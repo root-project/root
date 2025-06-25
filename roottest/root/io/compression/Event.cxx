@@ -18,7 +18,7 @@
 //        TClonesArray  *fTracks;
 //        TH1F          *fH;
 //        Float_t        fMatrix[4][4];
-//        Float_t       *fClosestDistance; //[fNvertex] indexed array! 
+//        Float_t       *fClosestDistance; //[fNvertex] indexed array!
 //
 //   The EventHeader class has 3 data members (integers):
 //     public:
@@ -101,17 +101,17 @@ Event::Event()
    }
    for (i0 = 0; i0 <10; i0++) fMeasures[i0] = 0;
    fClosestDistance = 0;
-   
+
    Int_t i,j;
    for (i=0;i<12;i++) fVectorint.push_back(i);
-   
+
    fString = "this is a C++ string";
    fStringp = new string("hello string");
    fTstringp = 0;
    fVaxis[0] = new TAxis();
    fVaxis[1] = new TAxis();
    fVaxis[2] = new TAxis();
-      
+
    fPaxis = 0;
    fQaxis = 0;
    fMapTAxisp = 0;
@@ -126,7 +126,7 @@ Event::Event()
    fListStringp.push_back(new string("2nd string"));
    fListStringp.push_back(new string("3rd string"));
    fListStringp.push_back(new string("4th string"));
-   
+
    fVectAxis.clear();
    static vector<TAxis*> vecta;
    for (i=0;i<4;i++) {
@@ -138,7 +138,7 @@ Event::Event()
    }
    fMapString.clear();
    fDequePair.clear();
-   
+
    fVectorshort.clear();
    for (i=0;i<120;i++) fVectorshort.push_back(i);
 
@@ -147,9 +147,9 @@ Event::Event()
    fVectorTobject->push_back(a1);
    fVectorTobject->push_back(a2);
    fVectorTobject->push_back(a3);
-   
+
    for (i=0;i<6;i++) fVectorTnamed[i] = new vector<TNamed>;
-      
+
    TLine line;
    fVectorTLine.clear();
    for (i=0;i<40;i++) {
@@ -157,28 +157,28 @@ Event::Event()
       line.SetX2(gRandom->Rndm());
       line.SetY1(gRandom->Rndm());
       line.SetY2(gRandom->Rndm());
-      line.SetLineColor(i); 
+      line.SetLineColor(i);
       fVectorTLine.push_back(line);
-   }  
-      
+   }
+
    TAttLine attline;
    fDeque.clear();
-   for (i=0;i<4;i++) {attline.SetLineColor(i); fDeque.push_back(attline);}  
-   
+   for (i=0;i<4;i++) {attline.SetLineColor(i); fDeque.push_back(attline);}
+
    fArrayF.Set(24);
    fArrayI = new TArrayI(24);
    for (i=0;i<24;i++) {
-      fArrayI->fArray[i] = 24-i; 
+      fArrayI->fArray[i] = 24-i;
       fArrayF.fArray[i] = 48-2*i;
-   } 
-   
+   }
+
    fRefH = 0;
    fEventName = 0;
    fTracksInVertex = 0;
 }
 
 //______________________________________________________________________________
-Event::Event(Int_t enumber)
+Event::Event(Int_t /* enumber */)
 {
    // Create an Event object.
    // When the constructor is invoked for the first time, the class static
@@ -196,22 +196,22 @@ Event::Event(Int_t enumber)
    }
    for (i0 = 0; i0 <10; i0++) fMeasures[i0] = 0;
    fClosestDistance = 0;
-   
+
    Int_t i;
    for (i=0;i<12;i++) fVectorint.push_back(i);
-   
+
    fString = "this is a C++ string";
    fTstringp = 0;
    fVaxis[0] = new TAxis();
    fVaxis[1] = new TAxis();
    fVaxis[2] = new TAxis();
-      
+
    fPaxis = 0;
    fQaxis = 0;
    fMapTAxisp = 0;
    fSetTAxisp = 0;
    fMultiSetTAxisp = 0;
-   
+
    fVectorshort.clear();
    for (i=0;i<120;i++) fVectorshort.push_back(i);
 
@@ -220,12 +220,12 @@ Event::Event(Int_t enumber)
    fVectorTobject->push_back(a1);
    fVectorTobject->push_back(a2);
    fVectorTobject->push_back(a3);
-   
+
    for (i=0;i<6;i++) fVectorTnamed[i] = new vector<TNamed>;
-      
+
    TAttLine attline;
    fDeque.clear();
-   for (i=0;i<40;i++) {attline.SetLineColor(i); fDeque.push_back(attline);}   
+   for (i=0;i<40;i++) {attline.SetLineColor(i); fDeque.push_back(attline);}
    fEventName = 0;
 }
 
@@ -240,8 +240,8 @@ Event::~Event()
    delete fVaxis[0];
    delete fVaxis[1];
    delete fVaxis[2];
-   if (fEventName) delete [] fEventName; 
-   if (fTracksInVertex) delete [] fTracksInVertex;  
+   if (fEventName) delete [] fEventName;
+   if (fTracksInVertex) delete [] fTracksInVertex;
 }
 
 //______________________________________________________________________________
@@ -267,12 +267,13 @@ void Event::Clear(Option_t *option)
 }
 
 //______________________________________________________________________________
-void Event::Reset(Option_t *option)
+void Event::Reset(Option_t * /* option */)
 {
 // Static function to reset all static objects for this event
 //   fgTracks->Delete(option);
-   delete fgTracks; fgTracks = 0;
-   fgHist   = 0;
+   delete fgTracks;
+   fgTracks = nullptr;
+   fgHist   = nullptr;
 }
 
 //______________________________________________________________________________
@@ -419,7 +420,7 @@ Track::Track(Float_t random) : TObject()
          }
       }
    }
-          
+
 
    fNpoint = Int_t(60+10*gRandom->Rndm(1));
    fValid  = Int_t(0.6+gRandom->Rndm(1));

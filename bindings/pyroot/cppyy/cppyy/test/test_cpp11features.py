@@ -1,13 +1,11 @@
-import py, sys
+import py, sys, pytest, os
 from pytest import mark, raises
-from .support import setup_make, ispypy
+from support import setup_make, ispypy, IS_MAC_ARM
 
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("cpp11featuresDict"))
+currpath = os.getcwd()
+test_dct = currpath + "/libcpp11featuresDict"
 
-def setup_module(mod):
-    setup_make("cpp11features")
 
 class TestCPP11FEATURES:
     def setup_class(cls):
@@ -351,7 +349,7 @@ class TestCPP11FEATURES:
             c = cppyy.gbl.std.nullopt
             assert cppyy.gbl.callopt(c)
 
-    @mark.xfail()
+    @mark.xfail(run = False, reason = "Crashes")
     def test11_chrono(self):
         """Use of chrono and overloaded operator+"""
 
@@ -565,3 +563,6 @@ class TestCPP11FEATURES:
 
         assert ns.call_creator(pyfunc)
 
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

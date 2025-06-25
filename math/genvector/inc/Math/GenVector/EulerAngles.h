@@ -22,6 +22,7 @@
 #include "Math/GenVector/PositionVector3D.h"
 #include "Math/GenVector/LorentzVector.h"
 #include "Math/GenVector/3DConversions.h"
+#include "TMath.h"
 #include <algorithm>
 #include <cassert>
 
@@ -40,7 +41,7 @@ namespace Math {
 
       @ingroup GenVector
 
-      @sa Overview of the @ref GenVector "physics vector library"
+      @see GenVector
    */
 class EulerAngles {
 
@@ -345,7 +346,7 @@ private:
    double fTheta;   // X rotation angle (second) defined only [0,PI]
    double fPsi;     // Z rotation angle (third)  defined in [-PI,PI]
 
-   static double Pi() { return M_PI; }
+   static double Pi() { return TMath::Pi(); }
 
 };  // EulerAngles
 

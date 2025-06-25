@@ -1,5 +1,6 @@
+import pytest
 from pytest import raises, skip, mark
-from .support import IS_MAC_ARM
+from support import IS_MAC_ARM
 
 
 class TestCONCURRENT:
@@ -302,3 +303,7 @@ class TestCONCURRENT:
 
         assert State.c1 == 1000
         assert State.c2 == State.c3
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

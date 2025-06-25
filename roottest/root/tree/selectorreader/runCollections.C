@@ -1,5 +1,5 @@
 // SampleClasses.h can be built in ROOT by '.L SampleClasses.h+'
-R__LOAD_LIBRARY(SampleClasses_h.so)
+R__LOAD_LIBRARY(SampleClasses_h)
 #include "SampleClasses.h"
 #include <string>
 #include <vector>

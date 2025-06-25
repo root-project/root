@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '7/05/2025',
+version_date = '28/05/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -142,9 +142,10 @@ if ((typeof document !== 'undefined') && (typeof window !== 'undefined') && (typ
   * @return {Number} 0 - not array, 1 - regular array, 2 - typed array
   * @private */
 function isArrayProto(proto) {
-    if ((proto.length < 14) || (proto.indexOf('[object ') !== 0)) return 0;
+    if ((proto.length < 14) || proto.indexOf('[object ')) return 0;
     const p = proto.indexOf('Array]');
-    if ((p < 0) || (p !== proto.length - 6)) return 0;
+    if ((p < 0) || (p !== proto.length - 6))
+      return 0;
     // plain array has only '[object Array]', typed array type name inside
     return proto.length === 14 ? 1 : 2;
 }
@@ -385,9 +386,13 @@ gStyle = {
    fOptLogy: 0,
    /** @summary Default log z scale */
    fOptLogz: 0,
+   /** @summary Show date on canvas */
    fOptDate: 0,
+   /** @summary Show file name on canvas */
    fOptFile: 0,
+   /** @summary X position of date on canvas */
    fDateX: 0.01,
+   /** @summary Y position of date on canvas */
    fDateY: 0.01,
    /** @summary Draw histogram title */
    fOptTitle: 1,
@@ -395,19 +400,29 @@ gStyle = {
    fCanvasColor: 0,
    /** @summary Pad fill color */
    fPadColor: 0,
+   /** @summary Pad bottom margin */
    fPadBottomMargin: 0.1,
+   /** @summary Pad top margin */
    fPadTopMargin: 0.1,
+   /** @summary Pad left margin */
    fPadLeftMargin: 0.1,
+   /** @summary Pad right margin */
    fPadRightMargin: 0.1,
    /** @summary TPad.fGridx default value */
    fPadGridX: false,
    /** @summary TPad.fGridy default value */
    fPadGridY: false,
+   /** @summary TPad.fTickx default value */
    fPadTickX: 0,
+   /** @summary TPad.fTicky default value */
    fPadTickY: 0,
+   /** @summary Pad border size */
    fPadBorderSize: 2,
+   /** @summary Pad border mode */
    fPadBorderMode: 0,
+   /** @summary Canvas border size */
    fCanvasBorderSize: 2,
+   /** @summary Canvas border mode */
    fCanvasBorderMode: 0,
    /** @summary fill color for stat box */
    fStatColor: 0,
@@ -423,16 +438,27 @@ gStyle = {
    fStatBorderSize: 1,
    /** @summary Printing format for stats */
    fStatFormat: '6.4g',
+   /** @summary Stat box X position - top right corner */
    fStatX: 0.98,
+   /** @summary Stat box Y position - top right corner */
    fStatY: 0.935,
+   /** @summary Stat box width */
    fStatW: 0.2,
+   /** @summary Stat box height */
    fStatH: 0.16,
+   /** @summary Title text align */
    fTitleAlign: 23,
+   /** @summary Title fill color */
    fTitleColor: 0,
+   /** @summary Title text color */
    fTitleTextColor: 1,
+   /** @summary Title border size */
    fTitleBorderSize: 0,
+   /** @summary Title text font */
    fTitleFont: 42,
+   /** @summary Title font size */
    fTitleFontSize: 0.05,
+   /** @summary Title fill style */
    fTitleStyle: 0,
    /** @summary X position of top left corner of title box */
    fTitleX: 0.5,
@@ -444,18 +470,31 @@ gStyle = {
    fTitleH: 0,
    /** @summary Printing format for fit parameters */
    fFitFormat: '5.4g',
+   /** @summary Default optstat value */
    fOptStat: 1111,
+   /** @summary Default optfit value */
    fOptFit: 0,
+   /** @summary Default number of colors in contour */
    fNumberContours: 20,
+   /** @summary Grids color */
    fGridColor: 0,
+   /** @summary Grids line style */
    fGridStyle: 3,
+   /** @summary Grids line width */
    fGridWidth: 1,
+   /** @summary Frame fill color */
    fFrameFillColor: 0,
+   /** @summary Frame fill style */
    fFrameFillStyle: 1001,
+   /** @summary Frame line color */
    fFrameLineColor: 1,
+   /** @summary Frame line width */
    fFrameLineWidth: 1,
+   /** @summary Frame line style */
    fFrameLineStyle: 1,
+   /** @summary Frame border size */
    fFrameBorderSize: 1,
+   /** @summary Frame border mode */
    fFrameBorderMode: 0,
    /** @summary size in pixels of end error for E1 draw options */
    fEndErrorSize: 2,
@@ -465,20 +504,31 @@ gStyle = {
    fHistMinimumZero: false,
    /** @summary Margin between histogram's top and pad's top */
    fHistTopMargin: 0.05,
+   /** @summary Histogram fill color */
    fHistFillColor: 0,
+   /** @summary Histogram fill style */
    fHistFillStyle: 1001,
+   /** @summary Histogram line color */
    fHistLineColor: 602,
+   /** @summary Histogram line style */
    fHistLineStyle: 1,
+   /** @summary Histogram line width */
    fHistLineWidth: 1,
    /** @summary format for bin content */
    fPaintTextFormat: 'g',
    /** @summary default time offset, UTC time at 01/01/95   */
    fTimeOffset: 788918400,
+   /** @summary Legend border size */
    fLegendBorderSize: 1,
+   /** @summary Legend text font */
    fLegendFont: 42,
+   /** @summary Legend font size */
    fLegendTextSize: 0,
+   /** @summary Legend fill color */
    fLegendFillColor: 0,
+   /** @summary Legend fill style */
    fLegendFillStyle: 1001,
+   /** @summary Hatches line width in fill styles  */
    fHatchesLineWidth: 1,
    fHatchesSpacing: 1,
    fCandleWhiskerRange: 1.0,
@@ -494,7 +544,10 @@ gStyle = {
    fYAxisExpYOffset: 0,
    fAxisMaxDigits: 5,
    fStripDecimals: true,
-   fBarWidth: 1
+   /** @summary Width of bar for graphs */
+   fBarWidth: 1,
+   /** @summary Offset of bar for graphs */
+   fBarOffset: 0
 };
 
 /** @summary Method returns current document in use
@@ -595,14 +648,17 @@ function parse(json) {
       if ((value === null) || (value === undefined)) return;
 
       if (isStr(value)) {
-         if (newfmt || (value.length < 6) || (value.indexOf('$ref:') !== 0)) return;
+         if (newfmt || (value.length < 6) || value.indexOf('$ref:'))
+            return;
          const ref = parseInt(value.slice(5));
-         if (!Number.isInteger(ref) || (ref < 0) || (ref >= map.length)) return;
+         if (!Number.isInteger(ref) || (ref < 0) || (ref >= map.length))
+            return;
          newfmt = false;
          return map[ref];
       }
 
-      if (typeof value !== 'object') return;
+      if (typeof value !== 'object')
+         return;
 
       const proto = Object.prototype.toString.apply(value);
 
@@ -810,7 +866,7 @@ function decodeUrl(url) {
    while (url) {
       // try to correctly handle quotes in the URL
       let pos = 0, nq = 0, eq = -1, firstq = -1;
-      while ((pos < url.length) && ((nq !== 0) || ((url[pos] !== '&') && (url[pos] !== '#')))) {
+      while ((pos < url.length) && (nq || ((url[pos] !== '&') && (url[pos] !== '#')))) {
          switch (url[pos]) {
             case '\'': if (nq >= 0) nq = (nq+1) % 2; if (firstq < 0) firstq = pos; break;
             case '"': if (nq <= 0) nq = (nq-1) % 2; if (firstq < 0) firstq = pos; break;
@@ -1039,7 +1095,7 @@ async function injectCode(code) {
 async function loadModules(arg) {
    if (isStr(arg))
       arg = arg.split(';');
-   if (arg.length === 0)
+   if (!arg.length)
       return true;
    return import(/* webpackIgnore: true */ arg.shift()).then(() => loadModules(arg));
 }
@@ -1146,14 +1202,14 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
       clTLegend = 'TLegend', clTLegendEntry = 'TLegendEntry',
       clTPaletteAxis = 'TPaletteAxis', clTImagePalette = 'TImagePalette',
       clTText = 'TText', clTLink = 'TLink', clTLatex = 'TLatex', clTMathText = 'TMathText', clTAnnotation = 'TAnnotation',
-      clTColor = 'TColor', clTLine = 'TLine', clTBox = 'TBox', clTPolyLine = 'TPolyLine',
+      clTColor = 'TColor', clTLine = 'TLine', clTMarker = 'TMarker', clTBox = 'TBox', clTPolyLine = 'TPolyLine',
       clTPolyLine3D = 'TPolyLine3D', clTPolyMarker3D = 'TPolyMarker3D',
       clTAttPad = 'TAttPad', clTPad = 'TPad', clTCanvas = 'TCanvas', clTFrame = 'TFrame', clTAttCanvas = 'TAttCanvas',
       clTGaxis = 'TGaxis', clTAttAxis = 'TAttAxis', clTAxis = 'TAxis', clTStyle = 'TStyle',
       clTH1 = 'TH1', clTH1I = 'TH1I', clTH1F = 'TH1F', clTH1D = 'TH1D', clTH2 = 'TH2', clTH2I = 'TH2I', clTH2F = 'TH2F', clTH2D = 'TH2D', clTH3 = 'TH3',
       clTF1 = 'TF1', clTF12 = 'TF12', clTF2 = 'TF2', clTF3 = 'TF3', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D', clTProfile3D = 'TProfile3D',
       clTGeoVolume = 'TGeoVolume', clTGeoNode = 'TGeoNode', clTGeoNodeMatrix = 'TGeoNodeMatrix',
-      nsREX = 'ROOT::Experimental::', nsSVG = 'http://www.w3.org/2000/svg',
+      nsROOT = 'ROOT::', nsREX = nsROOT + 'Experimental::', nsSVG = 'http://www.w3.org/2000/svg',
       kNoZoom = -1111, kNoStats = BIT(9), kInspect = 'inspect', kTitle = 'title',
       urlClassPrefix = 'https://root.cern/doc/master/class';
 
@@ -1207,6 +1263,11 @@ function create(typename, target) {
          create(clTObject, obj);
          create(clTAttLine, obj);
          extend(obj, { fX1: 0, fX2: 1, fY1: 0, fY2: 1 });
+         break;
+      case clTMarker:
+         create(clTObject, obj);
+         create(clTAttMarker, obj);
+         extend(obj, { fX: 0, fY: 0 });
          break;
       case clTBox:
          create(clTObject, obj);
@@ -1597,7 +1658,7 @@ function getMethods(typename, obj) {
    // Therefore when methods requested for given object, check also that basic methods are there
    if ((typename === clTObject) || (typename === clTNamed) || (obj?.fBits !== undefined)) {
       if (typeof m.TestBit === 'undefined') {
-         m.TestBit = function(f) { return (this.fBits & f) !== 0; };
+         m.TestBit = function(f) { return Boolean(this.fBits & f); };
          m.InvertBit = function(f) { this.fBits ^= f & 0xffffff; };
          m.SetBit = function(f, on = true) { this.fBits = on ? this.fBits | f : this.fBits & ~f; };
       }
@@ -1852,10 +1913,10 @@ function getMethods(typename, obj) {
          // compute variance in y (eprim2) and standard deviation in y (eprim)
          const contsum = cont/sum, eprim = Math.sqrt(Math.abs(err2/sum - contsum**2));
          if (this.fErrorMode === EErrorType.kERRORSPREADI) {
-            if (eprim !== 0) return eprim/Math.sqrt(neff);
+            if (eprim) return eprim / Math.sqrt(neff);
             // in case content y is an integer (so each my has an error +/- 1/sqrt(12)
             // when the std(y) is zero
-            return 1.0/Math.sqrt(12*neff);
+            return 1.0 / Math.sqrt(12*neff);
          }
          // if approximate compute the sums (of w, wy and wy2) using all the bins
          //  when the variance in y is zero
@@ -1898,7 +1959,7 @@ function getMethods(typename, obj) {
       };
    }
 
-   if (typename.indexOf('ROOT::Math::LorentzVector') === 0) {
+   if (typename.indexOf(nsROOT + 'Math::LorentzVector') === 0) {
       m.Px = m.X = function() { return this.fCoordinates.Px(); };
       m.Py = m.Y = function() { return this.fCoordinates.Py(); };
       m.Pz = m.Z = function() { return this.fCoordinates.Pz(); };
@@ -1912,7 +1973,7 @@ function getMethods(typename, obj) {
       m.Eta = m.eta = function() { return Math.atanh(this.Pz()/this.P()); };
    }
 
-   if (typename.indexOf('ROOT::Math::PxPyPzE4D') === 0) {
+   if (typename.indexOf(nsROOT + 'Math::PxPyPzE4D') === 0) {
       m.Px = m.X = function() { return this.fX; };
       m.Py = m.Y = function() { return this.fY; };
       m.Pz = m.Z = function() { return this.fZ; };
@@ -1960,6 +2021,25 @@ function isRootCollection(lst, typename) {
           (typename === clTObjArray) || (typename === clTClonesArray);
 }
 
+/** @summary Return kind string for type
+  * @desc Used when internal objects without clear ROOT type are used
+  * For such objects abstract 'kind' is defined. Used in hpainter and draw handles
+  * @private */
+function getKindForType(typ) {
+   return (!isStr(typ) || (typ.indexOf(nsROOT) !== 0)) ? prROOT + typ : typ;
+}
+
+/** @summary Return type name from kind string
+  * @private */
+function getTypeForKind(kind) {
+   if (!isStr(kind))
+      return null;
+   if (kind.indexOf(prROOT) === 0)
+      return kind.slice(prROOT.length);
+   if (kind.indexOf(nsROOT) === 0)
+      return kind;
+   return null;
+}
 
 /** @summary Internal collection of functions potentially used by batch scripts
   * @private */
@@ -1973,14 +2053,15 @@ export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, s
          clTAttLine, clTAttFill, clTAttMarker, clTAttText,
          clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTPaveClass, clTDiamond,
          clTLegend, clTLegendEntry, clTPaletteAxis, clTImagePalette, clTText, clTLink, clTLatex, clTMathText, clTAnnotation, clTMultiGraph,
-         clTColor, clTLine, clTBox, clTPolyLine, clTPad, clTCanvas, clTFrame, clTAttCanvas, clTGaxis,
+         clTColor, clTLine, clTMarker, clTBox, clTPolyLine, clTPad, clTCanvas, clTFrame, clTAttCanvas, clTGaxis,
          clTAxis, clTStyle, clTH1, clTH1I, clTH1F, clTH1D, clTH2, clTH2I, clTH2F, clTH2D, clTH3, clTF1, clTF12, clTF2, clTF3,
          clTProfile, clTProfile2D, clTProfile3D, clTHStack,
          clTGraph, clTGraph2DErrors, clTGraph2DAsymmErrors,
          clTGraphPolar, clTGraphPolargram, clTGraphTime, clTCutG,
          clTPolyLine3D, clTPolyMarker3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix,
-         nsREX, nsSVG, kNoZoom, kNoStats, kInspect, kTitle, urlClassPrefix,
+         nsROOT, nsREX, nsSVG, kNoZoom, kNoStats, kInspect, kTitle, urlClassPrefix,
          isArrayProto, getDocument, BIT, clone, addMethods, parse, parseMulti, toJSON,
          decodeUrl, findFunction, createHttpRequest, httpRequest, loadModules, loadScript, injectCode,
          create, createHistogram, setHistogramTitle, createTPolyLine, createTGraph, createTHStack, createTMultiGraph,
-         getMethods, registerMethods, isRootCollection, isObject, isFunc, isStr, isPromise, getPromise, postponePromise, _ensureJSROOT };
+         getMethods, registerMethods, isRootCollection, isObject, isFunc, isStr, isPromise, getPromise, postponePromise,
+         getKindForType, getTypeForKind, _ensureJSROOT };

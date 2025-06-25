@@ -145,10 +145,7 @@ ROOT_BUILD_OPTION(memory_termination OFF "Free internal ROOT memory before proce
 ROOT_BUILD_OPTION(minuit2_mpi OFF "Enable support for MPI in Minuit2")
 ROOT_BUILD_OPTION(minuit2_omp OFF "Enable support for OpenMP in Minuit2")
 ROOT_BUILD_OPTION(mpi OFF "Enable support for Message Passing Interface (MPI)")
-ROOT_BUILD_OPTION(mysql OFF "Enable support for MySQL databases (deprecated)")
-ROOT_BUILD_OPTION(odbc OFF "Enable support for ODBC databases (requires libiodbc or libodbc; deprecated)")
 ROOT_BUILD_OPTION(opengl ON "Enable support for OpenGL (requires libGL and libGLU)")
-ROOT_BUILD_OPTION(pgsql OFF "Enable support for PostgreSQL (deprecated)")
 ROOT_BUILD_OPTION(proof OFF "Enable support for PROOF")
 ROOT_BUILD_OPTION(pyroot ON "Enable support for automatic Python bindings (PyROOT)")
 ROOT_BUILD_OPTION(pythia8 OFF "Enable support for Pythia 8.x [GPL]")
@@ -161,7 +158,7 @@ ROOT_BUILD_OPTION(rpath ON "Link libraries with built-in RPATH (run-time search 
 ROOT_BUILD_OPTION(runtime_cxxmodules ON "Enable runtime support for C++ modules")
 ROOT_BUILD_OPTION(shadowpw OFF "Enable support for shadow passwords")
 ROOT_BUILD_OPTION(shared ON "Use shared 3rd party libraries if possible")
-ROOT_BUILD_OPTION(soversion OFF "Set version number in sonames (recommended)")
+ROOT_BUILD_OPTION(soversion OFF "Set version number in sonames for shared libraries. Not recommended, as the pcm and rootmap files do not (yet) support versioning and always point to the non-versioned shared libraries.")
 ROOT_BUILD_OPTION(spectrum ON "Enable support for TSpectrum")
 ROOT_BUILD_OPTION(sqlite ON "Enable support for SQLite")
 ROOT_BUILD_OPTION(ssl ON "Enable support for SSL encryption via OpenSSL")
@@ -396,23 +393,22 @@ foreach(opt afdsmgrd afs alien bonjour builtin_afterimage castor chirp cxx11 cxx
         cxxmodules exceptions geocad gfal glite globus gsl_shared hdfs html ios jemalloc krb5
         ldap memstat minuit2 monalisa oracle pyroot-python2 pyroot_legacy
         pythia6 pythia6_nolink python qt qtgsi qt5web rfio ruby sapdb srp table
-        tcmalloc vmc xproofd)
+        tcmalloc vmc xproofd mysql odbc pgsql)
   if(${opt})
     message(FATAL_ERROR ">>> '${opt}' is no longer part of ROOT ${ROOT_VERSION} build options.")
   endif()
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
-foreach(opt mysql odbc pgsql)
+foreach(opt )
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()
 endforeach()
 
-
-foreach(opt minuit2_omp minuit2_mpi)
+foreach(opt minuit2_mpi)
   if(${opt})
-      message(WARNING "The option '${opt}' can only be used to minimise thread-safe functions in Minuit2. It cannot be used for Histogram/Graph fitting and for RooFit. If you want to use Minuit2 with OpenMP or MPI support, it is better to build Minuit2 as a standalone library.")
+      message(WARNING "The option '${opt}' can only be used to minimise thread-safe functions in Minuit2. It cannot be used for Histogram/Graph fitting and for RooFit. If you want to use Minuit2 with MPI support, it is better to build Minuit2 as a standalone library.")
   endif()
 endforeach()
 
@@ -433,10 +429,13 @@ if(rpath)
   if(APPLE)
     set(CMAKE_MACOSX_RPATH TRUE)
     set(CMAKE_INSTALL_NAME_DIR "@rpath")
-    list(APPEND CMAKE_INSTALL_RPATH @loader_path @loader_path/${BINDIR_TO_LIBDIR})
+
+    set(_rpath_values "@loader_path" "@loader_path/${BINDIR_TO_LIBDIR}")
   else()
-    list(APPEND CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/${BINDIR_TO_LIBDIR})
+    set(_rpath_values "$ORIGIN" "$ORIGIN/${BINDIR_TO_LIBDIR}")
   endif()
+
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH-CACHED};${_rpath_values}" CACHE STRING "Install RPATH" FORCE)
 
   unset(BINDIR_TO_LIBDIR)
 endif()

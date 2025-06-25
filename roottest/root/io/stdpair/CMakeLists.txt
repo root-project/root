@@ -1,28 +1,21 @@
-ROOTTEST_ADD_TESTDIRS()
+ROOTTEST_GENERATE_DICTIONARY(libCmsPairCollection
+                             cmspair.h
+                             LINKDEF FullLinkDef.h
+                             NO_ROOTMAP NO_CXXMODULE
+                             FIXTURES_SETUP root-io-stdpair-cmspaircoll-fixture)
 
-set(CMAKE_ROOTTEST_NOROOTMAP ON)
-set(RootExternalIncludes -e "gInterpreter->AddIncludePath(\"-I${CMAKE_CURRENT_SOURCE_DIR}\");")
+ROOTTEST_GENERATE_DICTIONARY(libCmsPair
+                             cmspair.h LINKDEF PairLinkDef.h
+                             NO_ROOTMAP NO_CXXMODULE
+                             FIXTURES_SETUP root-io-stdpair-cmspair-fixture)
 
-ROOT_GENERATE_DICTIONARY(G__CmsPairCollection ${CMAKE_CURRENT_SOURCE_DIR}/cmspair.h LINKDEF FullLinkDef.h)
-ROOTTEST_LINKER_LIBRARY(CmsPairCollection TEST G__CmsPairCollection.cxx LIBRARIES ${ROOT_LIBRARIES})
+ROOTTEST_COMPILE_MACRO(cmspair.h
+                       FIXTURES_SETUP root-io-stdpair-compile-fixture)
 
-ROOT_GENERATE_DICTIONARY(G__CmsPair ${CMAKE_CURRENT_SOURCE_DIR}/cmspair.h LINKDEF PairLinkDef.h)
-ROOTTEST_LINKER_LIBRARY(CmsPair TEST G__CmsPair.cxx LIBRARIES ${ROOT_LIBRARIES})
-
-ROOT_ADD_TEST(roottest-root-io-stdpair-collection-build 
-              COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} ${build_config} --target G__CmsPairCollection${fast}  CmsPairCollection${fast} -- ${always-make}
-              FIXTURES_SETUP InputFiles)
-
-ROOT_ADD_TEST(roottest-root-io-stdpair-pair-build 
-              COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} ${build_config} --target G__CmsPair${fast}  CmsPair${fast} -- ${always-make}
-              FIXTURES_SETUP InputFiles)
-
-ROOTTEST_ADD_TEST(CopyRootFiles
+ROOTTEST_ADD_TEST(copyfiles
                   COMMAND ${CMAKE_COMMAND} -E echo "Copying root files"
                   COPY_TO_BUILDDIR aa02.root ab02.root
-                  FIXTURES_SETUP InputFiles)
-
-ROOTTEST_COMPILE_MACRO(cmspair.h)
+                  FIXTURES_SETUP root-io-stdpair-inputfiles-fixture)
 
 foreach(A RANGE 0 4)
 foreach(B RANGE 0 1)
@@ -31,10 +24,13 @@ foreach(D RANGE 0 1)
 
 ROOTTEST_ADD_TEST(pairEnumEvo_${A}_${B}_${C}_${D}
                   MACRO pairEnumEvo.C
+                  ROOTEXE_OPTS -e "gInterpreter->AddIncludePath(\"-I${CMAKE_CURRENT_SOURCE_DIR}\")"
                   MACROARG ${A},${B},${C},${D}
                   OUTREF pairEnumEvo_${A}_${B}_${C}_${D}.ref
-                  DEPENDS cmspaircollection-build cmspair-build ${COMPILE_MACRO_TEST}
-                  FIXTURES_REQUIRED InputFiles)
+                  FIXTURES_REQUIRED root-io-stdpair-cmspaircoll-fixture
+                                    root-io-stdpair-cmspair-fixture
+                                    root-io-stdpair-compile-fixture
+                                    root-io-stdpair-inputfiles-fixture)
 
 endforeach()
 endforeach()

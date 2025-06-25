@@ -7,13 +7,11 @@ class MyClass : public TObject
 {
 public:
 
-   MyClass() : TObject(), inOneOnly(0),transientMember(0) { ver = 1;}
+   MyClass() : TObject(), inOneOnly(0), transientMember(false) { ver = 1; }
 
-   void addSomeData() {
-      //fArray.push_back(123);
-      //fArray.push_back(456);
-   }
-   virtual void Print(Option_t* option = "") const;
+   void addSomeData() { }
+
+   void Print(Option_t* option = "") const override;
 
 private:
    // rule is only applied if fArray is first!
@@ -22,7 +20,7 @@ private:
    int inOneOnly; // !
    bool transientMember; //!
 
-   ClassDef(MyClass, 1)
+   ClassDefOverride(MyClass, 1)
 };
 
 #ifdef __MAKECINT__

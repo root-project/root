@@ -1,12 +1,10 @@
-import py, sys
+import py, sys, pytest, os
 from pytest import mark, raises, skip
-from .support import setup_make, ispypy, IS_WINDOWS
+from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("doc_helperDict"))
 
-def setup_module(mod):
-    setup_make("doc_helper")
+currpath = os.getcwd()
+test_dct = currpath + "/libdoc_helperDict"
 
 
 class TestDOCFEATURES:
@@ -448,6 +446,8 @@ namespace Namespace {
         assert cppyy.gbl.call_abstract_method1(pc) == "first message"
         assert cppyy.gbl.call_abstract_method2(pc) == "second message"
 
+    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    "libc++abi: terminating due to uncaught exception")
     def test_exceptions(self):
         """Exception throwing and catching"""
 
@@ -1223,6 +1223,8 @@ class TestTALKEXAMPLES:
         assert type(b) == CC.Derived
         assert d is b
 
+    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    "libc++abi: terminating due to uncaught exception")
     def test_exceptions(self):
         """Exceptions example"""
 
@@ -1280,3 +1282,7 @@ class TestTALKEXAMPLES:
             assert CC.utf8_chinese() == u'\u4e2d\u6587'
         else:
             assert CC.utf8_chinese() == b'\xe4\xb8\xad\xe6\x96\x87'
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

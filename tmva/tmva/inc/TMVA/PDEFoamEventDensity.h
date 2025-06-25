@@ -50,9 +50,9 @@ namespace TMVA
 
       // main function used by PDEFoam
       // returns event density at a given point by range searching in BST
-      virtual Double_t Density(std::vector<Double_t> &Xarg, Double_t &event_density);
+      Double_t Density(std::vector<Double_t> &Xarg, Double_t &event_density) override;
 
-      ClassDef(PDEFoamEventDensity, 1) //Class for Event density
+      ClassDefOverride(PDEFoamEventDensity, 1) //Class for Event density
          };  //end of PDEFoamEventDensity
 
 }  // namespace TMVA

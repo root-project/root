@@ -454,6 +454,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &in
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a class to the class table (this is a static function).
+/// The caller of this function should be holding the ROOT Write lock.
 
 void TClassTable::Add(TProtoClass *proto)
 {
@@ -977,10 +978,10 @@ void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Global function called by the dtor of a class's init class
 /// (see the ClassImp macro).
+/// The caller of this function should be holding the ROOT Write lock.
 
 void ROOT::RemoveClass(const char *cname, TClass *oldcl)
 {

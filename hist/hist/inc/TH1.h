@@ -35,6 +35,7 @@
 #include "TArrayL64.h"
 #include "TArrayF.h"
 #include "TArrayD.h"
+#include "TDirectory.h"
 #include "Foption.h"
 
 #include "TVectorFfwd.h"
@@ -44,6 +45,10 @@
 
 #include <cfloat>
 #include <string>
+#include <stdexcept>
+#include <type_traits>
+#include <array>
+#include <numeric>
 
 class TF1;
 class TH1D;
@@ -55,6 +60,50 @@ class TVirtualFFT;
 class TVirtualHistPainter;
 class TRandom;
 
+namespace ROOT::Internal {
+/**
+ * \brief Creates a sliced copy of the given histogram.
+ *
+ * \tparam T The type of the histogram.
+ * \param histo The histogram to slice.
+ * \param args A vector of integers specifying the low and upper edges of the slice for each dimension.
+ *
+ * \return A new histogram object that is a sliced version of the input histogram.
+ */
+template <typename T>
+T Slice(const T &histo, std::vector<Int_t> &args)
+{
+   static_assert(std::is_pointer_v<decltype(histo.fArray)>,
+                 "The type of the histogram to slice must expose the internal array data.");
+
+   TDirectory::TContext _{nullptr};
+   T slicedHisto = histo;
+
+   using ValueType = std::remove_pointer_t<decltype(slicedHisto.fArray)>;
+   slicedHisto.template SliceHistoInPlace<ValueType>(args, slicedHisto.fArray, slicedHisto.fN);
+   return slicedHisto;
+}
+
+/**
+ * \brief Sets the content of a slice in a histogram.
+ *
+ * \tparam T The type of the histogram.
+ * \param histo The histogram to set the slice content for.
+ * \param input A vector of values to assign to the bins in the specified slice. All input types are converted
+ *              to Double_t as that's the type `SetBinContent` eventually uses.
+ * \param sliceEdges A vector of pairs specifying the low and upper edges of the slice for each dimension.
+ */
+template <typename T>
+void SetSliceContent(T &histo, const std::vector<Double_t> &input,
+                     const std::vector<std::pair<Int_t, Int_t>> &sliceEdges)
+{
+   static_assert(std::is_pointer_v<decltype(histo.fArray)>,
+                 "The type of the histogram to slice must expose the internal array data.");
+
+   using ValueType = std::remove_pointer_t<decltype(histo.fArray)>;
+   histo.template SetSliceContent<ValueType>(input, sliceEdges, histo.fArray);
+}
+} // namespace ROOT::Internal
 
 class TH1 : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -136,6 +185,184 @@ private:
 
    TH1(const TH1&) = delete;
    TH1& operator=(const TH1&) = delete;
+
+   /**
+    * \brief Slices a histogram in place based on the specified bin ranges for each dimension.
+    *
+    * This function modifies the histogram by extracting a sub-region defined by the provided
+    * bin ranges for each dimension. The resulting histogram will have updated bin counts,
+    * edges, and contents. Bin contents outside the range fall into the flow bins.
+    * The histogram's internal data array is freed and reallocated by this function.
+    * This function is used by the python implementation of the Unified Histogram Interface (UHI)
+    * for slicing.
+    *
+    * \tparam ValueType The type of the histogram's data.
+    * \param args A vector of integers specifying the low and upper edges of the slice for each dimension.
+    * \param dataArray A pointer to the histogram's data array.
+    * \param fN The size of dataArray.
+    */
+   template <typename ValueType>
+   void SliceHistoInPlace(std::vector<Int_t> &args, ValueType *&dataArray, Int_t &fN)
+   {
+      constexpr Int_t kMaxDim = 3;
+      Int_t ndim = args.size() / 2;
+      if (ndim != fDimension) {
+         throw std::invalid_argument(
+            Form("Number of dimensions in slice (%d) does not match histogram dimension (%d).", ndim, fDimension));
+      }
+
+      // Compute new bin counts and edges
+      std::array<Int_t, kMaxDim> nBins{}, totalBins{};
+      std::array<Double_t, kMaxDim> lowEdge{}, upEdge{};
+      for (decltype(ndim) d = 0; d < ndim; ++d) {
+         const auto &axis = (d == 0 ? fXaxis : d == 1 ? fYaxis : fZaxis);
+         auto start = std::max(1, args[d * 2]);
+         auto end = std::min(axis.GetNbins() + 1, args[d * 2 + 1]);
+         nBins[d] = end - start;
+         lowEdge[d] = axis.GetBinLowEdge(start);
+         upEdge[d] = axis.GetBinLowEdge(end);
+         totalBins[d] = axis.GetNbins() + 2;
+         args[2 * d] = start;
+         args[2 * d + 1] = end;
+      }
+
+      // Compute layout sizes for slice
+      size_t rowSz = nBins[0] + 2;
+      size_t planeSz = rowSz * (ndim > 1 ? nBins[1] + 2 : 1);
+      size_t newSize = planeSz * (ndim > 2 ? nBins[2] + 2 : 1);
+
+      // Allocate the new array
+      auto *newArr = new ValueType[newSize]();
+
+      auto rowIncr = 1 + (ndim > 1 ? (rowSz - 1) : 0);
+      ValueType under = 0, over = 0;
+      Bool_t firstUnder = false;
+      Int_t lastOverIdx = 0;
+
+      // Copy the valid slice bins
+      size_t dstIdx = 1 + (ndim > 1 ? rowSz : 0) + (ndim > 2 ? planeSz : 0);
+      for (auto z = (ndim > 2 ? args[4] : 0); z < (ndim > 2 ? args[5] : 1); ++z) {
+         for (auto y = (ndim > 1 ? args[2] : 0); y < (ndim > 1 ? args[3] : 1); ++y) {
+            size_t rowStart = z * totalBins[1] * totalBins[0] + y * totalBins[0] + args[0];
+            std::copy_n(dataArray + rowStart, nBins[0], newArr + dstIdx);
+            if (!firstUnder) {
+               under = std::accumulate(dataArray, dataArray + rowStart, ValueType{});
+               firstUnder = true;
+            } else {
+               under += std::accumulate(dataArray + rowStart - args[0], dataArray + rowStart, ValueType{});
+            }
+            lastOverIdx = rowStart - args[0] + totalBins[0];
+            over += std::accumulate(dataArray + rowStart + nBins[0], dataArray + lastOverIdx, ValueType{});
+            dstIdx += rowIncr;
+         }
+         if (ndim > 2) {
+            dstIdx += 2 * rowIncr;
+         }
+      }
+
+      // Copy the flow bins
+      over += std::accumulate(dataArray + lastOverIdx, dataArray + fN, ValueType{});
+      newArr[0] = under;
+      newArr[newSize - 1] = over;
+
+      // Assign the new array
+      delete[] dataArray;
+      dataArray = newArr;
+
+      // Reconfigure Axes
+      if (ndim == 1) {
+         this->SetBins(nBins[0], lowEdge[0], upEdge[0]);
+      } else if (ndim == 2) {
+         this->SetBins(nBins[0], lowEdge[0], upEdge[0], nBins[1], lowEdge[1], upEdge[1]);
+      } else if (ndim == 3) {
+         this->SetBins(nBins[0], lowEdge[0], upEdge[0], nBins[1], lowEdge[1], upEdge[1], nBins[2], lowEdge[2],
+                       upEdge[2]);
+      }
+
+      // Update the statistics
+      ResetStats();
+   }
+
+   template <typename T>
+   friend T ROOT::Internal::Slice(const T &histo, std::vector<Int_t> &args);
+
+   /**
+    * \brief Sets the content of a slice of bins in a histogram.
+    *
+    * This function allows setting the content of a slice of bins in a histogram
+    * by specifying the edges of the slice and the corresponding values to assign.
+    *
+    * \tparam ValueType The type of the histogram's data.
+    * \param values A vector of values to assign to the bins in the specified slice.
+    * \param sliceEdges A vector of pairs specifying the low and upper edges of the slice for each dimension.
+    * \param dataArray A pointer to the histogram's data array.
+    */
+   template <typename ValueType>
+   void SetSliceContent(const std::vector<Double_t> &values, const std::vector<std::pair<Int_t, Int_t>> &sliceEdges,
+                        ValueType *dataArray)
+   {
+      const Int_t ndim = sliceEdges.size();
+      if (ndim != fDimension) {
+         throw std::invalid_argument(Form(
+            "Number of edges in the specified slice (%d) does not match histogram dimension (%d).", ndim, fDimension));
+      }
+
+      // Get the indices to set
+      auto getSliceIndices = [](const std::vector<std::pair<Int_t, Int_t>> &edges) -> std::vector<std::vector<Int_t>> {
+         const auto dim = edges.size();
+         if (dim == 0) {
+            return {};
+         }
+
+         std::vector<std::vector<Int_t>> slices(dim);
+         for (size_t d = 0; d < dim; ++d) {
+            for (auto val = edges[d].first; val < edges[d].second; ++val) {
+               slices[d].push_back(val);
+            }
+         }
+
+         size_t totalCombinations = 1;
+         for (const auto &slice : slices) {
+            totalCombinations *= slice.size();
+         }
+
+         std::vector<std::vector<Int_t>> result(totalCombinations, std::vector<Int_t>(3, 0));
+         for (size_t d = 0; d < slices.size(); ++d) {
+            size_t repeat = 1;
+            for (size_t i = d + 1; i < slices.size(); ++i) {
+               repeat *= slices[i].size();
+            }
+
+            size_t index = 0;
+            for (size_t i = 0; i < totalCombinations; ++i) {
+               result[i][d] = slices[d][(index / repeat) % slices[d].size()];
+               ++index;
+            }
+         }
+
+         return result;
+      };
+
+      auto sliceIndices = getSliceIndices(sliceEdges);
+
+      if (values.size() != sliceIndices.size()) {
+         throw std::invalid_argument("Number of provided values does not match number of bins to set.");
+      }
+
+      for (size_t i = 0; i < sliceIndices.size(); ++i) {
+         auto globalBin = this->GetBin(sliceIndices[i][0], sliceIndices[i][1], sliceIndices[i][2]);
+
+         // Set the bin content
+         dataArray[globalBin] = values[i];
+      }
+
+      // Update the statistics
+      ResetStats();
+   }
+
+   template <typename T>
+   friend void ROOT::Internal::SetSliceContent(T &histo, const std::vector<Double_t> &input,
+                                               const std::vector<std::pair<Int_t, Int_t>> &sliceEdges);
 
 protected:
    TH1();
@@ -367,6 +594,7 @@ public:
    virtual Bool_t   Multiply(TF1 *f1, Double_t c1=1);
    virtual Bool_t   Multiply(const TH1 *h1);
    virtual Bool_t   Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option="");
+   virtual void     Normalize(Option_t *option=""); // *MENU*
            void     Paint(Option_t *option = "") override;
            void     Print(Option_t *option = "") const override;
    virtual void     PutStats(Double_t *stats);

@@ -254,19 +254,20 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
          const bool scopeIsNamespace (tClassScope->Property() & kIsNamespace);
 
          const bool autoParseSuspended = gInterpreter->IsAutoParsingSuspended();
-         const bool suspendAutoParse = autoParseSuspended || scopeIsNamespace;
 
-         TInterpreter::SuspendAutoParsing autoParseRaii(gInterpreter, suspendAutoParse);
+         if (scopeIsNamespace && !autoParseSuspended) {
+            // Lock down the autoparsing state.
+            R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+            TInterpreter::SuspendAutoParsing autoParseRaii(gInterpreter, true);
 
-         if (scopeIsNamespace && !autoParseSuspended){
-            canLoadEnums=true;
+            auto listOfEnums = tClassScope->GetListOfEnums(true);
+            // Previous incarnation of the code re-enabled the auto parsing,
+            // before executing findEnumInList
+            theEnum = findEnumInList(listOfEnums, enName, sa_local);
+         } else {
+            auto listOfEnums = tClassScope->GetListOfEnums(canLoadEnums);
+            theEnum = findEnumInList(listOfEnums, enName, sa_local);
          }
-
-         auto listOfEnums = tClassScope->GetListOfEnums(canLoadEnums);
-
-         // Previous incarnation of the code re-enabled the auto parsing,
-         // before executing findEnumInList
-         theEnum = findEnumInList(listOfEnums, enName, sa_local);
       }
       // Check if the scope is still a protoclass
       else if (auto tProtoClassscope = static_cast<TProtoClass *>((gClassTable->GetProtoNorm(scopeName)))) {

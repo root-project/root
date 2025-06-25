@@ -1507,7 +1507,7 @@ template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, con
 
    // Do recursive calls dividing each time the interval by two
    while (n > 3) {
-      Double_t min_v_range = values[n - 1] - values[0];
+      Double_t min_v_range = values[jMin + n - 1] - values[jMin];
       const size_t N = std::ceil(n * 0.5);
       const size_t start = jMin;
       const size_t stop = start + n - N + 1; // +1 since we use < and not <=

@@ -12,7 +12,7 @@
 /** \class TPythia8
     \ingroup pythia8
 
-TPythia8 is an interface class to C++ version of Pythia 8.1           
+TPythia8 is an interface class to C++ version of Pythia 8.1
 event generators, written by T.Sjostrand.
 
 The user is assumed to be familiar with the Pythia package.
@@ -23,7 +23,7 @@ compiled C++ script.
 To call Pythia functions not available in this interface a dictionary must
 be generated.
 
-See $ROOTSYS/tutorials/pythia/pythia8.C for an example of use from CINT.
+See evegen_000_pythia8.C for an example of use from CLING.
 
 Author: Andreas Morsch   27/10/2007
 

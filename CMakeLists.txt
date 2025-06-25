@@ -314,7 +314,7 @@ add_custom_command(OUTPUT ${stamp_file}
 
 
 #---Copy files to the build area at build time---------------------------------
-set(directories_to_copy etc test icons fonts macros tutorials)
+set(directories_to_copy test icons fonts macros tutorials)
 if(http)
   list(APPEND directories_to_copy js)
 endif()
@@ -328,8 +328,7 @@ foreach(dir_to_copy ${directories_to_copy})
   file(GLOB_RECURSE artifacts_in ${dir_to_copy}/*)
   list(FILTER artifacts_in EXCLUDE REGEX "\.(d|swp|so|dylib|lib|dll|pcm|bak)$")
 
-  set(artifacts_out ${artifacts_in})
-  list(TRANSFORM artifacts_out REPLACE ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+  string(REPLACE ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} artifacts_out "${artifacts_in}")
   list(APPEND all_artifacts ${artifacts_out})
 
   add_custom_command(OUTPUT ${artifacts_out}
@@ -337,6 +336,28 @@ foreach(dir_to_copy ${directories_to_copy})
       COMMENT "Copy ${dir_to_copy}"
       DEPENDS ${artifacts_in})
 endforeach()
+
+#---Copy etc/* files individually to the build area at build time---------------------------------
+# The reason why we don't copy these files with copy_directory as above is that
+# we want to exclude a subset of the files.
+file(GLOB_RECURSE artifact_files RELATIVE ${CMAKE_SOURCE_DIR} etc/*)
+
+# Exclude the *.in files, just like in the install tree
+list(FILTER artifact_files EXCLUDE REGEX "\.(in)$")
+
+# Exclude etc/notebook/JsMVA
+list(FILTER artifact_files EXCLUDE REGEX "^etc/notebook/JsMVA/")
+
+foreach(artifact_file ${artifact_files})
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${artifact_file}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/${artifact_file} ${CMAKE_BINARY_DIR}/${artifact_file}
+    COMMENT "Copying ${CMAKE_SOURCE_DIR}/${artifact_file}"
+    DEPENDS ${CMAKE_SOURCE_DIR}/${artifact_file})
+  list(APPEND all_artifacts ${CMAKE_BINARY_DIR}/${artifact_file})
+endforeach()
+
+unset(artifact_files)
+
 
 add_custom_target(move_artifacts DEPENDS ${stamp_file} ${all_artifacts})
 
@@ -607,6 +628,7 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   endif()
   install(DIRECTORY etc/ DESTINATION ${CMAKE_INSTALL_SYSCONFDIR} USE_SOURCE_PERMISSIONS
                          ${DIR_PERMISSIONS}
+                         PATTERN "notebook/JsMVA" EXCLUDE
                          PATTERN "system.rootrc" EXCLUDE
                          PATTERN "system.rootauthrc" EXCLUDE
                          PATTERN "system.rootdaemonrc" EXCLUDE

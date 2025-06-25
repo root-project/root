@@ -18,20 +18,20 @@
   <class name="std::vector<ClassC>" />
   <class name="std::vector<ClassC*>" />
   <class name="std::vector<ClassD>" />
-  <class name="std::vector<ClassD*>" /> 
+  <class name="std::vector<ClassD*>" />
 
   <class name="ClassAIns::Transient" ClassVersion="2" />
   <read sourceClass="ClassAIns::Transient" version="[2]" targetClass="ClassAIns::Transient" source="" target="fCached" >
   <![CDATA[ { fCached = false; } ]]>
   </read>
- 
+
   <class name="CMS::ClassAIns" ClassVersion="2" />
   <class name="CMS::ClassAIns::Transient" ClassVersion="2" />
   <!-- ioread sourceClass="CMS::ClassAIns::Transient" version="[2]"  targetClass="CMS::ClassAIns::Transient" source="" target="fCached" >
   <![CDATA[ { fCached = crap you must die; } ]]>
   </ioread !-->
 
-  <class name="LHCb::Track" id="0000271a-0000-0000-0000-000000000000" ClassVersion="2"> 
+  <class name="LHCb::Track" id="0000271a-0000-0000-0000-000000000000" ClassVersion="2">
      <field name="m_measurements" transient="true"/>
      <field name="m_projections" transient="true"/>
      <field name="m_nothing" transient="true"/>

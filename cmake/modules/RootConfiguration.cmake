@@ -156,30 +156,10 @@ set(gl2pslibdir ${GL2PS_LIBRARY_DIR})
 set(gl2pslib ${GL2PS_LIBRARY})
 set(gl2psincdir ${GL2PS_INCLUDE_DIR})
 
-set(buildmysql ${value${mysql}})
-set(mysqllibdir ${MYSQL_LIBRARY_DIR})
-set(mysqllib ${MYSQL_LIBRARY})
-set(mysqlincdir ${MYSQL_INCLUDE_DIR})
-
-set(buildoracle ${value${oracle}})
-set(oraclelibdir ${ORACLE_LIBRARY_DIR})
-set(oraclelib ${ORACLE_LIBRARY})
-set(oracleincdir ${ORACLE_INCLUDE_DIR})
-
-set(buildpgsql ${value${pgsql}})
-set(pgsqllibdir ${PGSQL_LIBRARY_DIR})
-set(pgsqllib ${PGSQL_LIBRARY})
-set(pgsqlincdir ${PGSQL_INCLUDE_DIR})
-
 set(buildsqlite ${value${sqlite}})
 set(sqlitelibdir ${SQLITE_LIBRARY_DIR})
 set(sqlitelib ${SQLITE_LIBRARY})
 set(sqliteincdir ${SQLITE_INCLUDE_DIR})
-
-set(buildodbc ${value${odbc}})
-set(odbclibdir ${OCDB_LIBRARY_DIR})
-set(odbclib ${OCDB_LIBRARY})
-set(odbcincdir ${OCDB_INCLUDE_DIR})
 
 set(builddavix ${value${davix}})
 set(davixlibdir ${DAVIX_LIBRARY_DIR})
@@ -496,6 +476,12 @@ if (uring)
 else()
   set(hasuring undef)
 endif()
+if (geom)
+  set(hasgeom define)
+else()
+  set(hasgeom undef)
+endif()
+
 
 CHECK_CXX_SOURCE_COMPILES("
 inline __attribute__((always_inline)) bool TestBit(unsigned long f) { return f != 0; };
@@ -515,20 +501,25 @@ else()
    set(has_found_attribute_noinline undef)
 endif()
 
-# We could just check `#ifdef __cpp_lib_hardware_interference_size`, but on at least Mac 11
-# libc++ defines that macro but is missing the actual feature
-# (see https://github.com/llvm/llvm-project/commit/174322c2737d699e199db4762aaf4217305ec465).
-# So we need to "manually" check instead.
-# `#ifdef R__HAS_HARDWARE_INTERFERENCE_SIZE` could be substituted by `#ifdef __cpp_lib_hardware_interference_size`
-# when Mac 11's life has ended (assuming the libc++ fix makes it in the next MacOS version).
-CHECK_CXX_SOURCE_COMPILES("
+# The hardware interference size must be stable across all TUs in a ROOT build, so we need to save it in RConfigure.hxx
+# Since it can vary for different compilers or tune settings, we cannot base the ABI on a value that might change,
+# even be different between compiler and interpreter, or when ROOT is compiled on a different machine.
+if(CMAKE_VERSION VERSION_GREATER 3.24) # For older CMake, we simply fall back to 64
+set(test_interference_size "
 #include <new>
-using Check_t = char[std::hardware_destructive_interference_size];
-" found_hardware_interference_size)
-if(found_hardware_interference_size)
-   set(hashardwareinterferencesize define)
-else()
-   set(hashardwareinterferencesize undef)
+#include <iostream>
+int main() {
+  std::cout << std::hardware_destructive_interference_size << std::endl;
+  return 0;
+}
+")
+try_run(HARDWARE_INTERF_RUN HARDWARE_INTERF_COMPILE
+  SOURCE_FROM_VAR test_interference_size.cxx test_interference_size
+  RUN_OUTPUT_VARIABLE hardwareinterferencesize)
+endif()
+if(NOT HARDWARE_INTERF_COMPILE OR NOT HARDWARE_INTERF_RUN EQUAL 0)
+  message(STATUS "Could not detect hardware_interference_size in C++. Falling back to 64.")
+  set(hardwareinterferencesize 64)
 endif()
 
 if(webgui)

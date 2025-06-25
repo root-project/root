@@ -133,10 +133,29 @@ void InsertBranchName(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, c
 void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames, TBranch *b,
                           std::string prefix, std::string &friendName, bool allowDuplicates)
 {
+   // We want to avoid situations of overlap between the prefix and the
+   // sub-branch name that might happen when the branch is composite, e.g.
+   // prefix=reco_Wdecay2_from_tbar_4vect_NOSYS.fCoordinates.
+   // subBranchName=fCoordinates.fPt
+   // which would lead to a repetition of fCoordinates in the output branch name
+   // Boundary to search for the token before the last dot
+   auto prefixEndingDot = std::string::npos;
+   if (!prefix.empty() && prefix.back() == '.')
+      prefixEndingDot = prefix.size() - 2;
+   std::string lastPrefixToken{};
+   if (auto prefixLastRealDot = prefix.find_last_of('.', prefixEndingDot); prefixLastRealDot != std::string::npos)
+      lastPrefixToken = prefix.substr(prefixLastRealDot + 1, prefixEndingDot - prefixLastRealDot);
+
    for (auto sb : *b->GetListOfBranches()) {
       TBranch *subBranch = static_cast<TBranch *>(sb);
       auto subBranchName = std::string(subBranch->GetName());
       auto fullName = prefix + subBranchName;
+
+      if (auto subNameFirstDot = subBranchName.find_first_of('.'); subNameFirstDot != std::string::npos) {
+         // Concatenate the prefix to the sub-branch name without overlaps
+         if (!lastPrefixToken.empty() && lastPrefixToken == subBranchName.substr(0, subNameFirstDot))
+            fullName = prefix + subBranchName.substr(subNameFirstDot + 1);
+      }
 
       std::string newPrefix;
       if (!prefix.empty())
@@ -1192,16 +1211,15 @@ std::unique_ptr<TFile> OpenFileWithSanityChecks(std::string_view fileNameGlob)
    auto &&baseName = baseNameAndQuery.first;
    auto &&query = baseNameAndQuery.second;
 
-   const auto nameHasWildcard = [&baseName]() {
-      constexpr std::array<char, 4> wildCards{'[', ']', '*', '?'}; // Wildcards accepted by TChain::Add
-      return std::any_of(wildCards.begin(), wildCards.end(),
-                         [&baseName](auto &&wc) { return baseName.find(wc) != std::string_view::npos; });
-   }();
+   std::string fileToOpen{fileNameGlob};
+   if (baseName.find_first_of("[]*?") != std::string_view::npos) { // Wildcards accepted by TChain::Add
+      const auto expanded = ROOT::Internal::TreeUtils::ExpandGlob(std::string{baseName});
+      if (expanded.empty())
+         throw std::invalid_argument{"RDataFrame: The glob expression '" + std::string{baseName} +
+                                     "' did not match any files."};
 
-   // Open first file in case of glob, suppose all files in the glob use the same data format
-   std::string fileToOpen{nameHasWildcard
-                             ? ROOT::Internal::TreeUtils::ExpandGlob(std::string{baseName})[0] + std::string{query}
-                             : fileNameGlob};
+      fileToOpen = expanded.front() + std::string{query};
+   }
 
    ::TDirectory::TContext ctxt; // Avoid changing gDirectory;
    std::unique_ptr<TFile> inFile{TFile::Open(fileToOpen.c_str(), "READ_WITHOUT_GLOBALREGISTRATION")};

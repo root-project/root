@@ -65,29 +65,29 @@ namespace TMVA {
 
       virtual ~MethodFisher( void );
 
-      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
+      Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets ) override;
 
 
       // training method
-      void Train( void );
+      void Train( void ) override;
 
       using MethodBase::ReadWeightsFromStream;
 
       // write weights to stream
-      void AddWeightsXMLTo     ( void* parent ) const;
+      void AddWeightsXMLTo     ( void* parent ) const override;
 
       // read weights from stream
-      void ReadWeightsFromStream( std::istream & i );
-      void ReadWeightsFromXML   ( void* wghtnode );
+      void ReadWeightsFromStream( std::istream & i ) override;
+      void ReadWeightsFromXML   ( void* wghtnode ) override;
 
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr ) override;
 
       enum EFisherMethod { kFisher, kMahalanobis };
       EFisherMethod GetFisherMethod( void ) { return fFisherMethod; }
 
       // ranking of input variables
-      const Ranking* CreateRanking();
+      const Ranking* CreateRanking() override;
 
       // nice output
       void PrintCoefficients( void );
@@ -96,16 +96,16 @@ namespace TMVA {
    protected:
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      void MakeClassSpecific( std::ostream&, const TString& ) const;
+      void MakeClassSpecific( std::ostream&, const TString& ) const override;
 
       // get help message text
-      void GetHelpMessage() const;
+      void GetHelpMessage() const override;
 
    private:
 
       // the option handling methods
-      void DeclareOptions();
-      void ProcessOptions();
+      void DeclareOptions() override;
+      void ProcessOptions() override;
 
       // Initialization and allocation of matrices
       void InitMatrices( void );
@@ -149,9 +149,9 @@ namespace TMVA {
       Double_t fF0;                   ///< offset
 
       // default initialisation called by all constructors
-      void Init( void );
+      void Init( void ) override;
 
-      ClassDef(MethodFisher,0); // Analysis of Fisher discriminant (Fisher or Mahalanobis approach)
+      ClassDefOverride(MethodFisher,0); // Analysis of Fisher discriminant (Fisher or Mahalanobis approach)
    };
 
 } // namespace TMVA

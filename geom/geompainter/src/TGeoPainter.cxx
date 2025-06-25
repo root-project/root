@@ -24,14 +24,13 @@ using TBuffer3D mechanism.
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TVirtualPad.h"
+#include "TStopwatch.h"
 #include "TCanvas.h"
 #include "TCanvasImp.h"
-#include "TH2F.h"
 #include "TF1.h"
 #include "TGraph.h"
 #include "TPluginManager.h"
 #include "TVirtualPadEditor.h"
-#include "TStopwatch.h"
 
 #include "TPolyMarker3D.h"
 
@@ -42,13 +41,13 @@ using TBuffer3D mechanism.
 #include "TGeoManager.h"
 #include "TGeoTrack.h"
 #include "TGeoOverlap.h"
-#include "TGeoChecker.h"
 #include "TGeoPhysicalNode.h"
 #include "TGeoPolygon.h"
 #include "TGeoCompositeShape.h"
 #include "TGeoShapeAssembly.h"
 #include "TGeoPainter.h"
 #include "TMath.h"
+#include "TVirtualGeoChecker.h"
 
 #include "X3DBuffer.h"
 
@@ -98,7 +97,6 @@ TGeoPainter::TGeoPainter(TGeoManager *manager) : TVirtualGeoPainter(manager)
    memset(&fCheckedBox[0], 0, 6 * sizeof(Double_t));
 
    fCheckedNode = fGeoManager->GetTopNode();
-   fChecker = new TGeoChecker(fGeoManager);
    fIsEditable = kFALSE;
    DefineColors();
 }
@@ -107,8 +105,6 @@ TGeoPainter::TGeoPainter(TGeoManager *manager) : TVirtualGeoPainter(manager)
 
 TGeoPainter::~TGeoPainter()
 {
-   if (fChecker)
-      delete fChecker;
    delete fVisVolumes;
    delete fGlobal;
    delete fBuffer;
@@ -190,70 +186,6 @@ void TGeoPainter::BombTranslation(const Double_t *tr, Double_t *bombtr)
       return;
    default: return;
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check pushes and pulls needed to cross the next boundary with respect to the
-/// position given by FindNextBoundary. If radius is not mentioned the full bounding
-/// box will be sampled.
-
-void TGeoPainter::CheckBoundaryErrors(Int_t ntracks, Double_t radius)
-{
-   fChecker->CheckBoundaryErrors(ntracks, radius);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check the boundary errors reference file created by CheckBoundaryErrors method.
-/// The shape for which the crossing failed is drawn with the starting point in red
-/// and the extrapolated point to boundary (+/- failing push/pull) in yellow.
-
-void TGeoPainter::CheckBoundaryReference(Int_t icheck)
-{
-   fChecker->CheckBoundaryReference(icheck);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Geometry checking method (see: TGeoManager::CheckGeometry())
-
-void TGeoPainter::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings, Int_t ntracks, const Double_t *vertex)
-{
-   fChecker->CheckGeometryFull(checkoverlaps, checkcrossings, ntracks, vertex);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Geometry checking method (see TGeoChecker).
-
-void TGeoPainter::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const
-{
-   fChecker->CheckGeometry(nrays, startx, starty, startz);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check overlaps for the top volume of the geometry, within a limit OVLP.
-
-void TGeoPainter::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *option) const
-{
-   fChecker->CheckOverlaps(vol, ovlp, option);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check current point in the geometry.
-
-void TGeoPainter::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *option, Double_t safety)
-{
-   fChecker->CheckPoint(x, y, z, option, safety);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Test for shape navigation methods. Summary for test numbers:
-///  - 1: DistFromInside/Outside. Sample points inside the shape. Generate
-///    directions randomly in cos(theta). Compute DistFromInside and move the
-///    point with bigger distance. Compute DistFromOutside back from new point.
-///    Plot d-(d1+d2)
-
-void TGeoPainter::CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option)
-{
-   fChecker->CheckShape(shape, testNo, nsamples, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1176,16 +1108,6 @@ const char *TGeoPainter::GetVolumeInfo(const TGeoVolume *volume, Int_t /*px*/, I
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create/return geometry checker.
-
-TGeoChecker *TGeoPainter::GetChecker()
-{
-   if (!fChecker)
-      fChecker = new TGeoChecker(fGeoManager);
-   return fChecker;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Get the current view angles.
 
 void TGeoPainter::GetViewAngles(Double_t &longitude, Double_t &latitude, Double_t &psi)
@@ -1235,14 +1157,6 @@ void TGeoPainter::GrabFocus(Int_t nfr, Double_t dlong, Double_t dlat, Double_t d
    view->MoveFocus(&fCheckedBox[0], fCheckedBox[3], fCheckedBox[4], fCheckedBox[5], nframes, dlong, dlat, dpsi);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Generate a lego plot fot the top volume, according to option.
-
-TH2F *TGeoPainter::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax, Int_t nphi, Double_t phimin,
-                            Double_t phimax, Double_t rmin, Double_t rmax, Option_t *option)
-{
-   return fChecker->LegoPlot(ntheta, themin, themax, nphi, phimin, phimax, rmin, rmax, option);
-}
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert a local vector according view rotation matrix
 
@@ -1671,40 +1585,6 @@ void TGeoPainter::PaintPhysicalNode(TGeoPhysicalNode *node, Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Print overlaps (see TGeoChecker::PrintOverlaps())
-
-void TGeoPainter::PrintOverlaps() const
-{
-   fChecker->PrintOverlaps();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Text progress bar.
-
-void TGeoPainter::OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch, Bool_t last,
-                             Bool_t refresh, const char *msg)
-{
-   fChecker->OpProgress(opname, current, size, watch, last, refresh, msg);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Draw random points in the bounding box of a volume.
-
-void TGeoPainter::RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option)
-{
-   fChecker->RandomPoints((TGeoVolume *)vol, npoints, option);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Shoot nrays in the current drawn geometry
-
-void TGeoPainter::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz, const char *target_vol,
-                             Bool_t check_norm)
-{
-   fChecker->RandomRays(nrays, startx, starty, startz, target_vol, check_norm);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Raytrace current drawn geometry
 
 void TGeoPainter::Raytrace(Option_t *)
@@ -1784,6 +1664,8 @@ void TGeoPainter::Raytrace(Option_t *)
    tosource[1] = -dir[0] * TMath::Sin(phi) - dir[1] * TMath::Cos(phi);
    tosource[2] = -dir[2];
 
+   auto checker = fGeoManager->GetGeomChecker();
+
    Bool_t done;
    //   Int_t istep;
    Int_t base_color, color;
@@ -1799,7 +1681,7 @@ void TGeoPainter::Raytrace(Option_t *)
    for (px = pxmin; px < pxmax; px++) {
       for (py = pymin; py < pymax; py++) {
          if ((nrays % 100) == 0)
-            OpProgress("Raytracing", nrays, ntotal, timer, kFALSE);
+            checker->OpProgress("Raytracing", nrays, ntotal, timer, kFALSE);
          nrays++;
          base_color = 1;
          steptot = 0;
@@ -1930,17 +1812,8 @@ void TGeoPainter::Raytrace(Option_t *)
    }
    delete[] pxy;
    timer->Stop();
-   fChecker->OpProgress("Raytracing", nrays, ntotal, timer, kTRUE);
+   checker->OpProgress("Raytracing", nrays, ntotal, timer, kTRUE);
    delete timer;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Shoot npoints randomly in a box of 1E-5 around current point.
-/// Return minimum distance to points outside.
-
-TGeoNode *TGeoPainter::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil, const char *g3path)
-{
-   return fChecker->SamplePoints(npoints, dist, epsil, g3path);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1999,23 +1872,6 @@ void TGeoPainter::SetNsegments(Int_t nseg)
       return;
    fNsegments = nseg;
    ModifiedPad();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set number of points to be generated on the shape outline when checking for overlaps.
-
-void TGeoPainter::SetNmeshPoints(Int_t npoints)
-{
-   fChecker->SetNmeshPoints(npoints);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Select a node to be checked for overlaps. All overlaps not involving it will
-/// be ignored.
-
-void TGeoPainter::SetCheckedNode(TGeoNode *node)
-{
-   fChecker->SetSelectedNode(node);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2165,30 +2021,6 @@ Int_t TGeoPainter::ShapeDistancetoPrimitive(const TGeoShape *shape, Int_t numpoi
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check time of finding "Where am I" for n points.
-
-void TGeoPainter::Test(Int_t npoints, Option_t *option)
-{
-   fChecker->Test(npoints, option);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Geometry overlap checker based on sampling.
-
-void TGeoPainter::TestOverlaps(const char *path)
-{
-   fChecker->TestOverlaps(path);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check voxels efficiency per volume.
-
-Bool_t TGeoPainter::TestVoxels(TGeoVolume *vol)
-{
-   return fChecker->TestVoxels(vol);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Get the new 'unbombed' translation vector according current exploded view mode.
 
 void TGeoPainter::UnbombTranslation(const Double_t *tr, Double_t *bombtr)
@@ -2213,12 +2045,4 @@ void TGeoPainter::UnbombTranslation(const Double_t *tr, Double_t *bombtr)
       return;
    default: return;
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Compute weight [kg] of the current volume.
-
-Double_t TGeoPainter::Weight(Double_t precision, Option_t *option)
-{
-   return fChecker->Weight(precision, option);
 }

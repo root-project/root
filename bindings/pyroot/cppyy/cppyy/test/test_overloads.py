@@ -1,12 +1,10 @@
-import py
-from pytest import raises, skip
-from .support import setup_make, ispypy, IS_WINDOWS
+import py, pytest, os
+from pytest import raises, skip, mark
+from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("overloadsDict"))
 
-def setup_module(mod):
-    setup_make("overloads")
+currpath = os.getcwd()
+test_dct = currpath + "/liboverloadsDict"
 
 
 class TestOVERLOADS:
@@ -201,6 +199,8 @@ class TestOVERLOADS:
         with raises(ValueError):
             cpp.BoolInt4.fff(2)
 
+    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    "libc++abi: terminating due to uncaught exception")
     def test10_overload_and_exceptions(self):
         """Prioritize reporting C++ exceptions from callee"""
 
@@ -346,3 +346,7 @@ class TestOVERLOADS:
 
         assert ns.myfunc2(ns.E()) == "E"
         assert ns.myfunc2(ns.D()) == "D"
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

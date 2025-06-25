@@ -218,6 +218,20 @@ TEST_F(RNTupleProcessorTest, BaseWithBareModel)
    EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
 }
 
+TEST_F(RNTupleProcessorTest, PrintStructureSingle)
+{
+   auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+
+   std::ostringstream os;
+   proc->PrintStructure(os);
+
+   const std::string exp = "+-----------------------------+\n"
+                           "| ntuple                      |\n"
+                           "| test_ntuple_processor1.root |\n"
+                           "+-----------------------------+\n";
+   EXPECT_EQ(exp, os.str());
+}
+
 TEST_F(RNTupleProcessorTest, ChainedChain)
 {
    std::vector<std::unique_ptr<RNTupleProcessor>> innerProcs;
@@ -413,4 +427,91 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedSameName)
                                                  "is already present in the model of the primary processor; rename "
                                                  "the auxiliary processor to avoid conflicts"));
    }
+}
+
+TEST_F(RNTupleProcessorTest, PrintStructureChainedJoin)
+{
+   std::vector<std::unique_ptr<RNTupleProcessor>> innerProcs;
+   innerProcs.push_back(
+      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {}));
+   innerProcs.push_back(
+      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {}));
+
+   auto proc = RNTupleProcessor::CreateChain(std::move(innerProcs));
+
+   std::ostringstream os;
+   proc->PrintStructure(os);
+
+   const std::string exp = "+-----------------------------+ +-----------------------------+\n"
+                           "| ntuple                      | | ntuple_aux                  |\n"
+                           "| test_ntuple_processor1.root | | test_ntuple_processor2.root |\n"
+                           "+-----------------------------+ +-----------------------------+\n"
+                           "+-----------------------------+ +-----------------------------+\n"
+                           "| ntuple                      | | ntuple_aux                  |\n"
+                           "| test_ntuple_processor1.root | | test_ntuple_processor2.root |\n"
+                           "+-----------------------------+ +-----------------------------+\n";
+   EXPECT_EQ(exp, os.str());
+}
+
+TEST_F(RNTupleProcessorTest, PrintStructureJoinedChain)
+{
+   auto primaryChain =
+      RNTupleProcessor::CreateChain({{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[0], fFileNames[0]}});
+   auto auxiliaryChain =
+      RNTupleProcessor::CreateChain({{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[1], fFileNames[1]}});
+
+   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryChain), std::move(auxiliaryChain), {});
+
+   std::ostringstream os;
+   proc->PrintStructure(os);
+
+   const std::string exp = "+-----------------------------+ +-----------------------------+\n"
+                           "| ntuple                      | | ntuple_aux                  |\n"
+                           "| test_ntuple_processor1.root | | test_ntuple_processor2.root |\n"
+                           "+-----------------------------+ +-----------------------------+\n"
+                           "+-----------------------------+ +-----------------------------+\n"
+                           "| ntuple                      | | ntuple_aux                  |\n"
+                           "| test_ntuple_processor1.root | | test_ntuple_processor2.root |\n"
+                           "+-----------------------------+ +-----------------------------+\n";
+   EXPECT_EQ(exp, os.str());
+}
+
+TEST_F(RNTupleProcessorTest, PrintStructureJoinedChainAsymmetric)
+{
+   auto primaryChain =
+      RNTupleProcessor::CreateChain({{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[0], fFileNames[0]}});
+   auto auxiliaryChain = RNTupleProcessor::CreateChain({{fNTupleNames[1], fFileNames[1]}});
+
+   auto proc1 = RNTupleProcessor::CreateJoin(std::move(primaryChain), std::move(auxiliaryChain), {});
+
+   std::ostringstream os1;
+   proc1->PrintStructure(os1);
+
+   const std::string exp1 = "+-----------------------------+ +-----------------------------+\n"
+                            "| ntuple                      | | ntuple_aux                  |\n"
+                            "| test_ntuple_processor1.root | | test_ntuple_processor2.root |\n"
+                            "+-----------------------------+ +-----------------------------+\n"
+                            "+-----------------------------+\n"
+                            "| ntuple                      |\n"
+                            "| test_ntuple_processor1.root |\n"
+                            "+-----------------------------+\n";
+   EXPECT_EQ(exp1, os1.str());
+
+   primaryChain = RNTupleProcessor::CreateChain({{fNTupleNames[0], fFileNames[0]}});
+   auxiliaryChain = RNTupleProcessor::CreateChain({{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[1], fFileNames[1]}});
+
+   auto proc2 = RNTupleProcessor::CreateJoin(std::move(primaryChain), std::move(auxiliaryChain), {});
+
+   std::ostringstream os2;
+   proc2->PrintStructure(os2);
+
+   const std::string exp2 = "+-----------------------------+ +-----------------------------+\n"
+                            "| ntuple                      | | ntuple_aux                  |\n"
+                            "| test_ntuple_processor1.root | | test_ntuple_processor2.root |\n"
+                            "+-----------------------------+ +-----------------------------+\n"
+                            "                                +-----------------------------+\n"
+                            "                                | ntuple_aux                  |\n"
+                            "                                | test_ntuple_processor2.root |\n"
+                            "                                +-----------------------------+\n";
+   EXPECT_EQ(exp2, os2.str());
 }

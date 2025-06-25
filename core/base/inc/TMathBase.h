@@ -97,7 +97,8 @@ namespace TMath {
    // Binary search
    template <typename T> Long64_t BinarySearch(Long64_t n, const T  *array, T value);
    template <typename T> Long64_t BinarySearch(Long64_t n, const T **array, T value);
-   template <typename Iterator, typename Element> Iterator BinarySearch(Iterator first, Iterator last, Element value);
+   template <typename Iterator, typename Element> Iterator BinarySearch(Iterator first, Iterator last, Element value)
+       R__DEPRECATED(6,40, "Undefined behavior in case \"value\" is smaller than the first element. Use STL algorithms instead, e.g. std::lower_bound(v.rbegin(), v.rend(), value, std::greater{}).");
 
    // Sorting
    template <typename Element, typename Index>

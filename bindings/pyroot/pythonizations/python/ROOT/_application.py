@@ -13,7 +13,7 @@ import time
 
 from cppyy.gbl import gSystem, gInterpreter, gEnv
 
-from libROOTPythonizations import InitApplication, InstallGUIEventInputHook
+from ROOT.libROOTPythonizations import InitApplication, InstallGUIEventInputHook
 
 
 class PyROOTApplication(object):
@@ -35,6 +35,7 @@ class PyROOTApplication(object):
 
         from IPython import get_ipython
         from IPython.terminal import pt_inputhooks
+        from IPython.terminal.interactiveshell import TerminalInteractiveShell
 
         def inputhook(context):
             while not context.input_is_ready():
@@ -44,7 +45,10 @@ class PyROOTApplication(object):
         pt_inputhooks.register('ROOT', inputhook)
 
         ipy = get_ipython()
-        if ipy:
+
+        # Only the TerminalInteractiveShell will use the input hooks that are
+        # registered via terminal.pt_inputhooks.
+        if ipy and isinstance(ipy, TerminalInteractiveShell):
             get_ipython().run_line_magic('gui', 'ROOT')
 
     @staticmethod
@@ -75,10 +79,11 @@ class PyROOTApplication(object):
 
         # Note that we only end up in this function if gROOT.IsBatch() is false
         import __main__
-        if self._is_ipython and 'IPython' in sys.modules and sys.modules['IPython'].version_info[0] >= 5:
+
+        if self._is_ipython and "IPython" in sys.modules and sys.modules["IPython"].version_info[0] >= 5:
             # ipython and notebooks, register our event processing with their hooks
             self._ipython_config()
-        elif sys.flags.interactive == 1 or not hasattr(__main__, '__file__') or gSystem.InheritsFrom('TMacOSXSystem'):
+        elif sys.flags.interactive == 1 or not hasattr(__main__, "__file__") or gSystem.InheritsFrom("TMacOSXSystem"):
             # Python in interactive mode, use the PyOS_InputHook to call our event processing
             # - sys.flags.interactive checks for the -i flags passed to python
             # - __main__ does not have the attribute __file__ if the Python prompt is started directly
@@ -94,12 +99,13 @@ class PyROOTApplication(object):
                 while self.keep_polling:
                     gSystem.ProcessEvents()
                     time.sleep(0.01)
+
             import threading
-            self.keep_polling = True # Used to shut down the thread safely at teardown time
+
+            self.keep_polling = True  # Used to shut down the thread safely at teardown time
             update_thread = threading.Thread(None, _process_root_events, None, (self,))
-            self.process_root_events = update_thread # The thread is joined at teardown time
+            self.process_root_events = update_thread  # The thread is joined at teardown time
             update_thread.daemon = True
             update_thread.start()
 
         self._set_display_hook()
-

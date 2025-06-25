@@ -42,7 +42,7 @@ namespace Math {
 
     @ingroup GenVector
 
-    @sa Overview of the @ref GenVector "physics vector library"
+    @see GenVector
 */
 
 template <class ScalarType = double>
@@ -58,8 +58,7 @@ public :
    /**
       Default constructor  with x=y=z=m=0
    */
-   PxPyPzM4D() : fX(0.0), fY(0.0), fZ(0.0), fM(0.0) { }
-
+   constexpr PxPyPzM4D() noexcept = default;
 
    /**
       Constructor  from x, y , z , m values
@@ -78,26 +77,6 @@ public :
    explicit constexpr PxPyPzM4D(const CoordSystem & v) :
       fX( v.X() ), fY( v.Y() ), fZ( v.Z() ), fM( v.M() )
    { }
-
-   // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower
-   // so we decided to re-implement them ( there is no no need to have them with g++4)
-   /**
-      copy constructor
-    */
-   PxPyPzM4D(const PxPyPzM4D & v) :
-      fX(v.fX), fY(v.fY), fZ(v.fZ), fM(v.fM) { }
-
-   /**
-      assignment operator
-    */
-   PxPyPzM4D & operator = (const PxPyPzM4D & v) {
-      fX = v.fX;
-      fY = v.fY;
-      fZ = v.fZ;
-      fM = v.fM;
-      return *this;
-   }
-
 
    /**
       construct from any 4D  coordinate system class
@@ -372,11 +351,10 @@ private:
       (contiguous) data containing the coordinate values x,y,z,t
    */
 
-   ScalarType fX;
-   ScalarType fY;
-   ScalarType fZ;
-   ScalarType fM;
-
+   ScalarType fX = 0;
+   ScalarType fY = 0;
+   ScalarType fZ = 0;
+   ScalarType fM = 0;
 };
 
 } // end namespace Math

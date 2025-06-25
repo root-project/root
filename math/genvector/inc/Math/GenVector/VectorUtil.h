@@ -18,8 +18,7 @@
 #ifndef ROOT_Math_GenVector_VectorUtil
 #define ROOT_Math_GenVector_VectorUtil  1
 
-#include "Math/Math.h"
-
+#include "TMath.h"
 
 #include "Math/GenVector/Boost.h"
 
@@ -40,7 +39,7 @@ namespace ROOT {
 
        @ingroup GenVector
 
-       @sa Overview of the @ref GenVector "physics vector library"
+       @see GenVector
        */
 
 
@@ -60,10 +59,10 @@ namespace ROOT {
          template <class Vector1, class Vector2>
          inline typename Vector1::Scalar DeltaPhi( const Vector1 & v1, const Vector2 & v2) {
             typename Vector1::Scalar dphi = v2.Phi() - v1.Phi();
-            if ( dphi > M_PI ) {
-               dphi -= 2.0*M_PI;
-            } else if ( dphi <= -M_PI ) {
-               dphi += 2.0*M_PI;
+            if (dphi > TMath::Pi()) {
+               dphi -= 2.0 * TMath::Pi();
+            } else if (dphi <= -TMath::Pi()) {
+               dphi += 2.0 * TMath::Pi();
             }
             return dphi;
          }
@@ -283,7 +282,7 @@ namespace ROOT {
           */
          template <class Vector>
          Vector RotateX(const Vector & v, double alpha) {
-            if (std::fmod(alpha, 2 * M_PI) == 0.)
+            if (std::fmod(alpha, 2 * TMath::Pi()) == 0.)
                return v;
             using std::sin;
             double sina = sin(alpha);
@@ -304,7 +303,7 @@ namespace ROOT {
           */
          template <class Vector>
          Vector RotateY(const Vector & v, double alpha) {
-            if (std::fmod(alpha, 2 * M_PI) == 0.)
+            if (std::fmod(alpha, 2 * TMath::Pi()) == 0.)
                return v;
             using std::sin;
             double sina = sin(alpha);
@@ -325,7 +324,7 @@ namespace ROOT {
           */
          template <class Vector>
          Vector RotateZ(const Vector & v, double alpha) {
-            if (std::fmod(alpha, 2 * M_PI) == 0.)
+            if (std::fmod(alpha, 2 * TMath::Pi()) == 0.)
                return v;
             using std::sin;
             double sina = sin(alpha);
@@ -347,7 +346,7 @@ namespace ROOT {
          template <class Vector>
          Vector Rotate(const Vector &v, double alpha, const Vector &axis)
          {
-            if (std::fmod(alpha, 2 * M_PI) == 0.)
+            if (std::fmod(alpha, 2 * TMath::Pi()) == 0.)
                return v;
             const double ll = std::sqrt(axis.X() * axis.X() + axis.Y() * axis.Y() + axis.Z() * axis.Z());
             if (ll == 0.)

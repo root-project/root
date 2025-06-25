@@ -67,7 +67,7 @@ namespace TMVA {
       Int_t GetNpars() const { return fNpars; }
 
       // remove namespace in name
-      const char* GetName() const { return fClassName; }
+      const char* GetName() const override { return fClassName; }
 
       // setting up variables for JsMVA interactive training
       void SetIPythonInteractive(bool* ExitFromTraining, UInt_t *fIPyMaxIter_, UInt_t *fIPyCurrentIter_){
@@ -94,7 +94,7 @@ namespace TMVA {
       UInt_t *fIPyCurrentIter = nullptr, *fIPyMaxIter = nullptr;
       bool* fExitFromTraining = nullptr;
 
-      ClassDef(FitterBase,0); // Baseclass for fitters
+      ClassDefOverride(FitterBase,0); // Baseclass for fitters
    };
 
 } // namespace TMVA

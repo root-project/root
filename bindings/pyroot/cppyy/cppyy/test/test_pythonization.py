@@ -1,12 +1,10 @@
-import py, sys
+import py, sys, pytest, os
 from pytest import mark, raises
-from .support import setup_make, pylong
+from support import setup_make, pylong
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("pythonizablesDict"))
 
-def setup_module(mod):
-    setup_make("pythonizables")
+currpath = os.getcwd()
+test_dct = currpath + "/libpythonizablesDict"
 
 
 class TestClassPYTHONIZATION:
@@ -260,6 +258,5 @@ class TestClassPYTHONIZATION:
 
 
 ## actual test run
-if __name__ == '__main__':
-    result = run_pytest(__file__)
-    sys.exit(result)
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

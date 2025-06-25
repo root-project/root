@@ -42,11 +42,11 @@ class TFileOpenReadWrite(unittest.TestCase):
         self.assertEqual(self.xmax, xaxis.GetXmax())
 
     # Tests
-    def test_readHisto_attrsyntax(self):
+    def test_readHisto_itemsyntax(self):
         f = ROOT.TFile.Open(self.filename)
-        self.checkHisto(f.h)
-        self.checkHisto(f.dir1.h1)
-        self.checkHisto(f.dir1.dir2.h2)
+        self.checkHisto(f["h"])
+        self.checkHisto(f["dir1"]["h1"])
+        self.checkHisto(f["dir1"]["dir2"]["h2"])
 
     def test_readHisto(self):
         f = ROOT.TFile.Open(self.filename)
@@ -54,14 +54,14 @@ class TFileOpenReadWrite(unittest.TestCase):
         self.checkHisto(f.Get("dir1/h1"))
         self.checkHisto(f.Get("dir1/dir2/h2"))
 
-    def test_caching_getattr(self):
+    def test_caching_getitem(self):
         f = ROOT.TFile.Open(self.filename)
         # check that object is not cached initially
-        self.assertFalse("h" in f.__dict__)
-        f.h
+        self.assertFalse(hasattr(f, "_cached_items"))
+        f["h"]
         # check that the value in __dict__ is actually the object
         # inside the directory
-        self.assertEqual(f.__dict__['h'], f.h)
+        self.assertTrue(f._cached_items['h'] is f["h"])
 
     def test_oserror(self):
         # check that an OSError is raised when an inexistent file is opened

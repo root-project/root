@@ -1233,8 +1233,11 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
    // potentially add cors headers
    if (IsCors())
       arg->AddHeader("Access-Control-Allow-Origin", GetCors());
-   if (IsCorsCredentials())
+   if (IsCorsCredentials()) {
       arg->AddHeader("Access-Control-Allow-Credentials", GetCorsCredentials());
+      arg->AddHeader("Access-Control-Expose-Headers", "Content-Range, Content-Length, Date");
+      arg->AddHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

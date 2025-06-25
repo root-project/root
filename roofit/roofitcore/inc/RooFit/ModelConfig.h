@@ -23,8 +23,6 @@
 #include <RooGlobalFunc.h>
 #include <RooWorkspaceHandle.h>
 
-#include <TRef.h>
-
 #include <string>
 
 class RooFitResult;
@@ -32,6 +30,7 @@ class RooFitResult;
 // ModelConfig kept in the RooStats namespace for backwards compatibility.
 namespace RooStats {
 
+///< A class that holds configuration information for a model using a workspace as a store
 class ModelConfig final : public TNamed, public RooWorkspaceHandle {
 
 public:
@@ -309,7 +308,12 @@ public:
    /// alias for GetWS()
    RooWorkspace *GetWorkspace() const { return GetWS(); }
 
-   void GuessObsAndNuisance(const RooAbsData &data, bool printModelConfig = true);
+   void GuessObsAndNuisance(const RooArgSet &obsSet, bool printModelConfig = true);
+
+   inline void GuessObsAndNuisance(const RooDataSet &data, bool printModelConfig = true)
+   {
+      return GuessObsAndNuisance(*data.get(), printModelConfig);
+   }
 
    /// overload the print method
    void Print(Option_t *option = "") const override;
@@ -339,9 +343,9 @@ protected:
    /// internal function to import data in WS
    void ImportDataInWS(RooAbsData &data);
 
-   TRef fRefWS; ///< WS reference used in the file
-
-   std::string fWSName; ///< name of the WS
+   // The reference to the workspace is not persistent because it is always
+   // filled when the workspace is read (see RooWorkspace::Streamer()).
+   RooWorkspace *fRefWS = nullptr; ///<! WS reference used in the file
 
    std::string fPdfName;  ///< name of  PDF in workspace
    std::string fDataName; ///< name of data set in workspace
@@ -364,8 +368,7 @@ private:
    std::unique_ptr<RooAbsReal> createNLLImpl(RooAbsData &data, const RooLinkedList &cmdList) const;
    std::unique_ptr<RooFitResult> fitToImpl(RooAbsData &data, const RooLinkedList &cmdList) const;
 
-   ClassDefOverride(ModelConfig,
-                    6); ///< A class that holds configuration information for a model using a workspace as a store
+   ClassDefOverride(ModelConfig, 7);
 };
 
 } // end namespace RooStats

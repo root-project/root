@@ -1,7 +1,8 @@
 #include "Utils.h"
 
+#include "CppInterOp/CppInterOp.h"
+
 #include "clang/Basic/Version.h"
-#include "clang/Interpreter/CppInterOp.h"
 
 #include "gtest/gtest.h"
 
@@ -9,11 +10,12 @@ using namespace TestUtils;
 
 static bool HasCudaSDK() {
   auto supportsCudaSDK = []() {
-#if CLANG_VERSION_MAJOR < 16
+#ifdef CPPINTEROP_USE_CLING
     // FIXME: Enable this for cling.
     return false;
-#endif // CLANG_VERSION_MAJOR < 16
-    Cpp::CreateInterpreter({}, {"--cuda"});
+#endif
+    if (!Cpp::CreateInterpreter({}, {"--cuda"}))
+      return false;
     return Cpp::Declare("__global__ void test_func() {}"
                         "test_func<<<1,1>>>();") == 0;
   };
@@ -23,14 +25,15 @@ static bool HasCudaSDK() {
 
 static bool HasCudaRuntime() {
   auto supportsCuda = []() {
-#if CLANG_VERSION_MAJOR < 16
+#ifdef CPPINTEROP_USE_CLING
     // FIXME: Enable this for cling.
     return false;
-#endif //CLANG_VERSION_MAJOR < 16
+#endif
     if (!HasCudaSDK())
       return false;
 
-    Cpp::CreateInterpreter({}, {"--cuda"});
+    if (!Cpp::CreateInterpreter({}, {"--cuda"}))
+      return false;
     if (Cpp::Declare("__global__ void test_func() {}"
                      "test_func<<<1,1>>>();"))
       return false;
@@ -41,11 +44,11 @@ static bool HasCudaRuntime() {
   return hasCuda;
 }
 
-#if CLANG_VERSION_MAJOR < 16
+#ifdef CPPINTEROP_USE_CLING
 TEST(DISABLED_CUDATest, Sanity) {
 #else
 TEST(CUDATest, Sanity) {
-#endif // CLANG_VERSION_MAJOR < 16
+#endif
 #ifdef _WIN32
   GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
 #endif

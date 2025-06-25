@@ -341,14 +341,6 @@
 #   endif
 #endif
 
-#if defined(__GLIBCXX__) && !defined(__cpp_sized_deallocation)
-   // Sized global deallocation functions in libstc++ are only enabled if
-   // __cpp_sized_deallocation is defined, which Clang only does if explicitly
-   // passed -fsized-deallocation.
-#else
-#   define R__SIZEDDELETE
-#endif
-
 /* allows symbols to be hidden from the shared library export symbol table */
 /* use typically on file statics and private methods */
 #if defined(__GNUC__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3))

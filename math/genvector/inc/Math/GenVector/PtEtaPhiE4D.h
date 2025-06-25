@@ -47,7 +47,7 @@ namespace Math {
 
     @ingroup GenVector
 
-    @sa Overview of the @ref GenVector "physics vector library"
+    @see GenVector
 */
 
 template <class ScalarType>
@@ -63,13 +63,15 @@ public :
    /**
       Default constructor gives zero 4-vector
    */
-   PtEtaPhiE4D() : fPt(0), fEta(0), fPhi(0), fE(0) { }
+   constexpr PtEtaPhiE4D() noexcept = default;
 
    /**
       Constructor  from pt, eta, phi, e values
    */
-   PtEtaPhiE4D(Scalar pt, Scalar eta, Scalar phi, Scalar e) :
-      fPt(pt), fEta(eta), fPhi(phi), fE(e) { Restrict(); }
+   constexpr PtEtaPhiE4D(Scalar pt, Scalar eta, Scalar phi, Scalar e) noexcept : fPt(pt), fEta(eta), fPhi(phi), fE(e)
+   {
+      Restrict();
+   }
 
    /**
       Generic constructor from any 4D coordinate system implementing
@@ -78,27 +80,6 @@ public :
    template <class CoordSystem >
    explicit constexpr PtEtaPhiE4D(const CoordSystem & c) :
       fPt(c.Pt()), fEta(c.Eta()), fPhi(c.Phi()), fE(c.E())  { }
-
-   // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower
-   // so we decided to re-implement them ( there is no no need to have them with g++4)
-
-   /**
-      copy constructor
-    */
-   PtEtaPhiE4D(const PtEtaPhiE4D & v) :
-      fPt(v.fPt), fEta(v.fEta), fPhi(v.fPhi), fE(v.fE) { }
-
-   /**
-      assignment operator
-    */
-   PtEtaPhiE4D & operator = (const PtEtaPhiE4D & v) {
-      fPt  = v.fPt;
-      fEta = v.fEta;
-      fPhi = v.fPhi;
-      fE   = v.fE;
-      return *this;
-   }
-
 
    /**
       Set internal data based on an array of 4 Scalar numbers
@@ -358,16 +339,13 @@ public:
 
    void SetM(Scalar m);
 
-
 #endif
 
 private:
-
-   ScalarType fPt;
-   ScalarType fEta;
-   ScalarType fPhi;
-   ScalarType fE;
-
+   ScalarType fPt = 0.;
+   ScalarType fEta = 0.;
+   ScalarType fPhi = 0.;
+   ScalarType fE = 0.;
 };
 
 

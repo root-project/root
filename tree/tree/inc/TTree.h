@@ -71,10 +71,18 @@ class TVirtualIndex;
 class TBranchRef;
 class TBasket;
 class TStreamerInfo;
+class TTree;
 class TTreeCache;
 class TTreeCloner;
 class TFileMergeInfo;
 class TVirtualPerfStats;
+
+namespace ROOT::Internal::TreeUtils {
+void TBranch__SetTree(TTree *tree, TObjArray &branches);
+
+TBranch *CallBranchImpRef(TTree &tree, const char *branchname, TClass *ptrClass, EDataType datatype, void *addobj,
+                          Int_t bufsize = 32000, Int_t splitlevel = 99);
+}
 
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -160,13 +168,23 @@ private:
    mutable std::atomic<Long64_t> fIMTTotBytes;    ///<! Total bytes for the IMT flush baskets
    mutable std::atomic<Long64_t> fIMTZipBytes;    ///<! Zip bytes for the IMT flush baskets.
 
+   std::unordered_map<std::string, TBranch *>
+      fNamesToBranches; ///<! maps names to their branches, useful when retrieving branches by name
+
    void             InitializeBranchLists(bool checkLeafCount);
    void             SortBranchesByTime();
    Int_t            FlushBasketsImpl() const;
    void             MarkEventCluster();
    Long64_t         GetMedianClusterSize();
 
+   void RegisterBranchFullName(std::pair<std::string, TBranch *> &&kv) { fNamesToBranches.insert(kv); }
+   friend void ROOT::Internal::TreeUtils::TBranch__SetTree(TTree *tree, TObjArray &branches);
+
 protected:
+   friend TBranch *ROOT::Internal::TreeUtils::CallBranchImpRef(TTree &tree, const char *branchname, TClass *ptrClass,
+                                                               EDataType datatype, void *addobj, Int_t bufsize,
+                                                               Int_t splitlevel);
+
    virtual void     KeepCircular();
    virtual TBranch *BranchImp(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual TBranch *BranchImp(const char* branchname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);

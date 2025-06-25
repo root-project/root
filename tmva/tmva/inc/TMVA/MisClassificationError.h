@@ -57,10 +57,10 @@ namespace TMVA {
       virtual ~MisClassificationError() {}
 
       // Return the separation index: 1-max(p,1-p)
-      virtual Double_t  GetSeparationIndex( const Double_t s, const Double_t b );
+      Double_t  GetSeparationIndex( const Double_t s, const Double_t b ) override;
    protected:
 
-      ClassDef(MisClassificationError,0); // Implementation of the MisClassificationError as separation criterion
+      ClassDefOverride(MisClassificationError,0); // Implementation of the MisClassificationError as separation criterion
    };
 
 } // namespace TMVA

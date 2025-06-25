@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <TGeoManager.h>
+#include <TROOT.h>
 
 /**
    Test to verify that child volumes spanning over more than one component of their Boolean parent

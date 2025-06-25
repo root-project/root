@@ -59,6 +59,12 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
+unsigned int &NThreadPerTH3()
+{
+   static unsigned int nThread = 1;
+   return nThread;
+}
+
 /// Return the type_info associated to a name. If the association fails, an
 /// exception is thrown.
 /// References and pointers are not supported since those cannot be stored in
@@ -139,6 +145,23 @@ std::string TypeID2TypeName(const std::type_info &id)
    }
 
    return "";
+}
+
+char TypeID2ROOTTypeName(const std::type_info &tid)
+{
+   const static std::unordered_map<TypeInfoRef, char, TypeInfoRefHash, TypeInfoRefEqualComp> typeID2ROOTTypeNameMap{
+      {typeid(char), 'B'},      {typeid(Char_t), 'B'},   {typeid(unsigned char), 'b'},      {typeid(UChar_t), 'b'},
+      {typeid(int), 'I'},       {typeid(Int_t), 'I'},    {typeid(unsigned int), 'i'},       {typeid(UInt_t), 'i'},
+      {typeid(short), 'S'},     {typeid(Short_t), 'S'},  {typeid(unsigned short), 's'},     {typeid(UShort_t), 's'},
+      {typeid(long), 'G'},      {typeid(Long_t), 'G'},   {typeid(unsigned long), 'g'},      {typeid(ULong_t), 'g'},
+      {typeid(long long), 'L'}, {typeid(Long64_t), 'L'}, {typeid(unsigned long long), 'l'}, {typeid(ULong64_t), 'l'},
+      {typeid(float), 'F'},     {typeid(Float_t), 'F'},  {typeid(Double_t), 'D'},           {typeid(double), 'D'},
+      {typeid(bool), 'O'},      {typeid(Bool_t), 'O'}};
+
+   if (auto it = typeID2ROOTTypeNameMap.find(tid); it != typeID2ROOTTypeNameMap.end())
+      return it->second;
+
+   return ' ';
 }
 
 std::string ComposeRVecTypeName(const std::string &valueType)
@@ -593,4 +616,9 @@ ROOT::Internal::RDF::CreateColumnReader(ROOT::RDF::RDataSource &ds, unsigned int
                                         const std::type_info &tid, TTreeReader *treeReader)
 {
    return ds.CreateColumnReader(slot, col, tid, treeReader);
+}
+
+std::vector<ROOT::RDF::Experimental::RSample> ROOT::Internal::RDF::MoveOutSamples(ROOT::RDF::Experimental::RDatasetSpec &spec)
+{
+   return std::move(spec.fSamples);
 }

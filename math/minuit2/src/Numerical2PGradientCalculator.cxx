@@ -35,8 +35,7 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 {
    // calculate gradient using Initial gradient calculator and from MinimumParameters object
 
-   InitialGradientCalculator gc(fFcn, fTransformation);
-   FunctionGradient gra = gc(par);
+   FunctionGradient gra = calculateInitialGradient(par, fTransformation, fFcn.ErrorDef());
 
    return (*this)(par, gra);
 }
@@ -97,11 +96,10 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
 
    // parallelize this loop using OpenMP
 //#define N_PARALLEL_PAR 5
-#pragma omp parallel
-#pragma omp for
+#pragma omp parallel for if (fDoParallelOMP)
    //#pragma omp for schedule (static, N_PARALLEL_PAR)
 
-   for (int i = 0; i < int(n); i++) {
+   for (unsigned int i = 0; i < n; i++) {
 
 #endif
 

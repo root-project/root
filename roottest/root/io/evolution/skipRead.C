@@ -7,7 +7,7 @@
 class MyClass : public TObject {
    public:
      Int_t  x;
-     
+
      Double_t    x1;
      Double_t    x2;
      Double_t    x3;
@@ -21,13 +21,14 @@ class MyClass : public TObject {
 //     Float_t  *skip3;   // [skipsize]
      Double_t    x10;
      Int_t       x11;
-     
+
      MyClass() { /*skip3=0;*/ }
-     
-   ClassDef(MyClass,2);  
+
+   ClassDef(MyClass,2);
 };
 
-void skipRead(bool withxml = 0) {
+void skipRead(bool withxml = 0)
+{
    if (withxml) {
       TFile* f = TFile::Open("skiptestfile.xml");
       if (f==0) return;
@@ -47,7 +48,7 @@ void skipRead(bool withxml = 0) {
       cout << "x10 = " << m->x10 << endl;
       cout << "x11 = " << m->x11 << endl;
 
-      MyClass::Class()->GetStreamerInfo(1)->ls();
+      MyClass::Class()->GetStreamerInfo(1)->ls("noaddr");
 
       delete m;
       delete f;
@@ -68,10 +69,9 @@ void skipRead(bool withxml = 0) {
    cout << "x10 = " << m->x10 << endl;
    cout << "x11 = " << m->x11 << endl;
 
-   MyClass::Class()->GetStreamerInfo(1)->ls();
+   MyClass::Class()->GetStreamerInfo(1)->ls("noaddr");
 
    delete m;
    delete f;
-
 }
 

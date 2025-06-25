@@ -80,12 +80,20 @@ namespace Internal {
 } } // End ROOT::Internal
 
 namespace ROOT {
+   enum class EIMTConfig {
+      kWholeMachine = 0,     ///< Default configuration
+      kExistingTBBArena = 1, ///< Use the existing TBB arena
+      kNumConfigs = 2        ///< Number of support IMT semantic configurations
+   };
    /// \brief Enable support for multi-threading within the ROOT code
    /// in particular, enables the global mutex to make ROOT thread safe/aware.
    void EnableThreadSafety();
    /// \brief Enable ROOT's implicit multi-threading for all objects and methods that provide an internal
    /// parallelisation mechanism.
    void EnableImplicitMT(UInt_t numthreads = 0);
+   /// \brief Enable ROOT's implicit multi-threading for all objects and methods that provide an internal
+   /// parallelisation mechanism.
+   void EnableImplicitMT(ROOT::EIMTConfig config);
    void DisableImplicitMT();
    Bool_t IsImplicitMTEnabled();
    UInt_t GetThreadPoolSize();
@@ -97,7 +105,7 @@ friend class TCling;
 friend TROOT *ROOT::Internal::GetROOT2();
 
 private:
-   Int_t           fLineIsProcessing;       ///< To synchronize multi-threads
+   Int_t           fLineIsProcessing = 0;   ///< To synchronize multi-threads
 
    static Int_t    fgDirLevel;              ///< Indentation level for ls()
    static Bool_t   fgRootInit;              ///< Singleton initialization flag
@@ -108,67 +116,67 @@ private:
 protected:
    typedef std::atomic<TListOfEnums*> AListOfEnums_t;
 
-   TString         fConfigOptions;          ///< ROOT ./configure set build options
-   TString         fConfigFeatures;         ///< ROOT ./configure detected build features
-   TString         fVersion;                ///< ROOT version (from CMZ VERSQQ) ex 0.05/01
-   Int_t           fVersionInt;             ///< ROOT version in integer format (501)
-   Int_t           fVersionCode;            ///< ROOT version code as used in RVersion.h
-   Int_t           fVersionDate;            ///< Date of ROOT version (ex 951226)
-   Int_t           fVersionTime;            ///< Time of ROOT version (ex 1152)
-   Int_t           fBuiltDate;              ///< Date of ROOT built
-   Int_t           fBuiltTime;              ///< Time of ROOT built
-   TString         fGitCommit;              ///< Git commit SHA1 of built
-   TString         fGitBranch;              ///< Git branch
-   TString         fGitDate;                ///< Date and time when make was run
-   Int_t           fTimer;                  ///< Timer flag
-   std::atomic<TApplication*> fApplication; ///< Pointer to current application
-   TInterpreter    *fInterpreter;           ///< Command interpreter
-   Bool_t          fBatch;                  ///< True if session without graphics
-   TString         fWebDisplay;             ///< If not empty it defines where web graphics should be rendered (cef, qt6, browser...)
-   Bool_t          fIsWebDisplay;           ///< True if session uses web widgets
-   Bool_t          fIsWebDisplayBatch;      ///< True if web widgets are not displayed
-   Bool_t          fEditHistograms;         ///< True if histograms can be edited with the mouse
-   Bool_t          fFromPopUp;              ///< True if command executed from a popup menu
-   Bool_t          fMustClean;              ///< True if object destructor scans canvases
-   Bool_t          fForceStyle;             ///< Force setting of current style when reading objects
-   Bool_t          fInterrupt;              ///< True if macro should be interrupted
-   Bool_t          fEscape;                 ///< True if ESC has been pressed
-   Bool_t          fExecutingMacro;         ///< True while executing a TMacro
-   Int_t           fEditorMode;             ///< Current Editor mode
-   const TObject   *fPrimitive;             ///< Currently selected primitive
-   TVirtualPad     *fSelectPad;             ///< Currently selected pad
-   TCollection     *fClasses;               ///< List of classes definition
-   TCollection     *fTypes;                 ///< List of data types definition
-   TListOfFunctionTemplates *fFuncTemplate; ///< List of global function templates
-   TListOfDataMembers*fGlobals;             ///< List of global variables
-   TListOfFunctions*fGlobalFunctions;       ///< List of global functions
-   TSeqCollection  *fClosedObjects;         ///< List of closed objects from the list of files and sockets, so we can delete them if neededCl.
-   TSeqCollection  *fFiles;                 ///< List of files
-   TSeqCollection  *fMappedFiles;           ///< List of memory mapped files
-   TSeqCollection  *fSockets;               ///< List of network sockets
-   TSeqCollection  *fCanvases;              ///< List of canvases
-   TSeqCollection  *fStyles;                ///< List of styles
-   TCollection     *fFunctions;             ///< List of analytic functions
-   TSeqCollection  *fTasks;                 ///< List of tasks
-   TSeqCollection  *fColors;                ///< List of colors
-   TSeqCollection  *fGeometries;            ///< List of geometries
-   TSeqCollection  *fBrowsers;              ///< List of browsers
-   TSeqCollection  *fSpecials;              ///< List of special objects
-   TSeqCollection  *fCleanups;              ///< List of recursiveRemove collections
-   TSeqCollection  *fMessageHandlers;       ///< List of message handlers
-   TSeqCollection  *fStreamerInfo;          ///< List of active StreamerInfo classes
-   TCollection     *fClassGenerators;       ///< List of user defined class generators;
-   TSeqCollection  *fSecContexts;           ///< List of security contexts (TSecContext)
-   TSeqCollection  *fProofs;                ///< List of proof sessions
-   TSeqCollection  *fClipboard;             ///< List of clipboard objects
-   TSeqCollection  *fDataSets;              ///< List of data sets (TDSet or TChain)
-   AListOfEnums_t   fEnums;                 ///< List of enum types
-   TProcessUUID    *fUUIDs;                 ///< Pointer to TProcessID managing TUUIDs
-   TFolder         *fRootFolder;            ///< top level folder //root
-   TList           *fBrowsables;            ///< List of browsables
-   TPluginManager  *fPluginManager;         ///< Keeps track of plugin library handlers
-   TString         fCutClassName;           ///< Name of default CutG class in graphics editor
-   TString         fDefCanvasName;          ///< Name of default canvas
+   TString         fConfigOptions;                    ///< ROOT ./configure set build options
+   TString         fConfigFeatures;                   ///< ROOT ./configure detected build features
+   TString         fVersion;                          ///< ROOT version as TString, example: 0.05.01
+   Int_t           fVersionInt = 0;                   ///< ROOT version in integer format (501)
+   Int_t           fVersionCode = 0;                  ///< ROOT version code as used in RVersion.h
+   Int_t           fVersionDate = 0;                  ///< Date of ROOT version (ex 951226)
+   Int_t           fVersionTime = 0;                  ///< Time of ROOT version (ex 1152)
+   Int_t           fBuiltDate = 0;                    ///< Date of ROOT built
+   Int_t           fBuiltTime = 0;                    ///< Time of ROOT built
+   TString         fGitCommit;                        ///< Git commit SHA1 of built
+   TString         fGitBranch;                        ///< Git branch
+   TString         fGitDate;                          ///< Date and time when make was run
+   Int_t           fTimer = 0;                        ///< Timer flag
+   std::atomic<TApplication*> fApplication = nullptr; ///< Pointer to current application
+   TInterpreter    *fInterpreter = nullptr;           ///< Command interpreter
+   Bool_t          fBatch = true;                     ///< True if session without graphics
+   TString         fWebDisplay;                       ///< If not empty it defines where web graphics should be rendered (cef, qt6, browser...)
+   Bool_t          fIsWebDisplay = false;             ///< True if session uses web widgets
+   Bool_t          fIsWebDisplayBatch = false;        ///< True if web widgets are not displayed
+   Bool_t          fEditHistograms = true;            ///< True if histograms can be edited with the mouse
+   Bool_t          fFromPopUp = true;                 ///< True if command executed from a popup menu
+   Bool_t          fMustClean = true;                 ///< True if object destructor scans canvases
+   Bool_t          fForceStyle = false;               ///< Force setting of current style when reading objects
+   Bool_t          fInterrupt = false;                ///< True if macro should be interrupted
+   Bool_t          fEscape = false;                   ///< True if ESC has been pressed
+   Bool_t          fExecutingMacro = false;           ///< True while executing a TMacro
+   Int_t           fEditorMode = 0;                   ///< Current Editor mode
+   const TObject   *fPrimitive = nullptr;             ///< Currently selected primitive
+   TVirtualPad     *fSelectPad = nullptr;             ///< Currently selected pad
+   TCollection     *fClasses = nullptr;               ///< List of classes definition
+   TCollection     *fTypes = nullptr;                 ///< List of data types definition
+   TListOfFunctionTemplates *fFuncTemplate = nullptr; ///< List of global function templates
+   TListOfDataMembers*fGlobals = nullptr;             ///< List of global variables
+   TListOfFunctions*fGlobalFunctions = nullptr;       ///< List of global functions
+   TSeqCollection  *fClosedObjects = nullptr;         ///< List of closed objects from the list of files and sockets, so we can delete them if neededCl.
+   TSeqCollection  *fFiles = nullptr;                 ///< List of files
+   TSeqCollection  *fMappedFiles = nullptr;           ///< List of memory mapped files
+   TSeqCollection  *fSockets = nullptr;               ///< List of network sockets
+   TSeqCollection  *fCanvases = nullptr;              ///< List of canvases
+   TSeqCollection  *fStyles = nullptr;                ///< List of styles
+   TCollection     *fFunctions = nullptr;             ///< List of analytic functions
+   TSeqCollection  *fTasks = nullptr;                 ///< List of tasks
+   TSeqCollection  *fColors = nullptr;                ///< List of colors
+   TSeqCollection  *fGeometries = nullptr;            ///< List of geometries
+   TSeqCollection  *fBrowsers = nullptr;              ///< List of browsers
+   TSeqCollection  *fSpecials = nullptr;              ///< List of special objects
+   TSeqCollection  *fCleanups = nullptr;              ///< List of recursiveRemove collections
+   TSeqCollection  *fMessageHandlers = nullptr;       ///< List of message handlers
+   TSeqCollection  *fStreamerInfo = nullptr;          ///< List of active StreamerInfo classes
+   TCollection     *fClassGenerators = nullptr;       ///< List of user defined class generators;
+   TSeqCollection  *fSecContexts = nullptr;           ///< List of security contexts (TSecContext)
+   TSeqCollection  *fProofs = nullptr;                ///< List of proof sessions
+   TSeqCollection  *fClipboard = nullptr;             ///< List of clipboard objects
+   TSeqCollection  *fDataSets = nullptr;              ///< List of data sets (TDSet or TChain)
+   AListOfEnums_t   fEnums = nullptr;                 ///< List of enum types
+   TProcessUUID    *fUUIDs = nullptr;                 ///< Pointer to TProcessID managing TUUIDs
+   TFolder         *fRootFolder = nullptr;            ///< top level folder //root
+   TList           *fBrowsables = nullptr;            ///< List of browsables
+   TPluginManager  *fPluginManager = nullptr;         ///< Keeps track of plugin library handlers
+   TString         fCutClassName;                     ///< Name of default CutG class in graphics editor
+   TString         fDefCanvasName;                    ///< Name of default canvas
 
                   TROOT();                  ///< Only used by Dictionary
    void           InitSystem();             ///< Operating System interface

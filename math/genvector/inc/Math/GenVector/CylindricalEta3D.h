@@ -24,7 +24,7 @@
 
 #include "Math/GenVector/etaMax.h"
 
-
+#include "TMath.h"
 #include <limits>
 #include <cmath>
 
@@ -41,7 +41,7 @@ namespace Math {
 
       @ingroup GenVector
 
-      @sa Overview of the @ref GenVector "physics vector library"
+      @see GenVector
   */
 
 template <class T>
@@ -55,13 +55,15 @@ public :
   /**
      Default constructor with rho=eta=phi=0
    */
-  CylindricalEta3D() : fRho(0), fEta(0), fPhi(0) {  }
+  constexpr CylindricalEta3D() noexcept = default;
 
   /**
      Construct from rho eta and phi values
    */
-  CylindricalEta3D(Scalar rho, Scalar eta, Scalar phi) :
-             fRho(rho), fEta(eta), fPhi(phi) { Restrict(); }
+  constexpr CylindricalEta3D(Scalar rho, Scalar eta, Scalar phi) noexcept : fRho(rho), fEta(eta), fPhi(phi)
+  {
+     Restrict();
+  }
 
   /**
      Construct from any Vector or coordinate system implementing
@@ -80,25 +82,6 @@ public :
         fRho *= v.Z() / Z();
     }
   }
-
-   // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower
-   // re-implement them ( there is no no need to have them with g++4)
-
-   /**
-      copy constructor
-   */
-   CylindricalEta3D(const CylindricalEta3D & v) :
-      fRho(v.Rho() ),  fEta(v.Eta() ),  fPhi(v.Phi() )  {   }
-
-   /**
-      assignment operator
-   */
-   CylindricalEta3D & operator= (const CylindricalEta3D & v) {
-      fRho = v.Rho();
-      fEta = v.Eta();
-      fPhi = v.Phi();
-      return *this;
-   }
 
    /**
       Set internal data based on an array of 3 Scalar numbers
@@ -125,7 +108,7 @@ public :
    {rho=fRho; eta=fEta; phi=fPhi;}
 
 private:
-   inline static Scalar pi() { return M_PI; }
+   inline static Scalar pi() { return TMath::Pi(); }
    inline void Restrict() {
       using std::floor;
       if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
@@ -271,12 +254,10 @@ public:
 
 #endif
 
-
-private:
-   T fRho;
-   T fEta;
-   T fPhi;
-
+  private:
+     T fRho = 0;
+     T fEta = 0;
+     T fPhi = 0;
 };
 
   } // end namespace Math

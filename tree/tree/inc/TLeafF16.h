@@ -51,7 +51,7 @@ public:
    void            ReadValue(std::istream &s, Char_t delim = ' ') override;
    void            SetAddress(void *add = nullptr) override;
 
-   ClassDefOverride(TLeafF16, 1); // A TLeaf for a 24 bit truncated floating point data type.
+   ClassDefOverride(TLeafF16, 2); // A TLeaf for a 24 bit truncated floating point data type.
 };
 
 // if leaf is a simple type, i must be set to 0

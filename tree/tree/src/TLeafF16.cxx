@@ -48,10 +48,12 @@ TLeafF16::TLeafF16(TBranch *parent, const char *name, const char *type) : TLeaf(
    fValue = nullptr;
    fPointer = nullptr;
    fElement = nullptr;
-   fTitle = type;
 
-   if (strchr(type, '['))
-      fElement = new TStreamerElement(Form("%s_Element", name), type, 0, 0, "Float16_t");
+   auto bracket = strchr(type, '[');
+   if (bracket) {
+      fTitle.Append('/').Append(type);
+      fElement = new TStreamerElement(Form("%s_Element", name), bracket, 0, 0, "Float16_t");
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -105,7 +107,8 @@ void TLeafF16::Import(TClonesArray *list, Int_t n)
       if (clone)
          memcpy(&fValue[j], clone + fOffset, 4 * fLen);
       else
-         memcpy(&fValue[j], &kFloatUndefined, 4 * fLen);
+         for (Int_t k = 0; k < fLen; ++k)
+            fValue[j + k] = kFloatUndefined;
       j += fLen;
    }
 }
@@ -216,10 +219,19 @@ void TLeafF16::SetAddress(void *add)
 void TLeafF16::Streamer(TBuffer &R__b)
 {
    if (R__b.IsReading()) {
-      R__b.ReadClassBuffer(TLeafF16::Class(), this);
-
-      if (fTitle.Contains("["))
-	 fElement = new TStreamerElement(Form("%s_Element", fName.Data()), fTitle.Data(), 0, 0, "Float16_t");
+      delete fElement;
+      fElement = nullptr;
+      UInt_t R__s, R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      R__b.ReadClassBuffer(TLeafF16::Class(), this, R__v, R__s, R__c);
+      if (R__v < 2 && fTitle.BeginsWith("f[")) {
+         fTitle.Prepend('/');
+      }
+      if (fTitle.Contains("/f[")) {
+         auto slash = fTitle.First("/");
+         TString bracket = fTitle(slash + 2, fTitle.Length() - slash - 2);
+         fElement = new TStreamerElement(Form("%s_Element", fName.Data()), bracket.Data(), 0, 0, "Float16_t");
+      }
    } else {
       R__b.WriteClassBuffer(TLeafF16::Class(), this);
    }

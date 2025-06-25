@@ -218,6 +218,7 @@ macro(ROOTTEST_COMPILE_MACRO filename)
         -e "gROOT->SetMacroPath(\"${CMAKE_CURRENT_SOURCE_DIR}\")"
         -e "gInterpreter->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
         -e "gSystem->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
+        -e "gSystem->SetBuildDir(\"${CMAKE_CURRENT_BINARY_DIR}\", true)"
         ${RootMacroDirDefines})
 
   set(root_compile_macro ${ROOT_root_CMD} ${RootMacroBuildDefines} -q -l -b)
@@ -263,9 +264,6 @@ macro(ROOTTEST_COMPILE_MACRO filename)
     set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY FAIL_REGULAR_EXPRESSION "Warning in")
   endif()
   set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
-  if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
-    set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY RUN_SERIAL true)
-  endif()
   if (ARG_FIXTURES_SETUP)
     set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY
       FIXTURES_SETUP ${ARG_FIXTURES_SETUP})
@@ -278,15 +276,6 @@ macro(ROOTTEST_COMPILE_MACRO filename)
   if (ARG_FIXTURES_REQUIRED)
     set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY
       FIXTURES_REQUIRED ${ARG_FIXTURES_REQUIRED})
-  endif()
-
-  if(MSVC)
-    string(REPLACE "." "_" dll_name ${filename})
-    add_custom_command(TARGET ${compile_target} POST_BUILD
-       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${dll_name}.dll
-                                        ${CMAKE_CURRENT_BINARY_DIR}/
-       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${dll_name}_ACLiC_dict_rdict.pcm
-                                        ${CMAKE_CURRENT_BINARY_DIR}/)
   endif()
 
 endmacro(ROOTTEST_COMPILE_MACRO)
@@ -307,7 +296,7 @@ endmacro(ROOTTEST_COMPILE_MACRO)
 #
 #-------------------------------------------------------------------------------
 macro(ROOTTEST_GENERATE_DICTIONARY dictname)
-  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP;NO_CXXMODULE" "FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" "LINKDEF;DEPENDS;OPTIONS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP;NO_CXXMODULE" "FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" "LINKDEF;SOURCES;DEPENDS;OPTIONS;COMPILE_OPTIONS" ${ARGN})
 
   set(CMAKE_ROOTTEST_DICT ON)
 
@@ -344,32 +333,40 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   set(targetname_libgen ${dictname}libgen)
 
   add_library(${targetname_libgen} EXCLUDE_FROM_ALL SHARED ${dictname}.cxx)
-  set_target_properties(${targetname_libgen} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
+
+  if(ARG_SOURCES)
+    target_sources(${targetname_libgen} PUBLIC ${ARG_SOURCES})
+  endif()
+
+  if(ARG_COMPILE_OPTIONS)
+    target_compile_options(${targetname_libgen} PRIVATE ${ARG_COMPILE_OPTIONS})
+  endif()
+
+  set_target_properties(${targetname_libgen} PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
   if(MSVC)
     set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   endif()
+
   target_link_libraries(${targetname_libgen} ${ROOT_LIBRARIES})
 
   set_target_properties(${targetname_libgen} PROPERTIES PREFIX "")
 
-  set_property(TARGET ${targetname_libgen}
-               PROPERTY OUTPUT_NAME ${dictname})
+  set_target_properties(${targetname_libgen} PROPERTIES OUTPUT_NAME ${dictname})
 
-  set_property(TARGET ${targetname_libgen}
-               APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR})
+  set_property(TARGET ${targetname_libgen} APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR})
 
   add_dependencies(${targetname_libgen} ${dictname})
 
+  # We use the /fast variant of targetname_libgen, so we won't automatically
+  # build dependencies. Still, the dictname target is a clear dependency (see
+  # line above), so we have to explicilty build it too.
   add_test(NAME ${GENERATE_DICTIONARY_TEST}
            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
                                     ${build_config}
-                                    --target  ${targetname_libgen}${fast}
+                                    --target ${dictname}${fast} ${targetname_libgen}${fast}
                                     -- ${always-make})
 
   set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
-  if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
-    set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY RUN_SERIAL true)
-  endif()
 
   if (ARG_FIXTURES_SETUP)
     set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY
@@ -388,11 +385,12 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
 
   if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
     add_custom_command(TARGET ${targetname_libgen} POST_BUILD
-       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/${dictname}_rdict.pcm
-                                        ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${dictname}_rdict.pcm)
-    add_custom_command(TARGET ${targetname_libgen} POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/${dictname}_rdict.pcm
+                                       ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${dictname}_rdict.pcm
       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${dictname}.dll
-                                       ${CMAKE_CURRENT_BINARY_DIR}/${dictname}.dll)
+                                       ${CMAKE_CURRENT_BINARY_DIR}/${dictname}.dll
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${dictname}.lib
+                                       ${CMAKE_CURRENT_BINARY_DIR}/${dictname}.lib)
   endif()
 
 endmacro(ROOTTEST_GENERATE_DICTIONARY)
@@ -414,7 +412,7 @@ endmacro(ROOTTEST_GENERATE_DICTIONARY)
 #
 #-------------------------------------------------------------------------------
 macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP" "SELECTION;LIBNAME;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" "LIBRARIES;OPTIONS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "NO_ROOTMAP" "SELECTION;LIBNAME;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" "LIBRARIES;OPTIONS;COMPILE_OPTIONS" ${ARGN})
 
   set(CMAKE_ROOTTEST_DICT ON)
 
@@ -457,6 +455,10 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
                  PROPERTY OUTPUT_NAME ${dictionary}_dictrflx)
   endif()
 
+  if(ARG_COMPILE_OPTIONS)
+    target_compile_options(${targetname_libgen} PRIVATE ${ARG_COMPILE_OPTIONS})
+  endif()
+
   add_dependencies(${targetname_libgen}
                    ${targetname_dictgen})
 
@@ -469,16 +471,16 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
 
   set(GENERATE_REFLEX_TEST ${targetname_libgen}-build)
 
+  # We use the /fast variant of targetname_libgen, so we won't automatically
+  # build dependencies. Still, the targetname_dictgen is a clear dependency
+  # (see line above), so we have to explicilty build it too.
   add_test(NAME ${GENERATE_REFLEX_TEST}
            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
                                     ${build_config}
-                                    --target ${targetname_libgen}${fast}
+                                    --target ${targetname_dictgen}${fast} ${targetname_libgen}${fast}
                                     -- ${always-make})
 
   set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
-  if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
-    set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY RUN_SERIAL true)
-  endif()
 
   if (ARG_FIXTURES_SETUP)
     set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY
@@ -598,10 +600,6 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
       RESOURCE_LOCK ${ARG_RESOURCE_LOCK})
   endif()
 
-  if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
-    set_property(TEST ${GENERATE_EXECUTABLE_TEST} PROPERTY RUN_SERIAL true)
-  endif()
-
   if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
     add_custom_command(TARGET ${executable} POST_BUILD
        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${executable}.exe
@@ -662,7 +660,7 @@ macro(ROOTTEST_SETUP_MACROTEST)
                -e "gROOT->SetMacroPath(\"${CMAKE_CURRENT_SOURCE_DIR}\")"
                -e "gInterpreter->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
                -e "gSystem->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
-               ${RootExternalIncludes} ${RootExeOptions}
+               ${ARG_ROOTEXE_OPTS}
                -q -l -b)
 
   set(root_buildcmd ${ROOT_root_CMD} ${RootExeDefines} -q -l -b)
@@ -768,7 +766,7 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 function(ROOTTEST_ADD_TEST testname)
   CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;RUN_SERIAL"
                             "OUTREF;ERRREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR;INPUT;ENABLE_IF;DISABLE_IF;TIMEOUT;RESOURCE_LOCK"
-                            "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS;ENVIRONMENT;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED;PROPERTIES"
+                            "TESTOWNER;COPY_TO_BUILDDIR;MACRO;ROOTEXE_OPTS;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS;ENVIRONMENT;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED;PROPERTIES;PYTHON_DEPS"
                             ${ARGN})
 
   # Test name
@@ -874,6 +872,11 @@ function(ROOTTEST_ADD_TEST testname)
   # Mark the test as known to fail.
   if(ARG_WILLFAIL)
     set(willfail WILLFAIL)
+  endif()
+
+  # List of python packages required to run this test.
+  if(ARG_PYTHON_DEPS)
+    set(pythondeps ${ARG_PYTHON_DEPS})
   endif()
 
   # Add ownership and test labels.
@@ -1040,7 +1043,7 @@ function(ROOTTEST_ADD_TEST testname)
   if (ARG_PROPERTIES)
     set(properties ${ARG_PROPERTIES})
   endif()
-  
+
   ROOT_ADD_TEST(${fulltestname} COMMAND ${command}
                         OUTPUT ${logfile}
                         ${infile}
@@ -1066,6 +1069,7 @@ function(ROOTTEST_ADD_TEST testname)
                         ${failregex}
                         ${passregex}
                         ${copy_to_builddir}
+                        PYTHON_DEPS ${pythondeps}
                         DEPENDS ${deplist}
                         FIXTURES_SETUP ${fixtures_setup}
                         FIXTURES_CLEANUP ${fixtures_cleanup}
@@ -1159,7 +1163,7 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
     endif()
   else()
     if(TARGET ROOT::ROOTStaticSanitizerConfig)
-      target_link_libraries(${binary} ROOT::ROOTStaticSanitizerConfig)
+      target_link_libraries(${binary} PRIVATE ROOT::ROOTStaticSanitizerConfig)
     endif()
   endif()
 

@@ -37,7 +37,7 @@ namespace Math {
 
     @ingroup GenVector
 
-    @sa Overview of the @ref GenVector "physics vector library"
+    @see GenVector
 */
 
 template <class ScalarType = double>
@@ -53,15 +53,12 @@ public :
    /**
       Default constructor  with x=y=z=t=0
    */
-   PxPyPzE4D() : fX(0.0), fY(0.0), fZ(0.0), fT(0.0) { }
-
+   constexpr PxPyPzE4D() noexcept = default;
 
    /**
       Constructor  from x, y , z , t values
    */
-   PxPyPzE4D(Scalar px, Scalar py, Scalar pz, Scalar e) :
-      fX(px), fY(py), fZ(pz), fT(e) { }
-
+   constexpr PxPyPzE4D(Scalar px, Scalar py, Scalar pz, Scalar e) noexcept : fX(px), fY(py), fZ(pz), fT(e) {}
 
    /**
       construct from any vector or  coordinate system class
@@ -70,25 +67,6 @@ public :
    template <class CoordSystem>
    explicit constexpr PxPyPzE4D(const CoordSystem & v) :
       fX( v.x() ), fY( v.y() ), fZ( v.z() ), fT( v.t() )  { }
-
-   // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower
-   // so we decided to re-implement them ( there is no no need to have them with g++4)
-   /**
-      copy constructor
-    */
-   PxPyPzE4D(const PxPyPzE4D & v) :
-      fX(v.fX), fY(v.fY), fZ(v.fZ), fT(v.fT) { }
-
-   /**
-      assignment operator
-    */
-   PxPyPzE4D & operator = (const PxPyPzE4D & v) {
-      fX = v.fX;
-      fY = v.fY;
-      fZ = v.fZ;
-      fT = v.fT;
-      return *this;
-   }
 
    /**
       Set internal data based on an array of 4 Scalar numbers
@@ -344,11 +322,10 @@ private:
       (contiguous) data containing the coordinate values x,y,z,t
    */
 
-   ScalarType fX;
-   ScalarType fY;
-   ScalarType fZ;
-   ScalarType fT;
-
+   ScalarType fX = 0;
+   ScalarType fY = 0;
+   ScalarType fZ = 0;
+   ScalarType fT = 0;
 };
 
 } // end namespace Math

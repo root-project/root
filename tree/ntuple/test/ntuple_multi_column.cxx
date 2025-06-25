@@ -366,7 +366,7 @@ TEST(RNTuple, MultiColumnRepresentationBulk)
    }
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-   RFieldBase::RBulk bulk = reader->GetModel().CreateBulk("px");
+   RFieldBase::RBulkValues bulk = reader->GetModel().CreateBulk("px");
 
    auto mask = std::make_unique<bool[]>(1);
    mask[0] = true;

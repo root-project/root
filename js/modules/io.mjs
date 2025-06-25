@@ -168,7 +168,7 @@ CustomStreamers = {
       buf.classStreamer(obj, clTPad);
       obj.fDISPLAY = buf.readTString();
       obj.fDoubleBuffer = buf.ntoi4();
-      obj.fRetained = (buf.ntou1() !== 0);
+      obj.fRetained = buf.ntobool();
       obj.fXsizeUser = buf.ntoi4();
       obj.fYsizeUser = buf.ntoi4();
       obj.fXsizeReal = buf.ntoi4();
@@ -183,7 +183,7 @@ CustomStreamers = {
       buf.ntou1(); // ignore b << TestBit(kMoveOpaque);
       buf.ntou1(); // ignore b << TestBit(kResizeOpaque);
       obj.fHighLightColor = buf.ntoi2();
-      obj.fBatch = (buf.ntou1() !== 0);
+      obj.fBatch = buf.ntobool();
       buf.ntou1();   // ignore b << TestBit(kShowEventStatus);
       buf.ntou1();   // ignore b << TestBit(kAutoExec);
       buf.ntou1();   // ignore b << TestBit(kMenuBar);
@@ -266,8 +266,10 @@ CustomStreamers = {
             if (!Number.isInteger(nbits) || (nbits < 2) || (nbits > 32)) nbits = 32;
 
             const parse_range = val => {
-               if (!val) return 0;
-               if (val.indexOf('pi') < 0) return parseFloat(val);
+               if (!val)
+                  return 0;
+               if (val.indexOf('pi') < 0)
+                  return parseFloat(val);
                val = val.trim();
                let sign = 1;
                if (val[0] === '-') { sign = -1; val = val.slice(1); }
@@ -432,7 +434,7 @@ CustomStreamers = {
    TAttImage: [
       { name: 'fImageQuality', func(buf, obj) { obj.fImageQuality = buf.ntoi4(); } },
       { name: 'fImageCompression', func(buf, obj) { obj.fImageCompression = buf.ntou4(); } },
-      { name: 'fConstRatio', func(buf, obj) { obj.fConstRatio = (buf.ntou1() !== 0); } },
+      { name: 'fConstRatio', func(buf, obj) { obj.fConstRatio = buf.ntobool(); } },
       { name: 'fPalette', func(buf, obj) { obj.fPalette = buf.classStreamer({}, clTImagePalette); } }
    ],
 
@@ -442,7 +444,7 @@ CustomStreamers = {
 
       buf.classStreamer(obj, clTNamed);
 
-      if (buf.ntou1() !== 0) {
+      if (buf.ntobool()) {
          const size = buf.ntoi4();
          obj.fPngBuf = buf.readFastArray(size, kUChar);
       } else {
@@ -621,8 +623,10 @@ function getTypeId(typname, norecursion) {
   * @private */
 function getArrayKind(type_name) {
    if ((type_name === clTString) || (type_name === 'string') ||
-      (CustomStreamers[type_name] === clTString)) return 0;
-   if ((type_name.length < 7) || (type_name.indexOf('TArray') !== 0)) return -1;
+      (CustomStreamers[type_name] === clTString))
+      return 0;
+   if ((type_name.length < 7) || type_name.indexOf('TArray'))
+      return -1;
    if (type_name.length === 7) {
       switch (type_name[6]) {
          case 'I': return kInt;
@@ -928,7 +932,7 @@ function createMemberStreamer(element, file) {
       case kULong:
          member.func = function(buf, obj) { obj[this.name] = buf.ntou8(); }; break;
       case kBool:
-         member.func = function(buf, obj) { obj[this.name] = buf.ntou1() !== 0; }; break;
+         member.func = function(buf, obj) { obj[this.name] = buf.ntobool(); }; break;
       case kOffsetL + kBool:
       case kOffsetL + kInt:
       case kOffsetL + kCounter:
@@ -1004,7 +1008,7 @@ function createMemberStreamer(element, file) {
       case kFloat16:
       case kOffsetL + kFloat16:
       case kOffsetP + kFloat16:
-         if (element.fFactor !== 0) {
+         if (element.fFactor) {
             member.factor = 1 / element.fFactor;
             member.min = element.fXmin;
             member.read = function(buf) { return buf.ntou4() * this.factor + this.min; };
@@ -1299,7 +1303,7 @@ function createMemberStreamer(element, file) {
                member.read_version = function(buf, cnt) {
                   if (cnt === 0) return null;
                   const ver = buf.readVersion();
-                  this.member_wise = ((ver.val & kStreamedMemberWise) !== 0);
+                  this.member_wise = Boolean(ver.val & kStreamedMemberWise);
 
                   this.stl_version = undefined;
                   if (this.member_wise) {
@@ -1508,13 +1512,13 @@ function ZIP_inflate(arr, tgt) {
 
       // Find minimum and maximum length, bound *m by those
       for (j = 1; j <= BMAX; ++j)
-         if (c[j] !== 0) break;
+         if (c[j]) break;
 
       k = j;         // minimum code length
       if (mm < j)
          mm = j;
-      for (i = BMAX; i !== 0; --i)
-         if (c[i] !== 0) break;
+      for (i = BMAX; i; --i)
+         if (c[i]) break;
 
       const g = i;         // maximum code length
       if (mm > i)
@@ -1547,7 +1551,7 @@ function ZIP_inflate(arr, tgt) {
       p = b; pidx = 0;
       i = 0;
       do {
-         if ((j = p[pidx++]) !== 0)
+         if ((j = p[pidx++]))
             v[x[j]++] = i;
       } while (++i < n);
       n = x[g];         // set n to length of v
@@ -1637,7 +1641,7 @@ function ZIP_inflate(arr, tgt) {
             }
 
             // backwards increment the k-bit code i
-            for (j = 1 << (k - 1); (i & j) !== 0; j >>= 1)
+            for (j = 1 << (k - 1); (i & j); j >>= 1)
                i ^= j;
             i ^= j;
 
@@ -1651,7 +1655,7 @@ function ZIP_inflate(arr, tgt) {
       res.m = lx[1];
 
       /* Return true (1) if we were given an incomplete table */
-      res.status = ((y !== 0 && g !== 1) ? 1 : 0);
+      res.status = (y && g !== 1) ? 1 : 0;
 
       return res;
    }
@@ -1784,7 +1788,7 @@ function ZIP_inflate(arr, tgt) {
          zip_fixed_bl = 7;
 
          let h = zip_HuftBuild(l, 288, 257, zip_cplens, zip_cplext, zip_fixed_bl);
-         if (h.status !== 0)
+         if (h.status)
             throw new Error('HufBuild error: ' + h.status);
          zip_fixed_tl = h.root;
          zip_fixed_bl = h.m;
@@ -1842,7 +1846,7 @@ function ZIP_inflate(arr, tgt) {
       // build decoding table for trees--single level, 7 bit lookup
       zip_bl = 7;
       h = zip_HuftBuild(ll, 19, 19, null, null, zip_bl);
-      if (h.status !== 0)
+      if (h.status)
          return -1;  // incomplete code set
 
       zip_tl = h.root;
@@ -1893,7 +1897,7 @@ function ZIP_inflate(arr, tgt) {
       h = zip_HuftBuild(ll, nl, 257, zip_cplens, zip_cplext, zip_bl);
       if (zip_bl === 0)  // no literals or lengths
          h.status = 1;
-      if (h.status !== 0)
+      if (h.status)
          return -1;     // incomplete code set
       zip_tl = h.root;
       zip_bl = h.m;
@@ -1906,7 +1910,7 @@ function ZIP_inflate(arr, tgt) {
       zip_bd = h.m;
 
       // incomplete distance tree
-      if ((zip_bd === 0 && nl > 257) || (h.status !== 0))   // lengths but no distances
+      if ((zip_bd === 0 && nl > 257) || h.status)   // lengths but no distances
          return -1;
 
       // decompress until an end-of-block code
@@ -1922,7 +1926,7 @@ function ZIP_inflate(arr, tgt) {
             return n;
 
          if (zip_copy_leng > 0) {
-            if (zip_method !== 0 /* zip_STORED_BLOCK */) {
+            if (zip_method /* zip_STORED_BLOCK */) {
                // STATIC_TREES or DYN_TREES
                while (zip_copy_leng > 0 && n < size) {
                   --zip_copy_leng;
@@ -1952,7 +1956,7 @@ function ZIP_inflate(arr, tgt) {
 
             // read in last block bit
             zip_NEEDBITS(1);
-            if (zip_GETBITS(1) !== 0)
+            if (zip_GETBITS(1))
                zip_eof = true;
             zip_DUMPBITS(1);
 
@@ -2266,7 +2270,7 @@ class TBuffer {
       // large strings
       if (len === 255)
          len = this.ntou4();
-      if (len === 0)
+      if (!len)
          return '';
 
       const pos = this.o;
@@ -2279,7 +2283,7 @@ class TBuffer {
       * @desc stops when 0 is found */
     readNullTerminatedString() {
       let res = '', code;
-      while ((code = this.ntou1()) !== 0)
+      while ((code = this.ntou1()))
          res += String.fromCharCode(code);
       return res;
    }
@@ -2300,6 +2304,9 @@ class TBuffer {
 
    /** @summary read uint8_t */
    ntou1() { return this.arr.getUint8(this.o++); }
+
+   /** @summary read boolean */
+   ntobool() { return Boolean(this.arr.getUint8(this.o++)); }
 
    /** @summary read uint16_t */
    ntou2() {
@@ -3072,7 +3079,7 @@ class TFile {
                return send_new_request(true);
             }
 
-            if ((file.fMaxRanges === 1) || (first !== 0))
+            if ((file.fMaxRanges === 1) || !first)
                return rejectFunc(Error('Server returns normal response when multipart was requested, disable multirange support'));
 
             file.fMaxRanges = 1;
@@ -3119,7 +3126,8 @@ class TFile {
                         console.error(`Fail to decode content-range ${line} ${parts}`);
                   }
 
-                  if ((nline > 1) && (line.length === 0)) finish_header = true;
+                  if ((nline > 1) && !line)
+                     finish_header = true;
 
                   nline++; line = '';
                   if (code1 !== 10) {
@@ -3941,9 +3949,9 @@ function openFile(arg, opts) {
    let file, plain_file;
 
    if (isNodeJs() && isStr(arg)) {
-      if (arg.indexOf('file://') === 0)
+      if (!arg.indexOf('file://'))
          file = new TNodejsFile(arg.slice(7));
-      else if (arg.indexOf('http') !== 0)
+      else if (arg.indexOf('http'))
          file = new TNodejsFile(arg);
    }
 

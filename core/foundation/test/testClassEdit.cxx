@@ -1,5 +1,6 @@
 #include "TClassEdit.h"
 #include "TInterpreter.h"
+#include "TStreamerInfo.h"
 
 #include "gtest/gtest.h"
 
@@ -271,6 +272,9 @@ TEST(TClassEdit, ResolveTypedef)
    gInterpreter->Declare("typedef const int cmytype_t;");
    EXPECT_STREQ("const int", TClassEdit::ResolveTypedef("mytype_t").c_str());
    EXPECT_STREQ("const int", TClassEdit::ResolveTypedef("cmytype_t").c_str());
+   // #18833
+   const char* type_18833 = "pair<TAttMarker*,TGraph*(  *  )(const std::string&,const std::string&,TH1F*) >";
+   EXPECT_STREQ(type_18833, TClassEdit::ResolveTypedef(type_18833).c_str());
 }
 
 // ROOT-11000
@@ -306,6 +310,7 @@ TEST(TClassEdit, GetNormalizedName)
 
    n.clear();
    EXPECT_THROW(TClassEdit::GetNormalizedName(n, "_Atomic(map<string, TObjArray* >*"), std::runtime_error);
+
 }
 
 // https://github.com/root-project/root/issues/18654
@@ -332,4 +337,19 @@ TEST(TClassEdit, UnorderedMapNameNormalization)
 
    TClassEdit::GetNormalizedName(out, in_cxx11);
    EXPECT_STREQ(target, out.c_str());
+}
+
+TEST(TClassEdit, SplitType)
+{
+   // https://github.com/root-project/root/issues/16119
+   TClassEdit::TSplitType t1("std::conditional<(1 < 32), int, float>");
+   EXPECT_STREQ("std::conditional", t1.fElements[0].c_str());
+   EXPECT_STREQ("(1<32)", t1.fElements[1].c_str());
+   EXPECT_STREQ("int", t1.fElements[2].c_str());
+   EXPECT_STREQ("float", t1.fElements[3].c_str());
+
+   gInterpreter->ProcessLine(".L file_16199.C+");
+   auto c = TClass::GetClass("o2::dataformats::AbstractRef<25,5,2>");
+   auto si = (TStreamerInfo*) c->GetStreamerInfo();
+   si->ls("noaddr");
 }

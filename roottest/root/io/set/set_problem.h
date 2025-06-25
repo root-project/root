@@ -28,7 +28,7 @@ public:
    SetProblem() {}
    SetProblem(const char * name) : TNamed(name, "") {}
 
-   ClassDef(SetProblem,1) // Abstract base column of TFTable
+   ClassDefOverride(SetProblem,1) // Abstract base column of TFTable
 
 };
 

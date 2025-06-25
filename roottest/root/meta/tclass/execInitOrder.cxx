@@ -4,10 +4,13 @@
 #include "TSystem.h"
 #include "TInterpreter.h"
 
+#ifndef DEFINED_DERIVE
+#define DEFINED_DERIVE
 class Derived : public TObject {
    int fValue;
-   ClassDef(Derived, 1);
+   ClassDefOverride(Derived, 1);
 };
+#endif
 
 int i = Derived::Class()->GetClassVersion();
 
@@ -26,6 +29,10 @@ int execInitOrder()
    if (!cl) {
       std::cerr << "Could not find the TClass for Derived\n";
       return 2;
+   }
+   if (!cl->GetClassInfo()) {
+      std::cerr << "No ClassInfo found by TClass for Derived\n";
+      return 3;
    }
 
    auto inh = cl->InheritsFrom(TObject::Class());

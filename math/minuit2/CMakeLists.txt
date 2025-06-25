@@ -73,16 +73,15 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       Minuit2/MnMinos.h
       Minuit2/MnParabola.h
       Minuit2/MnParabolaFactory.h
-      Minuit2/MnParabolaPoint.h
       Minuit2/MnParameterScan.h
       Minuit2/MnPlot.h
+      Minuit2/MnPoint.h
       Minuit2/MnPosDef.h
       Minuit2/MnPrint.h
       Minuit2/MnScan.h
       Minuit2/MnSeedGenerator.h
       Minuit2/MnSimplex.h
       Minuit2/MnStrategy.h
-      Minuit2/MnTiny.h
       Minuit2/MnTraceObject.h
       Minuit2/MnUserCovariance.h
       Minuit2/MnUserFcn.h
@@ -120,6 +119,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       src/FumiliMinimizer.cxx
       src/FumiliStandardChi2FCN.cxx
       src/FumiliStandardMaximumLikelihoodFCN.cxx
+      src/GradientCalculator.cxx
       src/HessianGradientCalculator.cxx
       src/InitialGradientCalculator.cxx
       src/MPIProcess.cxx
@@ -147,7 +147,6 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       src/MnScan.cxx
       src/MnSeedGenerator.cxx
       src/MnStrategy.cxx
-      src/MnTiny.cxx
       src/MnTraceObject.cxx
       src/MnUserParameterState.cxx
       src/MnUserParameters.cxx

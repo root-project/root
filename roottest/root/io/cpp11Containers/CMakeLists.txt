@@ -1,5 +1,3 @@
-ROOTTEST_ADD_TESTDIRS()
-
 if(NOT 32BIT AND NOT MSVC)
    ROOTTEST_GENERATE_REFLEX_DICTIONARY(forwardList forwardList.h  SELECTION forwardList_selection.xml)
 

@@ -145,3 +145,13 @@ const std::string RMetaData::GetS(const std::string &key, const std::string &def
 } // namespace Experimental
 } // namespace RDF
 } // namespace ROOT
+
+void ROOT::Internal::RDF::ImportJSON(ROOT::RDF::Experimental::RMetaData &metadata, const std::string &jsonString)
+{
+   metadata.fJson->payload = nlohmann::json::parse(jsonString);
+}
+
+std::string ROOT::Internal::RDF::ExportJSON(ROOT::RDF::Experimental::RMetaData &metadata)
+{
+   return metadata.fJson->payload.dump();
+}

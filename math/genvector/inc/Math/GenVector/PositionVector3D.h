@@ -48,7 +48,7 @@ namespace ROOT {
 
      @ingroup GenVector
 
-     @sa Overview of the @ref GenVector "physics vector library"
+     @see GenVector
     */
 
     template <class CoordSystem, class Tag = DefaultCoordinateSystemTag >
@@ -66,15 +66,14 @@ namespace ROOT {
          Default constructor. Construct an empty object with zero values
       */
 
-      constexpr PositionVector3D() : fCoordinates() { }
+      constexpr PositionVector3D() noexcept = default;
 
       /**
          Construct from three values of type <em>Scalar</em>.
          In the case of a XYZPoint the values are x,y,z
          In the case of  a polar vector they are r,theta,phi
       */
-      constexpr PositionVector3D(const Scalar & a, const Scalar & b, const Scalar & c) :
-        fCoordinates ( a , b,  c)  { }
+      constexpr PositionVector3D(const Scalar &a, const Scalar &b, const Scalar &c) noexcept : fCoordinates(a, b, c) {}
 
      /**
           Construct from a position vector expressed in different

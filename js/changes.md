@@ -2,13 +2,27 @@
 
 ## Changes in dev
 1. Use ES6 modules to implement geoworker, enable node.js usage
-1. Upgrade three.js r174 -> r176
-1. Add missing colors 100 - 127
 1. Let use hex colors in histogram draw options like "fill_00ff00" or "line_77aa1166"
+1. Let configure exact axis ticks position via draw option like "xticks:[-3,-1,1,3]"
+1. Support gStyle.fBarOffset for `TGraph` bar drawing
+1. Support "fill_<id>" and "line_<id>" draw options for `TGraph`
+1. Support dark mode when store images
+1. With 'Shift' key pressed whole graph is moved by dragging action
+1. Upgrade three.js r174 -> r176
+1. Upgrade lil-gui.mjs 0.19.2 -> 0.20.0
+1. Remove experimental RHist classes, deprecated in ROOT
+1. Internal - ws members are private, new methods has to be used
+1. Fix - ticks size and labels with kMoreLogLabels axis bit
+
+
+## Changes in 7.9.1
 1. Fix - colz handling on `THStack`, avoid multiple palette drawings
-1. Fix - bug in pad.Divide context menu command
-1. Fix - palette not adjusted when 'same' draw option used for histogram
-1. Fix - drag and drop of histograms on empty sub-pads
+2. Fix - bug in pad.Divide context menu command
+3. Fix - drag and drop of histograms on empty sub-pads
+4. Fix - add missing colors 100 - 127
+5. Fix - correct online context menu for histogram title
+6. Fix - copy all X axis attributes in multi-graph painter
+7. Fix - if histogram WebGL drawing fails, fallback to default 2D
 
 
 ## Changes in 7.9.0

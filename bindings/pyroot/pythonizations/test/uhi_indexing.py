@@ -4,12 +4,7 @@ Tests to verify that TH1 and derived histograms conform to the UHI Indexing inte
 
 import pytest
 import ROOT
-from ROOT._pythonization._uhi import (
-    _get_axis,
-    _get_processed_slices,
-    _get_slice_indices,
-    _shape,
-)
+from ROOT._pythonization._uhi import _get_axis, _get_processed_slices, _overflow, _shape, _underflow
 from ROOT.uhi import loc, overflow, rebin, sum, underflow
 
 
@@ -32,6 +27,14 @@ def _iterate_bins(hist):
                 yield tuple(filter(None, (i, j, k)))
 
 
+def _get_slice_indices(slices):
+    import numpy as np
+
+    ranges = [range(start, stop) for start, stop in slices]
+    grids = np.meshgrid(*ranges, indexing="ij")
+    return np.array(grids).reshape(len(slices), -1).T
+
+
 class TestTH1Indexing:
     def test_access_with_bin_number(self, hist_setup):
         for index in [0, 8]:
@@ -52,7 +55,7 @@ class TestTH1Indexing:
 
     def test_access_with_len(self, hist_setup):
         len_indices = (len,) * hist_setup.GetDimension()
-        bin_counts = (_get_axis(hist_setup, i).GetNbins() for i in range(hist_setup.GetDimension()))
+        bin_counts = (_get_axis(hist_setup, i).GetNbins() + 1 for i in range(hist_setup.GetDimension()))
         assert hist_setup[len_indices] == hist_setup.GetBinContent(*bin_counts)
 
     def test_access_with_ellipsis(self, hist_setup):
@@ -104,23 +107,48 @@ class TestTH1Indexing:
         if _special_setting(hist_setup):
             pytest.skip("Setting cannot be tested here")
 
+        hist_setup.Reset()
         hist_setup[...] = 3
         for bin_indices in _iterate_bins(hist_setup):
             assert hist_setup.GetBinContent(*bin_indices) == 3
 
+        # Check that flow bins are not set
+        for flow_type in [underflow, overflow]:
+            flow_indices = (flow_type,) * hist_setup.GetDimension()
+            assert hist_setup[flow_indices] == 0, (
+                f"{hist_setup.values()}, {hist_setup[underflow]}, {hist_setup[overflow]}"
+            )
+
     def _test_slices_match(self, hist_setup, slice_ranges, processed_slices):
         dim = hist_setup.GetDimension()
-        slices, _, _ = _get_processed_slices(hist_setup, processed_slices[dim])
+        slices, _ = _get_processed_slices(hist_setup, processed_slices[dim])
         expected_indices = _get_slice_indices(slices)
         sliced_hist = hist_setup[tuple(slice_ranges[dim])]
 
         for bin_indices in expected_indices:
             bin_indices = tuple(map(int, bin_indices))
-            assert sliced_hist.GetBinContent(*bin_indices) == hist_setup.GetBinContent(*bin_indices)
+            shifted_indices = []
+            is_flow_bin = False
+            for i, idx in enumerate(bin_indices):
+                shift = slice_ranges[dim][i].start
+                if callable(shift):
+                    shift = shift(hist_setup, i)
+                elif shift is None:
+                    shift = 1
+                else:
+                    shift += 1
 
-        for bin_indices in _iterate_bins(hist_setup):
-            if list(bin_indices) not in expected_indices.tolist():
-                assert sliced_hist.GetBinContent(*bin_indices) == 0
+                shifted_idx = idx - shift + 1
+                if shifted_idx <= 0 or shifted_idx == _overflow(hist_setup, i):
+                    is_flow_bin = True
+                    break
+
+                shifted_indices.append(shifted_idx)
+
+            if is_flow_bin:
+                continue
+
+            assert sliced_hist.GetBinContent(*tuple(shifted_indices)) == hist_setup.GetBinContent(*bin_indices)
 
     def test_slicing_with_endpoints(self, hist_setup):
         if _special_setting(hist_setup):
@@ -144,13 +172,13 @@ class TestTH1Indexing:
 
         processed_slices = {
             1: [slice(0, 8)],
-            2: [slice(0, 8), slice(4, 11)],
-            3: [slice(0, 8), slice(4, 11), slice(3, 6)],
+            2: [slice(0, 8), slice(0, 8)],
+            3: [slice(0, 8), slice(0, 8), slice(3, 6)],
         }
         slice_ranges = {
             1: [slice(None, 7)],
-            2: [slice(None, 7), slice(3, None)],
-            3: [slice(None, 7), slice(3, None), slice(2, 5)],
+            2: [slice(None, 7), slice(None, 7)],
+            3: [slice(None, 7), slice(None, 7), slice(2, 5)],
         }
         self._test_slices_match(hist_setup, slice_ranges, processed_slices)
 
@@ -160,17 +188,17 @@ class TestTH1Indexing:
 
         processed_slices = {
             1: [slice(hist_setup.FindBin(2), 11)],
-            2: [slice(hist_setup.FindBin(2), 11), slice(hist_setup.FindBin(3), 11)],
+            2: [slice(hist_setup.FindBin(2) - 1, 11), slice(2, 11)],
             3: [
                 slice(hist_setup.FindBin(2), 11),
-                slice(hist_setup.FindBin(3), 11),
-                slice(hist_setup.FindBin(1.5), 11),
+                slice(2, 11),
+                slice(2, 11),
             ],
         }
         slice_ranges = {
             1: [slice(loc(2), None)],
-            2: [slice(loc(2), None), slice(loc(3), None)],
-            3: [slice(loc(2), None), slice(loc(3), None), slice(loc(1.5), None)],
+            2: [slice(loc(2), None), slice(3, None)],
+            3: [slice(loc(2), None), slice(3, None), slice(3, None)],
         }
         self._test_slices_match(hist_setup, slice_ranges, processed_slices)
 
@@ -191,7 +219,10 @@ class TestTH1Indexing:
         dim = hist_setup.GetDimension()
 
         if dim == 1:
-            integral = hist_setup[::sum]
+            full_integral = hist_setup[::sum]
+            assert full_integral == hist_setup.Integral(_underflow(hist_setup, 0), _overflow(hist_setup, 0))
+
+            integral = hist_setup[0:len:sum]
             assert integral == hist_setup.Integral()
 
         if dim == 2:
@@ -225,7 +256,7 @@ class TestTH1Indexing:
         if dim == 1:
             sliced_hist_rebin = hist_setup[5 : 9 : rebin(2)]
             assert isinstance(sliced_hist_rebin, ROOT.TH1)
-            assert sliced_hist_rebin.GetNbinsX() == hist_setup.GetNbinsX() // 2
+            assert sliced_hist_rebin.GetNbinsX() == 2
 
             sliced_hist_sum = hist_setup[5:9:sum]
             assert isinstance(sliced_hist_sum, float)
@@ -237,10 +268,10 @@ class TestTH1Indexing:
             assert sliced_hist.GetNbinsX() == hist_setup.GetNbinsX() // 2
 
         if dim == 3:
-            sliced_hist = hist_setup[:: rebin(2), ::sum, 5 : 9 : rebin(3)]
+            sliced_hist = hist_setup[:: rebin(2), ::sum, 3 : 9 : rebin(3)]
             assert isinstance(sliced_hist, ROOT.TH2)
             assert sliced_hist.GetNbinsX() == hist_setup.GetNbinsX() // 2
-            assert sliced_hist.GetNbinsY() == hist_setup.GetNbinsZ() // 3
+            assert sliced_hist.GetNbinsY() == 2
 
     def test_slicing_with_dict_syntax(self, hist_setup):
         if _special_setting(hist_setup):
@@ -262,19 +293,27 @@ class TestTH1Indexing:
         assert hist_setup.Integral() == pytest.approx(sliced_hist.Integral(), rel=10e-6)
 
     def test_statistics_slice(self, hist_setup):
-        if _special_setting(hist_setup):
+        if _special_setting(hist_setup) or isinstance(hist_setup, (ROOT.TH1C, ROOT.TH2C, ROOT.TH3C)):
             pytest.skip("Setting cannot be tested here")
+
+        # Check if slicing over everything preserves the statistics
+        sliced_hist_full = hist_setup[...]
+
+        assert hist_setup.GetEffectiveEntries() == sliced_hist_full.GetEffectiveEntries()
+        assert sliced_hist_full.GetEntries() == sliced_hist_full.GetEffectiveEntries()
+        assert hist_setup.Integral() == sliced_hist_full.Integral()
 
         # Check if slicing over a range updates the statistics
         dim = hist_setup.GetDimension()
-        [_get_axis(hist_setup, i).SetRange(3, 5) for i in range(dim)]
+        [_get_axis(hist_setup, i).SetRange(3, 7) for i in range(dim)]
         slice_indices = tuple(slice(2, 7) for _ in range(dim))
         sliced_hist = hist_setup[slice_indices]
 
-        assert hist_setup.Integral() == pytest.approx(sliced_hist.Integral(), rel=1e-6)
-        assert hist_setup.GetMean() == pytest.approx(sliced_hist.GetMean(), abs=1e-3)
-        assert hist_setup.GetStdDev() == pytest.approx(sliced_hist.GetStdDev(), abs=1e-3)
+        assert hist_setup.Integral() == sliced_hist.Integral()
         assert hist_setup.GetEffectiveEntries() == sliced_hist.GetEffectiveEntries()
+        assert sliced_hist.GetEntries() == sliced_hist.GetEffectiveEntries()
+        assert hist_setup.GetStdDev() == pytest.approx(sliced_hist.GetStdDev(), rel=10e-5)
+        assert hist_setup.GetMean() == pytest.approx(sliced_hist.GetMean(), rel=10e-5)
 
 
 if __name__ == "__main__":

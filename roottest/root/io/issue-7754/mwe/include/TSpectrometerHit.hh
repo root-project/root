@@ -16,7 +16,7 @@ class TSpectrometerHit : public TDetectorVHit, public SpectrometerChannelID {
 
         TSpectrometerHit();
         virtual ~TSpectrometerHit(){};
-        void Clear(Option_t* = "");
+        void Clear(Option_t* = "") override;
         Int_t EncodeChannelID();
         void DecodeChannelID();
 
@@ -40,6 +40,6 @@ class TSpectrometerHit : public TDetectorVHit, public SpectrometerChannelID {
 
         Double_t   fWireDistance;
 
-        ClassDef(TSpectrometerHit,1);
+        ClassDefOverride(TSpectrometerHit,1);
 };
 #endif

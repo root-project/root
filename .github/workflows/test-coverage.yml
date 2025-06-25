@@ -7,12 +7,12 @@ on:
 
   # https://github.com/root-project/root/pull/12112#issuecomment-1411004278
   # DISABLED: takes 4 hours! Might clang-coverage be a solution?
-  #pull_request:
-  #  branches:
-  #    - 'master'
-  #  paths-ignore:
-  #    - 'doc/**'
-  #    - 'documentation/**'
+  pull_request:
+    branches:
+      - '**'
+    paths-ignore:
+      - 'doc/**'
+      - 'documentation/**'
 
   workflow_call:
     inputs:
@@ -23,6 +23,9 @@ on:
       base_ref:
         type: string
         required: true
+        default: master
+      ref_name:
+        type: string
         default: master
 
   # Enables manual start of workflow
@@ -38,6 +41,26 @@ on:
         type: string
         required: true
         default: master
+      incremental:
+        description: 'Do incremental build'
+        type: boolean
+        required: true
+        default: true
+      binaries:
+        description: Create binary packages and upload them as artifacts
+        type: boolean
+        required: true
+        default: false
+      buildtype:
+        description: The CMAKE_BUILD_TYPE to use
+        type: choice
+        options:
+        - Debug
+        - RelWithDebInfo
+        - Release
+        - MinSizeRel
+        default: Debug
+        required: true
 
 env:
   PYTHONUNBUFFERED: true
@@ -45,7 +68,10 @@ env:
 jobs:
 
   build-linux:
-    if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
+    if: |
+        ( !(contains(github.event.pull_request.title, '[skip-ci]') || contains(github.event.pull_request.title, '[skip ci]')) )
+        && ( ( github.repository_owner == 'root-project' && github.event_name != 'pull_request' )
+             || ( github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'test coverage') ) )
 
     permissions:
       contents: read
@@ -58,27 +84,54 @@ jobs:
 
     name: Build and test to determine coverage
 
+    env:
+      PYTHONUNBUFFERED: true
+      OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
+      OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+      OS_AUTH_TYPE: 'v3applicationcredential'
+      OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+      OS_IDENTITY_API_VERSION: 3
+      OS_INTERFACE: 'public'
+      OS_REGION_NAME: 'cern'
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
+
     container:
-      image: registry.cern.ch/root-ci/fedora38:buildready
+      image: registry.cern.ch/root-ci/alma9:buildready
       options: '--security-opt label=disable --rm'
-      env:
-        OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
-        PYTHONUNBUFFERED: true
 
     steps:
+      - name: Set up Python Virtual Env
+        # if the `if` expr is false, `if` still has exit code 0.
+        # if the `if` block is entered, the block's exit code becomes the exit
+        # code of the `if`.
+        run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
+
+      # This should be part of the container image
       - name: Install cov packages
         run: |
-          sudo dnf -y update
-          sudo dnf -y install lcov
+          dnf -y update
+          dnf -y install lcov
           pip3 install gcovr
 
+      # This checks out the merge commit if this is a PR
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref_name }}
 
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJSON(github) }}
-        run: echo "$GITHUB_CONTEXT"
+          JOB_CONTEXT: ${{ toJSON(job) }}
+          ENV_CONTEXT: ${{ toJSON(env) }}
+        run: |
+          echo "$GITHUB_CONTEXT"
+          echo "--------------------------"
+          echo "$JOB_CONTEXT"
+          echo "--------------------------"
+          echo "$ENV_CONTEXT"
 
       - name: Print debug info
         run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
@@ -87,8 +140,8 @@ jobs:
 
       - name: Apply option override from matrix for this job
         env:
-          OVERRIDE: "coverage=On"
-          FILE: .github/workflows/root-ci-config/buildconfig/fedora38.txt
+          OVERRIDE: "coverage=ON"
+          FILE: .github/workflows/root-ci-config/buildconfig/alma9.txt
         shell: bash
         run: |
           set -x
@@ -103,23 +156,28 @@ jobs:
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      Debug
-                    --platform       fedora38
-                    --incremental    false
+                    --platform       alma9
+                    --incremental    $INCREMENTAL
                     --coverage       true
                     --base_ref       ${{ github.base_ref }}
+                    --sha            ${{ github.sha }}
                     --head_ref       refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
+                    --head_sha       ${{ github.event.pull_request.head.sha }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
       - name: Workflow dispatch
         if:   github.event_name == 'workflow_dispatch'
         run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype      Debug
-                    --platform       fedora38
-                    --incremental    false
+                    --binaries       ${{ inputs.binaries }}
+                    --buildtype      ${{ inputs.buildtype }}
+                    --platform       alma9
+                    --incremental    ${{ inputs.incremental }}
                     --coverage       true
                     --base_ref       ${{ inputs.base_ref }}
+                    --sha            ${{ github.sha }}
                     --head_ref       ${{ inputs.head_ref }}
+                    --head_sha       ${{ inputs.head_ref }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
@@ -127,16 +185,17 @@ jobs:
         if:   github.event_name == 'schedule'
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      Debug
-                    --platform       fedora38
+                    --platform       alma9
                     --incremental    false
                     --coverage       true
                     --base_ref       ${{ github.ref_name }}
+                    --sha            ${{ github.sha }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
       - name: Upload coverage to Codecov
         if: ${{ !cancelled() }}
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           env_vars: OS,PYTHON
           fail_ci_if_error: true

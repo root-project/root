@@ -3,6 +3,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 #pragma link C++ class Roo2DKeysPdf+ ;
+#pragma link C++ class RooMultiPdf + ;
 #pragma link C++ class RooArgusBG+ ;
 #pragma link C++ class RooBCPEffDecay+ ;
 #pragma link C++ class RooBCPGenDecay+ ;
@@ -22,6 +23,7 @@
 #pragma link C++ class RooExponential+ ;
 #pragma link C++ class RooLegacyExpPoly+ ;
 #pragma link C++ class RooPowerSum+ ;
+#pragma link C++ class RooGaussExpTails+ ;
 #pragma link C++ class RooGaussian+ ;
 #pragma link C++ class RooLognormal+ ;
 #pragma link C++ class RooGamma+ ;

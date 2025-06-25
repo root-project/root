@@ -69,6 +69,14 @@ using namespace ROOT::TypeTraits;
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::RDF;
 
+/// Obtain or set the number of threads that will share a clone of a thread-safe 3D histogram.
+/// Setting it to N will make N threads share a clone, setting it to 0 or 1 will use one clone
+/// per thread.
+/// Setting it to higher numbers reduces the RDF memory consumption, but might create contention
+/// on TH3Ds. When the RDF computation graph consists mostly of filling TH3Ds, lower values are better.
+/// \return A reference to the current divider.
+unsigned int &NThreadPerTH3();
+
 /// Check for container traits.
 ///
 /// Note that for all uses in RDF we don't want to classify std::string as a container.
@@ -136,6 +144,7 @@ std::string
 ColumnName2ColumnTypeName(const std::string &colName, TTree *, RDataSource *, RDefineBase *, bool vector2RVec = true);
 
 char TypeName2ROOTTypeName(const std::string &b);
+char TypeID2ROOTTypeName(const std::type_info &tid);
 
 unsigned int GetNSlots();
 
@@ -207,22 +216,12 @@ bool IsInternalColumn(std::string_view colName);
 /// Get optimal column width for printing a table given the names and the desired minimal space between columns
 unsigned int GetColumnWidth(const std::vector<std::string>& names, const unsigned int minColumnSpace = 8u);
 
-// We could just check `#ifdef __cpp_lib_hardware_interference_size`, but at least on Mac 11
-// libc++ defines that macro but is missing the actual feature, so we use an ad-hoc ROOT macro instead.
-// See the relevant entry in cmake/modules/RootConfiguration.cmake for more info.
-#ifdef R__HAS_HARDWARE_INTERFERENCE_SIZE
-   // C++17 feature (so we can use inline variables)
-   inline constexpr std::size_t kCacheLineSize = std::hardware_destructive_interference_size;
-#else
-   // safe bet: assume the typical 64 bytes
-   static constexpr std::size_t kCacheLineSize = 64;
-#endif
-
 /// Stepping through CacheLineStep<T> values in a vector<T> brings you to a new cache line.
 /// Useful to avoid false sharing.
 template <typename T>
 constexpr std::size_t CacheLineStep() {
-   return (kCacheLineSize + sizeof(T) - 1) / sizeof(T);
+   constexpr std::size_t cacheLineSize = R__HARDWARE_INTERFERENCE_SIZE;
+   return (cacheLineSize + sizeof(T) - 1) / sizeof(T);
 }
 
 void CheckReaderTypeMatches(const std::type_info &colType, const std::type_info &requestedType,

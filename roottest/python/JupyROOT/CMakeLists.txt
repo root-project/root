@@ -23,7 +23,8 @@ foreach(pyfile ${pyfiles})
   get_filename_component(SHORTPYFILE ${pyfile} NAME_WE)
   if (NOT ${SHORTPYFILE} STREQUAL "__init__")
     ROOTTEST_ADD_TEST(${SHORTPYFILE}_doctest
-                      COMMAND ${Python3_EXECUTABLE} ${DOCTEST_LAUNCHER} ${pyfile})
+                      COMMAND ${Python3_EXECUTABLE} ${DOCTEST_LAUNCHER} ${pyfile}
+                      PYTHON_DEPS IPython)
   endif()
 endforeach()
 
@@ -33,7 +34,8 @@ foreach(NOTEBOOK ${NOTEBOOKS})
   ROOTTEST_ADD_TEST(${NOTEBOOKBASE}_notebook
                     COPY_TO_BUILDDIR ${NOTEBOOK}
                     COMMAND ${Python3_EXECUTABLE} ${NBDIFFUTIL} ${NOTEBOOK}
-                    RUN_SERIAL)
+                    RUN_SERIAL
+                    PYTHON_DEPS jupyter)
 endforeach()
 
 if(ROOT_imt_FOUND)
@@ -43,7 +45,8 @@ if(ROOT_imt_FOUND)
   ROOTTEST_ADD_TEST(${NOTEBOOKBASE}_notebook
                     COPY_TO_BUILDDIR ${IMT_NB}
                     COMMAND ${Python3_EXECUTABLE} ${NBDIFFUTIL} ${IMT_NB} "OFF"
-                    RUN_SERIAL)
+                    RUN_SERIAL
+                    PYTHON_DEPS jupyter)
 endif()
 
 endif()

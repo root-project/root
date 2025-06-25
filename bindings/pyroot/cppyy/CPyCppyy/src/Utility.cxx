@@ -519,6 +519,7 @@ static bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
     }
 
     if (arg && PyCallable_Check(arg)) {
+    // annotated/typed Python function
         PyObject* annot = PyObject_GetAttr(arg, PyStrings::gAnnotations);
         if (annot) {
             if (PyDict_Check(annot) && 1 < PyDict_Size(annot)) {
@@ -540,6 +541,7 @@ static bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
                     tpn << ')';
                     tmpl_name.append(tpn.str());
 
+                    Py_DECREF(annot);
                     return true;
 
                 } else
@@ -549,6 +551,40 @@ static bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
         } else
             PyErr_Clear();
 
+    // ctypes function pointer
+        PyObject* argtypes = PyObject_GetAttrString(arg, "argtypes");
+        PyObject* ret = PyObject_GetAttrString(arg, "restype");
+        if (argtypes && ret) {
+            std::ostringstream tpn;
+            PyObject* pytc = PyObject_GetAttr(ret, PyStrings::gCTypesType);
+            tpn << CT2CppNameS(pytc, false)
+                << " (*)(";
+            Py_DECREF(pytc);
+
+            for (Py_ssize_t i = 0; i < PySequence_Length(argtypes); ++i) {
+                if (i) tpn << ", ";
+                PyObject* item = PySequence_GetItem(argtypes, i);
+                pytc = PyObject_GetAttr(item, PyStrings::gCTypesType);
+                tpn << CT2CppNameS(pytc, false);
+                Py_DECREF(pytc);
+                Py_DECREF(item);
+            }
+
+            tpn << ')';
+            tmpl_name.append(tpn.str());
+
+            Py_DECREF(ret);
+            Py_DECREF(argtypes);
+
+            return true;
+
+        } else {
+            PyErr_Clear();
+            Py_XDECREF(ret);
+            Py_XDECREF(argtypes);
+        }
+
+    // callable C++ type (e.g. std::function)
         PyObject* tpName = PyObject_GetAttr(arg, PyStrings::gCppName);
         if (tpName) {
             const char* cname = CPyCppyy_PyText_AsString(tpName);
@@ -623,6 +659,37 @@ std::string CPyCppyy::Utility::ConstructTemplateArgs(
     tmpl_name.push_back('>');
 
     return tmpl_name;
+}
+
+//----------------------------------------------------------------------------
+std::string CPyCppyy::Utility::CT2CppNameS(PyObject* pytc, bool allow_voidp)
+{
+// helper to convert ctypes' `_type_` info to the equivalent C++ name
+    const char* name = "";
+    if (CPyCppyy_PyText_Check(pytc)) {
+        char tc = ((char*)CPyCppyy_PyText_AsString(pytc))[0];
+        switch (tc) {
+            case '?': name = "bool";               break;
+            case 'c': name = "char";               break;
+            case 'b': name = "char";               break;
+            case 'B': name = "unsigned char";      break;
+            case 'h': name = "short";              break;
+            case 'H': name = "unsigned short";     break;
+            case 'i': name = "int";                break;
+            case 'I': name = "unsigned int";       break;
+            case 'l': name = "long";               break;
+            case 'L': name = "unsigned long";      break;
+            case 'q': name = "long long";          break;
+            case 'Q': name = "unsigned long long"; break;
+            case 'f': name = "float";              break;
+            case 'd': name = "double";             break;
+            case 'g': name = "long double";        break;
+            case 'z': name = "const char*";        break;
+            default:  name = (allow_voidp ? "void*" : nullptr); break;
+        }
+    }
+
+    return name;
 }
 
 //----------------------------------------------------------------------------

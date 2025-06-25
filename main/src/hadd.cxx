@@ -817,6 +817,8 @@ int main(int argc, char **argv)
       }
       merger.SetNotrees(args.fNoTrees);
       merger.SetMergeOptions(TString(merger.GetMergeOptions()) + " " + cacheSize);
+      merger.SetErrorBehavior(args.fSkipErrors ? TFileMerger::EErrorBehavior::kSkipOnError
+                                               : TFileMerger::EErrorBehavior::kFailOnError);
       merger.SetIOFeatures(features);
       Int_t fileMergerFlags = TFileMerger::kAll;
       Int_t extraFlags = ParseFilterFile(args.fObjectFilterFile, args.fObjectFilterType, merger);

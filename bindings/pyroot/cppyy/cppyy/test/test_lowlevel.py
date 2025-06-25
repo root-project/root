@@ -1,12 +1,10 @@
-import py, sys
+import py, sys, pytest, os
 from pytest import mark, raises, skip
-from .support import setup_make, pylong, pyunicode, IS_WINDOWS, ispypy
+from support import setup_make, pylong, pyunicode, IS_WINDOWS, ispypy
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("datatypesDict"))
 
-def setup_module(mod):
-    setup_make("datatypes")
+currpath = os.getcwd()
+test_dct = currpath + "/libdatatypesDict"
 
 
 class TestLOWLEVEL:
@@ -754,3 +752,7 @@ class TestMULTIDIMARRAYS:
         for i, v in enumerate(("s1", "s23", "s456")):
             assert len(ns.str_array[i]) == 7
             assert ns.str_array[i].as_string() == v
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

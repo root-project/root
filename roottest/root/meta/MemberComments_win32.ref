@@ -233,6 +233,8 @@ OBJ: TList	TList	Doubly linked list : 0
       Option_t* TArrow::GetOption() const
  OBJ: TMethod	GetOption	 : 0
       Option_t* TObject::GetOption() const
+ OBJ: TMethod	GetSlope	 : 0
+      Double_t TLine::GetSlope() const
  OBJ: TMethod	GetTitle	 : 0
       const char* TObject::GetTitle() const
  OBJ: TMethod	GetUniqueID	 : 0
@@ -245,6 +247,8 @@ OBJ: TList	TList	Doubly linked list : 0
       Double_t TLine::GetY1() const
  OBJ: TMethod	GetY2	 : 0
       Double_t TLine::GetY2() const
+ OBJ: TMethod	GetYIntercept	 : 0
+      Double_t TLine::GetYIntercept() const
  OBJ: TMethod	HandleTimer	 : 0
       Bool_t TObject::HandleTimer(TTimer* timer)
  OBJ: TMethod	HasInconsistentHash	 : 0
@@ -594,6 +598,8 @@ OBJ: TList	TList	Doubly linked list : 0
       TFitResultPtr TH1::Fit(const char* formula, Option_t* option = "", Option_t* goption = "", Double_t xmin = 0, Double_t xmax = 0)
  OBJ: TMethod	FitPanel	*MENU* : 0
       void TH1::FitPanel()
+ OBJ: TMethod	Normalize	*MENU* : 0
+      void TH1::Normalize(Option_t* option = "")
  OBJ: TMethod	Rebin	*MENU* : 0
       TH1* TH1::Rebin(Int_t ngroup = 2, const char* newname = "", const Double_t* xbins = nullptr)
  OBJ: TMethod	Scale	*MENU* : 0

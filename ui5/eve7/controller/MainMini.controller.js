@@ -42,11 +42,15 @@ sap.ui.define(['rootui5/eve7/controller/Main.controller','sap/ui/core/Component'
          if (staged.length == 0) return;
 
          let vMenu = this.getView().byId("menuViewId");
-
-         for (let n=0;n<staged.length;++n) {
+         for (let n = 0; n < staged.length; ++n) {
             let eveView = staged[n];
+
             eveView.$view_created = true;
-            if(eveView.subscribed) this.makeEveViewController(eveView);
+
+            if (eveView.subscribed)
+               this.makeEveViewController(eveView);
+            else
+               this.subscribeView(eveView);
          }
       },
 
@@ -92,7 +96,15 @@ sap.ui.define(['rootui5/eve7/controller/Main.controller','sap/ui/core/Component'
       
       onEveManagerInit: function() {
          this.updateViewers();
-      },
+      }, 
+      
+      subscribeView: function(viewer)
+      {
+         viewer.subscribed = true;
+         viewer.pendInstance = true;
+         this.mgr.SendMIR("ConnectClient()", viewer.fElementId, "ROOT::Experimental::REveViewer");
+      }
+
 
    });
 });

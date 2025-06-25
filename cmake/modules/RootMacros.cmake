@@ -618,13 +618,13 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(pcm_name)
   else()
     if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-      # Modules need RConfigure.h copied into include/.
-      set(ROOTCINTDEP rootcling rconfigure)
       if(MSVC AND CMAKE_ROOTTEST_DICT)
         set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${CMAKE_BINARY_DIR}/bin/rootcling.exe)
       else()
         set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}"
                     "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> -rootbuild)
+        # Modules need RConfigure.h copied into include/.
+        set(ROOTCINTDEP rootcling rconfigure)
       endif()
     elseif(TARGET ROOT::rootcling)
       if(APPLE)
@@ -2065,8 +2065,11 @@ function(ROOT_FIND_PYTHON_MODULE module)
   set(CACHE_VAR ROOT_TEST_${module_upper})
 
   if(NOT DEFINED ${CACHE_VAR})
-    execute_process(COMMAND "${Python3_EXECUTABLE}" "-c" "import ${module}"
+    execute_process(COMMAND "${Python3_EXECUTABLE}" "-c"
+                            "import ${module}; print(getattr(${module}, '__version__', 'unknown'))"
       RESULT_VARIABLE status
+      OUTPUT_VARIABLE module_version
+      OUTPUT_STRIP_TRAILING_WHITESPACE
       ERROR_QUIET)
 
     if(${status} EQUAL 0)
@@ -2077,7 +2080,7 @@ function(ROOT_FIND_PYTHON_MODULE module)
 
     if(NOT ARG_QUIET)
       if(${CACHE_VAR})
-        message(STATUS "Found Python module ${module}")
+        message(STATUS "Found Python module ${module} (found version \"${module_version}\")")
       else()
         message(STATUS "Could NOT find Python module ${module}. Corresponding tests will be disabled.")
       endif()

@@ -124,7 +124,7 @@ class TAttFillHandler {
       if (!Number.isInteger(this.pattern))
          this.pattern = 0;
 
-      this.change(this.color, this.pattern, painter ? painter.getCanvSvg() : null, true, painter);
+      this.change(this.color, this.pattern, painter?.getCanvSvg(), true, painter);
    }
 
    /** @summary Method to change fill attributes.

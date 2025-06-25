@@ -224,7 +224,7 @@ namespace TMVA {
 
    protected:
 
-      ClassDef(Factory,0);  // The factory creates all MVA methods, and performs their training and testing
+      ClassDefOverride(Factory,0);  // The factory creates all MVA methods, and performs their training and testing
    };
 
 } // namespace TMVA

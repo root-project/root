@@ -46,7 +46,7 @@ namespace Impl {
 
    @ingroup GenVector
 
-   @sa Overview of the @ref GenVector "physics vector library"
+   @see GenVector
 */
 
 template <typename T = double>

@@ -61,6 +61,9 @@ namespace CPyCppyy {
     static std::regex s_fnptr("\\((\\w*:*)*\\*&*\\)");
 }
 
+// Define our own PyUnstable_Object_IsUniqueReferencedTemporary function if the
+// Python version is lower than 3.14, the version where that function got introduced.
+#if PY_VERSION_HEX < 0x030e0000
 #if PY_VERSION_HEX < 0x03000000
 const Py_ssize_t MOVE_REFCOUNT_CUTOFF = 1;
 #elif PY_VERSION_HEX < 0x03080000
@@ -72,6 +75,10 @@ const Py_ssize_t MOVE_REFCOUNT_CUTOFF = 2;
 #else
 // since py3.8, vector calls behave again as expected
 const Py_ssize_t MOVE_REFCOUNT_CUTOFF = 1;
+#endif
+inline bool PyUnstable_Object_IsUniqueReferencedTemporary(PyObject *pyobject) {
+    return Py_REFCNT(pyobject) <= MOVE_REFCOUNT_CUTOFF;
+}
 #endif
 
 //- pretend-ctypes helpers ---------------------------------------------------
@@ -123,15 +130,17 @@ struct CPyCppyy_tagPyCArgObject {      // not public (but stable; note that olde
 #define ct_c_fcomplex   21
 #define ct_c_complex    22
 #define ct_c_pointer    23
-#define ct_c_int16      24
-#define ct_c_int32      25
-#define NTYPES          26
+#define ct_c_funcptr    24
+#define ct_c_int16      25
+#define ct_c_int32      26
+#define NTYPES          27
 
 static std::array<const char*, NTYPES> gCTypesNames = {
     "c_bool", "c_char", "c_wchar", "c_byte", "c_ubyte", "c_short", "c_ushort", "c_uint16",
     "c_int", "c_uint", "c_uint32", "c_long", "c_ulong", "c_longlong", "c_ulonglong",
     "c_float", "c_double", "c_longdouble",
-    "c_char_p", "c_wchar_p", "c_void_p", "c_fcomplex", "c_complex", "_Pointer" };
+    "c_char_p", "c_wchar_p", "c_void_p", "c_fcomplex", "c_complex",
+    "_Pointer", "_CFuncPtr" };
 static std::array<PyTypeObject*, NTYPES> gCTypesTypes;
 static std::array<PyTypeObject*, NTYPES> gCTypesPtrTypes;
 
@@ -2117,7 +2126,7 @@ bool CPyCppyy::STLStringMoveConverter::SetArg(
         if (pyobj->fFlags & CPPInstance::kIsRValue) {
             pyobj->fFlags &= ~CPPInstance::kIsRValue;
             moveit_reason = 2;
-        } else if (Py_REFCNT(pyobject) <= MOVE_REFCOUNT_CUTOFF) {
+        } else if (PyUnstable_Object_IsUniqueReferencedTemporary(pyobject)) {
             moveit_reason = 1;
         } else
             moveit_reason = 0;
@@ -2183,9 +2192,10 @@ template <bool ISCONST>
 PyObject* CPyCppyy::InstancePtrConverter<ISCONST>::FromMemory(void* address)
 {
 // construct python object from C++ instance read at <address>
+    Cppyy::TCppScope_t actual_class = Cppyy::GetActualClass(fClass, *(void**)address);
     if (ISCONST)
-        return BindCppObject(*(void**)address, fClass);                   // by pointer value
-    return BindCppObject(address, fClass, CPPInstance::kIsReference);     // modifiable
+        return BindCppObject(*(void**)address, actual_class);                   // by pointer value
+    return BindCppObject(address, actual_class, CPPInstance::kIsReference);     // modifiable
 }
 
 //----------------------------------------------------------------------------
@@ -2354,7 +2364,7 @@ bool CPyCppyy::InstanceMoveConverter::SetArg(
     if (pyobj->fFlags & CPPInstance::kIsRValue) {
         pyobj->fFlags &= ~CPPInstance::kIsRValue;
         moveit_reason = 2;
-    } else if (Py_REFCNT(pyobject) <= MOVE_REFCOUNT_CUTOFF) {
+    } else if (PyUnstable_Object_IsUniqueReferencedTemporary(pyobject)) {
         moveit_reason = 1;
     }
 
@@ -2691,6 +2701,12 @@ static void* PyFunction_AsCPointer(PyObject* pyobject,
             if (fptr) return fptr;
         }
         // fall-through, with calling through Python
+    }
+
+    if (PyObject_IsInstance(pyobject, (PyObject*)GetCTypesType(ct_c_funcptr))) {
+    // ctypes function pointer
+        void* fptr = *(void**)((CPyCppyy_tagCDataObject*)pyobject)->b_ptr;
+        return fptr;
     }
 
     if (PyCallable_Check(pyobject)) {

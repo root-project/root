@@ -24,6 +24,7 @@
 #define ROOT_RTaskArena
 
 #include "RConfigure.h"
+#include "TROOT.h" // For ROOT::EIMTConfig
 #include <memory>
 
 // exclude in case ROOT does not have IMT support
@@ -65,9 +66,13 @@ public:
    ~RTaskArenaWrapper(); // necessary to set size back to zero
    static unsigned TaskArenaSize(); // A static getter lets us check for RTaskArenaWrapper's existence
    ROOT::ROpaqueTaskArena &Access();
-private:
+   struct Attach {}; ///< Marker for attaching to an existing tbb::task_arena
+
    RTaskArenaWrapper(unsigned maxConcurrency = 0);
-   friend std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned maxConcurrency);
+   RTaskArenaWrapper(Attach);
+
+private:
+   friend std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned, ROOT::EIMTConfig);
    std::unique_ptr<ROOT::ROpaqueTaskArena> fTBBArena;
    static unsigned fNWorkers;
 };
@@ -81,6 +86,7 @@ private:
 /// references to the previous one are gone and the object destroyed.
 ////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(unsigned maxConcurrency = 0);
+std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> GetGlobalTaskArena(ROOT::EIMTConfig config);
 
 } // namespace Internal
 } // namespace ROOT

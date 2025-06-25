@@ -56,9 +56,9 @@ namespace TMVA
       virtual ~PDEFoamKernelGauss() {}      // Destructor
 
       // kernel estimator
-      virtual Float_t Estimate(PDEFoam*, std::vector<Float_t>&, ECellValue);
+      Float_t Estimate(PDEFoam*, std::vector<Float_t>&, ECellValue) override;
 
-      ClassDef(PDEFoamKernelGauss, 1) // Gaussian PDEFoam kernel estimator
+      ClassDefOverride(PDEFoamKernelGauss, 1) // Gaussian PDEFoam kernel estimator
          }; // end of PDEFoamKernelGauss
 }  // namespace TMVA
 

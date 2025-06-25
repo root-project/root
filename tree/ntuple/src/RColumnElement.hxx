@@ -1028,6 +1028,11 @@ int QuantizeReals(Quantized_t *dst, const T *src, std::size_t count, double min,
    static_assert(sizeof(T) <= sizeof(double));
    assert(1 <= nQuantBits && nQuantBits <= 8 * sizeof(Quantized_t));
 
+   // `min` and `max` are supposed to be exactly representable by type `T` because we cast them to `T` in
+   // SetQuantized().
+   assert(min == static_cast<double>(static_cast<T>(min)));
+   assert(max == static_cast<double>(static_cast<T>(max)));
+
    const std::size_t quantMax = (1ull << nQuantBits) - 1;
    const double scale = quantMax / (max - min);
    const std::size_t unusedBits = sizeof(Quantized_t) * 8 - nQuantBits;
@@ -1067,8 +1072,7 @@ int UnquantizeReals(T *dst, const Quantized_t *src, std::size_t count, double mi
    const double scale = (max - min) / quantMax;
    const std::size_t unusedBits = sizeof(Quantized_t) * 8 - nQuantBits;
    const double eps = std::numeric_limits<double>::epsilon();
-   const double emin = min - std::abs(min) * eps;
-   const double emax = max + std::abs(max) * eps;
+   const double emax = max + std::max(1.0, std::abs(max)) * eps;
 
    int nOutOfRange = 0;
 
@@ -1080,10 +1084,20 @@ int UnquantizeReals(T *dst, const Quantized_t *src, std::size_t count, double mi
       ByteSwapIfNecessary(elem);
 
       const double fq = static_cast<double>(elem);
-      const double e = fq * scale + min;
-      dst[i] = static_cast<T>(e);
+      double e = fq * scale + min;
 
-      nOutOfRange += !(emin <= dst[i] && dst[i] <= emax);
+      // NOTE: `e` must be greater or equal than precisely `min` because the min value is represented
+      // by a quantized value of 0, meaning there is no floating point error accumulation coming from
+      // `e = fq * scale + min` (as it just becomes `e = min`).
+      // For the max value, however, some error is introduced by the operation, therefore we allow for
+      // some leeway in the out of range check.
+      nOutOfRange += !(min <= e && e <= emax);
+
+      // Since we want to guarantee that the out value is always within `min` and `max`,
+      // after the bounds check we clamp the value to the stored `max`.
+      e = std::min(e, max);
+
+      dst[i] = static_cast<T>(e);
    }
 
    return nOutOfRange;
@@ -1500,9 +1514,9 @@ public:
    static constexpr std::size_t kBitsOnStorage = kSize * 8;
    RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
 
-   bool IsMappable() const { return kIsMappable; }
-   void Pack(void *, const void *, std::size_t) const {}
-   void Unpack(void *, const void *, std::size_t) const {}
+   bool IsMappable() const final { return kIsMappable; }
+   void Pack(void *, const void *, std::size_t) const final {}
+   void Unpack(void *, const void *, std::size_t) const final {}
 
    RIdentifier GetIdentifier() const final
    {

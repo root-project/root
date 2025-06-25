@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 #include <numeric>
+#include <iterator>
 
 namespace ROOT {
 
@@ -39,6 +40,8 @@ std::string Join(const std::string &sep, StringCollection_t &&strings)
    return std::accumulate(std::next(std::begin(strings)), std::end(strings), strings[0],
                           [&sep](auto const &a, auto const &b) { return a + sep + b; });
 }
+
+std::string Round(double value, double error, unsigned int cutoff = 1, std::string_view delim = "#pm");
 
 } // namespace ROOT
 

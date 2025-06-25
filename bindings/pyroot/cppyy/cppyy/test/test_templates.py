@@ -1,12 +1,10 @@
-import py
+import py, pytest, os
 from pytest import mark, raises
-from .support import setup_make, pylong
+from support import setup_make, pylong
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("templatesDict"))
 
-def setup_module(mod):
-    setup_make("templates")
+currpath = os.getcwd()
+test_dct = currpath + "/libtemplatesDict"
 
 
 class TestTEMPLATES:
@@ -156,6 +154,8 @@ class TestTEMPLATES:
         assert cppyy.gbl.isSomeInt()           == False
         assert cppyy.gbl.isSomeInt(1, 2, 3)    == False
 
+    @mark.xfail(run = False, reason = "This test causes the interpreter to raises errors and" \
+    "should not be run until further investigated")
     def test06_variadic_sfinae(self):
         """Attribute testing through SFINAE"""
 
@@ -182,7 +182,7 @@ class TestTEMPLATES:
         assert select_template_arg[0, Obj1, Obj2].argument == Obj1
         assert select_template_arg[1, Obj1, Obj2].argument == Obj2
         # TODO: the following crashes deep inside cling/clang ...
-        #raises(TypeError, getattr, select_template_arg[2, Obj1, Obj2], 'argument')
+        # raises(TypeError, getattr, select_template_arg[2, Obj1, Obj2], 'argument')
 
         # This is a bit subtle: to be able to use typedefs in templates, builtin
         # types are present as subclasses that carry __cpp_name__, hence the result
@@ -1118,6 +1118,7 @@ class TestTEMPLATES:
                         run_n = getattr(cppyy.gbl, 'TNaRun_%d' % n)
                         getattr(run_n, t)
 
+    @mark.xfail(run = False, reason = "This test crashes sporadically")
     def test33_using_template_argument(self):
         """`using` type as template argument"""
 
@@ -1338,3 +1339,7 @@ class TestTEMPLATE_TYPE_REDUCTION:
         cppyy.py.add_type_reducer('TypeReduction::BinaryExpr<int>', 'TypeReduction::Expr<int>')
 
         assert type(e1+e2) == cppyy.gbl.TypeReduction.Expr[int]
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

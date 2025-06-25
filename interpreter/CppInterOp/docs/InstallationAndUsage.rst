@@ -34,11 +34,11 @@ library
  Setup Clang-REPL
 ******************
 
-Clone the 19.x release of the LLVM project repository.
+Clone the 20.x release of the LLVM project repository.
 
 .. code:: bash
 
-   git clone --depth=1 --branch release/19.x https://github.com/llvm/llvm-project.git
+   git clone --depth=1 --branch release/20.x https://github.com/llvm/llvm-project.git
    cd llvm-project
 
 For Clang 16 & 17, the following patches required for development work. To apply
@@ -78,9 +78,6 @@ following command
            -DCLANG_ENABLE_ARCMT=OFF                            \
            -DCLANG_ENABLE_FORMAT=OFF                           \
            -DCLANG_ENABLE_BOOTSTRAP=OFF                        \
-           -DLLVM_ENABLE_ZSTD=OFF                              \
-           -DLLVM_ENABLE_TERMINFO=OFF                          \
-           -DLLVM_ENABLE_LIBXML2=OFF                           \
            ../llvm
    cmake --build . --target clang clang-repl --parallel $(nproc --all)
 
@@ -132,9 +129,10 @@ build instructions to build on Linux and MacOS
 
    git clone https://github.com/root-project/cling.git
    cd ./cling/
-   git checkout tags/v1.0
+   git checkout tags/v1.2
+   git apply -v ../CppInterOp/patches/llvm/cling1.2-LookupHelper.patch
    cd ..
-   git clone --depth=1 -b cling-llvm13 https://github.com/root-project/llvm-project.git
+   git clone --depth=1 -b cling-llvm18 https://github.com/root-project/llvm-project.git
    mkdir llvm-project/build
    cd llvm-project/build
    cmake   -DLLVM_ENABLE_PROJECTS=clang                       \
@@ -147,13 +145,9 @@ build instructions to build on Linux and MacOS
            -DCLANG_ENABLE_ARCMT=OFF                           \
            -DCLANG_ENABLE_FORMAT=OFF                          \
            -DCLANG_ENABLE_BOOTSTRAP=OFF                       \
-           -DLLVM_ENABLE_ZSTD=OFF                             \
-           -DLLVM_ENABLE_TERMINFO=OFF                         \
-           -DLLVM_ENABLE_LIBXML2=OFF                          \
            ../llvm
    cmake --build . --target clang --parallel $(nproc --all)
    cmake --build . --target cling --parallel $(nproc --all)
-   cmake --build . --target gtest_main --parallel $(nproc --all)
 
 Use the following build instructions to build on Windows
 
@@ -161,10 +155,11 @@ Use the following build instructions to build on Windows
 
    git clone https://github.com/root-project/cling.git
    cd .\cling\
-   git checkout tags/v1.0
+   git checkout tags/v1.2
+   git apply -v ..\CppInterOp\patches\llvm\cling1.2-LookupHelper.patch
    cd ..
-   git clone --depth=1 -b cling-llvm13 https://github.com/root-project/llvm-project.git
-   $env:ncpus = %NUMBER_OF_PROCESSORS%
+   git clone --depth=1 -b cling-llvm18 https://github.com/root-project/llvm-project.git
+   $env:ncpus = $([Environment]::ProcessorCount)
    $env:PWD_DIR= $PWD.Path
    $env:CLING_DIR="$env:PWD_DIR\cling"
    mkdir llvm-project\build
@@ -182,7 +177,6 @@ Use the following build instructions to build on Windows
            ../llvm
    cmake --build . --target clang --parallel $env:ncpus
    cmake --build . --target cling --parallel $env:ncpus
-   cmake --build . --target gtest_main --parallel $env:ncpus
 
 Note the 'llvm-project' directory location. On linux and MacOS you execute the
 following
@@ -215,7 +209,20 @@ define as follows
 
    export CB_PYTHON_DIR="$PWD/cppyy-backend/python"
    export CPPINTEROP_DIR="$CB_PYTHON_DIR/cppyy_backend"
+
+If building CppInterOp against clang-repl you will need to define the following
+
+.. code:: bash
+
    export CPLUS_INCLUDE_PATH="${CPLUS_INCLUDE_PATH}:${LLVM_DIR}/llvm/include:${LLVM_DIR}/clang/include:${LLVM_DIR}/build/include:${LLVM_DIR}/build/tools/clang/include"
+
+and if building against cling you will need to define the following
+
+.. code:: bash
+   
+   export CLING_DIR="$(pwd)/cling"
+   export CLING_BUILD_DIR="$(pwd)/cling/build"
+   export CPLUS_INCLUDE_PATH="${CLING_DIR}/tools/cling/include:${CLING_BUILD_DIR}/include:${LLVM_DIR}/llvm/include:${LLVM_DIR}/clang/include:${LLVM_BUILD_DIR}/include:${LLVM_BUILD_DIR}/tools/clang/include:$PWD/include"
 
 If on MacOS you will also need the following environment variable defined
 
@@ -230,7 +237,22 @@ $PWD.Path )
 
    $env:CB_PYTHON_DIR="$env:PWD_DIR\cppyy-backend\python"
    $env:CPPINTEROP_DIR="$env:CB_PYTHON_DIR\cppyy_backend"
+
+
+If building against clang-repl you will have the following defined
+
+.. code:: powershell
+
    $env:CPLUS_INCLUDE_PATH="$env:CPLUS_INCLUDE_PATH;$env:LLVM_DIR\llvm\include;$env:LLVM_DIR\clang\include;$env:LLVM_DIR\build\include;$env:LLVM_DIR\build\tools\clang\include"
+
+and if building against cling
+
+.. code:: powershell
+
+   $env:CLING_DIR="$env:PWD_DIR\cling"
+   $env:CLING_BUILD_DIR="$env:PWD_DIR\cling\build"
+   $env:CPLUS_INCLUDE_PATH="$env:CLING_DIR\tools\cling\include;$env:CLING_BUILD_DIR\include;$env:LLVM_DIR\llvm\include;$env:LLVM_DIR\clang\include;$env:LLVM_BUILD_DIR\include;$env:LLVM_BUILD_DIR\tools\clang\include;$env:PWD_DIR\include;"
+
 
 ******************
  Build CppInterOp

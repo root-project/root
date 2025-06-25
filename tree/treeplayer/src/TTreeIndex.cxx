@@ -207,9 +207,23 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
    //TMath::Sort(fN,w,fIndex,0);
    fIndexValues = new Long64_t[fN];
    fIndexValuesMinor = new Long64_t[fN];
-   for (i=0;i<fN;i++) {
+   bool duplicatedKeys = false;
+   for (i = 0; i < fN; i++) {
       fIndexValues[i] = tmp_major[fIndex[i]];
       fIndexValuesMinor[i] = tmp_minor[fIndex[i]];
+      const bool checkDuplicates = i > 0 && (!duplicatedKeys || gDebug >= 1);
+      if (checkDuplicates) {
+         if (fIndexValues[i - 1] == fIndexValues[i] && fIndexValuesMinor[i - 1] == fIndexValuesMinor[i]) {
+            Error("TTreeIndex",
+                  "In entry %lld, a duplicate key was found value at (%s, %s) = (%lld, %lld)",
+                  i, fMajorName.Data(), fMinorName.Data(), fIndexValues[i], fIndexValuesMinor[i]
+                 );
+            if (gDebug < 1) {
+               Warning("TTreeIndex", "Further potential duplicates won't be checked, use gDebug >= 1 to check all.");
+            }
+            duplicatedKeys = true;
+         }
+      }
    }
 
    delete [] tmp_major;

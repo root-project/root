@@ -91,10 +91,66 @@ namespace ROOT {
          // if it inherits from ROOT::Math::IGradientFunctionMultiDim.
          virtual bool HasGradient() const { return false; }
 
-      private:
+         virtual bool returnsInMinuit2ParameterSpace() const { return false; }
 
+         /// Evaluate all the vector of function derivatives (gradient)  at a point x.
+         /// Derived classes must re-implement it if more efficient than evaluating one at a time
+         virtual void Gradient(const T *x, T *grad) const
+         {
+            unsigned int ndim = NDim();
+            for (unsigned int icoord  = 0; icoord < ndim; ++icoord) {
+               grad[icoord] = Derivative(x, icoord);
+            }
+         }
+
+         /// In some cases, the gradient algorithm will use information from the previous step, these can be passed
+         /// in with this overload. The `previous_*` arrays can also be used to return second derivative and step size
+         /// so that these can be passed forward again as well at the call site, if necessary.
+         virtual void GradientWithPrevResult(const T *x, T *grad, T *previous_grad, T *previous_g2, T *previous_gstep) const
+         {
+            unsigned int ndim = NDim();
+            for (unsigned int icoord  = 0; icoord < ndim; ++icoord) {
+               grad[icoord] = Derivative(x, icoord, previous_grad, previous_g2, previous_gstep);
+            }
+         }
+
+         /// Optimized method to evaluate at the same time the function value and derivative at a point x.
+         /// Often both value and derivatives are needed and it is often more efficient to compute them at the same time.
+         /// Derived class should implement this method if performances play an important role and if it is faster to
+         /// evaluate value and derivative at the same time
+         virtual void FdF(const T *x, T &f, T *df) const
+         {
+            f = operator()(x);
+            Gradient(x, df);
+         }
+
+         /// Return the partial derivative with respect to the passed coordinate.
+         T Derivative(const T *x, unsigned int icoord = 0) const { return DoDerivative(x, icoord); }
+
+         /// In some cases, the derivative algorithm will use information from the previous step, these can be passed
+         /// in with this overload. The `previous_*` arrays can also be used to return second derivative and step size
+         /// so that these can be passed forward again as well at the call site, if necessary.
+         T Derivative(const T *x, unsigned int icoord, T *previous_grad, T *previous_g2,
+                      T *previous_gstep) const
+         {
+            return DoDerivativeWithPrevResult(x, icoord, previous_grad, previous_g2, previous_gstep);
+         }
+
+      private:
          /// Implementation of the evaluation function. Must be implemented by derived classes.
          virtual T DoEval(const T *x) const = 0;
+
+         /// Function to evaluate the derivative with respect each coordinate. To be implemented by the derived class.
+         virtual T DoDerivative(const T * /*x*/, unsigned int /*icoord*/) const { return {}; }
+
+         /// In some cases, the derivative algorithm will use information from the previous step, these can be passed
+         /// in with this overload. The `previous_*` arrays can also be used to return second derivative and step size
+         /// so that these can be passed forward again as well at the call site, if necessary.
+         virtual T DoDerivativeWithPrevResult(const T *x, unsigned int icoord, T * /*previous_grad*/,
+                                              T * /*previous_g2*/, T * /*previous_gstep*/) const
+         {
+            return DoDerivative(x, icoord);
+         }
       };
 
 
@@ -135,10 +191,36 @@ namespace ROOT {
          // if it inherits from ROOT::Math::IGradientFunctionOneDim.
          virtual bool HasGradient() const { return false; }
 
+         /// Return the derivative of the function at a point x
+         /// Use the private method DoDerivative
+         double Derivative(double x) const { return DoDerivative(x); }
+
+         /// Compatibility method with multi-dimensional interface for partial derivative.
+         double Derivative(const double *x) const { return DoDerivative(*x); }
+
+         /// Compatibility method with multi-dimensional interface for Gradient.
+         void Gradient(const double *x, double *g) const { g[0] = DoDerivative(*x); }
+
+         /// Optimized method to evaluate at the same time the function value and derivative at a point x.
+         /// Often both value and derivatives are needed and it is often more efficient to compute them at the same time.
+         /// Derived class should implement this method if performances play an important role and if it is faster to
+         /// evaluate value and derivative at the same time.
+         virtual void FdF(double x, double &f, double &df) const
+         {
+            f = operator()(x);
+            df = Derivative(x);
+         }
+
+         /// Compatibility method with multi-dimensional interface for Gradient and function evaluation.
+         void FdF(const double *x, double &f, double *df) const { FdF(*x, f, *df); }
+
       private:
 
          /// implementation of the evaluation function. Must be implemented by derived classes
          virtual double DoEval(double x) const = 0;
+
+         /// Function to evaluate the derivative with respect each coordinate. To be implemented by the derived class.
+         virtual double  DoDerivative(double) const { return 0.; }
       };
 
 
@@ -170,71 +252,8 @@ namespace ROOT {
       class IGradientFunctionMultiDimTempl : virtual public IBaseFunctionMultiDimTempl<T> {
 
       public:
-         typedef IBaseFunctionMultiDimTempl<T> BaseFunc;
-         typedef IGradientFunctionMultiDimTempl<T> BaseGrad;
 
-
-         /// Evaluate all the vector of function derivatives (gradient)  at a point x.
-         /// Derived classes must re-implement it if more efficient than evaluating one at a time
-         virtual void Gradient(const T *x, T *grad) const
-         {
-            unsigned int ndim = NDim();
-            for (unsigned int icoord  = 0; icoord < ndim; ++icoord) {
-               grad[icoord] = Derivative(x, icoord);
-            }
-         }
-
-         /// In some cases, the gradient algorithm will use information from the previous step, these can be passed
-         /// in with this overload. The `previous_*` arrays can also be used to return second derivative and step size
-         /// so that these can be passed forward again as well at the call site, if necessary.
-         virtual void GradientWithPrevResult(const T *x, T *grad, T *previous_grad, T *previous_g2, T *previous_gstep) const
-         {
-            unsigned int ndim = NDim();
-            for (unsigned int icoord  = 0; icoord < ndim; ++icoord) {
-               grad[icoord] = Derivative(x, icoord, previous_grad, previous_g2, previous_gstep);
-            }
-         }
-
-         using BaseFunc::NDim;
-
-         /// Optimized method to evaluate at the same time the function value and derivative at a point x.
-         /// Often both value and derivatives are needed and it is often more efficient to compute them at the same time.
-         /// Derived class should implement this method if performances play an important role and if it is faster to
-         /// evaluate value and derivative at the same time
-         virtual void FdF(const T *x, T &f, T *df) const
-         {
-            f = BaseFunc::operator()(x);
-            Gradient(x, df);
-         }
-
-         /// Return the partial derivative with respect to the passed coordinate.
-         T Derivative(const T *x, unsigned int icoord = 0) const { return DoDerivative(x, icoord); }
-
-         /// In some cases, the derivative algorithm will use information from the previous step, these can be passed
-         /// in with this overload. The `previous_*` arrays can also be used to return second derivative and step size
-         /// so that these can be passed forward again as well at the call site, if necessary.
-         T Derivative(const T *x, unsigned int icoord, T *previous_grad, T *previous_g2,
-                      T *previous_gstep) const
-         {
-            return DoDerivativeWithPrevResult(x, icoord, previous_grad, previous_g2, previous_gstep);
-         }
-
-         bool HasGradient() const { return true; }
-
-         virtual bool returnsInMinuit2ParameterSpace() const { return false; }
-
-      private:
-         /// Function to evaluate the derivative with respect each coordinate. To be implemented by the derived class.
-         virtual T DoDerivative(const T *x, unsigned int icoord) const = 0;
-
-         /// In some cases, the derivative algorithm will use information from the previous step, these can be passed
-         /// in with this overload. The `previous_*` arrays can also be used to return second derivative and step size
-         /// so that these can be passed forward again as well at the call site, if necessary.
-         virtual T DoDerivativeWithPrevResult(const T *x, unsigned int icoord, T * /*previous_grad*/,
-                                              T * /*previous_g2*/, T * /*previous_gstep*/) const
-         {
-            return DoDerivative(x, icoord);
-         }
+         bool HasGradient() const override { return true; }
       };
 
 
@@ -257,38 +276,7 @@ namespace ROOT {
 
       public:
 
-         typedef IBaseFunctionOneDim BaseFunc;
-         typedef IGradientFunctionOneDim BaseGrad;
-
-         /// Return the derivative of the function at a point x
-         /// Use the private method DoDerivative
-         double Derivative(double x) const { return DoDerivative(x); }
-
-         /// Compatibility method with multi-dimensional interface for partial derivative.
-         double Derivative(const double *x) const { return DoDerivative(*x); }
-
-         /// Compatibility method with multi-dimensional interface for Gradient.
-         void Gradient(const double *x, double *g) const { g[0] = DoDerivative(*x); }
-
-         /// Optimized method to evaluate at the same time the function value and derivative at a point x.
-         /// Often both value and derivatives are needed and it is often more efficient to compute them at the same time.
-         /// Derived class should implement this method if performances play an important role and if it is faster to
-         /// evaluate value and derivative at the same time.
-         virtual void FdF(double x, double &f, double &df) const
-         {
-            f = operator()(x);
-            df = Derivative(x);
-         }
-
-         /// Compatibility method with multi-dimensional interface for Gradient and function evaluation.
-         void FdF(const double *x, double &f, double *df) const { FdF(*x, f, *df); }
-
          bool HasGradient() const override { return true; }
-
-      private:
-
-         /// Function to evaluate the derivative with respect each coordinate. To be implemented by the derived class.
-         virtual  double  DoDerivative(double x) const = 0;
       };
 
 

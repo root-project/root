@@ -54,22 +54,21 @@ ROOTTEST_ADD_TEST(LastCluster
                   MACRO execLastCluster.C
                   OUTREF execLastCluster.ref)
 
-ROOT_GENERATE_DICTIONARY(G__TheEvent ${CMAKE_CURRENT_SOURCE_DIR}/Event.h LINKDEF EventLinkDef.h)
-ROOTTEST_LINKER_LIBRARY(TheEvent TEST Event.cxx G__TheEvent.cxx LIBRARIES ${ROOT_LIBRARIES})
-ROOTTEST_ADD_TEST(perfstattest-libevent-build 
-                  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} ${build_config} --target G__TheEvent${fast} TheEvent${fast} -- ${always-make})
+ROOTTEST_GENERATE_DICTIONARY(libRoottestTreeCacheEvent
+                             Event.h
+                             LINKDEF EventLinkDef.h
+                             SOURCES Event.cxx
+                             NO_ROOTMAP NO_CXXMODULE
+                             FIXTURES_SETUP root-tree-cache-dict-fixture)
 
-set(RootExeOptions -e "gSystem->Load(\"libTheEvent\")")
 if(compression_default STREQUAL "lz4")
-      ROOTTEST_ADD_TEST(perfstattest
-                  MACRO execperfstattest.C
-                  OUTREF execperfstattestLZ4.oref
-                  ERRREF execperfstattest.eref
-                  DEPENDS perfstattest-libevent-build)
+  set(_ref execperfstattestLZ4.oref)
 else()
-      ROOTTEST_ADD_TEST(perfstattest
-                  MACRO execperfstattest.C
-                  OUTREF execperfstattestZLIB.oref
-                  ERRREF execperfstattest.eref
-                  DEPENDS perfstattest-libevent-build)
+  set(_ref execperfstattestZLIB.oref)
 endif()
+ROOTTEST_ADD_TEST(perfstattest
+                  MACRO execperfstattest.C
+                  ROOTEXE_OPTS -e "(void)gSystem->Load(\"libRoottestTreeCacheEvent\")"
+                  OUTREF ${_ref}
+                  ERRREF execperfstattest.eref
+                  FIXTURES_REQUIRED root-tree-cache-dict-fixture)

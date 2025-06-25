@@ -32,7 +32,7 @@ namespace Math {
 
       @ingroup GenVector
 
-      @sa Overview of the @ref GenVector "physics vector library"
+      @see GenVector
    */
 
    class  DefaultCoordinateSystemTag {};
@@ -44,7 +44,7 @@ namespace Math {
 
       @ingroup GenVector
 
-      @sa Overview of the @ref GenVector "physics vector library"
+      @see GenVector
    */
    class  GlobalCoordinateSystemTag {};
 
@@ -54,7 +54,7 @@ namespace Math {
 
       @ingroup GenVector
 
-      @sa Overview of the @ref GenVector "physics vector library"
+      @see GenVector
    */
    class   LocalCoordinateSystemTag {};
 

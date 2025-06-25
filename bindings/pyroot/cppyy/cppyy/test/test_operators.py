@@ -1,12 +1,10 @@
-import py
-from pytest import raises, skip
-from .support import setup_make, pylong, maxvalue, IS_WINDOWS
+import py, pytest, os
+from pytest import raises, skip, mark
+from support import setup_make, pylong, maxvalue, IS_WINDOWS, IS_MAC
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("operatorsDict"))
 
-def setup_module(mod):
-    setup_make("operators")
+currpath = os.getcwd()
+test_dct = currpath + "/liboperatorsDict"
 
 
 class TestOPERATORS:
@@ -336,6 +334,7 @@ class TestOPERATORS:
         b = ns.Bar()
         assert b[42] == 42
 
+    @mark.xfail(condition=IS_MAC, reason="Fails on OSX")
     def test15_class_and_global_mix(self):
         """Iterator methods have both class and global overloads"""
 
@@ -384,3 +383,7 @@ class TestOPERATORS:
 
         assert     ns.AGe(5) >= ns.AGe(4)
         assert not ns.AGe(4) >= ns.AGe(5)
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

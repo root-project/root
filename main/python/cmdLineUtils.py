@@ -18,7 +18,6 @@ import os
 import sys
 from time import sleep
 from itertools import zip_longest
-import cppyy
 
 def fileno(file_or_fd):
     """
@@ -196,6 +195,8 @@ def isDirectoryKey(key):
     """
     Return True if the object, corresponding to the key, inherits from TDirectory
     """
+    import cppyy
+
     classname = key.GetClassName()
     cl = ROOT.gROOT.GetClass(classname)
     if cl == cppyy.nullptr:
@@ -208,6 +209,8 @@ def isTreeKey(key):
     """
     Return True if the object, corresponding to the key, inherits from TTree
     """
+    import cppyy
+
     classname = key.GetClassName()
     cl = ROOT.gROOT.GetClass(classname)
     if cl == cppyy.nullptr:
@@ -220,6 +223,8 @@ def isTHnSparseKey(key):
     """
     Return True if the object, corresponding to the key, inherits from THnSparse
     """
+    import cppyy
+
     classname = key.GetClassName()
     cl = ROOT.gROOT.GetClass(classname)
     if cl == cppyy.nullptr:
@@ -653,8 +658,7 @@ def copyRootObjectRecursive(sourceFile, sourcePathSplit, destFile, destPathSplit
     to an other file or directory (destFile,destPathSplit)
     - Has the will to be unix-like
     - that's a recursive function
-    - Python adaptation of a root input/output tutorial :
-      $ROOTSYS/tutorials/io/copyFiles.C
+    - Python adaptation of a root input/output tutorial : copyFiles.C
     """
     retcode = 0
     replaceOption = replace

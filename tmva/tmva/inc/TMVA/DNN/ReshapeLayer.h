@@ -65,19 +65,19 @@ public:
    /*! The input must be in 3D tensor form with the different matrices
     *  corresponding to different events in the batch. It transforms the
     *  input matrices. */
-   void Forward(Tensor_t &input, bool applyDropout = false);
+   void Forward(Tensor_t &input, bool applyDropout = false) override;
 
-   void Backward(Tensor_t &gradients_backward, const Tensor_t &activations_backward);
+   void Backward(Tensor_t &gradients_backward, const Tensor_t &activations_backward) override;
    //              Tensor_t &inp1, Tensor_t &inp2);
 
    /*! Prints the info about the layer. */
-   void Print() const;
+   void Print() const override;
 
    /*! Writes the information and the weights about the layer in an XML node. */
-   virtual void AddWeightsXMLTo(void *parent);
+   void AddWeightsXMLTo(void *parent) override;
 
    /*! Read the information and the weights about the layer from XML node. */
-   virtual void ReadWeightsFromXML(void *parent);
+   void ReadWeightsFromXML(void *parent) override;
 
 
    /*! TODO Add documentation

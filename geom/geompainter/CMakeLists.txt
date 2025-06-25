@@ -11,20 +11,15 @@
 
 ROOT_STANDARD_LIBRARY_PACKAGE(GeomPainter
   HEADERS
-    TGeoChecker.h
-    TGeoOverlap.h
     TGeoPainter.h
     TGeoTrack.h
   SOURCES
-    src/TGeoChecker.cxx
-    src/TGeoOverlap.cxx
     src/TGeoPainter.cxx
     src/TGeoTrack.cxx
   DEPENDENCIES
     Geom
+    GeomChecker
     Gpad
     Graf3d
     Hist
-    RIO
-    Tree
 )

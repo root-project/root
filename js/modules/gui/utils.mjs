@@ -24,9 +24,11 @@ function showProgress(msg, tmout, click_handle) {
       return box.remove();
    }
 
-   if ((arguments.length === 0) || !msg) {
-      if ((tmout !== -1) || (!box.empty() && box.property('with_timeout'))) box.remove();
-      if (modal) modal();
+   if (!arguments.length || !msg) {
+      if ((tmout !== -1) || (!box.empty() && box.property('with_timeout')))
+         box.remove();
+      if (modal)
+         modal();
       return;
    }
 
@@ -74,7 +76,7 @@ function closeCurrentWindow() {
 /** @summary Tries to open ui5
   * @private */
 function tryOpenOpenUI(sources, args) {
-   if (!sources || (sources.length === 0)) {
+   if (!sources?.length) {
       if (isFunc(args.rejectFunc)) {
          args.rejectFunc(Error('openui5 was not possible to load'));
          args.rejectFunc = null;
@@ -307,7 +309,7 @@ function registerForResize(handle, delay) {
             const mdi = node.property('mdi');
             if (isFunc(mdi?.checkMDIResize))
                mdi.checkMDIResize();
-             else
+            else
                resize(node.node());
          }
       }
@@ -329,17 +331,17 @@ function detectRightButton(event) {
 /** @summary Add move handlers for drawn element
   * @private */
 function addMoveHandler(painter, enabled = true, hover_handler = false) {
-   if (!settings.MoveResize || painter.isBatchMode() || !painter.draw_g)
+   if (!settings.MoveResize || painter.isBatchMode() || !painter.getG())
       return;
 
    if (painter.getPadPainter()?.isEditable() === false)
       enabled = false;
 
    if (!enabled) {
-      if (painter.draw_g.property('assigned_move')) {
+      if (painter.getG().property('assigned_move')) {
          const drag_move = d3_drag().subject(Object);
          drag_move.on('start', null).on('drag', null).on('end', null);
-         painter.draw_g
+         painter.getG()
                .style('cursor', null)
                .property('assigned_move', null)
                .call(drag_move);
@@ -347,7 +349,7 @@ function addMoveHandler(painter, enabled = true, hover_handler = false) {
       return;
    }
 
-   if (painter.draw_g.property('assigned_move'))
+   if (painter.getG().property('assigned_move'))
       return;
 
    const drag_move = d3_drag().subject(Object);
@@ -356,45 +358,45 @@ function addMoveHandler(painter, enabled = true, hover_handler = false) {
    drag_move
       .on('start', function(evnt) {
          move_disabled = this.moveEnabled ? !this.moveEnabled() : false;
-         if (move_disabled) return;
-         if (detectRightButton(evnt.sourceEvent)) return;
+         if (move_disabled || detectRightButton(evnt.sourceEvent))
+            return;
          evnt.sourceEvent.preventDefault();
          evnt.sourceEvent.stopPropagation();
-         const pos = d3_pointer(evnt, this.draw_g.node());
+         const pos = d3_pointer(evnt, this.getG().node());
          not_changed = true;
          if (this.moveStart)
-            this.moveStart(pos[0], pos[1]);
+            this.moveStart(pos[0], pos[1], evnt.sourceEvent);
       }.bind(painter)).on('drag', function(evnt) {
          if (move_disabled) return;
          evnt.sourceEvent.preventDefault();
          evnt.sourceEvent.stopPropagation();
          not_changed = false;
          if (this.moveDrag)
-            this.moveDrag(evnt.dx, evnt.dy);
+            this.moveDrag(evnt.dx, evnt.dy, evnt.sourceEvent);
       }.bind(painter)).on('end', function(evnt) {
          if (move_disabled) return;
          evnt.sourceEvent.preventDefault();
          evnt.sourceEvent.stopPropagation();
          if (this.moveEnd)
-            this.moveEnd(not_changed);
+            this.moveEnd(not_changed, evnt.sourceEvent);
 
          let arg = null;
          if (not_changed) {
             // if not changed - provide click position
-            const pos = d3_pointer(evnt, this.draw_g.node());
+            const pos = d3_pointer(evnt, this.getG().node());
             arg = { x: pos[0], y: pos[1], dbl: false };
          }
          this.getPadPainter()?.selectObjectPainter(this, arg);
       }.bind(painter));
 
-   painter.draw_g
+   painter.getG()
           .style('cursor', hover_handler ? 'pointer' : 'move')
           .property('assigned_move', true)
           .call(drag_move);
 
    if (hover_handler) {
-      painter.draw_g.on('mouseenter', () => painter.draw_g.style('text-decoration', 'underline'))
-                    .on('mouseleave', () => painter.draw_g.style('text-decoration', null));
+      painter.getG().on('mouseenter', () => painter.getG().style('text-decoration', 'underline'))
+                    .on('mouseleave', () => painter.getG().style('text-decoration', null));
    }
 }
 
@@ -539,7 +541,7 @@ function getBinFileContent(content) {
 /** @summary Returns type of file content
   * @private */
 function getContentType(content) {
-   if (content.indexOf('data:') !== 0)
+   if (content.indexOf('data:'))
       return '';
 
    const p = content.indexOf(';');

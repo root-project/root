@@ -31,15 +31,11 @@
 
  Example code can be found in
   - tutorials/io/tree/hsimpleReader.C
-  - tutorials/io/tree/h1analysisTreeReader.C
-  - <a href="https://github.com/root-project/roottest/tree/master/root/tree/reader">This example</a>
+  - tutorials/analysis/tree/h1analysisTreeReader.C
+  - An example in roottest showing the full power <a href="https://github.com/root-project/root/tree/master/roottest/root/tree/reader">here</a>.
 
  You can generate a skeleton of `TTreeReaderValue<T>` and `TTreeReaderArray<T>` declarations
  for all of a tree's branches using `TTree::MakeSelector()`.
-
- Roottest contains an
- <a href="https://github.com/root-project/roottest/tree/master/root/tree/reader">example</a>
- showing the full power.
 
 A simpler analysis example can be found below: it histograms a function of the px and py branches.
 

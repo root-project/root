@@ -1,26 +1,15 @@
 # CppInterOp
+<div align="center">
 
-[![Build Status](https://github.com/compiler-research/CppInterOp/actions/workflows/Ubuntu.yml/badge.svg)](https://github.com/compiler-research/CppInterOp/actions/workflows/Ubuntu.yml)
-
-[![Build Status](https://github.com/compiler-research/CppInterOp/actions/workflows/Ubuntu-arm.yml/badge.svg)](https://github.com/compiler-research/CppInterOp/actions/workflows/Ubuntu-arm.yml)
-
-[![Build Status](https://github.com/compiler-research/CppInterOp/actions/workflows/MacOS.yml/badge.svg)](https://github.com/compiler-research/CppInterOp/actions/workflows/MacOS.yml)
-
-[![Build Status](https://github.com/compiler-research/CppInterOp/actions/workflows/MacOS-arm.yml/badge.svg)](https://github.com/compiler-research/CppInterOp/actions/workflows/MacOS-arm.yml)
-
-[![Build Status](https://github.com/compiler-research/CppInterOp/actions/workflows/Windows.yml/badge.svg)](https://github.com/compiler-research/CppInterOp/actions/workflows/Windows.yml)
-
+[![Build Status](https://github.com/compiler-research/CppInterOp/actions/workflows/main.yml/badge.svg)](https://github.com/compiler-research/CppInterOp/actions/workflows/main.yml)
 [![Build Status](https://github.com/compiler-research/CppInterOp/actions/workflows/emscripten.yml/badge.svg)](https://github.com/compiler-research/CppInterOp/actions/workflows/emscripten.yml)
-
 [![codecov](https://codecov.io/gh/compiler-research/CppInterOp/branch/main/graph/badge.svg)](https://codecov.io/gh/compiler-research/CppInterOp)
-
 [![Conda-Forge](https://img.shields.io/conda/vn/conda-forge/cppinterop)](https://github.com/conda-forge/cppinterop-feedstock)
-
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/cppinterop/badges/license.svg)](https://github.com/conda-forge/cppinterop-feedstock)
-
 [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/cppinterop.svg)](https://anaconda.org/conda-forge/cppinterop)
-
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/cppinterop/badges/downloads.svg)](https://github.com/conda-forge/cppinterop-feedstock)
+
+</div>
 
 CppInterOp exposes API from [Clang](http://clang.llvm.org/) and [LLVM](https://llvm.org) in a backward compatible way.
 The API support downstream tools that utilize interactive C++ by using the compiler as a service.
@@ -28,15 +17,11 @@ That is, embed Clang and LLVM as a libraries in their codebases.
 The API are designed to be minimalistic and aid non-trivial tasks such as language interoperability on the fly.
 In such scenarios CppInterOp can be used to provide the necessary introspection information to the other side helping the language cross talk.
 
-[Installation](#build-instructions)  
+<div align="center">
 
-[Documentation](https://cppinterop.readthedocs.io/en/latest/index.html)  
+[Installation](#build-instructions) | [Documentation](https://cppinterop.readthedocs.io/en/latest/index.html) | [CppInterOp API Documentation](https://cppinterop.readthedocs.io/en/latest/build/html/index.html) | [![lite-badge](https://jupyterlite.rtfd.io/en/latest/_static/badge.svg)](https://compiler-research.github.io/CppInterOp/lab/index.html)
 
-[CppInterOp API Documentation](https://cppinterop.readthedocs.io/en/latest/build/html/index.html)  
-
-Try Jupyter Lite CppInterOp demo by clicking below
-
-[![lite-badge](https://jupyterlite.rtfd.io/en/latest/_static/badge.svg)](https://compiler-research.github.io/CppInterOp/lab/index.html)
+</div>
 
 ## CppInterOp Introduction
 
@@ -113,10 +98,10 @@ git clone --depth=1 https://github.com/compiler-research/cppyy-backend.git
 
 #### Setup Clang-REPL
 
-Clone the 19.x release of the LLVM project repository.
+Clone the 20.x release of the LLVM project repository.
 
 ```bash
-git clone --depth=1 --branch release/19.x https://github.com/llvm/llvm-project.git
+git clone --depth=1 --branch release/20.x https://github.com/llvm/llvm-project.git
 cd llvm-project
 ```
 
@@ -152,9 +137,6 @@ cmake -DLLVM_ENABLE_PROJECTS=clang                                  \
                 -DCLANG_ENABLE_ARCMT=OFF                            \
                 -DCLANG_ENABLE_FORMAT=OFF                           \
                 -DCLANG_ENABLE_BOOTSTRAP=OFF                        \
-                -DLLVM_ENABLE_ZSTD=OFF                              \
-                -DLLVM_ENABLE_TERMINFO=OFF                          \
-                -DLLVM_ENABLE_LIBXML2=OFF                           \
                 ../llvm
 cmake --build . --target clang clang-repl --parallel $(nproc --all)
 ```
@@ -203,9 +185,10 @@ Use the following build instructions to build on Linux and MacOS
 ```bash
 git clone https://github.com/root-project/cling.git
 cd ./cling/
-git checkout tags/v1.0
+git checkout tags/v1.2
+git apply -v ../CppInterOp/patches/llvm/cling1.2-LookupHelper.patch
 cd ..
-git clone --depth=1 -b cling-llvm13 https://github.com/root-project/llvm-project.git
+git clone --depth=1 -b cling-llvm18 https://github.com/root-project/llvm-project.git
 mkdir llvm-project/build
 cd llvm-project/build
 cmake -DLLVM_ENABLE_PROJECTS=clang                                 \
@@ -218,13 +201,9 @@ cmake -DLLVM_ENABLE_PROJECTS=clang                                 \
                 -DCLANG_ENABLE_ARCMT=OFF                           \
                 -DCLANG_ENABLE_FORMAT=OFF                          \
                 -DCLANG_ENABLE_BOOTSTRAP=OFF                       \
-                -DLLVM_ENABLE_ZSTD=OFF                             \
-                -DLLVM_ENABLE_TERMINFO=OFF                         \
-                -DLLVM_ENABLE_LIBXML2=OFF                          \
                 ../llvm
 cmake --build . --target clang --parallel $(nproc --all)
 cmake --build . --target cling --parallel $(nproc --all)
-cmake --build . --target gtest_main --parallel $(nproc --all)
 ```
 
 Use the following build instructions to build on Windows
@@ -232,10 +211,11 @@ Use the following build instructions to build on Windows
 ```powershell
 git clone https://github.com/root-project/cling.git
 cd .\cling\
-git checkout tags/v1.0
+git checkout tags/v1.2
+git apply -v ..\CppInterOp\patches\llvm\cling1.2-LookupHelper.patch
 cd ..
-git clone --depth=1 -b cling-llvm13 https://github.com/root-project/llvm-project.git
-$env:ncpus = %NUMBER_OF_PROCESSORS%
+git clone --depth=1 -b cling-llvm18 https://github.com/root-project/llvm-project.git
+$env:ncpus = $([Environment]::ProcessorCount)
 $env:PWD_DIR= $PWD.Path
 $env:CLING_DIR="$env:PWD_DIR\cling"
 mkdir llvm-project\build
@@ -253,7 +233,6 @@ cmake   -DLLVM_ENABLE_PROJECTS=clang                  `
         ../llvm
 cmake --build . --target clang --parallel $env:ncpus
 cmake --build . --target cling --parallel $env:ncpus
-cmake --build . --target gtest_main --parallel $env:ncpus
 ```
 
 Note the 'llvm-project' directory location. On linux and MacOS you execute the following
@@ -279,7 +258,20 @@ Regardless of whether you are building CppInterOP with Cling or Clang-REPL you w
 ```bash
 export CB_PYTHON_DIR="$PWD/cppyy-backend/python"
 export CPPINTEROP_DIR="$CB_PYTHON_DIR/cppyy_backend"
+```
+
+If building CppInterOp against clang-repl you will need to define the following
+
+```bash
 export CPLUS_INCLUDE_PATH="${CPLUS_INCLUDE_PATH}:${LLVM_DIR}/llvm/include:${LLVM_DIR}/clang/include:${LLVM_DIR}/build/include:${LLVM_DIR}/build/tools/clang/include"
+```
+
+and if building against cling you will need to define the following
+
+```bash
+export CLING_DIR="$(pwd)/cling"
+export CLING_BUILD_DIR="$(pwd)/cling/build"
+export CPLUS_INCLUDE_PATH="${CLING_DIR}/tools/cling/include:${CLING_BUILD_DIR}/include:${LLVM_DIR}/llvm/include:${LLVM_DIR}/clang/include:${LLVM_BUILD_DIR}/include:${LLVM_BUILD_DIR}/tools/clang/include:$PWD/include"
 ```
 
 If on MacOS you will also need the following environment variable defined
@@ -293,7 +285,20 @@ On Windows you define as follows (assumes you have defined $env:PWD_DIR= $PWD.Pa
 ```powershell
 $env:CB_PYTHON_DIR="$env:PWD_DIR\cppyy-backend\python"
 $env:CPPINTEROP_DIR="$env:CB_PYTHON_DIR\cppyy_backend"
+```
+
+If building against clang-repl you will have the following defined
+
+```powershell
 $env:CPLUS_INCLUDE_PATH="$env:CPLUS_INCLUDE_PATH;$env:LLVM_DIR\llvm\include;$env:LLVM_DIR\clang\include;$env:LLVM_DIR\build\include;$env:LLVM_DIR\build\tools\clang\include"
+```
+
+and if building against cling
+
+```powershell
+$env:CLING_DIR="$env:PWD_DIR\cling"
+$env:CLING_BUILD_DIR="$env:PWD_DIR\cling\build"
+$env:CPLUS_INCLUDE_PATH="$env:CLING_DIR\tools\cling\include;$env:CLING_BUILD_DIR\include;$env:LLVM_DIR\llvm\include;$env:LLVM_DIR\clang\include;$env:LLVM_BUILD_DIR\include;$env:LLVM_BUILD_DIR\tools\clang\include;$env:PWD_DIR\include;"
 ```
 
 #### Build CppInterOp

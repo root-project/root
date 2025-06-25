@@ -148,7 +148,7 @@ function floatToString(value, fmt, ret_fmt) {
       let diff = sg.length - l - prec;
       if (sg.indexOf('.') > l) diff--;
 
-      if (diff !== 0) {
+      if (diff) {
          prec -= diff;
          if (prec < 0)
             prec = 0;
@@ -185,10 +185,7 @@ class DrawOptions {
    }
 
    /** @summary Returns true if remaining options are empty or contain only separators symbols. */
-   empty() {
-      if (this.opt.length === 0) return true;
-      return this.opt.replace(/[ ;_,]/g, '').length === 0;
-   }
+   empty() { return !this.opt ? true : !this.opt.replace(/[ ;_,]/g, ''); }
 
    /** @summary Returns remaining part of the draw options. */
    remain() { return this.opt; }
@@ -204,10 +201,30 @@ class DrawOptions {
          return true;
 
       let pos2 = pos;
-      while ((pos2 < this.opt.length) && (this.opt[pos2] !== ' ') && (this.opt[pos2] !== ',') && (this.opt[pos2] !== ';')) pos2++;
+      const is_array = postpart === 'array';
+      if (is_array) {
+         if (this.opt[pos2] !== '[')
+            return false;
+         while ((pos2 < this.opt.length) && (this.opt[pos2] !== ']'))
+            pos2++;
+         if (++pos2 > this.opt.length)
+            return false;
+      } else {
+         while ((pos2 < this.opt.length) && (this.opt[pos2] !== ' ') && (this.opt[pos2] !== ',') && (this.opt[pos2] !== ';'))
+            pos2++;
+      }
       if (pos2 > pos) {
          this.part = this.opt.slice(pos, pos2);
          this.opt = this.opt.slice(0, pos) + this.opt.slice(pos2);
+      }
+
+      if (is_array) {
+         try {
+            this.array = JSON.parse(this.part);
+         } catch {
+            this.array = undefined;
+         }
+         return this.array?.length !== undefined;
       }
 
       if (postpart !== 'color')
@@ -233,7 +250,7 @@ class DrawOptions {
    /** @summary Returns remaining part of found option as integer. */
    partAsInt(offset, dflt) {
       let mult = 1;
-      const last = this.part ? this.part[this.part.length - 1] : '';
+      const last = this.part ? this.part.at(-1) : '';
       if (last === 'K')
          mult = 1e3;
       else if (last === 'M')
@@ -497,6 +514,9 @@ class BasePainter {
    /** @summary Returns assigned dom element */
    getDom() { return this.#divid; }
 
+   /** @summary Returns argument for draw function */
+   getDrawDom() { return this.#divid; }
+
    /** @summary Selects main HTML element assigned for drawing
      * @desc if main element was layout, returns main element inside layout
      * @param {string} [is_direct] - if 'origin' specified, returns original element even if actual drawing moved to some other place
@@ -690,7 +710,7 @@ class BasePainter {
             }
          }
 
-         while (main.node().childNodes.length > 0)
+         while (main.node().childNodes.length)
             enlarge.node().appendChild(main.node().firstChild);
 
          origin.property('use_enlarge', true);
@@ -698,7 +718,7 @@ class BasePainter {
          return true;
       }
       if ((action === false) && (state !== 'off')) {
-         while (enlarge.node() && enlarge.node().childNodes.length > 0)
+         while (enlarge.node()?.childNodes.length)
             main.node().appendChild(enlarge.node().firstChild);
 
          enlarge.remove();

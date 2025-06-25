@@ -1,13 +1,10 @@
-import py, os, sys
+import py, os, sys, pytest
 from pytest import mark, raises, skip
-from .support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
+from support import setup_make, ispypy, IS_WINDOWS, IS_MAC_ARM
 
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("fragileDict"))
-
-def setup_module(mod):
-    setup_make("fragile")
+currpath = os.getcwd()
+test_dct = currpath + "/libfragileDict"
 
 
 class TestFRAGILE:
@@ -166,6 +163,7 @@ class TestFRAGILE:
         g = cppyy.gbl.fragile.gI
         assert not g
 
+    @mark.xfail
     def test10_documentation(self):
         """Check contents of documentation"""
 
@@ -397,6 +395,7 @@ class TestFRAGILE:
         assert cppyy.gbl.myvar3
         assert cppyy.gbl.myvar4
 
+    @mark.xfail(run=False, reason="Crashes with \"alma10\"")
     def test16_opaque_handle(self):
         """Support use of opaque handles"""
 
@@ -461,6 +460,7 @@ class TestFRAGILE:
                     'double lb, double ub, double value, bool binary, bool integer, const std::string& name']:
             assert cppyy.gbl.Variable.__init__.__overload__(sig)
 
+    @mark.xfail(reason="Fails on \"alma9 modules_off runtime_cxxmodules=Off\"")
     def test19_gbl_contents(self):
         """Assure cppyy.gbl is mostly devoid of ROOT thingies"""
 
@@ -732,6 +732,7 @@ class TestSIGNALS:
         import cppyy
         cls.fragile = cppyy.load_reflection_info(cls.test_dct)
 
+    @mark.xfail
     def test01_abortive_signals(self):
         """Conversion from abortive signals to Python exceptions"""
 
@@ -871,3 +872,7 @@ class TestSTDNOTINGLOBAL:
         std::span<int> my_test_span1;
         #endif
         """)
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

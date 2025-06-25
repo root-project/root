@@ -959,26 +959,6 @@ class TestClassDATATYPES:
         c.s_voidp = c2
         address_equality_test(c.s_voidp, c2)
 
-    def test22_buffer_to_numpy(self):
-        """Wrap buffer with NumPy array"""
-
-        try:
-            import numpy as np
-        except:
-            raise ImportError("Cannot import numpy")
-
-        import cppyy
-        c = cppyy.gbl.CppyyTestData()
-        N = cppyy.gbl.N
-
-        arr = c.get_double_array()
-        np_arr = np.frombuffer(arr, 'f8', N)
-        assert len(np_arr) == N
-
-        val = 1.0
-        arr[N-1] = val
-        assert arr[N-1] == np_arr[N-1] == val
-
     def test23_pyunicode_to_stlstring(self):
         """Test conversion from Python Unicode str with non-ASCII
         characters to STL string"""
@@ -1016,48 +996,6 @@ class TestClassDATATYPES:
         for res in ROOT.f_cstring(bytes_val), ROOT.f_constcstring(bytes_val):
             assert res._0 == 'ℕ'
             assert res._1 == len(bytes_val)
-
-    def test27_boolarray2cpp(self):
-        '''
-        Pass an bool array to a C++ function taking a bool*
-        Fixes ROOT-10731
-        '''
-        try:
-            import numpy as np
-        except:
-            raise ImportError("Cannot import numpy")
-        import cppyy
-        cppyy.cppdef('int convert(bool* x) { return x[0]; }')
-        x1 = np.array([True], '?') # bool
-        x2 = np.array([True], 'b') # signed char, treated as bool before
-        y1 = cppyy.gbl.convert(x1)
-        y2 = cppyy.gbl.convert(x2)
-        assert y1 == 1
-        assert y2 == 1
-
-    def test28_arraydatamember_lifeline(self):
-        """Test setting of lifeline for array data members"""
-        # 7501
-
-        try:
-            import numpy as np
-        except:
-            raise ImportError("Cannot import numpy")
-
-        import cppyy
-        cppyy.cppdef("""
-        class array_ll {
-        public:
-            float *v1 = nullptr;
-            float *v2 = nullptr;
-        };
-        """)
-        a = cppyy.gbl.array_ll()
-        a.v1 = np.array([1, 2], dtype=np.float32)
-        a.v2 = np.array([3, 4], dtype=np.float32)
-
-        assert a.v1[0] == 1
-        assert a.v1[1] == 2
 
 
 ## actual test run

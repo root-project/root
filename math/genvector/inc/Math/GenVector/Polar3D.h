@@ -23,6 +23,7 @@
 
 #include "Math/GenVector/eta.h"
 
+#include "TMath.h"
 #include <cmath>
 
 namespace ROOT {
@@ -37,7 +38,7 @@ namespace Math {
 
        @ingroup GenVector
 
-       @sa Overview of the @ref GenVector "physics vector library"
+       @see GenVector
    */
 
 
@@ -52,12 +53,12 @@ public :
    /**
       Default constructor with r=theta=phi=0
    */
-   Polar3D() : fR(0), fTheta(0), fPhi(0) {  }
+   constexpr Polar3D() noexcept = default;
 
    /**
       Construct from the polar coordinates:  r, theta and phi
    */
-   Polar3D(T r,T theta,T phi) : fR(r), fTheta(theta), fPhi(phi) { Restrict(); }
+   constexpr Polar3D(T r, T theta, T phi) noexcept : fR(r), fTheta(theta), fPhi(phi) { Restrict(); }
 
    /**
       Construct from any Vector or coordinate system implementing
@@ -66,25 +67,6 @@ public :
    template <class CoordSystem >
    explicit constexpr Polar3D( const CoordSystem & v ) :
       fR(v.R() ),  fTheta(v.Theta() ),  fPhi(v.Phi() )  { Restrict(); }
-
-   // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower
-   // re-implement them ( there is no no need to have them with g++4)
-
-   /**
-      copy constructor
-    */
-   Polar3D(const Polar3D & v) :
-      fR(v.R() ),  fTheta(v.Theta() ),  fPhi(v.Phi() )  {   }
-
-   /**
-      assignment operator
-    */
-   Polar3D & operator= (const Polar3D & v) {
-      fR     = v.R();
-      fTheta = v.Theta();
-      fPhi   = v.Phi();
-      return *this;
-   }
 
    /**
       Set internal data based on an array of 3 Scalar numbers
@@ -158,7 +140,7 @@ public :
 
 
 private:
-   inline static Scalar pi()  { return M_PI; }
+   inline static Scalar pi() { return TMath::Pi(); }
    inline void Restrict() {
       using std::floor;
       if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
@@ -236,9 +218,9 @@ public:
 #endif
 
 private:
-   T fR;
-   T fTheta;
-   T fPhi;
+   T fR = 0;
+   T fTheta = 0;
+   T fPhi = 0;
 };
 
 

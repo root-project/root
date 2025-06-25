@@ -1,0 +1,29 @@
+<lcgdict>
+   <class name="A" />
+   <class name="B" />
+   <ioread type="read"
+           sourceClass="A"
+           targetClass="B"
+           version="[1-]"
+           source=""
+           target="transient_"
+           embed="true"
+           code=" { (void)transient_; newObj-&gt;initializeTransients(); } "/>
+</lcgdict>
+
+<!--
+The rootfile we try to read has been generated using this selection.
+Note the code section. Quite many spaces have been used.
+   <lcgdict>
+      <class name="A" />
+      <class name="B" />
+      <ioread type="read"
+      sourceClass="A"
+      targetClass="B"
+      version="[1-]"
+      source=""
+      target="transient_"
+      embed="true"
+         code="{ newObj->initializeTransients(); } "/>
+      </lcgdict>
+-->

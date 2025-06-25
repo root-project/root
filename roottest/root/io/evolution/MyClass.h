@@ -1,28 +1,27 @@
 
 #include <TNamed.h>
-#include <stdio.h>
+#include <cstdio>
 
 class MyClass : public TObject {
  public:
   MyClass();
   MyClass(int siz);
-  ~MyClass();
+  ~MyClass() override;
 
   void check();
 
-  int n; 
+  int n;
 #if (VERSION==2)
   float *arr; //[n];
 #else
   float arr[20];
 #endif
 
-
 #if (VERSION==1)
-  ClassDef(MyClass,1);
+  ClassDefOverride(MyClass, 1);
 #endif
 #if (VERSION==2)
-  ClassDef(MyClass,2);
+  ClassDefOverride(MyClass, 2);
 #endif
 
 };
@@ -30,11 +29,11 @@ class MyClass : public TObject {
 class Cont : public TObject {
 public:
   MyClass data;
-  Cont() {};
-  Cont(int siz) : data(siz) {};
-  ~Cont() {};
+  Cont() {}
+  Cont(int siz) : data(siz) {}
+  ~Cont() override {}
 
-  ClassDef(Cont,1);
+  ClassDefOverride(Cont,1);
 };
 
 
@@ -45,7 +44,7 @@ MyClass::MyClass() : n(0) {
     for(int i=0;i<20;i++) arr[i] = 0;
 #endif
   }
-  
+
 MyClass::MyClass(int siz) : n(siz) {
 
 #if (VERSION==2)
@@ -57,7 +56,7 @@ MyClass::MyClass(int siz) : n(siz) {
 
   }
 
-MyClass::~MyClass() { 
+MyClass::~MyClass() {
 #if (VERSION==2)
     delete arr;
 #endif

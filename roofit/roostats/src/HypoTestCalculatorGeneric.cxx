@@ -106,8 +106,8 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
 
    // initial setup
    PreHook();
-   const_cast<ModelConfig*>(fNullModel)->GuessObsAndNuisance(*fData);
-   const_cast<ModelConfig*>(fAltModel)->GuessObsAndNuisance(*fData);
+   const_cast<ModelConfig*>(fNullModel)->GuessObsAndNuisance(*fData->get());
+   const_cast<ModelConfig*>(fAltModel)->GuessObsAndNuisance(*fData->get());
 
    std::unique_ptr<const RooArgSet> nullSnapshot {fNullModel->GetSnapshot()};
    if(nullSnapshot == nullptr) {

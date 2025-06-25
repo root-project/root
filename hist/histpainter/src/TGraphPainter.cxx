@@ -656,7 +656,7 @@ NOTE all parameters of user function are taken from
   - `x` is highlighted x-th (i-th) point for graph
   - `y` not in use (only for 2D histogram)
 
-For more complex demo please see for example `$ROOTSYS/tutorials/math/hlquantiles.C` file.
+For more complex demo please see, for example, hlquantiles.C.
 
 */
 
@@ -2290,7 +2290,7 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
             gxwork[1] = xhigh;
             gywork[1] = yhigh;
             ComputeLogs(2, optionZ);
-            if (xlow < rwxmax && xhigh > rwxmin)
+            if (xlow < uxmax && xhigh > uxmin)
                gPad->PaintBox(gxworkl[0],gyworkl[0],gxworkl[1],gyworkl[1]);
             if (!optionBins) {
                xlow  = xlow+delta;

@@ -15,59 +15,36 @@
 #include <string>
 #include <iostream>
 #include <ostream>
-#include <../common/Demangler.h>
+#include <fstream>
+#include <streambuf>
+#include <regex>
 
-//------------------------------------------------------------------------------
-// Dump wrapper
-//------------------------------------------------------------------------------
-template <typename Type>
-void dump( Type* obj, std::ostream& out )
-{
-   const std::type_info& ti( typeid( Type ) );
-   TClass*  cl         = TClass :: GetClass( ti );
+#include "Demangler.h"
 
-   if( !cl )
-   {
-      std :: cout << "[!] Could not get dictionry for class: ";
-      std :: cout << getName( ti ) << std :: endl;
-      return;
-   }
+//template <class Type>
+//void dump( Type *obj, const char *prefix, const char *test_number, unsigned int varnumber, const char *version_number, const char *split)
+//{
+//   ofstream out( TString::Format("%stest%02d_%s%s.log",prefix,varnumber,version_number,split) );
+//   dump(obj, out);
+//}
 
-   if( !obj )
-   {
-      std :: cout << "[!] A null pointer ro object of class: " << cl->GetName();
-      std :: cout << std :: endl;
-      return;
-   }
-
-   TClass*  actClass   = cl->GetActualClass( obj );
-   unsigned baseOffset = actClass->GetBaseClassOffset( cl );
-   obj = (Type*)(((char *)obj) - baseOffset);
-   dump( obj, actClass, out );
-}
-
-template <class Type>
-void dump( Type *obj, const char *prefix, const char *test_number, unsigned int varnumber, const char *version_number, const char *split)
-{
-   ofstream out( TString::Format("../logs/%s/%stest%02d_%s%s.log",test_number,prefix,varnumber,version_number,split) );
-   dump(obj,out);
-}
-
+/*
 class Dumper {
 public:
    TString fPrefix;
    TString fTestNumber;
    TString fVersionNumber;
-   
+
    Dumper(const char *prefix, const char *test, const char *version) : fPrefix(prefix), fTestNumber(test), fVersionNumber(version) {}
-   
+
    template <class Type>
    void dump( Type *obj, unsigned int varnumber, const char *split)
    {
-     ofstream out( TString::Format("../logs/%s/%stest%02d_%s%s.log",fTestNumber.Data(),fPrefix.Data(),varnumber,fVersionNumber.Data(),split) );
-      ::dump(obj,out);
+      ofstream out( TString::Format("%stest%02d_%s%s.log",fPrefix.Data(),varnumber,fVersionNumber.Data(),split) );
+      ::dump(obj, out);
    }
 };
+*/
 
 //------------------------------------------------------------------------------
 // Dump all the primitive members of the class
@@ -120,7 +97,7 @@ void dump( void* obj, TClass* cl, std::ostream& out, std :: string prefix = "" )
                   ele -= actClass->GetBaseClassOffset( vcl );
                   dump( ele, actClass, out, prefix + "  " );
                }
-               
+
             }
          }
          //---------------------------------------------------------------------
@@ -176,14 +153,15 @@ void dump( void* obj, TClass* cl, std::ostream& out, std :: string prefix = "" )
 
          }
       }
-      out << prefix << "End of " << clName << endl; 
+      out << prefix << "End of " << clName << endl;
       return;
    }
 
    //---------------------------------------------------------------------------
    // Process base classes
    //---------------------------------------------------------------------------
-   if( !cl->GetListOfBases()->IsEmpty() )
+   // Workaround - exclude processing of base class for std::pair - they differ on Mac and Linux
+   if( !cl->GetListOfBases()->IsEmpty() && (std::string(clName).find("pair<") != 0))
    {
       out << prefix << "Processing bases of: " << clName << endl;
       TIter next( cl->GetListOfBases() );
@@ -243,7 +221,7 @@ void dump( void* obj, TClass* cl, std::ostream& out, std :: string prefix = "" )
                out << *(short *)(((char *)obj) + member->GetOffset());
                break;
             case kBool_t:
-               out << *(bool *)(((char *)obj) + member->GetOffset()); 
+               out << *(bool *)(((char *)obj) + member->GetOffset());
                //debug: << ' ' << (void*)obj << ' ' << member->GetOffset() << ' ' << (void*)(((char *)obj) + member->GetOffset());
                break;
             default:
@@ -275,7 +253,118 @@ void dump( void* obj, TClass* cl, std::ostream& out, std :: string prefix = "" )
          }
       }
    }
-   out << prefix << "End of " << clName << endl; 
+   out << prefix << "End of " << clName << endl;
+}
+
+//------------------------------------------------------------------------------
+// Dump wrapper
+//------------------------------------------------------------------------------
+template <typename Type>
+void dump( Type* obj, std::ostream& out )
+{
+   const std::type_info& ti( typeid( Type ) );
+   TClass*  cl         = TClass :: GetClass( ti );
+
+   if( !cl )
+   {
+      std :: cout << "[!] Could not get dictionary for class: ";
+      std :: cout << getName( ti ) << std :: endl;
+      return;
+   }
+
+   if( !obj )
+   {
+      std :: cout << "[!] A null pointer ro object of class: " << cl->GetName();
+      std :: cout << std :: endl;
+      return;
+   }
+
+   TClass*  actClass   = cl->GetActualClass( obj );
+   unsigned baseOffset = actClass->GetBaseClassOffset( cl );
+   obj = (Type*)(((char *)obj) - baseOffset);
+   dump( obj, actClass, out );
+}
+
+
+//------------------------------------------------------------------------------
+// Dump wrapper
+//------------------------------------------------------------------------------
+template <typename Type>
+void test_dump( Type* obj, const char *prefix, int testid, const char *suffix0, const char *suffix = nullptr, int correct = 0)
+{
+   const std::type_info& ti( typeid( Type ) );
+   TClass*  cl         = TClass :: GetClass( ti );
+
+   if( !cl )
+   {
+      std :: cout << "[!] Could not get dictionary for class: ";
+      std :: cout << getName( ti ) << std :: endl;
+      return;
+   }
+
+   if( !obj )
+   {
+      std :: cout << "[!] A null pointer ro object of class: " << cl->GetName();
+      std :: cout << std :: endl;
+      return;
+   }
+
+   TClass*  actClass   = cl->GetActualClass( obj );
+   unsigned baseOffset = actClass->GetBaseClassOffset( cl );
+   obj = (Type*)(((char *)obj) - baseOffset);
+
+   TString fbase = TString::Format("%stest%02d_", prefix, testid),
+           forigin =  fbase + suffix0 + ".log",
+           fwrite;
+
+   if (!suffix) {
+      // create origin file
+      fwrite = forigin;
+   } else {
+      // create file after reading
+      fwrite = fbase + suffix + ".log";
+   }
+
+   {
+      ofstream out(fwrite);
+      dump( obj, actClass, out );
+   }
+
+   std::string str0, str1;
+
+   {
+      std::ifstream f1(fwrite);
+      str1 = std::string(std::istreambuf_iterator<char>(f1), std::istreambuf_iterator<char>());
+   }
+
+   if (!suffix) {
+      // dump content of origin data
+      cout << "Content of " << fwrite << endl;
+      cout << str1 << endl;
+   } else {
+      {
+         std::ifstream f0(forigin);
+         str0 = std::string(std::istreambuf_iterator<char>(f0), std::istreambuf_iterator<char>());
+      }
+
+     // compare content of new and origin data, dump only file names
+      if (str0 == str1)
+         cout << "MATCH: " << forigin << " - " << fwrite << endl;
+      else if ((correct == 1) &&
+               (std::regex_replace(str0, std::regex("t bool fCached = [0|1]"), "t bool fCached = any") ==
+                std::regex_replace(str1, std::regex("t bool fCached = [0|1]"), "t bool fCached = any")))
+         cout << "MATCH: " << forigin << " - " << fwrite << " beside transient fCached value" << endl;
+      else if ((correct == 2) &&
+               (str0 == std::regex_replace(str1, std::regex("ClassAIns2"), "ClassAIns")))
+         cout << "MATCH: " << forigin << " - " << fwrite << " beside ClassAIns2 change" << endl;
+      else {
+         cout << "FAILURE: " << forigin << " - " << fwrite << " differs" << endl;
+         cout << "Content of " << forigin << endl;
+         cout << str0 << endl;
+         cout << "Content of " << fwrite << endl;
+         cout << str1 << endl;
+      }
+   }
 }
 
 #endif // DUMPER_H

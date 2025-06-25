@@ -1344,6 +1344,27 @@ public:
 
       RResultPtr<RInterface<RLoopManager>> resPtr;
 
+      auto retrieveTypeID = [](const std::string &colName, const std::string &colTypeName) -> const std::type_info * {
+         try {
+            return &ROOT::Internal::RDF::TypeName2TypeID(colTypeName);
+         } catch (const std::runtime_error &err) {
+            if (std::string(err.what()).find("Cannot extract type_info of type") != std::string::npos) {
+               // We could not find RTTI for this column, thus we cannot write it out at the moment.
+               std::string trueTypeName{colTypeName};
+               if (colTypeName.rfind("CLING_UNKNOWN_TYPE", 0) == 0)
+                  trueTypeName = colTypeName.substr(19);
+               std::string msg{"No runtime type information is available for column \"" + colName +
+                               "\" with type name \"" + trueTypeName +
+                               "\". Thus, it cannot be written to disk with Snapshot. Make sure to generate and load "
+                               "ROOT dictionaries for the type of this column."};
+
+               throw std::runtime_error(msg);
+            } else {
+               throw;
+            }
+         }
+      };
+
       if (options.fOutputFormat == ESnapshotOutputFormat::kRNTuple) {
          if (RDFInternal::GetDataSourceLabel(*this) == "TTreeDS") {
             throw std::runtime_error("Snapshotting from TTree to RNTuple is not yet supported. The current recommended "
@@ -1383,9 +1404,26 @@ public:
             std::string(filename), std::string(dirname), std::string(treename), colListWithAliasesAndSizeBranches,
             options, newRDF->GetLoopManager(), GetLoopManager(), false /* fToRNTuple */});
 
-         resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, RDFDetail::RInferredType>(
-            colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, fProxiedPtr,
-            colListNoAliasesWithSizeBranches.size(), options.fVector2RVec);
+         auto &&nColumns = colListNoAliasesWithSizeBranches.size();
+         const auto validColumnNames = GetValidatedColumnNames(nColumns, colListNoAliasesWithSizeBranches);
+
+         const auto nSlots = fLoopManager->GetNSlots();
+         std::vector<const std::type_info *> colTypeIDs;
+         colTypeIDs.reserve(nColumns);
+         for (decltype(nColumns) i{}; i < nColumns; i++) {
+            const auto &colName = validColumnNames[i];
+            const auto colTypeName = ROOT::Internal::RDF::ColumnName2ColumnTypeName(
+               colName, /*tree*/ nullptr, GetDataSource(), fColRegister.GetDefine(colName), options.fVector2RVec);
+            const std::type_info *colTypeID = retrieveTypeID(colName, colTypeName);
+            colTypeIDs.push_back(colTypeID);
+         }
+         // Crucial e.g. if the column names do not correspond to already-available column readers created by the data
+         // source
+         CheckAndFillDSColumns(validColumnNames, colTypeIDs);
+
+         auto action =
+            RDFInternal::BuildAction(validColumnNames, snapHelperArgs, nSlots, fProxiedPtr, fColRegister, colTypeIDs);
+         resPtr = MakeResultPtr(newRDF, *GetLoopManager(), std::move(action));
       }
 
       if (!options.fLazy)
@@ -2073,7 +2111,9 @@ public:
    /// auto myHist2 = myDf.Histo3D<double, double, float>({"name", "title", 64u, 0., 128., 32u, -4., 4., 8u, -2., 2.},
    ///                                                    "myValueX", "myValueY", "myValueZ");
    /// ~~~
-   ///
+   /// \note If three-dimensional histograms consume too much memory in multithreaded runs, the cloning of TH3D
+   /// per thread can be reduced using ROOT::RDF::Experimental::ThreadsPerTH3(). See the section "Memory Usage" in
+   /// the RDataFrame description.
    /// \note Differently from other ROOT interfaces, the returned histogram is not associated to gDirectory
    /// and the caller is responsible for its lifetime (in particular, a typical source of confusion is that
    /// if result histograms go out of scope before the end of the program, ROOT might display a blank canvas).

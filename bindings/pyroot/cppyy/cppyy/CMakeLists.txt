@@ -32,3 +32,7 @@ endforeach()
 install(DIRECTORY ${localruntimedir}/cppyy
         DESTINATION ${CMAKE_INSTALL_PYTHONDIR}
         COMPONENT libraries)
+
+if(NOT MSVC)
+  ROOT_ADD_TEST_SUBDIRECTORY(test)
+endif()

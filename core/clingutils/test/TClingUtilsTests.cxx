@@ -15,12 +15,15 @@
  *************************************************************************/
 
 #include <TClingUtils.h>
+#include <TClass.h>
+#include <TInterpreter.h>
 
 #include <ROOT/FoundationUtils.hxx>
 
 #include "gtest/gtest.h"
 
 #include <fstream>
+#include <deque>
 
 TEST(TClingUtilsTests, GetCppName)
 {
@@ -84,4 +87,26 @@ TEST(TClingUtilsTests, GetRealPath)
    std::remove("./realfile1");
    std::remove("./realfile2");
 #endif // not R__WIN32
+}
+
+TEST(TClingUtilsTests, CollectionSizeof)
+{
+   // https://its.cern.ch/jira/browse/ROOT-9889
+   EXPECT_EQ(sizeof(std::deque<short>), TClass::GetClass("std::deque<short>")->GetClassSize());
+   EXPECT_EQ(sizeof(std::deque<unsigned short>), TClass::GetClass("std::deque<unsigned short>")->GetClassSize());
+   EXPECT_EQ(sizeof(std::deque<int>), TClass::GetClass("std::deque<int>")->GetClassSize());
+   EXPECT_EQ(sizeof(std::deque<unsigned int>), TClass::GetClass("std::deque<unsigned int>")->GetClassSize());
+   EXPECT_EQ(sizeof(std::deque<long>), TClass::GetClass("std::deque<long>")->GetClassSize());
+   EXPECT_EQ(sizeof(std::deque<unsigned long>), TClass::GetClass("std::deque<unsigned long>")->GetClassSize());
+}
+
+TEST(TClingUtilsTests, ReSubstTemplateArg)
+{
+   // #18811
+   gInterpreter->Declare("template <typename T> struct S {};"
+                         "template <typename T1, typename T2> struct Two { using value_type = S<T2>; };"
+                         "template <typename T> struct One { Two<int, int>::value_type *t; };");
+
+   auto c = TClass::GetClass("One<std::string>");
+   c->BuildRealData();
 }

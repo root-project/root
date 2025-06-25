@@ -704,13 +704,8 @@ namespace {
 #elif __APPLE__
     if (Triple.isMacOSX()) {
       if (CI.getTarget().getSDKVersion() < VersionTuple(14, 4)) {
-        maybeAppendOverlayEntry(stdIncLoc.str(), "std_darwin.MacOSX14.2.sdk.modulemap",
-                                clingIncLoc.str().str(), MOverlay,
-                                /*RegisterModuleMap=*/ true,
-                                /*AllowModulemapOverride=*/ false);
-      } else if (CI.getTarget().getSDKVersion() < VersionTuple(15, 4)) {
         maybeAppendOverlayEntry(stdIncLoc.str(),
-                                "std_darwin.MacOSX15.2.sdk.modulemap",
+                                "std_darwin.MacOSX14.2.sdk.modulemap",
                                 clingIncLoc.str().str(), MOverlay,
                                 /*RegisterModuleMap=*/true,
                                 /*AllowModulemapOverride=*/false);
@@ -1385,11 +1380,6 @@ namespace {
     // Keep frame pointer to make JIT stack unwinding reliable for profiling
     if (profilingEnabled)
       argvCompile.push_back("-fno-omit-frame-pointer");
-#endif
-
-#ifdef __cpp_sized_deallocation
-      // Propagate the setting of the compiler to the interpreter
-      argvCompile.push_back("-fsized-deallocation");
 #endif
 
     // Disable optimizations and keep frame pointer when debugging, overriding

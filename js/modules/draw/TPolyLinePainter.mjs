@@ -8,14 +8,23 @@ import { assignContextMenu } from '../gui/menu.mjs';
 
 const kPolyLineNDC = BIT(14);
 
+/**
+ * @summary Painter for TPolyLine class
+ * @private
+ */
+
 class TPolyLinePainter extends ObjectPainter {
+
+   #dx; // interactive change
+   #dy; // interactive change
+   #isndc; // if NDC coordinates used
 
    /** @summary Dragging object
     *  @private */
    moveDrag(dx, dy) {
-      this.dx += dx;
-      this.dy += dy;
-      makeTranslate(this.draw_g.select('path'), this.dx, this.dy);
+      this.#dx += dx;
+      this.#dy += dy;
+      makeTranslate(this.getG().select('path'), this.#dx, this.#dy);
    }
 
    /** @summary End dragging object
@@ -23,12 +32,12 @@ class TPolyLinePainter extends ObjectPainter {
    moveEnd(not_changed) {
       if (not_changed) return;
       const polyline = this.getObject(),
-            func = this.getAxisToSvgFunc(this.isndc);
+            func = this.getAxisToSvgFunc(this.#isndc);
       let exec = '';
 
       for (let n = 0; n <= polyline.fLastPoint; ++n) {
-         const x = this.svgToAxis('x', func.x(polyline.fX[n]) + this.dx, this.isndc),
-               y = this.svgToAxis('y', func.y(polyline.fY[n]) + this.dy, this.isndc);
+         const x = this.svgToAxis('x', func.x(polyline.fX[n]) + this.#dx, this.#isndc),
+               y = this.svgToAxis('y', func.y(polyline.fY[n]) + this.#dy, this.#isndc);
          polyline.fX[n] = x;
          polyline.fY[n] = y;
          exec += `SetPoint(${n},${x},${y});;`;
@@ -57,9 +66,8 @@ class TPolyLinePainter extends ObjectPainter {
 
    /** @summary Redraw poly line */
    redraw() {
-      this.createG();
-
-      const polyline = this.getObject(),
+      const g = this.createG(),
+            polyline = this.getObject(),
             isndc = polyline.TestBit(kPolyLineNDC),
             opt = this.getDrawOpt() || polyline.fOption,
             dofill = (polyline._typename === clTPolyLine) && (isStr(opt) && opt.toLowerCase().indexOf('f') >= 0),
@@ -72,17 +80,17 @@ class TPolyLinePainter extends ObjectPainter {
       for (let n = 0; n <= polyline.fLastPoint; ++n)
          cmd += `${n > 0?'L':'M'}${func.x(polyline.fX[n])},${func.y(polyline.fY[n])}`;
 
-      this.draw_g.append('svg:path')
-                 .attr('d', cmd + (dofill ? 'Z' : ''))
-                 .call(dofill ? () => {} : this.lineatt.func)
-                 .call(this.fillatt.func);
+      g.append('svg:path')
+       .attr('d', cmd + (dofill ? 'Z' : ''))
+       .call(dofill ? () => {} : this.lineatt.func)
+       .call(this.fillatt.func);
 
       assignContextMenu(this);
 
       addMoveHandler(this);
 
-      this.dx = this.dy = 0;
-      this.isndc = isndc;
+      this.#dx = this.#dy = 0;
+      this.#isndc = isndc;
 
       return this;
    }

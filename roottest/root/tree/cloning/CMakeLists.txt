@@ -1,160 +1,92 @@
-if(ROOTTEST_DIR)
-      set(ROOT_EVENT_DIR ${ROOTTEST_DIR}/root/treeformula/event/)
-else()
-      set(ROOT_EVENT_DIR ${ROOT_SOURCE_DIR}/roottest/root/treeformula/event/)
-endif()
-
 # Generating dataset from roottest-treeformula-event-make test
 # FIXME: it will be nice to move roottest-treeformula-event to CMake and add it as dependency
 # To fix runtime_cxxmodules, we need to use already build artefacts.
 
-if(TARGET onepcm)
-      set(EventDependencies "onepcm")
-endif()
-
-if(NOT TARGET eventexe)
-      ROOT_GENERATE_DICTIONARY(EventDict ${ROOT_EVENT_DIR}/Event.h
-                  LINKDEF ${ROOT_EVENT_DIR}/EventLinkDef.h)
-
-      ROOTTEST_LINKER_LIBRARY(EventTreeFormula TEST ${ROOT_EVENT_DIR}/Event.cxx EventDict.cxx
-                  LIBRARIES ROOT::Core ROOT::Tree ROOT::Hist ROOT::MathCore)
-
-      ROOTTEST_GENERATE_EXECUTABLE(EventGenerate ${ROOT_EVENT_DIR}/MainEvent.cxx
-                  LIBRARIES ROOT::Core ROOT::RIO ROOT::Net ROOT::Tree ROOT::Hist ROOT::MathCore EventTreeFormula)
-
-      if(MSVC)
-        add_dependencies(EventGenerate EventTreeFormula)
-      endif()
-
-      add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/Event.root
-                  COMMAND ./EventGenerate 6 0 0 1 30 > log
-                  DEPENDS EventGenerate ${EventDependencies})
-
-      add_custom_target(event-generation ALL DEPENDS Event.root)
-
-      add_custom_command(
-        TARGET event-generation
-        COMMAND ${CMAKE_COMMAND} -E copy
-                Event.root
-                event1.root
-        COMMAND ${CMAKE_COMMAND} -E copy
-                Event.root
-                event2.root)
-
-      set(RootExeOptions -e "gSystem->Load(\"libEventTreeFormula\")")
-
-      ROOTTEST_ADD_TEST(treeCloneTest
-                  MACRO runEvent.C
-                  PRECMD ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/run.C
-                  OUTREF references/treeCloneTest.ref)
-
-else()
-   if(MSVC)
-      if(CMAKE_GENERATOR MATCHES Ninja)
-         set(RootExeOptions -e "gSystem->Load(\"${ROOTSYS}/test/libEvent\")")
-      else()
-         set(RootExeOptions -e "gSystem->Load(\"${ROOTSYS}/test/$<CONFIG>/libEvent\")")
-      endif()
+if(MSVC)
+   if(CMAKE_GENERATOR MATCHES Ninja)
+      set(test_bin_dir "${ROOTSYS}/test")
    else()
-      set(RootExeOptions -e "gSystem->Load(\"../test/libEvent\")")
-
-      ROOTTEST_ADD_TEST(treeCloneTest
-                  PRECMD sh ${CMAKE_CURRENT_SOURCE_DIR}/generate-eventfile.sh ${ROOT_DIR}
-                  COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/run.C -e "gSystem->Load(\"../test/libEvent\")"
-                  POSTCMD ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/runEvent.C -e "gSystem->Load(\"../test/libEvent\")"
-                  OUTREF references/treeCloneTest.ref)
+      set(test_bin_dir "${ROOTSYS}/test/$<CONFIG>")
    endif()
+else()
+   set(test_bin_dir "${CMAKE_BINARY_DIR}/test")
 endif()
 
-if(ROOTTEST_DIR)
-      set(ROOT_DIR ${ROOTSYS})
-else()
-      set(ROOT_DIR ${ROOT_SOURCE_DIR})
-endif()
+ROOTTEST_ADD_TEST(hsimple-create
+                  MACRO ${CMAKE_SOURCE_DIR}/tutorials/hsimple.C
+                  PASSRC 255
+                  FIXTURES_SETUP root-tree-cloning-hsimple-fixture)
 
-if(NOT TARGET hsimple)
-      add_custom_target(hsimple-file ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/hsimple.root)
-      add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/hsimple.root
-                  COMMAND ${ROOT_root_CMD} -q -l -b ${ROOT_TUTORIALS_DIR}/hsimple.C -e "{ TFile f(\"hsimple.root\"); TTree *ntuple; f.GetObject(\"ntuple\",ntuple); return ntuple ? 0 : 1; }" > hsimple.log
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                  DEPENDS ${HSimpleDependencies}
-                  VERBATIM)
-      add_custom_command(
-        TARGET  hsimple-file
-        COMMAND ${CMAKE_COMMAND} -E copy
-                ${CMAKE_CURRENT_BINARY_DIR}/hsimple.root
-                hsimple1.root
-        COMMAND ${CMAKE_COMMAND} -E copy
-                ${CMAKE_CURRENT_BINARY_DIR}/hsimple.root
-                hsimple2.root)
-else()
-      add_custom_target(hsimple-file ALL DEPENDS
-        ${CMAKE_CURRENT_BINARY_DIR}/hsimple1.root
-        ${CMAKE_CURRENT_BINARY_DIR}/hsimple2.root
-      )
-      set(HSimpleDependencies "hsimple")
-      add_dependencies(hsimple-file ${HSimpleDependencies})
-      add_custom_command(OUTPUT
-        ${CMAKE_CURRENT_BINARY_DIR}/hsimple1.root
-        ${CMAKE_CURRENT_BINARY_DIR}/hsimple2.root
-        COMMAND ${CMAKE_COMMAND} -E copy
-                ${CMAKE_BINARY_DIR}/tutorials/hsimple.root
-                hsimple1.root
-        COMMAND ${CMAKE_COMMAND} -E copy
-                ${CMAKE_BINARY_DIR}/tutorials/hsimple.root
-                hsimple2.root)
-endif()
+ROOTTEST_ADD_TEST(hsimple-copy1
+                  FIXTURES_REQUIRED root-tree-cloning-hsimple-fixture
+                  FIXTURES_SETUP root-tree-cloning-hsimple1-fixture
+                  COMMAND ${CMAKE_COMMAND} -E copy hsimple.root hsimple1.root)
+
+ROOTTEST_ADD_TEST(hsimple-copy2
+                  FIXTURES_REQUIRED root-tree-cloning-hsimple-fixture
+                  FIXTURES_SETUP root-tree-cloning-hsimple2-fixture
+                  COMMAND ${CMAKE_COMMAND} -E copy hsimple.root hsimple2.root)
+
+ROOTTEST_ADD_TEST(hsimple-clone
+                  MACRO run.C
+                  FIXTURES_REQUIRED root-tree-cloning-hsimple1-fixture root-tree-cloning-hsimple2-fixture)
+
+ROOTTEST_ADD_TEST(treeCloneTest-generate
+                  COMMAND ${test_bin_dir}/eventexe${CMAKE_EXECUTABLE_SUFFIX} 6 0 0 1 30 0 1 event1.root event2.root
+                  DEPENDS Event eventexe
+                  FIXTURES_SETUP root-tree-cloning-generate-fixture)
+
+ROOTTEST_ADD_TEST(treeCloneTest
+                  MACRO runEvent.C
+                  ROOTEXE_OPTS -e "(void)gSystem->Load(\"${test_bin_dir}/libEvent\")"
+                  OUTREF references/treeCloneTest.ref
+                  FIXTURES_REQUIRED root-tree-cloning-generate-fixture)
 
 ROOTTEST_ADD_TEST(runtreeCloneTest2
                   MACRO  runtreeCloneTest2.C
-                  PRECMD cp -r ${CMAKE_CURRENT_SOURCE_DIR}/files/root ${CMAKE_CURRENT_BINARY_DIR}
+                  COPY_TO_BUILDDIR files/root/BAC85D5487F19A3B6755584FBC29B3AF_100.root files/root/BAC85D5487F19A3B6755584FBC29B3AF_107.root
                   OUTCNVCMD grep -v Adding
                   OUTREF references/treeCloneTest2.ref)
+
 if(${compression_default} STREQUAL "lz4")
-    if(${CMAKE_SIZEOF_VOID_P} EQUAL "8")
-            ROOTTEST_ADD_TEST(exectrim
-                  MACRO exectrim.C
-                  COPY_TO_BUILDDIR files/output_Coulomb_LER_study_10.root
-                  OUTREF references/exectrimLZ4.ref)
-    else()
-            ROOTTEST_ADD_TEST(exectrim
-                  MACRO exectrim.C
-                  COPY_TO_BUILDDIR files/output_Coulomb_LER_study_10.root
-                  OUTREF references/exectrimLZ4_i686.ref)
-    endif()
+  if(${CMAKE_SIZEOF_VOID_P} EQUAL "8")
+    set(_ref references/exectrimLZ4.ref)
+  else()
+    set(_ref references/exectrimLZ4_i686.ref)
+  endif()
 elseif(${compression_default} STREQUAL "zlib")
   if(ZLIB_CF)
-      if(${CMAKE_SIZEOF_VOID_P} EQUAL "8")
-            ROOTTEST_ADD_TEST(exectrim
-                  MACRO exectrim.C
-                  COPY_TO_BUILDDIR files/output_Coulomb_LER_study_10.root
-                  OUTREF references/exectrimZLIB_builtinzlib.ref)
-      else()
-	   ROOTTEST_ADD_TEST(exectrim
-                  MACRO exectrim.C
-                  COPY_TO_BUILDDIR files/output_Coulomb_LER_study_10.root
-		  OUTREF references/exectrimZLIB_builtinzlib_i686.ref)
-      endif()
+    if(${CMAKE_SIZEOF_VOID_P} EQUAL "8")
+      set(_ref references/exectrimZLIB_builtinzlib.ref)
+    else()
+	set(_ref references/exectrimZLIB_builtinzlib_i686.ref)
+    endif()
   else()
-      if(${CMAKE_SIZEOF_VOID_P} EQUAL "8")
-            ROOTTEST_ADD_TEST(exectrim
-                  MACRO exectrim.C
-                  COPY_TO_BUILDDIR files/output_Coulomb_LER_study_10.root
-                  OUTREF references/exectrimZLIB.ref)
-      else()
-           ROOTTEST_ADD_TEST(exectrim
-                  MACRO exectrim.C
-                  COPY_TO_BUILDDIR files/output_Coulomb_LER_study_10.root
-                  OUTREF references/exectrimZLIB_i686${ref_suffix})
-      endif()
-  endif()      
+    if(${CMAKE_SIZEOF_VOID_P} EQUAL "8")
+      set(_ref references/exectrimZLIB.ref)
+    else()
+      set(_ref references/exectrimZLIB_i686${ref_suffix})
+    endif()
+  endif()
 endif()
+
+if(_ref)
+  ROOTTEST_ADD_TEST(exectrim
+                    MACRO exectrim.C
+                    COPY_TO_BUILDDIR files/output_Coulomb_LER_study_10.root
+                    OUTREF ${_ref})
+endif()
+
+
+ROOTTEST_ADD_TEST(deepClass-CopyTree
+                  MACRO make_CopyTree.C
+                  COPY_TO_BUILDDIR files/ver_40200.root
+                  FIXTURES_SETUP root-tree-cloning-deepClass-CopyTree-fixture)
 
 ROOTTEST_ADD_TEST(deepClass
                   MACRO rundeepClass.C
-                  PRECMD ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/make_CopyTree.C
-                  COPY_TO_BUILDDIR files/ver_40200.root
-                  OUTREF references/deepClass.ref)
+                  OUTREF references/deepClass.ref
+                  FIXTURES_REQUIRED root-tree-cloning-deepClass-CopyTree-fixture)
 
 ROOTTEST_ADD_TEST(mergeWithDir
                   MACRO runmergeWithDir.C

@@ -6,6 +6,7 @@
 
 mv CPyCppyy/CMakeLists.txt CPyCppyy_CMakeLists.txt
 mv cppyy/CMakeLists.txt cppyy_CMakeLists.txt
+mv cppyy/test/CMakeLists.txt cppyy_test_CMakeLists.txt
 
 rm -rf CPyCppyy
 rm -rf cppyy
@@ -18,14 +19,20 @@ git clone https://github.com/wlav/CPyCppyy.git
 git clone https://github.com/wlav/cppyy.git
 
 cd CPyCppyy/
-git reset --hard 519071905e5d6590e924932c20d3a8e4a7eeff13
+git reset --hard c6d623a43f346b7703032df166fb2ca788456526
 
 
 cd CPyCppyy
 
 git remote rename origin wlav
+
+git remote add ferdymercury https://github.com/ferdymercury/CPyCppyy.git
 git remote add guitargeek https://github.com/guitargeek/CPyCppyy.git
+git remote add vepadulano https://github.com/vepadulano/CPyCppyy.git
+
+git fetch ferdymercury
 git fetch guitargeek
+git fetch vepadulano
 
 git checkout -b sync
 
@@ -34,6 +41,8 @@ rebase_topic () {
 }
 
 rebase_topic guitargeek/py_errors
+rebase_topic vepadulano/improve-clone-heuristic
+rebase_topic ferdymercury/patch-1
 
 cd ../
 
@@ -48,17 +57,20 @@ rm -rf cppyy/.git
 
 mv CPyCppyy_CMakeLists.txt CPyCppyy/CMakeLists.txt
 mv cppyy_CMakeLists.txt cppyy/CMakeLists.txt
+mv cppyy_test_CMakeLists.txt cppyy/test/CMakeLists.txt
 
 # Apply patches (they were created with git format-patch -1 HEAD)
 # Alternatively, one can also use "git am" to create individual commits
 git apply patches/CPyCppyy-Adapt-to-no-std-in-ROOT.patch
 git apply patches/CPyCppyy-Always-convert-returned-std-string.patch
-git apply patches/CPyCppyy-Disable-implicit-conversion-to-smart-ptr.patch
 git apply patches/CPyCppyy-TString_converter.patch
 git apply patches/CPyCppyy-Prevent-construction-of-agg-init-for-tuple.patch
 git apply patches/CPyCppyy-Support-conversion-from-str-to-char.patch # https://github.com/wlav/CPyCppyy/pull/21
 git apply patches/CPyCppyy-Perform-function-style-casts.patch # https://github.com/wlav/CPyCppyy/pull/34
 git apply patches/CPyCppyy-Use-PyMapping_GetOptionalItemString-where-necessary.patch # https://github.com/wlav/CPyCppyy/pull/44
+git apply patches/CPyCppyy-Add-converters-and-low-level-views-for-fixed-width-integers.patch # https://github.com/wlav/CPyCppyy/pull/52
+git apply patches/CPyCppyy-Correct-check-for-temporaries-in-Python-3.14.patch # https://github.com/wlav/CPyCppyy/pull/53
+git apply patches/CPyCppyy-Disable-implicit-conversion-to-smart-ptr.patch
 git apply patches/CPyCppyy-Disable_std-vector-numpy-array-pythonization.patch
 git apply patches/cppyy-No-CppyyLegacy-namespace.patch
 git apply patches/cppyy-Remove-Windows-workaround.patch

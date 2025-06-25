@@ -38,6 +38,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <iterator> // for std::make_move_iterator
 #include <limits> // for numeric_limits
 #include <memory> // uninitialized_value_construct
 #include <new>
@@ -511,12 +512,7 @@ struct alignas(T) SmallVectorStorage<T, 0> {
 template <typename T>
 struct RVecInlineStorageSize {
 private:
-#ifdef R__HAS_HARDWARE_INTERFERENCE_SIZE
-   static constexpr std::size_t cacheLineSize = std::hardware_destructive_interference_size;
-#else
-   // safe bet: assume the typical 64 bytes
-   static constexpr std::size_t cacheLineSize = 64;
-#endif
+   static constexpr std::size_t cacheLineSize = R__HARDWARE_INTERFERENCE_SIZE;
    static constexpr unsigned elementsPerCacheLine = (cacheLineSize - sizeof(SmallVectorBase)) / sizeof(T);
    static constexpr unsigned maxInlineByteSize = 1024;
 

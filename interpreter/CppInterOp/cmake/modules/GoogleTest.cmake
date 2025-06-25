@@ -20,8 +20,13 @@ endif()
 
 include(ExternalProject)
 if (EMSCRIPTEN)
-  set(config_cmd emcmake cmake)
-  set(build_cmd emmake make)
+  if (CMAKE_C_COMPILER MATCHES ".bat")
+    set(config_cmd emcmake.bat cmake)
+    set(build_cmd emmake.bat make)
+  else()
+    set(config_cmd emcmake cmake)
+    set(build_cmd emmake make)
+  endif()
 else()
   set(config_cmd ${CMAKE_COMMAND})
   set(build_cmd ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}/unittests/googletest-prefix/src/googletest-build/ --config $<CONFIG>)
@@ -31,7 +36,7 @@ ExternalProject_Add(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
   GIT_SHALLOW 1
-  GIT_TAG v1.15.2
+  GIT_TAG v1.17.0
   UPDATE_COMMAND ""
   # # Force separate output paths for debug and release builds to allow easy
   # # identification of correct lib in subsequent TARGET_LINK_LIBRARIES commands
@@ -76,7 +81,7 @@ else()
 endif()
 
 # Use gmock_main instead of gtest_main because it initializes gtest as well.
-# Note: The libraries are listed in reverse order of their dependancies.
+# Note: The libraries are listed in reverse order of their dependencies.
 foreach(lib gtest gtest_main gmock gmock_main)
   add_library(${lib} IMPORTED STATIC GLOBAL)
   set_target_properties(${lib} PROPERTIES

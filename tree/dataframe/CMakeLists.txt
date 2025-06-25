@@ -53,6 +53,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/InterfaceUtils.hxx
     ROOT/RDF/RActionBase.hxx
     ROOT/RDF/RAction.hxx
+    ROOT/RDF/RActionSnapshot.hxx
     ROOT/RDF/RActionImpl.hxx
     ROOT/RDF/RColumnRegister.hxx
     ROOT/RDF/RNewSampleNotifier.hxx
@@ -108,6 +109,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDFActionHelpers.cxx
     src/RDFColumnReaderUtils.cxx
     src/RDFColumnRegister.cxx
+    src/RDFColumnReaderUtils.cxx
     src/RDFDisplay.cxx
     src/RDFGraphUtils.cxx
     src/RDFHistoModels.cxx

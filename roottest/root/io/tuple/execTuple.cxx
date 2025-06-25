@@ -72,7 +72,7 @@ void write(const char *filename = "tuple.root")
    std::get<1>(data) = 200/3.0;
    std::get<2>(data).fValue = 13;
    std::get<3>(data) = 7;
-   std::get<4>(data) = 2^7;
+   std::get<4>(data) = (long)2 ^ (long)7;
 
    f.WriteObject(&data,"tupleData");
 }
@@ -95,7 +95,7 @@ int read(const char *filename = "tuple.root")
    if (!tester(1, std::get<1>(*data), 200/3.0)) result += 4;
    if (!tester(2, std::get<2>(*data).fValue, 13)) result += 8;
    if (!tester(3, std::get<3>(*data), 7)) result += 16;
-   if (!tester(4, std::get<4>(*data), 2^7)) result += 32;
+   if (!tester(4, std::get<4>(*data), (long)2 ^ (long)7)) result += 32;
 
    return result;
 }

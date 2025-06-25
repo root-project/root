@@ -1,0 +1,24 @@
+
+Processing read.C...
+Reading int.root
+Reading float16.root
+Reading double32.root
+Reading regular.root
+Reading char.root
+Reading short.root
+Reading long.root
+Reading longlong.root
+Reading uchar.root
+Reading ushort.root
+Reading uint.root
+Reading ulong.root
+Reading ulonglong.root
+Reading float.root
+Reading double.root
+Reading double32enough.root
+Reading double32mantis.root
+Reading float16enough.root
+Reading float16mantis.root
+Reading double32tooshort.root
+Reading float16tooshort.root
+(bool) false

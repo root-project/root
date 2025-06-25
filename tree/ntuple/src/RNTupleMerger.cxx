@@ -285,7 +285,7 @@ struct RCommonField {
    const ROOT::RFieldDescriptor *fSrc;
    const ROOT::RFieldDescriptor *fDst;
 
-   RCommonField(const ROOT::RFieldDescriptor *src, const ROOT::RFieldDescriptor *dst) : fSrc(src), fDst(dst) {}
+   RCommonField(const ROOT::RFieldDescriptor &src, const ROOT::RFieldDescriptor &dst) : fSrc(&src), fDst(&dst) {}
 };
 
 struct RDescriptorsComparison {
@@ -411,7 +411,7 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
       const auto srcFieldId = src.FindFieldId(dstField.GetFieldName());
       if (srcFieldId != ROOT::kInvalidDescriptorId) {
          const auto &srcField = src.GetFieldDescriptor(srcFieldId);
-         commonFields.push_back({&srcField, &dstField});
+         commonFields.push_back({srcField, dstField});
       } else {
          res.fExtraDstFields.emplace_back(&dstField);
       }
@@ -423,7 +423,11 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
    }
 
    // Check compatibility of common fields
-   for (const auto &field : commonFields) {
+   auto fieldsToCheck = commonFields;
+   // NOTE: using index-based for loop because the collection may get extended by the iteration
+   for (std::size_t fieldIdx = 0; fieldIdx < fieldsToCheck.size(); ++fieldIdx) {
+      const auto &field = fieldsToCheck[fieldIdx];
+
       // NOTE: field.fSrc and field.fDst have the same name by construction
       const auto &fieldName = field.fSrc->GetFieldName();
 
@@ -480,6 +484,16 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
          errors.push_back(ss.str());
       }
 
+      const auto srcRole = field.fSrc->GetStructure();
+      const auto dstRole = field.fDst->GetStructure();
+      if (srcRole != dstRole) {
+         std::stringstream ss;
+         ss << "Field `" << field.fSrc->GetFieldName()
+            << "` has a different structural role than previously-seen field with the same name (old: " << dstRole
+            << ", new: " << srcRole << ")";
+         errors.push_back(ss.str());
+      }
+
       // Require that column representations match
       const auto srcNCols = field.fSrc->GetLogicalColumnIds().size();
       const auto dstNCols = field.fDst->GetLogicalColumnIds().size();
@@ -533,6 +547,23 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
             }
          }
       }
+
+      // Require that subfields are compatible
+      const auto &srcLinks = field.fSrc->GetLinkIds();
+      const auto &dstLinks = field.fDst->GetLinkIds();
+      if (srcLinks.size() != dstLinks.size()) {
+         std::stringstream ss;
+         ss << "Field `" << field.fSrc->GetFieldName()
+            << "` has a different number of children than previously-seen field with the same name (old: "
+            << dstLinks.size() << ", new: " << srcLinks.size() << ")";
+         errors.push_back(ss.str());
+      } else {
+         for (std::size_t linkIdx = 0, linkNum = srcLinks.size(); linkIdx < linkNum; ++linkIdx) {
+            const auto &srcSubfield = src.GetFieldDescriptor(srcLinks[linkIdx]);
+            const auto &dstSubfield = dst.GetFieldDescriptor(dstLinks[linkIdx]);
+            fieldsToCheck.push_back(RCommonField{srcSubfield, dstSubfield});
+         }
+      }
    }
 
    std::string errMsg;
@@ -545,13 +576,7 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
    if (errMsg.length())
       return R__FAIL(errMsg);
 
-   res.fCommonFields.reserve(commonFields.size());
-   for (const auto &[srcField, dstField] : commonFields) {
-      res.fCommonFields.emplace_back(srcField, dstField);
-   }
-
-   // TODO(gparolini): we should exhaustively check the field tree rather than just the top level fields,
-   // in case the user forgets to change the version number on one field.
+   res.fCommonFields = std::move(commonFields);
 
    return ROOT::RResult(res);
 }
@@ -613,7 +638,7 @@ static void ExtendDestinationModel(std::span<const ROOT::RFieldDescriptor *> new
    for (const auto *field : newFields) {
       const auto newFieldInDstId = mergeData.fDstDescriptor.FindFieldId(field->GetFieldName());
       const auto &newFieldInDst = mergeData.fDstDescriptor.GetFieldDescriptor(newFieldInDstId);
-      commonFields.emplace_back(field, &newFieldInDst);
+      commonFields.emplace_back(*field, newFieldInDst);
    }
 }
 
@@ -656,11 +681,11 @@ static void GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<con
       const auto structure = field->GetStructure();
 
       if (structure == ROOT::ENTupleStructure::kStreamer) {
-         Fatal(
-            "RNTuple::Merge",
-            "Destination RNTuple contains a streamer field (%s) that is not present in one of the sources. "
-            "Creating a default value for a streamer field is ill-defined, therefore the merging process will abort.",
-            field->GetFieldName().c_str());
+         R__LOG_FATAL(NTupleMergeLog())
+            << "RNTuple::Merge"
+               "Destination RNTuple contains a streamer field (%s) that is not present in one of the sources. "
+               "Creating a default value for a streamer field is ill-defined, therefore the merging process will abort."
+            << field->GetFieldName();
          continue;
       }
 

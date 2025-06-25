@@ -232,15 +232,26 @@ static Bool_t IsGoodChar(char c, TGNumberFormat::EStyle style,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// \brief Copy the string stored in `src` into `dst`, skipping some chars
+/// depending on the format and style.
+/// The copy is stopped when reaching `dstCap-1` copied chars or when finding a
+/// null terminator char in `src`, whatever happens first.
+/// \param src (owned by caller) is the preallocated char buffer to be copied
+/// \param dst (owned by caller) is a preallocated char buffer where result is stored
+/// \param dstCap must match the length of dst buffer and be bigger than 0
+/// \param style see TGNumberFormat::EStyle
+/// \param attr see TGNumberFormat::EAttribute
+/// \note If `src` is a nullptr, this function is a no-op and returns silently
 
-static void CopyAndEliminateGarbage(char *dst,
-                                    std::size_t dstCap,
-                                    const char *src,
-                                    TGNumberFormat::EStyle style,
-                                    TGNumberFormat::EAttribute attr)
+static void CopyAndSkipGarbage(char *dst, std::size_t dstCap, const char *src, TGNumberFormat::EStyle style,
+                               TGNumberFormat::EAttribute attr)
 {
+   if (!src)
+      return;
+   assert(dstCap > 0);
+   assert(dst);
    std::size_t dstIdx = 0;
-   while (dstIdx < dstCap - 1 && src) {
+   while (dstIdx < dstCap - 1 && *src) {
       if (IsGoodChar(*src, style, attr)) {
          dst[dstIdx++] = *src;
       }
@@ -1260,7 +1271,7 @@ void TGNumberEntryField::SetHexNumber(ULong_t val, Bool_t emit)
 void TGNumberEntryField::SetText(const char *text, Bool_t emit)
 {
    char buf[256];
-   CopyAndEliminateGarbage(buf, sizeof(buf), text, fNumStyle, fNumAttr);
+   CopyAndSkipGarbage(buf, sizeof(buf), text, fNumStyle, fNumAttr);
    TGTextEntry::SetText(buf, emit);
    fNeedsVerification = kFALSE;
 }

@@ -9,6 +9,7 @@ const kNormal = 1, /* kLessTraffic = 2, */ kOffline = 3;
 class RObjectPainter extends ObjectPainter {
 
    #pending_request;
+   #auto_colors; // handle for auto colors
 
    constructor(dom, obj, opt, csstype) {
       super(dom, obj, opt);
@@ -18,8 +19,8 @@ class RObjectPainter extends ObjectPainter {
    /** @summary Add painter to pad list of painters
     * @desc For RCanvas also handles common style
     * @protected */
-   addToPadPrimitives() {
-      const pp = super.addToPadPrimitives();
+   addToPadPrimitives(pad_painter) {
+      const pp = super.addToPadPrimitives(pad_painter);
 
       if (pp && !this.rstyle && pp.next_rstyle)
          this.rstyle = pp.next_rstyle;
@@ -149,16 +150,13 @@ class RObjectPainter extends ObjectPainter {
 
       if (val === 'auto') {
          const pp = this.getPadPainter();
-         if (pp?._auto_color_cnt !== undefined) {
-            const pal = pp.getHistPalette(),
-                  cnt = pp._auto_color_cnt++;
-            let num = pp._num_primitives - 1;
-            if (num < 2) num = 2;
-            val = pal ? pal.getColorOrdinal((cnt % num) / num) : 'blue';
-            if (!this._auto_colors) this._auto_colors = {};
-            this._auto_colors[name] = val;
-         } else if (this._auto_colors && this._auto_colors[name])
-            val = this._auto_colors[name];
+         if (pp) {
+            val = pp.getAutoColor();
+            if (!this.#auto_colors)
+               this.#auto_colors = {};
+            this.#auto_colors[name] = val;
+         } else if (this.#auto_colors && this.#auto_colors[name])
+            val = this.#auto_colors[name];
          else {
             console.error(`Autocolor ${name} not defined yet - please check code`);
             val = '';
@@ -257,7 +255,7 @@ class RObjectPainter extends ObjectPainter {
    /** @summary Create RChangeAttr, which can be applied on the server side
      * @private */
    v7AttrChange(req, name, value, kind) {
-      if (!this.snapid)
+      if (!this.getSnapId())
          return false;
 
       if (!req._typename) {
@@ -269,7 +267,7 @@ class RObjectPainter extends ObjectPainter {
       }
 
       if (this.cssprefix) name = this.cssprefix + name;
-      req.ids.push(this.snapid);
+      req.ids.push(this.getSnapId());
       req.names.push(name);
 
       if ((value === null) || (value === undefined)) {
@@ -313,11 +311,12 @@ class RObjectPainter extends ObjectPainter {
     * @param method is method of painter object which will be called when getting reply */
    v7SubmitRequest(kind, req, method) {
       const canp = this.getCanvPainter();
-      if (!isFunc(canp?.submitDrawableRequest)) return null;
+      if (!isFunc(canp?.submitDrawableRequest))
+         return null;
 
       // special situation when snapid not yet assigned - just keep ref until snapid is there
       // maybe keep full list - for now not clear if really needed
-      if (!this.snapid) {
+      if (!this.getSnapId()) {
          this.#pending_request = { kind, req, method };
          return req;
       }
@@ -328,8 +327,8 @@ class RObjectPainter extends ObjectPainter {
    /** @summary Assign snapid to the painter
      * @desc Overwrite default method */
    assignSnapId(id) {
-      this.snapid = id;
-      if (this.snapid && this.#pending_request) {
+      super.assignSnapId(id);
+      if (this.getSnapId() && this.#pending_request) {
          const p = this.#pending_request;
          this.#pending_request = undefined;
          this.v7SubmitRequest(p.kind, p.req, p.method);

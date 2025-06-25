@@ -1,12 +1,10 @@
-import py, sys
+import py, sys, pytest, os
 from pytest import mark, raises, skip
-from .support import setup_make, pylong, pyunicode
+from support import setup_make, pylong, pyunicode, IS_MAC_ARM
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("datatypesDict"))
+currpath = os.getcwd()
+test_dct = currpath + "/libdatatypesDict"
 
-def setup_module(mod):
-    setup_make("datatypes")
 
 class TestDATATYPES:
     def setup_class(cls):
@@ -1279,7 +1277,8 @@ class TestDATATYPES:
         if self.has_byte:
             run(self, cppyy.gbl.sum_byte_data, buf, total)
 
-    @mark.xfail
+    @mark.xfail(run=not IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    "libc++abi: terminating due to uncaught exception")
     def test26_function_pointers(self):
         """Function pointer passing"""
 
@@ -1342,6 +1341,8 @@ class TestDATATYPES:
         ns = cppyy.gbl.FuncPtrReturn
         assert ns.foo()() == "Hello, World!"
 
+    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    "libc++abi: terminating due to uncaught exception")
     def test27_callable_passing(self):
         """Passing callables through function pointers"""
 
@@ -1414,6 +1415,8 @@ class TestDATATYPES:
         gc.collect()
         raises(TypeError, c, 3, 3) # lambda gone out of scope
 
+    @mark.xfail(run=False, condition=IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    "libc++abi: terminating due to uncaught exception")
     def test28_callable_through_function_passing(self):
         """Passing callables through std::function"""
 
@@ -2353,6 +2356,7 @@ class TestDATATYPES:
         assert str(bt(1)) == 'True'
         assert str(bt(0)) == 'False'
 
+    @mark.xfail(condition=IS_MAC_ARM, reason="Fails on mac-beta ARM64")
     def test49_addressof_method(self):
         """Use of addressof for (const) methods"""
 
@@ -2370,3 +2374,42 @@ class TestDATATYPES:
 
         assert [ns.test[i]  for i in range(6)] == [-0x12, -0x34, -0x56, -0x78, 0x0, 0x0]
         assert [ns.utest[i] for i in range(6)] == [ 0x12,  0x34,  0x56,  0x78, 0x0, 0x0]
+
+    def test51_polymorphic_types_in_maps(self):
+        """Auto down-cast polymorphic types in maps"""
+        import cppyy
+        from cppyy import gbl
+
+        cppyy.cppdef(
+            """
+        namespace PolymorphicMaps {
+        struct Base {
+            int x;
+            Base(int x) : x(x) {}
+            virtual ~Base() {}
+        } b(1);
+
+        struct Derived : public Base {
+            int y;
+            Derived(int i) : Base(i), y(i) {}
+        } d(1);
+
+        std::map<int, Base*> getBaseMap() {
+            std::map<int, Base*> m;
+            m[1] = &b;
+            m[2] = &d;
+            return m;
+        }
+        }  // namespace PolymorphicMaps
+        """
+        )
+
+        for k, v in gbl.PolymorphicMaps.getBaseMap():
+            if k == 1:
+                assert type(v) == gbl.PolymorphicMaps.Base
+            else:
+                assert type(v) == gbl.PolymorphicMaps.Derived
+
+
+if __name__ == "__main__":
+    exit(pytest.main(args=['-sv', '-ra', __file__]))

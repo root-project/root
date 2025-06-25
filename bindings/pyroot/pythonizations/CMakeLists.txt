@@ -71,12 +71,12 @@ list(APPEND PYROOT_EXTRA_HEADERS
      inc/TPyDispatcher.h)
 
 set(py_sources
-  ROOT/JsMVA/DataLoader.py
-  ROOT/JsMVA/Factory.py
-  ROOT/JsMVA/JPyInterface.py
-  ROOT/JsMVA/JsMVAMagic.py
-  ROOT/JsMVA/OutputTransformer.py
-  ROOT/JsMVA/__init__.py
+  #ROOT/JsMVA/DataLoader.py
+  #ROOT/JsMVA/Factory.py
+  #ROOT/JsMVA/JPyInterface.py
+  #ROOT/JsMVA/JsMVAMagic.py
+  #ROOT/JsMVA/OutputTransformer.py
+  #ROOT/JsMVA/__init__.py
   ROOT/_application.py
   ROOT/_asan.py
   ROOT/_facade.py
@@ -174,14 +174,14 @@ add_dependencies(${libname} ROOTPythonizationsPySources)
 
 # Set the suffix to '.so' and the prefix to 'lib'
 set_target_properties(${libname} PROPERTIES ${ROOT_LIBRARY_PROPERTIES_NO_VERSION})
+target_link_libraries(${libname} PUBLIC Core Tree cppyy)
 if(MSVC)
   set_target_properties(${libname} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   set_target_properties(${libname} PROPERTIES SUFFIX ".pyd")
-  target_link_libraries(${libname} PUBLIC Core Tree cppyy)
 elseif(APPLE)
-  target_link_libraries(${libname} PUBLIC -Wl,-bind_at_load -Wl,-w -Wl,-undefined -Wl,dynamic_lookup Core Tree cppyy)
+  target_link_libraries(${libname} PUBLIC -Wl,-bind_at_load -Wl,-w -Wl,-undefined -Wl,dynamic_lookup)
 else()
-  target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all Core Tree cppyy)
+  target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all)
 endif()
 
 target_include_directories(${libname}
@@ -210,18 +210,49 @@ endforeach()
 add_library(PyROOT INTERFACE)
 target_link_libraries(PyROOT INTERFACE cppyy_backend cppyy ROOTPythonizations)
 
+# Define library output directories for build and install trees
+set(pymoduledir_build "${localruntimedir}/ROOT")
+set(pymoduledir_install "${CMAKE_INSTALL_PYTHONDIR}/ROOT")
+
+# To make sure that the library also ends up in the right subdirectory in the
+# build directory tree.
+if(MSVC)
+  set_target_properties(${libname}
+      PROPERTIES
+          RUNTIME_OUTPUT_DIRECTORY_DEBUG ${pymoduledir_build}
+          RUNTIME_OUTPUT_DIRECTORY_RELEASE ${pymoduledir_build}
+          RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL ${pymoduledir_build}
+          RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${pymoduledir_build})
+else()
+  set_target_properties(${libname} PROPERTIES
+      LIBRARY_OUTPUT_DIRECTORY ${pymoduledir_build})
+endif()
+
+if(NOT MSVC)
+  # Make sure that relative RUNPATH to main ROOT libraries is always correct.
+
+  file(RELATIVE_PATH pymoduledir_to_libdir_build ${pymoduledir_build} "${localruntimedir}")
+  file(RELATIVE_PATH pymoduledir_to_libdir_install ${CMAKE_INSTALL_PREFIX}/${pymoduledir_install} "${CMAKE_INSTALL_FULL_LIBDIR}")
+
+  if(APPLE)
+    set_target_properties(${libname} PROPERTIES
+        BUILD_RPATH "@loader_path/${pymoduledir_to_libdir_build}"
+        INSTALL_RPATH "@loader_path/${pymoduledir_to_libdir_install}"
+    )
+  else()
+    set_target_properties(${libname} PROPERTIES
+        BUILD_RPATH "$ORIGIN/${pymoduledir_to_libdir_build}"
+        INSTALL_RPATH "$ORIGIN/${pymoduledir_to_libdir_install}"
+    )
+  endif()
+
+endif()
+
 # Install library
 install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports
-                            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
-                            LIBRARY DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries
-                            ARCHIVE DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries)
-
-# Install meta-target PyROOT3 (INTERFACE library)
-# Install library
-install(TARGETS PyROOT EXPORT ${CMAKE_PROJECT_NAME}Exports
-                            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
-                            LIBRARY DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries
-                            ARCHIVE DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries)
+                            RUNTIME DESTINATION ${pymoduledir_install} COMPONENT libraries
+                            LIBRARY DESTINATION ${pymoduledir_install}  COMPONENT libraries
+                            ARCHIVE DESTINATION ${pymoduledir_install} COMPONENT libraries)
 
 # Install Python sources and bytecode
 install(DIRECTORY ${localruntimedir}/ROOT

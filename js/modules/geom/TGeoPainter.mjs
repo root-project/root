@@ -1,6 +1,6 @@
 import { httpRequest, browser, source_dir, settings, internals, constants, create, clone,
          findFunction, isBatchMode, isNodeJs, getDocument, isObject, isFunc, isStr, postponePromise, getPromise,
-         prROOT, clTNamed, clTList, clTAxis, clTObjArray, clTPolyMarker3D, clTPolyLine3D,
+         getKindForType, clTNamed, clTList, clTAxis, clTObjArray, clTPolyMarker3D, clTPolyLine3D,
          clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, nsSVG, kInspect } from '../core.mjs';
 import { showProgress, injectStyle, ToolbarIcons } from '../gui/utils.mjs';
 import { GUI } from '../gui/lil-gui.mjs';
@@ -461,13 +461,10 @@ class TGeoPainter extends ObjectPainter {
 
       super(dom, obj);
 
-      if (getHistPainter3DCfg(this.getMainPainter()))
-         this.#superimpose = true;
+      this.#superimpose = Boolean(getHistPainter3DCfg(this.getMainPainter()));
+      this.#geo_manager = gm;
 
-      if (gm)
-         this.#geo_manager = gm;
-
-      this.no_default_title = true; // do not set title to main DIV
+      this._no_default_title = true; // do not set title to main DIV
       this.mode3d = true; // indication of 3D mode
       this.drawing_stage = stageInit; //
       this.#drawing_log = 'Init';
@@ -877,7 +874,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Modify visibility of provided node by name */
    modifyVisisbility(name, sign) {
-      if (getNodeKind(this.getGeometry()) !== 0)
+      if (getNodeKind(this.getGeometry()) !== kindGeo)
          return;
 
       if (!name)
@@ -1076,7 +1073,7 @@ class TGeoPainter extends ObjectPainter {
          res._yup = this.getCanvSvg().empty();
 
       // let reuse for storing origin options
-      this.options = res;
+      this.setOptions(res, true);
    }
 
    /** @summary Activate specified items in the browser */
@@ -1691,7 +1688,7 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Should be called when configuration of highlight is changed */
    changedHighlight(arg) {
       if (arg !== undefined) {
-         this.ctrl.highlight = arg !== 0;
+         this.ctrl.highlight = Boolean(arg);
          if (this.ctrl.highlight)
             this.ctrl.highlight_bloom = (arg === 2);
       }
@@ -2354,7 +2351,7 @@ class TGeoPainter extends ObjectPainter {
             for (let n = 0; n < del.length; ++n)
                this.#clones.createObject3D(del[n].stack, this.#toplevel, 'delete_mesh');
 
-            if (del.length > 0)
+            if (del.length)
                this.#drawing_log = `Delete ${del.length} nodes`;
          }
 
@@ -2536,7 +2533,7 @@ class TGeoPainter extends ObjectPainter {
       }
 
       // remember additional nodes only if they include shape - otherwise one can ignore them
-      if (real_nodes.length > 0)
+      if (real_nodes.length)
          this.#more_nodes = real_nodes;
 
       if (!from_drawing)
@@ -3704,7 +3701,7 @@ class TGeoPainter extends ObjectPainter {
       }
 
       const lineMaterial = new THREE.LineBasicMaterial({ color, linewidth }),
-          line3d = createLineSegments(buf, lineMaterial);
+            line3d = createLineSegments(buf, lineMaterial);
 
       line3d.defaultOrder = line3d.renderOrder = 1000000; // to bring line to the front
       line3d.geo_name = itemname;
@@ -3762,7 +3759,7 @@ class TGeoPainter extends ObjectPainter {
             projx = (this.ctrl.project === 'x'),
             projy = (this.ctrl.project === 'y'),
             projz = (this.ctrl.project === 'z'),
-            hit_scale = Math.max(hit.fMarkerSize * this.getOverallSize() * (this.options.dummy ? 0.015 : 0.005), 0.2),
+            hit_scale = Math.max(hit.fMarkerSize * this.getOverallSize() * (this.getOptions().dummy ? 0.015 : 0.005), 0.2),
             pnts = new PointsCreator(nhits, this.#webgl, hit_scale);
 
       for (let i = 0; i < nhits; i++) {
@@ -3801,7 +3798,8 @@ class TGeoPainter extends ObjectPainter {
 
       if (!prnt) {
          prnt = this.getGeometry();
-         if (!prnt && (getNodeKind(prnt) !== 0)) return null;
+         if (!prnt && (getNodeKind(prnt) !== kindGeo))
+            return null;
          itemname = this.#geo_manager ? prnt.fName : '';
          first_level = true;
          volumes = [];
@@ -3854,7 +3852,7 @@ class TGeoPainter extends ObjectPainter {
       if (this.#geo_manager)
          result.prefix = result.obj.fName;
 
-      if (!script_name || (script_name.length < 3) || (getNodeKind(result.obj) !== 0))
+      if (!script_name || (script_name.length < 3) || (getNodeKind(result.obj) !== kindGeo))
          return result;
 
       const mgr = {
@@ -4087,7 +4085,7 @@ class TGeoPainter extends ObjectPainter {
             this.batch_mode = isBatchMode() || (!dom.empty() && dom.property('_batch_mode'));
             this.batch_format = dom.property('_batch_format');
 
-            const render3d = getRender3DKind(this.options.Render3D, this.batch_mode);
+            const render3d = getRender3DKind(this.getOptions().Render3D, this.batch_mode);
 
             // activate worker
             if ((this.ctrl.use_worker > 0) && !this.batch_mode)
@@ -4407,7 +4405,7 @@ class TGeoPainter extends ObjectPainter {
                   origin = this.#build_shapes[n];
 
             if (item.buf_pos && item.buf_norm) {
-               if (item.buf_pos.length === 0)
+               if (!item.buf_pos.length)
                   origin.geom = null;
                 else if (item.buf_pos.length !== item.buf_norm.length) {
                   console.error(`item.buf_pos.length ${item.buf_pos.length} !== item.buf_norm.length ${item.buf_norm.length}`);
@@ -4890,7 +4888,7 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Specify showtop draw options, relevant only for TGeoManager */
    setShowTop(on) {
       this.ctrl.showtop = Boolean(on);
-      this.redrawObject('same');
+      return this.startRedraw();
    }
 
    /** @summary Should be called when configuration of particular axis is changed */
@@ -4952,7 +4950,7 @@ class TGeoPainter extends ObjectPainter {
             container.add(helper);
          }
       }
-      if (panels.length === 0)
+      if (!panels.length)
          panels = null;
 
       if (this.#last_clip_cfg !== clip_cfg)
@@ -5136,7 +5134,7 @@ class TGeoPainter extends ObjectPainter {
                   fp.clear3dCanvas();
                   fp.mode3d = false;
                }
-            } else
+            } else if (isFunc(this.clear3dCanvas))
                can3d = this.clear3dCanvas(); // remove 3d canvas from main HTML element
 
             disposeThreejsObject(this.#scene);
@@ -5175,7 +5173,6 @@ class TGeoPainter extends ObjectPainter {
          super.cleanup();
 
          delete this.ctrl;
-         delete this.options;
 
          this.#did_cleanup = true;
 
@@ -5357,11 +5354,11 @@ class TGeoPainter extends ObjectPainter {
       if (this.#did_update)
          return this.startRedraw();
 
-      const main = this.#on_pad ? this.getFramePainter() : null;
-      if (!main)
+      const fp = this.#on_pad ? this.getFramePainter() : null;
+      if (!fp)
          return Promise.resolve(false);
-      const sz = main.getSizeFor3d(main.access3dKind());
-      main.apply3dSize(sz);
+      const sz = fp.getSizeFor3d(fp.access3dKind());
+      fp.apply3dSize(sz);
       return this.performResize(sz.width, sz.height);
    }
 
@@ -5375,14 +5372,16 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Start geometry redraw */
    startRedraw(tmout) {
+      if (this.#redraw_timer) {
+         clearTimeout(this.#redraw_timer);
+         this.#redraw_timer = undefined;
+      }
+
       if (tmout) {
-         if (this.#redraw_timer)
-            clearTimeout(this.#redraw_timer);
          this.#redraw_timer = setTimeout(() => this.startRedraw(), tmout);
          return;
       }
 
-      this.#redraw_timer = undefined;
       this.#did_update = undefined;
 
       this.clearDrawings();
@@ -5460,9 +5459,9 @@ let add_settings = false;
 function getBrowserIcon(hitem, hpainter) {
    let icon = '';
    switch (hitem._kind) {
-      case prROOT + clTEveTrack: icon = 'img_evetrack'; break;
-      case prROOT + clTEvePointSet: icon = 'img_evepoints'; break;
-      case prROOT + clTPolyMarker3D: icon = 'img_evepoints'; break;
+      case getKindForType(clTEveTrack): icon = 'img_evetrack'; break;
+      case getKindForType(clTEvePointSet): icon = 'img_evepoints'; break;
+      case getKindForType(clTPolyMarker3D): icon = 'img_evepoints'; break;
    }
    if (icon) {
       const drawitem = findItemWithGeoPainter(hitem);
@@ -5647,7 +5646,7 @@ function provideMenu(menu, item, hpainter) {
       menu.addchk(obj.fRnrSelf, 'Visible', 'self', toggleEveVisibility);
       const res = scanEveVisible(obj, undefined, true);
       if (res.hidden + res.visible > 0)
-         menu.addchk((res.hidden === 0), 'Daughters', res.hidden !== 0 ? 'true' : 'false', toggleEveVisibility);
+         menu.addchk((res.hidden === 0), 'Daughters', res.hidden ? 'true' : 'false', toggleEveVisibility);
    } else {
       const stack = drawitem?._painter?.getClones()?.findStackByName(fullname),
             phys_vis = stack ? drawitem._painter.getClones().getPhysNodeVisibility(stack) : null,
@@ -5687,7 +5686,7 @@ function createList(parent, lst, name, title) {
 
    const list_item = {
       _name: name,
-      _kind: prROOT + clTList,
+      _kind: getKindForType(clTList),
       _title: title,
       _more: true,
       _geoobj: lst,
@@ -5790,7 +5789,7 @@ function expandGeoObject(parent, obj) {
   * @private */
 createItem = function(node, obj, name) {
    const sub = {
-      _kind: prROOT + obj._typename,
+      _kind: getKindForType(obj._typename),
       _name: name || getObjectName(obj),
       _title: obj.fTitle,
       _parent: node,
@@ -5898,9 +5897,10 @@ async function drawDummy3DGeom(painter) {
                   fTrans: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
                   fShape: shape, fRGBA: [0, 0, 0, 0], fElements: null, fRnrSelf: false }),
          pp = painter.getPadPainter(),
-         opt = 'dummy;' + (pp?.pad?.fFillColor && (pp?.pad?.fFillStyle > 1000)) ? 'bkgr_' + pp.pad.fFillColor : '';
+         pad = pp?.getRootPad(true),
+         opt = 'dummy;' + (pad?.fFillColor && (pad?.fFillStyle > 1000) ? 'bkgr_' + pad.fFillColor : '');
 
-   return TGeoPainter.draw(pp, obj, opt);
+   return TGeoPainter.draw(pp || painter.getDom(), obj, opt);
 }
 
 /** @summary Direct draw function for TAxis3D

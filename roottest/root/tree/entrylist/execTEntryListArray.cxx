@@ -29,7 +29,7 @@ void MakeTrees(Int_t nentries, Int_t nfiles, Int_t Ntrees = 2, Int_t maxSubEntri
 {
    TFile *f1;
    std::vector< TTree* > trees(Ntrees);
-   
+
    std::vector<double> x, y, z;
    Double_t range = nentries/100.;
 
@@ -63,7 +63,7 @@ void MakeTrees(Int_t nentries, Int_t nfiles, Int_t Ntrees = 2, Int_t maxSubEntri
    }
 }
 
-/** Check the entries and subentries stored in TEntryListArray using TChain / TTree::Draw 
+/** Check the entries and subentries stored in TEntryListArray using TChain / TTree::Draw
  @param cut the cut to be used for the test
  @param elist a list produced using the cut (optional)
  **/
@@ -75,23 +75,23 @@ Bool_t TestSelection(TTree *tree, TCut cut, TEntryListArray *elist = 0)
     tree->Draw(">> elist", cut, "entrylistarray");
     elist = (TEntryListArray*) gDirectory->Get("elist");
   }
-  
+
   // Check the number of entries
   if (!elist || elist->GetN() != tree->GetEntries(cut)) return false;
-  
+
   // Check the total number of subentries
   Int_t NsubEntries = tree->Draw("x", cut, "goff");
   std::vector< Double_t > x1 = getValues(tree->GetV1(), NsubEntries);
-  
+
   tree->SetEntryList(elist);
   if (tree->Draw("x", "", "goff") != NsubEntries) return false;
   std::vector< Double_t > x2 = getValues(tree->GetV1(), NsubEntries);
   tree->SetEntryList(0);
-  
+
   if (x1 != x2) return false;
 
   return true;
-}  
+}
 
 /** Test the selection using TEntryListArray::Contains **/ // BUG: Does not work with chains
 // Bool_t TestSelectionWithContains(TTree *tree, TCut cut, TEntryListArray *elist = 0)
@@ -106,28 +106,28 @@ Bool_t TestSelection(TTree *tree, TCut cut, TEntryListArray *elist = 0)
 //     tree->Draw(">> elist", cut, "entrylistarray");
 //     elist = (TEntryListArray*) gDirectory->Get("elist");
 //   }
-//  
+//
 //   Int_t NsubEntries = tree->Draw("Entry$:Iteration$", cut, "goff");
 //   for (Int_t i =0; i < NsubEntries; ++i) {
 //     if (!elist->Contains((Long64_t) tree->GetV1()[i], 0, (Long64_t) tree->GetV2()[i]))
 //       return false;
 //   }
-//   
+//
 //   return true;
 // }
 
 
 
 
-/** Return true if the given TEntryListArray objects have the same entries **/  
+/** Return true if the given TEntryListArray objects have the same entries **/
 // Bool_t CompareLists(TEntryListArray *e1, TEntryListArray *e2)
 // {
 //   if (!e1 && !e2) return true;
 //   else if (!e1 || !e2) return false;
-//   
+//
 //   if (e1->GetN() != e2->GetN())
 //     return false;
-//   
+//
 //   // The lists are not splitted, compare the entries and subentries
 //   if (!e1->GetLists() && !e2->GetLists())
 //   {
@@ -141,11 +141,11 @@ Bool_t TestSelection(TTree *tree, TCut cut, TEntryListArray *elist = 0)
 //         return false;
 //     }
 //   }
-//   
-//  // Only e2 is splitted, 
-//   else if (!e1->GetLists()) 
+//
+//  // Only e2 is splitted,
+//   else if (!e1->GetLists())
 //     return CompareLists(e2, e1); // Invert the order to avoid duplicating the code
-//   
+//
 //   // e1 is splitted (and maybe also e2)
 //   else {
 //     TEntryListArray* e = 0;
@@ -156,7 +156,7 @@ Bool_t TestSelection(TTree *tree, TCut cut, TEntryListArray *elist = 0)
 //         return false;
 //     }
 //   }
-//   
+//
 //   return true;
 // }
 
@@ -166,7 +166,7 @@ Bool_t TestCopy(TTree *tree, TCut cut)
 {
   tree->Draw(">> e1", cut, "entrylistarray");
   TEntryListArray *e1 = (TEntryListArray*) gDirectory->Get("e1");
-  
+
   TEntryListArray *e2 = new TEntryListArray(*e1);
   Bool_t result = TestSelection(tree, cut, e2);
   return result;
@@ -178,7 +178,7 @@ Bool_t TestClone(TTree *tree, TCut cut)
 {
   tree->Draw(">> e1", cut, "entrylistarray");
   TEntryListArray *e1 = (TEntryListArray*) gDirectory->Get("e1");
-  
+
   TEntryListArray *e2 = (TEntryListArray*) e1->Clone("e2");
   Bool_t result = TestSelection(tree, cut, e2);
   return result;
@@ -200,15 +200,15 @@ Bool_t TestAddAndSubtract(TTree *tree, TCut c1, TCut c2)
 
   TEntryListArray *eA = new TEntryListArray(*e1);
   TEntryListArray *eB = new TEntryListArray(*e2);
-  
+
   eA->Add(e2);
   if (!TestSelection(tree, c1 || c2, eA ))
     return false;
-  
+
   eB->Add(e1);
   if (!TestSelection(tree, c1 || c2, eB ))
     return false;
-  
+
   return true;
 }
 
@@ -222,13 +222,13 @@ Bool_t stressAddAndSubtract(TTree *tree)
     result = false;
     cout << "Add and Subtract without intersection failed" << endl;
   }
-  
+
   if (!TestAddAndSubtract(tree, "x> 1", "x > 0.5 && x < 2"))
   {
     result = false;
     cout << "Add and Subtract with intersection failed" << endl;
   }
-  
+
   tree->Draw(">> elist", "x>1", "entrylistarray");
   tree->Draw(">>+ elist", "x<-1", "entrylistarray");
   if (!TestSelection(tree, "x> 1 || x<-1", (TEntryListArray*) gDirectory->Get("elist")))
@@ -236,8 +236,8 @@ Bool_t stressAddAndSubtract(TTree *tree)
     result = false;
     cout << "Add and Subtract with with >>+ operator failed" << endl;
   }
-  
-  
+
+
   TChain *chain = dynamic_cast<TChain*>(tree);
   if (chain)
   {
@@ -259,24 +259,24 @@ Bool_t stressAddAndSubtract(TTree *tree)
         result = false;
     }
   }
-  
+
   return result;
 }
-  
+
 
 int execTEntryListArray(Int_t nentries=1000, Int_t nfiles=3) {
   cout << "***************************************" << endl;
   cout << "*****   Testing TEntryListArray   *****" << endl;
   cout << "***************************************" << endl;
-  
+
   MakeTrees(nentries, nfiles);
   cout << "Tree making done" << endl;
-  
+
   TChain *chain = new TChain("tree1");
   chain->Add("testEntryListTrees_*.root");
-  
+
   Bool_t result = true;
-  
+
   if (!(result = TestSelection(chain, "x>0")))
     cout << "SelectionWithChain failed" << endl;
   if (!(result = TestCopy(chain, "x>1")))
@@ -284,18 +284,18 @@ int execTEntryListArray(Int_t nentries=1000, Int_t nfiles=3) {
   if (!(result = stressAddAndSubtract(chain)))
     cout << "AddAndSubtract failed" << endl;
   if (!(result = TestClone(chain, "x>0")))
-    cout << "Clone failed" << endl;  
-  
+    cout << "Clone failed" << endl;
+
   cout << "Result of tests with TEntryListArray: " << result << endl;
   cout << "***************************************" << endl;
-  
+
   return (result != true);
 }
 
 //_____________________________batch only_____________________
-#ifndef __CINT__
+#ifndef __CLING__
 
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
    TApplication theApp("App", &argc, argv);
    Int_t nentries = 1000;

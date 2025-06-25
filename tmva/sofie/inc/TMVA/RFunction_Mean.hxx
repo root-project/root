@@ -14,7 +14,7 @@ public:
         fFuncName = "Aggregate_by_Mean";
     }
 
-    std::string GenerateModel();
+    std::string GenerateModel() override;
 };
 
 } //SOFIE

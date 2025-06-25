@@ -103,9 +103,23 @@ bool RooAbsArg::_verboseDirty(false) ;
 bool RooAbsArg::_inhibitDirty(false) ;
 bool RooAbsArg::inhibitDirty() const { return _inhibitDirty && !_localNoInhibitDirty; }
 
-std::map<RooAbsArg*,std::unique_ptr<TRefArray>> RooAbsArg::_ioEvoList;
-std::stack<RooAbsArg*> RooAbsArg::_ioReadStack ;
+namespace {
 
+auto &ioEvoList()
+{
+   // temporary holding list for proxies needed in schema evolution
+   static std::map<RooAbsArg *, std::unique_ptr<TRefArray>> ioEvoListInstance;
+   return ioEvoListInstance;
+}
+
+// reading stack
+auto &ioReadStack()
+{
+   static std::stack<RooAbsArg *> ioReadStackInstance;
+   return ioReadStackInstance;
+}
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -2374,14 +2388,19 @@ void RooAbsArg::SetNameTitle(const char *name, const char *title)
 void RooAbsArg::Streamer(TBuffer &R__b)
 {
    if (R__b.IsReading()) {
-     _ioReadStack.push(this) ;
+     ioReadStack().push(this) ;
      R__b.ReadClassBuffer(RooAbsArg::Class(),this);
-     _ioReadStack.pop() ;
+     ioReadStack().pop() ;
      _namePtr = RooNameReg::instance().constPtr(GetName()) ;
      _isConstant = getAttribute("Constant") ;
    } else {
      R__b.WriteClassBuffer(RooAbsArg::Class(),this);
    }
+}
+
+void RooAbsArg::addToIoEvoList(RooAbsArg *newObj, TRefArray const &onfileProxyList)
+{
+   ioEvoList()[newObj] = std::make_unique<TRefArray>(onfileProxyList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2398,8 +2417,8 @@ void RooAbsArg::Streamer(TBuffer &R__b)
 void RooAbsArg::ioStreamerPass2()
 {
   // Handling of v5-v6 migration (TRefArray _proxyList --> RooRefArray _proxyList)
-  auto iter = _ioEvoList.find(this);
-  if (iter != _ioEvoList.end()) {
+  auto iter = ioEvoList().find(this);
+  if (iter != ioEvoList().end()) {
 
     // Transfer contents of saved TRefArray to RooRefArray now
     if (!_proxyList.GetEntriesFast())
@@ -2408,7 +2427,7 @@ void RooAbsArg::ioStreamerPass2()
        _proxyList.Add(iter->second->At(i));
     }
     // Delete TRefArray and remove from list
-    _ioEvoList.erase(iter);
+    ioEvoList().erase(iter);
   }
 }
 
@@ -2426,7 +2445,7 @@ void RooAbsArg::ioStreamerPass2()
 void RooAbsArg::ioStreamerPass2Finalize()
 {
   // Handling of v5-v6 migration (TRefArray _proxyList --> RooRefArray _proxyList)
-  for (const auto& iter : _ioEvoList) {
+  for (const auto& iter : ioEvoList()) {
 
     // Transfer contents of saved TRefArray to RooRefArray now
     if (!iter.first->_proxyList.GetEntriesFast())
@@ -2436,7 +2455,7 @@ void RooAbsArg::ioStreamerPass2Finalize()
     }
   }
 
-  _ioEvoList.clear();
+  ioEvoList().clear();
 }
 
 
@@ -2463,8 +2482,11 @@ void RooRefArray::Streamer(TBuffer &R__b)
       refArray->Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, refArray->IsA());
 
-      // Schedule deferred processing of TRefArray into proxy list
-      RooAbsArg::_ioEvoList[RooAbsArg::_ioReadStack.top()] = std::move(refArray);
+      // Schedule deferred processing of TRefArray into proxy list. Doesn't
+      // need to be done if there are no proxies anyway.
+      if(!refArray->IsEmpty()) {
+         ioEvoList()[ioReadStack().top()] = std::move(refArray);
+      }
 
    } else {
 

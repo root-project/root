@@ -597,9 +597,12 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TLeaf *leaf) {
    Int_t numberOfVarDim = 0;
 
    // Let see if we can understand the structure of this branch.
-   // Usually we have: leafname[fixed_array] leaftitle[var_array]\type
-   // (with fixed_array that can be a multi-dimension array.
-   const char *tname = leaf->GetTitle();
+   // Usually we have: leafname[fixed_array], leaftitle[var_array]/type, leaftitle[n]/d[0,10,32]
+   // (with fixed_array that can be a multi-dimensional array).
+   TString sname = leaf->GetTitle();
+   auto slash = sname.First("/");
+   sname = (slash == TString::kNPOS) ? sname : sname(0, slash);
+   const char *tname = sname.Data();
    char *leaf_dim = (char*)strstr( tname, "[" );
 
    const char *bname = leaf->GetBranch()->GetName();
@@ -2352,7 +2355,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
             final = true;
 
             // Record in 'i' what we consumed
-            i += strlen(params);
+            i += 2; // open and close parentheses
 
             // we reset work
             current = &(work[0]);
@@ -2618,8 +2621,8 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
 
    if (i<nchname) {
       if (strlen(right) && right[strlen(right)-1]!='.' && cname[i]!='.') {
-         // In some cases we remove a little to fast the period, we add
-         // it back if we need.  It is assumed that 'right' and the rest of
+         // In some cases we remove a little too fast the period, we add
+         // it back if we need. It is assumed that 'right' and the rest of
          // the name was cut by a delimiter, so this should be safe.
          strncat(right,".",2*kMaxLen-1-strlen(right));
       }
@@ -2961,8 +2964,11 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
             if (current[0] == ']') {
                fIndexes[code][dim] = -1; // Loop over all elements;
             } else {
-               scanindex = sscanf(current,"%d",&index);
-               if (scanindex) {
+               TString tempIndex(current);
+               auto closePos = tempIndex.First(']');
+               if (closePos != -1)
+                  tempIndex = tempIndex(0, closePos);
+               if (tempIndex.IsDigit() && (scanindex = sscanf(current, "%d", &index)) && scanindex == 1) {
                   fIndexes[code][dim] = index;
                } else {
                   fIndexes[code][dim] = -2; // Index is calculated via a variable.
@@ -3756,7 +3762,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
    const Int_t real_instance = GetRealInstance(instance,0);                                     \
                                                                                                 \
    if (instance==0) fNeedLoading = true;                                                        \
-   if (real_instance>=fNdata[0]) return 0;                                                      \
+   if (real_instance>=fNdata[0]) return TMath::SignalingNaN();                                  \
                                                                                                 \
    /* Since the only operation in this formula is reading this branch,                          \
       we are guaranteed that this function is first called with instance==0 and                 \
@@ -3790,7 +3796,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
 #define TREE_EVAL_INIT                                                                          \
    const Int_t real_instance = GetRealInstance(instance,0);                                     \
                                                                                                 \
-   if (real_instance>=fNdata[0]) return 0;                                                      \
+   if (real_instance>=fNdata[0]) return TMath::SignalingNaN();                                  \
                                                                                                 \
    if (fAxis) {                                                                                 \
       char * label;                                                                             \
@@ -3842,13 +3848,13 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
          }                                                                                      \
       }                                                                                         \
    }                                                                                            \
-   if (real_instance>=fNdata[code]) return 0;
+   if (real_instance>=fNdata[code]) return TMath::SignalingNaN();
 
 #define TREE_EVAL_INIT_LOOP                                                                     \
    /* Now let calculate what physical instance we really need.  */                              \
    const Int_t real_instance = GetRealInstance(instance,code);                                  \
                                                                                                 \
-   if (real_instance>=fNdata[code]) return 0;
+   if (real_instance>=fNdata[code]) return TMath::SignalingNaN();
 
 
 template<typename T> T Summing(TTreeFormula *sum) {
@@ -3990,14 +3996,75 @@ template<> inline Long64_t TTreeFormula::GetConstant(Int_t k) { return (Long64_t
 /// \tparam T The type used to interpret the numbers then used for the operations
 /// \param instance iteration instance
 /// \param stringStackArg formula as string
-/// \return the result of the evaluation
+/// \return the result of the evaluation, or a signaling NaN if out of bounds
+///
+/// \warning Care has to be taken before calling this function with std::vector
+/// or dynamically sized objects, rather than plain fixed-size arrays.
+/// For example, this works without problems:
+/// ~~~{.cpp}
+/// TTree t("t", "t");
+/// Float_t x[2]{};
+/// t.Branch("xa", &x, "x[2]/F");
+/// x[1] = 1;
+/// t.Fill();
+/// x[1] = 2;
+/// t.Fill();
+/// t.Scan();
+/// TTreeFormula tfx("tfx", "xa[1]", &t);
+/// t.GetEntry(0);
+/// tfx.EvalInstance()
+/// t.GetEntry(1);
+/// tfx.EvalInstance()
+/// ~~~
+/// But the following fails (independently on whether the size changed or not between entries):
+/// ~~~{.cpp}
+/// TTree t("t", "t");
+/// vector<Short_t> v;
+/// t.Branch("vec", &v);
+/// v.push_back(2);
+/// v.push_back(3);
+/// t.Fill();
+/// v.clear();
+/// v.push_back(4);
+/// v.push_back(5);
+/// t.Fill();
+/// t.Scan();
+/// TTreeFormula tfv1("tfv1", "vec[1]", &t);
+/// TTreeFormula tfv("tfv", "vec", &t);
+/// t.GetEntry(0);
+/// tfv1.EvalInstance()
+/// tfv.EvalInstance(1)
+/// t.GetEntry(1);
+/// tfv1.EvalInstance()
+/// tfv.EvalInstance(1)
+/// ~~~
+/// To prevent this, when working with objects with dynamic size for each entry, one needs
+/// to mimick what TTree::Scan does, i.e. to check the value of
+/// `GetNdata()` before calling `EvalInstance()`:
+/// ~~~{.cpp}
+/// t.GetEntry(0);
+/// if (tfv1.GetNdata() > 0)
+///    tfv1.EvalInstance()
+/// if (tfv.GetNdata() > 1)
+///    tfv.EvalInstance(1)
+/// t.GetEntry(1);
+/// if (tfv1.GetNdata() > 0)
+///    tfv1.EvalInstance()
+/// if (tfv.GetNdata() > 1)
+///    tfv.EvalInstance(1)
+/// ~~~
+/// Note that for `tfv1`, even if the index is fixed in the formula and even if each entry
+/// had the same std::vector size, since the formula contains a branch with theoretically variable size,
+/// one must check GetNData() as there might 0 or 1 answers. Since even with fixed index,
+/// the collection might be too small to fulfill it.
+/// TTreeFormula::GetMultiplicity tells you (indirectly) whether you need to call GetNData or not for a given formula.
 
 template<typename T>
 T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
 {
 // Note that the redundancy and structure in this code is tailored to improve
 // efficiencies.
-   if (TestBit(kMissingLeaf)) return 0;
+   if (TestBit(kMissingLeaf)) return TMath::SignalingNaN();
    if (fNoper == 1 && fNcodes > 0) {
 
       switch (fLookupType[0]) {
@@ -4056,7 +4123,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
             }
             return fx->EvalInstance<T>(instance);
          }
-         default: return 0;
+         default: return TMath::SignalingNaN();
       }
    }
 
@@ -4440,7 +4507,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                      Long64_t treeEntry = br->GetTree()->GetReadEntry();
                      R__LoadBranch(br,treeEntry,true);
                   }
-                  if (real_instance>=fNdata[string_code]) return 0;
+                  if (real_instance>=fNdata[string_code]) return TMath::SignalingNaN();
                }
                pos2++;
                if (fLookupType[string_code]==kDirect) {
