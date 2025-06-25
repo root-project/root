@@ -1013,7 +1013,7 @@ PyObject* CPyCppyy::CPPMethod::Call(CPPInstance*& self,
         ctxt->fPyContext = (PyObject*)cargs.fSelf;    // no Py_INCREF as no ownership
 
 // translate the arguments
-    if (fArgsRequired || CPyCppyy_PyArgs_GET_SIZE(args, nargsf)) {
+    if (fArgsRequired || CPyCppyy_PyArgs_GET_SIZE(args, cargs.fNArgsf)) {
         if (!ConvertAndSetArgs(cargs.fArgs, cargs.fNArgsf, ctxt))
             return nullptr;
     }
