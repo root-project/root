@@ -15,7 +15,6 @@ ROOTTEST_COMPILE_MACRO(cmspair.h
 ROOTTEST_ADD_TEST(copyfiles
                   COMMAND ${CMAKE_COMMAND} -E echo "Copying root files"
                   COPY_TO_BUILDDIR aa02.root ab02.root
-                  FIXTURES_REQUIRED root-io-stdpair-cmspaircoll-fixture root-io-stdpair-cmspair-fixture root-io-stdpair-compile-fixture
                   FIXTURES_SETUP root-io-stdpair-inputfiles-fixture)
 
 foreach(A RANGE 0 4)
@@ -28,7 +27,10 @@ ROOTTEST_ADD_TEST(pairEnumEvo_${A}_${B}_${C}_${D}
                   ROOTEXE_OPTS -e "gInterpreter->AddIncludePath(\"-I${CMAKE_CURRENT_SOURCE_DIR}\")"
                   MACROARG ${A},${B},${C},${D}
                   OUTREF pairEnumEvo_${A}_${B}_${C}_${D}.ref
-                  FIXTURES_REQUIRED root-io-stdpair-inputfiles-fixture)
+                  FIXTURES_REQUIRED root-io-stdpair-cmspaircoll-fixture
+                                    root-io-stdpair-cmspair-fixture
+                                    root-io-stdpair-compile-fixture
+                                    root-io-stdpair-inputfiles-fixture)
 
 endforeach()
 endforeach()
