@@ -49,10 +49,53 @@ CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<I
 \ingroup NTuple
 \brief An RNTuple that gets filled with entries (data) and writes them to storage
 
-An output ntuple can be filled with entries. The caller has to make sure that the data that gets filled into an ntuple
-is not modified for the time of the Fill() call. The fill call serializes the C++ object into the column format and
-writes data into the corresponding column page buffers.  Writing of the buffers to storage is deferred and can be
-triggered by FlushCluster() or by destructing the writer.  On I/O errors, an exception is thrown.
+RNTupleWriter is an interface for writing RNTuples to storage. It can be instantiated using the static functions
+Append() and Recreate(), providing an RNTupleModel that defines the schema of the data to be written.
+
+An RNTuple can be thought of as a table, whose columns are defined by its schema (i.e. by its associated RNTupleModel,
+whose Fields map to 0 or more columns). 
+Writing into an RNTuple happens by filling *entries* into the RNTupleWriter, which make up the rows of the table.
+The simplest way to do so is by:
+
+- retrieving a (shared) pointer to each Field's value;
+- writing a value into each pointer;
+- calling `writer->Fill()` to commit the entry with all the current pointer values.
+
+~~~ {.cpp}
+#include <ROOT/RNTupleWriter.hxx>
+
+/// 1. Create the model.
+auto model = ROOT::RNTupleModel::Create();
+// Define the schema by adding Fields to the model.
+// MakeField returns a shared_ptr to the value to be written (in this case, a shared_ptr<int>)
+auto pFoo = model->MakeField<int>("foo");
+
+/// 2. Create writer from the model.
+auto writer = ROOT::RNTupleReader::Recreate(std::move(model), "myNTuple", "some/file.root");
+
+/// 3. Write into it.
+for (int i = 0; i < 10; ++i) {
+   // Assign the value you want to each RNTuple Field (in this case there is only one Field "foo").
+   *pFoo = i;
+
+   // Fill() writes the entire entry to the RNTuple.
+   // After calling Fill() you can safely write another value into `pFoo` knowing that the previous one was
+   // already saved.
+   writer->Fill();
+}
+
+// On destruction, the writer will flush the written data to disk.
+~~~
+
+The caller has to make sure that the data that gets filled into an RNTuple is not modified for the time of the
+Fill() call. The Fill call serializes the C++ object into the column format and
+writes data into the corresponding column page buffers.
+
+The actual writing of the buffers to storage is deferred and can be triggered by FlushCluster() or by
+destructing the writer.
+
+On I/O errors, a ROOT::RException is thrown.
+
 */
 // clang-format on
 class RNTupleWriter {
@@ -83,14 +126,31 @@ private:
                                                 const ROOT::RNTupleWriteOptions &options);
 
 public:
-   /// Throws an exception if the model is null.
+   /// Creates an RNTupleWriter backed by `storage`, overwriting it if one with the same URI exists.
+   /// The format of the backing storage is determined by `storage`: in the simplest case it will be a local file, but
+   /// a different backend may be selected via the URI prefix.
+   ///
+   /// The RNTupleWriter will create an RNTuple with the schema determined by `model` (which must not be null) and
+   /// with name `ntupleName`. This same name can later be used to read back the RNTuple via RNTupleReader.
+   ///
+   /// \param model The RNTupleModel describing the schema of the RNTuple written by this writer
+   /// \param ntupleName The name of the RNTuple to be written
+   /// \param storage The URI where the RNTuple will be stored (usually just a file name or path)
+   /// \param options May be passed to customize the behavior of the RNTupleWriter (see also RNTupleWriteOptions).
+   ///
+   /// Throws a ROOT::RException if the model is null.
    static std::unique_ptr<RNTupleWriter>
    Recreate(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName, std::string_view storage,
             const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
+
+   /// Convenience function allowing to call Recreate() with an inline-defined model.
    static std::unique_ptr<RNTupleWriter>
    Recreate(std::initializer_list<std::pair<std::string_view, std::string_view>> fields, std::string_view ntupleName,
             std::string_view storage, const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
-   /// Throws an exception if the model is null.
+
+   /// Creates an RNTupleWriter that writes into an existing TFile or TDirectory, without overwriting its content.
+   /// `fileOrDirectory` may be an empty TFile.
+   /// \see Recreate()
    static std::unique_ptr<RNTupleWriter> Append(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName,
                                                 TDirectory &fileOrDirectory,
                                                 const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
