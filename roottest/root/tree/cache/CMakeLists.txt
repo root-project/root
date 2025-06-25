@@ -54,13 +54,6 @@ ROOTTEST_ADD_TEST(LastCluster
                   MACRO execLastCluster.C
                   OUTREF execLastCluster.ref)
 
-ROOTTEST_GENERATE_DICTIONARY(libRoottestTreeCacheEvent
-                             Event.h
-                             LINKDEF EventLinkDef.h
-                             SOURCES Event.cxx
-                             NO_ROOTMAP NO_CXXMODULE
-                             FIXTURES_SETUP root-tree-cache-dict-fixture)
-
 if(compression_default STREQUAL "lz4")
   set(_ref execperfstattestLZ4.oref)
 else()
@@ -68,7 +61,7 @@ else()
 endif()
 ROOTTEST_ADD_TEST(perfstattest
                   MACRO execperfstattest.C
-                  ROOTEXE_OPTS -e "(void)gSystem->Load(\"libRoottestTreeCacheEvent\")"
+                  ROOTEXE_OPTS -e "gInterpreter->AddIncludePath(\"${CMAKE_SOURCE_DIR}/roottest/root/io/event/\")" -e "gSystem->AddDynamicPath(\"${CMAKE_BINARY_DIR}/roottest/root/io/event/\")" -e "(void)gSystem->Load(\"libTestIoEvent\")"
                   OUTREF ${_ref}
                   ERRREF execperfstattest.eref
-                  FIXTURES_REQUIRED root-tree-cache-dict-fixture)
+                  FIXTURES_REQUIRED root-io-event-libTestIoEvent-fixture)
