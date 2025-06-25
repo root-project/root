@@ -2,14 +2,12 @@ if(NOT ROOT_pyroot_FOUND)
     return()
 endif()
 
-ROOTTEST_ADD_TEST(input_validation
-                  MACRO input_validation.py)
+ROOT_ADD_PYUNITTEST(input_validation input_validation.py GENERIC PYTHON_DEPS pytest)
 
 ################################################################
 #                    compression tests                         #
 ################################################################
-ROOTTEST_ADD_TEST(compression_settings
-                  MACRO test_compression_settings.py)
+ROOT_ADD_PYUNITTEST(compression_settings test_compression_settings.py GENERIC PYTHON_DEPS pytest)
 
 # merge 2 RNTuples passing an explicit compression
 ROOTTEST_ADD_TEST(test_MergeChangeComp_explicit
