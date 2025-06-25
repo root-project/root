@@ -15,117 +15,130 @@ ROOTTEST_ADD_TEST(execFileMerger
                   MACRO execFileMerger.C
                   OUTREF references/execFileMerger.ref)
 
-# FIXME: Should be CTEST fixtures
 ROOTTEST_ADD_TEST(datagen-hadd-mfile12
                   COMMAND ${ROOT_hadd_CMD} -f mfile1-2.root mfile1.root mfile2.root
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                   FIXTURES_REQUIRED root-io-filemerger-MergeMulti-fixture)
 
 ROOTTEST_ADD_TEST(datagen-hadd-mfile34
                   COMMAND ${ROOT_hadd_CMD} -f mfile3-4.root mfile3.root mfile4.root
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                   FIXTURES_REQUIRED root-io-filemerger-MergeMulti-fixture)
 
 ROOTTEST_ADD_TEST(datagen-hadd-mzfile12
                   COMMAND ${ROOT_hadd_CMD} -f209 mzfile1-2.root mfile1.root mfile2.root
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                   FIXTURES_REQUIRED root-io-filemerger-MergeMulti-fixture
                   FIXTURES_SETUP root-io-filemerger-datagen-hadd-mzfile12-fixture)
 
 ROOTTEST_ADD_TEST(datagen-hadd-mzfile34
                   COMMAND ${ROOT_hadd_CMD} -f209 mzfile3-4.root mfile3.root mfile4.root
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                   FIXTURES_REQUIRED root-io-filemerger-MergeMulti-fixture
                   FIXTURES_SETUP root-io-filemerger-datagen-hadd-mzfile34-fixture)
 
 ROOTTEST_ADD_TEST(datagen-hadd-mzlibfile12
                   COMMAND ${ROOT_hadd_CMD} -f101 mzlibfile1-2.root mfile1.root mfile2.root
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                   FIXTURES_REQUIRED root-io-filemerger-MergeMulti-fixture
                   FIXTURES_SETUP root-io-filemerger-datagen-hadd-mzlibfile12-fixture)
 
 ROOTTEST_ADD_TEST(datagen-hadd-mzlibfile34
                   COMMAND ${ROOT_hadd_CMD} -f101 mzlibfile3-4.root mfile3.root mfile4.root
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                   FIXTURES_REQUIRED root-io-filemerger-MergeMulti-fixture
                   FIXTURES_SETUP root-io-filemerger-datagen-hadd-mzlibfile34-fixture)
 
 ROOTTEST_ADD_TEST(datagen-hadd-mlz4file12
                   COMMAND ${ROOT_hadd_CMD} -f404 mlz4file1-2.root mfile1.root mfile2.root
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                   FIXTURES_REQUIRED root-io-filemerger-MergeMulti-fixture
                   FIXTURES_SETUP root-io-filemerger-datagen-hadd-mlz4file12-fixture)
 
 ROOTTEST_ADD_TEST(datagen-hadd-mlz4file34
                   COMMAND ${ROOT_hadd_CMD} -f404 mlz4file3-4.root mfile3.root mfile4.root
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                   FIXTURES_REQUIRED root-io-filemerger-MergeMulti-fixture
                   FIXTURES_SETUP root-io-filemerger-datagen-hadd-mlz4file34-fixture)
 
 ROOTTEST_ADD_TEST(datagen-hadd-mzstdfile12
                   COMMAND ${ROOT_hadd_CMD} -f505 mzstdfile1-2.root mfile1.root mfile2.root
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                   FIXTURES_REQUIRED root-io-filemerger-MergeMulti-fixture
                   FIXTURES_SETUP root-io-filemerger-datagen-hadd-mzstdfile12-fixture)
 
 ROOTTEST_ADD_TEST(datagen-hadd-mzstdfile34
                   COMMAND ${ROOT_hadd_CMD} -f505 mzstdfile3-4.root mfile3.root mfile4.root
-                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                   FIXTURES_REQUIRED root-io-filemerger-MergeMulti-fixture
                   FIXTURES_SETUP root-io-filemerger-datagen-hadd-mzstdfile34-fixture)
 
+ROOTTEST_ADD_TEST(datagen-hadd-mzlibfile14
+                  COMMAND ${ROOT_hadd_CMD} -f101 mzlibfile1-4.root mzlibfile1-2.root mzlibfile3-4.root
+                  FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mzlibfile12-fixture
+                                    root-io-filemerger-datagen-hadd-mzlibfile34-fixture
+                  FIXTURES_SETUP root-io-filemerger-datagen-hadd-mzlibfile14-fixture)
+
 if(ZLIB_CF)
   ROOTTEST_ADD_TEST(merged-zlib
-                    PRECMD  ${ROOT_hadd_CMD} -f101 mzlibfile1-4.root mzlibfile1-2.root mzlibfile3-4.root
-                    COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testMergedFile.C(\"mzlibfile1-4.root\",101,4804,20)"
-                    FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mzlibfile12-fixture root-io-filemerger-datagen-hadd-mzlibfile34-fixture)
+                    MACRO testMergedFile.C
+                    MACROARG "\"mzlibfile1-4.root\",101,4804,20"
+                    FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mzlibfile14-fixture)
 else()
   ROOTTEST_ADD_TEST(merged-zlib
-                    PRECMD  ${ROOT_hadd_CMD} -f101 mzlibfile1-4.root mzlibfile1-2.root mzlibfile3-4.root
-                    COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testMergedFile.C(\"mzlibfile1-4.root\",101,5014,20)"
-                    FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mzlibfile12-fixture root-io-filemerger-datagen-hadd-mzlibfile34-fixture)
+                    MACRO testMergedFile.C
+                    MACROARG "\"mzlibfile1-4.root\",101,5014,20"
+                    FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mzlibfile14-fixture)
 endif()
 
+ROOTTEST_ADD_TEST(datagen-hadd-mzfile14
+                  COMMAND ${ROOT_hadd_CMD} -f207 mzfile1-4.root mzfile1-2.root mzfile3-4.root
+                  FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mzfile12-fixture
+                                    root-io-filemerger-datagen-hadd-mzfile34-fixture
+                  FIXTURES_SETUP root-io-filemerger-datagen-hadd-mzfile14-fixture)
+
 ROOTTEST_ADD_TEST(merged-lzma
-                  PRECMD ${ROOT_hadd_CMD} -f207 mzfile1-4.root mzfile1-2.root mzfile3-4.root
-                  COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testMergedFile.C(\"mzfile1-4.root\",207,4455,20)"
-                  FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mzfile12-fixture root-io-filemerger-datagen-hadd-mzfile34-fixture)
+                  MACRO testMergedFile.C
+                  MACROARG "\"mzfile1-4.root\",207,4455,20"
+                  FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mzfile14-fixture)
+
+ROOTTEST_ADD_TEST(datagen-hadd-mlz4file14
+                  COMMAND ${ROOT_hadd_CMD} -f404 mlz4file1-4.root mlz4file1-2.root mlz4file3-4.root
+                  FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mlz4file12-fixture
+                                    root-io-filemerger-datagen-hadd-mlz4file34-fixture
+                  FIXTURES_SETUP root-io-filemerger-datagen-hadd-mlz4file14-fixture)
 
 if(${LZ4_VERSION} VERSION_LESS "1.7.5")
    ROOTTEST_ADD_TEST(merged-lz4
-                  PRECMD ${ROOT_hadd_CMD} -f404 mlz4file1-4.root mlz4file1-2.root mlz4file3-4.root
-                  COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testMergedFile.C(\"mlz4file1-4.root\",404,5422,5)"
-                  FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mlz4file12-fixture root-io-filemerger-datagen-hadd-mlz4file34-fixture)
+                     MACRO testMergedFile.C
+                     MACROARG "\"mlz4file1-4.root\",404,5422,5"
+                     FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mlz4file14-fixture)
 elseif(${LZ4_VERSION} VERSION_GREATER_EQUAL "1.7.5")
    ROOTTEST_ADD_TEST(merged-lz4
-                  PRECMD ${ROOT_hadd_CMD} -f404 mlz4file1-4.root mlz4file1-2.root mlz4file3-4.root
-                  COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testMergedFile.C(\"mlz4file1-4.root\",404,5395,5)"
-                  FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mlz4file12-fixture root-io-filemerger-datagen-hadd-mlz4file34-fixture)
+                     MACRO testMergedFile.C
+                     MACROARG "\"mlz4file1-4.root\",404,5395,5"
+                     FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mlz4file14-fixture)
 endif()
+
+ROOTTEST_ADD_TEST(datagen-hadd-mzstdfile14
+                  COMMAND ${ROOT_hadd_CMD} -f505 mzstdfile1-4.root mzstdfile1-2.root mzstdfile3-4.root
+                  FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mzstdfile12-fixture
+                                    root-io-filemerger-datagen-hadd-mzstdfile34-fixture
+                  FIXTURES_SETUP root-io-filemerger-datagen-hadd-mzstdfile14-fixture)
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 4)
    if(${ZSTD_VERSION} VERSION_LESS_EQUAL "1.3.3")
       ROOTTEST_ADD_TEST(merged-zstd
-            PRECMD ${ROOT_hadd_CMD} -f505 mzstdfile1-4.root mzstdfile1-2.root mzstdfile3-4.root
-            COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testMergedFile.C(\"mzstdfile1-4.root\",505,4533,20)"
-            FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mzstdfile12-fixture root-io-filemerger-datagen-hadd-mzstdfile34-fixture)
+                        MACRO testMergedFile.C
+                        MACROARG "\"mzstdfile1-4.root\",505,4533,20"
+                        FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mzstdfile14-fixture)
    else(${ZSTD_VERSION} VERSION_GREATER "1.3.3")
       ROOTTEST_ADD_TEST(merged-zstd
-            PRECMD ${ROOT_hadd_CMD} -f505 mzstdfile1-4.root mzstdfile1-2.root mzstdfile3-4.root
-            COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testMergedFile.C(\"mzstdfile1-4.root\",505,4456,20)"
-            FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mzstdfile12-fixture root-io-filemerger-datagen-hadd-mzstdfile34-fixture)
+                        MACRO testMergedFile.C
+                        MACROARG "\"mzstdfile1-4.root\",505,4456,20"
+                        FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mzstdfile14-fixture)
    endif()
 else()
    if(${ZSTD_VERSION} VERSION_LESS_EQUAL "1.3.3")
       ROOTTEST_ADD_TEST(merged-zstd
-                  PRECMD ${ROOT_hadd_CMD} -f505 mzstdfile1-4.root mzstdfile1-2.root mzstdfile3-4.root
-                  COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testMergedFile.C(\"mzstdfile1-4.root\",505,4529,20)"
-                  FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mzstdfile12-fixture root-io-filemerger-datagen-hadd-mzstdfile34-fixture)
+                        MACRO testMergedFile.C
+                        MACROARG "\"mzstdfile1-4.root\",505,4529,20"
+                        FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mzstdfile14-fixture)
    else(${ZSTD_VERSION} VERSION_GREATER "1.3.3")
       ROOTTEST_ADD_TEST(merged-zstd
-                  PRECMD ${ROOT_hadd_CMD} -f505 mzstdfile1-4.root mzstdfile1-2.root mzstdfile3-4.root
-                  COMMAND ${ROOT_root_CMD} -q -l -b "${CMAKE_CURRENT_SOURCE_DIR}/testMergedFile.C(\"mzstdfile1-4.root\",505,4454,20)"
-                  FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mzstdfile12-fixture root-io-filemerger-datagen-hadd-mzstdfile34-fixture)
+                        MACRO testMergedFile.C
+                        MACROARG "\"mzstdfile1-4.root\",505,4454,20"
+                        FIXTURES_REQUIRED root-io-filemerger-datagen-hadd-mzstdfile14-fixture)
    endif()
 endif()
 
