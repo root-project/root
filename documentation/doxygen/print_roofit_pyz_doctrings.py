@@ -193,8 +193,12 @@ def print_pyroot_blocks_for_cpp_docs():
 
 if __name__ == "__main__":
 
-    print("/**")
-    print_roofit_pythonization_page()
-    print("")
-    print_pyroot_blocks_for_cpp_docs()
-    print("*/")
+    try:
+        print("/**")
+        print_roofit_pythonization_page()
+        print("")
+        print_pyroot_blocks_for_cpp_docs()
+        print("*/")
+    except ImportError:
+        # roofit was probably not built
+        pass
