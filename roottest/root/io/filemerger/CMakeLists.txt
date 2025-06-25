@@ -1,6 +1,6 @@
 ROOTTEST_ADD_TEST(execKeyOrder
-	               MACRO execKeyOrder.C
-		            OUTREF execKeyOrder.ref)
+                  MACRO execKeyOrder.C
+                  OUTREF execKeyOrder.ref)
 
 ROOTTEST_ADD_TEST(execCreateAndMerge
                   MACRO execCreateAndMerge.C
