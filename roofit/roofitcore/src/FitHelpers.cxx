@@ -745,7 +745,13 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
 
       RooArgSet normSet;
       pdf.getObservables(data.get(), normSet);
-      normSet.remove(projDeps, true, true);
+
+      for(auto i: projDeps){
+          auto res = normSet.find(i->GetName());
+          if(res != nullptr){
+              res->setAttribute("__conditional__");
+          }
+      }
 
       pdf.setAttribute("SplitRange", splitRange);
       pdf.setStringAttribute("RangeName", rangeName);
