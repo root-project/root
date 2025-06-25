@@ -1,3 +1,4 @@
+CMAKE_BUILD_RPATH=/usr/local/lib
 builtin_cfitsio=ON
 builtin_cppzmq=ON
 builtin_davix=ON
@@ -23,7 +24,6 @@ builtin_zeromq=ON
 builtin_zstd=ON
 ccache=ON
 cocoa=ON
-fortran=OFF
 minuit2_omp=OFF
 pythia8=OFF
 test_distrdf_dask=ON
