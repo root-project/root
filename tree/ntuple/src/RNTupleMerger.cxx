@@ -1145,7 +1145,7 @@ ROOT::Experimental::Internal::RNTupleMerger::MergeSourceAttributes(RPageSource &
       ss << "The following Attribute Sets are present in the first source but missing in one of the following "
             "sources:\n";
       ss << std::accumulate(attrSetCmp.fExtraDstSets.begin(), attrSetCmp.fExtraDstSets.end(), std::string{},
-                            [&sets = mergeData.fDstAttributeSetNames](std::string &acc, std::size_t idx) {
+                            [&sets = mergeData.fDstAttributeSetNames](const std::string &acc, std::size_t idx) {
                                return acc + "  * " + sets[idx] + "\n";
                             });
       ss << "Note: if you want to merge RNTuples regardless of their Attribute Sets, pass `fAttributesMergingMode = "
@@ -1158,7 +1158,7 @@ ROOT::Experimental::Internal::RNTupleMerger::MergeSourceAttributes(RPageSource &
             "following "
             "sources:\n";
       ss << std::accumulate(attrSetCmp.fExtraSrcSets.begin(), attrSetCmp.fExtraSrcSets.end(), std::string{},
-                            [&sets = mergeData.fSrcDescriptor->GetAttributeSets()](std::string &acc, std::size_t idx) {
+                            [&sets = mergeData.fSrcDescriptor->GetAttributeSets()](const std::string &acc, std::size_t idx) {
                                auto it = sets.begin();
                                std::advance(it, idx);
                                return acc + "  * " + it->first + "\n";
