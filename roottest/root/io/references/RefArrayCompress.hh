@@ -1,31 +1,33 @@
+#ifndef RefArrazCompress_hh
+#define RefArrazCompress_hh
+
 #include "TObject.h"
 #include "TClonesArray.h"
 #include "TRefArray.h"
 
-#ifndef Test_hh
-#define Test_hh
 
 class ObjA: public TObject
 {
   public:
 
     UInt_t    fObjAVal;
-    void Clear(Option_t* = "") { fObjAVal = 0; }
+    void Clear(Option_t* = "") override { fObjAVal = 0; }
 
-  ClassDef(ObjA, 1);
+  ClassDefOverride(ObjA, 1);
 };
 
 class Top: public TObject
 {
   public:
-    Top() { fObjAArray = new TClonesArray(ObjA::Class(), 10); } 
-    ~Top() { delete fObjAArray; } 
-    void Clear(Option_t* = "")
+    Top() { fObjAArray = new TClonesArray(ObjA::Class(), 10); }
+    ~Top() override { delete fObjAArray; }
+    void Clear(Option_t* = "") override
       { fObjAArray->Clear("C"); fObjAs.Clear(); }
 
     TClonesArray*    fObjAArray; //->
     TRefArray fObjAs;
 
-  ClassDef(Top, 1);
+  ClassDefOverride(Top, 1);
 };
-#endif /* Test_hh */
+
+#endif /* RefArrazCompress_hh */
