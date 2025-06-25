@@ -92,6 +92,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RVariationReader.hxx
     ROOT/RDF/RVariationsDescription.hxx
     ROOT/RDF/RVariedAction.hxx
+    ROOT/RDF/SnapshotHelpers.hxx
     ROOT/RDF/Utils.hxx
     ROOT/RDF/PyROOTHelpers.hxx
     ROOT/RDF/RDFDescription.hxx
@@ -114,6 +115,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDFGraphUtils.cxx
     src/RDFHistoModels.cxx
     src/RDFInterfaceUtils.cxx
+    src/RDFSnapshotHelpers.cxx
     src/RDFUtils.cxx
     src/RDFHelpers.cxx
     src/RFilterBase.cxx

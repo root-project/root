@@ -11,13 +11,14 @@
 #ifndef ROOT_GRAPHUTILS
 #define ROOT_GRAPHUTILS
 
+#include <ROOT/RDataFrame.hxx>
+#include <ROOT/RDF/RInterface.hxx>
+#include <ROOT/RDF/GraphNode.hxx>
+
 #include <string>
 #include <vector>
 #include <unordered_map>
 #include <memory>
-#include <ROOT/RDataFrame.hxx>
-#include <ROOT/RDF/RInterface.hxx>
-#include <ROOT/RDF/GraphNode.hxx>
 
 namespace ROOT {
 namespace Detail {
@@ -80,7 +81,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Starting from a Filter or Range, prints the branch it belongs to
    template <typename Proxied, typename DataSource>
-   std::string RepresentGraph(RInterface<Proxied, DataSource> &rInterface)
+   std::string RepresentGraph(ROOT::RDF::RInterface<Proxied, DataSource> &rInterface)
    {
       auto loopManager = rInterface.GetLoopManager();
       loopManager->Jit();
@@ -91,7 +92,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Starting from an action, prints the branch it belongs to
    template <typename T>
-   std::string RepresentGraph(const RResultPtr<T> &resultPtr)
+   std::string RepresentGraph(const ROOT::RDF::RResultPtr<T> &resultPtr)
    {
       auto loopManager = resultPtr.fLoopManager;
 
