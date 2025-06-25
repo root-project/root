@@ -9,23 +9,28 @@
  *************************************************************************/
 
 #include "ROOT/RDFHelpers.hxx"
+
+#include "ROOT/RDF/RActionImpl.hxx"  // for RActionImpl
+#include "ROOT/RDF/RFilterBase.hxx"  // for RDFInternal
+#include "ROOT/RDF/RLoopManager.hxx" // for RLoopManager
+#include "ROOT/RDF/Utils.hxx"
+#include "ROOT/RResultHandle.hxx" // for RResultHandle, RunGraphs
+
 #include "TROOT.h"      // IsImplicitMTEnabled
 #include "TError.h"     // Warning
 #include "TStopwatch.h"
 #include "RConfigure.h" // R__USE_IMT
 #include "ROOT/RLogger.hxx"
-#include "ROOT/RDF/RLoopManager.hxx" // for RLoopManager
-#include "ROOT/RDF/Utils.hxx"
-#include "ROOT/RResultHandle.hxx"    // for RResultHandle, RunGraphs
 #include "ROOT/RSlotStack.hxx"
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #endif // R__USE_IMT
 
 #include <algorithm>
+#include <cstdio>
+#include <iomanip>
 #include <iostream>
 #include <set>
-#include <cstdio>
 
 // TODO, this function should be part of core libraries
 #include <numeric>
@@ -41,6 +46,8 @@
 #else
 #include <sys/ioctl.h>
 #endif
+
+class TTreeReader;
 
 // Get terminal size for progress bar
 int get_tty_size()

@@ -11,10 +11,10 @@
 #ifndef ROOT_RDF_TINTERFACE_UTILS
 #define ROOT_RDF_TINTERFACE_UTILS
 
-#include "RColumnRegister.hxx"
 #include <ROOT/RDF/RAction.hxx>
 #include <ROOT/RDF/RActionSnapshot.hxx>
 #include <ROOT/RDF/ActionHelpers.hxx> // for BuildAction
+#include <ROOT/RDF/SnapshotHelpers.hxx>
 #include <ROOT/RDF/RColumnRegister.hxx>
 #include <ROOT/RDF/RDefine.hxx>
 #include <ROOT/RDF/RDefinePerSample.hxx>
@@ -34,15 +34,12 @@
 
 #include <deque>
 #include <functional>
-#include <map>
 #include <memory>
 #include <string>
 #include <type_traits>
 #include <typeinfo>
 #include <vector>
-#include <unordered_map>
 
-class TObjArray;
 class TTree;
 namespace ROOT {
 namespace Detail {
@@ -51,12 +48,9 @@ class RNodeBase;
 }
 }
 namespace RDF {
-template <typename T>
-class RResultPtr;
 template<typename T, typename V>
 class RInterface;
 using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
-class RDataSource;
 } // namespace RDF
 
 } // namespace ROOT
