@@ -192,12 +192,12 @@ ROOT::Experimental::RNTupleAttributeSetReader::GetAttributesRangeInternal(NTuple
 
    assert(EntryRangesAreSorted(fEntryRanges));
 
-   const auto FullyContained = [rangeIsContained](auto startEntry, auto endEntry, auto start, auto end) {
+   const auto FullyContained = [rangeIsContained](auto startInner, auto endInner, auto startOuter, auto endOuter) {
       if (rangeIsContained) {
-         std::swap(start, startEntry);
-         std::swap(end, endEntry);
+         std::swap(startOuter, startInner);
+         std::swap(endOuter, endInner);
       }
-      return startEntry >= start && endEntry <= end;
+      return startOuter <= startInner && endInner <= endOuter;
    };
 
    auto &model = const_cast<RNTupleModel &>(fReader->GetModel());
