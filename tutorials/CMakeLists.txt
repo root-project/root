@@ -37,9 +37,10 @@ endif()
 
 # Set the environment for the tutorials, which is the eventual ROOT_environ
 # plus some environment variables related to limiting the number of threads
-# used by NumPy.
+# used by NumPy and enabling batch mode.
 # See: https://stackoverflow.com/questions/30791550/limit-number-of-threads-in-numpy
-set(TUTORIAL_ENV ${ROOT_environ} OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1)
+set(TUTORIAL_ENV ${ROOT_environ} ROOT_BATCH=1
+                 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1)
 
 #---Copy the CTestCustom.cmake file into the build directory--------
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
@@ -763,8 +764,6 @@ endforeach()
 #---Python tutorials-----------------------------------------------------
 if(ROOT_pyroot_FOUND)
 
-  # Copy .rootlogon.py file into the build directory. It disables graphics for the Python tutorials
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/.rootlogon.py ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
   # Copy .enableImplicitMTWrapper.py file into the build directory. It can limit the size of the thread pool
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/.enableImplicitMTWrapper.py ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
