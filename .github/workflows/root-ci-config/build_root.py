@@ -148,7 +148,8 @@ def main():
         extra_ctest_flags = ""
         if WINDOWS:
             extra_ctest_flags += "--repeat until-pass:5 "
-            extra_ctest_flags += "--build-config " + args.buildtype
+            extra_ctest_flags += "--build-config " + args.buildtype + " "
+            extra_ctest_flags += "--verbose "
 
         ctest_returncode = run_ctest(extra_ctest_flags)
 
