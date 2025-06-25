@@ -23,7 +23,7 @@ class TDirectory;
 class TH1F;
 class TRefArray;
 
-class Track : public TObject { 
+class Track : public TObject {
 
 private:
    Float_t      fPx;           // X component of the momentum
@@ -84,7 +84,7 @@ public:
    ClassDef(Track,2)  // A track segment
 };
 
-class EventHeader { 
+class EventHeader {
 
 private:
    Int_t fEvtNum;
@@ -106,7 +106,7 @@ public:
    ClassDef(EventHeader,1)  // Event Header
 };
 
-class Event : public TObject { 
+class Event : public TObject {
 
 private:
    char           fType[20];          // event type
@@ -130,17 +130,17 @@ private:
    Bool_t         fIsValid;           //
 
 private:
-   Event(const Event&); // NOT IMPLEMENTED
-   Event& operator=(const Event&); // NOT IMPLEMENTED
+   Event(const Event&) = delete;
+   Event& operator=(const Event&) = delete;
 
 public:
    Event();
    virtual ~Event();
    void          Build(Int_t ev, Int_t arg5 = 600, Float_t ptmin = 1);
-   void          Clear(Option_t* option = "");
+   void          Clear(Option_t* option = "") override;
    Bool_t        IsValid() const { return fIsValid; }
    void          Reset(Option_t* option = "");
-   void          ResetHistogramPointer() { delete fH; fH = 0; }
+   void          ResetHistogramPointer() { delete fH; fH = nullptr; }
    void          SetNseg(Int_t n) { fNseg = n; }
    void          SetNtrack(Int_t n) { fNtrack = n; }
    void          SetNvertex(Int_t n) { fNvertex = n; SetRandomVertex(); }
@@ -171,10 +171,10 @@ public:
    Double32_t    GetMatrix(UChar_t x, UChar_t y) { return ((x < 4) && (y < 4)) ? fMatrix[x][y] : 0; }
    TBits&        GetTriggerBits() { return fTriggerBits; }
 
-   ClassDef(Event,1)  // Event structure
+   ClassDefOverride(Event,1)  // Event structure
 };
 
-class HistogramManager { 
+class HistogramManager {
 
 private:
    TH1F* fNtrack;
@@ -199,8 +199,8 @@ private:
    TH1F* fValid;
 
 private:
-   HistogramManager(const HistogramManager&); // NOT IMPLEMENTED
-   HistogramManager& operator=(const HistogramManager&); // NOTIMPLEMENTED
+   HistogramManager(const HistogramManager&) = delete;
+   HistogramManager& operator=(const HistogramManager&) = delete;
 
 public:
    explicit HistogramManager(TDirectory*);
