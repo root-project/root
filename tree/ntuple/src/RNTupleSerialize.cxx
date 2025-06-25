@@ -1965,7 +1965,9 @@ ROOT::RResult<void> ROOT::Internal::RNTupleSerializer::DeserializeFooter(const v
       bytes = frame + frameSize;
    }
 
-   {
+   // NOTE: Attributes were introduced in v1.0.1.0, so this section may be missing.
+   // Testing for > 8 because bufSize includes the checksum.
+   if (fnBufSizeLeft() > 8) {
       std::uint32_t nAttributeSets;
       frame = bytes;
       if (auto res = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nAttributeSets)) {
