@@ -55,6 +55,7 @@ update_path MANPATH "$old_rootsys" "/man" @mandir@
 update_path CMAKE_PREFIX_PATH "$old_rootsys" "" $ROOTSYS
 update_path JUPYTER_PATH "$old_rootsys" "/etc/notebook" $ROOTSYS/etc/notebook
 update_path JUPYTER_CONFIG_PATH "$old_rootsys" "/etc/notebook" $ROOTSYS/etc/notebook
+update_path ROOT_INCLUDE_PATH "@DEFAULT_ROOT_INCLUDE_PATH@" "" "@DEFAULT_ROOT_INCLUDE_PATH@"
 
 functions -e update_path
 set -e old_rootsys

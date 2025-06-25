@@ -23,4 +23,4 @@ ROOTTEST_ADD_TEST(hadd_autoload
                   COMMAND hadd -f data_merge.root data1.root data2.root
                   OUTREF hadd_autoload${outref_suffix}.ref
                   FIXTURES_REQUIRED root-io-transient-base-WriteFile-fixture
-                  ENVIRONMENT ROOT_INCLUDE_PATH=${CMAKE_CURRENT_SOURCE_DIR})
+                  ENVIRONMENT ROOT_INCLUDE_PATH=${CMAKE_CURRENT_SOURCE_DIR}:${DEFAULT_ROOT_INCLUDE_PATH})
