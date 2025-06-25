@@ -8,6 +8,8 @@
 #include "TH1.h"
 #include "TTreeFormula.h"
 #include "TString.h"
+#include "TLorentzVector.h"
+#include <ROOT/TestSupport.hxx>
 
 #include "gtest/gtest.h"
 
@@ -202,4 +204,62 @@ TEST(TTreeFormulaRegressions, ConstantAlias)
    TTreeFormula tf2("tf2", "4.", &t);
    EXPECT_EQ(tf2.DefinedVariable(expr, action), 0); // was -3 during the regression
    EXPECT_FLOAT_EQ(tf2.EvalInstance(), 4.);
+}
+
+// ROOT-8577 (JIRA)
+#define MYSTRUCT struct MyS { int x; };
+MYSTRUCT
+#define TO_LITERAL(string) _QUOTE_(string)
+TEST(TTreeFormulaRegressions, WrongName)
+{
+   gInterpreter->Declare(TO_LITERAL(MYSTRUCT));
+   MyS s;
+   TLorentzVector v(1, 2, 3, 4);
+   TTree t("t", "t");
+   t.Branch("s", &s);
+   t.Branch("v", &v);
+   t.Fill();
+   {
+      EXPECT_EQ(t.Draw("s.x", ""), 1);
+   }
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      // diags.requiredDiag(kError, "TSelectorDraw::AbortProcess", "Variable compilation failed: {s.y,}");
+      diags.requiredDiag(kError, "TTreeFormula::DefinedVariable", "y is not a datamember of MyS");
+      diags.requiredDiag(kError, "TTreeFormula::Compile", " Bad numerical expression : \"s.y\"");
+      EXPECT_EQ(t.Draw("s.y", ""), -1);
+   }
+   {
+      EXPECT_EQ(t.Draw("v.Eta()", ""), 1);
+   }
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kError, "TTreeFormula::DefinedVariable", "Unknown method:eta() in TLorentzVector");
+      diags.requiredDiag(kError, "TTreeFormula::Compile", " Bad numerical expression : \"v.eta()\"");
+      EXPECT_EQ(t.Draw("v.eta()", ""), -1);
+   }
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kError, "TTreeFormula::DefinedVariable", "x is not a datamember of TLorentzVector");
+      diags.requiredDiag(kError, "TTreeFormula::Compile", " Bad numerical expression : \"v.x\"");
+      EXPECT_EQ(t.Draw("v.x", ""), -1);
+   }
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kError, "TTreeFormula::DefinedVariable", "y is not a datamember of TLorentzVector");
+      diags.requiredDiag(kError, "TTreeFormula::Compile", " Bad numerical expression : \"v.y\"");
+      EXPECT_EQ(t.Draw("v.y", ""), -1);
+   }
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kError, "TTreeFormula::DefinedVariable", "Unknown method:eta() in MyS");
+      diags.requiredDiag(kError, "TTreeFormula::Compile", " Bad numerical expression : \"s.eta()\"");
+      EXPECT_EQ(t.Draw("s.eta()", ""), -1);
+   }
+   {
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kError, "TTreeFormula::DefinedVariable", "Unknown method:Eta() in MyS");
+      diags.requiredDiag(kError, "TTreeFormula::Compile", " Bad numerical expression : \"s.Eta()\"");
+      EXPECT_EQ(t.Draw("s.Eta()", ""), -1);
+   }
 }

@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 if(NOT MSVC OR win_broken_tests)
-  ROOT_ADD_UNITTEST_DIR(TreePlayer)
+  ROOT_ADD_UNITTEST_DIR(TreePlayer Physics)
   add_custom_command(TARGET treetreeplayertestUnit POST_BUILD
                      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/data.h data.h
                      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/branchobject.root branchobject.root)
