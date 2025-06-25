@@ -90,7 +90,7 @@ private:
    std::vector<ROOT::Internal::RPageSink::RStagedCluster> fStagedClusters;
 
    /// All the Attribute Sets created from this FillContext
-   std::unordered_map<std::string, Experimental::RNTupleAttributeSetWriter> fAttributeSets;
+   std::unordered_map<std::string, std::unique_ptr<Experimental::RNTupleAttributeSetWriter>> fAttributeSets;
 
    template <typename Entry>
    void FillNoFlushImpl(Entry &entry, ROOT::RNTupleFillStatus &status)

@@ -36,7 +36,7 @@ static ROOT::RResult<void> ValidateAttributeModel(const ROOT::RNTupleModel &mode
 //
 //  RNTupleAttributeSetWriter
 //
-ROOT::RResult<ROOT::Experimental::RNTupleAttributeSetWriter>
+ROOT::RResult<std::unique_ptr<ROOT::Experimental::RNTupleAttributeSetWriter>>
 ROOT::Experimental::RNTupleAttributeSetWriter::Create(std::string_view name, std::unique_ptr<RNTupleModel> model,
                                                       const RNTupleFillContext *mainFillContext, TDirectory &dir)
 
@@ -72,7 +72,8 @@ ROOT::Experimental::RNTupleAttributeSetWriter::Create(std::string_view name, std
    opts.SetCompression(mainFillContext->fSink->GetWriteOptions().GetCompression());
    auto sink = std::make_unique<ROOT::Internal::RPageSinkFile>(name, dir, opts);
    RNTupleFillContext fillContext{std::move(newModel), std::move(sink)};
-   return RNTupleAttributeSetWriter(mainFillContext, std::move(fillContext));
+   return std::unique_ptr<RNTupleAttributeSetWriter>(
+      new RNTupleAttributeSetWriter(mainFillContext, std::move(fillContext)));
 }
 
 ROOT::Experimental::RNTupleAttributeSetWriter::RNTupleAttributeSetWriter(const RNTupleFillContext *mainFillContext,
