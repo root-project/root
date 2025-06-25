@@ -121,7 +121,7 @@ static ENameCycleError DecodeNumericCycle(const char *str, std::optional<std::in
       res += *str - '0';
    } while (*++str);
 
-   assert(res >= 0 && res < std::numeric_limits<std::int16_t>::max());
+   assert(res < std::numeric_limits<std::int16_t>::max());
    out = static_cast<std::int16_t>(res);
 
    return ENameCycleError::kNoError;
