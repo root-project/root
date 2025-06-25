@@ -1,19 +1,16 @@
 ROOT_GENERATE_DICTIONARY(G__TreeFormulaReferencesGeneration
   ${CMAKE_CURRENT_SOURCE_DIR}/Event.h
-  LINKDEF ${CMAKE_CURRENT_SOURCE_DIR}/EventLinkDef.h
-  FIXTURES_SETUP treeformula-references-G__TreeFormulaReferencesGeneration-fixture)
+  LINKDEF ${CMAKE_CURRENT_SOURCE_DIR}/EventLinkDef.h)
 
 ROOTTEST_LINKER_LIBRARY(TreeFormulaReferencesGeneration
   ${CMAKE_CURRENT_SOURCE_DIR}/TreeFormulaReferencesGeneration.cxx
-  TEST G__TreeFormulaReferencesGeneration.cxx
-  LIBRARIES ROOT::Core ROOT::Tree ROOT::Hist ROOT::MathCore
-  FIXTURES_REQUIRED treeformula-references-G__TreeFormulaReferencesGeneration-fixture
-  FIXTURES_SETUP treeformula-references-TreeFormulaReferencesGeneration-fixture)
+  G__TreeFormulaReferencesGeneration.cxx
+  LIBRARIES ROOT::Core ROOT::Tree ROOT::Hist ROOT::MathCore)
 
 ROOTTEST_GENERATE_EXECUTABLE(TreeFormulaReferencesGenerator
   ${CMAKE_CURRENT_SOURCE_DIR}/TreeFormulaReferencesGenerator.cxx
-  LIBRARIES Core RIO Net Tree Hist MathCore TreeFormulaReferencesGeneration
-  FIXTURES_REQUIRED treeformula-references-TreeFormulaReferencesGeneration-fixture
+  LIBRARIES ROOT::Core ROOT::RIO ROOT::Net ROOT::Tree ROOT::Hist ROOT::MathCore TreeFormulaReferencesGeneration
+  DEPENDS TreeFormulaReferencesGeneration
   FIXTURES_SETUP treeformula-references-generator)
 
 set(size 6)
