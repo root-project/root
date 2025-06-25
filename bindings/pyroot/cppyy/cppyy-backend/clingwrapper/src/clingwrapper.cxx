@@ -1440,7 +1440,7 @@ Cppyy::TCppIndex_t GetLongestInheritancePath(TClass *klass)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \fn Cppyy::TCppIndex_t Cppyy::GetNumBasesLongestBranch(TCppType_t klass)
+/// \fn Cppyy::TCppIndex_t Cppyy::GetNumBasesLongest(TCppType_t klass)
 /// \brief Retrieve number of base classes in the longest branch of the
 ///        inheritance tree.
 /// \param[in] klass The class to start the retrieval process from.
@@ -1472,7 +1472,9 @@ bool Cppyy::IsSubtype(TCppType_t derived, TCppType_t base)
         return true;
     TClassRef& derived_type = type_from_handle(derived);
     TClassRef& base_type = type_from_handle(base);
-    return derived_type->GetBaseClass(base_type) != 0;
+    if (derived_type.GetClass() && base_type.GetClass())
+        return derived_type->GetBaseClass(base_type) != 0;
+    return false;
 }
 
 bool Cppyy::IsSmartPtr(TCppType_t klass)
@@ -1607,7 +1609,10 @@ std::vector<Cppyy::TCppIndex_t> Cppyy::GetMethodIndicesFromName(
         TIter next(cr->GetListOfMethods());
         while ((func = (TFunction*)next())) {
             if (match_name(name, func->GetName())) {
-                if (func->Property() & kIsPublic)
+            // C++ functions should be public to allow access; C functions have no access
+            // specifier and should always be accepted
+                auto prop = func->Property();
+                if ((prop & kIsPublic) || !(prop & (kIsPrivate | kIsProtected | kIsPublic)))
                     indices.push_back((TCppIndex_t)imeth);
             }
             ++imeth;
@@ -1739,6 +1744,13 @@ std::string Cppyy::GetMethodArgType(TCppMethod_t method, TCppIndex_t iarg)
     if (method) {
         TFunction* f = m2f(method);
         TMethodArg* arg = (TMethodArg*)f->GetListOfMethodArgs()->At((int)iarg);
+        std::string ft = arg->GetFullTypeName();
+        if (ft.rfind("enum ", 0) != std::string::npos) {   // special case to preserve 'enum' tag
+            std::string arg_type = arg->GetTypeNormalizedName();
+            return arg_type.insert(arg_type.rfind("const ", 0) == std::string::npos ? 0 : 6, "enum ");
+        } else if (g_builtins.find(ft) != g_builtins.end() || ft.find("int8_t") != std::string::npos)
+            return ft;       // do not resolve int8_t and uint8_t typedefs
+
         return arg->GetTypeNormalizedName();
     }
     return "<unknown>";
@@ -2230,14 +2242,17 @@ intptr_t Cppyy::GetDatamemberOffset(TCppScope_t scope, TCppIndex_t idata)
     // CLING WORKAROUND: the following causes templates to be instantiated first within the proper
     // scope, making the lookup succeed and preventing spurious duplicate instantiations later. Also,
     // if the variable is not yet loaded, pull it in through gInterpreter.
+        intptr_t offset = (intptr_t)-1;
         if (m->Property() & kIsStatic) {
             if (strchr(cr->GetName(), '<'))
                 gInterpreter->ProcessLine(((std::string)cr->GetName()+"::"+m->GetName()+";").c_str());
-            if ((intptr_t)m->GetOffsetCint() == (intptr_t)-1)
+            offset = (intptr_t)m->GetOffsetCint();    // yes, CINT (GetOffset() is both wrong
+                                                      // and caches that wrong result!
+            if (offset == (intptr_t)-1)
                 return (intptr_t)gInterpreter->ProcessLine((std::string("&")+cr->GetName()+"::"+m->GetName()+";").c_str());
-        }
-        return (intptr_t)m->GetOffsetCint();    // yes, CINT (GetOffset() is both wrong
-                                                // and caches that wrong result!
+        } else
+            offset = (intptr_t)m->GetOffsetCint();    // yes, CINT, see above
+        return offset;
     }
 
     return (intptr_t)-1;
