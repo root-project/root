@@ -11,7 +11,9 @@ import { kAxisLabels } from '../base/ObjectPainter.mjs';
 
 const kToFront = '__front__', kNoReorder = '__no_reorder',
       sDfltName = 'root_ctx_menu', sDfltDlg = '_dialog',
-      sSub = 'sub:', sEndsub = 'endsub:', sSeparator = 'separator', sHeader = 'header:';
+      sSub = 'sub:', sEndsub = 'endsub:',
+      sColumn = 'column:', sEndcolumn = 'endcolumn:',
+      sSeparator = 'separator', sHeader = 'header:';
 
 /**
  * @summary Abstract class for creating context menu
@@ -94,14 +96,16 @@ class JSRootMenu {
    }
 
    /** @summary Mark end of submenu */
-   endsub() {
-      this.add(sEndsub);
-   }
+   endsub() { this.add(sEndsub); }
+
+   /** @summary Start column with items */
+   column() { this.add(sColumn); }
+
+   /** @summary End column with items */
+   endcolumn() { this.add(sEndcolumn); }
 
    /** @summary Add separator */
-   separator() {
-      this.add(sSeparator);
-   }
+   separator() { this.add(sSeparator); }
 
    /** @summary Add menu header - must be first entry */
    header(name, title) {
@@ -214,7 +218,7 @@ class JSRootMenu {
       });
 
       for (let ncolumn = 0; ncolumn < 5; ++ncolumn) {
-         this.add('column:');
+         this.column();
 
          for (let nrow = 0; nrow < 10; nrow++) {
             let n = ncolumn*10 + nrow;
@@ -231,7 +235,7 @@ class JSRootMenu {
             this.add(svg, (useid ? n : col), res => set_func(useid ? parseInt(res) : res), 'Select color ' + col);
          }
 
-         this.add('endcolumn:');
+         this.endcolumn();
          if (!this.native())
             break;
       }
@@ -286,7 +290,7 @@ class JSRootMenu {
 
       this.sub('Palette', () => this.input('Enter palette code [1..113]', curr, 'int', 1, 113).then(set_func));
 
-      this.add('column:');
+      this.column();
       add(57, 'Bird', 'Default color palette', (curr > 113));
       add(55, 'Rainbow');
       add(51, 'Deep Sea');
@@ -300,12 +304,12 @@ class JSRootMenu {
       add(59, '', 'Green Red Violet');
       add(60, '', 'Blue Red Yellow');
       add(61, 'Ocean');
-      this.add('endcolumn:');
+      this.endcolumn();
 
       if (!this.native())
          return this.endsub();
 
-      this.add('column:');
+      this.column();
       add(62, '', 'Color Printable On Grey');
       add(63, 'Alpine');
       add(64, 'Aquamarine');
@@ -319,9 +323,9 @@ class JSRootMenu {
       add(72, 'Brown Cyan');
       add(73, 'CMYK');
       add(74, 'Candy');
-      this.add('endcolumn:');
+      this.endcolumn();
 
-      this.add('column:');
+      this.column();
       add(75, 'Cherry');
       add(76, 'Coffee');
       add(77, '', 'Dark Rain Bow');
@@ -335,9 +339,9 @@ class JSRootMenu {
       add(85, 'Island');
       add(86, 'Lake');
       add(87, '', 'Light Temperature');
-      this.add('endcolumn:');
+      this.endcolumn();
 
-      this.add('column:');
+      this.column();
       add(88, '', 'Light Terrain');
       add(89, 'Mint');
       add(90, 'Neon');
@@ -351,9 +355,9 @@ class JSRootMenu {
       add(98, '', 'Sandy Terrain');
       add(99, 'Sienna');
       add(100, 'Solar');
-      this.add('endcolumn:');
+      this.endcolumn();
 
-      this.add('column:');
+      this.column();
       add(101, '', 'South West');
       add(102, '', 'Starry Night');
       add(103, '', 'Sunset');
@@ -367,7 +371,7 @@ class JSRootMenu {
       add(111, '', 'Gist Earth');
       add(112, 'Viridis');
       add(113, 'Cividis');
-      this.add('endcolumn:');
+      this.endcolumn();
 
       this.endsub();
    }
@@ -477,7 +481,7 @@ class JSRootMenu {
 
       for (let n = 0; n < supported.length; ++n) {
          if (n % 7 === 0)
-            this.add('column:');
+            this.column();
 
          const selected = (value === supported[n]);
 
@@ -492,7 +496,7 @@ class JSRootMenu {
          } else
             this.addchk(selected, supported[n].toString(), supported[n], arg => set_func(parseInt(arg)));
          if (n % 7 === 6)
-            this.add('endcolumn:');
+            this.endcolumn();
       }
       this.endsub();
    }
@@ -508,7 +512,7 @@ class JSRootMenu {
          });
       });
 
-      this.add('column:');
+      this.column();
 
       const doc = getDocument();
 
@@ -528,12 +532,12 @@ class JSRootMenu {
          this.add(svg, id, arg => set_func(parseInt(arg)), `${id}: ${fullname}`);
 
          if (n === 10) {
-            this.add('endcolumn:');
-            this.add('column:');
+            this.endcolumn();
+            this.column();
          }
       }
 
-      this.add('endcolumn:');
+      this.endcolumn();
       this.endsub();
    }
 
@@ -1193,7 +1197,7 @@ class StandaloneMenu extends JSRootMenu {
          return;
       }
 
-      if (name === 'endcolumn:')
+      if (name === sEndcolumn)
          return this.stack.pop();
 
       if (isFunc(arg)) { title = func; func = arg; arg = name; }
@@ -1201,7 +1205,7 @@ class StandaloneMenu extends JSRootMenu {
       const elem = {};
       curr.push(elem);
 
-      if (name === 'column:') {
+      if (name === sColumn) {
          elem.column = true;
          elem.sub = [];
          this.stack.push(elem.sub);

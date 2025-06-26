@@ -375,6 +375,11 @@ CustomStreamers = {
       func(buf, obj) { obj.$kind = 'TTree'; obj.$file = buf.fFile; }
    },
 
+   'ROOT::RNTuple': {
+      name: '$file',
+      func(buf, obj) { obj.$kind = 'ROOT::RNTuple'; obj.$file = buf.fFile; }
+   },
+
    RooRealVar(buf, obj) {
       const v = buf.last_read_version;
       buf.classStreamer(obj, 'RooAbsRealLValue');
@@ -2448,13 +2453,14 @@ class TBuffer {
 
    /** @summary Extract area */
    extract(place) {
-      if (!this.arr || !this.arr.buffer || !this.canExtract(place)) return null;
-      if (place.length === 2) return new DataView(this.arr.buffer, this.arr.byteOffset + place[0], place[1]);
+      if (!this.arr?.buffer || !this.canExtract(place))
+         return null;
+      if (place.length === 2)
+         return new DataView(this.arr.buffer, this.arr.byteOffset + place[0], place[1]);
 
       const res = new Array(place.length / 2);
       for (let n = 0; n < place.length; n += 2)
          res[n / 2] = new DataView(this.arr.buffer, this.arr.byteOffset + place[n], place[n + 1]);
-
       return res; // return array of buffers
    }
 
@@ -2654,12 +2660,21 @@ DirectStreamers[clTBasket] = function(buf, obj) {
    const ver = buf.readVersion();
    obj.fBufferSize = buf.ntoi4();
    obj.fNevBufSize = buf.ntoi4();
+
+   if (obj.fNevBufSize < 0) {
+      obj.fNevBufSize = -obj.fNevBufSize;
+      obj.fIOBits = buf.ntoi1();
+   }
+
    obj.fNevBuf = buf.ntoi4();
    obj.fLast = buf.ntoi4();
-   if (obj.fLast > obj.fBufferSize) obj.fBufferSize = obj.fLast;
+
+   if (obj.fLast > obj.fBufferSize)
+      obj.fBufferSize = obj.fLast;
    const flag = buf.ntoi1();
 
-   if (flag === 0) return;
+   if (flag === 0)
+      return;
 
    if ((flag % 10) !== 2) {
       if (obj.fNevBuf) {
