@@ -1,38 +1,25 @@
+int schemaRun4a()
 {
-#if defined(ClingWorkAroundIncorrectTearDownOrder)
-   if (1) {
+   gSystem->Load("libTreeFormulaScemaEvolution2");
+   auto f = TFile::Open("Event.root");
+
+#ifdef ClingWorkAroundMissingDynamicScope
+   gROOT->ProcessLine("Event * e = nullptr;");
+#else
+   Event *e = nullptr;
 #endif
 
-   gSystem->Load("./libEvent_2"); 
-   TFile f("Event.root");
+   TTree *T = nullptr;
+   f->GetObject("T",T);
+
 #ifdef ClingWorkAroundMissingDynamicScope
-      gROOT->ProcessLine("Event * e = 0;");
+   gROOT->ProcessLine("T->SetBranchAddress(\"event\",&e);");
 #else
-      Event * e =0;
+   T->SetBranchAddress("event",&e);
 #endif
-      
-      
-#ifdef ClingWorkAroundMissingDynamicScope
-   TTree *T; f.GetObject("T",T);
-#endif
-   
-#ifdef ClingWorkAroundMissingDynamicScope
-      gROOT->ProcessLine("T->SetBranchAddress(\"event\",&e);");
-#else
-      T->SetBranchAddress("event",&e);
-#endif
-      T->Show(5); //ok
+
+   T->Show(5); //ok
    Long64_t n = T->Scan("fTemperature"); //ok
-   
-#ifdef ClingWorkAroundBrokenUnnamedReturn
-   gApplication->Terminate(n!=0);
-#else    
-   return (n!=0);
-#endif
-#if defined(ClingWorkAroundIncorrectTearDownOrder)
-}
-#ifndef ClingWorkAroundBrokenUnnamedReturn
-return 1;
-#endif
-#endif
+
+   return !n;
 }
