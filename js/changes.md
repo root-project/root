@@ -8,11 +8,14 @@
 1. Support "fill_<id>" and "line_<id>" draw options for `TGraph`
 1. Support dark mode when store images
 1. With 'Shift' key pressed whole graph is moved by dragging action
+1. Support `Xall` and `Yall` as projections width #340
 1. Upgrade three.js r174 -> r176
 1. Upgrade lil-gui.mjs 0.19.2 -> 0.20.0
 1. Remove experimental RHist classes, deprecated in ROOT
 1. Internal - ws members are private, new methods has to be used
 1. Fix - ticks size and labels with kMoreLogLabels axis bit
+1. Fix - reading TLeafC leafs
+1. Fix - support BigInt in object inspector
 
 
 ## Changes in 7.9.1
