@@ -53,6 +53,7 @@ namespace ROOT {
       Int_t                       fImplFileLine;
       TVirtualIsAProxy           *fIsA;
       Int_t                       fVersion;
+      BrowseFunc_t                fBrowse;
       MergeFunc_t                 fMerge;
       ResetAfterMergeFunc_t       fResetAfterMerge;
       NewFunc_t                   fNew;
@@ -129,6 +130,7 @@ namespace ROOT {
       void                              SetDirectoryAutoAdd(DirAutoAdd_t dirAutoAdd);
       void                              SetFromTemplate();
       Int_t                             SetImplFile(const char *file, Int_t line);
+      void                              SetBrowse(BrowseFunc_t);
       void                              SetMerge(MergeFunc_t);
       void                              SetResetAfterMerge(ResetAfterMergeFunc_t);
       void                              SetNew(NewFunc_t newFunc);
