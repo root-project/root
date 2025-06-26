@@ -760,8 +760,6 @@ if(ROOT_pyroot_FOUND)
 
   # Copy .rootlogon.py file into the build directory. It disables graphics for the Python tutorials
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/.rootlogon.py ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
-  # Copy .enableImplicitMTWrapper.py file into the build directory. It can limit the size of the thread pool
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/.enableImplicitMTWrapper.py ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
   file(GLOB_RECURSE pytutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.py)
 
@@ -781,7 +779,6 @@ if(ROOT_pyroot_FOUND)
              io/sql/sqlfilldb.py       # same as the C++ case
              io/sql/sqlselect.py       # same as the C++ case
              launcher.py            # Not a tutorial
-             .enableImplicitMTWrapper.py # Not a tutorial
              )
 
   if(NOT dataframe
@@ -968,12 +965,8 @@ if(ROOT_pyroot_FOUND)
       # pool in case the tutorial invokes ROOT::EnableImplicitMT(), which by
       # default creates a thread pool of the size of the total number of cores.
       if(${t} IN_LIST multithreaded_all_cores)
-        set(setThreadPoolSize ".enableImplicitMTWrapper.py")
-        set(thisTestPoolSize ${NProcessors})
+        set(ROOT_MAX_THREADS "ROOT_MAX_THREADS=${NProcessors}")
       endif()
-    else()
-      unset(setThreadPoolSize)
-      unset(thisTestPoolSize)
     endif()
 
     string(REPLACE ".py" "" tname ${t})
@@ -1005,11 +998,11 @@ if(ROOT_pyroot_FOUND)
     endif()
 
     ROOT_ADD_TEST(${tutorial_name}
-                COMMAND ${Python3_EXECUTABLE} ${setThreadPoolSize} ${thisTestPoolSize} ${CMAKE_CURRENT_SOURCE_DIR}/${t}
+                COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${t}
                 PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation"
                 LABELS ${labels}
                 DEPENDS ${tutorial_dependency}
-                ENVIRONMENT ${TUTORIAL_ENV}
+                ENVIRONMENT ${TUTORIAL_ENV} ${ROOT_MAX_THREADS}
                 PYTHON_DEPS ${python_deps}
                 ${py_will_fail})
 
