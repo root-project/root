@@ -14,9 +14,7 @@
 #include "Minuit2/MnMatrix.h"
 #include "Minuit2/MinuitParameter.h"
 #include "Minuit2/MnMachinePrecision.h"
-#include "Minuit2/SinParameterTransformation.h"
-#include "Minuit2/SqrtLowParameterTransformation.h"
-#include "Minuit2/SqrtUpParameterTransformation.h"
+#include "Minuit2/MnParameterTransformation.h"
 
 #include <ROOT/RSpan.hxx>
 
