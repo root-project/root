@@ -191,7 +191,7 @@ one must redefine the branch address before filling the branch
 again. This is done via the `TBranch::SetAddress` member function.
 
 \anchor addingacolumnofobjs
-## Add a column holding objects
+## Add a column holding objects (or a TObjArray)
 
 ~~~ {.cpp}
     MyClass object;
@@ -250,7 +250,7 @@ for which `TTree` has been heavily optimised, as well as `RNTuple`.*
 
 ~~~ {.cpp}
     // clonesarray is the address of a pointer to a TClonesArray.
-    auto branch = tree.Branch(branchname,clonesarray, bufsize, splitlevel)
+    auto branch = tree.Branch(branchname, clonesarray, bufsize, splitlevel)
 ~~~
 The TClonesArray is a direct access list of objects of the same class.
 For example, if the TClonesArray is an array of TTrack objects,
