@@ -2723,11 +2723,7 @@ void sterilizeClientCaches(RooAbsArg & arg) {
 
 void RooAbsPdf::setNormRange(const char* rangeName)
 {
-  if (rangeName) {
-    _normRange = rangeName ;
-  } else {
-    _normRange.Clear() ;
-  }
+  _normRange = rangeName ? rangeName : "";
 
   // the stuff that the clients have cached may depend on the normalization range
   sterilizeClientCaches(*this);
@@ -2743,11 +2739,7 @@ void RooAbsPdf::setNormRange(const char* rangeName)
 
 void RooAbsPdf::setNormRangeOverride(const char* rangeName)
 {
-  if (rangeName) {
-    _normRangeOverride = rangeName ;
-  } else {
-    _normRangeOverride.Clear() ;
-  }
+  _normRangeOverride = rangeName ? rangeName : "";
 
   // the stuff that the clients have cached may depend on the normalization range
   sterilizeClientCaches(*this);
