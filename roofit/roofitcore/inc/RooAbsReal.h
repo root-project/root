@@ -18,6 +18,7 @@
 
 #include "RooAbsArg.h"
 #include "RooArgList.h"
+#include "RooArgProxy.h"
 #include "RooArgSet.h"
 #include "RooCmdArg.h"
 #include "RooCurve.h"
@@ -26,6 +27,9 @@
 #include "RooGlobalFunc.h"
 
 #include <ROOT/RSpan.hxx>
+
+#include <TList.h>
+#include <TObjString.h>
 
 class RooDataSet ;
 class RooPlot;
@@ -420,18 +424,18 @@ protected:
   void plotOnCompSelect(RooArgSet* selNodes) const ;
   RooPlot* plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, double Z, const RooArgSet* params, const RooLinkedList& argList, bool method1) const ;
 
-  // Support interface for subclasses to advertise their analytic integration
-  // and generator capabilities in their analyticalIntegral() and generateEvent()
-  // implementations.
-  bool matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
-         const RooArgProxy& a) const ;
-  bool matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
-         const RooArgProxy& a, const RooArgProxy& b) const ;
-  bool matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
-         const RooArgProxy& a, const RooArgProxy& b, const RooArgProxy& c) const ;
-  bool matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
-         const RooArgProxy& a, const RooArgProxy& b,
-         const RooArgProxy& c, const RooArgProxy& d) const ;
+  template<typename... Proxies>
+  bool matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps, const RooArgProxy& a, const Proxies&... proxies) const
+  {
+    TList nameList;
+    // Fold expression to add all proxy names to the list
+    nameList.Add(new TObjString(a.absArg()->GetName()));
+    (nameList.Add(new TObjString(proxies.absArg()->GetName())), ...);
+
+    bool result = matchArgsByName(allDeps, analDeps, nameList);
+    nameList.Delete(); // Clean up the list contents
+    return result;
+  }
 
   bool matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
          const RooArgSet& set) const ;
