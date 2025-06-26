@@ -10,8 +10,4 @@ public:
   ClassDef(A, 1)
 };
 
-#ifdef __ROOTCLING__
-#pragma link C++ class A+;
-#endif
-
 #endif

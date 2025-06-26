@@ -9,6 +9,7 @@ ROOTTEST_COMPILE_MACRO(A.C
                        FIXTURES_SETUP root-io-references-A-fixture)
 
 ROOTTEST_COMPILE_MACRO(lotsRef.C
+                       BUILDLIB A_C
                        FIXTURES_REQUIRED root-io-references-A-fixture
                        FIXTURES_SETUP root-io-references-lotsRef-fixture)
 
