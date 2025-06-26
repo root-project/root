@@ -23,7 +23,7 @@ endif()
 string(TOUPPER "${CMAKE_BUILD_TYPE}" _BUILD_TYPE_UPPER)
 
 include(CheckLanguage)
-#---Enable FORTRAN (unfortunatelly is not not possible in all cases)-------------------------------
+#---Enable FORTRAN (unfortunately is not not possible in all cases)-------------------------------
 if(fortran)
   #--Work-around for CMake issue 0009220
   if(DEFINED CMAKE_Fortran_COMPILER AND CMAKE_Fortran_COMPILER MATCHES "^$")
@@ -42,10 +42,13 @@ if(fortran)
       # in a separate process, the result might not be compatible with
       # the C++ compiler, so reset the variable, ...
       unset(CMAKE_Fortran_COMPILER CACHE)
-      # ..., and enable Fortran again, this time prefering compilers
+      # ..., and enable Fortran again, this time preferring compilers
       # compatible to the C++ compiler
       enable_language(Fortran)
     endif()
+  endif()
+  if(NOT CMAKE_Fortran_COMPILER AND fail-on-missing)
+    message(FATAL_ERROR "No Fortran compiler found. Please make sure it's installed, or disable ROOT's Fortran features with '-Dfortran=OFF' (or set '-Dfail-on-missing=OFF' to automatically disable features with missing requirements)")
   endif()
 else()
   set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
