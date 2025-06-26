@@ -31,7 +31,7 @@ ROOTTEST_ADD_TEST(rewrite
                   MACRO rewrite.C
                   OUTREF rewrite.ref
                   ROOTEXE_OPTS ${_opts_marker}
-                  FIXTURES_REQUIRED root-io-emulated-marker-fixtures root-io-emulated-read-fixtures)
+                  FIXTURES_REQUIRED root-io-emulated-marker-fixtures root-io-emulated-write-fixtures)
 
 ROOTTEST_ADD_TEST(writeAbstract
                   MACRO writeAbstract.cxx+
