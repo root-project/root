@@ -92,7 +92,11 @@ TEST(RCsvDS, ColumnReaders)
    RCsvDS tds(fileNameHeaders);
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
-   auto vals = tds.GetColumnReaders<Long64_t>("Age");
+   std::vector<std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>> vals;
+   vals.reserve(nSlots);
+   for (auto i = 0U; i < nSlots; i++) {
+      vals.push_back(tds.GetColumnReaders(i, "Age", typeid(Long64_t)));
+   }
    tds.Initialize();
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
@@ -101,7 +105,7 @@ TEST(RCsvDS, ColumnReaders)
       tds.InitSlot(slot, range.first);
       for (auto i : ROOT::TSeq<int>(range.first, range.second)) {
          tds.SetEntry(slot, i);
-         auto val = **vals[slot];
+         auto val = *vals[slot]->TryGet<Long64_t>(i);
          EXPECT_EQ(ages[i], val);
       }
       slot++;
@@ -115,7 +119,7 @@ TEST(RCsvDS, ColumnReadersWrongType)
    tds.SetNSlots(nSlots);
    int res = 1;
    try {
-      auto vals = tds.GetColumnReaders<float>("Age");
+      tds.GetColumnReaders(0, "Age", typeid(float));
    } catch (const std::runtime_error &e) {
       EXPECT_STREQ("The type selected for column \"Age\" does not correspond to column type, which is Long64_t",
                    e.what());
@@ -140,7 +144,11 @@ TEST(RCsvDS, ColumnReadersString)
    RCsvDS tds(fileNameHeaders);
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
-   auto vals = tds.GetColumnReaders<std::string>("Name");
+   std::vector<std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>> vals;
+   vals.reserve(nSlots);
+   for (auto i = 0U; i < nSlots; i++) {
+      vals.push_back(tds.GetColumnReaders(i, "Name", typeid(std::string)));
+   }
    tds.Initialize();
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
@@ -149,7 +157,7 @@ TEST(RCsvDS, ColumnReadersString)
       tds.InitSlot(slot, range.first);
       for (auto i : ROOT::TSeq<int>(range.first, range.second)) {
          tds.SetEntry(slot, i);
-         auto val = *((std::string *)*vals[slot]);
+         auto val = *vals[slot]->TryGet<std::string>(i);
          EXPECT_EQ(names[i], val);
       }
       slot++;
@@ -162,7 +170,11 @@ TEST(RCsvDS, ProgressiveReadingEntryRanges)
    RCsvDS tds(fileNameHeaders, true, ',', chunkSize);
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
-   auto vals = tds.GetColumnReaders<std::string>("Name");
+   std::vector<std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>> vals;
+   vals.reserve(nSlots);
+   for (auto i = 0U; i < nSlots; i++) {
+      vals.push_back(tds.GetColumnReaders(i, "Name", typeid(std::string)));
+   }
    tds.Initialize();
 
    std::vector<std::string> names = {"Harry", "Bob,Bob", "\"Joe\"", "Tom", " John  ", " Mary Ann "};
@@ -176,7 +188,7 @@ TEST(RCsvDS, ProgressiveReadingEntryRanges)
          tds.InitSlot(slot, range.first);
          for (auto i : ROOT::TSeq<int>(range.first, range.second)) {
             tds.SetEntry(slot, i);
-            auto val = *((std::string *)*vals[slot]);
+            auto val = *vals[slot]->TryGet<std::string>(i);
             EXPECT_EQ(names[i], val);
          }
          slot++;
