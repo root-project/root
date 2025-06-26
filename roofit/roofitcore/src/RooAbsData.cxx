@@ -473,10 +473,7 @@ RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const RooCmdArg& arg1,const Roo
 
 RooFit::OwningPtr<RooAbsData> RooAbsData::reduce(const char* cut) const
 {
-  RooFormulaVar cutVar(cut,cut,*get()) ;
-  auto ret = reduceEng(*get(),&cutVar,nullptr,0,std::numeric_limits<std::size_t>::max()) ;
-  ret->copyGlobalObservables(*this);
-  return RooFit::makeOwningPtr(std::move(ret));
+  return reduce(RooFormulaVar{cut,cut,*get()});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
