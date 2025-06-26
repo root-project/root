@@ -694,10 +694,8 @@ foreach(t ${tutorials})
     # pool in case the tutorial invokes ROOT::EnableImplicitMT(), which by
     # default creates a thread pool of the size of the total number of cores.
     if(${t} IN_LIST multithreaded_all_cores)
-      set(createThreadPool "-e \"ROOT::EnableImplicitMT(${NProcessors})\"")
+      set(ROOT_MAX_THREADS "ROOT_MAX_THREADS=${NProcessors}")
     endif()
-  else()
-    unset(createThreadPool)
   endif()
 
   if(${t} IN_LIST need_network)
@@ -712,11 +710,11 @@ foreach(t ${tutorials})
    endif()
 
   ROOT_ADD_TEST(tutorial-${tname}
-                COMMAND ${ROOT_root_CMD} -b -l -q ${createThreadPool} ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
+                COMMAND ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
                 PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED" "warning: Failed to call"
                 LABELS ${labels}
                 DEPENDS tutorial-hsimple ${${tname}-depends}
-                ENVIRONMENT ${TUTORIAL_ENV}
+                ENVIRONMENT ${TUTORIAL_ENV} ${ROOT_MAX_THREADS}
                 TIMEOUT ${thisTestTimeout})
 
   if(${t} IN_LIST multithreaded)
