@@ -18,6 +18,7 @@ builtin_xxhash=ON
 builtin_zlib=ON
 builtin_zstd=ON
 davix=OFF
+fortran=OFF
 llvm13_broken_tests=OFF
 minuit2_mpi=OFF
 minuit2_omp=OFF
