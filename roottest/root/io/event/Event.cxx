@@ -17,7 +17,7 @@
 //        Double32_t     fTemperature;
 //        Int_t          fMeasures[10];
 //        Double32_t     fMatrix[4][4];
-//        Double32_t    *fClosestDistance; //[fNvertex] indexed array! 
+//        Double32_t    *fClosestDistance; //[fNvertex] indexed array!
 //        EventHeader    fEvtHdr;
 //        TClonesArray  *fTracks;
 //        TRefArray     *fHighPt;            //array of High Pt tracks only
@@ -158,13 +158,13 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin)
    gRandom->Rannor(sigmat,sigmas);
    Int_t ntrack   = Int_t(arg5 +arg5*sigmat/120.);
    Float_t random = gRandom->Rndm(1);
- 
+
    //Save current Object count
    Int_t ObjectNumber = TProcessID::GetObjectCount();
    Clear();
    fHighPt->Delete();
    fMuons->Delete();
-   
+
    Int_t nch = 15;
    if (ev >= 100)   nch += 3;
    if (ev >= 10000) nch += 3;
@@ -178,7 +178,7 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin)
    SetNvertex(Int_t(1+20*gRandom->Rndm()));
    SetFlag(UInt_t(random+0.5));
    SetTemperature(random+20.);
- 
+
    for(UChar_t m = 0; m < 10; m++) {
       SetMeasure(m, Int_t(gRandom->Gaus(m,m+1)));
    }
@@ -187,20 +187,20 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin)
         SetMatrix(i0,i1,gRandom->Gaus(i0*i1,1));
      }
    }
- 
+
    fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
    fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
    fTriggerBits.SetBitNumber((UInt_t)(64*gRandom->Rndm(1)));
- 
+
    //  Create and Fill the Track objects
    for (Int_t t = 0; t < ntrack; t++) AddTrack(random,ptmin);
-   
-   //Restore Object count 
+
+   //Restore Object count
    //To save space in the table keeping track of all referenced objects
-   //we assume that our events do not address each other. We reset the 
+   //we assume that our events do not address each other. We reset the
    //object count to what it was at the beginning of the event.
    TProcessID::SetObjectCount(ObjectNumber);
-}  
+}
 
 //______________________________________________________________________________
 Track* Event::AddTrack(Float_t random, Float_t ptmin)
@@ -220,6 +220,12 @@ Track* Event::AddTrack(Float_t random, Float_t ptmin)
    //Save reference in fMuons if track is a muon candidate
    if (track->GetMass2() < 0.11) fMuons->Add(track);
    return track;
+}
+
+//______________________________________________________________________________
+Track Event::GetTrackCopy(int i) const
+{
+   return *(Track*)fTracks->At(i);
 }
 
 //______________________________________________________________________________
@@ -293,7 +299,7 @@ Track::Track(const Track& orig)
 
    fPx = orig.fPx;
    fPy = orig.fPy;
-   fPz = orig.fPx; 
+   fPz = orig.fPx;
    fRandom = orig.fRandom;
    fMass2 = orig.fMass2;
    fBx = orig.fBx;
@@ -382,8 +388,8 @@ Track::Track(Float_t random)
 //______________________________________________________________________________
 void Track::Clear(Option_t* /*option*/)
 {
-   fTriggerBits.Clear(); 
-   delete [] fPointValue; 
+   fTriggerBits.Clear();
+   delete [] fPointValue;
    fPointValue=0;
 }
 
