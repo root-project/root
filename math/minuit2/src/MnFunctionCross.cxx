@@ -113,7 +113,7 @@ MnCross MnFunctionCross::operator()(std::span<const unsigned int> par, std::span
    });
 
    for (unsigned int i = 0; i < npar; i++)
-      migrad.SetValue(par[i], pmid[i]);
+      migrad.State().SetValue(par[i], pmid[i]);
 
    // find minimum with respect all the other parameters (n- npar) (npar are the fixed ones)
 
@@ -163,7 +163,7 @@ MnCross MnFunctionCross::operator()(std::span<const unsigned int> par, std::span
    });
 
    for (unsigned int i = 0; i < npar; i++)
-      migrad.SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
+      migrad.State().SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
 
    FunctionMinimum min1 = migrad(maxcalls, mgr_tlr);
    nfcn += min1.NFcn();
@@ -221,7 +221,7 @@ L300:
          });
 
          for (unsigned int i = 0; i < npar; i++)
-            migrad.SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
+            migrad.State().SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
 
          min1 = migrad(maxcalls, mgr_tlr);
          nfcn += min1.NFcn();
@@ -300,7 +300,7 @@ L460:
    });
 
    for (unsigned int i = 0; i < npar; i++)
-      migrad.SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
+      migrad.State().SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
 
    FunctionMinimum min2 = migrad(maxcalls, mgr_tlr);
    nfcn += min2.NFcn();
@@ -512,7 +512,7 @@ L500:
       });
 
       for (unsigned int i = 0; i < npar; i++)
-         migrad.SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
+         migrad.State().SetValue(par[i], pmid[i] + (aopt)*pdir[i]);
 
       min2 = migrad(maxcalls, mgr_tlr);
       nfcn += min2.NFcn();
