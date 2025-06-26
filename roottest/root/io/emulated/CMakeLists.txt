@@ -1,15 +1,7 @@
-# ROOTTEST_ADD_OLDTEST()
-
-if (CMAKE_SIZEOF_VOID_P EQUAL 8)
-  set(_ext ref)
-else()
-  set(_ext ref32)
-endif()
-
 ROOTTEST_ADD_TEST(execROOT8804
                   MACRO execROOT8804.C
                   COPY_TO_BUILDDIR lariat-si.root
-                  OUTREF execROOT8804.${_ext})
+                  OUTREF execROOT8804.ref)
 
 ROOTTEST_COMPILE_MACRO(classes.h
                        FIXTURES_SETUP root-io-emulated-classes-fixtures)
