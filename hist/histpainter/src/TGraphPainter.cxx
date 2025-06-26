@@ -4371,12 +4371,13 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
 void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
 {
 
-   Int_t optionAxis;
+   Int_t optionAxis, optionSkipCol;
 
    TString opt = chopt;
    opt.ToUpper();
 
-   if (opt.Contains("A")) optionAxis  = 1;  else optionAxis  = 0;
+   if (opt.Contains("A"))       optionAxis     = 1;  else optionAxis     = 0;
+   if (opt.Contains("SKIPCOL")) optionSkipCol  = 1;  else optionSkipCol  = 0;
 
    double *theX         = theScatter->GetGraph()->GetX();
    double *theY         = theScatter->GetGraph()->GetY();
@@ -4458,9 +4459,11 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
 
    TH2F *h = theScatter->GetHistogram();
    if (optionAxis) h->Paint(" ");
-   if (h->GetMinimum() != h->GetMaximum()) {
+   if (h->GetMinimum() < h->GetMaximum()) {
       if (minc<h->GetMinimum()) minc = h->GetMinimum();
       if (maxc>h->GetMaximum()) maxc = h->GetMaximum();
+   } else {
+      Error("PaintScatter", "Mininal (%g) and Maximal (%g) values of the internal histogram are not valid",h->GetMinimum(),h->GetMaximum());
    }
 
    // Define and paint palette
@@ -4529,8 +4532,14 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
          } else {
             c = theColor[i];
          }
-         if (c<minc) continue;
-         if (c>maxc) continue;
+         if (c<minc) {
+            if (optionSkipCol) continue;
+            c = minc;
+         }
+         if (c>maxc) {
+            if (optionSkipCol) continue;
+            c = maxc;
+         }
          nc = TMath::Nint(((c-minc)/(maxc-minc))*(nbcol-1));
          if (nc > nbcol-1) nc = nbcol-1;
          theScatter->SetMarkerColor(gStyle->GetColorPalette(nc));
