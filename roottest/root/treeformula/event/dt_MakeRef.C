@@ -6,16 +6,18 @@
 #include "TH1.h"
 #include "TH2.h"
 #include "TSystem.h"
+#include "TClonesArray.h"
 
-#ifndef __CINT__
 #include "Event.h"
-#endif
 
-TH1* RefClone(TH1* orig) {    
-  TH1 *cloned = (TH1*)orig->Clone(); 
+#include <iostream>
+
+TH1* RefClone(TH1* orig)
+{
+  TH1 *cloned = (TH1*)orig->Clone();
   TString name = orig->GetName();
   name.Prepend("ref");
-  cloned->SetName(name); 
+  cloned->SetName(name);
   cloned->Reset();
   return cloned;
 };
@@ -30,7 +32,7 @@ TH1* RefClone(TDirectory* from, const char* name) {
 }
 
 void MakeHisto(TTree *tree, TDirectory* To) {
-   
+
    cout << "Generating histograms from TTree::Draw" << endl;
    TDirectory* where = GenerateDrawHist(tree);
    To->cd();
@@ -41,91 +43,91 @@ void MakeHisto(TTree *tree, TDirectory* To) {
    //We make clones of the generated histograms
    //We set new names and reset the clones.
    //We want to have identical histogram limits
-   TH1F *refNtrack = RefClone(where,"hNtrack");
-   TH1F *refGetNtrack = RefClone(where,"hGetNtrack");
-   TH1F *refNseg   = RefClone(where,"hNseg");  
-   TH1F *refTemp   = RefClone(where,"hTemp");  
-   TH1F *refHmean  = RefClone(where,"hHmean"); 
-   TH1F *refHAxisMax = RefClone(where,"hHAxisMax"); 
-   TH1F *refHAxisGetMax = RefClone(where,"hHAxisGetMax"); 
-   TH1F *refHGetAxisGetMax  = RefClone(where,"hHGetAxisGetMax");
-   TH1F *refHGetAxisMax  = RefClone(where,"hHGetAxisMax");
-   TH1F *refGetHGetAxisMax  = RefClone(where,"hGetHGetAxisMax");
-   TH1F *refGetRefHGetAxisMax  = RefClone(where,"hGetRefHGetAxisMax");
+   TH1 *refNtrack = RefClone(where,"hNtrack");
+   TH1 *refGetNtrack = RefClone(where,"hGetNtrack");
+   TH1 *refNseg   = RefClone(where,"hNseg");
+   TH1 *refTemp   = RefClone(where,"hTemp");
+   TH1 *refHmean  = RefClone(where,"hHmean");
+   TH1 *refHAxisMax = RefClone(where,"hHAxisMax");
+   TH1 *refHAxisGetMax = RefClone(where,"hHAxisGetMax");
+   TH1 *refHGetAxisGetMax  = RefClone(where,"hHGetAxisGetMax");
+   TH1 *refHGetAxisMax  = RefClone(where,"hHGetAxisMax");
+   TH1 *refGetHGetAxisMax  = RefClone(where,"hGetHGetAxisMax");
+   TH1 *refGetRefHGetAxisMax  = RefClone(where,"hGetRefHGetAxisMax");
 
-   TH1F *refPx     = RefClone(where,"hPx"); 
-   TH1F *refPy     = RefClone(where,"hPy");
-   TH1F *refPz     = RefClone(where,"hPz"); 
-   TH1F *refRandom = RefClone(where,"hRandom");
-   TH1F *refMass2  = RefClone(where,"hMass2");
-   TH1F *refBx     = RefClone(where,"hBx");
-   TH1F *refBy     = RefClone(where,"hBy");
-   TH1F *refXfirst = RefClone(where,"hXfirst");
-   TH1F *refYfirst = RefClone(where,"hYfirst");
-   TH1F *refZfirst = RefClone(where,"hZfirst");
-   TH1F *refXlast  = RefClone(where,"hXlast");
-   TH1F *refYlast  = RefClone(where,"hYlast");
-   TH1F *refZlast  = RefClone(where,"hZlast");
-   TH1F *refCharge = RefClone(where,"hCharge");
-   TH1F *refNpoint = RefClone(where,"hNpoint");
-   TH1F *refValid  = RefClone(where,"hValid");
-   TH1F *refPointValue  = RefClone(where,"hPointValue");
-   TH1F *refAlias  = RefClone(where,"hAlias");
+   TH1 *refPx     = RefClone(where,"hPx");
+   TH1 *refPy     = RefClone(where,"hPy");
+   TH1 *refPz     = RefClone(where,"hPz");
+   TH1 *refRandom = RefClone(where,"hRandom");
+   TH1 *refMass2  = RefClone(where,"hMass2");
+   TH1 *refBx     = RefClone(where,"hBx");
+   TH1 *refBy     = RefClone(where,"hBy");
+   TH1 *refXfirst = RefClone(where,"hXfirst");
+   TH1 *refYfirst = RefClone(where,"hYfirst");
+   TH1 *refZfirst = RefClone(where,"hZfirst");
+   TH1 *refXlast  = RefClone(where,"hXlast");
+   TH1 *refYlast  = RefClone(where,"hYlast");
+   TH1 *refZlast  = RefClone(where,"hZlast");
+   TH1 *refCharge = RefClone(where,"hCharge");
+   TH1 *refNpoint = RefClone(where,"hNpoint");
+   TH1 *refValid  = RefClone(where,"hValid");
+   TH1 *refPointValue  = RefClone(where,"hPointValue");
+   TH1 *refAlias  = RefClone(where,"hAlias");
 
-   TH1F *refFullMatrix   = RefClone(where,"hFullMatrix");
-   TH1F *refColMatrix    = RefClone(where,"hColMatrix");
-   TH1F *refRowMatrix    = RefClone(where,"hRowMatrix");
-   TH1F *refCellMatrix   = RefClone(where,"hCellMatrix");
-   TH1F *refFullOper     = RefClone(where,"hFullOper");
-   TH1F *refCellOper     = RefClone(where,"hCellOper");
-   TH1F *refColOper      = RefClone(where,"hColOper");
-   TH1F *refRowOper      = RefClone(where,"hRowOper");
-   TH1F *refMatchRowOper = RefClone(where,"hMatchRowOper");
-   TH1F *refMatchColOper = RefClone(where,"hMatchColOper");
-   TH1F *refRowMatOper   = RefClone(where,"hRowMatOper");
-   TH1F *refMatchDiffOper= RefClone(where,"hMatchDiffOper");
-   TH1F *refFullOper2    = RefClone(where,"hFullOper2");
+   TH1 *refFullMatrix   = RefClone(where,"hFullMatrix");
+   TH1 *refColMatrix    = RefClone(where,"hColMatrix");
+   TH1 *refRowMatrix    = RefClone(where,"hRowMatrix");
+   TH1 *refCellMatrix   = RefClone(where,"hCellMatrix");
+   TH1 *refFullOper     = RefClone(where,"hFullOper");
+   TH1 *refCellOper     = RefClone(where,"hCellOper");
+   TH1 *refColOper      = RefClone(where,"hColOper");
+   TH1 *refRowOper      = RefClone(where,"hRowOper");
+   TH1 *refMatchRowOper = RefClone(where,"hMatchRowOper");
+   TH1 *refMatchColOper = RefClone(where,"hMatchColOper");
+   TH1 *refRowMatOper   = RefClone(where,"hRowMatOper");
+   TH1 *refMatchDiffOper= RefClone(where,"hMatchDiffOper");
+   TH1 *refFullOper2    = RefClone(where,"hFullOper2");
 
-   TH1F *refClosestDistance  = RefClone(where,"hClosestDistance");
-   TH1F *refClosestDistance2 = RefClone(where,"hClosestDistance2");
-   TH1F *refClosestDistance9 = RefClone(where,"hClosestDistance9");
+   TH1 *refClosestDistance  = RefClone(where,"hClosestDistance");
+   TH1 *refClosestDistance2 = RefClone(where,"hClosestDistance2");
+   TH1 *refClosestDistance9 = RefClone(where,"hClosestDistance9");
 
-   TH1F *refClosestDistanceIndex = RefClone(where, "hClosestDistanceIndex");
-   TH2F *refPxInd = (TH2F*)RefClone(where,"hPxInd");
+   TH1 *refClosestDistanceIndex = RefClone(where, "hClosestDistanceIndex");
+   TH2 *refPxInd = (TH2F*)RefClone(where,"hPxInd");
 
-   TH1F *refSqrtNtrack = RefClone(where,"hSqrtNtrack");
-   TH1F *refShiftValid = RefClone(where,"hShiftValid");
-   TH1F *refAndValid = RefClone(where,"hAndValid");
+   TH1 *refSqrtNtrack = RefClone(where,"hSqrtNtrack");
+   TH1 *refShiftValid = RefClone(where,"hShiftValid");
+   TH1 *refAndValid = RefClone(where,"hAndValid");
 
-   TH1F *refString = RefClone(where,"hString");
-   TH1F *refAliasStr = RefClone(where,"hAliasStr");
+   TH1 *refString = RefClone(where,"hString");
+   TH1 *refAliasStr = RefClone(where,"hAliasStr");
 
-   TH1F *refPxBx = RefClone(where,"hPxBx");
-   TH1F *refPxBxWeight =  RefClone(where,"hPxBxWeight");
+   TH1 *refPxBx = RefClone(where,"hPxBx");
+   TH1 *refPxBxWeight =  RefClone(where,"hPxBxWeight");
 
-   TH1F *refTriggerBits = RefClone(where,"hTriggerBits");
-   TH1F *refTriggerBitsFunc = RefClone(where,"hTriggerBitsFunc");
-   TH1F *refFiltTriggerBits = RefClone(where,"hFiltTriggerBits");
+   TH1 *refTriggerBits = RefClone(where,"hTriggerBits");
+   TH1 *refTriggerBitsFunc = RefClone(where,"hTriggerBitsFunc");
+   TH1 *refFiltTriggerBits = RefClone(where,"hFiltTriggerBits");
 
-   TH1F *refTrackTrigger = RefClone(where,"hTrackTrigger");
-   TH1F *refFiltTrackTrigger = RefClone(where,"hFiltTrackTrigger");
+   TH1 *refTrackTrigger = RefClone(where,"hTrackTrigger");
+   TH1 *refFiltTrackTrigger = RefClone(where,"hFiltTrackTrigger");
 
-   TH1F *refBreit = RefClone(where,"hBreit");
+   TH1 *refBreit = RefClone(where,"hBreit");
 
-   TH1F *refAlt = RefClone(where,"hAlt");
+   TH1 *refAlt = RefClone(where,"hAlt");
 
-   TH1F *refVRun = RefClone(where,"hVRun");
-   TH1F *refVRun2 = RefClone(where,"hVRun2");
-   TH1F *refVRunIndex = RefClone(where,"hVRunIndex");
-   TH1F *refVRunFunc = RefClone(where,"hVRunFunc");
-   TH1F *refVPx = RefClone(where,"hVPx");
-   TH1F *refVCharge = RefClone(where,"hVCharge");
+   TH1 *refRun = RefClone(where,"hRun");
+   // TH1 *refVRun2 = RefClone(where,"hVRun2");
+   // TH1 *refVRunIndex = RefClone(where,"hVRunIndex");
+   TH1 *refRunFunc = RefClone(where,"hRunFunc");
+   // TH1 *refVPx = RefClone(where,"hVPx");
+   // TH1 *refVCharge = RefClone(where,"hVCharge");
    //TH1F *ref = RefClone(where,"");
 
    // Loop with user code on all events and fill the ref histograms
    // The code below should produce identical results to the tree->Draw above
 
-   cout << "Recalculating the histograms with custom loop." << endl;
+   std::cout << "Recalculating the histograms with custom loop." << std::endl;
 
    TClonesArray *tracks = event->GetTracks();
    Int_t nev = (Int_t)tree->GetEntries();
@@ -149,8 +151,8 @@ void MakeHisto(TTree *tree, TDirectory* To) {
       refGetHGetAxisMax->Fill(event->GetHistogram()->GetXaxis()->GetXmax());
       refGetRefHGetAxisMax->Fill(event->GetHistogram()->GetXaxis()->GetXmax());
       refSqrtNtrack->Fill(sqrt(event->GetNtrack()));
-      
-      if (!strcmp("type1",event->GetType())) 
+
+      if (!strcmp("type1",event->GetType()))
         refString->Fill(event->GetHeader()->GetEvtNum());
       if (strstr(event->GetType(),"1")) {
         refString->Fill(event->GetHeader()->GetEvtNum());
@@ -165,6 +167,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
       if (Nvertex>9) refClosestDistance9->Fill(event->GetClosestDistance(9));
       refClosestDistanceIndex->Fill(event->GetClosestDistance(Nvertex/2));
 
+      /*
       {
          std::vector<EventHeader>::const_iterator eiter = event->fVEvtHdr.begin();
          int i=0;
@@ -190,6 +193,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
             ++titer;
          }
       }
+      */
 
       for(i0=0;i0<4;i0++) {
          for(i1=0;i1<4;i1++) {
@@ -201,7 +205,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
          }
          refColMatrix->Fill(event->GetMatrix(i0,0));
          refRowMatrix->Fill(event->GetMatrix(1,i0)); // done here because the matrix is square!
-         
+
       }
       refCellMatrix->Fill(event->GetMatrix(2,2));
 
@@ -260,7 +264,7 @@ void MakeHisto(TTree *tree, TDirectory* To) {
          if (event->GetNvertex()>10 && event->GetNseg()<=6000) {
             refAndValid->Fill( t->GetValid() & 0x1 );
          }
-         
+
          Track * t2 = (Track*)tracks->At(t->GetNpoint()/6);
          if (t2 && t2->GetPy()>0) {
             refPxInd->Fill(t2->GetPy(),t->GetPx());
@@ -301,24 +305,27 @@ void MakeHisto(TTree *tree, TDirectory* To) {
    }
 
    delete event;
-   Event::Reset();
+   // Event::Reset();
 
 }
 
-void dt_MakeRef(const char* from, Int_t verboseLevel = 2) {
+void dt_MakeRef(const char* from, Int_t verboseLevel = 2)
+{
    SetVerboseLevel(verboseLevel);
 
-   if (!TClassTable::GetDict("Event")) {
-      gSystem->Load("libEvent");
-      gHasLibrary = kTRUE;
-   }
+   gHasLibrary = kTRUE;
+
+   //if (!TClassTable::GetDict("Event")) {
+   //   gSystem->Load("libTestIoEvent");
+   //   gHasLibrary = kTRUE;
+   //}
 
    gROOT->GetList()->Delete();
 
    TFile *hfile = new TFile(from);
    TTree *tree = (TTree*)hfile->Get("T");
-   
-   TFile* f= new TFile("dt_reference.root","recreate");
+
+   TFile* f = TFile::Open("dt_reference.root","recreate");
    MakeHisto(tree,f);
    f->Write();
    delete f;
