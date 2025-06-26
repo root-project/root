@@ -574,6 +574,13 @@ class TH2Painter extends THistPainter {
       if ((kind === 'Projections') || (kind === 'Off'))
          kind = '';
 
+      const parseWidth = arg => {
+         if ((arg === 'all') || (arg === 'ALL'))
+            return 10000;
+         const res = parseInt(arg);
+         return res && Number.isInteger(res) ? res : 1;
+      };
+
       let widthX = width, widthY = width;
 
       if (isStr(kind) && (kind.indexOf('XY') === 0)) {
@@ -583,15 +590,15 @@ class TH2Painter extends THistPainter {
       } else if (isStr(kind) && (kind.length > 1)) {
          const ps = kind.indexOf('_');
          if ((ps > 0) && (kind[0] === 'X') && (kind[ps+1] === 'Y')) {
-            widthX = parseInt(kind.slice(1, ps)) || 1;
-            widthY = parseInt(kind.slice(ps+2)) || 1;
+            widthX = parseWidth(kind.slice(1, ps));
+            widthY = parseWidth(kind.slice(ps+2));
             kind = 'XY';
          } else if ((ps > 0) && (kind[0] === 'Y') && (kind[ps+1] === 'X')) {
-            widthY = parseInt(kind.slice(1, ps)) || 1;
-            widthX = parseInt(kind.slice(ps+2)) || 1;
+            widthY = parseWidth(kind.slice(1, ps));
+            widthX = parseWidth(kind.slice(ps+2));
             kind = 'XY';
          } else {
-            widthX = widthY = parseInt(kind.slice(1)) || 1;
+            widthX = widthY = parseWidth(kind.slice(1));
             kind = kind[0];
          }
       }
@@ -752,12 +759,18 @@ class TH2Painter extends THistPainter {
          if ((this.#projection_widthX !== this.#projection_widthY) && (this.#projection_kind === 'XY'))
             kind = `X${this.#projection_widthX}_Y${this.#projection_widthY}`;
 
-         const kinds = ['X1', 'X2', 'X3', 'X5', 'X10', 'Y1', 'Y2', 'Y3', 'Y5', 'Y10', 'XY1', 'XY2', 'XY3', 'XY5', 'XY10'];
-         if (kind) kinds.unshift('Off');
+         const sizes = ['1', '2', '3', '5', '10', 'all'];
+         if (kind) sizes.unshift('');
 
          menu.sub('Projections', () => menu.input('Input projection kind X1 or XY2 or X3_Y4', kind, 'string').then(val => this.toggleProjection(val)));
-         for (let k = 0; k < kinds.length; ++k)
-            menu.addchk(kind === kinds[k], kinds[k], kinds[k], arg => this.toggleProjection(arg));
+         ['X', 'Y', 'XY'].forEach(name => {
+            menu.column();
+            sizes.forEach(sz => {
+               const id = sz ? name + sz : 'Off';
+               menu.addchk(kind === id, id, id, arg => this.toggleProjection(arg));
+            });
+            menu.endcolumn();
+         });
          menu.endsub();
       }
 

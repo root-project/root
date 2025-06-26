@@ -515,7 +515,7 @@ function objectHierarchy(top, obj, args = undefined) {
                }
             }
          }
-      } else if ((typeof fld === 'number') || (typeof fld === 'boolean')) {
+      } else if ((typeof fld === 'number') || (typeof fld === 'boolean') || (typeof fld === 'bigint')) {
          simple = true;
          if (key === 'fBits')
             item._value = '0x' + fld.toString(16);
@@ -3075,7 +3075,7 @@ class HierarchyPainter extends BasePainter {
             }
          }
 
-         if (!req && getTypeForKind(item._kind))
+         if (!req && !getTypeForKind(item._kind))
            req = 'item.json.gz?compact=3';
       }
 

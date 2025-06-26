@@ -1695,7 +1695,7 @@ async function treeProcess(tree, selector, args) {
          default: return null;
       }
       const elem = createStreamerElement(name || leaf.fName, datakind);
-      if (leaf.fLen > 1) {
+      if ((leaf.fLen > 1) && (datakind !== kTString)) {
          elem.fType += kOffsetL;
          elem.fArrayLength = leaf.fLen;
       }

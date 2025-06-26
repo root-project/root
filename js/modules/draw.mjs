@@ -135,6 +135,8 @@ drawFuncs = { lst: [
    { name: clTBranchFunc, icon: 'img_leaf_method', draw: () => import_tree().then(h => h.drawTree), opt: ';dump', noinspect: true },
    { name: /^TBranch/, icon: 'img_branch', draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: ';dump', ctrl: 'dump', shift: kInspect, ignore_online: true, always_draw: true },
    { name: /^TLeaf/, icon: 'img_leaf', noexpand: true, draw: () => import_tree().then(h => h.drawTree), opt: ';dump', ctrl: 'dump', ignore_online: true, always_draw: true },
+   { name: 'ROOT::RNTuple', icon: 'img_tree', get_expand: () => import('./rntuple.mjs').then(h => h.tupleHierarchy) },
+   { name: 'ROOT::RNTupleField', icon: 'img_leaf', opt: 'inspect', ctrl: 'inspect' },
    { name: clTList, icon: 'img_list', draw: () => import_h().then(h => h.drawList), get_expand: () => import_h().then(h => h.listHierarchy), dflt: 'expand' },
    { name: clTHashList, sameas: clTList },
    { name: clTObjArray, sameas: clTList },
@@ -248,8 +250,9 @@ function getDrawHandle(kind, selector) {
 function canDrawHandle(h) {
    if (isStr(h))
       h = getDrawHandle(h);
-   if (!isObject(h)) return false;
-   return h.func || h.class || h.draw || h.draw_field;
+   if (!isObject(h))
+      return false;
+   return (h.func || h.class || h.draw || h.draw_field || h.opt === 'inspect');
 }
 
 /** @summary Provide draw settings for specified class or kind
