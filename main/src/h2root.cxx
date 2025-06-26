@@ -316,7 +316,7 @@ int main(int argc, char **argv)
    // we need a buffer of at least 3 chars on Cs side, too. Predefine it as a extra variable "px " since that way
    // the space will be replaced by 'c' on the preallocated memory, instead of appending a new char (new memory) to "px".
    auto opt = PASSCHAR("px ");
-   auto exa = PASSCHAR("example ")
+   auto exa = PASSCHAR("example ");
    hropen(lun,exa,file_in,opt,record_size,ier,7,strlen(file_in),2);
 #else
    hropen(lun,PASSCHAR("example"),PASSCHAR(file_in),PASSCHAR("px"),record_size,ier);
