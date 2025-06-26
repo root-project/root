@@ -21,22 +21,23 @@ ROOTTEST_ADD_TEST(forwardDeclAndFake
                   COPY_TO_BUILDDIR test.root
                   FIXTURES_REQUIRED root-io-fakeClass-little-fixture)
 
-# The library loading order problem is not solved yet
-
 ROOTTEST_ADD_TEST(checkLittle0
                   MACRO checkLittle0.C
                   OUTREF checkLittle0.ref
+                  # There is an unresolved library loading order problem
                   WILLFAIL
                   FIXTURES_REQUIRED root-io-fakeClass-produceLittleFile-fixture root-io-fakeClass-little-v2-fixture)
 
 ROOTTEST_ADD_TEST(checkLittle
                   MACRO checkLittle.C
                   OUTREF checkLittle.ref
+                  # There is an unresolved library loading order problem
                   WILLFAIL
                   FIXTURES_REQUIRED root-io-fakeClass-produceLittleFile-fixture root-io-fakeClass-little-v2-fixture)
 
 ROOTTEST_ADD_TEST(checkLittle1
                   MACRO checkLittle1.C
                   OUTREF checkLittle1.ref
+                  # There is an unresolved library loading order problem
                   WILLFAIL
                   FIXTURES_REQUIRED root-io-fakeClass-produceLittleFile-fixture root-io-fakeClass-little-v2-fixture)
