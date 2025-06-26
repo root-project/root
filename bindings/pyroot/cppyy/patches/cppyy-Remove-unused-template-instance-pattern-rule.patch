@@ -1,0 +1,25 @@
+From 1d67aa782008d571d7d0bc545c3c0bcf335f0adc Mon Sep 17 00:00:00 2001
+From: Danilo Piparo <danilo.piparo@cern.ch>
+Date: Thu, 26 Jun 2025 20:41:53 +0200
+Subject: [PATCH] [cppyy] Remove unused template instance pattern rule
+
+as there are no instances to match.
+---
+ bindings/pyroot/cppyy/cppyy/test/templates.xml | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/bindings/pyroot/cppyy/cppyy/test/templates.xml b/bindings/pyroot/cppyy/cppyy/test/templates.xml
+index 32f56da76f3..7cb33f67a00 100644
+--- a/bindings/pyroot/cppyy/cppyy/test/templates.xml
++++ b/bindings/pyroot/cppyy/cppyy/test/templates.xml
+@@ -36,7 +36,6 @@
+   <class pattern="T_WithGreedyOverloads::*" />
+ 
+   <namespace name="TypeReduction" />
+-  <class pattern="TypeReduction::*" />
+   <function pattern="TypeReduction::*" />
+ 
+   <namespace name="FailedTypeDeducer" />
+-- 
+2.49.0
+

@@ -26,11 +26,9 @@ cd CPyCppyy
 
 git remote rename origin wlav
 
-git remote add ferdymercury https://github.com/ferdymercury/CPyCppyy.git
 git remote add guitargeek https://github.com/guitargeek/CPyCppyy.git
 git remote add vepadulano https://github.com/vepadulano/CPyCppyy.git
 
-git fetch ferdymercury
 git fetch guitargeek
 git fetch vepadulano
 
@@ -42,7 +40,6 @@ rebase_topic () {
 
 rebase_topic guitargeek/py_errors
 rebase_topic vepadulano/improve-clone-heuristic
-rebase_topic ferdymercury/patch-1
 
 cd ../
 
@@ -76,3 +73,4 @@ git apply patches/cppyy-No-CppyyLegacy-namespace.patch
 git apply patches/cppyy-Remove-Windows-workaround.patch
 git apply patches/cppyy-Don-t-enable-cling-autoloading.patch
 git apply patches/cppyy-Enable-testsuite.patch
+git apply patches/cppyy-Remove-unused-template-instance-pattern-rule.patch
