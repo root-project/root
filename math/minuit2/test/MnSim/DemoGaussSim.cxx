@@ -116,7 +116,7 @@ int main()
       MnMigrad migrad(fFCN, upar);
 
       // Fix a Parameter...
-      migrad.Fix("mean");
+      migrad.State().Fix("mean");
 
       // ... and Minimize
       FunctionMinimum min = migrad();
@@ -125,10 +125,10 @@ int main()
       std::cout << "minimum: " << min << std::endl;
 
       // Release a Parameter...
-      migrad.Release("mean");
+      migrad.State().Release("mean");
 
       // ... and Fix another one
-      migrad.Fix(1);
+      migrad.State().Fix(1);
 
       // and Minimize again
       FunctionMinimum min1 = migrad();
@@ -137,7 +137,7 @@ int main()
       std::cout << "minimum1: " << min1 << std::endl;
 
       // Release the Parameter...
-      migrad.Release(1);
+      migrad.State().Release(1);
 
       // ... and Minimize with all three parameters (still with limits!)
       FunctionMinimum min2 = migrad();
@@ -146,8 +146,8 @@ int main()
       std::cout << "minimum2: " << min2 << std::endl;
 
       // remove all limits on parameters...
-      migrad.RemoveLimits("mean");
-      migrad.RemoveLimits("sigma");
+      migrad.State().RemoveLimits("mean");
+      migrad.State().RemoveLimits("sigma");
 
       // ... and Minimize again with all three parameters (now without limits!)
       FunctionMinimum min3 = migrad();
