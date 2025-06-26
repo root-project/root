@@ -1,4 +1,4 @@
-#ifdef __CINT__
+#ifdef __ROOTCLING__
 
 #pragma link off all globals;
 #pragma link off all classes;
