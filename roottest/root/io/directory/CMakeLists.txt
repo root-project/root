@@ -1,6 +1,6 @@
 ROOTTEST_ADD_TEST(assertCycleParsing
                   MACRO assertCycleParsing.C
-                  OUTREF assertCycleParsing.ref)
+                  ERRREF assertCycleParsing.ref)
 
 ROOTTEST_ADD_TEST(assertSubdirAndTree
                   MACRO assertSubdirAndTree.C
