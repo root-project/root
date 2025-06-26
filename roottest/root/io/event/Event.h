@@ -49,14 +49,14 @@ private:
    TBits        fTriggerBits;  // Bits triggered by this track.
 
 private:
-   Track& operator=(const Track&); // NOT IMPLEMENTED
+   Track& operator=(const Track&) = delete;
 
 public:
    Track() : fPointValue(0) {}
    Track(const Track&);
    explicit Track(Float_t random);
-   virtual ~Track() { Clear(); }
-   void          Clear(Option_t* option = "");
+   ~Track() override { Clear(); }
+   void          Clear(Option_t* option = "") override;
    Float_t       GetPx() const { return fPx; }
    Float_t       GetPy() const { return fPy; }
    Float_t       GetPz() const { return fPz; }
@@ -81,7 +81,7 @@ public:
    Int_t         GetN() const { return fNsp; }
    Double32_t    GetPointValue(Int_t i = 0) const { return (i < fNsp) ? fPointValue[i] : 0; }
 
-   ClassDef(Track,2)  // A track segment
+   ClassDefOverride(Track,2)  // A track segment
 };
 
 class EventHeader {
@@ -92,8 +92,8 @@ private:
    Int_t fDate;
 
 private:
-   EventHeader(const EventHeader&); // NOT IMPLEMENTED
-   EventHeader& operator=(const EventHeader&); // NOT IMPLEMENTED
+   EventHeader(const EventHeader&) = delete;
+   EventHeader& operator=(const EventHeader&) = delete;
 
 public:
    EventHeader() : fEvtNum(0), fRun(0), fDate(0) { }
@@ -165,6 +165,7 @@ public:
    TRefArray*    GetHighPt() const { return fHighPt; }
    TRefArray*    GetMuons()  const { return fMuons; }
    Track*        GetLastTrack() const { return (Track*) fLastTrack.GetObject(); }
+   Track         GetTrackCopy(int i = 0) const;
    TH1F*         GetHistogram() const { return fH; }
    TH1*          GetWebHistogram()  const { return (TH1*) fWebHistogram.GetObject(); }
    Int_t         GetMeasure(UChar_t which) { return (which < 10) ? fMeasures[which] : 0; }
