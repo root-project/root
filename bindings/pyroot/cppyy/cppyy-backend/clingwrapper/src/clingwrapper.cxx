@@ -109,15 +109,14 @@ public:
     typedef const void* DeclId_t;
 
 public:
-    CallWrapper(TFunction* f) : fDecl(f->GetDeclId()), fName(f->GetName()), fTF(nullptr) {}
+    CallWrapper(TFunction* f) : fDecl(f->GetDeclId()), fName(f->GetName()), fTF(new TFunction(*f)) {}
     CallWrapper(DeclId_t fid, const std::string& n) : fDecl(fid), fName(n), fTF(nullptr) {}
     ~CallWrapper() {
-        if (fTF && fDecl == fTF->GetDeclId())
-            delete fTF;
+        delete fTF;
     }
 
 public:
-    TInterpreter::CallFuncIFacePtr_t   fFaceptr;
+    TInterpreter::CallFuncIFacePtr_t fFaceptr;
     DeclId_t      fDecl;
     std::string   fName;
     TFunction*    fTF;
@@ -126,7 +125,9 @@ public:
 }
 
 static std::vector<CallWrapper*> gWrapperHolder;
-static inline CallWrapper* new_CallWrapper(TFunction* f)
+
+static inline
+CallWrapper* new_CallWrapper(TFunction* f)
 {
     CallWrapper* wrap = new CallWrapper(f);
     gWrapperHolder.push_back(wrap);
@@ -249,7 +250,7 @@ public:
 
     // setup dummy holders for global and std namespaces
         assert(g_classrefs.size() == GLOBAL_HANDLE);
-        g_name2classrefidx[""]      = GLOBAL_HANDLE;
+        g_name2classrefidx[""]     = GLOBAL_HANDLE;
         g_classrefs.push_back(TClassRef(""));
 
     // aliases for std (setup already in pythonify)
@@ -259,6 +260,7 @@ public:
 
     // add a dummy global to refer to as null at index 0
         g_globalvars.push_back(nullptr);
+        g_globalidx[nullptr] = 0;
 
     // disable fast path if requested
         if (getenv("CPPYY_DISABLE_FASTPATH")) gEnableFastPath = false;
@@ -318,6 +320,9 @@ public:
             "namespace __cppyy_internal { template<class C1, class C2>"
             " bool is_not_equal(const C1& c1, const C2& c2) { return (bool)(c1 != c2); } }");
 
+    // helper for multiple inheritance
+        gInterpreter->Declare("namespace __cppyy_internal { struct Sep; }");
+
     // retrieve all initial (ROOT) C++ names in the global scope to allow filtering later
         if (!getenv("CPPYY_NO_ROOT_FILTER")) {
             gROOT->GetListOfGlobals(true);             // force initialize
@@ -367,7 +372,7 @@ TClassRef& type_from_handle(Cppyy::TCppScope_t scope)
 static inline
 TFunction* m2f(Cppyy::TCppMethod_t method) {
     CallWrapper* wrap = ((CallWrapper*)method);
-    if (!wrap->fTF || wrap->fTF->GetDeclId() != wrap->fDecl) {
+    if (!wrap->fTF) {
         MethodInfo_t* mi = gInterpreter->MethodInfo_Factory(wrap->fDecl);
         wrap->fTF = new TFunction(mi);
     }
@@ -652,6 +657,17 @@ Cppyy::TCppType_t Cppyy::GetActualClass(TCppType_t klass, TCppObject_t obj)
 {
     TClassRef& cr = type_from_handle(klass);
     if (!cr.GetClass() || !obj) return klass;
+
+    if (!(cr->ClassProperty() & kClassHasVirtual))
+        return klass;   // not polymorphic: no RTTI info available
+
+// TODO: ios class casting (ostream, streambuf, etc.) fails with a crash in GetActualClass()
+// below on Mac ARM (it's likely that the found actual class was replaced, maybe because
+// there are duplicates from pcm/pch?); filter them out for now as it's usually unnecessary
+// anyway to autocast these
+    std::string clName = cr->GetName();
+    if (clName.find("std::", 0, 5) == 0 && clName.find("stream") != std::string::npos)
+        return klass;
 
 #ifdef _WIN64
 // Cling does not provide a consistent ImageBase address for calculating relative addresses
