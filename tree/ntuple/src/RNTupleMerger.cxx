@@ -662,6 +662,7 @@ static void GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<con
       const auto colElement = RColumnElementBase::Generate(columnDesc.GetType());
       const auto nElements = nEntriesToGenerate * nRepetitions;
       const auto nBytesOnStorage = colElement->GetPackedSize(nElements);
+      // TODO(gparolini): make this configurable
       constexpr auto kPageSizeLimit = 256 * 1024;
       // TODO(gparolini): consider coalescing the last page if its size is less than some threshold
       const size_t nPages = nBytesOnStorage / kPageSizeLimit + !!(nBytesOnStorage % kPageSizeLimit);
@@ -672,7 +673,7 @@ static void GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<con
          assert(pageSize % colElement->GetSize() == 0);
          const auto nElementsPerPage = pageSize / colElement->GetSize();
          auto page = pageAlloc.NewPage(colElement->GetSize(), nElementsPerPage);
-         page.GrowUnchecked(nElements);
+         page.GrowUnchecked(nElementsPerPage);
          memset(page.GetBuffer(), 0, page.GetNBytes());
 
          auto &buffer = sealedPageData.fBuffers.emplace_back(new unsigned char[bufSize]);
@@ -685,10 +686,9 @@ static void GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<con
          auto sealedPage = RPageSink::SealPage(sealConf);
 
          sealedPageData.fPagesV.push_back({sealedPage});
+         sealedPageData.fGroups.emplace_back(column.fOutputId, sealedPageData.fPagesV.back().cbegin(),
+                                             sealedPageData.fPagesV.back().cend());
       }
-
-      sealedPageData.fGroups.emplace_back(column.fOutputId, sealedPageData.fPagesV.back().cbegin(),
-                                          sealedPageData.fPagesV.back().cend());
    }
 }
 
