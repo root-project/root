@@ -53,7 +53,7 @@ when it is desirable to have a high reading rate and not all columns are equally
 - [Add a column of Fundamental Types and Arrays thereof](\ref addcolumnoffundamentaltypes)
 - [Add a column of a STL Collection instances](\ref addingacolumnofstl)
 - [Add a column holding an object](\ref addingacolumnofobjs)
-- [Add a column holding a TObjectArray](\ref addingacolumnofobjs)
+- [Add a column holding a TClonesArray](\ref addingacolumnoftclonesarray)
 - [Fill the tree](\ref fillthetree)
 - [Add a column to an already existing Tree](\ref addcoltoexistingtree)
 - [An Example](\ref fullexample)
