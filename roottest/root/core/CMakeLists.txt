@@ -40,3 +40,9 @@ ROOTTEST_ADD_TEST(execStatusBitsCheck
                   OUTCNV ../html/MakeIndex_convert.sh
                   OUTREF execStatusBitsCheck.ref
                   )
+
+add_test(NAME root_exe_exitStatus COMMAND $<TARGET_FILE:root.exe> "-e invalid" "--no_exist")
+set_property(TEST root_exe_exitStatus PROPERTY WILL_FAIL True)
+add_test(NAME root_exe_errorMessage COMMAND $<TARGET_FILE:root.exe> "-e invalid" "--no_exist")
+set_property(TEST root_exe_errorMessage PROPERTY
+	PASS_REGULAR_EXPRESSION "root: unrecognized option '-e invalid'.*--no_exist.*Try 'root --help'")
