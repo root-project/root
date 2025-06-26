@@ -2847,6 +2847,74 @@ TEST(RNTupleMerger, MergeIncrementalLMExtMemFile)
    }
 }
 
+TEST(RNTupleMerger, MergeLMExtBig)
+{
+   // Merge 2 RNTuples where the first one contains an extra field and the second one contains lots of elements.
+   // This is meant to stress test the generation of zero pages when late model extending the merged rntuple.
+   FileRaii fileGuard1("test_ntuple_merge_lmext_big_1.root");
+   FileRaii fileGuard2("test_ntuple_merge_lmext_big_2.root");
+   FileRaii fileGuardOut("test_ntuple_merge_lmext_big_out.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto pFoo = model->MakeField<double>("foo");
+      auto pBar = model->MakeField<double>("bar");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      for (int i = 0; i < 50; ++i) {
+         *pFoo = i;
+         *pBar = 2 * i;
+         writer->Fill();
+      }
+   }
+   {
+      auto model = RNTupleModel::Create();
+      auto pFoo = model->MakeField<double>("foo");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      for (int i = 0; i < 50'000; ++i) {
+         *pFoo = i;
+         writer->Fill();
+      }
+   }
+
+   // Merge the inputs
+   {
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources)
+         sourcePtrs.push_back(s.get());
+
+      auto wopts = RNTupleWriteOptions();
+      wopts.SetCompression(0);
+      auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), wopts);
+      RNTupleMerger merger{std::move(destination)};
+      auto opts = RNTupleMergeOptions();
+      opts.fMergingMode = ENTupleMergingMode::kUnion;
+      auto res = merger.Merge(sourcePtrs, opts);
+      ASSERT_TRUE(bool(res));
+   }
+
+   // Now verify that the output file contains the expected data.
+   {
+      auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+      EXPECT_EQ(reader->GetNEntries(), 50'050);
+
+      auto vFoo = reader->GetView<double>("foo");
+      auto vBar = reader->GetView<double>("bar");
+      EXPECT_DOUBLE_EQ(vFoo(0), 0);
+      EXPECT_DOUBLE_EQ(vBar(0), 0);
+      EXPECT_DOUBLE_EQ(vFoo(49), 49);
+      EXPECT_DOUBLE_EQ(vBar(49), 98);
+      EXPECT_DOUBLE_EQ(vFoo(50), 0);
+      EXPECT_DOUBLE_EQ(vBar(50), 0);
+      EXPECT_DOUBLE_EQ(vFoo(1000), 950);
+      EXPECT_DOUBLE_EQ(vBar(1000), 0);
+      EXPECT_DOUBLE_EQ(vFoo(50'049), 49999);
+      EXPECT_DOUBLE_EQ(vBar(50'049), 0);
+   }
+}
+
 TEST(RNTupleMerger, MergeEmptySchema)
 {
    // Try merging two ntuples with an empty schema
