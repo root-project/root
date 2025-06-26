@@ -2415,7 +2415,7 @@ var GeometryNode = /** @class */ (function (_super) {
                 if (prev instanceof MoveTo || prev instanceof LineTo || prev instanceof CurveTo) {
                     if (curr instanceof CurveTo) {
                         hasStartMarker &&
-                            markers.addMarker(new Marker(markerStart, [prev.x, prev.y], 
+                            markers.addMarker(new Marker(markerStart, [prev.x, prev.y],
                             // @ts-ignore
                             getAngle(last_1 ? [last_1.x, last_1.y] : [prev.x, prev.y], [curr.x1, curr.y1]), true));
                         hasEndMarker &&
@@ -3133,7 +3133,7 @@ var TextNode = /** @class */ (function (_super) {
                     textChunks = [];
                     currentTextSegment = new TextChunk(this, context.attributeState.textAnchor, textX + dx, textY + dy);
                     textChunks.push({ type: '', chunk: currentTextSegment });
-                    initialSpace = this.processTSpans(this, this.element, context, textChunks, currentTextSegment, 
+                    initialSpace = this.processTSpans(this, this.element, context, textChunks, currentTextSegment,
                     // Set prevText to ' ' so any spaces on left of <text> are trimmed
                     { prevText: ' ', prevContext: context });
                     lengthAdjustment = initialSpace ? 0 : 1;
@@ -5415,7 +5415,7 @@ var Anchor = /** @class */ (function (_super) {
                             box = this.getBoundingBox(context);
                             scale = context.pdf.internal.scaleFactor;
                             ph = context.pdf.internal.pageSize.getHeight();
-                            context.pdf.link(scale * (box[0] * context.transform.sx + context.transform.tx), ph - scale * (box[1] * context.transform.sy + context.transform.ty), scale * box[2], scale * box[3], { url: href });
+                            context.pdf.link(scale * (box[0] * context.transform.sx + context.transform.tx), scale * (ph - box[1] * context.transform.sy - context.transform.ty), scale * context.transform.sx * box[2], scale * context.transform.sy * box[3], { url: href });
                         }
                         return [2 /*return*/];
                 }

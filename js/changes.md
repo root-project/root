@@ -1,5 +1,11 @@
 # JSROOT changelog
 
+## Changes in 7.9.x
+1. Fix - reading TLeafC leafs
+2. Fix - support BigInt in object inspector
+3. Fix - svg2pdf.js URL bounding box
+
+
 ## Changes in 7.9.1
 1. Fix - colz handling on `THStack`, avoid multiple palette drawings
 2. Fix - bug in pad.Divide context menu command
