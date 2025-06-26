@@ -40,3 +40,6 @@ ROOTTEST_ADD_TEST(execStatusBitsCheck
                   OUTCNV ../html/MakeIndex_convert.sh
                   OUTREF execStatusBitsCheck.ref
                   )
+
+add_test(NAME root_exitStatus COMMAND $<TARGET_FILE:root.exe> "-e invalid")
+set_property(TEST root_exitStatus PROPERTY WILL_FAIL TRUE)
