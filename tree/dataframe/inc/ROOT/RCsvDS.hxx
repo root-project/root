@@ -24,6 +24,16 @@
 
 #include <TRegexp.h>
 
+namespace ROOT::Internal::RDF {
+class R__CLING_PTRCHECK(off) RCsvDSColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
+   void *fValuePtr;
+   void *GetImpl(Long64_t) final { return fValuePtr; }
+
+public:
+   RCsvDSColumnReader(void *valuePtr) : fValuePtr(valuePtr) {}
+};
+} // namespace ROOT::Internal::RDF
+
 namespace ROOT {
 
 namespace Internal {
@@ -128,6 +138,9 @@ public:
    bool SetEntry(unsigned int slot, ULong64_t entry) final;
    void SetNSlots(unsigned int nSlots) final;
    std::string GetLabel() final;
+
+   std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
+   GetColumnReaders(unsigned int slot, std::string_view colName, const std::type_info &tid) final;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
