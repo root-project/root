@@ -1,5 +1,5 @@
-#ifndef RefArrazCompress_hh
-#define RefArrazCompress_hh
+#ifndef RefArrayCompress_hh
+#define RefArrayCompress_hh
 
 #include "TObject.h"
 #include "TClonesArray.h"
@@ -30,4 +30,4 @@ class Top: public TObject
   ClassDefOverride(Top, 1);
 };
 
-#endif /* RefArrazCompress_hh */
+#endif /* RefArrayCompress_hh */
