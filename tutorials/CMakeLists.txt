@@ -718,10 +718,7 @@ foreach(t ${tutorials})
                 TIMEOUT ${thisTestTimeout})
 
   if(${t} IN_LIST multithreaded)
-    # Makes sure that this doesn't run in parallel with other multithreaded tutorials, and that cmake doesn't start too
-    # many other tests. That we use 4 processors is actually a lie, because IMT takes whatever it finds.
-    # However, even this poor indication of MT behaviour is a good hint for cmake to reduce congestion.
-    set_tests_properties(tutorial-${tname} PROPERTIES RESOURCE_LOCK multithreaded PROCESSORS ${NProcessors})
+    set_tests_properties(tutorial-${tname} PROPERTIES PROCESSORS ${NProcessors})
   endif()
 endforeach()
 
