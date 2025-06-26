@@ -81,7 +81,9 @@ void vxinvb_(int *ixv, int *n)
             ((in >> 8) & 0x0000ff00) |
             ((in << 8) & 0x00ff0000) |
             ((in << 24) & 0xff000000);
+      printf("%d ", ixv[jloop]);
    }
+   printf("\n");
    return;
 }
 
