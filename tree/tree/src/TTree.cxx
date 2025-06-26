@@ -7662,6 +7662,7 @@ TSQLResult* TTree::Query(const char* varexp, const char* selection, Option_t* op
 ///     A/D:Table[2]/F:Ntracks/I:astring/C
 /// ~~~
 /// otherwise branchDescriptor must be specified with the above syntax.
+/// See all available datatypes [here](\ref addcolumnoffundamentaltypes).
 ///
 /// - If the type of the first variable is not specified, it is assumed to be "/F"
 /// - If the type of any other variable is not specified, the type of the previous
