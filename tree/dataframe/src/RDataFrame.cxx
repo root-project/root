@@ -1052,18 +1052,25 @@ the execution of its actions. Users have to call ROOT::EnableImplicitMT() *befor
 object to indicate that it should take advantage of a pool of worker threads. **Each worker thread processes a distinct
 subset of entries**, and their partial results are merged before returning the final values to the user.
 
+By default, RDataFrame will use as many threads as the hardware supports, using up **all** the resources on
+a machine. This might be undesirable on shared computing resources such as a batch cluster. Therefore, when running on shared computing resources, use
+~~~{.cpp}
+ROOT::EnableImplicitMT(numThreads)
+~~~
+or export an environment variable:
+~~~{.sh}
+export ROOT_MAX_THREADS=numThreads
+root.exe rdfAnalysis.cxx
+# or 
+ROOT_MAX_THREADS=4 python rdfAnalysis.py
+~~~
+replacing `numThreads` with the number of CPUs/slots that were allocated for this job.
+
 \warning There are no guarantees on the order in which threads will process the batches of
 entries. In particular, note that this means that, for multi-thread event loops, there is no
 guarantee on the order in which Snapshot() will _write_ entries: they could be scrambled with respect to the input
 dataset. The values of the special `rdfentry_` column will also not correspond to the entry numbers in the input dataset (e.g. TChain) in multi-threaded
 runs. Likewise, Take(), AsNumpy(), ... do not preserve the original ordering.
-
-\warning By default, RDataFrame will use as many threads as the hardware supports, using up **all** the resources on
-a machine. This might be undesirable on shared computing resources such as a batch cluster. Therefore, when running on shared computing resources, use
-~~~{.cpp}
-ROOT::EnableImplicitMT(i)
-~~~
-replacing `i` with the number of CPUs/slots that were allocated for this job.
 
 ### Thread-safety of user-defined expressions
 RDataFrame operations such as Histo1D() or Snapshot() are guaranteed to work correctly in multi-thread event loops.
