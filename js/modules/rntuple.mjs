@@ -20,8 +20,14 @@ class RBufferReader {
 
   // Move to a specific position in the buffer
   seek(position) {
+  if (typeof position === 'bigint') {
+    if (position > BigInt(Number.MAX_SAFE_INTEGER))
+      throw new Error(`Offset too large to seek safely: ${position}`);
+    this.offset = Number(position); 
+  } else 
     this.offset = position;
-  }
+}
+
 
   // Read unsigned 8-bit integer (1 BYTE)
   readU8() {
@@ -361,22 +367,137 @@ _readClusterGroups(reader) {
     const clusterRecordSize = reader.readS64(),
     minEntry = reader.readU64(),
     entrySpan = reader.readU64(),
-    numClusters = reader.readU32();
+    numClusters = reader.readU32(),
+    pageListLength = reader.readU64();
 
     console.log(`Cluster Record Size: ${clusterRecordSize}`);
-    console.log(`Min Entry: ${minEntry}, Entry Span: ${entrySpan}, Num Clusters: ${numClusters}`);
+    
+    // Locator method to get the page list locator offset
+    const pageListLocator = this._readLocator(reader);
 
-    clusterGroups.push({
-      minEntry,
-      entrySpan,
-      numClusters,
-    });
+    console.log('Page Length', pageListLength);
+  console.log(`Page List Locator Offset (hex): 0x${pageListLocator.offset.toString(16).toUpperCase()}`);
+
+ const group = {
+  minEntry,
+  entrySpan,
+  numClusters,
+  pageListLocator,
+  pageListLength
+    }; 
+    clusterGroups.push(group);
   }
-
   this.clusterGroups = clusterGroups;
 }
 
+_readLocator(reader) {
+  const sizeAndType = reader.readU32();           // 4 bytes: size + T bit
+  if ((sizeAndType | 0) < 0)  // | makes the sizeAndType as signed
+    throw new Error('Non-standard locators (T=1) not supported yet');
+  const size = sizeAndType,            
+  offset = reader.readU64();               // 8 bytes: offset
+  return {
+    size,
+    offset
+  };
 }
+deserializePageList(page_list_blob){
+    if (!page_list_blob)         
+      throw new Error('deserializePageList: received an invalid or empty page list blob');
+
+  const reader = new RBufferReader(page_list_blob);  
+  this._readEnvelopeMetadata(reader);
+  // Page list checksum (64-bit xxhash3)
+  const pageListHeaderChecksum = reader.readU64();
+  if (pageListHeaderChecksum !== this.headerEnvelopeChecksum)
+    throw new Error('RNTuple corrupted: header checksum does not match Page List Header checksum.');
+  
+
+  // Read cluster summaries list frame
+  const clusterSummaryListSize = reader.readS64();
+  if (clusterSummaryListSize>=0) 
+    throw new Error('Expected a list frame for cluster summaries');
+  const clusterSummaryCount = reader.readU32(),
+
+  clusterSummaries = [];
+
+  for (let i = 0; i < clusterSummaryCount; ++i) {
+  const clusterSummaryRecordSize = reader.readS64(), 
+  firstEntry = reader.readU64(),
+  combined = reader.readU64(),
+  flags = combined >> 56n;
+  if (flags & 0x01n)
+    throw new Error('Cluster summary uses unsupported sharded flag (0x01)');
+  const numEntries = Number(combined & 0x00FFFFFFFFFFFFFFn);
+  console.log(`Cluster Summary Record Size : ${clusterSummaryRecordSize}`);
+  clusterSummaries.push({
+    firstEntry,
+    numEntries,
+    flags
+  });
+}
+this.clusterSummaries = clusterSummaries;
+this._readNestedFrames(reader);
+
+const checksumPagelist = reader.readU64();
+console.log('Page List Checksum', checksumPagelist);
+}
+
+_readNestedFrames(reader) {
+  const clusterPageLocations = [],
+ numListClusters = reader.readS64();
+ if (numListClusters>=0)
+  throw new Error('Expected list frame for clusters');
+const numRecordCluster = reader.readU32();
+
+  for (let i = 0; i < numRecordCluster; ++i) {
+    const outerListSize = reader.readS64();
+    if (outerListSize >= 0)
+      throw new Error('Expected outer list frame for columns');
+
+    const numColumns = reader.readU32(),
+    columns = [];
+
+    for (let c = 0; c < numColumns; ++c) {
+      const innerListSize = reader.readS64();
+      if (innerListSize >= 0)     
+        throw new Error('Expected inner list frame for pages');
+
+      const numPages = reader.readU32();
+      console.log(`Column ${c} has ${numPages} page(s)`);
+     const pages = [];
+
+      for (let p = 0; p < numPages; ++p) {
+        const numElementsWithBit = reader.readS32(),
+        hasChecksum = numElementsWithBit < 0,
+        numElements = BigInt(Math.abs(Number(numElementsWithBit))),
+
+        locator = this._readLocator(reader);
+         console.log(`Page ${p} → elements: ${numElements}, checksum: ${hasChecksum}, locator offset: ${locator.offset}, size: ${locator.size}`);
+        pages.push({ numElements, hasChecksum, locator });
+      }
+
+      const elementOffset = reader.readS64(),
+      isSuppressed = elementOffset < 0;
+
+      let compression = null;
+      if (!isSuppressed) {
+        compression = reader.readU32();
+        console.log(`Column ${c} is NOT suppressed, offset: ${elementOffset}, compression: ${compression}`);
+      } else 
+        console.log(`Column ${c} is suppressed, offset: ${elementOffset}`);
+
+      columns.push({ pages, elementOffset, isSuppressed, compression });
+    }
+
+    clusterPageLocations.push(columns);
+  }
+
+  this.pageLocations = clusterPageLocations;
+}
+
+}
+
 
 /** @summary Very preliminary function to read header/footer from RNTuple
   * @private */
@@ -407,8 +528,30 @@ async function readHeaderFooter(tuple) {
 
          tuple.builder.deserializeFooter(footer_blob);
 
-         return true;
+         const group = tuple.builder.clusterGroups?.[0];
+         if (!group || !group.pageListLocator)
+            throw new Error('No valid cluster group or page list locator found');
+
+         const offset = Number(group.pageListLocator.offset),
+               size = Number(group.pageListLocator.size),
+               uncompressedSize = Number(group.pageListLength);
+
+         return tuple.$file.readBuffer([offset, size]).then(page_list_blob => {
+            if (!(page_list_blob instanceof DataView))
+               throw new Error(`Expected DataView from readBuffer, got ${Object.prototype.toString.call(page_list_blob)}`);
+
+            return R__unzip(page_list_blob, uncompressedSize).then(unzipped_blob => {
+               if (!(unzipped_blob instanceof DataView))
+                  throw new Error(`Unzipped page list is not a DataView, got ${Object.prototype.toString.call(unzipped_blob)}`);
+
+               tuple.builder.deserializePageList(unzipped_blob);
+               return true;
+            });
+         });
       });
+   }).catch(err => {
+      console.error('Error during readHeaderFooter execution:', err);
+      throw err;
    });
 }
 
