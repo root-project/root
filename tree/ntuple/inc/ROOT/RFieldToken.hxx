@@ -26,6 +26,10 @@ namespace Experimental {
 namespace Detail {
 class RRawPtrWriteEntry;
 } // namespace Detail
+
+namespace Internal {
+class RNTupleProcessorEntry;
+} // namespace Internal
 } // namespace Experimental
 
 // clang-format off
@@ -41,6 +45,7 @@ class RFieldToken {
    friend class REntry;
    friend class RNTupleModel;
    friend class Experimental::Detail::RRawPtrWriteEntry;
+   friend class Experimental::Internal::RNTupleProcessorEntry;
 
    std::size_t fIndex = 0;                      ///< The index of the field (top-level or registered subfield)
    std::uint64_t fSchemaId = std::uint64_t(-1); ///< Safety check to prevent tokens from other models being used
