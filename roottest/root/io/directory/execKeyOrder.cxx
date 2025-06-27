@@ -116,14 +116,14 @@ void checkKeys(TFile *f) {
    k =  GetKey(f,"bla");
    if (!k) cout << " not found\n";
    else cout<<" "<<k->GetCycle()<<endl;
-   
+
 }
 
 
 void execKeyOrder()
 {
    // run macro with old 5.34.01  or 5.34.14 (or later ) to compare
-   TFile* f = new TFile("test.root","RECREATE");
+   TFile* f = new TFile("test_execKeyOrder.root","RECREATE");
    TNamed n("bla","blub");
 
    n.Write();
@@ -134,7 +134,7 @@ void execKeyOrder()
    checkKeys(f);
 
    delete f;
-   f = new TFile("test.root","READ");
+   f = new TFile("test_execKeyOrder.root","READ");
    checkKeys(f);
 
 }
