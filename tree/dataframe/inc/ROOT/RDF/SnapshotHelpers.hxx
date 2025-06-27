@@ -114,23 +114,6 @@ public:
    }
 };
 
-void SetBranchesHelper(TTree *inputTree, TTree &outputTree, RBranchSet &outputBranches, int basketSize,
-                       const std::string &inputBranchName, const std::string &outputBranchName,
-                       const std::type_info &valueTypeID, void *valueAddress, TBranch *&actionHelperBranchPtr,
-                       void *&actionHelperBranchPtrAddress, bool isDefine);
-
-/// Ensure that the TTree with the resulting snapshot can be written to the target TFile. This means checking that the
-/// TFile can be opened in the mode specified in `opts`, deleting any existing TTrees in case
-/// `opts.fOverwriteIfExists = true`, or throwing an error otherwise.
-void EnsureValidSnapshotTTreeOutput(const RSnapshotOptions &opts, const std::string &treeName,
-                                    const std::string &fileName);
-
-/// Ensure that the RNTuple with the resulting snapshot can be written to the target TFile. This means checking that the
-/// TFile can be opened in the mode specified in `opts`, deleting any existing RNTuples in case
-/// `opts.fOverwriteIfExists = true`, or throwing an error otherwise.
-void EnsureValidSnapshotRNTupleOutput(const RSnapshotOptions &opts, const std::string &ntupleName,
-                                      const std::string &fileName);
-
 class R__CLING_PTRCHECK(off) UntypedSnapshotRNTupleHelper final : public RActionImpl<UntypedSnapshotRNTupleHelper> {
    std::string fFileName;
    std::string fDirName;
