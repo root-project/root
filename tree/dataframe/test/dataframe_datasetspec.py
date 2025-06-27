@@ -1,11 +1,13 @@
-import unittest
-import ROOT
 import os
+import unittest
+
+import ROOT
 
 RDataFrame = ROOT.ROOT.RDataFrame
 RDatasetSpec = ROOT.RDF.Experimental.RDatasetSpec
 REntryRange = ROOT.RDF.Experimental.RDatasetSpec.REntryRange
 RMetaData = ROOT.RDF.Experimental.RMetaData
+
 
 class RDatasetSpecTest(unittest.TestCase):
     @classmethod
