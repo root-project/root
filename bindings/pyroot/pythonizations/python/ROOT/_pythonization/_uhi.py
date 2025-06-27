@@ -548,11 +548,12 @@ def _get_sum_of_weights_squared(self) -> np.typing.NDArray[Any]:  # noqa: F821
     import numpy as np
 
     shape = _shape(self, include_flow_bins=False)
-    return np.frombuffer(
+    sumw2_arr = np.frombuffer(
         self.GetSumw2().GetArray(),
         dtype=self.GetSumw2().GetArray().typecode,
         count=self.GetSumw2().GetSize(),
-    ).reshape(shape, order="F")[tuple([slice(1, -1)] * len(shape))]
+    )
+    return sumw2_arr[tuple([slice(1, -1)] * len(shape))].reshape(shape, order="F") if sumw2_arr.size > 0 else sumw2_arr
 
 
 values_func_dict: dict[str, Callable] = {
