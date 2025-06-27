@@ -12,7 +12,7 @@ if(WIN32)
   cmake_policy(SET CMP0091 OLD)
   set(CMAKE_SKIP_TEST_ALL_DEPENDENCY TRUE)
 endif()
-if(APPLE AND (NOT CMAKE_OSX_SYSROOT OR CMAKE_OSX_SYSROOT STREQUAL ""))
+if(CMAKE_HOST_APPLE AND (NOT CMAKE_OSX_SYSROOT OR CMAKE_OSX_SYSROOT STREQUAL ""))
   # The SYSROOT *must* be set before the project() call
   execute_process(COMMAND xcrun --sdk macosx --show-sdk-path
     OUTPUT_VARIABLE SDK_PATH
