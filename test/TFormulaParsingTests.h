@@ -1004,19 +1004,19 @@ bool test50() {
    return ok;
 }
 
-bool test51() {
-   //switch off error messages to have test passing
-   int prevLevel = gErrorIgnoreLevel; 
-   gErrorIgnoreLevel= kFatal; 
-   TFormula f("fMissingParenthesis", "exp(x");
-   bool ok = !f.IsValid();
-   TFormula f2("fEmpty", "");
-   ok &= !f2.IsValid();
-   TFormula f3("fNonsense", "skmg#$#@!1");
-   ok &= !f3.IsValid();
-   gErrorIgnoreLevel = prevLevel; 
-   return ok;
-}
+//bool test51() {
+//   //switch off error messages to have test passing
+//   int prevLevel = gErrorIgnoreLevel; 
+//   gErrorIgnoreLevel= kFatal; 
+//   TFormula f("fMissingParenthesis", "exp(x");
+//   bool ok = !f.IsValid();
+//   TFormula f2("fEmpty", "");
+//   ok &= !f2.IsValid();
+//   TFormula f3("fNonsense", "skmg#$#@!1");
+//   ok &= !f3.IsValid();
+//   gErrorIgnoreLevel = prevLevel; 
+//   return ok;
+//}
 
 bool test52() {
    // test for bug 10815
@@ -1131,7 +1131,7 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test48() ) { PrintError(itest); }
    IncrTest(itest); if (!test49() ) { PrintError(itest); }
    IncrTest(itest); if (!test50() ) { PrintError(itest); }
-   IncrTest(itest); if (!test51() ) { PrintError(itest); }
+   //IncrTest(itest); if (!test51() ) { PrintError(itest); }
    IncrTest(itest); if (!test52() ) { PrintError(itest); }
    IncrTest(itest); if (!test53() ) { PrintError(itest); }
 

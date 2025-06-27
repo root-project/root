@@ -362,23 +362,24 @@ jobs:
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
           - image: fedora41
+            overrides: ["CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native"]
           - image: fedora42
-            overrides: ["CMAKE_CXX_STANDARD=23"]
+            overrides: ["CMAKE_CXX_STANDARD=23", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native"]
           - image: fedora43
-            overrides: ["CMAKE_CXX_STANDARD=23"]
+            overrides: ["CMAKE_CXX_STANDARD=23", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native"]
             is_special: true
           - image: alma8
           - image: alma9
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
           - image: alma10
           - image: ubuntu22
-            overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native"]
           - image: ubuntu2404
-            overrides: ["CMAKE_BUILD_TYPE=Debug"]
+            overrides: ["CMAKE_BUILD_TYPE=Debug", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native"]
           - image: ubuntu2504
-            overrides: ["CMAKE_CXX_STANDARD=23"]
+            overrides: ["CMAKE_CXX_STANDARD=23", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native"]
           - image: debian125
-            overrides: ["CMAKE_CXX_STANDARD=20", "dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
+            overrides: ["CMAKE_CXX_STANDARD=20", "dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native"]
           # Special builds
           - image: alma9
             is_special: true
