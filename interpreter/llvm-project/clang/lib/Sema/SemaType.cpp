@@ -9462,9 +9462,7 @@ bool Sema::RequireCompleteTypeImpl(SourceLocation Loc, QualType T,
 
     // Give the external AST source a chance to complete the type.
     if (auto *Source = Context.getExternalSource()) {
-      // AXEL: allows ROOT to autoload/-parse template specializations before
-      // trying to instantiate through the template definition. See ROOT-7462.
-      if (Tag /*&& Tag->hasExternalLexicalStorage()*/)
+      if (Tag && Tag->hasExternalLexicalStorage())
           Source->CompleteType(Tag);
       if (IFace && IFace->hasExternalLexicalStorage())
           Source->CompleteType(IFace);
