@@ -232,6 +232,8 @@ else()
   target_include_directories(RGL PRIVATE ${GL2PS_INCLUDE_DIRS})
 endif()
 
+# Remove when not needed anymore in the ROOT 6.40 development cycle
+target_compile_definitions(RGL PRIVATE _ROOT_GL_BUILDS_ITSELF)
 
 if(MSVC)
   target_compile_definitions (RGL PRIVATE "GLEW_STATIC")
