@@ -275,7 +275,7 @@ TEST(RDataFrameCloning, Snapshot)
    auto secondFile{"test_rdataframe_cloneactions_snapshot_2.root"};
 
    ROOT::RDataFrame df{10};
-   auto snap = df.Define("x", [] { return 10; }).Snapshot<int>(treeName, firstFile, {"x"}, opts);
+   auto snap = df.Define("x", [] { return 10; }).Snapshot(treeName, firstFile, {"x"}, opts);
 
    auto clone = CloneResultAndAction(snap, secondFile);
 

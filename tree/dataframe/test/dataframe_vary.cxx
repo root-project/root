@@ -668,7 +668,7 @@ TEST_P(RDFVary, SimultaneousVariations)
 TEST_P(RDFVary, VaryTTreeBranch)
 {
    const auto fname = "rdfvary_varyttreebranch.root";
-   ROOT::RDataFrame(10).Define("x", [] { return 1; }).Snapshot<int>("t", fname, {"x"});
+   ROOT::RDataFrame(10).Define("x", [] { return 1; }).Snapshot("t", fname, {"x"});
 
    ROOT::RDataFrame df("t", fname);
    auto sum = df.Vary("x", SimpleVariation, {}, 2).Sum<int>("x");
@@ -1560,12 +1560,8 @@ TEST_P(RDFVary, VarySnapshot)
    auto h = ROOT::RDataFrame(10)
                .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
                .Vary(
-                  "x",
-                  [](int x) {
-                     return ROOT::RVecI{x - 1, x + 1};
-                  },
-                  {"x"}, 2)
-               .Snapshot<int>("t", fname, {"x"});
+                  "x", [](int x) { return ROOT::RVecI{x - 1, x + 1}; }, {"x"}, 2)
+               .Snapshot("t", fname, {"x"});
    EXPECT_THROW(
       try { VariationsFor(h); } catch (const std::logic_error &err) {
          const auto msg = "Varying a Snapshot result is not implemented yet.";

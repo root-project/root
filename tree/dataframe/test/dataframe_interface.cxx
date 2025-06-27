@@ -861,9 +861,7 @@ TEST(RDataFrameInterface, BookWithoutColumns)
 
 TEST(RDataFrameInterface, SnapshotWithDuplicateColumns)
 {
-   EXPECT_THROW(
-      (ROOT::RDataFrame(1).Snapshot<ULong64_t, ULong64_t>("t", "neverwritten.root", {"rdfentry_", "rdfentry_"})),
-      std::logic_error);
+   EXPECT_THROW((ROOT::RDataFrame(1).Snapshot("t", "neverwritten.root", {"rdfentry_", "rdfentry_"})), std::logic_error);
    EXPECT_THROW((ROOT::RDataFrame(1).Snapshot("t", "neverwritten.root", {"rdfentry_", "rdfentry_"})), std::logic_error);
 }
 

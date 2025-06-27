@@ -166,7 +166,7 @@ void ParallelRDFSnapshots()
       std::this_thread::sleep_for(std::chrono::milliseconds(std::rand() / RAND_MAX * 200));
       ROOT::RDataFrame df(nevts);
       df.Define("x", [](ULong64_t ievt) { return int(ievt); }, {"rdfentry_"})
-         .Snapshot<int>("tree", "dataframe_parallel_snapshots_" + std::to_string(i) + ".root", {"x"});
+         .Snapshot("tree", "dataframe_parallel_snapshots_" + std::to_string(i) + ".root", {"x"});
    };
 
    ROOT::TThreadExecutor pool(NUM_THREADS);
