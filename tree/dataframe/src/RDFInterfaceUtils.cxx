@@ -1007,6 +1007,12 @@ AddSizeBranches(const std::vector<std::string> &branches, ROOT::RDF::RDataSource
       auto *b = tree->GetBranch(colName.c_str());
       if (!b) // try harder
          b = tree->FindBranch(colName.c_str());
+
+      if (!b && (tree->GetLeaf(colName.c_str()) || tree->FindLeaf(colName.c_str()))) {
+         // The column name corresponds to a leaf of a branch, nothing to do
+         continue;
+      }
+
       assert(b != nullptr);
       auto *leaves = b->GetListOfLeaves();
       if (b->IsA() != TBranch::Class() || leaves->GetEntries() != 1)
