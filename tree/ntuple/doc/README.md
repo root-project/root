@@ -1,8 +1,7 @@
 \defgroup NTuple RNTuple-related classes
 \brief Classes designed for columnar data storage in modern ROOT
 
-RNTuple Introduction
-====================
+# RNTuple Introduction
 
 RNTuple (for n-tuple and nested tuple) is the evolution of TTree columnar data storage. RNTuple introduces
 new interfaces that aim to be more robust.  In particular, the new interfaces are type-safe through the use of
@@ -20,8 +19,7 @@ most modern architectures. Combined with a clear separation of offset/index data
 uncompressed RNTuple data can be directly mapped to memory without further copies.
 
 
-Goals
------
+## Goals
 
 RNTuple shall investigate improvements of the TTree I/O in the following ways
 
@@ -39,8 +37,7 @@ RNTuple shall investigate improvements of the TTree I/O in the following ways
    * Self-contained I/O code to support creation of a standalone I/O library
 
 
-Concepts
---------
+## Concepts
 
 At the **logical layer**, the user defines a data model using the RNTupleModel class.
 The data model is a collection of serializable C++ types with associated names, similar to branches in a TTree.
@@ -65,8 +62,7 @@ At this point, the only provided backend stores the pages in ROOT files.
 RNTuples are further grouped into **clusters**, which are, like TTree clusters, self-contained blocks of
 consecutive entries.  Clusters provide a unit of writing and provide the means for parallel writing of RNTuple data.
 
-Related classes
----------------
+## Related classes
 
 \defgroup ROOT7 ROOT7 classes
 \brief Interfaces and classes designed for future ROOT version 7
