@@ -2118,8 +2118,7 @@ function (IS_SYSTEM_PATH path is_system_path)
 endfunction()
 
 #----------------------------------------------------------------------------
-# If path is not a system path, append it to the given variable using 
-# CMAKE_PATH_SEPARATOR
+# If path is not a system path, append it to the given variable
 # The 1st argument is the path to be checked
 # The 2nd argument is the variable that the path gets appended to if it is 
 # not a system path.
@@ -2130,7 +2129,12 @@ function (IF_NOT_SYSTEM_PATH_APPEND path variable)
     if (${${variable}} STRING_EMPTY)
       set(${variable} "${path}" PARENT_SCOPE)
     else()
-      set(${variable} "${${variable}}${CMAKE_PATH_SEPARATOR}${path}" PARENT_SCOPE)
+      if(WIN32)
+        set(ROOT_PATH_SEPARATOR ";")
+      elseif(UNIX)
+        set(ROOT_PATH_SEPARATOR ":")
+      endif()
+      set(${variable} "${${variable}}${ROOT_PATH_SEPARATOR}${path}" PARENT_SCOPE)
     endif()
   endif()
 endfunction()
