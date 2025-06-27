@@ -175,19 +175,19 @@ public:
    * 
    * @param option  Passed on to TH2::Reset verbatim
    */
-  void Clear(Option_t* option="");
+  void Clear(Option_t* option="") override;
   /** 
    * browse this object 
    * 
    * @param b Browser 
    */
-  void Browse(TBrowser* b);
+  void Browse(TBrowser* b) override;
   /** 
    * This is a folder 
    * 
    * @return Always true
    */
-  Bool_t IsFolder() const { return kTRUE; } // Always true 
+  Bool_t IsFolder() const override { return kTRUE; } // Always true 
   /** 
    * @return @c true if secondary corrected
    */
@@ -237,13 +237,13 @@ public:
    * 
    * @param option Passed verbatim to TH2::Print 
    */
-  void Print(Option_t* option="") const;
+  void Print(Option_t* option="") const override;
   /** 
    * Get the name of the object 
    * 
    * @return Name of object 
    */
-  const Char_t* GetName() const { return (fIsMC ? "ForwardMC" : "Forward"); }
+  const Char_t* GetName() const override { return (fIsMC ? "ForwardMC" : "Forward"); }
   /** 
    * Create a backward compatiblity header 
    * 
@@ -263,7 +263,7 @@ protected:
   TH2D     fHist;       // Histogram of d^2N_{ch}/(deta dphi) for this event
   AliAODForwardHeader* fHeader; //! Cached header 
 
-  ClassDef(AliAODForwardMult,6); // AOD forward multiplicity 
+  ClassDefOverride(AliAODForwardMult,6); // AOD forward multiplicity 
 };
 
 #endif

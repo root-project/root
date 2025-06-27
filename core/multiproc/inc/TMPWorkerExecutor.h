@@ -201,7 +201,7 @@ class TMPWorkerExecutor<F, void, void> : public TMPWorker {
 public:
    explicit TMPWorkerExecutor(F func) : TMPWorker(), fFunc(func) {}
    ~TMPWorkerExecutor() {}
-   void HandleInput(MPCodeBufPair &msg)
+   void HandleInput(MPCodeBufPair &msg) override
    {
       unsigned code = msg.first;
       TSocket *s = GetSocket();

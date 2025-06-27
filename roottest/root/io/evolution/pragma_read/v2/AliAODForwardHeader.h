@@ -108,7 +108,7 @@ public:
    * 
    * @param option  Not used
    */
-  void Clear(Option_t* option="");
+  void Clear(Option_t* option="") override;
   /** 
    * Set the trigger mask 
    * 
@@ -271,25 +271,25 @@ public:
    * 
    * @param option Passed verbatim to TH2::Print 
    */
-  void Print(Option_t* option="") const;
+  void Print(Option_t* option="") const override;
   /** 
    * Get the name of the object 
    * 
    * @return Name of object 
    */
-  const Char_t* GetName() const { return "ForwardHeader"; }
+  const Char_t* GetName() const override { return "ForwardHeader"; }
   /** 
    * browse this object 
    * 
    * @param b Browser 
    */
-  void Browse(TBrowser* b);
+  void Browse(TBrowser* b) override;
   /** 
    * This is a folder 
    * 
    * @return Always true
    */
-  Bool_t IsFolder() const { return kTRUE; } // Always true 
+  Bool_t IsFolder() const override { return kTRUE; } // Always true 
   /* @} */
   /** 
    * @{
@@ -354,7 +354,7 @@ protected:
   UShort_t fNClusters;  // Number of SPD clusters in |eta|<1
   /** Invalid value for interaction point @f$z@f$ coordiante */
   static const Float_t fgkInvalidIpZ; // Invalid IpZ value 
-  ClassDef(AliAODForwardHeader,1); // AOD forward header 
+  ClassDefOverride(AliAODForwardHeader,1); // AOD forward header 
 };
 
 //____________________________________________________________________

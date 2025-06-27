@@ -48,7 +48,7 @@ private:
    SuperCluster m_sc;
    Particle m_part;
 
-ClassDef(Container,1);
+ClassDefOverride(Container,1);
 };
 
 #endif

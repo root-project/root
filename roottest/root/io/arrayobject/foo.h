@@ -13,7 +13,7 @@ public:
   Int_t i;
   Float_t f;
   
-  ClassDef(foobj,1)
+  ClassDefOverride(foobj,1)
 };
 
 class foo {

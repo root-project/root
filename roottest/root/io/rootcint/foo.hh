@@ -9,7 +9,7 @@ class foo
 {
 public:
   void a();
-  ClassDef (foo, 1);
+  ClassDefOverride (foo, 1);
 };
 
 }
