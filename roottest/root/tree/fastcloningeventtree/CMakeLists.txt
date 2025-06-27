@@ -1,86 +1,74 @@
-set(ROOT_EVENT_DIR ${ROOT_SOURCE_DIR}/roottest/root/treeformula/event/)
+ROOTTEST_COMPILE_MACRO(dt_RunDrawTest.C
+                       FIXTURES_SETUP root-tree-fastcloningeventtree-RunDrawTest-fixture)
 
-# Generating dataset from roottest-treeformula-event-make test
-# FIXME: it will be nice to move roottest-treeformula-event to CMake and add it as dependency
-# To fix runtime_cxxmodules, we need to use already build artefacts.
-
-if(TARGET onepcm)
-      set(EventDependencies "onepcm")
+set(testsplit 0 1 9 -1)
+# file created with split -2 crashed when fast cloning is invoked
+if(broken_tests)
+  list(APPEND testsplit -2)
 endif()
 
-#ROOT_GENERATE_DICTIONARY(EventDict ${ROOT_EVENT_DIR}/Event.h
-#                  LINKDEF ${ROOT_EVENT_DIR}/EventLinkDef.h)
+foreach(split ${testsplit})
+  set(_smode new)
+  set(_sname split${split})
+  set(_tracks 600)
+  set(_size 50)
+  set(_willfail "")
+  set(_drawwillfail "")
+  if(${split} EQUAL -1)
+    set(_smode old)
+    set(_sname streamed)
+    set(_tracks 30)
+    set(_size 20)
+    # using split -1 after fast cloning makes problem for drawing
+    set(_drawwillfail "WILLFAIL")
+  elseif(${split} EQUAL -2)
+    set(_smode old)
+    set(_sname split)
+    set(_willfail "WILLFAIL")
+    set(_drawwillfail "WILLFAIL")
+  endif()
 
-#ROOT_LINKER_LIBRARY(Event TEST ${ROOT_EVENT_DIR}/Event.cxx EventDict.cxx
-#                  LIBRARIES Core Tree Hist MathCore)
+  set(_file_name Event.${_smode}.${_sname}.root)
+  set(_file_name_clone Event.${_smode}.${_sname}.clone.root)
 
-ROOTTEST_GENERATE_EXECUTABLE(EventGeneration ${ROOT_EVENT_DIR}/MainEvent.cxx
-                  LIBRARIES Core RIO Net Tree Hist MathCore Event)
+  ROOTTEST_ADD_TEST(write-${_sname}
+                    COMMAND ${CMAKE_BINARY_DIR}/roottest/root/io/event/TestIoEvent ${_size} 0 ${split} 1 ${_tracks} ${_file_name}
+                    FIXTURES_REQUIRED root-io-event-TestIoEvent-fixture
+                    FIXTURES_SETUP root-tree-fastcloningeventtree-write-${_sname}-fixture)
 
-if(NOT ClingWorkAroundMissingDynamicScope)
-   ROOTTEST_ADD_TEST(Event-new-split0
-                  COMMAND ./EventGeneration 50 0 0 1 600 > log && cp ${CMAKE_CURRENT_BINARY_DIR}/Event.root ${CMAKE_CURRENT_BINARY_DIR}/Event.new.split0.root
-                  DEPENDS EventGeneration ${EventDependencies})
+  ROOTTEST_ADD_TEST(clone-${_sname}
+                    MACRO ctrans.C
+                    ${_willfail}
+                    MACROARG "\"${_file_name}\",\"${_file_name_clone}\""
+                    ROOTEXE_OPTS -e "gSystem->AddDynamicPath(\"${CMAKE_BINARY_DIR}/roottest/root/io/event\")"
+                                 -e "gSystem->Load(\"libTestIoEvent\")"
+                    FIXTURES_REQUIRED root-tree-fastcloningeventtree-write-${_sname}-fixture
+                    FIXTURES_SETUP root-tree-fastcloningeventtree-clone-${_sname}-fixture)
 
-   ROOTTEST_ADD_TEST(Event-new-split1
-                  COMMAND ./EventGeneration 50 0 1 1 600 > log && cp ${CMAKE_CURRENT_BINARY_DIR}/Event.root ${CMAKE_CURRENT_BINARY_DIR}/Event.new.split1.root
-                  DEPENDS EventGeneration ${EventDependencies})
+  if(${split} EQUAL 0)
+    ROOTTEST_ADD_TEST(reference
+                    MACRO dt_MakeRef.C+
+                    MACROARG "\"${_file_name_clone}\""
+                    ROOTEXE_OPTS -e "gSystem->AddIncludePath(\"-I${CMAKE_SOURCE_DIR}/roottest/root/io/event\")"
+                                 -e "gSystem->AddDynamicPath(\"${CMAKE_BINARY_DIR}/roottest/root/io/event\")"
+                                 -e "gSystem->Load(\"libTestIoEvent\")"
+                    FIXTURES_REQUIRED root-io-event-libTestIoEvent-fixture
+                                      root-tree-fastcloningeventtree-clone-${_sname}-fixture
+                    FIXTURES_SETUP root-tree-fastcloningeventtree-reference-fixture)
+  endif()
 
-   ROOTTEST_ADD_TEST(Event-new-split2
-                  COMMAND ./EventGeneration 50 0 2 1 600 > log && cp ${CMAKE_CURRENT_BINARY_DIR}/Event.root ${CMAKE_CURRENT_BINARY_DIR}/Event.new.split2.root
-                  DEPENDS EventGeneration ${EventDependencies})
+  if(NOT split EQUAL -1 OR broken_tests)
+    foreach(mode 0 1 2 3 4)
+      ROOTTEST_ADD_TEST(draw-${_sname}-${mode}
+                       MACRO dt_RunDrawTest.C+
+                       ${_drawwillfail}
+                       MACROARG "\"${_file_name_clone}\",${mode}"
+                       ROOTEXE_OPTS -e "gSystem->AddDynamicPath(\"${CMAKE_BINARY_DIR}/roottest/root/io/event\")"
+                       FIXTURES_REQUIRED root-io-event-libTestIoEvent-fixture
+                                         root-tree-fastcloningeventtree-RunDrawTest-fixture
+                                         root-tree-fastcloningeventtree-reference-fixture
+                                         root-tree-fastcloningeventtree-clone-${_sname}-fixture)
+    endforeach()
+  endif()
 
-   ROOTTEST_ADD_TEST(Event-new-split9
-                  COMMAND ./EventGeneration 50 0 9 1 600 > log && cp ${CMAKE_CURRENT_BINARY_DIR}/Event.root ${CMAKE_CURRENT_BINARY_DIR}/Event.new.split9.root
-                  DEPENDS EventGeneration ${EventDependencies})
-
-   ROOTTEST_ADD_TEST(Event-old-split
-                  COMMAND ./EventGenerate 50 0 -2 1 600 > log && cp ${CMAKE_CURRENT_BINARY_DIR}/Event.root ${CMAKE_CURRENT_BINARY_DIR}/Event.old.split.root
-                  DEPENDS EventGenerate ${EventDependencies})
-
-   ROOTTEST_ADD_TEST(Event-old-streamed
-                  COMMAND ./EventGeneration 20 0 -1 1 30 > log && cp ${CMAKE_CURRENT_BINARY_DIR}/Event.root ${CMAKE_CURRENT_BINARY_DIR}/Event.old.streamed.root
-                  DEPENDS EventGeneration ${EventDependencies})
-
-   ROOTTEST_ADD_TEST(Event-new-split0-clone
-                  COMMAND ${ROOT_root_CMD} -q -b -l "${CMAKE_CURRENT_SOURCE_DIR}/ctrans.C\\(\\\"Event.new.split0.root\\\"\\)" > log
-                  DEPENDS Event-new-split0)
-
-   ROOTTEST_ADD_TEST(Event-new-split1-clone
-                  COMMAND ${ROOT_root_CMD} -q -b -l "${CMAKE_CURRENT_SOURCE_DIR}/ctrans.C\\(\\\"Event.new.split1.root\\\"\\)" > log
-                  DEPENDS Event-new-split1)
-
-   ROOTTEST_ADD_TEST(Event-new-split2-clone
-                  COMMAND ${ROOT_root_CMD} -q -b -l "${CMAKE_CURRENT_SOURCE_DIR}/ctrans.C\\(\\\"Event.new.split2.root\\\"\\)" > log
-                  DEPENDS Event-new-split2)
-
-   ROOTTEST_ADD_TEST(Event-new-split9-clone
-                  COMMAND ${ROOT_root_CMD} -q -b -l "${CMAKE_CURRENT_SOURCE_DIR}/ctrans.C\\(\\\"Event.new.split9.root\\\"\\)"  > log
-                  DEPENDS Event-new-split9)
-
-   ROOTTEST_ADD_TEST(Event-old-split-clone
-                  COMMAND ${ROOT_root_CMD} -q -b -l "${CMAKE_CURRENT_SOURCE_DIR}/ctrans.C\\(\\\"Event.old.split.root\\\"\\)" > log
-                  DEPENDS Event-old-split)
-
-   ROOTTEST_ADD_TEST(Event-old-streamed-clone
-                  COMMAND ${ROOT_root_CMD} -q -b -l "${CMAKE_CURRENT_SOURCE_DIR}/ctrans.C\\(\\\"Event.old.streamed.root\\\"\\)" > log
-                  DEPENDS Event-old-streamed)
-
-   ROOTTEST_ADD_TEST(Event-new-split9-clone
-                  COMMAND ${ROOT_root_CMD} -q -b -l "${CMAKE_CURRENT_SOURCE_DIR}/dt_MakeRef.C\\(\\\"Event.new.split9.root\\\"\\)" > log
-                  DEPENDS Event-new-split9)
-
-   ROOTTEST_ADD_TEST(runsingle
-                  COPY_TO_BUILDDIR dt_wrap.C dt_RunDrawTest.C dt_DrawTest.C
-                  EXEC dt_RunDrawTest.sh
-                  OUTREF references/runsingle.ref
-                  WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
-                  DEPENDS Event-new-split0-clone
-                  DEPENDS Event-new-split1-clone
-                  DEPENDS Event-new-split2-clone
-                  DEPENDS Event-new-split9-clone
-                  DEPENDS Event-old-split-clone
-                  DEPENDS Event-old-streamed-clone
-                  DEPENDS Event-new-split9-clone
-)
-endif()
+endforeach()
