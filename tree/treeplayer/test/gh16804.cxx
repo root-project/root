@@ -122,7 +122,104 @@ TEST_F(RegressionGH16804, GetBranchWrongName)
    ASSERT_EQ(mainTree->GetBranch("wrong"), nullptr);
 }
 
-TEST_F(RegressionGH16804, MainTTreeFriendTChain)
+TEST_F(RegressionGH16804, WrongBranchNameTTreeFriendTChain)
+{
+   TChain friendChain{fFriendTreeName};
+   for (const auto &fn : fFriendFileNames)
+      friendChain.Add(fn);
+
+   auto mainFile = std::make_unique<TFile>(fMainFileName);
+   auto mainTree = mainFile->Get<TTree>(fMainTreeName);
+   mainTree->AddFriend(&friendChain);
+
+   int wrong = -1;
+   ROOT::TestSupport::CheckDiagsRAII diagRAII;
+   diagRAII.requiredDiag(kError, "TTree::SetBranchAddress", "unknown branch -> wrong");
+   // SetBranchAddress loads the first tree in any friend TChain if it wasn't loaded before,
+   // so the full dataset schema is known.
+   auto wrongBranchRet = mainTree->SetBranchAddress("wrong", &wrong);
+   EXPECT_EQ(wrongBranchRet, -5);
+}
+
+TEST_F(RegressionGH16804, WrongBranchNameTTreeFriendTTree)
+{
+   auto friendFile = std::make_unique<TFile>(fFriendFileNames[0]);
+   auto friendTree = friendFile->Get<TTree>(fFriendTreeName);
+
+   auto mainFile = std::make_unique<TFile>(fMainFileName);
+   auto mainTree = mainFile->Get<TTree>(fMainTreeName);
+   mainTree->AddFriend(friendTree);
+
+   ROOT::TestSupport::CheckDiagsRAII diagRAII;
+   diagRAII.requiredDiag(kError, "TTree::SetBranchAddress", "unknown branch -> wrong");
+   int wrong = -1;
+   auto wrongBranchRet = mainTree->SetBranchAddress("wrong", &wrong);
+   EXPECT_EQ(wrongBranchRet, -5);
+}
+
+TEST_F(RegressionGH16804, WrongBranchNameTChainFriendTChain)
+{
+   TChain friendChain{fFriendTreeName};
+   for (const auto &fn : fFriendFileNames)
+      friendChain.Add(fn);
+
+   TChain mainChain{fMainTreeName};
+   mainChain.Add(fMainFileName);
+   mainChain.AddFriend(&friendChain);
+
+   ROOT::TestSupport::CheckDiagsRAII diagRAII;
+   // Branch name is not found in main chain nor in friend chain, SetBranchStatus should print error
+   // SetBranchAddress loads the first tree in any friend TChain if it wasn't loaded before,
+   // so the full dataset schema is known.
+   diagRAII.requiredDiag(kError, "TChain::SetBranchAddress", "unknown branch -> wrong");
+   int wrong = -1;
+   auto wrongBranchRet = mainChain.SetBranchAddress("wrong", &wrong);
+   EXPECT_EQ(wrongBranchRet, -5);
+}
+
+TEST_F(RegressionGH16804, WrongBranchNameTChainFriendTTree)
+{
+   auto friendFile = std::make_unique<TFile>(fMainFileName);
+   auto friendTree = friendFile->Get<TTree>(fMainTreeName);
+
+   TChain mainChain{fFriendTreeName};
+   for (const auto &fn : fFriendFileNames)
+      mainChain.Add(fn);
+   mainChain.AddFriend(friendTree);
+
+   ROOT::TestSupport::CheckDiagsRAII diagRAII;
+   // Branch name is not found in main chain nor in friend chain, SetBranchStatus should print error
+   diagRAII.requiredDiag(kError, "TChain::SetBranchAddress", "unknown branch -> wrong");
+   int wrong = -1;
+   auto wrongBranchRet = mainChain.SetBranchAddress("wrong", &wrong);
+   EXPECT_EQ(wrongBranchRet, -5);
+}
+
+TEST_F(RegressionGH16804, WrongBranchNameTTreeTwoFriendTChains)
+{
+   TChain friendChain{fFriendTreeName};
+   for (const auto &fn : fFriendFileNames)
+      friendChain.Add(fn);
+   TChain otherFriendChain{fOtherFriendTreeName};
+   for (const auto &fn : fOtherFriendFileNames)
+      otherFriendChain.Add(fn);
+
+   auto mainFile = std::make_unique<TFile>(fMainFileName);
+   auto mainTree = mainFile->Get<TTree>(fMainTreeName);
+   mainTree->AddFriend(&friendChain);
+   mainTree->AddFriend(&otherFriendChain);
+
+   ROOT::TestSupport::CheckDiagsRAII diagRAII;
+   // Branch name is not found in main tree nor in friend chain, SetBranchStatus should print error
+   // SetBranchAddress loads the first tree in any friend TChain if it wasn't loaded before,
+   // so the full dataset schema is known.
+   diagRAII.requiredDiag(kError, "TTree::SetBranchAddress", "unknown branch -> wrong");
+   int wrong = -1;
+   auto wrongBranchRet = mainTree->SetBranchAddress("wrong", &wrong);
+   EXPECT_EQ(wrongBranchRet, -5);
+}
+
+TEST_F(RegressionGH16804, TTreeFriendTChain)
 {
    TChain friendChain{fFriendTreeName};
    for (const auto &fn : fFriendFileNames)
@@ -366,132 +463,6 @@ TEST_F(RegressionGH16804, TTreeFriendTTree)
       } else
          throw std::runtime_error("Could not retrieve TTreePlayer from main tree!");
    }
-}
-
-TEST_F(RegressionGH16804, WrongBranchNameTTreeFriendTChain)
-{
-   TChain friendChain{fFriendTreeName};
-   for (const auto &fn : fFriendFileNames)
-      friendChain.Add(fn);
-
-   auto mainFile = std::make_unique<TFile>(fMainFileName);
-   auto mainTree = mainFile->Get<TTree>(fMainTreeName);
-   mainTree->AddFriend(&friendChain);
-
-   int wrong = -1;
-   auto wrongBranchRetBeforeLoadTree = mainTree->SetBranchAddress("wrong", &wrong);
-   // SetBranchAddress did not find the branch in the mainTree, then tried
-   // to find it in the list of friends. The friend TChain hasn't loaded its
-   // tree yet, so it returns kNoCheck==5
-   EXPECT_EQ(wrongBranchRetBeforeLoadTree, 5);
-
-   ROOT::TestSupport::CheckDiagsRAII diagRAII;
-   diagRAII.requiredDiag(kError, "TChain::SetBranchAddress", "unknown branch -> wrong");
-   diagRAII.requiredDiag(kError, "TTree::SetBranchAddress", "unknown branch -> wrong");
-
-   mainTree->LoadTree(0);
-   auto wrongBranchRetAfterLoadTree = mainTree->SetBranchAddress("wrong", &wrong);
-   EXPECT_EQ(wrongBranchRetAfterLoadTree, -5);
-}
-
-TEST_F(RegressionGH16804, WrongBranchNameTTreeFriendTTree)
-{
-   auto friendFile = std::make_unique<TFile>(fFriendFileNames[0]);
-   auto friendTree = friendFile->Get<TTree>(fFriendTreeName);
-
-   auto mainFile = std::make_unique<TFile>(fMainFileName);
-   auto mainTree = mainFile->Get<TTree>(fMainTreeName);
-   mainTree->AddFriend(friendTree);
-
-   ROOT::TestSupport::CheckDiagsRAII diagRAII;
-   diagRAII.requiredDiag(kError, "TTree::SetBranchAddress", "unknown branch -> wrong");
-   int wrong = -1;
-   auto wrongBranchRetBeforeLoadTree = mainTree->SetBranchAddress("wrong", &wrong);
-   EXPECT_EQ(wrongBranchRetBeforeLoadTree, -5);
-}
-
-TEST_F(RegressionGH16804, WrongBranchNameTChainFriendTChain)
-{
-   TChain friendChain{fFriendTreeName};
-   for (const auto &fn : fFriendFileNames)
-      friendChain.Add(fn);
-
-   TChain mainChain{fMainTreeName};
-   mainChain.Add(fMainFileName);
-   mainChain.AddFriend(&friendChain);
-
-   int wrong = -1;
-   auto wrongBranchRetBeforeLoadTree = mainChain.SetBranchAddress("wrong", &wrong);
-   // SetBranchAddress did not find the branch in the mainTree, then tried
-   // to find it in the list of friends. The friend TChain hasn't loaded its
-   // tree yet, so it returns kNoCheck==5
-   EXPECT_EQ(wrongBranchRetBeforeLoadTree, 5);
-
-   ROOT::TestSupport::CheckDiagsRAII diagRAII;
-   // Branch name is not found in main chain nor in friend chain, SetBranchStatus should print error
-   diagRAII.requiredDiag(kError, "TTree::SetBranchStatus", "unknown branch -> wrong");
-   diagRAII.requiredDiag(kError, "TChain::SetBranchAddress", "unknown branch -> wrong");
-
-   mainChain.LoadTree(0);
-   auto wrongBranchRetAfterLoadTree = mainChain.SetBranchAddress("wrong", &wrong);
-   EXPECT_EQ(wrongBranchRetAfterLoadTree, -5);
-}
-
-TEST_F(RegressionGH16804, WrongBranchNameTChainFriendTTree)
-{
-   auto friendFile = std::make_unique<TFile>(fMainFileName);
-   auto friendTree = friendFile->Get<TTree>(fMainTreeName);
-
-   TChain mainChain{fFriendTreeName};
-   for (const auto &fn : fFriendFileNames)
-      mainChain.Add(fn);
-   mainChain.AddFriend(friendTree);
-
-   int wrong = -1;
-   auto wrongBranchRetBeforeLoadTree = mainChain.SetBranchAddress("wrong", &wrong);
-   // SetBranchAddress did not find the branch in the mainTree, then tried
-   // to find it in the list of friends. The friend TChain hasn't loaded its
-   // tree yet, so it returns kNoCheck==5
-   EXPECT_EQ(wrongBranchRetBeforeLoadTree, 5);
-
-   ROOT::TestSupport::CheckDiagsRAII diagRAII;
-   // Branch name is not found in main chain nor in friend chain, SetBranchStatus should print error
-   diagRAII.requiredDiag(kError, "TTree::SetBranchStatus", "unknown branch -> wrong");
-   diagRAII.requiredDiag(kError, "TChain::SetBranchAddress", "unknown branch -> wrong");
-
-   mainChain.LoadTree(0);
-   auto wrongBranchRetAfterLoadTree = mainChain.SetBranchAddress("wrong", &wrong);
-   EXPECT_EQ(wrongBranchRetAfterLoadTree, -5);
-}
-
-TEST_F(RegressionGH16804, WrongBranchNameTTreeTwoFriendTChains)
-{
-   TChain friendChain{fFriendTreeName};
-   for (const auto &fn : fFriendFileNames)
-      friendChain.Add(fn);
-   TChain otherFriendChain{fOtherFriendTreeName};
-   for (const auto &fn : fOtherFriendFileNames)
-      otherFriendChain.Add(fn);
-
-   auto mainFile = std::make_unique<TFile>(fMainFileName);
-   auto mainTree = mainFile->Get<TTree>(fMainTreeName);
-   mainTree->AddFriend(&friendChain);
-   mainTree->AddFriend(&otherFriendChain);
-
-   int wrong = -1;
-   auto wrongBranchRetBeforeLoadTree = mainTree->SetBranchAddress("wrong", &wrong);
-   // SetBranchAddress did not find the branch in the mainTree, then tried
-   // to find it in the list of friends. The friend TChains haven not their
-   // trees yet, so the return value is kNoCheck==5
-   EXPECT_EQ(wrongBranchRetBeforeLoadTree, 5);
-
-   ROOT::TestSupport::CheckDiagsRAII diagRAII;
-   diagRAII.requiredDiag(kError, "TChain::SetBranchAddress", "unknown branch -> wrong");
-   diagRAII.requiredDiag(kError, "TTree::SetBranchAddress", "unknown branch -> wrong");
-
-   mainTree->LoadTree(0);
-   auto wrongBranchRetAfterLoadTree = mainTree->SetBranchAddress("wrong", &wrong);
-   EXPECT_EQ(wrongBranchRetAfterLoadTree, -5);
 }
 
 TEST_F(RegressionGH16804, TChainFriendTChain)

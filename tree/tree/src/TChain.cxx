@@ -2610,6 +2610,10 @@ void TChain::ResetBranchAddresses()
 
 Int_t TChain::SetBranchAddress(const char *bname, void* add, TBranch** ptr)
 {
+   if (!fTree && fReadEntry == -1 && fTreeNumber == -1) {
+      // Try to load the first tree to retrieve the dataset schema
+      LoadTree(0);
+   }
    Int_t res = kNoCheck;
 
    // Check if bname is already in the status list.
@@ -2652,7 +2656,8 @@ Int_t TChain::SetBranchAddress(const char *bname, void* add, TBranch** ptr)
 
          branch->SetAddress(add);
       } else {
-         Error("SetBranchAddress", "unknown branch -> %s", bname);
+         if (!element->IsDelayed())
+            Error("SetBranchAddress", "unknown branch -> %s", bname);
          return kMissingBranch;
       }
    } else {
@@ -2684,6 +2689,10 @@ Int_t TChain::SetBranchAddress(const char* bname, void* add, TClass* realClass, 
 
 Int_t TChain::SetBranchAddress(const char* bname, void* add, TBranch** ptr, TClass* realClass, EDataType datatype, bool isptr)
 {
+   if (!fTree && fReadEntry == -1 && fTreeNumber == -1) {
+      // Try to load the first tree to retrieve the dataset schema
+      LoadTree(0);
+   }
    TChainElement* element = (TChainElement*) fStatus->FindObject(bname);
    if (!element) {
       element = new TChainElement(bname, "");
@@ -3195,9 +3204,14 @@ void TChain::UseCache(Int_t /* maxCacheSize */, Int_t /* pageSize */)
 Int_t TChain::SetBranchAddress(const char *bname, void *addr, TBranch **ptr, TClass *ptrClass, EDataType datatype,
                                bool isptr, bool delayTChainElement)
 {
-   auto ret = SetBranchAddress(bname, addr, ptr, ptrClass, datatype, isptr);
-   // The previous call to SetBranchAddress must have created the element
-   auto *element = static_cast<TChainElement *>(fStatus->FindObject(bname));
-   element->IsDelayed(delayTChainElement);
-   return ret;
+   if (!fTree && fReadEntry == -1 && fTreeNumber == -1) {
+      // Try to load the first tree to retrieve the dataset schema
+      LoadTree(0);
+   }
+   if (!fStatus->FindObject(bname)) {
+      auto *element = new TChainElement(bname, "");
+      element->IsDelayed(delayTChainElement);
+      fStatus->Add(element);
+   }
+   return SetBranchAddress(bname, addr, ptr, ptrClass, datatype, isptr);
 }
