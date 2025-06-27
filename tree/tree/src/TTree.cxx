@@ -8576,15 +8576,8 @@ Int_t TTree::SetBranchAddress(const char* bname, void* addr, TClass* ptrClass, E
    return SetBranchAddress(bname, addr, nullptr, ptrClass, datatype, isptr);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Verify the validity of the type of addr before calling SetBranchAddress.
-/// See TTree::CheckBranchAddressType for the semantic of the return value.
-///
-/// Note: See the comments in TBranchElement::SetAddress() for the
-/// meaning of the addr parameter and the object ownership policy.
-
-Int_t TTree::SetBranchAddress(const char *bname, void *addr, TBranch **ptr, TClass *ptrClass, EDataType datatype,
-                              bool isptr)
+Int_t TTree::SetBranchAddressImp(const char *bname, void *addr, TBranch **ptr, TClass *ptrClass, EDataType datatype,
+                                 bool isptr)
 {
    if (auto *branchFromSelf = GetBranchFromSelf(bname)) {
       Int_t res = CheckBranchAddressType(branchFromSelf, ptrClass, datatype, isptr);
@@ -8623,14 +8616,30 @@ Int_t TTree::SetBranchAddress(const char *bname, void *addr, TBranch **ptr, TCla
    // Branch not found
    if (ptr)
       *ptr = nullptr;
-   Error("SetBranchAddress", "unknown branch -> %s", bname);
+
    return kMissingBranch;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Verify the validity of the type of addr before calling SetBranchAddress.
+/// See TTree::CheckBranchAddressType for the semantic of the return value.
+///
+/// Note: See the comments in TBranchElement::SetAddress() for the
+/// meaning of the addr parameter and the object ownership policy.
+
+Int_t TTree::SetBranchAddress(const char *bname, void *addr, TBranch **ptr, TClass *ptrClass, EDataType datatype,
+                              bool isptr)
+{
+   auto res = SetBranchAddressImp(bname, addr, ptr, ptrClass, datatype, isptr);
+   if (res == kMissingBranch)
+      Error("SetBranchAddress", "unknown branch -> %s", bname);
+   return res;
 }
 
 Int_t TTree::SetBranchAddress(const char *bname, void *addr, TBranch **ptr, TClass *ptrClass, EDataType datatype,
                               bool isptr, bool)
 {
-   return SetBranchAddress(bname, addr, ptr, ptrClass, datatype, isptr);
+   return SetBranchAddressImp(bname, addr, ptr, ptrClass, datatype, isptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

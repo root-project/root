@@ -182,6 +182,9 @@ private:
    void RegisterBranchFullName(std::pair<std::string, TBranch *> &&kv) { fNamesToBranches.insert(kv); }
    friend void ROOT::Internal::TreeUtils::TBranch__SetTree(TTree *tree, TObjArray &branches);
 
+   Int_t
+   SetBranchAddressImp(const char *bname, void *add, TBranch **ptr, TClass *realClass, EDataType datatype, bool isptr);
+
 protected:
    friend TBranch *ROOT::Internal::TreeUtils::CallBranchImpRef(TTree &tree, const char *branchname, TClass *ptrClass,
                                                                EDataType datatype, void *addobj, Int_t bufsize,
