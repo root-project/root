@@ -1,3 +1,4 @@
+CMAKE_BUILD_RPATH=/usr/local/lib
 asimage_tiff=OFF
 builtin_cfitsio=ON
 builtin_cppzmq=ON
