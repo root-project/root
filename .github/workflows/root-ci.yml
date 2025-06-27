@@ -363,11 +363,12 @@ jobs:
         include:
           - image: fedora41
           - image: fedora42
-            overrides: ["CMAKE_CXX_STANDARD=23"]
+            overrides: ["CMAKE_BUILD_TYPE=Debug", "CMAKE_CXX_STANDARD=23"]
           - image: fedora43
-            overrides: ["CMAKE_CXX_STANDARD=23"]
+            overrides: ["CMAKE_BUILD_TYPE=Debug", "CMAKE_CXX_STANDARD=23"]
             is_special: true
           - image: alma8
+            overrides: ["CMAKE_BUILD_TYPE=Debug"]
           - image: alma9
             overrides: ["CMAKE_BUILD_TYPE=Debug", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
           - image: alma10
@@ -387,11 +388,11 @@ jobs:
           - image: alma9
             is_special: true
             property: march_native
-            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "builtin_zlib=ON", "builtin_zstd=ON"]
+            overrides: ["CMAKE_BUILD_TYPE=Debug", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "builtin_zlib=ON", "builtin_zstd=ON"]
           - image: alma9
             is_special: true
             property: arm64
-            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "builtin_zlib=ON", "builtin_zstd=ON"]
+            overrides: ["CMAKE_BUILD_TYPE=Debug", "builtin_zlib=ON", "builtin_zstd=ON"]
             architecture: ARM64
           - image: alma9-clang
             is_special: true
