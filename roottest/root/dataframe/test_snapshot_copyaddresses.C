@@ -41,7 +41,7 @@ void test_snapshot_copyaddresses()
    // handles get out of scope, allowing to properly delete the files
    {
       ROOT::RDataFrame df("t", fnamePrefix + std::string("*.root"));
-      auto out_df = df.Snapshot<int, int>("t", fnamePrefix + outSuffix, {"x", "y"});
+      auto out_df = df.Snapshot("t", fnamePrefix + outSuffix, {"x", "y"});
 
       int expected = 1;
       out_df->Foreach(

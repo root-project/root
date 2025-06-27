@@ -17,7 +17,7 @@ TEST(RDFAndVecOps, ReadStdVectorAsRVec)
    const auto nEntries = 5u;
    // write out a small file with an std::vector column
    auto makeStdVec = []() { return std::vector<int>({1, 2, 3}); };
-   RDataFrame(nEntries).Define("v", makeStdVec).Snapshot<std::vector<int>>(treename, fname, {"v"});
+   RDataFrame(nEntries).Define("v", makeStdVec).Snapshot(treename, fname, {"v"});
 
    // read it from a non-jitted action
    RDataFrame d(treename, fname);
@@ -50,7 +50,7 @@ TEST(RDFAndVecOps, SnapshotRVec)
    const auto treename = "t";
    const auto nEntries = 5u;
    auto makeRVec = []() { return RVec<int>({1, 2, 3}); };
-   RDataFrame(nEntries).Define("v", makeRVec).Snapshot<RVec<int>>(treename, fname, {"v"});
+   RDataFrame(nEntries).Define("v", makeRVec).Snapshot(treename, fname, {"v"});
 
    // check the RVec was written as a RVec
    TFile f(fname);

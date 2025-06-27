@@ -31,9 +31,7 @@ void writeFcc()
 {
    using colType = vector<Electron>;
    ROOT::RDataFrame d(2);
-   d.Define("electrons", [](){return colType(4);})
-    .Snapshot<colType>("t",
-                       "fccMockup.root",
-                       {"electrons"},
-                       {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kLZ4, 4, 0, 0, false}); // non split!
+   d.Define("electrons", []() { return colType(4); })
+      .Snapshot("t", "fccMockup.root", {"electrons"},
+                {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kLZ4, 4, 0, 0, false}); // non split!
 }

@@ -102,7 +102,7 @@ public:
       for (const auto &d : data)
          for (const auto &trees : d.trees)
             for (const auto &t : trees)
-               dfWriter.Range(t.start, t.end).Snapshot<ULong64_t>(t.tree, t.file, {"x"});
+               dfWriter.Range(t.start, t.end).Snapshot(t.tree, t.file, {"x"});
    }
 
    static void TearDownTestCase()
@@ -578,10 +578,10 @@ TEST(RDatasetSpecTest, Describe)
    auto dfWriter1 = RDataFrame(10)
                        .Define("x", [](ULong64_t e) { return double(e); }, {"rdfentry_"})
                        .Define("w", [](ULong64_t e) { return e + 1.; }, {"rdfentry_"});
-   dfWriter1.Range(5).Snapshot<double>("subTree0", "specTestDescribe1.root", {"x"});
-   dfWriter1.Range(5, 10).Snapshot<double>("subTree1", "specTestDescribe2.root", {"x"});
-   dfWriter1.Range(5).Snapshot<double>("subTree2", "specTestDescribe3.root", {"w"});
-   dfWriter1.Range(5, 10).Snapshot<double>("subTree3", "specTestDescribe4.root", {"w"});
+   dfWriter1.Range(5).Snapshot("subTree0", "specTestDescribe1.root", {"x"});
+   dfWriter1.Range(5, 10).Snapshot("subTree1", "specTestDescribe2.root", {"x"});
+   dfWriter1.Range(5).Snapshot("subTree2", "specTestDescribe3.root", {"w"});
+   dfWriter1.Range(5, 10).Snapshot("subTree3", "specTestDescribe4.root", {"w"});
 
    RDatasetSpec spec;
    spec.AddSample({"sampleA", "subTree0"s, "specTestDescribe1.root"s});
@@ -618,12 +618,12 @@ TEST(RDatasetSpecTest, Describe)
 TEST(RDatasetSpecTest, FromSpec)
 {
    auto dfWriter0 = ROOT::RDataFrame(5).Define("z", [](ULong64_t e) { return e + 100; }, {"rdfentry_"});
-   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree", "CPPspecTestFile2.root", {"z"});
-   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree", "CPPspecTestFile3.root", {"z"});
-   dfWriter0.Range(4, 5).Snapshot<ULong64_t>("subTree", "CPPspecTestFile4.root", {"z"});
-   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree1", "CPPspecTestFile5.root", {"z"});
-   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree2", "CPPspecTestFile6.root", {"z"});
-   dfWriter0.Snapshot<ULong64_t>("anotherTree", "CPPspecTestFile7.root", {"z"});
+   dfWriter0.Range(0, 2).Snapshot("subTree", "CPPspecTestFile2.root", {"z"});
+   dfWriter0.Range(2, 4).Snapshot("subTree", "CPPspecTestFile3.root", {"z"});
+   dfWriter0.Range(4, 5).Snapshot("subTree", "CPPspecTestFile4.root", {"z"});
+   dfWriter0.Range(0, 2).Snapshot("subTree1", "CPPspecTestFile5.root", {"z"});
+   dfWriter0.Range(2, 4).Snapshot("subTree2", "CPPspecTestFile6.root", {"z"});
+   dfWriter0.Snapshot("anotherTree", "CPPspecTestFile7.root", {"z"});
 
    auto rdf =
       FromSpec("spec.json")
@@ -660,10 +660,10 @@ TEST(RDatasetSpecTest, FromSpec)
 TEST(RDatasetSpecTest, FromSpec_ordering_samplesAndFriends)
 {
    auto dfWriter0 = ROOT::RDataFrame(1).Define("z", [](ULong64_t e) { return e + 100; }, {"rdfentry_"});
-   dfWriter0.Snapshot<ULong64_t>("subTree", "FromSpecTestFile1.root", {"z"});
-   dfWriter0.Snapshot<ULong64_t>("subTree", "FromSpecTestFile2.root", {"z"});
-   dfWriter0.Snapshot<ULong64_t>("anotherTree", "FromSpecTestFile4.root", {"z"});
-   dfWriter0.Snapshot<ULong64_t>("anotherTree", "FromSpecTestFile3.root", {"z"});
+   dfWriter0.Snapshot("subTree", "FromSpecTestFile1.root", {"z"});
+   dfWriter0.Snapshot("subTree", "FromSpecTestFile2.root", {"z"});
+   dfWriter0.Snapshot("anotherTree", "FromSpecTestFile4.root", {"z"});
+   dfWriter0.Snapshot("anotherTree", "FromSpecTestFile3.root", {"z"});
 
    auto rdf_1 = FromSpec("spec_ordering_samples_withFriends.json");
 
@@ -751,12 +751,12 @@ TEST(RDatasetSpecTest, Clusters)
    opts[2].fAutoFlush = 7;  // last split is always shorter
    opts[3].fAutoFlush = 1;  // each entry is a split
    for (auto &opt : opts) {
-      dfWriter2.Range(40).Snapshot<ULong64_t>("mainA", "CspecTestFile0.root", {"x"}, opt);
-      dfWriter2.Range(40, 120).Snapshot<ULong64_t>("mainB", "CspecTestFile1.root", {"x"}, opt);
-      dfWriter2.Range(120, 200).Snapshot<ULong64_t>("mainC", "CspecTestFile2.root", {"x"}, opt);
-      dfWriter2.Range(50).Snapshot<ULong64_t>("friendA", "CspecTestFile3.root", {"x"}, opt);
-      dfWriter2.Range(50, 150).Snapshot<ULong64_t>("friendB", "CspecTestFile4.root", {"x"}, opt);
-      dfWriter2.Range(150, 200).Snapshot<ULong64_t>("friendC", "CspecTestFile5.root", {"x"}, opt);
+      dfWriter2.Range(40).Snapshot("mainA", "CspecTestFile0.root", {"x"}, opt);
+      dfWriter2.Range(40, 120).Snapshot("mainB", "CspecTestFile1.root", {"x"}, opt);
+      dfWriter2.Range(120, 200).Snapshot("mainC", "CspecTestFile2.root", {"x"}, opt);
+      dfWriter2.Range(50).Snapshot("friendA", "CspecTestFile3.root", {"x"}, opt);
+      dfWriter2.Range(50, 150).Snapshot("friendB", "CspecTestFile4.root", {"x"}, opt);
+      dfWriter2.Range(150, 200).Snapshot("friendC", "CspecTestFile5.root", {"x"}, opt);
 
       ROOT::EnableImplicitMT(std::min(4u, std::thread::hardware_concurrency()));
 

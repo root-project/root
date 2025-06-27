@@ -13,7 +13,7 @@ struct NoROOTExtension : public ::testing::TestWithParam<bool> {
    {
       if (GetParam())
          ROOT::EnableImplicitMT(std::min(4u, std::thread::hardware_concurrency()));
-      ROOT::RDataFrame(10).Define("x", [] { return 42; }).Snapshot<int>("t", fname, {"x"});
+      ROOT::RDataFrame(10).Define("x", [] { return 42; }).Snapshot("t", fname, {"x"});
    }
 
    ~NoROOTExtension()
