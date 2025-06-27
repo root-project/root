@@ -142,11 +142,11 @@ void CreateFundamentalTypeBranch(TTree &outputTree, const std::string &outputBra
    auto *outputBranch = outputTree.Branch(outputBranchName.c_str(), valueAddress, leafList.c_str(), bufSize);
    outputBranches.Insert(outputBranchName, outputBranch);
 }
-} // namespace
 
-namespace ROOT::Internal::RDF {
-
-void EnsureValidSnapshotTTreeOutput(const RSnapshotOptions &opts, const std::string &treeName,
+/// Ensure that the TTree with the resulting snapshot can be written to the target TFile. This means checking that the
+/// TFile can be opened in the mode specified in `opts`, deleting any existing TTrees in case
+/// `opts.fOverwriteIfExists = true`, or throwing an error otherwise.
+void EnsureValidSnapshotTTreeOutput(const ROOT::RDF::RSnapshotOptions &opts, const std::string &treeName,
                                     const std::string &fileName)
 {
    TString fileMode = opts.fMode;
@@ -178,7 +178,10 @@ void EnsureValidSnapshotTTreeOutput(const RSnapshotOptions &opts, const std::str
    }
 }
 
-void EnsureValidSnapshotRNTupleOutput(const RSnapshotOptions &opts, const std::string &ntupleName,
+/// Ensure that the RNTuple with the resulting snapshot can be written to the target TFile. This means checking that the
+/// TFile can be opened in the mode specified in `opts`, deleting any existing RNTuples in case
+/// `opts.fOverwriteIfExists = true`, or throwing an error otherwise.
+void EnsureValidSnapshotRNTupleOutput(const ROOT::RDF::RSnapshotOptions &opts, const std::string &ntupleName,
                                       const std::string &fileName)
 {
    TString fileMode = opts.fMode;
@@ -298,6 +301,9 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, ROOT::Internal::RDF:
    throw std::logic_error(
       "RDataFrame::Snapshot: something went wrong when creating a TTree branch, please report this as a bug.");
 }
+} // namespace
+
+namespace ROOT::Internal::RDF {
 
 ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::UntypedSnapshotTTreeHelper(
    std::string_view filename, std::string_view dirname, std::string_view treename, const ColumnNames_t &vbnames,
@@ -317,7 +323,7 @@ ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::UntypedSnapshotTTreeHelper(
      fInputLoopManager(inputLM),
      fInputColumnTypeIDs(colTypeIDs)
 {
-   ROOT::Internal::RDF::EnsureValidSnapshotTTreeOutput(fOptions, fTreeName, fFileName);
+   EnsureValidSnapshotTTreeOutput(fOptions, fTreeName, fFileName);
 }
 
 ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::~UntypedSnapshotTTreeHelper()
@@ -500,7 +506,7 @@ ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::UntypedSnapshotTTreeHelperMT(
      fInputColumnTypeIDs(colTypeIDs),
      fIsDefine(std::move(isDefine))
 {
-   ROOT::Internal::RDF::EnsureValidSnapshotTTreeOutput(fOptions, fTreeName, fFileName);
+   EnsureValidSnapshotTTreeOutput(fOptions, fTreeName, fFileName);
 }
 
 ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::~UntypedSnapshotTTreeHelperMT()
