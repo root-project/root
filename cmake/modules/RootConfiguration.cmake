@@ -737,19 +737,23 @@ set(all_features ${ROOT_ALL_OPTIONS})
 set(usercflags ${CMAKE_CXX_FLAGS-CACHED})
 file(REMOVE ${CMAKE_BINARY_DIR}/installtree/root-config)
 configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_BINARY_DIR}/installtree/root-config @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.csh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.csh @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.fish ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.fish @ONLY NEWLINE_STYLE UNIX)
+if(thisroot_scripts)
+  configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh @ONLY NEWLINE_STYLE UNIX)
+  configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.csh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.csh @ONLY NEWLINE_STYLE UNIX)
+  configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.fish ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.fish @ONLY NEWLINE_STYLE UNIX)
+  list(APPEND list_of_thisroot_scripts thisroot.sh thisroot.csh thisroot.fish setxrd.csh)
+endif()
 configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.csh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.csh COPYONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.sh COPYONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/proofserv.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/roots.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/rootssh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootssh @ONLY NEWLINE_STYLE UNIX)
 if(WIN32)
-  set(thisrootbat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.bat)
-  set(thisrootps1 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.ps1)
-  configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.bat ${thisrootbat} @ONLY)
-  configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.ps1 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.ps1 @ONLY)
+  if(thisroot_scripts)
+    configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.bat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.bat @ONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.ps1 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.ps1 @ONLY)
+    list(APPEND list_of_thisroot_scripts thisroot.bat thisroot.ps2)
+  endif()
   configure_file(${CMAKE_SOURCE_DIR}/config/root.rc.in ${CMAKE_BINARY_DIR}/etc/root.rc @ONLY)
   configure_file(${CMAKE_SOURCE_DIR}/config/root-manifest.xml.in ${CMAKE_BINARY_DIR}/etc/root-manifest.xml @ONLY)
   install(FILES ${CMAKE_SOURCE_DIR}/cmake/win/w32pragma.h  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
@@ -774,17 +778,19 @@ if(MSVC)
   DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
-install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh
-              ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.csh
-              ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.fish
-              ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.csh
-              ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.sh
-              ${thisrootbat}
-              ${thisrootps1}
-              PERMISSIONS OWNER_WRITE OWNER_READ
-                          GROUP_READ
-                          WORLD_READ
-              DESTINATION ${CMAKE_INSTALL_BINDIR})
+if(DEFINED list_of_thisroot_scripts)
+  # Prepend runtime output directory to list of setup scripts
+  set(final_list_of_thisroot_scripts "")
+  foreach(script IN LISTS list_of_thisroot_scripts)
+      list(APPEND final_list_of_thisroot_scripts "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${script}")
+  endforeach()
+
+  install(FILES ${final_list_of_thisroot_scripts}
+                PERMISSIONS OWNER_WRITE OWNER_READ
+                            GROUP_READ
+                            WORLD_READ
+                DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
 
 install(FILES ${CMAKE_BINARY_DIR}/installtree/root-config
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots
