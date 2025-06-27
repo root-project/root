@@ -1,5 +1,5 @@
 #define private public
-#define protected public 
+#define protected public
 
 #include "Class.h"
 
@@ -9,6 +9,7 @@ bool ClassTrick() {
   // This is known to fail on windows
   return m.GetPublic();
 #else
+  (void) m; // avoid unused warnings
   return false;
 #endif
 }

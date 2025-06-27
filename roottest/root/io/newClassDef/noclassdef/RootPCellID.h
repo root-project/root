@@ -16,17 +16,27 @@ class RootPCellID : public BaseWithNoDict {
 
 public:
 
-  RootPCellID(){    
+  RootPCellID(){
      for(int j=0;j<5;j++) base[j]=0;
   }
   RootPCellID(const RootPCellID&orig) {
-     for(int j=0;j<5;j++) base[j]=orig.base[j];     
+     for(int j=0;j<5;j++) base[j]=orig.base[j];
      id = orig.id;
   }
+  RootPCellID &operator=(const RootPCellID &orig) {
+     if (this != &orig) {
+        for(int j=0;j<5;j++)
+           base[j] = orig.base[j];
+        id = orig.id;
+     }
+
+     return *this;
+  }
+
   RootPCellID(const std::string & b, unsigned int i):id(i) {
     for(int j=0;j<4;j++) base[j]=b[j];
     base[4]= 0;
-  }   
+  }
   virtual ~RootPCellID() {};
 
   virtual void Print() const {
@@ -74,8 +84,8 @@ public:
    RootPCvirt() : RootPCellID("none",0), virt(0), vv(42.), status(kInit) { }
    RootPCvirt(int v) : RootPCellID("virt",v), virt(44), vv(43.), status(kInit) {}
    int virt;
-   vector<int> list; 
-   vector<RootPCfix*> list2; 
+   vector<int> list;
+   vector<RootPCfix*> list2;
    vector<helper<float>* > list3; //!
    vector<helper<float*> > list4; //!
    vector<vector<float*> > list5; //!
@@ -185,7 +195,7 @@ public:
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
-   }   
+   }
    ClassDef(RootPCobject,1) // inherit second from TObject
 };
 
@@ -200,7 +210,7 @@ public:
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
-   }   
+   }
    ClassDef(RootPCobject2,1) // inherit first from TObject
 };
 
@@ -215,7 +225,7 @@ class RootPCmisClDef : public RootPCellID, public TObject  {
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
-   }   
+   }
    // intentionally NOT putting the ClasDef
 
 };
@@ -231,7 +241,7 @@ public:
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
-   }   
+   }
    ClassDef(RootPrivPCobject,1) // inherits privately from RootPCellID then publicly from TObject
 };
 
@@ -246,7 +256,7 @@ public:
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
-   }   
+   }
    ClassDef(RootPrivPCobject2,1) // inherits publicly from TObject then privately from RootPCellID
 };
 
@@ -260,7 +270,7 @@ public:
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
-   }   
+   }
 };
 
 //inline Short_t GetClassVersion(RootPCellID*) { return 2; }
