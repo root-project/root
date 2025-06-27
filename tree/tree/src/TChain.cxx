@@ -1446,7 +1446,10 @@ Long64_t TChain::LoadTree(Long64_t entry)
             TIter fnext(fStatus);
             while ((frelement = (TChainElement*) fnext())) {
                Int_t status = frelement->GetStatus();
-               fTree->SetBranchStatus(frelement->GetName(), status);
+               // Only set the branch status if it has a value provided
+               // by the user
+               if (status != -1)
+                  fTree->SetBranchStatus(frelement->GetName(), status);
             }
 
             // Set the branch addresses for the newly opened file.
@@ -1743,7 +1746,10 @@ Long64_t TChain::LoadTree(Long64_t entry)
    TIter next(fStatus);
    while ((element = (TChainElement*) next())) {
       Int_t status = element->GetStatus();
-      fTree->SetBranchStatus(element->GetName(), status);
+      // Only set the branch status if it has a value provided
+      // by the user
+      if (status != -1)
+         fTree->SetBranchStatus(element->GetName(), status);
    }
 
    // Set the branch addresses for the newly opened file.

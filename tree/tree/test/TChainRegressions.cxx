@@ -128,31 +128,109 @@ TEST(TChain, UncommonFileExtension)
    gSystem->Unlink(dirname);
 }
 
-// https://github.com/root-project/root/issues/7567
-TEST(TChain, GetEntriesSingleFileDeactivateBranches)
+// Originally reproducer of https://github.com/root-project/root/issues/7567
+// but see also https://github.com/root-project/root/issues/19220 for an update
+// The test parameters are
+// - int: number of files (1, 2), only relevant for TChain.
+// - bool: call `GetEntries` at the beginning or not.
+// - bool: call `SetBranchStatus("*", false)` or not.
+// - bool: call `SetBranchStatus("random", true)` or not.
+class SetBranchStatusInteraction : public ::testing::TestWithParam<std::tuple<int, bool, bool, bool>> {};
+
+TEST_P(SetBranchStatusInteraction, TestTChain)
 {
+   const auto [nFiles, callGetEntries, deactivateAllBranches, activateSingleBranch] = GetParam();
+
    const auto treename = "ntuple";
    const auto filename = "$ROOTSYS/tutorials/hsimple.root";
-   for (auto nFiles : {2, 1}) {
-      for (auto DoGetEntries : {false, true}) {
-         for (auto DoDeactivateBranches : {false, true}) {
-            TChain chain(treename);
-            for (auto i = 0; i < nFiles; ++i) {
-               chain.Add(filename);
-            }
-            const long nEntries = DoGetEntries ? chain.GetEntries() : -1;
-            if (DoDeactivateBranches)
-               chain.SetBranchStatus("*", 0); // before the fix, this line, together with a previous GetEntries() caused
-                                              // a bug, but only if a single file is passed to the TChain!
-            // read a single branch
-            float random = 0.333333;
-            TBranch *b_random;
-            chain.SetBranchAddress("random", &random, &b_random); // initialize one branch only
-            for (long i = 0; i < (DoGetEntries ? nEntries : chain.GetEntriesFast()); ++i) {
-               auto bytes = chain.GetEntry(i);
-               ASSERT_GT(bytes, 0);
-            }
-         }
+
+   TChain chain(treename);
+   for (auto i = 0; i < nFiles; ++i) {
+      chain.Add(filename);
+   }
+   auto nEntries = callGetEntries ? chain.GetEntries() : chain.GetEntriesFast();
+   if (deactivateAllBranches)
+      chain.SetBranchStatus("*", 0);
+   // read a single branch
+   float random = 0.333333;
+   TBranch *b_random{nullptr};
+   // attention! SetBranchAddress!=SetBranchStatus. When all the branches are deactivated because of a previous
+   // `SetBranchStatus("*", false)` call, the only way to actually read the "random" branch is to activate it first!
+   if (deactivateAllBranches && activateSingleBranch)
+      chain.SetBranchStatus("random", true);
+   chain.SetBranchAddress("random", &random, &b_random);
+   for (decltype(nEntries) i = 0; i < chain.GetEntriesFast(); ++i) {
+      auto bytes = chain.GetEntry(i);
+      if (deactivateAllBranches) {
+         if (activateSingleBranch)
+            ASSERT_GT(bytes, 0);
+         else
+            ASSERT_EQ(bytes, 0);
+      } else {
+         // by default the branches will be activated
+         ASSERT_GT(bytes, 0);
       }
    }
 }
+
+TEST_P(SetBranchStatusInteraction, TestTTree)
+{
+   const auto [_, callGetEntries, deactivateAllBranches, activateSingleBranch] = GetParam();
+
+   const auto treename = "ntuple";
+   const auto filename = "$ROOTSYS/tutorials/hsimple.root";
+
+   auto tfile = std::make_unique<TFile>(filename);
+   auto *ttree = tfile->Get<TTree>(treename);
+
+   auto nEntries = callGetEntries ? ttree->GetEntries() : ttree->GetEntriesFast();
+   if (deactivateAllBranches)
+      ttree->SetBranchStatus("*", 0);
+   // read a single branch
+   float random = 0.333333;
+   TBranch *b_random{nullptr};
+   // attention! SetBranchAddress!=SetBranchStatus. When all the branches are deactivated because of a previous
+   // `SetBranchStatus("*", false)` call, the only way to actually read the "random" branch is to activate it first!
+   if (deactivateAllBranches && activateSingleBranch)
+      ttree->SetBranchStatus("random", true);
+   ttree->SetBranchAddress("random", &random, &b_random);
+   for (decltype(nEntries) i = 0; i < nEntries; ++i) {
+      auto bytes = ttree->GetEntry(i);
+      if (deactivateAllBranches) {
+         if (activateSingleBranch)
+            ASSERT_GT(bytes, 0);
+         else
+            ASSERT_EQ(bytes, 0);
+      } else {
+         // by default the branches will be activated
+         ASSERT_GT(bytes, 0);
+      }
+   }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+   RunTests, SetBranchStatusInteraction,
+   ::testing::Combine(
+      // number of files, only relevant for TChain
+      ::testing::Values(1, 2),
+      // call `GetEntries` at the beginning or not
+      ::testing::Values(true, false),
+      // call `SetBranchStatus("*", false)` or not
+      ::testing::Values(true, false),
+      // call `SetBranchStatus("random", true)` or not
+      ::testing::Values(true, false)),
+   // Extra parenthesis around lambda to avoid preprocessor errors, see
+   // https://stackoverflow.com/questions/79438894/lambda-with-structured-bindings-inside-macro-call
+   ([](const testing::TestParamInfo<SetBranchStatusInteraction::ParamType> &paramInfo) {
+      auto &&[nFiles, callGetEntries, deactivateAllBranches, activateSingleBranch] = paramInfo.param;
+      // googletest only accepts ASCII alphanumeric characters for labels
+      std::string label{"f"};
+      label += std::to_string(nFiles);
+      label += "e";
+      label += std::to_string(callGetEntries);
+      label += "d";
+      label += std::to_string(deactivateAllBranches);
+      label += "a";
+      label += std::to_string(activateSingleBranch);
+      return label;
+   }));
