@@ -4,11 +4,11 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-add_subdirectory(hist)             # special CMakeLists.txt
-add_subdirectory(histpainter)      # special CMakeLists.txt
+add_subdirectory(hist)
+add_subdirectory(histpainter)
 if (spectrum)
    add_subdirectory(spectrum)
-   add_subdirectory(spectrumpainter)  # special CMakeLists.txt
+   add_subdirectory(spectrumpainter)
 endif()
 if(unfold)
   add_subdirectory(unfold)
