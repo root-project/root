@@ -29,7 +29,7 @@ TEST(RRootDS, GenerateData)
                     g.SetPoint(i - 1, i, i);
                     return g;
                  })
-         .Snapshot<int, TGraph>(treeName, fileName, {"i", "g"});
+         .Snapshot(treeName, fileName, {"i", "g"});
    }
 }
 

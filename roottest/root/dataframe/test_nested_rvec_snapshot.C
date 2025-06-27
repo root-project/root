@@ -47,8 +47,7 @@ void test_nested_rvec_snapshot()
 
    {
       // compiled
-      auto out_df1 =
-         df.Snapshot<RVec<RVec<int>>, RVec<RVec<RVec<int>>>, RVec<RVec<TwoInts>>>("t", fname, {"vv", "vvv", "vvti"});
+      auto out_df1 = df.Snapshot("t", fname, {"vv", "vvv", "vvti"});
       check(*out_df1);
    }
 

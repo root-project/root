@@ -823,8 +823,8 @@ TEST_P(RDFSimpleTests, DifferentTreesInDifferentThreads)
       auto df = RDataFrame(64)
                    .Define("x", []() { return 1; })
                    .Define("y", []() { return 1; })
-                   .Snapshot<int, int>(treename, filename, {"x", "y"},
-                                       {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kZLIB, 4, 2, 99, false});
+                   .Snapshot(treename, filename, {"x", "y"},
+                             {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kZLIB, 4, 2, 99, false});
    }
 
    TFile f(filename);
@@ -862,8 +862,7 @@ TEST_P(RDFSimpleTests, ManyRangesPerWorker)
    {
       ROOT::RDataFrame(184)
          .Define("i", []() { return 0; })
-         .Snapshot<int>("t", filename, {"i"},
-                        {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kZLIB, 1, 1, 99, false});
+         .Snapshot("t", filename, {"i"}, {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kZLIB, 1, 1, 99, false});
    }
    ROOT::RDataFrame("t", filename).Mean<int>("i");
    gSystem->Unlink(filename);
@@ -884,7 +883,7 @@ TEST_P(RDFSimpleTests, NonExistingFile)
 TEST_P(RDFSimpleTests, NonExistingFileInChain)
 {
    const auto filename = "rdf_nonexistingfileinchain.root";
-   ROOT::RDataFrame(1).Define("x", [] { return 10; }).Snapshot<int>("t", filename, {"x"});
+   ROOT::RDataFrame(1).Define("x", [] { return 10; }).Snapshot("t", filename, {"x"});
 
    ROOT::RDataFrame df("t", {filename, "doesnotexist.root"});
 
@@ -1003,8 +1002,8 @@ TEST_P(RDFSimpleTests, ChainWithDifferentTreeNames)
    const auto fname1 = "test_chainwithdifferenttreenames_1.root";
    const auto fname2 = "test_chainwithdifferenttreenames_2.root";
    {
-      ROOT::RDataFrame(10).Define("x", [] { return 1; }).Snapshot<int>("t1", fname1, {"x"});
-      ROOT::RDataFrame(10).Define("x", [] { return 3; }).Snapshot<int>("t2", fname2, {"x"});
+      ROOT::RDataFrame(10).Define("x", [] { return 1; }).Snapshot("t1", fname1, {"x"});
+      ROOT::RDataFrame(10).Define("x", [] { return 3; }).Snapshot("t2", fname2, {"x"});
    }
 
    // add trees to chain

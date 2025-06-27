@@ -131,7 +131,7 @@ TEST(RCsvDS, ColumnReadersWrongType)
 TEST(RCsvDS, Snapshot)
 {
    auto tdf = ROOT::RDF::FromCSV(fileNameHeaders);
-   auto snap = tdf.Snapshot<Long64_t>("data","csv2root.root", {"Age"});
+   auto snap = tdf.Snapshot("data", "csv2root.root", {"Age"});
    auto ages = *snap->Take<Long64_t>("Age");
    std::vector<Long64_t> agesRef {60LL, 50LL, 40LL, 30LL, 1LL, -1LL};
    for (auto i : ROOT::TSeqI(agesRef.size())) {

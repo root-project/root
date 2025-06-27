@@ -24,7 +24,7 @@ void makeDataSet()
    RDataFrame d(1);
    auto counter = 0;
    auto dd = d.Define("x", [&counter]() { return counter++; });
-   dd.Snapshot<int>("t", "gdirectoryRestore2.root", {"x"});
+   dd.Snapshot("t", "gdirectoryRestore2.root", {"x"});
 }
 
 void writeHistWithInputFile()

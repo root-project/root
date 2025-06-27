@@ -23,7 +23,7 @@ int main() {
                   .Define("bZeroes", []()  { return 0; });
 
    // Generate on the fly the temporary branches and save them on disk
-   dWithB.Snapshot<Double_t,Double_t,int,int>(treeName, fileName, {"bRndm", "bGaus", "bOnes", "bZeroes"});
+   dWithB.Snapshot(treeName, fileName, {"bRndm", "bGaus", "bOnes", "bZeroes"});
 
    TFile f(fileName);
    TTree *t = (TTree*)f.Get(treeName);

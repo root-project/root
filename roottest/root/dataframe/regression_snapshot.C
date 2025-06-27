@@ -47,7 +47,7 @@ int regression_snapshot()
 
    {
       auto outFileName = "test_regr_snapshot_output1.root";
-      d2.Snapshot<int, int, std::vector<float>, A>(treeName, outFileName, {"b1", "b1_square", "b2_vector", "a"});
+      d2.Snapshot(treeName, outFileName, {"b1", "b1_square", "b2_vector", "a"});
 
       // Open the new file and list the branche of the trees
       TFile f(outFileName);
@@ -63,7 +63,7 @@ int regression_snapshot()
 
    {
       auto outFileName = "test_regr_snapshot_output2.root";
-      d2.Snapshot<int, int, std::vector<float>, A>(treeName, outFileName, {"b1", "b1_square", "b2_vector", "a"});
+      d2.Snapshot(treeName, outFileName, {"b1", "b1_square", "b2_vector", "a"});
 
       // Open the new file and list the branche of the trees
       TFile f(outFileName);

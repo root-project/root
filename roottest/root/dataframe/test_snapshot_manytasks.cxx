@@ -16,12 +16,12 @@ int main() {
    ROOT::RDataFrame d(1);
    auto dd = d.Define("x", []() { return 42; });
    for (auto i = 0u; i < nInputFiles; ++i)
-      dd.Snapshot<int>("t", inputFilePrefix + std::to_string(i) + ".root", {"x"});
+      dd.Snapshot("t", inputFilePrefix + std::to_string(i) + ".root", {"x"});
 
    // test multi-thread Snapshotting from many tasks per worker thread
    const auto outputFile = "out_snapshot_manytasks.root";
    ROOT::RDataFrame tdf("t", (inputFilePrefix + "*.root").c_str());
-   tdf.Snapshot<int>("t", outputFile, {"x"});
+   tdf.Snapshot("t", outputFile, {"x"});
 
    // check output contents
    ROOT::RDataFrame checkTdf("t", outputFile);

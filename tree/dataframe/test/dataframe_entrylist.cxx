@@ -16,7 +16,7 @@ void MakeInputFile(const std::string &filename, int nEntries, int valueStart = 0
 {
    int e = valueStart;
    const auto treename = "t";
-   auto d = ROOT::RDataFrame(nEntries).Define("e", [&] { return e++; }).Snapshot<int>(treename, filename, {"e"});
+   auto d = ROOT::RDataFrame(nEntries).Define("e", [&] { return e++; }).Snapshot(treename, filename, {"e"});
 }
 
 class RMTRAII {

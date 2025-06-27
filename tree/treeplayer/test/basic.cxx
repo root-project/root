@@ -473,8 +473,8 @@ TEST(TTreeReaderBasic, DisappearingBranch)
                                            "There was an error while notifying the proxies."};
 
    auto createFile = [](const char *fileName, int ncols) {
-      // auto r = ROOT::RDataFrame(1).Define("col0",[](){return 0;}).Snapshot<int>("t","f1.root",{"col0"});
-      // r->Define("col1",[](){return 0;}).Snapshot<int,int>("t","f0.root",{"col0","col1"});
+      // auto r = ROOT::RDataFrame(1).Define("col0",[](){return 0;}).Snapshot("t","f1.root",{"col0"});
+      // r->Define("col1",[](){return 0;}).Snapshot("t","f0.root",{"col0","col1"});
       TFile f(fileName, "RECREATE");
       TTree t("t", "t");
       int i = 42;
