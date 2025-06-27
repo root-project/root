@@ -11,6 +11,8 @@
 
 #include <thread> // std::thread::hardware_concurrency
 
+#include <TFile.h>
+
 using namespace ROOT;
 using namespace ROOT::RDF::Experimental;
 

@@ -9,6 +9,8 @@
 #include <ROOT/RVec.hxx>
 #include <ROOT/TestSupport.hxx>
 
+#include <TFile.h>
+
 using namespace ROOT::VecOps;
 
 template <typename T0, typename T1>

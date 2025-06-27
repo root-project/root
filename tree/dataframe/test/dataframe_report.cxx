@@ -4,6 +4,8 @@
 #include "ROOT/RDF/RCutFlowReport.hxx"
 #include "gtest/gtest.h"
 
+#include <TFile.h>
+
 TEST(RDataFrameReport, AnalyseCuts)
 {
    // Full coverage :) ?

@@ -17,13 +17,22 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RDF/SnapshotHelpers.hxx"
+#include <ROOT/RDF/SnapshotHelpers.hxx>
 
-#include "ROOT/RNTuple.hxx"
+#include <ROOT/REntry.hxx>
+#include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleDS.hxx>
+#include <ROOT/RNTupleWriter.hxx>
+#include <ROOT/RTTreeDS.hxx>
+#include <ROOT/TBufferMerger.hxx>
 
 #include <TBranchObject.h>
+#include <TClassEdit.h>
 #include <TDictionary.h>
 #include <TDataType.h>
+#include <TFile.h>
+#include <TLeaf.h>
+#include <TTreeReader.h>
 
 namespace {
 
@@ -391,6 +400,12 @@ ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::UntypedSnapshotTTreeHelper(
    EnsureValidSnapshotTTreeOutput(fOptions, fTreeName, fFileName);
 }
 
+// Define special member methods here where the definition of all the data member types is available
+ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::UntypedSnapshotTTreeHelper(
+   ROOT::Internal::RDF::UntypedSnapshotTTreeHelper &&) noexcept = default;
+ROOT::Internal::RDF::UntypedSnapshotTTreeHelper &ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::operator=(
+   ROOT::Internal::RDF::UntypedSnapshotTTreeHelper &&) noexcept = default;
+
 ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::~UntypedSnapshotTTreeHelper()
 {
    if (!fTreeName.empty() /*not moved from*/ && !fOutputFile /* did not run */ && fOptions.fLazy) {
@@ -573,6 +588,12 @@ ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::UntypedSnapshotTTreeHelperMT(
 {
    EnsureValidSnapshotTTreeOutput(fOptions, fTreeName, fFileName);
 }
+
+// Define special member methods here where the definition of all the data member types is available
+ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::UntypedSnapshotTTreeHelperMT(
+   ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT &&) noexcept = default;
+ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT &ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::operator=(
+   ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT &&) noexcept = default;
 
 ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::~UntypedSnapshotTTreeHelperMT()
 {
@@ -781,16 +802,25 @@ ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::UntypedSnapshotRNTupleHelper(
    : fFileName(filename),
      fDirName(dirname),
      fNTupleName(ntuplename),
+     fOutputFile(nullptr),
      fOptions(options),
      fInputLoopManager(inputLM),
      fOutputLoopManager(outputLM),
      fInputFieldNames(vfnames),
      fOutputFieldNames(ReplaceDotWithUnderscore(fnames)),
+     fWriter(nullptr),
+     fOutputEntry(nullptr),
      fIsDefine(std::move(isDefine)),
      fInputColumnTypeIDs(colTypeIDs)
 {
    EnsureValidSnapshotRNTupleOutput(fOptions, fNTupleName, fFileName);
 }
+
+// Define special member methods here where the definition of all the data member types is available
+ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::UntypedSnapshotRNTupleHelper(
+   ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper &&) noexcept = default;
+ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper &ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::operator=(
+   ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper &&) noexcept = default;
 
 ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::~UntypedSnapshotRNTupleHelper()
 {

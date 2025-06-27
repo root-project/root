@@ -20,22 +20,21 @@
 #ifndef RDF_SNAPSHOTHELPERS
 #define RDF_SNAPSHOTHELPERS
 
-#include "ROOT/RSnapshotOptions.hxx"
+#include <ROOT/RSnapshotOptions.hxx>
 
-#include "ROOT/RDF/RActionImpl.hxx"
-#include "ROOT/RDF/RLoopManager.hxx"
-#include "ROOT/RDF/Utils.hxx"
+#include <ROOT/RDF/RActionImpl.hxx>
+#include <ROOT/RDF/RLoopManager.hxx>
+#include <ROOT/RDF/Utils.hxx>
 
-#include "ROOT/RNTupleDS.hxx"
-#include "ROOT/RTTreeDS.hxx"
-#include "ROOT/TBufferMerger.hxx"
-#include "ROOT/RNTupleWriter.hxx"
+class TBranch;
+class TFile;
 
-#include <TClassEdit.h>
-#include <TFile.h>
-#include <TLeaf.h>
-#include <TTree.h>
-#include <TTreeReader.h>
+namespace ROOT {
+class RNTupleWriter;
+class REntry;
+class TBufferMerger;
+class TBufferMergerFile;
+} // namespace ROOT
 
 namespace ROOT::Internal::RDF {
 
@@ -57,14 +56,14 @@ class R__CLING_PTRCHECK(off) UntypedSnapshotRNTupleHelper final : public RAction
    std::string fDirName;
    std::string fNTupleName;
 
-   std::unique_ptr<TFile> fOutputFile{nullptr};
+   std::unique_ptr<TFile> fOutputFile;
 
    RSnapshotOptions fOptions;
    ROOT::Detail::RDF::RLoopManager *fInputLoopManager;
    ROOT::Detail::RDF::RLoopManager *fOutputLoopManager;
    ColumnNames_t fInputFieldNames; // This contains the resolved aliases
    ColumnNames_t fOutputFieldNames;
-   std::unique_ptr<ROOT::RNTupleWriter> fWriter{nullptr};
+   std::unique_ptr<ROOT::RNTupleWriter> fWriter;
 
    ROOT::REntry *fOutputEntry;
 
@@ -81,8 +80,8 @@ public:
 
    UntypedSnapshotRNTupleHelper(const UntypedSnapshotRNTupleHelper &) = delete;
    UntypedSnapshotRNTupleHelper &operator=(const UntypedSnapshotRNTupleHelper &) = delete;
-   UntypedSnapshotRNTupleHelper(UntypedSnapshotRNTupleHelper &&) = default;
-   UntypedSnapshotRNTupleHelper &operator=(UntypedSnapshotRNTupleHelper &&) = default;
+   UntypedSnapshotRNTupleHelper(UntypedSnapshotRNTupleHelper &&) noexcept;
+   UntypedSnapshotRNTupleHelper &operator=(UntypedSnapshotRNTupleHelper &&) noexcept;
    ~UntypedSnapshotRNTupleHelper() final;
 
    void InitTask(TTreeReader *, unsigned int /* slot */) {}
@@ -132,8 +131,8 @@ public:
 
    UntypedSnapshotTTreeHelper(const UntypedSnapshotTTreeHelper &) = delete;
    UntypedSnapshotTTreeHelper &operator=(const UntypedSnapshotTTreeHelper &) = delete;
-   UntypedSnapshotTTreeHelper(UntypedSnapshotTTreeHelper &&) = default;
-   UntypedSnapshotTTreeHelper &operator=(UntypedSnapshotTTreeHelper &&) = default;
+   UntypedSnapshotTTreeHelper(UntypedSnapshotTTreeHelper &&) noexcept;
+   UntypedSnapshotTTreeHelper &operator=(UntypedSnapshotTTreeHelper &&) noexcept;
    ~UntypedSnapshotTTreeHelper() final;
 
    void InitTask(TTreeReader *, unsigned int);
@@ -203,8 +202,8 @@ public:
 
    UntypedSnapshotTTreeHelperMT(const UntypedSnapshotTTreeHelperMT &) = delete;
    UntypedSnapshotTTreeHelperMT &operator=(const UntypedSnapshotTTreeHelperMT &) = delete;
-   UntypedSnapshotTTreeHelperMT(UntypedSnapshotTTreeHelperMT &&) = default;
-   UntypedSnapshotTTreeHelperMT &operator=(UntypedSnapshotTTreeHelperMT &&) = default;
+   UntypedSnapshotTTreeHelperMT(UntypedSnapshotTTreeHelperMT &&) noexcept;
+   UntypedSnapshotTTreeHelperMT &operator=(UntypedSnapshotTTreeHelperMT &&) noexcept;
    ~UntypedSnapshotTTreeHelperMT() final;
 
    void InitTask(TTreeReader *r, unsigned int slot);

@@ -12,6 +12,8 @@
 
 #include <gtest/gtest.h>
 
+#include <TFile.h>
+
 using ROOT::RDF::Experimental::VariationsFor;
 
 class RDFVary : public ::testing::TestWithParam<bool> {

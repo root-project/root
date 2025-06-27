@@ -15,6 +15,8 @@
 
 #include <limits>
 
+#include <TFile.h>
+
 using ROOT::RNTupleModel;
 using ROOT::RNTupleWriter;
 using ROOT::Internal::RPageSource;

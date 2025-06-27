@@ -13,6 +13,9 @@
 #include <string>
 
 #include "gtest/gtest.h"
+
+#include <TFile.h>
+
 using namespace ROOT;
 using namespace ROOT::RDF;
 using namespace ROOT::VecOps;

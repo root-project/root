@@ -34,6 +34,7 @@
 
 #include <deque>
 #include <functional>
+#include <list>
 #include <memory>
 #include <string>
 #include <type_traits>
