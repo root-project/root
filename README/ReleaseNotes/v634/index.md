@@ -709,10 +709,36 @@ Published on April 8, 2025
 
 ### Items addressed in this release
 
-This branch includes minor bugfixes as well as the changes necessary to build and run on macOS Sequoia 15.4 and XCode 16.3.
+This patch release includes minor bugfixes as well as the changes necessary to build and run on macOS Sequoia 15.4 and XCode 16.3.
 
 The following item was addressed:
 
 * [[#18195](https://github.com/root-project/root/issues/18195)] - TBufferJSON not serializing std::map
 
-## HEAD of the v6-34-00-patches branch
+## Release 6.34.10
+
+Published on June 26, 2025
+
+Last patch release of the 6.34 series, fully superseded by ROOT 6.36.00
+
+### Items addressed in this release
+
+This patch release implements support for CMake 4, Alma 10. It features a mechanism to be robust against future module map changes in XCode.
+The following items were addressed:
+
+  * [[#18953](https://github.com/root-project/root/issues/18953)] - error opening ZIP archive member (>4GB archive)
+  * [[#18881](https://github.com/root-project/root/issues/18881)] - Overlaps found with 6.32 no longer found in 6.34+
+  * [[#18863](https://github.com/root-project/root/issues/18863)] - ThreadSanitizer reports data race between TTree::Branch and TCling::Evaluate
+  * [[#18811](https://github.com/root-project/root/issues/18811)] - assertion failure in clang::TemplateParameterList::getParam
+  * [[#18792](https://github.com/root-project/root/issues/18792)] - Thread problem in TEnum::GetEnum
+  * [[#18623](https://github.com/root-project/root/issues/18623)] - DaviX errors from ROOT.File.Cp
+  * [[#18556](https://github.com/root-project/root/issues/18556)] - Class methods not available to python in cases of transient data members of private nested class type
+  * [[#18536](https://github.com/root-project/root/issues/18536)] - TClass::GetClass hoards memory when called for numerical types
+  * [[#18520](https://github.com/root-project/root/issues/18520)] - Missing lock deep inside TClassEdit::ResolveTypedef
+  * [[#18519](https://github.com/root-project/root/issues/18519)] - Concurrency issue with TClassEdit::ResolveTypedef and TClass::GetListOfMethods
+  * [[#18441](https://github.com/root-project/root/issues/18441)] - import ROOT fails after a template instantiation is invoked from cppyy
+  * [[#18365](https://github.com/root-project/root/issues/18365)] - SetBranchAddress does not work with np.int16 and uint16 in PyROOT
+  * [[#18312](https://github.com/root-project/root/issues/18312)] - Problem with cmake 4.0.0
+  * [[#18301](https://github.com/root-project/root/issues/18301)] - Performance issue seen by CMS for ROOT's use of tbb::task_arena
+  * [[#18236](https://github.com/root-project/root/issues/18236)] - Missing lock deep inside TClassEdit::GetNormalizedName
+  * [[#18085](https://github.com/root-project/root/issues/18085)] - Missing bool type in creating RDataFrame
