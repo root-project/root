@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include <TBranch.h>
+
 namespace RDFInt = ROOT::Internal::RDF;
 
 // Thanks clang-format...

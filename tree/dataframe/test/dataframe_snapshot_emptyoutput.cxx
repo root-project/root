@@ -9,6 +9,8 @@
 
 #include <thread>
 
+#include <TFile.h>
+
 class RDFManyBranchTypesTTree : public ::testing::TestWithParam<std::pair<bool, bool>> {
 protected:
    inline constexpr static auto fgNEvents = 10u;

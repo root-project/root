@@ -5,6 +5,8 @@
 
 #include <utility> // std::pair
 
+#include <TFile.h>
+
 using namespace ROOT;
 using namespace ROOT::RDF;
 using namespace ROOT::VecOps;

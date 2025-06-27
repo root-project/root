@@ -10,6 +10,8 @@
 
 #include <algorithm>
 
+#include <TFile.h>
+
 using namespace ROOT::RDF;
 using namespace ROOT::VecOps;
 

@@ -13,6 +13,8 @@
 
 #include "NTupleStruct.hxx"
 
+#include <TFile.h>
+
 using ROOT::RNTupleModel;
 using ROOT::RNTupleReader;
 using ROOT::RNTupleWriter;

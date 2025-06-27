@@ -11,6 +11,8 @@
 
 #include <memory>
 
+#include <TFile.h>
+
 using namespace ROOT::RDF;
 
 TEST(RNonCopiableColumnDS, UseNonCopiableColumnType)

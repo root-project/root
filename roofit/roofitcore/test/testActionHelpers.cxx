@@ -16,6 +16,8 @@
 
 #include "gtest/gtest.h"
 
+#include <TFile.h>
+
 namespace {
 
 constexpr std::size_t nEvent = 200000;
