@@ -149,6 +149,8 @@ inline void codeComplete(std::vector<std::string>& Results,
   // append cleaned results
   for (auto& r : results) {
     // remove the definition at the beginning (e.g., [#int#])
+    // trigger the failure
+    r = std::regex_replace(r, std::regex("\\[\\#.*\\#\\]"), "");
     r = removeDefinition.sub("", r, &error);
     if (!error.empty()) {
       Err = llvm::make_error<llvm::StringError>(error,
