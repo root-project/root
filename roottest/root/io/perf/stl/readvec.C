@@ -1,62 +1,62 @@
 #include "TLorentzVector.h"
 #include <vector>
 
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ class vector<TLorentzVector>+;
 #endif
 
 #include "TFile.h"
 #include "TTree.h"
-
+#include "TBranch.h"
 
 class Holder {
-   
+
 private:
    std::vector<TLorentzVector> fLorentzVec;
    std::vector<int> fIntVec;
-   
+
 public:
    void Fill(int vsize) {
       for(int j = 0; j < vsize ; ++j) {
          fIntVec.push_back(j);
-         fLorentzVec.push_back(TLorentzVector(j,j+1,j+2));
+         fLorentzVec.push_back(TLorentzVector(j,j+1,j+2,j+3));
       }
    }
 };
 
 void writefile(const char *filename = "vec.root", int vsize = 2000, int tsize = 1000) {
    TFile f(filename,"RECREATE");
-   
+
    Holder holder;
    holder.Fill(vsize);
 
    f.WriteObject(&holder,"obj");
-   
+
    TTree tree("tree","tree");
    tree.Branch("split.",&holder,32000,99);
    tree.Branch("strm.",&holder,32000,0);
-   
+
    for(int i = 0; i < tsize; ++i) {
       tree.Fill();
    }
    f.Write();
 }
 
-void readobj(TFile *file) 
+void readobj(TFile *file)
 {
    Holder *holder;
    file->GetObject("obj",holder);
    delete holder;
 }
 
-TTree *readtree(TFile *file) 
+TTree *readtree(TFile *file)
 {
    TTree *tree;
    file->GetObject("tree",tree);
    return tree;
 }
 
-Long64_t readsplit(TTree *tree) 
+Long64_t readsplit(TTree *tree)
 {
    TBranch *branch = tree->GetBranch("split.");
    Long64_t entries = tree->GetEntries();
@@ -67,7 +67,7 @@ Long64_t readsplit(TTree *tree)
    return nbytes;
 }
 
-Long64_t readstrm(TTree *tree) 
+Long64_t readstrm(TTree *tree)
 {
    TBranch *branch = tree->GetBranch("strm.");
    Long64_t entries = tree->GetEntries();
@@ -78,20 +78,21 @@ Long64_t readstrm(TTree *tree)
    return nbytes;
 }
 
-void readvec(int what = 7, const char *filename = "vec.root") {
+void readfile(int what = 7, const char *filename = "vec.root")
+{
    // Set bit in 'what' to request part of the reading:
    //   1 : the object
    //   2 : the split branch
    //   4 : the streamed branch
-   
+
    TFile *file = TFile::Open(filename);
-   
+
    if (what & 1) {
       readobj(file);
    }
-   if (what & (2|4) {
+   if (what & (2|4)) {
       TTree *tree = readtree(file);
-   
+
       if (what & 2) {
          readsplit(tree);
       }
@@ -100,6 +101,10 @@ void readvec(int what = 7, const char *filename = "vec.root") {
       }
    }
 }
-   
-   
-   
+
+void readvec(int what = 7, const char *filename = "vec.root")
+{
+   writefile(filename);
+   readfile(what, filename);
+}
+
