@@ -45,73 +45,11 @@ class RBranchSet {
    std::vector<bool> fIsCArray;
 
 public:
-   TBranch *Get(const std::string &name) const
-   {
-      auto it = std::find(fNames.begin(), fNames.end(), name);
-      if (it == fNames.end())
-         return nullptr;
-      return fBranches[std::distance(fNames.begin(), it)];
-   }
-
-   bool IsCArray(const std::string &name) const
-   {
-      if (auto it = std::find(fNames.begin(), fNames.end(), name); it != fNames.end())
-         return fIsCArray[std::distance(fNames.begin(), it)];
-      return false;
-   }
-
-   void Insert(const std::string &name, TBranch *address, bool isCArray = false)
-   {
-      if (address == nullptr) {
-         throw std::logic_error("Trying to insert a null branch address.");
-      }
-      if (std::find(fBranches.begin(), fBranches.end(), address) != fBranches.end()) {
-         throw std::logic_error("Trying to insert a branch address that's already present.");
-      }
-      if (std::find(fNames.begin(), fNames.end(), name) != fNames.end()) {
-         throw std::logic_error("Trying to insert a branch name that's already present.");
-      }
-      fNames.emplace_back(name);
-      fBranches.emplace_back(address);
-      fIsCArray.push_back(isCArray);
-   }
-
-   void Clear()
-   {
-      fBranches.clear();
-      fNames.clear();
-      fIsCArray.clear();
-   }
-
-   void AssertNoNullBranchAddresses()
-   {
-      std::vector<TBranch *> branchesWithNullAddress;
-      std::copy_if(fBranches.begin(), fBranches.end(), std::back_inserter(branchesWithNullAddress),
-                   [](TBranch *b) { return b->GetAddress() == nullptr; });
-
-      if (branchesWithNullAddress.empty())
-         return;
-
-      // otherwise build error message and throw
-      std::vector<std::string> missingBranchNames;
-      std::transform(branchesWithNullAddress.begin(), branchesWithNullAddress.end(),
-                     std::back_inserter(missingBranchNames), [](TBranch *b) { return b->GetName(); });
-      std::string msg = "RDataFrame::Snapshot:";
-      if (missingBranchNames.size() == 1) {
-         msg += " branch " + missingBranchNames[0] +
-                " is needed as it provides the size for one or more branches containing dynamically sized arrays, but "
-                "it is";
-      } else {
-         msg += " branches ";
-         for (const auto &bName : missingBranchNames)
-            msg += bName + ", ";
-         msg.resize(msg.size() - 2); // remove last ", "
-         msg +=
-            " are needed as they provide the size of other branches containing dynamically sized arrays, but they are";
-      }
-      msg += " not part of the set of branches that are being written out.";
-      throw std::runtime_error(msg);
-   }
+   TBranch *Get(const std::string &name) const;
+   bool IsCArray(const std::string &name) const;
+   void Insert(const std::string &name, TBranch *address, bool isCArray = false);
+   void Clear();
+   void AssertNoNullBranchAddresses();
 };
 
 class R__CLING_PTRCHECK(off) UntypedSnapshotRNTupleHelper final : public RActionImpl<UntypedSnapshotRNTupleHelper> {

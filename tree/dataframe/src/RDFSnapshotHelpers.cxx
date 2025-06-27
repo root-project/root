@@ -303,6 +303,73 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, ROOT::Internal::RDF:
 }
 } // namespace
 
+TBranch *ROOT::Internal::RDF::RBranchSet::Get(const std::string &name) const
+{
+   auto it = std::find(fNames.begin(), fNames.end(), name);
+   if (it == fNames.end())
+      return nullptr;
+   return fBranches[std::distance(fNames.begin(), it)];
+}
+
+bool ROOT::Internal::RDF::RBranchSet::IsCArray(const std::string &name) const
+{
+   if (auto it = std::find(fNames.begin(), fNames.end(), name); it != fNames.end())
+      return fIsCArray[std::distance(fNames.begin(), it)];
+   return false;
+}
+
+void ROOT::Internal::RDF::RBranchSet::Insert(const std::string &name, TBranch *address, bool isCArray)
+{
+   if (address == nullptr) {
+      throw std::logic_error("Trying to insert a null branch address.");
+   }
+   if (std::find(fBranches.begin(), fBranches.end(), address) != fBranches.end()) {
+      throw std::logic_error("Trying to insert a branch address that's already present.");
+   }
+   if (std::find(fNames.begin(), fNames.end(), name) != fNames.end()) {
+      throw std::logic_error("Trying to insert a branch name that's already present.");
+   }
+   fNames.emplace_back(name);
+   fBranches.emplace_back(address);
+   fIsCArray.push_back(isCArray);
+}
+
+void ROOT::Internal::RDF::RBranchSet::Clear()
+{
+   fBranches.clear();
+   fNames.clear();
+   fIsCArray.clear();
+}
+
+void ROOT::Internal::RDF::RBranchSet::AssertNoNullBranchAddresses()
+{
+   std::vector<TBranch *> branchesWithNullAddress;
+   std::copy_if(fBranches.begin(), fBranches.end(), std::back_inserter(branchesWithNullAddress),
+                [](TBranch *b) { return b->GetAddress() == nullptr; });
+
+   if (branchesWithNullAddress.empty())
+      return;
+
+   // otherwise build error message and throw
+   std::vector<std::string> missingBranchNames;
+   std::transform(branchesWithNullAddress.begin(), branchesWithNullAddress.end(),
+                  std::back_inserter(missingBranchNames), [](TBranch *b) { return b->GetName(); });
+   std::string msg = "RDataFrame::Snapshot:";
+   if (missingBranchNames.size() == 1) {
+      msg += " branch " + missingBranchNames[0] +
+             " is needed as it provides the size for one or more branches containing dynamically sized arrays, but "
+             "it is";
+   } else {
+      msg += " branches ";
+      for (const auto &bName : missingBranchNames)
+         msg += bName + ", ";
+      msg.resize(msg.size() - 2); // remove last ", "
+      msg += " are needed as they provide the size of other branches containing dynamically sized arrays, but they are";
+   }
+   msg += " not part of the set of branches that are being written out.";
+   throw std::runtime_error(msg);
+}
+
 ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::UntypedSnapshotTTreeHelper(
    std::string_view filename, std::string_view dirname, std::string_view treename, const ColumnNames_t &vbnames,
    const ColumnNames_t &bnames, const RSnapshotOptions &options, std::vector<bool> &&isDefine,
