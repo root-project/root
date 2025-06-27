@@ -18,4 +18,20 @@ foreach(k 1 2)
                     FIXTURES_REQUIRED root-io-perf-ReadBuffer-fixture)
 endforeach()
 
+ROOTTEST_ADD_TEST(directories
+                  MACRO directories.C+)
+
+# these are very long tests, writing huge files,
+# not run them by default
+if(very_long_tests)
+  ROOTTEST_ADD_TEST(ShortTest
+                    MACRO SergeiShortTest.C+
+                    LABELS longtest)
+
+  ROOTTEST_ADD_TEST(HardTest
+                    MACRO SergeiHardTest.C+
+                    MACROARG 1
+                    LABELS longtest)
+endif()
+
 ROOTTEST_ADD_TESTDIRS()
