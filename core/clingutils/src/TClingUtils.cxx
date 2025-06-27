@@ -49,6 +49,7 @@
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/SemaDiagnostic.h"
+#include "clang/AST/QualTypeNames.h"
 
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Transaction.h"
@@ -3605,7 +3606,10 @@ void ROOT::TMetaUtils::GetFullyQualifiedTypeName(std::string &typenamestr,
                                                  const clang::QualType &qtype,
                                                  const clang::ASTContext &astContext)
 {
-   std::string fqname = cling::utils::TypeName::GetFullyQualifiedName(qtype, astContext);
+   clang::PrintingPolicy Policy(astContext.getPrintingPolicy());
+   Policy.SuppressScope = false;
+   Policy.AnonymousTagLocations = true;
+   std::string fqname = clang::TypeName::getFullyQualifiedName(qtype, astContext, Policy, /*WithGlobalNsPrefix=*/false);
    TClassEdit::TSplitType splitname(fqname.c_str(),
                                     (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
    splitname.ShortType(typenamestr,TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst);
