@@ -82,6 +82,8 @@ void TBranch__SetTree(TTree *tree, TObjArray &branches);
 
 TBranch *CallBranchImpRef(TTree &tree, const char *branchname, TClass *ptrClass, EDataType datatype, void *addobj,
                           Int_t bufsize = 32000, Int_t splitlevel = 99);
+TBranch *CallBranchImp(TTree &tree, const char *branchname, TClass *ptrClass, void *addobj, Int_t bufsize = 32000,
+                       Int_t splitlevel = 99);
 }
 
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
@@ -184,7 +186,8 @@ protected:
    friend TBranch *ROOT::Internal::TreeUtils::CallBranchImpRef(TTree &tree, const char *branchname, TClass *ptrClass,
                                                                EDataType datatype, void *addobj, Int_t bufsize,
                                                                Int_t splitlevel);
-
+   friend TBranch *ROOT::Internal::TreeUtils::CallBranchImp(TTree &tree, const char *branchname, TClass *ptrClass,
+                                                            void *addobj, Int_t bufsize, Int_t splitlevel);
    virtual void     KeepCircular();
    virtual TBranch *BranchImp(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual TBranch *BranchImp(const char* branchname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
