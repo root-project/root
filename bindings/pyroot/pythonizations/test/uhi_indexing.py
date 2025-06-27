@@ -315,6 +315,19 @@ class TestTH1Indexing:
         assert hist_setup.GetStdDev() == pytest.approx(sliced_hist.GetStdDev(), rel=10e-5)
         assert hist_setup.GetMean() == pytest.approx(sliced_hist.GetMean(), rel=10e-5)
 
+    def test_equality(self, hist_setup):
+        if _special_setting(hist_setup):
+            pytest.skip("Setting cannot be tested here")
+
+        hist_copy_ptr = hist_setup
+        assert hist_setup == hist_copy_ptr
+
+        hist_copy = hist_setup.Clone()
+        assert hist_setup != hist_copy
+
+        hist_full_slice = hist_setup[...]
+        assert hist_setup != hist_full_slice
+
 
 if __name__ == "__main__":
     pytest.main(args=[__file__])
