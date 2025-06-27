@@ -6,6 +6,9 @@
 
 add_subdirectory(hist)
 add_subdirectory(histpainter)
+if(root7)
+  add_subdirectory(histv7)
+endif()
 if (spectrum)
    add_subdirectory(spectrum)
    add_subdirectory(spectrumpainter)
