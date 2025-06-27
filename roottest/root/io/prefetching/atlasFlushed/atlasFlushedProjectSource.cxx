@@ -35,7 +35,6 @@ TPCnvTokenList_p1::TPCnvTokenList_p1(const TPCnvTokenList_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
    TPCnvTokenList_p1 &modrhs = const_cast<TPCnvTokenList_p1 &>( rhs );
    modrhs.clear();
 }
@@ -52,7 +51,6 @@ Trk::TrackCollection_p1::TrackCollection_p1(const TrackCollection_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
    TrackCollection_p1 &modrhs = const_cast<TrackCollection_p1 &>( rhs );
    modrhs.clear();
 }
@@ -69,7 +67,6 @@ ElectronContainer_p1::ElectronContainer_p1(const ElectronContainer_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
    ElectronContainer_p1 &modrhs = const_cast<ElectronContainer_p1 &>( rhs );
    modrhs.clear();
 }
@@ -86,7 +83,6 @@ Rec::TrackParticleContainer_p1::TrackParticleContainer_p1(const TrackParticleCon
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
    TrackParticleContainer_p1 &modrhs = const_cast<TrackParticleContainer_p1 &>( rhs );
    modrhs.clear();
 }
@@ -103,7 +99,6 @@ MuonContainer_p4::MuonContainer_p4(const MuonContainer_p4 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
    MuonContainer_p4 &modrhs = const_cast<MuonContainer_p4 &>( rhs );
    modrhs.clear();
 }
@@ -120,7 +115,6 @@ MuonCaloEnergyContainer_p1::MuonCaloEnergyContainer_p1(const MuonCaloEnergyConta
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
    MuonCaloEnergyContainer_p1 &modrhs = const_cast<MuonCaloEnergyContainer_p1 &>( rhs );
    modrhs.clear();
 }
@@ -138,7 +132,6 @@ TauJetContainer_p3::TauJetContainer_p3(const TauJetContainer_p3 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
    TauJetContainer_p3 &modrhs = const_cast<TauJetContainer_p3 &>( rhs );
    modrhs.clear();
    modrhs.m_ROIauthor.clear();
@@ -156,7 +149,6 @@ TauDetailsContainer_p1::TauDetailsContainer_p1(const TauDetailsContainer_p1 & rh
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
    TauDetailsContainer_p1 &modrhs = const_cast<TauDetailsContainer_p1 &>( rhs );
    modrhs.clear();
 }
@@ -173,7 +165,6 @@ TrigRoiDescriptorCollection_p1::TrigRoiDescriptorCollection_p1(const TrigRoiDesc
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
    TrigRoiDescriptorCollection_p1 &modrhs = const_cast<TrigRoiDescriptorCollection_p1 &>( rhs );
    modrhs.clear();
 }
@@ -190,7 +181,6 @@ TrigTauClusterContainer_p1::TrigTauClusterContainer_p1(const TrigTauClusterConta
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
    TrigTauClusterContainer_p1 &modrhs = const_cast<TrigTauClusterContainer_p1 &>( rhs );
    modrhs.clear();
 }
@@ -207,7 +197,6 @@ TrigT2JetContainer_p1::TrigT2JetContainer_p1(const TrigT2JetContainer_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
    TrigT2JetContainer_p1 &modrhs = const_cast<TrigT2JetContainer_p1 &>( rhs );
    modrhs.clear();
 }
@@ -224,7 +213,6 @@ TrigVertexCollection_p1::TrigVertexCollection_p1(const TrigVertexCollection_p1 &
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
    TrigVertexCollection_p1 &modrhs = const_cast<TrigVertexCollection_p1 &>( rhs );
    modrhs.clear();
 }
@@ -242,7 +230,7 @@ TileMuFeatureContainer_p1::TileMuFeatureContainer_p1(const TileMuFeatureContaine
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TileMuFeatureContainer_p1 &modrhs = const_cast<TileMuFeatureContainer_p1 &>( rhs );
    modrhs.clear();
    modrhs.m_TileMuFeature.clear();
@@ -260,7 +248,7 @@ Trk::V0Container_p1::V0Container_p1(const V0Container_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    V0Container_p1 &modrhs = const_cast<V0Container_p1 &>( rhs );
    modrhs.clear();
 }
@@ -277,7 +265,7 @@ TrigEFBphysContainer_p1::TrigEFBphysContainer_p1(const TrigEFBphysContainer_p1 &
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigEFBphysContainer_p1 &modrhs = const_cast<TrigEFBphysContainer_p1 &>( rhs );
    modrhs.clear();
 }
@@ -294,7 +282,7 @@ TrigElectronContainer_p2::TrigElectronContainer_p2(const TrigElectronContainer_p
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigElectronContainer_p2 &modrhs = const_cast<TrigElectronContainer_p2 &>( rhs );
    modrhs.clear();
 }
@@ -312,7 +300,7 @@ IsoMuonFeatureContainer_p1::IsoMuonFeatureContainer_p1(const IsoMuonFeatureConta
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    IsoMuonFeatureContainer_p1 &modrhs = const_cast<IsoMuonFeatureContainer_p1 &>( rhs );
    modrhs.clear();
    modrhs.m_isoMuonFeature.clear();
@@ -332,7 +320,7 @@ JetCollection_p5::JetCollection_p5(const JetCollection_p5 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    JetCollection_p5 &modrhs = const_cast<JetCollection_p5 &>( rhs );
    modrhs.clear();
 }
@@ -349,7 +337,7 @@ TrigL2BphysContainer_p1::TrigL2BphysContainer_p1(const TrigL2BphysContainer_p1 &
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigL2BphysContainer_p1 &modrhs = const_cast<TrigL2BphysContainer_p1 &>( rhs );
    modrhs.clear();
 }
@@ -366,7 +354,7 @@ TrigPhotonContainer_p2::TrigPhotonContainer_p2(const TrigPhotonContainer_p2 & rh
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigPhotonContainer_p2 &modrhs = const_cast<TrigPhotonContainer_p2 &>( rhs );
    modrhs.clear();
 }
@@ -383,7 +371,7 @@ PhotonContainer_p1::PhotonContainer_p1(const PhotonContainer_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    PhotonContainer_p1 &modrhs = const_cast<PhotonContainer_p1 &>( rhs );
    modrhs.clear();
 }
@@ -401,7 +389,7 @@ TrigTrackCountsCollection_p1::TrigTrackCountsCollection_p1(const TrigTrackCounts
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigTrackCountsCollection_p1 &modrhs = const_cast<TrigTrackCountsCollection_p1 &>( rhs );
    modrhs.clear();
    modrhs.m_trigTrackCounts.clear();
@@ -419,7 +407,7 @@ Trk::VxContainer_p1::VxContainer_p1(const VxContainer_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    VxContainer_p1 &modrhs = const_cast<VxContainer_p1 &>( rhs );
    modrhs.clear();
 }
@@ -436,7 +424,7 @@ TrigEMClusterContainer_p1::TrigEMClusterContainer_p1(const TrigEMClusterContaine
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigEMClusterContainer_p1 &modrhs = const_cast<TrigEMClusterContainer_p1 &>( rhs );
    modrhs.clear();
 }
@@ -453,7 +441,7 @@ egammaContainer_p1::egammaContainer_p1(const egammaContainer_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    egammaContainer_p1 &modrhs = const_cast<egammaContainer_p1 &>( rhs );
    modrhs.clear();
 }
@@ -471,7 +459,7 @@ TrigSpacePointCountsCollection_p1::TrigSpacePointCountsCollection_p1(const TrigS
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigSpacePointCountsCollection_p1 &modrhs = const_cast<TrigSpacePointCountsCollection_p1 &>( rhs );
    modrhs.clear();
    modrhs.m_trigSpacePointCounts.clear();
@@ -490,7 +478,7 @@ TrigTauTracksInfoCollection_p1::TrigTauTracksInfoCollection_p1(const TrigTauTrac
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigTauTracksInfoCollection_p1 &modrhs = const_cast<TrigTauTracksInfoCollection_p1 &>( rhs );
    modrhs.clear();
    modrhs.m_trigTauTracksInfo.clear();
@@ -508,7 +496,7 @@ egDetailContainer_p1::egDetailContainer_p1(const egDetailContainer_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    egDetailContainer_p1 &modrhs = const_cast<egDetailContainer_p1 &>( rhs );
    modrhs.clear();
 }
@@ -525,7 +513,7 @@ TrigTauClusterDetailsContainer_p1::TrigTauClusterDetailsContainer_p1(const TrigT
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigTauClusterDetailsContainer_p1 &modrhs = const_cast<TrigTauClusterDetailsContainer_p1 &>( rhs );
    modrhs.clear();
 }
@@ -542,7 +530,7 @@ TrigEFBjetContainer_p2::TrigEFBjetContainer_p2(const TrigEFBjetContainer_p2 & rh
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigEFBjetContainer_p2 &modrhs = const_cast<TrigEFBjetContainer_p2 &>( rhs );
    modrhs.clear();
 }
@@ -559,7 +547,7 @@ TrigL2BjetContainer_p2::TrigL2BjetContainer_p2(const TrigL2BjetContainer_p2 & rh
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigL2BjetContainer_p2 &modrhs = const_cast<TrigL2BjetContainer_p2 &>( rhs );
    modrhs.clear();
 }
@@ -577,7 +565,7 @@ TrigT2MbtsBitsContainer_p1::TrigT2MbtsBitsContainer_p1(const TrigT2MbtsBitsConta
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigT2MbtsBitsContainer_p1 &modrhs = const_cast<TrigT2MbtsBitsContainer_p1 &>( rhs );
    modrhs.clear();
    modrhs.m_t2MbtsBits.clear();
@@ -596,7 +584,7 @@ CosmicMuonCollection_p1::CosmicMuonCollection_p1(const CosmicMuonCollection_p1 &
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    CosmicMuonCollection_p1 &modrhs = const_cast<CosmicMuonCollection_p1 &>( rhs );
    modrhs.clear();
    modrhs.m_cosmicMuon.clear();
@@ -614,7 +602,7 @@ Trk::SegmentCollection_p1::SegmentCollection_p1(const SegmentCollection_p1 & rhs
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    SegmentCollection_p1 &modrhs = const_cast<SegmentCollection_p1 &>( rhs );
    modrhs.clear();
 }
@@ -631,7 +619,7 @@ RingerRingsContainer_p1::RingerRingsContainer_p1(const RingerRingsContainer_p1 &
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    RingerRingsContainer_p1 &modrhs = const_cast<RingerRingsContainer_p1 &>( rhs );
    modrhs.clear();
 }
@@ -649,7 +637,7 @@ CombinedMuonFeatureContainer_p1::CombinedMuonFeatureContainer_p1(const CombinedM
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    CombinedMuonFeatureContainer_p1 &modrhs = const_cast<CombinedMuonFeatureContainer_p1 &>( rhs );
    modrhs.clear();
    modrhs.m_combinedMuonFeature.clear();
@@ -668,7 +656,7 @@ TileTrackMuFeatureContainer_p1::TileTrackMuFeatureContainer_p1(const TileTrackMu
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TileTrackMuFeatureContainer_p1 &modrhs = const_cast<TileTrackMuFeatureContainer_p1 &>( rhs );
    modrhs.clear();
    modrhs.m_TileTrackMuFeature.clear();
@@ -687,7 +675,7 @@ MdtTrackSegmentCollection_p1::MdtTrackSegmentCollection_p1(const MdtTrackSegment
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    MdtTrackSegmentCollection_p1 &modrhs = const_cast<MdtTrackSegmentCollection_p1 &>( rhs );
    modrhs.clear();
    modrhs.m_mdtTrackSegment.clear();
@@ -706,7 +694,7 @@ MuonFeatureContainer_p2::MuonFeatureContainer_p2(const MuonFeatureContainer_p2 &
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    MuonFeatureContainer_p2 &modrhs = const_cast<MuonFeatureContainer_p2 &>( rhs );
    modrhs.clear();
    modrhs.m_muonFeature.clear();
@@ -725,7 +713,7 @@ TrigMuonEFContainer_p1::TrigMuonEFContainer_p1(const TrigMuonEFContainer_p1 & rh
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigMuonEFContainer_p1 &modrhs = const_cast<TrigMuonEFContainer_p1 &>( rhs );
    modrhs.clear();
    modrhs.m_trigMuonEF.clear();
@@ -743,7 +731,7 @@ TrigTauContainer_p1::TrigTauContainer_p1(const TrigTauContainer_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigTauContainer_p1 &modrhs = const_cast<TrigTauContainer_p1 &>( rhs );
    modrhs.clear();
 }
@@ -761,7 +749,7 @@ TrigMuonEFInfoContainer_p1::TrigMuonEFInfoContainer_p1(const TrigMuonEFInfoConta
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigMuonEFInfoContainer_p1 &modrhs = const_cast<TrigMuonEFInfoContainer_p1 &>( rhs );
    modrhs.clear();
    modrhs.m_trigMuonEFInfo.clear();
@@ -780,7 +768,7 @@ TrigMuonEFInfoTrackContainer_p1::TrigMuonEFInfoTrackContainer_p1(const TrigMuonE
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigMuonEFInfoTrackContainer_p1 &modrhs = const_cast<TrigMuonEFInfoTrackContainer_p1 &>( rhs );
    modrhs.clear();
    modrhs.m_trigMuonEFInfoTrack.clear();
@@ -798,7 +786,7 @@ TrigMissingETContainer_p1::TrigMissingETContainer_p1(const TrigMissingETContaine
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigMissingETContainer_p1 &modrhs = const_cast<TrigMissingETContainer_p1 &>( rhs );
    modrhs.clear();
 }
@@ -815,7 +803,7 @@ TileMuContainer_p1::TileMuContainer_p1(const TileMuContainer_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TileMuContainer_p1 &modrhs = const_cast<TileMuContainer_p1 &>( rhs );
    modrhs.clear();
 }
@@ -839,7 +827,7 @@ EventID_p1::EventID_p1(const EventID_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 EventID_p1::~EventID_p1() {
 }
@@ -857,7 +845,7 @@ EventInfo_p2::EventInfo_p2(const EventInfo_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    EventInfo_p2 &modrhs = const_cast<EventInfo_p2 &>( rhs );
    modrhs.m_event_flags.clear();
 }
@@ -876,7 +864,7 @@ EventType_p1::EventType_p1(const EventType_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    EventType_p1 &modrhs = const_cast<EventType_p1 &>( rhs );
    modrhs.m_bit_mask.clear();
    modrhs.m_user_type.clear();
@@ -896,7 +884,7 @@ TriggerInfo_p2::StreamTag_p2::StreamTag_p2(const StreamTag_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    StreamTag_p2 &modrhs = const_cast<StreamTag_p2 &>( rhs );
    modrhs.m_name.clear();
    modrhs.m_type.clear();
@@ -920,7 +908,7 @@ TriggerInfo_p2::TriggerInfo_p2(const TriggerInfo_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TriggerInfo_p2 &modrhs = const_cast<TriggerInfo_p2 &>( rhs );
    modrhs.m_level1TriggerInfo.clear();
    modrhs.m_level2TriggerInfo.clear();
@@ -940,7 +928,7 @@ CaloCompactCellContainer::CaloCompactCellContainer(const CaloCompactCellContaine
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    CaloCompactCellContainer &modrhs = const_cast<CaloCompactCellContainer &>( rhs );
    modrhs.m_compactData.clear();
 }
@@ -960,7 +948,7 @@ P4EEtaPhiMFloat_p2::P4EEtaPhiMFloat_p2(const P4EEtaPhiMFloat_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 P4EEtaPhiMFloat_p2::~P4EEtaPhiMFloat_p2() {
 }
@@ -976,7 +964,7 @@ ElementLink_p2<unsigned int>::ElementLink_p2(const ElementLink_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 ElementLink_p2<unsigned int>::~ElementLink_p2() {
 }
@@ -1000,7 +988,7 @@ CaloClusterContainer_p5::CaloCluster_p::CaloCluster_p(const CaloCluster_p & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 CaloClusterContainer_p5::CaloCluster_p::~CaloCluster_p() {
 }
@@ -1026,7 +1014,7 @@ CaloClusterContainer_p5::CaloClusterContainer_p5(const CaloClusterContainer_p5 &
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    CaloClusterContainer_p5 &modrhs = const_cast<CaloClusterContainer_p5 &>( rhs );
    modrhs.m_vec.clear();
    modrhs.m_dataStore.clear();
@@ -1052,7 +1040,7 @@ CaloClusterMomentContainer_p2::CaloClusterMomentContainer_p2(const CaloClusterMo
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    CaloClusterMomentContainer_p2 &modrhs = const_cast<CaloClusterMomentContainer_p2 &>( rhs );
    modrhs.m_Mvalue.clear();
    modrhs.m_Mkey.clear();
@@ -1077,7 +1065,7 @@ CaloTowerSeg_p1::CaloTowerSeg_p1(const CaloTowerSeg_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 CaloTowerSeg_p1::~CaloTowerSeg_p1() {
 }
@@ -1092,7 +1080,7 @@ ElementLinkContNames_p2::ElementLinkContNames_p2(const ElementLinkContNames_p2 &
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    ElementLinkContNames_p2 &modrhs = const_cast<ElementLinkContNames_p2 &>( rhs );
    modrhs.m_names.clear();
 }
@@ -1109,7 +1097,7 @@ TileCellVec::TileCellVec(const TileCellVec & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TileCellVec &modrhs = const_cast<TileCellVec &>( rhs );
    modrhs.clear();
 }
@@ -1129,7 +1117,7 @@ TileMu_p1::TileMu_p1(const TileMu_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TileMu_p1 &modrhs = const_cast<TileMu_p1 &>( rhs );
    modrhs.m_energy_deposited.clear();
 }
@@ -1149,7 +1137,7 @@ P4EEtaPhiM_p1::P4EEtaPhiM_p1(const P4EEtaPhiM_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 P4EEtaPhiM_p1::~P4EEtaPhiM_p1() {
 }
@@ -1166,7 +1154,7 @@ ElementLink_p1<unsigned int>::ElementLink_p1(const ElementLink_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    ElementLink_p1 &modrhs = const_cast<ElementLink_p1 &>( rhs );
    modrhs.m_contName.clear();
 }
@@ -1189,7 +1177,7 @@ ParticleBase_p1::ParticleBase_p1(const ParticleBase_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 ParticleBase_p1::~ParticleBase_p1() {
 }
@@ -1204,7 +1192,7 @@ AthenaBarCode_p1::AthenaBarCode_p1(const AthenaBarCode_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 AthenaBarCode_p1::~AthenaBarCode_p1() {
 }
@@ -1220,7 +1208,7 @@ ElementLinkVector_p1<unsigned int>::ElementRef::ElementRef(const ElementRef & rh
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 ElementLinkVector_p1<unsigned int>::ElementRef::~ElementRef() {
 }
@@ -1236,7 +1224,7 @@ ElementLinkVector_p1<unsigned int>::ElementLinkVector_p1(const ElementLinkVector
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    ElementLinkVector_p1 &modrhs = const_cast<ElementLinkVector_p1 &>( rhs );
    modrhs.m_elementRefs.clear();
    modrhs.m_links.clear();
@@ -1262,7 +1250,7 @@ egamma_p1::egamma_p1(const egamma_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    egamma_p1 &modrhs = const_cast<egamma_p1 &>( rhs );
    modrhs.m_egammaEnumPIDs.clear();
    modrhs.m_egammaDblPIDs.clear();
@@ -1280,7 +1268,7 @@ Electron_p1::Electron_p1(const Electron_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Electron_p1::~Electron_p1() {
 }
@@ -1295,7 +1283,7 @@ Photon_p1::Photon_p1(const Photon_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Photon_p1::~Photon_p1() {
 }
@@ -1322,7 +1310,7 @@ GenEvent_p4::GenEvent_p4(const GenEvent_p4 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    GenEvent_p4 &modrhs = const_cast<GenEvent_p4 &>( rhs );
    modrhs.m_weights.clear();
    modrhs.m_pdfinfo.clear();
@@ -1343,7 +1331,7 @@ McEventCollection_p4::McEventCollection_p4(const McEventCollection_p4 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    McEventCollection_p4 &modrhs = const_cast<McEventCollection_p4 &>( rhs );
    modrhs.m_genEvents.clear();
    modrhs.m_genVertices.clear();
@@ -1370,7 +1358,7 @@ GenVertex_p4::GenVertex_p4(const GenVertex_p4 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    GenVertex_p4 &modrhs = const_cast<GenVertex_p4 &>( rhs );
    modrhs.m_particlesIn.clear();
    modrhs.m_particlesOut.clear();
@@ -1401,7 +1389,7 @@ GenParticle_p4::GenParticle_p4(const GenParticle_p4 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    GenParticle_p4 &modrhs = const_cast<GenParticle_p4 &>( rhs );
    modrhs.m_flow.clear();
 }
@@ -1422,7 +1410,7 @@ TrigDec::TrigDecision_p4::TrigDecision_p4(const TrigDecision_p4 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigDec::TrigDecision_p4::~TrigDecision_p4() {
 }
@@ -1440,7 +1428,7 @@ LVL1CTP::Lvl1Result_p2::Lvl1Result_p2(const Lvl1Result_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    Lvl1Result_p2 &modrhs = const_cast<Lvl1Result_p2 &>( rhs );
    modrhs.m_l1_itemsTBP.clear();
    modrhs.m_l1_itemsTAP.clear();
@@ -1459,7 +1447,7 @@ DataLink_p1::DataLink_p1(const DataLink_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    DataLink_p1 &modrhs = const_cast<DataLink_p1 &>( rhs );
    modrhs.m_link.clear();
 }
@@ -1480,7 +1468,7 @@ Muon_ROI_p1::Muon_ROI_p1(const Muon_ROI_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    Muon_ROI_p1 &modrhs = const_cast<Muon_ROI_p1 &>( rhs );
    modrhs.m_thrName.clear();
 }
@@ -1501,7 +1489,7 @@ LVL1_ROI_p1::LVL1_ROI_p1(const LVL1_ROI_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    LVL1_ROI_p1 &modrhs = const_cast<LVL1_ROI_p1 &>( rhs );
    modrhs.m_muonROIs.clear();
    modrhs.m_jetROIs.clear();
@@ -1529,7 +1517,7 @@ Jet_ROI_p1::Jet_ROI_p1(const Jet_ROI_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    Jet_ROI_p1 &modrhs = const_cast<Jet_ROI_p1 &>( rhs );
    modrhs.m_thresholdNames.clear();
    modrhs.m_thresholdValues.clear();
@@ -1548,7 +1536,7 @@ JetET_ROI_p1::JetET_ROI_p1(const JetET_ROI_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    JetET_ROI_p1 &modrhs = const_cast<JetET_ROI_p1 &>( rhs );
    modrhs.m_thresholds.clear();
 }
@@ -1575,7 +1563,7 @@ EmTau_ROI_p1::EmTau_ROI_p1(const EmTau_ROI_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    EmTau_ROI_p1 &modrhs = const_cast<EmTau_ROI_p1 &>( rhs );
    modrhs.m_thresholdNames.clear();
    modrhs.m_thresholdValues.clear();
@@ -1599,7 +1587,7 @@ EnergySum_ROI_p1::EnergySum_ROI_p1(const EnergySum_ROI_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    EnergySum_ROI_p1 &modrhs = const_cast<EnergySum_ROI_p1 &>( rhs );
    modrhs.m_thresholds.clear();
 }
@@ -1617,7 +1605,7 @@ TPCnvToken_p1::TPCnvToken_p1(const TPCnvToken_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TPCnvToken_p1 &modrhs = const_cast<TPCnvToken_p1 &>( rhs );
    modrhs.m_token.clear();
 }
@@ -1648,7 +1636,7 @@ Trk::VxContainer_tlp1::VxContainer_tlp1(const VxContainer_tlp1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    VxContainer_tlp1 &modrhs = const_cast<VxContainer_tlp1 &>( rhs );
    modrhs.m_vxContainers.clear();
    modrhs.m_vxCandidates.clear();
@@ -1679,7 +1667,7 @@ TPObjRef::typeID_t::typeID_t(const typeID_t & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TPObjRef::typeID_t::~typeID_t() {
 }
@@ -1695,7 +1683,7 @@ TPObjRef::TPObjRef(const TPObjRef & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TPObjRef::~TPObjRef() {
 }
@@ -1712,7 +1700,7 @@ Trk::VxCandidate_p1::VxCandidate_p1(const VxCandidate_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    VxCandidate_p1 &modrhs = const_cast<VxCandidate_p1 &>( rhs );
    modrhs.m_vxTrackAtVertex.clear();
 }
@@ -1730,7 +1718,7 @@ Trk::ExtendedVxCandidate_p1::ExtendedVxCandidate_p1(const ExtendedVxCandidate_p1
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::ExtendedVxCandidate_p1::~ExtendedVxCandidate_p1() {
 }
@@ -1751,7 +1739,7 @@ Trk::VxTrackAtVertex_p1::VxTrackAtVertex_p1(const VxTrackAtVertex_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::VxTrackAtVertex_p1::~VxTrackAtVertex_p1() {
 }
@@ -1768,7 +1756,7 @@ Trk::RecVertex_p1::RecVertex_p1(const RecVertex_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::RecVertex_p1::~RecVertex_p1() {
 }
@@ -1783,7 +1771,7 @@ Trk::Vertex_p1::Vertex_p1(const Vertex_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    Vertex_p1 &modrhs = const_cast<Vertex_p1 &>( rhs );
    modrhs.m_position.clear();
 }
@@ -1803,7 +1791,7 @@ Trk::Track_p1::Track_p1(const Track_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    Track_p1 &modrhs = const_cast<Track_p1 &>( rhs );
    modrhs.m_trackState.clear();
 }
@@ -1820,7 +1808,7 @@ Trk::TrackParameters_p1::TrackParameters_p1(const TrackParameters_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrackParameters_p1 &modrhs = const_cast<TrackParameters_p1 &>( rhs );
    modrhs.m_parameters.clear();
 }
@@ -1839,7 +1827,7 @@ Trk::Perigee_p1::Perigee_p1(const Perigee_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::Perigee_p1::~Perigee_p1() {
 }
@@ -1855,7 +1843,7 @@ Trk::MeasuredPerigee_p1::MeasuredPerigee_p1(const MeasuredPerigee_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::MeasuredPerigee_p1::~MeasuredPerigee_p1() {
 }
@@ -1871,7 +1859,7 @@ Trk::Surface_p1::Surface_p1(const Surface_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    Surface_p1 &modrhs = const_cast<Surface_p1 &>( rhs );
    modrhs.m_transform.clear();
 }
@@ -1889,7 +1877,7 @@ Trk::FitQuality_p1::FitQuality_p1(const FitQuality_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::FitQuality_p1::~FitQuality_p1() {
 }
@@ -1905,7 +1893,7 @@ Trk::HepSymMatrix_p1::HepSymMatrix_p1(const HepSymMatrix_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    HepSymMatrix_p1 &modrhs = const_cast<HepSymMatrix_p1 &>( rhs );
    modrhs.m_matrix_val.clear();
 }
@@ -1923,7 +1911,7 @@ Trk::LocalPosition_p1::LocalPosition_p1(const LocalPosition_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::LocalPosition_p1::~LocalPosition_p1() {
 }
@@ -1951,7 +1939,7 @@ TauJet_p3::TauJet_p3(const TauJet_p3 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TauJet_p3 &modrhs = const_cast<TauJet_p3 &>( rhs );
    modrhs.m_params.clear();
 }
@@ -1970,7 +1958,7 @@ JetKeyDescriptor_p1::JetKeyDescriptor_p1(const JetKeyDescriptor_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    JetKeyDescriptor_p1 &modrhs = const_cast<JetKeyDescriptor_p1 &>( rhs );
    modrhs.m_keyStoreLength.clear();
    modrhs.m_keyStore.clear();
@@ -1989,7 +1977,7 @@ MissingEtCalo_p2::MissingEtCalo_p2(const MissingEtCalo_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    MissingEtCalo_p2 &modrhs = const_cast<MissingEtCalo_p2 &>( rhs );
    modrhs.m_AllTheData.clear();
 }
@@ -2008,7 +1996,7 @@ MissingEtRegions_p1::MissingEtRegions_p1(const MissingEtRegions_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    MissingEtRegions_p1 &modrhs = const_cast<MissingEtRegions_p1 &>( rhs );
    modrhs.m_exReg.clear();
    modrhs.m_eyReg.clear();
@@ -2031,7 +2019,7 @@ MissingET_p1::MissingET_p1(const MissingET_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 MissingET_p1::~MissingET_p1() {
 }
@@ -2049,7 +2037,7 @@ MissingEtTruth_p1::MissingEtTruth_p1(const MissingEtTruth_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    MissingEtTruth_p1 &modrhs = const_cast<MissingEtTruth_p1 &>( rhs );
    modrhs.m_exTruth.clear();
    modrhs.m_eyTruth.clear();
@@ -2068,7 +2056,7 @@ MissingET_p2::MissingET_p2(const MissingET_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    MissingET_p2 &modrhs = const_cast<MissingET_p2 &>( rhs );
    modrhs.m_AllTheData.clear();
 }
@@ -2086,7 +2074,7 @@ TruthParticleContainer_p5::TruthParticleContainer_p5(const TruthParticleContaine
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TruthParticleContainer_p5::~TruthParticleContainer_p5() {
 }
@@ -2102,7 +2090,7 @@ TrigInDetTrackTruthMap_p1::TrigInDetTrackTruthMap_p1(const TrigInDetTrackTruthMa
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigInDetTrackTruthMap_p1 &modrhs = const_cast<TrigInDetTrackTruthMap_p1 &>( rhs );
    modrhs.m_truth_vec.clear();
 }
@@ -2125,7 +2113,7 @@ TrigInDetTrackTruthMap_tlp1::TrigInDetTrackTruthMap_tlp1(const TrigInDetTrackTru
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigInDetTrackTruthMap_tlp1 &modrhs = const_cast<TrigInDetTrackTruthMap_tlp1 &>( rhs );
    modrhs.m_trigInDetTrackTruthMap_p1.clear();
    modrhs.m_trigInDetTrackTruth_p1.clear();
@@ -2153,7 +2141,7 @@ TrigInDetTrackTruth_p1::TrigInDetTrackTruth_p1(const TrigInDetTrackTruth_p1 & rh
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigInDetTrackTruth_p1 &modrhs = const_cast<TrigInDetTrackTruth_p1 &>( rhs );
    modrhs.m_true_part_vec.clear();
    modrhs.m_nr_common_hits.clear();
@@ -2171,7 +2159,7 @@ TrigIDHitStats_p1::TrigIDHitStats_p1(const TrigIDHitStats_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    for (Int_t i=0;i<3;i++) numHits[i] = rhs.numHits[i];
 }
 TrigIDHitStats_p1::~TrigIDHitStats_p1() {
@@ -2188,7 +2176,7 @@ HepMcParticleLink_p1::HepMcParticleLink_p1(const HepMcParticleLink_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 HepMcParticleLink_p1::~HepMcParticleLink_p1() {
 }
@@ -2204,7 +2192,7 @@ TrigInDetTrackCollection_p1::TrigInDetTrackCollection_p1(const TrigInDetTrackCol
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigInDetTrackCollection_p1 &modrhs = const_cast<TrigInDetTrackCollection_p1 &>( rhs );
    modrhs.m_trigInDetTrackVector.clear();
 }
@@ -2228,7 +2216,7 @@ TrigInDetTrack_p1::TrigInDetTrack_p1(const TrigInDetTrack_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigInDetTrack_p1::~TrigInDetTrack_p1() {
 }
@@ -2257,7 +2245,7 @@ TrigInDetTrackFitPar_p1::TrigInDetTrackFitPar_p1(const TrigInDetTrackFitPar_p1 &
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigInDetTrackFitPar_p1 &modrhs = const_cast<TrigInDetTrackFitPar_p1 &>( rhs );
    modrhs.m_cov = 0;
    modrhs.m_covtmp.clear();
@@ -2278,7 +2266,7 @@ INav4MomAssocs_p2::INav4MomAssocs_p2(const INav4MomAssocs_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    INav4MomAssocs_p2 &modrhs = const_cast<INav4MomAssocs_p2 &>( rhs );
    modrhs.m_assocs.clear();
    modrhs.m_assocStores.clear();
@@ -2314,7 +2302,7 @@ Trk::SegmentCollection_tlp1::SegmentCollection_tlp1(const SegmentCollection_tlp1
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    SegmentCollection_tlp1 &modrhs = const_cast<SegmentCollection_tlp1 &>( rhs );
    modrhs.m_segmentCollections.clear();
    modrhs.m_segments.clear();
@@ -2352,7 +2340,7 @@ Trk::Segment_p1::Segment_p1(const Segment_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    Segment_p1 &modrhs = const_cast<Segment_p1 &>( rhs );
    modrhs.m_containedMeasBases.clear();
 }
@@ -2370,7 +2358,7 @@ Trk::TrackSegment_p1::TrackSegment_p1(const TrackSegment_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::TrackSegment_p1::~TrackSegment_p1() {
 }
@@ -2386,7 +2374,7 @@ Trk::BoundSurface_p1::BoundSurface_p1(const BoundSurface_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::BoundSurface_p1::~BoundSurface_p1() {
 }
@@ -2404,7 +2392,7 @@ Trk::CylinderBounds_p1::CylinderBounds_p1(const CylinderBounds_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::CylinderBounds_p1::~CylinderBounds_p1() {
 }
@@ -2425,7 +2413,7 @@ Trk::DiamondBounds_p1::DiamondBounds_p1(const DiamondBounds_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::DiamondBounds_p1::~DiamondBounds_p1() {
 }
@@ -2443,7 +2431,7 @@ Trk::DiscBounds_p1::DiscBounds_p1(const DiscBounds_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::DiscBounds_p1::~DiscBounds_p1() {
 }
@@ -2459,7 +2447,7 @@ Trk::RectangleBounds_p1::RectangleBounds_p1(const RectangleBounds_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::RectangleBounds_p1::~RectangleBounds_p1() {
 }
@@ -2478,7 +2466,7 @@ Trk::TrapezoidBounds_p1::TrapezoidBounds_p1(const TrapezoidBounds_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::TrapezoidBounds_p1::~TrapezoidBounds_p1() {
 }
@@ -2497,7 +2485,7 @@ Trk::RotatedTrapezoidBounds_p1::RotatedTrapezoidBounds_p1(const RotatedTrapezoid
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::RotatedTrapezoidBounds_p1::~RotatedTrapezoidBounds_p1() {
 }
@@ -2513,7 +2501,7 @@ Trk::LocalParameters_p1::LocalParameters_p1(const LocalParameters_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    LocalParameters_p1 &modrhs = const_cast<LocalParameters_p1 &>( rhs );
    modrhs.m_vec.clear();
 }
@@ -2532,7 +2520,7 @@ Trk::RIO_OnTrack_p1::RIO_OnTrack_p1(const RIO_OnTrack_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::RIO_OnTrack_p1::~RIO_OnTrack_p1() {
 }
@@ -2549,7 +2537,7 @@ Trk::PseudoMeasurementOnTrack_p1::PseudoMeasurementOnTrack_p1(const PseudoMeasur
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::PseudoMeasurementOnTrack_p1::~PseudoMeasurementOnTrack_p1() {
 }
@@ -2566,7 +2554,7 @@ Trk::CompetingRIOsOnTrack_p1::CompetingRIOsOnTrack_p1(const CompetingRIOsOnTrack
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    CompetingRIOsOnTrack_p1 &modrhs = const_cast<CompetingRIOsOnTrack_p1 &>( rhs );
    modrhs.m_assignProb.clear();
 }
@@ -2583,7 +2571,7 @@ Trk::DetElementSurface_p1::DetElementSurface_p1(const DetElementSurface_p1 & rhs
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::DetElementSurface_p1::~DetElementSurface_p1() {
 }
@@ -2600,7 +2588,7 @@ HLT::HLTResult_p1::HLTResult_p1(const HLTResult_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    HLTResult_p1 &modrhs = const_cast<HLTResult_p1 &>( rhs );
    modrhs.m_headerResult.clear();
    modrhs.m_chainsResult.clear();
@@ -2649,7 +2637,7 @@ Trk::TrackCollection_tlp3::TrackCollection_tlp3(const TrackCollection_tlp3 & rhs
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrackCollection_tlp3 &modrhs = const_cast<TrackCollection_tlp3 &>( rhs );
    modrhs.m_trackCollections.clear();
    modrhs.m_tracks.clear();
@@ -2697,7 +2685,7 @@ Trk::Track_p2::Track_p2(const Track_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    Track_p2 &modrhs = const_cast<Track_p2 &>( rhs );
    modrhs.m_trackState.clear();
 }
@@ -2718,7 +2706,7 @@ Trk::TrackStateOnSurface_p2::TrackStateOnSurface_p2(const TrackStateOnSurface_p2
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::TrackStateOnSurface_p2::~TrackStateOnSurface_p2() {
 }
@@ -2734,7 +2722,7 @@ Trk::AtaSurface_p1::AtaSurface_p1(const AtaSurface_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::AtaSurface_p1::~AtaSurface_p1() {
 }
@@ -2750,7 +2738,7 @@ Trk::MeasuredAtaSurface_p1::MeasuredAtaSurface_p1(const MeasuredAtaSurface_p1 & 
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::MeasuredAtaSurface_p1::~MeasuredAtaSurface_p1() {
 }
@@ -2767,7 +2755,7 @@ Trk::MaterialEffectsBase_p1::MaterialEffectsBase_p1(const MaterialEffectsBase_p1
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::MaterialEffectsBase_p1::~MaterialEffectsBase_p1() {
 }
@@ -2785,7 +2773,7 @@ Trk::EnergyLoss_p1::EnergyLoss_p1(const EnergyLoss_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::EnergyLoss_p1::~EnergyLoss_p1() {
 }
@@ -2805,7 +2793,7 @@ Trk::MaterialEffectsOnTrack_p2::MaterialEffectsOnTrack_p2(const MaterialEffectsO
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::MaterialEffectsOnTrack_p2::~MaterialEffectsOnTrack_p2() {
 }
@@ -2824,7 +2812,7 @@ Trk::EstimatedBremOnTrack_p1::EstimatedBremOnTrack_p1(const EstimatedBremOnTrack
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::EstimatedBremOnTrack_p1::~EstimatedBremOnTrack_p1() {
 }
@@ -2840,7 +2828,7 @@ Trk::LocalDirection_p1::LocalDirection_p1(const LocalDirection_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::LocalDirection_p1::~LocalDirection_p1() {
 }
@@ -2858,7 +2846,7 @@ Trk::TrackInfo_p1::TrackInfo_p1(const TrackInfo_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::TrackInfo_p1::~TrackInfo_p1() {
 }
@@ -2875,7 +2863,7 @@ CTP_Decision_p2::CTP_Decision_p2(const CTP_Decision_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    CTP_Decision_p2 &modrhs = const_cast<CTP_Decision_p2 &>( rhs );
    modrhs.m_CTPResultWord.clear();
    modrhs.m_items.clear();
@@ -2895,7 +2883,7 @@ TrigElectronContainer_tlp2::TrigElectronContainer_tlp2(const TrigElectronContain
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigElectronContainer_tlp2 &modrhs = const_cast<TrigElectronContainer_tlp2 &>( rhs );
    modrhs.m_trigElectronContainerVec.clear();
    modrhs.m_trigElectronVec.clear();
@@ -2928,7 +2916,7 @@ TrigElectron_p2::TrigElectron_p2(const TrigElectron_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigElectron_p2::~TrigElectron_p2() {
 }
@@ -2946,7 +2934,7 @@ P4PtEtaPhiM_p1::P4PtEtaPhiM_p1(const P4PtEtaPhiM_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 P4PtEtaPhiM_p1::~P4PtEtaPhiM_p1() {
 }
@@ -2972,7 +2960,7 @@ TauDetailsContainer_tlp1::TauDetailsContainer_tlp1(const TauDetailsContainer_tlp
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TauDetailsContainer_tlp1 &modrhs = const_cast<TauDetailsContainer_tlp1 &>( rhs );
    modrhs.m_tauDetailsContainers.clear();
    modrhs.m_tauCommonDetails.clear();
@@ -3054,7 +3042,7 @@ TauCommonDetails_p1::TauCommonDetails_p1(const TauCommonDetails_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TauCommonDetails_p1 &modrhs = const_cast<TauCommonDetails_p1 &>( rhs );
    modrhs.m_seedTrk_etChrgEM01Trk.clear();
    modrhs.m_seedTrk_etResChrgEMTrk.clear();
@@ -3075,7 +3063,7 @@ HepLorentzVector_p1::HepLorentzVector_p1(const HepLorentzVector_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 HepLorentzVector_p1::~HepLorentzVector_p1() {
 }
@@ -3107,7 +3095,7 @@ TauCommonExtraDetails_p1::TauCommonExtraDetails_p1(const TauCommonExtraDetails_p
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TauCommonExtraDetails_p1 &modrhs = const_cast<TauCommonExtraDetails_p1 &>( rhs );
    modrhs.m_closestEtaTrkVertCell.clear();
    modrhs.m_closestPhiTrkVertCell.clear();
@@ -3162,7 +3150,7 @@ Tau1P3PDetails_p1::Tau1P3PDetails_p1(const Tau1P3PDetails_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    Tau1P3PDetails_p1 &modrhs = const_cast<Tau1P3PDetails_p1 &>( rhs );
    modrhs.m_etChrgEM01Trk.clear();
    modrhs.m_etResChrgEMTrk.clear();
@@ -3188,7 +3176,7 @@ Tau1P3PExtraDetails_p1::Tau1P3PExtraDetails_p1(const Tau1P3PExtraDetails_p1 & rh
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    Tau1P3PExtraDetails_p1 &modrhs = const_cast<Tau1P3PExtraDetails_p1 &>( rhs );
    modrhs.m_closestEtaTrkVertCell.clear();
    modrhs.m_closestEtaTrkCell.clear();
@@ -3232,7 +3220,7 @@ TauRecDetails_p1::TauRecDetails_p1(const TauRecDetails_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TauRecDetails_p1 &modrhs = const_cast<TauRecDetails_p1 &>( rhs );
    modrhs.m_trackCaloEta.clear();
    modrhs.m_trackCaloPhi.clear();
@@ -3259,7 +3247,7 @@ TauRecExtraDetails_p1::TauRecExtraDetails_p1(const TauRecExtraDetails_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TauRecExtraDetails_p1::~TauRecExtraDetails_p1() {
 }
@@ -3319,7 +3307,7 @@ tauAnalysisHelperObject_p1::tauAnalysisHelperObject_p1(const tauAnalysisHelperOb
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    for (Int_t i=0;i<6;i++) m_emradii[i] = rhs.m_emradii[i];
    for (Int_t i=0;i<6;i++) m_hadradii[i] = rhs.m_hadradii[i];
    for (Int_t i=0;i<10;i++) m_ImpactParameter[i] = rhs.m_ImpactParameter[i];
@@ -3349,7 +3337,7 @@ P4IPtCotThPhiM_p1::P4IPtCotThPhiM_p1(const P4IPtCotThPhiM_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 P4IPtCotThPhiM_p1::~P4IPtCotThPhiM_p1() {
 }
@@ -3391,7 +3379,7 @@ Muon_p4::Muon_p4(const Muon_p4 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    Muon_p4 &modrhs = const_cast<Muon_p4 &>( rhs );
    modrhs.m_associatedEtaDigits.clear();
    modrhs.m_associatedPhiDigits.clear();
@@ -3412,7 +3400,7 @@ CombinedMuonFeatureContainer_tlp1::CombinedMuonFeatureContainer_tlp1(const Combi
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    CombinedMuonFeatureContainer_tlp1 &modrhs = const_cast<CombinedMuonFeatureContainer_tlp1 &>( rhs );
    modrhs.m_combinedMuonFeatureContainerVec.clear();
    modrhs.m_combinedMuonFeatureVec.clear();
@@ -3434,7 +3422,7 @@ CombinedMuonFeature_p1::CombinedMuonFeature_p1(const CombinedMuonFeature_p1 & rh
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 CombinedMuonFeature_p1::~CombinedMuonFeature_p1() {
 }
@@ -3452,7 +3440,7 @@ CombinedMuonFeature_p2::CombinedMuonFeature_p2(const CombinedMuonFeature_p2 & rh
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 CombinedMuonFeature_p2::~CombinedMuonFeature_p2() {
 }
@@ -3469,7 +3457,7 @@ TrigTauTracksInfoCollection_tlp1::TrigTauTracksInfoCollection_tlp1(const TrigTau
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigTauTracksInfoCollection_tlp1 &modrhs = const_cast<TrigTauTracksInfoCollection_tlp1 &>( rhs );
    modrhs.m_trigTauTracksInfoCollectionVec.clear();
    modrhs.m_trigTauTracksInfoVec.clear();
@@ -3498,7 +3486,7 @@ TrigTauTracksInfo_p1::TrigTauTracksInfo_p1(const TrigTauTracksInfo_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigTauTracksInfo_p1::~TrigTauTracksInfo_p1() {
 }
@@ -3514,7 +3502,7 @@ TrigRoiDescriptorCollection_tlp1::TrigRoiDescriptorCollection_tlp1(const TrigRoi
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigRoiDescriptorCollection_tlp1 &modrhs = const_cast<TrigRoiDescriptorCollection_tlp1 &>( rhs );
    modrhs.m_TrigRoiDescriptorCollection.clear();
    modrhs.m_TrigRoiDescriptor.clear();
@@ -3543,7 +3531,7 @@ TrigRoiDescriptor_p1::TrigRoiDescriptor_p1(const TrigRoiDescriptor_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigRoiDescriptor_p1 &modrhs = const_cast<TrigRoiDescriptor_p1 &>( rhs );
    modrhs.m_serialized.clear();
 }
@@ -3562,7 +3550,7 @@ TrigTrackCountsCollection_tlp1::TrigTrackCountsCollection_tlp1(const TrigTrackCo
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigTrackCountsCollection_tlp1 &modrhs = const_cast<TrigTrackCountsCollection_tlp1 &>( rhs );
    modrhs.m_trigTrackCountsCollectionVec.clear();
    modrhs.m_trigTrackCountsVec.clear();
@@ -3587,7 +3575,7 @@ TrigTrackCounts_p1::TrigTrackCounts_p1(const TrigTrackCounts_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigTrackCounts_p1 &modrhs = const_cast<TrigTrackCounts_p1 &>( rhs );
    modrhs.m_z0pcnt.clear();
    modrhs.m_phi0cnt.clear();
@@ -3613,7 +3601,7 @@ TrigHisto2D_p1::TrigHisto2D_p1(const TrigHisto2D_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigHisto2D_p1 &modrhs = const_cast<TrigHisto2D_p1 &>( rhs );
    modrhs.m_contents.clear();
 }
@@ -3631,7 +3619,7 @@ TrigTrackCounts_p2::TrigTrackCounts_p2(const TrigTrackCounts_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigTrackCounts_p2::~TrigTrackCounts_p2() {
 }
@@ -3648,7 +3636,7 @@ TrigSpacePointCountsCollection_tlp1::TrigSpacePointCountsCollection_tlp1(const T
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigSpacePointCountsCollection_tlp1 &modrhs = const_cast<TrigSpacePointCountsCollection_tlp1 &>( rhs );
    modrhs.m_trigSpacePointCountsCollectionVec.clear();
    modrhs.m_trigSpacePointCountsVec.clear();
@@ -3677,7 +3665,7 @@ TrigSpacePointCounts_p1::TrigSpacePointCounts_p1(const TrigSpacePointCounts_p1 &
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigSpacePointCounts_p1::~TrigSpacePointCounts_p1() {
 }
@@ -3697,7 +3685,7 @@ TrigSpacePointCounts_p2::TrigSpacePointCounts_p2(const TrigSpacePointCounts_p2 &
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigSpacePointCounts_p2::~TrigSpacePointCounts_p2() {
 }
@@ -3714,7 +3702,7 @@ TrigEFBjetContainer_tlp2::TrigEFBjetContainer_tlp2(const TrigEFBjetContainer_tlp
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigEFBjetContainer_tlp2 &modrhs = const_cast<TrigEFBjetContainer_tlp2 &>( rhs );
    modrhs.m_TrigEFBjetContainers.clear();
    modrhs.m_EFBjet.clear();
@@ -3745,7 +3733,7 @@ TrigEFBjet_p2::TrigEFBjet_p2(const TrigEFBjet_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigEFBjet_p2::~TrigEFBjet_p2() {
 }
@@ -3761,7 +3749,7 @@ TrigTauClusterDetailsContainer_tlp1::TrigTauClusterDetailsContainer_tlp1(const T
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigTauClusterDetailsContainer_tlp1 &modrhs = const_cast<TrigTauClusterDetailsContainer_tlp1 &>( rhs );
    modrhs.m_TrigTauClusterDetailsContainers.clear();
    modrhs.m_TauClusterDetails.clear();
@@ -3778,7 +3766,7 @@ TrigTauClusterDetails_p1::TrigTauClusterDetails_p1(const TrigTauClusterDetails_p
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    for (Int_t i=0;i<4;i++) m_EMRadius[i] = rhs.m_EMRadius[i];
    for (Int_t i=0;i<3;i++) m_HADRadius[i] = rhs.m_HADRadius[i];
    for (Int_t i=0;i<4;i++) m_EMenergyWidth[i] = rhs.m_EMenergyWidth[i];
@@ -3806,7 +3794,7 @@ JetCollection_tlp5::JetCollection_tlp5(const JetCollection_tlp5 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    JetCollection_tlp5 &modrhs = const_cast<JetCollection_tlp5 &>( rhs );
    modrhs.m_jetCollectionContainers.clear();
    modrhs.m_jet_p5.clear();
@@ -3826,7 +3814,7 @@ Navigable_p1<unsigned int,double>::Navigable_p1(const Navigable_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    Navigable_p1 &modrhs = const_cast<Navigable_p1 &>( rhs );
    modrhs.m_parameters.clear();
 }
@@ -3846,7 +3834,7 @@ JetConverterTypes::momentum::momentum(const momentum & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 JetConverterTypes::momentum::~momentum() {
 }
@@ -3872,7 +3860,7 @@ Jet_p5::Jet_p5(const Jet_p5 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    Jet_p5 &modrhs = const_cast<Jet_p5 &>( rhs );
    modrhs.m_rawSignal.clear();
    modrhs.m_shapeStore.clear();
@@ -3892,7 +3880,7 @@ JetAssociationBase_p1::JetAssociationBase_p1(const JetAssociationBase_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 JetAssociationBase_p1::~JetAssociationBase_p1() {
 }
@@ -3909,7 +3897,7 @@ TrigMuonEFContainer_tlp1::TrigMuonEFContainer_tlp1(const TrigMuonEFContainer_tlp
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigMuonEFContainer_tlp1 &modrhs = const_cast<TrigMuonEFContainer_tlp1 &>( rhs );
    modrhs.m_TrigMuonEFContainers.clear();
    modrhs.m_MuonEF.clear();
@@ -3931,7 +3919,7 @@ TrigMuonEF_p1::TrigMuonEF_p1(const TrigMuonEF_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigMuonEF_p1 &modrhs = const_cast<TrigMuonEF_p1 &>( rhs );
    modrhs.m_roi.clear();
 }
@@ -3958,7 +3946,7 @@ TrigMuonEFInfoContainer_tlp1::TrigMuonEFInfoContainer_tlp1(const TrigMuonEFInfoC
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigMuonEFInfoContainer_tlp1 &modrhs = const_cast<TrigMuonEFInfoContainer_tlp1 &>( rhs );
    modrhs.m_TrigMuonEFInfoContainers.clear();
    modrhs.m_MuonEFInfo.clear();
@@ -3988,7 +3976,7 @@ TrigMuonEFInfo_p1::TrigMuonEFInfo_p1(const TrigMuonEFInfo_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigMuonEFInfo_p1::~TrigMuonEFInfo_p1() {
 }
@@ -4006,7 +3994,7 @@ TrigMuonEFInfo_p2::TrigMuonEFInfo_p2(const TrigMuonEFInfo_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigMuonEFInfo_p2::~TrigMuonEFInfo_p2() {
 }
@@ -4032,7 +4020,7 @@ TrigMuonEFInfo_p3::TrigMuonEFInfo_p3(const TrigMuonEFInfo_p3 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigMuonEFInfo_p3::~TrigMuonEFInfo_p3() {
 }
@@ -4048,7 +4036,7 @@ TrigMuonEFTrack_p1::TrigMuonEFTrack_p1(const TrigMuonEFTrack_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigMuonEFTrack_p1::~TrigMuonEFTrack_p1() {
 }
@@ -4079,7 +4067,7 @@ TrigMuonEFTrack_p2::TrigMuonEFTrack_p2(const TrigMuonEFTrack_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigMuonEFTrack_p2::~TrigMuonEFTrack_p2() {
 }
@@ -4096,7 +4084,7 @@ TrigMuonEFCbTrack_p1::TrigMuonEFCbTrack_p1(const TrigMuonEFCbTrack_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigMuonEFCbTrack_p1::~TrigMuonEFCbTrack_p1() {
 }
@@ -4116,7 +4104,7 @@ TrigMuonEFCbTrack_p2::TrigMuonEFCbTrack_p2(const TrigMuonEFCbTrack_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigMuonEFCbTrack_p2::~TrigMuonEFCbTrack_p2() {
 }
@@ -4134,7 +4122,7 @@ TrigMuonEFInfoTrack_p1::TrigMuonEFInfoTrack_p1(const TrigMuonEFInfoTrack_p1 & rh
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigMuonEFInfoTrack_p1::~TrigMuonEFInfoTrack_p1() {
 }
@@ -4150,7 +4138,7 @@ TrigT2JetContainer_tlp1::TrigT2JetContainer_tlp1(const TrigT2JetContainer_tlp1 &
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigT2JetContainer_tlp1 &modrhs = const_cast<TrigT2JetContainer_tlp1 &>( rhs );
    modrhs.m_TrigT2JetContainers.clear();
    modrhs.m_T2Jet.clear();
@@ -4173,7 +4161,7 @@ TrigT2Jet_p1::TrigT2Jet_p1(const TrigT2Jet_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigT2Jet_p1::~TrigT2Jet_p1() {
 }
@@ -4190,7 +4178,7 @@ egDetail_p1::egDetail_p1(const egDetail_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    egDetail_p1 &modrhs = const_cast<egDetail_p1 &>( rhs );
    modrhs.m_className.clear();
    modrhs.m_egDetailEnumParams.clear();
@@ -4210,7 +4198,7 @@ TrigT2MbtsBitsContainer_tlp1::TrigT2MbtsBitsContainer_tlp1(const TrigT2MbtsBitsC
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigT2MbtsBitsContainer_tlp1 &modrhs = const_cast<TrigT2MbtsBitsContainer_tlp1 &>( rhs );
    modrhs.m_trigT2MbtsBitsContainerVec.clear();
    modrhs.m_trigT2MbtsBitsVec.clear();
@@ -4229,7 +4217,7 @@ TrigT2MbtsBits_p1::TrigT2MbtsBits_p1(const TrigT2MbtsBits_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigT2MbtsBits_p1 &modrhs = const_cast<TrigT2MbtsBits_p1 &>( rhs );
    modrhs.m_triggerTimes.clear();
 }
@@ -4247,7 +4235,7 @@ IsoMuonFeatureContainer_tlp1::IsoMuonFeatureContainer_tlp1(const IsoMuonFeatureC
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    IsoMuonFeatureContainer_tlp1 &modrhs = const_cast<IsoMuonFeatureContainer_tlp1 &>( rhs );
    modrhs.m_isoMuonFeatureContainerVec.clear();
    modrhs.m_isoMuonFeatureVec.clear();
@@ -4277,7 +4265,7 @@ IsoMuonFeature_p1::IsoMuonFeature_p1(const IsoMuonFeature_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 IsoMuonFeature_p1::~IsoMuonFeature_p1() {
 }
@@ -4293,7 +4281,7 @@ MuonFeatureContainer_tlp2::MuonFeatureContainer_tlp2(const MuonFeatureContainer_
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    MuonFeatureContainer_tlp2 &modrhs = const_cast<MuonFeatureContainer_tlp2 &>( rhs );
    modrhs.m_muonFeatureContainerVec.clear();
    modrhs.m_muonFeatureVec.clear();
@@ -4336,7 +4324,7 @@ MuonFeature_p2::MuonFeature_p2(const MuonFeature_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 MuonFeature_p2::~MuonFeature_p2() {
 }
@@ -4354,7 +4342,7 @@ TrigEMClusterContainer_tlp1::TrigEMClusterContainer_tlp1(const TrigEMClusterCont
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigEMClusterContainer_tlp1 &modrhs = const_cast<TrigEMClusterContainer_tlp1 &>( rhs );
    modrhs.m_TrigEMClusterContainers.clear();
    modrhs.m_EMCluster.clear();
@@ -4386,7 +4374,7 @@ TrigEMCluster_p1::TrigEMCluster_p1(const TrigEMCluster_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    for (Int_t i=0;i<25;i++) m_EnergyS[i] = rhs.m_EnergyS[i];
 }
 TrigEMCluster_p1::~TrigEMCluster_p1() {
@@ -4408,7 +4396,7 @@ TrigCaloCluster_p1::TrigCaloCluster_p1(const TrigCaloCluster_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    for (Int_t i=0;i<25;i++) m_rawEnergyS[i] = rhs.m_rawEnergyS[i];
 }
 TrigCaloCluster_p1::~TrigCaloCluster_p1() {
@@ -4437,7 +4425,7 @@ TrigEMCluster_p2::TrigEMCluster_p2(const TrigEMCluster_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    for (Int_t i=0;i<25;i++) m_EnergyS[i] = rhs.m_EnergyS[i];
 }
 TrigEMCluster_p2::~TrigEMCluster_p2() {
@@ -4463,7 +4451,7 @@ TrackRecord_p1::TrackRecord_p1(const TrackRecord_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrackRecord_p1 &modrhs = const_cast<TrackRecord_p1 &>( rhs );
    modrhs.m_volName.clear();
 }
@@ -4481,7 +4469,7 @@ TrackRecordCollection_p2::TrackRecordCollection_p2(const TrackRecordCollection_p
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrackRecordCollection_p2 &modrhs = const_cast<TrackRecordCollection_p2 &>( rhs );
    modrhs.m_cont.clear();
    modrhs.m_name.clear();
@@ -4502,7 +4490,7 @@ TrigTauClusterContainer_tlp1::TrigTauClusterContainer_tlp1(const TrigTauClusterC
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigTauClusterContainer_tlp1 &modrhs = const_cast<TrigTauClusterContainer_tlp1 &>( rhs );
    modrhs.m_TrigTauClusterContainers.clear();
    modrhs.m_TauCluster.clear();
@@ -4531,7 +4519,7 @@ TrigTauCluster_p1::TrigTauCluster_p1(const TrigTauCluster_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    for (Int_t i=0;i<25;i++) m_EnergyS[i] = rhs.m_EnergyS[i];
    for (Int_t i=0;i<4;i++) m_EMRadius[i] = rhs.m_EMRadius[i];
    for (Int_t i=0;i<4;i++) m_EMenergyWidth[i] = rhs.m_EMenergyWidth[i];
@@ -4566,7 +4554,7 @@ TrigTauCluster_p2::TrigTauCluster_p2(const TrigTauCluster_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigTauCluster_p2::~TrigTauCluster_p2() {
 }
@@ -4583,7 +4571,7 @@ TrigMissingETContainer_tlp1::TrigMissingETContainer_tlp1(const TrigMissingETCont
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigMissingETContainer_tlp1 &modrhs = const_cast<TrigMissingETContainer_tlp1 &>( rhs );
    modrhs.m_TrigMissingETContainer_p1.clear();
    modrhs.m_TrigMissingET_p1.clear();
@@ -4605,7 +4593,7 @@ TrigMissingET_p1::TrigMissingET_p1(const TrigMissingET_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigMissingET_p1::~TrigMissingET_p1() {
 }
@@ -4638,7 +4626,7 @@ TrigMissingET_p2::TrigMissingET_p2(const TrigMissingET_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigMissingET_p2 &modrhs = const_cast<TrigMissingET_p2 &>( rhs );
    modrhs.m_c_name.clear();
    modrhs.m_c_status.clear();
@@ -4667,7 +4655,7 @@ TrigL2BjetContainer_tlp2::TrigL2BjetContainer_tlp2(const TrigL2BjetContainer_tlp
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigL2BjetContainer_tlp2 &modrhs = const_cast<TrigL2BjetContainer_tlp2 &>( rhs );
    modrhs.m_TrigL2BjetContainers.clear();
    modrhs.m_L2Bjet.clear();
@@ -4698,7 +4686,7 @@ TrigL2Bjet_p2::TrigL2Bjet_p2(const TrigL2Bjet_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigL2Bjet_p2::~TrigL2Bjet_p2() {
 }
@@ -4714,7 +4702,7 @@ CaloClusterMomentContainer_p1::ClusterMoment_p::ClusterMoment_p(const ClusterMom
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 CaloClusterMomentContainer_p1::ClusterMoment_p::~ClusterMoment_p() {
 }
@@ -4730,7 +4718,7 @@ CaloClusterMomentContainer_p1::CaloClusterMomentContainer_p1(const CaloClusterMo
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    CaloClusterMomentContainer_p1 &modrhs = const_cast<CaloClusterMomentContainer_p1 &>( rhs );
    modrhs.m_store.clear();
 }
@@ -4749,7 +4737,7 @@ CaloShowerContainer_p2::CaloShowerContainer_p2(const CaloShowerContainer_p2 & rh
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 CaloShowerContainer_p2::~CaloShowerContainer_p2() {
 }
@@ -4765,7 +4753,7 @@ CaloSamplingDataContainer_p1::CaloSamplingDataContainer_p1(const CaloSamplingDat
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    CaloSamplingDataContainer_p1 &modrhs = const_cast<CaloSamplingDataContainer_p1 &>( rhs );
    modrhs.m_varTypePatterns.clear();
    modrhs.m_dataStore.clear();
@@ -4785,7 +4773,7 @@ TileTrackMuFeatureContainer_tlp1::TileTrackMuFeatureContainer_tlp1(const TileTra
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TileTrackMuFeatureContainer_tlp1 &modrhs = const_cast<TileTrackMuFeatureContainer_tlp1 &>( rhs );
    modrhs.m_TileTrackMuFeatureContainerVec.clear();
    modrhs.m_TileTrackMuFeatureVec.clear();
@@ -4809,7 +4797,7 @@ TileTrackMuFeature_p1::TileTrackMuFeature_p1(const TileTrackMuFeature_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TileTrackMuFeature_p1::~TileTrackMuFeature_p1() {
 }
@@ -4829,7 +4817,7 @@ TileTrackMuFeature_p2::TileTrackMuFeature_p2(const TileTrackMuFeature_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TileTrackMuFeature_p2::~TileTrackMuFeature_p2() {
 }
@@ -4846,7 +4834,7 @@ TrigPhotonContainer_tlp2::TrigPhotonContainer_tlp2(const TrigPhotonContainer_tlp
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigPhotonContainer_tlp2 &modrhs = const_cast<TrigPhotonContainer_tlp2 &>( rhs );
    modrhs.m_TrigPhotonContainers.clear();
    modrhs.m_Photon.clear();
@@ -4873,7 +4861,7 @@ TrigPhoton_p2::TrigPhoton_p2(const TrigPhoton_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigPhoton_p2::~TrigPhoton_p2() {
 }
@@ -4889,7 +4877,7 @@ TileMuFeatureContainer_tlp1::TileMuFeatureContainer_tlp1(const TileMuFeatureCont
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TileMuFeatureContainer_tlp1 &modrhs = const_cast<TileMuFeatureContainer_tlp1 &>( rhs );
    modrhs.m_TileMuFeatureContainerVec.clear();
    modrhs.m_TileMuFeatureVec.clear();
@@ -4910,7 +4898,7 @@ TileMuFeature_p1::TileMuFeature_p1(const TileMuFeature_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TileMuFeature_p1 &modrhs = const_cast<TileMuFeature_p1 &>( rhs );
    modrhs.m_energy_deposited.clear();
 }
@@ -4930,7 +4918,7 @@ TrigVertexCollection_tlp1::TrigVertexCollection_tlp1(const TrigVertexCollection_
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigVertexCollection_tlp1 &modrhs = const_cast<TrigVertexCollection_tlp1 &>( rhs );
    modrhs.m_TrigVertexCollection.clear();
    modrhs.m_Vertex.clear();
@@ -4960,7 +4948,7 @@ TrigVertex_p1::TrigVertex_p1(const TrigVertex_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    for (Int_t i=0;i<6;i++) m_cov[i] = rhs.m_cov[i];
    TrigVertex_p1 &modrhs = const_cast<TrigVertex_p1 &>( rhs );
    modrhs.m_tracks.clear();
@@ -4982,7 +4970,7 @@ TrigInDetTrackCollection_tlp1::TrigInDetTrackCollection_tlp1(const TrigInDetTrac
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigInDetTrackCollection_tlp1 &modrhs = const_cast<TrigInDetTrackCollection_tlp1 &>( rhs );
    modrhs.m_trigInDetTrackCollections.clear();
    modrhs.m_trigInDetTracks.clear();
@@ -5009,7 +4997,7 @@ TrigInDetTrackFitPar_p2::TrigInDetTrackFitPar_p2(const TrigInDetTrackFitPar_p2 &
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    for (Int_t i=0;i<15;i++) m_cov[i] = rhs.m_cov[i];
 }
 TrigInDetTrackFitPar_p2::~TrigInDetTrackFitPar_p2() {
@@ -5035,7 +5023,7 @@ TrigInDetTrack_p2::TrigInDetTrack_p2(const TrigInDetTrack_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigInDetTrack_p2::~TrigInDetTrack_p2() {
 }
@@ -5056,7 +5044,7 @@ TrigL2BphysContainer_tlp1::TrigL2BphysContainer_tlp1(const TrigL2BphysContainer_
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigL2BphysContainer_tlp1 &modrhs = const_cast<TrigL2BphysContainer_tlp1 &>( rhs );
    modrhs.m_TrigL2BphysContainers.clear();
    modrhs.m_L2Bphys.clear();
@@ -5087,7 +5075,7 @@ TrigL2Bphys_p1::TrigL2Bphys_p1(const TrigL2Bphys_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigL2Bphys_p1::~TrigL2Bphys_p1() {
 }
@@ -5114,7 +5102,7 @@ TrigL2Bphys_p2::TrigL2Bphys_p2(const TrigL2Bphys_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigL2Bphys_p2::~TrigL2Bphys_p2() {
 }
@@ -5132,7 +5120,7 @@ TrigEFBphysContainer_tlp1::TrigEFBphysContainer_tlp1(const TrigEFBphysContainer_
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigEFBphysContainer_tlp1 &modrhs = const_cast<TrigEFBphysContainer_tlp1 &>( rhs );
    modrhs.m_TrigEFBphysContainers.clear();
    modrhs.m_EFBphys.clear();
@@ -5158,7 +5146,7 @@ TrigEFBphys_p1::TrigEFBphys_p1(const TrigEFBphys_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigEFBphys_p1::~TrigEFBphys_p1() {
 }
@@ -5185,7 +5173,7 @@ TrigEFBphys_p2::TrigEFBphys_p2(const TrigEFBphys_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigEFBphys_p2::~TrigEFBphys_p2() {
 }
@@ -5201,7 +5189,7 @@ RingerRingsContainer_tlp1::RingerRingsContainer_tlp1(const RingerRingsContainer_
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    RingerRingsContainer_tlp1 &modrhs = const_cast<RingerRingsContainer_tlp1 &>( rhs );
    modrhs.m_RingerRingsContainers.clear();
    modrhs.m_RingerRings.clear();
@@ -5220,7 +5208,7 @@ RingerRings_p1::RingerRings_p1(const RingerRings_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    RingerRings_p1 &modrhs = const_cast<RingerRings_p1 &>( rhs );
    modrhs.m_rings.clear();
 }
@@ -5239,7 +5227,7 @@ Rec::TrackParticleTruthCollection_p1::Entry::Entry(const Entry & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Rec::TrackParticleTruthCollection_p1::Entry::~Entry() {
 }
@@ -5255,7 +5243,7 @@ Rec::TrackParticleTruthCollection_p1::TrackParticleTruthCollection_p1(const Trac
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrackParticleTruthCollection_p1 &modrhs = const_cast<TrackParticleTruthCollection_p1 &>( rhs );
    modrhs.m_entries.clear();
 }
@@ -5286,7 +5274,7 @@ Trk::V0Container_tlp1::V0Container_tlp1(const V0Container_tlp1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    V0Container_tlp1 &modrhs = const_cast<V0Container_tlp1 &>( rhs );
    modrhs.m_v0Containers.clear();
    modrhs.m_v0Candidates.clear();
@@ -5317,7 +5305,7 @@ Trk::V0Candidate_p1::V0Candidate_p1(const V0Candidate_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    V0Candidate_p1 &modrhs = const_cast<V0Candidate_p1 &>( rhs );
    modrhs.m_v0Hyp.clear();
 }
@@ -5337,7 +5325,7 @@ Trk::V0Hypothesis_p1::V0Hypothesis_p1(const V0Hypothesis_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Trk::V0Hypothesis_p1::~V0Hypothesis_p1() {
 }
@@ -5353,7 +5341,7 @@ CosmicMuonCollection_tlp1::CosmicMuonCollection_tlp1(const CosmicMuonCollection_
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    CosmicMuonCollection_tlp1 &modrhs = const_cast<CosmicMuonCollection_tlp1 &>( rhs );
    modrhs.m_cosmicMuonCollectionVec.clear();
    modrhs.m_cosmicMuonVec.clear();
@@ -5380,7 +5368,7 @@ CosmicMuon_p1::CosmicMuon_p1(const CosmicMuon_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    for (Int_t i=0;i<3;i++) mPoint[i] = rhs.mPoint[i];
 }
 CosmicMuon_p1::~CosmicMuon_p1() {
@@ -5401,7 +5389,7 @@ CaloCellLinkContainer_p2::CaloCellLinkContainer_p2(const CaloCellLinkContainer_p
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    CaloCellLinkContainer_p2 &modrhs = const_cast<CaloCellLinkContainer_p2 &>( rhs );
    modrhs.m_linkI.clear();
    modrhs.m_linkW.clear();
@@ -5424,7 +5412,7 @@ TrigTauContainer_tlp1::TrigTauContainer_tlp1(const TrigTauContainer_tlp1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrigTauContainer_tlp1 &modrhs = const_cast<TrigTauContainer_tlp1 &>( rhs );
    modrhs.m_TrigTauContainers.clear();
    modrhs.m_Tau.clear();
@@ -5449,7 +5437,7 @@ TrigTau_p2::TrigTau_p2(const TrigTau_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 TrigTau_p2::~TrigTau_p2() {
 }
@@ -5464,7 +5452,7 @@ MuonSpShowerContainer_p1::MuonSpShowerContainer_p1(const MuonSpShowerContainer_p
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    MuonSpShowerContainer_p1 &modrhs = const_cast<MuonSpShowerContainer_p1 &>( rhs );
    modrhs.m_showers.clear();
 }
@@ -5482,7 +5470,7 @@ MdtTrackSegmentCollection_tlp1::MdtTrackSegmentCollection_tlp1(const MdtTrackSeg
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    MdtTrackSegmentCollection_tlp1 &modrhs = const_cast<MdtTrackSegmentCollection_tlp1 &>( rhs );
    modrhs.m_mdtTrackSegmentCollectionVec.clear();
    modrhs.m_mdtTrackSegmentVec.clear();
@@ -5509,7 +5497,7 @@ MdtTrackSegment_p1::MdtTrackSegment_p1(const MdtTrackSegment_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 MdtTrackSegment_p1::~MdtTrackSegment_p1() {
 }
@@ -5546,7 +5534,7 @@ Rec::TrackParticleContainer_tlp1::TrackParticleContainer_tlp1(const TrackParticl
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrackParticleContainer_tlp1 &modrhs = const_cast<TrackParticleContainer_tlp1 &>( rhs );
    modrhs.m_trackParticleContainer.clear();
    modrhs.m_trackParticle.clear();
@@ -5584,7 +5572,7 @@ Rec::TrackParticle_p1::TrackParticle_p1(const TrackParticle_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 Rec::TrackParticle_p1::~TrackParticle_p1() {
 }
@@ -5610,7 +5598,7 @@ Trk::TrackParticleBase_p1::TrackParticleBase_p1(const TrackParticleBase_p1 & rhs
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrackParticleBase_p1 &modrhs = const_cast<TrackParticleBase_p1 &>( rhs );
    modrhs.m_trackParameters.clear();
 }
@@ -5629,7 +5617,7 @@ Trk::TrackSummary_p1::TrackSummary_p1(const TrackSummary_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    TrackSummary_p1 &modrhs = const_cast<TrackSummary_p1 &>( rhs );
    modrhs.m_information.clear();
    modrhs.m_eProbability.clear();
@@ -5648,7 +5636,7 @@ MuonCaloEnergyContainer_tlp1::MuonCaloEnergyContainer_tlp1(const MuonCaloEnergyC
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    MuonCaloEnergyContainer_tlp1 &modrhs = const_cast<MuonCaloEnergyContainer_tlp1 &>( rhs );
    modrhs.m_muonCaloEnergyContainer.clear();
    modrhs.m_caloEnergies.clear();
@@ -5672,7 +5660,7 @@ CaloEnergy_p2::CaloEnergy_p2(const CaloEnergy_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
    CaloEnergy_p2 &modrhs = const_cast<CaloEnergy_p2 &>( rhs );
    modrhs.m_deposits.clear();
 }
@@ -5697,7 +5685,7 @@ MuonSpShower_p1::MuonSpShower_p1(const MuonSpShower_p1 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 MuonSpShower_p1::~MuonSpShower_p1() {
 }
@@ -5715,7 +5703,7 @@ DepositInCalo_p2::DepositInCalo_p2(const DepositInCalo_p2 & rhs)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
-   if (&rhs) {} // avoid warning about unused parameter
+
 }
 DepositInCalo_p2::~DepositInCalo_p2() {
 }
