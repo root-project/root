@@ -83,7 +83,7 @@ void vxinvb_(int *ixv, int *n)
       n2[2] = n1[1];
       n2[3] = n1[0];
       ixv[jloop] = out;
-      printf("%04x ", ixv[jloop]);
+      printf("%x ", ixv[jloop]);
    }
    printf("\n");
    return;
@@ -105,7 +105,9 @@ void vxinvc_ (int *iv, int *ixv, int *n)
       n2[2] = n1[1];
       n2[3] = n1[0];
       ixv[jloop] = out;
+      printf("%x ", ixv[jloop]);
    }
+   printf("\n");
    return;
 }
 
