@@ -2756,7 +2756,7 @@ macro(ROOTTEST_SETUP_MACROTEST)
   set(root_buildcmd ${ROOT_root_CMD} ${RootExeDefines} -q -l -b)
 
   # Compile macro, then add to CTest.
-  if(ARG_MACRO MATCHES "[.]C\\+" OR ARG_MACRO MATCHES "[.]cxx\\+")
+  if(ARG_MACRO MATCHES "[.]C\\+" OR ARG_MACRO MATCHES "[.]cxx\\+" OR ARG_MACRO MATCHES "[.]cpp\\+" OR ARG_MACRO MATCHES "[.]cc\\+")
     string(REPLACE "+" "" compile_name "${ARG_MACRO}")
     get_filename_component(realfp ${compile_name} REALPATH)
 
@@ -2767,7 +2767,7 @@ macro(ROOTTEST_SETUP_MACROTEST)
     endif()
 
   # Add interpreted macro to CTest.
-  elseif(ARG_MACRO MATCHES "[.]C" OR ARG_MACRO MATCHES "[.]cxx")
+  elseif(ARG_MACRO MATCHES "[.]C" OR ARG_MACRO MATCHES "[.]cxx" OR ARG_MACRO MATCHES "[.]cpp" OR ARG_MACRO MATCHES "[.]cc")
     get_filename_component(realfp ${ARG_MACRO} REALPATH)
     if(DEFINED ARG_MACROARG)
       set(realfp "${realfp}(${ARG_MACROARG})")
