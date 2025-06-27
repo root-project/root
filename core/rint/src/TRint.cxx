@@ -181,7 +181,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options, 
          std::cerr << "root: unrecognized option '" << argv[n] << "'\n";
       }
       std::cerr << "Try 'root --help' for more information.\n";
-      TApplication::Terminate(0);
+      TApplication::Terminate(2);
    }
 
    fNcmd          = 0;
