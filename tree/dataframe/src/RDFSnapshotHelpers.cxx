@@ -303,8 +303,6 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, ROOT::Internal::RDF:
 }
 } // namespace
 
-namespace ROOT::Internal::RDF {
-
 ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::UntypedSnapshotTTreeHelper(
    std::string_view filename, std::string_view dirname, std::string_view treename, const ColumnNames_t &vbnames,
    const ColumnNames_t &bnames, const RSnapshotOptions &options, std::vector<bool> &&isDefine,
@@ -805,5 +803,3 @@ ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::MakeNew(void *newName)
                                        fInputLoopManager,  fOutputLoopManager, std::vector<bool>(fIsDefine),
                                        fInputColumnTypeIDs};
 }
-
-} // namespace ROOT::Internal::RDF
