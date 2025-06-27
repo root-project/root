@@ -18,12 +18,13 @@
 // root > .x julius.C(5)
 //By default the reader reads only 50% of the rows. This may be changed
 //by changing the default value of fraction in the function jread.
-   
+
 #include "TFile.h"
 #include "TStopwatch.h"
 #include "TTree.h"
 #include "TRandom.h"
 #include "TGraph.h"
+#include "TAxis.h"
 #include "TMultiGraph.h"
 #include "TCanvas.h"
 #include "TLegend.h"
@@ -34,10 +35,10 @@ Double_t jwrite(int nrows,int compress) {
         int integers[nints];
         float floats[nfloats];
         char astring[12];
-        
+
         TStopwatch timer;
         timer.Start();
-        
+
         //build the Tree and its branches
         TFile f("julius.root","recreate","test julius",compress);
         TTree *T = new TTree("T","julius test");
@@ -50,7 +51,7 @@ Double_t jwrite(int nrows,int compress) {
                 T->Branch(Form("float%d",i),&floats[i],Form("float%d/F",i));
         }
 
-        //fill the tree 
+        //fill the tree
         for (i=0;i<nrows;i++) {
                 sprintf(astring,"s%d",i);
                 for (j=0;j<nints;j++) integers[j] = 100*i+j;
@@ -63,7 +64,7 @@ Double_t jwrite(int nrows,int compress) {
         //T->Print();
         timer.Stop();
         Double_t cpu = timer.CpuTime();
-    printf("Write: compress=  %d, nrows=%d  : RT=%7.3f s, Cpu=%7.3f s, filesize = %d bytes\n",compress,nrows,timer.RealTime(),cpu,f.GetEND());
+        printf("Write: compress=  %d, nrows=%d  : RT=%7.3f s, Cpu=%7.3f s, filesize = %ld bytes\n",compress,nrows,timer.RealTime(),cpu,(long) f.GetEND());
         return cpu;
 }
 Double_t jread(double fraction =0.5) {
@@ -72,10 +73,10 @@ Double_t jread(double fraction =0.5) {
         int integers[nints];
         float floats[nfloats];
         char astring[12];
-        
+
         TStopwatch timer;
         timer.Start();
-        
+
         //read the Tree and its branches
         TFile f("julius.root");
         TTree *T = (TTree*)f.Get("T");
