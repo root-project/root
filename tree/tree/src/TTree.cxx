@@ -10023,3 +10023,9 @@ TBranch *ROOT::Internal::TreeUtils::CallBranchImpRef(TTree &tree, const char *br
 {
    return tree.BranchImpRef(branchname, ptrClass, datatype, addobj, bufsize, splitlevel);
 }
+
+TBranch *ROOT::Internal::TreeUtils::CallBranchImp(TTree &tree, const char *branchname, TClass *ptrClass, void *addobj,
+                                                  Int_t bufsize, Int_t splitlevel)
+{
+   return tree.BranchImp(branchname, ptrClass, addobj, bufsize, splitlevel);
+}

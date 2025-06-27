@@ -292,7 +292,7 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
 void SetBranchesHelper(TTree *inputTree, TTree &outputTree, RBranchSet &outputBranches, int basketSize,
                        const std::string &inputBranchName, const std::string &outputBranchName,
                        const std::type_info &valueTypeID, void *valueAddress, TBranch *&actionHelperBranchPtr,
-                       void *&actionHelperBranchPtrAddress);
+                       void *&actionHelperBranchPtrAddress, bool isDefine);
 
 /// Ensure that the TTree with the resulting snapshot can be written to the target TFile. This means checking that the
 /// TFile can be opened in the mode specified in `opts`, deleting any existing TTrees in case
@@ -419,7 +419,7 @@ public:
       // We use the expander trick rather than a fold expression to avoid incurring in the bracket depth limit of clang
       int expander[] = {(SetBranchesHelper(inputTree, outputTree, outputBranches, fOptions.fBasketSize,
                                            fInputBranchNames[S], fOutputBranchNames[S], typeid(ColTypes),
-                                           dummyValueAddress, dummyTBranchPtr, dummyTBranchAddress),
+                                           dummyValueAddress, dummyTBranchPtr, dummyTBranchAddress, fIsDefine[S]),
                          0)...,
                         0};
       (void)expander;
@@ -671,7 +671,7 @@ public:
       // We use the expander trick rather than a fold expression to avoid incurring in the bracket depth limit of clang
       int expander[] = {(SetBranchesHelper(inputTree, outputTree, outputBranches, fOptions.fBasketSize,
                                            fInputBranchNames[S], fOutputBranchNames[S], typeid(ColTypes),
-                                           dummyValueAddress, dummyTBranchPtr, dummyTBranchAddress),
+                                           dummyValueAddress, dummyTBranchPtr, dummyTBranchAddress, fIsDefine[S]),
                          0)...,
                         0};
       (void)expander;
