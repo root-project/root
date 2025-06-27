@@ -15,6 +15,7 @@
 #include "ROOT/RDF/RDefineReader.hxx" // RDefinesWithReaders
 #include "ROOT/RDF/RFilterBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
+#include "ROOT/RNTupleProcessor.hxx"
 #include "ROOT/RDF/RRangeBase.hxx"
 #include "ROOT/RDF/RVariationBase.hxx"
 #include "ROOT/RDF/RVariationReader.hxx" // RVariationsWithReaders
@@ -317,6 +318,50 @@ auto MakeDatasetColReadersKey(std::string_view colName, const std::type_info &ti
 }
 } // anonymous namespace
 
+/**
+ * \brief Helper function to open a file (or the first file from a glob).
+ * This function is used at construction time of an RDataFrame, to check the
+ * concrete type of the dataset stored inside the file.
+ */
+std::unique_ptr<TFile> OpenFileWithSanityChecks(std::string_view fileNameGlob)
+{
+   // Follow same logic in TChain::Add to find the correct string to look for globbing:
+   // - If the extension ".root" is present in the file name, pass along the basename.
+   // - If not, use the "?" token to delimit the part of the string which represents the basename.
+   // - Otherwise, pass the full filename.
+   auto &&baseNameAndQuery = [&fileNameGlob]() {
+      constexpr std::string_view delim{".root"};
+      if (auto &&it = std::find_end(fileNameGlob.begin(), fileNameGlob.end(), delim.begin(), delim.end());
+          it != fileNameGlob.end()) {
+         auto &&distanceToEndOfDelim = std::distance(fileNameGlob.begin(), it + delim.length());
+         return std::make_pair(fileNameGlob.substr(0, distanceToEndOfDelim), fileNameGlob.substr(distanceToEndOfDelim));
+      } else if (auto &&lastQuestionMark = fileNameGlob.find_last_of('?'); lastQuestionMark != std::string_view::npos)
+         return std::make_pair(fileNameGlob.substr(0, lastQuestionMark), fileNameGlob.substr(lastQuestionMark));
+      else
+         return std::make_pair(fileNameGlob, std::string_view{});
+   }();
+   // Captured structured bindings variable are only valid since C++20
+   auto &&baseName = baseNameAndQuery.first;
+   auto &&query = baseNameAndQuery.second;
+
+   std::string fileToOpen{fileNameGlob};
+   if (baseName.find_first_of("[]*?") != std::string_view::npos) { // Wildcards accepted by TChain::Add
+      const auto expanded = ROOT::Internal::TreeUtils::ExpandGlob(std::string{baseName});
+      if (expanded.empty())
+         throw std::invalid_argument{"RDataFrame: The glob expression '" + std::string{baseName} +
+                                     "' did not match any files."};
+
+      fileToOpen = expanded.front() + std::string{query};
+   }
+
+   ::TDirectory::TContext ctxt; // Avoid changing gDirectory;
+   std::unique_ptr<TFile> inFile{TFile::Open(fileToOpen.c_str(), "READ_WITHOUT_GLOBALREGISTRATION")};
+   if (!inFile || inFile->IsZombie())
+      throw std::invalid_argument("RDataFrame: could not open file \"" + fileToOpen + "\".");
+
+   return inFile;
+}
+
 namespace ROOT {
 namespace Detail {
 namespace RDF {
@@ -450,6 +495,11 @@ std::optional<std::string> GetRedirectedSampleId(std::string_view path, std::str
  */
 void RLoopManager::ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec)
 {
+   auto filesVec = spec.GetFileNameGlobs();
+   auto inFile = OpenFileWithSanityChecks(
+      filesVec[0]); // we only need the first file, we assume all files are either TTree or RNTuple
+   auto datasetName = spec.GetTreeNames();
+
    // Change the range of entries to be processed
    fBeginEntry = spec.GetEntryRangeBegin();
    fEndEntry = spec.GetEntryRangeEnd();
@@ -458,33 +508,75 @@ void RLoopManager::ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec)
    fSamples = spec.MoveOutSamples();
    fSampleMap.clear();
 
-   // Create the internal main chain
-   auto chain = ROOT::Internal::TreeUtils::MakeChainForMT();
-   for (auto &sample : fSamples) {
-      const auto &trees = sample.GetTreeNames();
-      const auto &files = sample.GetFileNameGlobs();
-      for (std::size_t i = 0ul; i < files.size(); ++i) {
-         // We need to use `<filename>?#<treename>` as an argument to TChain::Add
-         // (see https://github.com/root-project/root/pull/8820 for why)
-         const auto fullpath = files[i] + "?#" + trees[i];
-         chain->Add(fullpath.c_str());
-         // ...but instead we use `<filename>/<treename>` as a sample ID (cannot
-         // change this easily because of backward compatibility: the sample ID
-         // is exposed to users via RSampleInfo and DefinePerSample).
-         const auto sampleId = files[i] + '/' + trees[i];
-         fSampleMap.insert({sampleId, &sample});
+   const bool isTTree = inFile->Get<TTree>(datasetName[0].data());
+   const bool isRNTuple = inFile->Get<ROOT::RNTuple>(datasetName[0].data());
+
+   if (isTTree || isRNTuple) {
+
+      if (isTTree) {
+         // Create the internal main chain
+         auto chain = ROOT::Internal::TreeUtils::MakeChainForMT();
+         for (auto &sample : fSamples) {
+            const auto &trees = sample.GetTreeNames();
+            const auto &files = sample.GetFileNameGlobs();
+            for (std::size_t i = 0ul; i < files.size(); ++i) {
+               // We need to use `<filename>?#<treename>` as an argument to TChain::Add
+               // (see https://github.com/root-project/root/pull/8820 for why)
+               const auto fullpath = files[i] + "?#" + trees[i];
+               chain->Add(fullpath.c_str());
+               // ...but instead we use `<filename>/<treename>` as a sample ID (cannot
+               // change this easily because of backward compatibility: the sample ID
+               // is exposed to users via RSampleInfo and DefinePerSample).
+               const auto sampleId = files[i] + '/' + trees[i];
+               fSampleMap.insert({sampleId, &sample});
 #ifdef R__UNIX
-         // Also add redirected EOS xroot URL when available
-         if (auto redirectedSampleId = GetRedirectedSampleId(files[i], trees[i]))
-            fSampleMap.insert({redirectedSampleId.value(), &sample});
+               // Also add redirected EOS xroot URL when available
+               if (auto redirectedSampleId = GetRedirectedSampleId(files[i], trees[i]))
+                  fSampleMap.insert({redirectedSampleId.value(), &sample});
 #endif
+            }
+         }
+         fDataSource = std::make_unique<ROOT::Internal::RDF::RTTreeDS>(std::move(chain), spec.GetFriendInfo());
+      } else if (isRNTuple) {
+
+         std::vector<std::string> fileNames;
+         std::set<std::string> rntupleNames;
+
+         for (auto &sample : fSamples) {
+            const auto &trees = sample.GetTreeNames();
+            const auto &files = sample.GetFileNameGlobs();
+            for (std::size_t i = 0ul; i < files.size(); ++i) {
+               const auto sampleId = files[i] + '/' + trees[i];
+               fSampleMap.insert({sampleId, &sample});
+               fileNames.push_back(files[i]);
+               rntupleNames.insert(trees[i]);
+
+#ifdef R__UNIX
+               // Also add redirected EOS xroot URL when available
+               if (auto redirectedSampleId = GetRedirectedSampleId(files[i], trees[i]))
+                  fSampleMap.insert({redirectedSampleId.value(), &sample});
+#endif
+            }
+         }
+
+         if (rntupleNames.size() == 1) {
+            fDataSource = std::make_unique<ROOT::RDF::RNTupleDS>(*rntupleNames.begin(), fileNames);
+
+         } else {
+            throw std::runtime_error(
+               "More than one RNTuple name was found, please make sure to use RNTuples with the same name.");
+         }
       }
-   }
-   fDataSource = std::make_unique<ROOT::Internal::RDF::RTTreeDS>(std::move(chain), spec.GetFriendInfo());
-   fDataSource->SetNSlots(fNSlots);
-   for (unsigned int slot{}; slot < fNSlots; slot++) {
-      for (auto &v : fDatasetColumnReaders[slot])
-         v.second.reset();
+
+      fDataSource->SetNSlots(fNSlots);
+
+      for (unsigned int slot{}; slot < fNSlots; slot++) {
+         for (auto &v : fDatasetColumnReaders[slot])
+            v.second.reset();
+      }
+   } else {
+      throw std::invalid_argument(
+         "RDataFrame: unsupported data format for dataset. Make sure you use TTree or RNTuple.");
    }
 }
 
@@ -1183,50 +1275,6 @@ void RLoopManager::ChangeBeginAndEndEntries(Long64_t begin, Long64_t end)
 void ROOT::Detail::RDF::RLoopManager::SetTTreeLifeline(std::any lifeline)
 {
    fTTreeLifeline = std::move(lifeline);
-}
-
-/**
- * \brief Helper function to open a file (or the first file from a glob).
- * This function is used at construction time of an RDataFrame, to check the
- * concrete type of the dataset stored inside the file.
- */
-std::unique_ptr<TFile> OpenFileWithSanityChecks(std::string_view fileNameGlob)
-{
-   // Follow same logic in TChain::Add to find the correct string to look for globbing:
-   // - If the extension ".root" is present in the file name, pass along the basename.
-   // - If not, use the "?" token to delimit the part of the string which represents the basename.
-   // - Otherwise, pass the full filename.
-   auto &&baseNameAndQuery = [&fileNameGlob]() {
-      constexpr std::string_view delim{".root"};
-      if (auto &&it = std::find_end(fileNameGlob.begin(), fileNameGlob.end(), delim.begin(), delim.end());
-          it != fileNameGlob.end()) {
-         auto &&distanceToEndOfDelim = std::distance(fileNameGlob.begin(), it + delim.length());
-         return std::make_pair(fileNameGlob.substr(0, distanceToEndOfDelim), fileNameGlob.substr(distanceToEndOfDelim));
-      } else if (auto &&lastQuestionMark = fileNameGlob.find_last_of('?'); lastQuestionMark != std::string_view::npos)
-         return std::make_pair(fileNameGlob.substr(0, lastQuestionMark), fileNameGlob.substr(lastQuestionMark));
-      else
-         return std::make_pair(fileNameGlob, std::string_view{});
-   }();
-   // Captured structured bindings variable are only valid since C++20
-   auto &&baseName = baseNameAndQuery.first;
-   auto &&query = baseNameAndQuery.second;
-
-   std::string fileToOpen{fileNameGlob};
-   if (baseName.find_first_of("[]*?") != std::string_view::npos) { // Wildcards accepted by TChain::Add
-      const auto expanded = ROOT::Internal::TreeUtils::ExpandGlob(std::string{baseName});
-      if (expanded.empty())
-         throw std::invalid_argument{"RDataFrame: The glob expression '" + std::string{baseName} +
-                                     "' did not match any files."};
-
-      fileToOpen = expanded.front() + std::string{query};
-   }
-
-   ::TDirectory::TContext ctxt; // Avoid changing gDirectory;
-   std::unique_ptr<TFile> inFile{TFile::Open(fileToOpen.c_str(), "READ_WITHOUT_GLOBALREGISTRATION")};
-   if (!inFile || inFile->IsZombie())
-      throw std::invalid_argument("RDataFrame: could not open file \"" + fileToOpen + "\".");
-
-   return inFile;
 }
 
 std::shared_ptr<ROOT::Detail::RDF::RLoopManager>

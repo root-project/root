@@ -104,12 +104,18 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    std::vector<std::vector<ROOT::Internal::RDF::RNTupleColumnReader *>> fActiveColumnReaders;
 
    ULong64_t fSeenEntries = 0;                ///< The number of entries so far returned by GetEntryRanges()
+   ULong64_t fSeenEntriesWithGlobalRange = 0;
+   ULong64_t fSeenEntriesNoGlobalRange = 0;
+   ULong64_t fCounterFileEmpty = 0;
+
    std::vector<REntryRangeDS> fCurrentRanges; ///< Basis for the ranges returned by the last GetEntryRanges() call
    std::vector<REntryRangeDS> fNextRanges;    ///< Basis for the ranges populated by the PrepareNextRanges() call
    /// Maps the first entries from the ranges of the last GetEntryRanges() call to their corresponding index in
    /// the fCurrentRanges vectors.  This is necessary because the returned ranges get distributed arbitrarily
    /// onto slots.  In the InitSlot method, the column readers use this map to find the correct range to connect to.
    std::unordered_map<ULong64_t, std::size_t> fFirstEntry2RangeIdx;
+   // Keep track of the scheduled entries - necessary for processing of GlobalEntries
+   std::vector<std::pair<ULong64_t, ULong64_t>> fOriginalRanges;
    /// One element per slot, corresponding to the current range index for that slot, as filled by InitSlot
    std::vector<std::size_t> fSlotsToRangeIdxs;
 

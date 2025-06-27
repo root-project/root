@@ -162,8 +162,8 @@ class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
    std::shared_ptr<void> fValuePtr;            ///< Used to reuse the object created by fValue when reconnecting sources
    Long64_t fLastEntry = -1;                   ///< Last entry number that was read
    /// For chains, the logical entry and the physical entry in any particular file can be different.
-   /// The entry offset stores the logical entry number (sum of all previous physical entries) when a file of the corresponding
-   /// data source was opened.
+   /// The entry offset stores the logical entry number (sum of all previous physical entries) when a file of the
+   /// corresponding data source was opened.
    Long64_t fEntryOffset = 0;
 
 public:
@@ -174,6 +174,7 @@ public:
    void Connect(RPageSource &source, Long64_t entryOffset)
    {
       assert(fLastEntry == -1);
+
       fEntryOffset = entryOffset;
 
       // Create a new, real field from the prototype and set its field ID in the context of the given page source
@@ -517,7 +518,9 @@ void ROOT::RDF::RNTupleDS::ExecStaging()
 void ROOT::RDF::RNTupleDS::StageNextSources()
 {
    const auto nFiles = fFileNames.empty() ? 1 : fFileNames.size();
+
    for (auto i = fNextFileIndex; (i < nFiles) && ((i - fNextFileIndex) < fNSlots); ++i) {
+
       if (fStagingThreadShouldTerminate)
          return;
 
@@ -534,13 +537,16 @@ void ROOT::RDF::RNTupleDS::StageNextSources()
 void ROOT::RDF::RNTupleDS::PrepareNextRanges()
 {
    assert(fNextRanges.empty());
+
    auto nFiles = fFileNames.empty() ? 1 : fFileNames.size();
    auto nRemainingFiles = nFiles - fNextFileIndex;
+
    if (nRemainingFiles == 0)
       return;
 
    // Easy work scheduling: one file per slot. We skip empty files (files without entries).
-   if (nRemainingFiles >= fNSlots) {
+
+   if ((nRemainingFiles >= fNSlots) || (fGlobalEntryRange.has_value())) {
       while ((fNextRanges.size() < fNSlots) && (fNextFileIndex < nFiles)) {
          REntryRangeDS range;
 
@@ -554,12 +560,11 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
          range.fFileName = fFileNames[fNextFileIndex];
          range.fSource->Attach();
          fNextFileIndex++;
-
          auto nEntries = range.fSource->GetNEntries();
          if (nEntries == 0)
             continue;
-
          range.fLastEntry = nEntries; // whole file per slot, i.e. entry range [0..nEntries - 1]
+
          fNextRanges.emplace_back(std::move(range));
       }
       return;
@@ -633,6 +638,8 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
 std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRanges()
 {
    std::vector<std::pair<ULong64_t, ULong64_t>> ranges;
+   ULong64_t nEntriesPerRange = 0;
+   ULong64_t start = 0;
 
    // We need to distinguish between single threaded and multi-threaded runs.
    // In single threaded mode, InitSlot is only called once and column readers have to be rewired
@@ -648,7 +655,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
 
    // If we have fewer files than slots and we run multiple event loops, we can reuse fCurrentRanges and don't need
    // to worry about loading the fNextRanges. I.e., in this case we don't enter the if block.
-   if (fCurrentRanges.empty() || (fSeenEntries > 0)) {
+   if (fCurrentRanges.empty() || fSeenEntriesNoGlobalRange > 0) {
       // Otherwise, i.e. start of the first event loop or in the middle of the event loop, prepare the next ranges
       // and swap with the current ones.
       {
@@ -681,28 +688,102 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
    // We remember the connection from first absolute entry index of a range to its REntryRangeDS record
    // so that we can properly rewire the column reader in InitSlot
    fFirstEntry2RangeIdx.clear();
+
    ULong64_t nEntriesPerSource = 0;
+
    for (std::size_t i = 0; i < fCurrentRanges.size(); ++i) {
+
       // Several consecutive ranges may operate on the same file (each with their own page source clone).
       // We can detect a change of file when the first entry number jumps back to 0.
       if (fCurrentRanges[i].fFirstEntry == 0) {
          // New source
-         fSeenEntries += nEntriesPerSource;
+         fSeenEntriesNoGlobalRange += nEntriesPerSource;
          nEntriesPerSource = 0;
       }
-      auto start = fCurrentRanges[i].fFirstEntry + fSeenEntries;
-      auto end = fCurrentRanges[i].fLastEntry + fSeenEntries;
+
+      start = fCurrentRanges[i].fFirstEntry + fSeenEntriesNoGlobalRange;
+      auto end = fCurrentRanges[i].fLastEntry + fSeenEntriesNoGlobalRange;
+
       nEntriesPerSource += end - start;
 
-      fFirstEntry2RangeIdx[start] = i;
-      ranges.emplace_back(start, end);
+      if (fGlobalEntryRange.has_value()) {
+
+         // We need to consider different scenarios for when we have GlobalRanges set by the user.
+         // Consider a simple case of 3 files, with original ranges set as (consecutive entries of 3 files):
+         // [0, 20], [20, 45], [45, 65]
+         // we will now see what happens in each of the scenarios below when GlobalRanges can be set to different
+         // values:
+         // a) [2, 5] - we stay in file 1
+         //  - hence we will use the 1st case and get the range [2,5], in this case we also need to quit further
+         //  processing from the other files by entering case 3
+         // b) [2, 21] - we start in file 1 and finish in file 2
+         // - use the 2nd case first, as 21 > 20 (end of first file), then we will go to case 1, resulting in ranges:
+         // [2, 20], [20, 21], c) [21 - 40] - we skip file 1, start in file 2 and stay in file 2
+         // - to skip the first file, we use the 4th case, followed by the 1st case, resulting range is: [21, 40]
+         // d) [21 - 65] - we skip file 1, start in file 2 and continue to file 3
+         // - to skip the first file, we use the 4th case, we continue with the 2nd case, and use the 1st case at the
+         // end, resulting ranges are [21, 45], [45, 65]
+
+         // The first case
+         if (fGlobalEntryRange->first >= start && fGlobalEntryRange->second <= end) {
+            fOriginalRanges.emplace_back(start, end);
+            nEntriesPerRange += fGlobalEntryRange->second - fGlobalEntryRange->first;
+            ranges.emplace_back(fGlobalEntryRange->first, fGlobalEntryRange->second);
+            fFirstEntry2RangeIdx[fGlobalEntryRange->first] = i;
+         }
+
+         // The second case:
+         else if (fGlobalEntryRange->first <= end && fGlobalEntryRange->second > end) {
+            fOriginalRanges.emplace_back(start, end);
+            fFirstEntry2RangeIdx[fGlobalEntryRange->first] = i;
+            ranges.emplace_back(fGlobalEntryRange->first, end);
+            std::optional<std::pair<ULong64_t, ULong64_t>> newvalues({end, fGlobalEntryRange->second});
+            fGlobalEntryRange.swap(newvalues);
+         }
+         // The third case, needed to correctly quit processing if we only stay in the first file
+         else if (fGlobalEntryRange->first < start) {
+            return ranges;
+         }
+
+         // The fourth case:
+         else if (fGlobalEntryRange->first > end) {
+            fFirstEntry2RangeIdx[0] = i;
+            fOriginalRanges.emplace_back(start, end);
+            ranges.emplace_back(0, 0);
+            fCounterFileEmpty += 1;
+         }
+      }
+
+      else {
+         fFirstEntry2RangeIdx[start] = i;
+         fOriginalRanges.emplace_back(start, end);
+         ranges.emplace_back(start, end);
+      }
    }
-   fSeenEntries += nEntriesPerSource;
+
+   fSeenEntriesNoGlobalRange += nEntriesPerSource;
+   fSeenEntriesWithGlobalRange += nEntriesPerRange;
 
    if ((fNSlots == 1) && (fCurrentRanges[0].fSource)) {
       for (auto r : fActiveColumnReaders[0]) {
-         r->Connect(*fCurrentRanges[0].fSource, ranges[0].first);
+
+         if (fGlobalEntryRange.has_value()) {
+            if (ranges[0].first > fOriginalRanges[0].first && fCounterFileEmpty == 0) {
+               r->Connect(*fCurrentRanges[0].fSource, 0);
+            } else if (fCounterFileEmpty > 0) {
+               r->Connect(*fCurrentRanges[0].fSource, start);
+            } else {
+               r->Connect(*fCurrentRanges[0].fSource, ranges[0].first);
+            }
+         } else {
+            r->Connect(*fCurrentRanges[0].fSource, ranges[0].first);
+         }
       }
+   }
+   if (fGlobalEntryRange.has_value()) {
+      fSeenEntries = fSeenEntriesWithGlobalRange;
+   } else {
+      fSeenEntries = fSeenEntriesNoGlobalRange;
    }
 
    return ranges;
@@ -721,11 +802,17 @@ void ROOT::RDF::RNTupleDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
    // connection between the slot and the correct page source by finding which
    // range index corresponds to the first entry passed.
    auto idxRange = fFirstEntry2RangeIdx.at(firstEntry);
+
    // We also remember this connection so it can later be retrieved in CreateSampleInfo
    fSlotsToRangeIdxs[slot * ROOT::Internal::RDF::CacheLineStep<std::size_t>()] = idxRange;
 
    for (auto r : fActiveColumnReaders[slot]) {
-      r->Connect(*fCurrentRanges[idxRange].fSource, firstEntry - fCurrentRanges[idxRange].fFirstEntry);
+      if (fGlobalEntryRange.has_value()) {
+         r->Connect(*fCurrentRanges[idxRange].fSource,
+                    fOriginalRanges[idxRange].first - fCurrentRanges[idxRange].fFirstEntry);
+      } else {
+         r->Connect(*fCurrentRanges[idxRange].fSource, firstEntry - fCurrentRanges[idxRange].fFirstEntry);
+      }
    }
 }
 
@@ -760,6 +847,8 @@ bool ROOT::RDF::RNTupleDS::HasColumn(std::string_view colName) const
 void ROOT::RDF::RNTupleDS::Initialize()
 {
    fSeenEntries = 0;
+   fSeenEntriesNoGlobalRange = 0;
+   fSeenEntriesWithGlobalRange = 0;
    fNextFileIndex = 0;
    fIsReadyForStaging = fHasNextSources = fStagingThreadShouldTerminate = false;
    fThreadStaging = std::thread(&RNTupleDS::ExecStaging, this);
@@ -828,6 +917,7 @@ ROOT::RDF::RSampleInfo ROOT::Internal::RDF::RNTupleDS::CreateSampleInfo(
    // ending up processing different page sources. Here we re-establish the
    // connection between the slot and the correct page source by retrieving
    // which range is connected currently to the slot
+
    const auto &rangeIdx = fSlotsToRangeIdxs.at(slot * ROOT::Internal::RDF::CacheLineStep<std::size_t>());
 
    // Missing source if a file does not exist
@@ -838,8 +928,6 @@ ROOT::RDF::RSampleInfo ROOT::Internal::RDF::RNTupleDS::CreateSampleInfo(
    const auto &ntuplePath = fCurrentRanges[rangeIdx].fFileName;
    const auto ntupleID = std::string(ntuplePath) + '/' + ntupleName;
 
-   // TODO: There is no support for RNTuple in RDatasetSpec, thus the sample map
-   // is always empty at the moment.
    if (sampleMap.empty())
       return ROOT::RDF::RSampleInfo(
          ntupleID, std::make_pair(fCurrentRanges[rangeIdx].fFirstEntry, fCurrentRanges[rangeIdx].fLastEntry));
@@ -849,5 +937,5 @@ ROOT::RDF::RSampleInfo ROOT::Internal::RDF::RNTupleDS::CreateSampleInfo(
 
    return ROOT::RDF::RSampleInfo(
       ntupleID, std::make_pair(fCurrentRanges[rangeIdx].fFirstEntry, fCurrentRanges[rangeIdx].fLastEntry),
-      sampleMap.at(ntupleName));
+      sampleMap.at(ntupleID));
 }
