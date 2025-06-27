@@ -19,6 +19,7 @@
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RPageStorageFile.hxx>
+#include <ROOT/RNTupleAttributes.hxx>
 
 #include <TROOT.h>
 
@@ -261,4 +262,17 @@ ROOT::DescriptorId_t ROOT::RNTupleReader::RetrieveFieldId(std::string_view field
                                fSource->GetSharedDescriptorGuard()->GetName() + "'"));
    }
    return fieldId;
+}
+
+ROOT::RResult<ROOT::Experimental::RNTupleAttributeSetReader>
+ROOT::RNTupleReader::GetAttributeSet(std::string_view attrSetName)
+{
+   const auto &attrSets = GetDescriptor().GetAttributeSets();
+   const auto locatorIt = attrSets.find(std::string(attrSetName));
+   if (locatorIt == attrSets.end())
+      return R__FAIL(std::string("No such AttributeSet: ") + std::string(attrSetName));
+
+   const auto locator = locatorIt->second;
+   auto attrSetReader = fSource->ReadAttributeSet(locator);
+   return attrSetReader;
 }

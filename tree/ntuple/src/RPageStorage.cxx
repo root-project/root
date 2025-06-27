@@ -23,6 +23,8 @@
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorageFile.hxx>
+#include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleAttributes.hxx>
 #ifdef R__ENABLE_DAOS
 #include <ROOT/RPageStorageDaos.hxx>
 #endif
@@ -959,6 +961,11 @@ ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescr
    fDescriptorBuilder.SetSchemaFromExisting(srcDescriptor);
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
+   // Clone attribute sets
+   // for (const auto &[name, locator] : srcDescriptor.GetAttributeSets()) {
+   //    fDescriptorBuilder.AddAttributeSet(Experimental::Internal::RNTupleAttributeSetDescriptor{name, locator});
+   // }
+
    // Create column/page ranges
    const auto nColumns = descriptor.GetNPhysicalColumns();
    R__ASSERT(fOpenColumnRanges.empty() && fOpenPageRanges.empty());
@@ -1190,8 +1197,8 @@ void ROOT::Internal::RPagePersistentSink::CommitStagedClusters(std::span<RStaged
          if (!columnInfo.fIsSuppressed)
             continue;
          const auto colId = columnInfo.fPageRange.GetPhysicalColumnId();
-         // For suppressed columns, we need to reset the first element index to the first element of the next (upcoming)
-         // cluster. This information has been determined for the committed cluster descriptor through
+         // For suppressed columns, we need to reset the first element index to the first element of the next
+         // (upcoming) cluster. This information has been determined for the committed cluster descriptor through
          // CommitSuppressedColumnRanges(), so we can use the information from the descriptor.
          const auto &columnRangeFromDesc = clusterBuilder.GetColumnRange(colId);
          fOpenColumnRanges[colId].SetFirstElementIndex(columnRangeFromDesc.GetFirstElementIndex() +
@@ -1288,4 +1295,25 @@ void ROOT::Internal::RPagePersistentSink::EnableDefaultMetrics(const std::string
       *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter> *>("timeCpuWrite", "ns", "CPU time spent writing"),
       *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter> *>("timeCpuZip", "ns",
                                                                         "CPU time spent compressing")});
+}
+
+ROOT::RResult<ROOT::Experimental::RNTupleAttributeSetReader>
+ROOT::Internal::RPageSource::ReadAttributeSet(ROOT::RNTupleLocator locator)
+{
+   ROOT::Internal::RMiniFileReader *reader = GetUnderlyingReader();
+   // #TODO(gparolini)
+   if (!reader)
+      return R__FAIL("GetAttributeSet is only supported for file-based page sources");
+   
+   assert(locator.GetType() == RNTupleLocator::kTypeFile);
+   auto attrAnchor = reader->GetNTupleProperAtOffset(locator.GetPosition<std::uint64_t>()).Unwrap();
+
+   // NOTE: this static_cast assumes that GetUnderlyingReader() returns non-null only for RPageSourceFile.
+   // This should be made more robust. Maybe just make this method virtual?
+   auto attrSource = static_cast<Internal::RPageSourceFile &>(*this).OpenWithDifferentAnchor(attrAnchor);
+   auto newReader = std::unique_ptr<RNTupleReader>(new RNTupleReader(std::move(attrSource), RNTupleReadOptions{}));
+   R__ASSERT(newReader);
+   
+   auto attrReader = ROOT::Experimental::RNTupleAttributeSetReader(std::move(newReader));
+   return attrReader;
 }

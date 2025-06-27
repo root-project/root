@@ -300,6 +300,16 @@ void ROOT::Internal::RPageSinkBuf::CommitDatasetImpl()
    fInnerSink->CommitDataset();
 }
 
+void ROOT::Internal::RPageSinkBuf::CommitAttributeSet(RPageSink &sink)
+{
+   fInnerSink->CommitAttributeSet(sink);
+}
+
+ROOT::Experimental::Internal::RNTupleAttributeSetDescriptor ROOT::Internal::RPageSinkBuf::CommitAttributeSetInternal()
+{
+   return fInnerSink->CommitAttributeSetInternal();
+}
+
 ROOT::Internal::RPage ROOT::Internal::RPageSinkBuf::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
 {
    return fInnerSink->ReservePage(columnHandle, nElements);
