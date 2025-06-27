@@ -379,20 +379,9 @@ def _setitem(self, index, value):
         _slice_set(self, uhi_index, index, value)
 
 
-def _eq(self, other):
-    import numpy as np
-
-    return (
-        isinstance(other, type(self))
-        and _shape(self) == _shape(other)
-        and np.array_equal(_values_default(self), _values_default(other))
-    )
-
-
 def _add_indexing_features(klass: Any) -> None:
     klass.__getitem__ = _getitem
     klass.__setitem__ = _setitem
-    klass.__eq__ = _eq
 
 
 """
