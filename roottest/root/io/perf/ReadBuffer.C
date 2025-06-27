@@ -1,6 +1,6 @@
-#include "TBuffer.h"
+#include "TBufferFile.h"
 #include "TClass.h"
-#include "TStreamerInfo.h"
+#include "TROOT.h"
 
 class allint {
 public:
@@ -32,16 +32,16 @@ public:
 };
 
 
-void ReadBuffer(int siz=10) {
+void ReadBufferInt(int siz=10) {
 
-   TBuffer b(TBuffer::kWrite,32000);
+   TBufferFile b(TBuffer::kWrite,32000);
 
    allint obj;
    TClass *cl = gROOT->GetClass(typeid(obj));
    cl->Streamer(&obj,b);
 
    b.SetReadMode();
-   
+
    for(int i=0; i<siz; ++i) {
       b.Reset();
       cl->Streamer(&obj,b);
@@ -49,16 +49,16 @@ void ReadBuffer(int siz=10) {
 
 }
 
-void ReadBufferMix(int siz=10) {
+void ReadBufferFloat(int siz=10) {
 
-   TBuffer b(TBuffer::kWrite,32000);
+   TBufferFile b(TBuffer::kWrite,32000);
 
    fltint obj;
    TClass *cl = gROOT->GetClass(typeid(obj));
    cl->Streamer(&obj,b);
-   
+
    b.SetReadMode();
-   
+
    for(int i=0; i<siz; ++i) {
       b.Reset();
       cl->Streamer(&obj,b);
@@ -66,101 +66,18 @@ void ReadBufferMix(int siz=10) {
 
 }
 
-void InfoReadBuffer(int siz=10) {
-
-   TBuffer b(TBuffer::kWrite,32000);
-
-   allint obj;
-#if ROOT_VERSION_CODE<= 199169
-
-#else
-   char *pointer = (char*)&obj;
-#endif
-   TClass *cl = gROOT->GetClass(typeid(obj));
-   TStreamerInfo *info = cl->GetStreamerInfo();
-
-#if ROOT_VERSION_CODE<= 199169
-      info->WriteBuffer(b, (char*)(&obj),-1);
-#else
-      info->WriteBufferAux(b, &pointer,-1, 1, 0, 0);
-#endif
-   
-   b.SetReadMode();
-   
-   for(int i=0; i<siz; ++i) {
-      b.Reset();
-      // cl->Streamer(&obj,b);
-#if ROOT_VERSION_CODE<= 199169
-      info->ReadBuffer(b, (char*)(&obj),-1);
-#else
-      info->ReadBuffer(b, (char*)(&obj),-1, 1, 0, 0);
-#endif
-   }
-
-}
-
-void InfoReadBufferMix(int siz=10) {
-
-   TBuffer b(TBuffer::kWrite,32000);
-
-   fltint obj;
-#if ROOT_VERSION_CODE<= 199169
-
-#else
-   char *pointer = (char*)&obj;
-#endif
-   TClass *cl = gROOT->GetClass(typeid(obj));
-   TStreamerInfo *info = cl->GetStreamerInfo();
-   
-#if ROOT_VERSION_CODE<= 199169
-      info->WriteBuffer(b, (char*)(&obj),-1);
-#else
-      info->WriteBufferAux(b, &pointer,-1, 1, 0, 0);
-#endif
-   
-   b.SetReadMode();
-   
-   for(int i=0; i<siz; ++i) {
-      b.Reset();
-      // cl->Streamer(&obj,b);
-#if ROOT_VERSION_CODE<= 199169
-      info->ReadBuffer(b, (char*)(&obj),-1);
-#else
-      info->ReadBuffer(b, (char*)(&obj),-1, 1, 0, 0);
-#endif
-   }
-
-}
-
-
-
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ class allint+;
 #pragma link C++ class fltint+;
 #pragma link C++ function ReadBuffer;
 #endif
 
-#ifndef __CINT__
-int main(int argc,char**argv) {
-
-   if (argc!=3) {
-      fprintf(stderr,"ReadBuffer requires 1 argument:\n");
-      fprintf(stderr,"ReadBuffer <test type> <samplesize>\n");
-      return 1;
-   }
-   
-   int kase = atoi(argv[1]);
-   int z = atoi(argv[2]);
-
+int ReadBuffer(int kase = 1, int z = 1000000)
+{
    switch (kase) {
-      case 1: ReadBuffer(z); break;
-      case 2: InfoReadBuffer(z); break; 
-         
-      case 11: ReadBufferMix(z); break;
-      case 12: InfoReadBufferMix(z); break; 
-         
+      case 1: ReadBufferInt(z); break;
+      case 2: ReadBufferFloat(z); break;
    }
 
    return 0;
 }
-#endif
