@@ -14,6 +14,8 @@
 #include <memory>
 #include <thread> // std::thread::hardware_concurrency
 
+#include <TFile.h>
+
 // fixture for all tests in this file
 struct DefinePerSample : ::testing::TestWithParam<bool> {
    unsigned int NSLOTS;

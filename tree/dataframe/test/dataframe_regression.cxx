@@ -11,6 +11,8 @@
 
 #include "gtest/gtest.h"
 
+#include <TFile.h>
+
 // Fixture for all tests in this file. If parameter is true, run with implicit MT, else run sequentially
 class RDFRegressionTests : public ::testing::TestWithParam<bool> {
 protected:
