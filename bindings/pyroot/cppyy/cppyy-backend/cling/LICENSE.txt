@@ -1,4 +1,4 @@
-Copyright (c) 2017-2019, The Regents of the University of California,
+Copyright (c) 2017-2021, The Regents of the University of California,
 through Lawrence Berkeley National Laboratory (subject to receipt of
 any required approvals from the U.S. Dept. of Energy). All rights
 reserved. Redistribution and use in source and binary forms, with or
@@ -53,24 +53,34 @@ source code):
   Ellis Breen
   Antonio Cuni
   Aditi Dutta
+  Henrik Finsberg
   Shaheed Haque
+  Dennis Hemker
+  Jean Hominal
   Jonsomi
+  Baidyanath Kundu
   Alvaro Moran
   Tarmo Pikaro
   Matti Picus
   Camille Scott
+  Clemens Wolff
 
 
 External code
 -------------
 
-The create_src_directory.py script will pull in ROOT and LLVM sources, which
-are licensed differently:
+The 'src' directory contains source code from the ROOT project; these codes
+have been extensively patched. The create_src_directory.py script will pull
+in Cling and LLVM source codes, and apply some more patches.
+
+These codes are licensed as follows:
 
  LLVM: distributed under University of Illinois/NCSA Open Source License
    https://opensource.org/licenses/UoI-NCSA.php
+ Cling: distributed under University of Illinois/NCSA Open Source License
+   https://opensource.org/licenses/UoI-NCSA.php
  ROOT: distributed under LGPL 2.1
-   https://root.cern.ch/license
+   https://root.cern.ch/license (see also src/LICENSE)
 
-The ROOT and LLVM/Clang codes are modified/patched, as part of the build
-process.
+The ROOT code is build into independent shared libraries to allow use under
+LGPL. The Cling and LLVM codes are combined into a single shared library.
