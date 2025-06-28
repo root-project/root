@@ -51,6 +51,7 @@ to be merged, like the standalone hadd program.
 
 #include <cstring>
 #include <map>
+#include <iostream>
 
 ClassImp(TFileMerger);
 
@@ -530,7 +531,7 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
                  && !cl->InheritsFrom( TDirectory::Class() )) {
          R__ASSERT(cl->IsTObject());
          TDirectory::TContext ctxt(current_sourcedir);
-         obj = obj->Clone();
+         obj = gDirectory->CloneObject(obj);
          ownobj = kTRUE;
       }
    } else if (key) {
