@@ -126,7 +126,7 @@ PyObject *PyObjRefCounterAsStdAny(PyObject * /*self*/, PyObject *args)
 
 // Methods offered by the interface
 static PyMethodDef gPyROOTMethods[] = {
-   {(char *)"AddCPPInstancePickling", (PyCFunction)PyROOT::AddCPPInstancePickling, METH_VARARGS,
+   {(char *)"AddCPPInstancePickling", (PyCFunction)PyROOT::AddCPPInstancePickling, METH_NOARGS,
     (char *)"Add a custom pickling mechanism for Cppyy Python proxy objects"},
    {(char *)"GetBranchAttr", (PyCFunction)PyROOT::GetBranchAttr, METH_VARARGS,
     (char *)"Allow to access branches as tree attributes"},

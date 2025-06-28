@@ -62,7 +62,7 @@ PyObject *PyROOT::CPPInstanceExpand(PyObject * /*self*/, PyObject *args)
 /// Turn the object proxy instance into a character stream and return for
 /// pickle, together with the callable object that can restore the stream
 /// into the object proxy instance.
-PyObject *op_reduce(PyObject *self, PyObject * /*args*/)
+PyObject *op_reduce(PyObject *self)
 {
    // keep a borrowed reference around to the callable function for expanding;
    // because it is borrowed, it means that there can be no pickling during the
@@ -120,28 +120,8 @@ PyObject *op_reduce(PyObject *self, PyObject * /*args*/)
 ///
 /// The C++ function op_reduce defined above is wrapped in a Python method
 /// so that it can be injected in CPPInstance
-PyObject *PyROOT::AddCPPInstancePickling(PyObject * /*self*/, PyObject *args)
+PyObject *PyROOT::AddCPPInstancePickling(PyObject * /*self*/, PyObject * /*args*/)
 {
-   PyObject *pyclass = PyTuple_GetItem(args, 0);
-
-   const char *attr = "__reduce__";
-
-   PyMethodDef *pdef = new PyMethodDef();
-   pdef->ml_name = attr;
-   pdef->ml_meth = (PyCFunction)op_reduce;
-   pdef->ml_flags = METH_NOARGS;
-   pdef->ml_doc = nullptr;
-
-   PyObject *func = PyCFunction_New(pdef, nullptr);
-   PyObject *method = CustomInstanceMethod_New(func, nullptr, pyclass);
-
-   // here PyObject_GenericSetAttr is used because CPPInstance does not allow
-   // attribute assignment using PyObject_SetAttr
-   // for more info refer to:
-   // https://bitbucket.org/wlav/cppyy/issues/110/user-defined-classes-in-c-dont-seem-to-be
-   PyObject_GenericSetAttr(pyclass, PyUnicode_FromString(attr), method);
-   Py_DECREF(method);
-   Py_DECREF(func);
-
+   CPPInstance::ReduceMethod() = op_reduce;
    Py_RETURN_NONE;
 }
