@@ -35,6 +35,7 @@
 #include <unistd.h>
 #endif
 
+#include <algorithm>
 #include <iostream>
 
 using namespace ROOT;
@@ -179,6 +180,7 @@ std::pair<std::string, std::string> SplitPPDefine(const std::string &in)
 
 void TModuleGenerator::ParseArgs(const std::vector<std::string> &args)
 {
+   std::vector<std::string> systemIncludePaths;
    for (size_t iPcmArg = 1 /*skip argv0*/, nPcmArg = args.size();
          iPcmArg < nPcmArg; ++iPcmArg) {
       ESourceFileKind sfk = GetSourceFileKind(args[iPcmArg].c_str());
@@ -188,23 +190,36 @@ void TModuleGenerator::ParseArgs(const std::vector<std::string> &args)
          fLinkDefFile = args[iPcmArg];
       } else if (sfk == kSFKNotC && args[iPcmArg][0] == '-') {
          switch (args[iPcmArg][1]) {
-            case 'I':
-               if (args[iPcmArg] != "-I." &&  args[iPcmArg] != "-Iinclude") {
-                  fCompI.push_back(args[iPcmArg].c_str() + 2);
+         case 'i':
+            if (args[iPcmArg].find("-isystem") != std::string::npos) {
+               if (args[iPcmArg].size() == 8)
+                  systemIncludePaths.push_back(args[++iPcmArg]);
+               else {
+                  auto pos = 9; // start after -isystem
+                  while (args[iPcmArg][pos] == ' ')
+                     pos++;
+                  systemIncludePaths.push_back(args[iPcmArg].substr(pos));
                }
-               break;
-            case 'D':
-               if (args[iPcmArg] != "-DTRUE=1" && args[iPcmArg] != "-DFALSE=0"
-                     && args[iPcmArg] != "-DG__NOCINTDLL") {
-                  fCompD.push_back(SplitPPDefine(args[iPcmArg].c_str() + 2));
-               }
-               break;
-            case 'U':
-               fCompU.push_back(args[iPcmArg].c_str() + 2);
-               break;
+            }
+            break;
+         case 'I':
+            if (args[iPcmArg] != "-I." && args[iPcmArg] != "-Iinclude") {
+               fCompI.push_back(args[iPcmArg].c_str() + 2);
+            }
+            break;
+         case 'D':
+            if (args[iPcmArg] != "-DTRUE=1" && args[iPcmArg] != "-DFALSE=0" && args[iPcmArg] != "-DG__NOCINTDLL") {
+               fCompD.push_back(SplitPPDefine(args[iPcmArg].c_str() + 2));
+            }
+            break;
+         case 'U': fCompU.push_back(args[iPcmArg].c_str() + 2); break;
          }
       }
    }
+
+   // System includes have lowest priority, so we move them to the end:
+   std::move(systemIncludePaths.begin(), systemIncludePaths.end(), std::back_inserter(fCompI));
+   fCompI.erase(std::unique(fCompI.begin(), fCompI.end()), fCompI.end());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -402,9 +417,8 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out, const std::str
 {
    if (hasCxxModule) {
       std::string emptyStr = "\"\"";
-      WriteRegistrationSourceImpl(out, GetDictionaryName(), GetDemangledDictionaryName(), {}, {},
-                                  fwdDeclString, "{}",
-                                  emptyStr, headersClassesMapString, "0",
+      WriteRegistrationSourceImpl(out, GetDictionaryName(), GetDemangledDictionaryName(), {}, fCompI, fwdDeclString,
+                                  "{}", emptyStr, headersClassesMapString, "0",
                                   /*HasCxxModule*/ true);
       return;
    }
