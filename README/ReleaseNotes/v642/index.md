@@ -160,6 +160,18 @@ with `TMath::Sqrt()`, the standard C `sqrt()`, and the modern `TFormula` used by
 Note that in a selection, a NaN evaluates as `false`, so entries where the `sqrt` argument is negative now fail
 the cut instead of being selected based on `sqrt(abs(x))`.
 
+### Behavior change: `TTree::Clone()` and `TTree::Copy()` are disabled
+
+The virtual `Clone()` and `Copy()` methods inherited from `TObject` are now overridden in `TTree` to emit an
+error, with `Clone()` returning a `nullptr`. The generic streamer-based copy these methods performed was a
+recurring source of confusion: for a tree associated to a file it duplicates only the in-memory metadata, so
+the "clone" still reads its baskets from the original file, and writing it to another file produces a broken
+tree. Use `TTree::CloneTree()` to clone a tree, and `TTree::CopyTree()` or `TTree::CopyEntries()` to copy its
+entries. Code that intentionally wants the old low-level behavior of `tree->Clone()` — an independent
+metadata-only view of the same on-disk data — can still call `gDirectory->CloneObject(tree)` explicitly.
+Note that code that used the return value of `tree->Clone()` without checking it will now dereference a
+`nullptr` instead of misbehaving in more subtle ways.
+
 ## RooFit
 
 ### RooFit::MultiProcess without ZeroMQ, now enabled by default
