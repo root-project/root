@@ -1,6 +1,6 @@
-#include "TBuffer.h"
+#include "TBufferFile.h"
 #include "TClass.h"
-#include "TStreamerInfo.h"
+#include "TROOT.h"
 
 class allints {
 public:
@@ -32,13 +32,13 @@ public:
 };
 
 
-void WriteBuffer(int siz=10) {
+void WriteBufferInt(int siz=10) {
 
-   TBuffer b(TBuffer::kWrite,32000);
+   TBufferFile b(TBuffer::kWrite,32000);
 
    allints obj;
    TClass *cl = gROOT->GetClass(typeid(obj));
-   
+
    for(int i=0; i<siz; ++i) {
       if (i % 1000000 == 0 ) b.Reset();
       cl->Streamer(&obj,b);
@@ -46,13 +46,13 @@ void WriteBuffer(int siz=10) {
 
 }
 
-void WriteBufferMix(int siz=10) {
+void WriteBufferFloat(int siz=10) {
 
-   TBuffer b(TBuffer::kWrite,32000);
+   TBufferFile b(TBuffer::kWrite,32000);
 
    floatint obj;
    TClass *cl = gROOT->GetClass(typeid(obj));
-   
+
    for(int i=0; i<siz; ++i) {
       if (i % 1000000 == 0 ) b.Reset();
       cl->Streamer(&obj,b);
@@ -60,77 +60,20 @@ void WriteBufferMix(int siz=10) {
 
 }
 
-void InfoWriteBuffer(int siz=10) {
 
-   TBuffer b(TBuffer::kWrite,32000);
-
-   allints obj;
-   char *pointer = (char*)&obj;
-   TClass *cl = gROOT->GetClass(typeid(obj));
-   TStreamerInfo *info = cl->GetStreamerInfo();
-   
-   for(int i=0; i<siz; ++i) {
-      if (i % 1000000 == 0 ) b.Reset();
-      // cl->Streamer(&obj,b);
-#if ROOT_VERSION_CODE<= 199169
-      info->WriteBuffer(b, (char*)(&obj),-1);
-#else
-      info->WriteBufferAux(b, &pointer,-1, 1, 0, 0);
-#endif
-   }
-
-}
-
-void InfoWriteBufferMix(int siz=10) {
-
-   TBuffer b(TBuffer::kWrite,32000);
-
-   floatint obj;
-   char *pointer = (char*)&obj;
-   TClass *cl = gROOT->GetClass(typeid(obj));
-   TStreamerInfo *info = cl->GetStreamerInfo();
-   
-   for(int i=0; i<siz; ++i) {
-      if (i % 1000000 == 0 ) b.Reset();
-      // cl->Streamer(&obj,b);
-#if ROOT_VERSION_CODE<= 199169
-      info->WriteBuffer(b, (char*)(&obj),-1);
-#else
-      info->WriteBufferAux(b, &pointer,-1, 1, 0, 0);
-#endif
-   }
-
-}
-
-
-
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ class allints+;
 #pragma link C++ class floatint+;
 #pragma link C++ function WriteBuffer;
 #endif
 
-#ifndef __CINT__
-int main(int argc,char**argv) {
-
-   if (argc!=3) {
-      fprintf(stderr,"WriteBuffer requires 1 argument:\n");
-      fprintf(stderr,"WriteBuffer <test type> <samplesize>\n");
-      return 1;
-   }
-   
-   int kase = atoi(argv[1]);
-   int z = atoi(argv[2]);
+int WriteBuffer(int kase = 1, int z = 1000000)
+{
 
    switch (kase) {
-      case 1: WriteBuffer(z); break;
-      case 2: InfoWriteBuffer(z); break; 
-         
-      case 11: WriteBufferMix(z); break;
-      case 12: InfoWriteBufferMix(z); break; 
-         
+      case 1: WriteBufferInt(z); break;
+      case 2: WriteBufferFloat(z); break;
    }
 
    return 0;
 }
-#endif

@@ -56,9 +56,9 @@ void cleanup(TDirectory *dir)
    //delete dir;
    // dir->GetListOfKeys()->Delete("fast");
 }
-       
 
-void directories(int ntop, int nsub, int nhist) 
+
+void test_directories(int ntop, int nsub, int nhist)
 {
    fprintf(stdout,"Test top=%d sub=%d hist=%d\n",ntop,nsub,nhist);
    gBenchmark = new TBenchmark();
@@ -74,14 +74,15 @@ void directories(int ntop, int nsub, int nhist)
    delete f;
 }
 
-void steps(int ntop = 100, int nsub = 2, int nhist = 24) {
+void directories(int ntop = 100, int nsub = 2, int nhist = 24)
+{
 //    for(int h=100; h<500; h += 50) {
-//       directories(2,2,h);
+//       test_directories(2,2,h);
 //    }
 
    int step = ntop / 5;
    for(int t=1; t<ntop; t += step) {
-      directories(t,nsub,nhist);
+      test_directories(t,nsub,nhist);
    }
 }
 
