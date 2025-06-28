@@ -2610,10 +2610,6 @@ void TChain::ResetBranchAddresses()
 
 Int_t TChain::SetBranchAddress(const char *bname, void* add, TBranch** ptr)
 {
-   if (!fTree && fReadEntry == -1 && fTreeNumber == -1) {
-      // Try to load the first tree to retrieve the dataset schema
-      LoadTree(0);
-   }
    Int_t res = kNoCheck;
 
    // Check if bname is already in the status list.
@@ -2625,6 +2621,12 @@ Int_t TChain::SetBranchAddress(const char *bname, void* add, TBranch** ptr)
    }
    element->SetBaddress(add);
    element->SetBranchPtr(ptr);
+
+   if (!fTree && fReadEntry == -1 && fTreeNumber == -1) {
+      // Try to load the first tree to retrieve the dataset schema
+      LoadTree(0);
+   }
+
    // Also set address in current tree.
    // FIXME: What about the chain clones?
    if (fTreeNumber >= 0) {
@@ -2689,10 +2691,6 @@ Int_t TChain::SetBranchAddress(const char* bname, void* add, TClass* realClass, 
 
 Int_t TChain::SetBranchAddress(const char* bname, void* add, TBranch** ptr, TClass* realClass, EDataType datatype, bool isptr)
 {
-   if (!fTree && fReadEntry == -1 && fTreeNumber == -1) {
-      // Try to load the first tree to retrieve the dataset schema
-      LoadTree(0);
-   }
    TChainElement* element = (TChainElement*) fStatus->FindObject(bname);
    if (!element) {
       element = new TChainElement(bname, "");
@@ -2704,6 +2702,12 @@ Int_t TChain::SetBranchAddress(const char* bname, void* add, TBranch** ptr, TCla
    element->SetBaddressType((UInt_t) datatype);
    element->SetBaddressIsPtr(isptr);
    element->SetBranchPtr(ptr);
+
+   if (!fTree && fReadEntry == -1 && fTreeNumber == -1) {
+      // Try to load the first tree to retrieve the dataset schema
+      LoadTree(0);
+   }
+
    return SetBranchAddress(bname, add, ptr);
 }
 
@@ -3202,16 +3206,18 @@ void TChain::UseCache(Int_t /* maxCacheSize */, Int_t /* pageSize */)
 }
 
 Int_t TChain::SetBranchAddress(const char *bname, void *addr, TBranch **ptr, TClass *ptrClass, EDataType datatype,
-                               bool isptr, bool delayTChainElement)
+                               bool isptr, bool suppressMissingBranchError)
 {
+   if (!fStatus->FindObject(bname)) {
+      auto *element = new TChainElement(bname, "");
+      element->IsDelayed(suppressMissingBranchError);
+      fStatus->Add(element);
+   }
+
    if (!fTree && fReadEntry == -1 && fTreeNumber == -1) {
       // Try to load the first tree to retrieve the dataset schema
       LoadTree(0);
    }
-   if (!fStatus->FindObject(bname)) {
-      auto *element = new TChainElement(bname, "");
-      element->IsDelayed(delayTChainElement);
-      fStatus->Add(element);
-   }
+
    return SetBranchAddress(bname, addr, ptr, ptrClass, datatype, isptr);
 }

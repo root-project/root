@@ -55,8 +55,11 @@ protected:
    void InvalidateCurrentTree();
    void ReleaseChainProof();
 
+   // Called when setting the branch address of friends. In the case of TChain, the TChainElement for branch
+   // 'bname' is created calling IsDelayed, to avoid missing branch errors when connecting it to the trees
+   // of this chain
    Int_t SetBranchAddress(const char *bname, void *add, TBranch **ptr, TClass *realClass, EDataType datatype,
-                          bool isptr, bool delayTChainElement) override;
+                          bool isptr, bool suppressMissingBranchError) override;
 
 public:
    // TChain constants

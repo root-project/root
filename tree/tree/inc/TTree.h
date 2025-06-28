@@ -211,12 +211,12 @@ protected:
 
    TBranch *GetBranchFromSelf(const char *branchName);
    TBranch *GetBranchFromFriends(const char *branchName);
-   // This overload is useful only in the case of a main TTree with friend TChains. When registering the branches
-   // to be found later, we can't know a priori which friend TChain will have branch 'bname'. By activating the
-   // delayed status of the TChainElements, we avoid spurious error messages that a branch cannot be found if it is
-   // not in one particular friend TChain but in another.
+   // This overload is used when setting the branch address of friends of this tree. When registering the branches
+   // to be found later, we can't know a priori which friend will have branch 'bname'. TTree and TChain have different
+   // ways to deal with the fact that we should not print spurious error messages that a branch cannot be found
+   // if it is not in one particular friend but in another
    virtual Int_t SetBranchAddress(const char *bname, void *add, TBranch **ptr, TClass *realClass, EDataType datatype,
-                                  bool isptr, bool delayTChainElement);
+                                  bool isptr, bool suppressMissingBranchError);
 
    class TFriendLock {
       // Helper class to prevent infinite recursion in the

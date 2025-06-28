@@ -8639,6 +8639,8 @@ Int_t TTree::SetBranchAddress(const char *bname, void *addr, TBranch **ptr, TCla
 Int_t TTree::SetBranchAddress(const char *bname, void *addr, TBranch **ptr, TClass *ptrClass, EDataType datatype,
                               bool isptr, bool)
 {
+   // This has been called while setting the branch address of friends of a TTree. We can't know a priori
+   // which friend actually has the branch bname, so we avoid printing an error in case of missing branch
    return SetBranchAddressImp(bname, addr, ptr, ptrClass, datatype, isptr);
 }
 
