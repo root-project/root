@@ -492,17 +492,16 @@ TEST_P(TestStatisticTest, RooSimultaneousSingleChannelCrossCheckWithCondVar)
 
    RooSimultaneous modelSim("modelSim", "modelSim", {{"physics", &model}}, cat);
 
-   RooDataSet combData("combData", "combData", {x, width}, Index(cat),
-                       Import({{"physics", data.get()}}));
+   RooDataSet combData("combData", "combData", {x, width}, Index(cat), Import({{"physics", data.get()}}));
 
    params.assign(initialParams);
-   std::unique_ptr<RooFitResult> resDirect{model.fitTo(
-       *data, RooFit::ConditionalObservables(width), RooFit::Save(), RooFit::PrintLevel(-1))};
+   std::unique_ptr<RooFitResult> resDirect{
+      model.fitTo(*data, RooFit::ConditionalObservables(width), RooFit::Save(), RooFit::PrintLevel(-1))};
 
    params.assign(initialParams);
-   std::unique_ptr<RooFitResult> resSimWrapped{modelSim.fitTo(
-       combData, RooFit::ConditionalObservables(width), RooFit::Save(), RooFit::PrintLevel(-1))};
+   std::unique_ptr<RooFitResult> resSimWrapped{
+      modelSim.fitTo(combData, RooFit::ConditionalObservables(width), RooFit::Save(), RooFit::PrintLevel(-1))};
 
    EXPECT_TRUE(resSimWrapped->isIdentical(*resDirect))
-       << "Inconsistency in RooSimultaneous wrapping with ConditionalObservables";
+      << "Inconsistency in RooSimultaneous wrapping with ConditionalObservables";
 }
