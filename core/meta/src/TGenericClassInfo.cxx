@@ -94,7 +94,7 @@ namespace Internal {
         fImplFileName(nullptr), fImplFileLine(0),
         fIsA(isa),
         fVersion(1),
-        fMerge(nullptr),fResetAfterMerge(nullptr),fNew(nullptr),fNewArray(nullptr),fDelete(nullptr),fDeleteArray(nullptr),fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamer(nullptr),
+        fBrowse(nullptr),fMerge(nullptr),fResetAfterMerge(nullptr),fNew(nullptr),fNewArray(nullptr),fDelete(nullptr),fDeleteArray(nullptr),fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamer(nullptr),
         fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fCollectionProxy(nullptr), fSizeof(sizof), fPragmaBits(pragmabits),
         fCollectionProxyInfo(nullptr), fCollectionStreamerInfo(nullptr)
    {
@@ -114,7 +114,7 @@ namespace Internal {
         fImplFileName(nullptr), fImplFileLine(0),
         fIsA(isa),
         fVersion(version),
-        fMerge(nullptr),fResetAfterMerge(nullptr),fNew(nullptr),fNewArray(nullptr),fDelete(nullptr),fDeleteArray(nullptr),fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamer(nullptr),
+        fBrowse(nullptr),fMerge(nullptr),fResetAfterMerge(nullptr),fNew(nullptr),fNewArray(nullptr),fDelete(nullptr),fDeleteArray(nullptr),fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamer(nullptr),
         fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fCollectionProxy(nullptr), fSizeof(sizof), fPragmaBits(pragmabits),
         fCollectionProxyInfo(nullptr), fCollectionStreamerInfo(nullptr)
 
@@ -136,7 +136,7 @@ namespace Internal {
         fImplFileName(nullptr), fImplFileLine(0),
         fIsA(nullptr),
         fVersion(version),
-        fMerge(nullptr),fResetAfterMerge(nullptr),fNew(nullptr),fNewArray(nullptr),fDelete(nullptr),fDeleteArray(nullptr),fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamer(nullptr),
+        fBrowse(nullptr),fMerge(nullptr),fResetAfterMerge(nullptr),fNew(nullptr),fNewArray(nullptr),fDelete(nullptr),fDeleteArray(nullptr),fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamer(nullptr),
         fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fCollectionProxy(nullptr), fSizeof(0), fPragmaBits(pragmabits),
         fCollectionProxyInfo(nullptr), fCollectionStreamerInfo(nullptr)
 
@@ -279,6 +279,7 @@ namespace Internal {
          fClass->SetDirectoryAutoAdd(fDirAutoAdd);
          fClass->SetStreamerFunc(fStreamerFunc);
          fClass->SetConvStreamerFunc(fConvStreamerFunc);
+         fClass->SetBrowse(fBrowse);
          fClass->SetMerge(fMerge);
          fClass->SetResetAfterMerge(fResetAfterMerge);
          fClass->AdoptStreamer(fStreamer); fStreamer = nullptr;
@@ -618,6 +619,15 @@ namespace Internal {
 
       fDirAutoAdd = func;
       if (fClass) fClass->SetDirectoryAutoAdd(fDirAutoAdd);
+   }
+
+   void TGenericClassInfo::SetBrowse(BrowseFunc_t func)
+   {
+      // Install a new wrapper around the Browse function.
+
+      fBrowse = func;
+      if (fClass)
+         fClass->SetBrowse(fBrowse);
    }
 
    void TGenericClassInfo::SetMerge(MergeFunc_t func)

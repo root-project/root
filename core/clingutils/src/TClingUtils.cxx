@@ -1158,12 +1158,14 @@ ROOT::TMetaUtils::EIOCtorCategory ROOT::TMetaUtils::CheckConstructor(const clang
 const clang::CXXMethodDecl *GetMethodWithProto(const clang::Decl* cinfo,
                                                const char *method, const char *proto,
                                                const cling::Interpreter &interp,
-                                               bool diagnose)
+                                               bool diagnose,
+                                               bool objectIsConst = false)
 {
    const clang::FunctionDecl* funcD
       = interp.getLookupHelper().findFunctionProto(cinfo, method, proto,
                                                    diagnose ? cling::LookupHelper::WithDiagnostics
-                                                   : cling::LookupHelper::NoDiagnostics);
+                                                   : cling::LookupHelper::NoDiagnostics,
+                                                   objectIsConst);
    if (funcD)
       return llvm::dyn_cast<const clang::CXXMethodDecl>(funcD);
 
@@ -1260,16 +1262,13 @@ bool ROOT::TMetaUtils::NeedDestructor(const clang::CXXRecordDecl *cl,
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true, if the function (defined by the name and prototype) exists and is public
 
-bool ROOT::TMetaUtils::CheckPublicFuncWithProto(const clang::CXXRecordDecl *cl,
-                                                const char *methodname,
-                                                const char *proto,
-                                                const cling::Interpreter &interp,
-                                                bool diagnose)
+bool ROOT::TMetaUtils::CheckPublicFuncWithProto(const clang::CXXRecordDecl *cl, const char *methodname,
+                                                const char *proto, const cling::Interpreter &interp, bool diagnose,
+                                                bool objectIsConst)
 {
-   const clang::CXXMethodDecl *method
-      = GetMethodWithProto(cl,methodname,proto, interp,
-                           diagnose ? cling::LookupHelper::WithDiagnostics
-                           : cling::LookupHelper::NoDiagnostics);
+   const clang::CXXMethodDecl *method = GetMethodWithProto(
+      cl,methodname,proto, interp,
+      diagnose ? cling::LookupHelper::WithDiagnostics : cling::LookupHelper::NoDiagnostics, objectIsConst);
    return (method && method->getAccess() == clang::AS_public);
 }
 
@@ -1284,9 +1283,19 @@ bool ROOT::TMetaUtils::HasDirectoryAutoAdd(const clang::CXXRecordDecl *cl, const
    const char *proto = "TDirectory*";
    const char *name = "DirectoryAutoAdd";
 
-   return CheckPublicFuncWithProto(cl,name,proto,interp, false /*diags*/);
+   return CheckPublicFuncWithProto(cl, name, proto, interp, false /*diags*/);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if the class has a method Browse(TBrowser*) const
+
+bool ROOT::TMetaUtils::HasBrowse(const clang::CXXRecordDecl *cl, const cling::Interpreter &interp)
+{
+   const char *proto = "TBrowser*";
+   const char *name = "Browse";
+
+   return CheckPublicFuncWithProto(cl, name, proto, interp, false /*diags*/, true /* objectIsConst */);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the class has a method Merge(TCollection*,TFileMergeInfo*)
@@ -1299,7 +1308,7 @@ bool ROOT::TMetaUtils::HasNewMerge(const clang::CXXRecordDecl *cl, const cling::
    const char *proto = "TCollection*,TFileMergeInfo*";
    const char *name = "Merge";
 
-   return CheckPublicFuncWithProto(cl,name,proto,interp, false /*diags*/);
+   return CheckPublicFuncWithProto(cl, name, proto, interp, false /*diags*/);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1313,7 +1322,7 @@ bool ROOT::TMetaUtils::HasOldMerge(const clang::CXXRecordDecl *cl, const cling::
    const char *proto = "TCollection*";
    const char *name = "Merge";
 
-   return CheckPublicFuncWithProto(cl,name,proto, interp, false /*diags*/);
+   return CheckPublicFuncWithProto(cl, name, proto, interp, false /*diags*/);
 }
 
 
@@ -1329,7 +1338,7 @@ bool ROOT::TMetaUtils::HasResetAfterMerge(const clang::CXXRecordDecl *cl, const 
    const char *proto = "TFileMergeInfo*";
    const char *name = "ResetAfterMerge";
 
-   return CheckPublicFuncWithProto(cl,name,proto, interp, false /*diags*/);
+   return CheckPublicFuncWithProto(cl, name, proto, interp, false /*diags*/);
 }
 
 
@@ -1818,6 +1827,9 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    if (HasCustomConvStreamerMemberFunction(cl, decl, interp, normCtxt)) {
       finalString << "   static void conv_streamer_" << mappedname.c_str() << "(TBuffer &buf, void *obj, const TClass*);" << "\n";
    }
+   if (HasBrowse(decl, interp)) {
+      finalString << "   static void browse_" << mappedname.c_str() << "(const void *obj, TBrowser *b);" << "\n";
+   }
    if (HasNewMerge(decl, interp) || HasOldMerge(decl, interp)) {
       finalString << "   static Long64_t merge_" << mappedname.c_str() << "(void *obj, TCollection *coll,TFileMergeInfo *info);" << "\n";
    }
@@ -1997,6 +2009,9 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    if (HasCustomConvStreamerMemberFunction(cl, decl, interp, normCtxt)) {
       // We have a custom member function streamer or an older (not StreamerInfo based) automatic streamer.
       finalString << "      instance.SetConvStreamerFunc(&conv_streamer_" << mappedname.c_str() << ");" << "\n";
+   }
+   if (HasBrowse(decl, interp)) {
+      finalString << "      instance.SetBrowse(&browse_" << mappedname.c_str() << ");" << "\n";
    }
    if (HasNewMerge(decl, interp) || HasOldMerge(decl, interp)) {
       finalString << "      instance.SetMerge(&merge_" << mappedname.c_str() << ");" << "\n";
@@ -2614,6 +2629,13 @@ void ROOT::TMetaUtils::WriteAuxFunctions(std::ostream& finalString,
 
    if (HasCustomConvStreamerMemberFunction(cl, decl, interp, normCtxt)) {
       finalString << "   // Wrapper around a custom streamer member function." << "\n" << "   static void conv_streamer_" << mappedname.c_str() << "(TBuffer &buf, void *obj, const TClass *onfile_class) {" << "\n" << "      ((" << classname.c_str() << "*)obj)->" << classname.c_str() << "::Streamer(buf,onfile_class);" << "\n" << "   }" << "\n";
+   }
+
+   if (HasBrowse(decl, interp)) {
+      finalString << "   // Wrapper around the browse function." << "\n"
+                  << "   static void browse_" << mappedname.c_str() << "(const void *obj, TBrowser *b) {" << "\n"
+                  << "      return ((const " << classname.c_str() << "*)obj)->Browse(b);" << "\n"
+                  << "   }" << "\n";
    }
 
    if (HasNewMerge(decl, interp)) {
