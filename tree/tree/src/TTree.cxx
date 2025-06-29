@@ -466,6 +466,7 @@ End_Macro
 #include <climits>
 #include <algorithm>
 #include <set>
+#include <stdexcept>
 
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
@@ -1058,6 +1059,17 @@ TTree::~TTree()
       delete fTransientBuffer;
       fTransientBuffer = nullptr;
    }
+}
+
+TObject *TTree::Clone(const char *) const
+{
+   throw std::runtime_error("TObject::Clone() is not supported by TTree! Use TTree::CloneTree().");
+}
+
+void TTree::Copy(TObject &) const
+{
+   throw std::runtime_error(
+      "TObject::Copy() is not supported by TTree! Use TTree::CopyTree() or TTree::CopyEntries().");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3205,7 +3217,7 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
 
    // Note: For a chain, the returned clone will be
    //       a clone of the chain's first tree.
-   TTree* newtree = (TTree*) thistree->Clone();
+   TTree* newtree = (TTree*) thistree->TNamed::Clone();
    if (!newtree) {
       return nullptr;
    }
