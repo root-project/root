@@ -592,4 +592,5 @@ More than 200 items were addressed for this release. The full list is:
 * [#18665](https://github.com/root-project/root/issues/18665) - `TFileMerger`'s (and `hadd`'s) default behavior on encountering invalid/corrupt objects while merging has changed: previously the corrupt object would be skipped without aborting the merging process; now the merging process will abort by default. The "skip" behavior can be restored by:
   * calling the new method `TFileMerger::SetErrorBehavior()` (if using `TFileMerger` directly), or
   * using the `-k` flag if using `hadd`.
- 
+* [#19215](https://github.com/root-project/root/pull/19215)  - Fixed two bugs in `RNTupleMerger` that caused crashes and incomplete data to be generated when Union-merging certain RNTuples with different schemas.
+* [#16119](https://github.com/root-project/root/issues/16119) - Fixed TClassEdit::GetNormalizedName() mishandling templated types containing "greater than" expressions, such as `std::conditional<(1 > 32), int, float>`.
