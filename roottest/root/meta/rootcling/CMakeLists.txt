@@ -1,22 +1,28 @@
 ROOTTEST_ADD_TESTDIRS()
 
 # issue #13543
-ROOTTEST_GENERATE_DICTIONARY(xmlusedByRootclingDict Classy.h LINKDEF xmlusedByRootcling_sel.xml)
+ROOTTEST_GENERATE_DICTIONARY(xmlusedByRootclingDict
+                             Classy.h
+                             LINKDEF xmlusedByRootcling_sel.xml
+                             FIXTURES_SETUP root-meta-roocling-xmlusedByRootclingDict-fixture)
+
 ROOTTEST_ADD_TEST(xmlusedByRootcling
                   MACRO xmlusedByRootclingDict.C
-                  DEPENDS ${GENERATE_DICTIONARY_TEST})
-
+                  FIXTURES_REQUIRED root-meta-roocling-xmlusedByRootclingDict-fixture)
 
 # ROOT-9335
 ROOTTEST_ADD_TEST(classDelCtor
                   MACRO classDelCtor.C+)
 
 # ROOT-7765
-ROOTTEST_GENERATE_DICTIONARY(includeInLinkdefDict LINKDEF classInLinkdef.h)
+ROOTTEST_GENERATE_DICTIONARY(includeInLinkdefDict
+                             LINKDEF classInLinkdef.h
+                             FIXTURES_SETUP root-meta-roocling-includeInLinkdefDict-fixture)
+
 ROOTTEST_ADD_TEST(includeInLinkdef
                   MACRO includeInLinkdef.C
                   COPY_TO_BUILDDIR headerForLdef.h
-                  DEPENDS ${GENERATE_DICTIONARY_TEST})
+                  FIXTURES_REQUIRED root-meta-roocling-includeInLinkdefDict-fixture)
 
 # ROOT-8492
 ROOTTEST_ADD_TEST(selectUnion
@@ -29,10 +35,14 @@ ROOTTEST_ADD_TEST(ROOT10798
                   COMMAND ${ROOT_rootcling_CMD} -f ROOT10798Dict.cxx ${CMAKE_CURRENT_SOURCE_DIR}/ROOT10798LinkDef.h)
 
 # Issue #18833
-ROOTTEST_GENERATE_DICTIONARY(streamerInfoStdFunctionDict streamerInfoStdFunction.h LINKDEF streamerInfoStdFunction.xml)
+ROOTTEST_GENERATE_DICTIONARY(streamerInfoStdFunctionDict
+                             streamerInfoStdFunction.h
+                             LINKDEF streamerInfoStdFunction.xml
+                             FIXTURES_SETUP root-meta-roocling-streamerInfoStdFunctionDict-fixture)
+
 ROOTTEST_ADD_TEST(streamerInfoStdFunction
                   MACRO streamerInfoStdFunction.C
-                  DEPENDS ${GENERATE_DICTIONARY_TEST})
+                  FIXTURES_REQUIRED root-meta-roocling-streamerInfoStdFunctionDict-fixture)
 
 # Issue #18982
 ROOTTEST_ADD_TEST(selectTemplateInvalidArg
