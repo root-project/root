@@ -10,17 +10,17 @@
 #include "TEnv.h"
 
 // Instructions to use this script
-// 
+//
 // You can run the script in different configurations depending
 //    on the values given to the 5 arguments (all optional)
 //    -options: a string containing of:
 //        nolib : do not load any library.
 //        genreflex : use a reflex dictionary.
-//        tree=somename : use a non standard name for the dictionary, this _must_ be the last options.     
+//        tree=somename : use a non standard name for the dictionary, this _must_ be the last options.
 //    -cachesize: by default ROOT will take the best value computed when writing
 //        the file. You can specify a larger cache, eg 80000000 (80 MBytes)
 //        You can disable the treeCache by setting cachesize=0.
-//    -i_nentries: number of entries to be read, if set to -1 (the default), the script read the 
+//    -i_nentries: number of entries to be read, if set to -1 (the default), the script read the
 //        whole tree.
 //    -percententries: fraction of the entries to be read (default to all)
 //    -percentbranches: fraction of the branches to be read (default to all)
@@ -39,7 +39,7 @@
 void fixLHCb()
 {
    TClass::AddRule("KeyedContainer<LHCb::HepMCEvent,Containers::KeyedObjectManager<Containers::hashmap> >     m_sequential   attributes=Owner");
-   TClass::AddRule("KeyedContainer<LHCb::GenCollision,Containers::KeyedObjectManager<Containers::hashmap> >    m_sequential   attributes=Owner"); 
+   TClass::AddRule("KeyedContainer<LHCb::GenCollision,Containers::KeyedObjectManager<Containers::hashmap> >    m_sequential   attributes=Owner");
    TClass::AddRule("ObjectVector<LHCb::MCRichDigitSummary>    m_vector   attributes=Owner");
 }
 
@@ -62,10 +62,10 @@ TFile *openFileAndLib(const char *i_filename, bool loadlibrary, bool genreflex)
    if (pos != kNPOS) {
       libdir.Remove(pos);
    }
-   
+
    if (genreflex) {
-      gSystem->Load("libCintex"); 
-      gROOT->ProcessLine("ROOT::Cintex::Cintex::Enable()");
+      // gSystem->Load("libCintex");
+      // gROOT->ProcessLine("ROOT::Cintex::Cintex::Enable()");
       libdir.Prepend("gen");
    }
    libdir.Prepend("lib");
@@ -76,17 +76,20 @@ TFile *openFileAndLib(const char *i_filename, bool loadlibrary, bool genreflex)
          return 0;
       }
    }
-                    
+
    // open the local if any
    TString filename(i_filename);
    if (gSystem->AccessPathName(filename,kReadPermission) && filename.Index(":") == kNPOS) {
       // otherwise open the http file
-      filename.Prepend("http://root.cern.ch/files/");
+      filename.Prepend("https://root.cern/files/");
+
+      // configure cache directory
+      TFile::SetCacheFileDir(".");
    }
    TFile *file = TFile::Open( filename );
-   
+
    if (!file) return 0;
-   
+
    fixLHCb();
    fixCMS();
    fixATLAS();
@@ -108,14 +111,14 @@ TFile *openFileAndLib(const char *i_filename, bool loadlibrary, bool genreflex)
 
 TTree *getTree(TFile *file, const char *treename) {
    TTree *tree;
-   
+
    if (treename) {
       file->GetObject(treename,tree);
       return tree;
    }
    // Try the known names :)
    const char *names [] = { "E","Events","CollectionTree","ntuple","T" };
-   
+
    for (unsigned int i = 0; i < sizeof(names)/sizeof(names[0]); ++i) {
       file->GetObject(names[i],tree);
       if (tree) return tree;
@@ -130,15 +133,15 @@ void readfile(const char *filename = "lhcb2.root", Int_t cachesize=-1) {
 }
 
 void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesize /* =-1 */,
-              Long64_t i_nentries /* = -1 */, Int_t freq /* = 1000 */, Float_t percententries /* = 1.00 */, Float_t percentbranches /* = 1.00 */) 
+              Long64_t i_nentries /* = -1 */, Int_t freq /* = 1000 */, Float_t percententries /* = 1.00 */, Float_t percentbranches /* = 1.00 */)
 {
    // The support options are:
    //   nolib : do not load any library.
    //   genreflex : use a reflex dictionary.
    //   tree=somename : use a non standard name for the dictionary, this _must_ be the last options.
-   
+
    TStopwatch sw;
-   
+
    TString opt(options);
    bool genreflex = opt.Contains("genreflex");
    bool loadlibrary = !opt.Contains("nolib");
@@ -150,14 +153,14 @@ void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesi
    TFile *file = openFileAndLib(filename,loadlibrary,genreflex);
 
    if (file==0) return;
-   
+
    TTree *T = getTree(file,treename);
 
    TFile::SetReadaheadSize(0);  // (256*1024);
    Long64_t nentries = T->GetEntries();
    if (i_nentries >= 0) {
      nentries = i_nentries;
-   } 
+   }
    int efirst = 0;
    int elast  = efirst+nentries;
    if (cachesize == -2) {
@@ -176,18 +179,18 @@ void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesi
       }
       T->StopCacheLearningPhase();
    }
-  
+
    TTreePerfStats *ps= new TTreePerfStats("ioperf",T);
-   
+
    TRandom r;
    for (Long64_t i=efirst;i<elast;i++) {
       if (i%freq == 0) printf("i = %lld\n",i);
-      if (r.Rndm() > percententries) continue; 
+      if (r.Rndm() > percententries) continue;
       T->LoadTree(i);
       if (percentbranches < 1.00) {
          int nb = T->GetListOfBranches()->GetEntries();
          int incr = nb * percentbranches;
-         for(int b=0;b<nb; b += incr) ((TBranch*)T->GetListOfBranches()->At(b))->GetEntry(i);   
+         for(int b=0;b<nb; b += incr) ((TBranch*)T->GetListOfBranches()->At(b))->GetEntry(i);
          int count = 0;
          int maxcount = 100 + 100 ;
          for(int x = 0; x < maxcount; ++x ) { /* waste cpu */ count = sin(cos(count)); }
@@ -197,7 +200,7 @@ void readfile(const char *filename, const char *options /* = 0 */, Int_t cachesi
    }
    TString psfilename(filename);
    TString pssuffix("_ioperf.root");
-   if (options && options[0]) { pssuffix.Prepend(options); pssuffix.Prepend("_"); } 
+   if (options && options[0]) { pssuffix.Prepend(options); pssuffix.Prepend("_"); }
    psfilename.ReplaceAll(".root", pssuffix );
    ps->SaveAs(psfilename);
    //ps->Draw();
