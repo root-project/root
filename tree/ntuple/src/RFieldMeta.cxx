@@ -11,7 +11,6 @@
 //    - RMapField
 //    - RSetField
 //  - RStreamerField
-//  - RPairField
 //  - RField<TObject>
 //  - RVariantField
 
