@@ -11,6 +11,11 @@ class TestCONCURRENT:
         cls.data = [3.1415, 2.7183, 1.4142, 1.3807, -9.2848]
 
         cppyy.cppdef("""\
+        // as recommended by:
+        // https://docs.python.org/3/c-api/intro.html#include-files
+        #define PY_SSIZE_T_CLEAN
+        #include "Python.h"
+
         namespace Workers {
             double calc(double d) { return d*42.; }
         }""")
@@ -105,19 +110,41 @@ class TestCONCURRENT:
         };
 
         struct worker {
-            worker(consumer* c) : cons(c) { }
+            worker(consumer* c) : cons(c) {
+                // Get the main interpreter state state to spawn new thread states
+                PyThreadState* state = PyThreadState_Get();
+                interpreterState = state->interp;
+            }
             ~worker() { wait(); }
 
             void start() {
                 t = std::thread([this] {
                     int counter = 0;
+
+                    // Each thread needs a Python state object
+                    // Instead of using the higher-level PyGILState_Ensure and
+                    // PyGILState_Release functions, use the PyThreadState API
+                    // directly so that we only need to create one single
+                    // PyThreadState that can be restored and released in the
+                    // "hot loop".
+                    PyThreadState *pystate = PyThreadState_New(this->interpreterState);
+
                     while (counter++ < 10)
                         try {
+                            PyEval_RestoreThread(pystate);
                             cons->process(counter);
+                            PyEval_SaveThread();
                         } catch (CPyCppyy::PyException& e) {
                             err_msg = e.what();
+                            PyEval_SaveThread();
                             return;
                         }
+
+                    PyEval_RestoreThread(pystate);
+                    PyThreadState_Clear(pystate);
+                    PyEval_SaveThread();
+
+                    PyThreadState_Delete(pystate);
                 });
             }
 
@@ -126,6 +153,7 @@ class TestCONCURRENT:
                     t.join();
             }
 
+            PyInterpreterState* interpreterState = nullptr;
             std::thread t;
             consumer* cons = nullptr;
             std::string err_msg;
@@ -201,7 +229,11 @@ class TestCONCURRENT:
                 for (int i = 0; i < channels; ++i)
                     data[i] = new float[samples];
 
+                // Set Python thread because we call back into Python
+                PyGILState_STATE gstate;
+                gstate = PyGILState_Ensure();
                 p.process(data, channels, samples);
+                PyGILState_Release(gstate);
 
                 for (int i = 0; i < channels; ++i)
                     delete[] data[i];
