@@ -257,6 +257,7 @@
          ENDIF
   10  CONTINUE
       IQ10=IQUEST(10)
+      print*, 'HROPEN: ',CHOPT
       IF (INDEX(CHOPT,'F').EQ.0) THEN
          IC = MIN(LENOCC(CHOPT)+1,8)
          CHOPT(IC:IC) = 'C'
@@ -266,10 +267,13 @@
          print*, 'Cannot open file','HROPEN',0
          GO TO 99
       ENDIF
+      print*, 'HROPEN2: ',CHOPT
       IF (IQUEST(12).NE.0 ) THEN
          IC = MIN(LENOCC(CHOPT)+1,8)
          CHOPT(IC:IC) = 'X'
+         print*, 'IQUEST: ',IC,CHOPT
       ENDIF
+
       LRE=IQUEST(10)
       IQUEST(10)=IQ10
       IQUEST(99)=LRE
@@ -309,6 +313,7 @@
          print*, 'Too many open files','HRFILE',LUN
          GO TO 99
       ENDIF
+      print*, 'HRFILE: ',LUN,' ',CHDIR,' ',CHOPT
       CALL HUOPTC(CHOPT,'NGQMOE',IOPT)
       IF(IOPTM.NE.0)IOPTG=1
       IQUEST(1)=0
