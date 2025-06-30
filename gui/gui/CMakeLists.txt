@@ -204,6 +204,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gui
     Gpad
     Graf
     MathCore
+    ROOTNTupleBrowse
 )
 
 target_include_directories(Gui PRIVATE ${CMAKE_SOURCE_DIR}/gui/ged/inc)
