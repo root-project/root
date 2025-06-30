@@ -247,18 +247,7 @@ locked_execution = \
    rm -r $(1).lock; \
    exit $$command_result
 
-ifeq ($(CURDIR)/,$(ROOTTEST_LOC))
-EVENTDIR = root/io/event
-else
-EVENTDIR = $(ROOTTEST_LOC)/root/io/event
-endif
-$(EVENTDIR)/$(SUCCESS_FILE): $(ROOTCORELIBS)
-	$(CMDECHO) (cd $(EVENTDIR); $(call locked_execution,globalrun,$(MAKE) CURRENTDIR=$(EVENTDIR) --no-print-directory $(TESTGOAL),notest);)
-
-$(EVENTDIR)/bigeventTest.success: $(ROOTCORELIBS)
-	$(CMDECHO) (cd $(EVENTDIR); $(call locked_execution,globalrun,$(MAKE) EVENT=Event$(ExeSuf) CURRENTDIR=$(EVENTDIR) --no-print-directory bigeventTest.success,notest);)
-
-$(TEST_TARGETS_DIR): %.test:  $(EVENTDIR)/$(SUCCESS_FILE) utils
+$(TEST_TARGETS_DIR): %.test:  utils
 	@(echo Running test in $(CALLDIR)/$*)
 	@(cd $*; if [ "$(filter -j,$(MAKEFLAGS))" = "-j" ] ; then export ROOT_HIST=0; fi; $(MAKE) -f Makefile CURRENTDIR=$* --no-print-directory $(TESTGOAL) ; \
      result=$$?; \
@@ -675,13 +664,6 @@ check: $(ROOT_LOC)/lib/libCore.$(LibSuf)
 UTILS_PREREQ =  $(UTILS_LIBS)
 
 utils:  $(UTILS_LIBS)
-
-copiedEvent$(ExeSuf): $(EVENTDIR)/bigeventTest.success
-	$(CMDECHO) cp $(EVENTDIR)/libEvent.* $(EVENTDIR)/Event.h $(EVENTDIR)/EventDict_rdict.pcm .
-	$(CMDECHO) cp $(EVENTDIR)/Event$(ExeSuf) ./copiedEvent$(ExeSuf)
-ifeq ($(PLATFORM),win32)
-	$(CMDECHO) if [ -e $(EVENTDIR)/Event$(ExeSuf).manifest ] ; then cp $(EVENTDIR)/Event$(ExeSuf).manifest ./copiedEvent$(ExeSuf).manifest ; fi
-endif
 
 %.o: %.C
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< $(OutOpt)$@ > $*_o_C.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_C.build.log --test=$@
