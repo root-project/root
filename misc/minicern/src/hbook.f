@@ -252,7 +252,6 @@
       DO 11 I=LEN(CHOPTT)+1,8
          CHOPT(I:I) = ' '
   11  CONTINUE
-      print*, 'HROPEN0: "',CHOPT,'"',LEN(CHOPTT)
       CALL CLTOU(CHOPT)
       DO 10 I=1,NCHTOP
          IF(CFNAME.EQ.HFNAME(I))THEN
@@ -261,7 +260,6 @@
          ENDIF
   10  CONTINUE
       IQ10=IQUEST(10)
-      print*, 'HROPEN: ',CHOPT
       IF (INDEX(CHOPT,'F').EQ.0) THEN
          IC = MIN(LENOCC(CHOPT)+1,8)
          CHOPT(IC:IC) = 'C'
@@ -271,13 +269,10 @@
          print*, 'Cannot open file','HROPEN',0
          GO TO 99
       ENDIF
-      print*, 'HROPENZ: ',CHOPT
       IF (IQUEST(12).NE.0 ) THEN
          IC = MIN(LENOCC(CHOPT)+1,8)
          CHOPT(IC:IC) = 'X'
-         print*, 'IQUEST: ',IC,CHOPT
       ENDIF
-
       LRE=IQUEST(10)
       IQUEST(10)=IQ10
       IQUEST(99)=LRE
@@ -317,7 +312,6 @@
          print*, 'Too many open files','HRFILE',LUN
          GO TO 99
       ENDIF
-      print*, 'HRFILE: ',LUN,' ',CHDIR,' ',CHOPT
       CALL HUOPTC(CHOPT,'NGQMOE',IOPT)
       IF(IOPTM.NE.0)IOPTG=1
       IQUEST(1)=0
@@ -2469,11 +2463,8 @@
       CHARACTER*12 CHOPT
       DIMENSION IOPT(1)
       CHOPT = CCHOPT
-      print*, 'HUOPTC: ',CHOPT
       CALL CLTOU(CHOPT)
-      print*, 'HUOPTC2: ',CHOPT
       CALL UOPTC(CHOPT,CSTR,IOPT)
-      print*, 'HUOPTC3: ',CHOPT,CSTR,IOPT
       RETURN
       END
 
