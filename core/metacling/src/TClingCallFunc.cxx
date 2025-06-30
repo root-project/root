@@ -1441,10 +1441,10 @@ void TClingCallFunc::ExecDestructor(const TClingClassInfo *info, void *address /
       return;
    }
 
-   if (tcling_callfunc_dtor_Wrapper_t wrapper = make_dtor_wrapper(info)) {
-      (*wrapper)(address, nary, withFree);
+   R__LOCKGUARD_CLING(gInterpreterMutex);
+
+   if (Cpp::Destruct(address, info->GetDecl(), nary, withFree))
       return;
-   }
 
    ::Error("TClingCallFunc::ExecDestructor", "Called with no wrapper, not implemented!");
 }
