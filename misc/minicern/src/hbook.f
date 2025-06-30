@@ -248,7 +248,9 @@
       COMMON/QUEST/IQUEST(100)
       CHARACTER*(*) CFNAME,CHDIR,CHOPTT
       CHARACTER*8 CHOPT
+      print*, 'HROPEN0: "',CHOPTT,'", "',CHOPT,'"'
       CHOPT=CHOPTT
+      print*, 'HROPEN1: "',CHOPTT,'", "',CHOPT,'"'
       CALL CLTOU(CHOPT)
       DO 10 I=1,NCHTOP
          IF(CFNAME.EQ.HFNAME(I))THEN
@@ -267,7 +269,7 @@
          print*, 'Cannot open file','HROPEN',0
          GO TO 99
       ENDIF
-      print*, 'HROPEN2: ',CHOPT
+      print*, 'HROPENZ: ',CHOPT
       IF (IQUEST(12).NE.0 ) THEN
          IC = MIN(LENOCC(CHOPT)+1,8)
          CHOPT(IC:IC) = 'X'
@@ -2465,8 +2467,11 @@
       CHARACTER*12 CHOPT
       DIMENSION IOPT(1)
       CHOPT = CCHOPT
+      print*, 'HUOPTC: ',CHOPT
       CALL CLTOU(CHOPT)
+      print*, 'HUOPTC2: ',CHOPT
       CALL UOPTC(CHOPT,CSTR,IOPT)
+      print*, 'HUOPTC3: ',CHOPT,CSTR,IOPT
       RETURN
       END
 
