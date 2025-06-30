@@ -212,11 +212,11 @@ RProxiedCollectionField) from the RField primary template definition (RClassFiel
 ```
 auto field = std::make_unique<RField<MyClass>>("klass");
 // vs
-auto otherField = std::make_unique<RField<MyClass, ROOT::Experimental::TagIsCollectionProxy>>("klass");
+auto otherField = std::make_unique<RField<MyClass, ROOT::TagIsCollectionProxy>>("klass");
 ```
 
 That is convenient only for non-nested types, i.e. it doesn't work with, e.g. `RField<std::vector<MyClass>,
-ROOT::Experimental::TagIsCollectionProxy>`, as the tag is not forwarded to the instantiation of the inner RField
+ROOT::TagIsCollectionProxy>`, as the tag is not forwarded to the instantiation of the inner RField
 (that for the value type of the vector).  The following two possible solutions were considered:
 - A wrapper type that helps to differentiate both cases.
 There we would have:
@@ -251,7 +251,7 @@ struct IsCollectionProxy : HasCollectionProxyMemberType<T> {
 /// Classes behaving as a collection of elements that can be queried via the TVirtualCollectionProxy interface
 /// The use of a collection proxy for a particular class can be enabled via:
 /// ```
-/// namespace ROOT::Experimental {
+/// namespace ROOT {
 ///    template <> struct IsCollectionProxy<Classname> : std::true_type {};
 /// }
 /// ```
