@@ -248,7 +248,6 @@
       COMMON/QUEST/IQUEST(100)
       CHARACTER*(*) CFNAME,CHDIR,CHOPTT
       CHARACTER*8 CHOPT
-      print*, 'HROPEN0: "',CHOPTT,'", "',CHOPT,'"'
       CHOPT=CHOPTT
       print*, 'HROPEN1: "',CHOPTT,'", "',CHOPT,'"'
       CALL CLTOU(CHOPT)
