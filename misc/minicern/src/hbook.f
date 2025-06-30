@@ -248,8 +248,8 @@
       COMMON/QUEST/IQUEST(100)
       CHARACTER*(*) CFNAME,CHDIR,CHOPTT
       CHARACTER*8 CHOPT
+      CHOPT='        '
       CHOPT=CHOPTT
-      print*, 'HROPEN1: "',CHOPTT,'", "',CHOPT,'"'
       CALL CLTOU(CHOPT)
       DO 10 I=1,NCHTOP
          IF(CFNAME.EQ.HFNAME(I))THEN
