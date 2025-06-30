@@ -60,6 +60,9 @@ Here is the list of available options:
 
 */
 
+#include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleClassicBrowse.hxx>
+
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TApplication.h"
@@ -163,6 +166,11 @@ TRootBrowser::TRootBrowser(TBrowser *b, const char *name, Int_t x, Int_t y,
 
 void TRootBrowser::CreateBrowser(const char *name)
 {
+   static bool hasRNTupleBrowsing __attribute__((unused)) = []() {
+      ROOT::RNTuple::Class()->SetBrowse(ROOT::Internal::BrowseRNTuple);
+      return true;
+   }();
+
    // Create the actual interface.
 
    fVf = new TGVerticalFrame(this, 100, 100);
