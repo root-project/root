@@ -2111,30 +2111,37 @@ endfunction()
 function (IS_SYSTEM_PATH path is_system_path)
   foreach (dir ${CMAKE_SYSTEM_PATH})
     if ("${path}" STREQUALS "$dir")
-      set(${is_system_path} true PARENT_SCOPE)
+      set(${is_system_path} TRUE PARENT_SCOPE)
     endif()
+    return()
   endforeach()
-  set(${is_system_path} false PARENT_SCOPE)
+  set(${is_system_path} FALSE PARENT_SCOPE)
 endfunction()
 
 #----------------------------------------------------------------------------
-# If path is not a system path, append it to the given variable
-# The 1st argument is the path to be checked
-# The 2nd argument is the variable that the path gets appended to if it is 
-# not a system path.
+# Include paths of third-party libraries stored outside of system directories
+# must be added to the DEFAULT_ROOT_INCLUDE_PATH variable to ensure that the
+# C++ interpreter 'cling' can locate these header files at runtime.
+# Use this function to add these paths to DEFAULT_ROOT_INCLUDE_PATH.
 #----------------------------------------------------------------------------
-function (IF_NOT_SYSTEM_PATH_APPEND path variable)
+function (BUILD_ROOT_INCLUDE_PATH path)
+  # filter out paths into the ROOT src, build, and install directories
+  if((${path} MATCHES "${CMAKE_SOURCE_DIR}(/.*)?") OR
+     (${path} MATCHES "${CMAKE_BINARY_DIR}(/.*)?") OR
+     (${path} MATCHES "${CMAKE_INSTALL_PREFIX}(/.*)?"))
+    return()
+  endif()
   IS_SYSTEM_PATH("${path}" is_system_path)
   if (NOT is_system_path)
-    if (${${variable}} STRING_EMPTY)
-      set(${variable} "${path}" PARENT_SCOPE)
+    if ("${DEFAULT_ROOT_INCLUDE_PATH}" STREQUAL "")
+      set(DEFAULT_ROOT_INCLUDE_PATH "${path}" PARENT_SCOPE)
     else()
       if(WIN32)
         set(ROOT_PATH_SEPARATOR ";")
       elseif(UNIX)
         set(ROOT_PATH_SEPARATOR ":")
       endif()
-      set(${variable} "${${variable}}${ROOT_PATH_SEPARATOR}${path}" PARENT_SCOPE)
+      set(DEFAULT_ROOT_INCLUDE_PATH "${DEFAULT_ROOT_INCLUDE_PATH}${ROOT_PATH_SEPARATOR}${path}" PARENT_SCOPE)
     endif()
   endif()
 endfunction()
