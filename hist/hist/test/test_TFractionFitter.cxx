@@ -117,6 +117,13 @@ TEST(TFractionFitter, FitExample)
    fit->Constrain(2, 0.0, 1.0);               // constrain fraction 1 to be between 0 and 1
    // fit->SetRangeX(1,15);                    // use only the first 15 bins in the fit
    ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kWarning, "Minuit2", "DavidonErrorUpdator", false);
+   diags.requiredDiag(kWarning, "Minuit2", "VariableMetricBuilder Matrix", false);
+   diags.requiredDiag(kWarning, "Minuit2", "MnPosDef non-positive diagonal", false);
+   diags.requiredDiag(kWarning, "Minuit2", "MnPosDef Added", false);
+   diags.requiredDiag(kWarning, "Minuit2", "VariableMetricBuilder gdel", false);
+   diags.requiredDiag(kWarning, "Minuit2", "VariableMetricBuilder No", false);
+   diags.requiredDiag(kWarning, "Minuit2", "VariableMetricBuilder Iterations", false);
    Int_t status = fit->Fit();                 // perform the fit
    EXPECT_EQ(status, 0);
 
