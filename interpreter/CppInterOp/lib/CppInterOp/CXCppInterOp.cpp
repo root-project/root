@@ -613,10 +613,10 @@ void clang_invoke(CXScope func, void* result, void** args, size_t n,
 }
 
 namespace Cpp {
-void Destruct(compat::Interpreter& interp, TCppObject_t This,
-              clang::Decl* Class, bool withFree, size_t nary);
+bool Destruct(compat::Interpreter& interp, TCppObject_t This,
+              const clang::Decl* Class, bool withFree, size_t nary);
 } // namespace Cpp
 
-void clang_destruct(CXObject This, CXScope S, bool withFree, size_t nary) {
-  Cpp::Destruct(*getInterpreter(S), This, getDecl(S), withFree, nary);
+bool clang_destruct(CXObject This, CXScope S, bool withFree, size_t nary) {
+  return Cpp::Destruct(*getInterpreter(S), This, getDecl(S), withFree, nary);
 }
