@@ -249,6 +249,9 @@
       CHARACTER*(*) CFNAME,CHDIR,CHOPTT
       CHARACTER*8 CHOPT
       CHOPT=CHOPTT
+      DO 11 I=LEN(CHOPTT)+1,8
+         CHOPT(I:I) = ' '
+  11  CONTINUE
       CALL CLTOU(CHOPT)
       DO 10 I=1,NCHTOP
          IF(CFNAME.EQ.HFNAME(I))THEN
@@ -305,11 +308,13 @@
       DIMENSION IOPT(6)
       EQUIVALENCE (IOPTN,IOPT(1)),(IOPTG,IOPT(2)),(IOPTQ,IOPT(3))
       EQUIVALENCE (IOPTM,IOPT(4)),(IOPTO,IOPT(5)),(IOPTE,IOPT(6))
+      print*, LUN,':',CHDIR,':',CHOPT
       IF(NCHTOP.GE.MXFILES)THEN
          print*, 'Too many open files','HRFILE',LUN
          GO TO 99
       ENDIF
       CALL HUOPTC(CHOPT,'NGQMOE',IOPT)
+      print*, LUN,':',CHDIR,':',CHOPT
       IF(IOPTM.NE.0)IOPTG=1
       IQUEST(1)=0
       IF(IOPTG.EQ.0)THEN
@@ -2018,6 +2023,7 @@
          GO TO 99
       ENDIF
       IQUEST(1)=0
+      print*, 'HCDIR',CHPATH,':',CHOPT
       IF(CHPATH(1:1).EQ.'.')THEN
          CALL HPATH(' ')
       ELSE
@@ -2460,6 +2466,9 @@
       CHARACTER*12 CHOPT
       DIMENSION IOPT(1)
       CHOPT = CCHOPT
+      DO 12 I=LEN(CCHOPT)+1,12
+         CHOPT(I:I) = ' '
+  12  CONTINUE
       CALL CLTOU(CHOPT)
       CALL UOPTC(CHOPT,CSTR,IOPT)
       RETURN
