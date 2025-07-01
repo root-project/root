@@ -21,11 +21,11 @@ An example application of this fit is given below. For a TH1* histogram
 
 ~~~{.cpp}
 {
-  TH1F *data;                              //data histogram
-  TH1F *mc0;                               // first MC histogram
-  TH1F *mc1;                               // second MC histogram
-  TH1F *mc2;                               // third MC histogram
-  ....                                     // retrieve histograms
+   TH1F *data;                              //data histogram
+   TH1F *mc0;                               // first MC histogram
+   TH1F *mc1;                               // second MC histogram
+   TH1F *mc2;                               // third MC histogram
+   ....                                     // retrieve histograms
    TObjArray *mc = new TObjArray(3);        // MC histograms are put in this array
    mc->Add(mc0);
    mc->Add(mc1);
@@ -42,6 +42,8 @@ An example application of this fit is given below. For a TH1* histogram
    }
 }
 ~~~
+
+\note A fully runing example can be found in tutorials/math/fit/fitFraction.C
 
 ## Assumptions
 A few assumptions need to be made for the fit procedure to be carried out:
@@ -82,7 +84,8 @@ The function
 is provided for direct access to the ROOT::Fit::Fitter object. This allows to
 set and fix parameter values, limits and set step sizes directly via
 
-    fitter->Config().ParSettings(parameter #).Set(const std::string &name, double value, double step, double lower, double upper);
+    fitter->Config().ParSettings(parameter #).Set(const std::string &name, double value, double step, double lower,
+double upper);
 
 ## Restricting the fit range
 The fit range can be restricted through
