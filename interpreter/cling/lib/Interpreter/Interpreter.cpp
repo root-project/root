@@ -1048,7 +1048,9 @@ namespace cling {
                 getCI()->getFrontendOpts().CodeCompleteOpts, completions);
     // Child interpreter CI will own consumer!
     childCI->setCodeCompletionConsumer(consumer);
-    childSemaRef.CodeCompleter = consumer;
+    // FIXME (post LLVM20): https://github.com/llvm/llvm-project/pull/92311
+    // Sema was split up and CodeCompletionPtr was made a private member
+    // childSemaRef.CodeCompleter = consumer;
 
     // Ignore diagnostics when we tab complete.
     // This is because we get redefinition errors due to the import of the decls.

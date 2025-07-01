@@ -8,6 +8,4 @@ if(LLVM_INCLUDE_TESTS)
     ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS "FileCheck" "not" "count" "split-file" "yaml2obj" "llvm-objcopy"
   )
-
-  set_target_properties(check-mlgo-utils PROPERTIES FOLDER "Tests")
 endif()

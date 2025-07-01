@@ -47,9 +47,9 @@ static inline char* GetEnv(const char* Var_Name) {
 
 #if CLANG_VERSION_MAJOR < 19
 #define CXXSpecialMemberKindDefaultConstructor                                 \
-  clang::Sema::CXXDefaultConstructor
-#define CXXSpecialMemberKindCopyConstructor clang::Sema::CXXCopyConstructor
-#define CXXSpecialMemberKindMoveConstructor clang::Sema::CXXMoveConstructor
+  clang::CXXSpecialMemberKind::DefaultConstructor
+#define CXXSpecialMemberKindCopyConstructor clang::CXXSpecialMemberKind::CopyConstructor
+#define CXXSpecialMemberKindMoveConstructor clang::CXXSpecialMemberKind::MoveConstructor
 #else
 #define CXXSpecialMemberKindDefaultConstructor                                 \
   CXXSpecialMemberKind::DefaultConstructor
