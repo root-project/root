@@ -21,10 +21,8 @@ sap.ui.define([
 
       cleanup()
       {
-         if (this.geo_painter) {
-            this.geo_painter.cleanup();
-            delete this.geo_painter;
-         }
+         this.geo_painter?.cleanup();
+         delete this.geo_painter;
 
          super.cleanup();
       }
@@ -49,9 +47,10 @@ sap.ui.define([
       {
          let options = "outline";
          options += ", mouse_click"; // process mouse click events
-         options += ", ambient"; // use ambient light
+         // options += ", ambient"; // use ambient light
          // options += " black, ";
-         if (!this.controller.isEveCameraPerspective()) options += ", ortho_camera";
+         if (!this.controller.isEveCameraPerspective())
+            options += ", ortho_camera";
 
          // TODO: should be specified somehow in XML file
          // MT-RCORE - why have I removed this ???
@@ -59,7 +58,7 @@ sap.ui.define([
 
          this.geo_painter = EVE.JSR.createGeoPainter(this.get_view().getDomRef(), null, options);
 
-         this.geo_painter._geom_viewer = true; // disable several JSROOT features
+         this.geo_painter.setGeomViewer(true); // disable several JSROOT features
 
          // function used by TGeoPainter to create OutlineShader - for the moment remove from JSROOT
          this.geo_painter.createOutline = function(scene, camera, w, h) {
@@ -103,9 +102,11 @@ sap.ui.define([
 
          painter.eveGLcontroller = this.controller;
 
+         const ctrls = this.geo_painter?.getControls();
+
          /** Handler for single mouse click, provided by basic control, used in GeoPainter */
-         if (painter._controls)
-            painter._controls.processSingleClick = function(intersects) {
+         if (ctrls)
+            ctrls.processSingleClick = function(intersects) {
                if (!intersects) return;
                let intersect = null;
                for (let k=0;k<intersects.length;++k) {
@@ -121,20 +122,23 @@ sap.ui.define([
             };
 
          /** Handler of mouse double click - either ignore or reset camera position */
-         if ((this.controller.dblclick_action != "Reset") && painter._controls)
-            painter._controls.processDblClick = function() { }
+         if ((this.controller.dblclick_action != "Reset") && ctrls)
+            ctrls.processDblClick = function() { }
 
-         if (painter._controls)
-            painter._controls.processMouseMove = function(intersects) {
+         if (ctrls)
+            ctrls.processMouseMove = function(intersects) {
                let active_mesh = null, tooltip = null, resolve = null, names = [], geo_object, geo_index;
 
                // try to find mesh from intersections
                for (let k = 0; k < intersects.length; ++k) {
                   let obj = intersects[k].object, info = null;
                   if (!obj) continue;
-                  if (obj.geo_object) info = obj.geo_name; else
-                     if (obj.stack) info = painter.getStackFullName(obj.stack);
-                  if (info===null) continue;
+                  if (obj.geo_object)
+                     info = obj.geo_name;
+                  else if (obj.stack)
+                     info = painter.getStackFullName(obj.stack);
+                  if (info === null)
+                     continue;
 
                   if (info.indexOf("<prnt>")==0)
                      info = painter.getItemName() + info.substr(6);
@@ -147,9 +151,11 @@ sap.ui.define([
                      geo_object = obj.geo_object;
                      if (obj.get_ctrl) {
                         geo_index = obj.get_ctrl().extractIndex(intersects[k]);
-                        if ((geo_index !== undefined) && (typeof tooltip == "string")) tooltip += " indx:" + JSON.stringify(geo_index);
+                        if ((geo_index !== undefined) && (typeof tooltip == "string"))
+                           tooltip += " indx:" + JSON.stringify(geo_index);
                      }
-                     if (active_mesh.stack) resolve = painter.resolveStack(active_mesh.stack);
+                     if (active_mesh.stack)
+                        resolve = painter.resolveStack(active_mesh.stack);
                   }
                }
 
@@ -186,15 +192,17 @@ sap.ui.define([
 
          let sz = this.geo_painter.getSizeFor3d();
          this.geo_painter.getEffectComposer()?.setSize( sz.width, sz.height);
-         this.geo_painter.fxaa_pass.uniforms[ 'resolution' ].value.set( 1 / sz.width, 1 / sz.height );
+         if (this.geo_painter.fxaa_pass)
+            this.geo_painter.fxaa_pass.uniforms[ 'resolution' ].value.set( 1 / sz.width, 1 / sz.height );
 
-         if (this.geo_painter._controls)
-            this.geo_painter._controls.contextMenu = this.jsrootOrbitContext.bind(this);
+         if (ctrls)
+            ctrls.contextMenu = this.jsrootOrbitContext.bind(this);
 
          // create only when geo painter is ready
          this.controller.createScenes();
          this.controller.redrawScenes();
 
+         // is it too early?
          this.geo_painter.adjustCameraPosition(true);
          this.render();
 
