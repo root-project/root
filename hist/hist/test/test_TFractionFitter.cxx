@@ -117,13 +117,6 @@ TEST(TFractionFitter, FitExample)
    fit->Constrain(2, 0.0, 1.0);               // constrain fraction 1 to be between 0 and 1
    // fit->SetRangeX(1,15);                    // use only the first 15 bins in the fit
    ROOT::TestSupport::CheckDiagsRAII diags;
-   diags.requiredDiag(kWarning, "Minuit2", "", false);
-   diags.requiredDiag(kWarning, "Minuit2", "", false);
-   diags.requiredDiag(kWarning, "Minuit2", "", false);
-   diags.requiredDiag(kWarning, "Minuit2", "", false);
-   diags.requiredDiag(kWarning, "Minuit2", "", false);
-   diags.requiredDiag(kWarning, "Minuit2", "", false);
-   diags.requiredDiag(kWarning, "Minuit2", "", false);
    Int_t status = fit->Fit();                 // perform the fit
    EXPECT_EQ(status, 0);
 
