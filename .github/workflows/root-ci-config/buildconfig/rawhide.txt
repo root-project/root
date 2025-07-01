@@ -1,0 +1,6 @@
+builtin_zlib=ON
+builtin_zstd=ON
+ccache=ON
+test_distrdf_dask=OFF
+test_distrdf_pyspark=OFF
+vdt=OFF
