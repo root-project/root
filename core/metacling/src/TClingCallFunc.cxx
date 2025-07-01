@@ -1426,8 +1426,10 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info,
 
    clang::Decl *D = const_cast<clang::Decl *>(info->GetDecl());
 
-   if (Cpp::IsClass(D) || Cpp::IsConstructor(D))
+   if (Cpp::IsClass(D) || Cpp::IsConstructor(D)) {
+      R__LOCKGUARD_CLING(gInterpreterMutex);
       return Cpp::Construct(D, address, nary);
+   }
 
    ::Error("TClingCallFunc::ExecDefaultConstructor", "ClassInfo missing a valid Scope/Constructor");
    return nullptr;
