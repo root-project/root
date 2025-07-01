@@ -158,7 +158,7 @@ jobs:
 
       - uses: root-project/gcc-problem-matcher-improved@main
         with:
-          build-directory: /Users/sftnight/ROOT-CI/src/
+          build-directory: /Users/sftnight/build/ROOT-CI/src/
 
       - name: Set up curl CA bundle for Davix to work with https
         run: 'echo SSL_CERT_FILE=/opt/local/share/curl/curl-ca-bundle.crt >> $GITHUB_ENV'
@@ -215,14 +215,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Test Results ${{ matrix.platform }} ${{ matrix.arch }}
-          path: /Users/sftnight/ROOT-CI/build/TestResults.xml
+          path: /Users/sftnight/build/ROOT-CI/build/TestResults.xml
 
       - name: Upload binaries
         if:   ${{ !cancelled() && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
         uses: actions/upload-artifact@v4
         with:
           name: Binaries ${{ matrix.platform }} ${{ matrix.arch }}
-          path: /Users/sftnight/ROOT-CI/packages/root_v*
+          path: /Users/sftnight/build/ROOT-CI/packages/root_v*
           if-no-files-found: error
 
 
