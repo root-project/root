@@ -48,7 +48,7 @@ ROOTTEST_ADD_TEST(testFriend2
                   FIXTURES_REQUIRED root-tree-friend-file-fixture
                                     root-tree-friend-mcfiles-fixture)
 ROOTTEST_ADD_TEST(testFriend3
-                  MACRO testFriend2.cc
+                  MACRO testFriend3.cc
                   FIXTURES_REQUIRED root-tree-friend-file-fixture
                                     root-tree-friend-mcfiles-fixture)
 ROOTTEST_ADD_TEST(testFriend4
@@ -112,6 +112,5 @@ ROOTTEST_ADD_TEST(MissingParentValue
 
 ROOTTEST_ADD_TEST(NonExistingFriend
                   MACRO execNonExistingFriend.C
-                  # produced error output includes full file path
-                  WILLFAIL
+                  OUTCNVCMD sed -e "s: file [A-Za-z/\].*[/\]: file :g"
                   OUTREF execNonExistingFriend.ref)
