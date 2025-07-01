@@ -361,8 +361,10 @@ CINDEX_LINKAGE void clang_invoke(CXScope func, void* result, void** args,
  * \param type The type of the object.
  *
  * \param withFree Whether to call operator delete/free or not.
+ *
+ * \returns true if wrapper generation and invocation succeeded.
  */
-CINDEX_LINKAGE void clang_destruct(CXObject This, CXScope S,
+CINDEX_LINKAGE bool clang_destruct(CXObject This, CXScope S,
                                    bool withFree = true, size_t nary = 0UL);
 
 /**
