@@ -3,8 +3,8 @@
 // with additions by Bram Wijngaarden <dwijngaa@hef.kun.nl>
 
 /** \class TFractionFitter
-Fits MC fractions to data histogram. A la HMCMLL, see R. Barlow and C. Beeston,
-Comp. Phys. Comm. 77 (1993) 219-228, and http://www.hep.man.ac.uk/~roger/hfrac.f
+Fits MC fractions to data histogram. À la [HMCMLL](https://cds.cern.ch/record/2296378/files/hbook.pdf),
+see R. Barlow and C. Beeston, Comp. Phys. Comm. 77 (1993) 219-228
 
 The virtue of this fit is that it takes into account both data and Monte Carlo
 statistical uncertainties. The way in which this is done is through a standard
