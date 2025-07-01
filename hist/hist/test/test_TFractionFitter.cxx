@@ -117,4 +117,18 @@ TEST(TFractionFitter, FitExample)
    // fit->SetRangeX(1,15);                    // use only the first 15 bins in the fit
    Int_t status = fit->Fit();                 // perform the fit
    EXPECT_EQ(status, 0);
+
+   // Cleanup
+   delete fit;
+   delete data;
+   delete mc;
+   delete mc0;
+   delete mc1;
+   delete mc2;
+   delete htruemc0;
+   delete htruemc1;
+   delete htruemc2;
+   delete f0;
+   delete f1;
+   delete f2;
 }
