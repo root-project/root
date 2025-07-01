@@ -14,8 +14,7 @@ ROOTTEST_ADD_TEST(Parse
                   COPY_TO_BUILDDIR dune10kt_v1_workspace.gdml)
 
 ROOTTEST_ADD_TEST(unpack
-                  COMMAND tar xzf geometries.tar.gz
-                  COPY_TO_BUILDDIR geometries.tar.gz
+                  COMMAND tar xzf ${CMAKE_CURRENT_SOURCE_DIR}/geometries.tar.gz
                   FIXTURES_SETUP root-io-geo-unpack-fixture)
 
 foreach(macro aleph_all alice_all ams_all babar_all brahms_all btev_all cdf_all cms_cmse d0_all e907_all gem_all hades_all lhcb_mag lhcbfull_all phenix_all phobos_all star_all tesla_all)
