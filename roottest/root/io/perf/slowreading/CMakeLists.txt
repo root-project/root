@@ -21,6 +21,8 @@ foreach(macro 60 61 62)
   endif()
 
   foreach(file 60 61 62)
+    # in Makefile test was running twice if first time performance was too slow
+    # one could instead run performance code several times and choose best value
     ROOTTEST_ADD_TEST(check-macro${macro}-file${file}
                       MACRO Read.C
                       MACROARG "\"NuEvent_${macro}_cxx\", \"DST_${file}.root\""
