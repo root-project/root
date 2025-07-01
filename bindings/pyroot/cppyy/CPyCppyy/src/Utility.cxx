@@ -552,9 +552,9 @@ static bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
             PyErr_Clear();
 
     // ctypes function pointer
-        PyObject* argtypes = PyObject_GetAttrString(arg, "argtypes");
-        PyObject* ret = PyObject_GetAttrString(arg, "restype");
-        if (argtypes && ret) {
+        PyObject* argtypes = nullptr;
+        PyObject* ret = nullptr;
+        if ((argtypes = PyObject_GetAttrString(arg, "argtypes")) && (ret = PyObject_GetAttrString(arg, "restype"))) {
             std::ostringstream tpn;
             PyObject* pytc = PyObject_GetAttr(ret, PyStrings::gCTypesType);
             tpn << CT2CppNameS(pytc, false)
@@ -895,7 +895,7 @@ Py_ssize_t CPyCppyy::Utility::GetBuffer(PyObject* pyobject, char tc, int size, v
     if (PyObject_CheckBuffer(pyobject)) {
         if (PySequence_Check(pyobject) && !PySequence_Size(pyobject))
             return 0;   // PyObject_GetBuffer() crashes on some platforms for some zero-sized seqeunces
-
+        PyErr_Clear();
         Py_buffer bufinfo;
         memset(&bufinfo, 0, sizeof(Py_buffer));
         if (PyObject_GetBuffer(pyobject, &bufinfo, PyBUF_FORMAT) == 0) {
