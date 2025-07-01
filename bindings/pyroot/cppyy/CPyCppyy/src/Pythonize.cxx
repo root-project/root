@@ -2037,6 +2037,7 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, Cppyy::TCppScope_t scope)
 
         // data with size
             Utility::AddToClass(pyclass, "__real_data", "data");
+            PyErr_Clear(); // AddToClass might have failed for data
             Utility::AddToClass(pyclass, "data", (PyCFunction)VectorData);
 
         // checked getitem
