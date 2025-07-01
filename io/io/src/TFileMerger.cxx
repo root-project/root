@@ -542,7 +542,8 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
             keyname, keytitle);
       return kTRUE;
    }
-   Bool_t canBeFound = (type & kIncremental) && (current_sourcedir->GetList()->FindObject(keyname) != nullptr);
+   Bool_t canBeFound = (type & kIncremental) && (current_sourcedir->GetList()->FindObject(keyname) != nullptr) &&
+                       (target->GetList()->FindObject(keyname) != nullptr);
 
    // if (cl->IsTObject())
    //    obj->ResetBit(kMustCleanup);
@@ -822,7 +823,8 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
          delete ndir;
       }
    } else if (!canBeFound) { // Don't write the partial result for TTree and TH1
-
+      if (gDebug > 0)
+         Info("MergeOne", "Writing partial result of %s into target", oldkeyname.Data());
       if (!canBeMerged) {
          TIter peeknextkey(nextkey);
          status = WriteCycleInOrder(oldkeyname, nextkey, peeknextkey, target) && status;
