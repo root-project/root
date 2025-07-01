@@ -1,4 +1,5 @@
 #include "gtest/gtest.h"
+#include "ROOT/TestSupport.hxx"
 
 #include "TH1F.h"
 #include "TF1.h"
@@ -24,25 +25,25 @@ TEST(TFractionFitter, FitExample)
 
    Double_t trueP0 = .01;
    Double_t trueP1 = .3;
-   Double_t trueP2 = 1. - trueP0 - trueP1;
+   // Double_t trueP2 = 1. - trueP0 - trueP1;
 
    // contribution 0
    TF1 *f0 = new TF1("f0", "[0]*(1-cos(x))/TMath::Pi()", 0., TMath::Pi());
    f0->SetParameter(0, 1.);
    f0->SetLineColor(2);
-   Double_t int0 = f0->Integral(0., TMath::Pi());
+   // Double_t int0 = f0->Integral(0., TMath::Pi());
 
    // contribution 1
    TF1 *f1 = new TF1("f1", "[0]*(1-cos(x)*cos(x))*2./TMath::Pi()", 0., TMath::Pi());
    f1->SetParameter(0, 1.);
    f1->SetLineColor(3);
-   Double_t int1 = f1->Integral(0., TMath::Pi());
+   // Double_t int1 = f1->Integral(0., TMath::Pi());
 
    // contribution 2
    TF1 *f2 = new TF1("f2", "[0]*(1+cos(x))/TMath::Pi()", 0., TMath::Pi());
    f2->SetParameter(0, 1.);
    f2->SetLineColor(4);
-   Double_t int2 = f2->Integral(0., TMath::Pi());
+   // Double_t int2 = f2->Integral(0., TMath::Pi());
 
    // generate data
    data = new TH1F("data", "Data angle distribution", nBins, 0, TMath::Pi());
@@ -115,6 +116,14 @@ TEST(TFractionFitter, FitExample)
    fit->Constrain(1, 0.0, 1.0);               // constrain fraction 1 to be between 0 and 1
    fit->Constrain(2, 0.0, 1.0);               // constrain fraction 1 to be between 0 and 1
    // fit->SetRangeX(1,15);                    // use only the first 15 bins in the fit
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kWarning, "Minuit2", "", false);
+   diags.requiredDiag(kWarning, "Minuit2", "", false);
+   diags.requiredDiag(kWarning, "Minuit2", "", false);
+   diags.requiredDiag(kWarning, "Minuit2", "", false);
+   diags.requiredDiag(kWarning, "Minuit2", "", false);
+   diags.requiredDiag(kWarning, "Minuit2", "", false);
+   diags.requiredDiag(kWarning, "Minuit2", "", false);
    Int_t status = fit->Fit();                 // perform the fit
    EXPECT_EQ(status, 0);
 
