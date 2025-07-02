@@ -56,7 +56,7 @@ def run():
         factory.BookMethod(dataloader, TMVA.Types.kFisher, 'Fisher',
                            '!H:!V:Fisher:VarTransform=D,G')
         factory.BookMethod(dataloader, TMVA.Types.kPyKeras, 'PyKeras',
-                           'H:!V:VarTransform=D,G:FilenameModel=modelClassification.h5:FilenameTrainedModel=trainedModelClassification.h5:NumEpochs=20:BatchSize=32')
+                           'H:!V:VarTransform=D,G:FilenameModel=modelClassification.h5:FilenameTrainedModel=trainedModelClassification.h5:NumEpochs=20:BatchSize=32:LearningRateSchedule=10,0.01;20,0.005')
 
         # Run training, test and evaluation
         factory.TrainAllMethods()
