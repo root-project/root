@@ -23,14 +23,16 @@
 
 #include "TObject.h"
 
-
 class TFree : public TObject {
-
 protected:
    Long64_t        fFirst;            ///<First free word of segment
    Long64_t        fLast;             ///<Last free word of segment
 
 public:
+   /// Prevent gap coalescing from exceeding 2 GB, since the gap size is stored as a signed 4 bytes integer.
+   /// The true limit is 2 GiB but for historical reasons (previous implementation of TFree) we stick to the 2GB limit.
+   static constexpr Int_t kMaxGapSize = 2000 * 1000 * 1000;
+
    TFree();
    TFree(TList *lfree, Long64_t first, Long64_t last);
    ~TFree() override;
