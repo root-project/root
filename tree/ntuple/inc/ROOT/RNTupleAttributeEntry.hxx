@@ -75,7 +75,20 @@ class RNTupleAttributeEntry final {
    friend class ROOT::Experimental::RNTupleAttributeSetWriter;
    friend class ROOT::Experimental::RNTupleAttributeSetReader;
 
-   std::unique_ptr<REntry> fEntry;
+   /// Entry containing the Attribute-specific fields (such as the entry range)
+   std::unique_ptr<REntry> fMetaEntry;
+   /* Entry containing to user-defined fields. It is "scoped" because the Attribute Model is organized like this:
+    *  
+    *                      FieldZero
+    *                          |
+    *                _________/ \_________
+    *               /        |            \
+    *     __entryStart  __entryLen    RecordField
+    *                                    / | \
+    *                            (user defined fields)
+    *
+    *  and the ScopedEntry is scoped under RecordField, as if it were its top-level field.
+    */
    std::unique_ptr<REntry> fScopedEntry;
    RNTupleAttributeRange fRange;
 
@@ -83,21 +96,20 @@ class RNTupleAttributeEntry final {
    static std::pair<std::unique_ptr<REntry>, std::unique_ptr<REntry>> CreateInternalEntries(ROOT::RNTupleModel &model);
 
    /// Creates a pending AttributeEntry whose length is not determined yet.
-   /// `entry` is the "real" entry containing all the attribute data including the range, `scopedEntry` only contains
-   /// the values of the user-defined values.
-   RNTupleAttributeEntry(std::unique_ptr<REntry> entry, std::unique_ptr<REntry> scopedEntry, ROOT::NTupleSize_t start)
-      : fEntry(std::move(entry)),
+   /// `metaEntry` is the entry containing the range data, `scopedEntry` contains the user-defined values.
+   RNTupleAttributeEntry(std::unique_ptr<REntry> metaEntry, std::unique_ptr<REntry> scopedEntry,
+                         ROOT::NTupleSize_t start)
+      : fMetaEntry(std::move(metaEntry)),
         fScopedEntry(std::move(scopedEntry)),
         fRange(RNTupleAttributeRange::FromStartLength(start, 0))
    {
    }
 
    /// Creates an AttributeEntry with the given range.
-   /// `entry` is the "real" entry containing all the attribute data including the range, `scopedEntry` only contains
-   /// the values of the user-defined values.
+   /// `metaEntry` is the entry containing the range data, `scopedEntry` contains the user-defined values.
    RNTupleAttributeEntry(std::unique_ptr<REntry> entry, std::unique_ptr<REntry> scopedEntry,
                          RNTupleAttributeRange range)
-      : fEntry(std::move(entry)), fScopedEntry(std::move(scopedEntry)), fRange(range)
+      : fMetaEntry(std::move(entry)), fScopedEntry(std::move(scopedEntry)), fRange(range)
    {
    }
 

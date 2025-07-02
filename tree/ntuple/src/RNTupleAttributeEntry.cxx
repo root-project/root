@@ -18,7 +18,7 @@
 
 std::size_t ROOT::Experimental::RNTupleAttributeEntry::Append()
 {
-   auto bytesWritten = fEntry->Append();
+   auto bytesWritten = fMetaEntry->Append();
    bytesWritten += fScopedEntry->Append();
    return bytesWritten;
 }
@@ -47,18 +47,18 @@ std::unique_ptr<ROOT::REntry> ROOT::Experimental::RNTupleAttributeEntry::CreateS
 std::pair<std::unique_ptr<ROOT::REntry>, std::unique_ptr<ROOT::REntry>>
 ROOT::Experimental::RNTupleAttributeEntry::CreateInternalEntries(ROOT::RNTupleModel &model)
 {
-   auto entry = std::unique_ptr<ROOT::REntry>(new ROOT::REntry(model.GetModelId(), model.GetSchemaId()));
+   auto metaEntry = std::unique_ptr<ROOT::REntry>(new ROOT::REntry(model.GetModelId(), model.GetSchemaId()));
 
    auto &zeroField = ROOT::Internal::GetFieldZeroOfModel(const_cast<ROOT::RNTupleModel &>(model));
    auto subfields = zeroField.GetMutableSubfields();
    RFieldBase *rangeStartField = subfields[0]; // XXX: hardcoded
    RFieldBase *rangeLenField = subfields[1];   // XXX: hardcoded
 
-   // Add only the range start/len to `entry`
-   entry->AddValue(rangeStartField->CreateValue());
-   entry->AddValue(rangeLenField->CreateValue());
+   // Add only the range start/len to `metaEntry`
+   metaEntry->AddValue(rangeStartField->CreateValue());
+   metaEntry->AddValue(rangeLenField->CreateValue());
 
    auto scopedEntry = CreateScopedEntry(model);
 
-   return {std::move(entry), std::move(scopedEntry)};
+   return {std::move(metaEntry), std::move(scopedEntry)};
 }

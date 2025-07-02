@@ -117,8 +117,8 @@ void ROOT::Experimental::RNTupleAttributeSetWriter::EndRangeInternal()
    // Get current entry number from the writer and use it as end of entry range
    const auto end = fMainFillContext->GetNEntries();
    fOpenEntry->fRange = RNTupleAttributeRange::FromStartEnd(fOpenEntry->fRange.Start(), end);
-   auto pRangeStart = fOpenEntry->fEntry->GetPtr<ROOT::NTupleSize_t>("__rangeStart");
-   auto pRangeLen = fOpenEntry->fEntry->GetPtr<ROOT::NTupleSize_t>("__rangeLen");
+   auto pRangeStart = fOpenEntry->fMetaEntry->GetPtr<ROOT::NTupleSize_t>("__rangeStart");
+   auto pRangeLen = fOpenEntry->fMetaEntry->GetPtr<ROOT::NTupleSize_t>("__rangeLen");
    R__ASSERT(pRangeStart);
    R__ASSERT(pRangeLen);
    *pRangeStart = fOpenEntry->GetRange().Start();
