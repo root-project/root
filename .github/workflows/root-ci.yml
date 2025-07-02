@@ -102,10 +102,6 @@ jobs:
           - platform: mac14
             arch: X64
             overrides: ["CMAKE_CXX_STANDARD=20"]
-          - platform: mac14
-            is_special: true
-            arch: ARM64
-            overrides: ["CMAKE_CXX_STANDARD=20"]
           - platform: mac15
             arch: ARM64
             overrides: ["CMAKE_CXX_STANDARD=23"]
