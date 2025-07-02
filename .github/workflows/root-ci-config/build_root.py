@@ -229,8 +229,7 @@ def cleanup_previous_build():
     else:
         # mac/linux/POSIX
         result = subprocess_with_log(f"""
-            rm -rf {WORKDIR}
-            mkdir -p {WORKDIR}
+            rm -rf {WORKDIR}/*
         """)
 
     if result != 0:
