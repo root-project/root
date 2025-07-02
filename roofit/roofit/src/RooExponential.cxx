@@ -29,6 +29,7 @@ range and values of the arguments.
 
 #include "RooRealVar.h"
 #include "RooBatchCompute.h"
+#include "RooHelpers.h"
 
 #include <RooFit/Detail/MathFuncs.h>
 
@@ -45,6 +46,7 @@ RooExponential::RooExponential(const char *name, const char *title, RooAbsReal &
      c{"c", "Exponent", this, coefficient},
      _negateCoefficient{negateCoefficient}
 {
+   RooHelpers::checkRangeOfParameters(this, {&coefficient}, 0.);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
