@@ -410,13 +410,12 @@ TEnv::TEnv(const char *name)
 
       TString sname = "system";
       sname += name;
-      char *s = gSystem->ConcatFileName(TROOT::GetEtcDir(), sname);
+      const char *s = gSystem->PrependPathName(TROOT::GetEtcDir(), sname);
       ReadFile(s, kEnvGlobal);
-      delete [] s;
       if (!gSystem->Getenv("ROOTENV_NO_HOME")) {
-         s = gSystem->ConcatFileName(gSystem->HomeDirectory(), name);
-         ReadFile(s, kEnvUser);
-         delete [] s;
+         TString temp(name);
+         const char *s1 = gSystem->PrependPathName(gSystem->HomeDirectory(), temp);
+         ReadFile(s1, kEnvUser);
          if (strcmp(gSystem->HomeDirectory(), gSystem->WorkingDirectory()))
             ReadFile(name, kEnvLocal);
       } else
@@ -680,13 +679,9 @@ void TEnv::SaveLevel(EEnvLevel level)
 
       TString sname = "system";
       sname += fRcName;
-      char *s = gSystem->ConcatFileName(TROOT::GetEtcDir(), sname);
-      rootrcdir = s;
-      delete [] s;
+      rootrcdir = gSystem->PrependPathName(TROOT::GetEtcDir(), sname);
    } else if (level == kEnvUser) {
-      char *s = gSystem->ConcatFileName(gSystem->HomeDirectory(), fRcName);
-      rootrcdir = s;
-      delete [] s;
+      rootrcdir = gSystem->PrependPathName(gSystem->HomeDirectory(), fRcName);
    } else if (level == kEnvLocal)
       rootrcdir = fRcName;
    else
