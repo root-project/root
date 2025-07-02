@@ -13,7 +13,6 @@
 #include <ROOT/RDF/InterfaceUtils.hxx>
 #include <ROOT/RDF/RColumnRegister.hxx>
 #include <ROOT/RDF/RDisplay.hxx>
-#include <ROOT/RDF/RInterface.hxx>
 #include <ROOT/RDF/RJittedDefine.hxx>
 #include <ROOT/RDF/RJittedFilter.hxx>
 #include <ROOT/RDF/RJittedVariation.hxx>
@@ -56,26 +55,15 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <type_traits> // for remove_reference<>::type
 #include <typeinfo>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility> // for pair
 #include <vector>
 
-namespace ROOT {
-namespace Detail {
-namespace RDF {
+namespace ROOT::Detail::RDF {
 class RDefineBase;
-} // namespace RDF
-namespace Internal {
-namespace RDF {
-class RJittedAction;
 }
-} // namespace Internal
-} // namespace Detail
-
-} // namespace ROOT
 
 namespace {
 using ROOT::Internal::RDF::IsStrInVec;
@@ -1019,6 +1007,12 @@ AddSizeBranches(const std::vector<std::string> &branches, ROOT::RDF::RDataSource
       auto *b = tree->GetBranch(colName.c_str());
       if (!b) // try harder
          b = tree->FindBranch(colName.c_str());
+
+      if (!b && (tree->GetLeaf(colName.c_str()) || tree->FindLeaf(colName.c_str()))) {
+         // The column name corresponds to a leaf of a branch, nothing to do
+         continue;
+      }
+
       assert(b != nullptr);
       auto *leaves = b->GetListOfLeaves();
       if (b->IsA() != TBranch::Class() || leaves->GetEntries() != 1)

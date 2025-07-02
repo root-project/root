@@ -373,7 +373,7 @@ jobs:
             is_special: true
           - image: alma8
           - image: alma9
-            overrides: ["CMAKE_BUILD_TYPE=Debug", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
+            overrides: ["CMAKE_BUILD_TYPE=Debug"]
           - image: alma10
           - image: ubuntu22
             overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
@@ -382,7 +382,7 @@ jobs:
           - image: ubuntu2504
             overrides: ["CMAKE_CXX_STANDARD=23"]
           - image: debian125
-            overrides: ["CMAKE_CXX_STANDARD=20", "dev=ON"]
+            overrides: ["CMAKE_CXX_STANDARD=20", "dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
           # Special builds
           - image: alma9
             is_special: true
@@ -391,7 +391,7 @@ jobs:
           - image: alma9
             is_special: true
             property: march_native
-            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "fortran=OFF", "builtin_zlib=ON", "builtin_zstd=ON"]
+            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "builtin_zlib=ON", "builtin_zstd=ON"]
           - image: alma9
             is_special: true
             property: arm64

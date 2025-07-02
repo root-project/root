@@ -35,6 +35,7 @@
 namespace Cpp {
 using TCppIndex_t = size_t;
 using TCppScope_t = void*;
+using TCppConstScope_t = const void*;
 using TCppType_t = void*;
 using TCppFunction_t = void*;
 using TCppConstFunction_t = const void*;
@@ -224,6 +225,8 @@ public:
   ///\param[in] nary - Use array new if we have to construct an array of
   ///           objects (nary > 1).
   ///\param[in] args - a pointer to a argument list and argument size.
+  ///\param[in] is_arena - a pointer that indicates if placement new is to be
+  /// used
   // FIXME: Change the type of withFree from int to bool in the wrapper code.
   void InvokeConstructor(void* result, unsigned long nary = 1,
                          ArgList args = {}, void* is_arena = nullptr) const {
@@ -836,23 +839,25 @@ enum : long int {
 CPPINTEROP_API std::vector<long int> GetDimensions(TCppType_t type);
 
 /// Allocates memory required by an object of a given class
-/// \c scope Given class for which to allocate memory for
-/// \c count is used to indicate the number of objects to allocate for.
+/// \param[in] scope Given class for which to allocate memory for
+/// \param[in] count is used to indicate the number of objects to allocate for.
 CPPINTEROP_API TCppObject_t Allocate(TCppScope_t scope,
                                      TCppIndex_t count = 1UL);
 
 /// Deallocates memory for a given class.
-/// \c scope Class to indicate size of memory to deallocate
-/// \c count is used to indicate the number of objects to dallocate for
+/// \param[in] scope Class to indicate size of memory to deallocate
+/// \param[in] count is used to indicate the number of objects to dallocate for
 CPPINTEROP_API void Deallocate(TCppScope_t scope, TCppObject_t address,
                                TCppIndex_t count = 1UL);
 
 /// Creates one or more objects of class \c scope by calling its default
 /// constructor.
-/// \param[in] scope Class to construct
+/// \param[in] scope Class to construct, or handle to Constructor
 /// \param[in] arena If set, this API uses placement new to construct at this
 /// address.
 /// \param[in] is used to indicate the number of objects to construct.
+/// \returns a pointer to the constructed object, which is arena if placement
+/// new is used.
 CPPINTEROP_API TCppObject_t Construct(TCppScope_t scope, void* arena = nullptr,
                                       TCppIndex_t count = 1UL);
 
@@ -863,7 +868,8 @@ CPPINTEROP_API TCppObject_t Construct(TCppScope_t scope, void* arena = nullptr,
 /// destructor
 /// \param[in] count indicate the number of objects to destruct, if \c This
 /// points to an array of objects
-CPPINTEROP_API void Destruct(TCppObject_t This, TCppScope_t type,
+/// \returns true if wrapper generation and invocation succeeded.
+CPPINTEROP_API bool Destruct(TCppObject_t This, TCppConstScope_t type,
                              bool withFree = true, TCppIndex_t count = 0UL);
 
 /// @name Stream Redirection

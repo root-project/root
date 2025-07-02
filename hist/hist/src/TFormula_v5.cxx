@@ -147,8 +147,7 @@ TFormula::TFormula()
    fNstring= 0;
    fNames  = nullptr;
    fNval   = 0;
-   //
-   //MI change
+
    fNOperOptimized = 0;
    fExprOptimized  = nullptr;
    fOperOptimized  = nullptr;
@@ -175,8 +174,7 @@ TFormula::TFormula(const char *name,const char *expression) :
    fNstring= 0;
    fNames  = nullptr;
    fNval   = 0;
-   //
-   //MI change
+
    fNOperOptimized = 0;
    fExprOptimized  = nullptr;
    fOperOptimized  = nullptr;
@@ -468,24 +466,33 @@ Bool_t TFormula::AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset)
    }
 
    delete method;
-   //
-   // MI change - extended space of functions
-   // not forward compatible change
-   //
-   TString cbase(chaine);
+
+   return AnalyzePrimitive(chaine, argArr, err, offset);
+}
+
+/// Check if the given string matches a defined function primitive
+/// \see TFormula::AnalyzeFunction
+Bool_t TFormula::AnalyzePrimitive(TString &chain, TObjArray &argArr, Int_t &err, Int_t offset)
+{
+
+   TString cbase(chain);
    Int_t args_paran = cbase.First("(");
    if (args_paran>0){
       cbase[args_paran]=0;
    }
 
    ROOT::v5::TFormulaPrimitive *prim = ROOT::v5::TFormulaPrimitive::FindFormula(cbase, args_paran>0 ? cbase.Data() + args_paran + 1 : (const char*)nullptr);
-   if (prim &&   (!IsA()->GetBaseClass("TTreeFormula"))) {
-      // TO BE DONE ALSO IN TTREFORMULA - temporary fix MI
+   if (prim) {
+      // TO BE DONE ALSO IN TTREFORMULA - temporary fix
       // Analyze the arguments
       TIter next(&argArr);
       TObjString *objstr;
+      Int_t nargs=0;
       while ( (objstr=(TObjString*)next()) ) {
-         Analyze(objstr->String(),err,offset); if (err) return kFALSE;
+         Analyze(objstr->String(), err, offset);
+         if (err)
+            return kFALSE;
+         ++nargs;
       }
       if (nargs!=prim->fNArguments) {
          Error("Compile",        "%s requires %d arguments",
@@ -2243,8 +2250,7 @@ void TFormula::ClearFormula(Option_t * /*option*/ )
    if (fParams) { delete [] fParams; fParams = nullptr;}
    fFunctions.Delete();
    fLinearParts.Delete();
-   //
-   //MI change
+
    if (fPredefined)    { delete [] fPredefined;    fPredefined    = nullptr;}
    if (fOperOffset)    { delete [] fOperOffset;    fOperOffset    = nullptr;}
    if (fExprOptimized) { delete [] fExprOptimized; fExprOptimized = nullptr;}
@@ -2456,13 +2462,9 @@ Int_t TFormula::Compile(const char *expression)
 
 
    if (err) { fNdim = 0; return 1; }
-   //   Convert(5);
-   //
-   //MI change
-   if (!IsA()->GetBaseClass("TTreeFormula")) {
-      Optimize();
-   }
-   //
+
+   Optimize();
+
    return 0;
 }
 
@@ -2510,10 +2512,7 @@ void TFormula::Copy(TObject &obj) const
    while ( (fobj = next()) ) {
       ((TFormula&)obj).fFunctions.Add( fobj->Clone() );
    }
-   //
-   // MI change
-   //
-   //
+
    if (fNoper) {
       if(fExprOptimized) {
          ((TFormula&)obj).fExprOptimized   = new TString[fNoper];
@@ -2645,9 +2644,7 @@ Int_t TFormula::DefinedVariable(TString &chaine,Int_t &action)
       if (fNdim < 4) fNdim = 4;
       return 3;
    }
-   // MI change
-   // extended defined variable (MI)
-   //
+
    if (chaine.Data()[0]=='x'){
       if (chaine.Data()[1]=='[' && chaine.Data()[3]==']'){
          const char ch0 = '0';
@@ -3296,8 +3293,7 @@ void TFormula::Print(Option_t *) const
       Printf(" fExpr[%d] = %s  action = %d action param = %d ",
              i,(const char*)fExpr[i],GetAction(i),GetActionParam(i));
    }
-   //MI change
-   //
+
    if (fNOperOptimized>0){
       Printf("Optimized expression");
       for (i=0;i<fNOperOptimized;i++) {

@@ -1,5 +1,4 @@
-Cluster Sizes
-=============
+# Cluster Sizes
 
 A cluster contains all the data of a given event range.
 As clusters are usually compressed and tied to event boundaries, an exact size cannot be enforced.
@@ -24,8 +23,7 @@ The following clusters use the average compression ratio of all so-far written c
 See the notes below on a discussion of this approximation.
 
 
-Page Sizes
-==========
+# Page Sizes
 
 Pages contain consecutive elements of a certain column.
 They are the unit of compression and of addressability on storage.
@@ -52,11 +50,9 @@ The default values are tuned for a total write memory of around 300 MB per write
 In order to decrease the memory consumption,
 users should decrease the target cluster size before tuning more intricate memory settings.
 
-Notes
-=====
+# Notes
 
-Approximation of the compressed cluster size
---------------------------------------------
+## Approximation of the compressed cluster size
 
 The estimator for the compressed cluster size uses the average compression factor
 of the so far written clusters.
@@ -82,8 +78,7 @@ The following alternative strategies were discussed:
     Such an estimator would react better to a sudden change in the amount of data written for collections / columns
     that have substentially different compression ratios.
 
-Page Checksums
---------------
+## Page Checksums
 
 By default, RNTuple appends xxhash-3 64bit checksums to every compressed page.
 Typically, checksums increase the data size in the region of a per mille.

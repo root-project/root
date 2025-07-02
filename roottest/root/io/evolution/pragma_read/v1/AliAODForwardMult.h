@@ -277,19 +277,19 @@ public:
    * 
    * @param option  Passed on to TH2::Reset verbatim
    */
-  void Clear(Option_t* option="");
+  void Clear(Option_t* option="") override;
   /** 
    * browse this object 
    * 
    * @param b Browser 
    */
-  void Browse(TBrowser* b);
+  void Browse(TBrowser* b) override;
   /** 
    * This is a folder 
    * 
    * @return Always true
    */
-  Bool_t IsFolder() const { return kTRUE; } // Always true 
+  Bool_t IsFolder() const override { return kTRUE; } // Always true 
 
   Bool_t IsSecondaryCorrected() const { return TestBit(kSecondary); }
   Bool_t IsVertexBiasCorrected() const { return TestBit(kVertexBias); }
@@ -303,7 +303,7 @@ public:
    * 
    * @param option Passed verbatim to TH2::Print 
    */
-  void Print(Option_t* option="") const;
+  void Print(Option_t* option="") const override;
   /** 
    * Set the z coordinate of the interaction point
    * 
@@ -401,7 +401,7 @@ public:
    * 
    * @return Name of object 
    */
-  const Char_t* GetName() const { return (fIsMC ? "ForwardMC" : "Forward"); }
+  const Char_t* GetName() const override { return (fIsMC ? "ForwardMC" : "Forward"); }
   /** 
    * Check if event meets the passses requirements.   
    *
@@ -497,7 +497,7 @@ protected:
   UShort_t fNClusters;  // Number of SPD clusters in |eta|<1
   /** Invalid value for interaction point @f$z@f$ coordiante */
   static const Float_t fgkInvalidIpZ; // Invalid IpZ value 
-  ClassDef(AliAODForwardMult,5); // AOD forward multiplicity 
+  ClassDefOverride(AliAODForwardMult,5); // AOD forward multiplicity 
 };
 
 //____________________________________________________________________

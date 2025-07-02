@@ -2967,13 +2967,13 @@ void scatter_test()
    scatter->GetXaxis()->SetRangeUser(20.,90.);
    scatter->GetYaxis()->SetRangeUser(55.,90.);
    scatter->GetZaxis()->SetRangeUser(10.,200.);
-   scatter->Draw("A");
+   scatter->Draw("A SKIPCOL");
 
    auto pm = new TPolyMarker(n, x, y);
    pm->SetMarkerColor(kGreen);
    pm->SetMarkerStyle(29);
    pm->SetMarkerSize(1.4);
-   pm->Draw();
+   pm->Draw("SKIPCOL");
 
    TestReport(C, "TScatter with TPolyMarker test");
 }

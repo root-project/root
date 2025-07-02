@@ -17,7 +17,7 @@ struct StreamerDerived : public StreamerBase {
    int fFirst = 1;
    virtual ~StreamerDerived() = default;
 
-   ClassDef(StreamerDerived, 3)
+   ClassDefOverride(StreamerDerived, 3)
 };
 
 struct StreamerContainer {

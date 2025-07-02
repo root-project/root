@@ -336,6 +336,13 @@ auto MakeAliasedSharedPtr(T *rawPtr)
  */
 ROOT::RDF::Experimental::RDatasetSpec RetrieveSpecFromJson(const std::string &jsonFile);
 
+/**
+ * Tag to let data sources use the native data type when creating a column reader.
+ *
+ * See usage of this in RNTupleDS
+ */
+struct UseNativeDataType {};
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT

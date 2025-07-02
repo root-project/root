@@ -258,6 +258,7 @@ static PyObject* pt_new(PyTypeObject* subtype, PyObject* args, PyObject* kwds)
                 // so make it accessible (the __cpp_cross__ data member also signals that
                 // this is a cross-inheritance class)
                     PyObject* bname = CPyCppyy_PyText_FromString(Cppyy::GetBaseName(result->fCppType, 0).c_str());
+                    PyErr_Clear();
                     if (PyObject_SetAttrString((PyObject*)result, "__cpp_cross__", bname) == -1)
                         PyErr_Clear();
                     Py_DECREF(bname);
@@ -540,7 +541,7 @@ static int meta_setattro(PyObject* pyclass, PyObject* pyname, PyObject* pyval)
                 meta_getattro(pyclass, pyname);       // triggers creation
         }
     }
-
+    PyErr_Clear(); // creation might have failed
     return PyType_Type.tp_setattro(pyclass, pyname, pyval);
 }
 

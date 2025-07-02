@@ -10,7 +10,7 @@ int main()
 
    // create tree
    ROOT::RDataFrame newd(1);
-   newd.Define("x", [] { return 1; }).Snapshot<int>("t", "coloverride.root", {"x"});
+   newd.Define("x", [] { return 1; }).Snapshot("t", "coloverride.root", {"x"});
 
    ROOT::RDataFrame d("t", "coloverride.root");
    // re-define TTree variable

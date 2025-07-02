@@ -33,6 +33,7 @@
 #include "TInterpreter.h"
 
 #include "cling/Interpreter/Value.h"
+#include <CppInterOp/CppInterOp.h>
 
 #include "clang/AST/ASTContext.h"
 #include "llvm/ADT/SmallVector.h"
@@ -53,9 +54,7 @@ class TClingClassInfo;
 class TClingMethodInfo;
 class TInterpreterValue;
 
-typedef void (*tcling_callfunc_Wrapper_t)(void*, int, void**, void*);
-typedef void (*tcling_callfunc_ctor_Wrapper_t)(void**, void*, unsigned long);
-typedef void (*tcling_callfunc_dtor_Wrapper_t)(void*, unsigned long, int);
+typedef void (*tcling_callfunc_Wrapper_t)(void *, int, void **, void *);
 
 class TClingCallFunc {
 
@@ -108,12 +107,6 @@ private:
                                    std::ostringstream& buf, int indent_level);
 
    tcling_callfunc_Wrapper_t make_wrapper();
-
-   tcling_callfunc_ctor_Wrapper_t
-   make_ctor_wrapper(const TClingClassInfo *, ROOT::TMetaUtils::EIOCtorCategory, const std::string &);
-
-   tcling_callfunc_dtor_Wrapper_t
-   make_dtor_wrapper(const TClingClassInfo* info);
 
    void exec(void* address, void* ret);
 

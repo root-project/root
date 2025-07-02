@@ -114,6 +114,7 @@ endif()
 
 
 if(EMSCRIPTEN)
+  if(BUILD_SHARED_LIBS)
   # FIXME: When dynamically linking the Emscripten shared library to the
   # unit tests main_module you get errors due to undefined symbols. The reading of the file
   # below into a SYMBOLS_LIST variable is a temporary workaround that exports the undefined
@@ -131,8 +132,13 @@ if(EMSCRIPTEN)
     PRIVATE "SHELL: -s SIDE_MODULE=1"
     PRIVATE "SHELL: ${SYMBOLS_LIST}"
   )
+else()
+  target_link_options(clangCppInterOp
+    PRIVATE "SHELL: -s WASM_BIGINT"
+  )
+endif()
   if (CPPINTEROP_ENABLE_TESTING)
-    # When compiling Emscripten tests the shared library it links to is expected to be in the same folder as the compiled Javascript
+    # When compiling Emscripten tests the CppInterOp library it links to is expected to be in the same folder as the compiled Javascript
     add_custom_command(TARGET clangCppInterOp POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:clangCppInterOp> ${CMAKE_BINARY_DIR}/unittests/CppInterOp/
     )

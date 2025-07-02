@@ -13,20 +13,9 @@ Error in <TTree::SetBranchAddress>: unknown branch -> x.x
 Testing on TTree
 Testing on TChain
 Error in <TChain::SetBranchAddress>: unknown branch -> x.x
-Error in <TTree::SetBranchStatus>: unknown branch -> x.x
-Error in <TTree::SetBranchStatus>: unknown branch -> x.x
-Error in <TTree::SetBranchStatus>: unknown branch -> x.x
-Error in <TTree::SetBranchStatus>: unknown branch -> x.x
-Error in <TTree::SetBranchStatus>: unknown branch -> x.x
 Error in <TChain::SetBranchAddress>: unknown branch -> x.x
-Error in <TTree::SetBranchStatus>: unknown branch -> x.x
-Error in <TTree::SetBranchStatus>: unknown branch -> x.x
-Error in <TTree::SetBranchStatus>: unknown branch -> x.x
-Error in <TTree::SetBranchStatus>: unknown branch -> x.x
 TTreeReader::Next:
 TTreeReader::Next:
-Error in <TTree::SetBranchStatus>: unknown branch -> x.x
-Error in <TTree::SetBranchStatus>: unknown branch -> x.x
 RDataFrame columns:
 i
 i.x

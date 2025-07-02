@@ -56,8 +56,7 @@ int do_work(const char *fileName, const char *outFileName, const char *treeName,
   opts.fAutoFlush = 10;
 
   /****** non-jitted snapshot *******/
-  auto snapshot_tdf = d2.Snapshot<int, int, std::vector<float>, A>(
-      outTreeName, outFileName, {"b1", "b1_square", "b2_vector", "a"}, opts);
+  auto snapshot_tdf = d2.Snapshot(outTreeName, outFileName, {"b1", "b1_square", "b2_vector", "a"}, opts);
 
   // Open the new file and list the branches of the tree
   TFile f(outFileName);

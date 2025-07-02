@@ -11,6 +11,8 @@
 
 #include <memory>
 
+#include <TFile.h>
+
 using namespace ROOT::RDF;
 
 TEST(RNonCopiableColumnDS, UseNonCopiableColumnType)
@@ -64,11 +66,10 @@ TEST(RArraysDS, SnapshotAndShortSyntaxForCollectionSizes)
    f.Close(); // Windows does not allow deletion/recreation of files that are still in use.
 
    // Snapshot must throw if #var is passed explicitly
-   EXPECT_THROW(df.Snapshot<std::size_t>("t", fname, {"#var"}), std::runtime_error);
+   EXPECT_THROW(df.Snapshot("t", fname, {"#var"}), std::runtime_error);
 
    // ...and work if the Snapshot is performed via an Alias
-   const auto nvar =
-      df.Alias("nvar", "#var").Snapshot<std::size_t>("t", fname, {"nvar"})->Take<std::size_t>("nvar").GetValue();
+   const auto nvar = df.Alias("nvar", "#var").Snapshot("t", fname, {"nvar"})->Take<std::size_t>("nvar").GetValue();
    EXPECT_EQ(nvar, std::vector<std::size_t>{1});
 
    gSystem->Unlink(fname);

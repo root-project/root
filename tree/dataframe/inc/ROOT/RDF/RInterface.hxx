@@ -1244,6 +1244,7 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
+   /// \deprecated Use other overloads that do not require template arguments.
    /// \tparam ColumnTypes variadic list of branch/column types.
    /// \param[in] treename The name of the output TTree.
    /// \param[in] filename The name of the output TFile.
@@ -1286,11 +1287,9 @@ public:
    /// ### Example invocations:
    ///
    /// ~~~{.cpp}
-   /// // without specifying template parameters (column types automatically deduced)
+   /// // No need to specify column types, they are automatically deduced thanks
+   /// // to information coming from the data source
    /// df.Snapshot("outputTree", "outputFile.root", {"x", "y"});
-   ///
-   /// // specifying template parameters ("x" is `int`, "y" is `float`)
-   /// df.Snapshot<int, float>("outputTree", "outputFile.root", {"x", "y"});
    /// ~~~
    ///
    /// To book a Snapshot without triggering the event loop, one needs to set the appropriate flag in
@@ -1301,11 +1300,13 @@ public:
    /// df.Snapshot("outputTree", "outputFile.root", {"x"}, opts);
    /// ~~~
    template <typename... ColumnTypes>
-   RResultPtr<RInterface<RLoopManager>>
-   Snapshot(std::string_view treename, std::string_view filename, const ColumnNames_t &columnList,
-            const RSnapshotOptions &options = RSnapshotOptions())
+   R__DEPRECATED(
+      6, 40, "Snapshot does not need template arguments anymore, you can safely remove them from this function call.")
+   RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
+                                                 const ColumnNames_t &columnList,
+                                                 const RSnapshotOptions &options = RSnapshotOptions())
    {
-      return SnapshotImpl<ColumnTypes...>(treename, filename, columnList, options);
+      return Snapshot(treename, filename, columnList, options);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1344,10 +1345,14 @@ public:
 
       RResultPtr<RInterface<RLoopManager>> resPtr;
 
-      auto retrieveTypeID = [](const std::string &colName, const std::string &colTypeName) -> const std::type_info * {
+      auto retrieveTypeID = [](const std::string &colName, const std::string &colTypeName,
+                               bool isRNTuple = false) -> const std::type_info * {
          try {
             return &ROOT::Internal::RDF::TypeName2TypeID(colTypeName);
          } catch (const std::runtime_error &err) {
+            if (isRNTuple)
+               return &typeid(ROOT::Internal::RDF::UseNativeDataType);
+
             if (std::string(err.what()).find("Cannot extract type_info of type") != std::string::npos) {
                // We could not find RTTI for this column, thus we cannot write it out at the moment.
                std::string trueTypeName{colTypeName};
@@ -1380,12 +1385,26 @@ public:
             std::string(filename), std::string(dirname), std::string(treename), colListWithAliasesAndSizeBranches,
             options, newRDF->GetLoopManager(), GetLoopManager(), true /* fToNTuple */});
 
-         // The Snapshot helper will use colListNoAliasesWithSizeBranches (with aliases resolved) as input columns, and
-         // colListWithAliasesAndSizeBranches (still with aliases in it, passed through snapHelperArgs) as output column
-         // names.
-         resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, RDFDetail::RInferredType>(
-            colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, fProxiedPtr,
-            colListNoAliasesWithSizeBranches.size());
+         auto &&nColumns = colListNoAliasesWithSizeBranches.size();
+         const auto validColumnNames = GetValidatedColumnNames(nColumns, colListNoAliasesWithSizeBranches);
+
+         const auto nSlots = fLoopManager->GetNSlots();
+         std::vector<const std::type_info *> colTypeIDs;
+         colTypeIDs.reserve(nColumns);
+         for (decltype(nColumns) i{}; i < nColumns; i++) {
+            const auto &colName = validColumnNames[i];
+            const auto colTypeName = ROOT::Internal::RDF::ColumnName2ColumnTypeName(
+               colName, /*tree*/ nullptr, GetDataSource(), fColRegister.GetDefine(colName), options.fVector2RVec);
+            const std::type_info *colTypeID = retrieveTypeID(colName, colTypeName, /*isRNTuple*/ true);
+            colTypeIDs.push_back(colTypeID);
+         }
+         // Crucial e.g. if the column names do not correspond to already-available column readers created by the data
+         // source
+         CheckAndFillDSColumns(validColumnNames, colTypeIDs);
+
+         auto action =
+            RDFInternal::BuildAction(validColumnNames, snapHelperArgs, nSlots, fProxiedPtr, fColRegister, colTypeIDs);
+         resPtr = MakeResultPtr(newRDF, *GetLoopManager(), std::move(action));
       } else {
          if (RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS" &&
              options.fOutputFormat == ESnapshotOutputFormat::kDefault) {
@@ -3239,74 +3258,6 @@ private:
       static_assert(std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
                     "Error in `Define`: type returned by expression is not default-constructible");
       return *this; // never reached
-   }
-
-   template <typename... ColumnTypes>
-   RResultPtr<RInterface<RLoopManager>> SnapshotImpl(std::string_view fullTreeName, std::string_view filename,
-                                                     const ColumnNames_t &columnList, const RSnapshotOptions &options)
-   {
-      const auto columnListWithoutSizeColumns = RDFInternal::FilterArraySizeColNames(columnList, "Snapshot");
-
-      RDFInternal::CheckTypesAndPars(sizeof...(ColumnTypes), columnListWithoutSizeColumns.size());
-      // validCols has aliases resolved, while columnListWithoutSizeColumns still has aliases in it.
-      const auto validCols = GetValidatedColumnNames(columnListWithoutSizeColumns.size(), columnListWithoutSizeColumns);
-      RDFInternal::CheckForDuplicateSnapshotColumns(validCols);
-      CheckAndFillDSColumns(validCols, TTraits::TypeList<ColumnTypes...>());
-
-      const auto parsedTreePath = RDFInternal::ParseTreePath(fullTreeName);
-      const auto &treename = parsedTreePath.fTreeName;
-      const auto &dirname = parsedTreePath.fDirName;
-
-      ::TDirectory::TContext ctxt;
-
-      RResultPtr<RInterface<RLoopManager>> resPtr;
-
-      if (options.fOutputFormat == ESnapshotOutputFormat::kRNTuple) {
-         if (RDFInternal::GetDataSourceLabel(*this) == "TTreeDS") {
-            throw std::runtime_error("Snapshotting from TTree to RNTuple is not yet supported. The current recommended "
-                                     "way to convert TTrees to RNTuple is through the RNTupleImporter.");
-         }
-
-         auto newRDF =
-            std::make_shared<RInterface<RLoopManager>>(std::make_shared<RLoopManager>(columnListWithoutSizeColumns));
-
-         auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
-            std::string(filename), std::string(dirname), std::string(treename), columnListWithoutSizeColumns, options,
-            newRDF->GetLoopManager(), GetLoopManager(), true /* fToRNTuple */});
-
-         // The Snapshot helper will use validCols (with aliases resolved) as input columns, and
-         // columnListWithoutSizeColumns (still with aliases in it, passed through snapHelperArgs) as output column
-         // names.
-         resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, ColumnTypes...>(validCols, newRDF, snapHelperArgs,
-                                                                                  fProxiedPtr);
-      } else {
-         if (RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS" &&
-             options.fOutputFormat == ESnapshotOutputFormat::kDefault) {
-            Warning("Snapshot",
-                    "The default Snapshot output data format is TTree, but the input data format is RNTuple. If you "
-                    "want to Snapshot to RNTuple or suppress this warning, set the appropriate fOutputFormat option in "
-                    "RSnapshotOptions. Note that this current default behaviour might change in the future.");
-         }
-
-         // We create an RLoopManager without a data source. This needs to be initialised when the output TTree dataset
-         // has actually been created and written to TFile, i.e. at the end of the Snapshot execution.
-         auto newRDF =
-            std::make_shared<RInterface<RLoopManager>>(std::make_shared<RLoopManager>(columnListWithoutSizeColumns));
-
-         auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
-            std::string(filename), std::string(dirname), std::string(treename), columnListWithoutSizeColumns, options,
-            newRDF->GetLoopManager(), GetLoopManager(), false /* fToRNTuple */});
-
-         // The Snapshot helper will use validCols (with aliases resolved) as input columns, and
-         // columnListWithoutSizeColumns (still with aliases in it, passed through snapHelperArgs) as output column
-         // names.
-         resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, ColumnTypes...>(validCols, newRDF, snapHelperArgs,
-                                                                                  fProxiedPtr);
-      }
-
-      if (!options.fLazy)
-         *resPtr;
-      return resPtr;
    }
 
    ////////////////////////////////////////////////////////////////////////////

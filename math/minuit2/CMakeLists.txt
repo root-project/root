@@ -74,6 +74,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       Minuit2/MnParabola.h
       Minuit2/MnParabolaFactory.h
       Minuit2/MnParameterScan.h
+      Minuit2/MnParameterTransformation.h
       Minuit2/MnPlot.h
       Minuit2/MnPoint.h
       Minuit2/MnPosDef.h
@@ -99,9 +100,6 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       Minuit2/SimplexMinimizer.h
       Minuit2/SimplexParameters.h
       Minuit2/SimplexSeedGenerator.h
-      Minuit2/SinParameterTransformation.h
-      Minuit2/SqrtLowParameterTransformation.h
-      Minuit2/SqrtUpParameterTransformation.h
       Minuit2/VariableMetricBuilder.h
       Minuit2/VariableMetricEDMEstimator.h
       Minuit2/VariableMetricMinimizer.h
@@ -140,6 +138,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       src/MnMinos.cxx
       src/MnParabolaFactory.cxx
       src/MnParameterScan.cxx
+      src/MnParameterTransformation.cxx
       src/MnPlot.cxx
       src/MnPosDef.cxx
       src/MnPrint.cxx
@@ -160,9 +159,6 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       src/SimplexBuilder.cxx
       src/SimplexParameters.cxx
       src/SimplexSeedGenerator.cxx
-      src/SinParameterTransformation.cxx
-      src/SqrtLowParameterTransformation.cxx
-      src/SqrtUpParameterTransformation.cxx
       src/TMinuit2TraceObject.cxx
       src/VariableMetricBuilder.cxx
       src/VariableMetricEDMEstimator.cxx

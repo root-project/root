@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <vector>
 
+#include <TBranch.h>
+
 namespace RDFInt = ROOT::Internal::RDF;
 
 // Thanks clang-format...
@@ -24,10 +26,9 @@ TEST(RDataFrameUtils, DeduceAllPODsFromDefines)
                .Define("Long64_t_tmp", []() { return Long64_t(0ll); })
                .Define("ULong64_t_tmp", []() { return ULong64_t(0ull); })
                .Define("bool_tmp", []() { return bool(false); });
-   auto c = d.Snapshot<char, unsigned char, int, unsigned int, short, unsigned short, double, float, Long64_t,
-                       ULong64_t, bool>("t", "dataframe_interfaceAndUtils_1.root",
-                                        {"char_tmp", "uchar_tmp", "int_tmp", "uint_tmp", "short_tmp", "ushort_tmp",
-                                         "double_tmp", "float_tmp", "Long64_t_tmp", "ULong64_t_tmp", "bool_tmp"});
+   auto c = d.Snapshot("t", "dataframe_interfaceAndUtils_1.root",
+                       {"char_tmp", "uchar_tmp", "int_tmp", "uint_tmp", "short_tmp", "ushort_tmp", "double_tmp",
+                        "float_tmp", "Long64_t_tmp", "ULong64_t_tmp", "bool_tmp"});
 }
 
 TEST(RDataFrameUtils, DeduceAllPODsFromColumns)

@@ -73,7 +73,7 @@ class can be pythonized. Typical examples are the redefinition of dunder
 methods (e.g. `__iter__` and `__next__` to make your objects iterable from
 Python). If you need some inspiration, many ROOT classes are pythonized in
 the way we just saw; their pythonizations can be seen at:
-https://github.com/root-project/root/tree/master/bindings/pyroot/pythonizations/pythonROOT/pythonizatio
+<https://github.com/root-project/root/tree/master/bindings/pyroot/pythonizations/python/ROOT/_pythonization>
 The @pythonization decorator offers a few more options when it comes to
 matching classes that you want to pythonize. We saw that we can match a
 single class, but we can also specify a list of classes to pythonize.

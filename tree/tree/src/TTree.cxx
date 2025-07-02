@@ -53,7 +53,7 @@ when it is desirable to have a high reading rate and not all columns are equally
 - [Add a column of Fundamental Types and Arrays thereof](\ref addcolumnoffundamentaltypes)
 - [Add a column of a STL Collection instances](\ref addingacolumnofstl)
 - [Add a column holding an object](\ref addingacolumnofobjs)
-- [Add a column holding a TObjectArray](\ref addingacolumnofobjs)
+- [Add a column holding a TClonesArray](\ref addingacolumnoftclonesarray)
 - [Fill the tree](\ref fillthetree)
 - [Add a column to an already existing Tree](\ref addcoltoexistingtree)
 - [An Example](\ref fullexample)
@@ -191,7 +191,7 @@ one must redefine the branch address before filling the branch
 again. This is done via the `TBranch::SetAddress` member function.
 
 \anchor addingacolumnofobjs
-## Add a column holding objects
+## Add a column holding objects (or a TObjArray)
 
 ~~~ {.cpp}
     MyClass object;
@@ -250,7 +250,7 @@ for which `TTree` has been heavily optimised, as well as `RNTuple`.*
 
 ~~~ {.cpp}
     // clonesarray is the address of a pointer to a TClonesArray.
-    auto branch = tree.Branch(branchname,clonesarray, bufsize, splitlevel)
+    auto branch = tree.Branch(branchname, clonesarray, bufsize, splitlevel)
 ~~~
 The TClonesArray is a direct access list of objects of the same class.
 For example, if the TClonesArray is an array of TTrack objects,
@@ -7662,6 +7662,7 @@ TSQLResult* TTree::Query(const char* varexp, const char* selection, Option_t* op
 ///     A/D:Table[2]/F:Ntracks/I:astring/C
 /// ~~~
 /// otherwise branchDescriptor must be specified with the above syntax.
+/// See all available datatypes [here](\ref addcolumnoffundamentaltypes).
 ///
 /// - If the type of the first variable is not specified, it is assumed to be "/F"
 /// - If the type of any other variable is not specified, the type of the previous
@@ -10022,4 +10023,10 @@ TBranch *ROOT::Internal::TreeUtils::CallBranchImpRef(TTree &tree, const char *br
                                                      EDataType datatype, void *addobj, Int_t bufsize, Int_t splitlevel)
 {
    return tree.BranchImpRef(branchname, ptrClass, datatype, addobj, bufsize, splitlevel);
+}
+
+TBranch *ROOT::Internal::TreeUtils::CallBranchImp(TTree &tree, const char *branchname, TClass *ptrClass, void *addobj,
+                                                  Int_t bufsize, Int_t splitlevel)
+{
+   return tree.BranchImp(branchname, ptrClass, addobj, bufsize, splitlevel);
 }

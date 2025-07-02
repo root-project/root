@@ -1,12 +1,10 @@
-RNTuple Code Architecture
-=========================
+# RNTuple Code Architecture
 
 > This document is meant for ROOT developers. It provides background information on the RNTuple code design and behavior.
 
 > The RNTuple code uses the nomenclature from the [RNTuple format specification](https://github.com/root-project/root/blob/master/tree/ntuple/doc/BinaryFormatSpecification.md) (e.g. "field", "column", "anchor", etc.).
 
-General Principles
-------------------
+## General Principles
 
 The RNTuple classes provide the functionality to read, write, and describe RNTuple datasets.
 The core classes, such as `RNTupleReader` and `RNTupleWriter`, are part of the RNTuple library.
@@ -35,8 +33,7 @@ and type-unsafe APIs using void pointers.
 
 On I/O errors and invalid input, RNTuple classes throw an `RException`.
 
-Walkthrough: Reading Data
--------------------------
+## Walkthrough: Reading Data
 
 ```c++
 auto file = std::make_unique<TFile>("data.root");
@@ -93,8 +90,7 @@ reader->LoadEntry(0, *entry);
 ```
 
 
-Walkthrough: Writing Data
--------------------------
+## Walkthrough: Writing Data
 
 ```c++
 auto model = RNTupleModel::Create();
@@ -121,8 +117,7 @@ model->AddField(RFieldBase::Create("pt", "float").Unwrap());
 ```
 
 
-Main Classes
-------------
+## Main Classes
 
 ### RNTuple
 The RNTuple class contains the information of the RNTuple anchor in a ROOT file (see specification).
@@ -273,8 +268,7 @@ Once the reader is deconstructed, any attempt to read data will throw an excepti
 
 Views that originate from the same reader _cannot_ be used concurrently by different threads.
 
-Internal Classes
-----------------
+## Internal Classes
 
 ### RNTupleDS
 The `RNTupleDS` class is an internal class that provides an RNTuple data source for RDataFrame.
@@ -306,8 +300,7 @@ Concrete implementations exist for local files, XRootD and HTTP (the latter two 
 The local file implementation on Linux uses uring for vector reads, if available.
 `RRawFileTFile` wraps an existing `TFile` and provides access to the full set of implementations, e.g. `TMemFile`.
 
-Tooling
--------
+## Tooling
 
 ### RNTupleMerger
 The `RNTupleMerger` is an internal class and part of the core RNTuple library.
@@ -323,8 +316,7 @@ It is part of the `ROOTNTupleUtil` library.
 The RNTupleInspector provides insights of an RNTuple, e.g. the distribution of data volume wrt. column types.
 It is part of the `ROOTNTupleUtil` library.
 
-Ownership Model
----------------
+## Ownership Model
 
 By default, objects involved in RNTuple I/O (objects read from disk or written to disk) are passed to RNTuple as shared pointers.
 Both RNTuple or the application may create the object.
@@ -345,8 +337,7 @@ When creating a `RNTupleReader` from an existing anchor object, RNTuple uses `RR
 In either case, the `RRawFile` owns its own file descriptor and does not interfere with `TFile` objects concurrently reading the file.
 For anchors from files of other dynamic type, including all other `TFile` subclasses, the file is wrapped in a `RRawFileTFile` and access is shared.
 
-On-Disk Encoding
-----------------
+## On-Disk Encoding
 
 ### Writing Case
 The following steps are taken to write RNTuple data to disk:
@@ -405,8 +396,7 @@ Reading an RNTuple with an extended model is transparent -- i.e., no additional 
 Internally, columns that were created as part of late model extension will have synthesized zero-initialized column ranges for the clusters that were already written before the model was extended.
 In addition, pages made up of 0x00 bytes are synthesized for deferred columns in the clusters that were already (partially) filled before the model was extended.
 
-Storage Backends
-----------------
+## Storage Backends
 
 Support for storage backends is implemented through derived classes of `RPageSink` and `RPageSource`.
 The `RPage{Sink,Source}File` class provides a storage backend for RNTuple data in ROOT files, local or remote.
@@ -422,8 +412,7 @@ That means that new backends are likely to have implications on the RNTuple form
 The page sources and sinks are ROOT internal classes.
 They are not meant to be extended by users.
 
-Multi-Threading
----------------
+## Multi-Threading
 
 The following options exist in RNTuple for multithreaded data processing.
 
@@ -449,8 +438,7 @@ Every fill context prepares a set of entire clusters in the final on-disk layout
 When a fill context flushes data,
 a brief serialization point handles the RNTuple metadata updates and the reservation of disk space to write into.
 
-Low precision float types
---------------------------
+## Low precision float types
 RNTuple supports encoding floating point types with a lower precision when writing them to disk. This encoding is specified by the
 user per field and it is independent on the in-memory type used for that field (meaning both a `RField<double>` or `RField<float>` can
 be mapped to e.g. a low-precision 16 bit float).
@@ -490,8 +478,7 @@ for (float val : myFloats) {
 }
 ```
 
-Relationship to other ROOT components
--------------------------------------
+## Relationship to other ROOT components
 
 The RNTuple classes have the following relationship to other parts of ROOT.
 
@@ -510,8 +497,7 @@ A universal RDataFrame constructor can create a data frame from either a TTree o
 
 The RBrowser uses RNTuple classes to display RNTuple dataset information.
 
-Future Features
----------------
+## Future Features
 
 The following features are planned for after the first RNTuple production version:
   - RNTupleProcessor: advanced RNTupleReader that allows for free combination of chains and (indexed/unaligned) friends
@@ -522,8 +508,7 @@ The following features are planned for after the first RNTuple production versio
   - S3 storage backend (page source / page sink)
 
 
-Semantics of Reading Non-Trivial Objects
-========================================
+# Semantics of Reading Non-Trivial Objects
 
 Reading an object with RNTuple should be seen as _overwriting_ its persistent data members.
 Given a properly constructed and valid object, the object must ensure that it stays valid when overwriting its persistent data members.
@@ -544,8 +529,7 @@ So unless the collection buffer needs to be reallocated, RNTuple tries to avoid 
 Note that RNTuple currently does not copy or move existing objects when the collection buffer is reallocated.
 
 
-Naming Conventions
-==================
+# Naming Conventions
 
 For byte arrays and collections of things, the RNTuple code uses the following variable name suffixes:
   - `XyzSize` denotes the size of Xyz in bytes on disk, i.e. after compression. Example: `fPageListSize`.

@@ -28,8 +28,8 @@ protected:
    static void SetUpTestCase()
    {
       ROOT::RDataFrame d(kSizeSmall);
-      d.Define("x", [] { return 1; }).Snapshot<int>("t", kFile1, {"x"});
-      d.Define("y", [] { return 2; }).Snapshot<int>("t2", kFile2, {"y"});
+      d.Define("x", [] { return 1; }).Snapshot("t", kFile1, {"x"});
+      d.Define("y", [] { return 2; }).Snapshot("t2", kFile2, {"y"});
 
       // NOTE(vpadulan): these TFile and TTree are created on the heap to work around a know bug that can
       // cause a TObject to be incorrectly marked as "on heap" and attempted to be freed despite
@@ -51,8 +51,8 @@ protected:
       f->Write();
 
       ROOT::RDataFrame d2(kSizeBig);
-      d2.Define("x", [] { return 4; }).Snapshot<int>("t", kFile4, {"x"});
-      d2.Define("y", [] { return 5; }).Snapshot<int>("t2", kFile5, {"y"});
+      d2.Define("x", [] { return 4; }).Snapshot("t", kFile4, {"x"});
+      d2.Define("y", [] { return 5; }).Snapshot("t2", kFile5, {"y"});
    }
 
    static void TearDownTestCase()
