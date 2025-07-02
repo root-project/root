@@ -1474,27 +1474,58 @@ Bool_t TFile::IsOpen() const
 
 void TFile::MakeFree(Long64_t first, Long64_t last)
 {
-   TFree *f1      = (TFree*)fFree->First();
-   if (!f1) return;
-   TFree *newfree = f1->AddFree(fFree,first,last);
-   if(!newfree) return;
+   TFree *f1 = static_cast<TFree *>(fFree->First());
+   if (!f1)
+      return;
+
+   TFree *newfree = f1->AddFree(fFree, first, last);
+   if (!newfree)
+      return;
    Long64_t nfirst = newfree->GetFirst();
    Long64_t nlast  = newfree->GetLast();
-   Long64_t nbytesl= nlast-nfirst+1;
-   if (nbytesl > 2000000000) nbytesl = 2000000000;
-   Int_t nbytes    = -Int_t (nbytesl);
-   char buffer[sizeof(Int_t)];
-   char *pbuffer = buffer;
-   tobuf(pbuffer, nbytes);
-   if (last == fEND-1) fEND = nfirst;
-   Seek(nfirst);
-   // We could not update the meta data for this block on the file.
-   // This is not fatal as this only means that we won't get it 'right'
-   // if we ever need to Recover the file before the block is actually
-   // (attempted to be reused.
-   // coverity[unchecked_value]
-   WriteBuffer(buffer, sizeof(buffer));
-   if (fMustFlush) Flush();
+
+   // The new free segment may close a series of consecutive free segments at the end of the file.
+   // These segments need to be merged so that the last free segment is [fEND + 1 .. max file size].
+   auto tail = static_cast<TFree *>(fFree->Last());
+   while (tail != fFree->First()) {
+      // Starting from the last segment, merge in previous segments if they are adjacent
+      auto prev = (TFree *)fFree->Before(tail);
+      if (prev->GetLast() + 1 < tail->GetFirst())
+         break;
+      assert(prev->GetLast() + 1 == tail->GetFirst());
+      tail->SetFirst(prev->GetFirst());
+      fFree->Remove(prev);
+      delete prev;
+   }
+   if (tail->GetFirst() <= nfirst) {
+      nfirst = tail->GetFirst();
+      nlast = tail->GetLast();
+   }
+
+   // The file will get smaller if a free segment is added at the end. In this case, we are done and we don't need
+   // to write the free segment size past the new end of the file (besides, the length of this "virtual" free
+   // segment may anyway be larger than TFree::kMaxGapSize).
+   if (last == fEND - 1) {
+      fEND = nfirst;
+   } else {
+      Long64_t nbytesl = nlast - nfirst + 1;
+      assert(nbytesl <= TFree::kMaxGapSize);
+
+      Int_t nbytes = -static_cast<Int_t>(nbytesl);
+      char buffer[sizeof(Int_t)];
+      char *pbuffer = buffer;
+      tobuf(pbuffer, nbytes);
+
+      Seek(nfirst);
+      // We could not update the meta data for this block on the file.
+      // This is not fatal as this only means that we won't get it 'right'
+      // if we ever need to Recover the file before the block is actually
+      // (attempted to be reused.
+      // coverity[unchecked_value]
+      WriteBuffer(buffer, sizeof(buffer));
+      if (fMustFlush)
+         Flush();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

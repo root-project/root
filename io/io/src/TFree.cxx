@@ -67,20 +67,26 @@ TFree::TFree(TList *lfree, Long64_t first, Long64_t last)
 TFree *TFree::AddFree(TList *lfree, Long64_t first, Long64_t last)
 {
    TFree *idcur = this;
-   while (idcur) {
+   do {
       Long64_t curfirst = idcur->GetFirst();
       Long64_t curlast  = idcur->GetLast();
-      if (curlast == first-1) {
+      if ((curlast == first - 1) && (last - curfirst + 1 <= kMaxGapSize)) {
          idcur->SetLast(last);
-         TFree *idnext = (TFree*)lfree->After(idcur);
-         if (idnext == 0) return idcur;
-         if (idnext->GetFirst() > last+1) return idcur;
-         idcur->SetLast( idnext->GetLast() );
+         // Merged new segment with previous one; is there a next segment?
+         TFree *idnext = static_cast<TFree *>(lfree->After(idcur));
+         if (idnext == 0)
+            return idcur;
+
+         // Continue only if the next segment is adjacent to the newly merged one (and not too big)
+         if ((idnext->GetFirst() > last + 1) || (idnext->GetLast() - curfirst + 1 > kMaxGapSize))
+            return idcur;
+
+         idcur->SetLast(idnext->GetLast());
          lfree->Remove(idnext);
          delete idnext;
          return idcur;
       }
-      if (curfirst == last+1) {
+      if ((curfirst == last + 1) && (curlast - first + 1 <= kMaxGapSize)) {
          idcur->SetFirst(first);
          return idcur;
       }
@@ -92,7 +98,7 @@ TFree *TFree::AddFree(TList *lfree, Long64_t first, Long64_t last)
          return newfree;
       }
       idcur = (TFree*)lfree->After(idcur);
-   }
+   } while (idcur);
    return 0;
 }
 
