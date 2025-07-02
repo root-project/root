@@ -393,7 +393,7 @@ The "flags" field can have any of the following bits set:
 If `flag==0x01` (_repetitive field_) is set, the field represents a fixed-size array.
 For fixed-size arrays, another (sub) field with `Parent Field ID` equal to the ID of this field
 is expected to be found, representing the array content.
-The field backing `std::bitmap<N>` is a single repetitive field.
+The field backing `std::bitset<N>` is a single repetitive field.
 (See Section "Mapping of C++ Types to Fields and Columns").
 
 If `flag==0x02` (_projected field_) is set,
