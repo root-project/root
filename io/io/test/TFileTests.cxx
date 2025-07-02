@@ -14,6 +14,8 @@
 #include "TSystem.h"
 #include "TEnv.h" // gEnv
 
+#include <cstdio>
+
 TEST(TFile, WriteObjectTObject)
 {
    auto filename{"tfile_writeobject_tobject.root"};
@@ -250,4 +252,135 @@ TEST(TFile, WalkTKeys)
    ++it;
    EXPECT_EQ(it->fKeyName, kLongerKey);
    EXPECT_EQ(it->fClassName, "string");
+}
+
+TEST(TFile, DeleteKey)
+{
+   struct FileRaii {
+      std::string fFilename;
+      FileRaii(std::string_view fname) : fFilename(fname) {}
+      ~FileRaii() { gSystem->Unlink(fFilename.c_str()); }
+   } fileGuard("tfile_test_delete_keys.root");
+
+   auto fnCountGaps = [](const std::string &fileName) {
+      auto f = std::unique_ptr<TFile>(TFile::Open(fileName.c_str()));
+      std::uint64_t nGaps = 0;
+      for (const auto &k : f->WalkTKeys()) {
+         if (k.fType == ROOT::Detail::TKeyMapNode::kGap)
+            nGaps++;
+      }
+      return nGaps;
+   };
+
+   auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.fFilename.c_str(), "RECREATE"));
+   f->SetCompressionSettings(0);
+   f->Write();
+   f->Close();
+
+   // The empty file should have no gaps. Note that gaps are created temporarily when certain keys are overwritten.
+   EXPECT_EQ(0, fnCountGaps(fileGuard.fFilename));
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.fFilename.c_str(), "UPDATE"));
+   std::vector<char> v;
+   f->WriteObject(&v, "va0");
+   f->WriteObject(&v, "va1");
+   f->WriteObject(&v, "va2");
+   f->Write();
+   f->Close();
+   // 2 gaps: new (larger) keys list and free list are written
+   EXPECT_EQ(2, fnCountGaps(fileGuard.fFilename));
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.fFilename.c_str(), "UPDATE"));
+   f->Delete("va1;*"); // should create small gap that cannot be merged, trapped between v0 and v2
+   f->Write();
+   f->Close();
+
+   EXPECT_EQ(3, fnCountGaps(fileGuard.fFilename));
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.fFilename.c_str(), "UPDATE"));
+   f->Delete("va2;*"); // gaps at the tail should merge
+   f->Write();
+   f->Close();
+
+   EXPECT_EQ(2, fnCountGaps(fileGuard.fFilename));
+
+   // The following tests run out of memory on 32bit platforms
+   if (sizeof(std::size_t) == 4) {
+      printf("Skipping test partially on 32bit platform.\n");
+      return;
+   }
+
+   v.resize(1000 * 1000 * 1000 - 100, 'x'); // almost 1GB
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.fFilename.c_str(), "UPDATE"));
+   f->WriteObject(&v, "vb0");
+   f->WriteObject(&v, "vb1");
+   v.resize(1000 * 1000); // truncate next objects to 1MB
+   f->WriteObject(&v, "vc0");
+   f->WriteObject(&v, "vc1");
+   f->WriteObject(&v, "vc2");
+   f->WriteObject(&v, "vc3");
+   f->Write();
+   EXPECT_GT(f->GetEND(), TFile::kStartBigFile);
+   f->Close();
+
+   // New keys list, hence 3 gaps
+   EXPECT_EQ(3, fnCountGaps(fileGuard.fFilename));
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.fFilename.c_str(), "UPDATE"));
+   f->Delete("vb0;*"); //  |
+   f->Delete("vb1;*"); //  |---> First merged gap
+   f->Delete("vc0;*"); //  |
+   f->Delete("vc1;*"); //  |---> Second merged gap
+   f->Write();
+   f->Close();
+
+   // Two merged gaps, the new keys list fits into either of them
+   EXPECT_EQ(4, fnCountGaps(fileGuard.fFilename));
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.fFilename.c_str(), "UPDATE"));
+   // Delete the remaining data at the tail of the file in reverse order
+   f->Delete("vc2;*");
+   f->Delete("vc3;*");
+   f->Write();
+   // Back to small file
+   EXPECT_LT(f->GetEND(), TFile::kStartBigFile);
+   f->Close();
+
+   // Only the original 2 gaps from the first keys list and free list overwrite
+   EXPECT_EQ(2, fnCountGaps(fileGuard.fFilename));
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.fFilename.c_str(), "UPDATE"));
+   v.resize(700 * 1000 * 1000); // construct objects such that 3 consecutive gaps surpass 2GB (but not 2)
+   f->WriteObject(&v, "vd0");
+   f->WriteObject(&v, "vd1");
+   f->WriteObject(&v, "vd2");
+   f->WriteObject(&v, "vd3");
+   f->WriteObject(&v, "vd4");
+   f->Write();
+   f->Close();
+
+   // New keys list --> 3 gaps
+   EXPECT_EQ(3, fnCountGaps(fileGuard.fFilename));
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.fFilename.c_str(), "UPDATE"));
+   f->Delete("vd1;*");
+   f->Delete("vd3;*");
+   f->Write();
+   f->Close();
+
+   // Nothing mergable, 2 more gaps
+   EXPECT_EQ(5, fnCountGaps(fileGuard.fFilename));
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.fFilename.c_str(), "UPDATE"));
+   auto theEnd = f->GetEND();
+   f->Delete("vd2;*");
+   f->Write();
+   f->Close();
+
+   // We can only merge the gaps of v1 and v2, not all three (vd1, vd2, vd3) due to the gap size
+   EXPECT_EQ(5, fnCountGaps(fileGuard.fFilename));
+
+   // Ensure that the file's tail is still intact
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.fFilename.c_str()));
+   EXPECT_EQ(f->GetEND(), theEnd);
 }
