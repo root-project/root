@@ -113,9 +113,13 @@ ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(RNTupleOpenSp
    if (fProcessorName.empty()) {
       fProcessorName = fNTupleSpec.fNTupleName;
    }
+}
 
-   // TODO(fdegeus) make this operation lazy, i.e. move it to Connect(). This requires creating a Connect() method to
-   // the chain and join processors as well.
+void ROOT::Experimental::RNTupleSingleProcessor::Initialize()
+{
+   // The processor has already been initialized.
+   if (fProtoModel && fEntry)
+      return;
    fPageSource = fNTupleSpec.CreatePageSource();
    fPageSource->Attach();
    ROOT::RNTupleDescriptor::RCreateModelOptions opts;
@@ -127,7 +131,6 @@ ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(RNTupleOpenSp
 
 ROOT::NTupleSize_t ROOT::Experimental::RNTupleSingleProcessor::LoadEntry(ROOT::NTupleSize_t entryNumber)
 {
-   Connect();
    EnsureEntryIsFrozen();
 
    if (entryNumber >= fNEntries)
@@ -142,13 +145,14 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleSingleProcessor::LoadEntry(ROOT::N
 
 void ROOT::Experimental::RNTupleSingleProcessor::Connect()
 {
+   Initialize();
+
    fEntry->SetFrozen(true);
 
    // The processor has already been connected.
    if (fNEntries != kInvalidNTupleIndex)
       return;
 
-   fPageSource->Attach();
    fNEntries = fPageSource->GetNEntries();
 
    auto desc = fPageSource->GetSharedDescriptorGuard();
@@ -210,7 +214,14 @@ ROOT::Experimental::RNTupleChainProcessor::RNTupleChainProcessor(
    }
 
    fInnerNEntries.assign(fInnerProcessors.size(), kInvalidNTupleIndex);
+}
 
+void ROOT::Experimental::RNTupleChainProcessor::Initialize()
+{
+   // The processor has already been initialized.
+   if (fProtoModel && fEntry)
+      return;
+   fInnerProcessors[0]->Initialize();
    fProtoModel = fInnerProcessors[0]->GetProtoModel().Clone();
    fEntry = std::unique_ptr<Internal::RNTupleProcessorEntry>(new Internal::RNTupleProcessorEntry(*fProtoModel));
 }
@@ -234,6 +245,7 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::GetNEntries()
 
 void ROOT::Experimental::RNTupleChainProcessor::Connect()
 {
+   Initialize();
    fEntry->SetFrozen(true);
    ConnectInnerProcessor(fCurrentProcessorNumber);
 }
@@ -241,6 +253,8 @@ void ROOT::Experimental::RNTupleChainProcessor::Connect()
 void ROOT::Experimental::RNTupleChainProcessor::ConnectInnerProcessor(std::size_t processorNumber)
 {
    auto &innerProc = fInnerProcessors[processorNumber];
+   innerProc->Initialize();
+
    for (const auto &value : *fEntry) {
       auto fieldName = value.GetField().GetQualifiedFieldName();
       bool fieldAdded = innerProc->AddOrUpdateEntryField(fieldName, value.GetPtr<void>());
@@ -270,7 +284,7 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::LoadEntry(ROOT::NT
       if (++currProcessorNumber >= fInnerProcessors.size())
          return kInvalidNTupleIndex;
 
-      if (!fInnerProcessors[currProcessorNumber]->fEntry->IsFrozen())
+      if (!fInnerProcessors[currProcessorNumber]->IsConnected())
          ConnectInnerProcessor(currProcessorNumber);
    }
 
@@ -327,11 +341,22 @@ ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(std::unique_ptr<R
                                                                std::string_view processorName)
    : RNTupleProcessor(processorName),
      fPrimaryProcessor(std::move(primaryProcessor)),
-     fAuxiliaryProcessor(std::move(auxProcessor))
+     fAuxiliaryProcessor(std::move(auxProcessor)),
+     fJoinFieldNames(joinFields)
 {
    if (fProcessorName.empty()) {
       fProcessorName = fPrimaryProcessor->GetProcessorName();
    }
+}
+
+void ROOT::Experimental::RNTupleJoinProcessor::Initialize()
+{
+   // The processor has already been initialized.
+   if (fProtoModel && fEntry)
+      return;
+
+   fPrimaryProcessor->Initialize();
+   fAuxiliaryProcessor->Initialize();
 
    auto primaryModel = fPrimaryProcessor->GetProtoModel().Clone();
    auto auxModel = fAuxiliaryProcessor->GetProtoModel().Clone();
@@ -351,18 +376,19 @@ ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(std::unique_ptr<R
 
    fEntry = std::unique_ptr<Internal::RNTupleProcessorEntry>(new Internal::RNTupleProcessorEntry(*fProtoModel));
 
-   if (!joinFields.empty()) {
-      for (const auto &joinField : joinFields) {
+   if (!fJoinFieldNames.empty()) {
+      for (const auto &joinField : fJoinFieldNames) {
          AddOrUpdateEntryField(joinField);
          fJoinFieldTokens.emplace_back(*fEntry->FindToken(joinField));
       }
 
-      fJoinTable = Internal::RNTupleJoinTable::Create(joinFields);
+      fJoinTable = Internal::RNTupleJoinTable::Create(fJoinFieldNames);
    }
 }
 
 void ROOT::Experimental::RNTupleJoinProcessor::Connect()
 {
+   Initialize();
    fEntry->SetFrozen(true);
 
    for (auto &value : *fEntry) {

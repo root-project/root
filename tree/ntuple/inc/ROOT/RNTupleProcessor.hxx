@@ -221,8 +221,8 @@ class RNTupleProcessor {
 
 protected:
    std::string fProcessorName;
-   std::unique_ptr<ROOT::RNTupleModel> fProtoModel;
-   std::unique_ptr<Internal::RNTupleProcessorEntry> fEntry;
+   std::unique_ptr<ROOT::RNTupleModel> fProtoModel = nullptr;
+   std::unique_ptr<Internal::RNTupleProcessorEntry> fEntry = nullptr;
 
    /// Total number of entries. Only to be used internally by the processor, not meant to be exposed in the public
    /// interface.
@@ -233,8 +233,16 @@ protected:
    std::size_t fCurrentProcessorNumber = 0;    //< Number of the currently open inner processor
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Initialize the processor, by setting `fProtoModel` and creating an (initially empty) `fEntry`.
+   virtual void Initialize() = 0;
+
+   bool IsInitialized() { return fProtoModel && fEntry; }
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the page source of the underlying RNTuple.
    virtual void Connect() = 0;
+
+   bool IsConnected() { return fEntry && fEntry->IsFrozen(); }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Load the entry identified by the provided entry number.
@@ -249,7 +257,11 @@ protected:
    ///
    /// A processor's proto model contains all field that can be accessed and is inferred from the descriptors of the
    /// underlying RNTuples. It is used in RegisterField() to check that the requested field is actually valid.
-   const ROOT::RNTupleModel &GetProtoModel() const { return *fProtoModel; }
+   const ROOT::RNTupleModel &GetProtoModel() const
+   {
+      assert(fProtoModel);
+      return *fProtoModel;
+   }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries in this processor
@@ -344,10 +356,14 @@ public:
    template <typename T>
    RNTupleProcessorOptionalPtr<T> RegisterField(const std::string &fieldName)
    {
+      if (!fEntry)
+         Initialize();
+
       if (fEntry->IsFrozen()) {
          throw RException(
             R__FAIL("cannot register field \"" + fieldName + "\", because the processor loop has started"));
       }
+
       if (!AddOrUpdateEntryField(fieldName)) {
          throw RException(R__FAIL("cannot register field with name \"" + fieldName +
                                   "\" because it is not present in the on-disk information of the RNTuple(s) this "
@@ -498,6 +514,12 @@ private:
    std::unique_ptr<ROOT::Internal::RPageSource> fPageSource;
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Initialize the processor, by setting `fProtoModel` and creating an (initially empty) `fEntry`.
+   ///
+   /// At this point, the page source for the underlying RNTuple of the processor will be created and opened.
+   void Initialize() final;
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the page source of the underlying RNTuple.
    void Connect() final;
 
@@ -553,6 +575,10 @@ class RNTupleChainProcessor : public RNTupleProcessor {
 private:
    std::vector<std::unique_ptr<RNTupleProcessor>> fInnerProcessors;
    std::vector<ROOT::NTupleSize_t> fInnerNEntries;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Initialize the processor, by setting `fProtoModel` and creating an (initially empty) `fEntry`.
+   void Initialize() final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the page source of the underlying RNTuple.
@@ -615,6 +641,7 @@ private:
    std::unique_ptr<RNTupleProcessor> fPrimaryProcessor;
    std::unique_ptr<RNTupleProcessor> fAuxiliaryProcessor;
 
+   const std::vector<std::string> fJoinFieldNames;
    /// Tokens representing the join fields present in the primary processor.
    std::vector<ROOT::RFieldToken> fJoinFieldTokens;
    std::unique_ptr<Internal::RNTupleJoinTable> fJoinTable;
@@ -625,6 +652,9 @@ private:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the page source of the underlying RNTuple.
    void Connect() final;
+
+   /// \brief Initialize the processor, by setting `fProtoModel` and creating an (initially empty) `fEntry`.
+   void Initialize() final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Load the entry identified by the provided entry number of the primary processor.
