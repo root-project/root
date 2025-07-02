@@ -16,7 +16,10 @@ sap.ui.define([
          this.creator = new EveElements(controller);
          this.creator.useIndexAsIs = EVE.JSR.decodeUrl().has('useindx');
 
-         this.createGeoPainter();
+         let msg = this.getGeomDescription();
+
+
+         this.createGeoPainter(msg);
       }
 
       getGeomDescription() {
@@ -36,11 +39,16 @@ sap.ui.define([
 
       }
 
-      cleanup()
+      cleanupGeoPainter()
       {
          this.geo_painter?.cleanup();
          delete this.geo_painter;
          delete this.normal_drawing;
+      }
+
+      cleanup()
+      {
+         this.cleanupGeoPainter();
 
          super.cleanup();
       }
@@ -61,7 +69,7 @@ sap.ui.define([
 
       //==============================================================================
 
-      createGeoPainter()
+      createGeoPainter(msg)
       {
          let options = "outline";
          options += ", mouse_click"; // process mouse click events
@@ -69,8 +77,6 @@ sap.ui.define([
          // options += " black, ";
          if (!this.controller.isEveCameraPerspective())
             options += ", ortho_camera";
-
-         let msg = this.getGeomDescription();
 
          // TODO: should be specified somehow in XML file
          // MT-RCORE - why have I removed this ???
@@ -234,6 +240,29 @@ sap.ui.define([
 
          if (this.normal_drawing) {
             // TODO: create scene objects to controller to correctly update geom drawing
+
+            const pthis = this;
+
+            // we need scene objects, but need to manipulate it
+            this.controller.createScenes();
+
+            this.controller.created_scenes.forEach(scene => {
+               scene.redrawScene = function() { console.log("do nothing with redraw"); }
+               scene.sceneElementChange = function(msg) {
+                  if (!msg.geomDescription)
+                     return;
+
+                  let json = atob(msg.geomDescription);
+                  let draw_data = EVE.JSR.parse(json);
+
+                  // delete all drawings with geometry painter
+                  pthis.cleanupGeoPainter();
+
+                  // create from scratch
+                  pthis.createGeoPainter(draw_data);
+               }
+            });
+
 
          } else {
             // create only when geo painter is ready
