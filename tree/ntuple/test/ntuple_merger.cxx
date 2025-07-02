@@ -3905,33 +3905,35 @@ TEST_P(RNTupleMergerAttributesEmpty, MergeEmptyAttribute)
    const int emptyFileNo = GetParam();
 
    //// Write
-   int fileNo = 0;
-   // First two RNTuples have the same Attribute Set
-   for (const auto *fileGuard : {&fileGuard1, &fileGuard2, &fileGuard3}) {
-      auto model = RNTupleModel::Create();
-      model->MakeField<int>("int");
-      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard->GetPath().c_str(), "RECREATE"));
-      auto wopts = RNTupleWriteOptions();
-      wopts.SetCompression(0);
-      auto writer = RNTupleWriter::Append(std::move(model), "ntuple", *file, wopts);
+   {
+      int fileNo = 0;
+      // First two RNTuples have the same Attribute Set
+      for (const auto *fileGuard : {&fileGuard1, &fileGuard2, &fileGuard3}) {
+         auto model = RNTupleModel::Create();
+         model->MakeField<int>("int");
+         auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard->GetPath().c_str(), "RECREATE"));
+         auto wopts = RNTupleWriteOptions();
+         wopts.SetCompression(0);
+         auto writer = RNTupleWriter::Append(std::move(model), "ntuple", *file, wopts);
 
-      auto attrModel = RNTupleModel::Create();
-      attrModel->MakeField<std::string>("string");
+         auto attrModel = RNTupleModel::Create();
+         attrModel->MakeField<std::string>("string");
 
-      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel)).Unwrap();
+         auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel)).Unwrap();
 
-      auto &wModel = writer->GetModel();
+         auto &wModel = writer->GetModel();
 
-      auto attrRange = attrSet->BeginRange();
-      auto pMyAttr = attrRange.GetPtr<std::string>("string");
-      *pMyAttr = "This is file " + std::to_string(fileNo);
-      for (int i = 0; i < 10 * (fileNo != emptyFileNo); ++i) {
-         auto entry = wModel.CreateEntry();
-         *entry->GetPtr<int>("int") = i;
-         writer->Fill(*entry);
+         auto attrRange = attrSet->BeginRange();
+         auto pMyAttr = attrRange.GetPtr<std::string>("string");
+         *pMyAttr = "This is file " + std::to_string(fileNo);
+         for (int i = 0; i < 10 * (fileNo != emptyFileNo); ++i) {
+            auto entry = wModel.CreateEntry();
+            *entry->GetPtr<int>("int") = i;
+            writer->Fill(*entry);
+         }
+         attrSet->EndRange(std::move(attrRange));
+         ++fileNo;
       }
-      attrSet->EndRange(std::move(attrRange));
-      ++fileNo;
    }
 
    // Merge
