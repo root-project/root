@@ -19,10 +19,28 @@ sap.ui.define([
          this.createGeoPainter();
       }
 
+      getGeomDescription() {
+         let element = this.controller.mgr.GetElement(this.controller.eveViewerId);
+         for (let scene of element.childs)      {
+            let prnt = this.controller.mgr.GetElement(scene.fSceneId);
+            if (prnt?.childs)
+              for (let k = 0; k < prnt.childs.length; ++k)
+              {
+                let elem = prnt.childs[k];
+                if (elem?.geomDescription) {
+                  let json = atob(elem.geomDescription);
+                  return EVE.JSR.parse(json);
+                }
+              }
+         }
+
+      }
+
       cleanup()
       {
          this.geo_painter?.cleanup();
          delete this.geo_painter;
+         delete this.normal_drawing;
 
          super.cleanup();
       }
@@ -52,13 +70,13 @@ sap.ui.define([
          if (!this.controller.isEveCameraPerspective())
             options += ", ortho_camera";
 
+         let msg = this.getGeomDescription();
+
          // TODO: should be specified somehow in XML file
          // MT-RCORE - why have I removed this ???
          this.get_view().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
 
          this.geo_painter = EVE.JSR.createGeoPainter(this.get_view().getDomRef(), null, options);
-
-         this.geo_painter.setGeomViewer(true); // disable several JSROOT features
 
          // function used by TGeoPainter to create OutlineShader - for the moment remove from JSROOT
          this.geo_painter.createOutline = function(scene, camera, w, h) {
@@ -80,12 +98,28 @@ sap.ui.define([
 
          this.geo_painter.setMouseTmout(this.controller.htimeout);
 
-         this.geo_painter.assignObject(null);
-
          this.geo_painter.addOrbitControls();
 
-         this.geo_painter.prepareObjectDraw(null) // and now start everything
-             .then(() => this.onGeoPainterReady(this.geo_painter));
+         if (!msg) {
+            this.geo_painter.assignObject(null);
+
+            this.geo_painter.setGeomViewer(true); // disable several JSROOT features
+
+            this.geo_painter.prepareObjectDraw(null) // and now start everything
+               .then(() => this.onGeoPainterReady(this.geo_painter));
+         } else {
+            this.normal_drawing = true;
+
+            this.geo_painter.extractRawShapes(msg, true);
+
+            // assign configuration to the control ??
+            if (msg.cfg) {
+               this.geo_painter.ctrl.cfg = msg.cfg;
+               this.geo_painter.ctrl.show_config = true;
+            }
+            this.geo_painter.prepareObjectDraw(msg.visibles, '__geom_viewer_selection__') // and now start everything
+                .then(() => this.onGeoPainterReady(this.geo_painter));
+         }
       }
 
       onGeoPainterReady(painter)
@@ -198,13 +232,18 @@ sap.ui.define([
          if (ctrls)
             ctrls.contextMenu = this.jsrootOrbitContext.bind(this);
 
-         // create only when geo painter is ready
-         this.controller.createScenes();
-         this.controller.redrawScenes();
+         if (this.normal_drawing) {
+            // TODO: create scene objects to controller to correctly update geom drawing
 
-         // is it too early?
+         } else {
+            // create only when geo painter is ready
+            this.controller.createScenes();
+            this.controller.redrawScenes();
+
+            // is it too early?
+            this.render();
+         }
          this.geo_painter.adjustCameraPosition(true);
-         this.render();
 
          this.controller.glViewerInitDone();
       }
