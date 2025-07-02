@@ -70,7 +70,7 @@ TFree *TFree::AddFree(TList *lfree, Long64_t first, Long64_t last)
    while (idcur) {
       Long64_t curfirst = idcur->GetFirst();
       Long64_t curlast  = idcur->GetLast();
-      if (curlast == first-1) {
+      if ((curlast == first - 1) && (last - curfirst < kMaxGapSize)) {
          idcur->SetLast(last);
          TFree *idnext = (TFree*)lfree->After(idcur);
          if (idnext == 0) return idcur;
@@ -80,7 +80,7 @@ TFree *TFree::AddFree(TList *lfree, Long64_t first, Long64_t last)
          delete idnext;
          return idcur;
       }
-      if (curfirst == last+1) {
+      if ((curfirst == last + 1) && (curlast - first < kMaxGapSize)) {
          idcur->SetFirst(first);
          return idcur;
       }
