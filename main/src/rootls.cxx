@@ -41,17 +41,22 @@
 #include <windows.h>
 #endif
 
-#if defined(R__WIN32)
-static const char *const kAnsiNone = "";
-static const char *const kAnsiGreen = "";
-static const char *const kAnsiBlue = "";
-static const char *const kAnsiBold = "";
-#else
 static const char *const kAnsiNone = "\x1B[0m";
 static const char *const kAnsiGreen = "\x1B[32m";
 static const char *const kAnsiBlue = "\x1B[34m";
 static const char *const kAnsiBold = "\x1B[1m";
+
+static const char *Color(const char *col)
+{
+#if defined(R__WIN32)
+   return "";
+#else
+   const static bool isTerm = isatty(STDOUT_FILENO);
+   if (isTerm)
+      return col;
+   return "";
 #endif
+}
 
 static const char *const kLongHelp = R"(
 Display ROOT files contents in the terminal.
@@ -179,9 +184,9 @@ static V2i GetTerminalSize()
 {
 #if defined(R__UNIX)
    winsize w;
-   if (::ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) != 0)
-      return {0, 0};
-   return {w.ws_col, w.ws_row};
+   if (::ioctl(STDIN_FILENO, TIOCGWINSZ, &w) == 0 || ::ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == 0 ||
+       ::ioctl(STDERR_FILENO, TIOCGWINSZ, &w) == 0)
+      return {w.ws_col, w.ws_row};
 #elif defined(R__WINDOWS)
    int rows = 0, columns = 0;
    CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -192,10 +197,10 @@ static V2i GetTerminalSize()
    return {columns, rows};
 #endif
    // Fallback
-   return {80, 10};
+   return {80, 25};
 }
 
-enum Indent : int;
+using Indent = int;
 
 static void PrintIndent(std::ostream &stream, Indent indent)
 {
@@ -247,7 +252,7 @@ static void PrintTTree(std::ostream &stream, T &tree, Indent indent)
 static void PrintClusters(std::ostream &stream, TTree &tree, Indent indent)
 {
    PrintIndent(stream, indent);
-   stream << kAnsiBold << "Cluster INCLUSIVE ranges:\n" << kAnsiNone;
+   stream << Color(kAnsiBold) << "Cluster INCLUSIVE ranges:\n" << Color(kAnsiNone);
 
    std::size_t nTotClusters = 0;
    auto clusterIt = tree.GetClusterIterator(0);
@@ -260,7 +265,7 @@ static void PrintClusters(std::ostream &stream, TTree &tree, Indent indent)
       clusterStart = clusterIt();
    }
    PrintIndent(stream, indent);
-   stream << kAnsiBold << "The total number of clusters is " << nTotClusters << "\n";
+   stream << Color(kAnsiBold) << "The total number of clusters is " << nTotClusters << "\n";
 }
 
 /// Prints a `ls -l`-like output:
@@ -298,7 +303,7 @@ PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx node
 
       PrintIndent(stream, indent);
       stream << std::left;
-      stream << kAnsiBold << std::setw(maxClassLen) << child.fClassName << kAnsiNone;
+      stream << Color(kAnsiBold) << std::setw(maxClassLen) << child.fClassName << Color(kAnsiNone);
       PrintDatime(stream, child.fKey->GetDatime());
       std::string namecycle = child.fName + ';' + std::to_string(child.fKey->GetCycle());
       stream << std::left << std::setw(maxNameLen) << namecycle;
@@ -334,27 +339,29 @@ static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree,
    if (node.fChildren.empty())
       return;
 
-   const V2i terminalSize = GetTerminalSize();
-   const int minCharsBetween = 2;
+   // Calculate the min and max column size
+   V2i terminalSize = GetTerminalSize();
+   terminalSize.x -= indent;
    const auto [minElemWidthIt, maxElemWidthIt] =
       std::minmax_element(node.fChildren.begin(), node.fChildren.end(), [&tree](NodeIdx aIdx, NodeIdx bIdx) {
          const auto &a = tree.fNodes[aIdx];
          const auto &b = tree.fNodes[bIdx];
          return a.fName.length() < b.fName.length();
       });
+   const int minCharsBetween = 2;
    const auto minElemWidth = tree.fNodes[*minElemWidthIt].fName.length() + minCharsBetween;
    const auto maxElemWidth = tree.fNodes[*maxElemWidthIt].fName.length() + minCharsBetween;
 
    // Figure out how many columns do we need
    std::size_t nCols = 0;
    std::vector<int> colWidths;
-   if (maxElemWidth > static_cast<std::size_t>(terminalSize.x)) {
+   const bool oneColumn = (flags & RootLsArgs::kOneColumn);
+   if (maxElemWidth > static_cast<std::size_t>(terminalSize.x) || oneColumn) {
       nCols = 1;
       colWidths = {1};
    } else {
-      bool oneColumn = (flags & RootLsArgs::kOneColumn);
       // Start with the max possible number of columns and reduce it until it fits
-      nCols = oneColumn ? 1 : std::min<int>(node.fChildren.size(), terminalSize.x / static_cast<int>(minElemWidth));
+      nCols = std::min<int>(node.fChildren.size(), terminalSize.x / static_cast<int>(minElemWidth));
       while (1) {
          int totWidth = 0;
 
@@ -365,7 +372,7 @@ static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree,
                if ((j % nCols) == colIdx) {
                   NodeIdx childIdx = node.fChildren[j];
                   const RootLsNode &child = tree.fNodes[childIdx];
-                  width = std::max<int>(width, child.fName.length()) + minCharsBetween;
+                  width = std::max<int>(width, child.fName.length() + minCharsBetween);
                }
             }
 
@@ -390,43 +397,55 @@ static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree,
    // Do the actual printing
    const bool isTerminal = terminalSize.x + terminalSize.y > 0;
 
+   bool mustIndent = false;
    for (auto i = 0u; i < node.fChildren.size(); ++i) {
       NodeIdx childIdx = node.fChildren[i];
       const auto &child = tree.fNodes[childIdx];
-      if (i % nCols) {
-         for (int j = 0; j < indent; ++j)
-            stream << ' ';
+      if ((i % nCols) == 0 || mustIndent) {
+         PrintIndent(stream, indent);
       }
 
       // Colors
       const bool isDir = ClassInheritsFrom(child.fClassName.c_str(), "TDirectory");
       if (isTerminal) {
          if (isDir)
-            stream << kAnsiBlue;
+            stream << Color(kAnsiBlue);
          else if (ClassInheritsFrom(child.fClassName.c_str(), "TTree"))
-            stream << kAnsiGreen;
+            stream << Color(kAnsiGreen);
       }
 
-      if (((i + 1) % nCols) != 0 && i != node.fChildren.size() - 1) {
+      const bool isExtremal = !(((i + 1) % nCols) != 0 && i != node.fChildren.size() - 1);
+      if (!isExtremal) {
          stream << std::left << std::setw(colWidths[i % nCols]) << child.fName;
       } else {
-         stream << child.fName << "\n";
+         stream << std::setw(1) << child.fName;
       }
-      stream << kAnsiNone;
+      stream << Color(kAnsiNone);
+
+      if (isExtremal)
+         stream << "\n";
 
       if (isDir && (flags & RootLsArgs::kRecursiveListing)) {
+         if (!isExtremal)
+            stream << "\n";
          PrintChildrenInColumns(stream, tree, childIdx, flags, Indent(indent + 2));
+         mustIndent = true;
       }
    }
 }
 
 static void RootLs(const RootLsArgs &args)
 {
+   const Indent outerIndent = (args.fSources.size() > 1) * 2;
    for (const auto &source : args.fSources) {
-      const Indent indent = source.fObjectTree.fTopLevelNodes.size() > 1 ? Indent(2) : Indent(0);
+      if (args.fSources.size() > 1) {
+         std::cout << source.fFileName << " :\n";
+      }
+      const Indent indent = outerIndent + (source.fObjectTree.fTopLevelNodes.size() > 1) * 2;
       for (NodeIdx rootIdx : source.fObjectTree.fTopLevelNodes) {
          if (source.fObjectTree.fTopLevelNodes.size() > 1) {
             const auto &node = source.fObjectTree.fNodes[rootIdx];
+            PrintIndent(std::cout, outerIndent);
             std::cout << node.fName << " :\n";
          }
 
@@ -484,8 +503,7 @@ static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_
 
       for (TKey *key : keys) {
          // Don't recurse lower than requested by `pattern` unless we explicitly have the `recursive listing` flag.
-         if (!isRecursive && cur->fNesting < patternSplits.size() &&
-             !MatchesGlob(key->GetName(), patternSplits[cur->fNesting]))
+         if (cur->fNesting < patternSplits.size() && !MatchesGlob(key->GetName(), patternSplits[cur->fNesting]))
             continue;
 
          auto &newChild = nodeTree.fNodes.emplace_back(NodeFromKey(*key));
