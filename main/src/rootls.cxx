@@ -542,8 +542,6 @@ static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_
             auto &child = nodeTree.fNodes[childIdx];
             if (child.fDir)
                nodesToVisit.push_back(childIdx);
-            else
-               nodeTree.fLeafList.push_back(childIdx);
          }
       }
       if (cur->fNesting == patternSplits.size()) {
