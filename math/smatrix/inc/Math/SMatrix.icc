@@ -51,7 +51,6 @@
 #include "Math/Dinv.h"
 #include "Math/Functions.h"
 #include "Math/HelperOps.h"
-#include "Math/StaticCheck.h"
 
 
 
@@ -136,13 +135,13 @@ SMatrix<T,D1,D2,R>::SMatrix(InputIterator ibegin, unsigned int size, bool triang
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
 SMatrix<T,D1,D2,R>::SMatrix(const T&  rhs) {
-   STATIC_CHECK( kSize == 1,SMatrix_NOT_of_size_1 );
+   static_assert( kSize == 1, "SMatrix_NOT_of_size_1" );
    fRep[0] = rhs;
 }
 
 template <class T, unsigned int D1, unsigned int D2, class R>
 SMatrix<T,D1,D2,R>& SMatrix<T,D1,D2,R>::operator=(const T&  rhs) {
-   STATIC_CHECK( kSize == 1,SMatrix_NOT_of_size_1 );
+   static_assert( kSize == 1, "SMatrix_NOT_of_size_1" );
    fRep[0] = rhs;
    return *this;
 }
@@ -410,7 +409,7 @@ bool SMatrix<T,D1,D2,R>::operator<(const Expr<A,T,D1,D2,R2>& rhs) const {
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline bool SMatrix<T,D1,D2,R>::Invert() {
-   STATIC_CHECK( D1 == D2,SMatrix_not_square);
+   static_assert( D1 == D2, "SMatrix_not_square");
    return Inverter<D1,D2>::Dinv((*this).fRep);
 }
 
@@ -427,7 +426,7 @@ inline SMatrix<T,D1,D2,R> SMatrix<T,D1,D2,R>::Inverse(int & ifail) const {
 // fast inversion
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline bool SMatrix<T,D1,D2,R>::InvertFast() {
-   STATIC_CHECK( D1 == D2,SMatrix_not_square);
+   static_assert( D1 == D2, "SMatrix_not_square");
    return FastInverter<D1,D2>::Dinv((*this).fRep);
 }
 
@@ -444,7 +443,7 @@ inline SMatrix<T,D1,D2,R> SMatrix<T,D1,D2,R>::InverseFast(int & ifail) const {
 // Choleski inversion for symmetric and positive defined matrices
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline bool SMatrix<T,D1,D2, R>::InvertChol() {
-   STATIC_CHECK( D1 == D2,SMatrix_not_square);
+   static_assert( D1 == D2, "SMatrix_not_square");
    return CholInverter<D1>::Dinv((*this).fRep);
 }
 
@@ -464,7 +463,7 @@ inline SMatrix<T,D1,D2, R>  SMatrix<T,D1,D2, R>::InverseChol(int &ifail) const {
 //==============================================================================
 template <class T, unsigned int D1, unsigned int D2, class R>
 inline bool SMatrix<T,D1,D2,R>::Det(T& det) {
-   STATIC_CHECK( D1 == D2,SMatrix_not_square);
+   static_assert( D1 == D2, "SMatrix_not_square");
    //  return Dfact<SMatrix<T,D1,D1>, D1, D1>(*this,det);
    //return Dfact<R, D1, D1>(fRep, det);
    return Determinant<D1,D2>::Dfact(fRep, det);
@@ -713,7 +712,7 @@ SubVector SMatrix<T,D1,D2,R>::SubRow(unsigned int therow, unsigned int col0 ) co
 
    const unsigned int offset = therow*D2 + col0;
 
-   STATIC_CHECK( SubVector::kSize <= D2,SVector_dimension_too_small);
+   static_assert( SubVector::kSize <= D2, "SVector_dimension_too_small");
    assert(col0 + SubVector::kSize <= D2);
 
    SubVector tmp;
@@ -729,7 +728,7 @@ SubVector SMatrix<T,D1,D2,R>::SubCol(unsigned int thecol, unsigned int row0 ) co
 
    const unsigned int offset = thecol + row0*D1;
 
-   STATIC_CHECK( SubVector::kSize <= D1,SVector_dimension_too_small);
+   static_assert( SubVector::kSize <= D1, "SVector_dimension_too_small");
    assert(row0 + SubVector::kSize <= D1);
 
    SubVector tmp;
@@ -755,7 +754,7 @@ template <class T, unsigned int D1, unsigned int D2, class R>
 SVector<T,D1> SMatrix<T,D1,D2,R>::Diagonal( ) const {
 
    // only for squared matrices
-   STATIC_CHECK( D1 == D2,SMatrix_NOT_square );
+   static_assert( D1 == D2, "SMatrix_NOT_square");
 
    SVector<T,D1> tmp;
    for(unsigned int i=0; i<D1; ++i) {
@@ -770,8 +769,8 @@ template <class Vector>
 void SMatrix<T,D1,D2,R>::SetDiagonal( const Vector & v) {
 
    // check size that size of vector is correct
-   STATIC_CHECK( ( ( D1 <= D2) && Vector::kSize == D1 ) ||
-                 ( ( D2 < D1 ) && Vector::kSize == D2 ), SVector_size_NOT_correct );
+   static_assert( ( ( D1 <= D2) && Vector::kSize == D1 ) ||
+                 ( ( D2 < D1 ) && Vector::kSize == D2 ), "SVector_size_NOT_correct" );
 
 
    for(unsigned int i=0; i<Vector::kSize; ++i) {
@@ -800,13 +799,13 @@ template <class SubVector>
 SubVector SMatrix<T,D1,D2,R>::UpperBlock( ) const {
 #endif
    // only for squared matrices
-   STATIC_CHECK( D1 == D2,SMatrix_NOT_square );
+   static_assert( D1 == D2, "SMatrix_NOT_square" );
 
 #ifndef UNSUPPORTED_TEMPLATE_EXPRESSION
    SVector<T, D1 * (D2 +1)/2 >  tmp;
 #else
    // N must be equal D1 *(D1 +1)/2
-   STATIC_CHECK( SubVector::kSize == D1*(D1+1)/2,SVector_Wrong_Size );
+   static_assert( SubVector::kSize == D1*(D1+1)/2, "SVector_Wrong_Size" );
    SubVector tmp;
 #endif
 
@@ -830,13 +829,13 @@ SubVector SMatrix<T,D1,D2,R>::LowerBlock( ) const {
 #endif
 
    // only for squared matrices
-   STATIC_CHECK( D1 == D2,SMatrix_NOT_square );
+   static_assert( D1 == D2, "SMatrix_NOT_square" );
 
 #ifndef UNSUPPORTED_TEMPLATE_EXPRESSION
    SVector<T, D1 * (D2 +1)/2 >  tmp;
 #else
    // N must be equal D1 *(D1 +1)/2
-   STATIC_CHECK( SubVector::kSize == D1*(D1+1)/2,SVector_Wrong_Size );
+   static_assert( SubVector::kSize == D1*(D1+1)/2, "SVector_Wrong_Size" );
    SubVector tmp;
 #endif
 
@@ -862,10 +861,10 @@ SMatrix<T,D1,D2,R>::SMatrix(const SVector<T, N >  & v, bool lower ) {
 #endif
 
    // only for squared matrices
-   STATIC_CHECK( D1 == D2,SMatrix_NOT_square );
+   static_assert( D1 == D2, "SMatrix_NOT_square" );
 
 #ifdef UNSUPPORTED_TEMPLATE_EXPRESSION
-   STATIC_CHECK( N == D1*(D1+1)/2,SVector_Wrong_Size );
+   static_assert( N == D1*(D1+1)/2, "SVector_Wrong_Size" );
 #endif
 
    int k = 0;

@@ -315,7 +315,7 @@ public:
   ///
   template <class MatrixRep>
   static bool Dinv(MatrixRep&) {
-     STATIC_CHECK( false, Error_cholesky_SMatrix_type_is_not_symmetric );
+     static_assert( false, "Error_cholesky_SMatrix_type_is_not_symmetric" );
      return false;
   }
   template <class T>

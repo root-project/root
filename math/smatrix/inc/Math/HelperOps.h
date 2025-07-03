@@ -17,7 +17,6 @@
  *  Specialisations at the moment only for Symmetric LHS and Generic RHS
  *  and used to throw static assert.
  */
-#include "Math/StaticCheck.h"
 #include <algorithm>  // required by std::copy
 #include <cassert>
 
@@ -133,7 +132,7 @@ namespace Math {
       static void Evaluate(SMatrix<T,D1,D2,MatRepSym<T,D1> >&,
                            const Expr<A,T,D1,D2,MatRepStd<T,D1,D2> >&)
       {
-         STATIC_CHECK(0==1, Cannot_assign_general_to_symmetric_matrix);
+         static_assert(0==1, "Cannot_assign_general_to_symmetric_matrix");
       }
 
    }; // struct Assign
@@ -263,7 +262,7 @@ namespace Math {
       static void Evaluate(SMatrix<T,D1,D2,MatRepSym<T,D1> >&,
                            const Expr<A,T,D1,D2,MatRepStd<T,D1,D2> >&)
       {
-         STATIC_CHECK(0==1, Cannot_plusEqual_general_to_symmetric_matrix);
+         static_assert(0==1, "Cannot_plusEqual_general_to_symmetric_matrix");
       }
    }; // struct PlusEquals
 
@@ -347,7 +346,7 @@ namespace Math {
       static void Evaluate(SMatrix<T,D1,D2,MatRepSym<T,D1> >&,
                            const Expr<A,T,D1,D2,MatRepStd<T,D1,D2> >&)
       {
-         STATIC_CHECK(0==1, Cannot_minusEqual_general_to_symmetric_matrix);
+         static_assert(0==1, "Cannot_minusEqual_general_to_symmetric_matrix");
       }
    }; // struct MinusEquals
 
@@ -397,7 +396,7 @@ namespace Math {
                            const SMatrix<T,D3,D4,MatRepStd<T,D3,D4> >& ,
                            unsigned int , unsigned int )
       {
-         STATIC_CHECK(0==1, Cannot_Place_Matrix_general_in_symmetric_matrix);
+         static_assert(0==1, "Cannot_Place_Matrix_general_in_symmetric_matrix");
       }
    }; // struct PlaceMatrix
 
@@ -409,7 +408,7 @@ namespace Math {
                            const Expr<A,T,D3,D4,MatRepStd<T,D3,D4> >& ,
                            unsigned int , unsigned int )
       {
-         STATIC_CHECK(0==1, Cannot_Place_Matrix_general_in_symmetric_matrix);
+         static_assert(0==1, "Cannot_Place_Matrix_general_in_symmetric_matrix");
       }
    }; // struct PlaceExpr
 
@@ -462,8 +461,8 @@ namespace Math {
    {
       static void Evaluate(SMatrix<T,D1,D2,R1>& lhs,  const SMatrix<T,D3,D4,R2>& rhs,
                            unsigned int row, unsigned int col) {
-         STATIC_CHECK( D1 <= D3,Smatrix_nrows_too_small);
-         STATIC_CHECK( D2 <= D4,Smatrix_ncols_too_small);
+         static_assert( D1 <= D3, "Smatrix_nrows_too_small");
+         static_assert( D2 <= D4, "Smatrix_ncols_too_small");
 
          assert(row + D1 <= D3);
          assert(col + D2 <= D4);
@@ -483,7 +482,7 @@ namespace Math {
                            const SMatrix<T,D3,D4,MatRepStd<T,D3,D4> >& ,
                            unsigned int , unsigned int )
       {
-         STATIC_CHECK(0==1, Cannot_Sub_Matrix_symmetric_in_general_matrix);
+         static_assert(0==1, "Cannot_Sub_Matrix_symmetric_in_general_matrix");
       }
    }; // struct RetrieveMatrix
 
@@ -495,7 +494,7 @@ namespace Math {
                            const SMatrix<T,D3,D4,MatRepSym<T,D3> >& rhs,
                            unsigned int row, unsigned int col )
       {
-         STATIC_CHECK(  D1 <= D3,Smatrix_dimension1_too_small);
+         static_assert(  D1 <= D3, "Smatrix_dimension1_too_small");
          // can work only if placed on the diagonal
          assert(row == col);
          assert(row + D1 <= D3);

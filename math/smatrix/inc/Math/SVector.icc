@@ -39,8 +39,6 @@
 #include <assert.h>
 #include <algorithm>
 
-#include "Math/StaticCheck.h"
-
 namespace ROOT {
 
 namespace Math {
@@ -110,32 +108,32 @@ SVector<T,D>::SVector(const_iterator ibegin, const_iterator iend) {
 
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const T& a1) {
-   STATIC_CHECK( D == 1,SVector_dimension_not_right);
+   static_assert( D == 1, "SVector_dimension_not_right");
    fArray[0] = a1;
 }
 
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const T& a1, const T& a2) {
-   STATIC_CHECK( D == 2,SVector_dimension_not_right);
+   static_assert( D == 2, "SVector_dimension_not_right");
    fArray[0] = a1; fArray[1] = a2;
 }
 
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3) {
-   STATIC_CHECK( D == 3,SVector_dimension_not_right);
+   static_assert( D == 3, "SVector_dimension_not_right");
    fArray[0] = a1; fArray[1] = a2; fArray[2] = a3;
 }
 
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4) {
-   STATIC_CHECK( D == 4,SVector_dimension_not_right);
+   static_assert( D == 4, "SVector_dimension_not_right");
    fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
 }
 
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
                       const T& a5) {
-   STATIC_CHECK( D == 5,SVector_dimension_not_right);
+   static_assert( D == 5, "SVector_dimension_not_right");
    fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
    fArray[4] = a5;
 }
@@ -143,7 +141,7 @@ SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
                       const T& a5, const T& a6) {
-   STATIC_CHECK( D == 6,SVector_dimension_not_right);
+   static_assert( D == 6, "SVector_dimension_not_right");
    fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
    fArray[4] = a5; fArray[5] = a6;
 }
@@ -151,7 +149,7 @@ SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
                       const T& a5, const T& a6, const T& a7) {
-   STATIC_CHECK( D == 7,SVector_dimension_not_right);
+   static_assert( D == 7, "SVector_dimension_not_right");
    fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
    fArray[4] = a5; fArray[5] = a6; fArray[6] = a7;
 }
@@ -159,7 +157,7 @@ SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
 template <class T, unsigned int D>
 SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
                       const T& a5, const T& a6, const T& a7, const T& a8) {
-   STATIC_CHECK( D == 8,SVector_dimension_not_right);
+   static_assert( D == 8, "SVector_dimension_not_right");
    fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
    fArray[4] = a5; fArray[5] = a6; fArray[6] = a7; fArray[7] = a8;
 }
@@ -168,7 +166,7 @@ template <class T, unsigned int D>
 SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
                       const T& a5, const T& a6, const T& a7, const T& a8,
                       const T& a9) {
-   STATIC_CHECK( D == 9,SVector_dimension_not_right);
+   static_assert( D == 9, "SVector_dimension_not_right");
    fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
    fArray[4] = a5; fArray[5] = a6; fArray[6] = a7; fArray[7] = a8;
    fArray[8] = a9;
@@ -178,7 +176,7 @@ template <class T, unsigned int D>
 SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
                       const T& a5, const T& a6, const T& a7, const T& a8,
                       const T& a9, const T& a10) {
-   STATIC_CHECK( D == 10,SVector_dimension_not_right);
+   static_assert( D == 10, "SVector_dimension_not_right");
    fArray[0] = a1; fArray[1] = a2; fArray[2] = a3; fArray[3] = a4;
    fArray[4] = a5; fArray[5] = a6; fArray[6] = a7; fArray[7] = a8;
    fArray[8] = a9; fArray[9] = a10;
@@ -190,7 +188,7 @@ SVector<T,D>::SVector(const T& a1, const T& a2, const T& a3, const T& a4,
 template <class T, unsigned int D>
 SVector<T,D>& SVector<T,D>::operator=(const T& a1) {
    // operator = for size 1 vectors
-   STATIC_CHECK( D == 1,SVector_dimension_not_right);
+   static_assert( D == 1, "SVector_dimension_not_right");
    fArray[0] = a1;
    return *this;
 }
@@ -611,7 +609,7 @@ template <class T, unsigned int D>
 template <class SubVector>
 SubVector SVector<T,D>::Sub(unsigned int row) const {
 
-   STATIC_CHECK( SubVector::kSize <= D,SVector_dimension_too_small);
+   static_assert( SubVector::kSize <= D, "SVector_dimension_too_small");
 
    assert(row + SubVector::kSize <= D);
 

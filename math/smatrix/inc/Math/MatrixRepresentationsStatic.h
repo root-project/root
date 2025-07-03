@@ -18,8 +18,6 @@ operators =, +=, -=, ==.
 \date   2006-01-15
  */
 
-#include "Math/StaticCheck.h"
-
 #include <cstddef>
 #include <utility>
 #include <type_traits>
@@ -246,8 +244,8 @@ a_6 & a_7  & a_8   \end{array} \right)
        */
       template <class R>
       inline MatRepSym<T, D>& operator=(const R&) {
-         STATIC_CHECK(0==1,
-                      Cannot_assign_general_to_symmetric_matrix_representation);
+         static_assert(0==1,
+                       "Cannot_assign_general_to_symmetric_matrix_representation");
          return *this;
       }
       inline MatRepSym<T, D>& operator=(const MatRepSym& rhs) {
@@ -260,8 +258,8 @@ a_6 & a_7  & a_8   \end{array} \right)
        */
       template <class R>
       inline MatRepSym<T, D>& operator+=(const R&) {
-         STATIC_CHECK(0==1,
-                      Cannot_add_general_to_symmetric_matrix_representation);
+         static_assert(0==1,
+                       "Cannot_add_general_to_symmetric_matrix_representation");
          return *this;
       }
       inline MatRepSym<T, D>& operator+=(const MatRepSym& rhs) {
@@ -274,8 +272,8 @@ a_6 & a_7  & a_8   \end{array} \right)
        */
       template <class R>
       inline MatRepSym<T, D>& operator-=(const R&) {
-         STATIC_CHECK(0==1,
-                      Cannot_substract_general_to_symmetric_matrix_representation);
+         static_assert(0==1,
+                       "Cannot_substract_general_to_symmetric_matrix_representation");
          return *this;
       }
       inline MatRepSym<T, D>& operator-=(const MatRepSym& rhs) {

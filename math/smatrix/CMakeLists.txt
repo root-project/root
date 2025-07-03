@@ -28,7 +28,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Smatrix
     Math/SMatrixDfwd.h
     Math/SMatrixFfwd.h
     Math/SMatrix.h
-    Math/StaticCheck.h
     Math/SVector.h
     Math/UnaryOperators.h
   NO_SOURCES
