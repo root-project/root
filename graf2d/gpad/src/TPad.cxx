@@ -1435,8 +1435,8 @@ void TPad::DivideRatios(Int_t nx, Int_t ny,
          y1 = TMath::Max(0., y - yr);
          x2 = TMath::Min(1., x + xr);
          y2 = TMath::Min(1., y);
-         auto pad = new TPad(Form("%s_%d\n", GetName(), pn),
-                             Form("%s_%d\n", GetName(), pn),
+         auto pad = new TPad(TString::Format("%s_%d\n", GetName(), pn),
+                             TString::Format("%s_%d\n", GetName(), pn),
                              x1, y1, x2 ,y2);
          pad->SetNumber(pn);
          pad->Draw();
