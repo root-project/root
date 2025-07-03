@@ -22,10 +22,10 @@ namespace MySpace {
   class MyClass : public TObject {
   public:
     int a;
-    MyClass() {};
-    MyClass(int a_) : a(a_) {};
+    MyClass() {}
+    MyClass(int a_) : a(a_) {}
     std::vector<A> member;
-    ClassDef(MyClass,1)
+    ClassDefOverride(MyClass,1)
   };
 
 } // end namespace
