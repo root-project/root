@@ -1,0 +1,37 @@
+{
+   "samples": {
+      "sample_ntuple1": {
+         "trees": [
+            "ntuple"
+         ],
+         "files": [
+            "rdatasetspec_rntuple0.root"
+         ],
+         "metadata": {
+            "lum": 10.0
+         }
+      },
+      "sample_ntuple2": {
+         "trees": [
+            "ntuple"
+         ],
+         "files": [
+            "rdatasetspec_rntuple1.root"
+         ],
+         "metadata": {
+            "lum": 20.0
+         }
+      },
+      "sample_ntuple3": {
+         "trees": [
+            "ntuple"
+         ],
+         "files": [
+            "rdatasetspec_rntuple2.root"
+         ],
+         "metadata": {
+            "lum": 30.0
+         }
+      }
+   }
+}
