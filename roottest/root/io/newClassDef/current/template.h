@@ -6,8 +6,8 @@ template <class T> class MyTemplate : public TObject {
   T variable;
   std::vector<int> vars;
 
-  MyTemplate(T a) { variable = a; };
-  MyTemplate() {};
+  MyTemplate(T a) { variable = a; }
+  MyTemplate() {}
 
   ClassDefT(MyTemplate,1)
 };
@@ -20,14 +20,14 @@ class MyTemplate <const double*> : public TObject {
   double variable;
   std::vector<int> vars;
 
-  MyTemplate(const double* a) { variable = *a; };
-  MyTemplate() {};
+  MyTemplate(const double* a) { variable = *a; }
+  MyTemplate() {}
 
 #ifdef R__WIN32
   typedef MyTemplate<const double*> type;
-  ClassDef(type,2)
+  ClassDefOverride(type,2)
 #else
-  ClassDef(MyTemplate<const double*>,2)
+  ClassDefOverride(MyTemplate<const double*>,2)
 #endif
 };
 
@@ -36,9 +36,9 @@ template <class T1, class T2> class MyPairTemplate : public TObject {
   T1 var1;
   T2 var2;
 
-  MyPairTemplate(T1 a, T2 b) : var1(a), var2(b) {};
-  MyPairTemplate() {};
-  ~MyPairTemplate() {};
+  MyPairTemplate(T1 a, T2 b) : var1(a), var2(b) {}
+  MyPairTemplate() {}
+  ~MyPairTemplate() {}
 
   ClassDefT(MyPairTemplate,1)
 };

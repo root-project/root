@@ -13,7 +13,7 @@ namespace MySpace {
     MyTemplate(T a) { variable = a; }
     MyTemplate() {}
 
-    ClassDef(MyTemplate,1)
+    ClassDefOverride(MyTemplate,1)
   };
 
   template <> class MyTemplate <const double*> : public TObject {
@@ -25,7 +25,7 @@ namespace MySpace {
     MyTemplate(const double* a) { variable = *a; variable2 = 2* *a; }
     MyTemplate() {}
 
-    ClassDef(MyTemplate<const double*>,1)
+    ClassDefOverride(MyTemplate<const double*>,1)
   };
 
 }

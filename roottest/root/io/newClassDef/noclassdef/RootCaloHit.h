@@ -6,9 +6,10 @@
 #include "TClass.h"
 
 
-class RootCaloHit : public TObject { 
+class RootCaloHit : public TObject {
 public:
-   RootCaloHit() : index(0),objVarArr(0) {
+   RootCaloHit() : index(0),objVarArr(0)
+   {
       for(int i=0;i<4;i++) myArrFix[i]=0;
       myArrVar=0;
 
@@ -26,10 +27,10 @@ public:
       mytobjSt = new RootPCobject(0);
       mytobj2St = new RootPCobject2(0);
    }
-   RootCaloHit(float e, float t, int val, 
-               const std::string& s, unsigned int id) : 
-      energy (e), time (t), itra (val), 
-      mycell(s, id), 
+   RootCaloHit(float e, float t, int val,
+               const std::string& s, unsigned int id) :
+      energy (e), time (t), itra (val),
+      mycell(s, id),
       index(0),
       myArrVar(0),
       objVarArr(0),
@@ -63,7 +64,7 @@ public:
 
       objVarArr = new RootPCellID[index];
       objVarArr[0] = RootPCellID("varr",3);
-      objVarArr[1] = RootPCellID("varr",4);            
+      objVarArr[1] = RootPCellID("varr",4);
 
       myobjp = new RootPCobject(10);
       myobj2p = new RootPCobject2(11);
@@ -86,7 +87,8 @@ public:
       }
 
    }
-   virtual ~RootCaloHit() {
+   ~RootCaloHit() override
+   {
       int i = 0;
       for(i = 0; i<4; i++) delete myArrFix[i];
       for(i = 0; i<index; i++) delete myArrVar[i];
@@ -111,7 +113,8 @@ public:
       delete mytobj2St; mytobj2St = 0;
    }
 
-   void myPrint() {
+   void myPrint()
+   {
       //return;
       IsA()->Dump(this, true /*noaddr*/);
       mycell.Print();
@@ -146,21 +149,21 @@ public:
          myobjarr[i].Print();
          myobjarr2[i].Print();
       }
-          
+
    }
 protected:
-   float energy; 
-   float time; 
-   int itra; 
+   float energy;
+   float time;
+   int itra;
 public:
    RootPCellID      mycell;
    RootPCellID      myArr[3];
-   RootPCtemp<int> *myArrFix[4]; 
+   RootPCtemp<int> *myArrFix[4];
    int index;
    RootPCellID    **myArrVar;    //![index]  WAITING on Vicktor's implementation [index]
    RootPCellID     *objVarArr;   //![index]  Not implemented yet ... will it ever?
    RootPCnoRequestedDict     mynocell;
-   RootPCellID     *mycellnull; 
+   RootPCellID     *mycellnull;
    RootPCellID     *mycellfix; //
    RootPCellID     *mycellvirt; //
    RootPCellID     *mynocellp; //
@@ -176,15 +179,15 @@ public:
    TObject         *mytobj2p;
    TObject         *mytobjSt; //->
    TObject         *mytobj2St;//->
-   
+
    RootPCobject    *myobjdp;  //
    RootPCobject2   *myobj2dp; //
-   
+
    RootPCobject     myobjarr[2];    //
    RootPCobject2    myobjarr2[2];   //
 #else
    RootPCobject     myobj;          //!
-   RootPCobject2    myobj2;         //!     
+   RootPCobject2    myobj2;         //!
    RootPCellID     *myobjp;         //!
    RootPCellID     *myobj2p;        //!
    RootPCobject    *myobjSt;        //!->
@@ -201,8 +204,8 @@ public:
    RootPCobject2    myobjarr2[2];    //!
 #endif
 
-   ClassDef(RootCaloHit,1)
-}; 
+   ClassDefOverride(RootCaloHit,1)
+};
 
 #endif /* !defined(_ROOT_CALO_HIT_H) */
 
