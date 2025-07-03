@@ -39,11 +39,7 @@ void TMVAMulticlass( TString myMethodList = "" )
 
    // to get access to the GUI and all tmva macros
    //
-   //     TString tmva_dir(TString(gRootDir) + "/tmva");
-   //     if(gSystem->Getenv("TMVASYS"))
-   //        tmva_dir = TString(gSystem->Getenv("TMVASYS"));
-   //     gROOT->SetMacroPath(tmva_dir + "/test/:" + gROOT->GetMacroPath() );
-   //     gROOT->ProcessLine(".L TMVAMultiClassGui.C");
+   //     gROOT->ProcessLine("TMVA::TMVAMultiClassGui()");
 
 
    //---------------------------------------------------------------
