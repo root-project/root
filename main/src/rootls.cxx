@@ -144,7 +144,8 @@ static RootLsNode NodeFromKey(TKey &key)
 struct RootLsTree {
    // 0th node is the root node
    std::vector<RootLsNode> fNodes;
-   std::vector<NodeIdx> fTopLevelNodes;
+   std::vector<NodeIdx> fDirList;
+   std::vector<NodeIdx> fLeafList;
    // The file must be kept alive in order to access the nodes' keys
    std::unique_ptr<TFile> fFile;
 };
@@ -331,19 +332,23 @@ PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx node
    stream << std::flush;
 }
 
-// Prints a `ls`-like output
 static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree, NodeIdx nodeIdx, std::uint32_t flags,
-                                   Indent indent)
+                                   Indent indent);
+
+// Prints a `ls`-like output
+static void PrintNodesInColumns(std::ostream &stream, const RootLsTree &tree,
+                                std::vector<NodeIdx>::const_iterator nodesBegin,
+                                std::vector<NodeIdx>::const_iterator nodesEnd, std::uint32_t flags, Indent indent)
 {
-   const auto &node = tree.fNodes[nodeIdx];
-   if (node.fChildren.empty())
+   const auto nNodes = std::distance(nodesBegin, nodesEnd);
+   if (nNodes == 0)
       return;
 
    // Calculate the min and max column size
    V2i terminalSize = GetTerminalSize();
    terminalSize.x -= indent;
    const auto [minElemWidthIt, maxElemWidthIt] =
-      std::minmax_element(node.fChildren.begin(), node.fChildren.end(), [&tree](NodeIdx aIdx, NodeIdx bIdx) {
+      std::minmax_element(nodesBegin, nodesEnd, [&tree](NodeIdx aIdx, NodeIdx bIdx) {
          const auto &a = tree.fNodes[aIdx];
          const auto &b = tree.fNodes[bIdx];
          return a.fName.length() < b.fName.length();
@@ -361,16 +366,16 @@ static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree,
       colWidths = {1};
    } else {
       // Start with the max possible number of columns and reduce it until it fits
-      nCols = std::min<int>(node.fChildren.size(), terminalSize.x / static_cast<int>(minElemWidth));
+      nCols = std::min<int>(nNodes, terminalSize.x / static_cast<int>(minElemWidth));
       while (1) {
          int totWidth = 0;
 
          // Find maximum width of each column
          for (auto colIdx = 0u; colIdx < nCols; ++colIdx) {
             int width = 0;
-            for (auto j = 0u; j < node.fChildren.size(); ++j) {
+            for (auto j = 0u; j < nNodes; ++j) {
                if ((j % nCols) == colIdx) {
-                  NodeIdx childIdx = node.fChildren[j];
+                  NodeIdx childIdx = nodesBegin[j];
                   const RootLsNode &child = tree.fNodes[childIdx];
                   width = std::max<int>(width, child.fName.length() + minCharsBetween);
                }
@@ -398,8 +403,8 @@ static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree,
    const bool isTerminal = terminalSize.x + terminalSize.y > 0;
 
    bool mustIndent = false;
-   for (auto i = 0u; i < node.fChildren.size(); ++i) {
-      NodeIdx childIdx = node.fChildren[i];
+   for (auto i = 0u; i < nNodes; ++i) {
+      NodeIdx childIdx = nodesBegin[i];
       const auto &child = tree.fNodes[childIdx];
       if ((i % nCols) == 0 || mustIndent) {
          PrintIndent(stream, indent);
@@ -414,7 +419,7 @@ static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree,
             stream << Color(kAnsiGreen);
       }
 
-      const bool isExtremal = !(((i + 1) % nCols) != 0 && i != node.fChildren.size() - 1);
+      const bool isExtremal = !(((i + 1) % nCols) != 0 && i != nNodes - 1);
       if (!isExtremal) {
          stream << std::left << std::setw(colWidths[i % nCols]) << child.fName;
       } else {
@@ -434,6 +439,16 @@ static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree,
    }
 }
 
+static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree, NodeIdx nodeIdx, std::uint32_t flags,
+                                   Indent indent)
+{
+   const auto &node = tree.fNodes[nodeIdx];
+   if (node.fChildren.empty())
+      return;
+
+   PrintNodesInColumns(stream, tree, node.fChildren.begin(), node.fChildren.end(), flags, indent);
+}
+
 static void RootLs(const RootLsArgs &args)
 {
    const Indent outerIndent = (args.fSources.size() > 1) * 2;
@@ -441,9 +456,11 @@ static void RootLs(const RootLsArgs &args)
       if (args.fSources.size() > 1) {
          std::cout << source.fFileName << " :\n";
       }
-      const Indent indent = outerIndent + (source.fObjectTree.fTopLevelNodes.size() > 1) * 2;
-      for (NodeIdx rootIdx : source.fObjectTree.fTopLevelNodes) {
-         if (source.fObjectTree.fTopLevelNodes.size() > 1) {
+      const Indent indent = outerIndent + (source.fObjectTree.fDirList.size() > 1) * 2;
+      PrintNodesInColumns(std::cout, source.fObjectTree, source.fObjectTree.fLeafList.begin(),
+                          source.fObjectTree.fLeafList.end(), args.fFlags, indent);
+      for (NodeIdx rootIdx : source.fObjectTree.fDirList) {
+         if (source.fObjectTree.fDirList.size() > 1) {
             const auto &node = source.fObjectTree.fNodes[rootIdx];
             PrintIndent(std::cout, outerIndent);
             std::cout << node.fName << " :\n";
@@ -502,6 +519,7 @@ static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_
                 [](const auto *a, const auto *b) { return strcmp(a->GetName(), b->GetName()) < 0; });
 
       for (TKey *key : keys) {
+         const auto &pat = patternSplits[cur->fNesting];
          // Don't recurse lower than requested by `pattern` unless we explicitly have the `recursive listing` flag.
          if (cur->fNesting < patternSplits.size() && !MatchesGlob(key->GetName(), patternSplits[cur->fNesting]))
             continue;
@@ -522,10 +540,15 @@ static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_
             auto &child = nodeTree.fNodes[childIdx];
             if (child.fDir)
                nodesToVisit.push_back(childIdx);
+            else
+               nodeTree.fLeafList.push_back(childIdx);
          }
       }
       if (cur->fNesting == patternSplits.size()) {
-         nodeTree.fTopLevelNodes.push_back(curIdx);
+         if (cur->fDir)
+            nodeTree.fDirList.push_back(curIdx);
+         else
+            nodeTree.fLeafList.push_back(curIdx);
       }
    } while (!nodesToVisit.empty());
 
@@ -628,9 +651,19 @@ int main(int argc, char **argv)
       return 1;
    }
 
-   // sort by name
+   // sort sources by name
    std::sort(args.fSources.begin(), args.fSources.end(),
              [](const auto &a, const auto &b) { return a.fFileName < b.fFileName; });
+
+   // sort leaves by name
+   for (auto &source : args.fSources) {
+      std::sort(source.fObjectTree.fLeafList.begin(), source.fObjectTree.fLeafList.end(),
+                [&tree = source.fObjectTree](NodeIdx aIdx, NodeIdx bIdx) {
+                   const auto &a = tree.fNodes[aIdx];
+                   const auto &b = tree.fNodes[bIdx];
+                   return a.fName < b.fName;
+                });
+   }
 
    RootLs(args);
 }
