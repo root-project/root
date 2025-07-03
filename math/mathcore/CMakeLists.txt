@@ -79,7 +79,6 @@ set(HEADERS
   Math/SpecFuncMathCore.h
   Math/StdEngine.h
   Math/TDataPoint.h
-  Math/TDataPointN.h
   Math/TRandomEngine.h
   Math/Types.h
   Math/Util.h

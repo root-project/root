@@ -68,7 +68,6 @@ TKDTreeID
 basic_ios<char,char_traits<char> >::traits_type
 Short_t
 TKDTreeIF
-ROOT::Math::TDataPointN<double>::value_type
 basic_stringbuf<char,char_traits<char>,allocator<char> >::pos_type
 Version_t
 basic_ifstream<char,char_traits<char> >::char_type
@@ -179,7 +178,6 @@ vector<string,allocator<string> >::reference
 vector<TString,allocator<TString> >::const_pointer
 vector<double,allocator<double> >::const_iterator
 string::pointer
-ROOT::Math::TDataPointN<float>::value_type
 TColorGradient::SizeType_t
 vector<string,allocator<string> >::iterator::reference
 vector<double,allocator<double> >::difference_type
