@@ -28,7 +28,7 @@ ClassImp(A);
 A::A()
    : fX(0.0),fY(0.0),fZ(0.0)
 {
-   // We are going to test TTree::Branch()
+   // We are going to test TTree::Bronch (called implicitly via TTree::Branch).
    // to see if it handles this correctly.
    this->Class()->IgnoreTObjectStreamer();
 }
