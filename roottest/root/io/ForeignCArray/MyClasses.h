@@ -49,7 +49,7 @@ public:
     UInt_t n_objs_ ;
     T * objs_ ; //[n_objs_]
 
-    ClassDef(CArray,1)
+    ClassDefOverride(CArray,1)
  } ;
 
 
