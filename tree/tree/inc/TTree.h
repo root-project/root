@@ -182,6 +182,9 @@ private:
    void RegisterBranchFullName(std::pair<std::string, TBranch *> &&kv) { fNamesToBranches.insert(kv); }
    friend void ROOT::Internal::TreeUtils::TBranch__SetTree(TTree *tree, TObjArray &branches);
 
+   Int_t
+   SetBranchAddressImp(const char *bname, void *add, TBranch **ptr, TClass *realClass, EDataType datatype, bool isptr);
+
 protected:
    friend TBranch *ROOT::Internal::TreeUtils::CallBranchImpRef(TTree &tree, const char *branchname, TClass *ptrClass,
                                                                EDataType datatype, void *addobj, Int_t bufsize,
@@ -205,6 +208,15 @@ protected:
    void             ImportClusterRanges(TTree *fromtree);
    void             MoveReadCache(TFile *src, TDirectory *dir);
    Int_t            SetCacheSizeAux(bool autocache = true, Long64_t cacheSize = 0);
+
+   TBranch *GetBranchFromSelf(const char *branchName);
+   TBranch *GetBranchFromFriends(const char *branchName);
+   // This overload is used when setting the branch address of friends of this tree. When registering the branches
+   // to be found later, we can't know a priori which friend will have branch 'bname'. TTree and TChain have different
+   // ways to deal with the fact that we should not print spurious error messages that a branch cannot be found
+   // if it is not in one particular friend but in another
+   virtual Int_t SetBranchAddress(const char *bname, void *add, TBranch **ptr, TClass *realClass, EDataType datatype,
+                                  bool isptr, bool suppressMissingBranchError);
 
    class TFriendLock {
       // Helper class to prevent infinite recursion in the
