@@ -448,27 +448,27 @@ static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree,
    PrintNodesInColumns(stream, tree, children.begin(), children.end(), flags, indent);
 }
 
-static void RootLs(const RootLsArgs &args)
+static void RootLs(const RootLsArgs &args, std::ostream &stream = std::cout)
 {
    const Indent outerIndent = (args.fSources.size() > 1) * 2;
    for (const auto &source : args.fSources) {
       if (args.fSources.size() > 1) {
-         std::cout << source.fFileName << " :\n";
+         stream << source.fFileName << " :\n";
       }
       const Indent indent = outerIndent + (source.fObjectTree.fDirList.size() > 1) * 2;
-      PrintNodesInColumns(std::cout, source.fObjectTree, source.fObjectTree.fLeafList.begin(),
+      PrintNodesInColumns(stream, source.fObjectTree, source.fObjectTree.fLeafList.begin(),
                           source.fObjectTree.fLeafList.end(), args.fFlags, indent);
       for (NodeIdx rootIdx : source.fObjectTree.fDirList) {
          if (source.fObjectTree.fDirList.size() > 1) {
             const auto &node = source.fObjectTree.fNodes[rootIdx];
-            PrintIndent(std::cout, outerIndent);
-            std::cout << node.fName << " :\n";
+            PrintIndent(stream, outerIndent);
+            stream << node.fName << " :\n";
          }
 
          if (args.fFlags & (RootLsArgs::kLongListing | RootLsArgs::kTreeListing))
-            PrintChildrenDetailed(std::cout, source.fObjectTree, rootIdx, args.fFlags, indent);
+            PrintChildrenDetailed(stream, source.fObjectTree, rootIdx, args.fFlags, indent);
          else
-            PrintChildrenInColumns(std::cout, source.fObjectTree, rootIdx, args.fFlags, indent);
+            PrintChildrenInColumns(stream, source.fObjectTree, rootIdx, args.fFlags, indent);
       }
    }
 }
