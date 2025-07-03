@@ -531,20 +531,10 @@ else()
 endif()
 
 set(root_canvas_class "TRootCanvas")
+set(root_treeviewer_class "TTreeViewer")
+set(root_geompainter_type "root")
+set(root_browser_class "TRootBrowser")
 
-if(webgui)
-   set(root_treeviewer_class "RTreeViewer")
-   set(root_geompainter_type "web")
-else()
-   set(root_treeviewer_class "TTreeViewer")
-   set(root_geompainter_type "root")
-endif()
-
-if(root7 AND webgui)
-   set(root_browser_class "ROOT::RWebBrowserImp")
-else()
-   set(root_browser_class "TRootBrowser")
-endif()
 
 #---root-config----------------------------------------------------------------------------------------------
 ROOT_GET_OPTIONS(features ENABLED)
