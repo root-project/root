@@ -10,7 +10,7 @@ template <class T> class MyTemplate : public TObject {
   MyTemplate(T a) { variable = a; };
   MyTemplate() {};
 
-  ClassDef(MyTemplate,1)
+  ClassDefOverride(MyTemplate,1)
 };
 
 template <>
@@ -58,7 +58,7 @@ class RtbVArray : public TNamed
   //       ...
  private:
   ClassDefOverride(RtbVArray,1);
-} ;
+};
 
 
 // la variante template pour eviter les casts a l'utilisateur
@@ -67,8 +67,8 @@ class RtbVTArray : public RtbVArray
 {
   //...
  private:
-  ClassDef(RtbVTArray,1);
-} ;
+  ClassDefOverride(RtbVTArray,1);
+};
 
 // une implementation concrete
 template <class T>
@@ -78,7 +78,7 @@ class RtbCArray : public RtbVTArray<T>
 private:
   typedef T value_type;
   value_type a;
-  ClassDef(RtbCArray,1);
+  ClassDefOverride(RtbCArray,1);
 } ;
 
 // une classe etrangere

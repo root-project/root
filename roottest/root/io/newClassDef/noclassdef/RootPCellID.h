@@ -71,7 +71,7 @@ public:
    RootPCfix() : RootPCellID("none",0),fix(0) {}
    RootPCfix(int i) : RootPCellID("fix1",i),fix(33) {}
    int fix;
-   void Print() const {
+   void Print() const override {
      RootPCellID::Print();
      std::cout  << "fix \t" << fix << std::endl;
    }
@@ -99,8 +99,9 @@ public:
    union Stuff { int a; double b; };
    Stuff stuff;
 #endif
-   virtual ~RootPCvirt() {};
-   void Print() const {
+   virtual ~RootPCvirt() {}
+   void Print() const override
+   {
      RootPCellID::Print();
      std::cout  << "virt \t" << virt << std::endl;
    }
@@ -112,7 +113,8 @@ public:
    RootPCnoRequestedDict() : RootPCellID("none",0),nodict(0) {}
    RootPCnoRequestedDict(int n) :  RootPCellID("noRequestedDict",n),nodict(55) {}
    int nodict;
-   void Print() const {
+   void Print() const override
+   {
      RootPCellID::Print();
      std::cout  << "noRequestedDict \t" << nodict << std::endl;
    }
@@ -133,7 +135,8 @@ public:
    RootPCnodict() : RootPCellID("none",0),nodict(0) {}
    RootPCnodict(int n) :  RootPCellID("nodict",n),nodict(55) {}
    int nodict;
-   void Print() const {
+   void Print() const override
+    {
      RootPCellID::Print();
      std::cout  << "nodict \t" << nodict << std::endl;
    }
@@ -146,7 +149,8 @@ public:
    RootPCtemp(T n) :  RootPCellID("template",n),temp(66) {}
    T temp;
    vector<RootPCtemp<T>*> list;//!
-   void Print() const {
+   void Print() const override
+   {
      RootPCellID::Print();
      std::cout  << "templated \t" << temp << std::endl;
    }
@@ -162,7 +166,8 @@ public:
    typedef T *value;
    value temp2; //!
    vector<RootPCtempObj<T>*> list;//!
-   void Print() const {
+   void Print() const override
+   {
      RootPCellID::Print();
      //std::cout  << "templated \t" << temp << std::endl;
    }
@@ -172,12 +177,12 @@ namespace Local {
 
    class RootPCtop : public RootPCellID {
    public:
-      RootPCtop() {};
+      RootPCtop() {}
    };
 
    class RootPCbottom : public RootPCtop {
    public:
-      RootPCbottom() {};
+      RootPCbottom() {}
       RootPCtop var;
    };
 
@@ -269,9 +274,9 @@ class RootPrivPC : RootPCellID {
 public:
    RootPrivPC() : RootPCellID("none",0),obj(0) {}
    RootPrivPC(int n) :  RootPCellID("obj1",n),obj(101) {}
-   virtual ~RootPrivPC() {}
+   ~RootPrivPC() override {}
    int obj;
-   void Print() const
+   void Print() const override
    {
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
