@@ -258,6 +258,14 @@ protected:
       return (TH3D*) ProjectionAny(3, dim, false, option);
    }
 
+   /// @brief Project histogram onto the axes specified in dim.
+   /// @param ndim Size of the dim array.
+   /// @param dim Indices of the axes to project on.
+   /// @param option - "E" errors will be calculated.
+   ///               - "A" ranges of the target axes will be ignored.
+   ///               - "O" original axis range of the target axes will be kept, but only bins inside the selected range
+   ///               will be filled.
+   /// @return A new THnBase derived class, such as THN or THNSparse.
    THnBase* ProjectionND(Int_t ndim, const Int_t* dim,
                          Option_t* option = "") const {
       return (THnBase*)ProjectionAny(ndim, dim, kTRUE /*wantNDim*/, option);
