@@ -697,6 +697,9 @@ TObject* THnBase::ProjectionAny(Int_t ndim, const Int_t* dim,
    Bool_t haveErrors = GetCalculateErrors();
    Bool_t wantErrors = haveErrors || (option && (strchr(option, 'E') || strchr(option, 'e')));
 
+   if (wantNDim && wantErrors)
+      hn->Sumw2();
+
    Int_t* bins  = new Int_t[ndim];
    Long64_t myLinBin = 0;
 
