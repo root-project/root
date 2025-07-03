@@ -115,6 +115,8 @@ if(WIN32)
   set_property(TARGET rootcling APPEND_STRING PROPERTY LINK_FLAGS " -STACK:4000000")
 endif()
 
+ROOT_EXECUTABLE(rootlscxx src/rootls.cxx LIBRARIES RIO Tree Hist Core Rint)
+
 # Create aliases: rootcint, genreflex.
 if(WIN32)
   add_custom_command(TARGET rootcling POST_BUILD
