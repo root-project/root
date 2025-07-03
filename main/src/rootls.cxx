@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <cstring>
 #include <deque>
 #include <iomanip>
 #include <iostream>
@@ -25,6 +26,7 @@
 
 #include <TFile.h>
 #include <TKey.h>
+#include <TTree.h>
 
 #include <ROOT/StringUtils.hxx>
 #include <ROOT/RError.hxx>
@@ -93,14 +95,19 @@ struct SplitPath {
    std::vector<std::string> fPathFragments;
 };
 
+static bool ClassInheritsFrom(const char *class_, const char *baseClass)
+{
+   const auto *cl = TClass::GetClass(class_);
+   const bool inherits = cl && cl->InheritsFrom(baseClass);
+   return inherits;
+}
+
 using NodeIdx = std::uint32_t;
 
 struct RootLsNode {
    std::string fName;
    std::string fClassName;
-   TDatime fDatime;
-   std::string fTitle;
-   short fCycle = 0;
+   TKey *fKey = nullptr;
 
    TDirectory *fDir = nullptr; // may be null
    // TODO: this can probably be replaced by `NodeIdx firstChild; NodeIdx nChildren;` since the children
@@ -109,14 +116,12 @@ struct RootLsNode {
    std::uint32_t fNesting = 0;
 };
 
-static RootLsNode NodeFromKey(const TKey &key)
+static RootLsNode NodeFromKey(TKey &key)
 {
    RootLsNode node = {};
    node.fName = key.GetName();
    node.fClassName = key.GetClassName();
-   node.fDatime = key.GetDatime();
-   node.fTitle = key.GetTitle();
-   node.fCycle = key.GetCycle();
+   node.fKey = &key;
    return node;
 }
 
@@ -124,6 +129,8 @@ struct RootLsTree {
    // 0th node is the root node
    std::vector<RootLsNode> fNodes;
    std::vector<NodeIdx> fTopLevelNodes;
+   // The file must be kept alive in order to access the nodes' keys
+   std::unique_ptr<TFile> fFile;
 };
 
 struct RootLsSource {
@@ -183,27 +190,87 @@ static V2i GetTerminalSize()
 
 enum Indent : int;
 
-static void TimeStrFromDatime(const TDatime &datime, std::ostream &os)
+static void PrintIndent(std::ostream &stream, Indent indent)
+{
+   for (int i = 0; i < indent; ++i) {
+      stream << ' ';
+   }
+}
+
+static void PrintDatime(std::ostream &stream, const TDatime &datime)
 {
    static const char *kMonths[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
                                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
    int monthNo = datime.GetMonth() - 1;
    const char *month = monthNo >= 0 && monthNo < 12 ? kMonths[monthNo] : "???";
    std::ios defaultFmt(nullptr);
-   os << month << ' ';
-   os << std::right << std::setfill('0') << std::setw(2) << datime.GetDay() << ' ';
-   os << datime.GetHour() << ':' << datime.GetMinute() << ' ' << datime.GetYear() << ' ';
-   os.copyfmt(defaultFmt);
+   stream << month << ' ';
+   stream << std::right << std::setfill('0') << std::setw(2) << datime.GetDay() << ' ';
+   stream << datime.GetHour() << ':' << datime.GetMinute() << ' ' << datime.GetYear() << ' ';
+   stream.copyfmt(defaultFmt);
 }
 
-// Prints a `ls -l`-like output:
-//
-// $ rootls -l https://root.cern/files/tutorials/hsimple.root
-// TProfile  Jun 30 23:59 2018 hprof;1  "Profile of pz versus px"
-// TH1F      Jun 30 23:59 2018 hpx;1    "This is the px distribution"
-// TH2F      Jun 30 23:59 2018 hpxpy;1  "py vs px"
-// TNtuple   Jun 30 23:59 2018 ntuple;1 "Demo ntuple"
-static void PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx nodeIdx, std::uint32_t flags, Indent indent)
+// NOTE: T may be a TTree or a TBranch
+template <typename T>
+static void PrintTTree(std::ostream &stream, T &tree, Indent indent)
+{
+   TObjArray *branches = tree.GetListOfBranches();
+   std::size_t maxNameLen = 0, maxTitleLen = 0;
+   for (int i = 0; i < branches->GetEntries(); ++i) {
+      TBranch *branch = static_cast<TBranch *>((*branches)[i]);
+      maxNameLen = std::max(maxNameLen, strlen(branch->GetName()));
+      maxTitleLen = std::max(maxTitleLen, strlen(branch->GetTitle()));
+   }
+   maxNameLen += 2;
+   maxTitleLen += 4;
+
+   for (int i = 0; i < branches->GetEntries(); ++i) {
+      TBranch *branch = static_cast<TBranch *>((*branches)[i]);
+      PrintIndent(stream, indent);
+      stream << std::left << std::setw(maxNameLen) << branch->GetName();
+      std::string titleStr = std::string("\"") + branch->GetTitle() + "\"";
+      stream << std::setw(maxTitleLen) << titleStr;
+      stream << std::setw(1) << branch->GetTotBytes();
+      stream << '\n';
+      // @Recursion
+      PrintTTree(stream, *branch, Indent(indent + 2));
+   }
+}
+
+static void PrintClusters(std::ostream &stream, TTree &tree, Indent indent)
+{
+   PrintIndent(stream, indent);
+   stream << kAnsiBold << "Cluster INCLUSIVE ranges:\n" << kAnsiNone;
+
+   std::size_t nTotClusters = 0;
+   auto clusterIt = tree.GetClusterIterator(0);
+   auto clusterStart = clusterIt();
+   const auto nEntries = tree.GetEntries();
+   while (clusterStart < nEntries) {
+      PrintIndent(stream, indent);
+      stream << " - # " << nTotClusters << ": [" << clusterStart << ", " << clusterIt.GetNextEntry() - 1 << "]\n";
+      ++nTotClusters;
+      clusterStart = clusterIt();
+   }
+   PrintIndent(stream, indent);
+   stream << kAnsiBold << "The total number of clusters is " << nTotClusters << "\n";
+}
+
+/// Prints a `ls -l`-like output:
+///
+/// $ rootls -l https://root.cern/files/tutorials/hsimple.root
+/// TProfile  Jun 30 23:59 2018 hprof;1  "Profile of pz versus px"
+/// TH1F      Jun 30 23:59 2018 hpx;1    "This is the px distribution"
+/// TH2F      Jun 30 23:59 2018 hpxpy;1  "py vs px"
+/// TNtuple   Jun 30 23:59 2018 ntuple;1 "Demo ntuple"
+///
+/// \param stream The output stream to print to
+/// \param tree The node tree
+/// \param nodeIdx The index of the node whose children should be printed
+/// \param flags A bitmask of RootLsArgs::Flags that influence how stuff is printed
+/// \param indent Each line of the output will have these many leading whitespaces
+static void
+PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx nodeIdx, std::uint32_t flags, Indent indent)
 {
    const auto &node = tree.fNodes[nodeIdx];
    if (node.fChildren.empty())
@@ -218,27 +285,33 @@ static void PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, 
    maxClassLen += 2;
    maxNameLen += 2;
 
-   std::string indentStr;
-   indentStr.assign(indent, ' ');
-
    for (NodeIdx childIdx : node.fChildren) {
       const auto &child = tree.fNodes[childIdx];
       std::string timeStr = ""; // TODO
 
-      stream << indentStr;
+      PrintIndent(stream, indent);
       stream << std::left;
       stream << kAnsiBold << std::setw(maxClassLen) << child.fClassName << kAnsiNone;
-      TimeStrFromDatime(child.fDatime, stream);
-      std::string namecycle = child.fName + ';' + std::to_string(child.fCycle);
+      PrintDatime(stream, child.fKey->GetDatime());
+      std::string namecycle = child.fName + ';' + std::to_string(child.fKey->GetCycle());
       stream << std::left << std::setw(maxNameLen) << namecycle;
-      stream << " \"" << child.fTitle << "\"";
+      stream << " \"" << child.fKey->GetTitle() << "\"";
       stream << '\n';
+
+      if ((flags & RootLsArgs::kTreeListing) && ClassInheritsFrom(child.fClassName.c_str(), "TTree")) {
+         TTree *tree = child.fKey->ReadObject<TTree>();
+         if (tree) {
+            PrintTTree(stream, *tree, Indent(indent + 2));
+            PrintClusters(stream, *tree, Indent(indent + 2));
+         }
+      }
    }
    stream << std::flush;
 }
 
 // Prints a `ls`-like output
-static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree, NodeIdx nodeIdx, std::uint32_t flags, Indent indent)
+static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree, NodeIdx nodeIdx, std::uint32_t flags,
+                                   Indent indent)
 {
    const auto &node = tree.fNodes[nodeIdx];
    if (node.fChildren.empty())
@@ -299,7 +372,7 @@ static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree,
 
    // Do the actual printing
    const bool isTerminal = terminalSize.x + terminalSize.y > 0;
-  
+
    for (auto i = 0u; i < node.fChildren.size(); ++i) {
       NodeIdx childIdx = node.fChildren[i];
       const auto &child = tree.fNodes[childIdx];
@@ -309,12 +382,11 @@ static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree,
       }
 
       // Colors
-      const auto *cl = TClass::GetClass(child.fClassName.c_str());
-      const bool isDir = cl && cl->InheritsFrom("TDirectory");
+      const bool isDir = ClassInheritsFrom(child.fClassName.c_str(), "TDirectory");
       if (isTerminal) {
          if (isDir)
             stream << kAnsiBlue;
-         else if (cl && cl->InheritsFrom("TTree"))
+         else if (ClassInheritsFrom(child.fClassName.c_str(), "TTree"))
             stream << kAnsiGreen;
       }
 
@@ -356,9 +428,11 @@ static bool MatchesGlob(std::string_view haystack, std::string_view pattern)
 
 static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_view pattern)
 {
-   auto file = std::unique_ptr<TFile>(TFile::Open(std::string(fileName).c_str(), "READ_WITHOUT_GLOBALREGISTRATION"));
-   if (!file)
-      return {};
+   RootLsTree nodeTree;
+   nodeTree.fFile =
+      std::unique_ptr<TFile>(TFile::Open(std::string(fileName).c_str(), "READ_WITHOUT_GLOBALREGISTRATION"));
+   if (!nodeTree.fFile)
+      return nodeTree;
 
    // @Speed: avoid allocating
    const auto patternSplits = pattern.empty() ? std::vector<std::string>{} : ROOT::Split(pattern, "/");
@@ -368,12 +442,11 @@ static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_
       TDirectory *fDir;
    };
 
-   RootLsTree nodeTree;
    {
       RootLsNode rootNode = {};
       rootNode.fName = std::string(fileName);
-      rootNode.fClassName = file->Class()->GetName();
-      rootNode.fDir = file.get();
+      rootNode.fClassName = nodeTree.fFile->Class()->GetName();
+      rootNode.fDir = nodeTree.fFile.get();
       nodeTree.fNodes.emplace_back(std::move(rootNode));
    }
    std::deque<NodeIdx> nodesToVisit{0};
@@ -389,10 +462,9 @@ static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_
       for (TKey *key : ROOT::Detail::TRangeStaticCast<TKey>(cur->fDir->GetListOfKeys()))
          keys.push_back(key);
 
-      std::sort(keys.begin(), keys.end(), [] (const auto *a, const auto *b) {
-         return strcmp(a->GetName(), b->GetName()) < 0;
-      });
-         
+      std::sort(keys.begin(), keys.end(),
+                [](const auto *a, const auto *b) { return strcmp(a->GetName(), b->GetName()) < 0; });
+
       for (TKey *key : keys) {
          if (cur->fNesting < patternSplits.size() && !MatchesGlob(key->GetName(), patternSplits[cur->fNesting]))
             continue;
@@ -403,10 +475,8 @@ static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_
          newChild.fNesting = cur->fNesting + 1;
          cur->fChildren.push_back(nodeTree.fNodes.size() - 1);
 
-         const TClass *cl = TClass::GetClass(key->GetClassName());
-         if (cl && cl->InheritsFrom("TDirectory")) {
+         if (ClassInheritsFrom(key->GetClassName(), "TDirectory"))
             newChild.fDir = cur->fDir->GetDirectory(key->GetName());
-         }
       }
 
       // Only recurse into subdirectories that are at the deepest level we ask for through `pattern`.
