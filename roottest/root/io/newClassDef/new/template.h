@@ -22,7 +22,7 @@ class MyTemplate <const double*> : public TObject {
   MyTemplate(const double* a) { variable = *a; }
   MyTemplate() {}
 
-  ClassDefT(MyTemplate<const double*>,2)
+  ClassDefOverride(MyTemplate<const double*>,2)
 };
 
 template <class T1, class T2> class MyPairTemplate : public TObject {

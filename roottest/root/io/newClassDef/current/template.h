@@ -9,10 +9,8 @@ template <class T> class MyTemplate : public TObject {
   MyTemplate(T a) { variable = a; }
   MyTemplate() {}
 
-  ClassDefT(MyTemplate,1)
+  ClassDefOverride(MyTemplate,1)
 };
-
-ClassDefT2(MyTemplate,T)
 
 template <>
 class MyTemplate <const double*> : public TObject {
@@ -38,12 +36,10 @@ template <class T1, class T2> class MyPairTemplate : public TObject {
 
   MyPairTemplate(T1 a, T2 b) : var1(a), var2(b) {}
   MyPairTemplate() {}
-  ~MyPairTemplate() {}
+  ~MyPairTemplate() override {}
 
-  ClassDefT(MyPairTemplate,1)
+  ClassDefOverride(MyPairTemplate,1)
 };
-
-ClassDef2T2(MyPairTemplate,T1,T2)
 
 
 void template_driver();
