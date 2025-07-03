@@ -32,15 +32,23 @@
 #if defined(R__UNIX)
 #include <sys/ioctl.h>
 #include <unistd.h>
-#elif defined(R__WINDOWS)
+#elif defined(R__WIN32)
 #define WIN32_LEAN_AND_MEAN
 #define VC_EXTRALEAN
 #include <windows.h>
 #endif
 
+#if defined(R__WIN32)
+static const char *const kAnsiNone = "";
+static const char *const kAnsiGreen = "";
+static const char *const kAnsiBlue = "";
+static const char *const kAnsiBold = "";
+#else
 static const char *const kAnsiNone = "\x1B[0m";
 static const char *const kAnsiGreen = "\x1B[32m";
 static const char *const kAnsiBlue = "\x1B[34m";
+static const char *const kAnsiBold = "\x1B[1m";
+#endif
 
 static const char *const ONE_HELP = "Print content in one column";
 static const char *const LONG_PRINT_HELP = "Use a long listing format.";
@@ -90,12 +98,27 @@ using NodeIdx = std::uint32_t;
 struct RootLsNode {
    std::string fName;
    std::string fClassName;
+   TDatime fDatime;
+   std::string fTitle;
+   short fCycle = 0;
+
    TDirectory *fDir = nullptr; // may be null
    // TODO: this can probably be replaced by `NodeIdx firstChild; NodeIdx nChildren;` since the children
    // should always be contiguous.
    std::vector<NodeIdx> fChildren;
    std::uint32_t fNesting = 0;
 };
+
+static RootLsNode NodeFromKey(const TKey &key)
+{
+   RootLsNode node = {};
+   node.fName = key.GetName();
+   node.fClassName = key.GetClassName();
+   node.fDatime = key.GetDatime();
+   node.fTitle = key.GetTitle();
+   node.fCycle = key.GetCycle();
+   return node;
+}
 
 struct RootLsTree {
    // 0th node is the root node
@@ -160,6 +183,19 @@ static V2i GetTerminalSize()
 
 enum Indent : int;
 
+static void TimeStrFromDatime(const TDatime &datime, std::ostream &os)
+{
+   static const char *kMonths[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+   int monthNo = datime.GetMonth() - 1;
+   const char *month = monthNo >= 0 && monthNo < 12 ? kMonths[monthNo] : "???";
+   std::ios defaultFmt(nullptr);
+   os << month << ' ';
+   os << std::right << std::setfill('0') << std::setw(2) << datime.GetDay() << ' ';
+   os << datime.GetHour() << ':' << datime.GetMinute() << ' ' << datime.GetYear() << ' ';
+   os.copyfmt(defaultFmt);
+}
+
 // Prints a `ls -l`-like output:
 //
 // $ rootls -l https://root.cern/files/tutorials/hsimple.root
@@ -179,8 +215,26 @@ static void PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, 
       maxClassLen = std::max(maxClassLen, child.fClassName.length());
       maxNameLen = std::max(maxNameLen, child.fName.length());
    }
+   maxClassLen += 2;
+   maxNameLen += 2;
 
-   
+   std::string indentStr;
+   indentStr.assign(indent, ' ');
+
+   for (NodeIdx childIdx : node.fChildren) {
+      const auto &child = tree.fNodes[childIdx];
+      std::string timeStr = ""; // TODO
+
+      stream << indentStr;
+      stream << std::left;
+      stream << kAnsiBold << std::setw(maxClassLen) << child.fClassName << kAnsiNone;
+      TimeStrFromDatime(child.fDatime, stream);
+      std::string namecycle = child.fName + ';' + std::to_string(child.fCycle);
+      stream << std::left << std::setw(maxNameLen) << namecycle;
+      stream << " \"" << child.fTitle << "\"";
+      stream << '\n';
+   }
+   stream << std::flush;
 }
 
 // Prints a `ls`-like output
@@ -202,9 +256,9 @@ static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree,
    const auto maxElemWidth = tree.fNodes[*maxElemWidthIt].fName.length() + minCharsBetween;
 
    // Figure out how many columns do we need
-   int nCols = 0;
+   std::size_t nCols = 0;
    std::vector<int> colWidths;
-   if (maxElemWidth > terminalSize.x) {
+   if (maxElemWidth > static_cast<std::size_t>(terminalSize.x)) {
       nCols = 1;
       colWidths = {1};
    } else {
@@ -214,10 +268,10 @@ static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree,
       while (1) {
          int totWidth = 0;
 
-         // Find maximum width of each column 
-         for (int colIdx = 0; colIdx < nCols; ++colIdx) {
+         // Find maximum width of each column
+         for (auto colIdx = 0u; colIdx < nCols; ++colIdx) {
             int width = 0;
-            for (int j = 0; j < node.fChildren.size(); ++j) {
+            for (auto j = 0u; j < node.fChildren.size(); ++j) {
                if ((j % nCols) == colIdx) {
                   NodeIdx childIdx = node.fChildren[j];
                   const RootLsNode &child = tree.fNodes[childIdx];
@@ -279,29 +333,18 @@ static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree,
 
 static void RootLs(const RootLsArgs &args)
 {
-   int indent = 2 * (args.fSources.size() > 1);
    for (const auto &source : args.fSources) {
-      // std::cout << source.fFileName << "\n";
-      // VisitBreadthFirst(source.fObjectTree, [](const auto &node) {
-      //    std::string indentStr(std::size_t(node.fNesting * 2), ' ');
-      //    std::cout << indentStr << node.fName << "\n";
-      // });
-      // auto file = std::unique_ptr<TFile>(TFile::Open(source.fFileName.c_str(), "READ_WITHOUT_GLOBALREGISTRATION"));
-      // if (!file || file->IsZombie()) {
-      //    R__LOG_ERROR(RootLsChannel()) << "failed to open file " << source.fFileName;
-      //    continue;
-      // }
-
+      const Indent indent = source.fObjectTree.fTopLevelNodes.size() > 1 ? Indent(2) : Indent(0);
       for (NodeIdx rootIdx : source.fObjectTree.fTopLevelNodes) {
          if (source.fObjectTree.fTopLevelNodes.size() > 1) {
             const auto &node = source.fObjectTree.fNodes[rootIdx];
-            std::cout << node.fName << ":\n";
+            std::cout << node.fName << " :\n";
          }
 
          if (args.fFlags & (RootLsArgs::kLongListing | RootLsArgs::kTreeListing))
-            PrintChildrenDetailed(std::cout, source.fObjectTree, rootIdx, args.fFlags, Indent(2));
+            PrintChildrenDetailed(std::cout, source.fObjectTree, rootIdx, args.fFlags, indent);
          else
-            PrintChildrenInColumns(std::cout, source.fObjectTree, rootIdx, args.fFlags, Indent(2));
+            PrintChildrenInColumns(std::cout, source.fObjectTree, rootIdx, args.fFlags, indent);
       }
    }
 }
@@ -326,7 +369,13 @@ static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_
    };
 
    RootLsTree nodeTree;
-   auto &rootNode = nodeTree.fNodes.emplace_back(RootLsNode{std::string(fileName), file->Class()->GetName(), file.get()});
+   {
+      RootLsNode rootNode = {};
+      rootNode.fName = std::string(fileName);
+      rootNode.fClassName = file->Class()->GetName();
+      rootNode.fDir = file.get();
+      nodeTree.fNodes.emplace_back(std::move(rootNode));
+   }
    std::deque<NodeIdx> nodesToVisit{0};
 
    do {
@@ -348,11 +397,9 @@ static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_
          if (cur->fNesting < patternSplits.size() && !MatchesGlob(key->GetName(), patternSplits[cur->fNesting]))
             continue;
 
-         RootLsNode &newChild = nodeTree.fNodes.emplace_back();
+         auto &newChild = nodeTree.fNodes.emplace_back(NodeFromKey(*key));
          // Need to get back cur since the emplace_back() may have moved it.
          cur = &nodeTree.fNodes[curIdx];
-         newChild.fName = key->GetName();
-         newChild.fClassName = key->GetClassName();
          newChild.fNesting = cur->fNesting + 1;
          cur->fChildren.push_back(nodeTree.fNodes.size() - 1);
 
@@ -429,10 +476,10 @@ int main(int argc, char **argv)
    std::sort(args.fSources.begin(), args.fSources.end(),
              [](const auto &a, const auto &b) { return a.fFileName < b.fFileName; });
 
-   // TEMP
-   for (const auto &src : args.fSources) {
-      std::cout << src.fFileName << ", " << src.fObjectTree.fNodes.size() << "\n";
-   }
+   // // TEMP
+   // for (const auto &src : args.fSources) {
+   //    std::cout << src.fFileName << ", " << src.fObjectTree.fNodes.size() << "\n";
+   // }
 
    RootLs(args);
 }
