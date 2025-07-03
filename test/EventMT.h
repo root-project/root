@@ -98,7 +98,7 @@ public:
    Int_t  GetRun() const { return fRun; }
    Int_t  GetDate() const { return fDate; }
 
-   ClassDefOverride(EventHeader,1)  //Event Header
+   ClassDef(EventHeader,1)  //Event Header
 };
 
 
@@ -196,7 +196,7 @@ public:
 
    void Hfill(Event *event);
 
-   ClassDefOverride(HistogramManager,1)  //Manages all histograms
+   ClassDef(HistogramManager,1)  //Manages all histograms
 };
 
 #endif
