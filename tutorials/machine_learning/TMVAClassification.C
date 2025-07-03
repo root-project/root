@@ -16,9 +16,9 @@
 /// The output file "TMVAC.root" can be analysed with the use of dedicated
 /// macros (simply say: root -l <macro.C>), which can be conveniently
 /// invoked through a GUI that will appear at the end of the run of this macro.
-/// Launch the GUI via the command:
+/// You can also launch the GUI in another ROOT session via the command:
 ///
-///     root -l ./TMVAGui.C
+///     root -l -e 'TMVA::TMVAGui("TMVAC.root")'
 ///
 /// You can also compile and run the example with the following commands
 ///
