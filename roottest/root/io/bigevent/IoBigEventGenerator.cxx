@@ -70,7 +70,7 @@
 //
 ////////////////////////////////////////////////////////////////////////
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "TROOT.h"
 #include "TFile.h"
@@ -99,12 +99,14 @@ int main(int argc, char **argv)
    Int_t read   = 0;
    Int_t arg4   = 1;
    Int_t arg5   = 600;     //default number of tracks per event
+   const char *filename = "Event.root";
 
    if (argc > 1)  nevent = atoi(argv[1]);
    if (argc > 2)  comp   = atoi(argv[2]);
    if (argc > 3)  split  = atoi(argv[3]);
    if (argc > 4)  arg4   = atoi(argv[4]);
    if (argc > 5)  arg5   = atoi(argv[5]);
+   if (argc > 6)  filename = argv[6];
    if (arg4 ==  0) { write = 0; hfill = 0; read = 1;}
    if (arg4 ==  1) { write = 1; hfill = 0;}
    if (arg4 ==  2) { write = 0; hfill = 0;}
@@ -131,10 +133,10 @@ int main(int argc, char **argv)
    if (arg5 < 10)  printev = 10000;
 
    Track::Class()->IgnoreTObjectStreamer();
-      
+
 //         Read case
    if (read) {
-      hfile = new TFile("Event.root");
+      hfile = new TFile(filename);
       TTree *tree = (TTree*)hfile->Get("T");
       TBranch *branch = tree->GetBranch("event");
       branch->SetAddress(&event);
@@ -144,7 +146,7 @@ int main(int argc, char **argv)
          for (ev = 0; ev < nevent; ev++) {
             if (ev%printev == 0) {
                tnew = timer.RealTime();
-               printf("event:%d, rtime=%f s\n",ev,tnew-told);               
+               printf("event:%d, rtime=%f s\n",ev,tnew-told);
                told=tnew;
                timer.Continue();
             }
@@ -165,7 +167,7 @@ int main(int argc, char **argv)
       // Note that this file may contain any kind of ROOT objects, histograms,
       // pictures, graphics objects, detector geometries, tracks, events, etc..
       // This file is now becoming the current directory.
-      hfile = new TFile("Event.root","RECREATE","TTree benchmark ROOT file");
+      hfile = new TFile(filename,"RECREATE","TTree benchmark ROOT file");
       hfile->SetCompressionLevel(comp);
 
      // Create histogram to show write_time in function of time
@@ -223,7 +225,7 @@ int main(int argc, char **argv)
          event->GetUshort()->push_back(3);
          event->GetUshort()->push_back(5);
          //printf("vector size:%d \n",event->GetUshort()->size());
-            
+
          //  Create and Fill the Track objects
          for (Int_t t = 0; t < ntrack; t++) event->AddTrack(random);
 
@@ -238,7 +240,7 @@ int main(int argc, char **argv)
          tree->Print();
       }
    }
-   
+
    //  Stop timer and print results
    timer.Stop();
    Float_t mbytes = 0.000001*nb;
