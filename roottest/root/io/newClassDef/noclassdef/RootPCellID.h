@@ -37,7 +37,7 @@ public:
     for(int j=0;j<4;j++) base[j]=b[j];
     base[4]= 0;
   }
-  virtual ~RootPCellID() {};
+  virtual ~RootPCellID() {}
 
   virtual void Print() const {
     std::cout << "base \t";
@@ -188,40 +188,43 @@ class RootPCobject : public RootPCellID, public TObject {
 public:
    RootPCobject() : RootPCellID("none",0),obj(0) {}
    RootPCobject(int n) :  RootPCellID("obj1",n),obj(101) {}
-   virtual ~RootPCobject() {};
+   ~RootPCobject() override {}
    int obj;
-   void Print(Option_t*) const { Print(); }
-   void Print() const {
+   void Print(Option_t*) const override { Print(); }
+   void Print() const override
+   {
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
    }
-   ClassDef(RootPCobject,1) // inherit second from TObject
+   ClassDefOverride(RootPCobject,1) // inherit second from TObject
 };
 
 class RootPCobject2 : public TObject, public RootPCellID {
 public:
    RootPCobject2() : RootPCellID("none",0),obj(0) {}
    RootPCobject2(int n) :  RootPCellID("obj2",n),obj(102) {}
-   virtual ~RootPCobject2() {};
+   ~RootPCobject2() override {}
    int obj;
-   void Print(Option_t*) const { Print(); }
-   void Print() const {
+   void Print(Option_t*) const override { Print(); }
+   void Print() const override
+   {
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
    }
-   ClassDef(RootPCobject2,1) // inherit first from TObject
+   ClassDefOverride(RootPCobject2,1) // inherit first from TObject
 };
 
 class RootPCmisClDef : public RootPCellID, public TObject  {
  public:
    RootPCmisClDef() : RootPCellID("none",0),obj(0) {}
    RootPCmisClDef(int n) :  RootPCellID("miss",n),obj(103) {}
-   virtual ~RootPCmisClDef() {};
+   ~RootPCmisClDef() override {}
    int obj;
-   void Print(Option_t*) const { Print(); }
-   void Print() const {
+   void Print(Option_t*) const override { Print(); }
+   void Print() const override
+   {
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
@@ -234,39 +237,42 @@ class RootPrivPCobject : RootPCellID, public TObject {
 public:
    RootPrivPCobject() : RootPCellID("none",0),obj(0) {}
    RootPrivPCobject(int n) :  RootPCellID("obj1",n),obj(101) {}
-   virtual ~RootPrivPCobject() {};
+   ~RootPrivPCobject() override {}
    int obj;
-   void Print(Option_t*) const { Print(); }
-   void Print() const {
+   void Print(Option_t*) const override { Print(); }
+   void Print() const override
+   {
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
    }
-   ClassDef(RootPrivPCobject,1) // inherits privately from RootPCellID then publicly from TObject
+   ClassDefOverride(RootPrivPCobject,1) // inherits privately from RootPCellID then publicly from TObject
 };
 
 class RootPrivPCobject2 :  public TObject, private RootPCellID {
 public:
    RootPrivPCobject2() : RootPCellID("none",0),obj(0) {}
    RootPrivPCobject2(int n) :  RootPCellID("obj1",n),obj(101) {}
-   virtual ~RootPrivPCobject2() {};
+   ~RootPrivPCobject2() override {}
    int obj;
-   void Print(Option_t*) const { Print(); }
-   void Print() const {
+   void Print(Option_t*) const override { Print(); }
+   void Print() const override
+   {
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
    }
-   ClassDef(RootPrivPCobject2,1) // inherits publicly from TObject then privately from RootPCellID
+   ClassDefOverride(RootPrivPCobject2,1) // inherits publicly from TObject then privately from RootPCellID
 };
 
 class RootPrivPC : RootPCellID {
 public:
    RootPrivPC() : RootPCellID("none",0),obj(0) {}
    RootPrivPC(int n) :  RootPCellID("obj1",n),obj(101) {}
-   virtual ~RootPrivPC() {};
+   virtual ~RootPrivPC() {}
    int obj;
-   void Print() const {
+   void Print() const
+   {
      RootPCellID::Print();
      std::cout  << "obj \t" << obj << std::endl;
      //Dump();
