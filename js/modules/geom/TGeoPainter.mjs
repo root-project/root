@@ -591,6 +591,10 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Returns top Object3D instance */
    getTopObject3D() { return this.#toplevel; }
 
+   /** @summary Assign geometry viewer mode
+    * @private */
+   setGeomViewer(on) { this.#geom_viewer = on; }
+
    /** @summary Assign or remove subordinate painter */
    assignSubordinate(painter, do_assign = true) {
       if (this.#subordinate_painters === undefined)
@@ -4004,12 +4008,12 @@ class TGeoPainter extends ObjectPainter {
       if (name_prefix === '__geom_viewer_append__') {
          this.#new_append_nodes = draw_obj;
          this.ctrl.use_worker = 0;
-         this.#geom_viewer = true; // indicate that working with geom viewer
+         this.setGeomViewer(true); // indicate that working with geom viewer
       } else if ((name_prefix === '__geom_viewer_selection__') && this.#clones) {
          // these are selection done from geom viewer
          this.#new_draw_nodes = draw_obj;
          this.ctrl.use_worker = 0;
-         this.#geom_viewer = true; // indicate that working with geom viewer
+         this.setGeomViewer(true); // indicate that working with geom viewer
       } else if (this.getCentral())
          this.assignClones(this.getCentral().getClones(), false);
       else if (!draw_obj)

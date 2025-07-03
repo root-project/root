@@ -349,10 +349,10 @@ const Handling3DDrawings = {
          const main = this.selectDom().node();
          let chld = main?.firstChild;
 
-         if (chld && !chld.$jsroot)
+         while (chld && !chld.$jsroot)
             chld = chld.nextSibling;
 
-         if (chld?.$jsroot) {
+         if (chld?.$jsroot === '3d') {
             delete chld.painter;
             main.removeChild(chld);
          }
@@ -387,7 +387,7 @@ const Handling3DDrawings = {
          if (main !== null) {
             main.appendChild(canv);
             canv.painter = this;
-            canv.$jsroot = true; // mark canvas as added by jsroot
+            canv.$jsroot = '3d'; // mark canvas as added by jsroot
          }
 
          return;
