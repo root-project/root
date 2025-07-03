@@ -27,6 +27,7 @@
 #include <TFile.h>
 #include <TKey.h>
 #include <TTree.h>
+#include <THnSparse.h>
 
 #include <ROOT/StringUtils.hxx>
 #include <ROOT/RError.hxx>
@@ -152,17 +153,6 @@ struct RootLsArgs {
    std::uint32_t fFlags = 0;
    std::vector<RootLsSource> fSources;
 };
-
-// template <typename F>
-// static void VisitBreadthFirst(const RootLsTree &tree, const F &func, NodeIdx nodeIdx = 0)
-// {
-//    // TODO: make non-recursive?
-//    auto &root = tree.fNodes[nodeIdx];
-//    func(root);
-//    for (auto childIdx : root.fChildren) {
-//       VisitBreadthFirst(tree, func, childIdx);
-//    }
-// }
 
 struct V2i {
    int x, y;
@@ -298,12 +288,22 @@ PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx node
       stream << " \"" << child.fKey->GetTitle() << "\"";
       stream << '\n';
 
-      if ((flags & RootLsArgs::kTreeListing) && ClassInheritsFrom(child.fClassName.c_str(), "TTree")) {
-         TTree *tree = child.fKey->ReadObject<TTree>();
-         if (tree) {
-            PrintTTree(stream, *tree, Indent(indent + 2));
-            PrintClusters(stream, *tree, Indent(indent + 2));
+      if (flags & RootLsArgs::kTreeListing) {
+         if (ClassInheritsFrom(child.fClassName.c_str(), "TTree")) {
+            TTree *tree = child.fKey->ReadObject<TTree>();
+            if (tree) {
+               PrintTTree(stream, *tree, Indent(indent + 2));
+               PrintClusters(stream, *tree, Indent(indent + 2));
+            }
          }
+         if (ClassInheritsFrom(child.fClassName.c_str(), "THnSparse")) {
+            THnSparse *hs = child.fKey->ReadObject<THnSparse>();
+            if (hs)
+               hs->Print("all");
+         }
+      }
+      if ((flags & RootLsArgs::kRecursiveListing) && ClassInheritsFrom(child.fClassName.c_str(), "TDirectory")) {
+         PrintChildrenDetailed(stream, tree, childIdx, flags, Indent(indent + 2));
       }
    }
    stream << std::flush;
@@ -397,8 +397,8 @@ static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree,
       }
       stream << kAnsiNone;
 
-      if (isDir) {
-         // TODO: print recursive
+      if (isDir && (flags & RootLsArgs::kRecursiveListing)) {
+         PrintChildrenInColumns(stream, tree, childIdx, flags, Indent(indent + 2));
       }
    }
 }
@@ -426,7 +426,9 @@ static bool MatchesGlob(std::string_view haystack, std::string_view pattern)
    return wildcards::match(haystack, pattern);
 }
 
-static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_view pattern)
+/// Inspects `fileName` to match all children that match `pattern`. Returns a tree with all the matched nodes.
+/// `flags` is a bitmask of `RootLsArgs::Flags`.
+static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_view pattern, std::uint32_t flags)
 {
    RootLsTree nodeTree;
    nodeTree.fFile =
@@ -437,11 +439,8 @@ static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_
    // @Speed: avoid allocating
    const auto patternSplits = pattern.empty() ? std::vector<std::string>{} : ROOT::Split(pattern, "/");
 
-   // Match all objects at all nesting levels
-   struct DirLevel {
-      TDirectory *fDir;
-   };
-
+   // Match all objects at all nesting levels down to the deepest nesting level of `pattern` (or all nesting levels
+   // if we have the "recursive listing" flag). The nodes are visited breadth-first.
    {
       RootLsNode rootNode = {};
       rootNode.fName = std::string(fileName);
@@ -451,6 +450,7 @@ static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_
    }
    std::deque<NodeIdx> nodesToVisit{0};
 
+   const bool isRecursive = flags & RootLsArgs::kRecursiveListing;
    do {
       NodeIdx curIdx = nodesToVisit.front();
       nodesToVisit.pop_front();
@@ -466,7 +466,9 @@ static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_
                 [](const auto *a, const auto *b) { return strcmp(a->GetName(), b->GetName()) < 0; });
 
       for (TKey *key : keys) {
-         if (cur->fNesting < patternSplits.size() && !MatchesGlob(key->GetName(), patternSplits[cur->fNesting]))
+         // Don't recurse lower than requested by `pattern` unless we explicitly have the `recursive listing` flag.
+         if (!isRecursive && cur->fNesting < patternSplits.size() &&
+             !MatchesGlob(key->GetName(), patternSplits[cur->fNesting]))
             continue;
 
          auto &newChild = nodeTree.fNodes.emplace_back(NodeFromKey(*key));
@@ -480,13 +482,14 @@ static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_
       }
 
       // Only recurse into subdirectories that are at the deepest level we ask for through `pattern`.
-      if (cur->fNesting < patternSplits.size()) {
+      if (cur->fNesting < patternSplits.size() || isRecursive) {
          for (auto childIdx : cur->fChildren) {
             auto &child = nodeTree.fNodes[childIdx];
             if (child.fDir)
                nodesToVisit.push_back(childIdx);
          }
-      } else {
+      }
+      if (cur->fNesting == patternSplits.size()) {
          nodeTree.fTopLevelNodes.push_back(curIdx);
       }
    } while (!nodesToVisit.empty());
@@ -514,7 +517,9 @@ MatchFlag(const char *flag, char short_, const char *long_, RootLsArgs::Flags fl
 static RootLsArgs ParseArgs(const char **args, int nArgs)
 {
    RootLsArgs outArgs;
-
+   std::vector<int> sourceArgs;
+  
+   // First match all flags, then process positional arguments (since we need the flags to properly process them).
    for (int i = 0; i < nArgs; ++i) {
       const char *arg = args[i];
       if (arg[0] == '-') {
@@ -524,14 +529,20 @@ static RootLsArgs ParseArgs(const char **args, int nArgs)
             MatchFlag(arg, 't', "treeListing", RootLsArgs::kTreeListing, outArgs.fFlags) ||
             MatchFlag(arg, 'r', "recursiveListing", RootLsArgs::kRecursiveListing, outArgs.fFlags);
       } else {
-         RootLsSource &newSource = outArgs.fSources.emplace_back();
-         auto tokens = ROOT::Split(arg, ":");
-         newSource.fFileName = tokens[0];
-         if (tokens.size() > 1) {
-            newSource.fObjectTree = GetMatchingPathsInFile(tokens[0], tokens[1]);
-         } else {
-            newSource.fObjectTree = GetMatchingPathsInFile(tokens[0], "");
-         }
+         sourceArgs.push_back(i);
+      }
+   }
+
+   // Positional arguments
+   for (int argIdx : sourceArgs) {
+      const char *arg = args[argIdx];
+      RootLsSource &newSource = outArgs.fSources.emplace_back();
+      auto tokens = ROOT::Split(arg, ":");
+      newSource.fFileName = tokens[0];
+      if (tokens.size() > 1) {
+         newSource.fObjectTree = GetMatchingPathsInFile(tokens[0], tokens[1], outArgs.fFlags);
+      } else {
+         newSource.fObjectTree = GetMatchingPathsInFile(tokens[0], "", outArgs.fFlags);
       }
    }
 
@@ -545,11 +556,6 @@ int main(int argc, char **argv)
    // sort by name
    std::sort(args.fSources.begin(), args.fSources.end(),
              [](const auto &a, const auto &b) { return a.fFileName < b.fFileName; });
-
-   // // TEMP
-   // for (const auto &src : args.fSources) {
-   //    std::cout << src.fFileName << ", " << src.fObjectTree.fNodes.size() << "\n";
-   // }
 
    RootLs(args);
 }
