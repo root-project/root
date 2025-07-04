@@ -1965,9 +1965,10 @@ endfunction()
 #                     [COPY_TO_BUILDDIR copy_file1 copy_file1 ...]
 #                     [ENVIRONMENT var1=val1 var2=val2 ...]
 #                     [PYTHON_DEPS dep_x dep_y ...] # Communicate that this test requires python packages. A fixture checking for these will be run before the test.)
+#                     [FIXTURES_SETUP ...] [FIXTURES_CLEANUP ...] [FIXTURES_REQUIRED ...]
 #----------------------------------------------------------------------------
 function(ROOT_ADD_PYUNITTEST name file)
-  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;GENERIC" "" "COPY_TO_BUILDDIR;ENVIRONMENT;PYTHON_DEPS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;GENERIC" "" "COPY_TO_BUILDDIR;ENVIRONMENT;PYTHON_DEPS;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" ${ARGN})
   if(MSVC)
     set(ROOT_ENV ROOTSYS=${ROOTSYS}
         PYTHONPATH=${ROOTSYS}/bin;$ENV{PYTHONPATH})
@@ -2007,13 +2008,30 @@ function(ROOT_ADD_PYUNITTEST name file)
     set(test_cmd COMMAND ${Python3_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v)
   endif()
 
-  ROOT_ADD_TEST(pyunittests${clean_name_with_path}
+  set(test_name pyunittests${clean_name_with_path})
+  ROOT_ADD_TEST(${test_name}
               ${test_cmd}
               ENVIRONMENT ${ROOT_ENV} ${ARG_ENVIRONMENT}
               LABELS ${labels}
               ${copy_to_builddir}
               ${will_fail}
               PYTHON_DEPS ${ARG_PYTHON_DEPS})
+
+  if (ARG_FIXTURES_SETUP)
+    set_property(TEST ${test_name} PROPERTY
+      FIXTURES_SETUP ${ARG_FIXTURES_SETUP})
+  endif()
+
+  if (ARG_FIXTURES_CLEANUP)
+    set_property(TEST ${test_name} PROPERTY
+      FIXTURES_CLEANUP ${ARG_FIXTURES_CLEANUP})
+  endif()
+
+  if (ARG_FIXTURES_REQUIRED)
+    set_property(TEST ${test_name} PROPERTY
+      FIXTURES_REQUIRED ${ARG_FIXTURES_REQUIRED})
+  endif()
+
 endfunction()
 
 #----------------------------------------------------------------------------
