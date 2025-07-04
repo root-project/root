@@ -251,3 +251,54 @@ TEST(TFile, WalkTKeys)
    EXPECT_EQ(it->fKeyName, kLongerKey);
    EXPECT_EQ(it->fClassName, "string");
 }
+
+TEST(TFile, DeleteKeys)
+{
+   struct FileRaii {
+      std::string fFilename;
+      FileRaii(std::string_view fname) : fFilename(fname) {}
+      ~FileRaii() { gSystem->Unlink(fFilename.c_str()); }
+   } fileGuard("tfile_test_delete_keys.root");
+
+   auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.fFilename.c_str(), "RECREATE"));
+   f->SetCompressionSettings(0);
+
+   std::vector<char> v;
+   v.resize(1024 * 1024 * 1024 - 100, 'x'); // almost 1GiB
+
+   f->WriteObject(&v, "v1");
+   f->WriteObject(&v, "v2");
+
+   v.resize(1024 * 1024); // truncate next objects to 1MiB
+   f->WriteObject(&v, "v3");
+   f->WriteObject(&v, "v4");
+
+   f->Write();
+   f->Close();
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.fFilename.c_str(), "UPDATE"));
+   f->Delete("v1;*"); // --> gap 1
+   f->Delete("v2;*"); // --> gap 2
+   // Combined gap 3
+   f->Delete("v3;*");
+   f->Delete("v4;*");
+   f->Write();
+   f->Close();
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.fFilename.c_str()));
+   int nGaps = 0;
+   for (const auto &k : f->WalkTKeys()) {
+      if (k.fType == ROOT::Detail::TKeyMapNode::kGap)
+         nGaps++;
+   }
+   EXPECT_EQ(4, nGaps); // 3 from deleted objects + 1 from the old keys/free list
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.fFilename.c_str(), "UPDATE"));
+   f->WriteObject(&v, "v5");
+   f->Write();
+   f->Close();
+
+   f = std::unique_ptr<TFile>(TFile::Open(fileGuard.fFilename.c_str()));
+   auto v5 = f->Get<std::vector<char>>("v5");
+   EXPECT_EQ(1024 * 1024, v5->size());
+}

@@ -25,6 +25,11 @@
 
 
 class TFree : public TObject {
+   /// Prevent gap coalescing from exceeding the 1 GiB TKey limit
+   /// (and the 2 GiB limit given by the fact that the gap size is stored as a signed 4 byte integer).
+   /// The limit has a safety buffer until the actual 1 GiB limit to avoid possible corner cases very close to the
+   /// 1 GiB limit.
+   static constexpr Int_t kMaxGapSize = 1000 * 1000 * 1000;
 
 protected:
    Long64_t        fFirst;            ///<First free word of segment
