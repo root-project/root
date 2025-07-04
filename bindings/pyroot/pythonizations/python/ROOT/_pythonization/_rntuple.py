@@ -15,6 +15,7 @@ from ._pyz_utils import MethodTemplateGetter, MethodTemplateWrapper
 def _REntry_GetPtr(self, key):
     raise RuntimeError("GetPtr is not supported in Python, use indexing")
 
+
 def _try_getptr(entry, fieldType, key):
     rentry_getptr_typeerrors = []
     try:
@@ -35,6 +36,7 @@ def _try_getptr(entry, fieldType, key):
         # particular when it tries to instantiate the function template)
         rentry_getptr_typeerrors.append(e)
         import ROOT
+
         alt_field_type_names = ROOT.TClassTable.GetClassAlternativeNames(fieldType)
         for alt_field_type_name in alt_field_type_names:
             try:
@@ -48,6 +50,7 @@ def _try_getptr(entry, fieldType, key):
         err_msg += str(ex) + "\n"
 
     raise TypeError(err_msg)
+
 
 def _REntry_CallGetPtr(self, key):
     # key can be either a RFieldToken already or a string. In the latter case, get a token to use it twice.
