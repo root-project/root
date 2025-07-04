@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '3/07/2025',
+version_date = '4/07/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -9143,10 +9143,11 @@ class BasePainter {
      * @private */
    #accessTopPainter(on) {
       const chld = this.selectDom().node()?.firstChild;
-      if (!chld) return null;
+      if (!chld)
+         return null;
       if (on === true)
          chld.painter = this;
-      else if (on === false)
+      else if ((on === false) && (chld.painter === this))
          delete chld.painter;
       return chld.painter;
    }
@@ -9169,7 +9170,8 @@ class BasePainter {
    cleanup(keep_origin) {
       this.clearTopPainter();
       const origin = this.selectDom('origin');
-      if (!origin.empty() && !keep_origin) origin.html('');
+      if (!origin.empty() && !keep_origin)
+         origin.html('');
       this.#divid = null;
       this.#selected_main = undefined;
 
@@ -13169,14 +13171,16 @@ class ObjectPainter extends BasePainter {
      * @private */
    forEachPainter(userfunc, kind) {
       // iterate over all painters from pad list
-      const pp = this.getPadPainter();
+      let pp = this.getPadPainter(), top = null;
+      if (!pp) {
+         top = this.getTopPainter();
+         if (isPadPainter(top))
+            pp = top;
+      }
       if (pp)
          pp.forEachPainterInPad(userfunc, kind);
-      else {
-         const painter = this.getTopPainter();
-         if (painter && (kind !== 'pads'))
-            userfunc(painter);
-      }
+      else if (top && (kind !== 'pads'))
+         userfunc(top);
    }
 
    /** @summary indicate that redraw was invoked via interactive action (like context menu or zooming)
@@ -165378,6 +165382,7 @@ class HierarchyPainter extends BasePainter {
             showProgress();
          if (isFunc(respainter?.setItemName)) {
             respainter.setItemName(display_itemname, updating ? null : drawopt, this); // mark painter as created from hierarchy
+
             if (item && !item._painter)
                item._painter = respainter;
          }
@@ -165462,6 +165467,7 @@ class HierarchyPainter extends BasePainter {
 
                if (isFunc(p.redrawObject)) {
                   const pr = p.redrawObject(obj, drawopt);
+
                   if (pr) {
                      painter = p;
                      arr.push(pr);
@@ -165632,9 +165638,8 @@ class HierarchyPainter extends BasePainter {
                }
                if (!forced && only_auto_items) return;
             }
-         } else
-            if (arg.indexOf(itemname) < 0) return;
-
+         } else if (arg.indexOf(itemname) < 0)
+            return;
 
          allitems.push(itemname);
          options.push('update:' + p.getItemDrawOpt());
@@ -165774,10 +165779,11 @@ class HierarchyPainter extends BasePainter {
       // now check if several same items present - select only one for the drawing
       // if draw option includes 'main', such item will be drawn first
       for (let n = 0; n < items.length; ++n) {
-         if (items_wait[n] !== 0) continue;
+         if (items_wait[n] !== 0)
+            continue;
          let found_main = n;
          for (let k = 0; k < items.length; ++k) {
-            if ((items[n]===items[k]) && (options[k].indexOf('main') >= 0))
+            if ((items[n] === items[k]) && (options[k].indexOf('main') >= 0))
                found_main = k;
          }
          for (let k = 0; k < items.length; ++k) {
@@ -165787,7 +165793,8 @@ class HierarchyPainter extends BasePainter {
       }
 
       return this.createDisplay().then(mdi => {
-         if (!mdi) return false;
+         if (!mdi)
+            return false;
 
          const doms = new Array(items.length);
 
@@ -176157,30 +176164,10 @@ async function readHeaderFooter(tuple) {
         if (!firstColumn)
           throw new Error('No column descriptor found');
 
-        const field = tuple.builder.fieldDescriptors?.[firstColumn.fieldId];
-
-        // Returns the size in bytes of one value based on its type
-        function getElementSize(typeName) {
-           switch (typeName) {
-              case 'double': return 8;
-              case 'float': return 4;
-              case 'int32_t':
-              case 'uint32_t': return 4;
-              case 'int64_t':
-              case 'uint64_t': return 8;
-              case 'int16_t':
-              case 'uint16_t': return 2;
-              case 'bool':
-              case 'uint8_t':
-              case 'int8_t': return 1;
-              default:
-                 throw new Error(`Unknown type for uncompressed page size: ${typeName}`);
-           }
-        }
-
+        const field = tuple.builder.fieldDescriptors?.[firstColumn.fieldId],
 
         // Deserialize the Page List Envelope
-         const group = tuple.builder.clusterGroups?.[0];
+         group = tuple.builder.clusterGroups?.[0];
          if (!group || !group.pageListLocator)
             throw new Error('No valid cluster group or page list locator found');
 
@@ -176206,7 +176193,7 @@ async function readHeaderFooter(tuple) {
 
                const pageOffset = Number(firstPage.locator.offset),
                      pageSize = Number(firstPage.locator.size),
-                     elementSize = getElementSize(field?.typeName ?? ''),
+                     elementSize = firstColumn.bitsOnStorage / 8,
                      numElements = Number(firstPage.numElements),
                      uncompressedPageSize = elementSize * numElements;
 
@@ -176233,7 +176220,6 @@ async function readHeaderFooter(tuple) {
       throw err;
    });
 }
-
 
 /** @summary Create hierarchy of ROOT::RNTuple object
   * @desc Used by hierarchy painter to explore sub-elements

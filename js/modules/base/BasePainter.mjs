@@ -559,10 +559,11 @@ class BasePainter {
      * @private */
    #accessTopPainter(on) {
       const chld = this.selectDom().node()?.firstChild;
-      if (!chld) return null;
+      if (!chld)
+         return null;
       if (on === true)
          chld.painter = this;
-      else if (on === false)
+      else if ((on === false) && (chld.painter === this))
          delete chld.painter;
       return chld.painter;
    }
@@ -585,7 +586,8 @@ class BasePainter {
    cleanup(keep_origin) {
       this.clearTopPainter();
       const origin = this.selectDom('origin');
-      if (!origin.empty() && !keep_origin) origin.html('');
+      if (!origin.empty() && !keep_origin)
+         origin.html('');
       this.#divid = null;
       this.#selected_main = undefined;
 

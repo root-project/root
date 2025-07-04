@@ -796,14 +796,16 @@ class ObjectPainter extends BasePainter {
      * @private */
    forEachPainter(userfunc, kind) {
       // iterate over all painters from pad list
-      const pp = this.getPadPainter();
+      let pp = this.getPadPainter(), top = null;
+      if (!pp) {
+         top = this.getTopPainter();
+         if (isPadPainter(top))
+            pp = top;
+      }
       if (pp)
          pp.forEachPainterInPad(userfunc, kind);
-      else {
-         const painter = this.getTopPainter();
-         if (painter && (kind !== 'pads'))
-            userfunc(painter);
-      }
+      else if (top && (kind !== 'pads'))
+         userfunc(top);
    }
 
    /** @summary indicate that redraw was invoked via interactive action (like context menu or zooming)
