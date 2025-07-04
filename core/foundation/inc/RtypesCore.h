@@ -25,7 +25,7 @@
  * It ensures a portable fixed data type size across systems, since in
  * the early days, sizeof(int) could be 2 or 4 depending on the architecture.
  * \deprecated For future designs, unless for very specific needs, consider using instead standard
- * classes from <cstdint> such as `std::int16_t`, `std::int32_t`, etc. It might be ok
+ * fixed-width classes from <cstdint> such as `std::int16_t`, `std::int32_t` or from <cstdfloat> for floating types.
  * \warning `Long_t` has not the same width across platforms, so it should be avoided if portability is envisioned.
  * Also derived classes such as `TArrayL`. Use instead `Long64_t` or `TArrayL64`, or `std::int64_t`.
  * Likewise with `ULong_t`.
