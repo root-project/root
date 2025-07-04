@@ -31,12 +31,3 @@ void runwritevararypolyp()
   delete c;
   c = 0;
 }
-
-#ifdef TEST
-int main()
-{
-   runwritevararypolyp();
-   return 0;
-}
-#endif
-
