@@ -15,13 +15,46 @@ from ._pyz_utils import MethodTemplateGetter, MethodTemplateWrapper
 def _REntry_GetPtr(self, key):
     raise RuntimeError("GetPtr is not supported in Python, use indexing")
 
+def _try_getptr(entry, fieldType, key):
+    rentry_getptr_typeerrors = []
+    try:
+        return entry._GetPtr[fieldType](key)
+    except TypeError as e:
+        # The input field type name might not be found when trying to instantiate
+        # the template via the Python bindings. At the moment, there is one
+        # notable case when this happens. If the type name corresponds to a class
+        # that has alternative names registered via its dictionary, the name
+        # passed by the user may not be the fully qualified name seen by the
+        # compiler. We tap into the knowledge of TClassTable to look for all the
+        # alternative names, and try if there is a correspondence with one of those.
+        # Note: clearly a prerequisite for the following section to work is that
+        # the dictionary of the class was loaded and its alternative names were
+        # registered. This currently happens at loading time of the RNTupleModel
+        # which loads the classes found in the schema and also during the first
+        # attempt at calling _GetPtr with the user-provided class name (in
+        # particular when it tries to instantiate the function template)
+        rentry_getptr_typeerrors.append(e)
+        import ROOT
+        alt_field_type_names = ROOT.TClassTable.GetClassAlternativeNames(fieldType)
+        for alt_field_type_name in alt_field_type_names:
+            try:
+                # Need to convert std::string to Python string
+                return entry._GetPtr[str(alt_field_type_name)](key)
+            except TypeError as alt_e:
+                rentry_getptr_typeerrors.append(alt_e)
+
+    err_msg = f"Failed to retrieve entry value for field type name '{fieldType}'. Full stack trace follows:\n"
+    for ex in rentry_getptr_typeerrors:
+        err_msg += str(ex) + "\n"
+
+    raise TypeError(err_msg)
 
 def _REntry_CallGetPtr(self, key):
     # key can be either a RFieldToken already or a string. In the latter case, get a token to use it twice.
     if not hasattr(type(key), "__cpp_name__") or type(key).__cpp_name__ != "ROOT::RFieldToken":
         key = self.GetToken(key)
     fieldType = self.GetTypeName(key)
-    return self._GetPtr[fieldType](key)
+    return _try_getptr(self, fieldType, key)
 
 
 def _REntry_getitem(self, key):
