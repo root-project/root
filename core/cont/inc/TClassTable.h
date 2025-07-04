@@ -25,6 +25,8 @@
 #include "TObject.h"
 #include <string>
 #include <atomic>
+#include <unordered_map>
+#include <vector>
 
 class TProtoClass;
 
@@ -51,6 +53,8 @@ private:
    static std::atomic<UInt_t> fgTally;
    static Bool_t              fgSorted;
    static UInt_t              fgCursor;
+
+   static std::unordered_map<ROOT::TClassRec *, std::vector<ROOT::TClassAlt *>> fgClassRecToAlt;
 
    TClassTable();
 
@@ -80,6 +84,7 @@ public:
                                Int_t pragmabits);
    static void             Add(TProtoClass *protoClass);
    static ROOT::TClassAlt *AddAlternate(const char *normname, const char *alternate);
+   static std::vector<std::string> GetClassAlternativeNames(const char *cname);
    static char            *At(UInt_t index);
    int                     Classes();
    static Bool_t           Check(const char *cname, std::string &normname);
