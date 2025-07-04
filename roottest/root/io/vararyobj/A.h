@@ -20,7 +20,7 @@ public:
   // Special Member Functions
   //
   A();
-  ~A();
+  ~A() override;
   A(const A&);
   A& operator=(const A&);
 
@@ -41,7 +41,7 @@ public:
   void Init();
 
 public:
-  ClassDef(A,1);
+  ClassDefOverride(A,1);
 };
 
 #endif // A_HDR

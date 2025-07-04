@@ -42,12 +42,3 @@ void runvaryingArrayRead()
   delete a;
   a = 0;
 }
-
-#ifdef TEST
-int main(int argc, char* argv[])
-{
-  runvaryingArrayRead();
-  return 0;
-}
-#endif // TEST
-
