@@ -161,7 +161,7 @@ if(builtin_nlohmannjson)
 endif()
 
 #--- Check for civetweb ---------------------------------------------------------
-if(NOT builtin_civetweb)
+if(http AND NOT builtin_civetweb)
   message(STATUS "Looking for civetweb")
   if(NOT "$ENV{CIVETWEB_BUILD}" STREQUAL "" AND NOT "$ENV{CIVETWEB_SRC}" STREQUAL "")
      set(civetweb_LIBRARIES $ENV{CIVETWEB_BUILD}/src/libcivetweb.so)
