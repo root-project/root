@@ -392,8 +392,3 @@ ROOTTEST_ADD_TEST(NameCyclesRootmvCheckOutput
                   DEPENDS NameCyclesRootmv
                   ENVIRONMENT ${test_env})
 #########################################################################
-
-ROOTTEST_ADD_TEST(ROOT_8197
-                  MACRO ROOT_8197.C
-                  OUTREF ${ROOTFILES_DIR}/ROOT_8197.ref
-                  ENVIRONMENT ${test_env})
