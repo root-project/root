@@ -2,7 +2,6 @@
 TEmcl *e = nullptr;
 TNonEmcl *ne = nullptr;
 
-
 TFile *oldfile = new TFile("test.root");
 TTree *oldtree = (TTree*)oldfile->Get("T");
 

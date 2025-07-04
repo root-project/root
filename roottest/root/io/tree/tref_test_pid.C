@@ -27,7 +27,7 @@
 class tref_test_pid: public TNamed {
 public:
    tref_test_pid() {}
-   virtual ~tref_test_pid() {}
+   ~tref_test_pid() override {}
 
    tref_test_pid(const char* name, TObject* ref) {
       fName.Form("%s_%d", name, GetID());
@@ -37,19 +37,14 @@ public:
       static Int_t currentMax=0;
       return currentMax++;
    }
-   void Dump() const {
+   void Dump() const override {
       TNamed* r=(TNamed*)fRef.GetObject();
       printf("TTP %s ref: %s\n", GetName(), r ? r->GetName() : "(!NULL!)");
    }
 
    TRef  fRef; // a reference
-   ClassDef(tref_test_pid,1) // a roottest TRef autoloading object
+   ClassDefOverride(tref_test_pid,1) // a roottest TRef autoloading object
 };
-
-
-#ifdef __ROOTCLING__
-#pragma link C++ class tref_test_pid+;
-#endif
 
 void create(const char *filename) {
    TFile* file = new TFile(filename, "RECREATE");
