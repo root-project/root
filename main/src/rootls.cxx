@@ -119,9 +119,9 @@ using NodeIdx = std::uint32_t;
 struct RootLsNode {
    std::string fName;
    std::string fClassName;
-   TKey *fKey = nullptr;
+   TKey *fKey = nullptr; // This is non-null for all nodes except the root node (which is the file itself)
 
-   TDirectory *fDir = nullptr; // may be null
+   TDirectory *fDir = nullptr; // This is null for all non-directory nodes
    // NOTE: by construction of the tree, all children of the same node are contiguous.
    NodeIdx fFirstChild = 0;
    std::uint32_t fNChildren = 0;
@@ -333,6 +333,7 @@ static void PrintNodesDetailed(std::ostream &stream, const RootLsTree &tree,
          }
       }
       if ((flags & RootLsArgs::kRecursiveListing) && ClassInheritsFrom(child.fClassName.c_str(), "TDirectory")) {
+         // @Recursion
          PrintChildrenDetailed(stream, tree, childIdx, flags, Indent(indent + 2));
       }
    }
@@ -350,6 +351,7 @@ PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx node
 
    std::vector<NodeIdx> children(node.fNChildren);
    std::iota(children.begin(), children.end(), node.fFirstChild);
+   // @Recursion
    PrintNodesDetailed(stream, tree, children.begin(), children.end(), flags, indent);
 }
 
@@ -421,7 +423,8 @@ static void PrintNodesInColumns(std::ostream &stream, const RootLsTree &tree,
       }
    }
 
-   // Do the actual printing
+   //// Do the actual printing
+
    const bool isTerminal = terminalSize.x + terminalSize.y > 0;
 
    bool mustIndent = false;
@@ -455,6 +458,7 @@ static void PrintNodesInColumns(std::ostream &stream, const RootLsTree &tree,
       if (isDir && (flags & RootLsArgs::kRecursiveListing)) {
          if (!isExtremal)
             stream << "\n";
+         // @Recursion
          PrintChildrenInColumns(stream, tree, childIdx, flags, Indent(indent + 2));
          mustIndent = true;
       }
@@ -471,6 +475,7 @@ static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree,
 
    std::vector<NodeIdx> children(node.fNChildren);
    std::iota(children.begin(), children.end(), node.fFirstChild);
+   // @Recursion
    PrintNodesInColumns(stream, tree, children.begin(), children.end(), flags, indent);
 }
 
@@ -494,6 +499,7 @@ static std::string NodeFullPath(const RootLsTree &tree, NodeIdx nodeIdx)
    return fullPath;
 }
 
+// Main entrypoint of the program
 static void RootLs(const RootLsArgs &args, std::ostream &stream = std::cout)
 {
    const Indent outerIndent = (args.fSources.size() > 1) * 2;
@@ -539,7 +545,6 @@ static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_
    if (!nodeTree.fFile)
       return nodeTree;
 
-   // @Speed: avoid allocating
    const auto patternSplits = pattern.empty() ? std::vector<std::string>{} : ROOT::Split(pattern, "/");
 
    // Match all objects at all nesting levels down to the deepest nesting level of `pattern` (or all nesting levels
@@ -599,7 +604,7 @@ static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_
             newChild.fDir = cur->fDir->GetDirectory(key->GetName());
       }
 
-      // Only recurse into subdirectories that are at the deepest level we ask for through `pattern`.
+      // Only recurse into subdirectories that are up to the deepest level we ask for through `pattern`.
       if (cur->fNesting < patternSplits.size() || isRecursive) {
          for (auto childIdx = cur->fFirstChild; childIdx < cur->fFirstChild + cur->fNChildren; ++childIdx) {
             auto &child = nodeTree.fNodes[childIdx];
