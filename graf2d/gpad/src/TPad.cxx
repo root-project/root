@@ -1346,6 +1346,108 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Divide the canvas according to ratios.
+///
+/// The current canvas is divided in nx by ny according to the width and height ratios.
+/// If the ratios are not specified they are assumed to be equal.
+///
+/// Pads are automatically named `canvasname_n` where `n` is the division number
+/// starting from top left pad.
+///
+/// Top and left margins can be defined.
+
+void TPad::DivideRatios(Int_t nx, Int_t ny,
+                        const std::vector<double>& widthRatios,
+                        const std::vector<double>& heightRatios,
+                        const double canvasTopMargin,
+                        const double canvasLeftMargin
+                        )
+{
+   cd();
+
+   int wrs = widthRatios.size();
+   int hrs = heightRatios.size();
+   int nxl = TMath::Min(nx,wrs), nyl = TMath::Min(ny,hrs);
+
+   if (wrs==0) nxl = nx;
+   if (hrs==0) nyl = ny;
+
+   int    pn = 1;
+   double xr = 0.;
+   double yr = 0.;
+   double x  = 0.;
+   double y  = 1.;
+   double x1, y1, x2, y2;
+
+   // Check the validity of the margins
+   if (canvasTopMargin <0 || canvasTopMargin >1 ) {
+      Error("DivideRatios", "The canvas top margin must be >= 0 and <= 1");
+      return;
+   } else {
+      y = 1.- canvasTopMargin;
+   }
+   if (canvasLeftMargin <0 || canvasLeftMargin >1 ) {
+      Error("DivideRatios", "The canvas left margin must be >= 0 and <= 1");
+      return;
+   }
+
+   // Check the validity of the ratios
+   double sumOfHeightRatios = canvasTopMargin;
+   if (hrs) {
+      for (int i=0; i<nyl; i++) {
+         yr = heightRatios[i];
+         sumOfHeightRatios = sumOfHeightRatios + yr;
+         if (yr <0 || yr >1 ) {
+            Error("DivideRatios", "Y ratios plus the top margin must be >= 0 and <= 1");
+            return;
+         }
+      }
+   }
+   if (sumOfHeightRatios > 1.) {
+      Error("DivideRatios", "The sum of Y ratios plus the top margin must be <= 1 %g",sumOfHeightRatios);
+      return;
+   }
+   double sumOfWidthRatios = canvasLeftMargin;
+   if (wrs) {
+      for (int j=0; j<nxl; j++) {
+         xr = widthRatios[j];
+         sumOfWidthRatios = sumOfWidthRatios +xr;
+         if (xr <0 || xr >1 ) {
+            Error("DivideRatios", "X ratios must be >= 0 and <= 1");
+            return;
+         }
+      }
+   }
+   if (sumOfWidthRatios > 1.) {
+      Error("DivideRatios", "The sum of X ratios must be <= 1 %g ",sumOfWidthRatios);
+      return;
+   }
+
+   // Create the pads according to the ratios
+   for (int i=0; i<nyl; i++) {
+      x = canvasLeftMargin;
+      if (hrs) yr = heightRatios[i];
+      else     yr = 1./nyl;
+      for (int j=0; j<nxl; j++) {
+         if (wrs) xr = widthRatios[j];
+         else     xr = 1./nxl;
+         x1 = TMath::Max(0., x);
+         y1 = TMath::Max(0., y - yr);
+         x2 = TMath::Min(1., x + xr);
+         y2 = TMath::Min(1., y);
+         auto pad = new TPad(TString::Format("%s_%d", GetName(), pn),
+                             TString::Format("%s_%d", GetName(), pn),
+                             x1, y1, x2 ,y2);
+         pad->SetNumber(pn);
+         pad->Draw();
+         x = x + xr;
+         pn++;
+      }
+      y = y - yr;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// "n" is the total number of sub-pads. The number of sub-pads along the X
 /// and Y axis are computed according to the square root of n.
 
