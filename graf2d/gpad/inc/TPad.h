@@ -186,6 +186,7 @@ public:
    void              CopyPixmaps() override;
    void              DeleteExec(const char *name) override;
    void              Divide(Int_t nx=1, Int_t ny=1, Float_t xmargin=0.01, Float_t ymargin=0.01, Int_t color=0) override; // *MENU*
+   void              DivideRatios(Int_t nrows, Int_t ncolumns, const std::vector<double>& widthRatios={}, const std::vector<double>& heightRatios={}, const double canvasTopMargin=0., const double canvasLeftMargin=0.);
    virtual void      DivideSquare(Int_t n, Float_t xmargin=0.01, Float_t ymargin=0.01, Int_t color=0);
    void              Draw(Option_t *option="") override;
    void              DrawClassObject(const TObject *obj, Option_t *option="") override;
