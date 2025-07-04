@@ -3419,3 +3419,90 @@ TEST(RNTupleMerger, MergeUntypedSymmetric)
       }
    }
 }
+
+TEST(RNTupleMerger, GenerateZeroPagesIncremental)
+{
+   // Incrementally Union-merge RNTuples with alternating fields, so to trigger generation of zero pages.
+   // This is a minimal reproducer of a bug uncovered by an ATLAS-like merging flow:
+   // https://gitlab.cern.ch/amete/rootparallelmerger/-/tree/master-rntuple-prototype
+   FileRaii fileGuardOut("test_ntuple_merge_zeropages_incr_out.root");
+
+   {
+      TFileMerger merger(kFALSE, kTRUE);
+      merger.SetMergeOptions(TString("rntuple.MergingMode=Union"));
+      merger.OutputFile(fileGuardOut.GetPath().c_str(), "RECREATE",
+                        ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
+
+      auto writeOpts = RNTupleWriteOptions();
+
+      // Produce data
+      for (int idx : {0, 1, 2, 3, 4}) {
+         auto file = std::unique_ptr<TMemFile>(new TMemFile(std::to_string(idx).c_str(), "CREATE"));
+
+         auto model = ROOT::RNTupleModel::Create();
+         const auto dataName = (idx % 2 == 0) ? "foo" : "bar";
+         auto field = ROOT::RFieldBase::Create(dataName, "std::vector<int>").Unwrap();
+         model->AddField(std::move(field));
+
+         auto writer = ROOT::RNTupleWriter::Append(std::move(model), "ntuple", *file, writeOpts);
+
+         std::vector<int> data;
+         for (int i = 0; i < 5000; ++i) {
+            auto entry = writer->GetModel().CreateBareEntry();
+            data.clear();
+            for (int j = 0; j < 1000; ++j) {
+               data.push_back(i * j + j);
+            }
+            entry->BindRawPtr(dataName, &data);
+            writer->Fill(*entry);
+         }
+
+         writer.reset();
+
+         merger.AddFile(file.get());
+         bool res = merger.PartialMerge(TFileMerger::kAllIncremental | TFileMerger::kKeepCompression);
+         ASSERT_TRUE(res);
+
+         file->Write();
+      }
+   }
+
+   // Read back the data
+   auto reader = ROOT::RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+   EXPECT_EQ(reader->GetNEntries(), 25000);
+
+   auto viewFoo = reader->GetView<std::vector<int>>("foo");
+   auto viewBar = reader->GetView<std::vector<int>>("bar");
+
+   for (int idx : {0, 1, 2, 3, 4}) {
+      auto fooData = viewFoo(idx * 5000);
+      auto barData = viewBar(idx * 5000);
+      if (idx % 2 == 0) {
+         ASSERT_EQ(fooData.size(), 1000);
+         EXPECT_EQ(fooData[0], 0);
+         EXPECT_EQ(fooData[500], 500);
+         EXPECT_EQ(barData.size(), 0);
+
+         fooData = viewFoo(idx * 5000 + 4999);
+         barData = viewBar(idx * 5000 + 4999);
+         ASSERT_EQ(fooData.size(), 1000);
+         EXPECT_EQ(fooData[0], 0);
+         EXPECT_EQ(fooData[1], 5000);
+         EXPECT_EQ(fooData[999], 4995000);
+         EXPECT_EQ(barData.size(), 0);
+      } else {
+         EXPECT_EQ(fooData.size(), 0);
+         ASSERT_EQ(barData.size(), 1000);
+         EXPECT_EQ(barData[0], 0);
+         EXPECT_EQ(barData[500], 500);
+
+         fooData = viewFoo(idx * 5000 + 4999);
+         barData = viewBar(idx * 5000 + 4999);
+         EXPECT_EQ(fooData.size(), 0);
+         ASSERT_EQ(barData.size(), 1000);
+         EXPECT_EQ(barData[0], 0);
+         EXPECT_EQ(barData[1], 5000);
+         EXPECT_EQ(barData[999], 4995000);
+      }
+   }
+}
