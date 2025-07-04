@@ -179,22 +179,26 @@ struct V2i {
 
 static V2i GetTerminalSize()
 {
+   int rows = 80, columns = 25;
 #if defined(R__UNIX)
-   winsize w;
-   if (::ioctl(STDIN_FILENO, TIOCGWINSZ, &w) == 0 || ::ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == 0 ||
-       ::ioctl(STDERR_FILENO, TIOCGWINSZ, &w) == 0)
-      return {w.ws_col, w.ws_row};
-#elif defined(R__WINDOWS)
-   int rows = 0, columns = 0;
-   CONSOLE_SCREEN_BUFFER_INFO csbi;
-   if (::GetConsoleScreenBufferInfo(::GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
-      columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
-      rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+   {
+      winsize w;
+      if (::ioctl(STDIN_FILENO, TIOCGWINSZ, &w) == 0 || ::ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == 0 ||
+          ::ioctl(STDERR_FILENO, TIOCGWINSZ, &w) == 0) {
+         rows = w.ws_row;
+         columns = w.ws_col;
+      }
    }
-   return {columns, rows};
+#elif defined(R__WINDOWS)
+   {
+      CONSOLE_SCREEN_BUFFER_INFO csbi;
+      if (::GetConsoleScreenBufferInfo(::GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) {
+         columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+         rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+      }
+   }
 #endif
-   // Fallback
-   return {80, 25};
+   return {columns, rows};
 }
 
 using Indent = int;
