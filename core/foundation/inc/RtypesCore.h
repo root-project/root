@@ -93,11 +93,11 @@ typedef float          Size_t;      //Attribute size (float)
 constexpr Bool_t kTRUE = true;
 constexpr Bool_t kFALSE = false;
 
-constexpr Int_t kMaxUChar = 256;
+constexpr Int_t kMaxUChar = UChar_t(~0);
 constexpr Int_t kMaxChar = kMaxUChar >> 1;
 constexpr Int_t kMinChar = -kMaxChar - 1;
 
-constexpr Int_t kMaxUShort = 65534;
+constexpr Int_t kMaxUShort = UShort_t(~0);
 constexpr Int_t kMaxShort = kMaxUShort >> 1;
 constexpr Int_t kMinShort = -kMaxShort - 1;
 
