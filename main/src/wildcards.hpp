@@ -11,6 +11,11 @@
 #define WILDCARDS_VERSION_PATCH 0
 #ifndef WILDCARDS_CARDS_HPP
 #define WILDCARDS_CARDS_HPP
+#include <cstddef>
+#include <initializer_list>
+#include <ostream>
+#include <stdexcept>
+#include <type_traits>
 #include <utility>
 namespace wildcards {
 template <typename T>
@@ -209,345 +214,6 @@ constexpr cards<T> make_cards(T &&a, T &&s, T &&e, T &&so, T &&sc, T &&sn, T &&a
 }
 } // namespace wildcards
 #endif
-#ifndef WILDCARDS_MATCH_HPP
-#define WILDCARDS_MATCH_HPP
-#include <stdexcept>
-#include <type_traits>
-#include <utility>
-#ifndef CONFIG_HPP
-#define CONFIG_HPP
-#ifndef QUICKCPPLIB_HAS_FEATURE_H
-#define QUICKCPPLIB_HAS_FEATURE_H
-#if __cplusplus >= 201103L
-#if !defined(__cpp_alias_templates)
-#define __cpp_alias_templates 190000
-#endif
-#if !defined(__cpp_attributes)
-#define __cpp_attributes 190000
-#endif
-#if !defined(__cpp_constexpr)
-#if __cplusplus >= 201402L
-#define __cpp_constexpr 201304
-#else
-#define __cpp_constexpr 190000
-#endif
-#endif
-#if !defined(__cpp_decltype)
-#define __cpp_decltype 190000
-#endif
-#if !defined(__cpp_delegating_constructors)
-#define __cpp_delegating_constructors 190000
-#endif
-#if !defined(__cpp_explicit_conversion)
-#define __cpp_explicit_conversion 190000
-#endif
-#if !defined(__cpp_inheriting_constructors)
-#define __cpp_inheriting_constructors 190000
-#endif
-#if !defined(__cpp_initializer_lists)
-#define __cpp_initializer_lists 190000
-#endif
-#if !defined(__cpp_lambdas)
-#define __cpp_lambdas 190000
-#endif
-#if !defined(__cpp_nsdmi)
-#define __cpp_nsdmi 190000
-#endif
-#if !defined(__cpp_range_based_for)
-#define __cpp_range_based_for 190000
-#endif
-#if !defined(__cpp_raw_strings)
-#define __cpp_raw_strings 190000
-#endif
-#if !defined(__cpp_ref_qualifiers)
-#define __cpp_ref_qualifiers 190000
-#endif
-#if !defined(__cpp_rvalue_references)
-#define __cpp_rvalue_references 190000
-#endif
-#if !defined(__cpp_static_assert)
-#define __cpp_static_assert 190000
-#endif
-#if !defined(__cpp_unicode_characters)
-#define __cpp_unicode_characters 190000
-#endif
-#if !defined(__cpp_unicode_literals)
-#define __cpp_unicode_literals 190000
-#endif
-#if !defined(__cpp_user_defined_literals)
-#define __cpp_user_defined_literals 190000
-#endif
-#if !defined(__cpp_variadic_templates)
-#define __cpp_variadic_templates 190000
-#endif
-#endif
-#if __cplusplus >= 201402L
-#if !defined(__cpp_aggregate_nsdmi)
-#define __cpp_aggregate_nsdmi 190000
-#endif
-#if !defined(__cpp_binary_literals)
-#define __cpp_binary_literals 190000
-#endif
-#if !defined(__cpp_decltype_auto)
-#define __cpp_decltype_auto 190000
-#endif
-#if !defined(__cpp_generic_lambdas)
-#define __cpp_generic_lambdas 190000
-#endif
-#if !defined(__cpp_init_captures)
-#define __cpp_init_captures 190000
-#endif
-#if !defined(__cpp_return_type_deduction)
-#define __cpp_return_type_deduction 190000
-#endif
-#if !defined(__cpp_sized_deallocation)
-#define __cpp_sized_deallocation 190000
-#endif
-#if !defined(__cpp_variable_templates)
-#define __cpp_variable_templates 190000
-#endif
-#endif
-#if defined(_MSC_VER) && !defined(__clang__)
-#if !defined(__cpp_exceptions) && defined(_CPPUNWIND)
-#define __cpp_exceptions 190000
-#endif
-#if !defined(__cpp_rtti) && defined(_CPPRTTI)
-#define __cpp_rtti 190000
-#endif
-#if !defined(__cpp_alias_templates) && _MSC_VER >= 1800
-#define __cpp_alias_templates 190000
-#endif
-#if !defined(__cpp_attributes)
-#define __cpp_attributes 190000
-#endif
-#if !defined(__cpp_constexpr) && _MSC_FULL_VER >= 190023506
-#define __cpp_constexpr 190000
-#endif
-#if !defined(__cpp_decltype) && _MSC_VER >= 1600
-#define __cpp_decltype 190000
-#endif
-#if !defined(__cpp_delegating_constructors) && _MSC_VER >= 1800
-#define __cpp_delegating_constructors 190000
-#endif
-#if !defined(__cpp_explicit_conversion) && _MSC_VER >= 1800
-#define __cpp_explicit_conversion 190000
-#endif
-#if !defined(__cpp_inheriting_constructors) && _MSC_VER >= 1900
-#define __cpp_inheriting_constructors 190000
-#endif
-#if !defined(__cpp_initializer_lists) && _MSC_VER >= 1900
-#define __cpp_initializer_lists 190000
-#endif
-#if !defined(__cpp_lambdas) && _MSC_VER >= 1600
-#define __cpp_lambdas 190000
-#endif
-#if !defined(__cpp_nsdmi) && _MSC_VER >= 1900
-#define __cpp_nsdmi 190000
-#endif
-#if !defined(__cpp_range_based_for) && _MSC_VER >= 1700
-#define __cpp_range_based_for 190000
-#endif
-#if !defined(__cpp_raw_strings) && _MSC_VER >= 1800
-#define __cpp_raw_strings 190000
-#endif
-#if !defined(__cpp_ref_qualifiers) && _MSC_VER >= 1900
-#define __cpp_ref_qualifiers 190000
-#endif
-#if !defined(__cpp_rvalue_references) && _MSC_VER >= 1600
-#define __cpp_rvalue_references 190000
-#endif
-#if !defined(__cpp_static_assert) && _MSC_VER >= 1600
-#define __cpp_static_assert 190000
-#endif
-#if !defined(__cpp_user_defined_literals) && _MSC_VER >= 1900
-#define __cpp_user_defined_literals 190000
-#endif
-#if !defined(__cpp_variadic_templates) && _MSC_VER >= 1800
-#define __cpp_variadic_templates 190000
-#endif
-#if !defined(__cpp_binary_literals) && _MSC_VER >= 1900
-#define __cpp_binary_literals 190000
-#endif
-#if !defined(__cpp_decltype_auto) && _MSC_VER >= 1900
-#define __cpp_decltype_auto 190000
-#endif
-#if !defined(__cpp_generic_lambdas) && _MSC_VER >= 1900
-#define __cpp_generic_lambdas 190000
-#endif
-#if !defined(__cpp_init_captures) && _MSC_VER >= 1900
-#define __cpp_init_captures 190000
-#endif
-#if !defined(__cpp_return_type_deduction) && _MSC_VER >= 1900
-#define __cpp_return_type_deduction 190000
-#endif
-#if !defined(__cpp_sized_deallocation) && _MSC_VER >= 1900
-#define __cpp_sized_deallocation 190000
-#endif
-#if !defined(__cpp_variable_templates) && _MSC_FULL_VER >= 190023506
-#define __cpp_variable_templates 190000
-#endif
-#endif
-#if (defined(__GNUC__) && !defined(__clang__))
-#define QUICKCPPLIB_GCC (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
-#if !defined(__cpp_exceptions) && defined(__EXCEPTIONS)
-#define __cpp_exceptions 190000
-#endif
-#if !defined(__cpp_rtti) && defined(__GXX_RTTI)
-#define __cpp_rtti 190000
-#endif
-#if defined(__GXX_EXPERIMENTAL_CXX0X__)
-#if !defined(__cpp_alias_templates) && (QUICKCPPLIB_GCC >= 40700)
-#define __cpp_alias_templates 190000
-#endif
-#if !defined(__cpp_attributes) && (QUICKCPPLIB_GCC >= 40800)
-#define __cpp_attributes 190000
-#endif
-#if !defined(__cpp_constexpr) && (QUICKCPPLIB_GCC >= 40600)
-#define __cpp_constexpr 190000
-#endif
-#if !defined(__cpp_decltype) && (QUICKCPPLIB_GCC >= 40300)
-#define __cpp_decltype 190000
-#endif
-#if !defined(__cpp_delegating_constructors) && (QUICKCPPLIB_GCC >= 40700)
-#define __cpp_delegating_constructors 190000
-#endif
-#if !defined(__cpp_explicit_conversion) && (QUICKCPPLIB_GCC >= 40500)
-#define __cpp_explicit_conversion 190000
-#endif
-#if !defined(__cpp_inheriting_constructors) && (QUICKCPPLIB_GCC >= 40800)
-#define __cpp_inheriting_constructors 190000
-#endif
-#if !defined(__cpp_initializer_lists) && (QUICKCPPLIB_GCC >= 40800)
-#define __cpp_initializer_lists 190000
-#endif
-#if !defined(__cpp_lambdas) && (QUICKCPPLIB_GCC >= 40500)
-#define __cpp_lambdas 190000
-#endif
-#if !defined(__cpp_nsdmi) && (QUICKCPPLIB_GCC >= 40700)
-#define __cpp_nsdmi 190000
-#endif
-#if !defined(__cpp_range_based_for) && (QUICKCPPLIB_GCC >= 40600)
-#define __cpp_range_based_for 190000
-#endif
-#if !defined(__cpp_raw_strings) && (QUICKCPPLIB_GCC >= 40500)
-#define __cpp_raw_strings 190000
-#endif
-#if !defined(__cpp_ref_qualifiers) && (QUICKCPPLIB_GCC >= 40801)
-#define __cpp_ref_qualifiers 190000
-#endif
-#if !defined(__cpp_rvalue_references) && defined(__cpp_rvalue_reference)
-#define __cpp_rvalue_references __cpp_rvalue_reference
-#endif
-#if !defined(__cpp_static_assert) && (QUICKCPPLIB_GCC >= 40300)
-#define __cpp_static_assert 190000
-#endif
-#if !defined(__cpp_unicode_characters) && (QUICKCPPLIB_GCC >= 40500)
-#define __cpp_unicode_characters 190000
-#endif
-#if !defined(__cpp_unicode_literals) && (QUICKCPPLIB_GCC >= 40500)
-#define __cpp_unicode_literals 190000
-#endif
-#if !defined(__cpp_user_defined_literals) && (QUICKCPPLIB_GCC >= 40700)
-#define __cpp_user_defined_literals 190000
-#endif
-#if !defined(__cpp_variadic_templates) && (QUICKCPPLIB_GCC >= 40400)
-#define __cpp_variadic_templates 190000
-#endif
-#endif
-#endif
-#if defined(__clang__)
-#define QUICKCPPLIB_CLANG (__clang_major__ * 10000 + __clang_minor__ * 100 + __clang_patchlevel__)
-#if !defined(__cpp_exceptions) && (defined(__EXCEPTIONS) || defined(_CPPUNWIND))
-#define __cpp_exceptions 190000
-#endif
-#if !defined(__cpp_rtti) && (defined(__GXX_RTTI) || defined(_CPPRTTI))
-#define __cpp_rtti 190000
-#endif
-#if defined(__GXX_EXPERIMENTAL_CXX0X__)
-#if !defined(__cpp_alias_templates) && (QUICKCPPLIB_CLANG >= 30000)
-#define __cpp_alias_templates 190000
-#endif
-#if !defined(__cpp_attributes) && (QUICKCPPLIB_CLANG >= 30300)
-#define __cpp_attributes 190000
-#endif
-#if !defined(__cpp_constexpr) && (QUICKCPPLIB_CLANG >= 30100)
-#define __cpp_constexpr 190000
-#endif
-#if !defined(__cpp_decltype) && (QUICKCPPLIB_CLANG >= 20900)
-#define __cpp_decltype 190000
-#endif
-#if !defined(__cpp_delegating_constructors) && (QUICKCPPLIB_CLANG >= 30000)
-#define __cpp_delegating_constructors 190000
-#endif
-#if !defined(__cpp_explicit_conversion) && (QUICKCPPLIB_CLANG >= 30000)
-#define __cpp_explicit_conversion 190000
-#endif
-#if !defined(__cpp_inheriting_constructors) && (QUICKCPPLIB_CLANG >= 30300)
-#define __cpp_inheriting_constructors 190000
-#endif
-#if !defined(__cpp_initializer_lists) && (QUICKCPPLIB_CLANG >= 30100)
-#define __cpp_initializer_lists 190000
-#endif
-#if !defined(__cpp_lambdas) && (QUICKCPPLIB_CLANG >= 30100)
-#define __cpp_lambdas 190000
-#endif
-#if !defined(__cpp_nsdmi) && (QUICKCPPLIB_CLANG >= 30000)
-#define __cpp_nsdmi 190000
-#endif
-#if !defined(__cpp_range_based_for) && (QUICKCPPLIB_CLANG >= 30000)
-#define __cpp_range_based_for 190000
-#endif
-#if !defined(__cpp_raw_strings) && defined(__cpp_raw_string_literals)
-#define __cpp_raw_strings __cpp_raw_string_literals
-#endif
-#if !defined(__cpp_raw_strings) && (QUICKCPPLIB_CLANG >= 30000)
-#define __cpp_raw_strings 190000
-#endif
-#if !defined(__cpp_ref_qualifiers) && (QUICKCPPLIB_CLANG >= 20900)
-#define __cpp_ref_qualifiers 190000
-#endif
-#if !defined(__cpp_rvalue_references) && defined(__cpp_rvalue_reference)
-#define __cpp_rvalue_references __cpp_rvalue_reference
-#endif
-#if !defined(__cpp_rvalue_references) && (QUICKCPPLIB_CLANG >= 20900)
-#define __cpp_rvalue_references 190000
-#endif
-#if !defined(__cpp_static_assert) && (QUICKCPPLIB_CLANG >= 20900)
-#define __cpp_static_assert 190000
-#endif
-#if !defined(__cpp_unicode_characters) && (QUICKCPPLIB_CLANG >= 30000)
-#define __cpp_unicode_characters 190000
-#endif
-#if !defined(__cpp_unicode_literals) && (QUICKCPPLIB_CLANG >= 30000)
-#define __cpp_unicode_literals 190000
-#endif
-#if !defined(__cpp_user_defined_literals) && defined(__cpp_user_literals)
-#define __cpp_user_defined_literals __cpp_user_literals
-#endif
-#if !defined(__cpp_user_defined_literals) && (QUICKCPPLIB_CLANG >= 30100)
-#define __cpp_user_defined_literals 190000
-#endif
-#if !defined(__cpp_variadic_templates) && (QUICKCPPLIB_CLANG >= 20900)
-#define __cpp_variadic_templates 190000
-#endif
-#endif
-#endif
-#endif
-#define cfg_HAS_CONSTEXPR14 (__cpp_constexpr >= 201304)
-#if cfg_HAS_CONSTEXPR14
-#define cfg_constexpr14 constexpr
-#else
-#define cfg_constexpr14
-#endif
-#if cfg_HAS_CONSTEXPR14 && defined(__clang__)
-#define cfg_HAS_FULL_FEATURED_CONSTEXPR14 1
-#else
-#define cfg_HAS_FULL_FEATURED_CONSTEXPR14 0
-#endif
-#endif
-#ifndef CX_FUNCTIONAL_HPP
-#define CX_FUNCTIONAL_HPP
-#include <utility>
 namespace cx {
 template <typename T>
 struct less {
@@ -574,11 +240,6 @@ struct equal_to<void> {
    }
 };
 } // namespace cx
-#endif
-#ifndef CX_ITERATOR_HPP
-#define CX_ITERATOR_HPP
-#include <cstddef>
-#include <initializer_list>
 namespace cx {
 template <typename It>
 constexpr It next(It it)
@@ -666,11 +327,6 @@ constexpr auto cend(const C &c) -> decltype(cx::end(c))
    return cx::end(c);
 }
 } // namespace cx
-#endif
-#ifndef WILDCARDS_UTILITY_HPP
-#define WILDCARDS_UTILITY_HPP
-#include <type_traits>
-#include <utility>
 namespace wildcards {
 template <typename C>
 struct const_iterator {
@@ -700,7 +356,6 @@ struct container_item {
 template <typename C>
 using container_item_t = typename container_item<C>::type;
 } // namespace wildcards
-#endif
 namespace wildcards {
 template <typename SequenceIterator, typename PatternIterator>
 struct full_match_result {
@@ -731,26 +386,6 @@ make_full_match_result(SequenceIterator s, SequenceIterator send, PatternIterato
    return {std::move(mr.res), std::move(s),    std::move(send), std::move(mr.s),
            std::move(p),      std::move(pend), std::move(mr.p)};
 }
-#if !cfg_HAS_FULL_FEATURED_CONSTEXPR14
-constexpr bool throw_invalid_argument(const char *what_arg)
-{
-   return what_arg == nullptr ? false : throw std::invalid_argument(what_arg);
-}
-template <typename T>
-constexpr T throw_invalid_argument(T t, const char *what_arg)
-{
-   return what_arg == nullptr ? t : throw std::invalid_argument(what_arg);
-}
-constexpr bool throw_logic_error(const char *what_arg)
-{
-   return what_arg == nullptr ? false : throw std::logic_error(what_arg);
-}
-template <typename T>
-constexpr T throw_logic_error(T t, const char *what_arg)
-{
-   return what_arg == nullptr ? t : throw std::logic_error(what_arg);
-}
-#endif
 enum class is_set_state {
    open,
    not_or_first,
@@ -762,7 +397,6 @@ constexpr bool is_set(PatternIterator p, PatternIterator pend,
                       const cards<iterated_item_t<PatternIterator>> &c = cards<iterated_item_t<PatternIterator>>(),
                       is_set_state state = is_set_state::open)
 {
-#if cfg_HAS_CONSTEXPR14
    if (!c.set_enabled) {
       return false;
    }
@@ -788,25 +422,11 @@ constexpr bool is_set(PatternIterator p, PatternIterator pend,
          }
          break;
       default:
-#if cfg_HAS_FULL_FEATURED_CONSTEXPR14
          throw std::logic_error("The program execution should never end up here throwing this exception");
-#else
-         return throw_logic_error("The program execution should never end up here throwing this exception");
-#endif
       }
       p = cx::next(p);
    }
    return false;
-#else
-   return c.set_enabled && p != pend &&
-          (state == is_set_state::open ? *p == c.set_open && is_set(cx::next(p), pend, c, is_set_state::not_or_first)
-           : state == is_set_state::not_or_first ? *p == c.set_not ? is_set(cx::next(p), pend, c, is_set_state::first)
-                                                                   : is_set(cx::next(p), pend, c, is_set_state::next)
-           : state == is_set_state::first ? is_set(cx::next(p), pend, c, is_set_state::next)
-           : state == is_set_state::next         ? *p == c.set_close || is_set(cx::next(p), pend, c, is_set_state::next)
-                                                 : throw std::logic_error("The program execution should never end up "
-                                                                                  "here throwing this exception"));
-#endif
 }
 enum class set_end_state {
    open,
@@ -820,23 +440,14 @@ set_end(PatternIterator p, PatternIterator pend,
         const cards<iterated_item_t<PatternIterator>> &c = cards<iterated_item_t<PatternIterator>>(),
         set_end_state state = set_end_state::open)
 {
-#if cfg_HAS_CONSTEXPR14
    if (!c.set_enabled) {
-#if cfg_HAS_FULL_FEATURED_CONSTEXPR14
       throw std::invalid_argument("The use of sets is disabled");
-#else
-      return throw_invalid_argument(p, "The use of sets is disabled");
-#endif
    }
    while (p != pend) {
       switch (state) {
       case set_end_state::open:
          if (*p != c.set_open) {
-#if cfg_HAS_FULL_FEATURED_CONSTEXPR14
             throw std::invalid_argument("The given pattern is not a valid set");
-#else
-            return throw_invalid_argument(p, "The given pattern is not a valid set");
-#endif
          }
          state = set_end_state::not_or_first;
          break;
@@ -854,33 +465,11 @@ set_end(PatternIterator p, PatternIterator pend,
          }
          break;
       default:
-#if cfg_HAS_FULL_FEATURED_CONSTEXPR14
          throw std::logic_error("The program execution should never end up here throwing this exception");
-#else
-         return throw_logic_error(p, "The program execution should never end up here throwing this exception");
-#endif
       }
       p = cx::next(p);
    }
-#if cfg_HAS_FULL_FEATURED_CONSTEXPR14
    throw std::invalid_argument("The given pattern is not a valid set");
-#else
-   return throw_invalid_argument(p, "The given pattern is not a valid set");
-#endif
-#else
-   return !c.set_enabled                         ? throw std::invalid_argument("The use of sets is disabled")
-          : p == pend                            ? throw std::invalid_argument("The given pattern is not a valid set")
-          : state == set_end_state::open         ? *p == c.set_open
-                                                      ? set_end(cx::next(p), pend, c, set_end_state::not_or_first)
-                                                      : throw std::invalid_argument("The given pattern is not a valid set")
-                  : state == set_end_state::not_or_first ? *p == c.set_not ? set_end(cx::next(p), pend, c, set_end_state::first)
-                                                                           : set_end(cx::next(p), pend, c, set_end_state::next)
-                  : state == set_end_state::first ? set_end(cx::next(p), pend, c, set_end_state::next)
-          : state == set_end_state::next
-             ? *p == c.set_close ? cx::next(p) : set_end(cx::next(p), pend, c, set_end_state::next)
-             : throw std::logic_error("The program execution should never end up "
-                                      "here throwing this exception");
-#endif
 }
 enum class match_set_state {
    open,
@@ -895,23 +484,14 @@ match_set(SequenceIterator s, SequenceIterator send, PatternIterator p, PatternI
           const cards<iterated_item_t<PatternIterator>> &c = cards<iterated_item_t<PatternIterator>>(),
           const EqualTo &equal_to = EqualTo(), match_set_state state = match_set_state::open)
 {
-#if cfg_HAS_CONSTEXPR14
    if (!c.set_enabled) {
-#if cfg_HAS_FULL_FEATURED_CONSTEXPR14
       throw std::invalid_argument("The use of sets is disabled");
-#else
-      return throw_invalid_argument(make_match_result(false, s, p), "The use of sets is disabled");
-#endif
    }
    while (p != pend) {
       switch (state) {
       case match_set_state::open:
          if (*p != c.set_open) {
-#if cfg_HAS_FULL_FEATURED_CONSTEXPR14
             throw std::invalid_argument("The given pattern is not a valid set");
-#else
-            return throw_invalid_argument(make_match_result(false, s, p), "The given pattern is not a valid set");
-#endif
          }
          state = match_set_state::not_or_first_in;
          break;
@@ -951,47 +531,11 @@ match_set(SequenceIterator s, SequenceIterator send, PatternIterator p, PatternI
          }
          break;
       default:
-#if cfg_HAS_FULL_FEATURED_CONSTEXPR14
          throw std::logic_error("The program execution should never end up here throwing this exception");
-#else
-         return throw_logic_error(make_match_result(false, s, p),
-                                  "The program execution should never end up here throwing this exception");
-#endif
       }
       p = cx::next(p);
    }
-#if cfg_HAS_FULL_FEATURED_CONSTEXPR14
    throw std::invalid_argument("The given pattern is not a valid set");
-#else
-   return throw_invalid_argument(make_match_result(false, s, p), "The given pattern is not a valid set");
-#endif
-#else
-   return !c.set_enabled ? throw std::invalid_argument("The use of sets is disabled")
-          : p == pend    ? throw std::invalid_argument("The given pattern is not a valid set")
-          : state == match_set_state::open
-             ? *p == c.set_open ? match_set(s, send, cx::next(p), pend, c, equal_to, match_set_state::not_or_first_in)
-                                : throw std::invalid_argument("The given pattern is not a valid set")
-          : state == match_set_state::not_or_first_in
-             ? *p == c.set_not    ? match_set(s, send, cx::next(p), pend, c, equal_to, match_set_state::first_out)
-               : s == send        ? make_match_result(false, s, p)
-               : equal_to(*s, *p) ? make_match_result(true, s, p)
-                                  : match_set(s, send, cx::next(p), pend, c, equal_to, match_set_state::next_in)
-          : state == match_set_state::first_out
-             ? s == send || equal_to(*s, *p)
-                  ? make_match_result(false, s, p)
-                  : match_set(s, send, cx::next(p), pend, c, equal_to, match_set_state::next_out)
-          : state == match_set_state::next_in  ? *p == c.set_close || s == send ? make_match_result(false, s, p)
-                                                 : equal_to(*s, *p)
-                                                    ? make_match_result(true, s, p)
-                                                    : match_set(s, send, cx::next(p), pend, c, equal_to, state)
-           : state == match_set_state::next_out ? *p == c.set_close ? make_match_result(true, s, p)
-                                                  : s == send || equal_to(*s, *p)
-                                                     ? make_match_result(false, s, p)
-                                                     : match_set(s, send, cx::next(p), pend, c, equal_to, state)
-                                                : throw std::logic_error("The program execution should never end up "
-                                                                          "here "
-                                                                          "throwing this exception");
-#endif
 }
 enum class is_alt_state {
    open,
@@ -1003,7 +547,6 @@ constexpr bool is_alt(PatternIterator p, PatternIterator pend,
                       const cards<iterated_item_t<PatternIterator>> &c = cards<iterated_item_t<PatternIterator>>(),
                       is_alt_state state = is_alt_state::open, int depth = 0)
 {
-#if cfg_HAS_CONSTEXPR14
    if (!c.alt_enabled) {
       return false;
    }
@@ -1032,30 +575,11 @@ constexpr bool is_alt(PatternIterator p, PatternIterator pend,
          break;
       case is_alt_state::escape: state = is_alt_state::next; break;
       default:
-#if cfg_HAS_FULL_FEATURED_CONSTEXPR14
          throw std::logic_error("The program execution should never end up here throwing this exception");
-#else
-         return throw_logic_error(p, "The program execution should never end up here throwing this exception");
-#endif
       }
       p = cx::next(p);
    }
    return false;
-#else
-   return c.alt_enabled && p != pend &&
-          (state == is_alt_state::open ? *p == c.alt_open && is_alt(cx::next(p), pend, c, is_alt_state::next, depth + 1)
-           : state == is_alt_state::next
-              ? *p == c.escape ? is_alt(cx::next(p), pend, c, is_alt_state::escape, depth)
-                : c.set_enabled && *p == c.set_open && is_set(cx::next(p), pend, c, is_set_state::not_or_first)
-                   ? is_alt(set_end(cx::next(p), pend, c, set_end_state::not_or_first), pend, c, state, depth)
-                : *p == c.alt_open  ? is_alt(cx::next(p), pend, c, state, depth + 1)
-                : *p == c.alt_close ? depth == 1 || is_alt(cx::next(p), pend, c, state, depth - 1)
-                                    : is_alt(cx::next(p), pend, c, state, depth)
-           : state == is_alt_state::escape
-              ? is_alt(cx::next(p), pend, c, is_alt_state::next, depth)
-              : throw std::logic_error("The program execution should never end up here throwing this "
-                                       "exception"));
-#endif
 }
 enum class alt_end_state {
    open,
@@ -1068,23 +592,14 @@ alt_end(PatternIterator p, PatternIterator pend,
         const cards<iterated_item_t<PatternIterator>> &c = cards<iterated_item_t<PatternIterator>>(),
         alt_end_state state = alt_end_state::open, int depth = 0)
 {
-#if cfg_HAS_CONSTEXPR14
    if (!c.alt_enabled) {
-#if cfg_HAS_FULL_FEATURED_CONSTEXPR14
       throw std::invalid_argument("The use of alternatives is disabled");
-#else
-      return throw_invalid_argument(p, "The use of alternatives is disabled");
-#endif
    }
    while (p != pend) {
       switch (state) {
       case alt_end_state::open:
          if (*p != c.alt_open) {
-#if cfg_HAS_FULL_FEATURED_CONSTEXPR14
             throw std::invalid_argument("The given pattern is not a valid alternative");
-#else
-            return throw_invalid_argument(p, "The given pattern is not a valid alternative");
-#endif
          }
          state = alt_end_state::next;
          ++depth;
@@ -1105,38 +620,11 @@ alt_end(PatternIterator p, PatternIterator pend,
          break;
       case alt_end_state::escape: state = alt_end_state::next; break;
       default:
-#if cfg_HAS_FULL_FEATURED_CONSTEXPR14
          throw std::logic_error("The program execution should never end up here throwing this exception");
-#else
-         return throw_logic_error(p, "The program execution should never end up here throwing this exception");
-#endif
       }
       p = cx::next(p);
    }
-#if cfg_HAS_FULL_FEATURED_CONSTEXPR14
    throw std::invalid_argument("The given pattern is not a valid alternative");
-#else
-   return throw_invalid_argument(p, "The given pattern is not a valid alternative");
-#endif
-#else
-   return !c.alt_enabled ? throw std::invalid_argument("The use of alternatives is disabled")
-          : p == pend    ? throw std::invalid_argument("The given pattern is not a valid alternative")
-          : state == alt_end_state::open
-             ? *p == c.alt_open ? alt_end(cx::next(p), pend, c, alt_end_state::next, depth + 1)
-                                : throw std::invalid_argument("The given pattern is not a valid alternative")
-          : state == alt_end_state::next
-             ? *p == c.escape ? alt_end(cx::next(p), pend, c, alt_end_state::escape, depth)
-               : c.set_enabled && *p == c.set_open && is_set(cx::next(p), pend, c, is_set_state::not_or_first)
-                  ? alt_end(set_end(cx::next(p), pend, c, set_end_state::not_or_first), pend, c, state, depth)
-               : *p == c.alt_open  ? alt_end(cx::next(p), pend, c, state, depth + 1)
-               : *p == c.alt_close ? depth == 1 ? cx::next(p) : alt_end(cx::next(p), pend, c, state, depth - 1)
-                                   : alt_end(cx::next(p), pend, c, state, depth)
-          : state == alt_end_state::escape
-             ? alt_end(cx::next(p), pend, c, alt_end_state::next, depth)
-             : throw std::logic_error("The program execution should never end up here throwing "
-                                      "this "
-                                      "exception");
-#endif
 }
 enum class alt_sub_end_state {
    next,
@@ -1148,13 +636,8 @@ alt_sub_end(PatternIterator p, PatternIterator pend,
             const cards<iterated_item_t<PatternIterator>> &c = cards<iterated_item_t<PatternIterator>>(),
             alt_sub_end_state state = alt_sub_end_state::next, int depth = 1)
 {
-#if cfg_HAS_CONSTEXPR14
    if (!c.alt_enabled) {
-#if cfg_HAS_FULL_FEATURED_CONSTEXPR14
       throw std::invalid_argument("The use of alternatives is disabled");
-#else
-      return throw_invalid_argument(p, "The use of alternatives is disabled");
-#endif
    }
    while (p != pend) {
       switch (state) {
@@ -1178,36 +661,11 @@ alt_sub_end(PatternIterator p, PatternIterator pend,
          break;
       case alt_sub_end_state::escape: state = alt_sub_end_state::next; break;
       default:
-#if cfg_HAS_FULL_FEATURED_CONSTEXPR14
          throw std::logic_error("The program execution should never end up here throwing this exception");
-#else
-         return throw_logic_error(p, "The program execution should never end up here throwing this exception");
-#endif
       }
       p = cx::next(p);
    }
-#if cfg_HAS_FULL_FEATURED_CONSTEXPR14
    throw std::invalid_argument("The given pattern is not a valid alternative");
-#else
-   return throw_invalid_argument(p, "The given pattern is not a valid alternative");
-#endif
-#else
-   return !c.alt_enabled ? throw std::invalid_argument("The use of alternatives is disabled")
-          : p == pend    ? throw std::invalid_argument("The given pattern is not a valid alternative")
-          : state == alt_sub_end_state::next
-             ? *p == c.escape ? alt_sub_end(cx::next(p), pend, c, alt_sub_end_state::escape, depth)
-               : c.set_enabled && *p == c.set_open && is_set(cx::next(p), pend, c, is_set_state::not_or_first)
-                  ? alt_sub_end(set_end(cx::next(p), pend, c, set_end_state::not_or_first), pend, c, state, depth)
-               : *p == c.alt_open  ? alt_sub_end(cx::next(p), pend, c, state, depth + 1)
-               : *p == c.alt_close ? depth == 1 ? p : alt_sub_end(cx::next(p), pend, c, state, depth - 1)
-               : *p == c.alt_or ? depth == 1 ? p : alt_sub_end(cx::next(p), pend, c, state, depth)
-                                : alt_sub_end(cx::next(p), pend, c, state, depth)
-          : state == alt_sub_end_state::escape
-             ? alt_sub_end(cx::next(p), pend, c, alt_sub_end_state::next, depth)
-             : throw std::logic_error("The program execution should never end up here throwing "
-                                      "this "
-                                      "exception");
-#endif
 }
 template <typename SequenceIterator, typename PatternIterator, typename EqualTo = cx::equal_to<void>>
 constexpr match_result<SequenceIterator, PatternIterator>
@@ -1221,7 +679,6 @@ match_alt(SequenceIterator s, SequenceIterator send, PatternIterator p1, Pattern
           const cards<iterated_item_t<PatternIterator>> &c = cards<iterated_item_t<PatternIterator>>(),
           const EqualTo &equal_to = EqualTo(), bool partial = false)
 {
-#if cfg_HAS_CONSTEXPR14
    auto result1 = match(s, send, p1, p1end, c, equal_to, true);
    if (result1) {
       auto result2 = match(result1.s, send, p2, p2end, c, equal_to, partial);
@@ -1234,21 +691,12 @@ match_alt(SequenceIterator s, SequenceIterator send, PatternIterator p1, Pattern
       return make_match_result(false, s, p1end);
    }
    return match_alt(s, send, p1, alt_sub_end(p1, p2, c), p2, p2end, c, equal_to, partial);
-#else
-   return match(s, send, p1, p1end, c, equal_to, true) &&
-                match(match(s, send, p1, p1end, c, equal_to, true).s, send, p2, p2end, c, equal_to, partial)
-             ? match(match(s, send, p1, p1end, c, equal_to, true).s, send, p2, p2end, c, equal_to, partial)
-          : cx::next(p1end) == p2 ? make_match_result(false, s, p1end)
-                                  : match_alt(s, send, cx::next(p1end), alt_sub_end(cx::next(p1end), p2, c), p2, p2end,
-                                              c, equal_to, partial);
-#endif
 }
 template <typename SequenceIterator, typename PatternIterator, typename EqualTo>
 constexpr match_result<SequenceIterator, PatternIterator>
 match(SequenceIterator s, SequenceIterator send, PatternIterator p, PatternIterator pend,
       const cards<iterated_item_t<PatternIterator>> &c, const EqualTo &equal_to, bool partial, bool escape)
 {
-#if cfg_HAS_CONSTEXPR14
    if (p == pend) {
       return make_match_result(partial || s == send, s, p);
    }
@@ -1294,29 +742,6 @@ match(SequenceIterator s, SequenceIterator send, PatternIterator p, PatternItera
       return make_match_result(false, s, p);
    }
    return match(cx::next(s), send, cx::next(p), pend, c, equal_to, partial);
-#else
-   return p == pend          ? make_match_result(partial || s == send, s, p)
-          : escape           ? s == send || !equal_to(*s, *p) ? make_match_result(false, s, p)
-                                                              : match(cx::next(s), send, cx::next(p), pend, c, equal_to, partial)
-                    : *p == c.anything ? match(s, send, cx::next(p), pend, c, equal_to, partial)
-                                            ? match(s, send, cx::next(p), pend, c, equal_to, partial)
-                                         : s == send ? make_match_result(false, s, p)
-                                                     : match(cx::next(s), send, p, pend, c, equal_to, partial)
-                    : *p == c.single ? s == send ? make_match_result(false, s, p)
-                                                 : match(cx::next(s), send, cx::next(p), pend, c, equal_to, partial)
-                    : *p == c.escape ? match(s, send, cx::next(p), pend, c, equal_to, partial, true)
-          : c.set_enabled && *p == c.set_open && is_set(cx::next(p), pend, c, is_set_state::not_or_first)
-             ? !match_set(s, send, cx::next(p), pend, c, equal_to, match_set_state::not_or_first_in)
-                  ? match_set(s, send, cx::next(p), pend, c, equal_to, match_set_state::not_or_first_in)
-                  : match(cx::next(s), send, set_end(cx::next(p), pend, c, set_end_state::not_or_first), pend, c,
-                          equal_to, partial)
-          : c.alt_enabled && *p == c.alt_open && is_alt(cx::next(p), pend, c, is_alt_state::next, 1)
-             ? match_alt(s, send, cx::next(p),
-                         alt_sub_end(cx::next(p), alt_end(cx::next(p), pend, c, alt_end_state::next, 1), c),
-                         alt_end(cx::next(p), pend, c, alt_end_state::next, 1), pend, c, equal_to, partial)
-          : s == send || !equal_to(*s, *p) ? make_match_result(false, s, p)
-                                           : match(cx::next(s), send, cx::next(p), pend, c, equal_to, partial);
-#endif
 }
 } // namespace detail
 template <typename Sequence, typename Pattern, typename EqualTo = cx::equal_to<void>>
@@ -1339,34 +764,16 @@ match(Sequence &&sequence, Pattern &&pattern, const EqualTo &equal_to)
                 equal_to);
 }
 } // namespace wildcards
-#endif
-#ifndef WILDCARDS_MATCHER_HPP
-#define WILDCARDS_MATCHER_HPP
-#include <cstddef>
-#include <type_traits>
-#include <utility>
-#ifndef CX_STRING_VIEW_HPP
-#define CX_STRING_VIEW_HPP
-#include <cstddef>
-#include <ostream>
-#ifndef CX_ALGORITHM_HPP
-#define CX_ALGORITHM_HPP
 namespace cx {
 template <typename Iterator1, typename Iterator2>
 constexpr bool equal(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator2 last2)
 {
-#if cfg_HAS_CONSTEXPR14
    while (first1 != last1 && first2 != last2 && *first1 == *first2) {
       ++first1, ++first2;
    }
    return first1 == last1 && first2 == last2;
-#else
-   return first1 != last1 && first2 != last2 && *first1 == *first2 ? equal(first1 + 1, last1, first2 + 1, last2)
-                                                                   : first1 == last1 && first2 == last2;
-#endif
 }
 } // namespace cx
-#endif
 namespace cx {
 template <typename T>
 class basic_string_view {
@@ -1439,7 +846,6 @@ constexpr wstring_view operator""_sv(const wchar_t *str, std::size_t s)
 }
 } // namespace literals
 } // namespace cx
-#endif
 namespace wildcards {
 template <typename Pattern, typename EqualTo = cx::equal_to<void>>
 class matcher {
@@ -1506,5 +912,4 @@ constexpr auto operator""_wc(const wchar_t *str, std::size_t s)
 }
 } // namespace literals
 } // namespace wildcards
-#endif
 #endif
