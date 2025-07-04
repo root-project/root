@@ -545,8 +545,7 @@ static bool MatchesGlob(std::string_view haystack, std::string_view pattern)
 static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_view pattern, std::uint32_t flags)
 {
    RootLsTree nodeTree;
-   nodeTree.fFile =
-      std::unique_ptr<TFile>(TFile::Open(std::string(fileName).c_str(), "READ_WITHOUT_GLOBALREGISTRATION"));
+   nodeTree.fFile = std::unique_ptr<TFile>(TFile::Open(std::string(fileName).c_str(), "READ"));
    if (!nodeTree.fFile)
       return nodeTree;
 
@@ -702,12 +701,27 @@ static RootLsArgs ParseArgs(const char **args, int nArgs)
    for (int argIdx : sourceArgs) {
       const char *arg = args[argIdx];
       RootLsSource &newSource = outArgs.fSources.emplace_back();
+
+      // Handle known URI prefixes
+      static const char *const specialPrefixes[] = {"http", "https", "root", "gs", "s3"};
+      for (const char *prefix : specialPrefixes) {
+         const auto prefixLen = strlen(prefix);
+         if (strncmp(arg, prefix, prefixLen) == 0 && strncmp(arg + prefixLen, "://", 3) == 0) {
+            newSource.fFileName = std::string(prefix) + "://";
+            arg += prefixLen + 3;
+            break;
+         }
+      }
+
       auto tokens = ROOT::Split(arg, ":");
-      newSource.fFileName = tokens[0];
+      if (tokens.empty())
+         continue;
+
+      newSource.fFileName += tokens[0];
       if (tokens.size() > 1) {
-         newSource.fObjectTree = GetMatchingPathsInFile(tokens[0], tokens[1], outArgs.fFlags);
+         newSource.fObjectTree = GetMatchingPathsInFile(newSource.fFileName, tokens[1], outArgs.fFlags);
       } else {
-         newSource.fObjectTree = GetMatchingPathsInFile(tokens[0], "", outArgs.fFlags);
+         newSource.fObjectTree = GetMatchingPathsInFile(newSource.fFileName, "", outArgs.fFlags);
       }
    }
 
