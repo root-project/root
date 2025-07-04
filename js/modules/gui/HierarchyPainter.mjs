@@ -2097,6 +2097,7 @@ class HierarchyPainter extends BasePainter {
             showProgress();
          if (isFunc(respainter?.setItemName)) {
             respainter.setItemName(display_itemname, updating ? null : drawopt, this); // mark painter as created from hierarchy
+
             if (item && !item._painter)
                item._painter = respainter;
          }
@@ -2181,6 +2182,7 @@ class HierarchyPainter extends BasePainter {
 
                if (isFunc(p.redrawObject)) {
                   const pr = p.redrawObject(obj, drawopt);
+
                   if (pr) {
                      painter = p;
                      arr.push(pr);
@@ -2351,9 +2353,8 @@ class HierarchyPainter extends BasePainter {
                }
                if (!forced && only_auto_items) return;
             }
-         } else
-            if (arg.indexOf(itemname) < 0) return;
-
+         } else if (arg.indexOf(itemname) < 0)
+            return;
 
          allitems.push(itemname);
          options.push('update:' + p.getItemDrawOpt());
@@ -2493,10 +2494,11 @@ class HierarchyPainter extends BasePainter {
       // now check if several same items present - select only one for the drawing
       // if draw option includes 'main', such item will be drawn first
       for (let n = 0; n < items.length; ++n) {
-         if (items_wait[n] !== 0) continue;
+         if (items_wait[n] !== 0)
+            continue;
          let found_main = n;
          for (let k = 0; k < items.length; ++k) {
-            if ((items[n]===items[k]) && (options[k].indexOf('main') >= 0))
+            if ((items[n] === items[k]) && (options[k].indexOf('main') >= 0))
                found_main = k;
          }
          for (let k = 0; k < items.length; ++k) {
@@ -2506,7 +2508,8 @@ class HierarchyPainter extends BasePainter {
       }
 
       return this.createDisplay().then(mdi => {
-         if (!mdi) return false;
+         if (!mdi)
+            return false;
 
          const doms = new Array(items.length);
 
