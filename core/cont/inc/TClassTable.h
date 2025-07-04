@@ -25,6 +25,7 @@
 #include "TObject.h"
 #include <string>
 #include <atomic>
+#include <vector>
 
 class TProtoClass;
 
@@ -80,6 +81,7 @@ public:
                                Int_t pragmabits);
    static void             Add(TProtoClass *protoClass);
    static ROOT::TClassAlt *AddAlternate(const char *normname, const char *alternate);
+   static std::vector<std::string> GetClassAlternativeNames(const char *cname);
    static char            *At(UInt_t index);
    int                     Classes();
    static Bool_t           Check(const char *cname, std::string &normname);
