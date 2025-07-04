@@ -66,9 +66,9 @@ typedef long           Long_t;      ///< Signed long integer 4 bytes (long). Siz
 typedef unsigned long  ULong_t;     ///< Unsigned long integer 4 bytes (unsigned long). Size depends on architecture \deprecated Consider replacing with `unsigned long`
 #endif
 typedef float          Float_t;     ///< Float 4 bytes (float) \deprecated Consider replacing with `float`.
-typedef float          Float16_t;   ///< Float 4 bytes written with a truncated 7-bit mantissa \deprecated Consider (non-equivalent) alternatives in `<cstdfloat>`.
+typedef float          Float16_t;   ///< Float 4 bytes in memory, written to disk as a 3 bytes (24-bits, not 16-bits) float with a truncated (up-to) 16-bit mantissa (12-bit by default in memory), and (7+1)-bits of exponent \deprecated Consider (non-equivalent) alternatives in `<cstdfloat>`.
 typedef double         Double_t;    ///< Double 8 bytes \deprecated Consider replacing with `double`.
-typedef double         Double32_t;  ///< Double 8 bytes in memory, written as a 4 bytes float \deprecated Consider (non-equivalent) alternatives in `<cstdfloat>`.
+typedef double         Double32_t;  ///< Double 8 bytes in memory, written to disk as a 3 bytes (24-bits, not 32-bits) float with a truncated (up-to) 16-bit mantissa (24-bit by default in memory), and (7+1)-bits of exponent \deprecated Consider (non-equivalent) alternatives in `<cstdfloat>`.
 typedef long double    LongDouble_t;///< Long Double (not portable) \deprecated Consider replacing with `long double`.
 typedef char           Text_t;      ///< General string (char) \deprecated Consider replacing with `char`.
 typedef bool           Bool_t;      ///< Boolean (0=false, 1=true) (bool) \deprecated Consider replacing with `bool`.
@@ -125,7 +125,7 @@ constexpr Long64_t kMaxLong64 = Long64_t(kMaxULong64 >> 1);///< \deprecated Cons
 constexpr Long64_t kMinLong64 = -kMaxLong64 - 1;           ///< \deprecated Consider replacing with `std::numeric_limits<long long>::lowest()` (or `std::int64_t`)
 
 constexpr ULong_t kBitsPerByte = 8; ///< \deprecated Consider replacing with `CHAR_BIT` from `<climits>`
-constexpr Ssiz_t kNPOS = ~(Ssiz_t)0;///< \deprecated Consider replacing with `int(-1)`
+constexpr Ssiz_t kNPOS = ~(Ssiz_t)0;///< \deprecated Consider replacing with `int(-1)` or `std::string::npos`
 
 //---- debug global ------------------------------------------------------------
 
