@@ -43,12 +43,3 @@ void runvaryingArrayNoClassDefRead()
   delete a;
   a = 0;
 }
-
-#ifdef TEST
-int main()
-{
-  runvaryingArrayNoClassDefRead();
-  return 0;
-}
-#endif // TEST
-
