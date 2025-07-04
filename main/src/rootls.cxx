@@ -126,6 +126,7 @@ struct RootLsNode {
    NodeIdx fFirstChild = 0;
    std::uint32_t fNChildren = 0;
    std::uint32_t fNesting = 0;
+   NodeIdx fParent = 0;
 };
 
 static RootLsNode NodeFromKey(TKey &key)
@@ -263,6 +264,9 @@ static void PrintClusters(std::ostream &stream, TTree &tree, Indent indent)
    stream << Color(kAnsiBold) << "The total number of clusters is " << nTotClusters << "\n";
 }
 
+static void PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx nodeIdx, std::uint32_t flags,
+                                  Indent indent);
+
 /// Prints a `ls -l`-like output:
 ///
 /// $ rootls -l https://root.cern/files/tutorials/hsimple.root
@@ -273,37 +277,36 @@ static void PrintClusters(std::ostream &stream, TTree &tree, Indent indent)
 ///
 /// \param stream The output stream to print to
 /// \param tree The node tree
-/// \param nodeIdx The index of the node whose children should be printed
+/// \param nodesBegin The first node to be printed
+/// \param nodesEnd The last node to be printed
 /// \param flags A bitmask of RootLsArgs::Flags that influence how stuff is printed
 /// \param indent Each line of the output will have these many leading whitespaces
-static void
-PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx nodeIdx, std::uint32_t flags, Indent indent)
+static void PrintNodesDetailed(std::ostream &stream, const RootLsTree &tree,
+                               std::vector<NodeIdx>::const_iterator nodesBegin,
+                               std::vector<NodeIdx>::const_iterator nodesEnd, std::uint32_t flags, Indent indent)
 {
-   const auto &node = tree.fNodes[nodeIdx];
-   if (node.fNChildren == 0)
-      return;
-
    std::size_t maxClassLen = 0, maxNameLen = 0;
-   for (NodeIdx childIdx = node.fFirstChild; childIdx < node.fFirstChild + node.fNChildren; ++childIdx) {
-      const auto &child = tree.fNodes[childIdx];
+   for (auto childIt = nodesBegin; childIt != nodesEnd; ++childIt) {
+      const auto &child = tree.fNodes[*childIt];
       maxClassLen = std::max(maxClassLen, child.fClassName.length());
       maxNameLen = std::max(maxNameLen, child.fName.length());
    }
    maxClassLen += 2;
    maxNameLen += 2;
 
-   for (NodeIdx childIdx = node.fFirstChild; childIdx < node.fFirstChild + node.fNChildren; ++childIdx) {
+   for (auto childIt = nodesBegin; childIt != nodesEnd; ++childIt) {
+      NodeIdx childIdx = *childIt;
       const auto &child = tree.fNodes[childIdx];
 
       const char *cycleStr = "";
       // If this key is the first one in the list, or if it has a different name than the previous one, it means that
       // it's the first object of that kind in the list.
-      if (childIdx == node.fFirstChild || child.fName != tree.fNodes[childIdx - 1].fName) {
+      if (childIt == nodesBegin || child.fName != tree.fNodes[childIdx - 1].fName) {
          // Then we check the following key. If the current key is not the last key in the list and if the following key
          // has the same name, then it means it's another cycle of the same object. Thus, it's gonna be a backup cycle
          // of the same object. Otherwise, it's just a key with one cycle so we don't need to print information two
          // distinguish between different cycles of the same key.
-         if (childIdx < node.fFirstChild + node.fNChildren - 1 && child.fName == tree.fNodes[childIdx + 1].fName) {
+         if (std::next(childIt) != nodesEnd && child.fName == tree.fNodes[childIdx + 1].fName) {
             cycleStr = "[current cycle]";
          }
       } else {
@@ -334,6 +337,20 @@ PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx node
       }
    }
    stream << std::flush;
+}
+
+/// \param nodeIdx The index of the node whose children should be printed
+static void
+PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx nodeIdx, std::uint32_t flags, Indent indent)
+{
+
+   const auto &node = tree.fNodes[nodeIdx];
+   if (node.fNChildren == 0)
+      return;
+
+   std::vector<NodeIdx> children(node.fNChildren);
+   std::iota(children.begin(), children.end(), node.fFirstChild);
+   PrintNodesDetailed(stream, tree, children.begin(), children.end(), flags, indent);
 }
 
 // Prints all children of `nodeIdx`-th node in a ls-like fashion.
@@ -457,6 +474,26 @@ static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree,
    PrintNodesInColumns(stream, tree, children.begin(), children.end(), flags, indent);
 }
 
+static std::string NodeFullPath(const RootLsTree &tree, NodeIdx nodeIdx)
+{
+   std::vector<const std::string *> fragments;
+   const RootLsNode *node = &tree.fNodes[nodeIdx];
+   NodeIdx prevParent;
+   do {
+      prevParent = node->fParent;
+      fragments.push_back(&node->fName);
+      node = &tree.fNodes[node->fParent];
+   } while (node->fParent != prevParent);
+
+   assert(!fragments.empty());
+
+   std::string fullPath = **fragments.rbegin();
+   for (auto it = std::next(fragments.rbegin()), end = fragments.rend(); it != end; ++it) {
+      fullPath += '/' + **it;
+   }
+   return fullPath;
+}
+
 static void RootLs(const RootLsArgs &args, std::ostream &stream = std::cout)
 {
    const Indent outerIndent = (args.fSources.size() > 1) * 2;
@@ -464,14 +501,19 @@ static void RootLs(const RootLsArgs &args, std::ostream &stream = std::cout)
       if (args.fSources.size() > 1) {
          stream << source.fFileName << " :\n";
       }
+
+      if (args.fFlags & (RootLsArgs::kLongListing | RootLsArgs::kTreeListing))
+         PrintNodesDetailed(stream, source.fObjectTree, source.fObjectTree.fLeafList.begin(),
+                            source.fObjectTree.fLeafList.end(), args.fFlags, outerIndent);
+      else
+         PrintNodesInColumns(stream, source.fObjectTree, source.fObjectTree.fLeafList.begin(),
+                             source.fObjectTree.fLeafList.end(), args.fFlags, outerIndent);
+
       const Indent indent = outerIndent + (source.fObjectTree.fDirList.size() > 1) * 2;
-      PrintNodesInColumns(stream, source.fObjectTree, source.fObjectTree.fLeafList.begin(),
-                          source.fObjectTree.fLeafList.end(), args.fFlags, indent);
       for (NodeIdx rootIdx : source.fObjectTree.fDirList) {
          if (source.fObjectTree.fDirList.size() > 1) {
-            const auto &node = source.fObjectTree.fNodes[rootIdx];
             PrintIndent(stream, outerIndent);
-            stream << node.fName << " :\n";
+            stream << NodeFullPath(source.fObjectTree, rootIdx) << " :\n";
          }
 
          if (args.fFlags & (RootLsArgs::kLongListing | RootLsArgs::kTreeListing))
@@ -511,6 +553,9 @@ static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_
    }
    std::deque<NodeIdx> nodesToVisit{0};
 
+   // Keep track of the object names found at every nesting level and only add the first one.
+   std::unordered_set<std::string> namesFound;
+
    const bool isRecursive = flags & RootLsArgs::kRecursiveListing;
    do {
       NodeIdx curIdx = nodesToVisit.front();
@@ -527,16 +572,25 @@ static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_
       std::sort(keys.begin(), keys.end(),
                 [](const auto *a, const auto *b) { return strcmp(a->GetName(), b->GetName()) < 0; });
 
+      namesFound.clear();
+
       for (TKey *key : keys) {
-         const auto &pat = patternSplits[cur->fNesting];
          // Don't recurse lower than requested by `pattern` unless we explicitly have the `recursive listing` flag.
-         if (cur->fNesting < patternSplits.size() && !MatchesGlob(key->GetName(), pat))
+         if (cur->fNesting < patternSplits.size() && !MatchesGlob(key->GetName(), patternSplits[cur->fNesting]))
             continue;
+
+         if (namesFound.count(key->GetName()) > 0) {
+            std::cerr << "WARNING: Several versions of '" << key->GetName() << "' are present in '" << fileName
+                      << "'. Only the most recent will be considered.\n";
+            continue;
+         }
+         namesFound.insert(key->GetName());
 
          auto &newChild = nodeTree.fNodes.emplace_back(NodeFromKey(*key));
          // Need to get back cur since the emplace_back() may have moved it.
          cur = &nodeTree.fNodes[curIdx];
          newChild.fNesting = cur->fNesting + 1;
+         newChild.fParent = curIdx;
          if (!cur->fNChildren)
             cur->fFirstChild = nodeTree.fNodes.size() - 1;
          cur->fNChildren++;
@@ -551,6 +605,8 @@ static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_
             auto &child = nodeTree.fNodes[childIdx];
             if (child.fDir)
                nodesToVisit.push_back(childIdx);
+            else if (cur->fNesting < patternSplits.size())
+               nodeTree.fLeafList.push_back(childIdx);
          }
       }
       if (cur->fNesting == patternSplits.size()) {
