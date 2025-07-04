@@ -24,10 +24,10 @@
 
 #include "wildcards.hpp"
 
+#include <TError.h>
 #include <TFile.h>
 #include <TKey.h>
 #include <TTree.h>
-#include <THnSparse.h>
 
 #include <ROOT/StringUtils.hxx>
 #include <ROOT/RError.hxx>
@@ -327,12 +327,6 @@ PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx node
                PrintTTree(stream, *tree, Indent(indent + 2));
                PrintClusters(stream, *tree, Indent(indent + 2));
             }
-         }
-         // XXX: is this still needed?
-         if (ClassInheritsFrom(child.fClassName.c_str(), "THnSparse")) {
-            THnSparse *hs = child.fKey->ReadObject<THnSparse>();
-            if (hs)
-               hs->Print("all");
          }
       }
       if ((flags & RootLsArgs::kRecursiveListing) && ClassInheritsFrom(child.fClassName.c_str(), "TDirectory")) {
