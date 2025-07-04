@@ -1,6 +1,6 @@
 /// \file rootls.cxx
 ///
-/// Native implementation of rootls, vaguely based on rootls.py.
+/// Native implementation of rootls, partially based on rootls.py.
 ///
 /// \author Giacomo Parolini <giacomo.parolini@cern.ch>
 /// \date 2025-06-27
@@ -213,7 +213,7 @@ static void PrintDatime(std::ostream &stream, const TDatime &datime)
    std::ios defaultFmt(nullptr);
    stream << month << ' ';
    stream << std::right << std::setfill('0') << std::setw(2) << datime.GetDay() << ' ';
-   stream << datime.GetHour() << ':' << datime.GetMinute() << ' ' << datime.GetYear() << ' ';
+   stream << std::setw(2) << datime.GetHour() << ':' << datime.GetMinute() << ' ' << datime.GetYear() << ' ';
    stream.copyfmt(defaultFmt);
 }
 
@@ -294,7 +294,22 @@ PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx node
 
    for (NodeIdx childIdx = node.fFirstChild; childIdx < node.fFirstChild + node.fNChildren; ++childIdx) {
       const auto &child = tree.fNodes[childIdx];
-      std::string timeStr = ""; // TODO
+
+      const char *cycleStr = "";
+      // If this key is the first one in the list, or if it has a different name than the previous one, it means that
+      // it's the first object of that kind in the list.
+      if (childIdx == node.fFirstChild || child.fName != tree.fNodes[childIdx - 1].fName) {
+         // Then we check the following key. If the current key is not the last key in the list and if the following key
+         // has the same name, then it means it's another cycle of the same object. Thus, it's gonna be a backup cycle
+         // of the same object. Otherwise, it's just a key with one cycle so we don't need to print information two
+         // distinguish between different cycles of the same key.
+         if (childIdx < node.fFirstChild + node.fNChildren - 1 && child.fName == tree.fNodes[childIdx + 1].fName) {
+            cycleStr = "[current cycle]";
+         }
+      } else {
+         // This key is a subsequent cycle of a previous key
+         cycleStr = "[backup cycle]";
+      }
 
       PrintIndent(stream, indent);
       stream << std::left;
@@ -302,7 +317,7 @@ PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx node
       PrintDatime(stream, child.fKey->GetDatime());
       std::string namecycle = child.fName + ';' + std::to_string(child.fKey->GetCycle());
       stream << std::left << std::setw(maxNameLen) << namecycle;
-      stream << " \"" << child.fKey->GetTitle() << "\"";
+      stream << " \"" << child.fKey->GetTitle() << "\" " << cycleStr;
       stream << '\n';
 
       if (flags & RootLsArgs::kTreeListing) {
@@ -643,7 +658,7 @@ int main(int argc, char **argv)
 {
    // Ignore diagnostics up to (but excluding) kError to avoid spamming users with TClass::Init warnings.
    gErrorIgnoreLevel = kError;
-   
+
    auto args = ParseArgs(const_cast<const char **>(argv) + 1, argc - 1);
    if (args.fPrintUsageAndExit != RootLsArgs::PrintUsage::kNo) {
       std::cerr << "usage: rootls [-1hltr] FILE [FILE ...]\n";
