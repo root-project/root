@@ -1,19 +1,6 @@
 {
-#ifndef SECOND_RUN
-   gROOT->ProcessLine(".L classes.C+");
-      
-#ifdef ClingWorkAroundMissingAutoLoading
-   gSystem->Load("libTree");
-#endif
-#endif
-
-#if defined(ClingWorkAroundMissingDynamicScope) && !defined(SECOND_RUN)
-#define SECOND_RUN
-   gROOT->ProcessLine(".x copy.C");
-#else
-            
-TEmcl *e = 0;
-TNonEmcl *ne = 0;
+TEmcl *e = nullptr;
+TNonEmcl *ne = nullptr;
 
 
 TFile *oldfile = new TFile("test.root");
@@ -29,12 +16,6 @@ oldtree->GetEntry(0);
 tree->Fill();
 
 file->Write();
-#endif
-      
-#ifdef ClingWorkAroundBrokenUnnamedReturn
-   gApplication->Terminate(0);
-#else
-   return 0;
-#endif
+file->Close();
 }
 
