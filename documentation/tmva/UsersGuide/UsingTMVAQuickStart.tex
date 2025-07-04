@@ -118,10 +118,10 @@ for training and independent test samples provides overtraining validation.
               \pageref{pgr:scripttable1}) for classification (left) and regression
               problems (right). The multiclass classification GUI is similar to the classification GUI,
               where some functionality is not available.
-              The classification GUI can be launched manually by executing the script
-              {\tt \$}\code{ROOTSYS/tmva/test/TMVAGui.C} in a ROOT
-              session. To launch the multiclass or regression GUIs use the macros \code{TMVARegGui.C}
-              or \code{TMVAMultiClassGui.C}, respectively. \\[0.2cm]
+              The classification GUI can be launched manually by executing the line
+              \code{TMVA::TMVAGui()} in a ROOT
+              session. To launch the multiclass or regression GUIs run the lines \code{TMVA::TMVARegGui()}
+              or \code{TMVA::TMVAMultiClassGui()}, respectively. \\[0.2cm]
               {\footnotesize
               \underline{Classification (left)}. The buttons behave as follows:
               (1a) plots the signal and background
@@ -164,7 +164,7 @@ for training and independent test samples provides overtraining validation.
   To the right a sample output from the 1 vs. Rest ROC macro can be seen.
   {\footnotesize
      \\
-     \underline{Multiclass classification (left)}. The main difference between the multiclass GUI and the binary one is the splitting of button (5b) of \code{TMVAGui.C} into button (5) and (6) in \code{TMVAMultiClassGui.C}.
+     \underline{Multiclass classification (left)}. The main difference between the multiclass GUI and the binary one is the splitting of button (5b) of \code{TMVA::TMVAGui} into button (5) and (6) in \code{TMVA::TMVAMultiClassGui()}.
      Button (5) draws 1 vs. Rest ROC curves where each class, in turn, is considered signal while the remaining are considered background.
      Button (6) instead considers all pairs of classes in turn, ignoring events belonging to other classes.
      These two visualisation provide a simplified view of of the high-dimensional ROC surface of multiclass problems.
