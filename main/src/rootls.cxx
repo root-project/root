@@ -24,6 +24,7 @@
 
 #include "wildcards.hpp"
 
+#include <TBranch.h>
 #include <TError.h>
 #include <TFile.h>
 #include <TKey.h>
