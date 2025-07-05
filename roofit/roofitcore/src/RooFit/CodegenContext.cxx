@@ -104,6 +104,15 @@ void CodegenContext::addVecObs(const char *key, int idx)
       _vecObsIndices[namePtr] = idx;
 }
 
+int CodegenContext::observableIndexOf(RooAbsArg const &arg) const
+{
+   auto it = _vecObsIndices.find(arg.namePtr());
+   if (it != _vecObsIndices.end()) {
+      return it->second;
+   }
+
+   return -1; // Not found
+}
 /// @brief Adds the input string to the squashed code body. If a class implements a translate function that wants to
 /// emit something to the squashed code body, it must call this function with the code it wants to emit. In case of
 /// loops, automatically determines if code needs to be stored inside or outside loop scope.

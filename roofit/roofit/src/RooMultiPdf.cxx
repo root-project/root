@@ -20,7 +20,7 @@
    by setting their associated indices.*/
 
 #include <RooMultiPdf.h>
-
+#include <RooFit/Detail/MathFuncs.h>
 #include <RooConstVar.h>
 
 // Constructing a RooMultiPdf
