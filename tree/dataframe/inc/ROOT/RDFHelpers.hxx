@@ -17,6 +17,7 @@
 #include <ROOT/RDF/RActionBase.hxx>
 #include <ROOT/RDF/RResultMap.hxx>
 #include <ROOT/RResultHandle.hxx> // users of RunGraphs might rely on this transitive include
+#include <ROOT/RResultPtr.hxx>
 #include <ROOT/TypeTraits.hxx>
 
 #include <array>
@@ -276,8 +277,9 @@ SnapshotPtr_t VariationsFor(SnapshotPtr_t resPtr);
 /// \brief Add ProgressBar to a ROOT::RDF::RNode
 /// \param[in] df RDataFrame node at which ProgressBar is called.
 ///
-/// The ProgressBar can be added not only at the RDataFrame head node, but also at any any computational node,
-/// such as Filter or Define.
+/// The ProgressBar can be added not only at the RDataFrame head node, but also at any computational node,
+/// such as Filter or Define. To correctly account for the entries processed, place the progress bar
+/// after transformations that reduce the number of events (e.g. `Range`).
 /// ###Example usage:
 /// ~~~{.cpp}
 /// ROOT::RDataFrame df("tree", "file.root");
@@ -360,6 +362,8 @@ private:
    bool fUseShellColours;
 
    std::shared_ptr<TTree> fTree{nullptr};
+   ROOT::RDF::RResultPtr<ULong64_t> fTotalEntries{};
+
 
 public:
    /// Create a progress helper.
@@ -370,7 +374,8 @@ public:
    /// \param useColors Use shell colour codes to colour the output. Automatically disabled when
    /// we are not writing to a tty.
    ProgressHelper(std::size_t increment, unsigned int totalFiles = 1, unsigned int progressBarWidth = 40,
-                  unsigned int printInterval = 1, bool useColors = true);
+                  unsigned int printInterval = 1, bool useColors = true,
+                  ROOT::RDF::RResultPtr<ULong64_t> totalEntries = {});
 
    ~ProgressHelper() = default;
 
