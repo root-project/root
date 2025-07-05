@@ -1,12 +1,12 @@
 #include <TNamed.h>
+
 #include <unordered_set>
 
 using std::unordered_set;
 
 typedef unordered_set<Long64_t> uset_t;
 
-class SetProblem : public TNamed
-{
+class SetProblem : public TNamed {
 protected:
 
    unordered_set<int> fIntBad;
@@ -14,7 +14,6 @@ protected:
 
    unordered_set<Long64_t> fNull;
    unordered_set<long long> fStraight;
-
 
    unordered_set<ULong64_t> fUNull;
 
@@ -28,12 +27,12 @@ public:
    SetProblem() {}
    SetProblem(const char * name) : TNamed(name, "") {}
 
-   ClassDef(SetProblem,1) // Abstract base column of TFTable
+   ClassDefOverride(SetProblem,1) // Abstract base column of TFTable
 
 };
 
-#ifdef __MAKECINT__
-#pragma link C++ typedef set_t;
+#ifdef __ROOTCLING__
+#pragma link C++ typedef uset_t;
 #pragma link C++ class SetProblem+;
 #endif
 
