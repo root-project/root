@@ -33,25 +33,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Smatrix
     Math/UnaryOperators.h
   NO_SOURCES
   LINKDEF
-    LinkDef.h
+    LinkDefAll.h
   DICTIONARY_OPTIONS
-    -writeEmptyRootPCM
-  DEPENDENCIES
-    Core
-    MathCore
-)
-
-ROOT_GENERATE_DICTIONARY(G__Smatrix32
-    Math/SMatrix.h
-    Math/SMatrixDfwd.h
-    Math/SMatrixFfwd.h
-    Math/SVector.h
-  MULTIDICT
-  MODULE
-    Smatrix
-  LINKDEF
-    LinkDefD32.h
-  OPTIONS
     -writeEmptyRootPCM
   DEPENDENCIES
     Core
