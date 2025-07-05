@@ -1762,6 +1762,8 @@ namespace utils {
     PrintingPolicy Policy(Ctx.getPrintingPolicy());
     Policy.SuppressScope = false;
     Policy.AnonymousTagLocations = false;
+    Policy.SuppressElaboration = true;
+    Policy.FullyQualifiedName = true;
     return FQQT.getAsString(Policy);
   }
 

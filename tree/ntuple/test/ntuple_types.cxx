@@ -2261,7 +2261,7 @@ TEST(RNTuple, ContextDependentTypes)
       EXPECT_EQ(field.GetTypeName(), "DerivedWithTypedef");
       const auto &vec = model.GetConstField("foo.m");
       EXPECT_EQ(vec.GetTypeName(), "std::vector<std::int32_t>");
-      EXPECT_EQ(vec.GetTypeAlias(), "MyVec<std::int32_t>");
+      EXPECT_EQ(vec.GetTypeAlias(), "CustomStruct::MyVec<std::int32_t>");
 
       auto vecView = reader->GetView<DerivedWithTypedef::MyVec<int>>("foo.m");
       for (const auto &i : reader->GetEntryRange()) {

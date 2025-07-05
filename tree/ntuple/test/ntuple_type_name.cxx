@@ -216,13 +216,13 @@ TEST(RNTuple, TypeNameTemplatesNestedAlias)
    ASSERT_EQ(2, hashSubfields.size());
    EXPECT_EQ("fHash", hashSubfields[0]->GetFieldName());
    EXPECT_EQ("std::string", hashSubfields[0]->GetTypeName());
-   EXPECT_EQ("EdmHash<1>::value_type", hashSubfields[0]->GetTypeAlias());
+   EXPECT_EQ("EdmHash::value_type", hashSubfields[0]->GetTypeAlias());
 
    EXPECT_EQ("fHash2", hashSubfields[1]->GetFieldName());
    EXPECT_EQ("std::string", hashSubfields[1]->GetTypeName());
    // FIXME: This should really be EdmHash<1>::value_typeT<EdmHash<1>::value_type>, but this is the value we get from
    // TDataMember::GetFullTypeName right now...
-   EXPECT_EQ("value_typeT<EdmHash<1>::value_type>", hashSubfields[1]->GetTypeAlias());
+   EXPECT_EQ("EdmHash::value_typeT<EdmHash::value_type>", hashSubfields[1]->GetTypeAlias());
 }
 
 TEST(RNTuple, ContextDependentTypeNames)
@@ -257,7 +257,7 @@ TEST(RNTuple, ContextDependentTypeNames)
       {
          const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("m", fooId));
          EXPECT_EQ(fdesc.GetTypeName(), "std::vector<std::int32_t>");
-         EXPECT_EQ(fdesc.GetTypeAlias(), "MyVec<std::int32_t>");
+         EXPECT_EQ(fdesc.GetTypeAlias(), "CustomStruct::MyVec<std::int32_t>");
       }
       {
          const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("a", baseId));

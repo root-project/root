@@ -38,6 +38,10 @@ ROOTTEST_ADD_TEST(loadernotapp
                   OUTREF loadernotapp.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
+ROOTTEST_ADD_TEST(reproduceROOT10150
+                  MACRO reproduceROOT10150.C+
+                  FAILREGEX "error")
+
 ROOTTEST_COMPILE_MACRO(fornamespace.C)
 
 #---Copy from source to binary some of the files
