@@ -201,7 +201,9 @@ Int_t runPrefetchReading(bool prefetch = true, bool caching = false)
    fprintf(stderr, "fPrefetchedBlocks = %lli\n", file->GetCacheRead()->GetPrefetchedBlocks());
 
    fprintf(stderr, "Delete tmp directory: /tmp/xcache\n" );
-   if (caching) system( "rm -r /tmp/xcache" );
+   if (caching) {
+      gSystem->Unlink("/tmp/xcache");
+   }
 
    file->Close();
    delete file;
