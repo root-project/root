@@ -1798,6 +1798,24 @@ ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeFooter(
       return R__FORWARD_ERROR(res);
    }
 
+   // Attributes
+   frame = pos;
+   const auto nAttributeSets = desc.GetAttributeSets().size();
+   pos += SerializeListFramePreamble(nAttributeSets, *where);
+   for (const auto &[attrSetName, attrSetLocator] : desc.GetAttributeSets()) {
+      if (auto res = SerializeLocator(attrSetLocator, *where)) {
+         pos += res.Unwrap();
+      } else {
+         return R__FORWARD_ERROR(res);
+      }
+      pos += SerializeString(attrSetName, *where);
+   }
+   if (auto res = SerializeFramePostscript(buffer ? frame : nullptr, pos - frame)) {
+      pos += res.Unwrap();
+   } else {
+      return R__FORWARD_ERROR(res);
+   }
+
    std::uint32_t size = pos - base;
    if (auto res = SerializeEnvelopePostscript(base, size)) {
       size += res.Unwrap();
@@ -1917,32 +1935,64 @@ ROOT::RResult<void> ROOT::Internal::RNTupleSerializer::DeserializeFooter(const v
    }
    bytes = frame + frameSize;
 
-   std::uint32_t nClusterGroups;
-   frame = bytes;
-   if (auto res = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nClusterGroups)) {
-      bytes += res.Unwrap();
-   } else {
-      return R__FORWARD_ERROR(res);
-   }
-   for (std::uint32_t groupId = 0; groupId < nClusterGroups; ++groupId) {
-      RClusterGroup clusterGroup;
-      if (auto res = DeserializeClusterGroup(bytes, fnFrameSizeLeft(), clusterGroup)) {
+   {
+      std::uint32_t nClusterGroups;
+      frame = bytes;
+      if (auto res = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nClusterGroups)) {
          bytes += res.Unwrap();
       } else {
          return R__FORWARD_ERROR(res);
       }
+      for (std::uint32_t groupId = 0; groupId < nClusterGroups; ++groupId) {
+         RClusterGroup clusterGroup;
+         if (auto res = DeserializeClusterGroup(bytes, fnFrameSizeLeft(), clusterGroup)) {
+            bytes += res.Unwrap();
+         } else {
+            return R__FORWARD_ERROR(res);
+         }
 
-      descBuilder.AddToOnDiskFooterSize(clusterGroup.fPageListEnvelopeLink.fLocator.GetNBytesOnStorage());
-      RClusterGroupDescriptorBuilder clusterGroupBuilder;
-      clusterGroupBuilder.ClusterGroupId(groupId)
-         .PageListLocator(clusterGroup.fPageListEnvelopeLink.fLocator)
-         .PageListLength(clusterGroup.fPageListEnvelopeLink.fLength)
-         .MinEntry(clusterGroup.fMinEntry)
-         .EntrySpan(clusterGroup.fEntrySpan)
-         .NClusters(clusterGroup.fNClusters);
-      descBuilder.AddClusterGroup(clusterGroupBuilder.MoveDescriptor().Unwrap());
+         descBuilder.AddToOnDiskFooterSize(clusterGroup.fPageListEnvelopeLink.fLocator.GetNBytesOnStorage());
+         RClusterGroupDescriptorBuilder clusterGroupBuilder;
+         clusterGroupBuilder.ClusterGroupId(groupId)
+            .PageListLocator(clusterGroup.fPageListEnvelopeLink.fLocator)
+            .PageListLength(clusterGroup.fPageListEnvelopeLink.fLength)
+            .MinEntry(clusterGroup.fMinEntry)
+            .EntrySpan(clusterGroup.fEntrySpan)
+            .NClusters(clusterGroup.fNClusters);
+         descBuilder.AddClusterGroup(clusterGroupBuilder.MoveDescriptor().Unwrap());
+      }
+      bytes = frame + frameSize;
    }
-   bytes = frame + frameSize;
+
+   // NOTE: Attributes were introduced in v1.0.1.0, so this section may be missing.
+   // Testing for > 8 because bufSize includes the checksum.
+   if (fnBufSizeLeft() > 8) {
+      std::uint32_t nAttributeSets;
+      frame = bytes;
+      if (auto res = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nAttributeSets)) {
+         bytes += res.Unwrap();
+      } else {
+         return R__FORWARD_ERROR(res);
+      }
+      for (std::uint32_t attrSetId = 0; attrSetId < nAttributeSets; ++attrSetId) {
+         RNTupleLocator attrSetLocator;
+         if (auto res = DeserializeLocator(bytes, fnBufSizeLeft(), attrSetLocator)) {
+            bytes += res.Unwrap();
+         } else {
+            return R__FORWARD_ERROR(res);
+         }
+         std::string attrSetName;
+         if (auto res = DeserializeString(bytes, fnBufSizeLeft(), attrSetName)) {
+            bytes += res.Unwrap();
+         } else {
+            return R__FORWARD_ERROR(res);
+         }
+         if (auto res = descBuilder.AddAttributeSet({attrSetName, attrSetLocator}); !res) {
+            return R__FORWARD_ERROR(res);
+         }
+      }
+      bytes = frame + frameSize;
+   }
 
    return RResult<void>::Success();
 }

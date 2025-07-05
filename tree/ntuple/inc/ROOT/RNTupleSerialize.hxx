@@ -36,6 +36,10 @@ class RNTupleDescriptor;
 class RClusterDescriptor;
 enum class EExtraTypeInfoIds;
 
+namespace Experimental::Internal {
+struct RNTupleAttributeSetDescriptor;
+}
+
 namespace Internal {
 
 class RClusterDescriptorBuilder;

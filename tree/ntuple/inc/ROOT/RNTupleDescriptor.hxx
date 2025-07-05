@@ -61,6 +61,17 @@ class RNTupleDescriptorBuilder;
 RNTupleDescriptor CloneDescriptorSchema(const RNTupleDescriptor &desc);
 } // namespace Internal
 
+namespace Experimental::Internal {
+
+struct RNTupleAttributeSetDescriptor {
+   std::string fName;
+   // The locator of the AttributeSet anchor.
+   // In case of kTypeFile, it points to the beginning of the Anchor's TKey (not the payload).
+   // NOTE: Only kTypeFile is supported at the moment.
+   RNTupleLocator fLocator;
+};
+} // namespace Experimental::Internal
+
 // clang-format off
 /**
 \class ROOT::RFieldDescriptor
@@ -681,6 +692,9 @@ private:
    /// Potentially a subset of all the available clusters
    std::unordered_map<ROOT::DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
 
+   /// Mapping `{ attrSet name => attrSet locator }`
+   std::unordered_map<std::string, RNTupleLocator> fAttributeSets;
+
    // We don't expose this publicly because when we add sharded clusters, this interface does not make sense anymore
    ROOT::DescriptorId_t FindClusterId(ROOT::NTupleSize_t entryIdx) const;
 
@@ -819,6 +833,10 @@ public:
 
    bool HasFeature(unsigned int flag) const { return fFeatureFlags.count(flag) > 0; }
    std::vector<std::uint64_t> GetFeatureFlags() const;
+
+   // TODO: replace with an iterable?
+   // XXX: should be internal?
+   const std::unordered_map<std::string, RNTupleLocator> &GetAttributeSets() const { return fAttributeSets; }
 
    /// Return header extension information; if the descriptor does not have a header extension, return `nullptr`
    const RHeaderExtension *GetHeaderExtension() const { return fHeaderExtension.get(); }
@@ -1559,6 +1577,8 @@ public:
 
    RResult<void> AddExtraTypeInfo(RExtraTypeInfoDescriptor &&extraTypeInfoDesc);
    void ReplaceExtraTypeInfo(RExtraTypeInfoDescriptor &&extraTypeInfoDesc);
+
+   RResult<void> AddAttributeSet(Experimental::Internal::RNTupleAttributeSetDescriptor &&attrSetDesc);
 
    /// Clears so-far stored clusters, fields, and columns and return to a pristine RNTupleDescriptor
    void Reset();

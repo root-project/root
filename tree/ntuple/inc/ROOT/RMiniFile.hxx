@@ -32,13 +32,22 @@ class TVirtualStreamerInfo;
 
 namespace ROOT {
 
+class RNTupleWriteOptions;
+class RNTupleReader;
+
 namespace Internal {
-class RRawFile;
+class RNTupleFileWriter;
+class RPageSource;
 }
 
-class RNTupleWriteOptions;
+namespace Experimental::Internal {
+class RNTupleMerger;
+TDirectory *GetUnderlyingDirectory(ROOT::Internal::RNTupleFileWriter &writer);
+}
 
 namespace Internal {
+class RRawFile;
+
 /// Holds status information of an open ROOT file during writing
 struct RTFileControlBlock;
 
@@ -53,6 +62,9 @@ RNTuple data keys.
 */
 // clang-format on
 class RMiniFileReader {
+   friend ROOT::Internal::RPageSource;
+   friend ROOT::Experimental::Internal::RNTupleMerger;
+
 private:
    /// The raw file used to read byte ranges
    ROOT::Internal::RRawFile *fRawFile = nullptr;
@@ -106,6 +118,9 @@ A stand-alone version of RNTuple can remove the TFile based writer.
 */
 // clang-format on
 class RNTupleFileWriter {
+   friend TDirectory *ROOT::Experimental::Internal::GetUnderlyingDirectory(ROOT::Internal::RNTupleFileWriter &writer);
+   friend class ROOT::Experimental::Internal::RNTupleMerger;
+
 public:
    /// The key length of a blob. It is always a big key (version > 1000) with class name RBlob.
    static constexpr std::size_t kBlobKeyLen = 42;
@@ -251,7 +266,7 @@ public:
    void WriteIntoReservedBlob(const void *buffer, size_t nbytes, std::int64_t offset);
    /// Ensures that the streamer info records passed as argument are written to the file
    void UpdateStreamerInfos(const ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t &streamerInfos);
-   /// Writes the RNTuple key to the file so that the header and footer keys can be found
+   /// Writes the RNTuple key to the file so that the header and footer keys can be found.
    void Commit(int compression = RCompressionSetting::EDefaults::kUseGeneralPurpose);
 };
 
