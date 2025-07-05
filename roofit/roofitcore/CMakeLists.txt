@@ -459,7 +459,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RIO
     MathCore
     Foam
-    Smatrix
     ${EXTRA_DEPENDENCIES}
   LINKDEF
     inc/LinkDef.h
@@ -489,6 +488,13 @@ if(fftw3)
 endif()
 
 target_include_directories(RooFitCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
+
+# The SMatrix package is header-only, but it's only exposed via the Smatrix
+# target, which is a shared library that also includes the dictionaries. For
+# RooFit, we are not interested in them, and want to avoid a dependency of the
+# RooFitCore library on the Smatrix dictionary library. Therefore, we just add
+# the include path.
+target_include_directories(RooFitCore PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/math/smatrix/inc>)
 
 # For recent clang, this can facilitate auto-vectorisation.
 # In RooFit, the errno side effect is not needed, anyway:
