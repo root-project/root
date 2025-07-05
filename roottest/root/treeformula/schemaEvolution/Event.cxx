@@ -17,7 +17,7 @@
 //        Double32_t     fTemperature;
 //        Int_t          fMeasures[10];
 //        Double32_t     fMatrix[4][4];
-//        Double32_t    *fClosestDistance; //[fNvertex] indexed array! 
+//        Double32_t    *fClosestDistance; //[fNvertex] indexed array!
 //        EventHeader    fEvtHdr;
 //        TClonesArray  *fTracks;
 //        TRefArray     *fHighPt;            //array of High Pt tracks only
@@ -91,8 +91,8 @@ TClonesArray *Event::fgTracks = 0;
 TH1F *Event::fgHist = 0;
 
 //______________________________________________________________________________
-Event::Event():  fEventName(0), fNtrack(0), fNseg(0), fNvertex(0), fFlag(0), 
-                 fTemperature(0), fClosestDistance(0), fTracks(0), fHighPt(0), 
+Event::Event():  fEventName(0), fNtrack(0), fNseg(0), fNvertex(0), fFlag(0),
+                 fTemperature(0), fClosestDistance(0), fTracks(0), fHighPt(0),
                  fMuons(0), fH(0)
 {
    // Create an Event object.
@@ -139,7 +139,7 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
   Clear();
   fHighPt->Delete();
   fMuons->Delete();
-  
+
   Int_t nch = 15;
   if (ev >= 100)   nch += 3;
   if (ev >= 10000) nch += 3;
@@ -169,13 +169,13 @@ void Event::Build(Int_t ev, Int_t arg5, Float_t ptmin) {
 
   //  Create and Fill the Track objects
   for (Int_t t = 0; t < ntrack; t++) AddTrack(random,ptmin);
-  
-  //Restore Object count 
+
+  //Restore Object count
   //To save space in the table keeping track of all referenced objects
-  //we assume that our events do not address each other. We reset the 
+  //we assume that our events do not address each other. We reset the
   //object count to what it was at the beginning of the event.
   TProcessID::SetObjectCount(ObjectNumber);
-}  
+}
 
 //______________________________________________________________________________
 Track *Event::AddTrack(Float_t random, Float_t ptmin)
@@ -198,7 +198,7 @@ Track *Event::AddTrack(Float_t random, Float_t ptmin)
 }
 
 //______________________________________________________________________________
-void Event::Clear(Option_t *option)
+void Event::Clear(Option_t *)
 {
    fTracks->Clear("C"); //will also call Track::Clear
    fHighPt->Delete();
@@ -206,7 +206,7 @@ void Event::Clear(Option_t *option)
 }
 
 //______________________________________________________________________________
-void Event::Reset(Option_t *option)
+void Event::Reset(Option_t *)
 {
 // Static function to reset all static objects for this event
 //   fgTracks->Delete(option);
@@ -251,7 +251,7 @@ Track::Track(const Track &orig) : TObject(orig)
 
    fPx = orig.fPx;
    fPy = orig.fPy;
-   fPz = orig.fPx; 
+   fPz = orig.fPx;
    fRandom = orig.fRandom;
    fMass2 = orig.fMass2;
    fBx = orig.fBx;
@@ -339,9 +339,9 @@ Track::Track(Float_t random) : TObject(),fTriggerBits(64)
 //______________________________________________________________________________
 void Track::Clear(Option_t * /*option*/)
 {
-   fTriggerBits.Clear(); 
-   delete [] fPointValue; 
-   fPointValue=0; 
+   fTriggerBits.Clear();
+   delete [] fPointValue;
+   fPointValue=0;
 }
 
 //______________________________________________________________________________

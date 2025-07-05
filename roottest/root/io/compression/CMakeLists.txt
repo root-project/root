@@ -1,30 +1,13 @@
-ROOTTEST_GENERATE_DICTIONARY(libIoCompressionEvent
-  Event.h
-  LINKDEF EventLinkDef.h
-  SOURCES Event.cxx
-  NO_ROOTMAP
-  NO_CXXMODULE
-  FIXTURES_SETUP io-compression-dict)
+foreach(comp 0 101 208 301 404 505 5)
 
-target_link_libraries(libIoCompressionEventlibgen Physics)
+  set(file_name Event_${comp}.root)
 
-ROOTTEST_GENERATE_EXECUTABLE(MainEvent
-  MainEvent.cxx
-  LIBRARIES Core RIO libIoCompressionEventlibgen
-  FIXTURES_REQUIRED io-compression-dict
-  FIXTURES_SETUP io-compression-exec)
-
-set(values 0 101 208 301 404 505 5)
-
-foreach(comp ${values})
   ROOTTEST_ADD_TEST(write-${comp}
-    EXEC ./MainEvent
-    OPTS 20 ${comp} 1 1
-    FIXTURES_REQUIRED io-compression-exec
-    FIXTURES_SETUP io-compression-write-${comp})
+                    COMMAND ${CMAKE_BINARY_DIR}/roottest/root/io/bigevent/IoBigEventGenerator 20 ${comp} 1 1 600 ${file_name}
+                    FIXTURES_REQUIRED root-io-bigevent-generator-fixture
+                    FIXTURES_SETUP root-io-compression-write-${comp}-fixture)
 
   ROOTTEST_ADD_TEST(read-${comp}
-    EXEC ./MainEvent
-    OPTS 20 ${comp} 1 20
-    FIXTURES_REQUIRED io-compression-write-${comp})
+                    COMMAND ${CMAKE_BINARY_DIR}/roottest/root/io/bigevent/IoBigEventGenerator 20 ${comp} 1 20 600 ${file_name}
+                    FIXTURES_REQUIRED root-io-compression-write-${comp}-fixture)
 endforeach()

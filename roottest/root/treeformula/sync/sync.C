@@ -3,17 +3,16 @@
 #include "TTree.h"
 #include "TH1.h"
 #include "TClassTable.h"
-#ifndef __CINT__
 #include "Event.h"
-#endif
 #include "TMath.h"
-#include "Riostream.h"
+
+#include <iostream>
 
 bool Compare(TH1F *draw, TH1F *loop, const char *title) {
 
   if (draw->GetEntries()!=loop->GetEntries()) {
-    cout << title << ": incorrect number of entries (" << draw->GetEntries()
-         << " vs " << loop->GetEntries() << ")" << endl;
+    std::cout << title << ": incorrect number of entries (" << draw->GetEntries()
+         << " vs " << loop->GetEntries() << ")" << std::endl;
     return false;
   }
 
@@ -30,9 +29,6 @@ bool Compare(TH1F *draw, TH1F *loop, const char *title) {
 }
 
 Int_t sync(bool skipKnownFail) {
-  if (!TClassTable::GetDict("Event")) {
-    gSystem->Load("libEvent");
-  }
 
   TFile * file = new TFile("Event.root");
   TTree * tree = (TTree*)file->Get("T");
@@ -63,8 +59,8 @@ Int_t sync(bool skipKnownFail) {
                        h7->GetXaxis()->GetXmin(),
                        h7->GetXaxis()->GetXmax());
 
-  Event *e = 0;
-  Track *t;
+  Event *e = nullptr;
+  Track *t = nullptr;
   tree->SetBranchAddress("event",&e);
   double nentries = tree->GetEntries();
   for (int i = 0; i< nentries; i++ ) {
@@ -102,19 +98,20 @@ Int_t sync(bool skipKnownFail) {
   tree->SetBranchAddress("event", 0);
   new TCanvas("c2");
   bool result = true;
-  cout << result << endl;
+  std::cout << result << std::endl;
   result &= Compare(h1,h2,h1->GetTitle());
-  cout << result << endl;
+  std::cout << result << std::endl;
   result &= Compare(h3,h4,h3->GetTitle());
-  cout << result << endl;
+  std::cout << result << std::endl;
   result &= Compare(h5,h6,h5->GetTitle());
   if (!skipKnownFail) {
-    cout << result << endl;
+    std::cout << result << std::endl;
     result &= Compare(h7,h8,h7->GetTitle());
   }
   // h7->Dump();
   // h8->Dump();
   h8->Draw();
-  cout << result << endl;
-  return result;
+  std::cout << result << std::endl;
+
+  return result ? 0 : 1;
 }
