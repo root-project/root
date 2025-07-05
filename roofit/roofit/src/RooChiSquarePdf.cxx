@@ -40,7 +40,7 @@ RooChiSquarePdf::RooChiSquarePdf(const char* name, const char* title,
   _x("x", "Dependent", this, x),
   _ndof("ndof","ndof", this, ndof)
 {
-  RooHelpers::checkRangeOfParameters(this, {&_ndof}, 0.);
+  RooHelpers::checkRangeOfParameters(this, {&_x, &_ndof}, 0.);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
