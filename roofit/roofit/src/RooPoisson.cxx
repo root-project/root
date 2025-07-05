@@ -17,6 +17,7 @@ Poisson pdf
 #include "RooMath.h"
 #include "RooNaNPacker.h"
 #include "RooBatchCompute.h"
+#include "RooHelpers.h"
 
 #include <RooFit/Detail/MathFuncs.h>
 
@@ -35,6 +36,7 @@ RooPoisson::RooPoisson(const char *name, const char *title,
   mean("mean","mean",this,_mean),
   _noRounding(noRounding)
 {
+  RooHelpers::checkRangeOfParameters(this, {&static_cast<RooAbsReal&>(_x), &static_cast<RooAbsReal&>(_mean)}, 0.);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
