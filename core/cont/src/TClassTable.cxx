@@ -258,6 +258,8 @@ namespace ROOT {
    }
 }
 
+std::unordered_map<ROOT::TClassRec *, std::vector<ROOT::TClassAlt *>> TClassTable::fgClassRecToAlt;
+
 ////////////////////////////////////////////////////////////////////////////////
 /// TClassTable is a singleton (i.e. only one can exist per application).
 
@@ -271,6 +273,7 @@ TClassTable::TClassTable()
    fgIdMap = new IdMap_t;
    memset(fgTable, 0, fgSize * sizeof(TClassRec*));
    memset(fgAlternate, 0, fgSize * sizeof(TClassAlt*));
+   fgClassRecToAlt = std::unordered_map<ROOT::TClassRec *, std::vector<ROOT::TClassAlt *>>{};
    gClassTable = this;
 
    for (auto &&r : GetDelayedAddClass()) {
@@ -528,6 +531,16 @@ ROOT::TClassAlt* TClassTable::AddAlternate(const char *normName, const char *alt
    }
 
    fgAlternate[slot] = new TClassAlt(alternate,normName,fgAlternate[slot]);
+
+   UInt_t slotNorm = ROOT::ClassTableHash(normName, fgSize);
+   if (fgTable[slotNorm]) {
+      // Let others connect a class record to its class alternative names
+      if (auto it = fgClassRecToAlt.find(fgTable[slotNorm]); it == fgClassRecToAlt.end())
+         fgClassRecToAlt[fgTable[slotNorm]] = std::vector<ROOT::TClassAlt *>{fgAlternate[slot]};
+      else
+         fgClassRecToAlt[fgTable[slotNorm]].push_back(fgAlternate[slot]);
+   }
+
    return fgAlternate[slot];
 }
 
@@ -1029,4 +1042,22 @@ TNamed *ROOT::RegisterClassTemplate(const char *name, const char *file,
       reg->SetUniqueID(line);
    }
    return reg;
+}
+
+std::vector<std::string> TClassTable::GetClassAlternativeNames(const char *cname)
+{
+   UInt_t slot = ROOT::ClassTableHash(cname, fgSize);
+   if (!fgTable[slot])
+      return {};
+   if (auto it = fgClassRecToAlt.find(fgTable[slot]); it == fgClassRecToAlt.end())
+      return {};
+
+   const auto &classAlts = fgClassRecToAlt[fgTable[slot]];
+   std::vector<std::string> ret;
+   ret.reserve(classAlts.size());
+   for (const auto *classAlt : classAlts) {
+      ret.push_back(classAlt->fName);
+   }
+
+   return ret;
 }
