@@ -33,7 +33,6 @@ for the analytical convolution with a RooResolutionModel. See RooAbsAnaConvPdf.
 
 #include "RooRealVar.h"
 #include "RooRandom.h"
-#include "RooHelpers.h"
 
 #include "TError.h"
 
@@ -65,7 +64,6 @@ RooDecay::RooDecay(const char *name, const char *title,
     _basisExp = declareBasis("exp(-abs(@0)/@1)",tau) ;
     break ;
   }
-  RooHelpers::checkRangeOfParameters(this, {&_tau}, 0.);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
