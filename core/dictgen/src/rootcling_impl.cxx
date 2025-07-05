@@ -4969,6 +4969,14 @@ int RootClingMain(int argc,
          rootclingRetCode +=  FinalizeStreamerInfoWriting(interp);
       }
    } else {
+      if (!splitDictStream) {
+         if (gOptSplit) {
+            splitDictStream = CreateStreamPtrForSplitDict(gOptDictionaryFileName.getValue(), tmpCatalog);
+            splitDeleter.reset(splitDictStream);
+         } else {
+            splitDictStream = &dictStream;
+         }
+      }
       rootclingRetCode += GenerateFullDict(*splitDictStream, modGen.GetDictionaryName(), interp, scan, constructorTypes,
                                            gOptSplit, isGenreflex, isSelXML, gOptWriteEmptyRootPCM);
    }
