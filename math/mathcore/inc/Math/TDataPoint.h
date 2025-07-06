@@ -64,6 +64,7 @@ public:
       // fill coordinates
       for (unsigned int i = 0; i < kDimension; ++i)
          m_vCoordinates[i] = pData[i];
+      m_fWeight = fWeight;
    }
    /// euclidean distance
    ///
