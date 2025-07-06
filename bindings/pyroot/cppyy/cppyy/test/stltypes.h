@@ -12,8 +12,6 @@
 #include <utility>
 #include <vector>
 
-const int N = 5;
-
 //- basic example class
 class just_a_class {
 public:
