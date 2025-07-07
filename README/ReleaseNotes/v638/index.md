@@ -84,6 +84,9 @@ The deprecated pythonization with the `__getattr__` syntax is now removed.
 It was originally schedeuled for removal in 6.34 according to the 6.32 release notes, but since it was still used quite a bit,
 the deprecation period was extended.
 
+## Command line utils
+- `rootls` has a new native implementation and can now be run without Python. The options and the output of the new rootls are identical to the previous implementation but it should run faster (typically about 3 to 4x faster).
+
 ## JavaScript ROOT
 - A new configuration option `Jupyter.JSRoot` was added in .rootrc to set the default mode for JSROOT in Jupyter notebooks (on or off).
 

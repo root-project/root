@@ -1,16 +1,8 @@
-# For now let's reuse the rootls.py test files.
-set(ROOTFILES_DIR ../python/cmdLineUtils)
-
-configure_file(${ROOTFILES_DIR}/test.root . COPYONLY)
-configure_file(${ROOTFILES_DIR}/simpleTree.root . COPYONLY)
-configure_file(${ROOTFILES_DIR}/multipleNameCycles.root . COPYONLY)
-configure_file(${ROOTFILES_DIR}/MakeNameCyclesRootmvInput.C . COPYONLY)
-configure_file(${ROOTFILES_DIR}/subdirs.root . COPYONLY)
-
-# We compare the output of some tests against ref. files, and we don't want to
-# get noise for Python warnings (for example the warning that the GIL is
-# activated because the ROOT Python bindings don't support free threading yet).
-set(test_env PYTHONWARNINGS=ignore)
+configure_file(test.root . COPYONLY)
+configure_file(simpleTree.root . COPYONLY)
+configure_file(multipleNameCycles.root . COPYONLY)
+configure_file(MakeNameCyclesRootmvInput.C . COPYONLY)
+configure_file(subdirs.root . COPYONLY)
 
 if(MSVC)
     # the command line tools works fine in the Windows command prompt but
@@ -18,69 +10,112 @@ if(MSVC)
     set(PY_TOOLS_PREFIX ${Python3_EXECUTABLE} ${ROOTSYS}/bin)
     set(TOOLS_PREFIX ${ROOTSYS}/bin)
     set(pyext .py)
+    set(exeext .exe)
 else()
     set(PY_TOOLS_PREFIX ${ROOTSYS}/bin)
     set(TOOLS_PREFIX ${ROOTSYS}/bin)
 endif()
 
 ############################## ROOLS TESTS ##############################
-ROOTTEST_ADD_TEST(SimpleRootlsCxx1
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 test.root
-                  OUTREF ${ROOTFILES_DIR}/SimpleRootls.ref)
+ROOTTEST_ADD_TEST(SimpleRootls1
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 test.root
+                  OUTREF SimpleRootls.ref
+                  ENVIRONMENT ${test_env})
 
-ROOTTEST_ADD_TEST(SimpleRootlsCxx2
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 test.root:*
-                  OUTREF ${ROOTFILES_DIR}/SimpleRootls2.ref)
+ROOTTEST_ADD_TEST(SimpleRootls2
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 test.root:*
+                  OUTREF SimpleRootls2.ref
+                  ENVIRONMENT ${test_env})
 
-ROOTTEST_ADD_TEST(SimpleRootlsCxx3
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 test.root:tof
-                  OUTREF ${ROOTFILES_DIR}/SimpleRootls3.ref)
+ROOTTEST_ADD_TEST(SimpleRootls3
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 test.root:tof
+                  OUTREF SimpleRootls3.ref
+                  ENVIRONMENT ${test_env})
 
-ROOTTEST_ADD_TEST(SimpleRootlsCxx4
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 test.root:tof/*
-                  OUTREF ${ROOTFILES_DIR}/SimpleRootls4.ref)
+ROOTTEST_ADD_TEST(SimpleRootls4
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 test.root:tof/*
+                  OUTREF SimpleRootls4.ref
+                  ENVIRONMENT ${test_env})
 
-ROOTTEST_ADD_TEST(LongRootlsCxx1
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -l test.root
-                  OUTREF ${ROOTFILES_DIR}/LongRootls.ref)
+ROOTTEST_ADD_TEST(LongRootls1
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -l test.root
+                  OUTREF LongRootls.ref
+                  ENVIRONMENT ${test_env})
 
-ROOTTEST_ADD_TEST(LongRootlsCxx2
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -l test.root:*
-                  OUTREF ${ROOTFILES_DIR}/LongRootls2.ref)
+ROOTTEST_ADD_TEST(LongRootls2
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -l test.root:*
+                  OUTREF LongRootls2.ref
+                  ENVIRONMENT ${test_env})
 
-ROOTTEST_ADD_TEST(LongRootlsCxx3
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -l test.root:tof
-                  OUTREF ${ROOTFILES_DIR}/LongRootls3.ref)
+ROOTTEST_ADD_TEST(LongRootls3
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -l test.root:tof
+                  OUTREF LongRootls3.ref
+                  ENVIRONMENT ${test_env})
 
-ROOTTEST_ADD_TEST(LongRootlsCxx4
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -l test.root:tof/*
-                  OUTREF ${ROOTFILES_DIR}/LongRootls4.ref)
+ROOTTEST_ADD_TEST(LongRootls4
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -l test.root:tof/*
+                  OUTREF LongRootls4.ref
+                  ENVIRONMENT ${test_env})
 
 if(davix AND NOT MSVC) # davix is optional ; Windows cannot yet read https
-    ROOTTEST_ADD_TEST(WebRootlsCxx1
-                    COMMAND ${TOOLS_PREFIX}/rootlscxx -1 http://root.cern.ch/files/pippa.root
-                    OUTREF ${ROOTFILES_DIR}/WebRootls.ref)
+    ROOTTEST_ADD_TEST(WebRootls1
+                    COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 http://root.cern.ch/files/pippa.root
+                    OUTREF WebRootls.ref
+                    ENVIRONMENT ${test_env})
 
-    ROOTTEST_ADD_TEST(WebRootlsCxx2
-                    COMMAND ${TOOLS_PREFIX}/rootlscxx -1 http://root.cern.ch/files/pippa.root:LL
-                    OUTREF ${ROOTFILES_DIR}/WebRootls2.ref)
+    ROOTTEST_ADD_TEST(WebRootls2
+                    COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 http://root.cern.ch/files/pippa.root:LL
+                    OUTREF WebRootls2.ref
+                    ENVIRONMENT ${test_env})
 endif()
 
-ROOTTEST_ADD_TEST(TreeRootlsCxx1
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -t simpleTree.root
-                  OUTREF ${ROOTFILES_DIR}/TreeRootls.ref)
+ROOTTEST_ADD_TEST(TreeRootls1
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -t simpleTree.root
+                  OUTREF TreeRootls.ref
+                  ENVIRONMENT ${test_env})
 
-ROOTTEST_ADD_TEST(NameCyclesRootlsCxx
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -t multipleNameCycles.root:tree
-                  OUTREF ${ROOTFILES_DIR}/MultipleNameCyclesRootls.ref)
+ROOTTEST_ADD_TEST(NameCyclesRootls
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -t multipleNameCycles.root:tree
+                  OUTREF MultipleNameCyclesRootls.ref
+                  ENVIRONMENT ${test_env})
 
-ROOTTEST_ADD_TEST(RecursiveRootlsCxx
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -lr subdirs.root
-                  OUTREF ${ROOTFILES_DIR}/RecursiveRootls.ref)
+ROOTTEST_ADD_TEST(RecursiveRootls
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -lr subdirs.root
+                  OUTREF RecursiveRootls.ref
+                  ENVIRONMENT ${test_env})
 
 #########################################################################
 
+ROOTTEST_ADD_TEST(ROOT_8197
+                  MACRO ROOT_8197.C
+                  OUTREF ROOT_8197.ref
+                  ENVIRONMENT ${test_env})
+
 if(ROOT_pyroot_FOUND)
+
+# We compare the output of some tests against ref. files, and we don't want to
+# get noise for Python warnings (for example the warning that the GIL is
+# activated because the ROOT Python bindings don't support free threading yet).
+set(test_env PYTHONWARNINGS=ignore)
+
+############################## PATTERN TESTS ############################
+set (TESTPATTERN_EXE ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/testPatternToFileNameAndPathSplitList.py)
+ROOTTEST_ADD_TEST(SimplePattern1
+                  COMMAND ${TESTPATTERN_EXE} test.root
+                  OUTREF SimplePattern.ref
+                  ENVIRONMENT ${test_env})
+
+ROOTTEST_ADD_TEST(SimplePattern2
+                  COMMAND ${TESTPATTERN_EXE} test.root:tof
+                  OUTREF SimplePattern2.ref
+                  ENVIRONMENT ${test_env})
+
+ROOTTEST_ADD_TEST(SimplePattern3
+                  COMMAND ${TESTPATTERN_EXE} test.root:*
+                  OUTREF SimplePattern3.ref
+                  ENVIRONMENT ${test_env})
+#########################################################################
+
 
 ############################## ROORM TESTS ##############################
 ROOTTEST_ADD_TEST(SimpleRootrm1PrepareInput
@@ -91,8 +126,8 @@ ROOTTEST_ADD_TEST(SimpleRootrm1
                   DEPENDS SimpleRootrm1PrepareInput)
 
 ROOTTEST_ADD_TEST(SimpleRootrm1CheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 victim1.root
-                  OUTREF ${ROOTFILES_DIR}/SimpleRootrm.ref
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 victim1.root
+                  OUTREF SimpleRootrm.ref
                   DEPENDS SimpleRootrm1
                   ENVIRONMENT ${test_env})
 
@@ -110,8 +145,8 @@ ROOTTEST_ADD_TEST(SimpleRootrm2
                   DEPENDS SimpleRootrm2PrepareInput)
 
 ROOTTEST_ADD_TEST(SimpleRootrm2CheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 victim2.root
-                  OUTREF ${ROOTFILES_DIR}/SimpleRootrm2.ref
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 victim2.root
+                  OUTREF SimpleRootrm2.ref
                   DEPENDS SimpleRootrm2
                   ENVIRONMENT ${test_env})
 
@@ -129,8 +164,8 @@ ROOTTEST_ADD_TEST(SimpleRootrm3
                   DEPENDS SimpleRootrm3PrepareInput)
 
 ROOTTEST_ADD_TEST(SimpleRootrm3CheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 victim3.root:tof
-                  OUTREF ${ROOTFILES_DIR}/SimpleRootrm3.ref
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 victim3.root:tof
+                  OUTREF SimpleRootrm3.ref
                   DEPENDS SimpleRootrm3
                   ENVIRONMENT ${test_env})
 
@@ -148,8 +183,8 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir1
                   DEPENDS SimpleRootmkdir1PrepareInput)
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir1CheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 target1.root
-                  OUTREF ${ROOTFILES_DIR}/SimpleRootmkdir.ref
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 target1.root
+                  OUTREF SimpleRootmkdir.ref
                   DEPENDS SimpleRootmkdir1
                   ENVIRONMENT ${test_env})
 
@@ -167,8 +202,8 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir2
                   DEPENDS SimpleRootmkdir2PrepareInput)
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir2CheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 target2.root
-                  OUTREF ${ROOTFILES_DIR}/SimpleRootmkdir2.ref
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 target2.root
+                  OUTREF SimpleRootmkdir2.ref
                   DEPENDS SimpleRootmkdir2
                   ENVIRONMENT ${test_env})
 
@@ -186,8 +221,8 @@ ROOTTEST_ADD_TEST(SimpleRootmkdir3
                   DEPENDS SimpleRootmkdir3PrepareInput)
 
 ROOTTEST_ADD_TEST(SimpleRootmkdir3CheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 target3.root:aa/bb
-                  OUTREF ${ROOTFILES_DIR}/SimpleRootmkdir3.ref
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 target3.root:aa/bb
+                  OUTREF SimpleRootmkdir3.ref
                   DEPENDS SimpleRootmkdir3
                   ENVIRONMENT ${test_env})
 
@@ -205,8 +240,8 @@ ROOTTEST_ADD_TEST(SimpleRootcp1
                   DEPENDS SimpleRootcp1PrepareInput)
 
 ROOTTEST_ADD_TEST(SimpleRootcp1CheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 copy1.root
-                  OUTREF ${ROOTFILES_DIR}/SimpleRootcp.ref
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 copy1.root
+                  OUTREF SimpleRootcp.ref
                   DEPENDS SimpleRootcp1
                   ENVIRONMENT ${test_env})
 
@@ -224,8 +259,8 @@ ROOTTEST_ADD_TEST(SimpleRootcp2
                   DEPENDS SimpleRootcp2PrepareInput)
 
 ROOTTEST_ADD_TEST(SimpleRootcp2CheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 copy2.root
-                  OUTREF ${ROOTFILES_DIR}/SimpleRootcp2.ref
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 copy2.root
+                  OUTREF SimpleRootcp2.ref
                   DEPENDS SimpleRootcp2
                   ENVIRONMENT ${test_env})
 
@@ -243,8 +278,8 @@ ROOTTEST_ADD_TEST(SimpleRootcp3
                   DEPENDS SimpleRootcp3PrepareInput)
 
 ROOTTEST_ADD_TEST(SimpleRootcp3CheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 copy3.root
-                  OUTREF ${ROOTFILES_DIR}/SimpleRootcp3.ref
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 copy3.root
+                  OUTREF SimpleRootcp3.ref
                   DEPENDS SimpleRootcp3
                   ENVIRONMENT ${test_env})
 
@@ -260,8 +295,8 @@ ROOTTEST_ADD_TEST(SimpleRootcp4
                   DEPENDS SimpleRootcp4PrepareInput)
 
 ROOTTEST_ADD_TEST(SimpleRootcp4CheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 copy4.root:dir
-                  OUTREF ${ROOTFILES_DIR}/SimpleRootcp4.ref
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 copy4.root:dir
+                  OUTREF SimpleRootcp4.ref
                   DEPENDS SimpleRootcp4
                   ENVIRONMENT ${test_env})
 
@@ -279,8 +314,8 @@ ROOTTEST_ADD_TEST(SimpleRootcp5
                   DEPENDS SimpleRootcp5PrepareInput)
 
 ROOTTEST_ADD_TEST(SimpleRootcp5CheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 copy5.root:dir
-                  OUTREF ${ROOTFILES_DIR}/SimpleRootcp5.ref
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 copy5.root:dir
+                  OUTREF SimpleRootcp5.ref
                   DEPENDS SimpleRootcp5
                   ENVIRONMENT ${test_env})
 
@@ -298,8 +333,8 @@ ROOTTEST_ADD_TEST(SimpleRootmv1
                   DEPENDS SimpleRootmv1PrepareInput)
 
 ROOTTEST_ADD_TEST(SimpleRootmv1CheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 move1.root
-                  OUTREF ${ROOTFILES_DIR}/SimpleRootmv.ref
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 move1.root
+                  OUTREF SimpleRootmv.ref
                   DEPENDS SimpleRootmv1
                   ENVIRONMENT ${test_env})
 
@@ -317,8 +352,8 @@ ROOTTEST_ADD_TEST(SimpleRootmv2
                   DEPENDS SimpleRootmv2PrepareInput)
 
 ROOTTEST_ADD_TEST(SimpleRootmv2CheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 move2.root
-                  OUTREF ${ROOTFILES_DIR}/SimpleRootmv2.ref
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 move2.root
+                  OUTREF SimpleRootmv2.ref
                   DEPENDS SimpleRootmv2
                   ENVIRONMENT ${test_env})
 
@@ -336,8 +371,8 @@ ROOTTEST_ADD_TEST(SimpleRootmv3
                   DEPENDS SimpleRootmv3PrepareInput)
 
 ROOTTEST_ADD_TEST(SimpleRootmv3CheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 move3.root
-                  OUTREF ${ROOTFILES_DIR}/SimpleRootmv3.ref
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 move3.root
+                  OUTREF SimpleRootmv3.ref
                   DEPENDS SimpleRootmv3
                   ENVIRONMENT ${test_env})
 
@@ -353,8 +388,8 @@ ROOTTEST_ADD_TEST(SimpleRootmv4
                   DEPENDS SimpleRootmv4PrepareInput)
 
 ROOTTEST_ADD_TEST(SimpleRootmv4CheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 move4.root:*
-                  OUTREF ${ROOTFILES_DIR}/SimpleRootmv4.ref
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 move4.root:*
+                  OUTREF SimpleRootmv4.ref
                   DEPENDS SimpleRootmv4
                   ENVIRONMENT ${test_env})
 
@@ -370,8 +405,8 @@ ROOTTEST_ADD_TEST(SimpleRootmv5
                   DEPENDS SimpleRootmv5PrepareInput)
 
 ROOTTEST_ADD_TEST(SimpleRootmv5CheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 move5.root:*
-                  OUTREF ${ROOTFILES_DIR}/SimpleRootmv5.ref
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 move5.root:*
+                  OUTREF SimpleRootmv5.ref
                   DEPENDS SimpleRootmv5
                   ENVIRONMENT ${test_env})
 
@@ -388,8 +423,8 @@ ROOTTEST_ADD_TEST(NameCyclesRootmv
                   DEPENDS NameCyclesRootmvPrepareInput)
 
 ROOTTEST_ADD_TEST(NameCyclesRootmvCheckOutput
-                  COMMAND ${TOOLS_PREFIX}/rootlscxx -1 nameCyclesRootmvOutput.root
-                  OUTREF ${ROOTFILES_DIR}/NameCyclesRootmvCheckOutput.ref
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -1 nameCyclesRootmvOutput.root
+                  OUTREF NameCyclesRootmvCheckOutput.ref
                   DEPENDS NameCyclesRootmv
                   ENVIRONMENT ${test_env})
 #########################################################################
