@@ -330,10 +330,10 @@ static void PrintNodesDetailed(std::ostream &stream, const RootLsTree &tree,
 
       if (flags & RootLsArgs::kTreeListing) {
          if (ClassInheritsFrom(child.fClassName.c_str(), "TTree")) {
-            TTree *tree = child.fKey->ReadObject<TTree>();
-            if (tree) {
-               PrintTTree(stream, *tree, Indent(indent + 2));
-               PrintClusters(stream, *tree, Indent(indent + 2));
+            TTree *ttree = child.fKey->ReadObject<TTree>();
+            if (ttree) {
+               PrintTTree(stream, *ttree, Indent(indent + 2));
+               PrintClusters(stream, *ttree, Indent(indent + 2));
             }
          }
       }
