@@ -520,9 +520,10 @@ static void RootLs(const RootLsArgs &args, std::ostream &stream = std::cout)
          PrintNodesInColumns(stream, source.fObjectTree, source.fObjectTree.fLeafList.begin(),
                              source.fObjectTree.fLeafList.end(), args.fFlags, outerIndent);
 
-      const Indent indent = outerIndent + (source.fObjectTree.fDirList.size() > 1) * 2;
+      const bool manySources = source.fObjectTree.fDirList.size() + source.fObjectTree.fLeafList.size() > 1;
+      const Indent indent = outerIndent + manySources * 2;
       for (NodeIdx rootIdx : source.fObjectTree.fDirList) {
-         if (source.fObjectTree.fDirList.size() > 1) {
+         if (manySources) {
             PrintIndent(stream, outerIndent);
             stream << NodeFullPath(source.fObjectTree, rootIdx) << " :\n";
          }
