@@ -60,6 +60,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
+        ref: ${{ env.BASE_REF }}
         fetch-depth: 0
 
     - name: Set up Python Virtual Env
