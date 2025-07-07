@@ -317,4 +317,4 @@ class TestTH1Indexing:
 
 
 if __name__ == "__main__":
-    pytest.main(args=[__file__])
+    raise SystemExit(pytest.main(args=[__file__]))
