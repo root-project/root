@@ -180,7 +180,7 @@ struct V2i {
 
 static V2i GetTerminalSize()
 {
-   int rows = 80, columns = 25;
+   int columns = 80, rows = 25;
 #if defined(R__UNIX)
    {
       winsize w;
@@ -246,7 +246,6 @@ static void PrintTTree(std::ostream &stream, T &tree, Indent indent)
       stream << std::setw(maxTitleLen) << titleStr;
       stream << std::setw(1) << branch->GetTotBytes();
       stream << '\n';
-      // @Recursion
       PrintTTree(stream, *branch, Indent(indent + 2));
    }
 }
@@ -339,7 +338,6 @@ static void PrintNodesDetailed(std::ostream &stream, const RootLsTree &tree,
          }
       }
       if ((flags & RootLsArgs::kRecursiveListing) && ClassInheritsFrom(child.fClassName.c_str(), "TDirectory")) {
-         // @Recursion
          PrintChildrenDetailed(stream, tree, childIdx, flags, Indent(indent + 2));
       }
    }
@@ -357,7 +355,6 @@ PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx node
 
    std::vector<NodeIdx> children(node.fNChildren);
    std::iota(children.begin(), children.end(), node.fFirstChild);
-   // @Recursion
    PrintNodesDetailed(stream, tree, children.begin(), children.end(), flags, indent);
 }
 
@@ -464,7 +461,6 @@ static void PrintNodesInColumns(std::ostream &stream, const RootLsTree &tree,
       if (isDir && (flags & RootLsArgs::kRecursiveListing)) {
          if (!isExtremal)
             stream << "\n";
-         // @Recursion
          PrintChildrenInColumns(stream, tree, childIdx, flags, Indent(indent + 2));
          mustIndent = true;
       }
@@ -481,7 +477,6 @@ static void PrintChildrenInColumns(std::ostream &stream, const RootLsTree &tree,
 
    std::vector<NodeIdx> children(node.fNChildren);
    std::iota(children.begin(), children.end(), node.fFirstChild);
-   // @Recursion
    PrintNodesInColumns(stream, tree, children.begin(), children.end(), flags, indent);
 }
 
