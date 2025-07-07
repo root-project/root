@@ -60,11 +60,10 @@ Example usage:
 
 #include <iostream>
 
-using ROOT::Experimental::RNTuple;
 using ROOT::Experimental::RNTupleInspector;
 
 auto file = TFile::Open("data.rntuple");
-auto rntuple = std::unique_ptr<RNTuple>(file->Get<RNTuple>("NTupleName"));
+auto rntuple = std::unique_ptr<ROOT::RNTuple>(file->Get<RNTuple>("NTupleName"));
 auto inspector = RNTupleInspector::Create(*rntuple);
 
 std::cout << "The compression factor is " << inspector->GetCompressionFactor()
