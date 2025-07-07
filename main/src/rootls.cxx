@@ -40,6 +40,7 @@
 #define WIN32_LEAN_AND_MEAN
 #define VC_EXTRALEAN
 #include <windows.h>
+#undef GetClassName
 #endif
 
 static const char *const kAnsiNone = "\x1B[0m";
