@@ -3833,11 +3833,11 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
       fNeedLoading = false;                                                                     \
       TBranch *br = leaf->GetBranch();                                                          \
       if (br && br->GetTree()) {                                                                \
-         Long64_t tentry = br->GetTree()->GetReadEntry();                                       \
-         auto lres = R__LoadBranch(br,tentry,fQuickLoad);                                       \
+         Long64_t tEntry = br->GetTree()->GetReadEntry();                                       \
+         auto lres = R__LoadBranch(br, tEntry, fQuickLoad);                                     \
          if (lres <= 0)                                                                         \
             Error("TTreeFormula::TT_EVAL_INIT",                                                 \
-            "Could not read entry (%lld) of leaf (%s), r=(%d).", tentry, leaf->GetName(), lres);\
+            "Could not read entry (%lld) of leaf (%s), r=(%d).", tEntry, leaf->GetName(), lres);\
       } else {                                                                                  \
         Error("TTreeFormula::TT_EVAL_INIT",                                                     \
           "Could not init branch associated to this leaf (%s).", leaf->GetName());              \
@@ -3881,11 +3881,11 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
       TBranch *branch = (TBranch*)fBranches.UncheckedAt(code);                                  \
       if (branch) {                                                                             \
          if (branch->GetTree()) {                                                               \
-            Long64_t treeEntry = branch->GetTree()->GetReadEntry();                             \
-            auto lres = R__LoadBranch(branch, treeEntry, fQuickLoad);                           \
+            Long64_t tEntry = branch->GetTree()->GetReadEntry();                                \
+            auto lres = R__LoadBranch(branch, tEntry, fQuickLoad);                              \
             if (lres <= 0) {                                                                    \
                Error("TTreeFormula::TT_EVAL_INIT_LOOP",                                         \
-            "Could not read entry (%lld) of leaf (%s), r=(%d).", tentry, leaf->GetName(), lres);\
+            "Could not read entry (%lld) of leaf (%s), r=(%d).", tEntry, leaf->GetName(), lres);\
             }                                                                                   \
          } else {                                                                               \
             Error("TTreeFormula::TT_EVAL_INIT_LOOP",                                            \
@@ -3894,8 +3894,8 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
       } else if (fDidBooleanOptimization) {                                                     \
          branch = leaf->GetBranch();                                                            \
          if (branch && branch->GetTree()) {                                                     \
-            Long64_t treeEntry = branch->GetTree()->GetReadEntry();                             \
-            if (branch->GetReadEntry() != treeEntry) branch->GetEntry( treeEntry );             \
+            Long64_t tEntry = branch->GetTree()->GetReadEntry();                                \
+            if (branch->GetReadEntry() != tEntry) branch->GetEntry(tEntry);                     \
          } else {                                                                               \
             Error("TTreeFormula::TT_EVAL_INIT_LOOP",                                            \
                   "Could not init branch associated to this leaf (%s).", leaf->GetName());      \
@@ -3908,8 +3908,8 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
       if (fDidBooleanOptimization) {                                                            \
          TBranch *br = leaf->GetBranch();                                                       \
          if (br->GetTree()) {                                                                   \
-            Long64_t treeEntry = br->GetTree()->GetReadEntry();                                 \
-            if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );                     \
+            Long64_t tEntry = br->GetTree()->GetReadEntry();                                    \
+            if (br->GetReadEntry() != tEntry) br->GetEntry(tEntry);                             \
          } else {                                                                               \
             Error("TTreeFormula::TT_EVAL_INIT_LOOP",                                            \
                   "Could not init branch associated to this leaf (%s).", leaf->GetName());      \
@@ -4577,7 +4577,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                   if (fDidBooleanOptimization) {
                      TBranch *br = leafc->GetBranch();
                      Long64_t treeEntry = br->GetTree()->GetReadEntry();
-                     auto res = R__LoadBranch(br,treeEntry,true);
+                     auto res = R__LoadBranch(br, treeEntry, true);
                      if (res <= 0) {
                         Error("EvalInstance", "Branch could not be loaded:%d", res);
                         continue;
@@ -5541,7 +5541,7 @@ void TTreeFormula::LoadBranches()
 
       TBranch *br = leaf->GetBranch();
       Long64_t treeEntry = br->GetTree()->GetReadEntry();
-      auto res = R__LoadBranch(br,treeEntry,true);
+      auto res = R__LoadBranch(br, treeEntry, true);
       if (res <= 0) {
          Error("LoadBranches", "Branch could not be loaded:%d", res);
          continue;
