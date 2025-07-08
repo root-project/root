@@ -3883,9 +3883,10 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
          if (branch->GetTree()) {                                                               \
             Long64_t treeEntry = branch->GetTree()->GetReadEntry();                             \
             auto lres = R__LoadBranch(branch, treeEntry, fQuickLoad);                           \
-            if (lres <= 0)                                                                      \
+            if (lres <= 0) {                                                                    \
                Error("TTreeFormula::TT_EVAL_INIT_LOOP",                                         \
             "Could not read entry (%lld) of leaf (%s), r=(%d).", tentry, leaf->GetName(), lres);\
+            }                                                                                   \
          } else {                                                                               \
             Error("TTreeFormula::TT_EVAL_INIT_LOOP",                                            \
                   "Could not init branch associated to this leaf (%s).", leaf->GetName());      \
