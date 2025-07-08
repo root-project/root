@@ -284,7 +284,7 @@ public:
 template <typename T, typename = void>
 class RField final : public RClassField {
 public:
-   static std::string TypeName() { return ROOT::Internal::GetRenormalizedDemangledTypeName(typeid(T)); }
+   static std::string TypeName() { return ROOT::Internal::GetRenormalizedTypeName(typeid(T)); }
    RField(std::string_view name) : RClassField(name, TypeName())
    {
       static_assert(std::is_class_v<T>, "no I/O support for this basic C++ type");
@@ -498,10 +498,29 @@ public:
 // Has to be implemented after the definition of all RField<T> types
 // The void type is specialized in RField.cxx
 
+namespace Internal {
+
+/// Helper to check if a given type name is the one expected of Field<T>. Usually, this check can be done by
+/// type renormalization of the demangled type name T. The failure case, however, needs to additionally check for
+/// ROOT-specific special cases.
+template <class T>
+bool IsMatchingFieldType(const std::string &typeName)
+{
+   if (typeName == ROOT::RField<T>::TypeName())
+      return true;
+
+   // The typeName may be equal to the alternative, short type name issued by Meta. This is a rare case used, e.g.,
+   // by the ATLAS DataVector class to hide a default template parameter from the on-disk type name.
+   // Thus, we check again using first ROOT Meta normalization followed by RNTuple re-normalization.
+   return (typeName == ROOT::Internal::GetRenormalizedTypeName(ROOT::Internal::GetDemangledTypeName(typeid(T))));
+}
+
+} // namespace Internal
+
 template <typename T>
 std::unique_ptr<T, typename RFieldBase::RCreateObjectDeleter<T>::deleter> RFieldBase::CreateObject() const
 {
-   if (GetTypeName() != RField<T>::TypeName()) {
+   if (!Internal::IsMatchingFieldType<T>(GetTypeName())) {
       throw RException(
          R__FAIL("type mismatch for field " + GetFieldName() + ": " + GetTypeName() + " vs. " + RField<T>::TypeName()));
    }

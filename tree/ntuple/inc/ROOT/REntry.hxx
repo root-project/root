@@ -135,7 +135,7 @@ private:
    void EnsureMatchingType(ROOT::RFieldToken token [[maybe_unused]]) const
    {
       if constexpr (!std::is_void_v<T>) {
-         if (fFieldTypes[token.fIndex] != ROOT::RField<T>::TypeName()) {
+         if (!Internal::IsMatchingFieldType<T>(fFieldTypes[token.fIndex])) {
             throw RException(R__FAIL("type mismatch for field " + FindFieldName(token) + ": " +
                                      fFieldTypes[token.fIndex] + " vs. " + ROOT::RField<T>::TypeName()));
          }
