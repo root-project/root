@@ -328,7 +328,7 @@ public:
 
 protected:
    virtual void InitImpl(RNTupleModel &model) = 0;
-   virtual void CommitDatasetImpl() = 0;
+   virtual void CommitDatasetImpl(std::span<const std::size_t> linkedAttributeSets = {}) = 0;
 
 public:
    /// Parameters for the SealPage() method
@@ -391,7 +391,7 @@ public:
    /// The registered callback is executed at the beginning of CommitDataset();
    void RegisterOnCommitDatasetCallback(Callback_t callback) { fOnDatasetCommitCallbacks.emplace_back(callback); }
    /// Run the registered callbacks and finalize the current cluster and the entrire data set.
-   void CommitDataset();
+   void CommitDataset(std::span<const std::size_t> linkedAttrSets = {});
 
    /// Get a new, empty page for the given column that can be filled with up to nElements;
    /// nElements must be larger than zero.
@@ -540,7 +540,7 @@ public:
    RStagedCluster StageCluster(ROOT::NTupleSize_t nNewEntries) final;
    void CommitStagedClusters(std::span<RStagedCluster> clusters) final;
    void CommitClusterGroup() final;
-   void CommitDatasetImpl() final;
+   void CommitDatasetImpl(std::span<const std::size_t> linkedAttributeSets) final;
 }; // class RPagePersistentSink
 
 // clang-format off

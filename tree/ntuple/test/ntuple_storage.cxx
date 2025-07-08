@@ -53,7 +53,7 @@ protected:
    RStagedCluster StageCluster(ROOT::NTupleSize_t) final { return {}; }
    void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
-   void CommitDatasetImpl() final {}
+   void CommitDatasetImpl(std::span<const std::size_t>) final {}
 
 public:
    RPageSinkMock(const ROOT::RNTupleWriteOptions &options) : RPageSink("test", options) {}

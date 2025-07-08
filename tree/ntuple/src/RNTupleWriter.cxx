@@ -135,8 +135,8 @@ void ROOT::RNTupleWriter::CommitDataset()
       return;
 
    CommitCluster(true /* commitClusterGroup */);
-   fFillContext.fSink->CommitDataset();
-   fFillContext.CommitAttributes();
+   auto anchorOffsets = fFillContext.CommitAttributes();
+   fFillContext.fSink->CommitDataset(anchorOffsets);
    fFillContext.fModel->Expire();
 }
 

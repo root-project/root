@@ -157,7 +157,8 @@ public:
    void FlushCluster();
    /// Logically append staged clusters to the RNTuple.
    void CommitStagedClusters();
-   void CommitAttributes();
+   /// Finishes writing all Attribute RNTuples to disk and returns a list of offsets to their Anchors.
+   std::vector<std::size_t> CommitAttributes();
 
    const ROOT::RNTupleModel &GetModel() const { return *fModel; }
    std::unique_ptr<ROOT::REntry> CreateEntry() const { return fModel->CreateEntry(); }
