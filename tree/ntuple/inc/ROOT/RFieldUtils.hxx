@@ -27,7 +27,7 @@ std::string GetRenormalizedTypeName(const std::string &metaNormalizedName);
 
 /// Given a type info ask ROOT meta to demangle it, then renormalize the resulting type name for RNTuple. Useful to
 /// ensure that e.g. fundamental types are normalized to the type used by RNTuple (e.g. int -> std::int32_t).
-std::string GetRenormalizedDemangledTypeName(const std::type_info &ti);
+std::string GetRenormalizedTypeName(const std::type_info &ti);
 
 /// Applies all RNTuple type normalization rules except typedef resolution.
 std::string GetNormalizedUnresolvedTypeName(const std::string &origName);
@@ -57,8 +57,10 @@ std::tuple<std::string, std::vector<std::size_t>> ParseArrayType(const std::stri
 
 /// Used in RFieldBase::Create() in order to get the comma-separated list of template types
 /// E.g., gets {"int", "std::variant<double,int>"} from "int,std::variant<double,int>".
+/// If maxArgs > 0, stop tokenizing after the given number of tokens are found. Used to strip
+/// STL allocator and other optional arguments.
 /// TODO(jblomer): Try to merge with TClassEdit::TSplitType
-std::vector<std::string> TokenizeTypeList(std::string_view templateType);
+std::vector<std::string> TokenizeTypeList(std::string_view templateType, std::size_t maxArgs = 0);
 
 } // namespace Internal
 } // namespace ROOT
