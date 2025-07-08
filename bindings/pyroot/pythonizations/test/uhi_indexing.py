@@ -328,6 +328,16 @@ class TestTH1Indexing:
         hist_full_slice = hist_setup[...]
         assert hist_setup != hist_full_slice
 
+    def test_list_iter(self, hist_setup):
+        import numpy as np
+
+        if _special_setting(hist_setup):
+            pytest.skip("Setting cannot be tested here")
+
+        expected = np.full(_shape(hist_setup), 3, dtype=np.int64)
+        hist_setup[...] = expected
+        assert list(hist_setup) == expected.flatten().tolist()
+
 
 if __name__ == "__main__":
     pytest.main(args=[__file__])
