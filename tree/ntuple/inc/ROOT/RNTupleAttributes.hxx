@@ -51,7 +51,7 @@ class RNTupleAttributeSetWriter final {
    RNTupleFillContext fFillContext;
    /// Fill context of the main RNTuple being written (i.e. the RNTuple whose attributes we are).
    const RNTupleFillContext *fMainFillContext = nullptr;
-   /// The currently open entry, existing from BeginRange() to EndRange()
+   /// The currently open entry, existing from BeginRange() to CommitRange()
    std::optional<RNTupleAttributeEntry> fOpenEntry;
 
    /// Creates a RNTupleAttributeSetWriter associated to the RNTupleWriter owning `mainFillContext` and writing
@@ -62,7 +62,7 @@ class RNTupleAttributeSetWriter final {
 
    RNTupleAttributeSetWriter(const RNTupleFillContext *mainFillContext, RNTupleFillContext fillContext);
 
-   void EndRangeInternal();
+   void CommitRangeInternal();
    /// Flushes any remaining open range and writes the Attribute RNTuple to storage.
    void Commit();
 
@@ -76,7 +76,7 @@ public:
    const std::string &GetName() const;
 
    RNTupleAttributeEntryHandle BeginRange();
-   void EndRange(RNTupleAttributeEntryHandle rangeHandle);
+   void CommitRange(RNTupleAttributeEntryHandle rangeHandle);
 };
 
 class RNTupleAttributeSetWriterHandle final {
@@ -118,7 +118,7 @@ TODO: code sample here
 */
 // clang-format on
 class RNTupleAttributeSetReader final {
-   friend class ROOT::Internal::RPageSource;
+   friend class ROOT::RNTupleReader;
    friend class RAttributeEntryIterable;
 
    // List containing pairs { entryRange, entryIndex }, used to quickly find out which entries in the Attribute

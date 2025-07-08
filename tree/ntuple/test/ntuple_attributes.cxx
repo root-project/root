@@ -27,7 +27,7 @@ TEST(RNTupleAttributes, AttributeBasics)
       auto &wModel = writer->GetModel();
 
       // Step 4: assign attribute values.
-      // Values can be assigned anywhere between BeginRange() and EndRange().
+      // Values can be assigned anywhere between BeginRange() and CommitRange().
       auto pMyAttr = attrRange.GetPtr<std::string>("myAttr");
       *pMyAttr = "This is a custom attribute";
       for (int i = 0; i < 100; ++i) {
@@ -37,7 +37,7 @@ TEST(RNTupleAttributes, AttributeBasics)
       }
 
       // Step 5: close attribute range
-      attrSet->EndRange(std::move(attrRange));
+      attrSet->CommitRange(std::move(attrRange));
    }
 
    // READING
@@ -53,10 +53,10 @@ TEST(RNTupleAttributes, AttributeBasics)
       }
 
       // Fetch a specific attribute set
-      auto attrSet = reader->GetAttributeSet("MyAttrSet").Unwrap();
+      auto attrSet = reader->OpenAttributeSet("MyAttrSet");
       for (int i = 0; i < 100; ++i) {
          int nAttrs = 0;
-         for (const auto &attrEntry : attrSet.GetAttributes(i)) {
+         for (const auto &attrEntry : attrSet->GetAttributes(i)) {
             auto pAttr = attrEntry.GetPtr<std::string>("myAttr");
             EXPECT_EQ(*pAttr, "This is a custom attribute");
             ++nAttrs;
@@ -104,7 +104,7 @@ TEST(RNTupleAttributes, AttributeInvalidModel)
 
 TEST(RNTupleAttributes, MultipleBeginRange)
 {
-   // Calling BeginRange multiple times without calling EndRange is an error.
+   // Calling BeginRange multiple times without calling CommitRange is an error.
 
    FileRaii fileGuard("test_ntuple_attrs_multiplebegin.root");
 
@@ -121,10 +121,10 @@ TEST(RNTupleAttributes, MultipleBeginRange)
    EXPECT_THROW(attrSet->BeginRange(), ROOT::RException);
 }
 
-TEST(RNTupleAttributes, MultipleEndRange)
+TEST(RNTupleAttributes, MultipleCommitRange)
 {
-   // Calling EndRange multiple times on the same handle is an error (technically it cannot be on the "same handle"
-   // since EndRange requires you to move the handle - meaning the second time you are passing an invalid handle.)
+   // Calling CommitRange multiple times on the same handle is an error (technically it cannot be on the "same handle"
+   // since CommitRange requires you to move the handle - meaning the second time you are passing an invalid handle.)
 
    FileRaii fileGuard("test_ntuple_attrs_multipleend.root");
 
@@ -147,11 +147,11 @@ TEST(RNTupleAttributes, MultipleEndRange)
       *pInt = i;
       writer->Fill(*entry);
    }
-   attrSet->EndRange(std::move(attrRange));
-   EXPECT_THROW(attrSet->EndRange(std::move(attrRange)), ROOT::RException);
+   attrSet->CommitRange(std::move(attrRange));
+   EXPECT_THROW(attrSet->CommitRange(std::move(attrRange)), ROOT::RException);
 }
 
-TEST(RNTupleAttributes, AccessPastEndRange)
+TEST(RNTupleAttributes, AccessPastCommitRange)
 {
    FileRaii fileGuard("test_ntuple_attrs_pastendrange.root");
 
@@ -174,15 +174,15 @@ TEST(RNTupleAttributes, AccessPastEndRange)
       *pInt = i;
       writer->Fill(*entry);
    }
-   attrSet->EndRange(std::move(attrRange));
-   // Cannot access attrRange after EndRange()
+   attrSet->CommitRange(std::move(attrRange));
+   // Cannot access attrRange after CommitRange()
    EXPECT_THROW(attrRange.GetPtr<std::string>("string"), ROOT::RException);
 }
 
 TEST(RNTupleAttributes, AssignMetadataAfterData)
 {
    // Assigning the attribute range's value to the pointer can be done either before or after filling
-   // the corresponding rows - provided it's done between a BeginRange() and an EndRange().
+   // the corresponding rows - provided it's done between a BeginRange() and an CommitRange().
 
    FileRaii fileGuard("test_ntuple_attrs_assign_after.root");
 
@@ -206,7 +206,7 @@ TEST(RNTupleAttributes, AssignMetadataAfterData)
             *pInt = i;
             writer->Fill();
          }
-         attrSet->EndRange(std::move(attrRange));
+         attrSet->CommitRange(std::move(attrRange));
       }
 
       // Second attribute entry
@@ -218,7 +218,7 @@ TEST(RNTupleAttributes, AssignMetadataAfterData)
          }
          *attrRange.GetPtr<std::string>("string") = "Run 2";
          *attrRange.GetPtr<int>("int") = 2;
-         attrSet->EndRange(std::move(attrRange));
+         attrSet->CommitRange(std::move(attrRange));
       }
    }
 
@@ -226,9 +226,9 @@ TEST(RNTupleAttributes, AssignMetadataAfterData)
    {
       auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
       // Fetch a specific attribute set
-      auto attrSet = reader->GetAttributeSet("MyAttrSet").Unwrap();
+      auto attrSet = reader->OpenAttributeSet("MyAttrSet");
       auto nAttrs = 0;
-      for (const auto &attrEntry : attrSet.GetAttributes()) {
+      for (const auto &attrEntry : attrSet->GetAttributes()) {
          auto pAttrStr = attrEntry.GetPtr<std::string>("string");
          auto pAttrInt = attrEntry.GetPtr<int>("int");
          EXPECT_EQ(attrEntry.GetRange().Start(), nAttrs * 10);
@@ -241,9 +241,9 @@ TEST(RNTupleAttributes, AssignMetadataAfterData)
    }
 }
 
-TEST(RNTupleAttributes, ImplicitEndRange)
+TEST(RNTupleAttributes, ImplicitCommitRange)
 {
-   // EndRange gets called automatically when a AttributeRangeHandle goes out of scope.
+   // CommitRange gets called automatically when a AttributeRangeHandle goes out of scope.
 
    FileRaii fileGuard("test_ntuple_attrs_auto_end_range.root");
 
@@ -264,16 +264,16 @@ TEST(RNTupleAttributes, ImplicitEndRange)
          *pInt = i;
          writer->Fill();
       }
-      // Calling EndRange implicitly on scope exit
+      // Calling CommitRange implicitly on scope exit
    }
 
    // Read back the attributes
    {
       auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
       // Fetch a specific attribute set
-      auto attrSet = reader->GetAttributeSet("MyAttrSet").Unwrap();
+      auto attrSet = reader->OpenAttributeSet("MyAttrSet");
       auto nAttrs = 0;
-      for (const auto &attrEntry : attrSet.GetAttributes()) {
+      for (const auto &attrEntry : attrSet->GetAttributes()) {
          auto pAttr = attrEntry.GetPtr<std::string>("string");
          EXPECT_EQ(attrEntry.GetRange().Start(), 0);
          EXPECT_EQ(attrEntry.GetRange().End(), 10);
@@ -313,13 +313,13 @@ TEST(RNTupleAttributes, AttributeMultipleSets)
       auto entry = wModel.CreateEntry();
       *pInt = i;
       writer->Fill(*entry);
-      attrSet1->EndRange(std::move(attrRange1));
+      attrSet1->CommitRange(std::move(attrRange1));
    }
    *pMyAttr2 = "Run 1";
-   attrSet2->EndRange(std::move(attrRange2));
+   attrSet2->CommitRange(std::move(attrRange2));
 }
 
-TEST(RNTupleAttributes, AttributeInvalidEndRange)
+TEST(RNTupleAttributes, AttributeInvalidCommitRange)
 {
    // Same as AttributeMultipleSets but try to pass the wrong range to a Set and verify it fails.
 
@@ -350,12 +350,12 @@ TEST(RNTupleAttributes, AttributeInvalidEndRange)
       auto entry = wModel.CreateEntry();
       *pInt = i;
       writer->Fill(*entry);
-      attrSet1->EndRange(std::move(attrRange1));
+      attrSet1->CommitRange(std::move(attrRange1));
    }
    *pMyAttr2 = "Run 1";
 
-   // Oops! Calling EndRange on the wrong set!
-   EXPECT_THROW(attrSet1->EndRange(std::move(attrRange2)), ROOT::RException);
+   // Oops! Calling CommitRange on the wrong set!
+   EXPECT_THROW(attrSet1->CommitRange(std::move(attrRange2)), ROOT::RException);
 }
 
 TEST(RNTupleAttributes, ReadRanges)
@@ -390,7 +390,7 @@ TEST(RNTupleAttributes, ReadRanges)
                *pInt = i;
                writer->Fill();
             }
-            attrSetRuns->EndRange(std::move(attrRange));
+            attrSetRuns->CommitRange(std::move(attrRange));
          }
 
          // Second attribute entry
@@ -402,9 +402,9 @@ TEST(RNTupleAttributes, ReadRanges)
                writer->Fill();
             }
             *pMyAttr = "Run 2";
-            attrSetRuns->EndRange(std::move(attrRange));
+            attrSetRuns->CommitRange(std::move(attrRange));
          }
-         attrSetEpochs->EndRange(std::move(attrRangeEpoch));
+         attrSetEpochs->CommitRange(std::move(attrRangeEpoch));
       }
       {
          auto attrRangeEpoch = attrSetEpochs->BeginRange();
@@ -419,9 +419,9 @@ TEST(RNTupleAttributes, ReadRanges)
                *pInt = i;
                writer->Fill();
             }
-            attrSetRuns->EndRange(std::move(attrRange));
+            attrSetRuns->CommitRange(std::move(attrRange));
          }
-         attrSetEpochs->EndRange(std::move(attrRangeEpoch));
+         attrSetEpochs->CommitRange(std::move(attrRangeEpoch));
       }
    }
 
@@ -429,29 +429,29 @@ TEST(RNTupleAttributes, ReadRanges)
    {
       auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
       // Fetch a specific attribute set
-      auto attrSetRuns = reader->GetAttributeSet("Attr_Runs").Unwrap();
-      EXPECT_EQ(attrSetRuns.GetAttributes().size(), 3);
-      EXPECT_EQ(attrSetRuns.GetAttributes(4).size(), 1);
-      EXPECT_EQ(attrSetRuns.GetAttributesContainingRange(4, 5).size(), 1);
-      EXPECT_EQ(attrSetRuns.GetAttributesContainingRange(4, 4).size(), 1);
-      EXPECT_EQ(attrSetRuns.GetAttributesContainingRange(0, 10).size(), 1);
-      EXPECT_EQ(attrSetRuns.GetAttributesContainingRange(0, 11).size(), 0);
-      EXPECT_EQ(attrSetRuns.GetAttributesContainingRange(0, 100).size(), 0);
-      EXPECT_EQ(attrSetRuns.GetAttributesInRange(4, 5).size(), 0);
-      EXPECT_EQ(attrSetRuns.GetAttributesInRange(4, 4).size(), 0);
-      EXPECT_EQ(attrSetRuns.GetAttributesInRange(0, 100).size(), 3);
-      EXPECT_EQ(attrSetRuns.GetAttributes(12).size(), 1);
-      EXPECT_EQ(attrSetRuns.GetAttributes(120).size(), 0);
+      auto attrSetRuns = reader->OpenAttributeSet("Attr_Runs");
+      EXPECT_EQ(attrSetRuns->GetAttributes().size(), 3);
+      EXPECT_EQ(attrSetRuns->GetAttributes(4).size(), 1);
+      EXPECT_EQ(attrSetRuns->GetAttributesContainingRange(4, 5).size(), 1);
+      EXPECT_EQ(attrSetRuns->GetAttributesContainingRange(4, 4).size(), 1);
+      EXPECT_EQ(attrSetRuns->GetAttributesContainingRange(0, 10).size(), 1);
+      EXPECT_EQ(attrSetRuns->GetAttributesContainingRange(0, 11).size(), 0);
+      EXPECT_EQ(attrSetRuns->GetAttributesContainingRange(0, 100).size(), 0);
+      EXPECT_EQ(attrSetRuns->GetAttributesInRange(4, 5).size(), 0);
+      EXPECT_EQ(attrSetRuns->GetAttributesInRange(4, 4).size(), 0);
+      EXPECT_EQ(attrSetRuns->GetAttributesInRange(0, 100).size(), 3);
+      EXPECT_EQ(attrSetRuns->GetAttributes(12).size(), 1);
+      EXPECT_EQ(attrSetRuns->GetAttributes(120).size(), 0);
 
       {
          ROOT::TestSupport::CheckDiagsRAII diags;
          diags.requiredDiag(kWarning, "ROOT.NTuple", "end < start", false);
-         EXPECT_EQ(attrSetRuns.GetAttributesInRange(4, 3).size(), 0);
-         EXPECT_EQ(attrSetRuns.GetAttributesContainingRange(4, 3).size(), 0);
+         EXPECT_EQ(attrSetRuns->GetAttributesInRange(4, 3).size(), 0);
+         EXPECT_EQ(attrSetRuns->GetAttributesContainingRange(4, 3).size(), 0);
       }
 
-      auto attrSetEpochs = reader->GetAttributeSet("Attr_Epochs").Unwrap();
-      EXPECT_EQ(attrSetEpochs.GetAttributes().size(), 2);
+      auto attrSetEpochs = reader->OpenAttributeSet("Attr_Epochs");
+      EXPECT_EQ(attrSetEpochs->GetAttributes().size(), 2);
    }
 }
 
@@ -473,7 +473,7 @@ TEST(RNTupleAttributes, EmptyAttrRange)
       auto pMyAttr = attrRange.GetPtr<std::string>("myAttr");
       *pMyAttr = "This is range is empty.";
       // No values written to the main RNTuple...
-      attrSet->EndRange(std::move(attrRange));
+      attrSet->CommitRange(std::move(attrRange));
    }
 
    {
@@ -487,10 +487,10 @@ TEST(RNTupleAttributes, EmptyAttrRange)
       }
 
       // Fetch a specific attribute set
-      auto attrSet = reader->GetAttributeSet("MyAttrSet").Unwrap();
-      EXPECT_EQ(attrSet.GetAttributes().size(), 1);
-      EXPECT_EQ(attrSet.GetAttributes(0).size(), 0);
-      EXPECT_EQ(attrSet.GetAttributesInRange(0, reader->GetNEntries()).size(), 0);
-      EXPECT_EQ(attrSet.GetAttributesContainingRange(0, reader->GetNEntries()).size(), 0);
+      auto attrSet = reader->OpenAttributeSet("MyAttrSet");
+      EXPECT_EQ(attrSet->GetAttributes().size(), 1);
+      EXPECT_EQ(attrSet->GetAttributes(0).size(), 0);
+      EXPECT_EQ(attrSet->GetAttributesInRange(0, reader->GetNEntries()).size(), 0);
+      EXPECT_EQ(attrSet->GetAttributesContainingRange(0, reader->GetNEntries()).size(), 0);
    }
 }

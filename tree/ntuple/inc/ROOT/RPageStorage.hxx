@@ -848,7 +848,7 @@ public:
    /// connecting streamer fields so that emulated classes can be read.
    void RegisterStreamerInfos();
 
-   ROOT::RResult<ROOT::Experimental::RNTupleAttributeSetReader> ReadAttributeSet(ROOT::RNTupleLocator locator);
+   std::unique_ptr<RPageSource> ReadAttributeSet(ROOT::RNTupleLocator locator);
 }; // class RPageSource
 
 } // namespace Internal
