@@ -588,9 +588,29 @@ More than 200 items were addressed for this release. The full list is:
 
 ## Release 6.36.02
 
+Published on July 9, 2025
+
 ### Items addressed in this release
 
-* [#18665](https://github.com/root-project/root/issues/18665) - `TFileMerger`'s (and `hadd`'s) default behavior on encountering invalid/corrupt objects while merging has changed: previously the corrupt object would be skipped without aborting the merging process; now the merging process will abort by default. The "skip" behavior can be restored by:
-  * calling the new method `TFileMerger::SetErrorBehavior()` (if using `TFileMerger` directly), or
-  * using the `-k` flag if using `hadd`.
- 
+This release has been patched mainly to cope with a few reports filed mainly by the ALICE and ATLAS experiments.
+
+The list of issues addressed for this release is the following:
+
+  * [[#19241](https://github.com/root-project/root/issues/19241)] - THnBase::ProjectionAny does not calculate errors correctly
+  * [[#19113](https://github.com/root-project/root/issues/19113)] - [Python][UHI] Incorrect number of entries reported in TH1 after slicing
+  * [[#19104](https://github.com/root-project/root/issues/19104)] - RDataFrame Reads Garbage Data instead of File
+  * [[#19038](https://github.com/root-project/root/issues/19038)] - [Python] TH1 equality operator pythonization not appropriate for ROOT histograms
+  * [[#18998](https://github.com/root-project/root/issues/18998)] - Ninja failed to build ROOT 6.36 for AlmaLinux10/x86_64 with cyclic deps error
+  * [[#18974](https://github.com/root-project/root/issues/18974)] - `ROOT/RSpan.hxx` not found error in standalone Minuit2 source package
+  * [[#18972](https://github.com/root-project/root/issues/18972)] - Segmentation fault while running interpreted macro
+  * [[#18955](https://github.com/root-project/root/issues/18955)] - Change in behaviour in `TTreeReaderValueBase::GetSetupStatus()`
+  * [[#18953](https://github.com/root-project/root/issues/18953)] - error opening ZIP archive member (>4GB archive)
+  * [[#18909](https://github.com/root-project/root/issues/18909)] - Patch Version Format has three cyphers
+  * [[#18847](https://github.com/root-project/root/issues/18847)] - [RF] Memory issue in destructor of RooStats::HypoTestInverterResult
+  * [[#18833](https://github.com/root-project/root/issues/18833)] - segfault in TStreamerInfo::Compile with type involving std::function
+  * [[#18811](https://github.com/root-project/root/issues/18811)] - assertion failure in clang::TemplateParameterList::getParam
+  * [[#18768](https://github.com/root-project/root/issues/18768)] - Regression in i-adding array.array to std::vector in PyROOT
+  * [[#18665](https://github.com/root-project/root/issues/18665)] - hadd: Error in header does not cause hadd failure
+  * [[#7470](https://github.com/root-project/root/issues/7470)] - Dictionary generation fails for typedef to template specialization with default parameters
+
+## HEAD of the v6-36-00-patches branch
