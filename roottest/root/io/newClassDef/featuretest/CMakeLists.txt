@@ -5,7 +5,8 @@ ROOTTEST_COMPILE_MACRO(Class.C
                        FIXTURES_SETUP root-io-newClassDef-featuretest-Class-fixture)
 
 ROOTTEST_COMPILE_MACRO(ClassTrick.C
-                       FIXTURES_SETUP root-io-newClassDef-featuretest-ClassTrick-fixture)
+                       FIXTURES_SETUP root-io-newClassDef-featuretest-ClassTrick-fixture
+                       FIXTURES_REQUIRED root-io-newClassDef-featuretest-Class-fixture)
 
 # in the ClassTrick.C commants stated that
 # trick does not works on Windows.
