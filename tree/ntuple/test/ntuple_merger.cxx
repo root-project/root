@@ -3733,7 +3733,7 @@ TEST(RNTupleMerger, MergeAttributes)
          *entry->GetPtr<int>("int") = i;
          writer->Fill(*entry);
       }
-      attrSet->EndRange(std::move(attrRange));
+      attrSet->CommitRange(std::move(attrRange));
       ++fileNo;
    }
    // Third RNTuple has no Attribute Set
@@ -3807,11 +3807,10 @@ TEST(RNTupleMerger, MergeAttributes)
       auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
       EXPECT_EQ(reader->GetNEntries(), 45);
 
-      auto res = reader->GetAttributeSet("MyAttrSet");
-      ASSERT_TRUE(bool(res));
-      auto attrSet = res.Unwrap();
+      auto attrSet = reader->OpenAttributeSet("MyAttrSet");
+      ASSERT_TRUE(bool(attrSet));
 
-      auto attrs = attrSet.GetAttributes();
+      auto attrs = attrSet->GetAttributes();
       ASSERT_EQ(attrs.size(), 2);
       EXPECT_EQ(attrs[0].GetRange().Start(), 0);
       EXPECT_EQ(attrs[0].GetRange().End(), 10);
@@ -3864,7 +3863,7 @@ TEST(RNTupleMerger, MergeAttributesSymmetricSchema)
          *entry->GetPtr<int>("foo") = i;
          writer->Fill(*entry);
       }
-      attrSet->EndRange(std::move(attrRange));
+      attrSet->CommitRange(std::move(attrRange));
       ++fileNo;
    }
 
@@ -3931,7 +3930,7 @@ TEST_P(RNTupleMergerAttributesEmpty, MergeEmptyAttribute)
             *entry->GetPtr<int>("int") = i;
             writer->Fill(*entry);
          }
-         attrSet->EndRange(std::move(attrRange));
+         attrSet->CommitRange(std::move(attrRange));
          ++fileNo;
       }
    }
@@ -3964,11 +3963,10 @@ TEST_P(RNTupleMergerAttributesEmpty, MergeEmptyAttribute)
       auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
       EXPECT_EQ(reader->GetNEntries(), 20);
 
-      auto res = reader->GetAttributeSet("MyAttrSet");
-      ASSERT_TRUE(bool(res));
-      auto attrSet = res.Unwrap();
+      auto attrSet = reader->OpenAttributeSet("MyAttrSet");
+      ASSERT_TRUE(bool(attrSet));
 
-      auto attrs = attrSet.GetAttributes();
+      auto attrs = attrSet->GetAttributes();
       ASSERT_EQ(attrs.size(), 3);
       ROOT::NTupleSize_t expectedStart = 0;
       for (int fileNo = 0; fileNo < 3; ++fileNo) {

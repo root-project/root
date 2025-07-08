@@ -25,7 +25,6 @@
 #include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RNTupleReader.hxx>
-#include <ROOT/RNTupleAttributes.hxx>
 #ifdef R__ENABLE_DAOS
 #include <ROOT/RPageStorageDaos.hxx>
 #endif
@@ -1303,23 +1302,18 @@ void ROOT::Internal::RPagePersistentSink::EnableDefaultMetrics(const std::string
                                                                         "CPU time spent compressing")});
 }
 
-ROOT::RResult<ROOT::Experimental::RNTupleAttributeSetReader>
-ROOT::Internal::RPageSource::ReadAttributeSet(ROOT::RNTupleLocator locator)
+std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Internal::RPageSource::ReadAttributeSet(ROOT::RNTupleLocator locator)
 {
    ROOT::Internal::RMiniFileReader *reader = GetUnderlyingReader();
    // #TODO(gparolini)
    if (!reader)
-      return R__FAIL("GetAttributeSet is only supported for file-based page sources");
-   
+      throw ROOT::RException(R__FAIL("GetAttributeSet is only supported for file-based page sources"));
+
    assert(locator.GetType() == RNTupleLocator::kTypeFile);
    auto attrAnchor = reader->GetNTupleProperAtOffset(locator.GetPosition<std::uint64_t>()).Unwrap();
 
    // NOTE: this static_cast assumes that GetUnderlyingReader() returns non-null only for RPageSourceFile.
    // This should be made more robust. Maybe just make this method virtual?
    auto attrSource = static_cast<Internal::RPageSourceFile &>(*this).OpenWithDifferentAnchor(attrAnchor);
-   auto newReader = std::unique_ptr<RNTupleReader>(new RNTupleReader(std::move(attrSource), RNTupleReadOptions{}));
-   R__ASSERT(newReader);
-   
-   auto attrReader = ROOT::Experimental::RNTupleAttributeSetReader(std::move(newReader));
-   return attrReader;
+   return attrSource;
 }
