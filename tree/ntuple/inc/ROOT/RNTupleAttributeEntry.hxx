@@ -27,6 +27,13 @@ class RNTupleAttributeSetWriter;
 class RNTupleAttributeSetReader;
 class RNTupleFillContext;
 
+namespace Internal::RNTupleAttributes {
+
+const std::string kRangeStartName = "_rangeStart";
+const std::string kRangeLenName = "_rangeLen";
+
+} // namespace Internal::RNTupleAttributes
+
 class RNTupleAttributeRange final {
    ROOT::NTupleSize_t fStart = 0;
    ROOT::NTupleSize_t fLength = 0;
