@@ -212,6 +212,8 @@ jobs:
       run: |
         echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
         kinit -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
+        EOS_HOST=${EOS_ENDPOINT#root://}
+        xrdfs "${EOS_HOST}" rm -r "${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}" || true
         cd ${DOC_DIR}/html/
         xrdcp --parallel 64 -rf ./*.html ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
         rm -rf *.html
