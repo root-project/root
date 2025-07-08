@@ -269,15 +269,19 @@ ROOT::DescriptorId_t ROOT::RNTupleReader::RetrieveFieldId(std::string_view field
    return fieldId;
 }
 
-ROOT::RResult<ROOT::Experimental::RNTupleAttributeSetReader>
-ROOT::RNTupleReader::GetAttributeSet(std::string_view attrSetName)
+std::unique_ptr<ROOT::Experimental::RNTupleAttributeSetReader>
+ROOT::RNTupleReader::OpenAttributeSet(std::string_view attrSetName)
 {
    const auto &attrSets = GetDescriptor().GetAttributeSets();
    const auto locatorIt = attrSets.find(std::string(attrSetName));
    if (locatorIt == attrSets.end())
-      return R__FAIL(std::string("No such AttributeSet: ") + std::string(attrSetName));
+      throw ROOT::RException(R__FAIL(std::string("No such AttributeSet: ") + std::string(attrSetName)));
 
    const auto locator = locatorIt->second;
-   auto attrSetReader = fSource->ReadAttributeSet(locator);
+   auto attrSource = fSource->ReadAttributeSet(locator);
+   auto newReader = std::unique_ptr<RNTupleReader>(new RNTupleReader(std::move(attrSource), RNTupleReadOptions{}));
+   R__ASSERT(newReader);
+   auto attrSetReader = std::unique_ptr<ROOT::Experimental::RNTupleAttributeSetReader>(
+      new ROOT::Experimental::RNTupleAttributeSetReader(std::move(newReader)));
    return attrSetReader;
 }

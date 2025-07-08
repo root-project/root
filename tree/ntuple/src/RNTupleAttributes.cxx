@@ -101,18 +101,18 @@ ROOT::Experimental::RNTupleAttributeEntryHandle ROOT::Experimental::RNTupleAttri
    return handle;
 }
 
-void ROOT::Experimental::RNTupleAttributeSetWriter::EndRange(
+void ROOT::Experimental::RNTupleAttributeSetWriter::CommitRange(
    ROOT::Experimental::RNTupleAttributeEntryHandle rangeHandle)
 {
    if (R__unlikely(!fOpenEntry || rangeHandle.fRange != &*fOpenEntry))
       throw ROOT::RException(
-         R__FAIL(std::string("Handle passed to EndRange() of Attribute Set \"") + GetName() +
+         R__FAIL(std::string("Handle passed to CommitRange() of Attribute Set \"") + GetName() +
                  "\" is invalid (it is not the Handle returned by the latest call to BeginRange())"));
 
-   EndRangeInternal();
+   CommitRangeInternal();
 }
 
-void ROOT::Experimental::RNTupleAttributeSetWriter::EndRangeInternal()
+void ROOT::Experimental::RNTupleAttributeSetWriter::CommitRangeInternal()
 {
    // Get current entry number from the writer and use it as end of entry range
    const auto end = fMainFillContext->GetNEntries();
@@ -131,7 +131,7 @@ void ROOT::Experimental::RNTupleAttributeSetWriter::EndRangeInternal()
 void ROOT::Experimental::RNTupleAttributeSetWriter::Commit()
 {
    if (fOpenEntry)
-      EndRangeInternal();
+      CommitRangeInternal();
    fFillContext.FlushCluster();
    fFillContext.fSink->CommitClusterGroup();
    fFillContext.fSink->CommitDataset();
