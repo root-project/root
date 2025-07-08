@@ -19,6 +19,8 @@
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RNTupleReader.hxx>
 
+using namespace ROOT::Experimental::Internal::RNTupleAttributes;
+
 static ROOT::RResult<void> ValidateAttributeModel(const ROOT::RNTupleModel &model)
 {
    const auto &projFields = ROOT::Internal::GetProjectedFieldsOfModel(model);
@@ -65,8 +67,8 @@ ROOT::Experimental::RNTupleAttributeSetWriter::Create(std::string_view name, std
 
    // TODO: avoid creating a new model
    auto newModel = RNTupleModel::CreateBare();
-   newModel->MakeField<ROOT::NTupleSize_t>("__rangeStart");
-   newModel->MakeField<ROOT::NTupleSize_t>("__rangeLen");
+   newModel->MakeField<ROOT::NTupleSize_t>(kRangeStartName);
+   newModel->MakeField<ROOT::NTupleSize_t>(kRangeLenName);
    newModel->AddField(std::move(userRootField));
    newModel->Freeze();
 
@@ -120,8 +122,8 @@ void ROOT::Experimental::RNTupleAttributeSetWriter::CommitRangeInternal()
    // Get current entry number from the writer and use it as end of entry range
    const auto end = fMainFillContext->GetNEntries();
    fOpenEntry->fRange = RNTupleAttributeRange::FromStartEnd(fOpenEntry->fRange.Start(), end);
-   auto pRangeStart = fOpenEntry->fMetaEntry->GetPtr<ROOT::NTupleSize_t>("__rangeStart");
-   auto pRangeLen = fOpenEntry->fMetaEntry->GetPtr<ROOT::NTupleSize_t>("__rangeLen");
+   auto pRangeStart = fOpenEntry->fMetaEntry->GetPtr<ROOT::NTupleSize_t>(kRangeStartName);
+   auto pRangeLen = fOpenEntry->fMetaEntry->GetPtr<ROOT::NTupleSize_t>(kRangeLenName);
    R__ASSERT(pRangeStart);
    R__ASSERT(pRangeLen);
    *pRangeStart = fOpenEntry->GetRange().Start();
@@ -147,8 +149,8 @@ ROOT::Experimental::RNTupleAttributeSetReader::RNTupleAttributeSetReader(std::un
    : fReader(std::move(reader))
 {
    // Collect all entry ranges
-   auto entryRangeStartView = fReader->GetView<ROOT::NTupleSize_t>("__rangeStart");
-   auto entryRangeLenView = fReader->GetView<ROOT::NTupleSize_t>("__rangeLen");
+   auto entryRangeStartView = fReader->GetView<ROOT::NTupleSize_t>(kRangeStartName);
+   auto entryRangeLenView = fReader->GetView<ROOT::NTupleSize_t>(kRangeLenName);
    fEntryRanges.reserve(fReader->GetNEntries());
    for (auto i : fReader->GetEntryRange()) {
       auto start = entryRangeStartView(i);
