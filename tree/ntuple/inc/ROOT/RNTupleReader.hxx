@@ -323,7 +323,7 @@ public:
    /// \sa GetView(std::string_view, std::shared_ptr<T>)
    ROOT::RNTupleView<void> GetView(std::string_view fieldName, void *rawPtr, const std::type_info &ti)
    {
-      return GetView(RetrieveFieldId(fieldName), rawPtr, ROOT::Internal::GetRenormalizedDemangledTypeName(ti));
+      return GetView(RetrieveFieldId(fieldName), rawPtr, ROOT::Internal::GetRenormalizedTypeName(ti));
    }
 
    /// Provides access to an individual (sub)field from its on-disk ID.
@@ -376,7 +376,7 @@ public:
    /// \sa GetView(std::string_view, std::shared_ptr<T>)
    ROOT::RNTupleView<void> GetView(ROOT::DescriptorId_t fieldId, void *rawPtr, const std::type_info &ti)
    {
-      return GetView(fieldId, rawPtr, ROOT::Internal::GetRenormalizedDemangledTypeName(ti));
+      return GetView(fieldId, rawPtr, ROOT::Internal::GetRenormalizedTypeName(ti));
    }
 
    /// Provides direct access to the I/O buffers of a **mappable** (sub)field.

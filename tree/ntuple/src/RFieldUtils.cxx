@@ -25,6 +25,8 @@
 
 namespace {
 
+std::string GetRenormalizedDemangledTypeName(const std::string &demangledName, bool renormalizeStdString);
+
 const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
    {"Bool_t", "bool"},
    {"Float_t", "float"},
@@ -58,9 +60,15 @@ const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
    {"ULong64_t", "unsigned long long"},
    {"uint64_t", "std::uint64_t"}};
 
+// Natively supported types drop the default template arguments and the CV qualifiers in template arguments.
+bool IsUserClass(const std::string &typeName)
+{
+   return typeName.rfind("std::", 0) != 0 && typeName.rfind("ROOT::VecOps::RVec<", 0) != 0;
+}
+
 // Recursively normalizes a template argument using the regular type name normalizer F as a helper.
 template <typename F>
-std::string GetNormalizedTemplateArg(const std::string &arg, F fnTypeNormalizer)
+std::string GetNormalizedTemplateArg(const std::string &arg, bool keepQualifier, F fnTypeNormalizer)
 {
    R__ASSERT(!arg.empty());
 
@@ -69,12 +77,24 @@ std::string GetNormalizedTemplateArg(const std::string &arg, F fnTypeNormalizer)
       return ROOT::Internal::GetNormalizedInteger(arg);
    }
 
+   if (!keepQualifier)
+      return fnTypeNormalizer(arg);
+
    std::string qualifier;
-   // Type name template argument; template arguments must keep their CV qualifier
-   if (arg.substr(0, 6) == "const " || (arg.length() > 14 && arg.substr(9, 6) == "const "))
+   // Type name template argument; template arguments must keep their CV qualifier. We assume that fnTypeNormalizer
+   // strips the qualifier.
+   // Demangled names may have the CV qualifiers suffixed and not prefixed (but const always before volatile).
+   // Note that in the latter case, we may have the CV qualifiers before array brackets, e.g. `int const[2]`.
+   const auto [base, _] = ROOT::Internal::ParseArrayType(arg);
+   if (base.rfind("const ", 0) == 0 || base.rfind("volatile const ", 0) == 0 ||
+       base.find(" const", base.length() - 6) != std::string::npos ||
+       base.find(" const volatile", base.length() - 15) != std::string::npos) {
       qualifier += "const ";
-   if (arg.substr(0, 9) == "volatile " || (arg.length() > 14 && arg.substr(6, 9) == "volatile "))
+   }
+   if (base.rfind("volatile ", 0) == 0 || base.rfind("const volatile ", 0) == 0 ||
+       base.find(" volatile", base.length() - 9) != std::string::npos) {
       qualifier += "volatile ";
+   }
    return qualifier + fnTypeNormalizer(arg);
 }
 
@@ -118,37 +138,280 @@ std::vector<AnglePos> FindTemplateAngleBrackets(const std::string &typeName)
    return result;
 }
 
+// TClassEdit::CleanType and the name demangling insert blanks between closing angle brackets,
+// as they were required before C++11. Name demangling introduces a blank before array dimensions,
+// which should also be removed.
+void RemoveSpaceBefore(std::string &typeName, char beforeChar)
+{
+   auto dst = typeName.begin();
+   auto end = typeName.end();
+   for (auto src = dst; src != end; ++src) {
+      if (*src == ' ') {
+         auto next = src + 1;
+         if (next != end && *next == beforeChar) {
+            // Skip this space before a closing angle bracket.
+            continue;
+         }
+      }
+      *(dst++) = *src;
+   }
+   typeName.erase(dst, end);
+}
+
+// The demangled name adds spaces after commas
+void RemoveSpaceAfter(std::string &typeName, char afterChar)
+{
+   auto dst = typeName.begin();
+   auto end = typeName.end();
+   for (auto src = dst; src != end; ++src) {
+      *(dst++) = *src;
+      if (*src == afterChar) {
+         auto next = src + 1;
+         if (next != end && *next == ' ') {
+            // Skip this space before a closing angle bracket.
+            ++src;
+         }
+      }
+   }
+   typeName.erase(dst, end);
+}
+
+// We normalize typenames to omit any `class`, `struct`, `enum` prefix
+void RemoveLeadingKeyword(std::string &typeName)
+{
+   if (typeName.rfind("class ", 0) == 0) {
+      typeName.erase(0, 6);
+   } else if (typeName.rfind("struct ", 0) == 0) {
+      typeName.erase(0, 7);
+   } else if (typeName.rfind("enum ", 0) == 0) {
+      typeName.erase(0, 5);
+   }
+}
+
+// Needed for template arguments in demangled names
+void RemoveCVQualifiers(std::string &typeName)
+{
+   if (typeName.rfind("const ", 0) == 0)
+      typeName.erase(0, 6);
+   if (typeName.rfind("volatile ", 0) == 0)
+      typeName.erase(0, 9);
+   if (typeName.find(" volatile", typeName.length() - 9) != std::string::npos)
+      typeName.erase(typeName.length() - 9);
+   if (typeName.find(" const", typeName.length() - 6) != std::string::npos)
+      typeName.erase(typeName.length() - 6);
+}
+
+// Map fundamental integer types to stdint integer types (e.g. int --> std::int32_t)
+void MapIntegerType(std::string &typeName)
+{
+   if (typeName == "signed char") {
+      typeName = ROOT::RField<signed char>::TypeName();
+   } else if (typeName == "unsigned char") {
+      typeName = ROOT::RField<unsigned char>::TypeName();
+   } else if (typeName == "short" || typeName == "short int" || typeName == "signed short" ||
+              typeName == "signed short int") {
+      typeName = ROOT::RField<short int>::TypeName();
+   } else if (typeName == "unsigned short" || typeName == "unsigned short int") {
+      typeName = ROOT::RField<unsigned short int>::TypeName();
+   } else if (typeName == "int" || typeName == "signed" || typeName == "signed int") {
+      typeName = ROOT::RField<int>::TypeName();
+   } else if (typeName == "unsigned" || typeName == "unsigned int") {
+      typeName = ROOT::RField<unsigned int>::TypeName();
+   } else if (typeName == "long" || typeName == "long int" || typeName == "signed long" ||
+              typeName == "signed long int") {
+      typeName = ROOT::RField<long int>::TypeName();
+   } else if (typeName == "unsigned long" || typeName == "unsigned long int") {
+      typeName = ROOT::RField<unsigned long int>::TypeName();
+   } else if (typeName == "long long" || typeName == "long long int" || typeName == "signed long long" ||
+              typeName == "signed long long int") {
+      typeName = ROOT::RField<long long int>::TypeName();
+   } else if (typeName == "unsigned long long" || typeName == "unsigned long long int") {
+      typeName = ROOT::RField<unsigned long long int>::TypeName();
+   }
+}
+
+// Note that ROOT Meta already defines GetDemangledTypeName(), which does both demangling and normalizing.
+std::string GetRawDemangledTypeName(const std::type_info &ti)
+{
+   int e;
+   char *str = TClassEdit::DemangleName(ti.name(), e);
+   R__ASSERT(str && e == 0);
+   std::string result{str};
+   free(str);
+
+   return result;
+}
+
+// Reverse std::string --> std::basic_string<char> from the demangling
+void RenormalizeStdString(std::string &normalizedTypeName)
+{
+   static const std::string gStringName =
+      GetRenormalizedDemangledTypeName(GetRawDemangledTypeName(typeid(std::string)), false /* renormalizeStdString */);
+
+   // For real nested types of std::string (not typedefs like std::string::size_type), we would need to also check
+   // something like (normalizedTypeName + "::" == gStringName + "::") and replace only the prefix. However, since
+   // such a nested type is not standardized, it currently does not seem necessary to add the logic.
+   if (normalizedTypeName == gStringName) {
+      normalizedTypeName = "std::string";
+   }
+}
+
+// Reverse "internal" namespace prefix found in demangled names, such as std::vector<T> --> std::__1::vector<T>
+void RenormalizeStdlibType(std::string &normalizedTypeName)
+{
+   static std::vector<std::pair<std::string, std::string>> gDistortedStdlibNames = []() {
+      // clang-format off
+      // Listed in order of appearance in the BinaryFormatSpecification.md
+      static const std::vector<std::pair<const std::type_info &, std::string>> gCandidates =
+         {{typeid(std::vector<char>),                    "std::vector<"},
+          {typeid(std::array<char, 1>),                  "std::array<"},
+          {typeid(std::variant<char>),                   "std::variant<"},
+          {typeid(std::pair<char, char>),                "std::pair<"},
+          {typeid(std::tuple<char>),                     "std::tuple<"},
+          {typeid(std::bitset<1>),                       "std::bitset<"},
+          {typeid(std::unique_ptr<char>),                "std::unique_ptr<"},
+          {typeid(std::optional<char>),                  "std::optional<"},
+          {typeid(std::set<char>),                       "std::set<"},
+          {typeid(std::unordered_set<char>),             "std::unordered_set<"},
+          {typeid(std::multiset<char>),                  "std::multiset<"},
+          {typeid(std::unordered_multiset<char>),        "std::unordered_multiset<"},
+          {typeid(std::map<char, char>),                 "std::map<"},
+          {typeid(std::unordered_map<char, char>),       "std::unordered_map<"},
+          {typeid(std::multimap<char, char>),            "std::multimap<"},
+          {typeid(std::unordered_multimap<char, char>),  "std::unordered_multimap<"},
+          {typeid(std::atomic<char>),                    "std::atomic<"}};
+      // clang-format on
+
+      std::vector<std::pair<std::string, std::string>> result;
+      for (const auto &[ti, prefix] : gCandidates) {
+         const auto dm = GetRawDemangledTypeName(ti);
+         if (dm.rfind(prefix, 0) == std::string::npos)
+            result.push_back(std::make_pair(dm.substr(0, dm.find('<') + 1), prefix));
+      }
+
+      return result;
+   }();
+
+   for (const auto &[seenPrefix, canonicalPrefix] : gDistortedStdlibNames) {
+      if (normalizedTypeName.rfind(seenPrefix, 0) == 0) {
+         normalizedTypeName = canonicalPrefix + normalizedTypeName.substr(seenPrefix.length());
+         break;
+      }
+   }
+}
+
+template <typename F>
+void NormalizeTemplateArguments(std::string &templatedTypeName, int maxTemplateArgs, F fnTypeNormalizer)
+{
+   const auto angleBrackets = FindTemplateAngleBrackets(templatedTypeName);
+   R__ASSERT(!angleBrackets.empty());
+
+   std::string normName;
+   std::string::size_type currentPos = 0;
+   for (std::size_t i = 0; i < angleBrackets.size(); i++) {
+      const auto [posOpen, posClose] = angleBrackets[i];
+      // Append the type prefix until the open angle bracket.
+      normName += templatedTypeName.substr(currentPos, posOpen + 1 - currentPos);
+
+      const auto argList = templatedTypeName.substr(posOpen + 1, posClose - posOpen - 1);
+      const auto templateArgs = ROOT::Internal::TokenizeTypeList(argList, maxTemplateArgs);
+      R__ASSERT(!templateArgs.empty());
+
+      const bool isUserClass = IsUserClass(templatedTypeName);
+      for (const auto &a : templateArgs) {
+         normName += GetNormalizedTemplateArg(a, isUserClass, fnTypeNormalizer) + ",";
+      }
+
+      normName[normName.size() - 1] = '>';
+      currentPos = posClose + 1;
+   }
+
+   // Append the rest of the type from the last closing angle bracket.
+   const auto lastClosePos = angleBrackets.back().second;
+   normName += templatedTypeName.substr(lastClosePos + 1);
+
+   templatedTypeName = normName;
+}
+
+// Given a type name normalized by ROOT Meta, return the type name normalized according to the RNTuple rules.
+std::string GetRenormalizedMetaTypeName(const std::string &metaNormalizedName)
+{
+   const std::string canonicalTypePrefix{ROOT::Internal::GetCanonicalTypePrefix(metaNormalizedName)};
+   // RNTuple resolves Double32_t for the normalized type name but keeps Double32_t for the type alias
+   // (also in template parameters)
+   if (canonicalTypePrefix == "Double32_t")
+      return "double";
+
+   if (canonicalTypePrefix.find('<') == std::string::npos) {
+      // If there are no templates, the function is done.
+      return canonicalTypePrefix;
+   }
+
+   std::string normName{canonicalTypePrefix};
+   NormalizeTemplateArguments(normName, 0 /* maxTemplateArgs */, GetRenormalizedMetaTypeName);
+
+   return normName;
+}
+
+// Given a demangled name ("normalized by the compiler"), return the type name normalized according to the
+// RNTuple rules.
+std::string GetRenormalizedDemangledTypeName(const std::string &demangledName, bool renormalizeStdString)
+{
+   std::string canonicalTypePrefix{demangledName};
+   RemoveCVQualifiers(canonicalTypePrefix);
+   RemoveLeadingKeyword(canonicalTypePrefix);
+   MapIntegerType(canonicalTypePrefix);
+
+   if (canonicalTypePrefix.find('<') == std::string::npos) {
+      // If there are no templates, the function is done.
+      return canonicalTypePrefix;
+   }
+   RemoveSpaceBefore(canonicalTypePrefix, '>');
+   RemoveSpaceAfter(canonicalTypePrefix, ',');
+   RemoveSpaceBefore(canonicalTypePrefix, ','); // MSVC fancies spaces before commas in the demangled name
+   RenormalizeStdlibType(canonicalTypePrefix);
+
+   // Remove optional stdlib template arguments
+   int maxTemplateArgs = 0;
+   if (canonicalTypePrefix.rfind("std::vector<", 0) == 0 || canonicalTypePrefix.rfind("std::set<", 0) == 0 ||
+       canonicalTypePrefix.rfind("std::unordered_set<", 0) == 0 ||
+       canonicalTypePrefix.rfind("std::multiset<", 0) == 0 ||
+       canonicalTypePrefix.rfind("std::unordered_multiset<", 0) == 0 ||
+       canonicalTypePrefix.rfind("std::unique_ptr<", 0) == 0) {
+      maxTemplateArgs = 1;
+   } else if (canonicalTypePrefix.rfind("std::map<", 0) == 0 ||
+              canonicalTypePrefix.rfind("std::unordered_map<", 0) == 0 ||
+              canonicalTypePrefix.rfind("std::multimap<", 0) == 0 ||
+              canonicalTypePrefix.rfind("std::unordered_multimap<", 0) == 0) {
+      maxTemplateArgs = 2;
+   }
+
+   std::string normName{canonicalTypePrefix};
+   NormalizeTemplateArguments(normName, maxTemplateArgs, [renormalizeStdString](const std::string &n) {
+      return GetRenormalizedDemangledTypeName(n, renormalizeStdString);
+   });
+   // In RenormalizeStdString(), we normalize the demangled type name of `std::string`,
+   // so we need to prevent an endless recursion.
+   if (renormalizeStdString) {
+      RenormalizeStdString(normName);
+   }
+
+   return normName;
+}
+
 } // namespace
 
 std::string ROOT::Internal::GetCanonicalTypePrefix(const std::string &typeName)
 {
+   // Remove outer cv qualifiers
    std::string canonicalType{TClassEdit::CleanType(typeName.c_str(), /*mode=*/1)};
-   if (canonicalType.substr(0, 7) == "struct ") {
-      canonicalType.erase(0, 7);
-   } else if (canonicalType.substr(0, 5) == "enum ") {
-      canonicalType.erase(0, 5);
-   } else if (canonicalType.substr(0, 2) == "::") {
+
+   RemoveLeadingKeyword(canonicalType);
+   if (canonicalType.substr(0, 2) == "::") {
       canonicalType.erase(0, 2);
    }
 
-   // TClassEdit::CleanType inserts blanks between closing angle brackets, as they were required before C++11. We want
-   // to remove them for RNTuple.
-   auto angle = canonicalType.find('<');
-   if (angle != std::string::npos) {
-      auto dst = canonicalType.begin() + angle;
-      auto end = canonicalType.end();
-      for (auto src = dst; src != end; ++src) {
-         if (*src == ' ') {
-            auto next = src + 1;
-            if (next != end && *next == '>') {
-               // Skip this space before a closing angle bracket.
-               continue;
-            }
-         }
-         *(dst++) = *src;
-      }
-      canonicalType.erase(dst, end);
-   }
+   RemoveSpaceBefore(canonicalType, '>');
 
    if (canonicalType.substr(0, 6) == "array<") {
       canonicalType = "std::" + canonicalType;
@@ -191,75 +454,19 @@ std::string ROOT::Internal::GetCanonicalTypePrefix(const std::string &typeName)
       canonicalType = it->second;
    }
 
-   // Map fundamental integer types to stdint integer types (e.g. int --> std::int32_t)
-   if (canonicalType == "signed char") {
-      canonicalType = RField<signed char>::TypeName();
-   } else if (canonicalType == "unsigned char") {
-      canonicalType = RField<unsigned char>::TypeName();
-   } else if (canonicalType == "short" || canonicalType == "short int" || canonicalType == "signed short" ||
-              canonicalType == "signed short int") {
-      canonicalType = RField<short int>::TypeName();
-   } else if (canonicalType == "unsigned short" || canonicalType == "unsigned short int") {
-      canonicalType = RField<unsigned short int>::TypeName();
-   } else if (canonicalType == "int" || canonicalType == "signed" || canonicalType == "signed int") {
-      canonicalType = RField<int>::TypeName();
-   } else if (canonicalType == "unsigned" || canonicalType == "unsigned int") {
-      canonicalType = RField<unsigned int>::TypeName();
-   } else if (canonicalType == "long" || canonicalType == "long int" || canonicalType == "signed long" ||
-              canonicalType == "signed long int") {
-      canonicalType = RField<long int>::TypeName();
-   } else if (canonicalType == "unsigned long" || canonicalType == "unsigned long int") {
-      canonicalType = RField<unsigned long int>::TypeName();
-   } else if (canonicalType == "long long" || canonicalType == "long long int" || canonicalType == "signed long long" ||
-              canonicalType == "signed long long int") {
-      canonicalType = RField<long long int>::TypeName();
-   } else if (canonicalType == "unsigned long long" || canonicalType == "unsigned long long int") {
-      canonicalType = RField<unsigned long long int>::TypeName();
-   }
+   MapIntegerType(canonicalType);
 
    return canonicalType;
 }
 
+std::string ROOT::Internal::GetRenormalizedTypeName(const std::type_info &ti)
+{
+   return GetRenormalizedDemangledTypeName(GetRawDemangledTypeName(ti), true /* renormalizeStdString */);
+}
+
 std::string ROOT::Internal::GetRenormalizedTypeName(const std::string &metaNormalizedName)
 {
-   const std::string canonicalTypePrefix{GetCanonicalTypePrefix(metaNormalizedName)};
-   // RNTuple resolves Double32_t for the normalized type name but keeps Double32_t for the type alias
-   // (also in template parameters)
-   if (canonicalTypePrefix == "Double32_t")
-      return "double";
-
-   if (canonicalTypePrefix.find('<') == std::string::npos) {
-      // If there are no templates, the function is done.
-      return canonicalTypePrefix;
-   }
-
-   const auto angleBrackets = FindTemplateAngleBrackets(canonicalTypePrefix);
-   R__ASSERT(!angleBrackets.empty());
-
-   std::string normName;
-   std::string::size_type currentPos = 0;
-   for (std::size_t i = 0; i < angleBrackets.size(); i++) {
-      const auto [posOpen, posClose] = angleBrackets[i];
-      // Append the type prefix until the open angle bracket.
-      normName += canonicalTypePrefix.substr(currentPos, posOpen + 1 - currentPos);
-
-      const auto argList = canonicalTypePrefix.substr(posOpen + 1, posClose - posOpen - 1);
-      const auto templateArgs = TokenizeTypeList(argList);
-      R__ASSERT(!templateArgs.empty());
-
-      for (const auto &a : templateArgs) {
-         normName += GetNormalizedTemplateArg(a, GetRenormalizedTypeName) + ",";
-      }
-
-      normName[normName.size() - 1] = '>';
-      currentPos = posClose + 1;
-   }
-
-   // Append the rest of the type from the last closing angle bracket.
-   const auto lastClosePos = angleBrackets.back().second;
-   normName += canonicalTypePrefix.substr(lastClosePos + 1);
-
-   return normName;
+   return GetRenormalizedMetaTypeName(metaNormalizedName);
 }
 
 std::string ROOT::Internal::GetNormalizedUnresolvedTypeName(const std::string &origName)
@@ -280,8 +487,7 @@ std::string ROOT::Internal::GetNormalizedUnresolvedTypeName(const std::string &o
    R__ASSERT(!angleBrackets.empty());
 
    // For user-defined class types, we will need to get the default-initialized template arguments.
-   const bool isUserClass =
-      (canonicalTypePrefix.substr(0, 5) != "std::") && (canonicalTypePrefix.substr(0, 19) != "ROOT::VecOps::RVec<");
+   const bool isUserClass = IsUserClass(canonicalTypePrefix);
 
    std::string normName;
    std::string::size_type currentPos = 0;
@@ -295,7 +501,7 @@ std::string ROOT::Internal::GetNormalizedUnresolvedTypeName(const std::string &o
       R__ASSERT(!templateArgs.empty());
 
       for (const auto &a : templateArgs) {
-         normName += GetNormalizedTemplateArg(a, GetNormalizedUnresolvedTypeName) + ",";
+         normName += GetNormalizedTemplateArg(a, isUserClass, GetNormalizedUnresolvedTypeName) + ",";
       }
 
       // For user-defined classes, append default-initialized template arguments.
@@ -311,10 +517,13 @@ std::string ROOT::Internal::GetNormalizedUnresolvedTypeName(const std::string &o
             const auto expandedArgList =
                expandedName.substr(expandedPosOpen + 1, expandedPosClose - expandedPosOpen - 1);
             const auto expandedTemplateArgs = TokenizeTypeList(expandedArgList);
-            R__ASSERT(expandedTemplateArgs.size() >= templateArgs.size());
+            // Note that we may be in a sitation where expandedTemplateArgs.size() is _smaller_ than
+            // templateArgs.size(), which is when the input type name has the optional template arguments explicitly
+            // spelled out but ROOT Meta is told to ignore some template arguments.
 
             for (std::size_t j = templateArgs.size(); j < expandedTemplateArgs.size(); ++j) {
-               normName += GetNormalizedTemplateArg(expandedTemplateArgs[j], GetNormalizedUnresolvedTypeName) + ",";
+               normName +=
+                  GetNormalizedTemplateArg(expandedTemplateArgs[j], isUserClass, GetNormalizedUnresolvedTypeName) + ",";
             }
          }
       }
@@ -435,7 +644,7 @@ std::tuple<std::string, std::vector<std::size_t>> ROOT::Internal::ParseArrayType
    return std::make_tuple(prefix, sizeVec);
 }
 
-std::vector<std::string> ROOT::Internal::TokenizeTypeList(std::string_view templateType)
+std::vector<std::string> ROOT::Internal::TokenizeTypeList(std::string_view templateType, std::size_t maxArgs)
 {
    std::vector<std::string> result;
    if (templateType.empty())
@@ -452,6 +661,8 @@ std::vector<std::string> ROOT::Internal::TokenizeTypeList(std::string_view templ
       case ',':
          if (nestingLevel == 0) {
             result.push_back(std::string(typeBegin, typeCursor - typeBegin));
+            if (maxArgs && result.size() == maxArgs)
+               return result;
             typeBegin = typeCursor + 1;
          }
          break;
@@ -460,9 +671,4 @@ std::vector<std::string> ROOT::Internal::TokenizeTypeList(std::string_view templ
    }
    result.push_back(std::string(typeBegin, typeCursor - typeBegin));
    return result;
-}
-
-std::string ROOT::Internal::GetRenormalizedDemangledTypeName(const std::type_info &ti)
-{
-   return ROOT::Internal::GetRenormalizedTypeName(ROOT::Internal::GetDemangledTypeName(ti));
 }

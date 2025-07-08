@@ -16,7 +16,7 @@ TEST(RNTuple, TypeNameBasics)
                 (ROOT::RField<std::tuple<std::tuple<char, CustomStruct, char>, int>>::TypeName().c_str()));
 }
 
-TEST(RNTuple, TypeNameNormalization)
+TEST(RNTuple, TypeNameNormalizationByName)
 {
    EXPECT_EQ("CustomStruct", RFieldBase::Create("f", "class CustomStruct").Unwrap()->GetTypeName());
    EXPECT_EQ("", RFieldBase::Create("f", "class CustomStruct").Unwrap()->GetTypeAlias());
@@ -56,6 +56,58 @@ TEST(RNTuple, TypeNameNormalization)
    EXPECT_EQ("std::vector<CustomStruct>",
              RFieldBase::Create("f", "::std::vector<::CustomStruct>").Unwrap()->GetTypeName());
    EXPECT_EQ("", RFieldBase::Create("f", "::std::vector<::CustomStruct>").Unwrap()->GetTypeAlias());
+}
+
+TEST(RNTuple, TypeNameNormalizationById)
+{
+   EXPECT_EQ("std::int32_t", ROOT::Internal::GetRenormalizedTypeName(typeid(signed)));
+   EXPECT_EQ("std::int32_t", ROOT::Internal::GetRenormalizedTypeName(typeid(std::int32_t)));
+   EXPECT_EQ("double", ROOT::Internal::GetRenormalizedTypeName(typeid(Double32_t)));
+   EXPECT_EQ("float", ROOT::Internal::GetRenormalizedTypeName(typeid(const float)));
+
+   EXPECT_EQ("std::string", ROOT::Internal::GetRenormalizedTypeName(typeid(std::string)));
+   EXPECT_EQ("std::map<std::string,std::string>",
+             ROOT::Internal::GetRenormalizedTypeName(typeid(std::map<std::string, std::string>)));
+   EXPECT_EQ("char", ROOT::Internal::GetRenormalizedTypeName(typeid(std::string::value_type)));
+
+   EXPECT_EQ("std::vector<bool>", ROOT::Internal::GetRenormalizedTypeName(typeid(std::vector<Bool_t>)));
+   EXPECT_EQ("std::vector<char>", ROOT::Internal::GetRenormalizedTypeName(typeid(std::vector<char>)));
+   EXPECT_EQ("ROOT::VecOps::RVec<float>", ROOT::Internal::GetRenormalizedTypeName(typeid(ROOT::RVec<float>)));
+   EXPECT_EQ("std::array<float,2>", ROOT::Internal::GetRenormalizedTypeName(typeid(std::array<float, 0x02>)));
+   EXPECT_EQ("std::variant<float,double>",
+             ROOT::Internal::GetRenormalizedTypeName(typeid(std::variant<float, double>)));
+   EXPECT_EQ("std::pair<float,double>", ROOT::Internal::GetRenormalizedTypeName(typeid(std::pair<float, double>)));
+   EXPECT_EQ("std::tuple<float,float,float>",
+             ROOT::Internal::GetRenormalizedTypeName(typeid(std::tuple<float, float, float>)));
+   EXPECT_EQ("std::bitset<1000>", ROOT::Internal::GetRenormalizedTypeName(typeid(std::bitset<1000lu>)));
+   EXPECT_EQ("std::atomic<std::int32_t>", ROOT::Internal::GetRenormalizedTypeName(typeid(std::atomic<int>)));
+   EXPECT_EQ("std::unique_ptr<std::int32_t>", ROOT::Internal::GetRenormalizedTypeName(typeid(std::unique_ptr<int>)));
+   EXPECT_EQ("std::optional<std::int32_t>", ROOT::Internal::GetRenormalizedTypeName(typeid(std::optional<int>)));
+
+   EXPECT_EQ("std::set<std::int32_t>", ROOT::Internal::GetRenormalizedTypeName(typeid(std::set<int>)));
+   EXPECT_EQ("std::unordered_set<std::int32_t>",
+             ROOT::Internal::GetRenormalizedTypeName(typeid(std::unordered_set<int>)));
+   EXPECT_EQ("std::multiset<std::int32_t>", ROOT::Internal::GetRenormalizedTypeName(typeid(std::multiset<int>)));
+   EXPECT_EQ("std::unordered_multiset<std::int32_t>",
+             ROOT::Internal::GetRenormalizedTypeName(typeid(std::unordered_multiset<int>)));
+
+   EXPECT_EQ("std::map<std::int32_t,std::int32_t>",
+             ROOT::Internal::GetRenormalizedTypeName(typeid(std::map<int, int>)));
+   EXPECT_EQ("std::unordered_map<std::int32_t,std::int32_t>",
+             ROOT::Internal::GetRenormalizedTypeName(typeid(std::unordered_map<int, int>)));
+   EXPECT_EQ("std::multimap<std::int32_t,std::int32_t>",
+             ROOT::Internal::GetRenormalizedTypeName(typeid(std::multimap<int, int>)));
+   EXPECT_EQ("std::unordered_multimap<std::int32_t,std::int32_t>",
+             ROOT::Internal::GetRenormalizedTypeName(typeid(std::unordered_multimap<int, int>)));
+
+   EXPECT_EQ("CustomStruct", ROOT::Internal::GetRenormalizedTypeName(typeid(CustomStruct)));
+
+   EXPECT_EQ("std::map<std::int32_t,std::int32_t>",
+             ROOT::Internal::GetRenormalizedTypeName(typeid(std::map<int, int>)));
+
+   EXPECT_EQ(
+      "std::pair<std::uint32_t,std::array<CustomStruct,2>>",
+      ROOT::Internal::GetRenormalizedTypeName(typeid(const std::pair<unsigned int, std::array<::CustomStruct, 2>>)));
 }
 
 TEST(RNTuple, TClassDefaultTemplateParameter)
