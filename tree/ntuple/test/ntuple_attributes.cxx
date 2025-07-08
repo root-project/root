@@ -108,6 +108,37 @@ TEST(RNTupleAttributes, AttributeInvalidModel)
    }
 }
 
+TEST(RNTupleAttributes, ReservedAttributeSetName)
+{
+   FileRaii fileGuard("test_ntuple_attrs_reserved_name.root");
+
+   // Create a RNTuple
+   auto model = RNTupleModel::Create();
+   auto pInt = model->MakeField<int>("int");
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file);
+
+   auto attrModel = RNTupleModel::Create();
+   try {
+      writer->CreateAttributeSet("ROOT", std::move(attrModel));
+      FAIL() << "Trying to create an attribute set using a reserved name should fail";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("reserved"));
+   }
+   try {
+      writer->CreateAttributeSet("ROOT.MyAttrSet", std::move(attrModel));
+      FAIL() << "Trying to create an attribute set using a reserved name should fail";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("reserved"));
+   }
+   try {
+      writer->CreateAttributeSet("ROOT.", std::move(attrModel));
+      FAIL() << "Trying to create an attribute set using a reserved name should fail";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("reserved"));
+   }
+}
+
 TEST(RNTupleAttributes, MultipleBeginRange)
 {
    // Calling BeginRange multiple times without calling CommitRange is an error.

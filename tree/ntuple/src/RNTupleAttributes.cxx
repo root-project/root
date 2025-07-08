@@ -33,6 +33,11 @@ static ROOT::RResult<void> ValidateAttributeModel(const ROOT::RNTupleModel &mode
    return ROOT::RResult<void>::Success();
 }
 
+bool ROOT::Experimental::IsReservedRNTupleAttributeSetName(std::string_view name)
+{
+   return name == "ROOT" || (name.length() > 4 && strncmp(name.data(), "ROOT.", 5) == 0);
+}
+
 //
 //  RNTupleAttributeSetWriter
 //
@@ -41,7 +46,6 @@ ROOT::Experimental::RNTupleAttributeSetWriter::Create(std::string_view name, std
                                                       const RNTupleFillContext *mainFillContext, TDirectory &dir)
 
 {
-   // Validate model
    ValidateAttributeModel(*model).ThrowOnError();
 
    model->Unfreeze();
