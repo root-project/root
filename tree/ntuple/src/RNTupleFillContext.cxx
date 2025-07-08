@@ -108,23 +108,21 @@ void ROOT::Experimental::RNTupleFillContext::CommitStagedClusters()
    fStagedClusters.clear();
 }
 
-ROOT::RResult<ROOT::Experimental::RNTupleAttributeSetWriterHandle>
+ROOT::Experimental::RNTupleAttributeSetWriterHandle
 ROOT::Experimental::RNTupleFillContext::CreateAttributeSet(std::string_view name,
                                                            std::unique_ptr<ROOT::RNTupleModel> model)
 {
    TDirectory *dir = fSink->GetUnderlyingDirectory();
    if (!dir)
-      return R__FAIL("AttributeSetWriter can only be created from a TFile-based RNTupleWriter!");
+      throw ROOT::RException(R__FAIL("AttributeSetWriter can only be created from a TFile-based RNTupleWriter!"));
 
    std::string nameStr{name};
    auto attrSet = Experimental::RNTupleAttributeSetWriter::Create(name, std::move(model), this, *dir);
-   if (!attrSet)
-      return R__FORWARD_ERROR(attrSet);
 
-   auto [attrSetIter, wasInserted] = fAttributeSets.try_emplace(nameStr, attrSet.Unwrap());
+   auto [attrSetIter, wasInserted] = fAttributeSets.try_emplace(nameStr, std::move(attrSet));
    if (!wasInserted)
-      return R__FAIL(std::string("Attempted to create an Attribute Set named '") + nameStr +
-                     "', but one already exists with that name");
+      throw ROOT::RException(R__FAIL(std::string("Attempted to create an Attribute Set named '") + nameStr +
+                                     "', but one already exists with that name"));
 
    // NOTE(gparolini): pointers into unordered_map are guaranteed to be stable. cppreference states:
    // "References and pointers to either key or data stored in the container are only invalidated by
