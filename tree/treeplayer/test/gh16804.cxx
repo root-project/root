@@ -1109,3 +1109,125 @@ TEST_F(RegressionGH16804, TChainOneFriendTTreeOneFriendTChain)
          throw std::runtime_error("Could not retrieve TTreePlayer from main tree!");
    }
 }
+
+TEST_F(RegressionGH16804, TTreeTwoFriendTChainsAddFilesLater)
+{
+   TChain friendChain{fFriendTreeName};
+   TChain otherFriendChain{fOtherFriendTreeName};
+
+   auto mainFile = std::make_unique<TFile>(fMainFileName);
+   auto mainTree = mainFile->Get<TTree>(fMainTreeName);
+   mainTree->AddFriend(&friendChain);
+   mainTree->AddFriend(&otherFriendChain);
+
+   ROOT::TestSupport::CheckDiagsRAII diagRAII;
+   for (const auto &chainName : {fFriendTreeName, fOtherFriendTreeName}) {
+      for (const auto &branchName : {"index", "value", "a", "b", "wrong"}) {
+         std::string message{"Could not load the first tree in chain \""};
+         message += chainName;
+         message += "\", no dataset schema available. Thus, it is not possible to know whether the branch name \"";
+         message += branchName;
+         message += "\" corresponds to an available branch or not. This could happen if the chain has no files "
+                    "connected yet, make sure to add files to the chain before calling 'TChain::SetBranchAddress'.";
+         diagRAII.requiredDiag(kWarning, "TChain::SetBranchAddress", message);
+      }
+   }
+
+   int index = -1, value = -1, mainBranch = -1, a = -1, b = -1, wrong = -1;
+   auto mainBranchRet = mainTree->SetBranchAddress("mainBranch", &mainBranch);
+   auto indexRet = mainTree->SetBranchAddress("index", &index);
+   auto valueRet = mainTree->SetBranchAddress("value", &value);
+   auto aRet = mainTree->SetBranchAddress("a", &a);
+   auto bRet = mainTree->SetBranchAddress("b", &b);
+   // Note that also a completely wrong branch name will go through the function
+   // without error, because we can't know a priori which friend has that branch.
+   // That's why we print the warning dialog.
+   auto wrongRet = mainTree->SetBranchAddress("wrong", &wrong);
+
+   // The main tree is a TTree, so the dataset schema is available
+   EXPECT_EQ(mainBranchRet, 0);
+   // The friends are TChain and we haven't added files yet, so the branch cannot
+   // be found immediately. kNoCheck == 5
+   EXPECT_EQ(indexRet, 5);
+   EXPECT_EQ(valueRet, 5);
+   EXPECT_EQ(aRet, 5);
+   EXPECT_EQ(bRet, 5);
+   EXPECT_EQ(wrongRet, 5);
+
+   std::vector<int> expectedMainBranch(20);
+   std::vector<int> expectedIndex(20);
+   std::vector<int> expectedValue(20);
+   std::vector<int> expectedA(20);
+   std::vector<int> expectedB(20);
+   std::iota(expectedMainBranch.begin(), expectedMainBranch.end(), 0);
+   std::reverse(expectedMainBranch.begin(), expectedMainBranch.end());
+   std::iota(expectedIndex.begin(), expectedIndex.end(), 0);
+   std::iota(expectedValue.begin(), expectedValue.end(), 100);
+   std::iota(expectedA.begin(), expectedA.end(), 200);
+   std::iota(expectedB.begin(), expectedB.end(), 300);
+
+   // Adding the files later than calling SetBranchAddress should not matter for
+   // the purposes of reading valid branches present in the dataset schema
+   for (const auto &fn : fFriendFileNames)
+      friendChain.Add(fn);
+   for (const auto &fn : fOtherFriendFileNames)
+      otherFriendChain.Add(fn);
+
+   auto nEntries = mainTree->GetEntriesFast();
+   for (decltype(nEntries) i = 0; i < nEntries; ++i) {
+      mainTree->GetEntry(i);
+      EXPECT_EQ(expectedMainBranch[i], mainBranch);
+      EXPECT_EQ(expectedIndex[i], index);
+      EXPECT_EQ(expectedValue[i], value);
+      EXPECT_EQ(expectedA[i], a);
+      EXPECT_EQ(expectedB[i], b);
+   }
+
+   // Now test with TTree::Scan
+   std::ostringstream strCout;
+   {
+      if (auto *treePlayer = static_cast<TTreePlayer *>(mainTree->GetPlayer())) {
+         struct FileRAII {
+            const char *fPath;
+            FileRAII(const char *name) : fPath(name) {}
+            ~FileRAII() { std::remove(fPath); }
+         } redirectFile{"regression_16804_ttreetwofriendtchains_addfileslater_redirect.txt"};
+         treePlayer->SetScanRedirect(true);
+         treePlayer->SetScanFileName(redirectFile.fPath);
+         mainTree->Scan("mainBranch:index:value:a:b");
+
+         std::ifstream redirectStream(redirectFile.fPath);
+         std::stringstream redirectOutput;
+         redirectOutput << redirectStream.rdbuf();
+
+         const static std::string expectedScanOut{
+            R"Scan(************************************************************************
+*    Row   * mainBranc *     index *     value *         a *         b *
+************************************************************************
+*        0 *        19 *         0 *       100 *       200 *       300 *
+*        1 *        18 *         1 *       101 *       201 *       301 *
+*        2 *        17 *         2 *       102 *       202 *       302 *
+*        3 *        16 *         3 *       103 *       203 *       303 *
+*        4 *        15 *         4 *       104 *       204 *       304 *
+*        5 *        14 *         5 *       105 *       205 *       305 *
+*        6 *        13 *         6 *       106 *       206 *       306 *
+*        7 *        12 *         7 *       107 *       207 *       307 *
+*        8 *        11 *         8 *       108 *       208 *       308 *
+*        9 *        10 *         9 *       109 *       209 *       309 *
+*       10 *         9 *        10 *       110 *       210 *       310 *
+*       11 *         8 *        11 *       111 *       211 *       311 *
+*       12 *         7 *        12 *       112 *       212 *       312 *
+*       13 *         6 *        13 *       113 *       213 *       313 *
+*       14 *         5 *        14 *       114 *       214 *       314 *
+*       15 *         4 *        15 *       115 *       215 *       315 *
+*       16 *         3 *        16 *       116 *       216 *       316 *
+*       17 *         2 *        17 *       117 *       217 *       317 *
+*       18 *         1 *        18 *       118 *       218 *       318 *
+*       19 *         0 *        19 *       119 *       219 *       319 *
+************************************************************************
+)Scan"};
+         EXPECT_EQ(redirectOutput.str(), expectedScanOut);
+      } else
+         throw std::runtime_error("Could not retrieve TTreePlayer from main tree!");
+   }
+}
