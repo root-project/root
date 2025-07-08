@@ -159,6 +159,8 @@ public:
    std::vector<RNTupleAttributeEntry> GetAttributes();
 };
 
+bool IsReservedRNTupleAttributeSetName(std::string_view name);
+
 } // namespace Experimental
 } // namespace ROOT
 
