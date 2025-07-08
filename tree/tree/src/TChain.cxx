@@ -2703,11 +2703,6 @@ Int_t TChain::SetBranchAddress(const char* bname, void* add, TBranch** ptr, TCla
    element->SetBaddressIsPtr(isptr);
    element->SetBranchPtr(ptr);
 
-   if (!fTree && fReadEntry == -1 && fTreeNumber == -1) {
-      // Try to load the first tree to retrieve the dataset schema
-      LoadTree(0);
-   }
-
    return SetBranchAddress(bname, add, ptr);
 }
 
@@ -3212,11 +3207,6 @@ Int_t TChain::SetBranchAddress(const char *bname, void *addr, TBranch **ptr, TCl
       auto *element = new TChainElement(bname, "");
       element->IsDelayed(suppressMissingBranchError);
       fStatus->Add(element);
-   }
-
-   if (!fTree && fReadEntry == -1 && fTreeNumber == -1) {
-      // Try to load the first tree to retrieve the dataset schema
-      LoadTree(0);
    }
 
    return SetBranchAddress(bname, addr, ptr, ptrClass, datatype, isptr);
