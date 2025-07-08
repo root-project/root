@@ -12,7 +12,7 @@
 /** \class TLeafG
 \ingroup tree
 
-A TLeaf for a 64 bit Integer data type.
+A TLeaf for a long integer data type (Long_t, non-portable size).
 */
 
 #include "TLeafG.h"
@@ -24,7 +24,7 @@ A TLeaf for a 64 bit Integer data type.
 ClassImp(TLeafG);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor for LeafL.
+/// Default constructor for LeafG.
 
 TLeafG::TLeafG(): TLeaf()
 {
