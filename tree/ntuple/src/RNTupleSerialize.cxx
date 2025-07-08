@@ -1743,9 +1743,10 @@ ROOT::Internal::RNTupleSerializer::SerializePageList(void *buffer, const ROOT::R
    return size;
 }
 
-ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeFooter(void *buffer,
-                                                                                const ROOT::RNTupleDescriptor &desc,
-                                                                                const RContext &context)
+ROOT::RResult<std::uint32_t>
+ROOT::Internal::RNTupleSerializer::SerializeFooter(void *buffer, const ROOT::RNTupleDescriptor &desc,
+                                                   const RContext &context,
+                                                   std::span<const std::size_t> linkedAttributeSets)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
@@ -1792,6 +1793,19 @@ ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeFooter(
       } else {
          return R__FORWARD_ERROR(res);
       }
+   }
+   if (auto res = SerializeFramePostscript(buffer ? frame : nullptr, pos - frame)) {
+      pos += res.Unwrap();
+   } else {
+      return R__FORWARD_ERROR(res);
+   }
+
+   // Attributes
+   frame = pos;
+   const auto nAttributes = linkedAttributeSets.size();
+   pos += SerializeListFramePreamble(nAttributes, *where);
+   for (unsigned int i = 0; i < nAttributes; ++i) {
+      pos += SerializeInt64(linkedAttributeSets[i], *where);
    }
    if (auto res = SerializeFramePostscript(buffer ? frame : nullptr, pos - frame)) {
       pos += res.Unwrap();

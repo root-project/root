@@ -25,6 +25,9 @@
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RNTupleAttributes.hxx>
 
+#include <TDirectory.h>
+#include <TKey.h>
+
 #include <algorithm>
 #include <utility>
 
@@ -129,11 +132,21 @@ ROOT::Experimental::RNTupleFillContext::CreateAttributeSet(std::string_view name
    return &attrSetIter->second;
 }
 
-void ROOT::Experimental::RNTupleFillContext::CommitAttributes()
+std::vector<std::size_t> ROOT::Experimental::RNTupleFillContext::CommitAttributes()
 {
+   std::vector<std::size_t> offsets;
+   offsets.reserve(fAttributeSets.size());
+
    for (auto &[_, attrSet] : fAttributeSets) {
       attrSet.fFillContext.FlushCluster();
       attrSet.fFillContext.fSink->CommitClusterGroup();
       attrSet.fFillContext.fSink->CommitDataset();
+      TDirectory *dir = attrSet.fFillContext.fSink->GetUnderlyingDirectory();
+      R__ASSERT(dir); // TODO: we're only dealing with TFile-based attributes for now.
+      const auto *key = dir->GetKey(attrSet.fFillContext.fSink->GetNTupleName().c_str());
+      R__ASSERT(key);
+      offsets.push_back(key->GetSeekKey() + key->GetKeylen());
    }
+
+   return offsets;
 }

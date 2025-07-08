@@ -105,7 +105,7 @@ public:
    }
    void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
-   void CommitDatasetImpl() final {}
+   void CommitDatasetImpl(std::span<const std::size_t>) final {}
 };
 
 } // namespace Internal

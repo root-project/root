@@ -756,11 +756,11 @@ ROOT::Internal::RPageSink::SealPage(const ROOT::Internal::RPage &page, const RCo
    return SealPage(config);
 }
 
-void ROOT::Internal::RPageSink::CommitDataset()
+void ROOT::Internal::RPageSink::CommitDataset(std::span<const std::size_t> linkedAttrSets)
 {
    for (const auto &cb : fOnDatasetCommitCallbacks)
       cb(*this);
-   CommitDatasetImpl();
+   CommitDatasetImpl(linkedAttrSets);
 }
 
 ROOT::Internal::RPage ROOT::Internal::RPageSink::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
@@ -1251,7 +1251,7 @@ void ROOT::Internal::RPagePersistentSink::CommitClusterGroup()
    fNextClusterInGroup = nClusters;
 }
 
-void ROOT::Internal::RPagePersistentSink::CommitDatasetImpl()
+void ROOT::Internal::RPagePersistentSink::CommitDatasetImpl(std::span<const std::size_t> linkedAttributeSets)
 {
    if (!fStreamerInfos.empty()) {
       // De-duplicate extra type infos before writing. Usually we won't have them already in the descriptor, but
@@ -1275,9 +1275,10 @@ void ROOT::Internal::RPagePersistentSink::CommitDatasetImpl()
 
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
-   auto szFooter = RNTupleSerializer::SerializeFooter(nullptr, descriptor, fSerializationContext).Unwrap();
+   auto szFooter =
+      RNTupleSerializer::SerializeFooter(nullptr, descriptor, fSerializationContext, linkedAttributeSets).Unwrap();
    auto bufFooter = MakeUninitArray<unsigned char>(szFooter);
-   RNTupleSerializer::SerializeFooter(bufFooter.get(), descriptor, fSerializationContext);
+   RNTupleSerializer::SerializeFooter(bufFooter.get(), descriptor, fSerializationContext, linkedAttributeSets);
 
    CommitDatasetImpl(bufFooter.get(), szFooter);
 }
