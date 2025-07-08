@@ -169,9 +169,6 @@ def _process_index_for_axis(self, index, axis, include_flow_bins=False, is_slice
         if index == -1:
             return _overflow(self, axis) - 1
 
-        if index == _overflow(self, axis):
-            return index + (1 if include_flow_bins else 0)
-
         # Shift the indices by 1 to align with the UHI convention,
         # where 0 corresponds to the first bin, unlike ROOT where 0 represents underflow and 1 is the first bin.
         nbins = _get_axis_len(self, axis) + (1 if is_slice_stop else 0)
@@ -379,9 +376,16 @@ def _setitem(self, index, value):
         _slice_set(self, uhi_index, index, value)
 
 
+def _iter(self):
+    array = _values_by_copy(self, include_flow_bins=True)
+    for val in array.flat:
+        yield val.item()
+
+
 def _add_indexing_features(klass: Any) -> None:
     klass.__getitem__ = _getitem
     klass.__setitem__ = _setitem
+    klass.__iter__ = _iter
 
 
 """
@@ -492,18 +496,20 @@ def _values_default(self) -> np.typing.NDArray[Any]:  # noqa: F821
 
 # Special case for TH1K: we need the array length to correspond to the number of bins
 # according to the UHI plotting protocol
-def _values_by_copy(self) -> np.typing.NDArray[Any]:  # noqa: F821
+def _values_by_copy(self, include_flow_bins=False) -> np.typing.NDArray[Any]:  # noqa: F821
     from itertools import product
 
     import numpy as np
 
+    offset = 0 if include_flow_bins else 1
     dimensions = [
-        range(1, _get_axis_len(self, axis, include_flow_bins=False) + 1) for axis in range(self.GetDimension())
+        range(offset, _get_axis_len(self, axis, include_flow_bins=include_flow_bins) + offset)
+        for axis in range(self.GetDimension())
     ]
     bin_combinations = product(*dimensions)
 
     return np.array([self.GetBinContent(*bin) for bin in bin_combinations]).reshape(
-        _shape(self, include_flow_bins=False)
+        _shape(self, include_flow_bins=include_flow_bins)
     )
 
 

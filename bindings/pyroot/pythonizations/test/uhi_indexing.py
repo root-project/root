@@ -315,6 +315,16 @@ class TestTH1Indexing:
         assert hist_setup.GetStdDev() == pytest.approx(sliced_hist.GetStdDev(), rel=10e-5)
         assert hist_setup.GetMean() == pytest.approx(sliced_hist.GetMean(), rel=10e-5)
 
+    def test_list_iter(self, hist_setup):
+        import numpy as np
+
+        if _special_setting(hist_setup):
+            pytest.skip("Setting cannot be tested here")
+
+        expected = np.full(_shape(hist_setup), 3, dtype=np.int64)
+        hist_setup[...] = expected
+        assert list(hist_setup) == expected.flatten().tolist()
+
 
 if __name__ == "__main__":
     raise SystemExit(pytest.main(args=[__file__]))
