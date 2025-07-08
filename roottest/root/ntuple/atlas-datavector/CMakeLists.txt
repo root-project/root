@@ -58,7 +58,7 @@ ROOTTEST_GENERATE_EXECUTABLE(
 ROOTTEST_GENERATE_EXECUTABLE(
     read
     read.cxx
-    LIBRARIES Core RIO ROOTNTuple GTest::gtest GTest::gtest_main
+    LIBRARIES Core RIO ROOTNTuple GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main
     FIXTURES_REQUIRED atlas_datavector_dict_setup
     FIXTURES_SETUP atlas_datavector_read_setup)
 
