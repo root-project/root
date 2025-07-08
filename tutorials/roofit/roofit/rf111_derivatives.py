@@ -25,12 +25,6 @@ x = ROOT.RooRealVar("x", "x", -10, 10)
 mean = ROOT.RooRealVar("mean", "mean of gaussian", 1, -10, 10)
 sigma = ROOT.RooRealVar("sigma", "width of gaussian", 1, 0.1, 10)
 
-# Ranges for plotting derivatives. They can't be the full range, because
-# the derivatives is calculated by variation around the central point. We
-# need to ensure that the varied values are still in the full range.
-x.setRange("plotrange", -9.95, 9.95)
-sigma.setRange("plotrange", 0.15, 1.95)
-
 # Build gaussian pdf in terms of x, and sigma
 gauss = ROOT.RooGaussian("gauss", "gaussian PDF", x, mean, sigma)
 
@@ -51,9 +45,9 @@ xframe = x.frame(Title="d(Gauss)/dx")
 gauss.plotOn(xframe)
 
 # Plot derivatives in same frame
-dgdx.plotOn(xframe, LineColor="m", Range="plotrange")
-d2gdx2.plotOn(xframe, LineColor="r", Range="plotrange")
-d3gdx3.plotOn(xframe, LineColor="kOrange", Range="plotrange")
+dgdx.plotOn(xframe, LineColor="m")
+d2gdx2.plotOn(xframe, LineColor="r")
+d3gdx3.plotOn(xframe, LineColor="kOrange")
 
 # Create and plot derivatives w.r.t. sigma
 # ------------------------------------------------------------------------------
@@ -72,9 +66,9 @@ sframe = sigma.frame(Title="d(Gauss)/d(sigma)", Range=(0.0, 2.0))
 gauss.plotOn(sframe)
 
 # Plot derivatives in same frame
-dgds.plotOn(sframe, LineColor="m", Range="plotrange")
-d2gds2.plotOn(sframe, LineColor="r", Range="plotrange")
-d3gds3.plotOn(sframe, LineColor="kOrange", Range="plotrange")
+dgds.plotOn(sframe, LineColor="m")
+d2gds2.plotOn(sframe, LineColor="r")
+d3gds3.plotOn(sframe, LineColor="kOrange")
 
 # Draw all frames on a canvas
 c = ROOT.TCanvas("rf111_derivatives", "rf111_derivatives", 800, 400)
