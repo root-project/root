@@ -150,6 +150,11 @@ ROOT::Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model,
 ROOT::Experimental::RNTupleAttributeSetWriterHandle
 ROOT::RNTupleWriter::CreateAttributeSet(std::string_view name, std::unique_ptr<ROOT::RNTupleModel> model)
 {
+   if (ROOT::Experimental::IsReservedRNTupleAttributeSetName(name)) {
+      throw ROOT::RException(
+         R__FAIL("Cannot create Attribute Set named \"" + std::string(name) +
+                 "\": the name \"ROOT\" and any name starting with \"ROOT.\" are reserved for internal use."));
+   }
    return fFillContext.CreateAttributeSet(name, std::move(model));
 }
 
