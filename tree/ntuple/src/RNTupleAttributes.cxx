@@ -36,14 +36,13 @@ static ROOT::RResult<void> ValidateAttributeModel(const ROOT::RNTupleModel &mode
 //
 //  RNTupleAttributeSetWriter
 //
-ROOT::RResult<std::unique_ptr<ROOT::Experimental::RNTupleAttributeSetWriter>>
+std::unique_ptr<ROOT::Experimental::RNTupleAttributeSetWriter>
 ROOT::Experimental::RNTupleAttributeSetWriter::Create(std::string_view name, std::unique_ptr<RNTupleModel> model,
                                                       const RNTupleFillContext *mainFillContext, TDirectory &dir)
 
 {
    // Validate model
-   if (auto modelValid = ValidateAttributeModel(*model); !modelValid)
-      return R__FORWARD_ERROR(modelValid);
+   ValidateAttributeModel(*model).ThrowOnError();
 
    model->Unfreeze();
 

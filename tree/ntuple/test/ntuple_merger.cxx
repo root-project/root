@@ -3721,7 +3721,7 @@ TEST(RNTupleMerger, MergeAttributes)
       auto attrModel = RNTupleModel::Create();
       attrModel->MakeField<std::string>("string");
 
-      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel)).Unwrap();
+      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
 
       auto &wModel = writer->GetModel();
 
@@ -3849,7 +3849,7 @@ TEST(RNTupleMerger, MergeAttributesSymmetricSchema)
          attrModel->MakeField<std::string>("string");
       }
 
-      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel)).Unwrap();
+      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
 
       auto &wModel = writer->GetModel();
 
@@ -3918,7 +3918,7 @@ TEST_P(RNTupleMergerAttributesEmpty, MergeEmptyAttribute)
          auto attrModel = RNTupleModel::Create();
          attrModel->MakeField<std::string>("string");
 
-         auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel)).Unwrap();
+         auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
 
          auto &wModel = writer->GetModel();
 
