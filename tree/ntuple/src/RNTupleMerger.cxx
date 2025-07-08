@@ -1278,8 +1278,8 @@ ROOT::Experimental::Internal::RNTupleMerger::MergeSourceAttributes(RPageSource &
                // TODO(gparolini): more graceful error handling (skip the page?)
                sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
 
-               // Shift __rangeStart column so that it refers to the proper entry in the destination.
-               // Note that __rangeStart is always column 0 due to how it's created in the RNTupleAttributeSetWriter.
+               // Shift _rangeStart column so that it refers to the proper entry in the destination.
+               // Note that _rangeStart is always column 0 due to how it's created in the RNTupleAttributeSetWriter.
                if (colId == 0) {
                   // Unseal the page and shift its elements.
                   const auto &columnDesc = attrSrcDesc->GetColumnDescriptor(colId);
