@@ -1207,7 +1207,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
             TVirtualRefProxy *refproxy = cl->GetReferenceProxy();
             for(Long64_t i=0; i<leaf->GetBranch()->GetEntries()-readentry; ++i)  {
                auto res = R__LoadBranch(leaf->GetBranch(), readentry+i, fQuickLoad);
-               if (res <= 0) {
+               if (res < 0) {
                   Error("ParseWithLeaf", "Branch could not be loaded:%d", res);
                   continue;
                }
@@ -1344,7 +1344,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
 
                TBranch *clbranch = leaf->GetBranch();
                auto lres = R__LoadBranch(clbranch,readentry,fQuickLoad);
-               if (lres <= 0) {
+               if (lres < 0) {
                    Error("ParseWithLeaf", "Branch could not be loaded:%d", lres);
                    return -2;
                }
@@ -1570,7 +1570,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
             bool mustderef = false;
             if ( !prevUseReferenceObject && cl && cl->GetReferenceProxy() )  {
                auto res = R__LoadBranch(leaf->GetBranch(), readentry, fQuickLoad);
-               if (res <= 0) {
+               if (res < 0) {
                   Error("ParseWithLeaf", "Branch could not be loaded:%d", res);
                   return -2;
                }
@@ -1588,7 +1588,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                cl = nullptr;
                for(Long64_t entry=0; entry<leaf->GetBranch()->GetEntries()-readentry; ++entry)  {
                   auto eres = R__LoadBranch(leaf->GetBranch(), readentry+i, fQuickLoad);
-                  if (eres <= 0) {
+                  if (eres < 0) {
                      Error("ParseWithLeaf", "Branch could not be loaded:%d", eres);
                      return -2;
                   }
@@ -1608,7 +1608,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
 
                TBranch *clbranch = leaf->GetBranch();
                auto res = R__LoadBranch(clbranch,readentry,fQuickLoad);
-               if (res <= 0) {
+               if (res < 0) {
                   Error("ParseWithLeaf", "Branch could not be loaded:%d", res);
                   return -2;
                }
@@ -1673,7 +1673,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
 
                TBranch *clbranch = leaf->GetBranch();
                auto res = R__LoadBranch(clbranch,readentry,fQuickLoad);
-               if (res <= 0) {
+               if (res < 0) {
                   Error("ParseWithLeaf", "Branch could not be loaded:%d", res);
                   return -2;
                }
@@ -1738,7 +1738,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                         new TFormLeafInfo(cl, clones_offset, curelem);
                      TClonesArray * clones;
                      auto res = R__LoadBranch(leaf->GetBranch(),readentry,fQuickLoad);
-                     if (res <= 0) {
+                     if (res < 0) {
                         Error("ParseWithLeaf", "Branch could not be loaded:%d", res);
                         return -2;
                      }
@@ -1959,7 +1959,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                      } else if ( (object || pointer) && !useReferenceObject && element->GetClassPointer()->GetReferenceProxy() ) {
                         TClass* c = element->GetClassPointer();
                         auto res = R__LoadBranch(leaf->GetBranch(),readentry,fQuickLoad);
-                        if (res <= 0) {
+                        if (res < 0) {
                            Error("ParseWithLeaf", "Branch could not be loaded:%d", res);
                            return -2;
                         }
@@ -3170,7 +3170,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, const char* ne
          // In this case we assume that cl is the class in which the TClonesArray
          // belongs.
          auto res = R__LoadBranch(leafcur->GetBranch(),readentry,fQuickLoad);
-         if (res <= 0) {
+         if (res < 0) {
             Error("GetLeafWithDatamember", "Branch could not be loaded:%d", res);
             continue;
          }
@@ -3255,7 +3255,7 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, const char* ne
                   else leafinfo = sub_clonesinfo;
 
                   auto res = R__LoadBranch(branch,readentry,fQuickLoad);
-                  if (res <= 0) {
+                  if (res < 0) {
                      Error("GetLeafWithDatamember", "Branch could not be loaded:%d", res);
                      continue;
                   }
@@ -3355,7 +3355,7 @@ bool TTreeFormula::BranchHasMethod(TLeaf* leafcur, TBranch* branch, const char* 
       // unsplit and/or top leaf/branch.
       TClonesArray* clones = nullptr;
       auto res = R__LoadBranch(branch, readentry, fQuickLoad);
-      if (res <= 0) {
+      if (res < 0) {
          Error("BranchHasMethod", "Branch could not be loaded:%d", res);
          return false;
       }
@@ -3382,7 +3382,7 @@ bool TTreeFormula::BranchHasMethod(TLeaf* leafcur, TBranch* branch, const char* 
          }
          if (!clones) {
             auto cres = R__LoadBranch(bc, readentry, fQuickLoad);
-            if (cres <= 0) {
+            if (cres < 0) {
                Error("BranchHasMethod", "Branch could not be loaded:%d", cres);
                return false;
             }
@@ -3754,7 +3754,7 @@ void* TTreeFormula::EvalObject(int instance)
       auto res = R__LoadBranch(leaf->GetBranch(),
                     leaf->GetBranch()->GetTree()->GetReadEntry(),
                     fQuickLoad);
-      if (res <= 0) {
+      if (res < 0) {
          Error("EvalObject", "Branch could not be loaded:%d", res);
          return nullptr;
       }
@@ -3797,7 +3797,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
          fNeedLoading = false;
          TBranch *branch = leaf->GetBranch();
          auto res = R__LoadBranch(branch,branch->GetTree()->GetReadEntry(),fQuickLoad);
-         if (res <= 0) {
+         if (res < 0) {
             Error("EvalStringInstance", "Branch could not be loaded:%d", res);
             return nullptr;
          }
@@ -3835,7 +3835,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
       if (br && br->GetTree()) {                                                                \
          Long64_t tEntry = br->GetTree()->GetReadEntry();                                       \
          auto lres = R__LoadBranch(br, tEntry, fQuickLoad);                                     \
-         if (lres <= 0)                                                                         \
+         if (lres < 0)                                                                          \
             Error("TTreeFormula::TT_EVAL_INIT",                                                 \
             "Could not read entry (%lld) of leaf (%s), r=(%d).", tEntry, leaf->GetName(), lres);\
       } else {                                                                                  \
@@ -3883,7 +3883,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
          if (branch->GetTree()) {                                                               \
             Long64_t tEntry = branch->GetTree()->GetReadEntry();                                \
             auto lres = R__LoadBranch(branch, tEntry, fQuickLoad);                              \
-            if (lres <= 0) {                                                                    \
+            if (lres < 0) {                                                                     \
                Error("TTreeFormula::TT_EVAL_INIT_LOOP",                                         \
             "Could not read entry (%lld) of leaf (%s), r=(%d).", tEntry, leaf->GetName(), lres);\
             }                                                                                   \
@@ -4566,7 +4566,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                   TBranch *branch = leafc->GetBranch();
                   Long64_t readentry = branch->GetTree()->GetReadEntry();
                   auto res = R__LoadBranch(branch,readentry,fQuickLoad);
-                  if (res <= 0) {
+                  if (res < 0) {
                      Error("EvalInstance", "Branch could not be loaded:%d", res);
                      continue;
                   }
@@ -4578,7 +4578,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                      TBranch *br = leafc->GetBranch();
                      Long64_t treeEntry = br->GetTree()->GetReadEntry();
                      auto res = R__LoadBranch(br, treeEntry, true);
-                     if (res <= 0) {
+                     if (res < 0) {
                         Error("EvalInstance", "Branch could not be loaded:%d", res);
                         continue;
                      }
@@ -5025,7 +5025,7 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
                   TBranch *branch = leaf->GetBranch();
                   Long64_t readentry = branch->GetTree()->GetReadEntry();
                   auto res = R__LoadBranch(branch,readentry,fQuickLoad);
-                  if (res <= 0) {
+                  if (res < 0) {
                      Error("PrintValue", "Branch could not be loaded:%d", res);
                   } else {
                      if (fLookupType[0]==kDirect && fNoper==1) {
@@ -5542,7 +5542,7 @@ void TTreeFormula::LoadBranches()
       TBranch *br = leaf->GetBranch();
       Long64_t treeEntry = br->GetTree()->GetReadEntry();
       auto res = R__LoadBranch(br, treeEntry, true);
-      if (res <= 0) {
+      if (res < 0) {
          Error("LoadBranches", "Branch could not be loaded:%d", res);
          continue;
       }
@@ -5614,7 +5614,7 @@ bool TTreeFormula::LoadCurrentDim() {
             if (readentry < 0) readentry=0;
             if (!branchcount->GetAddress()) {
                auto res = R__LoadBranch(branchcount, readentry, fQuickLoad);
-               if (res <= 0) {
+               if (res < 0) {
                   Error("LoadCurrentDim", "Branch could not be loaded:%d", res);
                   return false;
                }
@@ -5644,7 +5644,7 @@ bool TTreeFormula::LoadCurrentDim() {
             if (fHasMultipleVarDim[i]) {// info && info->GetVarDim()>=0) {
                info = (TFormLeafInfo* )fDataMembers.At(i);
                auto res = R__LoadBranch(branch->GetBranchCount2() ? branch->GetBranchCount2() : branch, readentry, fQuickLoad);
-               if (res <= 0) {
+               if (res < 0) {
                    Error("LoadCurrentDim", "Branch could not be loaded:%d", res);
                    return false;
                }
@@ -5676,7 +5676,7 @@ bool TTreeFormula::LoadCurrentDim() {
             Long64_t readentry = leaf->GetBranch()->GetTree()->GetReadEntry();
             if (readentry < 0) readentry=0;
             auto res = R__LoadBranch(branchcount,readentry,fQuickLoad);
-            if (res <= 0) {
+            if (res < 0) {
                Error("LoadCurrentDim", "Branch could not be loaded:%d", res);
                return false;
             }
@@ -5729,7 +5729,7 @@ bool TTreeFormula::LoadCurrentDim() {
             Long64_t readentry = branch->GetTree()->GetReadEntry();
             if (readentry < 0) readentry=0;
             auto res = R__LoadBranch(branch,readentry,fQuickLoad);
-            if (res <= 0) {
+            if (res < 0) {
                Error("LoadCurrentDim", "Branch could not be loaded:%d", res);
                return false;
             }
@@ -5784,7 +5784,7 @@ bool TTreeFormula::LoadCurrentDim() {
             Long64_t readentry = branch->GetTree()->GetReadEntry();
             if (readentry < 0) readentry=0;
             auto res = R__LoadBranch(branch,readentry,fQuickLoad);
-            if (res <= 0) {
+            if (res < 0) {
                Error("LoadCurrentDim", "Branch could not be loaded:%d", res);
                return false;
             }
