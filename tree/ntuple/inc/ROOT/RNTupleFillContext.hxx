@@ -194,7 +194,7 @@ public:
    void EnableMetrics() { fMetrics.Enable(); }
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 
-   ROOT::RResult<ROOT::Experimental::RNTupleAttributeSetWriterHandle>
+   ROOT::Experimental::RNTupleAttributeSetWriterHandle
    CreateAttributeSet(std::string_view name, std::unique_ptr<ROOT::RNTupleModel> model);
 
    void CloseAttributeSet(Experimental::RNTupleAttributeSetWriterHandle handle);
