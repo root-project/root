@@ -1,4 +1,4 @@
-# RNTuple Binary Format Specification 1.0.0.2
+# RNTuple Binary Format Specification 1.0.1.0
 
 ## Versioning Notes
 
@@ -627,6 +627,7 @@ The footer envelope has the following structure:
 - Header checksum (XxHash-3 64bit)
 - Schema extension record frame
 - List frame of cluster group record frames
+- List frame of linked Attribute Sets
 
 The header checksum can be used to cross-check that header and footer belong together.
 The meaning of the feature flags is the same as for the header.
@@ -683,6 +684,25 @@ The entry span is the number of entries that are covered by this cluster group.
 The entry range allows for finding the right page list for random access requests to entries.
 The number of clusters information allows for using consistent cluster IDs
 even if cluster groups are accessed non-sequentially.
+
+#### Linked Attribute Sets
+
+An RNTuple may have zero or more linked Attribute Sets, containing metadata.
+Each Attribute Set is stored on disk as an RNTuple and the Anchor of each RNTuple is linked to by the main
+RNTuple's footer.
+
+An Attribute Set RNTuple has a number of restrictions compared to a regular RNTuple:
+
+1. it cannot have linked Attribute RNTuples itself;
+2. the Alias columns sections, both in its header and footer, must be empty (i.e. none of the Attribute Set RNTuple's
+   Fields can be Projected Fields);
+3. none of its fields may have a structural role of 0x04 (i.e. it must not contain a ROOT streamer object);
+
+The payload of each list element is a Record Frame containing the following fields:
+
+- a Locator pointing to the Attribute RNTuple's Anchor;
+- a 64-bit unsigned integer containing the uncompressed size of the Anchor;
+- a String containing the Attribute Set's name.
 
 ### Page List Envelope
 
