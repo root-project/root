@@ -1,4 +1,4 @@
-# RNTuple Binary Format Specification 1.0.0.2
+# RNTuple Binary Format Specification 1.0.1.0
 
 ## Versioning Notes
 
@@ -627,6 +627,7 @@ The footer envelope has the following structure:
 - Header checksum (XxHash-3 64bit)
 - Schema extension record frame
 - List frame of cluster group record frames
+- List frame of linked attribute set record frames
 
 The header checksum can be used to cross-check that header and footer belong together.
 The meaning of the feature flags is the same as for the header.
@@ -683,6 +684,40 @@ The entry span is the number of entries that are covered by this cluster group.
 The entry range allows for finding the right page list for random access requests to entries.
 The number of clusters information allows for using consistent cluster IDs
 even if cluster groups are accessed non-sequentially.
+
+### Linked Attribute Sets
+
+An RNTuple may have zero or more linked Attribute Sets, containing user-defined metadata.
+Each Attribute Set is stored on disk as an RNTuple and the anchor of each RNTuple is linked to by the main
+RNTuple's footer.
+
+An Attribute Set RNTuple has a number of restrictions compared to a regular RNTuple:
+
+1. it cannot have linked Attribute RNTuples itself;
+2. the alias columns sections, both in its header and footer, must be empty (i.e. none of the Attribute Set RNTuple's
+   fields can be projected fields);
+3. none of its fields may have a structural role of 0x04 (i.e. it must not contain a ROOT streamer object);
+
+An attribute set record frame has the following contents:
+```
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|     Schema Version Major     |     Schema Version Minor       |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|             Attribute Anchor Uncompressed Size                |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
+
+- The first 32 bits contain the _Attribute Schema Version_. This is split into a _Major_ (16 LSB) and a
+  _Minor_ (16 MSB) version. The Schema Version is described below;
+- a 32-bit unsigned integer follows, containing the uncompressed size of the Attribute Anchor.
+
+These fields are followed by: 
+
+- a locator pointing to the Attribute RNTuple's anchor;
+- a string containing the Attribute Set's name. All linked Attribute Sets must have a non-empty, distinct name.
+
 
 ### Page List Envelope
 
@@ -798,6 +833,25 @@ from the corresponding columns of the primary column representation.
 In every cluster, every field has exactly one primary column representation.
 All other representations must be suppressed.
 Note that the primary column representation can change from cluster to cluster.
+
+### Attribute Schema Version
+Each Attribute Set is created with a user-defined model. This model is not used directly by the underlying Attribute
+Set RNTuple, but it is augmented with internal fields used to store additional data that serve to associate each
+entry in the Attribute Set with those in the main RNTuple.
+
+The Attribute Schema Version describes the internal schema of the linked Attribute Set RNTuple.
+A change in Major version number indicates a breaking, non-forward-compatible change in the schema: readers should
+refuse reading an Attribute Set whose Major Schema Version is unknown.
+A change in Minor version number indicates the presence of optional additional fields in the schema: readers should
+still be able to read the Attribute Set as before, ignoring any new field.
+
+The current Attribute Schema Version is **1.0**. It has the following fields (in the following order):
+  1. `_rangeStart` (type `std::uint64_t`): the start of the range that each Attribute Entry refers to;
+  2. `_rangeLen` (type `std::uint64_t`): the length of the range that each Attribute Entry refers to.
+     Note that `_rangeLen == 0` is valid and refers to an empty range;
+  3. `_userModel` (untyped record): a record-type field that serves as the root field to the user-provided RNTupleModel
+     used by the Attribute Set RNTuple. Each user-defined field that was attached to the Field Zero in the user-provided
+    Model will be attached to this field in the Attribute Set RNTuple.
 
 ## Mapping of C++ Types to Fields and Columns
 
