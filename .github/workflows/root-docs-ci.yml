@@ -185,8 +185,8 @@ jobs:
       run: |
         pwd
         ls -l
-        aws s3 sync ${DOC_DIR}/html/ s3://root/doc/${WEB_DIR_NAME}/
-        aws s3 sync ${DOC_DIR}/ s3://root/doc/${WEB_DIR_NAME}/ --exclude "${DOC_DIR}/html/*"
+        aws s3 sync --delete ${DOC_DIR}/html/ s3://root/doc/${WEB_DIR_NAME}/
+        aws s3 sync --delete ${DOC_DIR}/ s3://root/doc/${WEB_DIR_NAME}/ --exclude "${DOC_DIR}/html/*"
         aws s3 cp ${TAR_NAME}.gz s3://root/download/
 
     - name: Install Kerberos utilities
