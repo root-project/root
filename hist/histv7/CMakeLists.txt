@@ -2,6 +2,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTHist
   HEADERS
     ROOT/RLinearizedIndex.hxx
     ROOT/RRegularAxis.hxx
+    ROOT/RVariableBinAxis.hxx
   NO_SOURCES
   DEPENDENCIES
     Core
