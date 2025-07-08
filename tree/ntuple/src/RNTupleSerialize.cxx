@@ -1804,12 +1804,11 @@ ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeFooter(
    const auto nAttributeSets = desc.GetAttributeSets().size();
    pos += SerializeListFramePreamble(nAttributeSets, *where);
    for (const auto &[attrSetName, attrSetLocator] : desc.GetAttributeSets()) {
-      if (auto res = SerializeLocator(attrSetLocator, *where)) {
+      if (auto res = SerializeAttributeSet(attrSetName, attrSetLocator, *where)) {
          pos += res.Unwrap();
       } else {
          return R__FORWARD_ERROR(res);
       }
-      pos += SerializeString(attrSetName, *where);
    }
    if (auto res = SerializeFramePostscript(buffer ? frame : nullptr, pos - frame)) {
       pos += res.Unwrap();
@@ -1824,6 +1823,30 @@ ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeFooter(
       return R__FORWARD_ERROR(res);
    }
    return size;
+}
+
+ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeAttributeSet(const std::string &name,
+                                                                                      const RNTupleLocator &locator,
+                                                                                      void *buffer)
+{
+   auto base = reinterpret_cast<unsigned char *>(buffer);
+   auto pos = base;
+   void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
+
+   auto frame = pos;
+   pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
+   if (auto res = SerializeLocator(locator, *where)) {
+      pos += res.Unwrap();
+   } else {
+      return R__FORWARD_ERROR(res);
+   }
+   pos += SerializeString(name, *where);
+   auto size = pos - frame;
+   if (auto res = SerializeFramePostscript(buffer ? frame : nullptr, size)) {
+      return size;
+   } else {
+      return R__FORWARD_ERROR(res);
+   }
 }
 
 ROOT::RResult<void> ROOT::Internal::RNTupleSerializer::DeserializeHeader(const void *buffer, std::uint64_t bufSize,
@@ -1976,19 +1999,9 @@ ROOT::RResult<void> ROOT::Internal::RNTupleSerializer::DeserializeFooter(const v
          return R__FORWARD_ERROR(res);
       }
       for (std::uint32_t attrSetId = 0; attrSetId < nAttributeSets; ++attrSetId) {
-         RNTupleLocator attrSetLocator;
-         if (auto res = DeserializeLocator(bytes, fnBufSizeLeft(), attrSetLocator)) {
+         if (auto res = DeserializeAttributeSet(bytes, fnBufSizeLeft(), descBuilder)) {
             bytes += res.Unwrap();
          } else {
-            return R__FORWARD_ERROR(res);
-         }
-         std::string attrSetName;
-         if (auto res = DeserializeString(bytes, fnBufSizeLeft(), attrSetName)) {
-            bytes += res.Unwrap();
-         } else {
-            return R__FORWARD_ERROR(res);
-         }
-         if (auto res = descBuilder.AddAttributeSet({attrSetName, attrSetLocator}); !res) {
             return R__FORWARD_ERROR(res);
          }
       }
@@ -1996,6 +2009,39 @@ ROOT::RResult<void> ROOT::Internal::RNTupleSerializer::DeserializeFooter(const v
    }
 
    return RResult<void>::Success();
+}
+
+ROOT::RResult<std::uint32_t>
+ROOT::Internal::RNTupleSerializer::DeserializeAttributeSet(const void *buffer, std::uint64_t bufSize,
+                                                           ROOT::Internal::RNTupleDescriptorBuilder &descBuilder)
+{
+   auto base = reinterpret_cast<const unsigned char *>(buffer);
+   auto bytes = base;
+   auto fnBufSizeLeft = [&]() { return bufSize - (bytes - base); };
+
+   std::uint64_t frameSize;
+   if (auto res = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize)) {
+      bytes += res.Unwrap();
+   } else {
+      return R__FORWARD_ERROR(res);
+   }
+   RNTupleLocator attrSetLocator;
+   if (auto res = DeserializeLocator(bytes, fnBufSizeLeft(), attrSetLocator)) {
+      bytes += res.Unwrap();
+   } else {
+      return R__FORWARD_ERROR(res);
+   }
+   std::string attrSetName;
+   if (auto res = DeserializeString(bytes, fnBufSizeLeft(), attrSetName)) {
+      bytes += res.Unwrap();
+   } else {
+      return R__FORWARD_ERROR(res);
+   }
+   if (auto res = descBuilder.AddAttributeSet({attrSetName, attrSetLocator}); !res) {
+      return R__FORWARD_ERROR(res);
+   }
+
+   return frameSize;
 }
 
 ROOT::RResult<std::vector<ROOT::Internal::RClusterDescriptorBuilder>>
