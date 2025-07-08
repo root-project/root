@@ -264,7 +264,7 @@ protected:
    {
       const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
       const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
-      if (fieldDesc.GetTypeName() != ROOT::RField<T>::TypeName()) {
+      if (!Internal::IsMatchingFieldType<T>(fieldDesc.GetTypeName())) {
          throw RException(R__FAIL("type mismatch for field " + fieldDesc.GetFieldName() + ": " +
                                   fieldDesc.GetTypeName() + " vs. " + ROOT::RField<T>::TypeName()));
       }
