@@ -1,0 +1,10 @@
+ROOT_STANDARD_LIBRARY_PACKAGE(ROOTHist
+  HEADERS
+    ROOT/RLinearizedIndex.hxx
+    ROOT/RRegularAxis.hxx
+  NO_SOURCES
+  DEPENDENCIES
+    Core
+)
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)
