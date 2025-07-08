@@ -148,7 +148,7 @@ void TLeafG::Import(TClonesArray *list, Int_t n)
    for (Int_t i=0;i<n;i++) {
       clone = (char*)list->UncheckedAt(i);
       if (clone)
-         memcpy(&fValue[j],clone + fOffset, 8*fLen);
+         memcpy(&fValue[j],clone + fOffset, fLenType*fLen);
       else
          for (Int_t k = 0; k < fLen; ++k)
             fValue[j + k] = kIntUndefined;
