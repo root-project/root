@@ -46,9 +46,9 @@ TEST(RNTupleAttributes, AttributeBasics)
       auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
 
       // Read back the list of available attribute sets
-      const auto attrSets = reader->GetDescriptor().GetAttributeSets();
+      const auto attrSets = reader->GetDescriptor().GetAttributeSetNames();
       EXPECT_EQ(attrSets.size(), 1);
-      for (const auto &[name, _] : attrSets) {
+      for (const auto &name : attrSets) {
          EXPECT_EQ(name, "MyAttrSet");
       }
 
@@ -550,9 +550,9 @@ TEST(RNTupleAttributes, EmptyAttrRange)
       auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
 
       // Read back the list of available attribute sets
-      const auto attrSets = reader->GetDescriptor().GetAttributeSets();
+      const auto attrSets = reader->GetDescriptor().GetAttributeSetNames();
       EXPECT_EQ(attrSets.size(), 1);
-      for (const auto &[name, _] : attrSets) {
+      for (const auto &name : attrSets) {
          EXPECT_EQ(name, "MyAttrSet");
       }
 

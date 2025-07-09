@@ -1801,10 +1801,11 @@ ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeFooter(
 
    // Attributes
    frame = pos;
-   const auto nAttributeSets = desc.GetAttributeSets().size();
+   const auto &attrSets = ROOT::Experimental::Internal::GetAttributeSets(desc);
+   const auto nAttributeSets = attrSets.size();
    pos += SerializeListFramePreamble(nAttributeSets, *where);
-   for (const auto &[attrSetName, attrSetLocator] : desc.GetAttributeSets()) {
-      if (auto res = SerializeAttributeSet(attrSetName, attrSetLocator, *where)) {
+   for (const auto &[attrSetName, attrSetLocator, uncompLen] : attrSets) {
+      if (auto res = SerializeAttributeSet(attrSetName, attrSetLocator, uncompLen, *where)) {
          pos += res.Unwrap();
       } else {
          return R__FORWARD_ERROR(res);
@@ -1825,9 +1826,9 @@ ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeFooter(
    return size;
 }
 
-ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeAttributeSet(const std::string &name,
-                                                                                      const RNTupleLocator &locator,
-                                                                                      void *buffer)
+ROOT::RResult<std::uint32_t>
+ROOT::Internal::RNTupleSerializer::SerializeAttributeSet(const std::string &name, const RNTupleLocator &locator,
+                                                         std::uint64_t uncompLen, void *buffer)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
@@ -1840,6 +1841,7 @@ ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeAttribu
    } else {
       return R__FORWARD_ERROR(res);
    }
+   pos += SerializeUInt64(uncompLen, *where);
    pos += SerializeString(name, *where);
    auto size = pos - frame;
    if (auto res = SerializeFramePostscript(buffer ? frame : nullptr, size)) {
@@ -2031,13 +2033,15 @@ ROOT::Internal::RNTupleSerializer::DeserializeAttributeSet(const void *buffer, s
    } else {
       return R__FORWARD_ERROR(res);
    }
+   std::uint64_t uncompLen;
+   bytes += DeserializeUInt64(bytes, uncompLen);
    std::string attrSetName;
    if (auto res = DeserializeString(bytes, fnBufSizeLeft(), attrSetName)) {
       bytes += res.Unwrap();
    } else {
       return R__FORWARD_ERROR(res);
    }
-   if (auto res = descBuilder.AddAttributeSet({attrSetName, attrSetLocator}); !res) {
+   if (auto res = descBuilder.AddAttributeSet({attrSetName, attrSetLocator, uncompLen}); !res) {
       return R__FORWARD_ERROR(res);
    }
 

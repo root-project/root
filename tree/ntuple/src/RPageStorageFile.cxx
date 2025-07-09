@@ -691,10 +691,10 @@ ROOT::Experimental::Internal::RNTupleAttributeSetDescriptor ROOT::Internal::RPag
    R__ASSERT(key);
    RNTupleLocator locator;
    locator.SetType(RNTupleLocator::kTypeFile);
-   // TODO(gparolini): set proper size of Anchor (although it's unused right now)
-   locator.SetNBytesOnStorage(0);
-   locator.SetPosition(static_cast<std::uint64_t>(key->GetSeekKey()));
-   return ROOT::Experimental::Internal::RNTupleAttributeSetDescriptor{attrSetName, locator};
+   locator.SetNBytesOnStorage(key->GetNbytes() - key->GetKeylen());
+   locator.SetPosition(static_cast<std::uint64_t>(key->GetSeekKey() + key->GetKeylen()));
+   auto uncompLen = static_cast<std::uint64_t>(key->GetObjlen());
+   return ROOT::Experimental::Internal::RNTupleAttributeSetDescriptor{attrSetName, locator, uncompLen};
 }
 
 void ROOT::Internal::RPageSinkFile::CommitAttributeSet(RPageSink &attrSink)
