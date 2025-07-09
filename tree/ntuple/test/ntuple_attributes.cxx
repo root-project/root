@@ -21,14 +21,14 @@ TEST(RNTupleAttributes, AttributeBasics)
       // Step 2: create the attribute set from the writer
       auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
 
-      // Step 3: open attribute range. attrRange has basically the same interface as REntry
-      auto attrRange = attrSet->BeginRange();
+      // Step 3: open attribute range. attrEntry has basically the same interface as REntry
+      auto attrEntry = attrSet->BeginRange();
 
       auto &wModel = writer->GetModel();
 
       // Step 4: assign attribute values.
       // Values can be assigned anywhere between BeginRange() and CommitRange().
-      auto pMyAttr = attrRange.GetPtr<std::string>("myAttr");
+      auto pMyAttr = attrEntry->GetPtr<std::string>("myAttr");
       *pMyAttr = "This is a custom attribute";
       for (int i = 0; i < 100; ++i) {
          auto entry = wModel.CreateEntry();
@@ -37,7 +37,7 @@ TEST(RNTupleAttributes, AttributeBasics)
       }
 
       // Step 5: close attribute range
-      attrSet->CommitRange(std::move(attrRange));
+      attrSet->CommitRange(std::move(attrEntry));
    }
 
    // READING
@@ -57,7 +57,7 @@ TEST(RNTupleAttributes, AttributeBasics)
       for (int i = 0; i < 100; ++i) {
          int nAttrs = 0;
          for (const auto &attrEntry : attrSet->GetAttributes(i)) {
-            auto pAttr = attrEntry.GetPtr<std::string>("myAttr");
+            auto pAttr = attrEntry->GetPtr<std::string>("myAttr");
             EXPECT_EQ(*pAttr, "This is a custom attribute");
             ++nAttrs;
          }
@@ -176,16 +176,16 @@ TEST(RNTupleAttributes, MultipleCommitRange)
 
    auto &wModel = writer->GetModel();
 
-   auto attrRange = attrSet->BeginRange();
-   auto pMyAttr = attrRange.GetPtr<std::string>("string");
+   auto attrEntry = attrSet->BeginRange();
+   auto pMyAttr = attrEntry->GetPtr<std::string>("string");
    *pMyAttr = "Run 1";
    for (int i = 0; i < 100; ++i) {
       auto entry = wModel.CreateEntry();
       *pInt = i;
       writer->Fill(*entry);
    }
-   attrSet->CommitRange(std::move(attrRange));
-   EXPECT_THROW(attrSet->CommitRange(std::move(attrRange)), ROOT::RException);
+   attrSet->CommitRange(std::move(attrEntry));
+   EXPECT_THROW(attrSet->CommitRange(std::move(attrEntry)), ROOT::RException);
 }
 
 TEST(RNTupleAttributes, AccessPastCommitRange)
@@ -203,17 +203,17 @@ TEST(RNTupleAttributes, AccessPastCommitRange)
 
    auto &wModel = writer->GetModel();
 
-   auto attrRange = attrSet->BeginRange();
-   auto pMyAttr = attrRange.GetPtr<std::string>("string");
+   auto attrEntry = attrSet->BeginRange();
+   auto pMyAttr = attrEntry->GetPtr<std::string>("string");
    *pMyAttr = "Run 1";
    for (int i = 0; i < 100; ++i) {
       auto entry = wModel.CreateEntry();
       *pInt = i;
       writer->Fill(*entry);
    }
-   attrSet->CommitRange(std::move(attrRange));
-   // Cannot access attrRange after CommitRange()
-   EXPECT_THROW(attrRange.GetPtr<std::string>("string"), ROOT::RException);
+   attrSet->CommitRange(std::move(attrEntry));
+   // Cannot access attrEntry after CommitRange()
+   EXPECT_THROW(attrEntry->GetPtr<std::string>("string"), ROOT::RException);
 }
 
 TEST(RNTupleAttributes, AssignMetadataAfterData)
@@ -236,26 +236,26 @@ TEST(RNTupleAttributes, AssignMetadataAfterData)
 
       // First attribute entry
       {
-         auto attrRange = attrSet->BeginRange();
-         *attrRange.GetPtr<std::string>("string") = "Run 1";
-         *attrRange.GetPtr<int>("int") = 1;
+         auto attrEntry = attrSet->BeginRange();
+         *attrEntry->GetPtr<std::string>("string") = "Run 1";
+         *attrEntry->GetPtr<int>("int") = 1;
          for (int i = 0; i < 10; ++i) {
             *pInt = i;
             writer->Fill();
          }
-         attrSet->CommitRange(std::move(attrRange));
+         attrSet->CommitRange(std::move(attrEntry));
       }
 
       // Second attribute entry
       {
-         auto attrRange = attrSet->BeginRange();
+         auto attrEntry = attrSet->BeginRange();
          for (int i = 0; i < 10; ++i) {
             *pInt = i;
             writer->Fill();
          }
-         *attrRange.GetPtr<std::string>("string") = "Run 2";
-         *attrRange.GetPtr<int>("int") = 2;
-         attrSet->CommitRange(std::move(attrRange));
+         *attrEntry->GetPtr<std::string>("string") = "Run 2";
+         *attrEntry->GetPtr<int>("int") = 2;
+         attrSet->CommitRange(std::move(attrEntry));
       }
    }
 
@@ -266,8 +266,8 @@ TEST(RNTupleAttributes, AssignMetadataAfterData)
       auto attrSet = reader->OpenAttributeSet("MyAttrSet");
       auto nAttrs = 0;
       for (const auto &attrEntry : attrSet->GetAttributes()) {
-         auto pAttrStr = attrEntry.GetPtr<std::string>("string");
-         auto pAttrInt = attrEntry.GetPtr<int>("int");
+         auto pAttrStr = attrEntry->GetPtr<std::string>("string");
+         auto pAttrInt = attrEntry->GetPtr<int>("int");
          EXPECT_EQ(attrEntry.GetRange().Start(), nAttrs * 10);
          EXPECT_EQ(attrEntry.GetRange().End(), (1 + nAttrs) * 10);
          EXPECT_EQ(*pAttrStr, nAttrs == 0 ? "Run 1" : "Run 2");
@@ -294,8 +294,8 @@ TEST(RNTupleAttributes, ImplicitCommitRange)
       attrModel->MakeField<std::string>("string");
       auto attrSet = writer->CreateAttributeSet("MyAttrSet", attrModel->Clone());
 
-      auto attrRange = attrSet->BeginRange();
-      auto pMyAttr = attrRange.GetPtr<std::string>("string");
+      auto attrEntry = attrSet->BeginRange();
+      auto pMyAttr = attrEntry->GetPtr<std::string>("string");
       *pMyAttr = "Run 1";
       for (int i = 0; i < 10; ++i) {
          *pInt = i;
@@ -311,7 +311,7 @@ TEST(RNTupleAttributes, ImplicitCommitRange)
       auto attrSet = reader->OpenAttributeSet("MyAttrSet");
       auto nAttrs = 0;
       for (const auto &attrEntry : attrSet->GetAttributes()) {
-         auto pAttr = attrEntry.GetPtr<std::string>("string");
+         auto pAttr = attrEntry->GetPtr<std::string>("string");
          EXPECT_EQ(attrEntry.GetRange().Start(), 0);
          EXPECT_EQ(attrEntry.GetRange().End(), 10);
          EXPECT_EQ(*pAttr, "Run 1");
@@ -341,19 +341,19 @@ TEST(RNTupleAttributes, AttributeMultipleSets)
 
    auto &wModel = writer->GetModel();
 
-   auto attrRange2 = attrSet2->BeginRange();
-   auto pMyAttr2 = attrRange2.GetPtr<std::string>("string");
+   auto attrEntry2 = attrSet2->BeginRange();
+   auto pMyAttr2 = attrEntry2->GetPtr<std::string>("string");
    for (int i = 0; i < 100; ++i) {
-      auto attrRange1 = attrSet1->BeginRange();
-      auto pMyAttr1 = attrRange1.GetPtr<int>("int");
+      auto attrEntry1 = attrSet1->BeginRange();
+      auto pMyAttr1 = attrEntry1->GetPtr<int>("int");
       *pMyAttr1 = i;
       auto entry = wModel.CreateEntry();
       *pInt = i;
       writer->Fill(*entry);
-      attrSet1->CommitRange(std::move(attrRange1));
+      attrSet1->CommitRange(std::move(attrEntry1));
    }
    *pMyAttr2 = "Run 1";
-   attrSet2->CommitRange(std::move(attrRange2));
+   attrSet2->CommitRange(std::move(attrEntry2));
 }
 
 TEST(RNTupleAttributes, AttributeInvalidCommitRange)
@@ -375,24 +375,24 @@ TEST(RNTupleAttributes, AttributeInvalidCommitRange)
    attrModel2->MakeField<std::string>("string");
    auto attrSet2 = writer->CreateAttributeSet("MyAttrSet2", attrModel2->Clone());
 
-   auto attrRange2 = attrSet2->BeginRange();
+   auto attrEntry2 = attrSet2->BeginRange();
 
    auto &wModel = writer->GetModel();
 
-   auto pMyAttr2 = attrRange2.GetPtr<std::string>("string");
+   auto pMyAttr2 = attrEntry2->GetPtr<std::string>("string");
    for (int i = 0; i < 100; ++i) {
-      auto attrRange1 = attrSet1->BeginRange();
-      auto pMyAttr1 = attrRange1.GetPtr<int>("int");
+      auto attrEntry1 = attrSet1->BeginRange();
+      auto pMyAttr1 = attrEntry1->GetPtr<int>("int");
       *pMyAttr1 = i;
       auto entry = wModel.CreateEntry();
       *pInt = i;
       writer->Fill(*entry);
-      attrSet1->CommitRange(std::move(attrRange1));
+      attrSet1->CommitRange(std::move(attrEntry1));
    }
    *pMyAttr2 = "Run 1";
 
    // Oops! Calling CommitRange on the wrong set!
-   EXPECT_THROW(attrSet1->CommitRange(std::move(attrRange2)), ROOT::RException);
+   EXPECT_THROW(attrSet1->CommitRange(std::move(attrEntry2)), ROOT::RException);
 }
 
 TEST(RNTupleAttributes, ReadRanges)
@@ -415,50 +415,50 @@ TEST(RNTupleAttributes, ReadRanges)
       auto attrSetEpochs = writer->CreateAttributeSet("Attr_Epochs", std::move(attrModelEpochs));
 
       {
-         auto attrRangeEpoch = attrSetEpochs->BeginRange();
-         auto pEpoch = attrRangeEpoch.GetPtr<std::string>("epoch");
+         auto attrEntryEpoch = attrSetEpochs->BeginRange();
+         auto pEpoch = attrEntryEpoch->GetPtr<std::string>("epoch");
          *pEpoch = "Epoch 1";
 
          {
-            auto attrRange = attrSetRuns->BeginRange();
-            auto pMyAttr = attrRange.GetPtr<std::string>("run");
+            auto attrEntry = attrSetRuns->BeginRange();
+            auto pMyAttr = attrEntry->GetPtr<std::string>("run");
             *pMyAttr = "Run 1";
             for (int i = 0; i < 10; ++i) {
                *pInt = i;
                writer->Fill();
             }
-            attrSetRuns->CommitRange(std::move(attrRange));
+            attrSetRuns->CommitRange(std::move(attrEntry));
          }
 
          // Second attribute entry
          {
-            auto attrRange = attrSetRuns->BeginRange();
-            auto pMyAttr = attrRange.GetPtr<std::string>("run");
+            auto attrEntry = attrSetRuns->BeginRange();
+            auto pMyAttr = attrEntry->GetPtr<std::string>("run");
             for (int i = 0; i < 10; ++i) {
                *pInt = i;
                writer->Fill();
             }
             *pMyAttr = "Run 2";
-            attrSetRuns->CommitRange(std::move(attrRange));
+            attrSetRuns->CommitRange(std::move(attrEntry));
          }
-         attrSetEpochs->CommitRange(std::move(attrRangeEpoch));
+         attrSetEpochs->CommitRange(std::move(attrEntryEpoch));
       }
       {
-         auto attrRangeEpoch = attrSetEpochs->BeginRange();
-         auto pMyAttrEpoch = attrRangeEpoch.GetPtr<std::string>("epoch");
+         auto attrEntryEpoch = attrSetEpochs->BeginRange();
+         auto pMyAttrEpoch = attrEntryEpoch->GetPtr<std::string>("epoch");
          *pMyAttrEpoch = "Epoch 2";
 
          {
-            auto attrRange = attrSetRuns->BeginRange();
-            auto pMyAttr = attrRange.GetPtr<std::string>("run");
+            auto attrEntry = attrSetRuns->BeginRange();
+            auto pMyAttr = attrEntry->GetPtr<std::string>("run");
             *pMyAttr = "Run 3";
             for (int i = 0; i < 10; ++i) {
                *pInt = i;
                writer->Fill();
             }
-            attrSetRuns->CommitRange(std::move(attrRange));
+            attrSetRuns->CommitRange(std::move(attrEntry));
          }
-         attrSetEpochs->CommitRange(std::move(attrRangeEpoch));
+         attrSetEpochs->CommitRange(std::move(attrEntryEpoch));
       }
    }
 
@@ -505,12 +505,12 @@ TEST(RNTupleAttributes, EmptyAttrRange)
       auto attrModel = RNTupleModel::Create();
       auto pAttr = attrModel->MakeField<std::string>("myAttr");
       auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
-      auto attrRange = attrSet->BeginRange();
+      auto attrEntry = attrSet->BeginRange();
 
-      auto pMyAttr = attrRange.GetPtr<std::string>("myAttr");
+      auto pMyAttr = attrEntry->GetPtr<std::string>("myAttr");
       *pMyAttr = "This is range is empty.";
       // No values written to the main RNTuple...
-      attrSet->CommitRange(std::move(attrRange));
+      attrSet->CommitRange(std::move(attrEntry));
    }
 
    {
