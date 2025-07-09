@@ -139,23 +139,63 @@ TEST(RNTupleAttributes, ReservedAttributeSetName)
    }
 }
 
-TEST(RNTupleAttributes, MultipleBeginRange)
+TEST(RNTupleAttributes, InterleavingRanges)
 {
-   // Calling BeginRange multiple times without calling CommitRange is an error.
+   // Calling BeginRange multiple times without calling CommitRange in between is valid:
+   // the user gets separate AttributeEntries that they can commit at their will.
 
    FileRaii fileGuard("test_ntuple_attrs_multiplebegin.root");
 
-   auto model = RNTupleModel::Create();
-   auto pInt = model->MakeField<int>("int");
-   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
-   auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file);
+   {
+      auto model = RNTupleModel::Create();
+      auto pInt = model->MakeField<int>("int");
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto wopts = RNTupleWriteOptions();
+      wopts.SetCompression(0);
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file, wopts);
 
-   auto attrModel = RNTupleModel::Create();
-   attrModel->MakeField<std::string>("string");
-   auto attrSet = writer->CreateAttributeSet("MyAttrSet", attrModel->Clone());
+      auto attrModel = RNTupleModel::Create();
+      attrModel->MakeField<int>("attrInt");
+      auto attrSet = writer->CreateAttributeSet("MyAttrSet", attrModel->Clone());
 
-   attrSet->BeginRange();
-   EXPECT_THROW(attrSet->BeginRange(), ROOT::RException);
+      auto attrEntry1 = attrSet->BeginRange();
+      auto attrEntry2 = attrSet->BeginRange();
+      int i1 = 0, i2 = 0;
+      *attrEntry1->GetPtr<int>("attrInt") = i1++;
+      *attrEntry2->GetPtr<int>("attrInt") = i2++;
+      for (int i = 0; i < 30; ++i) {
+         if (i > 0 && (i % 5) == 0) {
+            attrSet->CommitRange(std::move(attrEntry1));
+            attrEntry1 = attrSet->BeginRange();
+            *attrEntry1->GetPtr<int>("attrInt") = i1++;
+         }
+         if (i > 0 && (i % 11) == 0) {
+            attrSet->CommitRange(std::move(attrEntry2));
+            attrEntry2 = attrSet->BeginRange();
+            *attrEntry2->GetPtr<int>("attrInt") = i2++;
+         }
+         *pInt = i;
+         writer->Fill();
+      }
+      attrSet->CommitRange(std::move(attrEntry1));
+      attrSet->CommitRange(std::move(attrEntry2));
+   }
+
+   // read back
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto attrSet = reader->OpenAttributeSet("MyAttrSet");
+   for (auto i : reader->GetEntryRange()) {
+      auto attrs = attrSet->GetAttributes(i);
+      EXPECT_EQ(attrs.size(), 2);
+      int totVal = 0;
+      for (auto attrIdx = 0u; attrIdx < attrs.size(); ++attrIdx) {
+         totVal += *attrs[attrIdx]->GetPtr<int>("attrInt");
+      }
+      int expected = (i / 5) + (i / 11);
+      EXPECT_EQ(totVal, expected);
+   }
+
+   fileGuard.PreserveFile();
 }
 
 TEST(RNTupleAttributes, MultipleCommitRange)
@@ -213,7 +253,7 @@ TEST(RNTupleAttributes, AccessPastCommitRange)
    }
    attrSet->CommitRange(std::move(attrEntry));
    // Cannot access attrEntry after CommitRange()
-   EXPECT_THROW(attrEntry->GetPtr<std::string>("string"), ROOT::RException);
+   EXPECT_DEATH(attrEntry->GetPtr<std::string>("string"), "fScopedEntry");
 }
 
 TEST(RNTupleAttributes, AssignMetadataAfterData)
@@ -278,9 +318,10 @@ TEST(RNTupleAttributes, AssignMetadataAfterData)
    }
 }
 
-TEST(RNTupleAttributes, ImplicitCommitRange)
+TEST(RNTupleAttributes, NoImplicitCommitRange)
 {
-   // CommitRange gets called automatically when a AttributeRangeHandle goes out of scope.
+   // CommitRange doesn't get called automatically when a AttributeRangeHandle goes out of scope:
+   // forgetting to call CommitRange will cause the attribute range not to be saved.
 
    FileRaii fileGuard("test_ntuple_attrs_auto_end_range.root");
 
@@ -301,7 +342,7 @@ TEST(RNTupleAttributes, ImplicitCommitRange)
          *pInt = i;
          writer->Fill();
       }
-      // Calling CommitRange implicitly on scope exit
+      // Not calling CommitRange, so the attributes are not written.
    }
 
    // Read back the attributes
@@ -309,15 +350,7 @@ TEST(RNTupleAttributes, ImplicitCommitRange)
       auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
       // Fetch a specific attribute set
       auto attrSet = reader->OpenAttributeSet("MyAttrSet");
-      auto nAttrs = 0;
-      for (const auto &attrEntry : attrSet->GetAttributes()) {
-         auto pAttr = attrEntry->GetPtr<std::string>("string");
-         EXPECT_EQ(attrEntry.GetRange().Start(), 0);
-         EXPECT_EQ(attrEntry.GetRange().End(), 10);
-         EXPECT_EQ(*pAttr, "Run 1");
-         ++nAttrs;
-      }
-      EXPECT_EQ(nAttrs, 1);
+      EXPECT_EQ(attrSet->GetAttributes().size(), 0);
    }
 }
 
