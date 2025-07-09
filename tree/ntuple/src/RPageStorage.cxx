@@ -1296,7 +1296,8 @@ void ROOT::Internal::RPagePersistentSink::EnableDefaultMetrics(const std::string
                                                                         "CPU time spent compressing")});
 }
 
-std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Internal::RPageSource::ReadAttributeSet(ROOT::RNTupleLocator locator)
+std::unique_ptr<ROOT::Internal::RPageSource>
+ROOT::Internal::RPageSource::ReadAttributeSet(ROOT::RNTupleLocator locator, std::uint64_t uncompLen)
 {
    ROOT::Internal::RMiniFileReader *reader = GetUnderlyingReader();
    // #TODO(gparolini)
@@ -1304,7 +1305,9 @@ std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Internal::RPageSource::ReadAt
       throw ROOT::RException(R__FAIL("GetAttributeSet is only supported for file-based page sources"));
 
    assert(locator.GetType() == RNTupleLocator::kTypeFile);
-   auto attrAnchor = reader->GetNTupleProperAtOffset(locator.GetPosition<std::uint64_t>()).Unwrap();
+   auto attrAnchor =
+      reader->GetNTupleProperAtOffset(locator.GetPosition<std::uint64_t>(), locator.GetNBytesOnStorage(), uncompLen)
+         .Unwrap();
 
    // NOTE: this static_cast assumes that GetUnderlyingReader() returns non-null only for RPageSourceFile.
    // This should be made more robust. Maybe just make this method virtual?
