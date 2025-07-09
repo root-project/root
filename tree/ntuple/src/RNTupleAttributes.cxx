@@ -109,7 +109,7 @@ ROOT::Experimental::RNTupleAttributeEntryHandle ROOT::Experimental::RNTupleAttri
 void ROOT::Experimental::RNTupleAttributeSetWriter::CommitRange(
    ROOT::Experimental::RNTupleAttributeEntryHandle rangeHandle)
 {
-   if (R__unlikely(!fOpenEntry || rangeHandle.fRange != &*fOpenEntry))
+   if (R__unlikely(!fOpenEntry || rangeHandle.fInner != &*fOpenEntry))
       throw ROOT::RException(
          R__FAIL(std::string("Handle passed to CommitRange() of Attribute Set \"") + GetName() +
                  "\" is invalid (it is not the Handle returned by the latest call to BeginRange())"));

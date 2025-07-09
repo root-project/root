@@ -81,11 +81,12 @@ public:
 class RNTupleAttributeEntry final {
    friend class ROOT::Experimental::RNTupleAttributeSetWriter;
    friend class ROOT::Experimental::RNTupleAttributeSetReader;
+   friend class ROOT::Experimental::RNTupleFillContext;
 
    /// Entry containing the Attribute-specific fields (such as the entry range)
    std::unique_ptr<REntry> fMetaEntry;
    /* Entry containing to user-defined fields. It is "scoped" because the Attribute Model is organized like this:
-    *  
+    *
     *                      FieldZero
     *                          |
     *                _________/ \_________
@@ -120,19 +121,16 @@ class RNTupleAttributeEntry final {
    {
    }
 
+   std::size_t Append();
+   // Required for RNTupleFillContext::FillNoFlushImpl()
+   std::uint64_t GetModelId() const { return fScopedEntry->GetModelId(); }
+
 public:
    RNTupleAttributeEntry(RNTupleAttributeEntry &&) = default;
    RNTupleAttributeEntry &operator=(RNTupleAttributeEntry &&) = default;
 
-   std::size_t Append();
-
-   ROOT::DescriptorId_t GetModelId() const { return fScopedEntry->GetModelId(); }
-
-   template <typename T>
-   std::shared_ptr<T> GetPtr(std::string_view name) const
-   {
-      return fScopedEntry->GetPtr<T>(name);
-   }
+   REntry *operator->() { return fScopedEntry.get(); }
+   const REntry *operator->() const { return fScopedEntry.get(); }
 
    RNTupleAttributeRange GetRange() const { return fRange; }
 };
@@ -140,26 +138,25 @@ public:
 class RNTupleAttributeEntryHandle final {
    friend class RNTupleAttributeSetWriter;
 
-   RNTupleAttributeEntry *fRange = nullptr;
+   RNTupleAttributeEntry *fInner = nullptr;
 
-   explicit RNTupleAttributeEntryHandle(RNTupleAttributeEntry &range) : fRange(&range) {}
+   explicit RNTupleAttributeEntryHandle(RNTupleAttributeEntry &inner) : fInner(&inner) {}
 
 public:
    RNTupleAttributeEntryHandle(const RNTupleAttributeEntryHandle &) = delete;
    RNTupleAttributeEntryHandle &operator=(const RNTupleAttributeEntryHandle &) = delete;
-   RNTupleAttributeEntryHandle(RNTupleAttributeEntryHandle &&other) { std::swap(fRange, other.fRange); }
+   RNTupleAttributeEntryHandle(RNTupleAttributeEntryHandle &&other) { std::swap(fInner, other.fInner); }
    RNTupleAttributeEntryHandle &operator=(RNTupleAttributeEntryHandle &&other)
    {
-      std::swap(fRange, other.fRange);
+      std::swap(fInner, other.fInner);
       return *this;
    }
 
-   template <typename T>
-   std::shared_ptr<T> GetPtr(std::string_view name)
+   REntry *operator->()
    {
-      if (R__unlikely(!fRange))
+      if (R__unlikely(!fInner))
          throw ROOT::RException(R__FAIL("Called GetPtr() on invalid RNTupleAttributeEntryHandle"));
-      return fRange->GetPtr<T>(name);
+      return fInner->operator->();
    }
 };
 
