@@ -813,3 +813,23 @@ TEST(RNTupleInspector, MultiColumnRepresentations)
    EXPECT_EQ(ENTupleColumnType::kReal16, px1Inspector.GetType());
    EXPECT_EQ(1u, px1Inspector.GetNElements());
 }
+
+TEST(RNTupleInspector, FieldsTreeAsDot)
+{
+   FileRaii fileGuard("test_ntuple_inspector_fields_tree_as_dot.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldFloat1 = model->MakeField<float>("float1");
+      auto fldInt = model->MakeField<std::int32_t>("int");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+   }
+   auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
+   std::ostringstream dotStream;
+   inspector->PrintFieldsTreeAsDot(dotStream);
+   const std::string dot = dotStream.str();
+
+   EXPECT_NE(dot.find("digraph D {"), std::string::npos);
+   EXPECT_NE(dot.find("0->1"), std::string::npos);
+   EXPECT_NE(dot.find("0->2"), std::string::npos);
+   EXPECT_TRUE(dot.size() >= 2 && dot.substr(dot.size() - 1) == "}");
+}
