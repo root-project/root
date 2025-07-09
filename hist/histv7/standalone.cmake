@@ -14,3 +14,20 @@ target_compile_features(ROOTHist INTERFACE cxx_std_17)
 # flattens the directory structure on install, and FILE_SETs are only available
 # with CMake v3.23.
 install(FILES ${histv7_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ROOT)
+
+include(CTest)
+if(BUILD_TESTING)
+  find_package(GTest)
+  if(GTEST_FOUND)
+    # Function used in test/ to add unitest executables.
+    function(HIST_ADD_GTEST name source)
+      add_executable(${name} ${source})
+      target_link_libraries(${name} ROOTHist GTest::Main)
+      add_test(NAME ${name} COMMAND ${name})
+    endfunction()
+
+    add_subdirectory(test)
+  else()
+    message(WARNING "GTest not found, disabling tests")
+  endif()
+endif()
