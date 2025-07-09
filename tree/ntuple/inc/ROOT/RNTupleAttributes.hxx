@@ -51,8 +51,6 @@ class RNTupleAttributeSetWriter final {
    RNTupleFillContext fFillContext;
    /// Fill context of the main RNTuple being written (i.e. the RNTuple whose attributes we are).
    const RNTupleFillContext *fMainFillContext = nullptr;
-   /// The currently open entry, existing from BeginRange() to CommitRange()
-   std::optional<RNTupleAttributeEntry> fOpenEntry;
 
    /// Creates a RNTupleAttributeSetWriter associated to the RNTupleWriter owning `mainFillContext` and writing
    /// in `dir`. `model` is the schema of the AttributeSet.
@@ -61,7 +59,6 @@ class RNTupleAttributeSetWriter final {
 
    RNTupleAttributeSetWriter(const RNTupleFillContext *mainFillContext, RNTupleFillContext fillContext);
 
-   void CommitRangeInternal();
    /// Flushes any remaining open range and writes the Attribute RNTuple to storage.
    void Commit();
 
@@ -74,8 +71,8 @@ public:
 
    const std::string &GetName() const;
 
-   RNTupleAttributeEntryHandle BeginRange();
-   void CommitRange(RNTupleAttributeEntryHandle rangeHandle);
+   RNTupleAttributeEntry BeginRange();
+   void CommitRange(RNTupleAttributeEntry entry);
 };
 
 class RNTupleAttributeSetWriterHandle final {
