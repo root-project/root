@@ -516,3 +516,38 @@ ROOT::Experimental::RNTupleInspector::GetFieldsByName(const std::regex &fieldNam
 
    return fieldIds;
 }
+
+void ROOT::Experimental::RNTupleInspector::PrintFieldTreeAsDot(const ROOT::RFieldDescriptor &fieldDescriptor,
+                                                               std::ostream &output) const
+{
+   const auto &tupleDescriptor = GetDescriptor();
+   const bool isZeroField = fieldDescriptor.GetParentId() == ROOT::kInvalidDescriptorId;
+   if (isZeroField) {
+      output << "digraph D {\n";
+      output << "node[shape=box]\n";
+   }
+   const std::string &nodeId = (isZeroField) ? "0" : std::to_string(fieldDescriptor.GetId() + 1);
+   const std::string &fieldName = (isZeroField) ? "RFieldZero" : fieldDescriptor.GetFieldName();
+   const std::string &description = fieldDescriptor.GetFieldDescription();
+   const std::uint32_t &version = fieldDescriptor.GetFieldVersion();
+
+   output << nodeId << "[label=<";
+   if (!isZeroField) {
+      output << "<b>Name: </b>" << fieldName << "<br></br>";
+      output << "<b>Type: </b>" << fieldDescriptor.GetTypeName() << "<br></br>";
+      output << "<b>ID: </b>" << std::to_string(fieldDescriptor.GetId()) << "<br></br>";
+      if (description != "")
+         output << "<b>Description: </b>" << description << "<br></br>";
+      if (version != 0)
+         output << "<b>Version: </b>" << version << "<br></br>";
+   } else
+      output << "<b>" << fieldName << "</b>";
+   output << ">]\n";
+   for (const auto &childFieldId : fieldDescriptor.GetLinkIds()) {
+      const auto &childFieldDescriptor = tupleDescriptor.GetFieldDescriptor(childFieldId);
+      output << nodeId + "->" + std::to_string(childFieldDescriptor.GetId() + 1) + "\n";
+      PrintFieldTreeAsDot(childFieldDescriptor, output);
+   }
+   if (isZeroField)
+      output << "}";
+}
