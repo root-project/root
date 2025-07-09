@@ -3725,15 +3725,15 @@ TEST(RNTupleMerger, MergeAttributes)
 
       auto &wModel = writer->GetModel();
 
-      auto attrRange = attrSet->BeginRange();
-      auto pMyAttr = attrRange.GetPtr<std::string>("string");
+      auto attrEntry = attrSet->BeginRange();
+      auto pMyAttr = attrEntry->GetPtr<std::string>("string");
       *pMyAttr = "This is file " + std::to_string(fileNo);
       for (int i = 0; i < 10 + 5 * fileNo; ++i) {
          auto entry = wModel.CreateEntry();
          *entry->GetPtr<int>("int") = i;
          writer->Fill(*entry);
       }
-      attrSet->CommitRange(std::move(attrRange));
+      attrSet->CommitRange(std::move(attrEntry));
       ++fileNo;
    }
    // Third RNTuple has no Attribute Set
@@ -3816,8 +3816,8 @@ TEST(RNTupleMerger, MergeAttributes)
       EXPECT_EQ(attrs[0].GetRange().End(), 10);
       EXPECT_EQ(attrs[1].GetRange().Start(), 10);
       EXPECT_EQ(attrs[1].GetRange().End(), 25);
-      EXPECT_EQ(*attrs[0].GetPtr<std::string>("string"), "This is file 0");
-      EXPECT_EQ(*attrs[1].GetPtr<std::string>("string"), "This is file 1");
+      EXPECT_EQ(*attrs[0]->GetPtr<std::string>("string"), "This is file 0");
+      EXPECT_EQ(*attrs[1]->GetPtr<std::string>("string"), "This is file 1");
    }
 }
 
@@ -3853,9 +3853,9 @@ TEST(RNTupleMerger, MergeAttributesSymmetricSchema)
 
       auto &wModel = writer->GetModel();
 
-      auto attrRange = attrSet->BeginRange();
-      auto pAttrStr = attrRange.GetPtr<std::string>("string");
-      auto pAttrInt = attrRange.GetPtr<int>("int");
+      auto attrEntry = attrSet->BeginRange();
+      auto pAttrStr = attrEntry->GetPtr<std::string>("string");
+      auto pAttrInt = attrEntry->GetPtr<int>("int");
       *pAttrStr = "This is file " + std::to_string(fileNo);
       *pAttrInt = fileNo;
       for (int i = 0; i < 10 + 5 * fileNo; ++i) {
@@ -3863,7 +3863,7 @@ TEST(RNTupleMerger, MergeAttributesSymmetricSchema)
          *entry->GetPtr<int>("foo") = i;
          writer->Fill(*entry);
       }
-      attrSet->CommitRange(std::move(attrRange));
+      attrSet->CommitRange(std::move(attrEntry));
       ++fileNo;
    }
 
@@ -3922,15 +3922,15 @@ TEST_P(RNTupleMergerAttributesEmpty, MergeEmptyAttribute)
 
          auto &wModel = writer->GetModel();
 
-         auto attrRange = attrSet->BeginRange();
-         auto pMyAttr = attrRange.GetPtr<std::string>("string");
+         auto attrEntry = attrSet->BeginRange();
+         auto pMyAttr = attrEntry->GetPtr<std::string>("string");
          *pMyAttr = "This is file " + std::to_string(fileNo);
          for (int i = 0; i < 10 * (fileNo != emptyFileNo); ++i) {
             auto entry = wModel.CreateEntry();
             *entry->GetPtr<int>("int") = i;
             writer->Fill(*entry);
          }
-         attrSet->CommitRange(std::move(attrRange));
+         attrSet->CommitRange(std::move(attrEntry));
          ++fileNo;
       }
    }
@@ -3975,9 +3975,9 @@ TEST_P(RNTupleMergerAttributesEmpty, MergeEmptyAttribute)
          EXPECT_EQ(attrs[fileNo].GetRange().Length(), expectedLen);
          expectedStart += expectedLen;
       }
-      EXPECT_EQ(*attrs[0].GetPtr<std::string>("string"), "This is file 0");
-      EXPECT_EQ(*attrs[1].GetPtr<std::string>("string"), "This is file 1");
-      EXPECT_EQ(*attrs[2].GetPtr<std::string>("string"), "This is file 2");
+      EXPECT_EQ(*attrs[0]->GetPtr<std::string>("string"), "This is file 0");
+      EXPECT_EQ(*attrs[1]->GetPtr<std::string>("string"), "This is file 1");
+      EXPECT_EQ(*attrs[2]->GetPtr<std::string>("string"), "This is file 2");
    }
 }
 
