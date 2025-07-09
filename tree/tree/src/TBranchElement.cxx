@@ -3402,6 +3402,26 @@ void TBranchElement::InitializeOffsets()
                stlParentName.Remove(0, motherName.Length());
                stlParentNameUpdated = true;
             }
+         } else if (fType == 4) {
+            // This is a top-level branch of type STL collection. In this current
+            // iteration, we are trying to calculate the offset of one of the
+            // base classes of the element type of the STL collection. The
+            // dataName string in this case will be akin to
+            // "nameOfBranch.BaseClassName". Later logic in this function will
+            // try to get the TRealData relative to "BaseClassName". But if the
+            // base class is not splittable (i.e. it has a custom streamer), that
+            // will not work anyway. The treatment of base classes follows a
+            // different path: we remove the leading name of the branch, so only
+            // the name of the base class is left. This will be later detected
+            // and dataName will be stripped from the name of the base class,
+            // leaving the string completely empty. Since the dataName string
+            // will be empty, the logic of this function skips the part related
+            // to finding the TRealData and directly computes the base class
+            // offset.
+            // Only perform the modification of the string if it looks as we
+            // expect
+            if (dataName == (motherName + '.' + subBranchElement->GetName()))
+               dataName = subBranchElement->GetName();
          } else if (motherDot) {
             // -- Remove the top-level branch name from our name, folder case.
             //
