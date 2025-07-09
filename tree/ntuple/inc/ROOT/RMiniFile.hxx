@@ -38,12 +38,12 @@ class RNTupleReader;
 namespace Internal {
 class RNTupleFileWriter;
 class RPageSource;
-}
+} // namespace Internal
 
 namespace Experimental::Internal {
 class RNTupleMerger;
 TDirectory *GetUnderlyingDirectory(ROOT::Internal::RNTupleFileWriter &writer);
-}
+} // namespace Experimental::Internal
 
 namespace Internal {
 class RRawFile;
