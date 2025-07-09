@@ -123,41 +123,30 @@ class RNTupleAttributeEntry final {
 
    std::size_t Append();
    // Required for RNTupleFillContext::FillNoFlushImpl()
-   std::uint64_t GetModelId() const { return fScopedEntry->GetModelId(); }
+   std::uint64_t GetModelId() const
+   {
+      R__ASSERT(fScopedEntry);
+      return fScopedEntry->GetModelId();
+   }
 
 public:
    RNTupleAttributeEntry(RNTupleAttributeEntry &&) = default;
    RNTupleAttributeEntry &operator=(RNTupleAttributeEntry &&) = default;
 
-   REntry *operator->() { return fScopedEntry.get(); }
-   const REntry *operator->() const { return fScopedEntry.get(); }
-
-   RNTupleAttributeRange GetRange() const { return fRange; }
-};
-
-class RNTupleAttributeEntryHandle final {
-   friend class RNTupleAttributeSetWriter;
-
-   RNTupleAttributeEntry *fInner = nullptr;
-
-   explicit RNTupleAttributeEntryHandle(RNTupleAttributeEntry &inner) : fInner(&inner) {}
-
-public:
-   RNTupleAttributeEntryHandle(const RNTupleAttributeEntryHandle &) = delete;
-   RNTupleAttributeEntryHandle &operator=(const RNTupleAttributeEntryHandle &) = delete;
-   RNTupleAttributeEntryHandle(RNTupleAttributeEntryHandle &&other) { std::swap(fInner, other.fInner); }
-   RNTupleAttributeEntryHandle &operator=(RNTupleAttributeEntryHandle &&other)
-   {
-      std::swap(fInner, other.fInner);
-      return *this;
-   }
-
    REntry *operator->()
    {
-      if (R__unlikely(!fInner))
-         throw ROOT::RException(R__FAIL("Called GetPtr() on invalid RNTupleAttributeEntryHandle"));
-      return fInner->operator->();
+      R__ASSERT(fScopedEntry);
+      return fScopedEntry.get();
    }
+   const REntry *operator->() const
+   {
+      R__ASSERT(fScopedEntry);
+      return fScopedEntry.get();
+   }
+
+   operator bool() const { return fScopedEntry && fMetaEntry; }
+
+   RNTupleAttributeRange GetRange() const { return fRange; }
 };
 
 } // namespace ROOT::Experimental

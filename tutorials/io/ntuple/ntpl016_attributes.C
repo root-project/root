@@ -45,7 +45,7 @@ static void Write()
 
    // Step 5: assign attribute values.
    // Values can be assigned anywhere between BeginRange() and CommitRange().
-   auto pMyAttr = attrEntry.GetPtr<std::string>("myAttr");
+   auto pMyAttr = attrEntry->GetPtr<std::string>("myAttr");
    *pMyAttr = "This is a custom attribute";
 
    // Step 6: fill the data inside the RNTuple
@@ -64,9 +64,9 @@ static void Read()
    auto reader = ROOT::RNTupleReader::Open(ntplName, fileName);
 
    // Read back the list of available attribute sets
-   const auto attrSets = reader->GetDescriptor().GetAttributeSets();
-   std::cout << "Number of Attribute Sets inside " << fileName << ":" << ntplName << ": " << (attrSets.size(), 1) << "\n";
-   for (const auto &[name, _] : attrSets) {
+   const auto attrSets = reader->GetDescriptor().GetAttributeSetNames();
+   std::cout << "Number of Attribute Sets inside " << fileName << ":" << ntplName << ": " << attrSets.size() << "\n";
+   for (const auto &name : attrSets) {
       std::cout << "  - " << name << "\n";
    }
 
@@ -78,7 +78,7 @@ static void Read()
    for (int i = 0; i < 5; ++i) {
       // Note that an entry may have multiple attributes associated, so we need to loop over them.
       for (const auto &attrEntry : attrSet->GetAttributes(i)) {
-         auto pAttr = attrEntry.GetPtr<std::string>("myAttr");
+         auto pAttr = attrEntry->GetPtr<std::string>("myAttr");
          std::cout << "Entry " << i << " has attribute: myAttr = " << *pAttr << "\n";
       }
    }
@@ -86,7 +86,7 @@ static void Read()
    // Read all attributes inside the Attribute Set
    std::cout << "All attribute ranges:\n";
    for (const auto &attrEntry : attrSet->GetAttributes()) {
-      auto pAttr = attrEntry.GetPtr<std::string>("myAttr");
+      auto pAttr = attrEntry->GetPtr<std::string>("myAttr");
       const auto [first, last] = attrEntry.GetRange().GetFirstLast().value();
       std::cout << "  - myAttr has value \"" << *pAttr << "\" over range [" << first << ", " << last << "]\n";
    }
