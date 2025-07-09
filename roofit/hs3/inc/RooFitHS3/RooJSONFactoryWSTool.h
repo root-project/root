@@ -183,6 +183,11 @@ public:
    void exportCategory(RooAbsCategory const &cat, RooFit::Detail::JSONNode &node);
 
    void queueExport(RooAbsArg const &arg) { _serversToExport.push_back(&arg); }
+   void queueExportTemporary(RooAbsArg *arg)
+   {
+      _serversToExport.push_back(arg);
+      _serversToDelete.push_back(arg);
+   }
 
    std::string exportTransformed(const RooAbsReal *original, const std::string &suffix, const std::string &formula);
 
@@ -241,5 +246,6 @@ private:
    // objects to represent intermediate information
    std::unique_ptr<RooFit::JSONIO::Detail::Domains> _domains;
    std::vector<RooAbsArg const *> _serversToExport;
+   std::vector<RooAbsArg const *> _serversToDelete;
 };
 #endif

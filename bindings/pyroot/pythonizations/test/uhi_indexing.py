@@ -300,6 +300,7 @@ class TestTH1Indexing:
         sliced_hist_full = hist_setup[...]
 
         assert hist_setup.GetEffectiveEntries() == sliced_hist_full.GetEffectiveEntries()
+        assert sliced_hist_full.GetEntries() == sliced_hist_full.GetEffectiveEntries()
         assert hist_setup.Integral() == sliced_hist_full.Integral()
 
         # Check if slicing over a range updates the statistics
@@ -310,8 +311,22 @@ class TestTH1Indexing:
 
         assert hist_setup.Integral() == sliced_hist.Integral()
         assert hist_setup.GetEffectiveEntries() == sliced_hist.GetEffectiveEntries()
+        assert sliced_hist.GetEntries() == sliced_hist.GetEffectiveEntries()
         assert hist_setup.GetStdDev() == pytest.approx(sliced_hist.GetStdDev(), rel=10e-5)
         assert hist_setup.GetMean() == pytest.approx(sliced_hist.GetMean(), rel=10e-5)
+
+    def test_equality(self, hist_setup):
+        if _special_setting(hist_setup):
+            pytest.skip("Setting cannot be tested here")
+
+        hist_copy_ptr = hist_setup
+        assert hist_setup == hist_copy_ptr
+
+        hist_copy = hist_setup.Clone()
+        assert hist_setup != hist_copy
+
+        hist_full_slice = hist_setup[...]
+        assert hist_setup != hist_full_slice
 
 
 if __name__ == "__main__":

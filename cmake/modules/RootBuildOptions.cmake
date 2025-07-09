@@ -433,10 +433,13 @@ if(rpath)
   if(APPLE)
     set(CMAKE_MACOSX_RPATH TRUE)
     set(CMAKE_INSTALL_NAME_DIR "@rpath")
-    list(APPEND CMAKE_INSTALL_RPATH @loader_path @loader_path/${BINDIR_TO_LIBDIR})
+
+    set(_rpath_values "@loader_path" "@loader_path/${BINDIR_TO_LIBDIR}")
   else()
-    list(APPEND CMAKE_INSTALL_RPATH $ORIGIN $ORIGIN/${BINDIR_TO_LIBDIR})
+    set(_rpath_values "$ORIGIN" "$ORIGIN/${BINDIR_TO_LIBDIR}")
   endif()
+
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH-CACHED};${_rpath_values}" CACHE STRING "Install RPATH" FORCE)
 
   unset(BINDIR_TO_LIBDIR)
 endif()

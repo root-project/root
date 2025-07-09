@@ -1475,6 +1475,14 @@ std::vector<unsigned> RWebWindow::GetConnections(unsigned excludeid) const
 
 bool RWebWindow::HasConnection(unsigned connid, bool only_active) const
 {
+   if (fMaster) {
+      auto lst = GetMasterConnections(connid);
+      for (auto & entry : lst)
+         if (fMaster->HasConnection(entry.connid, only_active))
+            return true;
+      return false;
+   }
+
    std::lock_guard<std::mutex> grd(fConnMutex);
 
    for (auto &conn : fConn) {
@@ -1546,19 +1554,27 @@ RWebWindow::ConnectionsList_t RWebWindow::GetWindowConnections(unsigned connid, 
 
 bool RWebWindow::CanSend(unsigned connid, bool direct) const
 {
-   auto arr = GetWindowConnections(connid, direct); // for direct sending connection has to be active
+   if (fMaster) {
+      auto lst = GetMasterConnections(connid);
+      for (auto &entry : lst) {
+         if (!fMaster->CanSend(entry.connid, direct))
+            return false;
+      }
+   } else {
+      auto arr = GetWindowConnections(connid, direct); // for direct sending connection has to be active
 
-   auto maxqlen = GetMaxQueueLength();
+      auto maxqlen = GetMaxQueueLength();
 
-   for (auto &conn : arr) {
+      for (auto &conn : arr) {
 
-      std::lock_guard<std::mutex> grd(conn->fMutex);
+         std::lock_guard<std::mutex> grd(conn->fMutex);
 
-      if (direct && (!conn->fQueue.empty() || (conn->fSendCredits == 0) || conn->fDoingSend))
-         return false;
+         if (direct && (!conn->fQueue.empty() || (conn->fSendCredits == 0) || conn->fDoingSend))
+            return false;
 
-      if (conn->fQueue.size() >= maxqlen)
-         return false;
+         if (conn->fQueue.size() >= maxqlen)
+            return false;
+      }
    }
 
    return true;
@@ -1573,10 +1589,21 @@ int RWebWindow::GetSendQueueLength(unsigned connid) const
 {
    int maxq = -1;
 
-   for (auto &conn : GetWindowConnections(connid)) {
-      std::lock_guard<std::mutex> grd(conn->fMutex);
-      int len = conn->fQueue.size();
-      if (len > maxq) maxq = len;
+   if (fMaster) {
+      auto lst = GetMasterConnections(connid);
+      for (auto &entry : lst) {
+         int len = fMaster->GetSendQueueLength(entry.connid);
+         if (len > maxq)
+            maxq = len;
+      }
+   } else {
+      auto lst = GetWindowConnections(connid);
+      for (auto &conn : lst) {
+         std::lock_guard<std::mutex> grd(conn->fMutex);
+         int len = conn->fQueue.size();
+         if (len > maxq)
+            maxq = len;
+      }
    }
 
    return maxq;

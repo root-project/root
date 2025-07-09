@@ -904,6 +904,21 @@ void TClassEdit::GetNormalizedName(std::string &norm_name, std::string_view name
    }
 
    AtomicTypeNameHandlerRAII nameHandler(norm_name);
+   if (gInterpreterHelper) {
+      // Early check whether there is an existing type corresponding to `norm_name`
+      // It is *crucial* to run this block here, before `norm_name` gets split
+      // and reconstructed in the following lines. The reason is that we need
+      // to make string comparisons in `ExistingTypeCheck` and they will give
+      // different results if `norm_name` loses whitespaces. A notable example
+      // is when looking for registered alternate names of a custom user class
+      // present in the class dictionary.
+      std::string typeresult;
+      if (gInterpreterHelper->CheckInClassTable(norm_name, typeresult)) {
+         if (!typeresult.empty()) {
+            norm_name = typeresult;
+         }
+      }
+   }
 
    // Remove the std:: and default template argument and insert the Long64_t and change basic_string to string.
    TClassEdit::TSplitType splitname(norm_name.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
@@ -1204,10 +1219,10 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
       //we have 'something<'
       output.push_back(string(full,0,c - full.c_str()));
 
-      const char *cursor;
+      const char *cursor = c + 1;
       int level = 0;
       int parenthesis = 0;
-      for(cursor = c + 1; *cursor != '\0' && !(level==0 && *cursor == '>'); ++cursor) {
+      for ( ; *cursor != '\0' && !(level == 0 && parenthesis == 0 && *cursor == '>'); ++cursor) {
          if (*cursor == '(') {
             ++parenthesis;
             continue;
@@ -1284,7 +1299,8 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
 
    string result;
    result.reserve(strlen(typeDesc)*2);
-   int lev=0,kbl=1;
+   int kbl=1;
+   std::vector<char> parensStack;
    const char* c;
 
    for(c=typeDesc;*c;c++) {
@@ -1292,7 +1308,7 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
          if (kbl)       continue;
          if (!isalnum(c[ 1]) && c[ 1] !='_')    continue;
       }
-      if (kbl && (mode>=2 || lev==0)) { //remove "const' etc...
+      if (kbl && (mode>=2 || parensStack.empty())) { //remove "const' etc...
          int done = 0;
          size_t n = (mode) ? std::size(remove) : 1;
 
@@ -1315,8 +1331,10 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
       // '@' is special character used only the artifical class name used by ROOT to implement the
       // I/O customization rules that requires caching of the input data.
 
-      if (*c == '<' || *c == '(')   lev++;
-      if (lev==0 && !isalnum(*c)) {
+      if (*c == '<' || *c == '(')
+         parensStack.push_back(*c);
+      
+      if (parensStack.empty() && !isalnum(*c)) {
          if (!strchr("*&:._$ []-@",*c)) break;
          // '.' is used as a module/namespace separator by PyROOT, see
          // TPyClassGenerator::GetClass.
@@ -1325,7 +1343,10 @@ string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
 
       result += c[0];
 
-      if (*c == '>' || *c == ')')    lev--;
+      if (*c == '>' && !parensStack.empty() && parensStack.back() == '<')
+         parensStack.pop_back();
+      else if (*c == ')' && !parensStack.empty() && parensStack.back() == '(')
+         parensStack.pop_back();
    }
    if(tail) *tail=c;
    return result;
@@ -1652,7 +1673,36 @@ static void ResolveTypedefImpl(const char *tname,
             prevScope = cursor+1;
             break;
          }
+         case '(':
          case '<': {
+            // We move on in presence of function pointers, i.e. if we find '(*)' (with spaces which could be in
+            // between), for example cases like:
+            // pair<dd4hep::sim::Geant4Sensitive*,Geant4HitCollection*(*)(const std::string&,const std::string&,Geant4Sensitive*)>
+            // This honors #18842 without breaking #18833.
+            auto nStars = 0u;
+            auto next = cursor + 1;
+            for (; next != cursor && nStars < 2 && next < len; next++) {
+               if (' ' == tname[next]) {
+                  // We simply skip spaces
+                  continue;
+               } else if ('*' == tname[next]) {
+                  nStars++;
+               } else if (')' == tname[next]) {
+                  if (nStars == 1) {
+                     cursor = next;
+                  } else {
+                     break;
+                  }
+               } else {
+                  // if the token is not ' ', '*', or ')' we move on
+                  break;
+               }
+            }
+            // If we found '(*)' (with potentially spaces in between the characters)
+            // we move on with the parsing
+            if (cursor == next)
+               break;
+
             // push information on stack
             if (modified) {
                result += std::string(tname+prevScope,cursor+1-prevScope);
@@ -1683,6 +1733,11 @@ static void ResolveTypedefImpl(const char *tname,
                if (modified) result += " >";
                return;
             }
+            if ( (cursor+1)<len && tname[cursor+1] == ')') {
+               ++cursor;
+               if (modified) result += ")";
+               return;
+            }
             if ( (cursor+1) >= len) {
                return;
             }
@@ -1699,7 +1754,7 @@ static void ResolveTypedefImpl(const char *tname,
             while ((cursor+1)<len && tname[cursor+1] == ' ') ++cursor;
 
             auto next = cursor+1;
-            if (strncmp(tname+next,"const",5) == 0 && ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == ']'))
+            if (strncmp(tname+next,"const",5) == 0 && ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == ')' || tname[next+5] == ']'))
             {
                // A first const after the type needs to be move in the front.
                if (!modified) {
@@ -1719,7 +1774,7 @@ static void ResolveTypedefImpl(const char *tname,
                cursor += 5;
                end_of_type = cursor+1;
                prevScope = end_of_type;
-               if ((next+5)==len || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == '[') {
+               if ((next+5)==len || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == ')' || tname[next+5] == '[') {
                   break;
                }
             } else if (next!=len && tname[next] != '*' && tname[next] != '&') {
@@ -1736,7 +1791,7 @@ static void ResolveTypedefImpl(const char *tname,
             // check and skip const (followed by *,&, ,) ... what about followed by ':','['?
             auto next = cursor+1;
             if (strncmp(tname+next,"const",5) == 0) {
-               if ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == '[') {
+               if ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == ')' || tname[next+5] == '[') {
                   next += 5;
                }
             }
@@ -1745,7 +1800,7 @@ static void ResolveTypedefImpl(const char *tname,
                ++next;
                // check and skip const (followed by *,&, ,) ... what about followed by ':','['?
                if (strncmp(tname+next,"const",5) == 0) {
-                  if ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>' || tname[next+5] == '[') {
+                  if ((next+5)==len || tname[next+5] == ' ' || tname[next+5] == '*' || tname[next+5] == '&' || tname[next+5] == ',' || tname[next+5] == '>'|| tname[next+5] == ')' || tname[next+5] == '[') {
                      next += 5;
                   }
                }
@@ -1765,13 +1820,15 @@ static void ResolveTypedefImpl(const char *tname,
             if (modified) result += ',';
             return;
          }
+         case ')':
          case '>': {
+            char c = tname[cursor];
             if (modified && prevScope) {
                result += std::string(tname+prevScope,(end_of_type == 0 ? cursor : end_of_type)-prevScope);
             }
             ResolveTypedefProcessType(tname,len,cursor,constprefix,start_of_type,end_of_type,mod_start_of_type,
                                       modified, result);
-            if (modified) result += '>';
+            if (modified) result += c;
             return;
          }
          default:

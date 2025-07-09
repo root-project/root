@@ -43,7 +43,13 @@ using namespace ROOT::Internal;
 // Reader interface for clones arrays
 class TClonesReader : public TVirtualCollectionReader {
 public:
-   ~TClonesReader() override {}
+   TClonesReader() = default;
+   ~TClonesReader() override = default;
+   TClonesReader(const TClonesReader &) = delete;
+   TClonesReader &operator=(const TClonesReader &) = delete;
+   TClonesReader(TClonesReader &&) = delete;
+   TClonesReader &operator=(TClonesReader &&) = delete;
+
    TClonesArray *GetCA(ROOT::Detail::TBranchProxy *proxy)
    {
       if (!proxy->Read()) {
@@ -76,8 +82,14 @@ public:
 
    std::size_t GetValueSize(ROOT::Detail::TBranchProxy *proxy) override
    {
-      auto *ca = GetCA(proxy);
-      return ca ? ca->GetClass()->Size() : 0;
+      if (!proxy->Read()) {
+         fReadStatus = TTreeReaderValueBase::kReadError;
+         if (!proxy->GetSuppressErrorsForMissingBranch())
+            Error("TClonesReader::GetValueSize()", "Read error in TBranchProxy.");
+         return 0;
+      }
+      fReadStatus = TTreeReaderValueBase::kReadSuccess;
+      return proxy->GetValueSize();
    }
 };
 
@@ -443,6 +455,12 @@ private:
 
 public:
    TBasicTypeClonesReader(Int_t offsetArg) : fOffset(offsetArg) {}
+
+   ~TBasicTypeClonesReader() final = default;
+   TBasicTypeClonesReader(const TBasicTypeClonesReader &) = delete;
+   TBasicTypeClonesReader &operator=(const TBasicTypeClonesReader &) = delete;
+   TBasicTypeClonesReader(TBasicTypeClonesReader &&) = delete;
+   TBasicTypeClonesReader &operator=(TBasicTypeClonesReader &&) = delete;
 
    void *At(ROOT::Detail::TBranchProxy *proxy, size_t idx) override
    {

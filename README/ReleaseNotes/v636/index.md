@@ -8,7 +8,7 @@ ROOT 6.36.00, released on May 26th 2025, is the first release of the ROOT 6.36 L
 The new ROOT comes with many great features that have the potential of making you even more productive - see release notes below.
 The effort made by the contributors, experiments and core developers is testified by the 202 items in the ROOT trackers that have been addressed for this release.
 
-As previously announced, the 6.36 cycle supersedes the STS 6.34 one, which will be stopped in June. 
+As previously announced, the 6.36 cycle supersedes the STS 6.34 one, which will be stopped in June.
 
 For more information, see:
 
@@ -175,13 +175,13 @@ In case of using the old version, with `Experimental` keyword, a warning will be
 
 A set of new features is now available to the distributed RDataFrame users:
 
-* It is now much easier to inject the C++ code into the distributed RDF application. The following functions are available: 
+* It is now much easier to inject the C++ code into the distributed RDF application. The following functions are available:
   * DistributeHeaders - include and distribute headers
-  * DistributeSharedLibs - load and distribute shared libraries 
+  * DistributeSharedLibs - load and distribute shared libraries
   * DistributeCppCode - declare and distribute the C++ code, the C++ code is available to all dataframes in the application
   * DistributeFiles - distribute other files (not headers or shared libraries) that may be needed
 
-* The factory function `FromSpec` is available to build the distributed RDF. Note, however, the addition and use of the metadata is not yet supported. 
+* The factory function `FromSpec` is available to build the distributed RDF. Note, however, the addition and use of the metadata is not yet supported.
 
 * Support for the following API operations was added to distributed RDataFrame:
   * `Alias`
@@ -205,6 +205,9 @@ The `Scale(bool)` argument was always set internally to `false` in case `createH
 This meant that one could not get yield histograms that were correctly scaled by the bin volumes using that function.
 This release changes that behavior, meaning the `Scale(bool)` command argument is now respected for extended pdfs.
 
+### RooCrystalBall improvements
+
+- Fitting instabilities in the RooCrystalBall class (as well as in TMath's cbShape function) with high N parameter have been mitigated by reorganizing the code implementation.
 
 ## I/O
 
@@ -359,7 +362,7 @@ ROOT 6.36 will use [JSROOT 7.9](https://github.com/root-project/jsroot/releases/
 
 Use JSROOT 7.9.0 as fallback version.
 
-The tutorials have been reviewed, improved and modernised. It is now more intuitive to navigate through the individual parts of the ROOT tutorials. Some tutorials were added to showcase the new features, some were modernized to modern C++ standards and some were moved to the legacy folder. 
+The tutorials have been reviewed, improved and modernised. It is now more intuitive to navigate through the individual parts of the ROOT tutorials. Some tutorials were added to showcase the new features, some were modernized to modern C++ standards and some were moved to the legacy folder.
 
 ## Build, Configuration and Testing Infrastructure
 
@@ -466,7 +469,7 @@ More than 200 items were addressed for this release. The full list is:
   * [[#17418](https://github.com/root-project/root/issues/17418)] - Add option to change default basket size in RDataFrame Snapshot
   * [[#17350](https://github.com/root-project/root/issues/17350)] - rootreadspeed should be marked as "CMAKENOEXPORT"
   * [[#17346](https://github.com/root-project/root/issues/17346)] - I/O Customization rules fails in case of changes in the inputs types.
-  * [[#17321](https://github.com/root-project/root/issues/17321)] - [RF] Unused Class rule 
+  * [[#17321](https://github.com/root-project/root/issues/17321)] - [RF] Unused Class rule
   * [[#17320](https://github.com/root-project/root/issues/17320)] - [RF] Race when testing RooStats with its tutorials via CTest
   * [[#17305](https://github.com/root-project/root/issues/17305)] - The ONNX.Tile5D test in tmva/sofie/test/TestCustomModelsFromONNX.cxx writes array elements beyond the last element in the array.
   * [[#17295](https://github.com/root-project/root/issues/17295)] - constprefix incorrectly set in TClassEdit
@@ -477,19 +480,19 @@ More than 200 items were addressed for this release. The full list is:
   * [[#17222](https://github.com/root-project/root/issues/17222)] - Regression in Python ownership for histograms within subdirectories with ROOT 6.34.00
   * [[#17214](https://github.com/root-project/root/issues/17214)] - [ntuple] Optimize `RArrayField` reading
   * [[#17190](https://github.com/root-project/root/issues/17190)] - Compiler error (GCC 14.2.0 on Linux)
-  * [[#17163](https://github.com/root-project/root/issues/17163)] - Warnings from  the deserialization of RooCrystalBall 
+  * [[#17163](https://github.com/root-project/root/issues/17163)] - Warnings from  the deserialization of RooCrystalBall
   * [[#17145](https://github.com/root-project/root/issues/17145)] - Distributed RDataFrame cannot deal with same column name in different branches
   * [[#17142](https://github.com/root-project/root/issues/17142)] - Check Python code formatting in CI
   * [[#17135](https://github.com/root-project/root/issues/17135)] - Add Alias transformation to distributed RDataFrame
   * [[#17109](https://github.com/root-project/root/issues/17109)] - [PyROOT] False positive in cppyy proxy cache
-  * [[#17076](https://github.com/root-project/root/issues/17076)] - Double shadow in `TPaveText` 
+  * [[#17076](https://github.com/root-project/root/issues/17076)] - Double shadow in `TPaveText`
   * [[#17040](https://github.com/root-project/root/issues/17040)] - Small difference between kp6Violet implementation and official value from Petroff paper
   * [[#16976](https://github.com/root-project/root/issues/16976)] - Strange overflow bin bar when plotting TH1D with X1 option
   * [[#16946](https://github.com/root-project/root/issues/16946)] - Crash in RDF constructor with empty file list
   * [[#16936](https://github.com/root-project/root/issues/16936)] - [ntuple] RClusterPool can crash on non-existing cluster
   * [[#16915](https://github.com/root-project/root/issues/16915)] - `TThreadExecutor::Map` is private, users can only run `MapReduce`.
   * [[#16841](https://github.com/root-project/root/issues/16841)] - Validate `REntry` belonging to right model when reading
-  * [[#16794](https://github.com/root-project/root/issues/16794)] - TFormula: Pol functions do not accept variable name as arguments 
+  * [[#16794](https://github.com/root-project/root/issues/16794)] - TFormula: Pol functions do not accept variable name as arguments
   * [[#16784](https://github.com/root-project/root/issues/16784)] - Remove default value of p from TH1::GetQuantiles() as is the case with TF1::GetQuantiles
   * [[#16736](https://github.com/root-project/root/issues/16736)] - Please improve documentation and/or argument names for TH1::GetQuantiles()
   * [[#16725](https://github.com/root-project/root/issues/16725)] - Pyroot crashes reading TClonesArray in a TTree
@@ -551,7 +554,7 @@ More than 200 items were addressed for this release. The full list is:
   * [[ROOT-10553](https://its.cern.ch/jira/browse/10553)] - TSQLStatement::GetBinary is not consistently implemented
   * [[ROOT-10537](https://its.cern.ch/jira/browse/10537)] - CMakeList.txt environment cleanup inaccurate
   * [[ROOT-10482](https://its.cern.ch/jira/browse/10482)] - pullHist and residHist biased (or sampling biased)
-  * [[ROOT-10249](https://its.cern.ch/jira/browse/10249)] - TDataMember::GetOptions returns empty list for enum members 
+  * [[ROOT-10249](https://its.cern.ch/jira/browse/10249)] - TDataMember::GetOptions returns empty list for enum members
   * [[ROOT-10239](https://its.cern.ch/jira/browse/10239)] - rootcling crashes on -Werror + unknown warning flag to clang
   * [[ROOT-9886](https://its.cern.ch/jira/browse/9886)] - TTreeReader loads wrong entry from chain friend
   * [[ROOT-9833](https://its.cern.ch/jira/browse/9833)] - TMVA crashes adding single event w/o prior var def
@@ -571,7 +574,7 @@ More than 200 items were addressed for this release. The full list is:
   * [[ROOT-7855](https://its.cern.ch/jira/browse/7855)] - Inconsistent behaviour when cloning a tree using TChain and TTree
   * [[ROOT-7626](https://its.cern.ch/jira/browse/7626)] - TRegexp::MakeWildcard should support escape sequence
   * [[ROOT-7372](https://its.cern.ch/jira/browse/7372)] - Accessing complex map branches crashes in PyROOT
-  * [[ROOT-7322](https://its.cern.ch/jira/browse/7322)] - Missing Overload for TF1 GetParError 
+  * [[ROOT-7322](https://its.cern.ch/jira/browse/7322)] - Missing Overload for TF1 GetParError
   * [[ROOT-7067](https://its.cern.ch/jira/browse/7067)] - tree->GetMaximum() not working with TChain and TEntryList
   * [[ROOT-6874](https://its.cern.ch/jira/browse/6874)] - Suggested function TF1::EvalUncertainty()
   * [[ROOT-6636](https://its.cern.ch/jira/browse/6636)] - Tab completion fails for CV-qualified pointers and objects
@@ -582,3 +585,12 @@ More than 200 items were addressed for this release. The full list is:
   * [[ROOT-4663](https://its.cern.ch/jira/browse/4663)] - GetFromPipe() loses the return value
   * [[ROOT-4012](https://its.cern.ch/jira/browse/4012)] - TTree::SetAlias() fail to interpret the constant
   * [[ROOT-118](https://its.cern.ch/jira/browse/118)] - Implement support for access to nested objects
+
+## Release 6.36.02
+
+### Items addressed in this release
+
+* [#18665](https://github.com/root-project/root/issues/18665) - `TFileMerger`'s (and `hadd`'s) default behavior on encountering invalid/corrupt objects while merging has changed: previously the corrupt object would be skipped without aborting the merging process; now the merging process will abort by default. The "skip" behavior can be restored by:
+  * calling the new method `TFileMerger::SetErrorBehavior()` (if using `TFileMerger` directly), or
+  * using the `-k` flag if using `hadd`.
+ 

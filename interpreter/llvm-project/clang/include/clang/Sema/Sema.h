@@ -1075,30 +1075,21 @@ public:
   class ContextAndScopeRAII {
   private:
     Sema &S;
-    DeclContext *SavedContext;
+    ContextRAII SavedContext;
     Scope *SavedScope;
-    ProcessingContextState SavedContextState;
-    QualType SavedCXXThisTypeOverride;
 
   public:
     ContextAndScopeRAII(Sema &S, DeclContext *ContextToPush, Scope *ScopeToPush)
-      : S(S), SavedContext(S.CurContext), SavedScope(S.CurScope),
-        SavedContextState(S.DelayedDiagnostics.pushUndelayed()),
-        SavedCXXThisTypeOverride(S.CXXThisTypeOverride)
-    {
-      assert(ContextToPush && "pushing null context");
-      S.CurContext = ContextToPush;
+        : S(S), SavedContext(S, ContextToPush), SavedScope(S.CurScope) {
       S.CurScope = ScopeToPush;
     }
 
     void pop() {
-      if (!SavedContext) return;
-      S.CurContext = SavedContext;
+      SavedContext.pop();
+      if (!SavedScope)
+        return;
       S.CurScope = SavedScope;
-      S.DelayedDiagnostics.popUndelayed(SavedContextState);
-      S.CXXThisTypeOverride = SavedCXXThisTypeOverride;
-      SavedContext = 0;
-      SavedScope = 0;
+      SavedScope = nullptr;
     }
 
     ~ContextAndScopeRAII() {

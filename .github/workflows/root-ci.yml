@@ -20,13 +20,13 @@ on:
     inputs:
       head_ref:
         type: string
-        default: master
+        default: v6-36-00-patches
       base_ref:
         type: string
-        default: master
+        default: v6-36-00-patches
       ref_name:
         type: string
-        default: master
+        default: v6-36-00-patches
 
   # Enables manual start of workflow
   workflow_dispatch:
@@ -367,6 +367,7 @@ jobs:
           - image: alma8
           - image: alma9
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
+          - image: alma10
           - image: ubuntu22
             overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2404
@@ -383,18 +384,16 @@ jobs:
           - image: alma9
             is_special: true
             property: march_native
-            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "fortran=OFF"]
+            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "builtin_zlib=ON", "builtin_zstd=ON"]
           - image: alma9
             is_special: true
             property: arm64
-            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo"]
+            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "builtin_zlib=ON", "builtin_zstd=ON"]
             architecture: ARM64
           - image: alma9-clang
             is_special: true
             property: clang
             overrides: ["CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
-          - image: alma10
-            is_special: true
           # Disable GPU builds until the DNS problem is solved  
           # - image: ubuntu2404-cuda
           #   is_special: true
