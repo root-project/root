@@ -80,6 +80,7 @@ ROOTTEST_ADD_TEST(RecursiveRootlsCxx
 
 #########################################################################
 
+if(ROOT_pyroot_FOUND)
 
 ############################## ROORM TESTS ##############################
 ROOTTEST_ADD_TEST(SimpleRootrm1PrepareInput
@@ -392,3 +393,5 @@ ROOTTEST_ADD_TEST(NameCyclesRootmvCheckOutput
                   DEPENDS NameCyclesRootmv
                   ENVIRONMENT ${test_env})
 #########################################################################
+
+endif(ROOT_pyroot_FOUND)
