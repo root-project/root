@@ -85,13 +85,15 @@ def get_array_interface(self):
     idx1 = cppname.find("RTensor<")
     idx2 = cppname.find(",", idx1)
     dtype = cppname[idx1 + 8 : idx2]
-    # dtype_numpy = _array_interface_dtype_map[dtype]
     for numpy_dtype, type_info in _numpy_dtype_typeinfo_map.items():
         if dtype == type_info["cpp"] or dtype == type_info["typedef"]:
             dtype_numpy = numpy_dtype
             dtype_size = cppyy.sizeof(dtype)
             break
-    dtype_size = cppyy.sizeof(dtype)
+
+    if dtype_numpy:
+        raise RuntimeError(f"Unsupported dtype '{dtype}' found in RTensor.")
+
     endianness = "<" if sys.byteorder == "little" else ">"
     shape = self.GetShape()
     strides = self.GetStrides()
@@ -103,7 +105,7 @@ def get_array_interface(self):
     return {
         "shape": tuple(s for s in shape),
         "strides": tuple(s * dtype_size for s in strides),
-        "typestr": "{}{}{}".format(endianness, dtype_numpy, dtype_size),
+        "typestr": "{}{}".format(endianness, dtype_numpy),
         "version": 3,
         "data": (pointer, False),
     }
