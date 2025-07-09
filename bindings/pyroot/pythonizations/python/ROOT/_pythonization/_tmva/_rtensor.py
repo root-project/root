@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 from .. import pythonization
-from .._rvec import _array_interface_dtype_map, _get_cpp_type_from_numpy_type
+from .._rvec import _numpy_dtype_typeinfo_map, _get_cpp_type_from_numpy_type
 import cppyy
 import sys
 
@@ -85,7 +85,12 @@ def get_array_interface(self):
     idx1 = cppname.find("RTensor<")
     idx2 = cppname.find(",", idx1)
     dtype = cppname[idx1 + 8 : idx2]
-    dtype_numpy = _array_interface_dtype_map[dtype]
+    # dtype_numpy = _array_interface_dtype_map[dtype]
+    for numpy_dtype, type_info in _numpy_dtype_typeinfo_map.items():
+        if dtype == type_info["cpp"] or dtype == type_info["typedef"]:
+            dtype_numpy = numpy_dtype
+            dtype_size = cppyy.sizeof(dtype)
+            break
     dtype_size = cppyy.sizeof(dtype)
     endianness = "<" if sys.byteorder == "little" else ">"
     shape = self.GetShape()
@@ -113,7 +118,10 @@ def add_array_interface_property(klass, name):
         klass: class to be pythonized
         name: string containing the name of the class
     """
-    if True in [name.find("RTensor<{},".format(dtype)) != -1 for dtype in _array_interface_dtype_map]:
+    if any(
+        ("RTensor<{},".format(type_info["cpp"]) in name) or ("RTensor<{},".format(type_info["typedef"]) in name)
+        for type_info in _numpy_dtype_typeinfo_map.values()
+    ):
         klass.__array_interface__ = property(get_array_interface)
 
 
