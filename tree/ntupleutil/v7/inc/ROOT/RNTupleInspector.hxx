@@ -40,8 +40,16 @@ class RPageSource;
 
 namespace Experimental {
 
-enum class ENTupleInspectorPrintFormat { kTable, kCSV };
-enum class ENTupleInspectorHist { kCount, kNElems, kCompressedSize, kUncompressedSize };
+enum class ENTupleInspectorPrintFormat {
+   kTable,
+   kCSV
+};
+enum class ENTupleInspectorHist {
+   kCount,
+   kNElems,
+   kCompressedSize,
+   kUncompressedSize
+};
 
 // clang-format off
 /**
@@ -93,7 +101,7 @@ public:
          : fColumnDescriptor(colDesc),
            fCompressedPageSizes(compressedPageSizes),
            fElementSize(elemSize),
-           fNElements(nElems) {};
+           fNElements(nElems){};
       ~RColumnInspector() = default;
 
       const ROOT::RColumnDescriptor &GetDescriptor() const { return fColumnDescriptor; }
@@ -101,7 +109,8 @@ public:
       std::uint64_t GetNPages() const { return fCompressedPageSizes.size(); }
       std::uint64_t GetCompressedSize() const
       {
-         return std::accumulate(fCompressedPageSizes.begin(), fCompressedPageSizes.end(), static_cast<std::uint64_t>(0));
+         return std::accumulate(fCompressedPageSizes.begin(), fCompressedPageSizes.end(),
+                                static_cast<std::uint64_t>(0));
       }
       std::uint64_t GetUncompressedSize() const { return fElementSize * fNElements; }
       std::uint64_t GetElementSize() const { return fElementSize; }
@@ -123,7 +132,7 @@ public:
 
    public:
       RFieldTreeInspector(const ROOT::RFieldDescriptor &fieldDesc, std::uint64_t onDiskSize, std::uint64_t inMemSize)
-         : fRootFieldDescriptor(fieldDesc), fCompressedSize(onDiskSize), fUncompressedSize(inMemSize) {};
+         : fRootFieldDescriptor(fieldDesc), fCompressedSize(onDiskSize), fUncompressedSize(inMemSize){};
       ~RFieldTreeInspector() = default;
 
       const ROOT::RFieldDescriptor &GetDescriptor() const { return fRootFieldDescriptor; }
@@ -468,6 +477,23 @@ public:
    GetFieldsByName(std::string_view fieldNamePattern, bool searchInSubfields = true)
    {
       return GetFieldsByName(std::regex{std::string(fieldNamePattern)}, searchInSubfields);
+   }
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Print a .dot string that represents the tree of the (sub)fields of an RNTuple
+   ///
+   /// \param[in] fieldDescriptor The descriptor of the root field (this method works recursively)
+   ///
+
+   void PrintFieldTreeAsDot(const ROOT::RFieldDescriptor &fieldDescriptor, std::ostream &output = std::cout) const;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Print the tree of all the (sub)fields of an RNTuple
+   /// \param[in] output
+   ///
+   /// \see PrintFieldTreeAsDot(const ROOT::RFieldDescriptor &fieldDescriptor, std::ostream &output=std::cout) const
+   void PrintFieldTreeAsDot(std::ostream &output = std::cout) const
+   {
+      PrintFieldTreeAsDot(GetDescriptor().GetFieldZero(), output);
    }
 };
 } // namespace Experimental
