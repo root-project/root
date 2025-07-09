@@ -19,4 +19,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTHist
     Core
 )
 
+# Function used in test/ to add unitest executables.
+function(HIST_ADD_GTEST name source)
+  ROOT_ADD_GTEST(${name} ${source} LIBRARIES ROOTHist)
+endfunction()
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
