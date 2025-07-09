@@ -69,7 +69,8 @@ private:
    /// or an ntuple name preceded by a directory (`myNtuple` or `foo/bar/myNtuple` or `/foo/bar/myNtuple`)
    RResult<RNTuple> GetNTupleProper(std::string_view ntuplePath);
    /// Loads an RNTuple anchor from a TFile at the given file offset (unzipping it if necessary).
-   RResult<RNTuple> GetNTupleProperAtOffset(std::uint64_t keyOffset);
+   RResult<RNTuple>
+   GetNTupleProperAtOffset(std::uint64_t payloadOffset, std::uint64_t compSize, std::uint64_t uncompLen);
 
    /// Searches for a key with the given name and type in the key index of the directory starting at offsetDir.
    /// The offset points to the start of the TDirectory DATA section, without the key and without the name and title
