@@ -19,10 +19,10 @@ ROOTTEST_ADD_TEST(templateSingleton
 if(NOT ROOT_runtime_cxxmodules_FOUND)
   ROOTTEST_GENERATE_DICTIONARY(slaveDict        slave.h        LINKDEF slaveLinkDef.h)
 endif()
-ROOTTEST_GENERATE_DICTIONARY(masterDict       master.h       LINKDEF masterLinkDef.h)
-ROOTTEST_GENERATE_DICTIONARY(forwardDict      forward.C      LINKDEF linkdef.h)
-ROOTTEST_GENERATE_DICTIONARY(constructorDict  constructor.hh LINKDEF linkdef.h)
-ROOTTEST_GENERATE_DICTIONARY(typenameTestDict typenameTest.C LINKDEF linkdef.h
+ROOTTEST_GENERATE_DICTIONARY(masterDict       master.h       NO_CXXMODULE LINKDEF masterLinkDef.h)
+ROOTTEST_GENERATE_DICTIONARY(forwardDict      forward.C      NO_CXXMODULE LINKDEF linkdef.h)
+ROOTTEST_GENERATE_DICTIONARY(constructorDict  constructor.hh NO_CXXMODULE LINKDEF linkdef.h)
+ROOTTEST_GENERATE_DICTIONARY(typenameTestDict typenameTest.C NO_CXXMODULE LINKDEF linkdef.h
                              FIXTURES_SETUP cling-template-typenameTestDict-fixture)
 
 ROOTTEST_COMPILE_MACRO(usingtemplate.C
