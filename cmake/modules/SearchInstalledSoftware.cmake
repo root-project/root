@@ -1348,6 +1348,7 @@ elseif(vc)
   endif()
   if(Vc_FOUND)
     set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES ${Vc_INCLUDE_DIR})
+    BUILD_ROOT_INCLUDE_PATH("${Vc_INCLUDE_DIR}")
   endif()
 endif()
 
