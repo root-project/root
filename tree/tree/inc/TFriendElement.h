@@ -47,7 +47,8 @@ protected:
 public:
    enum EStatusBits {
       kFromChain = BIT(9),  // Indicates a TChain inserted this element in one of its content TTree
-      kUpdated   = BIT(10)  // Indicates that the chain 'fTree' went through a LoadTree
+      kUpdated   = BIT(10),  // Indicates that the chain 'fTree' went through a LoadTree
+      kUpdatedForChain = BIT(11), // Same as kUpdated, but detected only by the chain itself and not the current tree
    };
    TFriendElement();
    TFriendElement(TTree *tree, const char *treename, const char *filename);
@@ -65,8 +66,10 @@ public:
    void        ls(Option_t *option="") const override;
            void        Reset() { fTree = nullptr; fFile = nullptr; }
            bool        IsUpdated() const { return TestBit(kUpdated); }
+           bool        IsUpdatedForChain() const { return TestBit(kUpdatedForChain); }
            void        ResetUpdated() { ResetBit(kUpdated); }
-           void        MarkUpdated() { SetBit(kUpdated); }
+           void        ResetUpdatedForChain() { ResetBit(kUpdatedForChain); }
+           void        MarkUpdated() { SetBit(kUpdated); SetBit(kUpdatedForChain); }
    void        RecursiveRemove(TObject *obj) override;
 
 
