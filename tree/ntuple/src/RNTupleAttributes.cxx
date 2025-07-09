@@ -93,50 +93,34 @@ const std::string &ROOT::Experimental::RNTupleAttributeSetWriter::GetName() cons
    return name;
 }
 
-ROOT::Experimental::RNTupleAttributeEntryHandle ROOT::Experimental::RNTupleAttributeSetWriter::BeginRange()
+ROOT::Experimental::RNTupleAttributeEntry ROOT::Experimental::RNTupleAttributeSetWriter::BeginRange()
 {
-   if (fOpenEntry)
-      throw ROOT::RException(R__FAIL("Called BeginRange() without having closed the currently open range!"));
-
    const auto start = fMainFillContext->GetNEntries();
    auto &model = const_cast<RNTupleModel &>(fFillContext.GetModel());
-   auto [entry, scopedEntry] = RNTupleAttributeEntry::CreateInternalEntries(model);
-   fOpenEntry = RNTupleAttributeEntry{std::move(entry), std::move(scopedEntry), start};
-   auto handle = RNTupleAttributeEntryHandle{*fOpenEntry};
-   return handle;
+   auto [metaEntry, scopedEntry] = RNTupleAttributeEntry::CreateInternalEntries(model);
+   auto entry = RNTupleAttributeEntry{std::move(metaEntry), std::move(scopedEntry), start};
+   return entry;
 }
 
-void ROOT::Experimental::RNTupleAttributeSetWriter::CommitRange(
-   ROOT::Experimental::RNTupleAttributeEntryHandle rangeHandle)
+void ROOT::Experimental::RNTupleAttributeSetWriter::CommitRange(ROOT::Experimental::RNTupleAttributeEntry entry)
 {
-   if (R__unlikely(!fOpenEntry || rangeHandle.fInner != &*fOpenEntry))
-      throw ROOT::RException(
-         R__FAIL(std::string("Handle passed to CommitRange() of Attribute Set \"") + GetName() +
-                 "\" is invalid (it is not the Handle returned by the latest call to BeginRange())"));
+   if (!entry)
+      throw ROOT::RException(R__FAIL("Passed an invalid Attribute Entry to CommitRange()"));
 
-   CommitRangeInternal();
-}
-
-void ROOT::Experimental::RNTupleAttributeSetWriter::CommitRangeInternal()
-{
    // Get current entry number from the writer and use it as end of entry range
    const auto end = fMainFillContext->GetNEntries();
-   fOpenEntry->fRange = RNTupleAttributeRange::FromStartEnd(fOpenEntry->fRange.Start(), end);
-   auto pRangeStart = fOpenEntry->fMetaEntry->GetPtr<ROOT::NTupleSize_t>(kRangeStartName);
-   auto pRangeLen = fOpenEntry->fMetaEntry->GetPtr<ROOT::NTupleSize_t>(kRangeLenName);
+   entry.fRange = RNTupleAttributeRange::FromStartEnd(entry.fRange.Start(), end);
+   auto pRangeStart = entry.fMetaEntry->GetPtr<ROOT::NTupleSize_t>(kRangeStartName);
+   auto pRangeLen = entry.fMetaEntry->GetPtr<ROOT::NTupleSize_t>(kRangeLenName);
    R__ASSERT(pRangeStart);
    R__ASSERT(pRangeLen);
-   *pRangeStart = fOpenEntry->GetRange().Start();
-   *pRangeLen = fOpenEntry->GetRange().Length();
-   fFillContext.FillImpl(*fOpenEntry);
-
-   fOpenEntry = std::nullopt;
+   *pRangeStart = entry.GetRange().Start();
+   *pRangeLen = entry.GetRange().Length();
+   fFillContext.FillImpl(entry);
 }
 
 void ROOT::Experimental::RNTupleAttributeSetWriter::Commit()
 {
-   if (fOpenEntry)
-      CommitRangeInternal();
    fFillContext.FlushCluster();
    fFillContext.fSink->CommitClusterGroup();
    fFillContext.fSink->CommitDataset();
@@ -158,7 +142,8 @@ ROOT::Experimental::RNTupleAttributeSetReader::RNTupleAttributeSetReader(std::un
       fEntryRanges.push_back({RNTupleAttributeRange::FromStartLength(start, len), i});
    }
 
-   assert(EntryRangesAreSorted(fEntryRanges));
+   std::sort(fEntryRanges.begin(), fEntryRanges.end(),
+             [](const auto &a, const auto &b) { return a.first.Start() < b.first.Start(); });
 
    R__LOG_INFO(ROOT::Internal::NTupleLog()) << "Loaded " << fEntryRanges.size() << " attribute entries.";
 }
