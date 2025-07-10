@@ -75,9 +75,11 @@ static void Read()
 
    // Read attributes belonging to a specific entry index.
    // (Just read the first 5 values to avoid spamming)
+   auto attrEntry = attrSet->CreateAttrEntry();
    for (int i = 0; i < 5; ++i) {
       // Note that an entry may have multiple attributes associated, so we need to loop over them.
-      for (const auto &attrEntry : attrSet->GetAttributes(i)) {
+      for (auto idx : attrSet->GetAttributes(i)) {
+         attrSet->LoadAttrEntry(idx, attrEntry);
          auto pAttr = attrEntry->GetPtr<std::string>("myAttr");
          std::cout << "Entry " << i << " has attribute: myAttr = " << *pAttr << "\n";
       }
@@ -85,7 +87,8 @@ static void Read()
 
    // Read all attributes inside the Attribute Set
    std::cout << "All attribute ranges:\n";
-   for (const auto &attrEntry : attrSet->GetAttributes()) {
+   for (auto idx : attrSet->GetAttributes()) {
+      attrSet->LoadAttrEntry(idx, attrEntry);
       auto pAttr = attrEntry->GetPtr<std::string>("myAttr");
       const auto [first, last] = attrEntry.GetRange().GetFirstLast().value();
       std::cout << "  - myAttr has value \"" << *pAttr << "\" over range [" << first << ", " << last << "]\n";
