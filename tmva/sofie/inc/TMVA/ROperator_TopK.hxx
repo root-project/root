@@ -121,7 +121,7 @@ public:
 
       size_t length=ConvertShapeToLength(fShapeX);
       auto strideX = UTILITY::ComputeStrideFromShape(fShapeX);
-      auto strideY = UTILITY::ComputeStrideFromShape(fShapeX);
+      auto strideY = UTILITY::ComputeStrideFromShape(fShapeY);
       // we perform loop on dimension before sorted axis and after sorted axis
       size_t n_before = (axis>0) ? length/strideX[axis-1] : 1;
       size_t n_after = strideX[axis];
