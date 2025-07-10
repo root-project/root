@@ -966,11 +966,6 @@ ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescr
    fDescriptorBuilder.SetSchemaFromExisting(srcDescriptor);
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
-   // Clone attribute sets
-   // for (const auto &[name, locator] : srcDescriptor.GetAttributeSets()) {
-   //    fDescriptorBuilder.AddAttributeSet(Experimental::Internal::RNTupleAttrSetDescriptor{name, locator});
-   // }
-
    // Create column/page ranges
    const auto nColumns = descriptor.GetNPhysicalColumns();
    R__ASSERT(fOpenColumnRanges.empty() && fOpenPageRanges.empty());
