@@ -1362,7 +1362,7 @@ void ROOT::Internal::RNTupleDescriptorBuilder::ReplaceExtraTypeInfo(RExtraTypeIn
 }
 
 ROOT::RResult<void> ROOT::Internal::RNTupleDescriptorBuilder::AddAttributeSet(
-   Experimental::Internal::RNTupleAttributeSetDescriptor &&attrSetDesc)
+   Experimental::Internal::RNTupleAttrSetDescriptor &&attrSetDesc)
 {
    auto &attrSets = fDescriptor.fAttributeSets;
    if (std::find_if(attrSets.begin(), attrSets.end(),

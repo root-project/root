@@ -269,7 +269,7 @@ ROOT::DescriptorId_t ROOT::RNTupleReader::RetrieveFieldId(std::string_view field
    return fieldId;
 }
 
-std::unique_ptr<ROOT::Experimental::RNTupleAttributeSetReader>
+std::unique_ptr<ROOT::Experimental::RNTupleAttrSetReader>
 ROOT::RNTupleReader::OpenAttributeSet(std::string_view attrSetName)
 {
    const auto &attrSets = ROOT::Experimental::Internal::GetAttributeSets(GetDescriptor());
@@ -281,7 +281,7 @@ ROOT::RNTupleReader::OpenAttributeSet(std::string_view attrSetName)
    auto attrSource = fSource->ReadAttributeSet(it->fLocator, it->fAnchorUncompLen);
    auto newReader = std::unique_ptr<RNTupleReader>(new RNTupleReader(std::move(attrSource), RNTupleReadOptions{}));
    R__ASSERT(newReader);
-   auto attrSetReader = std::unique_ptr<ROOT::Experimental::RNTupleAttributeSetReader>(
-      new ROOT::Experimental::RNTupleAttributeSetReader(std::move(newReader)));
+   auto attrSetReader = std::unique_ptr<ROOT::Experimental::RNTupleAttrSetReader>(
+      new ROOT::Experimental::RNTupleAttrSetReader(std::move(newReader)));
    return attrSetReader;
 }

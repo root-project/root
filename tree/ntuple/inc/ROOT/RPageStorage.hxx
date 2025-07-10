@@ -57,7 +57,7 @@ ROOT::Internal::RMiniFileReader *GetUnderlyingReader(ROOT::Internal::RPageSource
 } // namespace Experimental::Internal
 
 namespace Experimental {
-class RNTupleAttributeSetReader;
+class RNTupleAttrSetReader;
 }
 
 namespace Internal {
@@ -403,11 +403,11 @@ public:
    /// CommitClusterGroup (or the beginning of writing).
    virtual void CommitClusterGroup() = 0;
    /// Given the Attribute Set's PageSink, adds its information (name + locator) into the main RNTuple's descriptor.
-   /// The Attribute Set must already have been written to storage via `RNTupleAttributeSetWriter::Commit()`.
+   /// The Attribute Set must already have been written to storage via `RNTupleAttrSetWriter::Commit()`.
    // TODO: make this pure virtual
    virtual void CommitAttributeSet(RPageSink &/* attrSink */) {}
    // TODO: make this pure virtual (also probably not public)
-   virtual ROOT::Experimental::Internal::RNTupleAttributeSetDescriptor CommitAttributeSetInternal() { return {}; }
+   virtual ROOT::Experimental::Internal::RNTupleAttrSetDescriptor CommitAttributeSetInternal() { return {}; }
 
    /// The registered callback is executed at the beginning of CommitDataset();
    void RegisterOnCommitDatasetCallback(Callback_t callback) { fOnDatasetCommitCallbacks.emplace_back(callback); }

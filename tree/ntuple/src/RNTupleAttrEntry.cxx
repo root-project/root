@@ -1,4 +1,4 @@
-/// \file RNTupleAttributeEntry.cxx
+/// \file RNTupleAttrEntry.cxx
 /// \ingroup NTuple ROOT7
 /// \author Giacomo Parolini <giacomo.parolini@cern.ch>
 /// \date 2025-05-19
@@ -13,17 +13,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RNTupleAttributeEntry.hxx>
+#include <ROOT/RNTupleAttrEntry.hxx>
 #include <ROOT/RNTupleModel.hxx>
 
-std::size_t ROOT::Experimental::RNTupleAttributeEntry::Append()
+std::size_t ROOT::Experimental::RNTupleAttrEntry::Append()
 {
    auto bytesWritten = fMetaEntry->Append();
    bytesWritten += fScopedEntry->Append();
    return bytesWritten;
 }
 
-std::unique_ptr<ROOT::REntry> ROOT::Experimental::RNTupleAttributeEntry::CreateScopedEntry(ROOT::RNTupleModel &model)
+std::unique_ptr<ROOT::REntry> ROOT::Experimental::RNTupleAttrEntry::CreateScopedEntry(ROOT::RNTupleModel &model)
 {
    auto scopedEntry = std::unique_ptr<ROOT::REntry>(new ROOT::REntry(model.GetModelId(), model.GetSchemaId()));
 
@@ -45,7 +45,7 @@ std::unique_ptr<ROOT::REntry> ROOT::Experimental::RNTupleAttributeEntry::CreateS
 }
 
 std::pair<std::unique_ptr<ROOT::REntry>, std::unique_ptr<ROOT::REntry>>
-ROOT::Experimental::RNTupleAttributeEntry::CreateInternalEntries(ROOT::RNTupleModel &model)
+ROOT::Experimental::RNTupleAttrEntry::CreateInternalEntries(ROOT::RNTupleModel &model)
 {
    auto metaEntry = std::unique_ptr<ROOT::REntry>(new ROOT::REntry(model.GetModelId(), model.GetSchemaId()));
 

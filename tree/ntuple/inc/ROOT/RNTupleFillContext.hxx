@@ -25,7 +25,7 @@
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleTypes.hxx>
-#include <ROOT/RNTupleAttributeEntry.hxx>
+#include <ROOT/RNTupleAttrEntry.hxx>
 
 #include <cstddef>
 #include <cstdint>
@@ -35,9 +35,9 @@
 namespace ROOT {
 namespace Experimental {
 
-class RNTupleAttributeSetWriter;
-class RNTupleAttributeSetWriterHandle;
-struct RNTupleAttributeSetDescriptor;
+class RNTupleAttrSetWriter;
+class RNTupleAttrSetWriterHandle;
+struct RNTupleAttrSetDescriptor;
 
 // clang-format off
 /**
@@ -57,7 +57,7 @@ sequential writing, please refer to RNTupleWriter.
 class RNTupleFillContext {
    friend class ROOT::RNTupleWriter;
    friend class RNTupleParallelWriter;
-   friend class RNTupleAttributeSetWriter;
+   friend class RNTupleAttrSetWriter;
 
 private:
    /// The page sink's parallel page compression scheduler if IMT is on.
@@ -90,7 +90,7 @@ private:
    std::vector<ROOT::Internal::RPageSink::RStagedCluster> fStagedClusters;
 
    /// All the Attribute Sets created from this FillContext
-   std::unordered_map<std::string, std::unique_ptr<Experimental::RNTupleAttributeSetWriter>> fAttributeSets;
+   std::unordered_map<std::string, std::unique_ptr<Experimental::RNTupleAttrSetWriter>> fAttributeSets;
 
    template <typename Entry>
    void FillNoFlushImpl(Entry &entry, ROOT::RNTupleFillStatus &status)
@@ -118,7 +118,7 @@ private:
       return status.GetLastEntrySize();
    }
 
-   void CloseAttributeSetInternal(Experimental::RNTupleAttributeSetWriter &handle);
+   void CloseAttributeSetInternal(Experimental::RNTupleAttrSetWriter &handle);
 
    RNTupleFillContext(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<ROOT::Internal::RPageSink> sink);
    RNTupleFillContext(const RNTupleFillContext &) = delete;
@@ -155,7 +155,7 @@ public:
    /// \return The number of uncompressed bytes written.
    std::size_t Fill(Detail::RRawPtrWriteEntry &entry) { return FillImpl(entry); }
 
-   void FillNoFlush(Experimental::RNTupleAttributeEntry &entry, ROOT::RNTupleFillStatus &status)
+   void FillNoFlush(Experimental::RNTupleAttrEntry &entry, ROOT::RNTupleFillStatus &status)
    {
       FillNoFlushImpl(entry, status);
    }
@@ -194,10 +194,10 @@ public:
    void EnableMetrics() { fMetrics.Enable(); }
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 
-   ROOT::Experimental::RNTupleAttributeSetWriterHandle
+   ROOT::Experimental::RNTupleAttrSetWriterHandle
    CreateAttributeSet(std::string_view name, std::unique_ptr<ROOT::RNTupleModel> model);
 
-   void CloseAttributeSet(Experimental::RNTupleAttributeSetWriterHandle handle);
+   void CloseAttributeSet(Experimental::RNTupleAttrSetWriterHandle handle);
 }; // class RNTupleFillContext
 
 } // namespace Experimental
