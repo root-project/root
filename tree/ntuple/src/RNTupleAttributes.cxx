@@ -207,33 +207,50 @@ ROOT::Experimental::RNTupleAttrSetReader::GetAttributesRangeInternal(NTupleSize_
    return result;
 }
 
-std::vector<ROOT::NTupleSize_t>
+ROOT::Experimental::RNTupleAttrEntryIterable
 ROOT::Experimental::RNTupleAttrSetReader::GetAttributesContainingRange(NTupleSize_t startEntry, NTupleSize_t endEntry)
 {
-   return GetAttributesRangeInternal(startEntry, endEntry, false);
+   RNTupleAttrRange range;
+   if (endEntry <= startEntry) {
+      R__LOG_WARNING(ROOT::Internal::NTupleLog())
+         << "empty range given when getting attributes from Attribute Set '" << GetDescriptor().GetName()
+         << "' (range given: [" << startEntry << ", " << endEntry << ")).";
+      // Make sure we find 0 entries
+      range = RNTupleAttrRange::FromStartLength(startEntry, 0);
+   } else {
+      range = RNTupleAttrRange::FromStartEnd(startEntry, endEntry);
+   }
+   RNTupleAttrEntryIterable::RFilter filter{range, false};
+   return RNTupleAttrEntryIterable{*this, filter};
 }
 
-std::vector<ROOT::NTupleSize_t>
+ROOT::Experimental::RNTupleAttrEntryIterable
 ROOT::Experimental::RNTupleAttrSetReader::GetAttributesInRange(NTupleSize_t startEntry, NTupleSize_t endEntry)
 {
-   return GetAttributesRangeInternal(startEntry, endEntry, true);
-}
-
-std::vector<ROOT::NTupleSize_t> ROOT::Experimental::RNTupleAttrSetReader::GetAttributes(NTupleSize_t entryIndex)
-{
-   return GetAttributesContainingRange(entryIndex, entryIndex + 1);
-}
-
-std::vector<ROOT::NTupleSize_t> ROOT::Experimental::RNTupleAttrSetReader::GetAttributes()
-{
-   std::vector<NTupleSize_t> result;
-   result.reserve(fEntryRanges.size());
-
-   for (const auto &[_range, index] : fEntryRanges) {
-      result.push_back(index);
+   RNTupleAttrRange range;
+   if (endEntry <= startEntry) {
+      R__LOG_WARNING(ROOT::Internal::NTupleLog())
+         << "empty range given when getting attributes from Attribute Set '" << GetDescriptor().GetName()
+         << "' (range given: [" << startEntry << ", " << endEntry << ")).";
+      // Make sure we find 0 entries
+      range = RNTupleAttrRange::FromStartLength(startEntry, 0);
+   } else {
+      range = RNTupleAttrRange::FromStartEnd(startEntry, endEntry);
    }
+   RNTupleAttrEntryIterable::RFilter filter{range, true};
+   return RNTupleAttrEntryIterable{*this, filter};
+}
 
-   return result;
+ROOT::Experimental::RNTupleAttrEntryIterable
+ROOT::Experimental::RNTupleAttrSetReader::GetAttributes(NTupleSize_t entryIndex)
+{
+   RNTupleAttrEntryIterable::RFilter filter{RNTupleAttrRange::FromStartEnd(entryIndex, entryIndex + 1), false};
+   return RNTupleAttrEntryIterable{*this, filter};
+}
+
+ROOT::Experimental::RNTupleAttrEntryIterable ROOT::Experimental::RNTupleAttrSetReader::GetAttributes()
+{
+   return RNTupleAttrEntryIterable{*this};
 }
 
 ROOT::Experimental::RNTupleAttrEntry ROOT::Experimental::RNTupleAttrSetReader::CreateAttrEntry()
@@ -251,4 +268,44 @@ void ROOT::Experimental::RNTupleAttrSetReader::LoadAttrEntry(ROOT::NTupleSize_t 
    fReader->LoadEntry(index, *entry.fMetaEntry);
    fReader->LoadEntry(index, *entry.fScopedEntry);
    entry.fRange = RNTupleAttrRange::FromStartLength(*pStart, *pLen);
+}
+
+bool ROOT::Experimental::RNTupleAttrEntryIterable::RIterator::FullyContained(RNTupleAttrRange range) const
+{
+   assert(fFilter);
+   if (fFilter->fIsContained) {
+      return fFilter->fRange.Start() <= range.Start() && range.End() <= fFilter->fRange.End();
+   } else {
+      return range.Start() <= fFilter->fRange.Start() && fFilter->fRange.End() <= range.End();
+   }
+}
+
+ROOT::Experimental::RNTupleAttrEntryIterable::RIterator::Iter_t
+ROOT::Experimental::RNTupleAttrEntryIterable::RIterator::Next() const
+{
+   // TODO: consider using binary search, since fEntryRanges is sorted
+   // (maybe it should be done only if the size of the list is bigger than a threshold).
+   for (auto it = fCur; it != fEnd; ++it) {
+      const auto &[range, index] = *it;
+      // If we have no filter, every entry is valid.
+      if (!fFilter)
+         return it;
+
+      const auto &firstLast = range.GetFirstLast();
+      // If this is nullopt it means this is a zero-length entry: we always skip those except
+      // for the "catch-all" GetAttributes() (which is when fFilter is also nullopt).
+      if (!firstLast)
+         continue;
+
+      const auto &[first, last] = *firstLast;
+      if (first >= fFilter->fRange.End()) {
+         // Since fEntryRanges is sorted we know we are at the end of the iteration
+         // TODO: tweak fEnd to directly pass the last entry?
+         return fEnd;
+      }
+
+      if (FullyContained(RNTupleAttrRange::FromStartEnd(first, last + 1)))
+         return it;
+   }
+   return fEnd;
 }

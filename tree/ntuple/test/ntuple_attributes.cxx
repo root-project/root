@@ -1,6 +1,14 @@
 #include "ntuple_test.hxx"
 #include <ROOT/RNTupleAttributes.hxx>
 
+static std::size_t Count(ROOT::Experimental::RNTupleAttrEntryIterable iterable)
+{
+   std::size_t n = 0;
+   for (auto _ : iterable)
+      ++n;
+   return n;
+}
+
 TEST(RNTupleAttributes, AttributeBasics)
 {
    FileRaii fileGuard("test_ntuple_attrs_basics.root");
@@ -191,10 +199,11 @@ TEST(RNTupleAttributes, InterleavingRanges)
    auto attrEntry = attrSet->CreateAttrEntry();
    for (auto i : reader->GetEntryRange()) {
       auto attrs = attrSet->GetAttributes(i);
-      EXPECT_EQ(attrs.size(), 2);
+      const auto nAttrs = Count(attrs);
+      EXPECT_EQ(nAttrs, 2);
       int totVal = 0;
-      for (auto attrIdx = 0u; attrIdx < attrs.size(); ++attrIdx) {
-         attrSet->LoadAttrEntry(attrs[attrIdx], attrEntry);
+      for (auto idx : attrs) {
+         attrSet->LoadAttrEntry(idx, attrEntry);
          totVal += *attrEntry->GetPtr<int>("attrInt");
       }
       int expected = (i / 5) + (i / 11);
@@ -356,7 +365,7 @@ TEST(RNTupleAttributes, NoImplicitCommitRange)
       auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
       // Fetch a specific attribute set
       auto attrSet = reader->OpenAttributeSet("MyAttrSet");
-      EXPECT_EQ(attrSet->GetAttributes().size(), 0);
+      EXPECT_EQ(Count(attrSet->GetAttributes()), 0);
    }
 }
 
@@ -506,28 +515,28 @@ TEST(RNTupleAttributes, ReadRanges)
       auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
       // Fetch a specific attribute set
       auto attrSetRuns = reader->OpenAttributeSet("Attr_Runs");
-      EXPECT_EQ(attrSetRuns->GetAttributes().size(), 3);
-      EXPECT_EQ(attrSetRuns->GetAttributes(4).size(), 1);
-      EXPECT_EQ(attrSetRuns->GetAttributesContainingRange(4, 5).size(), 1);
-      EXPECT_EQ(attrSetRuns->GetAttributesContainingRange(4, 4).size(), 1);
-      EXPECT_EQ(attrSetRuns->GetAttributesContainingRange(0, 10).size(), 1);
-      EXPECT_EQ(attrSetRuns->GetAttributesContainingRange(0, 11).size(), 0);
-      EXPECT_EQ(attrSetRuns->GetAttributesContainingRange(0, 100).size(), 0);
-      EXPECT_EQ(attrSetRuns->GetAttributesInRange(4, 5).size(), 0);
-      EXPECT_EQ(attrSetRuns->GetAttributesInRange(4, 4).size(), 0);
-      EXPECT_EQ(attrSetRuns->GetAttributesInRange(0, 100).size(), 3);
-      EXPECT_EQ(attrSetRuns->GetAttributes(12).size(), 1);
-      EXPECT_EQ(attrSetRuns->GetAttributes(120).size(), 0);
+      EXPECT_EQ(Count(attrSetRuns->GetAttributes()), 3);
+      EXPECT_EQ(Count(attrSetRuns->GetAttributes(4)), 1);
+      EXPECT_EQ(Count(attrSetRuns->GetAttributesContainingRange(4, 5)), 1);
+      EXPECT_EQ(Count(attrSetRuns->GetAttributesContainingRange(0, 10)), 1);
+      EXPECT_EQ(Count(attrSetRuns->GetAttributesContainingRange(0, 11)), 0);
+      EXPECT_EQ(Count(attrSetRuns->GetAttributesContainingRange(0, 100)), 0);
+      EXPECT_EQ(Count(attrSetRuns->GetAttributesInRange(4, 5)), 0);
+      EXPECT_EQ(Count(attrSetRuns->GetAttributesInRange(0, 100)), 3);
+      EXPECT_EQ(Count(attrSetRuns->GetAttributes(12)), 1);
+      EXPECT_EQ(Count(attrSetRuns->GetAttributes(120)), 0);
 
-      {
-         ROOT::TestSupport::CheckDiagsRAII diags;
-         diags.requiredDiag(kWarning, "ROOT.NTuple", "end < start", false);
-         EXPECT_EQ(attrSetRuns->GetAttributesInRange(4, 3).size(), 0);
-         EXPECT_EQ(attrSetRuns->GetAttributesContainingRange(4, 3).size(), 0);
-      }
+      ROOT_EXPECT_WARNING_PARTIAL(EXPECT_EQ(Count(attrSetRuns->GetAttributesInRange(4, 3)), 0), "ROOT.NTuple",
+                                  "empty range");
+      ROOT_EXPECT_WARNING_PARTIAL(EXPECT_EQ(Count(attrSetRuns->GetAttributesContainingRange(4, 3)), 0), "ROOT.NTuple",
+                                  "empty range");
+      ROOT_EXPECT_WARNING_PARTIAL(EXPECT_EQ(Count(attrSetRuns->GetAttributesInRange(4, 4)), 0), "ROOT.NTuple",
+                                  "empty range");
+      ROOT_EXPECT_WARNING_PARTIAL(EXPECT_EQ(Count(attrSetRuns->GetAttributesContainingRange(4, 4)), 0), "ROOT.NTuple",
+                                  "empty range");
 
       auto attrSetEpochs = reader->OpenAttributeSet("Attr_Epochs");
-      EXPECT_EQ(attrSetEpochs->GetAttributes().size(), 2);
+      EXPECT_EQ(Count(attrSetEpochs->GetAttributes()), 2);
    }
 }
 
@@ -564,10 +573,12 @@ TEST(RNTupleAttributes, EmptyAttrRange)
 
       // Fetch a specific attribute set
       auto attrSet = reader->OpenAttributeSet("MyAttrSet");
-      EXPECT_EQ(attrSet->GetAttributes().size(), 1);
-      EXPECT_EQ(attrSet->GetAttributes(0).size(), 0);
-      EXPECT_EQ(attrSet->GetAttributesInRange(0, reader->GetNEntries()).size(), 0);
-      EXPECT_EQ(attrSet->GetAttributesContainingRange(0, reader->GetNEntries()).size(), 0);
+      EXPECT_EQ(Count(attrSet->GetAttributes()), 1);
+      EXPECT_EQ(Count(attrSet->GetAttributes(0)), 0);
+      ROOT_EXPECT_WARNING_PARTIAL(EXPECT_EQ(Count(attrSet->GetAttributesInRange(0, reader->GetNEntries())), 0),
+                                  "ROOT.NTuple", "empty range");
+      ROOT_EXPECT_WARNING_PARTIAL(EXPECT_EQ(Count(attrSet->GetAttributesContainingRange(0, reader->GetNEntries())), 0),
+                                  "ROOT.NTuple", "empty range");
    }
 }
 
@@ -602,14 +613,14 @@ TEST(RNTupleAttributes, AccessAttrSetReaderAfterClosingMainReader)
       auto attrSet = reader->OpenAttributeSet("MyAttrSet");
 
       const auto nEntries = reader->GetNEntries();
-      
+
       // Close the main reader
       reader.reset();
-      
+
       // Access the attribute set reader
-      EXPECT_EQ(attrSet->GetAttributes().size(), 1);
-      EXPECT_EQ(attrSet->GetAttributes(0).size(), 1);
-      EXPECT_EQ(attrSet->GetAttributesInRange(0, nEntries).size(), 1);
-      EXPECT_EQ(attrSet->GetAttributesContainingRange(0, nEntries).size(), 1);
+      EXPECT_EQ(Count(attrSet->GetAttributes()), 1);
+      EXPECT_EQ(Count(attrSet->GetAttributes(0)), 1);
+      EXPECT_EQ(Count(attrSet->GetAttributesInRange(0, nEntries)), 1);
+      EXPECT_EQ(Count(attrSet->GetAttributesContainingRange(0, nEntries)), 1);
    }
 }

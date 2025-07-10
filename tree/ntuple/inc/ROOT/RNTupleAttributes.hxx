@@ -100,9 +100,7 @@ public:
    }
 };
 
-// class RNTupleAttrEntryIterable final {
-
-// };
+class RNTupleAttrEntryIterable;
 
 // clang-format off
 /**
@@ -119,6 +117,7 @@ TODO: code sample here
 // clang-format on
 class RNTupleAttrSetReader final {
    friend class ROOT::RNTupleReader;
+   friend class RNTupleAttrEntryIterable;
 
    // List containing pairs { entryRange, entryIndex }, used to quickly find out which entries in the Attribute
    // RNTuple contain entries that overlap a given range. The list is sorted by range start, i.e.
@@ -148,13 +147,78 @@ public:
    void LoadAttrEntry(NTupleSize_t index, RNTupleAttrEntry &entry);
 
    /// Returns all the attributes whose range fully contains `[startEntry, endEntry)`
-   std::vector<NTupleSize_t> GetAttributesContainingRange(NTupleSize_t startEntry, NTupleSize_t endEntry);
+   RNTupleAttrEntryIterable GetAttributesContainingRange(NTupleSize_t startEntry, NTupleSize_t endEntry);
    /// Returns all the attributes whose range is fully contained in `[startEntry, endEntry)`
-   std::vector<NTupleSize_t> GetAttributesInRange(NTupleSize_t startEntry, NTupleSize_t endEntry);
+   RNTupleAttrEntryIterable GetAttributesInRange(NTupleSize_t startEntry, NTupleSize_t endEntry);
    /// Returns all the attributes whose range contains index `entryIndex`.
-   std::vector<NTupleSize_t> GetAttributes(NTupleSize_t entryIndex);
+   RNTupleAttrEntryIterable GetAttributes(NTupleSize_t entryIndex);
    /// Returns all the attributes in this Set. The returned attributes are sorted by entry range start.
-   std::vector<NTupleSize_t> GetAttributes();
+   RNTupleAttrEntryIterable GetAttributes();
+};
+
+class RNTupleAttrEntryIterable final {
+public:
+   struct RFilter {
+      RNTupleAttrRange fRange;
+      bool fIsContained;
+   };
+
+private:
+   RNTupleAttrSetReader &fReader;
+   std::optional<RFilter> fFilter;
+
+public:
+   class RIterator final {
+   private:
+      using Iter_t = decltype(std::declval<RNTupleAttrSetReader>().fEntryRanges.begin());
+      Iter_t fCur, fEnd;
+      std::optional<RFilter> fFilter;
+
+      Iter_t Next() const;
+      bool FullyContained(RNTupleAttrRange range) const;
+
+   public:
+      using iterator_category = std::forward_iterator_tag;
+      using iterator = RIterator;
+      using value_type = NTupleSize_t;
+      using difference_type = std::ptrdiff_t;
+      using pointer = const value_type *;
+      using reference = const value_type &;
+
+      RIterator(Iter_t iter, Iter_t end, std::optional<RFilter> filter) : fCur(iter), fEnd(end), fFilter(filter)
+      {
+         if (fFilter) {
+            if (fFilter->fRange.Length() == 0)
+               fCur = end;
+            else
+               fCur = Next();
+         }
+      }
+      iterator operator++()
+      {
+         ++fCur;
+         fCur = Next();
+         return *this;
+      }
+      iterator operator++(int)
+      {
+         iterator it = *this;
+         ++fCur;
+         fCur = Next();
+         return it;
+      }
+      reference operator*() { return fCur->second; }
+      bool operator!=(const iterator &rh) const { return !operator==(rh); }
+      bool operator==(const iterator &rh) const { return fCur == rh.fCur; }
+   };
+
+   explicit RNTupleAttrEntryIterable(RNTupleAttrSetReader &reader, std::optional<RFilter> filter = {})
+      : fReader(reader), fFilter(filter)
+   {
+   }
+
+   RIterator begin() { return RIterator{fReader.fEntryRanges.begin(), fReader.fEntryRanges.end(), fFilter}; }
+   RIterator end() { return RIterator{fReader.fEntryRanges.end(), fReader.fEntryRanges.end(), fFilter}; }
 };
 
 bool IsReservedRNTupleAttrSetName(std::string_view name);
