@@ -591,8 +591,15 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
       // GetPath(), so we can still figure out where we are in the recursion
 
       // If this folder is a onlyListed object, merge everything inside.
-      if (onlyListed) type &= ~kOnlyListed;
-      status = MergeRecursive(newdir, sourcelist, type);
+      const auto mergeType = onlyListed ? type & ~kOnlyListed : type;
+      status = MergeRecursive(newdir, sourcelist, mergeType);
+
+      if ((type & kOnlyListed) && !(type & kIncremental) && !onlyListed && newdir->GetNkeys() == 0) {
+         // None of the children were merged, and the directory is not listed
+         delete newdir;
+         newdir = nullptr;
+         target->rmdir(obj->GetName());
+      }
       // Delete newdir directory after having written it (merged)
       if (!(type&kIncremental)) delete newdir;
       if (onlyListed) type |= kOnlyListed;

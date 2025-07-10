@@ -221,3 +221,61 @@ TEST(TFileMerger, ChangeFile)
    gSystem->Unlink("file6640mergerinput_2.root");
    gSystem->Unlink("file6640mergeroutput.root");
 }
+
+TEST(TFileMerger, SelectiveMergeWithDirectories)
+{
+   constexpr auto input1 = "selectiveMerge_input_1.root";
+   constexpr auto input2 = "selectiveMerge_input_2.root";
+   constexpr auto output = "selectiveMerge_output.root";
+   for (auto const &filename : {input1, input2}) {
+      TH1F histo("histo", "Histo", 2, 0, 1);
+      TFile infile(filename, "recreate");
+      auto dir = infile.mkdir("A");
+      dir->WriteObject(&histo, "Histo_A1");
+      if (filename == input1)
+         dir->WriteObject(&histo, "Histo_A2");
+      if (filename == input2)
+         dir->WriteObject(&histo, "Histo_A3");
+
+      dir = infile.mkdir("B");
+      dir->WriteObject(&histo, "Histo_B");
+
+      dir = infile.mkdir("C")->mkdir("D");
+      dir->WriteObject(&histo, "Histo_D");
+      dir = infile.mkdir("E")->mkdir("F");
+      dir->WriteObject(&histo, "Histo_F1");
+      if (filename == input1)
+         dir->WriteObject(&histo, "Histo_F2");
+      if (filename == input2)
+         dir->WriteObject(&histo, "Histo_F3");
+   }
+
+   {
+      TFileMerger fileMerger(false);
+      fileMerger.AddFile(input1);
+      fileMerger.AddFile(input2);
+      fileMerger.AddObjectNames("A");
+      fileMerger.AddObjectNames("Histo_F1 Histo_F2 Histo_F3");
+      fileMerger.OutputFile(output);
+      fileMerger.PartialMerge(TFileMerger::kOnlyListed | TFileMerger::kAll | TFileMerger::kRegular);
+   }
+
+   TFile outfile(output);
+   auto dir = outfile.Get<TDirectory>("A");
+   ASSERT_NE(dir, nullptr);
+   for (auto name : {"Histo_A1", "Histo_A2", "Histo_A3"})
+      EXPECT_NE(dir->Get<TH1F>(name), nullptr) << name;
+
+   EXPECT_EQ(outfile.Get("B"), nullptr);
+   EXPECT_EQ(outfile.Get("C"), nullptr);
+
+   dir = outfile.Get<TDirectory>("E");
+   ASSERT_NE(dir, nullptr);
+   dir = dir->Get<TDirectory>("F");
+   ASSERT_NE(dir, nullptr);
+   for (auto name : {"Histo_F1", "Histo_F2", "Histo_F3"})
+      EXPECT_NE(dir->Get<TH1F>(name), nullptr) << name;
+
+   for (auto name : {input1, input2, output})
+      gSystem->Unlink(name);
+}
