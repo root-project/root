@@ -38,11 +38,7 @@ public:
    /// default constructor (invalid state)
    MnUserParameterState()
       : fValid(false),
-        fCovarianceValid(false),
         fCovStatus(-1),
-        fFVal(0),
-        fEDM(0),
-        fNFcn(0),
         fParameters(MnUserParameters()),
         fCovariance(MnUserCovariance()),
         fIntParameters(std::vector<double>()),
@@ -157,11 +153,11 @@ public:
 
 private:
    bool fValid;
-   bool fCovarianceValid;
+   bool fCovarianceValid = false;
    int fCovStatus; // covariance matrix status
-   double fFVal;
-   double fEDM;
-   unsigned int fNFcn;
+   double fFVal = 0.;
+   double fEDM = 0.;
+   unsigned int fNFcn = 0;
 
    MnUserParameters fParameters;
    MnUserCovariance fCovariance;
