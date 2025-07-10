@@ -165,11 +165,11 @@ bool ROOT::Experimental::RNTupleAttrSetReader::EntryRangesAreSorted(const declty
    return true;
 };
 
-std::vector<ROOT::Experimental::RNTupleAttrEntry>
+std::vector<ROOT::NTupleSize_t>
 ROOT::Experimental::RNTupleAttrSetReader::GetAttributesRangeInternal(NTupleSize_t startEntry, NTupleSize_t endEntry,
                                                                      bool rangeIsContained)
 {
-   std::vector<RNTupleAttrEntry> result;
+   std::vector<ROOT::NTupleSize_t> result;
 
    if (endEntry < startEntry) {
       R__LOG_WARNING(ROOT::Internal::NTupleLog())
@@ -188,7 +188,6 @@ ROOT::Experimental::RNTupleAttrSetReader::GetAttributesRangeInternal(NTupleSize_
       return startOuter <= startInner && endInner <= endOuter;
    };
 
-   auto &model = const_cast<RNTupleModel &>(fReader->GetModel());
    // TODO: consider using binary search, since fEntryRanges is sorted
    // (maybe it should be done only if the size of the list is bigger than a threshold).
    for (const auto &[range, index] : fEntryRanges) {
@@ -201,46 +200,55 @@ ROOT::Experimental::RNTupleAttrSetReader::GetAttributesRangeInternal(NTupleSize_
          break; // We can break here because fEntryRanges is sorted.
 
       if (FullyContained(startEntry, endEntry, first, last + 1)) {
-         auto scopedEntry = RNTupleAttrEntry::CreateScopedEntry(model);
-         auto attrEntry = RNTupleAttrEntry(nullptr, std::move(scopedEntry), range);
-         fReader->LoadEntry(index, *attrEntry.fScopedEntry);
-         result.push_back(std::move(attrEntry));
+         result.push_back(index);
       }
    }
 
    return result;
 }
 
-std::vector<ROOT::Experimental::RNTupleAttrEntry>
+std::vector<ROOT::NTupleSize_t>
 ROOT::Experimental::RNTupleAttrSetReader::GetAttributesContainingRange(NTupleSize_t startEntry, NTupleSize_t endEntry)
 {
    return GetAttributesRangeInternal(startEntry, endEntry, false);
 }
 
-std::vector<ROOT::Experimental::RNTupleAttrEntry>
+std::vector<ROOT::NTupleSize_t>
 ROOT::Experimental::RNTupleAttrSetReader::GetAttributesInRange(NTupleSize_t startEntry, NTupleSize_t endEntry)
 {
    return GetAttributesRangeInternal(startEntry, endEntry, true);
 }
 
-std::vector<ROOT::Experimental::RNTupleAttrEntry>
-ROOT::Experimental::RNTupleAttrSetReader::GetAttributes(NTupleSize_t entryIndex)
+std::vector<ROOT::NTupleSize_t> ROOT::Experimental::RNTupleAttrSetReader::GetAttributes(NTupleSize_t entryIndex)
 {
    return GetAttributesContainingRange(entryIndex, entryIndex + 1);
 }
 
-std::vector<ROOT::Experimental::RNTupleAttrEntry> ROOT::Experimental::RNTupleAttrSetReader::GetAttributes()
+std::vector<ROOT::NTupleSize_t> ROOT::Experimental::RNTupleAttrSetReader::GetAttributes()
 {
-   std::vector<RNTupleAttrEntry> result;
+   std::vector<NTupleSize_t> result;
    result.reserve(fEntryRanges.size());
 
-   auto &model = const_cast<RNTupleModel &>(fReader->GetModel());
-   for (const auto &[range, index] : fEntryRanges) {
-      auto scopedEntry = RNTupleAttrEntry::CreateScopedEntry(model);
-      auto attrEntry = RNTupleAttrEntry(nullptr, std::move(scopedEntry), range);
-      fReader->LoadEntry(index, *attrEntry.fScopedEntry);
-      result.push_back(std::move(attrEntry));
+   for (const auto &[_range, index] : fEntryRanges) {
+      result.push_back(index);
    }
 
    return result;
+}
+
+ROOT::Experimental::RNTupleAttrEntry ROOT::Experimental::RNTupleAttrSetReader::CreateAttrEntry()
+{
+   auto &model = const_cast<RNTupleModel &>(fReader->GetModel());
+   auto [metaEntry, scopedEntry] = RNTupleAttrEntry::CreateInternalEntries(model);
+   auto attrEntry = RNTupleAttrEntry(std::move(metaEntry), std::move(scopedEntry), RNTupleAttrRange{});
+   return attrEntry;
+}
+
+void ROOT::Experimental::RNTupleAttrSetReader::LoadAttrEntry(ROOT::NTupleSize_t index, RNTupleAttrEntry &entry)
+{
+   auto pStart = entry.fMetaEntry->GetPtr<NTupleSize_t>(kRangeStartName);
+   auto pLen = entry.fMetaEntry->GetPtr<NTupleSize_t>(kRangeLenName);
+   fReader->LoadEntry(index, *entry.fMetaEntry);
+   fReader->LoadEntry(index, *entry.fScopedEntry);
+   entry.fRange = RNTupleAttrRange::FromStartLength(*pStart, *pLen);
 }
