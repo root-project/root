@@ -306,7 +306,7 @@ void ROOT::Internal::RPageSinkBuf::CommitAttributeSet(RPageSink &sink)
    fInnerSink->CommitAttributeSet(sink);
 }
 
-ROOT::Experimental::Internal::RNTupleAttributeSetDescriptor ROOT::Internal::RPageSinkBuf::CommitAttributeSetInternal()
+ROOT::Experimental::Internal::RNTupleAttrSetDescriptor ROOT::Internal::RPageSinkBuf::CommitAttributeSetInternal()
 {
    return fInnerSink->CommitAttributeSetInternal();
 }

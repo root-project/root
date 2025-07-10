@@ -108,7 +108,7 @@ void ROOT::Experimental::RNTupleFillContext::CommitStagedClusters()
    fStagedClusters.clear();
 }
 
-ROOT::Experimental::RNTupleAttributeSetWriterHandle
+ROOT::Experimental::RNTupleAttrSetWriterHandle
 ROOT::Experimental::RNTupleFillContext::CreateAttributeSet(std::string_view name,
                                                            std::unique_ptr<ROOT::RNTupleModel> model)
 {
@@ -117,7 +117,7 @@ ROOT::Experimental::RNTupleFillContext::CreateAttributeSet(std::string_view name
       throw ROOT::RException(R__FAIL("AttributeSetWriter can only be created from a TFile-based RNTupleWriter!"));
 
    std::string nameStr{name};
-   auto attrSet = Experimental::RNTupleAttributeSetWriter::Create(name, std::move(model), this, *dir);
+   auto attrSet = Experimental::RNTupleAttrSetWriter::Create(name, std::move(model), this, *dir);
 
    auto [attrSetIter, wasInserted] = fAttributeSets.try_emplace(nameStr, std::move(attrSet));
    if (!wasInserted)
@@ -127,17 +127,17 @@ ROOT::Experimental::RNTupleFillContext::CreateAttributeSet(std::string_view name
    // NOTE(gparolini): pointers into unordered_map are guaranteed to be stable. cppreference states:
    // "References and pointers to either key or data stored in the container are only invalidated by
    // erasing that element"
-   return Experimental::RNTupleAttributeSetWriterHandle{*attrSetIter->second};
+   return Experimental::RNTupleAttrSetWriterHandle{*attrSetIter->second};
 }
 
 void ROOT::Experimental::RNTupleFillContext::CloseAttributeSetInternal(
-   ROOT::Experimental::RNTupleAttributeSetWriter &attrSet)
+   ROOT::Experimental::RNTupleAttrSetWriter &attrSet)
 {
    attrSet.Commit(); // XXX: maybe could be moved to CommitAttributeSet()
    fSink->CommitAttributeSet(*attrSet.fFillContext.fSink);
 }
 
-void ROOT::Experimental::RNTupleFillContext::CloseAttributeSet(RNTupleAttributeSetWriterHandle handle)
+void ROOT::Experimental::RNTupleFillContext::CloseAttributeSet(RNTupleAttrSetWriterHandle handle)
 {
    if (!handle.fWriter) {
       throw ROOT::RException(R__FAIL("Tried to close an invalid AttributeSetWriter"));

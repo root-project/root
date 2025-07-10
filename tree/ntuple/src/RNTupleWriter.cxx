@@ -147,10 +147,10 @@ ROOT::Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model,
    return std::unique_ptr<ROOT::RNTupleWriter>(new ROOT::RNTupleWriter(std::move(model), std::move(sink)));
 }
 
-ROOT::Experimental::RNTupleAttributeSetWriterHandle
+ROOT::Experimental::RNTupleAttrSetWriterHandle
 ROOT::RNTupleWriter::CreateAttributeSet(std::string_view name, std::unique_ptr<ROOT::RNTupleModel> model)
 {
-   if (ROOT::Experimental::IsReservedRNTupleAttributeSetName(name)) {
+   if (ROOT::Experimental::IsReservedRNTupleAttrSetName(name)) {
       throw ROOT::RException(
          R__FAIL("Cannot create Attribute Set named \"" + std::string(name) +
                  "\": the name \"ROOT\" and any name starting with \"ROOT.\" are reserved for internal use."));
@@ -158,7 +158,7 @@ ROOT::RNTupleWriter::CreateAttributeSet(std::string_view name, std::unique_ptr<R
    return fFillContext.CreateAttributeSet(name, std::move(model));
 }
 
-void ROOT::RNTupleWriter::CloseAttributeSet(Experimental::RNTupleAttributeSetWriterHandle handle)
+void ROOT::RNTupleWriter::CloseAttributeSet(Experimental::RNTupleAttrSetWriterHandle handle)
 {
    fFillContext.CloseAttributeSet(std::move(handle));
 }
