@@ -20,14 +20,14 @@ namespace Minuit2 {
 // construct from user parameters (before minimization)
 //
 MnUserParameterState::MnUserParameterState(std::span<const double> par, std::span<const double> err)
-   : fValid(true), fCovarianceValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0),
+   : fValid(true), fCovStatus(-1),
      fParameters(MnUserParameters(par, err)),
      fIntParameters(par.begin(), par.end())
 {
 }
 
 MnUserParameterState::MnUserParameterState(const MnUserParameters &par)
-   : fValid(true), fCovarianceValid(false), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0),
+   : fValid(true), fCovStatus(-1),
      fParameters(par)
 {
    // construct from user parameters (before minimization)
@@ -48,9 +48,6 @@ MnUserParameterState::MnUserParameterState(const MnUserParameters &par)
 MnUserParameterState::MnUserParameterState(std::span<const double> par, std::span<const double> cov, unsigned int nrow)
    : fValid(true),
      fCovStatus(-1),
-     fFVal(0.),
-     fEDM(0.),
-     fNFcn(0),
      fIntParameters(par.begin(), par.end())
 {
    // construct from user parameters + errors (before minimization) using std::vector for parameter error and    // an
@@ -69,9 +66,6 @@ MnUserParameterState::MnUserParameterState(std::span<const double> par, std::spa
 MnUserParameterState::MnUserParameterState(std::span<const double> par, const MnUserCovariance &cov)
    : fValid(true),
      fCovStatus(-1),
-     fFVal(0.),
-     fEDM(0.),
-     fNFcn(0),
      fIntParameters(par.begin(), par.end())
 {
    // construct from user parameters + errors (before minimization) using std::vector (params) and MnUserCovariance
@@ -88,7 +82,7 @@ MnUserParameterState::MnUserParameterState(std::span<const double> par, const Mn
 }
 
 MnUserParameterState::MnUserParameterState(const MnUserParameters &par, const MnUserCovariance &cov)
-   : fValid(true), fCovStatus(-1), fFVal(0.), fEDM(0.), fNFcn(0), fParameters(par)
+   : fValid(true), fCovStatus(-1), fParameters(par)
 {
    // construct from user parameters + errors (before minimization) using
    // MnUserParameters and MnUserCovariance objects
@@ -108,7 +102,7 @@ MnUserParameterState::MnUserParameterState(const MnUserParameters &par, const Mn
 //
 //
 MnUserParameterState::MnUserParameterState(const MinimumState &st, double up, const MnUserTransformation &trafo)
-   : fValid(st.IsValid()), fCovarianceValid(false), fCovStatus(-1), fFVal(st.Fval()), fEDM(st.Edm()),
+   : fValid(st.IsValid()), fCovStatus(-1), fFVal(st.Fval()), fEDM(st.Edm()),
      fNFcn(st.NFcn())
 {
    //
