@@ -1,4 +1,4 @@
-/// \file ROOT/RNTupleAttributeEntry.hxx
+/// \file ROOT/RNTupleAttrEntry.hxx
 /// \ingroup NTuple ROOT7
 /// \author Giacomo Parolini <giacomo.parolini@cern.ch>
 /// \date 2025-05-19
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTuple_AttributeEntry
-#define ROOT7_RNTuple_AttributeEntry
+#ifndef ROOT7_RNTuple_AttrEntry
+#define ROOT7_RNTuple_AttrEntry
 
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/REntry.hxx>
@@ -23,8 +23,8 @@
 
 namespace ROOT::Experimental {
 
-class RNTupleAttributeSetWriter;
-class RNTupleAttributeSetReader;
+class RNTupleAttrSetWriter;
+class RNTupleAttrSetReader;
 class RNTupleFillContext;
 
 namespace Internal::RNTupleAttributes {
@@ -34,27 +34,27 @@ const std::string kRangeLenName = "_rangeLen";
 
 } // namespace Internal::RNTupleAttributes
 
-class RNTupleAttributeRange final {
+class RNTupleAttrRange final {
    ROOT::NTupleSize_t fStart = 0;
    ROOT::NTupleSize_t fLength = 0;
 
-   RNTupleAttributeRange(ROOT::NTupleSize_t start, ROOT::NTupleSize_t length) : fStart(start), fLength(length) {}
+   RNTupleAttrRange(ROOT::NTupleSize_t start, ROOT::NTupleSize_t length) : fStart(start), fLength(length) {}
 
 public:
-   static RNTupleAttributeRange FromStartLength(ROOT::NTupleSize_t start, ROOT::NTupleSize_t length)
+   static RNTupleAttrRange FromStartLength(ROOT::NTupleSize_t start, ROOT::NTupleSize_t length)
    {
-      return RNTupleAttributeRange{start, length};
+      return RNTupleAttrRange{start, length};
    }
 
    /// Creates an AttributeRange from [start, end), where `end` is one past the last valid entry of the range
    /// (`FromStartEnd(0, 10)` will create a range whose last valid index is 9).
-   static RNTupleAttributeRange FromStartEnd(ROOT::NTupleSize_t start, ROOT::NTupleSize_t end)
+   static RNTupleAttrRange FromStartEnd(ROOT::NTupleSize_t start, ROOT::NTupleSize_t end)
    {
       R__ASSERT(end >= start);
-      return RNTupleAttributeRange{start, end - start};
+      return RNTupleAttrRange{start, end - start};
    }
 
-   RNTupleAttributeRange() = default;
+   RNTupleAttrRange() = default;
 
    /// Returns the first valid entry index in the range. Returns nullopt if the range has zero length.
    std::optional<ROOT::NTupleSize_t> First() const { return fLength ? std::make_optional(fStart) : std::nullopt; }
@@ -78,9 +78,9 @@ public:
    std::pair<ROOT::NTupleSize_t, ROOT::NTupleSize_t> GetStartLength() const { return {Start(), Length()}; }
 };
 
-class RNTupleAttributeEntry final {
-   friend class ROOT::Experimental::RNTupleAttributeSetWriter;
-   friend class ROOT::Experimental::RNTupleAttributeSetReader;
+class RNTupleAttrEntry final {
+   friend class ROOT::Experimental::RNTupleAttrSetWriter;
+   friend class ROOT::Experimental::RNTupleAttrSetReader;
    friend class ROOT::Experimental::RNTupleFillContext;
 
    /// Entry containing the Attribute-specific fields (such as the entry range)
@@ -98,25 +98,23 @@ class RNTupleAttributeEntry final {
     *  and the ScopedEntry is scoped under RecordField, as if it were its top-level field.
     */
    std::unique_ptr<REntry> fScopedEntry;
-   RNTupleAttributeRange fRange;
+   RNTupleAttrRange fRange;
 
    static std::unique_ptr<REntry> CreateScopedEntry(ROOT::RNTupleModel &model);
    static std::pair<std::unique_ptr<REntry>, std::unique_ptr<REntry>> CreateInternalEntries(ROOT::RNTupleModel &model);
 
-   /// Creates a pending AttributeEntry whose length is not determined yet.
+   /// Creates a pending AttrEntry whose length is not determined yet.
    /// `metaEntry` is the entry containing the range data, `scopedEntry` contains the user-defined values.
-   RNTupleAttributeEntry(std::unique_ptr<REntry> metaEntry, std::unique_ptr<REntry> scopedEntry,
-                         ROOT::NTupleSize_t start)
+   RNTupleAttrEntry(std::unique_ptr<REntry> metaEntry, std::unique_ptr<REntry> scopedEntry, ROOT::NTupleSize_t start)
       : fMetaEntry(std::move(metaEntry)),
         fScopedEntry(std::move(scopedEntry)),
-        fRange(RNTupleAttributeRange::FromStartLength(start, 0))
+        fRange(RNTupleAttrRange::FromStartLength(start, 0))
    {
    }
 
-   /// Creates an AttributeEntry with the given range.
+   /// Creates an AttrEntry with the given range.
    /// `metaEntry` is the entry containing the range data, `scopedEntry` contains the user-defined values.
-   RNTupleAttributeEntry(std::unique_ptr<REntry> entry, std::unique_ptr<REntry> scopedEntry,
-                         RNTupleAttributeRange range)
+   RNTupleAttrEntry(std::unique_ptr<REntry> entry, std::unique_ptr<REntry> scopedEntry, RNTupleAttrRange range)
       : fMetaEntry(std::move(entry)), fScopedEntry(std::move(scopedEntry)), fRange(range)
    {
    }
@@ -130,8 +128,8 @@ class RNTupleAttributeEntry final {
    }
 
 public:
-   RNTupleAttributeEntry(RNTupleAttributeEntry &&) = default;
-   RNTupleAttributeEntry &operator=(RNTupleAttributeEntry &&) = default;
+   RNTupleAttrEntry(RNTupleAttrEntry &&) = default;
+   RNTupleAttrEntry &operator=(RNTupleAttrEntry &&) = default;
 
    REntry *operator->()
    {
@@ -146,7 +144,7 @@ public:
 
    operator bool() const { return fScopedEntry && fMetaEntry; }
 
-   RNTupleAttributeRange GetRange() const { return fRange; }
+   RNTupleAttrRange GetRange() const { return fRange; }
 };
 
 } // namespace ROOT::Experimental

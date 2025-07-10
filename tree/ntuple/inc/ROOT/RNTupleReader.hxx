@@ -43,7 +43,7 @@ enum class ENTupleInfo {
 };
 
 namespace Experimental {
-class RNTupleAttributeSetReader;
+class RNTupleAttrSetReader;
 }
 
 // clang-format off
@@ -457,7 +457,7 @@ public:
    void EnableMetrics() { fMetrics.Enable(); }
    const Experimental::Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 
-   std::unique_ptr<Experimental::RNTupleAttributeSetReader> OpenAttributeSet(std::string_view attrSetName);
+   std::unique_ptr<Experimental::RNTupleAttrSetReader> OpenAttributeSet(std::string_view attrSetName);
 
 }; // class RNTupleReader
 
