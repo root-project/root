@@ -100,6 +100,10 @@ public:
    }
 };
 
+// class RNTupleAttrEntryIterable final {
+
+// };
+
 // clang-format off
 /**
 \class ROOT::Experimental::RNTupleAttrSetReader
@@ -128,7 +132,7 @@ class RNTupleAttrSetReader final {
 
    // Used for GetAttributesContainingRange (with `rangeIsContained == false`) and GetAttributesInRange (with
    // `rangeIsContained == true`).
-   std::vector<RNTupleAttrEntry>
+   std::vector<NTupleSize_t>
    GetAttributesRangeInternal(NTupleSize_t startEntry, NTupleSize_t endEntry, bool rangeIsContained);
 
 public:
@@ -140,14 +144,17 @@ public:
 
    const ROOT::RNTupleDescriptor &GetDescriptor() const;
 
+   RNTupleAttrEntry CreateAttrEntry();
+   void LoadAttrEntry(NTupleSize_t index, RNTupleAttrEntry &entry);
+
    /// Returns all the attributes whose range fully contains `[startEntry, endEntry)`
-   std::vector<RNTupleAttrEntry> GetAttributesContainingRange(NTupleSize_t startEntry, NTupleSize_t endEntry);
+   std::vector<NTupleSize_t> GetAttributesContainingRange(NTupleSize_t startEntry, NTupleSize_t endEntry);
    /// Returns all the attributes whose range is fully contained in `[startEntry, endEntry)`
-   std::vector<RNTupleAttrEntry> GetAttributesInRange(NTupleSize_t startEntry, NTupleSize_t endEntry);
+   std::vector<NTupleSize_t> GetAttributesInRange(NTupleSize_t startEntry, NTupleSize_t endEntry);
    /// Returns all the attributes whose range contains index `entryIndex`.
-   std::vector<RNTupleAttrEntry> GetAttributes(NTupleSize_t entryIndex);
+   std::vector<NTupleSize_t> GetAttributes(NTupleSize_t entryIndex);
    /// Returns all the attributes in this Set. The returned attributes are sorted by entry range start.
-   std::vector<RNTupleAttrEntry> GetAttributes();
+   std::vector<NTupleSize_t> GetAttributes();
 };
 
 bool IsReservedRNTupleAttrSetName(std::string_view name);
