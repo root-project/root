@@ -684,7 +684,7 @@ ROOT::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::RKey> clusterK
    return clusters;
 }
 
-ROOT::Experimental::Internal::RNTupleAttributeSetDescriptor ROOT::Internal::RPageSinkFile::CommitAttributeSetInternal()
+ROOT::Experimental::Internal::RNTupleAttrSetDescriptor ROOT::Internal::RPageSinkFile::CommitAttributeSetInternal()
 {
    TDirectory *dir = GetUnderlyingDirectory();
    R__ASSERT(dir);
@@ -696,7 +696,7 @@ ROOT::Experimental::Internal::RNTupleAttributeSetDescriptor ROOT::Internal::RPag
    locator.SetNBytesOnStorage(key->GetNbytes() - key->GetKeylen());
    locator.SetPosition(static_cast<std::uint64_t>(key->GetSeekKey() + key->GetKeylen()));
    auto uncompLen = static_cast<std::uint64_t>(key->GetObjlen());
-   return ROOT::Experimental::Internal::RNTupleAttributeSetDescriptor{attrSetName, locator, uncompLen};
+   return ROOT::Experimental::Internal::RNTupleAttrSetDescriptor{attrSetName, locator, uncompLen};
 }
 
 void ROOT::Internal::RPageSinkFile::CommitAttributeSet(RPageSink &attrSink)
