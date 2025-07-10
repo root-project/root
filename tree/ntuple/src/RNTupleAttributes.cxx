@@ -67,6 +67,7 @@ ROOT::Experimental::RNTupleAttributeSetWriter::Create(std::string_view name, std
 
    // TODO: avoid creating a new model
    auto newModel = RNTupleModel::CreateBare();
+   newModel->SetDescription(model->GetDescription());
    newModel->MakeField<ROOT::NTupleSize_t>(kRangeStartName);
    newModel->MakeField<ROOT::NTupleSize_t>(kRangeLenName);
    newModel->AddField(std::move(userRootField));
@@ -87,10 +88,9 @@ ROOT::Experimental::RNTupleAttributeSetWriter::RNTupleAttributeSetWriter(const R
 {
 }
 
-const std::string &ROOT::Experimental::RNTupleAttributeSetWriter::GetName() const
+const ROOT::RNTupleDescriptor &ROOT::Experimental::RNTupleAttributeSetWriter::GetDescriptor() const
 {
-   const auto &name = fFillContext.fSink->GetNTupleName();
-   return name;
+   return fFillContext.fSink->GetDescriptor();
 }
 
 ROOT::Experimental::RNTupleAttributeEntry ROOT::Experimental::RNTupleAttributeSetWriter::BeginRange()
@@ -148,10 +148,9 @@ ROOT::Experimental::RNTupleAttributeSetReader::RNTupleAttributeSetReader(std::un
    R__LOG_INFO(ROOT::Internal::NTupleLog()) << "Loaded " << fEntryRanges.size() << " attribute entries.";
 }
 
-const std::string &ROOT::Experimental::RNTupleAttributeSetReader::GetName() const
+const ROOT::RNTupleDescriptor &ROOT::Experimental::RNTupleAttributeSetReader::GetDescriptor() const
 {
-   const auto &name = fReader->GetDescriptor().GetName();
-   return name;
+   return fReader->GetDescriptor();
 }
 
 // Entry ranges should be sorted with respect to Start by construction.
@@ -175,8 +174,8 @@ ROOT::Experimental::RNTupleAttributeSetReader::GetAttributesRangeInternal(NTuple
 
    if (endEntry < startEntry) {
       R__LOG_WARNING(ROOT::Internal::NTupleLog())
-         << "end < start when getting attributes from Attribute Set '" << GetName() << "' (range given: [" << startEntry
-         << ", " << endEntry << "].";
+         << "end < start when getting attributes from Attribute Set '" << GetDescriptor().GetName()
+         << "' (range given: [" << startEntry << ", " << endEntry << "].";
       return result;
    }
 

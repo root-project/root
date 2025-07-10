@@ -69,7 +69,7 @@ public:
    RNTupleAttributeSetWriter &operator=(RNTupleAttributeSetWriter &&) = default;
    ~RNTupleAttributeSetWriter() = default;
 
-   const std::string &GetName() const;
+   const ROOT::RNTupleDescriptor &GetDescriptor() const;
 
    RNTupleAttributeEntry BeginRange();
    void CommitRange(RNTupleAttributeEntry entry);
@@ -139,7 +139,7 @@ public:
    RNTupleAttributeSetReader &operator=(RNTupleAttributeSetReader &&) = default;
    ~RNTupleAttributeSetReader() = default;
 
-   const std::string &GetName() const;
+   const ROOT::RNTupleDescriptor &GetDescriptor() const;
 
    /// Returns all the attributes whose range fully contains `[startEntry, endEntry)`
    std::vector<RNTupleAttributeEntry> GetAttributesContainingRange(NTupleSize_t startEntry, NTupleSize_t endEntry);

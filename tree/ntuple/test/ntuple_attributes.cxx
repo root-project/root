@@ -16,6 +16,7 @@ TEST(RNTupleAttributes, AttributeBasics)
 
       // Step 1: create model for the attribute set
       auto attrModel = RNTupleModel::Create();
+      attrModel->SetDescription("My description");
       auto pAttr = attrModel->MakeField<std::string>("myAttr");
 
       // Step 2: create the attribute set from the writer
@@ -63,6 +64,7 @@ TEST(RNTupleAttributes, AttributeBasics)
          }
          EXPECT_EQ(nAttrs, 1);
       }
+      EXPECT_EQ(attrSet->GetDescriptor().GetDescription(), "My description");
    }
 }
 
@@ -194,8 +196,6 @@ TEST(RNTupleAttributes, InterleavingRanges)
       int expected = (i / 5) + (i / 11);
       EXPECT_EQ(totVal, expected);
    }
-
-   fileGuard.PreserveFile();
 }
 
 TEST(RNTupleAttributes, MultipleCommitRange)
