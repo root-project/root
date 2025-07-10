@@ -3811,13 +3811,16 @@ TEST(RNTupleMerger, MergeAttributes)
       ASSERT_TRUE(bool(attrSet));
 
       auto attrs = attrSet->GetAttributes();
+      auto attrEntry = attrSet->CreateAttrEntry();
       ASSERT_EQ(attrs.size(), 2);
-      EXPECT_EQ(attrs[0].GetRange().Start(), 0);
-      EXPECT_EQ(attrs[0].GetRange().End(), 10);
-      EXPECT_EQ(attrs[1].GetRange().Start(), 10);
-      EXPECT_EQ(attrs[1].GetRange().End(), 25);
-      EXPECT_EQ(*attrs[0]->GetPtr<std::string>("string"), "This is file 0");
-      EXPECT_EQ(*attrs[1]->GetPtr<std::string>("string"), "This is file 1");
+      attrSet->LoadAttrEntry(0, attrEntry);
+      EXPECT_EQ(attrEntry.GetRange().Start(), 0);
+      EXPECT_EQ(attrEntry.GetRange().End(), 10);
+      EXPECT_EQ(*attrEntry->GetPtr<std::string>("string"), "This is file 0");
+      attrSet->LoadAttrEntry(1, attrEntry);
+      EXPECT_EQ(attrEntry.GetRange().Start(), 10);
+      EXPECT_EQ(attrEntry.GetRange().End(), 25);
+      EXPECT_EQ(*attrEntry->GetPtr<std::string>("string"), "This is file 1");
    }
 }
 
@@ -3967,17 +3970,22 @@ TEST_P(RNTupleMergerAttributesEmpty, MergeEmptyAttribute)
       ASSERT_TRUE(bool(attrSet));
 
       auto attrs = attrSet->GetAttributes();
+      auto attrEntry = attrSet->CreateAttrEntry();
       ASSERT_EQ(attrs.size(), 3);
       ROOT::NTupleSize_t expectedStart = 0;
       for (int fileNo = 0; fileNo < 3; ++fileNo) {
          const ROOT::NTupleSize_t expectedLen = 10 * (fileNo != emptyFileNo);
-         EXPECT_EQ(attrs[fileNo].GetRange().Start(), expectedStart);
-         EXPECT_EQ(attrs[fileNo].GetRange().Length(), expectedLen);
+         attrSet->LoadAttrEntry(fileNo, attrEntry);
+         EXPECT_EQ(attrEntry.GetRange().Start(), expectedStart);
+         EXPECT_EQ(attrEntry.GetRange().Length(), expectedLen);
          expectedStart += expectedLen;
       }
-      EXPECT_EQ(*attrs[0]->GetPtr<std::string>("string"), "This is file 0");
-      EXPECT_EQ(*attrs[1]->GetPtr<std::string>("string"), "This is file 1");
-      EXPECT_EQ(*attrs[2]->GetPtr<std::string>("string"), "This is file 2");
+      attrSet->LoadAttrEntry(0, attrEntry);
+      EXPECT_EQ(*attrEntry->GetPtr<std::string>("string"), "This is file 0");
+      attrSet->LoadAttrEntry(1, attrEntry);
+      EXPECT_EQ(*attrEntry->GetPtr<std::string>("string"), "This is file 1");
+      attrSet->LoadAttrEntry(2, attrEntry);
+      EXPECT_EQ(*attrEntry->GetPtr<std::string>("string"), "This is file 2");
    }
 }
 
