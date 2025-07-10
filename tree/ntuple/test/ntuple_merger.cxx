@@ -12,10 +12,16 @@
 
 using ROOT::TestSupport::CheckDiagsRAII;
 
-namespace {
+static std::size_t Count(ROOT::Experimental::RNTupleAttrEntryIterable iterable)
+{
+   std::size_t n = 0;
+   for (auto _ : iterable)
+      ++n;
+   return n;
+}
 
 // Reads an integer from a little-endian 4 byte buffer
-std::int32_t ReadRawInt(const void *ptr)
+static std::int32_t ReadRawInt(const void *ptr)
 {
    std::int32_t val = *reinterpret_cast<const std::int32_t *>(ptr);
 #ifndef R__BYTESWAP
@@ -26,8 +32,6 @@ std::int32_t ReadRawInt(const void *ptr)
    return val;
 #endif
 }
-
-} // anonymous namespace
 
 TEST(RPageStorage, ReadSealedPages)
 {
@@ -3812,7 +3816,7 @@ TEST(RNTupleMerger, MergeAttributes)
 
       auto attrs = attrSet->GetAttributes();
       auto attrEntry = attrSet->CreateAttrEntry();
-      ASSERT_EQ(attrs.size(), 2);
+      ASSERT_EQ(Count(attrs), 2);
       attrSet->LoadAttrEntry(0, attrEntry);
       EXPECT_EQ(attrEntry.GetRange().Start(), 0);
       EXPECT_EQ(attrEntry.GetRange().End(), 10);
@@ -3971,7 +3975,7 @@ TEST_P(RNTupleMergerAttributesEmpty, MergeEmptyAttribute)
 
       auto attrs = attrSet->GetAttributes();
       auto attrEntry = attrSet->CreateAttrEntry();
-      ASSERT_EQ(attrs.size(), 3);
+      ASSERT_EQ(Count(attrs), 3);
       ROOT::NTupleSize_t expectedStart = 0;
       for (int fileNo = 0; fileNo < 3; ++fileNo) {
          const ROOT::NTupleSize_t expectedLen = 10 * (fileNo != emptyFileNo);
