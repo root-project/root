@@ -123,14 +123,9 @@ class RNTupleAttributeSetReader final {
    std::vector<std::pair<RNTupleAttributeRange, NTupleSize_t>> fEntryRanges;
    std::unique_ptr<RNTupleReader> fReader;
 
-   /// Creates a RNTupleAttributeSetReader associated to the RNTupleReader owning `mainFillContext` and writing
-   /// in `dir`. `model` is the schema of the AttributeSet.
-   static ROOT::RResult<RNTupleAttributeSetReader> Create(std::string_view name, std::unique_ptr<RNTupleModel> model,
-                                                          const RNTupleFillContext *mainFillContext, TDirectory &dir);
-
    static bool EntryRangesAreSorted(const decltype(fEntryRanges) &ranges);
 
-   RNTupleAttributeSetReader(std::unique_ptr<RNTupleReader> reader);
+   explicit RNTupleAttributeSetReader(std::unique_ptr<RNTupleReader> reader);
 
    // Used for GetAttributesContainingRange (with `rangeIsContained == false`) and GetAttributesInRange (with
    // `rangeIsContained == true`).

@@ -564,3 +564,46 @@ TEST(RNTupleAttributes, EmptyAttrRange)
       EXPECT_EQ(attrSet->GetAttributesContainingRange(0, reader->GetNEntries()).size(), 0);
    }
 }
+
+TEST(RNTupleAttributes, AccessAttrSetReaderAfterClosingMainReader)
+{
+   FileRaii fileGuard("test_ntuple_attrs_readerafterclosing.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto pInt = model->MakeField<int>("int");
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file);
+
+      auto attrModel = RNTupleModel::Create();
+      auto pAttr = attrModel->MakeField<std::string>("myAttr");
+      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
+      auto attrEntry = attrSet->BeginRange();
+
+      auto pMyAttr = attrEntry->GetPtr<std::string>("myAttr");
+      *pMyAttr = "This is an attribute";
+      for (int i = 0; i < 10; ++i) {
+         *pInt = i;
+         writer->Fill();
+      }
+      attrSet->CommitRange(std::move(attrEntry));
+   }
+
+   {
+      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+      // Fetch an attribute set
+      auto attrSet = reader->OpenAttributeSet("MyAttrSet");
+
+      const auto nEntries = reader->GetNEntries();
+      
+      // Close the main reader
+      reader.reset();
+      
+      // Access the attribute set reader
+      EXPECT_EQ(attrSet->GetAttributes().size(), 1);
+      EXPECT_EQ(attrSet->GetAttributes(0).size(), 1);
+      EXPECT_EQ(attrSet->GetAttributesInRange(0, nEntries).size(), 1);
+      EXPECT_EQ(attrSet->GetAttributesContainingRange(0, nEntries).size(), 1);
+   }
+}
