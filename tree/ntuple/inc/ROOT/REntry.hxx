@@ -39,8 +39,8 @@ class RNTupleProcessor;
 class RNTupleSingleProcessor;
 class RNTupleChainProcessor;
 class RNTupleJoinProcessor;
-class RNTupleAttributeSetWriter;
-class RNTupleAttributeEntry;
+class RNTupleAttrSetWriter;
+class RNTupleAttrEntry;
 } // namespace Experimental
 
 // clang-format off
@@ -61,8 +61,8 @@ class REntry {
    friend class Experimental::RNTupleSingleProcessor;
    friend class Experimental::RNTupleChainProcessor;
    friend class Experimental::RNTupleJoinProcessor;
-   friend class Experimental::RNTupleAttributeSetWriter;
-   friend class Experimental::RNTupleAttributeEntry;
+   friend class Experimental::RNTupleAttrSetWriter;
+   friend class Experimental::RNTupleAttrEntry;
 
 private:
    /// The entry must be linked to a specific model, identified by a model ID

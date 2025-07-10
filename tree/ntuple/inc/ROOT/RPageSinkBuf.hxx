@@ -147,7 +147,7 @@ public:
    void CommitClusterGroup() final;
    void CommitDatasetImpl() final;
    void CommitAttributeSet(RPageSink &) final;
-   ROOT::Experimental::Internal::RNTupleAttributeSetDescriptor CommitAttributeSetInternal() final;
+   ROOT::Experimental::Internal::RNTupleAttrSetDescriptor CommitAttributeSetInternal() final;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
 

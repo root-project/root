@@ -968,7 +968,7 @@ ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescr
 
    // Clone attribute sets
    // for (const auto &[name, locator] : srcDescriptor.GetAttributeSets()) {
-   //    fDescriptorBuilder.AddAttributeSet(Experimental::Internal::RNTupleAttributeSetDescriptor{name, locator});
+   //    fDescriptorBuilder.AddAttributeSet(Experimental::Internal::RNTupleAttrSetDescriptor{name, locator});
    // }
 
    // Create column/page ranges

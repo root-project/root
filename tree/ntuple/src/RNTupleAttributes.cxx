@@ -35,17 +35,17 @@ static ROOT::RResult<void> ValidateAttributeModel(const ROOT::RNTupleModel &mode
    return ROOT::RResult<void>::Success();
 }
 
-bool ROOT::Experimental::IsReservedRNTupleAttributeSetName(std::string_view name)
+bool ROOT::Experimental::IsReservedRNTupleAttrSetName(std::string_view name)
 {
    return name == "ROOT" || (name.length() > 4 && strncmp(name.data(), "ROOT.", 5) == 0);
 }
 
 //
-//  RNTupleAttributeSetWriter
+//  RNTupleAttrSetWriter
 //
-std::unique_ptr<ROOT::Experimental::RNTupleAttributeSetWriter>
-ROOT::Experimental::RNTupleAttributeSetWriter::Create(std::string_view name, std::unique_ptr<RNTupleModel> model,
-                                                      const RNTupleFillContext *mainFillContext, TDirectory &dir)
+std::unique_ptr<ROOT::Experimental::RNTupleAttrSetWriter>
+ROOT::Experimental::RNTupleAttrSetWriter::Create(std::string_view name, std::unique_ptr<RNTupleModel> model,
+                                                 const RNTupleFillContext *mainFillContext, TDirectory &dir)
 
 {
    ValidateAttributeModel(*model).ThrowOnError();
@@ -78,38 +78,37 @@ ROOT::Experimental::RNTupleAttributeSetWriter::Create(std::string_view name, std
    opts.SetCompression(mainFillContext->fSink->GetWriteOptions().GetCompression());
    auto sink = std::make_unique<ROOT::Internal::RPageSinkFile>(name, dir, opts);
    RNTupleFillContext fillContext{std::move(newModel), std::move(sink)};
-   return std::unique_ptr<RNTupleAttributeSetWriter>(
-      new RNTupleAttributeSetWriter(mainFillContext, std::move(fillContext)));
+   return std::unique_ptr<RNTupleAttrSetWriter>(new RNTupleAttrSetWriter(mainFillContext, std::move(fillContext)));
 }
 
-ROOT::Experimental::RNTupleAttributeSetWriter::RNTupleAttributeSetWriter(const RNTupleFillContext *mainFillContext,
-                                                                         RNTupleFillContext fillContext)
+ROOT::Experimental::RNTupleAttrSetWriter::RNTupleAttrSetWriter(const RNTupleFillContext *mainFillContext,
+                                                               RNTupleFillContext fillContext)
    : fFillContext(std::move(fillContext)), fMainFillContext(mainFillContext)
 {
 }
 
-const ROOT::RNTupleDescriptor &ROOT::Experimental::RNTupleAttributeSetWriter::GetDescriptor() const
+const ROOT::RNTupleDescriptor &ROOT::Experimental::RNTupleAttrSetWriter::GetDescriptor() const
 {
    return fFillContext.fSink->GetDescriptor();
 }
 
-ROOT::Experimental::RNTupleAttributeEntry ROOT::Experimental::RNTupleAttributeSetWriter::BeginRange()
+ROOT::Experimental::RNTupleAttrEntry ROOT::Experimental::RNTupleAttrSetWriter::BeginRange()
 {
    const auto start = fMainFillContext->GetNEntries();
    auto &model = const_cast<RNTupleModel &>(fFillContext.GetModel());
-   auto [metaEntry, scopedEntry] = RNTupleAttributeEntry::CreateInternalEntries(model);
-   auto entry = RNTupleAttributeEntry{std::move(metaEntry), std::move(scopedEntry), start};
+   auto [metaEntry, scopedEntry] = RNTupleAttrEntry::CreateInternalEntries(model);
+   auto entry = RNTupleAttrEntry{std::move(metaEntry), std::move(scopedEntry), start};
    return entry;
 }
 
-void ROOT::Experimental::RNTupleAttributeSetWriter::CommitRange(ROOT::Experimental::RNTupleAttributeEntry entry)
+void ROOT::Experimental::RNTupleAttrSetWriter::CommitRange(ROOT::Experimental::RNTupleAttrEntry entry)
 {
    if (!entry)
       throw ROOT::RException(R__FAIL("Passed an invalid Attribute Entry to CommitRange()"));
 
    // Get current entry number from the writer and use it as end of entry range
    const auto end = fMainFillContext->GetNEntries();
-   entry.fRange = RNTupleAttributeRange::FromStartEnd(entry.fRange.Start(), end);
+   entry.fRange = RNTupleAttrRange::FromStartEnd(entry.fRange.Start(), end);
    auto pRangeStart = entry.fMetaEntry->GetPtr<ROOT::NTupleSize_t>(kRangeStartName);
    auto pRangeLen = entry.fMetaEntry->GetPtr<ROOT::NTupleSize_t>(kRangeLenName);
    R__ASSERT(pRangeStart);
@@ -119,7 +118,7 @@ void ROOT::Experimental::RNTupleAttributeSetWriter::CommitRange(ROOT::Experiment
    fFillContext.FillImpl(entry);
 }
 
-void ROOT::Experimental::RNTupleAttributeSetWriter::Commit()
+void ROOT::Experimental::RNTupleAttrSetWriter::Commit()
 {
    fFillContext.FlushCluster();
    fFillContext.fSink->CommitClusterGroup();
@@ -127,9 +126,9 @@ void ROOT::Experimental::RNTupleAttributeSetWriter::Commit()
 }
 
 //
-//  RNTupleAttributeSetReader
+//  RNTupleAttrSetReader
 //
-ROOT::Experimental::RNTupleAttributeSetReader::RNTupleAttributeSetReader(std::unique_ptr<RNTupleReader> reader)
+ROOT::Experimental::RNTupleAttrSetReader::RNTupleAttrSetReader(std::unique_ptr<RNTupleReader> reader)
    : fReader(std::move(reader))
 {
    // Collect all entry ranges
@@ -139,7 +138,7 @@ ROOT::Experimental::RNTupleAttributeSetReader::RNTupleAttributeSetReader(std::un
    for (auto i : fReader->GetEntryRange()) {
       auto start = entryRangeStartView(i);
       auto len = entryRangeLenView(i);
-      fEntryRanges.push_back({RNTupleAttributeRange::FromStartLength(start, len), i});
+      fEntryRanges.push_back({RNTupleAttrRange::FromStartLength(start, len), i});
    }
 
    std::sort(fEntryRanges.begin(), fEntryRanges.end(),
@@ -148,14 +147,14 @@ ROOT::Experimental::RNTupleAttributeSetReader::RNTupleAttributeSetReader(std::un
    R__LOG_INFO(ROOT::Internal::NTupleLog()) << "Loaded " << fEntryRanges.size() << " attribute entries.";
 }
 
-const ROOT::RNTupleDescriptor &ROOT::Experimental::RNTupleAttributeSetReader::GetDescriptor() const
+const ROOT::RNTupleDescriptor &ROOT::Experimental::RNTupleAttrSetReader::GetDescriptor() const
 {
    return fReader->GetDescriptor();
 }
 
 // Entry ranges should be sorted with respect to Start by construction.
 // TODO: make sure merging attributes preserves the sorting.
-bool ROOT::Experimental::RNTupleAttributeSetReader::EntryRangesAreSorted(const decltype(fEntryRanges) &ranges)
+bool ROOT::Experimental::RNTupleAttrSetReader::EntryRangesAreSorted(const decltype(fEntryRanges) &ranges)
 {
    ROOT::NTupleSize_t prevStart = 0;
    for (const auto &[range, _] : ranges) {
@@ -166,11 +165,11 @@ bool ROOT::Experimental::RNTupleAttributeSetReader::EntryRangesAreSorted(const d
    return true;
 };
 
-std::vector<ROOT::Experimental::RNTupleAttributeEntry>
-ROOT::Experimental::RNTupleAttributeSetReader::GetAttributesRangeInternal(NTupleSize_t startEntry,
-                                                                          NTupleSize_t endEntry, bool rangeIsContained)
+std::vector<ROOT::Experimental::RNTupleAttrEntry>
+ROOT::Experimental::RNTupleAttrSetReader::GetAttributesRangeInternal(NTupleSize_t startEntry, NTupleSize_t endEntry,
+                                                                     bool rangeIsContained)
 {
-   std::vector<RNTupleAttributeEntry> result;
+   std::vector<RNTupleAttrEntry> result;
 
    if (endEntry < startEntry) {
       R__LOG_WARNING(ROOT::Internal::NTupleLog())
@@ -202,8 +201,8 @@ ROOT::Experimental::RNTupleAttributeSetReader::GetAttributesRangeInternal(NTuple
          break; // We can break here because fEntryRanges is sorted.
 
       if (FullyContained(startEntry, endEntry, first, last + 1)) {
-         auto scopedEntry = RNTupleAttributeEntry::CreateScopedEntry(model);
-         auto attrEntry = RNTupleAttributeEntry(nullptr, std::move(scopedEntry), range);
+         auto scopedEntry = RNTupleAttrEntry::CreateScopedEntry(model);
+         auto attrEntry = RNTupleAttrEntry(nullptr, std::move(scopedEntry), range);
          fReader->LoadEntry(index, *attrEntry.fScopedEntry);
          result.push_back(std::move(attrEntry));
       }
@@ -212,34 +211,33 @@ ROOT::Experimental::RNTupleAttributeSetReader::GetAttributesRangeInternal(NTuple
    return result;
 }
 
-std::vector<ROOT::Experimental::RNTupleAttributeEntry>
-ROOT::Experimental::RNTupleAttributeSetReader::GetAttributesContainingRange(NTupleSize_t startEntry,
-                                                                            NTupleSize_t endEntry)
+std::vector<ROOT::Experimental::RNTupleAttrEntry>
+ROOT::Experimental::RNTupleAttrSetReader::GetAttributesContainingRange(NTupleSize_t startEntry, NTupleSize_t endEntry)
 {
    return GetAttributesRangeInternal(startEntry, endEntry, false);
 }
 
-std::vector<ROOT::Experimental::RNTupleAttributeEntry>
-ROOT::Experimental::RNTupleAttributeSetReader::GetAttributesInRange(NTupleSize_t startEntry, NTupleSize_t endEntry)
+std::vector<ROOT::Experimental::RNTupleAttrEntry>
+ROOT::Experimental::RNTupleAttrSetReader::GetAttributesInRange(NTupleSize_t startEntry, NTupleSize_t endEntry)
 {
    return GetAttributesRangeInternal(startEntry, endEntry, true);
 }
 
-std::vector<ROOT::Experimental::RNTupleAttributeEntry>
-ROOT::Experimental::RNTupleAttributeSetReader::GetAttributes(NTupleSize_t entryIndex)
+std::vector<ROOT::Experimental::RNTupleAttrEntry>
+ROOT::Experimental::RNTupleAttrSetReader::GetAttributes(NTupleSize_t entryIndex)
 {
    return GetAttributesContainingRange(entryIndex, entryIndex + 1);
 }
 
-std::vector<ROOT::Experimental::RNTupleAttributeEntry> ROOT::Experimental::RNTupleAttributeSetReader::GetAttributes()
+std::vector<ROOT::Experimental::RNTupleAttrEntry> ROOT::Experimental::RNTupleAttrSetReader::GetAttributes()
 {
-   std::vector<RNTupleAttributeEntry> result;
+   std::vector<RNTupleAttrEntry> result;
    result.reserve(fEntryRanges.size());
 
    auto &model = const_cast<RNTupleModel &>(fReader->GetModel());
    for (const auto &[range, index] : fEntryRanges) {
-      auto scopedEntry = RNTupleAttributeEntry::CreateScopedEntry(model);
-      auto attrEntry = RNTupleAttributeEntry(nullptr, std::move(scopedEntry), range);
+      auto scopedEntry = RNTupleAttrEntry::CreateScopedEntry(model);
+      auto attrEntry = RNTupleAttrEntry(nullptr, std::move(scopedEntry), range);
       fReader->LoadEntry(index, *attrEntry.fScopedEntry);
       result.push_back(std::move(attrEntry));
    }
