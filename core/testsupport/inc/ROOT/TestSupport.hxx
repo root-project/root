@@ -76,9 +76,9 @@ public:
    }
 
    /// Construct from ROOT's `kWarning, kError, ...` and strings specifying location and message.
-   CheckDiagsRAII(int severity, std::string inRoutine, std::string E) : CheckDiagsRAII()
+   CheckDiagsRAII(int severity, std::string inRoutine, std::string E, bool matchFullMessage = true) : CheckDiagsRAII()
    {
-      requiredDiag(severity, inRoutine, E);
+      requiredDiag(severity, inRoutine, E, matchFullMessage);
    }
 
    ~CheckDiagsRAII();
@@ -155,25 +155,11 @@ private:
 } // namespace TestSupport
 } // namespace ROOT
 
-#define ROOT_EXPECT_ERROR(expression, where, expected_diag) \
-   {                                                        \
-      using namespace ROOT::TestSupport;                    \
-      CheckDiagsRAII EE(kError, where, expected_diag);      \
-      expression;                                           \
-   }
-
-#define ROOT_EXPECT_WARNING(expression, where, expected_diag) \
-   {                                                          \
-      using namespace ROOT::TestSupport;                      \
-      CheckDiagsRAII EE(kWarning, where, expected_diag);      \
-      expression;                                             \
-   }
-
-#define ROOT_EXPECT_INFO(expression, where, expected_diag) \
-   {                                                       \
-      using namespace ROOT::TestSupport;                   \
-      CheckDiagsRAII EE(kInfo, where, expected_diag);      \
-      expression;                                          \
+#define ROOT_EXPECT_DIAG(diag_class, expression, where, expected_diag, match_full) \
+   {                                                                               \
+      using namespace ROOT::TestSupport;                                           \
+      CheckDiagsRAII EE(diag_class, where, expected_diag, match_full);             \
+      expression;                                                                  \
    }
 
 #define ROOT_EXPECT_NODIAG(expression)   \
@@ -183,11 +169,28 @@ private:
       expression;                        \
    }
 
+#define ROOT_EXPECT_ERROR(expression, where, expected_diag) \
+   ROOT_EXPECT_DIAG(kError, expression, where, expected_diag, true)
+
+#define ROOT_EXPECT_ERROR_PARTIAL(expression, where, expected_diag) \
+   ROOT_EXPECT_DIAG(kError, expression, where, expected_diag, false)
+
+#define ROOT_EXPECT_WARNING(expression, where, expected_diag) \
+   ROOT_EXPECT_DIAG(kWarning, expression, where, expected_diag, true)
+
+#define ROOT_EXPECT_WARNING_PARTIAL(expression, where, expected_diag) \
+   ROOT_EXPECT_DIAG(kWarning, expression, where, expected_diag, false)
+
+#define ROOT_EXPECT_INFO(expression, where, expected_diag) \
+   ROOT_EXPECT_DIAG(kInfo, expression, where, expected_diag, true)
+
+#define ROOT_EXPECT_INFO_PARTIAL(expression, where, expected_diag) \
+   ROOT_EXPECT_DIAG(kInfo, expression, where, expected_diag, false)
+
 #define ROOT_EXPECT_SYSERROR(expression, where, expected_diag) \
-   {                                                           \
-      using namespace ROOT::TestSupport;                       \
-      CheckDiagsRAII EE(kSysError, where, expected_diag);      \
-      expression;                                              \
-   }
+   ROOT_EXPECT_DIAG(kSysError, expression, where, expected_diag, true)
+
+#define ROOT_EXPECT_SYSERROR_PARTIAL(expression, where, expected_diag) \
+   ROOT_EXPECT_DIAG(kSysError, expression, where, expected_diag, false)
 
 #endif // ROOT_UNITTESTSUPPORT_H
