@@ -102,7 +102,7 @@ It is strongly recommended to persistify those as objects rather than lists of l
    - `F` : a 32 bit floating point (`Float_t`)
    - `f` : a 24 bit (or 32) floating point with truncated mantissa (`Float16_t`, stored as 3 bytes by default or as fixed-point arithmetic 4 bytes Int_t if range is customized; occupies 4 bytes in memory): By default, in disk, only 21 bits are used: 1 for the sign, 8 for the exponent and 12 for the mantissa. Can be customized with suffix `[min,max(,nbits)] `where `nbits` is for the mantissa.
    - `D` : a 64 bit floating point (`Double_t`)
-   - `d` : a 32 (or 24) bit floating point with truncated mantissa (`Double32_t`, stored as a 4 bytes Float_t by default or as 3 bytes if range is customized; occupies 8 bytes in memory): By default, in disk, 1 bit is used for the sign, 7 for the exponent and 24 for the mantissa. Can be customized to 3 bytes (24 bits) with suffix `[min,max(,nbits)]` where `nbits` is for the mantissa.
+   - `d` : a 32 (or 24) bit floating point with truncated mantissa (`Double32_t`, stored as a 4 bytes Float_t by default or as 3 bytes if range is customized; occupies 8 bytes in memory): By default, in disk, 1 bit is used for the sign, 8 for the exponent and 23 for the mantissa. Can be customized to 3 bytes (24 bits) with suffix `[min,max(,nbits)]` where `nbits` is for the mantissa.
    - `L` : a 64 bit signed integer (`Long64_t`)
    - `l` : a 64 bit unsigned integer (`ULong64_t`)
    - `G` : a long signed integer, stored as 64 bit (`Long_t`)
