@@ -14,11 +14,15 @@
 #ifndef ROOT_RValue
 #define ROOT_RValue
 
+#include <ROOT/RError.hxx>
+#include <ROOT/RField.hxx> // for RField<T>::TypeName()
 #include <ROOT/RFieldBase.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
 #include <cstddef>
 #include <memory>
+#include <string>
+#include <type_traits>
 
 namespace ROOT {
 
@@ -33,6 +37,17 @@ private:
    /// Set by Bind() or by RFieldBase::CreateValue(), RFieldBase::SplitValue() or RFieldBase::BindValue()
    std::shared_ptr<void> fObjPtr;
    RValue(RFieldBase *field, std::shared_ptr<void> objPtr) : fField(field), fObjPtr(objPtr) {}
+
+   template <typename T>
+   void EnsureMatchingType() const
+   {
+      if constexpr (!std::is_void_v<T>) {
+         if (fField->GetTypeName() != ROOT::RField<T>::TypeName()) {
+            throw RException(
+               R__FAIL("type mismatch: " + fField->GetTypeName() + " vs. " + ROOT::RField<T>::TypeName()));
+         }
+      }
+   }
 
 public:
    RValue(const RValue &) = default;
@@ -52,12 +67,14 @@ public:
    template <typename T>
    std::shared_ptr<T> GetPtr() const
    {
+      EnsureMatchingType<T>();
       return std::static_pointer_cast<T>(fObjPtr);
    }
 
    template <typename T>
    const T &GetRef() const
    {
+      EnsureMatchingType<T>();
       return *static_cast<T *>(fObjPtr.get());
    }
 
