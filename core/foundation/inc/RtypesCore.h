@@ -57,7 +57,7 @@ typedef int            Int_t;       ///< Signed integer 4 bytes (int) \deprecate
 typedef unsigned int   UInt_t;      ///< Unsigned integer 4 bytes (unsigned int) \deprecated Consider replacing with `std::uint32_t`
 #endif
 #ifdef R__B64    // Note: Long_t and ULong_t are currently not portable types
-typedef int            Seek_t;      ///< File pointer (int). Size depends on architecture \deprecated Consider replacing with `int`.
+typedef int            Seek_t;      ///< File pointer (int).
 typedef long           Long_t;      ///< Signed long integer 8 bytes (long). Size depends on architecture \deprecated Consider replacing with `long`
 typedef unsigned long  ULong_t;     ///< Unsigned long integer 8 bytes (unsigned long). Size depends on architecture \deprecated Consider replacing with `unsigned long`
 #else
