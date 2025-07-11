@@ -61,7 +61,7 @@ typedef int            Seek_t;      ///< File pointer (int).
 typedef long           Long_t;      ///< Signed long integer 8 bytes (long). Size depends on architecture \deprecated Consider replacing with `long`
 typedef unsigned long  ULong_t;     ///< Unsigned long integer 8 bytes (unsigned long). Size depends on architecture \deprecated Consider replacing with `unsigned long`
 #else
-typedef int            Seek_t;      ///< File pointer (int). Size depends on architecture \deprecated Consider replacing with `int`.
+typedef int            Seek_t;      ///< File pointer (int). 
 typedef long           Long_t;      ///< Signed long integer 4 bytes (long). Size depends on architecture \deprecated Consider replacing with `long`
 typedef unsigned long  ULong_t;     ///< Unsigned long integer 4 bytes (unsigned long). Size depends on architecture \deprecated Consider replacing with `unsigned long`
 #endif
