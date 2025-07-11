@@ -32,13 +32,22 @@ class TVirtualStreamerInfo;
 
 namespace ROOT {
 
+class RNTupleWriteOptions;
+class RNTupleReader;
+
+namespace Internal {
+class RNTupleFileWriter;
+class RPageSource;
+} // namespace Internal
+
+namespace Experimental::Internal {
+class RNTupleMerger;
+TDirectory *GetUnderlyingDirectory(ROOT::Internal::RNTupleFileWriter &writer);
+} // namespace Experimental::Internal
+
 namespace Internal {
 class RRawFile;
-}
 
-class RNTupleWriteOptions;
-
-namespace Internal {
 /// Holds status information of an open ROOT file during writing
 struct RTFileControlBlock;
 
@@ -53,6 +62,9 @@ RNTuple data keys.
 */
 // clang-format on
 class RMiniFileReader {
+   friend ROOT::Internal::RPageSource;
+   friend ROOT::Experimental::Internal::RNTupleMerger;
+
 private:
    /// The raw file used to read byte ranges
    ROOT::Internal::RRawFile *fRawFile = nullptr;
@@ -69,7 +81,8 @@ private:
    /// or an ntuple name preceded by a directory (`myNtuple` or `foo/bar/myNtuple` or `/foo/bar/myNtuple`)
    RResult<RNTuple> GetNTupleProper(std::string_view ntuplePath);
    /// Loads an RNTuple anchor from a TFile at the given file offset (unzipping it if necessary).
-   RResult<RNTuple> GetNTupleProperAtOffset(std::uint64_t keyOffset);
+   RResult<RNTuple>
+   GetNTupleProperAtOffset(std::uint64_t payloadOffset, std::uint64_t compSize, std::uint64_t uncompLen);
 
    /// Searches for a key with the given name and type in the key index of the directory starting at offsetDir.
    /// The offset points to the start of the TDirectory DATA section, without the key and without the name and title
@@ -106,6 +119,9 @@ A stand-alone version of RNTuple can remove the TFile based writer.
 */
 // clang-format on
 class RNTupleFileWriter {
+   friend TDirectory *ROOT::Experimental::Internal::GetUnderlyingDirectory(ROOT::Internal::RNTupleFileWriter &writer);
+   friend class ROOT::Experimental::Internal::RNTupleMerger;
+
 public:
    /// The key length of a blob. It is always a big key (version > 1000) with class name RBlob.
    static constexpr std::size_t kBlobKeyLen = 42;
@@ -251,7 +267,7 @@ public:
    void WriteIntoReservedBlob(const void *buffer, size_t nbytes, std::int64_t offset);
    /// Ensures that the streamer info records passed as argument are written to the file
    void UpdateStreamerInfos(const ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t &streamerInfos);
-   /// Writes the RNTuple key to the file so that the header and footer keys can be found
+   /// Writes the RNTuple key to the file so that the header and footer keys can be found.
    void Commit(int compression = RCompressionSetting::EDefaults::kUseGeneralPurpose);
 };
 
