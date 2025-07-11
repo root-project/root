@@ -187,7 +187,7 @@ During its lifetime, a field undergoes the following possible state transitions:
 
 The RField class hierarchy is fixed and not meant to be extended by user classes.
 
-### RField::RValue
+### RFieldBase::RValue
 The `RValue` class makes the connection between an object in memory and the corresponding field used for I/O.
 It contains a shared pointer of the object, i.e. RNTuple and the application share ownership of objects.
 The object in an RValue can either be created by an RNTuple field (cf. `RField<T>::CreateValue()` method)
