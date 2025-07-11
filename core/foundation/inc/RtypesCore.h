@@ -81,7 +81,7 @@ typedef long long          Long64_t; ///< Portable signed long integer 8 bytes \
 typedef unsigned long long ULong64_t;///< Portable unsigned long integer 8 bytes \deprecated Consider replacing with `unsigned long long` or `std::uint64_t`.
 #ifdef _WIN64
 typedef long long      Longptr_t;     ///< Integer large enough to hold a pointer \deprecated Consider replacing with `long long` on Windows.
-typedef unsigned long long ULongptr_t;///< Unsigned integer large enough to hold a pointer \deprecated Consider replacing with `unsigned long long` on Windows.
+typedef unsigned long long ULongptr_t;///< Unsigned integer large enough to hold a pointer \deprecated Consider replacing with `size_t`.
 #else
 typedef long           Longptr_t;   ///< Integer large enough to hold a pointer \deprecated Consider replacing with `long` on UNIX.
 typedef unsigned long  ULongptr_t;  ///< Unsigned integer large enough to hold a pointer \deprecated Consider replacing with `unsigned long` on UNIX.
