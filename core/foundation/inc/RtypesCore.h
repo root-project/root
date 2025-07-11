@@ -29,6 +29,7 @@
  * \warning `Long_t` has not the same width across platforms, so it should be avoided if portability is envisioned.
  * Also derived classes such as `TArrayL`. Use instead `Long64_t` or `TArrayL64`, or `std::int64_t`.
  * Likewise with `ULong_t`.
+ * \warning In some architectures, `std::int64_t` may have a different size than in others.
  */
 
 #include <ROOT/RConfig.hxx>
