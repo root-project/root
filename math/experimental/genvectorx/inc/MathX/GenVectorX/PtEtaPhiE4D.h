@@ -49,9 +49,9 @@ namespace ROOT_MATH_ARCH {
     The metric used is (-,-,-,+).
     Phi is restricted to be in the range [-PI,PI)
 
-    @ingroup GenVector
+    @ingroup GenVectorX
 
-    @sa Overview of the @ref GenVector "physics vector library"
+    @see GenVectorX
 */
 
 template <class ScalarType>

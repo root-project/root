@@ -35,9 +35,9 @@ namespace ROOT_MATH_ARCH {
     Class describing a 2D cartesian coordinate system
     (x, y coordinates)
 
-    @ingroup GenVector
+    @ingroup GenVectorX
 
-    @sa Overview of the @ref GenVector "physics vector library"
+    @see GenVectorX
 */
 
 template <class T = double>

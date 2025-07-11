@@ -29,9 +29,9 @@ namespace ROOT_MATH_ARCH {
    DefaultCoordinateSystemTag
    Default tag for identifying any coordinate system
 
-   @ingroup GenVector
+   @ingroup GenVectorX
 
-   @sa Overview of the @ref GenVector "physics vector library"
+   @see GenVectorX
 */
 
 class DefaultCoordinateSystemTag {};
@@ -40,9 +40,9 @@ class DefaultCoordinateSystemTag {};
 /**
    Tag for identifying vectors based on a global coordinate system
 
-   @ingroup GenVector
+   @ingroup GenVectorX
 
-   @sa Overview of the @ref GenVector "physics vector library"
+   @see GenVectorX
 */
 class GlobalCoordinateSystemTag {};
 
@@ -50,9 +50,9 @@ class GlobalCoordinateSystemTag {};
 /**
    Tag for identifying vectors based on a local coordinate system
 
-   @ingroup GenVector
+   @ingroup GenVectorX
 
-   @sa Overview of the @ref GenVector "physics vector library"
+   @see GenVectorX
 */
 class LocalCoordinateSystemTag {};
 

@@ -46,9 +46,9 @@ namespace Impl {
     performs a noop, i.e. it returns the same vector. A translation can be applied only to the Point objects
     (PositionVector3D classes).
 
-    @ingroup GenVector
+    @ingroup GenVectorX
 
-    @sa Overview of the @ref GenVector "physics vector library"
+    @see GenVectorX
 
 */
 

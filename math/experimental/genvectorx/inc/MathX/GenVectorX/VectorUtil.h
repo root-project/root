@@ -37,9 +37,9 @@ namespace ROOT_MATH_ARCH {
  The functions returning a scalar value, returns always double precision number even if the vector are
  based on another precision type
 
- @ingroup GenVector
+ @ingroup GenVectorX
 
- @sa Overview of the @ref GenVector "physics vector library"
+ @see GenVectorX
  */
 
 namespace VectorUtil {

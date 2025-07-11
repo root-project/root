@@ -50,9 +50,9 @@ namespace ROOT_MATH_ARCH {
  to be able to identify (tag) vector described in different reference coordinate system,
  like global or local coordinate systems.
 
- @ingroup GenVector
+ @ingroup GenVectorX
 
- @sa Overview of the @ref GenVector "physics vector library"
+ @see GenVectorX
 */
 
 template <class CoordSystem, class Tag = DefaultCoordinateSystemTag>
