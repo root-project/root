@@ -70,14 +70,14 @@ typedef float          Float16_t;   ///< Float 4 bytes in memory, written to dis
 typedef double         Double_t;    ///< Double 8 bytes \deprecated Consider replacing with `double`.
 typedef double         Double32_t;  ///< Double 8 bytes in memory, written to disk as a 4 bytes Float_t (32-bits) by default, or as 3 bytes (24-bits) float if range is customized, with a truncated mantissa (24-bit by default in memory, less if range is customized), and (7+1)-bits of exponent \warning Do not confuse Double32_t on file representation with a single-precision float such as std::float32_t
 typedef long double    LongDouble_t;///< Long Double (not portable) \deprecated Consider replacing with `long double`.
-typedef char           Text_t;      ///< General string (char) \deprecated Consider replacing with `char`.
+typedef char           Text_t;      ///< General string (char)
 typedef bool           Bool_t;      ///< Boolean (0=false, 1=true) (bool) \deprecated Consider replacing with `bool`.
 typedef unsigned char  Byte_t;      ///< Byte (8 bits) (unsigned char) \deprecated Consider replacing with `unsigned char` or `std::byte`.
 typedef short          Version_t;   ///< Class version identifier (short)
-typedef const char     Option_t;    ///< Option string (const char) \deprecated Consider replacing with `const char`.
+typedef const char     Option_t;    ///< Option string (const char)
 typedef int            Ssiz_t;      ///< String size (currently int)
 typedef float          Real_t;      ///< TVector and TMatrix element type (float) \deprecated Consider replacing with `float`.
-typedef long long          Long64_t; ///< Portable signed long integer 8 bytes \deprecated Consider replacing with `long long` or `std::int64_t`.
+typedef long long           Long64_t;///< Portable signed long integer 8 bytes \deprecated Consider replacing with `long long` or `std::int64_t`.
 typedef unsigned long long ULong64_t;///< Portable unsigned long integer 8 bytes \deprecated Consider replacing with `unsigned long long` or `std::uint64_t`.
 #ifdef _WIN64
 typedef long long      Longptr_t;     ///< Integer large enough to hold a pointer (platform-dependent)
