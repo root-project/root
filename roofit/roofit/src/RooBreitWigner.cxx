@@ -27,6 +27,7 @@ that models a non-relativistic Breit-Wigner shape
 
 #include "RooBreitWigner.h"
 #include "RooRealVar.h"
+#include "RooHelpers.h"
 #include "RooBatchCompute.h"
 
 
@@ -40,6 +41,7 @@ RooBreitWigner::RooBreitWigner(const char *name, const char *title,
   mean("mean","Mean",this,_mean),
   width("width","Width",this,_width)
 {
+   RooHelpers::checkRangeOfParameters(this, {&_width}, 0.);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
