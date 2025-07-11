@@ -75,7 +75,7 @@ typedef bool           Bool_t;      ///< Boolean (0=false, 1=true) (bool) \depre
 typedef unsigned char  Byte_t;      ///< Byte (8 bits) (unsigned char) \deprecated Consider replacing with `unsigned char` or `std::byte`.
 typedef short          Version_t;   ///< Class version identifier (short) \deprecated Consider replacing with `short` or `std::int16_t`.
 typedef const char     Option_t;    ///< Option string (const char) \deprecated Consider replacing with `const char`.
-typedef int            Ssiz_t;      ///< String size (int) \deprecated Consider replacing with `int`.
+typedef int            Ssiz_t;      ///< String size (currently int)
 typedef float          Real_t;      ///< TVector and TMatrix element type (float) \deprecated Consider replacing with `float`.
 typedef long long          Long64_t; ///< Portable signed long integer 8 bytes \deprecated Consider replacing with `long long` or `std::int64_t`.
 typedef unsigned long long ULong64_t;///< Portable unsigned long integer 8 bytes \deprecated Consider replacing with `unsigned long long` or `std::uint64_t`.
