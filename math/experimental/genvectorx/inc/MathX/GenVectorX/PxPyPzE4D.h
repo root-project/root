@@ -40,9 +40,9 @@ namespace ROOT_MATH_ARCH {
     or momentum-energy vectors stored as (Px, Py, Pz, E).
     The metric used is (-,-,-,+)
 
-    @ingroup GenVector
+    @ingroup GenVectorX
 
-    @sa Overview of the @ref GenVector "physics vector library"
+    @see GenVectorX
 */
 
 template <class ScalarType = double>

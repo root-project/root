@@ -49,9 +49,9 @@ namespace ROOT_MATH_ARCH {
    Also, the 3-D rotation classes can be considered to be special Lorentz
    transformations which do not mix space and time components.
 
-   @ingroup GenVector
+   @ingroup GenVectorX
 
-   @sa Overview of the @ref GenVector "physics vector library"
+   @see GenVectorX
 */
 
 class LorentzRotation {

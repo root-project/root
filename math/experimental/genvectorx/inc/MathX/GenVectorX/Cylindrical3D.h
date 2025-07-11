@@ -39,9 +39,9 @@ namespace ROOT_MATH_ARCH {
     The base coordinates are rho (transverse component) , z and phi
     Phi is restricted to be in the range [-PI,PI)
 
-    @ingroup GenVector
+    @ingroup GenVectorX
 
-    @sa Overview of the @ref GenVector "physics vector library"
+    @see GenVectorX
 */
 
 template <class T>

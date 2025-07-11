@@ -42,9 +42,9 @@ namespace Impl {
    four coefficients, fA, fB, fC, fD. fA, fB, fC are the normal components normalized to 1,
    i.e. fA**2 + fB**2 + fC**2 = 1
 
-   @ingroup GenVector
+   @ingroup GenVectorX
 
-   @sa Overview of the @ref GenVector "physics vector library"
+   @see GenVectorX
 */
 
 template <typename T = double>
