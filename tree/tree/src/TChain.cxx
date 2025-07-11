@@ -2625,6 +2625,15 @@ Int_t TChain::SetBranchAddress(const char *bname, void* add, TBranch** ptr)
    if (!fTree && fReadEntry == -1 && fTreeNumber == -1) {
       // Try to load the first tree to retrieve the dataset schema
       LoadTree(0);
+      // Something went wrong when loading the first tree (possibly there are no
+      // files connected to this chain), let the user know.
+      if (!fTree && fReadEntry == -1 && fTreeNumber == -1)
+         Warning("SetBranchAddress",
+                 "Could not load the first tree in chain \"%s\", no dataset schema available. Thus, it is not possible "
+                 "to know whether the branch name \"%s\" corresponds to an available branch or not. This could happen "
+                 "if the chain has no files connected yet, make sure to add files to the chain before calling "
+                 "'TChain::SetBranchAddress'.",
+                 GetName(), bname);
    }
 
    // Also set address in current tree.
@@ -2702,11 +2711,6 @@ Int_t TChain::SetBranchAddress(const char* bname, void* add, TBranch** ptr, TCla
    element->SetBaddressType((UInt_t) datatype);
    element->SetBaddressIsPtr(isptr);
    element->SetBranchPtr(ptr);
-
-   if (!fTree && fReadEntry == -1 && fTreeNumber == -1) {
-      // Try to load the first tree to retrieve the dataset schema
-      LoadTree(0);
-   }
 
    return SetBranchAddress(bname, add, ptr);
 }
@@ -3212,11 +3216,6 @@ Int_t TChain::SetBranchAddress(const char *bname, void *addr, TBranch **ptr, TCl
       auto *element = new TChainElement(bname, "");
       element->IsDelayed(suppressMissingBranchError);
       fStatus->Add(element);
-   }
-
-   if (!fTree && fReadEntry == -1 && fTreeNumber == -1) {
-      // Try to load the first tree to retrieve the dataset schema
-      LoadTree(0);
    }
 
    return SetBranchAddress(bname, addr, ptr, ptrClass, datatype, isptr);
