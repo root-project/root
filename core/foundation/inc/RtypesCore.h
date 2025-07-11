@@ -50,8 +50,8 @@ typedef unsigned char  UChar_t;     ///< Unsigned Character 1 byte (unsigned cha
 typedef short          Short_t;     ///< Signed Short integer 2 bytes (short) \deprecated Consider replacing with `short` or `std::int16_t`
 typedef unsigned short UShort_t;    ///< Unsigned Short integer 2 bytes (unsigned short) \deprecated Consider replacing with `unsigned short` or `std::uint16_t`
 #ifdef R__INT16
-typedef long           Int_t;       ///< Signed integer 4 bytes \deprecated Consider replacing with `std::int16_t`
-typedef unsigned long  UInt_t;      ///< Unsigned integer 4 bytes \deprecated Consider replacing with `std::int16_t`
+typedef long           Int_t;       ///< Signed integer 4 bytes \deprecated Consider replacing with `std::int32_t`
+typedef unsigned long  UInt_t;      ///< Unsigned integer 4 bytes \deprecated Consider replacing with `std::int32_t`
 #else
 typedef int            Int_t;       ///< Signed integer 4 bytes (int) \deprecated Consider replacing with `std::int32_t`
 typedef unsigned int   UInt_t;      ///< Unsigned integer 4 bytes (unsigned int) \deprecated Consider replacing with `std::uint32_t`
