@@ -351,15 +351,6 @@ struct RSealedPageMergeData {
    std::vector<std::unique_ptr<std::uint8_t[]>> fBuffers;
 };
 
-struct RAttributeSetComparison {
-   // Indices inside `MergeData::fDstAttributeSetNames`
-   std::vector<std::size_t> fCommonSets;
-   // Indices inside the `srcDescriptor.GetAttributeSets()`
-   std::vector<std::size_t> fExtraSrcSets;
-   // Indices inside `MergeData::fDstAttributeSetNames`
-   std::vector<std::size_t> fExtraDstSets;
-};
-
 std::ostream &operator<<(std::ostream &os, const std::optional<ROOT::RColumnDescriptor::RValueRange> &x)
 {
    if (x) {
@@ -1096,35 +1087,6 @@ static void PrefillColumnMap(const ROOT::RNTupleDescriptor &desc, const ROOT::RF
    }
 }
 
-static RAttributeSetComparison
-CompareAttributeSets(std::span<const std::string> dstAttrSets, const ROOT::RNTupleDescriptor &src)
-{
-   RAttributeSetComparison result;
-
-   const auto srcAttrSets = src.GetAttributeSetNames();
-
-   for (std::size_t srcIdx = 0, srcLen = srcAttrSets.size(); srcIdx < srcLen; ++srcIdx) {
-      bool found = false;
-      for (std::size_t dstIdx = 0, dstLen = dstAttrSets.size(); dstIdx < dstLen; ++dstIdx) {
-         if (dstAttrSets[dstIdx] == srcAttrSets[srcIdx]) {
-            result.fCommonSets.push_back(dstIdx);
-            found = true;
-            break;
-         }
-      }
-      if (!found)
-         result.fExtraSrcSets.push_back(srcIdx);
-   }
-
-   // Note: O(N^2), but we expect both srcAttrSets and dstAttrSets to be very small
-   for (std::size_t dstIdx = 0, dstLen = dstAttrSets.size(); dstIdx < dstLen; ++dstIdx) {
-      if (std::find(srcAttrSets.begin(), srcAttrSets.end(), dstAttrSets[dstIdx]) == srcAttrSets.end())
-         result.fExtraDstSets.emplace_back(dstIdx);
-   }
-
-   return result;
-}
-
 ROOT::RResult<void>
 ROOT::Experimental::Internal::RNTupleMerger::MergeSourceAttributes(RPageSource &source, RNTupleMergeData &mergeData,
                                                                    ROOT::NTupleSize_t nDstEntriesAtPrevSource)
@@ -1133,56 +1095,16 @@ ROOT::Experimental::Internal::RNTupleMerger::MergeSourceAttributes(RPageSource &
    if (!reader) // No attributes to merge (TODO: maybe the check should be more thorough)
       return RResult<void>::Success();
 
-   const auto attrMergingMode = mergeData.fMergeOpts.fAttributesMergingMode;
-
-   // Check if we should even try merging the Sets given our merging mode.
-   const auto attrSetCmp = CompareAttributeSets(mergeData.fDstAttributeSetNames, *mergeData.fSrcDescriptor);
-   if (!attrSetCmp.fExtraDstSets.empty() && attrMergingMode != ENTupleMergingMode::kUnion) {
-      std::stringstream ss;
-      ss << "The following Attribute Sets are present in the first source but missing in one of the following "
-            "sources:\n";
-      ss << std::accumulate(attrSetCmp.fExtraDstSets.begin(), attrSetCmp.fExtraDstSets.end(), std::string{},
-                            [&sets = mergeData.fDstAttributeSetNames](const std::string &acc, std::size_t idx) {
-                               return acc + "  * " + sets[idx] + "\n";
-                            });
-      ss << "Note: if you want to merge RNTuples regardless of their Attribute Sets, pass `fAttributesMergingMode = "
-            "ROOT::ENTupleMergingMode::kUnion` in the RNTupleMergeOptions.";
-      return R__FAIL(ss.str());
-   }
-   if (!attrSetCmp.fExtraSrcSets.empty() && attrMergingMode == ENTupleMergingMode::kStrict) {
-      std::stringstream ss;
-      ss << "The following Attribute Sets are not present in the first source but they are present in one of the "
-            "following "
-            "sources:\n";
-      ss << std::accumulate(
-         attrSetCmp.fExtraSrcSets.begin(), attrSetCmp.fExtraSrcSets.end(), std::string{},
-         [sets = mergeData.fSrcDescriptor->GetAttributeSetNames()](const std::string &acc, std::size_t idx) {
-            auto it = sets.begin();
-            std::advance(it, idx);
-            return acc + "  * " + *it + "\n";
-         });
-      ss << "Refusing to merge, since the AttributesMergingMode is set to kStrict.";
-      return R__FAIL(ss.str());
-   }
+   // NOTE: we always Union-merge attribute sets (meaning the output RNTuple will contain all the Attribute Sets
+   // from all sources.)
 
    for (const auto &attrSetDesc : ROOT::Experimental::Internal::GetAttributeSets(*mergeData.fSrcDescriptor)) {
-      // Skip this Set if the mode is Filter and it's not present in the destination.
-      if (attrMergingMode == ENTupleMergingMode::kFilter) {
-         const bool isCommonSet =
-            std::find_if(attrSetCmp.fCommonSets.begin(), attrSetCmp.fCommonSets.end(),
-                         [&name = attrSetDesc.fName, &sets = mergeData.fDstAttributeSetNames](std::size_t idx) {
-                            return sets[idx] == name;
-                         }) == attrSetCmp.fCommonSets.end();
-         if (!isCommonSet)
-            continue;
-      }
-
       // Load the AttributeSet RNTuple from the source file.
       auto attrAnchorRes =
          reader->GetNTupleProperAtOffset(attrSetDesc.fLocator.GetPosition<std::uint64_t>(),
                                          attrSetDesc.fLocator.GetNBytesOnStorage(), attrSetDesc.fAnchorUncompLen);
       if (!attrAnchorRes) {
-         if (mergeData.fMergeOpts.fAttributesErrBehavior == ENTupleMergeErrBehavior::kAbort) {
+         if (mergeData.fMergeOpts.fErrBehavior == ENTupleMergeErrBehavior::kAbort) {
             return R__FORWARD_ERROR(attrAnchorRes);
          } else {
             R__LOG_ERROR(NTupleMergeLog()) << "Failed to read AttributeSet '" << attrSetDesc.fName
@@ -1377,9 +1299,9 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       }
    }
 
-#define SKIP_OR_ABORT(behavior, errMsg)                                               \
+#define SKIP_OR_ABORT(errMsg)                                                         \
    do {                                                                               \
-      if (mergeOpts.behavior == ENTupleMergeErrBehavior::kSkip) {                     \
+      if (mergeOpts.fErrBehavior == ENTupleMergeErrBehavior::kSkip) {                 \
          R__LOG_WARNING(NTupleMergeLog()) << "Skipping RNTuple due to: " << (errMsg); \
          continue;                                                                    \
       } else {                                                                        \
@@ -1407,8 +1329,8 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
 
       auto descCmpRes = CompareDescriptorStructure(mergeData.fDstDescriptor, srcDescriptor.GetRef());
       if (!descCmpRes) {
-         SKIP_OR_ABORT(fErrBehavior, std::string("Source RNTuple has an incompatible schema with the destination:\n") +
-                                        descCmpRes.GetError()->GetReport());
+         SKIP_OR_ABORT(std::string("Source RNTuple has an incompatible schema with the destination:\n") +
+                       descCmpRes.GetError()->GetReport());
       }
       auto descCmp = descCmpRes.Unwrap();
 
@@ -1419,7 +1341,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
          for (const auto *field : descCmp.fExtraDstFields) {
             msg += "\n  " + field->GetFieldName() + " : " + field->GetTypeName();
          }
-         SKIP_OR_ABORT(fErrBehavior, msg);
+         SKIP_OR_ABORT(msg);
       }
 
       // handle extra src fields
@@ -1435,7 +1357,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
             for (const auto *field : descCmp.fExtraSrcFields) {
                msg += "\n  " + field->GetFieldName() + " : " + field->GetTypeName();
             }
-            SKIP_OR_ABORT(fErrBehavior, msg);
+            SKIP_OR_ABORT(msg);
          }
       }
 
@@ -1450,7 +1372,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       // merge Attributes
       res = MergeSourceAttributes(*source, mergeData, nInitialDstEntries);
       if (!res) {
-         SKIP_OR_ABORT(fAttributesErrBehavior, res.GetError()->GetReport());
+         SKIP_OR_ABORT(res.GetError()->GetReport());
       }
    } // end loop over sources
 

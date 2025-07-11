@@ -3772,30 +3772,6 @@ TEST(RNTupleMerger, MergeAttributes)
       {
          auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuardOut.GetPath().c_str(), "RECREATE"));
          auto wopts = RNTupleWriteOptions();
-         auto destination = std::make_unique<RPageSinkFile>("ntuple", *tfile, wopts);
-         RNTupleMerger merger{std::move(destination)};
-         auto opts = RNTupleMergeOptions{};
-         opts.fAttributesMergingMode = ENTupleMergingMode::kFilter;
-         auto res = merger.Merge(sourcePtrs, opts);
-         ASSERT_FALSE(bool(res));
-         EXPECT_THAT(res.GetError()->GetReport(),
-                     testing::HasSubstr("present in the first source but missing in one of the following"));
-      }
-      {
-         auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuardOut.GetPath().c_str(), "RECREATE"));
-         auto wopts = RNTupleWriteOptions();
-         auto destination = std::make_unique<RPageSinkFile>("ntuple", *tfile, wopts);
-         RNTupleMerger merger{std::move(destination)};
-         auto opts = RNTupleMergeOptions{};
-         opts.fAttributesMergingMode = ENTupleMergingMode::kStrict;
-         auto res = merger.Merge(sourcePtrs, opts);
-         ASSERT_FALSE(bool(res));
-         EXPECT_THAT(res.GetError()->GetReport(),
-                     testing::HasSubstr("present in the first source but missing in one of the following"));
-      }
-      {
-         auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuardOut.GetPath().c_str(), "RECREATE"));
-         auto wopts = RNTupleWriteOptions();
          wopts.SetCompression(0);
          auto destination = std::make_unique<RPageSinkFile>("ntuple", *tfile, wopts);
          RNTupleMerger merger{std::move(destination)};
@@ -3959,7 +3935,6 @@ TEST_P(RNTupleMergerAttributesEmpty, MergeEmptyAttribute)
          auto destination = std::make_unique<RPageSinkFile>("ntuple", *tfile, wopts);
          RNTupleMerger merger{std::move(destination)};
          auto opts = RNTupleMergeOptions{};
-         opts.fAttributesMergingMode = ENTupleMergingMode::kStrict;
          auto res = merger.Merge(sourcePtrs, opts);
          ASSERT_TRUE(bool(res));
       }
