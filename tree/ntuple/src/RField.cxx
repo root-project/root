@@ -606,11 +606,12 @@ std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RRecordField::GetDeleter() con
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RRecordField::SplitValue(const RValue &value) const
 {
-   auto basePtr = value.GetPtr<unsigned char>().get();
+   auto valuePtr = value.GetPtr<void>();
+   auto charPtr = static_cast<unsigned char *>(valuePtr.get());
    std::vector<RValue> result;
    result.reserve(fSubfields.size());
    for (unsigned i = 0; i < fSubfields.size(); ++i) {
-      result.emplace_back(fSubfields[i]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), basePtr + fOffsets[i])));
+      result.emplace_back(fSubfields[i]->BindValue(std::shared_ptr<void>(valuePtr, charPtr + fOffsets[i])));
    }
    return result;
 }
@@ -817,9 +818,10 @@ std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RUniquePtrField::GetDeleter() 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RUniquePtrField::SplitValue(const RValue &value) const
 {
    std::vector<RValue> result;
-   const auto &ptr = value.GetRef<std::unique_ptr<char>>();
-   if (ptr) {
-      result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), ptr.get())));
+   auto valuePtr = value.GetPtr<void>();
+   const auto &uniquePtr = *static_cast<std::unique_ptr<char> *>(valuePtr.get());
+   if (uniquePtr) {
+      result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<void>(valuePtr, uniquePtr.get())));
    }
    return result;
 }
