@@ -298,7 +298,7 @@ void ROOT::Internal::RPrintValueVisitor::VisitCardinalityField(const ROOT::RCard
 void ROOT::Internal::RPrintValueVisitor::VisitBitsetField(const ROOT::RBitsetField &field)
 {
    constexpr auto nBitsULong = sizeof(unsigned long) * 8;
-   const auto *asULongArray = fValue.GetPtr<unsigned long>().get();
+   const auto *asULongArray = static_cast<unsigned long *>(fValue.GetPtr<void>().get());
 
    PrintIndent();
    PrintName(field);
