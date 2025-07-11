@@ -16,6 +16,8 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
+#include <ROOT/RFieldBase.hxx>
+#include <ROOT/RFieldBaseRValue.hxx>
 #include <ROOT/RFieldToken.hxx>
 #include <string_view>
 

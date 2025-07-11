@@ -15,6 +15,9 @@
 
 #include <ROOT/RNTupleJoinTable.hxx>
 
+#include <ROOT/RFieldBase.hxx>
+#include <ROOT/RFieldBaseRValue.hxx>
+
 namespace {
 ROOT::Experimental::Internal::RNTupleJoinTable::JoinValue_t CastValuePtr(void *valuePtr, std::size_t fieldValueSize)
 {

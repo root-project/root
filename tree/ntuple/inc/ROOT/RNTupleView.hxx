@@ -16,6 +16,8 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
+#include <ROOT/RFieldBase.hxx>
+#include <ROOT/RFieldBaseRValue.hxx>
 #include <ROOT/RNTupleRange.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <string_view>
