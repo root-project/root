@@ -69,9 +69,9 @@ namespace Impl {
     Only Point objects are able to be both rotated and translated.
 
 
-    @ingroup GenVector
+    @ingroup GenVectorX
 
-    @sa Overview of the @ref GenVector "physics vector library"
+    @see GenVectorX
 
 */
 
