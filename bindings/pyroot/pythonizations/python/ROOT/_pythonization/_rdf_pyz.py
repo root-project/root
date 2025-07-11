@@ -250,14 +250,99 @@ def _convert_to_vector(args):
 
     return (v, *args[1:])
 
-def _handle_cpp_callables(func, original_template, *args):
+def remove_fn_name_from_signature(signature):
+    """
+    Removes the function name from a signature string.
+    The signature is expected to be in the form of "return_type function_name(type param1, type param2, ...)".
+    """
+    if '(' not in signature or ')' not in signature:
+        raise ValueError(f"Invalid signature format: {signature}")
+
+    return signature[:signature.index(' ')] + signature[signature.index('('):]
+
+def get_cpp_overload_from_templ_proxy(func, types=None):
+    """
+    Gets the C++ overload from a cppyy TemplateProxy using the input
+    and template arguments types.
+    """
+    signature = ", ".join(types) if types else ""
+    template_args = func.__template_args__[1:-1] if func.__template_args__ else ""
+    return func.__overload__(signature, template_args)
+
+def get_column_types(rdf, cols):
+    return [rdf.GetColumnType(col) for col in cols]
+
+def get_overload_based_on_args(overload_types, types):
+    """
+    Gets the C++ overloads for a function based on the provided signatures and types.
+    """
+    if not isinstance(overload_types, dict):
+        raise TypeError("Overload types must be a dictionary.")
+
+    if not isinstance(types, list) or not all(isinstance(t, str) for t in types):
+        raise TypeError("Types must be a list of strings.")
+
+    if len(overload_types) == 1:
+        # If there is only one signature, return it directly
+        return next(iter(overload_types))
+
+    for full_sig, info in overload_types.items():
+        input_types = info.get('input_types', ())
+
+        if len(input_types) != len(types):
+            continue
+
+        match = True
+        for expected, actual in zip(input_types, types):
+            # Loose match: require actual to appear somewhere in expected (e.g. "int" in "const int&")
+            if actual not in expected:
+                match = False
+                break
+
+        if match:
+            return full_sig
+
+    raise ValueError(f"No matching overload found for types: {types} in signatures: {overload_types.keys()}. Please check the function overloads.")
+
+def _get_cpp_signature(func, rdf, cols):
+    """
+    Gets the C++ signature of a cppyy callable.
+    """
+    import cppyy
+
+    if isinstance(func, cppyy._backend.TemplateProxy):
+        func = get_cpp_overload_from_templ_proxy(func, get_column_types(rdf, cols))
+
+    if not isinstance(func, cppyy._backend.CPPOverload):
+        raise TypeError(f"Expected a cppyy callable, got {type(func).__name__}")
+
+    overload_types = func.func_overloads_types
+    matched_overload = get_overload_based_on_args(overload_types, get_column_types(rdf, cols))
+    return remove_fn_name_from_signature(matched_overload)
+
+def _to_std_function(func, rdf, cols):
+    """
+    Converts a cppyy callable to std::function.
+    """
+    import cppyy
+
+    if not isinstance(func, cppyy._backend.CPPOverload) and not isinstance(func, cppyy._backend.TemplateProxy):
+        raise TypeError(f"Expected a cppyy callable, got {type(func).__name__}")
+
+    signature = _get_cpp_signature(func, rdf, cols)
+    return cppyy.gbl.std.function(signature)
+
+def _handle_cpp_callables(func, original_template, *args, rdf=None, cols=None):
     """
     Checks whether the callable `func` is a cppyy proxy of one of these:
     1. C++ functor
     2. std::function
+    3. C++ free function
 
-    The cases above are supported by cppyy, so we can just invoke the original
+    Cases 1 and 2 above are supported by cppyy, so we can just invoke the original
     cppyy TemplateProxy (Filter or Define) with the callable as argument.
+    For case 3, we need to convert the callable to a std::function
+    before invoking the original cppyy TemplateProxy.
 
     Prior to the invocation of the original cppyy TemplateProxy, though, we
     need to explicitly instantiate the template using the type of the `func`
@@ -276,7 +361,18 @@ def _handle_cpp_callables(func, original_template, *args):
     import cppyy
 
     is_cpp_functor  = lambda : isinstance(getattr(func, '__call__', None), cppyy._backend.CPPOverload)
+
     is_std_function = lambda : isinstance(getattr(func, 'target_type', None), cppyy._backend.CPPOverload)
+
+    # handle free functions
+    if callable(func) and not is_cpp_functor() and not is_std_function():
+        try:
+            func = _to_std_function(func, rdf, cols)
+        except TypeError as e:
+            if "Expected a cppyy callable" in str(e):
+                pass # this function is not convertible to std::function, move on to the next check
+            else:
+                raise
 
     if is_cpp_functor() or is_std_function():
         return original_template[type(func)](*args)
@@ -329,13 +425,6 @@ def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
             f"Filter takes at most 3 positional arguments but {len(args) + 1} were given")
 
     func = callable_or_str
-    rdf_node = _handle_cpp_callables(func, rdf._OriginalFilter, func, *_convert_to_vector(args))
-    if rdf_node is not None:
-        return rdf_node
-
-    jitter = FunctionJitter(rdf)
-    func.__annotations__['return'] = 'bool' # return type for Filters is bool # Note: You can keep double and Filter still works.
-
     col_list = []
     filter_name  = ""
     
@@ -353,8 +442,14 @@ def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
             filter_name = args[1]
         else:
             raise ValueError(f"Arguments should be ('list', 'str',) not ({type(args[0]).__name__,type(args[1]).__name__}.")
+
+    rdf_node = _handle_cpp_callables(func, rdf._OriginalFilter, func, *_convert_to_vector(args), rdf=rdf, cols=col_list)
+    if rdf_node is not None:
+        return rdf_node
+
+    jitter = FunctionJitter(rdf)
+    func.__annotations__['return'] = 'bool' # return type for Filters is bool # Note: You can keep double and Filter still works.
             
-    
     func_call = jitter.jit_function(func, col_list, extra_args)
     return rdf._OriginalFilter("Numba::" + func_call, filter_name)
 
@@ -400,7 +495,7 @@ def _PyDefine(rdf, col_name, callable_or_str, cols = [] , extra_args = {} ):
         raise TypeError(f"Define takes a column list as third arguments but {type(cols).__name__} was given.")
     
     func = callable_or_str
-    rdf_node = _handle_cpp_callables(func, rdf._OriginalDefine, col_name, func, cols)
+    rdf_node = _handle_cpp_callables(func, rdf._OriginalDefine, col_name, func, cols, rdf=rdf, cols=cols)
     if rdf_node is not None:
         return rdf_node
 
