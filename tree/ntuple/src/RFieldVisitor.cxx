@@ -17,6 +17,7 @@
 #include <ROOT/RNTupleView.hxx>
 
 #include <cassert>
+#include <cstddef>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -202,7 +203,8 @@ void ROOT::Internal::RPrintValueVisitor::VisitByteField(const ROOT::RField<std::
    PrintIndent();
    PrintName(field);
    char prev = std::cout.fill();
-   fOutput << "0x" << std::setw(2) << std::setfill('0') << std::hex << (fValue.GetRef<unsigned char>() & 0xff);
+   auto value = std::to_integer<unsigned int>(fValue.GetRef<std::byte>());
+   fOutput << "0x" << std::setw(2) << std::setfill('0') << std::hex << value;
    fOutput << std::resetiosflags(std::ios_base::basefield);
    std::cout.fill(prev);
 }
