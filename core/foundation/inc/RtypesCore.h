@@ -124,7 +124,7 @@ constexpr ULong64_t kMaxULong64 = ULong64_t(~0LL);         ///< \deprecated Cons
 constexpr Long64_t kMaxLong64 = Long64_t(kMaxULong64 >> 1);///< \deprecated Consider replacing with `std::numeric_limits<long long>::max()` (or `std::int64_t`)
 constexpr Long64_t kMinLong64 = -kMaxLong64 - 1;           ///< \deprecated Consider replacing with `std::numeric_limits<long long>::lowest()` (or `std::int64_t`)
 
-constexpr ULong_t kBitsPerByte = 8; ///< \deprecated Consider replacing with `std::numeric_limits<unsigned char>::digits`, or with `CHAR_BIT` or `CHAR_WIDTH` from `<climits>`.
+constexpr ULong_t kBitsPerByte = 8; ///< \deprecated Consider replacing with `std::numeric_limits<unsigned char>::digits`.
 constexpr Ssiz_t kNPOS = ~(Ssiz_t)0;///< The equivalent of `std::string::npos` for the ROOT class TString. \note Consider using std::string instead of TString whenever possible
 
 //---- debug global ------------------------------------------------------------
