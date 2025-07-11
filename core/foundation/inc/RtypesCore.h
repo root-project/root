@@ -86,18 +86,18 @@ typedef unsigned long long ULongptr_t;///< Unsigned integer large enough to hold
 typedef long           Longptr_t;   ///< Integer large enough to hold a pointer \deprecated Consider replacing with `long` on UNIX.
 typedef unsigned long  ULongptr_t;  ///< Unsigned integer large enough to hold a pointer \deprecated Consider replacing with `unsigned long` on UNIX.
 #endif
-typedef double         Axis_t;      ///< Axis values type (double) \deprecated Consider replacing with `double`
-typedef double         Stat_t;      ///< Statistics type (double) \deprecated Consider replacing with `double`
+typedef double         Axis_t;      ///< Axis values type (double)
+typedef double         Stat_t;      ///< Statistics type (double)
 
-typedef short          Font_t;      ///< Font number (short) \deprecated Consider replacing with `short`
-typedef short          Style_t;     ///< Style number (short) \deprecated Consider replacing with `short`
-typedef short          Marker_t;    ///< Marker number (short) \deprecated Consider replacing with `short`
-typedef short          Width_t;     ///< Line width (short) \deprecated Consider replacing with `short`
-typedef short          Color_t;     ///< Color number (short) \deprecated Consider replacing with `short`
-typedef short          SCoord_t;    ///< Screen coordinates (short) \deprecated Consider replacing with `short`
-typedef double         Coord_t;     ///< Pad world coordinates (double) \deprecated Consider replacing with `double`
-typedef float          Angle_t;     ///< Graphics angle (float) \deprecated Consider replacing with `float`
-typedef float          Size_t;      ///< Attribute size (float) \deprecated Consider replacing with `float`
+typedef short          Font_t;      ///< Font number (short)
+typedef short          Style_t;     ///< Style number (short)
+typedef short          Marker_t;    ///< Marker number (short)
+typedef short          Width_t;     ///< Line width (short)
+typedef short          Color_t;     ///< Color number (short)
+typedef short          SCoord_t;    ///< Screen coordinates (short)
+typedef double         Coord_t;     ///< Pad world coordinates (double)
+typedef float          Angle_t;     ///< Graphics angle (float)
+typedef float          Size_t;      ///< Attribute size (float)
 
 //---- constants ---------------------------------------------------------------
 
