@@ -73,7 +73,7 @@ typedef long double    LongDouble_t;///< Long Double (not portable) \deprecated 
 typedef char           Text_t;      ///< General string (char) \deprecated Consider replacing with `char`.
 typedef bool           Bool_t;      ///< Boolean (0=false, 1=true) (bool) \deprecated Consider replacing with `bool`.
 typedef unsigned char  Byte_t;      ///< Byte (8 bits) (unsigned char) \deprecated Consider replacing with `unsigned char` or `std::byte`.
-typedef short          Version_t;   ///< Class version identifier (short) \deprecated Consider replacing with `short` or `std::int16_t`.
+typedef short          Version_t;   ///< Class version identifier (short)
 typedef const char     Option_t;    ///< Option string (const char) \deprecated Consider replacing with `const char`.
 typedef int            Ssiz_t;      ///< String size (currently int)
 typedef float          Real_t;      ///< TVector and TMatrix element type (float) \deprecated Consider replacing with `float`.
