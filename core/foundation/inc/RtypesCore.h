@@ -29,7 +29,8 @@
  * \warning `Long_t` has not the same width across platforms, so it should be avoided if portability is envisioned.
  * Also derived classes such as `TArrayL`. Use instead `Long64_t` or `TArrayL64`, or `std::int64_t`.
  * Likewise with `ULong_t`.
- * \warning In some architectures, `std::int64_t` may have a different size than in others.
+ * \warning In some architectures, `std::int64_t` may have a different underlying data type (long vs int) than in others
+ * and may lead to a different StreamerInfo than in others, thus it might be convenient to use (U)Long64_t instead.
  */
 
 #include <ROOT/RConfig.hxx>
@@ -78,8 +79,8 @@ typedef short          Version_t;   ///< Class version identifier (short)
 typedef const char     Option_t;    ///< Option string (const char)
 typedef int            Ssiz_t;      ///< String size (currently int)
 typedef float          Real_t;      ///< TVector and TMatrix element type (float) \deprecated Consider replacing with `float`.
-typedef long long           Long64_t;///< Portable signed long integer 8 bytes \deprecated Consider replacing with `long long` or `std::int64_t`.
-typedef unsigned long long ULong64_t;///< Portable unsigned long integer 8 bytes \deprecated Consider replacing with `unsigned long long` or `std::uint64_t`.
+typedef long long           Long64_t;///< Portable signed long integer 8 bytes \deprecated Consider replacing with `long long` or `std::int64_t` (unless you are worried about different StreamerInfos in different platforms).
+typedef unsigned long long ULong64_t;///< Portable unsigned long integer 8 bytes \deprecated Consider replacing with `unsigned long long` or `std::uint64_t` (unless you are worried about different StreamerInfos in different platforms).
 #ifdef _WIN64
 typedef long long      Longptr_t;     ///< Integer large enough to hold a pointer (platform-dependent)
 typedef unsigned long long ULongptr_t;///< Unsigned integer large enough to hold a pointer (platform-dependent)
