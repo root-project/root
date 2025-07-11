@@ -27,7 +27,7 @@ ROOTTEST_ADD_TEST(runConstructor
                   FIXTURES_REQUIRED cling-templateMembers-constructor-fixture
                   LABELS roottest regression cling)
 
-ROOTTEST_GENERATE_DICTIONARY(opdict operator.C LINKDEF linkdef.h)
+ROOTTEST_GENERATE_DICTIONARY(opdict operator.C NO_CXXMODULE LINKDEF linkdef.h)
 
 ROOTTEST_GENERATE_DICTIONARY(libtemplateMembersDict
                              templateMembersClasses.h
