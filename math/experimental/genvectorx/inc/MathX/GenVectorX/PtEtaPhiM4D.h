@@ -50,9 +50,9 @@ namespace ROOT_MATH_ARCH {
     but in this case m2 must always be less than P2 to preserve a positive value of E2
     Phi is restricted to be in the range [-PI,PI)
 
-    @ingroup GenVector
+    @ingroup GenVectorX
 
-    @sa Overview of the @ref GenVector "physics vector library"
+    @see GenVectorX
 */
 
 template <class ScalarType>

@@ -61,9 +61,9 @@ namespace ROOT_MATH_ARCH {
    With the operator * is possible also to combine rotations.
    Note that the operator is NOT commutative, the order how the rotations are applied is relevant.
 
-   @ingroup GenVector
+   @ingroup GenVectorX
 
-   @sa Overview of the @ref GenVector "physics vector library"
+   @see GenVectorX
 */
 
 class Rotation3D {

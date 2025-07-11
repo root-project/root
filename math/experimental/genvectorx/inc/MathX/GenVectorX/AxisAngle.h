@@ -39,9 +39,9 @@ namespace ROOT_MATH_ARCH {
    AxisAngle class describing rotation represented with direction axis (3D Vector) and an
    angle of rotation around that axis.
 
-   @ingroup GenVector
+   @ingroup GenVectorX
 
-   @sa Overview of the @ref GenVector "physics vector library"
+   @see GenVectorX
 */
 class AxisAngle {
 

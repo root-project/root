@@ -35,9 +35,9 @@ namespace ROOT_MATH_ARCH {
    Class representing a Lorentz Boost along the Z axis, by beta.
    For efficiency, gamma is held as well.
 
-   @ingroup GenVector
+   @ingroup GenVectorX
 
-   @sa Overview of the @ref GenVector "physics vector library"
+   @see GenVectorX
 */
 
 class BoostZ {

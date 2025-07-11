@@ -37,9 +37,9 @@ namespace ROOT_MATH_ARCH {
    Rotation class representing a 3D rotation about the Z axis by the angle of rotation.
    For efficiency reason, in addition to the angle, the sine and cosine of the angle are held
 
-   @ingroup GenVector
+   @ingroup GenVectorX
 
-   @sa Overview of the @ref GenVector "physics vector library"
+   @see GenVectorX
 */
 
 class RotationZ {

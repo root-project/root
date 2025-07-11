@@ -56,9 +56,9 @@ namespace ROOT_MATH_ARCH {
    RotationZ(phi) to the same vector.
 
 
-   @ingroup GenVector
+   @ingroup GenVectorX
 
-   @sa Overview of the @ref GenVector "physics vector library"
+   @see GenVectorX
 */
 
 class RotationZYX {

@@ -43,9 +43,9 @@ namespace ROOT_MATH_ARCH {
    and used in Mathematica and CLHEP. Note that the ROOT class TRotation defines
    a slightly different convention.
 
-   @ingroup GenVector
+   @ingroup GenVectorX
 
-   @sa Overview of the @ref GenVector "physics vector library"
+   @see GenVectorX
 */
 class EulerAngles {
 
