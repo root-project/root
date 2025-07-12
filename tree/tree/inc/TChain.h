@@ -50,6 +50,7 @@ private:
    TChain& operator=(const TChain&); // not implemented
    void
    ParseTreeFilename(const char *name, TString &filename, TString &treename, TString &query, TString &suffix) const;
+   Long64_t RefreshFriendAddresses(TTree &mainTree, Long64_t entry);
 
 protected:
    void InvalidateCurrentTree();
