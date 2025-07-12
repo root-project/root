@@ -8,8 +8,12 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TH1.h"
+#include "TNtuple.h"
+#include "TProfile.h"
+#include "TROOT.h"
 #include "TSystem.h"
 
+#include <filesystem>
 #include <memory>
 
 #include "gtest/gtest.h"
@@ -314,4 +318,79 @@ TEST(TFileMerger, SingleHistFile)
    gSystem->Unlink(filename1);
    gSystem->Unlink(filename2);
    gSystem->Unlink(outname);
+}
+
+// The merging demonstrated in tutorials/io/mergeSelective.C
+TEST(TFileMerger, MergeSelectiveTutorial)
+{
+   using namespace std::filesystem;
+   struct CleanupRAII {
+      std::vector<path> items;
+      ~CleanupRAII()
+      {
+         for (auto const &item : items)
+            remove(item);
+      }
+   } cleanup;
+
+   // Create the files to be merged
+   const auto baseDir = path{gROOT->GetTutorialsDir()};
+   std::cout << "BaseDir: " << baseDir << std::endl;
+   const auto file0 = baseDir / "tomerge00.root";
+   const auto file1 = baseDir / "tomerge01.root";
+   try {
+      copy(baseDir / "hsimple.root", file0);
+      copy(baseDir / "hsimple.root", file1);
+      cleanup.items.push_back(file0);
+      cleanup.items.push_back(file1);
+   } catch (filesystem_error &e) {
+      std::cerr << e.what() << "\n";
+   }
+
+   //------------------------------------
+   // Merge only the listed objects
+   //------------------------------------
+   {
+      TFileMerger fm{false};
+      fm.OutputFile("exclusive.root");
+      cleanup.items.push_back("exclusive.root");
+      fm.AddObjectNames("hprof ntuple");
+      fm.AddFile(file0.string().c_str());
+      fm.AddFile(file1.string().c_str());
+      // Must add new merging flag on top of the default ones
+      Int_t default_mode = TFileMerger::kAll | TFileMerger::kIncremental;
+      Int_t mode = default_mode | TFileMerger::kOnlyListed;
+      fm.PartialMerge(mode);
+   }
+   {
+      TFile file("exclusive.root");
+      EXPECT_NE(file.Get<TProfile>("hprof"), nullptr);
+      EXPECT_EQ(file.Get("hpx"), nullptr);
+      EXPECT_EQ(file.Get("hpxpy"), nullptr);
+      EXPECT_NE(file.Get<TNtuple>("ntuple"), nullptr);
+   }
+
+   //------------------------------------
+   // Skip merging of the listed objects
+   //------------------------------------
+   {
+      TFileMerger fm{true};
+      fm.OutputFile("skipped.root");
+      cleanup.items.push_back("skipped.root");
+      fm.AddObjectNames("hprof folder");
+      fm.AddFile(file0.string().c_str());
+      fm.AddFile(file1.string().c_str());
+      // Must add new merging flag on top of the default ones
+      Int_t default_mode = TFileMerger::kAll | TFileMerger::kIncremental;
+      auto mode = default_mode | TFileMerger::kSkipListed;
+      fm.PartialMerge(mode);
+      fm.Reset();
+   }
+   {
+      TFile file("skipped.root");
+      EXPECT_EQ(file.Get<TProfile>("hprof"), nullptr);
+      EXPECT_NE(file.Get("hpx"), nullptr);
+      EXPECT_NE(file.Get("hpxpy"), nullptr);
+      EXPECT_NE(file.Get<TNtuple>("ntuple"), nullptr);
+   }
 }
