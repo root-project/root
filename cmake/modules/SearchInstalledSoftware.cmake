@@ -1544,9 +1544,7 @@ if(vdt OR builtin_vdt)
           set(builtin_vdt ON CACHE BOOL "Enabled because external vdt not found (${vdt_description})" FORCE)
         endif()
       endif()
-     else()
-       add_library(VDT ALIAS VDT::VDT)
-     endif()
+    endif()
   endif()
   if(builtin_vdt)
     set(vdt_version 0.4.6)
@@ -1577,25 +1575,17 @@ if(vdt OR builtin_vdt)
     )
     set(VDT_INCLUDE_DIR ${CMAKE_BINARY_DIR}/ginclude)
     set(VDT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/ginclude)
-    if(NOT TARGET VDT)
-      add_library(VDT IMPORTED SHARED)
-      add_dependencies(VDT BUILTIN_VDT)
-      set_target_properties(VDT PROPERTIES IMPORTED_LOCATION "${VDT_LIBRARIES}")
-      target_include_directories(VDT INTERFACE $<BUILD_INTERFACE:${VDT_INCLUDE_DIR}> $<INSTALL_INTERFACE:include/>)
-    endif()
 
-    install(FILES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX}
+    add_library(VDT::VDT SHARED IMPORTED GLOBAL)
+    add_dependencies(VDT::VDT BUILTIN_VDT)
+    set_target_properties(VDT::VDT PROPERTIES IMPORTED_LOCATION "${VDT_LIBRARIES}")
+    target_include_directories(VDT::VDT INTERFACE $<BUILD_INTERFACE:${VDT_INCLUDE_DIR}> $<INSTALL_INTERFACE:include/>)
+
+    install(FILES ${VDT_LIBRARIES}
             DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT extra-headers)
-    set(vdt ON CACHE BOOL "Enabled because builtin_vdt enabled (${vdt_description})" FORCE)
-    set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS VDT)
-    add_library(VDT::VDT STATIC IMPORTED GLOBAL)
-    set_target_properties(VDT::VDT
-      PROPERTIES
-        IMPORTED_LOCATION "${VDT_LIBRARIES}"
-        INTERFACE_INCLUDE_DIRECTORIES "${VDT_INCLUDE_DIRS}"
-    )
+    set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS VDT::VDT)
   endif()
 endif()
 
