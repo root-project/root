@@ -479,11 +479,12 @@ void ROOT::RClassField::RClassDeleter::operator()(void *objPtr, bool dtorOnly)
 std::vector<ROOT::RFieldBase::RValue> ROOT::RClassField::SplitValue(const RValue &value) const
 {
    std::vector<RValue> result;
-   auto basePtr = value.GetPtr<unsigned char>().get();
+   auto valuePtr = value.GetPtr<void>();
+   auto charPtr = static_cast<unsigned char *>(valuePtr.get());
    result.reserve(fSubfields.size());
    for (unsigned i = 0; i < fSubfields.size(); i++) {
       result.emplace_back(
-         fSubfields[i]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), basePtr + fSubfieldsInfo[i].fOffset)));
+         fSubfields[i]->BindValue(std::shared_ptr<void>(valuePtr, charPtr + fSubfieldsInfo[i].fOffset)));
    }
    return result;
 }
@@ -1064,11 +1065,11 @@ void ROOT::RField<TObject>::ConstructValue(void *where) const
 std::vector<ROOT::RFieldBase::RValue> ROOT::RField<TObject>::SplitValue(const RValue &value) const
 {
    std::vector<RValue> result;
-   auto basePtr = value.GetPtr<unsigned char>().get();
-   result.emplace_back(
-      fSubfields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), basePtr + GetOffsetUniqueID())));
-   result.emplace_back(
-      fSubfields[1]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), basePtr + GetOffsetBits())));
+   // Use GetPtr<TObject> to type-check
+   std::shared_ptr<void> ptr = value.GetPtr<TObject>();
+   auto charPtr = static_cast<unsigned char *>(ptr.get());
+   result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<void>(ptr, charPtr + GetOffsetUniqueID())));
+   result.emplace_back(fSubfields[1]->BindValue(std::shared_ptr<void>(ptr, charPtr + GetOffsetBits())));
    return result;
 }
 

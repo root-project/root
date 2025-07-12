@@ -18,6 +18,7 @@ HEADERS
   ROOT/REntry.hxx
   ROOT/RField.hxx
   ROOT/RFieldBase.hxx
+  ROOT/RFieldBaseRValue.hxx
   ROOT/RFieldToken.hxx
   ROOT/RFieldUtils.hxx
   ROOT/RFieldVisitor.hxx

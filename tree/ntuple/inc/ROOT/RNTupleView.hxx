@@ -16,6 +16,8 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
+#include <ROOT/RFieldBase.hxx>
+#include <ROOT/RFieldBaseRValue.hxx>
 #include <ROOT/RNTupleRange.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <string_view>
@@ -345,6 +347,13 @@ private:
       return fieldId;
    }
 
+   std::uint64_t GetCardinalityValue() const
+   {
+      // We created the RValue and know its type, avoid extra checks.
+      void *ptr = fValue.GetPtr<void>().get();
+      return *static_cast<RNTupleCardinality<std::uint64_t> *>(ptr);
+   }
+
 public:
    RNTupleCollectionView(const RNTupleCollectionView &other) = delete;
    RNTupleCollectionView(RNTupleCollectionView &&other) = default;
@@ -413,14 +422,14 @@ public:
    std::uint64_t operator()(ROOT::NTupleSize_t globalIndex)
    {
       fValue.Read(globalIndex);
-      return fValue.GetRef<std::uint64_t>();
+      return GetCardinalityValue();
    }
 
    /// \see RNTupleView::operator()(RNTupleLocalIndex)
    std::uint64_t operator()(RNTupleLocalIndex localIndex)
    {
       fValue.Read(localIndex);
-      return fValue.GetRef<std::uint64_t>();
+      return GetCardinalityValue();
    }
 };
 

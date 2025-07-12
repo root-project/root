@@ -145,11 +145,11 @@ TEST(RNTuple, InsideCollection)
 
    auto valueCardinality64 = fieldCardinality64->CreateValue();
    valueCardinality64.Read(0);
-   EXPECT_EQ(1U, valueCardinality64.GetRef<std::uint64_t>());
+   EXPECT_EQ(1U, valueCardinality64.GetRef<ROOT::RNTupleCardinality<std::uint64_t>>());
 
    auto valueCardinality32 = fieldCardinality32->CreateValue();
    valueCardinality32.Read(0);
-   EXPECT_EQ(1U, valueCardinality32.GetRef<std::uint32_t>());
+   EXPECT_EQ(1U, valueCardinality32.GetRef<ROOT::RNTupleCardinality<std::uint32_t>>());
 
    // TODO: test reading of "klassVec.v1"
 }
