@@ -71,3 +71,6 @@ The implementation uses standard [C++17](https://en.cppreference.com/w/cpp/17.ht
  * No ROOT types, to make sure the histogram package can be compiled standalone.
 
 Small objects are passed by value instead of by reference (`RBinIndex`, `RWeight`).
+
+Complex objects, such as `std::vector`, that have to be copied (for example in a constructor) are also accepted by value.
+This allows a single overload that can efficiently take expiring ("moved") objects.
