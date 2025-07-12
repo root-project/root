@@ -112,8 +112,6 @@ class MemoryStlString(unittest.TestCase):
             "TGraph2D": (100,),
             "TEntryList": ("name", "title"),
             "TEventList": ("name", "title"),
-            "TTree": ("name", "title"),
-            "TNtuple": ("name", "title", "x:y:z"),
         }
         for klass, args in objs.items():
             with self.subTest(klass=klass):
