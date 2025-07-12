@@ -591,8 +591,15 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
       // GetPath(), so we can still figure out where we are in the recursion
 
       // If this folder is a onlyListed object, merge everything inside.
-      if (onlyListed) type &= ~kOnlyListed;
-      status = MergeRecursive(newdir, sourcelist, type);
+      const auto mergeType = onlyListed ? type & ~kOnlyListed : type;
+      status = MergeRecursive(newdir, sourcelist, mergeType);
+
+      if ((type & kOnlyListed) && !(type & kIncremental) && !onlyListed && newdir->GetNkeys() == 0) {
+         // None of the children were merged, and the directory is not listed
+         delete newdir;
+         newdir = nullptr;
+         target->rmdir(obj->GetName());
+      }
       // Delete newdir directory after having written it (merged)
       if (!(type&kIncremental)) delete newdir;
       if (onlyListed) type |= kOnlyListed;
@@ -936,16 +943,17 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
 /// the file "FileMerger.root" in the working directory. Returns true
 /// on success, false in case of error.
 /// The type is defined by the bit values in EPartialMergeType:
-///   kRegular        : normal merge, overwritting the output file
-///   kIncremental    : merge the input file with the content of the output file (if already exising) (default)
-///   kResetable      : merge only the objects with a MergeAfterReset member function.
-///   kNonResetable   : merge only the objects without a MergeAfterReset member function.
-///   kDelayWrite     : delay the TFile write (to reduce the number of write when reusing the file)
-///   kAll            : merge all type of objects (default)
-///   kAllIncremental : merge incrementally all type of objects.
-///   kOnlyListed     : merge only the objects specified in fObjectNames list
-///   kSkipListed     : skip objects specified in fObjectNames list
-///   kKeepCompression: keep compression level unchanged for each input
+///
+///     kRegular        : normal merge, overwriting the output file
+///     kIncremental    : merge the input file with the content of the output file (if already exising) (default)
+///     kResetable      : merge only the objects with a MergeAfterReset member function.
+///     kNonResetable   : merge only the objects without a MergeAfterReset member function.
+///     kDelayWrite     : delay the TFile write (to reduce the number of write when reusing the file)
+///     kAll            : merge all type of objects (default)
+///     kAllIncremental : merge incrementally all type of objects.
+///     kOnlyListed     : merge only the objects specified in fObjectNames list
+///     kSkipListed     : skip objects specified in fObjectNames list
+///     kKeepCompression: keep compression level unchanged for each input
 ///
 /// If the type is not set to kIncremental, the output file is deleted at the end of this operation.
 

@@ -221,3 +221,47 @@ TEST(TFileMerger, ChangeFile)
    gSystem->Unlink("file6640mergerinput_2.root");
    gSystem->Unlink("file6640mergeroutput.root");
 }
+
+TEST(TFileMerger, SelectiveMergeWithDirectories)
+{
+   constexpr auto input = "selectiveMerge_input.root";
+   constexpr auto output = "selectiveMerge_output.root";
+   {
+      TH1F histo("histo", "Histo", 2, 0, 1);
+      TFile infile(input, "recreate");
+      auto dir = infile.mkdir("A");
+      dir->WriteObject(&histo, "Histo_A");
+      dir = infile.mkdir("B");
+      dir->WriteObject(&histo, "Histo_B");
+      dir = infile.mkdir("C")->mkdir("D");
+      dir->WriteObject(&histo, "Histo_D");
+      dir = infile.mkdir("E")->mkdir("F");
+      dir->WriteObject(&histo, "Histo_F");
+   }
+
+   {
+      TFileMerger fileMerger(false);
+      fileMerger.AddFile(input);
+      fileMerger.AddObjectNames("A");
+      fileMerger.AddObjectNames("Histo_F");
+      fileMerger.OutputFile(output);
+      fileMerger.PartialMerge(TFileMerger::kOnlyListed | TFileMerger::kAll | TFileMerger::kRegular);
+   }
+
+   TFile outfile(output);
+   auto dir_A = outfile.Get<TDirectory>("A");
+   ASSERT_NE(dir_A, nullptr);
+   EXPECT_NE(dir_A->Get("Histo_A"), nullptr);
+
+   EXPECT_EQ(outfile.Get("B"), nullptr);
+   EXPECT_EQ(outfile.Get("C"), nullptr);
+
+   auto dir = outfile.Get<TDirectory>("E");
+   ASSERT_NE(dir, nullptr);
+   dir = dir->Get<TDirectory>("F");
+   ASSERT_NE(dir, nullptr);
+   ASSERT_NE(dir->Get("Histo_F"), nullptr);
+
+   std::remove(input);
+   std::remove(output);
+}
