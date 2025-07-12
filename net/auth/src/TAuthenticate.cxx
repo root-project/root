@@ -920,8 +920,9 @@ Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd,
    passwd = "";
    pwhash = kFALSE;
 
-   char *net =
-      gSystem->ConcatFileName(gSystem->HomeDirectory(), ".rootnetrc");
+   TString temp_rootnet = ".rootnetrc";
+   const char *net =
+      gSystem->PrependPathName(gSystem->HomeDirectory(), temp_rootnet);
 
    // Determine FQDN of the host ...
    TInetAddress addr = gSystem->GetHostByName(fRemote);
@@ -985,10 +986,10 @@ again:
             Warning("CheckNetrc",
                     "file %s exists but has not 0600 permission", net);
       }
-      delete [] net;
 
       if (first && !result) {
-         net = gSystem->ConcatFileName(gSystem->HomeDirectory(), ".netrc");
+         TString temp_net = ".netrc";
+         net = gSystem->PrependPathName(gSystem->HomeDirectory(), temp_net);
          first = kFALSE;
          goto again;
       }
@@ -3212,12 +3213,14 @@ Int_t TAuthenticate::SendRSAPublicKey(TSocket *socket, Int_t key)
 Int_t TAuthenticate::ReadRootAuthrc()
 {
    // rootauthrc family
-   char *authrc = 0;
+   const char *authrc;
+   TString temp_rootauthrc = ".rootauthrc";
+   TString temp_system = "system.rootauthrc";
    if (gSystem->Getenv("ROOTAUTHRC") != 0) {
-      authrc = StrDup(gSystem->Getenv("ROOTAUTHRC"));
+      authrc = gSystem->Getenv("ROOTAUTHRC");
    } else {
       if (fgReadHomeAuthrc)
-         authrc = gSystem->ConcatFileName(gSystem->HomeDirectory(), ".rootauthrc");
+         authrc = gSystem->PrependPathName(gSystem->HomeDirectory(), temp_rootauthrc);
    }
    if (authrc && gDebug > 2)
       ::Info("TAuthenticate::ReadRootAuthrc", "Checking file: %s", authrc);
@@ -3225,15 +3228,13 @@ Int_t TAuthenticate::ReadRootAuthrc()
       if (authrc && gDebug > 1)
          ::Info("TAuthenticate::ReadRootAuthrc",
                 "file %s cannot be read (errno: %d)", authrc, errno);
-      delete [] authrc;
-      authrc = gSystem->ConcatFileName(TROOT::GetEtcDir(), "system.rootauthrc");
+      authrc = gSystem->PrependPathName(TROOT::GetEtcDir(), temp_system);
       if (gDebug > 2)
          ::Info("TAuthenticate::ReadRootAuthrc", "Checking system file: %s", authrc);
       if (gSystem->AccessPathName(authrc, kReadPermission)) {
          if (gDebug > 1)
             ::Info("TAuthenticate::ReadRootAuthrc",
                    "file %s cannot be read (errno: %d)", authrc, errno);
-         delete [] authrc;
          return 0;
       }
    }
