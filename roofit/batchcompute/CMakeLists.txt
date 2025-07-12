@@ -10,7 +10,7 @@ ROOT_LINKER_LIBRARY(RooBatchCompute
 target_include_directories(RooBatchCompute PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
 
 if(vdt OR builtin_vdt)
-  target_link_libraries(RooBatchCompute PUBLIC VDT)
+  target_link_libraries(RooBatchCompute PRIVATE VDT::VDT)
 endif()
 
 

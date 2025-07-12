@@ -405,7 +405,7 @@ if(MSVC)
 endif()
 
 if(vdt OR builtin_vdt)
-  target_link_libraries(TMVA PRIVATE VDT)
+  target_link_libraries(TMVA PRIVATE VDT::VDT)
 endif()
 
 if(tmva-cpu)
