@@ -884,7 +884,11 @@ static Py_ssize_t mp_hash(CPPOverload* pymeth)
 {
 // Hash of method proxy object for insertion into dictionaries; with actual
 // method (fMethodInfo) shared, its address is best suited.
+#if PY_VERSION_HEX >= 0x030d0000
+    return Py_HashPointer(pymeth->fMethodInfo);
+#else
     return _Py_HashPointer(pymeth->fMethodInfo);
+#endif
 }
 
 //----------------------------------------------------------------------------
