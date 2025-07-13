@@ -1649,8 +1649,12 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
     }
 
 // for STL containers, and user classes modeled after them
-    if (HasAttrDirect(pyclass, PyStrings::gSize))
+// the attribute must be a CPyCppyy overload, otherwise the check gives false
+// positives in the case where the class has a non-function attribute that is
+// called "size".
+    if (HasAttrDirect(pyclass, PyStrings::gSize, /*mustBeCPyCppyy=*/ true)) {
         Utility::AddToClass(pyclass, "__len__", "size");
+    }
 
     if (!IsTemplatedSTLClass(name, "vector")  &&      // vector is dealt with below
            !((PyTypeObject*)pyclass)->tp_iter) {
