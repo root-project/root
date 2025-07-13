@@ -207,12 +207,7 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
             continue; // skip all other python special funcs
 
 // figure out number of variables required
-#if PY_VERSION_HEX < 0x03000000
-         PyObject *im_func = PyObject_GetAttrString(attr, (char *)"im_func");
-         PyObject *func_code = im_func ? PyObject_GetAttrString(im_func, (char *)"func_code") : NULL;
-#else
          PyObject *func_code = PyObject_GetAttrString(attr, "__code__");
-#endif
          PyObject *var_names = func_code ? PyObject_GetAttrString(func_code, (char *)"co_varnames") : NULL;
          if (PyErr_Occurred())
             PyErr_Clear(); // happens for slots; default to 0 arguments
@@ -223,9 +218,6 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
             nVars = 0;
          Py_DecRef(var_names);
          Py_DecRef(func_code);
-#if PY_VERSION_HEX < 0x03000000
-         Py_DecRef(im_func);
-#endif
 
          // method declaration as appropriate
          if (isConstructor) {
