@@ -1,4 +1,3 @@
-#include <ios>
 #include <TFile.h>
 #include <TTree.h>
 #include <TTreeReader.h>
@@ -63,9 +62,13 @@ TEST(TTreeReaderBasic, LorentzVector32)
    std::string code;
    {
       std::stringstream sstr;
-      sstr.setf(std::ios::hex);
-      sstr << "TTreeReaderValue<ROOT::Math::PtEtaPhiMVector> lv32(*(TTreeReader*)" << std::showbase << &reader
+      #ifdef WIN32
+      sstr << "TTreeReaderValue<ROOT::Math::PtEtaPhiMVector> lv32(*(TTreeReader*)0x" << &reader
            << ", \"lv32\");";
+      #else
+      sstr << "TTreeReaderValue<ROOT::Math::PtEtaPhiMVector> lv32(*(TTreeReader*)" << &reader
+           << ", \"lv32\");";
+      #endif
       code = sstr.str();
    }
    gInterpreter->Declare(code.c_str());
