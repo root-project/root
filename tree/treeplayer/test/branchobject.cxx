@@ -63,7 +63,8 @@ TEST(TTreeReaderBasic, LorentzVector32)
    std::string code;
    {
       std::stringstream sstr;
-      sstr << "TTreeReaderValue<ROOT::Math::PtEtaPhiMVector> lv32(*(TTreeReader*)" << std::showbase << std::ios::hex << &reader
+      sstr.setf(std::ios::hex);
+      sstr << "TTreeReaderValue<ROOT::Math::PtEtaPhiMVector> lv32(*(TTreeReader*)" << std::showbase << &reader
            << ", \"lv32\");";
       code = sstr.str();
    }
