@@ -146,7 +146,11 @@ static PyTypeObject PyNullPtr_t_Type = {
     nullptr_repr,        // tp_repr
     &nullptr_as_number,  // tp_as_number
     0, 0,
+#if PY_VERSION_HEX >= 0x030d0000
+    (hashfunc)Py_HashPointer, // tp_hash
+#else
     (hashfunc)_Py_HashPointer, // tp_hash
+#endif
     0, 0, 0, 0, 0, Py_TPFLAGS_DEFAULT, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 #if PY_VERSION_HEX >= 0x02030000
@@ -189,7 +193,11 @@ static PyTypeObject PyDefault_t_Type = {
     0, 0, 0, 0,
     default_repr,        // tp_repr
     0, 0, 0,
+#if PY_VERSION_HEX >= 0x030d0000
+    (hashfunc)Py_HashPointer, // tp_hash
+#else
     (hashfunc)_Py_HashPointer, // tp_hash
+#endif
     0, 0, 0, 0, 0, Py_TPFLAGS_DEFAULT, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 #if PY_VERSION_HEX >= 0x02030000
