@@ -1,3 +1,4 @@
+#include <ios>
 #include <TFile.h>
 #include <TTree.h>
 #include <TTreeReader.h>
@@ -62,8 +63,9 @@ TEST(TTreeReaderBasic, LorentzVector32)
    std::string code;
    {
       std::stringstream sstr;
+      
       sstr << "TTreeReaderValue<ROOT::Math::PtEtaPhiMVector> lv32(*(TTreeReader*)"
-         << &reader << ", \"lv32\");";
+         << std::showbase << &reader << ", \"lv32\");";
       code = sstr.str();
    }
    gInterpreter->Declare(code.c_str());
