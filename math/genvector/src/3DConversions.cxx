@@ -250,8 +250,7 @@ void convert( Rotation3D const & from, Quaternion  & to)
 ////////////////////////////////////////////////////////////////////////////////
 /// conversion from Rotation3D to RotationZYX
 /// same Math used as for EulerAngles apart from some different meaning of angles and
-/// matrix elements. But the basic algorithms principles are the same described in
-/// http://www.cern.ch/mathlibs/documents/eulerAngleComputation.pdf
+/// matrix elements.
 
 void convert( Rotation3D const & from, RotationZYX  & to)
 {
