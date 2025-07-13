@@ -109,8 +109,6 @@ static void correctByPi ( double& psi, double& phi ) {
 void convert( Rotation3D const & from, EulerAngles & to)
 {
    // conversion from Rotation3D to Euler Angles
-   // Mathematical justification appears in
-   // http://www.cern.ch/mathlibs/documents/eulerAngleComputation.pdf
 
    double r[9];
    from.GetComponents(r,r+9);
