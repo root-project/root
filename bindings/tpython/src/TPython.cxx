@@ -268,6 +268,8 @@ Bool_t TPython::Import(const char *mod_name)
          // get full class name (including module)
          PyObject *pyClName = PyObject_GetAttr(value, cppNameStr.obj());
          if (!pyClName) {
+            if (PyErr_Occurred())
+                PyErr_Clear();
             pyClName = PyObject_GetAttr(value, nameStr.obj());
          }
 
