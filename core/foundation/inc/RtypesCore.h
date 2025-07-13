@@ -31,6 +31,7 @@
  * Likewise with `ULong_t`.
  * \warning In some architectures, `std::int64_t` may have a different underlying data type (long vs int) than in others
  * and may lead to a different StreamerInfo than in others, thus it might be convenient to use (U)Long64_t instead.
+ * Hence, full fledge embrace of the std::types is actually waiting on ROOT I/O to be extended to support them explicitly.
  */
 
 #include <ROOT/RConfig.hxx>
