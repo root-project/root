@@ -20,7 +20,7 @@ add_custom_command(TARGET treeplayer_leafs POST_BUILD
 
 ROOT_ADD_GTEST(treeplayer_readerarray_iterator readerarray_iterator.cxx LIBRARIES TreePlayer)
 
-ROOT_ADD_GTEST(treeplayer_regressions regressions.cxx LIBRARIES TreePlayer)
+ROOT_ADD_GTEST(treeplayer_regressions regressions.cxx LIBRARIES TreePlayer Physics)
 
 ROOT_ADD_GTEST(ttreeindex_clone ttreeindex_clone.cxx LIBRARIES TreePlayer)
 
