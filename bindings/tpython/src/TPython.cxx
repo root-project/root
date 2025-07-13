@@ -135,18 +135,8 @@ Bool_t TPython::Initialize()
       return true;
 
    if (!Py_IsInitialized()) {
-// this happens if Cling comes in first
-#if PY_VERSION_HEX < 0x03020000
-      PyEval_InitThreads();
-#endif
-
-// set the command line arguments on python's sys.argv
-#if PY_VERSION_HEX < 0x03000000
-      char *argv[] = {"root"};
-#else
       wchar_t rootStr[] = L"root";
       wchar_t *argv[] = {rootStr};
-#endif
       int argc = sizeof(argv) / sizeof(argv[0]);
 #if PY_VERSION_HEX < 0x030b0000
       Py_Initialize();
@@ -171,10 +161,8 @@ Bool_t TPython::Initialize()
       }
       PyConfig_Clear(&config);
 #endif
-#if PY_VERSION_HEX >= 0x03020000
 #if PY_VERSION_HEX < 0x03090000
       PyEval_InitThreads();
-#endif
 #endif
 
       // try again to see if the interpreter is initialized
@@ -297,15 +285,11 @@ void TPython::LoadMacro(const char *name)
    PyObjectRef old{PyDict_Values(gMainDict)};
 
 // actual execution
-#if PY_VERSION_HEX < 0x03000000
-   Exec((std::string("execfile(\"") + name + "\")").c_str());
-#else
    Exec((std::string("__pyroot_f = open(\"") + name +
          "\"); "
          "exec(__pyroot_f.read()); "
          "__pyroot_f.close(); del __pyroot_f")
            .c_str());
-#endif
 
    // obtain new __main__ contents
    PyObjectRef current{PyDict_Values(gMainDict)};
