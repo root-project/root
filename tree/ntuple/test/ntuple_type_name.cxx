@@ -37,6 +37,14 @@ TEST(RNTuple, TypeNameNormalizationByName)
    EXPECT_EQ("std::uint32_t", RFieldBase::Create("f", "SG::sgkey_t").Unwrap()->GetTypeName());
    EXPECT_EQ("SG::sgkey_t", RFieldBase::Create("f", "SG::sgkey_t").Unwrap()->GetTypeAlias());
 
+   EXPECT_EQ("std::array<std::array<std::uint32_t,3>,2>",
+             RFieldBase::Create("f", "SG::sgkey_t[2][3]").Unwrap()->GetTypeName());
+   EXPECT_EQ("std::array<SG::sgkey_t,2>", RFieldBase::Create("f", "SG::sgkey_t[2]").Unwrap()->GetTypeAlias());
+   EXPECT_EQ("std::vector<std::array<double,2>>",
+             RFieldBase::Create("f", "vector<Double32_t[2]>").Unwrap()->GetTypeName());
+   EXPECT_EQ("std::vector<std::array<Double32_t,2>>",
+             RFieldBase::Create("f", "vector<Double32_t[2]>").Unwrap()->GetTypeAlias());
+
    const std::string innerCV = "class InnerCV<const int, const volatile int, volatile const int, volatile int>";
    const std::string normInnerCV =
       "InnerCV<const std::int32_t,const volatile std::int32_t,const volatile std::int32_t,volatile std::int32_t>";
@@ -83,6 +91,11 @@ TEST(RNTuple, TypeNameNormalizationById)
    EXPECT_EQ("std::atomic<std::int32_t>", ROOT::Internal::GetRenormalizedTypeName(typeid(std::atomic<int>)));
    EXPECT_EQ("std::unique_ptr<std::int32_t>", ROOT::Internal::GetRenormalizedTypeName(typeid(std::unique_ptr<int>)));
    EXPECT_EQ("std::optional<std::int32_t>", ROOT::Internal::GetRenormalizedTypeName(typeid(std::optional<int>)));
+
+   EXPECT_EQ("std::array<std::array<std::uint32_t,3>,2>",
+             ROOT::Internal::GetRenormalizedTypeName(typeid(SG::sgkey_t[2][3])));
+   EXPECT_EQ("std::vector<std::array<double,2>>",
+             ROOT::Internal::GetRenormalizedTypeName(typeid(std::vector<Double32_t[2]>)));
 
    EXPECT_EQ("std::set<std::int32_t>", ROOT::Internal::GetRenormalizedTypeName(typeid(std::set<int>)));
    EXPECT_EQ("std::unordered_set<std::int32_t>",
