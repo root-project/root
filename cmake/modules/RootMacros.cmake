@@ -2163,7 +2163,11 @@ function(ROOTTEST_TARGETNAME_FROM_FILE resultvar filename)
   get_filename_component(realfp ${filename} ABSOLUTE)
   get_filename_component(filename_we ${filename} NAME_WE)
 
-  string(REPLACE "${ROOTTEST_DIR}" "" relativepath ${realfp})
+  if(DEFINED ROOTTEST_DIR)
+    string(REPLACE "${ROOTTEST_DIR}" "" relativepath ${realfp})
+  else()
+    string(REPLACE "${CMAKE_SOURCE_DIR}" "" relativepath ${realfp})
+  endif()
   string(REPLACE "${filename}"     "" relativepath ${relativepath})
 
   string(REPLACE "/" "-" targetname ${relativepath}${filename_we})
