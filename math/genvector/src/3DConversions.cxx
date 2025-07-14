@@ -109,8 +109,6 @@ static void correctByPi ( double& psi, double& phi ) {
 void convert( Rotation3D const & from, EulerAngles & to)
 {
    // conversion from Rotation3D to Euler Angles
-   // Mathematical justification appears in
-   // http://www.cern.ch/mathlibs/documents/eulerAngleComputation.pdf
 
    double r[9];
    from.GetComponents(r,r+9);
@@ -252,8 +250,7 @@ void convert( Rotation3D const & from, Quaternion  & to)
 ////////////////////////////////////////////////////////////////////////////////
 /// conversion from Rotation3D to RotationZYX
 /// same Math used as for EulerAngles apart from some different meaning of angles and
-/// matrix elements. But the basic algorithms principles are the same described in
-/// http://www.cern.ch/mathlibs/documents/eulerAngleComputation.pdf
+/// matrix elements.
 
 void convert( Rotation3D const & from, RotationZYX  & to)
 {
