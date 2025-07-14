@@ -8,9 +8,12 @@ ROOT_ADD_GTEST(treeplayer_array array.cxx LIBRARIES TreePlayer)
 
 ROOT_ADD_GTEST(treeplayer_basic basic.cxx LIBRARIES TreePlayer)
 
+if(NOT MSVC OR win_broken_tests) 
+# disable this test on Windows since it complains about pointer address
 ROOT_ADD_GTEST(treeplayer_branchobject branchobject.cxx LIBRARIES TreePlayer)
 add_custom_command(TARGET treeplayer_branchobject POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/branchobject.root branchobject.root)
+endif()
 
 ROOT_ADD_GTEST(treeplayer_gh16804 gh16804.cxx LIBRARIES TreePlayer)
 
