@@ -1379,11 +1379,6 @@ public:
       };
 
       if (options.fOutputFormat == ESnapshotOutputFormat::kRNTuple) {
-         if (RDFInternal::GetDataSourceLabel(*this) == "TTreeDS") {
-            throw std::runtime_error("Snapshotting from TTree to RNTuple is not yet supported. The current recommended "
-                                     "way to convert TTrees to RNTuple is through the RNTupleImporter.");
-         }
-
          // The data source of the RNTuple resulting from the Snapshot action does not exist yet here, so we create one
          // without a data source for now, and set it once the actual data source can be created (i.e., after
          // writing the RNTuple).
