@@ -137,7 +137,7 @@ class ClingKernel(Kernel):
         else:
             raise RuntimeError('cling at ' + clingInPath + ' is unusable. No cling, no fun.')
 
-        for libFolder in ["/lib/libclingJupyter.", "/libexec/lib/libclingJupyter."]:
+        for libFolder in ["/bin/libclingJupyter.", "/lib/libclingJupyter.", "/libexec/lib/libclingJupyter."]:
 
             for ext in ['so', 'dylib', 'dll']:
                 libFilename = clingInstDir + libFolder + ext

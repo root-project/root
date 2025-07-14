@@ -81,6 +81,10 @@ add_cling_library(libclingJupyter ${ENABLE_SHARED} ${ENABLE_STATIC}
 set_target_properties(libclingJupyter
         PROPERTIES ENABLE_EXPORTS 1)
 
+if(MSVC)
+    set_target_properties(libclingJupyter PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
+endif()
+
 if(ENABLE_SHARED)
     if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
         set(LIBCLINGJUPYTER_LINK_FLAGS " -Wl,-compatibility_version -Wl,1")
