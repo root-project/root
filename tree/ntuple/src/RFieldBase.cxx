@@ -292,7 +292,6 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
                          const ROOT::RCreateFieldOptions &options, const ROOT::RNTupleDescriptor *desc,
                          ROOT::DescriptorId_t fieldId)
 {
-   using ROOT::Internal::ParseArrayType;
    using ROOT::Internal::ParseUIntTypeToken;
    using ROOT::Internal::TokenizeTypeList;
 
@@ -331,15 +330,6 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
    // try-catch block to intercept any exception that may be thrown by Unwrap() so that this
    // function never throws but returns RResult::Error instead.
    try {
-      if (auto [arrayBaseType, arraySizes] = ParseArrayType(resolvedType); !arraySizes.empty()) {
-         std::unique_ptr<RFieldBase> arrayField = Create("_0", arrayBaseType, options, desc, fieldId).Unwrap();
-         for (int i = arraySizes.size() - 1; i >= 0; --i) {
-            arrayField =
-               std::make_unique<RArrayField>((i == 0) ? fieldName : "_0", std::move(arrayField), arraySizes[i]);
-         }
-         return arrayField;
-      }
-
       if (resolvedType == "bool") {
          result = std::make_unique<RField<bool>>(fieldName);
       } else if (resolvedType == "char") {
