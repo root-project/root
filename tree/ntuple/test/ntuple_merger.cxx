@@ -657,7 +657,7 @@ TEST(RNTupleMerger, MergeThroughTFileMerger)
 TEST(RNTupleMerger, MergeThroughTFileMergerIncremental)
 {
    // Write two test ntuples to be merged
-   // These files are practically identical except that filed indices are interchanged
+   // These files are practically identical except that field indices are interchanged
    FileRaii fileGuardIn("test_ntuple_merge_in.root");
    {
       auto model = RNTupleModel::Create();
@@ -727,6 +727,123 @@ TEST(RNTupleMerger, MergeThroughTFileMergerIncremental)
       ntupleOut->LoadEntry(19);
       ASSERT_EQ(*fooIn, *fooOut);
       ASSERT_EQ(*barIn, *barOut);
+   }
+}
+
+TEST(RNTupleMerger, MergeThroughTFileMergerIncrementalWithAttributes)
+{
+   // Write two test ntuples to be merged.
+   // These files both have 2 attribute sets, one of which (AttrSet1) is common to both.
+   // We expect the output file to contain all 3 attribute sets, where AttrSet1 has the union of both sets' entries.
+   FileRaii fileGuardIn("test_ntuple_merge_in_attr.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldFoo = model->MakeField<int>("foo");
+      auto fieldBar = model->MakeField<int>("bar");
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuardIn.GetPath().c_str(), "RECREATE"));
+      auto writer = RNTupleWriter::Append(std::move(model), "ntuple", *file);
+      auto attrSetModel = RNTupleModel::CreateBare();
+      attrSetModel->MakeField<int>("int");
+      auto attrSet1 = writer->CreateAttributeSet("AttrSet1", attrSetModel->Clone());
+      attrSetModel->MakeField<long>("long");
+      auto attrSet2 = writer->CreateAttributeSet("AttrSet2", std::move(attrSetModel));
+      auto attrEntry1 = attrSet1->BeginRange();
+      auto attrEntry2 = attrSet2->BeginRange();
+      *attrEntry1->GetPtr<int>("int") = 1;
+      *attrEntry2->GetPtr<int>("int") = 2;
+      *attrEntry2->GetPtr<long>("long") = 3;
+      for (size_t i = 0; i < 10; ++i) {
+         *fieldFoo = i * 123;
+         *fieldBar = i * 321;
+         writer->Fill();
+      }
+      attrSet1->CommitRange(std::move(attrEntry1));
+      attrSet2->CommitRange(std::move(attrEntry2));
+   }
+
+   FileRaii fileGuardOut("test_ntuple_merge_out_attr.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldBar = model->MakeField<int>("bar");
+      auto fieldFoo = model->MakeField<int>("foo");
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuardOut.GetPath().c_str(), "RECREATE"));
+      auto writer = RNTupleWriter::Append(std::move(model), "ntuple", *file);
+      auto attrSetModel = RNTupleModel::CreateBare();
+      attrSetModel->MakeField<int>("int");
+      auto attrSet1 = writer->CreateAttributeSet("AttrSet1", attrSetModel->Clone());
+      attrSetModel->MakeField<std::string>("string");
+      auto attrSet3 = writer->CreateAttributeSet("AttrSet3", std::move(attrSetModel));
+      auto attrEntry1 = attrSet1->BeginRange();
+      auto attrEntry3 = attrSet3->BeginRange();
+      *attrEntry1->GetPtr<int>("int") = 4;
+      *attrEntry3->GetPtr<int>("int") = 5;
+      *attrEntry3->GetPtr<std::string>("string") = "6";
+      for (size_t i = 0; i < 10; ++i) {
+         *fieldFoo = i * 567;
+         *fieldBar = i * 765;
+         writer->Fill();
+      }
+      attrSet1->CommitRange(std::move(attrEntry1));
+      attrSet3->CommitRange(std::move(attrEntry3));
+   }
+
+   {
+      // Now merge the inputs through TFileMerger
+      TFileMerger merger;
+      merger.SetMergeOptions(TString("rntuple.ExtraVerbose=true rntuple.AttrBehavior=Keep"));
+      merger.AddFile(fileGuardIn.GetPath().c_str());
+      merger.OutputFile(fileGuardOut.GetPath().c_str(), "UPDATE");
+      merger.PartialMerge();
+   }
+
+   // Now check some information
+   {
+      auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+      EXPECT_EQ(reader->GetNEntries(), 20);
+      EXPECT_EQ(reader->GetDescriptor().GetAttributeSetNames().size(), 3);
+
+      {
+         auto attrSet1 = reader->OpenAttributeSet("AttrSet1");
+         auto attrEntry1 = attrSet1->CreateAttrEntry();
+         auto pInt1 = attrEntry1->GetPtr<int>("int");
+         EXPECT_EQ(attrSet1->GetNAttrEntries(), 2);
+         for (auto idx : attrSet1->GetAttributes()) {
+            attrSet1->LoadAttrEntry(idx, attrEntry1);
+            EXPECT_EQ(attrEntry1.GetRange().First(), 10 * idx);
+            EXPECT_EQ(attrEntry1.GetRange().Last(), 10 * idx + 9);
+            // NOTE: since the output file is the base for the merging, for idx=0 we have its values and for idx=1
+            // we have the values of the input file.
+            EXPECT_EQ(*pInt1, idx < 1 ? 4 : 1);
+         }
+      }
+      {
+         auto attrSet2 = reader->OpenAttributeSet("AttrSet2");
+         auto attrEntry2 = attrSet2->CreateAttrEntry();
+         auto pInt2 = attrEntry2->GetPtr<int>("int");
+         auto pLong2 = attrEntry2->GetPtr<long>("long");
+         EXPECT_EQ(attrSet2->GetNAttrEntries(), 1);
+         for (auto idx : attrSet2->GetAttributes()) {
+            attrSet2->LoadAttrEntry(idx, attrEntry2);
+            EXPECT_EQ(attrEntry2.GetRange().First(), 10);
+            EXPECT_EQ(attrEntry2.GetRange().Last(), 19);
+            EXPECT_EQ(*pInt2, 2);
+            EXPECT_EQ(*pLong2, 3);
+         }
+      }
+      {
+         auto attrSet3 = reader->OpenAttributeSet("AttrSet3");
+         auto attrEntry3 = attrSet3->CreateAttrEntry();
+         auto pInt3 = attrEntry3->GetPtr<int>("int");
+         auto pStr3 = attrEntry3->GetPtr<std::string>("string");
+         EXPECT_EQ(attrSet3->GetNAttrEntries(), 1);
+         for (auto idx : attrSet3->GetAttributes()) {
+            attrSet3->LoadAttrEntry(idx, attrEntry3);
+            EXPECT_EQ(attrEntry3.GetRange().First(), 0);
+            EXPECT_EQ(attrEntry3.GetRange().Last(), 9);
+            EXPECT_EQ(*pInt3, 5);
+            EXPECT_EQ(*pStr3, "6");
+         }
+      }
    }
 }
 
@@ -3801,6 +3918,72 @@ TEST(RNTupleMerger, MergeAttributes)
       EXPECT_EQ(attrEntry.GetRange().Start(), 10);
       EXPECT_EQ(attrEntry.GetRange().End(), 25);
       EXPECT_EQ(*attrEntry->GetPtr<std::string>("string"), "This is file 1");
+   }
+}
+
+TEST(RNTupleMerger, MergeDiscardAttributes)
+{
+   FileRaii fileGuard1("test_ntuple_merge_discard_attr1.root");
+   FileRaii fileGuard2("test_ntuple_merge_discard_attr2.root");
+   FileRaii fileGuardOut("test_ntuple_merge_discard_attr_out.root");
+
+   //// Write
+   int fileNo = 0;
+   for (const auto *fileGuard : {&fileGuard1, &fileGuard2}) {
+      auto model = RNTupleModel::Create();
+      model->MakeField<int>("int");
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard->GetPath().c_str(), "RECREATE"));
+      auto wopts = RNTupleWriteOptions();
+      wopts.SetCompression(0);
+      auto writer = RNTupleWriter::Append(std::move(model), "ntuple", *file, wopts);
+
+      auto attrModel = RNTupleModel::Create();
+      attrModel->MakeField<std::string>("string");
+
+      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
+
+      auto &wModel = writer->GetModel();
+
+      auto attrEntry = attrSet->BeginRange();
+      auto pMyAttr = attrEntry->GetPtr<std::string>("string");
+      *pMyAttr = "This is file " + std::to_string(fileNo);
+      for (int i = 0; i < 10 + 5 * fileNo; ++i) {
+         auto entry = wModel.CreateEntry();
+         *entry->GetPtr<int>("int") = i;
+         writer->Fill(*entry);
+      }
+      attrSet->CommitRange(std::move(attrEntry));
+      ++fileNo;
+   }
+
+   // Merge
+   {
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      {
+         auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuardOut.GetPath().c_str(), "RECREATE"));
+         auto wopts = RNTupleWriteOptions();
+         wopts.SetCompression(0);
+         auto destination = std::make_unique<RPageSinkFile>("ntuple", *tfile, wopts);
+         RNTupleMerger merger{std::move(destination)};
+         auto opts = RNTupleMergeOptions{};
+         opts.fAttrBehavior = ROOT::Experimental::Internal::ENTupleMergeAttrBehavior::kDiscard;
+         auto res = merger.Merge(sourcePtrs, opts);
+         EXPECT_TRUE(bool(res));
+      }
+   }
+
+   // Read
+   {
+      auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+      EXPECT_EQ(reader->GetNEntries(), 25);
+      EXPECT_THROW(reader->OpenAttributeSet("MyAttrSet"), ROOT::RException);
    }
 }
 
