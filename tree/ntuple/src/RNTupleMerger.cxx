@@ -108,7 +108,51 @@ static std::optional<ENTupleMergeErrBehavior> ParseOptionErrBehavior(const TStri
                                                         {"Skip", ENTupleMergeErrBehavior::kSkip},
                                                      });
 }
+
+static std::optional<ENTupleMergeAttrBehavior> ParseOptionAttrBehavior(const TString &opts)
+{
+   return ParseStringOption<ENTupleMergeAttrBehavior>(opts, "rntuple.AttrBehavior=",
+                                                      {
+                                                         {"Keep", ENTupleMergeAttrBehavior::kKeep},
+                                                         {"Discard", ENTupleMergeAttrBehavior::kDiscard},
+                                                      });
+}
 // -------------------------------------------------------------------------------------
+
+static ROOT::RResult<std::unique_ptr<ROOT::Internal::RPageSource>>
+OpenAttributeSource(const RNTupleAttrSetDescriptor &attrSetDesc, RAttributeSetMergeData &attrSetMergeData,
+                    ROOT::Internal::RPageSource &source, ROOT::Internal::RPageSink &destination,
+                    bool copyClusters = false)
+{
+   auto *reader = source.GetUnderlyingReader();
+   if (!reader) // No attributes to merge because the source is not file-based
+      return {nullptr};
+
+   auto attrAnchorRes =
+      reader->GetNTupleProperAtOffset(attrSetDesc.fLocator.GetPosition<std::uint64_t>(),
+                                      attrSetDesc.fLocator.GetNBytesOnStorage(), attrSetDesc.fAnchorUncompLen);
+   if (!attrAnchorRes) {
+      return R__FORWARD_ERROR(attrAnchorRes);
+   }
+   auto attrAnchor = attrAnchorRes.Unwrap();
+   auto attrSource = static_cast<ROOT::Internal::RPageSourceFile &>(source).OpenWithDifferentAnchor(attrAnchor);
+   attrSource->Attach();
+
+   // If we never found this AttributeSet name yet, create its data. This data will stay alive for the rest of the
+   // merger's lifetime.
+   if (!attrSetMergeData.fSink) {
+      auto opts = ROOT::RNTupleWriteOptions{}; // TODO: maybe we want some specific option here.
+      auto dir = destination.GetUnderlyingDirectory();
+      // Currently we're only dealing with file-based sinks for merging, so there should always be an underlying
+      // directory.
+      assert(dir);
+      attrSetMergeData.fSink = std::make_unique<ROOT::Internal::RPageSinkFile>(attrSetDesc.fName, *dir, opts);
+      attrSetMergeData.fModel =
+         attrSetMergeData.fSink->InitFromDescriptor(attrSource->GetSharedDescriptorGuard().GetRef(), copyClusters);
+   }
+
+   return {std::move(attrSource)};
+}
 
 // Entry point for TFileMerger. Internally calls RNTupleMerger::Merge().
 Long64_t ROOT::RNTuple::Merge(TCollection *inputs, TFileMergeInfo *mergeInfo)
@@ -216,17 +260,42 @@ try {
       sources.push_back(std::move(source));
    }
 
+   RNTupleMergeOptions mergerOpts;
+   mergerOpts.fCompressionSettings = *compression;
+   mergerOpts.fExtraVerbose = extraVerbose;
+   if (auto mergingMode = ParseOptionMergingMode(mergeInfo->fOptions)) {
+      mergerOpts.fMergingMode = *mergingMode;
+   }
+   if (auto errBehavior = ParseOptionErrBehavior(mergeInfo->fOptions)) {
+      mergerOpts.fErrBehavior = *errBehavior;
+   }
+   if (auto attrBehavior = ParseOptionAttrBehavior(mergeInfo->fOptions)) {
+      mergerOpts.fAttrBehavior = *attrBehavior;
+   }
+
    RNTupleWriteOptions writeOpts;
-   assert(compression);
+   assert(compression); // compression level should be decided by now.
    writeOpts.SetCompression(*compression);
    auto destination = std::make_unique<ROOT::Internal::RPageSinkFile>(ntupleName, *outFile, writeOpts);
+
    std::unique_ptr<ROOT::RNTupleModel> model;
+   std::unordered_map<std::string, RAttributeSetMergeData> attrMergeData;
    // If we already have an existing RNTuple, copy over its descriptor to support incremental merging
    if (outNTuple) {
       auto outSource = RPageSourceFile::CreateFromAnchor(*outNTuple);
       outSource->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
-      auto desc = outSource->GetSharedDescriptorGuard();
-      model = destination->InitFromDescriptor(desc.GetRef(), true /* copyClusters */);
+      auto descGuard = outSource->GetSharedDescriptorGuard();
+      const auto &srcDesc = descGuard.GetRef();
+      // For incremental merging we rewrite the metadata but don't touch the actual pages. Note that
+      // we don't merge the Footer's schema extension into the header, but we keep the two separate
+      // (hence why outSource gets attached with kForWriting).
+      model = destination->InitFromDescriptor(srcDesc, true /* copyClusters */);
+
+      if (mergerOpts.fAttrBehavior == ENTupleMergeAttrBehavior::kKeep) {
+         for (auto attrSet : ROOT::Experimental::Internal::GetAttributeSets(srcDesc)) {
+            OpenAttributeSource(attrSet, attrMergeData[attrSet.fName], *outSource, *destination, true).Unwrap();
+         }
+      }
    }
 
    // Interface conversion
@@ -237,15 +306,7 @@ try {
 
    // Now merge
    RNTupleMerger merger{std::move(destination), std::move(model)};
-   RNTupleMergeOptions mergerOpts;
-   mergerOpts.fCompressionSettings = *compression;
-   mergerOpts.fExtraVerbose = extraVerbose;
-   if (auto mergingMode = ParseOptionMergingMode(mergeInfo->fOptions)) {
-      mergerOpts.fMergingMode = *mergingMode;
-   }
-   if (auto errBehavior = ParseOptionErrBehavior(mergeInfo->fOptions)) {
-      mergerOpts.fErrBehavior = *errBehavior;
-   }
+   merger.fAttributesMergeData = std::move(attrMergeData);
    merger.Merge(sourcePtrs, mergerOpts).ThrowOnError();
 
    // Provide the caller with a merged anchor object (even though we've already
@@ -335,8 +396,6 @@ struct RNTupleMergeData {
 
    std::vector<RColumnMergeInfo> fColumns;
    ColumnIdMap_t fColumnIdMap;
-
-   std::vector<std::string> fDstAttributeSetNames;
 
    ROOT::NTupleSize_t fNumDstEntries = 0;
 
@@ -1098,44 +1157,26 @@ ROOT::RResult<void>
 ROOT::Experimental::Internal::RNTupleMerger::MergeSourceAttributes(RPageSource &source, RNTupleMergeData &mergeData,
                                                                    ROOT::NTupleSize_t nDstEntriesAtPrevSource)
 {
-   auto *reader = source.GetUnderlyingReader();
-   if (!reader) // No attributes to merge (TODO: maybe the check should be more thorough)
-      return RResult<void>::Success();
-
    // Merge each AttributeSet to the destination.
    // NOTE: we always Union-merge attribute sets (meaning the output RNTuple will contain all the Attribute Sets
    // from all sources.)
    for (const auto &attrSetDesc : ROOT::Experimental::Internal::GetAttributeSets(*mergeData.fSrcDescriptor)) {
       // Load the AttributeSet RNTuple from the source file.
-      auto attrAnchorRes =
-         reader->GetNTupleProperAtOffset(attrSetDesc.fLocator.GetPosition<std::uint64_t>(),
-                                         attrSetDesc.fLocator.GetNBytesOnStorage(), attrSetDesc.fAnchorUncompLen);
-      if (!attrAnchorRes) {
+      auto &attrSetMergeData = fAttributesMergeData[attrSetDesc.fName];
+      auto attrSourceRes = OpenAttributeSource(attrSetDesc, attrSetMergeData, source, *fDestination);
+      if (!attrSourceRes) {
          if (mergeData.fMergeOpts.fErrBehavior == ENTupleMergeErrBehavior::kAbort) {
-            return R__FORWARD_ERROR(attrAnchorRes);
+            return R__FORWARD_ERROR(attrSourceRes);
          } else {
             R__LOG_ERROR(NTupleMergeLog()) << "Failed to read AttributeSet '" << attrSetDesc.fName
-                                           << "': " << attrAnchorRes.GetError()->GetReport();
+                                           << "': " << attrSourceRes.GetError()->GetReport();
             continue;
          }
       }
-      auto attrAnchor = attrAnchorRes.Unwrap();
-      auto attrSource = static_cast<ROOT::Internal::RPageSourceFile &>(source).OpenWithDifferentAnchor(attrAnchor);
-      attrSource->Attach();
-
-      auto &attrSetMergeData = fAttributesMergeData[attrSetDesc.fName];
-      // If we never found this AttributeSet name yet, create its data. This data will stay alive for the rest of the
-      // merger's lifetime.
-      if (!attrSetMergeData.fSink) {
-         auto opts = ROOT::RNTupleWriteOptions{}; // TODO: maybe we want some specific option here.
-         auto dir = fDestination->GetUnderlyingDirectory();
-         // Currently we're only dealing with file-based sinks for merging, so there should always be an underlying
-         // directory.
-         assert(dir);
-         attrSetMergeData.fSink = std::make_unique<ROOT::Internal::RPageSinkFile>(attrSetDesc.fName, *dir, opts);
-         attrSetMergeData.fModel =
-            attrSetMergeData.fSink->InitFromDescriptor(attrSource->GetSharedDescriptorGuard().GetRef(), false);
-      }
+      auto attrSource = attrSourceRes.Unwrap();
+      // If we have no errors but no source either it means there are no AttributeSets to merge.
+      if (!attrSource)
+         return ROOT::RResult<void>::Success();
 
       // Verify schema compatibility. If two Attribute Sets have the same name we require them to have
       // an exactly identical schema. This may be relaxed in the future.
@@ -1257,10 +1298,6 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       // Create sink from the input model if not initialized
       if (!fModel) {
          fModel = fDestination->InitFromDescriptor(srcDescriptor.GetRef(), false /* copyClusters */);
-         // XXX: should we just fill in the destination's attribute sets in InitFromDescriptor?
-         // But they would have a bogus locator, so we'd need to patch it up later...
-         for (const auto &attrSetName : srcDescriptor->GetAttributeSetNames())
-            mergeData.fDstAttributeSetNames.push_back(attrSetName);
       }
 
       for (const auto &extraTypeInfoDesc : srcDescriptor->GetExtraTypeInfoIterable())
@@ -1309,9 +1346,11 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
          return R__FORWARD_ERROR(res);
 
       // merge Attributes
-      res = MergeSourceAttributes(*source, mergeData, nInitialDstEntries);
-      if (!res) {
-         SKIP_OR_ABORT(res.GetError()->GetReport());
+      if (mergeOpts.fAttrBehavior == ENTupleMergeAttrBehavior::kKeep) {
+         res = MergeSourceAttributes(*source, mergeData, nInitialDstEntries);
+         if (!res) {
+            SKIP_OR_ABORT(res.GetError()->GetReport());
+         }
       }
    } // end loop over sources
 
