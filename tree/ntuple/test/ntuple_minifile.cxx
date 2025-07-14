@@ -79,7 +79,7 @@ TEST(MiniFile, Stream)
    EXPECT_EQ(1u, ntuple.GetVersionEpoch());
    EXPECT_EQ(0u, ntuple.GetVersionMajor());
    EXPECT_EQ(0u, ntuple.GetVersionMinor());
-   EXPECT_EQ(1u, ntuple.GetVersionPatch());
+   EXPECT_EQ(2u, ntuple.GetVersionPatch());
    EXPECT_EQ(offHeader, ntuple.GetSeekHeader());
    EXPECT_EQ(offFooter, ntuple.GetSeekFooter());
 
@@ -118,7 +118,7 @@ TEST(MiniFile, Proper)
    EXPECT_EQ(1u, ntuple.GetVersionEpoch());
    EXPECT_EQ(0u, ntuple.GetVersionMajor());
    EXPECT_EQ(0u, ntuple.GetVersionMinor());
-   EXPECT_EQ(1u, ntuple.GetVersionPatch());
+   EXPECT_EQ(2u, ntuple.GetVersionPatch());
    EXPECT_EQ(offHeader, ntuple.GetSeekHeader());
    EXPECT_EQ(offFooter, ntuple.GetSeekFooter());
 
