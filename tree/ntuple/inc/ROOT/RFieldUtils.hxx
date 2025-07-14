@@ -20,6 +20,8 @@ namespace Internal {
 /// Applies RNTuple specific type name normalization rules (see specs) that help the string parsing in
 /// RFieldBase::Create(). The normalization of templated types does not include full normalization of the
 /// template arguments (hence "Prefix").
+/// Furthermore, if the type is a C-style array, rules are applied to the base type and the C style array
+/// is then mapped to an std::array.
 std::string GetCanonicalTypePrefix(const std::string &typeName);
 
 /// Given a type name normalized by ROOT meta, renormalize it for RNTuple. E.g., insert std::prefix.
@@ -47,13 +49,6 @@ enum class ERNTupleSerializationMode {
 };
 
 ERNTupleSerializationMode GetRNTupleSerializationMode(TClass *cl);
-
-/// Parse a type name of the form `T[n][m]...` and return the base type `T` and a vector that contains,
-/// in order, the declared size for each dimension, e.g. for `unsigned char[1][2][3]` it returns the tuple
-/// `{"unsigned char", {1, 2, 3}}`. Extra whitespace in `typeName` should be removed before calling this function.
-///
-/// If `typeName` is not an array type, it returns a tuple `{T, {}}`. On error, it returns a default-constructed tuple.
-std::tuple<std::string, std::vector<std::size_t>> ParseArrayType(const std::string &typeName);
 
 /// Used in RFieldBase::Create() in order to get the comma-separated list of template types
 /// E.g., gets {"int", "std::variant<double,int>"} from "int,std::variant<double,int>".
