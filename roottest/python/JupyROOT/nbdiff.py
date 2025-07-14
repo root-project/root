@@ -64,7 +64,8 @@ def removeCellMetadata(lines):
     return filteredLines
 
 def getFilteredLines(fileName):
-    filteredLines = list(filter(customLineJunkFilter, open(fileName).readlines()))
+    with open(fileName) as f:
+        filteredLines = list(filter(customLineJunkFilter, f.readlines()))
 
     # Sometimes the jupyter server adds a new line at the end of the notebook
     # and nbconvert does not.
@@ -117,9 +118,8 @@ def createKernelSpec():
     os.mkdir(kernelsPath)
     rootKernelPath = os.path.join(kernelsPath, "root")
     os.mkdir(rootKernelPath)
-    kernel_file = open(os.path.join(rootKernelPath, "kernel.json"), "w")
-    kernel_file.write(rootKernelFileContent)
-    kernel_file.close()
+    with open(os.path.join(rootKernelPath, "kernel.json"), "w") as kernel_file:
+        kernel_file.write(rootKernelFileContent)
 
     return tmpd
 
@@ -142,7 +142,8 @@ def getInterpreterName():
     return "jupyter" if ret == 0 else "i%s" %pythonInterpName
 
 def getKernelName(inNBName):
-    nbj = json.load(open(inNBName))
+    with open(inNBName) as f:
+        nbj = json.load(f)
     if nbj["metadata"]["kernelspec"]["language"] == "python":
         return pythonInterpName
     else: # we support only Python and C++

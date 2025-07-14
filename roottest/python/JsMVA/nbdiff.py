@@ -21,7 +21,8 @@ def customLineJunkFilter(line):
     return True
 
 def getFilteredLines(fileName):
-    filteredLines = list(filter(customLineJunkFilter, open(fileName).readlines()))
+    with open(fileName) as f:
+        filteredLines = list(filter(customLineJunkFilter, f.readlines()))
     # Sometimes the jupyter server adds a new line at the end of the notebook
     # and nbconvert does not.
     lastLine = filteredLines[-1]
