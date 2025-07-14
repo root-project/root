@@ -86,7 +86,6 @@ class CppCompleter(object):
     TROOT::IsLineProcessing
     TROOT::IsModified
     TROOT::IsOnHeap
-    TROOT::IsProofServ
     TROOT::IsRootFile
     TROOT::IsSortable
     TROOT::IsWebDisplay

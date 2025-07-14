@@ -7541,16 +7541,14 @@ void TTree::PrintCacheStats(Option_t* option) const
 /// filename must contain a valid class implementation derived from TSelector,
 /// where TSelector has the following member functions:
 ///
-/// - `Begin()`:         called every time a loop on the tree starts,
-///                      a convenient place to create your histograms.
-/// - `SlaveBegin()`:    called after Begin(), when on PROOF called only on the
-///                      slave servers.
-/// - `Process()`:       called for each event, in this function you decide what
-///                      to read and fill your histograms.
-/// - `SlaveTerminate`:  called at the end of the loop on the tree, when on PROOF
-///                      called only on the slave servers.
-/// - `Terminate()`:     called at the end of the loop on the tree,
-///                      a convenient place to draw/fit your histograms.
+/// - `Begin()`:          called every time a loop on the tree starts,
+///                       a convenient place to create your histograms.
+/// - `SlaveBegin()`:     called after Begin()
+/// - `Process()`:        called for each event, in this function you decide what
+///                       to read and fill your histograms.
+/// - `SlaveTerminate()`: called at the end of the loop on the tree
+/// - `Terminate()`:      called at the end of the loop on the tree,
+///                       a convenient place to draw/fit your histograms.
 ///
 /// If filename is of the form file.C, the file will be interpreted.
 ///
@@ -7620,16 +7618,14 @@ Long64_t TTree::Process(const char* filename, Option_t* option, Long64_t nentrie
 ///
 ///   The TSelector class has the following member functions:
 ///
-/// - `Begin()`:        called every time a loop on the tree starts,
-///                     a convenient place to create your histograms.
-/// - `SlaveBegin()`:   called after Begin(), when on PROOF called only on the
-///                     slave servers.
-/// - `Process()`:      called for each event, in this function you decide what
-///                     to read and fill your histograms.
-/// - `SlaveTerminate`: called at the end of the loop on the tree, when on PROOF
-///                     called only on the slave servers.
-/// - `Terminate()`:    called at the end of the loop on the tree,
-///                     a convenient place to draw/fit your histograms.
+/// - `Begin()`:          called every time a loop on the tree starts,
+///                       a convenient place to create your histograms.
+/// - `SlaveBegin()`:     called after Begin()
+/// - `Process()`:        called for each event, in this function you decide what
+///                       to read and fill your histograms.
+/// - `SlaveTerminate()`: called at the end of the loop on the tree
+/// - `Terminate()`:      called at the end of the loop on the tree,
+///                       a convenient place to draw/fit your histograms.
 ///
 ///  If the Tree (Chain) has an associated EventList, the loop is on the nentries
 ///  of the EventList, starting at firstentry, otherwise the loop is on the

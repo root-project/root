@@ -15,7 +15,6 @@
 // error                                                                //
 //                                                                      //
 // Set of error handling routines for daemon process.                   //
-// Merging of rootd and proofd/src/error.cxx                            //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -119,7 +118,7 @@ void Error(ErrorHandler_t func, int code, const char *va_(fmt), ...)
    }
 
    // Actions are defined by the specific error handler function
-   // (see rootd.cxx and proofd.cxx)
+   // (see rootd.cxx)
    if (func) (*func)(code,(const char *)buf, sizeof(buf));
 }
 

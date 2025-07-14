@@ -32,7 +32,6 @@ interpreter/cling/tools/packaging @vgvassilev
 /misc/ @dpiparo
 /montecarlo/ @dpiparo
 /net/ @gganis
-/proof/ @gganis
 /roofit/ @lmoneta @guitargeek
 /rootx/ @dpiparo
 /sql/ @pcanal @linev

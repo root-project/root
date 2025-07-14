@@ -26,12 +26,7 @@ table (column Sfx) to the specified protocol: for example
 
   TFile *f = TFile::Open("roots://host.doma.in/~fserv/TheFile.root","read")
 
-requires the use of the SRP method, and
-
-  gROOT->Proof("proofk://lxplus079.cern.ch")
-
-asks for Kerberos authentication in starting a proof session on node
-lxplus079.cern.ch.
+requires the use of the SRP method.
 
 Defaults can be changed on {host, user} base via the file $HOME/.rootauthrc;
 the header of the file $ROOTSYS/etc/system.rootauthrc, automatically generated
@@ -76,52 +71,6 @@ server) authentication is attempted. In the case the attempt is unsuccessful,
 the server sends back the list of the remaining methods accepted (if any); the
 client compares the server list with its own list of remaining methods and
 makes a new attempt if the overlap of the two lists is not empty; and so on.
-
-
-Slave/Data servers authentication during a PROOF session
-========================================================
-
-During a PROOF session there is the potential problem of Master/Slave or
-Slave/Data_Server authentication. For slaves, the list of methods to be tried
-is specified in the proof.conf file as a list of methods short names. However,
-before build the corresponding entry in THostAuth (see below) TProofServ checks
-that the method can be applied, i.e. that there exist valid credentials.
-The way the latter are transmitted depends on the method and on the
-Client/Master authentication method.
-
- * UsrPwd: to authenticate 'usrpwd' to slaves, the master needs the relevant
-           entry in the .netrc or .rootnetrc files; however, if the
-           client/master authentication was also 'usrpwd', the password is
-           already present on the master process and is used for later clear
-           authentications.
-
- * SRP:    to authenticate 'SRP' to slaves, the master needs the relevant entry
-           in the .netrc or .rootnetrc files; the syntax is the same as for
-           'usrpwd' authentication with the keyword 'secure' at the place of
-           'machine'. However, if the client/master authentication was also
-           'SRP', the master can receive the password from the client; the
-           password is sent encrypted with the internal RSA key generated for
-           the session. To use this option, set 'Proofd.SendSRPPwd 1' in your
-           .rootrc (default is 0).
-
- * Krb5/Globus  to authenticate Krb5/Globus to slaves, the master needs globus
-           credentials; this is possible (and automatic) only if the
-           client/master authentication was also Krb5/Globus.
-
- * UidGid  to authenticate 'uidgid' to slaves, the user must have the same
-           (uid,gid) on master and slaves.
-
-Negotiation is active also between master and slaves, so asking for 'uidgid'
-first may accelerate the authentication process if the server accepts it.
-
-The method actually used is listed by gProof->Print("a").
-
-If the slaves need to access data servers which are not part of the proof
-cluster, the login info vis-a-vis of these may be specified with the proofserv
-card in the .rootauthrc files (see below and etc/system.rootauthrc for
-details); the collected information is then transmitted to all the active
-slaves upon creation.
-
 
 Entries in .rootrc
 ==================
@@ -243,8 +192,6 @@ classes to display/modify/create THostAuth interactively.
       <opt> = "s" list of active security context (default)
               "h" the content of the instantiated THostAuth objects in
                   standard list
-              "p" the content of the instantiated THostAuth objects in
-                  the proof list
 
    Example:
 
@@ -308,13 +255,13 @@ Info in <THostAuth::Print>:  + Method: 1 (SRP) Ok:0 Ko:0 Dets:pt:no ru:1 us:gani
 Info in <THostAuth::Print>:  +------------------------------------------------------------------+
 Info in <::Print>:  +---------------------------- END ---------------------------------+
 
-  This is the list build following the 'proofserv' directives in .rootauthrc
+  This is the list build following the directives in .rootauthrc
 
  * THostAuth *TAuthenticate::GetHostAuth(<host_fqdn>,<user>,<opt>,<kExact>);
 
    Returns a pointer to the THostAuth object pertaining to (host,user) if it
    exist, 0 otherwise. If <opt>="R" (default) the search is performed in the
-   standard list, if <opt>="P" in the proof list. The last argument <kExact>
+   standard list. The last argument <kExact>
    is a pointer to an integer: if defined (.ne. 0) the pointed location is
    filled with 1 if the match is exact, with 0 if an matching entry with wild
    cards was found.

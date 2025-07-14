@@ -573,7 +573,7 @@ namespace ROOT {
       fflush(stdout);
 
       // Actions are defined by the specific error handler (
-      // see rootd.cxx and proofd.cxx)
+      // see rootd.cxx)
       if (func) (*func)(code,(const char *)buf, sizeof(buf));
    }
 

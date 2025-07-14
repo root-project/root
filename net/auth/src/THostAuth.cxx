@@ -43,8 +43,8 @@ ClassImp(THostAuth);
 /// Create hostauth object.
 /// 'host' may contain also the server for whicb these directives
 /// are valid in the form 'host:server' or 'server://host'
-/// with server either "sock[d]", "root[d]", "proof[d]" or
-/// 0, 1, 2, respectively.
+/// with server either "sock[d]", "root[d]" or
+/// 0, 1, respectively.
 
 THostAuth::THostAuth(const char *host, const char *user, Int_t nmeth,
                      Int_t *authmeth, char **details) : TObject()
@@ -56,8 +56,8 @@ THostAuth::THostAuth(const char *host, const char *user, Int_t nmeth,
 /// Create hostauth object.
 /// 'host' may contain also the server for whicb these directives
 /// are valid in the form 'host:server' or 'server://host'
-/// with server either "sock[d]", "root[d]", "proof[d]" or
-/// 0, 1, 2, respectively.
+/// with server either "sock[d]", "root[d]" or
+/// 0, 1, respectively.
 
 THostAuth::THostAuth(const char *host, Int_t server, const char *user,
                      Int_t nmeth, Int_t *authmeth, char **details) : TObject()
@@ -94,8 +94,8 @@ THostAuth::THostAuth(const char *host, Int_t server, const char *user,
 /// Create hostauth object.
 /// 'host' may contain also the server for whicb these directives
 /// are valid in the form 'host:server' or 'server://host'
-/// with server either "sock[d]", "root[d]", "proof[d]" or
-/// 0, 1, 2, respectively.
+/// with server either "sock[d]", "root[d]" or
+/// 0, 1, respectively.
 
 void THostAuth::Create(const char *host, const char *user, Int_t nmeth,
                        Int_t *authmeth, char **details)
@@ -123,8 +123,6 @@ void THostAuth::Create(const char *host, const char *user, Int_t nmeth,
          fServer = TSocket::kSOCKD;
       else if (srv == "1" || srv.BeginsWith("root"))
          fServer = TSocket::kROOTD;
-      else if (srv == "2" || srv.BeginsWith("proof"))
-         fServer = TSocket::kPROOFD;
    }
 
    // Check and save the host FQDN ...
@@ -183,72 +181,6 @@ void THostAuth::Create(const char *host, const char *user, Int_t nmeth,
    // Active when created
    fActive = kTRUE;
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Create hostauth object from directives given as a compact string
-/// See THostAuth::AsString().
-/// Used in proof context only; fServer not set; to be set by hand
-/// with SetServer() method if really needed
-
-THostAuth::THostAuth(const char *asstring) : TObject()
-{
-   fServer = -1;
-
-   TString strtmp(asstring);
-   char *tmp = strdup(asstring);
-
-   fHost = TString((const char *)strtok(tmp," "));
-   strtmp.ReplaceAll(fHost,"");
-   fHost.Remove(0,fHost.Index(":")+1);
-
-   fUser = TString((const char *)strtok(0," "));
-   strtmp.ReplaceAll(fUser,"");
-   fUser.Remove(0,fUser.Index(":")+1);
-
-   TString fNmet;
-   fNmet = TString((const char *)strtok(0," "));
-   strtmp.ReplaceAll(fNmet,"");
-   fNmet.Remove(0,fNmet.Index(":")+1);
-
-   free(tmp);
-
-   fNumMethods = atoi(fNmet.Data());
-   Int_t i = 0;
-   for (; i < fNumMethods; i++) {
-      TString det = strtmp;
-      det.Remove(0,det.Index("'")+1);
-      det.Resize(det.Index("'"));
-      // Remove leading spaces, if
-      char cmet[20];
-      sscanf(det.Data(),"%10s",cmet);
-      Int_t met = atoi(cmet);
-      if (met > -1 && met < kMAXSEC) {
-         det.ReplaceAll(cmet,"");
-         while (det.First(' ') == 0)
-            det.Remove(0,1);
-         while (det.Last(' ') == (det.Length() - 1))
-            det.Resize(det.Length() - 1);
-         fMethods[i] = met;
-         fSuccess[i] = 0;
-         fFailure[i] = 0;
-         fDetails[i] = det;
-      }
-      strtmp.Remove(0,strtmp.Index("'",strtmp.Index("'")+1)+1);
-   }
-   for (i = fNumMethods; i < kMAXSEC ; i++) {
-      fMethods[i] = -1;
-      fSuccess[i] = -1;
-      fFailure[i] = -1;
-   }
-
-   // List of TSecContext
-   fSecContexts = new TList;
-
-   // Active when created
-   fActive = kTRUE;
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy ctor ...
@@ -423,10 +355,10 @@ void THostAuth::SetDetails(Int_t level, const char *details)
 
 void THostAuth::Print(Option_t *proc) const
 {
-   char srvnam[5][8] = { "any", "sockd", "rootd", "proofd", "???" };
+   char srvnam[4][8] = { "any", "sockd", "rootd", "???" };
 
-   Int_t isrv = (fServer >= -1 && fServer <= TSocket::kPROOFD) ?
-      fServer+1 : TSocket::kPROOFD+2;
+   Int_t isrv = (fServer >= -1 && fServer <= TSocket::kROOTD) ?
+      fServer+1 : TSocket::kROOTD+2;
 
    Info("Print",
         "%s +------------------------------------------------------------------+",proc);

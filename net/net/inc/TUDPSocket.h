@@ -43,7 +43,7 @@ public:
                       kBrokenConn = BIT(17) // set if conn reset by peer or broken
                     };
    enum EInterest { kRead = 1, kWrite = 2 };
-   enum EServiceType { kSOCKD, kROOTD, kPROOFD };
+   enum EServiceType { kSOCKD, kROOTD };
 
 protected:
    TInetAddress  fAddress;        // remote internet address and port #

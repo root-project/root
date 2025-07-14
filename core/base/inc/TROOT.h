@@ -167,7 +167,6 @@ protected:
    TSeqCollection  *fStreamerInfo = nullptr;          ///< List of active StreamerInfo classes
    TCollection     *fClassGenerators = nullptr;       ///< List of user defined class generators;
    TSeqCollection  *fSecContexts = nullptr;           ///< List of security contexts (TSecContext)
-   TSeqCollection  *fProofs = nullptr;                ///< List of proof sessions
    TSeqCollection  *fClipboard = nullptr;             ///< List of clipboard objects
    TSeqCollection  *fDataSets = nullptr;              ///< List of data sets (TDSet or TChain)
    AListOfEnums_t   fEnums = nullptr;                 ///< List of enum types
@@ -258,7 +257,6 @@ public:
    TSeqCollection   *GetListOfMessageHandlers() const { return fMessageHandlers; }
    TCollection      *GetListOfClassGenerators() const { return fClassGenerators; }
    TSeqCollection   *GetListOfSecContexts() const { return fSecContexts; }
-   TSeqCollection   *GetListOfProofs() const { return fProofs; }
    TSeqCollection   *GetClipboard() const { return fClipboard; }
    TSeqCollection   *GetListOfDataSets() const { return fDataSets; }
    TCollection      *GetListOfEnums(Bool_t load = kFALSE);
@@ -290,7 +288,6 @@ public:
    Bool_t            IsInterrupted() const { return fInterrupt; }
    Bool_t            IsEscaped() const { return fEscape; }
    Bool_t            IsLineProcessing() const { return fLineIsProcessing ? kTRUE : kFALSE; }
-   Bool_t            IsProofServ() const { return fName == "proofserv" ? kTRUE : kFALSE; }
    Bool_t            IsRootFile(const char *filename) const;
    Bool_t            IsWebDisplay() const { return fIsWebDisplay; }
    Bool_t            IsWebDisplayBatch() const { return fIsWebDisplayBatch; }
