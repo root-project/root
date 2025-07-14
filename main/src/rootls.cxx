@@ -73,9 +73,9 @@ options:
   -1, --oneColumn       Print content in one column
   -l, --longListing     Use a long listing format.
   -t, --treeListing     Print tree recursively and use a long listing format.
+  -R, --rntupleListing  Print RNTuples recursively and use a long listing format.
   -r, --recursiveListing
                         Traverse file recursively entering any TDirectory.
-  -R, --rntupleListing  Print RNTuples recursively and use a long listing format.
 
 Examples:
 - rootls example.root
@@ -163,8 +163,8 @@ struct RootLsArgs {
       kOneColumn = 0x1,
       kLongListing = 0x2,
       kTreeListing = 0x4,
-      kRecursiveListing = 0x8,
-      kRNTupleListing = 0x10,
+      kRNTupleListing = 0x8,
+      kRecursiveListing = 0x10,
    };
 
    enum class PrintUsage {
@@ -279,27 +279,31 @@ static void PrintRNTuple(std::ostream &stream, const ROOT::RNTupleDescriptor &de
                          std::size_t minTypeLen = 0)
 {
    std::size_t maxNameLen = 0, maxTypeLen = 0;
-   for (const auto &childId : rootField.GetLinkIds()) {
-      const auto &field = desc.GetFieldDescriptor(childId);
+   std::vector<const ROOT::RFieldDescriptor *> fields;
+   fields.reserve(rootField.GetLinkIds().size());
+   for (const auto &field: desc.GetFieldIterable(rootField.GetId())) {
+      fields.push_back(&field);
       maxNameLen = std::max(maxNameLen, field.GetFieldName().length());
       maxTypeLen = std::max(maxTypeLen, field.GetTypeName().length());
    }
    maxNameLen = std::max(minNameLen, maxNameLen + 2);
    maxTypeLen = std::max(minTypeLen, maxTypeLen + 4);
 
+   std::sort(fields.begin(), fields.end(),
+             [](const auto &a, const auto &b) { return a->GetFieldName() < b->GetFieldName(); });
+
    // To aid readability a bit, we use a '.' fill for all nested subfields.
    const char fillChar = minNameLen == 0 ? ' ' : '.';
-   for (const auto &fieldId : rootField.GetLinkIds()) {
-      const auto &field = desc.GetFieldDescriptor(fieldId);
+   for (const auto *field : fields) {
       PrintIndent(stream, indent);
-      stream << std::left << std::setfill(fillChar) << std::setw(maxNameLen) << field.GetFieldName();
-      stream << std::setfill(' ') << std::setw(maxTypeLen) << field.GetTypeName();
-      if (!field.GetFieldDescription().empty()) {
-         std::string descStr = '"' + field.GetFieldDescription() + '"';
+      stream << std::left << std::setfill(fillChar) << std::setw(maxNameLen) << field->GetFieldName();
+      stream << std::setfill(' ') << std::setw(maxTypeLen) << field->GetTypeName();
+      if (!field->GetFieldDescription().empty()) {
+         std::string descStr = '"' + field->GetFieldDescription() + '"';
          stream << std::setw(1) << descStr;
       }
       stream << '\n';
-      PrintRNTuple(stream, desc, indent + 2, field, maxNameLen - 2, maxTypeLen - 2);
+      PrintRNTuple(stream, desc, indent + 2, *field, maxNameLen - 2, maxTypeLen - 2);
    }
 }
 
@@ -378,6 +382,8 @@ static void PrintNodesDetailed(std::ostream &stream, const RootLsTree &tree,
                auto reader = ROOT::RNTupleReader::Open(*rntuple);
                const auto &desc = reader->GetDescriptor();
                PrintRNTuple(stream, desc, indent + 2, desc.GetFieldZero());
+            } else {
+               R__LOG_ERROR(RootLsChannel()) << "failed to read RNTuple object: " << child.fName;
             }
          }
       }
