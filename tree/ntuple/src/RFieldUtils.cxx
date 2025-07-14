@@ -66,6 +66,50 @@ bool IsUserClass(const std::string &typeName)
    return typeName.rfind("std::", 0) != 0 && typeName.rfind("ROOT::VecOps::RVec<", 0) != 0;
 }
 
+/// Parse a type name of the form `T[n][m]...` and return the base type `T` and a vector that contains,
+/// in order, the declared size for each dimension, e.g. for `unsigned char[1][2][3]` it returns the tuple
+/// `{"unsigned char", {1, 2, 3}}`. Extra whitespace in `typeName` should be removed before calling this function.
+///
+/// If `typeName` is not an array type, it returns a tuple `{T, {}}`. On error, it returns a default-constructed tuple.
+std::tuple<std::string, std::vector<std::size_t>> ParseArrayType(const std::string &typeName)
+{
+   std::vector<std::size_t> sizeVec;
+
+   // Only parse outer array definition, i.e. the right `]` should be at the end of the type name
+   std::string prefix{typeName};
+   while (prefix.back() == ']') {
+      auto posRBrace = prefix.size() - 1;
+      auto posLBrace = prefix.rfind('[', posRBrace);
+      if (posLBrace == std::string_view::npos) {
+         throw ROOT::RException(R__FAIL(std::string("invalid array type: ") + typeName));
+      }
+      if (posRBrace - posLBrace <= 1) {
+         throw ROOT::RException(R__FAIL(std::string("invalid array type: ") + typeName));
+      }
+
+      const std::size_t size =
+         ROOT::Internal::ParseUIntTypeToken(prefix.substr(posLBrace + 1, posRBrace - posLBrace - 1));
+      if (size == 0) {
+         throw ROOT::RException(R__FAIL(std::string("invalid array size: ") + typeName));
+      }
+
+      sizeVec.insert(sizeVec.begin(), size);
+      prefix.resize(posLBrace);
+   }
+   return std::make_tuple(prefix, sizeVec);
+}
+
+/// Assembles a (nested) std::array<> based type based on the dimensions retrieved from ParseArrayType(). Returns
+/// baseType if there are no dimensions.
+std::string GetStandardArrayType(const std::string &baseType, const std::vector<std::size_t> &dimensions)
+{
+   std::string typeName = baseType;
+   for (auto i = dimensions.rbegin(), iEnd = dimensions.rend(); i != iEnd; ++i) {
+      typeName = "std::array<" + typeName + "," + std::to_string(*i) + ">";
+   }
+   return typeName;
+}
+
 // Recursively normalizes a template argument using the regular type name normalizer F as a helper.
 template <typename F>
 std::string GetNormalizedTemplateArg(const std::string &arg, bool keepQualifier, F fnTypeNormalizer)
@@ -85,7 +129,7 @@ std::string GetNormalizedTemplateArg(const std::string &arg, bool keepQualifier,
    // strips the qualifier.
    // Demangled names may have the CV qualifiers suffixed and not prefixed (but const always before volatile).
    // Note that in the latter case, we may have the CV qualifiers before array brackets, e.g. `int const[2]`.
-   const auto [base, _] = ROOT::Internal::ParseArrayType(arg);
+   const auto [base, _] = ParseArrayType(arg);
    if (base.rfind("const ", 0) == 0 || base.rfind("volatile const ", 0) == 0 ||
        base.find(" const", base.length() - 6) != std::string::npos ||
        base.find(" const volatile", base.length() - 15) != std::string::npos) {
@@ -336,7 +380,7 @@ void NormalizeTemplateArguments(std::string &templatedTypeName, int maxTemplateA
 // Given a type name normalized by ROOT Meta, return the type name normalized according to the RNTuple rules.
 std::string GetRenormalizedMetaTypeName(const std::string &metaNormalizedName)
 {
-   const std::string canonicalTypePrefix{ROOT::Internal::GetCanonicalTypePrefix(metaNormalizedName)};
+   const auto canonicalTypePrefix = ROOT::Internal::GetCanonicalTypePrefix(metaNormalizedName);
    // RNTuple resolves Double32_t for the normalized type name but keeps Double32_t for the type alias
    // (also in template parameters)
    if (canonicalTypePrefix == "Double32_t")
@@ -357,14 +401,16 @@ std::string GetRenormalizedMetaTypeName(const std::string &metaNormalizedName)
 // RNTuple rules.
 std::string GetRenormalizedDemangledTypeName(const std::string &demangledName, bool renormalizeStdString)
 {
-   std::string canonicalTypePrefix{demangledName};
+   std::string tn{demangledName};
+   RemoveSpaceBefore(tn, '[');
+   auto [canonicalTypePrefix, dimensions] = ParseArrayType(tn);
    RemoveCVQualifiers(canonicalTypePrefix);
    RemoveLeadingKeyword(canonicalTypePrefix);
    MapIntegerType(canonicalTypePrefix);
 
    if (canonicalTypePrefix.find('<') == std::string::npos) {
       // If there are no templates, the function is done.
-      return canonicalTypePrefix;
+      return GetStandardArrayType(canonicalTypePrefix, dimensions);
    }
    RemoveSpaceBefore(canonicalTypePrefix, '>');
    RemoveSpaceAfter(canonicalTypePrefix, ',');
@@ -396,15 +442,21 @@ std::string GetRenormalizedDemangledTypeName(const std::string &demangledName, b
       RenormalizeStdString(normName);
    }
 
-   return normName;
+   return GetStandardArrayType(normName, dimensions);
 }
 
 } // namespace
 
 std::string ROOT::Internal::GetCanonicalTypePrefix(const std::string &typeName)
 {
-   // Remove outer cv qualifiers
-   std::string canonicalType{TClassEdit::CleanType(typeName.c_str(), /*mode=*/1)};
+   // Remove outer cv qualifiers and extra white spaces
+   const std::string cleanedType = TClassEdit::CleanType(typeName.c_str(), /*mode=*/1);
+
+   // Can happen when called from RFieldBase::Create() and is caught there
+   if (cleanedType.empty())
+      return "";
+
+   auto [canonicalType, dimensions] = ParseArrayType(cleanedType);
 
    RemoveLeadingKeyword(canonicalType);
    if (canonicalType.substr(0, 2) == "::") {
@@ -456,7 +508,7 @@ std::string ROOT::Internal::GetCanonicalTypePrefix(const std::string &typeName)
 
    MapIntegerType(canonicalType);
 
-   return canonicalType;
+   return GetStandardArrayType(canonicalType, dimensions);
 }
 
 std::string ROOT::Internal::GetRenormalizedTypeName(const std::type_info &ti)
@@ -474,9 +526,9 @@ std::string ROOT::Internal::GetNormalizedUnresolvedTypeName(const std::string &o
    const TClassEdit::EModType modType = static_cast<TClassEdit::EModType>(
       TClassEdit::kDropStlDefault | TClassEdit::kDropComparator | TClassEdit::kDropHash);
    TClassEdit::TSplitType splitname(origName.c_str(), modType);
-   std::string canonicalTypePrefix;
-   splitname.ShortType(canonicalTypePrefix, modType);
-   canonicalTypePrefix = GetCanonicalTypePrefix(canonicalTypePrefix);
+   std::string shortType;
+   splitname.ShortType(shortType, modType);
+   const auto canonicalTypePrefix = GetCanonicalTypePrefix(shortType);
 
    if (canonicalTypePrefix.find('<') == std::string::npos) {
       // If there are no templates, the function is done.
@@ -618,30 +670,6 @@ ROOT::Internal::ERNTupleSerializationMode ROOT::Internal::GetRNTupleSerializatio
                                                   << am->GetPropertyAsString("rntuple.streamerMode");
       return ERNTupleSerializationMode::kUnset;
    }
-}
-
-std::tuple<std::string, std::vector<std::size_t>> ROOT::Internal::ParseArrayType(const std::string &typeName)
-{
-   std::vector<std::size_t> sizeVec;
-
-   // Only parse outer array definition, i.e. the right `]` should be at the end of the type name
-   std::string prefix{typeName};
-   while (prefix.back() == ']') {
-      auto posRBrace = prefix.size() - 1;
-      auto posLBrace = prefix.rfind('[', posRBrace);
-      if (posLBrace == std::string_view::npos) {
-         throw RException(R__FAIL(std::string("invalid array type: ") + typeName));
-      }
-
-      const std::size_t size = ParseUIntTypeToken(prefix.substr(posLBrace + 1, posRBrace - posLBrace - 1));
-      if (size == 0) {
-         throw RException(R__FAIL(std::string("invalid array size: ") + typeName));
-      }
-
-      sizeVec.insert(sizeVec.begin(), size);
-      prefix.resize(posLBrace);
-   }
-   return std::make_tuple(prefix, sizeVec);
 }
 
 std::vector<std::string> ROOT::Internal::TokenizeTypeList(std::string_view templateType, std::size_t maxArgs)
