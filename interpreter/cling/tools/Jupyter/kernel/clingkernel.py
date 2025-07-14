@@ -39,15 +39,30 @@ class my_void_p(ctypes.c_void_p):
 
 if sys.platform == 'win32':
     libc = ctypes.cdll.msvcrt
+
+    class FILE(ctypes.Structure):
+        pass
+
+    FILE_p = ctypes.POINTER(FILE)
+
+    libc._fdopen.argtypes = [ctypes.c_int, ctypes.c_char_p]
+    libc._fdopen.restype = FILE_p
+
+    c_stdout_p = libc._fdopen(sys.stdout.fileno(), b"w")
+    c_stderr_p = libc._fdopen(sys.stderr.fileno(), b"w")
+
+    libc.fflush.argtypes = [FILE_p]
+    libc.fflush.restype = ctypes.c_int
 else:
     libc = ctypes.CDLL(None)
-try:
-    c_stdout_p = ctypes.c_void_p.in_dll(libc, 'stdout')
-    c_stderr_p = ctypes.c_void_p.in_dll(libc, 'stderr')
-except ValueError:
-    # libc.stdout is has a funny name on OS X
-    c_stdout_p = ctypes.c_void_p.in_dll(libc, '__stdoutp')
-    c_stderr_p = ctypes.c_void_p.in_dll(libc, '__stderrp')
+
+    try:
+        c_stdout_p = ctypes.c_void_p.in_dll(libc, 'stdout')
+        c_stderr_p = ctypes.c_void_p.in_dll(libc, 'stderr')
+    except ValueError:
+        # libc.stdout is has a funny name on OS X
+        c_stdout_p = ctypes.c_void_p.in_dll(libc, '__stdoutp')
+        c_stderr_p = ctypes.c_void_p.in_dll(libc, '__stderrp')
 
 
 class FdReplacer:
