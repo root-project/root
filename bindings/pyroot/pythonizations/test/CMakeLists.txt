@@ -105,13 +105,9 @@ endif()
 
 # RDataFrame and subclasses pythonizations
 if (dataframe)
-    if(NOT MSVC OR win_broken_tests)
-        ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_makenumpy rdataframe_makenumpy.py PYTHON_DEPS numpy)
-    endif()
-    if(NOT MSVC OR win_broken_tests OR CMAKE_CXX_STANDARD GREATER 14)
-        ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_asnumpy rdataframe_asnumpy.py PYTHON_DEPS numpy)
-        ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_histo_profile rdataframe_histo_profile.py)
-    endif()
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_makenumpy rdataframe_makenumpy.py PYTHON_DEPS numpy)
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_asnumpy rdataframe_asnumpy.py PYTHON_DEPS numpy)
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_histo_profile rdataframe_histo_profile.py)
 endif()
 
 # RDFDescription pythonization
@@ -123,20 +119,16 @@ endif()
 
 # SOFIE-GNN pythonizations
 if (tmva)
-    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
-        ROOT_FIND_PYTHON_MODULE(sonnet)
-        ROOT_FIND_PYTHON_MODULE(graph_nets)
-        if (ROOT_SONNET_FOUND AND ROOT_GRAPH_NETS_FOUND)
-            ROOT_ADD_PYUNITTEST(pyroot_pyz_sofie_gnn sofie_gnn.py PYTHON_DEPS numpy sonnet graph_nets)
-        endif()
+    ROOT_FIND_PYTHON_MODULE(sonnet)
+    ROOT_FIND_PYTHON_MODULE(graph_nets)
+    if (ROOT_SONNET_FOUND AND ROOT_GRAPH_NETS_FOUND)
+        ROOT_ADD_PYUNITTEST(pyroot_pyz_sofie_gnn sofie_gnn.py PYTHON_DEPS numpy sonnet graph_nets)
     endif()
 endif()
 
 # RTensor pythonizations
 if (tmva AND dataframe)
-    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
-        ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py PYTHON_DEPS numpy)
-    endif()
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py PYTHON_DEPS numpy)
 endif()
 
 # Passing Python callables to ROOT.TF
@@ -144,6 +136,7 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tf_pycallables tf_pycallables.py PYTHON_DEPS nump
 
 if(roofit)
 
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabscollection roofit/rooabscollection.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabspdf_fitto roofit/rooabspdf_fitto.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabsreal_ploton roofit/rooabsreal_ploton.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooarglist roofit/rooarglist.py)
@@ -152,23 +145,11 @@ if(roofit)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_roodatahist_ploton roofit/roodatahist_ploton.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset roofit/roodataset.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset_numpy roofit/roodataset_numpy.py PYTHON_DEPS numpy)
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooglobalfunc roofit/rooglobalfunc.py)
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_roojsonfactorywstool roofit/roojsonfactorywstool.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_roolinkedlist roofit/roolinkedlist.py)
-
-  if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
-    ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabscollection roofit/rooabscollection.py)
-  endif()
-
-  if(NOT MSVC OR win_broken_tests)
-    # Test pythonizations for the RooFitHS3 package, which is not built on Windows.
-    ROOT_ADD_PYUNITTEST(pyroot_roofit_roojsonfactorywstool roofit/roojsonfactorywstool.py)
-
-    # Other pythonizations that fail on Windows for unknown reasons
-    ROOT_ADD_PYUNITTEST(pyroot_roofit_rooglobalfunc roofit/rooglobalfunc.py)
-    ROOT_ADD_PYUNITTEST(pyroot_roofit_roosimultaneous roofit/roosimultaneous.py)
-
-    # RooWorkspace pythonization that fails on Windows
-    ROOT_ADD_PYUNITTEST(pyroot_roofit_rooworkspace roofit/rooworkspace.py)
-  endif()
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_roosimultaneous roofit/roosimultaneous.py)
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooworkspace roofit/rooworkspace.py)
 
 endif()
 
@@ -190,9 +171,7 @@ ROOT_ADD_PYUNITTEST(pyroot_tcomplex tcomplex_operators.py)
 ROOT_ADD_PYUNITTEST(pyroot_memory memory.py)
 
 # rbatchgenerator tests
-# TODO: We currently do not support TensorFlow for Python >= 3.12 (see requirements.txt)
-# Update here once that is fixed.
-if (NOT MSVC AND tmva)
+if (tmva)
   ROOT_ADD_PYUNITTEST(batchgen rbatchgenerator_completeness.py PYTHON_DEPS numpy tensorflow torch)
 endif()
 
