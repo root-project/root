@@ -9003,9 +9003,6 @@ void TH1::Sumw2(Bool_t flag)
 
    fSumw2.Set(fNcells);
 
-   // empty the buffer
-   if (fBuffer) BufferEmpty();
-
    if (fEntries > 0)
       for (Int_t i = 0; i < fNcells; ++i)
          fSumw2.fArray[i] = TMath::Abs(RetrieveBinContent(i));
