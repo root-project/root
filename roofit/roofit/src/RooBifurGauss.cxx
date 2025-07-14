@@ -24,6 +24,7 @@ side of maximum value.
 #include <RooBifurGauss.h>
 
 #include "RooBatchCompute.h"
+#include "RooHelpers.h"
 
 #include <RooFit/Detail/MathFuncs.h>
 
@@ -39,6 +40,7 @@ RooBifurGauss::RooBifurGauss(const char *name, const char *title, RooAbsReal &_x
      sigmaR("sigmaR", "Right Sigma", this, _sigmaR)
 
 {
+   RooHelpers::checkRangeOfParameters(this, {&_sigmaL, &_sigmaR}, 0.);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
