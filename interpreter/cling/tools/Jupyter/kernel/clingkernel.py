@@ -18,8 +18,6 @@ Talks to Cling via ctypes
 __version__ = '0.0.3'
 
 import ctypes
-from contextlib import contextmanager
-from fcntl import fcntl, F_GETFL, F_SETFL
 import os
 import shutil
 import select
@@ -59,8 +57,9 @@ class FdReplacer:
         os.dup2(pipe_in, self.real_fd)
         os.close(pipe_in)
         # make pipe_out non-blocking
-        flags = fcntl(self.pipe_out, F_GETFL)
-        fcntl(self.pipe_out, F_SETFL, flags|os.O_NONBLOCK)
+        # flags = fcntl(self.pipe_out, F_GETFL)
+        # fcntl(self.pipe_out, F_SETFL, flags|os.O_NONBLOCK)
+        os.set_blocking(self.pipe_out, False)
 
     def restore(self):
         os.close(self.real_fd)
