@@ -186,5 +186,5 @@ TEST(THn, CreateSparse)
    hn.Fill(0.5);
    auto hn_sparse = THnSparseD::CreateSparse("", "", &hn);
    EXPECT_EQ(hn_sparse->GetNbins(), 1);
-   EXPECT_FLOAT_EQ(hn_sparse->GetSparseFractionBins(), 1./7); // 5 + under/overflows
+   EXPECT_FLOAT_EQ(hn_sparse->GetSparseFractionBins(), 1. / 7); // 5 + under/overflows
 }
