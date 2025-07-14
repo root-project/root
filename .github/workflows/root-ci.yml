@@ -393,7 +393,7 @@ jobs:
             property: arm64
             overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "builtin_zlib=ON", "builtin_zstd=ON"]
             architecture: ARM64
-          - image: alma9-clang
+          - image: alma10
             is_special: true
             property: "clang Ninja"
             overrides: ["CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
