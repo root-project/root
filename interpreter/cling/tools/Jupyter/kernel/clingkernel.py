@@ -37,7 +37,10 @@ from jupyter_client.session import Session
 class my_void_p(ctypes.c_void_p):
   pass
 
-libc = ctypes.CDLL(None)
+if sys.platform == 'win32':
+    libc = ctypes.cdll.msvcrt
+else:
+    libc = ctypes.CDLL(None)
 try:
     c_stdout_p = ctypes.c_void_p.in_dll(libc, 'stdout')
     c_stderr_p = ctypes.c_void_p.in_dll(libc, 'stderr')
