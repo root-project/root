@@ -62,13 +62,8 @@ TEST(TTreeReaderBasic, LorentzVector32)
    std::string code;
    {
       std::stringstream sstr;
-      #ifdef WIN32
-      sstr << "TTreeReaderValue<ROOT::Math::PtEtaPhiMVector> lv32(*(TTreeReader*)0x" << &reader
-           << ", \"lv32\");";
-      #else
       sstr << "TTreeReaderValue<ROOT::Math::PtEtaPhiMVector> lv32(*(TTreeReader*)" << &reader
            << ", \"lv32\");";
-      #endif
       code = sstr.str();
    }
    gInterpreter->Declare(code.c_str());
