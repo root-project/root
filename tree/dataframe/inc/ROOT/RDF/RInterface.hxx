@@ -1243,16 +1243,16 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
+   /// \brief Save selected columns to disk, in a new TTree or RNTuple `treename` in file `filename`.
    /// \deprecated Use other overloads that do not require template arguments.
    /// \tparam ColumnTypes variadic list of branch/column types.
-   /// \param[in] treename The name of the output TTree.
+   /// \param[in] treename The name of the output TTree or RNTuple.
    /// \param[in] filename The name of the output TFile.
-   /// \param[in] columnList The list of names of the columns/branches to be written.
-   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree.
+   /// \param[in] columnList The list of names of the columns/branches/fields to be written.
+   /// \param[in] options RSnapshotOptions struct with extra options to pass to the output TFile and TTree/RNTuple.
    /// \return a `RDataFrame` that wraps the snapshotted dataset.
    ///
-   /// Support for writing of nested branches is limited (although RDataFrame is able to read them) and dot ('.')
+   /// Support for writing of nested branches/fields is limited (although RDataFrame is able to read them) and dot ('.')
    /// characters in input column names will be replaced by underscores ('_') in the branches produced by Snapshot.
    /// When writing a variable size array through Snapshot, it is required that the column indicating its size is also
    /// written out and it appears before the array in the columnList.
@@ -1266,9 +1266,9 @@ public:
    ///
    /// ### Writing to a sub-directory
    ///
-   /// Snapshot supports writing the TTree in a sub-directory inside the TFile. It is sufficient to specify the path to
-   /// the TTree as part of the TTree name, e.g. `df.Snapshot("subdir/t", "f.root")` write TTree `t` in the
-   /// sub-directory `subdir` of file `f.root` (creating file and sub-directory as needed).
+   /// Snapshot supports writing the TTree or RNTuple in a sub-directory inside the TFile. It is sufficient to specify
+   /// the directory path as part of the TTree or RNTuple name, e.g. `df.Snapshot("subdir/t", "f.root")` writes TTree
+   /// `t` in the sub-directory `subdir` of file `f.root` (creating file and sub-directory as needed).
    ///
    /// \attention In multi-thread runs (i.e. when EnableImplicitMT() has been called) threads will loop over clusters of
    /// entries in an undefined order, so Snapshot will produce outputs in which (clusters of) entries will be shuffled
@@ -1277,7 +1277,7 @@ public:
    /// error out if such a "shuffled" TTree is used in a friendship.
    ///
    /// \note In case no events are written out (e.g. because no event passes all filters), Snapshot will still write the
-   /// requested output TTree to the file, with all the branches requested to preserve the dataset schema.
+   /// requested output TTree or RNTuple to the file, with all the branches requested to preserve the dataset schema.
    ///
    /// \note Snapshot will refuse to process columns with names of the form `#columnname`. These are special columns
    /// made available by some data sources (e.g. RNTupleDS) that represent the size of column `columnname`, and are
@@ -1299,6 +1299,14 @@ public:
    /// opts.fLazy = true;
    /// df.Snapshot("outputTree", "outputFile.root", {"x"}, opts);
    /// ~~~
+   ///
+   /// To snapshot to the RNTuple data format, the `fOutputFormat` option in `RSnapshotOptions` needs to be set
+   /// accordingly:
+   /// ~~~{.cpp}
+   /// RSnapshotOptions opts;
+   /// opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+   /// df.Snapshot("outputNTuple", "outputFile.root", {"x"}, opts);
+   /// ~~~
    template <typename... ColumnTypes>
    R__DEPRECATED(
       6, 40, "Snapshot does not need template arguments anymore, you can safely remove them from this function call.")
@@ -1310,14 +1318,14 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
-   /// \param[in] treename The name of the output TTree.
+   /// \brief Save selected columns to disk, in a new TTree or RNTuple `treename` in file `filename`.
+   /// \param[in] treename The name of the output TTree or RNTuple.
    /// \param[in] filename The name of the output TFile.
-   /// \param[in] columnList The list of names of the columns/branches to be written.
-   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree.
+   /// \param[in] columnList The list of names of the columns/branches/fields to be written.
+   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree/RNTuple.
    /// \return a `RDataFrame` that wraps the snapshotted dataset.
    ///
-   /// This function returns a `RDataFrame` built with the output tree as a source.
+   /// This function returns a `RDataFrame` built with the output TTree or RNTuple as a source.
    /// The types of the columns are automatically inferred and do not need to be specified.
    ///
    /// See above for a more complete description and example usages.
@@ -1452,14 +1460,14 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
-   /// \param[in] treename The name of the output TTree.
+   /// \brief Save selected columns to disk, in a new TTree or RNTuple `treename` in file `filename`.
+   /// \param[in] treename The name of the output TTree or RNTuple.
    /// \param[in] filename The name of the output TFile.
    /// \param[in] columnNameRegexp The regular expression to match the column names to be selected. The presence of a '^' and a '$' at the end of the string is implicitly assumed if they are not specified. The dialect supported is PCRE via the TPRegexp class. An empty string signals the selection of all columns.
-   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree
+   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree/RNTuple
    /// \return a `RDataFrame` that wraps the snapshotted dataset.
    ///
-   /// This function returns a `RDataFrame` built with the output tree as a source.
+   /// This function returns a `RDataFrame` built with the output TTree or RNTuple as a source.
    /// The types of the columns are automatically inferred and do not need to be specified.
    ///
    /// See above for a more complete description and example usages.
@@ -1495,14 +1503,14 @@ public:
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
-   /// \param[in] treename The name of the output TTree.
+   /// \brief Save selected columns to disk, in a new TTree or RNTuple `treename` in file `filename`.
+   /// \param[in] treename The name of the output TTree or RNTuple.
    /// \param[in] filename The name of the output TFile.
    /// \param[in] columnList The list of names of the columns/branches to be written.
-   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree.
+   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree/RNTuple.
    /// \return a `RDataFrame` that wraps the snapshotted dataset.
    ///
-   /// This function returns a `RDataFrame` built with the output tree as a source.
+   /// This function returns a `RDataFrame` built with the output TTree or RNTuple as a source.
    /// The types of the columns are automatically inferred and do not need to be specified.
    ///
    /// See above for a more complete description and example usages.
