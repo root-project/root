@@ -1393,20 +1393,18 @@ Long64_t TChain::LoadTree(Long64_t entry)
    Long64_t treeReadEntry = entry - fTreeOffset[treenum];
    fReadEntry = entry;
 
+   if (fExternalFriends) {
+      for (auto external_fe : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fExternalFriends)) {
+         external_fe->MarkUpdated();
+      }
+   }
+
    // If entry belongs to the current tree return entry.
    if (fTree && treenum == fTreeNumber) {
       // First set the entry the tree on its owns friends
       // (the friends of the chain will be updated in the
       // next loop).
       fTree->LoadTree(treeReadEntry);
-
-      // If we've been called while refreshing addresses of friend elements, we
-      // should notify them that they've been updated
-      if (fExternalFriends) {
-         for (auto external_fe : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fExternalFriends)) {
-            external_fe->MarkUpdated();
-         }
-      }
 
       Long64_t refreshFriendAddressesRet{};
       if (fFriends) {
@@ -1425,12 +1423,6 @@ Long64_t TChain::LoadTree(Long64_t entry)
          return refreshFriendAddressesRet;
 
       return treeReadEntry;
-   }
-
-   if (fExternalFriends) {
-      for(auto external_fe : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fExternalFriends)) {
-         external_fe->MarkUpdated();
-      }
    }
 
    // Delete the current tree and open the new tree.
