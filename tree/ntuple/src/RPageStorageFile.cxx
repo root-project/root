@@ -692,6 +692,7 @@ ROOT::Experimental::Internal::RNTupleAttrSetDescriptor ROOT::Internal::RPageSink
    RNTupleLocator locator;
    locator.SetType(RNTupleLocator::kTypeFile);
    locator.SetNBytesOnStorage(key->GetNbytes() - key->GetKeylen());
+   // Set the position to the start of the payload
    locator.SetPosition(static_cast<std::uint64_t>(key->GetSeekKey() + key->GetKeylen()));
    auto uncompLen = static_cast<std::uint64_t>(key->GetObjlen());
    return ROOT::Experimental::Internal::RNTupleAttrSetDescriptor{attrSetName, locator, uncompLen};
@@ -700,5 +701,12 @@ ROOT::Experimental::Internal::RNTupleAttrSetDescriptor ROOT::Internal::RPageSink
 void ROOT::Internal::RPageSinkFile::CommitAttributeSet(RPageSink &attrSink)
 {
    auto desc = attrSink.CommitAttributeSetInternal();
+   const auto attrSetName = desc.fName;
    fDescriptorBuilder.AddAttributeSet(std::move(desc)).ThrowOnError();
+
+   // Remove the newly added key from the Keys List to hide it
+   auto dir = GetUnderlyingDirectory();
+   auto key = dir->GetListOfKeys()->FindObject(attrSetName.c_str());
+   R__ASSERT(key);
+   dir->GetListOfKeys()->Remove(key);
 }
