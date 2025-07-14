@@ -1,3 +1,0 @@
-builtin_vdt=On
-tmva-sofie=On
-ccache=On
