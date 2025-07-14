@@ -154,6 +154,9 @@ public:
    RNTupleAttrEntryIterable GetAttributes(NTupleSize_t entryIndex);
    /// Returns all the attributes in this Set. The returned attributes are sorted by entry range start.
    RNTupleAttrEntryIterable GetAttributes();
+
+   /// Returns the number of all attribute entries in this Attribute Set.
+   std::size_t GetNAttrEntries() const { return fEntryRanges.size(); }
 };
 
 class RNTupleAttrEntryIterable final {

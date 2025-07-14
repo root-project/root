@@ -1,6 +1,7 @@
 /// \file ROOT/RNTupleMerger.hxx
 /// \ingroup NTuple
-/// \author Jakob Blomer <jblomer@cern.ch>, Max Orok <maxwellorok@gmail.com>, Alaettin Serhan Mete <amete@anl.gov>
+/// \author Jakob Blomer <jblomer@cern.ch>, Max Orok <maxwellorok@gmail.com>, Alaettin Serhan Mete <amete@anl.gov>,
+/// Giacomo Parolini <giacomo.parolini@cern.ch>
 /// \date 2020-07-08
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
@@ -64,6 +65,14 @@ enum class ENTupleMergeErrBehavior {
    kSkip
 };
 
+enum class ENTupleMergeAttrBehavior {
+   /// The merger will merge the Attributes linked to all source RNTuples into the destination
+   kKeep,
+   /// The merger will discard all sources' Attributes (in case of incremental merging, the Attributes of the
+   /// original RNTuple are preserved).
+   kDiscard,
+};
+
 struct RColumnMergeInfo;
 struct RNTupleMergeData;
 struct RSealedPageMergeData;
@@ -86,6 +95,8 @@ struct RNTupleMergeOptions {
    ENTupleMergingMode fMergingMode = ENTupleMergingMode::kFilter;
    /// Determines how the Merge function behaves upon merging errors on the main data
    ENTupleMergeErrBehavior fErrBehavior = ENTupleMergeErrBehavior::kAbort;
+   /// Determines what the Merger should do with the RNTuple Attributes of the sources.
+   ENTupleMergeAttrBehavior fAttrBehavior = ENTupleMergeAttrBehavior::kKeep;
    /// If true, the merger will emit further diagnostics and information.
    bool fExtraVerbose = false;
 };
@@ -98,6 +109,11 @@ struct RColumnOutInfo {
 // { fully.qualified.fieldName.colInputId => colOutputInfo }
 using ColumnIdMap_t = std::unordered_map<std::string, RColumnOutInfo>;
 
+struct RAttributeSetMergeData {
+   std::unique_ptr<ROOT::Internal::RPageSinkFile> fSink;
+   std::unique_ptr<ROOT::RNTupleModel> fModel;
+};
+
 // clang-format off
 /**
  * \class ROOT::Experimental::Internal::RNTupleMerger
@@ -108,12 +124,6 @@ using ColumnIdMap_t = std::unordered_map<std::string, RColumnOutInfo>;
 // clang-format on
 class RNTupleMerger final {
    friend class ROOT::RNTuple;
-
-   struct RAttributeSetMergeData {
-      std::unique_ptr<ROOT::Internal::RPageSinkFile> fSink;
-      std::unique_ptr<ROOT::RNTupleModel> fModel;
-      ColumnIdMap_t fColIdMap;
-   };
 
    using ForcePageResealingFn_t = std::function<bool(const RColumnMergeInfo &)>;
    using BeforePageResealingFn_t = std::function<void(const RColumnMergeInfo &, ROOT::Internal::RPage &)>;
