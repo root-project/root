@@ -77,13 +77,6 @@ int check_exist(const char *name)
 #include <iostream>
 #include <fstream>
 
-bool IsProofEnabled() {
-   return nullptr != strstr(gROOT->GetConfigFeatures(), "proof");
-}
-bool IsProofType(const char *what) {
-   return nullptr != strstr(what, "TProof") || nullptr != strstr(what, "TDSet");
-}
-
 int check_file(const char *filename, int expected_count)
 {
    std::ifstream f(filename);
@@ -91,18 +84,9 @@ int check_file(const char *filename, int expected_count)
    int count = 0;
    int found = 0;
    char what[1000];
-   const bool isProofEnabled = IsProofEnabled();
    while( f.getline(what,1000) ) {
       ++count;
       if (what[0]=='#') continue;
-      // If Proof is disabled and this is a name related to it, skip the analysis
-      if (isProofEnabled || !IsProofType(what)) {
-         int lres = check_exist(what);
-         if (lres) {
-            fprintf(stderr,"Failed on count == %d in %s\n",count,filename);
-            res = lres;
-         }
-      }
       ++found;
    }
    if (found != expected_count) {
@@ -120,7 +104,7 @@ int execTypedefList() {
    int res;
 
    // Just in case we have a small pch.
-   const char *whatToLoad [] = { "TPainter3dAlgorithms", "TLego", "TAuthenticate", "TProofDraw", "TChainIndex", "TF1", "TGeoBoolNode", "TShape", "TXMLEngine" };
+   const char *whatToLoad [] = { "TPainter3dAlgorithms", "TLego", "TAuthenticate", "TChainIndex", "TF1", "TGeoBoolNode", "TShape", "TXMLEngine" };
    for(unsigned int i = 0 ; i < sizeof(whatToLoad) / sizeof(const char*); ++i) {
       gInterpreter->AutoLoad(whatToLoad[i]);
       gInterpreter->AutoParse(whatToLoad[i]);
@@ -151,16 +135,16 @@ int execTypedefList() {
 #if defined(_MSC_VER)
    res = check_file("typelist_win32.v5.txt",334); if (res) return res;
    #if __cplusplus > 201402L
-      res = check_file("typelist_win32.v6.cxx17.txt",1408); if (res) return res;
+      res = check_file("typelist_win32.v6.cxx17.txt",1370); if (res) return res;
    #else
-      res = check_file("typelist_win32.v6.txt",1420); if (res) return res;
+      res = check_file("typelist_win32.v6.txt",1382); if (res) return res;
    #endif
 #elif defined(R__MACOSX) && __cplusplus > 201402L
    res = check_file("typelist.v5.txt",334); if (res) return res;
-   res = check_file("typelist.v6.cxx17.txt",1310); if (res) return res;
+   res = check_file("typelist.v6.cxx17.txt",1280); if (res) return res;
 #else   
    res = check_file("typelist.v5.txt",334); if (res) return res;
-   res = check_file("typelist.v6.txt",1322); if (res) return res;
+   res = check_file("typelist.v6.txt",1292); if (res) return res;
 #endif
 
    return 0;

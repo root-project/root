@@ -12,7 +12,7 @@
 /** \class TVirtualPerfStats
 \ingroup Base
 
-Provides the interface for the PROOF internal performance measurement
+Provides the interface for the an internal performance measurement
 and event tracing.
 */
 

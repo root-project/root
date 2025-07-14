@@ -111,8 +111,7 @@ TApplication::TApplication() :
 /// line options recognized by TApplication are described in the GetOptions()
 /// method. The recognized options are removed from the argument array.
 /// The original list of argument options can be retrieved via the Argc()
-/// and Argv() methods. The appClassName "proofserv" is reserved for the
-/// PROOF system. The "options" and "numOptions" arguments are not used,
+/// and Argv() methods. The "options" and "numOptions" arguments are not used,
 /// except if you want to by-pass the argv processing by GetOptions()
 /// in which case you should specify numOptions<0. All options will
 /// still be available via the Argv() method for later use.

@@ -752,7 +752,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc) : TDi
    fCleanups    = setNameLocked(new THashList, "Cleanups");
    fMessageHandlers = setNameLocked(new TList, "MessageHandlers");
    fSecContexts = setNameLocked(new TList, "SecContexts");
-   fProofs      = setNameLocked(new TList, "Proofs");
    fClipboard   = setNameLocked(new TList, "Clipboard");
    fDataSets    = setNameLocked(new TList, "DataSets");
    fTypes       = new TListOfTypes; fTypes->UseRWLock();
@@ -778,7 +777,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc) : TDi
    fRootFolder->AddFolder("Cleanups",  "List of RecursiveRemove Collections",fCleanups);
    fRootFolder->AddFolder("StreamerInfo","List of Active StreamerInfo Classes",fStreamerInfo);
    fRootFolder->AddFolder("SecContexts","List of Security Contexts",fSecContexts);
-   fRootFolder->AddFolder("PROOF Sessions", "List of PROOF sessions",fProofs);
    fRootFolder->AddFolder("ROOT Memory","List of Objects in the gROOT Directory",fList);
    fRootFolder->AddFolder("ROOT Files","List of Connected ROOT Files",fFiles);
 
@@ -851,7 +849,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc) : TDi
 
    // Set initial/default list of browsable objects
    fBrowsables->Add(fRootFolder, "root");
-   fBrowsables->Add(fProofs, "PROOF Sessions");
    fBrowsables->Add(workdir, gSystem->WorkingDirectory());
    fBrowsables->Add(fFiles, "ROOT Files");
 
@@ -942,7 +939,6 @@ TROOT::~TROOT()
 #ifdef R__COMPLETE_MEM_TERMINATION
       SafeDelete(fCanvases);
       SafeDelete(fTasks);
-      SafeDelete(fProofs);
       SafeDelete(fDataSets);
       SafeDelete(fClipboard);
 
@@ -1205,7 +1201,7 @@ void TROOT::CloseFiles()
                socket->SetBit(kMustCleanup);
                fClosedObjects->AddLast(socket);
             } else {
-               // Crap ... this is not a socket, likely Proof or something, let's try to find a Close
+               // Crap ... this is not a socket, let's try to find a Close
                Longptr_t other_offset;
                CallFunc_t *otherCloser = gInterpreter->CallFunc_Factory();
                gInterpreter->CallFunc_SetFuncProto(otherCloser, socket->IsA()->GetClassInfo(), "Close", "", &other_offset);

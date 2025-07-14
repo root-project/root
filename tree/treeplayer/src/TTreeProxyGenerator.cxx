@@ -1939,8 +1939,7 @@ namespace Internal {
       fprintf(hf,"inline void %s::Begin(TTree *tree)\n",classname.Data());
       fprintf(hf,"{\n");
       fprintf(hf,"   // The Begin() function is called at the start of the query.\n");
-      fprintf(hf,"   // When running with PROOF Begin() is only called on the client.\n");
-      fprintf(hf,"   // The tree argument is deprecated (on PROOF 0 is passed).\n");
+      fprintf(hf,"   // The tree argument is deprecated.\n");
       fprintf(hf,"\n");
       fprintf(hf,"   TString option = GetOption();\n");
       fprintf(hf,"   %s_Begin(tree);\n",scriptfunc.Data());
@@ -1952,8 +1951,7 @@ namespace Internal {
       fprintf(hf,"inline void %s::SlaveBegin(TTree *tree)\n",classname.Data());
       fprintf(hf,"{\n");
       fprintf(hf,"   // The SlaveBegin() function is called after the Begin() function.\n");
-      fprintf(hf,"   // When running with PROOF SlaveBegin() is called on each slave server.\n");
-      fprintf(hf,"   // The tree argument is deprecated (on PROOF 0 is passed).\n");
+      fprintf(hf,"   // The tree argument is deprecated.\n");
       fprintf(hf,"\n");
       fprintf(hf,"   Init(tree);\n");
       fprintf(hf,"\n");
@@ -1966,13 +1964,10 @@ namespace Internal {
       fprintf(hf,"inline bool %s::Process(Long64_t entry)\n",classname.Data());
       fprintf(hf,"{\n");
 
-      fprintf(hf,"   // The Process() function is called for each entry in the tree (or possibly\n"
-              "   // keyed object in the case of PROOF) to be processed. The entry argument\n"
-              "   // specifies which entry in the currently loaded tree is to be processed.\n"
+      fprintf(hf,"   // The Process() function is called for each entry in the tree to be processed.\n"
+              "   // The entry argument specifies which entry in the currently loaded tree is to be processed.\n"
               "   // It can be passed to either TTree::GetEntry() or TBranch::GetEntry()\n"
-              "   // to read either all or the required parts of the data. When processing\n"
-              "   // keyed objects with PROOF, the object is already loaded and is available\n"
-              "   // via the fObject pointer.\n"
+              "   // to read either all or the required parts of the data.\n"
               "   //\n"
               "   // This function should contain the \"body\" of the analysis. It can contain\n"
               "   // simple or elaborate selection criteria, run algorithms on the data\n"
@@ -2007,8 +2002,7 @@ namespace Internal {
       fprintf(hf,"inline void %s::SlaveTerminate()\n",classname.Data());
       fprintf(hf,"{\n");
       fprintf(hf,"   // The SlaveTerminate() function is called after all entries or objects\n"
-              "   // have been processed. When running with PROOF SlaveTerminate() is called\n"
-              "   // on each slave server.");
+              "   // have been processed.");
       fprintf(hf,"\n");
       fprintf(hf,"   %s_SlaveTerminate();\n",scriptfunc.Data());
       fprintf(hf,"}\n\n");

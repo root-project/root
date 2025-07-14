@@ -20,14 +20,12 @@ It contains the following main methods:
    attached.
 
 - void TSelector::SlaveBegin(). Create e.g. histograms in this method.
-  This method is called (with or without PROOF) before looping on the
-  entries in the Tree. When using PROOF, this method is called on
-  each worker node.
+  This method is called before looping on the
+  entries in the Tree.
 
 - void TSelector::Begin(). Mostly for backward compatibility; use
   SlaveBegin() instead. Both methods are called before looping on the
-  entries in the Tree. When using PROOF, Begin() is called on the
-  client only.
+  entries in the Tree.
 
 - bool TSelector::Notify(). This method is called at the first entry
   of a new file in a chain.
@@ -41,7 +39,6 @@ It contains the following main methods:
   next two functions in one, avoiding to have to maintain state
   in the class to communicate between these two functions.
   See WARNING below about entry.
-  This method is used by PROOF.
 
 - bool TSelector::ProcessCut(Long64_t entry). This method is called
   before processing entry. It is the user's responsibility to read
@@ -55,14 +52,9 @@ It contains the following main methods:
   This method is obsolete, use Process().
   See WARNING below about entry.
 
-- void TSelector::SlaveTerminate(). This method is called at the end of
-  the loop on all PROOF worker nodes. In local mode this method is
-  called on the client too.
-
 - void TSelector::Terminate(). This method is called at the end of
-  the loop on all entries. When using PROOF Terminate() is call on
-  the client only. Typically one performs the fits on the produced
-  histograms or write the histograms to file in this method.
+  the loop on all entries. Typically one performs the fits on the 
+  produced histograms or write the histograms to file in this method.
 
 __WARNING when a selector is used with a TChain:__
 
@@ -110,7 +102,7 @@ TSelector::~TSelector()
 /// aborted and the processing will continue with the next file, if there
 /// is no next file then Process() will be aborted. Abort() can also  be
 /// called from Begin(), SlaveBegin(), Init() and Notify(). After abort
-/// the SlaveTerminate() and Terminate() are always called. The abort flag
+/// the Terminate() method is always called. The abort flag
 /// can be checked in these methods using GetAbort().
 
 void TSelector::Abort(const char *why, EAbort what)
@@ -232,7 +224,7 @@ TSelector *TSelector::GetSelector(const char *filename)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Find out if this is a standard selection used for Draw actions
-/// (either TSelectorDraw, TProofDraw or deriving from them).
+/// (either TSelectorDraw or deriving from it).
 
 bool TSelector::IsStandardDraw(const char *selec)
 {
@@ -249,8 +241,7 @@ bool TSelector::IsStandardDraw(const char *selec)
          stdselec = true;
       } else {
          TClass *cl = TClass::GetClass(selec);
-         if (cl && (cl->InheritsFrom("TProofDraw") ||
-                    cl->InheritsFrom("TSelectorDraw")))
+         if (cl && (cl->InheritsFrom("TSelectorDraw")))
             stdselec = true;
       }
    }
@@ -333,13 +324,11 @@ void TSelector::ProcessFill(Long64_t /*entry*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// The Process() function is called for each entry in the tree (or possibly
-/// keyed object in the case of PROOF) to be processed. The entry argument
-/// specifies which entry in the currently loaded tree is to be processed.
+/// The Process() function is called for each entry in the tree to be processed. 
+/// The entry argument specifies which entry in the currently loaded 
+/// tree is to be processed.
 /// It can be passed to either t01::GetEntry() or TBranch::GetEntry()
-/// to read either all or the required parts of the data. When processing
-/// keyed objects with PROOF, the object is already loaded and is available
-/// via the fObject pointer.
+/// to read either all or the required parts of the data.
 ///
 /// This function should contain the "body" of the analysis. It can contain
 /// simple or elaborate selection criteria, run algorithms on the data

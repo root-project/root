@@ -1254,9 +1254,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
               "   // a new tree or chain. Typically here the branch addresses and branch\n"
               "   // pointers of the tree will be set.\n"
               "   // It is normally not necessary to make changes to the generated\n"
-              "   // code, but the routine can be extended by the user if needed.\n"
-              "   // Init() will be called many times when running on PROOF\n"
-              "   // (once per file to be processed).\n\n");
+              "   // code, but the routine can be extended by the user if needed.\n\n");
    if (mustInit.Last()) {
       TIter next(&mustInit);
       TObject *obj;
@@ -1364,8 +1362,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    fprintf(fp,"bool %s::Notify()\n",cppClassName.Data());
    fprintf(fp,"{\n");
    fprintf(fp,"   // The Notify() function is called when a new file is opened. This\n"
-              "   // can be either for a new TTree in a TChain or when when a new TTree\n"
-              "   // is started when using PROOF. It is normally not necessary to make changes\n"
+              "   // can be for a new TTree in a TChain. It is normally not necessary to make changes\n"
               "   // to the generated code, but the routine can be extended by the\n"
               "   // user if needed. The return value is currently not used.\n\n");
    fprintf(fp,"   return true;\n");
@@ -1450,12 +1447,10 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"// The following methods are defined in this file:\n");
       fprintf(fpc,"//    Begin():        called every time a loop on the tree starts,\n");
       fprintf(fpc,"//                    a convenient place to create your histograms.\n");
-      fprintf(fpc,"//    SlaveBegin():   called after Begin(), when on PROOF called only on the\n"
-                  "//                    slave servers.\n");
+      fprintf(fpc,"//    SlaveBegin():   called after Begin()\n");
       fprintf(fpc,"//    Process():      called for each event, in this function you decide what\n");
       fprintf(fpc,"//                    to read and fill your histograms.\n");
-      fprintf(fpc,"//    SlaveTerminate: called at the end of the loop on the tree, when on PROOF\n"
-                  "//                    called only on the slave servers.\n");
+      fprintf(fpc,"//    SlaveTerminate: called at the end of the loop on the tree.\n");
       fprintf(fpc,"//    Terminate():    called at the end of the loop on the tree,\n");
       fprintf(fpc,"//                    a convenient place to draw/fit your histograms.\n");
       fprintf(fpc,"//\n");
@@ -1474,8 +1469,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"void %s::Begin(TTree * /*tree*/)\n",cppClassName.Data());
       fprintf(fpc,"{\n");
       fprintf(fpc,"   // The Begin() function is called at the start of the query.\n");
-      fprintf(fpc,"   // When running with PROOF Begin() is only called on the client.\n");
-      fprintf(fpc,"   // The tree argument is deprecated (on PROOF 0 is passed).\n");
+      fprintf(fpc,"   // The tree argument is deprecated.\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"   TString option = GetOption();\n");
       fprintf(fpc,"\n");
@@ -1485,8 +1479,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"void %s::SlaveBegin(TTree * /*tree*/)\n",cppClassName.Data());
       fprintf(fpc,"{\n");
       fprintf(fpc,"   // The SlaveBegin() function is called after the Begin() function.\n");
-      fprintf(fpc,"   // When running with PROOF SlaveBegin() is called on each slave server.\n");
-      fprintf(fpc,"   // The tree argument is deprecated (on PROOF 0 is passed).\n");
+      fprintf(fpc,"   // The tree argument is deprecated.\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"   TString option = GetOption();\n");
       fprintf(fpc,"\n");
@@ -1495,13 +1488,10 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"\n");
       fprintf(fpc,"bool %s::Process(Long64_t entry)\n",cppClassName.Data());
       fprintf(fpc,"{\n");
-      fprintf(fpc,"   // The Process() function is called for each entry in the tree (or possibly\n"
-                  "   // keyed object in the case of PROOF) to be processed. The entry argument\n"
+      fprintf(fpc,"   // The Process() function is called for each entry in the tree to be processed. The entry argument\n"
                   "   // specifies which entry in the currently loaded tree is to be processed.\n"
                   "   // It can be passed to either %s::GetEntry() or TBranch::GetEntry()\n"
-                  "   // to read either all or the required parts of the data. When processing\n"
-                  "   // keyed objects with PROOF, the object is already loaded and is available\n"
-                  "   // via the fObject pointer.\n"
+                  "   // to read either all or the required parts of the data.\n"
                   "   //\n"
                   "   // This function should contain the \"body\" of the analysis. It can contain\n"
                   "   // simple or elaborate selection criteria, run algorithms on the data\n"
@@ -1520,8 +1510,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
       fprintf(fpc,"void %s::SlaveTerminate()\n",cppClassName.Data());
       fprintf(fpc,"{\n");
       fprintf(fpc,"   // The SlaveTerminate() function is called after all entries or objects\n"
-                  "   // have been processed. When running with PROOF SlaveTerminate() is called\n"
-                  "   // on each slave server.");
+                  "   // have been processed.");
       fprintf(fpc,"\n");
       fprintf(fpc,"\n");
       fprintf(fpc,"}\n");
@@ -2148,16 +2137,14 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
 /// filename must contain a valid class implementation derived from TSelector,
 /// where TSelector has the following member functions:
 ///
-/// -  Begin():        called every time a loop on the tree starts,
-///                    a convenient place to create your histograms.
-/// -  SlaveBegin():   called after Begin(), when on PROOF called only on the
-///                    slave servers.
-/// -  Process():      called for each event, in this function you decide what
-///                    to read and fill your histograms.
-/// -  SlaveTerminate: called at the end of the loop on the tree, when on PROOF
-///                    called only on the slave servers.
-/// -  Terminate():    called at the end of the loop on the tree,
-///                    a convenient place to draw/fit your histograms.
+/// -  Begin():          called every time a loop on the tree starts,
+///                      a convenient place to create your histograms.
+/// -  SlaveBegin():     called after Begin().
+/// -  Process():        called for each event, in this function you decide what
+///                      to read and fill your histograms.
+/// -  SlaveTerminate(): called at the end of the loop on the tree
+/// -  Terminate():      called at the end of the loop on the tree,
+///                      a convenient place to draw/fit your histograms.
 ///
 /// If filename is of the form file.C, the file will be interpreted.
 /// If filename is of the form file.C++, the file file.C will be compiled
@@ -2229,16 +2216,14 @@ Long64_t TTreePlayer::Process(const char *filename,Option_t *option, Long64_t ne
 ///
 ///   The TSelector class has the following member functions:
 ///
-/// -  Begin():        called every time a loop on the tree starts,
-///                    a convenient place to create your histograms.
-/// -  SlaveBegin():   called after Begin(), when on PROOF called only on the
-///                    slave servers.
-/// -  Process():      called for each event, in this function you decide what
-///                    to read and fill your histograms.
-/// -  SlaveTerminate: called at the end of the loop on the tree, when on PROOF
-///                    called only on the slave servers.
-/// -  Terminate():    called at the end of the loop on the tree,
-///                    a convenient place to draw/fit your histograms.
+/// -  Begin():          called every time a loop on the tree starts,
+///                      a convenient place to create your histograms.
+/// -  SlaveBegin():     called after Begin()
+/// -  Process():        called for each event, in this function you decide what
+///                      to read and fill your histograms.
+/// -  SlaveTerminate(): called at the end of the loop on the tree
+/// -  Terminate():      called at the end of the loop on the tree,
+///                      a convenient place to draw/fit your histograms.
 ///
 ///  If the Tree (Chain) has an associated EventList, the loop is on the nentries
 ///  of the EventList, starting at firstentry, otherwise the loop is on the

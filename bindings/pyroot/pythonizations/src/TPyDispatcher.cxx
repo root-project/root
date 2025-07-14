@@ -264,22 +264,3 @@ PyObject *TPyDispatcher::Dispatch(const char *name, const TList *attr)
 
    return result;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-PyObject *TPyDispatcher::Dispatch(TSlave *slave, TProofProgressInfo *pi)
-{
-   PyObject *args = PyTuple_New(2);
-   PyTuple_SET_ITEM(args, 0, CPyCppyy::Instance_FromVoidPtr(slave, "TSlave"));
-   PyTuple_SET_ITEM(args, 1, CPyCppyy::Instance_FromVoidPtr(pi, "TProofProgressInfo"));
-
-   PyObject *result = PyObject_CallObject(fCallable, args);
-   Py_XDECREF(args);
-
-   if (!result) {
-      PyErr_Print();
-      return 0;
-   }
-
-   return result;
-}

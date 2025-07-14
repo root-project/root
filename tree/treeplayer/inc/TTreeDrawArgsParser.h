@@ -90,7 +90,6 @@ public:
    Double_t       GetIfSpecified(Int_t num, Double_t def) const;
    Int_t          GetNoParameters() const { return fNoParameters; }
    Double_t       GetParameter(int num) const;
-   TString        GetProofSelectorName() const;
    TString const& GetObjectName() const { return fName; }
    TString        GetObjectTitle() const;
    bool           GetOptionSame() const { return fOptionSame; }

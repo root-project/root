@@ -55,7 +55,6 @@ Here is the list of available options:
   - F: File browser
   - E: Text Editor
   - H: HTML browser C: Canvas I: I/O redirection
-  - P: Proof
   - G: GL viewer
 
 */
@@ -904,12 +903,6 @@ void TRootBrowser::InitPlugins(Option_t *opt)
          ++fNbInitPlugins;
       }
 
-      // PROOF plugin...
-      if (opt[i] == 'P') {
-         cmd.Form("new TSessionViewer();");
-         ExecPlugin("PROOF", 0, cmd.Data(), 1);
-         ++fNbInitPlugins;
-      }
    }
    // --- Right bottom area
 

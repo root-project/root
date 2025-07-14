@@ -17,8 +17,7 @@
 //                                                                      //
 // TAuthenticate                                                        //
 //                                                                      //
-// An authentication module for ROOT based network services, like rootd //
-// and proofd.                                                          //
+// An authentication module for ROOT based network services, like rootd.//                                                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -63,7 +62,7 @@ private:
    TString      fDetails;     // logon details (method dependent ...)
    THostAuth   *fHostAuth;    // pointer to relevant authentication info
    TString      fPasswd;      // user's password
-   TString      fProtocol;    // remote service (rootd, proofd)
+   TString      fProtocol;    // remote service (rootd)
    Bool_t       fPwHash;      // kTRUE if fPasswd is a passwd hash
    TString      fRemote;      // remote host to which we want to connect
    Int_t        fRSAKey;      // Type of RSA key used
@@ -85,7 +84,6 @@ private:
    Bool_t       GetUserPasswd(TString &user, TString &passwd,
                               Bool_t &pwhash, Bool_t srppwd);
    char        *GetRandString(Int_t Opt,Int_t Len);
-   Int_t        ProofAuthSetup();
    Int_t        RfioAuth(TString &user);
    void         SetEnvironment();
    Int_t        SshAuth(TString &user);
@@ -103,7 +101,6 @@ private:
    static TString         fgPasswd;
    static TPluginHandler *fgPasswdDialog;   // Passwd dialog GUI plugin
    static Bool_t          fgPromptUser;     // kTRUE if user prompt required
-   static TList          *fgProofAuthInfo;  // Specific lists of THostAuth fro proof
    static Bool_t          fgPwHash;         // kTRUE if fgPasswd is a passwd hash
    static Bool_t          fgReadHomeAuthrc; // kTRUE to look for $HOME/.rootauthrc
    static TString         fgRootAuthrc;     // Path to last rootauthrc-like file read
@@ -122,7 +119,6 @@ private:
    static Bool_t          CheckHost(const char *Host, const char *host);
 
    static void            FileExpand(const char *fin, FILE *ftmp);
-   static Int_t           ProofAuthSetup(TSocket *sock, Bool_t client);
    static void            RemoveSecContext(TRootSecContext *ctx);
 
 public:
@@ -149,7 +145,6 @@ public:
    void               SetSecContext(TRootSecContext *ctx) { fSecContext = ctx; }
 
    static void        AuthError(const char *where, Int_t error);
-   static Bool_t      CheckProofAuth(Int_t cSec, TString &det);
 
    static Int_t       DecodeRSAPublic(const char *rsapubexport, R__rsa_NUMBER &n,
                                       R__rsa_NUMBER &d, char **rsassl = nullptr);
@@ -170,7 +165,6 @@ public:
                                   Option_t *opt = "R", Int_t *Exact = nullptr);
    static const char *GetKrb5Principal();
    static Bool_t      GetPromptUser();
-   static TList      *GetProofAuthInfo();
    static Int_t       GetRSAInit();
    static const char *GetRSAPubExport(Int_t key = 0);
    static THostAuth  *HasHostAuth(const char *host, const char *user,
@@ -197,7 +191,6 @@ public:
    static void        SetKrb5AuthHook(Krb5Auth_t func);
    static void        SetPromptUser(Bool_t promptuser);
    static void        SetDefaultRSAKeyType(Int_t key);
-   static void        SetReadHomeAuthrc(Bool_t readhomeauthrc); // for PROOF
    static void        SetRSAInit(Int_t init = 1);
    static Int_t       SetRSAPublic(const char *rsapubexport, Int_t klen);
    static void        SetSecureAuthHook(SecureAuth_t func);
