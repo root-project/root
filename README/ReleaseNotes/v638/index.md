@@ -5,6 +5,7 @@
 * The build options `mysql`, `odbc` and `pgsql`, that were deprecated in ROOT 6.36, are now removed.
 * The `TGLWSIncludes.h` header is deprecated and will be removed in ROOT 6.40
 * The `ROOT::Math::TDataPointN` class that can be used with the `ROOT::Math::KDETree` was removed. Use the templated `TDataPoint<N>` instead.
+* The Parallel ROOT Facility, `PROOF`, has been removed from the repository.
 
 ## Core Libraries
 * Behavior change: when selecting a template instantiation for a dictionary, all the template arguments have to be fully defined - the forward declarations are not enough any more. The error prompted by the dictionary generator will be `Warning: Unused class rule: MyTemplate<MyFwdDeclaredClass>`.

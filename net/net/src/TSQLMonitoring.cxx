@@ -1,4 +1,3 @@
-// @(#)root/proofplayer:$Id$
 // Author: J.F. Grosse-Oetringhaus, G.Ganis
 
 /*************************************************************************

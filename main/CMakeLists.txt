@@ -30,10 +30,6 @@ if(MSVC)
   add_custom_command(TARGET root.exe POST_BUILD
                      COMMAND mt -manifest ${ROOT_MANIFEST} -outputresource:${CMAKE_BINARY_DIR}/bin/root.exe)
 endif()
-if(proof)
-  ROOT_EXECUTABLE(proofserv.exe pmain.cxx LIBRARIES Core MathCore CMAKENOEXPORT)
-endif()
-
 
 if(MSVC)
   ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore CMAKENOEXPORT)

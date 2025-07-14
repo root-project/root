@@ -294,18 +294,6 @@ ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter
 ROOT_EXECUTABLE(stressHepix stressHepix.cxx LIBRARIES Core)
 #ROOT_ADD_TEST(test-stressHepix COMMAND stressHepix FAILREGEX "FAILED|Error in")
 
-#--stressProof-------------------------------------------------------------------------------
-if(proof AND NOT WIN32)
-  add_custom_target(TestData COMMAND ${CMAKE_COMMAND} -DDST=${CMAKE_SOURCE_DIR}/files -P ${CMAKE_CURRENT_SOURCE_DIR}/rootDownloadData.cmake)
-  ROOT_EXECUTABLE(stressProof stressProof.cxx LIBRARIES Proof ProofPlayer Hist)
-  ROOT_ADD_TEST(test-stressproof PRECMD ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target TestData
-                                 COMMAND stressProof lite://
-                                         -h1 ${CMAKE_SOURCE_DIR}/files/h1 -event ${CMAKE_SOURCE_DIR}/files/event
-                                         -l /tmp/stressProof-%d.log -cleanlog -catlog -noprogress
-                                         ENVIRONMENT PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
-                                         FAILREGEX "FAILED|Error in")
-endif()
-
 #--testbits----------------------------------------------------------------------------------
 ROOT_EXECUTABLE(testbits testbits.cxx LIBRARIES Core)
 ROOT_ADD_TEST(test-testbits COMMAND testbits)

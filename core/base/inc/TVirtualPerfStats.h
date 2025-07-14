@@ -16,7 +16,7 @@
 //                                                                      //
 // TVirtualPerfStats                                                    //
 //                                                                      //
-// Provides the interface for the PROOF internal performance measurment //
+// Provides the interface for an internal performance measurment        //
 // and event tracing.                                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
@@ -90,7 +90,7 @@ public:
 
    static const char *EventType(EEventType type);
 
-   ClassDefOverride(TVirtualPerfStats,0)  // ABC for collecting PROOF statistics
+   ClassDefOverride(TVirtualPerfStats,0) 
 };
 
 #define gPerfStats (TVirtualPerfStats::CurrentPerfStats())

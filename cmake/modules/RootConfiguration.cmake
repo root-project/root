@@ -745,7 +745,6 @@ if(thisroot_scripts)
 endif()
 configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.csh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.csh COPYONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.sh COPYONLY)
-configure_file(${CMAKE_SOURCE_DIR}/config/proofserv.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/roots.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/rootssh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootssh @ONLY NEWLINE_STYLE UNIX)
 if(WIN32)
@@ -794,7 +793,6 @@ endif()
 
 install(FILES ${CMAKE_BINARY_DIR}/installtree/root-config
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots
-              ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootssh
               PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
                           GROUP_EXECUTE GROUP_READ

@@ -37,6 +37,6 @@ const unsigned int kDMN_SYSLOG = 0x4;  // Log messages to syslog i.o. stderr
 
 //
 // type of service
-enum  EService  { kSOCKD = 0, kROOTD, kPROOFD };
+enum  EService  { kSOCKD = 0, kROOTD };
 
 #endif

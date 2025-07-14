@@ -1023,7 +1023,7 @@ Int_t TApplicationServer::BrowseKey(const char *keyname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Terminate the proof server.
+/// Terminate the server.
 
 void TApplicationServer::Terminate(Int_t status)
 {

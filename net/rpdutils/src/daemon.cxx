@@ -167,7 +167,7 @@ void DaemonStart(int ignsigcld, int fdkeep, EService service)
 out:
    // Close any open file descriptors
    for (fd = 0; fd < NOFILE; fd++) {
-      if ((fd != fdkeep) || (service == kPROOFD)) close(fd);
+      if ((fd != fdkeep)) close(fd);
    }
 
    ResetErrno();   // probably got set to EBADF from a close

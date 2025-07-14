@@ -59,7 +59,6 @@ file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogon.C "{
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootalias.C "")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/rootlogoff.C "{}")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/.rootrc "
-Proof.Sandbox: /tmp/proof
 Rint.History:  .root_hist
 ACLiC.LinkLibs:  1
 ")
@@ -138,10 +137,6 @@ endif()
 
 if(NOT geom)
   set(geom_veto visualisation/geom/*.C geom/*.C visualisation/geom/gdml/*.C legacy/g3d/shapes.* legacy/g3d/na49view.*)
-endif()
-
-if(NOT ROOT_proof_FOUND)
-   set(proof_veto roofit/roostats/StandardFrequentistDiscovery.C)
 endif()
 
 if(NOT ROOT_spectrum_FOUND)
@@ -425,7 +420,6 @@ set(extra_veto
   legacy/multicore/mp_H1_lambdas.C # not a tutorial; used by mp104_processH1.C et al.
   html/*.C
   legacy/net/*.C
-  legacy/proof/*.C
   io/sql/*.C
   io/tree/hsimpleProxy.C # A driver uses this macro which cannot be executed directly
   io/tree/tree103_tree.C
@@ -441,7 +435,8 @@ set(extra_veto
   analysis/tree/h1chain.C
   http/*.C
   visualisation/eve7/*.C
-  math/r/rootlogon.C)
+  math/r/rootlogon.C
+  roofit/roostats/StandardFrequentistDiscovery.C)
 
 if(MSVC)
   # disable run_h1analysis.C because of Endpoint Security HTTP traffic scanning,
@@ -502,7 +497,6 @@ set(all_veto hsimple.C
              ${macm1_veto}
              ${clad_veto}
              ${davix_veto}
-             ${proof_veto}
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)

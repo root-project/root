@@ -147,7 +147,6 @@ ROOT_BUILD_OPTION(minuit2_mpi OFF "Enable support for MPI in Minuit2")
 ROOT_BUILD_OPTION(minuit2_omp OFF "Enable support for OpenMP in Minuit2")
 ROOT_BUILD_OPTION(mpi OFF "Enable support for Message Passing Interface (MPI)")
 ROOT_BUILD_OPTION(opengl ON "Enable support for OpenGL (requires libGL and libGLU)")
-ROOT_BUILD_OPTION(proof OFF "Enable support for PROOF")
 ROOT_BUILD_OPTION(pyroot ON "Enable support for automatic Python bindings (PyROOT)")
 ROOT_BUILD_OPTION(pythia8 OFF "Enable support for Pythia 8.x [GPL]")
 ROOT_BUILD_OPTION(qt6web OFF "Enable support for Qt6 web-based display (requires Qt6::WebEngineCore and Qt6::WebEngineWidgets)")
@@ -236,7 +235,6 @@ if(all)
  set(imt_defvalue ON)
  set(mathmore_defvalue ON)
  set(opengl_defvalue ON)
- set(proof_defvalue OFF)
  set(pythia8_defvalue ON)
  set(pyroot_defvalue ON)
  set(qt6web_defvalue ON)
@@ -393,7 +391,7 @@ endif()
 # Please notify SPI when adding to this list
 foreach(opt afdsmgrd afs alien bonjour builtin_afterimage castor chirp cxx11 cxx14 cxx17
         cxxmodules exceptions geocad gfal glite globus gsl_shared hdfs html ios jemalloc krb5
-        ldap memstat minuit2 monalisa oracle pyroot-python2 pyroot_legacy
+        ldap memstat minuit2 monalisa oracle proof pyroot-python2 pyroot_legacy
         pythia6 pythia6_nolink python qt qtgsi qt5web rfio ruby sapdb srp table
         tcmalloc vmc xproofd mysql odbc pgsql)
   if(${opt})

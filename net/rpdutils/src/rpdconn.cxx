@@ -14,7 +14,7 @@
 // rpdconn                                                              //
 //                                                                      //
 // This header file contains the definition of some utility classes     //
-// used for process communication between xproofd, rootd, proofexecv.   //
+// used for process communication between rootd.                        //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

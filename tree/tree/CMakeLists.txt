@@ -52,7 +52,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Tree
     TLeafS.h
     TNtupleD.h
     TNtuple.h
-    TQueryResult.h
     TreeUtils.h
     TSelector.h
     TSelectorList.h
@@ -109,7 +108,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Tree
     src/TLeafS.cxx
     src/TNtuple.cxx
     src/TNtupleD.cxx
-    src/TQueryResult.cxx
     src/TreeUtils.cxx
     src/TSelector.cxx
     src/TSelectorList.cxx

@@ -309,40 +309,6 @@ TTreeDrawArgsParser::EOutputType TTreeDrawArgsParser::DefineType()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns appropriate TSelector class name for proof for the object that is to be drawn
-/// assumes that Parse() method has been called before.
-
-TString TTreeDrawArgsParser::GetProofSelectorName() const
-{
-   switch (fOutputType) {
-      case kUNKNOWN:
-         return "";
-      case kEVENTLIST:
-         return "TProofDrawEventList";
-      case kENTRYLIST:
-         return "TProofDrawEntryList";
-      case kPROFILE:
-         return "TProofDrawProfile";
-      case kPROFILE2D:
-         return "TProofDrawProfile2D";
-      case kGRAPH:
-         return "TProofDrawGraph";
-      case kPOLYMARKER3D:
-         return "TProofDrawPolyMarker3D";
-      case kLISTOFGRAPHS:
-         return "TProofDrawListOfGraphs";
-      case kHISTOGRAM1D:
-      case kHISTOGRAM2D:
-      case kHISTOGRAM3D:
-         return "TProofDrawHist";
-      case kLISTOFPOLYMARKERS3D:
-         return "TProofDrawListOfPolyMarkers3D";
-      default:
-         return "";
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// returns *num*-th parameter from brackets in the expression
 /// in case of an error (wrong number) returns 0.0
 /// num - number of parameter (counted from 0)

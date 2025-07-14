@@ -62,15 +62,14 @@ ClassImp(TUrl);
 /// ~~~ {.cpp}
 /// url: [proto://][user[:passwd]@]host[:port]/file.ext[?options][#anchor]
 /// ~~~
-/// Known protocols: http, root, proof, ftp, news and any special protocols
+/// Known protocols: http, root, ftp, news and any special protocols
 /// defined in the rootrc Url.Special key.
 /// The default protocol is "http", unless defaultIsFile is true in which
 /// case the url is assumed to be of type "file".
 /// If a passwd contains a @ it must be escaped by a \\, e.g.
 /// "pip@" becomes "pip\\@".
 ///
-/// Default ports: http=80, root=1094, proof=1093, ftp=20, news=119.
-/// Port #1093 has been assigned by IANA (www.iana.org) to proofd.
+/// Default ports: http=80, root=1094, ftp=20, news=119.
 /// Port #1094 has been assigned by IANA (www.iana.org) to rootd.
 
 TUrl::TUrl(const char *url, Bool_t defaultIsFile)
@@ -96,15 +95,14 @@ TUrl::~TUrl()
 ///~~~ {.cpp}
 /// url: [proto://][user[:passwd]@]host[:port]/file.ext[?options][#anchor]
 ///~~~
-/// Known protocols: http, root, proof, ftp, news and any special protocols
+/// Known protocols: http, root, ftp, news and any special protocols
 /// defined in the rootrc Url.Special key.
 /// The default protocol is "http", unless defaultIsFile is true in which
 /// case the url is assumed to be of type "file".
 /// If a passwd contains a @ it must be escaped by a \\, e.g.
 /// "pip@" becomes "pip\\@".
 ///
-/// Default ports: http=80, root=1094, proof=1093, ftp=20, news=119.
-/// Port #1093 has been assigned by IANA (www.iana.org) to proofd.
+/// Default ports: http=80, root=1094, ftp=20, news=119.
 /// Port #1094 has been assigned by IANA (www.iana.org) to rootd.
 
 void TUrl::SetUrl(const char *url, Bool_t defaultIsFile)
@@ -427,7 +425,6 @@ const char *TUrl::GetUrl(Bool_t withDeflt) const
 
       Bool_t deflt = kFALSE;
       if ((!fProtocol.CompareTo("http")  && fPort == 80)   ||
-          (fProtocol.BeginsWith("proof") && fPort == 1093) ||
           (fProtocol.BeginsWith("root")  && fPort == 1094) ||
           (!fProtocol.CompareTo("ftp")   && fPort == 20)   ||
           (!fProtocol.CompareTo("news")  && fPort == 119)  ||
@@ -536,8 +533,6 @@ void TUrl::SetProtocol(const char *proto, Bool_t setDefaultPort)
          fPort = 80;
       else if (!fProtocol.CompareTo("https"))
          fPort = 443;
-      else if (fProtocol.BeginsWith("proof"))  // can also be proofs or proofk
-         fPort = 1093;
       else if (fProtocol.BeginsWith("root"))   // can also be roots or rootk
          fPort = 1094;
       else if (!fProtocol.CompareTo("ftp"))

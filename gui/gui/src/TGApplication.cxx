@@ -80,23 +80,6 @@ TGApplication::TGApplication(const char *appClassName,
    // a GUI application is never run in batch mode
    gROOT->SetBatch(kFALSE);
 
-   if (strcmp(appClassName, "proofserv")) {
-      const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-                                          TROOT::GetTTFFontDir());
-      char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
-      // Added by cholm for use of DFSG - fonts - based on fix by Kevin
-      if (!ttfont)
-         ttfont = gSystem->Which(ttpath, "FreeSansBold.ttf", kReadPermission);
-      if (ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
-         TPluginHandler *h;
-         if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", "x11ttf")))
-            if (h->LoadPlugin() == -1)
-               Info("TGApplication", "no TTF support");
-      }
-
-      delete [] ttfont;
-   }
-
    // Create the canvas colors early so they are allocated before
    // any color table expensive bitmaps get allocated in GUI routines (like
    // creation of XPM bitmaps).

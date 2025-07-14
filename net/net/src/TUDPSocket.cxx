@@ -64,8 +64,6 @@ TUDPSocket::TUDPSocket(TInetAddress addr, const char *service)
    fServType = kSOCKD;
    if (fService.Contains("root"))
       fServType = kROOTD;
-   if (fService.Contains("proof"))
-      fServType = kPROOFD;
    fAddress = addr;
    fAddress.fPort = gSystem->GetServiceByName(service);
    fBytesSent = 0;
@@ -110,8 +108,6 @@ TUDPSocket::TUDPSocket(TInetAddress addr, Int_t port)
    fServType = kSOCKD;
    if (fService.Contains("root"))
       fServType = kROOTD;
-   if (fService.Contains("proof"))
-      fServType = kPROOFD;
    fAddress = addr;
    fAddress.fPort = port;
    SetTitle(fService);
@@ -153,8 +149,6 @@ TUDPSocket::TUDPSocket(const char *host, const char *service)
    fServType = kSOCKD;
    if (fService.Contains("root"))
       fServType = kROOTD;
-   if (fService.Contains("proof"))
-      fServType = kPROOFD;
    fAddress = gSystem->GetHostByName(host);
    fAddress.fPort = gSystem->GetServiceByName(service);
    SetName(fAddress.GetHostName());
@@ -201,8 +195,6 @@ TUDPSocket::TUDPSocket(const char *url, Int_t port)
    fServType = kSOCKD;
    if (fUrl.Contains("root"))
       fServType = kROOTD;
-   if (fUrl.Contains("proof"))
-      fServType = kPROOFD;
    fAddress = gSystem->GetHostByName(host);
    fAddress.fPort = port;
    SetName(fAddress.GetHostName());

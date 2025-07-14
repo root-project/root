@@ -31,7 +31,7 @@ RealArraySave.log: foo_C.$(DllSuf) bar_C.$(DllSuf) main_C.$(DllSuf) $(ROOT_LOC)/
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l RealArraySave.C > RealArraySave.log
 
 #main: main.C fooDict.C barDict.C foo.C bar.C
-#	g++ -g -o $@ $^ -I. `root-config --cflags --libs` -lTreePlayer -lProof
+#	g++ -g -o $@ $^ -I. `root-config --cflags --libs` -lTreePlayer
 
 #libFoo.so: main.C fooDict.C barDict.C foo.C bar.C
 #	g++ -g -shared -o $@ $^ -I. `root-config --cflags --libs`
