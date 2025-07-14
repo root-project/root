@@ -35,6 +35,18 @@ public:
    std::string GetPath() const { return fPath; }
 };
 
+template <typename T>
+void expect_vec_eq(const ROOT::RVec<T> &v1, const ROOT::RVec<T> &v2)
+{
+   ASSERT_EQ(v1.size(), v2.size()) << "Vectors 'v1' and 'v2' are of unequal length";
+   for (std::size_t i = 0ull; i < v1.size(); ++i) {
+      if constexpr (std::is_floating_point_v<T>)
+         EXPECT_FLOAT_EQ(v1[i], v2[i]) << "Vectors 'v1' and 'v2' differ at index " << i;
+      else
+         EXPECT_EQ(v1[i], v2[i]) << "Vectors 'v1' and 'v2' differ at index " << i;
+   }
+}
+
 TEST(RDFSnapshotRNTuple, FromScratch)
 {
    FileRAII fileGuard{"RDFSnapshotRNTuple_from_scratch.root"};
@@ -448,19 +460,39 @@ void WriteTestTree(const std::string &tname, const std::string &fname)
 {
    TFile file(fname.c_str(), "RECREATE");
    TTree t(tname.c_str(), tname.c_str());
-   float pt;
+
+   float pt = 42.f;
+   std::vector<float> photons{1.f, 2.f, 3.f};
+   Electron electron{137.f};
+   Jet jets;
+   jets.electrons.emplace_back(Electron{122.f});
+   jets.electrons.emplace_back(Electron{125.f});
+   jets.electrons.emplace_back(Electron{129.f});
+
+   Int_t nmuons = 1;
+   float muon_pt[3] = {10.f, 20.f, 30.f};
+
+   struct {
+      Int_t x = 1;
+      Int_t y = 2;
+   } point;
+
    t.Branch("pt", &pt);
+   t.Branch("photons", &photons);
+   t.Branch("electron", &electron);
+   t.Branch("jets", &jets);
+   t.Branch("nmuons", &nmuons);
+   t.Branch("muon_pt", muon_pt, "muon_pt[nmuons]");
+   t.Branch("point", &point, "x/I:y/I");
 
-   pt = 42.0;
    t.Fill();
-
    t.Write();
 }
 
-TEST(RDFSnapshotRNTuple, DisallowFromTTree)
+TEST(RDFSnapshotRNTuple, FromTTree)
 {
    const auto treename = "tree";
-   FileRAII fileGuard{"RDFSnapshotRNTuple_disallow_from_ttree.root"};
+   FileRAII fileGuard{"RDFSnapshotRNTuple_from_ttree.root"};
 
    WriteTestTree(treename, fileGuard.GetPath());
 
@@ -469,13 +501,68 @@ TEST(RDFSnapshotRNTuple, DisallowFromTTree)
    RSnapshotOptions opts;
    opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
 
-   try {
-      auto sdf = df.Define("x", [] { return 10; }).Snapshot("ntuple", fileGuard.GetPath(), {"pt", "x"}, opts);
-      FAIL() << "snapshotting from RNTuple to TTree is not (yet) possible";
-   } catch (const std::runtime_error &err) {
-      EXPECT_STREQ(err.what(), "Snapshotting from TTree to RNTuple is not yet supported. The current recommended way "
-                               "to convert TTrees to RNTuple is through the RNTupleImporter.");
+   {
+      // FIXME(fdegeus): snapshotting leaflist branches as-is (i.e. without explicitly providing their leafs) is not
+      // supported, because we have no way of reconstructing the memory layout of the branch itself from only the
+      // TTree's on-disk information without JITting. For RNTuple, we would be able to do this using anonymous record
+      // fields, however. Once this is implemented, this test should be changed to check the result of snapshotting
+      // "point" fully.
+      auto sdf = df.Define("x", [] { return 10; })
+                    .Snapshot("ntuple", fileGuard.GetPath(),
+                              {"x", "pt", "photons", "electron", "jets", "muon_pt", "point.x", "point.y"}, opts);
+
+      auto x = sdf->Take<int>("x");
+      auto pt = sdf->Take<float>("pt");
+      auto photons = sdf->Take<ROOT::RVec<float>>("photons");
+      auto electron = sdf->Take<Electron>("electron");
+      auto jet_electrons = sdf->Take<ROOT::RVec<Electron>>("jets.electrons");
+      auto nMuons = sdf->Take<int>("nmuons");
+      auto muonPt = sdf->Take<ROOT::RVec<float>>("muon_pt");
+      auto pointX = sdf->Take<int>("point_x");
+      auto pointY = sdf->Take<int>("point_y");
+
+      ASSERT_EQ(1UL, x->size());
+      ASSERT_EQ(1UL, pt->size());
+      ASSERT_EQ(1UL, photons->size());
+      ASSERT_EQ(1UL, electron->size());
+      ASSERT_EQ(1UL, jet_electrons->size());
+      ASSERT_EQ(1UL, nMuons->size());
+      ASSERT_EQ(1UL, muonPt->size());
+      ASSERT_EQ(1UL, pointX->size());
+      ASSERT_EQ(1UL, pointY->size());
+
+      EXPECT_EQ(10, x->front());
+      EXPECT_EQ(42.f, pt->front());
+      expect_vec_eq<float>({1.f, 2.f, 3.f}, photons->front());
+      EXPECT_EQ(Electron{137.f}, electron->front());
+      expect_vec_eq({Electron{122.f}, Electron{125.f}, Electron{129.f}}, jet_electrons->front());
+      EXPECT_EQ(1, nMuons->front());
+      expect_vec_eq({10.f}, muonPt->front());
+      EXPECT_EQ(1, pointX->front());
+      EXPECT_EQ(2, pointY->front());
    }
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+
+   auto x = reader->GetView<int>("x");
+   auto pt = reader->GetView<float>("pt");
+   auto photons = reader->GetView<ROOT::RVec<float>>("photons");
+   auto electron = reader->GetView<Electron>("electron");
+   auto jet_electrons = reader->GetView<ROOT::RVec<Electron>>("jets.electrons");
+   auto nMuons = reader->GetView<int>("nmuons");
+   auto muonPt = reader->GetView<ROOT::RVec<float>>("muon_pt");
+   auto pointX = reader->GetView<int>("point_x");
+   auto pointY = reader->GetView<int>("point_y");
+
+   EXPECT_EQ(10, x(0));
+   EXPECT_EQ(42.f, pt(0));
+   expect_vec_eq<float>({1.f, 2.f, 3.f}, photons(0));
+   EXPECT_EQ(Electron{137.f}, electron(0));
+   expect_vec_eq({Electron{122.f}, Electron{125.f}, Electron{129.f}}, jet_electrons(0));
+   EXPECT_EQ(1, nMuons(0));
+   expect_vec_eq({10.f}, muonPt(0));
+   EXPECT_EQ(1, pointX(0));
+   EXPECT_EQ(2, pointY(0));
 }
 
 #ifdef R__USE_IMT

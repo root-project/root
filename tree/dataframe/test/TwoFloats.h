@@ -14,4 +14,3 @@ public:
    }
    ClassDef(TwoFloats, 2)
 };
-
