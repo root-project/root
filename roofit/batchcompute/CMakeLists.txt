@@ -20,7 +20,7 @@ endif()
 set(shared_object_sources src/RooBatchCompute.cxx src/ComputeFunctions.cxx)
 
 # Generic implementation for CPUs that don't support vector instruction sets.
-ROOT_LINKER_LIBRARY(RooBatchCompute_GENERIC ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
+ROOT_LINKER_LIBRARY(RooBatchCompute_GENERIC ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute LIBRARIES VDT::VDT)
 target_compile_options(RooBatchCompute_GENERIC  PRIVATE ${common-flags} -DRF_ARCH=GENERIC)
 
 # Windows platform and ICC compiler need special code and testing, thus the feature has not been implemented yet for these.
@@ -28,10 +28,10 @@ if (ROOT_PLATFORM MATCHES "linux|macosx" AND CMAKE_SYSTEM_PROCESSOR MATCHES x86_
 
   target_compile_options(RooBatchCompute PRIVATE -DR__RF_ARCHITECTURE_SPECIFIC_LIBS)
 
-  ROOT_LINKER_LIBRARY(RooBatchCompute_SSE4.1  ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
-  ROOT_LINKER_LIBRARY(RooBatchCompute_AVX     ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
-  ROOT_LINKER_LIBRARY(RooBatchCompute_AVX2    ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
-  ROOT_LINKER_LIBRARY(RooBatchCompute_AVX512  ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
+  ROOT_LINKER_LIBRARY(RooBatchCompute_SSE4.1  ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute LIBRARIES VDT::VDT)
+  ROOT_LINKER_LIBRARY(RooBatchCompute_AVX     ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute LIBRARIES VDT::VDT)
+  ROOT_LINKER_LIBRARY(RooBatchCompute_AVX2    ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute LIBRARIES VDT::VDT)
+  ROOT_LINKER_LIBRARY(RooBatchCompute_AVX512  ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute LIBRARIES VDT::VDT)
 
   # Flags -fno-signaling-nans, -fno-trapping-math and -O3 are necessary to enable autovectorization (especially for GCC).
   set(common-flags $<$<CXX_COMPILER_ID:GNU>:-fno-signaling-nans>)
@@ -46,6 +46,6 @@ endif() # vector versions of library
 
 if (cuda)
   set(shared_object_sources_cu src/RooBatchCompute.cu src/ComputeFunctions.cu src/CudaInterface.cu)
-  ROOT_LINKER_LIBRARY(RooBatchCompute_CUDA  ${shared_object_sources_cu} TYPE SHARED DEPENDENCIES RooBatchCompute)
+  ROOT_LINKER_LIBRARY(RooBatchCompute_CUDA  ${shared_object_sources_cu} TYPE SHARED DEPENDENCIES RooBatchCompute LIBRARIES VDT::VDT)
   target_compile_options(RooBatchCompute_CUDA  PRIVATE -lineinfo --expt-relaxed-constexpr)
 endif()
