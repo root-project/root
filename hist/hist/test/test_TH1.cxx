@@ -6,6 +6,8 @@
 #include "TH1F.h"
 #include "THLimitsFinder.h"
 
+#include <cmath>
+#include <cstddef>
 #include <random>
 #include <vector>
 
@@ -278,4 +280,22 @@ TEST(TAxis, FindBinApprox)
       x -= x * std::numeric_limits<double>::epsilon();
       EXPECT_EQ(i, ax.FindBin(x));
    }
+}
+
+// https://github.com/root-project/root/issues/19359
+TEST(TH1, SetBufferedSumw2)
+{
+   // TH1::SetBuffer auto-adjusts small buffer sizes to at least 100 entries...
+   static constexpr std::size_t Entries = 200;
+   static constexpr double Weight = 2.0;
+
+   TH1D h1("name", "title", 1, 0, 1);
+   h1.SetBuffer(Entries);
+   for (std::size_t i = 0; i < Entries; i++) {
+      h1.Fill(0.5, Weight);
+   }
+   h1.Sumw2();
+
+   EXPECT_FLOAT_EQ(h1.GetBinContent(1), Entries * Weight);
+   EXPECT_FLOAT_EQ(h1.GetBinError(1), std::sqrt(Entries * Weight * Weight));
 }
