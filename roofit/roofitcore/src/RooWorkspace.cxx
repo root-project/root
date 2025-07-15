@@ -2432,6 +2432,67 @@ void RooWorkspace::CodeRepo::Streamer(TBuffer &R__b)
    }
 }
 
+namespace {
+
+/// \brief Serializes a RooArgSet into a RooWorkspace::Snapshot.
+///
+/// Converts a given set of RooRealVar objects from a RooArgSet into a compact
+/// `RooWorkspace::Snapshot` structure. This involves storing the component indices
+/// (from the workspace), current values, and errors of the variables.
+///
+/// \param workspace The RooWorkspace containing the component variables.
+/// \param set The RooArgSet of RooRealVar objects to serialize.
+/// \param snap The output snapshot structure to populate with the serialized data.
+void argSetToSnapshot(RooWorkspace const &workspace, RooArgSet const &set, RooWorkspace::Snapshot &snap)
+{
+   snap.SetName(set.GetName());
+
+   snap.indices.reserve(set.size());
+   snap.values.reserve(set.size());
+   snap.errors.reserve(set.size());
+   snap.isConstant.reserve(set.size());
+
+   // Create a hash map for fast index lookup
+   std::unordered_map<TNamed const*, std::size_t> indexMap;
+   for (std::size_t i = 0; i < workspace.components().size(); ++i) {
+      indexMap[workspace.components()[i]->namePtr()] = i;
+   }
+
+   for (auto *var : static_range_cast<RooRealVar const *>(set)) {
+      snap.indices.push_back(indexMap[var->namePtr()]);
+      snap.values.push_back(var->getVal());
+      snap.errors.push_back(var->getError());
+      snap.isConstant.push_back(var->isConstant());
+   }
+}
+
+/// \brief Deserializes a RooWorkspace::Snapshot into a RooArgSet.
+///
+/// Reconstructs a RooArgSet from the given snapshot by cloning the original
+/// RooAbsArg components from the workspace and restoring their values and errors.
+/// The resulting RooArgSet takes ownership of the cloned objects.
+///
+/// \param workspace The RooWorkspace containing the original components.
+/// \param snap The snapshot structure containing the serialized state.
+/// \param set The output RooArgSet to populate with restored RooRealVar objects.
+void snapshotToArgSet(RooWorkspace const &workspace, RooWorkspace::Snapshot const &snap, RooArgSet &set)
+{
+   set.setName(snap.GetName());
+
+   for (std::size_t i = 0; i < snap.values.size(); ++i) {
+      auto *orig = workspace.components()[snap.indices[i]];
+      set.addOwned(std::unique_ptr<RooAbsArg>{static_cast<RooAbsArg *>(orig->Clone())});
+
+      auto *var = static_cast<RooRealVar *>(set.get().back());
+
+      var->setVal(snap.values[i]);
+      var->setError(snap.errors[i]);
+      var->setConstant(snap.isConstant[i]);
+   }
+}
+
+} // namespace
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class RooWorkspace. This is a standard ROOT streamer for the
@@ -2453,7 +2514,7 @@ void RooWorkspace::Streamer(TBuffer &R__b)
       }
       RooAbsArg::ioStreamerPass2Finalize();
 
-      // Make expensive object cache of all objects point to intermal copy.
+      // Make expensive object cache of all objects point to internal copy.
       // Somehow this doesn't work OK automatically
       for (RooAbsArg *node : _allOwnedNodes) {
          node->setExpensiveObjectCache(_eocache);
@@ -2473,6 +2534,17 @@ void RooWorkspace::Streamer(TBuffer &R__b)
         if (auto handle = dynamic_cast<RooWorkspaceHandle*>(gobj)) {
           handle->ReplaceWS(this);
         }
+      }
+
+      // Expand the Snapshot objects to full RooArgSets
+      for (auto *snap : dynamic_range_cast<RooWorkspace::Snapshot const*>(_snapshots)) {
+         // If the type was not RooWorkspace::Snapshot, it was an old workspace
+         // where the RooArgSets were stored directly. So nothing to do.
+         if (snap) {
+            auto *set = new RooArgSet;
+            snapshotToArgSet(*this, *snap, *set);
+            _snapshots.Replace(snap, set);
+         }
       }
 
    } else {
@@ -2531,7 +2603,24 @@ void RooWorkspace::Streamer(TBuffer &R__b)
          }
       }
 
+      // Temporary container to hold converted snapshots during serialization
+      RooLinkedList snapshots;
+
+      // Loop over existing _snapshots (each is a RooArgSet), and convert them
+      // to the more compact RooWorkspace::Snapshot format
+      for (auto *set : static_range_cast<RooArgSet const*>(_snapshots)) {
+        auto *snap = new RooWorkspace::Snapshot;
+        argSetToSnapshot(*this, *set, *snap);
+        snapshots.Add(snap) ;
+      }
+
+      // Temporarily replace _snapshots with the serialized version for writing
+      std::swap(snapshots, _snapshots);
+
       R__b.WriteClassBuffer(RooWorkspace::Class(), this);
+
+      // Restore original _snapshots after serialization is complete
+      std::swap(snapshots, _snapshots);
 
       // Reinstate clients here
 
