@@ -89,19 +89,19 @@ if(MSVC)
     set_target_properties(libclingJupyter PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
 
     # RTTI/C++ symbols
-    set(cling_exports ${cling_exports} ??_7type_info@@6B@
+    set(jupyter_exports ${jupyter_exports} ??_7type_info@@6B@
         ?__type_info_root_node@@3U__type_info_node@@A
         ?nothrow@std@@3Unothrow_t@1@B
     )
 
     # Compiler added symbols for static variables. NOT for VStudio < 2015
-    set(cling_exports ${cling_exports} _Init_thread_abort _Init_thread_epoch
+    set(jupyter_exports ${jupyter_exports} _Init_thread_abort _Init_thread_epoch
         _Init_thread_footer _Init_thread_header _tls_index
     )
 
     if(CMAKE_SIZEOF_VOID_P EQUAL 8)
         # new/delete variants needed when linking to static msvc runtime (esp. Debug)
-        set(cling_exports ${cling_exports}
+        set(jupyter_exports ${jupyter_exports}
         ??2@YAPEAX_K@Z
         ??3@YAXPEAX@Z
         ??_U@YAPEAX_K@Z
@@ -119,7 +119,7 @@ if(MSVC)
         ?_Facet_Register@std@@YAXPEAV_Facet_base@1@@Z
         )
     else()
-        set(cling_exports ${cling_exports}
+        set(jupyter_exports ${jupyter_exports}
         ??2@YAPAXI@Z
         ??3@YAXPAX@Z
         ??3@YAXPAXI@Z
@@ -140,9 +140,9 @@ if(MSVC)
     endif()
 
     # List to '/EXPORT:sym0 /EXPORT:sym1 /EXPORT:sym2 ...'
-    foreach(sym ${cling_exports})
+    foreach(sym ${jupyter_exports})
         set(cling_link_str "${cling_link_str} /EXPORT:${sym}")
-    endforeach(sym ${cling_exports})
+    endforeach(sym ${jupyter_exports})
 
     set_property(TARGET libclingJupyter APPEND_STRING PROPERTY LINK_FLAGS ${cling_link_str})
 
