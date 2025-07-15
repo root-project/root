@@ -1,3 +1,5 @@
+set(histv7_standalone TRUE)
+
 include(GNUInstallDirs)
 include(headers.cmake)
 

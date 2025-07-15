@@ -8,6 +8,9 @@
 #include "RLinearizedIndex.hxx"
 
 #include <cstddef>
+#include <stdexcept>
+
+class TBuffer;
 
 namespace ROOT {
 namespace Experimental {
@@ -86,6 +89,9 @@ public:
       std::size_t bin = (x - fLow) * fInvBinWidth;
       return {bin, true};
    }
+
+   /// ROOT Streamer function to throw when trying to store an object of this class.
+   void Streamer(TBuffer &) { throw std::runtime_error("unable to store RRegularAxis"); }
 };
 
 } // namespace Experimental
