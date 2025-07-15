@@ -1,0 +1,42 @@
+version: 2.1
+
+parameters:
+  build_aarch64_wheel:
+    description: "Whether to build aarch64 wheel on CircleCI"
+    default: false
+    type: boolean
+
+
+jobs:
+  linux-aarch64-wheels:
+    working_directory: ~/linux-aarch64-wheels
+    machine:
+      image: ubuntu-2004:2022.04.1
+    # resource_class is what tells CircleCI to use an ARM worker for native arm builds
+    # https://circleci.com/product/features/resource-classes/
+    resource_class: arm.large
+    environment:
+        STDCXX: 20
+        MAKE_NPROCS: 4
+    steps:
+      - checkout
+      - run:
+          name: Build the Linux aarch64 wheels.
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            python3 -m pip install pip --upgrade
+            python3 -m pip install cibuildwheel==2.12.0
+            python3 -m cibuildwheel cling --print-build-identifiers
+            python3 -m cibuildwheel cling --output-dir wheelhouse
+      - store_artifacts:
+          path: wheelhouse/
+
+
+workflows:
+  version: 2
+  build-aarch64-wheels:
+    when: << pipeline.parameters.build_aarch64_wheel >>
+    jobs:
+      - linux-aarch64-wheels
+
