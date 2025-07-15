@@ -38,6 +38,7 @@
 #pragma link C++ class DataVector < int, float> ::Nested < int, double> + ;
 #pragma link C++ class DataVector < int, float> ::Nested < int, float> + ;
 #pragma link C++ class InnerCV < const int, const volatile int, volatile const int, volatile int> + ;
+#pragma link C++ class InnerCV < const std::vector<std::string[2]>, int, int, int> + ;
 #pragma link C++ class IntegerTemplates < 0, 0> + ;
 #pragma link C++ class IntegerTemplates < -1, 1> + ;
 #pragma link C++ class IntegerTemplates < -2147483650ll, 9223372036854775810ull> + ;
