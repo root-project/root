@@ -179,17 +179,6 @@ Int_t RooStudyPackage::initRandom()
   //gRandom->SetSeed(0) ;
   Int_t seed = random.Integer(TMath::Limits<Int_t>::Max()) ;
 
-  // get worker number
-  TString  worknumber = gEnv->GetValue("ProofServ.Ordinal","undef");
-  int iworker = -1;
-  if (worknumber != "undef")
-     iworker = int( worknumber.Atof()*10 + 0.1);
-
-  if (iworker >= 0)  {
-     for (int i = 0; i <= iworker; ++i )
-        seed = random.Integer( TMath::Limits<Int_t>::Max() );
-  }
-
   RooRandom::randomGenerator()->SetSeed(seed) ;
   gRandom->SetSeed(seed) ;
 

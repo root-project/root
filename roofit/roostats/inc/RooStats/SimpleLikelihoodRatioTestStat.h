@@ -24,7 +24,7 @@ namespace RooStats {
 
    public:
 
-      /// Constructor for proof. Do not use.
+      /// Constructor for proof, now removed. Do not use.
       SimpleLikelihoodRatioTestStat() = default;
 
       /// Takes null and alternate parameters from PDF. Can be overridden.
