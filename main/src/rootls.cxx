@@ -308,7 +308,7 @@ static void PrintRNTuple(std::ostream &stream, const ROOT::RNTupleDescriptor &de
 }
 
 static void PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx nodeIdx, std::uint32_t flags,
-                                  Indent indent);
+                                  Indent indent, std::size_t minNameLen = 0, std::size_t minClassLen = 0);
 
 /// Prints a `ls -l`-like output:
 ///
@@ -326,7 +326,8 @@ static void PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, 
 /// \param indent Each line of the output will have these many leading whitespaces
 static void PrintNodesDetailed(std::ostream &stream, const RootLsTree &tree,
                                std::vector<NodeIdx>::const_iterator nodesBegin,
-                               std::vector<NodeIdx>::const_iterator nodesEnd, std::uint32_t flags, Indent indent)
+                               std::vector<NodeIdx>::const_iterator nodesEnd, std::uint32_t flags, Indent indent,
+                               std::size_t minNameLen = 0, std::size_t minClassLen = 0)
 {
    std::size_t maxClassLen = 0, maxNameLen = 0;
    for (auto childIt = nodesBegin; childIt != nodesEnd; ++childIt) {
@@ -334,8 +335,8 @@ static void PrintNodesDetailed(std::ostream &stream, const RootLsTree &tree,
       maxClassLen = std::max(maxClassLen, child.fClassName.length());
       maxNameLen = std::max(maxNameLen, child.fName.length());
    }
-   maxClassLen += 2;
-   maxNameLen += 2;
+   maxClassLen = std::max(minClassLen, maxClassLen + 2);
+   maxNameLen = std::max(minNameLen, maxNameLen + 2);
 
    for (auto childIt = nodesBegin; childIt != nodesEnd; ++childIt) {
       NodeIdx childIdx = *childIt;
@@ -388,15 +389,15 @@ static void PrintNodesDetailed(std::ostream &stream, const RootLsTree &tree,
          }
       }
       if ((flags & RootLsArgs::kRecursiveListing) && ClassInheritsFrom(child.fClassName.c_str(), "TDirectory")) {
-         PrintChildrenDetailed(stream, tree, childIdx, flags, indent + 2);
+         PrintChildrenDetailed(stream, tree, childIdx, flags, indent + 2, maxNameLen - 2, maxClassLen - 2);
       }
    }
    stream << std::flush;
 }
 
 /// \param nodeIdx The index of the node whose children should be printed
-static void
-PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx nodeIdx, std::uint32_t flags, Indent indent)
+static void PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx nodeIdx, std::uint32_t flags,
+                                  Indent indent, std::size_t minNameLen, std::size_t minClassLen)
 {
 
    const auto &node = tree.fNodes[nodeIdx];
@@ -405,7 +406,7 @@ PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx node
 
    std::vector<NodeIdx> children(node.fNChildren);
    std::iota(children.begin(), children.end(), node.fFirstChild);
-   PrintNodesDetailed(stream, tree, children.begin(), children.end(), flags, indent);
+   PrintNodesDetailed(stream, tree, children.begin(), children.end(), flags, indent, minNameLen, minClassLen);
 }
 
 // Prints all children of `nodeIdx`-th node in a ls-like fashion.
