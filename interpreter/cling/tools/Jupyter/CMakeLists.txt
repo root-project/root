@@ -92,6 +92,8 @@ if(MSVC)
     set(jupyter_exports ${jupyter_exports} ??_7type_info@@6B@
         ?__type_info_root_node@@3U__type_info_node@@A
         ?nothrow@std@@3Unothrow_t@1@B
+        __std_find_trivial_1
+        __std_reverse_trivially_swappable_1
     )
 
     # Compiler added symbols for static variables. NOT for VStudio < 2015
