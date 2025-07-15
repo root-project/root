@@ -12,7 +12,11 @@ set(LLVM_NO_DEAD_STRIP 1)
 set(SOURCES
     Kernel.cpp
     )
-set_source_files_properties(Kernel.cpp COMPILE_FLAGS "-fexceptions -frtti")
+if(MSVC)
+    set_source_files_properties(Kernel.cpp COMPILE_FLAGS "/EHsc /GR")
+else()
+    set_source_files_properties(Kernel.cpp COMPILE_FLAGS "-fexceptions -frtti")
+endif()
 #Solve unresolved symbols bug in unix
 #See https://github.com/vgvassilev/cling/issues/114
 if(WIN32)
