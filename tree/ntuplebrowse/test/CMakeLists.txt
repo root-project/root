@@ -6,4 +6,8 @@
 
 # @author Jakob Blomer CERN
 
+if(NOT minimal) # gui is not built in minimal
+  return()
+endif()
+
 ROOT_ADD_GTEST(ntuple_browse ntuple_browse.cxx LIBRARIES Core Gui ROOTNTuple ROOTNTupleBrowse)
