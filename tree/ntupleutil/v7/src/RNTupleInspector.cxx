@@ -527,21 +527,36 @@ void ROOT::Experimental::RNTupleInspector::PrintFieldTreeAsDot(const ROOT::RFiel
       output << "node[shape=box]\n";
    }
    const std::string &nodeId = (isZeroField) ? "0" : std::to_string(fieldDescriptor.GetId() + 1);
-   const std::string &fieldName = (isZeroField) ? "RFieldZero" : fieldDescriptor.GetFieldName();
    const std::string &description = fieldDescriptor.GetFieldDescription();
    const std::uint32_t &version = fieldDescriptor.GetFieldVersion();
 
+   auto htmlEscape = [&](const std::string &in) -> std::string {
+      std::string out;
+      out.reserve(in.size());
+      for (const char &c : in) {
+         switch (c) {
+         case '&': out += "&amp;"; break;
+         case '<': out += "&lt;"; break;
+         case '>': out += "&gt;"; break;
+         case '\"': out += "&quot;"; break;
+         case '\'': out += "&#39;"; break;
+         default: out += c; break;
+         }
+      }
+      return out;
+   };
+
    output << nodeId << "[label=<";
    if (!isZeroField) {
-      output << "<b>Name: </b>" << fieldName << "<br></br>";
-      output << "<b>Type: </b>" << fieldDescriptor.GetTypeName() << "<br></br>";
+      output << "<b>Name: </b>" << htmlEscape(fieldDescriptor.GetFieldName()) << "<br></br>";
+      output << "<b>Type: </b>" << htmlEscape(fieldDescriptor.GetTypeName()) << "<br></br>";
       output << "<b>ID: </b>" << std::to_string(fieldDescriptor.GetId()) << "<br></br>";
       if (description != "")
-         output << "<b>Description: </b>" << description << "<br></br>";
+         output << "<b>Description: </b>" << htmlEscape(description) << "<br></br>";
       if (version != 0)
          output << "<b>Version: </b>" << version << "<br></br>";
    } else
-      output << "<b>" << fieldName << "</b>";
+      output << "<b>RFieldZero</b>";
    output << ">]\n";
    for (const auto &childFieldId : fieldDescriptor.GetLinkIds()) {
       const auto &childFieldDescriptor = tupleDescriptor.GetFieldDescriptor(childFieldId);
