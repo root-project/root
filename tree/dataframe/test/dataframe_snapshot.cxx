@@ -843,6 +843,7 @@ TEST(RDFSnapshotMore, Lazy)
    const auto fname1 = "lazy1.root";
    // make sure the file is not here beforehand
    gSystem->Unlink(fname0);
+   gSystem->Unlink(fname1);
    RDataFrame d(1);
    auto v = 0U;
    auto genf = [&v]() {
@@ -997,7 +998,7 @@ TEST(RDFSnapshotMore, CompositeTypeWithNameClash)
 {
    constexpr auto fName{"snap_compositetypewithnameclash.root"};
    struct FileGuard {
-      ~FileGuard() { std::remove(fName); }
+      ~FileGuard() { std::remove("snap_compositetypewithnameclash.root"); }
    } _;
    ROOT::RDataFrame df{3};
    auto snap_df = df.Define("i", [] { return Int{-1}; }).Define("x", [] { return 1; }).Snapshot("t", fName);
