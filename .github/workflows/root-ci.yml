@@ -102,10 +102,10 @@ jobs:
         include:
           - platform: mac14
             arch: X64
-            overrides: ["CMAKE_CXX_STANDARD=20"]
+            overrides: ["CMAKE_CXX_STANDARD=20", "CMAKE_BUILD_TYPE=Debug"]
           - platform: mac15
             arch: ARM64
-            overrides: ["CMAKE_CXX_STANDARD=23"]
+            overrides: ["CMAKE_CXX_STANDARD=23", "CMAKE_BUILD_TYPE=Debug"]
           - platform: mac26
             arch: ARM64
           - platform: mac-beta
