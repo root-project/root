@@ -1,0 +1,3 @@
+ROOT::RNTuple  Nov 13 13:16 2024 Contributors;1 ""
+  firstName  std::string
+  lastName   std::string

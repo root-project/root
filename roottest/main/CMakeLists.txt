@@ -3,6 +3,8 @@ configure_file(simpleTree.root . COPYONLY)
 configure_file(multipleNameCycles.root . COPYONLY)
 configure_file(MakeNameCyclesRootmvInput.C . COPYONLY)
 configure_file(subdirs.root . COPYONLY)
+configure_file(nested.root . COPYONLY)
+configure_file(RNTuple.root . COPYONLY)
 
 if(MSVC)
     # the command line tools works fine in the Windows command prompt but
@@ -82,6 +84,16 @@ ROOTTEST_ADD_TEST(NameCyclesRootls
 ROOTTEST_ADD_TEST(RecursiveRootls
                   COMMAND ${TOOLS_PREFIX}/rootls${exeext} -lr subdirs.root
                   OUTREF RecursiveRootls.ref
+                  ENVIRONMENT ${test_env})
+
+ROOTTEST_ADD_TEST(RecursiveRootls2
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -lr nested.root
+                  OUTREF RecursiveRootls2.ref
+                  ENVIRONMENT ${test_env})
+
+ROOTTEST_ADD_TEST(RootlsRNTuple
+                  COMMAND ${TOOLS_PREFIX}/rootls${exeext} -R RNTuple.root
+                  OUTREF RootlsRNTuple.ref
                   ENVIRONMENT ${test_env})
 
 #########################################################################
