@@ -327,7 +327,6 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
 
    fBufferRef = new TBufferFile(TBuffer::kWrite, bufsize);
    fBufferRef->SetParent(GetFile());
-   fCycle     = fMotherDir->AppendKey(this);
 
    Streamer(*fBufferRef);         //write key itself
    fKeylen    = fBufferRef->Length();
@@ -338,6 +337,10 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
    clActual->Streamer((void*)actualStart, *fBufferRef); //write object
    lbuf       = fBufferRef->Length();
    fObjlen    = lbuf - fKeylen;
+
+   // Append to mother directory only after the call to Streamer() was
+   // successful (and didn't throw).
+   fCycle = fMotherDir->AppendKey(this);
 
    Int_t cxlevel = GetFile() ? GetFile()->GetCompressionLevel() : 0;
    ROOT::RCompressionSetting::EAlgorithm::EValues cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(GetFile() ? GetFile()->GetCompressionAlgorithm() : 0);
