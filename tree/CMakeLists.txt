@@ -6,7 +6,9 @@
 
 add_subdirectory(tree)
 add_subdirectory(treeplayer)
-add_subdirectory(treeviewer)
+if(NOT minimal) # gui is not built in minimal
+  add_subdirectory(treeviewer)
+endif()
 if(webgui)
   add_subdirectory(webviewer)
 endif()
