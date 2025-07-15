@@ -7,9 +7,9 @@
 #include "TMVA/SOFIE_common.hxx"
 
 
-using namespace TMVA::Experimental::SOFIE;
-
-int main(int argc, char *argv[]){
+int main()
+{
+    using namespace TMVA::Experimental::SOFIE;
 
     GraphIndependent_Init init;
     init.num_nodes=2;
