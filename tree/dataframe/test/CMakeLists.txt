@@ -48,19 +48,15 @@ if(MSVC)
   set_source_files_properties(dataframe_simple.cxx PROPERTIES COMPILE_FLAGS /bigobj)
 endif()
 
-if(NOT MSVC OR win_broken_tests)
-  ROOT_ADD_GTEST(dataframe_snapshot dataframe_snapshot.cxx LIBRARIES ROOTDataFrame GenVector)
-  ROOT_GENERATE_DICTIONARY(DataFrameSnapshotUtils ${CMAKE_CURRENT_SOURCE_DIR}/DataFrameSnapshotUtils.hxx
-    MODULE dataframe_snapshot LINKDEF DataFrameSnapshotUtilsLinkDef.hxx OPTIONS -inlineInputHeader)
-endif()
+ROOT_ADD_GTEST(dataframe_snapshot dataframe_snapshot.cxx LIBRARIES ROOTDataFrame GenVector)
+ROOT_GENERATE_DICTIONARY(DataFrameSnapshotUtils ${CMAKE_CURRENT_SOURCE_DIR}/DataFrameSnapshotUtils.hxx
+  MODULE dataframe_snapshot LINKDEF DataFrameSnapshotUtilsLinkDef.hxx OPTIONS -inlineInputHeader)
 
-if(NOT MSVC OR win_broken_tests)
 ROOT_ADD_GTEST(dataframe_snapshot_emptyoutput dataframe_snapshot_emptyoutput.cxx LIBRARIES ROOTDataFrame GenVector)
 ROOT_GENERATE_DICTIONARY(DummyDict ${CMAKE_CURRENT_SOURCE_DIR}/DummyHeader.hxx
                          MODULE dataframe_snapshot_emptyoutput LINKDEF DummyHeaderLinkDef.hxx OPTIONS -inlineInputHeader
                          DEPENDENCIES ROOTVecOps GenVector)
 ROOT_ADD_GTEST(dataframe_snapshot_ntuple dataframe_snapshot_ntuple.cxx LIBRARIES ROOTDataFrame ROOTNTuple NTupleStruct)
-endif()
 
 ROOT_ADD_GTEST(dataframe_datasetspec dataframe_datasetspec.cxx LIBRARIES ROOTDataFrame)
 

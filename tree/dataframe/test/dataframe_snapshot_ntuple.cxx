@@ -325,41 +325,45 @@ TEST_F(RDFSnapshotRNTupleTest, InnerFields)
 {
    FileRAII fileGuard{"RDFSnapshotRNTuple_inner_fields.root"};
 
-   auto df = ROOT::RDataFrame(fNtplName, fFileName);
-   auto sdf1 = df.Snapshot("ntuple", fileGuard.GetPath(), "electron.pt", fSnapshotOpts);
-
-   // Verify we actually snapshotted to an RNTuple.
-   auto ntuple1 = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(1ull, ntuple1->GetNEntries());
-
    std::vector<std::string> expected = {"electron_pt"};
-   EXPECT_EQ(expected, sdf1->GetColumnNames());
 
-   auto electronPtMax = sdf1->Max("electron_pt").GetValue();
-   EXPECT_FLOAT_EQ(137.f, electronPtMax);
+   auto df = ROOT::RDataFrame(fNtplName, fFileName);
+   {
+      auto sdf1 = df.Snapshot("ntuple", fileGuard.GetPath(), "electron.pt", fSnapshotOpts);
 
-   auto sdf2 = df.Snapshot("ntuple", fileGuard.GetPath(), "jets.electrons", fSnapshotOpts);
+      // Verify we actually snapshotted to an RNTuple.
+      auto ntuple1 = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+      EXPECT_EQ(1ull, ntuple1->GetNEntries());
 
-   // Verify we actually snapshotted to an RNTuple.
-   auto ntuple2 = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(1ull, ntuple2->GetNEntries());
+      EXPECT_EQ(expected, sdf1->GetColumnNames());
 
-   expected = {"jets_electrons", "jets_electrons.pt"};
-   EXPECT_EQ(expected, sdf2->GetColumnNames());
+      auto electronPtMax = sdf1->Max("electron_pt").GetValue();
+      EXPECT_FLOAT_EQ(137.f, electronPtMax);
+   }
+   {
+      auto sdf2 = df.Snapshot("ntuple", fileGuard.GetPath(), "jets.electrons", fSnapshotOpts);
 
-   auto jetsElectronsPtMax =
-      sdf2
-         ->Define("jetsElectronsPtMax",
-                  [](const ROOT::RVec<ROOT::RVec<float>> &jetsElectronsPt) {
-                     auto innerMax = ROOT::VecOps::Map(jetsElectronsPt, [](const ROOT::RVec<float> &electronsPt) {
-                        return ROOT::VecOps::Max(electronsPt);
-                     });
-                     return ROOT::VecOps::Max(innerMax);
-                  },
-                  {"jets_electrons.pt"})
-         .Max("jetsElectronsPtMax")
-         .GetValue();
-   EXPECT_FLOAT_EQ(137.f, jetsElectronsPtMax);
+      // Verify we actually snapshotted to an RNTuple.
+      auto ntuple2 = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+      EXPECT_EQ(1ull, ntuple2->GetNEntries());
+
+      expected = {"jets_electrons", "jets_electrons.pt"};
+      EXPECT_EQ(expected, sdf2->GetColumnNames());
+
+      auto jetsElectronsPtMax =
+         sdf2
+            ->Define("jetsElectronsPtMax",
+                     [](const ROOT::RVec<ROOT::RVec<float>> &jetsElectronsPt) {
+                        auto innerMax = ROOT::VecOps::Map(jetsElectronsPt, [](const ROOT::RVec<float> &electronsPt) {
+                           return ROOT::VecOps::Max(electronsPt);
+                        });
+                        return ROOT::VecOps::Max(innerMax);
+                     },
+                     {"jets_electrons.pt"})
+            .Max("jetsElectronsPtMax")
+            .GetValue();
+      EXPECT_FLOAT_EQ(137.f, jetsElectronsPtMax);
+   }
 }
 
 TEST_F(RDFSnapshotRNTupleTest, AllFields)
