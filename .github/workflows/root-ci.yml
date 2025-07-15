@@ -98,7 +98,7 @@ jobs:
         include:
           - platform: mac13   
             arch: ARM64
-            overrides: ["builtin_zlib=ON"]
+            overrides: ["builtin_zlib=ON", "CMAKE_BUILD_TYPE=Debug"]
           - platform: mac14
             arch: X64
             overrides: ["CMAKE_CXX_STANDARD=20"]
