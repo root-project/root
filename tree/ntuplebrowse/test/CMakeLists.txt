@@ -6,4 +6,6 @@
 
 # @author Jakob Blomer CERN
 
-ROOT_ADD_GTEST(ntuple_browse ntuple_browse.cxx LIBRARIES Core Gui ROOTNTuple ROOTNTupleBrowse)
+if(gui)
+  ROOT_ADD_GTEST(ntuple_browse ntuple_browse.cxx LIBRARIES Core Gui ROOTNTuple ROOTNTupleBrowse)
+endif()

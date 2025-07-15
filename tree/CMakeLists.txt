@@ -6,7 +6,9 @@
 
 add_subdirectory(tree)
 add_subdirectory(treeplayer)
-add_subdirectory(treeviewer)
+if(gui)
+  add_subdirectory(treeviewer)
+endif()
 if(webgui)
   add_subdirectory(webviewer)
 endif()
