@@ -37,6 +37,12 @@ include(cmake/modules/CaptureCommandLine.cmake)
 
 project(ROOT)
 
+if(NOT WIN32)
+  # See https://gitlab.kitware.com/cmake/cmake/-/issues/23040
+  unset(MSVC_C_ARCHITECTURE_ID)
+  unset(MSVC_CXX_ARCHITECTURE_ID)
+endif()
+
 #---Set the locale to default C to prevent issued due to localization of commands---------------
 # This is necessary as we for example call `clang -v` and parse its output. But on a localized
 # program, the output parsing is much more error prone as certrain strings we're looking for
@@ -297,25 +303,6 @@ if (JEMALLOC_FOUND)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ljemalloc -L${JEMALLOC_LIBRARY_PATH}")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ljemalloc -L${JEMALLOC_LIBRARY_PATH}")
 endif()
-
-#---Populate the configure arguments returned by 'root-config --config'-------------------------
-get_cmake_property(variables CACHE_VARIABLES)
-foreach(var ${variables})
-  if((var MATCHES "_(LIBRARIES|LIBRARY|INCLUDE|VERSION)") AND
-     (NOT ${${var}} STREQUAL "") AND
-     (NOT ${var} MATCHES "NOTFOUND"))
-    if (var MATCHES "^QT_")
-      # filter out the very long list of Qt libraries and include dirs
-      if (var MATCHES "(QT_LIBRARY_DIR|QT_QTCORE_INCLUDE_DIR)")
-        set(ROOT_CONFIGARGS "${ROOT_CONFIGARGS}${var}=${${var}} ")
-      endif()
-    else()
-      if ((NOT var MATCHES "_(DOCS|TESTS|INSTALL)") AND (NOT var MATCHES "^_"))
-        set(ROOT_CONFIGARGS "${ROOT_CONFIGARGS}${var}=${${var}} ")
-      endif()
-    endif()
-  endif()
-endforeach()
 
 #---Move (copy) directories to binary tree------------------------------------------------------
 set(stamp_file ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/move_artifacts.stamp)
@@ -583,6 +570,28 @@ endif()
 #---distribution commands------------------------------------------------------------------------
 add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/cmake/unix/makedistsrc.sh "${ROOT_FULL_VERSION}" "${CMAKE_SOURCE_DIR}")
 add_custom_target(dist COMMAND cpack --config CPackConfig.cmake)
+
+#---Populate the configure arguments returned by 'root-config --config'-------------------------
+get_cmake_property(variables CACHE_VARIABLES)
+foreach(var ${variables})
+  if((var MATCHES "_(LIBRARIES|LIBRARY|INCLUDE|VERSION)") AND
+     (NOT ${${var}} STREQUAL "") AND
+     (NOT ${var} MATCHES "NOTFOUND"))
+    if (var MATCHES "^QT_")
+      # filter out the very long list of Qt libraries and include dirs
+      if (var MATCHES "(QT_LIBRARY_DIR|QT_QTCORE_INCLUDE_DIR)")
+        set(ROOT_CONFIGARGS "${ROOT_CONFIGARGS}${var}=${${var}} ")
+      endif()
+    else()
+      if ((NOT var MATCHES "_(DOCS|TESTS|INSTALL)") AND (NOT var MATCHES "^_")
+          AND NOT(var MATCHES "^CMAKE_PROJECT_VERSION") # Created by the 'latest' call to project()
+          AND NOT(var MATCHES "^CMAKE_CACHE_") # related to previous CMake invocation eg CMAKE_CACHE_MAJOR_VERSION
+          AND NOT(var MATCHES "^ROOT_.*_LIBRARY$")) # Created for users in ROOTConfig.cmake
+        set(ROOT_CONFIGARGS "${ROOT_CONFIGARGS}${var}=${${var}} ")
+      endif()
+    endif()
+  endif()
+endforeach()
 
 #---Configure and install various files neded later and for clients -----------------------------
 include(RootConfiguration)
