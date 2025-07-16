@@ -335,7 +335,7 @@ endif()
 
 #---Apply minimal or gminimal------------------------------------------------------------------
 foreach(opt ${root_build_options})
-  if(NOT opt MATCHES "builtin_llvm|builtin_clang|builtin_cling|shared|runtime_cxxmodules")
+  if(NOT opt MATCHES "builtin_llvm|builtin_clang|builtin_cling|shared|runtime_cxxmodules|thisroot_scripts")
     if(minimal)
       set(${opt}_defvalue OFF)
     elseif(gminimal AND NOT opt MATCHES "x11|cocoa")
