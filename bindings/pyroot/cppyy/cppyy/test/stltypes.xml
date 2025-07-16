@@ -33,5 +33,4 @@
   <function pattern="ErrorNamespace::*" />
 
   <function name="GetMyErrorCount" />
-  <variable name="N" />
 </lcgdict>
