@@ -95,6 +95,26 @@ TEST(RVariableBinAxis, ComputeLinearizedIndex)
       EXPECT_TRUE(linIndex.fValid);
    }
 
+   // Exactly on the bin edges
+   for (std::size_t i = 0; i < Bins; i++) {
+      auto linIndex = axis.ComputeLinearizedIndex(i);
+      EXPECT_EQ(linIndex.fIndex, i);
+      EXPECT_TRUE(linIndex.fValid);
+      linIndex = axisNoFlowBins.ComputeLinearizedIndex(i);
+      EXPECT_EQ(linIndex.fIndex, i);
+      EXPECT_TRUE(linIndex.fValid);
+   }
+
+   // Exactly the upper end of the axis interval
+   {
+      auto linIndex = axis.ComputeLinearizedIndex(Bins);
+      EXPECT_EQ(linIndex.fIndex, Bins + 1);
+      EXPECT_TRUE(linIndex.fValid);
+      linIndex = axisNoFlowBins.ComputeLinearizedIndex(Bins);
+      EXPECT_EQ(linIndex.fIndex, Bins + 1);
+      EXPECT_FALSE(linIndex.fValid);
+   }
+
    // Overflow
    static constexpr double PositiveInfinity = std::numeric_limits<double>::infinity();
    static constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
