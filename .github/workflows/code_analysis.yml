@@ -17,7 +17,8 @@ jobs:
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
         (github.event_name == 'pull_request' && !(
           contains(github.event.pull_request.title, '[skip-ci]') ||
-          contains(github.event.pull_request.labels.*.name, 'skip ci')
+          contains(github.event.pull_request.labels.*.name, 'skip ci') ||
+          contains(github.event.pull_request.labels.*.name, 'skip style checks')
         ))
 
     runs-on: ubuntu-latest
@@ -45,7 +46,8 @@ jobs:
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
         (github.event_name == 'pull_request' && !(
           contains(github.event.pull_request.title, '[skip-ci]') ||
-          contains(github.event.pull_request.labels.*.name, 'skip ci')
+          contains(github.event.pull_request.labels.*.name, 'skip ci') ||
+          contains(github.event.pull_request.labels.*.name, 'skip style checks')
         ))
 
     runs-on: ubuntu-latest
