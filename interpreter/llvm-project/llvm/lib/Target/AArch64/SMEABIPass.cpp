@@ -13,17 +13,14 @@
 //===----------------------------------------------------------------------===//
 
 #include "AArch64.h"
-#include "Utils/AArch64BaseInfo.h"
 #include "Utils/AArch64SMEAttributes.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/IR/Constants.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Instructions.h"
-#include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/IntrinsicsAArch64.h"
 #include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
 #include "llvm/InitializePasses.h"
-#include "llvm/Support/Debug.h"
 #include "llvm/Transforms/Utils/Cloning.h"
 
 using namespace llvm;
@@ -57,28 +54,34 @@ FunctionPass *llvm::createSMEABIPass() { return new SMEABI(); }
 //===----------------------------------------------------------------------===//
 
 // Utility function to emit a call to __arm_tpidr2_save and clear TPIDR2_EL0.
-void emitTPIDR2Save(Module *M, IRBuilder<> &Builder) {
+void emitTPIDR2Save(Module *M, IRBuilder<> &Builder, bool ZT0IsUndef = false) {
+  auto &Ctx = M->getContext();
   auto *TPIDR2SaveTy =
       FunctionType::get(Builder.getVoidTy(), {}, /*IsVarArgs=*/false);
   auto Attrs =
-      AttributeList()
-          .addFnAttribute(M->getContext(), "aarch64_pstate_sm_compatible")
-          .addFnAttribute(M->getContext(), "aarch64_pstate_za_preserved");
+      AttributeList().addFnAttribute(Ctx, "aarch64_pstate_sm_compatible");
   FunctionCallee Callee =
       M->getOrInsertFunction("__arm_tpidr2_save", TPIDR2SaveTy, Attrs);
   CallInst *Call = Builder.CreateCall(Callee);
+
+  // If ZT0 is undefined (i.e. we're at the entry of a "new_zt0" function), mark
+  // that on the __arm_tpidr2_save call. This prevents an unnecessary spill of
+  // ZT0 that can occur before ZA is enabled.
+  if (ZT0IsUndef)
+    Call->addFnAttr(Attribute::get(Ctx, "aarch64_zt0_undef"));
+
   Call->setCallingConv(
       CallingConv::AArch64_SME_ABI_Support_Routines_PreserveMost_From_X0);
 
   // A save to TPIDR2 should be followed by clearing TPIDR2_EL0.
   Function *WriteIntr =
-      Intrinsic::getDeclaration(M, Intrinsic::aarch64_sme_set_tpidr2);
+      Intrinsic::getOrInsertDeclaration(M, Intrinsic::aarch64_sme_set_tpidr2);
   Builder.CreateCall(WriteIntr->getFunctionType(), WriteIntr,
                      Builder.getInt64(0));
 }
 
 /// This function generates code at the beginning and end of a function marked
-/// with either `aarch64_pstate_za_new` or `aarch64_new_zt0`.
+/// with either `aarch64_new_za` or `aarch64_new_zt0`.
 /// At the beginning of the function, the following code is generated:
 ///  - Commit lazy-save if active   [Private-ZA Interface*]
 ///  - Enable PSTATE.ZA             [Private-ZA Interface]
@@ -115,7 +118,7 @@ bool SMEABI::updateNewStateFunctions(Module *M, Function *F,
     // Read TPIDR2_EL0 in PreludeBB & branch to SaveBB if not 0.
     Builder.SetInsertPoint(PreludeBB);
     Function *TPIDR2Intr =
-        Intrinsic::getDeclaration(M, Intrinsic::aarch64_sme_get_tpidr2);
+        Intrinsic::getOrInsertDeclaration(M, Intrinsic::aarch64_sme_get_tpidr2);
     auto *TPIDR2 = Builder.CreateCall(TPIDR2Intr->getFunctionType(), TPIDR2Intr,
                                       {}, "tpidr2");
     auto *Cmp = Builder.CreateCmp(ICmpInst::ICMP_NE, TPIDR2,
@@ -124,25 +127,25 @@ bool SMEABI::updateNewStateFunctions(Module *M, Function *F,
 
     // Create a call __arm_tpidr2_save, which commits the lazy save.
     Builder.SetInsertPoint(&SaveBB->back());
-    emitTPIDR2Save(M, Builder);
+    emitTPIDR2Save(M, Builder, /*ZT0IsUndef=*/FnAttrs.isNewZT0());
 
     // Enable pstate.za at the start of the function.
     Builder.SetInsertPoint(&OrigBB->front());
     Function *EnableZAIntr =
-        Intrinsic::getDeclaration(M, Intrinsic::aarch64_sme_za_enable);
+        Intrinsic::getOrInsertDeclaration(M, Intrinsic::aarch64_sme_za_enable);
     Builder.CreateCall(EnableZAIntr->getFunctionType(), EnableZAIntr);
   }
 
-  if (FnAttrs.hasNewZABody()) {
+  if (FnAttrs.isNewZA()) {
     Function *ZeroIntr =
-        Intrinsic::getDeclaration(M, Intrinsic::aarch64_sme_zero);
+        Intrinsic::getOrInsertDeclaration(M, Intrinsic::aarch64_sme_zero);
     Builder.CreateCall(ZeroIntr->getFunctionType(), ZeroIntr,
                        Builder.getInt32(0xff));
   }
 
   if (FnAttrs.isNewZT0()) {
     Function *ClearZT0Intr =
-        Intrinsic::getDeclaration(M, Intrinsic::aarch64_sme_zero_zt);
+        Intrinsic::getOrInsertDeclaration(M, Intrinsic::aarch64_sme_zero_zt);
     Builder.CreateCall(ClearZT0Intr->getFunctionType(), ClearZT0Intr,
                        {Builder.getInt32(0)});
   }
@@ -154,8 +157,8 @@ bool SMEABI::updateNewStateFunctions(Module *M, Function *F,
       if (!T || !isa<ReturnInst>(T))
         continue;
       Builder.SetInsertPoint(T);
-      Function *DisableZAIntr =
-          Intrinsic::getDeclaration(M, Intrinsic::aarch64_sme_za_disable);
+      Function *DisableZAIntr = Intrinsic::getOrInsertDeclaration(
+          M, Intrinsic::aarch64_sme_za_disable);
       Builder.CreateCall(DisableZAIntr->getFunctionType(), DisableZAIntr);
     }
   }
@@ -174,7 +177,7 @@ bool SMEABI::runOnFunction(Function &F) {
 
   bool Changed = false;
   SMEAttrs FnAttrs(F);
-  if (FnAttrs.hasNewZABody() || FnAttrs.isNewZT0())
+  if (FnAttrs.isNewZA() || FnAttrs.isNewZT0())
     Changed |= updateNewStateFunctions(M, &F, Builder, FnAttrs);
 
   return Changed;
