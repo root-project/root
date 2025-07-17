@@ -8,9 +8,12 @@ const char* fname = "index64.root";
 // Apple M1 has long double == double; these values exceed its range
 // and cannot be represented as (even temporary) expression results.
 // There would be a warning if you'd try.
-static constexpr bool shortlongdouble = sizeof(long double) < 16; // was true for __APPLE__ and __arm64__
-const Long64_t bigval   = shortlongdouble ? 0xFFFFFFFFFFFF : 0xFFFFFFFFFFFFFFF; // still positive number
-const ULong64_t biguval = shortlongdouble ?  0xFFFFFFFFFFFF0 : 0xFFFFFFFFFFFFFFF0; // "negative" number
+// More info: https://github.com/root-project/roottest/commit/f3c97809c9064feccaed3844007de9e7c6a5980d and https://github.com/root-project/roottest/commit/9e3843d4bf50bc34e6e15dfe7c027f029417d6c0
+// static constexpr bool shortlongdouble = sizeof(long double) < 16; // was true for __APPLE__ and __arm64__
+// const Long64_t bigval   = shortlongdouble ?  0x0FFFFFFFFFFFF : 0x0FFFFFFFFFFFFFFF; // still positive number
+// const ULong64_t biguval = shortlongdouble ?  0xFFFFFFFFFFFF0 : 0xFFFFFFFFFFFFFFF0; // "negative" number
+const Long64_t bigval = 0xFFFFFFFFFFFF0; // larger values fail on __APPLE__ / __arm64__ because the long double is less than 16 bytes.
+// const ULong64_t biguval = bigval;
 
 int runindex64(){
 
@@ -25,20 +28,30 @@ int runindex64(){
   tree->Branch("run", &run, "run/l");
   tree->Branch("event", &event, "event/l");
 
-  ULong64_t events[] = { 1,2,3, bigval, biguval, 5 };
-  run = 5;
-  for(int i=0; i<sizeof(events)/sizeof(*events); i++){
+  ULong64_t   runs[] = { 8,5,5,5,      5, 0,      4, 6, bigval};
+  ULong64_t events[] = { 0,1,3,2, bigval, 5, bigval, 3, bigval};
+  for(size_t i=0; i<sizeof(events)/sizeof(*events); i++){
+    run = runs[i];
     event = events[i];
     tree->Fill();
   }
-  run = 4; event = bigval; tree->Fill();
-  run = 6; event = 3; tree->Fill();
-  run = biguval; event = bigval; tree->Fill();
   tree->Write();
-
+  
+  bool pass = true;
   cout<<"Tree BuildIndex returns "<<tree->BuildIndex("run", "event")<<endl;
-  cout << "Entry should be 3: " << tree->GetEntryNumberWithIndex(5,bigval) << endl;
-  cout << "Entry should be 6: " << tree->GetEntryNumberWithIndex(4,bigval) << endl;
+  for (size_t i=0; i<sizeof(events)/sizeof(*events); i++) {
+    run = runs[i];
+    event = events[i];
+    pass &= (tree->GetEntryNumberWithIndex(run, event) == i);
+  }
+  if (!pass) {
+    tree->Scan("run:event","","colsize=30");
+    for (size_t i=0; i<sizeof(events)/sizeof(*events); i++) {
+      run = runs[i];
+      event = events[i];
+      cout << i << ": Run " << run << ", Event " << event << " found at entry number: " << tree->GetEntryNumberWithIndex(run, event) << endl;
+    }
+  }
 
   test(tree);
   file.Close();
@@ -60,8 +73,9 @@ bool test(TTree *chain)
 {
   cout<<"Entries in chain: "<<chain->GetEntries()<<endl;
   cout<<"BuildIndex returns "<<chain->BuildIndex("run", "event")<<endl;
-  cout<<"Try to get value that is not in the chain, this should return a -1:"<<endl;
+  cout<<"Try to find the position of run=0, event=500 in the chain, as it does not exist, this should return a -1:"<<endl;
   cout<<chain->GetEntryWithIndex(500)<<endl;
-  cout<<(int)chain->GetEntryNumberWithIndex(5, bigval)<<endl;
-  return (chain->GetEntryNumberWithIndex(500)==-1);
+  cout<<"Try to find the position of run=5, event=bigval in the chain, which was inserted in position 4:"<<endl;
+  cout<<chain->GetEntryNumberWithIndex(5, bigval)<<endl;
+  return (chain->GetEntryNumberWithIndex(500)==-1) && (chain->GetEntryNumberWithIndex(5, bigval) == 4);
 }
