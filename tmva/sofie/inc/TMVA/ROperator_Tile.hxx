@@ -27,7 +27,8 @@ public:
    ROperator_Tile(){}
    ROperator_Tile(std::string nameRepeat, std::string nameInput, std::string nameY):
       fNRepeats(UTILITY::Clean_name(nameRepeat)),fNInput(UTILITY::Clean_name(nameInput)), fNY(UTILITY::Clean_name(nameY)){
-         fInputTensorNames = { fNRepeats, fNInput };
+         // the repeats tensor is only used at generation time, so it is not a runtime input
+         fInputTensorNames = { fNInput };
          fOutputTensorNames = { fNY };
       }
 
@@ -40,7 +41,8 @@ public:
       for(size_t i=0; i < repeat.size(); i++) {
          if (repeat[i] != 1) {
             if (ret[i].isParam) {
-               ret[i] = Dim{ std::string(ret[i].GetVal() + "*" + std::to_string(repeat[i])), static_cast<size_t>(-1) };
+               // parenthesize in case the dimension is a compound expression (e.g. "bsize + 1")
+               ret[i] = Dim{ std::string("(" + ret[i].GetVal() + ")*" + std::to_string(repeat[i])), static_cast<size_t>(-1) };
             } else {
                ret[i]=Dim { ret[i].dim *repeat[i] };
             }
@@ -86,6 +88,10 @@ public:
 
       fShapeY = DoShapeInference(fShapeInput,repeats_vector);
 
+      // the repeats are baked into the generated code, so the tensor is not
+      // needed at runtime and must not be written in the weight file
+      model.SetNotWritableInitializedTensor(fNRepeats);
+
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNInput), fShapeY);
 
       if (model.Verbose())
@@ -99,52 +105,46 @@ public:
             throw std::runtime_error("TMVA SOFIE Tile Op called to Generate without being initialized first");
       }
 
-      //size_t input_length = ConvertShapeToLength(fShapeInput);
-      //size_t output_length = ConvertShapeToLength(fShapeY);
-
-
       std::stringstream out;
-      std::string input = "tensor_" + fNInput;
-      std::string output = "tensor_" + fNY;
-      out << "///-------- Tile operator\n";
-      out << "{\n"; // add scope to re-use same names
-      out << "const size_t input_shape[" << fShapeInput.size() << "] = " << ConvertDimShapeToString(fShapeInput) << ";\n";
+      out << "///-------- Tile operator " << OpName << "\n";
+      out << "{\n";
 
-      out << "int inputLength = " << ConvertDimShapeToLength(fShapeInput) << ";\n";
-      out << "int s = 1;\n";
-      // loop from inverse dim order
-      out << "for (int i = " << fShapeInput.size()-1 << "; i >=0; i--) {\n";
-      out << SP << "int r = tensor_" << fNRepeats << "[i];\n";
-      // we cannot exclude case where repeats=1 since we need offset
-      //out << SP << "if (r == 1 && i < " << fShapeInput.size()-1 <<  ") continue;\n";
-      out << SP << "int i_offset = 0, o_offset = 0;\n";
-      out << SP << "s = s * input_shape[i];\n";
-      // case we have first copy
-      out << SP << "if (i == " << fShapeInput.size()-1 <<  ") {\n";
-      out << SP << SP <<  "for (int j = 0; j < inputLength/s ; j++) {\n";
-      out << SP << SP << SP << "for (int k = 0; k < r ; k++) {\n";
-      out << SP << SP << SP << SP << "std::copy(" << input << "+ i_offset, "
-                                    << input << "+ i_offset + s, " << output << "+ o_offset);\n";
-      out << SP << SP << SP << SP << "o_offset += s;\n";
-      out << SP << SP << SP << "}\n"; // end k loop
-      out << SP << SP << SP << "i_offset += s;\n";
-      out << SP << SP << "}\n"; // end j loop
-      out << SP << "} else {\n";  // second copy we do from output to output
-      // and we need to loop on j from reverse order to avoir re-writing in output tensor
-      out << SP << SP << "for (int j = inputLength/s - 1 ; j>=0; j--) {\n";
-      out << SP << SP << SP << "o_offset = j*s*r;\n";
-      out << SP << SP << SP << "i_offset = j*s;\n";
-      out << SP << SP << SP << "for (int k = 0; k < r ; k++) {\n";
-      out << SP << SP << SP << SP << "std::copy(" << output << "+ i_offset, "
-                                    << output << "+ i_offset + s, " << output << "+ o_offset);\n";
-      out << SP << SP << SP << SP << "o_offset += s;\n";
-      out << SP << SP << SP << "}\n"; // end k loop
-      out << SP << SP << "}\n"; // end j loop
-      out << SP << "}\n"; // end if
-      out << SP << "s *= r;\n";
-      out << SP << "inputLength *= r;\n";
-      out << "}\n"; // end i loop
-      out << "}\n";  // end of scope
+      const int rank = fShapeInput.size();
+
+      // shapes can contain dynamic (parametric) dimensions, so they are emitted
+      // as expressions evaluated at runtime in the generated code
+      out << SP << "const size_t input_shape[" << rank << "] = " << ConvertDimShapeToString(fShapeInput) << ";\n";
+      out << SP << "const size_t output_shape[" << rank << "] = " << ConvertDimShapeToString(fShapeY) << ";\n\n";
+
+      // Pre-calculating the input strides to find element positions (the output
+      // index just advances sequentially in the loop nest below).
+      out << SP << "size_t input_strides[" << rank << "];\n";
+      out << SP << "input_strides[" << rank - 1 << "] = 1;\n";
+      out << SP << "for (int i = " << rank - 2 << "; i >= 0; --i) {\n";
+      out << SP << SP << "input_strides[i] = input_strides[i+1] * input_shape[i+1];\n";
+      out << SP << "}\n\n";
+
+      // One loop per output axis: o<i> is the output coordinate and ic<i> the
+      // corresponding input coordinate, kept in sync via a wrap-around counter
+      // so no division or modulo is needed per element.
+      out << SP << "size_t out_idx = 0;\n";
+      std::string indent = SP;
+      for (int i = 0; i < rank; ++i) {
+         out << indent << "for (size_t o" << i << " = 0, ic" << i << " = 0; o" << i
+             << " < output_shape[" << i << "]; ++o" << i << ") {\n";
+         indent += SP;
+         out << indent << "const size_t in_off" << i << " = "
+             << (i == 0 ? std::string() : "in_off" + std::to_string(i - 1) + " + ")
+             << "ic" << i << " * input_strides[" << i << "];\n";
+      }
+      out << indent << "tensor_" << fNY << "[out_idx++] = tensor_" << fNInput << "[in_off" << rank - 1 << "];\n";
+      for (int i = rank - 1; i >= 0; --i) {
+         out << indent << "if (++ic" << i << " == input_shape[" << i << "]) ic" << i << " = 0;\n";
+         indent.resize(indent.size() - SP.size());
+         out << indent << "}\n";
+      }
+
+      out << "}\n"; // End of scope
       return out.str();
    }
 };
