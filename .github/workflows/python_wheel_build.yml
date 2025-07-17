@@ -8,13 +8,8 @@ on:
         type: string
         required: true
         default: "experimental-pip-install-root"
-  pull_request:
-    branches:
-      - master
-    types:
-      - opened
-      - synchronize
-      - reopened
+  push:
+    branches: experimental-pip-install-root
 
 jobs:
   python_wheel:
@@ -39,8 +34,8 @@ jobs:
           output-dir: ${{ env.WORKDIR }}/wheelhouse
 
       - name: Upload wheel to github
-        uses: actions/upload-artifact@v4
         working-directory: ${{ env.WORKDIR }}
+        uses: actions/upload-artifact@v4
         with:
           name: cibw-wheels-test
           path: wheelhouse/*.whl
