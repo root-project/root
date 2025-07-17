@@ -13,6 +13,8 @@
 
 #include "gtest/gtest.h"
 
+#include "SimpleElectron.hxx"
+
 #include <thread>
 
 using namespace ROOT;
@@ -993,4 +995,91 @@ TEST(RDataFrameInterface, GetNFilesFromMoreFiles)
    TreeInFileRAII r3{filenames[2]};
    ROOT::RDataFrame df{"t", filenames};
    EXPECT_EQ(df.GetNFiles(), 3);
+}
+
+void expect_colnames_eq(const std::vector<std::string> &v1, const std::vector<std::string> &v2)
+{
+   ASSERT_EQ(v1.size(), v2.size()) << "Vectors 'v1' and 'v2' are of unequal length";
+   for (std::size_t i = 0ull; i < v1.size(); ++i) {
+      EXPECT_EQ(v1[i], v2[i]) << "Vectors 'v1' and 'v2' differ at index " << i;
+   }
+}
+
+// https://github.com/root-project/root/issues/19392
+TEST(RDataFrameInterface, GH19392)
+{
+   class FileRAII {
+   private:
+      std::string fPath;
+
+   public:
+      explicit FileRAII(const std::string &path) : fPath(path) {}
+      ~FileRAII() { std::remove(fPath.c_str()); }
+      auto GetPath() const { return fPath.c_str(); }
+   };
+
+   FileRAII fileraii{"dataframe_interface_gh19392.root"};
+   const auto treeName{"tree"};
+
+   {
+      auto file = std::make_unique<TFile>(fileraii.GetPath(), "RECREATE");
+      auto tree = std::make_unique<TTree>(treeName, treeName);
+
+      SimpleElectron el1;
+      el1.electron_pt = 10.f;
+
+      SimpleElectron el2;
+      el2.electron_pt = 20.f;
+
+      // The wrapper classes also have the same data member named 'electron_pt'
+      // just to make the parsing exercise more complicated
+      Wrapper wrap1;
+      wrap1.electron_pt = 30.f;
+      wrap1.electron.electron_pt = 40.f;
+
+      Wrapper wrap2;
+      wrap2.electron_pt = 50.f;
+      wrap2.electron.electron_pt = 60.f;
+
+      tree->Branch("el1", &el1);
+      tree->Branch("el2", &el2);
+      tree->Branch("wr1", &wrap1);
+      tree->Branch("wr2", &wrap2);
+      tree->Fill();
+      tree->Write();
+   }
+   ROOT::RDataFrame df(treeName, fileraii.GetPath());
+   const auto columns = df.GetColumnNames();
+   // The wrapper classes also have the same data member named 'electron_pt'
+   // just to make the parsing exercise more complicated
+   // It's thus expected to see e.g. 'wr1.electron_pt'
+   const std::vector<std::string> expectedCols{"el1",
+                                               "el1.electron_pt",
+                                               "el2",
+                                               "el2.electron_pt",
+                                               "wr1",
+                                               "wr1.electron",
+                                               "wr1.electron.electron_pt",
+                                               "wr1.electron_pt",
+                                               "wr2",
+                                               "wr2.electron",
+                                               "wr2.electron.electron_pt",
+                                               "wr2.electron_pt"};
+   expect_colnames_eq(columns, expectedCols);
+
+   // Check all values separately, ensures that all full leaf names point to
+   // the correct values
+   auto el1_pt = df.Take<float>("el1.electron_pt");
+   auto el2_pt = df.Take<float>("el2.electron_pt");
+   auto wr1_pt = df.Take<float>("wr1.electron_pt");
+   auto wr1_el_pt = df.Take<float>("wr1.electron.electron_pt");
+   auto wr2_pt = df.Take<float>("wr2.electron_pt");
+   auto wr2_el_pt = df.Take<float>("wr2.electron.electron_pt");
+
+   EXPECT_FLOAT_EQ(el1_pt->at(0), 10.f);
+   EXPECT_FLOAT_EQ(el2_pt->at(0), 20.f);
+   EXPECT_FLOAT_EQ(wr1_pt->at(0), 30.f);
+   EXPECT_FLOAT_EQ(wr1_el_pt->at(0), 40.f);
+   EXPECT_FLOAT_EQ(wr2_pt->at(0), 50.f);
+   EXPECT_FLOAT_EQ(wr2_el_pt->at(0), 60.f);
 }
