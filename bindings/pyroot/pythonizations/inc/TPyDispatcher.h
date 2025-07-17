@@ -31,9 +31,7 @@ class TGVFileSplitter;
 class TList;
 class TObject;
 class TPad;
-class TProofProgressInfo;
 class TQCommand;
-class TSlave;
 class TSocket;
 class TVirtualPad;
 
@@ -130,36 +128,6 @@ public:
    PyObject *Dispatch(TVirtualPad *pad, TObject *obj, Int_t event);
    PyObject *Dispatch(TGListTreeItem *item, TDNDData *data);
    PyObject *Dispatch(const char *name, const TList *attr);
-
-   // for PROOF
-   PyObject *Dispatch(const char *msg, Bool_t all) { return DispatchVA("si", msg, all); }
-   PyObject *Dispatch(Long64_t total, Long64_t processed) { return DispatchVA("LL", total, processed); }
-   PyObject *Dispatch(Long64_t total, Long64_t processed, Long64_t bytesread, Float_t initTime, Float_t procTime,
-                      Float_t evtrti, Float_t mbrti)
-   {
-      return DispatchVA("LLLffff", total, processed, bytesread, initTime, procTime, evtrti, mbrti);
-   }
-   PyObject *Dispatch(Long64_t total, Long64_t processed, Long64_t bytesread, Float_t initTime, Float_t procTime,
-                      Float_t evtrti, Float_t mbrti, Int_t actw, Int_t tses, Float_t eses)
-   {
-      return DispatchVA("LLLffffiif", total, processed, bytesread, initTime, procTime, evtrti, mbrti, actw, tses, eses);
-   }
-   PyObject *Dispatch(const char *sel, Int_t sz, Long64_t fst, Long64_t ent)
-   {
-      return DispatchVA("siLL", sel, sz, fst, ent);
-   }
-   PyObject *Dispatch(const char *msg, Bool_t status, Int_t done, Int_t total)
-   {
-      return DispatchVA("siii", msg, status, done, total);
-   }
-
-   PyObject *Dispatch(TSlave *slave, Long64_t total, Long64_t processed)
-   {
-      return DispatchVA1("TSlave", slave, "LL", total, processed);
-   }
-   PyObject *Dispatch(TProofProgressInfo *pi) { return DispatchVA1("TProofProgressInfo", pi, 0); }
-   PyObject *Dispatch(TSlave *slave) { return DispatchVA("TSlave", slave, 0); }
-   PyObject *Dispatch(TSlave *slave, TProofProgressInfo *pi);
 
 private:
    PyObject *fCallable; //! callable object to be dispatched

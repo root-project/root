@@ -243,8 +243,7 @@ Bool_t TSecContext::IsActive() const
 /// If opt is "F" (default) print object content.
 /// If opt is "<number>" print in special form for calls within THostAuth
 /// with cardinality "<number>"
-/// If opt is "S" prints short in-line form for calls within TFTP,
-/// TSlave, TProof ...
+/// If opt is "S" prints short in-line form for calls within TFTP and similar
 
 void TSecContext::Print(Option_t *opt) const
 {

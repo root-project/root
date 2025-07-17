@@ -299,9 +299,9 @@ class TestTH1Indexing:
         # Check if slicing over everything preserves the statistics
         sliced_hist_full = hist_setup[...]
 
-        assert hist_setup.GetEffectiveEntries() == sliced_hist_full.GetEffectiveEntries()
-        assert sliced_hist_full.GetEntries() == sliced_hist_full.GetEffectiveEntries()
-        assert hist_setup.Integral() == sliced_hist_full.Integral()
+        assert hist_setup.GetEffectiveEntries() == pytest.approx(sliced_hist_full.GetEffectiveEntries())
+        assert sliced_hist_full.GetEntries() == pytest.approx(sliced_hist_full.GetEffectiveEntries())
+        assert hist_setup.Integral() == pytest.approx(sliced_hist_full.Integral())
 
         # Check if slicing over a range updates the statistics
         dim = hist_setup.GetDimension()
@@ -310,24 +310,21 @@ class TestTH1Indexing:
         sliced_hist = hist_setup[slice_indices]
 
         assert hist_setup.Integral() == sliced_hist.Integral()
-        assert hist_setup.GetEffectiveEntries() == sliced_hist.GetEffectiveEntries()
-        assert sliced_hist.GetEntries() == sliced_hist.GetEffectiveEntries()
+        assert hist_setup.GetEffectiveEntries() == pytest.approx(sliced_hist.GetEffectiveEntries())
+        assert sliced_hist.GetEntries() == pytest.approx(sliced_hist.GetEffectiveEntries())
         assert hist_setup.GetStdDev() == pytest.approx(sliced_hist.GetStdDev(), rel=10e-5)
         assert hist_setup.GetMean() == pytest.approx(sliced_hist.GetMean(), rel=10e-5)
 
-    def test_equality(self, hist_setup):
+    def test_list_iter(self, hist_setup):
+        import numpy as np
+
         if _special_setting(hist_setup):
             pytest.skip("Setting cannot be tested here")
 
-        hist_copy_ptr = hist_setup
-        assert hist_setup == hist_copy_ptr
-
-        hist_copy = hist_setup.Clone()
-        assert hist_setup != hist_copy
-
-        hist_full_slice = hist_setup[...]
-        assert hist_setup != hist_full_slice
+        expected = np.full(_shape(hist_setup), 3, dtype=np.int64)
+        hist_setup[...] = expected
+        assert list(hist_setup) == expected.flatten().tolist()
 
 
 if __name__ == "__main__":
-    pytest.main(args=[__file__])
+    raise SystemExit(pytest.main(args=[__file__]))

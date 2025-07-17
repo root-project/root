@@ -110,7 +110,7 @@ class TSecContextCleanup : public TObject {
 private:
    Int_t   fPort;
    Int_t   fServerProtocol;
-   Int_t   fServerType;     // 0 = sockd, 1 = rootd, 2 = proofd
+   Int_t   fServerType;     // 0 = sockd, 1 = rootd
 
 public:
    TSecContextCleanup(Int_t port, Int_t proto, Int_t type) :

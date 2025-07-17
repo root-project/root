@@ -472,8 +472,6 @@ int NetInit(EService servtype, int port1, int port2, int tcpwindowsize)
          if (!sp) {
             if (servtype == kROOTD) {
                port1 = 1094;
-            } else if (servtype == kPROOFD) {
-               port1 = 1093;
             } else {
                fprintf(stderr,"NetInit: unknown service: %s/tcp\n", service.data());
                Error(gErrFatal, kErrFatal,

@@ -16,7 +16,7 @@ if(NOT WIN32)
   endif()
   ROOT_EXECUTABLE(roots.exe roots.cxx LIBRARIES Core MathCore CMAKENOEXPORT)
 endif()
-ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint CMAKENOEXPORT)
+ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint)
 if(MSVC)
   set(root_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch \
       /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index \
@@ -30,10 +30,6 @@ if(MSVC)
   add_custom_command(TARGET root.exe POST_BUILD
                      COMMAND mt -manifest ${ROOT_MANIFEST} -outputresource:${CMAKE_BINARY_DIR}/bin/root.exe)
 endif()
-if(proof)
-  ROOT_EXECUTABLE(proofserv.exe pmain.cxx LIBRARIES Core MathCore CMAKENOEXPORT)
-endif()
-
 
 if(MSVC)
   ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore CMAKENOEXPORT)
@@ -114,6 +110,8 @@ if(WIN32)
   set_target_properties(rootcling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
   set_property(TARGET rootcling APPEND_STRING PROPERTY LINK_FLAGS " -STACK:4000000")
 endif()
+
+ROOT_EXECUTABLE(rootls src/rootls.cxx LIBRARIES RIO Tree Core Rint)
 
 # Create aliases: rootcint, genreflex.
 if(WIN32)

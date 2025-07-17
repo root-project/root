@@ -42,7 +42,6 @@ protected:
    TFile       *fFile;             ///<! Pointer to current file (We own the file).
    TObjArray   *fFiles;            ///< -> List of file names containing the trees (TChainElement, owned)
    TList       *fStatus;           ///< -> List of active/inactive branches (TChainElement, owned)
-   TChain      *fProofChain;       ///<! chain proxy when going to be processed by PROOF
    bool         fGlobalRegistration;  ///<! if true, bypass use of global lists
 
 private:
@@ -53,15 +52,18 @@ private:
 
 protected:
    void InvalidateCurrentTree();
-   void ReleaseChainProof();
+
+   // Called when setting the branch address of friends. In the case of TChain, the TChainElement for branch
+   // 'bname' is created calling IsDelayed, to avoid missing branch errors when connecting it to the trees
+   // of this chain
+   Int_t SetBranchAddress(const char *bname, void *add, TBranch **ptr, TClass *realClass, EDataType datatype,
+                          bool isptr, bool suppressMissingBranchError) override;
 
 public:
    // TChain constants
    enum EStatusBits {
       kGlobalWeight   = BIT(15),
-      kAutoDelete     = BIT(16),
-      kProofUptodate  = BIT(17),
-      kProofLite      = BIT(18)
+      kAutoDelete     = BIT(16)
    };
 
    // This used to be 1234567890, if user code hardcoded this number, the user code will need to change.
@@ -166,7 +168,6 @@ public:
    void      SetMakeClass(Int_t make) override { TTree::SetMakeClass(make); if (fTree) fTree->SetMakeClass(make);}
    void      SetName(const char *name) override;
    virtual void      SetPacketSize(Int_t size = 100);
-   virtual void      SetProof(bool on = true, bool refresh = false, bool gettreeheader = false);
    void      SetWeight(Double_t w=1, Option_t *option="") override;
    virtual void      UseCache(Int_t maxCacheSize = 10, Int_t pageSize = 0);
 

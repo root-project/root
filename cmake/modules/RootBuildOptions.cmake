@@ -116,6 +116,7 @@ ROOT_BUILD_OPTION(builtin_zlib OFF "Build bundled copy of zlib")
 ROOT_BUILD_OPTION(builtin_zstd OFF "Build included libzstd, or use system libzstd")
 ROOT_BUILD_OPTION(ccache OFF "Enable ccache usage for speeding up builds")
 ROOT_BUILD_OPTION(cefweb OFF "Enable support for CEF (Chromium Embedded Framework) web-based display")
+ROOT_BUILD_OPTION(check_connection ON "Fail the configuration step if there is no internet connection, but it's required for the build")
 ROOT_BUILD_OPTION(clad ON "Build clad, the cling automatic differentiation plugin (requires network, or existing source directory indicated with -DCLAD_SOURCE_DIR=<clad_src_path>)")
 ROOT_BUILD_OPTION(cocoa OFF "Use native Cocoa/Quartz graphics backend (MacOS X only)")
 ROOT_BUILD_OPTION(coverage OFF "Enable compile flags for coverage testing")
@@ -146,7 +147,6 @@ ROOT_BUILD_OPTION(minuit2_mpi OFF "Enable support for MPI in Minuit2")
 ROOT_BUILD_OPTION(minuit2_omp OFF "Enable support for OpenMP in Minuit2")
 ROOT_BUILD_OPTION(mpi OFF "Enable support for Message Passing Interface (MPI)")
 ROOT_BUILD_OPTION(opengl ON "Enable support for OpenGL (requires libGL and libGLU)")
-ROOT_BUILD_OPTION(proof OFF "Enable support for PROOF")
 ROOT_BUILD_OPTION(pyroot ON "Enable support for automatic Python bindings (PyROOT)")
 ROOT_BUILD_OPTION(pythia8 OFF "Enable support for Pythia 8.x [GPL]")
 ROOT_BUILD_OPTION(qt6web OFF "Enable support for Qt6 web-based display (requires Qt6::WebEngineCore and Qt6::WebEngineWidgets)")
@@ -235,7 +235,6 @@ if(all)
  set(imt_defvalue ON)
  set(mathmore_defvalue ON)
  set(opengl_defvalue ON)
- set(proof_defvalue OFF)
  set(pythia8_defvalue ON)
  set(pyroot_defvalue ON)
  set(qt6web_defvalue ON)
@@ -336,7 +335,7 @@ endif()
 
 #---Apply minimal or gminimal------------------------------------------------------------------
 foreach(opt ${root_build_options})
-  if(NOT opt MATCHES "builtin_llvm|builtin_clang|builtin_cling|shared|runtime_cxxmodules")
+  if(NOT opt MATCHES "builtin_llvm|builtin_clang|builtin_cling|shared|runtime_cxxmodules|thisroot_scripts")
     if(minimal)
       set(${opt}_defvalue OFF)
     elseif(gminimal AND NOT opt MATCHES "x11|cocoa")
@@ -392,7 +391,7 @@ endif()
 # Please notify SPI when adding to this list
 foreach(opt afdsmgrd afs alien bonjour builtin_afterimage castor chirp cxx11 cxx14 cxx17
         cxxmodules exceptions geocad gfal glite globus gsl_shared hdfs html ios jemalloc krb5
-        ldap memstat minuit2 monalisa oracle pyroot-python2 pyroot_legacy
+        ldap memstat minuit2 monalisa oracle proof pyroot-python2 pyroot_legacy
         pythia6 pythia6_nolink python qt qtgsi qt5web rfio ruby sapdb srp table
         tcmalloc vmc xproofd mysql odbc pgsql)
   if(${opt})

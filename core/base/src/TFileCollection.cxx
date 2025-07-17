@@ -14,7 +14,7 @@
 
 Class that contains a list of TFileInfo's and accumulated meta
 data information about its entries. This class is used to describe
-file sets as stored by Grid file catalogs, by PROOF or any other
+file sets as stored by Grid file catalogs, by any 
 collection of TFile names.
 */
 

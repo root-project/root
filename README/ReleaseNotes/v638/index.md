@@ -5,6 +5,7 @@
 * The build options `mysql`, `odbc` and `pgsql`, that were deprecated in ROOT 6.36, are now removed.
 * The `TGLWSIncludes.h` header is deprecated and will be removed in ROOT 6.40
 * The `ROOT::Math::TDataPointN` class that can be used with the `ROOT::Math::KDETree` was removed. Use the templated `TDataPoint<N>` instead.
+* The Parallel ROOT Facility, `PROOF`, has been removed from the repository.
 
 ## Core Libraries
 * Behavior change: when selecting a template instantiation for a dictionary, all the template arguments have to be fully defined - the forward declarations are not enough any more. The error prompted by the dictionary generator will be `Warning: Unused class rule: MyTemplate<MyFwdDeclaredClass>`.
@@ -83,6 +84,9 @@ tree = my_file["my_tree"] # instead of my_file.my_tree, which gave you a depreca
 The deprecated pythonization with the `__getattr__` syntax is now removed.
 It was originally schedeuled for removal in 6.34 according to the 6.32 release notes, but since it was still used quite a bit,
 the deprecation period was extended.
+
+## Command line utils
+- `rootls` has a new native implementation and can now be run without Python. The options and the output of the new rootls are identical to the previous implementation but it should run faster (typically about 3 to 4x faster).
 
 ## JavaScript ROOT
 - A new configuration option `Jupyter.JSRoot` was added in .rootrc to set the default mode for JSROOT in Jupyter notebooks (on or off).

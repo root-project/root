@@ -9,11 +9,6 @@ ROOT_LINKER_LIBRARY(RooBatchCompute
 
 target_include_directories(RooBatchCompute PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
 
-if(vdt OR builtin_vdt)
-  target_link_libraries(RooBatchCompute PUBLIC VDT)
-endif()
-
-
 ############################################################################################################################################
 # Instantiations of the shared objects which provide the actual computation functions.
 
@@ -48,4 +43,12 @@ if (cuda)
   set(shared_object_sources_cu src/RooBatchCompute.cu src/ComputeFunctions.cu src/CudaInterface.cu)
   ROOT_LINKER_LIBRARY(RooBatchCompute_CUDA  ${shared_object_sources_cu} TYPE SHARED DEPENDENCIES RooBatchCompute)
   target_compile_options(RooBatchCompute_CUDA  PRIVATE -lineinfo --expt-relaxed-constexpr)
+endif()
+
+if(vdt OR builtin_vdt)
+  foreach(library RooBatchCompute_GENERIC RooBatchCompute_SSE4.1 RooBatchCompute_AVX RooBatchCompute_AVX2 RooBatchCompute_AVX512 )
+    if(TARGET ${library})
+      target_link_libraries(${library} PRIVATE VDT::VDT)
+    endif()
+  endforeach()
 endif()

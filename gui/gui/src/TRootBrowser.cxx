@@ -55,10 +55,12 @@ Here is the list of available options:
   - F: File browser
   - E: Text Editor
   - H: HTML browser C: Canvas I: I/O redirection
-  - P: Proof
   - G: GL viewer
 
 */
+
+#include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleClassicBrowse.hxx>
 
 #include "TROOT.h"
 #include "TSystem.h"
@@ -163,6 +165,11 @@ TRootBrowser::TRootBrowser(TBrowser *b, const char *name, Int_t x, Int_t y,
 
 void TRootBrowser::CreateBrowser(const char *name)
 {
+   static bool hasRNTupleBrowsing __attribute__((unused)) = []() {
+      ROOT::RNTuple::Class()->SetBrowse(ROOT::Internal::BrowseRNTuple);
+      return true;
+   }();
+
    // Create the actual interface.
 
    fVf = new TGVerticalFrame(this, 100, 100);
@@ -896,12 +903,6 @@ void TRootBrowser::InitPlugins(Option_t *opt)
          ++fNbInitPlugins;
       }
 
-      // PROOF plugin...
-      if (opt[i] == 'P') {
-         cmd.Form("new TSessionViewer();");
-         ExecPlugin("PROOF", 0, cmd.Data(), 1);
-         ++fNbInitPlugins;
-      }
    }
    // --- Right bottom area
 

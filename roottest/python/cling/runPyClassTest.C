@@ -21,6 +21,9 @@ void runPyClassTest() {
    gROOT->ProcessLine( ".x PyClassTest2.C" );
 
 // test derivation of C++ classes from Python classes
+// make sure that MyModule is in the path
+   TPython::Exec("import sys");
+   TPython::Exec("sys.path.append('./')");
    TPython::Import( "MyModule" );
    gROOT->ProcessLine( ".L PyClassTest3.C" );
    gROOT->ProcessLine( ".x PyClassTest4.C" );

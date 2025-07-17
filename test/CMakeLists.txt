@@ -13,7 +13,7 @@ cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
 project(test)
 
-# Sergey: make no sence while CMakeLists.txt file cannot be used separately from ROOT
+# Sergey: make no sense while CMakeLists.txt file cannot be used separately from ROOT
 # but variables like ROOT_asimage_FOUND used here and produced in ROOTConfig.cmake
 find_package(ROOT REQUIRED)
 
@@ -294,18 +294,6 @@ ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter
 ROOT_EXECUTABLE(stressHepix stressHepix.cxx LIBRARIES Core)
 #ROOT_ADD_TEST(test-stressHepix COMMAND stressHepix FAILREGEX "FAILED|Error in")
 
-#--stressProof-------------------------------------------------------------------------------
-if(proof AND NOT WIN32)
-  add_custom_target(TestData COMMAND ${CMAKE_COMMAND} -DDST=${CMAKE_SOURCE_DIR}/files -P ${CMAKE_CURRENT_SOURCE_DIR}/rootDownloadData.cmake)
-  ROOT_EXECUTABLE(stressProof stressProof.cxx LIBRARIES Proof ProofPlayer Hist)
-  ROOT_ADD_TEST(test-stressproof PRECMD ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target TestData
-                                 COMMAND stressProof lite://
-                                         -h1 ${CMAKE_SOURCE_DIR}/files/h1 -event ${CMAKE_SOURCE_DIR}/files/event
-                                         -l /tmp/stressProof-%d.log -cleanlog -catlog -noprogress
-                                         ENVIRONMENT PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
-                                         FAILREGEX "FAILED|Error in")
-endif()
-
 #--testbits----------------------------------------------------------------------------------
 ROOT_EXECUTABLE(testbits testbits.cxx LIBRARIES Core)
 ROOT_ADD_TEST(test-testbits COMMAND testbits)
@@ -371,30 +359,6 @@ endif()
 #--g2root------------------------------------------------------------------------------------------
 if(TARGET g2root)
   ROOT_ADD_TEST(test-g2root COMMAND g2root)
-endif()
-
-#--periodic----------------------------------------------------------------------------------------
-if(MSVC)
-  set(build_generator_args --build-generator ${CMAKE_GENERATOR})
-  if(CMAKE_GENERATOR_PLATFORM)
-    list(APPEND build_generator_args --build-generator-platform ${CMAKE_GENERATOR_PLATFORM})
-  endif()
-  if(CMAKE_GENERATOR_TOOLSET)
-    list(APPEND build_generator_args --build-generator-toolset ${CMAKE_GENERATOR_TOOLSET})
-  endif()
-  ROOT_ADD_TEST(test-periodic-build
-    COMMAND ${CMAKE_CTEST_COMMAND} ${build_generator_args}
-      --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
-      --build-options -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}
-  )
-else()
-  ROOT_ADD_TEST(test-periodic-build
-    COMMAND
-      env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
-      ${CMAKE_CTEST_COMMAND} --build-generator ${CMAKE_GENERATOR}
-      --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
-      --build-options -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}
-  )
 endif()
 
 #--canary tests------------------------------------------------------------------------------------

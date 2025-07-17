@@ -18,6 +18,7 @@ Here we also implement the analytic integral.
 #include "RooChiSquarePdf.h"
 #include "RooRealVar.h"
 #include "RooBatchCompute.h"
+#include "RooHelpers.h"
 
 #include "TMath.h"
 
@@ -39,6 +40,7 @@ RooChiSquarePdf::RooChiSquarePdf(const char* name, const char* title,
   _x("x", "Dependent", this, x),
   _ndof("ndof","ndof", this, ndof)
 {
+   RooHelpers::checkRangeOfParameters(this, {&x, &ndof}, 0.);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -53,7 +53,7 @@ ULong64_t TSocket::fgBytesRecv = 0;
 // 10: added support for authenticated socket via TSocket::CreateAuthSocket(...)
 // 11: modified SSH protocol + support for server 'no authentication' mode
 // 12: add random tags to avoid reply attacks (password+token)
-// 13: authentication re-organization; cleanup in PROOF
+// 13: LEGACY: authentication re-organization; cleanup in PROOF
 // 14: support for SSH authentication via SSH tunnel
 // 15: cope with fixes in TUrl::GetFile
 // 16: add env setup message exchange
@@ -86,8 +86,6 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
    fServType = kSOCKD;
    if (fService.Contains("root"))
       fServType = kROOTD;
-   if (fService.Contains("proof"))
-      fServType = kPROOFD;
    fAddress = addr;
    fAddress.fPort = gSystem->GetServiceByName(service);
    fBytesSent = 0;
@@ -131,8 +129,6 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
    fServType = kSOCKD;
    if (fService.Contains("root"))
       fServType = kROOTD;
-   if (fService.Contains("proof"))
-      fServType = kPROOFD;
    fAddress = addr;
    fAddress.fPort = port;
    SetTitle(fService);
@@ -174,8 +170,6 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
    fServType = kSOCKD;
    if (fService.Contains("root"))
       fServType = kROOTD;
-   if (fService.Contains("proof"))
-      fServType = kPROOFD;
    fAddress = gSystem->GetHostByName(host);
    fAddress.fPort = gSystem->GetServiceByName(service);
    SetName(fAddress.GetHostName());
@@ -222,8 +216,6 @@ TSocket::TSocket(const char *url, Int_t port, Int_t tcpwindowsize)
    fServType = kSOCKD;
    if (fUrl.Contains("root"))
       fServType = kROOTD;
-   if (fUrl.Contains("proof"))
-      fServType = kPROOFD;
    fAddress = gSystem->GetHostByName(host);
    fAddress.fPort = port;
    SetName(fAddress.GetHostName());
@@ -1107,27 +1099,12 @@ Bool_t TSocket::Authenticate(const char *user)
 {
    Bool_t rc = kFALSE;
 
-   // Parse protocol name, for PROOF, send message with server role
+   // Parse protocol name
    TString sproto = TUrl(fUrl).GetProtocol();
    if (sproto.Contains("sockd")) {
       fServType = kSOCKD;
    } else if (sproto.Contains("rootd")) {
       fServType = kROOTD;
-   } else if (sproto.Contains("proofd")) {
-      fServType = kPROOFD;
-      // Parse options
-      TString opt(TUrl(fUrl).GetOptions());
-      //First letter in Opt describes type of proofserv to invoke
-      if (!strncasecmp(opt, "S", 1)) {
-         if (Send("slave") < 0) return rc;
-      } else if (!strncasecmp(opt, "M", 1)) {
-         if (Send("master") < 0) return rc;
-      } else {
-         Warning("Authenticate",
-                 "called by TSlave: unknown option '%c' %s",
-                 opt[0], " - assuming Slave");
-         if (Send("slave") < 0) return rc;
-      }
    }
    if (gDebug > 2)
       Info("Authenticate","Local protocol: %s",sproto.Data());
@@ -1192,7 +1169,7 @@ Bool_t TSocket::Authenticate(const char *user)
       if (gDebug > 1)
          Info("Authenticate", "class for '%s' authentication loaded", alib.Data());
 
-      Option_t *opts = (gROOT->IsProofServ()) ? "P" : "";
+      Option_t *opts = "";
       if (!(auth->Authenticate(this, host, user, opts))) {
          Error("Authenticate",
                "authentication attempt failed for %s@%s", user, host.Data());
@@ -1249,22 +1226,17 @@ Bool_t TSocket::Authenticate(const char *user)
 /// Creates a socket or a parallel socket and authenticates to the
 /// remote server.
 ///
-/// url: [[proto][p][auth]://][user@]host[:port][/service][?options]
+/// url: [[proto][p][auth]://][user@]host[:port][/service]
 ///
-/// where  proto = "sockd", "rootd", "proofd"
+/// where  proto = "sockd", "rootd"
 ///                indicates the type of remote server;
 ///                if missing "sockd" is assumed ("sockd" indicates
 ///                any remote server session using TServerSocket)
-///          [p] = for parallel sockets (forced internally for
-///                rootd; ignored for proofd)
 ///       [auth] = "up" or "k" to force UsrPwd or Krb5 authentication
 ///       [port] = is the remote port number
 ///    [service] = service name used to determine the port
 ///                (for backward compatibility, specification of
 ///                 port as priority)
-///     options  = "m" or "s", when proto=proofd indicates whether
-///                we are master or slave (used internally by
-///                TSlave)
 ///
 /// An already opened connection can be used by passing its socket
 /// in opensock.
@@ -1313,9 +1285,8 @@ TSocket *TSocket::CreateAuthSocket(const char *url, Int_t size, Int_t tcpwindows
       proto.Resize(proto.Length()-1);
    }
 
-   // Find out if parallel (ignore if proofd, force if rootd)
-   if (((proto.EndsWith("p") || size > 1) &&
-               !proto.BeginsWith("proof")) ||
+   // Find out if parallel (force if rootd)
+   if ((proto.EndsWith("p") || size > 1) ||
          proto.BeginsWith("root") ) {
       parallel = kTRUE;
       if (proto.EndsWith("p"))
@@ -1323,7 +1294,7 @@ TSocket *TSocket::CreateAuthSocket(const char *url, Int_t size, Int_t tcpwindows
    }
 
    // Force "sockd" if the rest is not recognized
-   if (!proto.BeginsWith("sock") && !proto.BeginsWith("proof") &&
+   if (!proto.BeginsWith("sock") &&
        !proto.BeginsWith("root"))
       proto = "sockd";
 
@@ -1396,17 +1367,13 @@ TSocket *TSocket::CreateAuthSocket(const char *url, Int_t size, Int_t tcpwindows
 /// Creates a socket or a parallel socket and authenticates to the
 /// remote server specified in 'url' on remote 'port' as 'user'.
 ///
-/// url: [[proto][p][auth]://]host[/?options]
+/// url: [[proto][auth]://]host
 ///
-/// where  proto = "sockd", "rootd", "proofd"
+/// where  proto = "sockd", "rootd"
 ///                indicates the type of remote server
 ///                if missing "sockd" is assumed ("sockd" indicates
 ///                any remote server session using TServerSocket)
-///          [p] = for parallel sockets (forced internally for
-///                rootd)
 ///       [auth] = "up" or "k" to force UsrPwd or Krb5 authentication
-///    [options] = "m" or "s", when proto=proofd indicates whether
-///                we are master or slave (used internally by TSlave)
 ///
 /// An already opened connection can be used by passing its socket
 /// in opensock.

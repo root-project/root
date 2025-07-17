@@ -32,7 +32,6 @@ interpreter/cling/tools/packaging @vgvassilev
 /misc/ @dpiparo
 /montecarlo/ @dpiparo
 /net/ @gganis
-/proof/ @gganis
 /roofit/ @lmoneta @guitargeek
 /rootx/ @dpiparo
 /sql/ @pcanal @linev
@@ -42,6 +41,7 @@ interpreter/cling/tools/packaging @vgvassilev
 /tree/dataframe/ @martamaja10 @vepadulano
 /tree/readspeed/ @martamaja10
 /tree/ntuple/ @jblomer
+/tree/ntuplebrowse/ @jblomer
 /tree/ntupleutil/v7/ @jblomer
 /tutorials/sql/ @linev
 

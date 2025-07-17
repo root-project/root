@@ -304,7 +304,6 @@ link_directories(${ROOT_LIBRARY_DIR})
 set(CMAKE_MACOSX_RPATH TRUE)              # use RPATH for MacOSX
 
 include(RoottestCTest)
-include(RoottestMacros)
 include(SearchInstalledSoftwareRoottest)
 
 message("-- Scanning subdirectories for tests...")

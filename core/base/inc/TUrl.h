@@ -34,7 +34,7 @@ class TUrl : public TObject {
 
 private:
    mutable TString fUrl;    // full URL
-   TString fProtocol;       // protocol: http, ftp, news, root, proof, ...
+   TString fProtocol;       // protocol: http, ftp, news, root, ...
    TString fUser;           // user name
    TString fPasswd;         // password
    TString fHost;           // remote host

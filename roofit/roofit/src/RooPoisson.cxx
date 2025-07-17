@@ -17,24 +17,19 @@ Poisson pdf
 #include "RooMath.h"
 #include "RooNaNPacker.h"
 #include "RooBatchCompute.h"
+#include "RooHelpers.h"
 
 #include <RooFit/Detail/MathFuncs.h>
 
 #include <array>
 
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Constructor
 
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor
-
-RooPoisson::RooPoisson(const char *name, const char *title,
-             RooAbsReal::Ref _x,
-             RooAbsReal::Ref _mean,
-             bool noRounding) :
-  RooAbsPdf(name,title),
-  x("x","x",this,_x),
-  mean("mean","mean",this,_mean),
-  _noRounding(noRounding)
-{
+ RooPoisson::RooPoisson(const char *name, const char *title, RooAbsReal::Ref _x, RooAbsReal::Ref _mean, bool noRounding)
+    : RooAbsPdf(name, title), x("x", "x", this, _x), mean("mean", "mean", this, _mean), _noRounding(noRounding)
+ {
+    RooHelpers::checkRangeOfParameters(this, {&static_cast<RooAbsReal &>(_x), &static_cast<RooAbsReal &>(_mean)}, 0.);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

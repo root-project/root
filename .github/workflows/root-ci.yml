@@ -83,7 +83,11 @@ jobs:
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
     if: |
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !(contains(github.event.pull_request.title, '[skip-ci]') || contains(github.event.pull_request.title, '[skip ci]')))
+        (github.event_name == 'pull_request' && !(
+          contains(github.event.pull_request.title, '[skip-ci]') ||
+          contains(github.event.pull_request.title, '[skip ci]') ||
+          contains(github.event.pull_request.labels.*.name, 'skip ci')
+        ))
 
     permissions:
       contents: read
@@ -226,7 +230,11 @@ jobs:
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
     if: |
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !(contains(github.event.pull_request.title, '[skip-ci]') || contains(github.event.pull_request.title, '[skip ci]')))
+        (github.event_name == 'pull_request' && !(
+          contains(github.event.pull_request.title, '[skip-ci]') ||
+          contains(github.event.pull_request.title, '[skip ci]') ||
+          contains(github.event.pull_request.labels.*.name, 'skip ci')
+        ))
 
     permissions:
       contents: read
@@ -347,7 +355,11 @@ jobs:
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
     if: |
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !(contains(github.event.pull_request.title, '[skip-ci]') || contains(github.event.pull_request.title, '[skip ci]')))
+        (github.event_name == 'pull_request' && !(
+          contains(github.event.pull_request.title, '[skip-ci]') ||
+          contains(github.event.pull_request.title, '[skip ci]') ||
+          contains(github.event.pull_request.labels.*.name, 'skip ci')
+        ))
 
     permissions:
       contents: read
@@ -393,11 +405,16 @@ jobs:
             property: arm64
             overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "builtin_zlib=ON", "builtin_zstd=ON"]
             architecture: ARM64
-          - image: alma9-clang
+          - image: alma10
             is_special: true
             property: "clang Ninja"
             overrides: ["CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
             cmake_generator: Ninja
+          # Fedora Rawhide with Python debug build
+          - image: rawhide
+            is_special: true
+            property: "Fedora pydebug"
+            overrides: ["CMAKE_CXX_STANDARD=23"]
           # Disable GPU builds until the DNS problem is solved  
           # - image: ubuntu2404-cuda
           #   is_special: true
@@ -566,19 +583,3 @@ jobs:
       - name: ccache info (post)
         run: |
           ccache -s || true
-
-  event_file:
-    # For any event that is not a PR, the CI will always run. In PRs, the CI
-    # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
-    if: |
-        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !(contains(github.event.pull_request.title, '[skip-ci]') || contains(github.event.pull_request.title, '[skip ci]')))
-
-    name: "Upload Event Payload"
-    runs-on: ubuntu-latest
-    steps:
-    - name: Upload
-      uses: actions/upload-artifact@v4
-      with:
-        name: Event File
-        path: ${{ github.event_path }}

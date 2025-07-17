@@ -28,7 +28,7 @@
 
 PDF implementing the generalized Asymmetrical Double-Sided Crystall Ball line shape.
 \f[
-  f(m;m_0,\sigma,\alpha_L,n_L,\alpha_R,n_R) =
+  f(m;m_0,\sigma_L,\alpha_L,n_L,\sigma_R,\alpha_R,n_R) =
   \begin{cases}
     A_L \cdot (B_L - \frac{m - m_0}{\sigma_L})^{-n_L}, & \mbox{for }\frac{m - m_0}{\sigma_L} < -\alpha_L \\
     \exp \left( - \frac{1}{2} \cdot \left[ \frac{m - m_0}{\sigma_L} \right]^2 \right), & \mbox{for }\frac{m - m_0}{\sigma_L} \leq 0 \\

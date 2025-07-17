@@ -790,7 +790,7 @@ TGeoManager* TEveManager::GetGeometry(const TString& filename)
       gGeoManager->GetTopVolume()->VisibleDaughters(true);
 
       // Import colors exported by Gled, if they exist.
-      {
+      if (exp_filename.EndsWith(".root")) {
          TFile f(exp_filename, "READ");
          TObjArray* collist = (TObjArray*) f.Get("ColorList");
          f.Close();

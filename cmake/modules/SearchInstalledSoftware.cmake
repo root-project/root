@@ -22,8 +22,13 @@
 #       macro, the connection check will not run again.
 #----------------------------------------------------------------------------
 macro(ROOT_CHECK_CONNECTION option)
-    # Do something only if connection check is not already done
+  # Do something only if connection check is not already done
   if(NOT DEFINED NO_CONNECTION)
+    if(NOT check_connection)
+      # If the connection check is disabled, just assume there is internet
+      # connection
+      set(NO_CONNECTION FALSE)
+    endif()
     message(STATUS "Checking internet connectivity")
     file(DOWNLOAD https://root.cern/files/cmake_connectivity_test.txt ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt
       TIMEOUT 10 STATUS DOWNLOAD_STATUS
@@ -32,7 +37,7 @@ macro(ROOT_CHECK_CONNECTION option)
     list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
     # Check if download was successful.
     if(${STATUS_CODE} EQUAL 0)
-      # Succcess
+      # Success
       message(STATUS "Checking internet connectivity - found")
       # Now let's delete the file
       file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt)
@@ -40,9 +45,9 @@ macro(ROOT_CHECK_CONNECTION option)
     else()
       # Error
       if(fail-on-missing)
-        message(FATAL_ERROR "No internet connection. Please check your connection, set '-D${option}' or disable 'fail-on-missing' to automatically disable options requiring internet access")
+        message(FATAL_ERROR "No internet connection. Please check your connection, set '-D${option}' or disable 'fail-on-missing' to automatically disable options requiring internet access. You can also bypass the connection check with -Dcheck_connection=OFF.")
       endif()
-      message(STATUS "Checking internet connectivity - failed: will not automatically download external dependencies")
+      message(STATUS "Checking internet connectivity - failed: will not automatically download external dependencies. You can bypass the connection check with -Dcheck_connection=OFF.")
       set(NO_CONNECTION TRUE)
     endif()
   endif()
@@ -1070,7 +1075,7 @@ if(opengl AND NOT builtin_ftgl)
   find_package(FTGL)
   if(NOT FTGL_FOUND)
     if(fail-on-missing)
-      message(SEND_ERROR "ftgl library not found and is required ('builtin_ftgl' is OFF). Set varible FTGL_ROOT_DIR to installation location")
+      message(SEND_ERROR "ftgl library not found and is required ('builtin_ftgl' is OFF). Set variable FTGL_ROOT_DIR to installation location")
     else()
       message(STATUS "ftgl library not found. Set variable FTGL_ROOT_DIR to point to your installation")
       message(STATUS "For the time being switching ON 'builtin_ftgl' option")
@@ -1539,9 +1544,7 @@ if(vdt OR builtin_vdt)
           set(builtin_vdt ON CACHE BOOL "Enabled because external vdt not found (${vdt_description})" FORCE)
         endif()
       endif()
-     else()
-       add_library(VDT ALIAS VDT::VDT)
-     endif()
+    endif()
   endif()
   if(builtin_vdt)
     set(vdt_version 0.4.6)
@@ -1572,25 +1575,17 @@ if(vdt OR builtin_vdt)
     )
     set(VDT_INCLUDE_DIR ${CMAKE_BINARY_DIR}/ginclude)
     set(VDT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/ginclude)
-    if(NOT TARGET VDT)
-      add_library(VDT IMPORTED SHARED)
-      add_dependencies(VDT BUILTIN_VDT)
-      set_target_properties(VDT PROPERTIES IMPORTED_LOCATION "${VDT_LIBRARIES}")
-      target_include_directories(VDT INTERFACE $<BUILD_INTERFACE:${VDT_INCLUDE_DIR}> $<INSTALL_INTERFACE:include/>)
-    endif()
 
-    install(FILES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX}
+    add_library(VDT::VDT SHARED IMPORTED GLOBAL)
+    add_dependencies(VDT::VDT BUILTIN_VDT)
+    set_target_properties(VDT::VDT PROPERTIES IMPORTED_LOCATION "${VDT_LIBRARIES}")
+    target_include_directories(VDT::VDT INTERFACE $<BUILD_INTERFACE:${VDT_INCLUDE_DIR}> $<INSTALL_INTERFACE:include/>)
+
+    install(FILES ${VDT_LIBRARIES}
             DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT extra-headers)
-    set(vdt ON CACHE BOOL "Enabled because builtin_vdt enabled (${vdt_description})" FORCE)
-    set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS VDT)
-    add_library(VDT::VDT STATIC IMPORTED GLOBAL)
-    set_target_properties(VDT::VDT
-      PROPERTIES
-        IMPORTED_LOCATION "${VDT_LIBRARIES}"
-        INTERFACE_INCLUDE_DIRECTORIES "${VDT_INCLUDE_DIRS}"
-    )
+    set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS VDT::VDT)
   endif()
 endif()
 
@@ -1848,8 +1843,15 @@ if (roofit_multiprocess)
   endif()
 
   if(builtin_zeromq)
-    list(APPEND ROOT_BUILTINS ZeroMQ)
-    add_subdirectory(builtins/zeromq/libzmq)
+    ROOT_CHECK_CONNECTION("builtin_zeromq=OFF")
+    if(NO_CONNECTION)
+      message(STATUS "No internet connection, disabling the `builtin_zeromq` and `roofit_multiprocess` options")
+      set(builtin_zeromq OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+      set(roofit_multiprocess OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+    else()
+      list(APPEND ROOT_BUILTINS ZeroMQ)
+      add_subdirectory(builtins/zeromq/libzmq)
+    endif()
   endif()
 
   if(NOT builtin_cppzmq)
@@ -1872,8 +1874,15 @@ if (roofit_multiprocess)
   endif()
 
   if(builtin_cppzmq)
-    list(APPEND ROOT_BUILTINS cppzmq)
-    add_subdirectory(builtins/zeromq/cppzmq)
+    ROOT_CHECK_CONNECTION("builtin_cppzmq=OFF")
+    if(NO_CONNECTION)
+      message(STATUS "No internet connection, disabling the `builtin_cppzmq` and `roofit_multiprocess` options")
+      set(builtin_cppzmq OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+      set(roofit_multiprocess OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+    else()
+      list(APPEND ROOT_BUILTINS cppzmq)
+      add_subdirectory(builtins/zeromq/cppzmq)
+    endif()
   endif()
 endif (roofit_multiprocess)
 
@@ -2000,7 +2009,7 @@ if (builtin_gtest)
   set(_G_LIBRARY_PATH ${binary_dir}/lib/)
 
   # Use gmock_main instead of gtest_main because it initializes gtest as well.
-  # Note: The libraries are listed in reverse order of their dependancies.
+  # Note: The libraries are listed in reverse order of their dependencies.
   foreach(lib gtest gtest_main gmock gmock_main)
     add_library(${lib} IMPORTED STATIC GLOBAL)
     set_target_properties(${lib} PROPERTIES
