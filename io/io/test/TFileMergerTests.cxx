@@ -281,8 +281,13 @@ TEST(TFileMerger, MergeSelectiveTutorial)
    const auto file0 = baseDir / "tomerge00.root";
    const auto file1 = baseDir / "tomerge01.root";
    try {
+      #ifdef WIN32
+      copy(baseDir / "hsimple.root", file0);
+      copy(baseDir / "hsimple.root", file1);
+      #else
       create_symlink(baseDir / "hsimple.root", file0);
       create_symlink(baseDir / "hsimple.root", file1);
+      #endif
       cleanup.items.push_back(file0);
       cleanup.items.push_back(file1);
    } catch (filesystem_error &e) {
