@@ -456,113 +456,155 @@ TEST(RDFSnapshotRNTuple, TDirectory)
    EXPECT_EQ(expected, sdf.GetColumnNames());
 }
 
-void WriteTestTree(const std::string &tname, const std::string &fname)
-{
-   TFile file(fname.c_str(), "RECREATE");
-   TTree t(tname.c_str(), tname.c_str());
+class RDFSnapshotRNTupleFromTTreeTest : public ::testing::Test {
+protected:
+   const std::string fFileName = "RDFSnapshotRNTuple_ttree_fixture.root";
+   const std::string fTreeName = "tree";
 
-   float pt = 42.f;
-   std::vector<float> photons{1.f, 2.f, 3.f};
-   Electron electron{137.f};
-   Jet jets;
-   jets.electrons.emplace_back(Electron{122.f});
-   jets.electrons.emplace_back(Electron{125.f});
-   jets.electrons.emplace_back(Electron{129.f});
-
-   Int_t nmuons = 1;
-   float muon_pt[3] = {10.f, 20.f, 30.f};
-
-   struct {
-      Int_t x = 1;
-      Int_t y = 2;
-   } point;
-
-   t.Branch("pt", &pt);
-   t.Branch("photons", &photons);
-   t.Branch("electron", &electron);
-   t.Branch("jets", &jets);
-   t.Branch("nmuons", &nmuons);
-   t.Branch("muon_pt", muon_pt, "muon_pt[nmuons]");
-   t.Branch("point", &point, "x/I:y/I");
-
-   t.Fill();
-   t.Write();
-}
-
-TEST(RDFSnapshotRNTuple, FromTTree)
-{
-   const auto treename = "tree";
-   FileRAII fileGuard{"RDFSnapshotRNTuple_from_ttree.root"};
-
-   WriteTestTree(treename, fileGuard.GetPath());
-
-   auto df = ROOT::RDataFrame(treename, fileGuard.GetPath());
-
-   RSnapshotOptions opts;
-   opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
-
+   void SetUp() override
    {
-      // FIXME(fdegeus): snapshotting leaflist branches as-is (i.e. without explicitly providing their leafs) is not
-      // supported, because we have no way of reconstructing the memory layout of the branch itself from only the
-      // TTree's on-disk information without JITting. For RNTuple, we would be able to do this using anonymous record
-      // fields, however. Once this is implemented, this test should be changed to check the result of snapshotting
-      // "point" fully.
-      auto sdf = df.Define("x", [] { return 10; })
-                    .Snapshot("ntuple", fileGuard.GetPath(),
-                              {"x", "pt", "photons", "electron", "jets", "muon_pt", "point.x", "point.y"}, opts);
+      TFile file(fFileName.c_str(), "RECREATE");
+      TTree t(fTreeName.c_str(), fTreeName.c_str());
 
-      auto x = sdf->Take<int>("x");
-      auto pt = sdf->Take<float>("pt");
-      auto photons = sdf->Take<ROOT::RVec<float>>("photons");
-      auto electron = sdf->Take<Electron>("electron");
-      auto jet_electrons = sdf->Take<ROOT::RVec<Electron>>("jets.electrons");
-      auto nMuons = sdf->Take<int>("nmuons");
-      auto muonPt = sdf->Take<ROOT::RVec<float>>("muon_pt");
-      auto pointX = sdf->Take<int>("point_x");
-      auto pointY = sdf->Take<int>("point_y");
+      float pt = 42.f;
+      std::vector<float> photons{1.f, 2.f, 3.f};
+      Electron electron{137.f};
+      Jet jets;
+      jets.electrons.emplace_back(Electron{122.f});
+      jets.electrons.emplace_back(Electron{125.f});
+      jets.electrons.emplace_back(Electron{129.f});
 
-      ASSERT_EQ(1UL, x->size());
-      ASSERT_EQ(1UL, pt->size());
-      ASSERT_EQ(1UL, photons->size());
-      ASSERT_EQ(1UL, electron->size());
-      ASSERT_EQ(1UL, jet_electrons->size());
-      ASSERT_EQ(1UL, nMuons->size());
-      ASSERT_EQ(1UL, muonPt->size());
-      ASSERT_EQ(1UL, pointX->size());
-      ASSERT_EQ(1UL, pointY->size());
+      Int_t nmuons = 1;
+      float muon_pt[3] = {10.f, 20.f, 30.f};
 
-      EXPECT_EQ(10, x->front());
-      EXPECT_EQ(42.f, pt->front());
-      expect_vec_eq<float>({1.f, 2.f, 3.f}, photons->front());
-      EXPECT_EQ(Electron{137.f}, electron->front());
-      expect_vec_eq({Electron{122.f}, Electron{125.f}, Electron{129.f}}, jet_electrons->front());
-      EXPECT_EQ(1, nMuons->front());
-      expect_vec_eq({10.f}, muonPt->front());
-      EXPECT_EQ(1, pointX->front());
-      EXPECT_EQ(2, pointY->front());
+      struct {
+         Int_t x = 1;
+         Int_t y = 2;
+      } point;
+
+      t.Branch("pt", &pt);
+      t.Branch("photons", &photons);
+      t.Branch("electron", &electron);
+      t.Branch("jets", &jets);
+      t.Branch("nmuons", &nmuons);
+      t.Branch("muon_pt", muon_pt, "muon_pt[nmuons]");
+      t.Branch("point", &point, "x/I:y/I");
+
+      t.Fill();
+      t.Write();
    }
 
-   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   void TearDown() override { gSystem->Unlink(fFileName.c_str()); }
 
-   auto x = reader->GetView<int>("x");
-   auto pt = reader->GetView<float>("pt");
-   auto photons = reader->GetView<ROOT::RVec<float>>("photons");
-   auto electron = reader->GetView<Electron>("electron");
-   auto jet_electrons = reader->GetView<ROOT::RVec<Electron>>("jets.electrons");
-   auto nMuons = reader->GetView<int>("nmuons");
-   auto muonPt = reader->GetView<ROOT::RVec<float>>("muon_pt");
-   auto pointX = reader->GetView<int>("point_x");
-   auto pointY = reader->GetView<int>("point_y");
+   void TestFromTTree(const std::string &fname, bool vector2RVec = false)
+   {
+      FileRAII fileGuard{fname};
 
-   EXPECT_EQ(10, x(0));
-   EXPECT_EQ(42.f, pt(0));
-   expect_vec_eq<float>({1.f, 2.f, 3.f}, photons(0));
-   EXPECT_EQ(Electron{137.f}, electron(0));
-   expect_vec_eq({Electron{122.f}, Electron{125.f}, Electron{129.f}}, jet_electrons(0));
-   EXPECT_EQ(1, nMuons(0));
-   expect_vec_eq({10.f}, muonPt(0));
-   EXPECT_EQ(1, pointX(0));
-   EXPECT_EQ(2, pointY(0));
+      auto df = ROOT::RDataFrame(fTreeName, fFileName);
+
+      {
+         RSnapshotOptions opts;
+         opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+         opts.fVector2RVec = vector2RVec;
+
+         // FIXME(fdegeus): snapshotting leaflist branches as-is (i.e. without explicitly providing their leafs) is not
+         // supported, because we have no way of reconstructing the memory layout of the branch itself from only the
+         // TTree's on-disk information without JITting. For RNTuple, we would be able to do this using anonymous record
+         // fields, however. Once this is implemented, this test should be changed to check the result of snapshotting
+         // "point" fully.
+         auto sdf = df.Define("x", [] { return 10; })
+                       .Snapshot("ntuple", fileGuard.GetPath(),
+                                 {"x", "pt", "photons", "electron", "jets", "muon_pt", "point.x", "point.y"}, opts);
+
+         auto x = sdf->Take<int>("x");
+         auto pt = sdf->Take<float>("pt");
+         auto photons = sdf->Take<ROOT::RVec<float>>("photons");
+         auto electron = sdf->Take<Electron>("electron");
+         auto jet_electrons = sdf->Take<ROOT::RVec<Electron>>("jets.electrons");
+         auto nMuons = sdf->Take<int>("nmuons");
+         auto muonPt = sdf->Take<ROOT::RVec<float>>("muon_pt");
+         auto pointX = sdf->Take<int>("point_x");
+         auto pointY = sdf->Take<int>("point_y");
+
+         ASSERT_EQ(1UL, x->size());
+         ASSERT_EQ(1UL, pt->size());
+         ASSERT_EQ(1UL, photons->size());
+         ASSERT_EQ(1UL, electron->size());
+         ASSERT_EQ(1UL, jet_electrons->size());
+         ASSERT_EQ(1UL, nMuons->size());
+         ASSERT_EQ(1UL, muonPt->size());
+         ASSERT_EQ(1UL, pointX->size());
+         ASSERT_EQ(1UL, pointY->size());
+
+         EXPECT_EQ(10, x->front());
+         EXPECT_EQ(42.f, pt->front());
+         expect_vec_eq<float>({1.f, 2.f, 3.f}, photons->front());
+         EXPECT_EQ(Electron{137.f}, electron->front());
+         expect_vec_eq({Electron{122.f}, Electron{125.f}, Electron{129.f}}, jet_electrons->front());
+         EXPECT_EQ(1, nMuons->front());
+         expect_vec_eq({10.f}, muonPt->front());
+         EXPECT_EQ(1, pointX->front());
+         EXPECT_EQ(2, pointY->front());
+      }
+
+      auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+
+      auto &descriptor = reader->GetDescriptor();
+
+      int nTopLevelFields = std::distance(descriptor.GetTopLevelFields().begin(), descriptor.GetTopLevelFields().end());
+      EXPECT_EQ(9, nTopLevelFields);
+      EXPECT_EQ("std::int32_t", descriptor.GetFieldDescriptor(descriptor.FindFieldId("x")).GetTypeName());
+      EXPECT_EQ("float", descriptor.GetFieldDescriptor(descriptor.FindFieldId("pt")).GetTypeName());
+      if (vector2RVec) {
+         EXPECT_EQ("ROOT::VecOps::RVec<float>",
+                   descriptor.GetFieldDescriptor(descriptor.FindFieldId("photons")).GetTypeName());
+      } else {
+         EXPECT_EQ("std::vector<float>",
+                   descriptor.GetFieldDescriptor(descriptor.FindFieldId("photons")).GetTypeName());
+      }
+      EXPECT_EQ("Electron", descriptor.GetFieldDescriptor(descriptor.FindFieldId("electron")).GetTypeName());
+      auto jetsId = descriptor.FindFieldId("jets");
+      EXPECT_EQ("Jet", descriptor.GetFieldDescriptor(jetsId).GetTypeName());
+      auto electronsId = descriptor.FindFieldId("electrons", jetsId);
+      EXPECT_EQ("std::vector<Electron>", descriptor.GetFieldDescriptor(electronsId).GetTypeName());
+      EXPECT_EQ("std::int32_t", descriptor.GetFieldDescriptor(descriptor.FindFieldId("nmuons")).GetTypeName());
+      EXPECT_EQ("ROOT::VecOps::RVec<float>",
+                descriptor.GetFieldDescriptor(descriptor.FindFieldId("muon_pt")).GetTypeName());
+      EXPECT_EQ("std::int32_t", descriptor.GetFieldDescriptor(descriptor.FindFieldId("point_x")).GetTypeName());
+      EXPECT_EQ("std::int32_t", descriptor.GetFieldDescriptor(descriptor.FindFieldId("point_y")).GetTypeName());
+      // sanity check to make sure we don't snapshot the internal RDF size columns
+      EXPECT_EQ(ROOT::kInvalidDescriptorId, descriptor.FindFieldId("R_rdf_sizeof_photons"));
+
+      auto x = reader->GetView<int>("x");
+      auto pt = reader->GetView<float>("pt");
+      auto photons = reader->GetView<ROOT::RVec<float>>("photons");
+      auto electron = reader->GetView<Electron>("electron");
+      auto jet_electrons = reader->GetView<ROOT::RVec<Electron>>("jets.electrons");
+      auto nMuons = reader->GetView<int>("nmuons");
+      auto muonPt = reader->GetView<ROOT::RVec<float>>("muon_pt");
+      auto pointX = reader->GetView<int>("point_x");
+      auto pointY = reader->GetView<int>("point_y");
+
+      EXPECT_EQ(10, x(0));
+      EXPECT_EQ(42.f, pt(0));
+      expect_vec_eq<float>({1.f, 2.f, 3.f}, photons(0));
+      EXPECT_EQ(Electron{137.f}, electron(0));
+      expect_vec_eq({Electron{122.f}, Electron{125.f}, Electron{129.f}}, jet_electrons(0));
+      EXPECT_EQ(1, nMuons(0));
+      expect_vec_eq({10.f}, muonPt(0));
+      EXPECT_EQ(1, pointX(0));
+      EXPECT_EQ(2, pointY(0));
+   }
+};
+
+TEST_F(RDFSnapshotRNTupleFromTTreeTest, FromTTree)
+{
+   TestFromTTree("RDFSnapshotRNTuple_from_ttree.root");
+}
+
+TEST_F(RDFSnapshotRNTupleFromTTreeTest, FromTTreeNoVector2RVec)
+{
+   TestFromTTree("RDFSnapshotRNTuple_from_ttree_novec2rvec.root", /*vector2RVec=*/false);
 }
 
 #ifdef R__USE_IMT
