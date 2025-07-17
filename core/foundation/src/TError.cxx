@@ -22,9 +22,11 @@ to be replaced by the proper DefaultErrorHandler()
 
 #include "TError.h"
 
+#include <cassert>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <cerrno>
 #include <string>
 
@@ -108,46 +110,59 @@ ErrorHandlerFunc_t GetErrorHandler()
 
 void ErrorHandler(Int_t level, const char *location, const char *fmt, std::va_list ap)
 {
-   thread_local Int_t buf_size(256);
-   thread_local char *buf_storage(nullptr);
-
-   char small_buf[256];
-   char *buf = buf_storage ? buf_storage : small_buf;
-
-   std::va_list ap_copy;
-   va_copy(ap_copy, ap);
-
    if (!fmt)
       fmt = "no error message provided";
 
-   Int_t n = vsnprintf(buf, buf_size, fmt, ap_copy);
-   if (n >= buf_size) {
-      va_end(ap_copy);
+   char smallBuf[256];
 
-      buf_size = n + 1;
-      if (buf != &(small_buf[0]))
-         delete[] buf;
-      buf_storage = buf = new char[buf_size];
+   thread_local int bufSize = sizeof(smallBuf);
+   thread_local char *bufDynStorage = nullptr;
 
-      // Try again with a sufficiently large buffer
-      va_copy(ap_copy, ap);
-      vsnprintf(buf, buf_size, fmt, ap_copy);
-   }
-   va_end(ap_copy);
+   char *buf = bufDynStorage ? bufDynStorage : smallBuf;
 
-   std::string bp = buf;
+   std::va_list apCopy;
+   va_copy(apCopy, ap);
+
+   // Figure out exactly how many bytes we need
+   int nRequired = vsnprintf(nullptr, 0, fmt, ap) + 1;
    if (level >= kSysError && level < kFatal) {
-      bp.push_back(' ');
-      if (GetErrorSystemMsgHandlerRef())
-         bp += GetErrorSystemMsgHandlerRef()();
-      else
-         bp += std::string("(errno: ") + std::to_string(errno) + ")";
+      auto sysHandler = GetErrorSystemMsgHandlerRef();
+      if (sysHandler)
+         nRequired += strlen(sysHandler()) + 1; // +1 for the whitespace
+      else {
+         nRequired += snprintf(nullptr, 0, " (errno: %d)", errno) + 1;
+      }
    }
+
+   if (nRequired >= bufSize) {
+      // Not enough space: allocate more space on the heap to fit the string
+      if (buf != smallBuf)
+         delete[] buf;
+
+      bufSize = std::max(bufSize * 2, nRequired + 1);
+      buf = bufDynStorage = new char[bufSize];
+   }
+
+   // Actually write the string
+   int nWrittenPre = vsnprintf(buf, bufSize, fmt, apCopy);
+   int nWrittenPost = 0;
+   if (level >= kSysError && level < kFatal) {
+      auto sysHandler = GetErrorSystemMsgHandlerRef();
+      if (sysHandler) {
+         // NOTE: overwriting the null byte written by the previous vsnprintf
+         nWrittenPost = snprintf(buf + nWrittenPre, bufSize - nWrittenPre, " %s", sysHandler());
+      } else {
+         // NOTE: overwriting the null byte written by the previous vsnprintf
+         nWrittenPost = snprintf(buf + nWrittenPre, bufSize - nWrittenPre, " (errno: %d)", errno);
+      }
+   }
+   assert(nWrittenPre + nWrittenPost + 1 <= nRequired);
+   va_end(apCopy);
 
    if (level != kFatal)
-      gErrorHandler(level, level >= gErrorAbortLevel, location, bp.c_str());
+      gErrorHandler(level, level >= gErrorAbortLevel, location, buf);
    else
-      gErrorHandler(level, kTRUE, location, bp.c_str());
+      gErrorHandler(level, kTRUE, location, buf);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
