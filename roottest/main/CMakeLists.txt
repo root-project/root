@@ -98,12 +98,12 @@ ROOTTEST_ADD_TEST(RootlsRNTuple
 
 #########################################################################
 
+if(ROOT_pyroot_FOUND)
+
 ROOTTEST_ADD_TEST(ROOT_8197
                   MACRO ROOT_8197.C
                   OUTREF ROOT_8197.ref
                   ENVIRONMENT ${test_env})
-
-if(ROOT_pyroot_FOUND)
 
 # We compare the output of some tests against ref. files, and we don't want to
 # get noise for Python warnings (for example the warning that the GIL is
