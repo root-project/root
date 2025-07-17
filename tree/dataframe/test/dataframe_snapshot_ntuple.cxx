@@ -489,7 +489,7 @@ void WriteTestTree(const std::string &tname, const std::string &fname)
    t.Write();
 }
 
-TEST(RDFSnapshotRNTuple, FromTTree)
+void TestFromTTree(bool vector2RVec = false)
 {
    const auto treename = "tree";
    FileRAII fileGuard{"RDFSnapshotRNTuple_from_ttree.root"};
@@ -498,10 +498,11 @@ TEST(RDFSnapshotRNTuple, FromTTree)
 
    auto df = ROOT::RDataFrame(treename, fileGuard.GetPath());
 
-   RSnapshotOptions opts;
-   opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
-
    {
+      RSnapshotOptions opts;
+      opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+      opts.fVector2RVec = vector2RVec;
+
       // FIXME(fdegeus): snapshotting leaflist branches as-is (i.e. without explicitly providing their leafs) is not
       // supported, because we have no way of reconstructing the memory layout of the branch itself from only the
       // TTree's on-disk information without JITting. For RNTuple, we would be able to do this using anonymous record
@@ -544,6 +545,34 @@ TEST(RDFSnapshotRNTuple, FromTTree)
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
 
+   auto &descriptor = reader->GetDescriptor();
+
+   int nTopLevelFields = 0;
+   for (const auto &_ : descriptor.GetTopLevelFields()) {
+      nTopLevelFields++;
+   }
+   EXPECT_EQ(9, nTopLevelFields);
+   EXPECT_EQ("std::int32_t", descriptor.GetFieldDescriptor(descriptor.FindFieldId("x")).GetTypeName());
+   EXPECT_EQ("float", descriptor.GetFieldDescriptor(descriptor.FindFieldId("pt")).GetTypeName());
+   if (vector2RVec) {
+      EXPECT_EQ("ROOT::VecOps::RVec<float>",
+                descriptor.GetFieldDescriptor(descriptor.FindFieldId("photons")).GetTypeName());
+   } else {
+      EXPECT_EQ("std::vector<float>", descriptor.GetFieldDescriptor(descriptor.FindFieldId("photons")).GetTypeName());
+   }
+   EXPECT_EQ("Electron", descriptor.GetFieldDescriptor(descriptor.FindFieldId("electron")).GetTypeName());
+   auto jetsId = descriptor.FindFieldId("jets");
+   EXPECT_EQ("Jet", descriptor.GetFieldDescriptor(jetsId).GetTypeName());
+   auto electronsId = descriptor.FindFieldId("electrons", jetsId);
+   EXPECT_EQ("std::vector<Electron>", descriptor.GetFieldDescriptor(electronsId).GetTypeName());
+   EXPECT_EQ("std::int32_t", descriptor.GetFieldDescriptor(descriptor.FindFieldId("nmuons")).GetTypeName());
+   EXPECT_EQ("ROOT::VecOps::RVec<float>",
+             descriptor.GetFieldDescriptor(descriptor.FindFieldId("muon_pt")).GetTypeName());
+   EXPECT_EQ("std::int32_t", descriptor.GetFieldDescriptor(descriptor.FindFieldId("point_x")).GetTypeName());
+   EXPECT_EQ("std::int32_t", descriptor.GetFieldDescriptor(descriptor.FindFieldId("point_y")).GetTypeName());
+   // sanity check to make sure we don't snapshot the internal RDF size columns
+   EXPECT_EQ(ROOT::kInvalidDescriptorId, descriptor.FindFieldId("R_rdf_sizeof_photons"));
+
    auto x = reader->GetView<int>("x");
    auto pt = reader->GetView<float>("pt");
    auto photons = reader->GetView<ROOT::RVec<float>>("photons");
@@ -563,6 +592,16 @@ TEST(RDFSnapshotRNTuple, FromTTree)
    expect_vec_eq({10.f}, muonPt(0));
    EXPECT_EQ(1, pointX(0));
    EXPECT_EQ(2, pointY(0));
+}
+
+TEST(RDFSnapshotRNTuple, FromTTree)
+{
+   TestFromTTree();
+}
+
+TEST(RDFSnapshotRNTuple, FromTTreeNoVector2RVec)
+{
+   TestFromTTree(/*vector2RVec=*/false);
 }
 
 #ifdef R__USE_IMT
