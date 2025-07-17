@@ -198,8 +198,8 @@ set(BASE_SOURCES
   src/TVirtualX.cxx
 )
 
-set(FULL_BASE_HEADERS ${BASE_HEADERS})
-list(TRANSFORM FULL_BASE_HEADERS PREPEND ${CMAKE_CURRENT_SOURCE_DIR}/inc/)
+set(RELATIVE_BASE_INC_HEADERS ${BASE_HEADERS})
+list(TRANSFORM RELATIVE_BASE_INC_HEADERS PREPEND inc/)
 
 # only here complete list of headers can be propogated to parent cmake file
 set_property(TARGET Core APPEND PROPERTY DICT_HEADERS ${BASE_HEADERS})
@@ -214,8 +214,8 @@ if(NOT CMAKE_VERSION VERSION_LESS "3.23.0") # https://discourse.cmake.org/t/file
       TYPE HEADERS
       BASE_DIRS inc/ src/
       FILES
-          ${CMAKE_CURRENT_SOURCE_DIR}/src/TListOfTypes.h
-          ${FULL_BASE_HEADERS}
+          ${RELATIVE_BASE_INC_HEADERS}
+          src/TListOfTypes.h
   )
 endif()
 
