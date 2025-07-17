@@ -20,8 +20,8 @@ jobs:
       - name: Checkout Cling
         uses: actions/checkout@v4
         with:
-          repository: dpiparo/cling
-          token: ${{ secrets.CLING_GIT_TOKEN_TEST }}
+          repository: root-project/cling
+          token: ${{ secrets.CLING_GIT_TOKEN }}
           path: cling
           fetch-depth: 32768
 
