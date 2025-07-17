@@ -9,9 +9,9 @@ on:
         required: true
         default: "experimental-pip-install-root"
   pull_request:
-    branches: "master"
+    branches: master
   push:
-    branches: "experimental-pip-install-root"
+    branches: experimental-pip-install-root
 
 jobs:
   python_wheel:
