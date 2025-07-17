@@ -31,12 +31,15 @@ jobs:
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.0.1
+        with:
+          output-dir: ${{ env.WORKDIR }}/wheelhouse
       
       # Upload artifact to github
       - uses: actions/upload-artifact@v4
+        working-directory: ${{ env.WORKDIR }}
         with:
           name: cibw-wheels-test
-          path: ./wheelhouse/*.whl
+          path: wheelhouse/*.whl
 
       - name: Upload wheel to EOS
         env:
