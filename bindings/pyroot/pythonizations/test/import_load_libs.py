@@ -29,6 +29,9 @@ class ImportLoadLibs(unittest.TestCase):
         "librt",
         "libncurses.*",
         "libtinfo",  # by libncurses (on some older platforms)
+        # adaptivecpp and dependencies
+        "libacpp-rt",
+        "libgomp",
         # libTree and dependencies
         "libTree",
         "libThread",
