@@ -8,6 +8,9 @@ on:
         type: string
         required: true
         default: "experimental-pip-install-root"
+  pull_request:
+    branches:
+      - '**'
 
 jobs:
   python_wheel:
