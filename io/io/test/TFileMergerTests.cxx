@@ -297,8 +297,8 @@ TEST(TFileMerger, MergeSelectiveTutorial)
       fm.OutputFile("exclusive.root");
       cleanup.items.push_back("exclusive.root");
       fm.AddObjectNames("hprof ntuple");
-      fm.AddFile(file0.c_str());
-      fm.AddFile(file1.c_str());
+      fm.AddFile(file0.string().c_str());
+      fm.AddFile(file1.string().c_str());
       // Must add new merging flag on top of the default ones
       Int_t default_mode = TFileMerger::kAll | TFileMerger::kIncremental;
       Int_t mode = default_mode | TFileMerger::kOnlyListed;
@@ -320,8 +320,8 @@ TEST(TFileMerger, MergeSelectiveTutorial)
       fm.OutputFile("skipped.root");
       cleanup.items.push_back("skipped.root");
       fm.AddObjectNames("hprof folder");
-      fm.AddFile(file0.c_str());
-      fm.AddFile(file1.c_str());
+      fm.AddFile(file0.string().c_str());
+      fm.AddFile(file1.string().c_str());
       // Must add new merging flag on top of the default ones
       Int_t default_mode = TFileMerger::kAll | TFileMerger::kIncremental;
       auto mode = default_mode | TFileMerger::kSkipListed;
