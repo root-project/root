@@ -24,7 +24,6 @@
 #include "llvm/CodeGen/ISDOpcodes.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineOperand.h"
-#include "llvm/CodeGen/MachineValueType.h"
 #include "llvm/CodeGen/Register.h"
 #include "llvm/CodeGen/ScheduleDAG.h"
 #include "llvm/CodeGen/ScheduleHazardRecognizer.h"
@@ -36,6 +35,7 @@
 #include "llvm/CodeGen/TargetOpcodes.h"
 #include "llvm/CodeGen/TargetRegisterInfo.h"
 #include "llvm/CodeGen/TargetSubtargetInfo.h"
+#include "llvm/CodeGenTypes/MachineValueType.h"
 #include "llvm/Config/llvm-config.h"
 #include "llvm/IR/InlineAsm.h"
 #include "llvm/MC/MCInstrDesc.h"
@@ -125,9 +125,9 @@ static cl::opt<int> MaxReorderWindow(
   cl::desc("Number of instructions to allow ahead of the critical path "
            "in sched=list-ilp"));
 
-static cl::opt<unsigned> AvgIPC(
-  "sched-avg-ipc", cl::Hidden, cl::init(1),
-  cl::desc("Average inst/cycle whan no target itinerary exists."));
+static cl::opt<unsigned>
+    AvgIPC("sched-avg-ipc", cl::Hidden, cl::init(1),
+           cl::desc("Average inst/cycle when no target itinerary exists."));
 
 namespace {
 
@@ -183,7 +183,7 @@ private:
 
   // Hack to keep track of the inverse of FindCallSeqStart without more crazy
   // DAG crawling.
-  DenseMap<SUnit*, SUnit*> CallSeqEndForStart;
+  SmallDenseMap<SUnit *, SUnit *, 16> CallSeqEndForStart;
 
 public:
   ScheduleDAGRRList(MachineFunction &mf, bool needlatency,
@@ -370,7 +370,7 @@ void ScheduleDAGRRList::Schedule() {
   assert(Interferences.empty() && LRegsMap.empty() && "stale Interferences");
 
   // Build the scheduling graph.
-  BuildSchedGraph(nullptr);
+  BuildSchedGraph();
 
   LLVM_DEBUG(dump());
   Topo.MarkDirty();
