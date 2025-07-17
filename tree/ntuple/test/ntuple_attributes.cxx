@@ -4,7 +4,7 @@
 static std::size_t Count(ROOT::Experimental::RNTupleAttrEntryIterable iterable)
 {
    std::size_t n = 0;
-   for (auto _ : iterable)
+   for ([[maybe_unused]] auto _ : iterable)
       ++n;
    return n;
 }
