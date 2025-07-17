@@ -6,7 +6,7 @@
 
 # @author Jakob Blomer CERN
 
-if(NOT minimal) # gui is not built in minimal
+if(NOT TARGET Gui) # gui is not built in minimal
   return()
 endif()
 

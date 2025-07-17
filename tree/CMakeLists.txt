@@ -6,14 +6,14 @@
 
 add_subdirectory(tree)
 add_subdirectory(treeplayer)
-if(NOT minimal) # gui is not built in minimal
+if(TARGET Gui)
   add_subdirectory(treeviewer)
+  add_subdirectory(ntuplebrowse)
 endif()
 if(webgui)
   add_subdirectory(webviewer)
 endif()
 add_subdirectory(dataframe)
 add_subdirectory(ntuple)
-add_subdirectory(ntuplebrowse)
 add_subdirectory(ntupleutil)
 add_subdirectory(readspeed)

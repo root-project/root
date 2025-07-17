@@ -68,7 +68,7 @@ ROOT_EXECUTABLE(eventexe MainEvent.cxx LIBRARIES Event RIO Tree TreePlayer Hist 
 ROOT_ADD_TEST(test-event COMMAND eventexe)
 
 #---guitest------------------------------------------------------------------------------------
-if(NOT minimal) # gui is not built in minimal
+if(TARGET Gui) 
   ROOT_EXECUTABLE(guitest guitest.cxx LIBRARIES RIO Gui Gpad Hist)
 endif()
 
@@ -161,8 +161,8 @@ ROOT_ADD_TEST(test-stresslinear-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${
               FAILREGEX "FAILED|Error in" LABELS longtest)
 
 #--stressGraphics------------------------------------------------------------------------------------
-if(ROOT_opengl_FOUND)
-  ROOT_EXECUTABLE(stressGraphics stressGraphics.cxx LIBRARIES Graf Gpad Postscript)
+if(ROOT_opengl_FOUND AND TARGET TreeViewer)
+  ROOT_EXECUTABLE(stressGraphics stressGraphics.cxx LIBRARIES Graf Gpad Postscript TreeViewer)
   if(MSVC)
     set_property(TARGET stressGraphics APPEND_STRING PROPERTY LINK_FLAGS "/STACK:4000000")
   endif()
