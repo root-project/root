@@ -30,8 +30,8 @@ static void Write()
    auto writer = ROOT::RNTupleWriter::Append(std::move(model), ntplName, *file);
 
    // Step 2: create the model for the Attribute Set
-   auto attrModel = ROOT::RNTupleModel::Create();
-   auto pAttr = attrModel->MakeField<std::string>("myAttr");
+   auto attrModel = ROOT::RNTupleModel::CreateBare();
+   attrModel->MakeField<std::string>("myAttr");
 
    // Step 3: create the Attribute Set from the main writer
    auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
@@ -41,8 +41,6 @@ static void Write()
    // to attrEntry until the call to CommitRange().
    auto attrEntry = attrSet->BeginRange();
 
-   auto &wModel = writer->GetModel();
-
    // Step 5: assign attribute values.
    // Values can be assigned anywhere between BeginRange() and CommitRange().
    auto pMyAttr = attrEntry->GetPtr<std::string>("myAttr");
@@ -50,9 +48,8 @@ static void Write()
 
    // Step 6: fill the data inside the RNTuple
    for (int i = 0; i < 100; ++i) {
-      auto entry = wModel.CreateEntry();
       *pInt = i;
-      writer->Fill(*entry);
+      writer->Fill();
    }
 
    // Step 7: commit the attribute range

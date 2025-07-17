@@ -23,9 +23,9 @@ TEST(RNTupleAttributes, AttributeBasics)
       auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file);
 
       // Step 1: create model for the attribute set
-      auto attrModel = RNTupleModel::Create();
+      auto attrModel = RNTupleModel::CreateBare();
       attrModel->SetDescription("My description");
-      auto pAttr = attrModel->MakeField<std::string>("myAttr");
+      attrModel->MakeField<std::string>("myAttr");
 
       // Step 2: create the attribute set from the writer
       auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
@@ -33,16 +33,13 @@ TEST(RNTupleAttributes, AttributeBasics)
       // Step 3: open attribute range. attrEntry has basically the same interface as REntry
       auto attrEntry = attrSet->BeginRange();
 
-      auto &wModel = writer->GetModel();
-
       // Step 4: assign attribute values.
       // Values can be assigned anywhere between BeginRange() and CommitRange().
       auto pMyAttr = attrEntry->GetPtr<std::string>("myAttr");
       *pMyAttr = "This is a custom attribute";
       for (int i = 0; i < 100; ++i) {
-         auto entry = wModel.CreateEntry();
          *pInt = i;
-         writer->Fill(*entry);
+         writer->Fill();
       }
 
       // Step 5: close attribute range
