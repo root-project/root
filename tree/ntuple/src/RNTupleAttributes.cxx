@@ -50,34 +50,22 @@ ROOT::Experimental::RNTupleAttrSetWriter::Create(std::string_view name, std::uni
 {
    ValidateAttributeModel(*model).ThrowOnError();
 
-   model->Unfreeze();
-
    // Add all fields of `model` as subfields of a single top-level untyped record field which has the same
    // name as the attribute set. This way we "namespace" all user-defined attribute fields and we are free to use
    // whichever name we want for our internal fields.
-   // TODO: avoid cloning the fields
-   std::vector<std::unique_ptr<RFieldBase>> fields;
-   fields.reserve(model->GetFieldNames().size());
-   for (const auto &fieldName : model->GetFieldNames()) {
-      auto &field = model->GetMutableField(fieldName);
-      fields.push_back(field.Clone(fieldName));
-   }
-   // TODO: evaluate if this is really needed
+   model->Unfreeze();
+   auto fields = ROOT::Internal::DetachSubfields(model->GetMutableFieldZero());
    auto userRootField = std::make_unique<ROOT::RRecordField>(name, std::move(fields));
-
-   // TODO: avoid creating a new model
-   auto newModel = RNTupleModel::CreateBare();
-   newModel->SetDescription(model->GetDescription());
-   newModel->MakeField<ROOT::NTupleSize_t>(kRangeStartName);
-   newModel->MakeField<ROOT::NTupleSize_t>(kRangeLenName);
-   newModel->AddField(std::move(userRootField));
-   newModel->Freeze();
+   model->MakeField<ROOT::NTupleSize_t>(kRangeStartName);
+   model->MakeField<ROOT::NTupleSize_t>(kRangeLenName);
+   model->AddField(std::move(userRootField));
+   model->Freeze();
 
    // Create a sink that points to the same TDirectory as the main RNTuple
    auto opts = ROOT::RNTupleWriteOptions{};
    opts.SetCompression(mainFillContext->fSink->GetWriteOptions().GetCompression());
    auto sink = std::make_unique<ROOT::Internal::RPageSinkFile>(name, dir, opts);
-   RNTupleFillContext fillContext{std::move(newModel), std::move(sink)};
+   RNTupleFillContext fillContext{std::move(model), std::move(sink)};
    return std::unique_ptr<RNTupleAttrSetWriter>(new RNTupleAttrSetWriter(mainFillContext, std::move(fillContext)));
 }
 
