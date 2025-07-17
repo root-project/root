@@ -9,9 +9,12 @@ on:
         required: true
         default: "experimental-pip-install-root"
   pull_request:
-    branches: master
-  push:
-    branches: experimental-pip-install-root
+    branches:
+      - master
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 jobs:
   python_wheel:
