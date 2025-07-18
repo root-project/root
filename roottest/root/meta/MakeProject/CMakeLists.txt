@@ -1,4 +1,4 @@
-ROOTTEST_GENERATE_DICTIONARY(stl_makeproject_test stl_makeproject_test.h LINKDEF stl_makeproject_test_linkdef.h)
+ROOTTEST_GENERATE_DICTIONARY(stl_makeproject_test stl_makeproject_test.h LINKDEF stl_makeproject_test_linkdef.h NO_ROOTMAP NO_CXXMODULE)
 # If we build roottest in-tree, add a dependecy on Hist because the header
 # includes TH1D.
 if(TARGET Hist)

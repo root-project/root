@@ -1,4 +1,4 @@
-ROOTTEST_GENERATE_DICTIONARY(dict.C testing.C LINKDEF LinkDef.h)
+# ROOTTEST_GENERATE_DICTIONARY(dict.C testing.C NO_CXXMODULE LINKDEF LinkDef.h)
 
 ROOTTEST_COMPILE_MACRO(MyOpClass.C
                        FIXTURES_SETUP cling-stl-map-MyOpClass-fixtures)
