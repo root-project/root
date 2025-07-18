@@ -2135,6 +2135,10 @@ void AddPlatformDefines(std::vector<std::string> &clingArgs)
    clingArgs.push_back(platformDefines);
    snprintf(platformDefines, 64, "-DG__VISUAL=%ld", (long)_MSC_VER);
    clingArgs.push_back(platformDefines);
+#if defined(_WIN64) && defined(_DEBUG)
+   snprintf(platformDefines, 64, "-D_ITERATOR_DEBUG_LEVEL=0");
+   clingArgs.push_back(platformDefines);
+#endif
 #endif
 }
 
