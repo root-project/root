@@ -8222,8 +8222,8 @@ void TTree::ResetBranchAddress(TBranch *br)
    if (br && br->GetTree()) {
       br->ResetAddress();
       if (GetListOfClones()) {
-         for (TObjLink* lnk = GetListOfClones()->FirstLink(); lnk; lnk = lnk->Next()) {
-            TTree* clone = (TTree*) lnk->GetObject();
+         for (TObjLink *lnk = GetListOfClones()->FirstLink(); lnk; lnk = lnk->Next()) {
+            TTree *clone = (TTree *)lnk->GetObject();
             auto clbr = clone ? clone->FindBranch(br->GetName()) : nullptr;
             if (clbr)
                clone->ResetBranchAddress(clbr);
@@ -8259,8 +8259,8 @@ void TTree::ResetBranchAddresses()
       }
    }
    if (GetListOfClones()) {
-      for (TObjLink* lnk = GetListOfClones()->FirstLink(); lnk; lnk = lnk->Next()) {
-         TTree* clone = (TTree*) lnk->GetObject();
+      for (TObjLink *lnk = GetListOfClones()->FirstLink(); lnk; lnk = lnk->Next()) {
+         TTree *clone = (TTree *)lnk->GetObject();
          if (clone)
             clone->ResetBranchAddresses();
       }
