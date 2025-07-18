@@ -33,11 +33,20 @@ jobs:
         with:
           output-dir: ${{ env.WORKDIR }}/wheelhouse
 
-      - name: Upload wheel to github
+      - name: Set up Python
+        uses: actions/setup-python@v5
+
+      - name: Create PEP503-compliant wheel registry
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install simple503
+          simple503 ${{ env.WORKDIR }}/wheelhouse
+
+      - name: Upload wheel registry to github
         uses: actions/upload-artifact@v4
         with:
           name: cibw-wheels-test
-          path: ${{ env.WORKDIR }}/wheelhouse/*.whl
+          path: ${{ env.WORKDIR }}/wheelhouse/*
 
       - name: Upload wheel to EOS
         env:
