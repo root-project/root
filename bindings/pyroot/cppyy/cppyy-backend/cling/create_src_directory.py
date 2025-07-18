@@ -284,8 +284,7 @@ inp = os.path.join('cmake', 'modules', 'RootBuildOptions.cmake')
 outp = inp+'.new'
 new_cml = open(outp, 'w')
 for line in open(inp).readlines():
-    if 'ROOT_BUILD_OPTION(builtin_ftgl' in line or\
-       'ROOT_BUILD_OPTION(builtin_afterimage' in line:
+    if 'ROOT_BUILD_OPTION(builtin_ftgl' in line:
         line = '#'+line
     new_cml.write(line)
 new_cml.close()
