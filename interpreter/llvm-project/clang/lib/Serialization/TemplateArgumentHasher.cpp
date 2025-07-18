@@ -30,7 +30,7 @@ public:
 
   void AddInteger(unsigned V) { ID.AddInteger(V); }
 
-  unsigned getValue() { return ID.ComputeHash(); }
+  unsigned getValue() { return ID.computeStableHash(); }
 
   void AddType(const Type *T);
   void AddQualType(QualType T);
@@ -47,7 +47,9 @@ void TemplateArgumentHasher::AddTemplateArgument(TemplateArgument TA) {
 
   switch (Kind) {
   case TemplateArgument::Null:
-    llvm_unreachable("Expected valid TemplateArgument");
+    // These can occur in incomplete substitutions performed with code
+    // completion (see PartialOverloading).
+    break;
   case TemplateArgument::Type:
     AddQualType(TA.getAsType());
     break;
@@ -122,6 +124,9 @@ void TemplateArgumentHasher::AddTemplateName(TemplateName Name) {
       AddDecl(USD->getTargetDecl());
     break;
   }
+  case TemplateName::DeducedTemplate:
+    AddTemplateName(Name.getAsDeducedTemplateName()->getUnderlying());
+    break;
   }
 }
 
