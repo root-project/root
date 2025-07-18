@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "THn.h"
+#include "THnSparse.h"
 #include "TH1.h"
 #include "TH2.h"
 
