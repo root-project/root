@@ -128,6 +128,52 @@ TEST(TChain, UncommonFileExtension)
    gSystem->Unlink(dirname);
 }
 
+// https://github.com/root-project/root/issues/19402
+TEST(TChain, ResetCloneBranchAddress)
+{
+   std::unique_ptr<TFile> file1(TFile::Open("t1_19402.root", "RECREATE"));
+   TTree t1("t", "");
+   int value;
+   t1.Branch("value", &value);
+   value = 0;
+   t1.Fill();
+   value = 1;
+   t1.Fill();
+   file1->Write();
+   file1->Close();
+
+   std::unique_ptr<TFile> file2(TFile::Open("t2_19402.root", "RECREATE"));
+   TTree t2("t", "");
+   // int value;
+   t2.Branch("value", &value);
+   value = 10;
+   t2.Fill();
+   value = 11;
+   t2.Fill();
+   file2->Write();
+   file2->Close();
+
+   TChain ch("t");
+   ch.AddFile("t1_19402.root");
+   ch.AddFile("t2_19402.root");
+   auto newtree = ch.CloneTree(0);
+   ch.SetBranchAddress("value", &value);
+   EXPECT_NE(ch.GetBranch("value")->GetAddress(), nullptr);
+   EXPECT_NE(newtree->GetBranch("value")->GetAddress(), nullptr);
+   ch.ResetBranchAddress(ch.GetBranch("value"));
+   EXPECT_EQ(ch.GetBranch("value")->GetAddress(), nullptr);
+   EXPECT_EQ(newtree->GetBranch("value")->GetAddress(), nullptr);
+   ch.SetBranchAddress("value", &value);
+   EXPECT_NE(ch.GetBranch("value")->GetAddress(), nullptr);
+   EXPECT_NE(newtree->GetBranch("value")->GetAddress(), nullptr);
+   ch.ResetBranchAddresses();
+   EXPECT_EQ(ch.GetBranch("value")->GetAddress(), nullptr);
+   EXPECT_EQ(newtree->GetBranch("value")->GetAddress(), nullptr);
+   
+   gSystem->Unlink("t1_19402.root");
+   gSystem->Unlink("t2_19402.root");
+}
+
 // Originally reproducer of https://github.com/root-project/root/issues/7567
 // but see also https://github.com/root-project/root/issues/19220 for an update
 // The test parameters are
