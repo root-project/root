@@ -96,12 +96,17 @@ The following method are available from the TFormLeafInfo interface:
 ClassImp(TTreeFormula);
 
 ////////////////////////////////////////////////////////////////////////////////
-
-inline static void R__LoadBranch(TBranch* br, Long64_t entry, bool quickLoad)
+/// The function returns the number of bytes read from the input buffer.
+/// If entry does not exist or (entry!=readEntry && quickload), the function returns 0.
+/// If an I/O error occurs, the function returns -1.
+///
+[[nodiscard]] inline static Int_t R__LoadBranch(TBranch* br, Long64_t entry, bool quickLoad)
 {
    if (!quickLoad || (br->GetReadEntry() != entry)) {
-      br->GetEntry(entry);
+      auto res = br->GetEntry(entry);
+      return res;
    }
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -642,7 +647,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TLeaf *leaf) {
       if (branch->GetBranchCount2()) {
 
          if (!branch->GetBranchCount()) {
-            Warning("DefinedVariable",
+            Warning("RegisterDimensions",
                     "Noticed an incorrect in-memory TBranchElement object (%s).\nIt has a BranchCount2 but no BranchCount!\nThe result might be incorrect!",
                     branch->GetName());
             return numberOfVarDim;
@@ -650,7 +655,7 @@ Int_t TTreeFormula::RegisterDimensions(Int_t code, TLeaf *leaf) {
 
          // Switch from old direct style to using a TLeafInfo
          if (fLookupType[code] == kDataMember)
-            Warning("DefinedVariable",
+            Warning("RegisterDimensions",
                     "Already in kDataMember mode when handling multiple variable dimensions");
          fLookupType[code] = kDataMember;
 
@@ -723,7 +728,7 @@ Int_t TTreeFormula::DefineAlternate(const char *expression)
 
          if (action == kAlternate) {
             if (alternate->GetManager()->GetMultiplicity() != 0 ) {
-               Error("DefinedVariable","The 2nd arguments in %s can not be an array (%s,%d)!",
+               Error("DefineAlternate","The 2nd arguments in %s can not be an array (%s,%d)!",
                      expression,alternate->GetTitle(),
                      alternate->GetManager()->GetMultiplicity());
                return -1;
@@ -732,14 +737,14 @@ Int_t TTreeFormula::DefineAlternate(const char *expression)
             // Should check whether we have strings.
             if (primary->IsString()) {
                if (!alternate->IsString()) {
-                  Error("DefinedVariable",
+                  Error("DefineAlternate",
                         "The 2nd arguments in %s has to return the same type as the 1st argument (string)!",
                         expression);
                   return -1;
                }
                isstring = 1;
             } else if (alternate->IsString()) {
-               Error("DefinedVariable",
+               Error("DefineAlternate",
                      "The 2nd arguments in %s has to return the same type as the 1st argument (numerical type)!",
                      expression);
                return -1;
@@ -749,7 +754,7 @@ Int_t TTreeFormula::DefineAlternate(const char *expression)
             primary->GetManager()->Sync();
             if (primary->IsString() || alternate->IsString()) {
                if (!alternate->IsString()) {
-                  Error("DefinedVariable",
+                  Error("DefineAlternate",
                         "The arguments of %s can not be strings!",
                         expression);
                   return -1;
@@ -805,7 +810,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
          br = ((TBranchElement*)branch);
 
          if ( br->GetInfo() == nullptr ) {
-            Error("DefinedVariable","Missing StreamerInfo for %s.  We will be unable to read!",
+            Error("ParseWithLeaf","Missing StreamerInfo for %s.  We will be unable to read!",
                   name.Data());
             return -2;
          }
@@ -817,13 +822,13 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
          TBranchElement *mom = (TBranchElement*)br->GetMother();
          if (mom!=br) {
             if (mom->GetInfo()==nullptr) {
-               Error("DefinedVariable","Missing StreamerInfo for %s."
+               Error("ParseWithLeaf","Missing StreamerInfo for %s."
                      "  We will be unable to read!",
                      mom->GetName());
                return -2;
             }
             if ((mom->GetType()) < -1 && !mom->GetAddress()) {
-               Error("DefinedVariable", "Address not set when the type of the branch is negative for for %s.  We will be unable to read!", mom->GetName());
+               Error("ParseWithLeaf", "Address not set when the type of the branch is negative for for %s.  We will be unable to read!", mom->GetName());
                return -2;
             }
          }
@@ -962,7 +967,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
             // This is inside a TClonesArray.
 
             if (!element) {
-               Warning("DefinedVariable",
+               Warning("ParseWithLeaf",
                        "Missing TStreamerElement in object in TClonesArray section");
                return -2;
             }
@@ -1001,7 +1006,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
             // This is inside a Collection
 
             if (!element) {
-               Warning("DefinedVariable","Missing TStreamerElement in object in Collection section");
+               Warning("ParseWithLeaf","Missing TStreamerElement in object in Collection section");
                return -2;
             }
             // First we need to recover the collection.
@@ -1201,7 +1206,11 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
             }
             TVirtualRefProxy *refproxy = cl->GetReferenceProxy();
             for(Long64_t i=0; i<leaf->GetBranch()->GetEntries()-readentry; ++i)  {
-               R__LoadBranch(leaf->GetBranch(), readentry+i, fQuickLoad);
+               auto res = R__LoadBranch(leaf->GetBranch(), readentry+i, fQuickLoad);
+               if (res < 0) {
+                  Error("ParseWithLeaf", "Branch could not be loaded:%d", res);
+                  continue;
+               }
                void *refobj = maininfo->GetValuePointer(leaf,0);
                if (refobj) {
                   cl = refproxy->GetValueClass(refobj);
@@ -1209,7 +1218,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                if ( cl ) break;
             }
             if ( !cl )  {
-               Error("DefinedVariable","Failed to access class type of reference target (%s)",element->GetName());
+               Error("ParseWithLeaf","Failed to access class type of reference target (%s)",element->GetName());
                return -1;
             }
          }
@@ -1281,7 +1290,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
          TClass * casted = (TClass*) castqueue.At(paran_level+1);
          if (casted && cl != TClonesArray::Class()) {
             if ( ! casted->InheritsFrom(cl) ) {
-               Error("DefinedVariable","%s does not inherit from %s.  Casting not possible!",
+               Error("ParseWithLeaf","%s does not inherit from %s.  Casting not possible!",
                      casted->GetName(),cl->GetName());
                return -2;
             }
@@ -1321,11 +1330,11 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                *params = 0; params++;
             } else params = (char *) ")";
             if (cl==nullptr) {
-               Error("DefinedVariable","Can not call '%s' with a class",work);
+               Error("ParseWithLeaf","Can not call '%s' with a class",work);
                return -1;
             }
             if (!cl->HasDataMemberInfo() && !cl->GetCollectionProxy()) {
-               Error("DefinedVariable","Class probably unavailable:%s",cl->GetName());
+               Error("ParseWithLeaf","Class probably unavailable:%s",cl->GetName());
                return -2;
             }
             if (!useCollectionObject && cl == TClonesArray::Class()) {
@@ -1334,7 +1343,11 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                // We need to retrieve the class of its content.
 
                TBranch *clbranch = leaf->GetBranch();
-               R__LoadBranch(clbranch,readentry,fQuickLoad);
+               auto lres = R__LoadBranch(clbranch,readentry,fQuickLoad);
+               if (lres < 0) {
+                   Error("ParseWithLeaf", "Branch could not be loaded:%d", lres);
+                   return -2;
+               }
                TClonesArray * clones;
                if (previnfo) clones = (TClonesArray*)previnfo->GetLocalValuePointer(leaf,0);
                else {
@@ -1393,14 +1406,14 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                TClass * inside_cl = cl->GetCollectionProxy()->GetValueClass();
                if (inside_cl) cl = inside_cl;
                else if (cl->GetCollectionProxy()->GetType()>0) {
-                  Warning("DefinedVariable","Can not call method on content of %s in %s\n",
+                  Warning("ParseWithLeaf","Can not call method on content of %s in %s\n",
                            cl->GetName(),name.Data());
                   return -2;
                }
             }
             TMethodCall *method  = nullptr;
             if (cl==nullptr) {
-               Error("DefinedVariable",
+               Error("ParseWithLeaf",
                      "Could not discover the TClass corresponding to (%s)!",
                      right);
                return -2;
@@ -1421,7 +1434,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                cl = nullptr;
             } else {
                if (!cl->HasDataMemberInfo()) {
-                  Error("DefinedVariable",
+                  Error("ParseWithLeaf",
                         "Can not call method %s on class without dictionary (%s)!",
                         right,cl->GetName());
                   return -2;
@@ -1430,7 +1443,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
             }
             if (method) {
                if (!method->GetMethod()) {
-                  Error("DefinedVariable","Unknown method:%s in %s",right,cl->GetName());
+                  Error("ParseWithLeaf","Unknown method:%s in %s",right,cl->GetName());
                   return -1;
                }
                switch(method->ReturnType()) {
@@ -1478,7 +1491,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
 
             if (cl && cl->GetCollectionProxy()) {
                if (numberOfVarDim>1) {
-                  Warning("DefinedVariable","TTreeFormula support only 2 level of variables size collections.  Assuming '@' notation for the collection %s.",
+                  Warning("ParseWithLeaf","TTreeFormula support only 2 level of variables size collections.  Assuming '@' notation for the collection %s.",
                      cl->GetName());
                   leafinfo = new TFormLeafInfo(cl,0,nullptr);
                   useCollectionObject = true;
@@ -1556,7 +1569,11 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
 
             bool mustderef = false;
             if ( !prevUseReferenceObject && cl && cl->GetReferenceProxy() )  {
-               R__LoadBranch(leaf->GetBranch(), readentry, fQuickLoad);
+               auto res = R__LoadBranch(leaf->GetBranch(), readentry, fQuickLoad);
+               if (res < 0) {
+                  Error("ParseWithLeaf", "Branch could not be loaded:%d", res);
+                  return -2;
+               }
                if ( !maininfo )  {
                   maininfo = previnfo = new TFormLeafInfoReference(cl, element, offset);
                   if ( cl->GetReferenceProxy()->HasCounter() )  {
@@ -1570,7 +1587,11 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                TVirtualRefProxy *refproxy = cl->GetReferenceProxy();
                cl = nullptr;
                for(Long64_t entry=0; entry<leaf->GetBranch()->GetEntries()-readentry; ++entry)  {
-                  R__LoadBranch(leaf->GetBranch(), readentry+i, fQuickLoad);
+                  auto eres = R__LoadBranch(leaf->GetBranch(), readentry+i, fQuickLoad);
+                  if (eres < 0) {
+                     Error("ParseWithLeaf", "Branch could not be loaded:%d", eres);
+                     return -2;
+                  }
                   void *refobj = maininfo->GetValuePointer(leaf,0);
                   if (refobj) {
                      cl = refproxy->GetValueClass(refobj);
@@ -1586,7 +1607,11 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                // We need to retrieve the class of its content.
 
                TBranch *clbranch = leaf->GetBranch();
-               R__LoadBranch(clbranch,readentry,fQuickLoad);
+               auto res = R__LoadBranch(clbranch,readentry,fQuickLoad);
+               if (res < 0) {
+                  Error("ParseWithLeaf", "Branch could not be loaded:%d", res);
+                  return -2;
+               }
                TClonesArray * clones;
                if (maininfo) {
                   clones = (TClonesArray*)maininfo->GetValuePointer(leaf,0);
@@ -1612,7 +1637,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
 
                   if (clbranch->GetListOfBranches()->GetLast()>=0) {
                      if (clbranch->IsA() != TBranchElement::Class()) {
-                        Error("DefinedVariable","Unimplemented usage of ClonesArray");
+                        Error("ParseWithLeaf","Unimplemented usage of ClonesArray");
                         return -2;
                      }
                      //clbranch = ((TBranchElement*)clbranch)->GetMother();
@@ -1622,7 +1647,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                }
                // NOTE clones can be zero!
                if (clones==nullptr) {
-                  Warning("DefinedVariable",
+                  Warning("ParseWithLeaf",
                           "TClonesArray object was not retrievable for %s!",
                           name.Data());
                   return -1;
@@ -1647,7 +1672,11 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                // We need to retrieve the class of its content.
 
                TBranch *clbranch = leaf->GetBranch();
-               R__LoadBranch(clbranch,readentry,fQuickLoad);
+               auto res = R__LoadBranch(clbranch,readentry,fQuickLoad);
+               if (res < 0) {
+                  Error("ParseWithLeaf", "Branch could not be loaded:%d", res);
+                  return -2;
+               }
 
                if (maininfo==nullptr) {
 
@@ -1678,11 +1707,11 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                TClass * inside_cl = cl->GetCollectionProxy()->GetValueClass();
 
                if (!inside_cl) {
-                  Error("DefinedVariable","Could you not find the inner class for %s with coll type = %d",
+                  Error("ParseWithLeaf","Could you not find the inner class for %s with coll type = %d",
                         cl->GetName(),cl->GetCollectionProxy()->GetType());
                }
                if (!inside_cl && cl->GetCollectionProxy()->GetType() > 0) {
-                  Warning("DefinedVariable","No data member in content of %s in %s\n",
+                  Warning("ParseWithLeaf","No data member in content of %s in %s\n",
                            cl->GetName(),name.Data());
                }
                cl = inside_cl;
@@ -1691,7 +1720,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
 
             if (!cl) {
                if (leaf) leaf->GetBranch()->Print();
-               Warning("DefinedVariable","Missing class for %s!",name.Data());
+               Warning("ParseWithLeaf","Missing class for %s!",name.Data());
             } else {
                element = ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(work,offset);
             }
@@ -1708,7 +1737,11 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                      TFormLeafInfo* clonesinfo =
                         new TFormLeafInfo(cl, clones_offset, curelem);
                      TClonesArray * clones;
-                     R__LoadBranch(leaf->GetBranch(),readentry,fQuickLoad);
+                     auto res = R__LoadBranch(leaf->GetBranch(),readentry,fQuickLoad);
+                     if (res < 0) {
+                        Error("ParseWithLeaf", "Branch could not be loaded:%d", res);
+                        return -2;
+                     }
 
                      if (previnfo) {
                         previnfo->fNext = clonesinfo;
@@ -1747,7 +1780,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                      }
                      if (element) {
                         if (numberOfVarDim>1) {
-                           Warning("DefinedVariable","TTreeFormula support only 2 level of variables size collections.  Assuming '@' notation for the collection %s.",
+                           Warning("ParseWithLeaf","TTreeFormula support only 2 level of variables size collections.  Assuming '@' notation for the collection %s.",
                                    curelem->GetName());
                            leafinfo = new TFormLeafInfo(cl,coll_offset,curelem);
                            useCollectionObject = true;
@@ -1830,13 +1863,13 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                      case TStreamerInfo::kStreamer:
                      case TStreamerInfo::kStreamLoop:
                         // Unsupported case.
-                        Error("DefinedVariable",
+                        Error("ParseWithLeaf",
                               "%s is a datamember of %s BUT is not yet of a supported type (%d)",
                               right,cl ? cl->GetName() : "unknown class",type);
                         return -2;
                      default:
                         // Unknown and Unsupported case.
-                        Error("DefinedVariable",
+                        Error("ParseWithLeaf",
                               "%s is a datamember of %s BUT is not of a unknown type (%d)",
                               right,cl ? cl->GetName() : "unknown class",type);
                         return -2;
@@ -1866,7 +1899,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
 
                         mustderef = true;
                         if (numberOfVarDim>1) {
-                           Warning("DefinedVariable","TTreeFormula support only 2 level of variables size collections.  Assuming '@' notation for the collection %s.",
+                           Warning("ParseWithLeaf","TTreeFormula support only 2 level of variables size collections.  Assuming '@' notation for the collection %s.",
                                    element->GetName());
                            leafinfo = new TFormLeafInfo(cl,offset,element);
                            useCollectionObject = true;
@@ -1925,7 +1958,11 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                         }
                      } else if ( (object || pointer) && !useReferenceObject && element->GetClassPointer()->GetReferenceProxy() ) {
                         TClass* c = element->GetClassPointer();
-                        R__LoadBranch(leaf->GetBranch(),readentry,fQuickLoad);
+                        auto res = R__LoadBranch(leaf->GetBranch(),readentry,fQuickLoad);
+                        if (res < 0) {
+                           Error("ParseWithLeaf", "Branch could not be loaded:%d", res);
+                           return -2;
+                        }
                         if ( object )  {
                            leafinfo = new TFormLeafInfoReference(c, element, offset);
                         }
@@ -1951,7 +1988,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                   }
                }
             } else {
-               if (cl) Error("DefinedVariable","%s is not a datamember of %s",work,cl->GetName());
+               if (cl) Error("ParseWithLeaf","%s is not a datamember of %s",work,cl->GetName());
                // no else, we warned earlier that the class was missing.
                return -1;
             }
@@ -1986,13 +2023,13 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                   if ( refInfo )  {
                      cl = refInfo->GetValueClass(ptr);
                      if ( !cl )  {
-                        Error("DefinedVariable","Failed to access class type of reference target (%s)",element->GetName());
+                        Error("ParseWithLeaf","Failed to access class type of reference target (%s)",element->GetName());
                         return -1;
                      }
                      element = ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(work,offset);
                   }
                   else  {
-                     Error("DefinedVariable","Failed to access class type of reference target (%s)",element->GetName());
+                     Error("ParseWithLeaf","Failed to access class type of reference target (%s)",element->GetName());
                      return -1;
                   }
                }
@@ -2253,7 +2290,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
       }
       if (cname[i] == ')') {
          if (paran_level==0) {
-            Error("DefinedVariable","Unmatched parenthesis in %s",fullExpression);
+            Error("FindLeafForExpression","Unmatched parenthesis in %s",fullExpression);
             return -1;
          }
          paran_level--;
@@ -2270,13 +2307,13 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
                castqueue.AddAtAndExpand(cast_cl,paran_level);
                current = &(work[0]);
                *current = 0;
-               //            Warning("DefinedVariable","Found cast to %s",cast_fullExpression);
+               //            Warning("FindLeafForExpression","Found cast to %s",cast_fullExpression);
                continue;
             } else if (gROOT->GetType(cast_name)) {
                // We reset work
                current = &(work[0]);
                *current = 0;
-               Warning("DefinedVariable",
+               Warning("FindLeafForExpression",
                        "Casting to primary types like \"%s\" is not supported yet",cast_name.Data());
                continue;
             }
@@ -2319,7 +2356,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
                   if (find(aliasUsed.begin(),
                      aliasUsed.end(),
                      left) != aliasUsed.end()) {
-                        Error("DefinedVariable",
+                        Error("FindLeafForExpression",
                            "The substitution of the branch alias \"%s\" by \"%s\" in \"%s\" failed\n"\
                            "\tbecause \"%s\" is used [recursively] in its own definition!",
                            left,aliasValue,fullExpression,left);
@@ -2331,7 +2368,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
                   Int_t res = FindLeafForExpression(newExpression, leaf, leftover, final, paran_level,
                      castqueue, aliasUsed, useLeafCollectionObject, fullExpression);
                   if (res<0) {
-                     Error("DefinedVariable",
+                     Error("FindLeafForExpression",
                         "The substitution of the alias \"%s\" by \"%s\" failed.",left,aliasValue);
                      return -3;
                   }
@@ -2345,7 +2382,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
             //         if (!leaf->InheritsFrom(TLeafObject::Class()) ) {
             // If the leaf that we found so far is not a TLeafObject then there is
             // nothing we would be able to do.
-            //   Error("DefinedVariable","Need a TLeafObject to call a function!");
+            //   Error("FindLeafForExpression","Need a TLeafObject to call a function!");
             // return -1;
             //}
             // We need to recover the info not used.
@@ -2533,7 +2570,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
             }
          } else {  // correspond to if (leaf || branch)
             if (final) {
-               Error("DefinedVariable", "Unexpected control flow!");
+               Error("FindLeafForExpression", "Unexpected control flow!");
                return -1;
             }
 
@@ -2652,7 +2689,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
          if (find(aliasUsed.begin(),
                   aliasUsed.end(),
                   left) != aliasUsed.end()) {
-            Error("DefinedVariable",
+            Error("FindLeafForExpression",
                   "The substitution of the branch alias \"%s\" by \"%s\" in \"%s\" failed\n"\
                   "\tbecause \"%s\" is used [recursively] in its own definition!",
                   left,aliasValue,fullExpression,left);
@@ -2664,7 +2701,7 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
          Int_t res = FindLeafForExpression(newExpression, leaf, leftover, final, paran_level,
                                            castqueue, aliasUsed, useLeafCollectionObject, fullExpression);
          if (res<0) {
-            Error("DefinedVariable",
+            Error("FindLeafForExpression",
                   "The substitution of the alias \"%s\" by \"%s\" failed.",left,aliasValue);
             return -3;
          }
@@ -3132,7 +3169,11 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, const char* ne
          // We have a unsplit TClonesArray leaves
          // In this case we assume that cl is the class in which the TClonesArray
          // belongs.
-         R__LoadBranch(leafcur->GetBranch(),readentry,fQuickLoad);
+         auto res = R__LoadBranch(leafcur->GetBranch(),readentry,fQuickLoad);
+         if (res < 0) {
+            Error("GetLeafWithDatamember", "Branch could not be loaded:%d", res);
+            continue;
+         }
          TClonesArray * clones;
 
          TBranch *branch = leafcur->GetBranch();
@@ -3213,7 +3254,11 @@ TLeaf* TTreeFormula::GetLeafWithDatamember(const char* topchoice, const char* ne
                      else leafinfo->fNext = sub_clonesinfo;
                   else leafinfo = sub_clonesinfo;
 
-                  R__LoadBranch(branch,readentry,fQuickLoad);
+                  auto res = R__LoadBranch(branch,readentry,fQuickLoad);
+                  if (res < 0) {
+                     Error("GetLeafWithDatamember", "Branch could not be loaded:%d", res);
+                     continue;
+                  }
 
                   TClonesArray * clones = (TClonesArray*)leafinfo->GetValuePointer(leafcur,0);
 
@@ -3309,7 +3354,11 @@ bool TTreeFormula::BranchHasMethod(TLeaf* leafcur, TBranch* branch, const char* 
       // Since the leaf was not terminal, we might have a split or
       // unsplit and/or top leaf/branch.
       TClonesArray* clones = nullptr;
-      R__LoadBranch(branch, readentry, fQuickLoad);
+      auto res = R__LoadBranch(branch, readentry, fQuickLoad);
+      if (res < 0) {
+         Error("BranchHasMethod", "Branch could not be loaded:%d", res);
+         return false;
+      }
       if (branch->InheritsFrom(TBranchObject::Class())) {
          clones = (TClonesArray*) lobj->GetObject();
       } else if (branch->InheritsFrom(TBranchElement::Class())) {
@@ -3332,7 +3381,11 @@ bool TTreeFormula::BranchHasMethod(TLeaf* leafcur, TBranch* branch, const char* 
             }
          }
          if (!clones) {
-            R__LoadBranch(bc, readentry, fQuickLoad);
+            auto cres = R__LoadBranch(bc, readentry, fQuickLoad);
+            if (cres < 0) {
+               Error("BranchHasMethod", "Branch could not be loaded:%d", cres);
+               return false;
+            }
             TClass* mother_cl;
             mother_cl = bc->GetInfo()->GetClass();
             TFormLeafInfo* clonesinfo = new TFormLeafInfoClones(mother_cl, 0);
@@ -3698,9 +3751,13 @@ void* TTreeFormula::EvalObject(int instance)
 
    if (instance==0 || fNeedLoading) {
       fNeedLoading = false;
-      R__LoadBranch(leaf->GetBranch(),
+      auto res = R__LoadBranch(leaf->GetBranch(),
                     leaf->GetBranch()->GetTree()->GetReadEntry(),
                     fQuickLoad);
+      if (res < 0) {
+         Error("EvalObject", "Branch could not be loaded:%d", res);
+         return nullptr;
+      }
    }
    else if (real_instance>=fNdata[0]) return nullptr;
    if (fAxis) {
@@ -3739,7 +3796,11 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
       if (instance==0 || fNeedLoading) {
          fNeedLoading = false;
          TBranch *branch = leaf->GetBranch();
-         R__LoadBranch(branch,branch->GetTree()->GetReadEntry(),fQuickLoad);
+         auto res = R__LoadBranch(branch,branch->GetTree()->GetReadEntry(),fQuickLoad);
+         if (res < 0) {
+            Error("EvalStringInstance", "Branch could not be loaded:%d", res);
+            return nullptr;
+         }
       } else if (real_instance>=fNdata[0]) {
          return nullptr;
       }
@@ -3772,8 +3833,11 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
       fNeedLoading = false;                                                                     \
       TBranch *br = leaf->GetBranch();                                                          \
       if (br && br->GetTree()) {                                                                \
-         Long64_t tentry = br->GetTree()->GetReadEntry();                                       \
-         R__LoadBranch(br,tentry,fQuickLoad);                                                   \
+         Long64_t tEntry = br->GetTree()->GetReadEntry();                                       \
+         auto lres = R__LoadBranch(br, tEntry, fQuickLoad);                                     \
+         if (lres < 0)                                                                          \
+            Error("TTreeFormula::TT_EVAL_INIT",                                                 \
+            "Could not read entry (%lld) of leaf (%s), r=(%d).", tEntry, leaf->GetName(), lres);\
       } else {                                                                                  \
         Error("TTreeFormula::TT_EVAL_INIT",                                                     \
           "Could not init branch associated to this leaf (%s).", leaf->GetName());              \
@@ -3817,17 +3881,21 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
       TBranch *branch = (TBranch*)fBranches.UncheckedAt(code);                                  \
       if (branch) {                                                                             \
          if (branch->GetTree()) {                                                               \
-            Long64_t treeEntry = branch->GetTree()->GetReadEntry();                             \
-            R__LoadBranch(branch,treeEntry,fQuickLoad);                                         \
+            Long64_t tEntry = branch->GetTree()->GetReadEntry();                                \
+            auto lres = R__LoadBranch(branch, tEntry, fQuickLoad);                              \
+            if (lres < 0) {                                                                     \
+               Error("TTreeFormula::TT_EVAL_INIT_LOOP",                                         \
+            "Could not read entry (%lld) of leaf (%s), r=(%d).", tEntry, leaf->GetName(), lres);\
+            }                                                                                   \
          } else {                                                                               \
             Error("TTreeFormula::TT_EVAL_INIT_LOOP",                                            \
                   "Could not init branch associated to this leaf (%s).", leaf->GetName());      \
          }                                                                                      \
       } else if (fDidBooleanOptimization) {                                                     \
          branch = leaf->GetBranch();                                                            \
-         if (branch->GetTree()) {                                                               \
-            Long64_t treeEntry = branch->GetTree()->GetReadEntry();                             \
-            if (branch->GetReadEntry() != treeEntry) branch->GetEntry( treeEntry );             \
+         if (branch && branch->GetTree()) {                                                     \
+            Long64_t tEntry = branch->GetTree()->GetReadEntry();                                \
+            if (branch->GetReadEntry() != tEntry) branch->GetEntry(tEntry);                     \
          } else {                                                                               \
             Error("TTreeFormula::TT_EVAL_INIT_LOOP",                                            \
                   "Could not init branch associated to this leaf (%s).", leaf->GetName());      \
@@ -3840,8 +3908,8 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
       if (fDidBooleanOptimization) {                                                            \
          TBranch *br = leaf->GetBranch();                                                       \
          if (br->GetTree()) {                                                                   \
-            Long64_t treeEntry = br->GetTree()->GetReadEntry();                                 \
-            if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );                     \
+            Long64_t tEntry = br->GetTree()->GetReadEntry();                                    \
+            if (br->GetReadEntry() != tEntry) br->GetEntry(tEntry);                             \
          } else {                                                                               \
             Error("TTreeFormula::TT_EVAL_INIT_LOOP",                                            \
                   "Could not init branch associated to this leaf (%s).", leaf->GetName());      \
@@ -4497,7 +4565,11 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                   fNeedLoading = false;
                   TBranch *branch = leafc->GetBranch();
                   Long64_t readentry = branch->GetTree()->GetReadEntry();
-                  R__LoadBranch(branch,readentry,fQuickLoad);
+                  auto res = R__LoadBranch(branch,readentry,fQuickLoad);
+                  if (res < 0) {
+                     Error("EvalInstance", "Branch could not be loaded:%d", res);
+                     continue;
+                  }
                } else {
                   // In the cases where we are behind (i.e. right of) a potential boolean optimization
                   // this tree variable reading may have not been executed with instance==0 which would
@@ -4505,7 +4577,11 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                   if (fDidBooleanOptimization) {
                      TBranch *br = leafc->GetBranch();
                      Long64_t treeEntry = br->GetTree()->GetReadEntry();
-                     R__LoadBranch(br,treeEntry,true);
+                     auto res = R__LoadBranch(br, treeEntry, true);
+                     if (res < 0) {
+                        Error("EvalInstance", "Branch could not be loaded:%d", res);
+                        continue;
+                     }
                   }
                   if (real_instance>=fNdata[string_code]) return TMath::SignalingNaN();
                }
@@ -4948,11 +5024,15 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
                   TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(0);
                   TBranch *branch = leaf->GetBranch();
                   Long64_t readentry = branch->GetTree()->GetReadEntry();
-                  R__LoadBranch(branch,readentry,fQuickLoad);
-                  if (fLookupType[0]==kDirect && fNoper==1) {
-                     val = (const char*)leaf->GetValuePointer();
+                  auto res = R__LoadBranch(branch,readentry,fQuickLoad);
+                  if (res < 0) {
+                     Error("PrintValue", "Branch could not be loaded:%d", res);
                   } else {
-                     val = ((TTreeFormula*)this)->EvalStringInstance(instance);
+                     if (fLookupType[0]==kDirect && fNoper==1) {
+                        val = (const char*)leaf->GetValuePointer();
+                     } else {
+                        val = ((TTreeFormula*)this)->EvalStringInstance(instance);
+                     }
                   }
                }
             } else {
@@ -5461,7 +5541,11 @@ void TTreeFormula::LoadBranches()
 
       TBranch *br = leaf->GetBranch();
       Long64_t treeEntry = br->GetTree()->GetReadEntry();
-      R__LoadBranch(br,treeEntry,true);
+      auto res = R__LoadBranch(br, treeEntry, true);
+      if (res < 0) {
+         Error("LoadBranches", "Branch could not be loaded:%d", res);
+         continue;
+      }
 
       TTreeFormula *alias = (TTreeFormula*)fAliases.UncheckedAt(i);
       if (alias) alias->LoadBranches();
@@ -5529,7 +5613,11 @@ bool TTreeFormula::LoadCurrentDim() {
             Long64_t readentry = leaf->GetBranch()->GetTree()->GetReadEntry();
             if (readentry < 0) readentry=0;
             if (!branchcount->GetAddress()) {
-               R__LoadBranch(branchcount, readentry, fQuickLoad);
+               auto res = R__LoadBranch(branchcount, readentry, fQuickLoad);
+               if (res < 0) {
+                  Error("LoadCurrentDim", "Branch could not be loaded:%d", res);
+                  return false;
+               }
             } else {
                // Since we do not read the full branch let's reset the read entry number
                // so that a subsequent read from TTreeFormula will properly load the full
@@ -5555,8 +5643,11 @@ bool TTreeFormula::LoadCurrentDim() {
             // NOTE: could be sped up
             if (fHasMultipleVarDim[i]) {// info && info->GetVarDim()>=0) {
                info = (TFormLeafInfo* )fDataMembers.At(i);
-               if (branch->GetBranchCount2()) R__LoadBranch(branch->GetBranchCount2(),readentry,fQuickLoad);
-               else R__LoadBranch(branch,readentry,fQuickLoad);
+               auto res = R__LoadBranch(branch->GetBranchCount2() ? branch->GetBranchCount2() : branch, readentry, fQuickLoad);
+               if (res < 0) {
+                   Error("LoadCurrentDim", "Branch could not be loaded:%d", res);
+                   return false;
+               }
 
                // Here we need to add the code to take in consideration the
                // double variable length
@@ -5584,7 +5675,11 @@ bool TTreeFormula::LoadCurrentDim() {
          } else {
             Long64_t readentry = leaf->GetBranch()->GetTree()->GetReadEntry();
             if (readentry < 0) readentry=0;
-            R__LoadBranch(branchcount,readentry,fQuickLoad);
+            auto res = R__LoadBranch(branchcount,readentry,fQuickLoad);
+            if (res < 0) {
+               Error("LoadCurrentDim", "Branch could not be loaded:%d", res);
+               return false;
+            }
             size = leaf->GetLen() / leaf->GetLenStatic();
          }
          if (hasBranchCount2) {
@@ -5633,7 +5728,11 @@ bool TTreeFormula::LoadCurrentDim() {
             TBranch *branch = leaf->GetBranch();
             Long64_t readentry = branch->GetTree()->GetReadEntry();
             if (readentry < 0) readentry=0;
-            R__LoadBranch(branch,readentry,fQuickLoad);
+            auto res = R__LoadBranch(branch,readentry,fQuickLoad);
+            if (res < 0) {
+               Error("LoadCurrentDim", "Branch could not be loaded:%d", res);
+               return false;
+            }
             size = (Int_t) leafinfo->GetCounterValue(leaf);
             if (fIndexes[i][0]==-1) {
                // Case where the index is not specified AND the 1st dimension has a variable
@@ -5684,7 +5783,11 @@ bool TTreeFormula::LoadCurrentDim() {
             TBranch *branch = leaf->GetBranch();
             Long64_t readentry = branch->GetTree()->GetReadEntry();
             if (readentry < 0) readentry=0;
-            R__LoadBranch(branch,readentry,fQuickLoad);
+            auto res = R__LoadBranch(branch,readentry,fQuickLoad);
+            if (res < 0) {
+               Error("LoadCurrentDim", "Branch could not be loaded:%d", res);
+               return false;
+            }
             if (leafinfo->GetNdata(leaf)==0) {
                outofbounds = true;
             }
