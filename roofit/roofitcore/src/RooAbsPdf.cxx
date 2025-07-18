@@ -619,7 +619,14 @@ double RooAbsPdf::getLogVal(const RooArgSet* nset) const
 {
   return getLog(getVal(nset), this);
 }
-
+////////////////////////////////////////////////////////////////////////////////
+/// This function returns the penalty term.
+/// Penalty terms modify the likelihood,during model parameter estimation.This penalty term is usually
+//  a function of the model parameters
+double RooAbsPdf::getCorrection() const
+{
+   return 0;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check for infinity or NaN.

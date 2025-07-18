@@ -36,19 +36,13 @@ is therefore identical to that of <pre>f->createProjection(RooArgSet(x,y))</pre>
 #include "RooNameReg.h"
 #include "RooWrapperPdf.h"
 
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Default constructor
 
+ RooProjectedPdf::RooProjectedPdf() : _cacheMgr(this, 10) {}
 
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooProjectedPdf::RooProjectedPdf() : _cacheMgr(this,10)
-{
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Construct projection of input pdf '_intpdf' over observables 'intObs'
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Construct projection of input pdf '_intpdf' over observables 'intObs'
 
  RooProjectedPdf::RooProjectedPdf(const char *name, const char *title, RooAbsReal& _intpdf, const RooArgSet& intObs) :
    RooAbsPdf(name,title),
