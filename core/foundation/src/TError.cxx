@@ -108,34 +108,20 @@ ErrorHandlerFunc_t GetErrorHandler()
 
 void ErrorHandler(Int_t level, const char *location, const char *fmt, std::va_list ap)
 {
-   thread_local Int_t buf_size(256);
-   thread_local char *buf_storage(nullptr);
-
-   char small_buf[256];
-   char *buf = buf_storage ? buf_storage : small_buf;
-
-   std::va_list ap_copy;
-   va_copy(ap_copy, ap);
-
    if (!fmt)
       fmt = "no error message provided";
 
-   Int_t n = vsnprintf(buf, buf_size, fmt, ap_copy);
-   if (n >= buf_size) {
-      va_end(ap_copy);
+   std::va_list ap_copy;
+   va_copy(ap_copy, ap);
+   // Get the required buffer size
+   const int required_bytes = vsnprintf(nullptr, 0, fmt, ap) + 1;
 
-      buf_size = n + 1;
-      if (buf != &(small_buf[0]))
-         delete[] buf;
-      buf_storage = buf = new char[buf_size];
-
-      // Try again with a sufficiently large buffer
-      va_copy(ap_copy, ap);
-      vsnprintf(buf, buf_size, fmt, ap_copy);
-   }
+   std::string bp;
+   bp.resize(required_bytes - 1, 0);
+   // Actually print the string to the buffer
+   vsnprintf(bp.data(), required_bytes, fmt, ap_copy);
    va_end(ap_copy);
 
-   std::string bp = buf;
    if (level >= kSysError && level < kFatal) {
       bp.push_back(' ');
       if (GetErrorSystemMsgHandlerRef())
