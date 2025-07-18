@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "THn.h"
+#include "THnSparse.h"
 #include "TH1.h"
 #include "TH2.h"
 
@@ -173,4 +174,17 @@ TEST(THn, ErrorsOfProjection)
    const auto projectedBin2 = proj->GetBin(coordinates2);
    EXPECT_FLOAT_EQ(proj->GetBinContent(projectedBin2), 18.);
    EXPECT_FLOAT_EQ(proj->GetBinError(projectedBin2), 6.);
+}
+
+// https://github.com/root-project/root/issues/19366
+TEST(THn, CreateSparse)
+{
+   Int_t bins[1] = {5};
+   Double_t xmin[1] = {0.};
+   Double_t xmax[1] = {1.};
+   THnD hn("hn", "hn", 1, bins, xmin, xmax);
+   hn.Fill(0.5);
+   auto hn_sparse = THnSparseD::CreateSparse("", "", &hn);
+   EXPECT_EQ(hn_sparse->GetNbins(), 1);
+   EXPECT_FLOAT_EQ(hn_sparse->GetSparseFractionBins(), 1. / 7); // 5 + under/overflows
 }
