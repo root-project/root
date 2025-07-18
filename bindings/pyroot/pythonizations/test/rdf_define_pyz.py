@@ -113,6 +113,128 @@ class PyDefine(unittest.TestCase):
         for x,y in zip(rdf2.Take['ULong64_t']("rdfentry_"), rdf2.Take['ULong64_t']("x")):
            self.assertEqual(x*x, y)
 
-    
+    def test_cpp_free_function(self):
+        """
+        Test that a C++ free function can be passed as a callable argument of a
+        Define operation.
+        """
+
+        test_cases = [
+            # Free function with arguments
+            {
+                "name": "input_ULong64_t",
+                "decl": "ULong64_t my_free_function(ULong64_t l) { return l; }",
+                "coltype": "ULong64_t",
+                "define_args": ["rdfentry_"],
+                "callable": lambda: ROOT.my_free_function,
+                "extract_fn": lambda x: x,
+                "expected_fn": lambda i: i,
+            },
+            # Free function with user defined struct
+            {
+                "name": "input_user_defined_struct",
+                "decl": """
+                    struct MyStruct {
+                        ULong64_t value;
+                    };
+                    MyStruct my_free_function_struct(ULong64_t x) {
+                        MyStruct s; s.value = x; return s;
+                    }
+                """,
+                "coltype": "MyStruct",
+                "define_args": ["rdfentry_"],
+                "callable": lambda: ROOT.my_free_function_struct,
+                "extract_fn": lambda s: s.value,
+                "expected_fn": lambda i: i,
+            },
+            # Free function with no arguments
+            {
+                "name": "no_input",
+                "decl": "ULong64_t my_free_function_none() { return 42; }",
+                "coltype": "ULong64_t",
+                "define_args": [],
+                "callable": lambda: ROOT.my_free_function_none,
+                "extract_fn": lambda x: x,
+                "expected_fn": lambda _: 42,
+            },
+            # Free function with more than one argument
+            {
+                "name": "two_inputs",
+                "decl": """
+                    struct MyStruct2 {
+                        int value;
+                    };
+                    MyStruct2 my_free_function_two_args(MyStruct2 s, int x) {
+                        s.value = x; return s;
+                    }
+                """,
+                "coltype": "MyStruct2",
+                "define_args": ["s_col", "int_col"],
+                "setup_columns": {
+                    "s_col": "MyStruct2()",
+                    "int_col": "(int)rdfentry_"
+                },
+                "callable": lambda: ROOT.my_free_function_two_args,
+                "extract_fn": lambda s: s.value,
+                "expected_fn": lambda i: i,
+            }
+        ]
+
+        for case in test_cases:
+            with self.subTest(case=case["name"]):
+                ROOT.gInterpreter.Declare(case["decl"])
+                rdf = ROOT.RDataFrame(5)
+
+                if "setup_columns" in case:
+                    for colname, gen_fn in case["setup_columns"].items():
+                        rdf = rdf.Define(colname, gen_fn)
+
+                rdf = rdf.Define("new_col", case["callable"](), case.get("define_args", []))
+
+                outputs = rdf.Take[case["coltype"]]("new_col")
+                for i, out in enumerate(outputs):
+                    expected = case["expected_fn"](i)
+                    actual = case["extract_fn"](out)
+                    self.assertEqual(actual, expected)
+
+    def test_cpp_free_function_overload(self):
+        """
+        Test that an overload of a C++ free function can be passed as a callable argument of a
+        Define operation with overloads.
+        """
+
+        ROOT.gInterpreter.Declare("""
+            ULong64_t my_free_function_overload(ULong64_t l) { return l; }
+            ULong64_t my_free_function_overload(ULong64_t l, ULong64_t m) { return l * m; }
+        """)
+
+        rdf = ROOT.RDataFrame(5)
+        rdf = rdf.Define("new_col", ROOT.my_free_function_overload, ["rdfentry_"])
+
+        for x, y in zip(rdf.Take["ULong64_t"]("rdfentry_"), rdf.Take["ULong64_t"]("new_col")):
+            self.assertEqual(x, y)
+
+        rdf = rdf.Define("new_col_overload", ROOT.my_free_function_overload, ["rdfentry_", "rdfentry_"])
+        for x, y in zip(rdf.Take["ULong64_t"]("rdfentry_"), rdf.Take["ULong64_t"]("new_col_overload")):
+            self.assertEqual(x * x, y)
+
+    def test_cpp_free_function_template(self):
+        """
+        Test that a templated C++ free function can be passed as a callable argument of a
+        Define operation.
+        """
+
+        ROOT.gInterpreter.Declare("""
+            template <typename T>
+            T my_free_function_template(T l) { return l; }
+        """)
+
+        rdf = ROOT.RDataFrame(5)
+        rdf = rdf.Define("new_col", ROOT.my_free_function_template["ULong64_t"], ["rdfentry_"])
+
+        for x, y in zip(rdf.Take["ULong64_t"]("rdfentry_"), rdf.Take["ULong64_t"]("new_col")):
+            self.assertEqual(x, y)
+
+
 if __name__ == '__main__':
     unittest.main()
