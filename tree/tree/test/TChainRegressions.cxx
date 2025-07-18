@@ -169,7 +169,7 @@ TEST(TChain, ResetCloneBranchAddress)
    ch.ResetBranchAddresses();
    EXPECT_EQ(ch.GetBranch("value")->GetAddress(), nullptr);
    EXPECT_EQ(newtree->GetBranch("value")->GetAddress(), nullptr);
-   
+
    gSystem->Unlink("t1_19402.root");
    gSystem->Unlink("t2_19402.root");
 }
