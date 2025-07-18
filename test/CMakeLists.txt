@@ -68,7 +68,7 @@ ROOT_EXECUTABLE(eventexe MainEvent.cxx LIBRARIES Event RIO Tree TreePlayer Hist 
 ROOT_ADD_TEST(test-event COMMAND eventexe)
 
 #---guitest------------------------------------------------------------------------------------
-if(NOT minimal) # gui is not built in minimal
+if(TARGET Gui) 
   ROOT_EXECUTABLE(guitest guitest.cxx LIBRARIES RIO Gui Gpad Hist)
 endif()
 
