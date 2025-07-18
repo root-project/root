@@ -176,8 +176,10 @@ if(builtin_llvm)
     if(CMAKE_BUILD_TYPE MATCHES "Debug"
      OR LLVM_BUILD_TYPE MATCHES "(Debug|RelWithDebInfo)")
       set(LLVM_ENABLE_ASSERTIONS TRUE)
+      set(LLVM_ENABLE_DUMP TRUE)
     else()
       set(LLVM_ENABLE_ASSERTIONS FALSE)
+      set(LLVM_ENABLE_DUMP FALSE)
     endif()
   endif()
 

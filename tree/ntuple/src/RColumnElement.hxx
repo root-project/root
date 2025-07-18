@@ -993,7 +993,7 @@ using Quantized_t = std::uint32_t;
 #ifdef _MSC_VER
    unsigned long idx = 0;
    if (_BitScanReverse(&idx, x))
-      return static_cast<std::size_t>(31 - idx);
+      return static_cast<std::size_t>(32 - idx);
    return 32;
 #else
    return static_cast<std::size_t>(__builtin_clzl(x));
