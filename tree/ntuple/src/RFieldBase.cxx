@@ -1026,3 +1026,8 @@ void ROOT::RFieldBase::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitField(*this);
 }
+
+std::vector<std::unique_ptr<ROOT::RFieldBase>> ROOT::Internal::DetachSubfields(RFieldBase &field)
+{
+   return std::move(field.fSubfields);
+}
