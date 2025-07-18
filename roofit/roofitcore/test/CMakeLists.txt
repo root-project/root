@@ -20,6 +20,7 @@ ROOT_ADD_GTEST(testRooWrapperPdf testRooWrapperPdf.cxx LIBRARIES Gpad RooFitCore
 ROOT_ADD_GTEST(testGenericPdf testGenericPdf.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooAbsPdf testRooAbsPdf.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooAbsCollection testRooAbsCollection.cxx LIBRARIES RooFitCore)
+
 ROOT_ADD_GTEST(testRooDataSet testRooDataSet.cxx LIBRARIES Tree RooFitCore
   COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/dataSet_with_errors_6_26_10.root)
 ROOT_ADD_GTEST(testRooFormula testRooFormula.cxx LIBRARIES RooFitCore ROOT::TestSupport)
@@ -59,6 +60,7 @@ ROOT_ADD_GTEST(testRooExtendedBinding testRooExtendedBinding.cxx LIBRARIES RooFi
 ROOT_ADD_GTEST(testRooHist testRooHist.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooHistPdf testRooHistPdf.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooMinimizer testRooMinimizer.cxx LIBRARIES RooFitCore RooFit)
+ROOT_ADD_GTEST(testRooMultiPdf testRooMultiPdf.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooPolyFunc testRooPolyFunc.cxx LIBRARIES Gpad RooFitCore)
 ROOT_ADD_GTEST(testRooRealL TestStatistics/testRooRealL.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooRombergIntegrator testRooRombergIntegrator.cxx LIBRARIES MathCore RooFitCore)
@@ -67,6 +69,7 @@ ROOT_ADD_GTEST(testRooSimultaneous testRooSimultaneous.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooTruthModel testRooTruthModel.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testSumW2Error testSumW2Error.cxx LIBRARIES Gpad RooFitCore)
 ROOT_ADD_GTEST(testTestStatistics testTestStatistics.cxx LIBRARIES RooFitCore)
+
 if (roofit_multiprocess)
   ROOT_ADD_GTEST(testTestStatisticsPlot TestStatistics/testPlot.cxx LIBRARIES RooFitMultiProcess RooFitCore RooFit
                    COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/TestStatistics/TestStatistics_ref.root)

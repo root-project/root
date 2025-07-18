@@ -142,7 +142,6 @@ RooFuncWrapper::loadParamsAndData(RooArgSet const &paramSet, const RooAbsData *d
       idx += n;
    }
 
-   // Extract parameters
    for (auto *param : paramSet) {
       if (!dynamic_cast<RooAbsReal *>(param)) {
          if (param->isConstant()) {
