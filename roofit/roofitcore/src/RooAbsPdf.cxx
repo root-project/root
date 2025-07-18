@@ -621,6 +621,13 @@ double RooAbsPdf::getLogVal(const RooArgSet* nset) const
 }
 
 
+///Return correction factor
+
+double RooAbsPdf::getCorrection() const
+{
+  return 0;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Check for infinity or NaN.
 /// \param[in] inputs Array to check

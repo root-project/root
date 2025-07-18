@@ -1,4 +1,5 @@
 #include <RooCategory.h>
+#include <RooConstVar.h>
 #include <RooGaussian.h>
 #include <RooMultiPdf.h>
 #include <RooRealVar.h>
@@ -8,6 +9,20 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+     // Helper function to count parameters including x
+int countFloatingParametersIncludingObservable(const RooAbsPdf& pdf, const RooRealVar& observable) {
+   std::unique_ptr<RooArgSet> params{pdf.getParameters(RooArgSet())}; 
+   int count = 0;
+   for (auto* obj : *params) {
+      auto* var = dynamic_cast<RooRealVar*>(obj);
+      if (var && !var->isConstant()) {
+         count++;
+      }
+   }
+  
+   return count;
+}
+
 
 TEST(RooMultiPdf, SelectsCorrectPdf)
 {
@@ -39,9 +54,10 @@ TEST(RooMultiPdf, SelectsCorrectPdf)
 }
 
 TEST(RooMultiPdfTest, FitConvergesAndReturnsReasonableResult)
+
 {
    RooRealVar x("x", "x", -10, 10);
-   RooRealVar m1("mean1", "mean1", 0.);
+   RooRealVar m1("mean1", "mean1", 0. ,-10 , 10);
    RooRealVar s1("sigma1", "sigma1", 1., 0.001, 10.);
    RooGaussian gaus1("gaus1", "gaus1", x, m1, s1);
 
@@ -83,15 +99,22 @@ TEST(RooMultiPdfTest, FitConvergesAndReturnsReasonableResult)
    // Fit 2 - Reference fit
    std::unique_ptr<RooAbsReal> nll1{gaus1.createNLL(*data, RooFit::EvalBackend("codegen"))};
 
-   RooMinimizer minim1{*nll};
+   RooMinimizer minim1{*nll1};
    minim1.setStrategy(0);
    int status1 = minim1.minimize("Minuit2", "");
+   
+   
 
+   int n_param_gaus1 = countFloatingParametersIncludingObservable(gaus1, x);
+
+   double first_fit = nll->getVal();
+   double ref_fit = nll1->getVal()+ 0.5*n_param_gaus1; //1.5 because the gaussian has 3 param*0.5
    // Now test the results
    EXPECT_EQ(status, 0) << "Fit 1 did not converge.";
    EXPECT_EQ(status1, 0) << "Fit 2 did not converge.";
-   EXPECT_TRUE(std::isfinite(nll->getVal())) << "NLL is not finite.";
-   EXPECT_DOUBLE_EQ(nll->getVal(), nll1->getVal());
+   EXPECT_TRUE(std::isfinite(first_fit)) << "NLL is not finite.";
+   EXPECT_TRUE(std::isfinite(ref_fit)) << "NLL1 is not finite.";
+   EXPECT_DOUBLE_EQ(first_fit, ref_fit);
 
    // Check that the correct number of PDFs are present
    EXPECT_EQ(multipdf.getNumPdfs(), 3);
@@ -99,8 +122,9 @@ TEST(RooMultiPdfTest, FitConvergesAndReturnsReasonableResult)
    //  check fitted parameter
    EXPECT_NEAR(m1.getVal(), 0.0, 0.2);
    EXPECT_NEAR(s1.getVal(), 1.0, 0.2);
+                                       
+   // Check whether RooMultiPdf chooses the correct index 
 
-   // Check whether RooMultiPdf chooses the correct index
    for (int i = 0; i < multipdf.getNumPdfs(); ++i) {
 
       indx.setIndex(i);
@@ -109,10 +133,73 @@ TEST(RooMultiPdfTest, FitConvergesAndReturnsReasonableResult)
 
       RooAbsPdf *selectedPdf = multipdf.getPdf(i);
       std::unique_ptr<RooAbsReal> nll_direct{selectedPdf->createNLL(*data, RooFit::EvalBackend("codegen"))};
+      
+      int n_param = countFloatingParametersIncludingObservable(*selectedPdf, x);
+
 
       double multi = nll_multi->getVal();
-      double direct = nll_direct->getVal();
+      double direct = nll_direct->getVal() + 0.5*n_param ;
+     
+      std::cout << "PDF index " << i << ": n_param = " << n_param << ", direct+penalty = "
+      << direct << ", multipdf = " << multi << std::endl;
 
-      EXPECT_NEAR(multi, direct, 1e-6) << "Mismatch" << i;
+   EXPECT_NEAR(multi, direct,1e-6) << "Mismatch at index " << i;
+  
    }
+}
+TEST(RooMultiPdfTest, PenaltyTermIsAppliedCorrectly)
+{
+    using namespace RooFit;
+
+    
+    RooRealVar x("x", "x", -10, 10);
+
+    
+    RooRealVar mean("mean", "mean", 0, -5, 5);
+    RooRealVar sigma("sigma", "sigma", 1, 0.1, 10);
+
+   
+    RooGaussian gauss1("gauss1", "gauss1", x, mean, sigma);
+    RooGaussian gauss2("gauss2", "gauss2", x, mean, sigma);
+
+   
+    RooCategory index("index", "index");
+
+   
+    RooArgList pdfList(gauss1, gauss2);
+
+    
+    RooMultiPdf multiPdf("multiPdf", "multiPdf", index, pdfList);
+    index.setConstant();
+
+    
+    index.setIndex(0);
+
+    
+    std::unique_ptr<RooDataSet> data{gauss1.generate(x, 100)};
+
+    
+    std::unique_ptr<RooAbsReal> nll_gauss1{gauss1.createNLL(*data, EvalBackend("codegen"))};
+
+    
+    std::unique_ptr<RooAbsReal> nll_multi{multiPdf.createNLL(*data, EvalBackend("codegen"))};
+
+
+    double val_gauss1 = nll_gauss1->getVal();
+    double val_multi = nll_multi->getVal();
+    int n_params = countFloatingParametersIncludingObservable(gauss1, x);
+    
+    
+    const double expected_penalty = 0.5 * n_params;
+    const double delta = val_multi - val_gauss1;
+
+    std::cout << "NLL(gauss1):     " << val_gauss1 << std::endl;
+    std::cout << "NLL(multiPdf):   " << val_multi << std::endl;
+    std::cout << "Expected penalty: " << expected_penalty << std::endl;
+    std::cout << "Delta:           " << delta << std::endl;
+
+    EXPECT_TRUE(std::isfinite(val_gauss1));
+    EXPECT_TRUE(std::isfinite(val_multi));
+
+    EXPECT_NEAR(delta, expected_penalty, 1e-6) << "Penalty term not correctly applied.";
 }
