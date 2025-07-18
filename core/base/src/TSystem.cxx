@@ -3735,7 +3735,10 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    TString optdebFlags;
    if (mode & kDebug)
       optdebFlags = fFlagsDebug + " ";
-   else if (mode & kOpt)
+#ifdef WIN32
+   else
+#endif
+   if (mode & kOpt)
       optdebFlags += fFlagsOpt;
    cmd.ReplaceAll("$Opt", optdebFlags);
 #ifdef WIN32
