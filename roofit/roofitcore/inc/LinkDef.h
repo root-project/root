@@ -133,6 +133,7 @@
 #pragma read sourceClass="RooMappedCategory::Entry" targetClass="RooMappedCategory::Entry" version="[1]" include="RooFitLegacy/RooCatTypeLegacy.h" \
     source="RooCatType _cat" target="_catIdx" code="{ _catIdx = onfile._cat.getVal(); }"
 #pragma link C++ class RooMultiCategory+ ;
+#pragma link C++ class RooMultiPdf + ;
 #pragma link off class RooNameReg+ ;
 #pragma link C++ class RooNumConvolution+ ;
 #pragma link C++ class RooNumConvPdf+ ;

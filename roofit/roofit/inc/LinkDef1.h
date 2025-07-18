@@ -2,8 +2,7 @@
 #pragma link off all globals;
 #pragma link off all classes;
 #pragma link off all functions;
-#pragma link C++ class Roo2DKeysPdf+ ;
-#pragma link C++ class RooMultiPdf + ;
+#pragma link C++ class Roo2DKeysPdf + ;
 #pragma link C++ class RooArgusBG+ ;
 #pragma link C++ class RooBCPEffDecay+ ;
 #pragma link C++ class RooBCPGenDecay+ ;
@@ -59,6 +58,7 @@
 #pragma link C++ class RooSpline+ ;
 #pragma link C++ class RooStepFunction+ ;
 #pragma link C++ class RooMultiBinomial+ ;
+
 /* #pragma link C++ class std::vector< TVector2 >; */
 /* #pragma link C++ class std::vector< TVector2 >::iterator ; */
 /* #pragma link C++ class RooPolyMorph2D+ ; */
