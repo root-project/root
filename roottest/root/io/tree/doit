@@ -1,4 +1,0 @@
-rm -f *.so
-$(CALLROOTEXE) -q -l -b write.C
-$(CALLROOTEXE) -q -l -b copy.C
-$(CALLROOTEXE) -q -l -b read.C
