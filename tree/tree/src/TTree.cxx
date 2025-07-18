@@ -8212,7 +8212,8 @@ void TTree::ResetAfterMerge(TFileMergeInfo *info)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Tell a branch to set its address to zero.
+/// Tell a branch to set its address to zero. This also done for all
+/// trees in the list of clones.
 ///
 /// @note If the branch owns any objects, they are deleted.
 
@@ -8220,11 +8221,20 @@ void TTree::ResetBranchAddress(TBranch *br)
 {
    if (br && br->GetTree()) {
       br->ResetAddress();
+      if (GetListOfClones()) {
+         for (TObjLink* lnk = GetListOfClones()->FirstLink(); lnk; lnk = lnk->Next()) {
+            TTree* clone = (TTree*) lnk->GetObject();
+            auto clbr = clone ? clone->FindBranch(br->GetName()) : nullptr;
+            if (clbr)
+               clone->ResetBranchAddress(clbr);
+         }
+      }
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Tell all of our branches to drop their current objects and allocate new ones.
+/// All trees in lists of Friends and Clones are also told to reset theirs.
 
 void TTree::ResetBranchAddresses()
 {
@@ -8246,6 +8256,13 @@ void TTree::ResetBranchAddresses()
          if (frTree) {
             frTree->ResetBranchAddresses();
          }
+      }
+   }
+   if (GetListOfClones()) {
+      for (TObjLink* lnk = GetListOfClones()->FirstLink(); lnk; lnk = lnk->Next()) {
+         TTree* clone = (TTree*) lnk->GetObject();
+         if (clone)
+            clone->ResetBranchAddresses();
       }
    }
 }
