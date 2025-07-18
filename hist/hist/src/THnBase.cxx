@@ -836,10 +836,14 @@ void THnBase::AddInternal(const THnBase* h, Double_t c, Bool_t rebinned)
    Long64_t i = 0;
    std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{h->CreateIter(false)};
    // Add to this whatever is found inside the other histogram
+   const bool sparse = InheritsFrom(THnSparse::Class());
    while ((i = iter->Next(coord)) >= 0) {
       // Get the content of the bin from the second histogram
       Double_t v = h->GetBinContent(i);
-
+      Double_t err2 = haveErrors ? h->GetBinError2(i) * c * c : 0;
+      if (sparse && v == 0 && err2 == 0) {
+         continue;
+      }
       Long64_t mybinidx = -1;
       if (rebinned) {
          // Get the bin center given a coord
@@ -852,7 +856,6 @@ void THnBase::AddInternal(const THnBase* h, Double_t c, Bool_t rebinned)
       }
 
       if (haveErrors) {
-         Double_t err2 = h->GetBinError2(i) * c * c;
          AddBinError2(mybinidx, err2);
       }
       // only _after_ error calculation, or sqrt(v) is taken into account!
