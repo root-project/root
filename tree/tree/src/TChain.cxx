@@ -1232,6 +1232,107 @@ Int_t TChain::LoadBaskets(Long64_t /*maxmemory*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Refresh branch/leaf addresses of either top-level friends or friends of
+/// the current tree in the chain.
+///
+/// \param[in] mainTree The main tree, either the chain itself or the current tree
+/// \param[in] entry The entry loaded on the friends. If the main tree is the
+///   chain, this is the global entry of the chain being read. Otherwise, it is
+///   the local entry of the current tree being read.
+Long64_t TChain::RefreshFriendAddresses(TTree &mainTree, Long64_t entry)
+{
+   auto *friendList = mainTree.GetListOfFriends();
+   if (!friendList)
+      return 0;
+
+   TFriendLock lock(&mainTree, kLoadTree);
+
+   bool needUpdate = false;
+
+   for (auto *frEl : ROOT::Detail::TRangeStaticCast<TFriendElement>(*friendList)) {
+      auto *frTree = frEl->GetTree();
+      // Depending on whether we are traversing the friends of the chain itself
+      // or the friends of the current tree in the chain, the meaning of the
+      // entry parameter changes. In the first case, we pass the current chain
+      // global entry number. In the latter case, we pass the local tree entry
+      // number.
+      frTree->LoadTreeFriend(entry, &mainTree);
+   }
+
+   // If the mainTree is this chain, innerTree is the current tree in the chain.
+   // If instead it is the current tree, innerTree points to the same.
+   auto *innerTreePtr = mainTree.GetTree();
+   assert(innerTreePtr != nullptr);
+   auto &innerTree = *innerTreePtr;
+
+   if (auto *innerFriendList = innerTree.GetListOfFriends()) {
+      // If the current tree has friends, check if they were mark for update
+      // when switching to the following tree, detect it so that we later we
+      // actually refresh the addresses of the friends.
+      for (auto *frEl : ROOT::Detail::TRangeStaticCast<TFriendElement>(*innerFriendList)) {
+         if (frEl->IsUpdated()) {
+            needUpdate = true;
+            frEl->ResetUpdated();
+         }
+      }
+   }
+
+   if (!needUpdate)
+      return 0;
+
+   // Update the branch/leaf addresses and the list of leaves in all
+   // TTreeFormula of the TTreePlayer (if any).
+   for (auto *chainEl : ROOT::Detail::TRangeStaticCast<TChainElement>(*fStatus)) {
+      // Set the branch status of all the chain elements, which may include also
+      // branches that are available in friends. Only set the branch status
+      // if it has a value provided by the user
+      Int_t status = chainEl->GetStatus();
+      if (status != -1)
+         innerTree.SetBranchStatus(chainEl->GetName(), status);
+
+      // Set the branch addresses for the newly opened file.
+      void *addr = chainEl->GetBaddress();
+      if (!addr)
+         continue;
+
+      TBranch *br = innerTree.GetBranch(chainEl->GetName());
+      TBranch **pp = chainEl->GetBranchPtr();
+      if (pp) {
+         // FIXME: What if br is zero here?
+         *pp = br;
+      }
+      if (!br)
+         continue;
+
+      if (!chainEl->GetCheckedType()) {
+         Int_t res = CheckBranchAddressType(br, TClass::GetClass(chainEl->GetBaddressClassName()),
+                                            (EDataType)chainEl->GetBaddressType(), chainEl->GetBaddressIsPtr());
+         if ((res & kNeedEnableDecomposedObj) && !br->GetMakeClass()) {
+            br->SetMakeClass(true);
+         }
+         chainEl->SetDecomposedObj(br->GetMakeClass());
+         chainEl->SetCheckedType(true);
+      }
+      // FIXME: We may have to tell the branch it should
+      //        not be an owner of the object pointed at.
+      br->SetAddress(addr);
+      if (TestBit(kAutoDelete)) {
+         br->SetAutoDelete(true);
+      }
+   }
+   if (fPlayer) {
+      fPlayer->UpdateFormulaLeaves();
+   }
+   // Notify user if requested.
+   if (fNotify) {
+      if (!fNotify->Notify())
+         return -6;
+   }
+
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Find the tree which contains entry, and set it as the current tree.
 ///
 /// Returns the entry number in that tree.
@@ -1292,6 +1393,12 @@ Long64_t TChain::LoadTree(Long64_t entry)
    Long64_t treeReadEntry = entry - fTreeOffset[treenum];
    fReadEntry = entry;
 
+   if (fExternalFriends) {
+      for (auto external_fe : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fExternalFriends)) {
+         external_fe->MarkUpdated();
+      }
+   }
+
    // If entry belongs to the current tree return entry.
    if (fTree && treenum == fTreeNumber) {
       // First set the entry the tree on its owns friends
@@ -1299,90 +1406,23 @@ Long64_t TChain::LoadTree(Long64_t entry)
       // next loop).
       fTree->LoadTree(treeReadEntry);
 
+      Long64_t refreshFriendAddressesRet{};
       if (fFriends) {
-         // The current tree has not changed but some of its friends might.
-         //
-         TIter next(fFriends);
-         TFriendLock lock(this, kLoadTree);
-         TFriendElement* fe = nullptr;
-         while ((fe = (TFriendElement*) next())) {
-            TTree* at = fe->GetTree();
-            // If the tree is a
-            // direct friend of the chain, it should be scanned
-            // used the chain entry number and NOT the tree entry
-            // number (treeReadEntry) hence we do:
-            at->LoadTreeFriend(entry, this);
-         }
-         bool needUpdate = false;
-         if (fTree->GetListOfFriends()) {
-            for(auto fetree : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fTree->GetListOfFriends())) {
-               if (fetree->IsUpdated()) {
-                  needUpdate = true;
-                  fetree->ResetUpdated();
-               }
-            }
-         }
-         if (needUpdate) {
-            // Update the branch/leaf addresses and
-            // the list of leaves in all TTreeFormula of the TTreePlayer (if any).
-
-            // Set the branch statuses for the newly opened file.
-            TChainElement *frelement;
-            TIter fnext(fStatus);
-            while ((frelement = (TChainElement*) fnext())) {
-               Int_t status = frelement->GetStatus();
-               // Only set the branch status if it has a value provided
-               // by the user
-               if (status != -1)
-                  fTree->SetBranchStatus(frelement->GetName(), status);
-            }
-
-            // Set the branch addresses for the newly opened file.
-            fnext.Reset();
-            while ((frelement = (TChainElement*) fnext())) {
-               void* addr = frelement->GetBaddress();
-               if (addr) {
-                  TBranch* br = fTree->GetBranch(frelement->GetName());
-                  TBranch** pp = frelement->GetBranchPtr();
-                  if (pp) {
-                     // FIXME: What if br is zero here?
-                     *pp = br;
-                  }
-                  if (br) {
-                     if (!frelement->GetCheckedType()) {
-                        Int_t res = CheckBranchAddressType(br, TClass::GetClass(frelement->GetBaddressClassName()),
-                                                         (EDataType) frelement->GetBaddressType(), frelement->GetBaddressIsPtr());
-                        if ((res & kNeedEnableDecomposedObj) && !br->GetMakeClass()) {
-                           br->SetMakeClass(true);
-                        }
-                        frelement->SetDecomposedObj(br->GetMakeClass());
-                        frelement->SetCheckedType(true);
-                     }
-                     // FIXME: We may have to tell the branch it should
-                     //        not be an owner of the object pointed at.
-                     br->SetAddress(addr);
-                     if (TestBit(kAutoDelete)) {
-                        br->SetAutoDelete(true);
-                     }
-                  }
-               }
-            }
-            if (fPlayer) {
-               fPlayer->UpdateFormulaLeaves();
-            }
-            // Notify user if requested.
-            if (fNotify) {
-               if(!fNotify->Notify()) return -6;
-            }
-         }
+         // If this chain has friends, we need to pass the global entry to keep
+         // the friends aligned to the main chain
+         refreshFriendAddressesRet = RefreshFriendAddresses(*this, entry);
+      } else if (fTree->GetListOfFriends()) {
+         // If instead the current tree has friends, we pass the local entry
+         // we're reading of the current tree to keep the alignment of the friends
+         // with respect to it
+         refreshFriendAddressesRet = RefreshFriendAddresses(*fTree, treeReadEntry);
       }
+      // At the moment RefreshFriendAddresses has one failure state if something
+      // went wrong when notifying the registered listeners
+      if (refreshFriendAddressesRet == -6)
+         return refreshFriendAddressesRet;
+
       return treeReadEntry;
-   }
-
-   if (fExternalFriends) {
-      for(auto external_fe : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fExternalFriends)) {
-         external_fe->MarkUpdated();
-      }
    }
 
    // Delete the current tree and open the new tree.
