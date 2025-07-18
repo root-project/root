@@ -14,6 +14,10 @@
 
 using namespace clang;
 
+namespace clang {
+  class CompilerInstance;
+}
+
 namespace cling {
   /// \brief Create a new printing code-completion consumer that prints its
   /// results to the given raw output stream.
@@ -49,6 +53,28 @@ namespace cling {
     void getCompletions(std::vector<std::string>& completions) {
       completions = m_Completions;
     }
+  };
+
+  struct ClingCodeCompleter {
+    ClingCodeCompleter() = default;
+    std::string Prefix;
+
+    /// \param InterpCI [in] The compiler instance that is used to trigger code
+    /// completion
+
+    /// \param Content [in] The string where code completion is triggered.
+
+    /// \param Line [in] The line number of the code completion point.
+
+    /// \param Col [in] The column number of the code completion point.
+
+    /// \param ParentCI [in] The running interpreter compiler instance that
+    /// provides ASTContexts.
+
+    /// \param CCResults [out] The completion results.
+    void codeComplete(CompilerInstance* InterpCI, llvm::StringRef Content,
+                      unsigned Line, unsigned Col, CompilerInstance* ParentCI,
+                      std::vector<std::string>& CCResults);
   };
 }
 
