@@ -165,6 +165,14 @@ public:
 
   RooExpensiveObjectCache& expensiveObjectCache() { return _eocache ; }
 
+   struct Snapshot : public TNamed {
+      std::vector<std::size_t> indices;
+      std::vector<double> values;
+      std::vector<double> errors;
+      std::vector<std::uint8_t> isConstant;
+      ClassDefOverride(Snapshot, 1);
+   };
+
   class CodeRepo : public TObject {
   public:
     CodeRepo(RooWorkspace* wspace=nullptr) : _wspace(wspace), _compiledOK(true) {} ;
