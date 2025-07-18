@@ -139,6 +139,7 @@ that were used for writing and are no longer connected to a page sink.
 class RNTupleModel {
    friend ROOT::RFieldZero &Internal::GetFieldZeroOfModel(RNTupleModel &);
    friend Internal::RProjectedFields &Internal::GetProjectedFieldsOfModel(RNTupleModel &);
+   friend class ROOT::Experimental::Internal::RNTupleProcessorEntry; // for FindField()
 
 public:
    /// User-provided function that describes the mapping of existing source fields to projected fields in terms
