@@ -33,6 +33,7 @@
 #include <RooFuncWrapper.h>
 #include <RooLinkedList.h>
 #include <RooMinimizer.h>
+#include <RooConstVar.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooFormulaVar.h>
@@ -592,6 +593,7 @@ std::unique_ptr<RooFitResult> minimize(RooAbsReal &pdf, RooAbsReal &nll, RooAbsD
 
 std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const RooLinkedList &cmdList)
 {
+  
    auto timingScope = std::make_unique<ROOT::Math::Util::TimingScope>(
       [&pdf](std::string const &msg) { oocoutI(&pdf, Fitting) << msg << std::endl; }, "Creation of NLL object took");
 
@@ -809,10 +811,36 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
             *nll, &data, evalBackend == RooFit::EvalBackend::Value::Cuda, rangeName ? rangeName : "", pdfClone.get(),
             takeGlobalObservablesFromData);
       }
-
+      //pdfClone->Print("v");
+      const double correction = pdfClone->getCorrection();
       nllWrapper->addOwnedComponents(std::move(nll));
       nllWrapper->addOwnedComponents(std::move(pdfClone));
-      return nllWrapper;
+      
+
+      ///
+      if (correction > 0) {
+    std::cout << "[FitHelpers] Detected correction term from RooAbsPdf::getCorrection(). Adding penalty to NLL." << std::endl;
+
+    // Convert the multiplicative correction to an additive term in -log L
+    auto penaltyTerm = std::make_unique<RooConstVar>(
+        (baseName + "_Penalty").c_str(),
+        "Penalty term from getCorrection()",
+        correction
+
+    );
+      
+    auto correctedNLL = std::make_unique<RooAddition>( 
+      //add penalty and NLL
+        (baseName + "_corrected").c_str(),
+        "NLL + penalty",
+        RooArgSet(*nllWrapper, *penaltyTerm)
+    );
+
+    // transfer ownership of terms
+    correctedNLL->addOwnedComponents(std::move(nllWrapper), std::move(penaltyTerm));
+    nllWrapper = std::move(correctedNLL);
+   }
+    return nllWrapper;
    }
 
    std::unique_ptr<RooAbsReal> nll;
@@ -887,6 +915,29 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
 #else
    throw std::runtime_error("RooFit was not built with the legacy evaluation backend");
 #endif
+
+if (const double correction = pdf.getCorrection(); correction > 0) {
+    std::cout << "[FitHelpers] Detected correction term from RooAbsPdf::getCorrection(). Adding penalty to NLL." << std::endl;
+
+    // Convert the multiplicative correction to an additive term in -log L
+    auto penaltyTerm = std::make_unique<RooConstVar>(
+        (baseName + "_Penalty").c_str(),
+        "Penalty term from getCorrection()",
+        correction
+    );
+
+    auto correctedNLL = std::make_unique<RooAddition>( 
+      //add penalty and NLL
+        (baseName + "_corrected").c_str(),
+        "NLL + penalty",
+        RooArgSet(*nll, *penaltyTerm)
+    );
+
+    // transfer ownership of terms
+    correctedNLL->addOwnedComponents(std::move(nll), std::move(penaltyTerm));
+    nll = std::move(correctedNLL);
+}
+
 
    return nll;
 }

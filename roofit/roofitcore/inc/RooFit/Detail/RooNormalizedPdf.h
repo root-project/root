@@ -46,6 +46,12 @@ public:
    TObject *clone(const char *newname) const override { return new RooNormalizedPdf(*this, newname); }
 
    bool selfNormalized() const override { return true; }
+   
+  inline double getCorrection()  const override { 
+       
+      return  _pdf->getCorrection(); 
+  
+   }
 
    bool forceAnalyticalInt(const RooAbsArg & /*dep*/) const override { return true; }
    /// Forward determination of analytical integration capabilities to input p.d.f

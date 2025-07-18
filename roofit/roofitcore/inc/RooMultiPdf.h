@@ -17,8 +17,11 @@ public:
    RooMultiPdf(const RooMultiPdf &other, const char *name = nullptr);
    TObject *clone(const char *newname) const override { return new RooMultiPdf(*this, newname); }
 
+   
+
    inline bool checkIndexDirty() const { return _oldIndex != x; }
-   inline double getCorrection() const { return cFactor * static_cast<RooAbsReal *>(corr.at(x))->getVal(); }
+   inline double getCorrection()  const override { 
+      return cFactor * static_cast<RooAbsReal *>(corr.at(x))->getVal(); }
    inline RooAbsPdf *getCurrentPdf() const { return getPdf(getCurrentIndex()); }
    int getNumPdfs() const { return c.size(); }
 
