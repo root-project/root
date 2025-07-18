@@ -8212,7 +8212,7 @@ void TTree::ResetAfterMerge(TFileMergeInfo *info)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Tell a branch to set its address to zero. This also done for all
+/// Tell a branch to set its address to zero. This is also done for all
 /// trees in the list of clones.
 ///
 /// @note If the branch owns any objects, they are deleted.
