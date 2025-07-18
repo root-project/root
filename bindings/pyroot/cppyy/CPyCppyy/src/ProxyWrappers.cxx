@@ -927,19 +927,24 @@ PyObject* CPyCppyy::BindCppObject(Cppyy::TCppObject_t address,
 // successful, no down-casting is attempted?
 // TODO: optimize for final classes
     unsigned new_flags = flags;
-    if (!isRef && (gPinnedTypes.empty() || gPinnedTypes.find(klass) == gPinnedTypes.end())) {
-        Cppyy::TCppType_t clActual = Cppyy::GetActualClass(klass, address);
+    if (gPinnedTypes.empty() || gPinnedTypes.find(klass) == gPinnedTypes.end()) {
+        if (!isRef) {
+            Cppyy::TCppType_t clActual = Cppyy::GetActualClass(klass, address);
 
-        if (clActual) {
-            if (clActual != klass) {
-                intptr_t offset = Cppyy::GetBaseOffset(
-                    clActual, klass, address, -1 /* down-cast */, true /* report errors */);
-                if (offset != -1) {   // may fail if clActual not fully defined
-                    address = (void*)((intptr_t)address + offset);
-                    klass = clActual;
+            if (clActual) {
+                if (clActual != klass) {
+                    intptr_t offset = Cppyy::GetBaseOffset(
+                        clActual, klass, address, -1 /* down-cast */, true /* report errors */);
+                    if (offset != -1) {   // may fail if clActual not fully defined
+                        address = (void*)((intptr_t)address + offset);
+                        klass = clActual;
+                    }
                 }
+                new_flags |= CPPInstance::kIsActual;
             }
-            new_flags |= CPPInstance::kIsActual;
+        } else {
+            Cppyy::TCppType_t clActual = Cppyy::GetActualClass(klass, *(void**)address);
+            klass = clActual;
         }
     }
 
