@@ -68,7 +68,9 @@ ROOT_EXECUTABLE(eventexe MainEvent.cxx LIBRARIES Event RIO Tree TreePlayer Hist 
 ROOT_ADD_TEST(test-event COMMAND eventexe)
 
 #---guitest------------------------------------------------------------------------------------
-ROOT_EXECUTABLE(guitest guitest.cxx LIBRARIES RIO Gui Gpad Hist)
+if(TARGET Gui) 
+  ROOT_EXECUTABLE(guitest guitest.cxx LIBRARIES RIO Gui Gpad Hist)
+endif()
 
 #---hsimple------------------------------------------------------------------------------------
 #ROOT_EXECUTABLE(hsimple hsimple.cxx LIBRARIES RIO Tree Hist)
