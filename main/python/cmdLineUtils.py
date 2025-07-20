@@ -562,7 +562,7 @@ def getSourceDestListOptDict(parser, wildcards=True):
 # Several functions shared by rootcp, rootmv and rootrm
 
 TARGET_ERROR = "target '{0}' is not a directory"
-OMITTING_ERROR = "omitting {0} '{1}'. Did you forget to specify the -r option for a recursive copy?"
+OMITTING_ERROR = "{0} '{1}' will be copied but not its subdirectories (if any). Use the -r option if you need a recursive copy."
 OVERWRITE_ERROR = "cannot overwrite non-directory '{0}' with directory '{1}'"
 
 
