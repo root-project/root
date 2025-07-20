@@ -583,13 +583,12 @@ def copyRootObject(sourceFile, sourcePathSplit, destFile, destPathSplit, oneSour
         logging.warning(TARGET_ERROR.format(destPathSplit[-1]))
         retcode += 1
     # Entire ROOT file or directory in input omitting "-r" option
-    # OMITTING_FILE_ERROR or OMITTING_DIRECTORY_ERROR
     if not recursiveOption:
         if sourcePathSplit == []:
             logging.warning(OMITTING_ERROR.format("file", sourceFile.GetName()))
             retcode += 1
         elif isDirectory(sourceFile, sourcePathSplit):
-            logging.warning(OMITTING_DIRECTORY_ERROR.format("directory", sourcePathSplit[-1]))
+            logging.warning(OMITTING_ERROR.format("directory", sourcePathSplit[-1]))
             retcode += 1
     # Run copyRootObjectRecursive function with the wish
     # to follow the unix copy behaviour
