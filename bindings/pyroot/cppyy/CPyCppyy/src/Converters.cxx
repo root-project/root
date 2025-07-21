@@ -2192,10 +2192,9 @@ template <bool ISCONST>
 PyObject* CPyCppyy::InstancePtrConverter<ISCONST>::FromMemory(void* address)
 {
 // construct python object from C++ instance read at <address>
-    Cppyy::TCppScope_t actual_class = Cppyy::GetActualClass(fClass, *(void**)address);
     if (ISCONST)
-        return BindCppObject(*(void**)address, actual_class);                   // by pointer value
-    return BindCppObject(address, actual_class, CPPInstance::kIsReference);     // modifiable
+        return BindCppObject(*(void**)address, fClass);                   // by pointer value
+    return BindCppObject(address, fClass, CPPInstance::kIsReference);     // modifiable
 }
 
 //----------------------------------------------------------------------------
