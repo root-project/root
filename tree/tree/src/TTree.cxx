@@ -8262,7 +8262,7 @@ void TTree::ResetBranchAddresses()
       for (TObjLink *lnk = GetListOfClones()->FirstLink(); lnk; lnk = lnk->Next()) {
          TTree *clone = (TTree *)lnk->GetObject();
          if (clone)
-            clone->ResetBranchAddresses();
+            CopyAddresses(clone);
       }
    }
 }
