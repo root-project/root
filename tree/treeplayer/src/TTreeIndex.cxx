@@ -426,6 +426,9 @@ Long64_t TTreeIndex::FindValues(Long64_t major, Long64_t minor) const
 /// index in the table, otherwise it returns -1.
 /// \warning Due to internal architecture details, the maximum value for `(major, minor)`
 /// for which the function works correctly and consistently in all platforms is `0xFFFFFFFFFFFF0`, which is less than `kMaxLong64`.
+/// A runtime-warning will be printed if values above this range are detected to lead to a corresponding precision loss in your current architecture:
+/// `Warning in <TTreeIndex::TTreeIndex>: In tree entry, value event possibly out of range for internal long double`
+///
 /// If an entry corresponding to major and minor is not found, the function
 /// returns the index of the major,minor pair immediately lower than the
 /// requested value, ie it will return -1 if the pair is lower than
