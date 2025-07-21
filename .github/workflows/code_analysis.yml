@@ -18,7 +18,7 @@ jobs:
         (github.event_name == 'pull_request' && !(
           contains(github.event.pull_request.title, '[skip-ci]') ||
           contains(github.event.pull_request.labels.*.name, 'skip ci') ||
-          contains(github.event.pull_request.labels.*.name, 'skip style checks')
+          contains(github.event.pull_request.labels.*.name, 'skip code analysis')
         ))
 
     runs-on: ubuntu-latest
@@ -47,7 +47,7 @@ jobs:
         (github.event_name == 'pull_request' && !(
           contains(github.event.pull_request.title, '[skip-ci]') ||
           contains(github.event.pull_request.labels.*.name, 'skip ci') ||
-          contains(github.event.pull_request.labels.*.name, 'skip style checks')
+          contains(github.event.pull_request.labels.*.name, 'skip code analysis')
         ))
 
     runs-on: ubuntu-latest
