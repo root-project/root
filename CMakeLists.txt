@@ -286,7 +286,6 @@ if(asan)
 endif()
 
 #---Enable CTest package -----------------------------------------------------------------------
-#include(CTest)
 if(testing)
   enable_testing()
 endif()
