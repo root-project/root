@@ -10,6 +10,8 @@ on:
         default: "experimental-pip-install-root"
   push:
     branches: experimental-pip-install-root
+  schedule:
+    - cron: '01 1 * * *'
 
 jobs:
   python_wheel:
@@ -64,4 +66,4 @@ jobs:
           echo +++ Creating the token
           kinit  -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
           echo +++ Running the copy
-          xrdcp -rf wheelhouse ${EOS_ENDPOINT}/${EOS_PATH}/
+          xrdcp -rf wheelhouse/* ${EOS_ENDPOINT}/${EOS_PATH}/
