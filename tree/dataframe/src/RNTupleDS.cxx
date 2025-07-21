@@ -544,10 +544,11 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
    if (nRemainingFiles == 0)
       return;
 
-   unsigned int nEntries = 0;
    // Easy work scheduling: one file per slot. We skip empty files (files without entries).
 
-   if ((nRemainingFiles >= fNSlots) || (fGlobalEntryRange.has_value())) {
+   if ((nRemainingFiles >= fNSlots) ||
+       (fGlobalEntryRange.has_value() && fGlobalEntryRange->first <= std::numeric_limits<Long64_t>::max() &&
+        fGlobalEntryRange->second <= std::numeric_limits<Long64_t>::max())) {
       while ((fNextRanges.size() < fNSlots) && (fNextFileIndex < nFiles)) {
          REntryRangeDS range;
 
@@ -561,7 +562,7 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
          range.fFileName = fFileNames[fNextFileIndex];
          range.fSource->Attach();
          fNextFileIndex++;
-         nEntries = range.fSource->GetNEntries();
+         auto nEntries = range.fSource->GetNEntries();
          if (nEntries == 0)
             continue;
          range.fLastEntry = nEntries; // whole file per slot, i.e. entry range [0..nEntries - 1]
@@ -640,7 +641,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
 {
    std::vector<std::pair<ULong64_t, ULong64_t>> ranges;
    ULong64_t nEntriesPerRange = 0;
-   unsigned int start = 0;
+   ULong64_t start = 0;
 
    // We need to distinguish between single threaded and multi-threaded runs.
    // In single threaded mode, InitSlot is only called once and column readers have to be rewired
@@ -656,7 +657,8 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
 
    // If we have fewer files than slots and we run multiple event loops, we can reuse fCurrentRanges and don't need
    // to worry about loading the fNextRanges. I.e., in this case we don't enter the if block.
-   if (fCurrentRanges.empty() || (fSeenEntriesNonRange > 0)) {
+   if (fCurrentRanges.empty() || (fGlobalEntryRange.has_value() && fSeenEntriesNoGlobalRange > 0) ||
+       (!fGlobalEntryRange.has_value() && fSeenEntries > 0)) {
       // Otherwise, i.e. start of the first event loop or in the middle of the event loop, prepare the next ranges
       // and swap with the current ones.
       {
@@ -698,12 +700,12 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
       // We can detect a change of file when the first entry number jumps back to 0.
       if (fCurrentRanges[i].fFirstEntry == 0) {
          // New source
-         fSeenEntriesNonRange += nEntriesPerSource;
+         fSeenEntriesNoGlobalRange += nEntriesPerSource;
          nEntriesPerSource = 0;
       }
 
-      start = fCurrentRanges[i].fFirstEntry + fSeenEntriesNonRange;
-      auto end = fCurrentRanges[i].fLastEntry + fSeenEntriesNonRange;
+      start = fCurrentRanges[i].fFirstEntry + fSeenEntriesNoGlobalRange;
+      auto end = fCurrentRanges[i].fLastEntry + fSeenEntriesNoGlobalRange;
 
       nEntriesPerSource += end - start;
 
@@ -751,7 +753,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
             fFirstEntry2RangeIdx[0] = i;
             fOriginalRanges.emplace_back(start, end);
             ranges.emplace_back(0, 0);
-            counterFileEmpty += 1;
+            fCounterFileEmpty += 1;
          }
       }
 
@@ -762,17 +764,17 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
       }
    }
 
-   fSeenEntriesNonRange += nEntriesPerSource;
-   fSeenEntriesRange += nEntriesPerRange;
+   fSeenEntriesNoGlobalRange += nEntriesPerSource;
+   fSeenEntriesWithGlobalRange += nEntriesPerRange;
 
    if ((fNSlots == 1) && (fCurrentRanges[0].fSource)) {
       for (auto r : fActiveColumnReaders[0]) {
 
          if (fGlobalEntryRange.has_value() && fGlobalEntryRange->first <= std::numeric_limits<Long64_t>::max() &&
              fGlobalEntryRange->second <= std::numeric_limits<Long64_t>::max()) {
-            if (ranges[0].first > fOriginalRanges[0].first && counterFileEmpty == 0) {
+            if (ranges[0].first > fOriginalRanges[0].first && fCounterFileEmpty == 0) {
                r->Connect(*fCurrentRanges[0].fSource, 0);
-            } else if (counterFileEmpty > 0) {
+            } else if (fCounterFileEmpty > 0) {
                r->Connect(*fCurrentRanges[0].fSource, start);
             } else {
                r->Connect(*fCurrentRanges[0].fSource, ranges[0].first);
@@ -783,10 +785,11 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
       }
    }
    if ((fGlobalEntryRange.has_value() && fGlobalEntryRange->first <= std::numeric_limits<Long64_t>::max() &&
-        fGlobalEntryRange->second <= std::numeric_limits<Long64_t>::max()))
-      fSeenEntries = fSeenEntriesRange;
-   else
-      fSeenEntries = fSeenEntriesNonRange;
+        fGlobalEntryRange->second <= std::numeric_limits<Long64_t>::max())) {
+      fSeenEntries = fSeenEntriesWithGlobalRange;
+   } else {
+      fSeenEntries = fSeenEntriesNoGlobalRange;
+   }
 
    return ranges;
 }
@@ -809,8 +812,17 @@ void ROOT::RDF::RNTupleDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
    fSlotsToRangeIdxs[slot * ROOT::Internal::RDF::CacheLineStep<std::size_t>()] = idxRange;
 
    for (auto r : fActiveColumnReaders[slot]) {
-      r->Connect(*fCurrentRanges[idxRange].fSource,
-                 fOriginalRanges[idxRange].first - fCurrentRanges[idxRange].fFirstEntry);
+      if (fGlobalEntryRange.has_value() && fGlobalEntryRange->first <= std::numeric_limits<Long64_t>::max() &&
+          fGlobalEntryRange->second <= std::numeric_limits<Long64_t>::max()) {
+         r->Connect(*fCurrentRanges[idxRange].fSource,
+                    fOriginalRanges[idxRange].first - fCurrentRanges[idxRange].fFirstEntry);
+      } else {
+         r->Connect(*fCurrentRanges[idxRange].fSource, firstEntry - fCurrentRanges[idxRange].fFirstEntry);
+      }
+      // during testing turned out that this is needed in a case like:
+      // std::vector<std::string> fileNames(1000, fname);
+      // auto df1000 = ROOT::RDataFrame(name, fileNames);
+      // df1000.Sum<float>("pt").GetValue()
    }
 }
 
