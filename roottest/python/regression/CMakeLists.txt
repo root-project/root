@@ -22,8 +22,7 @@ endif()
                     MACRO exec_root_6023.py
                     COPY_TO_BUILDDIR root_6023.h
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ root_6023.h+
-                    ENVIRONMENT CLING_STANDARD_PCH=none
-                    CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so)
+                    ENVIRONMENT CLING_STANDARD_PCH=none)
 
   ROOTTEST_ADD_TEST(gh_16406
                     MACRO gh_16406.py

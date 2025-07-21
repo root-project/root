@@ -1,5 +1,4 @@
 #include "TPython.h"
-#include "cppyy_backend_check.h"
 
 // This test is no longer one script as it once was: Cling compiles code
 // within a single macro, so there is a problem of initialization of the
@@ -8,7 +7,6 @@
 // different from the line-to-line behaviour of CINT (and the ROOT CLI).
 
 void runPyClassTest() {
-   check_cppyy_backend();
 
 // load a python class and test its use
    TPython::LoadMacro( "MyPyClass.py" );

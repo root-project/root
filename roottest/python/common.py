@@ -3,7 +3,7 @@
 # Created: 09/24/10
 # Last: 04/04/14
 
-__all__ = [ 'pylong', 'maxvalue', 'MyTestCase', 'run_pytest', 'FIXCLING', 'check_cppyy_backend' ]
+__all__ = [ 'pylong', 'maxvalue', 'MyTestCase', 'run_pytest', 'FIXCLING' ]
 
 import os, sys, unittest, warnings
 import pytest
@@ -37,12 +37,3 @@ def run_pytest(test_file=None):
     if test_file: args += [test_file]
     # actual test run
     return pytest.main(args)
-
-def check_cppyy_backend():
-    # Helper function to check if CPPYY_BACKEND_LIBRARY
-    # points to an existing file.
-    # If it does not, the variable is unset to let cppyy
-    # look for the library in its default directories.
-    cbl = os.environ.get('CPPYY_BACKEND_LIBRARY')
-    if cbl is not None and not os.path.isfile(cbl):
-        del os.environ['CPPYY_BACKEND_LIBRARY']
