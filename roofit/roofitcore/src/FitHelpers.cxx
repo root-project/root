@@ -763,7 +763,7 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
       RooFit::Detail::CompileContext ctx{normSet};
       ctx.setLikelihoodMode(true);
       std::unique_ptr<RooAbsArg> head = pdf.compileForNormSet(normSet, ctx);
-      std::unique_ptr<RooAbsPdf> pdfClone = std::unique_ptr<RooAbsPdf>{static_cast<RooAbsPdf *>(head.release())};
+      std::unique_ptr<RooAbsPdf> pdfClone = std::unique_ptr<RooAbsPdf>{&dynamic_cast<RooAbsPdf &>(*head.release())};
 
       // reset attributes
       pdf.setAttribute("SplitRange", false);
