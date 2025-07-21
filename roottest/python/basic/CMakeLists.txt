@@ -10,15 +10,13 @@ if(NOT MSVC OR win_broken_tests)
                     COPY_TO_BUILDDIR DataTypes.C DataTypes.h
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ DataTypes.C+
                     FIXTURES_SETUP python-basic-datatype-fixture
-                    ENVIRONMENT CLING_STANDARD_PCH=none
-                                CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so)
+                    ENVIRONMENT CLING_STANDARD_PCH=none)
 
   ROOTTEST_ADD_TEST(datatype-numpy
                     MACRO PyROOT_datatypetest_numpy.py
                     FIXTURES_REQUIRED python-basic-datatype-fixture
                     PYTHON_DEPS numpy
-                    ENVIRONMENT CLING_STANDARD_PCH=none
-                                CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so)
+                    ENVIRONMENT CLING_STANDARD_PCH=none)
 endif()
 
   ROOTTEST_ADD_TEST(operator
@@ -31,7 +29,6 @@ if(NOT MSVC OR win_broken_tests)
                     MACRO PyROOT_overloadtests.py
                     COPY_TO_BUILDDIR Overloads.C Overloads.h
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Overloads.C+
-                    ENVIRONMENT CLING_STANDARD_PCH=none
-                                CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so)
+                    ENVIRONMENT CLING_STANDARD_PCH=none)
 endif()
 endif()
