@@ -2410,6 +2410,41 @@ class TestDATATYPES:
             else:
                 assert type(v) == gbl.PolymorphicMaps.Derived
 
+    def test52_virtual_inheritance(self):
+        import cppyy
+        from cppyy import gbl
+
+        cppyy.cppdef("""
+        class JetTag {
+        public:
+            JetTag() {}
+            virtual ~JetTag() = default;
+            int jt = 0;
+            std::string name = "NAME";
+        };
+        class BaseTag: public JetTag {
+        public:
+            int bt = 1;
+        } bt;
+        class JetFitTag: public virtual BaseTag {
+        public:
+            int jft = 2;
+        } jft;
+        class JetFit: public virtual JetFitTag {
+        public:
+            int jf = 3;
+        } jf;
+        std::vector<const JetTag*> make() {
+            std::vector<const JetTag*> res;
+            res.push_back(&bt);
+            res.push_back(&jft);
+            res.push_back(&jf);
+            return res;
+        }
+        """)
+
+        for i in gbl.make():
+            assert i.name == "NAME"
 
 if __name__ == "__main__":
     exit(pytest.main(args=['-sv', '-ra', __file__]))
