@@ -82,14 +82,12 @@ public:
 /// Template specializations for C++ std::bitset
 ////////////////////////////////////////////////////////////////////////////////
 
-/// The generic field an `std::bitset<N>`. All compilers we care about store the bits in an array of unsigned long.
+/// The generic field for a `std::bitset<N>`.
+/// GCC and Clang store the bits in an array of unsigned long, whereas MSVC uses either a single uint32_t for `N <= 32`
+/// or an array of uint64_t for `N > 32` (reference: https://github.com/microsoft/STL/blob/main/stl/inc/bitset).
 /// TODO(jblomer): reading and writing efficiency should be improved; currently it is one bit at a time
 /// with an array of bools on the page level.
 class RBitsetField : public RFieldBase {
-   using Word_t = unsigned long;
-   static constexpr std::size_t kWordSize = sizeof(Word_t);
-   static constexpr std::size_t kBitsPerWord = kWordSize * 8;
-
 protected:
    std::size_t fN;
 
@@ -106,14 +104,40 @@ protected:
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
 
+   size_t WordSize() const
+   {
+#if defined(_MSC_VER)
+      const size_t wordSize = (fN <= sizeof(unsigned long) * 8) ? sizeof(unsigned long) : sizeof(unsigned long long);
+#else
+      const size_t wordSize = sizeof(unsigned long);
+#endif
+      return wordSize;
+   }
+
+   template <typename FUlong, typename FUlonglong, typename... Args>
+   void SelectWordSize(FUlong &&fUlong, FUlonglong &&fUlonglong, Args &&...args);
+
 public:
    RBitsetField(std::string_view fieldName, std::size_t N);
    RBitsetField(RBitsetField &&other) = default;
    RBitsetField &operator=(RBitsetField &&other) = default;
    ~RBitsetField() override = default;
 
-   size_t GetValueSize() const final { return kWordSize * ((fN + kBitsPerWord - 1) / kBitsPerWord); }
-   size_t GetAlignment() const final { return alignof(Word_t); }
+   size_t GetValueSize() const final
+   {
+      const size_t bitsPerWord = WordSize() * 8;
+      return WordSize() * ((fN + bitsPerWord - 1) / bitsPerWord);
+   }
+
+   size_t GetAlignment() const final
+   {
+#if defined(_MSC_VER)
+      return WordSize() == sizeof(unsigned long) ? alignof(unsigned long) : alignof(unsigned long long);
+#else
+      return alignof(unsigned long);
+#endif
+   }
+
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 
    /// Get the number of bits in the bitset, i.e. the `N` in `std::bitset<N>`
