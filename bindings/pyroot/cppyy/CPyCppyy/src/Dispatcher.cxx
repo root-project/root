@@ -41,7 +41,9 @@ static inline void InjectMethod(Cppyy::TCppMethod_t method, const std::string& m
 // possible crash
     code << "    PyObject* iself = (PyObject*)_internal_self;\n"
             "    if (!iself || iself == Py_None) {\n"
+            "      PyGILState_STATE state = PyGILState_Ensure();\n"
             "      PyErr_Warn(PyExc_RuntimeWarning, (char*)\"Call attempted on deleted python-side proxy\");\n"
+            "      PyGILState_Release(state);\n"
             "      return";
     if (retType != "void") {
         if (retType.back() != '*')
@@ -50,11 +52,12 @@ static inline void InjectMethod(Cppyy::TCppMethod_t method, const std::string& m
             code << " nullptr";
     }
     code << ";\n"
-            "    }\n"
-            "    Py_INCREF(iself);\n";
+            "    }\n";
 
 // start actual function body
     Utility::ConstructCallbackPreamble(retType, argtypes, code);
+
+    code << "    Py_INCREF(iself);\n";
 
 // perform actual method call
 #if PY_VERSION_HEX < 0x03000000
@@ -238,6 +241,7 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
 // object goes before the C++ one, only __del__ is called)
     if (PyMapping_HasKeyString(dct, (char*)"__destruct__")) {
         code << "  virtual ~" << derivedName << "() {\n"
+                "PyGILState_STATE state = PyGILState_Ensure();\n"
                 "    PyObject* iself = (PyObject*)_internal_self;\n"
                 "    if (!iself || iself == Py_None)\n"
                 "      return;\n"      // safe, as destructor always returns void
@@ -250,6 +254,7 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
     // magic C++ exception ...
         code << "      if (!pyresult) PyErr_Print();\n"
                 "      else { Py_DECREF(pyresult); }\n"
+                "      PyGILState_Release(state);\n"
                 "  }\n";
     } else
         code << "  virtual ~" << derivedName << "() {}\n";
@@ -450,8 +455,11 @@ bool CPyCppyy::InsertDispatcher(CPPScope* klass, PyObject* bases, PyObject* dct,
 
 // provide an accessor to re-initialize after round-tripping from C++ (internal)
     code << "\n  static PyObject* _get_dispatch(" << derivedName << "* inst) {\n"
+            "    PyGILState_STATE state = PyGILState_Ensure();\n"
             "    PyObject* res = (PyObject*)inst->_internal_self;\n"
-            "    Py_XINCREF(res); return res;\n  }";
+            "    Py_XINCREF(res);\n"
+            "    PyGILState_Release(state);\n"
+            "    return res;\n  }";
 
 // finish class declaration
     code << "};\n}";
