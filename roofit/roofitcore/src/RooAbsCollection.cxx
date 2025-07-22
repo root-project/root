@@ -1646,3 +1646,13 @@ void RooAbsCollection::throwAddTypedException(TClass *klass, RooAbsArg *arg)
    oocoutE(nullptr, InputArguments) << msg.str() << std::endl;
    throw std::invalid_argument(msg.str());
 }
+
+void RooAbsCollection::removeConstantParameters()
+{
+   RooArgSet constSet;
+   for (auto const *myarg : static_range_cast<RooRealVar *>(*this)) {
+      if (myarg->isConstant())
+         constSet.add(*myarg);
+   }
+   this->remove(constSet);
+}

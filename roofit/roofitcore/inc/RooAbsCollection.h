@@ -362,6 +362,8 @@ public:
 
   void useHashMapForFind(bool flag) const;
 
+  void removeConstantParameters();
+
   // For use in the RooArgList/Set(std::vector<RooAbsArgPtrOrDouble> const&) constructor.
   // Can be replaced with std::variant when C++17 is the minimum supported standard.
   struct RooAbsArgPtrOrDouble {

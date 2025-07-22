@@ -65,19 +65,11 @@ namespace RooStats {
    }
 
    inline void RemoveConstantParameters(RooArgSet* set){
-      RooArgSet constSet;
-      for (auto const *myarg : static_range_cast<RooRealVar *>(*set)) {
-         if(myarg->isConstant()) constSet.add(*myarg);
-      }
-      set->remove(constSet);
+      set->removeConstantParameters();
    }
 
    inline void RemoveConstantParameters(RooArgList& set){
-      RooArgSet constSet;
-      for (auto const *myarg : static_range_cast<RooRealVar *>(set)) {
-         if(myarg->isConstant()) constSet.add(*myarg);
-      }
-      set.remove(constSet);
+      set.removeConstantParameters();
    }
 
    /// utility function to set all variable constant in a collection
