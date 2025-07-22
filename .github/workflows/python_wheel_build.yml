@@ -15,7 +15,10 @@ on:
 
 jobs:
   python_wheel:
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - linux
+      - x64
     env:
       WORKDIR: /home/runner/work/root
     steps:
@@ -24,19 +27,26 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+
       - name: Install Kerberos utilities
         run: sudo apt-get install -y krb5-user
 
       - name: Install XRootD client
         run: sudo apt-get -y install xrootd-client
 
+      - name: Configure large ccache
+        if: ${{ matrix.is_special }}
+        run: |
+          ccache -o max_size=5G
+          ccache -p || true
+          ccache -s || true
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.0.1
         with:
           output-dir: ${{ env.WORKDIR }}/wheelhouse
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
 
       - name: Create PEP503-compliant wheel registry
         run: |
