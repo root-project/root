@@ -11,6 +11,7 @@ on:
 
 jobs:
   sync-cling-history:
+    if: github.repository_owner == 'root-project'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout ROOT
