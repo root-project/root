@@ -2564,8 +2564,8 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createScanCdf(const RooArgSet& iset, co
 /// This helper function finds and collects all constraints terms of all component p.d.f.s
 /// and returns a RooArgSet with all those terms.
 
-RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, RooArgSet& constrainedParams,
-                                        bool stripDisconnected) const
+std::unique_ptr<RooArgSet>
+RooAbsPdf::getAllConstraints(const RooArgSet &observables, RooArgSet &constrainedParams, bool stripDisconnected) const
 {
   RooArgSet constraints;
   RooArgSet pdfParams;
@@ -2574,9 +2574,7 @@ RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, RooArgSet&
   for (const auto arg : *comps) {
     auto pdf = dynamic_cast<const RooAbsPdf*>(arg) ;
     if (pdf && !constraints.find(pdf->GetName())) {
-      std::unique_ptr<RooArgSet> compRet(
-              pdf->getConstraints(observables,constrainedParams, pdfParams));
-      if (compRet) {
+      if (auto compRet = pdf->getConstraints(observables,constrainedParams, pdfParams)) {
         constraints.add(*compRet,false) ;
       }
     }
@@ -2585,7 +2583,7 @@ RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, RooArgSet&
   RooArgSet conParams;
 
   // Strip any constraints that are completely decoupled from the other product terms
-  RooArgSet* finalConstraints = new RooArgSet("AllConstraints") ;
+  auto finalConstraints = std::make_unique<RooArgSet>("AllConstraints");
   for(auto * pdf : static_range_cast<RooAbsPdf*>(constraints)) {
 
     RooArgSet tmp;
@@ -2653,11 +2651,10 @@ RooNumGenConfig* RooAbsPdf::specialGeneratorConfig(bool createOnTheFly)
 /// a specialized configuration was associated with this object, that configuration
 /// is returned, otherwise the default configuration for all RooAbsReals is returned
 
-const RooNumGenConfig* RooAbsPdf::getGeneratorConfig() const
+const RooNumGenConfig *RooAbsPdf::getGeneratorConfig() const
 {
-  const RooNumGenConfig* config = specialGeneratorConfig() ;
-  if (config) return config ;
-  return defaultGeneratorConfig() ;
+   const RooNumGenConfig *config = specialGeneratorConfig();
+   return config ? config : defaultGeneratorConfig();
 }
 
 
