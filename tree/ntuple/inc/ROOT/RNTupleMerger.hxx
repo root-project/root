@@ -101,14 +101,6 @@ struct RNTupleMergeOptions {
    bool fExtraVerbose = false;
 };
 
-struct RColumnOutInfo {
-   ROOT::DescriptorId_t fColumnId;
-   ENTupleColumnType fColumnType;
-};
-
-// { fully.qualified.fieldName.colInputId => colOutputInfo }
-using ColumnIdMap_t = std::unordered_map<std::string, RColumnOutInfo>;
-
 struct RAttributeSetMergeData {
    std::unique_ptr<ROOT::Internal::RPageSinkFile> fSink;
    std::unique_ptr<ROOT::RNTupleModel> fModel;
