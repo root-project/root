@@ -53,6 +53,9 @@ jobs:
           ccache -s || true
 
       - name: Build wheels
+        env: 
+          PIP_ROOT_USER_ACTION: ignore
+          PIP_DISABLE_PIP_VERSION_CHECK: 1
         uses: pypa/cibuildwheel@v3.0.1
         with:
           output-dir: ${{ env.WORKDIR }}/wheelhouse
