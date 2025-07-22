@@ -35,9 +35,6 @@
 # endif
 #else
 
-/// tbb::task_arena is an alias of tbb::interface7::task_arena, which doesn't allow
-/// to forward declare tbb::task_arena without forward declaring tbb::interface7
-
 namespace ROOT {
 
 class ROpaqueTaskArena;
@@ -54,12 +51,14 @@ namespace Internal {
 ////////////////////////////////////////////////////////////////////////////////
 int LogicalCPUBandwidthControl();
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Wrapper for tbb::task_arena.
 ///
 /// Necessary in order to keep tbb away from ROOT headers.
 /// This class is thought out to be used as a singleton.
+///
+/// tbb::task_arena is an alias of tbb::interface7::task_arena, which doesn't allow
+/// to forward declare tbb::task_arena without forward declaring tbb::interface7
 ////////////////////////////////////////////////////////////////////////////////
 class RTaskArenaWrapper {
 public:
