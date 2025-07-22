@@ -360,6 +360,14 @@ struct RDescriptorsComparison {
    std::vector<RCommonField> fCommonFields;
 };
 
+struct RColumnOutInfo {
+   ROOT::DescriptorId_t fColumnId;
+   ENTupleColumnType fColumnType;
+};
+
+// { fully.qualified.fieldName.colInputId => colOutputInfo }
+using ColumnIdMap_t = std::unordered_map<std::string, RColumnOutInfo>;
+
 struct RColumnInfoGroup {
    std::vector<RColumnMergeInfo> fExtraDstColumns;
    // These are sorted by InputId
