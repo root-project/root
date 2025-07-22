@@ -112,7 +112,7 @@ private:
    std::size_t FillImpl(Entry &entry)
    {
       ROOT::RNTupleFillStatus status;
-      FillNoFlush(entry, status);
+      FillNoFlushImpl(entry, status);
       if (status.ShouldFlushCluster())
          FlushCluster();
       return status.GetLastEntrySize();
@@ -154,11 +154,6 @@ public:
    /// from the context's own model or throw an exception otherwise.
    /// \return The number of uncompressed bytes written.
    std::size_t Fill(Detail::RRawPtrWriteEntry &entry) { return FillImpl(entry); }
-
-   void FillNoFlush(Experimental::RNTupleAttrEntry &entry, ROOT::RNTupleFillStatus &status)
-   {
-      FillNoFlushImpl(entry, status);
-   }
 
    /// Flush column data, preparing for CommitCluster or to reduce memory usage. This will trigger compression of pages,
    /// but not actually write to storage.

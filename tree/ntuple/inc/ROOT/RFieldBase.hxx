@@ -66,7 +66,6 @@ void CallConnectPageSourceOnField(RFieldBase &, ROOT::Internal::RPageSource &);
 ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
 CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName, const ROOT::RCreateFieldOptions &options,
                     const ROOT::RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
-std::vector<std::unique_ptr<ROOT::RFieldBase>> DetachSubfields(RFieldBase &field);
 
 } // namespace Internal
 
@@ -98,7 +97,7 @@ class RFieldBase {
    Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName,
                                  const ROOT::RCreateFieldOptions &options, const ROOT::RNTupleDescriptor *desc,
                                  ROOT::DescriptorId_t fieldId);
-   friend std::vector<std::unique_ptr<ROOT::RFieldBase>> Internal::DetachSubfields(RFieldBase &field);
+   friend class ROOT::Experimental::RNTupleAttrSetReader;
 
    using ReadCallback_t = std::function<void(void *)>;
 
