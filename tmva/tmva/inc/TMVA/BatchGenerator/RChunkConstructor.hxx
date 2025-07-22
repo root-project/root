@@ -28,7 +28,33 @@ namespace TMVA {
 namespace Experimental {
 namespace Internal {
 
+// clang-format off
+/**
+\class ROOT::TMVA::Experimental::Internal::RChunkConstructor
+\ingroup tmva
+\brief The logic for constructing chunks from a dataset.
+
+This struct handles the logic for splitting a dataset into smaller subsets 
+known as chunks, which are constructed from blocks.
+ 
+A chunk is the largest portion of the dataset loaded into memory at once, 
+and each chunk is further divided into batches for machine learning training.
+ 
+The dataset is split into disjoint chunks based on a user-defined chunk size.
+There are two types of chunks:
+ - Full chunks: contain exactly the number of entries specified by the chunk size.
+ - Leftover chunk: contains any remaining entries that don't make up a full chunk.
+ 
+Each chunk is constructed from blocks based on a user-defined block size.
+There are two types of blocks:
+ - Full blocks: contain exactly the number of entries specified by the block size.
+ - Leftover block: contains any remaining entries that don't make up a full block.
+
+The blocks are defined by their start and end entries, which correspond to positions within the dataset’s total number of entries.
+*/
+
 struct RChunkConstructor {
+   // clang-format on
    std::size_t fNumEntries;
    std::size_t fChunkSize;
    std::size_t fBlockSize;
@@ -75,6 +101,7 @@ struct RChunkConstructor {
    // total number of blocks
    std::size_t NumberOfBlocks;
 
+   // pair of start and end entries in the different block types
    std::vector<std::pair<Long_t, Long_t>> BlockIntervals = {};
 
    std::vector<std::pair<Long_t, Long_t>> FullBlockIntervalsInFullChunks = {};
@@ -135,6 +162,8 @@ struct RChunkConstructor {
       NumberOfBlocks = std::accumulate(NumberOfDifferentBlocks.begin(), NumberOfDifferentBlocks.end(), 0);
    };
 
+   //////////////////////////////////////////////////////////////////////////
+   /// \brief Group the blocks based on the block type (full or leftover) based on the size of the block.
    void DistributeBlockIntervals()
    {
 
@@ -155,6 +184,8 @@ struct RChunkConstructor {
       }
    }
 
+   //////////////////////////////////////////////////////////////////////////
+   /// \brief Creates chunks from the dataset consisting of blocks with the begin and end entry. 
    void CreateChunksIntervals()
    {
 
@@ -192,6 +223,8 @@ struct RChunkConstructor {
       }
    }
 
+   //////////////////////////////////////////////////////////////////////////
+   /// \brief Fills a vector with the size of every chunk from the dataset 
    void SizeOfChunks()
    {
 

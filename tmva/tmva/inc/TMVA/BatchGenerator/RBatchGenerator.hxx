@@ -33,11 +33,20 @@ namespace TMVA {
 namespace Experimental {
 namespace Internal {
 
+// clang-format off
+/**
+\class ROOT::TMVA::Experimental::Internal::RBatchGenerator
+\ingroup tmva
+\brief 
+
+In this class, the processes of loading chunks (see RChunkLoader) and creating batches from those chunks (see RBatchLoader) are combined, allowing batches from the training and validation sets to be loaded directly from a dataset in an RDataFrame.
+*/
+
 template <typename... Args>
 class RBatchGenerator {
 private:
    std::vector<std::string> fCols;
-
+   // clang-format on
    std::size_t fChunkSize;
    std::size_t fMaxChunks;
    std::size_t fBatchSize;
@@ -128,7 +137,8 @@ public:
 
       fSumVecSizes = std::accumulate(vecSizes.begin(), vecSizes.end(), 0);
       fNumChunkCols = fNumColumns + fSumVecSizes - vecSizes.size();
-      // add the last element in entries to not go out range when filling chunks
+      
+      // add the last element in entries to not go out of range when filling chunks
       fEntries->push_back((*fEntries)[fNumEntries - 1] + 1);
 
       fChunkLoader =
@@ -136,7 +146,7 @@ public:
                                                  fCols, vecSizes, vecPadding, fShuffle, fSetSeed);
       fBatchLoader = std::make_unique<RBatchLoader>(fChunkSize, fBatchSize, fNumChunkCols);
 
-      // split the dataset into training and validation
+      // split the dataset into training and validation sets
       fChunkLoader->SplitDataset();
 
       fNumTrainingEntries = fChunkLoader->GetNumTrainingEntries();
@@ -214,6 +224,7 @@ public:
 
    void DeActivateValidationEpoch() { fValidationEpochActive = false; }
 
+   /// \brief Create training batches by first loading a chunk (see RChunkLoader) and split it into batches (see RBatchLoader)
    void CreateTrainBatches()
    {
 
@@ -229,6 +240,7 @@ public:
       fTrainingChunkNum++;
    }
 
+   /// \brief Creates validation batches by first loading a chunk (see RChunkLoader), and then split it into batches (see RBatchLoader)   
    void CreateValidationBatches()
    {
 
@@ -244,10 +256,12 @@ public:
       fValidationChunkNum++;
    }
 
+   /// \brief Loads a training batch from the queue
    TMVA::Experimental::RTensor<float> GetTrainBatch()
    {
       auto batchQueue = fBatchLoader->GetNumTrainingBatchQueue();
 
+      // load the next chunk if the queue is empty
       if (batchQueue < 1 && fTrainingChunkNum < fNumTrainingChunks) {
          fChunkLoader->LoadTrainingChunk(fTrainChunkTensor, fTrainingChunkNum);
          std::size_t lastTrainingBatch = fNumTrainingChunks - fTrainingChunkNum;
@@ -264,10 +278,12 @@ public:
       return fBatchLoader->GetTrainBatch();
    }
 
+   /// \brief Loads a validation batch from the queue   
    TMVA::Experimental::RTensor<float> GetValidationBatch()
    {
       auto batchQueue = fBatchLoader->GetNumValidationBatchQueue();
 
+      // load the next chunk if the queue is empty      
       if (batchQueue < 1 && fValidationChunkNum < fNumValidationChunks) {
          fChunkLoader->LoadValidationChunk(fValidationChunkTensor, fValidationChunkNum);
          std::size_t lastValidationBatch = fNumValidationChunks - fValidationChunkNum;
