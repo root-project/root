@@ -25,7 +25,6 @@
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleTypes.hxx>
-#include <ROOT/RNTupleAttrEntry.hxx>
 
 #include <cstddef>
 #include <cstdint>
@@ -37,7 +36,6 @@ namespace Experimental {
 
 class RNTupleAttrSetWriter;
 class RNTupleAttrSetWriterHandle;
-struct RNTupleAttrSetDescriptor;
 
 // clang-format off
 /**

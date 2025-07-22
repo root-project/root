@@ -132,6 +132,8 @@ class RNTupleAttrSetReader final {
    // entryRange.first.Start().
    std::vector<std::pair<RNTupleAttrRange, NTupleSize_t>> fEntryRanges;
    std::unique_ptr<RNTupleReader> fReader;
+   // The reconstructed user model
+   std::unique_ptr<ROOT::RNTupleModel> fUserModel;
 
    static bool EntryRangesAreSorted(const decltype(fEntryRanges) &ranges);
 
@@ -150,9 +152,11 @@ public:
    ~RNTupleAttrSetReader() = default;
 
    const ROOT::RNTupleDescriptor &GetDescriptor() const;
+   const ROOT::RNTupleModel &GetModel() const { return *fUserModel; }
 
-   RNTupleAttrEntry CreateAttrEntry();
-   void LoadAttrEntry(NTupleSize_t index, RNTupleAttrEntry &entry);
+   std::unique_ptr<REntry> CreateEntry() { return fUserModel->CreateEntry(); }
+   RNTupleAttrRange LoadAttrEntry(NTupleSize_t index);
+   RNTupleAttrRange LoadAttrEntry(NTupleSize_t index, REntry &entry);
 
    /// Returns all the attributes whose range fully contains `[startEntry, endEntry)`
    RNTupleAttrEntryIterable GetAttributesContainingRange(NTupleSize_t startEntry, NTupleSize_t endEntry);

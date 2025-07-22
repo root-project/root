@@ -64,8 +64,7 @@ class REntry {
    friend class Experimental::RNTupleSingleProcessor;
    friend class Experimental::RNTupleChainProcessor;
    friend class Experimental::RNTupleJoinProcessor;
-   friend class Experimental::RNTupleAttrSetWriter;
-   friend class Experimental::RNTupleAttrEntry; // TODO remove me
+   friend class Experimental::RNTupleAttrSetReader;
    friend struct Experimental::Internal::RNTupleAttrEntryPair;
 
 private:
