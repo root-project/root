@@ -172,3 +172,4 @@ This improves compile times and reduces code inter-dependency; see https://githu
 ## Versions of built-in packages
 
 * The version of openssl has been updated to 3.5.0
+* CFITSIO has been updated to 4.6.3
