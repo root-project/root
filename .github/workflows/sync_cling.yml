@@ -2,6 +2,8 @@ name: Sync Cling repo
 
 on:
   push:
+    branches:
+      - 'master'
     paths:
       - 'interpreter/cling/**'
       - 'core/textinput/src/textinput/**'
