@@ -49,6 +49,8 @@ namespace Detail {
 class RRawPtrWriteEntry;
 } // namespace Detail
 
+class RNTupleAttrSetReader;
+
 } // namespace Experimental
 
 namespace Internal {

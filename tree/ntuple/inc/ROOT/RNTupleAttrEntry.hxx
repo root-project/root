@@ -25,7 +25,6 @@ namespace ROOT::Experimental {
 
 class RNTupleAttrSetWriter;
 class RNTupleAttrSetReader;
-class RNTupleFillContext;
 
 namespace Internal::RNTupleAttributes {
 
@@ -118,6 +117,7 @@ public:
 };
 
 namespace Internal {
+
 struct RNTupleAttrEntryPair {
    REntry &fMetaEntry;
    REntry &fScopedEntry;
@@ -126,76 +126,8 @@ struct RNTupleAttrEntryPair {
    std::size_t Append();
    ROOT::DescriptorId_t GetModelId() const { return fMetaEntry.GetModelId(); }
 };
+
 } // namespace Internal
-
-class RNTupleAttrEntry final {
-   friend class ROOT::Experimental::RNTupleAttrSetWriter;
-   friend class ROOT::Experimental::RNTupleAttrSetReader;
-   friend class ROOT::Experimental::RNTupleFillContext;
-
-   /// Entry containing the Attribute-specific fields (such as the entry range)
-   std::unique_ptr<REntry> fMetaEntry;
-   /* Entry containing to user-defined fields. It is "scoped" because the Attribute Model is organized like this:
-    *
-    *                      FieldZero
-    *                          |
-    *                _________/ \_________
-    *               /        |            \
-    *      _entryStart   _entryLen    RecordField
-    *                                    / | \
-    *                            (user defined fields)
-    *
-    *  and the ScopedEntry is scoped under RecordField, as if it were its top-level field.
-    */
-   std::unique_ptr<REntry> fScopedEntry;
-   RNTupleAttrRange fRange;
-
-   static std::unique_ptr<REntry> CreateScopedEntry(ROOT::RNTupleModel &model);
-   static std::pair<std::unique_ptr<REntry>, std::unique_ptr<REntry>> CreateInternalEntries(ROOT::RNTupleModel &model);
-
-   /// Creates a pending AttrEntry whose length is not determined yet.
-   /// `metaEntry` is the entry containing the range data, `scopedEntry` contains the user-defined values.
-   RNTupleAttrEntry(std::unique_ptr<REntry> metaEntry, std::unique_ptr<REntry> scopedEntry, ROOT::NTupleSize_t start)
-      : fMetaEntry(std::move(metaEntry)),
-        fScopedEntry(std::move(scopedEntry)),
-        fRange(RNTupleAttrRange::FromStartLength(start, 0))
-   {
-   }
-
-   /// Creates an AttrEntry with the given range.
-   /// `metaEntry` is the entry containing the range data, `scopedEntry` contains the user-defined values.
-   RNTupleAttrEntry(std::unique_ptr<REntry> entry, std::unique_ptr<REntry> scopedEntry, RNTupleAttrRange range)
-      : fMetaEntry(std::move(entry)), fScopedEntry(std::move(scopedEntry)), fRange(range)
-   {
-   }
-
-   std::size_t Append();
-   // Required for RNTupleFillContext::FillNoFlushImpl()
-   std::uint64_t GetModelId() const
-   {
-      R__ASSERT(fScopedEntry);
-      return fScopedEntry->GetModelId();
-   }
-
-public:
-   RNTupleAttrEntry(RNTupleAttrEntry &&) = default;
-   RNTupleAttrEntry &operator=(RNTupleAttrEntry &&) = default;
-
-   REntry *operator->()
-   {
-      R__ASSERT(fScopedEntry);
-      return fScopedEntry.get();
-   }
-   const REntry *operator->() const
-   {
-      R__ASSERT(fScopedEntry);
-      return fScopedEntry.get();
-   }
-
-   operator bool() const { return fScopedEntry && fMetaEntry; }
-
-   RNTupleAttrRange GetRange() const { return fRange; }
-};
 
 } // namespace ROOT::Experimental
 #endif

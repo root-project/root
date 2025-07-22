@@ -133,6 +133,14 @@ void ROOT::Experimental::RNTupleAttrSetWriter::Commit()
 ROOT::Experimental::RNTupleAttrSetReader::RNTupleAttrSetReader(std::unique_ptr<RNTupleReader> reader)
    : fReader(std::move(reader))
 {
+   // Initialize user model
+   fUserModel = RNTupleModel::Create();
+   const auto *userFieldRoot = fReader->GetModel().GetConstFieldZero().GetConstSubfields()[2]; // XXX: hardcoded
+   for (const auto *field : userFieldRoot->GetConstSubfields()) {
+      fUserModel->AddField(field->Clone(field->GetFieldName()));
+   }
+   fUserModel->Freeze();
+
    // Collect all entry ranges
    auto entryRangeStartView = fReader->GetView<ROOT::NTupleSize_t>(kRangeStartName);
    auto entryRangeLenView = fReader->GetView<ROOT::NTupleSize_t>(kRangeLenName);
@@ -255,21 +263,38 @@ ROOT::Experimental::RNTupleAttrEntryIterable ROOT::Experimental::RNTupleAttrSetR
    return RNTupleAttrEntryIterable{*this};
 }
 
-ROOT::Experimental::RNTupleAttrEntry ROOT::Experimental::RNTupleAttrSetReader::CreateAttrEntry()
+ROOT::Experimental::RNTupleAttrRange
+ROOT::Experimental::RNTupleAttrSetReader::LoadAttrEntry(ROOT::NTupleSize_t index, REntry &entry)
 {
-   auto &model = const_cast<RNTupleModel &>(fReader->GetModel());
-   auto [metaEntry, scopedEntry] = RNTupleAttrEntry::CreateInternalEntries(model);
-   auto attrEntry = RNTupleAttrEntry(std::move(metaEntry), std::move(scopedEntry), RNTupleAttrRange{});
-   return attrEntry;
+   auto &metaModel = const_cast<ROOT::RNTupleModel &>(fReader->GetModel());
+   auto &metaEntry = metaModel.GetDefaultEntry();
+
+   if (R__unlikely(entry.GetModelId() != fUserModel->GetModelId()))
+      throw RException(R__FAIL("mismatch between entry and model"));
+
+   // Load the meta fields
+   metaEntry.fValues[0].Read(index); // XXX: hardcoded
+   metaEntry.fValues[1].Read(index); // XXX: hardcoded
+
+   // Load the user fields into `entry`
+   auto *userRootField = ROOT::Internal::GetFieldZeroOfModel(metaModel).GetMutableSubfields()[2]; // XXX: hardcoded
+   const auto userFields = userRootField->GetMutableSubfields();
+   assert(entry.fValues.size() == userFields.size());
+   for (std::size_t i = 0; i < userFields.size(); ++i) {
+      auto *field = userFields[i];
+      field->Read(index, entry.fValues[i].GetPtr<void>().get());
+   }
+
+   auto pStart = metaEntry.GetPtr<NTupleSize_t>(kRangeStartName);
+   auto pLen = metaEntry.GetPtr<NTupleSize_t>(kRangeLenName);
+
+   return RNTupleAttrRange::FromStartLength(*pStart, *pLen);
 }
 
-void ROOT::Experimental::RNTupleAttrSetReader::LoadAttrEntry(ROOT::NTupleSize_t index, RNTupleAttrEntry &entry)
+ROOT::Experimental::RNTupleAttrRange ROOT::Experimental::RNTupleAttrSetReader::LoadAttrEntry(ROOT::NTupleSize_t index)
 {
-   auto pStart = entry.fMetaEntry->GetPtr<NTupleSize_t>(kRangeStartName);
-   auto pLen = entry.fMetaEntry->GetPtr<NTupleSize_t>(kRangeLenName);
-   fReader->LoadEntry(index, *entry.fMetaEntry);
-   fReader->LoadEntry(index, *entry.fScopedEntry);
-   entry.fRange = RNTupleAttrRange::FromStartLength(*pStart, *pLen);
+   auto &entry = fUserModel->GetDefaultEntry();
+   return LoadAttrEntry(index, entry);
 }
 
 bool ROOT::Experimental::RNTupleAttrEntryIterable::RIterator::FullyContained(RNTupleAttrRange range) const

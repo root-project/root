@@ -804,13 +804,12 @@ TEST(RNTupleMerger, MergeThroughTFileMergerIncrementalWithAttributes)
 
       {
          auto attrSet1 = reader->OpenAttributeSet("AttrSet1");
-         auto attrEntry1 = attrSet1->CreateAttrEntry();
-         auto pInt1 = attrEntry1->GetPtr<int>("int");
+         auto pInt1 = attrSet1->GetModel().GetDefaultEntry().GetPtr<int>("int");
          EXPECT_EQ(attrSet1->GetNAttrEntries(), 2);
          for (auto idx : attrSet1->GetAttributes()) {
-            attrSet1->LoadAttrEntry(idx, attrEntry1);
-            EXPECT_EQ(attrEntry1.GetRange().First(), 10 * idx);
-            EXPECT_EQ(attrEntry1.GetRange().Last(), 10 * idx + 9);
+            const auto range = attrSet1->LoadAttrEntry(idx);
+            EXPECT_EQ(range.First(), 10 * idx);
+            EXPECT_EQ(range.Last(), 10 * idx + 9);
             // NOTE: since the output file is the base for the merging, for idx=0 we have its values and for idx=1
             // we have the values of the input file.
             EXPECT_EQ(*pInt1, idx < 1 ? 4 : 1);
@@ -818,28 +817,26 @@ TEST(RNTupleMerger, MergeThroughTFileMergerIncrementalWithAttributes)
       }
       {
          auto attrSet2 = reader->OpenAttributeSet("AttrSet2");
-         auto attrEntry2 = attrSet2->CreateAttrEntry();
-         auto pInt2 = attrEntry2->GetPtr<int>("int");
-         auto pLong2 = attrEntry2->GetPtr<long>("long");
+         auto pInt2 = attrSet2->GetModel().GetDefaultEntry().GetPtr<int>("int");
+         auto pLong2 = attrSet2->GetModel().GetDefaultEntry().GetPtr<long>("long");
          EXPECT_EQ(attrSet2->GetNAttrEntries(), 1);
          for (auto idx : attrSet2->GetAttributes()) {
-            attrSet2->LoadAttrEntry(idx, attrEntry2);
-            EXPECT_EQ(attrEntry2.GetRange().First(), 10);
-            EXPECT_EQ(attrEntry2.GetRange().Last(), 19);
+            const auto range = attrSet2->LoadAttrEntry(idx);
+            EXPECT_EQ(range.First(), 10);
+            EXPECT_EQ(range.Last(), 19);
             EXPECT_EQ(*pInt2, 2);
             EXPECT_EQ(*pLong2, 3);
          }
       }
       {
          auto attrSet3 = reader->OpenAttributeSet("AttrSet3");
-         auto attrEntry3 = attrSet3->CreateAttrEntry();
-         auto pInt3 = attrEntry3->GetPtr<int>("int");
-         auto pStr3 = attrEntry3->GetPtr<std::string>("string");
+         auto pInt3 = attrSet3->GetModel().GetDefaultEntry().GetPtr<int>("int");
+         auto pStr3 = attrSet3->GetModel().GetDefaultEntry().GetPtr<std::string>("string");
          EXPECT_EQ(attrSet3->GetNAttrEntries(), 1);
          for (auto idx : attrSet3->GetAttributes()) {
-            attrSet3->LoadAttrEntry(idx, attrEntry3);
-            EXPECT_EQ(attrEntry3.GetRange().First(), 0);
-            EXPECT_EQ(attrEntry3.GetRange().Last(), 9);
+            const auto range = attrSet3->LoadAttrEntry(idx);
+            EXPECT_EQ(range.First(), 0);
+            EXPECT_EQ(range.Last(), 9);
             EXPECT_EQ(*pInt3, 5);
             EXPECT_EQ(*pStr3, "6");
          }
@@ -3907,15 +3904,15 @@ TEST(RNTupleMerger, MergeAttributes)
       ASSERT_TRUE(bool(attrSet));
 
       auto attrs = attrSet->GetAttributes();
-      auto attrEntry = attrSet->CreateAttrEntry();
+      auto attrEntry = attrSet->CreateEntry();
       ASSERT_EQ(Count(attrs), 2);
-      attrSet->LoadAttrEntry(0, attrEntry);
-      EXPECT_EQ(attrEntry.GetRange().Start(), 0);
-      EXPECT_EQ(attrEntry.GetRange().End(), 10);
+      auto range = attrSet->LoadAttrEntry(0, *attrEntry);
+      EXPECT_EQ(range.Start(), 0);
+      EXPECT_EQ(range.End(), 10);
       EXPECT_EQ(*attrEntry->GetPtr<std::string>("string"), "This is file 0");
-      attrSet->LoadAttrEntry(1, attrEntry);
-      EXPECT_EQ(attrEntry.GetRange().Start(), 10);
-      EXPECT_EQ(attrEntry.GetRange().End(), 25);
+      range = attrSet->LoadAttrEntry(1, *attrEntry);
+      EXPECT_EQ(range.Start(), 10);
+      EXPECT_EQ(range.End(), 25);
       EXPECT_EQ(*attrEntry->GetPtr<std::string>("string"), "This is file 1");
    }
 }
@@ -4121,21 +4118,21 @@ TEST_P(RNTupleMergerAttributesEmpty, MergeEmptyAttribute)
       ASSERT_TRUE(bool(attrSet));
 
       auto attrs = attrSet->GetAttributes();
-      auto attrEntry = attrSet->CreateAttrEntry();
+      auto attrEntry = attrSet->CreateEntry();
       ASSERT_EQ(Count(attrs), 3);
       ROOT::NTupleSize_t expectedStart = 0;
       for (int fileNo = 0; fileNo < 3; ++fileNo) {
          const ROOT::NTupleSize_t expectedLen = 10 * (fileNo != emptyFileNo);
-         attrSet->LoadAttrEntry(fileNo, attrEntry);
-         EXPECT_EQ(attrEntry.GetRange().Start(), expectedStart);
-         EXPECT_EQ(attrEntry.GetRange().Length(), expectedLen);
+         const auto range = attrSet->LoadAttrEntry(fileNo, *attrEntry);
+         EXPECT_EQ(range.Start(), expectedStart);
+         EXPECT_EQ(range.Length(), expectedLen);
          expectedStart += expectedLen;
       }
-      attrSet->LoadAttrEntry(0, attrEntry);
+      attrSet->LoadAttrEntry(0, *attrEntry);
       EXPECT_EQ(*attrEntry->GetPtr<std::string>("string"), "This is file 0");
-      attrSet->LoadAttrEntry(1, attrEntry);
+      attrSet->LoadAttrEntry(1, *attrEntry);
       EXPECT_EQ(*attrEntry->GetPtr<std::string>("string"), "This is file 1");
-      attrSet->LoadAttrEntry(2, attrEntry);
+      attrSet->LoadAttrEntry(2, *attrEntry);
       EXPECT_EQ(*attrEntry->GetPtr<std::string>("string"), "This is file 2");
    }
 }

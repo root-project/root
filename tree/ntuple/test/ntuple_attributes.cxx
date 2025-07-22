@@ -59,12 +59,11 @@ TEST(RNTupleAttributes, AttributeBasics)
 
       // Fetch a specific attribute set
       auto attrSet = reader->OpenAttributeSet("MyAttrSet");
-      auto attrEntry = attrSet->CreateAttrEntry();
       for (int i = 0; i < 100; ++i) {
          int nAttrs = 0;
          for (const auto idx : attrSet->GetAttributes(i)) {
-            attrSet->LoadAttrEntry(idx, attrEntry);
-            auto pAttr = attrEntry->GetPtr<std::string>("myAttr");
+            attrSet->LoadAttrEntry(idx);
+            auto pAttr = attrSet->GetModel().GetDefaultEntry().GetPtr<std::string>("myAttr");
             EXPECT_EQ(*pAttr, "This is a custom attribute");
             ++nAttrs;
          }
@@ -109,11 +108,11 @@ TEST(RNTupleAttributes, AttributeBasicsExplicitEntry)
       }
 
       auto attrSet = reader->OpenAttributeSet("MyAttrSet");
-      auto attrEntry = attrSet->CreateAttrEntry();
+      auto attrEntry = attrSet->CreateEntry();
       for (int i = 0; i < 100; ++i) {
          int nAttrs = 0;
          for (const auto idx : attrSet->GetAttributes(i)) {
-            attrSet->LoadAttrEntry(idx, attrEntry);
+            attrSet->LoadAttrEntry(idx, *attrEntry);
             auto pAttr = attrEntry->GetPtr<std::string>("myAttr");
             EXPECT_EQ(*pAttr, "This is a custom attribute");
             ++nAttrs;
@@ -244,14 +243,14 @@ TEST(RNTupleAttributes, InterleavingRanges)
    // read back
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
    auto attrSet = reader->OpenAttributeSet("MyAttrSet");
-   auto attrEntry = attrSet->CreateAttrEntry();
+   auto attrEntry = attrSet->CreateEntry();
    for (auto i : reader->GetEntryRange()) {
       auto attrs = attrSet->GetAttributes(i);
       const auto nAttrs = Count(attrs);
       EXPECT_EQ(nAttrs, 2);
       int totVal = 0;
       for (auto idx : attrs) {
-         attrSet->LoadAttrEntry(idx, attrEntry);
+         attrSet->LoadAttrEntry(idx, *attrEntry);
          totVal += *attrEntry->GetPtr<int>("attrInt");
       }
       int expected = (i / 5) + (i / 11);
@@ -365,13 +364,13 @@ TEST(RNTupleAttributes, AssignMetadataAfterData)
       // Fetch a specific attribute set
       auto attrSet = reader->OpenAttributeSet("MyAttrSet");
       auto nAttrs = 0;
-      auto attrEntry = attrSet->CreateAttrEntry();
+      auto attrEntry = attrSet->CreateEntry();
       for (const auto idx : attrSet->GetAttributes()) {
-         attrSet->LoadAttrEntry(idx, attrEntry);
+         const auto range = attrSet->LoadAttrEntry(idx, *attrEntry);
          auto pAttrStr = attrEntry->GetPtr<std::string>("string");
          auto pAttrInt = attrEntry->GetPtr<int>("int");
-         EXPECT_EQ(attrEntry.GetRange().Start(), nAttrs * 10);
-         EXPECT_EQ(attrEntry.GetRange().End(), (1 + nAttrs) * 10);
+         EXPECT_EQ(range.Start(), nAttrs * 10);
+         EXPECT_EQ(range.End(), (1 + nAttrs) * 10);
          EXPECT_EQ(*pAttrStr, nAttrs == 0 ? "Run 1" : "Run 2");
          EXPECT_EQ(*pAttrInt, nAttrs == 0 ? 1 : 2);
          ++nAttrs;

@@ -30,20 +30,20 @@ static void Write()
    auto writer = ROOT::RNTupleWriter::Append(std::move(model), ntplName, *file);
 
    // Step 2: create the model for the Attribute Set
-   auto attrModel = ROOT::RNTupleModel::CreateBare();
-   attrModel->MakeField<std::string>("myAttr");
+   auto attrModel = ROOT::RNTupleModel::Create();
+   auto pMyAttr = attrModel->MakeField<std::string>("myAttr");
 
    // Step 3: create the Attribute Set from the main writer
    auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
 
-   // Step 4: start an attribute range. attrRange has basically the same interface as REntry.
+   // Step 4: start an attribute range.
+   // attrRange is a "pending range" which needs to be committed in order to write the attribute range to disk.
    // All entries added to the main writer will be associated to the set of attributes assigned
-   // to attrEntry until the call to CommitRange().
-   auto attrEntry = attrSet->BeginRange();
+   // to the committed entry until the call to CommitRange().
+   auto attrRange = attrSet->BeginRange();
 
    // Step 5: assign attribute values.
    // Values can be assigned anywhere between BeginRange() and CommitRange().
-   auto pMyAttr = attrEntry->GetPtr<std::string>("myAttr");
    *pMyAttr = "This is a custom attribute";
 
    // Step 6: fill the data inside the RNTuple
@@ -52,8 +52,11 @@ static void Write()
       writer->Fill();
    }
 
-   // Step 7: commit the attribute range
-   attrSet->CommitRange(std::move(attrEntry));
+   // Step 7: commit the attribute range.
+   // CommitRange() with a single argument uses the values found in attrModel's default entry;
+   // otherwise one may pass a reference to a REntry as the second argument in order to use its values instead
+   // (similarly to RNTupleWriter::Fill()).
+   attrSet->CommitRange(std::move(attrRange));
 }
 
 static void Read()
@@ -72,12 +75,14 @@ static void Read()
 
    // Read attributes belonging to a specific entry index.
    // (Just read the first 5 values to avoid spamming)
-   auto attrEntry = attrSet->CreateAttrEntry();
+   auto attrEntry = attrSet->CreateEntry();
+   auto pAttr = attrEntry->GetPtr<std::string>("myAttr");
    for (int i = 0; i < 5; ++i) {
       // Note that an entry may have multiple attributes associated, so we need to loop over them.
       for (auto idx : attrSet->GetAttributes(i)) {
-         attrSet->LoadAttrEntry(idx, attrEntry);
-         auto pAttr = attrEntry->GetPtr<std::string>("myAttr");
+         // LoadAttrEntry may be called with 1 or 2 arguments, similarly to RNTupleReader::LoadEntry().
+         // If no entry is passed, the values will be available through the attrSet's model's default entry.
+         attrSet->LoadAttrEntry(idx, *attrEntry);
          std::cout << "Entry " << i << " has attribute: myAttr = " << *pAttr << "\n";
       }
    }
@@ -85,9 +90,9 @@ static void Read()
    // Read all attributes inside the Attribute Set
    std::cout << "All attribute ranges:\n";
    for (auto idx : attrSet->GetAttributes()) {
-      attrSet->LoadAttrEntry(idx, attrEntry);
-      auto pAttr = attrEntry->GetPtr<std::string>("myAttr");
-      const auto [first, last] = attrEntry.GetRange().GetFirstLast().value();
+      // LoadAttrEntry return the range covered by the idx-th attribute entry.
+      const auto attrRange = attrSet->LoadAttrEntry(idx, *attrEntry);
+      const auto [first, last] = attrRange.GetFirstLast().value();
       std::cout << "  - myAttr has value \"" << *pAttr << "\" over range [" << first << ", " << last << "]\n";
    }
 }
