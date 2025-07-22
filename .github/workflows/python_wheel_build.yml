@@ -30,9 +30,14 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.13
+
       - name: Set up Python Virtual Environment
         run: |
-          python3 -m venv /py-venv/cibuildwheel-env
+          python -m venv /py-venv/cibuildwheel-env
           . /py-venv/cibuildwheel-env/bin/activate
           echo PATH=$PATH >> $GITHUB_ENV
 
