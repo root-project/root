@@ -23,7 +23,7 @@ jobs:
       WORKDIR: /home/runner/work/root
     container:
       image: registry.cern.ch/root-ci/ubuntu2404:buildready
-      options: '--security-opt label=disable --user="cibuildwheel" --rm'
+      options: '--security-opt label=disable --user="ubuntu" --rm'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
