@@ -1730,11 +1730,10 @@ bool RooProdPdf::isDirectGenSafe(const RooAbsArg& arg) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Look up user specified normalization set for given input PDF component
 
-RooArgSet* RooProdPdf::findPdfNSet(RooAbsPdf const& pdf) const
+RooArgSet *RooProdPdf::findPdfNSet(RooAbsPdf const &pdf) const
 {
-  Int_t idx = _pdfList.index(&pdf) ;
-  if (idx<0) return nullptr;
-  return _pdfNSetList[idx].get() ;
+   Int_t idx = _pdfList.index(&pdf);
+   return idx < 0 ? nullptr : _pdfNSetList[idx].get();
 }
 
 
@@ -1842,9 +1841,10 @@ bool sortedNamePtrsOverlap(std::vector<TNamed const*> const& ptrsA, std::vector<
 /// The pdfParams output parameter communicates to the caller which parameter
 /// are used in the pdfs that are not constraints.
 
-RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet const& constrainedParams, RooArgSet &pdfParams) const
+std::unique_ptr<RooArgSet>
+RooProdPdf::getConstraints(const RooArgSet &observables, RooArgSet const &constrainedParams, RooArgSet &pdfParams) const
 {
-  auto constraints = new RooArgSet{"constraints"};
+  auto constraints = std::make_unique<RooArgSet>("constraints");
 
   // For the optimized implementation of checking if two collections overlap by name.
   auto observablesNamePtrs = sortedNamePtrs(observables);

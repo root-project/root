@@ -26,15 +26,7 @@
 class RooArgSet ;
 class RooAbsGenContext ;
 class RooFitResult ;
-class RooExtendPdf ;
-class RooCategory ;
-class TPaveText;
-class TH1F;
-class TH2F;
-class TList ;
-class RooMinimizer ;
 class RooNumGenConfig ;
-class RooRealIntegral ;
 
 
 class RooAbsPdf : public RooAbsReal {
@@ -165,14 +157,16 @@ public:
     return RooFit::makeOwningPtr(createNLLImpl(data, *RooFit::Detail::createCmdList(&cmdArgs...)));
   }
 
-  // Constraint management
-  virtual RooArgSet* getConstraints(const RooArgSet& /*observables*/, RooArgSet const& /*constrainedParams*/, RooArgSet& /*pdfParams*/) const
+  // Constraint management. Interface to retrieve constraint terms on this pdf. Default implementation returns null.
+  virtual std::unique_ptr<RooArgSet> getConstraints(const RooArgSet & /*observables*/,
+                                                    RooArgSet const & /*constrainedParams*/,
+                                                    RooArgSet & /*pdfParams*/) const
   {
-    // Interface to retrieve constraint terms on this pdf. Default implementation returns null
-    return nullptr ;
+     return nullptr;
   }
-  RooArgSet* getAllConstraints(const RooArgSet& observables, RooArgSet& constrainedParams,
-                               bool stripDisconnected=true) const ;
+
+  std::unique_ptr<RooArgSet>
+  getAllConstraints(const RooArgSet &observables, RooArgSet &constrainedParams, bool stripDisconnected = true) const;
 
   // Project p.d.f into lower dimensional p.d.f
   virtual RooAbsPdf* createProjection(const RooArgSet& iset) ;
