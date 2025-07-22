@@ -532,9 +532,9 @@ ROOT::REnumField::REnumField(std::string_view fieldName, TEnum *enump)
    case kUShort_t: Attach(std::make_unique<RField<uint16_t>>("_0")); break;
    case kInt_t: Attach(std::make_unique<RField<int32_t>>("_0")); break;
    case kUInt_t: Attach(std::make_unique<RField<uint32_t>>("_0")); break;
-   case kLong_t:
+   case kLong_t: Attach(std::make_unique<RField<long>>("_0")); break;
    case kLong64_t: Attach(std::make_unique<RField<int64_t>>("_0")); break;
-   case kULong_t:
+   case kULong_t: Attach(std::make_unique<RField<unsigned long>>("_0")); break;
    case kULong64_t: Attach(std::make_unique<RField<uint64_t>>("_0")); break;
    default: throw RException(R__FAIL("Unsupported underlying integral type for enum type " + GetTypeName()));
    }
@@ -671,9 +671,9 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
       case EDataType::kUShort_t: itemField = std::make_unique<RField<std::uint16_t>>("_0"); break;
       case EDataType::kInt_t: itemField = std::make_unique<RField<std::int32_t>>("_0"); break;
       case EDataType::kUInt_t: itemField = std::make_unique<RField<std::uint32_t>>("_0"); break;
-      case EDataType::kLong_t:
+      case EDataType::kLong_t: itemField = std::make_unique<RField<long>>("_0"); break;
       case EDataType::kLong64_t: itemField = std::make_unique<RField<std::int64_t>>("_0"); break;
-      case EDataType::kULong_t:
+      case EDataType::kULong_t: itemField = std::make_unique<RField<unsigned long>>("_0"); break;
       case EDataType::kULong64_t: itemField = std::make_unique<RField<std::uint64_t>>("_0"); break;
       case EDataType::kFloat_t: itemField = std::make_unique<RField<float>>("_0"); break;
       case EDataType::kDouble_t: itemField = std::make_unique<RField<double>>("_0"); break;
