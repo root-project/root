@@ -34,7 +34,7 @@ static void Write()
    auto pMyAttr = attrModel->MakeField<std::string>("myAttr");
 
    // Step 3: create the Attribute Set from the main writer
-   auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
+   auto attrSet = writer->CreateAttributeSet(std::move(attrModel), "MyAttrSet");
 
    // Step 4: start an attribute range.
    // attrRange is a "pending range" which needs to be committed in order to write the attribute range to disk.

@@ -28,7 +28,7 @@ TEST(RNTupleAttributes, AttributeBasics)
       auto pMyAttr = attrModel->MakeField<std::string>("myAttr");
 
       // Step 2: create the attribute set from the writer
-      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
+      auto attrSet = writer->CreateAttributeSet(std::move(attrModel), "MyAttrSet");
 
       // Step 3: open attribute range. attrEntry has basically the same interface as REntry
       auto attrRange = attrSet->BeginRange();
@@ -87,7 +87,7 @@ TEST(RNTupleAttributes, AttributeBasicsExplicitEntry)
       attrModel->SetDescription("My description");
       attrModel->MakeField<std::string>("myAttr");
 
-      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
+      auto attrSet = writer->CreateAttributeSet(std::move(attrModel), "MyAttrSet");
       auto attrEntry = attrSet->CreateEntry();
       auto attrRange = attrSet->BeginRange();
       auto pMyAttr = attrEntry->GetPtr<std::string>("myAttr");
@@ -134,9 +134,9 @@ TEST(RNTupleAttributes, AttributeDuplicateName)
    auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file);
 
    auto attrModel = RNTupleModel::Create();
-   writer->CreateAttributeSet("MyAttrSet", attrModel->Clone());
+   writer->CreateAttributeSet(attrModel->Clone(), "MyAttrSet");
    try {
-      writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
+      writer->CreateAttributeSet(std::move(attrModel), "MyAttrSet");
       FAIL() << "Trying to create duplicate attribute sets should fail";
    } catch (const ROOT::RException &ex) {
       EXPECT_THAT(ex.what(), testing::HasSubstr("already exists"));
@@ -158,7 +158,7 @@ TEST(RNTupleAttributes, AttributeInvalidModel)
    auto projField = std::make_unique<ROOT::RField<int>>("proj");
    attrModel->AddProjectedField(std::move(projField), [](const auto &) { return "foo"; });
    try {
-      writer->CreateAttributeSet("MyAttrSet", attrModel->Clone());
+      writer->CreateAttributeSet(attrModel->Clone(), "MyAttrSet");
       FAIL() << "Trying to create an attribute model with projected fields should fail";
    } catch (const ROOT::RException &ex) {
       EXPECT_THAT(ex.what(), testing::HasSubstr("cannot contain projected fields"));
@@ -177,19 +177,19 @@ TEST(RNTupleAttributes, ReservedAttributeSetName)
 
    auto attrModel = RNTupleModel::Create();
    try {
-      writer->CreateAttributeSet("ROOT", std::move(attrModel));
+      writer->CreateAttributeSet(std::move(attrModel), "ROOT");
       FAIL() << "Trying to create an attribute set using a reserved name should fail";
    } catch (const ROOT::RException &ex) {
       EXPECT_THAT(ex.what(), testing::HasSubstr("reserved"));
    }
    try {
-      writer->CreateAttributeSet("ROOT.MyAttrSet", std::move(attrModel));
+      writer->CreateAttributeSet(std::move(attrModel), "ROOT.MyAttrSet");
       FAIL() << "Trying to create an attribute set using a reserved name should fail";
    } catch (const ROOT::RException &ex) {
       EXPECT_THAT(ex.what(), testing::HasSubstr("reserved"));
    }
    try {
-      writer->CreateAttributeSet("ROOT.", std::move(attrModel));
+      writer->CreateAttributeSet(std::move(attrModel), "ROOT.");
       FAIL() << "Trying to create an attribute set using a reserved name should fail";
    } catch (const ROOT::RException &ex) {
       EXPECT_THAT(ex.what(), testing::HasSubstr("reserved"));
@@ -213,7 +213,7 @@ TEST(RNTupleAttributes, InterleavingRanges)
 
       auto attrModel = RNTupleModel::Create();
       attrModel->MakeField<int>("attrInt");
-      auto attrSet = writer->CreateAttributeSet("MyAttrSet", attrModel->Clone());
+      auto attrSet = writer->CreateAttributeSet(attrModel->Clone(), "MyAttrSet");
 
       auto attrEntry1 = attrSet->CreateEntry();
       auto attrRange1 = attrSet->BeginRange();
@@ -272,7 +272,7 @@ TEST(RNTupleAttributes, MultipleCommitRange)
 
    auto attrModel = RNTupleModel::Create();
    attrModel->MakeField<std::string>("string");
-   auto attrSet = writer->CreateAttributeSet("MyAttrSet", attrModel->Clone());
+   auto attrSet = writer->CreateAttributeSet(attrModel->Clone(), "MyAttrSet");
 
    auto &wModel = writer->GetModel();
 
@@ -299,7 +299,7 @@ TEST(RNTupleAttributes, AccessPastCommitRange)
 
    auto attrModel = RNTupleModel::Create();
    auto pMyAttr = attrModel->MakeField<std::string>("string");
-   auto attrSet = writer->CreateAttributeSet("MyAttrSet", attrModel->Clone());
+   auto attrSet = writer->CreateAttributeSet(attrModel->Clone(), "MyAttrSet");
 
    auto &wModel = writer->GetModel();
 
@@ -331,7 +331,7 @@ TEST(RNTupleAttributes, AssignMetadataAfterData)
       auto attrModel = RNTupleModel::Create();
       auto pAttrString = attrModel->MakeField<std::string>("string");
       auto pAttrInt = attrModel->MakeField<int>("int");
-      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
+      auto attrSet = writer->CreateAttributeSet(std::move(attrModel), "MyAttrSet");
 
       // First attribute entry
       {
@@ -394,7 +394,7 @@ TEST(RNTupleAttributes, NoImplicitCommitRange)
 
       auto attrModel = RNTupleModel::Create();
       auto pMyAttr = attrModel->MakeField<std::string>("string");
-      auto attrSet = writer->CreateAttributeSet("MyAttrSet", attrModel->Clone());
+      auto attrSet = writer->CreateAttributeSet(attrModel->Clone(), "MyAttrSet");
 
       [[maybe_unused]] auto attrRange = attrSet->BeginRange();
       *pMyAttr = "Run 1";
@@ -427,11 +427,11 @@ TEST(RNTupleAttributes, AttributeMultipleSets)
 
    auto attrModel1 = RNTupleModel::Create();
    auto pInt1 = attrModel1->MakeField<int>("int");
-   auto attrSet1 = writer->CreateAttributeSet("MyAttrSet1", attrModel1->Clone());
+   auto attrSet1 = writer->CreateAttributeSet(attrModel1->Clone(), "MyAttrSet1");
 
    auto attrModel2 = RNTupleModel::Create();
    auto pString2 = attrModel2->MakeField<std::string>("string");
-   auto attrSet2 = writer->CreateAttributeSet("MyAttrSet2", attrModel2->Clone());
+   auto attrSet2 = writer->CreateAttributeSet(attrModel2->Clone(), "MyAttrSet2");
 
    auto attrRange2 = attrSet2->BeginRange();
    for (int i = 0; i < 100; ++i) {
@@ -459,11 +459,11 @@ TEST(RNTupleAttributes, AttributeInvalidCommitRange)
 
    auto attrModel1 = RNTupleModel::Create();
    auto pInt1 = attrModel1->MakeField<int>("int");
-   auto attrSet1 = writer->CreateAttributeSet("MyAttrSet1", attrModel1->Clone());
+   auto attrSet1 = writer->CreateAttributeSet(attrModel1->Clone(), "MyAttrSet1");
 
    auto attrModel2 = RNTupleModel::Create();
    auto pString2 = attrModel2->MakeField<std::string>("string");
-   auto attrSet2 = writer->CreateAttributeSet("MyAttrSet2", attrModel2->Clone());
+   auto attrSet2 = writer->CreateAttributeSet(attrModel2->Clone(), "MyAttrSet2");
 
    [[maybe_unused]] auto attrRange2 = attrSet2->BeginRange();
 
@@ -494,10 +494,10 @@ TEST(RNTupleAttributes, ReadRanges)
 
       auto attrModelRuns = RNTupleModel::Create();
       auto pRun = attrModelRuns->MakeField<std::string>("run");
-      auto attrSetRuns = writer->CreateAttributeSet("Attr_Runs", std::move(attrModelRuns));
+      auto attrSetRuns = writer->CreateAttributeSet(std::move(attrModelRuns), "Attr_Runs");
       auto attrModelEpochs = RNTupleModel::Create();
       auto pEpoch = attrModelEpochs->MakeField<std::string>("epoch");
-      auto attrSetEpochs = writer->CreateAttributeSet("Attr_Epochs", std::move(attrModelEpochs));
+      auto attrSetEpochs = writer->CreateAttributeSet(std::move(attrModelEpochs), "Attr_Epochs");
 
       {
          auto attrRangeEpoch = attrSetEpochs->BeginRange();
@@ -584,7 +584,7 @@ TEST(RNTupleAttributes, EmptyAttrRange)
 
       auto attrModel = RNTupleModel::Create();
       auto pAttr = attrModel->MakeField<std::string>("myAttr");
-      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
+      auto attrSet = writer->CreateAttributeSet(std::move(attrModel), "MyAttrSet");
 
       auto attrRange = attrSet->BeginRange();
       *pAttr = "This is range is empty.";
@@ -625,7 +625,7 @@ TEST(RNTupleAttributes, AccessAttrSetReaderAfterClosingMainReader)
 
       auto attrModel = RNTupleModel::Create();
       auto pAttr = attrModel->MakeField<std::string>("myAttr");
-      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
+      auto attrSet = writer->CreateAttributeSet(std::move(attrModel), "MyAttrSet");
 
       auto attrRange = attrSet->BeginRange();
       *pAttr = "This is an attribute";
