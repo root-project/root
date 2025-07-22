@@ -44,6 +44,7 @@ class RRawPtrWriteEntry;
 namespace Internal {
 class RProjectedFields;
 
+/// Retrieves the mutable field zero of a model even if the model is Frozen.
 ROOT::RFieldZero &GetFieldZeroOfModel(RNTupleModel &model);
 const RProjectedFields &GetProjectedFieldsOfModel(const RNTupleModel &model);
 RProjectedFields &GetProjectedFieldsOfModel(RNTupleModel &model);

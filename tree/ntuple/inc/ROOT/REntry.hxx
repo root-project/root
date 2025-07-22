@@ -41,6 +41,9 @@ class RNTupleChainProcessor;
 class RNTupleJoinProcessor;
 class RNTupleAttrSetWriter;
 class RNTupleAttrEntry;
+namespace Internal {
+struct RNTupleAttrEntryPair;
+}
 } // namespace Experimental
 
 // clang-format off
@@ -62,7 +65,8 @@ class REntry {
    friend class Experimental::RNTupleChainProcessor;
    friend class Experimental::RNTupleJoinProcessor;
    friend class Experimental::RNTupleAttrSetWriter;
-   friend class Experimental::RNTupleAttrEntry;
+   friend class Experimental::RNTupleAttrEntry; // TODO remove me
+   friend struct Experimental::Internal::RNTupleAttrEntryPair;
 
 private:
    /// The entry must be linked to a specific model, identified by a model ID

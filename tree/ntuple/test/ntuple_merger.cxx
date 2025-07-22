@@ -742,23 +742,23 @@ TEST(RNTupleMerger, MergeThroughTFileMergerIncrementalWithAttributes)
       auto fieldBar = model->MakeField<int>("bar");
       auto file = std::unique_ptr<TFile>(TFile::Open(fileGuardIn.GetPath().c_str(), "RECREATE"));
       auto writer = RNTupleWriter::Append(std::move(model), "ntuple", *file);
-      auto attrSetModel = RNTupleModel::CreateBare();
+      auto attrSetModel = RNTupleModel::Create();
       attrSetModel->MakeField<int>("int");
       auto attrSet1 = writer->CreateAttributeSet("AttrSet1", attrSetModel->Clone());
       attrSetModel->MakeField<long>("long");
       auto attrSet2 = writer->CreateAttributeSet("AttrSet2", std::move(attrSetModel));
-      auto attrEntry1 = attrSet1->BeginRange();
-      auto attrEntry2 = attrSet2->BeginRange();
-      *attrEntry1->GetPtr<int>("int") = 1;
-      *attrEntry2->GetPtr<int>("int") = 2;
-      *attrEntry2->GetPtr<long>("long") = 3;
+      auto attrRange1 = attrSet1->BeginRange();
+      auto attrRange2 = attrSet2->BeginRange();
+      *attrSet1->GetModel().GetDefaultEntry().GetPtr<int>("int") = 1;
+      *attrSet2->GetModel().GetDefaultEntry().GetPtr<int>("int") = 2;
+      *attrSet2->GetModel().GetDefaultEntry().GetPtr<long>("long") = 3;
       for (size_t i = 0; i < 10; ++i) {
          *fieldFoo = i * 123;
          *fieldBar = i * 321;
          writer->Fill();
       }
-      attrSet1->CommitRange(std::move(attrEntry1));
-      attrSet2->CommitRange(std::move(attrEntry2));
+      attrSet1->CommitRange(std::move(attrRange1));
+      attrSet2->CommitRange(std::move(attrRange2));
    }
 
    FileRaii fileGuardOut("test_ntuple_merge_out_attr.root");
@@ -768,23 +768,23 @@ TEST(RNTupleMerger, MergeThroughTFileMergerIncrementalWithAttributes)
       auto fieldFoo = model->MakeField<int>("foo");
       auto file = std::unique_ptr<TFile>(TFile::Open(fileGuardOut.GetPath().c_str(), "RECREATE"));
       auto writer = RNTupleWriter::Append(std::move(model), "ntuple", *file);
-      auto attrSetModel = RNTupleModel::CreateBare();
+      auto attrSetModel = RNTupleModel::Create();
       attrSetModel->MakeField<int>("int");
       auto attrSet1 = writer->CreateAttributeSet("AttrSet1", attrSetModel->Clone());
       attrSetModel->MakeField<std::string>("string");
       auto attrSet3 = writer->CreateAttributeSet("AttrSet3", std::move(attrSetModel));
-      auto attrEntry1 = attrSet1->BeginRange();
-      auto attrEntry3 = attrSet3->BeginRange();
-      *attrEntry1->GetPtr<int>("int") = 4;
-      *attrEntry3->GetPtr<int>("int") = 5;
-      *attrEntry3->GetPtr<std::string>("string") = "6";
+      auto attrRange1 = attrSet1->BeginRange();
+      auto attrRange3 = attrSet3->BeginRange();
+      *attrSet1->GetModel().GetDefaultEntry().GetPtr<int>("int") = 4;
+      *attrSet3->GetModel().GetDefaultEntry().GetPtr<int>("int") = 5;
+      *attrSet3->GetModel().GetDefaultEntry().GetPtr<std::string>("string") = "6";
       for (size_t i = 0; i < 10; ++i) {
          *fieldFoo = i * 567;
          *fieldBar = i * 765;
          writer->Fill();
       }
-      attrSet1->CommitRange(std::move(attrEntry1));
-      attrSet3->CommitRange(std::move(attrEntry3));
+      attrSet1->CommitRange(std::move(attrRange1));
+      attrSet3->CommitRange(std::move(attrRange3));
    }
 
    {
@@ -3840,21 +3840,20 @@ TEST(RNTupleMerger, MergeAttributes)
       auto writer = RNTupleWriter::Append(std::move(model), "ntuple", *file, wopts);
 
       auto attrModel = RNTupleModel::Create();
-      attrModel->MakeField<std::string>("string");
-
-      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
+      auto pMyAttr = attrModel->MakeField<std::string>("string");
 
       auto &wModel = writer->GetModel();
+      auto entry = wModel.CreateEntry();
 
-      auto attrEntry = attrSet->BeginRange();
-      auto pMyAttr = attrEntry->GetPtr<std::string>("string");
+      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
+      auto attrRange = attrSet->BeginRange();
+
       *pMyAttr = "This is file " + std::to_string(fileNo);
       for (int i = 0; i < 10 + 5 * fileNo; ++i) {
-         auto entry = wModel.CreateEntry();
          *entry->GetPtr<int>("int") = i;
          writer->Fill(*entry);
       }
-      attrSet->CommitRange(std::move(attrEntry));
+      attrSet->CommitRange(std::move(attrRange));
       ++fileNo;
    }
    // Third RNTuple has no Attribute Set
@@ -3931,28 +3930,24 @@ TEST(RNTupleMerger, MergeDiscardAttributes)
    int fileNo = 0;
    for (const auto *fileGuard : {&fileGuard1, &fileGuard2}) {
       auto model = RNTupleModel::Create();
-      model->MakeField<int>("int");
+      auto pInt = model->MakeField<int>("int");
       auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard->GetPath().c_str(), "RECREATE"));
       auto wopts = RNTupleWriteOptions();
       wopts.SetCompression(0);
       auto writer = RNTupleWriter::Append(std::move(model), "ntuple", *file, wopts);
 
       auto attrModel = RNTupleModel::Create();
-      attrModel->MakeField<std::string>("string");
+      auto pMyAttr = attrModel->MakeField<std::string>("string");
 
       auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
 
-      auto &wModel = writer->GetModel();
-
-      auto attrEntry = attrSet->BeginRange();
-      auto pMyAttr = attrEntry->GetPtr<std::string>("string");
+      auto attrRange = attrSet->BeginRange();
       *pMyAttr = "This is file " + std::to_string(fileNo);
       for (int i = 0; i < 10 + 5 * fileNo; ++i) {
-         auto entry = wModel.CreateEntry();
-         *entry->GetPtr<int>("int") = i;
-         writer->Fill(*entry);
+         *pInt = i;
+         writer->Fill();
       }
-      attrSet->CommitRange(std::move(attrEntry));
+      attrSet->CommitRange(std::move(attrRange));
       ++fileNo;
    }
 
@@ -4000,36 +3995,33 @@ TEST(RNTupleMerger, MergeAttributesSymmetricSchema)
    int fileNo = 0;
    for (const auto *fileGuard : {&fileGuard1, &fileGuard2}) {
       auto model = RNTupleModel::Create();
-      model->MakeField<int>("foo");
+      auto pFoo = model->MakeField<int>("foo");
       auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard->GetPath().c_str(), "RECREATE"));
       auto wopts = RNTupleWriteOptions();
       wopts.SetCompression(0);
       auto writer = RNTupleWriter::Append(std::move(model), "ntuple", *file, wopts);
 
       auto attrModel = RNTupleModel::Create();
+      std::shared_ptr<int> pAttrInt;
+      std::shared_ptr<std::string> pAttrStr;
       if (fileNo == 0) {
-         attrModel->MakeField<std::string>("string");
-         attrModel->MakeField<int>("int");
+         pAttrStr = attrModel->MakeField<std::string>("string");
+         pAttrInt = attrModel->MakeField<int>("int");
       } else {
-         attrModel->MakeField<int>("int");
-         attrModel->MakeField<std::string>("string");
+         pAttrInt = attrModel->MakeField<int>("int");
+         pAttrStr = attrModel->MakeField<std::string>("string");
       }
 
       auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
 
-      auto &wModel = writer->GetModel();
-
-      auto attrEntry = attrSet->BeginRange();
-      auto pAttrStr = attrEntry->GetPtr<std::string>("string");
-      auto pAttrInt = attrEntry->GetPtr<int>("int");
+      auto attrRange = attrSet->BeginRange();
       *pAttrStr = "This is file " + std::to_string(fileNo);
       *pAttrInt = fileNo;
       for (int i = 0; i < 10 + 5 * fileNo; ++i) {
-         auto entry = wModel.CreateEntry();
-         *entry->GetPtr<int>("foo") = i;
-         writer->Fill(*entry);
+         *pFoo = i;
+         writer->Fill();
       }
-      attrSet->CommitRange(std::move(attrEntry));
+      attrSet->CommitRange(std::move(attrRange));
       ++fileNo;
    }
 
@@ -4075,7 +4067,7 @@ TEST_P(RNTupleMergerAttributesEmpty, MergeEmptyAttribute)
       // First two RNTuples have the same Attribute Set
       for (const auto *fileGuard : {&fileGuard1, &fileGuard2, &fileGuard3}) {
          auto model = RNTupleModel::Create();
-         model->MakeField<int>("int");
+         auto pInt = model->MakeField<int>("int");
          auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard->GetPath().c_str(), "RECREATE"));
          auto wopts = RNTupleWriteOptions();
          wopts.SetCompression(0);
@@ -4085,18 +4077,15 @@ TEST_P(RNTupleMergerAttributesEmpty, MergeEmptyAttribute)
          attrModel->MakeField<std::string>("string");
 
          auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
-
-         auto &wModel = writer->GetModel();
-
-         auto attrEntry = attrSet->BeginRange();
+         auto attrEntry = attrSet->CreateEntry();
+         auto attrRange = attrSet->BeginRange();
          auto pMyAttr = attrEntry->GetPtr<std::string>("string");
          *pMyAttr = "This is file " + std::to_string(fileNo);
          for (int i = 0; i < 10 * (fileNo != emptyFileNo); ++i) {
-            auto entry = wModel.CreateEntry();
-            *entry->GetPtr<int>("int") = i;
-            writer->Fill(*entry);
+            *pInt = i;
+            writer->Fill();
          }
-         attrSet->CommitRange(std::move(attrEntry));
+         attrSet->CommitRange(std::move(attrRange), *attrEntry);
          ++fileNo;
       }
    }

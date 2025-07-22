@@ -23,6 +23,26 @@ std::size_t ROOT::Experimental::RNTupleAttrEntry::Append()
    return bytesWritten;
 }
 
+std::size_t ROOT::Experimental::Internal::RNTupleAttrEntryPair::Append()
+{
+   std::size_t bytesWritten = 0;
+   // Write the meta entry values
+   bytesWritten += fMetaEntry.fValues[0].Append(); // XXX: hardcoded
+   bytesWritten += fMetaEntry.fValues[1].Append(); // XXX: hardcoded
+
+   // Bind the user model's memory to the meta model's subfields
+   const auto &userFields =
+      ROOT::Internal::GetFieldZeroOfModel(fMetaModel).GetMutableSubfields()[2]->GetMutableSubfields(); // XXX: hardcoded
+   assert(userFields.size() == fScopedEntry.fValues.size());
+   for (std::size_t i = 0; i < fScopedEntry.fValues.size(); ++i) {
+      void *userPtr = fScopedEntry.fValues[i].GetPtr<void>().get();
+      auto value = userFields[i]->CreateValue();
+      value.BindRawPtr(userPtr);
+      bytesWritten += value.Append();
+   }
+   return bytesWritten;
+}
+
 std::unique_ptr<ROOT::REntry> ROOT::Experimental::RNTupleAttrEntry::CreateScopedEntry(ROOT::RNTupleModel &model)
 {
    auto scopedEntry = std::unique_ptr<ROOT::REntry>(new ROOT::REntry(model.GetModelId(), model.GetSchemaId()));

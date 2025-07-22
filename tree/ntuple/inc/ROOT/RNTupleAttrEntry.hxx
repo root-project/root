@@ -78,6 +78,56 @@ public:
    std::pair<ROOT::NTupleSize_t, ROOT::NTupleSize_t> GetStartLength() const { return {Start(), Length()}; }
 };
 
+/// A range used for writing. It has a well-defined start but not a length/end yet.
+/// It is artificially made non-copyable in order to clarify the semantics of Begin/CommitRange.
+/// For the same reason, it can only be created by the AttrSetWriter.
+class RNTupleAttrPendingRange final {
+   friend class ROOT::Experimental::RNTupleAttrSetWriter;
+
+   ROOT::NTupleSize_t fStart = 0;
+   ROOT::DescriptorId_t fModelId = kInvalidDescriptorId;
+
+   explicit RNTupleAttrPendingRange(ROOT::NTupleSize_t start, ROOT::DescriptorId_t modelId)
+      : fStart(start), fModelId(modelId)
+   {
+   }
+
+public:
+   RNTupleAttrPendingRange(const RNTupleAttrPendingRange &) = delete;
+   RNTupleAttrPendingRange &operator=(const RNTupleAttrPendingRange &) = delete;
+
+   // NOTE: explicitly implemented to make sure that 'other' gets invalidated upon move.
+   RNTupleAttrPendingRange(RNTupleAttrPendingRange &&other) { *this = std::move(other); }
+
+   // NOTE: explicitly implemented to make sure that 'other' gets invalidated upon move.
+   RNTupleAttrPendingRange &operator=(RNTupleAttrPendingRange &&other)
+   {
+      std::swap(fStart, other.fStart);
+      std::swap(fModelId, other.fModelId);
+      return *this;
+   }
+
+   ROOT::NTupleSize_t Start() const
+   {
+      if (fModelId == kInvalidDescriptorId)
+         throw ROOT::RException(R__FAIL("Tried to commit an already-committed attribute range."));
+      return fStart;
+   }
+
+   ROOT::DescriptorId_t GetModelId() const { return fModelId; }
+};
+
+namespace Internal {
+struct RNTupleAttrEntryPair {
+   REntry &fMetaEntry;
+   REntry &fScopedEntry;
+   ROOT::RNTupleModel &fMetaModel;
+
+   std::size_t Append();
+   ROOT::DescriptorId_t GetModelId() const { return fMetaEntry.GetModelId(); }
+};
+} // namespace Internal
+
 class RNTupleAttrEntry final {
    friend class ROOT::Experimental::RNTupleAttrSetWriter;
    friend class ROOT::Experimental::RNTupleAttrSetReader;
@@ -91,7 +141,7 @@ class RNTupleAttrEntry final {
     *                          |
     *                _________/ \_________
     *               /        |            \
-    *     __entryStart  __entryLen    RecordField
+    *      _entryStart   _entryLen    RecordField
     *                                    / | \
     *                            (user defined fields)
     *
