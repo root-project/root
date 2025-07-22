@@ -51,13 +51,16 @@ class RNTupleAttrSetWriter final {
    RNTupleFillContext fFillContext;
    /// Fill context of the main RNTuple being written (i.e. the RNTuple whose attributes we are).
    const RNTupleFillContext *fMainFillContext = nullptr;
+   /// The model that the user provided on creation. Used to create user-visible entries.
+   std::unique_ptr<RNTupleModel> fUserModel;
 
    /// Creates a RNTupleAttrSetWriter associated to the RNTupleWriter owning `mainFillContext` and writing
    /// in `dir`. `model` is the schema of the AttributeSet.
    static std::unique_ptr<RNTupleAttrSetWriter> Create(std::string_view name, std::unique_ptr<RNTupleModel> model,
                                                        const RNTupleFillContext *mainFillContext, TDirectory &dir);
 
-   RNTupleAttrSetWriter(const RNTupleFillContext *mainFillContext, RNTupleFillContext fillContext);
+   RNTupleAttrSetWriter(const RNTupleFillContext *mainFillContext, RNTupleFillContext fillContext,
+                        std::unique_ptr<RNTupleModel> userModel);
 
    /// Flushes any remaining open range and writes the Attribute RNTuple to storage.
    void Commit();
@@ -69,10 +72,15 @@ public:
    RNTupleAttrSetWriter &operator=(RNTupleAttrSetWriter &&) = default;
    ~RNTupleAttrSetWriter() = default;
 
-   const ROOT::RNTupleDescriptor &GetDescriptor() const;
+   // XXX: should this be exposed?
+   const ROOT::RNTupleDescriptor &GetDescriptor() const { return fFillContext.fSink->GetDescriptor(); }
+   const ROOT::RNTupleModel &GetModel() const { return *fUserModel; }
 
-   RNTupleAttrEntry BeginRange();
-   void CommitRange(RNTupleAttrEntry entry);
+   [[nodiscard]] RNTupleAttrPendingRange BeginRange();
+   void CommitRange(RNTupleAttrPendingRange range);
+   void CommitRange(RNTupleAttrPendingRange range, REntry &entry);
+
+   std::unique_ptr<REntry> CreateEntry() { return fUserModel->CreateEntry(); }
 };
 
 class RNTupleAttrSetWriterHandle final {
