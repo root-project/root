@@ -22,8 +22,8 @@ jobs:
     env:
       WORKDIR: /home/runner/work/root
     container:
-      image: ubuntu:latest
-      options: '--user=cibuildwheel'
+      image: registry.cern.ch/root-ci/ubuntu2404:buildready
+      options: '--security-opt label=disable --user="cibuildwheel" --rm'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,6 +32,14 @@ jobs:
 
       - name: Setup Python
         uses: actions/setup-python@v5
+        with:
+          python-version: 3.13
+
+      # - name: Set up Python Virtual Environment
+      #   run: |
+      #     python -m venv /py-venv/cibuildwheel-env
+      #     . /py-venv/cibuildwheel-env/bin/activate
+      #     echo PATH=$PATH >> $GITHUB_ENV
 
       - name: Update repositories
         run: apt-get update
@@ -41,9 +49,6 @@ jobs:
 
       - name: Install XRootD client
         run: apt-get -y install xrootd-client
-
-      - name: Install ccache
-        run: apt-get -y install ccache
 
       - name: Configure large ccache
         if: ${{ matrix.is_special }}
