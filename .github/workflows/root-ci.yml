@@ -111,6 +111,7 @@ jobs:
           - platform: mac-beta
             is_special: true
             arch: ARM64
+            overrides: ["gnuinstall=ON"]
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
@@ -405,8 +406,8 @@ jobs:
             overrides: ["runtime_cxxmodules=Off"]
           - image: alma9
             is_special: true
-            property: march_native
-            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "builtin_zlib=ON", "builtin_zstd=ON"]
+            property: "march_native, gnuinstall"
+            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "builtin_zlib=ON", "builtin_zstd=ON", "gnuinstall=ON"]
           - image: alma9
             is_special: true
             property: arm64
