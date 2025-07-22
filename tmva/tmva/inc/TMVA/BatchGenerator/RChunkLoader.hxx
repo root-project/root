@@ -30,8 +30,16 @@ namespace TMVA {
 namespace Experimental {
 namespace Internal {
 
+// clang-format off
+/**
+\class ROOT::TMVA::Experimental::Internal::RChunkLoaderFunctor
+\ingroup tmva
+\brief Loading chunks made in RChunkLoader into tensors from data from RDataFrame.
+*/
+
 template <typename... ColTypes>
 class RChunkLoaderFunctor {
+   // clang-format on   
    std::size_t fOffset{};
    std::size_t fVecSizeIdx{};
    float fVecPadding{};
@@ -43,6 +51,8 @@ class RChunkLoaderFunctor {
    int fI;
    int fNumColumns;
 
+   //////////////////////////////////////////////////////////////////////////
+   /// \brief Copy the content of a column into RTensor when the column consits of vectors 
    template <typename T, std::enable_if_t<ROOT::Internal::RDF::IsDataContainer<T>::value, int> = 0>
    void AssignToTensor(const T &vec, int i, int numColumns)
    {
@@ -60,6 +70,8 @@ class RChunkLoaderFunctor {
       fOffset += max_vec_size;
    }
 
+   //////////////////////////////////////////////////////////////////////////
+   /// \brief Copy the content of a column into RTensor when the column consits of single values 
    template <typename T, std::enable_if_t<!ROOT::Internal::RDF::IsDataContainer<T>::value, int> = 0>
    void AssignToTensor(const T &val, int i, int numColumns)
    {
@@ -82,9 +94,19 @@ public:
    }
 };
 
+// clang-format off
+/**
+\class ROOT::TMVA::Experimental::Internal::RChunkLoader
+\ingroup tmva
+\brief Building and loading the chunks from the blocks and chunks constructed in RChunkConstructor
+
+In this class the blocks are stiches together to form chunks that are loaded into memory. The blocks used to create each chunk comes from different parts of the dataset. This is achieved by shuffling the blocks before distributing them into chunks. The purpose of this process is to reduce bias during machine learning training by ensuring that the data is well mixed. The dataset is also spit into training and validation sets with the user-defined validation split fraction.
+*/
+
 template <typename... Args>
 class RChunkLoader {
 private:
+   // clang-format on   
    std::size_t fNumEntries;
    std::size_t fChunkSize;
    std::size_t fBlockSize;
@@ -143,6 +165,8 @@ public:
       fValidation = std::make_unique<RChunkConstructor>(fNumValidationEntries, fChunkSize, fBlockSize);
    }
 
+   //////////////////////////////////////////////////////////////////////////
+   /// \brief Distribute the blocks into training and validation datasets
    void SplitDataset()
    {
       std::random_device rd;
@@ -165,46 +189,59 @@ public:
          BlockSizes.insert(BlockSizes.end(), fValidation->NumberOfDifferentBlocks[i], fValidation->SizeOfBlocks[i]);
       }
 
+      // make an identity permutation map
       std::vector<Long_t> indices(BlockSizes.size());
 
       for (int i = 0; i < indices.size(); ++i) {
          indices[i] = i;
       }
 
+      // shuffle the identity permutation to create a new permutation
       if (fShuffle) {
          std::shuffle(indices.begin(), indices.end(), g);
       }
 
+      // use the permuation to shuffle the vector of block sizes  
       std::vector<Long_t> PermutedBlockSizes(BlockSizes.size());
       for (int i = 0; i < BlockSizes.size(); ++i) {
          PermutedBlockSizes[i] = BlockSizes[indices[i]];
       }
 
+      // create a vector for storing the boundaries of the blocks
       std::vector<Long_t> BlockBoundaries(BlockSizes.size());
 
+      // get the boundaries of the blocks with the partial sum of the block sizes
+      // insert 0 at the beginning for the lower boundary of the first block
       std::partial_sum(PermutedBlockSizes.begin(), PermutedBlockSizes.end(), BlockBoundaries.begin());
       BlockBoundaries.insert(BlockBoundaries.begin(), 0);
 
+      // distribute the neighbouring block boudaries into pairs to get the intevals for the blocks
       std::vector<std::pair<Long_t, Long_t>> BlockIntervals;
       for (size_t i = 0; i < BlockBoundaries.size() - 1; ++i) {
          BlockIntervals.emplace_back(BlockBoundaries[i], BlockBoundaries[i + 1]);
       }
 
+      // use the inverse of the permutation above to order the block intervals in the same order as
+      // the original vector of block sizes
       std::vector<std::pair<Long_t, Long_t>> UnpermutedBlockIntervals(BlockIntervals.size());
       for (int i = 0; i < BlockIntervals.size(); ++i) {
          UnpermutedBlockIntervals[indices[i]] = BlockIntervals[i];
       }
 
+      // distribute the block intervals between training and validation
       fTraining->BlockIntervals.insert(fTraining->BlockIntervals.begin(), UnpermutedBlockIntervals.begin(),
                                        UnpermutedBlockIntervals.begin() + fTraining->NumberOfBlocks);
       fValidation->BlockIntervals.insert(fValidation->BlockIntervals.begin(),
                                          UnpermutedBlockIntervals.begin() + fTraining->NumberOfBlocks,
                                          UnpermutedBlockIntervals.end());
 
+      // distribute the different block intervals types for training and validation
       fTraining->DistributeBlockIntervals();
       fValidation->DistributeBlockIntervals();
    }
 
+   //////////////////////////////////////////////////////////////////////////
+   /// \brief Create training chunks consisiting of block intervals of different types 
    void CreateTrainingChunksIntervals()
    {
 
@@ -217,6 +254,7 @@ public:
          g.seed(fSetSeed);
       }
 
+      // shuffle the block intervals within each type of block
       if (fShuffle) {
          std::shuffle(fTraining->FullBlockIntervalsInFullChunks.begin(),
                       fTraining->FullBlockIntervalsInFullChunks.end(), g);
@@ -228,9 +266,11 @@ public:
                       fTraining->LeftoverBlockIntervalsInLeftoverChunks.end(), g);
       }
 
+      // reset the chunk intervals and sizes before each epoch
       fTraining->ChunksIntervals = {};
       fTraining->ChunksSizes = {};
 
+      // create the chunks each consisiting of block intervals
       fTraining->CreateChunksIntervals();
 
       if (fShuffle) {
@@ -240,6 +280,8 @@ public:
       fTraining->SizeOfChunks();
    }
 
+   //////////////////////////////////////////////////////////////////////////
+   /// \brief Create training chunks consisiting of block intervals of different types 
    void CreateValidationChunksIntervals()
    {
       std::random_device rd;
@@ -274,6 +316,10 @@ public:
       fValidation->SizeOfChunks();
    }
 
+   //////////////////////////////////////////////////////////////////////////
+   /// \brief Load the nth chunk from the training dataset into a tensor
+   /// \param[in] TrainChunkTensor RTensor for the training chunk
+   /// \param[in] chunk Index of the chunk in the dataset
    void LoadTrainingChunk(TMVA::Experimental::RTensor<float> &TrainChunkTensor, std::size_t chunk)
    {
 
@@ -292,17 +338,21 @@ public:
          TMVA::Experimental::RTensor<float> Tensor({chunkSize, fNumChunkCols});
          TrainChunkTensor = TrainChunkTensor.Resize({{chunkSize, fNumChunkCols}});
 
+         // make an identity permutation map        
          std::vector<int> indices(chunkSize);
          std::iota(indices.begin(), indices.end(), 0);
 
+         // shuffle the identity permutation to create a new permutation         
          if (fShuffle) {
             std::shuffle(indices.begin(), indices.end(), g);
          }
 
+         // fill a chunk by looping over the blocks in a chunk (see RChunkConstructor)
          std::size_t chunkEntry = 0;
          std::vector<std::pair<Long_t, Long_t>> BlocksInChunk = fTraining->ChunksIntervals[chunk];
          for (std::size_t i = 0; i < BlocksInChunk.size(); i++) {
 
+            // Use the block start and end entry to load into the chunk if the dataframe is not filtered
             if (fNotFiltered) {
                RChunkLoaderFunctor<Args...> func(Tensor, fNumChunkCols, fVecSizes, fVecPadding, chunkEntry);
                ROOT::Internal::RDF::ChangeBeginAndEndEntries(f_rdf, BlocksInChunk[i].first, BlocksInChunk[i].second);
@@ -311,6 +361,7 @@ public:
                chunkEntry += BlocksInChunk[i].second - BlocksInChunk[i].first;
             }
 
+            // use the entry column of the dataframe as a map to load the entries that passed the filters
             else {
                std::size_t blockSize = BlocksInChunk[i].second - BlocksInChunk[i].first;
                for (std::size_t j = 0; j < blockSize; j++) {
@@ -323,7 +374,7 @@ public:
             }
          }
 
-         // shuffle data in RTensor
+         // shuffle data in RTensor with the permutation map defined above
          for (std::size_t i = 0; i < chunkSize; i++) {
             std::copy(Tensor.GetData() + indices[i] * fNumChunkCols,
                       Tensor.GetData() + (indices[i] + 1) * fNumChunkCols,
@@ -332,6 +383,10 @@ public:
       }
    }
 
+   //////////////////////////////////////////////////////////////////////////
+   /// \brief Load the nth chunk from the validation dataset into a tensor
+   /// \param[in] ValidationChunkTensor RTensor for the validation chunk
+   /// \param[in] chunk Index of the chunk in the dataset
    void LoadValidationChunk(TMVA::Experimental::RTensor<float> &ValidationChunkTensor, std::size_t chunk)
    {
 
@@ -350,9 +405,11 @@ public:
          TMVA::Experimental::RTensor<float> Tensor({chunkSize, fNumChunkCols});
          ValidationChunkTensor = ValidationChunkTensor.Resize({{chunkSize, fNumChunkCols}});
 
+         // make an identity permutation map        
          std::vector<int> indices(chunkSize);
          std::iota(indices.begin(), indices.end(), 0);
 
+         // shuffle the identity permutation to create a new permutation
          if (fShuffle) {
             std::shuffle(indices.begin(), indices.end(), g);
          }
@@ -361,6 +418,7 @@ public:
          std::vector<std::pair<Long_t, Long_t>> BlocksInChunk = fValidation->ChunksIntervals[chunk];
          for (std::size_t i = 0; i < BlocksInChunk.size(); i++) {
 
+            // use the block start and end entry to load into the chunk if the dataframe is not filtered
             if (fNotFiltered) {
                RChunkLoaderFunctor<Args...> func(Tensor, fNumChunkCols, fVecSizes, fVecPadding, chunkEntry);
                ROOT::Internal::RDF::ChangeBeginAndEndEntries(f_rdf, BlocksInChunk[i].first, BlocksInChunk[i].second);
@@ -368,6 +426,7 @@ public:
                chunkEntry += BlocksInChunk[i].second - BlocksInChunk[i].first;
             }
 
+            // use the entry column of the dataframe as a map to load the entries that passed the filters
             else {
                std::size_t blockSize = BlocksInChunk[i].second - BlocksInChunk[i].first;
                for (std::size_t j = 0; j < blockSize; j++) {
@@ -381,7 +440,7 @@ public:
             }
          }
 
-         // shuffle data in RTensor
+         // shuffle data in RTensor with the permutation map defined above         
          for (std::size_t i = 0; i < chunkSize; i++) {
             std::copy(Tensor.GetData() + indices[i] * fNumChunkCols,
                       Tensor.GetData() + (indices[i] + 1) * fNumChunkCols,
