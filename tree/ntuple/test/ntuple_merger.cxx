@@ -744,9 +744,9 @@ TEST(RNTupleMerger, MergeThroughTFileMergerIncrementalWithAttributes)
       auto writer = RNTupleWriter::Append(std::move(model), "ntuple", *file);
       auto attrSetModel = RNTupleModel::Create();
       attrSetModel->MakeField<int>("int");
-      auto attrSet1 = writer->CreateAttributeSet("AttrSet1", attrSetModel->Clone());
+      auto attrSet1 = writer->CreateAttributeSet(attrSetModel->Clone(), "AttrSet1");
       attrSetModel->MakeField<long>("long");
-      auto attrSet2 = writer->CreateAttributeSet("AttrSet2", std::move(attrSetModel));
+      auto attrSet2 = writer->CreateAttributeSet(std::move(attrSetModel), "AttrSet2");
       auto attrRange1 = attrSet1->BeginRange();
       auto attrRange2 = attrSet2->BeginRange();
       *attrSet1->GetModel().GetDefaultEntry().GetPtr<int>("int") = 1;
@@ -770,9 +770,9 @@ TEST(RNTupleMerger, MergeThroughTFileMergerIncrementalWithAttributes)
       auto writer = RNTupleWriter::Append(std::move(model), "ntuple", *file);
       auto attrSetModel = RNTupleModel::Create();
       attrSetModel->MakeField<int>("int");
-      auto attrSet1 = writer->CreateAttributeSet("AttrSet1", attrSetModel->Clone());
+      auto attrSet1 = writer->CreateAttributeSet(attrSetModel->Clone(), "AttrSet1");
       attrSetModel->MakeField<std::string>("string");
-      auto attrSet3 = writer->CreateAttributeSet("AttrSet3", std::move(attrSetModel));
+      auto attrSet3 = writer->CreateAttributeSet(std::move(attrSetModel), "AttrSet3");
       auto attrRange1 = attrSet1->BeginRange();
       auto attrRange3 = attrSet3->BeginRange();
       *attrSet1->GetModel().GetDefaultEntry().GetPtr<int>("int") = 4;
@@ -3842,7 +3842,7 @@ TEST(RNTupleMerger, MergeAttributes)
       auto &wModel = writer->GetModel();
       auto entry = wModel.CreateEntry();
 
-      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
+      auto attrSet = writer->CreateAttributeSet(std::move(attrModel), "MyAttrSet");
       auto attrRange = attrSet->BeginRange();
 
       *pMyAttr = "This is file " + std::to_string(fileNo);
@@ -3936,7 +3936,7 @@ TEST(RNTupleMerger, MergeDiscardAttributes)
       auto attrModel = RNTupleModel::Create();
       auto pMyAttr = attrModel->MakeField<std::string>("string");
 
-      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
+      auto attrSet = writer->CreateAttributeSet(std::move(attrModel), "MyAttrSet");
 
       auto attrRange = attrSet->BeginRange();
       *pMyAttr = "This is file " + std::to_string(fileNo);
@@ -4009,7 +4009,7 @@ TEST(RNTupleMerger, MergeAttributesSymmetricSchema)
          pAttrStr = attrModel->MakeField<std::string>("string");
       }
 
-      auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
+      auto attrSet = writer->CreateAttributeSet(std::move(attrModel), "MyAttrSet");
 
       auto attrRange = attrSet->BeginRange();
       *pAttrStr = "This is file " + std::to_string(fileNo);
@@ -4073,7 +4073,7 @@ TEST_P(RNTupleMergerAttributesEmpty, MergeEmptyAttribute)
          auto attrModel = RNTupleModel::Create();
          attrModel->MakeField<std::string>("string");
 
-         auto attrSet = writer->CreateAttributeSet("MyAttrSet", std::move(attrModel));
+         auto attrSet = writer->CreateAttributeSet(std::move(attrModel), "MyAttrSet");
          auto attrEntry = attrSet->CreateEntry();
          auto attrRange = attrSet->BeginRange();
          auto pMyAttr = attrEntry->GetPtr<std::string>("string");

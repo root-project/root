@@ -148,7 +148,7 @@ ROOT::Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model,
 }
 
 ROOT::Experimental::RNTupleAttrSetWriterHandle
-ROOT::RNTupleWriter::CreateAttributeSet(std::string_view name, std::unique_ptr<ROOT::RNTupleModel> model)
+ROOT::RNTupleWriter::CreateAttributeSet(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view name)
 {
    if (ROOT::Experimental::IsReservedRNTupleAttrSetName(name)) {
       throw ROOT::RException(
