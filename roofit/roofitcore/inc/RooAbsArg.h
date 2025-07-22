@@ -667,9 +667,6 @@ private:
 
   mutable bool _localNoInhibitDirty = false; //! Prevent 'AlwaysDirty' mode for this node
 
-/*   RooArgSet _leafNodeCache ; //! Cached leaf nodes */
-/*   RooArgSet _branchNodeCache //! Cached branch nodes     */
-
   mutable RooWorkspace *_myws = nullptr; //! In which workspace do I live, if any
 
   std::size_t _dataToken = std::numeric_limits<std::size_t>::max(); //! Set by the RooFitDriver for this arg to retrieve its result in the run context
