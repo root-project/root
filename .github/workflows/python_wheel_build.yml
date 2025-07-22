@@ -21,6 +21,9 @@ jobs:
       - x64
     env:
       WORKDIR: /home/runner/work/root
+    container:
+      image: registry.cern.ch/root-ci/ubuntu2404:buildready
+      options: '--security-opt label=disable --rm'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,11 +33,14 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
 
+      - name: Update repositories
+        run: apt-get update
+
       - name: Install Kerberos utilities
-        run: sudo apt-get install -y krb5-user
+        run: apt-get install -y krb5-user
 
       - name: Install XRootD client
-        run: sudo apt-get -y install xrootd-client
+        run: apt-get -y install xrootd-client
 
       - name: Configure large ccache
         if: ${{ matrix.is_special }}
