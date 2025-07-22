@@ -24,7 +24,6 @@ HEADERS
   ROOT/RMiniFile.hxx
   ROOT/RNTuple.hxx
   ROOT/RNTupleAttributes.hxx
-  ROOT/RNTupleAttrEntry.hxx
   ROOT/RNTupleDescriptor.hxx
   ROOT/RNTupleFillContext.hxx
   ROOT/RNTupleFillStatus.hxx
@@ -69,7 +68,6 @@ SOURCES
   src/RMiniFile.cxx
   src/RNTuple.cxx
   src/RNTupleAttributes.cxx
-  src/RNTupleAttrEntry.cxx
   src/RNTupleDescriptor.cxx
   src/RNTupleDescriptorFmt.cxx
   src/RNTupleFillContext.cxx
