@@ -1112,7 +1112,8 @@ When the minimum of the histogram is set to a greater value than the real minimu
  unless the option `0` is set.
 In other words, option `COLZ0` forces the painting of bins with content < set minimum with
  a color corresponding to the set minimum. In contrast, option `COLZ` would not draw values
-smaller than the specified minimum.
+ smaller than the specified minimum. Note that both `COLZ0` and `COLZ0` still do not draw
+ empty bins, ie bins with `content == error == 0` irrespectively of the set min and max.
 (Note that option `COLZ0` for TH2Poly has a different behavior than for TH2.)
 
 The following example illustrates the option `0` combined with the option `COL`.
@@ -1133,11 +1134,17 @@ Begin_Macro(source)
    hcol22->SetBit(TH1::kNoStats);
    c1->cd(1); hcol21->Draw("COLZ");
    c1->cd(2); hcol22->Draw("COLZ0");
+   hcol21->SetMaximum(100);
    hcol21->SetMinimum(40);
    hcol22->SetMaximum(100);
    hcol22->SetMinimum(40);
 }
 End_Macro
+
+Note that the behavior of `COLZ` is not symmetric: it does not draw values below the specified minimum,
+but does draw values above the specified maximum by clipping them to the maximum color. In contrast, `COLZ0`
+clips color on both lower and upper sides. Both `COLZ0` and `COLZ` exclude drawing empty bins (`content == error == 0`),
+irrespective of the specified min/max.
 
 \since **ROOT version 6.09/01:**
 
