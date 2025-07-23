@@ -491,7 +491,12 @@ std::unique_ptr<RooAbsData> ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &ob
   bool useMultiGen = (fUseMultiGen || fgAlwaysUseMultiGen) && !fNuisanceParametersSampler;
 
   if (events == 0) {
-    if (pdf.canBeExtended() && pdf.expectedEvents(observables) > 0) {
+    if (!pdf.canBeExtended() || pdf.expectedEvents(observables) <= 0) {
+      std::stringstream ss;
+      ss << "ToyMCSampler: Error : pdf is not extended and number of events per toy is zero";
+      oocoutE(nullptr,InputArguments) << ss.str() << std::endl;
+      throw std::runtime_error(ss.str());
+    }
       if(fGenerateBinned) {
         if(protoData) data = std::unique_ptr<RooDataSet>{pdf.generate(observables, AllBinned(), Extended(), ProtoData(*protoData, true, true))};
         else          data = std::unique_ptr<RooDataSet>{pdf.generate(observables, AllBinned(), Extended())};
@@ -513,12 +518,9 @@ std::unique_ptr<RooAbsData> ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &ob
 
         }
       }
-    } else {
-      oocoutE(nullptr,InputArguments)
-                << "ToyMCSampler: Error : pdf is not extended and number of events per toy is zero"
-                << std::endl;
-    }
-  } else {
+
+      return data;
+  }
     if (fGenerateBinned) {
       if(protoData) data = std::unique_ptr<RooDataSet>{pdf.generate(observables, events, AllBinned(), ProtoData(*protoData, true, true))};
       else          data = std::unique_ptr<RooDataSet>{pdf.generate(observables, events, AllBinned())};
@@ -539,7 +541,6 @@ std::unique_ptr<RooAbsData> ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &ob
         }
       }
     }
-  }
 
   return data;
 }
