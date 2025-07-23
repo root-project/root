@@ -1,0 +1,6 @@
+
+Processing /uscms_data/d2/pcanal/eaf_root_working/code/quick-devel/roottest/cling/stl/map/testing.C...
+
+StreamerInfo for class: test, checksum=0x4da0284e
+  map<int,map<int,int> > _lbn            offset=  0 type=300 stl=4 ctype=61                     
+   i= 0, _lbn            type=300, offset=  0, len=1, method=0
