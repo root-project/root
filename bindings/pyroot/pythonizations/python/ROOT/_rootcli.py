@@ -8,12 +8,13 @@ ROOT_HOME = os.path.dirname(__file__)
 def main() -> None:
     # Ensure all ROOT libraries are found at runtime by the process
     os.environ['LD_LIBRARY_PATH'] = os.path.join(ROOT_HOME, 'lib')
-    # Finds the ROOT process from the current installation directory
-    rootexe = os.path.join(ROOT_HOME, 'bin', 'root.exe')
+    # Finds the ROOT executable from the current installation directory
+    bindir = os.path.join(ROOT_HOME, 'bin')
+    rootexe = os.path.join(bindir, 'root.exe')
     if not os.path.exists(rootexe):
-        msg = (f"Could not find 'root' executable in directory '{os.path.join(ROOT_HOME, "bin")}'. "
-               "Something is wrong in the ROOT installation.")
-        raise FileNotFoundError(msg)
+        raise FileNotFoundError(
+            f"Could not find 'root' executable in directory '{bindir}'. "
+            "Something is wrong in the ROOT installation.")
     # Make sure command line arguments are preserved
     args = [rootexe] + sys.argv[1:]
     # Run the actual ROOT executable and return the exit code to the main Python process
