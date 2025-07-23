@@ -1,4 +1,12 @@
-ROOTTEST_GENERATE_DICTIONARY(dict.C testing.C LINKDEF LinkDef.h)
+ROOTTEST_GENERATE_DICTIONARY(simpleDict testing.h NO_CXXMODULE NO_ROOTMAP LINKDEF LinkDef.h
+                       FIXTURES_SETUP cling-stl-map-testing)
+
+ROOTTEST_ADD_TEST(simpleTest
+                  MACRO testing.C
+                  ROOTEXE_OPTS -e "(void)gSystem->Load(\"simpleDict\")" 
+                  OUTREF simpleTest.ref
+                  FIXTURES_REQUIRED cling-stl-map-testing
+                  LABEL roottest cling)
 
 ROOTTEST_COMPILE_MACRO(MyOpClass.C
                        FIXTURES_SETUP cling-stl-map-MyOpClass-fixtures)
