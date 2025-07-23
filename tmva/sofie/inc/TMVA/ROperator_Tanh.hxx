@@ -57,7 +57,14 @@ public:
       std::stringstream out;
       size_t length = ConvertShapeToLength(fShape);
       out << "\n//------ TANH\n";
-      out << SP << "for (int id = 0; id < " << length << " ; id++){\n";
+      // Deliberately std::tanh: rewriting this as (e^{2x}-1)/(e^{2x}+1) (or
+      // similar exp-based formulas) returns NaN for x > ~44 in single
+      // precision (exp overflows to inf, giving inf/inf) and loses all
+      // relative accuracy near x = 0 through cancellation. The measured
+      // speedup was only ~20-25%; the real performance lever is compiling
+      // the generated code so the loop vectorizes (e.g. -ffast-math with
+      // glibc uses the SIMD tanhf from libmvec, ~4x faster).
+      out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
       out << SP << SP << "tensor_" << fNY << "[id] = std::tanh(tensor_" << fNX << "[id]);\n";
       out << SP << "}\n";
       return out.str();
