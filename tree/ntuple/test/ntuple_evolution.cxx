@@ -379,6 +379,49 @@ struct RenamedMemberClass {
    }
 }
 
+TEST(RNTupleEvolution, AddedDefaultTemplateArg)
+{
+   // RNTuple currently does not support automatic schema evolution when a default template argument is added because it
+   // may have implications for the on-disk format.
+   FileRaii fileGuard("test_ntuple_evolution_added_default_template_arg.root");
+
+   ExecInFork([&] {
+      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+template <typename T>
+struct AddedDefaultTemplateArg {
+   T fMember;
+};
+)"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("f", "AddedDefaultTemplateArg<int>").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      // Reset / close the writer and flush the file.
+      writer.reset();
+   });
+
+   ASSERT_TRUE(gInterpreter->Declare(R"(
+template <typename T, typename U = int>
+struct AddedDefaultTemplateArg {
+   T fMember;
+};
+)"));
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   try {
+      reader->GetModel();
+      FAIL() << "model reconstruction should fail";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type name for field"));
+   }
+}
+
 TEST(RNTupleEvolution, AddedBaseClass)
 {
    FileRaii fileGuard("test_ntuple_evolution_added_base_class.root");
