@@ -14,163 +14,34 @@ on:
     - cron: '01 1 * * *'
 
 jobs:
-  cp38-manylinux_x86_64:
+  build-wheels:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [cp38-manylinux_x86_64, cp39-manylinux_x86_64, cp310-manylinux_x86_64, cp311-manylinux_x86_64, cp312-manylinux_x86_64, cp313-manylinux_x86_64]
+    name: ${{ matrix.target }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: ./.github/workflows/cibuildwheel-impl
         with:
-          ref: ${{ inputs.branch }}
+          build-tag: ${{ matrix.target }}
 
-      - name: Build wheel
-        uses: pypa/cibuildwheel@v3.0.1
-        env:
-          CIBW_BUILD: cp38-manylinux_x86_64
-      
-      - name: Upload wheel
-        uses: actions/upload-artifact@v4
-        with:
-          name: cp38-manylinux_x86_64
-          path: wheelhouse/*
-
-  cp39-manylinux_x86_64:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.branch }}
-
-      - name: Build wheel
-        uses: pypa/cibuildwheel@v3.0.1
-        env:
-          CIBW_BUILD: cp39-manylinux_x86_64
-      
-      - name: Upload wheel
-        uses: actions/upload-artifact@v4
-        with:
-          name: cp39-manylinux_x86_64
-          path: wheelhouse/*
-
-  cp310-manylinux_x86_64:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.branch }}
-
-      - name: Build wheel
-        uses: pypa/cibuildwheel@v3.0.1
-        env:
-          CIBW_BUILD: cp310-manylinux_x86_64
-      
-      - name: Upload wheel
-        uses: actions/upload-artifact@v4
-        with:
-          name: cp310-manylinux_x86_64
-          path: wheelhouse/*
-
-  cp311-manylinux_x86_64:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.branch }}
-
-      - name: Build wheel
-        uses: pypa/cibuildwheel@v3.0.1
-        env:
-          CIBW_BUILD: cp311-manylinux_x86_64
-      
-      - name: Upload wheel
-        uses: actions/upload-artifact@v4
-        with:
-          name: cp311-manylinux_x86_64
-          path: wheelhouse/*
-
-  cp312-manylinux_x86_64:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.branch }}
-
-      - name: Build wheel
-        uses: pypa/cibuildwheel@v3.0.1
-        env:
-          CIBW_BUILD: cp312-manylinux_x86_64
-      
-      - name: Upload wheel
-        uses: actions/upload-artifact@v4
-        with:
-          name: cp312-manylinux_x86_64
-          path: wheelhouse/*
-
-  cp313-manylinux_x86_64:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.branch }}
-
-      - name: Build wheel
-        uses: pypa/cibuildwheel@v3.0.1
-        env:
-          CIBW_BUILD: cp313-manylinux_x86_64
-      
-      - name: Upload wheel
-        uses: actions/upload-artifact@v4
-        with:
-          name: cp313-manylinux_x86_64
-          path: wheelhouse/*
-
-  create_and_upload_wheel_registry:
-      needs: [cp38-manylinux_x86_64, cp39-manylinux_x86_64, cp310-manylinux_x86_64, cp311-manylinux_x86_64, cp312-manylinux_x86_64, cp313-manylinux_x86_64]
+  create-and-upload-wheel-registry:
+      needs: build-wheels
       runs-on: ubuntu-latest
       steps:
 
-      - name: Download artifact
+      - name: Download produced wheels
         uses: actions/download-artifact@v4
-        with:
-          name: cp38-manylinux_x86_64
-
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: cp39-manylinux_x86_64
-
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: cp310-manylinux_x86_64
-
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: cp311-manylinux_x86_64
-
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: cp312-manylinux_x86_64
-
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: cp313-manylinux_x86_64
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
 
       - name: Install Kerberos utilities
         run: sudo apt-get install -y krb5-user
 
       - name: Install XRootD client
         run: sudo apt-get -y install xrootd-client
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
 
       - name: Create PEP503-compliant wheel registry
         run: |
@@ -202,4 +73,4 @@ jobs:
           echo +++ Creating the token
           kinit  -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
           echo +++ Running the copy
-          xrdcp -rf wheelhouse/* ${EOS_ENDPOINT}/${EOS_PATH}/
+          xrdcp --parallel 6 -rf wheelhouse/* ${EOS_ENDPOINT}/${EOS_PATH}/
