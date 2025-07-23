@@ -143,6 +143,11 @@ class ToyMCSampler: public TestStatSampler {
          fNEvents = nevents;
       }
 
+      // Getter for the number of events per toy
+      int nEventsPerToy() const {
+         return fNEvents;
+      }
+
 
       /// Set the Pdf, add to the workspace if not already there
       void SetParametersForTestStat(const RooArgSet& nullpoi) override {
