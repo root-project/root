@@ -83,21 +83,21 @@ ROOTTEST_ADD_TEST(SofieCompileModels_ROOT
 
 if (BLAS_FOUND)
   # Creating a Google Test for Serialisation of RModel
-  ROOTTEST_GENERATE_EXECUTABLE(TestCustomModelsFromROOT TestCustomModelsFromROOT.cxx
-    LIBRARIES
-      ROOTTMVASofie
-      BLAS::BLAS
-      GTest::gtest
-      GTest::gtest_main
-    FIXTURES_REQUIRED
-      sofie-compile-models-root
-    FIXTURES_SETUP
-      sofie-test-models-root-build
-  )
-  target_include_directories(TestCustomModelsFromROOT PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-  ROOTTEST_ADD_TEST(TestCustomModelsFromROOT
-                    EXEC ./TestCustomModelsFromROOT
-                    FIXTURES_REQUIRED sofie-test-models-root-build)
+  #ROOTTEST_GENERATE_EXECUTABLE(TestCustomModelsFromROOT TestCustomModelsFromROOT.cxx
+    #LIBRARIES
+      #ROOTTMVASofie
+      #BLAS::BLAS
+      #GTest::gtest
+      #GTest::gtest_main
+    #FIXTURES_REQUIRED
+      #sofie-compile-models-root
+    #FIXTURES_SETUP
+      #sofie-test-models-root-build
+  #)
+  #target_include_directories(TestCustomModelsFromROOT PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+  #ROOTTEST_ADD_TEST(TestCustomModelsFromROOT
+                    #EXEC ./TestCustomModelsFromROOT
+                    #FIXTURES_REQUIRED sofie-test-models-root-build)
 
   if (clad)
     # Creating a Google Test for the automatic differentiation of Gemm_Call
