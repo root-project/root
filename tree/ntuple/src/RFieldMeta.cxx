@@ -428,11 +428,16 @@ void ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pag
 
       rules = FindRules(&fieldDesc);
 
-      // If the field's type name is not the on-disk name but we found a rule, we know it is valid to read
-      // on-disk data because we found the rule according to the on-disk (source) type name and version/checksum.
-      if ((GetTypeName() != fieldDesc.GetTypeName()) && rules.empty()) {
-         throw RException(R__FAIL("incompatible type name for field " + GetFieldName() + ": " + GetTypeName() +
-                                  " vs. " + fieldDesc.GetTypeName()));
+      // If we found a rule, we know it is valid to read on-disk data because we found the rule according to the on-disk
+      // (source) type name and version/checksum.
+      if (rules.empty()) {
+         // Otherwise we require compatible type names, after renormalization (GetTypeName() is already renormalized).
+         // However, we must not ask TClass because it might add (new) default template arguments.
+         std::string descTypeName = GetRenormalizedTypeName(fieldDesc.GetTypeName());
+         if (GetTypeName() != descTypeName) {
+            throw RException(R__FAIL("incompatible type name for field " + GetFieldName() + ": " + GetTypeName() +
+                                     " vs. " + descTypeName));
+         }
       }
 
       if (!rules.empty()) {
