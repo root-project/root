@@ -1110,6 +1110,10 @@ painted with the color corresponding to the new maximum.
 When the minimum of the histogram is set to a greater value than the real minimum,
  the bins having a value between the real minimum and the new minimum are not drawn
  unless the option `0` is set.
+In other words, option `COLZ0` forces the painting of bins with content < set minimum with
+ a color corresponding to the set minimum. In contrast, option `COLZ` would not draw values
+smaller than the specified minimum.
+(Note that option `COLZ0` for TH2Poly has a different behavior than for TH2.)
 
 The following example illustrates the option `0` combined with the option `COL`.
 
@@ -1129,6 +1133,7 @@ Begin_Macro(source)
    hcol22->SetBit(TH1::kNoStats);
    c1->cd(1); hcol21->Draw("COLZ");
    c1->cd(2); hcol22->Draw("COLZ0");
+   hcol21->SetMinimum(40);
    hcol22->SetMaximum(100);
    hcol22->SetMinimum(40);
 }
@@ -2457,7 +2462,7 @@ the option "GLLEGO".
 \since **ROOT version 6.09/01**
 
 In some cases it can be useful to not draw the empty bins. the option "0"
-combined with the option "COL" et COLZ allows to do that.
+combined with the option "COL" and "COLZ" allows to do that.
 
 Begin_Macro(source)
 {
@@ -5903,7 +5908,7 @@ void THistPainter::PaintColorLevels(Option_t*)
                }
             }
          } else {
-            color = Int_t(0.01+(z-zmin)*scale);
+            color = Hoption.Zero ? Int_t(0.01+(std::max(z, zmin)-zmin)*scale) : Int_t(0.01+(z-zmin)*scale);
          }
 
          Int_t theColor = Int_t((color+0.99)*Float_t(ncolors)/Float_t(ndivz));
