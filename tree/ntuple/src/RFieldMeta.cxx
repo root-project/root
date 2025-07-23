@@ -526,16 +526,16 @@ ROOT::REnumField::REnumField(std::string_view fieldName, TEnum *enump)
    }
 
    switch (enump->GetUnderlyingType()) {
-   case kChar_t: Attach(std::make_unique<RField<int8_t>>("_0")); break;
-   case kUChar_t: Attach(std::make_unique<RField<uint8_t>>("_0")); break;
-   case kShort_t: Attach(std::make_unique<RField<int16_t>>("_0")); break;
-   case kUShort_t: Attach(std::make_unique<RField<uint16_t>>("_0")); break;
-   case kInt_t: Attach(std::make_unique<RField<int32_t>>("_0")); break;
-   case kUInt_t: Attach(std::make_unique<RField<uint32_t>>("_0")); break;
-   case kLong_t: Attach(std::make_unique<RField<long>>("_0")); break;
-   case kLong64_t: Attach(std::make_unique<RField<int64_t>>("_0")); break;
-   case kULong_t: Attach(std::make_unique<RField<unsigned long>>("_0")); break;
-   case kULong64_t: Attach(std::make_unique<RField<uint64_t>>("_0")); break;
+   case kChar_t: Attach(std::make_unique<RField<Char_t>>("_0")); break;
+   case kUChar_t: Attach(std::make_unique<RField<UChar_t>>("_0")); break;
+   case kShort_t: Attach(std::make_unique<RField<Short_t>>("_0")); break;
+   case kUShort_t: Attach(std::make_unique<RField<UShort_t>>("_0")); break;
+   case kInt_t: Attach(std::make_unique<RField<Int_t>>("_0")); break;
+   case kUInt_t: Attach(std::make_unique<RField<UInt_t>>("_0")); break;
+   case kLong_t: Attach(std::make_unique<RField<Long_t>>("_0")); break;
+   case kLong64_t: Attach(std::make_unique<RField<Long64_t>>("_0")); break;
+   case kULong_t: Attach(std::make_unique<RField<ULong_t>>("_0")); break;
+   case kULong64_t: Attach(std::make_unique<RField<ULong64_t>>("_0")); break;
    default: throw RException(R__FAIL("Unsupported underlying integral type for enum type " + GetTypeName()));
    }
 
@@ -665,19 +665,19 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
       itemField = RFieldBase::Create("_0", valueClass->GetName()).Unwrap();
    } else {
       switch (fProxy->GetType()) {
-      case EDataType::kChar_t: itemField = std::make_unique<RField<char>>("_0"); break;
-      case EDataType::kUChar_t: itemField = std::make_unique<RField<std::uint8_t>>("_0"); break;
-      case EDataType::kShort_t: itemField = std::make_unique<RField<std::int16_t>>("_0"); break;
-      case EDataType::kUShort_t: itemField = std::make_unique<RField<std::uint16_t>>("_0"); break;
-      case EDataType::kInt_t: itemField = std::make_unique<RField<std::int32_t>>("_0"); break;
-      case EDataType::kUInt_t: itemField = std::make_unique<RField<std::uint32_t>>("_0"); break;
-      case EDataType::kLong_t: itemField = std::make_unique<RField<long>>("_0"); break;
-      case EDataType::kLong64_t: itemField = std::make_unique<RField<std::int64_t>>("_0"); break;
-      case EDataType::kULong_t: itemField = std::make_unique<RField<unsigned long>>("_0"); break;
-      case EDataType::kULong64_t: itemField = std::make_unique<RField<std::uint64_t>>("_0"); break;
-      case EDataType::kFloat_t: itemField = std::make_unique<RField<float>>("_0"); break;
-      case EDataType::kDouble_t: itemField = std::make_unique<RField<double>>("_0"); break;
-      case EDataType::kBool_t: itemField = std::make_unique<RField<bool>>("_0"); break;
+      case EDataType::kChar_t: itemField = std::make_unique<RField<Char_t>>("_0"); break;
+      case EDataType::kUChar_t: itemField = std::make_unique<RField<UChar_t>>("_0"); break;
+      case EDataType::kShort_t: itemField = std::make_unique<RField<Short_t>>("_0"); break;
+      case EDataType::kUShort_t: itemField = std::make_unique<RField<UShort_t>>("_0"); break;
+      case EDataType::kInt_t: itemField = std::make_unique<RField<Int_t>>("_0"); break;
+      case EDataType::kUInt_t: itemField = std::make_unique<RField<UInt_t>>("_0"); break;
+      case EDataType::kLong_t: itemField = std::make_unique<RField<Long_t>>("_0"); break;
+      case EDataType::kLong64_t: itemField = std::make_unique<RField<Long64_t>>("_0"); break;
+      case EDataType::kULong_t: itemField = std::make_unique<RField<ULong_t>>("_0"); break;
+      case EDataType::kULong64_t: itemField = std::make_unique<RField<ULong64_t>>("_0"); break;
+      case EDataType::kFloat_t: itemField = std::make_unique<RField<Float_t>>("_0"); break;
+      case EDataType::kDouble_t: itemField = std::make_unique<RField<Double_t>>("_0"); break;
+      case EDataType::kBool_t: itemField = std::make_unique<RField<Bool_t>>("_0"); break;
       default: throw RException(R__FAIL("unsupported value type"));
       }
    }
