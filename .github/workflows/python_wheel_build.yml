@@ -14,68 +14,65 @@ on:
     - cron: '01 1 * * *'
 
 jobs:
-  python_wheel:
-    runs-on:
-      - self-hosted
-      - linux
-      - x64
-    env:
-      WORKDIR: /home/runner/work/root
-    container:
-      image: registry.cern.ch/root-ci/ubuntu2404:buildready
-      options: '--security-opt label=disable --user="ubuntu" --rm'
+  cp38-manylinux_x86_64:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
 
+      # - name: Build wheel
+      #   uses: pypa/cibuildwheel@v3.0.1
+      #   env:
+      #     CIBW_BUILD: cp38-manylinux_x86_64
+      #   with:
+      #     output-dir: ${{ env.WORKDIR }}/wheelhouse
+      
+      - name: Mock step
+        run: |
+          mkdir -p wheelhouse
+          touch wheelhouse/wheel1.whl
+          touch wheelhouse/wheel2.whl
+
+      - name: Upload wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: cp38-manylinux_x86_64
+          path: wheelhouse/*
+
+  create_and_upload_wheel_registry:
+      needs: cp38-manylinux_x86_64
+      runs-on: ubuntu-latest
+      steps:
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: cp38-manylinux_x86_64
+
       - name: Setup Python
         uses: actions/setup-python@v5
-        with:
-          python-version: 3.13
-
-      # - name: Set up Python Virtual Environment
-      #   run: |
-      #     python -m venv /py-venv/cibuildwheel-env
-      #     . /py-venv/cibuildwheel-env/bin/activate
-      #     echo PATH=$PATH >> $GITHUB_ENV
-
-      - name: Update repositories
-        run: apt-get update
 
       - name: Install Kerberos utilities
-        run: apt-get install -y krb5-user
+        run: sudo apt-get install -y krb5-user
 
       - name: Install XRootD client
-        run: apt-get -y install xrootd-client
-
-      - name: Configure large ccache
-        if: ${{ matrix.is_special }}
-        run: |
-          ccache -o max_size=5G
-          ccache -p || true
-          ccache -s || true
-
-      - name: Build wheels
-        env: 
-          PIP_ROOT_USER_ACTION: ignore
-          PIP_DISABLE_PIP_VERSION_CHECK: 1
-        uses: pypa/cibuildwheel@v3.0.1
-        with:
-          output-dir: ${{ env.WORKDIR }}/wheelhouse
+        run: sudo apt-get -y install xrootd-client
 
       - name: Create PEP503-compliant wheel registry
         run: |
+          mkdir -p wheelhouse
+          mv *.whl wheelhouse
           python -m pip install --upgrade pip
           python -m pip install simple503
-          simple503 ${{ env.WORKDIR }}/wheelhouse
+          simple503 wheelhouse
 
       - name: Upload wheel registry to github
         uses: actions/upload-artifact@v4
         with:
-          name: cibw-wheels-test
-          path: ${{ env.WORKDIR }}/wheelhouse/*
+          name: cibw-wheels-registry
+          path: wheelhouse
 
       - name: Upload wheel to EOS
         env:
