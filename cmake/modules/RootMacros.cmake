@@ -2834,6 +2834,7 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 # function ROOTTEST_ADD_TEST(testname
 #                            MACRO|EXEC macro_or_command
 #                            [MACROARG args1 arg2 ...]
+#                            [ROOTEXE_OPTS opt1 opt2 ...]
 #                            [INPUT infile]
 #                            [ENABLE_IF root-feature]
 #                            [DISABLE_IF root-feature]
