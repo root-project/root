@@ -45,8 +45,8 @@ struct RNTupleAttrEntryPair {
 
 namespace RNTupleAttributes {
 
-const std::string kRangeStartName = "_rangeStart";
-const std::string kRangeLenName = "_rangeLen";
+const char *const kRangeStartName = "_rangeStart";
+const char *const kRangeLenName = "_rangeLen";
 
 } // namespace RNTupleAttributes
 
