@@ -214,9 +214,8 @@ public:
    {
       // TODO(jblomer): can be templated depending on the factory method / constructor
       if (R__unlikely(!fModel)) {
-         fModel = fSource->GetSharedDescriptorGuard()->CreateModel(
-            fCreateModelOptions.value_or(ROOT::RNTupleDescriptor::RCreateModelOptions{}));
-         ConnectModel(*fModel);
+         // Will create the fModel.
+         GetModel();
       }
       LoadEntry(index, fModel->GetDefaultEntry());
    }
