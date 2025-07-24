@@ -120,7 +120,7 @@ if(root7)
     DEPENDENCIES
        ROOTBrowsable
        ROOTNTuple
-       Hist
+       ROOTNTupleBrowse
        Gpad
   )
 
@@ -129,7 +129,7 @@ if(root7)
     DEPENDENCIES
        ROOTBrowsable
        ROOTNTuple
-       Hist
+       ROOTNTupleBrowse
        ROOTGpadv7
 )
 endif()
