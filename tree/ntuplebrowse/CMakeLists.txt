@@ -12,12 +12,15 @@
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTNTupleBrowse
 HEADERS
   ROOT/RNTupleClassicBrowse.hxx
+  ROOT/RNTupleDrawVisitor.hxx
 SOURCES
   src/RNTupleClassicBrowse.cxx
+  src/RNTupleDrawVisitor.cxx
 LINKDEF
   LinkDef.h
 DEPENDENCIES
   Core
+  Hist
   ROOTNTuple
 )
 
