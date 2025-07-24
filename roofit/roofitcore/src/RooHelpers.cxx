@@ -168,42 +168,4 @@ bool setAllConstant(const RooAbsCollection &coll, bool constant)
    return changed;
 }
 
-bool freezeAllDisassociatedRooMultiPdfParameters(const RooArgSet &multiPdfs, const RooArgSet &allRooMultiPdfParams,
-                                                 bool freeze, bool freezeDisassParams_verb)
-{
-   RooArgSet multiPdfParams(allRooMultiPdfParams);
-
-   // For each multiPdf, get the active pdf and remove its parameters
-   // from this list of params and then freeze the remaining ones
-
-   for (RooAbsArg *P : multiPdfs) {
-      RooMultiPdf *mpdf = dynamic_cast<RooMultiPdf *>(P);
-      RooAbsPdf *pdf = (RooAbsPdf *)mpdf->getCurrentPdf();
-      if (freezeDisassParams_verb) {
-         std::cout << " Current active PDF - " << pdf->GetName() << std::endl;
-      }
-      std::unique_ptr<RooArgSet> pdfPars(pdf->getParameters((const RooArgSet *)0));
-      pdfPars->removeConstantParameters(); // make sure still to ignore user set constants
-      multiPdfParams.remove(*pdfPars);
-   }
-
-   if (multiPdfParams.getSize() > 0) {
-      if (freezeDisassParams_verb) {
-         std::cout << " Going to " << (freeze ? " freeze " : " float ") << " the following (disassociated) parameters"
-                   << std::endl;
-         multiPdfParams.Print("V");
-      }
-      setAllConstant(multiPdfParams, freeze);
-
-      // std::cout << " Current state of all MultiPdfParams -> " << std::endl;
-      // std::unique_ptr<TIterator> iter_par(allRooMultiPdfParams.createIterator());
-      // for (RooAbsArg *P = (RooAbsArg *) iter_par->Next(); P != 0; P = (RooAbsArg *) iter_par->Next()){
-      //   std::cout << P->GetName() << ", constant=" << P->isConstant() << std::endl;
-      // }
-      return true;
-   }
-
-   return false;
-}
-
 } // namespace RooHelpers
