@@ -747,7 +747,7 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
       RooArgSet normSet;
       pdf.getObservables(data.get(), normSet);
 
-      if (dynamic_cast<RooSimultaneous const*>(&pdf)) {
+      if (dynamic_cast<RooSimultaneous const *>(&pdf)) {
          for (auto i : projDeps) {
             auto res = normSet.find(i->GetName());
             if (res != nullptr) {
@@ -789,6 +789,25 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
       auto nll = createNLLNew(*pdfClone, data, std::move(compiledConstr), rangeName ? rangeName : "", projDeps, ext,
                               pc.getDouble("IntegrateBins"), offset);
 
+      const double correction = pdfClone->getCorrection();
+
+      if (correction > 0) {
+         oocoutI(&pdf, Fitting) << "[FitHelpers] Detected correction term from RooAbsPdf::getCorrection(). "
+                                << "Adding penalty to NLL." << std::endl;
+
+         // Convert the multiplicative correction to an additive term in -log L
+         auto penaltyTerm = std::make_unique<RooConstVar>((baseName + "_Penalty").c_str(),
+                                                          "Penalty term from getCorrection()", correction);
+
+         // add penalty and NLL
+         auto correctedNLL = std::make_unique<RooAddition>((baseName + "_corrected").c_str(), "NLL + penalty",
+                                                           RooArgSet{*nll, *penaltyTerm});
+
+         // transfer ownership of terms
+         correctedNLL->addOwnedComponents(std::move(nll), std::move(penaltyTerm));
+         nll = std::move(correctedNLL);
+      }
+
       std::unique_ptr<RooAbsReal> nllWrapper;
 
       if (evalBackend == RooFit::EvalBackend::Value::Codegen ||
@@ -811,26 +830,9 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
             takeGlobalObservablesFromData);
       }
 
-      const double correction = pdfClone->getCorrection();
       nllWrapper->addOwnedComponents(std::move(nll));
       nllWrapper->addOwnedComponents(std::move(pdfClone));
 
-      if (correction > 0) {
-         oocoutI(&pdf, Fitting) << "[FitHelpers] Detected correction term from RooAbsPdf::getCorrection(). "
-                                << "Adding penalty to NLL." << std::endl;
-
-         // Convert the multiplicative correction to an additive term in -log L
-         auto penaltyTerm = std::make_unique<RooConstVar>((baseName + "_Penalty").c_str(),
-                                                          "Penalty term from getCorrection()", correction);
-
-         auto correctedNLL = std::make_unique<RooAddition>(
-            // add penalty and NLL
-            (baseName + "_corrected").c_str(), "NLL + penalty", RooArgSet(*nllWrapper, *penaltyTerm));
-
-         // transfer ownership of terms
-         correctedNLL->addOwnedComponents(std::move(nllWrapper), std::move(penaltyTerm));
-         nllWrapper = std::move(correctedNLL);
-      }
       return nllWrapper;
    }
 
@@ -903,9 +905,6 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
    if (offset == RooFit::OffsetMode::Initial) {
       nll->enableOffsetting(true);
    }
-#else
-   throw std::runtime_error("RooFit was not built with the legacy evaluation backend");
-#endif
 
    if (const double correction = pdf.getCorrection(); correction > 0) {
       oocoutI(&pdf, Fitting) << "[FitHelpers] Detected correction term from RooAbsPdf::getCorrection(). "
@@ -923,6 +922,9 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
       correctedNLL->addOwnedComponents(std::move(nll), std::move(penaltyTerm));
       nll = std::move(correctedNLL);
    }
+#else
+   throw std::runtime_error("RooFit was not built with the legacy evaluation backend");
+#endif
 
    return nll;
 }
