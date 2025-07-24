@@ -613,18 +613,6 @@ std::size_t RooAbsArg::getParametersSizeEstimate(const RooArgSet *nset) const
 
 bool RooAbsArg::getParameters(const RooArgSet *observables, RooArgSet &outputSet, bool stripDisconnected) const
 {
-   using RooHelpers::getColonSeparatedNameString;
-
-   // Check for cached parameter set
-   if (_myws) {
-      auto nsetObs = getColonSeparatedNameString(observables ? *observables : RooArgSet());
-      const RooArgSet *paramSet = _myws->set(Form("CACHE_PARAMS_OF_PDF_%s_FOR_OBS_%s", GetName(), nsetObs.c_str()));
-      if (paramSet) {
-         outputSet.add(*paramSet);
-         return false;
-      }
-   }
-
    outputSet.clear();
    outputSet.setName("parameters");
 
@@ -634,12 +622,6 @@ bool RooAbsArg::getParameters(const RooArgSet *observables, RooArgSet &outputSet
    addParameters(outputSet, observables, stripDisconnected);
 
    outputSet.sort();
-
-   // Cache parameter set
-   if (_myws && outputSet.size() > 10) {
-      auto nsetObs = getColonSeparatedNameString(observables ? *observables : RooArgSet());
-      _myws->defineSetInternal(Form("CACHE_PARAMS_OF_PDF_%s_FOR_OBS_%s", GetName(), nsetObs.c_str()), outputSet);
-   }
 
    return false;
 }
