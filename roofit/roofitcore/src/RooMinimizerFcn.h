@@ -46,6 +46,8 @@ public:
    double operator()(const double *x) const;
    void evaluateGradient(const double *x, double *out) const;
 
+   RooArgSet freezeDisconnectedParameters() const override;
+
 private:
    RooAbsReal *_funct = nullptr;
    std::unique_ptr<ROOT::Math::IBaseFunctionMultiDim> _multiGenFcn;
