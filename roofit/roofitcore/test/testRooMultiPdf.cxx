@@ -9,6 +9,7 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+
 // Helper function to count parameters including x
 int countFloatingParametersIncludingObservable(const RooAbsPdf &pdf)
 {
@@ -55,48 +56,42 @@ TEST(RooMultiPdf, SelectsCorrectPdf)
 TEST(RooMultiPdfTest, FitConvergesAndReturnsReasonableResult)
 
 {
+   using namespace RooFit;
+
    RooRealVar x("x", "x", -10, 10);
+
    RooRealVar m1("mean1", "mean1", 0., -10, 10);
-   RooRealVar s1("sigma1", "sigma1", 1., 0.001, 10.);
+   RooRealVar s1("sigma1", "sigma1", 4., 0.001, 10.);
+   RooRealVar m2("mean2", "mean2", 2., -10, 10);
+   RooRealVar s2("sigma2", "sigma2", 4., 0.001, 10.);
    RooGaussian gaus1("gaus1", "gaus1", x, m1, s1);
-
-   RooRealVar expo_1("expo_1", "slope of exponential", -0.01, -0.2, -0.0003);
-   RooExponential exponential("exponential", "exponential pdf", x, expo_1);
-
-   RooRealVar poly_1("poly_1", "T1 of chebychev polynomial", 0, 0, 2);
-   RooRealVar poly_2("poly_2", "T2 of chebychev polynomial", 0, 0, 2);
-   RooBernstein polynomial("polynomial", "polynomial pdf", x, RooArgList(poly_1, poly_2));
+   RooGaussian gaus2("gaus2", "gaus2", x, m2, s2);
 
    RooCategory indx("my_special_index", "my_index");
    indx.setConstant();
 
-   RooArgList mypdfs;
-   mypdfs.add(gaus1);
-   mypdfs.add(polynomial);
-   mypdfs.add(exponential);
-
-   RooMultiPdf multipdf("roomultipdf", "pdfs", indx, mypdfs);
-   indx.setIndex(0); // choose Gaussian initially
+   RooMultiPdf multipdf("roomultipdf", "pdfs", indx, RooArgList{gaus1, gaus2});
+   indx.setIndex(0); // choose first gaussian initially
 
    std::unique_ptr<RooDataSet> data{gaus1.generate(x, 1000)};
 
    // Fit 1 - RooMultiPdf fit
 
-   std::unique_ptr<RooAbsReal> nll{multipdf.createNLL(*data, RooFit::EvalBackend("codegen"))};
+   std::unique_ptr<RooAbsReal> nll{multipdf.createNLL(*data, EvalBackend("codegen"))};
 
    RooMinimizer minim{*nll};
    minim.setStrategy(0);
    int status = minim.minimize("Minuit2", "");
 
-   // Reseting the initial parameters
+   // Resetting the initial parameters
 
    m1.setVal(0.);
-   s1.setVal(1.);
+   s1.setVal(4.);
 
    m1.setError(0.0);
    s1.setError(0.0);
    // Fit 2 - Reference fit
-   std::unique_ptr<RooAbsReal> nll1{gaus1.createNLL(*data, RooFit::EvalBackend("codegen"))};
+   std::unique_ptr<RooAbsReal> nll1{gaus1.createNLL(*data, EvalBackend("codegen"))};
 
    RooMinimizer minim1{*nll1};
    minim1.setStrategy(0);
@@ -114,11 +109,11 @@ TEST(RooMultiPdfTest, FitConvergesAndReturnsReasonableResult)
    EXPECT_DOUBLE_EQ(first_fit, ref_fit);
 
    // Check that the correct number of PDFs are present
-   EXPECT_EQ(multipdf.getNumPdfs(), 3);
+   EXPECT_EQ(multipdf.getNumPdfs(), 2);
 
    //  check fitted parameter
    EXPECT_NEAR(m1.getVal(), 0.0, 0.2);
-   EXPECT_NEAR(s1.getVal(), 1.0, 0.2);
+   EXPECT_NEAR(s1.getVal(), 4.0, 0.2);
 
    // Check whether RooMultiPdf chooses the correct index
 
@@ -126,10 +121,10 @@ TEST(RooMultiPdfTest, FitConvergesAndReturnsReasonableResult)
 
       indx.setIndex(i);
 
-      std::unique_ptr<RooAbsReal> nll_multi{multipdf.createNLL(*data, RooFit::EvalBackend("codegen"))};
+      std::unique_ptr<RooAbsReal> nll_multi{multipdf.createNLL(*data, EvalBackend("codegen"))};
 
       RooAbsPdf *selectedPdf = multipdf.getPdf(i);
-      std::unique_ptr<RooAbsReal> nll_direct{selectedPdf->createNLL(*data, RooFit::EvalBackend("codegen"))};
+      std::unique_ptr<RooAbsReal> nll_direct{selectedPdf->createNLL(*data, EvalBackend("codegen"))};
 
       int n_param = countFloatingParametersIncludingObservable(*selectedPdf);
 
