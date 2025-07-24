@@ -533,7 +533,6 @@ protected:
    virtual bool isValid() const ;
 
    virtual void getParametersHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/, bool /*stripDisconnected*/) const {} ;
-   virtual void getObservablesHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/) const {} ;
 
    void clearValueAndShapeDirty() const {
      _valueDirty=false ;
