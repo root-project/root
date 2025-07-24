@@ -33,12 +33,11 @@ jobs:
 
       - name: Download produced wheels
         uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
 
-      - name: Install Kerberos utilities
-        run: sudo apt-get install -y krb5-user
-
-      - name: Install XRootD client
-        run: sudo apt-get -y install xrootd-client
+      - name: Install required system packages
+        run: sudo apt-get install -y krb5-user xrootd-client
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -51,11 +50,9 @@ jobs:
           python -m pip install --user simple503
           simple503 wheelhouse
 
-      - name: Upload wheel registry to github
-        uses: actions/upload-artifact@v4
-        with:
-          name: cibw-wheels-registry
-          path: wheelhouse
+      - name: Compute number of files to upload
+        id: nfiles
+        run: echo "NFILES=$(find wheelhouse -maxdepth 1 | wc -l)" >> "$GITHUB_OUTPUT"
 
       - name: Upload wheels to EOS
         env:
@@ -64,6 +61,7 @@ jobs:
           EOS_PATH: /eos/project/r/root-eos/www/experimental-python-wheels
           EOS_ENDPOINT: root://eosproject-r.cern.ch
           KRB5CCNAME: /tmp/krb5cc
+          NFILES: ${{ steps.nfiles.outputs.NFILES }}
         working-directory: ${{ env.WORKDIR }}
         run: |
           echo +++ Content
@@ -73,4 +71,4 @@ jobs:
           echo +++ Creating the token
           kinit  -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
           echo +++ Running the copy
-          xrdcp --parallel 6 -rf wheelhouse/* ${EOS_ENDPOINT}/${EOS_PATH}/
+          xrdcp --parallel ${NFILES} -rf wheelhouse/* ${EOS_ENDPOINT}/${EOS_PATH}/

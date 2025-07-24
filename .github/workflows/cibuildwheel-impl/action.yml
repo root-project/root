@@ -12,7 +12,7 @@ runs:
       uses: pypa/cibuildwheel@v3.0.1
       env:
         CIBW_BUILD: ${{ inputs.build-tag }}
-    
+
     - name: Upload wheel
       uses: actions/upload-artifact@v4
       with:
