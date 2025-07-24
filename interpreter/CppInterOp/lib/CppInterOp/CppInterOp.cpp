@@ -2098,22 +2098,14 @@ void make_narg_call(const FunctionDecl* FD, const std::string& return_type,
       FD->getNameForDiagnostic(stream, PP,
                                /*Qualified=*/false);
 
-      // insert space between template argument list and the function name
-      // this is require if the function is `operator<`
-      // `operator<<type1, type2, ...>` is invalid syntax
-      // whereas `operator< <type1, type2, ...>` is valid
-      std::string simple_name = FD->getNameAsString();
-      size_t idx = complete_name.find(simple_name, 0) + simple_name.size();
-      std::string name_without_template_args = complete_name.substr(0, idx);
-      std::string template_args = complete_name.substr(idx);
-      name = name_without_template_args +
-             (template_args.empty() ? "" : " " + template_args);
+      name = complete_name;
 
       // If a template has consecutive parameter packs, then it is impossible to
       // use the explicit name in the wrapper, since the type deduction is what
       // determines the split of the packs. Instead, we'll revert to the
       // non-templated function name and hope that the type casts in the wrapper
       // will suffice.
+      std::string simple_name = FD->getNameAsString();
       if (FD->isTemplateInstantiation() && FD->getPrimaryTemplate()) {
         const FunctionTemplateDecl* FTDecl =
             llvm::dyn_cast<FunctionTemplateDecl>(FD->getPrimaryTemplate());
@@ -2128,9 +2120,12 @@ void make_narg_call(const FunctionDecl* FD, const std::string& return_type,
               numPacks = 0;
           }
           if (numPacks > 1) {
-            name = name_without_template_args;
+            name = simple_name;
           }
         }
+      }
+      if (FD->isOverloadedOperator()) {
+        name = simple_name;
       }
     }
     if (op_flag || N <= 1)
