@@ -114,6 +114,7 @@ struct NodeInfo {
    bool computeInGPU = false;
    std::size_t outputSize = 1;
    std::size_t lastSetValCount = std::numeric_limits<std::size_t>::max();
+   int lastCatVal = std::numeric_limits<int>::max();
    double scalarBuffer = 0.0;
    std::vector<NodeInfo *> serverInfos;
    std::vector<NodeInfo *> clientInfos;
@@ -406,6 +407,22 @@ void Evaluator::processVariable(NodeInfo &nodeInfo)
    }
 }
 
+/// Process a category in the computation graph. This is a separate non-inlined
+/// function such that we can see in performance profiles how long this takes.
+void Evaluator::processCategory(NodeInfo &nodeInfo)
+{
+   RooAbsArg *node = nodeInfo.absArg;
+   auto *cat = static_cast<RooAbsCategory const *>(node);
+   if (nodeInfo.lastCatVal != cat->getCurrentIndex()) {
+      nodeInfo.lastCatVal = cat->getCurrentIndex();
+      for (NodeInfo *clientInfo : nodeInfo.clientInfos) {
+         clientInfo->isDirty = true;
+      }
+      computeCPUNode(node, nodeInfo);
+      nodeInfo.isDirty = false;
+   }
+}
+
 /// Flags all the clients of a given node dirty. This is a separate non-inlined
 /// function such that we can see in performance profiles how long this takes.
 void Evaluator::setClientsDirty(NodeInfo &nodeInfo)
@@ -431,6 +448,8 @@ std::span<const double> Evaluator::run()
       if (!nodeInfo.fromArrayInput) {
          if (nodeInfo.isVariable) {
             processVariable(nodeInfo);
+         } else if (nodeInfo.isCategory) {
+            processCategory(nodeInfo);
          } else {
             if (nodeInfo.isDirty) {
                setClientsDirty(nodeInfo);

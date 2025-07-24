@@ -47,6 +47,7 @@ public:
 
 private:
    void processVariable(NodeInfo &nodeInfo);
+   void processCategory(NodeInfo &nodeInfo);
    void setClientsDirty(NodeInfo &nodeInfo);
    std::span<const double> getValHeterogeneous();
    void markGPUNodes();
