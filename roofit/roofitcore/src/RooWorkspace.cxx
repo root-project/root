@@ -54,6 +54,8 @@ and try reading again.
 #include <RooCmdConfig.h>
 #include <RooConstVar.h>
 #include <RooFactoryWSTool.h>
+#include <RooHistFunc.h>
+#include <RooHistPdf.h>
 #include <RooLinkedListIter.h>
 #include <RooMsgService.h>
 #include <RooPlot.h>
@@ -2442,6 +2444,69 @@ void RooWorkspace::CodeRepo::Streamer(TBuffer &R__b)
    }
 }
 
+void RooWorkspace::packEmbeddedHisto(RooAbsArg const &arg, RooDataHist const &dataHist,
+                                     RooWorkspace::EmbeddedHisto &packed)
+{
+   // We error out if the dataHist is not as we expect it to be for a template.
+   // Which is in case of:
+   //   * asymmetric uncertainties
+   //   * global observables
+   if (dataHist.wgtErrLoArray() || dataHist.wgtErrHiArray() || dataHist.getGlobalObservables()) {
+      throw std::runtime_error("Template histogram for \"" + std::string{arg.GetName()} + "\" can't be serialized!");
+   }
+
+   packed.argName = arg.GetName();
+   packed.name = dataHist.GetName();
+   packed.title = dataHist.GetTitle();
+
+   packed.arraySize = dataHist.arraySize();
+
+   auto fillVector = [&](double const *arr, std::vector<double> &vec) {
+      if (arr) {
+         vec.resize(packed.arraySize);
+         std::copy(arr, arr + vec.size(), vec.begin());
+      }
+   };
+
+   fillVector(dataHist.weightArray(), packed.weightArray);
+   fillVector(dataHist.sumW2Array(), packed.sumW2Array);
+   fillVector(dataHist.wgtErrLoArray(), packed.wgtErrLoArray);
+   fillVector(dataHist.wgtErrHiArray(), packed.wgtErrHiArray);
+
+   for (auto const &binning : dataHist.getBinnings()) {
+      packed.binnings.emplace_back(binning ? binning->clone() : nullptr);
+   }
+}
+
+RooDataHist *RooWorkspace::unpackEmbeddedHisto(RooArgSet const &vars, RooWorkspace::EmbeddedHisto const &packed)
+{
+   RooArgSet varsCopy;
+   vars.snapshot(varsCopy);
+
+   for (std::size_t i = 0; i < vars.size(); ++i) {
+      if (packed.binnings[i]) {
+         static_cast<RooRealVar *>(varsCopy[i])->setBinning(*packed.binnings[i]);
+      }
+   }
+
+   auto *dataHist = new RooDataHist{packed.name, packed.title, varsCopy};
+
+   int n = packed.arraySize;
+
+   for (int i = 0; i < n; ++i) {
+      dataHist->set(i, packed.weightArray[i], -1);
+   }
+
+   // Set the sum of weights squared
+   if (!packed.sumW2Array.empty()) {
+      dataHist->_sumw2 = new double[n];
+      std::copy(packed.sumW2Array.begin(), packed.sumW2Array.end(), dataHist->_sumw2);
+   }
+
+   dataHist->registerWeightArraysToDataStore();
+
+   return dataHist;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class RooWorkspace. This is a standard ROOT streamer for the
@@ -2483,6 +2548,29 @@ void RooWorkspace::Streamer(TBuffer &R__b)
         if (auto handle = dynamic_cast<RooWorkspaceHandle*>(gobj)) {
           handle->ReplaceWS(this);
         }
+      }
+
+      for (auto *packed : dynamic_range_cast<RooWorkspace::EmbeddedHisto const*>(_embeddedDataList)) {
+         // If the type was not RooWorkspace::EmbeddedHisto, it was an old workspace
+         // where the RooDataHists were stored directly. So nothing to do.
+         if (packed) {
+            RooAbsArg *arg = &_allOwnedNodes[packed->argName.c_str()];
+
+            auto *histPdf = dynamic_cast<RooHistPdf *>(arg);
+            auto *histFunc = dynamic_cast<RooHistFunc *>(arg);
+
+            RooArgSet const &vars = histPdf ? histPdf->variables() : histFunc->variables();
+
+            RooDataHist *dataHist = unpackEmbeddedHisto(vars, *packed);
+
+            if (histPdf)
+               histPdf->_dataHist = dataHist;
+            if (histFunc)
+               histFunc->_dataHist = dataHist;
+
+            _embeddedDataList.Replace(packed, dataHist);
+            delete packed;
+         }
       }
 
    } else {
@@ -2541,7 +2629,51 @@ void RooWorkspace::Streamer(TBuffer &R__b)
          }
       }
 
+      // Temporary container to hold converted embedded datasets during serialization
+      RooLinkedList embeddedDataList;
+
+      // Pack the embedded RooDataHists
+      std::vector<std::pair<RooAbsArg*, RooDataHist*>> associated;
+      for (RooAbsArg *arg : _allOwnedNodes) {
+          auto *histPdf = dynamic_cast<RooHistPdf *>(arg);
+          auto *histFunc = dynamic_cast<RooHistFunc *>(arg);
+          if (!histPdf && !histFunc) continue;
+          RooDataHist &dataHist = histPdf ? histPdf->dataHist() : histFunc->dataHist();
+
+          // We have to temporarily nullify the dataHists that the
+          // HistFuncs/Pdfs point to, so they don't get serialized.
+          // Remember the association and reset later.
+          if(histPdf) histPdf->_dataHist = nullptr;
+          if(histFunc) histFunc->_dataHist = nullptr;
+          associated.emplace_back(arg, &dataHist);
+
+          auto *dataHistPacked = new RooWorkspace::EmbeddedHisto;
+          packEmbeddedHisto(*arg, dataHist, *dataHistPacked);
+          embeddedDataList.Add(dataHistPacked);
+      }
+
+      // Validate that we have now packed all the embedded RooDataHists
+      if (embeddedDataList.size() != _embeddedDataList.size()) {
+         throw std::runtime_error("There were unexpected embedded datasets!");
+      }
+
+      // Temporarily replace _embeddedDataList with the serialized version for writing
+      std::swap(embeddedDataList, _embeddedDataList);
+
       R__b.WriteClassBuffer(RooWorkspace::Class(), this);
+
+      // Restore original _embeddedDataList after serialization is complete
+      std::swap(embeddedDataList, _embeddedDataList);
+
+      embeddedDataList.Delete();
+
+      // Reset the histFuncs to the RooDataHists/Pdfs
+      for(auto const &item : associated) {
+          auto *histPdf = dynamic_cast<RooHistPdf *>(item.first);
+          auto *histFunc = dynamic_cast<RooHistFunc *>(item.first);
+          if(histPdf) histPdf->_dataHist = item.second;
+          if(histFunc) histFunc->_dataHist = item.second;
+      }
 
       // Reinstate clients here
 

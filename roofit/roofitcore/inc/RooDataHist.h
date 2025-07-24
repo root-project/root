@@ -265,6 +265,8 @@ public:
   mutable double _cache_sum{0.};          ///<! Cache for sum of entries ;
 
 private:
+  friend class RooWorkspace ;
+
   void interpolateQuadratic(double* output, std::span<const double> xVals, bool correctForBinSize, bool cdfBoundaries);
   void interpolateLinear(double* output, std::span<const double> xVals, bool correctForBinSize, bool cdfBoundaries);
   double weightInterpolated(const RooArgSet& bin, int intOrder, bool correctForBinSize, bool cdfBoundaries);
