@@ -12,6 +12,7 @@
  *************************************************************************/
 
 #include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleBrowseUtils.hxx>
 #include <ROOT/RNTupleClassicBrowse.hxx>
 #include <ROOT/RNTupleDrawVisitor.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
@@ -44,9 +45,10 @@ public:
          return;
 
       const auto &desc = fReader->GetDescriptor();
+      const auto browsableFieldId = ROOT::Internal::GetNextBrowsableField(fFieldId, desc);
 
-      if (desc.GetFieldDescriptor(fFieldId).GetLinkIds().empty()) {
-         const auto qualifiedFieldName = desc.GetQualifiedFieldName(fFieldId);
+      if (desc.GetFieldDescriptor(browsableFieldId).GetLinkIds().empty()) {
+         const auto qualifiedFieldName = desc.GetQualifiedFieldName(browsableFieldId);
          auto view = fReader->GetView<void>(qualifiedFieldName);
 
          ROOT::Internal::RNTupleDrawVisitor drawVisitor(fReader, qualifiedFieldName);
@@ -56,7 +58,7 @@ public:
          if (gPad)
             gPad->Update();
       } else {
-         for (const auto &f : desc.GetFieldIterable(fFieldId)) {
+         for (const auto &f : desc.GetFieldIterable(browsableFieldId)) {
             b->Add(new RFieldBrowsable(fReader, f.GetId()), f.GetFieldName().c_str());
          }
       }
