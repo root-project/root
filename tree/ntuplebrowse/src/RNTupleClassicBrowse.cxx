@@ -13,11 +13,13 @@
 
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleClassicBrowse.hxx>
+#include <ROOT/RNTupleDrawVisitor.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleReader.hxx>
 
 #include <TBrowser.h>
 #include <TObject.h>
+#include <TPad.h>
 
 #include <memory>
 #include <string>
@@ -28,6 +30,7 @@ class RFieldBrowsable final : public TObject {
 private:
    std::shared_ptr<ROOT::RNTupleReader> fReader;
    ROOT::DescriptorId_t fFieldId = ROOT::kInvalidDescriptorId;
+   std::unique_ptr<TH1> fHistogram;
 
 public:
    RFieldBrowsable(std::shared_ptr<ROOT::RNTupleReader> reader, ROOT::DescriptorId_t fieldId)
@@ -41,8 +44,21 @@ public:
          return;
 
       const auto &desc = fReader->GetDescriptor();
-      for (const auto &f : desc.GetFieldIterable(fFieldId)) {
-         b->Add(new RFieldBrowsable(fReader, f.GetId()), f.GetFieldName().c_str());
+
+      if (desc.GetFieldDescriptor(fFieldId).GetLinkIds().empty()) {
+         const auto qualifiedFieldName = desc.GetQualifiedFieldName(fFieldId);
+         auto view = fReader->GetView<void>(qualifiedFieldName);
+
+         ROOT::Internal::RNTupleDrawVisitor drawVisitor(fReader, qualifiedFieldName);
+         view.GetField().AcceptVisitor(drawVisitor);
+         fHistogram = std::unique_ptr<TH1>(drawVisitor.MoveHist());
+         fHistogram->Draw();
+         if (gPad)
+            gPad->Update();
+      } else {
+         for (const auto &f : desc.GetFieldIterable(fFieldId)) {
+            b->Add(new RFieldBrowsable(fReader, f.GetId()), f.GetFieldName().c_str());
+         }
       }
    }
 };
