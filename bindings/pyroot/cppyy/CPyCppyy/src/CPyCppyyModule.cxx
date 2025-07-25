@@ -1064,21 +1064,18 @@ static struct PyModuleDef moduledef = {
     cpycppyymodule_clear,
     nullptr
 };
+#endif
 
+namespace CPyCppyy {
 
 //----------------------------------------------------------------------------
-#define CPYCPPYY_INIT_ERROR return nullptr
-extern "C" PyObject* PyInit_libcppyy()
-#else
-#define CPYCPPYY_INIT_ERROR return
-extern "C" void initlibcppyy()
-#endif
+PyObject* Init()
 {
 // Initialization of extension module libcppyy.
 
 // load commonly used python strings
     if (!CPyCppyy::CreatePyStrings())
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
 // setup interpreter
 #if PY_VERSION_HEX < 0x03090000
@@ -1107,7 +1104,7 @@ extern "C" void initlibcppyy()
     gThisModule = Py_InitModule(const_cast<char*>("libcppyy"), gCPyCppyyMethods);
 #endif
     if (!gThisModule)
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
 // keep gThisModule, but do not increase its reference count even as it is borrowed,
 // or a self-referencing cycle would be created
@@ -1121,58 +1118,58 @@ extern "C" void initlibcppyy()
 
 // inject meta type
     if (!Utility::InitProxy(gThisModule, &CPPScope_Type, "CPPScope"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
 // inject object proxy type
     if (!Utility::InitProxy(gThisModule, &CPPInstance_Type, "CPPInstance"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
 // inject exception object proxy type
     if (!Utility::InitProxy(gThisModule, &CPPExcInstance_Type, "CPPExcInstance"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
 // inject method proxy type
     if (!Utility::InitProxy(gThisModule, &CPPOverload_Type, "CPPOverload"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
 // inject template proxy type
     if (!Utility::InitProxy(gThisModule, &TemplateProxy_Type, "TemplateProxy"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
 // inject property proxy type
     if (!Utility::InitProxy(gThisModule, &CPPDataMember_Type, "CPPDataMember"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
 // inject custom data types
 #if PY_VERSION_HEX < 0x03000000
     if (!Utility::InitProxy(gThisModule, &RefFloat_Type, "Double"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
     if (!Utility::InitProxy(gThisModule, &RefInt_Type, "Long"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 #endif
 
     if (!Utility::InitProxy(gThisModule, &CustomInstanceMethod_Type, "InstanceMethod"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
     if (!Utility::InitProxy(gThisModule, &TupleOfInstances_Type, "InstanceArray"))
-       CPYCPPYY_INIT_ERROR;
+       return nullptr;
 
     if (!Utility::InitProxy(gThisModule, &LowLevelView_Type, "LowLevelView"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
     if (!Utility::InitProxy(gThisModule, &PyNullPtr_t_Type, "nullptr_t"))
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
 // custom iterators
     if (PyType_Ready(&InstanceArrayIter_Type) < 0)
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
     if (PyType_Ready(&IndexIter_Type) < 0)
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
     if (PyType_Ready(&VectorIter_Type) < 0)
-        CPYCPPYY_INIT_ERROR;
+        return nullptr;
 
 // inject identifiable nullptr and default
     gNullPtrObject = (PyObject*)&_CPyCppyy_NullPtrStruct;
@@ -1209,6 +1206,8 @@ extern "C" void initlibcppyy()
 
 #if PY_VERSION_HEX >= 0x03000000
     Py_INCREF(gThisModule);
-    return gThisModule;
 #endif
+    return gThisModule;
 }
+
+} // namespace CPyCppyy

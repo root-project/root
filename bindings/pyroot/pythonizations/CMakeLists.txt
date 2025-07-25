@@ -174,7 +174,7 @@ add_dependencies(${libname} ROOTPythonizationsPySources)
 
 # Set the suffix to '.so' and the prefix to 'lib'
 set_target_properties(${libname} PROPERTIES ${ROOT_LIBRARY_PROPERTIES_NO_VERSION})
-target_link_libraries(${libname} PUBLIC Core Tree cppyy)
+target_link_libraries(${libname} PUBLIC Core Tree CPyCppyy)
 if(MSVC)
   set_target_properties(${libname} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   set_target_properties(${libname} PROPERTIES SUFFIX ".pyd")
@@ -183,9 +183,6 @@ elseif(APPLE)
 else()
   target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all)
 endif()
-
-target_include_directories(${libname}
-    SYSTEM PRIVATE ${Python3_INCLUDE_DIRS})
 
 target_include_directories(${libname}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>)
