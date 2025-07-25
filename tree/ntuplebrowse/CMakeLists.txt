@@ -20,6 +20,7 @@ LINKDEF
   LinkDef.h
 DEPENDENCIES
   Core
+  Gpad
   Hist
   ROOTNTuple
 )
