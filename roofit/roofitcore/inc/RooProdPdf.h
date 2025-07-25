@@ -129,8 +129,6 @@ private:
 
   std::unique_ptr<RooAbsReal> makeCondPdfRatioCorr(RooAbsReal& term, const RooArgSet& termNset, const RooArgSet& termImpSet, const char* normRange, const char* refRange) const ;
 
-  void getParametersHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/, bool stripDisconnected) const override ;
-
   void initializeFromCmdArgList(const RooArgSet& fullPdfSet, const RooLinkedList& l) ;
 
   struct Factorized {

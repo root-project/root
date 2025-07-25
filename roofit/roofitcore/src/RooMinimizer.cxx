@@ -48,6 +48,7 @@ automatic PDF optimization.
 #include "RooSentinel.h"
 #include "RooMsgService.h"
 #include "RooPlot.h"
+#include "RooHelpers.h"
 #include "RooMinimizerFcn.h"
 #include "RooFitResult.h"
 #include "TestStatistics/MinuitFcnGrad.h"
@@ -68,6 +69,31 @@ automatic PDF optimization.
 #include <iostream>
 #include <stdexcept> // logic_error
 
+namespace {
+
+class FreezeDisconnectedParametersRAII {
+public:
+   FreezeDisconnectedParametersRAII(RooMinimizer const *minimizer, RooAbsMinimizerFcn const &fcn)
+      : _minimizer{minimizer}, _frozen{fcn.freezeDisconnectedParameters()}
+   {
+      if (!_frozen.empty()) {
+         oocoutI(_minimizer, Minimization) << "Freezing disconnected parameters: " << _frozen << std::endl;
+      }
+   }
+   ~FreezeDisconnectedParametersRAII()
+   {
+      if (!_frozen.empty()) {
+         oocoutI(_minimizer, Minimization) << "Unfreezing disconnected parameters: " << _frozen << std::endl;
+      }
+      RooHelpers::setAllConstant(_frozen, false);
+   }
+
+private:
+   RooMinimizer const *_minimizer = nullptr;
+   RooArgSet _frozen;
+};
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct MINUIT interface to given function. Function can be anything,
@@ -279,6 +305,8 @@ void RooMinimizer::determineStatus(bool fitterReturnValue)
 /// \param[in] alg  Fit algorithm to use. (Optional)
 int RooMinimizer::minimize(const char *type, const char *alg)
 {
+   FreezeDisconnectedParametersRAII freeze(this, *_fcn);
+
    if (_cfg.timingAnalysis) {
 #ifdef ROOFIT_MULTIPROCESS
       addParamsToProcessTimer();
@@ -321,6 +349,8 @@ int RooMinimizer::migrad()
 
 int RooMinimizer::exec(std::string const &algoName, std::string const &statusName)
 {
+   FreezeDisconnectedParametersRAII freeze(this, *_fcn);
+
    _fcn->Synchronize(_config.ParamsSettings());
    profileStart();
    {
@@ -395,6 +425,7 @@ int RooMinimizer::minos(const RooArgSet &minosParamList)
       coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!" << std::endl;
       _status = -1;
    } else if (!minosParamList.empty()) {
+      FreezeDisconnectedParametersRAII freeze(this, *_fcn);
 
       _fcn->Synchronize(_config.ParamsSettings());
       profileStart();
@@ -515,7 +546,7 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::save(const char *userName, const c
 
    fitRes->setStatus(_status);
    fitRes->setCovQual(_minimizer->CovMatrixStatus());
-   fitRes->setMinNLL(_result->fVal -_fcn->getOffset());
+   fitRes->setMinNLL(_result->fVal - _fcn->getOffset());
    fitRes->setEDM(_result->fEdm);
 
    fitRes->setInitParList(_fcn->initFloatParams());

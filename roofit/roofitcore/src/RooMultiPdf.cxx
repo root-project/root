@@ -28,7 +28,6 @@
 //  parameter title : Display title in plots
 //  parameter _x :  variable used to select which PDF that selects the active PDF.
 //  parameter _c : A list of the pdfs.The index of each PDF in the list should match the values in _x
-//_____________________________________________________________________________
 RooMultiPdf::RooMultiPdf(const char *name, const char *title, RooCategory &_x, const RooArgList &_c)
    : RooAbsPdf(name, title), // call of constructor base class RooAbsPdf passing it name and title
      c("_pdfs", "The list of pdfs", this),
@@ -54,7 +53,6 @@ RooMultiPdf::RooMultiPdf(const char *name, const char *title, RooCategory &_x, c
    _oldIndex = fIndex;
 }
 
-//_____________________________________________________________________________
 // Here new RooMultiPdf copy is created that references the same components as the original.
 // Copies c, corr, x
 RooMultiPdf::RooMultiPdf(const RooMultiPdf &other, const char *name)
@@ -65,7 +63,6 @@ RooMultiPdf::RooMultiPdf(const RooMultiPdf &other, const char *name)
    cFactor = other.cFactor; // correction to 2*NLL by default is -> 2*0.5 per param
 }
 
-//_____________________________________________________________________________
 // evaluate() and getLogVal() define how the value and log-value of the RooMultiPdf are computed at a given point.
 // RooMultiPdf must have both of these so it RooFit can treat it like a PDF
 Double_t RooMultiPdf::evaluate() const
@@ -75,10 +72,18 @@ Double_t RooMultiPdf::evaluate() const
    return val;
 }
 
-//_____________________________________________________________________________
 Double_t RooMultiPdf::getLogVal(const RooArgSet *nset) const
 {
    double logval = getCurrentPdf()->getLogVal(nset);
    _oldIndex = x;
    return logval;
+}
+
+void RooMultiPdf::getParametersHook(const RooArgSet *nset, RooArgSet *list, bool stripDisconnected) const
+{
+   if (!stripDisconnected)
+      return;
+
+   list->removeAll();
+   getCurrentPdf()->getParameters(nset, *list, stripDisconnected);
 }

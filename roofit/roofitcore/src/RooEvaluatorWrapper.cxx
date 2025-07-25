@@ -78,7 +78,7 @@ double RooEvaluatorWrapper::evaluate() const
 }
 
 bool RooEvaluatorWrapper::getParameters(const RooArgSet *observables, RooArgSet &outputSet,
-                                        bool /*stripDisconnected*/) const
+                                        bool stripDisconnected) const
 {
    outputSet.add(_evaluator->getParameters());
    if (observables) {
@@ -101,6 +101,23 @@ bool RooEvaluatorWrapper::getParameters(const RooArgSet *observables, RooArgSet 
    if (_takeGlobalObservablesFromData && _data->getGlobalObservables()) {
       outputSet.replace(*_data->getGlobalObservables());
    }
+
+   // The disconnected parameters are stripped away in
+   // RooAbsArg::getParametersHook(), that is only called in the original
+   // RooAbsArg::getParameters() implementation. So he have to call it to
+   // identify disconnected parameters to remove.
+   if (stripDisconnected) {
+      RooArgSet paramsStripped;
+      _topNode->getParameters(observables, paramsStripped, true);
+      RooArgSet toRemove;
+      for (RooAbsArg *param : outputSet) {
+         if (!paramsStripped.find(param->GetName())) {
+            toRemove.add(*param);
+         }
+      }
+      outputSet.remove(toRemove, /*silent*/ false, /*matchByNameOnly*/ true);
+   }
+
    return false;
 }
 
@@ -118,9 +135,9 @@ bool RooEvaluatorWrapper::setData(RooAbsData &data, bool /*cloneData*/)
 
    std::stack<std::vector<double>>{}.swap(_vectorBuffers);
    bool skipZeroWeights = !_pdf || !_pdf->getAttribute("BinnedLikelihoodActive");
-   _dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(
-      *_data, _rangeName, dynamic_cast<RooSimultaneous const *>(_pdf), skipZeroWeights, _takeGlobalObservablesFromData,
-      _vectorBuffers);
+   _dataSpans =
+      RooFit::BatchModeDataHelpers::getDataSpans(*_data, _rangeName, dynamic_cast<RooSimultaneous const *>(_pdf),
+                                                 skipZeroWeights, _takeGlobalObservablesFromData, _vectorBuffers);
    if (!isInitializing && _dataSpans.size() != oldSize) {
       coutE(DataHandling) << errMsg << std::endl;
       throw std::runtime_error(errMsg);

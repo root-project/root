@@ -555,9 +555,6 @@ void RooAbsArg::addParameters(RooAbsCollection &params, const RooArgSet *nset, b
       }
    }
 
-   // Allow pdf to strip parameters from list before adding it
-   getParametersHook(nset, &nodeParamServers, stripDisconnected);
-
    // Add parameters of this node to the combined list
    params.add(nodeParamServers, true);
 
@@ -567,6 +564,9 @@ void RooAbsArg::addParameters(RooAbsCollection &params, const RooArgSet *nset, b
    for (auto serverIt = branchList.begin(); serverIt < last; ++serverIt) {
       (*serverIt)->addParameters(params, nset);
    }
+
+   // Allow pdf to strip parameters from list
+   getParametersHook(nset, &dynamic_cast<RooArgSet &>(params), stripDisconnected);
 }
 
 /// Obtain an estimate of the number of parameters of the function and its daughters.
@@ -613,38 +613,15 @@ std::size_t RooAbsArg::getParametersSizeEstimate(const RooArgSet *nset) const
 
 bool RooAbsArg::getParameters(const RooArgSet *observables, RooArgSet &outputSet, bool stripDisconnected) const
 {
-   using RooHelpers::getColonSeparatedNameString;
-
-   // Check for cached parameter set
-   if (_myws) {
-      auto nsetObs = getColonSeparatedNameString(observables ? *observables : RooArgSet());
-      const RooArgSet *paramSet = _myws->set(Form("CACHE_PARAMS_OF_PDF_%s_FOR_OBS_%s", GetName(), nsetObs.c_str()));
-      if (paramSet) {
-         outputSet.add(*paramSet);
-         return false;
-      }
-   }
-
    outputSet.clear();
    outputSet.setName("parameters");
 
-   RooArgList tempList;
    // reserve all memory needed in one go
-   tempList.reserve(getParametersSizeEstimate(observables));
+   outputSet.reserve(getParametersSizeEstimate(observables));
 
-   addParameters(tempList, observables, stripDisconnected);
+   addParameters(outputSet, observables, stripDisconnected);
 
-   // The adding from the list to the set has to be silent to not complain
-   // about duplicate parameters. After all, it's normal that parameters can
-   // appear in sifferent components of the model.
-   outputSet.add(tempList, /*silent=*/true);
    outputSet.sort();
-
-   // Cache parameter set
-   if (_myws && outputSet.size() > 10) {
-      auto nsetObs = getColonSeparatedNameString(observables ? *observables : RooArgSet());
-      _myws->defineSetInternal(Form("CACHE_PARAMS_OF_PDF_%s_FOR_OBS_%s", GetName(), nsetObs.c_str()), outputSet);
-   }
 
    return false;
 }

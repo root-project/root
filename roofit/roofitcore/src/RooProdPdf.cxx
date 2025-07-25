@@ -1920,42 +1920,6 @@ RooArgSet* RooProdPdf::getConnectedParameters(const RooArgSet& observables) cons
   return connectedPars ;
 }
 
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-void RooProdPdf::getParametersHook(const RooArgSet* nset, RooArgSet* params, bool stripDisconnected) const
-{
-  if (!stripDisconnected) return ;
-  if (!nset || nset->empty()) return ;
-
-  // Get/create appropriate term list for this normalization set
-  Int_t code = getPartIntList(nset, nullptr);
-  RooArgList & plist = static_cast<CacheElem*>(_cacheMgr.getObj(nset, &code))->_partList;
-
-  // Strip any terms from params that do not depend on any term
-  RooArgSet tostrip ;
-  for (auto param : *params) {
-    bool anyDep(false) ;
-    for (auto term : plist) {
-      if (term->dependsOnValue(*param)) {
-        anyDep=true ;
-      }
-    }
-    if (!anyDep) {
-      tostrip.add(*param) ;
-    }
-  }
-
-  if (!tostrip.empty()) {
-    params->remove(tostrip,true,true);
-  }
-
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface function used by test statistics to freeze choice of range
 /// for interpretation of conditional product terms

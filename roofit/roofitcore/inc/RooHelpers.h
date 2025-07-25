@@ -91,9 +91,6 @@ void checkRangeOfParameters(const RooAbsReal *callingClass, std::initializer_lis
 /// set all RooRealVars to constants. return true if at least one changed status
 bool setAllConstant(const RooAbsCollection &coll, bool constant = true);
 
-bool freezeAllDisassociatedRooMultiPdfParameters(const RooArgSet &multiPdfs, const RooArgSet &allRooMultiPdfParams,
-                                                 bool freeze = true, bool freezeDisassParams_verb = false);
-
 } // namespace RooHelpers
 
 #endif

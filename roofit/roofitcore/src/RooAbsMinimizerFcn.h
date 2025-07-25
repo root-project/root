@@ -88,6 +88,8 @@ public:
       return static_cast<RooRealVar &>(_allParams[_floatableParamIndices[i]]);
    }
 
+   virtual RooArgSet freezeDisconnectedParameters() const { return {}; }
+
 protected:
    void optimizeConstantTerms(bool constStatChange, bool constValChange);
    /// This function must be overridden in the derived class to pass on constant term optimization configuration
