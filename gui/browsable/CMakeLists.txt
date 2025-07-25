@@ -113,6 +113,7 @@ if(root7)
     DEPENDENCIES
        ROOTBrowsable
        ROOTNTuple
+       ROOTNTupleBrowse
   )
 
   ROOT_LINKER_LIBRARY(ROOTNTupleDraw6Provider
