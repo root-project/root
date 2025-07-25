@@ -36,6 +36,8 @@ class RooAbsReal ;
 class RooAbsCategory ;
 class RooFactoryWSTool ;
 class RooAbsStudy ;
+class RooDataHist ;
+class RooAbsBinning ;
 
 #include "TNamed.h"
 #include "TDirectoryFile.h"
@@ -165,6 +167,24 @@ public:
 
   RooExpensiveObjectCache& expensiveObjectCache() { return _eocache ; }
 
+   /// Internal class that can pack all the information in an embedded
+   /// RooDataHist for smaller workspace sizes on disk.
+   struct EmbeddedHisto : public TObject {
+      std::string name;
+      std::string title;
+      std::string argName;
+
+      int arraySize;
+      std::vector<double> weightArray;
+      std::vector<double> wgtErrLoArray;
+      std::vector<double> wgtErrHiArray;
+      std::vector<double> sumW2Array;
+
+      std::vector<std::unique_ptr<RooAbsBinning>> binnings;
+
+      ClassDefOverride(EmbeddedHisto, 1);
+   };
+
   class CodeRepo : public TObject {
   public:
     CodeRepo(RooWorkspace* wspace=nullptr) : _wspace(wspace), _compiledOK(true) {} ;
@@ -245,7 +265,12 @@ public:
     friend class RooAbsArg;
     friend class RooAbsPdf;
     friend class RooConstraintSum;
+
     bool defineSetInternal(const char *name, const RooArgSet &aset);
+
+    void packEmbeddedHisto(RooAbsArg const &arg, RooDataHist const &dataHist, EmbeddedHisto &packed);
+
+    RooDataHist *unpackEmbeddedHisto(RooArgSet const &vars, EmbeddedHisto const &packed);
 
     friend class CodeRepo;
     static std::list<std::string> _classDeclDirList;
