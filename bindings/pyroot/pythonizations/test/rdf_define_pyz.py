@@ -176,7 +176,7 @@ class PyDefine(unittest.TestCase):
                 for x, y in zip(inputs, outputs):
                     self.assertEqual(case["extract_fn"](y), x)
 
-    def test_cpp_free_function_overloead(self):
+    def test_cpp_free_function_overload(self):
         """
         Test that an overload of a C++ free function can be passed as a callable argument of a
         Define operation with overloads.
