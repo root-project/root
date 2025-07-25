@@ -13,6 +13,7 @@
 #include <gtest/gtest.h>
 
 #include <TFile.h>
+#include <TTree.h>
 
 using ROOT::RDF::Experimental::VariationsFor;
 

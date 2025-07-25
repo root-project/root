@@ -6,6 +6,8 @@
 #include <iostream>
 #include <numeric> // accumulate
 
+#include <TTree.h>
+
 void FillTree(const char* filename, const char* treeName) {
    TFile f(filename, "RECREATE");
    TTree t(treeName, treeName);
