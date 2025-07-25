@@ -25,7 +25,8 @@ namespace {
 
 struct ClusterInfo {
    std::uint64_t fFirstEntry = 0;
-   std::uint32_t fNPages = 0;
+   std::uint64_t fNPhysicalPages = 0;
+   std::uint64_t fNAliasedPages = 0;
    std::uint32_t fNEntries = 0;
    std::uint32_t fNBytesOnStorage = 0;
    std::uint32_t fNBytesInMemory = 0;
@@ -40,7 +41,8 @@ struct ColumnInfo {
    ROOT::DescriptorId_t fLogicalColumnId = 0;
    ROOT::DescriptorId_t fFieldId = 0;
    std::uint64_t fNElements = 0;
-   std::uint64_t fNPages = 0;
+   std::uint64_t fNPhysicalPages = 0;
+   std::uint64_t fNAliasedPages = 0;
    std::uint64_t fNBytesOnStorage = 0;
    std::uint32_t fElementSize = 0;
    std::uint32_t fColumnIndex = 0;
@@ -92,7 +94,8 @@ void ROOT::RNTupleDescriptor::PrintInfo(std::ostream &output) const
 
    std::uint64_t nBytesOnStorage = 0;
    std::uint64_t nBytesInMemory = 0;
-   std::uint64_t nPages = 0;
+   std::uint64_t nPhysicalPages = 0;
+   std::uint64_t nAliasedPages = 0;
    std::unordered_set<std::uint64_t> seenPages{};
    int compression = -1;
    for (const auto &column : fColumnDescriptors) {
@@ -136,10 +139,14 @@ void ROOT::RNTupleDescriptor::PrintInfo(std::ostream &output) const
                nBytesInMemory += page.GetNElements() * elementSize;
                clusters[idx].fNBytesOnStorage += page.GetLocator().GetNBytesOnStorage();
                clusters[idx].fNBytesInMemory += page.GetNElements() * elementSize;
-               ++clusters[idx].fNPages;
+               ++clusters[idx].fNPhysicalPages;
                info.fNBytesOnStorage += page.GetLocator().GetNBytesOnStorage();
-               ++info.fNPages;
-               ++nPages;
+               ++info.fNPhysicalPages;
+               ++nPhysicalPages;
+            } else {
+               ++clusters[idx].fNAliasedPages;
+               ++info.fNAliasedPages;
+               ++nAliasedPages;
             }
          }
       }
@@ -155,7 +162,8 @@ void ROOT::RNTupleDescriptor::PrintInfo(std::ostream &output) const
    output << "  # Fields:         " << GetNFields() << "\n";
    output << "  # Columns:        " << GetNPhysicalColumns() << "\n";
    output << "  # Alias Columns:  " << GetNLogicalColumns() - GetNPhysicalColumns() << "\n";
-   output << "  # Pages:          " << nPages << "\n";
+   output << "  # Physical Pages: " << nPhysicalPages << "\n";
+   output << "  # Aliased Pages:  " << nAliasedPages << "\n";
    output << "  # Clusters:       " << GetNClusters() << "\n";
    output << "  Size on storage:  " << nBytesOnStorage << " B" << "\n";
    output << "  Compression rate: " << std::fixed << std::setprecision(2)
@@ -172,12 +180,13 @@ void ROOT::RNTupleDescriptor::PrintInfo(std::ostream &output) const
 
    std::sort(clusters.begin(), clusters.end());
    for (unsigned int i = 0; i < clusters.size(); ++i) {
-      output << "  # " << std::setw(5) << i << "   Entry range:     [" << clusters[i].fFirstEntry << ".."
+      output << "  # " << std::setw(5) << i << "   Entry range:      [" << clusters[i].fFirstEntry << ".."
              << clusters[i].fFirstEntry + clusters[i].fNEntries - 1 << "]  --  " << clusters[i].fNEntries << "\n";
-      output << "         " << "   # Pages:         " << clusters[i].fNPages << "\n";
-      output << "         " << "   Size on storage: " << clusters[i].fNBytesOnStorage << " B\n";
-      output << "         " << "   Compression:     " << std::fixed << std::setprecision(2);
-      if (clusters[i].fNPages > 0)
+      output << "         " << "   # Physical Pages: " << clusters[i].fNPhysicalPages << "\n";
+      output << "         " << "   # Aliased Pages:  " << clusters[i].fNAliasedPages << "\n";
+      output << "         " << "   Size on storage:  " << clusters[i].fNBytesOnStorage << " B\n";
+      output << "         " << "   Compression:      " << std::fixed << std::setprecision(2);
+      if (clusters[i].fNPhysicalPages > 0)
          output << float(clusters[i].fNBytesInMemory) / float(float(clusters[i].fNBytesOnStorage)) << std::endl;
       else
          output << "N/A" << std::endl;
@@ -192,8 +201,8 @@ void ROOT::RNTupleDescriptor::PrintInfo(std::ostream &output) const
    }
    std::sort(columns.begin(), columns.end());
    for (const auto &col : columns) {
-      auto avgPageSize = (col.fNPages == 0) ? 0 : (col.fNBytesOnStorage / col.fNPages);
-      auto avgElementsPerPage = (col.fNPages == 0) ? 0 : (col.fNElements / col.fNPages);
+      auto avgPageSize = (col.fNPhysicalPages == 0) ? 0 : (col.fNBytesOnStorage / col.fNPhysicalPages);
+      auto avgElementsPerPage = (col.fNPhysicalPages == 0) ? 0 : (col.fNElements / col.fNPhysicalPages);
       std::string nameAndType = std::string("  ") + col.fFieldName + " [#" + std::to_string(col.fColumnIndex);
       if (col.fRepresentationIndex > 0)
          nameAndType += " / R." + std::to_string(col.fRepresentationIndex);
@@ -205,12 +214,13 @@ void ROOT::RNTupleDescriptor::PrintInfo(std::ostream &output) const
       if (!col.fFieldDescription.empty())
          output << "    Description:         " << col.fFieldDescription << "\n";
       output << "    # Elements:          " << col.fNElements << "\n";
-      output << "    # Pages:             " << col.fNPages << "\n";
+      output << "    # Physical Pages:    " << col.fNPhysicalPages << "\n";
+      output << "    # Aliased Pages:     " << col.fNAliasedPages << "\n";
       output << "    Avg elements / page: " << avgElementsPerPage << "\n";
       output << "    Avg page size:       " << avgPageSize << " B\n";
       output << "    Size on storage:     " << col.fNBytesOnStorage << " B\n";
       output << "    Compression:         " << std::fixed << std::setprecision(2);
-      if (col.fNPages > 0)
+      if (col.fNPhysicalPages > 0)
          output << float(col.fElementSize * col.fNElements) / float(col.fNBytesOnStorage) << std::endl;
       else
          output << "N/A" << std::endl;
