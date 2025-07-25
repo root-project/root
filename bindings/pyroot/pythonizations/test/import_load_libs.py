@@ -56,6 +56,7 @@ class ImportLoadLibs(unittest.TestCase):
         "libresolv",
         # cppyy and Python libraries
         "libcppyy.*",
+        "libCPyCppyy.*",
         "libROOTPythonizations.*",
         "libpython.*",
         "libutil.*",

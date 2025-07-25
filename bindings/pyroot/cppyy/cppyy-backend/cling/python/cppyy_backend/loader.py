@@ -76,32 +76,6 @@ def load_cpp_backend():
      # distribution as there are too many varieties; create it now if needed
         ensure_precompiled_header()
 
-    names = list()
-    try:
-        bkname = os.environ['CPPYY_BACKEND_LIBRARY']
-        if bkname.rfind(soext) < 0:
-            bkname += soext
-        names.append(bkname)
-    except KeyError:
-        names.append('libcppyy_backend'+soext)
-        if soabi:
-            names.append('libcppyy_backend.'+soabi+soext)
-        if soext2:
-            names.append('libcppyy_backend'+soext2)
-
-    err = set()
-    for name in names:
-        c, err2 = _load_helper(name)
-        if c:
-            break
-        err = err.union(err2)
-
-    if not c:
-        raise RuntimeError("could not load cppyy_backend library, details:\n%s" %
-            '\n'.join(['  '+x for x in err]))
-
-    return c
-
 
 def set_cling_compile_options(add_defaults = False):
   # extra optimization flags for Cling
