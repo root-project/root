@@ -1,4 +1,4 @@
-# RNTuple Binary Format Specification 1.0.0.1
+# RNTuple Binary Format Specification 1.0.0.2
 
 ## Versioning Notes
 
@@ -805,10 +805,12 @@ e.g. `std::vector<MyEvent>` or `std::vector<std::vector<float>>`.
 ### Type Name Normalization
 
 Type names are stored according to the following normalization rules
-  - The type name of a field has typedefs and usings fully resolved (except for the following rule).
+  - The type name of a field has typedefs and usings fully resolved (except for the following two rules).
   - The integer types `signed char`, `unsigned char`, and `[signed|unsigned](short|int|long[ long])`
     are replaced by the corresponding (at the time of writing) `std::[u]int(8|16|32|64)_t` standard integer typedef.
-  - Qualifiers `volatile` and `const` that do not appear in template arguments are removed.
+  - Supported stdlib types are not further resolved (e.g., `std::string` is _not_ stored as `std::basic_string<char>`).
+  - C style array types (`T[N][M]`) are mapped to stdlib arrays (`std::array<std::array<T,M>,N>`)
+  - Qualifiers `volatile` and `const` that do not appear in template arguments of user-defined types are removed.
   - The `class`, `struct`, and `enum` keywords are removed.
   - Type names are fully qualified by the namespace in which they are declared;
     the root namespace ('::' prefix) is stripped.
