@@ -14,6 +14,7 @@
 #include "NTupleStruct.hxx"
 
 #include <TFile.h>
+#include <TTree.h>
 
 using ROOT::RNTupleModel;
 using ROOT::RNTupleReader;

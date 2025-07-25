@@ -15,6 +15,7 @@
 #include "gtest/gtest.h"
 
 #include <TFile.h>
+#include <TTree.h>
 
 using namespace ROOT;
 using namespace ROOT::RDF;
