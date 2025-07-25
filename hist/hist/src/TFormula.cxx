@@ -3280,7 +3280,9 @@ bool TFormula::GenerateGradientPar() {
       return false;
 
    IncludeCladRuntime(fIsCladRuntimeIncluded);
-
+   if (!fIsCladRuntimeIncluded)
+      return false;
+    
    // Check if the gradient request was made as part of another TFormula.
    // This can happen when we create multiple TFormula objects with the same
    // formula. In that case, the hasher will give identical id and we can
@@ -3345,6 +3347,8 @@ bool TFormula::GenerateHessianPar()
       return false;
 
    IncludeCladRuntime(fIsCladRuntimeIncluded);
+   if (!fIsCladRuntimeIncluded)
+      return false;
 
    // Check if the hessian request was made as part of another TFormula.
    // This can happen when we create multiple TFormula objects with the same
