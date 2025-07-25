@@ -203,7 +203,7 @@ size_t ROOT::Experimental::RNTupleInspector::GetColumnCountByType(ROOT::ENTupleC
    return typeCount;
 }
 
-const std::vector<ROOT::DescriptorId_t>
+std::vector<ROOT::DescriptorId_t>
 ROOT::Experimental::RNTupleInspector::GetColumnsByType(ROOT::ENTupleColumnType colType)
 {
    std::vector<ROOT::DescriptorId_t> colIds;
@@ -216,7 +216,7 @@ ROOT::Experimental::RNTupleInspector::GetColumnsByType(ROOT::ENTupleColumnType c
    return colIds;
 }
 
-const std::vector<ROOT::ENTupleColumnType> ROOT::Experimental::RNTupleInspector::GetColumnTypes()
+std::vector<ROOT::ENTupleColumnType> ROOT::Experimental::RNTupleInspector::GetColumnTypes()
 {
    std::set<ROOT::ENTupleColumnType> colTypes;
 
@@ -498,7 +498,7 @@ size_t ROOT::Experimental::RNTupleInspector::GetFieldCountByType(const std::rege
    return typeCount;
 }
 
-const std::vector<ROOT::DescriptorId_t>
+std::vector<ROOT::DescriptorId_t>
 ROOT::Experimental::RNTupleInspector::GetFieldsByName(const std::regex &fieldNamePattern, bool searchInSubfields) const
 {
    std::vector<ROOT::DescriptorId_t> fieldIds;
