@@ -2009,6 +2009,44 @@ TEST(FunctionReflectionTest, GetFunctionCallWrapper) {
 
   auto bar_callable = Cpp::MakeFunctionCallable(bar);
   EXPECT_EQ(bar_callable.getKind(), Cpp::JitCall::kGenericCall);
+
+  Cpp::Declare(R"(
+  template<typename T1, typename T2>
+  struct Product {};
+
+  template<typename T>
+  struct KlassProduct {
+    template<typename O>
+    const Product<T, O>
+    operator*(const KlassProduct<O> &other) const { return Product<T, O>(); }
+
+    template<typename TT, typename O>
+    const Product<TT, O>
+    operator*(const KlassProduct<O> &other) const { return Product<TT, O>(); }
+  };
+  )");
+
+  Cpp::TCppScope_t KlassProduct = Cpp::GetNamed("KlassProduct");
+  EXPECT_TRUE(KlassProduct);
+
+  Cpp::TCppScope_t KlassProduct_int =
+      Cpp::InstantiateTemplate(KlassProduct, &TAI, 1);
+  EXPECT_TRUE(KlassProduct_int);
+  TAI = Cpp::TemplateArgInfo(Cpp::GetType("float"));
+  Cpp::TCppScope_t KlassProduct_float =
+      Cpp::InstantiateTemplate(KlassProduct, &TAI, 1);
+  EXPECT_TRUE(KlassProduct_float);
+
+  operators.clear();
+  Cpp::GetOperator(KlassProduct_int, Cpp::OP_Star, operators);
+  EXPECT_EQ(operators.size(), 2);
+
+  op = Cpp::BestOverloadFunctionMatch(
+      operators, {}, {{Cpp::GetTypeFromScope(KlassProduct_float)}});
+  EXPECT_TRUE(op);
+
+  auto op_callable = Cpp::MakeFunctionCallable(op);
+  EXPECT_EQ(op_callable.getKind(), Cpp::JitCall::kGenericCall);
 }
 
 TEST(FunctionReflectionTest, IsConstMethod) {
