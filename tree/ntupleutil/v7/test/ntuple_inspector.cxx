@@ -263,6 +263,30 @@ TEST(RNTupleInspector, SizeProjectedFields)
    EXPECT_EQ(inspector->GetFieldTreeInspector("muonPt").GetCompressedSize(), inspector->GetCompressedSize());
 }
 
+TEST(RNTupleInspector, SizeSamePageMerging)
+{
+   FileRaii fileGuard("test_ntuple_inspector_size_same_page_merging.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto nFldInt = model->MakeField<std::int32_t>("int");
+
+      auto writeOptions = RNTupleWriteOptions();
+      writeOptions.SetCompression(0);
+      writeOptions.SetInitialUnzippedPageSize(16);
+      writeOptions.SetMaxUnzippedPageSize(16);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), writeOptions);
+
+      for (int32_t i = 0; i < 64; ++i) {
+         *nFldInt = 0;
+         ntuple->Fill();
+      }
+   }
+
+   auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(inspector->GetUncompressedSize(), 256);
+   EXPECT_EQ(inspector->GetCompressedSize(), 16);
+}
+
 TEST(RNTupleInspector, ColumnInfoCompressed)
 {
    FileRaii fileGuard("test_ntuple_inspector_column_info_compressed.root");
