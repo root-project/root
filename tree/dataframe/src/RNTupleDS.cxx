@@ -15,6 +15,8 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDF/Utils.hxx>
 #include <ROOT/RField.hxx>
+#include <ROOT/RFieldBase.hxx>
+#include <ROOT/RFieldBaseRValue.hxx>
 #include <ROOT/RFieldUtils.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
