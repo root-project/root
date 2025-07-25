@@ -1112,7 +1112,7 @@ When the minimum of the histogram is set to a greater value than the real minimu
  unless the option `0` is set.
 In other words, option `COLZ0` forces the painting of bins with content < set minimum with
  a color corresponding to the set minimum. In contrast, option `COLZ` would not draw values
- smaller than the specified minimum. Note that both `COLZ0` and `COLZ0` still do not draw
+ smaller than the specified minimum. Note that both `COLZ` and `COLZ0` still do not draw
  empty bins, ie bins with `content == error == 0`, if the set min is not negative.
 (Note that option `COLZ0` for TH2Poly has a different behavior than for TH2.)
 
