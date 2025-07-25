@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include <TFile.h>
+#include <TTree.h>
 
 using ROOT::Internal::RDF::ChangeBeginAndEndEntries;
 using ROOT::Internal::RDF::ChangeEmptyEntryRange;

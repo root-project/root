@@ -12,6 +12,7 @@
 #include <memory>
 
 #include <TFile.h>
+#include <TTree.h>
 
 using namespace ROOT::RDF;
 
