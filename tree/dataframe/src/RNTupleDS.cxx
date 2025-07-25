@@ -657,8 +657,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
 
    // If we have fewer files than slots and we run multiple event loops, we can reuse fCurrentRanges and don't need
    // to worry about loading the fNextRanges. I.e., in this case we don't enter the if block.
-   if (fCurrentRanges.empty() || (fGlobalEntryRange.has_value() && fSeenEntriesNoGlobalRange > 0) ||
-       (!fGlobalEntryRange.has_value() && fSeenEntries > 0)) {
+   if (fCurrentRanges.empty() || fSeenEntriesNoGlobalRange > 0) {
       // Otherwise, i.e. start of the first event loop or in the middle of the event loop, prepare the next ranges
       // and swap with the current ones.
       {
@@ -857,6 +856,8 @@ bool ROOT::RDF::RNTupleDS::HasColumn(std::string_view colName) const
 void ROOT::RDF::RNTupleDS::Initialize()
 {
    fSeenEntries = 0;
+   fSeenEntriesNoGlobalRange = 0;
+   fSeenEntriesWithGlobalRange = 0;
    fNextFileIndex = 0;
    fIsReadyForStaging = fHasNextSources = fStagingThreadShouldTerminate = false;
    fThreadStaging = std::thread(&RNTupleDS::ExecStaging, this);
