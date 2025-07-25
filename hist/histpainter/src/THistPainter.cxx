@@ -10138,6 +10138,9 @@ void THistPainter::PaintText(Option_t *)
 
    // 2D histograms
    } else {
+      Double_t zmin = Hparam.zmin;
+      if (Hoption.Logz) zmin = TMath::Power(10,Hparam.zmin);
+
       text.SetTextAlign(22);
       if (Hoption.Text ==  1) angle = 0;
       text.SetTextAngle(angle);
@@ -10157,7 +10160,7 @@ void THistPainter::PaintText(Option_t *)
             }
             if (!IsInside(x,y)) continue;
             z = fH->GetBinContent(bin);
-            if (z < Hparam.zmin || (z == 0 && !Hoption.MinimumZero)) continue;
+            if (z < zmin || (z == 0 && !Hoption.MinimumZero)) continue;
             if (Hoption.Text>2000) {
                e = fH->GetBinError(bin);
                tf.Form("#splitline{%s%s}{#pm %s%s}",
