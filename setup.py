@@ -47,7 +47,7 @@ class ROOTBuild(_build):
             "-Dgminimal=ON -Dasimage=ON -Dopengl=OFF "  # Graphics
             "-Druntime_cxxmodules=ON -Drpath=ON -Dfail-on-missing=ON -DROOT_WHEEL_BUILD=ON "  # Generic build configuration
             "-Dbuiltin_nlohmannjson=ON -Dbuiltin_tbb=ON -Dbuiltin_xrootd=ON "  # builtins
-            "-Dbuiltin_lz4=ON -Dbuiltin_lzma=ON -Dbuiltin_zstd=ON -Dbuiltin_xxhash=ON"  # builtins
+            "-Dbuiltin_lz4=ON -Dbuiltin_lzma=ON -Dbuiltin_zstd=ON -Dbuiltin_xxhash=ON "  # builtins
             "-Dpyroot=ON -Ddataframe=ON -Dxrootd=ON -Dssl=ON -Dimt=ON "
             "-Droofit=ON "
             f"-DCMAKE_INSTALL_PREFIX={INSTALL_DIR} -B {BUILD_DIR} -S {SOURCE_DIR}"
