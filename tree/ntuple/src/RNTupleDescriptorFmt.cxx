@@ -93,6 +93,7 @@ void ROOT::RNTupleDescriptor::PrintInfo(std::ostream &output) const
    std::uint64_t nBytesOnStorage = 0;
    std::uint64_t nBytesInMemory = 0;
    std::uint64_t nPages = 0;
+   std::unordered_set<std::uint64_t> seenPages{};
    int compression = -1;
    for (const auto &column : fColumnDescriptors) {
       // Alias columns (columns of projected fields) don't contribute to the storage consumption. Count them
@@ -124,15 +125,22 @@ void ROOT::RNTupleDescriptor::PrintInfo(std::ostream &output) const
          }
          const auto &pageRange = cluster.second.GetPageRange(column.second.GetPhysicalId());
          auto idx = cluster2Idx[cluster.first];
+         std::uint64_t locatorOffset;
          for (const auto &page : pageRange.GetPageInfos()) {
-            nBytesOnStorage += page.GetLocator().GetNBytesOnStorage();
-            nBytesInMemory += page.GetNElements() * elementSize;
-            clusters[idx].fNBytesOnStorage += page.GetLocator().GetNBytesOnStorage();
-            clusters[idx].fNBytesInMemory += page.GetNElements() * elementSize;
-            ++clusters[idx].fNPages;
-            info.fNBytesOnStorage += page.GetLocator().GetNBytesOnStorage();
-            ++info.fNPages;
-            ++nPages;
+            locatorOffset = page.GetLocator().GetType() == ROOT::RNTupleLocator::ELocatorType::kTypeDAOS
+                               ? page.GetLocator().GetPosition<RNTupleLocatorObject64>().GetLocation()
+                               : page.GetLocator().GetPosition<std::uint64_t>();
+            auto [_, pageAdded] = seenPages.emplace(locatorOffset);
+            if (pageAdded) {
+               nBytesOnStorage += page.GetLocator().GetNBytesOnStorage();
+               nBytesInMemory += page.GetNElements() * elementSize;
+               clusters[idx].fNBytesOnStorage += page.GetLocator().GetNBytesOnStorage();
+               clusters[idx].fNBytesInMemory += page.GetNElements() * elementSize;
+               ++clusters[idx].fNPages;
+               info.fNBytesOnStorage += page.GetLocator().GetNBytesOnStorage();
+               ++info.fNPages;
+               ++nPages;
+            }
          }
       }
       columns.emplace_back(info);
@@ -168,8 +176,11 @@ void ROOT::RNTupleDescriptor::PrintInfo(std::ostream &output) const
              << clusters[i].fFirstEntry + clusters[i].fNEntries - 1 << "]  --  " << clusters[i].fNEntries << "\n";
       output << "         " << "   # Pages:         " << clusters[i].fNPages << "\n";
       output << "         " << "   Size on storage: " << clusters[i].fNBytesOnStorage << " B\n";
-      output << "         " << "   Compression:     " << std::fixed << std::setprecision(2)
-             << float(clusters[i].fNBytesInMemory) / float(float(clusters[i].fNBytesOnStorage)) << std::endl;
+      output << "         " << "   Compression:     " << std::fixed << std::setprecision(2);
+      if (clusters[i].fNPages > 0)
+         output << float(clusters[i].fNBytesInMemory) / float(float(clusters[i].fNBytesOnStorage)) << std::endl;
+      else
+         output << "N/A" << std::endl;
    }
 
    output << "------------------------------------------------------------\n";
@@ -198,8 +209,11 @@ void ROOT::RNTupleDescriptor::PrintInfo(std::ostream &output) const
       output << "    Avg elements / page: " << avgElementsPerPage << "\n";
       output << "    Avg page size:       " << avgPageSize << " B\n";
       output << "    Size on storage:     " << col.fNBytesOnStorage << " B\n";
-      output << "    Compression:         " << std::fixed << std::setprecision(2)
-             << float(col.fElementSize * col.fNElements) / float(col.fNBytesOnStorage) << "\n";
+      output << "    Compression:         " << std::fixed << std::setprecision(2);
+      if (col.fNPages > 0)
+         output << float(col.fElementSize * col.fNElements) / float(col.fNBytesOnStorage) << std::endl;
+      else
+         output << "N/A" << std::endl;
       output << "............................................................" << std::endl;
    }
 }
