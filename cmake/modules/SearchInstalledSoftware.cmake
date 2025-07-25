@@ -677,7 +677,13 @@ set(Python3_FIND_FRAMEWORK LAST)
 # Even if we don't build PyROOT, one still need python executable to run some scripts
 list(APPEND python_components Interpreter)
 if(pyroot OR tmva-pymva)
-  list(APPEND python_components Development)
+  if(DEFINED ROOT_WHEEL_BUILD AND ROOT_WHEEL_BUILD)
+    # We have to only look for the Python development module in order to be able to build ROOT with a pip backend
+    # In particular, it is forbidden to link against libPython.so, see https://peps.python.org/pep-0513/#libpythonx-y-so-1
+    list(APPEND python_components Development.Module)
+  else()
+    list(APPEND python_components Development)
+  endif()
 endif()
 if(tmva-pymva)
   list(APPEND python_components NumPy)
@@ -1759,7 +1765,7 @@ endif(tmva)
 #---Check for PyROOT---------------------------------------------------------------------
 if(pyroot)
 
-  if(Python3_Development_FOUND)
+  if(Python3_Development.Module_FOUND)
     message(STATUS "PyROOT: development package found. Building for version ${Python3_VERSION}")
   else()
     if(fail-on-missing)
@@ -1774,7 +1780,7 @@ if(pyroot)
 endif()
 
 #---Check for TPython---------------------------------------------------------------------
-if(tpython)
+if(tpython AND NOT (DEFINED ROOT_WHEEL_BUILD AND ROOT_WHEEL_BUILD))
 
   if(NOT Python3_Development_FOUND)
     if(fail-on-missing)

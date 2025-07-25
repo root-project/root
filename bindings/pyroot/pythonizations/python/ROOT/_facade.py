@@ -11,7 +11,6 @@ from ._application import PyROOTApplication
 from ._numbadeclare import _NumbaDeclareDecorator
 from ._pythonization import pythonization
 
-
 class PyROOTConfiguration(object):
     """Class for configuring PyROOT"""
 

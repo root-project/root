@@ -174,7 +174,7 @@ add_dependencies(${libname} ROOTPythonizationsPySources)
 
 # Set the suffix to '.so' and the prefix to 'lib'
 set_target_properties(${libname} PROPERTIES ${ROOT_LIBRARY_PROPERTIES_NO_VERSION})
-target_link_libraries(${libname} PUBLIC Core Tree cppyy)
+target_link_libraries(${libname} PUBLIC ROOT::Core ROOT::Tree cppyy)
 if(MSVC)
   set_target_properties(${libname} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   set_target_properties(${libname} PROPERTIES SUFFIX ".pyd")
@@ -228,6 +228,18 @@ else()
       LIBRARY_OUTPUT_DIRECTORY ${pymoduledir_build})
 endif()
 
+# It is crucial to add the path to the other ROOT libraries for compatibility with pip build backends.
+# After the `pip install` step, the target install user directory will look like:
+# site-packages/
+# -- cppyy/
+# -- cppyy_backend/
+# -- libcppyy.so
+# -- libcppyy_backend.so
+# -- ROOT/
+# -- -- libROOTPythonizations.so
+# With most of the ROOT libraries being stored in `ROOT/lib`. The RPATH must then be updated for the CPython extension
+# shared libraries.
+
 if(NOT MSVC)
   # Make sure that relative RUNPATH to main ROOT libraries is always correct.
 
@@ -242,7 +254,8 @@ if(NOT MSVC)
   else()
     set_target_properties(${libname} PROPERTIES
         BUILD_RPATH "$ORIGIN/${pymoduledir_to_libdir_build}"
-        INSTALL_RPATH "$ORIGIN/${pymoduledir_to_libdir_install}"
+        # ATTENTION: NEXT PART IS CRUCIAL SEE COMMENT ABOVE
+        INSTALL_RPATH "$ORIGIN/${pymoduledir_to_libdir_install}:${CMAKE_INSTALL_RPATH}:$ORIGIN/lib"
     )
   endif()
 

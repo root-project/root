@@ -17,7 +17,7 @@ if(pyroot)
   endif()
 endif()
 
-if(tpython)
+if(tpython AND NOT (DEFINED ROOT_WHEEL_BUILD AND ROOT_WHEEL_BUILD))
   add_subdirectory(tpython)
 endif()
 
