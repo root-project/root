@@ -1,4 +1,5 @@
 #include "ROOT/RDataFrame.hxx"
+#include <TTree.h>
 
 #include "gtest/gtest.h"
 

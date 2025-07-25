@@ -11,6 +11,7 @@
 #include <algorithm>
 
 #include <TFile.h>
+#include <TTree.h>
 
 using namespace ROOT::RDF;
 using namespace ROOT::VecOps;
