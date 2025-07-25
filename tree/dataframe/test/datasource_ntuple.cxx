@@ -809,3 +809,22 @@ TEST(RNTupleDS, TDirectory)
    EXPECT_EQ(1ull, ds.GetNFiles());
    EXPECT_EQ(std::vector<std::string>{"x"}, ds.GetColumnNames());
 }
+
+TEST(RNTupleDS, Int8)
+{
+   FileRAII fileGuard("test_rntupleds_int8.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldX = model->MakeField<std::int8_t>("x");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+
+      for (unsigned i = 0; i < 5; ++i) {
+         *fldX = i;
+         ntuple->Fill();
+      }
+   }
+
+   ROOT::RDataFrame df("ntuple", fileGuard.GetPath());
+   std::vector<std::int8_t> expected{0, 1, 2, 3, 4};
+   EXPECT_EQ(expected, df.Take<std::int8_t>("x").GetValue());
+}

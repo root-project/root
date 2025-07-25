@@ -178,12 +178,19 @@ const std::type_info &TypeName2TypeID(const std::string &name)
 std::string TypeID2TypeName(const std::type_info &id)
 {
    const static std::unordered_map<TypeInfoRef, std::string, TypeInfoRefHash, TypeInfoRefEqualComp> typeID2TypeNameMap{
-      {typeid(char), "char"},         {typeid(unsigned char), "unsigned char"},
-      {typeid(int), "int"},           {typeid(unsigned int), "unsigned int"},
-      {typeid(short), "short"},       {typeid(unsigned short), "unsigned short"},
-      {typeid(long), "long"},         {typeid(unsigned long), "unsigned long"},
-      {typeid(double), "double"},     {typeid(float), "float"},
-      {typeid(Long64_t), "Long64_t"}, {typeid(ULong64_t), "ULong64_t"},
+      {typeid(char), "char"},
+      {typeid(unsigned char), "unsigned char"},
+      {typeid(signed char), "signed char"},
+      {typeid(int), "int"},
+      {typeid(unsigned int), "unsigned int"},
+      {typeid(short), "short"},
+      {typeid(unsigned short), "unsigned short"},
+      {typeid(long), "long"},
+      {typeid(unsigned long), "unsigned long"},
+      {typeid(double), "double"},
+      {typeid(float), "float"},
+      {typeid(Long64_t), "Long64_t"},
+      {typeid(ULong64_t), "ULong64_t"},
       {typeid(bool), "bool"}};
 
    if (auto it = typeID2TypeNameMap.find(id); it != typeID2TypeNameMap.end())
