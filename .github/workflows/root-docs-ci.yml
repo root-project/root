@@ -186,8 +186,8 @@ jobs:
       run: |
         pwd
         ls -l
-        aws s3 sync ${DOC_DIR}/html/ s3://root/doc/${WEB_DIR_NAME}/
-        aws s3 sync ${DOC_DIR}/ s3://root/doc/${WEB_DIR_NAME}/ --exclude "${DOC_DIR}/html/*"
+        aws s3 sync --delete ${DOC_DIR}/html/ s3://root/doc/${WEB_DIR_NAME}/
+        aws s3 sync --delete ${DOC_DIR}/ s3://root/doc/${WEB_DIR_NAME}/ --exclude "${DOC_DIR}/html/*"
         aws s3 cp ${TAR_NAME}.gz s3://root/download/
 
     - name: Install Kerberos utilities
@@ -208,23 +208,47 @@ jobs:
       working-directory: ${{ env.DOC_LOCATION }}
       # Because of https://github.com/xrootd/xrootd/issues/2235 , the xrd client can copy
       # only at most 65536 in one go. For this reason, we copy files in batches, dividing
-      # them by extension. Once that is fixed in XRootD, a single command can be used 
+      # them by extension. Once that is fixed in XRootD, a single command can be used
       # instead.
       run: |
         echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
         kinit -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
+
+        EOS_HOST=${EOS_ENDPOINT#root://}
+        TMP_DIR=${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}_tmp
+        OLD_DIR=${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}_old
+        FINAL_DIR=${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+
+        # Clean up temporary directory if it exists
+        xrdfs "${EOS_HOST}" rm -r "${TMP_DIR}" || true
+
+        # Upload documentation to temporary directory
         cd ${DOC_DIR}/html/
-        xrdcp --parallel 64 -rf ./*.html ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp --parallel 64 -rf ./*.html ${EOS_ENDPOINT}/${TMP_DIR}
         rm -rf *.html
-        xrdcp --parallel 64 -rf ./*.svg ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp --parallel 64 -rf ./*.svg ${EOS_ENDPOINT}/${TMP_DIR}
         rm -rf *.svg
-        xrdcp --parallel 64 -rf ./*.map ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp --parallel 64 -rf ./*.map ${EOS_ENDPOINT}/${TMP_DIR}
         rm -rf *.map
-        xrdcp --parallel 64 -rf ./*.md5 ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp --parallel 64 -rf ./*.md5 ${EOS_ENDPOINT}/${TMP_DIR}
         rm -rf *.md5
-        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${TMP_DIR}
         cd ..
         rm -r html
-        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${TMP_DIR}
         cd ..
+
+        # Remove previous backup if it exists
+        xrdfs "${EOS_HOST}" rm -r "${OLD_DIR}" || true
+
+        # Rename current live directory to old
+        xrdfs "${EOS_HOST}" mv "${FINAL_DIR}" "${OLD_DIR}" || true
+
+        # Rename temporary directory to live
+        xrdfs "${EOS_HOST}" mv "${TMP_DIR}" "${FINAL_DIR}"
+
+        # Delete the old directory after successful swap
+        xrdfs "${EOS_HOST}" rm -r "${OLD_DIR}" || true
+
+        # Upload tar.gz archive to download directory
         xrdcp -rf ${TAR_NAME}.gz ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download
