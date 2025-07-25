@@ -42,18 +42,16 @@ class ROOTBuild(_build):
         _build.run(self)
 
         # Configure ROOT build
-        base_opts = shlex.split("cmake -GNinja -Dccache=ON")
-        mode_opts = shlex.split(
+        configure_command = shlex.split(
+            "cmake -GNinja -Dccache=ON "
+            "-Dgminimal=ON -Dasimage=ON -Dopengl=OFF "  # Graphics
+            "-Druntime_cxxmodules=ON -Drpath=ON -Dfail-on-missing=ON -DROOT_WHEEL_BUILD=ON "  # Generic build configuration
             "-Dbuiltin_nlohmannjson=ON -Dbuiltin_tbb=ON -Dbuiltin_xrootd=ON "  # builtins
             "-Dbuiltin_lz4=ON -Dbuiltin_lzma=ON -Dbuiltin_zstd=ON -Dbuiltin_xxhash=ON"  # builtins
-            "-Druntime_cxxmodules=ON -Drpath=ON -Dfail-on-missing=ON "  # Generic build configuration
-            "-Dgminimal=ON -Dasimage=ON -Dopengl=OFF "  # Graphics
             "-Dpyroot=ON -Ddataframe=ON -Dxrootd=ON -Dssl=ON -Dimt=ON "
-            "-Droofit=ON"
+            "-Droofit=ON "
+            f"-DCMAKE_INSTALL_PREFIX={INSTALL_DIR} -B {BUILD_DIR} -S {SOURCE_DIR}"
         )
-        dirs_opts = shlex.split(f"-DCMAKE_INSTALL_PREFIX={INSTALL_DIR} -B {BUILD_DIR} -S {SOURCE_DIR}")
-        configure_command = base_opts + mode_opts + dirs_opts
-        print(f"\n\n{' '.join(configure_command)}\n\n")
         subprocess.run(configure_command, check=True)
 
         # Run build with CMake
