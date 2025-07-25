@@ -136,7 +136,6 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    // check whether we have a ToyMCSampler and if so, keep a pointer to it
    ToyMCSampler* toymcs = dynamic_cast<ToyMCSampler*>(fTestStatSampler );
 
-
    // evaluate test statistic on data
    RooArgSet nullP(*nullSnapshot);
    double obsTestStat;
@@ -152,6 +151,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
       if (allTS->size()<=1) {
         allTS = nullptr; // don't save
       }
+
    }else{
       obsTestStat = fTestStatSampler->EvaluateTestStatistic(*const_cast<RooAbsData*>(fData), nullP);
    }
@@ -162,6 +162,16 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    // must be set here)
    bothParams->assign(*saveAll);
 
+   // If the pdf is not extended, the generation of toy datasets will fail if
+   // the number of events requested per toy is not set. In that case, we
+   // generate the same number of events as in the observed data.
+   auto setNEventsIfNeeded = [&](RooFit::ModelConfig const *modelConfig) {
+      int nEventsPerToy = toymcs->nEventsPerToy();
+      auto *pdf = modelConfig->GetPdf();
+      if (nEventsPerToy == 0 && (!pdf->canBeExtended() || pdf->expectedEvents(modelConfig->GetObservables()) <= 0)) {
+         toymcs->SetNEventsPerToy(fData->sumEntries());
+      }
+   };
 
 
    // Generate sampling distribution for null
@@ -173,6 +183,8 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    SamplingDistribution* samp_null = nullptr;
    RooDataSet* detOut_null = nullptr;
    if(toymcs) {
+      setNEventsIfNeeded(fNullModel);
+
       detOut_null = toymcs->GetSamplingDistributions(paramPointNull);
       if( detOut_null ) {
         samp_null = new SamplingDistribution( detOut_null->GetName(), detOut_null->GetTitle(), *detOut_null );
@@ -203,6 +215,8 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
          prevSeed = RooRandom::integer(std::numeric_limits<unsigned int>::max()-1)+1;  // want to avoid zero value
          RooRandom::randomGenerator()->SetSeed(fAltToysSeed);
       }
+
+      setNEventsIfNeeded(fAltModel);
 
       detOut_alt = toymcs->GetSamplingDistributions(paramPointAlt);
       if( detOut_alt ) {
