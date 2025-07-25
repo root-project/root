@@ -9,10 +9,10 @@ jobs:
   build-ubuntu:
     runs-on: ubuntu-latest
     steps:
-      - name: Install GoogleTest
+      - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install libgtest-dev
+          sudo apt-get install libbenchmark-dev libgtest-dev
       - name: Checkout
         uses: actions/checkout@v4
       - name: Configure

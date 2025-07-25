@@ -25,3 +25,11 @@ function(HIST_ADD_GTEST name source)
 endfunction()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
+
+if(DEFINED histv7_benchmark AND histv7_benchmark)
+  # The user set the "hidden" flag, require the benchmark library.
+  find_package(benchmark CONFIG REQUIRED)
+  # Keep the binaries out of the global bin/ directory.
+  unset(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+  add_subdirectory(benchmark)
+endif()
