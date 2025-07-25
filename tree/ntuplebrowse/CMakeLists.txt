@@ -11,9 +11,11 @@
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTNTupleBrowse
 HEADERS
+  ROOT/RNTupleBrowseUtils.hxx
   ROOT/RNTupleClassicBrowse.hxx
   ROOT/RNTupleDrawVisitor.hxx
 SOURCES
+  src/RNTupleBrowseUtils.cxx
   src/RNTupleClassicBrowse.cxx
   src/RNTupleDrawVisitor.cxx
 LINKDEF
