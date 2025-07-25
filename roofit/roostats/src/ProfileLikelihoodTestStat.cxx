@@ -43,6 +43,36 @@ bool RooStats::ProfileLikelihoodTestStat::fgAlwaysReuseNll = true ;
 
 void RooStats::ProfileLikelihoodTestStat::SetAlwaysReuseNLL(bool flag) { fgAlwaysReuseNll = flag ; }
 
+/// Check if there are non-const parameters so it is worth to do the minimization.
+bool RooStats::ProfileLikelihoodTestStat::minimizationNeeded(RooArgSet allParams) const
+{
+   allParams.removeConstantParameters();
+
+   return !allParams.empty();
+}
+
+std::pair<double, int> RooStats::ProfileLikelihoodTestStat::minimizeNLL(std::string const &prefix)
+{
+   // minimize and count eval errors
+   fNll->clearEvalErrorLog();
+   std::unique_ptr<RooFitResult> result{GetMinNLL()};
+   if (!result) {
+      // this should not really happen
+      throw std::runtime_error("ProfileLikelihoodTestStat: minimization unexpectedly failed!");
+   }
+   double minNll = result->minNll();
+   double status = result->status();
+
+   // save this snapshot
+   if (fDetailedOutputEnabled) {
+      std::unique_ptr<RooArgSet> detOutput{
+         DetailedOutputAggregator::GetAsArgSet(result.get(), prefix, fDetailedOutputWithErrorsAndPulls)};
+      fDetailedOutput->addOwned(*detOutput);
+   }
+
+   return {minNll, status};
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// internal function to evaluate test statistics
 /// can do depending on type:
@@ -127,29 +157,16 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
        double uncondML = 0;
        double fit_favored_mu = 0;
        int statusD = 0;
-       RooArgSet * detOutput = nullptr;
        if (type != 2) {
-          // minimize and count eval errors
-          fNll->clearEvalErrorLog();
-          if (fPrintLevel>1) std::cout << "Do unconditional fit" << std::endl;
-          std::unique_ptr<RooFitResult> result{GetMinNLL()};
-          if (result) {
-             uncondML = result->minNll();
-             statusD = result->status();
-
-             // get best fit value for one-sided interval
-             if (firstPOI) fit_favored_mu = attachedSet->getRealValue(firstPOI->GetName()) ;
-
-             // save this snapshot
-             if( fDetailedOutputEnabled ) {
-                detOutput = DetailedOutputAggregator::GetAsArgSet(result.get(), "fitUncond_", fDetailedOutputWithErrorsAndPulls);
-                fDetailedOutput->addOwned(*detOutput);
-                delete detOutput;
-             }
+          if (!minimizationNeeded(*attachedSet)) {
+             uncondML = fNll->getVal();
+          } else {
+             if (fPrintLevel>1) std::cout << "Do unconditional fit" << std::endl;
+             std::tie(uncondML, statusD) = minimizeNLL("fitUncond_");
           }
-          else {
-             return TMath::SignalingNaN();   // this should not really happen
-          }
+
+          // get best fit value for one-sided interval
+          if (firstPOI) fit_favored_mu = attachedSet->getRealValue(firstPOI->GetName()) ;
        }
        tsw.Stop();
        double fitTime1  = tsw.CpuTime();
@@ -186,33 +203,16 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
           }
 
 
-          // check if there are non-const parameters so it is worth to do the minimization
-          RooArgSet allParams(*attachedSet);
-          RooStats::RemoveConstantParameters(&allParams);
-
           // in case no nuisance parameters are present
           // no need to minimize just evaluate the nll
-          if (allParams.empty() ) {
+          if (!minimizationNeeded(*attachedSet)) {
              // be sure to evaluate with offsets
              if (fLOffset == "initial") RooAbsReal::setHideOffset(false);
              condML = fNll->getVal();
              if (fLOffset == "initial") RooAbsReal::setHideOffset(true);
           }
           else {
-            fNll->clearEvalErrorLog();
-            std::unique_ptr<RooFitResult> result{GetMinNLL()};
-            if (result) {
-               condML = result->minNll();
-               statusN = result->status();
-               if( fDetailedOutputEnabled ) {
-                  detOutput = DetailedOutputAggregator::GetAsArgSet(result.get(), "fitCond_", fDetailedOutputWithErrorsAndPulls);
-                  fDetailedOutput->addOwned(*detOutput);
-                  delete detOutput;
-               }
-            }
-            else {
-               return TMath::SignalingNaN();   // this should not really happen
-            }
+            std::tie(condML, statusN) = minimizeNLL("fitCond_");
           }
 
        }
