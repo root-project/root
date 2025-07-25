@@ -655,3 +655,28 @@ TEST(RNTupleAttributes, AccessAttrSetReaderAfterClosingMainReader)
       EXPECT_EQ(Count(attrSet->GetAttributesContainingRange(0, nEntries)), 1);
    }
 }
+
+TEST(RNTupleAttributes, AccessAttrSetWriterAfterClosingMainReader)
+{
+   FileRaii fileGuard("test_ntuple_attrs_writerafterclosing.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto pInt = model->MakeField<int>("int");
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file);
+
+      auto attrModel = RNTupleModel::Create();
+      auto pMyAttr = attrModel->MakeField<std::string>("myAttr");
+      auto attrSet = writer->CreateAttributeSet(std::move(attrModel), "MyAttrSet");
+      auto attrEntry = attrSet->BeginRange();
+
+      *pMyAttr = "This is an attribute";
+      for (int i = 0; i < 10; ++i) {
+         *pInt = i;
+         writer->Fill();
+      }
+      writer.reset();
+      EXPECT_THROW(attrSet->CommitRange(std::move(attrEntry)), ROOT::RException);
+   }
+}

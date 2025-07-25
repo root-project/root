@@ -190,9 +190,9 @@ public:
 class RNTupleAttrSetWriterHandle final {
    friend class ::ROOT::Experimental::RNTupleFillContext;
 
-   RNTupleAttrSetWriter *fWriter = nullptr;
+   std::weak_ptr<RNTupleAttrSetWriter> fWriter;
 
-   explicit RNTupleAttrSetWriterHandle(RNTupleAttrSetWriter &range) : fWriter(&range) {}
+   explicit RNTupleAttrSetWriterHandle(const std::shared_ptr<RNTupleAttrSetWriter> &range) : fWriter(range) {}
 
 public:
    RNTupleAttrSetWriterHandle(const RNTupleAttrSetWriterHandle &) = delete;
@@ -204,11 +204,14 @@ public:
       return *this;
    }
 
+   /// Retrieves the underlying pointer to the AttrSetWriter, throwing if it's invalid.
+   /// This is NOT thread-safe and must be called from the same thread that created the
+   /// AttrSetWriter.
    RNTupleAttrSetWriter *operator->()
    {
-      if (R__unlikely(!fWriter))
+      if (R__unlikely(fWriter.expired()))
          throw ROOT::RException(R__FAIL("Tried to access invalid RNTupleAttrSetWriterHandle"));
-      return fWriter;
+      return fWriter.lock().get();
    }
 };
 

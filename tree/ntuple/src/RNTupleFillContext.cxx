@@ -127,7 +127,7 @@ ROOT::Experimental::RNTupleFillContext::CreateAttributeSet(std::string_view name
    // NOTE(gparolini): pointers into unordered_map are guaranteed to be stable. cppreference states:
    // "References and pointers to either key or data stored in the container are only invalidated by
    // erasing that element"
-   return Experimental::RNTupleAttrSetWriterHandle{*attrSetIter->second};
+   return Experimental::RNTupleAttrSetWriterHandle{attrSetIter->second};
 }
 
 void ROOT::Experimental::RNTupleFillContext::CloseAttributeSetInternal(
@@ -139,15 +139,16 @@ void ROOT::Experimental::RNTupleFillContext::CloseAttributeSetInternal(
 
 void ROOT::Experimental::RNTupleFillContext::CloseAttributeSet(RNTupleAttrSetWriterHandle handle)
 {
-   if (!handle.fWriter) {
+   if (handle.fWriter.expired()) {
       throw ROOT::RException(R__FAIL("Tried to close an invalid AttributeSetWriter"));
    }
+   auto writer = handle.fWriter.lock();
 
-   CloseAttributeSetInternal(*handle.fWriter);
+   CloseAttributeSetInternal(*writer);
 
    bool erased = false;
    for (auto it = fAttributeSets.begin(), end = fAttributeSets.end(); it != end; ++it) {
-      if (it->second.get() == handle.fWriter) {
+      if (it->second.get() == writer.get()) {
          fAttributeSets.erase(it);
          erased = true;
          break;
