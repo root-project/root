@@ -266,6 +266,8 @@ def get_cpp_overload_from_templ_proxy(func, types=None):
     return func.__overload__(signature, template_args)
 
 def get_column_types(rdf, cols):
+    if rdf is None:
+        return []
     types = [rdf.GetColumnType(col) for col in cols]
     return types
 
@@ -420,14 +422,6 @@ def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
             f"Filter takes at most 3 positional arguments but {len(args) + 1} were given")
 
     func = callable_or_str
-    # TODO handle args here
-    rdf_node = _handle_cpp_callables(func, rdf._OriginalFilter, func, *_convert_to_vector(args))
-    if rdf_node is not None:
-        return rdf_node
-
-    jitter = FunctionJitter(rdf)
-    func.__annotations__['return'] = 'bool' # return type for Filters is bool # Note: You can keep double and Filter still works.
-
     col_list = []
     filter_name  = ""
     
@@ -445,8 +439,14 @@ def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
             filter_name = args[1]
         else:
             raise ValueError(f"Arguments should be ('list', 'str',) not ({type(args[0]).__name__,type(args[1]).__name__}.")
+
+    rdf_node = _handle_cpp_callables(func, rdf._OriginalFilter, func, *_convert_to_vector(args), rdf=rdf, cols=col_list)
+    if rdf_node is not None:
+        return rdf_node
+
+    jitter = FunctionJitter(rdf)
+    func.__annotations__['return'] = 'bool' # return type for Filters is bool # Note: You can keep double and Filter still works.
             
-    
     func_call = jitter.jit_function(func, col_list, extra_args)
     return rdf._OriginalFilter("Numba::" + func_call, filter_name)
 
