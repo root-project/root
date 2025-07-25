@@ -277,7 +277,7 @@ public:
    /// \param [in] fieldId The ID of the field for which to collect the columns.
    ///
    /// \return A vector containing the IDs of all columns for the provided field ID.
-   std::vector<ROOT::DescriptorId_t> GetColumnsByFieldId(ROOT::DescriptorId_t fieldId) const;
+   std::vector<ROOT::DescriptorId_t> GetAllColumnsOfField(ROOT::DescriptorId_t fieldId) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get all column types present in the RNTuple being inspected.
