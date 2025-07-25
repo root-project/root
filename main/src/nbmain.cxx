@@ -32,7 +32,7 @@
 
 #define JUPYTER_CMD        "jupyter"
 #define NB_OPT             "notebook"
-#define JUPYTER_CONF_DIR_V "JUPYTER_CONFIG_DIR"
+#define JUPYTER_CONF_PATH_V "JUPYTER_CONFIG_PATH"
 #define JUPYTER_PATH_V     "JUPYTER_PATH"
 #define NB_CONF_DIR        "notebook"
 #define ROOTNB_DIR         ".rootnb"
@@ -208,9 +208,9 @@ int main(int argc, char **argv)
 
    // Set IPython directory for the ROOT notebook flavour
    string rootnbpath = homedir + pathsep + ROOTNB_DIR;
-   string jupyconfdir(JUPYTER_CONF_DIR_V + ("=" + rootnbpath));
+   string jupyconfpathdir(JUPYTER_CONF_PATH_V + ("=" + rootnbpath));
    string jupypathdir(JUPYTER_PATH_V + ("=" + rootnbpath));
-   putenv((char *)jupyconfdir.c_str());
+   putenv((char *)jupyconfpathdir.c_str());
    putenv((char *)jupypathdir.c_str());
 
    char **jargv = new char* [argc + 2];
