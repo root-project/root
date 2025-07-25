@@ -464,7 +464,7 @@ ROOT::RFieldBase *ROOT::RDF::RNTupleDS::GetFieldWithTypeChecks(std::string_view 
       auto newAltProtoFieldOrException = ROOT::RFieldBase::Create(std::string(fieldName), requestedType);
       if (!newAltProtoFieldOrException) {
          throw std::runtime_error("RNTupleDS: Could not create field with type \"" + requestedType +
-                                  "\" for column \"" + std::string(fieldName));
+                                  "\" for column \"" + std::string(fieldName) + "\"");
       }
       auto newAltProtoField = newAltProtoFieldOrException.Unwrap();
       newAltProtoField->SetOnDiskId(fProtoFields[index]->GetOnDiskId());
