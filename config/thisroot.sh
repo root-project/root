@@ -74,9 +74,9 @@ clean_environment()
          drop_from_path "$JUPYTER_PATH" "${old_rootsys}/etc/notebook"
          JUPYTER_PATH=$newpath
       fi
-      if [ -n "${JUPYTER_CONFIG_DIR-}" ]; then
-         drop_from_path "$JUPYTER_CONFIG_DIR" "${old_rootsys}/etc/notebook"
-         JUPYTER_CONFIG_DIR=$newpath
+      if [ -n "${JUPYTER_CONFIG_PATH-}" ]; then
+         drop_from_path "$JUPYTER_CONFIG_PATH" "${old_rootsys}/etc/notebook"
+         JUPYTER_CONFIG_PATH=$newpath
       fi
    fi
    if [ -z "${MANPATH-}" ]; then
@@ -157,10 +157,10 @@ set_environment()
       JUPYTER_PATH=$ROOTSYS/etc/notebook:$JUPYTER_PATH; export JUPYTER_PATH
    fi
 
-   if [ -z "${JUPYTER_CONFIG_DIR-}" ]; then
-      JUPYTER_CONFIG_DIR=$ROOTSYS/etc/notebook; export JUPYTER_CONFIG_DIR # Linux, ELF HP-UX
+   if [ -z "${JUPYTER_CONFIG_PATH-}" ]; then
+      JUPYTER_CONFIG_PATH=$ROOTSYS/etc/notebook; export JUPYTER_CONFIG_PATH # Linux, ELF HP-UX
    else
-      JUPYTER_CONFIG_DIR=$ROOTSYS/etc/notebook:$JUPYTER_CONFIG_DIR; export JUPYTER_CONFIG_DIR
+      JUPYTER_CONFIG_PATH=$ROOTSYS/etc/notebook:$JUPYTER_CONFIG_PATH; export JUPYTER_CONFIG_PATH
    fi
 }
 
