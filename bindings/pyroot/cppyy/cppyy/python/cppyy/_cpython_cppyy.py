@@ -21,9 +21,8 @@ __all__ = [
 
 # first load the dependency libraries of the backend, then pull in the
 # libcppyy extension module
-c = loader.load_cpp_backend()
+loader.load_cpp_backend()
 import libcppyy as _backend
-_backend._cpp_backend = c
 
 # explicitly expose APIs from libcppyy
 _w = ctypes.CDLL(_backend.__file__, ctypes.RTLD_GLOBAL)
