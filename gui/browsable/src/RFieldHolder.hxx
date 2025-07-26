@@ -29,11 +29,12 @@ class RFieldHolder : public ROOT::Browsable::RHolder {
    std::string fParentName;
 
    ROOT::DescriptorId_t fFieldId;
+   std::string fDisplayName;
 
 public:
    RFieldHolder(std::shared_ptr<ROOT::RNTupleReader> ntplReader, const std::string &parent_name,
-                ROOT::DescriptorId_t id)
-      : fNtplReader(ntplReader), fParentName(parent_name), fFieldId(id)
+                ROOT::DescriptorId_t id, const std::string &displayName)
+      : fNtplReader(ntplReader), fParentName(parent_name), fFieldId(id), fDisplayName(displayName)
    {
    }
 
@@ -45,6 +46,7 @@ public:
    auto GetNtplReader() const { return fNtplReader; }
    auto GetParentName() const { return fParentName; }
    auto GetId() const { return fFieldId; }
+   auto GetDisplayName() const { return fDisplayName; }
 };
 
 #endif

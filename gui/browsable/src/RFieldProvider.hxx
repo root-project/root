@@ -48,14 +48,11 @@ public:
       if (!holder) return nullptr;
 
       auto ntplReader = holder->GetNtplReader();
-      std::string name = holder->GetParentName();
 
-      const auto fieldName = ntplReader->GetDescriptor().GetFieldDescriptor(holder->GetId()).GetFieldName();
       const auto qualifiedFieldName = ntplReader->GetDescriptor().GetQualifiedFieldName(holder->GetId());
       auto view = ntplReader->GetView<void>(qualifiedFieldName);
-      name.append(fieldName);
 
-      ROOT::Internal::RNTupleDrawVisitor drawVisitor(ntplReader, qualifiedFieldName);
+      ROOT::Internal::RNTupleDrawVisitor drawVisitor(ntplReader, holder->GetDisplayName());
       view.GetField().AcceptVisitor(drawVisitor);
       return drawVisitor.MoveHist();
    }
