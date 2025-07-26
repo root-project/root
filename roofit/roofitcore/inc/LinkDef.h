@@ -248,6 +248,7 @@
 #pragma link C++ class RooProjectedPdf+ ;
 #pragma link C++ class RooWorkspace- ;
 #pragma link C++ class RooWorkspace::CodeRepo- ;
+#pragma link C++ class RooWorkspace::Snapshot+ ;
 #pragma link C++ class RooWorkspace::WSDir+ ;
 #pragma link C++ class RooWorkspaceHandle+;
 #pragma link C++ class std::list<TObject*>+ ;
