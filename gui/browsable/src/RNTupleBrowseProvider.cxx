@@ -37,15 +37,14 @@ using namespace ROOT::Browsable;
 class RFieldElement : public RElement {
 protected:
    std::shared_ptr<ROOT::RNTupleReader> fNtplReader;
-
    std::string fParentName;
-
    ROOT::DescriptorId_t fFieldId;
+   std::string fDisplayName;
 
 public:
    RFieldElement(std::shared_ptr<ROOT::RNTupleReader> ntplReader, const std::string &parent_name,
-                 const ROOT::DescriptorId_t id)
-      : RElement(), fNtplReader(ntplReader), fParentName(parent_name), fFieldId(id)
+                 const ROOT::DescriptorId_t id, const std::string &displayName)
+      : RElement(), fNtplReader(ntplReader), fParentName(parent_name), fFieldId(id), fDisplayName(displayName)
    {
    }
 
@@ -71,7 +70,7 @@ public:
 
    std::unique_ptr<RHolder> GetObject() override
    {
-      return std::make_unique<RFieldHolder>(fNtplReader, fParentName, fFieldId);
+      return std::make_unique<RFieldHolder>(fNtplReader, fParentName, fFieldId, fDisplayName);
    }
 
    EActionKind GetDefaultAction() const override
@@ -207,7 +206,8 @@ public:
 
    std::shared_ptr<RElement> GetElement() override
    {
-      return std::make_shared<RFieldElement>(fNtplReader, fParentName, fActualFieldIds[fCounter]);
+      const auto name = fNtplReader->GetDescriptor().GetFieldDescriptor(fProvidedFieldIds[fCounter]).GetFieldName();
+      return std::make_shared<RFieldElement>(fNtplReader, fParentName, fActualFieldIds[fCounter], name);
    }
 };
 

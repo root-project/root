@@ -48,10 +48,9 @@ public:
       const auto browsableFieldId = ROOT::Internal::GetNextBrowsableField(fFieldId, desc);
 
       if (desc.GetFieldDescriptor(browsableFieldId).GetLinkIds().empty()) {
-         const auto qualifiedFieldName = desc.GetQualifiedFieldName(browsableFieldId);
-         auto view = fReader->GetView<void>(qualifiedFieldName);
+         auto view = fReader->GetView<void>(desc.GetQualifiedFieldName(browsableFieldId));
 
-         ROOT::Internal::RNTupleDrawVisitor drawVisitor(fReader, qualifiedFieldName);
+         ROOT::Internal::RNTupleDrawVisitor drawVisitor(fReader, desc.GetFieldDescriptor(fFieldId).GetFieldName());
          view.GetField().AcceptVisitor(drawVisitor);
          fHistogram = std::unique_ptr<TH1>(drawVisitor.MoveHist());
          fHistogram->Draw();
