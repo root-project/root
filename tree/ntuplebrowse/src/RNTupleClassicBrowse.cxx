@@ -31,12 +31,17 @@ class RFieldBrowsable final : public TObject {
 private:
    std::shared_ptr<ROOT::RNTupleReader> fReader;
    ROOT::DescriptorId_t fFieldId = ROOT::kInvalidDescriptorId;
+   ROOT::DescriptorId_t fBrowsableFieldId = ROOT::kInvalidDescriptorId;
+   bool fIsLeaf = false;
    std::unique_ptr<TH1> fHistogram;
 
 public:
    RFieldBrowsable(std::shared_ptr<ROOT::RNTupleReader> reader, ROOT::DescriptorId_t fieldId)
       : fReader(reader), fFieldId(fieldId)
    {
+      const auto &desc = fReader->GetDescriptor();
+      fBrowsableFieldId = ROOT::Internal::GetNextBrowsableField(fFieldId, desc);
+      fIsLeaf = desc.GetFieldDescriptor(fBrowsableFieldId).GetLinkIds().empty();
    }
 
    void Browse(TBrowser *b) final
@@ -45,10 +50,9 @@ public:
          return;
 
       const auto &desc = fReader->GetDescriptor();
-      const auto browsableFieldId = ROOT::Internal::GetNextBrowsableField(fFieldId, desc);
 
-      if (desc.GetFieldDescriptor(browsableFieldId).GetLinkIds().empty()) {
-         auto view = fReader->GetView<void>(desc.GetQualifiedFieldName(browsableFieldId));
+      if (fIsLeaf) {
+         auto view = fReader->GetView<void>(desc.GetQualifiedFieldName(fBrowsableFieldId));
 
          ROOT::Internal::RNTupleDrawVisitor drawVisitor(fReader, desc.GetFieldDescriptor(fFieldId).GetFieldName());
          view.GetField().AcceptVisitor(drawVisitor);
@@ -57,11 +61,14 @@ public:
          if (gPad)
             gPad->Update();
       } else {
-         for (const auto &f : desc.GetFieldIterable(browsableFieldId)) {
+         for (const auto &f : desc.GetFieldIterable(fBrowsableFieldId)) {
             b->Add(new RFieldBrowsable(fReader, f.GetId()), f.GetFieldName().c_str());
          }
       }
    }
+
+   bool IsFolder() const final { return !fIsLeaf; }
+   const char *GetIconName() const final { return IsFolder() ? "RNTuple-folder" : "RNTuple-leaf"; }
 };
 
 } // anonymous namespace

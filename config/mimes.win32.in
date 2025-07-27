@@ -66,7 +66,7 @@ icon = psp_s.xpm psp_t.xpm
 action = TImage::Open("%s")->Draw("nxxx")
 
 [image/x-xpixmap]
-pattern = *.x[bp]m *.X[PB]M 
+pattern = *.x[bp]m *.X[PB]M
 icon = psp_s.xpm psp_t.xpm
 action =  TImage::Open("%s")->Draw("nxxx")
 
@@ -118,7 +118,7 @@ action =
 [settings/executable]
 pattern = .bash_profile .bashrc .profile .login .kshrc .cshrc .xsession
 icon = run_config.xpm
-action = 
+action =
 
 [settings/config]
 pattern = .*rc *.conf
@@ -238,6 +238,21 @@ action = ->Browse()
 [root/tmethodbrowsable-branch]
 pattern = TMethodBrowsable-branch
 icon = return_object_s.xpm return_object_t.xpm
+action = ->Browse()
+
+[root/rntuple]
+pattern = ROOT::RNTuple
+icon = rntuple_s.xpm
+action = ->Browse()
+
+[root/rntuple-folder]
+pattern = RNTuple-folder
+icon = branch_folder_s.xpm branch_folder_t.xpm
+action = ->Browse()
+
+[root/rntuple-leaf]
+pattern = RNTuple-leaf
+icon = leaf_s.xpm leaf_t.xpm
 action = ->Browse()
 
 # actions used by GuiBuilder
