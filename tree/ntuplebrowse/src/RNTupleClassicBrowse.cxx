@@ -34,6 +34,8 @@ private:
    ROOT::DescriptorId_t fBrowsableFieldId = ROOT::kInvalidDescriptorId;
    bool fIsLeaf = false;
    std::unique_ptr<TH1> fHistogram;
+   std::string fFieldName;
+   std::string fTypeName;
 
 public:
    RFieldBrowsable(std::shared_ptr<ROOT::RNTupleReader> reader, ROOT::DescriptorId_t fieldId)
@@ -42,6 +44,8 @@ public:
       const auto &desc = fReader->GetDescriptor();
       fBrowsableFieldId = ROOT::Internal::GetNextBrowsableField(fFieldId, desc);
       fIsLeaf = desc.GetFieldDescriptor(fBrowsableFieldId).GetLinkIds().empty();
+      fFieldName = desc.GetFieldDescriptor(fFieldId).GetFieldName();
+      fTypeName = desc.GetFieldDescriptor(fFieldId).GetTypeName();
    }
 
    void Browse(TBrowser *b) final
@@ -69,6 +73,9 @@ public:
 
    bool IsFolder() const final { return !fIsLeaf; }
    const char *GetIconName() const final { return IsFolder() ? "RNTuple-folder" : "RNTuple-leaf"; }
+
+   const char *GetName() const final { return fFieldName.c_str(); }
+   const char *GetTitle() const final { return fTypeName.c_str(); }
 };
 
 } // anonymous namespace
