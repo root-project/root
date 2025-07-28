@@ -142,6 +142,12 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
             } else
                 PyErr_Clear();
 
+            if (!bArgSet && (Py_TYPE(itemi) == &TemplateProxy_Type)) {
+                TemplateProxy *tp = (TemplateProxy*)itemi;
+                PyObject *tmpl_name = CPyCppyy_PyText_FromFormat("decltype(%s%s)", tp->fTI->fCppName.c_str(), tp->fTemplateArgs ? CPyCppyy_PyText_AsString(tp->fTemplateArgs) : "");
+                PyTuple_SET_ITEM(tpArgs, i, tmpl_name);
+                bArgSet = true;
+            }
             if (!bArgSet) {
             // normal case (may well fail)
                 PyErr_Clear();

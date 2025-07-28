@@ -1341,5 +1341,41 @@ class TestTEMPLATE_TYPE_REDUCTION:
         assert type(e1+e2) == cppyy.gbl.TypeReduction.Expr[int]
 
 
+class TestTEMPLATED_CALLBACK:
+    def setup_class(cls):
+        cls.test_dct = test_dct
+        import cppyy
+        cls.templates = cppyy.load_reflection_info(cls.test_dct)
+    
+    def test01_templated_callbacks(self):
+        import cppyy
+        from cppyy.gbl import std
+
+        cppyy.cppdef(r"""
+        bool foo() { return true; }
+
+        int bar(int a, int b) { return a + b; }
+
+        template <typename T, typename U>
+        T baz(T a, U b, std::string c) {
+            return (T)(a + b) + std::stoi(c);
+        }
+
+        template <typename F, typename R, typename... Args>
+        R returned_callback(F callable, R r, Args... args) {
+            return callable(r, std::forward<Args>(args)...);
+        }
+
+        template <typename F, typename... Args>
+        bool callback(F callable, Args&&... args) {
+            return callable(std::forward<Args>(args)...);
+        }
+        """)
+
+        assert cppyy.gbl.callback(cppyy.gbl.foo)
+        assert cppyy.gbl.returned_callback(cppyy.gbl.bar, 1, 1) == 2
+        assert cppyy.gbl.returned_callback(cppyy.gbl.baz[int, int], 1, 1, std.string("1")) == 3
+
+
 if __name__ == "__main__":
     exit(pytest.main(args=['-sv', '-ra', __file__]))
