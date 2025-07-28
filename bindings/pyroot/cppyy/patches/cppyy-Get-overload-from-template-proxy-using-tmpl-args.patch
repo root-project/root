@@ -1,0 +1,70 @@
+From a78169cedc78a7a3787473652e394da3ead5dbdf Mon Sep 17 00:00:00 2001
+From: Silia Taider <siliataider@gmail.com>
+Date: Mon, 14 Jul 2025 11:26:30 +0200
+Subject: [PATCH] [Python][cppyy] Get overload from template proxy using input
+ and template arguments
+
+---
+ .../cppyy/CPyCppyy/src/TemplateProxy.cxx      | 25 ++++++++++++++++++-
+ 1 file changed, 24 insertions(+), 1 deletion(-)
+
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/TemplateProxy.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/TemplateProxy.cxx
+index 20ea4929ad..235a804c37 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/TemplateProxy.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/TemplateProxy.cxx
+@@ -729,6 +729,21 @@ static int tpp_setuseffi(CPPOverload*, PyObject*, void*)
+     return 0;                 // dummy (__useffi__ unused)
+ }
+ 
++//-----------------------------------------------------------------------------
++static PyObject* tpp_gettemplateargs(TemplateProxy* self, void*) {
++    if (!self->fTemplateArgs) {
++        Py_RETURN_NONE;
++    }
++
++    Py_INCREF(self->fTemplateArgs);
++    return self->fTemplateArgs;
++}
++
++//-----------------------------------------------------------------------------
++static int tpp_settemplateargs(TemplateProxy*, PyObject*, void*) {
++    PyErr_SetString(PyExc_AttributeError, "__template_args__ is read-only");
++    return -1;
++}
+ 
+ //----------------------------------------------------------------------------
+ static PyMappingMethods tpp_as_mapping = {
+@@ -739,7 +754,9 @@ static PyGetSetDef tpp_getset[] = {
+     {(char*)"__doc__", (getter)tpp_doc, (setter)tpp_doc_set, nullptr, nullptr},
+     {(char*)"__useffi__", (getter)tpp_getuseffi, (setter)tpp_setuseffi,
+       (char*)"unused", nullptr},
+-    {(char*)nullptr,   nullptr,         nullptr, nullptr, nullptr}
++    {(char*)"__template_args__", (getter)tpp_gettemplateargs, (setter)tpp_settemplateargs,
++      (char*)"the template arguments for this method", nullptr},
++    {(char*)nullptr,   nullptr,         nullptr, nullptr, nullptr},
+ };
+ 
+ 
+@@ -770,6 +787,7 @@ static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args)
+ {
+ // Select and call a specific C++ overload, based on its signature.
+     const char* sigarg = nullptr;
++    const char* tmplarg = nullptr;
+     PyObject* sigarg_tuple = nullptr;
+     int want_const = -1;
+ 
+@@ -795,6 +813,11 @@ static PyObject* tpp_overload(TemplateProxy* pytmpl, PyObject* args)
+         scope = ((CPPClass*)pytmpl->fTI->fPyClass)->fCppType;
+         cppmeth = Cppyy::GetMethodTemplate(
+             scope, pytmpl->fTI->fCppName, proto.substr(1, proto.size()-2));
++    } else if (PyArg_ParseTuple(args, const_cast<char*>("ss:__overload__"), &sigarg, &tmplarg)) {
++        scope = ((CPPClass*)pytmpl->fTI->fPyClass)->fCppType;
++        std::string full_name = std::string(pytmpl->fTI->fCppName) + "<" + tmplarg + ">";
++
++        cppmeth = Cppyy::GetMethodTemplate(scope, full_name, sigarg);
+     } else if (PyArg_ParseTuple(args, const_cast<char*>("O|i:__overload__"), &sigarg_tuple, &want_const)) {
+         PyErr_Clear();
+         want_const = PyTuple_GET_SIZE(args) == 1 ? -1 : want_const;
+-- 
+2.49.0
+
