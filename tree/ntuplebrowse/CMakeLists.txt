@@ -23,6 +23,7 @@ LINKDEF
 DEPENDENCIES
   Core
   Gpad
+  Graf
   Hist
   ROOTNTuple
 )
