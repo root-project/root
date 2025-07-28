@@ -634,10 +634,6 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
    fCollectionType = fProxy->GetCollectionType();
    if (fProxy->HasPointers())
       throw RException(R__FAIL("collection proxies whose value type is a pointer are not supported"));
-   if (!fProxy->GetCollectionClass()->HasDictionary()) {
-      throw RException(R__FAIL("dictionary not available for type " +
-                               GetRenormalizedTypeName(fProxy->GetCollectionClass()->GetName())));
-   }
 
    fIFuncsRead = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), true /* readFromDisk */);
    fIFuncsWrite = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), false /* readFromDisk */);
