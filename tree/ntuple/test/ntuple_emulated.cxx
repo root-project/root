@@ -1,6 +1,6 @@
 #include "ntuple_test.hxx"
-
 #include "ntuple_fork.hxx"
+#include "TSystem.h"
 
 TEST(RNTupleEmulated, EmulatedFields_Simple)
 {
@@ -492,3 +492,195 @@ TEST(RNTupleEmulated, EmulatedFields_Write)
    }
 }
 
+TEST(RNTupleEmulated, CollectionProxy)
+{
+   FileRaii fileGuard("test_ntuple_emulated_collproxy.root");
+
+   // Declare a custom type in a separate process, then write it through a custom collection proxy.
+   // In the main process we load the generated RNTuple without having its dictionary available and we verify
+   // we can read it (only) via field emulation (as an untyped VectorField).
+   ExecInFork([&] {
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+         // Copypasted from StructUsingCollectionProxy in CustomStruct.hxx
+         // Using a separate type because we don't want to have its dictionary loaded in the test.
+         template <typename T>
+         struct StructWithCollectionProxyForEmuTest {
+            using ValueType = T;
+            std::vector<T> v; //! do not accidentally store via RClassField
+         };
+
+         // Copypasted from SimpleCollectionProxy.hxx
+         // Using a separate type because we don't want to have its dictionary loaded in the test.
+         template <typename CollectionT>
+         class SimpleCollectionProxyForEmuTest : public TVirtualCollectionProxy {
+            /// The internal representation of an iterator, which in this simple test only contains a pointer to an element
+            struct IteratorData {
+               typename CollectionT::ValueType *ptr;
+            };
+
+            static void
+            Func_CreateIterators(void *collection, void **begin_arena, void **end_arena, TVirtualCollectionProxy * /*proxy*/)
+            {
+               static_assert(sizeof(IteratorData) <= TVirtualCollectionProxy::fgIteratorArenaSize);
+               auto &vec = static_cast<CollectionT *>(collection)->v;
+               // An iterator on an array-backed container is just a pointer; thus, it can be directly stored in `*xyz_arena`,
+               // saving one dereference (see TVirtualCollectionProxy documentation)
+               *begin_arena = vec.data();
+               *end_arena = vec.data() + vec.size();
+            }
+
+            static void *Func_Next(void *iter, const void *end)
+            {
+               auto _iter = static_cast<IteratorData *>(iter);
+               auto _end = static_cast<const IteratorData *>(end);
+               if (_iter->ptr >= _end->ptr)
+                  return nullptr;
+               return _iter->ptr++;
+            }
+
+            static void Func_DeleteTwoIterators(void * /*begin*/, void * /*end*/) {}
+
+         private:
+            CollectionT *fObject = nullptr;
+
+         public:
+            SimpleCollectionProxyForEmuTest()
+               : TVirtualCollectionProxy(TClass::GetClass(ROOT::Internal::GetDemangledTypeName(typeid(CollectionT)).c_str()))
+            {
+            }
+            SimpleCollectionProxyForEmuTest(const SimpleCollectionProxyForEmuTest<CollectionT> &) : SimpleCollectionProxyForEmuTest() {}
+
+            TVirtualCollectionProxy *Generate() const override
+            {
+               return new SimpleCollectionProxyForEmuTest<CollectionT>(*this);
+            }
+            Int_t GetCollectionType() const override { return ROOT::kSTLvector; }
+            ULong_t GetIncrement() const override { return sizeof(typename CollectionT::ValueType); }
+            UInt_t Sizeof() const override { return sizeof(CollectionT); }
+            bool HasPointers() const override { return false; }
+
+            TClass *GetValueClass() const override
+            {
+               if constexpr (std::is_fundamental<typename CollectionT::ValueType>::value)
+                  return nullptr;
+               return TClass::GetClass(ROOT::Internal::GetDemangledTypeName(typeid(typename CollectionT::ValueType)).c_str());
+            }
+            EDataType GetType() const override
+            {
+               if constexpr (std::is_same<typename CollectionT::ValueType, char>::value)
+                  return EDataType::kChar_t;
+               ;
+               if constexpr (std::is_same<typename CollectionT::ValueType, float>::value)
+                  return EDataType::kFloat_t;
+               ;
+               return EDataType::kOther_t;
+            }
+
+            void PushProxy(void *objectstart) override { fObject = static_cast<CollectionT *>(objectstart); }
+            void PopProxy() override { fObject = nullptr; }
+
+            void *At(UInt_t idx) override { return &fObject->v[idx]; }
+            void Clear(const char * /*opt*/ = "") override { fObject->v.clear(); }
+            UInt_t Size() const override { return fObject->v.size(); }
+            void *Allocate(UInt_t n, bool /*forceDelete*/) override
+            {
+               fObject->v.resize(n);
+               return fObject;
+            }
+            void Commit(void *) override {}
+            void Insert(const void *data, void *container, size_t size) override
+            {
+               auto p = static_cast<const typename CollectionT::ValueType *>(data);
+               for (size_t i = 0; i < size; ++i) {
+                  static_cast<CollectionT *>(container)->v.push_back(p[i]);
+               }
+            }
+
+            TStreamerInfoActions::TActionSequence *
+            GetConversionReadMemberWiseActions(TClass * /*oldClass*/, Int_t /*version*/) override
+            {
+               return nullptr;
+            }
+            TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Int_t /*version*/) override { return nullptr; }
+            TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions() override { return nullptr; }
+
+            CreateIterators_t GetFunctionCreateIterators(bool /*read*/ = true) override { return &Func_CreateIterators; }
+            CopyIterator_t GetFunctionCopyIterator(bool /*read*/ = true) override { return nullptr; }
+            Next_t GetFunctionNext(bool /*read*/ = true) override { return &Func_Next; }
+            DeleteIterator_t GetFunctionDeleteIterator(bool /*read*/ = true) override { return nullptr; }
+            DeleteTwoIterators_t GetFunctionDeleteTwoIterators(bool /*read*/ = true) override
+            {
+               return &Func_DeleteTwoIterators;
+            }
+         };
+
+         namespace ROOT {
+         template <>
+         struct IsCollectionProxy<StructWithCollectionProxyForEmuTest<char>> : std::true_type {
+         };
+         } // namespace ROOT                                       
+
+         SimpleCollectionProxyForEmuTest<StructWithCollectionProxyForEmuTest<char>> proxyC;
+         auto klassC = TClass::GetClass("StructWithCollectionProxyForEmuTest<char>");
+         klassC->CopyCollectionProxy(proxyC);
+      )"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("proxyC", "StructWithCollectionProxyForEmuTest<char>").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("proxyC").get();
+      DeclarePointer("StructWithCollectionProxyForEmuTest<char>", "pProxyC", ptr);
+      ProcessLine("for(int i = 0; i < 100; ++i) pProxyC->v.push_back(0x42);");
+      writer->Fill();
+
+      ProcessLine("pProxyC->v.clear();");
+      writer->Fill();
+
+      // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
+      // See also https://github.com/root-project/root/issues/9371
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                            /*matchFullMessage=*/false);
+      writer.reset();
+   });
+
+   try {
+      auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+      reader->GetModel();
+      FAIL() << "Reconstructing the model without emulating fields should fail";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("unknown type: StructWithCollectionProxyForEmuTest<char>"));
+   }
+
+   auto opts = RNTupleDescriptor::RCreateModelOptions();
+   opts.SetEmulateUnknownTypes(true);
+   auto reader = ROOT::RNTupleReader::Open(opts, "ntpl", fileGuard.GetPath());
+   EXPECT_EQ(reader->GetNEntries(), 2);
+
+   const auto &model = reader->GetModel();
+   const auto &field = model.GetConstField("proxyC");
+   EXPECT_EQ(field.GetTypeName(), "StructWithCollectionProxyForEmuTest<char>");
+   EXPECT_EQ(field.GetStructure(), ROOT::ENTupleStructure::kCollection);
+   EXPECT_EQ(field.GetConstSubfields().size(), 1);
+   EXPECT_NE(field.GetTraits() & RFieldBase::kTraitEmulatedField, 0);
+   EXPECT_EQ(field.GetValueSize(), sizeof(std::vector<char>));
+
+   const auto *vec = dynamic_cast<const ROOT::RVectorField *>(&field);
+   ASSERT_NE(vec, nullptr);
+   RNTupleLocalIndex collectionStart;
+   ROOT::NTupleSize_t size;
+   vec->GetCollectionInfo(0, &collectionStart, &size);
+   EXPECT_EQ(collectionStart.GetClusterId(), 0);
+   EXPECT_EQ(collectionStart.GetIndexInCluster(), 0);
+   EXPECT_EQ(size, 100);
+   vec->GetCollectionInfo(1, &collectionStart, &size);
+   EXPECT_EQ(collectionStart.GetClusterId(), 0);
+   EXPECT_EQ(collectionStart.GetIndexInCluster(), 100);
+   EXPECT_EQ(size, 0);
+
+   reader->LoadEntry(0);
+}
