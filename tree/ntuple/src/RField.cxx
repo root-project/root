@@ -510,10 +510,20 @@ void ROOT::RRecordField::AttachItemFields(std::vector<std::unique_ptr<RFieldBase
 }
 
 std::unique_ptr<ROOT::RFieldBase>
-ROOT::Internal::CreateEmulatedField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
-                                    std::string_view emulatedFromType)
+ROOT::Internal::CreateEmulatedRecordField(std::string_view fieldName,
+                                          std::vector<std::unique_ptr<RFieldBase>> itemFields,
+                                          std::string_view emulatedFromType)
 {
+   R__ASSERT(!emulatedFromType.empty());
    return std::unique_ptr<RFieldBase>(new RRecordField(fieldName, std::move(itemFields), emulatedFromType));
+}
+
+std::unique_ptr<ROOT::RFieldBase> ROOT::Internal::CreateEmulatedVectorField(std::string_view fieldName,
+                                                                            std::unique_ptr<RFieldBase> itemField,
+                                                                            std::string_view emulatedFromType)
+{
+   R__ASSERT(!emulatedFromType.empty());
+   return std::unique_ptr<RFieldBase>(new RVectorField(fieldName, std::move(itemField), emulatedFromType));
 }
 
 ROOT::RRecordField::RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
