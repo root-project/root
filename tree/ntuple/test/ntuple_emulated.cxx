@@ -14,20 +14,20 @@ TEST(RNTupleEmulated, EmulatedFields_Simple)
       fileGuard.PreserveFile();
 
       ASSERT_TRUE(gInterpreter->Declare(R"(
-struct Inner_Simple {
-   int fInt1 = 1;
-   int fInt2 = 2;
+         struct Inner_Simple {
+            int fInt1 = 1;
+            int fInt2 = 2;
 
-   ClassDefNV(Inner_Simple, 2);
-};
+            ClassDefNV(Inner_Simple, 2);
+         };
 
-struct Outer_Simple {
-   int fInt1 = 1;
-   Inner_Simple fInner;
+         struct Outer_Simple {
+            int fInt1 = 1;
+            Inner_Simple fInner;
 
-   ClassDefNV(Outer_Simple, 2);
-};
-)"));
+            ClassDefNV(Outer_Simple, 2);
+         };
+      )"));
 
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "Outer_Simple").Unwrap());
@@ -116,20 +116,20 @@ TEST(RNTupleEmulated, EmulatedFields_Vecs)
       fileGuard.PreserveFile();
 
       ASSERT_TRUE(gInterpreter->Declare(R"(
-struct Inner_Vecs {
-   float fFlt;
+         struct Inner_Vecs {
+            float fFlt;
 
-   ClassDefNV(Inner_Vecs, 2);
-};
+            ClassDefNV(Inner_Vecs, 2);
+         };
 
-struct Outer_Vecs {
-   std::vector<Inner_Vecs> fInners;
-   Inner_Vecs fInner;
-   int f;
+         struct Outer_Vecs {
+            std::vector<Inner_Vecs> fInners;
+            Inner_Vecs fInner;
+            int f;
 
-   ClassDefNV(Outer_Vecs, 2);
-};
-)"));
+            ClassDefNV(Outer_Vecs, 2);
+         };
+      )"));
 
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("outers", "std::vector<Outer_Vecs>").Unwrap());
@@ -218,11 +218,11 @@ TEST(RNTupleEmulated, EmulatedFields_VecsTemplatedWrapper)
       fileGuard.PreserveFile();
 
       ASSERT_TRUE(gInterpreter->Declare(R"(
-template <typename T>
-struct TemplatedWrapper {
-   T fValue;
-};
-)"));
+         template <typename T>
+         struct TemplatedWrapper {
+            T fValue;
+         };
+      )"));
 
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("vec", "std::vector<TemplatedWrapper<float>>").Unwrap());
@@ -294,15 +294,15 @@ TEST(RNTupleEmulated, EmulatedFields_EmptyStruct)
       fileGuard.PreserveFile();
 
       ASSERT_TRUE(gInterpreter->Declare(R"(
-struct Inner_EmptyStruct {
-   ClassDefNV(Inner_EmptyStruct, 2);
-};
+         struct Inner_EmptyStruct {
+            ClassDefNV(Inner_EmptyStruct, 2);
+         };
 
-struct Outer_EmptyStruct {
-   Inner_EmptyStruct fInner;
-   ClassDefNV(Outer_EmptyStruct, 2);
-};
-)"));
+         struct Outer_EmptyStruct {
+            Inner_EmptyStruct fInner;
+            ClassDefNV(Outer_EmptyStruct, 2);
+         };
+      )"));
 
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "Outer_EmptyStruct").Unwrap());
@@ -370,10 +370,10 @@ TEST(RNTupleEmulated, EmulatedFields_EmptyVec)
       fileGuard.PreserveFile();
 
       ASSERT_TRUE(gInterpreter->Declare(R"(
-struct Inner_EmptyVec {
-   ClassDefNV(Inner_EmptyVec, 2);
-};
-)"));
+         struct Inner_EmptyVec {
+            ClassDefNV(Inner_EmptyVec, 2);
+         };
+      )"));
 
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "std::vector<Inner_EmptyVec>").Unwrap());
@@ -449,18 +449,18 @@ TEST(RNTupleEmulated, EmulatedFields_Write)
       fileGuard.PreserveFile();
 
       ASSERT_TRUE(gInterpreter->Declare(R"(
-struct Inner_Write {
-   int fFlt = 42;
+         struct Inner_Write {
+            int fFlt = 42;
 
-   ClassDefNV(Inner_Write, 2);
-};
+            ClassDefNV(Inner_Write, 2);
+         };
 
-struct Outer_Write {
-   std::vector<Inner_Write> fInners;
+         struct Outer_Write {
+            std::vector<Inner_Write> fInners;
 
-   ClassDefNV(Outer_Write, 2);
-};
-)"));
+            ClassDefNV(Outer_Write, 2);
+         };
+      )"));
 
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "Outer_Write").Unwrap());
@@ -491,3 +491,4 @@ struct Outer_Write {
       EXPECT_THAT(ex.GetError().GetReport(), testing::HasSubstr("unsupported"));
    }
 }
+
