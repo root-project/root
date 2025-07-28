@@ -188,8 +188,7 @@ class PyFilter(unittest.TestCase):
         )
 
         rdf2 = ROOT.RDataFrame(5)
-        c = rdf2.Define("x", "(int) rdfentry_") \
-                .Filter(ROOT.myfun_t[int], ["x"]).Count().GetValue()
+        c = rdf2.Define("x", "(int) rdfentry_").Filter(ROOT.myfun_t[int], ["x"]).Count().GetValue()
 
         self.assertEqual(c, 1)
 
