@@ -29,7 +29,7 @@ gx = ROOT.RooGaussian("gx", "gx", x, -2, 3)
 print("gx = ", gx.getVal())
 
 # Return value of gx normalized over x in range [-10,10]
-nset = {x}
+nset = ROOT.RooArgSet(x)
 print("gx_Norm[x] = ", gx.getVal(nset))
 
 # Create object representing integral over gx
