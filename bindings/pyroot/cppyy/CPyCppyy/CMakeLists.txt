@@ -55,14 +55,15 @@ add_library(${libname} SHARED ${headers} ${sources})
 # Set the suffix to '.so' and the prefix to 'lib'
 set_target_properties(${libname} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES})
 if(MSVC)
-  target_link_libraries(${libname} PUBLIC cppyy_backend Python3::Python)
+  target_link_libraries(${libname} PRIVATE cppyy_backend)
+  target_link_libraries(${libname} PUBLIC Python3::Python)
   set_target_properties(${libname} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   set_target_properties(${libname} PROPERTIES PREFIX "lib")
   set_target_properties(${libname} PROPERTIES SUFFIX ".pyd")
 elseif(APPLE)
-  target_link_libraries(${libname} PUBLIC -Wl,-bind_at_load -Wl,-w -Wl,-undefined -Wl,dynamic_lookup cppyy_backend)
+  target_link_libraries(${libname} PRIVATE -Wl,-bind_at_load -Wl,-w -Wl,-undefined -Wl,dynamic_lookup cppyy_backend)
 else()
-  target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all cppyy_backend)
+  target_link_libraries(${libname} PRIVATE -Wl,--unresolved-symbols=ignore-all cppyy_backend)
 endif()
 
 if(NOT MSVC)
@@ -103,6 +104,26 @@ target_include_directories(${libname}
 )
 
 set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${libname})
+
+if(NOT MSVC)
+  # Make sure that relative RUNPATH to main ROOT libraries is always correct.
+
+  file(RELATIVE_PATH pymoduledir_to_libdir_build ${localruntimedir} "${localruntimedir}")
+  file(RELATIVE_PATH pymoduledir_to_libdir_install ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_PYTHONDIR} "${CMAKE_INSTALL_FULL_LIBDIR}")
+
+  if(APPLE)
+    set_target_properties(${libname} PROPERTIES
+        BUILD_RPATH "@loader_path/${pymoduledir_to_libdir_build}"
+        INSTALL_RPATH "@loader_path/${pymoduledir_to_libdir_install}"
+    )
+  else()
+    set_target_properties(${libname} PROPERTIES
+        BUILD_RPATH "$ORIGIN/${pymoduledir_to_libdir_build}"
+        INSTALL_RPATH "$ORIGIN/${pymoduledir_to_libdir_install}"
+    )
+  endif()
+
+endif()
 
 # Install library
 install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports
