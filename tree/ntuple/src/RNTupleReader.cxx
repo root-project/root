@@ -218,8 +218,13 @@ void ROOT::RNTupleReader::PrintInfo(const ENTupleInfo what, std::ostream &output
 
 ROOT::RNTupleReader *ROOT::RNTupleReader::GetDisplayReader()
 {
-   if (!fDisplayReader)
-      fDisplayReader = Clone();
+   if (!fDisplayReader) {
+      ROOT::RNTupleDescriptor::RCreateModelOptions opts;
+      opts.SetEmulateUnknownTypes(true);
+      auto fullModel = fSource->GetSharedDescriptorGuard()->CreateModel(opts);
+      fDisplayReader = std::unique_ptr<RNTupleReader>(
+         new RNTupleReader(std::move(fullModel), fSource->Clone(), ROOT::RNTupleReadOptions{}));
+   }
    return fDisplayReader.get();
 }
 
