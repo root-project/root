@@ -5,6 +5,7 @@
 #include <Math/IFunction.h>
 #include <Math/FitMethodFunction.h>
 #include <Math/GenAlgoOptions.h>
+#include <Math/Error.h>
 #include <TString.h>
 #include <iostream>
 
@@ -352,7 +353,7 @@ void ScipyMinimizer::PyRunString(TString code, TString errorMessage, int start)
 }
 
 //_______________________________________________________________________
-void ScipyMinimizer::SetHessianFunction(std::function<bool(const std::vector<double> &, double *)> func)
+void ScipyMinimizer::SetHessianFunction(std::function<bool(std::span<const double>, double *)> func)
 {
    fHessianFunc = func;
 }

@@ -9,7 +9,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Scipy
                                 Math/ScipyMinimizer.h
                               LINKDEF 
                                 Math/LinkDef.h
-                              LIBRARIES ${PYTHON_LIBRARIES_Development_Main}
+                              LIBRARIES
+                                Python3::NumPy
+                                Python3::Python
                               SOURCES
                                 src/ScipyMinimizer.cxx
                               DEPENDENCIES Core MathCore RIO

@@ -28,7 +28,7 @@ double RosenBrockGrad(const double *x, unsigned int ipar)
       return 200 * (x[1] - x[0] * x[0]);
 }
 // Hessian function
-bool RosenBrockHessian(const std::vector<double> &xx, double *hess)
+bool RosenBrockHessian(std::span<const double> xx, double *hess)
 {
    const double x = xx[0];
    const double y = xx[1];

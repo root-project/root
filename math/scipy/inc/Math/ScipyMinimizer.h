@@ -84,7 +84,7 @@ private:
    PyObject *fBoundsMod;
    PyObject *fConstraintsList; /// contraints functions
    GenAlgoOptions *fExtraOpts;
-   std::function<bool(const std::vector<double> &, double *)> fHessianFunc;
+   std::function<bool(std::span<const double>, double *)> fHessianFunc;
    unsigned int fConstN;
    unsigned int fCalls;
 
@@ -158,7 +158,7 @@ public:
    /// method to perform the minimization
    virtual bool Minimize() override;
 
-   virtual void SetHessianFunction(std::function<bool(const std::vector<double> &, double *)>) override;
+   virtual void SetHessianFunction(std::function<bool(std::span<const double>, double *)>) override;
 
 protected:
    ClassDef(ScipyMinimizer, 0) //
