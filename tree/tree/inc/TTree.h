@@ -541,7 +541,7 @@ public:
    virtual Long64_t        GetEstimate() const { return fEstimate; }
    virtual Int_t           GetEntry(Long64_t entry, Int_t getall = 0);
            Int_t           GetEvent(Long64_t entry, Int_t getall = 0) { return GetEntry(entry, getall); }
-   virtual Int_t           GetEntryWithIndex(Int_t major, Int_t minor = 0);
+   virtual Int_t           GetEntryWithIndex(Long64_t major, Long64_t minor = 0);
    virtual Long64_t        GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor = 0) const;
    virtual Long64_t        GetEntryNumberWithIndex(Long64_t major, Long64_t minor = 0) const;
    TEventList             *GetEventList() const { return fEventList; }
