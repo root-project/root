@@ -148,30 +148,20 @@ inline PyObject* CallSelfIndex(CPPInstance* self, PyObject* idx, PyObject* pymet
 }
 
 //- "smart pointer" behavior ---------------------------------------------------
-PyObject* DeRefGetAttr(PyObject* self, PyObject* name)
+static PyObject* smart_follow(PyObject* self, PyObject* name, PyObject* method)
 {
-// Follow operator*() if present (available in python as __deref__), so that
-// smart pointers behave as expected.
-    if (name == PyStrings::gTypeCode || name == PyStrings::gCTypesType) {
-    // TODO: these calls come from TemplateProxy and are unlikely to be needed in practice,
-    // whereas as-is, they can accidentally dereference the result of end() on some STL
-    // containers. Obviously, this is a dumb hack that should be resolved more fundamentally.
-        PyErr_SetString(PyExc_AttributeError, CPyCppyy_PyText_AsString(name));
-        return nullptr;
-    }
-
     if (!CPyCppyy_PyText_Check(name))
         PyErr_SetString(PyExc_TypeError, "getattr(): attribute name must be string");
 
-    PyObject* pyptr = PyObject_CallMethodNoArgs(self, PyStrings::gDeref);
+    PyObject* pyptr = PyObject_CallMethodNoArgs(self, method);
     if (!pyptr)
         return nullptr;
 
 // prevent a potential infinite loop
     if (Py_TYPE(pyptr) == Py_TYPE(self)) {
-        PyObject* val1 = PyObject_Str(self);
+        PyObject* val1 = PyObject_Str((PyObject*)Py_TYPE(self));
         PyObject* val2 = PyObject_Str(name);
-        PyErr_Format(PyExc_AttributeError, "%s has no attribute \'%s\'",
+        PyErr_Format(PyExc_AttributeError, "%s object has no attribute \'%s\'",
             CPyCppyy_PyText_AsString(val1), CPyCppyy_PyText_AsString(val2));
         Py_DECREF(val2);
         Py_DECREF(val1);
@@ -185,21 +175,28 @@ PyObject* DeRefGetAttr(PyObject* self, PyObject* name)
     return result;
 }
 
+PyObject* DeRefGetAttr(PyObject* self, PyObject* name)
+{
+// Follow operator*() if present (available in python as __deref__), so that
+// smart pointers behave as expected.
+    if (name == PyStrings::gTypeCode || name == PyStrings::gCTypesType) {
+    // TODO: these calls come from TemplateProxy and are unlikely to be needed in practice,
+    // whereas as-is, they can accidentally dereference the result of end() on some STL
+    // containers. Obviously, this is a dumb hack that should be resolved more fundamentally.
+        PyErr_SetString(PyExc_AttributeError, CPyCppyy_PyText_AsString(name));
+        return nullptr;
+    }
+
+
+    return smart_follow(self, name, PyStrings::gDeref);
+}
+
 //-----------------------------------------------------------------------------
 PyObject* FollowGetAttr(PyObject* self, PyObject* name)
 {
 // Follow operator->() if present (available in python as __follow__), so that
 // smart pointers behave as expected.
-    if (!CPyCppyy_PyText_Check(name))
-        PyErr_SetString(PyExc_TypeError, "getattr(): attribute name must be string");
-
-    PyObject* pyptr = PyObject_CallMethodNoArgs(self, PyStrings::gFollow);
-    if (!pyptr)
-         return nullptr;
-
-    PyObject* result = PyObject_GetAttr(pyptr, name);
-    Py_DECREF(pyptr);
-    return result;
+    return smart_follow(self, name, PyStrings::gFollow);
 }
 
 //- pointer checking bool converter -------------------------------------------
