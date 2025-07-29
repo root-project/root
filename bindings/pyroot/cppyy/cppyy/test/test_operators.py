@@ -384,6 +384,25 @@ class TestOPERATORS:
         assert     ns.AGe(5) >= ns.AGe(4)
         assert not ns.AGe(4) >= ns.AGe(5)
 
+    def test17_arrow_operator_recursion(self):
+        """operator->() returning same type should not recurse"""
+
+        import cppyy
+
+        cppyy.cppdef(r"""\
+        namespace Recursion {
+        class MCPCollection {
+        public:
+          MCPCollection() = default;
+          MCPCollection* operator->() { return this; }
+        }; }""")
+
+        ns = cppyy.gbl.Recursion
+
+        coll = ns.MCPCollection()
+        with raises(AttributeError):
+            coll.non_existing_method
+
 
 if __name__ == "__main__":
     exit(pytest.main(args=['-sv', '-ra', __file__]))

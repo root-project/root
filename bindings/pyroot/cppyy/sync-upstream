@@ -23,7 +23,7 @@ rebase_topic () {
 }
 
 cd CPyCppyy/
-git reset --hard bcb79193c5c7b66afc70b7c6eb30682b07907727
+git reset --hard 0586cd9e5d7112cf20418c5126130276c5b8e384
 
 git remote rename origin wlav
 
@@ -40,7 +40,7 @@ cd ../
 
 cd cppyy/
 
-git reset --hard 06bc3dacea8399f21cc304d425ecdfe337d6494a
+git reset --hard 05c8f2dad4a37c495c55f2ea28d9dff540b0fecc
 
 git remote rename origin wlav
 
@@ -75,6 +75,8 @@ git apply patches/CPyCppyy-Disable-implicit-conversion-to-smart-ptr.patch
 git apply patches/CPyCppyy-Disable_std-vector-numpy-array-pythonization.patch
 git apply patches/CPyCppyy-TString_converter.patch
 git apply patches/CPyCppyy-Support-conversion-from-str-to-char.patch # https://github.com/wlav/CPyCppyy/pull/21
+git apply patches/CPyCppyy-Get-names-and-types-of-all-overloads-signature.patch
+git apply patches/CPyCppyy-Fix-usage-of-Python-GIL-to-support-threading.patch # https://github.com/wlav/CPyCppyy/pull/60
 git apply patches/cppyy-No-CppyyLegacy-namespace.patch
 git apply patches/cppyy-Remove-Windows-workaround.patch
 git apply patches/cppyy-Don-t-enable-cling-autoloading.patch
