@@ -16,12 +16,13 @@
 #include "cling/Utils/ParserStateRAII.h"
 
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/LocInfoType.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Parse/Parser.h"
 #include "clang/Parse/RAIIObjectsForParser.h"
-#include "clang/Sema/Scope.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Overload.h"
+#include "clang/Sema/Scope.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/Template.h"
 #include "clang/Sema/TemplateDeduction.h"
@@ -1476,7 +1477,7 @@ namespace cling {
     DeclarationName FuncName = FuncNameInfo.getName();
     SourceLocation FuncNameLoc = FuncNameInfo.getLoc();
     LookupResult Result(S, FuncName, FuncNameLoc, Sema::LookupMemberName,
-                        Sema::NotForRedeclaration);
+                        RedeclarationKind::NotForRedeclaration);
     Result.suppressDiagnostics();
 
     bool LookupSuccess = true;
@@ -1500,10 +1501,8 @@ namespace cling {
       CXXScopeSpec SS;
       if (scopeNNS)
         SS.MakeTrivial(Context, scopeNNS, scopeSrcRange);
-      bool MemberOfUnknownSpecialization;
       S.LookupTemplateName(Result, P.getCurScope(), SS, QualType(),
-                           /*EnteringContext*/false,
-                           MemberOfUnknownSpecialization);
+                           /*EnteringContext*/false);
       // "Translation" of the TemplateDecl to the specialization is done
       // in findAnyFunctionSelector() given the ExplicitTemplateArgs.
       if (Result.empty())
@@ -1812,12 +1811,12 @@ namespace cling {
         SourceLocation loc;
         sema::TemplateDeductionInfo Info(loc);
         FunctionDecl *fdecl = 0;
-        Sema::TemplateDeductionResult TemplDedResult
+        clang::TemplateDeductionResult TemplDedResult
           = S.DeduceTemplateArguments(MethodTmpl,
                     const_cast<TemplateArgumentListInfo*>(ExplicitTemplateArgs),
                                       fdecl,
                                       Info);
-        if (TemplDedResult != Sema::TDK_Success) {
+        if (TemplDedResult != clang::TemplateDeductionResult::Success) {
           // Deduction failure.
           return 0;
         } else {
