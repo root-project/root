@@ -403,33 +403,6 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/cmake/CppInterOp/CppInterOpConfigVersion.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/lib/cmake/CppInterOp/CppInterOpConfigVersion.cmake
   @ONLY)
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/lib/cmake/CppInterOp/
-  DESTINATION lib/cmake/CppInterOp
-  FILES_MATCHING
-  PATTERN "*.cmake"
-  )
-
-
-install(DIRECTORY include/
-  DESTINATION include
-  FILES_MATCHING
-  PATTERN "*.def"
-  PATTERN "*.h"
-  PATTERN ".svn" EXCLUDE
-  )
-
-install(DIRECTORY tools/
-  DESTINATION include/CppInterOp/tools
-  FILES_MATCHING
-  PATTERN "*.h"
-)
-
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/
-  DESTINATION include
-  FILES_MATCHING
-  PATTERN "CMakeFiles" EXCLUDE
-  PATTERN "*.inc"
-  )
 
 add_definitions( -D_GNU_SOURCE )
 

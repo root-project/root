@@ -103,7 +103,7 @@ endif()
       clangStaticAnalyzerCore
       )
   endif(LLVM_LINK_LLVM_DYLIB)
-  add_llvm_library(clangCppInterOp
+  add_llvm_library(clangCppInterOp BUILDTREE_ONLY
     DISABLE_LLVM_LINK_LLVM_DYLIB
     CppInterOp.cpp
     CXCppInterOp.cpp
