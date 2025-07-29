@@ -115,7 +115,7 @@ index 5ca1c26cd78..16edf28b831 100644
      using SCharArrayConverter::SCharArrayConverter;
      bool SetArg(PyObject*, Parameter&, CallContext* = nullptr) override;
      PyObject* FromMemory(void* address) override;
-+    virtual bool ToMemory(PyObject*, void*, PyObject* = nullptr);
++    bool ToMemory(PyObject*, void*, PyObject* = nullptr) override;
  
  private:
      std::vector<const char*> fBuffer;
