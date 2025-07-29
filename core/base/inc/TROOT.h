@@ -341,6 +341,7 @@ public:
    Int_t             Timer() const { return fTimer; }
 
    //---- static functions
+   static void        CleanUpROOTAtExit();
    static Int_t       DecreaseDirLevel();
    static Int_t       GetDirLevel();
    static const char *GetMacroPath();
@@ -353,6 +354,7 @@ public:
    static Int_t       ConvertVersionCode2Int(Int_t code);
    static Int_t       ConvertVersionInt2Code(Int_t v);
    static Int_t       RootVersionCode();
+   static void        WriteCloseAllFiles();
    static const std::vector<std::string> &AddExtraInterpreterArgs(const std::vector<std::string> &args);
    static const char**&GetExtraInterpreterArgs();
 
