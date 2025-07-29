@@ -100,8 +100,19 @@ TEST(RNTupleEmulated, EmulatedFields_Simple)
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
    std::unique_ptr<ROOT::RNTuple> ntpl(file->Get<ROOT::RNTuple>("ntpl"));
    reader = RNTupleReader::Open(cmOpts, *ntpl);
+   EXPECT_EQ(reader->GetNEntries(), 2);
 
    reader->LoadEntry(0);
+
+   auto vInnerInt1 = reader->GetView<int>("f.fInner.fInt1");
+   auto vInnerInt2 = reader->GetView<int>("f.fInner.fInt2");
+   auto vOuterInt1 = reader->GetView<int>("f.fInt1");
+   EXPECT_EQ(vInnerInt1(0), 1);
+   EXPECT_EQ(vInnerInt2(0), 2);
+   EXPECT_EQ(vOuterInt1(0), 1);
+   EXPECT_EQ(vInnerInt1(1), 71);
+   EXPECT_EQ(vInnerInt2(1), 82);
+   EXPECT_EQ(vOuterInt1(1), 93);
 }
 
 TEST(RNTupleEmulated, EmulatedFields_Vecs)
