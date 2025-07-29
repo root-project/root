@@ -5,7 +5,6 @@ import ctypes
 import sys
 
 from . import _stdcpp_fix
-from cppyy_backend import loader
 
 __all__ = [
     'gbl',
@@ -19,11 +18,19 @@ __all__ = [
     '_end_capture_stderr'
     ]
 
-# first load the dependency libraries of the backend, then pull in the
-# libcppyy extension module
-c = loader.load_cpp_backend()
+# First load the dependency libraries of the backend, then pull in the libcppyy
+# extension module. If the backed can't be loaded, it was probably linked
+# statically into the extension module, so we don't error out at this point.
+try:
+    from cppyy_backend import loader
+    c = loader.load_cpp_backend()
+except ImportError:
+    c = None
+
 import libcppyy as _backend
-_backend._cpp_backend = c
+
+if c is not None:
+    _backend._cpp_backend = c
 
 # explicitly expose APIs from libcppyy
 _w = ctypes.CDLL(_backend.__file__, ctypes.RTLD_GLOBAL)
