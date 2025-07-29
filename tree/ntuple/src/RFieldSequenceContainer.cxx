@@ -493,9 +493,9 @@ ROOT::RVectorField::CreateUntyped(std::string_view fieldName, std::unique_ptr<RF
 std::unique_ptr<ROOT::RFieldBase> ROOT::RVectorField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
-   auto isUntyped = GetTypeName().empty();
-   return std::unique_ptr<ROOT::RVectorField>(
-      new RVectorField(newName, std::move(newItemField), isUntyped ? std::make_optional("") : std::nullopt));
+   auto isUntyped = GetTypeName().empty() || ((fTraits & kTraitEmulatedField) != 0);
+   auto emulatedFromType = isUntyped ? std::make_optional(GetTypeName()) : std::nullopt;
+   return std::unique_ptr<ROOT::RVectorField>(new RVectorField(newName, std::move(newItemField), emulatedFromType));
 }
 
 std::size_t ROOT::RVectorField::AppendImpl(const void *from)

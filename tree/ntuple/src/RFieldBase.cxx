@@ -555,7 +555,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
       if (!result) {
          auto cl = TClass::GetClass(typeName.c_str());
 
-         if (cl != nullptr) {
+         if (cl && cl->GetState() > TClass::kForwardDeclared) {
             createContextGuard.AddClassToStack(resolvedType);
             if (cl->GetCollectionProxy()) {
                result = std::make_unique<RProxiedCollectionField>(fieldName, typeName);
