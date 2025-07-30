@@ -1,0 +1,74 @@
+name: 'ROOT Python wheels'
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'The branch for which the Python wheel has to be generated'
+        type: string
+        required: true
+        default: "master"
+  push:
+    branches: experimental-pip-install-root
+  schedule:
+    - cron: '01 1 * * *'
+
+jobs:
+  build-wheels:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [cp38-manylinux_x86_64, cp39-manylinux_x86_64, cp310-manylinux_x86_64, cp311-manylinux_x86_64, cp312-manylinux_x86_64, cp313-manylinux_x86_64]
+    name: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/workflows/cibuildwheel-impl
+        with:
+          build-tag: ${{ matrix.target }}
+
+  create-and-upload-wheel-registry:
+      needs: build-wheels
+      runs-on: ubuntu-latest
+      steps:
+
+      - name: Download produced wheels
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Install required system packages
+        run: sudo apt-get install -y krb5-user xrootd-client
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+
+      - name: Create PEP503-compliant wheel registry
+        run: |
+          mkdir -p wheelhouse
+          mv *.whl wheelhouse
+          python -m pip install --upgrade pip
+          python -m pip install --user simple503
+          simple503 wheelhouse
+
+      - name: Compute number of files to upload
+        id: nfiles
+        run: echo "NFILES=$(find wheelhouse -maxdepth 1 | wc -l)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload wheels to EOS
+        env:
+          RWEBEOS_KT: ${{ secrets.RWEBEOS_KT }}
+          KT_FILE_NAME: /tmp/decoded.keytab
+          EOS_PATH: /eos/project/r/root-eos/www/experimental-python-wheels
+          EOS_ENDPOINT: root://eosproject-r.cern.ch
+          KRB5CCNAME: /tmp/krb5cc
+          NFILES: ${{ steps.nfiles.outputs.NFILES }}
+        working-directory: ${{ env.WORKDIR }}
+        run: |
+          echo +++ Content
+          ls
+          echo +++ Retrieving the secret
+          echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
+          echo +++ Creating the token
+          kinit  -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
+          echo +++ Running the copy
+          xrdcp --parallel ${NFILES} -rf wheelhouse/* ${EOS_ENDPOINT}/${EOS_PATH}/
