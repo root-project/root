@@ -542,8 +542,7 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
             keyname, keytitle);
       return kTRUE;
    }
-   Bool_t canBeFound = (type & kIncremental) && (current_sourcedir->GetList()->FindObject(keyname) != nullptr) &&
-                       (target->GetList()->FindObject(keyname) != nullptr);
+   Bool_t canBeFound = (type & kIncremental) && (target->GetList()->FindObject(keyname) != nullptr);
 
    // if (cl->IsTObject())
    //    obj->ResetBit(kMustCleanup);
