@@ -1110,6 +1110,11 @@ painted with the color corresponding to the new maximum.
 When the minimum of the histogram is set to a greater value than the real minimum,
  the bins having a value between the real minimum and the new minimum are not drawn
  unless the option `0` is set.
+In other words, option `COLZ0` forces the painting of bins with content < set minimum with
+ a color corresponding to the set minimum. In contrast, option `COLZ` would not draw values
+ smaller than the specified minimum. Note that both `COLZ` and `COLZ0` still do not draw
+ empty bins, ie bins with `content == error == 0`, if the set min is not negative.
+(Note that option `COLZ0` for TH2Poly has a different behavior than for TH2.)
 
 The following example illustrates the option `0` combined with the option `COL`.
 
@@ -1129,10 +1134,17 @@ Begin_Macro(source)
    hcol22->SetBit(TH1::kNoStats);
    c1->cd(1); hcol21->Draw("COLZ");
    c1->cd(2); hcol22->Draw("COLZ0");
+   hcol21->SetMaximum(100);
+   hcol21->SetMinimum(40);
    hcol22->SetMaximum(100);
    hcol22->SetMinimum(40);
 }
 End_Macro
+
+Note that the behavior of `COLZ` is not symmetric: it does not draw values below the specified minimum,
+but does draw values above the specified maximum by clipping them to the maximum color. In contrast, `COLZ0`
+clips color on both lower and upper sides. Both `COLZ0` and `COLZ` exclude drawing empty bins (`content == error == 0`),
+if the set minimum is not negative.
 
 \since **ROOT version 6.09/01:**
 
@@ -2457,7 +2469,7 @@ the option "GLLEGO".
 \since **ROOT version 6.09/01**
 
 In some cases it can be useful to not draw the empty bins. the option "0"
-combined with the option "COL" et COLZ allows to do that.
+combined with the option "COL" and "COLZ" allows to do that.
 
 Begin_Macro(source)
 {
@@ -5903,7 +5915,7 @@ void THistPainter::PaintColorLevels(Option_t*)
                }
             }
          } else {
-            color = Int_t(0.01+(z-zmin)*scale);
+            color = Hoption.Zero ? Int_t(0.01+(std::max(z, zmin)-zmin)*scale) : Int_t(0.01+(z-zmin)*scale);
          }
 
          Int_t theColor = Int_t((color+0.99)*Float_t(ncolors)/Float_t(ndivz));
@@ -10126,6 +10138,9 @@ void THistPainter::PaintText(Option_t *)
 
    // 2D histograms
    } else {
+      Double_t zmin = Hparam.zmin;
+      if (Hoption.Logz) zmin = TMath::Power(10,Hparam.zmin);
+
       text.SetTextAlign(22);
       if (Hoption.Text ==  1) angle = 0;
       text.SetTextAngle(angle);
@@ -10145,7 +10160,7 @@ void THistPainter::PaintText(Option_t *)
             }
             if (!IsInside(x,y)) continue;
             z = fH->GetBinContent(bin);
-            if (z < Hparam.zmin || (z == 0 && !Hoption.MinimumZero)) continue;
+            if (z < zmin || (z == 0 && !Hoption.MinimumZero)) continue;
             if (Hoption.Text>2000) {
                e = fH->GetBinError(bin);
                tf.Form("#splitline{%s%s}{#pm %s%s}",
