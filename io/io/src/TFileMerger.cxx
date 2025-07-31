@@ -828,7 +828,7 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
          ndir->ResetBit(kMustCleanup);
          delete ndir;
       }
-   } else if (!canBeFound) { // Don't write the partial result for TTree and TH1
+   } else if (!canBeFound) { // object (TTree, TH1) is not yet owned by the target, thus write it
       if (gDebug > 0)
          Info("MergeOne", "Writing partial result of %s into target", oldkeyname.Data());
       if (!canBeMerged) {
