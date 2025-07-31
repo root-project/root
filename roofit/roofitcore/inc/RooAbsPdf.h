@@ -36,8 +36,11 @@ public:
   RooAbsPdf() ;
   RooAbsPdf(const char *name, const char *title=nullptr) ;
   RooAbsPdf(const char *name, const char *title, double minVal, double maxVal) ;
-  // RooAbsPdf(const RooAbsPdf& other, const char* name=nullptr);
   ~RooAbsPdf() override;
+
+  TObject* clone(const char* newname=nullptr) const override {
+    return new RooAbsPdf(*this,newname);
+  }
 
   // Toy MC generation
 
@@ -285,6 +288,8 @@ private:
   }
 
 protected:
+
+  double evaluate() const override;
 
   virtual std::unique_ptr<RooAbsReal> createNLLImpl(RooAbsData& data, const RooLinkedList& cmdList);
   virtual std::unique_ptr<RooFitResult> fitToImpl(RooAbsData& data, const RooLinkedList& cmdList);

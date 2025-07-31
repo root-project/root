@@ -87,7 +87,9 @@ public:
   RooAbsReal(const RooAbsReal& other, const char* name=nullptr);
   ~RooAbsReal() override;
 
-
+  TObject* clone(const char* newname=nullptr) const override {
+    return new RooAbsReal(*this,newname);
+  }
 
 
   //////////////////////////////////////////////////////////////////////////////////
@@ -453,7 +455,7 @@ protected:
   double traceEval(const RooArgSet* set) const ;
 
   /// Evaluate this PDF / function / constant. Needs to be overridden by all derived classes.
-  virtual double evaluate() const = 0;
+  virtual double evaluate() const;
 
   // Hooks for RooDataSet interface
   void syncCache(const RooArgSet* set=nullptr) override { getVal(set) ; }
