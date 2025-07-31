@@ -21,6 +21,12 @@ TEST(RVariableBinAxis, Constructor)
    EXPECT_EQ(axis.GetNumNormalBins(), Bins);
    EXPECT_EQ(axis.GetTotalNumBins(), Bins);
    EXPECT_FALSE(axis.HasFlowBins());
+
+   EXPECT_THROW(RVariableBinAxis({}), std::invalid_argument);
+   EXPECT_THROW(RVariableBinAxis({0}), std::invalid_argument);
+   EXPECT_THROW(RVariableBinAxis({0, 0}), std::invalid_argument);
+   EXPECT_THROW(RVariableBinAxis({0, 1, 0}), std::invalid_argument);
+   EXPECT_THROW(RVariableBinAxis({0, 1, 1}), std::invalid_argument);
 }
 
 TEST(RVariableBinAxis, Equality)
