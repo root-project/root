@@ -21,7 +21,7 @@
 #include <TObjString.h>
 #include <TObjArray.h>
 // #include "AliLog.h"
-#define AliWarningGeneral(X,Y) do { ::Warning((X), (Y)); } while(false)
+#define AliWarningGeneral(X, fmt, Y) do { ::Warning((X), (fmt), (Y)); } while(false)
 ClassImp(AliAODForwardMult)
 #ifdef DOXY_INPUT
 ; // For Emacs
@@ -320,8 +320,7 @@ AliAODForwardMult::MakeTriggerMask(const char* what)
     else if (s.CompareTo("E")          == 0) trgMask |= kE;
     else if (s.CompareTo("NCLUSTER>0") == 0) trgMask |= kNClusterGt0;
     else
-      AliWarningGeneral("MakeTriggerMask",
-			Form("Unknown trigger %s", s.Data()));
+      AliWarningGeneral("MakeTriggerMask", "Unknown trigger %s", s.Data());
   }
   delete parts;
   return trgMask;
