@@ -19,7 +19,7 @@
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleDS.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <string_view>
 

@@ -22,7 +22,7 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleJoinTable.hxx>
 #include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RPageStorage.hxx>
 
 #include <memory>

@@ -19,7 +19,7 @@
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 
 #include <algorithm>
 #include <cstdint>

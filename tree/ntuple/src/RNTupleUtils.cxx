@@ -1,4 +1,4 @@
-/// \file RNTupleUtil.cxx
+/// \file RNTupleUtils.cxx
 /// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch> & Max Orok <maxwellorok@gmail.com>
 /// \date 2020-07-14
@@ -6,22 +6,21 @@
 /// \date 2024-11-08
 
 /*************************************************************************
- * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2025, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RNTupleUtil.hxx"
-
-#include "ROOT/RLogger.hxx"
-#include "ROOT/RMiniFile.hxx"
+#include <ROOT/RLogger.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 
 #include <algorithm>
+#include <array>
 #include <cctype>
-#include <cstring>
-#include <iostream>
+#include <string>
+#include <utility>
 
 ROOT::RLogChannel &ROOT::Internal::NTupleLog()
 {
