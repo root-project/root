@@ -1,0 +1,27 @@
+## \file
+## \ingroup tutorial_hist
+## \notebook
+## Example that shows how you can set the colors of the confidence interval bands by using
+## the method `TRatioPlot::SetConfidenceIntervalColors`.
+## Inspired by the tutorial of Paul Gessinger.
+##
+## \macro_image
+## \macro_code
+## \date July 2025
+## \author Alberto Ferro, Nursena Bitirgen
+
+import numpy as np
+import ROOT
+
+ROOT.gStyle.SetOptStat(0)
+c1 = ROOT.TCanvas("c1", "fit residual simple")
+h1 = ROOT.TH1D("h1", "h1", 50, -5, 5)
+# h1[:] = np.histogram(np.random.normal(0.0, 1.0, 2000), bins=50, range=(-5, 5))[0]
+h1.Fill(np.random.normal(0.0, 1.0, 2000))
+h1.Fit("gaus")
+h1.GetXaxis().SetTitle("x")
+h1.GetYaxis().SetTitle("y")
+rp1 = ROOT.TRatioPlot(h1)
+rp1.SetConfidenceIntervalColors("kBlue", "kRed")
+rp1.Draw()
+c1.Update()
