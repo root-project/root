@@ -2155,7 +2155,7 @@ endfunction(ROOTTEST_SET_TESTOWNER)
 # Construct a target name for a given file <filename> and store its name into
 # <resultvar>. The target name is of the form:
 #
-#   roottest-<directorypath>-<filename_WE>
+#   <directorypath>-<filename_WE>
 #
 #-------------------------------------------------------------------------------
 function(ROOTTEST_TARGETNAME_FROM_FILE resultvar filename)
@@ -2163,15 +2163,11 @@ function(ROOTTEST_TARGETNAME_FROM_FILE resultvar filename)
   get_filename_component(realfp ${filename} ABSOLUTE)
   get_filename_component(filename_we ${filename} NAME_WE)
 
-  if(DEFINED ROOTTEST_DIR)
-    string(REPLACE "${ROOTTEST_DIR}" "" relativepath ${realfp})
-  else()
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" relativepath ${realfp})
-  endif()
+  string(REPLACE "${CMAKE_SOURCE_DIR}/" "" relativepath ${realfp})
   string(REPLACE "${filename}"     "" relativepath ${relativepath})
 
   string(REPLACE "/" "-" targetname ${relativepath}${filename_we})
-  set(${resultvar} "roottest${targetname}" PARENT_SCOPE)
+  set(${resultvar} "${targetname}" PARENT_SCOPE)
 
 endfunction(ROOTTEST_TARGETNAME_FROM_FILE)
 
@@ -2305,7 +2301,7 @@ macro(ROOTTEST_COMPILE_MACRO filename)
     string(REPLACE "/" "\\\\" realfp ${realfp})
   endif()
 
-  set(BuildScriptFile ${ROOTTEST_DIR}/scripts/build.C)
+  set(BuildScriptFile ${ROOT_SOURCE_DIR}/roottest/scripts/build.C)
 
   set(BuildScriptArg \(\"${realfp}\",\"${ARG_BUILDLIB}\",\"${ARG_BUILDOBJ}\"\))
 
@@ -3144,7 +3140,7 @@ function(ROOTTEST_ADD_TEST testname)
                         ${outref}
                         ${errref}
                         WORKING_DIR ${test_working_dir}
-                        DIFFCMD ${Python3_EXECUTABLE} ${ROOTTEST_DIR}/scripts/custom_diff.py
+                        DIFFCMD ${Python3_EXECUTABLE} ${ROOT_SOURCE_DIR}/roottest/scripts/custom_diff.py
                         TIMEOUT ${timeout}
                         ${environment}
                         ${build}
