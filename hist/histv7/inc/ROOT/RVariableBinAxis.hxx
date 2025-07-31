@@ -9,6 +9,7 @@
 
 #include <cstddef>
 #include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -41,12 +42,21 @@ class RVariableBinAxis final {
 public:
    /// Construct an axis object with variable bins.
    ///
-   /// \param[in] binEdges the (ordered) edges of the normal bins
+   /// \param[in] binEdges the (ordered) edges of the normal bins, must define at least one bin (i.e. size >= 2)
    /// \param[in] enableFlowBins whether to enable underflow and overflow bins
    RVariableBinAxis(std::vector<double> binEdges, bool enableFlowBins = true)
       : fBinEdges(std::move(binEdges)), fEnableFlowBins(enableFlowBins)
    {
-      // FIXME: should validate that fBinEdges is sorted
+      if (fBinEdges.size() < 2) {
+         throw std::invalid_argument("must have >= 2 bin edges");
+      }
+      for (std::size_t i = 1; i < fBinEdges.size(); i++) {
+         if (fBinEdges[i - 1] >= fBinEdges[i]) {
+            std::string msg = "binEdges must be sorted, but for bin " + std::to_string(i - 1) + ": ";
+            msg += std::to_string(fBinEdges[i - 1]) + " >= " + std::to_string(fBinEdges[i]);
+            throw std::invalid_argument(msg);
+         }
+      }
    }
 
    std::size_t GetNumNormalBins() const { return fBinEdges.size() - 1; }
