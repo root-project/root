@@ -16,7 +16,7 @@
 #ifndef ROOT_RCluster
 #define ROOT_RCluster
 
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 
 #include <cstdint>
 #include <memory>

@@ -15,7 +15,7 @@
 #define ROOT_RFieldVisitor
 
 #include <ROOT/RField.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 
 #include <algorithm>
 #include <iostream>

@@ -14,7 +14,7 @@
 #ifndef ROOT_RNTupleFillStatus
 #define ROOT_RNTupleFillStatus
 
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 
 #include <cstddef>
 

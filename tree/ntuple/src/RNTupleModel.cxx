@@ -15,6 +15,7 @@
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldToken.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/StringUtils.hxx>
 

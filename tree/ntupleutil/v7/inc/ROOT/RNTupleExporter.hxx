@@ -16,12 +16,12 @@
 #ifndef ROOT7_RNTupleExporter
 #define ROOT7_RNTupleExporter
 
+#include <ROOT/RNTupleTypes.hxx>
+
 #include <cstdint>
 #include <string>
 #include <vector>
 #include <unordered_set>
-
-#include <ROOT/RNTupleUtil.hxx>
 
 namespace ROOT::Internal {
 class RPageSource;

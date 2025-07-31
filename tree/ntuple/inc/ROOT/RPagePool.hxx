@@ -16,7 +16,7 @@
 
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageAllocator.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 
 #include <cstddef>
 #include <map>

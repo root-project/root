@@ -16,7 +16,7 @@
 #define ROOT_RNTupleSerialize
 
 #include <ROOT/RError.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RSpan.hxx>
 
 #include <Rtypes.h>

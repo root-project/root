@@ -14,7 +14,7 @@
 #ifndef ROOT_RNTupleRange
 #define ROOT_RNTupleRange
 
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 
 namespace ROOT {
 

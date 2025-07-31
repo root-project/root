@@ -20,7 +20,7 @@
 
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RFieldBase.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 
 #include <cstddef>
 #include <memory>

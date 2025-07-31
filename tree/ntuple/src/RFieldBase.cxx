@@ -8,6 +8,7 @@
 #include <ROOT/RFieldBase.hxx>
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RFieldUtils.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 
 #include <TClass.h>
 #include <TClassEdit.h>

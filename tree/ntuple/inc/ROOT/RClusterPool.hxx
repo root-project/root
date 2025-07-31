@@ -17,7 +17,7 @@
 #define ROOT_RClusterPool
 
 #include <ROOT/RCluster.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 
 #include <condition_variable>
 #include <deque>
