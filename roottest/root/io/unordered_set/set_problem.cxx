@@ -1,8 +1,7 @@
 #include <TFile.h>
 #include "set_problem.h"
 
-
-int run() {
+int set_problem() {
    // create a ROOT file with object SetProblem
    TFile * file = new TFile("set_problem.root", "RECREATE");
 
@@ -24,10 +23,3 @@ int run() {
    delete pr;
    return 0;
 }
-
-#ifndef __CINT__
-int main()
-{
-return run();
-}
-#endif

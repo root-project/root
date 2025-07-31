@@ -38,12 +38,3 @@ void runvaryingArrayWrite()
   f1 = 0;
   t1 = 0;
 }
-
-#ifdef TEST
-int main(int argc, char* argv[])
-{
-  runvaryingArrayWrite();
-  return 0;
-}
-#endif // TEST
-
