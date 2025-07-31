@@ -1,6 +1,6 @@
 #define TreeClassNested2_atfC_cxx
 
-#include "../generated_selectors/TreeClassNested2_atfC.h"
+#include "generated_selectors/TreeClassNested2_atfC.h"
 #include <TH2.h>
 #include <TStyle.h>
 

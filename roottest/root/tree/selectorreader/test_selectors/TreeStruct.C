@@ -1,6 +1,6 @@
 #define TreeStruct_cxx
 
-#include "../generated_selectors/TreeStruct.h"
+#include "generated_selectors/TreeStruct.h"
 #include <TH2.h>
 #include <TStyle.h>
 

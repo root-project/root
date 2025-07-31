@@ -1,6 +1,6 @@
 #define TreeClassWithClones_cxx
 
-#include "../generated_selectors/TreeClassWithClones.h"
+#include "generated_selectors/TreeClassWithClones.h"
 #include <TH2.h>
 #include <TStyle.h>
 
