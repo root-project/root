@@ -16,6 +16,9 @@ TEST(RRegularAxis, Constructor)
    EXPECT_EQ(axis.GetNumNormalBins(), Bins);
    EXPECT_EQ(axis.GetTotalNumBins(), Bins);
    EXPECT_FALSE(axis.HasFlowBins());
+
+   EXPECT_THROW(RRegularAxis(0, 0, Bins), std::invalid_argument);
+   EXPECT_THROW(RRegularAxis(Bins, 1, 1), std::invalid_argument);
 }
 
 TEST(RRegularAxis, Equality)
