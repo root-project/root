@@ -178,6 +178,9 @@ public:
 
    std::vector<std::unique_ptr<ROOT::Internal::RCluster>>
    LoadClusters(std::span<ROOT::Internal::RCluster::RKey> clusterKeys) final;
+
+   /// Forces the loading of StreamerInfo from the underlying TFile
+   void LoadStreamerInfo();
 }; // class RPageSourceFile
 
 } // namespace Internal
