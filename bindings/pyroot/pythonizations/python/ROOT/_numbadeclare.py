@@ -39,11 +39,11 @@ def _NumbaDeclareDecorator(input_types, return_type = None, name=None):
 
     CONTAINER_TYPES = {
         'RVec': {
-            'match_pattern': 'RVec\w+|RVec<[\w\s]+>',
+            'match_pattern': r'RVec\w+|RVec<[\w\s]+>',
             'cpp_name': 'ROOT::RVec',
         },
         'std::vector': {
-            'match_pattern': 'std::vector<[\w\s]+>',
+            'match_pattern': r'std::vector<[\w\s]+>',
             'cpp_name': 'std::vector',
         }
     }
@@ -359,7 +359,7 @@ def pywrapper({SIGNATURE}):
                 if get_inner_type(t) == 'bool':
                     # Copy the container<bool> to a container<char> to match the numpy memory layout
                     func_args[-1] = func_args[-1].replace('x_', 'xb_')
-                    vecbool_conversion += [f'{get_container_type(t)}<char> xb_{i} = x_{i};']
+                    vecbool_conversion += [f'{get_container_cpp_name(t)}<char> xb_{i} = x_{i};']
             else:
                 func_args += ['x_{}'.format(i)]
         if is_container_type(return_type):
