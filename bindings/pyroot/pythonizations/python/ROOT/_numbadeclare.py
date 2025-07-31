@@ -33,6 +33,7 @@ def _NumbaDeclareDecorator(input_types, return_type = None, name=None):
     except:
         raise Exception('Failed to import cffi')
     import re, sys
+    from typing import Union
 
     if hasattr(nb, 'version_info') and nb.version_info >= (0, 54):
         import cppyy.numba_ext
@@ -48,13 +49,13 @@ def _NumbaDeclareDecorator(input_types, return_type = None, name=None):
         }
     }
 
-    def get_container_type(cpp_type: str) -> str | None:
+    def get_container_type(cpp_type: str) -> Union[str, None]:
         return next((name for name in CONTAINER_TYPES if name in cpp_type), None)
 
     def is_container_type(cpp_type: str) -> bool:
         return get_container_type(cpp_type) is not None
 
-    def get_container_cpp_name(cpp_type: str) -> str | None:
+    def get_container_cpp_name(cpp_type: str) -> Union[str, None]:
         container_type = get_container_type(cpp_type)
         if container_type is None:
             return None
