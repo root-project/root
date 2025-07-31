@@ -854,7 +854,7 @@ int main(int argc, char **argv)
       if (maxopenedfiles > 0) {
          mergerP.SetMaxOpenedFiles(maxopenedfiles / nProcesses);
       }
-      if (!mergerP.OutputFile(partialFiles[start / step].c_str(), newcomp)) {
+      if (!mergerP.OutputFile(partialFiles[start / step].c_str(), args.fForce, newcomp)) {
          Err() << "error opening target partial file\n";
          exit(1);
       }
