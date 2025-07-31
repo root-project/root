@@ -37,3 +37,11 @@ ROOTTEST_ADD_TEST(vstr
                   OUTREF vstr.ref
                   FIXTURES_REQUIRED root-tree-stl-copylogon-fixture)
 
+ROOTTEST_COMPILE_MACRO(runsimple.C
+                       FIXTURES_SETUP root-tree-stl-runsimple-fixture)
+
+ROOTTEST_ADD_TEST(simple
+                  MACRO runsimple.C+
+                  OUTREF simple.ref
+                  FIXTURES_REQUIRED root-tree-stl-copylogon-fixture root-tree-stl-runsimple-fixture)
+

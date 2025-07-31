@@ -1,14 +1,16 @@
-#include <vector>
 #include "TTree.h"
 #include "TFile.h"
-#include "Riostream.h"
+
+#include <vector>
+#include <iostream>
 
 #ifdef __MAKECINT__
 //#pragma link C++ class pair<int,long>+;
 #pragma link C++ class vector<pair<int,long> >+;
 #endif
 
-void runsimple() {
+void simple()
+{
    TTree *t = new TTree("T","T");
    std::vector<int> myvec;
    myvec.push_back(3);
@@ -17,12 +19,13 @@ void runsimple() {
    delete t;
 }
 
-void write(int len = 20) {
+void write(int len = 20)
+{
    TFile *f = new TFile("simple.root","RECREATE");
    TTree *t = new TTree("T","T");
    std::vector<int> myvec;
    std::vector<pair<int,long> > myobj;
-   
+
    t->Branch("vec",&myvec);
    t->Branch("obj.",&myobj);
 
@@ -36,22 +39,29 @@ void write(int len = 20) {
    delete f;
 }
 
-void read() {
+void read()
+{
    TFile *f = new TFile("simple.root");
    TTree *t; f->GetObject("T",t);
    if (!t) return;
-   std::vector<int> *myvec = 0;
-   std::vector<pair<int,long> > *myobj = 0;
+   std::vector<int> *myvec = nullptr;
+   std::vector<pair<int,long> > *myobj = nullptr;
    t->SetBranchAddress("vec",&myvec);
    t->SetBranchAddress("obj",&myobj);
-   for(int i=0;i<t->GetEntries();++i) {
+   for(int i = 0; i < t->GetEntries(); ++i) {
       t->GetEntry(i);
-      cout << "single: size:  " << myvec->size() << "\t";
-      cout << "alloc: " << myvec->capacity() << "\n";
-      cout << "pair  : size:  " << myobj->size() << "\t";
-      cout << "alloc: " << myobj->capacity() << "\n";
+      std::cout << "single: size:  " << myvec->size() << std::endl;
+      // capacity may differ on different platforms - so do not print it
+      // cout << "alloc: " << myvec->capacity() << "\n";
+      std::cout << "pair  : size:  " << myobj->size() << std::endl;
+      // capacity may differ on different platforms - so do not print it
+      // cout << "alloc: " << myobj->capacity() << "\n";
    }
 }
-      
-      
-  
+
+void runsimple()
+{
+   simple();
+   write();
+   read();
+}
