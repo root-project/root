@@ -1,6 +1,6 @@
 #define TreeNestedArray_cxx
 
-#include "../generated_selectors/TreeNestedArray.h"
+#include "generated_selectors/TreeNestedArray.h"
 #include <TH2.h>
 #include <TStyle.h>
 

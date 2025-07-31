@@ -1,6 +1,6 @@
 #define TreeVectorClass2_cxx
 
-#include "../generated_selectors/TreeVectorClass2.h"
+#include "generated_selectors/TreeVectorClass2.h"
 #include <TH2.h>
 #include <TStyle.h>
 
