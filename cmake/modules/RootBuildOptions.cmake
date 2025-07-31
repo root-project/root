@@ -135,6 +135,7 @@ ROOT_BUILD_OPTION(gdml ON "Enable support for GDML (Geometry Description Markup 
 ROOT_BUILD_OPTION(geom ON "Enable support for the geometry library. Disabling this will also disable Eve and gviz3d.")
 ROOT_BUILD_OPTION(geombuilder OFF "Enable support for the geombuilder library")
 ROOT_BUILD_OPTION(gnuinstall OFF "Perform installation following the GNU guidelines")
+ROOT_BUILD_OPTION(gui ON "Enable GUI support")
 ROOT_BUILD_OPTION(gviz OFF "Enable support for Graphviz (graph visualization software)")
 ROOT_BUILD_OPTION(http ON "Enable support for HTTP server")
 ROOT_BUILD_OPTION(imt ON "Enable support for implicit multi-threading via Intel® Thread Building Blocks (TBB)")
