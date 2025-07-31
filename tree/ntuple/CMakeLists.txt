@@ -38,6 +38,7 @@ HEADERS
   ROOT/RNTupleReader.hxx
   ROOT/RNTupleSerialize.hxx
   ROOT/RNTupleTypes.hxx
+  ROOT/RNTupleUtil.hxx
   ROOT/RNTupleUtils.hxx
   ROOT/RNTupleView.hxx
   ROOT/RNTupleWriteOptions.hxx
