@@ -43,7 +43,7 @@
       tree->Process(&csel);
 # endif
 
-   auto c = new TChain("T1");
+   c = new TChain("T1");
    c->Add("Event1.root");
 # ifdef ClingWorkAroundMissingDynamicScope
    c->Process(csel);
