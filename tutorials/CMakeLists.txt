@@ -906,7 +906,6 @@ if(ROOT_pyroot_FOUND)
       hist/hist007_TH1_liveupdate_uhi.py
       hist/hist010_TH1_two_scales_uhi.py
       hist/hist015_TH1_read_and_draw_uhi.py
-      hist/hist105_TExec_dynamic_slice_uhi.py
   )
 
   file(GLOB requires_numba   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
