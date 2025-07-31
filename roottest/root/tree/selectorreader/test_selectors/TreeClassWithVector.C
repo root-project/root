@@ -1,6 +1,6 @@
 #define TreeClassWithVector_cxx
 
-#include "../generated_selectors/TreeClassWithVector.h"
+#include "generated_selectors/TreeClassWithVector.h"
 #include <TH2.h>
 #include <TStyle.h>
 

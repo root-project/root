@@ -1,6 +1,6 @@
 #define TreeTClonesArray0_cxx
 
-#include "../generated_selectors/TreeTClonesArray0.h"
+#include "generated_selectors/TreeTClonesArray0.h"
 #include <TH2.h>
 #include <TStyle.h>
 

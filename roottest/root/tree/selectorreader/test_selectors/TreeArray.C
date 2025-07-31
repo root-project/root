@@ -1,6 +1,6 @@
 #define TreeArray_cxx
 
-#include "../generated_selectors/TreeArray.h"
+#include "generated_selectors/TreeArray.h"
 #include <TH2.h>
 #include <TStyle.h>
 
