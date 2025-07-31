@@ -9,6 +9,7 @@
 
 #include <cstddef>
 #include <stdexcept>
+#include <string>
 
 class TBuffer;
 
@@ -44,14 +45,20 @@ class RRegularAxis final {
 public:
    /// Construct a regular axis object.
    ///
-   /// \param[in] numNormalBins the number of normal bins
+   /// \param[in] numNormalBins the number of normal bins, must be > 0
    /// \param[in] low the lower end of the axis interval (inclusive)
-   /// \param[in] high the upper end of the axis interval (exclusive)
+   /// \param[in] high the upper end of the axis interval (exclusive), must be > low
    /// \param[in] enableFlowBins whether to enable underflow and overflow bins
    RRegularAxis(std::size_t numNormalBins, double low, double high, bool enableFlowBins = true)
       : fNumNormalBins(numNormalBins), fLow(low), fHigh(high), fEnableFlowBins(enableFlowBins)
    {
-      // FIXME: should validate numNormalBins > 0 and low < high
+      if (numNormalBins == 0) {
+         throw std::invalid_argument("numNormalBins must be > 0");
+      }
+      if (low >= high) {
+         std::string msg = "high must be > low, but " + std::to_string(low) + " >= " + std::to_string(high);
+         throw std::invalid_argument(msg);
+      }
       fInvBinWidth = numNormalBins / (high - low);
    }
 
