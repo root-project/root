@@ -5,7 +5,7 @@ ROOTTEST_ADD_TEST(assertCycleParsing
 ROOTTEST_ADD_TEST(assertSubdirAndTree
                   MACRO assertSubdirAndTree.C
                   COPY_TO_BUILDDIR Collision12-ANNPID.root
-                  ERRREF assertSubdirAndTree.ref)
+                  OUTREF assertSubdirAndTree.ref)
 
 ROOTTEST_ADD_TEST(cd
                   MACRO runcd.C

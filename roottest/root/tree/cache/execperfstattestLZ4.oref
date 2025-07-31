@@ -1,5 +1,7 @@
 
 Processing execperfstattest.C...
+Info in <TTreePerfStats::SaveAs>: ROOT file tree1ps.root has been created
+Info in <TTreePerfStats::SaveAs>: ROOT file tree2ps.root has been created
 9
 9
 (int) 0
