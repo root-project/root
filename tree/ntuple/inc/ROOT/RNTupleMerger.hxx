@@ -33,7 +33,7 @@ class RNTuple;
 namespace Internal {
 class RPageAllocator;
 class RClusterPool;
-}
+} // namespace Internal
 
 namespace Experimental::Internal {
 
@@ -48,6 +48,12 @@ enum class ENTupleMergingMode {
    /// that are not present in a source will be set to the default value of the type.
    kUnion
 };
+
+inline const char *ToString(ENTupleMergingMode mode)
+{
+   static const char *const kMergingModeStr[] = {"Filter", "Strict", "Union"};
+   return kMergingModeStr[static_cast<int>(mode)];
+}
 
 enum class ENTupleMergeErrBehavior {
    /// The merger will abort merging as soon as an error is encountered
@@ -98,14 +104,18 @@ class RNTupleMerger final {
    std::optional<TTaskGroup> fTaskGroup;
    std::unique_ptr<ROOT::RNTupleModel> fModel;
 
-   void MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool, const ROOT::RClusterDescriptor &clusterDesc,
-                           std::span<const RColumnMergeInfo> commonColumns,
-                           const ROOT::Internal::RCluster::ColumnSet_t &commonColumnSet,
-                           std::size_t nCommonColumnsInCluster, RSealedPageMergeData &sealedPageData,
-                           const RNTupleMergeData &mergeData, ROOT::Internal::RPageAllocator &pageAlloc);
+   [[nodiscard]]
+   ROOT::RResult<void> MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
+                                          const ROOT::RClusterDescriptor &clusterDesc,
+                                          std::span<const RColumnMergeInfo> commonColumns,
+                                          const ROOT::Internal::RCluster::ColumnSet_t &commonColumnSet,
+                                          std::size_t nCommonColumnsInCluster, RSealedPageMergeData &sealedPageData,
+                                          const RNTupleMergeData &mergeData, ROOT::Internal::RPageAllocator &pageAlloc);
 
-   void MergeSourceClusters(ROOT::Internal::RPageSource &source, std::span<const RColumnMergeInfo> commonColumns,
-                            std::span<const RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData);
+   [[nodiscard]]
+   ROOT::RResult<void>
+   MergeSourceClusters(ROOT::Internal::RPageSource &source, std::span<const RColumnMergeInfo> commonColumns,
+                       std::span<const RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData);
 
    /// Creates a RNTupleMerger with the given destination.
    /// The model must be given if and only if `destination` has been initialized with that model
