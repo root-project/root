@@ -1,8 +1,4 @@
-if(ROOTTEST_DIR)
-      set(ROOT_EVENT_DIR ${ROOTTEST_DIR}/root/treeformula/event/)
-else()
-      set(ROOT_EVENT_DIR ${ROOT_SOURCE_DIR}/roottest/root/treeformula/event/)
-endif()
+set(ROOT_EVENT_DIR ${ROOT_SOURCE_DIR}/roottest/root/treeformula/event/)
 
 # Generating dataset from roottest-treeformula-event-make test
 # FIXME: it will be nice to move roottest-treeformula-event to CMake and add it as dependency
