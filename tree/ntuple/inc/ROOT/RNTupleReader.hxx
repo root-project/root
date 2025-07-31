@@ -266,6 +266,8 @@ public:
    /// **Note**: if `T = void`, type checks are disabled. This is not really useful for this overload because
    /// RNTupleView<void> does not give access to the pointer. If required, it is possible to provide an `objPtr` of a
    /// dynamic type, for example via GetView(std::string_view, void *, std::string_view).
+   ///
+   /// Note that creating a View for a Streamer field is not supported.
    template <typename T>
    ROOT::RNTupleView<T> GetView(std::string_view fieldName)
    {
@@ -295,6 +297,8 @@ public:
    /// object types. It is strongly recommended to use an overload that allows passing the `typeName`, such as
    /// GetView(std::string_view, void *, std::string_view). This allows type checks with the on-disk metadata and
    /// enables automatic schema evolution and conversion rules.
+   ///
+   /// Note that creating a View for a Streamer field is not supported.
    template <typename T>
    ROOT::RNTupleView<T> GetView(std::string_view fieldName, std::shared_ptr<T> objPtr)
    {

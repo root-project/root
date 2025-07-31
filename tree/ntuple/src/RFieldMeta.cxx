@@ -421,6 +421,9 @@ void ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pag
       const ROOT::RNTupleDescriptor &desc = descriptorGuard.GetRef();
       const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
 
+      if (fieldDesc.GetStructure() == ENTupleStructure::kStreamer)
+         throw RException(R__FAIL("invalid attempt to reconstruct StreamerField as a ClassField"));
+
       for (auto linkId : fieldDesc.GetLinkIds()) {
          const auto &subFieldDesc = desc.GetFieldDescriptor(linkId);
          regularSubfields.insert(subFieldDesc.GetFieldName());

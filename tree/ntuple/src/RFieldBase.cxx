@@ -563,8 +563,13 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
             if (cl->GetCollectionProxy()) {
                result = std::make_unique<RProxiedCollectionField>(fieldName, typeName);
             } else {
-               if (ROOT::Internal::GetRNTupleSerializationMode(cl) ==
-                   ROOT::Internal::ERNTupleSerializationMode::kForceStreamerMode) {
+               bool reconstructAsStreamer = ROOT::Internal::GetRNTupleSerializationMode(cl) ==
+                                            ROOT::Internal::ERNTupleSerializationMode::kForceStreamerMode;
+               if (!reconstructAsStreamer && desc) {
+                  reconstructAsStreamer =
+                     (desc->GetFieldDescriptor(fieldId).GetStructure() == ENTupleStructure::kStreamer);
+               }
+               if (reconstructAsStreamer) {
                   result = std::make_unique<RStreamerField>(fieldName, typeName);
                } else {
                   result = std::make_unique<RClassField>(fieldName, typeName);
