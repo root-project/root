@@ -18,8 +18,8 @@
 #define ROOT_RNTupleDS
 
 #include <ROOT/RDataSource.hxx>
-#include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <string_view>
 
 #include <condition_variable>

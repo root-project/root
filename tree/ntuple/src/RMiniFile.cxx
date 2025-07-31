@@ -16,6 +16,7 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RMiniFile.hxx>
 #include <ROOT/RRawFile.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>

@@ -19,7 +19,7 @@
 #endif
 
 #include <ROOT/RFieldBase.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RVec.hxx>
 
 #include <array>

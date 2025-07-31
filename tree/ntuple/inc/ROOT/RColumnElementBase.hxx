@@ -17,7 +17,7 @@
 #include "RtypesCore.h"
 #include <ROOT/RError.hxx>
 #include <ROOT/RFloat16.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 
 #include <Byteswap.h>
 #include <TError.h>

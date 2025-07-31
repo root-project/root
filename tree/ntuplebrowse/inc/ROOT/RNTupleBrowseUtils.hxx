@@ -16,7 +16,7 @@
 #ifndef ROOT_RNTupleBrowseUtils
 #define ROOT_RNTupleBrowseUtils
 
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 
 namespace ROOT {
 
