@@ -113,11 +113,6 @@ void generateAll() {
 //   the data. (Regarding the header file, it needs no modification, so the newly
 //   generated one is used.)
 void runClasses(const std::string &srcdir = ".") {
-   const char *dirSaved = gSystem->pwd(); // Save working directory
-
-   if (srcdir != ".")
-      gInterpreter->AddIncludePath((std::string("-I") + dirSaved + "/generated_selectors").c_str());
-
    // Loop through test trees
    std::vector<std::string> trees = {"TreeClass0",
                                      "TreeClass2",
@@ -140,6 +135,5 @@ void runClasses(const std::string &srcdir = ".") {
       gSystem->cd("..");                                  // Go back
       t->Process((srcdir + "/test_selectors/" + treeName + ".C").c_str()); // Run (pre-filled) selector
    }
-   gSystem->cd(dirSaved); // Restore working directory
 }
 

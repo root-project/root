@@ -75,11 +75,6 @@ void generateAll() {
 //   generated one is used.)
 void runSimple(const std::string &srcdir = ".")
 {
-   const char *dirSaved = gSystem->pwd(); // Save working directory
-
-   if (srcdir != ".")
-      gInterpreter->AddIncludePath((std::string("-I") + dirSaved + "/generated_selectors").c_str());
-
    // Loop through test trees
    std::vector<std::string> trees = {"Tree", "TreeStruct"};
    for (std::string const &treeName : trees)
@@ -93,6 +88,5 @@ void runSimple(const std::string &srcdir = ".")
       gSystem->cd("..");                                  // Go back
       t->Process((srcdir + "/test_selectors/" + treeName + ".C").c_str()); // Run (pre-filled) selector
    }
-   gSystem->cd(dirSaved); // Restore working directory
 }
 

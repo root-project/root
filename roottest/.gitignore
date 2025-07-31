@@ -844,10 +844,6 @@ root/tree/addresses/converterIssues/ExtHit/ExtHitProjectDict.cxx
 /root/tree/selector/lhef_*_gen.C
 /root/tree/selector/lhef_*_gen.h
 
-
-# /root/tree/selectorreader/
-/root/tree/selectorreader/generated_selectors/
-
 # /root/tree/split/
 /root/tree/split/abstract.root
 /root/tree/split/customClassTree.root

@@ -1,6 +1,6 @@
 #define TreeClassNested2_empty_cxx
 
-#include "../generated_selectors/TreeClassNested2_empty.h"
+#include "generated_selectors/TreeClassNested2_empty.h"
 #include <TH2.h>
 #include <TStyle.h>
 
