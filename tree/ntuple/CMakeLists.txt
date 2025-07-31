@@ -9,6 +9,10 @@
 # @author Jakob Blomer CERN
 ############################################################################
 
+if(root7)
+  set(RNTUPLE_EXTRA_DEPS ROOTFile)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTNTuple
 HEADERS
   ROOT/RCluster.hxx
@@ -91,6 +95,7 @@ DEPENDENCIES
   Imt
   RIO
   ROOTVecOps
+  ${RNTUPLE_EXTRA_DEPS}
 )
 
 target_link_libraries(ROOTNTuple PRIVATE xxHash::xxHash)
