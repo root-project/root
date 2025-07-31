@@ -53,8 +53,8 @@ void ReleaseDefaultErrorHandler()
 } // ROOT namespace
 
 
-/// Print debugging message to stderr and, on Windows, to the system debugger.
-static void DebugPrint(const char *fmt, ...)
+/// Print debugging message to outstream (stdout or stderr) and, on Windows, to the system debugger.
+static void DebugPrint(FILE *outstream, const char *fmt, ...)
 {
    TTHREAD_TLS(Int_t) buf_size = 2048;
    TTHREAD_TLS(char*) buf = nullptr;
@@ -86,7 +86,7 @@ again:
    std::lock_guard<std::mutex> guard(*GetErrorMutex());
 
    const char *toprint = buf; // Work around for older platform where we use TThreadTLSWrapper
-   fprintf(stderr, "%s", toprint);
+   fprintf(outstream, "%s", toprint);
 
 #ifdef WIN32
    ::OutputDebugString(buf);
@@ -94,11 +94,13 @@ again:
 }
 
 
-/// The default error handler function. It prints the message on stderr and
-/// if abort is set it aborts the application.  Replaces the minimal error handler
-/// of TError.h as part of the gROOT construction.  TError's minimal handler is put
+/// The default error handler function. It prints the message and
+/// if abort is set it aborts the application. Replaces the minimal error handler
+/// of TError.h as part of the gROOT construction. TError's minimal handler is put
 /// back in place during the gROOT destruction.
-/// @note `abort()` is only called if `abort_bool` is `true` and `level < gErrorIgnoreLevel`
+/// The error message is printed to stdout if the error level is lower than kWarning
+/// and to stderr if it's equal or higher; see TError.h.
+/// @note `abort()` is only called if `abort_bool` is `true` and `level >= gErrorIgnoreLevel`
 void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, const char *msg)
 {
    if (gErrorIgnoreLevel == kUnset) {
@@ -160,9 +162,10 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
    else
       smsg = std::string(type) + " in <" + location + ">: " + msg;
 
-   DebugPrint("%s\n", smsg.c_str());
+   auto outstream = level >= kWarning ? stderr : stdout;
+   DebugPrint(outstream, "%s\n", smsg.c_str());
 
-   fflush(stderr);
+   fflush(outstream);
    if (abort_bool) {
 
 #ifdef __APPLE__
@@ -170,8 +173,8 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
          delete [] __crashreporter_info__;
       __crashreporter_info__ = strdup(smsg.c_str());
 #endif
-
-      DebugPrint("aborting\n");
+      // Since we abort, here we force stderr independently of the level
+      DebugPrint(stderr, "aborting\n");
       fflush(stderr);
       if (gSystem) {
          gSystem->StackTrace();
