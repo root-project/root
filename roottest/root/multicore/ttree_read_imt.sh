@@ -21,8 +21,8 @@ else
    cat ${TESTNAME}.err
 fi
 
-# Print IMT messages from the application
-cat ${TESTNAME}.out | grep -e " \[IMT\]"
+# Print last 100 IMT messages from the application
+cat ${TESTNAME}.out | grep -e " \[IMT\]" | tail -n 100
 
 grep -v -e "Info in"  -e 'HEAD http' -e 'GET http' -e 'Host:' -e 'User-Agent:' -e 'Range: ' -e '^\s*$' ${TESTNAME}.err | cat > /dev/stderr
 
