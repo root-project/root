@@ -150,25 +150,13 @@
                      }
 
                   }
+                  // add parenthesis in case is an expression
+                  if (concat_dim.isParam && concat_dim.dim == static_cast<size_t>(-1))
+                     concat_dim =  Dim{ std::string("(") + concat_dim.GetVal() +  std::string(")"), concat_dim.dim };
                }
 
                // output shape for concatenated axis
                ret[fAxis] = Dim{concat_dim};
-               // //ret[0] = inputs[0];
-               // // check if concat_dim is an integer
-               // // case like "2+n" can be converted to an integer so need to check the length
-               // size_t pos = 0;
-               // try {
-               //    i_concat_dim = std::stoi(concat_dim, &pos);
-               //    if (pos == concat_dim.length())
-               //       ret[fAxis] = Dim{i_concat_dim}; // dimension is integer
-               //    else {
-               //       // check if a composite expression
-               //       ret[fAxis] = Dim{concat_dim};
-               // }
-               // catch (std::invalid_argument const& ex) {
-
-               // }
 
             }
             // case of stacking (not supported yet)
@@ -241,7 +229,7 @@
                         for (size_t i = 0; i < inputData.size(); i++)
                            inputData[i] = Dim{ static_cast<size_t>(intData[i])};
                      }
-                     std::cout << "concatanating input data " << inputLength << "  " << inputData[0] << std::endl;
+                     std::cout << "concatenating input data " << inputLength << "  " << inputData[0] << std::endl;
                      std::copy(inputData.begin(), inputData.end(), outputData.begin() + offset );
                      offset += inputLength;
                   }

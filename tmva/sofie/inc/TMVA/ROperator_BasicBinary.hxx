@@ -141,6 +141,7 @@ public:
                   // Update the data and the shape of A
                   model.AddConstantTensor(fNBroadcastedA, model.GetTensorType(fNA), fShapeY, broadcastedData);
                   fShapeA = fShapeY;
+                  fDimShapeA = ConvertShapeToDim(fShapeA);
                } else {
                   // Add an intermediate tensor for broadcasting A
                   model.AddIntermediateTensor(fNBroadcastedA, model.GetTensorType(fNA), fShapeY);
@@ -166,6 +167,7 @@ public:
                                << std::endl;
                   model.AddConstantTensor(fNBroadcastedB, model.GetTensorType(fNB), fShapeY, broadcastedData);
                   fShapeB = fShapeY;
+                  fDimShapeB = ConvertShapeToDim(fShapeB);
                } else {
                   // Add an intermediate tensor for broadcasting B
                   model.AddIntermediateTensor(fNBroadcastedB, model.GetTensorType(fNB), fShapeY);
@@ -314,14 +316,15 @@ public:
       }
       // Broadcast A if it's uninitialized
       // use broadcasting function where we pass an already allocated tensor to minimize memory allocations
-      if (!fNBroadcastedA.empty()) {
+      // in case of A is  constant tensor is automatically broadcasted in Initialize() then shapeA == shapeY
+      if (!fNBroadcastedA.empty() && (fDimShapeA != fDimShapeY)) {
          out << SP << SP << "// Broadcasting uninitialized tensor " << fNA << "\n";
          out << SP << SP  << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << typeName << ">(tensor_" << fNA << ", "
                   << ConvertDimShapeToString(fDimShapeA) << ", " << ConvertDimShapeToString(fDimShapeY)
                   << ", fTensor_" << fNBroadcastedA << ");\n";
       }
       // Broadcast B if it's uninitialized
-      if (!fNBroadcastedB.empty()) {
+      if (!fNBroadcastedB.empty() && (fDimShapeB != fDimShapeY)) {
          out << SP << SP << "// Broadcasting uninitialized tensor " << fNB << "\n";
          out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << typeName << ">(tensor_" << fNB << ", "
                   << ConvertDimShapeToString(fDimShapeB) << ", " << ConvertDimShapeToString(fDimShapeY)
