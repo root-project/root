@@ -8,13 +8,14 @@ on:
         type: string
         required: true
         default: "master"
-  push:
-    branches: experimental-pip-install-root
   schedule:
     - cron: '01 1 * * *'
+  pull_request:
+    types: [labeled]
 
 jobs:
   build-wheels:
+    if: contains(github.event.pull_request.labels.*.name, 'build-python-wheels')
     runs-on: ubuntu-latest
     strategy:
       matrix:
