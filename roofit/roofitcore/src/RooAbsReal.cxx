@@ -4367,3 +4367,9 @@ double RooAbsReal::getVal(RooArgSet &&) const
    coutF(Eval) << errMsg.str() << std::endl;
    throw std::runtime_error(errMsg.str());
 }
+
+double RooAbsReal::evaluate() const
+{
+   throw std::runtime_error(
+      "RooAbsReal::evaluate() should not be called! Please implement in the RooAbsReal-derived class.");
+}
