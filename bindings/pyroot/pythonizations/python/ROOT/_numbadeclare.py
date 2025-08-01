@@ -179,10 +179,10 @@ def _NumbaDeclareDecorator(input_types, return_type = None, name=None):
         Construct the type of a container input parameter for its use in the C++
         wrapper function signature.
         '''
-        if 'RVec' in container_t:
-            tref = '{}ROOT::{}&'.format(const_mod, container_t)
-        else:
-            tref = '{}{}&'.format(const_mod, container_t)
+        container_base = get_container_type(container_t)
+        cpp_name = get_container_cpp_name(container_t)
+        full_type = container_t.replace(container_base, cpp_name, 1)
+        tref = f"{const_mod}{full_type}&"
         input_types_ref.append(tref)
 
     def add_container_func_ptr_input_type(func_ptr_input_types: list, const_mod: str, container_t: str) -> None:
