@@ -154,7 +154,7 @@ ROOT_BUILD_OPTION(r OFF "Enable support for R bindings (requires R, Rcpp, and RI
 ROOT_BUILD_OPTION(roofit ON "Build the advanced fitting package RooFit, and RooStats for statistical tests. If xml is available, also build HistFactory.")
 ROOT_BUILD_OPTION(roofit_multiprocess OFF "Build RooFit::MultiProcess and multi-process RooFit::TestStatistics classes (requires ZeroMQ >= 3.4.5 built with -DENABLE_DRAFTS and cppzmq).")
 ROOT_BUILD_OPTION(root7 ON "Build ROOT 7 components of ROOT")
-ROOT_BUILD_OPTION(rpath ON "Link libraries with built-in RPATH (run-time search path)")
+ROOT_BUILD_OPTION(rpath ON "In addition to CMAKE_INSTALL_RPATH, append appropriate relative paths to ROOT's executables/libraries to find each other.")
 ROOT_BUILD_OPTION(runtime_cxxmodules ON "Enable runtime support for C++ modules")
 ROOT_BUILD_OPTION(shadowpw OFF "Enable support for shadow passwords")
 ROOT_BUILD_OPTION(shared ON "Use shared 3rd party libraries if possible")
@@ -430,12 +430,11 @@ if(rpath)
     set(CMAKE_MACOSX_RPATH TRUE)
     set(CMAKE_INSTALL_NAME_DIR "@rpath")
 
-    set(_rpath_values "@loader_path" "@loader_path/${BINDIR_TO_LIBDIR}")
+    # Note that the arguments are not quoted. This is to ensure that each item becomes its own element in the list
+    set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_RPATH} @loader_path @loader_path/${BINDIR_TO_LIBDIR})
   else()
-    set(_rpath_values "$ORIGIN" "$ORIGIN/${BINDIR_TO_LIBDIR}")
+    set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_RPATH} "$ORIGIN" "$ORIGIN/${BINDIR_TO_LIBDIR}")
   endif()
-
-  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH-CACHED};${_rpath_values}" CACHE STRING "Install RPATH" FORCE)
 
   unset(BINDIR_TO_LIBDIR)
 endif()
