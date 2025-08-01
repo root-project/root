@@ -16,6 +16,9 @@ TEST(RRegularAxis, Constructor)
    EXPECT_EQ(axis.GetNumNormalBins(), Bins);
    EXPECT_EQ(axis.GetTotalNumBins(), Bins);
    EXPECT_FALSE(axis.HasFlowBins());
+
+   EXPECT_THROW(RRegularAxis(0, 0, Bins), std::invalid_argument);
+   EXPECT_THROW(RRegularAxis(Bins, 1, 1), std::invalid_argument);
 }
 
 TEST(RRegularAxis, Equality)
@@ -64,6 +67,16 @@ TEST(RRegularAxis, ComputeLinearizedIndex)
       EXPECT_FALSE(linIndex.fValid);
    }
 
+   // Exactly the lower end of the axis interval
+   {
+      auto linIndex = axis.ComputeLinearizedIndex(0);
+      EXPECT_EQ(linIndex.fIndex, 0);
+      EXPECT_TRUE(linIndex.fValid);
+      linIndex = axisNoFlowBins.ComputeLinearizedIndex(0);
+      EXPECT_EQ(linIndex.fIndex, 0);
+      EXPECT_TRUE(linIndex.fValid);
+   }
+
    for (std::size_t i = 0; i < Bins; i++) {
       auto linIndex = axis.ComputeLinearizedIndex(i + 0.5);
       EXPECT_EQ(linIndex.fIndex, i);
@@ -71,6 +84,16 @@ TEST(RRegularAxis, ComputeLinearizedIndex)
       linIndex = axisNoFlowBins.ComputeLinearizedIndex(i + 0.5);
       EXPECT_EQ(linIndex.fIndex, i);
       EXPECT_TRUE(linIndex.fValid);
+   }
+
+   // Exactly the upper end of the axis interval
+   {
+      auto linIndex = axis.ComputeLinearizedIndex(Bins);
+      EXPECT_EQ(linIndex.fIndex, Bins + 1);
+      EXPECT_TRUE(linIndex.fValid);
+      linIndex = axisNoFlowBins.ComputeLinearizedIndex(Bins);
+      EXPECT_EQ(linIndex.fIndex, Bins + 1);
+      EXPECT_FALSE(linIndex.fValid);
    }
 
    // Overflow
