@@ -37,17 +37,19 @@ ROOTTEST_ADD_TEST(VectorBranches
                   MACRO execVectorBranches.C
                   OUTREF execVectorBranches.ref)
 
-ROOTTEST_COMPILE_MACRO(A.h
-                       FIXTURES_SETUP root-tree-reader-A-fixture)
+if(NOT MSVC OR win_broken_tests)
+  ROOTTEST_COMPILE_MACRO(A.h
+                         FIXTURES_SETUP root-tree-reader-A-fixture)
 
-ROOTTEST_COMPILE_MACRO(hardTreeReaderTest.cpp
-                       FIXTURES_REQUIRED root-tree-reader-A-fixture
-                       FIXTURES_SETUP root-tree-reader-hardTreeReaderTest-fixture)
+  ROOTTEST_COMPILE_MACRO(hardTreeReaderTest.cpp
+                         FIXTURES_REQUIRED root-tree-reader-A-fixture
+                         FIXTURES_SETUP root-tree-reader-hardTreeReaderTest-fixture)
 
-ROOTTEST_ADD_TEST(complexTree
-                  MACRO runcomplexTree.C
-                  OUTREF complexTree.ref
-                  FIXTURES_REQUIRED root-tree-reader-A-fixture root-tree-reader-hardTreeReaderTest-fixture)
+  ROOTTEST_ADD_TEST(complexTree
+                    MACRO runcomplexTree.C
+                    OUTREF complexTree.ref
+                    FIXTURES_REQUIRED root-tree-reader-A-fixture root-tree-reader-hardTreeReaderTest-fixture)
+endif()
 
 # IntroTut tests fails while file eventdata.root is missing on eos
 # ROOTTEST_ADD_TEST(assertIntroTut
