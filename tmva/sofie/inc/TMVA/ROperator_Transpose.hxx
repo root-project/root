@@ -147,7 +147,8 @@ public:
       //......
       // and we have j_k = i_fAttrPerm[k]
       // since we are using consecutive writes we should find the inverse of fAttrPerm
-      out << SP << "///------- Transpose operator\n" << std::endl;
+      out << SP << "///------- Transpose operator " << OpName << ConvertDimShapeToString(fShapeData)
+                  << " --> " << ConvertDimShapeToString(fShapeOutput) << std::endl;
       out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
       out << SP << SP << "tensor_" << fNOutput << "[id] = tensor_" << fNData << "[ ";
       // compute output j indices
@@ -156,9 +157,9 @@ public:
          if (k == 0)
             i_out[k] = "id";
          else
-            i_out[k] = "(id % " + outStrides[k-1].GetVal() + ")";
+            i_out[k] = "(id % (" + outStrides[k-1].GetVal() + "))";
          if (k < dim-1)
-            i_out[k] += " / " + outStrides[k].GetVal();
+            i_out[k] += " / (" + outStrides[k].GetVal() + ")";
       }
       // use now them for input tensors
       // need to invert the fAttrPerm[k]

@@ -121,7 +121,7 @@ public:
                         output_shape[i] = Dim{std::string("(") + ConvertDimShapeToLength(reduced_input) + ")", static_cast<size_t>(-1)};
                   }
                   if (!canSimplify)
-                     output_shape[i] = Dim{std::string("(") + input_length + " / (" + tmp_length + ")", static_cast<size_t>(-1)};
+                     output_shape[i] = Dim{std::string("(") + input_length + " / (" + tmp_length + "))", static_cast<size_t>(-1)};
                }
 
                break; // cannot have more than -1
