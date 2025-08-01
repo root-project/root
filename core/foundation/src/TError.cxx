@@ -28,6 +28,7 @@ to be replaced by the proper DefaultErrorHandler()
 #include <cerrno>
 #include <string>
 
+Int_t  gErrorStreamLevel     = kWarning;
 Int_t  gErrorIgnoreLevel     = kUnset;
 Int_t  gErrorAbortLevel      = kSysError+1;
 Bool_t gPrintViaErrorHandler = kFALSE;

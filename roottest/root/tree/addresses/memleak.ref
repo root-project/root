@@ -97,6 +97,7 @@ Processing runmemleak.C+...
 *Baskets :        2 : Basket Size=      32000 bytes  Compression=  77.22     *
 *............................................................................*
 Info in <memleak>: branch has 2 entries
+Executing TMyData::~TMyData()
 Info in <memleak>: fSmoothMonoM->IsOwner(): 1
 Info in <memleak>: fSmoothMonoM->par(caff)->fSmoothL->IsOwner(): 1
 Info in <memleak>: fSmoothMonoM->par(corchg2)->fSmoothL->IsOwner(): 1
@@ -119,7 +120,6 @@ Info in <memleak>: fSmoothMonoM->par(std)->fSmoothL->IsOwner(): 1
 Info in <memleak>: fSmoothMonoM->par(corchgi)->fSmoothL->IsOwner(): 1
 Info in <memleak>: fSmoothMonoM->par(trd2)->fSmoothL->IsOwner(): 1
 Info in <memleak>: fSmoothMonoM->par(vol15)->fSmoothL->IsOwner(): 1
-Executing TMyData::~TMyData()
 Executing TMyData::~TMyData()
 Executing TMyData::~TMyData()
 Executing TMyData::~TMyData()

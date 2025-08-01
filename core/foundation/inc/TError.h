@@ -137,6 +137,7 @@ R__EXTERN const char *kCheckMsg;
          ::Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__); \
    } while (false)
 
+R__EXTERN Int_t  gErrorStreamLevel;    ///< errors with level below this value will be streamed to `stdout`, if greater or equal, to `stderr`. Default is `kWarning`.
 R__EXTERN Int_t  gErrorIgnoreLevel;
 R__EXTERN Int_t  gErrorAbortLevel;
 R__EXTERN Bool_t gPrintViaErrorHandler;
