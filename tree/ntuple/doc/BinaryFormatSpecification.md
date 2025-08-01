@@ -374,13 +374,16 @@ The field version and type version are used for schema evolution.
 
 The structural role of the field can have one of the following values:
 
-| Value    | Structural role                                                          |
-|----------|--------------------------------------------------------------------------|
-| 0x00     | Leaf field in the schema tree                                            |
-| 0x01     | The field is the parent of a collection (e.g., a vector)                 |
-| 0x02     | The field is the parent of a record (e.g., a struct)                     |
-| 0x03     | The field is the parent of a variant                                     |
-| 0x04     | The field stores objects serialized with the ROOT streamer               |
+| Value    | Structural role                                                                 |
+|----------|---------------------------------------------------------------------------------|
+| 0x00     | Plain field in the schema tree that does not carry a particular structural role |
+| 0x01     | The field is the parent of a collection (e.g., a vector)                        |
+| 0x02     | The field is the parent of a record (e.g., a struct)                            |
+| 0x03     | The field is the parent of a variant                                            |
+| 0x04     | The field stores objects serialized with the ROOT streamer                      |
+
+A plain field is either a leaf or a "wrapper field" in the schema tree such as the parent field of an enum data field
+(see Section "Mapping of C++ Types to Fields and Columns")
 
 The "flags" field can have any of the following bits set:
 
@@ -403,7 +406,7 @@ these columns are alias columns to physical columns attached to the source field
 The following restrictions apply on field projections:
   - The source field and the target field must have the same structural role,
     except for an `RNTupleCardinality` field, which must have a collection field as a source.
-  - For streamer fields and leaf fields, the type name of the source field and the projected field must be identical.
+  - For streamer fields and plain fields, the type name of the source field and the projected field must be identical.
   - Projections involving variants or fixed-size arrays are unsupported.
   - Projected fields must be on the same schema path of collection fields as the source field.
     For instance, one can project a vector of structs with floats to individual vectors of floats but cannot
@@ -830,7 +833,7 @@ For example, the type name `const pair<size_t, array<class ::Event, 2>>` will be
 
 ### Fundamental Types
 
-The following fundamental types are stored as `leaf` fields with a single column each.
+The following fundamental types are stored as `plain` fields with a single column each.
 Fundamental C++ types can potentially be stored in multiple possible column types.
 The possible combinations are marked as `W` in the following table.
 Additionally, some types allow for reading from certain column types but not to write into them.
@@ -923,7 +926,7 @@ The child fields are named `_0`, `_1`, ...
 
 #### std::bitset\<N\>
 
-A bitset is stored as a repetitive leaf field with an attached `Bit` column.
+A bitset is stored as a repetitive plain field with an attached `Bit` column.
 The bitset size `N` is stored as repetition parameter in the field metadata.
 Within the repetition blocks, bits are stored in little-endian order, i.e. the least significant bits come first.
 
@@ -952,13 +955,13 @@ whose principal column is of type `(Split)Index[64|32]` and a child field of typ
 
 ### std::atomic\<T\>
 
-Atomic types are stored as a leaf field with a single subfield named `_0`.
+Atomic types are stored as a plain field with a single subfield named `_0`.
 The parent field has no attached columns.
 The subfield corresponds to the inner type `T`.
 
 ### User-defined enums
 
-User-defined enums are stored as a leaf field with a single subfield named `_0`.
+User-defined enums are stored as a plain field with a single subfield named `_0`.
 The parent field has no attached columns.
 The subfield corresponds to the integer type the underlies the enum.
 Unscoped and scoped enums are supported as long as the enum has a dictionary.
