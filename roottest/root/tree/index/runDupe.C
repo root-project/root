@@ -9,4 +9,6 @@ int runDupe()
   tree.Fill();
 
   tree.BuildIndex("run", "event");
+
+  return 0;
 }
