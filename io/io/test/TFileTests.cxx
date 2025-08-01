@@ -7,7 +7,6 @@
 #include "TFile.h"
 #include "TMemFile.h"
 #include "TDirectory.h"
-#include "TDirectoryFile.h"
 #include "TKey.h"
 #include "TNamed.h"
 #include "TPluginManager.h"
