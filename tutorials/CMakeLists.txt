@@ -905,14 +905,33 @@ if(ROOT_pyroot_FOUND)
       visualisation/graphs/gr012_polar.py
       visualisation/graphs/gr013_polar2.py
       visualisation/graphs/gr014_polar3.py
+      hist/hist000_TH1_first_uhi.py
+      hist/hist001_TH1_fillrandom_uhi.py
+      hist/hist002_TH1_fillrandom_userfunc_uhi.py
+      hist/hist003_TH1_draw_uhi.py
+      hist/hist007_TH1_liveupdate_uhi.py
+      hist/hist010_TH1_two_scales_uhi.py
+      hist/hist015_TH1_read_and_draw_uhi.py
+      hist/hist029_TRatioPlot_simple_uhi.py
+      hist/hist031_TRatioPlot_residual_fit_uhi.py
+      hist/hist032_TRatioPlot_fit_lines_uhi.py
+      hist/hist033_TRatioPlot_fit_confidence_uhi.py
+      hist/hist034_TRatioPlot_fit_margin_uhi.py
+      hist/hist105_TExec_dynamic_slice_uhi.py
   )
+
+
   file(GLOB requires_numba   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       analysis/dataframe/df038_NumbaDeclare.py
       analysis/dataframe/df101_h1Analysis.py)
+
   file(GLOB requires_pandas  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       analysis/dataframe/df026_AsNumpyArrays.py
       analysis/dataframe/df035_RDFFromPandas.py
       roofit/roofit/rf409_NumPyPandasToRooFit.py)
+
+
+
   file(GLOB requires_keras   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       machine_learning/TMVA_SOFIE_Inference.py
       machine_learning/TMVA_SOFIE_Models.py
@@ -931,6 +950,22 @@ if(ROOT_pyroot_FOUND)
   file(GLOB requires_tensorflow RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       machine_learning/RBatchGenerator_TensorFlow.py
   )
+
+
+
+  file(GLOB requires_matplotlib requires_mplhep RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+      hist/hist002_TH1_fillrandom_userfunc_uhi.py
+      hist/hist003_TH1_draw_uhi.py
+      hist/hist007_TH1_liveupdate_uhi.py
+      hist/hist010_TH1_two_scales_uhi.py
+      hist/hist015_TH1_read_and_draw_uhi.py
+      hist/hist029_TRatioPlot_simple_uhi.py
+  )
+
+
+
+
+
   set(fixtureLists
       requires_keras
       requires_numba
@@ -940,6 +975,8 @@ if(ROOT_pyroot_FOUND)
       requires_tensorflow
       requires_torch
       requires_xgboost
+      requires_matplotlib
+      requires_mplhep
   )
 
   # Now set up all the tests
