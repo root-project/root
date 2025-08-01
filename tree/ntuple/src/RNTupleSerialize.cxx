@@ -149,7 +149,7 @@ DeserializeField(const void *buffer, std::uint64_t bufSize, ROOT::Internal::RFie
    std::uint32_t typeVersion;
    std::uint32_t parentId;
    // initialize properly for call to SerializeFieldStructure()
-   ENTupleStructure structure{ENTupleStructure::kLeaf};
+   ENTupleStructure structure{ENTupleStructure::kPlain};
    std::uint16_t flags;
    std::uint32_t result;
    if (auto res = RNTupleSerializer::SerializeFieldStructure(structure, nullptr)) {
@@ -811,7 +811,7 @@ ROOT::Internal::RNTupleSerializer::SerializeFieldStructure(ROOT::ENTupleStructur
 {
    using ENTupleStructure = ROOT::ENTupleStructure;
    switch (structure) {
-   case ENTupleStructure::kLeaf: return SerializeUInt16(0x00, buffer);
+   case ENTupleStructure::kPlain: return SerializeUInt16(0x00, buffer);
    case ENTupleStructure::kCollection: return SerializeUInt16(0x01, buffer);
    case ENTupleStructure::kRecord: return SerializeUInt16(0x02, buffer);
    case ENTupleStructure::kVariant: return SerializeUInt16(0x03, buffer);
@@ -830,7 +830,7 @@ ROOT::Internal::RNTupleSerializer::DeserializeFieldStructure(const void *buffer,
    std::uint16_t onDiskValue;
    auto result = DeserializeUInt16(buffer, onDiskValue);
    switch (onDiskValue) {
-   case 0x00: structure = ENTupleStructure::kLeaf; break;
+   case 0x00: structure = ENTupleStructure::kPlain; break;
    case 0x01: structure = ENTupleStructure::kCollection; break;
    case 0x02: structure = ENTupleStructure::kRecord; break;
    case 0x03: structure = ENTupleStructure::kVariant; break;

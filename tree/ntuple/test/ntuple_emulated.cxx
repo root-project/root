@@ -273,7 +273,7 @@ TEST(RNTupleEmulated, EmulatedFields_VecsTemplatedWrapper)
       const auto *innerField = wrapperField->GetConstSubfields()[0];
       ASSERT_EQ(innerField->GetTypeName(), "float");
       ASSERT_EQ(innerField->GetFieldName(), "fValue");
-      ASSERT_EQ(innerField->GetStructure(), ROOT::ENTupleStructure::kLeaf);
+      ASSERT_EQ(innerField->GetStructure(), ROOT::ENTupleStructure::kPlain);
    }
 
    // Now test loading entries with a reader
@@ -620,7 +620,7 @@ TEST(RNTupleEmulated, CollectionProxy)
          template <>
          struct IsCollectionProxy<StructWithCollectionProxyForEmuTest<char>> : std::true_type {
          };
-         } // namespace ROOT                                       
+         } // namespace ROOT
 
          SimpleCollectionProxyForEmuTest<StructWithCollectionProxyForEmuTest<char>> proxyC;
          auto klassC = TClass::GetClass("StructWithCollectionProxyForEmuTest<char>");

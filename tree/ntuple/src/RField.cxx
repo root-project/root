@@ -634,7 +634,7 @@ void ROOT::RRecordField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) con
 //------------------------------------------------------------------------------
 
 ROOT::RBitsetField::RBitsetField(std::string_view fieldName, std::size_t N)
-   : ROOT::RFieldBase(fieldName, "std::bitset<" + std::to_string(N) + ">", ROOT::ENTupleStructure::kLeaf,
+   : ROOT::RFieldBase(fieldName, "std::bitset<" + std::to_string(N) + ">", ROOT::ENTupleStructure::kPlain,
                       false /* isSimple */, N),
      fN(N)
 {
@@ -981,7 +981,7 @@ size_t ROOT::ROptionalField::GetAlignment() const
 
 ROOT::RAtomicField::RAtomicField(std::string_view fieldName, std::string_view typeName,
                                  std::unique_ptr<RFieldBase> itemField)
-   : RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
+   : RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kPlain, false /* isSimple */)
 {
    if (itemField->GetTraits() & kTraitTriviallyConstructible)
       fTraits |= kTraitTriviallyConstructible;
