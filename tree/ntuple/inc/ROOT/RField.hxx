@@ -97,7 +97,7 @@ protected:
 
 public:
    RInvalidField(std::string_view name, std::string_view type, std::string_view error, ECategory category)
-      : RFieldBase(name, type, ROOT::ENTupleStructure::kLeaf, false /* isSimple */), fError(error), fCategory(category)
+      : RFieldBase(name, type, ROOT::ENTupleStructure::kPlain, false /* isSimple */), fError(error), fCategory(category)
    {
       fTraits |= kTraitInvalidField;
    }
@@ -326,7 +326,7 @@ private:
 
 protected:
    RCardinalityField(std::string_view fieldName, std::string_view typeName)
-      : RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
+      : RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kPlain, false /* isSimple */)
    {
    }
 
@@ -355,7 +355,7 @@ protected:
    void ConstructValue(void *where) const final { new (where) T{0}; }
 
    RSimpleField(std::string_view name, std::string_view type)
-      : RFieldBase(name, type, ROOT::ENTupleStructure::kLeaf, true /* isSimple */)
+      : RFieldBase(name, type, ROOT::ENTupleStructure::kPlain, true /* isSimple */)
    {
       fTraits |= kTraitTrivialType;
    }
