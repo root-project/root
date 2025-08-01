@@ -613,3 +613,24 @@ TEST(RNTuple, VoidWithExternalAddressAndTypeName)
                                                  "matched to its in-memory type `std::int32_t`"));
    }
 }
+
+TEST(RNTuple, ViewStreamer)
+{
+   FileRaii fileGuard("test_ntuple_view_streamer.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(std::make_unique<ROOT::RStreamerField>("foo", "CustomStruct"));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      auto fieldFoo = ntuple->GetModel().GetDefaultEntry().GetPtr<CustomStruct>("foo");
+      for (int i = 0; i < 10; ++i) {
+         CustomStruct foo;
+         foo.v1.push_back(i);
+         foo.s = std::to_string(i);
+         *fieldFoo = foo;
+         ntuple->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_THROW(reader->GetView<CustomStruct>("foo"), ROOT::RException);
+}
