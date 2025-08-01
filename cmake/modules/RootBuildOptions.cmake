@@ -154,7 +154,6 @@ ROOT_BUILD_OPTION(r OFF "Enable support for R bindings (requires R, Rcpp, and RI
 ROOT_BUILD_OPTION(roofit ON "Build the advanced fitting package RooFit, and RooStats for statistical tests. If xml is available, also build HistFactory.")
 ROOT_BUILD_OPTION(roofit_multiprocess OFF "Build RooFit::MultiProcess and multi-process RooFit::TestStatistics classes (requires ZeroMQ >= 3.4.5 built with -DENABLE_DRAFTS and cppzmq).")
 ROOT_BUILD_OPTION(root7 ON "Build ROOT 7 components of ROOT")
-ROOT_BUILD_OPTION(rpath ON "Link libraries with built-in RPATH (run-time search path)")
 ROOT_BUILD_OPTION(runtime_cxxmodules ON "Enable runtime support for C++ modules")
 ROOT_BUILD_OPTION(shadowpw OFF "Enable support for shadow passwords")
 ROOT_BUILD_OPTION(shared ON "Use shared 3rd party libraries if possible")
@@ -307,7 +306,6 @@ if(WIN32)
   set(davix_defvalue OFF)
   set(roofit_multiprocess_defvalue OFF)
   set(roottest_defvalue OFF)
-  set(rpath_defvalue OFF)
   set(runtime_cxxmodules_defvalue OFF)
   set(testing_defvalue OFF)
   set(vdt_defvalue OFF)
@@ -405,6 +403,14 @@ foreach(opt )
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()
 endforeach()
+
+if(DEFINED rpath)
+  message(DEPRECATION ">>> Option 'rpath' is deprecated and without effect."
+      " See https://root.cern/doc/v638/release-notes.html"
+      " Relative RPATHs to the main ROOT libraries are unconditionally appended to all ROOT"
+      " executables and libraries."
+      "") # empty line at the end to make the deprecation message more visible
+endif()
 
 foreach(opt minuit2_mpi)
   if(${opt})
