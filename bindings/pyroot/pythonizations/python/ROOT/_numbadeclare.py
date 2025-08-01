@@ -46,7 +46,11 @@ def _NumbaDeclareDecorator(input_types, return_type = None, name=None):
         'std::vector': {
             'match_pattern': r'std::vector<[\w\s]+>',
             'cpp_name': 'std::vector',
-        }
+        },
+        'std::array': {
+            'match_pattern': r'std::array<[\w\s,<>]+>',
+            'cpp_name': 'std::array',
+        },
     }
 
     def get_container_type(cpp_type: str) -> Union[str, None]:
@@ -72,7 +76,7 @@ def _NumbaDeclareDecorator(input_types, return_type = None, name=None):
     return_type = normalize_typename(return_type) if return_type is not None else None
 
     # Helper functions to determine types
-    def get_inner_type(t):
+    def get_inner_type(t: str, with_dims: bool = False) -> str:
         '''
         Get inner typename of a templated C++ typename
         '''
@@ -96,7 +100,11 @@ def _NumbaDeclareDecorator(input_types, return_type = None, name=None):
                         'Unrecognized type {}. Valid shorthand aliases of RVec are {}'
                         .format(t, list('RVec' + i for i in typemap.keys())))
             g = re.match('(.*)<(.*)>', t).groups(0)
-            return g[1]
+            inner_type = g[1]
+            # Handle std::array<T, N> by splitting the inner type, if requested
+            if ',' in inner_type and not with_dims:
+                inner_type = inner_type.split(',')[0].strip()
+            return inner_type
         except:
             raise Exception('Failed to extract template argument of type {}'.format(t))
 
@@ -166,7 +174,7 @@ def _NumbaDeclareDecorator(input_types, return_type = None, name=None):
             nb_return_type = None
         return nb_return_type, nb_input_types
 
-    def add_container_input_type_ref(input_types_ref, const_mod, container_t):
+    def add_container_input_type_ref(input_types_ref: list, const_mod: str, container_t: str) -> None:
         '''
         Construct the type of a container input parameter for its use in the C++
         wrapper function signature.
@@ -177,7 +185,7 @@ def _NumbaDeclareDecorator(input_types, return_type = None, name=None):
             tref = '{}{}&'.format(const_mod, container_t)
         input_types_ref.append(tref)
 
-    def add_container_func_ptr_input_type(func_ptr_input_types, const_mod, container_t):
+    def add_container_func_ptr_input_type(func_ptr_input_types: list, const_mod: str, container_t: str) -> None:
         '''
         Construct the type of a container input parameter for its use in the cast
         of the function pointer of the jitted Python wrapper.
@@ -370,17 +378,38 @@ def pywrapper({SIGNATURE}):
         # Define return operation
         if is_container_type(return_type):
             innert = get_inner_type(return_type)
-            if innert == 'bool': innert = 'char'
+            container_cpp = get_container_cpp_name(return_type)
+            inner_with_dims = get_inner_type(return_type, with_dims=True)
+
+            if innert == 'bool':
+                innert = 'char'
+                inner_with_dims = 'char' + inner_with_dims[4:]
+
+            # Default case: create container from pointer and size (e.g. std::vector, RVec)
+            copy_lines = [
+                f'{container_cpp}<{innert}> x_r(ptr, ptr + size);'
+            ]
+
+            # Special case: if inner type includes dimensions (e.g. std::array<T, N>)
+            # We construct the array then copy the data manually
+            if innert != inner_with_dims:
+                innert, dims = inner_with_dims.split(',')
+                copy_lines = [
+                    f'{container_cpp}<{innert}, {dims}> x_r;'
+                    f'std::copy(ptr, ptr + size, x_r.begin());'
+                ]
+
             return_op = '\n    '.join([
-                '// Because an container type cannot take the ownership of external data, we have to copy the returned array',
+                '// Because a container type cannot take the ownership of external data, we have to copy the returned array',
                 'long size; // Size of the returned array',
-                '{}* ptr; // Pointer to the data of the returned array'.format(innert),
-                'funcptr({});'.format(', '.join(func_args)),
+                f'{innert}* ptr; // Pointer to the data of the returned array',
+                f'funcptr({", ".join(func_args)});',
                 # TODO: Remove this copy as soon as the container type can adopt the ownership
-                '{}<{}> x_r(ptr, ptr + size);'.format(get_container_cpp_name(return_type), innert),
+                *copy_lines,
                 'free(ptr);',
                 # If we return a container_type<bool>, we rely here on the automatic conversion of container_type<char> to container_type<bool>
-                'return x_r;'])
+                'return x_r;'
+            ])
         else:
             return_op = 'return funcptr({});'.format(', '.join(func_args))
 
