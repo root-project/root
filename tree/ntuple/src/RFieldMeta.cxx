@@ -517,7 +517,7 @@ ROOT::REnumField::REnumField(std::string_view fieldName, std::string_view enumNa
 }
 
 ROOT::REnumField::REnumField(std::string_view fieldName, TEnum *enump)
-   : ROOT::RFieldBase(fieldName, GetRenormalizedTypeName(enump->GetQualifiedName()), ROOT::ENTupleStructure::kLeaf,
+   : ROOT::RFieldBase(fieldName, GetRenormalizedTypeName(enump->GetQualifiedName()), ROOT::ENTupleStructure::kStatic,
                       false /* isSimple */)
 {
    // Avoid accidentally supporting std types through TEnum.
@@ -544,7 +544,7 @@ ROOT::REnumField::REnumField(std::string_view fieldName, TEnum *enump)
 
 ROOT::REnumField::REnumField(std::string_view fieldName, std::string_view enumName,
                              std::unique_ptr<RFieldBase> intField)
-   : ROOT::RFieldBase(fieldName, enumName, ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
+   : ROOT::RFieldBase(fieldName, enumName, ROOT::ENTupleStructure::kStatic, false /* isSimple */)
 {
    Attach(std::move(intField));
    fTraits |= kTraitTriviallyConstructible | kTraitTriviallyDestructible;

@@ -273,7 +273,7 @@ struct TemplatedWrapper {
       const auto *innerField = wrapperField->GetConstSubfields()[0];
       ASSERT_EQ(innerField->GetTypeName(), "float");
       ASSERT_EQ(innerField->GetFieldName(), "fValue");
-      ASSERT_EQ(innerField->GetStructure(), ROOT::ENTupleStructure::kLeaf);
+      ASSERT_EQ(innerField->GetStructure(), ROOT::ENTupleStructure::kStatic);
    }
 
    // Now test loading entries with a reader

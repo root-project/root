@@ -105,23 +105,28 @@ enum class ENTupleColumnType {
    kMax,
 };
 
-/// The fields in the ntuple model tree can carry different structural information about the type system.
-/// Leaf fields contain just data, collection fields resolve to offset columns, record fields have no
-/// materialization on the primitive column layer.
+/// The fields in the RNTuple data model tree can carry different structural information about the type system.
+/// Collection fields have an offset column and subfields with arbitrary cardinality, record fields have no
+/// materialization on the primitive column layer and an arbitrary number of subfields. Static fields are either
+/// leafs (e.g., `float`) or fields with exactly one child that has the same cardinality as the parent
+/// (modulo field repetitions, e.g. std::atomic<T>).
 // IMPORTANT: if you add members, remember to change the related `operator<<` below.
 enum class ENTupleStructure : std::uint16_t {
    kInvalid,
-   kLeaf,
+   kStatic,
    kCollection,
    kRecord,
    kVariant,
    kStreamer,
-   kUnknown
+   kUnknown,
+
+   // for backwards compatibility
+   kLeaf R__DEPRECATED(6, 40, "use instead ROOT::ENTupleStructure::kStatic") = kStatic
 };
 
 inline std::ostream &operator<<(std::ostream &os, ENTupleStructure structure)
 {
-   static const char *const names[] = {"Invalid", "Leaf", "Collection", "Record", "Variant", "Streamer", "Unknown"};
+   static const char *const names[] = {"Invalid", "Static", "Collection", "Record", "Variant", "Streamer", "Unknown"};
    static_assert((std::size_t)ENTupleStructure::kUnknown + 1 == std::size(names));
 
    if (R__likely(static_cast<std::size_t>(structure) <= std::size(names)))
