@@ -123,41 +123,48 @@ void ErrorHandler(Int_t level, const char *location, const char *fmt, std::va_li
    std::va_list apCopy;
    va_copy(apCopy, ap);
 
-   // Figure out exactly how many bytes we need
-   int nRequired = vsnprintf(nullptr, 0, fmt, ap) + 1;
+   // Write the user string to the current buffer and, at the same time, figure out exactly how many bytes we need.
+   int nWritten = vsnprintf(buf, bufSize, fmt, ap);
+   int nAdditional = 0;
    if (level >= kSysError && level < kFatal) {
       auto sysHandler = GetErrorSystemMsgHandlerRef();
       if (sysHandler)
-         nRequired += strlen(sysHandler()) + 1; // +1 for the whitespace
+         nAdditional = strlen(sysHandler()) + 1; // +1 for the whitespace
       else {
-         nRequired += snprintf(nullptr, 0, " (errno: %d)", errno) + 1;
+         nAdditional = snprintf(nullptr, 0, " (errno: %d)", errno);
       }
    }
 
+   // nWritten and nAdditional are the number of characters, nRequired is the required
+   // number of bytes, hence the + 1 for the null terminator.
+   int nRequired = nWritten + nAdditional + 1;
    if (nRequired >= bufSize) {
-      // Not enough space: allocate more space on the heap to fit the string
+      // Not enough space: allocate more space on the heap to fit the string.
       if (buf != smallBuf)
          delete[] buf;
 
-      bufSize = std::max(bufSize * 2, nRequired + 1);
+      bufSize = std::max(bufSize * 2, nRequired);
       buf = bufDynStorage = new char[bufSize];
+      // Write the user string again in the new buffer.
+      vsnprintf(buf, bufSize, fmt, apCopy);
    }
+   va_end(apCopy);
 
-   // Actually write the string
-   int nWrittenPre = vsnprintf(buf, bufSize, fmt, apCopy);
+   assert(nRequired <= bufSize);
+
+   // if necessary, write the additional string.
+   // NOTE: this will overwrite the null byte written by the previous vsnprintf, extending the string.
    int nWrittenPost = 0;
-   if (level >= kSysError && level < kFatal) {
+   if (nAdditional > 0) {
       auto sysHandler = GetErrorSystemMsgHandlerRef();
       if (sysHandler) {
-         // NOTE: overwriting the null byte written by the previous vsnprintf
-         nWrittenPost = snprintf(buf + nWrittenPre, bufSize - nWrittenPre, " %s", sysHandler());
+         nWrittenPost = snprintf(buf + nWritten, bufSize - nWritten, " %s", sysHandler());
       } else {
-         // NOTE: overwriting the null byte written by the previous vsnprintf
-         nWrittenPost = snprintf(buf + nWrittenPre, bufSize - nWrittenPre, " (errno: %d)", errno);
+         nWrittenPost = snprintf(buf + nWritten, bufSize - nWritten, " (errno: %d)", errno);
       }
    }
-   assert(nWrittenPre + nWrittenPost + 1 <= nRequired);
-   va_end(apCopy);
+   assert(nWrittenPost == nAdditional);
+   assert(nWritten + nWrittenPost + 1 <= nRequired);
 
    if (level != kFatal)
       gErrorHandler(level, level >= gErrorAbortLevel, location, buf);
