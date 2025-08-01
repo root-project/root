@@ -692,7 +692,7 @@ static void GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<con
 
       // NOTE: we cannot have a Record here because it has no associated columns.
       R__ASSERT(structure == ROOT::ENTupleStructure::kCollection || structure == ROOT::ENTupleStructure::kVariant ||
-                structure == ROOT::ENTupleStructure::kLeaf);
+                structure == ROOT::ENTupleStructure::kStatic);
 
       const auto &columnDesc = dstDescriptor.GetColumnDescriptor(column.fOutputId);
       const auto colElement = RColumnElementBase::Generate(columnDesc.GetType());
