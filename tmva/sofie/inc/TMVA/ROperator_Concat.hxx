@@ -154,21 +154,6 @@
 
                // output shape for concatenated axis
                ret[fAxis] = Dim{concat_dim};
-               // //ret[0] = inputs[0];
-               // // check if concat_dim is an integer
-               // // case like "2+n" can be converted to an integer so need to check the length
-               // size_t pos = 0;
-               // try {
-               //    i_concat_dim = std::stoi(concat_dim, &pos);
-               //    if (pos == concat_dim.length())
-               //       ret[fAxis] = Dim{i_concat_dim}; // dimension is integer
-               //    else {
-               //       // check if a composite expression
-               //       ret[fAxis] = Dim{concat_dim};
-               // }
-               // catch (std::invalid_argument const& ex) {
-
-               // }
 
             }
             // case of stacking (not supported yet)
