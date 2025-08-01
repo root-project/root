@@ -125,6 +125,19 @@ class NumbaDeclareSimple(unittest.TestCase):
         self.assertEqual(df.Sum("x").GetValue(), 24)
         self.assertEqual(df.Sum("x_sq").GetValue(), 56)
 
+    def test_rdataframe_std_array(self):
+        """
+        Test function call as part of RDataFrame with std::array
+        """
+        @ROOT.Numba.Declare(["std::array<int, 3>"], "std::array<int, 3>")
+        def square_array(x):
+            return x * x
+
+        df = ROOT.RDataFrame(4).Define("x", "std::array{1, 2, 3}").Define("x_sq", "Numba::square_array(x)")
+        df.Display().Print()
+        self.assertEqual(df.Sum("x").GetValue(), 24)
+        self.assertEqual(df.Sum("x_sq").GetValue(), 56)
+
     # Test wrappings
     def test_wrapper_in_void(self):
         """
