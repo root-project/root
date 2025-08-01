@@ -14,6 +14,8 @@ ROOT_ADD_GTEST(dataframe_callbacks dataframe_callbacks.cxx LIBRARIES ROOTDataFra
 ROOT_ADD_GTEST(dataframe_cloning dataframe_cloning.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_histomodels dataframe_histomodels.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_interface dataframe_interface.cxx LIBRARIES ROOTDataFrame)
+target_include_directories(dataframe_interface PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+ROOT_GENERATE_DICTIONARY(SimpleElectronDict ${CMAKE_CURRENT_SOURCE_DIR}/SimpleElectron.hxx MODULE dataframe_interface LINKDEF SimpleElectronLinkDef.hxx OPTIONS -inlineInputHeader DEPENDENCIES RIO)
 ROOT_ADD_GTEST(dataframe_nodes dataframe_nodes.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_regression dataframe_regression.cxx LIBRARIES Physics ROOTDataFrame GenVector)
 ROOT_ADD_GTEST(dataframe_utils dataframe_utils.cxx LIBRARIES ROOTDataFrame)
