@@ -63,6 +63,8 @@ jobs:
           EOS_ENDPOINT: root://eosproject-r.cern.ch
           KRB5CCNAME: /tmp/krb5cc
           NFILES: ${{ steps.nfiles.outputs.NFILES }}
+          KRB5USER: ${{ secrets.KRB5USER }}
+          KRB5REALM: ${{ secrets.KRB5REALM }}
         working-directory: ${{ env.WORKDIR }}
         run: |
           echo +++ Content
@@ -70,6 +72,6 @@ jobs:
           echo +++ Retrieving the secret
           echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
           echo +++ Creating the token
-          kinit  -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
+          kinit  -p ${KRB5USER}@${KRB5REALM} -kt ${KT_FILE_NAME}
           echo +++ Running the copy
           xrdcp --parallel ${NFILES} -rf wheelhouse/* ${EOS_ENDPOINT}/${EOS_PATH}/
