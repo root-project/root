@@ -741,9 +741,9 @@ void TKDTree<Index, Value>::FindPoint(Value * point, Index &index, Int_t &iter){
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Find all points in the sphere of a given radius "range" around the given point
-///1st argument - the point
-///2nd argument - radius of the shere
-///3rd argument - a vector, in which the results will be returned
+/// \param point the point
+/// \param range radius of the sphere
+/// \param res a vector, in which the results will be returned
 
 template <typename  Index, typename Value>
 void TKDTree<Index, Value>::FindInRange(Value * point, Value range, std::vector<Index> &res)
