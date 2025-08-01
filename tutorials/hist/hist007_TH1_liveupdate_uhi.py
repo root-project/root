@@ -23,9 +23,9 @@ N_EVENTS = 10000
 fig, ax = plt.subplots(figsize=(8, 6), num="The HSUM UHI Example")
 # Create some histograms.
 total = TH1F("total", "This is the total distribution", BINS, RANGE_MIN, RANGE_MAX)
-main = TH1F("main", "Main contributor", 100, -4, 4)
-s1 = TH1F("s1", "This is the first signal", 100, -4, 4)
-s2 = TH1F("s2", "This is the second signal", 100, -4, 4)
+main = TH1F("main", "Main contributor",BINS, RANGE_MIN, RANGE_MAX)
+s1 = TH1F("s1", "This is the first signal", BINS, RANGE_MIN, RANGE_MAX)
+s2 = TH1F("s2", "This is the second signal", BINS, RANGE_MIN, RANGE_MAX)
 counts = {"total": np.zeros(BINS), "main": np.zeros(BINS), "s1": np.zeros(BINS), "s2": np.zeros(BINS)}
 np.random.seed(0)
 

@@ -1,6 +1,5 @@
-<<<<<<< Updated upstream
-## \file
-## \ingroup tutorial_hist
+## \file hist001_TH1_first.py
+### \ingroup tutorial_hist
 ## \notebook
 ## Fill a 1D histogram with random values using predefined functions.
 ##
@@ -10,15 +9,6 @@
 ## \date July 2025
 ## \author Giacomo Parolini, Nursena Bitirgen
 
-=======
-## \file hist000_TH1_first.py
-## \ingroup tutorial_hist
-## \brief Hello World example for TH1 histogram.
-## This tutorial has been updated to include proper Doxygen documentation.
-## \macro_code
-## \date July 2025
-## \author Giacomo Parolini, Nursena Bitirgen 
->>>>>>> Stashed changes
 import numpy as np
 import ROOT
 

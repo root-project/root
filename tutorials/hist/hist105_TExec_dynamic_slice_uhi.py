@@ -19,7 +19,6 @@
 ## \author Rene Brun, Johann Cohen-Tanugi, Wim Lavrijsen, Enric Tejedor, Nursena Bitirgen
 
 import matplotlib.pyplot as plt
-import mplhep as hep
 import numpy as np
 from ROOT import TH2, TH2F, TCanvas, gPad, gVirtualX, kRed, kTRUE
 from some_module import DynamicSlicer
@@ -92,7 +91,7 @@ class DynamicExec:
 
 
 def main():
-    plt.style.use(hep.style.ROOT)
+    ROOT.gROOT.SetStyle("Modern")
     # create a new canvas.
     main_canvas = TCanvas("c1", "Dynamic Slice Example", 10, 10, 700, 500)
     main_canvas.SetFillColor(42)
