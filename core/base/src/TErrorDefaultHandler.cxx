@@ -162,7 +162,7 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
    else
       smsg = std::string(type) + " in <" + location + ">: " + msg;
 
-   auto outstream = level >= kWarning ? stderr : stdout;
+   auto outstream = level >= gErrorStreamLevel ? stderr : stdout;
    DebugPrint(outstream, "%s\n", smsg.c_str());
 
    fflush(outstream);
