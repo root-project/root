@@ -1,8 +1,5 @@
-#include "abcsetup.h"
-
-void abcread(const char* mode, const char* what) {
-   abcsetup(mode);
-
+void abcread(const char* mode, const char* what)
+{
    TFile f(TString::Format("abc_%s.root", mode));
    TTree* t = 0;
    f.GetObject("tree", t);
@@ -14,5 +11,5 @@ void abcread(const char* mode, const char* what) {
          Derived * d = (Derived*) h->fABC;
          std::cout << e << ": read d.abc==" << d->abc
                    << ", d.derived==" << d->derived << std::endl;
-      }
+   }
 }
