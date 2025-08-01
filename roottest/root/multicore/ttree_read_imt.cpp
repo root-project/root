@@ -1,5 +1,6 @@
 #include "ROOT/TThreadExecutor.hxx"
 #include "TBranch.h"
+#include "TError.h"
 #include "TFile.h"
 #include "TROOT.h"
 #include "TSystem.h"
@@ -82,7 +83,7 @@ Int_t ReadTree(TTree *tree, Int_t nentries, bool reuse)
 
 
 int main(int argc, char** argv) {
-
+  gErrorStreamLevel = kUnset;
   auto options = parseOptions(argc, argv);
 
   const int nthreads  = std::get<0>(options);
