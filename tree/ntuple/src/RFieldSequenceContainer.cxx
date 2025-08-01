@@ -17,7 +17,7 @@ ROOT::RArrayField::RArrayField(std::string_view fieldName, std::unique_ptr<RFiel
    : ROOT::RFieldBase(fieldName,
                       "std::array<" + itemField->GetTypeName() + "," +
                          Internal::GetNormalizedInteger(static_cast<unsigned long long>(arrayLength)) + ">",
-                      ROOT::ENTupleStructure::kLeaf, false /* isSimple */, arrayLength),
+                      ROOT::ENTupleStructure::kPlain, false /* isSimple */, arrayLength),
      fItemSize(itemField->GetValueSize()),
      fArrayLength(arrayLength)
 {

@@ -336,7 +336,7 @@ private:
 public:
    static std::string TypeName() { return "std::string"; }
    explicit RField(std::string_view name)
-      : RFieldBase(name, TypeName(), ROOT::ENTupleStructure::kLeaf, false /* isSimple */), fIndex(0)
+      : RFieldBase(name, TypeName(), ROOT::ENTupleStructure::kPlain, false /* isSimple */), fIndex(0)
    {
    }
    RField(RField &&other) = default;
