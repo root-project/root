@@ -28,6 +28,6 @@ target_include_directories(root PRIVATE
   ${CMAKE_BINARY_DIR}/ginclude         # for RConfigure.h and rootCommandLineOptionsHelp.h
 )
 
-if(rpath)
+if(NOT MSVC AND NOT CMAKE_SKIP_INSTALL_RPATH)
   target_compile_definitions(root PRIVATE IS_RPATH_BUILD)
 endif()

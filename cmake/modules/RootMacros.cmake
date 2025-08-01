@@ -975,7 +975,7 @@ function(ROOT_LINKER_LIBRARY library)
 
   #----Installation details-------------------------------------------------------
   if(NOT ARG_TEST AND NOT ARG_NOINSTALL AND CMAKE_LIBRARY_OUTPUT_DIRECTORY)
-    if(rpath)
+    if(NOT MSVC)
       ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH(${library} ${CMAKE_INSTALL_LIBDIR})
     endif()
     if(ARG_CMAKENOEXPORT)
@@ -1440,7 +1440,7 @@ function(ROOT_EXECUTABLE executable)
   endif()
   #----Installation details------------------------------------------------------
   if(NOT ARG_NOINSTALL AND CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-    if(rpath)
+    if(NOT MSVC)
       ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH(${executable} ${CMAKE_INSTALL_BINDIR})
     endif()
     if(ARG_CMAKENOEXPORT)
