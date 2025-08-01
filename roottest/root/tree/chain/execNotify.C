@@ -1,5 +1,6 @@
 #include "TObject.h"
-#include <stdio.h>
+
+#include <cstdio>
 
 class Notified : public TObject {
   unsigned int fValue = 0;
@@ -34,5 +35,5 @@ void execNotifyImpl() {
 void execNotify() {
   execNotifyImpl<TList>();
   execNotifyImpl<TObjArray>();
- 
+
 }
