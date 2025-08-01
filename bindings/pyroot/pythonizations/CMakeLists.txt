@@ -227,22 +227,7 @@ endif()
 
 if(NOT MSVC)
   # Make sure that relative RUNPATH to main ROOT libraries is always correct.
-
-  file(RELATIVE_PATH pymoduledir_to_libdir_build ${pymoduledir_build} "${localruntimedir}")
-  file(RELATIVE_PATH pymoduledir_to_libdir_install ${CMAKE_INSTALL_PREFIX}/${pymoduledir_install} "${CMAKE_INSTALL_FULL_LIBDIR}")
-
-  if(APPLE)
-    set_target_properties(${libname} PROPERTIES
-        BUILD_RPATH "@loader_path/${pymoduledir_to_libdir_build}"
-        INSTALL_RPATH "@loader_path/${pymoduledir_to_libdir_install}"
-    )
-  else()
-    set_target_properties(${libname} PROPERTIES
-        BUILD_RPATH "$ORIGIN/${pymoduledir_to_libdir_build}"
-        INSTALL_RPATH "$ORIGIN/${pymoduledir_to_libdir_install}"
-    )
-  endif()
-
+  ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH(${libname} ${pymoduledir_install})
 endif()
 
 # Install library
