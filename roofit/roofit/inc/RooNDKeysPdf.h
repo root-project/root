@@ -53,29 +53,29 @@ public:
   RooNDKeysPdf() = default;
 
   RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
-               TString options = "ma", double rho = 1, double nSigma = 3, bool rotate = true,
+               RooStringView options = "ma", double rho = 1, double nSigma = 3, bool rotate = true,
                bool sortInput = true);
 
-  RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const TH1 &hist, TString options = "ma",
+  RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const TH1 &hist, RooStringView options = "ma",
                double rho = 1, double nSigma = 3, bool rotate = true, bool sortInput = true);
 
   RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
-               const TVectorD &rho, TString options = "ma", double nSigma = 3, bool rotate = true,
+               const TVectorD &rho, RooStringView options = "ma", double nSigma = 3, bool rotate = true,
                bool sortInput = true);
 
   RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
-               const RooArgList &rhoList, TString options = "ma", double nSigma = 3, bool rotate = true,
+               const RooArgList &rhoList, RooStringView options = "ma", double nSigma = 3, bool rotate = true,
                bool sortInput = true);
 
   RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const TH1 &hist,
-               const RooArgList &rhoList, TString options = "ma", double nSigma = 3, bool rotate = true,
+               const RooArgList &rhoList, RooStringView options = "ma", double nSigma = 3, bool rotate = true,
                bool sortInput = true);
 
   RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, const RooDataSet &data, Mirror mirror = NoMirror,
                double rho = 1, double nSigma = 3, bool rotate = true, bool sortInput = true);
 
   RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, RooAbsReal &y, const RooDataSet &data,
-               TString options = "ma", double rho = 1.0, double nSigma = 3, bool rotate = true,
+               RooStringView options = "ma", double rho = 1.0, double nSigma = 3, bool rotate = true,
                bool sortInput = true);
 
   RooNDKeysPdf(const RooNDKeysPdf& other, const char* name=nullptr);
