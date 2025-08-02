@@ -26,7 +26,7 @@ std::underlying_type_t<Options> operator|(std::underlying_type_t<Options> opA, O
     return opA | static_cast<std::underlying_type_t<Options>>(opB);
 }
 
-const std::vector<size_t>& RModel::GetTensorShape(std::string name) const {
+std::vector<size_t> RModel::GetTensorShape(const std::string & name) const {
     auto f = fReadyInputTensorInfos.find(name);
     if (f != fReadyInputTensorInfos.end()) {
         return f->second.shape;
@@ -43,6 +43,16 @@ const std::vector<size_t>& RModel::GetTensorShape(std::string name) const {
     if (f4 != fIntermediateTensorInfos.end()) {
         return f4->second.shape;
     }
+    // case of shape tensors
+    auto f5 = fShapeTensors.find(name);
+    if (f5 != fShapeTensors.end()) {
+      // shape is vector of size 1 with size of shape values or just a scalar
+      if (f5->second.second)  // check scalar flag
+         return std::vector<size_t>{};
+      else
+         return std::vector<size_t>{f5->second.first.size()};
+    }
+
     if (fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end())
       throw std::runtime_error("TMVA SOFIE tensor [" + name + "] is a dynamic tensor. Use GetDynamicTensorShape instead of GetTensorShape");
 
@@ -52,7 +62,7 @@ const std::vector<size_t>& RModel::GetTensorShape(std::string name) const {
     throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the shape is requested is not found");
 }
 
-std::vector<Dim> RModel::GetDynamicTensorShape(std::string name) const {
+std::vector<Dim> RModel::GetDimTensorShape(const std::string & name) const {
    if (auto f = fDynamicTensorInfos.find(name); f != fDynamicTensorInfos.end()) {
       return f->second.shape;
    }
@@ -63,8 +73,21 @@ std::vector<Dim> RModel::GetDynamicTensorShape(std::string name) const {
    // for this we need to return the vector by value
    return ConvertShapeToDim(GetTensorShape(name));
 }
+std::vector<Dim> RModel::GetDynamicTensorShape(const std::string & name) const {
+   if (auto f = fDynamicTensorInfos.find(name); f != fDynamicTensorInfos.end()) {
+      return f->second.shape;
+   }
+   if (auto f = fInputTensorInfos.find(name); f != fInputTensorInfos.end()) {
+      return f->second.shape;
+   }
+   // throw error if shape is not dynamic
+   if (!IsDynamicTensor(name))
+      throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the shape is requested is not dynamic");
 
-const ETensorType& RModel::GetTensorType(std::string name) const {
+   throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the shape is requested is not found");
+}
+
+ETensorType RModel::GetTensorType(std::string name) const {
     auto f = fReadyInputTensorInfos.find(name);
     if (f != fReadyInputTensorInfos.end()) {
         return f->second.type;
@@ -85,6 +108,10 @@ const ETensorType& RModel::GetTensorType(std::string name) const {
     if (f5 != fDynamicTensorInfos.end()){
       return f5->second.type;
     }
+    // case of shape tensor type is INT64
+    if (fShapeTensors.find(name) != fShapeTensors.end()){
+      return ETensorType::INT64;
+    }
 
     if (fIsSubGraph && fParentGraph)
       return fParentGraph->GetTensorType(name);
@@ -98,6 +125,7 @@ bool RModel::CheckIfTensorAlreadyExist(std::string tensor_name) {
     if (fInitializedTensors.find(tensor_name) != fInitializedTensors.end()) return true;
     if (fIntermediateTensorInfos.find(tensor_name) != fIntermediateTensorInfos.end()) return true;
     if (fDynamicTensorInfos.find(tensor_name) != fDynamicTensorInfos.end()) return true;
+    if (fShapeTensors.find(tensor_name) != fShapeTensors.end()) return true;
     if (fIsSubGraph && fParentGraph) return fParentGraph->CheckIfTensorAlreadyExist(tensor_name);
     return false;
 }
@@ -166,10 +194,27 @@ void RModel::AddConstantTensor(std::string tensor_name, ETensorType type, std::v
     tensor_name = UTILITY::Clean_name(tensor_name);
     //NB: own data
     if (CheckIfTensorAlreadyExist(tensor_name)) {
-        throw std::runtime_error("TMVA-SOFIE: initialized tensor with name " + tensor_name + " already exists \n");
+        throw std::runtime_error("TMVA-SOFIE: constant tensor with name " + tensor_name + " already exists \n");
     }
     InitializedTensor new_tensor {type, shape, data, true};   // add here flag to specify is a constant tensor
     fInitializedTensors[tensor_name] = new_tensor;
+}
+
+void RModel::AddShapeTensor(const std::string & name, const std::vector<Dim> & shape_values, bool scalar){
+   auto tensor_name = UTILITY::Clean_name(name);
+   if (fShapeTensors.count(tensor_name) != 0) {
+      throw std::runtime_error("TMVA-SOFIE: shape tensor with name " + tensor_name + " already exists \n");
+   }
+   fShapeTensors[tensor_name] = std::make_pair(shape_values, scalar);
+}
+
+bool RModel::IsShapeTensor(const std::string & tensor_name) const {
+   return fShapeTensors.count(tensor_name) != 0;
+}
+
+const std::vector<Dim> & RModel::GetShapeTensorValues(const std::string & tensor_name) const {
+   //if (!IsShapeTensor(tensor_name) ) return std::vector<Dim>{};
+   return fShapeTensors.at(tensor_name).first;
 }
 
 bool RModel::IsInitializedTensor(const std::string& tensorName) const {
@@ -183,9 +228,11 @@ bool RModel::IsConstantTensor(const std::string& tensorName) const {
     return itr->second.IsConstantTensor();
 }
 
+// dynamic tensors include also Dim input tensors
 bool RModel::IsDynamicTensor(const std::string& tensorName) const {
    std::string name = UTILITY::Clean_name(tensorName);
-   return fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end();
+   bool ret = fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end();
+   return (ret) ? true : IsDimInputTensor(tensorName);
 }
 bool RModel::IsDimInputTensor(const std::string& tensorName) const {
    std::string name = UTILITY::Clean_name(tensorName);
@@ -224,14 +271,18 @@ void RModel::AddDynamicTensor(std::string tensor_name, ETensorType type, std::ve
    // store shape parameter if not existing
    for (auto &d : shape) {
       if (d.isParam) {
-         if (fShapeParams.count(d.param) == 0) {
-            // case parameter is an expression of some other existing parameter, no need to
-            // register it
-            if (d.dim != size_t(-1)) {
-              fShapeParams[d.param] = std::to_string(d.dim);
-            }
+         if (d.dim != size_t(-1)) {
+            AddShapeParam(d.param, d.dim);
          }
       }
+   }
+}
+
+void RModel::AddShapeParam(const std::string & param, size_t default_value) {
+   if (fShapeParams.count(param) == 0) {
+      fShapeParams[param] = std::to_string(default_value);
+      // add also in the vector list (used to keep the order)
+      fDimShapeNames.push_back(param);
    }
 }
 
@@ -417,7 +468,7 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
       auto shape = ConvertShapeToInt(input.second.shape);
       if (verbose)
          std::cout << "converting input shape for " << input.first << " " << ConvertShapeToString(shape) << " from "
-            << ConvertDynamicShapeToString(input.second.shape) << std::endl;
+            << ConvertShapeToString(input.second.shape) << std::endl;
       if (!shape.empty()) {
          // case shape is defined (not parametric) we add the tensor in the fReadyInputTensorInfos map and
          // we remove the tensor from the fInputTensorInfo where th eold parametric shape was stored
@@ -431,8 +482,12 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
       else {
          // store the found parametric shape parameters
          for (auto &d : input.second.shape) {
-            if (d.isParam)
-               fShapeParams[d.param] = std::to_string(d.dim);
+            if (d.isParam) {
+               if (fShapeParams.count(d.param) == 0) {
+                  fDimShapeNames.push_back(d.param);
+                  fShapeParams[d.param] = std::to_string(d.dim);
+               }
+            }
          }
       }
    }
@@ -849,10 +904,10 @@ void RModel::GenerateSessionCode()
       }
       // add initialization of shape parameters
       // assume all parameters are of type size_t
-      if (!fShapeParams.empty()) {
-         for (auto &p : fShapeParams) {
+      if (!fDimShapeNames.empty()) {
+         for (auto &p : fDimShapeNames) {
             fGC += ",\n";
-            fGC += "        size_t " + p.first + " = " + p.second;
+            fGC += "        size_t " + p + " = " + fShapeParams[p];
          }
       }
       fGC += ") {\n";
@@ -898,7 +953,7 @@ void RModel::GenerateSessionCode()
       // larger size) in that case better to copy
       bool isIntermediate = fIntermediateTensorInfos.count(name) > 0;
       std::string n = isIntermediate ? std::to_string(ConvertShapeToLength(GetTensorShape(name)))
-                                     : ConvertDynamicShapeToLength(GetDynamicTensorShape(name));
+                                     : ConvertDimShapeToLength(GetDimTensorShape(name));
       fGC += SP + "FillOutput(tensor_" + name + ", output_tensor_" + name + ", " + n + ");\n";
    }
 
@@ -1238,9 +1293,9 @@ void RModel::PrintOutputTensors() {
     for (auto& it: fOutputTensorNames) {
         std::cout << "Tensor name: \"" << it << "\"\t";
         if (!IsDynamicTensor(it))
-          std::cout << "shape: " << ConvertShapeToString(GetTensorShape(it)) << std::endl;
-       else
-          std::cout << "shape: " << ConvertDynamicShapeToString(GetDynamicTensorShape(it)) << std::endl;
+           std::cout << "shape: " << ConvertShapeToString(GetTensorShape(it)) << std::endl;
+        else
+          std::cout << "shape: " << ConvertShapeToString(GetDynamicTensorShape(it)) << std::endl;
     }
     std::cout << "\n";
 }
