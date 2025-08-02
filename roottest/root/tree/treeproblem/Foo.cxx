@@ -1,7 +1,7 @@
 //____________________________________________________________________
-// 
-// 
-// 
+//
+//
+//
 
 //____________________________________________________________________
 //
@@ -10,23 +10,16 @@
 // $Date$
 // $Copyright: (C) 2002 BRAHMS Collaboration <brahmlib@rhic.bnl.gov>
 //
-#ifndef TREEPROBLEM_Foo
 #include "Foo.h"
-#endif
-#ifndef __IOSTREAM__
 #include <iostream>
-#endif
-
-using std::cout;
-using std::endl;
 
 //____________________________________________________________________
 ClassImp(Foo);
 
 //____________________________________________________________________
-void Foo::Print(Option_t* option) const 
+void Foo::Print(Option_t *) const
 {
-  cout << "Foo class: " << fFoo << endl;
+  std::cout << "Foo class: " << fFoo << std::endl;
 }
 
 //____________________________________________________________________
