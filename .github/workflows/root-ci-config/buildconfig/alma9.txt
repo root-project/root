@@ -1,3 +1,3 @@
 builtin_vdt=ON
-ccache=ON
+pythia8=ON
 tmva-sofie=ON
