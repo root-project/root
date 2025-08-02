@@ -1966,7 +1966,6 @@ bool CPyCppyy::name##Converter::ToMemory(                                    \
     return InstanceConverter::ToMemory(value, address, ctxt);                \
 }
 
-CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(TString, TString, Data, Length)
 CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(STLString, std::string, c_str, size)
 
 
@@ -3631,9 +3630,6 @@ public:
         gf[CCOMPLEX_D " ptr"] =             gf["std::complex<double> ptr"];
 
     // factories for special cases
-        gf["TString"] =                     (cf_t)+[](cdims_t) { return new TStringConverter{}; };
-        gf["TString&"] =                    gf["TString"];
-        gf["const TString&"] =              gf["TString"];
         gf["nullptr_t"] =                   (cf_t)+[](cdims_t) { static NullptrConverter c{};        return &c;};
         gf["const char*"] =                 (cf_t)+[](cdims_t) { return new CStringConverter{}; };
         gf["const signed char*"] =          gf["const char*"];
