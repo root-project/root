@@ -16,7 +16,8 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 
 #include <RVersion.h>
 #include <TBufferFile.h>

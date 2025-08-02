@@ -14,7 +14,7 @@
 #ifndef ROOT_RPageAllocator
 #define ROOT_RPageAllocator
 
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RPage.hxx>
 
 #include <cstddef>

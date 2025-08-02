@@ -16,7 +16,8 @@
 #include <ROOT/RFieldBase.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RPage.hxx>
 #include <string_view>
 

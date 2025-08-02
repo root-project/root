@@ -14,7 +14,7 @@
 #ifndef ROOT_RPage
 #define ROOT_RPage
 
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 
 #include <cassert>
 #include <cstddef>

@@ -19,7 +19,8 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMerger.hxx>
 #include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RPageStorage.hxx>

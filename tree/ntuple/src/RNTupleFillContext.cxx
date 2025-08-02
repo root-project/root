@@ -20,6 +20,7 @@
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
 #include <ROOT/RPageStorage.hxx>
 

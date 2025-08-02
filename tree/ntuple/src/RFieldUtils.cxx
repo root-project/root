@@ -7,7 +7,8 @@
 
 #include <ROOT/RField.hxx>
 #include <ROOT/RLogger.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 
 #include <TClass.h>
 #include <TClassEdit.h>

@@ -18,7 +18,7 @@
 #include <ROOT/RFieldBase.hxx>
 #include <ROOT/RFieldUtils.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RSpan.hxx>
 #include <string_view>
 #include <ROOT/TypeTraits.hxx>

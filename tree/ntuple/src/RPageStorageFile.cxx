@@ -24,7 +24,8 @@
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RRawFile.hxx>
 #include <ROOT/RRawFileTFile.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 
 #include <RVersion.h>
 #include <TDirectory.h>

@@ -13,7 +13,8 @@
 
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldVisitor.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RNTupleView.hxx>
 
 #include <cassert>

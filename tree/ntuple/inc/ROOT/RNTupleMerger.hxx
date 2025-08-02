@@ -18,7 +18,7 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/TTaskGroup.hxx>
 #include <Compression.h>

@@ -7,7 +7,8 @@
 // definitions are implementation details and should not be exposed to a public interface.
 
 #include <ROOT/RColumnElementBase.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RConfig.hxx>
 #include <ROOT/RError.hxx>
 #include <Byteswap.h>
