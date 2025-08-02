@@ -975,6 +975,9 @@ function(ROOT_LINKER_LIBRARY library)
 
   #----Installation details-------------------------------------------------------
   if(NOT ARG_TEST AND NOT ARG_NOINSTALL AND CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+    if(NOT MSVC)
+      ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH(${library} ${CMAKE_INSTALL_LIBDIR})
+    endif()
     if(ARG_CMAKENOEXPORT)
       install(TARGETS ${library} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
                                  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
@@ -1437,6 +1440,9 @@ function(ROOT_EXECUTABLE executable)
   endif()
   #----Installation details------------------------------------------------------
   if(NOT ARG_NOINSTALL AND CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+    if(NOT MSVC)
+      ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH(${executable} ${CMAKE_INSTALL_BINDIR})
+    endif()
     if(ARG_CMAKENOEXPORT)
       install(TARGETS ${executable} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
     else()
@@ -2072,6 +2078,32 @@ function(generateManual name input output)
 
   install(FILES ${output} DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 endfunction()
+
+#----------------------------------------------------------------------------
+# --- ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH(target install_dir)
+#
+# Sets the INSTALL_RPATH for a given target so that it can find the ROOT shared
+# libraries at runtime. The RPATH is set relative to the target's own location
+# using $ORIGIN (or @loader_path on macOS).
+#
+# Arguments:
+#   target       - The CMake target (e.g., a shared library or executable)
+#   install_dir  - The install subdirectory relative to CMAKE_INSTALL_PREFIX
+#----------------------------------------------------------------------------
+function(ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH target install_dir)
+  file(RELATIVE_PATH to_libdir "${CMAKE_INSTALL_PREFIX}/${install_dir}" "${CMAKE_INSTALL_FULL_LIBDIR}")
+
+  # New path
+  if(APPLE)
+    set(new_rpath "@loader_path/${to_libdir}")
+  else()
+    set(new_rpath "$ORIGIN/${to_libdir}")
+  endif()
+
+  # Append to existing RPATH
+  set_property(TARGET ${target} APPEND PROPERTY INSTALL_RPATH "${new_rpath}")
+endfunction()
+
 
 #-------------------------------------------------------------------------------
 #
