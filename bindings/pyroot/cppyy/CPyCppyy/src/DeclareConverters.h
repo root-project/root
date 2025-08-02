@@ -9,9 +9,6 @@
 #include <complex>
 #include <string>
 
-// ROOT
-#include "ROOT/RStringView.hxx"
-#include "TString.h"
 
 namespace CPyCppyy {
 
@@ -385,7 +382,6 @@ protected:                                                                   \
     strtype fBuffer;                                                         \
 }
 
-CPPYY_DECLARE_STRING_CONVERTER(TString, TString);
 CPPYY_DECLARE_STRING_CONVERTER(STLString, std::string);
 CPPYY_DECLARE_STRING_CONVERTER(STLWString, std::wstring);
 #if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
