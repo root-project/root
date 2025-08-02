@@ -51,7 +51,6 @@ set(sources
 add_library(CPyCppyy SHARED ${headers} ${sources})
 # Set the suffix to '.so' and the prefix to 'lib'
 set_target_properties(CPyCppyy PROPERTIES  ${ROOT_LIBRARY_PROPERTIES})
-target_link_libraries(CPyCppyy PRIVATE Core)
 if(MSVC)
   target_link_libraries(CPyCppyy PRIVATE cppyy_backend)
   target_link_libraries(CPyCppyy PUBLIC Python3::Python)
