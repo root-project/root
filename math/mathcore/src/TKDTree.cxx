@@ -115,9 +115,13 @@ in the 2 subtrees as close as possible. The following section gives more details
     kdtree->SetData(2, datatree->GetV3());
     kdtree->Build();
     }
+\endcode
+
     NOTE, that this implementation of kd-tree doesn't support adding new points after the tree has been built
     Of course, it's not necessary to use TTree::Draw(). What is important, is to have data columnwise.
     An example with regular arrays:
+
+\code{.cpp}
     {
     Int_t npoints = 100000;
     Int_t ndim = 3;
