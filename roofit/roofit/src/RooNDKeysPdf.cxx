@@ -67,9 +67,9 @@ using std::string, std::vector, std::pair, std::map;
 /// expression in observables that specifies the weight of each event.
 
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
-                           TString options, double rho, double nSigma, bool rotate, bool sortInput)
+                           RooStringView options, double rho, double nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
-     _rhoList("rhoList", "List of rho parameters", this), _options(options), _widthFactor(rho),
+     _rhoList("rhoList", "List of rho parameters", this), _options{options.c_str()}, _widthFactor(rho),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
 {
   _varList.addTyped<RooAbsReal>(varList);
@@ -81,24 +81,20 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
 /// Constructor
 
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const TH1 &hist,
-                           TString options, double rho, double nSigma, bool rotate, bool sortInput)
-   : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
-     _rhoList("rhoList", "List of rho parameters", this),
-     _options(options), _widthFactor(rho), _nSigma(nSigma), _rotate(rotate),
-     _sortInput(sortInput), _nAdpt(1)
+                           RooStringView options, double rho, double nSigma, bool rotate, bool sortInput)
+   : RooNDKeysPdf{name,     title, varList, *std::unique_ptr<RooDataSet>{createDatasetFromHist(varList, hist)},
+                  options,  rho,   nSigma,  rotate,
+                  sortInput}
 {
-   _varList.addTyped<RooAbsReal>(varList);
-
-   createPdf(true, *std::unique_ptr<RooDataSet>{createDatasetFromHist(varList, hist)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
-                           const TVectorD &rho, TString options, double nSigma, bool rotate, bool sortInput)
+                           const TVectorD &rho, RooStringView options, double nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
-     _rhoList("rhoList", "List of rho parameters", this), _options(options), _widthFactor(-1.0),
+     _rhoList("rhoList", "List of rho parameters", this), _options{options.c_str()}, _widthFactor(-1.0),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
 {
   _varList.addTyped<RooAbsReal>(varList);
@@ -127,9 +123,9 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
 /// please use the first constructor form.
 
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooDataSet &data,
-                           const RooArgList &rhoList, TString options, double nSigma, bool rotate, bool sortInput)
+                           const RooArgList &rhoList, RooStringView options, double nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
-     _rhoList("rhoList", "List of rho parameters", this), _options(options), _widthFactor(-1.0),
+     _rhoList("rhoList", "List of rho parameters", this), _options{options.c_str()}, _widthFactor(-1.0),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
 {
    _varList.addTyped<RooAbsReal>(varList);
@@ -165,10 +161,10 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
 /// Constructor
 
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const TH1 &hist,
-                           const RooArgList &rhoList, TString options, double nSigma, bool rotate, bool sortInput)
+                           const RooArgList &rhoList, RooStringView options, double nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
      _rhoList("rhoList", "List of rho parameters", this),
-     _options(options), _widthFactor(-1), _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput),
+     _options{options.c_str()}, _widthFactor(-1), _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput),
      _nAdpt(1)
 {
    _varList.addTyped<RooAbsReal>(varList);
@@ -227,9 +223,9 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, c
 /// please use the first constructor form.
 
 RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, RooAbsReal &y, const RooDataSet &data,
-                           TString options, double rho, double nSigma, bool rotate, bool sortInput)
+                           RooStringView options, double rho, double nSigma, bool rotate, bool sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
-     _rhoList("rhoList", "List of rho parameters", this), _options(options), _widthFactor(rho),
+     _rhoList("rhoList", "List of rho parameters", this), _options{options.c_str()}, _widthFactor(rho),
      _nSigma(nSigma), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
 {
    _varList.add(RooArgSet(x, y));
