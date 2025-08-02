@@ -373,7 +373,6 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - image: fedora41
           - image: fedora42
             overrides: ["CMAKE_CXX_STANDARD=23"]
           - image: fedora43
@@ -388,6 +387,9 @@ jobs:
           - image: ubuntu2404
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2504
+            overrides: ["CMAKE_CXX_STANDARD=23"]
+          - image: ubuntu2510
+            is_special: true
             overrides: ["CMAKE_CXX_STANDARD=23"]
           - image: debian125
             overrides: ["CMAKE_CXX_STANDARD=20", "dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
