@@ -135,26 +135,6 @@ endif()
 set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS CPyCppyy)
 set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS cppyy)
 
-if(NOT MSVC)
-  # Make sure that relative RUNPATH to main ROOT libraries is always correct.
-
-  file(RELATIVE_PATH pymoduledir_to_libdir_build ${localruntimedir} "${localruntimedir}")
-  file(RELATIVE_PATH pymoduledir_to_libdir_install ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_PYTHONDIR} "${CMAKE_INSTALL_FULL_LIBDIR}")
-
-  if(APPLE)
-    set_target_properties(${libname} PROPERTIES
-        BUILD_RPATH "@loader_path/${pymoduledir_to_libdir_build}"
-        INSTALL_RPATH "@loader_path/${pymoduledir_to_libdir_install}"
-    )
-  else()
-    set_target_properties(${libname} PROPERTIES
-        BUILD_RPATH "$ORIGIN/${pymoduledir_to_libdir_build}"
-        INSTALL_RPATH "$ORIGIN/${pymoduledir_to_libdir_install}"
-    )
-  endif()
-
-endif()
-
 # Install library
 install(TARGETS CPyCppyy EXPORT ${CMAKE_PROJECT_NAME}Exports
                             RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
@@ -166,7 +146,8 @@ install(TARGETS cppyy EXPORT ${CMAKE_PROJECT_NAME}Exports
                             LIBRARY DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries
                             ARCHIVE DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries)
 
-file(COPY ${headers} DESTINATION ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR}/CPyCppyy)
+file(COPY ${headers} DESTINATION ${CMAKE_BINARY_DIR}/include/CPyCppyy)
+
 install(FILES ${headers}
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CPyCppyy
         COMPONENT headers)
