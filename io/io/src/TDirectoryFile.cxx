@@ -153,7 +153,7 @@ void TDirectoryFile::InitDirectoryFile(TClass *cl)
          cl = IsA(); // NOLINT: silence clang-tidy warnings
       }
       TDirectory* motherdir = GetMotherDir();
-      fSeekParent  = f->GetSeekDir();
+      fSeekParent  = motherdir->GetSeekDir();
       Int_t nbytes = TDirectoryFile::Sizeof();
       TKey *key    = new TKey(fName,fTitle,cl,nbytes,motherdir);
       fNbytesName  = key->GetKeylen();
