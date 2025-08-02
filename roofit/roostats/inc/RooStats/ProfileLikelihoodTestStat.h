@@ -103,6 +103,8 @@ namespace RooStats {
   private:
 
      std::unique_ptr<RooFitResult> GetMinNLL();
+     bool minimizationNeeded(RooArgSet allParams) const;
+     std::pair<double, int> minimizeNLL(std::string const &prefix);
 
       RooAbsPdf* fPdf = nullptr;
       std::unique_ptr<RooAbsReal> fNll; //!

@@ -154,8 +154,8 @@ if ($?old_rootsys) then
                                  -e "s;^$old_rootsys/etc/notebook:;;g"   \
                                  -e "s;^$old_rootsys/etc/notebook${DOLLAR};;g"`
    endif
-   if ($?JUPYTER_CONFIG_DIR) then
-      setenv JUPYTER_CONFIG_DIR `set DOLLAR='$'; echo $JUPYTER_CONFIG_DIR | \
+   if ($?JUPYTER_CONFIG_PATH) then
+      setenv JUPYTER_CONFIG_PATH `set DOLLAR='$'; echo $JUPYTER_CONFIG_PATH | \
                              sed -e "s;:$old_rootsys/etc/notebook:;:;g" \
                                  -e "s;:$old_rootsys/etc/notebook${DOLLAR};;g"   \
                                  -e "s;^$old_rootsys/etc/notebook:;;g"   \
@@ -226,10 +226,10 @@ else
    setenv JUPYTER_PATH ${ROOTSYS}/etc/notebook
 endif
 
-if ($?JUPYTER_CONFIG_DIR) then
-   setenv JUPYTER_CONFIG_DIR ${ROOTSYS}/etc/notebook:$JUPYTER_CONFIG_DIR
+if ($?JUPYTER_CONFIG_PATH) then
+   setenv JUPYTER_CONFIG_PATH ${ROOTSYS}/etc/notebook:$JUPYTER_CONFIG_PATH
 else
-   setenv JUPYTER_CONFIG_DIR ${ROOTSYS}/etc/notebook
+   setenv JUPYTER_CONFIG_PATH ${ROOTSYS}/etc/notebook
 endif
 
 # Prevent Cppyy from checking the PCH (and avoid warning)
@@ -239,4 +239,3 @@ endif # if ("$thisroot" != "")
 
 set thisroot=
 set old_rootsys=
-

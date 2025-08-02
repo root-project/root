@@ -1868,6 +1868,18 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    std::set<std::string> exportedObjectNames;
    exportObjects(allpdfs, exportedObjectNames);
 
+   // export all toplevel functions
+   std::vector<RooAbsReal *> allfuncs;
+   for (auto &arg : _workspace.allFunctions()) {
+      if (!arg->hasClients()) {
+         if (auto *func = dynamic_cast<RooAbsReal *>(arg)) {
+            allfuncs.push_back(func);
+         }
+      }
+   }
+   sortByName(allfuncs);
+   exportObjects(allfuncs, exportedObjectNames);
+
    // export attributes of all objects
    for (RooAbsArg *arg : _workspace.components()) {
       exportAttributes(arg, n);
