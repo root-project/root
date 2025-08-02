@@ -78,6 +78,18 @@ static struct ForbidDiagnostics {
         return;
       }
 
+      if (level == kWarning && strcmp(location, "RIoUring") == 0 &&
+          strstr(msg, "io_uring is unexpectedly not available because:") != nullptr) {
+         std::cerr << "Warning in " << location << " " << msg << std::endl;
+         return;
+      }
+
+      if (level == kWarning && strcmp(location, "RRawFileUnix") == 0 &&
+          strcmp(msg, "io_uring setup failed, falling back to blocking I/O in ReadV") == 0) {
+         std::cerr << "Warning in " << location << " " << msg << std::endl;
+         return;
+      }
+
       FAIL() << "Received unexpected diagnostic of severity "
          << level
          << " at '" << location << "' reading '" << msg << "'.\n"
