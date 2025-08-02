@@ -5063,7 +5063,8 @@ static Bool_t ContainsTImage(TList *li)
 ///  generated in some loop one needs to detect the special cases of first
 ///  and last page and then munge the argument to Print() accordingly.
 ///
-///  The "[" and "]" can be used instead of "(" and ")".
+///  The "[" and "]" can be used instead of "(" and ")" to open / close without
+///  actual printing.
 ///
 /// Example:
 /// ~~~ {.cpp}
