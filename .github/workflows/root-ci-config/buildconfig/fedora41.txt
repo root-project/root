@@ -1,4 +1,0 @@
-builtin_zstd=ON
-builtin_zlib=ON
-builtin_vdt=On
-ccache=On
