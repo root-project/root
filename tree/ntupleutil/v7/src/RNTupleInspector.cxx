@@ -127,7 +127,7 @@ ROOT::Experimental::RNTupleInspector::CollectFieldTreeInfo(ROOT::DescriptorId_t 
 }
 
 std::vector<ROOT::DescriptorId_t>
-ROOT::Experimental::RNTupleInspector::GetColumnsByFieldId(ROOT::DescriptorId_t fieldId) const
+ROOT::Experimental::RNTupleInspector::GetAllColumnsOfField(ROOT::DescriptorId_t fieldId) const
 {
    std::vector<ROOT::DescriptorId_t> colIds;
    std::deque<ROOT::DescriptorId_t> fieldIdQueue{fieldId};
