@@ -202,6 +202,8 @@ extern "C" {
     int cppyy_is_destructor(cppyy_method_t);
     RPY_EXPORTED
     int cppyy_is_staticmethod(cppyy_method_t);
+    RPY_EXPORTED
+    int cppyy_is_explicit(cppyy_method_t);
 
     /* data member reflection information ------------------------------------- */
     RPY_EXPORTED
