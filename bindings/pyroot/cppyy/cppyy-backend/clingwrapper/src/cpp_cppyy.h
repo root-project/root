@@ -227,6 +227,8 @@ namespace Cppyy {
     bool IsDestructor(TCppMethod_t method);
     RPY_EXPORTED
     bool IsStaticMethod(TCppMethod_t method);
+    RPY_EXPORTED
+    bool IsExplicit(TCppMethod_t method);
 
 // data member reflection information ----------------------------------------
     RPY_EXPORTED
