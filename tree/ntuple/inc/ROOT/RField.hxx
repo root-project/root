@@ -482,7 +482,7 @@ protected:
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
 
-   void AfterConnectPageSource() final;
+   void BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
 
 public:
    static std::string TypeName() { return "TObject"; }
