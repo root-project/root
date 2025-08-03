@@ -247,6 +247,8 @@ namespace Cppyy {
     bool IsDestructor(TCppMethod_t method);
     CPPYY_IMPORT
     bool IsStaticMethod(TCppMethod_t method);
+    CPPYY_IMPORT
+    bool IsExplicit(TCppMethod_t method);
 
 // data member reflection information ----------------------------------------
     CPPYY_IMPORT
