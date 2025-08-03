@@ -495,9 +495,6 @@ protected:
    /// Called by ConnectPageSource() before connecting; derived classes may override this as appropriate
    virtual void BeforeConnectPageSource(ROOT::Internal::RPageSource &) {}
 
-   /// Called by ConnectPageSource() once connected; derived classes may override this as appropriate
-   virtual void AfterConnectPageSource() {}
-
    /// Factory method to resurrect a field from the stored on-disk type information.  This overload takes an already
    /// normalized type name and type alias.
    /// `desc` and `fieldId` must be passed if `options.fEmulateUnknownTypes` is true, otherwise they can be left blank.

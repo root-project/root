@@ -1043,10 +1043,19 @@ void ROOT::RField<TObject>::ReadInClusterImpl(RNTupleLocalIndex localIndex, void
    ReadTObject(to, uniqueID, bits);
 }
 
-void ROOT::RField<TObject>::AfterConnectPageSource()
+void ROOT::RField<TObject>::BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource)
 {
-   if (GetOnDiskTypeVersion() != 1) {
-      throw RException(R__FAIL("unsupported on-disk version of TObject: " + std::to_string(GetTypeVersion())));
+   if (GetOnDiskId() == kInvalidDescriptorId) {
+      // This can happen for added base classes or added members of class type
+      return;
+   }
+
+   const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
+   const ROOT::RNTupleDescriptor &desc = descriptorGuard.GetRef();
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   if (fieldDesc.GetTypeVersion() != 1) {
+      throw RException(
+         R__FAIL("unsupported on-disk version of TObject: " + std::to_string(fieldDesc.GetTypeVersion())));
    }
 }
 
