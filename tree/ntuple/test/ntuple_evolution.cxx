@@ -132,6 +132,7 @@ struct AddedMemberObject {
    AddedMemberObjectI fMember1{1};
    AddedMemberObjectI fMember2{2};
    AddedMemberObjectI fMember3{3};
+   TObject fMemberTObj;
 };
 )"));
 
@@ -145,11 +146,13 @@ struct AddedMemberObject {
    EXPECT_EVALUATE_EQ("ptrAddedMemberObject->fMember1.fInt", 1);
    EXPECT_EVALUATE_EQ("ptrAddedMemberObject->fMember2.fInt", 2);
    EXPECT_EVALUATE_EQ("ptrAddedMemberObject->fMember3.fInt", 3);
+   EXPECT_EVALUATE_EQ("ptrAddedMemberObject->fMemberTObj.GetUniqueID()", 0);
 
    reader->LoadEntry(1);
    EXPECT_EVALUATE_EQ("ptrAddedMemberObject->fMember1.fInt", 71);
    EXPECT_EVALUATE_EQ("ptrAddedMemberObject->fMember2.fInt", 2);
    EXPECT_EVALUATE_EQ("ptrAddedMemberObject->fMember3.fInt", 93);
+   EXPECT_EVALUATE_EQ("ptrAddedMemberObject->fMemberTObj.GetUniqueID()", 0);
 }
 
 TEST(RNTupleEvolution, RemovedMember)
