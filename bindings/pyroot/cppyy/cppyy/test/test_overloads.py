@@ -14,7 +14,7 @@ class TestOVERLOADS:
         cls.overloads = cppyy.load_reflection_info(cls.test_dct)
 
     def test01_class_based_overloads(self):
-        """Test functions overloaded on different C++ clases"""
+        """Test functions overloaded on different C++ classes"""
 
         import cppyy
         a_overload = cppyy.gbl.a_overload
@@ -347,6 +347,35 @@ class TestOVERLOADS:
         assert ns.myfunc2(ns.E()) == "E"
         assert ns.myfunc2(ns.D()) == "D"
 
+    def test12_explicit_constructor_in_implicit_conversion(self):
+        """Check that explicit constructors are not used in implicit conversion."""
+
+        import cppyy
+
+        cppyy.cppdef("""
+
+        struct Test12Class {
+          explicit Test12Class(int arg) {}
+        };
+
+        int test12_foo(Test12Class const&) { return 0; }
+        int test12_foo(bool) { return 1; }
+
+        int test12_bar(Test12Class const&) { return 0; }
+        int test12_bar(bool = true) { return 1; }
+
+        int call_test12_foo() { return test12_foo(1); }
+        int call_test12_bar() { return test12_bar(1); }
+
+        """)
+
+        # Check that the cppyy overload resolution figures out the right
+        # overload when calling the functions with an integer. In the past,
+        # this used to go wrong for the "bar" function with the default bool
+        # argument: cppyy went for the overload that takes the test class, even
+        # though implicit construction of the test class is forbidden.
+        assert cppyy.gbl.test12_foo(1) == cppyy.gbl.call_test12_foo()
+        assert cppyy.gbl.test12_bar(1) == cppyy.gbl.call_test12_bar()
 
 if __name__ == "__main__":
     exit(pytest.main(args=['-sv', '-ra', __file__]))
