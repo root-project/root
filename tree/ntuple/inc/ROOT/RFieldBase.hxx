@@ -492,7 +492,10 @@ protected:
    /// Add a new subfield to the list of nested fields
    void Attach(std::unique_ptr<RFieldBase> child);
 
-   /// Called by ConnectPageSource() before connecting; derived classes may override this as appropriate
+   /// Called by ConnectPageSource() before connecting; derived classes may override this as appropriate.
+   /// Used to check compatibility of the in-memory field and the on-disk field. In the process,
+   /// the field at hand or its subfields may be marked as "artifical", i.e. introduced by schema evolution
+   /// and not backed by on-disk information.
    virtual void BeforeConnectPageSource(ROOT::Internal::RPageSource &) {}
 
    /// Factory method to resurrect a field from the stored on-disk type information.  This overload takes an already
