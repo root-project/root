@@ -27,6 +27,14 @@ TEST(RNTupleAtlasDataVector, Read)
    // Ensure that RField<T>::TypeName() is not changing depending on the loaded dictionaries
    EXPECT_EQ(fullTypeName, ROOT::RField<AtlasLikeDataVector<CustomStruct>>::TypeName());
 
+   {
+      // Ensure that RValue::GetPtr() and RValue::GetRef() work.
+      ROOT::RField<AtlasLikeDataVector<CustomStruct>> f("f");
+      auto value = f.CreateValue();
+      EXPECT_NO_THROW(value.GetPtr<AtlasLikeDataVector<CustomStruct>>());
+      EXPECT_NO_THROW(value.GetRef<AtlasLikeDataVector<CustomStruct>>());
+   }
+
    // Ensure that we can access the field by typeid, short name, and long name and the
    // type name checks will be fine with it
    auto reader = ROOT::RNTupleReader::Open("ntpl", "test_ntuple_datavector.root");
