@@ -11,11 +11,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-import sys
-import cppyy
-
 from .. import pythonization
-
 from ._rooabscollection import RooAbsCollection
 from ._rooabsdata import RooAbsData
 from ._rooabspdf import RooAbsPdf
@@ -24,36 +20,33 @@ from ._rooabsreallvalue import RooAbsRealLValue
 from ._rooarglist import RooArgList
 from ._rooargset import RooArgSet
 from ._roocategory import RooCategory
-from ._roochi2var import RooChi2Var
 from ._roodatahist import RooDataHist
 from ._roodataset import RooDataSet
-from ._roodecays import RooDecay, RooBDecay, RooBCPGenDecay, RooBCPEffDecay, RooBMixDecay
+from ._roodecays import RooBCPEffDecay, RooBCPGenDecay, RooBDecay, RooBMixDecay, RooDecay
 from ._roogenfitstudy import RooGenFitStudy
 from ._rooglobalfunc import (
     DataError,
     FitOptions,
     Format,
     Frame,
-    MultiArg,
-    YVar,
-    ZVar,
-    Slice,
     Import,
     Link,
+    MultiArg,
+    Slice,
+    YVar,
+    ZVar,
     bindFunction,
 )
 from ._roojsonfactorywstool import RooJSONFactoryWSTool
 from ._roomcstudy import RooMCStudy
 from ._roomsgservice import RooMsgService
-from ._roonllvar import RooNLLVar
 from ._rooprodpdf import RooProdPdf
 from ._roorealvar import RooRealVar
 from ._roosimultaneous import RooSimultaneous
 from ._roosimwstool import RooSimWSTool
-from ._rooworkspace import RooWorkspace
-from ._roovectordatastore import RooVectorDataStore
 from ._roostats import SPlot
-
+from ._roovectordatastore import RooVectorDataStore
+from ._rooworkspace import RooWorkspace
 
 # list of python classes that are used to pythonize RooFit classes
 python_classes = [
@@ -69,7 +62,6 @@ python_classes = [
     RooBDecay,
     RooBMixDecay,
     RooCategory,
-    RooChi2Var,
     RooDataHist,
     RooDataSet,
     RooDecay,
@@ -77,14 +69,13 @@ python_classes = [
     RooJSONFactoryWSTool,
     RooMCStudy,
     RooMsgService,
-    RooNLLVar,
     RooProdPdf,
     RooRealVar,
     RooSimultaneous,
     RooSimWSTool,
     RooWorkspace,
     RooVectorDataStore,
-    SPlot
+    SPlot,
 ]
 
 # list of python functions that are used to pythonize RooGlobalFunc function in RooFit
@@ -122,7 +113,7 @@ def get_defined_attributes(klass, consider_base_classes=False):
         "__weakref__",
         "__firstlineno__",
         "__static_attributes__",
-        "__cpp_name__"
+        "__cpp_name__",
     ]
 
     if not consider_base_classes:
@@ -159,9 +150,6 @@ def rebind_attribute(to_class, from_class, func_name):
     """
     Bind the instance method `from_class.func_name` also to class `to_class`.
     """
-
-    import sys
-
     from_method = getattr(from_class, func_name)
 
     if is_classmethod(from_class, from_method):
@@ -189,7 +177,7 @@ def pythonize_roofit_class(klass, name):
     # klass: class to pythonize
     # name: string containing the name of the class
 
-    if not name in python_classes_dict:
+    if name not in python_classes_dict:
         return
 
     python_klass = python_classes_dict[name]
@@ -212,7 +200,7 @@ def pythonize_roofit_class(klass, name):
 
             if func_new.__doc__ is None:
                 func_new.__doc__ = func_orig.__doc__
-            elif not func_orig.__doc__ is None:
+            elif func_orig.__doc__ is not None:
                 python_docstring = func_new.__doc__
                 func_new.__doc__ = "Pythonization info\n"
                 func_new.__doc__ += "==============\n\n"
