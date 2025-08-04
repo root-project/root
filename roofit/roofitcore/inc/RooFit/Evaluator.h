@@ -64,7 +64,8 @@ private:
    bool _needToUpdateOutputSizes = false;
    RooFit::EvalContext _evalContextCPU;
    RooFit::EvalContext _evalContextCUDA;
-   std::vector<NodeInfo> _nodes; // the ordered computation graph
+   std::vector<NodeInfo> _nodes;                             // the ordered computation graph
+   std::unordered_map<TNamed const *, NodeInfo *> _nodesMap; // for quick lookup of nodes
    std::stack<std::unique_ptr<ChangeOperModeRAII>> _changeOperModeRAIIs;
 };
 
