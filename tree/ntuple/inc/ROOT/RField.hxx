@@ -352,12 +352,13 @@ protected:
 
    void ConstructValue(void *where) const final { new (where) T{0}; }
 
-public:
    RSimpleField(std::string_view name, std::string_view type)
       : RFieldBase(name, type, ROOT::ENTupleStructure::kLeaf, true /* isSimple */)
    {
       fTraits |= kTraitTrivialType;
    }
+
+public:
    RSimpleField(RSimpleField &&other) = default;
    RSimpleField &operator=(RSimpleField &&other) = default;
    ~RSimpleField() override = default;
