@@ -859,9 +859,14 @@ ROOT::RStreamerField::RStreamerField(std::string_view fieldName, TClass *classp)
       fTraits |= kTraitTriviallyDestructible;
 }
 
-void ROOT::RStreamerField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource)
+void ROOT::RStreamerField::BeforeConnectPageSource(ROOT::Internal::RPageSource &source)
 {
-   pageSource.RegisterStreamerInfos();
+   if (IsArtificial())
+      return;
+
+   // TODO(jblomer): proper type compatibility check akin to RClassField
+   EnsureCompatibleOnDiskField(source, kDiffTypeName | kDiffTypeVersion);
+   source.RegisterStreamerInfos();
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RStreamerField::CloneImpl(std::string_view newName) const
@@ -1041,22 +1046,6 @@ void ROOT::RField<TObject>::ReadInClusterImpl(RNTupleLocalIndex localIndex, void
    CallReadOn(*fSubfields[0], localIndex, &uniqueID);
    CallReadOn(*fSubfields[1], localIndex, &bits);
    ReadTObject(to, uniqueID, bits);
-}
-
-void ROOT::RField<TObject>::BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource)
-{
-   if (GetOnDiskId() == kInvalidDescriptorId) {
-      // This can happen for added base classes or added members of class type
-      return;
-   }
-
-   const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
-   const ROOT::RNTupleDescriptor &desc = descriptorGuard.GetRef();
-   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   if (fieldDesc.GetTypeVersion() != 1) {
-      throw RException(
-         R__FAIL("unsupported on-disk version of TObject: " + std::to_string(fieldDesc.GetTypeVersion())));
-   }
 }
 
 std::uint32_t ROOT::RField<TObject>::GetTypeVersion() const

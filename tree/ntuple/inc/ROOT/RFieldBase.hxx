@@ -510,8 +510,7 @@ protected:
    /// Used to check compatibility of the in-memory field and the on-disk field. In the process,
    /// the field at hand or its subfields may be marked as "artifical", i.e. introduced by schema evolution
    /// and not backed by on-disk information.
-   /// By default the implementation will fail if the on-disk ID is set and CompareOnDisk() reports any differences.
-   virtual void BeforeConnectPageSource(ROOT::Internal::RPageSource &) {}
+   virtual void BeforeConnectPageSource(ROOT::Internal::RPageSource &source);
 
    /// Returns a combination of kDiff... flags, indicating peroperties that are different between the field at hand
    /// and the given on-disk field
@@ -521,6 +520,9 @@ protected:
    void EnsureCompatibleOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits = 0) const;
    /// Convenience wrapper to be used from within BeforeConnectPageSource()
    void EnsureCompatibleOnDiskField(const ROOT::Internal::RPageSource &source, std::uint32_t ignoreBits = 0) const;
+   /// Many fields accept a range of type prefixes for schema evolution,
+   /// e.g. std::unique_ptr< and std::optional< for nullable fields
+   void EnsureCompatibleTypePrefix(const RFieldDescriptor &fieldDesc, const std::vector<std::string> &prefixes) const;
 
    /// Factory method to resurrect a field from the stored on-disk type information.  This overload takes an already
    /// normalized type name and type alias.

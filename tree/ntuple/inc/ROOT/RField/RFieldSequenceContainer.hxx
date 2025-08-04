@@ -71,6 +71,8 @@ protected:
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
 
+   void BeforeConnectPageSource(Internal::RPageSource &source) final;
+
 public:
    RArrayField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField, std::size_t arrayLength);
    RArrayField(RArrayField &&other) = default;
@@ -144,6 +146,11 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec) final;
+
+   void BeforeConnectPageSource(Internal::RPageSource &source) final
+   {
+      EnsureCompatibleOnDiskField(source, kDiffTypeName);
+   }
 
    void CommitClusterImpl() final { fNWritten = 0; }
 
@@ -235,6 +242,11 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
 
+   void BeforeConnectPageSource(Internal::RPageSource &source) final
+   {
+      EnsureCompatibleOnDiskField(source, kDiffTypeName);
+   }
+
    void CommitClusterImpl() final { fNWritten = 0; }
 
 public:
@@ -294,6 +306,8 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
 
+   void BeforeConnectPageSource(Internal::RPageSource &source) final;
+
    void CommitClusterImpl() final { fNWritten = 0; }
 
 public:
@@ -350,6 +364,8 @@ protected:
 
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
+
+   void BeforeConnectPageSource(Internal::RPageSource &source) final;
 
 public:
    /**
