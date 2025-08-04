@@ -16,6 +16,8 @@
 
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RCreateFieldOptions.hxx>
+#include <ROOT/RError.hxx>
+#include <ROOT/RFieldUtils.hxx>
 #include <ROOT/RNTupleRange.hxx>
 #include <ROOT/RNTupleTypes.hxx>
 
@@ -26,6 +28,8 @@
 #include <new>
 #include <string>
 #include <string_view>
+#include <typeinfo>
+#include <type_traits>
 #include <vector>
 
 namespace ROOT {
@@ -706,6 +710,8 @@ private:
    RFieldBase *fField = nullptr;  ///< The field that created the RValue
    /// Set by Bind() or by RFieldBase::CreateValue(), RFieldBase::SplitValue() or RFieldBase::BindValue()
    std::shared_ptr<void> fObjPtr;
+   mutable const std::type_info *fTypeInfo = nullptr;
+
    RValue(RFieldBase *field, std::shared_ptr<void> objPtr) : fField(field), fObjPtr(objPtr) {}
 
 public:
@@ -716,6 +722,26 @@ public:
    ~RValue() = default;
 
 private:
+   template <typename T>
+   void EnsureMatchingType() const
+   {
+      if constexpr (!std::is_void_v<T>) {
+         const std::type_info &ti = typeid(T);
+         // Fast path: if we had a matching type before, try comparing the type_info's. This may still fail in case the
+         // type has a suppressed template argument that may change the typeid.
+         if (fTypeInfo != nullptr && *fTypeInfo == ti) {
+            return;
+         }
+         std::string renormalizedTypeName = Internal::GetRenormalizedTypeName(ti);
+         if (Internal::IsMatchingFieldType(fField->GetTypeName(), renormalizedTypeName, ti)) {
+            fTypeInfo = &ti;
+            return;
+         }
+         throw RException(R__FAIL("type mismatch for field \"" + fField->GetFieldName() + "\": expected " +
+                                  fField->GetTypeName() + ", got " + renormalizedTypeName));
+      }
+   }
+
    std::size_t Append() { return fField->Append(fObjPtr.get()); }
 
 public:
@@ -730,12 +756,14 @@ public:
    template <typename T>
    std::shared_ptr<T> GetPtr() const
    {
+      EnsureMatchingType<T>();
       return std::static_pointer_cast<T>(fObjPtr);
    }
 
    template <typename T>
    const T &GetRef() const
    {
+      EnsureMatchingType<T>();
       return *static_cast<T *>(fObjPtr.get());
    }
 

@@ -57,6 +57,11 @@ ERNTupleSerializationMode GetRNTupleSerializationMode(TClass *cl);
 /// TODO(jblomer): Try to merge with TClassEdit::TSplitType
 std::vector<std::string> TokenizeTypeList(std::string_view templateType, std::size_t maxArgs = 0);
 
+/// Helper to check if a given actualTypeName matches the expectedTypeName, either from RField<T>::TypeName() or
+/// GetRenormalizedTypeName(). Usually, this check can be done with a simple string comparison. The failure case,
+/// however, needs to additionally check for ROOT-specific special cases.
+bool IsMatchingFieldType(std::string_view actualTypeName, std::string_view expectedTypeName, const std::type_info &ti);
+
 } // namespace Internal
 } // namespace ROOT
 

@@ -758,6 +758,14 @@ TEST(RNTuple, RValue)
    v3.EmplaceNew();
    EXPECT_NE(p.get(), v3.GetPtr<void>().get());
 
+   // The templated API checks the type.
+   EXPECT_THROW(v1.GetPtr<float>(), ROOT::RException);
+   EXPECT_THROW(v1.GetRef<float>(), ROOT::RException);
+   EXPECT_THROW(v2.GetPtr<std::vector<char>>(), ROOT::RException);
+   EXPECT_THROW(v2.GetRef<std::vector<char>>(), ROOT::RException);
+   EXPECT_THROW(v3.GetPtr<std::variant<float>>(), ROOT::RException);
+   EXPECT_THROW(v3.GetRef<std::variant<float>>(), ROOT::RException);
+
    // Destruct fields to check if the deleters work without the fields
    f1 = nullptr;
    f2 = nullptr;

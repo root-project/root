@@ -701,3 +701,16 @@ std::vector<std::string> ROOT::Internal::TokenizeTypeList(std::string_view templ
    result.push_back(std::string(typeBegin, typeCursor - typeBegin));
    return result;
 }
+
+bool ROOT::Internal::IsMatchingFieldType(std::string_view actualTypeName, std::string_view expectedTypeName,
+                                         const std::type_info &ti)
+{
+   // Fast path: the caller provided the expected type name (from RField<T>::TypeName())
+   if (actualTypeName == expectedTypeName)
+      return true;
+
+   // The type name may be equal to the alternative, short type name issued by Meta. This is a rare case used, e.g.,
+   // by the ATLAS DataVector class to hide a default template parameter from the on-disk type name.
+   // Thus, we check again using first ROOT Meta normalization followed by RNTuple re-normalization.
+   return (actualTypeName == ROOT::Internal::GetRenormalizedTypeName(ROOT::Internal::GetDemangledTypeName(ti)));
+}
