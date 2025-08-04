@@ -33,7 +33,7 @@ Use $ROOTSYS/bin/hadd to merge many histogram files
 #include "TTree.h"
 #include "TKey.h"
 #include "TSystem.h"
-#include "Riostream.h"
+#include <iostream>
 
 TList *FileList;
 TFile *Target;
@@ -62,11 +62,11 @@ void runtreeCloneTest2(const char* outFile = "pion_merged.root", //here's where 
       if(fileName.EndsWith(".root") && fileName.BeginsWith(inputFileBeginsWith)) {
          auto fullName = gSystem->ConcatFileName(inputDir,fileName);
          FileList->Add( TFile::Open(fullName));
-         cout << "  Adding " << fullName << endl;
+         std::cout << "  Adding " << fullName << std::endl;
          delete [] fullName;
       }
    }
-   cout <<"\n\nDone collecting files. begin merging\n"<<endl;
+   std::cout <<"\n\nDone collecting files. begin merging\n" << std::endl;
    MergeRootfile( Target, FileList );
 }
 
@@ -139,7 +139,7 @@ void MergeRootfile( TDirectory *target, TList *sourcelist )
       } else if ( obj->IsA()->InheritsFrom( "TDirectory" ) ) {
          // it's a subdirectory
 
-         cout << "Found subdirectory " << obj->GetName() << endl;
+         std::cout << "Found subdirectory " << obj->GetName() << std::endl;
 
          // create a new subdir of same name and title in the target file
          target->cd();
@@ -153,8 +153,8 @@ void MergeRootfile( TDirectory *target, TList *sourcelist )
       } else {
 
          // object is of no type that we know or can handle
-         cout << "Unknown object type, name: "
-         << obj->GetName() << " title: " << obj->GetTitle() << endl;
+         std::cout << "Unknown object type, name: "
+         << obj->GetName() << " title: " << obj->GetTitle() << std::endl;
       }
 
       // now write the merged histogram (which is "in" obj) to the target file

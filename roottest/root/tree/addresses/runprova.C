@@ -1,9 +1,5 @@
 #include "TROOT.h"
 #include "TMinuit.h"
-#include <stdio.h>
-#include <fcntl.h>
-#include <iostream>
-#include <fstream>
 
 int runprova()
 {

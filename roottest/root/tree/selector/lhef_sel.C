@@ -1,5 +1,5 @@
 #include "lhef_sel_gen.C"
-#include <stdio.h>
+#include <cstdio>
 
 class lhef_sel : public lhef_sel_gen {
    UInt_t nullValues = 0;
@@ -24,7 +24,7 @@ public:
       return true;
    }
 
-   virtual void    Terminate() {
+   virtual void Terminate() {
       fprintf(stdout,"all=%u zero=%u low=%u high=%u\n",allValues,nullValues,lowValues,highValues);
    }
 };

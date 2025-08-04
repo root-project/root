@@ -1,5 +1,5 @@
 #include "lhef_mc_gen.C"
-#include <stdio.h>
+#include <cstdio>
 
 class lhef_mc : public lhef_mc_gen {
    UInt_t nullValues = 0;

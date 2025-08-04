@@ -1,6 +1,6 @@
 #include "TFile.h"
 #include "TChain.h"
-#include "Riostream.h"
+#include <iostream>
 
 bool test(TTree*);
 
@@ -36,7 +36,7 @@ int runindex64(){
     tree->Fill();
   }
   tree->Write();
-  
+
   bool pass = true;
   cout<<"Tree BuildIndex returns "<<tree->BuildIndex("run", "event")<<endl;
   for (size_t i=0; i<sizeof(events)/sizeof(*events); i++) {
@@ -66,7 +66,7 @@ int runindex64(){
   delete chain;
 
   return result;
-  
+
 }
 
 bool test(TTree *chain)

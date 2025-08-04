@@ -11,7 +11,7 @@
 #include <TObjString.h>
 #include <TMap.h>
 #include <TSystem.h>
-#include <Riostream.h>
+#include <iostream>
 #endif
 
 class TMyPar : public TObject
@@ -45,7 +45,7 @@ public:
 };
 
 ClassImp(TMyPar)
-  
+
 //______________________________________________________________________________
 TMyPar::TMyPar()
 {
@@ -100,7 +100,7 @@ public:
         Int_t       fCalcVarRed;
 
         TMap       *fSmoothMonoM;
-  
+
  public:
 
   TMyData();
@@ -110,14 +110,14 @@ public:
 };
 
 ClassImp(TMyData)
-  
+
 //______________________________________________________________________________
 TMyData::TMyData()
 {
   fSDay         = 0;
   fEDay         = 0;
 
-  fCoeffDate    = 0; 
+  fCoeffDate    = 0;
   fNrSrcs       = 0;
 
   fDotsHalfLife = 0;
@@ -135,7 +135,7 @@ TMyData::TMyData()
 //______________________________________________________________________________
 TMyData::~TMyData()
 {
-   cout << "Executing TMyData::~TMyData()\n"; 
+   std::cout << "Executing TMyData::~TMyData()\n";
    if (fCommL)       { delete fCommL;       fCommL       = 0; }
    if (fPnts)        { delete [] fPnts;     fPnts        = 0; }
    if (fSmoothMonoM) { fSmoothMonoM->DeleteAll(); delete fSmoothMonoM; fSmoothMonoM = 0; }
@@ -144,20 +144,20 @@ TMyData::~TMyData()
 void runmemleak(bool showdetails = false)
 {
   TFile f("memleak.root");
-  
+
   TTree *t = (TTree *)f.Get("MonoData");
   t->Print();
   //t->SetBranchStatus("fSmoothMonoM",0);
-  
-  TMyData *data = 0;
-  
+
+  TMyData *data = nullptr;
+
   TBranch *br = t->GetBranch("mono");
   br->SetAddress(&data);
   br->SetAutoDelete(kTRUE);
 
   Info("memleak","branch has %lld entries",br->GetEntries());
 
-  
+
   br->GetEntry(0);
   if (data->fSmoothMonoM)
   {
@@ -170,7 +170,7 @@ void runmemleak(bool showdetails = false)
       Info("memleak","fSmoothMonoM->par(%s)->fSmoothL->IsOwner(): %d",keyStr.Data(),par->fSmoothL->IsOwner());
     }
   }
-  
+
   ProcInfo_t *info = new ProcInfo_t();
   for (Int_t i = 0; i < 50; i++)
   {
@@ -184,7 +184,7 @@ void runmemleak(bool showdetails = false)
   }
 
   delete info;
-  delete data; data = 0;
+  delete data; data = nullptr;
 
   f.Close();
 }

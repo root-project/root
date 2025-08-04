@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////
-//   This class has been automatically generated 
+//   This class has been automatically generated
 //     (Wed Sep 25 17:31:23 2002 by ROOT version3.03/09)
 //   from TTree T1/An example of a ROOT tree
 //   found on file: Event1.root
@@ -14,10 +14,8 @@
 #include <TFile.h>
 #include <TSelector.h>
 #include <TRef.h>
-#ifndef __CINT__
-#include <Riostream.h>
-#endif
-#include <stdio.h>
+#include <iostream>
+#include <cstdio>
 
 class selabort : public TSelector {
    public :
@@ -52,7 +50,7 @@ class selabort : public TSelector {
 
 //Extra members
    TString MyNameIs;
-   
+
    selabort(TTree * /* tree */=0) { }
    ~selabort() override { }
    Int_t   Version() const override { return 2; }
@@ -67,7 +65,7 @@ class selabort : public TSelector {
    void    SetInputList(TList *input) override {fInput = input;}
    TList  *GetOutputList() const override { return fOutput; }
    void    Terminate() override;
-   
+
    //ClassDefOverride(selabort,3);
 };
 

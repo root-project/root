@@ -1,9 +1,9 @@
 #include <TSystem.h>
 #include <TFile.h>
 #include <TTree.h>
-#include "Riostream.h"
+#include <iostream>
 
-void clone(char *filename, char *tag) 
+void clone(char *filename, char *tag)
 {
   TString opt(tag);
   opt.Prepend("fast,");
@@ -14,7 +14,7 @@ void clone(char *filename, char *tag)
   TFile *f0 = TFile::Open(filename);
   TTree *from = (TTree*) f0->Get("T");
   TFile *f1 = new TFile("clone.root","RECREATE");
-  cerr << "The option are: " << opt << endl;;
+  std::cerr << "The option are: " << opt << std::endl;
   from->CloneTree(-1,opt);
   f1->Write();
   delete f0; delete f1;

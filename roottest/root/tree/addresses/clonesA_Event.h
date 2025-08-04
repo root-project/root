@@ -1,6 +1,6 @@
 #include "TTree.h"
-#include "Riostream.h"
 #include "TClonesArray.h"
+#include <iostream>
 
 class TUsrHit:public TObject {
  public:
@@ -24,17 +24,17 @@ class TUsrHitBuffer:public TObject {
    // TUsrHitBuffer(){};
    TUsrHitBuffer(Int_t maxent = 10);
    virtual ~TUsrHitBuffer() {
-      cerr << "~~~~~~dtor TUsrHitBuffer " << this << endl;
+      std::cerr << "~~~~~~dtor TUsrHitBuffer " << this << std::endl;
       delete fHits;
    }
-   
+
 
    TUsrHit *AddHit(Int_t ev);
    Int_t GetBufSize() { return fHits->GetSize();}
    Int_t GetNofHits() { return fNofHits; }
-   Int_t GetNofEntries() { return fNofEntries; } 
+   Int_t GetNofEntries() { return fNofEntries; }
    TClonesArray *GetCA() { return (fHits);}
-   void Clear(Option_t *opt="");
+   void Clear(Option_t *opt="") override;
 
  protected:
 
@@ -50,9 +50,9 @@ class TUsrHitBuffer:public TObject {
 class TMrbSubevent_Caen:public TObject {
 
  public:
-   TMrbSubevent_Caen() { cerr << "ctor TMrbSubevent_Caen: " << this << endl;}
+   TMrbSubevent_Caen() { std::cerr << "ctor TMrbSubevent_Caen: " << this << std::endl;}
    virtual ~TMrbSubevent_Caen() {}
-   void Clear(Option_t* /* opt */ ="") {fHitBuffer.Clear();};
+   void Clear(Option_t* /* opt */ ="") override {fHitBuffer.Clear();};
 
    Int_t           GetTimeStamp() {return fTimeStamp;}
    TUsrHitBuffer * GetHitBuffer() {return &fHitBuffer;};
@@ -66,10 +66,10 @@ class TMrbSubevent_Caen:public TObject {
 
 class TMrbSubevent_Nice {
  public:
-   TMrbSubevent_Nice() { cerr << "ctor TMrbSubevent_Nice: " << this << endl;}
+   TMrbSubevent_Nice() { std::cerr << "ctor TMrbSubevent_Nice: " << this << std::endl;}
    virtual ~TMrbSubevent_Nice() {}
-   void Clear(Option_t* /* opt */ ="") {};
-   
+   void Clear(Option_t* /* opt */ ="") {}
+
    Int_t GetNiceTrig() { return fNiceTrig; }
 
  protected:
@@ -81,14 +81,14 @@ class TMrbSubevent_Nice {
 
 class TUsrSevtData1 : public TMrbSubevent_Caen, public TMrbSubevent_Nice {
  public:
-   TUsrSevtData1() { cerr << "ctor TUsrSevtData1 " << this << endl; SetEvent(0);}
+   TUsrSevtData1() { std::cerr << "ctor TUsrSevtData1 " << this << std::endl; SetEvent(0);}
 
    virtual ~TUsrSevtData1() {}
-   void Clear(Option_t *opt="") {TMrbSubevent_Caen::Clear(opt); TMrbSubevent_Nice::Clear(opt);}
+   void Clear(Option_t *opt="") override {TMrbSubevent_Caen::Clear(opt); TMrbSubevent_Nice::Clear(opt);}
 
    void  SetEvent(Int_t ev);
    Int_t GetPileup() {return fPileup; };
-   
+
  protected:
    TString fSevtName;           // subevent name
    Int_t fMer;                  // data2.mer
@@ -105,7 +105,7 @@ class TUsrSevtData2:public TMrbSubevent_Caen {
    virtual ~TUsrSevtData2() {}
    void  SetEvent(Int_t ev);
    Int_t GetPileup() {return fPileup; };
-   
+
  protected:
    TString fSevtName;           // subevent name
    Int_t fMer;                  // data2.mer
