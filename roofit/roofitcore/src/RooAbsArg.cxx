@@ -562,7 +562,7 @@ void RooAbsArg::addParameters(RooAbsCollection &params, const RooArgSet *nset, b
    std::sort(branchList.begin(), branchList.end());
    const auto last = std::unique(branchList.begin(), branchList.end());
    for (auto serverIt = branchList.begin(); serverIt < last; ++serverIt) {
-      (*serverIt)->addParameters(nodeParamServers, nset);
+      (*serverIt)->addParameters(nodeParamServers, nset, stripDisconnected);
    }
 
    // Allow pdf to strip parameters from list
