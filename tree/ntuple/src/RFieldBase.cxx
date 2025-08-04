@@ -14,6 +14,7 @@
 #include <TClassEdit.h>
 #include <TEnum.h>
 
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -1029,6 +1030,61 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
       column->ConnectPageSource(fOnDiskId, pageSource);
 
    fState = EState::kConnectedToSource;
+}
+
+void ROOT::RFieldBase::EnsureCompatibleOnDiskField(const ROOT::Internal::RPageSource &source,
+                                                   std::uint32_t ignoreBits) const
+{
+   // For computed fields added by schema evolution (e.g., new class member, new base class,
+   // field targeted by I/O customization rule), ignore on-disk information.
+   if (!fIsArtificial) {
+      const auto descriptorGuard = source.GetSharedDescriptorGuard();
+      EnsureCompatibleOnDiskField(descriptorGuard->GetFieldDescriptor(GetOnDiskId()), ignoreBits);
+   }
+}
+
+void ROOT::RFieldBase::EnsureCompatibleOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits) const
+{
+   const std::uint32_t diffBits = CompareOnDiskField(fieldDesc) & ~ignoreBits;
+   if (diffBits == 0)
+      return;
+
+   std::ostringstream errMsg;
+   errMsg << "in-memory field " << GetQualifiedFieldName() << " of type " << GetTypeName() << " is incompatible "
+          << "with on-disk field " << fieldDesc.GetFieldName() << ":";
+   if (diffBits & kDiffFieldVersion) {
+      errMsg << " field version " << GetFieldVersion() << " vs. " << fieldDesc.GetFieldVersion() << ";";
+   }
+   if (diffBits & kDiffTypeVersion) {
+      errMsg << " type version " << GetTypeVersion() << " vs. " << fieldDesc.GetTypeVersion() << ";";
+   }
+   if (diffBits & kDiffStructure) {
+      errMsg << " structural role " << GetStructure() << " vs. " << fieldDesc.GetStructure() << ";";
+   }
+   if (diffBits & kDiffTypeName) {
+      errMsg << " incompatible on-disk type name " << fieldDesc.GetTypeName() << ";";
+   }
+   if (diffBits & kDiffNRepetitions) {
+      errMsg << " repetition count " << GetNRepetitions() << " vs. " << fieldDesc.GetNRepetitions() << ";";
+   }
+   throw RException(R__FAIL(errMsg.str()));
+}
+
+std::uint32_t ROOT::RFieldBase::CompareOnDiskField(const RFieldDescriptor &fieldDesc) const
+{
+   std::uint32_t diffBits = 0;
+   if (GetFieldVersion() != fieldDesc.GetFieldVersion())
+      diffBits |= kDiffFieldVersion;
+   if (GetTypeVersion() != fieldDesc.GetTypeVersion())
+      diffBits |= kDiffTypeVersion;
+   if (GetStructure() != fieldDesc.GetStructure())
+      diffBits |= kDiffStructure;
+   if (GetTypeName() != fieldDesc.GetTypeName())
+      diffBits |= kDiffTypeName;
+   if (GetNRepetitions() != fieldDesc.GetNRepetitions())
+      diffBits |= kDiffNRepetitions;
+
+   return diffBits;
 }
 
 void ROOT::RFieldBase::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
