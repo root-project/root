@@ -80,4 +80,6 @@ class AllReconstructions {
 
 }; // AllReconostructions
 
+extern void save();
+
 #endif // __TESTOBJ_H
