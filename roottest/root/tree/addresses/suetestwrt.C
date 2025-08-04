@@ -2,10 +2,10 @@
 // usage: root[0] .x testwrt.C
 
 #ifndef ClingWorkAroundMissingDynamicScope
-   gSystem -> Load("sueloader_C");
-   gSystem -> Load("ConfigRecord_cxx");
+   // gSystem -> Load("sueloader_C");
+   // gSystem -> Load("ConfigRecord_cxx");
 #endif
-   
+
 auto f = new TFile("configtest.root","RECREATE");
 auto t = new TTree("Config","Config Test");
 
@@ -17,7 +17,7 @@ for ( int i = 0; i < 5; i++ ) {
   Context context(1,2,3);
   RecHeader hdr(context);
   record = new ConfigRecord(hdr);
-  t->SetBranchAddress("ConfigRecord",&record); 
+  t->SetBranchAddress("ConfigRecord",&record);
   Int_t nbytes = t -> Fill();
   cout << "Filled entry " << i << " with " << nbytes << " bytes." << endl;
   record -> Print();
