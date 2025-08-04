@@ -15,9 +15,6 @@ ROOTTEST_ADD_TEST(objArrayTest
                   OUTREF objArrayTest.ref
                   FIXTURES_REQUIRED root-tree-array-TestObj-fixture)
 
-ROOTTEST_COMPILE_MACRO(save.C
-                       FIXTURES_SETUP root-tree-array-save-fixture)
-
 ROOTTEST_ADD_TEST(objArrayTest2
                   MACRO run2.C
                   OUTREF objArrayTest2.ref
