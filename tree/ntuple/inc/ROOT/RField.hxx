@@ -297,7 +297,7 @@ public:
 template <typename T>
 class RField<T, typename std::enable_if<std::is_enum_v<T>>::type> final : public REnumField {
 public:
-   static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
+   static std::string TypeName() { return ROOT::Internal::GetRenormalizedTypeName(typeid(T)); }
    RField(std::string_view name) : REnumField(name, TypeName()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
