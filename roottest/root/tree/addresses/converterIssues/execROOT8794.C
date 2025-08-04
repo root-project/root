@@ -1,4 +1,4 @@
-R__LOAD_LIBRARY(ExtHit/ExtHit)
+R__LOAD_LIBRARY(ExtHit)
 
 void execROOT8794() {
 
@@ -53,5 +53,5 @@ void trim() {
    TFile *outfile = TFile::Open("b2.root","RECREATE");
    TTree *outtree = tree->CloneTree(-1);
    outfile->Write();
-   
+
 }
