@@ -58,40 +58,53 @@ ROOTTEST_ADD_TEST(embread
                   FIXTURES_REQUIRED root-tree-addresses-Embedded_load-fixture
                                     root-tree-addresses-embwrite-fixture)
 
-ROOTTEST_COMPILE_MACRO(relations_load.C
-                       FIXTURES_SETUP root-tree-addresses-relations_load-fixture)
+# disable on Windows because relations_write.C compilation problem
+# in any case test cannot be run on Windows because of sed usage
+if(NOT MSVC OR win_broken_tests)
+  ROOTTEST_COMPILE_MACRO(relations_load.C
+                         FIXTURES_SETUP root-tree-addresses-relations_load-fixture)
 
-ROOTTEST_COMPILE_MACRO(relations_read.C
-                       FIXTURES_SETUP root-tree-addresses-relations_read-fixture)
+  ROOTTEST_COMPILE_MACRO(relations_read.C
+                         FIXTURES_SETUP root-tree-addresses-relations_read-fixture)
 
-ROOTTEST_COMPILE_MACRO(relations_write.C
-                       FIXTURES_SETUP root-tree-addresses-relations_write-fixture)
+  ROOTTEST_COMPILE_MACRO(relations_write.C
+                         FIXTURES_SETUP root-tree-addresses-relations_write-fixture)
 
-SET(_relations_opts -e "(void)gROOT->ProcessLine(\".L relations_load.C+\")"
-                    -e "(void)gROOT->ProcessLine(\".L relations_write.C+\")"
-                    -e "(void)gROOT->ProcessLine(\".L relations_read.C+\")")
+  SET(_relations_opts -e "(void)gROOT->ProcessLine(\".L relations_load.C+\")"
+                      -e "(void)gROOT->ProcessLine(\".L relations_write.C+\")"
+                      -e "(void)gROOT->ProcessLine(\".L relations_read.C+\")")
 
-ROOTTEST_ADD_TEST(relations
-                  MACRO relationsRun.C
-                  ROOTEXE_OPTS ${_relations_opts}
-                  OUTREF relationsTest.ref
-                  OUTCNVCMD sed -e "s|File  Size =.*\\*||g"
-                  FIXTURES_REQUIRED root-tree-addresses-relations_load-fixture
-                                    root-tree-addresses-relations_read-fixture
-                                    root-tree-addresses-relations_write-fixture)
+  ROOTTEST_ADD_TEST(relations
+                    MACRO relationsRun.C
+                    ROOTEXE_OPTS ${_relations_opts}
+                    OUTREF relationsTest.ref
+                    OUTCNVCMD sed -e "s|File  Size =.*\\*||g"
+                    FIXTURES_REQUIRED root-tree-addresses-relations_load-fixture
+                                      root-tree-addresses-relations_read-fixture
+                                      root-tree-addresses-relations_write-fixture)
+endif()
 
-ROOTTEST_ADD_TEST(merging
-                  MACRO runmerging.C
-                  OUTREF merging.ref)
+# disable on Windows because of problem with running same macro twice
+if(NOT MSVC OR win_broken_tests)
+  ROOTTEST_ADD_TEST(merging
+                    MACRO runmerging.C
+                    OUTREF merging.ref)
+endif()
 
-ROOTTEST_COMPILE_MACRO(iobug.C
-                       FIXTURES_SETUP root-tree-addresses-iobug-fixture)
+# disable on Windows because of utils.cc usage which has some troubles with windows.h
+if(NOT MSVC OR win_broken_tests)
+  ROOTTEST_COMPILE_MACRO(iobug.C
+                         FIXTURES_SETUP root-tree-addresses-iobug-fixture)
 
-ROOTTEST_ADD_TEST(iobug
-                  MACRO runiobug.C
-                  ROOTEXE_OPTS -e "(void)gROOT->ProcessLine(\".L ${CMAKE_SOURCE_DIR}/roottest/scripts/utils.cc+\")"
-                  OUTREF iobug.ref
-                  FIXTURES_REQUIRED root-tree-addresses-iobug-fixture)
+  ROOTTEST_COMPILE_MACRO(${CMAKE_SOURCE_DIR}/roottest/scripts/utils.cc
+                         FIXTURES_SETUP root-tree-addresses-utils-fixture)
+
+  ROOTTEST_ADD_TEST(iobug
+                    MACRO runiobug.C
+                    ROOTEXE_OPTS -e "(void)gSystem->Load(\"utils_cc\")"
+                    OUTREF iobug.ref
+                    FIXTURES_REQUIRED root-tree-addresses-iobug-fixture root-tree-addresses-utils-fixture)
+endif()
 
 ROOTTEST_COMPILE_MACRO(userClass.C
                        FIXTURES_SETUP root-tree-addresses-userClass-fixture)
@@ -136,32 +149,36 @@ ROOTTEST_ADD_TEST(ursula
                   COPY_TO_BUILDDIR cmsursula.root
                   OUTREF ursula.ref)
 
-ROOTTEST_COMPILE_MACRO(ConfigRecord.cxx
-                       FIXTURES_SETUP root-tree-addresses-ConfigRecord-fixture)
+#disable on Windows while there are problem to compile ConfigRecord.cxx without building dictionary
+#for some classes
+if(NOT MSVC OR win_broken_tests)
+  ROOTTEST_COMPILE_MACRO(ConfigRecord.cxx
+                         FIXTURES_SETUP root-tree-addresses-ConfigRecord-fixture)
 
-ROOTTEST_COMPILE_MACRO(sueloader.C
-                       FIXTURES_SETUP root-tree-addresses-sueloader-fixture)
+  ROOTTEST_COMPILE_MACRO(sueloader.C
+                         FIXTURES_SETUP root-tree-addresses-sueloader-fixture)
 
-if(ClingWorkAroundMissingDynamicScope)
-  SET(_sue_opts -e "(void)gROOT->ProcessLine(\".L sueloader.C+\")"
-                -e "(void)gROOT->ProcessLine(\".L ConfigRecord.cxx+\")")
+  if(ClingWorkAroundMissingDynamicScope)
+    SET(_sue_opts -e "(void)gROOT->ProcessLine(\".L sueloader.C+\")"
+                  -e "(void)gROOT->ProcessLine(\".L ConfigRecord.cxx+\")")
+  endif()
+
+  ROOTTEST_ADD_TEST(configtest
+                    MACRO suetestwrt.C
+                    ROOTEXE_OPTS ${_sue_opts}
+                    OUTREF configtest.ref
+                    FIXTURES_REQUIRED root-tree-addresses-ConfigRecord-fixture
+                                      root-tree-addresses-sueloader-fixture
+                   FIXTURES_SETUP root-tree-addresses-configtest-fixture)
+
+  ROOTTEST_ADD_TEST(suetest
+                    MACRO suetestrd.C
+                    ROOTEXE_OPTS ${_sue_opts}
+                    OUTREF suetest.ref
+                    FIXTURES_REQUIRED root-tree-addresses-ConfigRecord-fixture
+                                      root-tree-addresses-sueloader-fixture
+                                      root-tree-addresses-configtest-fixture)
 endif()
-
-ROOTTEST_ADD_TEST(configtest
-                  MACRO suetestwrt.C
-                  ROOTEXE_OPTS ${_sue_opts}
-                  OUTREF configtest.ref
-                  FIXTURES_REQUIRED root-tree-addresses-ConfigRecord-fixture
-                                    root-tree-addresses-sueloader-fixture
-                  FIXTURES_SETUP root-tree-addresses-configtest-fixture)
-
-ROOTTEST_ADD_TEST(suetest
-                  MACRO suetestrd.C
-                  ROOTEXE_OPTS ${_sue_opts}
-                  OUTREF suetest.ref
-                  FIXTURES_REQUIRED root-tree-addresses-ConfigRecord-fixture
-                                    root-tree-addresses-sueloader-fixture
-                                    root-tree-addresses-configtest-fixture)
 
 ROOTTEST_COMPILE_MACRO(JansEvent.C
                        FIXTURES_SETUP root-tree-addresses-JansEvent-fixture)
