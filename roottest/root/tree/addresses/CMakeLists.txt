@@ -211,10 +211,13 @@ ROOTTEST_ADD_TEST(twrite
                   ERRREF assert_twrite.ref
                   FIXTURES_SETUP root-tree-addresses-twrite-fixture)
 
+ROOTTEST_COMPILE_MACRO(assert_tread.cxx
+                       FIXTURES_SETUP root-tree-addresses-assert_tread-fixture)
+
 ROOTTEST_ADD_TEST(tread
                   MACRO assert_tread.cxx+
                   ERRREF assert_tread.ref
-                  FIXTURES_REQUIRED root-tree-addresses-twrite-fixture)
+                  FIXTURES_REQUIRED root-tree-addresses-twrite-fixture root-tree-addresses-assert_tread-fixture)
 
 ROOTTEST_ADD_TEST(ReuseTree
                   MACRO execReuseTree.C
