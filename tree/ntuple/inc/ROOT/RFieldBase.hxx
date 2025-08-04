@@ -510,8 +510,13 @@ protected:
    /// Used to check compatibility of the in-memory field and the on-disk field. In the process,
    /// the field at hand or its subfields may be marked as "artifical", i.e. introduced by schema evolution
    /// and not backed by on-disk information.
-   /// By default the implementation will fail if the on-disk ID is set and CompareOnDisk() reports any differences.
-   virtual void BeforeConnectPageSource(ROOT::Internal::RPageSource &) {}
+   virtual void BeforeConnectPageSource(ROOT::Internal::RPageSource &source)
+   {
+      // The default implementation throws an exception if the on-disk ID is set and there are structural differences
+      // to the on-disk field. Note that we ignore the type name by default, which is the right behavior for
+      // simple fields and many collection types.
+      EnsureCompatibleOnDiskField(source, kDiffTypeName);
+   }
 
    /// Returns a combination of kDiff... flags, indicating peroperties that are different between the field at hand
    /// and the given on-disk field
