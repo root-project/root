@@ -572,40 +572,6 @@ void RooAbsArg::addParameters(RooAbsCollection &params, const RooArgSet *nset, b
    params.add(nodeParamServers, true);
 }
 
-/// Obtain an estimate of the number of parameters of the function and its daughters.
-/// Calling `addParameters` for large functions (NLL) can cause many reallocations of
-/// `params` due to the recursive behaviour. This utility function aims to pre-compute
-/// the total number of parameters, so that enough memory is reserved.
-/// The estimate is not fully accurate (overestimate) as there is no equivalent to `getParametersHook`.
-/// \param[in] nset Normalisation set (optional). If a value depends on this set, it's not a parameter.
-
-std::size_t RooAbsArg::getParametersSizeEstimate(const RooArgSet *nset) const
-{
-
-   std::size_t res = 0;
-   std::vector<RooAbsArg *> branchList;
-   for (const auto server : _serverList) {
-      if (server->isValueServer(*this)) {
-         if (server->isFundamental()) {
-            if (!nset || !server->dependsOn(*nset)) {
-               res++;
-            }
-         } else {
-            branchList.push_back(server);
-         }
-      }
-   }
-
-   // Now recurse into branch servers
-   std::sort(branchList.begin(), branchList.end());
-   const auto last = std::unique(branchList.begin(), branchList.end());
-   for (auto serverIt = branchList.begin(); serverIt < last; ++serverIt) {
-      res += (*serverIt)->getParametersSizeEstimate(nset);
-   }
-
-   return res;
-}
-
 /// Fills a list with leaf nodes in the arg tree starting with
 /// ourself as top node that don't match any of the names the args in the
 /// supplied argset. Returns `true` only if something went wrong.
@@ -618,9 +584,6 @@ bool RooAbsArg::getParameters(const RooArgSet *observables, RooArgSet &outputSet
 {
    outputSet.clear();
    outputSet.setName("parameters");
-
-   // reserve all memory needed in one go
-   outputSet.reserve(getParametersSizeEstimate(observables));
 
    addParameters(outputSet, observables, stripDisconnected);
 
