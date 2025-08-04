@@ -164,6 +164,14 @@ template<>
 struct TensorType<bool> {
    static const std::string Name() { return "bool"; }
 };
+template<>
+struct TensorType<int8_t> {
+   static const std::string Name() { return "int8_t"; }
+};
+template<>
+struct TensorType<uint8_t> {
+   static const std::string Name() { return "uint8_t"; }
+};
 
 struct TensorMemoryInfo {
    std::string_view tensor_name;
@@ -225,8 +233,11 @@ std::string ConvertValuesToString(size_t n, const T * data) {
    ret << "{ ";
    for (size_t i = 0; i < n; i++) {
       if (std::is_floating_point_v<T>)
-         ret << std::setprecision(std::numeric_limits<T>::max_digits10);
-      ret << data[i];
+         ret << std::setprecision(std::numeric_limits<T>::max_digits10) << data[i];
+      else
+         // cast in case of boolean (int8)
+         ret << (int64_t) data[i];
+
       if (i < n-1) ret << ", ";
    }
    ret << "}";

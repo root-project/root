@@ -2941,3 +2941,37 @@ TEST(ONNX, GatherND_3)
    }
 }
 
+TEST(ONNX, NonZero)
+{
+   // test with input uint8_t   (note int8_t is not supported in the test_helper code)
+   std::vector<uint8_t> input = {0,1,0, 1,1,0, 0,0,1, 0,1,1 }; // shape is (2x2x3)
+   // output is tensor shape { 3, number of non zeros}
+   std::vector<int64_t> correct_output = { 0,0,0,1,1,1 ,   0,1,1,0,1,1 ,    1,0,1,2,1,2 };
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<int64_t>, "NonZero", input);
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_EQ(output[i] , correct_output[i]);
+   }
+}
+
+TEST(ONNX, NonZero_Constant)
+{
+   // input is a constant tensor in the model
+   // output is tensor shape { 3, number of non zeros}
+   std::vector<int64_t> correct_output = { 0,0,0,1,1,1 ,   0,1,1,0,1,1 ,    1,0,1,2,1,2 };
+
+   ASSERT_INCLUDE_AND_RUN_0(std::vector<int64_t>, "NonZero_Constant");
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_EQ(output[i] , correct_output[i]);
+   }
+}
+
+
