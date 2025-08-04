@@ -487,10 +487,13 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection *list, const RooAbsArg *arg,
    if (arg->isDerived() && (!arg->isFundamental() || recurseFundamental)) {
       for (const auto server : arg->_serverList) {
 
-         // Skip non-value server nodes if requested
-         bool isValueSrv = server->_clientListValue.containsByNamePtr(arg);
-         if (valueOnly && !isValueSrv) {
-            continue;
+         // Skip non-value server nodes if requested.
+         if (valueOnly) {
+            // The "containsByNamePtr" check is an expensive call, don't do it
+            // if "valueOnly" is false anyway!
+            if (!server->_clientListValue.containsByNamePtr(arg)) {
+               continue;
+            }
          }
          treeNodeServerList(list, server, doBranch, doLeaf, valueOnly, recurseFundamental);
       }
