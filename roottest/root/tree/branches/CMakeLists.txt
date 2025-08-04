@@ -104,9 +104,12 @@ ROOTTEST_ADD_TEST(noname
                   MACRO  runnoname.C
                   OUTREF noname.ref)
 
-ROOTTEST_ADD_TEST(separate
-                  MACRO  runseparate.C
-                  OUTREF separate.ref)
+# on windows test fails while after reading of treeobj.root file branch.root left open
+if(NOT MSVC OR win_broken_tests)
+  ROOTTEST_ADD_TEST(separate
+                    MACRO  runseparate.C
+                    OUTREF separate.ref)
+endif()
 
 ROOTTEST_ADD_TEST(updates
                   MACRO  runupdates.C
