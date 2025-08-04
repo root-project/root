@@ -498,8 +498,7 @@ public:
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
-// Has to be implemented after the definition of all RField<T> types
-// The void type is specialized in RField.cxx
+// Have to be implemented after the definition of all RField<T> types
 
 namespace Internal {
 
@@ -529,6 +528,8 @@ std::unique_ptr<T, typename RFieldBase::RCreateObjectDeleter<T>::deleter> RField
    }
    return std::unique_ptr<T>(static_cast<T *>(CreateObjectRawPtr()));
 }
+
+// The void type is specialized in RField.cxx
 
 template <>
 struct RFieldBase::RCreateObjectDeleter<void> {
