@@ -30,7 +30,6 @@ if(roofit)
         ROOT/_pythonization/_roofit/_rooarglist.py
         ROOT/_pythonization/_roofit/_rooargset.py
         ROOT/_pythonization/_roofit/_roocategory.py
-        ROOT/_pythonization/_roofit/_roochi2var.py
         ROOT/_pythonization/_roofit/_roodatahist.py
         ROOT/_pythonization/_roofit/_roodataset.py
         ROOT/_pythonization/_roofit/_roodecays.py
@@ -39,7 +38,6 @@ if(roofit)
         ROOT/_pythonization/_roofit/_roojsonfactorywstool.py
         ROOT/_pythonization/_roofit/_roomcstudy.py
         ROOT/_pythonization/_roofit/_roomsgservice.py
-        ROOT/_pythonization/_roofit/_roonllvar.py
         ROOT/_pythonization/_roofit/_rooprodpdf.py
         ROOT/_pythonization/_roofit/_roorealvar.py
         ROOT/_pythonization/_roofit/_roosimultaneous.py
