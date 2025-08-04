@@ -10,6 +10,7 @@
 #ifndef CLING_DYNAMIC_LIBRARY_MANAGER_H
 #define CLING_DYNAMIC_LIBRARY_MANAGER_H
 
+#include "llvm/ExecutionEngine/Orc/Shared/DynamicLoader.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
@@ -65,6 +66,8 @@ namespace cling {
     InterpreterCallbacks* m_Callbacks = nullptr;
 
     Dyld* m_Dyld = nullptr;
+
+    std::unique_ptr<llvm::orc::LibraryResolutionDriver> m_DyldController;
 
     ///\brief Concatenates current include paths and the system include paths
     /// and performs a lookup for the filename.
@@ -123,11 +126,14 @@ namespace cling {
     void addSearchPath(llvm::StringRef dir, bool isUser = true,
                        bool prepend = false) {
        if (!dir.empty()) {
-          for (auto & item : m_SearchPaths)
-            if (dir == item.Path)
-              return;
-          auto pos = prepend ? m_SearchPaths.begin() : m_SearchPaths.end();
-          m_SearchPaths.insert(pos, SearchPathInfo{dir.str(), isUser});
+          // for (auto & item : m_SearchPaths)
+          //   if (dir == item.Path)
+          //     return;
+          // auto pos = prepend ? m_SearchPaths.begin() : m_SearchPaths.end();
+          // m_SearchPaths.insert(pos, SearchPathInfo{dir.str(), isUser});
+          m_DyldController->addScanPath(dir.str(),
+                                        isUser ? llvm::orc::PathType::User
+                                               : llvm::orc::PathType::System);
        }
     }
 
