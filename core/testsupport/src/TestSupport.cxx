@@ -58,12 +58,6 @@ static struct ForbidDiagnostics {
         return;
       }
 
-      // FIXME: RNTuple warns that it's in beta stage.
-      if (level == kWarning && strstr(msg, "Merging RNTuples is experimental") != nullptr) {
-         std::cerr << "Warning in " << location << " " << msg << std::endl;
-         return;
-      }
-
       // FIXME: DOAS backend is exprimental.
       if (level == kWarning
           && strstr(msg, "The DAOS backend is experimental and still under development") != nullptr) {
