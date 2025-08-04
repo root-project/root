@@ -558,18 +558,18 @@ void RooAbsArg::addParameters(RooAbsCollection &params, const RooArgSet *nset, b
       }
    }
 
-   // Add parameters of this node to the combined list
-   params.add(nodeParamServers, true);
-
    // Now recurse into branch servers
    std::sort(branchList.begin(), branchList.end());
    const auto last = std::unique(branchList.begin(), branchList.end());
    for (auto serverIt = branchList.begin(); serverIt < last; ++serverIt) {
-      (*serverIt)->addParameters(params, nset);
+      (*serverIt)->addParameters(nodeParamServers, nset);
    }
 
    // Allow pdf to strip parameters from list
-   getParametersHook(nset, &dynamic_cast<RooArgSet &>(params), stripDisconnected);
+   getParametersHook(nset, &nodeParamServers, stripDisconnected);
+
+   // Add parameters of this node to the combined list
+   params.add(nodeParamServers, true);
 }
 
 /// Obtain an estimate of the number of parameters of the function and its daughters.
