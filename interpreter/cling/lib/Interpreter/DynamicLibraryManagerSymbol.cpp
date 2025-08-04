@@ -1357,7 +1357,26 @@ namespace cling {
   DynamicLibraryManager::searchLibrariesForSymbol(StringRef mangledName,
                                            bool searchSystem/* = true*/) const {
     assert(m_Dyld && "Must call initialize dyld before!");
-    return m_Dyld->searchLibrariesForSymbol(mangledName, searchSystem);
+    std::string res = "";
+    std::vector<std::string> sym;
+    sym.push_back(mangledName.str());
+    llvm::orc::SearchPolicy policy = {
+        {{llvm::orc::LibraryManager::State::Queried, llvm::orc::PathType::User},
+         {llvm::orc::LibraryManager::State::Unloaded,
+          llvm::orc::PathType::User},
+         {llvm::orc::LibraryManager::State::Queried,
+          llvm::orc::PathType::System},
+         {llvm::orc::LibraryManager::State::Unloaded,
+          llvm::orc::PathType::System}}};
+    m_DyldController->resolveSymbols(
+        sym,
+        [&](llvm::orc::LibraryResolver::SymbolQuery& Q) {
+          if (auto s = Q.getResolvedLib(mangledName))
+            res = *s;
+        },
+        policy);
+    return res;
+    // return m_Dyld->searchLibrariesForSymbol(mangledName, searchSystem);
   }
 
   std::string DynamicLibraryManager::getSymbolLocation(void *func) {
