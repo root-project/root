@@ -1,14 +1,9 @@
 #ifndef RecRecordImp_cxx
-#ifdef ClingWorkAroundMultipleInclude
 #define RecRecordImp_cxx
-#endif
 
 #include <iostream>
-using namespace std;
 
 #include "RecRecordImp.h"
-
-
 
 
 template<class T>
@@ -21,9 +16,9 @@ void  RecRecordImp<T>::Print(Option_t* /* option */) const {
   //  Return:  none.
   //
   //  Contact:   S. Kasahara
-  // 
+  //
 
-  cout << "RecRecordImp::Print Header:" << endl;
+  std::cout << "RecRecordImp::Print Header:" << std::endl;
   fHeader.Print();
 
   return;
