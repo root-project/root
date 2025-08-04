@@ -506,15 +506,9 @@ namespace Internal {
 /// type renormalization of the demangled type name T. The failure case, however, needs to additionally check for
 /// ROOT-specific special cases.
 template <class T>
-bool IsMatchingFieldType(const std::string &typeName)
+bool IsMatchingFieldType(const std::string &actualTypeName)
 {
-   if (typeName == ROOT::RField<T>::TypeName())
-      return true;
-
-   // The typeName may be equal to the alternative, short type name issued by Meta. This is a rare case used, e.g.,
-   // by the ATLAS DataVector class to hide a default template parameter from the on-disk type name.
-   // Thus, we check again using first ROOT Meta normalization followed by RNTuple re-normalization.
-   return (typeName == ROOT::Internal::GetRenormalizedTypeName(ROOT::Internal::GetDemangledTypeName(typeid(T))));
+   return IsMatchingFieldType(actualTypeName, ROOT::RField<T>::TypeName(), typeid(T));
 }
 
 } // namespace Internal
