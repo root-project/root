@@ -1032,6 +1032,14 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
    fState = EState::kConnectedToSource;
 }
 
+void ROOT::RFieldBase::BeforeConnectPageSource(ROOT::Internal::RPageSource &source)
+{
+   // The default implementation throws an exception if the on-disk ID is set and there are any differences
+   // to the on-disk field. Derived classes may overwrite this and losen the checks to support automatic schema
+   // evolution.
+   EnsureCompatibleOnDiskField(source);
+}
+
 void ROOT::RFieldBase::EnsureCompatibleOnDiskField(const ROOT::Internal::RPageSource &source,
                                                    std::uint32_t ignoreBits) const
 {
@@ -1068,6 +1076,16 @@ void ROOT::RFieldBase::EnsureCompatibleOnDiskField(const RFieldDescriptor &field
       errMsg << " repetition count " << GetNRepetitions() << " vs. " << fieldDesc.GetNRepetitions() << ";";
    }
    throw RException(R__FAIL(errMsg.str()));
+}
+
+void ROOT::RFieldBase::EnsureCompatibleTypePrefix(const RFieldDescriptor &fieldDesc,
+                                                  const std::vector<std::string> &prefixes) const
+{
+   for (const auto &p : prefixes) {
+      if (fieldDesc.GetTypeName().rfind(p, 0) == 0)
+         return;
+   }
+   throw RException(R__FAIL("incompatible type " + fieldDesc.GetTypeName() + " for field " + GetQualifiedFieldName()));
 }
 
 std::uint32_t ROOT::RFieldBase::CompareOnDiskField(const RFieldDescriptor &fieldDesc) const
