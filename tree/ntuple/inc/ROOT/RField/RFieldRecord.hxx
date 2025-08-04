@@ -101,6 +101,11 @@ protected:
       fSize += GetItemPadding(fSize, fMaxAlignment);
    }
 
+   void BeforeConnectPageSource(ROOT::Internal::RPageSource &source) override
+   {
+      EnsureCompatibleOnDiskField(source, kDiffTypeName | kDiffTypeVersion);
+   }
+
 public:
    /// Construct a RRecordField based on a vector of child fields. The ownership of the child fields is transferred
    /// to the RRecordField instance.
