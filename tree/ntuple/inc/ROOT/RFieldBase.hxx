@@ -30,6 +30,7 @@
 
 namespace ROOT {
 
+class REntry;
 class RFieldBase;
 class RClassField;
 
@@ -699,6 +700,7 @@ public:
 /// RFieldBase::SplitValue().
 class RFieldBase::RValue final {
    friend class RFieldBase;
+   friend class ROOT::REntry;
 
 private:
    RFieldBase *fField = nullptr;  ///< The field that created the RValue
@@ -713,9 +715,13 @@ public:
    RValue &operator=(RValue &&other) = default;
    ~RValue() = default;
 
+private:
    std::size_t Append() { return fField->Append(fObjPtr.get()); }
+
+public:
    void Read(ROOT::NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr.get()); }
    void Read(RNTupleLocalIndex localIndex) { fField->Read(localIndex, fObjPtr.get()); }
+
    void Bind(std::shared_ptr<void> objPtr) { fObjPtr = objPtr; }
    void BindRawPtr(void *rawPtr);
    /// Replace the current object pointer by a pointer to a new object constructed by the field
