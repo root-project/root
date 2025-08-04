@@ -177,6 +177,8 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
 
       _nodes.emplace_back();
       auto &nodeInfo = _nodes.back();
+      _nodesMap[arg->namePtr()] = &nodeInfo;
+
       nodeInfo.absArg = arg;
       nodeInfo.originalOperMode = arg->operMode();
       nodeInfo.iNode = iNode;
@@ -244,49 +246,51 @@ void Evaluator::setInput(std::string const &name, std::span<const double> inputA
       throw std::runtime_error("Evaluator can only take device array as input in CUDA mode!");
    }
 
-   auto namePtr = RooNameReg::ptr(name.c_str());
+   // Check if "name" is used in the computation graph. If yes, add the span to
+   // the data map and set the node info accordingly.
 
-   // Iterate over the given data spans and add them to the data map. Check if
-   // they are used in the computation graph. If yes, add the span to the data
-   // map and set the node info accordingly.
-   std::size_t iNode = 0;
-   for (auto &info : _nodes) {
-      const bool fromArrayInput = info.absArg->namePtr() == namePtr;
-      if (fromArrayInput) {
-         info.fromArrayInput = true;
-         info.absArg->setDataToken(iNode);
-         info.outputSize = inputArray.size();
-         if (_useGPU && info.outputSize <= 1) {
-            // Empty or scalar observables from the data don't need to be
-            // copied to the GPU.
-            _evalContextCPU.set(info.absArg, inputArray);
-            _evalContextCUDA.set(info.absArg, inputArray);
-         } else if (_useGPU && info.outputSize > 1) {
-            // For simplicity, we put the data on both host and device for
-            // now. This could be optimized by inspecting the clients of the
-            // variable.
-            if (isOnDevice) {
-               _evalContextCUDA.set(info.absArg, inputArray);
-               auto gpuSpan = _evalContextCUDA.at(info.absArg);
-               info.buffer = _bufferManager->makeCpuBuffer(gpuSpan.size());
-               info.buffer->assignFromDevice(gpuSpan);
-               _evalContextCPU.set(info.absArg, {info.buffer->hostReadPtr(), gpuSpan.size()});
-            } else {
-               _evalContextCPU.set(info.absArg, inputArray);
-               auto cpuSpan = _evalContextCPU.at(info.absArg);
-               info.buffer = _bufferManager->makeGpuBuffer(cpuSpan.size());
-               info.buffer->assignFromHost(cpuSpan);
-               _evalContextCUDA.set(info.absArg, {info.buffer->deviceReadPtr(), cpuSpan.size()});
-            }
-         } else {
-            _evalContextCPU.set(info.absArg, inputArray);
-         }
-      }
-      info.isDirty = !info.fromArrayInput;
-      ++iNode;
-   }
+   auto found = _nodesMap.find(RooNameReg::ptr(name.c_str()));
+
+   if (found == _nodesMap.end())
+      return;
 
    _needToUpdateOutputSizes = true;
+
+   NodeInfo &info = *found->second;
+
+   info.fromArrayInput = true;
+   info.absArg->setDataToken(info.iNode);
+   info.outputSize = inputArray.size();
+
+   if (!_useGPU) {
+      _evalContextCPU.set(info.absArg, inputArray);
+      return;
+   }
+
+   if (info.outputSize <= 1) {
+      // Empty or scalar observables from the data don't need to be
+      // copied to the GPU.
+      _evalContextCPU.set(info.absArg, inputArray);
+      _evalContextCUDA.set(info.absArg, inputArray);
+      return;
+   }
+
+   // For simplicity, we put the data on both host and device for
+   // now. This could be optimized by inspecting the clients of the
+   // variable.
+   if (isOnDevice) {
+      _evalContextCUDA.set(info.absArg, inputArray);
+      auto gpuSpan = _evalContextCUDA.at(info.absArg);
+      info.buffer = _bufferManager->makeCpuBuffer(gpuSpan.size());
+      info.buffer->assignFromDevice(gpuSpan);
+      _evalContextCPU.set(info.absArg, {info.buffer->hostReadPtr(), gpuSpan.size()});
+   } else {
+      _evalContextCPU.set(info.absArg, inputArray);
+      auto cpuSpan = _evalContextCPU.at(info.absArg);
+      info.buffer = _bufferManager->makeGpuBuffer(cpuSpan.size());
+      info.buffer->assignFromHost(cpuSpan);
+      _evalContextCUDA.set(info.absArg, {info.buffer->deviceReadPtr(), cpuSpan.size()});
+   }
 }
 
 void Evaluator::updateOutputSizes()
@@ -309,6 +313,7 @@ void Evaluator::updateOutputSizes()
 
    for (auto &info : _nodes) {
       info.outputSize = outputSizeMap.at(info.absArg);
+      info.isDirty = true;
 
       // In principle we don't need dirty flag propagation because the driver
       // takes care of deciding which node needs to be re-evaluated. However,
