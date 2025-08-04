@@ -332,6 +332,7 @@ protected:
    // Field is only used for reading
    void GenerateColumns() final { throw RException(R__FAIL("Cardinality fields must only be used for reading")); }
    void GenerateColumns(const ROOT::RNTupleDescriptor &) final;
+   void BeforeConnectPageSource(Internal::RPageSource &source) final;
 
 public:
    RCardinalityField(RCardinalityField &&other) = default;

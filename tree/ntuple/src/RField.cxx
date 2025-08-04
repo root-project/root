@@ -59,6 +59,24 @@ void ROOT::RCardinalityField::GenerateColumns(const ROOT::RNTupleDescriptor &des
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
+void ROOT::RCardinalityField::BeforeConnectPageSource(Internal::RPageSource &source)
+{
+   if (IsArtificial())
+      return;
+
+   const auto descriptorGuard = source.GetSharedDescriptorGuard();
+   const auto &fieldDesc = descriptorGuard->GetFieldDescriptor(GetOnDiskId());
+   EnsureCompatibleOnDiskField(fieldDesc, kDiffTypeVersion | kDiffStructure | kDiffTypeName);
+   if (fieldDesc.GetStructure() == ENTupleStructure::kLeaf) {
+      if (fieldDesc.GetTypeName().rfind("ROOT::RNTupleCardinality<", 0) != 0) {
+         throw RException(R__FAIL("RCardinalityField " + GetQualifiedFieldName() +
+                                  " expects an on-disk leaf field of the same type"));
+      }
+   } else if (fieldDesc.GetStructure() != ENTupleStructure::kCollection) {
+      throw RException(R__FAIL("invalid on-disk structural role for RCardinalityField " + GetQualifiedFieldName()));
+   }
+}
+
 void ROOT::RCardinalityField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitCardinalityField(*this);
