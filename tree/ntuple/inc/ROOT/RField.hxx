@@ -393,12 +393,14 @@ namespace ROOT {
 
 template <typename SizeT>
 class RField<RNTupleCardinality<SizeT>> final : public RCardinalityField {
+   using CardinalityType = RNTupleCardinality<SizeT>;
+
 protected:
    std::unique_ptr<ROOT::RFieldBase> CloneImpl(std::string_view newName) const final
    {
-      return std::make_unique<RField<RNTupleCardinality<SizeT>>>(newName);
+      return std::make_unique<RField>(newName);
    }
-   void ConstructValue(void *where) const final { new (where) RNTupleCardinality<SizeT>(0); }
+   void ConstructValue(void *where) const final { new (where) CardinalityType(0); }
 
    /// Get the number of elements of the collection identified by globalIndex
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final
@@ -406,7 +408,7 @@ protected:
       RNTupleLocalIndex collectionStart;
       ROOT::NTupleSize_t size;
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
-      *static_cast<RNTupleCardinality<SizeT> *>(to) = size;
+      *static_cast<CardinalityType *>(to) = size;
    }
 
    /// Get the number of elements of the collection identified by clusterIndex
@@ -415,7 +417,7 @@ protected:
       RNTupleLocalIndex collectionStart;
       ROOT::NTupleSize_t size;
       fPrincipalColumn->GetCollectionInfo(localIndex, &collectionStart, &size);
-      *static_cast<RNTupleCardinality<SizeT> *>(to) = size;
+      *static_cast<CardinalityType *>(to) = size;
    }
 
    std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec) final
@@ -424,7 +426,7 @@ protected:
       ROOT::NTupleSize_t collectionSize;
       fPrincipalColumn->GetCollectionInfo(bulkSpec.fFirstIndex, &collectionStart, &collectionSize);
 
-      auto typedValues = static_cast<RNTupleCardinality<SizeT> *>(bulkSpec.fValues);
+      auto typedValues = static_cast<CardinalityType *>(bulkSpec.fValues);
       typedValues[0] = collectionSize;
 
       auto lastOffset = collectionStart.GetIndexInCluster() + collectionSize;
@@ -452,8 +454,8 @@ public:
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
 
-   size_t GetValueSize() const final { return sizeof(RNTupleCardinality<SizeT>); }
-   size_t GetAlignment() const final { return alignof(RNTupleCardinality<SizeT>); }
+   size_t GetValueSize() const final { return sizeof(CardinalityType); }
+   size_t GetAlignment() const final { return alignof(CardinalityType); }
 };
 
 /// TObject requires special handling of the fBits and fUniqueID members
