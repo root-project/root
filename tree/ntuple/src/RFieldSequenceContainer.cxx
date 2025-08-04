@@ -85,6 +85,19 @@ void ROOT::RArrayField::ConstructValue(void *where) const
    }
 }
 
+void ROOT::RArrayField::BeforeConnectPageSource(Internal::RPageSource &source)
+{
+   if (IsArtificial())
+      return;
+
+   static const std::vector<std::string> prefixes = {"std::array<"};
+
+   const auto descriptorGuard = source.GetSharedDescriptorGuard();
+   const auto &fieldDesc = descriptorGuard->GetFieldDescriptor(GetOnDiskId());
+   EnsureCompatibleOnDiskField(fieldDesc, kDiffTypeName);
+   EnsureCompatibleTypePrefix(fieldDesc, prefixes);
+}
+
 void ROOT::RArrayField::RArrayDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    if (fItemDeleter) {
@@ -695,6 +708,16 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RField<std::vector<bool>>::SplitValu
    return result;
 }
 
+void ROOT::RField<std::vector<bool>>::BeforeConnectPageSource(Internal::RPageSource &source)
+{
+   if (IsArtificial())
+      return;
+
+   const auto descriptorGuard = source.GetSharedDescriptorGuard();
+   const auto &fieldDesc = descriptorGuard->GetFieldDescriptor(GetOnDiskId());
+   EnsureCompatibleOnDiskField(fieldDesc, kDiffTypeName);
+}
+
 void ROOT::RField<std::vector<bool>>::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitVectorBoolField(*this);
@@ -816,6 +839,18 @@ void ROOT::RArrayAsRVecField::ReadInClusterImpl(RNTupleLocalIndex localIndex, vo
    for (std::size_t i = 0; i < fArrayLength; ++i) {
       CallReadOn(*fSubfields[0], RNTupleLocalIndex(clusterId, indexInCluster * fArrayLength + i),
                  rvecBeginPtr + (i * fItemSize));
+   }
+}
+
+void ROOT::RArrayAsRVecField::BeforeConnectPageSource(Internal::RPageSource &source)
+{
+   R__ASSERT(!IsArtificial());
+
+   const auto descriptorGuard = source.GetSharedDescriptorGuard();
+   const auto &fieldDesc = descriptorGuard->GetFieldDescriptor(GetOnDiskId());
+   EnsureCompatibleOnDiskField(fieldDesc, kDiffTypeName | kDiffTypeVersion | kDiffStructure | kDiffNRepetitions);
+   if (fieldDesc.GetTypeName().rfind("std::array<", 0) != 0) {
+      throw RException(R__FAIL("RArrayAsRVecField " + GetQualifiedFieldName() + " expects an on-disk array field"));
    }
 }
 

@@ -59,6 +59,24 @@ void ROOT::RCardinalityField::GenerateColumns(const ROOT::RNTupleDescriptor &des
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
+void ROOT::RCardinalityField::BeforeConnectPageSource(Internal::RPageSource &source)
+{
+   if (IsArtificial())
+      return;
+
+   const auto descriptorGuard = source.GetSharedDescriptorGuard();
+   const auto &fieldDesc = descriptorGuard->GetFieldDescriptor(GetOnDiskId());
+   EnsureCompatibleOnDiskField(fieldDesc, kDiffTypeVersion | kDiffStructure | kDiffTypeName);
+   if (fieldDesc.GetStructure() == ENTupleStructure::kPlain) {
+      if (fieldDesc.GetTypeName().rfind("ROOT::RNTupleCardinality<", 0) != 0) {
+         throw RException(R__FAIL("RCardinalityField " + GetQualifiedFieldName() +
+                                  " expects an on-disk leaf field of the same type"));
+      }
+   } else if (fieldDesc.GetStructure() != ENTupleStructure::kCollection) {
+      throw RException(R__FAIL("invalid on-disk structural role for RCardinalityField " + GetQualifiedFieldName()));
+   }
+}
+
 void ROOT::RCardinalityField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitCardinalityField(*this);
@@ -783,6 +801,19 @@ std::size_t ROOT::RNullableField::AppendValue(const void *from)
    return sizeof(ROOT::Internal::RColumnIndex) + nbytesItem;
 }
 
+void ROOT::RNullableField::BeforeConnectPageSource(Internal::RPageSource &source)
+{
+   if (IsArtificial())
+      return;
+
+   static const std::vector<std::string> prefixes = {"std::optional<", "std::unique_ptr<"};
+
+   const auto descriptorGuard = source.GetSharedDescriptorGuard();
+   const auto &fieldDesc = descriptorGuard->GetFieldDescriptor(GetOnDiskId());
+   EnsureCompatibleOnDiskField(fieldDesc, kDiffTypeName);
+   EnsureCompatibleTypePrefix(fieldDesc, prefixes);
+}
+
 ROOT::RNTupleLocalIndex ROOT::RNullableField::GetItemIndex(ROOT::NTupleSize_t globalIndex)
 {
    RNTupleLocalIndex collectionStart;
@@ -1001,6 +1032,19 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RAtomicField::SplitValue(const RValu
    std::vector<RValue> result;
    result.emplace_back(fSubfields[0]->BindValue(value.GetPtr<void>()));
    return result;
+}
+
+void ROOT::RAtomicField::BeforeConnectPageSource(Internal::RPageSource &source)
+{
+   if (IsArtificial())
+      return;
+
+   static const std::vector<std::string> prefixes = {"std::atomic<"};
+
+   const auto descriptorGuard = source.GetSharedDescriptorGuard();
+   const auto &fieldDesc = descriptorGuard->GetFieldDescriptor(GetOnDiskId());
+   EnsureCompatibleOnDiskField(fieldDesc, kDiffTypeName);
+   EnsureCompatibleTypePrefix(fieldDesc, prefixes);
 }
 
 void ROOT::RAtomicField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
