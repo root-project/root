@@ -40,6 +40,7 @@
 
 #define DEBUG_TYPE "orc-scanner"
 
+
 namespace llvm::orc {
 
 void handleError(Error Err, StringRef context = "") {
@@ -57,13 +58,7 @@ T handleErrorAndReturn(Error Err, T ReturnValue, StringRef context = "") {
   return ReturnValue;
 }
 
-template <typename T>
-T handleExpectedAndReturn(Expected<T> &&ValOrErr, T ReturnValue,
-                          StringRef context = "") {
-  if (!ValOrErr)
-    return handleErrorAndReturn(ValOrErr.takeError(), ReturnValue, context);
-  return *ValOrErr;
-}
+
 
 bool ObjectFileLoader::isArchitectureCompatible(const object::ObjectFile &Obj) {
   Triple HostTriple(sys::getDefaultTargetTriple());
@@ -159,7 +154,21 @@ ObjectFileLoader::loadObjectFileWithOwnership(StringRef FilePath) {
 
 template <class ELFT>
 bool isELFSharedLibrary(const object::ELFFile<ELFT> &ELFObj) {
-  return ELFObj.getHeader().e_type == ELF::ET_DYN;
+  if (ELFObj.getHeader().e_type != ELF::ET_DYN)
+    return false;
+
+  auto PHOrErr = ELFObj.program_headers();
+  if (!PHOrErr) {
+    consumeError(PHOrErr.takeError());
+    return true;
+  }
+
+  for (auto Phdr : *PHOrErr) {
+    if (Phdr.p_type == ELF::PT_INTERP)
+      return false;
+  }
+
+  return true;
 }
 
 bool isSharedLibraryObject(object::ObjectFile &Obj) {
@@ -211,9 +220,13 @@ bool DylibPathValidator::isSharedLibrary(StringRef Path) {
     return false;
   }
 
-  ObjectFileLoader ObjLoader(Path);
+  file_magic MagicCode;
+  identify_magic(Path, MagicCode);
 
-  auto ObjOrErr = ObjLoader.getObjectFile();
+#ifdef _WIN32
+  (Magic == file_magic::pecoff_executable &&
+   platform::IsDLL(libFullPath.str())) auto ObjOrErr =
+      ObjLoader.getObjectFile();
 
   if (!ObjOrErr) {
     consumeError(ObjOrErr.takeError());
@@ -222,13 +235,44 @@ bool DylibPathValidator::isSharedLibrary(StringRef Path) {
 
   object::ObjectFile &Obj = ObjOrErr.get();
 
-  if (isSharedLibraryObject(Obj))
-    return true;
-
-  LLVM_DEBUG(dbgs() << "Path is not identified as a shared library: " << Path
-                    << "\n";);
+  if (Obj.isCOFF()) {
+    const object::COFFObjectFile *coff = dyn_cast<object::COFFObjectFile>(&Obj);
+    if (!coff)
+      return false;
+    return coff->getCharacteristics() & COFF::IMAGE_FILE_DLL;
+  } else {
+    LLVM_DEBUG(dbgs() << "Binary is not an COFF ObjectFile.\n";);
+  }
 
   return false;
+#endif
+
+  bool result =
+#ifdef __APPLE__
+      (MagicCode == file_magic::macho_fixed_virtual_memory_shared_lib ||
+       MagicCode == file_magic::macho_dynamically_linked_shared_lib ||
+       MagicCode == file_magic::macho_dynamically_linked_shared_lib_stub ||
+       MagicCode == file_magic::macho_universal_binary)
+#elif defined(LLVM_ON_UNIX)
+#ifdef __CYGWIN__
+      (Magic == file_magic::pecoff_executable)
+#else
+      (Magic == file_magic::elf_shared_object)
+#endif
+#else
+#error "Unsupported platform."
+#endif
+      ;
+
+  LLVM_DEBUG({
+    if (result) {
+      dbgs() << "Path is identified as a shared library: " << Path << "\n";
+    } else {
+      dbgs() << "Path is not identified as a shared library: " << Path << "\n";
+    }
+  });
+
+  return result;
 }
 
 void DylibSubstitutor::configure(StringRef loaderPath) {
@@ -869,6 +913,11 @@ Expected<LibraryDepsInfo> LibraryScanner::extractDeps(StringRef filePath) {
     LLVM_DEBUG(dbgs() << "extractDeps: File " << filePath
                       << " is a Mach-O object\n";);
     return parseMachODeps(*macho);
+  }
+
+  if (auto *coff = dyn_cast<object::COFFObjectFile>(Obj)) {
+    // TODO: COFF support
+    return LibraryDepsInfo();
   }
 
   LLVM_DEBUG(dbgs() << "extractDeps: Unsupported binary format for file "
