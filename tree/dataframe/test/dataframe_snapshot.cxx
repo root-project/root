@@ -1115,31 +1115,17 @@ TEST(RDFSnapshotMore, OutOfOrderSizeBranch)
       t.Write();
    }
 
-   auto check = [](const std::vector<int> &sizes, const std::vector<ROOT::RVecF> &vecs) {
-      EXPECT_EQ(sizes.at(0), 1);
-      EXPECT_EQ(sizes.at(1), 2);
-      EXPECT_EQ(sizes.at(2), 3);
-      EXPECT_TRUE(All(vecs.at(0) == ROOT::RVecF{1}));
-      EXPECT_TRUE(All(vecs.at(1) == ROOT::RVecF{1, 2}));
-      EXPECT_TRUE(All(vecs.at(2) == ROOT::RVecF{1, 2, 3}));
-   };
-
    {
-      // fully typed Snapshot
       auto out = ROOT::RDataFrame("t", inFile).Snapshot("t", outFile, {"vec", "sz"});
       auto sizes = out->Take<int>("sz");
       auto vecs = out->Take<ROOT::RVecF>("vec");
 
-      check(*sizes, *vecs);
-   }
-
-   {
-      // jitted Snapshot
-      auto out = ROOT::RDataFrame("t", inFile).Snapshot("t", outFile, {"vec", "sz"});
-      auto sizes = out->Take<int>("sz");
-      auto vecs = out->Take<ROOT::RVecF>("vec");
-
-      check(*sizes, *vecs);
+      EXPECT_EQ(sizes->at(0), 1);
+      EXPECT_EQ(sizes->at(1), 2);
+      EXPECT_EQ(sizes->at(2), 3);
+      EXPECT_TRUE(All(vecs->at(0) == ROOT::RVecF{1}));
+      EXPECT_TRUE(All(vecs->at(1) == ROOT::RVecF{1, 2}));
+      EXPECT_TRUE(All(vecs->at(2) == ROOT::RVecF{1, 2, 3}));
    }
 
    gSystem->Unlink(inFile);
