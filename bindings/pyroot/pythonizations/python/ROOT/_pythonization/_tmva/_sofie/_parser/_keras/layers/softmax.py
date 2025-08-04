@@ -23,7 +23,7 @@ def MakeKerasSoftmax(layer):
     fLayerInputName = finput[0]
     fLayerOutputName = foutput[0]
     if SOFIE.ConvertStringToType(fLayerDType) == SOFIE.ETensorType.FLOAT:
-        op = SOFIE.ROperator_Softmax("float")(-1, fLayerInputName, fLayerOutputName)
+        op = SOFIE.ROperator_Softmax(-1, fLayerInputName, fLayerOutputName, False)
         return op
     else:
         raise RuntimeError(

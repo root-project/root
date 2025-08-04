@@ -207,8 +207,7 @@ public:
       std::string idIndex;
       for (size_t j = 0; j < fBatchDims; j++) {
          std::string index = "i_" + std::to_string(j);
-         for (size_t k = 0; k <= j; k++)
-            out << SP;
+         for (size_t k = 0; k <= j; k++) out << SP;
          out << "for (size_t " << index << " = 0; " << index << " < " << fShapeY[j] << "; " << index << "++) {\n";
          if (j > 0) {
             outIndex += " + ";

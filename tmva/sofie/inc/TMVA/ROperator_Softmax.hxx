@@ -26,7 +26,7 @@ private:
 
 public:
    ROperator_Softmax() {}
-   ROperator_Softmax(int64_t attr_axis, std::string nameX, std::string nameY, bool logSoftmax)
+   ROperator_Softmax(int64_t attr_axis, std::string nameX, std::string nameY, bool logSoftmax = false)
       : fLogSoftmax(logSoftmax),
       fAttrAxis(attr_axis), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY))
 
