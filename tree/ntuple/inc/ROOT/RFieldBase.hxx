@@ -697,7 +697,7 @@ public:
 /// Points to an object with RNTuple I/O support and keeps a pointer to the corresponding field.
 /// Fields can create RValue objects through RFieldBase::CreateValue(), RFieldBase::BindValue()) or
 /// RFieldBase::SplitValue().
-class RFieldBase::RValue {
+class RFieldBase::RValue final {
    friend class RFieldBase;
 
 private:
@@ -769,7 +769,7 @@ on the same range, where in each read operation a different subset of values is 
 The memory of the value array is managed by the RBulkValues class.
 */
 // clang-format on
-class RFieldBase::RBulkValues {
+class RFieldBase::RBulkValues final {
 private:
    friend class RFieldBase;
 
