@@ -586,8 +586,10 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
 }
 
 // Applies late model extension to `destination`, adding all `newFields` to it.
-static void ExtendDestinationModel(std::span<const ROOT::RFieldDescriptor *> newFields, ROOT::RNTupleModel &dstModel,
-                                   RNTupleMergeData &mergeData, std::vector<RCommonField> &commonFields)
+[[nodiscard]]
+static ROOT::RResult<void>
+ExtendDestinationModel(std::span<const ROOT::RFieldDescriptor *> newFields, ROOT::RNTupleModel &dstModel,
+                       RNTupleMergeData &mergeData, std::vector<RCommonField> &commonFields)
 {
    assert(newFields.size() > 0); // no point in calling this with 0 new cols
 
@@ -636,7 +638,11 @@ static void ExtendDestinationModel(std::span<const ROOT::RFieldDescriptor *> new
       ROOT::Internal::GetProjectedFieldsOfModel(dstModel).Add(std::move(field), fieldMap);
    }
    dstModel.Freeze();
-   mergeData.fDestination.UpdateSchema(changeset, mergeData.fNumDstEntries);
+   try {
+      mergeData.fDestination.UpdateSchema(changeset, mergeData.fNumDstEntries);
+   } catch (const ROOT::RException &ex) {
+      return R__FAIL(ex.GetError().GetReport());
+   }
 
    commonFields.reserve(commonFields.size() + newFields.size());
    for (const auto *field : newFields) {
@@ -644,6 +650,8 @@ static void ExtendDestinationModel(std::span<const ROOT::RFieldDescriptor *> new
       const auto &newFieldInDst = mergeData.fDstDescriptor.GetFieldDescriptor(newFieldInDstId);
       commonFields.emplace_back(*field, newFieldInDst);
    }
+
+   return ROOT::RResult<void>::Success();
 }
 
 // Generates default (zero) values for the given columns
@@ -1184,7 +1192,9 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       if (descCmp.fExtraSrcFields.size()) {
          if (mergeOpts.fMergingMode == ENTupleMergingMode::kUnion) {
             // late model extension for all fExtraSrcFields in Union mode
-            ExtendDestinationModel(descCmp.fExtraSrcFields, *fModel, mergeData, descCmp.fCommonFields);
+            auto res = ExtendDestinationModel(descCmp.fExtraSrcFields, *fModel, mergeData, descCmp.fCommonFields);
+            if (!res)
+               return R__FORWARD_ERROR(res);
          } else if (mergeOpts.fMergingMode == ENTupleMergingMode::kStrict) {
             // If the current source has extra fields and we're in Strict mode, error
             std::string msg = "Source RNTuple has extra fields that the destination RNTuple doesn't have:";

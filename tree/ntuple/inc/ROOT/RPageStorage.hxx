@@ -320,8 +320,8 @@ public:
       if (fIsInitialized) {
          throw RException(R__FAIL("already initialized"));
       }
-      fIsInitialized = true;
       InitImpl(model);
+      fIsInitialized = true;
    }
 
 protected:

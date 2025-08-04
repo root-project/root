@@ -125,6 +125,7 @@ public:
    void Throw();
 
    /// Used by R__FORWARD_ERROR in order to keep track of the stack trace.
+   [[nodiscard]]
    static RError ForwardError(RResultBase &&result, RError::RLocation &&sourceLocation)
    {
       if (!result.fError) {

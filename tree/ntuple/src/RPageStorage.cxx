@@ -830,6 +830,11 @@ ROOT::Internal::RPagePersistentSink::AddColumn(ROOT::DescriptorId_t fieldId, RCo
 void ROOT::Internal::RPagePersistentSink::UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset,
                                                        ROOT::NTupleSize_t firstEntry)
 {
+   if (fIsInitialized)
+      for (const auto &field : changeset.fAddedFields)
+         if (field->GetStructure() == ENTupleStructure::kStreamer)
+            throw ROOT::RException(R__FAIL("a Model cannot be extended with Streamer fields"));
+
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
    if (descriptor.GetNLogicalColumns() > descriptor.GetNPhysicalColumns()) {

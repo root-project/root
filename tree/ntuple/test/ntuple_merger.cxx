@@ -3561,6 +3561,7 @@ TEST(RNTupleMerger, MergeStreamerFields)
 
       // Now merge the inputs
       for (const auto mmode : {ENTupleMergingMode::kFilter, ENTupleMergingMode::kStrict, ENTupleMergingMode::kUnion}) {
+         SCOPED_TRACE(std::string("with merging mode = ") + ToString(mmode));
          FileRaii fileGuardOut("test_ntuple_merge_streamer_out.root");
          {
             auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
@@ -3575,6 +3576,8 @@ TEST(RNTupleMerger, MergeStreamerFields)
          EXPECT_EQ(reader->GetNEntries(), 20);
          auto pFoo = reader->GetModel().GetDefaultEntry().GetPtr<CustomStruct>("foo");
          auto pBar = reader->GetModel().GetDefaultEntry().GetPtr<CustomStruct>("bar");
+         EXPECT_EQ(reader->GetModel().GetConstField("foo").GetStructure(), ROOT::ENTupleStructure::kStreamer);
+         EXPECT_EQ(reader->GetModel().GetConstField("bar").GetStructure(), ROOT::ENTupleStructure::kStreamer);
          for (auto idx : reader->GetEntryRange()) {
             reader->LoadEntry(idx);
             ASSERT_EQ(pFoo->v1.size(), 1);
@@ -3588,7 +3591,7 @@ TEST(RNTupleMerger, MergeStreamerFields)
 
 TEST(RNTupleMerger, MergeStreamerFieldsFirstMissing)
 {
-   // Merge two files where the second has an additional streamer field - should succeed.
+   // Merge two files where the second has an additional streamer field - should fail except in Filter mode.
    FileRaii fileGuard1("test_ntuple_merge_streamer_firstmissing1.root");
    {
       auto model = RNTupleModel::Create();
@@ -3634,6 +3637,7 @@ TEST(RNTupleMerger, MergeStreamerFieldsFirstMissing)
 
       // Now merge the inputs
       for (const auto mmode : {ENTupleMergingMode::kFilter, ENTupleMergingMode::kStrict, ENTupleMergingMode::kUnion}) {
+         SCOPED_TRACE(std::string("with merging mode = ") + ToString(mmode));
          FileRaii fileGuardOut("test_ntuple_merge_streamer_firstmissing_out.root");
          {
             auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
@@ -3641,7 +3645,7 @@ TEST(RNTupleMerger, MergeStreamerFieldsFirstMissing)
             RNTupleMergeOptions opts;
             opts.fMergingMode = mmode;
             auto res = merger.Merge(sourcePtrs, opts);
-            if (mmode != ENTupleMergingMode::kStrict)
+            if (mmode == ENTupleMergingMode::kFilter)
                EXPECT_TRUE(bool(res));
             else
                EXPECT_FALSE(bool(res));
