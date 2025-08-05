@@ -13,6 +13,8 @@
 
 #include "gtest/gtest.h"
 
+#include "SimpleElectron.hxx"
+
 #include <thread>
 
 using namespace ROOT;
@@ -993,4 +995,49 @@ TEST(RDataFrameInterface, GetNFilesFromMoreFiles)
    TreeInFileRAII r3{filenames[2]};
    ROOT::RDataFrame df{"t", filenames};
    EXPECT_EQ(df.GetNFiles(), 3);
+}
+
+void expect_colnames_eq(const std::vector<std::string> &v1, const std::vector<std::string> &v2)
+{
+   ASSERT_EQ(v1.size(), v2.size()) << "Vectors 'v1' and 'v2' are of unequal length";
+   for (std::size_t i = 0ull; i < v1.size(); ++i) {
+      EXPECT_EQ(v1[i], v2[i]) << "Vectors 'v1' and 'v2' differ at index " << i;
+   }
+}
+
+// https://github.com/root-project/root/issues/19392
+TEST(RDataFrameInterface, GH19392)
+{
+   class FileRAII {
+   private:
+      std::string fPath;
+
+   public:
+      explicit FileRAII(const std::string &path) : fPath(path) {}
+      ~FileRAII() { std::remove(fPath.c_str()); }
+      auto GetPath() const { return fPath.c_str(); }
+   };
+
+   FileRAII fileraii{"dataframe_interface_gh19392.root"};
+   const auto treeName{"tree"};
+
+   {
+      auto file = std::make_unique<TFile>(fileraii.GetPath(), "RECREATE");
+      auto tree = std::make_unique<TTree>(treeName, treeName);
+
+      SimpleElectron el1;
+      el1.electron_pt = 10.f;
+
+      SimpleElectron el2;
+      el2.electron_pt = 20.f;
+
+      tree->Branch("el1", &el1);
+      tree->Branch("el2", &el2);
+      tree->Fill();
+      tree->Write();
+   }
+   ROOT::RDataFrame df(treeName, fileraii.GetPath());
+   const auto columns = df.GetColumnNames();
+   const std::vector<std::string> expectedCols{"el1", "el1.electron_pt", "el2", "el2.electron_pt"};
+   expect_colnames_eq(columns, expectedCols);
 }
