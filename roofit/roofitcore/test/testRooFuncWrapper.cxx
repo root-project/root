@@ -21,7 +21,7 @@
 #include <RooDataSet.h>
 #include <RooExponential.h>
 #include <RooFitResult.h>
-#include <RooFuncWrapper.h>
+#include <../src/RooEvaluatorWrapper.h>
 #include <RooGaussian.h>
 #include <RooHelpers.h>
 #include <RooHistFunc.h>
@@ -159,9 +159,9 @@ TEST_P(FactoryTest, NLLFit)
    std::unique_ptr<RooAbsReal> nllRef = _params._createNLL(model, *data, ws, RooFit::EvalBackend::Cpu());
    std::unique_ptr<RooAbsReal> nllFunc = _params._createNLL(model, *data, ws, RooFit::EvalBackend::Codegen());
 
-   // We don't use the RooFit::Evaluator for the nominal likelihood. Like this,
-   // we make sure to validate also the NLL values of the generated code.
-   static_cast<RooFit::Experimental::RooFuncWrapper &>(*nllFunc).disableEvaluator();
+   // We want to use the generated code also for the nominal likelihood. Like
+   // this, we make sure to validate also the NLL values of the generated code.
+   static_cast<RooEvaluatorWrapper &>(*nllFunc).setUseGeneratedFunctionCode(true);
 
    double tol = _params._fitResultTolerance;
 
