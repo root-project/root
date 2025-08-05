@@ -71,7 +71,7 @@ public:
 /// future RNTuple versions (e.g. an unknown Structure)
 class RInvalidField final : public RFieldBase {
 public:
-   enum class RCategory {
+   enum class ECategory {
       /// Generic unrecoverable error
       kGeneric,
       /// The type given to RFieldBase::Create was invalid
@@ -82,9 +82,11 @@ public:
       kUnknownStructure,
    };
 
+   using RCategory R__DEPRECATED(6, 40, "enum renamed to ECategory") = ECategory;
+
 private:
    std::string fError;
-   RCategory fCategory;
+   ECategory fCategory;
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
@@ -94,14 +96,14 @@ protected:
    void ConstructValue(void *) const final {}
 
 public:
-   RInvalidField(std::string_view name, std::string_view type, std::string_view error, RCategory category)
+   RInvalidField(std::string_view name, std::string_view type, std::string_view error, ECategory category)
       : RFieldBase(name, type, ROOT::ENTupleStructure::kLeaf, false /* isSimple */), fError(error), fCategory(category)
    {
       fTraits |= kTraitInvalidField;
    }
 
    const std::string &GetError() const { return fError; }
-   RCategory GetCategory() const { return fCategory; }
+   ECategory GetCategory() const { return fCategory; }
 
    size_t GetValueSize() const final { return 0; }
    size_t GetAlignment() const final { return 0; }
@@ -214,7 +216,7 @@ private:
 
    TClass *fClass = nullptr;
    ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t fStreamerInfos; ///< streamer info records seen during writing
-   ROOT::Internal::RColumnIndex fIndex;                           ///< number of bytes written in the current cluster
+   ROOT::Internal::RColumnIndex fIndex; ///< number of bytes written in the current cluster
 
 private:
    RStreamerField(std::string_view fieldName, TClass *classp);

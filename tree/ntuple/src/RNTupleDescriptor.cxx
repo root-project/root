@@ -81,7 +81,7 @@ ROOT::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc, const ROO
    if (GetStructure() == ROOT::ENTupleStructure::kUnknown) {
       if (options.GetReturnInvalidOnError()) {
          auto invalidField = std::make_unique<ROOT::RInvalidField>(GetFieldName(), GetTypeName(), "",
-                                                                   ROOT::RInvalidField::RCategory::kUnknownStructure);
+                                                                   ROOT::RInvalidField::ECategory::kUnknownStructure);
          invalidField->SetOnDiskId(fFieldId);
          return invalidField;
       } else {
@@ -144,7 +144,7 @@ ROOT::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc, const ROO
    } catch (const RException &ex) {
       if (options.GetReturnInvalidOnError())
          return std::make_unique<ROOT::RInvalidField>(GetFieldName(), GetTypeName(), ex.GetError().GetReport(),
-                                                      ROOT::RInvalidField::RCategory::kGeneric);
+                                                      ROOT::RInvalidField::ECategory::kGeneric);
       else
          throw ex;
    }
@@ -702,7 +702,7 @@ std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleDescriptor::CreateModel(const R
       if (field->GetTraits() & ROOT::RFieldBase::kTraitInvalidField) {
          const auto &invalid = static_cast<const RInvalidField &>(*field);
          const auto cat = invalid.GetCategory();
-         bool mustThrow = cat != RInvalidField::RCategory::kUnknownStructure;
+         bool mustThrow = cat != RInvalidField::ECategory::kUnknownStructure;
          if (mustThrow)
             throw invalid.GetError();
 
