@@ -36,6 +36,7 @@
 #include "clang/Parse/Parser.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
+#include "clang/AST/QualTypeNames.h"
 
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Support/ConvertUTF.h"
@@ -97,7 +98,10 @@ static std::string enclose(std::string Mid, const char* Begin,
 static std::string enclose(const clang::QualType& Ty, clang::ASTContext& C,
                            const char* Begin = "(", const char* End = "*)",
                            size_t Hint = 3) {
-  return enclose(cling::utils::TypeName::GetFullyQualifiedName(Ty, C),
+  clang::PrintingPolicy Policy(C.getPrintingPolicy());
+  Policy.SuppressScope = false;
+  Policy.AnonymousTagLocations = true;
+  return enclose(clang::TypeName::getFullyQualifiedName(Ty, C,  Policy, /*WithGlobalNsPrefix=*/false),
                  Begin, End, Hint);
 }
 
@@ -148,16 +152,24 @@ static std::string printQualType(clang::ASTContext& Ctx, clang::QualType QT) {
       // std::vector<Type>::iterator is a TemplateSpecializationType
       // std::vector<Type>::value_type is a SubstTemplateTypeParmType
       //
+      clang::PrintingPolicy Policy(Ctx.getPrintingPolicy());
+      Policy.SuppressScope = false;
+      Policy.AnonymousTagLocations = true;
+
       QualType SSDesugar = TDTy->getLocallyUnqualifiedSingleStepDesugaredType();
       if (dyn_cast<SubstTemplateTypeParmType>(SSDesugar))
-        ValueTyStr += utils::TypeName::GetFullyQualifiedName(QTCanon, Ctx);
+        ValueTyStr += clang::TypeName::getFullyQualifiedName(QTCanon, Ctx, Policy, /*WithGlobalNsPrefix=*/false);
       else if (dyn_cast<TemplateSpecializationType>(SSDesugar))
-        ValueTyStr += utils::TypeName::GetFullyQualifiedName(QTNonRef, Ctx);
+        ValueTyStr += clang::TypeName::getFullyQualifiedName(QTNonRef, Ctx, Policy, /*WithGlobalNsPrefix=*/false);
       else
         ValueTyStr += printDeclType(QTNonRef, TDTy->getDecl());
     }
-    else
-      ValueTyStr += utils::TypeName::GetFullyQualifiedName(QTNonRef, Ctx);
+    else {
+      clang::PrintingPolicy Policy(Ctx.getPrintingPolicy());
+      Policy.SuppressScope = false;
+      Policy.AnonymousTagLocations = true;
+      ValueTyStr += clang::TypeName::getFullyQualifiedName(QTNonRef, Ctx, Policy, /*WithGlobalNsPrefix=*/false);
+    }
   }
 
   if (QT->isReferenceType())
