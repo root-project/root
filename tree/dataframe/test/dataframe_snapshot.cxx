@@ -755,12 +755,13 @@ void ReadWriteCarray(const char *outFileNameBase)
       EXPECT_TRUE(r.Next());
       EXPECT_EQ(rv.GetSize(), 100000u);
       EXPECT_EQ(rvb.GetSize(), 100000u);
-      for (auto e : rv)
-         EXPECT_EQ(e, 84);
-      for (auto e : rvb)
-         EXPECT_TRUE(e);
-      for (auto e : rvl)
-         EXPECT_EQ(e, 42);
+      EXPECT_EQ(rvl.GetSize(), 100000u);
+      EXPECT_TRUE(std::all_of(rv.begin(), rv.end(), [](auto elm) { return elm == 84; }))
+         << rv[0] << " " << rv[1] << " " << rv[2];
+      EXPECT_TRUE(std::all_of(rvb.begin(), rvb.end(), [](auto elm) { return elm; }))
+         << rvb[0] << " " << rvb[1] << " " << rvb[2];
+      EXPECT_TRUE(std::all_of(rvl.begin(), rvl.end(), [](auto elm) { return elm == 42; }))
+         << rvl[0] << " " << rvl[1] << " " << rvl[2];
 
       // Size 3
       EXPECT_TRUE(r.Next());
