@@ -4852,7 +4852,7 @@ static TBranch *R__FindBranchHelper(TObjArray *list, const char *branchname) {
 
       const char *name = where->GetName();
       UInt_t len = strlen(name);
-      if (len && name[len-1]==']') {
+      if (len && name[len - 1] == ']' && (brlen == 0 || branchname[brlen - 1] != ']')) {
          const  char *dim = strchr(name,'[');
          if (dim) {
             len = dim - name;
