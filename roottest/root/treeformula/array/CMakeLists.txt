@@ -18,3 +18,21 @@ ROOTTEST_ADD_TEST(arraytest
                   OUTREF arrayDrawTest.good
                   FIXTURES_REQUIRED root-treeformula-array-Data_cxx-fixture
                                     root-treeformula-array-filltree-fixture)
+
+ROOTTEST_ADD_TEST(eventlist
+                  MACRO eventlist.C
+                  COPY_TO_BUILDDIR ggss207.root
+                  OUTREF arrayEventListTest.ref
+                  FIXTURES_SETUP root-treeformula-array-eventlist-fixture)
+
+# depend from eventlist because of file copying
+ROOTTEST_ADD_TEST(boolOpt
+                  MACRO boolOpt.C
+                  OUTREF boolOptTest.ref
+                  FIXTURES_REQUIRED root-treeformula-array-eventlist-fixture)
+
+ROOTTEST_ADD_TEST(indexMultiDim
+                  MACRO indexMultiDim.C
+                  COPY_TO_BUILDDIR orange.root shorttrack.root
+                  OUTREF indexMultiDim.ref)
+
