@@ -338,6 +338,40 @@ TEST(RNTupleDescriptor, QualifiedFieldName)
    EXPECT_STREQ("jets._0", desc.GetQualifiedFieldName(fldIdInner).c_str());
 }
 
+// https://github.com/root-project/root/issues/19442
+TEST(RNTupleDescriptor, GetTypeNameForComparison)
+{
+   static const std::string MetaTypeName = "Template<Template<float> >";
+   static const std::string RenormalizedTypeName = "Template<Template<float>>";
+
+   RFieldDescriptor fieldDesc = RFieldDescriptorBuilder()
+                                   .FieldId(1)
+                                   .Structure(ROOT::ENTupleStructure::kRecord)
+                                   .FieldName("f")
+                                   .TypeName(MetaTypeName)
+                                   .MakeDescriptor()
+                                   .Unwrap();
+   {
+      RNTupleDescriptorBuilder descBuilder;
+      // Pretend the descriptor was created before the spec version that clarified type normalization (ROOT v6.34)
+      descBuilder.SetVersion(1, 0, 0, 0);
+      descBuilder.SetNTuple("ntpl", "");
+
+      auto desc = descBuilder.MoveDescriptor();
+      ASSERT_EQ(desc.GetTypeNameForComparison(fieldDesc), RenormalizedTypeName);
+   }
+
+   {
+      RNTupleDescriptorBuilder descBuilder;
+      // For later spec versions, we should not hide the problem
+      descBuilder.SetVersion(1, 0, 0, 1);
+      descBuilder.SetNTuple("ntpl", "");
+
+      auto desc = descBuilder.MoveDescriptor();
+      ASSERT_EQ(desc.GetTypeNameForComparison(fieldDesc), MetaTypeName);
+   }
+}
+
 TEST(RFieldDescriptorIterable, IterateOverFieldNames)
 {
    auto model = RNTupleModel::Create();

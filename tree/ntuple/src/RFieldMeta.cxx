@@ -429,11 +429,17 @@ void ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pag
 
       rules = FindRules(&fieldDesc);
 
-      // If the field's type name is not the on-disk name but we found a rule, we know it is valid to read
-      // on-disk data because we found the rule according to the on-disk (source) type name and version/checksum.
-      if ((GetTypeName() != fieldDesc.GetTypeName()) && rules.empty()) {
-         throw RException(R__FAIL("incompatible type name for field " + GetFieldName() + ": " + GetTypeName() +
-                                  " vs. " + fieldDesc.GetTypeName()));
+      // If we found a rule, we know it is valid to read on-disk data because we found the rule according to the on-disk
+      // (source) type name and version/checksum.
+      if (rules.empty()) {
+         // Otherwise we require compatible type names, after renormalization. GetTypeName() is already renormalized,
+         // but RNTuple data written with ROOT v6.34 might not have renormalized the field type name. Ask the
+         // RNTupleDescriptor, which knows about the spec version, for a fixed up type name.
+         std::string descTypeName = desc.GetTypeNameForComparison(fieldDesc);
+         if (GetTypeName() != descTypeName) {
+            throw RException(R__FAIL("incompatible type name for field " + GetFieldName() + ": " + GetTypeName() +
+                                     " vs. " + descTypeName));
+         }
       }
 
       if (!rules.empty()) {
