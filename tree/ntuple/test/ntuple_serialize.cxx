@@ -532,6 +532,7 @@ TEST(RNTuple, SerializeClusterGroup)
 TEST(RNTuple, SerializeEmptyHeader)
 {
    RNTupleDescriptorBuilder builder;
+   builder.SetVersionForWriting();
    builder.SetNTuple("ntpl", "");
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(0)
@@ -551,6 +552,7 @@ TEST(RNTuple, SerializeEmptyHeader)
 TEST(RNTuple, SerializeHeader)
 {
    RNTupleDescriptorBuilder builder;
+   builder.SetVersionForWriting();
    builder.SetNTuple("ntpl", "");
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(0)
@@ -631,6 +633,8 @@ TEST(RNTuple, SerializeHeader)
    auto buffer = MakeUninitArray<unsigned char>(context.GetHeaderSize());
    context = RNTupleSerializer::SerializeHeader(buffer.get(), desc).Unwrap();
 
+   // Should set the version from the anchor; here it is fine to use the same version as for writing.
+   builder.SetVersionForWriting();
    RNTupleSerializer::DeserializeHeader(buffer.get(), context.GetHeaderSize(), builder);
 
    desc = builder.MoveDescriptor();
@@ -647,6 +651,7 @@ TEST(RNTuple, SerializeHeader)
 TEST(RNTuple, SerializeFooter)
 {
    RNTupleDescriptorBuilder builder;
+   builder.SetVersionForWriting();
    builder.SetNTuple("ntpl", "");
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(0)
@@ -721,6 +726,8 @@ TEST(RNTuple, SerializeFooter)
    auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
    EXPECT_EQ(sizeFooter, RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context).Unwrap());
 
+   // Should set the version from the anchor; here it is fine to use the same version as for writing.
+   builder.SetVersionForWriting();
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
    desc = builder.MoveDescriptor();
@@ -768,6 +775,7 @@ TEST(RNTuple, SerializeFooter)
 TEST(RNTuple, SerializeFooterXHeader)
 {
    RNTupleDescriptorBuilder builder;
+   builder.SetVersionForWriting();
    builder.SetNTuple("ntpl", "");
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(0)
@@ -875,6 +883,8 @@ TEST(RNTuple, SerializeFooterXHeader)
    auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
    EXPECT_EQ(sizeFooter, RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context).Unwrap());
 
+   // Should set the version from the anchor; here it is fine to use the same version as for writing.
+   builder.SetVersionForWriting();
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
 
@@ -933,6 +943,7 @@ TEST(RNTuple, SerializeStreamerInfos)
 TEST(RNTuple, SerializeMultiColumnRepresentation)
 {
    RNTupleDescriptorBuilder builder;
+   builder.SetVersionForWriting();
    builder.SetNTuple("ntpl", "");
 
    // Construct an RNTuple with a single string field, "str", having two column representations,
@@ -1042,6 +1053,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
    auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
    RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context).Unwrap();
 
+   // Should set the version from the anchor; here it is fine to use the same version as for writing.
+   builder.SetVersionForWriting();
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
    desc = builder.MoveDescriptor();
@@ -1123,6 +1136,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
 TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
 {
    RNTupleDescriptorBuilder builder;
+   builder.SetVersionForWriting();
    builder.SetNTuple("ntpl", "");
 
    // Construct an RNTuple with a single float field, "pt", having two column representations,
@@ -1228,6 +1242,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
    auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
    RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context).Unwrap();
 
+   // Should set the version from the anchor; here it is fine to use the same version as for writing.
+   builder.SetVersionForWriting();
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
    desc = builder.MoveDescriptor();
@@ -1259,6 +1275,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
 TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
 {
    RNTupleDescriptorBuilder builder;
+   builder.SetVersionForWriting();
    builder.SetNTuple("ntpl", "");
 
    // Construct an RNTuple with a single, deferred float field, "pt", having two column representations,
@@ -1350,6 +1367,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
    auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
    RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context).Unwrap();
 
+   // Should set the version from the anchor; here it is fine to use the same version as for writing.
+   builder.SetVersionForWriting();
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
    desc = builder.MoveDescriptor();
@@ -1390,6 +1409,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
 TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
 {
    RNTupleDescriptorBuilder builder;
+   builder.SetVersionForWriting();
    builder.SetNTuple("ntpl", "");
 
    // Construct an RNTuple with a single float field "pt". The field has a single representation for the
@@ -1473,6 +1493,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
    auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
    RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context).Unwrap();
 
+   // Should set the version from the anchor; here it is fine to use the same version as for writing.
+   builder.SetVersionForWriting();
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
    desc = builder.MoveDescriptor();
@@ -1512,6 +1534,7 @@ TEST(RNTuple, DeserializeDescriptorModes)
    // Writing
    {
       RNTupleDescriptorBuilder builder;
+      builder.SetVersionForWriting();
       builder.SetNTuple("ntpl", "");
 
       builder.AddField(RFieldDescriptorBuilder()
@@ -1780,6 +1803,7 @@ TEST(RNTuple, DeserializeDescriptorModes)
 TEST(RNTuple, SerializeMultiColumnRepresentationDeferred_HeaderExtBeforeSerialize)
 {
    RNTupleDescriptorBuilder builder;
+   builder.SetVersionForWriting();
    builder.SetNTuple("ntpl", "");
 
    // Exactly like SerializeMultiColumnRepresentationDeferred but we start the header extension before
@@ -1868,6 +1892,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred_HeaderExtBeforeSerializ
    auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
    RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context).Unwrap();
 
+   // Should set the version from the anchor; here it is fine to use the same version as for writing.
+   builder.SetVersionForWriting();
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
    desc = builder.MoveDescriptor();
@@ -1908,6 +1934,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred_HeaderExtBeforeSerializ
 TEST(RNTuple, SerializeMultiColumnRepresentationDeferredInMainHeader)
 {
    RNTupleDescriptorBuilder builder;
+   builder.SetVersionForWriting();
    builder.SetNTuple("ntpl", "");
 
    // Exactly like SerializeMultiColumnRepresentationDeferred but we add the deferred columns
@@ -1994,6 +2021,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferredInMainHeader)
    auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
    RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context).Unwrap();
 
+   // Should set the version from the anchor; here it is fine to use the same version as for writing.
+   builder.SetVersionForWriting();
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
    desc = builder.MoveDescriptor();

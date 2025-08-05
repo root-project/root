@@ -34,6 +34,7 @@ TEST(RNTupleCompat, FeatureFlag)
    FileRaii fileGuard("test_ntuple_compat_feature_flag.root");
 
    RNTupleDescriptorBuilder descBuilder;
+   descBuilder.SetVersionForWriting();
    descBuilder.SetNTuple("ntpl", "");
    descBuilder.SetFeature(RNTupleDescriptor::kFeatureFlagTest);
    descBuilder.AddField(RFieldDescriptorBuilder::FromField(ROOT::RFieldZero()).FieldId(0).MakeDescriptor().Unwrap());

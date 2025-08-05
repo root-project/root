@@ -189,6 +189,7 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
 TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
 {
    RNTupleDescriptorBuilder descBuilder;
+   descBuilder.SetVersionForWriting();
 
    // empty string is not a valid NTuple name
    descBuilder.SetNTuple("", "");
@@ -204,6 +205,7 @@ TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
 TEST(RFieldDescriptorBuilder, HeaderExtension)
 {
    RNTupleDescriptorBuilder descBuilder;
+   descBuilder.SetVersionForWriting();
    descBuilder.SetNTuple("ntpl", "");
    descBuilder.AddField(
       RFieldDescriptorBuilder().FieldId(0).Structure(ROOT::ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
