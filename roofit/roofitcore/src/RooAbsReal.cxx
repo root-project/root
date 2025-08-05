@@ -3678,7 +3678,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createRunningIntegral(const RooArgSet&
     Int_t isNum= !static_cast<RooRealIntegral&>(*tmp).numIntRealVars().empty();
 
     if (isNum) {
-      coutI(NumIntegration) << "RooAbsPdf::createRunningIntegral(" << GetName() << ") integration over observable(s) " << iset << " involves numeric integration," << std::endl
+      coutI(NumericIntegration) << "RooAbsPdf::createRunningIntegral(" << GetName() << ") integration over observable(s) " << iset << " involves numeric integration," << std::endl
              << "      constructing cdf though numeric integration of sampled pdf in " << numScanBins << " bins and applying order "
              << intOrder << " interpolation on integrated histogram." << std::endl
              << "      To override this choice of technique use argument ScanNone(), to change scan parameters use ScanParameters(nbins,order) argument" << std::endl ;

@@ -114,7 +114,7 @@ TEST(RooRealIntegral, IntegrateFuncWithShapeServers)
 {
    using namespace RooFit;
 
-   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
 
    RooWorkspace ws;
    ws.factory("Product::mu_mod({mu[-0.005, -5.0, 5.0], 10.0})");
@@ -232,7 +232,7 @@ TEST(RooRealIntegral, UseCloneAsIntegrationVariable2)
 TEST(RooRealIntegral, DISABLED_Issue11476)
 {
    // Silence the info about numeric integration because we don't care about it
-   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
 
    RooWorkspace ws{"ws"};
    ws.factory("Gaussian::gs(x[0,10], mu[2, 0, 10], sg[2, 0.1, 10])");
@@ -278,7 +278,7 @@ private:
 /// Related to GitHub issue #11814.
 TEST_P(LevelTest, ProjectConditional)
 {
-   RooHelpers::HijackMessageStream hijack(RooFit::INFO, RooFit::NumIntegration);
+   RooHelpers::HijackMessageStream hijack(RooFit::INFO, RooFit::NumericIntegration);
 
    constexpr bool verbose = false;
 

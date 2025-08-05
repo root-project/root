@@ -847,7 +847,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
             #    hc.StoreFitInfo(True)
 
         # Get the result
-        ROOT.RooMsgService.instance().getStream(1).removeTopic(ROOT.RooFit.NumIntegration)
+        ROOT.RooMsgService.instance().getStream(1).removeTopic(ROOT.RooFit.NumericIntegration)
 
         calc = ROOT.RooStats.HypoTestInverter(hc)
         calc.SetConfidenceLevel(optHTInv.confLevel)

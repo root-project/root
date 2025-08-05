@@ -29,7 +29,7 @@ public:
 private:
    void SetUp() override
    {
-      RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
+      RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
 
       datap = std::unique_ptr<RooDataSet>{prod.generate(x, 1000)};
       a.setConstant(true);
@@ -56,7 +56,7 @@ protected:
 
 TEST_P(TestProdPdf, CachingOpt)
 {
-   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
 
    using namespace RooFit;
    prod.fitTo(*datap, Optimize(_optimize), PrintLevel(-1), _evalBackend);
@@ -76,7 +76,7 @@ INSTANTIATE_TEST_SUITE_P(RooProdPdf, TestProdPdf,
 TEST(RooProdPdf, TestGetPartIntList)
 {
    RooHelpers::LocalChangeMsgLevel chmsglvl1{RooFit::ERROR, 0u, RooFit::InputArguments, true};
-   RooHelpers::LocalChangeMsgLevel chmsglvl2{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
+   RooHelpers::LocalChangeMsgLevel chmsglvl2{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
 
    // This test checks if RooProdPdf::getPartIntList factorizes the integrals
    // as expected, for the example of a three dimensional RooProdPdf.

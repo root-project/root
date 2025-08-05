@@ -101,7 +101,7 @@ RooMsgService::RooMsgService()
   _topicNames[Tracing]="Tracing" ;
   _topicNames[Contents]="Contents" ;
   _topicNames[DataHandling]="DataHandling" ;
-  _topicNames[NumIntegration]="NumericIntegration" ;
+  _topicNames[NumericIntegration]="NumericIntegration" ;
   _topicNames[FastEvaluations] = "FastEvaluations";
   _topicNames[HistFactory]="HistFactory";
 
@@ -123,7 +123,7 @@ void RooMsgService::reset() {
   // Old-style streams
   _streams.clear();
   addStream(RooFit::PROGRESS, Topic(RooFit::HistFactory - 1));//All before HistFactory
-  addStream(RooFit::INFO,Topic(RooFit::Eval|RooFit::Plotting|RooFit::Fitting|RooFit::Minimization|RooFit::Caching|RooFit::ObjectHandling|RooFit::NumIntegration|RooFit::InputArguments|RooFit::DataHandling)) ;
+  addStream(RooFit::INFO,Topic(RooFit::Eval|RooFit::Plotting|RooFit::Fitting|RooFit::Minimization|RooFit::Caching|RooFit::ObjectHandling|RooFit::NumericIntegration|RooFit::InputArguments|RooFit::DataHandling)) ;
   addStream(RooFit::INFO, Topic(RooFit::HistFactory));
 }
 

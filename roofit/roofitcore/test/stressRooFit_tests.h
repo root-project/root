@@ -2191,7 +2191,7 @@ public:
       {
          // To remove the INFO:NumericIntegration output from the stressRooFit output,
          // change the message level locally.
-         RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::INFO, 0u, RooFit::NumIntegration, false};
+         RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::INFO, 0u, RooFit::NumericIntegration, false};
 
          // Create integral over normalized pdf model over x,y,z in "R" region
          std::unique_ptr<RooAbsReal> intPdf{pxyz.createIntegral(RooArgSet(x, y, z), RooArgSet(x, y, z), "R")};

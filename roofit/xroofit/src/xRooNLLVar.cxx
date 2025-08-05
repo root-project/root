@@ -161,7 +161,7 @@ xRooNLLVar::xRooNLLVar(const std::shared_ptr<RooAbsPdf> &pdf,
    : fPdf(pdf), fData(data.first), fGlobs(data.second)
 {
 
-   RooMsgService::instance().getStream(RooFit::INFO).removeTopic(RooFit::NumIntegration);
+   RooMsgService::instance().getStream(RooFit::INFO).removeTopic(RooFit::NumericIntegration);
 
    fOpts = std::shared_ptr<RooLinkedList>(new RooLinkedList, [](RooLinkedList *l) {
       if (l)
