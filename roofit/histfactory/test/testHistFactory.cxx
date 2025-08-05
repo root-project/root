@@ -86,7 +86,7 @@ TEST(Sample, CopyAssignment)
 
 TEST(HistFactory, Read_ROOT6_16_Model)
 {
-   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
 
    std::string filename = "./ref_6.16_example_UsingC_channel1_meas_model.root";
    std::unique_ptr<TFile> file(TFile::Open(filename.c_str()));
@@ -115,7 +115,7 @@ TEST(HistFactory, Read_ROOT6_16_Model)
 
 TEST(HistFactory, Read_ROOT6_16_Combined_Model)
 {
-   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
 
    std::string filename = "./ref_6.16_example_UsingC_combined_meas_model.root";
    std::unique_ptr<TFile> file(TFile::Open(filename.c_str()));

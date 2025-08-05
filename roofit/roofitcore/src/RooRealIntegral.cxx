@@ -694,11 +694,11 @@ bool RooRealIntegral::initNumIntegrator() const
     return false;
   }
 
-  cxcoutI(NumIntegration) << "RooRealIntegral::init(" << GetName() << ") using numeric integrator "
+  cxcoutI(NumericIntegration) << "RooRealIntegral::init(" << GetName() << ") using numeric integrator "
            << integratorName << " to calculate Int" << _intList << std::endl ;
 
   if (_intList.size()>3) {
-    cxcoutI(NumIntegration) << "RooRealIntegral::init(" << GetName() << ") evaluation requires " << _intList.size() << "-D numeric integration step. Evaluation may be slow, sufficient numeric precision for fitting & minimization is not guaranteed" << std::endl ;
+    cxcoutI(NumericIntegration) << "RooRealIntegral::init(" << GetName() << ") evaluation requires " << _intList.size() << "-D numeric integration step. Evaluation may be slow, sufficient numeric precision for fitting & minimization is not guaranteed" << std::endl ;
   }
 
   _restartNumIntEngine = false ;
