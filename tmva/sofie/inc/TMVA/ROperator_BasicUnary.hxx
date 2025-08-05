@@ -9,7 +9,18 @@ namespace TMVA {
 namespace Experimental {
 namespace SOFIE {
 
-enum class EBasicUnaryOperator { kReciprocal, kSqrt , kNeg, kExp, kLog, kSin, kCos, kAbs };
+enum class EBasicUnaryOperator {
+   kReciprocal,
+   kSqrt,
+   kNeg,
+   kNot,
+   kExp,
+   kLog,
+   kSin,
+   kCos,
+   kAbs,
+   kRound
+};
 
 template <typename T, EBasicUnaryOperator Op>
 struct UnaryOpTraits {
@@ -31,6 +42,12 @@ template <typename T>
 struct UnaryOpTraits<T, EBasicUnaryOperator::kNeg> {
    static std::string Name() { return "Neg"; }
    static std::string Op(const std::string &X) { return "-" + X; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kNot> {
+   static std::string Name() { return "Not"; }
+   static std::string Op(const std::string &X) { return "!" + X; }
 };
 
 template <typename T>
@@ -61,6 +78,15 @@ template <typename T>
 struct UnaryOpTraits<T, EBasicUnaryOperator::kAbs> {
    static std::string Name() { return "Abs"; }
    static std::string Op(const std::string &X) { return "std::abs(" + X + ")"; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kRound> {
+   static std::string Name() { return "Round"; }
+   static std::string Op(const std::string &X)
+   {
+      return "(std::fabs(" + X + "- std::trunc(" + X + ")) == 0.5) ? std::trunc(" + X + ") : std::round(" + X + ");";
+   }
 };
 
 template <typename T, EBasicUnaryOperator Op>
@@ -103,13 +129,21 @@ public:
       out << SP << "\n//---- Operator" << UnaryOpTraits<T, Op>::Name() << " " << OpName << "\n";
       auto length = ConvertDimShapeToLength(fShapeX);
       out << SP << "for (size_t i = 0; i < " << length << "; i++) {\n";
-      out << SP << SP << "tensor_" << fNY << "[i] = " << UnaryOpTraits<T, Op>::Op("tensor_" + fNX + "[i]") << ";\n";
+      
+      // since NOT is operated on a boolean vector, for which we do not use a pointer
+      if (Op == EBasicUnaryOperator::kNot){
+         out << SP << SP << "fTensor_" << fNY << "[i] = " << UnaryOpTraits<T, Op>::Op("fTensor_" + fNX + "[i]") << ";\n"; 
+      } else {
+         out << SP << SP << "tensor_" << fNY << "[i] = " << UnaryOpTraits<T, Op>::Op("tensor_" + fNX + "[i]") << ";\n";
+      }
+      
       out << SP << "}\n";
       return out.str();
    }
 
    std::vector<std::string> GetStdLibs() override {
-      if (Op == EBasicUnaryOperator::kSqrt || Op == EBasicUnaryOperator::kExp || Op == EBasicUnaryOperator::kLog) {
+      if (Op == EBasicUnaryOperator::kSqrt || Op == EBasicUnaryOperator::kExp || Op == EBasicUnaryOperator::kLog ||
+          Op == EBasicUnaryOperator::kRound) {
          return { std::string("cmath") };
       } else {
          return {};
