@@ -371,6 +371,19 @@ std::string ROOT::RNTupleDescriptor::GetQualifiedFieldName(ROOT::DescriptorId_t 
    return prefix + "." + fieldDescriptor.GetFieldName();
 }
 
+std::string ROOT::RNTupleDescriptor::GetTypeNameForComparison(const RFieldDescriptor &fieldDesc) const
+{
+   std::string typeName = fieldDesc.GetTypeName();
+
+   // ROOT v6.34, with spec versions before 1.0.0.1, did not properly renormalize the type name.
+   R__ASSERT(fVersionEpoch == 1);
+   if (fVersionMajor == 0 && fVersionMinor == 0 && fVersionPatch < 1) {
+      typeName = ROOT::Internal::GetRenormalizedTypeName(typeName);
+   }
+
+   return typeName;
+}
+
 ROOT::DescriptorId_t ROOT::RNTupleDescriptor::FindFieldId(std::string_view fieldName) const
 {
    return FindFieldId(fieldName, GetFieldZeroId());
