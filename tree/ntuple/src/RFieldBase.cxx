@@ -305,8 +305,8 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
 
    auto fnFail = [&fieldName,
                   &resolvedType](const std::string &errMsg,
-                                 RInvalidField::RCategory cat =
-                                    RInvalidField::RCategory::kTypeError) -> RResult<std::unique_ptr<RFieldBase>> {
+                                 RInvalidField::ECategory cat =
+                                    RInvalidField::ECategory::kTypeError) -> RResult<std::unique_ptr<RFieldBase>> {
       if (createContext.GetContinueOnError()) {
          return std::unique_ptr<RFieldBase>(std::make_unique<RInvalidField>(fieldName, resolvedType, errMsg, cat));
       } else {
@@ -603,7 +603,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
       auto error = e.GetError();
       if (createContext.GetContinueOnError()) {
          return std::unique_ptr<RFieldBase>(std::make_unique<RInvalidField>(fieldName, typeName, error.GetReport(),
-                                                                            RInvalidField::RCategory::kGeneric));
+                                                                            RInvalidField::ECategory::kGeneric));
       } else {
          return error;
       }
@@ -611,7 +611,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
       // Integer parsing error
       if (createContext.GetContinueOnError()) {
          return std::unique_ptr<RFieldBase>(
-            std::make_unique<RInvalidField>(fieldName, typeName, e.what(), RInvalidField::RCategory::kGeneric));
+            std::make_unique<RInvalidField>(fieldName, typeName, e.what(), RInvalidField::ECategory::kGeneric));
       } else {
          return R__FAIL(e.what());
       }
@@ -624,7 +624,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
       }
       return result;
    }
-   return R__FORWARD_RESULT(fnFail("unknown type: " + typeName, RInvalidField::RCategory::kUnknownType));
+   return R__FORWARD_RESULT(fnFail("unknown type: " + typeName, RInvalidField::ECategory::kUnknownType));
 }
 
 const ROOT::RFieldBase::RColumnRepresentations &ROOT::RFieldBase::GetColumnRepresentations() const
