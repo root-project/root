@@ -213,6 +213,38 @@ void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Swap the underlying data buffer (fBuffer) of 2 TBuffer.
+/// Ownership and reallocation function are also swapped
+/// read/write mode is unchanged
+/// The current buffer position is reset to the start of the buffer for both objects
+void TBuffer::SwapBuffer(TBuffer &other)
+{
+   std::swap(fBuffer, other.fBuffer);
+   std::swap(fReAllocFunc, other.fReAllocFunc);
+
+   bool isowner = TestBit(kIsOwner);
+   SetBit(kIsOwner, other.TestBit(kIsOwner));
+   other.SetBit(kIsOwner, isowner);
+
+   std::swap(fBufSize, other.fBufSize);
+   if (fMode != other.fMode)
+   {
+      if ( (fMode&kWrite)!=0 ) {
+         // Local is read mode, other is write mode
+         fBufSize = fBufSize - kExtraSpace;
+      } else {
+         // Local is write mode, other is read mode
+         other.fBufSize = other.fBufSize - kExtraSpace;
+      }
+   }
+   fBufMax = fBuffer + fBufSize;
+   other.fBufMax = other.fBuffer + other.fBufSize;
+
+   fBufCur = fBuffer;
+   other.fBufCur = other.fBuffer;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Expand (or shrink) the I/O buffer to newsize bytes.
 /// If copy is true (the default), the existing content of the
 /// buffer is preserved, otherwise the buffer is returned zero-ed out.

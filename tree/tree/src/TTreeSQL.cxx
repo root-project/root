@@ -189,7 +189,7 @@ void TTreeSQL::CheckBasket(TBranch *branch)
    TBasketSQL* basket = (TBasketSQL *)branch->GetBasket(0);
 
    if (basket==nullptr) {
-      basket = (TBasketSQL*)CreateBasket(branch);
+      basket = (TBasketSQL*)CreateBasket(branch, 0);
       if (basket==nullptr) return;
       //++(branch->fNBaskets);
       branch->GetListOfBaskets()->AddAtAndExpand(basket,0);
@@ -348,7 +348,7 @@ TString TTreeSQL::ConvertTypeName(const TString& typeName )
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a TBasketSQL
 
-TBasket * TTreeSQL::CreateBasket(TBranch * tb)
+TBasket * TTreeSQL::CreateBasket(TBranch * tb, Int_t /* ondiskSize */)
 {
    if (fServer==nullptr) {
       Error("CreateBasket","No TSQLServer specified");
@@ -478,7 +478,7 @@ void TTreeSQL::CreateBranches()
       br->SetEntries(fEntries);
 
       //++(br->fNBaskets);
-      br->GetListOfBaskets()->AddAtAndExpand(CreateBasket(br),0);
+      br->GetListOfBaskets()->AddAtAndExpand(CreateBasket(br, 0),0);
    }
 }
 

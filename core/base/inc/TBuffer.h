@@ -88,6 +88,7 @@ public:
    void     SetReadMode();
    void     SetWriteMode();
    void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
+   void     SwapBuffer(TBuffer &other);
    ReAllocCharFun_t GetReAllocFunc() const;
    void     SetReAllocFunc(ReAllocCharFun_t reallocfunc = nullptr);
    void     SetBufferOffset(Int_t offset = 0) { fBufCur = fBuffer+offset; }
