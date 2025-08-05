@@ -554,9 +554,13 @@ set(CPPINTEROP_USE_CLING ON CACHE BOOL "" FORCE)
 set(CPPINTEROP_USE_REPL OFF CACHE BOOL "" FORCE)
 
 #---Disable testing on InterOp if ROOT's testing is OFF (InterOp tests are enabled by default) -------------------------------------------------------
-if(testing)
+ROOT_CHECK_CONNECTION("CPPINTEROP_ENABLE_TESTING=OFF")
+if(testing AND NOT NO_CONNECTION)
   set(CPPINTEROP_ENABLE_TESTING ON CACHE BOOL "" FORCE)
 else()
+  if(NO_CONNECTION)
+    message(STATUS "No internet connection, disabling the `CppInterOp testing infrastructure` option")
+  endif()
   set(CPPINTEROP_ENABLE_TESTING OFF CACHE BOOL "")
 endif()
 
