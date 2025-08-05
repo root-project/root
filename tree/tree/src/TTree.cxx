@@ -4887,6 +4887,7 @@ static TBranch *R__FindBranchHelper(TObjArray *list, const char *branchname) {
 /// Return the branch that correspond to the path 'branchname', which can
 /// include the name of the tree or the omitted name of the parent branches.
 /// In case of ambiguity, returns the first match.
+/// \sa TTree::GetBranch
 
 TBranch* TTree::FindBranch(const char* branchname)
 {
@@ -4961,7 +4962,7 @@ TBranch* TTree::FindBranch(const char* branchname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find leaf..
+/// Find first leaf containing searchname.
 
 TLeaf* TTree::FindLeaf(const char* searchname)
 {
@@ -5426,6 +5427,7 @@ TBranch *TTree::GetBranchFromFriends(const char *branchName)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to the branch with the given name in this tree or its friends.
 /// The search is done breadth first.
+/// \sa TTree::FindBranch
 
 TBranch *TTree::GetBranch(const char *name)
 {
