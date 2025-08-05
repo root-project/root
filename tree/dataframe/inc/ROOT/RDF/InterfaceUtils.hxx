@@ -352,10 +352,10 @@ ColumnNames_t FilterArraySizeColNames(const ColumnNames_t &columnNames, const st
 void CheckValidCppVarName(std::string_view var, const std::string &where);
 
 void CheckForRedefinition(const std::string &where, std::string_view definedCol, const RColumnRegister &colRegister,
-                          const ColumnNames_t &treeColumns, const ColumnNames_t &dataSourceColumns);
+                          const ColumnNames_t &dataSourceColumns);
 
 void CheckForDefinition(const std::string &where, std::string_view definedColView, const RColumnRegister &colRegister,
-                        const ColumnNames_t &treeColumns, const ColumnNames_t &dataSourceColumns);
+                        const ColumnNames_t &dataSourceColumns);
 
 void CheckForNoVariations(const std::string &where, std::string_view definedColView,
                           const RColumnRegister &colRegister);
@@ -363,12 +363,12 @@ void CheckForNoVariations(const std::string &where, std::string_view definedColV
 std::string PrettyPrintAddr(const void *const addr);
 
 std::shared_ptr<RJittedFilter> BookFilterJit(std::shared_ptr<RNodeBase> *prevNodeOnHeap, std::string_view name,
-                                             std::string_view expression, const ColumnNames_t &branches,
-                                             const RColumnRegister &colRegister, TTree *tree, RDataSource *ds);
+                                             std::string_view expression, const RColumnRegister &colRegister,
+                                             TTree *tree, RDataSource *ds);
 
 std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
                                              RDataSource *ds, const RColumnRegister &colRegister,
-                                             const ColumnNames_t &branches, std::shared_ptr<RNodeBase> *prevNodeOnHeap);
+                                             std::shared_ptr<RNodeBase> *prevNodeOnHeap);
 
 std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std::string_view expression,
                                                       RLoopManager &lm, const RColumnRegister &colRegister,
@@ -377,8 +377,8 @@ std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std
 std::shared_ptr<RJittedVariation>
 BookVariationJit(const std::vector<std::string> &colNames, std::string_view variationName,
                  const std::vector<std::string> &variationTags, std::string_view expression, RLoopManager &lm,
-                 RDataSource *ds, const RColumnRegister &colRegister, const ColumnNames_t &branches,
-                 std::shared_ptr<RNodeBase> *upcastNodeOnHeap, bool isSingleColumn);
+                 RDataSource *ds, const RColumnRegister &colRegister, std::shared_ptr<RNodeBase> *upcastNodeOnHeap,
+                 bool isSingleColumn);
 
 std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
                            const std::type_info &art, const std::type_info &at, void *rOnHeap, TTree *tree,
@@ -756,8 +756,8 @@ void CheckTypesAndPars(unsigned int nTemplateParams, unsigned int nColumnNames);
 const ColumnNames_t SelectColumns(unsigned int nArgs, const ColumnNames_t &bl, const ColumnNames_t &defBl);
 
 /// Check whether column names refer to a valid branch of a TTree or have been `Define`d. Return invalid column names.
-ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, const ColumnNames_t &datasetColumns,
-                                 const RColumnRegister &definedCols, const ColumnNames_t &dataSourceColumns);
+ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, const RColumnRegister &definedCols,
+                                 const ColumnNames_t &dataSourceColumns);
 
 /// Returns the list of Filters defined in the whole graph
 std::vector<std::string> GetFilterNames(const std::shared_ptr<RLoopManager> &loopManager);
@@ -822,8 +822,8 @@ template <typename T>
 using InnerValueType_t = typename InnerValueType<T>::type;
 
 std::pair<std::vector<std::string>, std::vector<std::string>>
-AddSizeBranches(const std::vector<std::string> &branches, ROOT::RDF::RDataSource *ds,
-                std::vector<std::string> &&colsWithoutAliases, std::vector<std::string> &&colsWithAliases);
+AddSizeBranches(ROOT::RDF::RDataSource *ds, std::vector<std::string> &&colsWithoutAliases,
+                std::vector<std::string> &&colsWithAliases);
 
 void RemoveDuplicates(ColumnNames_t &columnNames);
 void RemoveRNTupleSubFields(ColumnNames_t &columnNames);

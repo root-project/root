@@ -173,9 +173,6 @@ class RLoopManager : public RNodeBase {
    /// Readers for TTree/RDataSource columns (one per slot), shared by all nodes in the computation graph.
    std::vector<std::unordered_map<std::string, std::unique_ptr<RColumnReaderBase>>> fDatasetColumnReaders;
 
-   /// Cache of the tree/chain branch names. Never access directy, always use GetBranchNames().
-   ColumnNames_t fValidBranchNames;
-
    /// Pointer to a shared slot stack in case this instance runs concurrently with others:
    std::weak_ptr<ROOT::Internal::RSlotStack> fSlotStack;
 
@@ -268,8 +265,6 @@ public:
 
    std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>
    GetGraph(std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> &visitedMap) final;
-
-   const ColumnNames_t &GetBranchNames();
 
    void AddSampleCallback(void *nodePtr, ROOT::RDF::SampleCallback_t &&callback);
 
