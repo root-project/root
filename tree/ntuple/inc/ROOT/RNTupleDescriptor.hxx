@@ -822,6 +822,9 @@ public:
    /// In case of invalid field ID, an empty string is returned.
    std::string GetQualifiedFieldName(ROOT::DescriptorId_t fieldId) const;
 
+   /// Adjust the passed typeName for comparison with another renormalized type name.
+   std::string GetTypeNameForComparison(const std::string &typeName) const;
+
    bool HasFeature(unsigned int flag) const { return fFeatureFlags.count(flag) > 0; }
    std::vector<std::uint64_t> GetFeatureFlags() const;
 
