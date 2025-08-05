@@ -94,14 +94,11 @@ endif()
 ROOTTEST_COMPILE_MACRO(iobug.C
                        FIXTURES_SETUP root-tree-addresses-iobug-fixture)
 
-ROOTTEST_COMPILE_MACRO(${CMAKE_SOURCE_DIR}/roottest/scripts/utils.cc
-                       FIXTURES_SETUP root-tree-addresses-utils-fixture)
-
 ROOTTEST_ADD_TEST(iobug
                   MACRO runiobug.C
-                  ROOTEXE_OPTS -e "(void)gSystem->Load(\"utils_cc\")"
+                  ROOTEXE_OPTS -e "(void)gSystem->Load(\"../../../utils_cc\")"
                   OUTREF iobug.ref
-                  FIXTURES_REQUIRED root-tree-addresses-iobug-fixture root-tree-addresses-utils-fixture)
+                  FIXTURES_REQUIRED root-tree-addresses-iobug-fixture roottest-scripts-utils-fixture)
 
 ROOTTEST_COMPILE_MACRO(userClass.C
                        FIXTURES_SETUP root-tree-addresses-userClass-fixture)
