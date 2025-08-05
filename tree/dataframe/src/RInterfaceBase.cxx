@@ -26,15 +26,6 @@
 
 unsigned int ROOT::RDF::RInterfaceBase::GetNFiles()
 {
-   // TTree/TChain as input
-   if (const auto *tree = fLoopManager->GetTree()) {
-      if (!dynamic_cast<const TChain *>(tree) && !tree->GetCurrentFile()) {
-         // in-memory TTree
-         return 0;
-      }
-      return ROOT::Internal::TreeUtils::GetFileNamesFromTree(*tree).size();
-   }
-   // Datasource as input
    if (auto dataSource = GetDataSource()) {
       return dataSource->GetNFiles();
    }
@@ -97,12 +88,6 @@ ROOT::RDF::ColumnNames_t ROOT::RDF::RInterfaceBase::GetColumnNames()
 
    std::for_each(definedColumns.begin(), definedColumns.end(), addIfNotInternal);
 
-   auto tree = fLoopManager->GetTree();
-   if (tree) {
-      for (const auto &bName : RDFInternal::GetBranchNames(*tree, /*allowDuplicates=*/false))
-         allColumns.emplace(bName);
-   }
-
    if (auto ds = GetDataSource()) {
       for (const auto &s : ROOT::Internal::RDF::GetColumnNamesNoDuplicates(*ds)) {
          if (s.rfind("R_rdf_sizeof", 0) != 0)
@@ -135,8 +120,8 @@ std::string ROOT::RDF::RInterfaceBase::GetColumnType(std::string_view column)
    RDFDetail::RDefineBase *define = fColRegister.GetDefine(col);
 
    const bool convertVector2RVec = true;
-   return RDFInternal::ColumnName2ColumnTypeName(std::string(col), fLoopManager->GetTree(),
-                                                 fLoopManager->GetDataSource(), define, convertVector2RVec);
+   return RDFInternal::ColumnName2ColumnTypeName(std::string(col), nullptr, fLoopManager->GetDataSource(), define,
+                                                 convertVector2RVec);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -288,13 +273,6 @@ bool ROOT::RDF::RInterfaceBase::HasColumn(std::string_view columnName)
 {
    if (fColRegister.IsDefineOrAlias(columnName))
       return true;
-
-   if (fLoopManager->GetTree()) {
-      const auto &branchNames = fLoopManager->GetBranchNames();
-      const auto branchNamesEnd = branchNames.end();
-      if (branchNamesEnd != std::find(branchNames.begin(), branchNamesEnd, columnName))
-         return true;
-   }
 
    if (auto ds = GetDataSource(); ds->HasColumn(columnName))
       return true;

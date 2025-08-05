@@ -48,9 +48,7 @@ void ROOT::Internal::RDF::TriggerRun(ROOT::RDF::RNode node)
 
 std::string ROOT::Internal::RDF::GetDataSourceLabel(const ROOT::RDF::RNode &node)
 {
-   if (node.fLoopManager->GetTree()) {
-      return "TTreeDS";
-   } else if (auto ds = node.GetDataSource()) {
+   if (auto ds = node.GetDataSource()) {
       return ds->GetLabel();
    } else {
       return "EmptyDS";
