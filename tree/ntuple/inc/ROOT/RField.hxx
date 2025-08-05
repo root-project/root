@@ -79,7 +79,7 @@ public:
       /// The type given to RFieldBase::Create was unknown
       kUnknownType,
       /// The field could not be created because its descriptor had an unknown structural role
-      kUnknownStructure
+      kUnknownStructure,
    };
 
 private:
