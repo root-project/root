@@ -68,3 +68,25 @@ ROOTTEST_ADD_TEST(vectorOfvector
                   MACRO runvectorOfvector.C+
                   OUTREF vectorOfvector.ref
                   FIXTURES_REQUIRED root-treeformula-array-vectorOfvector-fixture)
+
+ROOTTEST_ADD_TEST(indexLoad
+                  MACRO runindexLoad.C+
+                  OUTREF indexLoad.ref)
+
+ROOTTEST_ADD_TEST(vectorInVector
+                  MACRO runvectorInVector.C
+                  COPY_TO_BUILDDIR CaloTowers.root
+                  OUTREF vectorInVector.ref)
+
+ROOTTEST_ADD_TEST(nestedind
+                  MACRO runnestedind.C
+                  OUTREF nestedind.ref)
+
+ROOTTEST_ADD_TEST(NestedFail
+                  MACRO execNestedFail.C
+                  OUTREF execNestedFail.ref)
+
+ROOTTEST_ADD_TEST(OutOfBounds
+                  MACRO execOutOfBounds.C
+                  COPY_TO_BUILDDIR run133.root
+                  OUTREF execOutOfBounds.ref)
