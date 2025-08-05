@@ -55,4 +55,26 @@ QualType typedef_my_int = lookup.findType("my_int", LookupHelper::WithDiagnostic
 typedef_my_int.getAsString().c_str()
 //CHECK: ({{[^)]+}}) "my_int"
 
+cl_A = lookup.findType<A>();
+cl_A.getAsString().c_str()
+//CHECK: ({{[^)]+}}) "class A"
+
+cl_B_in_N = lookup.findType<N::B>();
+cl_B_in_N.getAsString().c_str()
+//CHECK: ({{[^)]+}}) "class N::B"
+
+cl_C_in_M = lookup.findType<N::M::C>();
+cl_C_in_M.getAsString().c_str()
+//CHECK: ({{[^)]+}}) "class N::M::C"
+
+builtin_int = lookup.findType<int>();
+builtin_int.getAsString().c_str()
+//CHECK: ({{[^)]+}}) "int"
+
+// Typedefs and aliases cannot be found using findType<T>()
+// because they are replaced with the underlying type
+typedef_my_int = lookup.findType<my_int>();
+typedef_my_int.getAsString().c_str()
+//CHECK: ({{[^)]+}}) "int"
+
 .q
