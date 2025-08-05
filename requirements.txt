@@ -35,6 +35,8 @@ ipywidgets
 
 # Unified Histogram Interface (UHI)
 uhi
+matplotlib
+mplhep
 
 # For testing
 nbconvert>=7.4.0
