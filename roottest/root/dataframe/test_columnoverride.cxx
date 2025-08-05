@@ -18,8 +18,8 @@ int main()
       auto c = d.Define("x", [] { return 2; }).Count();
    } catch (const std::runtime_error &e) {
       std::string msg(e.what());
-      const auto expected_msg = "RDataFrame::Define: cannot define column \"x\". A branch with that name is already "
-                                "present in the input TTree/TChain.";
+      const auto expected_msg = "RDataFrame::Define: cannot define column \"x\". A column with that name is already "
+                                "present in the input data source. ";
       if (msg.find(expected_msg) == std::string::npos)
          throw;
       exceptionCount++;
@@ -30,8 +30,8 @@ int main()
       auto c = d.Define("x", "2").Count();
    } catch (const std::runtime_error &e) {
       std::string msg(e.what());
-      const auto expected_msg = "RDataFrame::Define: cannot define column \"x\". A branch with that name is already "
-                                "present in the input TTree/TChain.";
+      const auto expected_msg = "RDataFrame::Define: cannot define column \"x\". A column with that name is already "
+                                "present in the input data source.";
       if (msg.find(expected_msg) == std::string::npos)
          throw;
       exceptionCount++;
