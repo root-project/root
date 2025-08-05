@@ -698,12 +698,11 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
                                              const ColumnNames_t &branches,
                                              std::shared_ptr<RNodeBase> *upcastNodeOnHeap)
 {
-   auto *const tree = lm.GetTree();
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
 
    const auto parsedExpr = ParseRDFExpression(expression, branches, colRegister, dsColumns);
    const auto exprVarTypes =
-      GetValidatedArgTypes(parsedExpr.fUsedCols, colRegister, tree, ds, "Define", /*vector2RVec=*/true);
+      GetValidatedArgTypes(parsedExpr.fUsedCols, colRegister, nullptr, ds, "Define", /*vector2RVec=*/true);
    const auto funcName = DeclareFunction(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
    const auto type = RetTypeOfFunc(funcName);
 
@@ -773,12 +772,11 @@ BookVariationJit(const std::vector<std::string> &colNames, std::string_view vari
                  RDataSource *ds, const RColumnRegister &colRegister, const ColumnNames_t &branches,
                  std::shared_ptr<RNodeBase> *upcastNodeOnHeap, bool isSingleColumn)
 {
-   auto *const tree = lm.GetTree();
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
 
    const auto parsedExpr = ParseRDFExpression(expression, branches, colRegister, dsColumns);
    const auto exprVarTypes =
-      GetValidatedArgTypes(parsedExpr.fUsedCols, colRegister, tree, ds, "Vary", /*vector2RVec=*/true);
+      GetValidatedArgTypes(parsedExpr.fUsedCols, colRegister, nullptr, ds, "Vary", /*vector2RVec=*/true);
    const auto funcName = DeclareFunction(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
    const auto type = RetTypeOfFunc(funcName);
 
