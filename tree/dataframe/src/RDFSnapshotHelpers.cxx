@@ -426,7 +426,8 @@ void ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::InitTask(TTreeReader *, un
 {
    // We ask the input RLoopManager if it has a TTree. We cannot rely on getting this information when constructing
    // this action helper, since the TTree might change e.g. when ChangeSpec is called in-between distributed tasks.
-   fInputTree = fInputLoopManager->GetTree();
+   if (auto treeDS = dynamic_cast<ROOT::Internal::RDF::RTTreeDS *>(fInputLoopManager->GetDataSource()))
+      fInputTree = treeDS->GetTree();
    fBranchAddressesNeedReset = true;
 }
 
@@ -636,8 +637,8 @@ void ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::InitTask(TTreeReader *r,
    if (r) {
       // We could be getting a task-local TTreeReader from the TTreeProcessorMT.
       fInputTrees[slot] = r->GetTree();
-   } else {
-      fInputTrees[slot] = fInputLoopManager->GetTree();
+   } else if (auto treeDS = dynamic_cast<ROOT::Internal::RDF::RTTreeDS *>(fInputLoopManager->GetDataSource())) {
+      fInputTrees[slot] = treeDS->GetTree();
    }
    fBranchAddressesNeedReset[slot] = 1; // reset first event flag for this slot
 }
@@ -753,7 +754,10 @@ void ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::Finalize()
       // Create the output TTree and create the user-requested branches
       auto outTree =
          std::make_unique<TTree>(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/treeDirectory);
-      SetEmptyBranches(fInputLoopManager->GetTree(), *outTree);
+      TTree *inputTree{};
+      if (auto treeDS = dynamic_cast<ROOT::Internal::RDF::RTTreeDS *>(fInputLoopManager->GetDataSource()))
+         inputTree = treeDS->GetTree();
+      SetEmptyBranches(inputTree, *outTree);
 
       fOutputFile->Write();
    }

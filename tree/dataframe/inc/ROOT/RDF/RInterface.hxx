@@ -296,9 +296,8 @@ public:
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       using BaseNodeType_t = typename std::remove_pointer_t<decltype(upcastNodeOnHeap)>::element_type;
       RInterface<BaseNodeType_t> upcastInterface(*upcastNodeOnHeap, *fLoopManager, fColRegister);
-      const auto jittedFilter =
-         RDFInternal::BookFilterJit(upcastNodeOnHeap, name, expression, fLoopManager->GetBranchNames(), fColRegister,
-                                    fLoopManager->GetTree(), GetDataSource());
+      const auto jittedFilter = RDFInternal::BookFilterJit(
+         upcastNodeOnHeap, name, expression, fLoopManager->GetBranchNames(), fColRegister, nullptr, GetDataSource());
 
       return RInterface<RDFDetail::RJittedFilter, DS_t>(std::move(jittedFilter), *fLoopManager, fColRegister);
    }
@@ -1591,8 +1590,8 @@ public:
 
       const auto validColumnNames =
          GetValidatedColumnNames(columnListWithoutSizeColumns.size(), columnListWithoutSizeColumns);
-      const auto colTypes = GetValidatedArgTypes(validColumnNames, fColRegister, fLoopManager->GetTree(),
-                                                 GetDataSource(), "Cache", /*vector2RVec=*/false);
+      const auto colTypes =
+         GetValidatedArgTypes(validColumnNames, fColRegister, nullptr, GetDataSource(), "Cache", /*vector2RVec=*/false);
       for (const auto &colType : colTypes)
          cacheCall << colType << ", ";
       if (!columnListWithoutSizeColumns.empty())
