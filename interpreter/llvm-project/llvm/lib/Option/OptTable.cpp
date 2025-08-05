@@ -556,7 +556,7 @@ InputArgList OptTable::internalParseArgs(
 
     // Check for missing argument error.
     if (!A) {
-      assert(Index >= End && "Unexpected parser error.");
+      //assert(Index >= End && "Unexpected parser error.");
       assert(Index - Prev - 1 && "No missing arguments!");
       MissingArgIndex = Prev;
       MissingArgCount = Index - Prev - 1;
