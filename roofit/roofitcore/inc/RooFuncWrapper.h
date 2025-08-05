@@ -14,7 +14,7 @@
 #define RooFit_RooFuncWrapper_h
 
 #include <RooAbsReal.h>
-#include <RooListProxy.h>
+#include <RooRealProxy.h>
 
 #include <map>
 #include <memory>
@@ -40,7 +40,7 @@ public:
 
    TObject *clone(const char *newname) const override { return new RooFuncWrapper(*this, newname); }
 
-   double defaultErrorLevel() const override { return 0.5; }
+   double defaultErrorLevel() const override { return _absReal->defaultErrorLevel(); }
 
    bool hasGradient() const override { return _hasGradient; }
    void gradient(double *out) const override;
@@ -82,8 +82,8 @@ private:
       std::size_t size = 0;
    };
 
-   std::unique_ptr<RooAbsReal> _absReal;
-   RooListProxy _params;
+   RooRealProxy _absReal;
+   RooArgList _params;
    std::string _funcName;
    Func _func;
    Grad _grad;

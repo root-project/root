@@ -54,15 +54,13 @@ namespace Experimental {
 
 RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal &obj, const RooAbsData *data,
                                RooSimultaneous const *simPdf, bool useEvaluator)
-   : RooAbsReal{name, title}, _params{"!params", "List of parameters", this}, _useEvaluator{useEvaluator}
+   : RooAbsReal{name, title},
+    _absReal{"input", "input", this, std::make_unique<RooEvaluatorWrapper>(obj, const_cast<RooAbsData *>(data), false, "", simPdf, false)},
+    _useEvaluator{useEvaluator}
 {
-   if (_useEvaluator) {
-      _absReal = std::make_unique<RooEvaluatorWrapper>(obj, const_cast<RooAbsData *>(data), false, "", simPdf, false);
-   }
-
    // Get the parameters.
    RooArgSet paramSet;
-   obj.getParameters(data ? data->get() : nullptr, paramSet);
+   _absReal->getParameters(data ? data->get() : nullptr, paramSet);
 
    // Load the parameters and observables.
    auto spans = loadParamsAndData(paramSet, data, simPdf);
@@ -110,7 +108,8 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal &
 
 RooFuncWrapper::RooFuncWrapper(const RooFuncWrapper &other, const char *name)
    : RooAbsReal(other, name),
-     _params("!params", this, other._params),
+     _absReal("input", this, other._absReal),
+     _params(other._params),
      _funcName(other._funcName),
      _func(other._func),
      _grad(other._grad),
