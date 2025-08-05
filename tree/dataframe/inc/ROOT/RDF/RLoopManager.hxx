@@ -45,8 +45,6 @@ class RDataSource;
 namespace Internal {
 class RSlotStack;
 namespace RDF {
-std::vector<std::string> GetBranchNames(TTree &t, bool allowDuplicates = true);
-
 class GraphNode;
 class RActionBase;
 class RVariationBase;
