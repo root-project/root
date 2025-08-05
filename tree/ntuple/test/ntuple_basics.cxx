@@ -734,7 +734,12 @@ TEST(RNTuple, FillBytesWritten)
    *fieldStr = "abc";
    // A 32bit integer + "abc" literal + one 64bit integer for each index column
    EXPECT_EQ(7U + (3 * sizeof(std::uint64_t)), ntuple->Fill());
-   *fieldBoolVec = {true, false, true};
+   // For the bool vector, we can't assign an initializer list. It would lead
+   // to memory copy routines trying to operate on the packed bits that are
+   // particular to vector<bool> - resulting in invalid offset warnings.
+   for (bool b : {true, false, true}) {
+      fieldBoolVec->push_back(b);
+   }
    *fieldFloatVec = {42.0f, 1.1f};
    // A 32bit integer + "abc" literal + one 64bit integer for each index column + 3 bools + 2 floats
    EXPECT_EQ(18U + (3 * sizeof(std::uint64_t)), ntuple->Fill());
