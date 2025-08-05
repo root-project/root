@@ -657,6 +657,11 @@ private:
    //// All fields above are part of the schema and are cloned when creating a new descriptor from a given one
    //// (see CloneSchema())
 
+   std::uint16_t fVersionEpoch = 0; ///< Set by the descriptor builder when deserialized
+   std::uint16_t fVersionMajor = 0; ///< Set by the descriptor builder when deserialized
+   std::uint16_t fVersionMinor = 0; ///< Set by the descriptor builder when deserialized
+   std::uint16_t fVersionPatch = 0; ///< Set by the descriptor builder when deserialized
+
    std::uint64_t fOnDiskHeaderSize = 0;    ///< Set by the descriptor builder when deserialized
    std::uint64_t fOnDiskHeaderXxHash3 = 0; ///< Set by the descriptor builder when deserialized
    std::uint64_t fOnDiskFooterSize = 0; ///< Like fOnDiskHeaderSize, contains both cluster summaries and page locations
@@ -1528,6 +1533,7 @@ private:
 
 public:
    /// Checks whether invariants hold:
+   /// * RNTuple epoch is valid
    /// * RNTuple name is valid
    /// * Fields have valid parents
    /// * Number of columns is constant across column representations
@@ -1538,6 +1544,10 @@ public:
    /// Copies the "schema" part of `descriptor` into the builder's descriptor.
    /// This resets the builder's descriptor.
    void SetSchemaFromExisting(const RNTupleDescriptor &descriptor);
+
+   void SetVersion(std::uint16_t versionEpoch, std::uint16_t versionMajor, std::uint16_t versionMinor,
+                   std::uint16_t versionPatch);
+   void SetVersionForWriting();
 
    void SetNTuple(const std::string_view name, const std::string_view description);
    void SetFeature(unsigned int flag);
