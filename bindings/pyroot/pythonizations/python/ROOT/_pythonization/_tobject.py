@@ -8,7 +8,6 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from ROOT.libROOTPythonizations import AddTObjectEqNePyz
 import cppyy
 
 # Searching
@@ -56,7 +55,6 @@ def pythonize_tobject():
     klass.__contains__ = _contains
 
     # Inject comparison operators
-    AddTObjectEqNePyz(klass)
     klass.__lt__ = _lt
     klass.__le__ = _le
     klass.__gt__ = _gt
