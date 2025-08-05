@@ -166,7 +166,7 @@ protected:
    }
 
 public:
-   static std::string TypeName() { return "FutureColumn"; }
+   static std::string TypeName() { return "ROOT::Internal::RTestFutureColumn"; }
    explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
@@ -196,9 +196,11 @@ TEST(RNTupleCompat, FutureColumnType)
    const auto &cdesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
    EXPECT_EQ(cdesc.GetType(), ROOT::ENTupleColumnType::kUnknown);
 
-   {
-      // Creating a model not in fwd-compatible mode should fail
-      EXPECT_THROW(desc.CreateModel(), ROOT::RException);
+   try {
+      desc.CreateModel();
+      FAIL() << "Creating a model not in fwd-compatible mode should fail";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("unknown column types"));
    }
 
    {
@@ -206,8 +208,12 @@ TEST(RNTupleCompat, FutureColumnType)
       modelOpts.SetForwardCompatible(true);
       auto model = desc.CreateModel(modelOpts);
 
-      // The future column should not show up in the model
-      EXPECT_THROW(model->GetConstField("futureColumn"), ROOT::RException);
+      try {
+         model->GetConstField("futureColumn");
+         FAIL() << "the future column should not show up in the model";
+      } catch (const ROOT::RException &ex) {
+         EXPECT_THAT(ex.what(), testing::HasSubstr("invalid field"));
+      }
 
       const auto &floatFld = model->GetConstField("float");
       EXPECT_EQ(floatFld.GetTypeName(), "float");
@@ -244,13 +250,15 @@ TEST(RNTupleCompat, FutureColumnType_Nested)
    const auto &desc = reader->GetDescriptor();
    const auto futureId = desc.FindFieldId("future");
    const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("vec._0", futureId));
-   GTEST_ASSERT_EQ(fdesc.GetLogicalColumnIds().size(), 1);
+   ASSERT_EQ(fdesc.GetLogicalColumnIds().size(), 1);
    const auto &cdesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
    EXPECT_EQ(cdesc.GetType(), ROOT::ENTupleColumnType::kUnknown);
 
-   {
-      // Creating a model not in fwd-compatible mode should fail
-      EXPECT_THROW(desc.CreateModel(), ROOT::RException);
+   try {
+      desc.CreateModel();
+      FAIL() << "Creating a model not in fwd-compatible mode should fail";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("unknown column types"));
    }
 
    {
@@ -258,8 +266,12 @@ TEST(RNTupleCompat, FutureColumnType_Nested)
       modelOpts.SetForwardCompatible(true);
       auto model = desc.CreateModel(modelOpts);
 
-      // The future column should not show up in the model
-      EXPECT_THROW(model->GetConstField("future"), ROOT::RException);
+      try {
+         model->GetConstField("futureColumn");
+         FAIL() << "the future column should not show up in the model";
+      } catch (const ROOT::RException &ex) {
+         EXPECT_THAT(ex.what(), testing::HasSubstr("invalid field"));
+      }
 
       const auto &floatFld = model->GetConstField("float");
       EXPECT_EQ(floatFld.GetTypeName(), "float");
@@ -308,8 +320,12 @@ TEST(RNTupleCompat, FutureFieldStructuralRole)
    const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("future"));
    EXPECT_EQ(fdesc.GetLogicalColumnIds().size(), 0);
 
-   // Attempting to create a model with default options should fail
-   EXPECT_THROW(desc.CreateModel(), ROOT::RException);
+   try {
+      desc.CreateModel();
+      FAIL() << "Attempting to create a model with default options should fail";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("unexpected on-disk field structure"));
+   }
 
    auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
    modelOpts.SetForwardCompatible(true);
@@ -345,8 +361,12 @@ TEST(RNTupleCompat, FutureFieldStructuralRole_Nested)
    const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("record"));
    EXPECT_EQ(fdesc.GetLogicalColumnIds().size(), 0);
 
-   // Attempting to create a model with default options should fail
-   EXPECT_THROW(desc.CreateModel(), ROOT::RException);
+   try {
+      desc.CreateModel();
+      FAIL() << "attempting to create a model with default options should fail";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("unexpected on-disk field structure"));
+   }
 
    auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
    modelOpts.SetForwardCompatible(true);

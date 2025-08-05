@@ -704,9 +704,10 @@ public:
       /// If set to true, projected fields will be reconstructed as such. This will prevent the model to be used
       /// with an RNTupleReader, but it is useful, e.g., to accurately merge data.
       bool fReconstructProjections = false;
+      /// By default, creating a model will fail if any of the reconstructed fields contains an unknown column type
+      /// or an unknown field structural role.
       /// If this option is enabled, the model will be created and all fields containing unknown data (directly
       /// or indirectly) will be skipped instead.
-      /// Normally creating a model will fail if any of the reconstructed fields contains an unknown column type.
       bool fForwardCompatible = false;
       /// If true, the model will be created without a default entry (bare model).
       bool fCreateBare = false;
