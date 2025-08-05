@@ -29,12 +29,13 @@ ROOT_GENERATE_DICTIONARY(RXTupleDict ${CMAKE_CURRENT_SOURCE_DIR}/RXTuple.hxx
                        MODULE ntuple_compat
                        LINKDEF RXTupleLinkDef.h
                        DEPENDENCIES RIO)
-ROOT_ADD_GTEST(ntuple_descriptor ntuple_descriptor.cxx LIBRARIES ROOTNTuple CustomStruct)
+ROOT_ADD_GTEST(ntuple_descriptor ntuple_descriptor.cxx LIBRARIES ROOTNTuple)
 ROOT_GENERATE_DICTIONARY(RNTupleDescriptorDict ${CMAKE_CURRENT_SOURCE_DIR}/RNTupleDescriptorDict.hxx
-                       MODULE ntuple_descriptor
-                       LINKDEF RNTupleDescriptorLinkDef.h
-                       OPTIONS -inlineInputHeader
-                       DEPENDENCIES RIO CustomStruct)
+                         MODULE ntuple_descriptor
+                         LINKDEF RNTupleDescriptorLinkDef.h
+                         OPTIONS -inlineInputHeader
+                         DEPENDENCIES RIO)
+
 ROOT_ADD_GTEST(ntuple_endian ntuple_endian.cxx LIBRARIES ROOTNTuple)
 if(NOT MSVC)
   # These unit tests rely on fork(), which is not available on Windows.
@@ -43,33 +44,33 @@ if(NOT MSVC)
 endif()
 ROOT_ADD_GTEST(ntuple_join_table ntuple_join_table.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_merger ntuple_merger.cxx LIBRARIES ROOTNTuple CustomStruct ZLIB::ZLIB Tree INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/tree/tree/inc)
-ROOT_ADD_GTEST(ntuple_metrics ntuple_metrics.cxx LIBRARIES ROOTNTuple CustomStruct)
+ROOT_ADD_GTEST(ntuple_metrics ntuple_metrics.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_model ntuple_model.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_multi_column ntuple_multi_column.cxx LIBRARIES ROOTNTuple)
-ROOT_ADD_GTEST(ntuple_packing ntuple_packing.cxx LIBRARIES ROOTNTuple CustomStruct)
-ROOT_ADD_GTEST(ntuple_pages ntuple_pages.cxx LIBRARIES ROOTNTuple CustomStruct)
+ROOT_ADD_GTEST(ntuple_packing ntuple_packing.cxx LIBRARIES ROOTNTuple)
+ROOT_ADD_GTEST(ntuple_pages ntuple_pages.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_print ntuple_print.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_processor ntuple_processor.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_processor_chain ntuple_processor_chain.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_processor_join ntuple_processor_join.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_project ntuple_project.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_modelext ntuple_modelext.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
-ROOT_ADD_GTEST(ntuple_serialize ntuple_serialize.cxx LIBRARIES ROOTNTuple CustomStruct)
+ROOT_ADD_GTEST(ntuple_serialize ntuple_serialize.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_type_name ntuple_type_name.cxx LIBRARIES ROOTNTuple CustomStruct)
 if(NOT MSVC OR llvm13_broken_tests)
-  ROOT_ADD_GTEST(ntuple_types ntuple_types.cxx LIBRARIES ROOTNTuple CustomStruct)
+  ROOT_ADD_GTEST(ntuple_types ntuple_types.cxx LIBRARIES ROOTNTuple)
   ROOT_GENERATE_DICTIONARY(ProxiedSTLContainerDict ${CMAKE_CURRENT_SOURCE_DIR}/ProxiedSTLContainer.hxx
-                         MODULE ntuple_types
-                         LINKDEF ProxiedSTLContainerLinkDef.h
-                         OPTIONS -inlineInputHeader
-                         DEPENDENCIES CustomStruct)
+                           MODULE ntuple_types
+                           LINKDEF ProxiedSTLContainerLinkDef.h
+                           OPTIONS -inlineInputHeader
+                           DEPENDENCIES CustomStruct)
 endif()
 ROOT_ADD_GTEST(ntuple_view ntuple_view.cxx LIBRARIES ROOTNTuple CustomStruct)
-ROOT_ADD_GTEST(ntuple_zip ntuple_zip.cxx LIBRARIES ROOTNTuple CustomStruct)
+ROOT_ADD_GTEST(ntuple_zip ntuple_zip.cxx LIBRARIES ROOTNTuple)
 
 ROOT_ADD_GTEST(rfield_basics rfield_basics.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(rfield_class rfield_class.cxx LIBRARIES ROOTNTuple CustomStruct Physics)
-ROOT_ADD_GTEST(rfield_string rfield_string.cxx LIBRARIES ROOTNTuple CustomStruct)
+ROOT_ADD_GTEST(rfield_string rfield_string.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(rfield_variant rfield_variant.cxx LIBRARIES ROOTNTuple CustomStruct)
 if(MSVC)
   # Necessary to have TClass handle very large variants
@@ -77,15 +78,15 @@ if(MSVC)
 endif()
 ROOT_ADD_GTEST(rfield_vector rfield_vector.cxx LIBRARIES ROOTNTuple CustomStruct)
 
-ROOT_ADD_GTEST(ntuple_minifile ntuple_minifile.cxx LIBRARIES ROOTNTuple Physics Tree CustomStruct)
+ROOT_ADD_GTEST(ntuple_minifile ntuple_minifile.cxx LIBRARIES ROOTNTuple Physics Tree)
 ROOT_ADD_GTEST(ntuple_show ntuple_show.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_storage ntuple_storage.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
-ROOT_ADD_GTEST(ntuple_extended ntuple_extended.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
+ROOT_ADD_GTEST(ntuple_extended ntuple_extended.cxx LIBRARIES ROOTNTuple MathCore)
 if(NOT MSVC OR win_broken_tests)
-  ROOT_ADD_GTEST(ntuple_largefile1 ntuple_largefile1.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
-  ROOT_ADD_GTEST(ntuple_largefile2 ntuple_largefile2.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
+  ROOT_ADD_GTEST(ntuple_largefile1 ntuple_largefile1.cxx LIBRARIES ROOTNTuple MathCore)
+  ROOT_ADD_GTEST(ntuple_largefile2 ntuple_largefile2.cxx LIBRARIES ROOTNTuple MathCore)
 endif()
-ROOT_ADD_GTEST(ntuple_randomaccess ntuple_randomaccess.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
+ROOT_ADD_GTEST(ntuple_randomaccess ntuple_randomaccess.cxx LIBRARIES ROOTNTuple MathCore)
 
 ROOT_ADD_GTEST(ntuple_parallel_writer ntuple_parallel_writer.cxx LIBRARIES ROOTNTuple)
 
