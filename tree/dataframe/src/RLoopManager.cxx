@@ -988,17 +988,6 @@ std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetG
    return thisNode;
 }
 
-////////////////////////////////////////////////////////////////////////////
-/// Return all valid TTree::Branch names (caching results for subsequent calls).
-/// Never use fBranchNames directy, always request it through this method.
-const ColumnNames_t &RLoopManager::GetBranchNames()
-{
-   if (fValidBranchNames.empty() && fDataSource) {
-      fValidBranchNames = fDataSource->GetColumnNames();
-   }
-   return fValidBranchNames;
-}
-
 /// Return true if AddDataSourceColumnReaders was called for column name col.
 bool RLoopManager::HasDataSourceColumnReaders(std::string_view col, const std::type_info &ti) const
 {
