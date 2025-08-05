@@ -144,7 +144,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFitResult.h
     RooFormulaVar.h
     RooFracRemainder.h
-    RooFuncWrapper.h
     RooFunctor.h
     RooGenContext.h
     RooGenFitStudy.h
@@ -337,7 +336,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooFormula.cxx
     src/RooFormulaVar.cxx
     src/RooFracRemainder.cxx
-    src/RooFuncWrapper.cxx
     src/RooFunctor.cxx
     src/RooGenContext.cxx
     src/RooGenFitStudy.cxx

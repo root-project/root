@@ -30,7 +30,6 @@
 #include <RooFit/TestStatistics/RooRealL.h>
 #include <RooFit/TestStatistics/buildLikelihood.h>
 #include <RooFitResult.h>
-#include <RooFuncWrapper.h>
 #include <RooLinkedList.h>
 #include <RooMinimizer.h>
 #include <RooConstVar.h>
@@ -808,26 +807,20 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
          nll = std::move(correctedNLL);
       }
 
-      std::unique_ptr<RooAbsReal> nllWrapper;
+      auto nllWrapper = std::make_unique<RooEvaluatorWrapper>(
+         *nll, &data, evalBackend == RooFit::EvalBackend::Value::Cuda, rangeName ? rangeName : "", pdfClone.get(),
+         takeGlobalObservablesFromData);
 
-      if (evalBackend == RooFit::EvalBackend::Value::Codegen ||
-          evalBackend == RooFit::EvalBackend::Value::CodegenNoGrad) {
-         bool createGradient = evalBackend == RooFit::EvalBackend::Value::Codegen;
-         auto simPdf = dynamic_cast<RooSimultaneous const *>(pdfClone.get());
+      // We destroy the timing scrope for createNLL prematurely, because we
+      // separately measure the time for jitting and gradient creation
+      // inside the RooFuncWrapper.
+      timingScope.reset();
 
-         // We destroy the timing scrope for createNLL prematurely, because we
-         // separately measure the time for jitting and gradient creation
-         // inside the RooFuncWrapper.
-         timingScope.reset();
-
-         nllWrapper = std::make_unique<RooFit::Experimental::RooFuncWrapper>("nll_func_wrapper", "nll_func_wrapper",
-                                                                             *nll, &data, simPdf, createGradient);
-         if (createGradient)
-            static_cast<Experimental::RooFuncWrapper &>(*nllWrapper).createGradient();
-      } else {
-         nllWrapper = std::make_unique<RooEvaluatorWrapper>(
-            *nll, &data, evalBackend == RooFit::EvalBackend::Value::Cuda, rangeName ? rangeName : "", pdfClone.get(),
-            takeGlobalObservablesFromData);
+      if (evalBackend == RooFit::EvalBackend::Value::Codegen) {
+         nllWrapper->generateGradient();
+      }
+      if (evalBackend == RooFit::EvalBackend::Value::CodegenNoGrad) {
+         nllWrapper->setUseGeneratedFunctionCode(true);
       }
 
       nllWrapper->addOwnedComponents(std::move(nll));
