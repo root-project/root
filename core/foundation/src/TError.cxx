@@ -154,7 +154,7 @@ void ErrorHandler(Int_t level, const char *location, const char *fmt, std::va_li
 
    // if necessary, write the additional string.
    // NOTE: this will overwrite the null byte written by the previous vsnprintf, extending the string.
-   int nWrittenPost = 0;
+   [[maybe_unused]] int nWrittenPost = 0;
    if (nAdditional > 0) {
       auto sysHandler = GetErrorSystemMsgHandlerRef();
       if (sysHandler) {
@@ -163,6 +163,7 @@ void ErrorHandler(Int_t level, const char *location, const char *fmt, std::va_li
          nWrittenPost = snprintf(buf + nWritten, bufSize - nWritten, " (errno: %d)", errno);
       }
    }
+
    assert(nWrittenPost == nAdditional);
    assert(nWritten + nWrittenPost + 1 <= nRequired);
 
