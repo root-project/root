@@ -148,7 +148,7 @@ ToyMCSampler::ToyMCSampler(TestStatistic &ts, Int_t ntoys)
 {
 
    //suppress messages for num integration of Roofit
-   RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
+   RooMsgService::instance().getStream(1).removeTopic(RooFit::NumericIntegration);
 
    AddTestStatistic(&ts);
 }

@@ -178,7 +178,7 @@ public:
 
       fIntegrator.SetFunction(fLikelihood, bindParams.size() );
 
-      ooccoutD(nullptr,NumIntegration) << "PosteriorCdfFunction::Compute integral of posterior in nuisance and poi. "
+      ooccoutD(nullptr,NumericIntegration) << "PosteriorCdfFunction::Compute integral of posterior in nuisance and poi. "
                                            << " nllMinimum is " << nllMinimum << std::endl;
 
       std::vector<double> par(bindParams.size());
@@ -187,18 +187,18 @@ public:
          fXmin[i] = var.getMin();
          fXmax[i] = var.getMax();
          par[i] = var.getVal();
-         ooccoutD(nullptr,NumIntegration) << "PosteriorFunction::Integrate" << var.GetName()
+         ooccoutD(nullptr,NumericIntegration) << "PosteriorFunction::Integrate" << var.GetName()
                                               << " in interval [ " <<  fXmin[i] << " , " << fXmax[i] << " ] " << std::endl;
       }
 
-      fIntegrator.Options().Print(ooccoutD(nullptr,NumIntegration));
+      fIntegrator.Options().Print(ooccoutD(nullptr,NumericIntegration));
 
       // store max POI value because it will be changed when evaluating the function
       fMaxPOI = fXmax[0];
 
       // compute first the normalization with  the poi
       fNorm = (*this)( fMaxPOI );
-      if (fError) ooccoutE(nullptr,NumIntegration) << "PosteriorFunction::Error computing normalization - norm = " << fNorm << std::endl;
+      if (fError) ooccoutE(nullptr,NumericIntegration) << "PosteriorFunction::Error computing normalization - norm = " << fNorm << std::endl;
       fHasNorm = true;
       fNormCdfValues.insert(std::make_pair(fXmin[0], 0) );
       fNormCdfValues.insert(std::make_pair(fXmax[0], 1.0) );
@@ -239,7 +239,7 @@ public:
 
 
    ROOT::Math::IGenFunction * Clone() const override {
-      ooccoutD(nullptr,NumIntegration) << " cloning function .........." << std::endl;
+      ooccoutD(nullptr,NumericIntegration) << " cloning function .........." << std::endl;
       return new PosteriorCdfFunction(*this);
    }
 
@@ -270,7 +270,7 @@ private:
          if (itr != fNormCdfValues.end() ) {
             fXmin[0] = itr->first;
             normcdf0 = itr->second;
-            // ooccoutD(nullptr,NumIntegration) << "PosteriorCdfFunction:   computing integral between in poi interval : "
+            // ooccoutD(nullptr,NumericIntegration) << "PosteriorCdfFunction:   computing integral between in poi interval : "
             //                                      << fXmin[0] << " -  " << fXmax[0] << std::endl;
          }
       }
@@ -281,25 +281,25 @@ private:
       double error = fIntegrator.Error();
       double normcdf =  cdf/fNorm;  // normalize the cdf
 
-      ooccoutD(nullptr,NumIntegration) << "PosteriorCdfFunction: poi = [" << fXmin[0] << " , "
+      ooccoutD(nullptr,NumericIntegration) << "PosteriorCdfFunction: poi = [" << fXmin[0] << " , "
                                            << fXmax[0] << "] integral =  " << cdf << " +/- " << error
                                            << "  norm-integ = " << normcdf << " cdf(x) = " << normcdf+normcdf0
                                            << " ncalls = " << fFunctor.binding().numCall() << std::endl;
 
       if (TMath::IsNaN(cdf) || cdf > std::numeric_limits<double>::max()) {
-         ooccoutE(nullptr,NumIntegration) << "PosteriorFunction::Error computing integral - cdf = "
+         ooccoutE(nullptr,NumericIntegration) << "PosteriorFunction::Error computing integral - cdf = "
                                               << cdf << std::endl;
          fError = true;
       }
 
       if (cdf != 0 && error / cdf > 0.2) {
-         oocoutW(nullptr, NumIntegration)
+         oocoutW(nullptr, NumericIntegration)
             << "PosteriorCdfFunction: integration error  is larger than 20 %   x0 = " << fXmin[0] << " x = " << x
             << " cdf(x) = " << cdf << " +/- " << error << std::endl;
       }
 
       if (!fHasNorm) {
-         oocoutI(nullptr,NumIntegration) << "PosteriorCdfFunction - integral of posterior = "
+         oocoutI(nullptr,NumericIntegration) << "PosteriorCdfFunction - integral of posterior = "
                                              << cdf << " +/- " << error << std::endl;
          fNormErr = error;
          return cdf;
@@ -314,7 +314,7 @@ private:
 
       double errnorm = sqrt( error*error + normcdf*normcdf * fNormErr * fNormErr )/fNorm;
       if (normcdf > 1. + 3 * errnorm) {
-         oocoutW(nullptr,NumIntegration) << "PosteriorCdfFunction: normalized cdf values is larger than 1"
+         oocoutW(nullptr,NumericIntegration) << "PosteriorCdfFunction: normalized cdf values is larger than 1"
                                               << " x = " << x << " normcdf(x) = " << normcdf << " +/- " << error/fNorm << std::endl;
       }
 
@@ -363,12 +363,12 @@ public:
          fLikelihood.SetPrior(fPriorFunc.get() );
       }
 
-      ooccoutD(nullptr,NumIntegration) << "PosteriorFunction::Evaluate the posterior function by integrating the nuisances: " << std::endl;
+      ooccoutD(nullptr,NumericIntegration) << "PosteriorFunction::Evaluate the posterior function by integrating the nuisances: " << std::endl;
       for (unsigned int i = 0; i < fXmin.size(); ++i) {
          RooRealVar & var = static_cast<RooRealVar &>( nuisParams[i]);
          fXmin[i] = var.getMin();
          fXmax[i] = var.getMax();
-         ooccoutD(nullptr,NumIntegration) << "PosteriorFunction::Integrate " << var.GetName()
+         ooccoutD(nullptr,NumericIntegration) << "PosteriorFunction::Integrate " << var.GetName()
                                               << " in interval [" <<  fXmin[i] << " , " << fXmax[i] << " ] " << std::endl;
       }
       if (fXmin.size() == 1) { // 1D case
@@ -377,7 +377,7 @@ public:
          fIntegratorOneDim->SetFunction(fLikelihood);
          // interested only in relative tolerance
          //fIntegratorOneDim->SetAbsTolerance(1.E-300);
-         fIntegratorOneDim->Options().Print(ooccoutD(nullptr,NumIntegration) );
+         fIntegratorOneDim->Options().Print(ooccoutD(nullptr,NumericIntegration) );
       }
       else if (fXmin.size() > 1) { // multiDim case
          fIntegratorMultiDim = std::make_unique<ROOT::Math::IntegratorMultiDim>(ROOT::Math::IntegratorMultiDim::GetType(integType));
@@ -389,7 +389,7 @@ public:
          }
          //fIntegratorMultiDim->SetAbsTolerance(1.E-300);
          // print the options
-         opt.Print(ooccoutD(nullptr,NumIntegration) );
+         opt.Print(ooccoutD(nullptr,NumericIntegration) );
       }
    }
 
@@ -425,13 +425,13 @@ private:
       }
 
       // debug
-      ooccoutD(nullptr,NumIntegration) << "PosteriorFunction:  POI value  =  "
+      ooccoutD(nullptr,NumericIntegration) << "PosteriorFunction:  POI value  =  "
                                            << x << "\tf(x) =  " << f << " +/- " << error
                                            << "  norm-f(x) = " << f/fNorm
                                            << " ncalls = " << fFunctor.binding().numCall() << std::endl;
 
       if (f != 0 && error / f > 0.2) {
-         ooccoutW(nullptr, NumIntegration)
+         ooccoutW(nullptr, NumericIntegration)
             << "PosteriorFunction::DoEval - Error from integration in " << fXmin.size() << " Dim is larger than 20 % "
             << "x = " << x << " p(x) = " << f << " +/- " << error << std::endl;
       }
@@ -594,12 +594,12 @@ private:
       fError = std::sqrt( dval2 / fNumIterations);
 
       // debug
-      ooccoutD(nullptr,NumIntegration) << "PosteriorFunctionFromToyMC:  POI value  =  "
+      ooccoutD(nullptr,NumericIntegration) << "PosteriorFunctionFromToyMC:  POI value  =  "
                                            << x << "\tp(x) =  " << val << " +/- " << fError << std::endl;
 
 
       if (val != 0 && fError/val > 0.2 ) {
-         ooccoutW(nullptr,NumIntegration) << "PosteriorFunctionFromToyMC::DoEval"
+         ooccoutW(nullptr,NumericIntegration) << "PosteriorFunctionFromToyMC::DoEval"
                                               << " - Error in estimating posterior is larger than 20% ! "
                                               << "x = " << x << " p(x) = " << val << " +/- " << fError << std::endl;
       }
@@ -1276,12 +1276,12 @@ void BayesianCalculator::ComputeIntervalFromCdf(double lowerCutOff, double upper
 
    if (lowerCutOff > 0) {
       cdf.SetOffset(lowerCutOff);
-      ccoutD(NumIntegration) << "Integrating posterior to get cdf and search lower limit at p =" << lowerCutOff << std::endl;
+      ccoutD(NumericIntegration) << "Integrating posterior to get cdf and search lower limit at p =" << lowerCutOff << std::endl;
       bool ok = rf.Solve(cdf, poi->getMin(),poi->getMax() , 200,fBrfPrecision, fBrfPrecision);
       if( cdf.HasError() )
          coutW(Eval) <<  "BayesianCalculator: Numerical error integrating the  CDF   " << std::endl;
       if (!ok) {
-         coutE(NumIntegration) << "BayesianCalculator::GetInterval - Error from root finder when searching lower limit !" << std::endl;
+         coutE(NumericIntegration) << "BayesianCalculator::GetInterval - Error from root finder when searching lower limit !" << std::endl;
          return;
       }
       fLower = rf.Root();
@@ -1291,12 +1291,12 @@ void BayesianCalculator::ComputeIntervalFromCdf(double lowerCutOff, double upper
    }
    if (upperCutOff < 1.0) {
       cdf.SetOffset(upperCutOff);
-      ccoutD(NumIntegration) << "Integrating posterior to get cdf and search upper interval limit at p =" << upperCutOff << std::endl;
+      ccoutD(NumericIntegration) << "Integrating posterior to get cdf and search upper interval limit at p =" << upperCutOff << std::endl;
       bool ok = rf.Solve(cdf, fLower,poi->getMax() , 200, fBrfPrecision, fBrfPrecision);
       if( cdf.HasError() )
          coutW(Eval) <<  "BayesianCalculator: Numerical error integrating the  CDF   " << std::endl;
       if (!ok)  {
-         coutE(NumIntegration) << "BayesianCalculator::GetInterval - Error from root finder when searching upper limit !" << std::endl;
+         coutE(NumericIntegration) << "BayesianCalculator::GetInterval - Error from root finder when searching upper limit !" << std::endl;
          return;
       }
       fUpper = rf.Root();
