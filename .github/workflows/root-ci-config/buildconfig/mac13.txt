@@ -1,3 +1,4 @@
+CMAKE_BUILD_RPATH=/usr/local/lib
 asimage_tiff=OFF
 builtin_cfitsio=ON
 builtin_cppzmq=ON
@@ -26,7 +27,6 @@ builtin_xxhash=ON
 builtin_zeromq=ON
 builtin_zstd=ON
 cocoa=ON
-fortran=OFF
 minuit2_omp=OFF
 test_distrdf_dask=ON
 test_distrdf_pyspark=ON
