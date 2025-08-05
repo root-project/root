@@ -1,0 +1,184 @@
+diff --git a/src/interpreter/llvm-project/clang/lib/AST/MicrosoftMangle.cpp b/src/interpreter/llvm-project/clang/lib/AST/MicrosoftMangle.cpp
+index 24b16f892e..57a5b6f686 100644
+--- a/src/interpreter/llvm-project/clang/lib/AST/MicrosoftMangle.cpp
++++ b/src/interpreter/llvm-project/clang/lib/AST/MicrosoftMangle.cpp
+@@ -35,7 +35,8 @@
+ #include "llvm/Support/MathExtras.h"
+ #include "llvm/Support/StringSaver.h"
+ #include "llvm/Support/xxhash.h"
++#include "llvm/Support/raw_ostream.h"
+ #include <optional>
+ 
+ using namespace clang;
+ 
+@@ -2816,11 +2817,13 @@ void MicrosoftCXXNameMangler::mangleType(const UnresolvedUsingType *T,
+                                          Qualifiers, SourceRange Range) {
+   // Probably should be mangled as a template instantiation; need to see what
+   // VC does first.
++/*
+   DiagnosticsEngine &Diags = Context.getDiags();
+   unsigned DiagID = Diags.getCustomDiagID(DiagnosticsEngine::Error,
+     "cannot mangle this unresolved dependent type yet");
+   Diags.Report(Range.getBegin(), DiagID)
+     << Range;
++*/
+ }
+ 
+ // <type>        ::= <union-type> | <struct-type> | <class-type> | <enum-type>
+@@ -2966,20 +2967,24 @@ void MicrosoftCXXNameMangler::mangleType(const MemberPointerType *T, Qualifiers
+ 
+ void MicrosoftCXXNameMangler::mangleType(const TemplateTypeParmType *T,
+                                          Qualifiers, SourceRange Range) {
++/*
+   DiagnosticsEngine &Diags = Context.getDiags();
+   unsigned DiagID = Diags.getCustomDiagID(DiagnosticsEngine::Error,
+     "cannot mangle this template type parameter type yet");
+   Diags.Report(Range.getBegin(), DiagID)
+     << Range;
++*/
+ }
+ 
+ void MicrosoftCXXNameMangler::mangleType(const SubstTemplateTypeParmPackType *T,
+                                          Qualifiers, SourceRange Range) {
++/*
+   DiagnosticsEngine &Diags = Context.getDiags();
+   unsigned DiagID = Diags.getCustomDiagID(DiagnosticsEngine::Error,
+     "cannot mangle this substituted parameter pack yet");
+   Diags.Report(Range.getBegin(), DiagID)
+     << Range;
++*/
+ }
+ 
+ // <type> ::= <pointer-type>
+@@ -3136,11 +3137,13 @@ void MicrosoftCXXNameMangler::mangleType(const ExtVectorType *T,
+ 
+ void MicrosoftCXXNameMangler::mangleType(const DependentSizedExtVectorType *T,
+                                          Qualifiers, SourceRange Range) {
++/*
+   DiagnosticsEngine &Diags = Context.getDiags();
+   unsigned DiagID = Diags.getCustomDiagID(DiagnosticsEngine::Error,
+     "cannot mangle this dependent-sized extended vector type yet");
+   Diags.Report(Range.getBegin(), DiagID)
+     << Range;
++*/
+ }
+ 
+ void MicrosoftCXXNameMangler::mangleType(const ConstantMatrixType *T,
+@@ -3236,97 +3237,117 @@ void MicrosoftCXXNameMangler::mangleType(const InjectedClassNameType *,
+ 
+ void MicrosoftCXXNameMangler::mangleType(const TemplateSpecializationType *T,
+                                          Qualifiers, SourceRange Range) {
++/*
+   DiagnosticsEngine &Diags = Context.getDiags();
+   unsigned DiagID = Diags.getCustomDiagID(DiagnosticsEngine::Error,
+     "cannot mangle this template specialization type yet");
+   Diags.Report(Range.getBegin(), DiagID)
+     << Range;
++*/
+ }
+ 
+ void MicrosoftCXXNameMangler::mangleType(const DependentNameType *T, Qualifiers,
+                                          SourceRange Range) {
++/*
+   DiagnosticsEngine &Diags = Context.getDiags();
+   unsigned DiagID = Diags.getCustomDiagID(DiagnosticsEngine::Error,
+     "cannot mangle this dependent name type yet");
+   Diags.Report(Range.getBegin(), DiagID)
+     << Range;
++*/
+ }
+ 
+ void MicrosoftCXXNameMangler::mangleType(
+     const DependentTemplateSpecializationType *T, Qualifiers,
+     SourceRange Range) {
++/*
+   DiagnosticsEngine &Diags = Context.getDiags();
+   unsigned DiagID = Diags.getCustomDiagID(DiagnosticsEngine::Error,
+     "cannot mangle this dependent template specialization type yet");
+   Diags.Report(Range.getBegin(), DiagID)
+     << Range;
++*/
+ }
+ 
+ void MicrosoftCXXNameMangler::mangleType(const PackExpansionType *T, Qualifiers,
+                                          SourceRange Range) {
++/*
+   DiagnosticsEngine &Diags = Context.getDiags();
+   unsigned DiagID = Diags.getCustomDiagID(DiagnosticsEngine::Error,
+     "cannot mangle this pack expansion yet");
+   Diags.Report(Range.getBegin(), DiagID)
+     << Range;
++*/
+ }
+ 
+ void MicrosoftCXXNameMangler::mangleType(const TypeOfType *T, Qualifiers,
+                                          SourceRange Range) {
++/*
+   DiagnosticsEngine &Diags = Context.getDiags();
+   unsigned DiagID = Diags.getCustomDiagID(DiagnosticsEngine::Error,
+     "cannot mangle this typeof(type) yet");
+   Diags.Report(Range.getBegin(), DiagID)
+     << Range;
++*/
+ }
+ 
+ void MicrosoftCXXNameMangler::mangleType(const TypeOfExprType *T, Qualifiers,
+                                          SourceRange Range) {
++/*
+   DiagnosticsEngine &Diags = Context.getDiags();
+   unsigned DiagID = Diags.getCustomDiagID(DiagnosticsEngine::Error,
+     "cannot mangle this typeof(expression) yet");
+   Diags.Report(Range.getBegin(), DiagID)
+     << Range;
++*/
+ }
+ 
+ void MicrosoftCXXNameMangler::mangleType(const DecltypeType *T, Qualifiers,
+                                          SourceRange Range) {
++/*
+   DiagnosticsEngine &Diags = Context.getDiags();
+   unsigned DiagID = Diags.getCustomDiagID(DiagnosticsEngine::Error,
+     "cannot mangle this decltype() yet");
+   Diags.Report(Range.getBegin(), DiagID)
+     << Range;
++*/
+ }
+ 
+ void MicrosoftCXXNameMangler::mangleType(const UnaryTransformType *T,
+                                          Qualifiers, SourceRange Range) {
++/*
+   DiagnosticsEngine &Diags = Context.getDiags();
+   unsigned DiagID = Diags.getCustomDiagID(DiagnosticsEngine::Error,
+     "cannot mangle this unary transform type yet");
+   Diags.Report(Range.getBegin(), DiagID)
+     << Range;
++*/
+ }
+ 
+ void MicrosoftCXXNameMangler::mangleType(const AutoType *T, Qualifiers,
+                                          SourceRange Range) {
+   assert(T->getDeducedType().isNull() && "expecting a dependent type!");
+ 
++/*
+   DiagnosticsEngine &Diags = Context.getDiags();
+   unsigned DiagID = Diags.getCustomDiagID(DiagnosticsEngine::Error,
+     "cannot mangle this 'auto' type yet");
+   Diags.Report(Range.getBegin(), DiagID)
+     << Range;
++*/
+ }
+ 
+ void MicrosoftCXXNameMangler::mangleType(
+     const DeducedTemplateSpecializationType *T, Qualifiers, SourceRange Range) {
+   assert(T->getDeducedType().isNull() && "expecting a dependent type!");
+ 
++/*
+   DiagnosticsEngine &Diags = Context.getDiags();
+   unsigned DiagID = Diags.getCustomDiagID(DiagnosticsEngine::Error,
+     "cannot mangle this deduced class template specialization type yet");
+   Diags.Report(Range.getBegin(), DiagID)
+     << Range;
++*/
+ }
+ 
+ void MicrosoftCXXNameMangler::mangleType(const AtomicType *T, Qualifiers,
