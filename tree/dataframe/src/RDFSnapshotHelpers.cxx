@@ -36,7 +36,44 @@
 #include <TLeaf.h>
 #include <TTreeReader.h>
 
+#include <algorithm>
+#include <type_traits>
+#include <utility>
+
+using ROOT::Internal::RDF::RBranchData;
+
 namespace {
+
+void AssertNoNullBranchAddresses(const std::vector<RBranchData> &branches)
+{
+   std::vector<TBranch *> branchesWithNullAddress;
+   for (const auto &branchData : branches) {
+      if (branchData.fOutputBranch->GetAddress() == nullptr)
+         branchesWithNullAddress.push_back(branchData.fOutputBranch);
+   }
+
+   if (branchesWithNullAddress.empty())
+      return;
+
+   // otherwise build error message and throw
+   std::vector<std::string> missingBranchNames;
+   std::transform(branchesWithNullAddress.begin(), branchesWithNullAddress.end(),
+                  std::back_inserter(missingBranchNames), [](TBranch *b) { return b->GetName(); });
+   std::string msg = "RDataFrame::Snapshot:";
+   if (missingBranchNames.size() == 1) {
+      msg += " branch " + missingBranchNames[0] +
+             " is needed as it provides the size for one or more branches containing dynamically sized arrays, but "
+             "it is";
+   } else {
+      msg += " branches ";
+      for (const auto &bName : missingBranchNames)
+         msg += bName + ", ";
+      msg.resize(msg.size() - 2); // remove last ", "
+      msg += " are needed as they provide the size of other branches containing dynamically sized arrays, but they are";
+   }
+   msg += " not part of the set of branches that are being written out.";
+   throw std::runtime_error(msg);
+}
 
 TBranch *SearchForBranch(TTree *inputTree, const std::string &branchName)
 {
@@ -51,35 +88,51 @@ TBranch *SearchForBranch(TTree *inputTree, const std::string &branchName)
    return nullptr;
 }
 
-void CreateCStyleArrayBranch(TTree &outputTree, ROOT::Internal::RDF::RBranchSet &outputBranches, TBranch *inputBranch,
-                             const std::string &outputBranchName, int basketSize, void *address)
+std::vector<RBranchData>::iterator CreateCStyleArrayBranch(TTree &outputTree, std::vector<RBranchData> &outputBranches,
+                                                           std::vector<RBranchData>::iterator thisBranch,
+                                                           TBranch *inputBranch, int basketSize, void *address)
 {
    if (!inputBranch)
-      return;
+      return thisBranch;
    const auto STLKind = TClassEdit::IsSTLCont(inputBranch->GetClassName());
    if (STLKind == ROOT::ESTLType::kSTLvector || STLKind == ROOT::ESTLType::kROOTRVec)
-      return;
+      return thisBranch;
    // must construct the leaflist for the output branch and create the branch in the output tree
    const auto *leaf = static_cast<TLeaf *>(inputBranch->GetListOfLeaves()->UncheckedAt(0));
    if (!leaf)
-      return;
+      return thisBranch;
    const auto bname = leaf->GetName();
    auto *sizeLeaf = leaf->GetLeafCount();
    const auto sizeLeafName = sizeLeaf ? std::string(sizeLeaf->GetName()) : std::to_string(leaf->GetLenStatic());
 
    // We proceed only if branch is a fixed-or-variable-sized array
    if (sizeLeaf || leaf->GetLenStatic() > 1) {
-      if (sizeLeaf && !outputBranches.Get(sizeLeafName)) {
-         // The output array branch `bname` has dynamic size stored in leaf `sizeLeafName`, but that leaf has not been
-         // added to the output tree yet. However, the size leaf has to be available for the creation of the array
-         // branch to be successful. So we create the size leaf here.
-         const auto sizeTypeStr = ROOT::Internal::RDF::TypeName2ROOTTypeName(sizeLeaf->GetTypeName());
-         // Use Original basket size for Existing Branches otherwise use Custom basket Size.
-         const auto bufSize = (basketSize > 0) ? basketSize : sizeLeaf->GetBranch()->GetBasketSize();
-         // The null branch address is a placeholder. It will be set when SetBranchesHelper is called for `sizeLeafName`
-         auto *outputBranch = outputTree.Branch(sizeLeafName.c_str(), static_cast<void *>(nullptr),
-                                                (sizeLeafName + '/' + sizeTypeStr).c_str(), bufSize);
-         outputBranches.Insert(sizeLeafName, outputBranch);
+      if (sizeLeaf) {
+         // The array branch `bname` has dynamic size stored in leaf `sizeLeafName`, so we need to ensure that it's
+         // in the output tree.
+         auto sizeLeafIt =
+            std::find_if(outputBranches.begin(), outputBranches.end(),
+                         [&sizeLeafName](const RBranchData &bd) { return bd.fOutputBranchName == sizeLeafName; });
+         if (sizeLeafIt == outputBranches.end()) {
+            // The size leaf is not part of the output branches yet, so emplace an empty slot for it.
+            // This means that iterators need to be updated in case the container reallocates.
+            const auto indexBeforeEmplace = std::distance(outputBranches.begin(), thisBranch);
+            outputBranches.emplace_back("", sizeLeafName, /*isDefine=*/false, /*typeID=*/nullptr,
+                                        /*outputBranch=*/nullptr);
+            thisBranch = outputBranches.begin() + indexBeforeEmplace;
+            sizeLeafIt = outputBranches.end() - 1;
+         }
+         if (!sizeLeafIt->fOutputBranch) {
+            // The size leaf was emplaced, but not initialised yet
+            const auto sizeTypeStr = ROOT::Internal::RDF::TypeName2ROOTTypeName(sizeLeaf->GetTypeName());
+            // Use original basket size for existing branches otherwise use custom basket size.
+            const auto bufSize = (basketSize > 0) ? basketSize : sizeLeaf->GetBranch()->GetBasketSize();
+            // The null branch address is a placeholder. It will be set when SetBranchesHelper is called for
+            // `sizeLeafName`
+            auto *outputBranch = outputTree.Branch(sizeLeafName.c_str(), static_cast<void *>(nullptr),
+                                                   (sizeLeafName + '/' + sizeTypeStr).c_str(), bufSize);
+            sizeLeafIt->fOutputBranch = outputBranch;
+         }
       }
 
       const auto btype = leaf->GetTypeName();
@@ -89,7 +142,7 @@ void CreateCStyleArrayBranch(TTree &outputTree, ROOT::Internal::RDF::RBranchSet 
                  "RDataFrame::Snapshot: could not correctly construct a leaflist for C-style array in column %s. The "
                  "leaf is of type '%s'. This column will not be written out.",
                  bname, btype);
-         return;
+         return thisBranch;
       }
 
       const auto leaflist = std::string(bname) + "[" + sizeLeafName + "]/" + rootbtype;
@@ -104,23 +157,26 @@ void CreateCStyleArrayBranch(TTree &outputTree, ROOT::Internal::RDF::RBranchSet 
          }
          return nullptr;
       }();
-      auto *outputBranch = outputTree.Branch(outputBranchName.c_str(), addressForBranch, leaflist.c_str(), bufSize);
-      outputBranch->SetTitle(inputBranch->GetTitle());
-      outputBranches.Insert(outputBranchName, outputBranch, true);
+      thisBranch->fOutputBranch =
+         outputTree.Branch(thisBranch->fOutputBranchName.c_str(), addressForBranch, leaflist.c_str(), bufSize);
+      thisBranch->fOutputBranch->SetTitle(inputBranch->GetTitle());
+      thisBranch->fIsCArray = true;
    }
+
+   return thisBranch;
 }
 
-void SetBranchAddress(TBranch *inputBranch, TBranch &outputBranch, void *&outputBranchAddress, bool isCArray,
-                      void *valueAddress)
+void SetBranchAddress(TBranch *inputBranch, RBranchData &branchData, void *valueAddress)
 {
    const static TClassRef TBOClRef("TBranchObject");
    if (inputBranch && inputBranch->IsA() == TBOClRef) {
-      outputBranch.SetAddress(reinterpret_cast<void **>(inputBranch->GetAddress()));
-   } else if (outputBranch.IsA() != TBranch::Class()) {
-      outputBranchAddress = valueAddress;
-      outputBranch.SetAddress(&outputBranchAddress);
+      branchData.fOutputBranch->SetAddress(reinterpret_cast<void **>(inputBranch->GetAddress()));
+   } else if (branchData.fOutputBranch->IsA() != TBranch::Class()) {
+      // This is a relatively rare case of a fixed-size array getting redefined
+      branchData.fBranchAddressForCArrays = valueAddress;
+      branchData.fOutputBranch->SetAddress(&branchData.fBranchAddressForCArrays);
    } else {
-      void *correctAddress = [valueAddress, isCArray]() -> void * {
+      void *correctAddress = [valueAddress, isCArray = branchData.fIsCArray]() -> void * {
          if (isCArray) {
             // Address here points to a ROOT::RVec<std::byte> coming from RTreeUntypedArrayColumnReader. We know we
             // need its buffer, so we cast it and extract the address of the buffer
@@ -129,29 +185,26 @@ void SetBranchAddress(TBranch *inputBranch, TBranch &outputBranch, void *&output
          }
          return valueAddress;
       }();
-      outputBranch.SetAddress(correctAddress);
-      outputBranchAddress = valueAddress;
+      branchData.fOutputBranch->SetAddress(correctAddress);
+      branchData.fBranchAddressForCArrays = valueAddress;
    }
 }
 
-void CreateFundamentalTypeBranch(TTree &outputTree, const std::string &outputBranchName, void *valueAddress,
-                                 const std::type_info &valueTypeID, ROOT::Internal::RDF::RBranchSet &outputBranches,
-                                 int bufSize)
+void CreateFundamentalTypeBranch(TTree &outputTree, RBranchData &bd, void *valueAddress, int bufSize)
 {
    // Logic taken from
    // TTree::BranchImpRef(
    // const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel)
-   auto rootTypeChar = ROOT::Internal::RDF::TypeID2ROOTTypeName(valueTypeID);
+   auto rootTypeChar = ROOT::Internal::RDF::TypeID2ROOTTypeName(*bd.fInputTypeID);
    if (rootTypeChar == ' ') {
       Warning("Snapshot",
               "RDataFrame::Snapshot: could not correctly construct a leaflist for fundamental type in column %s. This "
               "column will not be written out.",
-              outputBranchName.c_str());
+              bd.fOutputBranchName.c_str());
       return;
    }
-   std::string leafList{outputBranchName + '/' + rootTypeChar};
-   auto *outputBranch = outputTree.Branch(outputBranchName.c_str(), valueAddress, leafList.c_str(), bufSize);
-   outputBranches.Insert(outputBranchName, outputBranch);
+   std::string leafList{bd.fOutputBranchName + '/' + rootTypeChar};
+   bd.fOutputBranch = outputTree.Branch(bd.fOutputBranchName.c_str(), valueAddress, leafList.c_str(), bufSize);
 }
 
 /// Ensure that the TTree with the resulting snapshot can be written to the target TFile. This means checking that the
@@ -240,13 +293,18 @@ void EnsureValidSnapshotRNTupleOutput(const ROOT::RDF::RSnapshotOptions &opts, c
    }
 }
 
-void SetBranchesHelper(TTree *inputTree, TTree &outputTree, ROOT::Internal::RDF::RBranchSet &outputBranches,
-                       int basketSize, const std::string &inputBranchName, const std::string &outputBranchName,
-                       const std::type_info &valueTypeID, void *valueAddress, TBranch *&actionHelperBranchPtr,
-                       void *&actionHelperBranchPtrAddress, bool isDefine)
+void SetBranchesHelper(TTree *inputTree, TTree &outputTree,
+                       std::vector<ROOT::Internal::RDF::RBranchData> &allBranchData, std::size_t currentIndex,
+                       int basketSize, void *valueAddress)
 {
+   auto branchData = allBranchData.begin() + currentIndex;
+   auto *inputBranch = branchData->fIsDefine ? nullptr : SearchForBranch(inputTree, branchData->fInputBranchName);
 
-   auto *inputBranch = isDefine ? nullptr : SearchForBranch(inputTree, inputBranchName);
+   if (branchData->fOutputBranch && valueAddress) {
+      // The output branch was already created, we just need to (re)set its address
+      SetBranchAddress(inputBranch, *branchData, valueAddress);
+      return;
+   }
 
    // Respect the original bufsize and splitlevel arguments
    // In particular, by keeping splitlevel equal to 0 if this was the case for `inputBranch`, we avoid
@@ -256,55 +314,47 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, ROOT::Internal::RDF:
    const auto bufSize = (basketSize > 0) ? basketSize : (inputBranch ? inputBranch->GetBasketSize() : 32000);
    const auto splitLevel = inputBranch ? inputBranch->GetSplitLevel() : 99;
 
-   if (auto *outputBranch = outputBranches.Get(outputBranchName); outputBranch && valueAddress) {
-      // The output branch was already created, we just need to (re)set its address
-      SetBranchAddress(inputBranch, *outputBranch, actionHelperBranchPtrAddress,
-                       outputBranches.IsCArray(outputBranchName), valueAddress);
-      return;
-   }
-
-   auto *dictionary = TDictionary::GetDictionary(valueTypeID);
+   auto *dictionary = TDictionary::GetDictionary(*branchData->fInputTypeID);
    if (dynamic_cast<TDataType *>(dictionary)) {
       // Branch of fundamental type
-      CreateFundamentalTypeBranch(outputTree, outputBranchName, valueAddress, valueTypeID, outputBranches, bufSize);
+      CreateFundamentalTypeBranch(outputTree, *branchData, valueAddress, bufSize);
       return;
    }
 
-   if (!isDefine) {
+   if (!branchData->fIsDefine) {
       // Cases where we need a leaflist (e.g. C-style arrays)
       // We only enter this code path if the input value does not come from a Define/Redefine. In those cases, it is
       // not allowed to create a column of C-style array type, so that can't happen when writing the TTree. This is
       // currently what prevents writing the wrong branch output type in a scenario where the input branch of the TTree
       // is a C-style array and then the user is Redefining it with some other type (e.g. a ROOT::RVec).
-      CreateCStyleArrayBranch(outputTree, outputBranches, inputBranch, outputBranchName, bufSize, valueAddress);
+      branchData = CreateCStyleArrayBranch(outputTree, allBranchData, branchData, inputBranch, bufSize, valueAddress);
    }
-   if (auto *arrayBranch = outputBranches.Get(outputBranchName)) {
+   if (branchData->fOutputBranch) {
       // A branch was created in the previous function call
-      actionHelperBranchPtr = arrayBranch;
       if (valueAddress) {
          // valueAddress here points to a ROOT::RVec<std::byte> coming from RTreeUntypedArrayColumnReader. We know we
          // need its buffer, so we cast it and extract the address of the buffer
          auto *rawRVec = reinterpret_cast<ROOT::RVec<std::byte> *>(valueAddress);
-         actionHelperBranchPtrAddress = rawRVec->data();
+         branchData->fBranchAddressForCArrays = rawRVec->data();
       }
       return;
    }
 
    if (auto *classPtr = dynamic_cast<TClass *>(dictionary)) {
-      TBranch *outputBranch{};
       // Case of unsplit object with polymorphic type
       if (inputBranch && dynamic_cast<TBranchObject *>(inputBranch) && valueAddress)
-         outputBranch = ROOT::Internal::TreeUtils::CallBranchImp(outputTree, outputBranchName.c_str(), classPtr,
-                                                                 inputBranch->GetAddress(), bufSize, splitLevel);
+         branchData->fOutputBranch =
+            ROOT::Internal::TreeUtils::CallBranchImp(outputTree, branchData->fOutputBranchName.c_str(), classPtr,
+                                                     inputBranch->GetAddress(), bufSize, splitLevel);
       // General case, with valid address
       else if (valueAddress)
-         outputBranch = ROOT::Internal::TreeUtils::CallBranchImpRef(outputTree, outputBranchName.c_str(), classPtr,
-                                                                    TDataType::GetType(valueTypeID), valueAddress,
-                                                                    bufSize, splitLevel);
+         branchData->fOutputBranch = ROOT::Internal::TreeUtils::CallBranchImpRef(
+            outputTree, branchData->fOutputBranchName.c_str(), classPtr, TDataType::GetType(*branchData->fInputTypeID),
+            valueAddress, bufSize, splitLevel);
       // No value was passed, we're just creating a hollow branch to populate the dataset schema
       else
-         outputBranch = outputTree.Branch(outputBranchName.c_str(), classPtr->GetName(), nullptr, bufSize);
-      outputBranches.Insert(outputBranchName, outputBranch);
+         branchData->fOutputBranch =
+            outputTree.Branch(branchData->fOutputBranchName.c_str(), classPtr->GetName(), nullptr, bufSize);
       return;
    }
 
@@ -390,16 +440,16 @@ ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::UntypedSnapshotTTreeHelper(
      fDirName(dirname),
      fTreeName(treename),
      fOptions(options),
-     fInputBranchNames(vbnames),
-     fOutputBranchNames(ReplaceDotWithUnderscore(bnames)),
-     fBranches(vbnames.size(), nullptr),
-     fBranchAddresses(vbnames.size(), nullptr),
-     fIsDefine(std::move(isDefine)),
      fOutputLoopManager(loopManager),
-     fInputLoopManager(inputLM),
-     fInputColumnTypeIDs(colTypeIDs)
+     fInputLoopManager(inputLM)
 {
    EnsureValidSnapshotTTreeOutput(fOptions, fTreeName, fFileName);
+
+   auto outputBranchNames = ReplaceDotWithUnderscore(bnames);
+   fBranchData.reserve(vbnames.size());
+   for (unsigned int i = 0; i < vbnames.size(); ++i) {
+      fBranchData.emplace_back(vbnames[i], std::move(outputBranchNames[i]), isDefine[i], colTypeIDs[i]);
+   }
 }
 
 // Define special member methods here where the definition of all the data member types is available
@@ -451,17 +501,16 @@ void ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::UpdateCArraysPtrs(const st
    // associated to those is re-allocated. As a result the value of the pointer can change therewith
    // leaving associated to the branch of the output tree an invalid pointer.
    // With this code, we set the value of the pointer in the output branch anew when needed.
-   assert(values.size() == fBranches.size());
+   assert(values.size() == fBranchData.size());
    auto nValues = values.size();
    for (decltype(nValues) i{}; i < nValues; i++) {
-      if (fBranches[i] && fOutputBranches.IsCArray(fOutputBranchNames[i])) {
+      if (fBranchData[i].fIsCArray) {
          // valueAddress here points to a ROOT::RVec<std::byte> coming from RTreeUntypedArrayColumnReader. We know we
          // need its buffer, so we cast it and extract the address of the buffer
          auto *rawRVec = reinterpret_cast<ROOT::RVec<std::byte> *>(values[i]);
-         if (auto *data = rawRVec->data(); fBranchAddresses[i] != data) {
-            // reset the branch address
-            fBranches[i]->SetAddress(data);
-            fBranchAddresses[i] = data;
+         if (auto *data = rawRVec->data(); fBranchData[i].fBranchAddressForCArrays != data) {
+            fBranchData[i].fOutputBranch->SetAddress(data);
+            fBranchData[i].fBranchAddressForCArrays = data;
          }
       }
    }
@@ -470,26 +519,18 @@ void ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::UpdateCArraysPtrs(const st
 void ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::SetBranches(const std::vector<void *> &values)
 {
    // create branches in output tree
-   auto nValues = values.size();
-   for (decltype(nValues) i{}; i < nValues; i++) {
-      SetBranchesHelper(fInputTree, *fOutputTree, fOutputBranches, fOptions.fBasketSize, fInputBranchNames[i],
-                        fOutputBranchNames[i], *fInputColumnTypeIDs[i], values[i], fBranches[i], fBranchAddresses[i],
-                        fIsDefine[i]);
+   assert(fBranchData.size() == values.size());
+   for (std::size_t i = 0; i < fBranchData.size(); i++) { // fBranchData can grow due to insertions
+      SetBranchesHelper(fInputTree, *fOutputTree, fBranchData, i, fOptions.fBasketSize, values[i]);
    }
-   fOutputBranches.AssertNoNullBranchAddresses();
+   AssertNoNullBranchAddresses(fBranchData);
 }
 
 void ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::SetEmptyBranches(TTree *inputTree, TTree &outputTree)
 {
    void *dummyValueAddress{};
-   TBranch *dummyTBranchPtr{};
-   void *dummyTBranchAddress{};
-   RBranchSet outputBranches{};
-   auto nBranches = fInputBranchNames.size();
-   for (decltype(nBranches) i{}; i < nBranches; i++) {
-      SetBranchesHelper(inputTree, outputTree, outputBranches, fOptions.fBasketSize, fInputBranchNames[i],
-                        fOutputBranchNames[i], *fInputColumnTypeIDs[i], dummyValueAddress, dummyTBranchPtr,
-                        dummyTBranchAddress, fIsDefine[i]);
+   for (std::size_t i = 0; i < fBranchData.size(); i++) { // fBranchData can grow due to insertions
+      SetBranchesHelper(inputTree, outputTree, fBranchData, i, fOptions.fBasketSize, dummyValueAddress);
    }
 }
 
@@ -553,16 +594,29 @@ ROOT::Internal::RDF::UntypedSnapshotTTreeHelper
 ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::MakeNew(void *newName, std::string_view)
 {
    const std::string finalName = *reinterpret_cast<const std::string *>(newName);
+   std::vector<std::string> inputBranchNames;
+   std::vector<std::string> outputBranchNames;
+   std::vector<bool> isDefine;
+   std::vector<const std::type_info *> inputColumnTypeIDs;
+   for (const auto &bd : fBranchData) {
+      if (bd.fInputBranchName.empty())
+         break;
+      inputBranchNames.push_back(bd.fInputBranchName);
+      outputBranchNames.push_back(bd.fOutputBranchName);
+      isDefine.push_back(bd.fIsDefine);
+      inputColumnTypeIDs.push_back(bd.fInputTypeID);
+   }
+
    return ROOT::Internal::RDF::UntypedSnapshotTTreeHelper{finalName,
                                                           fDirName,
                                                           fTreeName,
-                                                          fInputBranchNames,
-                                                          fOutputBranchNames,
+                                                          std::move(inputBranchNames),
+                                                          std::move(outputBranchNames),
                                                           fOptions,
-                                                          std::vector<bool>(fIsDefine),
+                                                          std::move(isDefine),
                                                           fOutputLoopManager,
                                                           fInputLoopManager,
-                                                          fInputColumnTypeIDs};
+                                                          inputColumnTypeIDs};
 }
 
 ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::UntypedSnapshotTTreeHelperMT(
@@ -575,21 +629,25 @@ ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::UntypedSnapshotTTreeHelperMT(
      fOutputTrees(fNSlots),
      fBranchAddressesNeedReset(fNSlots, 1),
      fInputTrees(fNSlots),
-     fBranches(fNSlots, std::vector<TBranch *>(vbnames.size(), nullptr)),
-     fBranchAddresses(fNSlots, std::vector<void *>(vbnames.size(), nullptr)),
-     fOutputBranches(fNSlots),
      fFileName(filename),
      fDirName(dirname),
      fTreeName(treename),
      fOptions(options),
-     fOutputBranchNames(ReplaceDotWithUnderscore(bnames)),
      fOutputLoopManager(loopManager),
-     fInputLoopManager(inputLM),
-     fInputBranchNames(vbnames),
-     fInputColumnTypeIDs(colTypeIDs),
-     fIsDefine(std::move(isDefine))
+     fInputLoopManager(inputLM)
 {
    EnsureValidSnapshotTTreeOutput(fOptions, fTreeName, fFileName);
+
+   auto outputBranchNames = ReplaceDotWithUnderscore(bnames);
+   fBranchData.reserve(fNSlots);
+   for (unsigned int slot = 0; slot < fNSlots; ++slot) {
+      fBranchData.emplace_back();
+      auto &thisSlot = fBranchData.back();
+      thisSlot.reserve(vbnames.size());
+      for (unsigned int i = 0; i < vbnames.size(); ++i) {
+         thisSlot.emplace_back(vbnames[i], outputBranchNames[i], isDefine[i], colTypeIDs[i]);
+      }
+   }
 }
 
 // Define special member methods here where the definition of all the data member types is available
@@ -649,9 +707,10 @@ void ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::FinalizeTask(unsigned in
 {
    if (fOutputTrees[slot]->GetEntries() > 0)
       fOutputFiles[slot]->Write();
+   for (auto &branchData : fBranchData[slot])
+      branchData.ClearBranchPointers(); // Pointers might go to an old tree, so they are stale now
    // clear now to avoid concurrent destruction of output trees and input tree (which has them listed as fClones)
    fOutputTrees[slot].reset(nullptr);
-   fOutputBranches[slot].Clear();
 }
 
 void ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::Exec(unsigned int slot, const std::vector<void *> &values)
@@ -676,17 +735,18 @@ void ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::UpdateCArraysPtrs(unsign
    // associated to those is re-allocated. As a result the value of the pointer can change therewith
    // leaving associated to the branch of the output tree an invalid pointer.
    // With this code, we set the value of the pointer in the output branch anew when needed.
-   assert(values.size() == fBranches[slot].size());
+   assert(values.size() == fBranchData[slot].size());
    auto nValues = values.size();
    for (decltype(nValues) i{}; i < nValues; i++) {
-      if (fBranches[slot][i] && fOutputBranches[slot].IsCArray(fOutputBranchNames[i])) {
+      auto &branchData = fBranchData[slot][i];
+      if (branchData.fIsCArray) {
          // valueAddress here points to a ROOT::RVec<std::byte> coming from RTreeUntypedArrayColumnReader. We know we
          // need its buffer, so we cast it and extract the address of the buffer
          auto *rawRVec = reinterpret_cast<ROOT::RVec<std::byte> *>(values[i]);
-         if (auto *data = rawRVec->data(); fBranchAddresses[slot][i] != data) {
+         if (auto *data = rawRVec->data(); branchData.fBranchAddressForCArrays != data) {
             // reset the branch address
-            fBranches[slot][i]->SetAddress(data);
-            fBranchAddresses[slot][i] = data;
+            branchData.fOutputBranch->SetAddress(data);
+            branchData.fBranchAddressForCArrays = data;
          }
       }
    }
@@ -696,26 +756,21 @@ void ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::SetBranches(unsigned int
                                                                     const std::vector<void *> &values)
 {
    // create branches in output tree
-   auto nValues = values.size();
-   for (decltype(nValues) i{}; i < nValues; i++) {
-      SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot], fOutputBranches[slot], fOptions.fBasketSize,
-                        fInputBranchNames[i], fOutputBranchNames[i], *fInputColumnTypeIDs[i], values[i],
-                        fBranches[slot][i], fBranchAddresses[slot][i], fIsDefine[i]);
+   auto &branchData = fBranchData[slot];
+   assert(branchData.size() == values.size());
+   for (std::size_t i = 0; i < branchData.size(); i++) { // branchData can grow due to insertions
+      SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot], branchData, i, fOptions.fBasketSize, values[i]);
    }
-   fOutputBranches[slot].AssertNoNullBranchAddresses();
+
+   AssertNoNullBranchAddresses(branchData);
 }
 
 void ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::SetEmptyBranches(TTree *inputTree, TTree &outputTree)
 {
    void *dummyValueAddress{};
-   TBranch *dummyTBranchPtr{};
-   void *dummyTBranchAddress{};
-   RBranchSet outputBranches{};
-   auto nBranches = fInputBranchNames.size();
-   for (decltype(nBranches) i{}; i < nBranches; i++) {
-      SetBranchesHelper(inputTree, outputTree, outputBranches, fOptions.fBasketSize, fInputBranchNames[i],
-                        fOutputBranchNames[i], *fInputColumnTypeIDs[i], dummyValueAddress, dummyTBranchPtr,
-                        dummyTBranchAddress, fIsDefine[i]);
+   auto &branchData = fBranchData.front();
+   for (std::size_t i = 0; i < branchData.size(); i++) { // branchData can grow due to insertions
+      SetBranchesHelper(inputTree, outputTree, branchData, i, fOptions.fBasketSize, dummyValueAddress);
    }
 }
 
@@ -787,17 +842,30 @@ ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT
 ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::MakeNew(void *newName, std::string_view)
 {
    const std::string finalName = *reinterpret_cast<const std::string *>(newName);
+   std::vector<std::string> inputBranchNames;
+   std::vector<std::string> outputBranchNames;
+   std::vector<bool> isDefine;
+   std::vector<const std::type_info *> inputColumnTypeIDs;
+   for (const auto &bd : fBranchData.front()) {
+      if (bd.fInputBranchName.empty())
+         break;
+      inputBranchNames.push_back(bd.fInputBranchName);
+      outputBranchNames.push_back(bd.fOutputBranchName);
+      isDefine.push_back(bd.fIsDefine);
+      inputColumnTypeIDs.push_back(bd.fInputTypeID);
+   }
+
    return ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT{fNSlots,
                                                             finalName,
                                                             fDirName,
                                                             fTreeName,
-                                                            fInputBranchNames,
-                                                            fOutputBranchNames,
+                                                            std::move(inputBranchNames),
+                                                            std::move(outputBranchNames),
                                                             fOptions,
-                                                            std::vector<bool>(fIsDefine),
+                                                            std::move(isDefine),
                                                             fOutputLoopManager,
                                                             fInputLoopManager,
-                                                            fInputColumnTypeIDs};
+                                                            std::move(inputColumnTypeIDs)};
 }
 
 ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::UntypedSnapshotRNTupleHelper(
