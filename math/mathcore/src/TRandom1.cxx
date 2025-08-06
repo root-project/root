@@ -349,7 +349,7 @@ void TRandom1::GetTableSeeds(UInt_t* seeds, Int_t index)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \brief Returns a random number in ]0,1]
+/// \brief Returns a random number in ]0,1[
 Double_t TRandom1::Rndm( )
 {
    float next_random;
@@ -401,7 +401,7 @@ Double_t TRandom1::Rndm( )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \brief Returns an array of random numbers in ]0,1]
+/// \brief Returns an array of random numbers in ]0,1[
 void TRandom1::RndmArray(const Int_t size, Float_t *vect)
 {
    for (Int_t i=0;i<size;i++) vect[i] = Rndm();
