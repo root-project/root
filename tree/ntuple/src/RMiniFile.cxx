@@ -755,8 +755,13 @@ void ROOT::Internal::RMiniFileReader::LoadStreamerInfo()
    streamerInfoList.Streamer(buffer);
    TObjLink *lnk = streamerInfoList.FirstLink();
    while (lnk) {
-      auto info = static_cast<TStreamerInfo *>(lnk->GetObject());
-      info->BuildCheck();
+      auto obj = lnk->GetObject();
+      // NOTE: the last element of the streamer info list may be a TList with the IO customization rules, so we need
+      // to check before static casting.
+      if (obj->IsA() == TStreamerInfo::Class()) {
+         auto info = static_cast<TStreamerInfo *>(obj);
+         info->BuildCheck();
+      }
       lnk = lnk->Next();
    }
 }
