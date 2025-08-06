@@ -53,7 +53,7 @@ TEST(Cache, Ambiguity)
 }
 
 /*
-// The contiguity has been dropped since now caching is backed up by a TDS
+// The contiguity has been dropped since now caching is backed up by a data source
 // TODO: we can optimise this. The reason why addresses are not contiguous with
 // data sources (now cache is achieved with a data source) is linked to Snapshot.
 // Indeed we need to set an address for each branch and keep that constant

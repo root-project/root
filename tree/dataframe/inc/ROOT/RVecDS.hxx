@@ -43,7 +43,7 @@ namespace RDF {
 /// so that the lifetime of the data is tied to the datasource.
 template <typename... ColumnTypes>
 class RVecDS final : public ROOT::RDF::RDataSource {
-   using PointerHolderPtrs_t = std::vector<ROOT::Internal::TDS::TPointerHolder *>;
+   using PointerHolderPtrs_t = std::vector<ROOT::Internal::RDF::TPointerHolder *>;
 
    std::tuple<ROOT::RVec<ColumnTypes>...> fColumns;
    const std::vector<std::string> fColNames;
@@ -125,7 +125,7 @@ public:
       : fColumns(colsNameVals.second...),
         fColNames{colsNameVals.first...},
         fColTypesMap({{colsNameVals.first, ROOT::Internal::RDF::TypeID2TypeName(typeid(ColumnTypes))}...}),
-        fPointerHoldersModels({new ROOT::Internal::TDS::TTypedPointerHolder<ColumnTypes>(new ColumnTypes())...}),
+        fPointerHoldersModels({new ROOT::Internal::RDF::TTypedPointerHolder<ColumnTypes>(new ColumnTypes())...}),
         fDeleteRVecs(deleteRVecs)
    {
    }
