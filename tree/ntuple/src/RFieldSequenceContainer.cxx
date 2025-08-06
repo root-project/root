@@ -819,6 +819,18 @@ void ROOT::RArrayAsRVecField::ReadInClusterImpl(RNTupleLocalIndex localIndex, vo
    }
 }
 
+void ROOT::RArrayAsRVecField::BeforeConnectPageSource(Internal::RPageSource &source)
+{
+   R__ASSERT(!IsArtificial());
+
+   const auto descriptorGuard = source.GetSharedDescriptorGuard();
+   const auto &fieldDesc = descriptorGuard->GetFieldDescriptor(GetOnDiskId());
+   EnsureCompatibleOnDiskField(fieldDesc, kDiffTypeName | kDiffTypeVersion | kDiffStructure | kDiffNRepetitions);
+   if (fieldDesc.GetTypeName().rfind("std::array<", 0) != 0) {
+      throw RException(R__FAIL("RArrayAsRVecField " + GetQualifiedFieldName() + " expects an on-disk array field"));
+   }
+}
+
 size_t ROOT::RArrayAsRVecField::GetAlignment() const
 {
    return EvalRVecAlignment(fSubfields[0]->GetAlignment());

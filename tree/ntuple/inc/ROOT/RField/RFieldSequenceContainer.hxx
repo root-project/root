@@ -351,6 +351,8 @@ protected:
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
 
+   void BeforeConnectPageSource(Internal::RPageSource &source) final;
+
 public:
    /**
       Constructor of the field. The `itemField` argument represents the inner
