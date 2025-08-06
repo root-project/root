@@ -35,7 +35,7 @@ struct Bottom : public Mid1, Mid2
 #pragma warning(push)
 #pragma warning(disable : 4584)
 #endif
-#ifdef __CLING__
+#if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Winaccessible-base"
 #endif
