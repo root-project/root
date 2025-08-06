@@ -32,7 +32,6 @@ set(TestSource
     testIntegrationMultiDim.cxx
     testAnalyticalIntegrals.cxx
     testTStatistic.cxx
-    testTRandom4.cxx
     fit/SparseDataComparer.cxx
     fit/SparseFit3.cxx
     fit/SparseFit4.cxx
@@ -96,6 +95,7 @@ ROOT_ADD_GTEST(testRootFinder testRootFinder.cxx  LIBRARIES ${Libraries})
 
 ROOT_ADD_GTEST(testKahan testKahan.cxx LIBRARIES Core MathCore)
 ROOT_ADD_GTEST(testDelaunay2D testDelaunay2D.cxx LIBRARIES Core MathCore)
+ROOT_ADD_GTEST(testTRandom4 testTRandom4.cxx LIBRARIES Core MathCore)
 
 if(clad)
   ROOT_ADD_GTEST(CladDerivatorTests CladDerivatorTests.cxx LIBRARIES Core MathCore)
