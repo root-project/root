@@ -47,6 +47,4 @@ public:
    ClassDefOverride(TRandom4,1)  //Random number generator: Mersenne Twister
 };
 
-R__EXTERN TRandom *gRandom;
-
 #endif

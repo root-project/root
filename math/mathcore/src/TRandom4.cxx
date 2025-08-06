@@ -63,16 +63,6 @@ case SetSeed(0) uses TRandom2 to avoid artefacts.
 #include "TRandom2.h"
 #include "TUUID.h"
 
-TRandom *gRandom = new TRandom4();
-#ifdef R__COMPLETE_MEM_TERMINATION
-namespace {
-   struct TRandomCleanup {
-      ~TRandomCleanup() { delete gRandom; gRandom = nullptr; }
-   };
-   static TRandomCleanup gCleanupRandom;
-}
-#endif
-
 ClassImp(TRandom4);
 
 ////////////////////////////////////////////////////////////////////////////////
