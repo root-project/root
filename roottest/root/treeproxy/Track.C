@@ -1,5 +1,5 @@
 #include "Track.h"
 
-#if defined(__MAKECINT__) && !defined(R__ACLIC_ROOTMAP)
+#ifdef __ROOTCLING__
 #pragma link C++ class Track+;
 #endif
