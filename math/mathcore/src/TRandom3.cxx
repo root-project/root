@@ -140,7 +140,7 @@ Double_t TRandom3::Rndm()
    y ^= ((y << 15) & kTemperingMaskC );
    y ^=  (y >> 18);
 
-   // 2.3283064365386963e-10 == 1./(UINT_MAX+1)  -> then returned value cannot be = 1.0
+   // 2.3283064365386963e-10 == 1./(UINT_MAX+1UL)  -> then returned value cannot be = 1.0
    if (y) return ( (Double_t) y * 2.3283064365386963e-10); // * Power(2,-32)
    return Rndm();
 }
