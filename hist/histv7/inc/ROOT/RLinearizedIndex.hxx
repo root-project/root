@@ -19,8 +19,8 @@ For example, when an argument is outside the axis and underflow / overflow bins 
 welcome!
 */
 struct RLinearizedIndex final {
-   std::size_t fIndex;
-   bool fValid;
+   std::size_t fIndex = 0;
+   bool fValid = false;
 };
 
 } // namespace Experimental
