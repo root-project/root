@@ -86,6 +86,8 @@ TEST(RNTuple, TypeNameNormalizationById)
 
    EXPECT_EQ("std::int32_t", GetRenormalizedTypeName(typeid(signed)));
    EXPECT_EQ("std::int32_t", GetRenormalizedTypeName(typeid(std::int32_t)));
+   EXPECT_EQ("std::int64_t", GetRenormalizedTypeName(typeid(std::int64_t)));
+   EXPECT_EQ("std::uint64_t", GetRenormalizedTypeName(typeid(std::uint64_t)));
    EXPECT_EQ("double", GetRenormalizedTypeName(typeid(Double32_t)));
    EXPECT_EQ("float", GetRenormalizedTypeName(typeid(const float)));
 
