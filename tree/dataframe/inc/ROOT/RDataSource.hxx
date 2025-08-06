@@ -51,7 +51,7 @@ std::string printValue(ROOT::RDF::RDataSource *ds);
 namespace ROOT {
 
 namespace Internal {
-namespace TDS {
+namespace RDF {
 
 /// Mother class of TTypedPointerHolder. The instances
 /// of this class can be put in a container. Upon destruction,
@@ -85,9 +85,6 @@ public:
    ~TTypedPointerHolder() { delete static_cast<T *>(fPointer); }
 };
 
-} // ns TDS
-
-namespace RDF {
 std::string GetTypeNameWithOpts(const ROOT::RDF::RDataSource &ds, std::string_view colName, bool vector2RVec);
 const std::vector<std::string> &GetTopLevelFieldNames(const ROOT::RDF::RDataSource &ds);
 const std::vector<std::string> &GetColumnNamesNoDuplicates(const ROOT::RDF::RDataSource &ds);

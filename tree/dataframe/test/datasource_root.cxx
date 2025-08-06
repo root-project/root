@@ -11,10 +11,10 @@
 using namespace ROOT;
 using namespace ROOT::RDF;
 
-auto fileName0 = "TRootTDS_input_0.root";
-auto fileName1 = "TRootTDS_input_1.root";
-auto fileName2 = "TRootTDS_input_2.root";
-auto fileGlob = "TRootTDS_input_*.root";
+auto fileName0 = "RRootDS_input_0.root";
+auto fileName1 = "RRootDS_input_1.root";
+auto fileName2 = "RRootDS_input_2.root";
+auto fileGlob = "RRootDS_input_*.root";
 auto treeName = "t";
 
 TEST(RRootDS, GenerateData)
@@ -51,7 +51,7 @@ TEST(RRootDS, ColTypeNames)
    EXPECT_STREQ("TGraph", tds.GetTypeName("g").c_str());
 }
 
-TEST(TRootTDS, EntryRanges)
+TEST(RRootDS, EntryRanges)
 {
    ROOT::Internal::RDF::RRootDS tds(treeName, fileGlob);
    tds.SetNSlots(3U);
@@ -69,7 +69,7 @@ TEST(TRootTDS, EntryRanges)
    EXPECT_EQ(30U, ranges[2].second);
 }
 
-TEST(TRootTDS, ColumnReaders)
+TEST(RRootDS, ColumnReaders)
 {
    ROOT::Internal::RDF::RRootDS tds(treeName, fileGlob);
    const auto nSlots = 3U;
@@ -89,7 +89,7 @@ TEST(TRootTDS, ColumnReaders)
    }
 }
 
-TEST(TRootTDS, ColumnReadersWrongType)
+TEST(RRootDS, ColumnReadersWrongType)
 {
    ROOT::Internal::RDF::RRootDS tds(treeName, fileGlob);
    const auto nSlots = 3U;
@@ -106,7 +106,7 @@ TEST(TRootTDS, ColumnReadersWrongType)
 
 #ifndef NDEBUG
 
-TEST(TRootTDS, SetNSlotsTwice)
+TEST(RRootDS, SetNSlotsTwice)
 {
    auto theTest = []() {
       ROOT::Internal::RDF::RRootDS tds(treeName, fileGlob);
@@ -117,7 +117,7 @@ TEST(TRootTDS, SetNSlotsTwice)
 }
 #endif
 
-TEST(TRootTDS, FromARDF)
+TEST(RRootDS, FromARDF)
 {
    std::unique_ptr<RDataSource> tds(new ROOT::Internal::RDF::RRootDS(treeName, fileGlob));
    RDataFrame tdf(std::move(tds));
@@ -130,7 +130,7 @@ TEST(TRootTDS, FromARDF)
    EXPECT_DOUBLE_EQ(0., *min);
 }
 
-TEST(TRootTDS, FromARDFWithJitting)
+TEST(RRootDS, FromARDFWithJitting)
 {
    std::unique_ptr<RDataSource> tds(new ROOT::Internal::RDF::RRootDS(treeName, fileGlob));
    RDataFrame tdf(std::move(tds));
@@ -144,7 +144,7 @@ TEST(TRootTDS, FromARDFWithJitting)
 // NOW MT!-------------
 #ifdef R__USE_IMT
 
-TEST(TRootTDS, DefineSlotMT)
+TEST(RRootDS, DefineSlotMT)
 {
    const auto nSlots = 4U;
    ROOT::EnableImplicitMT(nSlots);
@@ -163,7 +163,7 @@ TEST(TRootTDS, DefineSlotMT)
    EXPECT_LE(nUsedSlots, nSlots);
 }
 
-TEST(TRootTDS, FromARDFMT)
+TEST(RRootDS, FromARDFMT)
 {
    std::unique_ptr<RDataSource> tds(new ROOT::Internal::RDF::RRootDS(treeName, fileGlob));
    RDataFrame tdf(std::move(tds));
@@ -176,7 +176,7 @@ TEST(TRootTDS, FromARDFMT)
    EXPECT_DOUBLE_EQ(0., *min);
 }
 
-TEST(TRootTDS, FromARDFWithJittingMT)
+TEST(RRootDS, FromARDFWithJittingMT)
 {
    std::unique_ptr<RDataSource> tds(new ROOT::Internal::RDF::RRootDS(treeName, fileGlob));
    RDataFrame tdf(std::move(tds));

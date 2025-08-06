@@ -26,11 +26,11 @@
 
 namespace ROOT::Internal::RDF {
 class R__CLING_PTRCHECK(off) RLazyDSColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
-   ROOT::Internal::TDS::TPointerHolder *fPtr;
+   ROOT::Internal::RDF::TPointerHolder *fPtr;
    void *GetImpl(Long64_t) final { return fPtr->GetPointer(); }
 
 public:
-   RLazyDSColumnReader(ROOT::Internal::TDS::TPointerHolder *ptr) : fPtr(ptr) {}
+   RLazyDSColumnReader(ROOT::Internal::RDF::TPointerHolder *ptr) : fPtr(ptr) {}
 };
 } // namespace ROOT::Internal::RDF
 
@@ -49,7 +49,7 @@ namespace RDF {
 /// information, e.g. expanding in a smart way the template parameters packs.
 template <typename... ColumnTypes>
 class RLazyDS final : public ROOT::RDF::RDataSource {
-   using PointerHolderPtrs_t = std::vector<ROOT::Internal::TDS::TPointerHolder *>;
+   using PointerHolderPtrs_t = std::vector<ROOT::Internal::RDF::TPointerHolder *>;
 
    std::tuple<RResultPtr<std::vector<ColumnTypes>>...> fColumns;
    const std::vector<std::string> fColNames;
@@ -106,7 +106,7 @@ public:
       : fColumns(std::tuple<RResultPtr<std::vector<ColumnTypes>>...>(colsNameVals.second...)),
         fColNames({colsNameVals.first...}),
         fColTypesMap({{colsNameVals.first, ROOT::Internal::RDF::TypeID2TypeName(typeid(ColumnTypes))}...}),
-        fPointerHoldersModels({new ROOT::Internal::TDS::TTypedPointerHolder<ColumnTypes>(new ColumnTypes())...})
+        fPointerHoldersModels({new ROOT::Internal::RDF::TTypedPointerHolder<ColumnTypes>(new ColumnTypes())...})
    {
    }
 

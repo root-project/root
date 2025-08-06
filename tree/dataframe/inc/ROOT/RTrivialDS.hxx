@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RTRIVIALTDS
-#define ROOT_RTRIVIALTDS
+#ifndef ROOT_RTRIVIALDS
+#define ROOT_RTRIVIALDS
 
 #include "ROOT/RDF/RInterface.hxx"
 #include "ROOT/RDataSource.hxx"
