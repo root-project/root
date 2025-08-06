@@ -42,6 +42,7 @@ protected:
    RNTupleDescriptor AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode) final { return RNTupleDescriptor(); }
    std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
    RPageRef LoadPageImpl(ColumnHandle_t, const RClusterInfo &, ROOT::NTupleSize_t) final { return RPageRef(); }
+   void LoadStreamerInfo() final {}
 
 public:
    /// Records the cluster IDs requests by LoadClusters() calls

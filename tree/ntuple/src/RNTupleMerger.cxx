@@ -1159,11 +1159,9 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
 
    // Merge main loop
    for (RPageSource *source : sources) {
-      if (auto *sourceFile = dynamic_cast<RPageSourceFile *>(source)) {
-         // We need to make sure the streamer info from the source files is loaded otherwise we may not be able
-         // to build the streamer info of user-defined types unless we have their dictionaries available.
-         sourceFile->LoadStreamerInfo();
-      }
+      // We need to make sure the streamer info from the source files is loaded otherwise we may not be able
+      // to build the streamer info of user-defined types unless we have their dictionaries available.
+      source->LoadStreamerInfo();
 
       source->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
       auto srcDescriptor = source->GetSharedDescriptorGuard();

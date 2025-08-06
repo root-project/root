@@ -185,6 +185,8 @@ public:
 
    /// Return the object class used for user data OIDs in this ntuple.
    std::string GetObjectClass() const;
+
+   void LoadStreamerInfo() final;
 }; // class RPageSourceDaos
 
 } // namespace Internal
