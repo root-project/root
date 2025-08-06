@@ -273,6 +273,14 @@ void MapIntegerType(std::string &typeName)
    } else if (typeName == "unsigned long long" || typeName == "unsigned long long int") {
       typeName = ROOT::RField<unsigned long long int>::TypeName();
    }
+
+   // The following two types are 64-bit integers on Windows that we can encounter during renormalization of demangled
+   // std::type_info names.
+   if (typeName == "__int64") {
+      typeName = "std::int64_t";
+   } else if (typeName == "unsigned __int64") {
+      typeName = "std::uint64_t";
+   }
 }
 
 // Note that ROOT Meta already defines GetDemangledTypeName(), which does both demangling and normalizing.
