@@ -930,12 +930,9 @@ void RModel::GenerateSessionCode()
 
       fGC += "}\n\n";
    }
-<<<<<<< HEAD
 
    fGC += doInferSignature + "{\n";
    fGC += "\n";
-=======
->>>>>>> 03b52f574c (Profiler code generation)
 
    if (fProfile) {
       RModelProfiler profiler(*this);
