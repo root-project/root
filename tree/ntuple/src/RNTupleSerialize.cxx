@@ -2140,7 +2140,7 @@ std::string ROOT::Internal::RNTupleSerializer::SerializeStreamerInfos(const Stre
 }
 
 ROOT::RResult<ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t>
-ROOT::Internal::RNTupleSerializer::DeserializeStreamerInfos(std::string_view extraTypeInfoContent)
+ROOT::Internal::RNTupleSerializer::DeserializeStreamerInfos(const std::string &extraTypeInfoContent)
 {
    StreamerInfoMap_t infoMap;
 
