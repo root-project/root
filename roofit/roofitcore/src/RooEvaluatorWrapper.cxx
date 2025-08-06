@@ -154,7 +154,7 @@ bool RooEvaluatorWrapper::setData(RooAbsData &data, bool /*cloneData*/)
 /// represents the data entry.
 class RooFuncWrapper {
 public:
-   RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimultaneous const *simPdf, RooArgSet const& paramSet);
+   RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimultaneous const *simPdf, RooArgSet const &paramSet);
 
    bool hasGradient() const { return _hasGradient; }
    void gradient(double *out) const
@@ -221,7 +221,8 @@ void replaceAll(std::string &str, const std::string &from, const std::string &to
 
 } // namespace
 
-RooFuncWrapper::RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimultaneous const *simPdf, RooArgSet const&paramSet)
+RooFuncWrapper::RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimultaneous const *simPdf,
+                               RooArgSet const &paramSet)
 {
    // Load the parameters and observables.
    auto spans = loadParamsAndData(paramSet, data, simPdf);
@@ -290,15 +291,6 @@ RooFuncWrapper::loadParamsAndData(RooArgSet const &paramSet, const RooAbsData *d
    }
 
    for (auto *param : paramSet) {
-      if (!dynamic_cast<RooAbsReal *>(param)) {
-         if (param->isConstant()) {
-            continue;
-         }
-         std::stringstream errorMsg;
-         errorMsg << "In creation of function wrapper: input param expected to be of type RooAbsReal.";
-         oocoutE(nullptr, InputArguments) << errorMsg.str() << std::endl;
-         throw std::runtime_error(errorMsg.str().c_str());
-      }
       if (spans.find(param) == spans.end()) {
          _params.add(*param);
       }
@@ -358,8 +350,10 @@ void RooFuncWrapper::createGradient()
 
 void RooFuncWrapper::updateGradientVarBuffer() const
 {
-   std::transform(_params.begin(), _params.end(), _gradientVarBuffer.begin(),
-                  [](RooAbsArg *obj) { return static_cast<RooAbsReal *>(obj)->getVal(); });
+   std::transform(_params.begin(), _params.end(), _gradientVarBuffer.begin(), [](RooAbsArg *obj) {
+      return obj->isCategory() ? static_cast<RooAbsCategory *>(obj)->getCurrentIndex()
+                               : static_cast<RooAbsReal *>(obj)->getVal();
+   });
 }
 
 /// @brief Dumps a macro "filename.C" that can be used to test and debug the generated code and gradient.
@@ -487,9 +481,10 @@ void RooEvaluatorWrapper::createFuncWrapper()
 {
    // Get the parameters.
    RooArgSet paramSet;
-   this->getParameters(_data ? _data->get() : nullptr, paramSet);
+   this->getParameters(_data ? _data->get() : nullptr, paramSet, /*sripDisconnectedParams=*/false);
 
-   _funcWrapper = std::make_unique<RooFuncWrapper>(*_topNode, _data, dynamic_cast<RooSimultaneous const *>(_pdf), paramSet);
+   _funcWrapper =
+      std::make_unique<RooFuncWrapper>(*_topNode, _data, dynamic_cast<RooSimultaneous const *>(_pdf), paramSet);
 }
 
 void RooEvaluatorWrapper::generateGradient()
