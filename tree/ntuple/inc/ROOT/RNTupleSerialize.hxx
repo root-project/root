@@ -300,7 +300,7 @@ public:
 
    // Helper functions to (de-)serialize the streamer info type extra information
    static std::string SerializeStreamerInfos(const StreamerInfoMap_t &infos);
-   static RResult<StreamerInfoMap_t> DeserializeStreamerInfos(std::string_view extraTypeInfoContent);
+   static RResult<StreamerInfoMap_t> DeserializeStreamerInfos(const std::string &extraTypeInfoContent);
 }; // class RNTupleSerializer
 
 } // namespace Internal
