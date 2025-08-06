@@ -32,7 +32,7 @@ To get started these examples show some of the basic features of the MathCore li
 | mathcoreSpecFunc.C |  | Example macro showcasing some special mathematical functions.|
 | multidimSampling.C |  | Example of random number generation by sampling a multi-dim distribution using the DistSampler class.|
 | permute.C |  | Tutorial illustrating the use of TMath::Permute for computing all permutations of n natural numbers.|
-| testrandom.C |  | Performance test of all the ROOT random generator (TRandom, TRandom1, TRandom2 and TRandom3).|
+| testrandom.C |  | Performance test of all the ROOT random generators (TRandom, TRandom1, TRandom2, TRandom3 and TRandom4).|
 
 \anchor mathmore
 ## Basic features of MathMore
