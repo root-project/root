@@ -42,19 +42,6 @@ class TBufferMergerFile;
 
 namespace ROOT::Internal::RDF {
 
-class RBranchSet {
-   std::vector<TBranch *> fBranches;
-   std::vector<std::string> fNames;
-   std::vector<bool> fIsCArray;
-
-public:
-   TBranch *Get(const std::string &name) const;
-   bool IsCArray(const std::string &name) const;
-   void Insert(const std::string &name, TBranch *address, bool isCArray = false);
-   void Clear();
-   void AssertNoNullBranchAddresses();
-};
-
 class R__CLING_PTRCHECK(off) UntypedSnapshotRNTupleHelper final : public RActionImpl<UntypedSnapshotRNTupleHelper> {
    std::string fFileName;
    std::string fDirName;
