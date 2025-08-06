@@ -44,7 +44,7 @@ public:
    ///
    /// \param[in] binEdges the (ordered) edges of the normal bins, must define at least one bin (i.e. size >= 2)
    /// \param[in] enableFlowBins whether to enable underflow and overflow bins
-   RVariableBinAxis(std::vector<double> binEdges, bool enableFlowBins = true)
+   explicit RVariableBinAxis(std::vector<double> binEdges, bool enableFlowBins = true)
       : fBinEdges(std::move(binEdges)), fEnableFlowBins(enableFlowBins)
    {
       if (fBinEdges.size() < 2) {
