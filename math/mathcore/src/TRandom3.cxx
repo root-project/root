@@ -27,6 +27,7 @@ Drawbacks:
 
 An alternatively excellent generator passing all tests of TestU01, having 61 random bits and
 being as fast as Mersenne and Twister is MIXMAX (TRandomMixMax).
+Also, TRandomRanluxpp is a recommended alternative over TRandom3.
 
 @warning TRandom3 is not a fully correct Mersenne and Twister random number generator, since
 zeroes of the sequence are skipped, and thus the actual period is slightly less than
