@@ -32,6 +32,7 @@ set(TestSource
     testIntegrationMultiDim.cxx
     testAnalyticalIntegrals.cxx
     testTStatistic.cxx
+    testTRandom4.cxx
     fit/SparseDataComparer.cxx
     fit/SparseFit3.cxx
     fit/SparseFit4.cxx

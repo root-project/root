@@ -1,10 +1,10 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook -nodraw
-/// Performance test of all the ROOT random generator (TRandom, TRandom1, TRandom2 and TRandom3).
+/// Performance test of all the ROOT random generator (TRandom, TRandom1, TRandom2, TRandom3 and TRandom4).
 ///
 /// Tests the generator TRandom3 against some ref values
-/// and creates a timing table against TRandom, TRandom1 and TRandom2.
+/// and creates a timing table against TRandom, TRandom1, TRandom2 and TRandom4.
 ///
 /// E.g. on an an Intel Xeon Quad-core Harpertown (E5410) 2.33 GHz running
 /// Linux SLC4 64 bit and compiled with gcc 3.4
@@ -46,6 +46,7 @@
 #include <TRandom1.h>
 #include <TRandom2.h>
 #include <TRandom3.h>
+#include <TRandom4.h>
 #include <TRandomGen.h>
 #include <TStopwatch.h>
 #include <TF1.h>
@@ -66,6 +67,7 @@ void testAll() {
   TRandom *r1 = new TRandom1();
   TRandom *r2 = new TRandom2();
   TRandom *r3 = new TRandom3();
+  TRandom *r11 = new TRandom4();
   TRandom *r4 = new TRandomMixMax();
   TRandom *r5 = new TRandomMixMax17();
   TRandom *r6 = new TRandomGen<ROOT::Math::MixMaxEngine<256,0>>();
@@ -77,7 +79,7 @@ void testAll() {
 
   TStopwatch sw;
   printf("Distribution            nanoseconds/call\n");
-  printf("                    TRandom  TRandom1 TRandom2 TRandom3 MixMax240 MixMax17 Mixmax256_0 MixMax256_2 MixMax256_4 MT_64 Ranlux48\n");
+  printf("                    TRandom  TRandom1 TRandom2 TRandom3 TRandom4 MixMax240 MixMax17 Mixmax256_0 MixMax256_2 MixMax256_4 MT_64 Ranlux48\n");
 
   sw.Start();
   for (i=0;i<N;i++) {
@@ -97,6 +99,11 @@ void testAll() {
   sw.Start();
   for (i=0;i<N;i++) {
      x = r3->Rndm(i);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r11->Rndm(i);
   }
   printf(" %8.3f",sw.CpuTime()*cpn);
   // new random generators
@@ -169,7 +176,12 @@ void testAll() {
      r3->RndmArray(NR,rn);
   }
   printf(" %8.3f",sw.CpuTime()*cpn);
-   sw.Start();
+  sw.Start();
+  for (i=0;i<N;i+=NR) {
+     r11->RndmArray(NR,rn);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+  sw.Start();
   for (i=0;i<N;i+=NR) {
      r4->RndmArray(NR,rn);
   }
@@ -227,6 +239,10 @@ void testAll() {
      x = r3->Gaus(0,1);
   }
   printf(" %8.3f",sw.CpuTime()*cpn);
+  for (i=0;i<N;i++) {
+     x = r11->Gaus(0,1);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
   sw.Start();
   for (i=0;i<N;i++) {
      x = r4->Gaus(0,1);
@@ -279,6 +295,10 @@ void testAll() {
   sw.Start();
   for (i=0;i<N;i+=2) {
      r3->Rannor(x,y);
+  }
+  sw.Start();
+  for (i=0;i<N;i+=2) {
+     r11->Rannor(x,y);
   }
   printf(" %8.3f",sw.CpuTime()*cpn);
   sw.Start();
@@ -334,6 +354,11 @@ void testAll() {
      x = r3->Landau(0,1);
   }
   printf(" %8.3f\n",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r11->Landau(0,1);
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
 
   sw.Start();
   for (i=0;i<N;i++) {
@@ -353,6 +378,11 @@ void testAll() {
   sw.Start();
   for (i=0;i<N;i++) {
      x = r3->Exp(1);
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r11->Exp(1);
   }
   printf(" %8.3f\n",sw.CpuTime()*cpn);
 
@@ -376,6 +406,11 @@ void testAll() {
      x = r3->Binomial(5,0.5);
   }
   printf(" %8.3f\n",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r11->Binomial(5,0.5);
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
 
   sw.Start();
   for (i=0;i<N;i++) {
@@ -395,6 +430,11 @@ void testAll() {
   sw.Start();
   for (i=0;i<N;i++) {
      x = r3->Binomial(15,0.5);
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r11->Binomial(15,0.5);
   }
   printf(" %8.3f\n",sw.CpuTime()*cpn);
 
@@ -418,6 +458,11 @@ void testAll() {
      x = r3->Poisson(3);
   }
   printf(" %8.3f\n",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r11->Poisson(3);
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
 
   sw.Start();
   for (i=0;i<N;i++) {
@@ -437,6 +482,11 @@ void testAll() {
   sw.Start();
   for (i=0;i<N;i++) {
      x = r3->Poisson(10);
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r11->Poisson(10);
   }
   printf(" %8.3f\n",sw.CpuTime()*cpn);
 
@@ -460,6 +510,11 @@ void testAll() {
      x = r3->Poisson(70);
   }
   printf(" %8.3f\n",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r11->Poisson(70);
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
 
   sw.Start();
   for (i=0;i<N;i++) {
@@ -479,6 +534,11 @@ void testAll() {
   sw.Start();
   for (i=0;i<N;i++) {
      x = r3->Poisson(100);
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r11->Poisson(100);
   }
   printf(" %8.3f\n",sw.CpuTime()*cpn);
 
@@ -503,6 +563,12 @@ void testAll() {
   }
   printf(" %8.3f",sw.CpuTime()*cpn);
   gRandom = r3;
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = f1->GetRandom();
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
+  gRandom = r11;
   sw.Start();
   for (i=0;i<N;i++) {
      x = f1->GetRandom();
@@ -536,6 +602,12 @@ void testAll() {
      x = f2->GetRandom();
   }
   printf(" %8.3f\n",sw.CpuTime()*cpn);
+  gRandom = r11;
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = f2->GetRandom();
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
 
   // test using Unuran
 #if __has_include("TUnuran.h")
@@ -543,6 +615,7 @@ void testAll() {
   TUnuran unr1(r1);
   TUnuran unr2(r2);
   TUnuran unr3(r3);
+  TUnuran unr11(r11);
 
   // continuous distribution (ex. Gaus)
   TUnuranContDist dist(f1);
@@ -551,6 +624,7 @@ void testAll() {
   unr1.Init(dist,"arou");
   unr2.Init(dist,"arou");
   unr3.Init(dist,"arou");
+  unr11.Init(dist,"arou");
 
   sw.Start();
   for (i=0;i<N;i++) {
@@ -572,6 +646,11 @@ void testAll() {
      x = unr3.Sample();
   }
   printf(" %8.3f\n",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = unr11.Sample();
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
 
   // Poisson (need to initialize before with Poisson mu value)
 
@@ -579,6 +658,7 @@ void testAll() {
   unr1.InitPoisson(10);
   unr2.InitPoisson(10);
   unr3.InitPoisson(10);
+  unr11.InitPoisson(10);
 
   sw.Start();
   for (i=0;i<N;i++) {
@@ -600,11 +680,17 @@ void testAll() {
      x = unr3.SampleDiscr();
   }
   printf(" %8.3f\n",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = unr11.SampleDiscr();
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
 
   unr0.InitPoisson(100);
   unr1.InitPoisson(100);
   unr2.InitPoisson(100);
   unr3.InitPoisson(100);
+  unr11.InitPoisson(100);
 
   sw.Start();
   for (i=0;i<N;i++) {
@@ -626,12 +712,18 @@ void testAll() {
      x = unr3.SampleDiscr();
   }
   printf(" %8.3f\n",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = unr11.SampleDiscr();
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
 #endif
 
   delete r0;
   delete r1;
   delete r2;
   delete r3;
+  delete r11;
   delete r4;
   delete r5;
   delete r6;
@@ -648,6 +740,7 @@ void testAll() {
   unr1.InitBinomial(15,0.5);
   unr2.InitBinomial(15,0.5);
   unr3.InitBinomial(15,0.5);
+  unr11.InitBinomial(15,0.5);
 
   sw.Start();
   for (i=0;i<N;i++) {
@@ -667,6 +760,11 @@ void testAll() {
   sw.Start();
   for (i=0;i<N;i++) {
      x = unr3.SampleDiscr();
+  }
+  printf(" %8.3f\n",sw.CpuTime()*cpn);
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = unr11.SampleDiscr();
   }
   printf(" %8.3f\n",sw.CpuTime()*cpn);
 #endif

@@ -3,13 +3,11 @@
 
 /**
 
-\class TRandom3
-
-\deprecated Consider using TRandom4 instead
+\class TRandom4
 
 Random number generator class based on
   M. Matsumoto and T. Nishimura,
-  Mersenne Twister: A 623-diminsionally equidistributed
+  Mersenne Twister: A 623-dimensionally equidistributed
   uniform pseudorandom number generator
   ACM Transactions on Modeling and Computer Simulation,
   Vol. 8, No. 1, January 1998, pp 3--30.
@@ -17,19 +15,22 @@ Random number generator class based on
 For more information see the Mersenne Twister homepage
   [http://www.math.keio.ac.jp/~matumoto/emt.html]
 
-Advantage:
-
+Advantages:
 -  large period 2**19937 -1
 -  relatively fast (slightly slower than TRandom2 but much faster than TRandom1)
 
-Drawback:
+Drawbacks:
 -  a relative large internal state of 624 integers 
 - generate only 32 random bits 
 - not passing all the random generator tests. It fails some tests in TestU01
  (see [http://simul.iro.umontreal.ca/testu01/tu01.html])
 
-An altenativly excellent generator passing all tests of TestU01, having 61 random bits and 
-fast as Mersenne and Twister is MIXMAX (TRandomMixMax). 
+An alternatively excellent generator passing all tests of TestU01, having 61 random bits and
+being as fast as Mersenne and Twister is MIXMAX (TRandomMixMax).
+
+@note TRandom4 is comparable with the original paper and with std::mt19937. The only differences are that
+here we return doubles in the open interval (0,1) rather than integers in [0, 2**32 - 1], and that the special
+case SetSeed(0) uses TRandom2 to avoid artefacts.
 
 @ingroup Random
 
@@ -57,12 +58,12 @@ fast as Mersenne and Twister is MIXMAX (TRandomMixMax).
 /* with an appropriate reference to your work.                     */
 /////////////////////////////////////////////////////////////////////
 
-#include "TRandom3.h"
+#include "TRandom4.h"
 #include "TBuffer.h"
 #include "TRandom2.h"
 #include "TUUID.h"
 
-TRandom *gRandom = new TRandom3();
+TRandom *gRandom = new TRandom4();
 #ifdef R__COMPLETE_MEM_TERMINATION
 namespace {
    struct TRandomCleanup {
@@ -72,33 +73,37 @@ namespace {
 }
 #endif
 
-ClassImp(TRandom3);
+ClassImp(TRandom4);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-/// If seed is 0, the seed is automatically computed via a TUUID object.
+/// \brief Default constructor.
+///
+/// If seed is 0, the seed array is automatically computed via a TRandom2
+/// object, which internally uses TUUID.
 /// In this case the seed is guaranteed to be unique in space and time.
 
-TRandom3::TRandom3(UInt_t seed)
+TRandom4::TRandom4(UInt_t seed)
 {
-   SetName("Random3");
+   SetName("Random4");
    SetTitle("Random number generator: Mersenne Twister");
    SetSeed(seed);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default destructor
+/// \brief Default destructor.
 
-TRandom3::~TRandom3()
+TRandom4::~TRandom4()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Machine independent random number generator.
-///  Produces uniformly-distributed floating points in (0,1)
+///  \brief Machine independent random number generator.
+///
+///  Produces uniformly-distributed floating points in ]0, 1[.
 ///  Method: Mersenne Twister
+///  Generate number in interval (0,1): 0 and 1 are not included in the interval
 
-Double_t TRandom3::Rndm()
+Double_t TRandom4::Rndm()
 {
    UInt_t y;
 
@@ -134,23 +139,23 @@ Double_t TRandom3::Rndm()
    y ^= ((y << 15) & kTemperingMaskC );
    y ^=  (y >> 18);
 
-   // 2.3283064365386963e-10 == 1./(max<UINt_t>+1)  -> then returned value cannot be = 1.0
-   if (y) return ( (Double_t) y * 2.3283064365386963e-10); // * Power(2,-32)
-   return Rndm();
+   // 2.3283064365386963e-10 == 1./(UINT_MAX+1UL)  -> then returned value cannot be = 1.0
+   // First number is 1e-10, last number is 1-1e-10, inbetween they are evenly spaced.
+   return (y + 0.5)* 2.3283064365386963e-10; // * Power(2,-32)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return an array of n random numbers uniformly distributed in ]0,1]
+///  \brief Return an array of n random numbers uniformly distributed in ]0, 1[.
 
-void TRandom3::RndmArray(Int_t n, Float_t *array)
+void TRandom4::RndmArray(Int_t n, Float_t *array)
 {
   for(Int_t i=0; i<n; i++) array[i]=(Float_t)Rndm();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return an array of n random numbers uniformly distributed in ]0,1]
+///  \brief Return an array of n random numbers uniformly distributed in ]0, 1[.
 
-void TRandom3::RndmArray(Int_t n, Double_t *array)
+void TRandom4::RndmArray(Int_t n, Double_t *array)
 {
    Int_t k = 0;
 
@@ -189,23 +194,23 @@ void TRandom3::RndmArray(Int_t n, Double_t *array)
       y ^= ((y << 15) & kTemperingMaskC );
       y ^=  (y >> 18);
 
-      if (y) {
-         array[k] = Double_t( y * 2.3283064365386963e-10); // * Power(2,-32)
-         k++;
-      }
+      array[k] = (y + 0.5) * 2.3283064365386963e-10; // * Power(2,-32)
+      k++;
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Set the random generator sequence
-/// if seed is 0 (default value) a TUUID is generated and used to fill
-/// the first 8 integers of the seed array.
+/// \brief Set the random generator sequence.
+///
+/// If seed is 0 (default value) a TRandom2 (internally uses TUUID) is used to
+/// generate all 624 unsigned integers of the seed array.
 /// In this case the seed is guaranteed to be unique in space and time.
-/// Use upgraded seeding procedure to fix a known problem when seeding with values
-/// with many zero in the bit pattern (like 2**28).
-/// see http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/MT2002/emt19937ar.html
+///
+/// Upgraded seeding procedure is used to fix a known problem when seeding with
+/// values with many zero in the bit pattern (like 2**28), see
+/// http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/MT2002/emt19937ar.html
 
-void TRandom3::SetSeed(ULong_t seed)
+void TRandom4::SetSeed(ULong_t seed)
 {
    TRandom::SetSeed(seed);
    fCount624 = 624;
@@ -219,7 +224,7 @@ void TRandom3::SetSeed(ULong_t seed)
 
    } else {
 
-      // use TRandom2 (which is based on TUUId to generate the seed
+      // use TRandom2 (which is based on TUUID to generate the seed.
       // TRandom2 works fairly well  and has been tested against example
       // layout in https://savannah.cern.ch/bugs/?99516
       TRandom2 r(0);
@@ -234,25 +239,25 @@ void TRandom3::SetSeed(ULong_t seed)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Stream an object of class TRandom3.
+/// \brief Streamer for an object of class TRandom4.
 
-void TRandom3::Streamer(TBuffer &R__b)
+void TRandom4::Streamer(TBuffer &R__b)
 {
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
       if (R__v > 1) {
-         R__b.ReadClassBuffer(TRandom3::Class(), this, R__v, R__s, R__c);
+         R__b.ReadClassBuffer(TRandom4::Class(), this, R__v, R__s, R__c);
          return;
       }
       //====process old versions before automatic schema evolution
       TRandom::Streamer(R__b);
       R__b.ReadStaticArray(fMt);
       R__b >> fCount624;
-      R__b.CheckByteCount(R__s, R__c, TRandom3::IsA());
+      R__b.CheckByteCount(R__s, R__c, TRandom4::IsA());
       //====end of old versions
 
    } else {
-      R__b.WriteClassBuffer(TRandom3::Class(),this);
+      R__b.WriteClassBuffer(TRandom4::Class(),this);
    }
 }

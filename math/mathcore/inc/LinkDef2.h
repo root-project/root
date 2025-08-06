@@ -32,6 +32,7 @@
 #pragma link C++ class TRandom1+;
 #pragma link C++ class TRandom2+;
 #pragma link C++ class TRandom3-;
+#pragma link C++ class TRandom4-;
 
 #pragma link C++ class ROOT::Math::TRandomEngine+;
 #pragma link C++ class ROOT::Math::LCGEngine+;

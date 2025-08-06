@@ -4,6 +4,7 @@
 #include "TRandom1.h"
 #include "TRandom2.h"
 #include "TRandom3.h"
+#include "TRandom4.h"
 #include "TRandomGen.h"
 #include <iostream>
 #include <cmath>
@@ -106,16 +107,20 @@ void printName( const R & r) {
 void printName( const TRandom & r) {
   std::cout << "\nRandom :\t " << r.ClassName() << std::endl;
 }
-// specializations for TRandom's
+// specializations for TRandom1's
 void printName( const TRandom1 & r) {
   std::cout << "\nRandom :\t " << r.ClassName() << std::endl;
 }
-// specializations for TRandom's
+// specializations for TRandom2's
 void printName( const TRandom2 & r) {
   std::cout << "\nRandom :\t " << r.ClassName() << std::endl;
 }
-// specializations for TRandom's
+// specializations for TRandom3's
 void printName( const TRandom3 & r) {
+  std::cout << "\nRandom :\t " << r.ClassName() << std::endl;
+}
+// specializations for TRandom4's
+void printName( const TRandom4 & r) {
   std::cout << "\nRandom :\t " << r.ClassName() << std::endl;
 }
 // specialization for TRandomGen
@@ -203,6 +208,7 @@ int main() {
   TRandom1                 tr1e(0,4);
   TRandom2                 tr2;
   TRandom3                 tr3;
+  TRandom4                 tr7;
   TRandomMixMax            tr4;
   TRandomMixMax17          tr5;
   TRandomMixMax256         tr6;
@@ -216,6 +222,7 @@ int main() {
   generate(tr1e);
   generate(tr2);
   generate(tr3);
+  generate(tr7);
   generate(tr4);
   generate(tr5);
   generate(tr6);
