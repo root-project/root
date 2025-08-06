@@ -969,7 +969,6 @@ void RModel::GenerateSessionCode()
       fGC += "}\n\n";
    }
 
-<<<<<<< HEAD
    fGC += SP + "using TMVA::Experimental::SOFIE::UTILITY::FillOutput;\n\n";
 
    for (std::string const &name : fOutputTensorNames) {
@@ -983,9 +982,7 @@ void RModel::GenerateSessionCode()
 
    fGC += "}\n\n";
 
-=======
->>>>>>> 03b52f574c (Profiler code generation)
-   // generate the inference overload that returns an output struct
+    // generate the inference overload that returns an output struct
    GenerateOutput();
 
    // end of session
