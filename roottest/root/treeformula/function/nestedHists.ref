@@ -1,5 +1,7 @@
 
 Processing runnestedHists.C...
+Warning in <TClass::Init>: no dictionary for class TPlate is available
+Warning in <TClass::Init>: no dictionary for class TStrip is available
 Warning in <TTreeFormula::ParseWithLeaf>: TTreeFormula support only 2 level of variables size collections.  Assuming '@' notation for the collection fHists.
 Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
 Warning in <TTreeFormula::ParseWithLeaf>: TTreeFormula support only 2 level of variables size collections.  Assuming '@' notation for the collection fHists.
