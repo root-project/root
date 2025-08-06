@@ -11,9 +11,10 @@
 # shellcheck disable=SC2086
 
 : "${CXX:=c++}"
-: "${CXXFLAGS:=-std=c++17 -Wall -Wextra -Wno-unused-parameter -Wno-unused-const-variable}"
+: "${CXXFLAGS:=-Wall -Wextra -Wno-unused-parameter -Wno-unused-const-variable}"
 : "${INCLUDE_DIR:=${1}}"
 : "${NCPU:=$(getconf _NPROCESSORS_ONLN)}"
+: "${CXX_STANDARD:=$(${INCLUDE_DIR}/../bin/root-config --cxxstandard || echo 17)}"
 
 if ! command -v "${CXX}" >/dev/null; then
 	echo "Please set CXX to a valid compiler"
@@ -29,5 +30,5 @@ fi
 # Check all installed headers for include errors.
 HEADERS=$(find "${INCLUDE_DIR}" -type f -name '*.h*' | grep -v TMVA)
 
-xargs -P ${NCPU:-1} -n 1 "${CXX}" -fsyntax-only -x c++ ${CXXFLAGS} -I"${INCLUDE_DIR}" <<< "${HEADERS}" || exit 1
+xargs -P ${NCPU:-1} -n 1 "${CXX}" -fsyntax-only -x c++ -std=c++${CXX_STANDARD} ${CXXFLAGS} -I"${INCLUDE_DIR}" <<< "${HEADERS}" || exit 1
 
