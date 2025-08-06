@@ -181,6 +181,13 @@ protected:
    {
    }
 
+   const T &GetValueRef() const
+   {
+      // We created the RValue and know its type, avoid extra checks.
+      void *ptr = RNTupleViewBase<T>::fValue.template GetPtr<void>().get();
+      return *static_cast<T *>(ptr);
+   }
+
 public:
    RNTupleView(const RNTupleView &other) = delete;
    RNTupleView(RNTupleView &&other) = default;
@@ -192,7 +199,7 @@ public:
    const T &operator()(ROOT::NTupleSize_t globalIndex)
    {
       RNTupleViewBase<T>::fValue.Read(globalIndex);
-      return RNTupleViewBase<T>::fValue.template GetRef<T>();
+      return GetValueRef();
    }
 
    /// Reads the value of this view for the entry with the provided `localIndex`.
@@ -200,7 +207,7 @@ public:
    const T &operator()(RNTupleLocalIndex localIndex)
    {
       RNTupleViewBase<T>::fValue.Read(localIndex);
-      return RNTupleViewBase<T>::fValue.template GetRef<T>();
+      return GetValueRef();
    }
 };
 
