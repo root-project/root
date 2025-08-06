@@ -21,6 +21,7 @@
 #include <ROOT/RNTupleRange.hxx>
 #include <ROOT/RNTupleTypes.hxx>
 
+#include <atomic>
 #include <cstddef>
 #include <functional>
 #include <iterator>
@@ -710,15 +711,29 @@ private:
    RFieldBase *fField = nullptr;  ///< The field that created the RValue
    /// Set by Bind() or by RFieldBase::CreateValue(), RFieldBase::SplitValue() or RFieldBase::BindValue()
    std::shared_ptr<void> fObjPtr;
-   mutable const std::type_info *fTypeInfo = nullptr;
+   mutable std::atomic<const std::type_info *> fTypeInfo = nullptr;
 
    RValue(RFieldBase *field, std::shared_ptr<void> objPtr) : fField(field), fObjPtr(objPtr) {}
 
 public:
-   RValue(const RValue &) = default;
-   RValue &operator=(const RValue &) = default;
-   RValue(RValue &&other) = default;
-   RValue &operator=(RValue &&other) = default;
+   RValue(const RValue &other) : fField(other.fField), fObjPtr(other.fObjPtr) {}
+   RValue &operator=(const RValue &other)
+   {
+      fField = other.fField;
+      fObjPtr = other.fObjPtr;
+      // We could copy over the cached type info, or just start with a fresh state...
+      fTypeInfo = nullptr;
+      return *this;
+   }
+   RValue(RValue &&other) : fField(other.fField), fObjPtr(other.fObjPtr) {}
+   RValue &operator=(RValue &&other)
+   {
+      fField = other.fField;
+      fObjPtr = other.fObjPtr;
+      // We could copy over the cached type info, or just start with a fresh state...
+      fTypeInfo = nullptr;
+      return *this;
+   }
    ~RValue() = default;
 
 private:
@@ -729,12 +744,13 @@ private:
          const std::type_info &ti = typeid(T);
          // Fast path: if we had a matching type before, try comparing the type_info's. This may still fail in case the
          // type has a suppressed template argument that may change the typeid.
-         if (fTypeInfo != nullptr && *fTypeInfo == ti) {
+         auto *cachedTypeInfo = fTypeInfo.load();
+         if (cachedTypeInfo != nullptr && *cachedTypeInfo == ti) {
             return;
          }
          std::string renormalizedTypeName = Internal::GetRenormalizedTypeName(ti);
          if (Internal::IsMatchingFieldType(fField->GetTypeName(), renormalizedTypeName, ti)) {
-            fTypeInfo = &ti;
+            fTypeInfo.store(&ti);
             return;
          }
          throw RException(R__FAIL("type mismatch for field \"" + fField->GetFieldName() + "\": expected " +
