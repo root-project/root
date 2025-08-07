@@ -16,7 +16,8 @@ class TestDaskHistoWrite:
     gaus_stdev = 1
     delta_equal = 0.01
 
-    def test_write_histo(self, payload):
+    @pytest.mark.parametrize("datasource", ["ttree", "rntuple"])
+    def test_write_histo(self, payload, datasource):
         """
         Tests that an histogram is correctly written to a .root file created
         before the execution of the event loop.
@@ -26,7 +27,7 @@ class TestDaskHistoWrite:
         with ROOT.TFile("out_file.root", "recreate") as outfile:
             # We can reuse the same dataset from another test
             treename = "T"
-            filename = "../data/ttree/distrdf_roottest_check_friend_trees_main.root"
+            filename = f"../data/{datasource}/distrdf_roottest_check_friend_trees_main.root"
             # Create a DistRDF RDataFrame with the parent and the friend trees
             connection, _ = payload
             df = ROOT.RDataFrame(treename, filename, executor=connection)
