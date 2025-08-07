@@ -1,6 +1,5 @@
 int execCheckLateProxy(){
-TString hSimplePath = gROOT->GetTutorialsDir();
-hSimplePath+="/hsimple.root";
+TString hSimplePath = "hsimple.root";
 TFile f(hSimplePath);
 auto t = (TTree*)f.Get("ntuple");
 TTreeReader r(t);
