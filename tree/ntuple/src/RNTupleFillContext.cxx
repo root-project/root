@@ -117,7 +117,7 @@ ROOT::Experimental::RNTupleFillContext::CreateAttributeSet(std::string_view name
       throw ROOT::RException(R__FAIL("AttributeSetWriter can only be created from a TFile-based RNTupleWriter!"));
 
    std::string nameStr{name};
-   auto attrSet = Experimental::RNTupleAttrSetWriter::Create(name, std::move(model), this, *dir);
+   auto attrSet = Experimental::RNTupleAttrSetWriter::Create(name, std::move(model), *this, *dir);
 
    auto [attrSetIter, wasInserted] = fAttributeSets.try_emplace(nameStr, std::move(attrSet));
    if (!wasInserted)
