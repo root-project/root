@@ -1292,7 +1292,7 @@ TEST_F(RDFSnapshotMT, Reshuffled_friends)
 TEST(RDFSnapshotMore, ManyTasksPerThread)
 {
    const auto nSlots = 4u;
-   ROOT::EnableImplicitMT(nSlots);
+   TIMTEnabler imt(nSlots);
    // make sure the file is not here beforehand
    gSystem->Unlink("snapshot_manytasks_out.root");
 
@@ -1322,8 +1322,6 @@ TEST(RDFSnapshotMore, ManyTasksPerThread)
    for (auto i = 0u; i < nInputFiles; ++i)
       gSystem->Unlink((inputFilePrefix + std::to_string(i) + ".root").c_str());
    gSystem->Unlink(outputFile);
-
-   ROOT::DisableImplicitMT();
 }
 
 void checkSnapshotArrayFileMT(RResultPtr<RInterface<RLoopManager>> &df, unsigned int kNEvents)
@@ -1341,35 +1339,31 @@ void checkSnapshotArrayFileMT(RResultPtr<RInterface<RLoopManager>> &df, unsigned
 
 TEST_F(RDFSnapshotArrays, MultiThread)
 {
-   ROOT::EnableImplicitMT(4);
+   TIMTEnabler imt(4);
 
    RDataFrame tdf("arrayTree", kFileNames);
    auto dt = tdf.Snapshot("outTree", "test_snapshotRVecoutMT.root",
                           {"fixedSizeArr", "size", "varSizeArr", "varSizeBoolArr", "fixedSizeBoolArr"});
 
    checkSnapshotArrayFileMT(dt, kNEvents);
-
-   ROOT::DisableImplicitMT();
 }
 
 TEST_F(RDFSnapshotArrays, MultiThreadJitted)
 {
-   ROOT::EnableImplicitMT(4);
+   TIMTEnabler imt(4);
 
    RDataFrame tdf("arrayTree", kFileNames);
    auto dj = tdf.Snapshot("outTree", "test_snapshotRVecoutMTJitted.root",
                           {"fixedSizeArr", "size", "varSizeArr", "varSizeBoolArr", "fixedSizeBoolArr"});
 
    checkSnapshotArrayFileMT(dj, kNEvents);
-
-   ROOT::DisableImplicitMT();
 }
 
 TEST_F(RDFSnapshotArrays, RedefineArrayMT)
 {
    static constexpr unsigned int newArraySize = 6u;
    static_assert(kFixedSize != newArraySize);
-   ROOT::EnableImplicitMT(3);
+   TIMTEnabler(3);
 
    // More input files than threads, so output branches need to be bound to new inputs
    std::vector<std::string> fileNames(kFileNames);
@@ -1396,7 +1390,6 @@ TEST_F(RDFSnapshotArrays, RedefineArrayMT)
       },
       {"fixedSizeArr"});
 
-   ROOT::DisableImplicitMT();
    gSystem->Unlink("test_snapshotRVecRedefineArray.root");
 }
 
@@ -1431,7 +1424,7 @@ TEST(RDFSnapshotMore, ColsWithCustomTitlesMT)
    WriteColsWithCustomTitles(tname, fname);
 
    // read and write test tree with RDF (in parallel)
-   ROOT::EnableImplicitMT(4);
+   TIMTEnabler imt(4);
    RDataFrame d(tname, fname);
    const std::string prefix = "snapshotted_";
    auto res_tdf = d.Snapshot(tname, prefix + fname, {"i", "float", "arrint", "vararrint"});
@@ -1443,7 +1436,6 @@ TEST(RDFSnapshotMore, ColsWithCustomTitlesMT)
    // clean-up
    gSystem->Unlink(fname);
    gSystem->Unlink((prefix + fname).c_str());
-   ROOT::DisableImplicitMT();
 }
 
 TEST(RDFSnapshotMore, TreeWithFriendsMT)
@@ -1453,7 +1445,7 @@ TEST(RDFSnapshotMore, TreeWithFriendsMT)
    RDataFrame(10).Define("x", []() { return 42; }).Snapshot("t", fname1, {"x"});
    RDataFrame(10).Define("x", []() { return 0; }).Snapshot("t", fname2, {"x"});
 
-   ROOT::EnableImplicitMT();
+   TIMTEnabler imt(0);
 
    TFile file(fname1);
    auto tree = file.Get<TTree>("t");
@@ -1467,7 +1459,6 @@ TEST(RDFSnapshotMore, TreeWithFriendsMT)
    EXPECT_EQ(df_out->Max<int>("x").GetValue(), 42);
    EXPECT_EQ(df_out->GetColumnNames(), std::vector<std::string>{"x"});
 
-   ROOT::DisableImplicitMT();
    gSystem->Unlink(fname1);
    gSystem->Unlink(fname2);
    gSystem->Unlink(outfname);
@@ -1494,13 +1485,12 @@ TEST(RDFSnapshotMore, JittedSnapshotAndAliasedColumns)
 
 TEST(RDFSnapshotMore, LazyNotTriggeredMT)
 {
-   ROOT::EnableImplicitMT(4);
+   TIMTEnabler imt(4);
    ROOT_EXPECT_WARNING(BookLazySnapshot(), "Snapshot",
                        "A lazy Snapshot action was booked but never triggered. The tree 't' in output file "
                        "'lazysnapshotnottriggered_shouldnotbecreated.root' was not created. "
                        "In case it was desired instead, remember to trigger the Snapshot operation, by "
                        "storing its result in a variable and for example calling the GetValue() method on it.");
-   ROOT::DisableImplicitMT();
 }
 
 TEST(RDFSnapshotMore, LazyTriggeredMT)
@@ -1517,7 +1507,7 @@ TEST(RDFSnapshotMore, EmptyBuffersMT)
    const auto fname = "emptybuffersmt.root";
    const auto treename = "t";
    const unsigned int nslots = std::min(4U, std::thread::hardware_concurrency());
-   ROOT::EnableImplicitMT(nslots);
+   TIMTEnabler imt(nslots);
    ROOT::RDataFrame d(10);
    std::atomic_bool firstWorker{true};
    auto dd = d.DefineSlot("x", [&](unsigned int) {
@@ -1540,15 +1530,13 @@ TEST(RDFSnapshotMore, EmptyBuffersMT)
    EXPECT_EQ(t->GetListOfBranches()->GetEntries(), 1);
    EXPECT_EQ(t->GetEntries(), Long64_t(passed));
 
-   ROOT::DisableImplicitMT();
    gSystem->Unlink(fname);
 }
 
 TEST(RDFSnapshotMore, ReadWriteCarrayMT)
 {
-   ROOT::EnableImplicitMT(4);
+   TIMTEnabler imt(4);
    ReadWriteCarray("ReadWriteCarrayMT");
-   ROOT::DisableImplicitMT();
 }
 
 TEST(RDFSnapshotMore, TClonesArrayMT)
@@ -1618,12 +1606,10 @@ TEST(RDFSnapshotMore, SetMaxTreeSizeMT)
    // Create an RDF from the previously snapshotted file, then Snapshot again
    // with IMT enabled.
    {
-      ROOT::EnableImplicitMT();
+      TIMTEnabler imt(0);
 
       ROOT::RDataFrame df{"T", "rdfsnapshot_ttree_sequential_setmaxtreesize.root"};
       df.Snapshot("T", "rdfsnapshot_imt_setmaxtreesize.root", {"x"});
-
-      ROOT::DisableImplicitMT();
    }
 
    // Check the file for data integrity.
@@ -1668,25 +1654,22 @@ TEST(RDFSnapshotMore, ZeroOutputEntriesMT)
 
 TEST(RDFSnapshotMore, CustomBasketSizeMT)
 {
-   ROOT::EnableImplicitMT();
+   TIMTEnabler imt(0);
    TestCustomBasketSize();
-   ROOT::DisableImplicitMT();
 }
 
 // Test for default basket size
 TEST(RDFSnapshotMore, DefaultBasketSizeMT)
 {
-   ROOT::EnableImplicitMT();
+   TIMTEnabler imt(0);
    TestDefaultBasketSize();
-   ROOT::DisableImplicitMT();
 }
 
 // Test for basket size preservation
 TEST(RDFSnapshotMore, BasketSizePreservationMT)
 {
-   ROOT::EnableImplicitMT();
+   TIMTEnabler imt(0);
    TestBasketSizePreservation();
-   ROOT::DisableImplicitMT();
 }
 
 #endif // R__USE_IMT
