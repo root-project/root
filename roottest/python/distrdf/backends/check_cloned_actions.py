@@ -1,6 +1,5 @@
 import numpy
 import pytest
-
 import ROOT
 
 
@@ -11,14 +10,15 @@ class TestAsNumpy:
     """
 
     @pytest.mark.parametrize("nparts", range(1, 21))
-    def test_clone_asnumpyresult(self, payload, nparts):
+    @pytest.mark.parametrize("datasource", ["ttree", "rntuple"])
+    def test_clone_asnumpyresult(self, payload, nparts, datasource):
         """
         Test that the correct values of the numpy array are retrieved from
         distributed execution irrespective of the number of partitions.
         """
 
         datasetname = "Events"
-        filename = "../data/ttree/distrdf_roottest_check_cloned_actions_asnumpy.root"
+        filename = f"../data/{datasource}/distrdf_roottest_check_cloned_actions_asnumpy.root"
         connection, _ = payload
         distrdf = ROOT.RDataFrame(datasetname, filename, executor=connection, npartitions=nparts)
 
