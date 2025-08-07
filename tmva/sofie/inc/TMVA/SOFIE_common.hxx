@@ -408,7 +408,7 @@ void BroadcastTensor(ConstContT data, const std::vector<size_t>& shape, const st
    size_t targetLength = broadcastedData.size();
    assert(ConvertShapeToLength(targetShape) == targetLength);
    // special case when broadcasting last dimensions (initial shapes must be the same)
-   if (shape.front() == targetShape.front() && shape.back() == 1 && size > 1) {
+   if (size > 1 && shape.front() == targetShape.front() && shape.back() == 1) {
       size_t bsize = targetShape.back();
       // compute the size of the data to broadcast
       for (int k = int(size)-2; k >=0; k--) {
