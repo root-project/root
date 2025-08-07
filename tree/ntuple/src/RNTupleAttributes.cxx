@@ -68,7 +68,7 @@ std::size_t ROOT::Experimental::Internal::RNTupleAttrEntryPair::Append()
 //
 std::unique_ptr<ROOT::Experimental::RNTupleAttrSetWriter>
 ROOT::Experimental::RNTupleAttrSetWriter::Create(std::string_view name, std::unique_ptr<RNTupleModel> userModel,
-                                                 const RNTupleFillContext *mainFillContext, TDirectory &dir)
+                                                 const RNTupleFillContext &mainFillContext, TDirectory &dir)
 
 {
    ValidateAttributeModel(*userModel).ThrowOnError();
@@ -97,17 +97,17 @@ ROOT::Experimental::RNTupleAttrSetWriter::Create(std::string_view name, std::uni
 
    // Create a sink that points to the same TDirectory as the main RNTuple
    auto opts = ROOT::RNTupleWriteOptions{};
-   opts.SetCompression(mainFillContext->fSink->GetWriteOptions().GetCompression());
+   opts.SetCompression(mainFillContext.fSink->GetWriteOptions().GetCompression());
    auto sink = std::make_unique<ROOT::Internal::RPageSinkFile>(name, dir, opts);
    RNTupleFillContext fillContext{std::move(metaModel), std::move(sink)};
    return std::unique_ptr<RNTupleAttrSetWriter>(
       new RNTupleAttrSetWriter(mainFillContext, std::move(fillContext), std::move(userModel)));
 }
 
-ROOT::Experimental::RNTupleAttrSetWriter::RNTupleAttrSetWriter(const RNTupleFillContext *mainFillContext,
+ROOT::Experimental::RNTupleAttrSetWriter::RNTupleAttrSetWriter(const RNTupleFillContext &mainFillContext,
                                                                RNTupleFillContext fillContext,
                                                                std::unique_ptr<RNTupleModel> userModel)
-   : fFillContext(std::move(fillContext)), fMainFillContext(mainFillContext), fUserModel(std::move(userModel))
+   : fFillContext(std::move(fillContext)), fMainFillContext(&mainFillContext), fUserModel(std::move(userModel))
 {
 }
 
