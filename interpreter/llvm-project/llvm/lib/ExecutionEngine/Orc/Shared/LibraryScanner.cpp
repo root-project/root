@@ -66,8 +66,7 @@ bool ObjectFileLoader::isArchitectureCompatible(const object::ObjectFile &Obj) {
            << ", Object triple: " << ObjTriple.str() << "\n";
   });
 
-  return HostTriple.getArch() == ObjTriple.getArch() &&
-         HostTriple.getOS() == ObjTriple.getOS();
+  return HostTriple.getArch() == ObjTriple.getArch();
 }
 
 Expected<object::OwningBinary<object::ObjectFile>>
