@@ -35,17 +35,17 @@
 #include <utility>
 
 // clang-format off
-/**
-* \class ROOT::RDF::RNTupleDS
-* \ingroup dataframe
-* \brief The RDataSource implementation for RNTuple. It lets RDataFrame read RNTuple data.
-*
-* An RDataFrame that reads RNTuple data can be constructed using FromRNTuple().
-*
-* For each column containing an array or a collection, a corresponding column `#colname` is available to access
-* `colname.size()` without reading and deserializing the collection values.
-*
-**/
+  /**
+  * \class ROOT::RDF::RNTupleDS
+  * \ingroup dataframe
+  * \brief The RDataSource implementation for RNTuple. It lets RDataFrame read RNTuple data.
+  *
+  * An RDataFrame that reads RNTuple data can be constructed using FromRNTuple().
+  *
+  * For each column containing an array or a collection, a corresponding column `#colname` is available to access
+  * `colname.size()` without reading and deserializing the collection values.
+  *
+  **/
 // clang-format on
 
 namespace ROOT::Internal::RDF {
@@ -594,17 +594,12 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
       if (i == (nRemainingFiles - 1))
          nSlotsPerFile = fNSlots - fNextRanges.size();
 
-      std::vector<std::pair<ULong64_t, ULong64_t>> rangesByCluster;
-      {
-         auto descriptorGuard = source->GetSharedDescriptorGuard();
-         auto clusterId = descriptorGuard->FindClusterId(0, 0);
-         while (clusterId != kInvalidDescriptorId) {
-            const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterId);
-            rangesByCluster.emplace_back(std::make_pair<ULong64_t, ULong64_t>(
-               clusterDesc.GetFirstEntryIndex(), clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries()));
-            clusterId = descriptorGuard->FindNextClusterId(clusterId);
-         }
-      }
+      const auto rangesByCluster = [&source]() {
+         // Take the shared lock of the descriptor just for the time necessary
+         const auto descGuard = source->GetSharedDescriptorGuard();
+         return ROOT::Internal::GetClusterBoundaries(descGuard.GetRef());
+      }();
+
       const unsigned int nRangesByCluster = rangesByCluster.size();
 
       // Distribute slots equidistantly over the entry range, aligned on cluster boundaries
