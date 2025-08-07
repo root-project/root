@@ -250,7 +250,8 @@ TEST(RDFSnapshotMore, BasketSizePreservation)
 // fixture that provides fixed and variable sized arrays as RDF columns
 class RDFSnapshotArrays : public ::testing::Test {
 protected:
-   const static unsigned int kNEvents = 10u;
+   static constexpr unsigned int kNEvents = 10u;
+   static constexpr unsigned int kFixedSize = 4u;
    static const std::vector<std::string> kFileNames;
 
    static void SetUpTestCase()
@@ -263,18 +264,17 @@ protected:
          TTree t("arrayTree", "arrayTree");
 
          // doubles, floats
-         const unsigned int fixedSize = 4u;
-         float fixedSizeArr[fixedSize];
-         t.Branch("fixedSizeArr", fixedSizeArr, ("fixedSizeArr[" + std::to_string(fixedSize) + "]/F").c_str());
+         float fixedSizeArr[kFixedSize];
+         t.Branch("fixedSizeArr", fixedSizeArr, ("fixedSizeArr[" + std::to_string(kFixedSize) + "]/F").c_str());
          unsigned int size = 0u;
          t.Branch("size", &size);
          double *varSizeArr = new double[eventsPerFile * 100u];
          t.Branch("varSizeArr", varSizeArr, "varSizeArr[size]/D");
 
          // bools. std::vector<bool> makes bool treatment in RDF special
-         bool fixedSizeBoolArr[fixedSize];
+         bool fixedSizeBoolArr[kFixedSize];
          t.Branch("fixedSizeBoolArr", fixedSizeBoolArr,
-                  ("fixedSizeBoolArr[" + std::to_string(fixedSize) + "]/O").c_str());
+                  ("fixedSizeBoolArr[" + std::to_string(kFixedSize) + "]/O").c_str());
          bool *varSizeBoolArr = new bool[eventsPerFile * 100u];
          t.Branch("varSizeBoolArr", varSizeBoolArr, "varSizeBoolArr[size]/O");
 
@@ -509,15 +509,29 @@ TEST_F(RDFSnapshotArrays, SingleThreadJitted)
 
 TEST_F(RDFSnapshotArrays, RedefineArray)
 {
+   static constexpr unsigned int newArraySize = 6u;
+   static_assert(kFixedSize != newArraySize);
+
    RDataFrame df("arrayTree", kFileNames);
-   auto df2 = df.Redefine("fixedSizeArr", [] { return ROOT::RVecF{42.f, 42.f}; })
-                 .Snapshot("t", "test_snapshotRVecRedefineArray.root", {"fixedSizeArr"});
+   auto df2 =
+      df.Redefine("fixedSizeArr",
+                  [](ULong64_t entry) {
+                     return ROOT::RVecF{float(entry), entry + 1.f, entry + 2.f, entry + 3.f, entry + 4.f, entry + 5.f};
+                  },
+                  {"rdfentry_"})
+         .Snapshot("t", "test_snapshotRVecRedefineArray.root", {"fixedSizeArr"});
    df2->Foreach(
-      [](const ROOT::RVecF &v) {
-         EXPECT_EQ(v.size(), 2u); // not 4 as it was in the original input
-         EXPECT_TRUE(All(v == ROOT::RVecF{42.f, 42.f}));
+      [](const ROOT::RVecF &v, ULong64_t entry) {
+         EXPECT_EQ(v.size(), newArraySize); // not 4 as it was in the original input
+         EXPECT_FLOAT_EQ(v.front(), entry);
+         std::vector<float> diffs(newArraySize);
+         std::adjacent_difference(v.begin(), v.end(), diffs.begin());
+
+         std::vector<float> target(6, 1.f);
+         target.front() = entry;
+         EXPECT_EQ(diffs, target);
       },
-      {"fixedSizeArr"});
+      {"fixedSizeArr", "rdfentry_"});
 
    gSystem->Unlink("test_snapshotRVecRedefineArray.root");
 }
@@ -1348,6 +1362,41 @@ TEST_F(RDFSnapshotArrays, MultiThreadJitted)
    checkSnapshotArrayFileMT(dj, kNEvents);
 
    ROOT::DisableImplicitMT();
+}
+
+TEST_F(RDFSnapshotArrays, RedefineArrayMT)
+{
+   static constexpr unsigned int newArraySize = 6u;
+   static_assert(kFixedSize != newArraySize);
+   ROOT::EnableImplicitMT(3);
+
+   // More input files than threads, so output branches need to be bound to new inputs
+   std::vector<std::string> fileNames(kFileNames);
+   std::copy(kFileNames.begin(), kFileNames.end(), std::back_inserter(fileNames));
+   std::copy(kFileNames.begin(), kFileNames.end(), std::back_inserter(fileNames));
+
+   RDataFrame df("arrayTree", fileNames);
+   auto df2 =
+      df.Redefine("fixedSizeArr",
+                  [](ULong64_t entry) {
+                     return ROOT::RVecF{float(entry), entry + 1.f, entry + 2.f, entry + 3.f, entry + 4.f, entry + 5.f};
+                  },
+                  {"rdfentry_"})
+         .Snapshot("t", "test_snapshotRVecRedefineArray.root", {"fixedSizeArr"});
+   EXPECT_EQ(df2->Count().GetValue(), 3 * kNEvents);
+   df2->Foreach(
+      [](const ROOT::RVecF &v) {
+         EXPECT_EQ(v.size(), newArraySize); // not 4 as it was in the original input
+         EXPECT_LT(v.front(), 3 * kNEvents);
+
+         std::vector<float> target(newArraySize, 0.f);
+         for (unsigned int i = 0; i < newArraySize; ++i)
+            EXPECT_FLOAT_EQ(v[i], v.front() + i);
+      },
+      {"fixedSizeArr"});
+
+   ROOT::DisableImplicitMT();
+   gSystem->Unlink("test_snapshotRVecRedefineArray.root");
 }
 
 // See also https://github.com/root-project/root/issues/10225
