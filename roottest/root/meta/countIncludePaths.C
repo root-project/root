@@ -19,8 +19,13 @@ int countIncludePaths()
 
    // count paths coming from the ROOT_INCLUDE_PATH environment variable
    // and exclude them
-   std::string envVar(std::getenv("ROOT_INCLUDE_PATH"));
-   auto nEnvVarPaths = countSubstring(envVar, ":") + 1 - (envVar.back() == ':') - (envVar.front() == ':') ;
+   int nEnvVarPaths = 0;
+   auto *envVarCStr = std::getenv("ROOT_INCLUDE_PATH");
+   if (envVarCStr) {
+      std::string envVar(envVarCStr);
+      nEnvVarPaths =
+         countSubstring(envVar, ":") + 1 - (envVar.back() == ':') - (envVar.front() == ':');
+   }
 
    // At most 10
    auto nPaths = countSubstring(includePath, "-I");
