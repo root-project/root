@@ -59,6 +59,16 @@ class RFieldDescriptorBuilder;
 class RNTupleDescriptorBuilder;
 
 RNTupleDescriptor CloneDescriptorSchema(const RNTupleDescriptor &desc);
+struct RNTupleClusterBoundaries {
+   ROOT::NTupleSize_t fFirstEntry;
+   ROOT::NTupleSize_t fLastEntry;
+};
+
+const std::vector<ROOT::Internal::RNTupleClusterBoundaries>
+GetVecRNTupleClusterBoundaries(const ROOT::RNTupleDescriptor &RNTupDesc);
+
+class RSharedDescriptorGuard;
+
 } // namespace Internal
 
 // clang-format off
@@ -633,6 +643,8 @@ and backward compatibility when the metadata evolves.
 class RNTupleDescriptor final {
    friend class Internal::RNTupleDescriptorBuilder;
    friend RNTupleDescriptor Internal::CloneDescriptorSchema(const RNTupleDescriptor &desc);
+   friend const std::vector<ROOT::Internal::RNTupleClusterBoundaries>
+   ROOT::Internal::GetVecRNTupleClusterBoundaries(const ROOT::RNTupleDescriptor &RNTupDesc);
 
 public:
    class RHeaderExtension;
@@ -688,6 +700,8 @@ private:
    /// to create a new RNTuple with the same schema as this one but not necessarily the same clustering. This is used
    /// when merging two RNTuples.
    RNTupleDescriptor CloneSchema() const;
+
+   std::vector<ROOT::Internal::RNTupleClusterBoundaries> GetRNTupleClusterBoundaries() const;
 
 public:
    static constexpr unsigned int kFeatureFlagTest = 137; // Bit reserved for forward-compatibility testing
@@ -798,6 +812,11 @@ public:
    /// We know the number of entries from adding the cluster summaries
    ROOT::NTupleSize_t GetNEntries() const { return fNEntries; }
    ROOT::NTupleSize_t GetNElements(ROOT::DescriptorId_t physicalColumnId) const;
+   // struct RClusterBoundaries {
+   //    ROOT::NTupleSize_t fFirstEntry;
+   //    ROOT::NTupleSize_t fLastEntry;
+   // };
+   // std::vector<RClusterBoundaries> GetRNTupleClusterBoundaries() const;
 
    /// Returns the logical parent of all top-level RNTuple data fields.
    ROOT::DescriptorId_t GetFieldZeroId() const { return fFieldZeroId; }

@@ -35,17 +35,17 @@
 #include <utility>
 
 // clang-format off
-/**
-* \class ROOT::RDF::RNTupleDS
-* \ingroup dataframe
-* \brief The RDataSource implementation for RNTuple. It lets RDataFrame read RNTuple data.
-*
-* An RDataFrame that reads RNTuple data can be constructed using FromRNTuple().
-*
-* For each column containing an array or a collection, a corresponding column `#colname` is available to access
-* `colname.size()` without reading and deserializing the collection values.
-*
-**/
+ /**
+ * \class ROOT::RDF::RNTupleDS
+ * \ingroup dataframe
+ * \brief The RDataSource implementation for RNTuple. It lets RDataFrame read RNTuple data.
+ *
+ * An RDataFrame that reads RNTuple data can be constructed using FromRNTuple().
+ *
+ * For each column containing an array or a collection, a corresponding column `#colname` is available to access
+ * `colname.size()` without reading and deserializing the collection values.
+ *
+ **/
 // clang-format on
 
 namespace ROOT::Internal::RDF {
@@ -594,17 +594,12 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
       if (i == (nRemainingFiles - 1))
          nSlotsPerFile = fNSlots - fNextRanges.size();
 
-      std::vector<std::pair<ULong64_t, ULong64_t>> rangesByCluster;
-      {
-         auto descriptorGuard = source->GetSharedDescriptorGuard();
-         auto clusterId = descriptorGuard->FindClusterId(0, 0);
-         while (clusterId != kInvalidDescriptorId) {
-            const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterId);
-            rangesByCluster.emplace_back(std::make_pair<ULong64_t, ULong64_t>(
-               clusterDesc.GetFirstEntryIndex(), clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries()));
-            clusterId = descriptorGuard->FindNextClusterId(clusterId);
-         }
-      }
+      const auto rangesByCluster = [&source]() {
+         // Take the shared lock of the descriptor just for the time necessary
+         const auto descGuard = source->GetSharedDescriptorGuard();
+         return ROOT::Internal::GetVecRNTupleClusterBoundaries(descGuard.GetRef());
+      }();
+
       const unsigned int nRangesByCluster = rangesByCluster.size();
 
       // Distribute slots equidistantly over the entry range, aligned on cluster boundaries
@@ -776,6 +771,9 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
                r->Connect(*fCurrentRanges[0].fSource, ranges[0].first);
             }
          } else {
+            // This is the case of single-threaded processing of RNTuples without GlobalEntryRanges. An offset is 0 for
+            // the first processed file and it is equal to the number of already processed/seen entries in case of s.
+            // the consecutive files. In this case ranges[0].first and start would give the same offset.
             r->Connect(*fCurrentRanges[0].fSource, ranges[0].first);
          }
       }
