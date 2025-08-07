@@ -161,9 +161,9 @@ class RNTupleAttrSetWriter final {
    /// Creates a RNTupleAttrSetWriter associated to the RNTupleWriter owning `mainFillContext` and writing
    /// in `dir`. `model` is the schema of the AttributeSet.
    static std::unique_ptr<RNTupleAttrSetWriter> Create(std::string_view name, std::unique_ptr<RNTupleModel> model,
-                                                       const RNTupleFillContext *mainFillContext, TDirectory &dir);
+                                                       const RNTupleFillContext &mainFillContext, TDirectory &dir);
 
-   RNTupleAttrSetWriter(const RNTupleFillContext *mainFillContext, RNTupleFillContext fillContext,
+   RNTupleAttrSetWriter(const RNTupleFillContext &mainFillContext, RNTupleFillContext fillContext,
                         std::unique_ptr<RNTupleModel> userModel);
 
    /// Flushes any remaining open range and writes the Attribute RNTuple to storage.
