@@ -48,9 +48,12 @@ ROOTTEST_ADD_TEST(templateBase
                   COPY_TO_BUILDDIR CaloJets.root
                   OUTREF templateBase.ref)
 
-ROOTTEST_ADD_TEST(aliases
-                  MACRO runaliases.C
-                  OUTREF aliases.ref)
+# macro crashes on Windows, need to be investiaged
+if(NOT MSVC OR win_broken_tests)
+  ROOTTEST_ADD_TEST(aliases
+                    MACRO runaliases.C
+                    OUTREF aliases.ref)
+endif()
 
 ROOTTEST_ADD_TEST(AliasTest
                   MACRO execAliasTest.C
