@@ -1,10 +1,10 @@
 // @(#)root/base:$Id$
 // Author: Victor Perev   08/05/02
 
+#include <cstdio>
+#include <cstdlib>
+#include <cassert>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
 #include "TOffset.h"
 #include "TObject.h"
 #include "TList.h"
@@ -22,6 +22,7 @@
 #include <deque>
 #include <map>
 #include <set>
+
 //using namespace std ;
 using std::vector;
 using std::list;
@@ -31,29 +32,19 @@ using std::multimap;
 using std::set;
 using std::multiset;
 
-    
+
 //  	static members init
-#ifndef __CINT__ 
-Int_t  TOffset::fgAlign[16]  	= {0};    
-
-
-Int_t  TOffset::fgSize[16] 	= {0};    
-#else 
-Int_t  TOffset::fgAlign[16] ;    
-
-
-Int_t  TOffset::fgSize[16] ;    
-#endif
-Int_t  TOffset::fgWhereVirt 	= -1;    
-Int_t  TOffset::fgSolBug 	= 0;    
-
+Int_t  TOffset::fgAlign[16]  	= {0};
+Int_t  TOffset::fgSize[16] 	= {0};
+Int_t  TOffset::fgWhereVirt 	= -1;
+Int_t  TOffset::fgSolBug 	= 0;
 
 //______________________________________________________________________________
  TOffset::TOffset(TClass *cl,Int_t all)
 {
   fOffsetList	= new TList;
   fClass  = cl;
-  fOffset = fTail = fNBase = fSize = fUsed = fLastMult = 0; 
+  fOffset = fTail = fNBase = fSize = fUsed = fLastMult = 0;
   Init();
   Virt();
   Adopt(all);
@@ -63,7 +54,8 @@ Int_t  TOffset::fgSolBug 	= 0;
  TOffset::~TOffset()
 {
   fOffsetList->Delete();
-  delete fOffsetList; fOffsetList=0;
+  delete fOffsetList;
+  fOffsetList = nullptr;
 }
 //______________________________________________________________________________
 const char *TOffset::GetName() const
@@ -131,10 +123,10 @@ const char *TOffset::GetName() const
  {fgSize[kSizeVirt] = sizeof(TestVirt2);
   TestVirt3  t; fgAlign[kAlignVirt]   = (char*)((TestVirt2*)&t)-&t.c1;}
  {TestVirt4  t; fgWhereVirt = ((char*)&t == &t.c);}
-  
+
 //	Test Solaris bug
  { sol4Class t; fgSolBug = ((t.i4-(char*)&t) < (int) sizeof(sol3Class));}
- 
+
 
 
   printf(" AlignChar     %d size %d\n",fgAlign[kAlignChar]  	,fgSize[kSizeChar]    );
@@ -179,7 +171,7 @@ const char *TOffset::GetName() const
   }
   fVirt = 0;
   fMult = fgAlign[kAlignChar];
-}  
+}
 
 //______________________________________________________________________________
  void TOffset::Adopt(Int_t all)
@@ -187,9 +179,9 @@ const char *TOffset::GetName() const
  //Adopt info from bases
 
    TList *lb = fClass->GetListOfBases();
-   if (!lb) return; 
+   if (!lb) return;
    TListIter nextBase(lb);
-   TClass *bc=0; 
+   TClass *bc=0;
    TBaseClass *bcl=0;
    while ((bcl = (TBaseClass*)nextBase())) {//list of base
      bc = bcl->GetClassPointer();
@@ -211,10 +203,10 @@ const char *TOffset::GetName() const
      }//end of base offset list
      fOffset += basOff.GetUsed();
    }//end list of base
-   
+
    return;
-   
-}  
+
+}
 //______________________________________________________________________________
  void TOffset::DoIt()
 {
@@ -232,7 +224,7 @@ const char *TOffset::GetName() const
      TDataType *dt = dm->GetDataType();
      FullTypeName = dm->GetFullTypeName();
      tit = fClass->GetName(); tit +=":: type=";
-     tit += FullTypeName; 
+     tit += FullTypeName;
      TypeName = dm->GetTypeName();
      if (dt) {
        p|=dt->Property();
@@ -246,10 +238,10 @@ const char *TOffset::GetName() const
      for (int dim = 0; dim < dm->GetArrayDim(); dim++)
      { units *= dm->GetMaxIndex(dim);}
      tit += " units="; tit+=units;
-     
+
      kind = -1;
 
-     if (p&kIsPointer) 
+     if (p&kIsPointer)
      { kind = kAlignPoint;}
 
      else if (p&kIsEnum)
@@ -264,10 +256,10 @@ const char *TOffset::GetName() const
        const char *ctype  = strstr(ctypes,ty.Data());
        assert (ctype);
        kind = (ctype-ctypes)/7;
-       
+
      }
      else if (dm->IsSTLContainer())
-     {   
+     {
        kind = kAlignVector + dm->IsSTLContainer() - 1;
      }
 
@@ -283,7 +275,7 @@ const char *TOffset::GetName() const
        fOffset += size*units;
        continue;
      }
-       
+
      cl = gROOT->GetClass(TypeName.Data());
      if (p&kIsClass || cl) {
 
@@ -299,9 +291,6 @@ const char *TOffset::GetName() const
        tnoff->SetUniqueID(fOffset);
        fOffsetList->AddLast(tnoff);
        fOffset += (offClass.GetSize())*units;
-
-       
-
 
        continue;
      }
@@ -332,7 +321,7 @@ const char *TOffset::GetName() const
   printf ("TOffset: Class %s",fClass->GetName());
   printf (" size = %d virt = %d align = %d",fSize,fVirt,fMult);
   printf (" Tail = %d \n",fTail);
-  int num = 0;  
+  int num = 0;
   TListIter next(fOffsetList);
   TNamed *tn;
   while ((tn=(TNamed*)next())) {
@@ -354,25 +343,21 @@ Int_t TOffset::GetOffset(const char *name) const
 
 class myProf :public TH1F {
 public:
-virtual ~myProf(){}
-TArrayD fArr;
-ClassDef(myProf, 1)
+   ~myProf() override {}
+   TArrayD fArr;
+   ClassDefOverride(myProf, 1)
 };
 class myPro2  {
-
 public:
-TH1F fH1;
-TArrayD fArr;
+   TH1F fH1;
+   TArrayD fArr;
 };
 class myPro3 :public TH1F {
 public:
-  
-virtual ~myPro3(){}
-char fArr;
-ClassDef(myPro3, 1)
+   ~myPro3() override{}
+   char fArr;
+   ClassDefOverride(myPro3, 1)
 };
-
-
 
 
 //Tail
@@ -392,10 +377,8 @@ class fst3Class : public fst1Class,fst2Class {public:virtual ~fst3Class(){};};
 
 class tailPClass : public fst3Class {public: char c2;};
 
-
-
 //______________________________________________________________________________
-void TOffset::Test() 
+void TOffset::Test()
 {
 
   myProf my;
@@ -410,28 +393,35 @@ void TOffset::Test()
   printf("size TH1D,TArrayD,my=%zu,%zu,%zu offset=%td\n",
   sizeof(TH1F),sizeof(TArrayD),sizeof(my3),(char*)&my3.fArr-(char*)&my3);
 
-//Tail
-{ tailClass t; printf("Tail1: first size=%zu c012offset=%td %td %td,TailSize=%zu\n"
-  ,sizeof(fstClass),&t.f.c0-(char*)&t, &t.f.c1-(char*)&t,&t.c2-(char*)&t,sizeof(t));
-}
-//Tail2
-{ tail2Class t; printf("Tail2: first size=%zu c0121offset=%td %td %td,TailSize=%zu\n"
-  ,sizeof(fstClass),&t.c0-(char*)&t, &t.c1-(char*)&t, &t.c2-(char*)&t, sizeof(t));
-}
-//Tail3
-{ tail3Class t; printf("Tail3: first size=%zu c012offset=%td %td %td,TailSize=%zu\n"
-  ,sizeof(fstClass),&t.c0-(char*)&t, &t.c1-(char*)&t, (char*)&t.c2-(char*)&t, sizeof(t));
-}
-//Tail4
-{ tail2Class t; printf("Tail2: first size=%zu c0121offset=%td %td %td,TailSize=%zu\n"
-  ,sizeof(fstClass),&t.c0-(char*)&t, &t.c1-(char*)&t, &t.c2-(char*)&t, sizeof(t));
-}
-//TailP
-{ tailPClass t; printf("TailP: first size=%zu offset=%td TailSize=%zu\n"
-  ,sizeof(fst3Class),(char*)&t.c2-(char*)&t, sizeof(t));
-}
+  //Tail
+  {
+    tailClass t;
+    printf("Tail1: first size=%zu c012offset=%td %td %td,TailSize=%zu\n"
+            ,sizeof(fstClass),&t.f.c0-(char*)&t, &t.f.c1-(char*)&t,&t.c2-(char*)&t,sizeof(t));
+  }
+  //Tail2
+  {
+    tail2Class t;
+    printf("Tail2: first size=%zu c0121offset=%td %td %td,TailSize=%zu\n"
+           ,sizeof(fstClass),&t.c0-(char*)&t, &t.c1-(char*)&t, &t.c2-(char*)&t, sizeof(t));
+  }
+  //Tail3
+  {
+    tail3Class t;
+    printf("Tail3: first size=%zu c012offset=%td %td %td,TailSize=%zu\n"
+           ,sizeof(fstClass),&t.c0-(char*)&t, &t.c1-(char*)&t, (char*)&t.c2-(char*)&t, sizeof(t));
+  }
+  //Tail4
+  {
+    tail2Class t;
+    printf("Tail2: first size=%zu c0121offset=%td %td %td,TailSize=%zu\n"
+            ,sizeof(fstClass),&t.c0-(char*)&t, &t.c1-(char*)&t, &t.c2-(char*)&t, sizeof(t));
+  }
+  //TailP
+  {
+    tailPClass t;
+    printf("TailP: first size=%zu offset=%td TailSize=%zu\n"
+           ,sizeof(fst3Class),(char*)&t.c2-(char*)&t, sizeof(t));
+  }
 
-
 }
-
-
