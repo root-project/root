@@ -1819,6 +1819,25 @@ class TestCROSSINHERITANCE:
         assert derived.s == "Hello"
         assert derived.t == "World"
 
+    def test39_returning_multi_keyword_types(self):
+        """Supporting dispatcher for functions that return multi-keyword types like `unsigned int`"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+              class MyUIntBaseClass {
+              public:
+                 virtual ~MyUIntBaseClass() = default;
+                 virtual unsigned int give_unsigned_int() const = 0;
+              };
+
+        """)
+
+        # Compiling the dispatcher for the overridden member function used to
+        # fail because of the `unsigned int` type, whose name has two keywords.
+        class MyUIntDerivedClass( cppyy.gbl.MyUIntBaseClass ):
+            def give_unsigned_int( self ):
+                return 1
 
 if __name__ == "__main__":
     exit(pytest.main(args=['-ra', __file__]))
