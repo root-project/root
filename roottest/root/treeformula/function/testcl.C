@@ -4,9 +4,9 @@ public:
    static TObject *crap(double x) {
       return gROOT;
    }
-   
-   static long stuff(double x) {
-      return (long)ROOT::GetROOT();
+
+   static Longptr_t stuff(double x) {
+      return (Longptr_t)ROOT::GetROOT();
    }
 };
 
