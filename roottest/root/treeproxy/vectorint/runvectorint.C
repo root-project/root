@@ -12,7 +12,7 @@
 class Track : public TObject {
 public:
    int random;
-   ClassDef(Track,1);
+   ClassDefOverride(Track,1);
 };
 
 #ifdef __MAKECINT__
