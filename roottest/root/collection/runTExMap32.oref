@@ -1,5 +1,5 @@
 
-Processing /Users/mato/Development/ROOT/root.git/roottest/root/collection/runTExMap.C...
+Processing runTExMap.C...
 
 TExMap Basic Tests Start
 
@@ -241,63 +241,63 @@ TestRange(hash_div4)
 
 TestDoubleAdd(hash_identity, -2147483648)
 
-(Expect Error) 
+(Expect Error)
 TestDoubleAdd(hash_min, -2147483648)
 
-(Expect Error) 
+(Expect Error)
 TestDoubleAdd(hash_max, -2147483648)
 
-(Expect Error) 
+(Expect Error)
 TestDoubleAdd(hash_div4, -2147483648)
 
-(Expect Error) 
+(Expect Error)
 TestDoubleAdd(hash_identity, -1)
 
-(Expect Error) 
+(Expect Error)
 TestDoubleAdd(hash_min, -1)
 
-(Expect Error) 
+(Expect Error)
 TestDoubleAdd(hash_max, -1)
 
-(Expect Error) 
+(Expect Error)
 TestDoubleAdd(hash_div4, -1)
 
-(Expect Error) 
+(Expect Error)
 TestDoubleAdd(hash_identity, 0)
 
-(Expect Error) 
+(Expect Error)
 TestDoubleAdd(hash_min, 0)
 
-(Expect Error) 
+(Expect Error)
 TestDoubleAdd(hash_max, 0)
 
-(Expect Error) 
+(Expect Error)
 TestDoubleAdd(hash_div4, 0)
 
-(Expect Error) 
+(Expect Error)
 TestDoubleAdd(hash_identity, 1)
 
-(Expect Error) 
+(Expect Error)
 TestDoubleAdd(hash_min, 1)
 
-(Expect Error) 
+(Expect Error)
 TestDoubleAdd(hash_max, 1)
 
-(Expect Error) 
+(Expect Error)
 TestDoubleAdd(hash_div4, 1)
 
-(Expect Error) 
+(Expect Error)
 TestDoubleAdd(hash_identity, 2147483647)
 
-(Expect Error) 
+(Expect Error)
 TestDoubleAdd(hash_min, 2147483647)
 
-(Expect Error) 
+(Expect Error)
 TestDoubleAdd(hash_max, 2147483647)
 
-(Expect Error) 
+(Expect Error)
 TestDoubleAdd(hash_div4, 2147483647)
 
-(Expect Error) 
+(Expect Error)
 TExMap Basic Tests End
 
