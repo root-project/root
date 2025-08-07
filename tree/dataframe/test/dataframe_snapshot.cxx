@@ -252,7 +252,7 @@ class RDFSnapshotArrays : public ::testing::Test {
 protected:
    static constexpr unsigned int kNEvents = 10u;
    static constexpr unsigned int kFixedSize = 4u;
-   static const std::vector<std::string> kFileNames;
+   static inline const std::vector<std::string> kFileNames = {"test_snapshotarray1.root", "test_snapshotarray2.root"};
 
    static void SetUpTestCase()
    {
@@ -305,7 +305,6 @@ protected:
          gSystem->Unlink(fname.c_str());
    }
 };
-const std::vector<std::string> RDFSnapshotArrays::kFileNames = {"test_snapshotarray1.root", "test_snapshotarray2.root"};
 
 /********* SINGLE THREAD TESTS ***********/
 
