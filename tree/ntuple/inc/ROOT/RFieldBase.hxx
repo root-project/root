@@ -51,6 +51,10 @@ class RRawPtrWriteEntry;
 
 class RNTupleAttrSetReader;
 
+namespace Internal {
+struct RNTupleAttrEntryPair;   
+}
+
 } // namespace Experimental
 
 namespace Internal {
@@ -709,6 +713,7 @@ public:
 class RFieldBase::RValue final {
    friend class RFieldBase;
    friend class ROOT::REntry;
+   friend struct ROOT::Experimental::Internal::RNTupleAttrEntryPair;
 
 private:
    RFieldBase *fField = nullptr;  ///< The field that created the RValue
