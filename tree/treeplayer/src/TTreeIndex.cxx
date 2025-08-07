@@ -199,11 +199,11 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
          }
          return ret;
       };
-      auto GetLong64 = [this](bool isMajor, Long64_t entry) {
+      auto GetLong64 = [this](bool isMajor) {
          return (isMajor ? fMajorFormula : fMinorFormula)->EvalInstance<Long64_t>();
       };
-      tmp_major[i] = long64major ? GetLong64(true, i) : GetAndRangeCheck(true, i);
-      tmp_minor[i] = long64minor ? GetLong64(false, i) : GetAndRangeCheck(false, i);
+      tmp_major[i] = long64major ? GetLong64(true) : GetAndRangeCheck(true, i);
+      tmp_minor[i] = long64minor ? GetLong64(false) : GetAndRangeCheck(false, i);
    }
    fIndex = new Long64_t[fN];
    for(i = 0; i < fN; i++) { fIndex[i] = i; }
