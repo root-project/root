@@ -424,6 +424,13 @@ ROOT::RDF::RNTupleDS::RNTupleDS(std::string_view ntupleName, const std::vector<s
    fStagingArea.resize(fFileNames.size());
 }
 
+ROOT::RDF::RNTupleDS::RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames,
+                                const std::pair<ULong64_t, ULong64_t> &range)
+   : RNTupleDS(ntupleName, fileNames)
+{
+   fGlobalEntryRange = range;
+}
+
 ROOT::RDF::RDataSource::Record_t
 ROOT::RDF::RNTupleDS::GetColumnReadersImpl(std::string_view /* name */, const std::type_info & /* ti */)
 {
@@ -609,10 +616,10 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
       unsigned int iSlot = 0;
       const unsigned int N = std::min(nSlotsPerFile, nRangesByCluster);
       for (; iSlot < N; ++iSlot) {
-         auto start = rangesByCluster[iRange].first;
+         auto start = rangesByCluster[iRange].fFirstEntry;
          iRange += nClustersPerSlot + static_cast<int>(iSlot < remainder);
          assert(iRange > 0);
-         auto end = rangesByCluster[iRange - 1].second;
+         auto end = rangesByCluster[iRange - 1].fLastEntryPlusOne;
 
          REntryRangeDS range;
          range.fFileName = sourceFileName;
@@ -907,4 +914,21 @@ ROOT::RDF::RSampleInfo ROOT::Internal::RDF::RNTupleDS::CreateSampleInfo(
    return ROOT::RDF::RSampleInfo(
       ntupleID, std::make_pair(fCurrentRanges[rangeIdx].fFirstEntry, fCurrentRanges[rangeIdx].fLastEntry),
       sampleMap.at(ntupleID));
+}
+
+ROOT::RDataFrame ROOT::Internal::RDF::FromRNTuple(std::string_view ntupleName,
+                                                  const ROOT::RDF::ColumnNames_t &fileNames,
+                                                  const std::pair<ULong64_t, ULong64_t> &range)
+{
+   std::unique_ptr<ROOT::RDF::RNTupleDS> ds{new ROOT::RDF::RNTupleDS(ntupleName, fileNames, range)};
+   return ROOT::RDataFrame(std::move(ds));
+}
+
+std::pair<std::vector<ROOT::Internal::RNTupleClusterBoundaries>, ROOT::NTupleSize_t>
+ROOT::Internal::RDF::GetClustersAndEntries(std::string_view ntupleName, std::string_view location)
+{
+   auto source = ROOT::Internal::RPageSource::Create(ntupleName, location);
+   source->Attach();
+   const auto descGuard = source->GetSharedDescriptorGuard();
+   return std::make_pair(ROOT::Internal::GetClusterBoundaries(descGuard.GetRef()), descGuard->GetNEntries());
 }
