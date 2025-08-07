@@ -218,7 +218,7 @@ TEST_F(testMatrixD, Eigen)
    CompareTMatrix(B, C);
 }
 
-TEST_F(testMatrixDSym, IsSymmetric)
+TEST(TMatrixTSym, IsSymmetric)
 {
    using ROOT::TestSupport::CheckDiagsRAII;
    Double_t edata[] = {1, 2, 3, 4};
