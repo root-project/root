@@ -244,7 +244,7 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, ROOT::Internal::RDF:
                        void *&actionHelperBranchPtrAddress, bool isDefine)
 {
 
-   auto *inputBranch = SearchForBranch(inputTree, inputBranchName);
+   auto *inputBranch = isDefine ? nullptr : SearchForBranch(inputTree, inputBranchName);
 
    // Respect the original bufsize and splitlevel arguments
    // In particular, by keeping splitlevel equal to 0 if this was the case for `inputBranch`, we avoid
