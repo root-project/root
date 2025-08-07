@@ -59,6 +59,12 @@ class RFieldDescriptorBuilder;
 class RNTupleDescriptorBuilder;
 
 RNTupleDescriptor CloneDescriptorSchema(const RNTupleDescriptor &desc);
+struct RNTupleClusterBoundaries {
+   ROOT::NTupleSize_t fFirstEntry = kInvalidNTupleIndex;
+   ROOT::NTupleSize_t fLastEntryPlusOne = kInvalidNTupleIndex;
+};
+
+std::vector<ROOT::Internal::RNTupleClusterBoundaries> GetClusterBoundaries(const RNTupleDescriptor &desc);
 } // namespace Internal
 
 // clang-format off
