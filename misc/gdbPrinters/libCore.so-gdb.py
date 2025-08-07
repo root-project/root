@@ -12,20 +12,20 @@
 # printers registered at the end of this file.
 
 import gdb
-
+import gdb.printing
 
 class TObjectPrinter(object):
    "Print TObjects"
 
    def __init__(self, val):
-      self.val = val
+      self.__val = val
       
    def children(self):
-      yield "fUniqueID", self.val['fUniqueID']
-      yield "fBits", self.val['fBits']
+      yield "fUniqueID", self.__val['fUniqueID']
+      yield "fBits", self.__val['fBits']
 
    def to_string(self):
-      return "(TObject)"
+      return self.__val.dynamic_type.name
 
 
 
@@ -33,10 +33,13 @@ class TNamedPrinter(object):
    "Print TNamed"
 
    def __init__(self, val):
-      self.val = val
+      self.__val = val
+   
+   def children(self):
+      yield "<TObject>", self.__val[self.__val.type.fields()[0]]
 
    def to_string(self):
-      return "(TNamed) " + str(self.val['fName']) + " " + str(self.val['fTitle'])
+      return "(" + str(self.__val['fName']) + ", " + str(self.__val['fTitle']) + ")"
 
 
 
@@ -44,7 +47,7 @@ class TStringPrinter(object):
    "Print TStrings"
 
    def __init__(self, val):
-      self.val = val
+      self.__val = val
       typeAndAddr = "(*(TString*)"+str(val.address)+")"
       query = typeAndAddr + ".fRep.fShort.fSize & TString::kShortMask"
       self.isLong = bool(gdb.parse_and_eval(query))
@@ -53,18 +56,18 @@ class TStringPrinter(object):
       return 'string'
 
    def to_string(self):
-      theStr = self.val['fRep']['fLong']['fData'] if self.isLong else self.val['fRep']['fShort']['fData']
+      theStr = self.__val['fRep']['fLong']['fData'] if self.isLong else self.__val['fRep']['fShort']['fData']
       return theStr.string()
 
 
 
 
 def build_pretty_printer():
-   pp = gdb.printing.RegexpCollectionPrettyPrinter("libCore")
+   pp = gdb.printing.RegexpCollectionPrettyPrinter("libCore.so")
    pp.add_printer('TObject', '^TObject$', TObjectPrinter)
    pp.add_printer('TNamed', '^TNamed$', TNamedPrinter)
    pp.add_printer('TString', '^TString$', TStringPrinter)  
-   
+
    return pp
 
 
