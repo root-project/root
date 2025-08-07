@@ -452,7 +452,6 @@ void RModel::CheckAndFuseOperators() {
           auto opKind = fOperators[j]->GetOpKind();
           // Only consider operators with fusable kinds
           if (!FusableKinds.count(opKind)) {
-            // std::cout<<"\n op not fusable: "<<toString(opKind);  
             break;
           }
    
@@ -464,7 +463,6 @@ void RModel::CheckAndFuseOperators() {
           if (freqIt != fIntermediateTensorFrequencyLookup.end() &&
           (freqIt->second != fOperators[j + 1]->GetOpOrder() ||
            FusableKinds.count(fOperators[j + 1]->GetOpKind()) == 0)) {
-            //   std::cout << "\nBreaking here, second: " << freqIt->second << ", idx: " << fOperators[j+1]->GetOpOrder();
               fusable_propagate_tensor_name = tensorName;
               break;
           }
@@ -591,9 +589,6 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
        }
    
        fOperators[op_idx]->Initialize(*this);
-      //  if(fOperators[op_idx]->GetOpName().length()==0){
-      //    std::cout<<"\nempty name for op, typeid: "<<typeid(*fOperators[op_idx]).name();
-      //  }
        for (auto &it : fOperators[op_idx]->GetOpOutputTensors()) {
            std::string name{it};
            if (fIntermediateTensorFrequencyLookup.find(it) == fIntermediateTensorFrequencyLookup.end() &&
@@ -920,7 +915,6 @@ void RModel::GenerateSessionCode()
       std::string intermediate_memory_alloc_string = "";
       intermediate_memory_alloc_string += "\n// --- Positioning intermediate tensor memory --";
       for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
-         // std::cout<<std::endl<<"currently processing: "<<toString(fOperators[op_idx]->GetOpKind());
          intermediate_memory_alloc_string += AllocateIntermediateMemory(fOperators[op_idx]->GetOpOutputTensors(), allocated_tensors);
          CheckAndFlushIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx);
       }
