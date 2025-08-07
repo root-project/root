@@ -2666,9 +2666,9 @@ void TTree::Browse(TBrowser* b)
 /// assigned to the TTree via the TTree::SetTreeIndex() method.
 /// \see TTree::SetTreeIndex()
 
-Int_t TTree::BuildIndex(const char* majorname, const char* minorname /* = "0" */)
+Int_t TTree::BuildIndex(const char* majorname, const char* minorname /* = "0" */, const bool long64major, const bool long64minor)
 {
-   fTreeIndex = GetPlayer()->BuildIndex(this, majorname, minorname);
+   fTreeIndex = GetPlayer()->BuildIndex(this, majorname, minorname, long64major, long64minor);
    if (fTreeIndex->IsZombie()) {
       delete fTreeIndex;
       fTreeIndex = nullptr;
