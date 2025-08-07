@@ -1045,10 +1045,9 @@ if(ROOT_pyroot_FOUND)
                 ${py_will_fail})
 
     if(${t} IN_LIST multithreaded)
-      # Makes sure that this doesn't run in parallel with other multithreaded tutorials, and that cmake doesn't start too
-      # many other tests. That we use 4 processors is actually a lie, because IMT takes whatever it finds.
-      # However, even this poor indication of MT behaviour is a good hint for cmake to reduce congestion.
-      set_tests_properties(${tutorial_name} PROPERTIES RESOURCE_LOCK multithreaded PROCESSORS ${NProcessors})
+      # Makes sure that this doesn't run in parallel with too many other multithreaded tutorials.
+      # The number of threads used by the tutorials is limited by setting ROOT_MAX_THREADS (see above).
+      set_tests_properties(${tutorial_name} PROPERTIES PROCESSORS ${NProcessors})
     endif()
 
     if(${t} IN_LIST distrdf_spark_tutorials)
