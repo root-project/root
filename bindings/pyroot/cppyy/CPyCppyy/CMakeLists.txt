@@ -118,6 +118,7 @@ set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS cppyy)
 if(NOT MSVC)
   # Make sure that relative RUNPATH to main ROOT libraries is always correct.
   ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH(cppyy ${CMAKE_INSTALL_PYTHONDIR})
+  ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH(CPyCppyy ${CMAKE_INSTALL_LIBDIR})
 endif()
 
 # Install library
