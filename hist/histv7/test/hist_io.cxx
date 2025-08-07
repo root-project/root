@@ -34,3 +34,19 @@ TEST(RVariableBinAxis, Streamer)
    const RVariableBinAxis axis(bins);
    ExpectThrowOnWriteObject(axis);
 }
+
+TEST(RAxes, Streamer)
+{
+   static constexpr std::size_t BinsX = 20;
+   const RRegularAxis regularAxis(BinsX, 0, BinsX);
+   static constexpr std::size_t BinsY = 30;
+   std::vector<double> bins;
+   for (std::size_t i = 0; i < BinsY; i++) {
+      bins.push_back(i);
+   }
+   bins.push_back(BinsY);
+   const RVariableBinAxis variableBinAxis(bins);
+
+   const RAxes axes({regularAxis, variableBinAxis});
+   ExpectThrowOnWriteObject(axes);
+}
