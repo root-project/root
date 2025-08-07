@@ -66,9 +66,6 @@ TMatrixTSym<Element>::TMatrixTSym(Int_t no_rows,const Element *elements,Option_t
 {
    Allocate(no_rows,no_rows);
    SetMatrixArray(elements,option);
-   if (!this->IsSymmetric()) {
-      Error("TMatrixTSym(Int_t,Element*,Option_t*)","matrix not symmetric");
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -80,9 +77,6 @@ TMatrixTSym<Element>::TMatrixTSym(Int_t row_lwb,Int_t row_upb,const Element *ele
    const Int_t no_rows = row_upb-row_lwb+1;
    Allocate(no_rows,no_rows,row_lwb,row_lwb);
    SetMatrixArray(elements,option);
-   if (!this->IsSymmetric()) {
-      Error("TMatrixTSym(Int_t,Int_t,Element*,Option_t*)","matrix not symmetric");
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -203,7 +197,7 @@ TMatrixTSym<Element>::TMatrixTSym(const TMatrixTSymLazy<Element> &lazy_construct
             lazy_constructor.GetRowUpb()-lazy_constructor.GetRowLwb()+1,
             lazy_constructor.GetRowLwb(),lazy_constructor.GetRowLwb(),1);
    lazy_constructor.FillIn(*this);
-   if (!this->IsSymmetric()) {
+   if (!this->TMatrixTBase<Element>::IsSymmetric()) {
       Error("TMatrixTSym(TMatrixTSymLazy)","matrix not symmetric");
    }
 }
@@ -743,7 +737,7 @@ template<class Element>
 TMatrixTBase<Element> &TMatrixTSym<Element>::SetMatrixArray(const Element *data,Option_t *option)
 {
    TMatrixTBase<Element>::SetMatrixArray(data,option);
-   if (!this->IsSymmetric()) {
+   if (!this->TMatrixTBase<Element>::IsSymmetric()) {
       Error("SetMatrixArray","Matrix is not symmetric after Set");
    }
 
