@@ -32,9 +32,8 @@ ROOTTEST_ADD_TEST(assertROOT8542
 
 ROOTTEST_ADD_TEST(execStatusBitsCheck
                   MACRO execStatusBitsCheck.C
-                  OUTCNV ../html/MakeIndex_convert.sh
-                  OUTREF execStatusBitsCheck.ref
-                  )
+                  OUTCNV convert.sh
+                  OUTREF execStatusBitsCheck.ref)
 
 add_test(NAME root_exe_exitStatus COMMAND $<TARGET_FILE:root.exe> "-e invalid" "--no_exist")
 set_property(TEST root_exe_exitStatus PROPERTY WILL_FAIL True)
