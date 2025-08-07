@@ -52,6 +52,7 @@ const char *const kRangeLenName = "_rangeLen";
 
 } // namespace Internal
 
+/// An entry range linked to an Attribute
 class RNTupleAttrRange final {
    ROOT::NTupleSize_t fStart = 0;
    ROOT::NTupleSize_t fLength = 0;
@@ -141,10 +142,36 @@ public:
 \ingroup NTuple
 \brief Class used to write a RNTupleAttrSet in the context of a RNTupleWriter.
 
-TODO: description here
+An Attribute Set is written as a separate RNTuple linked to the "main" RNTuple that created it.
+A RNTupleAttrSetWriter only lives as long as the RNTupleWriter that created it (or until CloseAttributeSet() is called).
+Users should not use this class directly but rather via RNTupleAttrSetWriterHandle, which is the type returned by
+RNTupleWriter::CreateAttributeSet().
 
 ~~~ {.cpp}
-TODO: code sample here
+// Writing attributes via RNTupleAttrSetWriter
+// -------------------------------------------
+
+// First define the schema of your Attribute Set:
+auto attrModel = ROOT::RNTupleModel::Create();
+auto pMyAttr = attrModel->MakeField<std::string>("myAttr");
+
+// Then, assuming `writer` is an RNTupleWriter, create it:
+auto attrSet = writer->CreateAttributeSet(std::move(attrModel), "MyAttrSet");
+
+// Attributes are assigned to entry ranges. A range is started via BeginRange():
+auto range = attrSet->BeginRange();
+
+// To assign actual attributes, you use the same interface as the main RNTuple:
+*pMyAttr = "This is my attribute for this range";
+
+// ... here you can fill your main RNTuple with data ...
+
+// Once you're done, close the range. This will commit the attribute data and bind it to all data written
+// between BeginRange() and CommitRange().
+attrSet->CommitRange(std::move(range));
+
+// You don't need to explicitly close the AttributeSet, but if you want to do so, use:
+// writer->CloseAttributeSet(std::move(attrSet));
 ~~~
 */
 // clang-format on
@@ -197,16 +224,11 @@ class RNTupleAttrSetWriterHandle final {
 public:
    RNTupleAttrSetWriterHandle(const RNTupleAttrSetWriterHandle &) = delete;
    RNTupleAttrSetWriterHandle &operator=(const RNTupleAttrSetWriterHandle &) = delete;
-   RNTupleAttrSetWriterHandle(RNTupleAttrSetWriterHandle &&other) { std::swap(fWriter, other.fWriter); }
-   RNTupleAttrSetWriterHandle &operator=(RNTupleAttrSetWriterHandle &&other)
-   {
-      std::swap(fWriter, other.fWriter);
-      return *this;
-   }
+   RNTupleAttrSetWriterHandle(RNTupleAttrSetWriterHandle &&) = default;
+   RNTupleAttrSetWriterHandle &operator=(RNTupleAttrSetWriterHandle &&other) = default;
 
    /// Retrieves the underlying pointer to the AttrSetWriter, throwing if it's invalid.
-   /// This is NOT thread-safe and must be called from the same thread that created the
-   /// AttrSetWriter.
+   /// This is NOT thread-safe and must be called from the same thread that created the AttrSetWriter.
    RNTupleAttrSetWriter *operator->()
    {
       if (R__unlikely(fWriter.expired()))
@@ -223,10 +245,26 @@ class RNTupleAttrEntryIterable;
 \ingroup NTuple
 \brief Class used to read a RNTupleAttrSet in the context of a RNTupleReader
 
-TODO: description here
+An RNTupleAttrSetReader is created via RNTupleReader::OpenAttributeSet. Once created, it may outlive its parent Reader.
+Reading Attributes works similarly to reading regular RNTuple entries: you can either create entries or just use the
+AttrSetReader Model's default entry and load data into it via LoadAttrEntry.
 
 ~~~ {.cpp}
-TODO: code sample here
+// Reading Attributes via RNTupleAttrSetReader
+// -------------------------------------------
+
+// Assuming `reader` is a RNTupleReader:
+auto attrSet = reader->OpenAttributeSet("MyAttrSet");
+
+// Just like how you would read a regular RNTuple, first get the pointer to the fields you want to read:
+auto &attrEntry = attrSet->GetModel().GetDefaultEntry();
+auto pAttr = attrEntry->GetPtr<std::string>("myAttr");
+
+// Then select which attributes you want to read. E.g. read all attributes linked to the entry at index 10:
+for (auto idx : attrSet->GetAttributes(10)) {
+   attrSet->LoadAttrEntry(idx);
+   cout << "entry " << idx << " has attribute " << *pAttr << "\n";
+}
 ~~~
 */
 // clang-format on
@@ -234,12 +272,13 @@ class RNTupleAttrSetReader final {
    friend class ROOT::RNTupleReader;
    friend class RNTupleAttrEntryIterable;
 
-   // List containing pairs { entryRange, entryIndex }, used to quickly find out which entries in the Attribute
-   // RNTuple contain entries that overlap a given range. The list is sorted by range start, i.e.
-   // entryRange.first.Start().
+   /// List containing pairs { entryRange, entryIndex }, used to quickly find out which entries in the Attribute
+   /// RNTuple contain entries that overlap a given range. The list is sorted by range start, i.e.
+   /// entryRange.first.Start().
    std::vector<std::pair<RNTupleAttrRange, NTupleSize_t>> fEntryRanges;
+   /// The internal Reader used to read the AttributeSet RNTuple
    std::unique_ptr<RNTupleReader> fReader;
-   // The reconstructed user model
+   /// The reconstructed user model
    std::unique_ptr<ROOT::RNTupleModel> fUserModel;
 
    static bool EntryRangesAreSorted(const decltype(fEntryRanges) &ranges);
