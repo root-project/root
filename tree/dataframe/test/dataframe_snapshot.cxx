@@ -506,6 +506,31 @@ TEST_F(RDFSnapshotArrays, SingleThreadJitted)
    checkSnapshotArrayFile(dj, kNEvents);
 }
 
+// Run a define across a TTree boundary to trigger an update of branch addresses
+TEST_F(RDFSnapshotArrays, AddDefine)
+{
+   RDataFrame df("arrayTree", kFileNames);
+   auto df2 = df.Define("RVecColumn",
+                        [](ULong64_t entry) {
+                           return ROOT::RVec<ULong64_t>{entry, entry + 1, entry + 2, entry + 3, entry + 4, entry + 5};
+                        },
+                        {"rdfentry_"})
+                 .Snapshot("t", "test_snapshotDefineRVec.root", {"RVecColumn"});
+   df2->Foreach(
+      [](const ROOT::RVec<ULong64_t> &v, ULong64_t entry) {
+         EXPECT_EQ(v.size(), 6);
+         EXPECT_FLOAT_EQ(v.front(), entry);
+
+         std::vector<ULong64_t> column(v.begin(), v.end());
+         std::vector<ULong64_t> target(6);
+         std::generate(target.begin(), target.end(), [i = entry]() mutable { return i++; });
+         EXPECT_EQ(column, target);
+      },
+      {"RVecColumn", "rdfentry_"});
+
+   gSystem->Unlink("test_snapshotDefineRVec.root.root");
+}
+
 TEST_F(RDFSnapshotArrays, RedefineArray)
 {
    static constexpr unsigned int newArraySize = 6u;
