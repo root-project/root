@@ -340,6 +340,24 @@ ROOT::NTupleSize_t ROOT::RNTupleDescriptor::GetNElements(ROOT::DescriptorId_t ph
    return result;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the cluster boundaries for each cluster in this RNTuple.
+std::vector<ROOT::Internal::RNTupleClusterBoundaries>
+ROOT::Internal::GetClusterBoundaries(const ROOT::RNTupleDescriptor &desc)
+{
+   std::vector<Internal::RNTupleClusterBoundaries> boundaries;
+   boundaries.reserve(desc.GetNClusters());
+   auto clusterId = desc.FindClusterId(0, 0);
+   while (clusterId != ROOT::kInvalidDescriptorId) {
+      const auto &clusterDesc = desc.GetClusterDescriptor(clusterId);
+      R__ASSERT(clusterDesc.GetNEntries() > 0);
+      boundaries.emplace_back(ROOT::Internal::RNTupleClusterBoundaries{
+         clusterDesc.GetFirstEntryIndex(), clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries()});
+      clusterId = desc.FindNextClusterId(clusterId);
+   }
+   return boundaries;
+}
+
 ROOT::DescriptorId_t
 ROOT::RNTupleDescriptor::FindFieldId(std::string_view fieldName, ROOT::DescriptorId_t parentId) const
 {

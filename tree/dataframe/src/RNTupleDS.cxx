@@ -594,17 +594,12 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
       if (i == (nRemainingFiles - 1))
          nSlotsPerFile = fNSlots - fNextRanges.size();
 
-      std::vector<std::pair<ULong64_t, ULong64_t>> rangesByCluster;
-      {
-         auto descriptorGuard = source->GetSharedDescriptorGuard();
-         auto clusterId = descriptorGuard->FindClusterId(0, 0);
-         while (clusterId != kInvalidDescriptorId) {
-            const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterId);
-            rangesByCluster.emplace_back(std::make_pair<ULong64_t, ULong64_t>(
-               clusterDesc.GetFirstEntryIndex(), clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries()));
-            clusterId = descriptorGuard->FindNextClusterId(clusterId);
-         }
-      }
+      const auto rangesByCluster = [&source]() {
+         // Take the shared lock of the descriptor just for the time necessary
+         const auto descGuard = source->GetSharedDescriptorGuard();
+         return ROOT::Internal::GetClusterBoundaries(descGuard.GetRef());
+      }();
+
       const unsigned int nRangesByCluster = rangesByCluster.size();
 
       // Distribute slots equidistantly over the entry range, aligned on cluster boundaries
