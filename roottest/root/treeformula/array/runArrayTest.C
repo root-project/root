@@ -1,6 +1,6 @@
 {
-   if (!gSystem->CompileMacro("Data.cxx","k")) gApplication->Terminate(1);
-   TFile *f = new TFile("myTree.root");
+   // if (!gSystem->CompileMacro("Data.cxx","k")) gApplication->Terminate(1);
+   TFile *f = TFile::Open("myTree.root");
 #ifdef ClingWorkAroundMissingDynamicScope
    TTree *tr; f->GetObject("tr",tr);
 #endif

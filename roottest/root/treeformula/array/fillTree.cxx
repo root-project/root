@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include <cstdlib>
 #include "TTree.h"
 #include "TFile.h"
 #include "TRandom.h"
@@ -34,10 +34,3 @@ int fillTree() {
 
 	return 0;
 }
-
-#ifndef __CINT__
-int main(void)
-{
-return fillTree();
-}
-#endif
