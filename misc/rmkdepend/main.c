@@ -184,9 +184,12 @@ int main_orig(int argc, char **argv)
          fatalerr("cannot open \"%s\"\n", argv[1] + 1);
       fstat(afd, &ast);
       args = (char *)malloc(ast.st_size + 1);
-      if ((ast.st_size = read(afd, args, ast.st_size)) < 0)
+      if (!args)
+         fatalerr("failed to allocate memory\n");
+      int bytes_read = read(afd, args, ast.st_size);
+      if (bytes_read < 0)
          fatalerr("failed to read %s\n", argv[1] + 1);
-      args[ast.st_size] = '\0';
+      args[bytes_read] = '\0';
       close(afd);
       for (p = args; *p; p++) {
          if (quotechar) {
