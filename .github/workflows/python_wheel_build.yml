@@ -15,7 +15,10 @@ on:
 
 jobs:
   build-wheels:
-    if: contains(github.event.pull_request.labels.*.name, 'build-python-wheels')
+    if: |
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'build-python-wheels')
     runs-on: ubuntu-latest
     strategy:
       matrix:
