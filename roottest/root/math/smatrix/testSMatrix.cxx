@@ -33,6 +33,7 @@ template <typename T>
 typename std::enable_if<!std::is_floating_point<T>::value, int>::type compare(T a, T b, const std::string &s = "",
                                                                               int ulps = 10)
 {
+   (void) ulps;
    if (a != b) compare_fail(a, b, T(0), T(0), s);
    return a == b ? 0 : 1;
 }
