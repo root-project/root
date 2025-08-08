@@ -2963,9 +2963,12 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
    if (version<=1) {
       if (version <= 0)  {
          if (cl) {
-            if (cl->GetClassVersion() != 0
+            auto clversion = cl->GetClassVersion();
+            if ((clversion != 0
                 // If v.cnt < 6 then we have a class with a version that used to be zero and so there is no checksum.
-                && (v.cnt && v.cnt >= 6)
+                 && (v.cnt && v.cnt >= 6)) ||
+                // ::WriteVersion for a foreign class (no ClassDef) but defining Class_Version() { return 0; } does write checksum.
+                (clversion == 0 && version == 0 && cl->IsForeign())
                 ) {
                UInt_t checksum = 0;
                //*this >> checksum;
@@ -2975,11 +2978,11 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
                   return vinfo->TStreamerInfo::GetClassVersion(); // Try to get inlining.
                } else {
                   // There are some cases (for example when the buffer was stored outside of
-                  // a ROOT file) where we do not have a TStreamerInfo.  If the checksum is
+                  // a ROOT file) where we do not have a TStreamerInfo. If the checksum is
                   // the one from the current class, we can still assume that we can read
                   // the data so let use it.
                   if (checksum==cl->GetCheckSum() || cl->MatchLegacyCheckSum(checksum)) {
-                     version = cl->GetClassVersion();
+                     version = clversion;
                   } else {
                      if (fParent) {
                         Error("ReadVersion", "Could not find the StreamerInfo with a checksum of 0x%x for the class \"%s\" in %s.",
