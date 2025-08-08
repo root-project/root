@@ -30,4 +30,4 @@ if(NOT builtin_clang)
   link_directories("${LLVM_LIBRARY_DIR}")
 endif()
 
-ROOT_ADD_UNITTEST_DIR(Core RIO ${CLING_LIBRARIES} $<TARGET_OBJECTS:ClingUtils>)
+ROOT_ADD_UNITTEST_DIR(Core ${CLING_LIBRARIES} $<TARGET_OBJECTS:ClingUtils>)
