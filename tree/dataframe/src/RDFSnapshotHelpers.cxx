@@ -801,8 +801,7 @@ ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::MakeNew(void *newName, std::s
 ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::UntypedSnapshotRNTupleHelper(
    std::string_view filename, std::string_view dirname, std::string_view ntuplename, const ColumnNames_t &vfnames,
    const ColumnNames_t &fnames, const RSnapshotOptions &options, ROOT::Detail::RDF::RLoopManager *inputLM,
-   ROOT::Detail::RDF::RLoopManager *outputLM, std::vector<bool> &&isDefine,
-   const std::vector<const std::type_info *> &colTypeIDs)
+   ROOT::Detail::RDF::RLoopManager *outputLM, const std::vector<const std::type_info *> &colTypeIDs)
    : fFileName(filename),
      fDirName(dirname),
      fNTupleName(ntuplename),
@@ -814,7 +813,6 @@ ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::UntypedSnapshotRNTupleHelper(
      fOutputFieldNames(ReplaceDotWithUnderscore(fnames)),
      fWriter(nullptr),
      fOutputEntry(nullptr),
-     fIsDefine(std::move(isDefine)),
      fInputColumnTypeIDs(colTypeIDs)
 {
    EnsureValidSnapshotRNTupleOutput(fOptions, fNTupleName, fFileName);
@@ -899,8 +897,7 @@ ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper
 ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::MakeNew(void *newName)
 {
    const std::string finalName = *reinterpret_cast<const std::string *>(newName);
-   return UntypedSnapshotRNTupleHelper{finalName,          fDirName,           fNTupleName,
-                                       fInputFieldNames,   fOutputFieldNames,  fOptions,
-                                       fInputLoopManager,  fOutputLoopManager, std::vector<bool>(fIsDefine),
-                                       fInputColumnTypeIDs};
+   return UntypedSnapshotRNTupleHelper{finalName,         fDirName,           fNTupleName,
+                                       fInputFieldNames,  fOutputFieldNames,  fOptions,
+                                       fInputLoopManager, fOutputLoopManager, fInputColumnTypeIDs};
 }
