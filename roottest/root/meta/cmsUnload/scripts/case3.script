@@ -1,6 +1,6 @@
 struct Marker { ~Marker() { fprintf(stdout,"dest\n"); } };
-.L lib/libEdm.so 
-.L lib/libStrip.so 
+gSystem->Load("libEdm_dictrflx");
+gSystem->Load("libStrip_dictrflx");
 Marker m1;
 Marker m2;
 gInterpreter->AutoParse("SiStripCluster");
