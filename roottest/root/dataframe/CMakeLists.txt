@@ -9,11 +9,7 @@ if(ROOTTEST_OS_ID MATCHES Ubuntu)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
 endif()
 
-set(DFLIBRARIES Core RIO Hist Tree MathCore TreePlayer ROOTDataFrame ROOTVecOps)
-
-if(root7)
-  list(APPEND DFLIBRARIES ROOTNTuple)
-endif()
+set(DFLIBRARIES Core RIO Hist Tree MathCore TreePlayer ROOTDataFrame ROOTVecOps ROOTNTuple)
 
 # ROOT-9975
 ROOTTEST_ADD_TEST(test_ROOT9975
