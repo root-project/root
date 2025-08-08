@@ -59,11 +59,11 @@ TEST(RNTupleAttributes, AttributeBasics)
 
       // Fetch a specific attribute set
       auto attrSet = reader->OpenAttributeSet("MyAttrSet");
+      auto pAttr = attrSet->GetModel().GetDefaultEntry().GetPtr<std::string>("myAttr");
       for (int i = 0; i < 100; ++i) {
          int nAttrs = 0;
          for (const auto idx : attrSet->GetAttributes(i)) {
             attrSet->LoadAttrEntry(idx);
-            auto pAttr = attrSet->GetModel().GetDefaultEntry().GetPtr<std::string>("myAttr");
             EXPECT_EQ(*pAttr, "This is a custom attribute");
             ++nAttrs;
          }
@@ -678,5 +678,68 @@ TEST(RNTupleAttributes, AccessAttrSetWriterAfterClosingMainReader)
       }
       writer.reset();
       EXPECT_THROW(attrSet->CommitRange(std::move(attrEntry)), ROOT::RException);
+   }
+}
+
+TEST(RNTupleAttributes, UserPassingInternalNames)
+{
+   // Verify that even if the user passes field names that we use internally, we still handle them properly.
+   FileRaii fileGuard("test_ntuple_attrs_internalnames.root");
+
+   using namespace ROOT::Experimental::Internal;
+
+   {
+      auto model = RNTupleModel::Create();
+      auto pInt = model->MakeField<int>("int");
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file);
+
+      auto attrModel = RNTupleModel::Create();
+      auto pStart = attrModel->MakeField<std::string>(RNTupleAttributes::kRangeStartName);
+      auto pLen = attrModel->MakeField<std::string>(RNTupleAttributes::kRangeLenName);
+      auto pModel = attrModel->MakeField<std::string>(RNTupleAttributes::kUserModelName);
+      auto attrSet = writer->CreateAttributeSet(std::move(attrModel), RNTupleAttributes::kRangeStartName);
+
+      auto attrEntry = attrSet->BeginRange();
+      *pStart = "start 0";
+      *pLen = "len 0";
+      *pModel = "model 0";
+      for (int i = 0; i < 10; ++i) {
+         *pInt = i;
+         writer->Fill();
+      }
+      attrSet->CommitRange(std::move(attrEntry));
+
+      attrEntry = attrSet->BeginRange();
+      *pStart = "start 1";
+      *pLen = "len 1";
+      *pModel = "model 1";
+      for (int i = 0; i < 10; ++i) {
+         *pInt = i;
+         writer->Fill();
+      }
+      attrSet->CommitRange(std::move(attrEntry));
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   // Read back the list of available attribute sets
+   const auto attrSets = reader->GetDescriptor().GetAttributeSetNames();
+
+   // Fetch a specific attribute set
+   auto attrSet = reader->OpenAttributeSet(RNTupleAttributes::kRangeStartName);
+   auto pStart = attrSet->GetModel().GetDefaultEntry().GetPtr<std::string>(RNTupleAttributes::kRangeStartName);
+   auto pLen = attrSet->GetModel().GetDefaultEntry().GetPtr<std::string>(RNTupleAttributes::kRangeLenName);
+   auto pModel = attrSet->GetModel().GetDefaultEntry().GetPtr<std::string>(RNTupleAttributes::kUserModelName);
+   for (int i = 0; i < 20; ++i) {
+      int nAttrs = 0;
+      for (const auto idx : attrSet->GetAttributes(i)) {
+         attrSet->LoadAttrEntry(idx);
+         EXPECT_EQ(*pStart, std::string("start ") + (i < 10 ? "0" : "1"));
+         EXPECT_EQ(*pLen, std::string("len ") + (i < 10 ? "0" : "1"));
+         EXPECT_EQ(*pModel, std::string("model ") + (i < 10 ? "0" : "1"));
+         ++nAttrs;
+      }
+      EXPECT_EQ(nAttrs, 1);
    }
 }
