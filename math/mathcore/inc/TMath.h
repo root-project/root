@@ -1483,7 +1483,8 @@ template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, con
       const double d1_0 = values[1] - values[0];
       const double d2_1 = values[2] - values[1];
       if (d2_1 < d1_0)
-         return TMath::Mean(2, values.data() + 1, weights.data() + 1);
+         // Start only from the second value
+         return TMath::Mean(std::next(values.begin()), values.end(), std::next(weights.begin()));
       else if (d2_1 > d1_0)
          return TMath::Mean(2, values.data(), weights.data());
       else
