@@ -82,11 +82,11 @@ public:
    UntypedSnapshotRNTupleHelper &operator=(UntypedSnapshotRNTupleHelper &&) noexcept;
    ~UntypedSnapshotRNTupleHelper() final;
 
+   void Initialize();
+
    void InitTask(TTreeReader *, unsigned int /* slot */) {}
 
    void Exec(unsigned int /* slot */, const std::vector<void *> &values);
-
-   void Initialize();
 
    void Finalize();
 

@@ -827,15 +827,6 @@ ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::~UntypedSnapshotRNTupleHelper
       Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
 }
 
-void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Exec(unsigned int /* slot */, const std::vector<void *> &values)
-{
-   assert(values.size() == fOutputFieldNames.size());
-   for (decltype(values.size()) i = 0; i < values.size(); i++) {
-      fOutputEntry->BindRawPtr(fOutputFieldNames[i], values[i]);
-   }
-   fWriter->Fill();
-}
-
 void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
 {
    auto model = ROOT::RNTupleModel::Create();
@@ -870,6 +861,15 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
    }
 
    fWriter = ROOT::RNTupleWriter::Append(std::move(model), fNTupleName, *outputDir, writeOptions);
+}
+
+void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Exec(unsigned int /* slot */, const std::vector<void *> &values)
+{
+   assert(values.size() == fOutputFieldNames.size());
+   for (decltype(values.size()) i = 0; i < values.size(); i++) {
+      fOutputEntry->BindRawPtr(fOutputFieldNames[i], values[i]);
+   }
+   fWriter->Fill();
 }
 
 void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Finalize()
