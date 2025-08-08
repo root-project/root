@@ -298,9 +298,9 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
          using Helper_t = UntypedSnapshotRNTupleHelper;
          using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
 
-         actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options, inputLM,
-                                               outputLM, std::move(isDefine), colTypeIDs),
-                                      colNames, colTypeIDs, prevNode, colRegister));
+         actionPtr.reset(new Action_t(
+            Helper_t(filename, dirname, treename, colNames, outputColNames, options, inputLM, outputLM, colTypeIDs),
+            colNames, colTypeIDs, prevNode, colRegister));
       } else {
          // multi-thread snapshot to RNTuple is not yet supported
          // TODO(fdegeus) Add MT snapshotting
