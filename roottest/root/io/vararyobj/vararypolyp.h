@@ -10,12 +10,12 @@ public:
 public:
    A();
    A(const A&);
-   virtual ~A();
+   ~A() override;
    A& operator=(const A&);
    virtual void clear();
    virtual void set();
    virtual void print();
-ClassDef(A, 2)
+ClassDefOverride(A, 2)
 };
 
 class B : public A {
@@ -24,12 +24,12 @@ public:
 public:
    B();
    B(const B&);
-   virtual ~B();
+   ~B() override;
    B& operator=(const B&);
-   virtual void clear();
-   virtual void set();
-   virtual void print();
-ClassDef(B, 2);
+   void clear() override;
+   void set() override;
+   void print() override;
+ClassDefOverride(B, 2);
 };
 
 class C : public TObject {
@@ -40,12 +40,12 @@ public:
 public:
    C();
    C(const C&);
-   virtual ~C();
+   ~C() override;
    C& operator=(const C&);
    virtual void clear();
    virtual void set();
    virtual void print();
-ClassDef(C, 2);
+ClassDefOverride(C, 2);
 };
 
 #endif // VARARYPOLYP_H
