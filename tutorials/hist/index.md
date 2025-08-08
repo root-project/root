@@ -1,5 +1,6 @@
 \addtogroup tutorial_hist
 
+
 @{
 A histogram is a visual representation of the distribution of quantitative data.
 [TH1 class](classTH1.html) introduces the basic data structure used in root for histograms.
@@ -58,35 +59,38 @@ Explore the examples below for [different histogram classes](group__Histograms.h
 
 \anchor th1
 
+
 ## TH1 Histograms
+The examples below showcase the same functionalities through 3 different implementations: the first column is a C++ macro, the second column corresponds to the Python implementation, and the third column is a Python implementation showcasing the newest Pythonizations available in ROOT.
 
-These examples shows some of the ratioplots
 
-| **Tutorial**             ||    **Description**         |
-|-------------|-------------|----------------------------|
-|hist000_TH1_first.C||Hello World example for TH1.|
-|hist001_TH1_fillrandom.C|hist001_TH1_fillrandom.py|Fill a 1D histogram with random values using predefined functions.|
-|hist002_TH1_fillrandom_userfunc.C||Fill a 1D histogram from a user-defined parametric function.|
-|hist003_TH1_draw.C||Draw a 1D histogram to a canva.|
-|hist004_TH1_labels.C||1D histograms with alphanumeric labels.|
-|hist005_TH1_palettecolor.C||Palette coloring for TH1.|
-|hist006_TH1_bar_charts.C||Draw 1D histograms as bar charts.|
-|hist007_TH1_liveupdate.C|hist007_TH1_liveupdate.py|Histograms filled and drawn in a loop.|
-|hist008_TH1_zoom.C||Change the range of an axis in a Histogram.|
-|hist009_TH1_normalize.C||Normalizing a Histogram.|
-|hist010_TH1_two_scales.C|hist010_TH1_two_scales.py|Draw two histograms on one canva using different y-axis scales.|
-|hist011_TH1_legend_autoplaced.C||Automatic placing of the legend.|
-|hist012_TH1_hksimple.C||Dynamic filling of TH1K histograms.|
-|hist013_TH1_rebin.C||Create a variable bin-width histogram and change bin sizes.|
-|hist014_TH1_cumulative.C||Illustrate use of the TH1::GetCumulative method.|
-|hist015_TH1_read_and_draw.C|hist015_TH1_read_and_draw.py|Read a 1D histogram from a ROOT File and draw it.|
-|hist016_TH1_different_scales_canvas.C||Draw two histograms on one canva using different y-axis scales.|
-|hist017_TH1_smooth.C||Histogram smoothing.|
-|hist060_TH1_stats.C||Edit statistics box.|
-|hist061_TH1_timeonaxis.C||Use a time axis as an x axis.|
-|hist062_TH1_timeonaxis2.C||Use a time axis as an x axis and use a time offset.|
-|hist063_TH1_seism.C||Use a time axis as an x axis to show sine signal as a strip chart.|
-|hist101_TH1_autobinning.C||Fill multiple histograms with different functions and automatic binning.|
+## Tutorial
+|                                    |           **Tutorial**          |                               |     **Description**    |
+|------------------------------------|---------------------------------|-------------------------------|------------------------|
+|**C++ macro** |**Python** |**Python+Newest Pythonization**||
+| hist000_TH1_first.C                | hist000_TH1_first.py            |   hist000_TH1_first_uhi.py    |Hello World example for TH1. |
+| hist001_TH1_fillrandom.C           | hist001_TH1_fillrandom.py       |  hist001_TH1_fillrandom_uhi.py    | Fill a 1D histogram with random values using predefined functions. |
+| hist002_TH1_fillrandom_userfunc.C  | hist002_TH1_fillrandom_userfunc.py |hist002_TH1_fillrandom_userfunc_uhi.py| Fill a 1D histogram from a user-defined parametric function. |
+| hist003_TH1_draw.C                 | hist003_TH1_draw.py              | hist003_TH1_draw_uhi.py|Draw a 1D histogram to a canvas. |
+| hist004_TH1_labels.C               |                                  |                              | 1D histograms with alphanumeric labels. |
+| hist005_TH1_palettecolor.C         |                                  |                              | Palette coloring for TH1. |
+| hist006_TH1_bar_charts.C           |                                  |                              | Draw 1D histograms as bar charts. |
+| hist007_TH1_liveupdate.C           | hist007_TH1_liveupdate.py        |hist007_TH1_liveupdate_uhi.py | Histograms filled and drawn in a loop. |
+| hist008_TH1_zoom.C                 |                                  |                               | Change the range of an axis in a Histogram. |
+| hist009_TH1_normalize.C            |                                  |                               | Normalizing a Histogram. |
+| hist010_TH1_two_scales.C           | hist010_TH1_two_scales.py        | hist010_TH1_two_scales_uhi.py|Draw two histograms on one canvas using different y-axis scales. |
+| hist011_TH1_legend_autoplaced.C    |                                  |                               | Automatic placing of the legend. |
+| hist012_TH1_hksimple.C             |                                  |                               | Dynamic filling of TH1K histograms. |
+| hist013_TH1_rebin.C                |                                  |                               | Create a variable bin-width histogram and change bin sizes. |
+| hist014_TH1_cumulative.C           |                                  |                               | Illustrate use of the TH1::GetCumulative method. |
+| hist015_TH1_read_and_draw.C        | hist015_TH1_read_and_draw.py     | hist015_TH1_read_and_draw_uhi.py|Read a 1D histogram from a ROOT File and draw it. |
+| hist016_TH1_different_scales_canvas.C |                               |                               | Draw two histograms on one canvas using different y-axis scales. |
+| hist017_TH1_smooth.C               |                                  |                               | Histogram smoothing. |
+| hist060_TH1_stats.C                |                                  |                               | Edit statistics box. |
+| hist061_TH1_timeonaxis.C           |                                  |                               | Use a time axis as an x axis. |
+| hist062_TH1_timeonaxis2.C          |                                  |                               | Use a time axis as an x axis and use a time offset. |
+| hist063_TH1_seism.C                |                                  |                               | Use a time axis as an x axis to show sine signal as a strip chart. |
+| hist101_TH1_autobinning.C          |                                  |                               | Fill multiple histograms with different functions and automatic binning. |
 
 \anchor th2
 
@@ -125,14 +129,16 @@ These examples shows some of the ratioplots
 
 ## Ratio plots
 
-| **Tutorial**             ||    **Description**         |
-|------------|--------------|----------------------------|
-|hist029_TRatioPlot_simple.C|hist029_TRatioPlot_simple.py|Create a simple ratio plot of two histograms using the `pois` division option.|
-|hist030_TRatioPlot_residual.C|hist030_TRatioPlot_residual.py|Create a fit residual plot.|
-|hist031_TRatioPlot_residual_fit.C|hist031_TRatioPlot_residual_fit.py|Create a fit residual plot and set the y-axis range for it.|
-|hist032_TRatioPlot_fit_lines.C|hist032_TRatioPlot_fit_lines.py|Set custom dashed lines specified by a vector of floats.|
-|hist033_TRatioPlot_fit_confidence.C|hist033_TRatioPlot_fit_confidence.py|Set the colors of the confidence interval bands by using|
-|hist034_TRatioPlot_fit_margin.C|hist034_TRatioPlot_fit_margin.py|Create a fit residual plot, where the separation margin has been set to 0.|
+|                                    |           **Tutorial**          |                               |     **Description**    |
+|------------------------------------|---------------------------------|-------------------------------|------------------------|
+|**C++ macro** |**Python** |**Python+Newest Pythonization**| |
+|hist029_TRatioPlot_simple.C|hist029_TRatioPlot_simple.py||Create a simple ratio plot of two histograms using the `pois` division option.|
+|hist030_TRatioPlot_residual.C|hist030_TRatioPlot_residual.py|hist030_TRatioPlot_residual_uhi.py |Create a fit residual plot.|
+|hist031_TRatioPlot_residual_fit.C|hist031_TRatioPlot_residual_fit.py||Create a fit residual plot and set the y-axis range for it.|
+|hist032_TRatioPlot_fit_lines.C|hist032_TRatioPlot_fit_lines.py||Set custom dashed lines specified by a vector of floats.|
+|hist033_TRatioPlot_fit_confidence.C|hist033_TRatioPlot_fit_confidence.py||Set the colors of the confidence interval bands by using|
+|hist034_TRatioPlot_fit_margin.C|hist034_TRatioPlot_fit_margin.py||Create a fit residual plot, where the separation margin has been set to 0.|
+
 
 
 \anchor tpoly
@@ -172,12 +178,14 @@ These examples shows some of the ratioplots
 
 ## TExec
 
-| **Tutorial**             ||    **Description**         |
-|------------|--------------|----------------------------|
-|hist057_TExec_th1.C||Echo object at mouse position.|
-|hist058_TExec_th2.C||Echo object at mouse position and show a graphics line.|
-|hist105_TExec_dynamic_slice.C|hist105_TExec_dynamic_slice.py|Show the slice of a TH2 following the mouse position.|
+|                                    |           **Tutorial**          |                               |     **Description**    |
+|------------------------------------|---------------------------------|-------------------------------|------------------------|
+|**C++ macro** |**Python** |**Python+Newest Pythonization**||
+|hist057_TExec_th1.C                 |                                 |                               |Echo object at mouse position.|
+|hist058_TExec_th2.C                 |                                 |                               |Echo object at mouse position and show a graphics line.|
+|hist105_TExec_dynamic_slice.C       |hist105_TExec_dynamic_slice.py   ||Show the slice of a TH2 following the mouse position.|
 
 \anchor hist_alltutorials
 
 @}
+
