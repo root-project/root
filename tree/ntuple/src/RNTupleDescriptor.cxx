@@ -339,6 +339,22 @@ ROOT::NTupleSize_t ROOT::RNTupleDescriptor::GetNElements(ROOT::DescriptorId_t ph
    return result;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the cluster boundaries for each cluster in this RNTuple.
+std::vector<ROOT::Internal::RNTupleClusterBoundaries> ROOT::RNTupleDescriptor::GetRNTupleClusterBoundaries() const
+{
+   std::vector<ROOT::Internal::RNTupleClusterBoundaries> clusterBoundariesVec;
+   clusterBoundariesVec.reserve(GetNClusters());
+   auto clusterId = FindClusterId(0, 0);
+   while (clusterId != ROOT::kInvalidDescriptorId) {
+      const auto &clusterDesc = GetClusterDescriptor(clusterId);
+      clusterBoundariesVec.emplace_back(ROOT::Internal::RNTupleClusterBoundaries{
+         clusterDesc.GetFirstEntryIndex(), clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries()});
+      clusterId = FindNextClusterId(clusterId);
+   }
+   return clusterBoundariesVec;
+}
+
 ROOT::DescriptorId_t
 ROOT::RNTupleDescriptor::FindFieldId(std::string_view fieldName, ROOT::DescriptorId_t parentId) const
 {
@@ -1431,4 +1447,10 @@ ROOT::RNTupleDescriptor::RClusterDescriptorIterable ROOT::RNTupleDescriptor::Get
 ROOT::RNTupleDescriptor::RExtraTypeInfoDescriptorIterable ROOT::RNTupleDescriptor::GetExtraTypeInfoIterable() const
 {
    return RExtraTypeInfoDescriptorIterable(*this);
+}
+
+const std::vector<ROOT::Internal::RNTupleClusterBoundaries>
+ROOT::Internal::GetVecRNTupleClusterBoundaries(const ROOT::RNTupleDescriptor &RNTupDesc)
+{
+   return RNTupDesc.GetRNTupleClusterBoundaries();
 }

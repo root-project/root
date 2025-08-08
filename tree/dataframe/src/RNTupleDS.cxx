@@ -424,6 +424,13 @@ ROOT::RDF::RNTupleDS::RNTupleDS(std::string_view ntupleName, const std::vector<s
    fStagingArea.resize(fFileNames.size());
 }
 
+ROOT::RDF::RNTupleDS::RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames,
+                                const std::pair<ULong64_t, ULong64_t> &range)
+   : RNTupleDS(ntupleName, fileNames)
+{
+   fGlobalEntryRange = range;
+}
+
 ROOT::RDF::RDataSource::Record_t
 ROOT::RDF::RNTupleDS::GetColumnReadersImpl(std::string_view /* name */, const std::type_info & /* ti */)
 {
@@ -594,17 +601,12 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
       if (i == (nRemainingFiles - 1))
          nSlotsPerFile = fNSlots - fNextRanges.size();
 
-      std::vector<std::pair<ULong64_t, ULong64_t>> rangesByCluster;
-      {
-         auto descriptorGuard = source->GetSharedDescriptorGuard();
-         auto clusterId = descriptorGuard->FindClusterId(0, 0);
-         while (clusterId != kInvalidDescriptorId) {
-            const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterId);
-            rangesByCluster.emplace_back(std::make_pair<ULong64_t, ULong64_t>(
-               clusterDesc.GetFirstEntryIndex(), clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries()));
-            clusterId = descriptorGuard->FindNextClusterId(clusterId);
-         }
-      }
+      const auto rangesByCluster = [&source]() {
+         // Take the shared lock of the descriptor just for the time necessary
+         const auto descGuard = source->GetSharedDescriptorGuard();
+         return ROOT::Internal::GetVecRNTupleClusterBoundaries(descGuard.GetRef());
+      }();
+
       const unsigned int nRangesByCluster = rangesByCluster.size();
 
       // Distribute slots equidistantly over the entry range, aligned on cluster boundaries
@@ -614,10 +616,10 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
       unsigned int iSlot = 0;
       const unsigned int N = std::min(nSlotsPerFile, nRangesByCluster);
       for (; iSlot < N; ++iSlot) {
-         auto start = rangesByCluster[iRange].first;
+         auto start = rangesByCluster[iRange].fFirstEntry;
          iRange += nClustersPerSlot + static_cast<int>(iSlot < remainder);
          assert(iRange > 0);
-         auto end = rangesByCluster[iRange - 1].second;
+         auto end = rangesByCluster[iRange - 1].fLastEntry;
 
          REntryRangeDS range;
          range.fFileName = sourceFileName;
@@ -766,16 +768,48 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
 
    if ((fNSlots == 1) && (fCurrentRanges[0].fSource)) {
       for (auto r : fActiveColumnReaders[0]) {
+         // The logic of assigning correct offsets takes into account various scenarios.
 
          if (fGlobalEntryRange.has_value()) {
-            if (ranges[0].first > fOriginalRanges[0].first && fCounterFileEmpty == 0) {
+            // This will be true either for local, single-threaded, cases when user specifies a GlobalEntry range in
+            // RDatasetSpec but also, when processing RNTuples in the distributed mode, which now uses cluster based
+            // scheduling.
+            if (ranges[0].first > fOriginalRanges[0].first && fCounterFileEmpty == 0 &&
+                ranges[0].first < nEntriesPerSource) {
+               // Set offset to zero.
+               // Let's first consider a single-threaded case WithGlobalEntryRange and the following situation. We have
+               // one file with entries 0 - 100. The user sets GlobalEntryRange to 50 - n. We want to distinguish this
+               // case as it requires an offset of 0. What we have is ranges[0].first=50 and fOriginalRanges[0].first=0.
+               // We are inside the first file, so the fCounterFileEmpty is also 0.
+               // Therefore, the first two conditions are sufficient for the single-threaded case.
+               // The last condition is needed to exclude distributed RDataFrame processing as the offset there is not
+               // 0. The first two conditions are also true for the distributed case and the third condition is needed
+               // for the distinction as for the distributed RDataFrame processing ranges[0].first will always be >=
+               // nEntriesPerSource (number of entries per file).
                r->Connect(*fCurrentRanges[0].fSource, 0);
-            } else if (fCounterFileEmpty > 0) {
+
+            } else if (fCounterFileEmpty > 0 || ranges[0].first >= nEntriesPerSource) {
+               // Set offset to the offset of the current file, in terms of all events in the files before the file that
+               // is being processed. In single-threaded case, this is needed when the user asks for GlobalEntryRange
+               // which starts not in the first file but in any file after it. The offset here takes into account events
+               // in the files that exist but are not being processed due to given GlobalRange (fCounterFileEmpty > 0).
+               // The 2nd condition is for the distributed RDataFrame processing. This is the offset we want to set for
+               // the distributed processing and the second condition is always true. Note that offset must be equal to
+               // start and not ranges[0].first, as when we have GlobalEntryRange, these two values will not be the
+               // same.
                r->Connect(*fCurrentRanges[0].fSource, start);
-            } else {
-               r->Connect(*fCurrentRanges[0].fSource, ranges[0].first);
             }
+
+            // TODO: for CI - checking if any test fails without this condition
+            // else {
+            //    // Covering all cases
+            //    r->Connect(*fCurrentRanges[0].fSource, ranges[0].first);
+            // }
+
          } else {
+            // This is the case of single-threaded processing of RNTuples without GlobalEntryRanges. An offset is 0 for
+            // the first processed file and it is equal to the number of already processed/seen entries in case of s.
+            // the consecutive files. In this case ranges[0].first and start would give the same offset.
             r->Connect(*fCurrentRanges[0].fSource, ranges[0].first);
          }
       }
@@ -938,4 +972,21 @@ ROOT::RDF::RSampleInfo ROOT::Internal::RDF::RNTupleDS::CreateSampleInfo(
    return ROOT::RDF::RSampleInfo(
       ntupleID, std::make_pair(fCurrentRanges[rangeIdx].fFirstEntry, fCurrentRanges[rangeIdx].fLastEntry),
       sampleMap.at(ntupleID));
+}
+
+ROOT::RDataFrame ROOT::Internal::RDF::FromRNTuple(std::string_view ntupleName,
+                                                  const ROOT::RDF::ColumnNames_t &fileNames,
+                                                  const std::pair<ULong64_t, ULong64_t> &range)
+{
+   std::unique_ptr<ROOT::RDF::RNTupleDS> ds{new ROOT::RDF::RNTupleDS(ntupleName, fileNames, range)};
+   return ROOT::RDataFrame(std::move(ds));
+}
+
+std::pair<std::vector<ROOT::Internal::RNTupleClusterBoundaries>, ROOT::NTupleSize_t>
+ROOT::Internal::RDF::GetClustersAndEntries(std::string_view ntupleName, std::string_view location)
+{
+   auto source = ROOT::Internal::RPageSource::Create(ntupleName, location);
+   source->Attach();
+   const auto descGuard = source->GetSharedDescriptorGuard();
+   return std::make_pair(ROOT::Internal::GetVecRNTupleClusterBoundaries(descGuard.GetRef()), descGuard->GetNEntries());
 }
