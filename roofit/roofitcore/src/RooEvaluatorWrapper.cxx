@@ -342,7 +342,7 @@ void RooFuncWrapper::createGradient()
 #else
    _hasGradient = false;
    std::stringstream errorMsg;
-   errorMsg << "Function " << GetName() << " could not be differentiated since ROOT was built without Clad support.";
+   errorMsg << "Function could not be differentiated since ROOT was built without Clad support.";
    oocoutE(nullptr, InputArguments) << errorMsg.str() << std::endl;
    throw std::runtime_error(errorMsg.str().c_str());
 #endif
