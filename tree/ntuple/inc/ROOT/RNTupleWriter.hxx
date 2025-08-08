@@ -220,6 +220,8 @@ public:
    /// Get a RNTupleModel::RUpdater that provides limited support for incremental updates to the underlying
    /// model, e.g. addition of new fields.
    ///
+   /// Note that a Model may not be extended with Streamer fields.
+   ///
    /// **Example: add a new field after the model has been used to construct a `RNTupleWriter` object**
    /// ~~~ {.cpp}
    /// #include <ROOT/RNTuple.hxx>

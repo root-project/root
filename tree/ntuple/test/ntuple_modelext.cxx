@@ -587,3 +587,21 @@ TEST(RNTuple, ModelExtensionNullableField)
    EXPECT_FLOAT_EQ(1.0, viewA(1).value());
    EXPECT_FALSE(viewA(2).has_value());
 }
+
+TEST(RNTuple, ModelExtensionStreamerFields)
+{
+   FileRaii fileGuard("test_ntuple_modelext_streamer.root");
+
+   auto writer = RNTupleWriter::Recreate(RNTupleModel::Create(), "ntpl", fileGuard.GetPath());
+   writer->Fill();
+
+   auto modelUpdater = writer->CreateModelUpdater();
+   modelUpdater->BeginUpdate();
+   modelUpdater->AddField(std::make_unique<ROOT::RStreamerField>("foo", "CustomStruct"));
+   try {
+      modelUpdater->CommitUpdate();
+      FAIL() << "extending a Model with a Streamer field should fail";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("a Model cannot be extended with Streamer fields"));
+   }
+}
