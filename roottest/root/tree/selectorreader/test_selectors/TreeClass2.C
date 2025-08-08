@@ -1,6 +1,6 @@
 #define TreeClass2_cxx
 
-#include "../generated_selectors/TreeClass2.h"
+#include "generated_selectors/TreeClass2.h"
 #include <TH2.h>
 #include <TStyle.h>
 

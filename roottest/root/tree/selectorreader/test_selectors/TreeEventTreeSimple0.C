@@ -1,6 +1,6 @@
 #define TreeEventTreeSimple0_cxx
 
-#include "../generated_selectors/TreeEventTreeSimple0.h"
+#include "generated_selectors/TreeEventTreeSimple0.h"
 #include <TH2.h>
 #include <TStyle.h>
 
@@ -19,7 +19,7 @@ Bool_t TreeEventTreeSimple0::Process(Long64_t entry)
    fReader.SetEntry(entry);
 
    fprintf(stderr, "EventSize: %d\n", Event_branch->fEventSize);
-   
+
    fprintf(stderr, "Px:");
    for(Int_t i = 0; i < Event_branch->fParticles.size(); ++i)
       fprintf(stderr, " %.1lf", Event_branch->fParticles[i].fPosX);

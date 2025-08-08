@@ -1,6 +1,6 @@
 #define TreeTObjArray_cxx
 
-#include "../generated_selectors/TreeTObjArray.h"
+#include "generated_selectors/TreeTObjArray.h"
 #include <TH2.h>
 #include <TStyle.h>
 

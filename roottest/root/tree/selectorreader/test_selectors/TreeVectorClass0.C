@@ -1,6 +1,6 @@
 #define TreeVectorClass0_cxx
 
-#include "../generated_selectors/TreeVectorClass0.h"
+#include "generated_selectors/TreeVectorClass0.h"
 #include <TH2.h>
 #include <TStyle.h>
 
@@ -30,7 +30,7 @@ Bool_t TreeVectorClass0::Process(Long64_t entry)
    fprintf(stderr, "PosZ: ");
    for (Int_t i = 0; i < vp.GetSize(); ++i) fprintf(stderr, " %.1lf", vp[i].fPosZ);
    fprintf(stderr, "\n");
-   
+
    return kTRUE;
 }
 
