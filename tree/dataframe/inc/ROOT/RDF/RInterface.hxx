@@ -882,7 +882,7 @@ public:
    ///            return an RVec of varied values, one for each variation tag, in the same order as the tags.
    /// \param[in] inputColumns the names of the columns to be passed to the callable.
    /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be `"0"`,
-   /// `"1"`, etc. 
+   /// `"1"`, etc.
    /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
    ///            colName is used if none is provided.
    ///
@@ -988,7 +988,7 @@ public:
    ///            return an RVec of varied values, one for each variation tag, in the same order as the tags.
    /// \param[in] inputColumns the names of the columns to be passed to the callable.
    /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be `"0"`,
-   /// `"1"`, etc. 
+   /// `"1"`, etc.
    /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
    ///            colName is used if none is provided.
    ///
@@ -1036,7 +1036,7 @@ public:
    /// \param[in] inputColumns the names of the columns to be passed to the callable.
    /// \param[in] inputColumns the names of the columns to be passed to the callable.
    /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be `"0"`,
-   /// `"1"`, etc. 
+   /// `"1"`, etc.
    /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
    ///            colName is used if none is provided.
    ///
@@ -1091,7 +1091,7 @@ public:
    /// \param[in] expression a string containing valid C++ code that evaluates to an RVec containing the varied
    ///            values for the specified column.
    /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be `"0"`,
-   /// `"1"`, etc. 
+   /// `"1"`, etc.
    /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
    ///            colName is used if none is provided.
    ///
@@ -1126,7 +1126,7 @@ public:
    /// \param[in] expression a string containing valid C++ code that evaluates to an RVec or RVecs containing the varied
    ///            values for the specified columns.
    /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be `"0"`,
-   /// `"1"`, etc. 
+   /// `"1"`, etc.
    /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
    ///
    /// This overload adds the possibility for the expression used to evaluate the varied values to be just-in-time
@@ -1163,7 +1163,7 @@ public:
    /// \param[in] expression a string containing valid C++ code that evaluates to an RVec containing the varied
    ///            values for the specified column.
    /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be `"0"`,
-   /// `"1"`, etc. 
+   /// `"1"`, etc.
    /// \param[in] variationName a generic name for this set of varied values, e.g. `"ptvariation"`.
    ///            colName is used if none is provided.
    ///
@@ -2362,13 +2362,13 @@ public:
    /// auto myGAE2 = myDf.GraphAsymmErrors<f, f, f, f, f, f>("xValues", "yValues", "exl", "exh", "eyl", "eyh");
    /// ~~~
    ///
-   /// `GraphAssymErrors` should also be used for the cases in which values associated only with 
-   /// one of the axes have associated errors. For example, only `ey` exist and `ex` are equal to zero. 
-   /// In such cases, user should do the following: 
+   /// `GraphAsymmErrors` should also be used for the cases in which values associated only with
+   /// one of the axes have associated errors. For example, only `ey` exist and `ex` are equal to zero.
+   /// In such cases, user should do the following:
    /// ~~~{.cpp}
    /// // Create a column of zeros in RDataFrame
-   /// auto rdf_withzeros = rdf.Define("zero", "0"); 
-   /// // or alternatively: 
+   /// auto rdf_withzeros = rdf.Define("zero", "0");
+   /// // or alternatively:
    /// auto rdf_withzeros = rdf.Define("zero", []() -> double { return 0.;});
    /// // Create the graph with y errors only
    /// auto rdf_errorsOnYOnly = rdf_withzeros.GraphAsymmErrors("xValues", "yValues", "zero", "zero", "eyl", "eyh");
