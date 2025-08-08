@@ -303,5 +303,8 @@ set(CMAKE_MACOSX_RPATH TRUE)              # use RPATH for MacOSX
 include(RoottestCTest)
 include(SearchInstalledSoftwareRoottest)
 
+ROOTTEST_COMPILE_MACRO(scripts/utils.cc
+                       FIXTURES_SETUP roottest-scripts-utils-fixture)
+
 message("-- Scanning subdirectories for tests...")
 ROOTTEST_ADD_TESTDIRS()
