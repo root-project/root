@@ -829,7 +829,7 @@ ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::~UntypedSnapshotRNTupleHelper
 
 void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
 {
-   auto model = ROOT::RNTupleModel::Create();
+   auto model = ROOT::RNTupleModel::CreateBare();
    auto nFields = fOutputFieldNames.size();
    for (decltype(nFields) i = 0; i < nFields; i++) {
       // Need to retrieve the type of every field to create as a string
@@ -841,7 +841,8 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
                                : ROOT::Internal::RDF::TypeID2TypeName(*fInputColumnTypeIDs[i]);
       model->AddField(ROOT::RFieldBase::Create(fOutputFieldNames[i], typeName).Unwrap());
    }
-   fOutputEntry = &model->GetDefaultEntry();
+   model->Freeze();
+   fOutputEntry = model->CreateBareEntry();
 
    ROOT::RNTupleWriteOptions writeOptions;
    writeOptions.SetCompression(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel);
@@ -869,7 +870,7 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Exec(unsigned int /* slo
    for (decltype(values.size()) i = 0; i < values.size(); i++) {
       fOutputEntry->BindRawPtr(fOutputFieldNames[i], values[i]);
    }
-   fWriter->Fill();
+   fWriter->Fill(*fOutputEntry);
 }
 
 void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Finalize()
