@@ -47,6 +47,7 @@ namespace RNTupleAttributes {
 
 const char *const kRangeStartName = "_rangeStart";
 const char *const kRangeLenName = "_rangeLen";
+const char *const kUserModelName = "_userModel";
 
 } // namespace RNTupleAttributes
 
