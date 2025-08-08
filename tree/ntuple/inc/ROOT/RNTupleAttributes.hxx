@@ -17,11 +17,11 @@
 #define ROOT7_RNTuple_Attributes
 
 #include <memory>
-#include <string>
 #include <string_view>
 
 #include <ROOT/REntry.hxx>
 #include <ROOT/RNTupleFillContext.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 
 namespace ROOT {
 
@@ -106,6 +106,7 @@ class RNTupleAttrPendingRange final {
 
    ROOT::NTupleSize_t fStart = 0;
    ROOT::DescriptorId_t fModelId = kInvalidDescriptorId;
+   bool fWasCommitted = false;
 
    explicit RNTupleAttrPendingRange(ROOT::NTupleSize_t start, ROOT::DescriptorId_t modelId)
       : fStart(start), fModelId(modelId)
@@ -116,7 +117,6 @@ public:
    RNTupleAttrPendingRange(const RNTupleAttrPendingRange &) = delete;
    RNTupleAttrPendingRange &operator=(const RNTupleAttrPendingRange &) = delete;
 
-   // NOTE: explicitly implemented to make sure that 'other' gets invalidated upon move.
    RNTupleAttrPendingRange(RNTupleAttrPendingRange &&other) { *this = std::move(other); }
 
    // NOTE: explicitly implemented to make sure that 'other' gets invalidated upon move.
@@ -124,7 +124,16 @@ public:
    {
       std::swap(fStart, other.fStart);
       std::swap(fModelId, other.fModelId);
+      other.fWasCommitted = true;
       return *this;
+   }
+
+   ~RNTupleAttrPendingRange()
+   {
+      if (R__unlikely(!fWasCommitted))
+         R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "A pending attribute range was not committed! If CommitRange() "
+                                                        "is not explicitly called before closing the main "
+                                                        "Writer, the attributes will not be saved to storage!";
    }
 
    ROOT::NTupleSize_t Start() const
