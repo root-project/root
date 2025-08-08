@@ -8,19 +8,15 @@ ROOTTEST_GENERATE_DICTIONARY(
 
 ROOTTEST_GENERATE_EXECUTABLE(
   write_event
+  write_event.cxx event_v2_dict.cxx
   LIBRARIES Core RIO ROOTNTuple
   FIXTURES_REQUIRED generated_event_v2_dictionary
-  FIXTURES_SETUP write_event_excutable)
-
-target_sources(
-  write_event
-  PRIVATE write_event.cxx event_v2_dict.cxx
-)
+  FIXTURES_SETUP streamerfield_write_event_excutable)
 
 ROOTTEST_ADD_TEST(write_event
                   EXEC ./write_event
-                  FIXTURES_REQUIRED write_event_excutable
-                  FIXTURES_SETUP written_event)
+                  FIXTURES_REQUIRED streamerfield_write_event_excutable
+                  FIXTURES_SETUP streamerfield_written_event)
 
 ROOTTEST_GENERATE_DICTIONARY(
   event_v3_dict
@@ -32,15 +28,11 @@ ROOTTEST_GENERATE_DICTIONARY(
 
 ROOTTEST_GENERATE_EXECUTABLE(
   read_event
+  read_event.cxx event_v3_dict.cxx
   LIBRARIES Core RIO ROOTNTuple
   FIXTURES_REQUIRED generated_event_v3_dictionary
-  FIXTURES_SETUP read_event_executable)
-
-target_sources(
-  read_event
-  PRIVATE read_event.cxx event_v3_dict.cxx
-)
+  FIXTURES_SETUP streamerfield_read_event_executable)
 
 ROOTTEST_ADD_TEST(read_event
                   EXEC ./read_event
-                  FIXTURES_REQUIRED read_event_executable written_event)
+                  FIXTURES_REQUIRED streamerfield_read_event_executable streamerfield_written_event)
