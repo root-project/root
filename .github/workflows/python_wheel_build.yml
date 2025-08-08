@@ -31,6 +31,7 @@ jobs:
           build-tag: ${{ matrix.target }}
 
   create-and-upload-wheel-registry:
+      if: github.event_name != 'pull_request' # The secrets are not available in PR
       needs: build-wheels
       runs-on: ubuntu-latest
       steps:
