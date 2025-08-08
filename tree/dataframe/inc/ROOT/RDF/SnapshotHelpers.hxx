@@ -67,15 +67,13 @@ class R__CLING_PTRCHECK(off) UntypedSnapshotRNTupleHelper final : public RAction
 
    ROOT::REntry *fOutputEntry;
 
-   std::vector<bool> fIsDefine;
-
    std::vector<const std::type_info *> fInputColumnTypeIDs; // Types for the input columns
 
 public:
    UntypedSnapshotRNTupleHelper(std::string_view filename, std::string_view dirname, std::string_view ntuplename,
                                 const ColumnNames_t &vfnames, const ColumnNames_t &fnames,
                                 const RSnapshotOptions &options, ROOT::Detail::RDF::RLoopManager *inputLM,
-                                ROOT::Detail::RDF::RLoopManager *outputLM, std::vector<bool> &&isDefine,
+                                ROOT::Detail::RDF::RLoopManager *outputLM,
                                 const std::vector<const std::type_info *> &colTypeIDs);
 
    UntypedSnapshotRNTupleHelper(const UntypedSnapshotRNTupleHelper &) = delete;
