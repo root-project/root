@@ -1224,8 +1224,10 @@ ROOT::Experimental::Internal::RNTupleMerger::MergeSourceAttributes(RPageSource &
                rangeStarts[i] += nDstEntriesAtPrevSource;
          }
       };
-      MergeSourceClusters(*attrSource, colInfoGroup.fCommonColumns, colInfoGroup.fExtraDstColumns, attrMergeData,
-                          forcePageResealing, beforePageResealing);
+      auto res = MergeSourceClusters(*attrSource, colInfoGroup.fCommonColumns, colInfoGroup.fExtraDstColumns,
+                                     attrMergeData, forcePageResealing, beforePageResealing);
+      if (!res)
+         return R__FORWARD_ERROR(res);
    }
    return RResult<void>::Success();
 }
