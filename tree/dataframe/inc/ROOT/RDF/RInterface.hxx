@@ -1251,6 +1251,27 @@ public:
    /// \param[in] options RSnapshotOptions struct with extra options to pass to the output TFile and TTree/RNTuple.
    /// \return a `RDataFrame` that wraps the snapshotted dataset.
    ///
+   template <typename... ColumnTypes>
+   R__DEPRECATED(
+      6, 40, "Snapshot does not need template arguments anymore, you can safely remove them from this function call.")
+   RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
+                                                 const ColumnNames_t &columnList,
+                                                 const RSnapshotOptions &options = RSnapshotOptions())
+   {
+      return Snapshot(treename, filename, columnList, options);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Save selected columns to disk, in a new TTree or RNTuple `treename` in file `filename`.
+   /// \param[in] treename The name of the output TTree or RNTuple.
+   /// \param[in] filename The name of the output TFile.
+   /// \param[in] columnList The list of names of the columns/branches/fields to be written.
+   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree/RNTuple.
+   /// \return a `RDataFrame` that wraps the snapshotted dataset.
+   ///
+   /// This function returns a `RDataFrame` built with the output TTree or RNTuple as a source.
+   /// The types of the columns are automatically inferred and do not need to be specified.
+   ///
    /// Support for writing of nested branches/fields is limited (although RDataFrame is able to read them) and dot ('.')
    /// characters in input column names will be replaced by underscores ('_') in the branches produced by Snapshot.
    /// When writing a variable size array through Snapshot, it is required that the column indicating its size is also
@@ -1306,28 +1327,6 @@ public:
    /// opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
    /// df.Snapshot("outputNTuple", "outputFile.root", {"x"}, opts);
    /// ~~~
-   template <typename... ColumnTypes>
-   R__DEPRECATED(
-      6, 40, "Snapshot does not need template arguments anymore, you can safely remove them from this function call.")
-   RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
-                                                 const ColumnNames_t &columnList,
-                                                 const RSnapshotOptions &options = RSnapshotOptions())
-   {
-      return Snapshot(treename, filename, columnList, options);
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns to disk, in a new TTree or RNTuple `treename` in file `filename`.
-   /// \param[in] treename The name of the output TTree or RNTuple.
-   /// \param[in] filename The name of the output TFile.
-   /// \param[in] columnList The list of names of the columns/branches/fields to be written.
-   /// \param[in] options RSnapshotOptions struct with extra options to pass to TFile and TTree/RNTuple.
-   /// \return a `RDataFrame` that wraps the snapshotted dataset.
-   ///
-   /// This function returns a `RDataFrame` built with the output TTree or RNTuple as a source.
-   /// The types of the columns are automatically inferred and do not need to be specified.
-   ///
-   /// See above for a more complete description and example usages.
    RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
                                                  const ColumnNames_t &columnList,
                                                  const RSnapshotOptions &options = RSnapshotOptions())
@@ -1464,7 +1463,7 @@ public:
    /// This function returns a `RDataFrame` built with the output TTree or RNTuple as a source.
    /// The types of the columns are automatically inferred and do not need to be specified.
    ///
-   /// See above for a more complete description and example usages.
+   /// See Snapshot(std::string_view, std::string_view, const ColumnNames_t&, const RSnapshotOptions &) for a more complete description and example usages.
    RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
                                                  std::string_view columnNameRegexp = "",
                                                  const RSnapshotOptions &options = RSnapshotOptions())
@@ -1507,7 +1506,7 @@ public:
    /// This function returns a `RDataFrame` built with the output TTree or RNTuple as a source.
    /// The types of the columns are automatically inferred and do not need to be specified.
    ///
-   /// See above for a more complete description and example usages.
+   /// See Snapshot(std::string_view, std::string_view, const ColumnNames_t&, const RSnapshotOptions &) for a more complete description and example usages.
    RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
                                                  std::initializer_list<std::string> columnList,
                                                  const RSnapshotOptions &options = RSnapshotOptions())
