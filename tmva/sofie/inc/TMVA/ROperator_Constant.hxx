@@ -122,9 +122,7 @@ public:
          model.AddConstantTensor(fNY, fShape, fValues);
          if (model.Verbose()) {
             std::cout << "adding constant tensor " << fNY << " with shape " << ConvertShapeToString(fShape)
-            << " and values [";
-            for (auto v : fValues) std::cout << " " << v;
-            std::cout << "]" << std::endl;
+            << " and values " << ConvertValuesToString(fValues) << std::endl;
          }
       } else {
          model.AddIntermediateTensor(fNY, ConvertStringToType(TensorType<T>::Name()), fDimOutputShape);

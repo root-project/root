@@ -321,7 +321,14 @@
 #include "Split_1_FromONNX.hxx"
 #include "Split_2_FromONNX.hxx"
 
+#include "GatherND_1_FromONNX.hxx"
+#include "GatherND_2_FromONNX.hxx"
+#include "GatherND_3_FromONNX.hxx"
+
 #include "ScatterElements_FromONNX.hxx"
+
+#include "NonZero_FromONNX.hxx"
+#include "NonZero_Constant_FromONNX.hxx"
 
 #include "gtest/gtest.h"
 
@@ -3214,3 +3221,107 @@ TEST(ONNX, ScatterElements)
       EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
    }
 }
+
+TEST(ONNX, GatherND_1)
+{
+   // test  gatherND elements
+   std::vector<float> input(18, 0.);    // input tensor shape is (2, 3, 3)
+   std::iota(input.begin(), input.end(), 1.);
+   // input : {1,2,3},{4,5,6},{7,8,9}  {10,11,12}{13,14,15}{16,17,18}
+   std::vector<int64_t> indices = { 1, 0, 2,   0, 2, 1};  // get x(1,0,2) and x(0,2,1)
+   std::vector<float> correct_output = {12, 8};
+
+   TMVA_SOFIE_GatherND_1::Session s("GatherND_1_FromONNX.dat");
+
+   auto output = s.infer(input.data(), indices.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_EQ(output[i] , correct_output[i]);
+   }
+}
+
+TEST(ONNX, GatherND_2)
+{
+   // test GatherND using slices
+   std::vector<float> input(18, 0.);    // input tensor shape is (2, 3, 3)
+   // input : {1,2,3},{4,5,6},{7,8,9}......
+   std::iota(input.begin(), input.end(), 1.);  // { 1,...,18}
+   std::vector<int64_t> indices = { 1, 1, 0, 2}; // get x(1,1,:) and x(0,2:)
+   std::vector<float> correct_output = {13,14,15, 7,8,9};
+
+   TMVA_SOFIE_GatherND_2::Session s("GatherND_2_FromONNX.dat");
+
+   auto output = s.infer(input.data(), indices.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_EQ(output[i] , correct_output[i]);
+   }
+}
+
+TEST(ONNX, GatherND_3)
+{
+   // test GatherND elements using batch size as first dim (bs=2)
+   std::vector<float> input(24, 0.);    // input tensor shape is (2, 3, 2, 2)
+   std::iota(input.begin(), input.end(), 1.);  // { 1,...,24}
+   std::vector<int64_t> indices = { 2, 0, 0, 1}; // shape is (2,2,1)
+   // indices are { [[2],[0]] , [[0],[1]]}  :
+   // data[0,2,:] data[0,0:] ,  data[1,0:] data[1,1,:]
+   std::vector<float> correct_output = {9,10,11,12, 1,2,3,4, 13,14,15,16, 17,18,19,20};
+
+   TMVA_SOFIE_GatherND_3::Session s("GatherND_3_FromONNX.dat");
+
+   auto output = s.infer(input.data(), indices.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_EQ(output[i] , correct_output[i]);
+   }
+}
+
+TEST(ONNX, NonZero)
+{
+   // test GatherND elements using batch size as first dim (bs=2)
+   std::vector<int8_t> input = {0,1,0, 1,1,0, 0,0,1, 0,1,1 }; // shape is (2x2x3)
+   // output is tensor shape { 3, number of non zeros}
+   std::vector<int32_t> correct_output = { 0,0,0,1,1,1 ,   0,1,1,0,1,1 ,    1,0,1,2,1,2 };
+
+   TMVA_SOFIE_NonZero::Session s("NonZero_FromONNX.dat");
+
+   auto output = s.infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_EQ(output[i] , correct_output[i]);
+   }
+}
+
+TEST(ONNX, NonZero_Constant)
+{
+   // test GatherND elements using batch size as first dim (bs=2)
+   //std::vector<int8_t> input = {0,1,0, 1,1,0, 0,0,1, 0,1,1 }; // shape is (2x2x3)
+   // output is tensor shape { 3, number of non zeros}
+   std::vector<int32_t> correct_output = { 0,0,0,1,1,1 ,   0,1,1,0,1,1 ,    1,0,1,2,1,2 };
+
+   TMVA_SOFIE_NonZero_Constant::Session s("NonZero_Constant_FromONNX.dat");
+
+   auto output = s.infer();
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_EQ(output[i] , correct_output[i]);
+   }
+}
+
+

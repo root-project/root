@@ -11,7 +11,7 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
-enum EBasicBinaryOperator { Add, Sub, Mul, Div, Pow };
+enum EBasicBinaryOperator { Add, Sub, Mul, Div, Pow, Mod, FMod };
 
 template <typename T, EBasicBinaryOperator Op1>
 struct BinaryOperatorTrait {};
@@ -48,6 +48,18 @@ template <typename T>
 struct BinaryOperatorTrait<T, Pow> {
    static const std::string Name() { return "Pow"; }
    static std::string Op(const std::string & t1, const std::string t2) { return "std::pow(" + t1 + "," + t2 + ")"; }
+   static T Func (T t1, T t2) { return std::pow(t1,t2);}
+};
+template <typename T>
+struct BinaryOperatorTrait<T, Mod> {
+   static const std::string Name() { return "Mod"; }
+   static std::string Op(const std::string & t1, const std::string t2) { return "(" + t1 + " % " + t2 + ")"; }
+   static T Func (T t1, T t2) { return std::pow(t1,t2);}
+};
+template <typename T>
+struct BinaryOperatorTrait<T, FMod> {
+   static const std::string Name() { return "FMod"; }
+   static std::string Op(const std::string & t1, const std::string t2) { return "std::fmod(" + t1 + "," + t2 + ")"; }
    static T Func (T t1, T t2) { return std::pow(t1,t2);}
 };
 

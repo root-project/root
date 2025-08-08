@@ -109,12 +109,19 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
             break;
          }
          case ETensorType::BOOL: {
-            std::vector<bool> values(length);
-            auto raw_data_ptr = reinterpret_cast<bool *>(const_cast<char *>(t.raw_data().c_str()));
-            // cannot use values.data() for vector of bools
-            std::copy(raw_data_ptr, raw_data_ptr + length, values.begin());
-            //std::memcpy(values.data(), raw_data_ptr, length * sizeof(float));
-            op.reset(new ROperator_Constant<bool>("bool",values, shape, input_name, output_name));
+            //values are int32 in ONNX
+            std::vector<int8_t> values(length);
+            if (t.int32_data_size() == int(length)) {
+               for (size_t i = 0; i < length; i++) {
+                  auto val = t.int32_data(i);
+                  if (val < 0 || val > 1)
+                     throw std::runtime_error("TMVA::SOFIE ONNX Parser Constant has invalid boolean value " + std::to_string(val));
+                  values[i] = static_cast<int8_t>(val);
+               }
+            } else
+               throw std::runtime_error("TMVA::SOFIE ONNX Parser COnstant : invalid tensor data values");
+
+            op.reset(new ROperator_Constant<int8_t>("bool",values, shape, input_name, output_name));
             break;
          }
          default:
