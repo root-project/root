@@ -89,7 +89,7 @@ ROOT::Experimental::RNTupleAttrSetWriter::Create(std::string_view name, std::uni
    for (const auto *field : userModel->GetConstFieldZero().GetConstSubfields()) {
       fields.push_back(field->Clone(field->GetFieldName()));
    }
-   auto userRootField = std::make_unique<ROOT::RRecordField>(name, std::move(fields));
+   auto userRootField = std::make_unique<ROOT::RRecordField>(kUserModelName, std::move(fields));
    metaModel->AddField(std::move(userRootField));
 
    metaModel->Freeze();
