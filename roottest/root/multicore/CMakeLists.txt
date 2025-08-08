@@ -174,7 +174,8 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(tclass_methods
 
 ROOTTEST_ADD_TEST(tclass_methods
                   EXEC ${CMAKE_CURRENT_BINARY_DIR}/tclass_methods_test
-                  FIXTURES_REQUIRED root-multicore-tclass_methods_test-fixture root-multicore-tclass_methods-fixture)
+                  FIXTURES_REQUIRED root-multicore-tclass_methods_test-fixture root-multicore-tclass_methods-fixture
+                  FIXTURES_SETUP root-multicore-tclass_methodstest-fixture)
 
 ROOTTEST_GENERATE_EXECUTABLE(ttree_write
                              ttree_write.cpp
@@ -204,13 +205,17 @@ ROOTTEST_GENERATE_EXECUTABLE(th1f_fill
 ROOTTEST_ADD_TEST(th1f_fill
                   EXEC ${CMAKE_CURRENT_BINARY_DIR}/th1f_fill
                   COPY_TO_BUILDDIR file1.root file2.root file3.root
+                  OUTREF execth1f_fill.ref
                   FIXTURES_REQUIRED root-multicore-th1f_fill-fixture)
 
-# ROOTTEST_GENERATE_EXECUTABLE(tformula tformula.cpp LIBRARIES Core Hist Thread)
-#
+# ROOTTEST_GENERATE_EXECUTABLE(tformula
+#                              tformula.cpp
+#                              LIBRARIES Core Hist Thread
+#                              FIXTURES_SETUP root-multicore-tformula-fixture)
+
 # ROOTTEST_ADD_TEST(tformula
-#                   EXEC ./tformula
-#                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
+#                   EXEC ${CMAKE_CURRENT_BINARY_DIR}/tformula
+#                   FIXTURES_REQUIRED root-multicore-tformula-fixture)
 
 ROOTTEST_GENERATE_EXECUTABLE(tprofile
                              tprofile.cpp
@@ -219,6 +224,7 @@ ROOTTEST_GENERATE_EXECUTABLE(tprofile
 
 ROOTTEST_ADD_TEST(tprofile
                   EXEC ${CMAKE_CURRENT_BINARY_DIR}/tprofile
+                  OUTREF exectprofile.ref
                   FIXTURES_REQUIRED root-multicore-tprofile-fixture)
 
 # Re-Enabled Disable test: see ROOT-7158
@@ -231,7 +237,8 @@ if(NOT MSVC OR win_broken_tests)
   ROOTTEST_ADD_TEST(tsenums
                     MACRO  exectsenums.C
                     OUTREF exectsenums.ref
-                    FIXTURES_REQUIRED root-multicore-tsenums-fixture)
+                    FIXTURES_REQUIRED root-multicore-tsenums-fixture
+                    FIXTURE_SETUP root-multicore-tsenumstest-fixture)
 endif()
 
 ROOTTEST_ADD_TEST(semaphore
@@ -254,7 +261,8 @@ if(NOT MSVC OR win_broken_tests)
                     COPY_TO_BUILDDIR commands1.txt commands2.txt
                     FAILREGEX "Error in" "cannot load any more object with static TLS"
                     FIXTURES_REQUIRED root-multicore-fork-fixture
-                    DEPENDS roottest-root-multicore-tsenums roottest-root-multicore-tclass_methods)
+                                      root-multicore-tsenumstest-fixture
+                                      root-multicore-tclass_methodstest-fixture)
 endif()
 
 if(imt)
@@ -271,13 +279,16 @@ if(imt)
 
 ### Keep this test for debugging purposes: even if ttree_read_imt makes it redundant, it can be useful to
 ### debug issues that are hard to reproduce locally but can eventually be observed on the test machines.
-#   ROOTTEST_GENERATE_EXECUTABLE(ttree_read_imt_allpar ttree_read_imt_allpar.cpp LIBRARIES Core Thread Tree)
+#   ROOTTEST_GENERATE_EXECUTABLE(ttree_read_imt_allpar
+#                                ttree_read_imt_allpar.cpp
+#                                LIBRARIES Core Thread Tree
+#                                FIXTURES_SETUP root-multicore-ttree_read_imt_allpar-fixture)
 
 #   ROOTTEST_ADD_TEST(ttree_read_imt_allpar
 #                     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/ttree_read_imt_allpar.sh
 #                     FAILREGEX "ERROR"
 #                     OUTREF ttree_read_imt_allpar.ref
-#                     DEPENDS ${GENERATE_EXECUTABLE_TEST})
+#                     FIXTURES_REQUIRED root-multicore-ttree_read_imt_allpar-fixture)
 
    ROOTTEST_GENERATE_EXECUTABLE(ttree_write_imt
                                 ttree_write_imt.cpp
