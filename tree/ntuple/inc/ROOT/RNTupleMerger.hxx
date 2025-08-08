@@ -1,6 +1,7 @@
 /// \file ROOT/RNTupleMerger.hxx
 /// \ingroup NTuple
-/// \author Jakob Blomer <jblomer@cern.ch>, Max Orok <maxwellorok@gmail.com>, Alaettin Serhan Mete <amete@anl.gov>
+/// \author Jakob Blomer <jblomer@cern.ch>, Max Orok <maxwellorok@gmail.com>, Alaettin Serhan Mete <amete@anl.gov>,
+/// Giacomo Parolini <giacomo.parolini@cern.ch>
 /// \date 2020-07-08
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
@@ -20,6 +21,7 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RPageStorage.hxx>
+#include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/TTaskGroup.hxx>
 #include <Compression.h>
 
@@ -38,14 +40,15 @@ class RClusterPool;
 namespace Experimental::Internal {
 
 enum class ENTupleMergingMode {
-   /// The merger will discard all columns that aren't present in the prototype model (i.e. the model of the first
-   /// source); also all subsequent RNTuples must contain at least all the columns that are present in the prototype
-   /// model
+   /// The merger will discard all columns that aren't present in the prototype
+   /// model (i.e. the model of the first source); also all subsequent RNTuples must contain at least all the columns
+   /// that are present in the prototype model.
    kFilter,
-   /// The merger will refuse to merge any 2 RNTuples whose schema doesn't match exactly
+   /// The merger will refuse to merge any 2 RNTuples whose schema doesn't match exactly.
    kStrict,
-   /// The merger will update the output model to include all columns from all sources. Entries corresponding to columns
-   /// that are not present in a source will be set to the default value of the type.
+   /// The merger will update the output model to include all columns from all
+   /// sources. Entries corresponding to columns that are not present in a source will be set to the default value of
+   /// the type.
    kUnion
 };
 
@@ -60,6 +63,14 @@ enum class ENTupleMergeErrBehavior {
    kAbort,
    /// Upon errors, the merger will skip the current source and continue
    kSkip
+};
+
+enum class ENTupleMergeAttrBehavior {
+   /// The merger will merge the Attributes linked to all source RNTuples into the destination
+   kKeep,
+   /// The merger will discard all sources' Attributes (in case of incremental merging, the Attributes of the
+   /// original RNTuple are preserved).
+   kDiscard,
 };
 
 struct RColumnMergeInfo;
@@ -82,10 +93,17 @@ struct RNTupleMergeOptions {
    std::optional<std::uint32_t> fCompressionSettings;
    /// Determines how the merging treats sources with different models (\see ENTupleMergingMode).
    ENTupleMergingMode fMergingMode = ENTupleMergingMode::kFilter;
-   /// Determines how the Merge function behaves upon merging errors
+   /// Determines how the Merge function behaves upon merging errors on the main data
    ENTupleMergeErrBehavior fErrBehavior = ENTupleMergeErrBehavior::kAbort;
+   /// Determines what the Merger should do with the RNTuple Attributes of the sources.
+   ENTupleMergeAttrBehavior fAttrBehavior = ENTupleMergeAttrBehavior::kKeep;
    /// If true, the merger will emit further diagnostics and information.
    bool fExtraVerbose = false;
+};
+
+struct RAttributeSetMergeData {
+   std::unique_ptr<ROOT::Internal::RPageSinkFile> fSink;
+   std::unique_ptr<ROOT::RNTupleModel> fModel;
 };
 
 // clang-format off
@@ -99,23 +117,34 @@ struct RNTupleMergeOptions {
 class RNTupleMerger final {
    friend class ROOT::RNTuple;
 
+   using ForcePageResealingFn_t = std::function<bool(const RColumnMergeInfo &)>;
+   using BeforePageResealingFn_t = std::function<void(const RColumnMergeInfo &, ROOT::Internal::RPage &)>;
+
    std::unique_ptr<ROOT::Internal::RPagePersistentSink> fDestination;
+   // Mapping { attrSetName => data needed to merge it }
+   std::unordered_map<std::string, RAttributeSetMergeData> fAttributesMergeData;
    std::unique_ptr<ROOT::Internal::RPageAllocator> fPageAlloc;
    std::optional<TTaskGroup> fTaskGroup;
    std::unique_ptr<ROOT::RNTupleModel> fModel;
 
    [[nodiscard]]
-   ROOT::RResult<void> MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
-                                          const ROOT::RClusterDescriptor &clusterDesc,
-                                          std::span<const RColumnMergeInfo> commonColumns,
-                                          const ROOT::Internal::RCluster::ColumnSet_t &commonColumnSet,
-                                          std::size_t nCommonColumnsInCluster, RSealedPageMergeData &sealedPageData,
-                                          const RNTupleMergeData &mergeData, ROOT::Internal::RPageAllocator &pageAlloc);
+   ROOT::RResult<void>
+   MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool, const ROOT::RClusterDescriptor &clusterDesc,
+                      std::span<const RColumnMergeInfo> commonColumns,
+                      const ROOT::Internal::RCluster::ColumnSet_t &commonColumnSet, std::size_t nCommonColumnsInCluster,
+                      RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData,
+                      ROOT::Internal::RPageAllocator &pageAlloc, ForcePageResealingFn_t forcePageResealingFn,
+                      BeforePageResealingFn_t beforePageResealingFn);
 
    [[nodiscard]]
-   ROOT::RResult<void>
-   MergeSourceClusters(ROOT::Internal::RPageSource &source, std::span<const RColumnMergeInfo> commonColumns,
-                       std::span<const RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData);
+   ROOT::RResult<void> MergeSourceClusters(
+      ROOT::Internal::RPageSource &source, std::span<const RColumnMergeInfo> commonColumns,
+      std::span<const RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData,
+      ForcePageResealingFn_t forcePageResealingFn = [](auto &&) { return false; },
+      BeforePageResealingFn_t beforePageResealingFn = [](auto &&, auto &&) {});
+
+   ROOT::RResult<void> MergeSourceAttributes(ROOT::Internal::RPageSource &source, RNTupleMergeData &mergeData,
+                                             ROOT::NTupleSize_t nDstEntriesAtPrevSource);
 
    /// Creates a RNTupleMerger with the given destination.
    /// The model must be given if and only if `destination` has been initialized with that model
