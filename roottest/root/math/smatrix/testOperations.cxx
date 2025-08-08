@@ -82,11 +82,11 @@ int test_smatrix_op() {
 
 
   double t_veq, t_meq, t_vad, t_mad, t_dot, t_mv, t_gmv, t_mm, t_prd, t_inv, t_vsc, t_msc, t_ama, t_tra = 0;
-  double totTime1, totTime2;
+  double totTime1 = 0, totTime2 = 0;
 
 
 
-  double r1,r2;
+  double r1 = 0, r2 = 0;
   int npass = NITER;
   TRandom3 r(111);
   for (int k = 0; k < npass; k++) {
@@ -203,11 +203,11 @@ int test_smatrix_sym_op() {
 
 
   double t_meq, t_mad, t_mv, t_gmv, t_mm, t_prd, t_inv, t_msc, t_ama = 0;
-  double totTime1, totTime2;
+  double totTime1 = 0, totTime2 = 0;
 
 
 
-  double r1;
+  double r1 = 0;
   int npass = NITER;
   TRandom3 r(111);
   for (int k = 0; k < npass; k++) {
@@ -308,9 +308,9 @@ int test_tmatrix_op() {
   std::cout << "************************************************\n";
 
   double t_veq, t_meq, t_vad, t_mad, t_dot, t_mv, t_gmv, t_mm, t_prd, t_inv, t_vsc, t_msc, t_ama, t_tra = 0;
-  double totTime1, totTime2;
+  double totTime1 = 0, totTime2 = 0;
 
-  double r1,r2;
+  double r1 = 0, r2 = 0;
   int npass = NITER;
   TRandom3 r(111);
   gMatrixCheck = 0;
@@ -420,11 +420,11 @@ int test_tmatrix_sym_op() {
 
 
   double t_meq, t_mad, t_mv, t_gmv, t_mm, t_prd, t_inv, t_msc, t_ama = 0;
-  double totTime1, totTime2;
+  double totTime1 = 0, totTime2 = 0;
 
 
 
-  double r1;
+  double r1 = 0;
   int npass = NITER;
   TRandom3 r(111);
   for (int k = 0; k < npass; k++) {
