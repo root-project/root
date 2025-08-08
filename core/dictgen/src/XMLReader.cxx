@@ -18,6 +18,7 @@
 
 
 #include "XMLReader.h"
+#include "RConversionRuleParser.h"
 #include "SelectionRules.h"
 #include "TClingUtils.h"
 
