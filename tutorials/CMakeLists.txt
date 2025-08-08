@@ -812,12 +812,6 @@ if(ROOT_pyroot_FOUND)
   # Disable tutorial showing connection to the HTCondor service at CERN
   list(APPEND pyveto analysis/dataframe/distrdf004_dask_lxbatch.py)
 
-  ROOT_FIND_PYTHON_MODULE(xgboost QUIET)
-  if(NOT ROOT_XGBOOST_FOUND OR NOT dataframe)
-    file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/tmva10*.py roofit/roofit/rf618_mixture_models.py)
-    list(APPEND pyveto ${tmva_veto_py})
-  endif()
-
   if(NOT tmva-pymva)
     file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/keras/*.py)
     list(APPEND pyveto ${tmva_veto_py})
@@ -923,10 +917,15 @@ if(ROOT_pyroot_FOUND)
       machine_learning/pytorch/*.py
       machine_learning/RBatchGenerator_PyTorch.py
   )
-  file(GLOB requires_xgboost RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/tmva10*.py)
+  file(GLOB requires_xgboost RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+      machine_learning/tmva101_Training.py
+      roofit/roofit/rf618_mixture_models.py
+  )
   file(GLOB requires_sklearn RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       machine_learning/TMVA_SOFIE_Models.py
+      machine_learning/tmva101_Training.py # uses the xgboost sklearn plugin
       roofit/roofit/rf617_simulation_based_inference_multidimensional.py
+      roofit/roofit/rf618_mixture_models.py # uses the xgboost sklearn plugin
   )
   file(GLOB requires_tensorflow RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       machine_learning/RBatchGenerator_TensorFlow.py
