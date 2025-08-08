@@ -1,3 +1,0 @@
-{ 
-   gSystem->SetBuildDir(".",kTRUE);
-}
