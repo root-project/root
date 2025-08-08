@@ -120,6 +120,8 @@ ROOT::Experimental::RNTupleAttrPendingRange ROOT::Experimental::RNTupleAttrSetWr
 void ROOT::Experimental::RNTupleAttrSetWriter::CommitRange(ROOT::Experimental::RNTupleAttrPendingRange pendingRange,
                                                            REntry &entry)
 {
+   pendingRange.fWasCommitted = true;
+
    if (pendingRange.GetModelId() != fFillContext.GetModel().GetModelId())
       throw ROOT::RException(R__FAIL("Range passed to CommitRange() of AttributeSet '" + GetDescriptor().GetName() +
                                      "' was not created by it or was already committed."));

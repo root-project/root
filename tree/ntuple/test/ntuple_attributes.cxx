@@ -396,12 +396,16 @@ TEST(RNTupleAttributes, NoImplicitCommitRange)
       auto pMyAttr = attrModel->MakeField<std::string>("string");
       auto attrSet = writer->CreateAttributeSet(attrModel->Clone(), "MyAttrSet");
 
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kWarning, "NTuple", "range was not committed", false);
+
       [[maybe_unused]] auto attrRange = attrSet->BeginRange();
       *pMyAttr = "Run 1";
       for (int i = 0; i < 10; ++i) {
          *pInt = i;
          writer->Fill();
       }
+
       // Not calling CommitRange, so the attributes are not written.
    }
 
@@ -669,6 +673,10 @@ TEST(RNTupleAttributes, AccessAttrSetWriterAfterClosingMainReader)
       auto attrModel = RNTupleModel::Create();
       auto pMyAttr = attrModel->MakeField<std::string>("myAttr");
       auto attrSet = writer->CreateAttributeSet(std::move(attrModel), "MyAttrSet");
+
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kWarning, "NTuple", "range was not committed", false);
+
       auto attrEntry = attrSet->BeginRange();
 
       *pMyAttr = "This is an attribute";
