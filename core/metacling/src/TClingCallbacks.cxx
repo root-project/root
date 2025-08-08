@@ -11,6 +11,7 @@
 
 #include "TClingCallbacks.h"
 
+#include <DllImport.h> // for R__EXTERN
 #include <ROOT/FoundationUtils.hxx>
 
 #include "cling/Interpreter/DynamicLibraryManager.h"
