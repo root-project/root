@@ -2784,7 +2784,7 @@ macro(ROOTTEST_SETUP_MACROTEST)
   set(root_buildcmd ${ROOT_root_CMD} ${RootExeDefines} -q -l -b)
 
   # Compile macro, then add to CTest.
-  if(ARG_MACRO MATCHES "[.]C\\+" OR ARG_MACRO MATCHES "[.]cxx\\+")
+  if(ARG_MACRO MATCHES "[.]C\\+" OR ARG_MACRO MATCHES "[.]cxx\\+" OR ARG_MACRO MATCHES "[.]cpp\\+" OR ARG_MACRO MATCHES "[.]cc\\+")
     string(REPLACE "+" "" compile_name "${ARG_MACRO}")
     get_filename_component(realfp ${compile_name} REALPATH)
 
@@ -2795,7 +2795,7 @@ macro(ROOTTEST_SETUP_MACROTEST)
     endif()
 
   # Add interpreted macro to CTest.
-  elseif(ARG_MACRO MATCHES "[.]C" OR ARG_MACRO MATCHES "[.]cxx")
+  elseif(ARG_MACRO MATCHES "[.]C" OR ARG_MACRO MATCHES "[.]cxx" OR ARG_MACRO MATCHES "[.]cpp" OR ARG_MACRO MATCHES "[.]cc")
     get_filename_component(realfp ${ARG_MACRO} REALPATH)
     if(DEFINED ARG_MACROARG)
       set(realfp "${realfp}(${ARG_MACROARG})")
@@ -2883,7 +2883,7 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 #
 #-------------------------------------------------------------------------------
 function(ROOTTEST_ADD_TEST testname)
-  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;RUN_SERIAL"
+  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;RUN_SERIAL;STOREOUT"
                             "OUTREF;ERRREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR;INPUT;ENABLE_IF;DISABLE_IF;TIMEOUT;RESOURCE_LOCK"
                             "TESTOWNER;COPY_TO_BUILDDIR;MACRO;ROOTEXE_OPTS;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS;ENVIRONMENT;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED;PROPERTIES;PYTHON_DEPS"
                             ${ARGN})
@@ -2938,6 +2938,10 @@ function(ROOTTEST_ADD_TEST testname)
       set(checkstdout CHECKOUT)
       set(checkstderr CHECKERR)
     endif()
+  endif()
+  if(ARG_STOREOUT)
+    set(checkstdout CHECKOUT)
+    set(checkstderr CHECKERR)
   endif()
 
   # Reference output given?
