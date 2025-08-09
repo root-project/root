@@ -29,6 +29,7 @@
 #include "TStyle.h"
 
 #include <bitset>
+#include <cmath>
 #include <memory>
 #include <utility>
 

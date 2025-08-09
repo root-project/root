@@ -13,7 +13,9 @@
 #include "gtest/gtest.h"
 #include "ROOT/TestSupport.hxx"
 
+#include <algorithm>
 #include <iostream>
+
 // Test regression for https://github.com/root-project/root/issues/16804
 struct RegressionGH16804 : public ::testing::Test {
 

@@ -1906,12 +1906,12 @@ void TH1Editor::DoBinLabel()
    else nx = fHist->GetXaxis()->GetNbins();
    if (nx < 2) return;
    Int_t *div = Dividers(nx);
-   Int_t diff = TMath::Abs(num - div[1]);
+   Int_t diff = std::abs(num - div[1]);
    Int_t c = 1;
    for (Int_t i = 2; i <= div[0]; i++) {
-      if ((TMath::Abs(num - div[i])) < diff) {
+      if ((std::abs(num - div[i])) < diff) {
          c = i;
-         diff = TMath::Abs(num - div[i]);
+         diff = std::abs(num - div[i]);
       }
    }
    fBinNumberEntry->SetNumber(div[c]);

@@ -1189,8 +1189,8 @@ TGDimension TGMdiContainer::GetDefaultSize() const
    Int_t xpos = -fMain->GetViewPort()->GetHPos() - rect.LeftTop().fX;
    Int_t ypos = -fMain->GetViewPort()->GetVPos() - rect.LeftTop().fY;
 
-   return TGDimension(TMath::Max(Int_t(xpos + fWidth), rect.RightBottom().fX + 1),
-                      TMath::Max(Int_t(ypos + fHeight), rect.RightBottom().fY + 1));
+   return TGDimension(std::max(Int_t(xpos + fWidth), rect.RightBottom().fX + 1),
+                      std::max(Int_t(ypos + fHeight), rect.RightBottom().fY + 1));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1204,8 +1204,8 @@ Bool_t TGMdiContainer::HandleConfigureNotify(Event_t *event)
       Int_t vw = fMain->GetViewPort()->GetWidth();
       Int_t vh = fMain->GetViewPort()->GetHeight();
 
-      Int_t w = TMath::Max(vw, rect.RightBottom().fX + 1);
-      Int_t h = TMath::Max(vh, rect.RightBottom().fY + 1);
+      Int_t w = std::max(vw, rect.RightBottom().fX + 1);
+      Int_t h = std::max(vh, rect.RightBottom().fY + 1);
 
       if ((w != (Int_t)fWidth) || (h != (Int_t)fHeight)) {
          ((TGMdiMainFrame*)fMain)->Layout();

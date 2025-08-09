@@ -578,7 +578,7 @@ Bool_t TGListTree::HandleButton(Event_t *event)
 //                              fCanvas->GetContainer()->GetHeight());
          // choose page size either 1/5 of viewport or 5 lines (90)
          Int_t r = fCanvas->GetViewPort()->GetHeight() / 5;
-         page = TMath::Min(r, 90);
+         page = std::min(r, 90);
       }
    }
 
@@ -1314,10 +1314,10 @@ void TGListTree::AdjustPosition(TGListTreeItem *item)
       vh = fCanvas->GetVScrollbar()->GetPosition()+(Int_t)fViewPort->GetHeight();
 
       if (y<fCanvas->GetVScrollbar()->GetPosition()) {
-         v = TMath::Max(0,y-(Int_t)fViewPort->GetHeight()/2);
+         v = std::max(0,y-(Int_t)fViewPort->GetHeight()/2);
          fCanvas->SetVsbPosition(v);
       } else if (y+(Int_t)it->fHeight>vh) {
-         v = TMath::Min((Int_t)GetHeight()-(Int_t)fViewPort->GetHeight(),
+         v = std::min((Int_t)GetHeight()-(Int_t)fViewPort->GetHeight(),
                         y+(Int_t)it->fHeight-(Int_t)fViewPort->GetHeight()/2);
          if (v<0) v = 0;
          fCanvas->SetVsbPosition(v);

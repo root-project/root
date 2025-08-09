@@ -110,8 +110,8 @@ ASImage *TASPluginGS::File2ASImage(const char *filename)
             int lx, ly, ux, uy;
             line = line(14, line.Length());
             sscanf(line.Data(), "%d %d %d %d", &lx, &ly, &ux, &uy);
-            width = TMath::Abs(ux - lx);
-            height = TMath::Abs(uy - ly);
+            width = std::abs(ux - lx);
+            height = std::abs(uy - ly);
             break;
          }
       } while (!feof(fd));

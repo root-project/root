@@ -1,10 +1,12 @@
 #ifndef __CLASSESERROR1_H__
 #define __CLASSESERROR1_H__
 
+#include <cmath>
 #include <functional>
 #include <memory>
 #include <string>
 #include <vector>
+
 #include "TH1F.h"
 #include "TRandom.h"
 #include "ROOT/TSeq.hxx"
@@ -35,7 +37,7 @@ public:
          for (auto i : ROOT::TSeqI(h->GetNbinsX())) {
             auto bContent = h->GetBinContent(i);
             auto bVar = bContent*.6;
-            h->SetBinContent(i, fabs(gRandom->Gaus(bContent,bVar)));
+            h->SetBinContent(i, std::fabs(gRandom->Gaus(bContent,bVar)));
          }
       };
       rndMizeBins(TH1FPtr);

@@ -753,7 +753,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
          } else {
             line[kvalue] = '-';
             line[kvalue+1] = '>';
-            strncpy(&line[kvalue+2], membertype->AsString(p3pointer), TMath::Min(kline-1-kvalue-2,(int)strlen(membertype->AsString(p3pointer))));
+            strncpy(&line[kvalue+2], membertype->AsString(p3pointer), std::min(kline-1-kvalue-2,(int)strlen(membertype->AsString(p3pointer))));
          }
       } else if (!strcmp(memberFullTypeName, "char*") ||
                  !strcmp(memberFullTypeName, "const char*")) {
@@ -785,7 +785,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
       } else if (isbits) {
          snprintf(&line[kvalue],kline-kvalue,"0x%08x", *(UInt_t*)pointer);
       } else {
-         strncpy(&line[kvalue], membertype->AsString(pointer), TMath::Min(kline-1-kvalue,(int)strlen(membertype->AsString(pointer))));
+         strncpy(&line[kvalue], membertype->AsString(pointer), std::min(kline-1-kvalue,(int)strlen(membertype->AsString(pointer))));
       }
    } else {
       if (isStdString) {

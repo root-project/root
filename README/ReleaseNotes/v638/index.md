@@ -95,6 +95,13 @@ the deprecation period was extended.
 ## JavaScript ROOT
 - A new configuration option `Jupyter.JSRoot` was added in .rootrc to set the default mode for JSROOT in Jupyter notebooks (on or off).
 
+### Optimization of ROOT header files
+
+More unused includes were removed from ROOT header files.
+For instance, `#include "TMathBase.h"` was removed from `TString.h`.
+This change may cause errors during compilation of ROOT-based code. To fix it, provide missing the includes
+where they are really required.
+This improves compile times and reduces code inter-dependency; see https://github.com/include-what-you-use/include-what-you-use/blob/master/docs/WhyIWYU.md for a good overview of the motivation.
 
 ## Versions of built-in packages
 

@@ -340,7 +340,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    fVbf->AddFrame(fOk, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
    fVbf->AddFrame(fCancel, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
 
-   UInt_t width = TMath::Max(fOk->GetDefaultWidth(), fCancel->GetDefaultWidth()) + 20;
+   UInt_t width = std::max(fOk->GetDefaultWidth(), fCancel->GetDefaultWidth()) + 20;
    fVbf->Resize(width + 20, fVbf->GetDefaultHeight());
 
    fHf->AddFrame(fVbf, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));

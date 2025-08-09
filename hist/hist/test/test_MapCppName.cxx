@@ -11,6 +11,8 @@
 #include "TProfile.h"
 #include "TSystem.h"
 
+#include <cmath>
+
 TEST(TH1, MapCppNameTest)
 {
    gROOT->SetBatch();

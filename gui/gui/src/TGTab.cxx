@@ -85,7 +85,7 @@ TGTabElement::TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h
       fTWidth = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
-   Resize(TMath::Max(fTWidth+12, (UInt_t)45), fTHeight+6);
+   Resize(std::max(fTWidth+12, (UInt_t)45), fTHeight+6);
    fEnabled = kTRUE;
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier, kButtonPressMask |
                          kPointerMotionMask, kNone, kNone);
@@ -202,9 +202,9 @@ Bool_t TGTabElement::HandleButton(Event_t *event)
 TGDimension TGTabElement::GetDefaultSize() const
 {
    if (fShowClose && fClosePic && fClosePicD)
-      return TGDimension(TMath::Max(fTWidth+30, (UInt_t)45), fTHeight+6);
+      return TGDimension(std::max(fTWidth+30, (UInt_t)45), fTHeight+6);
    else
-      return TGDimension(TMath::Max(fTWidth+12, (UInt_t)45), fTHeight+6);
+      return TGDimension(std::max(fTWidth+12, (UInt_t)45), fTHeight+6);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -232,9 +232,9 @@ void TGTabElement::ShowClose(Bool_t show)
    TGTab* main = (TGTab*)fParent;
    fShowClose = show;
    if (fShowClose && fClosePic && fClosePicD)
-      Resize(TMath::Max(fTWidth+30, (UInt_t)45), fTHeight+6);
+      Resize(std::max(fTWidth+30, (UInt_t)45), fTHeight+6);
    else
-      Resize(TMath::Max(fTWidth+12, (UInt_t)45), fTHeight+6);
+      Resize(std::max(fTWidth+12, (UInt_t)45), fTHeight+6);
    if (main)
       main->GetLayoutManager()->Layout();
 }

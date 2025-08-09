@@ -33,6 +33,7 @@ equivalent of a plot. To create a table use the RooDataSet::table() method.
 
 #include <iostream>
 #include <iomanip>
+#include <cmath>
 
 using std::ostream, std::setw, std::setfill;
 

@@ -134,15 +134,15 @@ void TMVA::DrawMLPoutputMovie(TString dataset, TFile* file, const TString& metho
       // set only first time, then same for all plots
       if (first) {
          if (xmin == 0 && xmax == 0) {
-            xmin = TMath::Max( TMath::Min(sig->GetMean() - nrms*sig->GetRMS(),
+            xmin = std::max( std::min(sig->GetMean() - nrms*sig->GetRMS(),
                                           bgd->GetMean() - nrms*bgd->GetRMS() ),
                                sig->GetXaxis()->GetXmin() );
-            xmax = TMath::Min( TMath::Max(sig->GetMean() + nrms*sig->GetRMS(),
+            xmax = std::min( std::max(sig->GetMean() + nrms*sig->GetRMS(),
                                           bgd->GetMean() + nrms*bgd->GetRMS() ),
                                sig->GetXaxis()->GetXmax() );
          }
          ymin = 0;
-         ymax = TMath::Max( sig->GetMaximum(), bgd->GetMaximum() )*maxMult;
+         ymax = std::max( sig->GetMaximum(), bgd->GetMaximum() )*maxMult;
          first = kFALSE;
       }
 

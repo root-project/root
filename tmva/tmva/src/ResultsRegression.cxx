@@ -168,7 +168,7 @@ TH2F*  TMVA::ResultsRegression::DeviationAsAFunctionOf( UInt_t varNum, UInt_t tg
    Int_t   nxbins = 50;
    Int_t   nybins = 50;
 
-   Float_t epsilon = TMath::Abs(xmax-xmin)/((Float_t)nxbins-1);
+   Float_t epsilon = std::abs(xmax-xmin)/((Float_t)nxbins-1);
    xmin -= 1.01*epsilon;
    xmax += 1.01*epsilon;
 

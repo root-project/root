@@ -12,6 +12,8 @@
 
 #include "gtest/gtest.h"
 
+#include <cmath>
+
 static const Long64_t gRollOver = std::pow(10, (std::numeric_limits<float>::digits10-1));
 
 class BulkApiMultipleTest : public ::testing::Test {

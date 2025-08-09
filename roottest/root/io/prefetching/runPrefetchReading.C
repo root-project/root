@@ -14,6 +14,8 @@
 #include "TError.h"
 #include "TSystemDirectory.h"
 
+#include <cmath>
+
 Int_t runPrefetchReading(bool prefetch = true, bool caching = false)
 {
    //const char *options = 0;

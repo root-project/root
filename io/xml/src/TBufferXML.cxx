@@ -48,6 +48,7 @@ There are limitations for complex objects like TTree, which can not be converted
 #include "RZip.h"
 #include "snprintf.h"
 
+#include <limits>
 #include <memory>
 
 ClassImp(TBufferXML);

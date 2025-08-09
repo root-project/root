@@ -133,7 +133,7 @@ Int_t TTreeFormulaManager::GetNdata(bool forceLoadDim)
 
    // Reset the registers.
    for (k = 0; k <= kMAXFORMDIM; k++) {
-      fUsedSizes[k] = TMath::Abs(fVirtUsedSizes[k]);
+      fUsedSizes[k] = std::abs(fVirtUsedSizes[k]);
       if (fVarDims[k]) {
          for (Int_t i0 = 0; i0 < fVarDims[k]->GetSize(); i0++) {
             fVarDims[k]->AddAt(0, i0);
@@ -254,7 +254,7 @@ bool TTreeFormulaManager::Sync()
       if (fUsedSizes[k - 1] >= 0) {
          fCumulUsedSizes[k - 1] = fUsedSizes[k - 1] * fCumulUsedSizes[k];
       } else {
-         fCumulUsedSizes[k - 1] = -TMath::Abs(fCumulUsedSizes[k]);
+         fCumulUsedSizes[k - 1] = -std::abs(fCumulUsedSizes[k]);
       }
    }
 
@@ -308,8 +308,8 @@ void TTreeFormulaManager::UpdateFormulaLeaves()
 void TTreeFormulaManager::UpdateUsedSize(Int_t &virt_dim, Int_t vsize)
 {
    if (vsize < 0)
-      fVirtUsedSizes[virt_dim] = -1 * TMath::Abs(fVirtUsedSizes[virt_dim]);
-   else if (TMath::Abs(fVirtUsedSizes[virt_dim]) == 1 || (vsize < TMath::Abs(fVirtUsedSizes[virt_dim]))) {
+      fVirtUsedSizes[virt_dim] = -1 * std::abs(fVirtUsedSizes[virt_dim]);
+   else if (std::abs(fVirtUsedSizes[virt_dim]) == 1 || (vsize < std::abs(fVirtUsedSizes[virt_dim]))) {
       // Absolute values represent the min of all real dimensions
       // that are known.  The fact that it is negatif indicates
       // that one of the leaf has a variable size for this

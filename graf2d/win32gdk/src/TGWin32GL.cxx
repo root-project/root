@@ -355,7 +355,7 @@ Bool_t TGWin32GLManager::ResizeOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, U
    TGLContext &ctx = fPimpl->fGLContexts[ctxInd];
 
    if (ctx.fPixmapIndex != -1)
-      if (TMath::Abs(Int_t(w) - Int_t(ctx.fW)) > 1 || TMath::Abs(Int_t(h) - Int_t(ctx.fH)) > 1) {
+      if (std::abs(Int_t(w) - Int_t(ctx.fW)) > 1 || std::abs(Int_t(h) - Int_t(ctx.fH)) > 1) {
          TGLContext newCtx = {ctx.fWindowIndex, -1, ctx.fDC, 0, ctx.fGLContext, w, h, x, y, ctx.fHighColor};
          if (CreateDIB(newCtx)) {
             //new DIB created

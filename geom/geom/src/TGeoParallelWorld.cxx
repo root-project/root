@@ -1170,13 +1170,13 @@ Double_t TGeoParallelWorld::SafetyOrig(Double_t point[3], Double_t safmax)
    for (Int_t id = 0; id < nd; id++) {
       Int_t ist = 6 * id;
       Double_t dxyz = 0.;
-      Double_t dxyz0 = TMath::Abs(point[0] - boxes[ist + 3]) - boxes[ist];
+      Double_t dxyz0 = std::abs(point[0] - boxes[ist + 3]) - boxes[ist];
       if (dxyz0 > safe)
          continue;
-      Double_t dxyz1 = TMath::Abs(point[1] - boxes[ist + 4]) - boxes[ist + 1];
+      Double_t dxyz1 = std::abs(point[1] - boxes[ist + 4]) - boxes[ist + 1];
       if (dxyz1 > safe)
          continue;
-      Double_t dxyz2 = TMath::Abs(point[2] - boxes[ist + 5]) - boxes[ist + 2];
+      Double_t dxyz2 = std::abs(point[2] - boxes[ist + 5]) - boxes[ist + 2];
       if (dxyz2 > safe)
          continue;
       if (dxyz0 > 0)

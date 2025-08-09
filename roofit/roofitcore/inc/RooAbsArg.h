@@ -29,12 +29,11 @@
 #include <TObjArray.h>
 #include <TRefArray.h>
 
-#include <deque>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <memory>
 #include <set>
-#include <stack>
 #include <string>
 #include <unordered_map>
 

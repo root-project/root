@@ -305,7 +305,7 @@ public:
    void             SetFitFormat(const char *format="5.4g") {fFitFormat = format;}
    void             SetHeaderPS(const char *header);
    void             SetHatchesLineWidth(Int_t l) {fHatchesLineWidth = l;}
-   void             SetHatchesSpacing(Double_t h) {fHatchesSpacing = TMath::Max(0.1,h);}
+   void             SetHatchesSpacing(Double_t h) {fHatchesSpacing = std::max(0.1,h);}
    void             SetTitlePS(const char *pstitle);
    void             SetJoinLinePS(Int_t joinline=0) {fJoinLinePS=joinline;} ///< Set the line join method used for PostScript, PDF and SVG output. See `TPostScript::SetLineJoin` for details.
    void             SetCapLinePS(Int_t capline=0) {fCapLinePS=capline;}     ///< Set the line cap method used for PostScript, PDF and SVG output. See `TPostScript::SetLineCap` for details.

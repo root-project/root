@@ -527,7 +527,7 @@ bool TTVLVContainer::HandleButton(Event_t *event)
                fViewer->Message(msg);
             }
          }
-         if ((TMath::Abs(event->fX - fXp) < 2) && (TMath::Abs(event->fY - fYp) < 2)) {
+         if ((std::abs(event->fX - fXp) < 2) && (std::abs(event->fY - fYp) < 2)) {
             SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_ITEMCLICK),
                         event->fCode, (event->fYRoot << 16) | event->fXRoot);
          }

@@ -11,6 +11,7 @@
 #include <iostream>
 #include <limits>
 #include <utility>
+#include <cmath>
 
 #define PRINTRANGE(a, b, bn)                                                                                          \
    Printf(" base: %f %f %d, %s: %f %f %d", a->GetXmin(), a->GetXmax(), a->GetNbins(), bn, b->GetXmin(), b->GetXmax(), \
@@ -707,7 +708,7 @@ Bool_t TH1Merger::AutoP2Merge()
       for (Int_t ibin = 0; ibin < hist->fNcells; ibin++) {
 
          Double_t cu = hist->RetrieveBinContent(ibin);
-         Double_t e1sq = TMath::Abs(cu);
+         Double_t e1sq = std::abs(cu);
          if (fH0->fSumw2.fN)
             e1sq = hist->GetBinErrorSqUnchecked(ibin);
 

@@ -124,25 +124,25 @@ again:
       pL = pR  = pTop = pBot = pINSIDE = kFALSE;
 
       if (vertical && (px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
-          TMath::Abs(py - pyl) < kMaxDiff) {             // top edge
+          std::abs(py - pyl) < kMaxDiff) {             // top edge
          pxold = pxl; pyold = pyl; pTop = kTRUE;
          gPad->SetCursor(kTopSide);
       }
 
       if (vertical && (px > pxl+kMaxDiff && px < pxt-kMaxDiff) &&
-          TMath::Abs(py - pyt) < kMaxDiff) {             // bottom edge
+          std::abs(py - pyt) < kMaxDiff) {             // bottom edge
          pxold = pxt; pyold = pyt; pBot = kTRUE;
          gPad->SetCursor(kBottomSide);
       }
 
       if (!vertical && (py > pyl+kMaxDiff && py < pyt-kMaxDiff) &&
-          TMath::Abs(px - pxl) < kMaxDiff) {             // left edge
+          std::abs(px - pxl) < kMaxDiff) {             // left edge
          pxold = pxl; pyold = pyl; pL = kTRUE;
          gPad->SetCursor(kLeftSide);
       }
 
       if (!vertical && (py > pyl+kMaxDiff && py < pyt-kMaxDiff) &&
-          TMath::Abs(px - pxt) < kMaxDiff) {             // right edge
+          std::abs(px - pxt) < kMaxDiff) {             // right edge
          pxold = pxt; pyold = pyt; pR = kTRUE;
          gPad->SetCursor(kRightSide);
       }

@@ -235,7 +235,7 @@ Int_t TAttLine::DistancetoLine(Int_t px, Int_t py, Double_t xp1, Double_t yp1, D
    if (c <= 0)  return 9999;
    Double_t v     = sqrt(c);
    Double_t u     = (a - b + c)/(2*v);
-   Double_t d     = TMath::Abs(a - u*u);
+   Double_t d     = std::abs(a - u*u);
    if (d < 0)   return 9999;
 
    return Int_t(sqrt(d) - 0.5*Double_t(fLineWidth));
@@ -247,7 +247,7 @@ Int_t TAttLine::DistancetoLine(Int_t px, Int_t py, Double_t xp1, Double_t yp1, D
 void TAttLine::Modify()
 {
    if (!gPad) return;
-   Int_t lineWidth = TMath::Abs(fLineWidth%100);
+   Int_t lineWidth = std::abs(fLineWidth%100);
    if (!gPad->IsBatch()) {
       gVirtualX->SetLineColor(fLineColor);
       if (fLineStyle > 0 && fLineStyle < 30) gVirtualX->SetLineStyle(fLineStyle);

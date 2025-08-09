@@ -473,7 +473,7 @@ int TGHtml::ControlSize(TGHtmlInput *pElem)
             for (int i=0;i<lb->GetNumberOfEntries();++i) {
                TGHtmlLBEntry *te = (TGHtmlLBEntry *)lb->GetEntry(i);
                if (te && te->GetText())
-                  width = TMath::Max(width, te->GetDefaultWidth());
+                  width = std::max(width, te->GetDefaultWidth());
             }
             height = lb->GetItemVsize() ? lb->GetItemVsize()+4 : 22;
             cb->Resize(width > 0 ? width+30 : 200,
@@ -488,7 +488,7 @@ int TGHtml::ControlSize(TGHtmlInput *pElem)
             for (int i=0;i<lb->GetNumberOfEntries();++i) {
                TGHtmlLBEntry *te = (TGHtmlLBEntry *)lb->GetEntry(i);
                if (te && te->GetText())
-                  width = TMath::Max(width, te->GetDefaultWidth());
+                  width = std::max(width, te->GetDefaultWidth());
             }
             height = lb->GetItemVsize() ? lb->GetItemVsize() : 22;
             lb->Resize(width > 0 ? width+30 : 200, height * size);
