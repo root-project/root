@@ -938,7 +938,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
 
    else if (opPower>-1 && opUnder>-1) { // ^ and _ found
       min = TMath::Min(opPower,opUnder);
-      max = TMath::Max(opPower,opUnder);
+      max = std::max(opPower,opUnder);
       Double_t xfpos = 0. ; //GetHeight()*spec.fSize/5.;
       Double_t prop=1, propU=1; // scale factor for #sum & #int
       switch (abovePlace) {
@@ -985,7 +985,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             Analyse(x+addW,y+addH1,specNewSize,text+min+1,max-min-1);
          } else {
             Double_t addW1, addW2, addH1, addH2;
-            Double_t m = TMath::Max(fs1.Width(),TMath::Max(fs2.Width(),fs3.Width()));
+            Double_t m = std::max(fs1.Width(),std::max(fs2.Width(),fs3.Width()));
             pos = (m-fs1.Width())/2;
             if (opPower<opUnder) {
                addH1 = -fs1.Over()*propU-fs2.Under();
@@ -1013,20 +1013,20 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
 
       if (!abovePlace) {
          if (opPower<opUnder) {
-            result.Set(fs1.Width()+xfpos+TMath::Max(fs2.Width(),fs3.Width()),
+            result.Set(fs1.Width()+xfpos+std::max(fs2.Width(),fs3.Width()),
                        fs1.Over()*fFactorPos+fs2.Height(),
                        fs1.Under()+fs3.Height()-fs3.Over()*(1-fFactorPos));
          } else {
-            result.Set(fs1.Width()+xfpos+TMath::Max(fs2.Width(),fs3.Width()),
+            result.Set(fs1.Width()+xfpos+std::max(fs2.Width(),fs3.Width()),
                        fs1.Over()*fFactorPos+fs3.Height(),
                        fs1.Under()+fs2.Height()-fs2.Over()*(1-fFactorPos));
          }
       } else {
          if (opPower<opUnder) {
-            result.Set(TMath::Max(fs1.Width(),TMath::Max(fs2.Width(),fs3.Width())),
+            result.Set(std::max(fs1.Width(),std::max(fs2.Width(),fs3.Width())),
                        fs1.Over()*propU+fs2.Height(),fs1.Under()*prop+fs3.Height());
          } else {
-            result.Set(TMath::Max(fs1.Width(),TMath::Max(fs2.Width(),fs3.Width())),
+            result.Set(std::max(fs1.Width(),std::max(fs2.Width(),fs3.Width())),
                        fs1.Over()*propU+fs3.Height(),fs1.Under()*prop+fs2.Height());
          }
       }
@@ -1082,7 +1082,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          result.Set(fs1.Width()+xfpos+fs2.Width(),
                     fs1.Over()*fFactorPos+fs2.Over(),fs1.Under());
       else
-         result.Set(TMath::Max(fs1.Width(),fs2.Width()),fs1.Over()*prop+fs2.Height(),fs1.Under());
+         result.Set(std::max(fs1.Width(),fs2.Width()),fs1.Over()*prop+fs2.Height(),fs1.Under());
 
    }
    else if (opUnder>-1) { // _ found
@@ -1128,7 +1128,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          result.Set(fs1.Width()+xfpos+fs2.Width(),fs1.Over(),
                     fs1.Under()+fs2.Under()+fs2.Over()*fpos);
       else
-         result.Set(TMath::Max(fs1.Width(),fs2.Width()),fs1.Over(),fs1.Under()*prop+fs2.Height());
+         result.Set(std::max(fs1.Width(),fs2.Width()),fs1.Over(),fs1.Under()*prop+fs2.Height());
    }
    else if (opBox) {
       Double_t square = GetHeight()*spec.fSize/2;
@@ -1394,7 +1394,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             break;
          }
          case 2: { // dot
-            Double_t dd = TMath::Max(0.5*GetLineWidth(), 0.5*sub), // dot size
+            Double_t dd = std::max(0.5*GetLineWidth(), 0.5*sub), // dot size
                      midx = x + fs1.Width()/2,
                      midy = y - sub - fs1.Over() - dd;
             Double_t xx[5] = { midx - dd, midx - dd, midx + dd, midx + dd, midx - dd },
@@ -1414,7 +1414,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             break;
          }
          case 4: { // ddot
-            Double_t dd = TMath::Max(0.5*GetLineWidth(), 0.5*sub), // dot size
+            Double_t dd = std::max(0.5*GetLineWidth(), 0.5*sub), // dot size
                      midx = x + fs1.Width()/2 - 1.5*sub,
                      midy = y - sub - fs1.Over() - dd;
             Double_t xx1[5] = { midx - dd, midx - dd, midx + dd, midx + dd, midx - dd },
@@ -1622,10 +1622,10 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          Analyse(x+addW2,y+fs2.Over()-height,spec,text+opCurlyCurly+2,length-opCurlyCurly-3);  // denominator
          Analyse(x+addW1,y-fs1.Under()-3*height,spec,text+opFrac+6,opCurlyCurly-opFrac-6); //numerator
 
-         DrawLine(x,y-2*height,x+TMath::Max(fs1.Width(),fs2.Width()),y-2*height,spec);
+         DrawLine(x,y-2*height,x+std::max(fs1.Width(),fs2.Width()),y-2*height,spec);
       }
 
-      result.Set(TMath::Max(fs1.Width(),fs2.Width()),fs1.Height()+3*height,fs2.Height()-height);
+      result.Set(std::max(fs1.Width(),fs2.Width()),fs1.Height()+3*height,fs2.Height()-height);
 
    }
    else if (opSplitLine>-1) { // \splitline found
@@ -1648,7 +1648,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          Analyse(x,y-fs1.Under()-3*height,spec,text+opSplitLine+11,opCurlyCurly-opSplitLine-11); //first line
       }
 
-      result.Set(TMath::Max(fs1.Width(),fs2.Width()),fs1.Height()+3*height,fs2.Height()-height);
+      result.Set(std::max(fs1.Width(),fs2.Width()),fs1.Height()+3*height,fs2.Height()-height);
 
    }
    else if (opSqrt>-1) { // \sqrt found
@@ -1659,7 +1659,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             fs2 = Anal1(spec,text+opSquareCurly+1,length-opSquareCurly-1);
             Savefs(&fs1);
             Savefs(&fs2);
-            result.Set(fs2.Width()+ GetHeight()*spec.fSize/10+TMath::Max(GetHeight()*spec.fSize/2,(Double_t)fs1.Width()),
+            result.Set(fs2.Width()+ GetHeight()*spec.fSize/10+std::max(GetHeight()*spec.fSize/2,(Double_t)fs1.Width()),
                        fs2.Over()+fs1.Height()+GetHeight()*spec.fSize/4,fs2.Under());
          } else {
             fs1 = Anal1(spec,text+opSqrt+5,length-opSqrt-5);
@@ -1670,7 +1670,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          if (opSquareCurly>-1) { // ]{
             fs2 = Readfs();
             fs1 = Readfs();
-            Double_t pas = TMath::Max(GetHeight()*spec.fSize/2,(Double_t)fs1.Width());
+            Double_t pas = std::max(GetHeight()*spec.fSize/2,(Double_t)fs1.Width());
             Double_t pas2 = pas + GetHeight()*spec.fSize/10;
             Double_t y1 = y-fs2.Over() ;
             Double_t y2 = y+fs2.Under() ;
@@ -1695,9 +1695,9 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             Double_t dx = (y2-y3)/8;
             UInt_t a,d;
             GetTextAscentDescent(a, d, text);
-            if (a>12) SetLineWidth(TMath::Max(2,(Int_t)(dx/2)));
+            if (a>12) SetLineWidth(std::max(2,(Int_t)(dx/2)));
             DrawLine(x1-2*dx,y1,x1-dx,y2,spec);
-            if (a>12) SetLineWidth(TMath::Max(1,(Int_t)(dx/4)));
+            if (a>12) SetLineWidth(std::max(1,(Int_t)(dx/4)));
             DrawLine(x1-dx,y2,x1,y3,spec);
             DrawLine(x1,y3,x2,y3,spec);
             SetLineWidth(lineW);
@@ -2594,7 +2594,7 @@ Double_t TLatex::GetXsize()
    TLatexFormSize fs = FirstParse(0,GetTextSize(),text);
    SetTextAngle(angle_old);
    fTabSize.clear();
-   return TMath::Abs(gPad->AbsPixeltoX(Int_t(fs.Width())) - gPad->AbsPixeltoX(0));
+   return std::abs(gPad->AbsPixeltoX(Int_t(fs.Width())) - gPad->AbsPixeltoX(0));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2682,7 +2682,7 @@ Double_t TLatex::GetYsize()
    TLatexFormSize fs = FirstParse(0,GetTextSize(),text);
    fTextAngle = angsav;
    fTabSize.clear();
-   return TMath::Abs(gPad->AbsPixeltoY(Int_t(fs.Height())) - gPad->AbsPixeltoY(0));
+   return std::abs(gPad->AbsPixeltoY(Int_t(fs.Height())) - gPad->AbsPixeltoY(0));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -453,7 +453,7 @@ TStyleManager::TStyleManager(const TGWindow *p) : TGMainFrame(p)
    gVirtualX->TranslateCoordinates(GetId(), GetParent()->GetId(), 0, 0, x, y, win);
    x -= 6;
    y -= 21;
-   MoveResize(x, TMath::Max(TMath::Min(y, (Int_t) (gClient->GetDisplayHeight() - h)), 0), w, h);
+   MoveResize(x, std::max(std::min(y, (Int_t) (gClient->GetDisplayHeight() - h)), 0), w, h);
 
    // Only the top level interface is shown, at the begining.
    DoMoreLess();
@@ -1488,9 +1488,9 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
             fOptLogx->SetState(kButtonDown, kFALSE);
          else
             fOptLogx->SetState(kButtonUp, kFALSE);
-         fXNdivMain->SetIntNumber(TMath::Abs(fCurSelStyle->GetNdivisions("X")) % 100);
-         fXNdivSub->SetIntNumber((TMath::Abs(fCurSelStyle->GetNdivisions("X")) % 10000)/100);
-         fXNdivSubSub->SetIntNumber((TMath::Abs(fCurSelStyle->GetNdivisions("X")) % 1000000)/10000);
+         fXNdivMain->SetIntNumber(std::abs(fCurSelStyle->GetNdivisions("X")) % 100);
+         fXNdivSub->SetIntNumber((std::abs(fCurSelStyle->GetNdivisions("X")) % 10000)/100);
+         fXNdivSubSub->SetIntNumber((std::abs(fCurSelStyle->GetNdivisions("X")) % 1000000)/10000);
          if (fCurSelStyle->GetNdivisions("X") > 0)
             fXNdivisionsOptimize->SetState(kButtonDown, kFALSE);
          else
@@ -1523,9 +1523,9 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
             fOptLogy->SetState(kButtonDown, kFALSE);
          else
             fOptLogy->SetState(kButtonUp, kFALSE);
-         fYNdivMain->SetIntNumber(TMath::Abs(fCurSelStyle->GetNdivisions("Y")) % 100);
-         fYNdivSub->SetIntNumber((TMath::Abs(fCurSelStyle->GetNdivisions("Y")) % 10000)/100);
-         fYNdivSubSub->SetIntNumber((TMath::Abs(fCurSelStyle->GetNdivisions("Y")) % 1000000)/10000);
+         fYNdivMain->SetIntNumber(std::abs(fCurSelStyle->GetNdivisions("Y")) % 100);
+         fYNdivSub->SetIntNumber((std::abs(fCurSelStyle->GetNdivisions("Y")) % 10000)/100);
+         fYNdivSubSub->SetIntNumber((std::abs(fCurSelStyle->GetNdivisions("Y")) % 1000000)/10000);
          if (fCurSelStyle->GetNdivisions("Y") > 0)
             fYNdivisionsOptimize->SetState(kButtonDown, kFALSE);
          else
@@ -1560,9 +1560,9 @@ void TStyleManager::UpdateEditor(Int_t tabNum)
          else
             fOptLogz->SetState(kButtonUp, kFALSE);
 
-         fZNdivMain->SetIntNumber(TMath::Abs(fCurSelStyle->GetNdivisions("Z")) % 100);
-         fZNdivSub->SetIntNumber((TMath::Abs(fCurSelStyle->GetNdivisions("Z")) % 10000)/100);
-         fZNdivSubSub->SetIntNumber((TMath::Abs(fCurSelStyle->GetNdivisions("Z")) % 1000000)/10000);
+         fZNdivMain->SetIntNumber(std::abs(fCurSelStyle->GetNdivisions("Z")) % 100);
+         fZNdivSub->SetIntNumber((std::abs(fCurSelStyle->GetNdivisions("Z")) % 10000)/100);
+         fZNdivSubSub->SetIntNumber((std::abs(fCurSelStyle->GetNdivisions("Z")) % 1000000)/10000);
          if (fCurSelStyle->GetNdivisions("Z") > 0)
             fZNdivisionsOptimize->SetState(kButtonDown, kFALSE);
          else
@@ -4784,7 +4784,7 @@ void TStyleManager::ModTextSizeInPixels(Bool_t b)
 {
    Int_t tmp = fCurSelStyle->GetTextFont() / 10;
    Int_t mod = fCurSelStyle->GetTextFont() % 10;
-   Double_t h = TMath::Max(fCurSelStyle->GetCanvasDefH(), 100);
+   Double_t h = std::max(fCurSelStyle->GetCanvasDefH(), 100);
    if (b) {
       fCurSelStyle->SetTextFont(tmp * 10 + 3);
       fTextSize->SetFormat(TGNumberFormat::kNESInteger,
@@ -4940,7 +4940,7 @@ void TStyleManager::ModAttDateTextSizeInPixels(Bool_t b)
 {
    Int_t tmp = fCurSelStyle->GetAttDate()->GetTextFont() / 10;
    Int_t mod = fCurSelStyle->GetAttDate()->GetTextFont() % 10;
-   Double_t h = TMath::Max(fCurSelStyle->GetCanvasDefH(), 100);
+   Double_t h = std::max(fCurSelStyle->GetCanvasDefH(), 100);
 
    if (b) {
       fCurSelStyle->GetAttDate()->SetTextFont(tmp * 10 + 3);
@@ -5511,7 +5511,7 @@ void TStyleManager::ModXTitleSizeInPixels(Bool_t b)
 {
    Int_t tmp = fCurSelStyle->GetTitleFont("X") / 10;
    Int_t mod = fCurSelStyle->GetTitleFont("X") % 10;
-   Double_t h = TMath::Max(fCurSelStyle->GetCanvasDefH(), 100);
+   Double_t h = std::max(fCurSelStyle->GetCanvasDefH(), 100);
    if (b) {
       fCurSelStyle->SetTitleFont(tmp * 10 + 3, "X");
       fXTitleSize->SetFormat(TGNumberFormat::kNESInteger,
@@ -5575,7 +5575,7 @@ void TStyleManager::ModXLabelSizeInPixels(Bool_t b)
 {
    Int_t tmp = fCurSelStyle->GetLabelFont("X") / 10;
    Int_t mod = fCurSelStyle->GetLabelFont("X") % 10;
-   Double_t h = TMath::Max(fCurSelStyle->GetCanvasDefH(), 100);
+   Double_t h = std::max(fCurSelStyle->GetCanvasDefH(), 100);
    if (b) {
       fCurSelStyle->SetLabelFont(tmp * 10 + 3, "X");
       fXLabelSize->SetFormat(TGNumberFormat::kNESInteger,
@@ -5681,7 +5681,7 @@ void TStyleManager::ModYTitleSizeInPixels(Bool_t b)
 {
    Int_t tmp = fCurSelStyle->GetTitleFont("Y") / 10;
    Int_t mod = fCurSelStyle->GetTitleFont("Y") % 10;
-   Double_t h = TMath::Max(fCurSelStyle->GetCanvasDefH(), 100);
+   Double_t h = std::max(fCurSelStyle->GetCanvasDefH(), 100);
    if (b) {
       fCurSelStyle->SetTitleFont(tmp * 10 + 3, "Y");
       fYTitleSize->SetFormat(TGNumberFormat::kNESInteger,
@@ -5745,7 +5745,7 @@ void TStyleManager::ModYLabelSizeInPixels(Bool_t b)
 {
    Int_t tmp = fCurSelStyle->GetLabelFont("Y") / 10;
    Int_t mod = fCurSelStyle->GetLabelFont("Y") % 10;
-   Double_t h = TMath::Max(fCurSelStyle->GetCanvasDefH(), 100);
+   Double_t h = std::max(fCurSelStyle->GetCanvasDefH(), 100);
    if (b) {
       fCurSelStyle->SetLabelFont(tmp * 10 + 3, "Y");
       fYLabelSize->SetFormat(TGNumberFormat::kNESInteger,
@@ -5850,7 +5850,7 @@ void TStyleManager::ModZTitleSizeInPixels(Bool_t b)
 {
    Int_t tmp = fCurSelStyle->GetTitleFont("Z") / 10;
    Int_t mod = fCurSelStyle->GetTitleFont("Z") % 10;
-   Double_t h = TMath::Max(fCurSelStyle->GetCanvasDefH(), 100);
+   Double_t h = std::max(fCurSelStyle->GetCanvasDefH(), 100);
    if (b) {
       fCurSelStyle->SetTitleFont(tmp * 10 + 3, "Z");
       fZTitleSize->SetFormat(TGNumberFormat::kNESInteger,
@@ -5914,7 +5914,7 @@ void TStyleManager::ModZLabelSizeInPixels(Bool_t b)
 {
    Int_t tmp = fCurSelStyle->GetLabelFont("Z") / 10;
    Int_t mod = fCurSelStyle->GetLabelFont("Z") % 10;
-   Double_t h = TMath::Max(fCurSelStyle->GetCanvasDefH(), 100);
+   Double_t h = std::max(fCurSelStyle->GetCanvasDefH(), 100);
    if (b) {
       fCurSelStyle->SetLabelFont(tmp * 10 + 3, "Z");
       fZLabelSize->SetFormat(TGNumberFormat::kNESInteger,
@@ -6058,7 +6058,7 @@ void TStyleManager::ModTitleFontSizeInPixels(Bool_t b)
 {
    Int_t tmp = fCurSelStyle->GetTitleFont() / 10;
    Int_t mod = fCurSelStyle->GetTitleFont() % 10;
-   Double_t h = TMath::Max(fCurSelStyle->GetCanvasDefH(), 100);
+   Double_t h = std::max(fCurSelStyle->GetCanvasDefH(), 100);
    if (b) {
       fCurSelStyle->SetTitleFont(tmp * 10 + 3);
       fTitleFontSize->SetFormat(TGNumberFormat::kNESInteger,
@@ -6194,7 +6194,7 @@ void TStyleManager::ModStatFontSizeInPixels(Bool_t b)
 {
    Int_t tmp = fCurSelStyle->GetStatFont() / 10;
    Int_t mod = fCurSelStyle->GetStatFont() % 10;
-   Double_t h = TMath::Max(fCurSelStyle->GetCanvasDefH(), 100);
+   Double_t h = std::max(fCurSelStyle->GetCanvasDefH(), 100);
    if (b) {
       fCurSelStyle->SetStatFont(tmp * 10 + 3);
       fStatFontSize->SetFormat(TGNumberFormat::kNESInteger,

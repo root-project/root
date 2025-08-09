@@ -86,6 +86,7 @@ via the command gObjectTable->Print()
 #include "TROOT.h"
 #include "TClass.h"
 #include "TError.h"
+#include "TMathBase.h"
 
 
 TObjectTable *gObjectTable = nullptr;

@@ -38,8 +38,9 @@ few other, which can not be converted to SQL (yet).
 #include "TStreamerInfoActions.h"
 #include "snprintf.h"
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
+#include <limits>
 #include <string>
 
 #include "TSQLServer.h"

@@ -22,7 +22,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <vector>
+#include <cmath>
 
 #include "RtypesCore.h"
 #include "TError.h" // R__ASSERT

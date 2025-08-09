@@ -187,7 +187,7 @@ void TRootDialog::Popup()
       b->Associate(fMenu);
       hf->AddFrame(b, l1);
       height = b->GetDefaultHeight();
-      width  = TMath::Max(width, b->GetDefaultWidth()); ++nb;
+      width  = std::max(width, b->GetDefaultWidth()); ++nb;
    }
    if (fApply) {
       b = new TGTextButton(hf, "&Apply", 2);
@@ -195,7 +195,7 @@ void TRootDialog::Popup()
       b->Associate(fMenu);
       hf->AddFrame(b, l1);
       height = b->GetDefaultHeight();
-      width  = TMath::Max(width, b->GetDefaultWidth()); ++nb;
+      width  = std::max(width, b->GetDefaultWidth()); ++nb;
    }
    if (fCancel) {
       b = new TGTextButton(hf, "&Cancel", 3);
@@ -203,7 +203,7 @@ void TRootDialog::Popup()
       b->Associate(fMenu);
       hf->AddFrame(b, l1);
       height = b->GetDefaultHeight();
-      width  = TMath::Max(width, b->GetDefaultWidth()); ++nb;
+      width  = std::max(width, b->GetDefaultWidth()); ++nb;
    }
    if (fHelp) {
       b = new TGTextButton(hf, "Online &Help", 4);
@@ -211,7 +211,7 @@ void TRootDialog::Popup()
       b->Associate(fMenu);
       hf->AddFrame(b, l1);
       height = b->GetDefaultHeight();
-      width  = TMath::Max(width, b->GetDefaultWidth()); ++nb;
+      width  = std::max(width, b->GetDefaultWidth()); ++nb;
    }
 
    // place buttons at the bottom

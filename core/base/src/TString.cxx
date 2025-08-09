@@ -1033,7 +1033,7 @@ TString &TString::Replace(Ssiz_t pos, Ssiz_t n1, const char *cs, Ssiz_t n2)
       return *this;
    }
 
-   n1 = TMath::Min(n1, len - pos);
+   n1 = std::min(n1, len - pos);
    if (!cs) n2 = 0;
 
    Long64_t tot = static_cast<Long64_t>(len) - n1 + n2;  // Final string length, use 64-bit long instead of 32-bit int to check for overflows
@@ -1225,7 +1225,7 @@ Ssiz_t TString::AdjustCapacity(Ssiz_t oldCap, Ssiz_t newCap)
             newCap, ms);
    }
    Ssiz_t cap = oldCap < ms / 2 - kAlignment ?
-                Recommend(TMath::Max(newCap, 2 * oldCap)) : ms - 1;
+                Recommend(std::max(newCap, 2 * oldCap)) : ms - 1;
    return cap;
 }
 
@@ -2101,7 +2101,7 @@ TString TString::Itoa(Int_t value, Int_t base)
    Int_t quotient = value;
    // Translating number to string with base:
    do {
-      buf += "0123456789abcdefghijklmnopqrstuvwxyz"[ TMath::Abs(quotient % base) ];
+      buf += "0123456789abcdefghijklmnopqrstuvwxyz"[ std::abs(quotient % base) ];
       quotient /= base;
    } while (quotient);
    // Append the negative sign
@@ -2153,7 +2153,7 @@ TString TString::LLtoa(Long64_t value, Int_t base)
    Long64_t quotient = value;
    // Translating number to string with base:
    do {
-      buf += "0123456789abcdefghijklmnopqrstuvwxyz"[ TMath::Abs(quotient % base) ];
+      buf += "0123456789abcdefghijklmnopqrstuvwxyz"[ std::abs(quotient % base) ];
       quotient /= base;
    } while (quotient);
    // Append the negative sign

@@ -493,8 +493,8 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
 
             if ((event->fTime - fgLastClick < 350) &&
                 (event->fCode == fgLastButton) &&
-                (TMath::Abs(event->fXRoot - fgDbx) < 6) &&
-                (TMath::Abs(event->fYRoot - fgDby) < 6) &&
+                (std::abs(event->fXRoot - fgDbx) < 6) &&
+                (std::abs(event->fYRoot - fgDby) < 6) &&
                 (event->fWindow == fgDbw))
                dbl_clk = kTRUE;
 

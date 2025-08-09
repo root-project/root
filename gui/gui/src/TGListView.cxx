@@ -476,7 +476,7 @@ TGDimension TGLVEntry::GetDefaultSize() const
    switch (fViewMode) {
       default:
       case kLVLargeIcons:
-         size.fWidth = TMath::Max(isize.fWidth, lsize.fWidth);
+         size.fWidth = std::max(isize.fWidth, lsize.fWidth);
          size.fHeight = isize.fHeight + lsize.fHeight + 6;
          break;
 
@@ -484,7 +484,7 @@ TGDimension TGLVEntry::GetDefaultSize() const
       case kLVList:
       case kLVDetails:
          size.fWidth = isize.fWidth + lsize.fWidth + 4;
-         size.fHeight = TMath::Max(isize.fHeight, lsize.fHeight);
+         size.fHeight = std::max(isize.fHeight, lsize.fHeight);
          break;
    }
    return size;
@@ -701,8 +701,8 @@ TGDimension TGLVContainer::GetMaxItemSize() const
    TIter next(fList);
    while ((el = (TGFrameElement *) next())) {
       csize = el->fFrame->GetDefaultSize();
-      maxsize.fWidth  = TMath::Max(maxsize.fWidth, csize.fWidth);
-      maxsize.fHeight = TMath::Max(maxsize.fHeight, csize.fHeight);
+      maxsize.fWidth  = std::max(maxsize.fWidth, csize.fWidth);
+      maxsize.fHeight = std::max(maxsize.fHeight, csize.fHeight);
    }
    if (fViewMode == kLVLargeIcons) {
       maxsize.fWidth  += 8;
@@ -730,7 +730,7 @@ Int_t TGLVContainer::GetMaxSubnameWidth(Int_t idx) const
    while ((el = (TGFrameElement *) next())) {
       TGLVEntry *entry = (TGLVEntry *) el->fFrame;
       width = entry->GetSubnameWidth(idx-1);
-      maxwidth = TMath::Max(maxwidth, width);
+      maxwidth = std::max(maxwidth, width);
    }
    return maxwidth;
 }
@@ -1417,9 +1417,9 @@ void TGListView::SetDefaultColumnWidth(TGVFileSplitter* splitter)
          TString dt = fColHeader[i]->GetString();
          UInt_t bsize = gVirtualX->TextWidth(fColHeader[i]->GetFontStruct(),
                                              dt.Data(), dt.Length());
-         UInt_t w = TMath::Max(fColHeader[i]->GetDefaultWidth(), bsize + 20);
-         if (i == 0) w = TMath::Max(fMaxSize.fWidth + 10, w);
-         if (i > 0)  w = TMath::Max(container->GetMaxSubnameWidth(i) + 40, (Int_t)w);
+         UInt_t w = std::max(fColHeader[i]->GetDefaultWidth(), bsize + 20);
+         if (i == 0) w = std::max(fMaxSize.fWidth + 10, w);
+         if (i > 0)  w = std::max(container->GetMaxSubnameWidth(i) + 40, (Int_t)w);
          fColHeader[i]->Resize(w, fColHeader[i]->GetHeight());
          Layout();
       }
@@ -1467,14 +1467,14 @@ void TGListView::Layout()
          fColHeader[i]->SetText(fColNames[i]);
 
          if ( fJustChanged ) {
-            w = TMath::Min(fMaxSize.fWidth + 10, fColHeader[i]->GetDefaultWidth());
+            w = std::min(fMaxSize.fWidth + 10, fColHeader[i]->GetDefaultWidth());
             if (w < fMinColumnSize) w = fColHeader[i]->GetDefaultWidth();
-            if (i == 0) w = TMath::Max(fMaxSize.fWidth + 10, w);
-            if (i > 0)  w = TMath::Max(container->GetMaxSubnameWidth(i) + 40, (Int_t)w);
+            if (i == 0) w = std::max(fMaxSize.fWidth + 10, w);
+            if (i > 0)  w = std::max(container->GetMaxSubnameWidth(i) + 40, (Int_t)w);
          } else {
             w = fColHeader[i]->GetWidth();
          }
-         w = TMath::Max(fMinColumnSize, w);
+         w = std::max(fMinColumnSize, w);
          if ( fColHeader[i]->GetDefaultWidth() > w ) {
             for (int j = fColNames[i].Length() - 1 ; j > 0; j--) {
                fColHeader[i]->SetText( fColNames[i](0,j) + "..." );
@@ -1560,14 +1560,14 @@ void TGListView::LayoutHeader(TGFrame *head)
          fColHeader[i]->SetText(fColNames[i]);
 
          if ( fJustChanged ) {
-            w = TMath::Min(fMaxSize.fWidth + 10, fColHeader[i]->GetDefaultWidth());
+            w = std::min(fMaxSize.fWidth + 10, fColHeader[i]->GetDefaultWidth());
             if (w < fMinColumnSize) w = fColHeader[i]->GetDefaultWidth();
-            if (i == 0) w = TMath::Max(fMaxSize.fWidth + 10, w);
-            if (i > 0)  w = TMath::Max(container->GetMaxSubnameWidth(i) + 40, (Int_t)w);
+            if (i == 0) w = std::max(fMaxSize.fWidth + 10, w);
+            if (i > 0)  w = std::max(container->GetMaxSubnameWidth(i) + 40, (Int_t)w);
          } else {
             w = fColHeader[i]->GetWidth();
          }
-         w = TMath::Max(fMinColumnSize, w);
+         w = std::max(fMinColumnSize, w);
          if ( fColHeader[i]->GetDefaultWidth() > w ) {
             for (int j = fColNames[i].Length() - 1 ; j > 0; j--) {
                fColHeader[i]->SetText( fColNames[i](0,j) + "..." );

@@ -82,7 +82,7 @@ namespace TMVA {
       //      Double_t GetWeight()         const { return fWeight*fBoostWeight; }
       Double_t GetWeight()         const;
       Double_t GetOriginalWeight() const { return fWeight; }
-      Double_t GetBoostWeight()    const { return TMath::Max(Double_t(0.0001),fBoostWeight); }
+      Double_t GetBoostWeight()    const { return std::max(Double_t(0.0001),fBoostWeight); }
       UInt_t   GetClass()          const { return fClass; }
 
       UInt_t   GetNVariables()        const;

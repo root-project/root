@@ -479,7 +479,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                   // Not a class name, nothing to do.
                } else if ((stlType = TClassEdit::IsSTLCont(incName))) {
                   const char *what = "";
-                  switch (TMath::Abs(stlType))  {
+                  switch (std::abs(stlType))  {
                      case ROOT::kSTLvector:
                         what = "vector";
                         break;
@@ -669,7 +669,7 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
       int nestedLoc;
       unsigned int narg = TClassEdit::GetSplit( name, inside, nestedLoc, TClassEdit::kLong64 );
 
-      Int_t stlkind =  TMath::Abs(TClassEdit::STLKind(inside[0]));
+      Int_t stlkind =  std::abs(TClassEdit::STLKind(inside[0]));
 
       for(unsigned int i = 1; i<narg; ++i) {
          inside[i] = UpdateAssociativeToVector( inside[i].c_str() );

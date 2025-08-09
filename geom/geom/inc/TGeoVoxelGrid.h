@@ -12,6 +12,10 @@
 #ifndef ROOT_TGeoVoxelGrid
 #define ROOT_TGeoVoxelGrid
 
+#include <array>
+#include <cmath>
+#include <limits>
+
 // a simple structure to encode voxel indices, to address
 // individual voxels in the 3D grid.
 struct TGeoVoxelGridIndex {

@@ -21,6 +21,8 @@
 #include "TROOT.h"
 #include "TStreamerInfo.h"
 #include "TClassEdit.h"
+
+#include <algorithm>
 #include <memory>
 
 std::string gPCMFilename;

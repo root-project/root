@@ -43,6 +43,7 @@
 
 #include "TFitResultPtr.h"
 
+#include <algorithm>
 #include <cfloat>
 #include <string>
 #include <stdexcept>

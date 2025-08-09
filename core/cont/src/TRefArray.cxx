@@ -342,13 +342,13 @@ void TRefArray::AddAtAndExpand(TObject *obj, Int_t idx)
       return;
    }
    if (idx-fLowerBound >= fSize)
-      Expand(TMath::Max(idx-fLowerBound+1, GrowBy(fSize)));
+      Expand(std::max(idx-fLowerBound+1, GrowBy(fSize)));
 
    // Check if the object can belong here
    Int_t uid;
    if (GetObjectUID(uid, obj, "AddAtAndExpand")) {
       fUIDs[idx-fLowerBound] = uid;   // NOLINT
-      fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
+      fLast = std::max(idx-fLowerBound, GetAbsLast());
       Changed();
    }
 }
@@ -366,7 +366,7 @@ void TRefArray::AddAt(TObject *obj, Int_t idx)
    Int_t uid;
    if (GetObjectUID(uid, obj, "AddAt")) {
       fUIDs[idx-fLowerBound] = uid;
-      fLast = TMath::Max(idx-fLowerBound, GetAbsLast());
+      fLast = std::max(idx-fLowerBound, GetAbsLast());
       Changed();
    }
 }
@@ -386,7 +386,7 @@ Int_t  TRefArray::AddAtFree(TObject *obj)
             Int_t uid;
             if (GetObjectUID(uid, obj, "AddAtFree")) {
                fUIDs[i] = uid;    // NOLINT
-               fLast = TMath::Max(i, GetAbsLast());
+               fLast = std::max(i, GetAbsLast());
                Changed();
                return i+fLowerBound;
             }
