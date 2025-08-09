@@ -89,7 +89,7 @@ void TMVA::draw_network(TString dataset, TFile* f, TDirectory* d, const TString&
          Int_t n2 = h->GetNbinsY();
          for (Int_t i = 0; i < n1; i++) {
             for (Int_t j = 0; j < n2; j++) {
-               Double_t weight = TMath::Abs(h->GetBinContent(i+1, j+1));
+               Double_t weight = std::abs(h->GetBinContent(i+1, j+1));
                if (maxWeight < weight) maxWeight = weight;
             }
          }
@@ -415,7 +415,7 @@ void TMVA::draw_synapse(Double_t cx1, Double_t cy1, Double_t cx2, Double_t cy2,
    TArrow *arrow = new TArrow(cx1+rad1, cy1, cx2-rad2, cy2, TIP_SIZE, ">");
    arrow->SetFillColor(1);
    arrow->SetFillStyle(1001);
-   arrow->SetLineWidth((Int_t)(TMath::Abs(weightNormed)*MAX_WEIGHT+0.5));
+   arrow->SetLineWidth((Int_t)(std::abs(weightNormed)*MAX_WEIGHT+0.5));
    arrow->SetLineColor((Int_t)((weightNormed+1.0)/2.0*(MAX_COLOR-MIN_COLOR)+MIN_COLOR+0.5));
    arrow->Draw();
 }

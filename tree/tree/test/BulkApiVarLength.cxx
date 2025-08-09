@@ -15,6 +15,8 @@
 
 #include "gtest/gtest.h"
 
+#include <cmath>
+
 class BulkApiVariableTest : public ::testing::Test {
 public:
    static constexpr Long64_t fClusterSize = 1e5;

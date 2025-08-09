@@ -5,8 +5,10 @@
 #include "TSystem.h"
 #include "TTreeReaderValue.h"
 #include "TTreeReaderArray.h"
-#include <vector>
 #include "A.h"
+
+#include <cmath>
+#include <vector>
 
 #define TREE_ENTRIES 10
 #define LIST_ENTRIES 10
@@ -323,7 +325,7 @@ void readVectorFloatValue(const char* branchName, Bool_t printOut, Bool_t testVa
         if (printOut) fprintf(stderr, "vectorFloat values:");
 
         for (int j = 0; j < LIST_ENTRIES; ++j){
-            if (testValues && fabs(myVectorFloat->at(j) - i * j * MULTIPLIER_VECTOR_FLOAT) > 0.001f) success = false;
+            if (testValues && std::fabs(myVectorFloat->at(j) - i * j * MULTIPLIER_VECTOR_FLOAT) > 0.001f) success = false;
             if (printOut) fprintf(stderr, " %.2f", myVectorFloat->at(j));
         }
 
@@ -426,7 +428,7 @@ void readVectorFloatArray(const char* branchName, Bool_t printOut, Bool_t testVa
         if (printOut) fprintf(stderr, "vectorFloat values(%lu):", myVectorFloat.GetSize());
 
         for (int j = 0; j < LIST_ENTRIES && j < (int)myVectorFloat.GetSize(); ++j){
-            if (testValues && fabs(myVectorFloat.At(j) - i * j * MULTIPLIER_VECTOR_FLOAT) > 0.001f) success = false;
+            if (testValues && std::fabs(myVectorFloat.At(j) - i * j * MULTIPLIER_VECTOR_FLOAT) > 0.001f) success = false;
             if (printOut) fprintf(stderr, " %.2f", myVectorFloat.At(j));
         }
 
@@ -741,7 +743,7 @@ void readLeafDoubleAArray(Bool_t printOut, Bool_t testValues, TreeGetter& getter
         if (printOut) fprintf(stderr, "MyLeafList.a(%lu):", myDoubles.GetSize());
 
         for (size_t j = 0; j < myDoubles.GetSize() && j < 10; ++j){
-            if (testValues && fabs(myDoubles.At(j) - (i * j) / 10.0f) > 0.0001f) success = false;
+            if (testValues && std::fabs(myDoubles.At(j) - (i * j) / 10.0f) > 0.0001f) success = false;
             if (printOut) fprintf(stderr, " %f", myDoubles.At(j));
         }
 

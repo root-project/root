@@ -788,11 +788,11 @@ void TUnixSystem::AddFileHandler(TFileHandler *h)
       int fd = h->GetFd();
       if (h->HasReadInterest()) {
          fReadmask->Set(fd);
-         fMaxrfd = TMath::Max(fMaxrfd, fd);
+         fMaxrfd = std::max(fMaxrfd, fd);
       }
       if (h->HasWriteInterest()) {
          fWritemask->Set(fd);
-         fMaxwfd = TMath::Max(fMaxwfd, fd);
+         fMaxwfd = std::max(fMaxwfd, fd);
       }
    }
 }
@@ -819,11 +819,11 @@ TFileHandler *TUnixSystem::RemoveFileHandler(TFileHandler *h)
          int fd = th->GetFd();
          if (th->HasReadInterest()) {
             fReadmask->Set(fd);
-            fMaxrfd = TMath::Max(fMaxrfd, fd);
+            fMaxrfd = std::max(fMaxrfd, fd);
          }
          if (th->HasWriteInterest()) {
             fWritemask->Set(fd);
-            fMaxwfd = TMath::Max(fMaxwfd, fd);
+            fMaxwfd = std::max(fMaxwfd, fd);
          }
       }
    }
@@ -1145,7 +1145,7 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
       *fReadready  = *fReadmask;
       *fWriteready = *fWritemask;
 
-      int mxfd = TMath::Max(fMaxrfd, fMaxwfd);
+      int mxfd = std::max(fMaxrfd, fMaxwfd);
       mxfd++;
 
       // if nothing to select (socket or timer) return
@@ -1212,11 +1212,11 @@ Int_t TUnixSystem::Select(TList *act, Long_t to)
       if (fd > -1) {
          if (h->HasReadInterest()) {
             rd.Set(fd);
-            mxfd = TMath::Max(mxfd, fd);
+            mxfd = std::max(mxfd, fd);
          }
          if (h->HasWriteInterest()) {
             wr.Set(fd);
-            mxfd = TMath::Max(mxfd, fd);
+            mxfd = std::max(mxfd, fd);
          }
          h->ResetReadyMask();
       }

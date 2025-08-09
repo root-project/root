@@ -29,6 +29,9 @@
 
 #include "TSpinLockGuard.h"
 
+#include <algorithm>
+#include <limits>
+
 Bool_t TDirectory::fgAddDirectory = kTRUE;
 
 const Int_t  kMaxLen = 2048;

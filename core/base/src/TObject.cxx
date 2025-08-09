@@ -47,6 +47,7 @@ class hierarchies (watch out for overlaps).
 #include <fstream>
 #include <iostream>
 #include <iomanip>
+#include <limits>
 
 #include "Varargs.h"
 #include "snprintf.h"

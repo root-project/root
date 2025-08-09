@@ -2,6 +2,8 @@
 #include <TFile.h>
 #include <TTree.h>
 #include <TTreePlayer.h>
+
+#include <algorithm>
 #include <memory>
 #include <iostream>
 #include <vector>

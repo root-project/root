@@ -5,6 +5,8 @@
 #include "TH2Poly.h"
 #include "TRandom.h"
 
+#include <cmath>
+
 TH2Poly * CreateHist() {
 
    TH2Poly *h2p = new TH2Poly();

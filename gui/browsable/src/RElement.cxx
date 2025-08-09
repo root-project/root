@@ -14,6 +14,8 @@
 
 #include "TBufferJSON.h"
 
+#include <algorithm>
+
 using namespace ROOT::Browsable;
 using namespace std::string_literals;
 

@@ -118,7 +118,7 @@ void TMVA::variables(TString dataset, TString fin, TString dirName , TString tit
       // finally plot and overlay
       Float_t sc = 1.1;
       if (countPad == 1) sc = 1.3;
-      sig->SetMaximum( TMath::Max( sig->GetMaximum(), bgd->GetMaximum() )*sc );
+      sig->SetMaximum( std::max( sig->GetMaximum(), bgd->GetMaximum() )*sc );
       sig->Draw( "hist" );
       cPad->SetLeftMargin( 0.17 );
 

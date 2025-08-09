@@ -3339,7 +3339,7 @@ Int_t TBufferFile::ReadBuf(void *buf, Int_t max)
 
    if (max == 0) return 0;
 
-   Int_t n = TMath::Min(max, (Int_t)(fBufMax - fBufCur));
+   Int_t n = std::min(max, (Int_t)(fBufMax - fBufCur));
 
    memcpy(buf, fBufCur, n);
    fBufCur += n;

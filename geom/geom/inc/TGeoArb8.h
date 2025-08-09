@@ -14,6 +14,8 @@
 
 #include "TGeoBBox.h"
 
+#include <cstdlib>
+
 class TGeoArb8 : public TGeoBBox {
 protected:
    enum EGeoArb8Type {
@@ -73,7 +75,7 @@ public:
    Bool_t IsCylType() const override { return kFALSE; }
    static Bool_t IsSamePoint(const Double_t *p1, const Double_t *p2)
    {
-      return (TMath::Abs(p1[0] - p2[0]) < 1.E-16 && TMath::Abs(p1[1] - p2[1]) < 1.E-16) ? kTRUE : kFALSE;
+      return (std::abs(p1[0] - p2[0]) < 1.E-16 && std::abs(p1[1] - p2[1]) < 1.E-16) ? kTRUE : kFALSE;
    }
    static Bool_t InsidePolygon(Double_t x, Double_t y, Double_t *pts);
    void InspectShape() const override;
