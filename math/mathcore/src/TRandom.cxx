@@ -251,7 +251,7 @@ void TRandom::Circle(Double_t &x, Double_t &y, Double_t r)
 
 Double_t TRandom::Exp(Double_t tau)
 {
-   Double_t x = Rndm();              // uniform on ] 0, 1 ]
+   Double_t x = Rndm();              // uniform on ]0, 1[
    Double_t t = -tau * TMath::Log( x ); // convert to exponential distribution
    return t;
 }
@@ -577,7 +577,7 @@ Double_t TRandom::Rndm( )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return an array of n random numbers uniformly distributed in ]0,1].
+/// Return an array of n random numbers uniformly distributed in ]0,1[.
 
 void TRandom::RndmArray(Int_t n, Double_t *array)
 {
@@ -590,7 +590,7 @@ void TRandom::RndmArray(Int_t n, Double_t *array)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return an array of n random numbers uniformly distributed in ]0,1].
+/// Return an array of n random numbers uniformly distributed in ]0,1[.
 
 void TRandom::RndmArray(Int_t n, Float_t *array)
 {

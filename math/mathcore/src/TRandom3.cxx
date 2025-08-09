@@ -7,7 +7,7 @@
 
 Random number generator class based on
   M. Matsumoto and T. Nishimura,
-  Mersenne Twister: A 623-diminsionally equidistributed
+  Mersenne Twister: A 623-dimensionally equidistributed
   uniform pseudorandom number generator
   ACM Transactions on Modeling and Computer Simulation,
   Vol. 8, No. 1, January 1998, pp 3--30.
@@ -15,19 +15,24 @@ Random number generator class based on
 For more information see the Mersenne Twister homepage
   [http://www.math.keio.ac.jp/~matumoto/emt.html]
 
-Advantage:
-
--  large period 2**19937 -1
+Advantages:
+-  large period (slightly less than 2**19937 -1)
 -  relatively fast (slightly slower than TRandom2 but much faster than TRandom1)
 
-Drawback:
+Drawbacks:
 -  a relative large internal state of 624 integers 
 - generate only 32 random bits 
 - not passing all the random generator tests. It fails some tests in TestU01
  (see [http://simul.iro.umontreal.ca/testu01/tu01.html])
 
-An altenativly excellent generator passing all tests of TestU01, having 61 random bits and 
-fast as Mersenne and Twister is MIXMAX (TRandomMixMax). 
+An alternatively excellent generator passing all tests of TestU01, having 61 random bits and
+being as fast as Mersenne and Twister is MIXMAX (TRandomMixMax).
+Also, TRandomRanluxpp is a recommended alternative over TRandom3.
+
+@warning TRandom3 is not a fully correct Mersenne and Twister random number generator, since
+zeroes of the sequence are skipped, and thus the actual period is slightly less than
+2**19937 -1. Consider using instead std::mt19937. Other differences are that, unlike in the paper, 0 (skip)
+and 1 (here we divide by UINT_MAX + 1 instead of UINT_MAX - 1) are not included in the sequence.
 
 @ingroup Random
 
@@ -73,8 +78,10 @@ namespace {
 ClassImp(TRandom3);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-/// If seed is 0, the seed is automatically computed via a TUUID object.
+/// \brief Default constructor.
+///
+/// If seed is 0, the seed array is automatically computed via a TRandom2
+/// object, which internally uses TUUID.
 /// In this case the seed is guaranteed to be unique in space and time.
 
 TRandom3::TRandom3(UInt_t seed)
@@ -85,16 +92,18 @@ TRandom3::TRandom3(UInt_t seed)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default destructor
+/// \brief Default destructor.
 
 TRandom3::~TRandom3()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Machine independent random number generator.
-///  Produces uniformly-distributed floating points in (0,1)
+///  \brief Machine independent random number generator.
+///
+///  Produces uniformly-distributed floating points in ]0, 1[.
 ///  Method: Mersenne Twister
+///  Generate number in interval (0,1): 0 and 1 are not included in the interval
 
 Double_t TRandom3::Rndm()
 {
@@ -132,13 +141,13 @@ Double_t TRandom3::Rndm()
    y ^= ((y << 15) & kTemperingMaskC );
    y ^=  (y >> 18);
 
-   // 2.3283064365386963e-10 == 1./(max<UINt_t>+1)  -> then returned value cannot be = 1.0
+   // 2.3283064365386963e-10 == 1./(UINT_MAX+1UL)  -> then returned value cannot be = 1.0
    if (y) return ( (Double_t) y * 2.3283064365386963e-10); // * Power(2,-32)
    return Rndm();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return an array of n random numbers uniformly distributed in ]0,1]
+///  \brief Return an array of n random numbers uniformly distributed in ]0, 1[.
 
 void TRandom3::RndmArray(Int_t n, Float_t *array)
 {
@@ -146,7 +155,7 @@ void TRandom3::RndmArray(Int_t n, Float_t *array)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return an array of n random numbers uniformly distributed in ]0,1]
+///  \brief Return an array of n random numbers uniformly distributed in ]0, 1[.
 
 void TRandom3::RndmArray(Int_t n, Double_t *array)
 {
@@ -195,13 +204,15 @@ void TRandom3::RndmArray(Int_t n, Double_t *array)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Set the random generator sequence
-/// if seed is 0 (default value) a TUUID is generated and used to fill
-/// the first 8 integers of the seed array.
+/// \brief Set the random generator sequence.
+///
+/// If seed is 0 (default value) a TRandom2 (internally uses TUUID) is used to
+/// generate all 624 unsigned integers of the seed array.
 /// In this case the seed is guaranteed to be unique in space and time.
-/// Use upgraded seeding procedure to fix a known problem when seeding with values
-/// with many zero in the bit pattern (like 2**28).
-/// see http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/MT2002/emt19937ar.html
+///
+/// Upgraded seeding procedure is used to fix a known problem when seeding with
+/// values with many zero in the bit pattern (like 2**28), see
+/// http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/MT2002/emt19937ar.html
 
 void TRandom3::SetSeed(ULong_t seed)
 {
@@ -217,7 +228,7 @@ void TRandom3::SetSeed(ULong_t seed)
 
    } else {
 
-      // use TRandom2 (which is based on TUUId to generate the seed
+      // use TRandom2 (which is based on TUUID to generate the seed.
       // TRandom2 works fairly well  and has been tested against example
       // layout in https://savannah.cern.ch/bugs/?99516
       TRandom2 r(0);
@@ -232,7 +243,7 @@ void TRandom3::SetSeed(ULong_t seed)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Stream an object of class TRandom3.
+/// \brief Streamer for an object of class TRandom3.
 
 void TRandom3::Streamer(TBuffer &R__b)
 {
