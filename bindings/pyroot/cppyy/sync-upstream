@@ -73,7 +73,6 @@ git apply patches/CPyCppyy-Add-converters-and-low-level-views-for-fixed-width-in
 git apply patches/CPyCppyy-Correct-check-for-temporaries-in-Python-3.14.patch # https://github.com/wlav/CPyCppyy/pull/53
 git apply patches/CPyCppyy-Disable-implicit-conversion-to-smart-ptr.patch
 git apply patches/CPyCppyy-Disable_std-vector-numpy-array-pythonization.patch
-git apply patches/CPyCppyy-TString_converter.patch
 git apply patches/CPyCppyy-Support-conversion-from-str-to-char.patch # https://github.com/wlav/CPyCppyy/pull/21
 git apply patches/CPyCppyy-Get-names-and-types-of-all-overloads-signature.patch
 git apply patches/CPyCppyy-Fix-usage-of-Python-GIL-to-support-threading.patch # https://github.com/wlav/CPyCppyy/pull/60
