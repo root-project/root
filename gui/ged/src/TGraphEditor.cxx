@@ -204,7 +204,7 @@ void TGraphEditor::SetModel(TObject* obj)
    // Exclusion zone parameters
    if (fGraph->GetLineWidth()<0) fExSide->SetState(kButtonDown, kFALSE);
    else fExSide->SetState(kButtonUp, kFALSE);
-   fWidthCombo->Select(TMath::Abs(Int_t(fGraph->GetLineWidth()/100)), kFALSE);
+   fWidthCombo->Select(std::abs(Int_t(fGraph->GetLineWidth()/100)), kFALSE);
 
    if (fInit) ConnectSignals2Slots();
    fAvoidSignal = kFALSE;
@@ -355,7 +355,7 @@ void TGraphEditor::DoGraphLineWidth()
 
    if (fAvoidSignal) return;
    Int_t width = fWidthCombo->GetSelected();
-   Int_t lineWidth = TMath::Abs(fGraph->GetLineWidth()%100);
+   Int_t lineWidth = std::abs(fGraph->GetLineWidth()%100);
    Int_t side = 1;
    if (fExSide->GetState() == kButtonDown) side = -1;
    fGraph->SetLineWidth(side*(100*width+lineWidth));

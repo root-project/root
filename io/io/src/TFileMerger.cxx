@@ -1077,7 +1077,7 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
 Bool_t TFileMerger::OpenExcessFiles()
 {
    if (fPrintLevel > 0) {
-      Printf("%s Opening the next %d files", fMsgPrefix.Data(), TMath::Min(fExcessFiles.GetEntries(), fMaxOpenedFiles - 1));
+      Printf("%s Opening the next %d files", fMsgPrefix.Data(), std::min(fExcessFiles.GetEntries(), fMaxOpenedFiles - 1));
    }
    Int_t nfiles = 0;
    TIter next(&fExcessFiles);

@@ -24,6 +24,7 @@ Implement TBuffer for a SQL backend.
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <limits>
 
 ClassImp(TBufferSQL);
 

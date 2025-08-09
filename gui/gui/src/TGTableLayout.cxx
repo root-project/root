@@ -164,14 +164,14 @@ void TGTableLayout::FindRowColSizesSinglyAttached()
       }
       UInt_t col = layout->GetAttachLeft();
       if (col == (layout->GetAttachRight() - 1))
-         fCol[col].fDefSize = TMath::Max(fCol[col].fDefSize,
+         fCol[col].fDefSize = std::max(fCol[col].fDefSize,
                                          ptr->fFrame->GetDefaultWidth() +
                                          layout->GetPadLeft() +
                                          layout->GetPadRight());
 
       UInt_t row = layout->GetAttachTop();
       if (row == (layout->GetAttachBottom() - 1))
-         fRow[row].fDefSize = TMath::Max(fRow[row].fDefSize,
+         fRow[row].fDefSize = std::max(fRow[row].fDefSize,
                                          ptr->fFrame->GetDefaultHeight() +
                                          layout->GetPadTop() +
                                          layout->GetPadBottom());
@@ -190,10 +190,10 @@ void TGTableLayout::FindRowColSizesHomogeneous()
 
    // find max
    for (col = 0; col < fNcols; ++col)
-      max_width = TMath::Max(max_width,fCol[col].fDefSize);
+      max_width = std::max(max_width,fCol[col].fDefSize);
 
    for (row = 0; row < fNrows; ++row)
-      max_height = TMath::Max(max_height,fRow[row].fDefSize);
+      max_height = std::max(max_height,fRow[row].fDefSize);
 
    // set max
    for (col = 0; col < fNcols; ++col) fCol[col].fDefSize = max_width;
@@ -278,7 +278,7 @@ void TGTableLayout::SetRowColResize(UInt_t real_size, UInt_t nthings,
             UInt_t size = real_size;
             for (ind = 0; ind < nthings; ++ ind) {
                UInt_t extra = size / (nthings - ind);
-               thing[ind].fRealSize = TMath::Max(1U, extra);
+               thing[ind].fRealSize = std::max(1U, extra);
                size -= extra;
             }
          }
@@ -290,7 +290,7 @@ void TGTableLayout::SetRowColResize(UInt_t real_size, UInt_t nthings,
             UInt_t size = real_size;
             for (ind = 0; ind < nthings; ++ ind) {
                UInt_t extra = size / (nthings - ind);
-               thing[ind].fRealSize = TMath::Max(1U, extra);
+               thing[ind].fRealSize = std::max(1U, extra);
                size -= extra;
             }
          }
@@ -325,7 +325,7 @@ void TGTableLayout::SetRowColResize(UInt_t real_size, UInt_t nthings,
             for (ind = 0; ind < nthings; ++ind)
                if (thing[ind].fShrink) {
                   UInt_t size2 = thing[ind].fRealSize;
-                  thing[ind].fRealSize = TMath::Max(1U,thing[ind].fRealSize - extra / nshrink);
+                  thing[ind].fRealSize = std::max(1U,thing[ind].fRealSize - extra / nshrink);
                   extra -= size2 - thing[ind].fRealSize;
                   --nshrink;
                   if (thing[ind].fRealSize < 2) {

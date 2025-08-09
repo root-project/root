@@ -21,6 +21,7 @@
 
 #include "gtest/gtest.h"
 
+#include <algorithm>
 #include <string>
 
 TEST(TTabComTests, Sanity)

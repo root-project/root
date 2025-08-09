@@ -5,6 +5,7 @@
 
 #include "ROOT/TestSupport.hxx"
 
+#include <algorithm>
 #include <fstream>
 #include <random>
 #include <thread>

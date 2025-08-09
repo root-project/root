@@ -40,16 +40,16 @@ Int_t HistCompare(TH1 *ref, TH1 *comp)
 
    Float_t xrange = ref->GetXaxis()->GetXmax() - ref->GetXaxis()->GetXmin();
    if (xrange==0) { fprintf(stderr,"no range for %s\n",ref->GetName()); return -4; }
-   if (xrange>0.0001 && TMath::Abs((mean1-mean2)/xrange) > 0.001) {
-      printf("xrange=%g, mean1=%g, mean2=%g, abs=%g\n",xrange,mean1,mean2,TMath::Abs((mean1-mean2)/xrange));
+   if (xrange>0.0001 && std::abs((mean1-mean2)/xrange) > 0.001) {
+      printf("xrange=%g, mean1=%g, mean2=%g, abs=%g\n",xrange,mean1,mean2,std::abs((mean1-mean2)/xrange));
       return -1;
    }
-   if (mean2> 0.0001 && TMath::Abs((mean1-mean2)/mean2) > 0.01) {
-      printf("mean1=%g, mean2=%g, abs=%g\n",mean1,mean2,TMath::Abs((mean1-mean2)/mean2));
+   if (mean2> 0.0001 && std::abs((mean1-mean2)/mean2) > 0.01) {
+      printf("mean1=%g, mean2=%g, abs=%g\n",mean1,mean2,std::abs((mean1-mean2)/mean2));
       return -2;
    }
-   if (rms1 > 0.0001 && TMath::Abs((rms1-rms2)/rms1) > 0.0003) {
-      printf("rms1=%g, rms2=%g, abs=%g\n",rms1,rms2,TMath::Abs((rms1-rms2)/rms1));
+   if (rms1 > 0.0001 && std::abs((rms1-rms2)/rms1) > 0.0003) {
+      printf("rms1=%g, rms2=%g, abs=%g\n",rms1,rms2,std::abs((rms1-rms2)/rms1));
       return -3;
    }
    return n1*factor-n2;

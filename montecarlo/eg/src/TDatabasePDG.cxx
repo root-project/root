@@ -128,7 +128,7 @@ void TDatabasePDG::BuildPdgMap() const
 {
    // It is preferrable to waste some work in presence of high contention
    // for the benefit of reducing the critical section to the bare minimum
-   auto pdgMap = new TExMap(4 * TMath::Max(600, fParticleList->GetEntries()) / 3 + 3);
+   auto pdgMap = new TExMap(4 * std::max(600, fParticleList->GetEntries()) / 3 + 3);
    TIter next(fParticleList);
    TParticlePDG *p;
    while ((p = (TParticlePDG*)next())) {

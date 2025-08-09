@@ -30,6 +30,10 @@
 #include <string>
 #include <memory>
 
+#ifdef WIN32
+#include <algorithm> // for std::replace
+#endif
+
 #define JUPYTER_CMD        "jupyter"
 #define NB_OPT             "notebook"
 #define JUPYTER_CONF_PATH_V "JUPYTER_CONFIG_PATH"

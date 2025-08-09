@@ -97,7 +97,7 @@ Float_t *TWebPainting::Reserve(Int_t sz)
       return nullptr;
 
    if (fSize + sz > fBuf.GetSize()) {
-      Int_t nextsz = fBuf.GetSize() + TMath::Max(1024, (sz/128 + 1) * 128);
+      Int_t nextsz = fBuf.GetSize() + std::max(1024, (sz/128 + 1) * 128);
       fBuf.Set(nextsz);
    }
 

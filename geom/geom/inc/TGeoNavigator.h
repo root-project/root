@@ -16,6 +16,8 @@
 
 #include "TGeoCache.h"
 
+#include <cmath>
+
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
 // TGeoNavigator - Class containing the implementation of all navigation  //

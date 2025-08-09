@@ -538,8 +538,8 @@ Int_t TGTextEntry::GetCharacterIndex(Int_t xcoord)
    ix = down;
 
    // safety check...
-   ix = TMath::Max(ix, 0);
-   ix = TMath::Min(ix, len); // len-1
+   ix = std::max(ix, 0);
+   ix = std::min(ix, len); // len-1
 
    return ix;
 }
@@ -797,7 +797,7 @@ void TGTextEntry::Insert(const char *newText)
    }
 
    if (fInsertMode == kReplace) fText->RemoveText(cp,t.Length());
-   Int_t ncp = TMath::Min(cp+t.Length(), GetMaxLength());
+   Int_t ncp = std::min(cp+t.Length(), GetMaxLength());
    fText->AddText(cp, t.Data());
    Int_t dlen = fText->GetTextLength()-GetMaxLength();
    if (dlen>0) fText->RemoveText(GetMaxLength(),dlen); // truncate
@@ -1128,10 +1128,10 @@ void TGTextEntry::DoRedraw()
    if (fSelectionOn) {
       int xs, ws, ixs, iws;
 
-      xs  = TMath::Min(fStartX, fEndX);
-      ws  = TMath::Abs(fEndX - fStartX);
-      ixs = TMath::Min(fStartIX, fEndIX);
-      iws = TMath::Abs(fEndIX - fStartIX);
+      xs  = std::min(fStartX, fEndX);
+      ws  = std::abs(fEndX - fStartX);
+      ixs = std::min(fStartIX, fEndIX);
+      iws = std::abs(fEndIX - fStartIX);
 
       gVirtualX->FillRectangle(fId, fSelbackGC, xs, y, ws, h + 1);
 
@@ -1674,7 +1674,7 @@ void TGTextEntry::SetFocus()
 
 void TGTextEntry::InsertText(const char *text, Int_t pos)
 {
-   Int_t position = TMath::Min((Int_t)fText->GetTextLength(), pos);
+   Int_t position = std::min((Int_t)fText->GetTextLength(), pos);
    TString newText(GetText());
    newText.Insert(position, text);
    SetText(newText.Data());
@@ -1698,8 +1698,8 @@ void TGTextEntry::AppendText(const char *text)
 
 void TGTextEntry::RemoveText(Int_t start, Int_t end)
 {
-   Int_t pos = TMath::Min(start, end);
-   Int_t len = TMath::Abs(end-start);
+   Int_t pos = std::min(start, end);
+   Int_t len = std::abs(end-start);
    TString newText(GetText());
    newText.Remove(pos, len);
    SetText(newText.Data());

@@ -444,7 +444,7 @@ void EfficiencyPlotWrapper::addLegendEntry(TString methodTitle, TGraph *graph)
 {
    fLegend->AddEntry(graph, methodTitle, "l");
 
-   Float_t dyH_local = fdyH * (Float_t(TMath::Min((UInt_t)10, fNumMethods) - 3.0) / 4.0);
+   Float_t dyH_local = fdyH * (Float_t(std::min((UInt_t)10, fNumMethods) - 3.0) / 4.0);
    fLegend->SetY2(fy0H + dyH_local);
 
    fLegend->Paint();
