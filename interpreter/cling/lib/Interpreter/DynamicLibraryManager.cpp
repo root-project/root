@@ -44,6 +44,9 @@ namespace cling {
   #endif
     };
 
+    m_DyldController = llvm::orc::LibraryResolutionDriver::create(
+        llvm::orc::LibraryResolver::Setup::create({}));
+
     // Behaviour is to not add paths that don't exist...In an interpreted env
     // does this make sense? Path could pop into existance at any time.
     for (const char* Var : kSysLibraryEnv) {
@@ -393,6 +396,7 @@ namespace cling {
     if (!insRes.second)
       return kLoadLibAlreadyLoaded;
     m_LoadedLibraries.insert(canonicalLoadedLib);
+    m_DyldController->markLibraryLoaded(canonicalLoadedLib);
     return kLoadLibSuccess;
   }
 
@@ -424,6 +428,7 @@ namespace cling {
 
     m_DyLibs.erase(dyLibHandle);
     m_LoadedLibraries.erase(canonicalLoadedLib);
+    m_DyldController->markLibraryUnLoaded(canonicalLoadedLib);
   }
 
   bool DynamicLibraryManager::isLibraryLoaded(llvm::StringRef fullPath) const {
