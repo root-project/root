@@ -250,8 +250,9 @@ TEST(RDFSnapshotMore, BasketSizePreservation)
 // fixture that provides fixed and variable sized arrays as RDF columns
 class RDFSnapshotArrays : public ::testing::Test {
 protected:
-   const static unsigned int kNEvents = 10u;
-   static const std::vector<std::string> kFileNames;
+   static constexpr unsigned int kNEvents = 10u;
+   static constexpr unsigned int kFixedSize = 4u;
+   static inline const std::vector<std::string> kFileNames = {"test_snapshotarray1.root", "test_snapshotarray2.root"};
 
    static void SetUpTestCase()
    {
@@ -263,18 +264,17 @@ protected:
          TTree t("arrayTree", "arrayTree");
 
          // doubles, floats
-         const unsigned int fixedSize = 4u;
-         float fixedSizeArr[fixedSize];
-         t.Branch("fixedSizeArr", fixedSizeArr, ("fixedSizeArr[" + std::to_string(fixedSize) + "]/F").c_str());
+         float fixedSizeArr[kFixedSize];
+         t.Branch("fixedSizeArr", fixedSizeArr, ("fixedSizeArr[" + std::to_string(kFixedSize) + "]/F").c_str());
          unsigned int size = 0u;
          t.Branch("size", &size);
          double *varSizeArr = new double[eventsPerFile * 100u];
          t.Branch("varSizeArr", varSizeArr, "varSizeArr[size]/D");
 
          // bools. std::vector<bool> makes bool treatment in RDF special
-         bool fixedSizeBoolArr[fixedSize];
+         bool fixedSizeBoolArr[kFixedSize];
          t.Branch("fixedSizeBoolArr", fixedSizeBoolArr,
-                  ("fixedSizeBoolArr[" + std::to_string(fixedSize) + "]/O").c_str());
+                  ("fixedSizeBoolArr[" + std::to_string(kFixedSize) + "]/O").c_str());
          bool *varSizeBoolArr = new bool[eventsPerFile * 100u];
          t.Branch("varSizeBoolArr", varSizeBoolArr, "varSizeBoolArr[size]/O");
 
@@ -305,7 +305,6 @@ protected:
          gSystem->Unlink(fname.c_str());
    }
 };
-const std::vector<std::string> RDFSnapshotArrays::kFileNames = {"test_snapshotarray1.root", "test_snapshotarray2.root"};
 
 /********* SINGLE THREAD TESTS ***********/
 
@@ -507,17 +506,56 @@ TEST_F(RDFSnapshotArrays, SingleThreadJitted)
    checkSnapshotArrayFile(dj, kNEvents);
 }
 
-TEST_F(RDFSnapshotArrays, RedefineArray)
+// Run a define across a TTree boundary to trigger an update of branch addresses
+TEST_F(RDFSnapshotArrays, AddDefine)
 {
    RDataFrame df("arrayTree", kFileNames);
-   auto df2 = df.Redefine("fixedSizeArr", [] { return ROOT::RVecF{42.f, 42.f}; })
-                 .Snapshot("t", "test_snapshotRVecRedefineArray.root", {"fixedSizeArr"});
+   auto df2 = df.Define("RVecColumn",
+                        [](ULong64_t entry) {
+                           return ROOT::RVec<ULong64_t>{entry, entry + 1, entry + 2, entry + 3, entry + 4, entry + 5};
+                        },
+                        {"rdfentry_"})
+                 .Snapshot("t", "test_snapshotDefineRVec.root", {"RVecColumn"});
    df2->Foreach(
-      [](const ROOT::RVecF &v) {
-         EXPECT_EQ(v.size(), 2u); // not 4 as it was in the original input
-         EXPECT_TRUE(All(v == ROOT::RVecF{42.f, 42.f}));
+      [](const ROOT::RVec<ULong64_t> &v, ULong64_t entry) {
+         EXPECT_EQ(v.size(), 6);
+         EXPECT_FLOAT_EQ(v.front(), entry);
+
+         std::vector<ULong64_t> column(v.begin(), v.end());
+         std::vector<ULong64_t> target(6);
+         std::generate(target.begin(), target.end(), [i = entry]() mutable { return i++; });
+         EXPECT_EQ(column, target);
       },
-      {"fixedSizeArr"});
+      {"RVecColumn", "rdfentry_"});
+
+   gSystem->Unlink("test_snapshotDefineRVec.root.root");
+}
+
+TEST_F(RDFSnapshotArrays, RedefineArray)
+{
+   static constexpr unsigned int newArraySize = 6u;
+   static_assert(kFixedSize != newArraySize);
+
+   RDataFrame df("arrayTree", kFileNames);
+   auto df2 =
+      df.Redefine("fixedSizeArr",
+                  [](ULong64_t entry) {
+                     return ROOT::RVecF{float(entry), entry + 1.f, entry + 2.f, entry + 3.f, entry + 4.f, entry + 5.f};
+                  },
+                  {"rdfentry_"})
+         .Snapshot("t", "test_snapshotRVecRedefineArray.root", {"fixedSizeArr"});
+   df2->Foreach(
+      [](const ROOT::RVecF &v, ULong64_t entry) {
+         EXPECT_EQ(v.size(), newArraySize); // not 4 as it was in the original input
+         EXPECT_FLOAT_EQ(v.front(), entry);
+         std::vector<float> diffs(newArraySize);
+         std::adjacent_difference(v.begin(), v.end(), diffs.begin());
+
+         std::vector<float> target(6, 1.f);
+         target.front() = entry;
+         EXPECT_EQ(diffs, target);
+      },
+      {"fixedSizeArr", "rdfentry_"});
 
    gSystem->Unlink("test_snapshotRVecRedefineArray.root");
 }
@@ -741,12 +779,13 @@ void ReadWriteCarray(const char *outFileNameBase)
       EXPECT_TRUE(r.Next());
       EXPECT_EQ(rv.GetSize(), 100000u);
       EXPECT_EQ(rvb.GetSize(), 100000u);
-      for (auto e : rv)
-         EXPECT_EQ(e, 84);
-      for (auto e : rvb)
-         EXPECT_TRUE(e);
-      for (auto e : rvl)
-         EXPECT_EQ(e, 42);
+      EXPECT_EQ(rvl.GetSize(), 100000u);
+      EXPECT_TRUE(std::all_of(rv.begin(), rv.end(), [](auto elm) { return elm == 84; }))
+         << rv[0] << " " << rv[1] << " " << rv[2];
+      EXPECT_TRUE(std::all_of(rvb.begin(), rvb.end(), [](auto elm) { return elm; }))
+         << rvb[0] << " " << rvb[1] << " " << rvb[2];
+      EXPECT_TRUE(std::all_of(rvl.begin(), rvl.end(), [](auto elm) { return elm == 42; }))
+         << rvl[0] << " " << rvl[1] << " " << rvl[2];
 
       // Size 3
       EXPECT_TRUE(r.Next());
@@ -1115,31 +1154,17 @@ TEST(RDFSnapshotMore, OutOfOrderSizeBranch)
       t.Write();
    }
 
-   auto check = [](const std::vector<int> &sizes, const std::vector<ROOT::RVecF> &vecs) {
-      EXPECT_EQ(sizes.at(0), 1);
-      EXPECT_EQ(sizes.at(1), 2);
-      EXPECT_EQ(sizes.at(2), 3);
-      EXPECT_TRUE(All(vecs.at(0) == ROOT::RVecF{1}));
-      EXPECT_TRUE(All(vecs.at(1) == ROOT::RVecF{1, 2}));
-      EXPECT_TRUE(All(vecs.at(2) == ROOT::RVecF{1, 2, 3}));
-   };
-
    {
-      // fully typed Snapshot
       auto out = ROOT::RDataFrame("t", inFile).Snapshot("t", outFile, {"vec", "sz"});
       auto sizes = out->Take<int>("sz");
       auto vecs = out->Take<ROOT::RVecF>("vec");
 
-      check(*sizes, *vecs);
-   }
-
-   {
-      // jitted Snapshot
-      auto out = ROOT::RDataFrame("t", inFile).Snapshot("t", outFile, {"vec", "sz"});
-      auto sizes = out->Take<int>("sz");
-      auto vecs = out->Take<ROOT::RVecF>("vec");
-
-      check(*sizes, *vecs);
+      EXPECT_EQ(sizes->at(0), 1);
+      EXPECT_EQ(sizes->at(1), 2);
+      EXPECT_EQ(sizes->at(2), 3);
+      EXPECT_TRUE(All(vecs->at(0) == ROOT::RVecF{1}));
+      EXPECT_TRUE(All(vecs->at(1) == ROOT::RVecF{1, 2}));
+      EXPECT_TRUE(All(vecs->at(2) == ROOT::RVecF{1, 2, 3}));
    }
 
    gSystem->Unlink(inFile);
@@ -1291,7 +1316,7 @@ TEST_F(RDFSnapshotMT, Reshuffled_friends)
 TEST(RDFSnapshotMore, ManyTasksPerThread)
 {
    const auto nSlots = 4u;
-   ROOT::EnableImplicitMT(nSlots);
+   TIMTEnabler imt(nSlots);
    // make sure the file is not here beforehand
    gSystem->Unlink("snapshot_manytasks_out.root");
 
@@ -1321,8 +1346,6 @@ TEST(RDFSnapshotMore, ManyTasksPerThread)
    for (auto i = 0u; i < nInputFiles; ++i)
       gSystem->Unlink((inputFilePrefix + std::to_string(i) + ".root").c_str());
    gSystem->Unlink(outputFile);
-
-   ROOT::DisableImplicitMT();
 }
 
 void checkSnapshotArrayFileMT(RResultPtr<RInterface<RLoopManager>> &df, unsigned int kNEvents)
@@ -1340,28 +1363,58 @@ void checkSnapshotArrayFileMT(RResultPtr<RInterface<RLoopManager>> &df, unsigned
 
 TEST_F(RDFSnapshotArrays, MultiThread)
 {
-   ROOT::EnableImplicitMT(4);
+   TIMTEnabler imt(4);
 
    RDataFrame tdf("arrayTree", kFileNames);
    auto dt = tdf.Snapshot("outTree", "test_snapshotRVecoutMT.root",
                           {"fixedSizeArr", "size", "varSizeArr", "varSizeBoolArr", "fixedSizeBoolArr"});
 
    checkSnapshotArrayFileMT(dt, kNEvents);
-
-   ROOT::DisableImplicitMT();
 }
 
 TEST_F(RDFSnapshotArrays, MultiThreadJitted)
 {
-   ROOT::EnableImplicitMT(4);
+   TIMTEnabler imt(4);
 
    RDataFrame tdf("arrayTree", kFileNames);
    auto dj = tdf.Snapshot("outTree", "test_snapshotRVecoutMTJitted.root",
                           {"fixedSizeArr", "size", "varSizeArr", "varSizeBoolArr", "fixedSizeBoolArr"});
 
    checkSnapshotArrayFileMT(dj, kNEvents);
+}
 
-   ROOT::DisableImplicitMT();
+TEST_F(RDFSnapshotArrays, RedefineArrayMT)
+{
+   static constexpr unsigned int newArraySize = 6u;
+   static_assert(kFixedSize != newArraySize);
+   TIMTEnabler(3);
+
+   // More input files than threads, so output branches need to be bound to new inputs
+   std::vector<std::string> fileNames(kFileNames);
+   std::copy(kFileNames.begin(), kFileNames.end(), std::back_inserter(fileNames));
+   std::copy(kFileNames.begin(), kFileNames.end(), std::back_inserter(fileNames));
+
+   RDataFrame df("arrayTree", fileNames);
+   auto df2 =
+      df.Redefine("fixedSizeArr",
+                  [](ULong64_t entry) {
+                     return ROOT::RVecF{float(entry), entry + 1.f, entry + 2.f, entry + 3.f, entry + 4.f, entry + 5.f};
+                  },
+                  {"rdfentry_"})
+         .Snapshot("t", "test_snapshotRVecRedefineArray.root", {"fixedSizeArr"});
+   EXPECT_EQ(df2->Count().GetValue(), 3 * kNEvents);
+   df2->Foreach(
+      [](const ROOT::RVecF &v) {
+         EXPECT_EQ(v.size(), newArraySize); // not 4 as it was in the original input
+         EXPECT_LT(v.front(), 3 * kNEvents);
+
+         std::vector<float> target(newArraySize, 0.f);
+         for (unsigned int i = 0; i < newArraySize; ++i)
+            EXPECT_FLOAT_EQ(v[i], v.front() + i);
+      },
+      {"fixedSizeArr"});
+
+   gSystem->Unlink("test_snapshotRVecRedefineArray.root");
 }
 
 // See also https://github.com/root-project/root/issues/10225
@@ -1395,7 +1448,7 @@ TEST(RDFSnapshotMore, ColsWithCustomTitlesMT)
    WriteColsWithCustomTitles(tname, fname);
 
    // read and write test tree with RDF (in parallel)
-   ROOT::EnableImplicitMT(4);
+   TIMTEnabler imt(4);
    RDataFrame d(tname, fname);
    const std::string prefix = "snapshotted_";
    auto res_tdf = d.Snapshot(tname, prefix + fname, {"i", "float", "arrint", "vararrint"});
@@ -1407,7 +1460,6 @@ TEST(RDFSnapshotMore, ColsWithCustomTitlesMT)
    // clean-up
    gSystem->Unlink(fname);
    gSystem->Unlink((prefix + fname).c_str());
-   ROOT::DisableImplicitMT();
 }
 
 TEST(RDFSnapshotMore, TreeWithFriendsMT)
@@ -1417,7 +1469,7 @@ TEST(RDFSnapshotMore, TreeWithFriendsMT)
    RDataFrame(10).Define("x", []() { return 42; }).Snapshot("t", fname1, {"x"});
    RDataFrame(10).Define("x", []() { return 0; }).Snapshot("t", fname2, {"x"});
 
-   ROOT::EnableImplicitMT();
+   TIMTEnabler imt(0);
 
    TFile file(fname1);
    auto tree = file.Get<TTree>("t");
@@ -1431,7 +1483,6 @@ TEST(RDFSnapshotMore, TreeWithFriendsMT)
    EXPECT_EQ(df_out->Max<int>("x").GetValue(), 42);
    EXPECT_EQ(df_out->GetColumnNames(), std::vector<std::string>{"x"});
 
-   ROOT::DisableImplicitMT();
    gSystem->Unlink(fname1);
    gSystem->Unlink(fname2);
    gSystem->Unlink(outfname);
@@ -1458,13 +1509,12 @@ TEST(RDFSnapshotMore, JittedSnapshotAndAliasedColumns)
 
 TEST(RDFSnapshotMore, LazyNotTriggeredMT)
 {
-   ROOT::EnableImplicitMT(4);
+   TIMTEnabler imt(4);
    ROOT_EXPECT_WARNING(BookLazySnapshot(), "Snapshot",
                        "A lazy Snapshot action was booked but never triggered. The tree 't' in output file "
                        "'lazysnapshotnottriggered_shouldnotbecreated.root' was not created. "
                        "In case it was desired instead, remember to trigger the Snapshot operation, by "
                        "storing its result in a variable and for example calling the GetValue() method on it.");
-   ROOT::DisableImplicitMT();
 }
 
 TEST(RDFSnapshotMore, LazyTriggeredMT)
@@ -1481,7 +1531,7 @@ TEST(RDFSnapshotMore, EmptyBuffersMT)
    const auto fname = "emptybuffersmt.root";
    const auto treename = "t";
    const unsigned int nslots = std::min(4U, std::thread::hardware_concurrency());
-   ROOT::EnableImplicitMT(nslots);
+   TIMTEnabler imt(nslots);
    ROOT::RDataFrame d(10);
    std::atomic_bool firstWorker{true};
    auto dd = d.DefineSlot("x", [&](unsigned int) {
@@ -1504,15 +1554,13 @@ TEST(RDFSnapshotMore, EmptyBuffersMT)
    EXPECT_EQ(t->GetListOfBranches()->GetEntries(), 1);
    EXPECT_EQ(t->GetEntries(), Long64_t(passed));
 
-   ROOT::DisableImplicitMT();
    gSystem->Unlink(fname);
 }
 
 TEST(RDFSnapshotMore, ReadWriteCarrayMT)
 {
-   ROOT::EnableImplicitMT(4);
+   TIMTEnabler imt(4);
    ReadWriteCarray("ReadWriteCarrayMT");
-   ROOT::DisableImplicitMT();
 }
 
 TEST(RDFSnapshotMore, TClonesArrayMT)
@@ -1582,12 +1630,10 @@ TEST(RDFSnapshotMore, SetMaxTreeSizeMT)
    // Create an RDF from the previously snapshotted file, then Snapshot again
    // with IMT enabled.
    {
-      ROOT::EnableImplicitMT();
+      TIMTEnabler imt(0);
 
       ROOT::RDataFrame df{"T", "rdfsnapshot_ttree_sequential_setmaxtreesize.root"};
       df.Snapshot("T", "rdfsnapshot_imt_setmaxtreesize.root", {"x"});
-
-      ROOT::DisableImplicitMT();
    }
 
    // Check the file for data integrity.
@@ -1632,25 +1678,22 @@ TEST(RDFSnapshotMore, ZeroOutputEntriesMT)
 
 TEST(RDFSnapshotMore, CustomBasketSizeMT)
 {
-   ROOT::EnableImplicitMT();
+   TIMTEnabler imt(0);
    TestCustomBasketSize();
-   ROOT::DisableImplicitMT();
 }
 
 // Test for default basket size
 TEST(RDFSnapshotMore, DefaultBasketSizeMT)
 {
-   ROOT::EnableImplicitMT();
+   TIMTEnabler imt(0);
    TestDefaultBasketSize();
-   ROOT::DisableImplicitMT();
 }
 
 // Test for basket size preservation
 TEST(RDFSnapshotMore, BasketSizePreservationMT)
 {
-   ROOT::EnableImplicitMT();
+   TIMTEnabler imt(0);
    TestBasketSizePreservation();
-   ROOT::DisableImplicitMT();
 }
 
 #endif // R__USE_IMT
