@@ -51,12 +51,6 @@ void handleError(Error Err, StringRef context = "") {
   }));
 }
 
-template <typename T>
-T handleErrorAndReturn(Error Err, T ReturnValue, StringRef context = "") {
-  handleError(std::move(Err), context);
-  return ReturnValue;
-}
-
 bool ObjectFileLoader::isArchitectureCompatible(const object::ObjectFile &Obj) {
   Triple HostTriple(sys::getDefaultTargetTriple());
   Triple ObjTriple = Obj.makeTriple();
@@ -892,11 +886,7 @@ Expected<LibraryDepsInfo> LibraryScanner::extractDeps(StringRef filePath) {
   auto ObjOrErr = ObjLoader.getObjectFile();
   if (!ObjOrErr) {
     LLVM_DEBUG(dbgs() << "extractDeps: Failed to open " << filePath << "\n";);
-    return handleErrorAndReturn(ObjOrErr.takeError(),
-                                createStringError(std::errc::file_exists,
-                                                  "Failed to open %s",
-                                                  filePath.str().c_str()),
-                                "LibraryScanner::extractDeps");
+    return ObjOrErr.takeError();
   }
 
   object::ObjectFile *Obj = &ObjOrErr.get();
