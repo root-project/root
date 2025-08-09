@@ -82,11 +82,11 @@ int test_smatrix_op() {
 
 
   double t_veq, t_meq, t_vad, t_mad, t_dot, t_mv, t_gmv, t_mm, t_prd, t_inv, t_vsc, t_msc, t_ama, t_tra = 0;
-  double totTime1, totTime2;
+  double totTime1 = 0, totTime2 = 0;
 
 
 
-  double r1,r2;
+  double r1 = 0, r2 = 0;
   int npass = NITER;
   TRandom3 r(111);
   for (int k = 0; k < npass; k++) {
@@ -203,11 +203,11 @@ int test_smatrix_sym_op() {
 
 
   double t_meq, t_mad, t_mv, t_gmv, t_mm, t_prd, t_inv, t_msc, t_ama = 0;
-  double totTime1, totTime2;
+  double totTime1 = 0, totTime2 = 0;
 
 
 
-  double r1;
+  double r1 = 0;
   int npass = NITER;
   TRandom3 r(111);
   for (int k = 0; k < npass; k++) {
@@ -308,9 +308,9 @@ int test_tmatrix_op() {
   std::cout << "************************************************\n";
 
   double t_veq, t_meq, t_vad, t_mad, t_dot, t_mv, t_gmv, t_mm, t_prd, t_inv, t_vsc, t_msc, t_ama, t_tra = 0;
-  double totTime1, totTime2;
+  double totTime1 = 0, totTime2 = 0;
 
-  double r1,r2;
+  double r1 = 0, r2 = 0;
   int npass = NITER;
   TRandom3 r(111);
   gMatrixCheck = 0;
@@ -420,11 +420,11 @@ int test_tmatrix_sym_op() {
 
 
   double t_meq, t_mad, t_mv, t_gmv, t_mm, t_prd, t_inv, t_msc, t_ama = 0;
-  double totTime1, totTime2;
+  double totTime1 = 0, totTime2 = 0;
 
 
 
-  double r1;
+  double r1 = 0;
   int npass = NITER;
   TRandom3 r(111);
   for (int k = 0; k < npass; k++) {
@@ -766,79 +766,6 @@ int testOperations() {
 
   TEST(5)
 
-   return 0;
-}
-
-
-int main(int argc , char *argv[] ) {
-
-
-  std::string fname = "testOperations";
-  if (argc > 1) {
-    std::string platf(argv[1]);
-    fname = fname + "_" + platf;
-  }
-  fname = fname + ".root";
-
-
-#ifdef REPORT_TIME
-  TFile * f = new TFile(fname.c_str(),"recreate");
-
-  typeNames[0] = "SMatrix";
-  typeNames[1] = "TMatrix";
-#if !defined(HAVE_CLHEP) && defined (TEST_SYM)
-  typeNames[2] = "SMatrix_sym";
-  typeNames[3] = "TMatrix_sym";
-#elif defined(HAVE_CLHEP) && defined (TEST_SYM)
-  typeNames[2] = "HepMatrix";
-  typeNames[3] = "SMatrix_sym";
-  typeNames[4] = "TMatrix_sym";
-  typeNames[5] = "HepMatrix_sym";
-#elif defined(HAVE_CLHEP) && !defined (TEST_SYM)
-  typeNames[2] = "HepMatrix";
-#endif
-
-#endif
-
-#ifndef TEST_ALL_MATRIX_SIZES
-//   NLOOP = 1000*NLOOP_MIN
-//   initValues();
-
-//   TEST(5)
-//   NLOOP = 50*NLOOP_MIN;
-//   TEST(30);
-
-  return testOperations();
-
-#else
-  NLOOP = 5000*NLOOP_MIN;
-  initValues();
-
-
-
-  TEST(2);
-  TEST(3);
-  TEST(4);
-  NLOOP = 1000*NLOOP_MIN
-  TEST(5);
-  TEST(6);
-  TEST(7);
-  TEST(10);
-  NLOOP = 100*NLOOP_MIN;
-  TEST(15);
-  TEST(20);
-  NLOOP = 50*NLOOP_MIN;
-  TEST(30);
-//   NLOOP = NLOOP_MIN;
-//   TEST(50);
-//   TEST(75);
-//   TEST(100);
-#endif
-
-#ifdef REPORT_TIME
-  f->Write();
-  f->Close();
-#endif
-
+  return 0;
 }
 
