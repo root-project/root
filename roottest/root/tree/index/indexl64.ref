@@ -1,0 +1,16 @@
+
+Processing runindexl64.C...
+Tree BuildIndex returns 9
+Entries in chain: 9
+BuildIndex returns 9
+Try to find the position of run=0, event=500 in the chain, as it does not exist, this should return a -1:
+-1
+Try to find the position of run=5, event=bigval in the chain, which was inserted in position 4:
+4
+Entries in chain: 9
+BuildIndex returns 1
+Try to find the position of run=0, event=500 in the chain, as it does not exist, this should return a -1:
+-1
+Try to find the position of run=5, event=bigval in the chain, which was inserted in position 4:
+4
+(int) 0
