@@ -126,11 +126,11 @@ namespace cling {
     void addSearchPath(llvm::StringRef dir, bool isUser = true,
                        bool prepend = false) {
        if (!dir.empty()) {
-          // for (auto & item : m_SearchPaths)
-          //   if (dir == item.Path)
-          //     return;
-          // auto pos = prepend ? m_SearchPaths.begin() : m_SearchPaths.end();
-          // m_SearchPaths.insert(pos, SearchPathInfo{dir.str(), isUser});
+          for (auto & item : m_SearchPaths)
+            if (dir == item.Path)
+              return;
+          auto pos = prepend ? m_SearchPaths.begin() : m_SearchPaths.end();
+          m_SearchPaths.insert(pos, SearchPathInfo{dir.str(), isUser});
           m_DyldController->addScanPath(dir.str(),
                                         isUser ? llvm::orc::PathType::User
                                                : llvm::orc::PathType::System);
