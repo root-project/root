@@ -75,6 +75,8 @@ for (auto br : TRangeDynCast<TBranch>( tree->GetListOfBranches() )) {
 #include "TError.h"
 #include "TSystem.h"
 #include "TObjArray.h"
+#include "TMathBase.h"
+
 #include <iostream>
 #include <sstream>
 

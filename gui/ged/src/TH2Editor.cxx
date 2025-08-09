@@ -1761,19 +1761,19 @@ void TH2Editor::DoBinLabel()
    // Get the divider of nx/ny which is closest to numx/numy
    Int_t *divx = Dividers(nx);
    Int_t *divy = Dividers(ny);
-   Int_t diff = TMath::Abs(numx - divx[1]);
+   Int_t diff = std::abs(numx - divx[1]);
    Int_t c = 1; Int_t d = 1;
    for (i = 2; i <= divx[0]; i++) {
-      if ((TMath::Abs(numx - divx[i])) < diff) {
+      if ((std::abs(numx - divx[i])) < diff) {
          c = i;
-         diff = TMath::Abs(numx - divx[i]);
+         diff = std::abs(numx - divx[i]);
       }
    }
-   diff = TMath::Abs(numy - divy[1]);
+   diff = std::abs(numy - divy[1]);
    for (i = 2; i <= divy[0]; i++) {
-      if ((TMath::Abs(numy - divy[i])) < diff) {
+      if ((std::abs(numy - divy[i])) < diff) {
          d = i;
-         diff = TMath::Abs(numy - divy[i]);
+         diff = std::abs(numy - divy[i]);
       }
    }
    if (divx[c]!= fHist->GetXaxis()->GetNbins() ||

@@ -6,6 +6,8 @@
 #include "TGraphErrors.h"
 #include "TFrame.h"
 
+#include <cmath>
+
 /*
   this macro plots the quadratic deviation of the estimated from the target value, averaged over the first nevt events in test sample (all if Nevt=-1)
   a) normal average

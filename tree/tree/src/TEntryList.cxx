@@ -430,7 +430,7 @@ void TEntryList::Add(const TEntryList *elist)
             TEntryListBlock *block1=nullptr;
             TEntryListBlock *block2=nullptr;
             Int_t i;
-            Int_t nmin = TMath::Min(fNBlocks, elist->fNBlocks);
+            Int_t nmin = std::min(fNBlocks, elist->fNBlocks);
             Long64_t nnew, nold;
             for (i=0; i<nmin; i++){
                block1 = (TEntryListBlock*)fBlocks->UncheckedAt(i);

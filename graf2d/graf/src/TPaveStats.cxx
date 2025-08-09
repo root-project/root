@@ -351,11 +351,11 @@ void TPaveStats::Paint(Option_t *option)
 
    if (!fLines) return;
    TString typolabel;
-   Double_t y2ref = TMath::Max(fY1,fY2);
-   Double_t x1ref = TMath::Min(fX1,fX2);
-   Double_t x2ref = TMath::Max(fX1,fX2);
-   Double_t dx    = TMath::Abs(fX2 - fX1);
-   Double_t dy    = TMath::Abs(fY2 - fY1);
+   Double_t y2ref = std::max(fY1,fY2);
+   Double_t x1ref = std::min(fX1,fX2);
+   Double_t x2ref = std::max(fX1,fX2);
+   Double_t dx    = std::abs(fX2 - fX1);
+   Double_t dy    = std::abs(fY2 - fY1);
    Double_t titlesize=0;
    Double_t textsize = GetTextSize();
    Int_t nlines = GetSize();

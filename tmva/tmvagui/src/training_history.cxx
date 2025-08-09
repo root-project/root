@@ -157,7 +157,7 @@ void TMVA::plot_training_history(TString dataset, TFile* /*file*/, TDirectory* B
 
    // rescale legend box size
    // current box size has been tuned for 3 MVAs + 1 title
-   dyH *= (1. + (Float_t(TMath::Min(10,nmva) - 3.0)/4.0) );
+   dyH *= (1. + (Float_t(std::min(10,nmva) - 3.0)/4.0) );
    legend->SetY1( y0H - dyH);
 
    // redraw axes

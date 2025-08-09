@@ -398,7 +398,7 @@ Bool_t TX11GLManager::ResizeOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt
    TGLContext_t &ctx = fPimpl->fGLContexts[ctxInd];
 
    if (ctx.fPixmapIndex != -1) {
-      if (TMath::Abs(Int_t(w) - Int_t(ctx.fW)) > 1 || TMath::Abs(Int_t(h) - Int_t(ctx.fH)) > 1) {
+      if (std::abs(Int_t(w) - Int_t(ctx.fW)) > 1 || std::abs(Int_t(h) - Int_t(ctx.fH)) > 1) {
          TGLContext_t newCtx;
          newCtx.fWindowIndex = ctx.fWindowIndex;
          newCtx.fW = w, newCtx.fH = h, newCtx.fX = x, newCtx.fY = y;

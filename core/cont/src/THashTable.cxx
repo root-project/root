@@ -26,6 +26,7 @@ use THashList instead.
 #include "TList.h"
 #include "TError.h"
 #include "TROOT.h"
+#include "TMathBase.h"
 
 ClassImp(THashTable);
 
@@ -48,7 +49,7 @@ THashTable::THashTable(Int_t capacity, Int_t rehashlevel)
    } else if (capacity == 0)
       capacity = TCollection::kInitHashTableCapacity;
 
-   fSize = (Int_t)TMath::NextPrime(TMath::Max(capacity,(int)TCollection::kInitHashTableCapacity));
+   fSize = (Int_t)TMath::NextPrime(std::max(capacity,(int)TCollection::kInitHashTableCapacity));
    fCont = new TList* [fSize];
    memset(fCont, 0, fSize*sizeof(TList*));
 
