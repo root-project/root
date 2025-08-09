@@ -1944,6 +1944,14 @@ XMLNodePointer_t TGDMLWrite::CreateOpticalSurfaceN(TGeoOpticalSurface *geoSurf)
       while ((property = (TNamed *)next()))
          fGdmlE->AddChild(mainN, CreatePropertyN(*property));
    }
+   // Write CONST properties
+   TList const &const_properties = geoSurf->GetConstProperties();
+   if (const_properties.GetSize()) {
+      TIter next(&const_properties);
+      TNamed *property;
+      while ((property = (TNamed *)next()))
+         fGdmlE->AddChild(mainN, CreatePropertyN(*property));
+   }
    return mainN;
 }
 
