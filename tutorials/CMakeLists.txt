@@ -937,11 +937,13 @@ if(ROOT_pyroot_FOUND)
   )
   file(GLOB requires_xgboost RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       machine_learning/tmva101_Training.py
+      machine_learning/tmva102_Testing.py # requires tmva101_Training.py
       roofit/roofit/rf618_mixture_models.py
   )
   file(GLOB requires_sklearn RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       machine_learning/TMVA_SOFIE_Models.py
       machine_learning/tmva101_Training.py # uses the xgboost sklearn plugin
+      machine_learning/tmva102_Testing.py # requires tmva101_Training.py
       roofit/roofit/rf617_simulation_based_inference_multidimensional.py
       roofit/roofit/rf618_mixture_models.py # uses the xgboost sklearn plugin
   )
