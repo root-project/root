@@ -381,9 +381,14 @@ add_custom_target(move_artifacts DEPENDS ${stamp_file} ${all_artifacts})
 add_subdirectory (interpreter)
 
 # Update etc/gitinfo.txt for every build.
+find_package(Git)
 add_custom_target(gitinfotxt
   ALL
-  COMMAND ${CMAKE_COMMAND} -DSRCDIR=${CMAKE_SOURCE_DIR} -DBINDIR=${CMAKE_BINARY_DIR} -P ${CMAKE_SOURCE_DIR}/cmake/modules/UpdateGitInfo.cmake
+  COMMAND ${CMAKE_COMMAND}
+          -DSRCDIR=${CMAKE_SOURCE_DIR} -DBINDIR=${CMAKE_BINARY_DIR}
+          # Forward git executable info so that the script doesn't have to find it again
+          -DGit_FOUND=${Git_FOUND} -DGIT_EXECUTABLE=${GIT_EXECUTABLE}
+          -P ${CMAKE_SOURCE_DIR}/cmake/modules/UpdateGitInfo.cmake
   COMMENT "Updating etc/gitinfo.txt."
   BYPRODUCTS ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
 )
