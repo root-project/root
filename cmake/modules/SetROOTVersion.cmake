@@ -12,9 +12,7 @@
 # - GIT_DESCRIBE_ALL: output of `git describe --all` if source directory is git repo
 
 
-cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
-
-find_package(Git)
+cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 function(SET_VERSION_FROM_FILE)
   # See https://stackoverflow.com/questions/47066115/cmake-get-version-from-multiline-text-file
