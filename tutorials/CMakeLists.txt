@@ -68,15 +68,6 @@ set(need_network analysis/dataframe/df027_SQliteDependencyOverVersion.C)
 
 #---Tutorials disabled depending on the build components-------------
 
-if(NOT clad)
-  set(clad_veto math/fit/minuit2GausFit.C
-                # TODO: the next veto should not be necessary!
-                # The tutorial should also work without clad.
-                # See https://github.com/root-project/root/issues/15091.
-                math/fit/exampleFit3D.C
-  )
-endif()
-
 if(MSVC AND NOT win_broken_tests)
   # RBatchGenerator tutorials don't work on Windows at the moment.
   list(APPEND dataframe_veto machine_learning/RBatchGenerator_NumPy.py)
@@ -141,10 +132,6 @@ if(NOT davix)
     set(davix_veto
         legacy/hist040_TH2Poly_europe.C hist/hist039_TH2Poly_usa.*
         legacy/multicore/mp104_processH1.C analysis/parallel/mp_processSelector.C)
-endif()
-
-if(MACOSX_VERSION VERSION_EQUAL 10.13)
-   list(APPEND dataframe_veto analysis/dataframe/df103_NanoAODHiggsAnalysis.*)
 endif()
 
 if(NOT geom)
@@ -417,10 +404,6 @@ else()
   endif()
 endif()
 
-if (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64)
-   set(macm1_veto analysis/dataframe/df107_SingleTopAnalysis.py)
-endif()
-
 #---These ones are disabled !!! ------------------------------------
 set(extra_veto
   legacy/benchmarks.C
@@ -506,8 +489,6 @@ set(all_veto hsimple.C
              ${xrootd_veto}
              ${spectrum_veto}
              ${dataframe_veto}
-             ${macm1_veto}
-             ${clad_veto}
              ${davix_veto}
              )
 
@@ -827,12 +808,6 @@ if(ROOT_pyroot_FOUND)
   if(NOT tmva-pymva)
     file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/keras/*.py)
     list(APPEND pyveto ${tmva_veto_py})
-  elseif(ROOT_ARCHITECTURE MATCHES macosx)
-    # Veto also keras tutorial on macos due to issue in disabling eager execution on macos
-    # TODO: fix these tutorials on macOS
-    list(APPEND pyveto machine_learning/keras/RegressionKeras.py)
-    list(APPEND pyveto machine_learning/keras/ApplicationRegressionKeras.py)
-    list(APPEND pyveto machine_learning/keras/MultiClassKeras.py)
   endif()
 
   if (ROOT_KERAS_FOUND)
