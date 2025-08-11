@@ -12,7 +12,7 @@
    void *obj = file->Get("object");
 
    // Delay parsing as long as possible by using ProcessLine
-   if (obj) gROOT->ProcessLine(TString::Format("{Outer *o = (Outer*)%p; o->Print();}",obj));
+   if (obj) gROOT->ProcessLine(TString::Format("{Outer *o = (Outer*)0x%zx; o->Print();}", (size_t)obj));
 
    // Loading the library (or even auto parsing the header since it is the same for both library
    // solves the I/O problem.
@@ -20,10 +20,10 @@
 
    instHeaderTestValid(true);
    instHeaderTestDecl(false);
-      
+
    printf("Name of real 'variable' seen as: '%s'\n",c->GetListOfRealData()->At(1)->GetName());
    obj = file->Get("object");
-   if (obj) gROOT->ProcessLine(TString::Format("{Outer *o = (Outer*)%p; o->Print();}",obj));
+   if (obj) gROOT->ProcessLine(TString::Format("{Outer *o = (Outer*)0x%zx; o->Print();}", (size_t)obj));
 
    return 0;
 }
