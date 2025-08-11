@@ -11,7 +11,7 @@ on:
   schedule:
     - cron: '01 1 * * *'
   pull_request:
-    types: [labeled]
+    types: [opened, synchronize, reopened, labeled]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
@@ -26,6 +26,7 @@ jobs:
       contains(github.event.pull_request.labels.*.name, 'build-python-wheels')
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         target: [cp39-manylinux_x86_64, cp310-manylinux_x86_64, cp311-manylinux_x86_64, cp312-manylinux_x86_64, cp313-manylinux_x86_64]
     name: ${{ matrix.target }}
@@ -34,6 +35,44 @@ jobs:
       - uses: ./.github/workflows/cibuildwheel-impl
         with:
           build-tag: ${{ matrix.target }}
+
+  test-wheels:
+    needs: build-wheels
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    name: test-wheel-cp${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download produced wheels
+        uses: actions/download-artifact@v4
+        with:
+          path: wheels
+          merge-multiple: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install produced wheel
+        run: |
+          ls -R wheels
+          PY_VER=$(python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')")
+          WHEEL=$(ls wheels/*${PY_VER}*.whl | head -n 1)
+          echo "Python version: ${PY_VER}, installing wheel: ${WHEEL}"
+          pip install "$WHEEL"
+
+      - name: Install tutorials dependencies
+        run: |
+          python -m pip install --no-cache-dir -r requirements.txt
+
+      - name: Run tutorials
+        run: |
+          pytest -vv -s -rF --show-capture=all test/wheels
 
   create-and-upload-wheel-registry:
       if: github.event_name != 'pull_request' # The secrets are not available in PR
