@@ -90,11 +90,11 @@ TFileCacheRead::TFileCacheRead() : TObject()
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates a TFileCacheRead data structure.
 
-TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize, TObject *tree)
+TFileCacheRead::TFileCacheRead(TFile *file, Int_t bufsize, TObject *tree)
            : TObject()
 {
-   if (buffersize <=10000) fBufferSize = 100000;
-   else fBufferSize = buffersize;
+   if (bufsize <=10000) fBufferSize = 100000;
+   else fBufferSize = bufsize;
 
    fBufferSizeMin = fBufferSize;
    fBufferLen   = 0;
@@ -741,7 +741,7 @@ Int_t TFileCacheRead::SetBufferSize(Long64_t buffersize)
       }
       delete [] fBuffer;
       fBuffer = 0;
-      np = new char[buffersize];
+      np = new char[bufsize];
       if (pres) {
          memcpy(np, pres, fNtot);
       }
@@ -750,8 +750,8 @@ Int_t TFileCacheRead::SetBufferSize(Long64_t buffersize)
 
    delete [] fBuffer;
    fBuffer = np;
-   fBufferSizeMin = buffersize;
-   fBufferSize = buffersize;
+   fBufferSizeMin = bufsize;
+   fBufferSize = bufsize;
 
    if (inval) {
       return 1;

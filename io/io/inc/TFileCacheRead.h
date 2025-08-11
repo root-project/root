@@ -78,7 +78,7 @@ private:
 
 public:
    TFileCacheRead();
-   TFileCacheRead(TFile *file, Int_t buffersize, TObject *tree = nullptr);
+   TFileCacheRead(TFile *file, Int_t bufsize, TObject *tree = nullptr);
    ~TFileCacheRead() override;
    virtual Int_t       AddBranch(TBranch * /*b*/, Bool_t /*subbranches*/ = kFALSE) { return 0; }
    virtual Int_t       AddBranch(const char * /*branch*/, Bool_t /*subbranches*/ = kFALSE) { return 0; }

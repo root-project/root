@@ -51,8 +51,8 @@ public:
 
    void   Close(Option_t *option="") override;
    Bool_t UploadAndReset();
-   Int_t  Write(const char *name=nullptr, Int_t opt=0, Int_t bufsiz=0) override;
-   Int_t  Write(const char *name=nullptr, Int_t opt=0, Int_t bufsiz=0) const override;
+   Int_t  Write(const char *name=nullptr, Int_t opt=0, Int_t bufsize=0) override;
+   Int_t  Write(const char *name=nullptr, Int_t opt=0, Int_t bufsize=0) const override;
    void   WriteStreamerInfo() override;
 
    Int_t GetServerIdx() const { return fServerIdx; }

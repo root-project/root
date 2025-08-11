@@ -173,7 +173,7 @@ It is strongly recommended to persistify those as objects rather than lists of l
 ## Adding a column holding STL collection instances (e.g. std::vector or std::list)
 
 ~~~ {.cpp}
-    auto branch = tree.Branch( branchname, STLcollection, buffsize, splitlevel);
+    auto branch = tree.Branch( branchname, STLcollection, bufsize, splitlevel);
 ~~~
 `STLcollection` is the address of a pointer to a container of the standard
 library such as `std::vector`, `std::list`, containing pointers, fundamental types
@@ -8522,9 +8522,9 @@ void TTree::SetAutoSave(Long64_t autos)
 /// - if bname="xxx*", apply to all branches with name starting with xxx
 ///
 /// see TRegexp for wildcarding options
-/// buffsize = branc basket size
+/// bufsize = branch basket size
 
-void TTree::SetBasketSize(const char* bname, Int_t buffsize)
+void TTree::SetBasketSize(const char* bname, Int_t bufsize)
 {
    Int_t nleaves = fLeaves.GetEntriesFast();
    TRegexp re(bname, true);
@@ -8537,7 +8537,7 @@ void TTree::SetBasketSize(const char* bname, Int_t buffsize)
          continue;
       }
       nb++;
-      branch->SetBasketSize(buffsize);
+      branch->SetBasketSize(bufsize);
    }
    if (!nb) {
       Error("SetBasketSize", "unknown branch -> '%s'", bname);
