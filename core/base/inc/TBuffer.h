@@ -64,9 +64,9 @@ protected:
    void operator=(const TBuffer &) = delete;
 
    Int_t Read(const char *name) override { return TObject::Read(name); }
-   Int_t Write(const char *name, Int_t opt, Int_t bufsize) override
+   Int_t Write(const char *name, Int_t opt, Long64_t bufsize) override
                               { return TObject::Write(name, opt, bufsize); }
-   Int_t Write(const char *name, Int_t opt, Int_t bufsize) const override
+   Int_t Write(const char *name, Int_t opt, Long64_t bufsize) const override
                               { return TObject::Write(name, opt, bufsize); }
 
 public:
@@ -78,8 +78,8 @@ public:
    enum { kInitialSize = 1024, kMinimalSize = 128 };
 
    TBuffer(EMode mode);
-   TBuffer(EMode mode, Int_t bufsize);
-   TBuffer(EMode mode, Int_t bufsize, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
+   TBuffer(EMode mode, Long64_t bufsize);
+   TBuffer(EMode mode, Long64_t bufsize, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
    virtual ~TBuffer();
 
    Int_t    GetBufferVersion() const { return fVersion; }
@@ -87,7 +87,7 @@ public:
    Bool_t   IsWriting() const { return (fMode & kWrite) != 0; }
    void     SetReadMode();
    void     SetWriteMode();
-   void     SetBuffer(void *buf, UInt_t bufsize = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
+   void     SetBuffer(void *buf, Long64_t bufsize = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
    ReAllocCharFun_t GetReAllocFunc() const;
    void     SetReAllocFunc(ReAllocCharFun_t reallocfunc = nullptr);
    void     SetBufferOffset(Int_t offset = 0) { fBufCur = fBuffer+offset; }
@@ -98,8 +98,8 @@ public:
    Int_t    BufferSize() const { return fBufSize; }
    void     DetachBuffer() { fBuffer = nullptr; }
    Int_t    Length()     const { return (Int_t)(fBufCur - fBuffer); }
-   void     Expand(Int_t newsize, Bool_t copy = kTRUE);  // expand buffer to newsize
-   void     AutoExpand(Int_t size_needed);  // expand buffer to newsize
+   void     Expand(Long64_t newsize, Bool_t copy = kTRUE);  // expand buffer to newsize
+   void     AutoExpand(Long64_t size_needed);  // expand buffer to newsize
    Bool_t   ByteSwapBuffer(Long64_t n, EDataType type);  // Byte-swap N primitive-elements in the buffer
 
    virtual Bool_t     CheckObject(const TObject *obj) = 0;

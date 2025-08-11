@@ -252,7 +252,7 @@ extern void convert_cwn(Int_t id);
 extern void convert_rwn(Int_t id);
 
 Int_t golower  = 1;
-Int_t bufsize  = 64000;
+Long64_t bufsize  = 64000;
 Int_t optcwn = 1;
 int main(int argc, char **argv)
 {
@@ -280,7 +280,7 @@ int main(int argc, char **argv)
       optcwn = atoi(argv[7]);
    }
    if (argc > 6) {
-      bufsize = atoi(argv[6]);
+      bufsize = atol(argv[6]);
    }
    if (argc > 5) {
       record_size = atoi(argv[5]);

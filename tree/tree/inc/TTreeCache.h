@@ -127,7 +127,7 @@ private:
 public:
 
    TTreeCache();
-   TTreeCache(TTree *tree, Int_t bufsize=0);
+   TTreeCache(TTree *tree, Long64_t bufsize=0);
    ~TTreeCache() override;
    Int_t                AddBranch(TBranch *b, bool subgbranches = false) override;
    Int_t                AddBranch(const char *branch, bool subbranches = false) override;
@@ -162,7 +162,7 @@ public:
    virtual void         ResetCache();
    void                 ResetMissCache(); // Reset the miss cache.
    void                 SetAutoCreated(bool val) {fAutoCreated = val;}
-   Int_t                SetBufferSize(Long64_t buffersize) override;
+   Int_t                SetBufferSize(Long64_t bufsize) override;
    virtual void         SetEntryRange(Long64_t emin,   Long64_t emax);
    void                 SetFile(TFile *file, TFile::ECacheAction action=TFile::kDisconnect) override;
    virtual void         SetLearnPrefill(EPrefillType type = kNoPrefill);

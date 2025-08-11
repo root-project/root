@@ -85,7 +85,7 @@ TBufferFile::TBufferFile(TBuffer::EMode mode)
 /// Create an I/O buffer object. Mode should be either TBuffer::kRead or
 /// TBuffer::kWrite.
 
-TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsize)
+TBufferFile::TBufferFile(TBuffer::EMode mode, Long64_t bufsize)
             :TBufferIO(mode,bufsize),
              fInfo(nullptr), fInfoStack()
 {
@@ -102,7 +102,7 @@ TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsize)
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
 
-TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsize, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc) :
+TBufferFile::TBufferFile(TBuffer::EMode mode, Long64_t bufsize, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc) :
    TBufferIO(mode,bufsize,buf,adopt,reallocfunc),
    fInfo(nullptr), fInfoStack()
 {
