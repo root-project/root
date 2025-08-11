@@ -498,7 +498,6 @@ void TRint::Run(Bool_t retrn)
    }
 
    if (QuitOpt()) {
-      printf("\n");
       if (retrn) return;
       Terminate(fCaughtSignal != -1 ? fCaughtSignal + 128 : 0);
    }
