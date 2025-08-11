@@ -614,23 +614,25 @@ struct TIMTEnabler {
    ~TIMTEnabler() { ROOT::DisableImplicitMT(); }
 };
 
-TEST(RDFSnapshotRNTuple, ThrowIfMT)
+TEST(RDFSnapshotRNTuple, WithMT)
 {
    TIMTEnabler _(4);
 
-   FileRAII fileGuard{"RDFSnapshotRNTuple_throw_if_mt.root"};
+   FileRAII fileGuard{"RDFSnapshotRNTuple_mt.root"};
 
-   auto df = ROOT::RDataFrame(25ull).Define("x", [] { return 10; });
+   auto df = ROOT::RDataFrame(25ull).Define("x", [](ULong64_t e) { return e; }, {"rdfentry_"});
 
    RSnapshotOptions opts;
    opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
 
-   try {
-      auto sdf = df.Snapshot("ntuple", fileGuard.GetPath(), {"x"}, opts);
-      *sdf;
-      FAIL() << "MT snapshotting to RNTuple is not supported yet";
-   } catch (const std::runtime_error &err) {
-      EXPECT_STREQ(err.what(), "Snapshot: Snapshotting to RNTuple with IMT enabled is not supported yet.");
-   }
+   auto sdf = df.Snapshot("ntuple", fileGuard.GetPath(), {"x"}, opts);
+   *sdf;
+
+   auto sum = sdf->Sum<std::uint64_t>("x");
+   EXPECT_EQ(300, sum.GetValue());
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(25, reader->GetNEntries());
+   // There should be more than one cluster, but this is not guaranteed because of scheduling...
 }
 #endif // R__USE_IMT
