@@ -1,5 +1,5 @@
-.L lib/libjet.so
-.L lib/libbtag.so 
+gSystem->Load("libjet_dictrflx");
+gSystem->Load("libbtag_dictrflx");
 #include "DataVector.h"
 DataVector<xAOD::Jet_v1> obj;
 
