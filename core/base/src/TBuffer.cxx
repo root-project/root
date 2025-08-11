@@ -74,7 +74,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsize)
 {
    if (bufsize < 0)
       Fatal("TBuffer","Request to create a buffer with a negative size, likely due to an integer overflow: 0x%x for a max of 0x%x.", bufsize, kMaxBufferSize);
-   if (bufsize < kMinimalSize) bufsiz = kMinimalSize;
+   if (bufsize < kMinimalSize) bufsize = kMinimalSize;
    fBufSize  = bufsiz;
    fMode     = mode;
    fVersion  = 0;
