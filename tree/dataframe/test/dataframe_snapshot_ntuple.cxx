@@ -72,6 +72,18 @@ TEST(RDFSnapshotRNTuple, FromScratch)
    }
 }
 
+TEST(RDFSnapshotRNTuple, LazyTriggered)
+{
+   FileRAII fileGuard{"RDFSnapshotRNTuple_lazy.root"};
+   auto d = ROOT::RDataFrame(1);
+   ROOT::RDF::RSnapshotOptions opts;
+   opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+   opts.fLazy = true;
+   auto r = d.Snapshot("t", fileGuard.GetPath(), {"rdfentry_"}, opts);
+   *r;
+   r = {};
+}
+
 void BookLazySnapshot(std::string_view filename)
 {
    auto d = ROOT::RDataFrame(1);
