@@ -174,7 +174,7 @@ TTreeCacheUnzip::TTreeCacheUnzip() : TTreeCache(),
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TTreeCacheUnzip::TTreeCacheUnzip(TTree *tree, Int_t bufsize) : TTreeCache(tree,bufsize),
+TTreeCacheUnzip::TTreeCacheUnzip(TTree *tree, Long64_t bufsize) : TTreeCache(tree,bufsize),
    fAsyncReading(false),
    fEmpty(true),
    fCycle(0),
@@ -356,9 +356,9 @@ bool TTreeCacheUnzip::FillBuffer()
 ///  - 1 if some or all of the buffer content has been made unavailable
 ///  - -1 on error
 
-Int_t TTreeCacheUnzip::SetBufferSize(Long64_t buffersize)
+Int_t TTreeCacheUnzip::SetBufferSize(Long64_t bufsize)
 {
-   Int_t res = TTreeCache::SetBufferSize(buffersize);
+   Int_t res = TTreeCache::SetBufferSize(bufsize);
    if (res < 0) {
       return res;
    }

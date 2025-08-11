@@ -1124,7 +1124,7 @@ void TMapFile::ls(Option_t *) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment statistics for buffer sizes of objects in this file.
 
-void TMapFile::SumBuffer(Int_t bufsize)
+void TMapFile::SumBuffer(Long64_t bufsize)
 {
    fWritten++;
    fSumBuffer  += bufsize;

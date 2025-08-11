@@ -404,7 +404,7 @@ Int_t TXMLFile::ReOpen(Option_t *mode)
 ////////////////////////////////////////////////////////////////////////////////
 /// create XML key, which will store object in xml structures
 
-TKey *TXMLFile::CreateKey(TDirectory *mother, const TObject *obj, const char *name, Int_t)
+TKey *TXMLFile::CreateKey(TDirectory *mother, const TObject *obj, const char *name, Long64_t)
 {
    return new TKeyXML(mother, ++fKeyCounter, obj, name);
 }
@@ -412,7 +412,7 @@ TKey *TXMLFile::CreateKey(TDirectory *mother, const TObject *obj, const char *na
 ////////////////////////////////////////////////////////////////////////////////
 /// create XML key, which will store object in xml structures
 
-TKey *TXMLFile::CreateKey(TDirectory *mother, const void *obj, const TClass *cl, const char *name, Int_t)
+TKey *TXMLFile::CreateKey(TDirectory *mother, const void *obj, const TClass *cl, const char *name, Long64_t)
 {
    return new TKeyXML(mother, ++fKeyCounter, obj, cl, name);
 }
