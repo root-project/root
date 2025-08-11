@@ -25,6 +25,8 @@
 
 #include "TString.h"
 
+#include <cassert>
+
 class TExMap;
 
 class TBufferIO : public TBuffer {
@@ -44,8 +46,8 @@ protected:
    TBufferIO() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
 
    TBufferIO(TBuffer::EMode mode);
-   TBufferIO(TBuffer::EMode mode, Int_t bufsize);
-   TBufferIO(TBuffer::EMode mode, Int_t bufsize, void *buf, Bool_t adopt = kTRUE,
+   TBufferIO(TBuffer::EMode mode, Long64_t bufsize);
+   TBufferIO(TBuffer::EMode mode, Long64_t bufsize, void *buf, Bool_t adopt = kTRUE,
              ReAllocCharFun_t reallocfunc = nullptr);
 
    ////////////////////////////////////////////////////////////////////////////////
@@ -80,7 +82,7 @@ public:
    void SetPidOffset(UShort_t offset) override;
    Int_t GetBufferDisplacement() const override { return fDisplacement; }
    void SetBufferDisplacement() override { fDisplacement = 0; }
-   void SetBufferDisplacement(Int_t skipped) override { fDisplacement = (Int_t)(Length() - skipped); }
+   void SetBufferDisplacement(Long64_t skipped) override { assert(skipped <= kMaxInt); fDisplacement = (Int_t)(Length() - skipped); }
 
    // Utilities for objects map
    void SetReadParam(Int_t mapsize) override;
@@ -89,8 +91,8 @@ public:
    void ResetMap() override;
    void Reset() override;
    Int_t GetMapCount() const override { return fMapCount; }
-   void MapObject(const TObject *obj, UInt_t offset = 1) override;
-   void MapObject(const void *obj, const TClass *cl, UInt_t offset = 1) override;
+   void MapObject(const TObject *obj, ULong64_t offset = 1) override;
+   void MapObject(const void *obj, const TClass *cl, ULong64_t offset = 1) override;
    Bool_t CheckObject(const TObject *obj) override;
    Bool_t CheckObject(const void *obj, const TClass *ptrClass) override;
    void GetMappedObject(UInt_t tag, void *&ptr, TClass *&ClassPtr) const override;
@@ -98,8 +100,8 @@ public:
    // Utilities for TStreamerInfo
    void ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force) override;
    void ForceWriteInfoClones(TClonesArray *a) override;
-   Int_t ReadClones(TClonesArray *a, Int_t nobjects, Version_t objvers) override;
-   Int_t WriteClones(TClonesArray *a, Int_t nobjects) override;
+   Int_t ReadClones(TClonesArray *a, Long64_t nobjects, Version_t objvers) override;
+   Int_t WriteClones(TClonesArray *a, Long64_t nobjects) override;
    void TagStreamerInfo(TVirtualStreamerInfo *info) override;
 
    // Special basic ROOT objects and collections

@@ -89,9 +89,14 @@ TFileCacheRead::TFileCacheRead() : TObject()
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates a TFileCacheRead data structure.
 
-TFileCacheRead::TFileCacheRead(TFile *file, Int_t bufsize, TObject *tree)
+TFileCacheRead::TFileCacheRead(TFile *file, Long64_t bufsize, TObject *tree)
            : TObject()
 {
+   if (bufsize < 0)
+      Fatal("TFileCacheRead", "Negative buffer size: 0x%llx.", bufsize);
+   else if (bufsize > kMaxInt) {
+      Fatal("TFileCacheRead", "Integer overflow in buffer size: 0x%llx for a max of 0x%x.", bufsize, kMaxInt);
+   }
    if (bufsize <=10000) fBufferSize = 100000;
    else fBufferSize = bufsize;
 

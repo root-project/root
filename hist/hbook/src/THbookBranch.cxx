@@ -21,14 +21,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-THbookBranch::THbookBranch(TTree *tree, const char *name, void *address, const char *leaflist, Int_t basketsize, Int_t compress)
+THbookBranch::THbookBranch(TTree *tree, const char *name, void *address, const char *leaflist, Long64_t basketsize, Int_t compress)
             :TBranch(tree, name,address,leaflist,basketsize,compress)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-THbookBranch::THbookBranch(TBranch *branch, const char *name, void *address, const char *leaflist, Int_t basketsize, Int_t compress)
+THbookBranch::THbookBranch(TBranch *branch, const char *name, void *address, const char *leaflist, Long64_t basketsize, Int_t compress)
             :TBranch(branch,name,address,leaflist,basketsize,compress)
 {
 }
