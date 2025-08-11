@@ -1,5 +1,5 @@
-.L lib/libsjet.so
-.L lib/libbtag.so 
+gSystem->Load("libsjet_dictrflx");
+gSystem->Load("libbtag_dictrflx");
 #include "DataVector.h"
 TClass::GetClass("SG::AuxTypeVectorFactory<std::vector<ElementLink<SDataVector<xAOD::SJet_v1> > > >");
 auto c = TClass::GetClass("SDataVector<xAOD::SJet_v1>")->GetClassInfo();
