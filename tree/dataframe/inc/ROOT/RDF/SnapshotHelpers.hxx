@@ -32,6 +32,7 @@ class TFile;
 namespace ROOT {
 class RNTupleWriter;
 class REntry;
+class RFieldToken;
 class TBufferMerger;
 class TBufferMergerFile;
 } // namespace ROOT
@@ -64,6 +65,7 @@ class R__CLING_PTRCHECK(off) UntypedSnapshotRNTupleHelper final : public RAction
    ColumnNames_t fInputFieldNames; // This contains the resolved aliases
    ColumnNames_t fOutputFieldNames;
    std::unique_ptr<ROOT::RNTupleWriter> fWriter;
+   std::vector<ROOT::RFieldToken> fFieldTokens;
 
    std::unique_ptr<ROOT::REntry> fOutputEntry;
 
