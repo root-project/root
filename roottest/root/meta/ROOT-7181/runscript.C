@@ -21,7 +21,7 @@ void runscript(const char *fname, bool with_rootmap = false)
 
    std::string line;
    while (std::getline(f, line)) {
-      // std::cout << "Process: " << line << std::endl;
+      std::cout << "Process: " << line << std::endl;
       gROOT->ProcessLine(line.c_str());
    }
 }
