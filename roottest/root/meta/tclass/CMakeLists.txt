@@ -47,6 +47,7 @@ ROOTTEST_ADD_TEST(execState
 
 ROOTTEST_ADD_TEST(execSharedPtr
                   MACRO execSharedPtr.C
+                  OUTREF execSharedPtr.ref
                   ERRREF execSharedPtr.eref)
 
 ROOTTEST_ADD_TEST(execMTInit
@@ -137,8 +138,8 @@ endif()
 
 ROOTTEST_ADD_TEST(TClassAtTearDown
                   MACRO execTClassAtTearDown.C
-		  COPY_TO_BUILDDIR empty.root
-		  OUTREF execTClassAtTearDown.ref)
+		              COPY_TO_BUILDDIR empty.root
+		              OUTREF execTClassAtTearDown.ref)
 
 ROOTTEST_GENERATE_EXECUTABLE(TFileTearDown TFileTearDown.cxx
                              LIBRARIES Core RIO Hist Rint
