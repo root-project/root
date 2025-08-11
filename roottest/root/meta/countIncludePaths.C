@@ -23,13 +23,12 @@ int countIncludePaths()
    auto *envVarCStr = std::getenv("ROOT_INCLUDE_PATH");
    if (envVarCStr) {
       std::string envVar(envVarCStr);
-      nEnvVarPaths =
-         countSubstring(envVar, ":") + 1 - (envVar.back() == ':') - (envVar.front() == ':');
+      nEnvVarPaths = countSubstring(envVar, ":") + 1 - (envVar.back() == ':') - (envVar.front() == ':');
    }
 
    // At most 10
    auto nPaths = countSubstring(includePath, "-I");
-   if ((nPaths - nEnvVarPaths) > 10){
+   if ((nPaths - nEnvVarPaths) > 10) {
       std::cerr << "The number of include paths is too high (>9) " << nPaths
                 << ". The number of \"-I\"s has been counted in the include path of ROOT (gSystem->GetIncludePath()=" << includePath << ")." << std::endl;
       return nPaths;
