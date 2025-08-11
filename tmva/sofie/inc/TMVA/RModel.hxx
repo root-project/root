@@ -11,15 +11,22 @@ namespace SOFIE {
 
 class RModel final : public RModel_Base {
 
+   friend class RModelProfiler;
+
 private:
    bool fIsInitialized = false;
    bool fIsSubGraph = false;
+   bool fProfile = false;
+
    int fVerbose = 0;
    int fBatchSize = -1;
    long fReadPos = 0;  // reading file position
+
    size_t fConstantTensorSize = 0; // size  (in Bytes) of the allocated constant tensors
    size_t fWeightsTensorSize = 0;  // size  (in Bytes) of the allocated weight tensors
    size_t fOtherTensorSize = 0;    // size  (in Bytes) of intermediate tensors which are not managed by the memory pool
+
+   std::string fProfilerGC = "";
 
    OptimizationLevel fOptimizationLevel = OptimizationLevel::kExtended;
 
@@ -157,7 +164,7 @@ public:
    void Initialize(int batchSize = -1, bool verbose = false);
    void Initialize(const std::map<std::string,size_t> & inputParams, bool verbose = false);
 
-   void Generate(std::underlying_type_t<Options> options, int batchSize = -1, long pos = 0, bool verbose = false);
+    void Generate(std::underlying_type_t<Options> options, int batchSize = -1, long pos = 0, bool verbose = false);
    void Generate(Options options = Options::kDefault, int batchSize = -1, int pos = 0, bool verbose = false)
    {
       Generate(static_cast<std::underlying_type_t<Options>>(options), batchSize, pos, verbose);

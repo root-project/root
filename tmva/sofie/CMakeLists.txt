@@ -22,6 +22,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/OperatorList.hxx
    TMVA/RModel_Base.hxx
    TMVA/RModel.hxx
+   TMVA/RModelProfiler.hxx
    TMVA/ROperator.hxx
    TMVA/ROperator_BasicUnary.hxx
    TMVA/ROperator_BasicBinary.hxx
@@ -77,6 +78,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
   SOURCES
     src/RModel_Base.cxx
     src/RModel.cxx
+    src/RModelProfiler.cxx
     src/RModel_GNN.cxx
     src/RModel_GraphIndependent.cxx
     src/RFunction.cxx
