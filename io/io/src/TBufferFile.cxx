@@ -84,7 +84,7 @@ TBufferFile::TBufferFile(TBuffer::EMode mode)
 /// Create an I/O buffer object. Mode should be either TBuffer::kRead or
 /// TBuffer::kWrite.
 
-TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsize)
+TBufferFile::TBufferFile(TBuffer::EMode mode, Long64_t bufsize)
             :TBufferIO(mode,bufsize),
              fInfo(nullptr), fInfoStack()
 {
@@ -101,7 +101,7 @@ TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsize)
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
 
-TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsize, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc) :
+TBufferFile::TBufferFile(TBuffer::EMode mode, Long64_t bufsize, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc) :
    TBufferIO(mode,bufsize,buf,adopt,reallocfunc),
    fInfo(nullptr), fInfoStack()
 {
@@ -317,13 +317,13 @@ void TBufferFile::WriteCharStar(char *s)
 /// count larger than kMaxMapCount. The count is excluded its own size.
 /// \note If underflow or overflow, an Error ir raised (stricter checks in Debug mode)
 
-void TBufferFile::SetByteCount(UInt_t cntpos, Bool_t packInVersion)
+void TBufferFile::SetByteCount(ULong64_t cntpos, Bool_t packInVersion)
 {
-   assert( (sizeof(UInt_t) + cntpos) <  static_cast<UInt_t>(fBufCur - fBuffer)
+   assert( cntpos <= kMaxUInt && (sizeof(UInt_t) + cntpos) <  static_cast<UInt_t>(fBufCur - fBuffer)
         && (fBufCur >= fBuffer)
         && static_cast<ULong64_t>(fBufCur - fBuffer) <= std::numeric_limits<UInt_t>::max()
         && "Byte count position is after the end of the buffer");
-   const UInt_t cnt = UInt_t(fBufCur - fBuffer) - cntpos - sizeof(UInt_t);
+   const UInt_t cnt = UInt_t(fBufCur - fBuffer) - UInt_t(cntpos) - sizeof(UInt_t);
    char  *buf = (char *)(fBuffer + cntpos);
 
    // if true, pack byte count in two consecutive shorts, so it can
@@ -358,11 +358,11 @@ void TBufferFile::SetByteCount(UInt_t cntpos, Bool_t packInVersion)
 /// Returns 0 if everything is ok, otherwise the bytecount offset
 /// (< 0 when read too little, >0 when read too much).
 
-Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss, const char *classname)
+Long64_t TBufferFile::CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const TClass *clss, const char *classname)
 {
    if (!bcnt) return 0;
-
-   Int_t  offset = 0;
+   R__ASSERT(startpos <= kMaxUInt && bcnt <= kMaxUInt);
+   Long64_t offset = 0;
 
    Longptr_t endpos = Longptr_t(fBuffer) + startpos + bcnt + sizeof(UInt_t);
 
@@ -373,11 +373,11 @@ Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *cl
 
       if (name) {
          if (offset < 0) {
-            Error("CheckByteCount", "object of class %s read too few bytes: %d instead of %d",
+            Error("CheckByteCount", "object of class %s read too few bytes: %lld instead of %llu",
                   name,bcnt+offset,bcnt);
          }
          if (offset > 0) {
-            Error("CheckByteCount", "object of class %s read too many bytes: %d instead of %d",
+            Error("CheckByteCount", "object of class %s read too many bytes: %lld instead of %llu",
                   name,bcnt+offset,bcnt);
             if (fParent)
                Warning("CheckByteCount","%s::Streamer() not in sync with data on file %s, fix Streamer()",
@@ -390,7 +390,7 @@ Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *cl
       if ( ((char *)endpos) > fBufMax ) {
          offset = fBufMax-fBufCur;
          Error("CheckByteCount",
-               "Byte count probably corrupted around buffer position %d:\n\t%d for a possible maximum of %d",
+               "Byte count probably corrupted around buffer position %llu:\n\t%llu for a possible maximum of %lld",
                startpos, bcnt, offset);
          fBufCur = fBufMax;
 
@@ -411,7 +411,7 @@ Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *cl
 /// Returns 0 if everything is ok, otherwise the bytecount offset
 /// (< 0 when read too little, >0 when read too much).
 
-Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss)
+Long64_t TBufferFile::CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const TClass *clss)
 {
    if (!bcnt) return 0;
    return CheckByteCount( startpos, bcnt, clss, nullptr);
@@ -425,7 +425,7 @@ Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *cl
 /// Returns 0 if everything is ok, otherwise the bytecount offset
 /// (< 0 when read too little, >0 when read too much).
 
-Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname)
+Long64_t TBufferFile::CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const char *classname)
 {
    if (!bcnt) return 0;
    return CheckByteCount( startpos, bcnt, nullptr, classname);
@@ -3332,13 +3332,13 @@ UInt_t TBufferFile::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClas
 /// Read max bytes from the I/O buffer into buf. The function returns
 /// the actual number of bytes read.
 
-Int_t TBufferFile::ReadBuf(void *buf, Int_t max)
+Long64_t TBufferFile::ReadBuf(void *buf, Long64_t max)
 {
    R__ASSERT(IsReading());
 
    if (max == 0) return 0;
 
-   Int_t n = std::min(max, (Int_t)(fBufMax - fBufCur));
+   Long64_t n = std::min(max, (Long64_t)(fBufMax - fBufCur));
 
    memcpy(buf, fBufCur, n);
    fBufCur += n;
@@ -3349,7 +3349,7 @@ Int_t TBufferFile::ReadBuf(void *buf, Int_t max)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write max bytes from buf into the I/O buffer.
 
-void TBufferFile::WriteBuf(const void *buf, Int_t max)
+void TBufferFile::WriteBuf(const void *buf, Long64_t max)
 {
    R__ASSERT(IsWriting());
 
@@ -3365,14 +3365,14 @@ void TBufferFile::WriteBuf(const void *buf, Int_t max)
 /// Read string from I/O buffer. String is read till 0 character is
 /// found or till max-1 characters are read (i.e. string s has max
 /// bytes allocated). If max = -1 no check on number of character is
-/// made, reading continues till 0 character is found.
+/// made, reading continues till 0 character is found or MaxInt-1 chars are read.
 
-char *TBufferFile::ReadString(char *s, Int_t max)
+char *TBufferFile::ReadString(char *s, Long64_t max)
 {
    R__ASSERT(IsReading());
-
+   R__ASSERT(max <= kMaxInt);
    char  ch;
-   Int_t nr = 0;
+   Long64_t nr = 0;
 
    if (max == -1) max = kMaxInt;
 

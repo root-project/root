@@ -117,7 +117,7 @@ private:
 
 public:
    TTreeCacheUnzip();
-   TTreeCacheUnzip(TTree *tree, Int_t buffersize=0);
+   TTreeCacheUnzip(TTree *tree, Long64_t buffersize=0);
    ~TTreeCacheUnzip() override;
 
    Int_t               AddBranch(TBranch *b, bool subbranches = false) override;

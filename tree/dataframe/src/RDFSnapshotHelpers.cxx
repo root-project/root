@@ -196,7 +196,7 @@ void CreateFundamentalTypeBranch(TTree &outputTree, RBranchData &bd, void *value
 {
    // Logic taken from
    // TTree::BranchImpRef(
-   // const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel)
+   // const char *branchname, TClass *ptrClass, EDataType datatype, void *addobj, Long64_t bufsize, Int_t splitlevel)
    auto rootTypeChar = ROOT::Internal::RDF::TypeID2ROOTTypeName(*bd.fInputTypeID);
    if (rootTypeChar == ' ') {
       Warning("Snapshot",

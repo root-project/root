@@ -49,9 +49,14 @@ TFileCacheWrite::TFileCacheWrite() : TObject()
 /// The size of the cache will be bufsize,
 /// if bufsize < 10000 a default size of 512 Kbytes is used
 
-TFileCacheWrite::TFileCacheWrite(TFile *file, Int_t bufsize)
+TFileCacheWrite::TFileCacheWrite(TFile *file, Long64_t bufsize)
            : TObject()
 {
+   if (bufsize < 0)
+      Fatal("TFileCacheWrite", "Negative buffer size: 0x%llx.", bufsize);
+   else if (bufsize > kMaxInt) {
+      Fatal("TFileCacheWrite", "Integer overflow in buffer size: 0x%llx for a max of 0x%x.", bufsize, kMaxInt);
+   }
    if (bufsize < 10000) bufsize = 512000;
    fBufferSize  = bufsize;
    fSeekStart   = 0;
@@ -60,7 +65,7 @@ TFileCacheWrite::TFileCacheWrite(TFile *file, Int_t bufsize)
    fRecursive   = kFALSE;
    fBuffer      = new char[fBufferSize];
    if (file) file->SetCacheWrite(this);
-   if (gDebug > 0) Info("TFileCacheWrite","Creating a write cache with buffersize=%d bytes",bufsize);
+   if (gDebug > 0) Info("TFileCacheWrite","Creating a write cache with buffersize=%lld bytes",bufsize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

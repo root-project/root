@@ -171,11 +171,16 @@ TKey::TKey(TDirectory* motherDir, const TKey &orig, UShort_t pidOffset) : TNamed
 /// Constructor called by TDirectoryFile::ReadKeys and by TFile::TFile.
 /// A TKey object is created to read the keys structure itself.
 
-TKey::TKey(Long64_t pointer, Int_t nbytes, TDirectory* motherDir) : TNamed()
+TKey::TKey(Long64_t pointer, Long64_t nbytes, TDirectory* motherDir) : TNamed()
 {
    Build(motherDir, "", pointer);
 
    fSeekKey    = pointer;
+   if (nbytes > kMaxInt) {
+      Fatal("TKey", "Integer overflow in byte size: 0x%llx for a max of 0x%x.", nbytes, kMaxInt);
+   } else if (nbytes < 0) {
+      Fatal("TKey", "Negative byte size: 0x%llx.", nbytes);
+   }
    fNbytes     = nbytes;
    fBuffer     = new char[nbytes];
    keyAbsNumber++; SetUniqueID(keyAbsNumber);
@@ -187,12 +192,17 @@ TKey::TKey(Long64_t pointer, Int_t nbytes, TDirectory* motherDir) : TNamed()
 ///  WARNING: in name avoid special characters like '^','$','.' that are used
 ///  by the regular expression parser (see TRegexp).
 
-TKey::TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes, TDirectory* motherDir)
+TKey::TKey(const char *name, const char *title, const TClass *cl, Long64_t nbytes, TDirectory* motherDir)
       : TNamed(name,title)
 {
    Build(motherDir, cl->GetName(), -1);
 
    fKeylen     = Sizeof();
+   if (nbytes > kMaxInt) {
+      Fatal("TKey", "Integer overflow in byte size: 0x%llx for a max of 0x%x.", nbytes, kMaxInt);
+   } else if (nbytes < 0) {
+      Fatal("TKey", "Negative byte size: 0x%llx.", nbytes);
+   }
    fObjlen     = nbytes;
    Create(nbytes);
 }
@@ -203,12 +213,17 @@ TKey::TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes, 
 ///  WARNING: in name avoid special characters like '^','$','.' that are used
 ///  by the regular expression parser (see TRegexp).
 
-TKey::TKey(const TString &name, const TString &title, const TClass *cl, Int_t nbytes, TDirectory* motherDir)
+TKey::TKey(const TString &name, const TString &title, const TClass *cl, Long64_t nbytes, TDirectory* motherDir)
       : TNamed(name,title)
 {
    Build(motherDir, cl->GetName(), -1);
 
    fKeylen     = Sizeof();
+   if (nbytes > kMaxInt) {
+      Fatal("TKey", "Integer overflow in byte size: 0x%llx for a max of 0x%x.", nbytes, kMaxInt);
+   } else if (nbytes < 0) {
+      Fatal("TKey", "Negative byte size: 0x%llx.", nbytes);
+   }
    fObjlen     = nbytes;
    Create(nbytes);
 }
@@ -219,7 +234,7 @@ TKey::TKey(const TString &name, const TString &title, const TClass *cl, Int_t nb
 ///  WARNING: in name avoid special characters like '^','$','.' that are used
 ///  by the regular expression parser (see TRegexp).
 
-TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* motherDir)
+TKey::TKey(const TObject *obj, const char *name, Long64_t bufsize, TDirectory* motherDir)
      : TNamed(name, obj->GetTitle())
 {
    R__ASSERT(obj);
@@ -294,7 +309,7 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
 ///  WARNING: in name avoid special characters like '^','$','.' that are used
 ///  by the regular expression parser (see TRegexp).
 
-TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory *motherDir) : TNamed(name, "")
+TKey::TKey(const void *obj, const TClass *cl, const char *name, Long64_t bufsize, TDirectory *motherDir) : TNamed(name, "")
 {
    R__ASSERT(obj && cl);
 
@@ -458,7 +473,7 @@ void TKey::Browse(TBrowser *b)
 /// If externFile!=0, key will be allocated in specified file, otherwise file
 /// of mother directory will be used.
 
-void TKey::Create(Int_t nbytes, TFile* externFile)
+void TKey::Create(Long64_t nbytes, TFile* externFile)
 {
    keyAbsNumber++; SetUniqueID(keyAbsNumber);
 
@@ -468,7 +483,11 @@ void TKey::Create(Int_t nbytes, TFile* externFile)
       Error("Create","Cannot create key without file");
       return;
    }
-
+   if (nbytes > kMaxInt - fKeylen) {
+      Fatal("Create", "Integer overflow in byte size: 0x%llx for a max of 0x%x.", nbytes, kMaxInt);
+   } else if (nbytes < 0) {
+      Fatal("Create", "Negative byte size: 0x%llx.", nbytes);
+   }
    Int_t nsize      = nbytes + fKeylen;
    TList *lfree     = f->GetListOfFree();
    TFree *f1        = (TFree*)lfree->First();
