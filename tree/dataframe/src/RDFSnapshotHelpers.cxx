@@ -829,7 +829,7 @@ ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper &ROOT::Internal::RDF::UntypedS
 
 ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::~UntypedSnapshotRNTupleHelper()
 {
-   if (!fNTupleName.empty() && !fOutputLoopManager->GetDataSource() && fOptions.fLazy)
+   if (!fNTupleName.empty() /* not moved from */ && !fOutputFile /* did not run */ && fOptions.fLazy)
       Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
 }
 
