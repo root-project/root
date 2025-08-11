@@ -285,10 +285,10 @@ public:
 
            void        Close(Option_t *option="") override; // *MENU*
            void        Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
-   virtual Bool_t      Cp(const char *dst, Bool_t progressbar = kTRUE,UInt_t bufsize = 1000000);
-   virtual TKey*       CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t bufsize);
+   virtual Bool_t      Cp(const char *dst, Bool_t progressbar = kTRUE, Long64_t bufsize = 1000000);
+   virtual TKey*       CreateKey(TDirectory* mother, const TObject* obj, const char* name, Long64_t bufsize);
    virtual TKey*       CreateKey(TDirectory* mother, const void* obj, const TClass* cl,
-                                 const char* name, Int_t bufsize);
+                                 const char* name, Long64_t bufsize);
    static TFile      *&CurrentFile(); // Return the current file for this thread.
            void        Delete(const char *namecycle="") override;
            void        Draw(Option_t *option="") override;
@@ -372,10 +372,10 @@ public:
    virtual void        SetReadCalls(Int_t readcalls = 0) { fReadCalls = readcalls; }
    virtual void        ShowStreamerInfo();
            Int_t       Sizeof() const override;
-           void        SumBuffer(Int_t bufsize);
+           void        SumBuffer(Long64_t bufsize);
    virtual Bool_t      WriteBuffer(const char *buf, Int_t len);
-           Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsize=0) override;
-           Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsize=0) const override;
+           Int_t       Write(const char *name=nullptr, Int_t opt=0, Long64_t bufsize=0) override;
+           Int_t       Write(const char *name=nullptr, Int_t opt=0, Long64_t bufsize=0) const override;
    virtual void        WriteFree();
    virtual void        WriteHeader();
    virtual UShort_t    WriteProcessID(TProcessID *pid);
@@ -403,8 +403,8 @@ public:
 
    static void         SetFileBytesRead(Long64_t bytes = 0);
    static void         SetFileBytesWritten(Long64_t bytes = 0);
-   static void         SetFileReadCalls(Int_t readcalls = 0);
-   static void         SetReadaheadSize(Int_t bufsize = 256000);
+   static void         SetFileReadCalls(Long64_t readcalls = 0);
+   static void         SetReadaheadSize(Long64_t bytes = 256000);
    static void         SetReadStreamerInfo(Bool_t readinfo=kTRUE);
    static Bool_t       GetReadStreamerInfo();
 
@@ -416,7 +416,7 @@ public:
    static const char  *GetCacheFileDir();
    static Bool_t       ShrinkCacheFileDir(Long64_t shrinkSize, Long_t cleanupInteval = 0);
    static Bool_t       Cp(const char *src, const char *dst, Bool_t progressbar = kTRUE,
-                          UInt_t buffersize = 1000000);
+                          Long64_t bufsize = 1000000);
 
    static UInt_t       SetOpenTimeout(UInt_t timeout);  // in ms
    static UInt_t       GetOpenTimeout(); // in ms

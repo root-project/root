@@ -132,7 +132,7 @@ public:
    virtual Long64_t  Merge(const char *name, Option_t *option = "");
    Long64_t  Merge(TCollection *list, Option_t *option = "") override;
    Long64_t  Merge(TCollection *list, TFileMergeInfo *info) override;
-   virtual Long64_t  Merge(TFile *file, Int_t basketsize, Option_t *option="");
+   virtual Long64_t  Merge(TFile *file, Long64_t basketsize, Option_t *option="");
    void      Print(Option_t *option="") const override;
    Long64_t  Process(const char *filename, Option_t *option="", Long64_t nentries=kMaxEntries, Long64_t firstentry=0) override; // *MENU*
    Long64_t  Process(TSelector* selector, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0) override;

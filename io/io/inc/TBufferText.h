@@ -75,20 +75,20 @@ public:
 
    // virtual abstract TBuffer methods, which are not used in text streaming
 
-   Int_t CheckByteCount(UInt_t /* startpos */, UInt_t /* bcnt */, const TClass * /* clss */) final { return 0; }
-   Int_t CheckByteCount(UInt_t /* startpos */, UInt_t /* bcnt */, const char * /* classname */) final { return 0; }
-   void SetByteCount(UInt_t /* cntpos */, Bool_t /* packInVersion */ = kFALSE) final {}
+   Long64_t CheckByteCount(ULong64_t /* startpos */, ULong64_t /* bcnt */, const TClass * /* clss */) final { return 0; }
+   Long64_t CheckByteCount(ULong64_t /* startpos */, ULong64_t /* bcnt */, const char * /* classname */) final { return 0; }
+   void SetByteCount(ULong64_t /* cntpos */, Bool_t /* packInVersion */ = kFALSE) final {}
    void SkipVersion(const TClass *cl = nullptr) final;
    Version_t ReadVersionNoCheckSum(UInt_t *, UInt_t *) final { return 0; }
 
-   Int_t ReadBuf(void * /*buf*/, Int_t /*max*/) final
+   Long64_t ReadBuf(void * /*buf*/, Long64_t /*max*/) final
    {
       Error("ReadBuf", "useless in text streamers");
       return 0;
    }
-   void WriteBuf(const void * /*buf*/, Int_t /*max*/) final { Error("WriteBuf", "useless in text streamers"); }
+   void WriteBuf(const void * /*buf*/, Long64_t /*max*/) final { Error("WriteBuf", "useless in text streamers"); }
 
-   char *ReadString(char * /*s*/, Int_t /*max*/) final
+   char *ReadString(char * /*s*/, Long64_t /*max*/) final
    {
       Error("ReadString", "useless");
       return nullptr;

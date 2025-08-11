@@ -1579,7 +1579,7 @@ namespace {
 /// \see TTree::Branch()
 ///
 
-TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel)
+TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Long64_t bufsize, Int_t splitlevel)
 {
    TClass* claim = TClass::GetClass(classname);
    if (!ptrClass) {
@@ -1627,7 +1627,7 @@ TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass*
 /// Same as TTree::Branch but automatic detection of the class name.
 /// \see TTree::Branch
 
-TBranch* TTree::BranchImp(const char* branchname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel)
+TBranch* TTree::BranchImp(const char* branchname, TClass* ptrClass, void* addobj, Long64_t bufsize, Int_t splitlevel)
 {
    if (!ptrClass) {
       Error("Branch", "The pointer specified for %s is not of a class known to ROOT", branchname);
@@ -1660,7 +1660,7 @@ TBranch* TTree::BranchImp(const char* branchname, TClass* ptrClass, void* addobj
 /// Same as TTree::Branch but automatic detection of the class name.
 /// \see TTree::Branch
 
-TBranch* TTree::BranchImpRef(const char* branchname, const char *classname, TClass* ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel)
+TBranch* TTree::BranchImpRef(const char* branchname, const char *classname, TClass* ptrClass, void *addobj, Long64_t bufsize, Int_t splitlevel)
 {
    TClass* claim = TClass::GetClass(classname);
    if (!ptrClass) {
@@ -1720,7 +1720,7 @@ TBranch* TTree::BranchImpRef(const char* branchname, const char *classname, TCla
 /// Same as TTree::Branch but automatic detection of the class name.
 /// \see TTree::Branch
 
-TBranch* TTree::BranchImpRef(const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel)
+TBranch* TTree::BranchImpRef(const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Long64_t bufsize, Int_t splitlevel)
 {
    if (!ptrClass) {
       if (datatype == kOther_t || datatype == kNoType_t) {
@@ -1756,7 +1756,7 @@ TBranch* TTree::BranchImpRef(const char* branchname, TClass* ptrClass, EDataType
 ////////////////////////////////////////////////////////////////////////////////
 // Wrapper to turn Branch call with an std::array into the relevant leaf list
 // call
-TBranch *TTree::BranchImpArr(const char *branchname, EDataType datatype, std::size_t N, void *addobj, Int_t bufsize,
+TBranch *TTree::BranchImpArr(const char *branchname, EDataType datatype, std::size_t N, void *addobj, Long64_t bufsize,
                              Int_t /* splitlevel */)
 {
    if (datatype == kOther_t || datatype == kNoType_t) {
@@ -1774,7 +1774,7 @@ TBranch *TTree::BranchImpArr(const char *branchname, EDataType datatype, std::si
 ////////////////////////////////////////////////////////////////////////////////
 /// Deprecated function. Use next function instead.
 
-Int_t TTree::Branch(TList* li, Int_t bufsize /* = 32000 */ , Int_t splitlevel /* = 99 */)
+Int_t TTree::Branch(TList* li, Long64_t bufsize /* = 32000 */ , Int_t splitlevel /* = 99 */)
 {
    return Branch((TCollection*) li, bufsize, splitlevel);
 }
@@ -1861,7 +1861,7 @@ Int_t TTree::Branch(TList* li, Int_t bufsize /* = 32000 */ , Int_t splitlevel /*
 ///     }
 /// ~~~
 
-Int_t TTree::Branch(TCollection* li, Int_t bufsize /* = 32000 */, Int_t splitlevel /* = 99 */, const char* name /* = "" */)
+Int_t TTree::Branch(TCollection* li, Long64_t bufsize /* = 32000 */, Int_t splitlevel /* = 99 */, const char* name /* = "" */)
 {
 
    if (!li) {
@@ -1908,7 +1908,7 @@ Int_t TTree::Branch(TCollection* li, Int_t bufsize /* = 32000 */, Int_t splitlev
 /// Create one branch for each element in the folder.
 /// Returns the total number of branches created.
 
-Int_t TTree::Branch(const char* foldername, Int_t bufsize /* = 32000 */, Int_t splitlevel /* = 99 */)
+Int_t TTree::Branch(const char* foldername, Long64_t bufsize /* = 32000 */, Int_t splitlevel /* = 99 */)
 {
    TObject* ob = gROOT->FindObjectAny(foldername);
    if (!ob) {
@@ -2014,7 +2014,7 @@ Int_t TTree::Branch(const char* foldername, Int_t bufsize /* = 32000 */, Int_t s
 ///      A small value for bufsize is optimum if you intend to access
 ///      the entries in the Tree randomly and your Tree is in split mode.
 
-TBranch* TTree::Branch(const char* name, void* address, const char* leaflist, Int_t bufsize /* = 32000 */)
+TBranch* TTree::Branch(const char* name, void* address, const char* leaflist, Long64_t bufsize /* = 32000 */)
 {
    TBranch* branch = new TBranch(this, name, address, leaflist, bufsize);
    if (branch->IsZombie()) {
@@ -2049,7 +2049,7 @@ TBranch* TTree::Branch(const char* name, void* address, const char* leaflist, In
 /// Note: if the split level is set to the default (99),  TTree::Branch will
 /// not issue a warning if the class can not be split.
 
-TBranch* TTree::Branch(const char* name, const char* classname, void* addobj, Int_t bufsize /* = 32000 */, Int_t splitlevel /* = 99 */)
+TBranch* TTree::Branch(const char* name, const char* classname, void* addobj, Long64_t bufsize /* = 32000 */, Int_t splitlevel /* = 99 */)
 {
    if (fgBranchStyle == 1) {
       return Bronch(name, classname, addobj, bufsize, splitlevel);
@@ -2102,7 +2102,7 @@ TBranch* TTree::Branch(const char* name, const char* classname, void* addobj, In
 /// A small value for bufsize is optimum if you intend to access
 /// the entries in the Tree randomly and your Tree is in split mode.
 
-TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj, Int_t bufsize /* = 32000 */, Int_t splitlevel /* = 1 */)
+TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj, Long64_t bufsize /* = 32000 */, Int_t splitlevel /* = 1 */)
 {
    TClass* cl = TClass::GetClass(classname);
    if (!cl) {
@@ -2432,7 +2432,7 @@ TBranch* TTree::BranchRef()
 /// Note: if the split level is set to the default (99),  TTree::Branch will
 /// not issue a warning if the class can not be split.
 
-TBranch* TTree::Bronch(const char* name, const char* classname, void* addr, Int_t bufsize /* = 32000 */, Int_t splitlevel /* = 99 */)
+TBranch* TTree::Bronch(const char* name, const char* classname, void* addr, Long64_t bufsize /* = 32000 */, Int_t splitlevel /* = 99 */)
 {
    return BronchExec(name, classname, addr, true, bufsize, splitlevel);
 }
@@ -2440,7 +2440,7 @@ TBranch* TTree::Bronch(const char* name, const char* classname, void* addr, Int_
 ////////////////////////////////////////////////////////////////////////////////
 /// Helper function implementing TTree::Bronch and TTree::Branch(const char *name, T &obj);
 
-TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, bool isptrptr, Int_t bufsize /* = 32000 */, Int_t splitlevel /* = 99 */)
+TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, bool isptrptr, Long64_t bufsize /* = 32000 */, Int_t splitlevel /* = 99 */)
 {
    TClass* cl = TClass::GetClass(classname);
    if (!cl) {
@@ -8563,7 +8563,7 @@ void TTree::SetAutoSave(Long64_t autos)
 /// see TRegexp for wildcarding options
 /// bufsize = branch basket size
 
-void TTree::SetBasketSize(const char* bname, Int_t bufsize)
+void TTree::SetBasketSize(const char* bname, Long64_t bufsize)
 {
    Int_t nleaves = fLeaves.GetEntriesFast();
    TRegexp re(bname, true);
@@ -10007,7 +10007,7 @@ void TTree::UseCurrentStyle()
 /// Write this object to the current directory. For more see TObject::Write
 /// If option & kFlushBasket, call FlushBasket before writing the tree.
 
-Int_t TTree::Write(const char *name, Int_t option, Int_t bufsize) const
+Int_t TTree::Write(const char *name, Int_t option, Long64_t bufsize) const
 {
    FlushBasketsImpl();
    if (R__unlikely(option & kOnlyPrepStep))
@@ -10019,7 +10019,7 @@ Int_t TTree::Write(const char *name, Int_t option, Int_t bufsize) const
 /// Write this object to the current directory. For more see TObject::Write
 /// If option & kFlushBasket, call FlushBasket before writing the tree.
 
-Int_t TTree::Write(const char *name, Int_t option, Int_t bufsize)
+Int_t TTree::Write(const char *name, Int_t option, Long64_t bufsize)
 {
    return ((const TTree*)this)->Write(name, option, bufsize);
 }
@@ -10126,13 +10126,13 @@ Option_t* TTreeFriendLeafIter::GetOption() const
 }
 
 TBranch *ROOT::Internal::TreeUtils::CallBranchImpRef(TTree &tree, const char *branchname, TClass *ptrClass,
-                                                     EDataType datatype, void *addobj, Int_t bufsize, Int_t splitlevel)
+                                                     EDataType datatype, void *addobj, Long64_t bufsize, Int_t splitlevel)
 {
    return tree.BranchImpRef(branchname, ptrClass, datatype, addobj, bufsize, splitlevel);
 }
 
 TBranch *ROOT::Internal::TreeUtils::CallBranchImp(TTree &tree, const char *branchname, TClass *ptrClass, void *addobj,
-                                                  Int_t bufsize, Int_t splitlevel)
+                                                  Long64_t bufsize, Int_t splitlevel)
 {
    return tree.BranchImp(branchname, ptrClass, addobj, bufsize, splitlevel);
 }
