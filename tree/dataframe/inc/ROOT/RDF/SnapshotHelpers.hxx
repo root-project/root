@@ -65,7 +65,7 @@ class R__CLING_PTRCHECK(off) UntypedSnapshotRNTupleHelper final : public RAction
    ColumnNames_t fOutputFieldNames;
    std::unique_ptr<ROOT::RNTupleWriter> fWriter;
 
-   ROOT::REntry *fOutputEntry;
+   ROOT::REntry *fOutputEntry = nullptr;
 
    std::vector<const std::type_info *> fInputColumnTypeIDs; // Types for the input columns
 

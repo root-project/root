@@ -805,14 +805,11 @@ ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::UntypedSnapshotRNTupleHelper(
    : fFileName(filename),
      fDirName(dirname),
      fNTupleName(ntuplename),
-     fOutputFile(nullptr),
      fOptions(options),
      fInputLoopManager(inputLM),
      fOutputLoopManager(outputLM),
      fInputFieldNames(vfnames),
      fOutputFieldNames(ReplaceDotWithUnderscore(fnames)),
-     fWriter(nullptr),
-     fOutputEntry(nullptr),
      fInputColumnTypeIDs(colTypeIDs)
 {
    EnsureValidSnapshotRNTupleOutput(fOptions, fNTupleName, fFileName);
