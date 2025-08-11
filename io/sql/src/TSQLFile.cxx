@@ -762,7 +762,7 @@ Int_t TSQLFile::ReOpen(Option_t *mode)
 ////////////////////////////////////////////////////////////////////////////////
 /// create SQL key, which will store object in data base
 
-TKey *TSQLFile::CreateKey(TDirectory *mother, const TObject *obj, const char *name, Int_t)
+TKey *TSQLFile::CreateKey(TDirectory *mother, const TObject *obj, const char *name, Long64_t)
 {
    return new TKeySQL(mother, obj, name);
 }
@@ -770,7 +770,7 @@ TKey *TSQLFile::CreateKey(TDirectory *mother, const TObject *obj, const char *na
 ////////////////////////////////////////////////////////////////////////////////
 /// create SQL key, which will store object in data base
 
-TKey *TSQLFile::CreateKey(TDirectory *mother, const void *obj, const TClass *cl, const char *name, Int_t)
+TKey *TSQLFile::CreateKey(TDirectory *mother, const void *obj, const TClass *cl, const char *name, Long64_t)
 {
    return new TKeySQL(mother, obj, cl, name);
 }

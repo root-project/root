@@ -1770,7 +1770,7 @@ void TProfile::SetBinsLength(Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the buffer size in units of 8 bytes (double).
 
-void TProfile::SetBuffer(Int_t bufsize, Option_t *)
+void TProfile::SetBuffer(Long64_t bufsize, Option_t *)
 {
    if (fBuffer) {
       BufferEmpty();
@@ -1782,6 +1782,8 @@ void TProfile::SetBuffer(Int_t bufsize, Option_t *)
       return;
    }
    if (bufsize < 100) bufsize = 100;
+   if (1 + 3*bufsize > kMaxInt)
+      Fatal("SetBufferSize", "Integer overflow in buffer size: 0x%llx for a max of 0x%x.", 1 + 3*bufsize, kMaxInt);
    fBufferSize = 1 + 3*bufsize;
    fBuffer = new Double_t[fBufferSize];
    memset(fBuffer,0,sizeof(Double_t)*fBufferSize);

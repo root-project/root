@@ -2009,7 +2009,9 @@ void TPainter3dAlgorithms::InitRaster(Double_t xmin, Double_t ymin, Double_t xma
    fDYrast = ymax - ymin;
 
    //  Create buffer for raster
-   Int_t bufsize = nx*ny/30 + 1;
+   if (Long64_t(nx)*ny / 30 + 1 > kMaxInt)
+      Fatal("InitRaster", "Integer overflow in buffer size: 0x%llx for a max of 0x%x.", Long64_t(nx)*ny / 30 + 1, kMaxInt);
+   Int_t bufsize = Long64_t(nx)*ny/30 + 1;
    fRaster.resize(bufsize);
 
    //          S E T   M A S K S
