@@ -731,7 +731,8 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
          std::cout << "\t" << i << "  " << nodesOrder[i] << " parsing operator " << op_type << std::endl;
       }
 
-      std::unique_ptr<ROperator> op = ParseOperator(i, graph, nodesOrder, nodesChildren[i]);
+      std::unique_ptr<ROperator> op = ParseOperator(i, graph, nodesOrder, nodesChildren[nodesOrder[i]]);
+
       if (!op) {
          if (verbose) {
             std::cout << "\t\tskipping operator since it is fused with previous one" << std::endl;
@@ -739,6 +740,12 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
          // for skipping the fused nodes like Add after MatMul
          continue;
       }
+      const auto &nodeproto = graph.node(nodesOrder[i]);
+      op->name = nodeproto.name();
+      if (op->name.empty()) {
+          op->name = op_type + "_" + std::to_string(i);
+      }
+
       rmodel.AddOperator(std::move(op), node_order_exec++);
    }
 
