@@ -153,7 +153,7 @@ public:
    ReduceNLLOutput reduceNLL(RooBatchCompute::Config const &cfg, std::span<const double> probas,
                              std::span<const double> weights, std::span<const double> offsetProbas) override;
 
-   std::unique_ptr<AbsBufferManager> createBufferManager() const;
+   std::unique_ptr<AbsBufferManager> createBufferManager() const override;
 
    CudaInterface::CudaEvent *newCudaEvent(bool forTiming) const override
    {
