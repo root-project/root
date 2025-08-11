@@ -1,12 +1,10 @@
-ROOTTEST_GENERATE_REFLEX_DICTIONARY(classes classes.h SELECTION classes_selection.xml)
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(classes
+                                    classes.h
+                                    SELECTION classes_selection.xml
+                                    FIXTURES_SETUP root-meta-iotypeioname-dict-fixture)
 
-#---Copy from source to binary some of the files
-configure_file(example.xml . COPYONLY)
-
-ROOTTEST_ADD_AUTOMACROS(DEPENDS ${GENERATE_REFLEX_TEST}
-                        EXCLUDE execionameiotype)
-
-ROOTTEST_ADD_TEST(execionameiotype
+ROOTTEST_ADD_TEST(ionameiotype
                   MACRO execionameiotype.C
-                  DEPENDS ${GENERATE_REFLEX_TEST}
-                  OUTREF execionameiotype.ref)
+                  COPY_TO_BUILDDIR example.xml
+                  OUTREF execionameiotype.ref
+                  FIXTURES_REQUIRED root-meta-iotypeioname-dict-fixture)
