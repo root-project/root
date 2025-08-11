@@ -113,6 +113,10 @@ if (NOT dataframe)
     # RDataFrame tutorial in graphs
     list(APPEND dataframe_veto visualisation/graphs/gr109_timeSeriesFromCSV_RDF.C)
     # TMVA tutorials dependent on RDataFrame
+    list(APPEND dataframe_veto machine_learning/tmva100_DataPreparation.py
+        machine_learning/tmva101_Training.py # depends on tmva100_DataPreparation.py
+        machine_learning/tmva102_Testing.py # depends on tmva101_Training.py
+    )
     list(APPEND dataframe_veto machine_learning/tmva*.C)
     list(APPEND dataframe_veto machine_learning/TMVA_SOFIE_RDataFrame*.C)
     list(APPEND dataframe_veto machine_learning/TMVA_SOFIE_RDataFrame*.py)
