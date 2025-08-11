@@ -47,7 +47,7 @@ TBranchObject::TBranchObject()
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a BranchObject.
 
-TBranchObject::TBranchObject(TTree *tree, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, bool isptrptr /* = true */)
+TBranchObject::TBranchObject(TTree *tree, const char* name, const char* classname, void* addobj, Long64_t basketsize, Int_t splitlevel, Int_t compress, bool isptrptr /* = true */)
 : TBranch()
 {
    Init(tree,nullptr,name,classname,addobj,basketsize,splitlevel,compress,isptrptr);
@@ -56,7 +56,7 @@ TBranchObject::TBranchObject(TTree *tree, const char* name, const char* classnam
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a BranchObject.
 
-TBranchObject::TBranchObject(TBranch *parent, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, bool isptrptr /* = true */)
+TBranchObject::TBranchObject(TBranch *parent, const char* name, const char* classname, void* addobj, Long64_t basketsize, Int_t splitlevel, Int_t compress, bool isptrptr /* = true */)
 : TBranch()
 {
    Init(nullptr,parent,name,classname,addobj,basketsize,splitlevel,compress,isptrptr);
@@ -65,7 +65,7 @@ TBranchObject::TBranchObject(TBranch *parent, const char* name, const char* clas
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialization routine (run from the constructor so do not make this function virtual)
 
-void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const char* classname, void* addobj, Int_t basketsize, Int_t /*splitlevel*/, Int_t compress, bool isptrptr)
+void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const char* classname, void* addobj, Long64_t basketsize, Int_t /*splitlevel*/, Int_t compress, bool isptrptr)
 {
    if (tree==nullptr && parent!=nullptr) tree = parent->GetTree();
    fTree   = tree;
@@ -114,6 +114,8 @@ void TBranchObject::Init(TTree *tree, TBranch *parent, const char* name, const c
    if (basketsize < 100) {
       basketsize = 100;
    }
+   if (basketsize > kMaxInt)
+      Fatal("Init", "Integer overflow in basket size: 0x%llx for a max of 0x%x.", basketsize, kMaxInt);
    fBasketSize = basketsize;
    fAddress = (char*) addobj;
    fClassName = classname;
@@ -528,7 +530,7 @@ void TBranchObject::SetAutoDelete(bool autodel)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset basket size for all subbranches of this branch.
 
-void TBranchObject::SetBasketSize(Int_t bufsize)
+void TBranchObject::SetBasketSize(Long64_t bufsize)
 {
    TBranch::SetBasketSize(bufsize);
 

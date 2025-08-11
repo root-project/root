@@ -42,7 +42,7 @@ Bool_t TMessage::fgEvolution = kFALSE;
 /// the message will be compressed in TSocket using the zip algorithm
 /// (only if message is > 256 bytes).
 
-TMessage::TMessage(UInt_t what, Int_t bufsize) :
+TMessage::TMessage(UInt_t what, Long64_t bufsize) :
    TBufferFile(TBuffer::kWrite, bufsize + 2*sizeof(UInt_t)),
    fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
 {
@@ -67,7 +67,7 @@ TMessage::TMessage(UInt_t what, Int_t bufsize) :
 /// Create a TMessage object for reading objects. The objects will be
 /// read from buf. Use the What() method to get the message type.
 
-TMessage::TMessage(void *buf, Int_t bufsize, Bool_t adopt) : TBufferFile(TBuffer::kRead, bufsize, buf, adopt),
+TMessage::TMessage(void *buf, Long64_t bufsize, Bool_t adopt) : TBufferFile(TBuffer::kRead, bufsize, buf, adopt),
                                                fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
 {
    // skip space at the beginning of the message reserved for the message length

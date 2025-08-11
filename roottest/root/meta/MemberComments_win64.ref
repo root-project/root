@@ -45,17 +45,6 @@ OBJ: TViewPubDataMembers	TViewPubDataMembers	 : 0
  OBJ: TDataMember	kSingleKey	 : 0
  OBJ: TDataMember	kOverwrite	 : 0
  OBJ: TDataMember	kWriteDelete	 : 0
- OBJ: TDataMember	kShapeDot	 : 0
- OBJ: TDataMember	kShapeCircle	 : 0
- OBJ: TDataMember	kShapeFilledCircle	 : 0
- OBJ: TDataMember	kShapePolyLine	 : 0
- OBJ: TDataMember	kShapeFilledArea	 : 0
- OBJ: TDataMember	kShapeSegments	 : 0
- OBJ: TDataMember	kShapeTriangles	 : 0
- OBJ: TDataMember	kPreferTriangles	 : 0
- OBJ: TDataMember	kDotAsLines	 : 0
- OBJ: TDataMember	kDotAsCircle	 : 0
- OBJ: TDataMember	kUsePSWidthScale	 : 0
  OBJ: TDataMember	fArray	[fN] Array of fN floats : 0
  OBJ: TDataMember	fN	Number of array elements : 0
 
@@ -207,6 +196,8 @@ OBJ: TList	TList	Doubly linked list : 0
       Rectangle_t TLine::GetBBox()
  OBJ: TMethod	GetBBox	Get TopLeft Corner with width and height : 0
       Rectangle_t TAttBBox2D::GetBBox()
+ OBJ: TMethod	GetBBoxCenter	 : 0
+      TPoint TLine::GetBBoxCenter()
  OBJ: TMethod	GetBBoxCenter	 : 0
       TPoint TAttBBox2D::GetBBoxCenter()
  OBJ: TMethod	GetDefaultAngle	 : 0
@@ -387,6 +378,8 @@ OBJ: TList	TList	Doubly linked list : 0
       void TArrow::SetAngle(Float_t angle = 60)
  OBJ: TMethod	SetArrowSize	*MENU* : 0
       void TArrow::SetArrowSize(Float_t arrowsize = 0.050000000000000003)
+ OBJ: TMethod	SetBBoxCenter	 : 0
+      void TLine::SetBBoxCenter(const TPoint& p)
  OBJ: TMethod	SetBBoxCenter	 : 0
       void TAttBBox2D::SetBBoxCenter(const TPoint& p)
  OBJ: TMethod	SetBBoxCenterX	 : 0

@@ -194,7 +194,7 @@ TBranch::TBranch()
 ///
 ///    Note that this function is invoked by TTree::Branch
 
-TBranch::TBranch(TTree *tree, const char *name, void *address, const char *leaflist, Int_t basketsize, Int_t compress)
+TBranch::TBranch(TTree *tree, const char *name, void *address, const char *leaflist, Long64_t basketsize, Int_t compress)
    : TNamed(name, leaflist)
 , TAttFill(0, 1001)
 , fCompress(compress)
@@ -238,6 +238,8 @@ TBranch::TBranch(TTree *tree, const char *name, void *address, const char *leafl
 , fReadLeaves(&TBranch::ReadLeavesImpl)
 , fFillLeaves(&TBranch::FillLeavesImpl)
 {
+   if (basketsize > kMaxInt)
+      Fatal("TBranch", "Integer overflow in basket size: 0x%llx for a max of 0x%x.", basketsize, kMaxInt);
    Init(name,leaflist,compress);
 }
 
@@ -247,7 +249,7 @@ TBranch::TBranch(TTree *tree, const char *name, void *address, const char *leafl
 /// See documentation for
 /// TBranch::TBranch(TTree *, const char *, void *, const char *, Int_t, Int_t)
 
-TBranch::TBranch(TBranch *parent, const char *name, void *address, const char *leaflist, Int_t basketsize,
+TBranch::TBranch(TBranch *parent, const char *name, void *address, const char *leaflist, Long64_t basketsize,
                  Int_t compress)
 : TNamed(name, leaflist)
 , TAttFill(0, 1001)
@@ -292,6 +294,8 @@ TBranch::TBranch(TBranch *parent, const char *name, void *address, const char *l
 , fReadLeaves(&TBranch::ReadLeavesImpl)
 , fFillLeaves(&TBranch::FillLeavesImpl)
 {
+   if (basketsize > kMaxInt)
+      Fatal("TBranch", "Integer overflow in basket size: 0x%llx for a max of 0x%x.", basketsize, kMaxInt);
    Init(name,leaflist,compress);
 }
 
@@ -2737,8 +2741,10 @@ void TBranch::SetAutoDelete(bool autodel)
 /// Set the basket size
 /// The function makes sure that the basket size is greater than fEntryOffsetlen
 
-void TBranch::SetBasketSize(Int_t bufsize)
+void TBranch::SetBasketSize(Long64_t bufsize)
 {
+   if (bufsize > kMaxInt)
+      Fatal("SetBasketSize", "Integer overflow in basket size: 0x%llx for a max of 0x%x.", bufsize, kMaxInt);
    Int_t minsize = 100 + fName.Length();
    if (bufsize < minsize+fEntryOffsetLen) bufsize = minsize+fEntryOffsetLen;
    fBasketSize = bufsize;

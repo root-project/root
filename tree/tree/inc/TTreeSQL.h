@@ -65,21 +65,21 @@ protected:
    bool                   CreateTable(const TString& table);
    TBasket               *CreateBasket(TBranch * br) override;
 
-   TBranch               *BranchImp(const char *branchname, const char *classname, TClass *ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel) override;
-   TBranch               *BranchImp(const char *branchname, TClass *ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel) override;
+   TBranch               *BranchImp(const char *branchname, const char *classname, TClass *ptrClass, void *addobj, Long64_t bufsize, Int_t splitlevel) override;
+   TBranch               *BranchImp(const char *branchname, TClass *ptrClass, void *addobj, Long64_t bufsize, Int_t splitlevel) override;
 
 public:
    TTreeSQL(TSQLServer * server, TString DB, const TString& table);
    ~TTreeSQL() override;
 
-   Int_t                  Branch(TCollection *list, Int_t bufsize=32000, Int_t splitlevel=99, const char *name="") override;
-   Int_t                  Branch(TList *list, Int_t bufsize=32000, Int_t splitlevel=99) override;
-   Int_t                  Branch(const char *folder, Int_t bufsize=32000, Int_t splitlevel=99) override;
-   TBranch               *Bronch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=99) override;
-   TBranch               *BranchOld(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=1) override;
-   TBranch               *Branch(const char *name, const char *classname, void *addobj, Int_t bufsize=32000, Int_t splitlevel=99) override;
+   Int_t                  Branch(TCollection *list, Long64_t bufsize=32000, Int_t splitlevel=99, const char *name="") override;
+   Int_t                  Branch(TList *list, Long64_t bufsize=32000, Int_t splitlevel=99) override;
+   Int_t                  Branch(const char *folder, Long64_t bufsize=32000, Int_t splitlevel=99) override;
+   TBranch               *Bronch(const char *name, const char *classname, void *addobj, Long64_t bufsize=32000, Int_t splitlevel=99) override;
+   TBranch               *BranchOld(const char *name, const char *classname, void *addobj, Long64_t bufsize=32000, Int_t splitlevel=1) override;
+   TBranch               *Branch(const char *name, const char *classname, void *addobj, Long64_t bufsize=32000, Int_t splitlevel=99) override;
 
-   TBranch               *Branch(const char *name, void *address, const char *leaflist, Int_t bufsize) override;
+   TBranch               *Branch(const char *name, void *address, const char *leaflist, Long64_t bufsize) override;
 
    Int_t          Fill() override;
    Int_t          GetEntry(Long64_t entry=0, Int_t getall=0) override;
