@@ -1,8 +1,32 @@
-#-------------------------------------------------------------------------------
-#
-# Placeholder file to translate the tests to the new CTest system. Meanwhile we
-# define a CTest test that calls 'make' in ${CMAKE_CURRENT_SOURCE_DIR}
-#
-#-------------------------------------------------------------------------------
+ROOTTEST_GENERATE_DICTIONARY(instlib
+                             instHeader.h
+                             instGood.cxx
+                             LINKDEF linkdef.h
+                             NO_CXXMODULE
+                             FIXTURES_SETUP root-meta-7462-instlib-fixtures)
 
-ROOTTEST_ADD_OLDTEST()
+ROOTTEST_GENERATE_DICTIONARY(inst2lib
+                             instHeader.h
+                             instGood.cxx
+                             LINKDEF secondLinkdef.h
+                             NO_CXXMODULE NO_ROOTMAP
+                             FIXTURES_SETUP root-meta-7462-inst2lib-fixtures)
+
+ROOTTEST_ADD_TEST(WriteFile
+                  MACRO execWriteFile.C
+                  OUTREF execWriteFile.ref
+                  FIXTURES_REQUIRED root-meta-7462-instlib-fixtures
+                                    root-meta-7462-inst2lib-fixtures
+                  FIXTURES_SETUP root-meta-7462-WriteFile-fixtures)
+
+ROOTTEST_ADD_TEST(Test
+                  MACRO execTest.C
+                  OUTREF execTest.ref
+                  FIXTURES_REQUIRED root-meta-7462-WriteFile-fixtures)
+
+ROOTTEST_ADD_TEST(InvalidDeclRecoveryCI
+                  MACRO execInvalidDeclRecoveryCI.C
+                  OUTREF execInvalidDeclRecoveryCI.ref)
+
+ROOTTEST_ADD_TEST(InvalidDeclRecovery
+                  MACRO runInvalidDeclRecovery.C)
