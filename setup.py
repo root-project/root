@@ -52,7 +52,7 @@ class ROOTBuild(_build):
             "-Dbuiltin_nlohmannjson=ON -Dbuiltin_tbb=ON -Dbuiltin_xrootd=ON "  # builtins
             "-Dbuiltin_lz4=ON -Dbuiltin_lzma=ON -Dbuiltin_zstd=ON -Dbuiltin_xxhash=ON "  # builtins
             "-Dpyroot=ON -Ddataframe=ON -Dxrootd=ON -Dssl=ON -Dimt=ON "
-            "-Droofit=ON "
+            "-Droofit=ON -Dmathmore=ON -Dbuiltin_fftw3=ON -Dbuiltin_gsl=ON "
             # Next 4 paths represent the structure of the target binaries/headers/libs
             # as the target installation directory of the Python environment would expect
             f"-DCMAKE_INSTALL_BINDIR={ROOT_BUILD_INTERNAL_DIRNAME}/ROOT/bin "
