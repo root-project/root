@@ -75,7 +75,7 @@ RooAbsData *dataForChan = found != splits.end() ? found->get() : nullptr;
   are filled at very high rates. Use lower number in this case.
 - The Snapshot method has been refactored so that it does not need anymore compile-time information (i.e. either template arguments or JIT-ting) to know the input column types. This means that any Snapshot call that specifies the template arguments, e.g. `Snapshot<int, float>(..., {"intCol", "floatCol"})` is now redundant and the template arguments can safely be removed from the call. At the same time, Snapshot does not need to JIT compile the column types, practically giving huge speedups depending on the number of columns that need to be written to disk. In certain cases (e.g. when writing O(10000) columns) the speedup can be larger than an order of magnitude. The Snapshot template is now deprecated and it will issue a compile-time warning when called. The function overload is scheduled for removal in ROOT 6.40.
 
-## PyROOT
+## Python Interface
 
 ### Deprecate the attribute pythonization of `TDirectory` in favor of item-getting syntax
 
@@ -89,8 +89,14 @@ The deprecated pythonization with the `__getattr__` syntax is now removed.
 It was originally schedeuled for removal in 6.34 according to the 6.32 release notes, but since it was still used quite a bit,
 the deprecation period was extended.
 
-## Command line utils
-- `rootls` has a new native implementation and can now be run without Python. The options and the output of the new rootls are identical to the previous implementation but it should run faster (typically about 3 to 4x faster).
+## ROOT executable
+
+- Removed stray linebreak when running `root -q` with no input files.
+  This ensures that there is no superfluous output when running `root` without the banner and without input files (`root -q -l`).
+
+## Command-line utilities
+- The `rootls` utility has a new native implementation and can now be run without Python.
+  The options and the output of the new rootls are identical to the previous implementation but it should run faster (typically about 3 to 4x faster).
 
 ## JavaScript ROOT
 - A new configuration option `Jupyter.JSRoot` was added in .rootrc to set the default mode for JSROOT in Jupyter notebooks (on or off).
