@@ -40,6 +40,9 @@ public:
    //virtual void Forward_blas() = 0;
    virtual ~ROperator(){}
 
+   std::string name = "UnnamedOperator";
+   const std::string &GetOperatorName() { return name; };
+
 protected:
 
    const std::string SP = "   ";    ///< space used to correctly indent the generated C++ code

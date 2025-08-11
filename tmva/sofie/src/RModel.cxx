@@ -10,6 +10,7 @@
 #endif
 
 #include "TMVA/RModel.hxx"
+#include "TMVA/RModelProfiler.hxx"
 #include "TMVA/SOFIE_common.hxx"
 
 namespace TMVA::Experimental::SOFIE {
@@ -1304,7 +1305,7 @@ void RModel::GenerateSessionCode()
          CheckAndFlushIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx);
       }
 
-      // to check remaining unused fragments after memory allocation (lesser the better)
+  // to check remaining unused fragments after memory allocation (lesser the better)
       // for (const auto &it: fIntermediateMemoryInfo.available_stack){
       //    std::cout<<"chunk_idx: "<<it.first<<", chunk_size: "<<it.second<<"\n";
       // }
@@ -1339,6 +1340,9 @@ void RModel::GenerateSessionCode()
 
    // Generate code for Session constructor
    if (fUseSession) {
+      std::string sessionName = "Session";
+      if (fIsSubGraph)
+         sessionName += "_" + fName;
       // add here specific operator code that needs to define session data members
       fGC += "\n";
       for (size_t id = 0; id < fOperators.size(); id++) {
@@ -1411,6 +1415,12 @@ void RModel::GenerateSessionCode()
       GenerateRequiredInputTensorInfo();
    }
 
+   if (fProfile) {
+      RModelProfiler profiler(*this);
+      profiler.Generate();
+      fGC += fProfilerGC;
+   } else {
+
    fGC += doInferSignature + " {\n";
    fGC += "\n";
 
@@ -1434,6 +1444,42 @@ void RModel::GenerateSessionCode()
    // local variable name that we're using for the session:
    ReplaceAll(allOperatorCode, "this->", "session.");
 
+   }
+
+   //    fGC += doInferSignature + "{\n";
+   //    fGC += "\n";
+
+   //    // generate the inference code
+   //    if (fVerbose)
+   //       std::cout << "Generating main inference code for " << fName << std::endl;
+
+   //    if (fOutputTensorNames.size() == 0)
+   //       throw std::runtime_error("TMVA-SOFIE: output size=0 are not supported");
+
+   //    for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
+   //       if (fVerbose)
+   //       std::cout << "Generating code for operator .... " << op_idx << std::endl;
+   //       fGC += (fOperators[op_idx]->Generate(std::to_string(op_idx)));
+   //    }
+
+   //    fGC += SP + "using TMVA::Experimental::SOFIE::UTILITY::FillOutput;\n\n";
+
+   // for (std::string const &name : fOutputTensorNames) {
+   //    // need to check is size is the same (don't want to return a vector with
+   //    // larger size) in that case better to copy
+   //    bool isIntermediate = fIntermediateTensorInfos.count(name) > 0;
+   //    std::string n = isIntermediate ? std::to_string(ConvertShapeToLength(GetTensorShape(name)))
+   //                                   : ConvertDimShapeToLength(GetDimTensorShape(name));
+   //    fGC += SP + "FillOutput(tensor_" + name + ", output_tensor_" + name + ", " + n + ");\n";
+   // }
+
+   //    fGC += "}\n\n";
+   // }
+
+   // // generate the inference overload that returns an output struct
+   // GenerateOutput();
+
+   // end of session
    if (fUseSession && !fIsGNNComponent) {
       // Collect all "tensor_*" data members that are not input or output tensors
       std::vector<std::string> tensorMemberNames = CollectTensorMemberNames(allOperatorCode);
@@ -1466,9 +1512,11 @@ void RModel::GenerateSessionCode()
 
 void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, long pos, bool verbose)
 {
+   bool profile = (options & static_cast<std::underlying_type_t<Options>>(Options::kProfile));
    fVerbose = verbose;
    fBatchSize = batchSize;
    fReadPos = pos;
+   fProfile = profile;
 
    // session flag is used in operator initialize
    if (static_cast<std::underlying_type_t<Options>>(Options::kNoSession) & options) {

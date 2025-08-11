@@ -26,6 +26,7 @@ enum class Options {
    kRootBinaryWeightFile = 0x4,
    kGNN = 0x8,
    kGNNComponent = 0x10,
+   kProfile = 0x20,
 };
 
 // Optimization levels inspired by ONNXRuntime.
