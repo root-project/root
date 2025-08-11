@@ -92,11 +92,16 @@ private:
    Int_t fDate;
 
 private:
-   EventHeader(const EventHeader&) = delete;
    EventHeader& operator=(const EventHeader&) = delete;
 
 public:
    EventHeader() : fEvtNum(0), fRun(0), fDate(0) { }
+   EventHeader(const EventHeader&src)
+   {
+     fEvtNum = src.fEvtNum;
+     fRun = src.fRun;
+     fDate = src.fDate;
+   }
    virtual ~EventHeader() { }
    void   Set(Int_t i, Int_t r, Int_t d) { fEvtNum = i; fRun = r; fDate = d; }
    Int_t  GetEvtNum() const { return fEvtNum; }
@@ -134,6 +139,10 @@ private:
    Event& operator=(const Event&) = delete;
 
 public:
+   std::vector<Double32_t>  fVClosestDistance;
+   std::vector<EventHeader> fVEvtHdr;
+   std::vector<Track*>      fVTracks;
+
    Event();
    virtual ~Event();
    void          Build(Int_t ev, Int_t arg5 = 600, Float_t ptmin = 1);

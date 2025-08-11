@@ -142,11 +142,11 @@ Event::~Event()
       fTracks->Clear("C");
    }
    delete fTracks;
-   fTracks = 0;
+   fTracks = nullptr;
    delete[] fClosestDistance;
-   fClosestDistance = 0;
+   fClosestDistance = nullptr;
    delete[] fEventName;
-   fEventName = 0;
+   fEventName = nullptr;
 }
 
 //______________________________________________________________________________
@@ -219,6 +219,9 @@ Track* Event::AddTrack(Float_t random, Float_t ptmin)
    if (track->GetPt() > ptmin)   fHighPt->Add(track);
    //Save reference in fMuons if track is a muon candidate
    if (track->GetMass2() < 0.11) fMuons->Add(track);
+
+   fVTracks.push_back(track);
+
    return track;
 }
 
@@ -232,6 +235,9 @@ Track Event::GetTrackCopy(int i) const
 void Event::Clear(Option_t* /*option*/)
 {
    // -- FIXME: Describe this function.
+
+   fVTracks.clear();
+   fVEvtHdr.clear();
 
    // will also call Track::Clear
    if (fTracks) {
@@ -250,12 +256,12 @@ void Event::Reset(Option_t* /*option*/)
 {
    // -- Delete tracks and histograms.
    delete fH;
-   fH = 0;
+   fH = nullptr;
    if (fTracks) {
       fTracks->Clear();
    }
    delete fTracks;
-   fTracks = 0;
+   fTracks = nullptr;
 }
 
 //______________________________________________________________________________
@@ -263,8 +269,11 @@ void Event::SetHeader(Int_t i, Int_t run, Int_t date, Float_t random)
 {
    fNtrack = 0;
    fEvtHdr.Set(i, run, date);
+   int duplicate = (int) (gRandom->Rndm(1) * 5);
+   for (int j = 0; j < duplicate; ++j)
+      fVEvtHdr.push_back(fEvtHdr);
    fH = new TH1F("hstat", "Event Histogram", 100, 0, 1);
-   fH->SetDirectory(0);
+   fH->SetDirectory(nullptr);
    fH->Fill(random);
 }
 
@@ -280,14 +289,18 @@ void Event::SetMeasure(UChar_t which, Int_t what)
 void Event::SetRandomVertex()
 {
    // This delete is to test the relocation of variable length array
-   if (fClosestDistance) delete [] fClosestDistance;
+   if (fClosestDistance)
+      delete [] fClosestDistance;
+   fVClosestDistance.clear();
    if (!fNvertex) {
-      fClosestDistance = 0;
+      fClosestDistance = nullptr;
       return;
    }
    fClosestDistance = new Double32_t[fNvertex];
    for (Int_t k = 0; k < fNvertex; k++ ) {
       fClosestDistance[k] = gRandom->Gaus(1,1);
+      fVClosestDistance.push_back(  fClosestDistance[k] );
+
    }
 }
 
