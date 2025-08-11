@@ -2016,7 +2016,7 @@ Long64_t TChain::Merge(TCollection* /* list */, TFileMergeInfo *)
 ///     }
 /// ~~~
 
-Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
+Long64_t TChain::Merge(TFile* file, Long64_t basketsize, Option_t* option)
 {
    // We must have been passed a file, we will use it
    // later to reset the compression level of the branches.
