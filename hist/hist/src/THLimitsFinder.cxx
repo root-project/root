@@ -337,10 +337,16 @@ LOK:
    Int_t oldnbins = nbins;
 
    Double_t atest = BinWidth*0.0001;
-   //if (TMath::Abs(BinLow-A1)  >= atest) { BinLow  += BinWidth;  nbins--; } //replaced by Damir in 3.10/02
-   //if (TMath::Abs(BinHigh-A2) >= atest) { BinHigh -= BinWidth;  nbins--; } //by the next two lines
-   if (al-BinLow  >= atest) { BinLow  += BinWidth;  nbins--; }
-   if (BinHigh-ah >= atest) { BinHigh -= BinWidth;  nbins--; }
+   if (al - BinLow >= atest && al < BinLow + BinWidth) {
+      // Suppress the first bin, but only if al doesn't fall into it
+      BinLow += BinWidth;
+      nbins--;
+   }
+   if (BinHigh - ah >= atest && BinHigh - BinWidth > ah) {
+      // Suppress the last bin, but only if ah doesn't fall into it
+      BinHigh -= BinWidth;
+      nbins--;
+   }
    if (!optionTime && BinLow >= BinHigh) {
       //this case may happen when nbins <=5
       BinLow = oldBinLow;
