@@ -27,14 +27,54 @@ class REveScene;
 class REveViewer : public REveElement
 {
 public:
-   enum ECameraType { kCameraPerspXOZ, kCameraOrthoXOY };
-   enum EAxesType {kAxesNone, kAxesOrigin, kAxesEdge };
+   enum ECameraType
+   {
+      // Perspective
+      kCameraPerspXOZ,  // XOZ floor
+      kCameraPerspYOZ,  // YOZ floor
+      kCameraPerspXOY,  // XOY floor
+      // Orthographic
+      kCameraOrthoXOY,  // Looking down  Z axis,  X horz, Y vert
+      kCameraOrthoXOZ,  // Looking along Y axis,  X horz, Z vert
+      kCameraOrthoZOY,  // Looking along X axis,  Z horz, Y vert
+      kCameraOrthoZOX,  // Looking along Y axis,  Z horz, X vert
+      // nOrthographic
+      kCameraOrthoXnOY, // Looking along Z axis, -X horz, Y vert
+      kCameraOrthoXnOZ, // Looking down  Y axis, -X horz, Z vert
+      kCameraOrthoZnOY, // Looking down  X axis, -Z horz, Y vert
+      kCameraOrthoZnOX  // Looking down  Y axis, -Z horz, X vert
+   };
+
+   enum EAxesType {
+      kAxesNone,
+      kAxesOrigin,
+      kAxesEdge
+   };
+
+   // For the moment REveCamera is internal class
+   class REveCamera
+   {
+      ECameraType fType;
+      std::string fName;
+      REveVector fV2;
+      REveVector fV1;
+
+      public:
+       REveCamera() { Setup(kCameraPerspXOZ, "PerspXOZ", REveVector(-1.0, 0.0, 0.0), REveVector(0.0, 1.0, 0.0));}
+       ~REveCamera() {}
+
+       void Setup(ECameraType type, const std::string& name, REveVector v1, REveVector v2);
+
+       ECameraType GetType() const { return fType; }
+
+       int WriteCoreJson(nlohmann::json &j, Int_t /*rnr_offset*/);
+   };
 
 private:
    REveViewer(const REveViewer&) = delete;
    REveViewer& operator=(const REveViewer&) = delete;
 
-   ECameraType fCameraType{kCameraPerspXOZ};
+   REveCamera fCamera;
    EAxesType fAxesType{kAxesNone};
    bool      fBlackBackground{false};
 
@@ -50,8 +90,8 @@ public:
    virtual void AddScene(REveScene* scene);
    // XXX Missing RemoveScene() ????
 
-   void SetCameraType(ECameraType t) { fCameraType = t; }
-   ECameraType GetCameraType() const { return fCameraType; }
+   void SetCameraType(ECameraType t);
+   ECameraType GetCameraType() const { return fCamera.GetType(); }
 
    void SetAxesType(int);
    void SetBlackBackground(bool);
