@@ -4762,8 +4762,8 @@ Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t bufsize)
       Long64_t b1 = sfile->GetBytesRead() - b00;
 
       Long64_t readsize;
-      if (filesize - b1 > (Long64_t)buffersize) {
-         readsize = buffersize;
+      if (filesize - b1 > (Long64_t)bufsize) {
+         readsize = bufsize;
       } else {
          readsize = filesize - b1;
       }
@@ -4817,7 +4817,7 @@ copyout:
 /// kFALSE otherwise.
 
 Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
-                 UInt_t buffsize)
+                 UInt_t bufsize)
 {
    TUrl sURL(src, kTRUE);
 
