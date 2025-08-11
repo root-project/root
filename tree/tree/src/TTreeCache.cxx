@@ -316,7 +316,7 @@ TTreeCache::TTreeCache() : TFileCacheRead(), fPrefillType(GetConfiguredPrefillTy
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TTreeCache::TTreeCache(TTree *tree, Int_t bufsize)
+TTreeCache::TTreeCache(TTree *tree, Long64_t bufsize)
    : TFileCacheRead(tree->GetCurrentFile(), bufsize, tree), fEntryMax(tree->GetEntriesFast()), fEntryNext(0),
      fBrNames(new TList), fTree(tree), fPrefillType(GetConfiguredPrefillType())
 {
@@ -2069,15 +2069,15 @@ void TTreeCache::ResetCache()
 ///  - 1 if some or all of the buffer content has been made unavailable
 ///  - -1 on error
 
-Int_t TTreeCache::SetBufferSize(Long64_t buffersize)
+Int_t TTreeCache::SetBufferSize(Long64_t bufsize)
 {
    Int_t prevsize = GetBufferSize();
-   Int_t res = TFileCacheRead::SetBufferSize(buffersize);
+   Int_t res = TFileCacheRead::SetBufferSize(bufsize);
    if (res < 0) {
       return res;
    }
 
-   if (res == 0 && buffersize <= prevsize) {
+   if (res == 0 && bufsize <= prevsize) {
       return res;
    }
 

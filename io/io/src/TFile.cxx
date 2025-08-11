@@ -1053,7 +1053,7 @@ void TFile::Close(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates key for object and converts data to buffer.
 
-TKey* TFile::CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t bufsize)
+TKey* TFile::CreateKey(TDirectory* mother, const TObject* obj, const char* name, Long64_t bufsize)
 {
    return new TKey(obj, name, bufsize, mother);
 }
@@ -1061,7 +1061,7 @@ TKey* TFile::CreateKey(TDirectory* mother, const TObject* obj, const char* name,
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates key for object and converts data to buffer.
 
-TKey* TFile::CreateKey(TDirectory* mother, const void* obj, const TClass* cl, const char* name, Int_t bufsize)
+TKey* TFile::CreateKey(TDirectory* mother, const void* obj, const TClass* cl, const char* name, Long64_t bufsize)
 {
    return new TKey(obj, cl, name, bufsize, mother);
 }
@@ -2445,11 +2445,16 @@ void TFile::Streamer(TBuffer &b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment statistics for buffer sizes of objects in this file.
 
-void TFile::SumBuffer(Int_t bufsize)
+void TFile::SumBuffer(Long64_t bufsize)
 {
+   if (bufsize > kMaxInt)
+      Fatal("SumBuffer", "Integer overflow in buffer size: 0x%llx for a max of 0x%x.", bufsize, kMaxInt);
+   else if (bufsize < 0)
+      Fatal("SumBuffer", "negative buffer size: 0x%llx.", bufsize);
+
    fWritten++;
-   fSumBuffer  += double(bufsize);
-   fSum2Buffer += double(bufsize) * double(bufsize); // avoid reaching MAXINT for temporary
+   fSumBuffer  += bufsize;
+   fSum2Buffer += bufsize * bufsize;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2464,7 +2469,7 @@ void TFile::SumBuffer(Int_t bufsize)
 /// The linked list of FREE segments is written.
 /// The file header is written (bytes 1->fBEGIN).
 
-Int_t TFile::Write(const char *, Int_t opt, Int_t bufsize)
+Int_t TFile::Write(const char *, Int_t opt, Long64_t bufsize)
 {
    if (!IsWritable()) {
       if (!TestBit(kWriteError)) {
@@ -2494,7 +2499,7 @@ Int_t TFile::Write(const char *, Int_t opt, Int_t bufsize)
 ////////////////////////////////////////////////////////////////////////////////
 /// One can not save a const TDirectory object.
 
-Int_t TFile::Write(const char *n, Int_t opt, Int_t bufsize) const
+Int_t TFile::Write(const char *n, Int_t opt, Long64_t bufsize) const
 {
    Error("Write const","A const TFile object should not be saved. We try to proceed anyway.");
    return const_cast<TFile*>(this)->Write(n, opt, bufsize);
@@ -4286,16 +4291,28 @@ Int_t TFile::GetReadaheadSize()
 }
 
 //______________________________________________________________________________
-void TFile::SetReadaheadSize(Int_t bytes) { fgReadaheadSize = bytes; }
+void TFile::SetReadaheadSize(Long64_t bytes) {
+   assert (bytes <= kMaxInt);
+   fgReadaheadSize = bytes;
+}
 
 //______________________________________________________________________________
-void TFile::SetFileBytesRead(Long64_t bytes) { fgBytesRead = bytes; }
+void TFile::SetFileBytesRead(Long64_t bytes) {
+   assert (bytes <= kMaxInt);
+   fgBytesRead = bytes;
+}
 
 //______________________________________________________________________________
-void TFile::SetFileBytesWritten(Long64_t bytes) { fgBytesWrite = bytes; }
+void TFile::SetFileBytesWritten(Long64_t bytes) {
+   assert (bytes <= kMaxInt);
+   fgBytesWrite = bytes;
+}
 
 //______________________________________________________________________________
-void TFile::SetFileReadCalls(Int_t readcalls) { fgReadCalls = readcalls; }
+void TFile::SetFileReadCalls(Long64_t readcalls) {
+   assert (readcalls <= kMaxInt);
+   fgReadCalls = readcalls;
+}
 
 //______________________________________________________________________________
 Long64_t TFile::GetFileCounter() { return fgFileCounter; }
@@ -4685,7 +4702,7 @@ void TFile::CpProgress(Long64_t bytesread, Long64_t size, TStopwatch &watch)
 /// Allows to copy this file to the dst URL. Returns kTRUE in case of success,
 /// kFALSE otherwise.
 
-Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t bufsize)
+Bool_t TFile::Cp(const char *dst, Bool_t progressbar, Long64_t bufsize)
 {
    Bool_t rmdestiferror = kFALSE;
    TStopwatch watch;
@@ -4740,6 +4757,11 @@ Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t bufsize)
    sfile->Seek(0);
    dfile->Seek(0);
 
+   if (bufsize < 0)
+      Fatal("TFile::Cp", "Negative buffer size: 0x%llx.", bufsize);
+   else if (bufsize > kMaxUInt) {
+      Fatal("TFile::Cp", "Integer overflow in buffer size: 0x%llx for a max of 0x%x.", bufsize, kMaxUInt);
+   }
    copybuffer = new char[bufsize];
    if (!copybuffer) {
       ::Error("TFile::Cp", "cannot allocate the copy buffer");
@@ -4762,7 +4784,7 @@ Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t bufsize)
       Long64_t b1 = sfile->GetBytesRead() - b00;
 
       Long64_t readsize;
-      if (filesize - b1 > (Long64_t)bufsize) {
+      if (filesize - b1 > bufsize) {
          readsize = bufsize;
       } else {
          readsize = filesize - b1;
@@ -4788,7 +4810,7 @@ Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t bufsize)
          goto copyout;
       }
       totalread += read;
-   } while (read == (Long64_t)bufsize);
+   } while (read == bufsize);
 
    if (progressbar) {
       CpProgress(totalread, filesize,watch);
@@ -4817,7 +4839,7 @@ copyout:
 /// kFALSE otherwise.
 
 Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
-                 UInt_t bufsize)
+                 Long64_t bufsize)
 {
    TUrl sURL(src, kTRUE);
 

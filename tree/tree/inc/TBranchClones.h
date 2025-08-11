@@ -38,13 +38,13 @@ protected:
 
    friend class TTreeCloner;
 
-   void Init(TTree *tree, TBranch *parent, const char *name, void *clonesaddress, Int_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
+   void Init(TTree *tree, TBranch *parent, const char *name, void *clonesaddress, Long64_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
    Int_t   FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
 
 public:
    TBranchClones();
-   TBranchClones(TTree *tree, const char *name, void *clonesaddress, Int_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
-   TBranchClones(TBranch *parent, const char *name, void *clonesaddress, Int_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
+   TBranchClones(TTree *tree, const char *name, void *clonesaddress, Long64_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
+   TBranchClones(TBranch *parent, const char *name, void *clonesaddress, Long64_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
    ~TBranchClones() override;
 
    void    Browse(TBrowser *b) override;
@@ -57,7 +57,7 @@ public:
    void    Reset(Option_t *option="") override;
    void    ResetAfterMerge(TFileMergeInfo *) override;
    void    SetAddress(void *add) override;
-   void    SetBasketSize(Int_t bufsize) override;
+   void    SetBasketSize(Long64_t bufsize) override;
    void    SetTree(TTree *tree) override { fTree = tree; fBranchCount->SetTree(tree); }
    void    UpdateFile() override;
 

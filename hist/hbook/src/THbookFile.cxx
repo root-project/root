@@ -760,7 +760,7 @@ TObject *THbookFile::ConvertCWN(Int_t id)
 
       }
 
-      Int_t bufsize = 8000;
+      Long64_t bufsize = 8000;
       THbookBranch *branch = new THbookBranch(tree,name,(void*)&bigbuf[bufpos],fullname,bufsize);
       tree->GetListOfBranches()->Add(branch);
       branch->SetBlockName(block);

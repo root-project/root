@@ -205,8 +205,8 @@ public:
    void StopLogFile();                   // *MENU*
 
    void Close(Option_t *option = "") final; // *MENU*
-   TKey *CreateKey(TDirectory *mother, const TObject *obj, const char *name, Int_t bufsize) final;
-   TKey *CreateKey(TDirectory *mother, const void *obj, const TClass *cl, const char *name, Int_t bufsize) final;
+   TKey *CreateKey(TDirectory *mother, const TObject *obj, const char *name, Long64_t bufsize) final;
+   TKey *CreateKey(TDirectory *mother, const void *obj, const TClass *cl, const char *name, Long64_t bufsize) final;
    void DrawMap(const char * = "*", Option_t * = "") final {}
    void FillBuffer(char *&) final {}
    void Flush() final {}
@@ -245,8 +245,8 @@ public:
    Int_t Sizeof() const final { return 0; }
 
    Bool_t WriteBuffer(const char *, Int_t) final { return kFALSE; }
-   Int_t Write(const char * = nullptr, Int_t = 0, Int_t = 0) final { return 0; }
-   Int_t Write(const char * = nullptr, Int_t = 0, Int_t = 0) const final { return 0; }
+   Int_t Write(const char * = nullptr, Int_t = 0, Long64_t = 0) final { return 0; }
+   Int_t Write(const char * = nullptr, Int_t = 0, Long64_t = 0) const final { return 0; }
    void WriteFree() final {}
    void WriteHeader() final;
    void WriteStreamerInfo() final;

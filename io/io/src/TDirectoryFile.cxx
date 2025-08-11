@@ -406,7 +406,7 @@ TObject *TDirectoryFile::CloneObject(const TObject *obj, Bool_t autoadd /* = kTR
       // during the streaming ....
       TFile *filsav = gFile;
       gFile = nullptr;
-      const Int_t bufsize = 10000;
+      const Long64_t bufsize = 10000;
       TBufferFile buffer(TBuffer::kWrite,bufsize);
       buffer.MapObject(obj);  //register obj in map to handle self reference
       {
@@ -1662,8 +1662,10 @@ void TDirectoryFile::SaveSelf(Bool_t force)
 ///
 /// See also TDirectoryFile::GetBufferSize
 
-void TDirectoryFile::SetBufferSize(Int_t bufsize)
+void TDirectoryFile::SetBufferSize(Long64_t bufsize)
 {
+   if (bufsize > kMaxInt)
+      Fatal("SetBufferSize", "Integer overflow in buffer size: 0x%llx for a max of 0x%x.", bufsize, kMaxInt);
    fBufferSize = bufsize;
 }
 
@@ -1850,7 +1852,7 @@ void TDirectoryFile::Streamer(TBuffer &b)
 /// For allowed options see TObject::Write().
 /// The directory header info is rewritten on the directory header record.
 
-Int_t TDirectoryFile::Write(const char *, Int_t opt, Int_t bufsize)
+Int_t TDirectoryFile::Write(const char *, Int_t opt, Long64_t bufsize)
 {
    if (!IsWritable()) return 0;
    TDirectory::TContext ctxt(this);
@@ -1871,7 +1873,7 @@ Int_t TDirectoryFile::Write(const char *, Int_t opt, Int_t bufsize)
 ////////////////////////////////////////////////////////////////////////////////
 /// One can not save a const TDirectory object.
 
-Int_t TDirectoryFile::Write(const char *n, Int_t opt, Int_t bufsize) const
+Int_t TDirectoryFile::Write(const char *n, Int_t opt, Long64_t bufsize) const
 {
    Error("Write const","A const TDirectory object should not be saved. We try to proceed anyway.");
    return const_cast<TDirectoryFile*>(this)->Write(n, opt, bufsize);
@@ -1921,7 +1923,7 @@ Int_t TDirectoryFile::Write(const char *n, Int_t opt, Int_t bufsize) const
 /// WARNING: avoid special characters like '^','$','.' in the name as they
 /// are used by the regular expression parser (see TRegexp).
 
-Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_t *option, Int_t bufsize)
+Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_t *option, Long64_t bufsize)
 {
    TDirectory::TContext ctxt(this);
 
@@ -1948,7 +1950,11 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
 
    TKey *key=0, *oldkey=0;
    Int_t bsize = GetBufferSize();
-   if (bufsize > 0) bsize = bufsize;
+   if (bufsize > 0) {
+      if (bufsize > kMaxInt)
+         Fatal("WriteTObject", "Integer overflow in buffer size: 0x%llx for a max of 0x%x.", bufsize, kMaxInt);
+      bsize = bufsize;
+   }
 
    const char *oname;
    if (name && *name)
@@ -2036,7 +2042,7 @@ Int_t TDirectoryFile::WriteTObject(const TObject *obj, const char *name, Option_
 /// ~~~
 /// See also remarks in TDirectoryFile::WriteTObject
 
-Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option, Int_t bufsize)
+Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option, Long64_t bufsize)
 {
    TClass *cl = TClass::GetClass(classname);
    if (!cl) {
@@ -2063,7 +2069,7 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const char *classname, con
 /// An alternative is to call the function WriteObjectAny above.
 /// see TDirectoryFile::WriteTObject for comments
 
-Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option, Int_t bufsize)
+Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option, Long64_t bufsize)
 {
    TDirectory::TContext ctxt(this);
 
@@ -2102,7 +2108,10 @@ Int_t TDirectoryFile::WriteObjectAny(const void *obj, const TClass *cl, const ch
 
    TKey *key, *oldkey = nullptr;
    Int_t bsize = GetBufferSize();
-   if (bufsize > 0) bsize = bufsize;
+   if (bufsize > 0) {
+      Fatal("WriteObjectAny", "Integer overflow in buffer size: 0x%llx for a max of 0x%x.", bufsize, kMaxInt);
+      bsize = bufsize;
+   }
 
    TString opt = option;
    opt.ToLower();

@@ -69,10 +69,10 @@ TBuffer::TBuffer(EMode mode)
 /// Create an I/O buffer object. Mode should be either TBuffer::kRead or
 /// TBuffer::kWrite.
 
-TBuffer::TBuffer(EMode mode, Int_t bufsize)
+TBuffer::TBuffer(EMode mode, Long64_t bufsize)
 {
-   if (bufsize < 0)
-      Fatal("TBuffer","Request to create a buffer with a negative size, likely due to an integer overflow: 0x%x for a max of 0x%x.", bufsize, kMaxBufferSize);
+   if (bufsize > kMaxBufferSize)
+      Fatal("TBuffer","Request to create a too large buffer: 0x%llx for a max of 0x%x.", bufsize, kMaxBufferSize);
    if (bufsize < kMinimalSize) bufsize = kMinimalSize;
    fBufSize  = bufsize;
    fMode     = mode;
@@ -100,10 +100,10 @@ TBuffer::TBuffer(EMode mode, Int_t bufsize)
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
 
-TBuffer::TBuffer(EMode mode, Int_t bufsize, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
+TBuffer::TBuffer(EMode mode, Long64_t bufsize, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
 {
-   if (bufsize < 0)
-      Fatal("TBuffer","Request to create a buffer with a negative size, likely due to an integer overflow: 0x%x for a max of 0x%x.", bufsize, kMaxBufferSize);
+   if (bufsize > kMaxBufferSize)
+      Fatal("TBuffer","Request to create a too large buffer: 0x%llx for a max of 0x%x.", bufsize, kMaxBufferSize);
    fBufSize  = bufsize;
    fMode     = mode;
    fVersion  = 0;
@@ -154,10 +154,10 @@ TBuffer::~TBuffer()
 /// If the size_needed is larger than the current size, the policy
 /// is to expand to double the current size or the size_needed which ever is largest.
 
-void TBuffer::AutoExpand(Int_t size_needed)
+void TBuffer::AutoExpand(Long64_t size_needed)
 {
-   if (size_needed < 0) {
-      Fatal("AutoExpand","Request to expand to a negative size, likely due to an integer overflow: 0x%x for a max of 0x%x.", size_needed, kMaxBufferSize);
+   if (size_needed > kMaxBufferSize) {
+      Fatal("AutoExpand","Request to expand a too large buffer: 0x%llx for a max of 0x%x.", size_needed, kMaxBufferSize);
    }
    if (size_needed > fBufSize) {
       Long64_t doubling = 2LLU * fBufSize;
@@ -183,8 +183,10 @@ void TBuffer::AutoExpand(Int_t size_needed)
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
 
-void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t reallocfunc)
+void TBuffer::SetBuffer(void *buf, Long64_t newsiz, Bool_t adopt, ReAllocCharFun_t reallocfunc)
 {
+   if (newsiz > kMaxBufferSize)
+      Fatal("SetBuffer","Request to create a too large buffer: 0x%llx for a max of 0x%x.", newsiz, kMaxBufferSize);
    if (fBuffer && TestBit(kIsOwner))
       delete [] fBuffer;
 
@@ -219,19 +221,19 @@ void TBuffer::SetBuffer(void *buf, UInt_t newsiz, Bool_t adopt, ReAllocCharFun_t
 /// In order to avoid losing data, if the current length is greater than
 /// the requested size, we only shrink down to the current length.
 
-void TBuffer::Expand(Int_t newsize, Bool_t copy)
+void TBuffer::Expand(Long64_t newsize, Bool_t copy)
 {
    Int_t l  = Length();
-   if ( (l > newsize) && copy ) {
+   if ( (Long64_t(l) > newsize) && copy ) {
       newsize = l;
    }
    const Int_t extraspace = (fMode&kWrite)!=0 ? kExtraSpace : 0;
 
-   if ( ((Long64_t)newsize+extraspace) > kMaxBufferSize) {
+   if ( newsize > kMaxBufferSize - kExtraSpace) {
       if (l < kMaxBufferSize) {
          newsize = kMaxBufferSize - extraspace;
       } else {
-         Fatal("Expand","Requested size (%d) is too large (max is %d).", newsize, kMaxBufferSize);
+         Fatal("Expand","Requested size (%lld) is too large (max is %d).", newsize, kMaxBufferSize);
       }
    }
    if ( (fMode&kWrite)!=0 ) {
