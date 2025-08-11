@@ -23,7 +23,8 @@
 #include <ROOT/RFieldToken.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDS.hxx>
-#include <ROOT/RNTupleWriter.hxx>
+#include <ROOT/RNTupleFillContext.hxx>
+#include <ROOT/RNTupleParallelWriter.hxx>
 #include <ROOT/RTTreeDS.hxx>
 #include <ROOT/TBufferMerger.hxx>
 
@@ -800,9 +801,10 @@ ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::MakeNew(void *newName, std::s
 }
 
 ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::UntypedSnapshotRNTupleHelper(
-   std::string_view filename, std::string_view dirname, std::string_view ntuplename, const ColumnNames_t &vfnames,
-   const ColumnNames_t &fnames, const RSnapshotOptions &options, ROOT::Detail::RDF::RLoopManager *inputLM,
-   ROOT::Detail::RDF::RLoopManager *outputLM, const std::vector<const std::type_info *> &colTypeIDs)
+   unsigned int nSlots, std::string_view filename, std::string_view dirname, std::string_view ntuplename,
+   const ColumnNames_t &vfnames, const ColumnNames_t &fnames, const RSnapshotOptions &options,
+   ROOT::Detail::RDF::RLoopManager *inputLM, ROOT::Detail::RDF::RLoopManager *outputLM,
+   const std::vector<const std::type_info *> &colTypeIDs)
    : fFileName(filename),
      fDirName(dirname),
      fNTupleName(ntuplename),
@@ -811,6 +813,9 @@ ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::UntypedSnapshotRNTupleHelper(
      fOutputLoopManager(outputLM),
      fInputFieldNames(vfnames),
      fOutputFieldNames(ReplaceDotWithUnderscore(fnames)),
+     fNSlots(nSlots),
+     fFillContexts(nSlots),
+     fEntries(nSlots),
      fInputColumnTypeIDs(colTypeIDs)
 {
    EnsureValidSnapshotRNTupleOutput(fOptions, fNTupleName, fFileName);
@@ -845,7 +850,6 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
       fFieldTokens[i] = model->GetToken(fOutputFieldNames[i]);
    }
    model->Freeze();
-   fOutputEntry = model->CreateBareEntry();
 
    ROOT::RNTupleWriteOptions writeOptions;
    writeOptions.SetCompression(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel);
@@ -864,20 +868,43 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
          outputDir = fOutputFile->mkdir(fDirName.c_str());
    }
 
-   fWriter = ROOT::RNTupleWriter::Append(std::move(model), fNTupleName, *outputDir, writeOptions);
+   // The RNTupleParallelWriter has exclusive access to the underlying TFile, no further synchronization is needed for
+   // calls to Fill() (in Exec) and FlushCluster() (in FinalizeTask).
+   fWriter = ROOT::Experimental::RNTupleParallelWriter::Append(std::move(model), fNTupleName, *outputDir, writeOptions);
 }
 
-void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Exec(unsigned int /* slot */, const std::vector<void *> &values)
+void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::InitTask(TTreeReader *, unsigned int slot)
 {
+   if (!fFillContexts[slot]) {
+      fFillContexts[slot] = fWriter->CreateFillContext();
+      fEntries[slot] = fFillContexts[slot]->GetModel().CreateBareEntry();
+   }
+}
+
+void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Exec(unsigned int slot, const std::vector<void *> &values)
+{
+   auto &fillContext = fFillContexts[slot];
+   auto &outputEntry = fEntries[slot];
    assert(values.size() == fFieldTokens.size());
    for (decltype(values.size()) i = 0; i < values.size(); i++) {
-      fOutputEntry->BindRawPtr(fFieldTokens[i], values[i]);
+      outputEntry->BindRawPtr(fFieldTokens[i], values[i]);
    }
-   fWriter->Fill(*fOutputEntry);
+   fillContext->Fill(*outputEntry);
+}
+
+void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::FinalizeTask(unsigned int slot)
+{
+   // In principle we would not need to flush a cluster here, but we want to benefit from parallelism for compression.
+   // NB: RNTupleFillContext::FlushCluster() is a nop if there is no new entry since the last flush.
+   fFillContexts[slot]->FlushCluster();
 }
 
 void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Finalize()
 {
+   // First clear and destroy all entries, which were created from the RNTupleFillContexts.
+   fEntries.clear();
+   fFillContexts.clear();
+   // Then destroy the RNTupleParallelWriter and write the metadata.
    fWriter.reset();
    // We can now set the data source of the loop manager for the RDataFrame that is returned by the Snapshot call.
    fOutputLoopManager->SetDataSource(std::make_unique<ROOT::RDF::RNTupleDS>(fDirName + "/" + fNTupleName, fFileName));
@@ -898,7 +925,7 @@ ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper
 ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::MakeNew(void *newName)
 {
    const std::string finalName = *reinterpret_cast<const std::string *>(newName);
-   return UntypedSnapshotRNTupleHelper{finalName,         fDirName,           fNTupleName,
-                                       fInputFieldNames,  fOutputFieldNames,  fOptions,
-                                       fInputLoopManager, fOutputLoopManager, fInputColumnTypeIDs};
+   return UntypedSnapshotRNTupleHelper{
+      fNSlots,           finalName, fDirName,          fNTupleName,        fInputFieldNames,
+      fOutputFieldNames, fOptions,  fInputLoopManager, fOutputLoopManager, fInputColumnTypeIDs};
 }
