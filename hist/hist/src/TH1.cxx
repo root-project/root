@@ -6740,8 +6740,9 @@ UInt_t TH1::GetAxisLabelStatus() const
 /// or equal to its upper limit, the function SetBuffer is automatically
 /// called with the default buffer size.
 
-void TH1::SetDefaultBufferSize(Int_t bufsize)
+void TH1::SetDefaultBufferSize(Long64_t bufsize)
 {
+   assert(bufsize <= kMaxInt);
    fgBufferSize = bufsize > 0 ? bufsize : 0;
 }
 
@@ -8508,7 +8509,7 @@ Double_t TH1::GetContourLevelPad(Int_t level) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the maximum number of entries to be kept in the buffer.
 
-void TH1::SetBuffer(Int_t bufsize, Option_t * /*option*/)
+void TH1::SetBuffer(Long64_t bufsize, Option_t * /*option*/)
 {
    if (fBuffer) {
       BufferEmpty();
@@ -8520,6 +8521,8 @@ void TH1::SetBuffer(Int_t bufsize, Option_t * /*option*/)
       return;
    }
    if (bufsize < 100) bufsize = 100;
+   if (1 + bufsize*(fDimension+1)> kMaxInt)
+       Fatal("SetBufferSize", "Integer overflow in buffer size: 0x%llx for a max of 0x%x.", 1 + bufsize*(fDimension+1), kMaxInt);
    fBufferSize = 1 + bufsize*(fDimension+1);
    fBuffer = new Double_t[fBufferSize];
    memset(fBuffer, 0, sizeof(Double_t)*fBufferSize);

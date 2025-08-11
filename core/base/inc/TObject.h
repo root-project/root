@@ -170,8 +170,8 @@ public:
    virtual void        SetDrawOption(Option_t *option="");  // *MENU*
    virtual void        SetUniqueID(UInt_t uid);
    virtual void        UseCurrentStyle();
-   virtual Int_t       Write(const char *name = nullptr, Int_t option = 0, Int_t bufsize = 0);
-   virtual Int_t       Write(const char *name = nullptr, Int_t option = 0, Int_t bufsize = 0) const;
+   virtual Int_t       Write(const char *name = nullptr, Int_t option = 0, Long64_t bufsize = 0);
+   virtual Int_t       Write(const char *name = nullptr, Int_t option = 0, Long64_t bufsize = 0) const;
 
    /// IsDestructed
    ///
