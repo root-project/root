@@ -346,10 +346,17 @@ void TMVA::Factory::SetVerbose(Bool_t v)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Book a classifier or regression method.
+/// Books an MVA classifier or regression method. The option configuration
+/// string is custom for each MVA. The TString field `theNameAppendix` serves to
+/// define (and distinguish) several instances of a given MVA, e.g., when one
+/// wants to compare the performance of various configurations
+///
+/// The method is identified by `theMethodName`, which can be provided either as:
+///   - a string containing the method's name, or
+///   - a `TMVA::Types::EMVA` enum value (automatically converted to the corresponding method name).
 
-TMVA::MethodBase *
-TMVA::Factory::BookMethod(TMVA::DataLoader *loader, TString theMethodName, TString methodTitle, TString theOption)
+TMVA::MethodBase *TMVA::Factory::BookMethod(TMVA::DataLoader *loader, TMVA::Factory::MethodName theMethodName,
+                                            TString methodTitle, TString theOption)
 {
    if (fModelPersistence)
       gSystem->MakeDirectory(loader->GetName()); // creating directory for DataLoader output
@@ -403,7 +410,7 @@ TMVA::Factory::BookMethod(TMVA::DataLoader *loader, TString theMethodName, TStri
    // initialize methods
    IMethod *im;
    if (!boostNum) {
-      im = ClassifierFactory::Instance().Create(theMethodName.Data(), fJobName, methodTitle, loader->GetDataSetInfo(),
+      im = ClassifierFactory::Instance().Create(theMethodName.tString().Data(), fJobName, methodTitle, loader->GetDataSetInfo(),
                                                 theOption);
    } else {
       // boosted classifier, requires a specific definition, making it transparent for the user
@@ -417,7 +424,7 @@ TMVA::Factory::BookMethod(TMVA::DataLoader *loader, TString theMethodName, TStri
       if (fModelPersistence)
          methBoost->SetWeightFileDir(fileDir);
       methBoost->SetModelPersistence(fModelPersistence);
-      methBoost->SetBoostedMethodName(theMethodName);                            // DSMTEST divided into two lines
+      methBoost->SetBoostedMethodName(theMethodName.tString());                            // DSMTEST divided into two lines
       methBoost->fDataSetManager = loader->GetDataSetInfo().GetDataSetManager(); // DSMTEST
       methBoost->SetFile(fgTargetFile);
       methBoost->SetSilentFile(IsSilentFile());
@@ -475,18 +482,6 @@ TMVA::Factory::BookMethod(TMVA::DataLoader *loader, TString theMethodName, TStri
    }
    fMethodsMap[datasetname]->push_back(method);
    return method;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Books MVA method. The option configuration string is custom for each MVA
-/// the TString field "theNameAppendix" serves to define (and distinguish)
-/// several instances of a given MVA, eg, when one wants to compare the
-/// performance of various configurations
-
-TMVA::MethodBase *
-TMVA::Factory::BookMethod(TMVA::DataLoader *loader, Types::EMVA theMethod, TString methodTitle, TString theOption)
-{
-   return BookMethod(loader, Types::Instance().GetMethodName(theMethod), methodTitle, theOption);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
