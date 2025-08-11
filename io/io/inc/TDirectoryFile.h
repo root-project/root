@@ -114,17 +114,17 @@ public:
            void        Save() override;
            void        SaveSelf(Bool_t force = kFALSE) override;
            Int_t       SaveObjectAs(const TObject *obj, const char *filename="", Option_t *option="") const override;
-           void        SetBufferSize(Int_t bufsize) override;
+           void        SetBufferSize(Long64_t bufsize) override;
            void        SetModified() override {fModified = kTRUE;}
            void        SetSeekDir(Long64_t v) override { fSeekDir = v; }
            void        SetTRefAction(TObject *ref, TObject *parent) override;
            void        SetWritable(Bool_t writable=kTRUE) override;
            Int_t       Sizeof() const override;
-           Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsize=0) override;
-           Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsize=0) const override;
-           Int_t       WriteTObject(const TObject *obj, const char *name=nullptr, Option_t *option="", Int_t bufsize=0) override;
-           Int_t       WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option="", Int_t bufsize=0) override;
-           Int_t       WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option="", Int_t bufsize=0) override;
+           Int_t       Write(const char *name=nullptr, Int_t opt=0, Long64_t bufsize=0) override;
+           Int_t       Write(const char *name=nullptr, Int_t opt=0, Long64_t bufsize=0) const override;
+           Int_t       WriteTObject(const TObject *obj, const char *name=nullptr, Option_t *option="", Long64_t bufsize=0) override;
+           Int_t       WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option="", Long64_t bufsize=0) override;
+           Int_t       WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option="", Long64_t bufsize=0) override;
            void        WriteDirHeader() override;
            void        WriteKeys() override;
 

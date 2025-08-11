@@ -73,7 +73,7 @@ TTreeSQL::TTreeSQL(TSQLServer *server, TString DB, const TString& table) :
 /// Not implemented yet
 
 TBranch* TTreeSQL::BranchImp(const char *, const char *,
-                             TClass *, void *, Int_t ,
+                             TClass *, void *, Long64_t ,
                              Int_t )
 {
    Fatal("BranchImp","Not implemented yet");
@@ -84,7 +84,7 @@ TBranch* TTreeSQL::BranchImp(const char *, const char *,
 /// Not implemented yet
 
 TBranch* TTreeSQL::BranchImp(const char *, TClass *,
-                             void *, Int_t , Int_t )
+                             void *, Long64_t , Int_t )
 {
    Fatal("BranchImp","Not implemented yet");
    return nullptr;
@@ -92,7 +92,7 @@ TBranch* TTreeSQL::BranchImp(const char *, TClass *,
 ////////////////////////////////////////////////////////////////////////////////
 /// Not implemented yet
 
-Int_t TTreeSQL::Branch(TCollection *, Int_t,
+Int_t TTreeSQL::Branch(TCollection *, Long64_t,
                        Int_t, const char *)
 {
    Fatal("Branch","Not implemented yet");
@@ -102,7 +102,7 @@ Int_t TTreeSQL::Branch(TCollection *, Int_t,
 ////////////////////////////////////////////////////////////////////////////////
 /// Not implemented yet
 
-Int_t TTreeSQL::Branch(TList *, Int_t, Int_t)
+Int_t TTreeSQL::Branch(TList *, Long64_t, Int_t)
 {
    Fatal("Branch","Not implemented yet");
    return 0;
@@ -111,7 +111,7 @@ Int_t TTreeSQL::Branch(TList *, Int_t, Int_t)
 ////////////////////////////////////////////////////////////////////////////////
 /// Not implemented yet
 
-Int_t TTreeSQL::Branch(const char *, Int_t ,
+Int_t TTreeSQL::Branch(const char *, Long64_t ,
                        Int_t)
 {
    Fatal("Branch","Not implemented yet");
@@ -122,7 +122,7 @@ Int_t TTreeSQL::Branch(const char *, Int_t ,
 /// Not implemented yet
 
 TBranch* TTreeSQL::Bronch(const char *, const char *, void *,
-                          Int_t, Int_t)
+                          Long64_t, Int_t)
 {
    Fatal("Bronch","Not implemented yet");
    return nullptr;
@@ -132,7 +132,7 @@ TBranch* TTreeSQL::Bronch(const char *, const char *, void *,
 /// Not implemented yet
 
 TBranch* TTreeSQL::BranchOld(const char *, const char *,
-                             void *, Int_t, Int_t)
+                             void *, Long64_t, Int_t)
 {
    Fatal("BranchOld","Not implemented yet");
    return nullptr;
@@ -142,7 +142,7 @@ TBranch* TTreeSQL::BranchOld(const char *, const char *,
 /// Not implemented yet
 
 TBranch *TTreeSQL::Branch(const char *, const char *, void *,
-                          Int_t, Int_t)
+                          Long64_t, Int_t)
 {
    Fatal("Branch","Not implemented yet");
    return nullptr;
@@ -152,7 +152,7 @@ TBranch *TTreeSQL::Branch(const char *, const char *, void *,
 /// Create a branch
 
 TBranch * TTreeSQL::Branch(const char *name, void *address,
-                           const char *leaflist, Int_t bufsize)
+                           const char *leaflist, Long64_t bufsize)
 {
    Int_t nb = fBranches.GetEntriesFast();
    TBranch *branch;

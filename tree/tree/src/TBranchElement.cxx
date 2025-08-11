@@ -209,7 +209,7 @@ TBranchElement::TBranchElement()
 ///
 /// If splitlevel > 0 this branch in turn is split into sub-branches.
 
-TBranchElement::TBranchElement(TTree *tree, const char* bname, TStreamerInfo* sinfo, Int_t id, char* pointer, Int_t basketsize, Int_t splitlevel, Int_t btype)
+TBranchElement::TBranchElement(TTree *tree, const char* bname, TStreamerInfo* sinfo, Int_t id, char* pointer, Long64_t basketsize, Int_t splitlevel, Int_t btype)
 : TBranch()
 , fClassName(sinfo->GetName())
 , fParentName()
@@ -256,7 +256,7 @@ TBranchElement::TBranchElement(TTree *tree, const char* bname, TStreamerInfo* si
 ///
 /// If splitlevel > 0 this branch in turn is split into sub-branches.
 
-TBranchElement::TBranchElement(TBranch *parent, const char* bname, TStreamerInfo* sinfo, Int_t id, char* pointer, Int_t basketsize, Int_t splitlevel, Int_t btype)
+TBranchElement::TBranchElement(TBranch *parent, const char* bname, TStreamerInfo* sinfo, Int_t id, char* pointer, Long64_t basketsize, Int_t splitlevel, Int_t btype)
 : TBranch()
 , fClassName(sinfo->GetName())
 , fParentName()
@@ -301,7 +301,7 @@ TBranchElement::TBranchElement(TBranch *parent, const char* bname, TStreamerInfo
 ///
 /// If splitlevel > 0 this branch in turn is split into sub-branches.
 
-void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStreamerInfo* sinfo, Int_t id, char* pointer, Int_t basketsize, Int_t splitlevel, Int_t btype)
+void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStreamerInfo* sinfo, Int_t id, char* pointer, Long64_t basketsize, Int_t splitlevel, Int_t btype)
 {
    TString name(bname);
 
@@ -367,7 +367,8 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
    // Make sure the basket is big enough to contain the
    // entry offset array plus 100 bytes of data.
    //
-
+   if (basketsize > kMaxInt)
+      Fatal("Init", "Integer overflow in basket size: 0x%llx for a max of 0x%x.", basketsize, kMaxInt);
    if (basketsize < (100 + fEntryOffsetLen)) {
       basketsize = 100 + fEntryOffsetLen;
    }
@@ -693,7 +694,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
 ///
 /// If splitlevel > 0 this branch in turn is split into sub branches.
 
-TBranchElement::TBranchElement(TTree *tree, const char* bname, TClonesArray* clones, Int_t basketsize, Int_t splitlevel, Int_t compress)
+TBranchElement::TBranchElement(TTree *tree, const char* bname, TClonesArray* clones, Long64_t basketsize, Int_t splitlevel, Int_t compress)
 : TBranch()
 , fClassName("TClonesArray")
 , fParentName()
@@ -720,7 +721,7 @@ TBranchElement::TBranchElement(TTree *tree, const char* bname, TClonesArray* clo
 ///
 /// If splitlevel > 0 this branch in turn is split into sub branches.
 
-TBranchElement::TBranchElement(TBranch *parent, const char* bname, TClonesArray* clones, Int_t basketsize, Int_t splitlevel, Int_t compress)
+TBranchElement::TBranchElement(TBranch *parent, const char* bname, TClonesArray* clones, Long64_t basketsize, Int_t splitlevel, Int_t compress)
 : TBranch()
 , fClassName("TClonesArray")
 , fParentName()
@@ -747,7 +748,7 @@ TBranchElement::TBranchElement(TBranch *parent, const char* bname, TClonesArray*
 ///
 /// If splitlevel > 0 this branch in turn is split into sub branches.
 
-void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClonesArray* clones, Int_t basketsize, Int_t splitlevel, Int_t compress)
+void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClonesArray* clones, Long64_t basketsize, Int_t splitlevel, Int_t compress)
 {
    fCollProxy = nullptr;
    fSplitLevel    = splitlevel;
@@ -848,7 +849,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClon
 ///
 /// If splitlevel > 0 this branch in turn is split into sub branches.
 
-TBranchElement::TBranchElement(TTree *tree, const char* bname, TVirtualCollectionProxy* cont, Int_t basketsize, Int_t splitlevel, Int_t compress)
+TBranchElement::TBranchElement(TTree *tree, const char* bname, TVirtualCollectionProxy* cont, Long64_t basketsize, Int_t splitlevel, Int_t compress)
 : TBranch()
 , fClassName(cont->GetCollectionClass()->GetName())
 , fParentName()
@@ -874,7 +875,7 @@ TBranchElement::TBranchElement(TTree *tree, const char* bname, TVirtualCollectio
 ///
 /// If splitlevel > 0 this branch in turn is split into sub branches.
 
-TBranchElement::TBranchElement(TBranch *parent, const char* bname, TVirtualCollectionProxy* cont, Int_t basketsize, Int_t splitlevel, Int_t compress)
+TBranchElement::TBranchElement(TBranch *parent, const char* bname, TVirtualCollectionProxy* cont, Long64_t basketsize, Int_t splitlevel, Int_t compress)
 : TBranch()
 , fClassName(cont->GetCollectionClass()->GetName())
 , fParentName()
@@ -900,7 +901,7 @@ TBranchElement::TBranchElement(TBranch *parent, const char* bname, TVirtualColle
 ///
 /// If splitlevel > 0 this branch in turn is split into sub branches.
 
-void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TVirtualCollectionProxy* cont, Int_t basketsize, Int_t splitlevel, Int_t compress)
+void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TVirtualCollectionProxy* cont, Long64_t basketsize, Int_t splitlevel, Int_t compress)
 {
    fCollProxy = cont->Generate();
    TString name( bname );
@@ -945,7 +946,8 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TVirt
          fCompress = bfile->GetCompressionSettings();
       }
    }
-
+   if (basketsize > kMaxInt)
+      Fatal("Init", "Integer overflow in basket size: 0x%llx for a max of 0x%x.", basketsize, kMaxInt);
    if (basketsize < 100) {
       basketsize = 100;
    }
@@ -5574,7 +5576,7 @@ void TBranchElement::SetAddressImpl(void* addr, bool implied, Int_t offset)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset the basket size for all sub-branches of this branch element.
 
-void TBranchElement::SetBasketSize(Int_t bufsize)
+void TBranchElement::SetBasketSize(Long64_t bufsize)
 {
    TBranch::SetBasketSize(bufsize);
    Int_t nbranches = fBranches.GetEntriesFast();
@@ -6136,7 +6138,7 @@ void TBranchElement::Streamer(TBuffer& R__b)
 /// This version of Unroll was formerly embedded in TTree::BronchExec
 /// It is moved here so we can make sure to call SetReadActionSequence.
 
-void TBranchElement::Unroll(const char *name, TClass *cl, TStreamerInfo *sinfo, char* objptr, Int_t bufsize, Int_t splitlevel)
+void TBranchElement::Unroll(const char *name, TClass *cl, TStreamerInfo *sinfo, char* objptr, Long64_t bufsize, Int_t splitlevel)
 {
    //
    // Do we have a final dot in our name?
@@ -6270,7 +6272,7 @@ void TBranchElement::Unroll(const char *name, TClass *cl, TStreamerInfo *sinfo, 
 ///       except for a TObject base class of a class which has the
 ///       can ignore tobject streamer flag set.
 
-Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, char* ptr, Int_t basketsize, Int_t splitlevel, Int_t btype)
+Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, char* ptr, Long64_t basketsize, Int_t splitlevel, Int_t btype)
 {
    //----------------------------------------------------------------------------
    // Handling the case of STL collections of pointers
