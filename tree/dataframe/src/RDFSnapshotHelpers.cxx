@@ -20,6 +20,7 @@
 #include <ROOT/RDF/SnapshotHelpers.hxx>
 
 #include <ROOT/REntry.hxx>
+#include <ROOT/RFieldToken.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RNTupleWriter.hxx>
@@ -831,6 +832,7 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
 {
    auto model = ROOT::RNTupleModel::CreateBare();
    auto nFields = fOutputFieldNames.size();
+   fFieldTokens.resize(nFields);
    for (decltype(nFields) i = 0; i < nFields; i++) {
       // Need to retrieve the type of every field to create as a string
       // If the input type for a field does not have RTTI, internally we store it as the tag UseNativeDataType. When
@@ -840,6 +842,7 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
                                                                           fInputFieldNames[i], fOptions.fVector2RVec)
                                : ROOT::Internal::RDF::TypeID2TypeName(*fInputColumnTypeIDs[i]);
       model->AddField(ROOT::RFieldBase::Create(fOutputFieldNames[i], typeName).Unwrap());
+      fFieldTokens[i] = model->GetToken(fOutputFieldNames[i]);
    }
    model->Freeze();
    fOutputEntry = model->CreateBareEntry();
@@ -866,9 +869,9 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
 
 void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Exec(unsigned int /* slot */, const std::vector<void *> &values)
 {
-   assert(values.size() == fOutputFieldNames.size());
+   assert(values.size() == fFieldTokens.size());
    for (decltype(values.size()) i = 0; i < values.size(); i++) {
-      fOutputEntry->BindRawPtr(fOutputFieldNames[i], values[i]);
+      fOutputEntry->BindRawPtr(fFieldTokens[i], values[i]);
    }
    fWriter->Fill(*fOutputEntry);
 }
