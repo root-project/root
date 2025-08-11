@@ -78,7 +78,7 @@ private:
 
 public:
    TFileCacheRead();
-   TFileCacheRead(TFile *file, Int_t bufsize, TObject *tree = nullptr);
+   TFileCacheRead(TFile *file, Long64_t bufsize, TObject *tree = nullptr);
    ~TFileCacheRead() override;
    virtual Int_t       AddBranch(TBranch * /*b*/, Bool_t /*subbranches*/ = kFALSE) { return 0; }
    virtual Int_t       AddBranch(const char * /*branch*/, Bool_t /*subbranches*/ = kFALSE) { return 0; }
@@ -107,7 +107,7 @@ public:
    virtual Int_t       ReadBufferExtNormal(char *buf, Long64_t pos, Int_t len, Int_t &loc);
    virtual Int_t       ReadBufferExtPrefetch(char *buf, Long64_t pos, Int_t len, Int_t &loc);
    virtual Int_t       ReadBuffer(char *buf, Long64_t pos, Int_t len);
-   virtual Int_t       SetBufferSize(Long64_t buffersize);
+   virtual Int_t       SetBufferSize(Long64_t bufsize);
    virtual void        SetFile(TFile *file, TFile::ECacheAction action = TFile::kDisconnect);
    virtual void        SetSkipZip(Bool_t /*skip*/ = kTRUE) {} // This function is only used by TTreeCacheUnzip (ignore it)
    virtual void        Sort();

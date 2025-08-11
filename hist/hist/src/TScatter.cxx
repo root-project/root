@@ -83,6 +83,9 @@ TScatter::TScatter(Int_t n, const Double_t *x, const Double_t *y, const Double_t
    fMaxSize   = fGraph->GetMaxSize();
 
    Int_t bufsize = sizeof(Double_t) * fNpoints;
+   if (sizeof(Double_t) * fNpoints > kMaxInt || bufsize < 0) {
+      Fatal("TScatter", "Negative buffer size likely due to an integer overflow: 0x%x.", bufsize);
+   }
    if (col) {
       fColor = new Double_t[fMaxSize];
       memcpy(fColor, col, bufsize);

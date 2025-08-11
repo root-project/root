@@ -254,7 +254,7 @@ public:
    virtual void        Save() {}
    virtual Int_t       SaveObjectAs(const TObject * /*obj*/, const char * /*filename*/="", Option_t * /*option*/="") const;
    virtual void        SaveSelf(Bool_t /*force*/ = kFALSE) {}
-   virtual void        SetBufferSize(Int_t /* bufsize */) {}
+   virtual void        SetBufferSize(Long64_t /* bufsize */) {}
    virtual void        SetModified() {}
    virtual void        SetMother(TObject *mother) {fMother = (TObject*)mother;}
            void        SetName(const char* newname) override;
@@ -262,12 +262,12 @@ public:
    virtual void        SetSeekDir(Long64_t) {}
    virtual void        SetWritable(Bool_t) {}
            Int_t       Sizeof() const override {return 0;}
-   virtual Int_t       Write(const char * /*name*/=nullptr, Int_t /*opt*/=0, Int_t /*bufsize*/=0) override {return 0;}
-   virtual Int_t       Write(const char * /*name*/=nullptr, Int_t /*opt*/=0, Int_t /*bufsize*/=0) const override {return 0;}
-   virtual Int_t       WriteTObject(const TObject *obj, const char *name =nullptr, Option_t * /*option*/="", Int_t /*bufsize*/ =0);
+   virtual Int_t       Write(const char * /*name*/=nullptr, Int_t /*opt*/=0, Long64_t /*bufsize*/=0) override {return 0;}
+   virtual Int_t       Write(const char * /*name*/=nullptr, Int_t /*opt*/=0, Long64_t /*bufsize*/=0) const override {return 0;}
+   virtual Int_t       WriteTObject(const TObject *obj, const char *name =nullptr, Option_t * /*option*/="", Long64_t /*bufsize*/ =0);
 private:
 /// \cond HIDDEN_SYMBOLS
-           Int_t       WriteObject(void *obj, const char* name, Option_t *option="", Int_t bufsize=0); // Intentionally not implemented.
+           Int_t       WriteObject(void *obj, const char* name, Option_t *option="", Long64_t bufsize=0); // Intentionally not implemented.
 /// \endcond
 public:
    /// \brief Write an object with proper type checking.
@@ -280,7 +280,7 @@ public:
    /// from TObject. The method redirects to TDirectory::WriteObjectAny.
    template <typename T>
    inline std::enable_if_t<!std::is_base_of<TObject, T>::value, Int_t>
-   WriteObject(const T *obj, const char *name, Option_t *option = "", Int_t bufsize = 0)
+   WriteObject(const T *obj, const char *name, Option_t *option = "", Long64_t bufsize = 0)
    {
       return WriteObjectAny(obj, TClass::GetClass<T>(), name, option, bufsize);
    }
@@ -294,12 +294,12 @@ public:
    /// TObject. The method redirects to TDirectory::WriteTObject.
    template <typename T>
    inline std::enable_if_t<std::is_base_of<TObject, T>::value, Int_t>
-   WriteObject(const T *obj, const char *name, Option_t *option = "", Int_t bufsize = 0)
+   WriteObject(const T *obj, const char *name, Option_t *option = "", Long64_t bufsize = 0)
    {
       return WriteTObject(obj, name, option, bufsize);
    }
-   virtual Int_t       WriteObjectAny(const void *, const char * /*classname*/, const char * /*name*/, Option_t * /*option*/="", Int_t /*bufsize*/ =0) {return 0;}
-   virtual Int_t       WriteObjectAny(const void *, const TClass * /*cl*/, const char * /*name*/, Option_t * /*option*/="", Int_t /*bufsize*/ =0) {return 0;}
+   virtual Int_t       WriteObjectAny(const void *, const char * /*classname*/, const char * /*name*/, Option_t * /*option*/="", Long64_t /*bufsize*/ =0) {return 0;}
+   virtual Int_t       WriteObjectAny(const void *, const TClass * /*cl*/, const char * /*name*/, Option_t * /*option*/="", Long64_t /*bufsize*/ =0) {return 0;}
    virtual void        WriteDirHeader() {}
    virtual void        WriteKeys() {}
 
