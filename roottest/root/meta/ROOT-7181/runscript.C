@@ -7,9 +7,9 @@ void runscript(const char *fname, bool with_rootmap = false)
 {
    if (with_rootmap) {
       int old = gInterpreter->SetClassAutoloading(kFALSE);
-      gInterpreter->LoadLibraryMap("libbtag.rootmap");
-      gInterpreter->LoadLibraryMap("libjet.rootmap");
-      gInterpreter->LoadLibraryMap("libsjet.rootmap");
+      gInterpreter->LoadLibraryMap("btag.rootmap");
+      gInterpreter->LoadLibraryMap("jet.rootmap");
+      gInterpreter->LoadLibraryMap("sjet.rootmap");
       gInterpreter->SetClassAutoloading(old);
    }
 
@@ -21,7 +21,7 @@ void runscript(const char *fname, bool with_rootmap = false)
 
    std::string line;
    while (std::getline(f, line)) {
-      std::cout << "Process: " << line << std::endl;
+      // std::cout << "Process: " << line << std::endl;
       gROOT->ProcessLine(line.c_str());
    }
 }

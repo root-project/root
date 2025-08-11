@@ -26,6 +26,7 @@ macro(ROOT_7181_TEST name use_rmap)
                     MACRO runscript.C
                     MACROARG "\"${CMAKE_CURRENT_SOURCE_DIR}/scripts/${name}.script\",${use_rmap}"
                     ROOTEXE_OPTS -e "gInterpreter->AddIncludePath(\"-I${CMAKE_CURRENT_SOURCE_DIR}\")"
+                                 -e "gROOT->SetMacroPath(\"${CMAKE_CURRENT_BINARY_DIR}\")"
                     OUTREF ${testname}.ref
                     FIXTURES_REQUIRED root-meta-7181-btag-fixture
                                       root-meta-7181-jet-fixture
