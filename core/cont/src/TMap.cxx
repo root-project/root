@@ -401,7 +401,7 @@ void TMap::Streamer(TBuffer &b)
 /// objects using a single key specify a name and set option to
 /// TObject::kSingleKey (i.e. 1).
 
-Int_t TMap::Write(const char *name, Int_t option, Int_t bufsize) const
+Int_t TMap::Write(const char *name, Int_t option, Long64_t bufsize) const
 {
    if ((option & kSingleKey)) {
       return TObject::Write(name, option, bufsize);
@@ -428,7 +428,7 @@ Int_t TMap::Write(const char *name, Int_t option, Int_t bufsize) const
 /// objects using a single key specify a name and set option to
 /// TObject::kSingleKey (i.e. 1).
 
-Int_t TMap::Write(const char *name, Int_t option, Int_t bufsize)
+Int_t TMap::Write(const char *name, Int_t option, Long64_t bufsize)
 {
    return ((const TMap*)this)->Write(name,option,bufsize);
 }
