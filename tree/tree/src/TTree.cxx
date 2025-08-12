@@ -93,7 +93,7 @@ It is strongly recommended to persistify those as objects rather than lists of l
   assumed of type F by default. The list of currently supported
   types is given below:
    - `C` : a character string terminated by the 0 character
-   - `B` : an 8 bit integer (`Char_t`); Mostly signed, might be unsigned in special platforms or depending on compiler flags; Treated as a character when in an array.
+   - `B` : an 8 bit integer (`Char_t`); Mostly signed, might be unsigned in special platforms or depending on compiler flags, thus do not use std::int8_t as underlying variable since they are not equivalent; Treated as a character when in an array.
    - `b` : an 8 bit unsigned integer (`UChar_t`)
    - `S` : a 16 bit signed integer (`Short_t`)
    - `s` : a 16 bit unsigned integer (`UShort_t`)
@@ -1971,7 +1971,7 @@ Int_t TTree::Branch(const char* foldername, Int_t bufsize /* = 32000 */, Int_t s
 ///      variable. If the first variable does not have a type, it is assumed
 ///      of type F by default. The list of currently supported types is given below:
 ///         - `C` : a character string terminated by the 0 character
-///         - `B` : an 8 bit integer (`Char_t`); Mostly signed, might be unsigned in special platforms or depending on compiler flags; Treated as a character when in an array.
+///         - `B` : an 8 bit integer (`Char_t`); Mostly signed, might be unsigned in special platforms or depending on compiler flags, thus do not use std::int8_t as underlying variable since they are not equivalent; Treated as a character when in an array.
 ///         - `b` : an 8 bit unsigned integer (`UChar_t`)
 ///         - `S` : a 16 bit signed integer (`Short_t`)
 ///         - `s` : a 16 bit unsigned integer (`UShort_t`)
