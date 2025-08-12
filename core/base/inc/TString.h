@@ -264,7 +264,7 @@ private:
    char          *GetPointer() { return IsLong() ? GetLongPointer() : GetShortPointer(); }
    const char    *GetPointer() const { return IsLong() ? GetLongPointer() : GetShortPointer(); }
 #ifdef R__BYTESWAP
-   static constexpr Ssiz_t  MaxSize() { return kMaxInt - 1; }
+   static constexpr Ssiz_t MaxSize() { return kMaxInt - 1; }
 #else
    static constexpr Ssiz_t  MaxSize() { return (kMaxInt >> 1) - 1; }
 #endif
