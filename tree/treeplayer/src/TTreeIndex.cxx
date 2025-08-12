@@ -435,6 +435,7 @@ Long64_t TTreeIndex::FindValues(Long64_t major, Long64_t minor) const
 /// `Warning in <TTreeIndex::TTreeIndex>: In tree entry, value event possibly out of range for internal long double`
 /// This default behavior can be circumvented by setting long64major/minor to true in the TTreeIndex constructor,
 /// which replaces `long double` with `Long64_t`, but it's the user responsibility as range checking will be deactivated.
+/// In this case, you can go higher than `0xFFFFFFFFFFFF0` on all architectures without problems.
 ///
 /// If an entry corresponding to major and minor is not found, the function
 /// returns the index of the major,minor pair immediately lower than the
@@ -468,6 +469,7 @@ Long64_t TTreeIndex::GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor)
 /// for which the function works correctly and consistently in all platforms is `0xFFFFFFFFFFFF0`, which is less than `kMaxLong64`.
 /// This default behavior can be circumvented by setting long64major/minor to true in the TTreeIndex constructor,
 /// which replaces `long double` with `Long64_t`, but it's the user responsibility as range checking will be deactivated.
+/// In this case, you can go higher than `0xFFFFFFFFFFFF0` on all architectures without problems.
 ///
 /// See also GetEntryNumberWithBestIndex
 
