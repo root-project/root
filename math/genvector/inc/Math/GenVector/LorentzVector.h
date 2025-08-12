@@ -19,10 +19,9 @@
 #define ROOT_Math_GenVector_LorentzVector  1
 
 #include "Math/GenVector/PxPyPzE4D.h"
-
 #include "Math/GenVector/DisplacementVector3D.h"
-
 #include "Math/GenVector/GenVectorIO.h"
+#include "Math/Vector2D.h"
 
 #include "TMath.h"
 
@@ -730,6 +729,66 @@ Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity.
        LorentzVector<CoordSystem> tmp(v);
        tmp *= a;
        return tmp;
+    }
+
+  /**
+     pair (p+ p-) acoplanarity `alpha = 1 - |phi+ - phi-|/pi`.
+     \param pp p+, mathcore::LorentzVector based on any coordinate system
+     \param pm p-, mathcore::LorentzVector based on any coordinate system
+     \return a scalar
+     \see http://doi.org/10.1103/PhysRevLett.121.212301
+   */
+    template< class CoordSystem >
+    Scalar Acoplanarity(LorentzVector<CoordSystem> pp, LorentzVector<CoordSystem> pm)
+    {
+       double dphi = pp.Phi() - pm.Phi();
+       // convert dphi angle to the interval (-PI,PI]
+       if (dphi > TMath::Pi() || dphi <= -TMath::Pi()) {
+          if (dphi > 0) {
+             int n = static_cast<int>(dphi / TMath::TwoPi() + 0.5);
+             dphi -= TMath::TwoPi() * n;
+          } else {
+             int n = static_cast<int>(0.5 - dphi / TMath::TwoPi());
+             dphi += TMath::TwoPi() * n;
+          }
+       }
+       return 1 - std::abs(phi)/TMath::Pi();
+    }
+
+  /**
+     pair (p+ p-) vectorial asymmetry `Av = |Pt+ - Pt-|/|Pt+ + Pt-|`.
+     In an experimental setting, it reﬂects a convolution of the experimental resolutions
+     of particle energy and azimuthal angle measurement.
+     \param pp p+, mathcore::LorentzVector based on any coordinate system
+     \param pm p-, mathcore::LorentzVector based on any coordinate system
+     \return a scalar
+     \see http://doi.org/10.1103/PhysRevLett.121.212301, https://doi.org/10.1103/PhysRevD.99.093013
+   */
+    template< class CoordSystem >
+    Scalar AsymmetryVectorial(LorentzVector<CoordSystem> pp, LorentzVector<CoordSystem> pm)
+    {
+       ROOT::Math::XYVector vp(pp.Px(), pp.Py());
+       ROOT::Math::XYVector vm(pm.Px(), pm.Py());
+       return (vp - vm).R() / (vp + vm).R();
+    }
+
+  /**
+     pair (p+ p-) scalar asymmetry `As = ||Pt+| - |Pt-|/||Pt+| + |Pt-||`.
+     Measures the relative difference in transverse momentum of the pair, e.g. two photons,
+     and would be ideally zero for two back-to-back photons.
+     \param pp p+, mathcore::LorentzVector based on any coordinate system
+     \param pm p-, mathcore::LorentzVector based on any coordinate system
+     \return a scalar. Returns 0 if both transverse momenta are zero
+     \see http://doi.org/10.1103/PhysRevLett.121.212301, https://doi.org/10.1103/PhysRevD.99.093013
+   */
+    template< class CoordSystem >
+    Scalar AsymmetryScalar(LorentzVector<CoordSystem> pp, LorentzVector<CoordSystem> pm)
+    {
+       auto ptp = pp.Pt();
+       auto ptm = pm.Pt();
+       if (ptp == 0 && ptm == 0)
+          return 0;
+       return std::abs(ptp - ptm) / (ptp + ptm);
     }
 
     // ------------- I/O to/from streams -------------
