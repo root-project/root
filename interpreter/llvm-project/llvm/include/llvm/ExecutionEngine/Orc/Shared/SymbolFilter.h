@@ -11,7 +11,7 @@
 
 #include "llvm/ExecutionEngine/Orc/Shared/SimplePackedSerialization.h"
 
-#include <math.h>
+#include <cmath>
 #include <type_traits>
 #include <vector>
 

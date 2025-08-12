@@ -352,7 +352,7 @@ DylibResolverImpl::tryWithExtensions(StringRef libStem) const {
     LLVM_DEBUG(dbgs() << "  Trying candidate: " << name << "\n";);
 
     for (const auto &resolver : resolvers) {
-      if (auto result = resolver.resolve(libStem, substitutor, validator))
+      if (auto result = resolver.resolve(name, substitutor, validator))
         return result;
     }
   }
