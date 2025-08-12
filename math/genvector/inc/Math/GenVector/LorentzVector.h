@@ -739,7 +739,7 @@ Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity.
      \see http://doi.org/10.1103/PhysRevLett.121.212301
    */
     template< class CoordSystem >
-    LorentzVector<CoordSystem>::Scalar Acoplanarity(LorentzVector<CoordSystem> pp, LorentzVector<CoordSystem> pm)
+    typename LorentzVector<CoordSystem>::Scalar Acoplanarity(LorentzVector<CoordSystem> pp, LorentzVector<CoordSystem> pm)
     {
        auto dphi = pp.Phi() - pm.Phi();
        // convert dphi angle to the interval (-PI,PI]
@@ -761,15 +761,18 @@ Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity.
      of particle energy and azimuthal angle measurement.
      \param pp p+, mathcore::LorentzVector based on any coordinate system
      \param pm p-, mathcore::LorentzVector based on any coordinate system
-     \return a scalar
+     \return a scalar. Returns -1 if both momenta are exactly mirrored.
      \see http://doi.org/10.1103/PhysRevLett.121.212301, https://doi.org/10.1103/PhysRevD.99.093013
    */
     template< class CoordSystem >
-    LorentzVector<CoordSystem>::Scalar AsymmetryVectorial(LorentzVector<CoordSystem> pp, LorentzVector<CoordSystem> pm)
+    typename LorentzVector<CoordSystem>::Scalar AsymmetryVectorial(LorentzVector<CoordSystem> pp, LorentzVector<CoordSystem> pm)
     {
        ROOT::Math::XYVector vp(pp.Px(), pp.Py());
        ROOT::Math::XYVector vm(pm.Px(), pm.Py());
-       return (vp - vm).R() / (vp + vm).R();
+       auto denom = (vp + vm).R();
+       if (denom == 0.)
+          return -1;
+       return (vp - vm).R() / denom;
     }
 
   /**
@@ -782,7 +785,7 @@ Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity.
      \see http://doi.org/10.1103/PhysRevLett.121.212301, https://doi.org/10.1103/PhysRevD.99.093013
    */
     template< class CoordSystem >
-    LorentzVector<CoordSystem>::Scalar AsymmetryScalar(LorentzVector<CoordSystem> pp, LorentzVector<CoordSystem> pm)
+    typename LorentzVector<CoordSystem>::Scalar AsymmetryScalar(LorentzVector<CoordSystem> pp, LorentzVector<CoordSystem> pm)
     {
        auto ptp = pp.Pt();
        auto ptm = pm.Pt();
