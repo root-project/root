@@ -266,7 +266,7 @@ private:
 #ifdef R__BYTESWAP
    static constexpr Ssiz_t MaxSize() { return kMaxInt - 1; }
 #else
-   static constexpr Ssiz_t  MaxSize() { return (kMaxInt >> 1) - 1; }
+   static constexpr Ssiz_t MaxSize() { return (kMaxInt >> 1) - 1; }
 #endif
    void           UnLink() const { if (IsLong()) delete [] fRep.fLong.fData; }
    void           Zero() {
