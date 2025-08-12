@@ -23,7 +23,7 @@ strings (<15 on 64-bit and <11 on 32-bit) are contained in the
 TString internal data structure without the need for mallocing the
 required space.
 
-\note TString can store a maximum of MaxSize()=2147483646 characters.
+\note TString can store a maximum of MaxSize()=2147483646 characters + 1 terminating null.
 Trying to allocate larger buffers might throw std::bad_alloc or raise
 Fatal errors or lead to undefined behavior. Likewise, there is no safety
 check if you pass a Long64_t to the class functions, they will be silently
