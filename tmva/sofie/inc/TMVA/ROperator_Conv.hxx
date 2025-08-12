@@ -58,7 +58,8 @@ public:
       fAttrPads(pads), fAttrStrides(strides),
       fNX(UTILITY::Clean_name(nameX)), fNW(UTILITY::Clean_name(nameW)),
       fNB(UTILITY::Clean_name(nameB)), fNY(UTILITY::Clean_name(nameY))
-   {
+   {  
+      fKind = OperatorKind::CONV;
       if(std::is_same<T, float>::value) {
          fType = "float";
       } else {
@@ -77,6 +78,7 @@ public:
       fAttrPads(pads), fAttrStrides(strides),
       fNX(UTILITY::Clean_name(nameX)), fNW(UTILITY::Clean_name(nameW)), fNY(UTILITY::Clean_name(nameY))
    {
+      fKind = OperatorKind::CONV;
       if(std::is_same<T, float>::value) {
          fType = "float";
       } else {
@@ -569,6 +571,14 @@ public:
    /*! \brief Returns the blas routines needed to compile the generated code
     */
    std::vector<std::string> GetBlasRoutines() override { return { std::string("Gemm"), std::string("Axpy") }; }
+         std::string GetFusableOutputTensorName() override {
+         return fNY;
+      }
+   void UpdateFusableTensorName(std::string fusable_tensor_name, const std::function<void(const std::string&)>& removal_func) override {
+      removal_func(fNY);
+      fNY = fusable_tensor_name;
+      fOutputTensorNames[0] = fNY;
+   }
 };
 
 } // namespace SOFIE

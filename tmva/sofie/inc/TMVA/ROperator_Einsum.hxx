@@ -51,7 +51,7 @@ public:
 
       fInputTensorNames.resize(fNInputs.size());
       std::transform(fNInputs.begin(), fNInputs.end(), fInputTensorNames.begin(),
-                  [](const std::string& s) -> std::string_view { return s; });
+                  [](const std::string& s) -> std::string { return s; });
       fOutputTensorNames = { fNY };
    }
 

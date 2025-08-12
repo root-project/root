@@ -53,6 +53,7 @@ public:
    fNB(UTILITY::Clean_name(nameB)), fNMean(UTILITY::Clean_name(nameMean)),
    fNVar(UTILITY::Clean_name(nameVar)), fNY(UTILITY::Clean_name(nameY)), fActivation(activation)
    {
+               fKind = OperatorKind::BATCHNORM;
       fInputTensorNames = { fNX };
       fOutputTensorNames = { fNY };
 
@@ -233,6 +234,19 @@ public:
    }
 
    std::vector<std::string> GetBlasRoutines() override { return { std::string("Copy"), std::string("Axpy") }; }
+   std::string GetFusableOutputTensorName() override {
+       return fNY;
+   }
+   
+   void UpdateFusableTensorName(std::string fusable_tensor_name, const std::function<void(const std::string&)>& removal_func){
+      removal_func(fNX);
+      removal_func(fNY);      
+      fNX = fusable_tensor_name;
+      fNY = fusable_tensor_name;
+      fInputTensorNames[0] = fNX;
+      fOutputTensorNames[0] = fNY;
+   }
+
 };
 
 }//SOFIE

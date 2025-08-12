@@ -34,6 +34,7 @@ private:
 
 
    std::vector<std::unique_ptr<ROperator>> fOperators;
+   std::vector<std::unique_ptr<ROperator>> fConstantOperators;
 
    std::vector<std::shared_ptr<RModel>> fSubGraphs;    ///<!  sub-graph models (transient)
    RModel * fParentGraph = nullptr;
@@ -68,12 +69,13 @@ public:
    bool CheckIfTensorAlreadyExist(std::string tensor_name);
    void AddInputTensorInfo(std::string input_name, ETensorType type, std::vector<Dim> shape);
    void AddInputTensorInfo(std::string input_name, ETensorType type, std::vector<size_t> shape);
-   void AddOperator(std::unique_ptr<ROperator> op, int order_execution = -1);
-   void AddOperatorReference(ROperator *op, int order_execution = -1)
+   void AddOperator(std::unique_ptr<ROperator> op, size_t order_execution = -1);
+   void AddOperatorReference(ROperator *op, size_t order_execution = -1)
    {
       std::unique_ptr<ROperator> tmp(op);
       AddOperator(std::move(tmp), order_execution);
    }
+   void AddConstantOperator(std::unique_ptr<ROperator> op);
    void AddInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape,
                              std::shared_ptr<void> data);
    void AddConstantTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape,
@@ -159,11 +161,15 @@ public:
    std::string GenerateInferSignature(bool isdecl = true);
 
    // calculate total intermediate memory and position intermediate tensor addresses
-   std::string AllocateIntermediateMemory(std::span<const std::string_view> op_output_tensors);
-   void CheckAndFlushIntermediateMemory(std::span<const std::string_view> op_output_tensors, const size_t& op_idx);
+   std::string AllocateIntermediateMemory(std::span<const std::string> op_output_tensors, std::set<std::string>& allocated_tensors);
+   void CheckAndFlushIntermediateMemory(std::span<const std::string> op_output_tensors, const size_t& op_idx);
 
    void SetOptimizationLevel(const OptimizationLevel &optim_level) { fOptimizationLevel = optim_level; }
 
+   void RemoveIntermediateTensor(const std::string& tensor_name){
+      fIntermediateTensorInfos.erase(tensor_name);
+   }
+   
 protected:
    // internal functions
    // generate code for the initialized tensors
@@ -180,6 +186,7 @@ protected:
    void GenerateIntermediateMemoryPool();
    // Generate all session code
    void GenerateSessionCode();
+   void CheckAndFuseOperators();
 
 public:
    const std::vector<std::string> & GetInputTensorNames() const { return fInputTensorNames; }
