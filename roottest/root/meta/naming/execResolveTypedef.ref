@@ -87,4 +87,5 @@ Test 83 The result is correct: ::int
 Test 84 The result is correct: unsigned int
 Test 85 The result is correct: unsigned int
 Test 86 The result is correct: SG::sgkey_t
+Test 87 The result is correct: RT::EX::ClusterSize
 (int) 0
