@@ -408,7 +408,6 @@ endforeach()
 
 if(DEFINED rpath)
   message(DEPRECATION ">>> Option 'rpath' is deprecated and without effect."
-      " See https://root.cern/doc/v638/release-notes.html"
       " Relative RPATHs to the main ROOT libraries are unconditionally appended to all ROOT"
       " executables and libraries."
       "") # empty line at the end to make the deprecation message more visible
