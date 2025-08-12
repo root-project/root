@@ -7,22 +7,22 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog newTestFile.root index64.root ind
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += chain mytest index64 indexl64
+TEST_TARGETS += chain mytest index64 indexl64 varsizearr
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
-#  '*roottest/'.  Append the path for Rules.mk from within roottest, which 
+#  '*roottest/'.  Append the path for Rules.mk from within roottest, which
 #  should be 'scripts/Rules.mk'.  The roottest path is saved in the
-#  ROOTTEST_HOME variable for use by the SUBDIRECTORIES variable and is 
-#  exported to eliminate the overhead of findding the path again during 
+#  ROOTTEST_HOME variable for use by the SUBDIRECTORIES variable and is
+#  exported to eliminate the overhead of findding the path again during
 #  recursive calls of gmake.
 # Since all makefiles should be under roottest or one of its
-#  subdirectories and all recursions of gmake are called by 
+#  subdirectories and all recursions of gmake are called by
 #    'cd [DIR]; gmake ...'
 #  this algorithm should not fail in finding /roottest/ in the
-#  current working directory.  
-# Issues:  This algorithm will fail if a makefile is called from outside the 
-#  roottest folder, as in executing 'gmake -f ~/roottest/Makefile' from 
+#  current working directory.
+# Issues:  This algorithm will fail if a makefile is called from outside the
+#  roottest folder, as in executing 'gmake -f ~/roottest/Makefile' from
 #  the home directory.
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -75,4 +75,9 @@ chain: chain.log
 index64: index64.log
 	$(TestDiff)
 
+indexl64: indexl64.log
+	$(TestDiff)
+
+varsizearr: varsizearr.log
+	$(TestDiff)
 
