@@ -121,14 +121,14 @@ bool SymbolEnumerator::enumerateSymbols(StringRef Path, OnEachSymbolFn OnEach,
   if (Path.empty())
     return false;
 
-
   ObjectFileLoader ObjLoader(Path);
 
   auto ObjOrErr = ObjLoader.getObjectFile();
   if (!ObjOrErr) {
-    handleAllErrors(ObjOrErr.takeError(), [&](const ErrorInfoBase &EIB) {
-      errs() << "Error loading object: " << EIB.message() << "\n";
-    });
+    // handleAllErrors(ObjOrErr.takeError(), [&](const ErrorInfoBase &EIB) {
+    //   errs() << "Error loading object: " << EIB.message() << "\n";
+    // });
+    consumeError(ObjOrErr.takeError());
     return false;
   }
 
