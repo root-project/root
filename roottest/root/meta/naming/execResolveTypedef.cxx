@@ -12,6 +12,11 @@
 
 namespace A1 { namespace B2 { namespace C3 { typedef int what; } } }
 namespace NS { typedef int IntNS_t; }
+namespace SG { typedef std::uint32_t sgkey_t; }
+
+struct PackedParameters {
+   SG::sgkey_t  m_sgkey;
+};
 
 class Object
 {
@@ -206,6 +211,10 @@ int execResolveTypedef()
    testing("::SomeTypedefName_tSF",TClassEdit::ResolveTypedef("::SomeTypedefName_tSF")); // the last 2 characters used to be ignored.
    testing("::int",TClassEdit::ResolveTypedef("::Int_t"));
    // Add an example like pair<...::type_t,int>
+
+   testing("unsigned int", TClassEdit::ResolveTypedef("SG::sgkey_t"));
+   testing("unsigned int", TClass::GetClass("PackedParameters")->GetTrueTypeName());
+   testing("SG::sgkey_t", TClass::GetClass("PackedParameters")->GetFullTypeName());
 
    return 0;
 }
