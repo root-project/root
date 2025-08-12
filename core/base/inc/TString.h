@@ -230,7 +230,15 @@ protected:
 
    enum { kAlignment = 16 };
    static Ssiz_t  Align(Ssiz_t s) { return (s + (kAlignment-1)) & ~(kAlignment-1); }
-   static Ssiz_t  Recommend(Ssiz_t s) { return (s < kMinCap ? kMinCap : Align(s+1)) - 1; }
+   // `s` is expected to be <= MaxSize() = (kMaxInt-1) ; `s + 1` includes the terminating nullchar
+   static Ssiz_t  Recommend(Ssiz_t s) {
+      if (s < kMinCap)
+         return kMinCap;
+      else if (s > MaxSize() - (kAlignment - 1))
+         return s;
+      else 
+         return Align(s + 1) - 1;
+   }
    static Ssiz_t  AdjustCapacity(Ssiz_t oldCap, Ssiz_t newCap);
 
 private:
