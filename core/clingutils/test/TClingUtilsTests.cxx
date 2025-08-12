@@ -21,6 +21,7 @@
 // test was to do any of the above, there would be two copies of functions around (in libCling.so and the test binary)
 // with not much guarantees which ones are called at which moment.
 
+#include <DllImport.h>
 #include <ROOT/FoundationUtils.hxx>
 
 #include "gtest/gtest.h"
@@ -90,3 +91,13 @@ TEST(TClingUtilsTests, GetRealPath)
    std::remove("./realfile2");
 #endif // not R__WIN32
 }
+
+// Forward-declare gCling to not include TInterpreter.h just for checking that the interpreter has not been initialized.
+class TInterpreter;
+R__EXTERN TInterpreter *gCling;
+
+class InterpreterCheck : public testing::Environment {
+   void TearDown() override { ASSERT_EQ(gCling, nullptr); }
+};
+
+testing::Environment *gInterpreterCheck = testing::AddGlobalTestEnvironment(new InterpreterCheck);
