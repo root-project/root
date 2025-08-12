@@ -934,8 +934,14 @@ if(ROOT_pyroot_FOUND)
       machine_learning/RBatchGenerator_TensorFlow.py
   )
 
-  file(GLOB requires_matplotlib requires_mplhep RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-      hist/hist002_TH1_fillrandom_userfunc_uhi.py
+  file(GLOB requires_matplotlib RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+      hist/hist003_TH1_draw_uhi.py
+      hist/hist007_TH1_liveupdate_uhi.py
+      hist/hist010_TH1_two_scales_uhi.py
+      hist/hist015_TH1_read_and_draw_uhi.py
+  )
+
+  file(GLOB requires_mplhep RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       hist/hist003_TH1_draw_uhi.py
       hist/hist007_TH1_liveupdate_uhi.py
       hist/hist010_TH1_two_scales_uhi.py
