@@ -1232,8 +1232,8 @@ Ssiz_t TString::AdjustCapacity(Ssiz_t oldCap, Ssiz_t newCap)
       Fatal("TString::AdjustCapacity", "capacity too large (%d, max = %d)",
             newCap, ms);
    }
-   Ssiz_t cap = oldCap < ms / 2 - kAlignment ?
-                Recommend(std::max(newCap, 2 * oldCap)) : ms - 1;
+   Ssiz_t cap = oldCap <= ms / 2 ?
+                Recommend(std::max(newCap, 2 * oldCap)) : ms;
    return cap;
 }
 
