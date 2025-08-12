@@ -125,8 +125,12 @@ if (NOT dataframe)
     list(APPEND dataframe_veto machine_learning/RBatchGenerator_TensorFlow.py)
     list(APPEND dataframe_veto machine_learning/RBatchGenerator_PyTorch.py)
     list(APPEND dataframe_veto machine_learning/RBatchGenerator_filters_vectors.py)
-    # RooFit tutorial depending on RDataFrame
-    list(APPEND dataframe_veto roofit/roofit/rf408*)
+    # RooFit tutorials depending on RDataFrame
+    list(APPEND dataframe_veto
+        roofit/roofit/rf408_RDataFrameToRooFit.C
+        roofit/roofit/rf408_RDataFrameToRooFit.py
+        roofit/roofit/rf618_mixture_models.py # depends on analysis/dataframe/df106_HiggsToFourLeptons.py
+    )
 endif()
 
 if(NOT sqlite)
