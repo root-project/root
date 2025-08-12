@@ -90,6 +90,7 @@ TTreeIndex::TTreeIndex(): TVirtualIndex()
 /// Tree variables eg: "run-90000", "event +3*xx". These treeformulas will be calculated using
 /// long double precision, and then cast to long64. If you want to directly
 /// use directly long64 for the intermediate calculation, set long64major/minor to true.
+/// Minor formula can be skipped by setting it to "0".
 ///
 /// In case an expression is specified, the equivalent expression must be computed
 /// when calling GetEntryWithIndex.
@@ -126,7 +127,7 @@ TTreeIndex::TTreeIndex(): TVirtualIndex()
 /// It is possible to play with different TreeIndex in the same Tree.
 /// see comments in TTree::SetTreeIndex.
 
-TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorname, const bool long64major, const bool long64minor)
+TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorname, bool long64major, bool long64minor)
            : TVirtualIndex()
 {
    fTree               = (TTree*)T;

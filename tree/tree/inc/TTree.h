@@ -451,7 +451,8 @@ public:
    virtual TBranch        *BranchOld(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 1);
    virtual TBranch        *BranchRef();
            void            Browse(TBrowser*) override;
-   virtual Int_t           BuildIndex(const char *majorname, const char *minorname = "0", const bool long64major = false, const bool long64minor = false);
+   virtual Int_t           BuildIndex(const char *majorname, const char *minorname = "0", bool long64major = false, bool long64minor = false);
+           Int_t           BuildIndex(const char *majorname, bool long64major) { return BuildIndex(majorname, "0", long64major, false); } 
    TStreamerInfo          *BuildStreamerInfo(TClass* cl, void *pointer = nullptr, bool canOptimize = true);
    virtual TFile          *ChangeFile(TFile* file);
    virtual TTree          *CloneTree(Long64_t nentries = -1, Option_t* option = "");
