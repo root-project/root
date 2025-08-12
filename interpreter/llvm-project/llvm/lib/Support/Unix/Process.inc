@@ -93,10 +93,9 @@ Expected<unsigned> Process::getPageSize() {
 
 size_t Process::GetMallocUsage() {
 #if defined(HAVE_MALLINFO2)
-//  struct mallinfo2 mi;
-//  mi = ::mallinfo2();
-//  return mi.uordblks;
-  return 0;
+  struct mallinfo2 mi;
+  mi = ::mallinfo2();
+  return mi.uordblks;
 #elif defined(HAVE_MALLINFO)
   struct mallinfo mi;
   mi = ::mallinfo();
