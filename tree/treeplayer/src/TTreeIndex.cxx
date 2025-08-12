@@ -89,7 +89,7 @@ TTreeIndex::TTreeIndex(): TVirtualIndex()
 /// Note that majorname and minorname may be expressions using original
 /// Tree variables eg: "run-90000", "event +3*xx". These treeformulas will be calculated using
 /// long double precision, and then cast to long64. If you want to directly
-/// use directly long64 for the intermediate calculation, set long64major/minor to true.
+/// use long64 for the intermediate calculation, allowing for larger maximum indices, set long64major/minor to true.
 /// Minor formula can be skipped by setting it to "0".
 ///
 /// In case an expression is specified, the equivalent expression must be computed
