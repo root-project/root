@@ -76,7 +76,6 @@ root7=ON
 rootbench=OFF
 roottest=ON
 roottest_force_checkout=OFF
-rpath=ON
 runtime_cxxmodules=ON
 shadowpw=OFF
 shared=ON
