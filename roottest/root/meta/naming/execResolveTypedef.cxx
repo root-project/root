@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <TClassEdit.h>
+#include <TClass.h>
+#include <cstdint>
 
 // See also roottest/meta/naming/execCheckNaming.C
 
