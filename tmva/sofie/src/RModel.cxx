@@ -9,6 +9,7 @@
 #endif
 
 #include "TMVA/RModel.hxx"
+#include "TMVA/RModelProfiler.hxx"
 #include "TMVA/SOFIE_common.hxx"
 
 namespace TMVA {
@@ -850,7 +851,7 @@ void RModel::GenerateSessionCode()
          CheckAndFlushIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx);
       }
 
-      // to check remaining unused fragments after memory allocation (lesser the better)
+  // to check remaining unused fragments after memory allocation (lesser the better)
       // for (const auto &it: fIntermediateMemoryInfo.available_stack){
       //    std::cout<<"chunk_idx: "<<it.first<<", chunk_size: "<<it.second<<"\n";
       // }
@@ -878,13 +879,13 @@ void RModel::GenerateSessionCode()
    // Generate code for Session constructor
    if (fUseSession) {
       std::string sessionName = "Session";
-      if (fIsSubGraph)
+      if (fIsSubGraph) 
          sessionName += "_" + fName;
       // add here specific operator code that needs to define session data members
       fGC += "\n";
       for (size_t id = 0; id < fOperators.size(); id++) {
          std::string opName = std::to_string(id);
-         fGC += fOperators[id]->GenerateSessionMembersCode(opName);
+         fGC += fOperators[id]->GenerateSessionMembersCode(opName);        
       }
       fGC += "\n";
       // here add initialization and reading of weight tensors
@@ -930,23 +931,28 @@ void RModel::GenerateSessionCode()
       fGC += "}\n\n";
    }
 
-   fGC += doInferSignature + "{\n";
-   fGC += "\n";
+   if (fProfile) {
+      RModelProfiler profiler(*this);
+      profiler.Generate();
+      fGC += fProfilerGC; 
+   } else {
+      fGC += doInferSignature + "{\n";
+      fGC += "\n";
 
-   // generate the inference code
-   if (fVerbose)
-      std::cout << "Generating main inference code for " << fName << std::endl;
-
-   if (fOutputTensorNames.size() == 0)
-      throw std::runtime_error("TMVA-SOFIE: output size=0 are not supported");
-
-   for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
+      // generate the inference code
       if (fVerbose)
-         std::cout << "Generating code for operator .... " << op_idx << std::endl;
-      fGC += (fOperators[op_idx]->Generate(std::to_string(op_idx)));
-   }
+         std::cout << "Generating main inference code for " << fName << std::endl;
 
-   fGC += SP + "using TMVA::Experimental::SOFIE::UTILITY::FillOutput;\n\n";
+      if (fOutputTensorNames.size() == 0)
+         throw std::runtime_error("TMVA-SOFIE: output size=0 are not supported");
+
+      for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
+         if (fVerbose)
+         std::cout << "Generating code for operator .... " << op_idx << std::endl;
+         fGC += (fOperators[op_idx]->Generate(std::to_string(op_idx)));
+      }
+
+      fGC += SP + "using TMVA::Experimental::SOFIE::UTILITY::FillOutput;\n\n";
 
    for (std::string const &name : fOutputTensorNames) {
       // need to check is size is the same (don't want to return a vector with
@@ -957,7 +963,8 @@ void RModel::GenerateSessionCode()
       fGC += SP + "FillOutput(tensor_" + name + ", output_tensor_" + name + ", " + n + ");\n";
    }
 
-   fGC += "}\n\n";
+      fGC += "}\n\n";
+   }
 
    // generate the inference overload that returns an output struct
    GenerateOutput();
@@ -970,9 +977,11 @@ void RModel::GenerateSessionCode()
 
 void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, long pos, bool verbose)
 {
+   bool profile = (options & static_cast<std::underlying_type_t<Options>>(Options::kProfile));
    fVerbose = verbose;
    fBatchSize = batchSize;
    fReadPos = pos;
+   fProfile = profile;
 
    // session flag is used in operator initialize
    if (static_cast<std::underlying_type_t<Options>>(Options::kNoSession) & options) {
@@ -992,9 +1001,9 @@ void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, lo
          "TMVA-SOFIE: RModel::Generate: cannot use a separate weight file without generating a Session class");
    }
 
-   if (static_cast<std::underlying_type_t<Options>>(Options::kGNN) & options)
+   if (static_cast<std::underlying_type_t<Options>>(Options::kGNN) & options) 
       fIsGNN = true;
-   if (static_cast<std::underlying_type_t<Options>>(Options::kGNNComponent) & options)
+   if (static_cast<std::underlying_type_t<Options>>(Options::kGNNComponent) & options) 
       fIsGNNComponent = true;
 
    // initialize the model including all operators and sub-graphs
@@ -1008,13 +1017,13 @@ void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, lo
 
    // generate first code for the subgraphs
    for (auto &graph : fSubGraphs) {
-      if (fVerbose)
+      if (fVerbose) 
          std::cout << "generate session code for subgraph " << graph->fName << std::endl;
       graph->GenerateSessionCode();
       fGC += graph->fGC;
    }
 
-   if (fVerbose)
+   if (fVerbose) 
       std::cout << "generate Main session code - model  " << fName << std::endl;
 
    // generate main session code
