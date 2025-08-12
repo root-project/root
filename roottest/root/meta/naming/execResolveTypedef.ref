@@ -84,4 +84,7 @@ Test 80 The result is correct: ::int
 Test 81 The result is correct: ::Unknown
 Test 82 The result is correct: ::SomeTypedefName_tSF
 Test 83 The result is correct: ::int
+Test 84 The result is correct: unsigned int
+Test 85 The result is correct: unsigned int
+Test 86 The result is correct: SG::sgkey_t
 (int) 0
