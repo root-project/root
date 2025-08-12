@@ -23,6 +23,14 @@ strings (<15 on 64-bit and <11 on 32-bit) are contained in the
 TString internal data structure without the need for mallocing the
 required space.
 
+\note TString can store a maximum of MaxSize()=2147483646 characters; ie 2147483647 bytes if you include the terminating null.
+Trying to allocate larger buffers might throw std::bad_alloc or raise
+Fatal errors or lead to undefined behavior. Likewise, there is no safety
+check if you pass a Long64_t to the class functions, they will be silently
+rounded to Int_t and lead to an integer overflow (negative value).
+For future designs, consider using std::string instead, which has a larger
+maximum size.
+
 Substring operations are provided by the TSubString class, which
 holds a reference to the original string and its data, along with
 the offset and length of the substring. To retrieve the substring
@@ -1220,12 +1228,11 @@ void TString::AssertElement(Ssiz_t i) const
 Ssiz_t TString::AdjustCapacity(Ssiz_t oldCap, Ssiz_t newCap)
 {
    Ssiz_t ms = MaxSize();
-   if (newCap > ms - 1) {
+   if (newCap > ms) {
       Fatal("TString::AdjustCapacity", "capacity too large (%d, max = %d)",
             newCap, ms);
    }
-   Ssiz_t cap = oldCap < ms / 2 - kAlignment ?
-                Recommend(std::max(newCap, 2 * oldCap)) : ms - 1;
+   Ssiz_t cap = oldCap <= ms / 2 ? Recommend(std::max(newCap, 2 * oldCap)) : ms;
    return cap;
 }
 
