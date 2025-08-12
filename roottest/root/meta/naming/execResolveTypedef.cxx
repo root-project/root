@@ -215,8 +215,8 @@ int execResolveTypedef()
    // Add an example like pair<...::type_t,int>
 
    testing("unsigned int", TClassEdit::ResolveTypedef("SG::sgkey_t"));
-   testing("unsigned int", TClass::GetClass("PackedParameters")->GetTrueTypeName());
-   testing("SG::sgkey_t", TClass::GetClass("PackedParameters")->GetFullTypeName());
+   testing("unsigned int", TClass::GetClass("PackedParameters")->GetDataMember("m_sgkey")->GetTrueTypeName());
+   testing("SG::sgkey_t", TClass::GetClass("PackedParameters")->GetDataMember("m_sgkey")->GetFullTypeName());
 
    return 0;
 }
