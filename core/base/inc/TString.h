@@ -255,9 +255,9 @@ private:
    char          *GetPointer() { return IsLong() ? GetLongPointer() : GetShortPointer(); }
    const char    *GetPointer() const { return IsLong() ? GetLongPointer() : GetShortPointer(); }
 #ifdef R__BYTESWAP
-   static Ssiz_t  MaxSize() { return kMaxInt - 1; }
+   static constexpr Ssiz_t  MaxSize() { return kMaxInt - 1; }
 #else
-   static Ssiz_t  MaxSize() { return (kMaxInt >> 1) - 1; }
+   static constexpr Ssiz_t  MaxSize() { return (kMaxInt >> 1) - 1; }
 #endif
    void           UnLink() const { if (IsLong()) delete [] fRep.fLong.fData; }
    void           Zero() {
