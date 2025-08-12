@@ -15,4 +15,3 @@ def test_tutorial(tutorial):
     # subprocess.run([sys.executable, str(tutorial)], check=True)
     print(f"Running tutorial: {tutorial}")
     assert len(tutorials) > 0
-je siiosi
