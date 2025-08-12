@@ -8498,7 +8498,7 @@ void TH1::SetBuffer(Int_t bufsize, Option_t * /*option*/)
       return;
    }
    if (bufsize < 100) bufsize = 100;
-   bufsize = 1 + bufsize*(fDimension+1);
+   fBufferSize = 1 + bufsize*(fDimension+1);
    fBuffer = new Double_t[fBufferSize];
    memset(fBuffer, 0, sizeof(Double_t)*fBufferSize);
 }
