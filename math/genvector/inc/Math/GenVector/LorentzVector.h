@@ -736,6 +736,7 @@ Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity.
      \param pp p+, mathcore::LorentzVector based on any coordinate system
      \param pm p-, mathcore::LorentzVector based on any coordinate system
      \return a scalar
+     \ingroup GenVector
      \see http://doi.org/10.1103/PhysRevLett.121.212301
    */
     template< class CoordSystem >
@@ -762,6 +763,7 @@ Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity.
      \param pp p+, mathcore::LorentzVector based on any coordinate system
      \param pm p-, mathcore::LorentzVector based on any coordinate system
      \return a scalar. Returns -1 if both momenta are exactly mirrored.
+     \ingroup GenVector
      \see http://doi.org/10.1103/PhysRevLett.121.212301, https://doi.org/10.1103/PhysRevD.99.093013
    */
     template< class CoordSystem >
@@ -782,6 +784,7 @@ Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity.
      \param pp p+, mathcore::LorentzVector based on any coordinate system
      \param pm p-, mathcore::LorentzVector based on any coordinate system
      \return a scalar. Returns 0 if both transverse momenta are zero
+     \ingroup GenVector
      \see http://doi.org/10.1103/PhysRevLett.121.212301, https://doi.org/10.1103/PhysRevD.99.093013
    */
     template< class CoordSystem >
