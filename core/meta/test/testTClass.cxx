@@ -104,3 +104,58 @@ TEST(TClass, ReSubstTemplateArg)
    auto c = TClass::GetClass("One<std::string>");
    c->BuildRealData();
 }
+
+// This is a test case for an issue that arises when template names are not desugared
+// (specifically when default template arguments are involved).
+// In this case, __pool will not be fully qualified (it will be missing the
+// `test__gnu_cxx` prefix). We need to desugar it before fully qualifying the template names.
+TEST(TClass, TemplateTemplate)
+{
+   gInterpreter->ProcessLine(R"(
+      namespace test__gnu_cxx {
+         // This can be any template type, given we change the template parameters
+         // for __common_pool_policy
+         template<typename T>
+         class __pool {};
+
+         template<template<typename> class _PoolTp>
+         struct __common_pool_policy {};
+         template<typename _Poolp = __common_pool_policy<__pool> >
+         class __mt_alloc {};
+      }
+
+      namespace double32t_test__gnu_cxx {
+         template<typename T>
+         class __pool {};
+
+         template<template<typename> class _PoolTp, typename T>
+         struct __common_pool_policy {};
+         template<typename _Poolp = __common_pool_policy<__pool, Double32_t> >
+         class __mt_alloc {};
+      }
+
+      namespace test_LHCb {
+         template <typename ALLOC = test__gnu_cxx::__mt_alloc<>>
+         struct FastAllocVector {};
+
+         template <typename ALLOC = double32t_test__gnu_cxx::__mt_alloc<>>
+         struct FastAllocVectorDouble32 {};
+      }
+   )");
+
+   TClass *fastAllocVecClass = TClass::GetClass("test_LHCb::FastAllocVector<>");
+   ASSERT_NE(fastAllocVecClass, nullptr);
+   EXPECT_NE(strstr(fastAllocVecClass->GetName(), "test__gnu_cxx::__pool"), nullptr);
+   // EXPECT_EQ(strcmp(fastAllocVecClass->GetName(),
+   //                  "test_LHCb::FastAllocVector<test__gnu_cxx::__mt_alloc<test__gnu_cxx::__common_"
+   //                  "pool_policy<test__gnu_cxx::__pool> > >"),
+   //           0);
+
+   TClass *fastAllocVecD32Class = TClass::GetClass("test_LHCb::FastAllocVectorDouble32<>");
+   ASSERT_NE(fastAllocVecD32Class, nullptr);
+   EXPECT_NE(strstr(fastAllocVecD32Class->GetName(), "double32t_test__gnu_cxx::__pool"), nullptr);
+   // EXPECT_EQ(strcmp(fastAllocVecD32Class->GetName(),
+   //                  "test_LHCb::FastAllocVectorDouble32<double32t_test__gnu_cxx::__mt_alloc<double32t_test_"
+   //                  "_gnu_cxx::__common_pool_policy<double32t_test__gnu_cxx::__pool,Double32_t> > >"),
+   //           0);
+}
