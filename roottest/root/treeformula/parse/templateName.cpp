@@ -17,7 +17,8 @@ void plot_my_i()
 {
   C c, *cp(&c);
   C c2, *cp2(&c2);
-  
+
+  TFile *f = TFile::Open("mytree.root", "recreate");
   TTree *t = new TTree("mytree", "Icecube", 10000);
 
   t->Branch("my_c", "C", &cp);
@@ -37,12 +38,16 @@ void plot_my_i()
   t->Scan("plot_my_i.i:against_my_i.i","","",10);
   t->ResetBranchAddresses();
   //t->StartViewer();
+
+  delete t;
+  delete f;
 }
 
 class C2 { public: int i; };
 void makeclass()
 {
   C2 c, *cp(&c);
+  TFile *f = TFile::Open("mytreemk.root", "recreate");
   TTree *t = new TTree("mytreemk", "foo", 10000);
   t->Branch("my_c", "C2", &cp);
   t->Branch("other_c.", "C2", &cp);
@@ -54,6 +59,8 @@ void makeclass()
   t->Draw("forproxy.C+","","goff");
   gSystem->Exec("diff generatedSel.old generatedSel.h");
   t->ResetBranchAddresses();
+  delete t;
+  delete f;
 }
 
 void templateName() { plot_my_i(); makeclass(); }

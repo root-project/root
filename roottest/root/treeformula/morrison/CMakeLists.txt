@@ -1,7 +1,7 @@
-#-------------------------------------------------------------------------------
-#
-# Placeholder file to translate the tests to the new CTest system. Meanwhile we
-# define a CTest test that calls 'make' in ${CMAKE_CURRENT_SOURCE_DIR}
-#
-#-------------------------------------------------------------------------------
-ROOTTEST_ADD_OLDTEST()
+ROOTTEST_COMPILE_MACRO(main.C
+                       FIXTURES_SETUP root-treeformula-morrison-func-fixture)
+
+ROOTTEST_ADD_TEST(ArraySyntax
+                  MACRO run.C
+                  OUTREF ArraySyntax.ref
+                  FIXTURES_REQUIRED root-treeformula-morrison-func-fixture)
