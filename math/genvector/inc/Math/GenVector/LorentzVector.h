@@ -740,7 +740,7 @@ Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity.
      \see http://doi.org/10.1103/PhysRevLett.121.212301
    */
     template< class CoordSystem >
-    typename LorentzVector<CoordSystem>::Scalar Acoplanarity(LorentzVector<CoordSystem> pp, LorentzVector<CoordSystem> pm)
+    typename LorentzVector<CoordSystem>::Scalar Acoplanarity(LorentzVector<CoordSystem> const &pp, LorentzVector<CoordSystem> const &pm)
     {
        auto dphi = pp.Phi() - pm.Phi();
        // convert dphi angle to the interval (-PI,PI]
@@ -767,7 +767,7 @@ Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity.
      \see http://doi.org/10.1103/PhysRevLett.121.212301, https://doi.org/10.1103/PhysRevD.99.093013
    */
     template< class CoordSystem >
-    typename LorentzVector<CoordSystem>::Scalar AsymmetryVectorial(LorentzVector<CoordSystem> pp, LorentzVector<CoordSystem> pm)
+    typename LorentzVector<CoordSystem>::Scalar AsymmetryVectorial(LorentzVector<CoordSystem> const &pp, LorentzVector<CoordSystem> const &pm)
     {
        ROOT::Math::XYVector vp(pp.Px(), pp.Py());
        ROOT::Math::XYVector vm(pm.Px(), pm.Py());
@@ -788,7 +788,7 @@ Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity.
      \see http://doi.org/10.1103/PhysRevLett.121.212301, https://doi.org/10.1103/PhysRevD.99.093013
    */
     template< class CoordSystem >
-    typename LorentzVector<CoordSystem>::Scalar AsymmetryScalar(LorentzVector<CoordSystem> pp, LorentzVector<CoordSystem> pm)
+    typename LorentzVector<CoordSystem>::Scalar AsymmetryScalar(LorentzVector<CoordSystem> const &pp, LorentzVector<CoordSystem> const &pm)
     {
        auto ptp = pp.Pt();
        auto ptm = pm.Pt();
