@@ -54,6 +54,19 @@ TEST(THLimitsFinder, Degenerate)
    EXPECT_GE(xmax, centralValue + 5.);
 }
 
+// see https://root-forum.cern.ch/t/bug-or-feature-in-ttree-draw/62862
+// Due to a poor binning choice in THLimitsFinder, the histograms in
+// TTree::Draw might not contain all values.
+TEST(THLimitsFinder, TTreeDraw_AutoBinning)
+{
+   TH1F histo("limitsFinder", "", 100, 0, 0);
+   histo.Fill(-999);
+   histo.Fill(0);
+   histo.BufferEmpty(1);
+
+   EXPECT_EQ(histo.GetEntries(), histo.GetEffectiveEntries());
+}
+
 // Simple cross-check that TH1::SmoothArray() is not doing anything if input
 // array is already smooth.
 TEST(TH1, SmoothArrayCrossCheck)
