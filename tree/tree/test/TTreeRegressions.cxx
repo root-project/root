@@ -289,3 +289,23 @@ TEST(TTreeRegressions, FindBranchBrackets)
    EXPECT_NE(t.FindBranch("branch[3]"), nullptr);
    EXPECT_EQ(t.FindBranch("branch[3]"), t.GetBranch("branch[3]"));
 }
+
+// see https://root-forum.cern.ch/t/bug-or-feature-in-ttree-draw/62862
+// Due to a poor binning choice in THLimitsFinder, the histogram didn't contain
+// all values.
+TEST(TTreeRegressions, DrawAutoBinning)
+{
+   TTree t;
+   Float_t x;
+   t.Branch("x", &x);
+   x = -999;
+   t.Fill();
+   x = 0;
+   t.Fill();
+   t.Draw("x");
+   auto h = (TH1 *)gROOT->FindObject("htemp");
+   ASSERT_NE(h, nullptr);
+   EXPECT_EQ(h->GetEntries(), h->GetEffectiveEntries());
+   delete h;
+   delete gROOT->FindObject("c1");
+}
