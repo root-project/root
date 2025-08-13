@@ -28,27 +28,28 @@ macro(ROOT_CHECK_CONNECTION option)
       # If the connection check is disabled, just assume there is internet
       # connection
       set(NO_CONNECTION FALSE)
-    endif()
-    message(STATUS "Checking internet connectivity")
-    file(DOWNLOAD https://root.cern/files/cmake_connectivity_test.txt ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt
-      TIMEOUT 10 STATUS DOWNLOAD_STATUS
-    )
-    # Get the status code from the download status
-    list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
-    # Check if download was successful.
-    if(${STATUS_CODE} EQUAL 0)
-      # Success
-      message(STATUS "Checking internet connectivity - found")
-      # Now let's delete the file
-      file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt)
-      set(NO_CONNECTION FALSE)
     else()
-      # Error
-      if(fail-on-missing)
-        message(FATAL_ERROR "No internet connection. Please check your connection, set '-D${option}' or disable 'fail-on-missing' to automatically disable options requiring internet access. You can also bypass the connection check with -Dcheck_connection=OFF.")
+      message(STATUS "Checking internet connectivity")
+      file(DOWNLOAD https://root.cern/files/cmake_connectivity_test.txt ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt
+        TIMEOUT 10 STATUS DOWNLOAD_STATUS
+      )
+      # Get the status code from the download status
+      list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
+      # Check if download was successful.
+      if(${STATUS_CODE} EQUAL 0)
+        # Success
+        message(STATUS "Checking internet connectivity - found")
+        # Now let's delete the file
+        file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt)
+        set(NO_CONNECTION FALSE)
+      else()
+        # Error
+        if(fail-on-missing)
+          message(FATAL_ERROR "No internet connection. Please check your connection, set '-D${option}' or disable 'fail-on-missing' to automatically disable options requiring internet access. You can also bypass the connection check with -Dcheck_connection=OFF.")
+        endif()
+        message(STATUS "Checking internet connectivity - failed: will not automatically download external dependencies. You can bypass the connection check with -Dcheck_connection=OFF.")
+        set(NO_CONNECTION TRUE)
       endif()
-      message(STATUS "Checking internet connectivity - failed: will not automatically download external dependencies. You can bypass the connection check with -Dcheck_connection=OFF.")
-      set(NO_CONNECTION TRUE)
     endif()
   endif()
 endmacro()
