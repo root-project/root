@@ -120,12 +120,62 @@ std::vector<bool> getWordBoundaryFlags(std::string const &s)
    return out;
 }
 
+// Receiving a RooConstVar as parameter having a numeric value as name, checks if the numeric value
+// of the name is equal to the value of the RooConstVar
+//
+// E.g.
+// RooConstVar("2.1", "const1", 2.1) returns true
+// RooConstVar("3.4", "const2", 2.1) returns false
+bool isNumericNameValid(RooAbsArg &_rooAbsArg)
+{
+   // Extract the value from the RooAbsArg
+   std::stringstream ss;
+   ss << _rooAbsArg;
+   double nameValue, actualValue;
+   try {
+      nameValue = std::stod(_rooAbsArg.GetName());
+      actualValue = std::stod(ss.str());
+   } catch (const std::invalid_argument &e) {
+      std::stringstream ssExc;
+      ssExc << "RooConstVar named " << _rooAbsArg.GetName() << " has name or value that "
+            << "cannot be converted to number";
+      throw std::invalid_argument(ssExc.str());
+   } catch (const std::out_of_range &e) {
+      std::stringstream ssExc;
+      ssExc << "RooConstVar named " << _rooAbsArg.GetName() << " has numeric name or value that "
+            << "gets out of a double range";
+      throw std::out_of_range(ssExc.str());
+   }
+
+   return nameValue == actualValue;
+}
+
 /// Replace all named references with "x[i]"-style.
 void replaceVarNamesWithIndexStyle(std::string &formula, RooArgList const &varList)
 {
    std::vector<bool> isWordBoundary = getWordBoundaryFlags(formula);
    for (unsigned int i = 0; i < varList.size(); ++i) {
       std::string_view varName = varList[i].GetName();
+
+      // If the RooAbsArg has a number as name, we perform checks
+      std::string varNameStr{varName};
+      static const std::regex pureNumberNameRegex("^\\s*\\d+(\\.\\d+)?\\s*$");
+      if (std::regex_match(varNameStr, pureNumberNameRegex)) { // Name is a number
+         // Get class name
+         std::stringstream classNameSs;
+         varList[i].printClassName(classNameSs);
+         // If the RooAbsArg is a RooConstVar having (double)name == value
+         // we don't perform substitution
+         if (classNameSs.str() == "RooConstVar" && isNumericNameValid(varList[i])) {
+            continue;
+         } else {
+            std::stringstream exceptionSs;
+            exceptionSs << "Variable '" << varName << "' is not a valid argument for RooFormulaVar. "
+                        << "Variables with a name that is a number can only be of type RooConstVar "
+                        << "and have value equal to the name";
+            throw std::invalid_argument(exceptionSs.str());
+         }
+      }
 
       std::stringstream replacementStream;
       replacementStream << "x[" << i << "]";

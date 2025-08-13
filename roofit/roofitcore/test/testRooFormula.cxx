@@ -1,10 +1,12 @@
 // Tests for the RooFormula
 // Authors: Stephan Hageboeck, CERN  2020
 //          Jonas Rembser, CERN 2023
+//          Andrea Germinario, CERN 2025
 
 #include "../src/RooFormula.h"
 #include <RooFormulaVar.h>
 #include <RooRealVar.h>
+#include <RooConstVar.h>
 
 #include <ROOT/TestSupport.hxx>
 
@@ -56,7 +58,7 @@ TEST(RooFormula, TestDangerousVariableNames)
 {
    RooRealVar dt("dt", "dt", -10, 10);
    RooRealVar x("x", "x", 1.547);
-   RooRealVar zero("0", "0", 0);
+   RooConstVar zero("0", "0", 0);
 
    // Create the formula, triggers an error if the formula doesn't compile
    // correctly because the dangerous variable names haven't been treated right.
@@ -88,4 +90,22 @@ TEST(RooFormula, UndefinedVariables)
    ASSERT_ANY_THROW(RooFormulaVar f1("f1", "r + B + x", {r, B}))  << "Formulae with missing x in arg list cannot work.";
    ASSERT_ANY_THROW(RooFormulaVar f2("f2", "r + B + y", {r, B}))  << "Formulae with missing (x,)y in arg list cannot work.";
    ASSERT_NO_THROW(RooFormulaVar f2("f2", "r + B + y", {r, B, y})) << "Formula with specified y must work.";
+}
+
+TEST(RooFormula, RooConstVarSafeSubstitution)
+{
+   // Check RooConst are substituted only by index
+   ASSERT_NO_THROW(RooFormulaVar f("f", "2.7*@0", RooFit::RooConst(2.)))
+      << "Formulae with RooConstVar argument should be substituted only by index.";
+
+   // Check that constant values to be used in RooFormulaVar have to be RooConstVar
+   RooRealVar x("x", "x", 1.547);
+   RooRealVar zero("0", "0", 0); // Constant values should be RooConstVar
+   ASSERT_ANY_THROW(RooFormulaVar f1("f1", "x + 0", {x, zero}))
+      << "Const arguments in a RooFormula should be of type RooConstVar";
+
+   // Check that RooConstVar having a value as name has value==(double)name
+   RooConstVar troubleConst("3.4", "troubleConst", 2.1);
+   ASSERT_ANY_THROW(RooFormulaVar f1("f1", "x + 0", {x, zero}))
+      << "RooConst variables, if having numeric name, should have name value equal to actual value.";
 }
