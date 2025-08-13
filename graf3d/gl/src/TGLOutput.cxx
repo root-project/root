@@ -104,16 +104,16 @@ Bool_t TGLOutput::CapturePostscript(TGLViewer & viewer, EFormat format, const ch
             assert(kFALSE);
             return kFALSE;
       }
-      Int_t buffsize = 0, state = GL2PS_OVERFLOW;
+      Int_t bufsize = 0, state = GL2PS_OVERFLOW;
       viewer.DoDraw();
       viewer.fIsPrinting = kTRUE;
       while (state == GL2PS_OVERFLOW) {
-         buffsize += 1024*1024;
+         bufsize += 1024*1024;
          gl2psBeginPage ("ROOT Scene Graph", "ROOT", nullptr,
          gl2psFormat, gl2psSort, GL2PS_USE_CURRENT_VIEWPORT
          | GL2PS_SILENT | GL2PS_BEST_ROOT | GL2PS_OCCLUSION_CULL | 0,
          GL_RGBA, 0, nullptr,0, 0, 0,
-         buffsize, output, nullptr);
+         bufsize, output, nullptr);
          viewer.DoDraw();
          state = gl2psEndPage();
          std::cout << ".";
@@ -210,17 +210,17 @@ void TGLOutput::Capture(TGLViewer & viewer)
 
    Int_t gl2psFormat = GL2PS_EPS;
    Int_t gl2psSort = GL2PS_BSP_SORT;
-   Int_t buffsize = 0, state = GL2PS_OVERFLOW;
+   Int_t bufsize = 0, state = GL2PS_OVERFLOW;
    viewer.DoDraw();
    viewer.fIsPrinting = kTRUE;
 
    while (state == GL2PS_OVERFLOW) {
-      buffsize += 1024*1024;
+      bufsize += 1024*1024;
       gl2psBeginPage ("ROOT Scene Graph", "ROOT", nullptr,
       gl2psFormat, gl2psSort, GL2PS_USE_CURRENT_VIEWPORT
       | GL2PS_SILENT | GL2PS_BEST_ROOT | GL2PS_OCCLUSION_CULL | 0,
       GL_RGBA, 0, nullptr,0, 0, 0,
-      buffsize, output, nullptr);
+      bufsize, output, nullptr);
       viewer.DoDraw();
       state = gl2psEndPage();
       std::cout << ".";

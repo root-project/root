@@ -5548,9 +5548,9 @@ void TBranchElement::SetAddressImpl(void* addr, bool implied, Int_t offset)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset the basket size for all sub-branches of this branch element.
 
-void TBranchElement::SetBasketSize(Int_t buffsize)
+void TBranchElement::SetBasketSize(Int_t bufsize)
 {
-   TBranch::SetBasketSize(buffsize);
+   TBranch::SetBasketSize(bufsize);
    Int_t nbranches = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < nbranches; ++i) {
       TBranch* branch = (TBranch*) fBranches[i];

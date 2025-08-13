@@ -822,8 +822,8 @@ private:
    RCallbackStreamerInfo fCallbackStreamerInfo;
 
 public:
-   TBufferRecStreamer(TBuffer::EMode mode, Int_t bufsiz, RCallbackStreamerInfo callbackStreamerInfo)
-      : TBufferFile(mode, bufsiz), fCallbackStreamerInfo(callbackStreamerInfo)
+   TBufferRecStreamer(TBuffer::EMode mode, Int_t bufsize, RCallbackStreamerInfo callbackStreamerInfo)
+      : TBufferFile(mode, bufsize), fCallbackStreamerInfo(callbackStreamerInfo)
    {
    }
    void TagStreamerInfo(TVirtualStreamerInfo *info) final { fCallbackStreamerInfo(info); }
