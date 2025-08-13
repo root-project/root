@@ -58,6 +58,8 @@ public:
             totalNumBins *= regular->GetTotalNumBins();
          } else if (auto *variable = std::get_if<RVariableBinAxis>(&axis)) {
             totalNumBins *= variable->GetTotalNumBins();
+         } else {
+            throw std::logic_error("unimplemented axis type");
          }
       }
       return totalNumBins;
@@ -75,6 +77,8 @@ private:
       } else if (auto *variable = std::get_if<RVariableBinAxis>(&axis)) {
          index *= variable->GetTotalNumBins();
          linIndex = variable->ComputeLinearizedIndex(std::get<I>(args));
+      } else {
+         throw std::logic_error("unimplemented axis type");
       }
       if (!linIndex.fValid) {
          return {0, false};
