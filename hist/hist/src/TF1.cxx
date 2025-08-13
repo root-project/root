@@ -1368,6 +1368,7 @@ TF1 *TF1::DrawCopy(Option_t *option) const
    Copy(*newf1);
    newf1->AppendPad(option);
    newf1->SetBit(kCanDelete);
+   if (fHistogram) newf1->SetHistogram(fHistogram);
    return newf1;
 }
 
