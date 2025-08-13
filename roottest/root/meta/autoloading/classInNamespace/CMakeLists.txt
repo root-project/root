@@ -1,9 +1,12 @@
-ROOTTEST_GENERATE_REFLEX_DICTIONARY(classInNamespace classInNamespace.h
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(classInNamespace
+                                    classInNamespace.h
                                     SELECTION classInNamespace_selection.xml
                                     LIBNAME libclassInNamespace_dictrflx
-                                    NO_ROOTMAP)
+                                    NO_ROOTMAP
+                                    FIXTURES_SETUP root-meta-autoloading-classInNamespace-dict-fixture)
 
-#---Copy from source to binary some of the files
-configure_file(classInNamespace.rootmap . COPYONLY)
-
-ROOTTEST_ADD_AUTOMACROS(DEPENDS ${GENERATE_REFLEX_TEST})
+ROOTTEST_ADD_TEST(ClassInNamespace
+                  MACRO execClassInNamespace.C
+                  OUTREF execClassInNamespace.ref
+                  COPY_TO_BUILDDIR classInNamespace.rootmap
+                  FIXTURES_REQUIRED root-meta-autoloading-classInNamespace-dict-fixture)

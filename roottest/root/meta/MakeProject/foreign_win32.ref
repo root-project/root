@@ -1,6 +1,9 @@
 
 Processing runforeign.C...
 Warning in <TClass::Init>: no dictionary for class ndtf::FinalStateParticle is available
+
+
+foreignProjectSource.cxx
 MakeProject has generated 1 classes in foreign
 foreign/MAKEP file has been generated
 Shared lib foreign/foreign.so has been generated
