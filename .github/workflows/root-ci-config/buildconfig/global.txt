@@ -34,6 +34,7 @@ builtin_zlib=OFF
 builtin_zstd=OFF
 ccache=ON
 cefweb=OFF
+check_connection=OFF
 clad=ON
 clingtest=OFF
 cocoa=OFF
