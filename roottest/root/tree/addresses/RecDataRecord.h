@@ -1,7 +1,7 @@
 #ifndef RECDATARECORD_H
 #define RECDATARECORD_H
 
-#include "RecRecordImp.h"
+#include "RecRecordImp.cxx"
 
 template <class T>
 class RecDataRecord : public RecRecordImp<T> {
@@ -10,8 +10,8 @@ class RecDataRecord : public RecRecordImp<T> {
   // ctors/dtor
   RecDataRecord() {}
   RecDataRecord(const T& header) : RecRecordImp<T>(header) {}
-  virtual ~RecDataRecord() {}
-  
+  ~RecDataRecord() override {}
+
  private:
   // data members
 
@@ -20,4 +20,4 @@ class RecDataRecord : public RecRecordImp<T> {
 };
 
 #endif
-  
+
