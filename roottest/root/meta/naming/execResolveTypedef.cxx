@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <TClassEdit.h>
+#include <TClass.h>
+#include <cstdint>
 
 // See also roottest/meta/naming/execCheckNaming.C
 
@@ -12,6 +14,20 @@
 
 namespace A1 { namespace B2 { namespace C3 { typedef int what; } } }
 namespace NS { typedef int IntNS_t; }
+namespace SG { typedef std::uint32_t sgkey_t; }
+namespace RT {
+namespace EX {
+struct ClusterSize {
+   using ValueType = std::uint64_t;
+   ValueType fValue;
+};
+using ClusterSize_t = ClusterSize;
+}
+}
+
+struct PackedParameters {
+   SG::sgkey_t  m_sgkey;
+};
 
 class Object
 {
@@ -207,5 +223,9 @@ int execResolveTypedef()
    testing("::int",TClassEdit::ResolveTypedef("::Int_t"));
    // Add an example like pair<...::type_t,int>
 
+   testing("unsigned int", TClassEdit::ResolveTypedef("SG::sgkey_t"));
+   testing("unsigned int", TClass::GetClass("PackedParameters")->GetDataMember("m_sgkey")->GetTrueTypeName());
+   testing("SG::sgkey_t", TClass::GetClass("PackedParameters")->GetDataMember("m_sgkey")->GetFullTypeName());
+   testing("RT::EX::ClusterSize", TClassEdit::ResolveTypedef("RT::EX::ClusterSize_t"));
    return 0;
 }
