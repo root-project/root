@@ -408,6 +408,51 @@ TEST(RNTupleFillContext, FlushColumns)
    EXPECT_EQ(pageInfos[1].GetNElements(), 1);
 }
 
+TEST(RNTupleParallelWriter, ParallelZip)
+{
+#ifdef R__USE_IMT
+   ROOT::EnableImplicitMT();
+#endif
+
+   FileRaii fileGuard("test_ntuple_parallel_pzip.root");
+
+   using EImplicitMT = RNTupleWriteOptions::EImplicitMT;
+   for (auto imt : {EImplicitMT::kOff, EImplicitMT::kOn, EImplicitMT::kDefault}) {
+      auto model = RNTupleModel::CreateBare();
+      model->MakeField<float>("pt");
+
+      RNTupleWriteOptions options;
+      options.SetUseImplicitMT(imt);
+      auto writer = RNTupleParallelWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
+
+      auto c = writer->CreateFillContext();
+      c->EnableMetrics();
+      auto e = c->CreateEntry();
+      auto pt = e->GetPtr<float>("pt");
+
+      *pt = 1.0;
+      c->Fill(*e);
+      c->FlushCluster();
+
+      auto *parallel_zip = c->GetMetrics().GetCounter("RNTupleFillContext.RPageSinkBuf.ParallelZip");
+      ASSERT_FALSE(parallel_zip == nullptr);
+#ifdef R__USE_IMT
+      // Only explicit setting will enable parallel compression.
+      if (imt == EImplicitMT::kOn) {
+         EXPECT_EQ(1, parallel_zip->GetValueAsInt());
+      } else {
+#endif
+         EXPECT_EQ(0, parallel_zip->GetValueAsInt());
+#ifdef R__USE_IMT
+      }
+#endif
+   }
+
+#ifdef R__USE_IMT
+   ROOT::DisableImplicitMT();
+#endif
+}
+
 TEST(RNTupleParallelWriter, ExplicitCommit)
 {
    FileRaii fileGuard("test_ntuple_parallel_explicit_commit.root");

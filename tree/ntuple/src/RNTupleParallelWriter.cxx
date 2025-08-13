@@ -15,6 +15,7 @@
 
 #include <ROOT/RNTupleParallelWriter.hxx>
 
+#include <ROOT/RNTupleImtTaskScheduler.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RNTupleWriter.hxx>
@@ -25,6 +26,7 @@
 #include <TDirectory.h>
 #include <TError.h>
 #include <TFile.h>
+#include <TROOT.h>
 
 namespace {
 
@@ -205,5 +207,14 @@ std::shared_ptr<ROOT::Experimental::RNTupleFillContext> ROOT::Experimental::RNTu
    // (direct) memory of all contexts stays around until the vector of weak_ptr's is cleared.
    std::shared_ptr<RNTupleFillContext> context(new RNTupleFillContext(std::move(model), std::move(sink)));
    fFillContexts.push_back(context);
+
+#ifdef R__USE_IMT
+   if (IsImplicitMTEnabled() &&
+       fSink->GetWriteOptions().GetUseImplicitMT() == ROOT::RNTupleWriteOptions::EImplicitMT::kOn) {
+      context->fZipTasks = std::make_unique<ROOT::Experimental::Internal::RNTupleImtTaskScheduler>();
+      context->fSink->SetTaskScheduler(context->fZipTasks.get());
+   }
+#endif
+
    return context;
 }
