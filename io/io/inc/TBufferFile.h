@@ -69,8 +69,8 @@ public:
    enum { kStreamedMemberWise = BIT(14) }; //added to version number to know if a collection has been stored member-wise
 
    TBufferFile(TBuffer::EMode mode);
-   TBufferFile(TBuffer::EMode mode, Int_t bufsiz);
-   TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
+   TBufferFile(TBuffer::EMode mode, Int_t bufsize);
+   TBufferFile(TBuffer::EMode mode, Int_t bufsize, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
    ~TBufferFile() override;
 
    Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss) override;

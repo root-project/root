@@ -47,21 +47,21 @@ TFileCacheWrite::TFileCacheWrite() : TObject()
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates a TFileCacheWrite data structure.
 /// The write cache will be connected to file.
-/// The size of the cache will be buffersize,
-/// if buffersize < 10000 a default size of 512 Kbytes is used
+/// The size of the cache will be bufsize,
+/// if bufsize < 10000 a default size of 512 Kbytes is used
 
-TFileCacheWrite::TFileCacheWrite(TFile *file, Int_t buffersize)
+TFileCacheWrite::TFileCacheWrite(TFile *file, Int_t bufsize)
            : TObject()
 {
-   if (buffersize < 10000) buffersize = 512000;
-   fBufferSize  = buffersize;
+   if (bufsize < 10000) bufsize = 512000;
+   fBufferSize  = bufsize;
    fSeekStart   = 0;
    fNtot        = 0;
    fFile        = file;
    fRecursive   = kFALSE;
    fBuffer      = new char[fBufferSize];
    if (file) file->SetCacheWrite(this);
-   if (gDebug > 0) Info("TFileCacheWrite","Creating a write cache with buffersize=%d bytes",buffersize);
+   if (gDebug > 0) Info("TFileCacheWrite","Creating a write cache with buffersize=%d bytes",bufsize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
