@@ -148,6 +148,11 @@ performance (with Direct I/O) at a reasonable memory consumption.
 <td>EImplicitMT::kDefault</td>
 <td>
 Whether to use implicit multi-threading to compress pages. Only has an effect if buffered writing is turned on.
+The meaning of EImplicitMT::kDefault depends on the used writer: For the (sequential) RNTupleWriter, it translates
+to EImplicitMT::kOn and the user has to manually disable the use of implicit multi-threading if it is not wanted.
+For the RNTupleParalellWriter, the implementation defaults to EImplicitMT::kOff in order to avoid interference with
+explicit parallelism that might create one RNTupleFillContext per thread. If implicit multi-threading is wanted on
+top of this, the user has to explicitly request EImplicitMT::kOn.
 </td>
 </tr>
 
@@ -178,6 +183,7 @@ class RNTupleWriteOptions {
 public:
    enum class EImplicitMT {
       kOff,
+      kOn,
       kDefault,
    };
 
