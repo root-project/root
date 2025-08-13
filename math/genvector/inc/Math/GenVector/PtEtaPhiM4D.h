@@ -209,8 +209,8 @@ public :
          using std::sqrt;
          return sqrt(mm);
       } else {
-         GenVector::Throw  ("PtEtaPhiM4D::Mt() - Tachyonic:\n"
-                            "    Pz^2 > E^2 so the transverse mass would be imaginary");
+         GenVector_Throw("PtEtaPhiM4D::Mt() - Tachyonic:\n"
+                         "    Pz^2 > E^2 so the transverse mass would be imaginary");
          using std::sqrt;
          return -sqrt(-mm);
       }
@@ -241,7 +241,7 @@ private:
    inline void RestrictNegMass() {
       if (fM < 0) {
          if (P2() - fM * fM < 0) {
-            GenVector::Throw("PtEtaPhiM4D::unphysical value of mass, set to closest physical value");
+            GenVector_Throw("PtEtaPhiM4D::unphysical value of mass, set to closest physical value");
             fM = -P();
          }
       }
@@ -299,7 +299,7 @@ public:
    void Negate( ) {
       fPhi = ( (fPhi > 0) ? fPhi - pi() : fPhi + pi()  );
       fEta = - fEta;
-      GenVector::Throw ("PtEtaPhiM4D::Negate - cannot negate the energy - can negate only the spatial components");
+      GenVector_Throw("PtEtaPhiM4D::Negate - cannot negate the energy - can negate only the spatial components");
    }
 
    /**

@@ -627,12 +627,14 @@ Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity.
                 // to avoid Nan
                 return 0;
              else {
-                GenVector::Throw ("LorentzVector::Beta() - beta computed for LorentzVector with t = 0. Return an Infinite result");
+                GenVector_Throw(
+                   "LorentzVector::Beta() - beta computed for LorentzVector with t = 0. Return an Infinite result");
                 return 1./E();
              }
           }
           if ( M2() <= 0 ) {
-             GenVector::Throw ("LorentzVector::Beta() - beta computed for non-timelike LorentzVector . Result is physically meaningless" );
+             GenVector_Throw("LorentzVector::Beta() - beta computed for non-timelike LorentzVector . Result is "
+                             "physically meaningless");
           }
           return P() / E();
        }
@@ -646,16 +648,16 @@ Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity.
              if ( P2() == 0) {
                 return 1;
              } else {
-                GenVector::Throw ("LorentzVector::Gamma() - gamma computed for LorentzVector with t = 0. Return a zero result");
-
+                GenVector_Throw(
+                   "LorentzVector::Gamma() - gamma computed for LorentzVector with t = 0. Return a zero result");
              }
           }
           if ( t2 < v2 ) {
-             GenVector::Throw ("LorentzVector::Gamma() - gamma computed for a spacelike LorentzVector. Imaginary result");
+             GenVector_Throw("LorentzVector::Gamma() - gamma computed for a spacelike LorentzVector. Imaginary result");
              return 0;
           }
           else if ( t2 == v2 ) {
-             GenVector::Throw ("LorentzVector::Gamma() - gamma computed for a lightlike LorentzVector. Infinite result");
+             GenVector_Throw("LorentzVector::Gamma() - gamma computed for a lightlike LorentzVector. Infinite result");
           }
           using std::sqrt;
           return Scalar(1) / sqrt(Scalar(1) - v2 / t2);

@@ -170,8 +170,8 @@ public :
          using std::sqrt;
          return sqrt(mm);
       } else {
-         GenVector::Throw ("PtEtaPhiE4D::M() - Tachyonic:\n"
-                           "    Pt and Eta give P such that P^2 > E^2, so the mass would be imaginary");
+         GenVector_Throw("PtEtaPhiE4D::M() - Tachyonic:\n"
+                         "    Pt and Eta give P such that P^2 > E^2, so the mass would be imaginary");
          using std::sqrt;
          return -sqrt(-mm);
       }
@@ -198,8 +198,8 @@ public :
          using std::sqrt;
          return sqrt(mm);
       } else {
-         GenVector::Throw ("PtEtaPhiE4D::Mt() - Tachyonic:\n"
-                           "    Pt and Eta give Pz such that Pz^2 > E^2, so the mass would be imaginary");
+         GenVector_Throw("PtEtaPhiE4D::Mt() - Tachyonic:\n"
+                         "    Pt and Eta give Pz such that Pz^2 > E^2, so the mass would be imaginary");
          using std::sqrt;
          return -sqrt(-mm);
       }

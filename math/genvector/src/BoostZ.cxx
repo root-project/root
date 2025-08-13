@@ -33,8 +33,7 @@ void BoostZ::SetComponents (Scalar bz) {
    // set component
    Scalar bp2 = bz*bz;
    if (bp2 >= 1) {
-      GenVector::Throw (
-                              "Beta Vector supplied to set BoostZ represents speed >= c");
+      GenVector_Throw("Beta Vector supplied to set BoostZ represents speed >= c");
       return;
    }
    fBeta = bz;
@@ -68,8 +67,7 @@ void BoostZ::Rectify() {
    // again.
 
    if (fGamma <= 0) {
-      GenVector::Throw (
-                              "Attempt to rectify a boost with non-positive gamma");
+      GenVector_Throw("Attempt to rectify a boost with non-positive gamma");
       return;
    }
    Scalar beta = fBeta;
