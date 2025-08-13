@@ -61,7 +61,7 @@ protected:
 public:
    TTreePlayer();
    ~TTreePlayer() override;
-   TVirtualIndex *BuildIndex(const TTree *T, const char *majorname, const char *minorname) override;
+   TVirtualIndex *BuildIndex(const TTree *T, const char *majorname, const char *minorname, bool long64major = false, bool long64minor = false) override;
    TTree    *CopyTree(const char *selection, Option_t *option
                               ,Long64_t nentries, Long64_t firstentry) override;
    Long64_t  DrawScript(const char* wrapperPrefix,

@@ -87,8 +87,10 @@ TTreeIndex::TTreeIndex(): TVirtualIndex()
 ///                                      // Run=1234 and Event=56789
 /// ~~~
 /// Note that majorname and minorname may be expressions using original
-/// Tree variables eg: "run-90000", "event +3*xx". However the result
-/// must be integer.
+/// Tree variables eg: "run-90000", "event +3*xx". These treeformulas will be calculated using
+/// long double precision, and then cast to long64. If you want to directly
+/// use long64 for the intermediate calculation, allowing for larger maximum indices, set long64major/minor to true.
+/// Minor formula can be skipped by setting it to "0".
 ///
 /// In case an expression is specified, the equivalent expression must be computed
 /// when calling GetEntryWithIndex.
@@ -125,7 +127,7 @@ TTreeIndex::TTreeIndex(): TVirtualIndex()
 /// It is possible to play with different TreeIndex in the same Tree.
 /// see comments in TTree::SetTreeIndex.
 
-TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorname)
+TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorname, bool long64major, bool long64minor)
            : TVirtualIndex()
 {
    fTree               = (TTree*)T;
@@ -198,8 +200,11 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
          }
          return ret;
       };
-      tmp_major[i] = GetAndRangeCheck(true, i);
-      tmp_minor[i] = GetAndRangeCheck(false, i);
+      auto GetLong64 = [this](bool isMajor) {
+         return (isMajor ? fMajorFormula : fMinorFormula)->EvalInstance<Long64_t>();
+      };
+      tmp_major[i] = long64major ? GetLong64(true) : GetAndRangeCheck(true, i);
+      tmp_minor[i] = long64minor ? GetLong64(false) : GetAndRangeCheck(false, i);
    }
    fIndex = new Long64_t[fN];
    for(i = 0; i < fN; i++) { fIndex[i] = i; }
@@ -428,6 +433,9 @@ Long64_t TTreeIndex::FindValues(Long64_t major, Long64_t minor) const
 /// for which the function works correctly and consistently in all platforms is `0xFFFFFFFFFFFF0`, which is less than `kMaxLong64`.
 /// A runtime-warning will be printed if values above this range are detected to lead to a corresponding precision loss in your current architecture:
 /// `Warning in <TTreeIndex::TTreeIndex>: In tree entry, value event possibly out of range for internal long double`
+/// This default behavior can be circumvented by setting long64major/minor to true in the TTreeIndex constructor,
+/// which replaces `long double` with `Long64_t`, but it's the user responsibility as range checking will be deactivated.
+/// In this case, you can go higher than `0xFFFFFFFFFFFF0` on all architectures without problems.
 ///
 /// If an entry corresponding to major and minor is not found, the function
 /// returns the index of the major,minor pair immediately lower than the
@@ -459,6 +467,9 @@ Long64_t TTreeIndex::GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor)
 /// index in the table, otherwise it returns -1.
 /// \warning Due to internal architecture details, the maximum value for `(major, minor)`
 /// for which the function works correctly and consistently in all platforms is `0xFFFFFFFFFFFF0`, which is less than `kMaxLong64`.
+/// This default behavior can be circumvented by setting long64major/minor to true in the TTreeIndex constructor,
+/// which replaces `long double` with `Long64_t`, but it's the user responsibility as range checking will be deactivated.
+/// In this case, you can go higher than `0xFFFFFFFFFFFF0` on all architectures without problems.
 ///
 /// See also GetEntryNumberWithBestIndex
 

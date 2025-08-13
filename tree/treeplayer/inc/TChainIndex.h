@@ -72,7 +72,7 @@ protected:
    TString        fMinorName;               // Index minor name
    TTreeFormula  *fMajorFormulaParent;      //! Pointer to major TreeFormula in Parent tree (if any)
    TTreeFormula  *fMinorFormulaParent;      //! Pointer to minor TreeFormula in Parent tree (if any)
-   std::vector<TChainIndexEntry> fEntries; // descriptions of indices of trees in the chain.
+   std::vector<TChainIndexEntry> fEntries;  // descriptions of indices of trees in the chain.
 
    std::pair<TVirtualIndex*, Int_t> GetSubTreeIndex(Long64_t major, Long64_t minor) const;
    void ReleaseSubTreeIndex(TVirtualIndex* index, Int_t treeNo) const;
@@ -83,7 +83,7 @@ protected:
 
 public:
    TChainIndex();
-   TChainIndex(const TTree *T, const char *majorname, const char *minorname);
+   TChainIndex(const TTree *T, const char *majorname, const char *minorname, bool long64major = false, bool long64minor = false);
    ~TChainIndex() override;
    void           Append(const TVirtualIndex *, bool delaySort = false) override;
    Long64_t       GetEntryNumberFriend(const TTree *parent) override;
