@@ -12,7 +12,7 @@ runs:
       uses: pypa/cibuildwheel@v3.0.1
       env:
         CIBW_BUILD: ${{ inputs.build-tag }}
-        CIBW_TEST_REQUIRES: "pytest"
+        CIBW_TEST_REQUIRES: "pytest numpy matplotlib mplhep"
         CIBW_TEST_SOURCES: "test_tutorials"
         CIBW_TEST_COMMAND: "pytest -v"
 
