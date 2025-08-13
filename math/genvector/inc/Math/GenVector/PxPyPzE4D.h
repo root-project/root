@@ -135,8 +135,8 @@ public :
          using std::sqrt;
          return sqrt(mm);
       } else {
-         GenVector::Throw ("PxPyPzE4D::M() - Tachyonic:\n"
-                   "    P^2 > E^2 so the mass would be imaginary");
+         GenVector_Throw("PxPyPzE4D::M() - Tachyonic:\n"
+                         "    P^2 > E^2 so the mass would be imaginary");
          using std::sqrt;
          return -sqrt(-mm);
       }
@@ -170,8 +170,8 @@ public :
          using std::sqrt;
          return sqrt(mm);
       } else {
-         GenVector::Throw ("PxPyPzE4D::Mt() - Tachyonic:\n"
-                           "    Pz^2 > E^2 so the transverse mass would be imaginary");
+         GenVector_Throw("PxPyPzE4D::Mt() - Tachyonic:\n"
+                         "    Pz^2 > E^2 so the transverse mass would be imaginary");
          using std::sqrt;
          return -sqrt(-mm);
       }
