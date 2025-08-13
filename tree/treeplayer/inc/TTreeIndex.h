@@ -48,7 +48,7 @@ private:
 
 public:
    TTreeIndex();
-   TTreeIndex(const TTree *T, const char *majorname, const char *minorname);
+   TTreeIndex(const TTree *T, const char *majorname, const char *minorname, bool long64major = false, bool long64minor = false);
    ~TTreeIndex() override;
    void                   Append(const TVirtualIndex *,bool delaySort = false) override;
    bool                   ConvertOldToNew();
