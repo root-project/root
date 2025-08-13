@@ -15,6 +15,10 @@ ROOTTEST_ADD_TEST(index64
                   MACRO runindex64.C
                   OUTREF index64.ref)
 
+ROOTTEST_ADD_TEST(indexl64
+                  MACRO runindexl64.C
+                  OUTREF indexl64.ref)
+
 ROOTTEST_ADD_TEST(varsizearr
                   MACRO runvarsizearr.C
                   OUTREF varsizearr.ref)
