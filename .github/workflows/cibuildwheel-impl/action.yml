@@ -11,6 +11,7 @@ runs:
     - name: Build wheel
       uses: pypa/cibuildwheel@v3.0.1
       env:
+        PIP_NO_CACHE_DIR: "1"
         CIBW_BUILD: ${{ inputs.build-tag }}
         CIBW_TEST_REQUIRES: "-r test_tutorials/requirements.txt"
         CIBW_TEST_SOURCES: "test_tutorials"
