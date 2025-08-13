@@ -81,7 +81,6 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 </details>
 */
 
-#include "RtypesCore.h"
 #include <ROOT/RConfig.hxx>
 
 #ifdef R__LINUX

@@ -24,7 +24,6 @@ End_Macro
 */
 
 #include <iostream>
-#include "RtypesCore.h"
 #include "Strlen.h"
 #include "strlcpy.h"
 #include "TDirectoryFile.h"
