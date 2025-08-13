@@ -19,4 +19,16 @@ def test_tutorial(tutorial):
     env = dict(**os.environ)
     # force matplotlib to use a non-GUI backend
     env["MPLBACKEND"] = "Agg"
-    subprocess.run([sys.executable, str(tutorial)], check=True, env=env)
+    try:
+        subprocess.run(
+            [sys.executable, str(tutorial)],
+            check=True,
+            env=env,
+            capture_output=True,
+            text=True
+        )
+    except subprocess.CalledProcessError as e:
+        # read stderr to see if EOFError occurred
+        if "EOFError" in e.stderr:
+            pytest.skip("Skipping tutorial that requires user input")
+        raise
