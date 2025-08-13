@@ -1,8 +1,11 @@
-ROOTTEST_GENERATE_EXECUTABLE(recursivewarning recursivewarning.cxx LIBRARIES Core)
+ROOTTEST_GENERATE_EXECUTABLE(recursivewarning
+                             recursivewarning.cxx
+                             LIBRARIES Core
+                             FIXTURES_SETUP root-core-recursive-recursivewarning-fixture)
+
 ROOTTEST_ADD_TEST(recursivewarning
                   EXEC ./recursivewarning
                   OUTREF test_recursivewarning.ref
-                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
-
-configure_file(fakelib.rootmap . COPYONLY)
+                  COPY_TO_BUILDDIR fakelib.rootmap
+                  FIXTURES_REQUIRED root-core-recursive-recursivewarning-fixture)
 
