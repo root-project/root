@@ -147,11 +147,11 @@ TTreePlayer::~TTreePlayer()
 ////////////////////////////////////////////////////////////////////////////////
 /// Build the index for the tree (see TTree::BuildIndex)
 
-TVirtualIndex *TTreePlayer::BuildIndex(const TTree *T, const char *majorname, const char *minorname)
+TVirtualIndex *TTreePlayer::BuildIndex(const TTree *T, const char *majorname, const char *minorname, bool long64major, bool long64minor)
 {
    TVirtualIndex *index;
    if (dynamic_cast<const TChain*>(T)) {
-      index = new TChainIndex(T, majorname, minorname);
+      index = new TChainIndex(T, majorname, minorname, long64major, long64minor);
       if (index->IsZombie()) {
          delete index;
          Error("BuildIndex", "Creating a TChainIndex unsuccessful - switching to TTreeIndex");
@@ -159,7 +159,7 @@ TVirtualIndex *TTreePlayer::BuildIndex(const TTree *T, const char *majorname, co
       else
          return index;
    }
-   return new TTreeIndex(T,majorname,minorname);
+   return new TTreeIndex(T, majorname, minorname, long64major, long64minor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
