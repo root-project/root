@@ -24,10 +24,10 @@ class TBranchSTL: public TBranch {
       TBranchSTL();
       TBranchSTL( TTree* tree, const char* name,
                   TVirtualCollectionProxy* collProxy,
-                  Int_t buffsize, Int_t splitlevel );
+                  Int_t bufsize, Int_t splitlevel );
       TBranchSTL( TBranch* parent, const char* name,
                   TVirtualCollectionProxy* collProxy,
-                  Int_t buffsize, Int_t splitlevel,
+                  Int_t bufsize, Int_t splitlevel,
                   TStreamerInfo* info, Int_t id );
       ~TBranchSTL() override;
               void           Browse( TBrowser *b ) override;

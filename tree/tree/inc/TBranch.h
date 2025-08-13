@@ -270,7 +270,7 @@ public:
    virtual void      SetAddress(void *add);
    virtual void      SetObject(void *objadd);
    virtual void      SetAutoDelete(bool autodel=true);
-   virtual void      SetBasketSize(Int_t buffsize);
+   virtual void      SetBasketSize(Int_t bufsize);
    virtual void      SetBufferAddress(TBuffer *entryBuffer);
            void      SetCompressionAlgorithm(Int_t algorithm = ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
            void      SetCompressionLevel(Int_t level = ROOT::RCompressionSetting::ELevel::kUseMin);

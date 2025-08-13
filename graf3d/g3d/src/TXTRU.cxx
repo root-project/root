@@ -709,7 +709,7 @@ void TXTRU::DumpSegments(int nsegments, int *segbuff) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Dump the derived polygon info for visual inspection
 
-void TXTRU::DumpPolygons(int npolygons, int *polybuff, int buffsize) const
+void TXTRU::DumpPolygons(int npolygons, int *polybuff, int bufsize) const
 {
    std::cout << "TXTRU::DumpPolygons - " << npolygons << " polygons" << std::endl;
    int ioff = 0;
@@ -729,7 +729,7 @@ void TXTRU::DumpPolygons(int npolygons, int *polybuff, int buffsize) const
       }
       std::cout << polybuff[ioff++] << ")" << std::endl;
    }
-   std::cout << " buffer size " << buffsize << " last used " << --ioff << std::endl;
+   std::cout << " buffer size " << bufsize << " last used " << --ioff << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

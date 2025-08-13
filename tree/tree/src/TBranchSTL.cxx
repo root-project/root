@@ -45,13 +45,13 @@ TBranchSTL::TBranchSTL():
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor, called from TTree.
 
-TBranchSTL::TBranchSTL( TTree *tree, const char *name,
-                        TVirtualCollectionProxy *collProxy,
-                        Int_t buffsize, Int_t splitlevel )
+TBranchSTL::TBranchSTL(TTree *tree, const char *name,
+                       TVirtualCollectionProxy *collProxy,
+                       Int_t bufsize, Int_t splitlevel )
 {
    fTree         = tree;
    fCollProxy    = collProxy;
-   fBasketSize   = buffsize;
+   fBasketSize   = bufsize;
    fSplitLevel   = splitlevel;
    fContName     = collProxy->GetCollectionClass()->GetName();
    fClCheckSum   = 0;
@@ -87,14 +87,14 @@ TBranchSTL::TBranchSTL( TTree *tree, const char *name,
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor, called from another branch.
 
-TBranchSTL::TBranchSTL( TBranch* parent, const char* name,
-                        TVirtualCollectionProxy* collProxy,
-                        Int_t buffsize, Int_t splitlevel,
-                        TStreamerInfo* info, Int_t id )
+TBranchSTL::TBranchSTL(TBranch* parent, const char* name,
+                       TVirtualCollectionProxy* collProxy,
+                       Int_t bufsize, Int_t splitlevel,
+                       TStreamerInfo* info, Int_t id )
 {
    fTree         = parent->GetTree();
    fCollProxy    = collProxy;
-   fBasketSize   = buffsize;
+   fBasketSize   = bufsize;
    fSplitLevel   = splitlevel;
    fContName     = collProxy->GetCollectionClass()->GetName();
    fClassName    = info->GetClass()->GetName();

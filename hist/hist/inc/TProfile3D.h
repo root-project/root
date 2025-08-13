@@ -143,7 +143,7 @@ public:
    void      SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t * yBins, Int_t nz,
                              const Double_t *zBins) override;
    void      SetBinsLength(Int_t n=-1) override;
-   void      SetBuffer(Int_t buffersize, Option_t *opt="") override;
+   void      SetBuffer(Int_t bufsize, Option_t *opt="") override;
    virtual void      SetErrorOption(Option_t *option=""); // *MENU*
    void      Sumw2(Bool_t flag = kTRUE) override;
 

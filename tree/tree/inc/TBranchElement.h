@@ -222,7 +222,7 @@ public:
            void             SetAddress(void* addobj) override;
            bool             SetMakeClass(bool decomposeObj = true) override;
            void             SetObject(void *objadd) override;
-           void             SetBasketSize(Int_t buffsize) override;
+           void             SetBasketSize(Int_t bufsize) override;
    virtual void             SetBranchFolder() { SetBit(kBranchFolder); }
    virtual void             SetClassName(const char* name) { fClassName = name; }
            void             SetOffset(Int_t offset) override;

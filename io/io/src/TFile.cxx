@@ -2465,7 +2465,7 @@ void TFile::SumBuffer(Int_t bufsize)
 /// The linked list of FREE segments is written.
 /// The file header is written (bytes 1->fBEGIN).
 
-Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
+Int_t TFile::Write(const char *, Int_t opt, Int_t bufsize)
 {
    if (!IsWritable()) {
       if (!TestBit(kWriteError)) {
@@ -2483,7 +2483,7 @@ Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
    }
 
    fMustFlush = kFALSE;
-   Int_t nbytes = TDirectoryFile::Write(0, opt, bufsiz); // Write directory tree
+   Int_t nbytes = TDirectoryFile::Write(0, opt, bufsize); // Write directory tree
    WriteStreamerInfo();
    WriteFree();                       // Write free segments linked list
    WriteHeader();                     // Now write file header
@@ -4685,7 +4685,7 @@ void TFile::CpProgress(Long64_t bytesread, Long64_t size, TStopwatch &watch)
 /// Allows to copy this file to the dst URL. Returns kTRUE in case of success,
 /// kFALSE otherwise.
 
-Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t buffersize)
+Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t bufsize)
 {
    Bool_t rmdestiferror = kFALSE;
    TStopwatch watch;
@@ -4740,7 +4740,7 @@ Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t buffersize)
    sfile->Seek(0);
    dfile->Seek(0);
 
-   copybuffer = new char[buffersize];
+   copybuffer = new char[bufsize];
    if (!copybuffer) {
       ::Error("TFile::Cp", "cannot allocate the copy buffer");
       goto copyout;
@@ -4762,8 +4762,8 @@ Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t buffersize)
       Long64_t b1 = sfile->GetBytesRead() - b00;
 
       Long64_t readsize;
-      if (filesize - b1 > (Long64_t)buffersize) {
-         readsize = buffersize;
+      if (filesize - b1 > (Long64_t)bufsize) {
+         readsize = bufsize;
       } else {
          readsize = filesize - b1;
       }
@@ -4788,7 +4788,7 @@ Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t buffersize)
          goto copyout;
       }
       totalread += read;
-   } while (read == (Long64_t)buffersize);
+   } while (read == (Long64_t)bufsize);
 
    if (progressbar) {
       CpProgress(totalread, filesize,watch);
@@ -4817,7 +4817,7 @@ copyout:
 /// kFALSE otherwise.
 
 Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
-                 UInt_t buffersize)
+                 UInt_t bufsize)
 {
    TUrl sURL(src, kTRUE);
 
@@ -4829,7 +4829,7 @@ Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
    if (!(sfile = TFile::Open(sURL.GetUrl(), "READ"))) {
       ::Error("TFile::Cp", "cannot open source file %s", src);
    } else {
-      success = sfile->Cp(dst, progressbar, buffersize);
+      success = sfile->Cp(dst, progressbar, bufsize);
    }
 
    if (sfile) {
