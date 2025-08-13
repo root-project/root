@@ -90,11 +90,11 @@ TFileCacheRead::TFileCacheRead() : TObject()
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates a TFileCacheRead data structure.
 
-TFileCacheRead::TFileCacheRead(TFile *file, Int_t buffersize, TObject *tree)
+TFileCacheRead::TFileCacheRead(TFile *file, Int_t bufsize, TObject *tree)
            : TObject()
 {
-   if (buffersize <=10000) fBufferSize = 100000;
-   else fBufferSize = buffersize;
+   if (bufsize <=10000) fBufferSize = 100000;
+   else fBufferSize = bufsize;
 
    fBufferSizeMin = fBufferSize;
    fBufferLen   = 0;
@@ -708,25 +708,25 @@ void TFileCacheRead::WaitFinishPrefetch()
 ///   - 1 if some or all blocks have been removed from the prefetch list
 ///   - -1 on error
 
-Int_t TFileCacheRead::SetBufferSize(Long64_t buffersize)
+Int_t TFileCacheRead::SetBufferSize(Long64_t bufsize)
 {
-   if (buffersize <= 0) return -1;
-   if (buffersize <=10000) buffersize = 100000;
-   if (buffersize > std::numeric_limits<Int_t>::max()) buffersize = std::numeric_limits<Int_t>::max();
+   if (bufsize <= 0) return -1;
+   if (bufsize <=10000) bufsize = 100000;
+   if (bufsize > std::numeric_limits<Int_t>::max()) bufsize = std::numeric_limits<Int_t>::max();
 
-   if (buffersize == fBufferSize) {
-      fBufferSizeMin = buffersize;
+   if (bufsize == fBufferSize) {
+      fBufferSizeMin = bufsize;
       return 0;
    }
 
    Bool_t inval = kFALSE;
 
    // the cached data is too large to fit in the new buffer size mark data unavailable
-   if (fNtot > buffersize) {
+   if (fNtot > bufsize) {
       Prefetch(0, 0);
       inval = kTRUE;
    }
-   if (fBNtot > buffersize) {
+   if (fBNtot > bufsize) {
       SecondPrefetch(0, 0);
       inval = kTRUE;
    }
@@ -741,7 +741,7 @@ Int_t TFileCacheRead::SetBufferSize(Long64_t buffersize)
       }
       delete [] fBuffer;
       fBuffer = 0;
-      np = new char[buffersize];
+      np = new char[bufsize];
       if (pres) {
          memcpy(np, pres, fNtot);
       }
@@ -750,8 +750,8 @@ Int_t TFileCacheRead::SetBufferSize(Long64_t buffersize)
 
    delete [] fBuffer;
    fBuffer = np;
-   fBufferSizeMin = buffersize;
-   fBufferSize = buffersize;
+   fBufferSizeMin = bufsize;
+   fBufferSize = bufsize;
 
    if (inval) {
       return 1;

@@ -66,7 +66,7 @@ protected:
    void SetLength() const;               // only called by T(P)Socket::Send()
 
 public:
-   TMessage(UInt_t what = kMESS_ANY, Int_t bufsiz = TBuffer::kInitialSize);
+   TMessage(UInt_t what = kMESS_ANY, Int_t bufsize = TBuffer::kInitialSize);
    virtual ~TMessage();
 
    void     ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force) override;

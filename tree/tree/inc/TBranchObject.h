@@ -61,7 +61,7 @@ public:
            void        ResetAfterMerge(TFileMergeInfo *) override;
            void        SetAddress(void *addobj) override;
            void        SetAutoDelete(bool autodel=true) override;
-           void        SetBasketSize(Int_t buffsize) override;
+           void        SetBasketSize(Int_t bufsize) override;
            void        SetupAddresses() override;
            void        UpdateAddress() override;
 
