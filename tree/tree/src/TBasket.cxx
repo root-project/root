@@ -1218,7 +1218,7 @@ Int_t TBasket::WriteBuffer()
       cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(file->GetCompressionAlgorithm());
    if (cxlevel > 0) {
       Int_t nbuffers = 1 + (fObjlen - 1) / kMAXZIPBUF;
-      Int_t buflen = fKeylen + fObjlen + 9 * nbuffers + 28; //add 28 bytes in case object is placed in a deleted gap
+      Int_t buflen = fKeylen + fObjlen;
       InitializeCompressedBuffer(buflen, file);
       if (!fCompressedBufferRef) {
          Warning("WriteBuffer", "Unable to allocate the compressed buffer");
