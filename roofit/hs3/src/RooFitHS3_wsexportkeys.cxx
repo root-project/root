@@ -42,6 +42,13 @@ auto RooFitHS3_wsexportkeys = R"({
             "sigma": "sigma"
         }
     },
+    "RooChebychev": {
+        "type": "chebychev_dist",
+        "proxies": {
+            "x": "x",
+            "coefList": "coefficients"
+        }
+    },    
     "RooCrystalBall": {
         "type": "crystalball_doublesided_dist",
         "proxies": {

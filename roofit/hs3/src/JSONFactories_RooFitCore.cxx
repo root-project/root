@@ -29,6 +29,7 @@
 #include <RooMultiVarGaussian.h>
 #include <RooPoisson.h>
 #include <RooPolynomial.h>
+#include <RooPolyVar.h>
 #include <RooRealSumFunc.h>
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
@@ -195,7 +196,7 @@ public:
       return true;
    }
 };
-
+template <class RooArg_t>
 class RooPolynomialFactory : public RooFit::JSONIO::Importer {
 public:
    bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
@@ -222,7 +223,7 @@ public:
          ++order;
       }
 
-      tool->wsEmplace<RooPolynomial>(name, *x, coefs, lowestOrder);
+      tool->wsEmplace<RooArg_t>(name, *x, coefs, lowestOrder);
       return true;
    }
 };
@@ -565,13 +566,13 @@ public:
       return true;
    }
 };
-
+template <class RooArg_t>
 class RooPolynomialStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override;
    bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
-      auto *pdf = static_cast<const RooPolynomial *>(func);
+      auto *pdf = static_cast<const RooArg_t *>(func);
       elem["type"] << key();
       elem["x"] << pdf->x().GetName();
       auto &coefs = elem["coefficients"].set_seq();
@@ -709,6 +710,14 @@ public:
    bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       auto *integral = static_cast<const RooRealIntegral *>(func);
+      std::string name = elem["name"].val();
+      for (char& c : name ) {
+        if (c == '[' || c == '|' || c==',') {
+            c = '_';
+         }
+      }
+      name.erase(std::remove(name.begin(), name.end(), ']'), name.end());
+      elem["name"] << name;
       elem["type"] << key();
       elem["integrand"] << integral->integrand().GetName();
       if (integral->intRange()) {
@@ -743,7 +752,10 @@ DEFINE_EXPORTER_KEY(RooHistPdfStreamer, "histogram_dist");
 DEFINE_EXPORTER_KEY(RooLogNormalStreamer, "lognormal_dist");
 DEFINE_EXPORTER_KEY(RooMultiVarGaussianStreamer, "multivariate_normal_dist");
 DEFINE_EXPORTER_KEY(RooPoissonStreamer, "poisson_dist");
-DEFINE_EXPORTER_KEY(RooPolynomialStreamer, "polynomial_dist");
+template <>
+DEFINE_EXPORTER_KEY(RooPolynomialStreamer<RooPolynomial>, "polynomial_dist");
+template <>
+DEFINE_EXPORTER_KEY(RooPolynomialStreamer<RooPolyVar>, "polynomial");
 DEFINE_EXPORTER_KEY(RooRealSumFuncStreamer, "weighted_sum");
 DEFINE_EXPORTER_KEY(RooRealSumPdfStreamer, "weighted_sum_dist");
 DEFINE_EXPORTER_KEY(RooTFnBindingStreamer, "generic_function");
@@ -768,7 +780,8 @@ STATIC_EXECUTE([]() {
    registerImporter<RooLogNormalFactory>("lognormal_dist", false);
    registerImporter<RooMultiVarGaussianFactory>("multivariate_normal_dist", false);
    registerImporter<RooPoissonFactory>("poisson_dist", false);
-   registerImporter<RooPolynomialFactory>("polynomial_dist", false);
+   registerImporter<RooPolynomialFactory<RooPolynomial>>("polynomial_dist", false);
+   registerImporter<RooPolynomialFactory<RooPolyVar>>("polynomial", false);
    registerImporter<RooRealSumPdfFactory>("weighted_sum_dist", false);
    registerImporter<RooRealSumFuncFactory>("weighted_sum", false);
    registerImporter<RooRealIntegralFactory>("integral", false);
@@ -785,7 +798,8 @@ STATIC_EXECUTE([]() {
    registerExporter<RooLogNormalStreamer>(RooLognormal::Class(), false);
    registerExporter<RooMultiVarGaussianStreamer>(RooMultiVarGaussian::Class(), false);
    registerExporter<RooPoissonStreamer>(RooPoisson::Class(), false);
-   registerExporter<RooPolynomialStreamer>(RooPolynomial::Class(), false);
+   registerExporter<RooPolynomialStreamer<RooPolynomial>>(RooPolynomial::Class(), false);
+   registerExporter<RooPolynomialStreamer<RooPolyVar>>(RooPolyVar::Class(), false);
    registerExporter<RooRealSumFuncStreamer>(RooRealSumFunc::Class(), false);
    registerExporter<RooRealSumPdfStreamer>(RooRealSumPdf::Class(), false);
    registerExporter<RooTFnBindingStreamer>(RooTFnBinding::Class(), false);
