@@ -81,8 +81,8 @@ TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
 ///
 /// \warning A function created with this constructor cannot be Cloned.
 
-TF3::TF3(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar,Int_t ndim)
-      :TF2(name,fcn,xmin,xmax,ymin,ymax,npar,ndim)
+TF3::TF3(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, Int_t ndim, EAddToList addToGlobList)
+      :TF2(name,fcn,xmin,xmax,ymin,ymax,npar,ndim,addToGlobList)
 {
    fZmin   = zmin;
    fZmax   = zmax;
@@ -108,8 +108,8 @@ TF3::TF3(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
 ///
 /// WARNING! A function created with this constructor cannot be Cloned.
 
-TF3::TF3(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, Int_t ndim)
-   : TF2(name,fcn,xmin,xmax,ymin,ymax,npar,ndim),
+TF3::TF3(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, Int_t ndim, EAddToList addToGlobList)
+   : TF2(name,fcn,xmin,xmax,ymin,ymax,npar,ndim,addToGlobList),
    fZmin(zmin),
    fZmax(zmax),
    fNpz(30)
@@ -131,8 +131,8 @@ TF3::TF3(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
 ///
 /// \warning A function created with this constructor cannot be Cloned.
 
-TF3::TF3(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, Int_t ndim)
-   : TF2(name, f, xmin, xmax, ymin, ymax,  npar, ndim),
+TF3::TF3(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, Int_t ndim, EAddToList addToGlobList)
+   : TF2(name, f, xmin, xmax, ymin, ymax,  npar, ndim, addToGlobList),
    fZmin(zmin),
    fZmax(zmax),
    fNpz(30)
