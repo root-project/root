@@ -90,7 +90,7 @@ public:
    void     SetBuffer(void *buf, Long64_t bufsize = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
    ReAllocCharFun_t GetReAllocFunc() const;
    void     SetReAllocFunc(ReAllocCharFun_t reallocfunc = nullptr);
-   void     SetBufferOffset(Int_t offset = 0) { fBufCur = fBuffer+offset; }
+   void     SetBufferOffset(Long64_t offset = 0) { assert(offset <= kMaxInt); fBufCur = fBuffer+offset; }
    void     SetParent(TObject *parent);
    TObject *GetParent()  const;
    char    *Buffer()     const { return fBuffer; }
@@ -105,26 +105,26 @@ public:
    virtual Bool_t     CheckObject(const TObject *obj) = 0;
    virtual Bool_t     CheckObject(const void *obj, const TClass *ptrClass) = 0;
 
-   virtual Int_t      ReadBuf(void *buf, Int_t max) = 0;
-   virtual void       WriteBuf(const void *buf, Int_t max) = 0;
+   virtual Long64_t   ReadBuf(void *buf, Long64_t max) = 0;
+   virtual void       WriteBuf(const void *buf, Long64_t max) = 0;
 
-   virtual char      *ReadString(char *s, Int_t max) = 0;
+   virtual char      *ReadString(char *s, Long64_t max) = 0;
    virtual void       WriteString(const char *s) = 0;
 
    virtual Int_t      GetVersionOwner() const  = 0;
    virtual Int_t      GetMapCount() const  = 0;
    virtual void       GetMappedObject(UInt_t tag, void* &ptr, TClass* &ClassPtr) const = 0;
-   virtual void       MapObject(const TObject *obj, UInt_t offset = 1) = 0;
-   virtual void       MapObject(const void *obj, const TClass *cl, UInt_t offset = 1) = 0;
+   virtual void       MapObject(const TObject *obj, ULong64_t offset = 1) = 0;
+   virtual void       MapObject(const void *obj, const TClass *cl, ULong64_t offset = 1) = 0;
    virtual void       Reset() = 0;
    virtual void       InitMap() = 0;
    virtual void       ResetMap() = 0;
    virtual void       SetReadParam(Int_t mapsize) = 0;
    virtual void       SetWriteParam(Int_t mapsize) = 0;
 
-   virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss) = 0;
-   virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname) = 0;
-   virtual void       SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE)= 0;
+   virtual Long64_t   CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const TClass *clss) = 0;
+   virtual Long64_t   CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const char *classname) = 0;
+   virtual void       SetByteCount(ULong64_t cntpos, Bool_t packInVersion = kFALSE)= 0;
 
    virtual void       SkipVersion(const TClass *cl = nullptr) = 0;
    virtual Version_t  ReadVersion(UInt_t *start = nullptr, UInt_t *bcnt = nullptr, const TClass *cl = nullptr) = 0;
@@ -164,7 +164,7 @@ public:
    virtual void       SetPidOffset(UShort_t offset) = 0;
    virtual Int_t      GetBufferDisplacement() const  = 0;
    virtual void       SetBufferDisplacement() = 0;
-   virtual void       SetBufferDisplacement(Int_t skipped) = 0;
+   virtual void       SetBufferDisplacement(Long64_t skipped) = 0;
 
    // basic types and arrays of basic types
    virtual   void     ReadFloat16 (Float_t *f, TStreamerElement *ele = nullptr) = 0;
@@ -320,8 +320,8 @@ public:
    // Utilities for TStreamerInfo
    virtual   void     ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force) = 0;
    virtual   void     ForceWriteInfoClones(TClonesArray *a) = 0;
-   virtual   Int_t    ReadClones (TClonesArray *a, Int_t nobjects, Version_t objvers) = 0;
-   virtual   Int_t    WriteClones(TClonesArray *a, Int_t nobjects) = 0;
+   virtual   Int_t    ReadClones (TClonesArray *a, Long64_t nobjects, Version_t objvers) = 0;
+   virtual   Int_t    WriteClones(TClonesArray *a, Long64_t nobjects) = 0;
 
    // Utilities for TClass
    virtual   Int_t    ReadClassEmulated(const TClass *cl, void *object, const TClass *onfile_class = nullptr) = 0;
