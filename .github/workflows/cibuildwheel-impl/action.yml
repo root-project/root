@@ -8,6 +8,13 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          binutils cmake dpkg-dev g++ gcc libssl-dev git libx11-dev \
+          libxext-dev libxft-dev libxpm-dev python3 libtbb-dev libvdt-dev libgif-dev
+
     - name: Build wheel
       uses: pypa/cibuildwheel@v3.0.1
       env:
