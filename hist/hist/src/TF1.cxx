@@ -1030,7 +1030,7 @@ void TF1::Copy(TObject &obj) const
    ((TF1 &)obj).fParent    = fParent;
    ((TF1 &)obj).fSave      = fSave;
    if (fHistogram) {
-      auto *h1 = (TH1*)fHistogram->Clone();
+      auto *h1 = (TH1 *)fHistogram->Clone();
       h1->SetDirectory(nullptr);
       ((TF1 &)obj).fHistogram = h1;
    } else {
