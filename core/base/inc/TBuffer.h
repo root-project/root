@@ -90,7 +90,7 @@ public:
    void     SetBuffer(void *buf, Long64_t bufsize = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
    ReAllocCharFun_t GetReAllocFunc() const;
    void     SetReAllocFunc(ReAllocCharFun_t reallocfunc = nullptr);
-   void     SetBufferOffset(Long64_t offset = 0) { assert(offset <= kMaxInt); fBufCur = fBuffer+offset; }
+   void     SetBufferOffset(Long64_t offset = 0) { fBufCur = fBuffer+offset; }
    void     SetParent(TObject *parent);
    TObject *GetParent()  const;
    char    *Buffer()     const { return fBuffer; }

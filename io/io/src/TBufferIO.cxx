@@ -160,7 +160,7 @@ void TBufferIO::InitMap()
 /// contains (via via) a pointer to itself. In that case offset must be 1
 /// (default value for offset).
 
-void TBufferIO::MapObject(const TObject *obj, Long64_t offset)
+void TBufferIO::MapObject(const TObject *obj, ULong64_t offset)
 {
    R__ASSERT(offset <= kMaxUInt);
    if (IsWriting()) {
@@ -194,7 +194,7 @@ void TBufferIO::MapObject(const TObject *obj, Long64_t offset)
 /// contains (via via) a pointer to itself. In that case offset must be 1
 /// (default value for offset).
 
-void TBufferIO::MapObject(const void *obj, const TClass *cl, Long64_t offset)
+void TBufferIO::MapObject(const void *obj, const TClass *cl, ULong64_t offset)
 {
    R__ASSERT(offset <= kMaxUInt);
    if (IsWriting()) {

@@ -59,9 +59,9 @@ protected:
    TBufferFile(const TBufferFile &) = delete;       ///<  not implemented
    void operator=(const TBufferFile &) = delete;    ///<  not implemented
 
-   Long64_t  CheckByteCount(ULong64_t startpos, UInt_t bcnt, const TClass *clss, const char* classname);
-   void  CheckCount(UInt_t offset) override;
-   UInt_t CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass = kFALSE);
+   Long64_t CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const TClass *clss, const char* classname);
+   void     CheckCount(UInt_t offset) override;
+   UInt_t   CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass = kFALSE);
 
    void  WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) override;
 
