@@ -609,10 +609,13 @@ void RModel::GenerateInitializedTensorInfo()
 
    for (auto &i : fInitializedTensors) {
       if (!fUseWeightFile || i.second.IsConstantTensor()) {
-         if (i.second.type() == ETensorType::FLOAT)
+         if (i.second.type() == ETensorType::FLOAT)  {
             fGC += GenerateConstantTensorCode<float>(i);
-         else if (i.second.type() == ETensorType::INT64)
+            fConstantTensorSize += ConvertShapeToLength(i.second.shape())*4;
+         } else if (i.second.type() == ETensorType::INT64) {
             fGC += GenerateConstantTensorCode<int64_t>(i);
+            fConstantTensorSize += ConvertShapeToLength(i.second.shape())*8;
+         }
 
       } else {
          // case of tensors which are read from a file
@@ -620,6 +623,7 @@ void RModel::GenerateInitializedTensorInfo()
          if (i.second.type() == ETensorType::FLOAT) {
             fGC += "std::vector<float> fTensor_" + i.first + " = std::vector<float>(" + std::to_string(length) + ");\n";
             fGC += "float * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
+            fWeightsTensorSize += ConvertShapeToLength(i.second.shape())*4;
          }
       }
    }
@@ -657,14 +661,17 @@ void RModel::GenerateIntermediateTensorInfo() {
             if (i.second.type == ETensorType::FLOAT) {
                tensor_declaration_block += "std::vector<float> fTensor_" + i.first + " = std::vector<float>(" + std::to_string(length) + ");\n";
                tensor_declaration_block += "float * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
+               fOtherTensorSize += 4*length;
             }
             else if (i.second.type == ETensorType::DOUBLE) {
                tensor_declaration_block += "std::vector<double> fTensor_" + i.first + " = std::vector<double>(" + std::to_string(length) + ");\n";
                tensor_declaration_block += "double * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
+               fOtherTensorSize += 8*length;
             }
             else if (i.second.type == ETensorType::INT64) {
                tensor_declaration_block += "std::vector<int64_t> fTensor_" + i.first + " = std::vector<int64_t>(" + std::to_string(length) + ");\n";
                tensor_declaration_block += "int64_t * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
+               fOtherTensorSize += 8*length;
             }
          }
       }

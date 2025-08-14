@@ -17,6 +17,9 @@ private:
    int fVerbose = 0;
    int fBatchSize = -1;
    long fReadPos = 0;  // reading file position
+   size_t fConstantTensorSize = 0;
+   size_t fWeightsTensorSize = 0;
+   size_t fOtherTensorSize = 0;
 
    OptimizationLevel fOptimizationLevel = OptimizationLevel::kExtended;
 
@@ -163,6 +166,14 @@ public:
    void CheckAndFlushIntermediateMemory(std::span<const std::string_view> op_output_tensors, const size_t& op_idx);
 
    void SetOptimizationLevel(const OptimizationLevel &optim_level) { fOptimizationLevel = optim_level; }
+
+   size_t GetConstantTensorSize() const { return fConstantTensorSize;}
+   size_t GetWeightsTensorSize() const { return fWeightsTensorSize;}
+   size_t GetOtherTensorSize() const { return fOtherTensorSize;}
+   size_t GetIntermediateTensorSize() const {
+      return (!fIntermediateMemoryInfo.total_stack.empty()) ?
+         fIntermediateMemoryInfo.total_stack.rbegin()->first + fIntermediateMemoryInfo.total_stack.rbegin()->second.tensor_size : 0;
+   }
 
 protected:
    // internal functions
