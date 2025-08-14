@@ -13,13 +13,13 @@ TEST(RVariableBinAxis, Constructor)
    bins.push_back(Bins);
 
    RVariableBinAxis axis(bins);
-   EXPECT_EQ(axis.GetNumNormalBins(), Bins);
-   EXPECT_EQ(axis.GetTotalNumBins(), Bins + 2);
+   EXPECT_EQ(axis.GetNNormalBins(), Bins);
+   EXPECT_EQ(axis.GetTotalNBins(), Bins + 2);
    EXPECT_TRUE(axis.HasFlowBins());
 
    axis = RVariableBinAxis(bins, /*enableFlowBins=*/false);
-   EXPECT_EQ(axis.GetNumNormalBins(), Bins);
-   EXPECT_EQ(axis.GetTotalNumBins(), Bins);
+   EXPECT_EQ(axis.GetNNormalBins(), Bins);
+   EXPECT_EQ(axis.GetTotalNBins(), Bins);
    EXPECT_FALSE(axis.HasFlowBins());
 
    EXPECT_THROW(RVariableBinAxis({}), std::invalid_argument);
