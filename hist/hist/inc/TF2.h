@@ -37,17 +37,17 @@ protected:
 public:
    TF2();
    TF2(const char *name, const char *formula, Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Option_t * opt = nullptr);
-   TF2(const char *name, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim = 2);
-   TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0,Int_t ndim = 2);
-   TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0, Int_t ndim = 2);
+   TF2(const char *name, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim = 2, EAddToList addToGlobList = EAddToList::kDefault);
+   TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0,Int_t ndim = 2, EAddToList addToGlobList = EAddToList::kDefault);
+   TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0, Int_t ndim = 2, EAddToList addToGlobList = EAddToList::kDefault);
 
    // Constructor using a functor
-   TF2(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Double_t ymin = 0, Double_t ymax = 1, Int_t npar = 0, Int_t ndim = 2);
+   TF2(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Double_t ymin = 0, Double_t ymax = 1, Int_t npar = 0, Int_t ndim = 2, EAddToList addToGlobList = EAddToList::kDefault);
 
    /// Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type MemFn.
    template <class PtrObj, typename MemFn>
-   TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim = 2) :
-      TF1(name,p,memFn,xmin,xmax,npar,ndim),
+   TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim = 2, EAddToList addToGlobList = EAddToList::kDefault) :
+      TF1(name,p,memFn,xmin,xmax,npar,ndim, addToGlobList),
    fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
    {
       fNpx = 30;
@@ -64,8 +64,8 @@ public:
 
    /// Template constructors from any  C++ callable object,  defining  the operator() (double * , double *) and returning a double.
    template <typename Func>
-   TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar,Int_t ndim = 2) :
-      TF1(name,f,xmin,xmax,npar,ndim),
+   TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar,Int_t ndim = 2, EAddToList addToGlobList = EAddToList::kDefault) :
+      TF1(name,f,xmin,xmax,npar,ndim, addToGlobList),
    fYmin(ymin), fYmax(ymax), fNpy(30), fContour(0)
    {
       fNpx = 30;
