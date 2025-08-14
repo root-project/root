@@ -330,7 +330,7 @@ ROOT::DescriptorId_t ROOT::RClassField::LookupMember(const ROOT::RNTupleDescript
 void ROOT::RClassField::SetStagingClass(const std::string &className, unsigned int classVersion)
 {
    TClass::GetClass(className.c_str())->GetStreamerInfo(classVersion);
-   if (classVersion != GetTypeVersion()) {
+   if (classVersion != GetTypeVersion() || className != GetTypeName()) {
       fStagingClass = TClass::GetClass((className + std::string("@@") + std::to_string(classVersion)).c_str());
       if (!fStagingClass) {
          // For a rename rule, we may simply ask for the old class name
