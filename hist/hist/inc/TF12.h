@@ -31,7 +31,7 @@ protected:
 
 public:
    TF12();
-   TF12(const char *name, TF2 *f2, Double_t xy, Option_t *option="x");
+   TF12(const char *name, TF2 *f2, Double_t xy, Option_t *option="x", EAddToList addToGlobList = EAddToList::kDefault);
    TF12(const TF12 &f12);
      ~TF12() override;
    void     Copy(TObject &f12) const override;
