@@ -1,5 +1,8 @@
 #include "hist_test.hxx"
 
+#include <iterator>
+#include <vector>
+
 TEST(RBinIndex, Constructor)
 {
    const RBinIndex invalid;
@@ -146,4 +149,57 @@ TEST(RBinIndex, Relation)
    EXPECT_FALSE(underflow <= overflow);
    EXPECT_FALSE(underflow > overflow);
    EXPECT_FALSE(underflow >= overflow);
+}
+
+using ROOT::Experimental::Internal::CreateBinIndexRange;
+
+TEST(RBinIndexRange, ConstructorCreate)
+{
+   const RBinIndexRange invalid;
+   EXPECT_TRUE(invalid.GetBegin().IsInvalid());
+   EXPECT_TRUE(invalid.GetEnd().IsInvalid());
+
+   const auto index0 = RBinIndex(0);
+   const auto range0 = CreateBinIndexRange(index0, index0, 0);
+   EXPECT_EQ(range0.GetBegin(), index0);
+   EXPECT_EQ(range0.GetEnd(), index0);
+
+   const auto range01 = CreateBinIndexRange(index0, RBinIndex(1), 1);
+   EXPECT_EQ(range01.GetBegin(), index0);
+   EXPECT_EQ(range01.GetEnd(), RBinIndex(1));
+}
+
+TEST(RBinIndexRange, Empty)
+{
+   const auto index0 = RBinIndex(0);
+   const auto empty = CreateBinIndexRange(index0, index0, 0);
+   EXPECT_EQ(empty.begin(), empty.end());
+   EXPECT_EQ(std::distance(empty.begin(), empty.end()), 0);
+}
+
+TEST(RBinIndexRange, Normal)
+{
+   const auto index0 = RBinIndex(0);
+   const auto range01 = CreateBinIndexRange(index0, RBinIndex(1), 0);
+   EXPECT_EQ(std::distance(range01.begin(), range01.end()), 1);
+   auto range01It = range01.begin();
+   EXPECT_TRUE(range01It->IsNormal());
+   EXPECT_EQ(*range01It, index0);
+   range01It++;
+   EXPECT_EQ(range01It, range01.end());
+}
+
+TEST(RBinIndexRange, Full)
+{
+   const auto underflow = RBinIndex::Underflow();
+   const RBinIndex invalid;
+   const auto full = CreateBinIndexRange(underflow, invalid, /*nNormalBins=*/10);
+   EXPECT_EQ(full.GetBegin(), underflow);
+   EXPECT_EQ(full.GetEnd(), invalid);
+   EXPECT_EQ(std::distance(full.begin(), full.end()), 12);
+
+   const std::vector binIndexes(full.begin(), full.end());
+   ASSERT_EQ(binIndexes.size(), 12);
+   EXPECT_TRUE(binIndexes.front().IsUnderflow());
+   EXPECT_TRUE(binIndexes.back().IsOverflow());
 }
