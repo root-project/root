@@ -5,10 +5,13 @@
 #ifndef ROOT_RAxes
 #define ROOT_RAxes
 
+#include "RBinIndex.hxx"
 #include "RLinearizedIndex.hxx"
 #include "RRegularAxis.hxx"
 #include "RVariableBinAxis.hxx"
 
+#include <array>
+#include <cassert>
 #include <stdexcept>
 #include <tuple>
 #include <utility>
@@ -102,6 +105,38 @@ public:
          throw std::invalid_argument("invalid number of arguments to ComputeGlobalIndex");
       }
       return ComputeGlobalIndex<0, A...>(0, args);
+   }
+
+   /// Compute the global index for all axes.
+   ///
+   /// \param[in] indices the array of RBinIndex
+   /// \return the global index that may be invalid
+   template <std::size_t N>
+   RLinearizedIndex ComputeGlobalIndex(const std::array<RBinIndex, N> &indices) const
+   {
+      if (N != fAxes.size()) {
+         throw std::invalid_argument("invalid number of indices passed to ComputeGlobalIndex");
+      }
+      std::size_t globalIndex = 0;
+      for (std::size_t i = 0; i < N; i++) {
+         const auto &index = indices[i];
+         const auto &axis = fAxes[i];
+         RLinearizedIndex linIndex;
+         if (auto *regular = std::get_if<RRegularAxis>(&axis)) {
+            globalIndex *= regular->GetTotalNBins();
+            linIndex = regular->GetLinearizedIndex(index);
+         } else if (auto *variable = std::get_if<RVariableBinAxis>(&axis)) {
+            globalIndex *= variable->GetTotalNBins();
+            linIndex = variable->GetLinearizedIndex(index);
+         } else {
+            throw std::logic_error("unimplemented axis type");
+         }
+         if (!linIndex.fValid) {
+            return {0, false};
+         }
+         globalIndex += linIndex.fIndex;
+      }
+      return {globalIndex, true};
    }
 
    /// ROOT Streamer function to throw when trying to store an object of this class.

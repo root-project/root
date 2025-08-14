@@ -1,5 +1,6 @@
 #include "hist_test.hxx"
 
+#include <array>
 #include <stdexcept>
 #include <tuple>
 #include <variant>
@@ -96,21 +97,33 @@ TEST(RAxes, ComputeGlobalIndex)
    const RAxes axes({regularAxis, variableBinAxis});
 
    {
-      const auto globalIndex = axes.ComputeGlobalIndex(std::make_tuple(1.5, 2.5));
+      auto globalIndex = axes.ComputeGlobalIndex(std::make_tuple(1.5, 2.5));
+      EXPECT_EQ(globalIndex.fIndex, 1 * (BinsY + 2) + 2);
+      EXPECT_TRUE(globalIndex.fValid);
+      const std::array<RBinIndex, 2> indices = {1, 2};
+      globalIndex = axes.ComputeGlobalIndex(indices);
       EXPECT_EQ(globalIndex.fIndex, 1 * (BinsY + 2) + 2);
       EXPECT_TRUE(globalIndex.fValid);
    }
 
    {
       // Underflow bin of the first axis.
-      const auto globalIndex = axes.ComputeGlobalIndex(std::make_tuple(-1, 2.5));
+      auto globalIndex = axes.ComputeGlobalIndex(std::make_tuple(-1, 2.5));
+      EXPECT_EQ(globalIndex.fIndex, BinsX * (BinsY + 2) + 2);
+      EXPECT_TRUE(globalIndex.fValid);
+      const std::array<RBinIndex, 2> indices = {RBinIndex::Underflow(), 2};
+      globalIndex = axes.ComputeGlobalIndex(indices);
       EXPECT_EQ(globalIndex.fIndex, BinsX * (BinsY + 2) + 2);
       EXPECT_TRUE(globalIndex.fValid);
    }
 
    {
       // Overflow bin of the second axis.
-      const auto globalIndex = axes.ComputeGlobalIndex(std::make_tuple(1.5, 42));
+      auto globalIndex = axes.ComputeGlobalIndex(std::make_tuple(1.5, 42));
+      EXPECT_EQ(globalIndex.fIndex, 1 * (BinsY + 2) + BinsY + 1);
+      EXPECT_TRUE(globalIndex.fValid);
+      const std::array<RBinIndex, 2> indices = {1, RBinIndex::Overflow()};
+      globalIndex = axes.ComputeGlobalIndex(indices);
       EXPECT_EQ(globalIndex.fIndex, 1 * (BinsY + 2) + BinsY + 1);
       EXPECT_TRUE(globalIndex.fValid);
    }
@@ -131,21 +144,33 @@ TEST(RAxes, ComputeGlobalIndexNoFlowBins)
    ASSERT_EQ(axes.ComputeTotalNBins(), BinsX * BinsY);
 
    {
-      const auto globalIndex = axes.ComputeGlobalIndex(std::make_tuple(1.5, 2.5));
+      auto globalIndex = axes.ComputeGlobalIndex(std::make_tuple(1.5, 2.5));
+      EXPECT_EQ(globalIndex.fIndex, 1 * BinsY + 2);
+      EXPECT_TRUE(globalIndex.fValid);
+      const std::array<RBinIndex, 2> indices = {1, 2};
+      globalIndex = axes.ComputeGlobalIndex(indices);
       EXPECT_EQ(globalIndex.fIndex, 1 * BinsY + 2);
       EXPECT_TRUE(globalIndex.fValid);
    }
 
    {
       // Underflow bin of the first axis.
-      const auto globalIndex = axes.ComputeGlobalIndex(std::make_tuple(-1, 2.5));
+      auto globalIndex = axes.ComputeGlobalIndex(std::make_tuple(-1, 2.5));
+      EXPECT_EQ(globalIndex.fIndex, 0);
+      EXPECT_FALSE(globalIndex.fValid);
+      const std::array<RBinIndex, 2> indices = {RBinIndex::Underflow(), 2};
+      globalIndex = axes.ComputeGlobalIndex(indices);
       EXPECT_EQ(globalIndex.fIndex, 0);
       EXPECT_FALSE(globalIndex.fValid);
    }
 
    {
       // Overflow bin of the second axis.
-      const auto globalIndex = axes.ComputeGlobalIndex(std::make_tuple(1.5, 42));
+      auto globalIndex = axes.ComputeGlobalIndex(std::make_tuple(1.5, 42));
+      EXPECT_EQ(globalIndex.fIndex, 0);
+      EXPECT_FALSE(globalIndex.fValid);
+      const std::array<RBinIndex, 2> indices = {1, RBinIndex::Overflow()};
+      globalIndex = axes.ComputeGlobalIndex(indices);
       EXPECT_EQ(globalIndex.fIndex, 0);
       EXPECT_FALSE(globalIndex.fValid);
    }
@@ -166,4 +191,15 @@ TEST(RAxes, ComputeGlobalIndexInvalidNumberOfArguments)
    EXPECT_THROW(axes2.ComputeGlobalIndex(std::make_tuple(1)), std::invalid_argument);
    EXPECT_NO_THROW(axes2.ComputeGlobalIndex(std::make_tuple(1, 2)));
    EXPECT_THROW(axes2.ComputeGlobalIndex(std::make_tuple(1, 2, 3)), std::invalid_argument);
+
+   const std::array<RBinIndex, 1> indices1 = {1};
+   const std::array<RBinIndex, 2> indices2 = {1, 2};
+   const std::array<RBinIndex, 3> indices3 = {1, 2, 3};
+
+   EXPECT_NO_THROW(axes1.ComputeGlobalIndex(indices1));
+   EXPECT_THROW(axes1.ComputeGlobalIndex(indices2), std::invalid_argument);
+
+   EXPECT_THROW(axes2.ComputeGlobalIndex(indices1), std::invalid_argument);
+   EXPECT_NO_THROW(axes2.ComputeGlobalIndex(indices2));
+   EXPECT_THROW(axes2.ComputeGlobalIndex(indices3), std::invalid_argument);
 }

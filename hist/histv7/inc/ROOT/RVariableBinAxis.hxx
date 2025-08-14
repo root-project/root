@@ -5,8 +5,10 @@
 #ifndef ROOT_RVariableBinAxis
 #define ROOT_RVariableBinAxis
 
+#include "RBinIndex.hxx"
 #include "RLinearizedIndex.hxx"
 
+#include <cassert>
 #include <cstddef>
 #include <stdexcept>
 #include <string>
@@ -96,6 +98,27 @@ public:
       }
       std::size_t bin = fBinEdges.size() - 2;
       return {bin, true};
+   }
+
+   /// Get the linearized index for an RBinIndex.
+   ///
+   /// The normal bins have indices \f$0\f$ to \f$fBinEdges.size() - 2\f$, the underflow bin has index
+   /// \f$fBinEdges.size() - 1\f$, and the overflow bin has index \f$fBinEdges.size()\f$.
+   ///
+   /// \param[in] index the RBinIndex
+   /// \return the linearized index that may be invalid
+   RLinearizedIndex GetLinearizedIndex(RBinIndex index) const
+   {
+      if (index.IsUnderflow()) {
+         return {fBinEdges.size() - 1, fEnableFlowBins};
+      } else if (index.IsOverflow()) {
+         return {fBinEdges.size(), fEnableFlowBins};
+      } else if (index.IsInvalid()) {
+         return {0, false};
+      }
+      assert(index.IsNormal());
+      std::size_t bin = index.GetIndex();
+      return {bin, bin < fBinEdges.size() - 1};
    }
 
    /// ROOT Streamer function to throw when trying to store an object of this class.
