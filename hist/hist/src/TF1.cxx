@@ -692,7 +692,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, Op
 /// Same constructor as above (for TFormula based function) but passing an option strings
 ///  available options
 ///  VEC -  vectorize the formula expressions (not possible for lambda based expressions)
-///  NL   - function is not stores in the global list of functions
+///  NL   - function is not stored in the global list of functions
 ///  GL   -  function will be always stored in the global list of functions ,
 ///         independently of the global setting of TF1::DefaultAddToGlobalList
 ///////////////////////////////////////////////////////////////////////////////////
