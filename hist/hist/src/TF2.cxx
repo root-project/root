@@ -94,8 +94,8 @@ TF2::TF2(): fYmin(0),fYmax(0),fNpy(100)
 /// the formula string is "fffffff" and "xxxx" and "yyyy" are the
 /// titles for the X and Y axis respectively.
 
-TF2::TF2(const char *name,const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Option_t * opt)
-   :TF1(name,formula,xmax,xmin,opt)
+TF2::TF2(const char *name, const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Option_t * opt)
+   :TF1(name, formula, xmax, xmin, opt)
 {
    if (ymin < ymax) {
       fYmin   = ymin;
@@ -128,8 +128,8 @@ TF2::TF2(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
 ///
 /// WARNING! A function created with this constructor cannot be Cloned.
 
-TF2::TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim)
-      : TF1(name, fcn, xmin, xmax, npar,ndim)
+TF2::TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim, EAddToList addToGlobList)
+      : TF1(name, fcn, xmin, xmax, npar, ndim, addToGlobList)
 {
    fYmin   = ymin;
    fYmax   = ymax;
@@ -138,8 +138,8 @@ TF2::TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmi
    fContour.Set(0);
 }
 
-TF2::TF2(const char *name, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim):
-   TF1(name, xmin, xmax, npar, ndim, EAddToList::kDefault)
+TF2::TF2(const char *name, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim, EAddToList addToGlobList):
+   TF1(name, xmin, xmax, npar, ndim, addToGlobList)
 {
    fYmin   = ymin;
    fYmax   = ymax;
@@ -159,8 +159,8 @@ TF2::TF2(const char *name, Double_t xmin, Double_t xmax, Double_t ymin, Double_t
 ///
 /// WARNING! A function created with this constructor cannot be Cloned.
 
-TF2::TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim)
-      : TF1(name, fcn, xmin, xmax, npar,ndim)
+TF2::TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim, EAddToList addToGlobList)
+      : TF1(name, fcn, xmin, xmax, npar, ndim, addToGlobList)
 {
    fYmin   = ymin;
    fYmax   = ymax;
@@ -178,8 +178,8 @@ TF2::TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), 
 ///
 /// WARNING! A function created with this constructor cannot be Cloned.
 
-TF2::TF2(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim)
-      : TF1(name, f, xmin, xmax, npar,ndim)
+TF2::TF2(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim, EAddToList addToGlobList)
+      : TF1(name, f, xmin, xmax, npar, ndim, addToGlobList)
 {
    fYmin   = ymin;
    fYmax   = ymax;
