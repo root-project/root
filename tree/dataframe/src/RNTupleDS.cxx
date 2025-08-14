@@ -723,17 +723,17 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
          // d) [21 - 65] - we skip file 1, start in file 2 and continue to file 3
          // - to skip the first file, we use the 4th case, we continue with the 2nd case, and use the 1st case at the
          // end, resulting ranges are [21, 45], [45, 65]
-
          // The first case
          if (fGlobalEntryRange->first >= start && fGlobalEntryRange->second <= end) {
             fOriginalRanges.emplace_back(start, end);
-            nEntriesPerRange += fGlobalEntryRange->second - fGlobalEntryRange->first;
-            ranges.emplace_back(fGlobalEntryRange->first, fGlobalEntryRange->second);
             fFirstEntry2RangeIdx[fGlobalEntryRange->first] = i;
+            ranges.emplace_back(fGlobalEntryRange->first, fGlobalEntryRange->second);
+            nEntriesPerRange += fGlobalEntryRange->second - fGlobalEntryRange->first;
          }
 
          // The second case:
-         else if (fGlobalEntryRange->first <= end && fGlobalEntryRange->second > end) {
+         // The `fGlobalEntryRange->first < end` condition is to distinguish this case from the 4th case.
+         else if (fGlobalEntryRange->second > end && fGlobalEntryRange->first < end) {
             fOriginalRanges.emplace_back(start, end);
             fFirstEntry2RangeIdx[fGlobalEntryRange->first] = i;
             ranges.emplace_back(fGlobalEntryRange->first, end);
@@ -741,15 +741,15 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
             fGlobalEntryRange.swap(newvalues);
          }
          // The third case, needed to correctly quit processing if we only stay in the first file
-         else if (fGlobalEntryRange->first < start) {
+         else if (fGlobalEntryRange->second < start) {
             return ranges;
          }
 
          // The fourth case:
-         else if (fGlobalEntryRange->first > end) {
-            fFirstEntry2RangeIdx[0] = i;
+         else if (fGlobalEntryRange->first >= end) {
             fOriginalRanges.emplace_back(start, end);
-            ranges.emplace_back(0, 0);
+            fFirstEntry2RangeIdx[start] = i;
+            ranges.emplace_back(start, start);
             fCounterFileEmpty += 1;
          }
       }
