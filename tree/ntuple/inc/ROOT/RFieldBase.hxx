@@ -277,6 +277,20 @@ private:
 protected:
    struct RBulkSpec;
 
+   /// Bits used in CompareOnDisk()
+   enum {
+      /// The in-memory field and the on-disk field differ in the field version
+      kDiffFieldVersion = 0x01,
+      /// The in-memory field and the on-disk field differ in the type version
+      kDiffTypeVersion  = 0x02,
+      /// The in-memory field and the on-disk field differ in their structural roles
+      kDiffStructure    = 0x04,
+      /// The in-memory field and the on-disk field have different type names
+      kDiffTypeName     = 0x08,
+      /// The in-memory field and the on-disk field have different repetition counts
+      kDiffNRepetitions = 0x10
+   };
+
    /// Collections and classes own subfields
    std::vector<std::unique_ptr<RFieldBase>> fSubfields;
    /// Subfields point to their mother field
@@ -492,11 +506,26 @@ protected:
    /// Add a new subfield to the list of nested fields
    void Attach(std::unique_ptr<RFieldBase> child);
 
-   /// Called by ConnectPageSource() before connecting; derived classes may override this as appropriate
-   virtual void BeforeConnectPageSource(ROOT::Internal::RPageSource &) {}
+   /// Called by ConnectPageSource() before connecting; derived classes may override this as appropriate.
+   /// Used to check compatibility of the in-memory field and the on-disk field. In the process,
+   /// the field at hand or its subfields may be marked as "artifical", i.e. introduced by schema evolution
+   /// and not backed by on-disk information.
+   virtual void BeforeConnectPageSource(ROOT::Internal::RPageSource &source)
+   {
+      // The default implementation throws an exception if the on-disk ID is set and there are structural differences
+      // to the on-disk field. Note that we ignore the type name by default, which is the right behavior for
+      // simple fields and many collection types.
+      EnsureCompatibleOnDiskField(source, kDiffTypeName);
+   }
 
-   /// Called by ConnectPageSource() once connected; derived classes may override this as appropriate
-   virtual void AfterConnectPageSource() {}
+   /// Returns a combination of kDiff... flags, indicating peroperties that are different between the field at hand
+   /// and the given on-disk field
+   std::uint32_t CompareOnDiskField(const RFieldDescriptor &fieldDesc) const;
+   /// Compares the field to the provieded on-disk field descriptor. Throws an exception if the fields don't match.
+   /// Optionally, a set of bits can be provided that should be ignored in the comparison.
+   void EnsureCompatibleOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits = 0) const;
+   /// Convenience wrapper to be used from within BeforeConnectPageSource()
+   void EnsureCompatibleOnDiskField(const ROOT::Internal::RPageSource &source, std::uint32_t ignoreBits = 0) const;
 
    /// Factory method to resurrect a field from the stored on-disk type information.  This overload takes an already
    /// normalized type name and type alias.
