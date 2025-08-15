@@ -46,13 +46,14 @@ public:
 
    double defaultErrorLevel() const override { return _topNode->defaultErrorLevel(); }
 
-   bool getParameters(const RooArgSet *observables, RooArgSet &outputSet, bool stripDisconnected = true) const override;
-
    bool setData(RooAbsData &data, bool cloneData) override;
 
    double getValV(const RooArgSet *) const override { return evaluate(); }
 
    void applyWeightSquared(bool flag) override { _topNode->applyWeightSquared(flag); }
+
+   void addParameters(RooAbsCollection &params, const RooArgSet *nset,
+                      RooFit::GetParametersPolicy const &policy) const override;
 
    /// The RooFit::Evaluator is dealing with constant terms itself.
    void constOptimizeTestStatistic(ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/) override {}

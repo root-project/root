@@ -47,7 +47,7 @@ public:
   };
 
   void initializeBarlowCache();
-  bool getParameters(const RooArgSet* depList, RooArgSet& outputSet, bool stripDisconnected=true) const override;
+  void addParameters(RooAbsCollection & params, const RooArgSet *nset, RooFit::GetParametersPolicy const &policy) const override;
   RooAbsReal& nll() { return const_cast<RooAbsReal&>(_nll.arg()) ; }
   void setPdf(RooAbsPdf* pdf) { _pdf = pdf; }
   void setDataset(RooAbsData* data) { _data = data; }
