@@ -506,21 +506,10 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection *list, const RooAbsArg *arg,
 /// function is responsible for deleting the returned argset.
 /// The complement of this function is getObservables()
 
-RooFit::OwningPtr<RooArgSet> RooAbsArg::getParameters(const RooAbsData *set, bool stripDisconnected) const
+RooFit::OwningPtr<RooArgSet>
+RooAbsArg::getParameters(const RooAbsData *set, RooFit::GetParametersPolicy const &policy) const
 {
-   return getParameters(set ? set->get() : nullptr, stripDisconnected);
-}
-
-/// Return the parameters of this p.d.f when used in conjunction with dataset 'data'.
-RooFit::OwningPtr<RooArgSet> RooAbsArg::getParameters(const RooAbsData &data, bool stripDisconnected) const
-{
-   return getParameters(&data, stripDisconnected);
-}
-
-/// Return the parameters of the p.d.f given the provided set of observables.
-RooFit::OwningPtr<RooArgSet> RooAbsArg::getParameters(const RooArgSet &observables, bool stripDisconnected) const
-{
-   return getParameters(&observables, stripDisconnected);
+   return getParameters(set ? set->get() : nullptr, policy);
 }
 
 /// Create a list of leaf nodes in the arg tree starting with
@@ -529,19 +518,21 @@ RooFit::OwningPtr<RooArgSet> RooAbsArg::getParameters(const RooArgSet &observabl
 /// for deleting the returned argset. The complement of this function
 /// is getObservables().
 
-RooFit::OwningPtr<RooArgSet> RooAbsArg::getParameters(const RooArgSet *observables, bool stripDisconnected) const
+RooFit::OwningPtr<RooArgSet>
+RooAbsArg::getParameters(const RooArgSet *observables, RooFit::GetParametersPolicy const &policy) const
 {
    auto *outputSet = new RooArgSet;
-   getParameters(observables, *outputSet, stripDisconnected);
+   getParameters(observables, *outputSet, policy);
    return RooFit::OwningPtr<RooArgSet>{outputSet};
 }
 
 /// Add all parameters of the function and its daughters to `params`.
 /// \param[in] params Collection that stores all parameters. Add all new parameters to this.
 /// \param[in] nset Normalisation set (optional). If a value depends on this set, it's not a parameter.
-/// \param[in] stripDisconnected Passed on to getParametersHook().
+/// \param[in] stripDisconnected TODO.
 
-void RooAbsArg::addParameters(RooAbsCollection &params, const RooArgSet *nset, bool stripDisconnected) const
+void RooAbsArg::addParameters(RooAbsCollection &params, const RooArgSet *nset,
+                              RooFit::GetParametersPolicy const &policy) const
 {
 
    RooArgSet nodeParamServers;
@@ -562,11 +553,8 @@ void RooAbsArg::addParameters(RooAbsCollection &params, const RooArgSet *nset, b
    std::sort(branchList.begin(), branchList.end());
    const auto last = std::unique(branchList.begin(), branchList.end());
    for (auto serverIt = branchList.begin(); serverIt < last; ++serverIt) {
-      (*serverIt)->addParameters(nodeParamServers, nset, stripDisconnected);
+      (*serverIt)->addParameters(nodeParamServers, nset, policy);
    }
-
-   // Allow pdf to strip parameters from list
-   getParametersHook(nset, &nodeParamServers, stripDisconnected);
 
    // Add parameters of this node to the combined list
    params.add(nodeParamServers, true);
@@ -580,12 +568,13 @@ void RooAbsArg::addParameters(RooAbsCollection &params, const RooArgSet *nset, b
 /// \param[out] outputSet Output set.
 /// \param[in] stripDisconnected Allow pdf to strip parameters from list before adding it.
 
-bool RooAbsArg::getParameters(const RooArgSet *observables, RooArgSet &outputSet, bool stripDisconnected) const
+bool RooAbsArg::getParameters(const RooArgSet *observables, RooArgSet &outputSet,
+                              RooFit::GetParametersPolicy const &policy) const
 {
    outputSet.clear();
    outputSet.setName("parameters");
 
-   addParameters(outputSet, observables, stripDisconnected);
+   addParameters(outputSet, observables, policy);
 
    outputSet.sort();
 
@@ -1906,9 +1895,9 @@ RooAbsCache *RooAbsArg::getCache(Int_t index) const
 
 /// Return RooArgSet with all variables (tree leaf nodes of expression tree)
 
-RooFit::OwningPtr<RooArgSet> RooAbsArg::getVariables(bool stripDisconnected) const
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getVariables() const
 {
-   return getParameters(RooArgSet(), stripDisconnected);
+   return getParameters(RooArgSet());
 }
 
 /// Create a GraphViz .dot file visualizing the expression tree headed by

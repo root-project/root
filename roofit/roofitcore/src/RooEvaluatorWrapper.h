@@ -47,13 +47,14 @@ public:
 
    double defaultErrorLevel() const override { return _topNode->defaultErrorLevel(); }
 
-   bool getParameters(const RooArgSet *observables, RooArgSet &outputSet, bool stripDisconnected = true) const override;
-
    bool setData(RooAbsData &data, bool cloneData) override;
 
    double getValV(const RooArgSet *) const override { return evaluate(); }
 
    void applyWeightSquared(bool flag) override { _topNode->applyWeightSquared(flag); }
+
+   void addParameters(RooAbsCollection &params, const RooArgSet *nset,
+                      RooFit::GetParametersPolicy const &policy) const override;
 
    void printMultiline(std::ostream &os, Int_t /*contents*/, bool /*verbose*/ = false,
                        TString /*indent*/ = "") const override
