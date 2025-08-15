@@ -32,12 +32,3 @@ void runreadvararypolyp()
    delete c;
    c = 0;
 }
-
-#ifdef TEST
-int main()
-{
-   runreadvararypolyp();
-   return 0;
-}
-#endif
-

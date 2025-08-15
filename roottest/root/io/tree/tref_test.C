@@ -52,6 +52,4 @@ void tref_test()
   // Close the output file.
   hFile.Close();
 
-  // Done.
-  return;
 }
