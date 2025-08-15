@@ -315,11 +315,8 @@ void ROOT::Internal::RPageSourceFile::LoadStructureImpl()
    }
    fReader.SetMaxKeySize(fAnchor->GetMaxKeySize());
 
-   // TOOD(jblomer): can the epoch check be factored out across anchors?
-   if (fAnchor->GetVersionEpoch() != RNTuple::kVersionEpoch) {
-      throw RException(R__FAIL("unsupported RNTuple epoch version: " + std::to_string(fAnchor->GetVersionEpoch())));
-   }
-
+   fDescriptorBuilder.SetVersion(fAnchor->GetVersionEpoch(), fAnchor->GetVersionMajor(), fAnchor->GetVersionMinor(),
+                                 fAnchor->GetVersionPatch());
    fDescriptorBuilder.SetOnDiskHeaderSize(fAnchor->GetNBytesHeader());
    fDescriptorBuilder.AddToOnDiskFooterSize(fAnchor->GetNBytesFooter());
 

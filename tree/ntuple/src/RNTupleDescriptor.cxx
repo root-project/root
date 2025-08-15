@@ -14,6 +14,7 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RFieldBase.hxx>
+#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
@@ -368,6 +369,19 @@ std::string ROOT::RNTupleDescriptor::GetQualifiedFieldName(ROOT::DescriptorId_t 
    if (prefix.empty())
       return fieldDescriptor.GetFieldName();
    return prefix + "." + fieldDescriptor.GetFieldName();
+}
+
+std::string ROOT::RNTupleDescriptor::GetTypeNameForComparison(const RFieldDescriptor &fieldDesc) const
+{
+   std::string typeName = fieldDesc.GetTypeName();
+
+   // ROOT v6.34, with spec versions before 1.0.0.1, did not properly renormalize the type name.
+   R__ASSERT(fVersionEpoch == 1);
+   if (fVersionMajor == 0 && fVersionMinor == 0 && fVersionPatch < 1) {
+      typeName = ROOT::Internal::GetRenormalizedTypeName(typeName);
+   }
+
+   return typeName;
 }
 
 ROOT::DescriptorId_t ROOT::RNTupleDescriptor::FindFieldId(std::string_view fieldName) const
@@ -736,6 +750,11 @@ ROOT::RNTupleDescriptor ROOT::RNTupleDescriptor::Clone() const
 {
    RNTupleDescriptor clone = CloneSchema();
 
+   clone.fVersionEpoch = fVersionEpoch;
+   clone.fVersionMajor = fVersionMajor;
+   clone.fVersionMinor = fVersionMinor;
+   clone.fVersionPatch = fVersionPatch;
+
    clone.fOnDiskHeaderSize = fOnDiskHeaderSize;
    clone.fOnDiskHeaderXxHash3 = fOnDiskHeaderXxHash3;
    clone.fOnDiskFooterSize = fOnDiskFooterSize;
@@ -980,6 +999,10 @@ ROOT::RResult<void> ROOT::Internal::RNTupleDescriptorBuilder::EnsureFieldExists(
 
 ROOT::RResult<void> ROOT::Internal::RNTupleDescriptorBuilder::EnsureValidDescriptor() const
 {
+   if (fDescriptor.fVersionEpoch != RNTuple::kVersionEpoch) {
+      return R__FAIL("unset or unsupported RNTuple epoch version");
+   }
+
    // Reuse field name validity check
    auto validName = ROOT::Internal::EnsureValidNameForRNTuple(fDescriptor.GetName(), "Field");
    if (!validName) {
@@ -1027,6 +1050,26 @@ ROOT::RNTupleDescriptor ROOT::Internal::RNTupleDescriptorBuilder::MoveDescriptor
    RNTupleDescriptor result;
    std::swap(result, fDescriptor);
    return result;
+}
+
+void ROOT::Internal::RNTupleDescriptorBuilder::SetVersion(std::uint16_t versionEpoch, std::uint16_t versionMajor,
+                                                          std::uint16_t versionMinor, std::uint16_t versionPatch)
+{
+   if (versionEpoch != RNTuple::kVersionEpoch) {
+      throw RException(R__FAIL("unsupported RNTuple epoch version: " + std::to_string(versionEpoch)));
+   }
+   fDescriptor.fVersionEpoch = versionEpoch;
+   fDescriptor.fVersionMajor = versionMajor;
+   fDescriptor.fVersionMinor = versionMinor;
+   fDescriptor.fVersionPatch = versionPatch;
+}
+
+void ROOT::Internal::RNTupleDescriptorBuilder::SetVersionForWriting()
+{
+   fDescriptor.fVersionEpoch = RNTuple::kVersionEpoch;
+   fDescriptor.fVersionMajor = RNTuple::kVersionMajor;
+   fDescriptor.fVersionMinor = RNTuple::kVersionMinor;
+   fDescriptor.fVersionPatch = RNTuple::kVersionPatch;
 }
 
 void ROOT::Internal::RNTupleDescriptorBuilder::SetNTuple(const std::string_view name,
