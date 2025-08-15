@@ -1118,7 +1118,7 @@ void CPyCppyy::CPPOverload::Set(const std::string& name, std::vector<PyCallable*
 // special case, in heuristics mode also tag *Clone* methods as creators. Only
 // check that Clone is present in the method name, not in the template argument
 // list.
-    if (CallContext::globalPolicyFlags() & CallContext::kUseHeuristics) {
+    if (CallContext::GlobalPolicyFlags() & CallContext::kUseHeuristics) {
         std::string_view name_maybe_template = name;
         auto begin_template = name_maybe_template.find_first_of('<');
         if (begin_template <= name_maybe_template.size()) {
