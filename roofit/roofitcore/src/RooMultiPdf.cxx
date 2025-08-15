@@ -79,11 +79,12 @@ Double_t RooMultiPdf::getLogVal(const RooArgSet *nset) const
    return logval;
 }
 
-void RooMultiPdf::getParametersHook(const RooArgSet *nset, RooArgSet *list, bool stripDisconnected) const
+void RooMultiPdf::addParameters(RooAbsCollection &params, const RooArgSet *nset,
+                                RooFit::GetParametersPolicy const &policy) const
 {
-   if (!stripDisconnected)
-      return;
-
-   list->removeAll();
-   getCurrentPdf()->getParameters(nset, *list, stripDisconnected);
+   if (policy.stripDisconnected) {
+      getCurrentPdf()->addParameters(params, nset, policy);
+   } else {
+      RooAbsArg::addParameters(params, nset, policy);
+   }
 }

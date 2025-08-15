@@ -584,9 +584,10 @@ public:
 
    // required forwarding methods for RooEvaluatorWrapper in 6.32 onwards
    double defaultErrorLevel() const override { return fFunc->defaultErrorLevel(); }
-   bool getParameters(const RooArgSet *observables, RooArgSet &outputSet, bool stripDisconnected) const override
+   void addParameters(RooAbsCollection &params, const RooArgSet *nset,
+                      RooFit::GetParametersPolicy const &policy) const override
    {
-      return fFunc->getParameters(observables, outputSet, stripDisconnected);
+      fFunc->addParameters(params, nset, policy);
    }
    bool setData(RooAbsData &data, bool cloneData) override { return fFunc->setData(data, cloneData); }
    double getValV(const RooArgSet *) const override { return evaluate(); }
@@ -1283,10 +1284,13 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
          }
       }
 
-      if(miniStrat < _minimizer.fitter()->Config().MinimizerOptions().Strategy() && hesse && out->edm() > _minimizer.fitter()->Config().MinimizerOptions().Tolerance()*1e-3 && out->status() != 3) {
+      if (miniStrat < _minimizer.fitter()->Config().MinimizerOptions().Strategy() && hesse &&
+          out->edm() > _minimizer.fitter()->Config().MinimizerOptions().Tolerance() * 1e-3 && out->status() != 3) {
          // hesse may have updated edm by using a better strategy than used in the minimization
          // so print a warning about this
-         std::cerr << "Warning: post-Hesse edm greater than allowed by tolerance. Consider increasing minimization strategy" << std::endl;
+         std::cerr
+            << "Warning: post-Hesse edm greater than allowed by tolerance. Consider increasing minimization strategy"
+            << std::endl;
          // Dec24: As this is a new warning, will not update status code for now, so edm will be large
          // but in the future we should probably update the code to 3 so that users don't miss this warning.
          // out->setStatus(3); // edm above max
@@ -1400,7 +1404,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       }
    }
 
-   if(out && out->status() == 0 && minos) {
+   if (out && out->status() == 0 && minos) {
       // call minos if requested on any parameters
       for (auto label : {"xminos", "xMinos"}) {
          std::unique_ptr<RooAbsCollection> pars(floatPars->selectByAttrib(label, true));

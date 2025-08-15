@@ -81,7 +81,9 @@ double RooJeffreysPrior::evaluate() const
     //and we start to clone again.
     auto& pdf = _nominal.arg();
     RooAbsPdf* clonePdf = static_cast<RooAbsPdf*>(pdf.cloneTree());
-    std::unique_ptr<RooArgSet> vars{clonePdf->getParameters(_obsSet)};
+    auto vars = std::make_unique<RooArgSet>();
+    RooArgSet obsSet{_obsSet}; // need a RooArgSet and not RooListProxy
+    clonePdf->getParameters(&obsSet, *vars);
     for (auto varTmp : *vars) {
       auto& var = static_cast<RooRealVar&>(*varTmp);
       auto range = var.getRange();

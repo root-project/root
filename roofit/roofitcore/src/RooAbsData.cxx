@@ -1465,12 +1465,13 @@ SplittingSetup initSplit(RooAbsData const &data, RooAbsCategory const &splitCat)
 
    // Construct set of variables to be included in split sets = full set - split category
    setup.subsetVars.add(*data.get());
+   RooArgSet vars;
    if (splitCat.isDerived()) {
-      std::unique_ptr<RooArgSet> vars{splitCat.getVariables()};
-      setup.subsetVars.remove(*vars, true, true);
+      splitCat.getParameters(nullptr, vars);
    } else {
-      setup.subsetVars.remove(splitCat, true, true);
+      vars.add(splitCat);
    }
+   setup.subsetVars.remove(vars, true, true);
 
    // Add weight variable explicitly if dataset has weights, but no top-level weight
    // variable exists (can happen with composite datastores)

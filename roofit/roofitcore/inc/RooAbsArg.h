@@ -55,6 +55,11 @@ namespace RooFit {
 namespace Experimental {
 class CodegenContext;
 }
+
+struct GetParametersPolicy {
+   bool stripDisconnected = false;
+};
+
 } // namespace RooFit
 
 class RooRefArray : public TObjArray {
@@ -208,12 +213,27 @@ public:
    ///////////////////////////////////////////////////////////////////////////////
 
    // Parameter & observable interpretation of servers
-   RooFit::OwningPtr<RooArgSet> getVariables(bool stripDisconnected = true) const;
-   RooFit::OwningPtr<RooArgSet> getParameters(const RooAbsData *data, bool stripDisconnected = true) const;
-   RooFit::OwningPtr<RooArgSet> getParameters(const RooAbsData &data, bool stripDisconnected = true) const;
-   RooFit::OwningPtr<RooArgSet> getParameters(const RooArgSet &observables, bool stripDisconnected = true) const;
-   RooFit::OwningPtr<RooArgSet> getParameters(const RooArgSet *observables, bool stripDisconnected = true) const;
-   virtual bool getParameters(const RooArgSet *observables, RooArgSet &outputSet, bool stripDisconnected = true) const;
+   RooFit::OwningPtr<RooArgSet> getVariables() const;
+
+   auto getParameters(const RooArgSet &ref, RooFit::GetParametersPolicy const &policy = {}) const
+   {
+      return getParameters(&ref, policy);
+   }
+   auto getParameters(const RooAbsData &ref, RooFit::GetParametersPolicy const &policy = {}) const
+   {
+      return getParameters(&ref, policy);
+   }
+   auto getParameters(std::nullptr_t, RooFit::GetParametersPolicy const &policy = {}) const
+   {
+      return getParameters(static_cast<RooArgSet const *>(nullptr), policy);
+   }
+   RooFit::OwningPtr<RooArgSet>
+   getParameters(const RooAbsData *data, RooFit::GetParametersPolicy const &policy = {}) const;
+   RooFit::OwningPtr<RooArgSet>
+   getParameters(const RooArgSet *observables, RooFit::GetParametersPolicy const &policy = {}) const;
+   bool getParameters(const RooArgSet *observables, RooArgSet &outputSet,
+                      RooFit::GetParametersPolicy const &policy = {}) const;
+
    RooFit::OwningPtr<RooArgSet> getObservables(const RooArgSet &set, bool valueOnly = true) const;
    RooFit::OwningPtr<RooArgSet> getObservables(const RooAbsData *data) const;
    RooFit::OwningPtr<RooArgSet> getObservables(const RooAbsData &data) const;
@@ -224,6 +244,9 @@ public:
    virtual bool checkObservables(const RooArgSet *nset) const;
    bool recursiveCheckObservables(const RooArgSet *nset) const;
    RooFit::OwningPtr<RooArgSet> getComponents() const;
+
+   virtual void
+   addParameters(RooAbsCollection &params, const RooArgSet *nset, RooFit::GetParametersPolicy const &policy) const;
 
    void attachArgs(const RooAbsCollection &set);
    void attachDataSet(const RooAbsData &set);
@@ -529,9 +552,6 @@ protected:
 
    virtual bool isValid() const;
 
-   virtual void
-   getParametersHook(const RooArgSet * /*nset*/, RooArgSet * /*list*/, bool /*stripDisconnected*/) const {};
-
    void clearValueAndShapeDirty() const
    {
       _valueDirty = false;
@@ -550,8 +570,6 @@ protected:
    static void ioStreamerPass2Finalize();
 
 private:
-   void addParameters(RooAbsCollection &params, const RooArgSet *nset = nullptr, bool stripDisconnected = true) const;
-
    RefCountListLegacyIterator_t *makeLegacyIterator(const RefCountList_t &list) const;
 
 protected:
@@ -652,7 +670,7 @@ protected:
    mutable RooExpensiveObjectCache *_eocache{nullptr}; //! Pointer to global cache manager for expensive components.
 
    mutable const TNamed *_namePtr = nullptr; //! De-duplicated name pointer, equal for all objects with the same name.
-   bool _isConstant = false; //! Cached isConstant status
+   bool _isConstant = false;                 //! Cached isConstant status
 
    mutable bool _localNoInhibitDirty = false; //! Prevent 'AlwaysDirty' mode for this node
 

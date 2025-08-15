@@ -72,21 +72,21 @@ RooEvaluatorWrapper::RooEvaluatorWrapper(const RooEvaluatorWrapper &other, const
 
 RooEvaluatorWrapper::~RooEvaluatorWrapper() = default;
 
-bool RooEvaluatorWrapper::getParameters(const RooArgSet *observables, RooArgSet &outputSet,
-                                        bool stripDisconnected) const
+void RooEvaluatorWrapper::addParameters(RooAbsCollection &params, const RooArgSet *nset,
+                                        RooFit::GetParametersPolicy const &policy) const
 {
-   outputSet.add(_evaluator->getParameters());
-   if (observables) {
-      outputSet.remove(*observables, /*silent*/ false, /*matchByNameOnly*/ true);
+   params.add(_evaluator->getParameters());
+   if (nset) {
+      params.remove(*nset, /*silent*/ false, /*matchByNameOnly*/ true);
    }
    // Exclude the data variables from the parameters which are not global observables
    for (auto const &item : _dataSpans) {
       if (_data->getGlobalObservables() && _data->getGlobalObservables()->find(item.first->GetName())) {
          continue;
       }
-      RooAbsArg *found = outputSet.find(item.first->GetName());
+      RooAbsArg *found = params.find(item.first->GetName());
       if (found) {
-         outputSet.remove(*found);
+         params.remove(*found);
       }
    }
    // If we take the global observables as data, we have to return these as
@@ -94,26 +94,26 @@ bool RooEvaluatorWrapper::getParameters(const RooArgSet *observables, RooArgSet 
    // constant parameters in the fit result that are global observables will
    // not have the right values.
    if (_takeGlobalObservablesFromData && _data->getGlobalObservables()) {
-      outputSet.replace(*_data->getGlobalObservables());
+      params.replace(*_data->getGlobalObservables());
    }
 
    // The disconnected parameters are stripped away in
    // RooAbsArg::getParametersHook(), that is only called in the original
    // RooAbsArg::getParameters() implementation. So he have to call it to
    // identify disconnected parameters to remove.
-   if (stripDisconnected) {
+   if (policy.stripDisconnected) {
       RooArgSet paramsStripped;
-      _topNode->getParameters(observables, paramsStripped, true);
+      RooFit::GetParametersPolicy policy;
+      policy.stripDisconnected = true;
+      _topNode->getParameters(nset, paramsStripped, policy);
       RooArgSet toRemove;
-      for (RooAbsArg *param : outputSet) {
+      for (RooAbsArg *param : params) {
          if (!paramsStripped.find(param->GetName())) {
             toRemove.add(*param);
          }
       }
-      outputSet.remove(toRemove, /*silent*/ false, /*matchByNameOnly*/ true);
+      params.remove(toRemove, /*silent*/ false, /*matchByNameOnly*/ true);
    }
-
-   return false;
 }
 
 bool RooEvaluatorWrapper::setData(RooAbsData &data, bool /*cloneData*/)
@@ -481,7 +481,7 @@ void RooEvaluatorWrapper::createFuncWrapper()
 {
    // Get the parameters.
    RooArgSet paramSet;
-   this->getParameters(_data ? _data->get() : nullptr, paramSet, /*sripDisconnectedParams=*/false);
+   this->getParameters(_data ? _data->get() : nullptr, paramSet);
 
    _funcWrapper =
       std::make_unique<RooFuncWrapper>(*_topNode, _data, dynamic_cast<RooSimultaneous const *>(_pdf), paramSet);
