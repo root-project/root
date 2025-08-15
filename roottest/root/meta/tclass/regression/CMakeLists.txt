@@ -9,8 +9,7 @@ ROOTTEST_ADD_TEST(execNormalizationInf
 if(pyroot)
     ROOTTEST_ADD_TEST(execNormalizationInfPy
                   MACRO execNormalizationInf.py
-                  OUTREF execNormalizationInf.py.ref
-                  ENVIRONMENT CLING_STANDARD_PCH=none)
+                  OUTREF execNormalizationInf.py.ref)
 endif()
 
 ROOTTEST_ADD_TEST(6038
