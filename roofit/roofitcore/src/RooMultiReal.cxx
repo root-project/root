@@ -42,8 +42,6 @@ Double_t RooMultiReal::evaluate() const
    return val;
 }
 
-
-
 // Propagate parameter fetching to the current model
 void RooMultiReal::getParametersHook(const RooArgSet *nset, RooArgSet *list, bool stripDisconnected) const
 {
