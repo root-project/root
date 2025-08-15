@@ -3,8 +3,7 @@ if(ROOT_pyroot_FOUND)
   ROOTTEST_ADD_TEST(api
                     MACRO ${api_macro_file}
                     WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-                    OUTREF PyAPITest.ref
-                    ENVIRONMENT CLING_STANDARD_PCH=none)
+                    OUTREF PyAPITest.ref)
 
   # TPython::LoadMacro and TPython::Import are broken in the new Cppyy
   # https://bitbucket.org/wlav/cppyy/issues/65
@@ -14,8 +13,7 @@ if(ROOT_pyroot_FOUND)
       ROOTTEST_ADD_TEST(class MACRO
                         runPyClassTest.C
                         WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-                        OUTREF PyClassTest.ref
-                        ENVIRONMENT CLING_STANDARD_PCH=none)
+                        OUTREF PyClassTest.ref)
     endif()
   endif()
 
