@@ -40,7 +40,7 @@ public:
       }
    }
 
-   std::size_t GetNumDimensions() const { return fAxes.size(); }
+   std::size_t GetNDimensions() const { return fAxes.size(); }
    const std::vector<AxisVariant> &Get() const { return fAxes; }
 
    friend bool operator==(const RAxes &lhs, const RAxes &rhs) { return lhs.fAxes == rhs.fAxes; }
@@ -50,19 +50,19 @@ public:
    /// It is the product of each dimension's total number of bins.
    ///
    /// \return the total number of bins
-   std::size_t ComputeTotalNumBins() const
+   std::size_t ComputeTotalNBins() const
    {
-      std::size_t totalNumBins = 1;
+      std::size_t totalNBins = 1;
       for (auto &&axis : fAxes) {
          if (auto *regular = std::get_if<RRegularAxis>(&axis)) {
-            totalNumBins *= regular->GetTotalNumBins();
+            totalNBins *= regular->GetTotalNBins();
          } else if (auto *variable = std::get_if<RVariableBinAxis>(&axis)) {
-            totalNumBins *= variable->GetTotalNumBins();
+            totalNBins *= variable->GetTotalNBins();
          } else {
             throw std::logic_error("unimplemented axis type");
          }
       }
-      return totalNumBins;
+      return totalNBins;
    }
 
 private:
@@ -72,10 +72,10 @@ private:
       const auto &axis = fAxes[I];
       RLinearizedIndex linIndex;
       if (auto *regular = std::get_if<RRegularAxis>(&axis)) {
-         index *= regular->GetTotalNumBins();
+         index *= regular->GetTotalNBins();
          linIndex = regular->ComputeLinearizedIndex(std::get<I>(args));
       } else if (auto *variable = std::get_if<RVariableBinAxis>(&axis)) {
-         index *= variable->GetTotalNumBins();
+         index *= variable->GetTotalNBins();
          linIndex = variable->ComputeLinearizedIndex(std::get<I>(args));
       } else {
          throw std::logic_error("unimplemented axis type");

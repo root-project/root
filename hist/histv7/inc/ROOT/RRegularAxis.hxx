@@ -32,7 +32,7 @@ welcome!
 */
 class RRegularAxis final {
    /// The number of normal bins
-   std::size_t fNumNormalBins;
+   std::size_t fNNormalBins;
    /// The lower end of the axis interval
    double fLow;
    /// The upper end of the axis interval
@@ -45,39 +45,39 @@ class RRegularAxis final {
 public:
    /// Construct a regular axis object.
    ///
-   /// \param[in] numNormalBins the number of normal bins, must be > 0
+   /// \param[in] nNormalBins the number of normal bins, must be > 0
    /// \param[in] low the lower end of the axis interval (inclusive)
    /// \param[in] high the upper end of the axis interval (exclusive), must be > low
    /// \param[in] enableFlowBins whether to enable underflow and overflow bins
-   RRegularAxis(std::size_t numNormalBins, double low, double high, bool enableFlowBins = true)
-      : fNumNormalBins(numNormalBins), fLow(low), fHigh(high), fEnableFlowBins(enableFlowBins)
+   RRegularAxis(std::size_t nNormalBins, double low, double high, bool enableFlowBins = true)
+      : fNNormalBins(nNormalBins), fLow(low), fHigh(high), fEnableFlowBins(enableFlowBins)
    {
-      if (numNormalBins == 0) {
-         throw std::invalid_argument("numNormalBins must be > 0");
+      if (nNormalBins == 0) {
+         throw std::invalid_argument("nNormalBins must be > 0");
       }
       if (low >= high) {
          std::string msg = "high must be > low, but " + std::to_string(low) + " >= " + std::to_string(high);
          throw std::invalid_argument(msg);
       }
-      fInvBinWidth = numNormalBins / (high - low);
+      fInvBinWidth = nNormalBins / (high - low);
    }
 
-   std::size_t GetNumNormalBins() const { return fNumNormalBins; }
-   std::size_t GetTotalNumBins() const { return fEnableFlowBins ? fNumNormalBins + 2 : fNumNormalBins; }
+   std::size_t GetNNormalBins() const { return fNNormalBins; }
+   std::size_t GetTotalNBins() const { return fEnableFlowBins ? fNNormalBins + 2 : fNNormalBins; }
    double GetLow() const { return fLow; }
    double GetHigh() const { return fHigh; }
    bool HasFlowBins() const { return fEnableFlowBins; }
 
    friend bool operator==(const RRegularAxis &lhs, const RRegularAxis &rhs)
    {
-      return lhs.fNumNormalBins == rhs.fNumNormalBins && lhs.fLow == rhs.fLow && lhs.fHigh == rhs.fHigh &&
+      return lhs.fNNormalBins == rhs.fNNormalBins && lhs.fLow == rhs.fLow && lhs.fHigh == rhs.fHigh &&
              lhs.fEnableFlowBins == rhs.fEnableFlowBins;
    }
 
    /// Compute the linarized index for a single argument.
    ///
-   /// The normal bins have indices \f$0\f$ to \f$fNumNormalBins - 1\f$, the underflow bin has index
-   /// \f$fNumNormalBins\f$, and the overflow bin has index \f$fNumNormalBins + 1\f$. If the argument is outside the
+   /// The normal bins have indices \f$0\f$ to \f$fNNormalBins - 1\f$, the underflow bin has index
+   /// \f$fNNormalBins\f$, and the overflow bin has index \f$fNNormalBins + 1\f$. If the argument is outside the
    /// interval \f$[fLow, fHigh)\f$ and the flow bins are disabled, the return value is invalid.
    ///
    /// \param[in] x the argument
@@ -88,9 +88,9 @@ public:
       // Put NaNs into overflow bin.
       bool overflow = !(x < fHigh);
       if (underflow) {
-         return {fNumNormalBins, fEnableFlowBins};
+         return {fNNormalBins, fEnableFlowBins};
       } else if (overflow) {
-         return {fNumNormalBins + 1, fEnableFlowBins};
+         return {fNNormalBins + 1, fEnableFlowBins};
       }
 
       std::size_t bin = (x - fLow) * fInvBinWidth;

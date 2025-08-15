@@ -18,7 +18,7 @@ TEST(RAxes, Constructor)
    const RVariableBinAxis variableBinAxis(bins);
 
    RAxes axes({regularAxis, variableBinAxis});
-   EXPECT_EQ(axes.GetNumDimensions(), 2);
+   EXPECT_EQ(axes.GetNDimensions(), 2);
    const auto &v = axes.Get();
    ASSERT_EQ(v.size(), 2);
    EXPECT_EQ(v[0].index(), 0);
@@ -28,7 +28,7 @@ TEST(RAxes, Constructor)
 
    std::vector<RAxes::AxisVariant> newAxes{variableBinAxis, regularAxis};
    axes = RAxes(newAxes);
-   EXPECT_EQ(axes.GetNumDimensions(), 2);
+   EXPECT_EQ(axes.GetNDimensions(), 2);
 
    EXPECT_THROW(RAxes({}), std::invalid_argument);
 }
@@ -65,7 +65,7 @@ TEST(RAxes, Equality)
    EXPECT_FALSE(axesC == axesD);
 }
 
-TEST(RAxes, ComputeTotalNumBins)
+TEST(RAxes, ComputeTotalNBins)
 {
    static constexpr std::size_t BinsX = 20;
    const RRegularAxis regularAxis(BinsX, 0, BinsX);
@@ -79,7 +79,7 @@ TEST(RAxes, ComputeTotalNumBins)
    const RAxes axes({regularAxis, variableBinAxis});
 
    // Both axes include underflow and overflow bins.
-   EXPECT_EQ(axes.ComputeTotalNumBins(), (BinsX + 2) * (BinsY + 2));
+   EXPECT_EQ(axes.ComputeTotalNBins(), (BinsX + 2) * (BinsY + 2));
 }
 
 TEST(RAxes, ComputeGlobalIndex)
@@ -128,7 +128,7 @@ TEST(RAxes, ComputeGlobalIndexNoFlowBins)
    bins.push_back(BinsY);
    const RVariableBinAxis variableBinAxis(bins, /*enableFlowBins=*/false);
    const RAxes axes({regularAxis, variableBinAxis});
-   ASSERT_EQ(axes.ComputeTotalNumBins(), BinsX * BinsY);
+   ASSERT_EQ(axes.ComputeTotalNBins(), BinsX * BinsY);
 
    {
       const auto globalIndex = axes.ComputeGlobalIndex(std::make_tuple(1.5, 2.5));
@@ -156,9 +156,9 @@ TEST(RAxes, ComputeGlobalIndexInvalidNumberOfArguments)
    static constexpr std::size_t Bins = 20;
    const RRegularAxis axis(Bins, 0, Bins);
    const RAxes axes1({axis});
-   ASSERT_EQ(axes1.GetNumDimensions(), 1);
+   ASSERT_EQ(axes1.GetNDimensions(), 1);
    const RAxes axes2({axis, axis});
-   ASSERT_EQ(axes2.GetNumDimensions(), 2);
+   ASSERT_EQ(axes2.GetNDimensions(), 2);
 
    EXPECT_NO_THROW(axes1.ComputeGlobalIndex(std::make_tuple(1)));
    EXPECT_THROW(axes1.ComputeGlobalIndex(std::make_tuple(1, 2)), std::invalid_argument);

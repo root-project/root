@@ -6,15 +6,15 @@ TEST(RRegularAxis, Constructor)
 {
    static constexpr std::size_t Bins = 20;
    RRegularAxis axis(Bins, 0, Bins);
-   EXPECT_EQ(axis.GetNumNormalBins(), Bins);
-   EXPECT_EQ(axis.GetTotalNumBins(), Bins + 2);
+   EXPECT_EQ(axis.GetNNormalBins(), Bins);
+   EXPECT_EQ(axis.GetTotalNBins(), Bins + 2);
    EXPECT_EQ(axis.GetLow(), 0);
    EXPECT_EQ(axis.GetHigh(), Bins);
    EXPECT_TRUE(axis.HasFlowBins());
 
    axis = RRegularAxis(Bins, 0, Bins, /*enableFlowBins=*/false);
-   EXPECT_EQ(axis.GetNumNormalBins(), Bins);
-   EXPECT_EQ(axis.GetTotalNumBins(), Bins);
+   EXPECT_EQ(axis.GetNNormalBins(), Bins);
+   EXPECT_EQ(axis.GetTotalNBins(), Bins);
    EXPECT_FALSE(axis.HasFlowBins());
 
    EXPECT_THROW(RRegularAxis(0, 0, Bins), std::invalid_argument);
