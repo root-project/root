@@ -2146,7 +2146,18 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
         scaleFactor *= rangeNevt/nExpected ;
 
       } else {
-        scaleFactor *= frame->getFitRangeNEvt()/nExpected ;
+        // Default plotting behavior: if PDF is extended, normalize to its own
+        // prediction. Otherwise, normalize to the number of events in the data.
+        frame->updateNormVars(*frame->getPlotVar());
+        const double nExp = expectedEvents(frame->getNormVars());
+
+        if (nExp > 0) {
+            // PDF is extended, scale to its expected number of events.
+            scaleFactor *= nExp / nExpected;
+        } else {
+            // PDF is not extended, scale to the number of events in the data.
+            scaleFactor *= frame->getFitRangeNEvt() / nExpected;
+        }
       }
     } else if (stype==RelativeExpected) {
       scaleFactor *= nExpected ;
