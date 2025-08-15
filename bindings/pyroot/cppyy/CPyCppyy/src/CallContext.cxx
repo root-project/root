@@ -2,22 +2,9 @@
 #include "CPyCppyy.h"
 #include "CallContext.h"
 
-namespace {
-
-bool setPolicy(CPyCppyy::CallContext::ECallFlags toggleFlag, bool enabled) {
-    auto &flags = CPyCppyy::CallContext::globalPolicyFlags();
-    bool old = flags & toggleFlag;
-    if (enabled)
-        flags |= toggleFlag;
-    else
-        flags &= ~toggleFlag;
-    return old;
-}
-
-} // namespace 
-
-
-uint32_t &CPyCppyy::CallContext::globalPolicyFlags() {
+//-----------------------------------------------------------------------------
+uint32_t &CPyCppyy::CallContext::GlobalPolicyFlags()
+{
    static uint32_t flags = 0;
    return flags;
 }
@@ -48,18 +35,13 @@ void CPyCppyy::CallContext::Cleanup() {
 }
 
 //-----------------------------------------------------------------------------
-bool CPyCppyy::CallContext::SetHeuristicMemoryPolicy(bool enabled)
+bool CPyCppyy::CallContext::SetGlobalPolicy(ECallFlags toggleFlag, bool enabled)
 {
-// Set the global memory policy, which affects object ownership when objects
-// are passed as function arguments.
-    return setPolicy(kUseHeuristics, enabled);
+    auto &flags = GlobalPolicyFlags();
+    bool old = flags & toggleFlag;
+    if (enabled)
+        flags |= toggleFlag;
+    else
+        flags &= ~toggleFlag;
+    return old;
 }
-
-//-----------------------------------------------------------------------------
-bool CPyCppyy::CallContext::SetGlobalSignalPolicy(bool enabled)
-{
-// Set the global signal policy, which determines whether a jmp address
-// should be saved to return to after a C++ segfault.
-    return setPolicy(kProtected, enabled);
-}
-

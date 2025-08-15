@@ -896,37 +896,23 @@ static PyObject* AddTypeReducer(PyObject*, PyObject* args)
     Py_RETURN_NONE;
 }
 
-//----------------------------------------------------------------------------
-static PyObject* SetHeuristicMemoryPolicy(PyObject*, PyObject* args)
-{
-// Set the global memory policy, which affects object ownership when objects
-// are passed as function arguments.
-    PyObject* enabled = 0;
-    if (!PyArg_ParseTuple(args, const_cast<char*>("O"), &enabled))
-        return nullptr;
-
-    if (CallContext::SetHeuristicMemoryPolicy(PyObject_IsTrue(enabled))) {
-        Py_RETURN_TRUE;
-    }
-
-    Py_RETURN_FALSE;
+#define DEFINE_CALL_POLICY_TOGGLE(name, flagname) \
+static PyObject* name(PyObject*, PyObject* args) \
+{ \
+    PyObject* enabled = 0; \
+    if (!PyArg_ParseTuple(args, const_cast<char*>("O"), &enabled)) \
+        return nullptr; \
+ \
+    if (CallContext::SetGlobalPolicy(CallContext::flagname, PyObject_IsTrue(enabled))) { \
+        Py_RETURN_TRUE; \
+    } \
+ \
+    Py_RETURN_FALSE; \
 }
 
-//----------------------------------------------------------------------------
-static PyObject* SetGlobalSignalPolicy(PyObject*, PyObject* args)
-{
-// Set the global signal policy, which determines whether a jmp address
-// should be saved to return to after a C++ segfault.
-    PyObject* enabled = 0;
-    if (!PyArg_ParseTuple(args, const_cast<char*>("O"), &enabled))
-        return nullptr;
-
-    if (CallContext::SetGlobalSignalPolicy(PyObject_IsTrue(enabled))) {
-        Py_RETURN_TRUE;
-    }
-
-    Py_RETURN_FALSE;
-}
+DEFINE_CALL_POLICY_TOGGLE(SetHeuristicMemoryPolicy, kUseHeuristics);
+DEFINE_CALL_POLICY_TOGGLE(SetImplicitSmartPointerConversion, kImplicitSmartPtrConversion);
+DEFINE_CALL_POLICY_TOGGLE(SetGlobalSignalPolicy, kProtected);
 
 //----------------------------------------------------------------------------
 static PyObject* SetOwnership(PyObject*, PyObject* args)
@@ -1014,9 +1000,12 @@ static PyMethodDef gCPyCppyyMethods[] = {
     {(char*) "_add_type_reducer", (PyCFunction)AddTypeReducer,
       METH_VARARGS, (char*)"Add a type reducer."},
     {(char*) "SetHeuristicMemoryPolicy", (PyCFunction)SetHeuristicMemoryPolicy,
-      METH_VARARGS, (char*)"Determines object ownership model."},
-    {(char*) "SetGlobalSignalPolicy", (PyCFunction)SetGlobalSignalPolicy,
-      METH_VARARGS, (char*)"Trap signals in safe mode to prevent interpreter abort."},
+      METH_VARARGS, (char*)"Set the global memory policy, which affects object ownership when objects are passed as function arguments."},
+    {(char*) "SetImplicitSmartPointerConversion", (PyCFunction)SetImplicitSmartPointerConversion,
+      METH_VARARGS, (char*)"Enable or disable the implicit conversion to smart pointers in function calls (on by default)."},
+    {(char *)"SetGlobalSignalPolicy", (PyCFunction)SetGlobalSignalPolicy, METH_VARARGS,
+     (char *)"Set the global signal policy, which determines whether a jmp address should be saved to return to after a "
+             "C++ segfault. In practical terms: trap signals in safe mode to prevent interpreter abort."},
     {(char*) "SetOwnership", (PyCFunction)SetOwnership,
       METH_VARARGS, (char*)"Modify held C++ object ownership."},
     {(char*) "AddSmartPtrType", (PyCFunction)AddSmartPtrType,
