@@ -52,7 +52,7 @@ protected:
    TDirectory *fMotherDir;   ///<!pointer to mother directory
 
            Int_t    Read(const char *name) override { return TObject::Read(name); }
-   virtual void     Create(Int_t nbytes, TFile* f = nullptr);
+   virtual void     Create(Long64_t nbytes, TFile* f = nullptr);
            void     Build(TDirectory* motherDir, const char* classname, Long64_t filepos);
            void     Reset(); // Currently only for the use of TBasket.
    virtual Int_t    WriteFileKeepBuffer(TFile *f = nullptr);
@@ -61,11 +61,11 @@ protected:
    TKey();
    TKey(TDirectory* motherDir);
    TKey(TDirectory* motherDir, const TKey &orig, UShort_t pidOffset);
-   TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes, TDirectory* motherDir);
-   TKey(const TString &name, const TString &title, const TClass *cl, Int_t nbytes, TDirectory* motherDir);
-   TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* motherDir);
-   TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory* motherDir);
-   TKey(Long64_t pointer, Int_t nbytes, TDirectory* motherDir = nullptr);
+   TKey(const char *name, const char *title, const TClass *cl, Long64_t nbytes, TDirectory* motherDir);
+   TKey(const TString &name, const TString &title, const TClass *cl, Long64_t nbytes, TDirectory* motherDir);
+   TKey(const TObject *obj, const char *name, Long64_t bufsize, TDirectory* motherDir);
+   TKey(const void *obj, const TClass *cl, const char *name, Long64_t bufsize, TDirectory* motherDir);
+   TKey(Long64_t pointer, Long64_t nbytes, TDirectory* motherDir = nullptr);
    ~TKey() override;
 
            void        Browse(TBrowser *b) override;

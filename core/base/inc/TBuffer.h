@@ -64,9 +64,9 @@ protected:
    void operator=(const TBuffer &) = delete;
 
    Int_t Read(const char *name) override { return TObject::Read(name); }
-   Int_t Write(const char *name, Int_t opt, Int_t bufsize) override
+   Int_t Write(const char *name, Int_t opt, Long64_t bufsize) override
                               { return TObject::Write(name, opt, bufsize); }
-   Int_t Write(const char *name, Int_t opt, Int_t bufsize) const override
+   Int_t Write(const char *name, Int_t opt, Long64_t bufsize) const override
                               { return TObject::Write(name, opt, bufsize); }
 
 public:
@@ -78,8 +78,8 @@ public:
    enum { kInitialSize = 1024, kMinimalSize = 128 };
 
    TBuffer(EMode mode);
-   TBuffer(EMode mode, Int_t bufsize);
-   TBuffer(EMode mode, Int_t bufsize, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
+   TBuffer(EMode mode, Long64_t bufsize);
+   TBuffer(EMode mode, Long64_t bufsize, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
    virtual ~TBuffer();
 
    Int_t    GetBufferVersion() const { return fVersion; }
@@ -87,10 +87,10 @@ public:
    Bool_t   IsWriting() const { return (fMode & kWrite) != 0; }
    void     SetReadMode();
    void     SetWriteMode();
-   void     SetBuffer(void *buf, UInt_t bufsize = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
+   void     SetBuffer(void *buf, Long64_t bufsize = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
    ReAllocCharFun_t GetReAllocFunc() const;
    void     SetReAllocFunc(ReAllocCharFun_t reallocfunc = nullptr);
-   void     SetBufferOffset(Int_t offset = 0) { fBufCur = fBuffer+offset; }
+   void     SetBufferOffset(Long64_t offset = 0) { fBufCur = fBuffer+offset; }
    void     SetParent(TObject *parent);
    TObject *GetParent()  const;
    char    *Buffer()     const { return fBuffer; }
@@ -98,33 +98,33 @@ public:
    Int_t    BufferSize() const { return fBufSize; }
    void     DetachBuffer() { fBuffer = nullptr; }
    Int_t    Length()     const { return (Int_t)(fBufCur - fBuffer); }
-   void     Expand(Int_t newsize, Bool_t copy = kTRUE);  // expand buffer to newsize
-   void     AutoExpand(Int_t size_needed);  // expand buffer to newsize
+   void     Expand(Long64_t newsize, Bool_t copy = kTRUE);  // expand buffer to newsize
+   void     AutoExpand(Long64_t size_needed);  // expand buffer to newsize
    Bool_t   ByteSwapBuffer(Long64_t n, EDataType type);  // Byte-swap N primitive-elements in the buffer
 
    virtual Bool_t     CheckObject(const TObject *obj) = 0;
    virtual Bool_t     CheckObject(const void *obj, const TClass *ptrClass) = 0;
 
-   virtual Int_t      ReadBuf(void *buf, Int_t max) = 0;
-   virtual void       WriteBuf(const void *buf, Int_t max) = 0;
+   virtual Long64_t   ReadBuf(void *buf, Long64_t max) = 0;
+   virtual void       WriteBuf(const void *buf, Long64_t max) = 0;
 
-   virtual char      *ReadString(char *s, Int_t max) = 0;
+   virtual char      *ReadString(char *s, Long64_t max) = 0;
    virtual void       WriteString(const char *s) = 0;
 
    virtual Int_t      GetVersionOwner() const  = 0;
    virtual Int_t      GetMapCount() const  = 0;
    virtual void       GetMappedObject(UInt_t tag, void* &ptr, TClass* &ClassPtr) const = 0;
-   virtual void       MapObject(const TObject *obj, UInt_t offset = 1) = 0;
-   virtual void       MapObject(const void *obj, const TClass *cl, UInt_t offset = 1) = 0;
+   virtual void       MapObject(const TObject *obj, ULong64_t offset = 1) = 0;
+   virtual void       MapObject(const void *obj, const TClass *cl, ULong64_t offset = 1) = 0;
    virtual void       Reset() = 0;
    virtual void       InitMap() = 0;
    virtual void       ResetMap() = 0;
    virtual void       SetReadParam(Int_t mapsize) = 0;
    virtual void       SetWriteParam(Int_t mapsize) = 0;
 
-   virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss) = 0;
-   virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname) = 0;
-   virtual void       SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE)= 0;
+   virtual Long64_t   CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const TClass *clss) = 0;
+   virtual Long64_t   CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const char *classname) = 0;
+   virtual void       SetByteCount(ULong64_t cntpos, Bool_t packInVersion = kFALSE)= 0;
 
    virtual void       SkipVersion(const TClass *cl = nullptr) = 0;
    virtual Version_t  ReadVersion(UInt_t *start = nullptr, UInt_t *bcnt = nullptr, const TClass *cl = nullptr) = 0;
@@ -164,7 +164,7 @@ public:
    virtual void       SetPidOffset(UShort_t offset) = 0;
    virtual Int_t      GetBufferDisplacement() const  = 0;
    virtual void       SetBufferDisplacement() = 0;
-   virtual void       SetBufferDisplacement(Int_t skipped) = 0;
+   virtual void       SetBufferDisplacement(Long64_t skipped) = 0;
 
    // basic types and arrays of basic types
    virtual   void     ReadFloat16 (Float_t *f, TStreamerElement *ele = nullptr) = 0;
@@ -320,8 +320,8 @@ public:
    // Utilities for TStreamerInfo
    virtual   void     ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force) = 0;
    virtual   void     ForceWriteInfoClones(TClonesArray *a) = 0;
-   virtual   Int_t    ReadClones (TClonesArray *a, Int_t nobjects, Version_t objvers) = 0;
-   virtual   Int_t    WriteClones(TClonesArray *a, Int_t nobjects) = 0;
+   virtual   Int_t    ReadClones (TClonesArray *a, Long64_t nobjects, Version_t objvers) = 0;
+   virtual   Int_t    WriteClones(TClonesArray *a, Long64_t nobjects) = 0;
 
    // Utilities for TClass
    virtual   Int_t    ReadClassEmulated(const TClass *cl, void *object, const TClass *onfile_class = nullptr) = 0;

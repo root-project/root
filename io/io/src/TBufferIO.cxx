@@ -48,7 +48,7 @@ TBufferIO::TBufferIO(TBuffer::EMode mode) : TBuffer(mode)
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TBufferIO::TBufferIO(TBuffer::EMode mode, Int_t bufsize) : TBuffer(mode, bufsize)
+TBufferIO::TBufferIO(TBuffer::EMode mode, Long64_t bufsize) : TBuffer(mode, bufsize)
 {
    fMapSize = fgMapSize;
 }
@@ -56,7 +56,7 @@ TBufferIO::TBufferIO(TBuffer::EMode mode, Int_t bufsize) : TBuffer(mode, bufsize
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TBufferIO::TBufferIO(TBuffer::EMode mode, Int_t bufsize, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
+TBufferIO::TBufferIO(TBuffer::EMode mode, Long64_t bufsize, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
    : TBuffer(mode, bufsize, buf, adopt, reallocfunc)
 {
    fMapSize = fgMapSize;
@@ -160,8 +160,9 @@ void TBufferIO::InitMap()
 /// contains (via via) a pointer to itself. In that case offset must be 1
 /// (default value for offset).
 
-void TBufferIO::MapObject(const TObject *obj, UInt_t offset)
+void TBufferIO::MapObject(const TObject *obj, ULong64_t offset)
 {
+   R__ASSERT(offset <= kMaxUInt);
    if (IsWriting()) {
       if (!fMap)
          InitMap();
@@ -193,8 +194,9 @@ void TBufferIO::MapObject(const TObject *obj, UInt_t offset)
 /// contains (via via) a pointer to itself. In that case offset must be 1
 /// (default value for offset).
 
-void TBufferIO::MapObject(const void *obj, const TClass *cl, UInt_t offset)
+void TBufferIO::MapObject(const void *obj, const TClass *cl, ULong64_t offset)
 {
+   R__ASSERT(offset <= kMaxUInt);
    if (IsWriting()) {
       if (!fMap)
          InitMap();
@@ -369,8 +371,9 @@ void TBufferIO::TagStreamerInfo(TVirtualStreamerInfo *info)
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface to TStreamerInfo::ReadBufferClones.
 
-Int_t TBufferIO::ReadClones(TClonesArray *a, Int_t nobjects, Version_t objvers)
+Int_t TBufferIO::ReadClones(TClonesArray *a, Long64_t nobjects, Version_t objvers)
 {
+   assert(nobjects <= kMaxInt);
    char **arr = (char **)a->GetObjectRef(0);
    char **end = arr + nobjects;
    // a->GetClass()->GetStreamerInfo()->ReadBufferClones(*this,a,nobjects,-1,0);
@@ -382,8 +385,9 @@ Int_t TBufferIO::ReadClones(TClonesArray *a, Int_t nobjects, Version_t objvers)
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface to TStreamerInfo::WriteBufferClones.
 
-Int_t TBufferIO::WriteClones(TClonesArray *a, Int_t nobjects)
+Int_t TBufferIO::WriteClones(TClonesArray *a, Long64_t nobjects)
 {
+   assert(nobjects <= kMaxInt);
    char **arr = reinterpret_cast<char **>(a->GetObjectRef(0));
    // a->GetClass()->GetStreamerInfo()->WriteBufferClones(*this,(TClonesArray*)a,nobjects,-1,0);
    TStreamerInfo *info = (TStreamerInfo *)a->GetClass()->GetStreamerInfo();

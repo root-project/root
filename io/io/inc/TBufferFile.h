@@ -59,9 +59,9 @@ protected:
    TBufferFile(const TBufferFile &) = delete;       ///<  not implemented
    void operator=(const TBufferFile &) = delete;    ///<  not implemented
 
-   Int_t  CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss, const char* classname);
-   void  CheckCount(UInt_t offset) override;
-   UInt_t CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass = kFALSE);
+   Long64_t CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const TClass *clss, const char* classname);
+   void     CheckCount(UInt_t offset) override;
+   UInt_t   CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass = kFALSE);
 
    void  WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) override;
 
@@ -69,13 +69,13 @@ public:
    enum { kStreamedMemberWise = BIT(14) }; //added to version number to know if a collection has been stored member-wise
 
    TBufferFile(TBuffer::EMode mode);
-   TBufferFile(TBuffer::EMode mode, Int_t bufsize);
-   TBufferFile(TBuffer::EMode mode, Int_t bufsize, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
+   TBufferFile(TBuffer::EMode mode, Long64_t bufsize);
+   TBufferFile(TBuffer::EMode mode, Long64_t bufsize, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = nullptr);
    ~TBufferFile() override;
 
-   Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss) override;
-   Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname) override;
-   void       SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE) override;
+   Long64_t   CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const TClass *clss) override;
+   Long64_t   CheckByteCount(ULong64_t startpos, ULong64_t bcnt, const char *classname) override;
+   void       SetByteCount(ULong64_t cntpos, Bool_t packInVersion = kFALSE) override;
 
    void       SkipVersion(const TClass *cl = nullptr) override;
    Version_t  ReadVersion(UInt_t *start = nullptr, UInt_t *bcnt = nullptr, const TClass *cl = nullptr) override;
@@ -95,10 +95,10 @@ public:
    void       ClassEnd(const TClass*) override {}
    void       ClassMember(const char*, const char * = nullptr, Int_t = -1, Int_t = -1) override {}
 
-   Int_t      ReadBuf(void *buf, Int_t max) override;
-   void       WriteBuf(const void *buf, Int_t max) override;
+   Long64_t   ReadBuf(void *buf, Long64_t max) override;
+   void       WriteBuf(const void *buf, Long64_t max) override;
 
-   char      *ReadString(char *s, Int_t max) override;
+   char      *ReadString(char *s, Long64_t max) override;
    void       WriteString(const char *s) override;
 
    TClass    *ReadClass(const TClass *cl = nullptr, UInt_t *objTag = nullptr) override;
