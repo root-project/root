@@ -30,8 +30,12 @@ class TBranch;
 class TFile;
 
 namespace ROOT {
-class RNTupleWriter;
+namespace Experimental {
+class RNTupleFillContext;
+class RNTupleParallelWriter;
+} // namespace Experimental
 class REntry;
+class RFieldToken;
 class TBufferMerger;
 class TBufferMergerFile;
 } // namespace ROOT
@@ -63,19 +67,20 @@ class R__CLING_PTRCHECK(off) UntypedSnapshotRNTupleHelper final : public RAction
    ROOT::Detail::RDF::RLoopManager *fOutputLoopManager;
    ColumnNames_t fInputFieldNames; // This contains the resolved aliases
    ColumnNames_t fOutputFieldNames;
-   std::unique_ptr<ROOT::RNTupleWriter> fWriter;
+   std::unique_ptr<ROOT::Experimental::RNTupleParallelWriter> fWriter;
+   std::vector<ROOT::RFieldToken> fFieldTokens;
 
-   ROOT::REntry *fOutputEntry;
-
-   std::vector<bool> fIsDefine;
+   unsigned int fNSlots;
+   std::vector<std::shared_ptr<ROOT::Experimental::RNTupleFillContext>> fFillContexts;
+   std::vector<std::unique_ptr<ROOT::REntry>> fEntries;
 
    std::vector<const std::type_info *> fInputColumnTypeIDs; // Types for the input columns
 
 public:
-   UntypedSnapshotRNTupleHelper(std::string_view filename, std::string_view dirname, std::string_view ntuplename,
-                                const ColumnNames_t &vfnames, const ColumnNames_t &fnames,
+   UntypedSnapshotRNTupleHelper(unsigned int nSlots, std::string_view filename, std::string_view dirname,
+                                std::string_view ntuplename, const ColumnNames_t &vfnames, const ColumnNames_t &fnames,
                                 const RSnapshotOptions &options, ROOT::Detail::RDF::RLoopManager *inputLM,
-                                ROOT::Detail::RDF::RLoopManager *outputLM, std::vector<bool> &&isDefine,
+                                ROOT::Detail::RDF::RLoopManager *outputLM,
                                 const std::vector<const std::type_info *> &colTypeIDs);
 
    UntypedSnapshotRNTupleHelper(const UntypedSnapshotRNTupleHelper &) = delete;
@@ -84,11 +89,13 @@ public:
    UntypedSnapshotRNTupleHelper &operator=(UntypedSnapshotRNTupleHelper &&) noexcept;
    ~UntypedSnapshotRNTupleHelper() final;
 
-   void InitTask(TTreeReader *, unsigned int /* slot */) {}
-
-   void Exec(unsigned int /* slot */, const std::vector<void *> &values);
-
    void Initialize();
+
+   void Exec(unsigned int slot, const std::vector<void *> &values);
+
+   void InitTask(TTreeReader *, unsigned int slot);
+
+   void FinalizeTask(unsigned int slot);
 
    void Finalize();
 
