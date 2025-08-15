@@ -42,19 +42,8 @@ Double_t RooMultiReal::evaluate() const
    return val;
 }
 
-/*RooFit::OwningPtr<RooArgSet> RooMultiReal::getParameters(const RooArgSet* obs, bool stripDisconnected) const {
-    RooArgSet* out = new RooArgSet();
-    for (int i = 0; i < _models.getSize(); ++i) {
-        const RooAbsReal* model = dynamic_cast<const RooAbsReal*>(_models.at(i));
-        if (model) {
-            RooFit::OwningPtr<RooArgSet> modelParams = model->getParameters(obs, stripDisconnected);
-            if (modelParams) {
-                out->add(*modelParams);
-            }
-        }
-    }
-    return RooFit::OwningPtr<RooArgSet>(out);
-}*/
+
+
 // Propagate parameter fetching to the current model
 void RooMultiReal::getParametersHook(const RooArgSet *nset, RooArgSet *list, bool stripDisconnected) const
 {
