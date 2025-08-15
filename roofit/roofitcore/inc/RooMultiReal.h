@@ -21,7 +21,8 @@ public:
    inline const RooCategoryProxy &indexCategory() const { return _index; }
    inline const RooListProxy &getModelList() const { return _models; }
 
-   void getParametersHook(const RooArgSet *nset, RooArgSet *list, bool stripDisconnected) const override;
+   void addParameters(RooAbsCollection &params, const RooArgSet *nset,
+                      RooFit::GetParametersPolicy const &policy) const override;
 
 protected:
    RooListProxy _models;    // list of RooAbsReal models
