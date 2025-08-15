@@ -2,6 +2,7 @@
 #include <RooConstVar.h>
 #include <RooGaussian.h>
 #include <RooMultiPdf.h>
+#include <RooMultiReal.h>
 #include <RooRealVar.h>
 #include <RooBernstein.h>
 #include <RooExponential.h>
@@ -256,4 +257,108 @@ TEST(RooMultiPdfTest, Minimization)
    // Validate the results
    EXPECT_DOUBLE_EQ(multiNllVals[0], nllVal1);
    EXPECT_DOUBLE_EQ(multiNllVals[1], nllVal2);
+}
+TEST(RooMultiReal, SelectsCorrectModel)
+{
+   RooRealVar x("x", "x", -10, 10);
+   x.setVal(2.0);
+
+   RooRealVar model1("model1", "model1", 5.0);
+   RooRealVar model2("model2", "model2", 10.0);
+
+   RooCategory indx("index", "index");
+
+   RooArgList models{model1, model2};
+
+   RooMultiReal multiReal("multiReal", "multi_real", indx, models);
+
+   RooArgSet normSet{x};
+
+   indx.setIndex(0);
+   EXPECT_DOUBLE_EQ(multiReal.getVal(normSet), model1.getVal());
+
+   indx.setIndex(1);
+   EXPECT_DOUBLE_EQ(multiReal.getVal(normSet), model2.getVal());
+}
+
+TEST(RooMultiReal, EvaluateAndParameterAccess_Hook)
+{
+    RooRealVar x("x", "x", -10, 10);
+
+    RooRealVar model1("model1", "model1", 5.0, 0., 10.);
+    RooRealVar model2("model2", "model2", 10.0, 5., 15.);
+
+    RooCategory indx("index", "index");
+
+    RooMultiReal multiReal("multiReal", "multi_real", indx, RooArgList{model1, model2});
+
+    indx.setIndex(0);
+    EXPECT_EQ(multiReal.getVal(), model1.getVal());
+
+    indx.setIndex(1);
+    EXPECT_EQ(multiReal.getVal(), model2.getVal());
+
+    // Prepare the observables
+    RooArgSet observables(x);
+
+    // Prepare an empty parameter list for getParametersHook to fill
+   RooArgSet params;
+    indx.setIndex(0);
+    multiReal.getParameters(&observables, params, true);
+    EXPECT_TRUE(params.find("model1") != nullptr);
+    EXPECT_TRUE(params.find("model2") == nullptr);
+    
+
+    indx.setIndex(1);
+    multiReal.getParameters(&observables, params, true);
+    EXPECT_TRUE(params.find("model1") == nullptr);
+    EXPECT_TRUE(params.find("model2") != nullptr);
+    
+}
+TEST(RooMultiPdf, StripDisconnectedParameterTest)
+{
+    // Observable
+    RooRealVar x("x", "x", -10, 10);
+
+    // Parameters for two Gaussians
+    RooRealVar mean1("mean1", "mean1", 0.0, -5.0, 5.0);
+    RooRealVar sigma1("sigma1", "sigma1", 1.0, 0.1, 10.0);
+    RooGaussian gauss1("gauss1", "gauss1", x, mean1, sigma1);
+
+    RooRealVar mean2("mean2", "mean2", 2.0, -5.0, 5.0);
+    RooRealVar sigma2("sigma2", "sigma2", 2.0, 0.1, 10.0);
+    RooGaussian gauss2("gauss2", "gauss2", x, mean2, sigma2);
+
+    // Category index
+    RooCategory cat("cat", "cat");
+    cat.defineType("first", 0);
+    cat.defineType("second", 1);
+
+    RooArgList pdfs(gauss1, gauss2);
+    RooMultiPdf multiPdf("multiPdf", "multiPdf", cat, pdfs);
+
+    RooArgSet observables(x);
+    RooArgSet params;
+
+    // --- Case 1: stripDisconnected = true ---
+    cat.setIndex(0);
+    multiPdf.getParameters(&observables, params,  true);
+
+    EXPECT_TRUE(params.find("mean1") != nullptr);
+    EXPECT_TRUE(params.find("sigma1") != nullptr);
+
+    EXPECT_TRUE(params.find("mean2") == nullptr); // should be stripped out
+    EXPECT_TRUE(params.find("sigma2") == nullptr); // should be stripped out
+
+    // --- Case 2: stripDisconnected = false ---
+    params.removeAll();
+    cat.setIndex(0);
+    multiPdf.getParameters(&observables, params, false);
+
+    // Now both models' parameters should be present
+    EXPECT_TRUE(params.find("mean1") != nullptr);
+    EXPECT_TRUE(params.find("sigma1") != nullptr);
+    EXPECT_TRUE(params.find("mean2") != nullptr);
+    EXPECT_TRUE(params.find("sigma2") != nullptr);
+    
 }
