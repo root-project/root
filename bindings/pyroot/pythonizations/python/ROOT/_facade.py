@@ -80,6 +80,7 @@ class ROOTFacade(types.ModuleType):
             "as_cobject",
             "addressof",
             "SetHeuristicMemoryPolicy",
+            "SetImplicitSmartPointerConversion",
             "SetOwnership",
         ]
         for name in self._cppyy_exports:
@@ -195,6 +196,15 @@ class ROOTFacade(types.ModuleType):
         # This restores the default in PyROOT which was changed
         # by new Cppyy
         self.SetHeuristicMemoryPolicy(True)
+
+        # The automatic conversion of ordinary obejcts to smart pointers is
+        # disabled for ROOT because it can cause trouble with overload
+        # resolution. If a function has overloads for both ordinary objects and
+        # smart pointers, then the implicit conversion to smart pointers can
+        # result in the smart pointer overload being hit, even though there
+        # would be an overload for the regular object. Since PyROOT didn't have
+        # this feature before 6.32 anyway, disabling it was the safest option.
+        self.SetImplicitSmartPointerConversion(False)
 
         # Redirect lookups to cppyy's global namespace
         self.__class__.__getattr__ = self._fallback_getattr

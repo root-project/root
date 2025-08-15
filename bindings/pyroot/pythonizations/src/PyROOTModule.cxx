@@ -217,7 +217,7 @@ extern "C" PyObject *PyInit_libROOTPythonizations()
    TInterpreter::Instance();
 
    // signal policy: don't abort interpreter in interactive mode
-   CallContext::SetGlobalSignalPolicy(!gROOT->IsBatch());
+   CallContext::SetGlobalPolicy(CallContext::kProtected, !gROOT->IsBatch());
 
    // inject ROOT namespace for convenience
    PyModule_AddObject(gRootModule, (char *)"ROOT", CreateScopeProxy("ROOT"));
