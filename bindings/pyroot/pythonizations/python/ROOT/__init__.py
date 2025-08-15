@@ -12,9 +12,6 @@ import importlib
 import os
 import sys
 
-# Prevent cppyy's check for the PCH
-os.environ["CLING_STANDARD_PCH"] = "none"
-
 # Prevent cppyy's check for extra header directory
 os.environ["CPPYY_API_PATH"] = "none"
 
