@@ -117,10 +117,17 @@ target_compile_definitions(Core PRIVATE
 if (runtime_cxxmodules)
   list(APPEND core_implicit_modules "-mSystemByproducts")
   # Force generation of _Builtin_intrinsics from Core.
-  list(APPEND core_implicit_modules "-m" "_Builtin_intrinsics" "-mByproduct" "_Builtin_intrinsics")
-  list(APPEND core_implicit_modules "-mByproduct" "ROOT_Foundation_Stage1_NoRTTI")
-  list(APPEND core_implicit_modules "-mByproduct" "ROOT_Foundation_C")
-  list(APPEND core_implicit_modules "-mByproduct" "ROOT_Rtypes")
+  list(APPEND core_implicit_modules "-m" "_Builtin_intrinsics")
+
+  set(byproducts _Builtin_intrinsics ROOT_Foundation_Stage1_NoRTTI ROOT_Foundation_C ROOT_Rtypes)
+  foreach(byproduct ${byproducts})
+    list(APPEND core_implicit_modules "-mByproduct" "${byproduct}")
+    install(FILES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${byproduct}.pcm DESTINATION ${CMAKE_INSTALL_LIBDIR})
+  endforeach()
+
+  list(APPEND core_implicit_modules "-mByproduct" "")
+  list(APPEND core_implicit_modules "-mByproduct" "")
+  list(APPEND core_implicit_modules "-mByproduct" "")
 endif(runtime_cxxmodules)
 
 get_target_property(CORE_DICT_HEADERS Core DICT_HEADERS)
