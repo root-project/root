@@ -780,11 +780,6 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
          }
       }
    }
-   if (fGlobalEntryRange.has_value()) {
-      fSeenEntries = fSeenEntriesWithGlobalRange;
-   } else {
-      fSeenEntries = fSeenEntriesNoGlobalRange;
-   }
 
    return ranges;
 }
@@ -846,7 +841,6 @@ bool ROOT::RDF::RNTupleDS::HasColumn(std::string_view colName) const
 
 void ROOT::RDF::RNTupleDS::Initialize()
 {
-   fSeenEntries = 0;
    fSeenEntriesNoGlobalRange = 0;
    fSeenEntriesWithGlobalRange = 0;
    fNextFileIndex = 0;
