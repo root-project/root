@@ -958,25 +958,33 @@ TEST_P(RDatasetSpecTest, RNTupleWithGlobalRanges)
    auto filt = df.Filter("rdfentry_ == 2");
    auto result = filt.Take<ULong64_t>("x");
    auto res = result.GetValue();
+   auto count_entries = df.Count().GetValue();
    EXPECT_EQ(res[0], 2);
+   EXPECT_EQ(count_entries, 3);
 
    auto df2 = RDataFrame(spec.WithGlobalRange(goodRanges[1]));
    auto filt2 = df2.Filter("rdfentry_ == 3");
    auto result2 = filt2.Take<ULong64_t>("x");
    auto res2 = result2.GetValue();
+   auto count_entries_2 = df2.Count().GetValue();
    EXPECT_EQ(res2[0], 3);
+   EXPECT_EQ(count_entries_2, 5);
 
    auto df3 = RDataFrame(spec.WithGlobalRange(goodRanges[2]));
    auto filt3 = df3.Filter("rdfentry_ == 8");
    auto result3 = filt3.Take<ULong64_t>("x");
    auto res3 = result3.GetValue();
+   auto count_entries_3 = df3.Count().GetValue();
    EXPECT_EQ(res3[0], 12);
+   EXPECT_EQ(count_entries_3, 13);
 
    auto df4 = RDataFrame(spec.WithGlobalRange(goodRanges[3]));
    auto filt4 = df4.Filter("rdfentry_ == 19");
    auto result4 = filt4.Take<ULong64_t>("x");
    auto res4 = result4.GetValue();
+   auto count_entries_4 = df4.Count().GetValue();
    EXPECT_EQ(res4[0], 12);
+   EXPECT_EQ(count_entries_4, 4);
 
    EXPECT_EQ(df_final.GetValue(), 11);
    EXPECT_EQ(df_filtered.GetValue(), 10);
