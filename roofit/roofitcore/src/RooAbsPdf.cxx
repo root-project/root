@@ -351,6 +351,12 @@ double RooAbsPdf::getValV(const RooArgSet* nset) const
   return _value ;
 }
 
+double RooAbsPdf::evaluate() const
+{
+   throw std::runtime_error(
+      "RooAbsPdf::evaluate() should not be called! Please implement in the RooAbsPdf-derived class.");
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Analytical integral with normalization (see RooAbsReal::analyticalIntegralWN() for further information).
