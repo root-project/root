@@ -87,6 +87,7 @@ set(py_sources
   ROOT/_pythonization/_memory_utils.py
   ROOT/_pythonization/_pyz_utils.py
   ROOT/_pythonization/_rntuple.py
+  ROOT/_pythonization/_rfile.py
   ROOT/_pythonization/_runtime_error.py
   ROOT/_pythonization/_rvec.py
   ROOT/_pythonization/_stl_vector.py
