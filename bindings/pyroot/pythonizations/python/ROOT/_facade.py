@@ -79,9 +79,7 @@ class ROOTFacade(types.ModuleType):
             "bind_object",
             "as_cobject",
             "addressof",
-            "SetMemoryPolicy",
-            "kMemoryHeuristics",
-            "kMemoryStrict",
+            "SetHeuristicMemoryPolicy",
             "SetOwnership",
         ]
         for name in self._cppyy_exports:
@@ -196,7 +194,7 @@ class ROOTFacade(types.ModuleType):
         # Set memory policy to kUseHeuristics.
         # This restores the default in PyROOT which was changed
         # by new Cppyy
-        self.SetMemoryPolicy(self.kMemoryHeuristics)
+        self.SetHeuristicMemoryPolicy(True)
 
         # Redirect lookups to cppyy's global namespace
         self.__class__.__getattr__ = self._fallback_getattr

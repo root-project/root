@@ -980,8 +980,7 @@ PyObject* CPyCppyy::CPPMethod::Execute(void* self, ptrdiff_t offset, CallContext
 // call the interface method
     PyObject* result = 0;
 
-    if (CallContext::sSignalPolicy != CallContext::kProtected && \
-        !(ctxt->fFlags & CallContext::kProtected)) {
+    if (!(CallContext::globalPolicyFlags() & CallContext::kProtected) && !(ctxt->fFlags & CallContext::kProtected)) {
     // bypasses try block (i.e. segfaults will abort)
         result = ExecuteFast(self, offset, ctxt);
     } else {
