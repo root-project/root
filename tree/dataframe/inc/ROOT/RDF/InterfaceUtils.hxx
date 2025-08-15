@@ -271,6 +271,7 @@ struct SnapshotHelperArgs {
    ROOT::Detail::RDF::RLoopManager *fOutputLoopManager;
    ROOT::Detail::RDF::RLoopManager *fInputLoopManager;
    bool fToNTuple;
+   bool fIncludeVariations;
 };
 
 template <typename PrevNodeType>
@@ -304,12 +305,23 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
    } else {
       if (!ROOT::IsImplicitMTEnabled()) {
          // single-thread snapshot
-         using Helper_t = UntypedSnapshotTTreeHelper;
-         using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
-         actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options,
-                                               std::move(isDefine), outputLM, inputLM, colTypeIDs),
-                                      colNames, colTypeIDs, prevNode, colRegister));
+         if (snapHelperArgs->fIncludeVariations) {
+            using Helper_t = SnapshotHelperWithVariations;
+            using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
+            actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options,
+                                                  std::move(isDefine), outputLM, inputLM, colTypeIDs),
+                                         colNames, colTypeIDs, prevNode, colRegister));
+         } else {
+            using Helper_t = UntypedSnapshotTTreeHelper;
+            using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
+            actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options,
+                                                  std::move(isDefine), outputLM, inputLM, colTypeIDs),
+                                         colNames, colTypeIDs, prevNode, colRegister));
+         }
       } else {
+         if (snapHelperArgs->fIncludeVariations) {
+            throw std::invalid_argument("Multi-threaded snapshot with variations is not supported yet.");
+         }
          // multi-thread snapshot
          using Helper_t = UntypedSnapshotTTreeHelperMT;
          using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
