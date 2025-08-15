@@ -1321,7 +1321,7 @@ class TestREGRESSION:
         try:
             # The scope with the heuristic memory policy is in a try-except-finally block
             # to ensure the memory policy is always reset.
-            old_memory_policy = cppyy._backend.SetMemoryPolicy(cppyy._backend.kMemoryHeuristics)
+            old_memory_policy = cppyy._backend.SetHeuristicMemoryPolicy(True)
 
             # Validate the intended behavior for different argument types:
             #   const ref : caller keeps ownership
@@ -1348,7 +1348,7 @@ class TestREGRESSION:
         except:
             raise # rethrow the exception
         finally:
-            cppyy._backend.SetMemoryPolicy(old_memory_policy)
+            cppyy._backend.SetHeuristicMemoryPolicy(old_memory_policy)
 
     @mark.xfail()
     def test45_typedef_resolution(self):
