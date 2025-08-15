@@ -687,6 +687,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
    // We remember the connection from first absolute entry index of a range to its REntryRangeDS record
    // so that we can properly rewire the column reader in InitSlot
    fFirstEntry2RangeIdx.clear();
+   fOriginalRanges.clear();
 
    ULong64_t nEntriesPerSource = 0;
 
