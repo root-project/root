@@ -57,31 +57,31 @@ struct CallContext {
     ~CallContext() { if (fTemps) Cleanup(); delete fArgsVec; }
 
     enum ECallFlags {
-        kNone           = 0x000000,
-        kIsSorted       = 0x000001, // if method overload priority determined
-        kIsCreator      = 0x000002, // if method creates python-owned objects
-        kIsConstructor  = 0x000004, // if method is a C++ constructor
-        kHaveImplicit   = 0x000008, // indicate that implicit converters are available
-        kAllowImplicit  = 0x000010, // indicate that implicit conversions are allowed
-        kNoImplicit     = 0x000020, // disable implicit to prevent recursion
-        kCallDirect     = 0x000040, // call wrapped method directly, no inheritance
-        kFromDescr      = 0x000080, // initiated from a descriptor
-        kUseHeuristics  = 0x000100, // if method applies heuristics memory policy
-        kReleaseGIL     = 0x000400, // if method should release the GIL
-        kSetLifeLine    = 0x000800, // if return value is part of 'this'
-        kNeverLifeLine  = 0x001000, // if the return value is never part of 'this'
-        kPyException    = 0x002000, // Python exception during method execution
-        kCppException   = 0x004000, // C++ exception during method execution
-        kProtected      = 0x008000, // if method should return on signals
-        kUseFFI         = 0x010000, // not implemented
-        kIsPseudoFunc   = 0x020000, // internal, used for introspection
+        kNone                        = 0x000000,
+        kIsSorted                    = 0x000001, // if method overload priority determined
+        kIsCreator                   = 0x000002, // if method creates python-owned objects
+        kIsConstructor               = 0x000004, // if method is a C++ constructor
+        kHaveImplicit                = 0x000008, // indicate that implicit converters are available
+        kAllowImplicit               = 0x000010, // indicate that implicit conversions are allowed
+        kNoImplicit                  = 0x000020, // disable implicit to prevent recursion
+        kCallDirect                  = 0x000040, // call wrapped method directly, no inheritance
+        kFromDescr                   = 0x000080, // initiated from a descriptor
+        kUseHeuristics               = 0x000100, // if method applies heuristics memory policy
+        kImplicitSmartPtrConversion  = 0x000200, // enable implicit conversion to smart pointers
+        kReleaseGIL                  = 0x000400, // if method should release the GIL
+        kSetLifeLine                 = 0x000800, // if return value is part of 'this'
+        kNeverLifeLine               = 0x001000, // if the return value is never part of 'this'
+        kPyException                 = 0x002000, // Python exception during method execution
+        kCppException                = 0x004000, // C++ exception during method execution
+        kProtected                   = 0x008000, // if method should return on signals
+        kUseFFI                      = 0x010000, // not implemented
+        kIsPseudoFunc                = 0x020000, // internal, used for introspection
     };
 
 // Policies about memory handling and signal safety
-    static bool SetHeuristicMemoryPolicy(bool enabled);
-    static bool SetGlobalSignalPolicy(bool enabled);
+    static bool SetGlobalPolicy(ECallFlags e, bool enabled);
 
-    static uint32_t &globalPolicyFlags();
+    static uint32_t& GlobalPolicyFlags();
 
     void AddTemporary(PyObject* pyobj);
     void Cleanup();
@@ -148,7 +148,7 @@ inline bool ReleasesGIL(CallContext* ctxt) {
 
 inline bool UseStrictOwnership() {
     using CC = CPyCppyy::CallContext;
-    return !(CC::globalPolicyFlags() & CC::kUseHeuristics);
+    return !(CC::GlobalPolicyFlags() & CC::kUseHeuristics);
 }
 
 template<CallContext::ECallFlags F>
