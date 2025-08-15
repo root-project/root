@@ -1412,7 +1412,7 @@ public:
 
          auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
             std::string(filename), std::string(dirname), std::string(treename), colListWithAliasesAndSizeBranches,
-            options, newRDF->GetLoopManager(), GetLoopManager(), true /* fToNTuple */});
+            options, newRDF->GetLoopManager(), GetLoopManager(), true /* fToNTuple */, /*fIncludeVariations=*/false});
 
          auto &&nColumns = colListNoAliasesWithSizeBranches.size();
          const auto validColumnNames = GetValidatedColumnNames(nColumns, colListNoAliasesWithSizeBranches);
@@ -1450,7 +1450,7 @@ public:
 
          auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
             std::string(filename), std::string(dirname), std::string(treename), colListWithAliasesAndSizeBranches,
-            options, newRDF->GetLoopManager(), GetLoopManager(), false /* fToRNTuple */});
+            options, newRDF->GetLoopManager(), GetLoopManager(), false /* fToRNTuple */, options.fIncludeVariations});
 
          auto &&nColumns = colListNoAliasesWithSizeBranches.size();
          const auto validColumnNames = GetValidatedColumnNames(nColumns, colListNoAliasesWithSizeBranches);
