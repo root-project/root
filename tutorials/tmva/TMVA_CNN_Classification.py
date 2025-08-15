@@ -22,22 +22,29 @@
 ## The difference between signal and background is in the gaussian width.
 ## The width for the background gaussian is slightly larger than the signal width by few % values
 
+import ROOT
+
 import os
 import importlib.util
 
+useKerasCNN = False
+
+if ROOT.gSystem.GetFromPipe("root-config --has-tmva-pymva") == "yes":
+    useKerasCNN = True
+
 opt = [1, 1, 1, 1, 1]
 useTMVACNN = opt[0] if len(opt) > 0  else False
-useKerasCNN = opt[1] if len(opt) > 1 else False
+useKerasCNN = opt[1] if len(opt) > 1 else useKerasCNN
 useTMVADNN = opt[2] if len(opt) > 2 else False
 useTMVABDT = opt[3] if len(opt) > 3 else False
 usePyTorchCNN = opt[4] if len(opt) > 4 else False
 
-tf_spec = importlib.util.find_spec("tensorflow")
-if tf_spec is None:
-    useKerasCNN = False
-    print("TMVA_CNN_Classificaton","Skip using Keras since tensorflow is not installed")
-else:
-    import tensorflow
+if useKerasCNN:
+    try:
+      import tensorflow
+    except:
+      ROOT.Warning("TMVA_CNN_Classification", "Skip using Keras since tensorflow cannot be imported")
+      useKerasCNN = False
 
 # PyTorch has to be imported before ROOT to avoid crashes because of clashing
 # std::regexp symbols that are exported by cppyy.
