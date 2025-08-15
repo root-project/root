@@ -122,11 +122,15 @@ struct RBranchData {
         fIsDefine{isDefine}
    {
    }
+   RBranchData(RBranchData const &other) noexcept { *this = other; }
+   RBranchData(RBranchData &&other) noexcept { *this = std::move(other); }
    ~RBranchData()
    {
       if (fEmptyInstanceDeleter)
          fEmptyInstanceDeleter(fEmptyInstance);
    }
+   RBranchData &operator=(RBranchData const &other) noexcept;
+   RBranchData &operator=(RBranchData &&other) noexcept;
 
    void ClearBranchPointers()
    {
