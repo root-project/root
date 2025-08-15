@@ -8,8 +8,11 @@
 ### \macro_output
 ### \author Dante Niewenhuis
 
-import tensorflow as tf
 import ROOT
+
+# TensorFlow has to be imported after ROOT to avoid LLMV symbol clashes if ROOT
+# was built with LLVM in Debug mode and TensorFlow>=2.20.0.
+import tensorflow as tf
 
 tree_name = "sig_tree"
 file_name = str(ROOT.gROOT.GetTutorialDir()) + "/tmva/data/Higgs_data.root"
