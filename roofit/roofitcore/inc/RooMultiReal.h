@@ -8,31 +8,32 @@
 
 class RooMultiReal : public RooAbsReal {
 public:
-    RooMultiReal() = default;
-    RooMultiReal(const char *name, const char *title, RooCategory &indexCat, const RooArgList &models);
-    RooMultiReal(const RooMultiReal &other, const char *name = nullptr);
-    virtual ~RooMultiReal() {}
+   RooMultiReal() = default;
+   RooMultiReal(const char *name, const char *title, RooCategory &indexCat, const RooArgList &models);
+   RooMultiReal(const RooMultiReal &other, const char *name = nullptr);
+   virtual ~RooMultiReal() {}
 
-    TObject *clone(const char *newname) const override { return new RooMultiReal(*this, newname); }
+   TObject *clone(const char *newname) const override { return new RooMultiReal(*this, newname); }
 
-    inline int getCurrentIndex() const { return static_cast<int>(_index); }
-    inline RooAbsReal *getCurrentReal() const { return static_cast<RooAbsReal *>(_models.at(getCurrentIndex())); }
-    inline int getNumModels() const { return _models.getSize(); }
-    inline const RooCategoryProxy &indexCategory() const { return _index; }
-    inline const RooListProxy &getModelList() const { return _models; }
-   // virtual RooFit::OwningPtr<RooArgSet> getParameters(const RooArgSet* observables, bool stripDisconnected = true) const;
+   inline int getCurrentIndex() const { return static_cast<int>(_index); }
+   inline RooAbsReal *getCurrentReal() const { return static_cast<RooAbsReal *>(_models.at(getCurrentIndex())); }
+   inline int getNumModels() const { return _models.getSize(); }
+   inline const RooCategoryProxy &indexCategory() const { return _index; }
+   inline const RooListProxy &getModelList() const { return _models; }
+   // virtual RooFit::OwningPtr<RooArgSet> getParameters(const RooArgSet* observables, bool stripDisconnected = true)
+   // const;
    void getParametersHook(const RooArgSet *nset, RooArgSet *list, bool stripDisconnected) const override;
+
 protected:
-    RooListProxy _models;         // list of RooAbsReal models
-    RooCategoryProxy _index;      // index category proxy
+   RooListProxy _models;    // list of RooAbsReal models
+   RooCategoryProxy _index; // index category proxy
 
-    mutable Int_t _oldIndex{-1};
+   mutable Int_t _oldIndex{-1};
 
-    Double_t evaluate() const override;
-  
+   Double_t evaluate() const override;
 
 private:
-    ClassDefOverride(RooMultiReal, 1)
+   ClassDefOverride(RooMultiReal, 1)
 };
 
-#endif 
+#endif
