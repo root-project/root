@@ -110,3 +110,56 @@ TEST(RRegularAxis, ComputeLinearizedIndex)
       EXPECT_FALSE(linIndex.fValid);
    }
 }
+
+TEST(RRegularAxis, GetLinearizedIndex)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axisNoFlowBins(Bins, 0, Bins, /*enableFlowBins=*/false);
+
+   {
+      const auto underflow = RBinIndex::Underflow();
+      auto linIndex = axis.GetLinearizedIndex(underflow);
+      EXPECT_EQ(linIndex.fIndex, Bins);
+      EXPECT_TRUE(linIndex.fValid);
+      linIndex = axisNoFlowBins.GetLinearizedIndex(underflow);
+      EXPECT_EQ(linIndex.fIndex, Bins);
+      EXPECT_FALSE(linIndex.fValid);
+   }
+
+   for (std::size_t i = 0; i < Bins; i++) {
+      auto linIndex = axis.GetLinearizedIndex(i);
+      EXPECT_EQ(linIndex.fIndex, i);
+      EXPECT_TRUE(linIndex.fValid);
+      linIndex = axisNoFlowBins.GetLinearizedIndex(i);
+      EXPECT_EQ(linIndex.fIndex, i);
+      EXPECT_TRUE(linIndex.fValid);
+   }
+
+   // Out of bounds
+   {
+      auto linIndex = axis.GetLinearizedIndex(Bins);
+      EXPECT_EQ(linIndex.fIndex, Bins);
+      EXPECT_FALSE(linIndex.fValid);
+      linIndex = axisNoFlowBins.GetLinearizedIndex(Bins);
+      EXPECT_EQ(linIndex.fIndex, Bins);
+      EXPECT_FALSE(linIndex.fValid);
+   }
+
+   {
+      const auto overflow = RBinIndex::Overflow();
+      auto linIndex = axis.GetLinearizedIndex(overflow);
+      EXPECT_TRUE(linIndex.fValid);
+      EXPECT_EQ(linIndex.fIndex, Bins + 1);
+      linIndex = axisNoFlowBins.GetLinearizedIndex(overflow);
+      EXPECT_FALSE(linIndex.fValid);
+   }
+
+   {
+      const RBinIndex invalid;
+      auto linIndex = axis.GetLinearizedIndex(invalid);
+      EXPECT_FALSE(linIndex.fValid);
+      linIndex = axisNoFlowBins.GetLinearizedIndex(invalid);
+      EXPECT_FALSE(linIndex.fValid);
+   }
+}
