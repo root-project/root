@@ -104,7 +104,6 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    std::vector<std::vector<ROOT::Internal::RDF::RNTupleColumnReader *>> fActiveColumnReaders;
 
    ULong64_t fSeenEntriesNoGlobalRange = 0; ///< The number of entries seen so far in GetEntryRanges()
-   ULong64_t fCounterFileEmpty = 0;
 
    std::vector<REntryRangeDS> fCurrentRanges; ///< Basis for the ranges returned by the last GetEntryRanges() call
    std::vector<REntryRangeDS> fNextRanges;    ///< Basis for the ranges populated by the PrepareNextRanges() call

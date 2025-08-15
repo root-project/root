@@ -638,7 +638,6 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
 std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRanges()
 {
    std::vector<std::pair<ULong64_t, ULong64_t>> ranges;
-   ULong64_t start = 0;
 
    // We need to distinguish between single threaded and multi-threaded runs.
    // In single threaded mode, InitSlot is only called once and column readers have to be rewired
@@ -701,7 +700,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
          nEntriesPerSource = 0;
       }
 
-      start = fCurrentRanges[i].fFirstEntry + fSeenEntriesNoGlobalRange;
+      auto start = fCurrentRanges[i].fFirstEntry + fSeenEntriesNoGlobalRange;
       auto end = fCurrentRanges[i].fLastEntry + fSeenEntriesNoGlobalRange;
 
       nEntriesPerSource += end - start;
@@ -749,7 +748,6 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
             fOriginalRanges.emplace_back(start, end);
             fFirstEntry2RangeIdx[start] = i;
             ranges.emplace_back(start, start);
-            fCounterFileEmpty += 1;
          }
       }
 
@@ -764,18 +762,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
 
    if ((fNSlots == 1) && (fCurrentRanges[0].fSource)) {
       for (auto r : fActiveColumnReaders[0]) {
-
-         if (fGlobalEntryRange.has_value()) {
-            if (ranges[0].first > fOriginalRanges[0].first && fCounterFileEmpty == 0) {
-               r->Connect(*fCurrentRanges[0].fSource, 0);
-            } else if (fCounterFileEmpty > 0) {
-               r->Connect(*fCurrentRanges[0].fSource, start);
-            } else {
-               r->Connect(*fCurrentRanges[0].fSource, ranges[0].first);
-            }
-         } else {
-            r->Connect(*fCurrentRanges[0].fSource, ranges[0].first);
-         }
+         r->Connect(*fCurrentRanges[0].fSource, fOriginalRanges[0].first);
       }
    }
 
@@ -800,12 +787,8 @@ void ROOT::RDF::RNTupleDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
    fSlotsToRangeIdxs[slot * ROOT::Internal::RDF::CacheLineStep<std::size_t>()] = idxRange;
 
    for (auto r : fActiveColumnReaders[slot]) {
-      if (fGlobalEntryRange.has_value()) {
-         r->Connect(*fCurrentRanges[idxRange].fSource,
-                    fOriginalRanges[idxRange].first - fCurrentRanges[idxRange].fFirstEntry);
-      } else {
-         r->Connect(*fCurrentRanges[idxRange].fSource, firstEntry - fCurrentRanges[idxRange].fFirstEntry);
-      }
+      r->Connect(*fCurrentRanges[idxRange].fSource,
+                 fOriginalRanges[idxRange].first - fCurrentRanges[idxRange].fFirstEntry);
    }
 }
 
