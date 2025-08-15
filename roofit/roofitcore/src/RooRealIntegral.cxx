@@ -399,7 +399,12 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   RooArgSet branchListVD;
   branchListVD.reserve(branchListVDAll.size());
   for (RooAbsArg *branch : branchListVDAll) {
-    if (branch != &function) branchListVD.add(*branch);
+    if (branch != &function) {
+      // The branchListVDAll is a RooArgList, so it's not de-duplicated yet.
+      // Add elements to the branchListVD with the "silent" flag, so it
+      // de-duplicates while adding without printing errors.
+      branchListVD.add(*branch, /*silent=*/true);
+    }
   }
 
   for (auto branch: branchList) {
