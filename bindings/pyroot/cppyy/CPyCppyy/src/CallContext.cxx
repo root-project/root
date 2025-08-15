@@ -2,15 +2,25 @@
 #include "CPyCppyy.h"
 #include "CallContext.h"
 
+namespace {
 
-//- data _____________________________________________________________________
-namespace CPyCppyy {
+bool setPolicy(CPyCppyy::CallContext::ECallFlags toggleFlag, bool enabled) {
+    auto &flags = CPyCppyy::CallContext::globalPolicyFlags();
+    bool old = flags & toggleFlag;
+    if (enabled)
+        flags |= toggleFlag;
+    else
+        flags &= ~toggleFlag;
+    return old;
+}
 
-    CallContext::ECallFlags CallContext::sMemoryPolicy = CallContext::kUseStrict;
-// this is just a data holder for linking; actual value is set in CPyCppyyModule.cxx
-    CallContext::ECallFlags CallContext::sSignalPolicy = CallContext::kNone;
+} // namespace 
 
-} // namespace CPyCppyy
+
+uint32_t &CPyCppyy::CallContext::globalPolicyFlags() {
+   static uint32_t flags = 0;
+   return flags;
+}
 
 //-----------------------------------------------------------------------------
 void CPyCppyy::CallContext::AddTemporary(PyObject* pyobj) {
@@ -38,24 +48,18 @@ void CPyCppyy::CallContext::Cleanup() {
 }
 
 //-----------------------------------------------------------------------------
-bool CPyCppyy::CallContext::SetMemoryPolicy(ECallFlags e)
+bool CPyCppyy::CallContext::SetHeuristicMemoryPolicy(bool enabled)
 {
 // Set the global memory policy, which affects object ownership when objects
 // are passed as function arguments.
-    if (kUseHeuristics == e || e == kUseStrict) {
-        sMemoryPolicy = e;
-        return true;
-    }
-    return false;
+    return setPolicy(kUseHeuristics, enabled);
 }
 
 //-----------------------------------------------------------------------------
-bool CPyCppyy::CallContext::SetGlobalSignalPolicy(bool setProtected)
+bool CPyCppyy::CallContext::SetGlobalSignalPolicy(bool enabled)
 {
 // Set the global signal policy, which determines whether a jmp address
 // should be saved to return to after a C++ segfault.
-    bool old = sSignalPolicy == kProtected;
-    sSignalPolicy = setProtected ? kProtected : kNone;
-    return old;
+    return setPolicy(kProtected, enabled);
 }
 
