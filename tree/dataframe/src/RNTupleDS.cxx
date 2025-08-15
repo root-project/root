@@ -638,7 +638,6 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
 std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRanges()
 {
    std::vector<std::pair<ULong64_t, ULong64_t>> ranges;
-   ULong64_t nEntriesPerRange = 0;
    ULong64_t start = 0;
 
    // We need to distinguish between single threaded and multi-threaded runs.
@@ -728,7 +727,6 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
             fOriginalRanges.emplace_back(start, end);
             fFirstEntry2RangeIdx[fGlobalEntryRange->first] = i;
             ranges.emplace_back(fGlobalEntryRange->first, fGlobalEntryRange->second);
-            nEntriesPerRange += fGlobalEntryRange->second - fGlobalEntryRange->first;
          }
 
          // The second case:
@@ -762,7 +760,6 @@ std::vector<std::pair<ULong64_t, ULong64_t>> ROOT::RDF::RNTupleDS::GetEntryRange
    }
 
    fSeenEntriesNoGlobalRange += nEntriesPerSource;
-   fSeenEntriesWithGlobalRange += nEntriesPerRange;
 
    if ((fNSlots == 1) && (fCurrentRanges[0].fSource)) {
       for (auto r : fActiveColumnReaders[0]) {
@@ -842,7 +839,6 @@ bool ROOT::RDF::RNTupleDS::HasColumn(std::string_view colName) const
 void ROOT::RDF::RNTupleDS::Initialize()
 {
    fSeenEntriesNoGlobalRange = 0;
-   fSeenEntriesWithGlobalRange = 0;
    fNextFileIndex = 0;
    fIsReadyForStaging = fHasNextSources = fStagingThreadShouldTerminate = false;
    fThreadStaging = std::thread(&RNTupleDS::ExecStaging, this);

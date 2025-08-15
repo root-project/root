@@ -103,7 +103,6 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// to new page sources when the files in the chain change.
    std::vector<std::vector<ROOT::Internal::RDF::RNTupleColumnReader *>> fActiveColumnReaders;
 
-   ULong64_t fSeenEntriesWithGlobalRange = 0;
    ULong64_t fSeenEntriesNoGlobalRange = 0; ///< The number of entries seen so far in GetEntryRanges()
    ULong64_t fCounterFileEmpty = 0;
 
