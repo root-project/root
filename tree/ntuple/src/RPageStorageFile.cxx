@@ -26,10 +26,12 @@
 #include <ROOT/RRawFileTFile.hxx>
 #include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RNTupleUtils.hxx>
+#include <ROOT/RNTupleAttributes.hxx>
 
 #include <RVersion.h>
 #include <TDirectory.h>
 #include <TError.h>
+#include <TKey.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -305,6 +307,16 @@ ROOT::Internal::RPageSourceFile::CreateFromAnchor(const RNTuple &anchor, const R
    return pageSource;
 }
 
+std::unique_ptr<ROOT::Internal::RPageSourceFile>
+ROOT::Internal::RPageSourceFile::OpenWithDifferentAnchor(const RNTuple &anchor, const ROOT::RNTupleReadOptions &options)
+{
+   // TODO: name?
+   auto pageSource = std::make_unique<RPageSourceFile>("", fFile->Clone(), options);
+   pageSource->fAnchor = anchor;
+   pageSource->fNTupleName = pageSource->fDescriptorBuilder.GetDescriptor().GetName();
+   return pageSource;
+}
+
 ROOT::Internal::RPageSourceFile::~RPageSourceFile() = default;
 
 void ROOT::Internal::RPageSourceFile::LoadStructureImpl()
@@ -504,18 +516,17 @@ ROOT::Internal::RPageSourceFile::PrepareSingleCluster(const RCluster::RKey &clus
    std::vector<ROnDiskPageLocator> onDiskPages;
    auto activeSize = 0;
    auto pageZeroMap = std::make_unique<ROnDiskPageMap>();
-   PrepareLoadCluster(clusterKey, *pageZeroMap,
-                      [&](ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t pageNo,
-                          const ROOT::RClusterDescriptor::RPageInfo &pageInfo) {
-                         const auto &pageLocator = pageInfo.GetLocator();
-                         if (pageLocator.GetType() == RNTupleLocator::kTypeUnknown)
-                            throw RException(R__FAIL("tried to read a page with an unknown locator"));
-                         const auto nBytes =
-                            pageLocator.GetNBytesOnStorage() + pageInfo.HasChecksum() * kNBytesPageChecksum;
-                         activeSize += nBytes;
-                         onDiskPages.push_back(
-                            {physicalColumnId, pageNo, pageLocator.GetPosition<std::uint64_t>(), nBytes, 0});
-                      });
+   PrepareLoadCluster(
+      clusterKey, *pageZeroMap,
+      [&](ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t pageNo,
+          const ROOT::RClusterDescriptor::RPageInfo &pageInfo) {
+         const auto &pageLocator = pageInfo.GetLocator();
+         if (pageLocator.GetType() == RNTupleLocator::kTypeUnknown)
+            throw RException(R__FAIL("tried to read a page with an unknown locator"));
+         const auto nBytes = pageLocator.GetNBytesOnStorage() + pageInfo.HasChecksum() * kNBytesPageChecksum;
+         activeSize += nBytes;
+         onDiskPages.push_back({physicalColumnId, pageNo, pageLocator.GetPosition<std::uint64_t>(), nBytes, 0});
+      });
 
    // Linearize the page requests by file offset
    std::sort(onDiskPages.begin(), onDiskPages.end(),
@@ -669,4 +680,33 @@ ROOT::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::RKey> clusterK
    }
 
    return clusters;
+}
+
+ROOT::Experimental::Internal::RNTupleAttrSetDescriptor ROOT::Internal::RPageSinkFile::CommitAttributeSetInternal()
+{
+   TDirectory *dir = GetUnderlyingDirectory();
+   R__ASSERT(dir);
+   const std::string &attrSetName = GetNTupleName();
+   const TKey *key = dir->GetKey(attrSetName.c_str());
+   R__ASSERT(key);
+   RNTupleLocator locator;
+   locator.SetType(RNTupleLocator::kTypeFile);
+   locator.SetNBytesOnStorage(key->GetNbytes() - key->GetKeylen());
+   // Set the position to the start of the payload
+   locator.SetPosition(static_cast<std::uint64_t>(key->GetSeekKey() + key->GetKeylen()));
+   auto uncompLen = static_cast<std::uint64_t>(key->GetObjlen());
+   return ROOT::Experimental::Internal::RNTupleAttrSetDescriptor{attrSetName, locator, uncompLen};
+}
+
+void ROOT::Internal::RPageSinkFile::CommitAttributeSet(RPageSink &attrSink)
+{
+   auto desc = attrSink.CommitAttributeSetInternal();
+   const auto attrSetName = desc.fName;
+   fDescriptorBuilder.AddAttributeSet(std::move(desc)).ThrowOnError();
+
+   // Remove the newly added key from the Keys List to hide it
+   auto dir = GetUnderlyingDirectory();
+   auto key = dir->GetListOfKeys()->FindObject(attrSetName.c_str());
+   R__ASSERT(key);
+   dir->GetListOfKeys()->Remove(key);
 }

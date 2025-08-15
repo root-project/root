@@ -146,8 +146,12 @@ public:
    void CommitStagedClusters(std::span<RStagedCluster> clusters) final;
    void CommitClusterGroup() final;
    void CommitDatasetImpl() final;
+   void CommitAttributeSet(RPageSink &) final;
+   ROOT::Experimental::Internal::RNTupleAttrSetDescriptor CommitAttributeSetInternal() final;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
+
+   TDirectory *GetUnderlyingDirectory() const final { return fInnerSink->GetUnderlyingDirectory(); }
 }; // RPageSinkBuf
 
 } // namespace Internal

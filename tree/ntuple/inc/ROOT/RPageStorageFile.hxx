@@ -34,8 +34,10 @@ class TDirectory;
 namespace ROOT {
 class RNTuple; // for making RPageSourceFile a friend of RNTuple
 class RNTupleLocator;
+class RNTupleWriter;
 
 namespace Internal {
+class RPageSinkFile;
 class RClusterPool;
 class RRawFile;
 class RPageAllocatorHeap;
@@ -89,6 +91,8 @@ protected:
    RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
    using RPagePersistentSink::CommitDatasetImpl;
    void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
+   void CommitAttributeSet(RPageSink &) final;
+   ROOT::Experimental::Internal::RNTupleAttrSetDescriptor CommitAttributeSetInternal() final;
 
 public:
    RPageSinkFile(std::string_view ntupleName, std::string_view path, const ROOT::RNTupleWriteOptions &options);
@@ -98,6 +102,13 @@ public:
    RPageSinkFile(RPageSinkFile &&) = default;
    RPageSinkFile &operator=(RPageSinkFile &&) = default;
    ~RPageSinkFile() override;
+
+   virtual TDirectory *GetUnderlyingDirectory() const final
+   {
+      return Experimental::Internal::GetUnderlyingDirectory(*fWriter);
+   }
+
+   ROOT::Internal::RNTupleFileWriter *GetUnderlyingWriter() const { return fWriter.get(); }
 }; // class RPageSinkFile
 
 // clang-format off
@@ -149,6 +160,8 @@ private:
    std::unique_ptr<ROOT::Internal::RCluster>
    PrepareSingleCluster(const ROOT::Internal::RCluster::RKey &clusterKey, std::vector<RRawFile::RIOVec> &readRequests);
 
+   RMiniFileReader *GetUnderlyingReader() final { return &fReader; }
+
 protected:
    void LoadStructureImpl() final;
    ROOT::RNTupleDescriptor AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode mode) final;
@@ -172,6 +185,11 @@ public:
    RPageSourceFile(RPageSourceFile &&) = delete;
    RPageSourceFile &operator=(RPageSourceFile &&) = delete;
    ~RPageSourceFile() override;
+
+   /// Creates a new PageSourceFile using the same underlying file as this but referring to a different RNTuple,
+   /// represented by `anchor`.
+   std::unique_ptr<RPageSourceFile>
+   OpenWithDifferentAnchor(const RNTuple &anchor, const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
 
    void
    LoadSealedPage(ROOT::DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) final;
