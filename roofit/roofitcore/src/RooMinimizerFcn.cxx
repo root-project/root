@@ -172,7 +172,7 @@ RooArgSet RooMinimizerFcn::freezeDisconnectedParameters() const
          changedSet.add(*v);
       } else if (cv && !cv->isConstant()) {
          cv->setConstant();
-         changedSet.add(*v);
+         changedSet.add(*cv);
       }
    }
 
