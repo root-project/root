@@ -39,6 +39,9 @@
 #include <utility>
 
 using ROOT::Internal::RDF::RBranchData;
+// Maintaining the following allows for faster vector resize:
+static_assert(std::is_nothrow_move_assignable_v<RBranchData>);
+static_assert(std::is_nothrow_move_constructible_v<RBranchData>);
 
 namespace {
 
@@ -360,6 +363,43 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree,
       "RDataFrame::Snapshot: something went wrong when creating a TTree branch, please report this as a bug.");
 }
 } // namespace
+
+RBranchData &RBranchData::operator=(RBranchData const &other) noexcept
+{
+   fInputBranchName = other.fInputBranchName;
+   fOutputBranchName = other.fOutputBranchName;
+   fInputTypeID = other.fInputTypeID;
+   fOutputBranch = other.fOutputBranch;
+   fBranchAddressForCArrays = other.fBranchAddressForCArrays;
+   fVariationIndex = other.fVariationIndex;
+   fEmptyInstance = nullptr;
+   fNullBytes = other.fNullBytes;
+   fEmptyInstanceDeleter = nullptr;
+   fIsCArray = other.fIsCArray;
+   fIsDefine = other.fIsDefine;
+
+   return *this;
+}
+
+RBranchData &RBranchData::operator=(RBranchData &&other) noexcept
+{
+   fInputBranchName = std::move(other.fInputBranchName);
+   fOutputBranchName = std::move(other.fOutputBranchName);
+   fInputTypeID = other.fInputTypeID;
+   fOutputBranch = other.fOutputBranch;
+   fBranchAddressForCArrays = other.fBranchAddressForCArrays;
+   fVariationIndex = other.fVariationIndex;
+   fEmptyInstance = other.fEmptyInstance;
+   fNullBytes = other.fNullBytes;
+   fEmptyInstanceDeleter = other.fEmptyInstanceDeleter;
+   fIsCArray = other.fIsCArray;
+   fIsDefine = other.fIsDefine;
+
+   // This is why it's not = default:
+   other.fEmptyInstanceDeleter = nullptr;
+
+   return *this;
+}
 
 void *ROOT::Internal::RDF::RBranchData::EmptyInstance()
 {
