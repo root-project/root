@@ -102,17 +102,17 @@ jobs:
         include:
           - platform: mac13   
             arch: ARM64
-            overrides: ["builtin_zlib=ON"]
+            overrides: ["builtin_zlib=ON", "CMAKE_BUILD_TYPE=Debug"]
           - platform: mac14
             arch: X64
-            overrides: ["CMAKE_CXX_STANDARD=20"]
+            overrides: ["CMAKE_CXX_STANDARD=20", "CMAKE_BUILD_TYPE=Debug"]
           - platform: mac15
             arch: ARM64
-            overrides: ["CMAKE_CXX_STANDARD=23"]
+            overrides: ["CMAKE_CXX_STANDARD=23", "CMAKE_BUILD_TYPE=Debug"]
           - platform: mac-beta
             is_special: true
             arch: ARM64
-            overrides: ["CMAKE_CXX_STANDARD=23"]
+            overrides: ["CMAKE_CXX_STANDARD=23", "CMAKE_BUILD_TYPE=Debug"]
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
