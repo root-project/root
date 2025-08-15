@@ -32,19 +32,28 @@ ROOT::Internal::RDF::RDefinesWithReaders::GetReader(unsigned int slot, std::stri
    if (it != defineReaders.end())
       return *it->second;
 
+   std::shared_ptr<RDefineReader> readerToReturn;
    auto *define = fDefine.get();
-   if (*nameIt != "nominal")
-      define = &define->GetVariedDefine(std::string(variationName));
+   if (*nameIt == "nominal") {
+      readerToReturn = std::make_shared<RDefineReader>(slot, *define);
+   } else {
+      auto *variedDefine = &define->GetVariedDefine(std::string(variationName));
+      if (variedDefine == define) {
+         // The column in not affected by variations. We can return the same reader as for nominal
+         if (auto nominalReaderIt = defineReaders.find("nominal"); nominalReaderIt != defineReaders.end()) {
+            readerToReturn = nominalReaderIt->second;
+         } else {
+            // The nominal reader doesn't exist yet
+            readerToReturn = std::make_shared<RDefineReader>(slot, *define);
+            auto nominalNameIt = fCachedColNames.Insert("nominal");
+            defineReaders.insert({*nominalNameIt, readerToReturn});
+         }
+      } else {
+         readerToReturn = std::make_shared<RDefineReader>(slot, *variedDefine);
+      }
+   }
 
-#if !defined(__clang__) && __GNUC__ >= 7 && __GNUC_MINOR__ >= 3
-   const auto insertion =
-      defineReaders.insert({*nameIt, std::make_unique<ROOT::Internal::RDF::RDefineReader>(slot, *define)});
-   return *insertion.first->second;
-#else
-   // gcc < 7.3 has issues with passing the non-movable std::pair temporary into the insert call
-   auto reader = std::make_unique<ROOT::Internal::RDF::RDefineReader>(slot, *define);
-   auto &ret = *reader;
-   defineReaders[*nameIt] = std::move(reader);
-   return ret;
-#endif
+   defineReaders.insert({*nameIt, readerToReturn});
+
+   return *readerToReturn;
 }
