@@ -207,6 +207,21 @@ target_include_directories(Core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
 )
 
+if(ROOT_NEED_STDCXXFS)
+    target_link_libraries(Core PRIVATE stdc++fs)
+endif()
+
+# This code about the LIB_CORE_NAME define is important for TROOT::GetLibDir()
+get_target_property(core_prefix Core PREFIX)
+get_target_property(core_suffix Core SUFFIX)
+get_target_property(core_soversion Core SOVERSION)
+if(core_soversion)
+    set(full_core_filename "${core_prefix}Core${core_suffix}.${core_soversion}")
+else()
+    set(full_core_filename "${core_prefix}Core${core_suffix}")
+endif()
+target_compile_options(Core PRIVATE -DLIB_CORE_NAME=${full_core_filename})
+
 if(PCRE2_FOUND)
   target_link_libraries(Core PRIVATE PCRE2::PCRE2)
   set_source_files_properties(src/TPRegexp.cxx
