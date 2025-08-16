@@ -1,8 +1,3 @@
-# Workaround (k)ubuntu bug: runtime issue when using pthread and gcc48
-if(ROOTTEST_OS_ID MATCHES Ubuntu)
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
-endif()
-
 if(UNIX AND 32BIT)
   # linux32 llvm-JIT ABI issue constructing the pair of map<tthread::id, uint>.
   # Compile instead.
