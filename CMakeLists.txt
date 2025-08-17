@@ -376,6 +376,9 @@ unset(artifact_files)
 
 add_custom_target(move_artifacts DEPENDS ${stamp_file} ${all_artifacts})
 
+if(builtin_cling)
+    set(CLING_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
+endif()
 
 #---Add the main sources ---------------------------------
 add_subdirectory (interpreter)

@@ -467,8 +467,6 @@ if (builtin_cling)
   add_subdirectory(cling EXCLUDE_FROM_ALL)
   add_dependencies(CLING ${CLING_LIBRARIES})
 
-  set(CLING_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/cling/include CACHE STRING "")
-
 
 
   #---These are the libraries that we link ROOT with CLING---------------------------
@@ -543,11 +541,6 @@ mark_as_advanced(FORCE BUG_REPORT_URL BUILD_CLANG_FORMAT_VS_PLUGIN BUILD_SHARED_
 mark_as_advanced(CLEAR LLVM_ENABLE_ASSERTIONS LLVM_BUILD_TYPE)
 
 ##################### LIBINTEROP ###########################
-
-#---Set InterOp include directories, for any ROOT component that requires the headers--------------------------------------------------------
-set(CPPINTEROP_INCLUDE_DIRS
-  ${CMAKE_CURRENT_SOURCE_DIR}/CppInterOp/include
-  CACHE STRING "CppInterOp include directories.")
 
 #---Set InterOp to build on Cling, this can be toggled to use Clang-REPL-------------------------------------------------------
 set(CPPINTEROP_USE_CLING ON CACHE BOOL "" FORCE)
