@@ -50,7 +50,7 @@ target_include_directories(MetaCling SYSTEM PRIVATE
   ${CLANG_INCLUDE_DIRS}
   ${LLVM_INCLUDE_DIRS}
   ${CLAD_INCLUDE_DIRS}
-  ${CPPINTEROP_INCLUDE_DIRS}
+  ${CMAKE_SOURCE_DIR}/interpreter/CppInterOp/include
 )
 
 target_include_directories(MetaCling PRIVATE
