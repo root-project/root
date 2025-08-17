@@ -20,9 +20,11 @@ if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
     set(ROOT_environ PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
                      ${ld_library_path}=${CMAKE_BINARY_DIR}/lib:$ENV{${ld_library_path}}
                      ROOTSYS=${CMAKE_BINARY_DIR}
+                     ROOT_INCLUDE_PATH=${CMAKE_BINARY_DIR}/tutorials/io/tree
                      PYTHONPATH=${CMAKE_BINARY_DIR}/lib:$ENV{PYTHONPATH})
   else()
     set(ROOT_environ ROOTSYS=${CMAKE_BINARY_DIR}
+                     ROOT_INCLUDE_PATH=${CMAKE_BINARY_DIR}/tutorials/io/tree
                      PYTHONPATH=${CMAKE_BINARY_DIR}/bin;$ENV{PYTHONPATH})
   endif()
 else()                       # testing using an installation
@@ -423,7 +425,6 @@ set(extra_veto
   io/tree/hsimpleProxy.C # A driver uses this macro which cannot be executed directly
   io/tree/tree103_tree.C
   io/tree/tree106_tree.C
-  io/tree/tree108_tree.C
   roofit/roostats/rs401d_FeldmanCousins.C  # Takes too much time
   roofit/roostats/rs401d_FeldmanCousins.py
   roofit/histfactory/ModifyInterpolation.C
@@ -436,6 +437,11 @@ set(extra_veto
   visualisation/eve7/*.C
   math/r/rootlogon.C
   roofit/roostats/StandardFrequentistDiscovery.C)
+
+configure_file(${CMAKE_SOURCE_DIR}/test/Event.h ${CMAKE_BINARY_DIR}/tutorials/io/tree/Event.h COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/test/Event.cxx ${CMAKE_BINARY_DIR}/tutorials/io/tree/Event.cxx COPYONLY)
+install(FILES ${CMAKE_SOURCE_DIR}/test/Event.h ${CMAKE_SOURCE_DIR}/test/Event.cxx
+        DESTINATION ${CMAKE_INSTALL_TUTDIR}/io/tree COMPONENT tests)
 
 if(MSVC)
   # disable run_h1analysis.C because of Endpoint Security HTTP traffic scanning,
@@ -549,6 +555,9 @@ set(io-xml-xmlmodifyfile-depends tutorial-io-xml-xmlnewfile)
 set(io-xml-xmlreadfile-depends tutorial-io-xml-xmlnewfile)
 set(roofit-roofit-rf503_wspaceread-depends tutorial-roofit-roofit-rf502_wspacewrite)
 set(io-readCode-depends tutorial-io-importCode)
+set(io-tree-tree110_copy-depends tutorial-io-tree-tree108_tree)
+set(io-tree-tree111_copy-depends tutorial-io-tree-tree108_tree)
+set(io-tree-tree112_copy-depends tutorial-io-tree-tree108_tree)
 set(math-fit-fit1-depends tutorial-hist-hist001_TH1_fillrandom)
 set(math-fit-myfit-depends tutorial-math-fit-fitslicesy)
 set(math-foam-foam_demopers-depends tutorial-math-foam-foam_demo)
