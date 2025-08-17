@@ -11,26 +11,23 @@
 ///
 /// \author Rene Brun
 
-R__LOAD_LIBRARY($ROOTSYS/test/libEvent)
+#ifdef ACTUAL_RUN  // -------- Second pass: dictionary already built --------
 
-void tree112_copy()
+#include "./Event.h"  // now safe to include Event, its dictionary is loaded
+
+void run()
 {
-   // Get old file, old tree and set top branch address
-   TString dir = "$ROOTSYS/test/Event.root";
-   gSystem->ExpandPathName(dir);
-   const auto filename = gSystem->AccessPathName(dir) ? "./Event.root" : "$ROOTSYS/test/Event.root";
-
-   TFile oldfile(filename);
+   TFile oldfile("tree108.root");
    TTree *oldtree;
-   oldfile.GetObject("T", oldtree);
+   oldfile.GetObject("t4", oldtree);
 
    const auto nentries = oldtree->GetEntries();
 
    Event *event = nullptr;
-   oldtree->SetBranchAddress("event", &event);
+   oldtree->SetBranchAddress("event_split", &event);
 
    // Create a new file + a clone of old tree in new file
-   TFile newfile("small.root", "recreate");
+   TFile newfile("tree112.root", "recreate");
    auto newtree = oldtree->CloneTree(0);
 
    for (auto i : ROOT::TSeqI(nentries)) {
@@ -43,3 +40,16 @@ void tree112_copy()
    newtree->Print();
    newfile.Write();
 }
+
+#else  // -------- First pass: build dictionary + rerun macro --------
+
+void tree112_copy()
+{
+   TString tutdir = gROOT->GetTutorialDir();
+   gROOT->ProcessLine(".L " + tutdir + "/io/tree/Event.cxx+");
+   gROOT->ProcessLine("#define ACTUAL_RUN yes");
+   gROOT->ProcessLine("#include \"" __FILE__ "\"");
+   gROOT->ProcessLine("run()");
+}
+
+#endif

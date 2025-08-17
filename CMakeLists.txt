@@ -424,7 +424,6 @@ if(roofit)
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
-ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 
 # Each subdirectory added above will register headers to be copied to the build tree.
 # Here, the copy targets are created:
@@ -573,6 +572,8 @@ if(runtime_cxxmodules)
   set_property(TARGET modules_idx PROPERTY modules_idx_file ${library_output_dir}/modules.idx)
   set_directory_properties(PROPERTIES ADDITIONAL_CLEAN_FILES "${library_output_dir}/modules.timestamp")
 endif()
+
+ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
 add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
