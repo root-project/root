@@ -49,7 +49,10 @@
 ///
 /// \author Rene Brun
 
-R__LOAD_LIBRARY($ROOTSYS/test/libEvent)
+
+#ifdef ACTUAL_RUN  // -------- Second pass: dictionary already built --------
+
+#include "./Event.h"  // now safe to include Event, its dictionary is loaded
 
 #include "TFile.h"
 #include "TTree.h"
@@ -59,7 +62,6 @@ R__LOAD_LIBRARY($ROOTSYS/test/libEvent)
 #include "TClassTable.h"
 #include "TSystem.h"
 #include "TROOT.h"
-#include "../test/Event.h"
 
 void tree108_write()
 {
@@ -168,10 +170,23 @@ void tree108_read()
    t4->StartViewer();
 }
 
-void tree108_tree()
+void run()
 {
    Event::Reset(); // Allow for re-run this script by cleaning static variables.
    tree108_write();
    Event::Reset(); // Allow for re-run this script by cleaning static variables.
    tree108_read();
 }
+
+#else  // -------- First pass: build dictionary + rerun macro --------
+
+void tree108_tree()
+{
+   TString tutdir = gROOT->GetTutorialDir();
+   gROOT->ProcessLine(".L " + tutdir + "/io/tree/Event.cxx+");
+   gROOT->ProcessLine("#define ACTUAL_RUN yes");
+   gROOT->ProcessLine("#include \"" __FILE__ "\"");
+   gROOT->ProcessLine("run()");
+}
+
+#endif
