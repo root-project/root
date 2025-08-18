@@ -94,7 +94,6 @@ TEST_F(RNTupleJoinProcessorTest, Aligned)
    std::vector<float> yExpected;
 
    for (auto idx : *proc) {
-      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
       EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
 
       yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};
@@ -103,7 +102,7 @@ TEST_F(RNTupleJoinProcessorTest, Aligned)
       EXPECT_FLOAT_EQ(*i * 2.f, *z);
    }
 
-   EXPECT_EQ(10, proc->GetNEntriesProcessed());
+   EXPECT_EQ(9, proc->GetCurrentEntryNumber());
 }
 
 TEST_F(RNTupleJoinProcessorTest, IdenticalFieldNames)
@@ -118,7 +117,7 @@ TEST_F(RNTupleJoinProcessorTest, IdenticalFieldNames)
       EXPECT_EQ(*iPrimary, *iAux);
    }
 
-   EXPECT_EQ(10, proc->GetNEntriesProcessed());
+   EXPECT_EQ(9, proc->GetCurrentEntryNumber());
 }
 
 TEST_F(RNTupleJoinProcessorTest, UnalignedSingleJoinField)
@@ -141,7 +140,7 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedSingleJoinField)
       EXPECT_EQ(yExpected, *y);
    }
 
-   EXPECT_EQ(5, proc->GetNEntriesProcessed());
+   EXPECT_EQ(4, proc->GetCurrentEntryNumber());
 }
 
 TEST_F(RNTupleJoinProcessorTest, UnalignedMultipleJoinFields)
@@ -185,7 +184,7 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedMultipleJoinFields)
       EXPECT_EQ(*i * 0.1f, *a);
    }
 
-   EXPECT_EQ(5, proc->GetNEntriesProcessed());
+   EXPECT_EQ(4, proc->GetCurrentEntryNumber());
 }
 
 TEST_F(RNTupleJoinProcessorTest, MissingEntries)
@@ -250,7 +249,7 @@ TEST_F(RNTupleJoinProcessorTest, WithModel)
       EXPECT_EQ(*fldY, *y);
    }
 
-   EXPECT_EQ(5, proc->GetNEntriesProcessed());
+   EXPECT_EQ(4, proc->GetCurrentEntryNumber());
 }
 
 TEST_F(RNTupleJoinProcessorTest, WithBareModel)
@@ -288,7 +287,7 @@ TEST_F(RNTupleJoinProcessorTest, WithBareModel)
       EXPECT_EQ(yExpected, *y);
    }
 
-   EXPECT_EQ(5, proc->GetNEntriesProcessed());
+   EXPECT_EQ(4, proc->GetCurrentEntryNumber());
 }
 
 TEST_F(RNTupleJoinProcessorTest, TMemFile)
@@ -324,7 +323,7 @@ TEST_F(RNTupleJoinProcessorTest, TMemFile)
       EXPECT_EQ(yExpected, *y);
    }
 
-   EXPECT_EQ(5, proc->GetNEntriesProcessed());
+   EXPECT_EQ(4, proc->GetCurrentEntryNumber());
 }
 
 TEST_F(RNTupleJoinProcessorTest, PrintStructure)

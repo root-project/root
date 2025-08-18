@@ -176,7 +176,6 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleSingleProcessor::LoadEntry(ROOT::N
 
    fEntry->Read(entryNumber);
 
-   fNEntriesProcessed++;
    fCurrentEntryNumber = entryNumber;
    return entryNumber;
 }
@@ -346,7 +345,6 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::LoadEntry(ROOT::NT
    if (currProcessor != fCurrentProcessorNumber)
       fCurrentProcessorNumber = currProcessor;
 
-   fNEntriesProcessed++;
    fCurrentEntryNumber = entryNumber;
    return entryNumber;
 }
@@ -524,7 +522,6 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
       return kInvalidNTupleIndex;
 
    fCurrentEntryNumber = entryNumber;
-   fNEntriesProcessed++;
 
    if (!fJoinTable) {
       if (fAuxiliaryProcessor->LoadEntry(entryNumber) == kInvalidNTupleIndex) {
