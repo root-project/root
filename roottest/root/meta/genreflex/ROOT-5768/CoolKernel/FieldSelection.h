@@ -55,13 +55,13 @@ namespace cool
                     Nullness nullness );
 
     /// Can the selection be applied to a record with the given specification?
-    bool canSelect( const IRecordSpecification& spec ) const;
+    bool canSelect( const IRecordSpecification& spec ) const override;
 
     /// Apply the selection to the given record.
-    bool select( const IRecord& record ) const;
+    bool select( const IRecord& record ) const override;
 
     /// Clone the record selection (and any objects referenced therein).
-    IRecordSelection* clone() const;
+    IRecordSelection* clone() const override;
 
     /// Nullness operator for this selection.
     /// Returns IS_NOT_NULL for comparisons to non-NULL reference values.
