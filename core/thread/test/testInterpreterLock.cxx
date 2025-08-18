@@ -47,7 +47,9 @@ TEST(InterpreterLock, ConcurrentCalc)
    for (unsigned int i = 0; i < nThreads; ++i) {
       threads.emplace_back([&, i] { func(i); });
    }
-   std::for_each(threads.begin(), threads.end(), [](std::thread &thr) { thr.join(); });
+   for (auto &thr : threads) {
+      thr.join();
+   };
 #endif
 }
 
@@ -79,7 +81,9 @@ TEST(InterpreterLock, ReadLocks)
    for (unsigned int i = 0; i < nThreads; ++i) {
       threads.emplace_back([&, i] { func(i); });
    }
-   std::for_each(threads.begin(), threads.end(), [](std::thread &thr) { thr.join(); });
+   for (auto &thr : threads) {
+      thr.join();
+   };
 #endif
 }
 
@@ -109,7 +113,9 @@ TEST(InterpreterLock, BalancedUserReadLock)
    for (unsigned int i = 0; i < nThreads; ++i) {
       threads.emplace_back([&, i] { func(i); });
    }
-   std::for_each(threads.begin(), threads.end(), [](std::thread &thr) { thr.join(); });
+   for (auto &thr : threads) {
+      thr.join();
+   };
 #endif
 }
 
@@ -139,7 +145,9 @@ TEST(InterpreterLock, BalancedUserWriteLock)
    for (unsigned int i = 0; i < nThreads; ++i) {
       threads.emplace_back([&, i] { func(i); });
    }
-   std::for_each(threads.begin(), threads.end(), [](std::thread &thr) { thr.join(); });
+   for (auto &thr : threads) {
+      thr.join();
+   };
 #endif
 }
 
@@ -173,7 +181,9 @@ TEST(InterpreterLock, UnBalancedUserReadLock)
    for (unsigned int i = 0; i < nThreads; ++i) {
       threads.emplace_back([&, i] { func(i); });
    }
-   std::for_each(threads.begin(), threads.end(), [](std::thread &thr) { thr.join(); });
+   for (auto &thr : threads) {
+      thr.join();
+   };
 #endif
 }
 
@@ -205,6 +215,8 @@ TEST(InterpreterLock, UnBalancedUserWriteLock)
    for (unsigned int i = 0; i < nThreads; ++i) {
       threads.emplace_back([&, i] { func(i); });
    }
-   std::for_each(threads.begin(), threads.end(), [](std::thread &thr) { thr.join(); });
+   for (auto &thr : threads) {
+      thr.join();
+   };
 #endif
 }
