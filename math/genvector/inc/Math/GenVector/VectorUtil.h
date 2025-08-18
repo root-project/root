@@ -45,6 +45,8 @@ namespace ROOT {
 
       namespace VectorUtil {
 
+      /// \addtogroup GenVector
+      /// @{
 
          // methods for 3D vectors
 
@@ -258,6 +260,8 @@ namespace ROOT {
             //return ( v1 + v2).mag();
          }
 
+         /// @brief Returns the square of what InvariantMass(const Vector1&, const Vector2&) would return.
+         /// This is mostly useful for speed optimisations, because the expensive sqrt operation is skipped.
          template <class Vector1, class Vector2>
          inline typename Vector1::Scalar InvariantMass2( const Vector1 & v1, const Vector2 & v2) {
             typedef typename  Vector1::Scalar Scalar;
@@ -553,7 +557,8 @@ namespace ROOT {
           */
          double  Phi_mpi_pi(double phi);
 
-
+         // Close of doxygen group:
+         /// @}
 
       }  // end namespace Vector Util
 

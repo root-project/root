@@ -718,31 +718,32 @@ Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity.
 
   // global methods
 
-  /**
-     Scale of a LorentzVector with a scalar quantity a
-     \param a  scalar quantity of type a
-     \param v  mathcore::LorentzVector based on any coordinate system
-     \return a new mathcoreLorentzVector q = v * a same type as v
-   */
-    template< class CoordSystem >
-    inline LorentzVector<CoordSystem> operator *
-    ( const typename  LorentzVector<CoordSystem>::Scalar & a,
-      const LorentzVector<CoordSystem>& v) {
+    /**
+       Scale of a LorentzVector with a scalar quantity a
+       \param a  scalar quantity of type a
+       \param v  LorentzVector based on any coordinate system
+       \return a new mathcoreLorentzVector q = v * a same type as v
+     */
+    template <class CoordSystem>
+    inline LorentzVector<CoordSystem>
+    operator*(const typename LorentzVector<CoordSystem>::Scalar &a, const LorentzVector<CoordSystem> &v)
+    {
        LorentzVector<CoordSystem> tmp(v);
        tmp *= a;
        return tmp;
     }
 
-  /**
-     pair (p+ p-) acoplanarity `alpha = 1 - |phi+ - phi-|/pi`.
-     \param pp p+, mathcore::LorentzVector based on any coordinate system
-     \param pm p-, mathcore::LorentzVector based on any coordinate system
-     \return a scalar
-     \ingroup GenVector
-     \see http://doi.org/10.1103/PhysRevLett.121.212301
-   */
-    template< class CoordSystem >
-    typename LorentzVector<CoordSystem>::Scalar Acoplanarity(LorentzVector<CoordSystem> const &pp, LorentzVector<CoordSystem> const &pm)
+    /**
+       pair (p+ p-) acoplanarity `alpha = 1 - |phi+ - phi-|/pi`.
+       \param pp p+, LorentzVector based on any coordinate system
+       \param pm p-, LorentzVector based on any coordinate system
+       \return a scalar
+       \ingroup GenVector
+       \see http://doi.org/10.1103/PhysRevLett.121.212301
+     */
+    template <class CoordSystem>
+    typename LorentzVector<CoordSystem>::Scalar
+    Acoplanarity(LorentzVector<CoordSystem> const &pp, LorentzVector<CoordSystem> const &pm)
     {
        auto dphi = pp.Phi() - pm.Phi();
        // convert dphi angle to the interval (-PI,PI]
@@ -755,21 +756,22 @@ Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity.
              dphi += TMath::TwoPi() * n;
           }
        }
-       return 1 - std::abs(dphi)/TMath::Pi();
+       return 1 - std::abs(dphi) / TMath::Pi();
     }
 
-  /**
-     pair (p+ p-) vectorial asymmetry `Av = |Pt+ - Pt-|/|Pt+ + Pt-|`.
-     In an experimental setting, it reﬂects a convolution of the experimental resolutions
-     of particle energy and azimuthal angle measurement.
-     \param pp p+, mathcore::LorentzVector based on any coordinate system
-     \param pm p-, mathcore::LorentzVector based on any coordinate system
-     \return a scalar. Returns -1 if both momenta are exactly mirrored.
-     \ingroup GenVector
-     \see http://doi.org/10.1103/PhysRevLett.121.212301, https://doi.org/10.1103/PhysRevD.99.093013
-   */
-    template< class CoordSystem >
-    typename LorentzVector<CoordSystem>::Scalar AsymmetryVectorial(LorentzVector<CoordSystem> const &pp, LorentzVector<CoordSystem> const &pm)
+    /**
+       pair (p+ p-) vectorial asymmetry `Av = |Pt+ - Pt-|/|Pt+ + Pt-|`.
+       In an experimental setting, it reflects a convolution of the experimental resolutions
+       of particle energy and azimuthal angle measurement.
+       \param pp p+, LorentzVector based on any coordinate system
+       \param pm p-, LorentzVector based on any coordinate system
+       \return a scalar. Returns -1 if both momenta are exactly mirrored.
+       \ingroup GenVector
+       \see http://doi.org/10.1103/PhysRevLett.121.212301, https://doi.org/10.1103/PhysRevD.99.093013
+     */
+    template <class CoordSystem>
+    typename LorentzVector<CoordSystem>::Scalar
+    AsymmetryVectorial(LorentzVector<CoordSystem> const &pp, LorentzVector<CoordSystem> const &pm)
     {
        ROOT::Math::XYVector vp(pp.Px(), pp.Py());
        ROOT::Math::XYVector vm(pm.Px(), pm.Py());
@@ -779,16 +781,16 @@ Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity.
        return (vp - vm).R() / denom;
     }
 
-  /**
-     pair (p+ p-) scalar asymmetry `As = ||Pt+| - |Pt-|/||Pt+| + |Pt-||`.
-     Measures the relative difference in transverse momentum of the pair, e.g. two photons,
-     and would be ideally zero for two back-to-back photons.
-     \param pp p+, mathcore::LorentzVector based on any coordinate system
-     \param pm p-, mathcore::LorentzVector based on any coordinate system
-     \return a scalar. Returns 0 if both transverse momenta are zero
-     \ingroup GenVector
-     \see http://doi.org/10.1103/PhysRevLett.121.212301, https://doi.org/10.1103/PhysRevD.99.093013
-   */
+    /**
+       pair (p+ p-) scalar asymmetry `As = ||Pt+| - |Pt-|/||Pt+| + |Pt-||`.
+       Measures the relative difference in transverse momentum of the pair, e.g. two photons,
+       and would be ideally zero for two back-to-back photons.
+       \param pp p+, LorentzVector based on any coordinate system
+       \param pm p-, LorentzVector based on any coordinate system
+       \return a scalar. Returns 0 if both transverse momenta are zero
+       \ingroup GenVector
+       \see http://doi.org/10.1103/PhysRevLett.121.212301, https://doi.org/10.1103/PhysRevD.99.093013
+     */
     template< class CoordSystem >
     typename LorentzVector<CoordSystem>::Scalar AsymmetryScalar(LorentzVector<CoordSystem> const &pp, LorentzVector<CoordSystem> const &pm)
     {
