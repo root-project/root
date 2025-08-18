@@ -51,11 +51,13 @@ if(NOT MSVC OR win_broken_tests)
                     FIXTURES_REQUIRED root-tree-reader-A-fixture root-tree-reader-hardTreeReaderTest-fixture)
 endif()
 
-# IntroTut tests fails while file eventdata.root is missing on eos
-# ROOTTEST_ADD_TEST(assertIntroTut
-#                   MACRO assertIntroTut.C)
-#
-# ROOTTEST_ADD_TEST(IntroTut
-#                   MACRO execIntroTut.C
-#                   OUTREF execIntroTut.ref)
+# tests reading files from EOS and requires xrootd enabled,
+if(xrootd)
+  ROOTTEST_ADD_TEST(assertIntroTut
+                    MACRO assertIntroTut.C
+                    ERRREF assertIntroTut.ref)
 
+  ROOTTEST_ADD_TEST(IntroTut
+                    MACRO execIntroTut.C
+                    OUTREF execIntroTut.ref)
+endif()
