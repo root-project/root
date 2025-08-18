@@ -6282,6 +6282,9 @@ bool testMerge1DWithBuffer(bool allNoLimits)
    TH1D* h4 = new TH1D("h4", "h4-Title", numberOfBins, x1,x2);
 
    h0->Sumw2(); h1->Sumw2();h2->Sumw2();h4->Sumw2();
+   // The below histograms will be merged into h0, so they all need to fit into the buffer.
+   // Otherwise, the axis ranges will be computed already during the partial merge.
+   h0->SetBuffer(nEvents * 10);
    h1->SetBuffer(nEvents*10);
    h2->SetBuffer(nEvents*10);
    h3->SetBuffer(nEvents*10);
