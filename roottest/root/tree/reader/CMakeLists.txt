@@ -37,19 +37,18 @@ ROOTTEST_ADD_TEST(VectorBranches
                   MACRO execVectorBranches.C
                   OUTREF execVectorBranches.ref)
 
-if(NOT MSVC OR win_broken_tests)
-  ROOTTEST_COMPILE_MACRO(A.h
-                         FIXTURES_SETUP root-tree-reader-A-fixture)
+ROOTTEST_COMPILE_MACRO(A.h
+                       FIXTURES_SETUP root-tree-reader-A-fixture)
 
-  ROOTTEST_COMPILE_MACRO(hardTreeReaderTest.cpp
-                         FIXTURES_REQUIRED root-tree-reader-A-fixture
-                         FIXTURES_SETUP root-tree-reader-hardTreeReaderTest-fixture)
+ROOTTEST_COMPILE_MACRO(hardTreeReaderTest.cpp
+                       BUILDLIB A_h
+                       FIXTURES_REQUIRED root-tree-reader-A-fixture
+                       FIXTURES_SETUP root-tree-reader-hardTreeReaderTest-fixture)
 
-  ROOTTEST_ADD_TEST(complexTree
-                    MACRO runcomplexTree.C
-                    OUTREF complexTree.ref
-                    FIXTURES_REQUIRED root-tree-reader-A-fixture root-tree-reader-hardTreeReaderTest-fixture)
-endif()
+ROOTTEST_ADD_TEST(complexTree
+                  MACRO runcomplexTree.C
+                  OUTREF complexTree.ref
+                  FIXTURES_REQUIRED root-tree-reader-A-fixture root-tree-reader-hardTreeReaderTest-fixture)
 
 # tests reading files from EOS and requires xrootd enabled,
 if(xrootd)
