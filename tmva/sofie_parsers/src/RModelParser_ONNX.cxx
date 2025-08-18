@@ -31,6 +31,7 @@ extern ParserFuncSignature ParseSub;
 extern ParserFuncSignature ParseMul;
 extern ParserFuncSignature ParseDiv;
 extern ParserFuncSignature ParsePow;
+extern ParserFuncSignature ParseMod;
 // Nary operators
 extern ParserFuncSignature ParseMax;
 extern ParserFuncSignature ParseMin;
@@ -74,6 +75,7 @@ extern ParserFuncSignature ParseShape;
 extern ParserFuncSignature ParseMatMul;
 extern ParserFuncSignature ParseLayerNormalization;
 extern ParserFuncSignature ParseGather;
+extern ParserFuncSignature ParseGatherND;
 extern ParserFuncSignature ParseErf;
 extern ParserFuncSignature ParseElu;
 extern ParserFuncSignature ParseEyeLike;
@@ -87,6 +89,7 @@ extern ParserFuncSignature ParseWhere;
 extern ParserFuncSignature ParseEinsum;
 extern ParserFuncSignature ParseRandom;
 extern ParserFuncSignature ParseScatterElements;
+extern ParserFuncSignature ParseNonZero;
 // Declaration of fused operators
 extern ParserFuseFuncSignature ParseFuseConvAdd;
 extern ParserFuseFuncSignature ParseFuseGemmRelu;
@@ -169,6 +172,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Mul", ParseMul);
    RegisterOperator("Div", ParseDiv);
    RegisterOperator("Pow", ParsePow);
+   RegisterOperator("Mod", ParseMod);
    // Nary operators
    RegisterOperator("Max", ParseMax);
    RegisterOperator("Min", ParseMin);
@@ -212,12 +216,14 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Sigmoid", ParseSigmoid);
    RegisterOperator("Slice", ParseSlice);
    RegisterOperator("Softmax", ParseSoftmax);
+   RegisterOperator("LogSoftmax", ParseSoftmax);
    RegisterOperator("Tanh", ParseTanh);
    RegisterOperator("Transpose", ParseTranspose);
    RegisterOperator("MatMul", ParseMatMul);
    RegisterOperator("LayerNormalization", ParseLayerNormalization);
    RegisterOperator("Expand", ParseExpand);
    RegisterOperator("Gather", ParseGather);
+   RegisterOperator("GatherND", ParseGatherND);
    RegisterOperator("Erf", ParseErf);
    RegisterOperator("Elu", ParseElu);
    RegisterOperator("EyeLike", ParseEyeLike);
@@ -234,6 +240,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("RandomUniform", ParseRandom);
    RegisterOperator("RandomUniformLike", ParseRandom);
    RegisterOperator("ScatterElements", ParseScatterElements);
+   RegisterOperator("NonZero", ParseNonZero);
 }
 
 // Destructor of the parser

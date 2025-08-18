@@ -143,21 +143,21 @@ std::string ConvertDimShapeToLength(const std::vector<Dim> & shape) {
    std::string length;
    // case of empty vectors return 1
    if (shape.empty()) return "1";
-   size_t int_length = 0;
+   int64_t int_length = -1;
    for (size_t i = 0; i < shape.size(); i++) {
       if (shape[i].isParam) {
          if (!length.empty()) length += " * ";
          length += shape[i].param;
       } else {
-         if (int_length == 0)
+         if (int_length == -1)
             int_length = shape[i].dim;
          else
             int_length *= shape[i].dim;
       }
    }
    // multiply the integer components to the parametric one
-   // if larger than 1
-   if (int_length > 0) {
+   // if larger than 1 - otherwise returns -1
+   if (int_length >= 0) {
       if (!length.empty() && int_length > 1) {
          length += " * ";
          length += std::to_string(int_length);
