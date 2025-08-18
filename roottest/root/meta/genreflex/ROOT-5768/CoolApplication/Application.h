@@ -50,35 +50,35 @@ namespace cool
     virtual ~Application();
 
     /// Retrieve a reference to the COOL database service.
-    IDatabaseSvc& databaseService()
+    IDatabaseSvc& databaseService() override
     {
       return m_application->databaseService();
     }
 
     /// Get the output level threshold for COOL (and CORAL) messages.
     /// *** WARNING: this may actually return a shared (static) value. ***
-    MSG::Level outputLevel()
+    MSG::Level outputLevel() override
     {
       return m_application->outputLevel();
     }
 
     /// Set the output level threshold for COOL (and CORAL) messages.
     /// *** WARNING: this may actually change a shared (static) value. ***
-    void setOutputLevel( MSG::Level level )
+    void setOutputLevel( MSG::Level level ) override
     {
       m_application->setOutputLevel( level );
     }
 
     /// Get the SEAL context (if any) associated with this application.
     /// *** WARNING: throws an exception for applications not using SEAL. ***
-    seal::Context* context() const
+    seal::Context* context() const override
     {
       return m_application->context();
     }
 
     /// Get the CORAL connection service (if any) used in this application.
     /// *** WARNING: throws an exception for applications not using CORAL. ***
-    coral::IConnectionService& connectionSvc() const
+    coral::IConnectionService& connectionSvc() const override
     {
       return m_application->connectionSvc();
     }
