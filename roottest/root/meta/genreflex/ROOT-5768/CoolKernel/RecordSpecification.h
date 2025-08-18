@@ -52,30 +52,30 @@ namespace cool
     void extend( const IRecordSpecification& recSpec );
 
     /// Return the number of fields in this record specification.
-    UInt32 size() const;
+    UInt32 size() const override;
 
     /// Comparison operator. Two record specifications are equal if they have
     /// the same fields (each with the same name and type), in the same order.
-    bool operator==( const IRecordSpecification& rhs ) const;
+    bool operator==( const IRecordSpecification& rhs ) const override;
 
     /// Comparison operator. Two record specifications are equal if they have
     /// the same fields (each with the same name and type), in the same order.
-    bool operator!=( const IRecordSpecification& rhs ) const;
+    bool operator!=( const IRecordSpecification& rhs ) const override;
 
     /// Does a field with this name exist?
-    bool exists( const std::string& name ) const;
+    bool exists( const std::string& name ) const override;
 
     /// Return a field specification given its index in [0, N-1].
     /// Throws RecordSpecificationUnknownField if no such field exists.
-    const IFieldSpecification& operator[] ( UInt32 index ) const;
+    const IFieldSpecification& operator[] ( UInt32 index ) const override;
 
     /// Return a field specification given its name.
     /// Throws RecordSpecificationUnknownField if no such field exists.
-    const IFieldSpecification& operator[] ( const std::string& name ) const;
+    const IFieldSpecification& operator[] ( const std::string& name ) const override;
 
     /// Return the index of a field given its name.
     /// Throws RecordSpecificationUnknownField if no such field exists.
-    UInt32 index( const std::string& name ) const;
+    UInt32 index( const std::string& name ) const override;
 
     /// Check that a given record is compatible with this specification.
     /// For every 'reference' field in this specification, the record must
@@ -88,7 +88,7 @@ namespace cool
     /// Throw StorageTypeInvalidValue for values outside the allowed range.
     /// Throw RecordSpecificationWrongSize if record has too many fields (*).
     void validate( const IRecord& record,
-                   bool checkSize = true ) const;
+                   bool checkSize = true ) const override;
 
     /// Check that an attribute list is compatible with this specification.
     /// For every 'reference' field in this specification, the list must
@@ -100,7 +100,7 @@ namespace cool
     /// Throw StorageTypeInvalidValue for values outside the allowed range.
     /// Throw RecordSpecificationWrongSize if list has too many attributes (*).
     void validate( const coral::AttributeList& attributeList,
-                   bool checkSize = true ) const;
+                   bool checkSize = true ) const override;
 
   private:
 

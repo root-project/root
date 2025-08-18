@@ -70,7 +70,7 @@ namespace cool
     void extend( const IRecord& rhs );
 
     /// Return the specification of this record.
-    const IRecordSpecification& specification() const;
+    const IRecordSpecification& specification() const override;
 
     /// Return a field in this record by its name (const).
     const IField& operator[] ( const std::string& name ) const;
@@ -85,15 +85,15 @@ namespace cool
     IField& operator[] ( UInt32 index );
 
     /// Explicit conversion to a constant coral AttributeList reference.
-    const coral::AttributeList& attributeList() const;
+    const coral::AttributeList& attributeList() const override;
 
   private:
 
     /// Return a field in this record by its index in [0, N-1] (const).
-    const IField& field( UInt32 index ) const;
+    const IField& field( UInt32 index ) const override;
 
     /// Return a field in this record by its index in [0, N-1] (const).
-    IField& field( UInt32 index );
+    IField& field( UInt32 index ) override;
 
     /// Reset specification and data to that of an empty record with no fields.
     void reset();
