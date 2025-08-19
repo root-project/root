@@ -18,6 +18,7 @@
 #include "DefinitionShadower.h"
 #include "DeviceKernelInliner.h"
 #include "DynamicLookup.h"
+#include "FindTypeTransformer.h"
 #include "NullDerefProtectionTransformer.h"
 #include "TransactionPool.h"
 #include "ValueExtractionSynthesizer.h"
@@ -1041,6 +1042,7 @@ namespace cling {
             new DeviceKernelInliner(TheSema));
     }
     ASTTransformers.emplace_back(new DefinitionShadower(*TheSema, *m_Interpreter));
+    ASTTransformers.emplace_back(new FindTypeTransformer(TheSema));
 
     typedef std::unique_ptr<WrapperTransformer> WTPtr_t;
     std::vector<WTPtr_t> WrapperTransformers;

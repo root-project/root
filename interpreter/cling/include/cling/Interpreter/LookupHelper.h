@@ -10,6 +10,7 @@
 #ifndef CLING_LOOKUP_HELPER_H
 #define CLING_LOOKUP_HELPER_H
 
+#include "clang/AST/Type.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/SmallVector.h"
 
@@ -87,6 +88,17 @@ namespace cling {
     ///
     clang::QualType findType(llvm::StringRef typeName,
                              DiagSetting diagOnOff) const;
+
+    ///\brief Lookup a type by template argument.
+    ///
+    ///\tparam T - The type to lookup.
+    ///\returns On a failed lookup retval.isNull() will be true.
+    ///
+    template <typename T> clang::QualType findType() const {
+      // -1 is replaced with the correct QualType pointer by
+      // FindTypeTransformer.
+      return clang::QualType::getFromOpaquePtr((void*)-1);
+    }
 
     ///\brief Lookup a class declaration by name, starting from the global
     /// namespace, also handles struct, union, namespace, and enum.
