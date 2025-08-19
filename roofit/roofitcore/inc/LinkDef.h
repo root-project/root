@@ -134,6 +134,7 @@
     source="RooCatType _cat" target="_catIdx" code="{ _catIdx = onfile._cat.getVal(); }"
 #pragma link C++ class RooMultiCategory+ ;
 #pragma link C++ class RooMultiPdf + ;
+#pragma link C++ class RooMultiReal + ;
 #pragma link off class RooNameReg+ ;
 #pragma link C++ class RooNumConvolution+ ;
 #pragma link C++ class RooNumConvPdf+ ;
