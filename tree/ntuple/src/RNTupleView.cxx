@@ -16,6 +16,7 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleView.hxx>
 #include <ROOT/RPageStorage.hxx>
+#include <ROOT/RNTupleProcessor.hxx>
 
 #include <deque>
 
@@ -54,4 +55,12 @@ ROOT::Internal::GetFieldRange(const ROOT::RFieldBase &field, const ROOT::Interna
 
    auto arraySize = std::max(std::uint64_t(1), desc.GetFieldDescriptor(field.GetOnDiskId()).GetNRepetitions());
    return ROOT::RNTupleGlobalRange(0, desc.GetNElements(columnId) / arraySize);
+}
+
+ROOT::NTupleSize_t ROOT::Experimental::Internal::GetRelativeProcessorEntryIndex(RNTupleProcessor &processor,
+                                                                                std::string_view fieldName,
+                                                                                ROOT::NTupleSize_t globalIndex)
+{
+   processor.Update(globalIndex);
+   return processor.GetLocalCurrentEntryIndex(fieldName);
 }

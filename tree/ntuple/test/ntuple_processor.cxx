@@ -20,6 +20,7 @@ TEST(RNTupleProcessor, EmptyNTuple)
       nEntries++;
    }
    EXPECT_EQ(0, nEntries);
+   EXPECT_EQ(ROOT::kInvalidNTupleIndex, proc->GetCurrentEntryNumber());
 }
 
 TEST(RNTupleProcessor, TMemFile)
@@ -38,12 +39,12 @@ TEST(RNTupleProcessor, TMemFile)
 
    auto proc = RNTupleProcessor::Create({"ntuple", &memFile});
 
-   auto x = proc->GetEntry().GetPtr<float>("x");
+   auto x = proc->GetView<float>("x");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
 
-      EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
+      EXPECT_FLOAT_EQ(static_cast<float>(idx), x(idx));
    }
 
    EXPECT_EQ(4, proc->GetCurrentEntryNumber());
@@ -67,12 +68,12 @@ TEST(RNTupleProcessor, TDirectory)
 
    auto file = std::make_unique<TFile>(fileGuard.GetPath().c_str());
    auto proc = RNTupleProcessor::Create({"a/b/ntuple", file.get()});
-   auto x = proc->GetEntry().GetPtr<float>("x");
+   auto x = proc->GetView<float>("x");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
 
-      EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
+      EXPECT_FLOAT_EQ(static_cast<float>(idx), x(idx));
    }
 
    EXPECT_EQ(4, proc->GetCurrentEntryNumber());
@@ -139,70 +140,18 @@ TEST_F(RNTupleProcessorTest, Base)
 {
    auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
 
-   auto x = proc->GetEntry().GetPtr<float>("x");
-   auto y = proc->GetEntry().GetPtr<std::vector<float>>("y");
+   auto x = proc->GetView<float>("x");
+   auto y = proc->GetView<std::vector<float>>("y");
+   // TODO add check for non-existing field
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
 
-      EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
+      EXPECT_FLOAT_EQ(static_cast<float>(idx), x(idx));
 
-      std::vector<float> yExp{static_cast<float>(idx), static_cast<float>((idx) * 2)};
-      EXPECT_EQ(yExp, *std::static_pointer_cast<std::vector<float>>(y));
+      std::vector<float> yExp{x(idx), (x(idx) * 2)};
+      EXPECT_EQ(yExp, y(idx));
    }
-   EXPECT_EQ(4, proc->GetCurrentEntryNumber());
-}
-
-TEST_F(RNTupleProcessorTest, BaseWithModel)
-{
-   auto model = RNTupleModel::Create();
-   auto fldX = model->MakeField<float>("x");
-
-   auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]}, std::move(model));
-
-   auto x = proc->GetEntry().GetPtr<float>("x");
-
-   try {
-      proc->GetEntry().GetPtr<void>("y");
-      FAIL() << "fields not present in the model passed to the processor shouldn't be readable";
-   } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: y"));
-   }
-
-   for (auto idx : *proc) {
-      EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
-   }
-
-   EXPECT_EQ(4, proc->GetCurrentEntryNumber());
-}
-
-TEST_F(RNTupleProcessorTest, BaseWithBareModel)
-{
-   auto model = RNTupleModel::CreateBare();
-   model->MakeField<float>("x");
-
-   auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]}, std::move(model));
-
-   EXPECT_STREQ("ntuple", proc->GetProcessorName().c_str());
-
-   {
-      auto namedProc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]}, nullptr, "my_ntuple");
-      EXPECT_STREQ("my_ntuple", namedProc->GetProcessorName().c_str());
-   }
-
-   auto x = proc->GetEntry().GetPtr<float>("x");
-
-   try {
-      proc->GetEntry().GetPtr<std::vector<float>>("y");
-      FAIL() << "fields not present in the model passed to the processor shouldn't be readable";
-   } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: y"));
-   }
-
-   for (auto idx : *proc) {
-      EXPECT_FLOAT_EQ(static_cast<float>(idx), *x);
-   }
-
    EXPECT_EQ(4, proc->GetCurrentEntryNumber());
 }
 
@@ -229,13 +178,14 @@ TEST_F(RNTupleProcessorTest, ChainedChain)
 
    auto proc = RNTupleProcessor::CreateChain(std::move(innerProcs));
 
-   auto i = proc->GetEntry().GetPtr<int>("i");
-   auto x = proc->GetEntry().GetPtr<float>("x");
+   auto i = proc->GetView<int>("i");
+   auto x = proc->GetView<float>("x");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
-      EXPECT_EQ(static_cast<float>(*i), *x);
+      EXPECT_EQ(i(idx), idx % 5);
+
+      EXPECT_EQ(static_cast<float>(i(idx)), x(idx));
    }
    EXPECT_EQ(14, proc->GetCurrentEntryNumber());
 }
@@ -250,16 +200,16 @@ TEST_F(RNTupleProcessorTest, ChainedJoin)
 
    auto proc = RNTupleProcessor::CreateChain(std::move(innerProcs));
 
-   auto i = proc->GetEntry().GetPtr<int>("i");
-   auto x = proc->GetEntry().GetPtr<float>("x");
-   auto z = proc->GetEntry().GetPtr<float>("ntuple_aux.z");
+   auto i = proc->GetView<int>("i");
+   auto x = proc->GetView<float>("x");
+   auto z = proc->GetView<float>("ntuple_aux.z");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+      EXPECT_EQ(i(idx), idx % 5);
 
-      EXPECT_EQ(static_cast<float>(*i), *x);
-      EXPECT_EQ(*x * 2, *z);
+      EXPECT_EQ(static_cast<float>(i(idx)), x(idx));
+      EXPECT_EQ(x(idx) * 2, z(idx));
    }
    EXPECT_EQ(9, proc->GetCurrentEntryNumber());
 }
@@ -274,16 +224,16 @@ TEST_F(RNTupleProcessorTest, ChainedJoinUnaligned)
 
    auto proc = RNTupleProcessor::CreateChain(std::move(innerProcs));
 
-   auto i = proc->GetEntry().GetPtr<int>("i");
-   auto x = proc->GetEntry().GetPtr<float>("x");
-   auto z = proc->GetEntry().GetPtr<float>("ntuple_aux.z");
+   auto i = proc->GetView<int>("i");
+   auto x = proc->GetView<float>("x");
+   auto z = proc->GetView<float>("ntuple_aux.z");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+      EXPECT_EQ(i(idx), idx % 5);
 
-      EXPECT_EQ(static_cast<float>(*i), *x);
-      EXPECT_EQ(*x * 2, *z);
+      EXPECT_EQ(static_cast<float>(i(idx)), x(idx));
+      EXPECT_EQ(x(idx) * 2, z(idx));
    }
    EXPECT_EQ(9, proc->GetCurrentEntryNumber());
 }
@@ -298,16 +248,16 @@ TEST_F(RNTupleProcessorTest, JoinedChain)
 
    auto proc = RNTupleProcessor::CreateJoin(std::move(primaryChain), std::move(auxiliaryChain), {});
 
-   auto i = proc->GetEntry().GetPtr<int>("i");
-   auto x = proc->GetEntry().GetPtr<float>("x");
-   auto z = proc->GetEntry().GetPtr<float>("ntuple_aux.z");
+   auto i = proc->GetView<int>("i");
+   auto x = proc->GetView<float>("x");
+   auto z = proc->GetView<float>("ntuple_aux.z");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+      EXPECT_EQ(i(idx), idx % 5);
 
-      EXPECT_EQ(static_cast<float>(*i), *x);
-      EXPECT_EQ(*x * 2, *z);
+      EXPECT_EQ(static_cast<float>(i(idx)), x(idx));
+      EXPECT_EQ(x(idx) * 2, z(idx));
    }
    EXPECT_EQ(9, proc->GetCurrentEntryNumber());
 }
@@ -322,16 +272,16 @@ TEST_F(RNTupleProcessorTest, JoinedChainUnaligned)
 
    auto proc = RNTupleProcessor::CreateJoin(std::move(primaryChain), std::move(auxiliaryChain), {"i"});
 
-   auto i = proc->GetEntry().GetPtr<int>("i");
-   auto x = proc->GetEntry().GetPtr<float>("x");
-   auto z = proc->GetEntry().GetPtr<float>("ntuple_aux.z");
+   auto i = proc->GetView<int>("i");
+   auto x = proc->GetView<float>("x");
+   auto z = proc->GetView<float>("ntuple_aux.z");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+      EXPECT_EQ(i(idx), idx % 5);
 
-      EXPECT_EQ(static_cast<float>(*i), *x);
-      EXPECT_EQ(*x * 2, *z);
+      EXPECT_EQ(static_cast<float>(i(idx)), x(idx));
+      EXPECT_EQ(x(idx) * 2, z(idx));
    }
    EXPECT_EQ(9, proc->GetCurrentEntryNumber());
 }
@@ -341,22 +291,22 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimary)
    auto primaryProc =
       RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {});
 
-   auto auxProc = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, nullptr, "ntuple_aux2");
+   auto auxProc = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, "ntuple_aux2");
 
    auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {"i"});
 
-   auto i = proc->GetEntry().GetPtr<int>("i");
-   auto x = proc->GetEntry().GetPtr<float>("x");
-   auto z1 = proc->GetEntry().GetPtr<float>("ntuple_aux.z");
-   auto z2 = proc->GetEntry().GetPtr<float>("ntuple_aux2.z");
+   auto i = proc->GetView<int>("i");
+   auto x = proc->GetView<float>("x");
+   auto z1 = proc->GetView<float>("ntuple_aux.z");
+   auto z2 = proc->GetView<float>("ntuple_aux2.z");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+      EXPECT_EQ(i(idx), idx % 5);
 
-      EXPECT_EQ(static_cast<float>(*i), *x);
-      EXPECT_EQ(*x * 2, *z1);
-      EXPECT_EQ(*z1, *z2);
+      EXPECT_EQ(static_cast<float>(i(idx)), x(idx));
+      EXPECT_EQ(x(idx) * 2, z1(idx));
+      EXPECT_EQ(z1(idx), z2(idx));
    }
    EXPECT_EQ(4, proc->GetCurrentEntryNumber());
 }
@@ -365,25 +315,25 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliary)
 {
    auto primaryProc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
 
-   auto auxProcIntermediate = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, nullptr, "ntuple_aux2");
+   auto auxProcIntermediate = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, "ntuple_aux2");
 
    auto auxProc = RNTupleProcessor::CreateJoin(RNTupleProcessor::Create({fNTupleNames[1], fFileNames[1]}),
                                                std::move(auxProcIntermediate), {"i"});
 
    auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {});
 
-   auto i = proc->GetEntry().GetPtr<int>("i");
-   auto x = proc->GetEntry().GetPtr<float>("x");
-   auto z1 = proc->GetEntry().GetPtr<float>("ntuple_aux.z");
-   auto z2 = proc->GetEntry().GetPtr<float>("ntuple_aux.ntuple_aux2.z");
+   auto i = proc->GetView<int>("i");
+   auto x = proc->GetView<float>("x");
+   auto z1 = proc->GetView<float>("ntuple_aux.z");
+   auto z2 = proc->GetView<float>("ntuple_aux.ntuple_aux2.z");
 
    for (auto idx : *proc) {
       EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
-      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+      EXPECT_EQ(i(idx), idx % 5);
 
-      EXPECT_EQ(static_cast<float>(*i), *x);
-      EXPECT_EQ(*x * 2, *z1);
-      EXPECT_EQ(*z1, *z2);
+      EXPECT_EQ(static_cast<float>(i(idx)), x(idx));
+      EXPECT_EQ(x(idx) * 2, z1(idx));
+      EXPECT_EQ(z1(idx), z2(idx));
    }
 
    EXPECT_EQ(4, proc->GetCurrentEntryNumber());

@@ -274,46 +274,47 @@ TEST(RNTupleJoinTable, Partitions)
    }
    auto proc = RNTupleProcessor::CreateChain(openSpec);
 
-   auto i = proc->GetEntry().GetPtr<std::uint32_t>("i");
-   auto run = proc->GetEntry().GetPtr<int16_t>("run");
-
    // When getting the entry indexes for all partitions, we expect multiple resulting entry indexes (i.e., one entry
    // index for each ntuple in the chain).
-   *i = 0;
+   std::uint32_t i = 0;
    std::unordered_map<RNTupleJoinTable::PartitionKey_t, std::vector<ROOT::NTupleSize_t>> expectedEntryIdxMap = {
       {1, {0}},
       {2, {0}},
       {3, {0, 0}},
    };
-   EXPECT_EQ(expectedEntryIdxMap, joinTable->GetPartitionedEntryIndexes({i.get()}));
-   EXPECT_EQ(expectedEntryIdxMap, joinTable->GetPartitionedEntryIndexes({i.get()}, {1, 2, 3}));
+   EXPECT_EQ(expectedEntryIdxMap, joinTable->GetPartitionedEntryIndexes({&i}));
+   EXPECT_EQ(expectedEntryIdxMap, joinTable->GetPartitionedEntryIndexes({&i}, {1, 2, 3}));
 
    expectedEntryIdxMap = {
       {1, {0}},
       {3, {0, 0}},
    };
-   EXPECT_EQ(expectedEntryIdxMap, joinTable->GetPartitionedEntryIndexes({i.get()}, {1, 3}));
+   EXPECT_EQ(expectedEntryIdxMap, joinTable->GetPartitionedEntryIndexes({&i}, {1, 3}));
 
    // Calling GetEntryIndexes with a partition key not present in the join table shouldn't fail; it should just return
    // an empty vector.
-   EXPECT_EQ(std::vector<ROOT::NTupleSize_t>{}, joinTable->GetEntryIndexes({i.get()}, 4));
+   EXPECT_EQ(std::vector<ROOT::NTupleSize_t>{}, joinTable->GetEntryIndexes({&i}, 4));
 
    // Similarly, calling GetEntryIndexes with a partition key that is present in the join table but a join value that
    // isn't shouldn't fail; it should just return an empty vector.
-   *i = 99;
-   EXPECT_EQ(std::vector<ROOT::NTupleSize_t>{}, joinTable->GetEntryIndexes({i.get()}, 3));
+   i = 99;
+   EXPECT_EQ(std::vector<ROOT::NTupleSize_t>{}, joinTable->GetEntryIndexes({&i}, 3));
 
    expectedEntryIdxMap.clear();
-   EXPECT_EQ(expectedEntryIdxMap, joinTable->GetPartitionedEntryIndexes({i.get()}));
-   EXPECT_EQ(expectedEntryIdxMap, joinTable->GetPartitionedEntryIndexes({i.get()}, {1, 2, 3}));
-   EXPECT_EQ(expectedEntryIdxMap, joinTable->GetPartitionedEntryIndexes({i.get()}, {1, 3}));
+   EXPECT_EQ(expectedEntryIdxMap, joinTable->GetPartitionedEntryIndexes({&i}));
+   EXPECT_EQ(expectedEntryIdxMap, joinTable->GetPartitionedEntryIndexes({&i}, {1, 2, 3}));
+   EXPECT_EQ(expectedEntryIdxMap, joinTable->GetPartitionedEntryIndexes({&i}, {1, 3}));
 
-   for (auto it = proc->begin(); it != proc->end(); it++) {
-      auto entryIdxs = joinTable->GetEntryIndexes({i.get()}, *run);
+   auto viewI = proc->GetView<std::int32_t>("i");
+   auto viewRun = proc->GetView<std::int16_t>("run");
+
+   for (auto idx : *proc) {
+      i = viewI(idx);
+      auto entryIdxs = joinTable->GetEntryIndexes({&i}, viewRun(idx));
 
       // Because two ntuples store their events under run number 3 and their entries for `i` are identical, two entry
       // indexes are expected. For the other case (run == 1 and run == 2), only one entry index is expected.
-      if (*run == 3)
+      if (viewRun(idx) == 3)
          EXPECT_EQ(entryIdxs.size(), 2ul);
       else
          EXPECT_EQ(entryIdxs.size(), 1ul);
