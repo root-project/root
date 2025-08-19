@@ -54,12 +54,17 @@ public:
    void             SetOwner(Bool_t enable = kTRUE) override;
 
    void             AddFirst(TObject *) override { MayNotUse("AddFirst"); }
+   void             AddFirst(TObject *, Option_t *) override { MayNotUse("AddFirst"); }
    void             AddLast(TObject *) override { MayNotUse("AddLast"); }
+   void             AddLast(TObject *, Option_t *) override { MayNotUse("AddLast"); }
    void             AddAt(TObject *, Int_t) override { MayNotUse("AddAt"); }
+   void             AddAt(TObject *, Int_t, Option_t *) override { MayNotUse("AddAt"); }
    void             AddAtAndExpand(TObject *, Int_t) override { MayNotUse("AddAtAndExpand"); }
    Int_t            AddAtFree(TObject *) override { MayNotUse("AddAtFree"); return 0; }
    void             AddAfter(const TObject *, TObject *) override { MayNotUse("AddAfter"); }
+   void             AddAfter(const TObject *, TObject *, Option_t *) override { MayNotUse("AddAfter"); }
    void             AddBefore(const TObject *, TObject *) override { MayNotUse("AddBefore"); }
+   void             AddBefore(const TObject *, TObject *, Option_t *) override { MayNotUse("AddBefore"); }
    void             BypassStreamer(Bool_t bypass=kTRUE);
    Bool_t           CanBypassStreamer() const { return TestBit(kBypassStreamer); }
    TObject         *ConstructedAt(Int_t idx);
