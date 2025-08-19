@@ -14,7 +14,7 @@
 
 #include "TSQLResult.h"
 
-class sqlite3_stmt;
+typedef struct sqlite3_stmt sqlite3_stmt;
 
 class TSQLiteResult : public TSQLResult {
 
