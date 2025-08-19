@@ -20,14 +20,12 @@ public:
    inline int getNumModels() const { return _models.getSize(); }
    inline const RooCategoryProxy &indexCategory() const { return _index; }
    inline const RooListProxy &getModelList() const { return _models; }
-  
+
    void getParametersHook(const RooArgSet *nset, RooArgSet *list, bool stripDisconnected) const override;
 
 protected:
    RooListProxy _models;    // list of RooAbsReal models
    RooCategoryProxy _index; // index category proxy
-
-   
 
    Double_t evaluate() const override;
 
