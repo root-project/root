@@ -447,6 +447,9 @@ double RooSimultaneous::evaluate() const
 {
    // Retrieve the proxy by index name
    RooRealProxy *proxy = static_cast<RooRealProxy *>(_pdfProxyList.FindObject(_indexCat.label()));
+   if(!proxy) {
+      return 0;
+   }
 
    double nEvtTot = 1.0;
    double nEvtCat = 1.0;
