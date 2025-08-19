@@ -20,15 +20,14 @@ public:
    inline int getNumModels() const { return _models.getSize(); }
    inline const RooCategoryProxy &indexCategory() const { return _index; }
    inline const RooListProxy &getModelList() const { return _models; }
-   // virtual RooFit::OwningPtr<RooArgSet> getParameters(const RooArgSet* observables, bool stripDisconnected = true)
-   // const;
+  
    void getParametersHook(const RooArgSet *nset, RooArgSet *list, bool stripDisconnected) const override;
 
 protected:
    RooListProxy _models;    // list of RooAbsReal models
    RooCategoryProxy _index; // index category proxy
 
-   mutable Int_t _oldIndex{-1};
+   
 
    Double_t evaluate() const override;
 

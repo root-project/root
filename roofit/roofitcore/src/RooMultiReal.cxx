@@ -5,8 +5,8 @@
 RooMultiReal::RooMultiReal(const char *name, const char *title, RooCategory &indexCat, const RooArgList &models)
    : RooAbsReal(name, title),
      _models("_models", "List of RooAbsReal models", this), // name, title, owner
-     _index("_index", "Index category", this, indexCat),    // name, title, owner, reference to RooCategory
-     _oldIndex(-1)
+     _index("_index", "Index category", this, indexCat)    // name, title, owner, reference to RooCategory
+    
 {
    _models.add(models);
 
@@ -16,15 +16,15 @@ RooMultiReal::RooMultiReal(const char *name, const char *title, RooCategory &ind
       cat.defineType(("model" + std::to_string(i)).c_str(), i);
    }
 
-   _oldIndex = static_cast<int>(_index);
+   
 }
 
 // Copy constructor
 RooMultiReal::RooMultiReal(const RooMultiReal &other, const char *name)
    : RooAbsReal(other, name),
      _models("_models", this, other._models), // name, owner, other list proxy
-     _index("_index", this, other._index),    // name, owner, other category proxy
-     _oldIndex(other._oldIndex)
+     _index("_index", this, other._index)   // name, owner, other category proxy
+    
 {
 }
 
@@ -38,7 +38,7 @@ Double_t RooMultiReal::evaluate() const
    }
 
    Double_t val = static_cast<RooAbsReal *>(_models.at(currentIndex))->getVal(_models.nset());
-   _oldIndex = currentIndex;
+   
    return val;
 }
 
