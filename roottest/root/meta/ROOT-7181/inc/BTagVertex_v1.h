@@ -20,19 +20,4 @@ namespace xAOD {
    typedef DataVector<BTagging_v1> BTaggingContainer_v1;
 }
 
-#if 0
-template <> struct DataVectorBase<xAOD::BTagVertex_v1>
-{
-   typedef DataVector<xAOD::IParticle > Base;
-   int fBtag;
-};
-
-template <> struct DataVectorBase<xAOD::BTagging_v1>
-{
-   typedef DataVector<xAOD::IParticle > Base;
-   int fBtagging;
-};
-
-#endif
-
 #endif
