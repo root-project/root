@@ -119,8 +119,8 @@ protected:
    /// interface.
    ROOT::NTupleSize_t fNEntries = kInvalidNTupleIndex;
 
-   ROOT::NTupleSize_t fCurrentEntryNumber = kInvalidNTupleIndex; //< Current processor entry number
-   std::size_t fCurrentProcessorNumber = 0;                      //< Number of the currently open inner processor
+   ROOT::NTupleSize_t fCurrentEntryIndex = kInvalidNTupleIndex; //< Current processor entry index
+   std::size_t fCurrentProcessorNumber = 0;                     //< Number of the currently open inner processor
 
    static ENTupleProcessorKind GetKind() { return fKind; }
 
@@ -141,7 +141,7 @@ protected:
    virtual void Update(ROOT::NTupleSize_t globalIndex) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Check if the processor has an entry following fCurrentEntryNumber.
+   /// \brief Check if the processor has an entry following fCurrentEntryIndex.
    virtual bool HasNextEntry() = 0;
 
    /////////////////////////////////////////////////////////////////////////////
@@ -183,7 +183,7 @@ protected:
    virtual ROOT::NTupleSize_t GetNEntries() = 0;
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the entry index relative to `fCurrentEntryNumber` in innermost processor for the given field, so its
+   /// \brief Get the entry index relative to `fCurrentEntryIndex` in innermost processor for the given field, so its
    /// value can be read from disk.
    ///
    /// \param[in] fieldName Name of the field for which to get the local entry index.
@@ -221,8 +221,8 @@ public:
    virtual ~RNTupleProcessor() = default;
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the entry number that is currently being processed.
-   ROOT::NTupleSize_t GetCurrentEntryNumber() const { return fCurrentEntryNumber; }
+   /// \brief Get the entry index that is currently being processed.
+   ROOT::NTupleSize_t GetCurrentEntryIndex() const { return fCurrentEntryIndex; }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the name of the processor.
@@ -265,7 +265,7 @@ public:
    class RIterator {
    private:
       RNTupleProcessor &fProcessor;
-      ROOT::NTupleSize_t fCurrentEntryNumber;
+      ROOT::NTupleSize_t fCurrentEntryIndex;
 
    public:
       using iterator_category = std::forward_iterator_tag;
@@ -276,24 +276,24 @@ public:
       using reference = ROOT::NTupleSize_t &;
 
       RIterator(RNTupleProcessor &processor, ROOT::NTupleSize_t entryNumber)
-         : fProcessor(processor), fCurrentEntryNumber(entryNumber)
+         : fProcessor(processor), fCurrentEntryIndex(entryNumber)
       {
-         if (fCurrentEntryNumber != kInvalidNTupleIndex) {
+         if (fCurrentEntryIndex != kInvalidNTupleIndex) {
             if (!fProcessor.fEntry)
                fProcessor.Connect();
-            fProcessor.Update(fCurrentEntryNumber);
+            fProcessor.Update(fCurrentEntryIndex);
 
             if (!fProcessor.HasNextEntry())
-               fCurrentEntryNumber = ROOT::kInvalidNTupleIndex;
+               fCurrentEntryIndex = ROOT::kInvalidNTupleIndex;
          }
       }
 
       iterator operator++()
       {
          if (fProcessor.HasNextEntry()) {
-            fProcessor.Update(++fCurrentEntryNumber);
+            fProcessor.Update(++fCurrentEntryIndex);
          } else {
-            fCurrentEntryNumber = kInvalidNTupleIndex;
+            fCurrentEntryIndex = kInvalidNTupleIndex;
          }
          return *this;
       }
@@ -305,15 +305,15 @@ public:
          return obj;
       }
 
-      reference operator*() { return fCurrentEntryNumber; }
+      reference operator*() { return fCurrentEntryIndex; }
 
       friend bool operator!=(const iterator &lh, const iterator &rh)
       {
-         return lh.fCurrentEntryNumber != rh.fCurrentEntryNumber;
+         return lh.fCurrentEntryIndex != rh.fCurrentEntryIndex;
       }
       friend bool operator==(const iterator &lh, const iterator &rh)
       {
-         return lh.fCurrentEntryNumber == rh.fCurrentEntryNumber;
+         return lh.fCurrentEntryIndex == rh.fCurrentEntryIndex;
       }
    };
 
@@ -412,8 +412,8 @@ private:
    void Update(ROOT::NTupleSize_t globalIndex) final;
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Check if the processor has an entry following fCurrentEntryNumber.
-   bool HasNextEntry() final { return fNEntries != 0 && fCurrentEntryNumber < fNEntries - 1; }
+   /// \brief Check if the processor has an entry following fCurrentEntryIndex.
+   bool HasNextEntry() final { return fNEntries != 0 && fCurrentEntryIndex < fNEntries - 1; }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Check whether a field can exists in the processor's schema.
@@ -436,13 +436,13 @@ private:
    }
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the entry index relative to `fCurrentEntryNumber` in innermost processor for the given field, so its
+   /// \brief Get the entry index relative to `fCurrentEntryIndex` in innermost processor for the given field, so its
    /// value can be read from disk.
    ///
    /// \sa RNTupleProcessor::GetLocalCurrentEntryIndex
    ROOT::NTupleSize_t GetLocalCurrentEntryIndex(std::string_view /* fieldName */) const final
    {
-      return fCurrentEntryNumber;
+      return fCurrentEntryIndex;
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -500,7 +500,7 @@ private:
    void Update(ROOT::NTupleSize_t globalIndex) final;
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Check if the processor has an entry following fCurrentEntryNumber.
+   /// \brief Check if the processor has an entry following fCurrentEntryIndex.
    bool HasNextEntry() final
    {
       return fInnerProcessors[fCurrentProcessorNumber]->HasNextEntry() ||
@@ -524,7 +524,7 @@ private:
    ROOT::NTupleSize_t GetNEntries() final;
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the entry index relative to `fCurrentEntryNumber` in innermost processor for the given field, so its
+   /// \brief Get the entry index relative to `fCurrentEntryIndex` in innermost processor for the given field, so its
    /// value can be read from disk.
    ///
    /// \sa RNTupleProcessor::GetLocalCurrentEntryIndex
@@ -594,7 +594,7 @@ private:
    void Update(ROOT::NTupleSize_t globalIndex) final;
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Check if the processor has an entry following fCurrentEntryNumber.
+   /// \brief Check if the processor has an entry following fCurrentEntryIndex.
    bool HasNextEntry() final { return fPrimaryProcessor->HasNextEntry(); }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -621,7 +621,7 @@ private:
    ROOT::NTupleSize_t GetNEntries() final;
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the entry index relative to `fCurrentEntryNumber` in innermost processor for the given field, so its
+   /// \brief Get the entry index relative to `fCurrentEntryIndex` in innermost processor for the given field, so its
    /// value can be read from disk.
    ///
    /// \sa RNTupleProcessor::GetLocalCurrentEntryIndex

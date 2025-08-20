@@ -88,11 +88,11 @@ TEST_F(RNTupleChainProcessorTest, SingleNTuple)
    auto x = proc->GetView<float>("x");
 
    for (auto idx : *proc) {
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
+      EXPECT_EQ(idx, proc->GetCurrentEntryIndex());
 
-      EXPECT_FLOAT_EQ(static_cast<float>(proc->GetCurrentEntryNumber()), x(idx));
+      EXPECT_FLOAT_EQ(static_cast<float>(proc->GetCurrentEntryIndex()), x(idx));
    }
-   EXPECT_EQ(4, proc->GetCurrentEntryNumber());
+   EXPECT_EQ(4, proc->GetCurrentEntryIndex());
 }
 
 TEST_F(RNTupleChainProcessorTest, Basic)
@@ -111,14 +111,14 @@ TEST_F(RNTupleChainProcessorTest, Basic)
    auto y = proc->GetView<std::vector<float>>("y");
 
    for (auto idx : *proc) {
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
+      EXPECT_EQ(idx, proc->GetCurrentEntryIndex());
 
       EXPECT_EQ(static_cast<float>(idx), x(idx));
 
       std::vector<float> yExp{x(idx), (x(idx) * 2)};
       EXPECT_EQ(yExp, y(idx));
    }
-   EXPECT_EQ(9, proc->GetCurrentEntryNumber());
+   EXPECT_EQ(9, proc->GetCurrentEntryIndex());
 }
 
 TEST_F(RNTupleChainProcessorTest, MissingFields)
@@ -141,7 +141,7 @@ TEST_F(RNTupleChainProcessorTest, MissingFields)
       }
    }
 
-   EXPECT_EQ(14, proc->GetCurrentEntryNumber());
+   EXPECT_EQ(14, proc->GetCurrentEntryIndex());
 }
 
 TEST_F(RNTupleChainProcessorTest, EmptyNTuples)
@@ -167,7 +167,7 @@ TEST_F(RNTupleChainProcessorTest, EmptyNTuples)
    for (auto idx : *proc) {
       EXPECT_EQ(static_cast<float>(idx), x(idx));
    }
-   EXPECT_EQ(9, proc->GetCurrentEntryNumber());
+   EXPECT_EQ(9, proc->GetCurrentEntryIndex());
 }
 
 TEST_F(RNTupleChainProcessorTest, LoadRandomEntry)
@@ -208,11 +208,11 @@ TEST_F(RNTupleChainProcessorTest, TMemFile)
    auto x = proc->GetView<float>("x");
 
    for (auto idx : *proc) {
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
+      EXPECT_EQ(idx, proc->GetCurrentEntryIndex());
 
       EXPECT_EQ(static_cast<float>(idx), x(idx));
    }
-   EXPECT_EQ(9, proc->GetCurrentEntryNumber());
+   EXPECT_EQ(9, proc->GetCurrentEntryIndex());
 }
 
 TEST_F(RNTupleChainProcessorTest, PrintStructure)

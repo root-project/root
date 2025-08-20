@@ -94,7 +94,7 @@ TEST_F(RNTupleJoinProcessorTest, Aligned)
    std::vector<float> yExpected;
 
    for (auto idx : *proc) {
-      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
+      EXPECT_EQ(idx, proc->GetCurrentEntryIndex());
 
       yExpected = {static_cast<float>(i(idx) * 0.2), 3.14, static_cast<float>(i(idx) * 1.3)};
       EXPECT_EQ(yExpected, y(idx));
@@ -102,7 +102,7 @@ TEST_F(RNTupleJoinProcessorTest, Aligned)
       EXPECT_FLOAT_EQ(i(idx) * 2.f, z(idx));
    }
 
-   EXPECT_EQ(9, proc->GetCurrentEntryNumber());
+   EXPECT_EQ(9, proc->GetCurrentEntryIndex());
 }
 
 TEST_F(RNTupleJoinProcessorTest, IdenticalFieldNames)
@@ -117,7 +117,7 @@ TEST_F(RNTupleJoinProcessorTest, IdenticalFieldNames)
       EXPECT_EQ(iPrimary(idx), iAux(idx));
    }
 
-   EXPECT_EQ(9, proc->GetCurrentEntryNumber());
+   EXPECT_EQ(9, proc->GetCurrentEntryIndex());
 }
 
 TEST_F(RNTupleJoinProcessorTest, UnalignedSingleJoinField)
@@ -140,7 +140,7 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedSingleJoinField)
       EXPECT_EQ(yExpected, y(idx));
    }
 
-   EXPECT_EQ(4, proc->GetCurrentEntryNumber());
+   EXPECT_EQ(4, proc->GetCurrentEntryIndex());
 }
 
 TEST_F(RNTupleJoinProcessorTest, UnalignedMultipleJoinFields)
@@ -177,14 +177,14 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedMultipleJoinFields)
    auto a = proc->GetView<float>("ntuple4.a");
 
    for (auto idx : *proc) {
-      EXPECT_EQ(proc->GetCurrentEntryNumber(), idx);
+      EXPECT_EQ(proc->GetCurrentEntryIndex(), idx);
 
-      EXPECT_FLOAT_EQ(proc->GetCurrentEntryNumber() * 2, i(idx));
+      EXPECT_FLOAT_EQ(proc->GetCurrentEntryIndex() * 2, i(idx));
       EXPECT_FLOAT_EQ(i(idx) * 0.5f, x(idx));
       EXPECT_EQ(i(idx) * 0.1f, a(idx));
    }
 
-   EXPECT_EQ(4, proc->GetCurrentEntryNumber());
+   EXPECT_EQ(4, proc->GetCurrentEntryIndex());
 }
 
 TEST_F(RNTupleJoinProcessorTest, MissingEntries)
@@ -241,7 +241,7 @@ TEST_F(RNTupleJoinProcessorTest, TMemFile)
       EXPECT_EQ(yExpected, y(idx));
    }
 
-   EXPECT_EQ(4, proc->GetCurrentEntryNumber());
+   EXPECT_EQ(4, proc->GetCurrentEntryIndex());
 }
 
 TEST_F(RNTupleJoinProcessorTest, PrintStructure)

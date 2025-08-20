@@ -133,12 +133,12 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect(
 
 void ROOT::Experimental::RNTupleSingleProcessor::Update(ROOT::NTupleSize_t globalIndex)
 {
-   if (globalIndex == fCurrentEntryNumber || fNEntries == 0)
+   if (globalIndex == fCurrentEntryIndex || fNEntries == 0)
       return;
 
    if (globalIndex >= fNEntries)
       throw RException(R__FAIL("index " + std::to_string(globalIndex) + " out of bounds"));
-   fCurrentEntryNumber = globalIndex;
+   fCurrentEntryIndex = globalIndex;
 }
 
 bool ROOT::Experimental::RNTupleSingleProcessor::HasField(std::string_view fieldName)
@@ -232,7 +232,7 @@ void ROOT::Experimental::RNTupleChainProcessor::Connect(
 
 void ROOT::Experimental::RNTupleChainProcessor::Update(ROOT::NTupleSize_t globalIndex)
 {
-   if (globalIndex == fCurrentEntryNumber)
+   if (globalIndex == fCurrentEntryIndex)
       return;
 
    ROOT::NTupleSize_t relativeIndex = globalIndex;
@@ -271,7 +271,7 @@ void ROOT::Experimental::RNTupleChainProcessor::Update(ROOT::NTupleSize_t global
       }
    }
 
-   fCurrentEntryNumber = globalIndex;
+   fCurrentEntryIndex = globalIndex;
    fInnerProcessors[fCurrentProcessorNumber]->Update(relativeIndex);
 }
 
@@ -406,13 +406,13 @@ void ROOT::Experimental::RNTupleJoinProcessor::Connect(
 
 void ROOT::Experimental::RNTupleJoinProcessor::Update(ROOT::NTupleSize_t globalIndex)
 {
-   if (globalIndex == fCurrentEntryNumber)
+   if (globalIndex == fCurrentEntryIndex)
       return;
 
    if (globalIndex >= fNEntries)
       throw RException(R__FAIL("index " + std::to_string(globalIndex) + " out of bounds"));
 
-   fCurrentEntryNumber = globalIndex;
+   fCurrentEntryIndex = globalIndex;
    fPrimaryProcessor->Update(globalIndex);
    fAuxiliaryProcessor->Update(globalIndex);
 
