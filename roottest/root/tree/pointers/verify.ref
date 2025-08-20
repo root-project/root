@@ -1,5 +1,5 @@
 
-Processing /home/linev/git/webgui/roottest/root/tree/pointers/verify.cxx+...
+Processing verify.cxx+...
 Info in <TUnixSystem::ACLiC>: creating shared library /home/linev/build/webgui/roottest/root/tree/pointers/verify_cxx.so
 The indirect pointer is still null
 ******************************************************************************
