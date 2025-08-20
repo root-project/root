@@ -220,6 +220,114 @@ void StdDevHelper::Finalize()
    *fResultStdDev = std::sqrt(variance);
 }
 
+CovHelper::CovHelper(const std::shared_ptr<TMatrixDSym> &covMatrixPtr, const unsigned int nSlots, const unsigned int nCols)
+   : fNSlots(nSlots), fNCols(nCols), fResultCov(covMatrixPtr), fCounts(nSlots, 0), 
+     fMeans(nSlots, std::vector<double>(nCols, 0.0)), 
+     fCovariances(nSlots, std::vector<double>(nCols * (nCols + 1) / 2, 0.0))
+{
+}
+
+void CovHelper::Exec(unsigned int slot, double v1, double v2)
+{
+   ExecImpl(slot, {v1, v2});
+}
+
+void CovHelper::Exec(unsigned int slot, double v1, double v2, double v3)
+{
+   ExecImpl(slot, {v1, v2, v3});
+}
+
+void CovHelper::Exec(unsigned int slot, double v1, double v2, double v3, double v4)
+{
+   ExecImpl(slot, {v1, v2, v3, v4});
+}
+
+void CovHelper::ExecImpl(unsigned int slot, const std::vector<double> &values)
+{
+   if (values.size() != fNCols) {
+      throw std::runtime_error("Number of values doesn't match expected number of columns");
+   }
+   
+   auto count = ++fCounts[slot];
+   auto &means = fMeans[slot];
+   auto &covs = fCovariances[slot];
+   
+   // Update means using online algorithm
+   std::vector<double> deltas(fNCols);
+   for (unsigned int i = 0; i < fNCols; ++i) {
+      deltas[i] = values[i] - means[i];
+      means[i] += deltas[i] / count;
+   }
+   
+   // Update covariances using online algorithm  
+   // Store upper triangular matrix in linear array
+   for (unsigned int i = 0; i < fNCols; ++i) {
+      for (unsigned int j = i; j < fNCols; ++j) {
+         // Linear index for upper triangular storage: i * ncols - i*(i+1)/2 + j
+         unsigned int idx = i * fNCols - i * (i + 1) / 2 + j;
+         covs[idx] += deltas[i] * (values[j] - means[j]);
+      }
+   }
+}
+
+void CovHelper::Finalize()
+{
+   // Combine results from all slots
+   double totalElements = 0;
+   for (auto c : fCounts) {
+      totalElements += c;
+   }
+   
+   if (totalElements <= 1) {
+      // Covariance is not defined for 1 or fewer elements
+      for (Int_t i = 0; i < static_cast<Int_t>(fNCols); ++i) {
+         for (Int_t j = 0; j < static_cast<Int_t>(fNCols); ++j) {
+            (*fResultCov)(i, j) = 0.0;
+         }
+      }
+      return;
+   }
+   
+   // Calculate overall means
+   std::vector<double> overallMeans(fNCols, 0.0);
+   for (unsigned int col = 0; col < fNCols; ++col) {
+      for (unsigned int slot = 0; slot < fNSlots; ++slot) {
+         overallMeans[col] += fCounts[slot] * fMeans[slot][col];
+      }
+      overallMeans[col] /= totalElements;
+   }
+   
+   // Calculate final covariance matrix
+   for (unsigned int i = 0; i < fNCols; ++i) {
+      for (unsigned int j = i; j < fNCols; ++j) {
+         double covariance = 0.0;
+         
+         // Sum covariances from all slots
+         for (unsigned int slot = 0; slot < fNSlots; ++slot) {
+            if (fCounts[slot] == 0) continue;
+            
+            unsigned int idx = i * fNCols - i * (i + 1) / 2 + j;
+            covariance += fCovariances[slot][idx];
+            
+            // Add correction term for different means between slots
+            if (i == j) {
+               covariance += fCounts[slot] * std::pow(fMeans[slot][i] - overallMeans[i], 2);
+            } else {
+               covariance += fCounts[slot] * (fMeans[slot][i] - overallMeans[i]) * (fMeans[slot][j] - overallMeans[j]);
+            }
+         }
+         
+         covariance /= (totalElements - 1);
+         (*fResultCov)(static_cast<Int_t>(i), static_cast<Int_t>(j)) = covariance;
+         
+         // Fill symmetric part
+         if (i != j) {
+            (*fResultCov)(static_cast<Int_t>(j), static_cast<Int_t>(i)) = covariance;
+         }
+      }
+   }
+}
+
 // External templates are disabled for gcc5 since this version wrongly omits the C++11 ABI attribute
 #if __GNUC__ > 5
 template class TakeHelper<bool, bool, std::vector<bool>>;

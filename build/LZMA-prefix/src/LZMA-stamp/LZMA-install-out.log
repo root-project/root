@@ -1,0 +1,50 @@
+Making install in src
+Making install in liblzma
+Making install in api
+ /usr/bin/mkdir -p '/home/runner/work/root/root/build/include'
+ /usr/bin/mkdir -p '/home/runner/work/root/root/build/include/lzma'
+ /usr/bin/install -c -m 644  lzma/base.h lzma/bcj.h lzma/block.h lzma/check.h lzma/container.h lzma/delta.h lzma/filter.h lzma/hardware.h lzma/index.h lzma/index_hash.h lzma/lzma12.h lzma/stream_flags.h lzma/version.h lzma/vli.h '/home/runner/work/root/root/build/include/lzma'
+ /usr/bin/install -c -m 644  lzma.h '/home/runner/work/root/root/build/include/.'
+ /usr/bin/mkdir -p '/home/runner/work/root/root/build/lib'
+ /bin/bash ../../libtool   --mode=install /usr/bin/install -c   liblzma.la '/home/runner/work/root/root/build/lib'
+libtool: install: /usr/bin/install -c .libs/liblzma.lai /home/runner/work/root/root/build/lib/liblzma.la
+libtool: install: /usr/bin/install -c .libs/liblzma.a /home/runner/work/root/root/build/lib/liblzma.a
+libtool: install: chmod 644 /home/runner/work/root/root/build/lib/liblzma.a
+libtool: install: ranlib /home/runner/work/root/root/build/lib/liblzma.a
+libtool: finish: PATH="/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/sbin" ldconfig -n /home/runner/work/root/root/build/lib
+----------------------------------------------------------------------
+Libraries have been installed in:
+   /home/runner/work/root/root/build/lib
+
+If you ever happen to want to link against installed libraries
+in a given directory, LIBDIR, you must either use libtool, and
+specify the full pathname of the library, or use the '-LLIBDIR'
+flag during linking and do at least one of the following:
+   - add LIBDIR to the 'LD_LIBRARY_PATH' environment variable
+     during execution
+   - add LIBDIR to the 'LD_RUN_PATH' environment variable
+     during linking
+   - use the '-Wl,-rpath -Wl,LIBDIR' linker flag
+   - have your system administrator add LIBDIR to '/etc/ld.so.conf'
+
+See any operating system documentation about shared libraries for
+more information, such as the ld(1) and ld.so(8) manual pages.
+----------------------------------------------------------------------
+ /usr/bin/mkdir -p '/home/runner/work/root/root/build/lib/pkgconfig'
+ /usr/bin/install -c -m 644 liblzma.pc '/home/runner/work/root/root/build/lib/pkgconfig'
+Making install in xzdec
+ /usr/bin/mkdir -p '/home/runner/work/root/root/build/bin'
+Making install in po
+installing cs.gmo as /home/runner/work/root/root/build/share/locale/cs/LC_MESSAGES/xz.mo
+installing de.gmo as /home/runner/work/root/root/build/share/locale/de/LC_MESSAGES/xz.mo
+installing fr.gmo as /home/runner/work/root/root/build/share/locale/fr/LC_MESSAGES/xz.mo
+installing it.gmo as /home/runner/work/root/root/build/share/locale/it/LC_MESSAGES/xz.mo
+installing pl.gmo as /home/runner/work/root/root/build/share/locale/pl/LC_MESSAGES/xz.mo
+installing vi.gmo as /home/runner/work/root/root/build/share/locale/vi/LC_MESSAGES/xz.mo
+Making install in tests
+ /usr/bin/mkdir -p '/home/runner/work/root/root/build/share/doc/xz'
+ /usr/bin/install -c -m 644 AUTHORS COPYING COPYING.GPLv2 NEWS README THANKS TODO doc/faq.txt doc/history.txt doc/xz-file-format.txt doc/lzma-file-format.txt '/home/runner/work/root/root/build/share/doc/xz'
+ /usr/bin/mkdir -p '/home/runner/work/root/root/build/share/doc/xz/examples'
+ /usr/bin/install -c -m 644 doc/examples/00_README.txt doc/examples/01_compress_easy.c doc/examples/02_decompress.c doc/examples/03_compress_custom.c doc/examples/04_compress_easy_mt.c doc/examples/Makefile '/home/runner/work/root/root/build/share/doc/xz/examples'
+ /usr/bin/mkdir -p '/home/runner/work/root/root/build/share/doc/xz/examples_old'
+ /usr/bin/install -c -m 644 doc/examples_old/xz_pipe_comp.c doc/examples_old/xz_pipe_decomp.c '/home/runner/work/root/root/build/share/doc/xz/examples_old'

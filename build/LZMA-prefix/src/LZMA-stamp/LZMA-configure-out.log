@@ -1,0 +1,22 @@
+
+XZ Utils 5.2.4
+
+System type:
+
+Configure options:
+
+
+Initializing Automake:
+
+POSIX threading support:
+
+Initializing Libtool:
+
+Initializing gettext:
+
+System headers and functions:
+
+GCC extensions:
+
+config.status: creating po/POTFILES
+config.status: creating po/Makefile

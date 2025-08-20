@@ -1,0 +1,11 @@
+-- verifying file...
+     file='/home/runner/work/root/root/core/lzma/src/xz-5.2.4.tar.gz'
+-- verifying file... done
+-- extracting...
+     src='/home/runner/work/root/root/core/lzma/src/xz-5.2.4.tar.gz'
+     dst='/home/runner/work/root/root/build/LZMA-prefix/src/LZMA'
+-- extracting... [tar xfz]
+-- extracting... [analysis]
+-- extracting... [rename]
+-- extracting... [clean up]
+-- extracting... done

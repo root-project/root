@@ -1,0 +1,144 @@
+// @(#)root/roostats:$Id$
+// Authors: Sven Kreiss    June 2010
+// Authors: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke
+/*************************************************************************
+ * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef ROOSTATS_SamplingDistPlot
+#define ROOSTATS_SamplingDistPlot
+
+#include "Compression.h"
+#include "RooPrintable.h"
+#include "TNamed.h"
+#include "TH1F.h"
+#include "TF1.h"
+#include "TLegend.h"
+#include "TList.h"
+
+#include <limits>
+#include <vector>
+
+#include "RooStats/SamplingDistribution.h"
+
+#include "RooPlot.h"
+
+
+namespace RooStats {
+
+ class SamplingDistPlot : public TNamed, public RooPrintable {
+
+   public:
+    /// Constructors for SamplingDistribution
+    SamplingDistPlot(Int_t nbins = 100);
+    SamplingDistPlot(Int_t nbins, double min, double max);
+
+    /// Destructor of SamplingDistribution
+    ~SamplingDistPlot() override;
+
+    /// adds the sampling distribution and returns the scale factor
+    double AddSamplingDistribution(const SamplingDistribution *samplingDist, Option_t *drawOptions="NORMALIZE HIST");
+    /// Like AddSamplingDistribution, but also sets a shaded area in the
+    /// minShaded and maxShaded boundaries.
+    double AddSamplingDistributionShaded(const SamplingDistribution *samplingDist, double minShaded, double maxShaded, Option_t *drawOptions="NORMALIZE HIST");
+
+    /// add a line
+    void AddLine(double x1, double y1, double x2, double y2, const char* title = nullptr);
+    /// add a TH1
+    void AddTH1(TH1* h, Option_t *drawOptions="");
+    /// add a TF1
+    void AddTF1(TF1* f, const char* title = nullptr, Option_t *drawOptions="SAME");
+    /// set legend
+    void SetLegend(TLegend* l){ fLegend = l; }
+
+    void Draw(Option_t *options=nullptr) override;
+
+    /// Applies a predefined style if fApplyStyle is true (default).
+    void ApplyDefaultStyle(void);
+
+    void SetLineColor(Color_t color, const SamplingDistribution *sampleDist = nullptr);
+    void SetLineWidth(Width_t lwidth, const SamplingDistribution *sampleDist = nullptr);
+    void SetLineStyle(Style_t style, const SamplingDistribution *sampleDist = nullptr);
+
+    void SetMarkerColor(Color_t color, const SamplingDistribution *sampleDist = nullptr);
+    void SetMarkerStyle(Style_t style, const SamplingDistribution *sampleDist = nullptr);
+    void SetMarkerSize(Size_t size, const SamplingDistribution *sampleDist = nullptr);
+
+    void RebinDistribution(Int_t rebinFactor, const SamplingDistribution *sampleDist = nullptr);
+
+    void SetAxisTitle(char *varName) { fVarName = TString(varName); }
+
+    /// If you do not want SamplingDistPlot to interfere with your style settings, call this
+    /// function with "false" before Draw().
+    void SetApplyStyle(bool s) { fApplyStyle = s; }
+
+    /// Returns the TH1F associated with the give SamplingDistribution.
+    /// Intended use: Access to member functions of TH1F like GetMean(),
+    /// GetRMS() etc.
+    /// The return objects is managed by  SamplingDistPlot
+    TH1F* GetTH1F(const SamplingDistribution *sampleDist = nullptr);
+    TH1 * GetHistogram(const SamplingDistribution *sampleDist = nullptr) { return GetTH1F(sampleDist); }
+
+    /// return plotter class used to draw the sampling distribution histograms
+    /// object is managed by SamplingDistPlot
+    RooPlot * GetPlot() { return fRooPlot; }
+
+    /// changes plot to log scale on x axis
+    void SetLogXaxis(bool lx) { fLogXaxis = lx; }
+    /// changes plot to log scale on y axis
+    void SetLogYaxis(bool ly) { fLogYaxis = ly; }
+
+    /// change x range
+    void SetXRange( double mi, double ma ) { fXMin = mi; fXMax = ma; }
+    /// change y range
+    void SetYRange( double mi, double ma ) { fYMin = mi; fYMax = ma; }
+
+    /// write to Root file
+    void DumpToFile(const char* RootFileName, Option_t *option="", const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
+
+  private:
+    std::vector<double> fSamplingDistr;
+    std::vector<double> fSampleWeights;
+
+    bool fIsWeighted = false;
+
+    Int_t fBins;
+    Int_t fMarkerType = 20;
+    Int_t fColor = 1;
+
+    TString fVarName;
+
+  protected:
+
+    TH1F* fHist = nullptr;
+    TLegend *fLegend = nullptr;
+
+    TList fItems;       ///< holds TH1Fs only
+    TList fOtherItems;  ///< other objects to be drawn like TLine etc.
+    RooPlot* fRooPlot = nullptr;
+    bool fLogXaxis = false;
+    bool fLogYaxis = false;
+
+    double fXMin = std::numeric_limits<float>::quiet_NaN();
+    double fXMax = std::numeric_limits<float>::quiet_NaN();
+    double fYMin = std::numeric_limits<float>::quiet_NaN();
+    double fYMax = std::numeric_limits<float>::quiet_NaN();
+
+    bool fApplyStyle = true;
+    Style_t fFillStyle = 3004;
+
+    void SetSampleWeights(const SamplingDistribution *samplingDist);
+
+    void addObject(TObject *obj, Option_t *drawOptions=nullptr); // for TH1Fs only
+    void addOtherObject(TObject *obj, Option_t *drawOptions=nullptr);
+    void GetAbsoluteInterval(double &theMin, double &theMax, double &theYMax) const;
+
+    ClassDefOverride(SamplingDistPlot,2)  /// Class containing the results of the HybridCalculator
+  };
+}
+
+#endif

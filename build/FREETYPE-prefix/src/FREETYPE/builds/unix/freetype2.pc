@@ -1,0 +1,14 @@
+prefix=/home/runner/work/root/root/build/FREETYPE-prefix
+exec_prefix=/home/runner/work/root/root/build/FREETYPE-prefix
+libdir=/home/runner/work/root/root/build/FREETYPE-prefix/lib
+includedir=/home/runner/work/root/root/build/FREETYPE-prefix/include
+
+Name: FreeType 2
+URL: https://freetype.org
+Description: A free, high-quality, and portable font engine.
+Version: 24.3.18
+Requires: zlib
+Requires.private: 
+Libs: -L/home/runner/work/root/root/build/FREETYPE-prefix/lib -lfreetype 
+Libs.private: 
+Cflags: -I${includedir}/freetype2

@@ -28,6 +28,7 @@
 #include "TH3.h"
 #include "TGraph.h"
 #include "TGraphAsymmErrors.h"
+#include "TMatrixDSym.h"
 #include "TObject.h"
 #include "ROOT/RDF/RActionImpl.hxx"
 #include "ROOT/RDF/RMergeableValue.hxx"
@@ -1314,6 +1315,53 @@ public:
       auto &result = *static_cast<std::shared_ptr<double> *>(newResult);
       return StdDevHelper(result, fCounts.size());
    }
+};
+
+class R__CLING_PTRCHECK(off) CovHelper : public RActionImpl<CovHelper> {
+   // Number of subsets of data
+   unsigned int fNSlots;
+   // Number of columns
+   unsigned int fNCols;
+   std::shared_ptr<TMatrixDSym> fResultCov;
+   // Number of element for each slot
+   std::vector<ULong64_t> fCounts;
+   // Means of each column for each slot
+   std::vector<std::vector<double>> fMeans;
+   // Running sums for covariance calculation (upper triangular storage)
+   std::vector<std::vector<double>> fCovariances;
+
+public:
+   CovHelper(const std::shared_ptr<TMatrixDSym> &covMatrixPtr, const unsigned int nSlots, const unsigned int nCols);
+   CovHelper(CovHelper &&) = default;
+   CovHelper(const CovHelper &) = delete;
+   void InitTask(TTreeReader *, unsigned int) {}
+   
+   // Specializations for different numbers of columns
+   void Exec(unsigned int slot, double v1, double v2);
+   void Exec(unsigned int slot, double v1, double v2, double v3);
+   void Exec(unsigned int slot, double v1, double v2, double v3, double v4);
+
+   void Initialize() { /* noop */}
+
+   void Finalize();
+
+   // Helper functions for RMergeableValue
+   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   {
+      // For now, return nullptr since we don't implement mergeability for covariance
+      return nullptr;
+   }
+
+   std::string GetActionName() { return "Cov"; }
+
+   CovHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
+   {
+      auto &result = *static_cast<std::shared_ptr<TMatrixDSym> *>(newResult);
+      return CovHelper(result, fNSlots, fNCols);
+   }
+
+private:
+   void ExecImpl(unsigned int slot, const std::vector<double> &values);
 };
 
 template <typename PrevNodeType>

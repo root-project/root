@@ -1,0 +1,152 @@
+
+FreeType build system -- automatic system detection
+
+The following settings are used:
+
+  platform                    unix
+  compiler                    cc
+  configuration directory     ./builds/unix
+  configuration rules         ./builds/unix/unix.mk
+
+If this does not correspond to your system or settings please remove the file
+`config.mk' from this directory then read the INSTALL file for help.
+
+Otherwise, simply type `make' again to build the library,
+or `make refdoc' to build the API reference (this needs Python >= 3.5).
+
+Generating modules list in ./objs/ftmodule.h...
+done.
+* module: truetype  (Windows/Mac font files with extension *.ttf or *.ttc)
+* module: type1     (Postscript font files with extension *.pfa or *.pfb)
+* module: cff       (OpenType fonts with extension *.otf)
+* module: cid       (Postscript CID-keyed fonts, no known extension)
+* module: pfr       (PFR/TrueDoc font files with extension *.pfr)
+* module: type42    (Type 42 font files with no known extension)
+* module: winfnt    (Windows bitmap fonts with extension *.fnt or *.fon)
+* module: pcf       (pcf bitmap fonts)
+* module: bdf       (bdf bitmap fonts)
+* module: sfnt      (helper module for TrueType & OpenType formats)
+* module: autofit   (automatic hinting module)
+* module: pshinter  (Postscript hinter module)
+* module: smooth    (anti-aliased bitmap renderer)
+* module: raster    (monochrome bitmap renderer)
+* module: ot-svg    (OT-SVG glyph renderer module)
+* module: sdf       (signed distance field renderer)
+* module: bsdf      (bitmap to signed distance field converter)
+* module: psaux     (Postscript Type 1 & Type 2 helper module)
+* module: psnames   (Postscript & Unicode Glyph name handling)
+checking build system type... x86_64-pc-linux-gnu
+checking host system type... x86_64-pc-linux-gnu
+checking for gcc... /usr/bin/cc
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... no
+checking for suffix of object files... o
+checking whether the compiler supports GNU C... yes
+checking whether /usr/bin/cc accepts -g... yes
+checking for /usr/bin/cc option to enable C11 features... none needed
+checking how to run the C preprocessor... /usr/bin/cc -E
+checking for pkg-config... /usr/bin/pkg-config
+checking pkg-config is at least version 0.24... yes
+checking how to print strings... printf
+checking for a sed that does not truncate output... /usr/bin/sed
+checking for grep that handles long lines and -e... /usr/bin/grep
+checking for egrep... /usr/bin/grep -E
+checking for fgrep... /usr/bin/grep -F
+checking for ld used by /usr/bin/cc... /usr/bin/ld
+checking if the linker (/usr/bin/ld) is GNU ld... yes
+checking for BSD- or MS-compatible name lister (nm)... /usr/bin/nm -B
+checking the name lister (/usr/bin/nm -B) interface... BSD nm
+checking whether ln -s works... yes
+checking the maximum length of command line arguments... 3145728
+checking how to convert x86_64-pc-linux-gnu file names to x86_64-pc-linux-gnu format... func_convert_file_noop
+checking how to convert x86_64-pc-linux-gnu file names to toolchain format... func_convert_file_noop
+checking for /usr/bin/ld option to reload object files... -r
+checking for file... file
+checking for objdump... objdump
+checking how to recognize dependent libraries... pass_all
+checking for dlltool... no
+checking how to associate runtime and link libraries... printf %s\n
+checking for ar... ar
+checking for archiver @FILE support... @
+checking for strip... strip
+checking for ranlib... ranlib
+checking for gawk... gawk
+checking command to parse /usr/bin/nm -B output from /usr/bin/cc object... ok
+checking for sysroot... no
+checking for a working dd... /usr/bin/dd
+checking how to truncate binary pipes... /usr/bin/dd bs=4096 count=1
+checking for mt... mt
+checking if mt is a manifest tool... no
+checking for stdio.h... yes
+checking for stdlib.h... yes
+checking for string.h... yes
+checking for inttypes.h... yes
+checking for stdint.h... yes
+checking for strings.h... yes
+checking for sys/stat.h... yes
+checking for sys/types.h... yes
+checking for unistd.h... yes
+checking for sys/param.h... yes
+checking for dlfcn.h... yes
+checking for objdir... .libs
+checking if /usr/bin/cc supports -fno-rtti -fno-exceptions... no
+checking for /usr/bin/cc option to produce PIC... -fPIC -DPIC
+checking if /usr/bin/cc PIC flag -fPIC -DPIC works... yes
+checking if /usr/bin/cc static flag -static works... yes
+checking if /usr/bin/cc supports -c -o file.o... yes
+checking if /usr/bin/cc supports -c -o file.o... (cached) yes
+checking whether the /usr/bin/cc linker (/usr/bin/ld -m elf_x86_64) supports shared libraries... yes
+checking dynamic linker characteristics... GNU/Linux ld.so
+checking how to hardcode library paths into programs... immediate
+checking whether stripping libraries is possible... yes
+checking if libtool supports shared libraries... yes
+checking whether to build shared libraries... no
+checking whether to build static libraries... yes
+checking for windows.h... no
+checking for a BSD-compatible install... /usr/bin/install -c
+checking for a race-free mkdir -p... /usr/bin/mkdir -p
+checking for fcntl.h... yes
+checking for unistd.h... (cached) yes
+checking for an ANSI C-conforming const... yes
+checking for special C compiler options needed for large files... no
+checking for _FILE_OFFSET_BITS value needed for large files... no
+checking for getpagesize... yes
+checking for working mmap... yes
+checking for /usr/bin/cc options needed to detect all undeclared functions... none needed
+checking whether munmap is declared... yes
+checking for munmap's first parameter type... void *
+checking for memcpy... yes
+checking for memmove... yes
+checking /usr/bin/cc compiler flag -pedantic to assure ANSI C99 works correctly... ok, adding to XX_ANSIFLAGS
+checking /usr/bin/cc compiler flag -std=c99 to assure ANSI C99 works correctly... ok, adding to XX_ANSIFLAGS
+checking for -fvisibility=hidden compiler flag... yes
+checking for ZLIB... yes
+checking for library containing clock_gettime... none required
+checking for LIBRSVG... no
+checking target system type... x86_64-pc-linux-gnu
+checking whether /usr/bin/cc is Clang... no
+checking whether pthreads work with "-pthread" and "-lpthread"... yes
+checking for joinable pthread attribute... PTHREAD_CREATE_JOINABLE
+checking whether more special flags are required for pthreads... no
+checking for PTHREAD_PRIO_INHERIT... yes
+checking for python3... python3
+checking for python version... 3.12.3
+checking for `docwriter' Python module... no
+configure: creating ./config.status
+config.status: creating ftoption.h
+config.status: creating unix-cc.mk
+config.status: creating unix-def.mk
+config.status: creating ftconfig.h
+config.status: executing libtool commands
+configure:
+
+Library configuration:
+  external zlib: yes (pkg-config)
+  bzip2:         no
+  libpng:        no
+  harfbuzz:      no
+  brotli:        no
+  pthread:       yes
+

@@ -1,0 +1,34 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/runner/work/root/root/interpreter/llvm-project/llvm/lib/Support/BLAKE3/blake3_avx2_x86-64_unix.S
+llvm_blake3_prefix.h
+/home/runner/work/root/root/interpreter/llvm-project/llvm/lib/Support/BLAKE3/llvm_blake3_prefix.h
+cet.h
+-
+
+/home/runner/work/root/root/interpreter/llvm-project/llvm/lib/Support/BLAKE3/blake3_avx512_x86-64_unix.S
+llvm_blake3_prefix.h
+/home/runner/work/root/root/interpreter/llvm-project/llvm/lib/Support/BLAKE3/llvm_blake3_prefix.h
+cet.h
+-
+
+/home/runner/work/root/root/interpreter/llvm-project/llvm/lib/Support/BLAKE3/blake3_sse2_x86-64_unix.S
+llvm_blake3_prefix.h
+/home/runner/work/root/root/interpreter/llvm-project/llvm/lib/Support/BLAKE3/llvm_blake3_prefix.h
+cet.h
+-
+
+/home/runner/work/root/root/interpreter/llvm-project/llvm/lib/Support/BLAKE3/blake3_sse41_x86-64_unix.S
+llvm_blake3_prefix.h
+/home/runner/work/root/root/interpreter/llvm-project/llvm/lib/Support/BLAKE3/llvm_blake3_prefix.h
+cet.h
+-
+
+/home/runner/work/root/root/interpreter/llvm-project/llvm/lib/Support/BLAKE3/llvm_blake3_prefix.h
+
