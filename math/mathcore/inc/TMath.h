@@ -1451,23 +1451,33 @@ template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, con
    if (w && std::adjacent_find(w, w + n, std::not_equal_to<>()) == w + n) // If all weights are equal, ignore those
       w = nullptr;
 
-   // Sort the array and remove duplicates (if w != nullptr)
+   // Sort the array
    std::vector<T> values;
    std::vector<Double_t> weights;
-   values.reserve(n);
-   weights.reserve(n);
-   for (Long64_t i = 0; i < n; ++i) {
-      const T value = a[i];
-      const Double_t weight = w ? w[i] : 1;
-      const auto vstart = values.begin();
-      const auto vstop = values.end();
-      const auto viter = std::lower_bound(vstart, vstop, value);
-      const auto vidx = std::distance(vstart, viter);
-      if (viter != vstop && w) {
-         weights[vidx] += weight;
-      } else {
-         values.insert(viter, value);
-         weights.insert(weights.begin() + vidx, weight);
+   if (w == nullptr) {
+      values.assign(a, a + n);
+      weights.assign(n, 1.0);
+      std::sort(values.begin(), values.end());
+   } else {
+      // Remove duplicates (if w != nullptr).
+      // The Bickel algorithm expects all values have the same weight of 1.
+      // The deduplication is relevant for varying weights, where we fall back
+      // to getting the Mode of the sample.
+      values.reserve(n);
+      weights.reserve(n);
+      for (Long64_t i = 0; i < n; ++i) {
+         const T value = a[i];
+         const auto vstart = values.begin();
+         const auto viter = std::lower_bound(vstart, values.end(), value);
+         const auto vidx = std::distance(vstart, viter);
+         if (viter != values.end() && *viter == value) {
+            // increase weight if value already added
+            weights[vidx] += w[i];
+         } else {
+            // otherwise, insert at the right position
+            values.insert(viter, value);
+            weights.insert(weights.begin() + vidx, w[i]);
+         }
       }
    }
 
@@ -1483,7 +1493,7 @@ template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, con
       const double d1_0 = values[1] - values[0];
       const double d2_1 = values[2] - values[1];
       if (d2_1 < d1_0)
-         return TMath::Mean(2, values.data() + 1, weights.data() + 1);
+         return TMath::Mean(std::next(values.begin()), values.end(), std::next(weights.begin()));
       else if (d2_1 > d1_0)
          return TMath::Mean(2, values.data(), weights.data());
       else
