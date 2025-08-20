@@ -45,6 +45,17 @@ TEST(RBinIndex, Plus)
       const auto index3 = index1 + 2;
       EXPECT_EQ(index3.GetIndex(), 3);
    }
+
+   // Arithmetic operations on special values go to InvalidIndex.
+   for (auto index : {RBinIndex::Underflow(), RBinIndex::Overflow(), RBinIndex()}) {
+      index++;
+      EXPECT_TRUE(index.IsInvalid());
+   }
+
+   // Matches RBinIndex::UnderflowIndex
+   static constexpr std::size_t UnderflowIndex = -3;
+   EXPECT_TRUE((RBinIndex(0) + UnderflowIndex).IsInvalid());
+   EXPECT_TRUE((RBinIndex(3) + UnderflowIndex).IsInvalid());
 }
 
 TEST(RBinIndex, Minus)
@@ -74,6 +85,15 @@ TEST(RBinIndex, Minus)
       const auto index1 = index3 - 2;
       EXPECT_EQ(index1.GetIndex(), 1);
    }
+
+   // Arithmetic operations on special values go to InvalidIndex.
+   for (auto index : {RBinIndex::Underflow(), RBinIndex::Overflow(), RBinIndex()}) {
+      index--;
+      EXPECT_TRUE(index.IsInvalid());
+   }
+
+   EXPECT_TRUE((RBinIndex(0) - 1).IsInvalid());
+   EXPECT_TRUE((RBinIndex(0) - 4).IsInvalid());
 }
 
 TEST(RBinIndex, Equality)
