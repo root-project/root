@@ -37,6 +37,24 @@ def inject_rbatchgenerator(ns):
     return ns
 
 
+from ._gnn import RModel_GNN, RModel_GraphIndependent
+from ._sofie._parser._keras.parser import RModelParser_Keras
+
+hasRDF = "dataframe" in cppyy.gbl.ROOT.GetROOT().GetConfigFeatures()
+if hasRDF:
+    from ._rtensor import (
+        get_array_interface,
+        add_array_interface_property,
+        RTensorGetitem,
+        pythonize_rtensor,
+        _AsRTensor,
+    )
+
+# this should be available only when xgboost is there ?
+# We probably don't need a protection here since the code is run only when there is xgboost
+from ._tree_inference import SaveXGBoost
+
+
 # list of python classes that are used to pythonize TMVA classes
 python_classes = [Factory, DataLoader, CrossValidation]
 

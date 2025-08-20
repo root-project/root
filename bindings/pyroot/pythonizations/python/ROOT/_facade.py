@@ -443,6 +443,7 @@ class ROOTFacade(types.ModuleType):
         from ._pythonization import _tmva  # noqa: F401
 
         ns = self._fallback_getattr("TMVA")
+        setattr(ns.Experimental.SOFIE, "RModelParser_Keras", _tmva.RModelParser_Keras)
         hasRDF = "dataframe" in self.gROOT.GetConfigFeatures()
         if hasRDF:
             try:
