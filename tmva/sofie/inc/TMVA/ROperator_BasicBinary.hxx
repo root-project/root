@@ -89,7 +89,7 @@ public:
       auto ret = std::vector<std::vector<size_t>>(1, input[0]); // return vector size 1 with first input
       return ret;
    }
-
+     
    void Initialize(RModel& model) override {
       // input must be a graph input, or already initialized intermediate tensor
       if (!model.CheckIfTensorAlreadyExist(fNA)){
@@ -142,9 +142,6 @@ public:
                   model.AddConstantTensor(fNBroadcastedA, model.GetTensorType(fNA), fShapeY, broadcastedData);
                   fShapeA = fShapeY;
                   fDimShapeA = ConvertShapeToDim(fShapeA);
-               } else {
-                  // Add an intermediate tensor for broadcasting A
-                  model.AddIntermediateTensor(fNBroadcastedA, model.GetTensorType(fNA), fShapeY);
                }
             }
             // Broadcast B to Y
@@ -168,9 +165,6 @@ public:
                   model.AddConstantTensor(fNBroadcastedB, model.GetTensorType(fNB), fShapeY, broadcastedData);
                   fShapeB = fShapeY;
                   fDimShapeB = ConvertShapeToDim(fShapeB);
-               } else {
-                  // Add an intermediate tensor for broadcasting B
-                  model.AddIntermediateTensor(fNBroadcastedB, model.GetTensorType(fNB), fShapeY);
                }
             }
          } else {
@@ -244,17 +238,7 @@ public:
                }
             }
          }
-         if (ret.first & 2) {
-            // case we broadcast A
-            fNBroadcastedA = "Broadcasted" + fNA + "to" + fNY;
-            model.AddIntermediateTensor(fNBroadcastedA, model.GetTensorType(fNA), fDimShapeY);
-         }
-         if (ret.first & 1)  {
-            // case we broadcast B
-            fNBroadcastedB = "Broadcasted" + fNB + "to" + fNY;
-            model.AddIntermediateTensor(fNBroadcastedB, model.GetTensorType(fNB), fDimShapeY);
-         }
-
+         
          model.AddIntermediateTensor(fNY, model.GetTensorType(fNA), fDimShapeY);
          if (model.Verbose()) {
             std::cout << BinaryOperatorTrait<T, Op>::Name() << " : " << ConvertShapeToString(fDimShapeA) << " , "
@@ -281,6 +265,7 @@ public:
       out << SP << "\n//------ " << BinaryOperatorTrait<T,Op>::Name() << "\n";
       auto length = ConvertDimShapeToLength(fDimShapeY);
       std::string typeName = TensorType<T>::Name();
+
       // we need to check if we can broadcast (case flag has bit 4 set)
       if (fBroadcastFlag & 4) {
          // need to check if shapes are the same
@@ -312,33 +297,44 @@ public:
             }
          }
       } else {
-         out << SP << "{\n";
+         auto stridesA = UTILITY::ComputeStrideFromShape(fShapeA);
+         auto stridesB = UTILITY::ComputeStrideFromShape(fShapeB);
+         auto stridesY = UTILITY::ComputeStrideFromShape(fShapeY);
+
+         std::string compute_idx_A, compute_idx_B, compute_idx_Y;
+         if (std::all_of(fShapeA.begin(), fShapeA.end(), [](size_t x) { return x == 1; })){
+            compute_idx_A = "0";
+         } else {
+            for(size_t i = 0; i<fShapeA.size(); ++i){
+               if(fShapeA[i]==1) continue;
+               compute_idx_A += " idx_"+fNY+std::to_string(i+(fShapeY.size()-fShapeA.size()))+" * "+stridesA[i]+" +";
+            }
+            compute_idx_A.pop_back();
+         }
+         if (std::all_of(fShapeB.begin(), fShapeB.end(), [](size_t x) { return x == 1; })){
+            compute_idx_B = "0";
+         } else {
+            for(size_t i = 0; i<fShapeB.size(); ++i){
+               if(fShapeB[i]==1) continue;
+               compute_idx_B += " idx_"+fNY+std::to_string(i+(fShapeY.size()-fShapeB.size()))+" * "+stridesB[i]+" +";
+            }
+            compute_idx_B.pop_back();
+         }
+         for(size_t i=0; i<fShapeY.size(); ++i){
+            if(fShapeY[i]!=1){
+               out<<std::string(i + 1, ' ')<<"for(size_t idx_"<<fNY<<i<<"=0; idx_"<<fNY<<i<<"<"<<fShapeY[i]<<"; ++idx_"<<fNY<<i<<"){\n";
+               compute_idx_Y += "idx_"+fNY+std::to_string(i)+"*"+stridesY[i]+"+";
+            }
+         }
+         compute_idx_Y.pop_back();
+         out << SP << SP << "tensor_" << fNY <<"["<<compute_idx_Y<<"] = "<<BinaryOperatorTrait<T,Op>::Op("tensor_"+ fNA + "["+compute_idx_A+"]", "tensor_"+ fNB + "["+compute_idx_B+"]")<<" ;\n";
+         for(size_t i=0; i<fShapeY.size(); ++i){
+            if(fShapeY[i]!=1){
+               out<<std::string(fShapeY.size()-i+1, ' ')<<"}\n";
+            }
+         }
+         return out.str();
       }
-      // Broadcast A if it's uninitialized
-      // use broadcasting function where we pass an already allocated tensor to minimize memory allocations
-      // in case of A is  constant tensor is automatically broadcasted in Initialize() then shapeA == shapeY
-      if (!fNBroadcastedA.empty() && (fDimShapeA != fDimShapeY)) {
-         out << SP << SP << "// Broadcasting uninitialized tensor " << fNA << "\n";
-         out << SP << SP  << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << typeName << ">(tensor_" << fNA << ", "
-                  << ConvertDimShapeToString(fDimShapeA) << ", " << ConvertDimShapeToString(fDimShapeY)
-                  << ", fTensor_" << fNBroadcastedA << ");\n";
-      }
-      // Broadcast B if it's uninitialized
-      if (!fNBroadcastedB.empty() && (fDimShapeB != fDimShapeY)) {
-         out << SP << SP << "// Broadcasting uninitialized tensor " << fNB << "\n";
-         out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << typeName << ">(tensor_" << fNB << ", "
-                  << ConvertDimShapeToString(fDimShapeB) << ", " << ConvertDimShapeToString(fDimShapeY)
-                  << ", fTensor_" << fNBroadcastedB << ");\n";
-      }
-      out << SP << "}\n"; // end if on broadcasting
-      const std::string& nameA = fNBroadcastedA.empty()? fNA : fNBroadcastedA;
-      const std::string& nameB = fNBroadcastedB.empty()? fNB : fNBroadcastedB;
-      out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
-      out << SP << SP << "tensor_" << fNY << "[id] = "
-               << BinaryOperatorTrait<T,Op>::Op( "tensor_" + nameA + "[id]" , "tensor_" + nameB + "[id]")
-               <<  " ;\n";
-      out << SP << "}\n";
-      return out.str();
    }
 
    std::vector<std::string> GetStdLibs() override {
