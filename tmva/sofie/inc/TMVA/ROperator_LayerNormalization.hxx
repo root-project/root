@@ -331,6 +331,7 @@ public:
          out << SP << "}\n";
       }
 
+<<<<<<< HEAD
       // if (!fNB.empty()) {
       //    std::string bias = "tensor_" + (fNBroadcastedB.empty() ? fNB : fNBroadcastedB);
       //    out << SP << "// Add the bias to Y\n";
@@ -340,6 +341,82 @@ public:
       //    out << SP << "BLAS::saxpy_(&" << opName << "_n, &" << opName << "_alpha, " << bias << ", &";
       //    out << opName << "_inc, " << "tensor_" << fNY << ", &" << opName << "_inc);\n";
       // }
+=======
+      if (!fNCastedX.empty()) {
+         out << "// NormalizedX = InvStdDev * (CastedX - Mean)\n";
+         for (size_t i = 0; i < fAxis; i++) {
+            std::string iIdx = "axis_" + std::to_string(i);
+            out << SP << "for (size_t " << iIdx << " = 0; " << iIdx << " < " << inputShape[i]
+                          << "; " << iIdx << "++){\n";
+         }
+         for (size_t j = fAxis; j < fSize; j++) {
+            std::string jIdx = "axis_" + std::to_string(j);
+            out << SP << SP << "for (size_t " << jIdx << " = 0; " << jIdx << " < " << inputShape[j]
+                             << "; " << jIdx << "++){\n";
+         }
+         out << SP << SP << SP << "tensor_" << fNNormalizedX << "[" << InputIndex << "] = tensor_";
+         out << fNInvStdDev << "[" << axesIndex << "] * (tensor_" << fNCastedX << "[" << InputIndex;
+         out << "] - tensor_" << fNMean << "[" << axesIndex << "])\n";
+         for (size_t j = fAxis; j < fSize; j++) {
+            out << SP << SP << "}\n";
+         }
+         for (size_t i = 0; i < fAxis; i++) {
+            out << SP << "}\n";
+         }
+         out << "// Y = Scale o NormalizedX";
+         for (size_t i = 0; i < fAxis; i++) {
+            std::string iIdx = "axis_" + std::to_string(i);
+            out << SP << "for (size_t " << iIdx << " = 0; " << iIdx << " < " << inputShape[i]
+                      << "; " << iIdx << "++){\n";
+         }
+         for (size_t j = fAxis; j < fSize; j++) {
+            std::string jIdx = "axis_" + std::to_string(j);
+            out << SP << SP << "for (size_t " << jIdx << " = 0; " << jIdx << " < " << inputShape[j]
+                            << "; " << jIdx << "++){\n";
+         }
+         out << SP << SP << SP << "tensor_" << fNY << "[" << InputIndex << "] = tensor_" << fNScale;
+         out << "[" << axesIndex << "] * static_cast<" << fType << ">(tensor_" << fNCastedX << "[" << InputIndex;
+         out << "]);\n";
+         for (size_t j = fAxis; j < fSize; j++) {
+            out << SP << SP << "}\n";
+         }
+         for (size_t i = 0; i < fAxis; i++) {
+            out << SP << "}\n";
+         }
+      } else {
+         out << SP << "// Y = Scale o InvStdDev (X - Mean)\n";
+         for (size_t i = 0; i < fAxis; i++) {
+            std::string iIdx = "axis_" + std::to_string(i);
+            out << SP << "for (size_t " << iIdx << " = 0; " << iIdx << " < " << inputShape[i]
+                         << "; " << iIdx << "++){\n";
+         }
+         for (size_t j = fAxis; j < fSize; j++) {
+            std::string jIdx = "axis_" + std::to_string(j);
+            out << SP << SP << "for (size_t " << jIdx << " = 0; " << jIdx << " < " << inputShape[j]
+                           << "; " << jIdx << "++){\n";
+         }
+         out << SP << SP << SP << "tensor_" << fNY << "[" << InputIndex << "] = tensor_" << fNScale;
+         out << "[" << normalizedIndex << "] * tensor_" << fNInvStdDev << "[" << axesIndex;
+         out << "] * (tensor_" << fNX << "[" << InputIndex << "] - tensor_" << fNMean << "[";
+         out << axesIndex << "]);\n";
+         for (size_t j = fAxis; j < fSize; j++) {
+            out << SP << SP << "}\n";
+         }
+         for (size_t i = 0; i < fAxis; i++) {
+            out << SP << "}\n";
+         }
+      }
+
+      if (!fNB.empty()) {
+         std::string bias = "tensor_" + (fNBroadcastedB.empty() ? fNB : fNBroadcastedB);
+         out << SP << "// Add the bias to Y\n";
+         out << SP << "int " << opName << "_n = " << fLength << ";\n";
+         out << SP << "float " << opName << "_alpha = 1.;\n";
+         out << SP << "int " << opName << "_inc = 1;\n";
+         out << SP << "BLAS::saxpy_(&" << opName << "_n, &" << opName << "_alpha, " << bias << ", &";
+         out << opName << "_inc, " << "tensor_" << fNY << ", &" << opName << "_inc);\n";
+      }
+>>>>>>> dcbb6bff294 (New Keras parser - added support for LayerNorm, BatchNorm ND, ELU layers and added tests for them. Imported Keras within the required functions. Created new CMakeLists.txt file for the keras parser. Made changes in the pythonization CMake file to build the keras parser files)
 
       return out.str();
    }
