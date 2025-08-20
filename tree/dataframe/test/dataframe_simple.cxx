@@ -1228,10 +1228,10 @@ TEST_P(RDFSimpleTests, CovarianceMatrixLargerDimensions)
    }
 }
 
-TEST_P(RDFSimpleTests, CovarianceMatrix10x10)
+TEST_P(RDFSimpleTests, CovarianceMatrix20x20)
 {
-   // Test with 10 columns (maximum supported)
-   ROOT::RDataFrame df(50);
+   // Test with 20 columns (maximum supported)
+   ROOT::RDataFrame df(30);
    auto df2 = df.Define("x1", "gRandom->Gaus(0, 1)")
                 .Define("x2", "gRandom->Gaus(1, 1)")
                 .Define("x3", "gRandom->Gaus(2, 1)")
@@ -1241,26 +1241,50 @@ TEST_P(RDFSimpleTests, CovarianceMatrix10x10)
                 .Define("x7", "gRandom->Gaus(6, 1)")
                 .Define("x8", "gRandom->Gaus(7, 1)")
                 .Define("x9", "gRandom->Gaus(8, 1)")
-                .Define("x10", "gRandom->Gaus(9, 1)");
+                .Define("x10", "gRandom->Gaus(9, 1)")
+                .Define("x11", "gRandom->Gaus(10, 1)")
+                .Define("x12", "gRandom->Gaus(11, 1)")
+                .Define("x13", "gRandom->Gaus(12, 1)")
+                .Define("x14", "gRandom->Gaus(13, 1)")
+                .Define("x15", "gRandom->Gaus(14, 1)")
+                .Define("x16", "gRandom->Gaus(15, 1)")
+                .Define("x17", "gRandom->Gaus(16, 1)")
+                .Define("x18", "gRandom->Gaus(17, 1)")
+                .Define("x19", "gRandom->Gaus(18, 1)")
+                .Define("x20", "gRandom->Gaus(19, 1)");
    
-   auto cov = df2.Cov({"x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10"});
+   auto cov = df2.Cov({"x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10",
+                       "x11", "x12", "x13", "x14", "x15", "x16", "x17", "x18", "x19", "x20"});
    auto matrix = cov.GetValue();
    
    // Verify matrix dimensions
-   EXPECT_EQ(matrix.GetNrows(), 10);
-   EXPECT_EQ(matrix.GetNcols(), 10);
+   EXPECT_EQ(matrix.GetNrows(), 20);
+   EXPECT_EQ(matrix.GetNcols(), 20);
    
    // Verify matrix is symmetric
-   for (int i = 0; i < 10; ++i) {
-      for (int j = 0; j < 10; ++j) {
+   for (int i = 0; i < 20; ++i) {
+      for (int j = 0; j < 20; ++j) {
          EXPECT_DOUBLE_EQ(matrix(i, j), matrix(j, i));
       }
    }
    
    // Check diagonal elements are positive (variances)
-   for (int i = 0; i < 10; ++i) {
+   for (int i = 0; i < 20; ++i) {
       EXPECT_GT(matrix(i, i), 0.0);
    }
+}
+
+TEST_P(RDFSimpleTests, CovarianceMatrixLimitExceeded)
+{
+   ROOT::RDataFrame df(10);
+   
+   // Test with more than 20 columns
+   ColumnNames_t cols;
+   for (int i = 1; i <= 21; ++i) {
+      cols.push_back("x" + std::to_string(i));
+   }
+   
+   EXPECT_THROW(df.Cov(cols), std::invalid_argument);
 }
 
 // run single-thread tests
