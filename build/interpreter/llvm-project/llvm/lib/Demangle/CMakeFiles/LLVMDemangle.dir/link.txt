@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../libLLVMDemangle.a CMakeFiles/LLVMDemangle.dir/Demangle.cpp.o CMakeFiles/LLVMDemangle.dir/ItaniumDemangle.cpp.o CMakeFiles/LLVMDemangle.dir/MicrosoftDemangle.cpp.o CMakeFiles/LLVMDemangle.dir/MicrosoftDemangleNodes.cpp.o CMakeFiles/LLVMDemangle.dir/RustDemangle.cpp.o CMakeFiles/LLVMDemangle.dir/DLangDemangle.cpp.o
+/usr/bin/ranlib -D ../libLLVMDemangle.a

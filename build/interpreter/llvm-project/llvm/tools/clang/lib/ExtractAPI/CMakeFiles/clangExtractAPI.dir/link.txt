@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../../../lib/libclangExtractAPI.a CMakeFiles/obj.clangExtractAPI.dir/API.cpp.o CMakeFiles/obj.clangExtractAPI.dir/APIIgnoresList.cpp.o CMakeFiles/obj.clangExtractAPI.dir/AvailabilityInfo.cpp.o CMakeFiles/obj.clangExtractAPI.dir/ExtractAPIConsumer.cpp.o CMakeFiles/obj.clangExtractAPI.dir/DeclarationFragments.cpp.o CMakeFiles/obj.clangExtractAPI.dir/Serialization/SymbolGraphSerializer.cpp.o CMakeFiles/obj.clangExtractAPI.dir/TypedefUnderlyingTypeResolver.cpp.o
+/usr/bin/ranlib -D ../../../../lib/libclangExtractAPI.a

@@ -1,0 +1,12 @@
+# This is a generated file and its contents are an internal implementation detail.
+# The download step will be re-executed if anything in this file changes.
+# No other meaning or use of this file is supported.
+
+method=url
+command=/usr/local/bin/cmake;-DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE;-P;/home/runner/work/root/root/build/RENDERCORE-prefix/src/RENDERCORE-stamp/verify-RENDERCORE.cmake;COMMAND;/usr/local/bin/cmake;-DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE;-P;/home/runner/work/root/root/build/RENDERCORE-prefix/src/RENDERCORE-stamp/extract-RENDERCORE.cmake
+source_dir=/home/runner/work/root/root/build/ui5/eve7/rcore
+work_dir=/home/runner/work/root/root/build/ui5/eve7
+url(s)=/home/runner/work/root/root/builtins/rendercore/RenderCore-1.7.tar.gz
+hash=SHA256=46cf6171ae0e16ba2f99789daaeb202146072af874ea530f06a0099c66c3e9b1
+      no_extract=
+

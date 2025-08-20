@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../libLLVMHipStdPar.a CMakeFiles/LLVMHipStdPar.dir/HipStdPar.cpp.o
+/usr/bin/ranlib -D ../../libLLVMHipStdPar.a

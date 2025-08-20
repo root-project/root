@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../../../lib/libclangDirectoryWatcher.a CMakeFiles/obj.clangDirectoryWatcher.dir/DirectoryScanner.cpp.o "CMakeFiles/obj.clangDirectoryWatcher.dir/linux/DirectoryWatcher-linux.cpp.o"
+/usr/bin/ranlib -D ../../../../lib/libclangDirectoryWatcher.a

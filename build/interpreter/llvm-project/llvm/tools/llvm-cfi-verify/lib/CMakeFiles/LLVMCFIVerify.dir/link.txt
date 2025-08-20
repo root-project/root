@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../../lib/libLLVMCFIVerify.a CMakeFiles/LLVMCFIVerify.dir/FileAnalysis.cpp.o CMakeFiles/LLVMCFIVerify.dir/GraphBuilder.cpp.o
+/usr/bin/ranlib -D ../../../lib/libLLVMCFIVerify.a

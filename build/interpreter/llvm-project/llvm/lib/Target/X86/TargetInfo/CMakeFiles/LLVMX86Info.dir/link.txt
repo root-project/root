@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../../libLLVMX86Info.a CMakeFiles/LLVMX86Info.dir/X86TargetInfo.cpp.o
+/usr/bin/ranlib -D ../../../libLLVMX86Info.a

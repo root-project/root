@@ -1,0 +1,1 @@
+/usr/bin/c++  -Wno-implicit-fallthrough -Wno-noexcept-type -pipe  -Wshadow -Wall -W -Woverloaded-virtual -fsigned-char -fsized-deallocation -pthread -O3 -DNDEBUG  -rdynamic -Wl,--dependency-file=CMakeFiles/roots.exe.dir/link.d CMakeFiles/roots.exe.dir/src/roots.cxx.o -o ../bin/roots.exe  -Wl,-rpath,/home/runner/work/root/root/build/lib: ../lib/libMathCore.so ../lib/libCore.so

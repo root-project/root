@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../../../lib/libclangEdit.a CMakeFiles/obj.clangEdit.dir/Commit.cpp.o CMakeFiles/obj.clangEdit.dir/EditedSource.cpp.o CMakeFiles/obj.clangEdit.dir/RewriteObjCFoundationAPI.cpp.o
+/usr/bin/ranlib -D ../../../../lib/libclangEdit.a

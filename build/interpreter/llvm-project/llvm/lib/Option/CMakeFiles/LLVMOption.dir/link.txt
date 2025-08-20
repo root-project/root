@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../libLLVMOption.a CMakeFiles/LLVMOption.dir/Arg.cpp.o CMakeFiles/LLVMOption.dir/ArgList.cpp.o CMakeFiles/LLVMOption.dir/Option.cpp.o CMakeFiles/LLVMOption.dir/OptTable.cpp.o
+/usr/bin/ranlib -D ../libLLVMOption.a

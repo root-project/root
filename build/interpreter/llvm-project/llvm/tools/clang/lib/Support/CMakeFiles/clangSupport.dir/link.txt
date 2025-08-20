@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../../../lib/libclangSupport.a CMakeFiles/obj.clangSupport.dir/RISCVVIntrinsicUtils.cpp.o
+/usr/bin/ranlib -D ../../../../lib/libclangSupport.a

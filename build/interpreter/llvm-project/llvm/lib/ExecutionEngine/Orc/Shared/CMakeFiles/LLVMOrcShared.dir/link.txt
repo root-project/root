@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../../libLLVMOrcShared.a CMakeFiles/LLVMOrcShared.dir/AllocationActions.cpp.o CMakeFiles/LLVMOrcShared.dir/ObjectFormats.cpp.o CMakeFiles/LLVMOrcShared.dir/OrcError.cpp.o CMakeFiles/LLVMOrcShared.dir/OrcRTBridge.cpp.o CMakeFiles/LLVMOrcShared.dir/SimpleRemoteEPCUtils.cpp.o
+/usr/bin/ranlib -D ../../../libLLVMOrcShared.a

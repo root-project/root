@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../libLLVMFrontendHLSL.a CMakeFiles/LLVMFrontendHLSL.dir/HLSLResource.cpp.o
+/usr/bin/ranlib -D ../../libLLVMFrontendHLSL.a

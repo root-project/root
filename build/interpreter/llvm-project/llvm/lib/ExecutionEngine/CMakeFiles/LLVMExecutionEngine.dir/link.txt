@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../libLLVMExecutionEngine.a CMakeFiles/LLVMExecutionEngine.dir/ExecutionEngine.cpp.o CMakeFiles/LLVMExecutionEngine.dir/ExecutionEngineBindings.cpp.o CMakeFiles/LLVMExecutionEngine.dir/GDBRegistrationListener.cpp.o CMakeFiles/LLVMExecutionEngine.dir/SectionMemoryManager.cpp.o CMakeFiles/LLVMExecutionEngine.dir/TargetSelect.cpp.o
+/usr/bin/ranlib -D ../libLLVMExecutionEngine.a

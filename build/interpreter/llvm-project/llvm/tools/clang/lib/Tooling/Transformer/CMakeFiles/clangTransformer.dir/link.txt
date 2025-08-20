@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../../../../lib/libclangTransformer.a CMakeFiles/obj.clangTransformer.dir/Parsing.cpp.o CMakeFiles/obj.clangTransformer.dir/RangeSelector.cpp.o CMakeFiles/obj.clangTransformer.dir/RewriteRule.cpp.o CMakeFiles/obj.clangTransformer.dir/SourceCode.cpp.o CMakeFiles/obj.clangTransformer.dir/SourceCodeBuilders.cpp.o CMakeFiles/obj.clangTransformer.dir/Stencil.cpp.o CMakeFiles/obj.clangTransformer.dir/Transformer.cpp.o
+/usr/bin/ranlib -D ../../../../../lib/libclangTransformer.a

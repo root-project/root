@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../libLLVMTarget.a CMakeFiles/LLVMTarget.dir/Target.cpp.o CMakeFiles/LLVMTarget.dir/TargetIntrinsicInfo.cpp.o CMakeFiles/LLVMTarget.dir/TargetLoweringObjectFile.cpp.o CMakeFiles/LLVMTarget.dir/TargetMachine.cpp.o CMakeFiles/LLVMTarget.dir/TargetMachineC.cpp.o
+/usr/bin/ranlib -D ../libLLVMTarget.a

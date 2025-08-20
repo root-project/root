@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../libLLVMFrontendDriver.a CMakeFiles/LLVMFrontendDriver.dir/CodeGenOptions.cpp.o
+/usr/bin/ranlib -D ../../libLLVMFrontendDriver.a

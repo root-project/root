@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../../../lib/libclangIndex.a CMakeFiles/obj.clangIndex.dir/CommentToXML.cpp.o CMakeFiles/obj.clangIndex.dir/FileIndexRecord.cpp.o CMakeFiles/obj.clangIndex.dir/IndexBody.cpp.o CMakeFiles/obj.clangIndex.dir/IndexDecl.cpp.o CMakeFiles/obj.clangIndex.dir/IndexingAction.cpp.o CMakeFiles/obj.clangIndex.dir/IndexingContext.cpp.o CMakeFiles/obj.clangIndex.dir/IndexSymbol.cpp.o CMakeFiles/obj.clangIndex.dir/IndexTypeSourceInfo.cpp.o CMakeFiles/obj.clangIndex.dir/USRGeneration.cpp.o
+/usr/bin/ranlib -D ../../../../lib/libclangIndex.a

@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../libLLVMIRPrinter.a CMakeFiles/LLVMIRPrinter.dir/IRPrintingPasses.cpp.o
+/usr/bin/ranlib -D ../libLLVMIRPrinter.a

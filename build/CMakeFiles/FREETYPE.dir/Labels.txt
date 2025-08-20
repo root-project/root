@@ -1,0 +1,13 @@
+# Target labels
+ FREETYPE
+# Source files and their labels
+/home/runner/work/root/root/build/CMakeFiles/FREETYPE
+/home/runner/work/root/root/build/CMakeFiles/FREETYPE.rule
+/home/runner/work/root/root/build/CMakeFiles/FREETYPE-complete.rule
+/home/runner/work/root/root/build/FREETYPE-prefix/src/FREETYPE-stamp/FREETYPE-build.rule
+/home/runner/work/root/root/build/FREETYPE-prefix/src/FREETYPE-stamp/FREETYPE-configure.rule
+/home/runner/work/root/root/build/FREETYPE-prefix/src/FREETYPE-stamp/FREETYPE-download.rule
+/home/runner/work/root/root/build/FREETYPE-prefix/src/FREETYPE-stamp/FREETYPE-install.rule
+/home/runner/work/root/root/build/FREETYPE-prefix/src/FREETYPE-stamp/FREETYPE-mkdir.rule
+/home/runner/work/root/root/build/FREETYPE-prefix/src/FREETYPE-stamp/FREETYPE-patch.rule
+/home/runner/work/root/root/build/FREETYPE-prefix/src/FREETYPE-stamp/FREETYPE-update.rule

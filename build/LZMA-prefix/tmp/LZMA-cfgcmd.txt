@@ -1,0 +1,1 @@
+cmd='<SOURCE_DIR>/configure;--prefix;<INSTALL_DIR>;--libdir;<INSTALL_DIR>/lib;--with-pic;--disable-shared;--quiet;--disable-scripts;--disable-xz;--disable-xzdec;--disable-lzmadec;--disable-lzmainfo;--disable-lzma-links;CC=/usr/bin/cc;CXX=/usr/bin/c++;CFLAGS= -O3;LDFLAGS='

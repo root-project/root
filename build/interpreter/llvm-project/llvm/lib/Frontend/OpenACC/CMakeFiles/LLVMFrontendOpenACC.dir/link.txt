@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../libLLVMFrontendOpenACC.a CMakeFiles/LLVMFrontendOpenACC.dir/ACC.cpp.o
+/usr/bin/ranlib -D ../../libLLVMFrontendOpenACC.a

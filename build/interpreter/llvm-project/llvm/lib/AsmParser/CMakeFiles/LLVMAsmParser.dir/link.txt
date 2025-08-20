@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../libLLVMAsmParser.a CMakeFiles/LLVMAsmParser.dir/LLLexer.cpp.o CMakeFiles/LLVMAsmParser.dir/LLParser.cpp.o CMakeFiles/LLVMAsmParser.dir/Parser.cpp.o
+/usr/bin/ranlib -D ../libLLVMAsmParser.a

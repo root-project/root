@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../../lib/libLLVMTableGenGlobalISel.a CMakeFiles/LLVMTableGenGlobalISel.dir/CodeExpander.cpp.o CMakeFiles/LLVMTableGenGlobalISel.dir/CXXPredicates.cpp.o CMakeFiles/LLVMTableGenGlobalISel.dir/MatchDataInfo.cpp.o CMakeFiles/LLVMTableGenGlobalISel.dir/Patterns.cpp.o
+/usr/bin/ranlib -D ../../../lib/libLLVMTableGenGlobalISel.a

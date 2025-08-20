@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../libLLVMInterpreter.a CMakeFiles/LLVMInterpreter.dir/Execution.cpp.o CMakeFiles/LLVMInterpreter.dir/ExternalFunctions.cpp.o CMakeFiles/LLVMInterpreter.dir/Interpreter.cpp.o
+/usr/bin/ranlib -D ../../libLLVMInterpreter.a

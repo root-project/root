@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../libLLVMDWARFLinkerClassic.a CMakeFiles/LLVMDWARFLinkerClassic.dir/DWARFLinkerCompileUnit.cpp.o CMakeFiles/LLVMDWARFLinkerClassic.dir/DWARFLinkerDeclContext.cpp.o CMakeFiles/LLVMDWARFLinkerClassic.dir/DWARFLinker.cpp.o CMakeFiles/LLVMDWARFLinkerClassic.dir/DWARFStreamer.cpp.o
+/usr/bin/ranlib -D ../../libLLVMDWARFLinkerClassic.a

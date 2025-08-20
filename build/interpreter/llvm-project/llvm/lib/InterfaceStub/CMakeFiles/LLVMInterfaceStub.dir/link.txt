@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../libLLVMInterfaceStub.a CMakeFiles/LLVMInterfaceStub.dir/ELFObjHandler.cpp.o CMakeFiles/LLVMInterfaceStub.dir/IFSHandler.cpp.o CMakeFiles/LLVMInterfaceStub.dir/IFSStub.cpp.o
+/usr/bin/ranlib -D ../libLLVMInterfaceStub.a

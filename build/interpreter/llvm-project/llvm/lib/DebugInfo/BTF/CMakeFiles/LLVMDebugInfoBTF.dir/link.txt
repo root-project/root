@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../libLLVMDebugInfoBTF.a CMakeFiles/LLVMDebugInfoBTF.dir/BTFParser.cpp.o CMakeFiles/LLVMDebugInfoBTF.dir/BTFContext.cpp.o
+/usr/bin/ranlib -D ../../libLLVMDebugInfoBTF.a

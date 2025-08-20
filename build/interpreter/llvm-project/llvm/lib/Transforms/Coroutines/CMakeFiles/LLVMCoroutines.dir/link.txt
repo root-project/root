@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../libLLVMCoroutines.a CMakeFiles/LLVMCoroutines.dir/Coroutines.cpp.o CMakeFiles/LLVMCoroutines.dir/CoroCleanup.cpp.o CMakeFiles/LLVMCoroutines.dir/CoroConditionalWrapper.cpp.o CMakeFiles/LLVMCoroutines.dir/CoroEarly.cpp.o CMakeFiles/LLVMCoroutines.dir/CoroElide.cpp.o CMakeFiles/LLVMCoroutines.dir/CoroFrame.cpp.o CMakeFiles/LLVMCoroutines.dir/CoroSplit.cpp.o
+/usr/bin/ranlib -D ../../libLLVMCoroutines.a

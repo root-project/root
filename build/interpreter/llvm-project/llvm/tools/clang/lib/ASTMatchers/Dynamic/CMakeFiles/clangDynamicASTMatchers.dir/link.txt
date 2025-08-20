@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../../../../lib/libclangDynamicASTMatchers.a CMakeFiles/obj.clangDynamicASTMatchers.dir/Diagnostics.cpp.o CMakeFiles/obj.clangDynamicASTMatchers.dir/Marshallers.cpp.o CMakeFiles/obj.clangDynamicASTMatchers.dir/Parser.cpp.o CMakeFiles/obj.clangDynamicASTMatchers.dir/Registry.cpp.o CMakeFiles/obj.clangDynamicASTMatchers.dir/VariantValue.cpp.o
+/usr/bin/ranlib -D ../../../../../lib/libclangDynamicASTMatchers.a

@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../../lib/libLLVMDiff.a CMakeFiles/LLVMDiff.dir/DiffConsumer.cpp.o CMakeFiles/LLVMDiff.dir/DifferenceEngine.cpp.o CMakeFiles/LLVMDiff.dir/DiffLog.cpp.o
+/usr/bin/ranlib -D ../../../lib/libLLVMDiff.a

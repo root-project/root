@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../lib/librpdutil.a CMakeFiles/rpdutil.dir/src/daemon.cxx.o CMakeFiles/rpdutil.dir/src/error.cxx.o CMakeFiles/rpdutil.dir/src/net.cxx.o CMakeFiles/rpdutil.dir/src/netpar.cxx.o CMakeFiles/rpdutil.dir/src/rpdutils.cxx.o
+/usr/bin/ranlib -D ../../lib/librpdutil.a

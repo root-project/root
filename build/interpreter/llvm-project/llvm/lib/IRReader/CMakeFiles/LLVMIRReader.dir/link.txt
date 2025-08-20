@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../libLLVMIRReader.a CMakeFiles/LLVMIRReader.dir/IRReader.cpp.o
+/usr/bin/ranlib -D ../libLLVMIRReader.a

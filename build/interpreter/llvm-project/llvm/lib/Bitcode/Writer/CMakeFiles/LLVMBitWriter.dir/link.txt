@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../libLLVMBitWriter.a CMakeFiles/LLVMBitWriter.dir/BitWriter.cpp.o CMakeFiles/LLVMBitWriter.dir/BitcodeWriter.cpp.o CMakeFiles/LLVMBitWriter.dir/BitcodeWriterPass.cpp.o CMakeFiles/LLVMBitWriter.dir/ValueEnumerator.cpp.o
+/usr/bin/ranlib -D ../../libLLVMBitWriter.a

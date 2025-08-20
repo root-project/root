@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../../../../lib/libclangToolingCore.a CMakeFiles/obj.clangToolingCore.dir/Diagnostic.cpp.o CMakeFiles/obj.clangToolingCore.dir/Replacement.cpp.o
+/usr/bin/ranlib -D ../../../../../lib/libclangToolingCore.a

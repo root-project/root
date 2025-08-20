@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../libLLVMWindowsManifest.a CMakeFiles/LLVMWindowsManifest.dir/WindowsManifestMerger.cpp.o
+/usr/bin/ranlib -D ../libLLVMWindowsManifest.a

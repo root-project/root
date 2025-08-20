@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/runner/work/root/root/build/CMakeFiles/FREETYPE"
+		},
+		{
+			"file" : "/home/runner/work/root/root/build/CMakeFiles/FREETYPE.rule"
+		},
+		{
+			"file" : "/home/runner/work/root/root/build/CMakeFiles/FREETYPE-complete.rule"
+		},
+		{
+			"file" : "/home/runner/work/root/root/build/FREETYPE-prefix/src/FREETYPE-stamp/FREETYPE-build.rule"
+		},
+		{
+			"file" : "/home/runner/work/root/root/build/FREETYPE-prefix/src/FREETYPE-stamp/FREETYPE-configure.rule"
+		},
+		{
+			"file" : "/home/runner/work/root/root/build/FREETYPE-prefix/src/FREETYPE-stamp/FREETYPE-download.rule"
+		},
+		{
+			"file" : "/home/runner/work/root/root/build/FREETYPE-prefix/src/FREETYPE-stamp/FREETYPE-install.rule"
+		},
+		{
+			"file" : "/home/runner/work/root/root/build/FREETYPE-prefix/src/FREETYPE-stamp/FREETYPE-mkdir.rule"
+		},
+		{
+			"file" : "/home/runner/work/root/root/build/FREETYPE-prefix/src/FREETYPE-stamp/FREETYPE-patch.rule"
+		},
+		{
+			"file" : "/home/runner/work/root/root/build/FREETYPE-prefix/src/FREETYPE-stamp/FREETYPE-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"FREETYPE"
+		],
+		"name" : "FREETYPE"
+	}
+}

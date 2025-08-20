@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../../../lib/libclangInterpreter.a CMakeFiles/obj.clangInterpreter.dir/DeviceOffload.cpp.o CMakeFiles/obj.clangInterpreter.dir/CodeCompletion.cpp.o CMakeFiles/obj.clangInterpreter.dir/IncrementalExecutor.cpp.o CMakeFiles/obj.clangInterpreter.dir/IncrementalParser.cpp.o CMakeFiles/obj.clangInterpreter.dir/Interpreter.cpp.o CMakeFiles/obj.clangInterpreter.dir/InterpreterUtils.cpp.o CMakeFiles/obj.clangInterpreter.dir/Value.cpp.o
+/usr/bin/ranlib -D ../../../../lib/libclangInterpreter.a

@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../libLLVMMCDisassembler.a CMakeFiles/LLVMMCDisassembler.dir/Disassembler.cpp.o CMakeFiles/LLVMMCDisassembler.dir/MCDisassembler.cpp.o CMakeFiles/LLVMMCDisassembler.dir/MCExternalSymbolizer.cpp.o CMakeFiles/LLVMMCDisassembler.dir/MCRelocationInfo.cpp.o CMakeFiles/LLVMMCDisassembler.dir/MCSymbolizer.cpp.o
+/usr/bin/ranlib -D ../../libLLVMMCDisassembler.a

@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../../../lib/libclangIndexSerialization.a CMakeFiles/obj.clangIndexSerialization.dir/SerializablePathCollection.cpp.o
+/usr/bin/ranlib -D ../../../../lib/libclangIndexSerialization.a

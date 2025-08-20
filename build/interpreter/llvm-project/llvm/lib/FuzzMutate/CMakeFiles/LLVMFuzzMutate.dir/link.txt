@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../libLLVMFuzzMutate.a CMakeFiles/LLVMFuzzMutate.dir/IRMutator.cpp.o CMakeFiles/LLVMFuzzMutate.dir/OpDescriptor.cpp.o CMakeFiles/LLVMFuzzMutate.dir/Operations.cpp.o CMakeFiles/LLVMFuzzMutate.dir/RandomIRBuilder.cpp.o
+/usr/bin/ranlib -D ../libLLVMFuzzMutate.a

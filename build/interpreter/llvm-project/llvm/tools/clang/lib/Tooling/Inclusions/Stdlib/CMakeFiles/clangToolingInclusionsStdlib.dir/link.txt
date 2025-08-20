@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../../../../../lib/libclangToolingInclusionsStdlib.a CMakeFiles/obj.clangToolingInclusionsStdlib.dir/StandardLibrary.cpp.o
+/usr/bin/ranlib -D ../../../../../../lib/libclangToolingInclusionsStdlib.a

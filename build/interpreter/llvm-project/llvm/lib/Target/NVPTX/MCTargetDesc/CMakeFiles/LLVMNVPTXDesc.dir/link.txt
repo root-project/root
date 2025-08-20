@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../../libLLVMNVPTXDesc.a CMakeFiles/LLVMNVPTXDesc.dir/NVPTXInstPrinter.cpp.o CMakeFiles/LLVMNVPTXDesc.dir/NVPTXMCAsmInfo.cpp.o CMakeFiles/LLVMNVPTXDesc.dir/NVPTXMCTargetDesc.cpp.o CMakeFiles/LLVMNVPTXDesc.dir/NVPTXTargetStreamer.cpp.o
+/usr/bin/ranlib -D ../../../libLLVMNVPTXDesc.a

@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../../../../lib/libclangDependencyScanning.a CMakeFiles/obj.clangDependencyScanning.dir/DependencyScanningFilesystem.cpp.o CMakeFiles/obj.clangDependencyScanning.dir/DependencyScanningService.cpp.o CMakeFiles/obj.clangDependencyScanning.dir/DependencyScanningWorker.cpp.o CMakeFiles/obj.clangDependencyScanning.dir/DependencyScanningTool.cpp.o CMakeFiles/obj.clangDependencyScanning.dir/ModuleDepCollector.cpp.o
+/usr/bin/ranlib -D ../../../../../lib/libclangDependencyScanning.a

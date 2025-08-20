@@ -1,0 +1,1 @@
+cmd='./configure;--prefix;<INSTALL_DIR>;--with-pic;--disable-shared;--with-png=no;--with-bzip2=no;--with-harfbuzz=no;--with-brotli=no;CC=/usr/bin/cc;CFLAGS=-O'

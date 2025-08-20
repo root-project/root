@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../lib/librsa.a CMakeFiles/rsa.dir/src/rsaaux.cxx.o CMakeFiles/rsa.dir/src/rsalib.cxx.o CMakeFiles/rsa.dir/src/rsafun.cxx.o
+/usr/bin/ranlib -D ../../lib/librsa.a

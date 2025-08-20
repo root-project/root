@@ -1,0 +1,70 @@
+#
+#  $ROOTSYS/etc/system.rootdaemonrc, $HOME/.rootdaemonrc
+#      This files describe the names of the hosts for which
+#      the allowed authentication methods are not the default ones
+#      as specified in system.rootrc (if any).
+#      This file is used by servers run from ROOT interactive sessions
+#      via the TServerSocket class.
+#
+#      If existing, $HOME/.rootdaemonrc has priority over
+#      $ROOTSYS/etc/system.rootdaemonrc
+#
+#  Format:
+#    - lines starting with '#' are comment lines.
+#
+#    - hosts can specified either with their name (eg. pcepsft43),
+#      their FQDN (eg, pcepsft43.cern.ch) or their IP address
+#      (eg 137.138.99.73).
+#
+#    - directives applying to all host can be specified either by
+#      'default' or '*'
+#
+#    - the '*' character can be used in any field of the name to indicate
+#      a set of machines or domains, e.g. pcepsft*.cern.ch applies to all
+#      'pcepsft' machines in the domain 'cern.ch'. (to indicate all
+#      'lxplus' machines you should use 'lxplus*.cern.ch' because
+#      internally the generic lxplus machine has a real name of the form
+#      lxplusnnn.cern.ch; you can also use 'lxplus' if you don't care
+#      about domain name checking).
+#
+#    - a whole domain can be indicated by its name, eg 'cern.ch',
+#      'cnaf.infn.it' or '.ch'
+#    - truncated IP address can also be used to indicate a set of
+#      machines; they are interpreted as the very first or very last
+#      part of the address; for example, to select 137.138.99.73,
+#      any of these is valid: '137.138.99', '137.138', '137', '99.73';
+#      or with wild cards: '137.13*' or '*.99.73'; however, '138.99'
+#      is invalid because ambiguous.
+#
+#    - the information following the name or IP address indicates, in order
+#      of preference, the short names or the internal codes of authentication
+#      methods accepted for requests coming from the specified host(s); the
+#      ones implemented so far are:
+#
+#        Method                           short name   code
+#
+#        UsrPwd                            usrpwd       0
+#
+#     (The insecure method is intended to speed up access within a cluster
+#     protected by other means from outside attacks; should not be used for
+#     inter-cluster or inter-domain authentication).
+#     Methods non specified explicitly are not accepted.
+#
+#   - Lines ending with '\' are followed by additional information for the
+#     host on the next line; the name of the host should not be repeated.
+#
+# Example of allowing machines in the cern.ch domain to authenticate.
+# The accepted methods will be communicated to the client and an automatic
+# retry is attempted if the client can use any of them (negotiation).
+#
+# Valid examples:
+#
+# default              none
+# lxplus*.cern.ch      0:qwerty:uytre 2
+
+# Everything allowed from the local host (for testing)
+#
+127.0.0.1            0 2
+#
+# secure methods allowed by default
+default usrpwd

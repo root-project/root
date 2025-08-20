@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../../../lib/libclangAPINotes.a CMakeFiles/obj.clangAPINotes.dir/APINotesManager.cpp.o CMakeFiles/obj.clangAPINotes.dir/APINotesReader.cpp.o CMakeFiles/obj.clangAPINotes.dir/APINotesTypes.cpp.o CMakeFiles/obj.clangAPINotes.dir/APINotesWriter.cpp.o CMakeFiles/obj.clangAPINotes.dir/APINotesYAMLCompiler.cpp.o
+/usr/bin/ranlib -D ../../../../lib/libclangAPINotes.a

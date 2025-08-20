@@ -1,0 +1,2 @@
+/usr/bin/ar Dqc ../../../../lib/libcppyy_backend.a CMakeFiles/cppyy_backend.dir/clingwrapper/src/clingwrapper.cxx.o
+/usr/bin/ranlib -D ../../../../lib/libcppyy_backend.a
