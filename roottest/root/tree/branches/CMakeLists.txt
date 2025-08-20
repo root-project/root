@@ -2,9 +2,8 @@
 ROOTTEST_ADD_TEST(initOffset
                   MACRO  initOffset.C+)
 
-ROOTTEST_ADD_TEST(abc_rflx
-                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/abc.h -o abc_rflx.cpp
-                  FIXTURES_SETUP root-tree-branches-abc-rflx-dict-fixture)
+ROOTTEST_ADD_TEST(abc_rflx_gen_dict
+                  COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/abc.h -o standalone_abc_rflx.cpp)
 
 ROOTTEST_COMPILE_MACRO(abc.h
                        FIXTURES_SETUP root-tree-branches-abc-fixture)
