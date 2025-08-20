@@ -120,7 +120,6 @@ protected:
    ROOT::NTupleSize_t fNEntries = kInvalidNTupleIndex;
 
    ROOT::NTupleSize_t fCurrentEntryIndex = kInvalidNTupleIndex; //< Current processor entry index
-   std::size_t fCurrentProcessorNumber = 0;                     //< Number of the currently open inner processor
 
    static ENTupleProcessorKind GetKind() { return fKind; }
 
@@ -485,7 +484,8 @@ class RNTupleChainProcessor : public RNTupleProcessor {
 
 private:
    std::vector<std::unique_ptr<RNTupleProcessor>> fInnerProcessors;
-   std::vector<ROOT::NTupleSize_t> fInnerNEntries;
+   std::size_t fCurrentProcessorIndex = 0;         //< Number of the currently open inner processor
+   std::vector<ROOT::NTupleSize_t> fInnerNEntries; //< Number of entries in each inner processor
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the processor and the first nested processor in the chain.
@@ -503,8 +503,8 @@ private:
    /// \brief Check if the processor has an entry following fCurrentEntryIndex.
    bool HasNextEntry() final
    {
-      return fInnerProcessors[fCurrentProcessorNumber]->HasNextEntry() ||
-             fCurrentProcessorNumber < fInnerProcessors.size() - 1;
+      return fInnerProcessors[fCurrentProcessorIndex]->HasNextEntry() ||
+             fCurrentProcessorIndex < fInnerProcessors.size() - 1;
    }
 
    /////////////////////////////////////////////////////////////////////////////

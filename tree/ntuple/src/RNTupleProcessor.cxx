@@ -227,7 +227,7 @@ void ROOT::Experimental::RNTupleChainProcessor::Connect(
    if (!fEntry)
       fEntry = std::make_shared<Internal::RNTupleProcessorEntry>();
 
-   fInnerProcessors[fCurrentProcessorNumber]->Connect(fEntry);
+   fInnerProcessors[fCurrentProcessorIndex]->Connect(fEntry);
 }
 
 void ROOT::Experimental::RNTupleChainProcessor::Update(ROOT::NTupleSize_t globalIndex)
@@ -248,9 +248,9 @@ void ROOT::Experimental::RNTupleChainProcessor::Update(ROOT::NTupleSize_t global
       nCurrentEntries = fInnerProcessors[currProcessor]->GetNEntries();
    }
 
-   if (currProcessor != fCurrentProcessorNumber) {
-      fCurrentProcessorNumber = currProcessor;
-      auto &innerProc = fInnerProcessors[fCurrentProcessorNumber];
+   if (currProcessor != fCurrentProcessorIndex) {
+      fCurrentProcessorIndex = currProcessor;
+      auto &innerProc = fInnerProcessors[fCurrentProcessorIndex];
 
       // Processor has not been connected before
       if (!innerProc->fEntry) {
@@ -272,18 +272,18 @@ void ROOT::Experimental::RNTupleChainProcessor::Update(ROOT::NTupleSize_t global
    }
 
    fCurrentEntryIndex = globalIndex;
-   fInnerProcessors[fCurrentProcessorNumber]->Update(relativeIndex);
+   fInnerProcessors[fCurrentProcessorIndex]->Update(relativeIndex);
 }
 
 bool ROOT::Experimental::RNTupleChainProcessor::HasField(std::string_view fieldName)
 {
-   return fInnerProcessors[fCurrentProcessorNumber]->HasField(fieldName);
+   return fInnerProcessors[fCurrentProcessorIndex]->HasField(fieldName);
 }
 
 std::unique_ptr<ROOT::RFieldBase>
 ROOT::Experimental::RNTupleChainProcessor::CreateField(std::string_view fieldName, std::string_view typeName)
 {
-   return fInnerProcessors[fCurrentProcessorNumber]->CreateField(fieldName, typeName);
+   return fInnerProcessors[fCurrentProcessorIndex]->CreateField(fieldName, typeName);
 }
 
 ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::GetNEntries()
@@ -306,7 +306,7 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::GetNEntries()
 ROOT::NTupleSize_t
 ROOT::Experimental::RNTupleChainProcessor::GetLocalCurrentEntryIndex(std::string_view fieldName) const
 {
-   return fInnerProcessors[fCurrentProcessorNumber]->GetLocalCurrentEntryIndex(fieldName);
+   return fInnerProcessors[fCurrentProcessorIndex]->GetLocalCurrentEntryIndex(fieldName);
 }
 
 void ROOT::Experimental::RNTupleChainProcessor::AddEntriesToJoinTable(Internal::RNTupleJoinTable &joinTable,
