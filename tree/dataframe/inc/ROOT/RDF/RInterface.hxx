@@ -2858,8 +2858,8 @@ public:
          throw std::invalid_argument("Covariance matrix calculation requires at least 2 columns");
       }
       auto covMatrixV = std::make_shared<TMatrixDSym>(static_cast<Int_t>(nCols));
-      // For variadic template dispatch, we need to handle the column types dynamically
-      // For now, assume all columns are double (can be improved later for type inference)
+      
+      // Create template list with all double types for the number of columns
       switch (nCols) {
          case 2:
             return CreateAction<RDFInternal::ActionTags::Cov, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
@@ -2867,8 +2867,20 @@ public:
             return CreateAction<RDFInternal::ActionTags::Cov, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
          case 4:
             return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
+         case 5:
+            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
+         case 6:
+            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
+         case 7:
+            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
+         case 8:
+            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
+         case 9:
+            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
+         case 10:
+            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
          default:
-            throw std::invalid_argument("Covariance matrix calculation currently supports up to 4 columns");
+            throw std::invalid_argument("Covariance matrix calculation currently supports up to 10 columns");
       }
    }
 

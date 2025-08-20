@@ -1336,10 +1336,14 @@ public:
    CovHelper(const CovHelper &) = delete;
    void InitTask(TTreeReader *, unsigned int) {}
    
-   // Specializations for different numbers of columns
-   void Exec(unsigned int slot, double v1, double v2);
-   void Exec(unsigned int slot, double v1, double v2, double v3);
-   void Exec(unsigned int slot, double v1, double v2, double v3, double v4);
+   // Generic Exec method that works with any number of columns
+   template <typename... T>
+   void Exec(unsigned int slot, T &&...values)
+   {
+      static_assert(sizeof...(T) >= 2, "Covariance requires at least 2 columns");
+      static_assert((std::is_convertible_v<T, double> && ...), "All values must be convertible to double");
+      ExecImpl(slot, {static_cast<double>(values)...});
+   }
 
    void Initialize() { /* noop */}
 

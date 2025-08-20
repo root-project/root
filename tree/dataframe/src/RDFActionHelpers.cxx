@@ -227,21 +227,6 @@ CovHelper::CovHelper(const std::shared_ptr<TMatrixDSym> &covMatrixPtr, const uns
 {
 }
 
-void CovHelper::Exec(unsigned int slot, double v1, double v2)
-{
-   ExecImpl(slot, {v1, v2});
-}
-
-void CovHelper::Exec(unsigned int slot, double v1, double v2, double v3)
-{
-   ExecImpl(slot, {v1, v2, v3});
-}
-
-void CovHelper::Exec(unsigned int slot, double v1, double v2, double v3, double v4)
-{
-   ExecImpl(slot, {v1, v2, v3, v4});
-}
-
 void CovHelper::ExecImpl(unsigned int slot, const std::vector<double> &values)
 {
    if (values.size() != fNCols) {

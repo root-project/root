@@ -1076,6 +1076,193 @@ TEST_P(RDFSimpleTests, ReadStdArray)
    }
 }
 
+TEST_P(RDFSimpleTests, CovarianceMatrix2x2)
+{
+   // Test 2x2 covariance matrix with known values
+   ROOT::RDataFrame df(5);
+   auto df2 = df.Define("x", []() { 
+                    static int i = 0; 
+                    return std::array<double, 5>{1, 2, 3, 4, 5}[i++]; 
+                })
+                .Define("y", []() { 
+                    static int i = 0; 
+                    return std::array<double, 5>{2, 4, 6, 8, 10}[i++]; 
+                });
+   
+   auto cov = df2.Cov({"x", "y"});
+   auto matrix = cov.GetValue();
+   
+   // Expected covariance matrix for x=[1,2,3,4,5], y=[2,4,6,8,10]
+   // Var(x) = 2.5, Var(y) = 10.0, Cov(x,y) = 5.0
+   EXPECT_DOUBLE_EQ(matrix(0, 0), 2.5);   // Var(x)
+   EXPECT_DOUBLE_EQ(matrix(1, 1), 10.0);  // Var(y) 
+   EXPECT_DOUBLE_EQ(matrix(0, 1), 5.0);   // Cov(x,y)
+   EXPECT_DOUBLE_EQ(matrix(1, 0), 5.0);   // Cov(y,x) - symmetric
+}
+
+TEST_P(RDFSimpleTests, CovarianceMatrix3x3)
+{
+   // Test 3x3 covariance matrix
+   ROOT::RDataFrame df(4);
+   auto df2 = df.Define("x", []() { 
+                    static int i = 0; 
+                    return std::array<double, 4>{1, 2, 3, 4}[i++]; 
+                })
+                .Define("y", []() { 
+                    static int i = 0; 
+                    return std::array<double, 4>{2, 3, 4, 5}[i++]; 
+                })
+                .Define("z", []() { 
+                    static int i = 0; 
+                    return std::array<double, 4>{1, 4, 2, 3}[i++]; 
+                });
+   
+   auto cov = df2.Cov({"x", "y", "z"});
+   auto matrix = cov.GetValue();
+   
+   // Verify matrix is symmetric
+   for (int i = 0; i < 3; ++i) {
+      for (int j = 0; j < 3; ++j) {
+         EXPECT_DOUBLE_EQ(matrix(i, j), matrix(j, i));
+      }
+   }
+   
+   // Check diagonal elements are positive (variances)
+   for (int i = 0; i < 3; ++i) {
+      EXPECT_GT(matrix(i, i), 0.0);
+   }
+}
+
+TEST_P(RDFSimpleTests, CovarianceMatrixUncorrelated)
+{
+   // Test with uncorrelated variables (should have near-zero covariances)
+   ROOT::RDataFrame df(1000);
+   auto df2 = df.Define("x", "gRandom->Gaus(0, 1)")
+                .Define("y", "gRandom->Gaus(0, 1)");
+   
+   auto cov = df2.Cov({"x", "y"});
+   auto matrix = cov.GetValue();
+   
+   // Variances should be close to 1
+   EXPECT_NEAR(matrix(0, 0), 1.0, 0.1);
+   EXPECT_NEAR(matrix(1, 1), 1.0, 0.1);
+   
+   // Covariance should be close to 0 for independent variables
+   EXPECT_NEAR(matrix(0, 1), 0.0, 0.1);
+   EXPECT_NEAR(matrix(1, 0), 0.0, 0.1);
+}
+
+TEST_P(RDFSimpleTests, CovarianceMatrixEdgeCases)
+{
+   // Test with single element (should return zero matrix)
+   {
+      ROOT::RDataFrame df(1);
+      auto df2 = df.Define("x", []() { return 1.0; })
+                   .Define("y", []() { return 2.0; });
+      auto cov = df2.Cov({"x", "y"});
+      auto matrix = cov.GetValue();
+      
+      EXPECT_DOUBLE_EQ(matrix(0, 0), 0.0);
+      EXPECT_DOUBLE_EQ(matrix(0, 1), 0.0);
+      EXPECT_DOUBLE_EQ(matrix(1, 0), 0.0);
+      EXPECT_DOUBLE_EQ(matrix(1, 1), 0.0);
+   }
+   
+   // Test with identical columns
+   {
+      ROOT::RDataFrame df(5);
+      auto df2 = df.Define("x", []() { 
+                      static int i = 0; 
+                      return std::array<double, 5>{1, 2, 3, 4, 5}[i++]; 
+                   })
+                   .Define("y", "x");  // y identical to x
+      auto cov = df2.Cov({"x", "y"});
+      auto matrix = cov.GetValue();
+      
+      // Variance should be same for both
+      EXPECT_DOUBLE_EQ(matrix(0, 0), matrix(1, 1));
+      // Covariance should equal variance (perfect correlation)
+      EXPECT_DOUBLE_EQ(matrix(0, 1), matrix(0, 0));
+      EXPECT_DOUBLE_EQ(matrix(1, 0), matrix(0, 0));
+   }
+}
+
+TEST_P(RDFSimpleTests, CovarianceMatrixInvalidInput)
+{
+   ROOT::RDataFrame df(10);
+   
+   // Test with too few columns
+   EXPECT_THROW(df.Cov({"x"}), std::invalid_argument);
+   
+   // Test with empty column list  
+   EXPECT_THROW(df.Cov({}), std::invalid_argument);
+}
+
+TEST_P(RDFSimpleTests, CovarianceMatrixLargerDimensions)
+{
+   // Test with 5 columns (exceeds original 4-column limit)
+   ROOT::RDataFrame df(100);
+   auto df2 = df.Define("x1", "gRandom->Gaus(0, 1)")
+                .Define("x2", "gRandom->Gaus(1, 1)")
+                .Define("x3", "gRandom->Gaus(2, 1)")
+                .Define("x4", "gRandom->Gaus(3, 1)")
+                .Define("x5", "gRandom->Gaus(4, 1)");
+   
+   auto cov = df2.Cov({"x1", "x2", "x3", "x4", "x5"});
+   auto matrix = cov.GetValue();
+   
+   // Verify matrix dimensions
+   EXPECT_EQ(matrix.GetNrows(), 5);
+   EXPECT_EQ(matrix.GetNcols(), 5);
+   
+   // Verify matrix is symmetric
+   for (int i = 0; i < 5; ++i) {
+      for (int j = 0; j < 5; ++j) {
+         EXPECT_DOUBLE_EQ(matrix(i, j), matrix(j, i));
+      }
+   }
+   
+   // Check diagonal elements are positive (variances)
+   for (int i = 0; i < 5; ++i) {
+      EXPECT_GT(matrix(i, i), 0.0);
+   }
+}
+
+TEST_P(RDFSimpleTests, CovarianceMatrix10x10)
+{
+   // Test with 10 columns (maximum supported)
+   ROOT::RDataFrame df(50);
+   auto df2 = df.Define("x1", "gRandom->Gaus(0, 1)")
+                .Define("x2", "gRandom->Gaus(1, 1)")
+                .Define("x3", "gRandom->Gaus(2, 1)")
+                .Define("x4", "gRandom->Gaus(3, 1)")
+                .Define("x5", "gRandom->Gaus(4, 1)")
+                .Define("x6", "gRandom->Gaus(5, 1)")
+                .Define("x7", "gRandom->Gaus(6, 1)")
+                .Define("x8", "gRandom->Gaus(7, 1)")
+                .Define("x9", "gRandom->Gaus(8, 1)")
+                .Define("x10", "gRandom->Gaus(9, 1)");
+   
+   auto cov = df2.Cov({"x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8", "x9", "x10"});
+   auto matrix = cov.GetValue();
+   
+   // Verify matrix dimensions
+   EXPECT_EQ(matrix.GetNrows(), 10);
+   EXPECT_EQ(matrix.GetNcols(), 10);
+   
+   // Verify matrix is symmetric
+   for (int i = 0; i < 10; ++i) {
+      for (int j = 0; j < 10; ++j) {
+         EXPECT_DOUBLE_EQ(matrix(i, j), matrix(j, i));
+      }
+   }
+   
+   // Check diagonal elements are positive (variances)
+   for (int i = 0; i < 10; ++i) {
+      EXPECT_GT(matrix(i, i), 0.0);
+   }
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDFSimpleTests, ::testing::Values(false));
 
