@@ -9,6 +9,7 @@
 
 #include "gtest/gtest.h"
 
+using ROOT::Experimental::RAxisVariant;
 using ROOT::Experimental::RBinIndex;
 using ROOT::Experimental::RBinIndexRange;
 using ROOT::Experimental::RRegularAxis;

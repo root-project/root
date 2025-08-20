@@ -22,21 +22,21 @@ class TBuffer;
 
 namespace ROOT {
 namespace Experimental {
+
+/// Variant of all supported axis types.
+using RAxisVariant = std::variant<RRegularAxis, RVariableBinAxis>;
+
 namespace Internal {
 
 /**
 Bin configurations for all dimensions of a histogram.
 */
 class RAxes final {
-public:
-   using AxisVariant = std::variant<RRegularAxis, RVariableBinAxis>;
-
-private:
-   std::vector<AxisVariant> fAxes;
+   std::vector<RAxisVariant> fAxes;
 
 public:
    /// \param[in] axes the axis objects, must have size > 0
-   explicit RAxes(std::vector<AxisVariant> axes) : fAxes(std::move(axes))
+   explicit RAxes(std::vector<RAxisVariant> axes) : fAxes(std::move(axes))
    {
       if (fAxes.empty()) {
          throw std::invalid_argument("must have at least 1 axis object");
@@ -44,7 +44,7 @@ public:
    }
 
    std::size_t GetNDimensions() const { return fAxes.size(); }
-   const std::vector<AxisVariant> &Get() const { return fAxes; }
+   const std::vector<RAxisVariant> &Get() const { return fAxes; }
 
    friend bool operator==(const RAxes &lhs, const RAxes &rhs) { return lhs.fAxes == rhs.fAxes; }
 
