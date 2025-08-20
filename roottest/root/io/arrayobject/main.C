@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <cmath>
 #include <iostream>
 #include <string>
 
@@ -17,16 +18,16 @@ using namespace std;
 bool runHisto(TTree *tree, const char *what, const char* where, double mean) {
   string cmd = what;
   cmd += (">>"); cmd += where;
-  
+
   tree->Draw(cmd.c_str());
-  
+
   TH1F* hist = (TH1F*)gROOT->FindObject(where);
 
-  if (hist==0) {
+  if (!hist) {
     cerr << "Histograms for " << what << " not created" << endl;
     return false;
-  } else if (hist->GetMean()!=mean) {
-    cerr << "Histograms for " << what << " improperly created mean is " 
+  } else if (std::abs(hist->GetMean() - mean) > 1e-6) {
+    cerr << "Histograms for " << what << " improperly created mean is "
          << hist->GetMean() << " instead of " << mean << endl;
     return false;
   }
@@ -71,17 +72,17 @@ int run() {
     b->fvp[j].i = j+1;
     b->fvp[j].f = 2*b->f[j].i;
 
-    
+
   }
 
   TTree *tree = new TTree("T","An example of a ROOT tree");
   // T->Draw("f[].i"); does not work with a .!
   TBranch *br = tree->Branch("a/b", "bar", &b,32000,0);
-  
+
   for (int i = 0; i < 10; i++) {
     tree->Fill();
   }
-  
+
   h->Write();
 
   // Now do the actual test ... quickly
@@ -101,23 +102,23 @@ int run() {
   tree->GetEntry(2);
   b->print();
 
-  return 1;
+  // return 1;
 
-  result &= runHisto(tree, "fo.i","hist0",1.5);
-  result &= runHisto(tree, "fo[].i","hist1",1.5);
-  result &= runHisto(tree, "fo[].f","hist1",3);
+  result &= runHisto(tree, "fo.i", "hist1",1.5);
+  result &= runHisto(tree, "fo[].i", "hist2",1.5);
+  result &= runHisto(tree, "fo[].f", "hist3", 3.);
 
-  result &= runHisto(tree, "fop.i","hist0",1.5);
-  result &= runHisto(tree, "fop[].i","hist1",1.5);
-  result &= runHisto(tree, "fop[].f","hist1",3);
+  result &= runHisto(tree, "fop.i","hist4", 1.);
+  result &= runHisto(tree, "fop[].i","hist5", 1.);
+  result &= runHisto(tree, "fop[].f","hist6", 2.);
 
-  result &= runHisto(tree, "fp.i","hist0",1.5);
-  result &= runHisto(tree, "fp[].i","hist1",1.5);
-  result &= runHisto(tree, "fp[].f","hist1",3);
+  result &= runHisto(tree, "fp.i","hist7", 1.);
+  result &= runHisto(tree, "fp[].i","hist8", 1.);
+  result &= runHisto(tree, "fp[].f","hist9", 2.);
 
-  result &= runHisto(tree, "f.i","hist0",1.5);
-  result &= runHisto(tree, "f[].i","hist1",1.5);
-  result &= runHisto(tree, "f[].f","hist1",3);
+  result &= runHisto(tree, "f.i","hist10", 1.5);
+  result &= runHisto(tree, "f[].i","hist11", 1.5);
+  result &= runHisto(tree, "f[].f","hist12",  3.);
 
 
   // Note the same fail without the original library.
