@@ -49,6 +49,10 @@ namespace Detail {
 class RRawPtrWriteEntry;
 } // namespace Detail
 
+namespace Internal {
+class RNTupleProcessorValue;
+class RNTupleProcessorEntry;
+} // namespace Internal
 } // namespace Experimental
 
 namespace Internal {
@@ -85,10 +89,12 @@ This is and can only be partially enforced through C++.
 */
 // clang-format on
 class RFieldBase {
-   friend class ROOT::RClassField;                             // to mark members as artificial
-   friend class ROOT::Experimental::Detail::RRawPtrWriteEntry; // to call Append()
-   friend struct ROOT::Internal::RFieldCallbackInjector;       // used for unit tests
-   friend struct ROOT::Internal::RFieldRepresentationModifier; // used for unit tests
+   friend class ROOT::RClassField;                                   // to mark members as artificial
+   friend class ROOT::Experimental::Detail::RRawPtrWriteEntry;       // to call Append()
+   friend class ROOT::Experimental::Internal::RNTupleProcessorValue; // to call Append() and Read()
+   friend class ROOT::Experimental::Internal::RNTupleProcessorEntry; // to call CreateObjRawPtr()
+   friend struct ROOT::Internal::RFieldCallbackInjector;             // used for unit tests
+   friend struct ROOT::Internal::RFieldRepresentationModifier;       // used for unit tests
    friend void Internal::CallFlushColumnsOnField(RFieldBase &);
    friend void Internal::CallCommitClusterOnField(RFieldBase &);
    friend void Internal::CallConnectPageSinkOnField(RFieldBase &, ROOT::Internal::RPageSink &, ROOT::NTupleSize_t);
@@ -706,6 +712,7 @@ public:
 class RFieldBase::RValue final {
    friend class RFieldBase;
    friend class ROOT::REntry;
+   friend class Experimental::Internal::RNTupleProcessorValue;
 
 private:
    RFieldBase *fField = nullptr;  ///< The field that created the RValue

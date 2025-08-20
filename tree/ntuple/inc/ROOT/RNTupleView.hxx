@@ -16,6 +16,7 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
+#include <ROOT/RNTupleProcessorEntry.hxx>
 #include <ROOT/RNTupleRange.hxx>
 #include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RNTupleUtils.hxx>
@@ -28,6 +29,19 @@
 #include <unordered_map>
 
 namespace ROOT {
+
+namespace Experimental {
+class RNTupleProcessor;
+
+namespace Internal {
+class RNTupleProcessorValue;
+
+/// Helper to get the entry index relative to `globalIndex` in the innermost processor for the given field, so its value
+/// can be read from disk.
+ROOT::NTupleSize_t
+GetRelativeProcessorEntryIndex(RNTupleProcessor &processor, std::string_view fieldName, ROOT::NTupleSize_t globalIndex);
+} // namespace Internal
+} // namespace Experimental
 
 class RNTupleReader;
 
@@ -251,6 +265,62 @@ public:
    /// \see RNTupleView::operator()(RNTupleLocalIndex)
    void operator()(RNTupleLocalIndex localIndex) { fValue.Read(localIndex); }
 };
+
+namespace Experimental {
+// clang-format off
+/**
+\class ROOT::RNTupleView
+\ingroup NTuple
+\brief An RNTupleView for a known type created from an RNTupleProcessor.
+*/
+// clang-format on
+/// TODO(fdegeus) add template specialization for RNTupleProcessorView<T>
+template <typename T>
+class RNTupleProcessorView {
+   friend class RNTupleProcessor;
+   friend class RNTupleSingleProcessor;
+
+private:
+   RNTupleProcessor *fProcessor;
+   Internal::RNTupleProcessorValue *fValue;
+
+protected:
+   RNTupleProcessorView(RNTupleProcessor &processor, Internal::RNTupleProcessorValue &value)
+      : fProcessor(&processor), fValue(&value)
+   {
+   }
+
+public:
+   RNTupleProcessorView(const RNTupleProcessorView &other) = delete;
+   RNTupleProcessorView(RNTupleProcessorView &&other) = default;
+   RNTupleProcessorView &operator=(const RNTupleProcessorView &other) = delete;
+   RNTupleProcessorView &operator=(RNTupleProcessorView &&other) = default;
+   ~RNTupleProcessorView() = default;
+
+   /// Reads the value of this view for the entry with the provided `globalIndex`.
+   const T &operator()(ROOT::NTupleSize_t globalIndex)
+   {
+      auto relativeIndex =
+         Internal::GetRelativeProcessorEntryIndex(*fProcessor, fValue->GetProcessorFieldName(), globalIndex);
+
+      if (!fValue->IsValid()) {
+         throw RException(R__FAIL("cannot read from \"" + fValue->GetProcessorFieldName() + "\" at entry " +
+                                  std::to_string(globalIndex) + " because the field is invalid at this entry"));
+      }
+
+      fValue->Read(relativeIndex);
+      return fValue->GetRef<T>();
+   }
+
+   const ROOT::RFieldBase &GetField() const { return fValue->GetField(); }
+
+   bool IsValid(ROOT::NTupleSize_t globalIndex) const
+   {
+      Internal::GetRelativeProcessorEntryIndex(*fProcessor, fValue->GetProcessorFieldName(), globalIndex);
+      return fValue->IsValid();
+   }
+};
+} // namespace Experimental
 
 // clang-format off
 /**
