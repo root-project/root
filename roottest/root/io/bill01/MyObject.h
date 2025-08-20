@@ -6,5 +6,5 @@ public:
 	MyObject() : memberMyObject()  {}
 	MyObject(int allocated, int filled) : memberMyObject(allocated, filled)  {}
 	MemberMyObject memberMyObject;
-	ClassDef(MyObject, 1)
+	ClassDefOverride(MyObject, 1)
 };
