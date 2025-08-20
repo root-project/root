@@ -1,27 +1,27 @@
 
-Processing /home/linev/git/webgui/roottest/root/io/double32/runtemplate32.C+...
-Info in <TUnixSystem::ACLiC>: creating shared library /home/linev/build/webgui/roottest/root/io/double32/runtemplate32_C.so
+Processing runtemplate32.C+...
+Info in <TUnixSystem::ACLiC>: creating shared library runtemplate32_C.so
 
 StreamerInfo for class: WithDouble, checksum=0xf3af1b21
-  Double32_t     d32             offset=__deleted__ type= 9                     
-  double         regdouble       offset=__deleted__ type= 8                     
+  Double32_t     d32             offset=__deleted__ type= 9
+  double         regdouble       offset=__deleted__ type= 8
    i= 0, d32             type=  9, offset=__deleted__, len=1, method=0
    i= 1, regdouble       type=  8, offset=__deleted__, len=1, method=0
 
 StreamerInfo for class: MyVector<double>, checksum=0x4ffe5ea
-  double         d32             offset=__deleted__ type= 8                     
-  double         regdouble       offset=__deleted__ type= 8                     
+  double         d32             offset=__deleted__ type= 8
+  double         regdouble       offset=__deleted__ type= 8
    i= 0, d32             type= 28, offset=__deleted__, len=2, method=0 [optimized]
 
 StreamerInfo for class: MyVector<Double32_t>, checksum=0xdd163122
-  Double32_t     d32             offset=__deleted__ type= 9                     
-  double         regdouble       offset=__deleted__ type= 8                     
+  Double32_t     d32             offset=__deleted__ type= 9
+  double         regdouble       offset=__deleted__ type= 8
    i= 0, d32             type=  9, offset=__deleted__, len=1, method=0
    i= 1, regdouble       type=  8, offset=__deleted__, len=1, method=0
 
 StreamerInfo for class: Contains, checksum=0x83fd6ef5
-  MyVector<Double32_t> v1              offset=__deleted__ type=62                     
-  MyVector<float> v2              offset=__deleted__ type=62                     
+  MyVector<Double32_t> v1              offset=__deleted__ type=62
+  MyVector<float> v2              offset=__deleted__ type=62
    i= 0, v1              type= 62, offset=__deleted__, len=1, method=0
    i= 1, v2              type= 62, offset=__deleted__, len=1, method=0
 OBJ: TList	TList	Doubly linked list : 0
@@ -34,27 +34,27 @@ OBJ: TList	TList	Doubly linked list : 0
 The following should be a Double32_t: Double32_t
 
 StreamerInfo for class: m02<Double32_t>, checksum=0x8610c861
-  map2<Double32_t,Double32_t,alloc<pair<Double32_t,Double32_t> > > BASE            offset=__deleted__ type= 0                     
-  int            fN              offset=__deleted__ type= 6 newtype= 3                     
-  vector<Double32_t> ff1             offset=__deleted__ type=300 stl=1 ctype=9                     
-  Double32_t     ff2[3]          offset=__deleted__ type=29                     
-  Double32_t     ff3             offset=__deleted__ type= 9                     
-  Double32_t*    ff4             offset=__deleted__ type=49 [fN]                
-  Double32_t     fv1[4]          offset=__deleted__ type=29                     
-  Double32_t     fv2             offset=__deleted__ type= 9                     
-  Double32_t&    fv3             offset=__deleted__ type= 9                     
-  Double32_t*    fv4             offset=__deleted__ type=49 [fN]                
-  Double32_t     fv5             offset=__deleted__ type= 9                     
-  Double32_t*    fv6             offset=__deleted__ type=49 [fN]                
-  vec<Double32_t> fv7             offset=__deleted__ type=62                     
-  map1<int,Double32_t> fv9             offset=__deleted__ type=62                     
-  map1<int,vec<Double32_t> > fv10            offset=__deleted__ type=62                     
-  map1<int,map1<double,Double32_t> > fv11            offset=__deleted__ type=62                     
-  map1<int,map1<double,vec<Double32_t> > > fv12            offset=__deleted__ type=62                     
-  map2<int,Double32_t,alloc<pair<int,Double32_t> > > fv13            offset=__deleted__ type=62                     
-  map2<int,vec<Double32_t>,alloc<pair<int,vec<Double32_t> > > > fv14            offset=__deleted__ type=62                     
-  map2<int,map2<double,Double32_t,alloc<pair<double,Double32_t> > >,alloc<pair<int,map2<double,Double32_t,alloc<pair<double,Double32_t> > > > > > fv15            offset=__deleted__ type=62                     
-  map2<int,map2<double,vec<Double32_t>,alloc<pair<double,vec<Double32_t> > > >,alloc<pair<int,map2<double,vec<Double32_t>,alloc<pair<double,vec<Double32_t> > > > > > > fv16            offset=__deleted__ type=62                     
+  map2<Double32_t,Double32_t,alloc<pair<Double32_t,Double32_t> > > BASE            offset=__deleted__ type= 0
+  int            fN              offset=__deleted__ type= 6 newtype= 3
+  vector<Double32_t> ff1             offset=__deleted__ type=300 stl=1 ctype=9
+  Double32_t     ff2[3]          offset=__deleted__ type=29
+  Double32_t     ff3             offset=__deleted__ type= 9
+  Double32_t*    ff4             offset=__deleted__ type=49 [fN]
+  Double32_t     fv1[4]          offset=__deleted__ type=29
+  Double32_t     fv2             offset=__deleted__ type= 9
+  Double32_t&    fv3             offset=__deleted__ type= 9
+  Double32_t*    fv4             offset=__deleted__ type=49 [fN]
+  Double32_t     fv5             offset=__deleted__ type= 9
+  Double32_t*    fv6             offset=__deleted__ type=49 [fN]
+  vec<Double32_t> fv7             offset=__deleted__ type=62
+  map1<int,Double32_t> fv9             offset=__deleted__ type=62
+  map1<int,vec<Double32_t> > fv10            offset=__deleted__ type=62
+  map1<int,map1<double,Double32_t> > fv11            offset=__deleted__ type=62
+  map1<int,map1<double,vec<Double32_t> > > fv12            offset=__deleted__ type=62
+  map2<int,Double32_t,alloc<pair<int,Double32_t> > > fv13            offset=__deleted__ type=62
+  map2<int,vec<Double32_t>,alloc<pair<int,vec<Double32_t> > > > fv14            offset=__deleted__ type=62
+  map2<int,map2<double,Double32_t,alloc<pair<double,Double32_t> > >,alloc<pair<int,map2<double,Double32_t,alloc<pair<double,Double32_t> > > > > > fv15            offset=__deleted__ type=62
+  map2<int,map2<double,vec<Double32_t>,alloc<pair<double,vec<Double32_t> > > >,alloc<pair<int,map2<double,vec<Double32_t>,alloc<pair<double,vec<Double32_t> > > > > > > fv16            offset=__deleted__ type=62
    i= 0, map2<Double32_t,Double32_t,alloc<pair<Double32_t,Double32_t> > > type=  0, offset=__deleted__, len=1, method=0
    i= 1, fN              type=  6, offset=__deleted__, len=1, method=0
    i= 2, ff1             type=300, offset=__deleted__, len=1, method=0
