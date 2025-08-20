@@ -1,6 +1,0 @@
-
-    #define CLING_CXX_INCL "/usr/include/c++/13:/usr/include/x86_64-linux-gnu/c++/13:/usr/include/c++/13/backward"
-    #define CLING_INCLUDE_PATHS ""
-  
-      #define CLING_CXX_RLTV "x86_64-linux-gnu-g++-13  "
-    

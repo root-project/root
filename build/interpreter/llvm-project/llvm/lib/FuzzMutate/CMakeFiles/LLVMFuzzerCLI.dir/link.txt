@@ -1,2 +1,0 @@
-/usr/bin/ar Dqc ../libLLVMFuzzerCLI.a CMakeFiles/LLVMFuzzerCLI.dir/FuzzerCLI.cpp.o
-/usr/bin/ranlib -D ../libLLVMFuzzerCLI.a

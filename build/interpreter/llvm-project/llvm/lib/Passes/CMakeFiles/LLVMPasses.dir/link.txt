@@ -1,2 +1,0 @@
-/usr/bin/ar Dqc ../libLLVMPasses.a CMakeFiles/LLVMPasses.dir/OptimizationLevel.cpp.o CMakeFiles/LLVMPasses.dir/PassBuilder.cpp.o CMakeFiles/LLVMPasses.dir/PassBuilderBindings.cpp.o CMakeFiles/LLVMPasses.dir/PassBuilderPipelines.cpp.o CMakeFiles/LLVMPasses.dir/PassPlugin.cpp.o CMakeFiles/LLVMPasses.dir/StandardInstrumentations.cpp.o
-/usr/bin/ranlib -D ../libLLVMPasses.a

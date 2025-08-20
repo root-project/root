@@ -1,2 +1,0 @@
-/usr/bin/ar Dqc ../../libLLVMFrontendOffloading.a CMakeFiles/LLVMFrontendOffloading.dir/Utility.cpp.o CMakeFiles/LLVMFrontendOffloading.dir/OffloadWrapper.cpp.o
-/usr/bin/ranlib -D ../../libLLVMFrontendOffloading.a

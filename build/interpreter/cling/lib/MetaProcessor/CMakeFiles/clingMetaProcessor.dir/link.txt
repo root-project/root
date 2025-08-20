@@ -1,2 +1,0 @@
-/usr/bin/ar Dqc ../../../../lib/libclingMetaProcessor.a CMakeFiles/obj.clingMetaProcessor.dir/Display.cpp.o CMakeFiles/obj.clingMetaProcessor.dir/InputValidator.cpp.o CMakeFiles/obj.clingMetaProcessor.dir/MetaLexer.cpp.o CMakeFiles/obj.clingMetaProcessor.dir/MetaParser.cpp.o CMakeFiles/obj.clingMetaProcessor.dir/MetaProcessor.cpp.o CMakeFiles/obj.clingMetaProcessor.dir/MetaSema.cpp.o
-/usr/bin/ranlib -D ../../../../lib/libclingMetaProcessor.a

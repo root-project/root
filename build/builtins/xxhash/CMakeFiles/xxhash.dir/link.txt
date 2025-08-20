@@ -1,2 +1,0 @@
-/usr/bin/ar Dqc ../../lib/libxxhash.a CMakeFiles/xxhash.dir/xxhash.c.o
-/usr/bin/ranlib -D ../../lib/libxxhash.a

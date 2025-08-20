@@ -1,2 +1,0 @@
-/usr/bin/ar Dqc ../../lib/libLLVMTableGenCommon.a CMakeFiles/obj.LLVMTableGenCommon.dir/Attributes.cpp.o CMakeFiles/obj.LLVMTableGenCommon.dir/CodeGenIntrinsics.cpp.o CMakeFiles/obj.LLVMTableGenCommon.dir/DirectiveEmitter.cpp.o CMakeFiles/obj.LLVMTableGenCommon.dir/IntrinsicEmitter.cpp.o CMakeFiles/obj.LLVMTableGenCommon.dir/RISCVTargetDefEmitter.cpp.o CMakeFiles/obj.LLVMTableGenCommon.dir/SDNodeProperties.cpp.o CMakeFiles/obj.LLVMTableGenCommon.dir/VTEmitter.cpp.o
-/usr/bin/ranlib -D ../../lib/libLLVMTableGenCommon.a

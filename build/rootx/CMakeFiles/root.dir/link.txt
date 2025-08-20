@@ -1,1 +1,0 @@
-/usr/bin/c++  -Wno-implicit-fallthrough -Wno-noexcept-type -pipe  -Wshadow -Wall -W -Woverloaded-virtual -fsigned-char -fsized-deallocation -pthread -O3 -DNDEBUG  -rdynamic -Wl,--dependency-file=CMakeFiles/root.dir/link.d CMakeFiles/root.dir/src/rootx.cxx.o -o ../bin/root  -Wl,-rpath,::::::::::::::

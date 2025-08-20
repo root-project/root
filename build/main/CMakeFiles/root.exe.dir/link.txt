@@ -1,1 +1,0 @@
-/usr/bin/c++  -Wno-implicit-fallthrough -Wno-noexcept-type -pipe  -Wshadow -Wall -W -Woverloaded-virtual -fsigned-char -fsized-deallocation -pthread -O3 -DNDEBUG  -rdynamic -Wl,--dependency-file=CMakeFiles/root.exe.dir/link.d CMakeFiles/root.exe.dir/src/rmain.cxx.o -o ../bin/root.exe  -Wl,-rpath,/home/runner/work/root/root/build/lib: ../lib/libRint.so ../lib/libCore.so

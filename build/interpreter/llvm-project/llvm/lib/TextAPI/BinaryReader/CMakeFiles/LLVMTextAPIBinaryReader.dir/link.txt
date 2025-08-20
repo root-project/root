@@ -1,2 +1,0 @@
-/usr/bin/ar Dqc ../../libLLVMTextAPIBinaryReader.a CMakeFiles/LLVMTextAPIBinaryReader.dir/DylibReader.cpp.o
-/usr/bin/ranlib -D ../../libLLVMTextAPIBinaryReader.a
