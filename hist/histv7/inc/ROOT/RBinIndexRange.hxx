@@ -26,6 +26,16 @@ A range of bin indices \f$[fBegin, fEnd)\f$.
 The interface allows convenient iteration over RBinIndex. If included, RBinIndex::Underflow() is encountered before the
 normal bins and RBinIndex::Overflow() is the last value.
 
+\code
+ROOT::Experimental::RRegularAxis axis(10, 0, 1);
+for (auto index : axis.GetNormalRange(2, 5)) {
+   // Will iterate over [2, 3, 4]
+}
+for (auto index : axis.GetFullRange()) {
+   // Will iterate over all bins, starting with the underflow and ending with the overflow bin
+}
+\endcode
+
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is
 welcome!
 */
@@ -112,6 +122,10 @@ public:
 namespace Internal {
 
 /// %Internal function to create RBinIndexRange.
+///
+/// Users are strongly advised to create bin index ranges via the respective axis types, for example with
+/// \ref RRegularAxis::GetNormalRange(RBinIndex, RBinIndex) const "RRegularAxis::GetNormalRange(RBinIndex, RBinIndex)"
+/// or RRegularAxis::GetFullRange().
 ///
 /// \param[in] begin the begin of the bin index range (inclusive)
 /// \param[in] end the end of the bin index range (exclusive)
