@@ -142,6 +142,10 @@ protected:
    /// with respect to the processor's position in the chain.
    virtual void AddEntriesToJoinTable(Internal::RNTupleJoinTable &joinTable, ROOT::NTupleSize_t entryOffset = 0) = 0;
 
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Processor-specific implementation for printing its structure, called by PrintStructure().
+   ///
+   /// \param[in,out] output Output stream to print to.
    virtual void PrintStructureImpl(std::ostream &output) const = 0;
 
    /////////////////////////////////////////////////////////////////////////////
@@ -198,6 +202,24 @@ public:
    /// \return A reference to the entry used by the processor.
    const ROOT::REntry &GetEntry() const { return *fEntry; }
 
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Print a graphical representation of the processor composition.
+   ///
+   /// \param[in,out] output Stream to print to (default is stdout).
+   ///
+   /// ### Example:
+   /// The structure of a processor representing a join between a single primary RNTuple and a chain of two auxiliary
+   /// RNTuples will be printed as follows:
+   /// ~~~
+   /// +-----------------------------+ +-----------------------------+
+   /// | ntuple                      | | ntuple_aux                  |
+   /// | ntuple.root                 | | ntuple_aux1.root            |
+   /// +-----------------------------+ +-----------------------------+
+   ///                                 +-----------------------------+
+   ///                                 | ntuple_aux                  |
+   ///                                 | ntuple_aux2.root            |
+   ///                                 +-----------------------------+
+   /// ~~~
    void PrintStructure(std::ostream &output = std::cout) { PrintStructureImpl(output); }
 
    // clang-format off
@@ -386,6 +408,10 @@ private:
    /// \sa ROOT::Experimental::RNTupleProcessor::AddEntriesToJoinTable
    void AddEntriesToJoinTable(Internal::RNTupleJoinTable &joinTable, ROOT::NTupleSize_t entryOffset = 0) final;
 
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Processor-specific implementation for printing its structure, called by PrintStructure().
+   ///
+   /// \sa ROOT::Experimental::RNTupleProcessor::PrintStructureImpl
    void PrintStructureImpl(std::ostream &output) const final;
 
    /////////////////////////////////////////////////////////////////////////////
@@ -443,6 +469,10 @@ private:
    /// \sa ROOT::Experimental::RNTupleProcessor::AddEntriesToJoinTable
    void AddEntriesToJoinTable(Internal::RNTupleJoinTable &joinTable, ROOT::NTupleSize_t entryOffset = 0) final;
 
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Processor-specific implementation for printing its structure, called by PrintStructure().
+   ///
+   /// \sa ROOT::Experimental::RNTupleProcessor::PrintStructureImpl
    void PrintStructureImpl(std::ostream &output) const final;
 
    /////////////////////////////////////////////////////////////////////////////
@@ -517,6 +547,10 @@ private:
    /// This way, they can be accessed from the processor's entry as `auxNTupleName.fieldName`.
    void SetModel(std::unique_ptr<ROOT::RNTupleModel> primaryModel, std::unique_ptr<ROOT::RNTupleModel> auxModel);
 
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Processor-specific implementation for printing its structure, called by PrintStructure().
+   ///
+   /// \sa ROOT::Experimental::RNTupleProcessor::PrintStructureImpl
    void PrintStructureImpl(std::ostream &output) const final;
 
    /////////////////////////////////////////////////////////////////////////////
