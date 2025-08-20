@@ -50,10 +50,17 @@ public:
 
    RBinIndex &operator+=(std::size_t a)
    {
-      assert(IsNormal());
-      fIndex += a;
-      // TODO: is it possible to catch overflows?
-      assert(IsNormal());
+      if (!IsNormal()) {
+         // Arithmetic operations on special values go to InvalidIndex.
+         fIndex = InvalidIndex;
+      } else {
+         std::size_t old = fIndex;
+         fIndex += a;
+         if (fIndex < old || !IsNormal()) {
+            // The addition wrapped around, go to InvalidIndex.
+            fIndex = InvalidIndex;
+         }
+      }
       return *this;
    }
 
@@ -79,10 +86,15 @@ public:
 
    RBinIndex &operator-=(std::size_t a)
    {
-      assert(IsNormal());
-      assert(fIndex >= a);
-      fIndex -= a;
-      assert(IsNormal());
+      if (!IsNormal()) {
+         // Arithmetic operations on special values go to InvalidIndex.
+         fIndex = InvalidIndex;
+      } else if (fIndex >= a) {
+         fIndex -= a;
+      } else {
+         // The operation would wrap around, go to InvalidIndex.
+         fIndex = InvalidIndex;
+      }
       return *this;
    }
 
