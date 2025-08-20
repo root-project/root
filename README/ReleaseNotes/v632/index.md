@@ -874,3 +874,15 @@ Published on June 5, 2025
 
 ### New platforms
 The support for Alma10 was added.
+
+## Release 6.32.16
+
+Published on August 21, 2025
+
+### Items addressed in this release
+
+This branch includes minor bugfixes as well as the changes necessary to build and run on macOS Tahoe and XCode 26.
+
+* [[#19366](https://github.com/root-project/root/issues/19366)] - THnSparse::CreateSparse creates histograms that are not sparse
+* [[#19359](https://github.com/root-project/root/issues/19359)] - Incorrect bin error with TH1::SetBuffer and TH1::Sumw2
+* [[#18953](https://github.com/root-project/root/issues/18953)] - error opening ZIP archive member (>4GB archive)
