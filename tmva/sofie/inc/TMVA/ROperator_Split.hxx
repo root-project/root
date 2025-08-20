@@ -38,7 +38,7 @@ public:
          fInputTensorNames = { fNX };
          fOutputTensorNames.resize(fNYs.size());
          std::transform(fNYs.begin(), fNYs.end(), fOutputTensorNames.begin(),
-                   [](const std::string& s) -> std::string_view { return s; });
+                   [](const std::string& s) -> std::string { return s; });
       }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {

@@ -90,7 +90,7 @@ extern ParserFuncSignature ParseScatterElements;
 // Declaration of fused operators
 extern ParserFuseFuncSignature ParseFuseConvAdd;
 extern ParserFuseFuncSignature ParseFuseGemmRelu;
-extern ParserFuseFuncSignature ParseFuseBatchnormRelu;
+// extern ParserFuseFuncSignature ParseFuseBatchnormRelu;
 extern ParserFuseFuncSignature ParseFuseConvTransposeAdd;
 extern ParserFuseFuncSignature ParseFuseMatMulAdd;
 
@@ -320,12 +320,13 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
             fFusedOperators[idx2] = true;
             return ParseFuseGemmRelu(*this, graphproto.node(idx), graphproto.node(idx2));
          }
-      } else if (nodeproto.op_type() == "BatchNormalization") {
-         if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Relu") {
-            fFusedOperators[idx2] = true;
-            return ParseFuseBatchnormRelu(*this, graphproto.node(idx), graphproto.node(idx2));
-         }
-      }
+      } 
+      // else if (nodeproto.op_type() == "BatchNormalization") {
+      //    if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Relu") {
+      //       fFusedOperators[idx2] = true;
+      //       return ParseFuseBatchnormRelu(*this, graphproto.node(idx), graphproto.node(idx2));
+      //    }
+      // }
    }
 
 
@@ -676,7 +677,7 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
    } while ((int)nodesOrder.size() < graph.node_size());
 
 
-   // find list of children for each operator (used for fusing oiperators)
+   // find list of children for each operator (used for fusing operators)
    std::vector<std::vector<int>> nodesChildren(graph.node_size());
 
    for (int k = 0; k < graph.node_size(); k++) {

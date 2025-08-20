@@ -58,7 +58,8 @@ public:
       : fAttrAxis(axis), fAttrEpsilon(epsilon), fAttrStashType(stashType), fNX(UTILITY::Clean_name(nameX)),
         fNScale(UTILITY::Clean_name(nameScale)), fNB(UTILITY::Clean_name(nameB)),
         fNY(UTILITY::Clean_name(nameY)), fNMean(UTILITY::Clean_name(nameMean)), fNInvStdDev(UTILITY::Clean_name(nameInvStdDev))
-   {
+   {     
+         fKind = OperatorKind::LAYERNORM;
          fInputTensorNames = { fNX, fNScale };
          if (!fNB.empty()){
             fInputTensorNames.emplace_back(fNB);
@@ -336,6 +337,20 @@ public:
    std::vector<std::string> GetBlasRoutines() override { return { std::string("Axpy") }; }
 
    std::vector<std::string> GetStdLibs() override { return { std::string("cmath") }; }
+
+   std::string GetFusableOutputTensorName() override {
+       return fNY;
+   }
+   
+   void UpdateFusableTensorName(std::string fusable_tensor_name, const std::function<void(const std::string&)>& removal_func){
+      removal_func(fNX);
+      removal_func(fNY);
+      fNX = fusable_tensor_name;
+      fNY = fusable_tensor_name;
+      fInputTensorNames[0] = fNX;
+      fOutputTensorNames[0] = fNY;
+   }
+
 };
 
 } // namespace SOFIE
