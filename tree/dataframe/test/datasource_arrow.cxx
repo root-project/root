@@ -12,6 +12,7 @@
 #include <arrow/record_batch.h>
 #include <arrow/table.h>
 #include <arrow/type.h>
+#include <arrow/util/config.h>
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
@@ -21,9 +22,15 @@
 #include <iostream>
 using namespace arrow;
 
+#if ARROW_VERSION_MAJOR >= 21
+#define ASSERT_OK(expr)                                              \
+   for (::arrow::Status _st = ::arrow::ToStatus((expr)); !_st.ok();) \
+   FAIL() << "'" ARROW_STRINGIFY(expr) "' failed with " << _st.ToString()
+#else
 #define ASSERT_OK(expr)                                                               \
    for (::arrow::Status _st = ::arrow::internal::GenericToStatus((expr)); !_st.ok();) \
    FAIL() << "'" ARROW_STRINGIFY(expr) "' failed with " << _st.ToString()
+#endif
 
 // Copied from arrow/testing/builder.h
 template <typename TYPE, typename C_TYPE = typename TYPE::c_type>
