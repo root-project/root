@@ -44,6 +44,7 @@ def inject_rbatchgenerator(ns):
 
 
 from ._gnn import RModel_GNN, RModel_GraphIndependent
+from ._sofie._parser._keras.parser import RModelParser_Keras
 
 hasRDF = "dataframe" in cppyy.gbl.ROOT.GetROOT().GetConfigFeatures()
 if hasRDF:
