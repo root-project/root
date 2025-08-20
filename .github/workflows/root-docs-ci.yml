@@ -219,37 +219,41 @@ jobs:
         OLD_DIR=${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}_old
         FINAL_DIR=${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
 
-        # Function to safely remove a directory on EOS
+        # Recursive cleanup function
         cleanup_dir() {
           local dir="$1"
           if xrdfs "${EOS_HOST}" stat "${dir}" >/dev/null 2>&1; then
             for f in $(xrdfs "${EOS_HOST}" ls "${dir}" 2>/dev/null); do
-              xrdfs "${EOS_HOST}" rm "$f" || true
+              if xrdfs ${EOS_HOST} stat "$f" 2>/dev/null | grep -q "is a directory"; then
+                cleanup_dir "$f"
+              else
+                xrdfs ${EOS_HOST} rm "$f" || true
+              fi
             done
             xrdfs "${EOS_HOST}" rmdir "${dir}" || true
           fi
         }
 
-        # Clean up temporary directory if it exists
+        # Clean temporary directory
         cleanup_dir "${TMP_DIR}"
 
         # Upload documentation to temporary directory
         cd ${DOC_DIR}/html/
-        xrdcp --parallel 64 -rf ./*.html ${EOS_ENDPOINT}/${TMP_DIR}
+        xrdcp --parallel 64 -r -f ./*.html ${EOS_ENDPOINT}/${TMP_DIR}/
         rm -rf *.html
-        xrdcp --parallel 64 -rf ./*.svg ${EOS_ENDPOINT}/${TMP_DIR}
+        xrdcp --parallel 64 -r -f ./*.svg  ${EOS_ENDPOINT}/${TMP_DIR}/
         rm -rf *.svg
-        xrdcp --parallel 64 -rf ./*.map ${EOS_ENDPOINT}/${TMP_DIR}
+        xrdcp --parallel 64 -r -f ./*.map  ${EOS_ENDPOINT}/${TMP_DIR}/
         rm -rf *.map
-        xrdcp --parallel 64 -rf ./*.md5 ${EOS_ENDPOINT}/${TMP_DIR}
+        xrdcp --parallel 64 -r -f ./*.md5  ${EOS_ENDPOINT}/${TMP_DIR}/
         rm -rf *.md5
-        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${TMP_DIR}
+        xrdcp --parallel 64 -r -f ./        ${EOS_ENDPOINT}/${TMP_DIR}/
         cd ..
         rm -r html
-        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${TMP_DIR}
+        xrdcp --parallel 64 -r -f ./ ${EOS_ENDPOINT}/${TMP_DIR}/
         cd ..
 
-        # Remove previous backup if it exists
+        # Remove previous backup
         cleanup_dir "${OLD_DIR}"
 
         # Rename current live directory to old
@@ -262,4 +266,4 @@ jobs:
         cleanup_dir "${OLD_DIR}"
 
         # Upload tar.gz archive to download directory
-        xrdcp -rf ${TAR_NAME}.gz ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download
+        xrdcp -r -f ${TAR_NAME}.gz ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download/
