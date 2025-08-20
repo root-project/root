@@ -296,45 +296,45 @@ public:
                                         << opName << "\");\n";
             }
          }
-      } else {
-         auto stridesA = UTILITY::ComputeStrideFromShape(fShapeA);
-         auto stridesB = UTILITY::ComputeStrideFromShape(fShapeB);
-         auto stridesY = UTILITY::ComputeStrideFromShape(fShapeY);
-
-         std::string compute_idx_A, compute_idx_B, compute_idx_Y;
-         if (std::all_of(fShapeA.begin(), fShapeA.end(), [](size_t x) { return x == 1; })){
-            compute_idx_A = "0";
-         } else {
-            for(size_t i = 0; i<fShapeA.size(); ++i){
-               if(fShapeA[i]==1) continue;
-               compute_idx_A += " idx_"+fNY+std::to_string(i+(fShapeY.size()-fShapeA.size()))+" * "+stridesA[i]+" +";
-            }
-            compute_idx_A.pop_back();
-         }
-         if (std::all_of(fShapeB.begin(), fShapeB.end(), [](size_t x) { return x == 1; })){
-            compute_idx_B = "0";
-         } else {
-            for(size_t i = 0; i<fShapeB.size(); ++i){
-               if(fShapeB[i]==1) continue;
-               compute_idx_B += " idx_"+fNY+std::to_string(i+(fShapeY.size()-fShapeB.size()))+" * "+stridesB[i]+" +";
-            }
-            compute_idx_B.pop_back();
-         }
-         for(size_t i=0; i<fShapeY.size(); ++i){
-            if(fShapeY[i]!=1){
-               out<<std::string(i + 1, ' ')<<"for(size_t idx_"<<fNY<<i<<"=0; idx_"<<fNY<<i<<"<"<<fShapeY[i]<<"; ++idx_"<<fNY<<i<<"){\n";
-               compute_idx_Y += "idx_"+fNY+std::to_string(i)+"*"+stridesY[i]+"+";
-            }
-         }
-         compute_idx_Y.pop_back();
-         out << SP << SP << "tensor_" << fNY <<"["<<compute_idx_Y<<"] = "<<BinaryOperatorTrait<T,Op>::Op("tensor_"+ fNA + "["+compute_idx_A+"]", "tensor_"+ fNB + "["+compute_idx_B+"]")<<" ;\n";
-         for(size_t i=0; i<fShapeY.size(); ++i){
-            if(fShapeY[i]!=1){
-               out<<std::string(fShapeY.size()-i+1, ' ')<<"}\n";
-            }
-         }
-         return out.str();
       }
+      
+      auto stridesA = UTILITY::ComputeStrideFromShape(fShapeA);
+      auto stridesB = UTILITY::ComputeStrideFromShape(fShapeB);
+      auto stridesY = UTILITY::ComputeStrideFromShape(fShapeY);
+
+      std::string compute_idx_A, compute_idx_B, compute_idx_Y;
+      if (std::all_of(fShapeA.begin(), fShapeA.end(), [](size_t x) { return x == 1; })){
+         compute_idx_A = "0";
+      } else {
+         for(size_t i = 0; i<fShapeA.size(); ++i){
+            if(fShapeA[i]==1) continue;
+            compute_idx_A += " idx_"+fNY+std::to_string(i+(fShapeY.size()-fShapeA.size()))+" * "+stridesA[i]+" +";
+         }
+         compute_idx_A.pop_back();
+      }
+      if (std::all_of(fShapeB.begin(), fShapeB.end(), [](size_t x) { return x == 1; })){
+         compute_idx_B = "0";
+      } else {
+         for(size_t i = 0; i<fShapeB.size(); ++i){
+            if(fShapeB[i]==1) continue;
+            compute_idx_B += " idx_"+fNY+std::to_string(i+(fShapeY.size()-fShapeB.size()))+" * "+stridesB[i]+" +";
+         }
+         compute_idx_B.pop_back();
+      }
+      for(size_t i=0; i<fShapeY.size(); ++i){
+         if(fShapeY[i]!=1){
+            out<<std::string(i + 1, ' ')<<"for(size_t idx_"<<fNY<<i<<"=0; idx_"<<fNY<<i<<"<"<<fShapeY[i]<<"; ++idx_"<<fNY<<i<<"){\n";
+            compute_idx_Y += "idx_"+fNY+std::to_string(i)+"*"+stridesY[i]+"+";
+         }
+      }
+      compute_idx_Y.pop_back();
+      out << SP << SP << "tensor_" << fNY <<"["<<compute_idx_Y<<"] = "<<BinaryOperatorTrait<T,Op>::Op("tensor_"+ fNA + "["+compute_idx_A+"]", "tensor_"+ fNB + "["+compute_idx_B+"]")<<" ;\n";
+      for(size_t i=0; i<fShapeY.size(); ++i){
+         if(fShapeY[i]!=1){
+            out<<std::string(fShapeY.size()-i+1, ' ')<<"}\n";
+         }
+      }
+      return out.str();
    }
 
    std::vector<std::string> GetStdLibs() override {
