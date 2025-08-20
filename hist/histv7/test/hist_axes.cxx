@@ -27,7 +27,7 @@ TEST(RAxes, Constructor)
    EXPECT_TRUE(std::get_if<RRegularAxis>(&v[0]) != nullptr);
    EXPECT_TRUE(std::get_if<RVariableBinAxis>(&v[1]) != nullptr);
 
-   std::vector<RAxes::AxisVariant> newAxes{variableBinAxis, regularAxis};
+   std::vector<RAxisVariant> newAxes{variableBinAxis, regularAxis};
    axes = RAxes(newAxes);
    EXPECT_EQ(axes.GetNDimensions(), 2);
 
