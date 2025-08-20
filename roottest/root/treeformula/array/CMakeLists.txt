@@ -20,6 +20,10 @@ ROOTTEST_ADD_TEST(eventlist
                   OUTREF arrayEventListTest.ref
                   FIXTURES_SETUP root-treeformula-array-eventlist-fixture)
 
+ROOTTEST_ADD_TEST(nonSplit
+                  MACRO nonsplit.C+
+                  ERRREF nonsplit.erref)
+
 # depend from eventlist because of file copying
 ROOTTEST_ADD_TEST(boolOpt
                   MACRO boolOpt.C
