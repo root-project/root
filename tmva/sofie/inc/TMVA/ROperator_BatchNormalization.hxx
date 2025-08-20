@@ -31,12 +31,9 @@ private:
    std::string fNVar;
    std::string fNY;
    EActivationType fActivation;
+   std::string fNFusedScale;
 
    std::vector<Dim> fShapeX;
-   std::vector<size_t> fShapeScale;
-   std::vector<size_t> fShapeB;
-   std::vector<size_t> fShapeMean;
-   std::vector<size_t> fShapeVar;
    std::vector<Dim> fShapeY;
 
    std::string fType;
@@ -55,9 +52,10 @@ public:
    {
       fInputTensorNames = { fNX };
       fOutputTensorNames = { fNY };
+      fNFusedScale = fNScale + "_fused_inv_std_dev";
 
       if(std::is_same<T, float>::value){
-      fType = "float";
+         fType = "float";
       }
       else{
 	      throw
@@ -116,74 +114,30 @@ public:
             std::runtime_error("TMVA SOFIE BatchNormalization Op input tensor " + fNX + " fnx has wrong shape : " + ConvertShapeToString(fShapeX));
       }
 
-      fShapeScale = model.GetTensorShape(fNScale);
-      fShapeB = model.GetTensorShape(fNB);
-      fShapeMean = model.GetTensorShape(fNMean);
-      fShapeVar = model.GetTensorShape(fNVar);
       fShapeY = fShapeX;
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
 
-      if (fShapeB.size() == 1 && !model.IsDynamicTensor(fNX)) {
-         auto shapeX = model.GetTensorShape(fNX);
-         // Broadcast scale, bias, input_mean and input_var to shape_X
-         auto original_B = model.GetInitializedTensorData(fNB);
-         auto original_S = model.GetInitializedTensorData(fNScale);
-         auto original_M = model.GetInitializedTensorData(fNMean);
-         auto original_V = model.GetInitializedTensorData(fNVar);
-         size_t batchSize = shapeX[0];
-         size_t channels = shapeX[1];
-         size_t height = (shapeX.size() > 2) ? shapeX[2] : 1;
-         size_t width = (shapeX.size() > 3) ? shapeX[3] : 1;
-         size_t n = batchSize * channels * height * width;
-         if (fType == "float") {
-            float *original_bias = static_cast<float *>(original_B.get());
-            float *original_scale = static_cast<float *>(original_S.get());
-            float *original_mean = static_cast<float *>(original_M.get());
-            float *original_var = static_cast<float *>(original_V.get());
-            float *new_bias = new float[n];
-            float *new_scale = new float[n];
-            float *new_mean = new float[n];
-            float *new_var = new float[n];
-            size_t bs = 0, ch = 0, h = 0, w = 0;
-            for (ch = 0; ch < channels; ch++) {
-               for (h = 0; h < height; h++) {
-                  for (w = 0; w < width; w++) {
-                     new_bias[bs * channels * height * width + ch * height * width + h * width + w] = original_bias[ch];
-                     new_scale[bs * channels * height * width + ch * height * width + h * width + w] =
-                        original_scale[ch];
-                     new_mean[bs * channels * height * width + ch * height * width + h * width + w] = original_mean[ch];
-                     new_var[bs * channels * height * width + ch * height * width + h * width + w] = original_var[ch];
-                  }
-               }
-            }
-            size_t Batchoffset = channels * height * width;
-            for (bs = 1; bs < batchSize; bs++) {
-               std::copy(new_bias, new_bias + Batchoffset, new_bias + (bs * Batchoffset));
-               std::copy(new_scale, new_scale + Batchoffset, new_scale + (bs * Batchoffset));
-               std::copy(new_mean, new_mean + Batchoffset, new_mean + (bs * Batchoffset));
-               std::copy(new_var, new_var + Batchoffset, new_var + (bs * Batchoffset));
-            }
-            //// new_var =1. / sqrt(input_var + fepsilon)
-            for (size_t i = 0; i < n; i++) {
-               new_var[i] = 1. / sqrt(new_var[i] + fepsilon);
-               new_scale[i] *= new_var[i]; // include var in new scale
-            }
-            std::vector<size_t> new_bias_shape = {batchSize, channels, height, width};
-            std::shared_ptr<void> new_bias_ptr(new_bias, std::default_delete<float[]>());
-            std::shared_ptr<void> new_scale_ptr(new_scale, std::default_delete<float[]>());
-            std::shared_ptr<void> new_mean_ptr(new_mean, std::default_delete<float[]>());
-            std::shared_ptr<void> new_var_ptr(new_var, std::default_delete<float[]>());
-            model.UpdateInitializedTensor(fNB, model.GetTensorType(fNB), new_bias_shape, new_bias_ptr);
-            model.UpdateInitializedTensor(fNScale, model.GetTensorType(fNScale), new_bias_shape, new_scale_ptr);
-            model.UpdateInitializedTensor(fNMean, model.GetTensorType(fNMean), new_bias_shape, new_mean_ptr);
-            model.UpdateInitializedTensor(fNVar, model.GetTensorType(fNVar), new_bias_shape, new_var_ptr);
-            fShapeB = model.GetTensorShape(fNB);
-            fShapeScale = model.GetTensorShape(fNScale);
-            fShapeMean = model.GetTensorShape(fNMean);
-            fShapeVar = model.GetTensorShape(fNVar);
+      auto original_S = model.GetInitializedTensorData(fNScale);
+      auto original_V = model.GetInitializedTensorData(fNVar);
+
+      auto shape_S = model.GetTensorShape(fNScale);
+      if (shape_S.size() != 1) {
+          throw std::runtime_error("TMVA SOFIE BatchNormalization 'scale' tensor must be 1D (per-channel).");
+      }
+      size_t channels = shape_S[0];
+
+      if (fType == "float") {
+         float *original_scale_ptr = static_cast<float *>(original_S.get());
+         float *original_var_ptr = static_cast<float *>(original_V.get());
+         float *fused_scale_data = new float[channels];
+
+         for (size_t i = 0; i < channels; i++) {
+            // Calculate scale * (1 / sqrt(variance + epsilon))
+            fused_scale_data[i] = original_scale_ptr[i] / std::sqrt(original_var_ptr[i] + fepsilon);
          }
-      } else {
-         // we need to broadcast at run time
+
+         std::shared_ptr<void> fused_scale_ptr(fused_scale_data, std::default_delete<float[]>());
+         model.AddInitializedTensor(fNFusedScale, model.GetTensorType(fNScale), {channels}, fused_scale_ptr);
       }
    }
 
@@ -195,44 +149,41 @@ public:
 
       std::stringstream out;
       //// Batch Norm op
-      std::string batchSize = fShapeX[0].GetVal();
-      std::string channels = fShapeX[1].GetVal();
-      std::string height = (fShapeX.size() > 2) ? fShapeX[2].GetVal() : "1";
-      std::string width = (fShapeX.size() > 3) ? fShapeX[3].GetVal() : "1";
-      auto n = ConvertDimShapeToLength(fShapeX);
+      auto batchSize = fShapeX[0].GetVal();
+      auto channels = fShapeX[1].GetVal();
+      std::string spatial_dim = "1";
+      if (fShapeX.size() > 2) {
+         auto spatialShape = fShapeX;
+         spatialShape.erase(spatialShape.begin(), spatialShape.begin()+2);
+         spatial_dim = ConvertDimShapeToLength( spatialShape);
+      }
 
-      //// copy X into Y
-      out << "\n\n//---- BatchNorm\n";
-      out << SP << "constexpr int " << OpName << "_N =" << n << ";\n";
-      out << SP << "constexpr int "<<OpName<< "_incx = 1;\n";
-      out << SP << "constexpr int "<<OpName<< "_incy = 1;\n";
-      out << SP << "BLAS::scopy_(&" << OpName << "_N, " << "tensor_" << fNX << ", &" << OpName << "_incx," << "tensor_" << fNY << ", &" << OpName << "_incy);\n\n";
+      out << "\n\n//---- BatchNorm" << (fActivation == EActivationType::RELU ? " + ReLU" : "") << "\n";
+      out << SP << "{\n";
+      out << SP << "   size_t i = 0;\n";
+      out << SP << "   for (size_t n = 0; n < " << batchSize << "; ++n) {\n";
+      out << SP << "      for (size_t c = 0; c < " << channels << "; ++c) {\n";
+      out << SP << "         const float mean_val = tensor_" << fNMean << "[c];\n";
+      out << SP << "         const float fused_scale_val = tensor_" << fNFusedScale << "[c];\n";
+      out << SP << "         const float bias_val = tensor_" << fNB << "[c];\n";
+      out << SP << "         for (size_t sp = 0; sp < " << spatial_dim << "; ++sp) {\n";
+      out << SP << "            float val = (tensor_" << fNX << "[i] - mean_val) * fused_scale_val + bias_val;\n";
 
-      //// blas saxpy (Y = -Bmean + Y)
-      out << SP << "float "<<OpName<< "_alpha = -1;\n";
-      out << SP << "BLAS::saxpy_(&" << OpName << "_N, &" << OpName << "_alpha, " << "tensor_" << fNMean << ", &" << OpName << "_incx,"
-         << "tensor_" << fNY <<", &" << OpName << "_incy);\n\n ";
-
-      //// Y *= scale*var
-      out << SP << "for (size_t i = 0; i < " << n << "; i++) {\n";
-      // scale tensor contains already the var
-      out << SP << SP << "tensor_" << fNY << "[i] *= tensor_" << fNScale << "[i]; \n";
+      if (fActivation == EActivationType::RELU) {
+         out << SP << "            tensor_" << fNY << "[i] = (val > 0.0f) ? val : 0.0f;\n";
+      } else {
+         out << SP << "            tensor_" << fNY << "[i] = val;\n";
+      }
+      out << SP << "            i++;\n";
+      out << SP << "         }\n";
+      out << SP << "      }\n";
+      out << SP << "   }\n";
       out << SP << "}\n";
 
-      //// blas saxpy (Y = Bbias + Y)
-      out << SP <<OpName<< "_alpha = 1;\n";
-      out << SP << "BLAS::saxpy_(&" << OpName << "_N, &" << OpName << "_alpha, " << "tensor_" << fNB << ", &" << OpName << "_incx, "
-         << "tensor_" << fNY << ", &" << OpName << "_incy);\n\n";
-
-      if(fActivation == EActivationType::RELU){
-         out << SP << "for (int id = 0; id < " << n << " ; id++){\n";
-         out << SP << SP << "tensor_" << fNY << "[id] = ((tensor_" << fNY << "[id] > 0 )? tensor_" << fNY << "[id] : 0);\n";
-         out << SP << "}\n";
-      }
       return out.str();
    }
 
-   std::vector<std::string> GetBlasRoutines() override { return { std::string("Copy"), std::string("Axpy") }; }
+   std::vector<std::string> GetBlasRoutines() override { return {}; }
 };
 
 }//SOFIE
