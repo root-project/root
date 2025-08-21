@@ -5,3 +5,4 @@ Info in <hadd>: each process should handle at least 3 files for efficiency. Sett
 hadd Source file 1: hadd_args_in.root
 hadd Source file 2: hadd_args_in.root
 hadd Target path: hadd_args_ff_dbg_j_2_out.root:/
+Info in <hadd>: merged 2 (2) input (partial) files into hadd_args_ff_dbg_j_2_out.root
