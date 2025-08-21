@@ -141,15 +141,7 @@ unsigned int ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
    return uniqueLoops.size();
 }
 
-ROOT::RDF::Experimental::SnapshotPtr_t ROOT::RDF::Experimental::VariationsFor(ROOT::RDF::Experimental::SnapshotPtr_t)
-{
-   throw std::logic_error("Varying a Snapshot result is not implemented yet.");
-}
-
-namespace ROOT {
-namespace RDF {
-
-namespace Experimental {
+namespace ROOT::RDF::Experimental {
 
 void ThreadsPerTH3(unsigned int N)
 {
@@ -398,6 +390,5 @@ void AddProgressBar(ROOT::RDataFrame dataframe)
    auto node = ROOT::RDF::AsRNode(dataframe);
    ROOT::RDF::Experimental::AddProgressBar(node);
 }
-} // namespace Experimental
-} // namespace RDF
-} // namespace ROOT
+
+} // namespace ROOT::RDF::Experimental
