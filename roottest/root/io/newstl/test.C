@@ -28,8 +28,9 @@ template <class HolderClass> void write(const char *testname, int nEntry = 3) {
    dirname.ReplaceAll("/","-");
 
    gSystem->mkdir(dirname);
-   gSystem->Unlink("latest");
-   gSystem->Symlink(dirname,"latest");
+   // do not create symlink
+   //gSystem->Unlink("latest");
+   //gSystem->Symlink(dirname,"latest");
 
    auto _filename = gSystem->ConcatFileName(dirname, testname );
    TString filename = _filename;

@@ -1,13 +1,9 @@
 {
-#ifndef SECOND_RUN
+
+#ifndef ClingWorkAroundMissingDynamicScope
   gROOT->ProcessLine(".L sample_bx_classes.C+");
 #endif
 
-#if defined(ClingWorkAroundMissingDynamicScope) && !defined(SECOND_RUN)
-#define SECOND_RUN
-  gROOT->ProcessLine(".x sample_writer.C");
-
-#else
   TFile* p_root_file = new TFile ("samplerootfile.root", "RECREATE");
 
   // create BxEvent
@@ -19,12 +15,11 @@
   for(int i = 0; i< 10; i++) {
     std::cout << "event " << i << std::endl;
     p_root_event->Assign(i);
-    p_root_tree->Fill ();  
+    p_root_tree->Fill ();
   }
 
   p_root_tree->Print ();
   p_root_tree->Write ();
   p_root_file->Close ();
-#endif
 }
 
