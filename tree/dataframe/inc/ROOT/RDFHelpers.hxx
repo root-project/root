@@ -222,6 +222,10 @@ namespace Experimental {
 template <typename T>
 RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
 {
+   using SnapshotResult_t = ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager, void>;
+   static_assert(!std::is_same_v<T, SnapshotResult_t>,
+                 "Snapshot with variations can only be enabled via RSnapshotOptions.");
+
    R__ASSERT(resPtr != nullptr && "Calling VariationsFor on an empty RResultPtr");
 
    // populate parts of the computation graph for which we only have "empty shells", e.g. RJittedActions and
@@ -269,9 +273,6 @@ RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
    return RDFInternal::MakeResultMap<T>(resPtr.fObjPtr, std::move(variedResults), std::move(variations),
                                         *resPtr.fLoopManager, std::move(nominalAction), std::move(variedAction));
 }
-
-using SnapshotPtr_t = ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager, void>>;
-SnapshotPtr_t VariationsFor(SnapshotPtr_t resPtr);
 
 /// \brief Add ProgressBar to a ROOT::RDF::RNode
 /// \param[in] df RDataFrame node at which ProgressBar is called.
