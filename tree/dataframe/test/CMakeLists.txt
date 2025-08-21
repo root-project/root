@@ -57,6 +57,8 @@ ROOT_GENERATE_DICTIONARY(DummyDict ${CMAKE_CURRENT_SOURCE_DIR}/DummyHeader.hxx
                          MODULE dataframe_snapshot_emptyoutput LINKDEF DummyHeaderLinkDef.hxx OPTIONS -inlineInputHeader
                          DEPENDENCIES ROOTVecOps GenVector)
 ROOT_ADD_GTEST(dataframe_snapshot_ntuple dataframe_snapshot_ntuple.cxx LIBRARIES ROOTDataFrame ROOTNTuple NTupleStruct)
+ROOT_ADD_GTEST(dataframe_snapshotWithVariations dataframe_snapshotWithVariations.cxx TwoFloatsDict.cxx LIBRARIES ROOTDataFrame)
+# add_dependencies(dataframe_snapshotWithVariations TwoFloatsDict)
 
 ROOT_ADD_GTEST(dataframe_datasetspec dataframe_datasetspec.cxx LIBRARIES ROOTDataFrame)
 
