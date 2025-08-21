@@ -2859,49 +2859,8 @@ public:
       }
       auto covMatrixV = std::make_shared<TMatrixDSym>(static_cast<Int_t>(nCols));
       
-      // Support up to 20 columns explicitly, with common sizes readily available
-      switch (nCols) {
-         case 2:
-            return CreateAction<RDFInternal::ActionTags::Cov, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
-         case 3:
-            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
-         case 4:
-            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
-         case 5:
-            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
-         case 6:
-            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
-         case 7:
-            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
-         case 8:
-            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
-         case 9:
-            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
-         case 10:
-            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
-         case 11:
-            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double, double, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
-         case 12:
-            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double, double, double, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
-         case 13:
-            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double, double, double, double, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
-         case 14:
-            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double, double, double, double, double, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
-         case 15:
-            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
-         case 16:
-            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
-         case 17:
-            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
-         case 18:
-            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
-         case 19:
-            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
-         case 20:
-            return CreateAction<RDFInternal::ActionTags::Cov, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double, double>(columnNames, covMatrixV, covMatrixV, fProxiedPtr);
-         default:
-            throw std::invalid_argument("Covariance matrix calculation currently supports up to 20 columns. For larger matrices, consider using statistical libraries or chunking your analysis.");
-      }
+      // Use type inference like HistoND to support arbitrary number of columns
+      return CreateAction<RDFInternal::ActionTags::Cov, RDFDetail::RInferredType>(columnNames, covMatrixV, covMatrixV, fProxiedPtr, columnNames.size());
    }
 
    // clang-format off
