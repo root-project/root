@@ -1,104 +1,120 @@
-// void run(Int_t opt=0) {
-{
+enum EWhich {
+   kVector = 1,
+   kDeque = 2,
+   kList = 4,
+   kSet = 8,
+   kMultiSet = 16,
+   kMap = 32,
+   kMultiMap = 64,
+   kRVec = 128,
+   kEnd = 256
+};
 
-   int result = gSystem->CompileMacro("TestHelpers.C","k");
+void srun(const TString &srcpath = "", int which = kEnd - 1, int exec = 2) {
+
+   // use current directory as build directory
+   gSystem->SetBuildDir(gSystem->pwd(), true);
+
+   int result = gSystem->CompileMacro(srcpath + "TestHelpers.C","k");
    if (result != 0 && result != 1) return;
+
+   TString arg = exec > 1 ? "(true)" : "(false)";
 
    if ( which & kRVec ) {
 
-      result = gSystem->CompileMacro("rvecHolder.C","k");
-      if (result != 0 && result != 1) return;
-      
-      result = gSystem->CompileMacro("rtest.C","k");
+      result = gSystem->CompileMacro(srcpath + "rvecHolder.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) gROOT->ProcessLine("rtest(exec-1)");
+      result = gSystem->CompileMacro(srcpath + "rtest.C","k");
+      if (result != 0 && result != 1) return;
+
+      if (exec) gROOT->ProcessLine("rtest" + arg);
 
    }
 
    if ( which & kVector ) {
 
-      result = gSystem->CompileMacro("vectorHolder.C","k");
-      if (result != 0 && result != 1) return;
-      
-      result = gSystem->CompileMacro("vtest.C","k");
+      result = gSystem->CompileMacro(srcpath + "vectorHolder.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) gROOT->ProcessLine("vtest(exec-1)");
+      result = gSystem->CompileMacro(srcpath + "vtest.C","k");
+      if (result != 0 && result != 1) return;
+
+      if (exec) gROOT->ProcessLine("vtest" + arg);
 
    }
 
    if ( which & kDeque ) {
 
-      result = gSystem->CompileMacro("dequeHolder.C","k");
-      if (result != 0 && result != 1) return;
-      
-      result = gSystem->CompileMacro("dtest.C","k");
+      result = gSystem->CompileMacro(srcpath + "dequeHolder.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) gROOT->ProcessLine("dtest(exec-1)");
+      result = gSystem->CompileMacro(srcpath + "dtest.C","k");
+      if (result != 0 && result != 1) return;
+
+      if (exec) gROOT->ProcessLine("dtest" + arg);
 
    }
 
    if ( which & kList ) {
 
-      result = gSystem->CompileMacro("listHolder.C","k");
-      if (result != 0 && result != 1) return;
-      
-      result = gSystem->CompileMacro("ltest.C","k");
+      result = gSystem->CompileMacro(srcpath + "listHolder.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) gROOT->ProcessLine("ltest(exec-1)");
+      result = gSystem->CompileMacro(srcpath + "ltest.C","k");
+      if (result != 0 && result != 1) return;
+
+      if (exec) gROOT->ProcessLine("ltest" + arg);
 
    }
 
    if ( which & kSet ) {
 
-      result = gSystem->CompileMacro("setHolder.C","k");
-      if (result != 0 && result != 1) return;
-      
-      result = gSystem->CompileMacro("stest.C","k");
+      result = gSystem->CompileMacro(srcpath + "setHolder.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) gROOT->ProcessLine("stest(exec-1)");
+      result = gSystem->CompileMacro(srcpath + "stest.C","k");
+      if (result != 0 && result != 1) return;
+
+      if (exec) gROOT->ProcessLine("stest" + arg);
 
    }
 
    if ( which & kMultiSet ) {
 
-      result = gSystem->CompileMacro("multisetHolder.C","k");
-      if (result != 0 && result != 1) return;
-      
-      result = gSystem->CompileMacro("ttest.C","k");
+      result = gSystem->CompileMacro(srcpath + "multisetHolder.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) gROOT->ProcessLine("ttest(exec-1)");
+      result = gSystem->CompileMacro(srcpath + "ttest.C","k");
+      if (result != 0 && result != 1) return;
+
+      if (exec) gROOT->ProcessLine("ttest" + arg);
 
    }
 
    if ( which & kMap ) {
 
-      result = gSystem->CompileMacro("mapHolder.C","k");
-      if (result != 0 && result != 1) return;
-      
-      result = gSystem->CompileMacro("mtest.C","k");
+      result = gSystem->CompileMacro(srcpath + "mapHolder.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) gROOT->ProcessLine("mtest(exec-1)");
+      result = gSystem->CompileMacro(srcpath + "mtest.C","k");
+      if (result != 0 && result != 1) return;
+
+      if (exec) gROOT->ProcessLine("mtest" + arg);
 
    }
 
    if ( which & kMultiMap ) {
 
-      result = gSystem->CompileMacro("multimapHolder.C","k");
-      if (result != 0 && result != 1) return;
-      
-      result = gSystem->CompileMacro("ntest.C","k");
+      result = gSystem->CompileMacro(srcpath + "multimapHolder.C","k");
       if (result != 0 && result != 1) return;
 
-      if (exec) gROOT->ProcessLine("ntest(exec-1)");
+      result = gSystem->CompileMacro(srcpath + "ntest.C","k");
+      if (result != 0 && result != 1) return;
+
+      if (exec) gROOT->ProcessLine("ntest" + arg);
 
    }
 
-   pass++;
+   // pass++;
 }
