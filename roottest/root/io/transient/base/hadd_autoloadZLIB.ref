@@ -3,3 +3,4 @@ Info in <hadd>: compression setting for all output: 101
 hadd Source file 1: data1.root
 hadd Source file 2: data2.root
 hadd Target path: data_merge.root:/
+Info in <hadd>: merged 2 (2) input (partial) files into data_merge.root
