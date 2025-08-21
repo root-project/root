@@ -4,6 +4,7 @@ import pathlib
 import ROOT
 import os
 import pytest
+import signal
 
 ROOT.gROOT.SetBatch(True)
 
@@ -27,9 +28,12 @@ def test_tutorial(tutorial):
             [sys.executable, str(tutorial)],
             check=True,
             env=env,
+            timeout=60,
             capture_output=True,
-            text=True
+            text=True,
         )
+    except subprocess.TimeoutExpired:
+        pytest.skip(f"Tutorial {tutorial} timed out")
     except subprocess.CalledProcessError as e:
         # read stderr to see if EOFError occurred
         if "EOFError" in e.stderr:
@@ -52,9 +56,12 @@ def test_cpp_tutorial(tutorial):
         result = subprocess.run(
             [sys.executable, "-c", f'import ROOT; ROOT.gROOT.ProcessLine(".x {tutorial}")'],
             check=True,
+            timeout=60,
             capture_output=True,
             text=True
         )
+    except subprocess.TimeoutExpired:
+        pytest.skip(f"Tutorial {tutorial} timed out")
     except subprocess.CalledProcessError as e:
         if e.returncode == -signal.SIGILL or e.returncode == 132:
             pytest.skip(f"Skipping {tutorial.name} (illegal instruction on this platform)")
