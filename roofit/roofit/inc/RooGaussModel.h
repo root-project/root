@@ -50,6 +50,11 @@ public:
 
   bool canComputeBatchWithCuda() const override;
 
+  /// Get the mean parameter.
+  RooAbsReal const& getMean() const { return mean.arg(); }
+ 
+  /// Get the sigma parameter.
+  RooAbsReal const& getSigma() const { return sigma.arg(); }
 protected:
 
   double evaluate() const override ;
