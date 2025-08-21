@@ -244,19 +244,22 @@ jobs:
         # Clean temporary directory
         cleanup_dir "${TMP_DIR}"
 
-        # Upload documentation files
+        # Ensure tmp dir exists on EOS
+        xrdfs "${EOS_HOST}" mkdir -p "${TMP_DIR}"
+
+        # Upload documentation files (with / final so EOS sees directory)
         cd ${DOC_DIR}/html/
-        xrdcp --parallel 64 -f ./*.html ${EOS_ENDPOINT}/${TMP_DIR} || true
-        xrdcp --parallel 64 -f ./*.svg  ${EOS_ENDPOINT}/${TMP_DIR} || true
-        xrdcp --parallel 64 -f ./*.map  ${EOS_ENDPOINT}/${TMP_DIR} || true
-        xrdcp --parallel 64 -f ./*.md5  ${EOS_ENDPOINT}/${TMP_DIR} || true
+        xrdcp --parallel 64 -f ./*.html ${EOS_ENDPOINT}/${TMP_DIR}/ || true
+        xrdcp --parallel 64 -f ./*.svg  ${EOS_ENDPOINT}/${TMP_DIR}/ || true
+        xrdcp --parallel 64 -f ./*.map  ${EOS_ENDPOINT}/${TMP_DIR}/ || true
+        xrdcp --parallel 64 -f ./*.md5  ${EOS_ENDPOINT}/${TMP_DIR}/ || true
 
         # Upload entire folder content
-        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${TMP_DIR}
+        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${TMP_DIR}/
 
         cd ..
         rm -r html
-        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${TMP_DIR}
+        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${TMP_DIR}/
         cd ..
 
         # Remove previous backup
