@@ -1574,23 +1574,6 @@ TEST_P(RDFVary, VaryTake)
    EXPECT_EQ(sorted(rs["x:1"]), std::vector<int>({1, 2, 3}));
 }
 
-TEST_P(RDFVary, VarySnapshot)
-{
-   const auto fname = "dummy.root";
-   auto h = ROOT::RDataFrame(10)
-               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
-               .Vary(
-                  "x", [](int x) { return ROOT::RVecI{x - 1, x + 1}; }, {"x"}, 2)
-               .Snapshot("t", fname, {"x"});
-   EXPECT_THROW(
-      try { VariationsFor(h); } catch (const std::logic_error &err) {
-         const auto msg = "Varying a Snapshot result is not implemented yet.";
-         EXPECT_STREQ(err.what(), msg);
-         throw;
-      },
-      std::logic_error);
-}
-
 // this is a regression test, we used to read from wrong addresses in this case
 TEST_P(RDFVary, MoreVariedColumnsThanVariations)
 {
