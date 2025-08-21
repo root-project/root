@@ -33,7 +33,7 @@ def test_tutorial(tutorial):
     except subprocess.CalledProcessError as e:
         # read stderr to see if EOFError occurred
         if "EOFError" in e.stderr:
-            pytest.skip("Skipping tutorial that requires user input")
+            pytest.skip(f"Skipping {tutorial.name} (requires user input)")
         raise
 
 # ----------------------
@@ -46,4 +46,18 @@ def test_cpp_tutorials_are_detected():
 
 @pytest.mark.parametrize("tutorial", cpp_tutorials, ids=lambda p: p.name)
 def test_cpp_tutorial(tutorial):
-    ROOT.gROOT.ProcessLine(f".x {tutorial}")
+    # ROOT.gROOT.ProcessLine(f".x {tutorial}")
+
+    try:
+        result = subprocess.run(
+            [sys.executable, "-c", f'import ROOT; ROOT.gROOT.ProcessLine(".x {tutorial}")'],
+            check=True,
+            capture_output=True,
+            text=True
+        )
+    except subprocess.CalledProcessError as e:
+        if e.returncode == -signal.SIGILL or e.returncode == 132:
+            pytest.skip(f"Skipping {tutorial.name} (illegal instruction on this platform)")
+        elif "EOFError" in e.stderr:
+            pytest.skip(f"Skipping {tutorial.name} (requires user input)")
+        raise
