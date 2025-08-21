@@ -1,7 +1,9 @@
 {
-#include <complex>
+#ifndef ClingWorkAroundMissingDynamicScope
    gROOT->ProcessLine(".L ComplexTest.h+");
-   aTest = new Test();
+#endif
+
+   auto aTest = new Test();
    aTest->Set(3);
    if (!aTest->TestValue(3)) {
       cout << "The complex object was not set properly:\n";
@@ -10,10 +12,10 @@
       cout << "The complex object was set properly:\n";
       cout << aTest->fMyComplexVector.real() << ' ' << aTest->fMyComplexVector.imag() << '\n';
    }
-   temp_file = new TFile("temp.root", "recreate");
+   auto temp_file = new TFile("temp.root", "recreate");
    aTest->Write("test");
    temp_file->Close();
-   
+
    Test *bTest = 0;
    temp_file = new TFile("temp.root", "read");
    temp_file->GetObject("test",bTest);
@@ -24,6 +26,6 @@
       cout << "The complex object was read properly:\n";
       cout << bTest->fMyComplexVector.real() << ' ' << bTest->fMyComplexVector.imag() << '\n';
    }
-      
+
    temp_file->Close();
 }
