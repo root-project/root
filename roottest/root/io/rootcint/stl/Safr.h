@@ -12,5 +12,5 @@ class Safr : public TMatrixF {
  public:
   Safr() : TMatrixF(5,5) {}
 
-  ClassDef(Safr, 1)
+  ClassDefOverride(Safr, 1)
 };
