@@ -25,6 +25,7 @@ if(webgui)
 
    add_subdirectory(browsable)
    add_subdirectory(browserv7)
+   add_subdirectory(treemap)
 
    if(root7)
       add_subdirectory(canvaspainter)
