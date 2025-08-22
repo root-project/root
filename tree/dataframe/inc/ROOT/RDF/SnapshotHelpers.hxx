@@ -26,6 +26,8 @@
 #include <ROOT/RDF/RLoopManager.hxx>
 #include <ROOT/RDF/Utils.hxx>
 
+#include <memory>
+
 class TBranch;
 class TFile;
 
@@ -37,19 +39,6 @@ class TBufferMergerFile;
 } // namespace ROOT
 
 namespace ROOT::Internal::RDF {
-
-class RBranchSet {
-   std::vector<TBranch *> fBranches;
-   std::vector<std::string> fNames;
-   std::vector<bool> fIsCArray;
-
-public:
-   TBranch *Get(const std::string &name) const;
-   bool IsCArray(const std::string &name) const;
-   void Insert(const std::string &name, TBranch *address, bool isCArray = false);
-   void Clear();
-   void AssertNoNullBranchAddresses();
-};
 
 class R__CLING_PTRCHECK(off) UntypedSnapshotRNTupleHelper final : public RActionImpl<UntypedSnapshotRNTupleHelper> {
    std::string fFileName;
@@ -102,6 +91,49 @@ public:
    UntypedSnapshotRNTupleHelper MakeNew(void *newName);
 };
 
+/// Stores properties of each output branch in a Snapshot.
+struct RBranchData {
+   std::string fInputBranchName; // This contains resolved aliases
+   std::string fOutputBranchName;
+   const std::type_info *fInputTypeID = nullptr;
+   TBranch *fOutputBranch = nullptr;
+   void *fBranchAddressForCArrays = nullptr; // Used to detect if branch addresses need to be updated
+
+   int fVariationIndex = -1; // For branches that are only valid if a specific filter passed
+   void *fEmptyInstance = nullptr;
+   alignas(8) std::array<std::byte, 8> fNullBytes{
+      std::byte{0}}; // Nullbytes for writing 0 into branches of primitive types
+   DesFunc_t fEmptyInstanceDeleter = nullptr;
+   bool fIsCArray = false;
+   bool fIsDefine = false;
+
+   RBranchData() = default;
+   RBranchData(std::string inputBranchName, std::string outputBranchName, bool isDefine, const std::type_info *typeID)
+      : fInputBranchName{std::move(inputBranchName)},
+        fOutputBranchName{std::move(outputBranchName)},
+        fInputTypeID{typeID},
+        fIsDefine{isDefine}
+   {
+   }
+   RBranchData(RBranchData const &other) noexcept { *this = other; }
+   RBranchData(RBranchData &&other) noexcept { *this = std::move(other); }
+   ~RBranchData()
+   {
+      if (fEmptyInstanceDeleter)
+         fEmptyInstanceDeleter(fEmptyInstance);
+   }
+   RBranchData &operator=(RBranchData const &other) noexcept;
+   RBranchData &operator=(RBranchData &&other) noexcept;
+
+   void ClearBranchPointers()
+   {
+      fOutputBranch = nullptr;
+      fBranchAddressForCArrays = nullptr;
+   }
+   void *EmptyInstance();
+   void ResetBranchAddressToEmtpyInstance();
+};
+
 class R__CLING_PTRCHECK(off) UntypedSnapshotTTreeHelper final : public RActionImpl<UntypedSnapshotTTreeHelper> {
    std::string fFileName;
    std::string fDirName;
@@ -110,17 +142,10 @@ class R__CLING_PTRCHECK(off) UntypedSnapshotTTreeHelper final : public RActionIm
    std::unique_ptr<TFile> fOutputFile;
    std::unique_ptr<TTree> fOutputTree; // must be a ptr because TTrees are not copy/move constructible
    bool fBranchAddressesNeedReset{true};
-   ColumnNames_t fInputBranchNames; // This contains the resolved aliases
-   ColumnNames_t fOutputBranchNames;
    TTree *fInputTree = nullptr; // Current input tree. Set at initialization time (`InitTask`)
-   // TODO we might be able to unify fBranches, fBranchAddresses and fOutputBranches
-   std::vector<TBranch *> fBranches;     // Addresses of branches in output, non-null only for the ones holding C arrays
-   std::vector<void *> fBranchAddresses; // Addresses of objects associated to output branches
-   RBranchSet fOutputBranches;
-   std::vector<bool> fIsDefine;
+   std::vector<RBranchData> fBranchData; // Information for all output branches
    ROOT::Detail::RDF::RLoopManager *fOutputLoopManager;
    ROOT::Detail::RDF::RLoopManager *fInputLoopManager;
-   std::vector<const std::type_info *> fInputColumnTypeIDs; // Types for the input columns
 
 public:
    UntypedSnapshotTTreeHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
@@ -169,11 +194,7 @@ class R__CLING_PTRCHECK(off) UntypedSnapshotTTreeHelperMT final : public RAction
    std::vector<std::unique_ptr<TTree>> fOutputTrees;
    std::vector<int> fBranchAddressesNeedReset; // vector<bool> does not allow concurrent writing of different elements
    std::vector<TTree *> fInputTrees; // Current input trees, one per slot. Set at initialization time (`InitTask`)
-   // Addresses of branches in output per slot, non-null only for the ones holding C arrays
-   std::vector<std::vector<TBranch *>> fBranches;
-   // Addresses of objects associated to output branches per slot, non-null only for the ones holding C arrays
-   std::vector<std::vector<void *>> fBranchAddresses;
-   std::vector<RBranchSet> fOutputBranches; // Unique set of output branches, one per slot.
+   std::vector<std::vector<RBranchData>> fBranchData; // Information for all output branches of each slot
 
    // Attributes of the output TTree
 
@@ -182,16 +203,11 @@ class R__CLING_PTRCHECK(off) UntypedSnapshotTTreeHelperMT final : public RAction
    std::string fTreeName;
    TFile *fOutputFile; // Non-owning view on the output file
    RSnapshotOptions fOptions;
-   std::vector<std::string> fOutputBranchNames;
 
    // Attributes related to the computation graph
 
    ROOT::Detail::RDF::RLoopManager *fOutputLoopManager;
    ROOT::Detail::RDF::RLoopManager *fInputLoopManager;
-   std::vector<std::string> fInputBranchNames;              // This contains the resolved aliases
-   std::vector<const std::type_info *> fInputColumnTypeIDs; // Types for the input columns
-
-   std::vector<bool> fIsDefine;
 
 public:
    UntypedSnapshotTTreeHelperMT(unsigned int nSlots, std::string_view filename, std::string_view dirname,
@@ -230,6 +246,55 @@ public:
    }
 
    UntypedSnapshotTTreeHelperMT MakeNew(void *newName, std::string_view /*variation*/ = "nominal");
+};
+
+struct SnapshotOutputWriter;
+
+/// Helper object for a single-thread Snapshot action
+class R__CLING_PTRCHECK(off) SnapshotHelperWithVariations
+   : public ROOT::Detail::RDF::RActionImpl<SnapshotHelperWithVariations> {
+   RSnapshotOptions fOptions;
+   std::shared_ptr<SnapshotOutputWriter> fOutputHandle;
+   TTree *fInputTree = nullptr; // Current input tree. Set at initialization time (`InitTask`)
+   std::vector<RBranchData> fBranchData;
+   ROOT::Detail::RDF::RLoopManager *fInputLoopManager = nullptr;
+   ROOT::Detail::RDF::RLoopManager *fOutputLoopManager = nullptr;
+
+   void ClearOutputBranches();
+
+public:
+   SnapshotHelperWithVariations(std::string_view filename, std::string_view dirname, std::string_view treename,
+                                const ColumnNames_t & /*vbnames*/, const ColumnNames_t &bnames,
+                                const RSnapshotOptions &options, std::vector<bool> && /*isDefine*/,
+                                ROOT::Detail::RDF::RLoopManager *outputLoopMgr,
+                                ROOT::Detail::RDF::RLoopManager *inputLoopMgr,
+                                const std::vector<const std::type_info *> &colTypeIDs);
+
+   SnapshotHelperWithVariations(SnapshotHelperWithVariations &&) = default;
+   ~SnapshotHelperWithVariations();
+
+   void RegisterVariedColumn(unsigned int slot, unsigned int columnIndex, unsigned int originalColumnIndex,
+                             unsigned int varationIndex, std::string const &variationName);
+
+   void InitTask(TTreeReader *, unsigned int slot);
+
+   void Exec(unsigned int /*slot*/, const std::vector<void *> &values, std::vector<bool> const &filterPassed);
+
+   void FlushEvent(unsigned int slot);
+
+   void ResetBranchAddresses(unsigned int slot);
+
+   void Initialize() {}
+
+   void Finalize();
+
+   std::string GetActionName() { return "SnapshotWithVariations"; }
+
+   ROOT::RDF::SampleCallback_t GetSampleCallback() final
+   {
+      // TODO: Needed?
+      return [this](unsigned int, const RSampleInfo &) mutable { ; };
+   }
 };
 
 } // namespace ROOT::Internal::RDF
