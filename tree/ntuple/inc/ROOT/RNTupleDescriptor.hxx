@@ -1076,37 +1076,33 @@ private:
 public:
    class RIterator final {
    private:
-      /// The enclosing range's RNTuple.
-      const RNTupleDescriptor &fNTuple;
-      std::size_t fIndex = 0;
+      using Iter_t = std::vector<RExtraTypeInfoDescriptor>::const_iterator;
+      /// The wrapped vector iterator
+      Iter_t fIter;
 
    public:
       using iterator_category = std::forward_iterator_tag;
       using iterator = RIterator;
       using value_type = RExtraTypeInfoDescriptor;
       using difference_type = std::ptrdiff_t;
-      using pointer = RExtraTypeInfoDescriptor *;
+      using pointer = const RExtraTypeInfoDescriptor *;
       using reference = const RExtraTypeInfoDescriptor &;
 
-      RIterator(const RNTupleDescriptor &ntuple, std::size_t index) : fNTuple(ntuple), fIndex(index) {}
+      RIterator(Iter_t iter) : fIter(iter) {}
       iterator operator++()
       {
-         ++fIndex;
+         ++fIter;
          return *this;
       }
-      reference operator*()
-      {
-         auto it = fNTuple.fExtraTypeInfoDescriptors.begin();
-         std::advance(it, fIndex);
-         return *it;
-      }
-      bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
-      bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
+      reference operator*() const { return *fIter; }
+      pointer operator->() const { return &*fIter; }
+      bool operator!=(const iterator &rh) const { return fIter != rh.fIter; }
+      bool operator==(const iterator &rh) const { return fIter == rh.fIter; }
    };
 
    RExtraTypeInfoDescriptorIterable(const RNTupleDescriptor &ntuple) : fNTuple(ntuple) {}
-   RIterator begin() { return RIterator(fNTuple, 0); }
-   RIterator end() { return RIterator(fNTuple, fNTuple.GetNExtraTypeInfos()); }
+   RIterator begin() { return RIterator(fNTuple.fExtraTypeInfoDescriptors.cbegin()); }
+   RIterator end() { return RIterator(fNTuple.fExtraTypeInfoDescriptors.cend()); }
 };
 
 // clang-format off
