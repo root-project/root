@@ -24,7 +24,7 @@ macro(ROOT_7181_TEST name use_rmap)
 
   ROOTTEST_ADD_TEST(${testname}
                     MACRO runscript.C
-                    MACROARG "\"${CMAKE_CURRENT_SOURCE_DIR}/scripts/${name}.script\",${use_rmap}"
+                    MACROARG "\"${name}\",${use_rmap}"
                     ROOTEXE_OPTS -e "gInterpreter->AddIncludePath(\"-I${CMAKE_CURRENT_SOURCE_DIR}\")"
                                  -e "gInterpreter->AddIncludePath(\"-I${CMAKE_CURRENT_SOURCE_DIR}/inc\")"
                     OUTREF ${testname}.ref
