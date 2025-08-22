@@ -741,7 +741,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 
 Bool_t TH1::AddDirectoryStatus()
 {
-   return fgAddDirectory;
+   return !ROOT::ROOT7MemoryManagement() && fgAddDirectory;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2710,7 +2710,7 @@ void TH1::Copy(TObject &obj) const
    // will be added to gDirectory independently of the fDirectory stored.
    // and if the AddDirectoryStatus() is false it will not be added to
    // any directory (fDirectory = nullptr)
-   if (fgAddDirectory && gDirectory) {
+   if (!ROOT::ROOT7MemoryManagement() && fgAddDirectory && gDirectory) {
       gDirectory->Append(&obj);
       ((TH1&)obj).fFunctions->UseRWLock();
       ((TH1&)obj).fDirectory = gDirectory;
