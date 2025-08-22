@@ -129,33 +129,37 @@ public:
       // check if need to broadcast at initialization time if shapes are known and different
       // (we could broadcast the tensor tensor to maximum values of dynamic shapes - to be done)
       // case of known shapes
+      // if shapes are known find the output shape from broadcasting
       if (dynamicInputs == 0) {
          auto ret = UTILITY::MultidirectionalBroadcastShape(fShapeA, fShapeB);
          fBroadcastFlag = ret.first;
          fShapeY = ret.second;
-         bool broadcast = ret.first > 0;
-         if (broadcast) {
-            // Y is the common shape of A and B
-            bool broadcastA = ret.first & 2;
-            bool broadcastB = ret.first & 1;
-            // Broadcast A to Y
-            if (broadcastA) {
-               fNBroadcastedA = "Broadcasted" + fNA + "to" + fNY;
-               if (model.IsConstantTensor(fNA)) {
+         if (model.IsConstantTensor(fNA) && model.IsConstantTensor(fNB)) {
+            bool broadcast = fBroadcastFlag > 0;
+            if (broadcast) {
+               // Y is the common shape of A and B
+               bool broadcastA = fBroadcastFlag & 2;
+               bool broadcastB = fBroadcastFlag & 1;
+               // Broadcast A to Y
+               if (broadcastA) {
+                  fNBroadcastedA = "Broadcasted" + fNA + "to" + fNY;
                   auto data = model.GetInitializedTensorData(fNA);
                   std::shared_ptr<void> broadcastedData(
                      UTILITY::UnidirectionalBroadcast<T>(static_cast<T *>(data.get()), fShapeA, fShapeY),
                      std::default_delete<T[]>());
+                  if (model.Verbose())
+                     std::cout << "broadcasted data A " << ConvertShapeToString(fShapeY) << " : "
+                               << ConvertValuesToString(ConvertShapeToLength(fShapeY),
+                                                        static_cast<T *>(broadcastedData.get()))
+                               << std::endl;
                   // Update the data and the shape of A
                   model.AddConstantTensor(fNBroadcastedA, model.GetTensorType(fNA), fShapeY, broadcastedData);
                   fShapeA = fShapeY;
                   fDimShapeA = ConvertShapeToDim(fShapeA);
                }
-            }
-            // Broadcast B to Y
-            if (broadcastB) {
-               fNBroadcastedB = "Broadcasted" + fNB + "to" + fNY;
-               if (model.IsConstantTensor(fNB)) {
+               // Broadcast B to Y
+               if (broadcastB) {
+                  fNBroadcastedB = "Broadcasted" + fNB + "to" + fNY;
                   auto data = model.GetInitializedTensorData(fNB);
                   if (model.Verbose())
                      std::cout << "data B " << ConvertShapeToString(fShapeB) << " : "
@@ -174,12 +178,11 @@ public:
                   fShapeB = fShapeY;
                   fDimShapeB = ConvertShapeToDim(fShapeB);
                }
+            } else {
+               fShapeY = fShapeA;
             }
-         } else {
-            fShapeY = fShapeA;
-         }
-         // check case of constant  output (if all inputs are defined)
-         if (model.IsConstantTensor(fNA) && model.IsConstantTensor(fNB)) {
+            // tensors are constant: perform here the binary operation
+
             const std::string &nameA = fNBroadcastedA.empty() ? fNA : fNBroadcastedA;
             const std::string &nameB = fNBroadcastedB.empty() ? fNB : fNBroadcastedB;
             auto dataA = static_cast<T *>(model.GetInitializedTensorData(nameA).get());
@@ -189,7 +192,7 @@ public:
                dataY[i] = BinaryOperatorTrait<T, Op>::Func(dataA[i], dataB[i]);
             }
             model.AddConstantTensor<T>(fNY, fShapeY, dataY.data());
-            // flag tensors to not be written in a fil
+            // flag tensors to not be written in the weight file
             model.SetNotWritableInitializedTensor(nameA);
             model.SetNotWritableInitializedTensor(nameB);
             fIsOutputConstant = true;
@@ -199,17 +202,17 @@ public:
                          << ConvertShapeToString(fShapeY) << " : " << ConvertValuesToString(dataY) << std::endl;
             }
          } else {
+            // case of defined and non-constant tensors
             model.AddIntermediateTensor(fNY, model.GetTensorType(fNA), fShapeY);
             if (model.Verbose()) {
                std::cout << BinaryOperatorTrait<T, Op>::Name() << " : " << fNA << "  " << ConvertShapeToString(fShapeA)
                          << " , " << fNB << "  " << ConvertShapeToString(fShapeB) << " ---> " << fNY << "  "
                          << ConvertShapeToString(fShapeY) << std::endl;
             }
+            // we convert non-dim shapes to Dim shapes
+            fDimShapeY = ConvertShapeToDim(fShapeY);
          }
-         // we convert non-dim shapes to Dim shapes
-         fDimShapeY = ConvertShapeToDim(fShapeY);
-      } // endif of non-parametric shapes
-      else {
+      } else {
          // case A or B have dynamic shapes. We need to broadcast if shape are not same
          auto ret = UTILITY::MultidirectionalBroadcastShape(fDimShapeA, fDimShapeB);
          fBroadcastFlag = ret.first;
@@ -274,7 +277,8 @@ public:
          throw std::runtime_error("TMVA SOFIE Binary Op called to Generate without being initialized first");
       }
       std::stringstream out;
-      out << SP << "\n//------ " << BinaryOperatorTrait<T, Op>::Name() << "\n";
+      out << SP << "\n//------ " << opName << "  " << BinaryOperatorTrait<T, Op>::Name() << " --> "
+          << ConvertDimShapeToString(fDimShapeY) << "\n";
       auto length = ConvertDimShapeToLength(fDimShapeY);
       std::string typeName = TensorType<T>::Name();
 
@@ -323,7 +327,7 @@ public:
             if (fShapeA[i] == 1)
                continue;
             compute_idx_A +=
-               " idx_" + fNY + std::to_string(i + (fShapeY.size() - fShapeA.size())) + " * " + stridesA[i] + " +";
+               " idx_" + std::to_string(i + (fShapeY.size() - fShapeA.size())) + " * " + stridesA[i] + " +";
          }
          compute_idx_A.pop_back();
       }
@@ -334,15 +338,15 @@ public:
             if (fShapeB[i] == 1)
                continue;
             compute_idx_B +=
-               " idx_" + fNY + std::to_string(i + (fShapeY.size() - fShapeB.size())) + " * " + stridesB[i] + " +";
+               " idx_" + std::to_string(i + (fShapeY.size() - fShapeB.size())) + " * " + stridesB[i] + " +";
          }
          compute_idx_B.pop_back();
       }
       for (size_t i = 0; i < fShapeY.size(); ++i) {
          if (fShapeY[i] != 1) {
-            out << std::string(i + 1, ' ') << "for(size_t idx_" << fNY << i << "=0; idx_" << fNY << i << "<"
-                << fShapeY[i] << "; ++idx_" << fNY << i << "){\n";
-            compute_idx_Y += "idx_" + fNY + std::to_string(i) + "*" + stridesY[i] + "+";
+            out << std::string(i + 1, ' ') << "for(size_t idx_" << i << "=0; idx_" << i << "<" << fShapeY[i]
+                << "; ++idx_" << i << "){\n";
+            compute_idx_Y += "idx_" + std::to_string(i) + "*" + stridesY[i] + "+";
          }
       }
       compute_idx_Y.pop_back();
