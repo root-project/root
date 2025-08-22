@@ -162,7 +162,8 @@ drawFuncs = { lst: [
    { name: nsREX+'RPaveText', icon: 'img_pavetext', class: () => import_v7('pave').then(h => h.RPaveTextPainter), opt: '' },
    { name: nsREX+'RFrame', icon: 'img_frame', draw: () => import_v7().then(h => h.drawRFrame), opt: '' },
    { name: nsREX+'RFont', icon: 'img_text', draw: () => import_v7().then(h => h.drawRFont), opt: '', direct: 'v7', csstype: 'font' },
-   { name: nsREX+'RAxisDrawable', icon: 'img_frame', draw: () => import_v7().then(h => h.drawRAxis), opt: '' }
+   { name: nsREX+'RAxisDrawable', icon: 'img_frame', draw: () => import_v7().then(h => h.drawRAxis), opt: '' },
+   { name :nsREX+'RTreeMapPainter', class: () => import('./treemap/RTreeMapPainter.mjs').then(h => h.RTreeMapPainter), opt:'' }
 ], cache: {} };
 
 
