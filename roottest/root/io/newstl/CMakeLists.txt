@@ -17,10 +17,16 @@ foreach(index RANGE 7)
                          FIXTURES_SETUP root-io-newstl-test-fixture)
 endforeach()
 
+if(APPLE OR MSVC)
+  set(_srun_ref stlIoTestMac.ref)
+else()
+  set(_srun_ref stlIoTest.ref)
+endif()
+
 ROOTTEST_ADD_TEST(run
                   MACRO srun.C
                   MACROARG "\"${CMAKE_CURRENT_SOURCE_DIR}/\""
-                  OUTREF stlIoTest.ref
+                  OUTREF ${_srun_ref}
                   FIXTURES_REQUIRED root-io-newstl-test-fixture
                   FIXTURES_SETUP root-io-newstl-run-fixture)
 
