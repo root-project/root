@@ -26,6 +26,8 @@
 #include <ROOT/RDF/RLoopManager.hxx>
 #include <ROOT/RDF/Utils.hxx>
 
+#include <memory>
+
 class TBranch;
 class TFile;
 
@@ -104,24 +106,35 @@ struct RBranchData {
    TBranch *fOutputBranch = nullptr;
    void *fBranchAddressForCArrays = nullptr; // Used to detect if branch addresses need to be updated
 
-   std::unique_ptr<void, std::function<void(void *)>> fEmptyInstance;
+   int fVariationIndex = -1; // For branches that are only valid if a specific filter passed
+   void *fEmptyInstance = nullptr;
+   alignas(8) std::array<std::byte, 8> fNullBytes{
+      std::byte{0}}; // Nullbytes for writing 0 into branches of primitive types
+   DesFunc_t fEmptyInstanceDeleter = nullptr;
    bool fIsCArray = false;
    bool fIsDefine = false;
 
-   RBranchData(std::string inputBranchName, std::string outputBranchName, bool isDefine, const std::type_info *typeID,
-               TBranch *outputBranch = nullptr)
+   RBranchData() = default;
+   RBranchData(std::string inputBranchName, std::string outputBranchName, bool isDefine, const std::type_info *typeID)
       : fInputBranchName{std::move(inputBranchName)},
         fOutputBranchName{std::move(outputBranchName)},
         fInputTypeID{typeID},
-        fOutputBranch{outputBranch},
-        fIsDefine(isDefine)
+        fIsDefine{isDefine}
    {
    }
+   ~RBranchData()
+   {
+      if (fEmptyInstanceDeleter)
+         fEmptyInstanceDeleter(fEmptyInstance);
+   }
+
    void ClearBranchPointers()
    {
       fOutputBranch = nullptr;
       fBranchAddressForCArrays = nullptr;
    }
+   void *EmptyInstance();
+   void ResetBranchAddressToEmtpyInstance();
 };
 
 class R__CLING_PTRCHECK(off) UntypedSnapshotTTreeHelper final : public RActionImpl<UntypedSnapshotTTreeHelper> {
@@ -236,6 +249,55 @@ public:
    }
 
    UntypedSnapshotTTreeHelperMT MakeNew(void *newName, std::string_view /*variation*/ = "nominal");
+};
+
+struct SnapshotOutputWriter;
+
+/// Helper object for a single-thread Snapshot action
+class R__CLING_PTRCHECK(off) SnapshotHelperWithVariations
+   : public ROOT::Detail::RDF::RActionImpl<SnapshotHelperWithVariations> {
+   RSnapshotOptions fOptions;
+   std::shared_ptr<SnapshotOutputWriter> fOutputHandle;
+   TTree *fInputTree = nullptr; // Current input tree. Set at initialization time (`InitTask`)
+   std::vector<RBranchData> fBranchData;
+   ROOT::Detail::RDF::RLoopManager *fInputLoopManager = nullptr;
+   ROOT::Detail::RDF::RLoopManager *fOutputLoopManager = nullptr;
+
+   void ClearOutputBranches();
+
+public:
+   SnapshotHelperWithVariations(std::string_view filename, std::string_view dirname, std::string_view treename,
+                                const ColumnNames_t & /*vbnames*/, const ColumnNames_t &bnames,
+                                const RSnapshotOptions &options, std::vector<bool> && /*isDefine*/,
+                                ROOT::Detail::RDF::RLoopManager *outputLoopMgr,
+                                ROOT::Detail::RDF::RLoopManager *inputLoopMgr,
+                                const std::vector<const std::type_info *> &colTypeIDs);
+
+   SnapshotHelperWithVariations(SnapshotHelperWithVariations &&) = default;
+   ~SnapshotHelperWithVariations();
+
+   void RegisterVariedColumn(unsigned int slot, unsigned int columnIndex, unsigned int originalColumnIndex,
+                             unsigned int varationIndex, std::string const &variationName);
+
+   void InitTask(TTreeReader *, unsigned int slot);
+
+   void Exec(unsigned int /*slot*/, const std::vector<void *> &values, std::vector<bool> const &filterPassed);
+
+   void FlushEvent(unsigned int slot);
+
+   void ResetBranchAddresses(unsigned int slot);
+
+   void Initialize() {}
+
+   void Finalize();
+
+   std::string GetActionName() { return "SnapshotWithVariations"; }
+
+   ROOT::RDF::SampleCallback_t GetSampleCallback() final
+   {
+      // TODO: Needed?
+      return [this](unsigned int, const RSampleInfo &) mutable { ; };
+   }
 };
 
 } // namespace ROOT::Internal::RDF
