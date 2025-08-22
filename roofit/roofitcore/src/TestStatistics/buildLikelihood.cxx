@@ -75,7 +75,7 @@ RooArgSet getConstraintsSet(RooAbsPdf *pdf, RooAbsData *data, RooArgSet constrai
    std::size_t N_default_constraints = 0;
 #endif
    if (constrained_parameters.empty()) {
-      std::unique_ptr<RooArgSet> default_constraints{pdf->getParameters(*data, false)};
+      std::unique_ptr<RooArgSet> default_constraints{pdf->getParameters(*data)};
       constrained_parameters.add(*default_constraints);
       doStripDisconnected = true;
 #ifndef NDEBUG
