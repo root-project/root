@@ -105,11 +105,11 @@ public:
 
    public:
       using iterator = RIterator;
-      using iterator_category = std::forward_iterator_tag;
+      using iterator_category = std::input_iterator_tag;
       using value_type = ROOT::NTupleSize_t;
-      using difference_type = ROOT::NTupleSize_t;
-      using pointer = ROOT::NTupleSize_t *;
-      using reference = ROOT::NTupleSize_t &;
+      using difference_type = std::ptrdiff_t;
+      using pointer = const ROOT::NTupleSize_t *;
+      using reference = const ROOT::NTupleSize_t &;
 
       RIterator() = default;
       explicit RIterator(ROOT::NTupleSize_t index) : fIndex(index) {}
@@ -126,8 +126,8 @@ public:
          ++fIndex;
          return *this;
       }
-      reference operator*() { return fIndex; }
-      pointer operator->() { return &fIndex; }
+      reference operator*() const { return fIndex; }
+      pointer operator->() const { return &fIndex; }
       bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
       bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
    };
