@@ -352,6 +352,9 @@ public:
    TTree(const TTree& tt) = delete;
    TTree& operator=(const TTree& tt) = delete;
 
+   TObject *Clone(const char *newname="") const override;
+   void     Copy(TObject &object) const override;
+
    virtual Int_t           AddBranchToCache(const char *bname, bool subbranches = false);
    virtual Int_t           AddBranchToCache(TBranch *branch,   bool subbranches = false);
    virtual Int_t           DropBranchFromCache(const char *bname, bool subbranches = false);
