@@ -76,8 +76,8 @@
   \param -v [LEVEL]    Explicitly set the verbosity level:
                             <= 0 = only output errors;
                             1 = only output errors and warnings;
-                            2 = output minimal informative messages, errors and warnings;
-                            >= 3 = output all messages (default).
+                            2 = output minimal informative messages, errors and warnings (default);
+                            >= 3 = output all messages.
   \return hadd returns a status code: 0 if OK, 1 otherwise
 
   For example assume 3 files f1, f2, f3 containing histograms hn and Trees Tn
@@ -168,13 +168,13 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// NOTE: TFileMerger will use PrintLevel = gVerbosity - 1. If PrintLevel is < 1, it will print nothing, otherwise
+// NOTE: TFileMerger will use PrintLevel = gHaddVerbosity - 1. If PrintLevel is < 1, it will print nothing, otherwise
 // it will print everything. To give some granularity to hadd, we do the following:
-// gVerbosity = 0: only print hadd errors
-// gVerbosity = 1: only print hadd errors + warnings
-// gVerbosity = 2: print hadd errors + warnings and TFileMerger messages
-// gVerbosity > 2: print all hadd and TFileMerger messages.
-static int gVerbosity = 99;
+// gHaddVerbosity = 0: only print hadd errors
+// gHaddVerbosity = 1: only print hadd errors + warnings
+// gHaddVerbosity = 2: print hadd errors + warnings and TFileMerger messages
+// gHaddVerbosity > 2: print all hadd and TFileMerger messages.
+static int gHaddVerbosity = 2;
 
 namespace {
 
@@ -206,14 +206,14 @@ static inline std::ostream &Err()
 
 static inline std::ostream &Warn()
 {
-   std::ostream &s = gVerbosity < 1 ? GetNullStream() : std::cerr;
+   std::ostream &s = gHaddVerbosity < 1 ? GetNullStream() : std::cerr;
    s << "Warning in <hadd>: ";
    return s;
 }
 
-static inline std::ostream &Info()
+static inline std::ostream &Info(int minLevel)
 {
-   std::ostream &s = gVerbosity < 3 ? GetNullStream() : std::cerr;
+   std::ostream &s = gHaddVerbosity < minLevel ? GetNullStream() : std::cerr;
    s << "Info in <hadd>: ";
    return s;
 }
@@ -636,7 +636,7 @@ static Int_t ParseFilterFile(const std::optional<std::string> &filterFileName,
       }
 
       if (nObjects) {
-         Info() << "added " << nObjects << " object from filter file '" << *filterFileName << "'\n";
+         Info(2) << "added " << nObjects << " object from filter file '" << *filterFileName << "'\n";
          fileMerger.AddObjectNames(filteredObjects);
       } else {
          Warn() << "no objects were added from filter file '" << *filterFileName << "'\n";
@@ -664,7 +664,7 @@ int main(int argc, char **argv)
 
    ROOT::TIOFeatures features = args.fFeatures.value_or(ROOT::TIOFeatures{});
    Int_t maxopenedfiles = args.fMaxOpenedFiles.value_or(0);
-   gVerbosity = args.fVerbosity.value_or(99);
+   gHaddVerbosity = args.fVerbosity.value_or(99);
    Int_t newcomp = args.fCompressionSettings.value_or(-1);
    TString cacheSize = args.fCacheSize.value_or("");
 
@@ -682,7 +682,7 @@ int main(int argc, char **argv)
       nProcesses = s.fCpus;
    }
    if (multiproc)
-      Info() << "parallelizing  with " << nProcesses << " processes.\n";
+      Info(3) << "parallelizing  with " << nProcesses << " processes.\n";
 
    // If the user specified a workingDir, use that. Otherwise, default to the system temp dir.
    std::string workingDir;
@@ -712,10 +712,10 @@ int main(int argc, char **argv)
    }
    targetname = argv[args.fOutputArgIdx];
 
-   Info() << "target file: " << targetname << "\n";
+   Info(2) << "target file: " << targetname << "\n";
 
    if (args.fCacheSize)
-      Info() << "Using " << cacheSize << "\n";
+      Info(3) << "Using " << cacheSize << "\n";
 
    ////////////////////////////// end flags processing /////////////////////////////////
 
@@ -723,7 +723,7 @@ int main(int argc, char **argv)
 
    TFileMerger fileMerger(kFALSE, kFALSE);
    fileMerger.SetMsgPrefix("hadd");
-   fileMerger.SetPrintLevel(gVerbosity - 1);
+   fileMerger.SetPrintLevel(gHaddVerbosity - 1);
    if (maxopenedfiles > 0) {
       fileMerger.SetMaxOpenedFiles(maxopenedfiles);
    }
@@ -796,9 +796,9 @@ int main(int argc, char **argv)
       }
    }
    if (args.fKeepCompressionAsIs && !args.fReoptimize)
-      Info() << "compression setting for meta data: " << newcomp << '\n';
+      Info(2) << "compression setting for meta data: " << newcomp << '\n';
    else
-      Info() << "compression setting for all output: " << newcomp << '\n';
+      Info(2) << "compression setting for all output: " << newcomp << '\n';
 
    if (args.fAppend) {
       if (!fileMerger.OutputFile(targetname, "UPDATE", newcomp)) {
@@ -819,9 +819,9 @@ int main(int argc, char **argv)
       // At least 3 files per process
       step = 3;
       nProcesses = (allSubfiles.size() + step - 1) / step;
-      Info() << "each process should handle at least 3 files for efficiency."
-                " Setting the number of processes to: "
-             << nProcesses << std::endl;
+      Info(2) << "each process should handle at least 3 files for efficiency."
+                 " Setting the number of processes to: "
+              << nProcesses << std::endl;
    }
    if (nProcesses == 1)
       multiproc = kFALSE;
@@ -888,7 +888,7 @@ int main(int argc, char **argv)
    auto parallelMerge = [&](int start) {
       TFileMerger mergerP(kFALSE, kFALSE);
       mergerP.SetMsgPrefix("hadd");
-      mergerP.SetPrintLevel(gVerbosity - 1);
+      mergerP.SetPrintLevel(gHaddVerbosity - 1);
       if (maxopenedfiles > 0) {
          mergerP.SetMaxOpenedFiles(maxopenedfiles / nProcesses);
       }
@@ -931,8 +931,8 @@ int main(int argc, char **argv)
 #endif
 
    if (status) {
-      Info() << "merged " << allSubfiles.size() << " (" << fileMerger.GetMergeList()->GetEntries()
-             << ") input (partial) files into " << targetname << "\n";
+      Info(3) << "merged " << allSubfiles.size() << " (" << fileMerger.GetMergeList()->GetEntries()
+              << ") input (partial) files into " << targetname << "\n";
       return 0;
    } else {
       Err() << "failure during the merge of " << allSubfiles.size() << " (" << fileMerger.GetMergeList()->GetEntries()
