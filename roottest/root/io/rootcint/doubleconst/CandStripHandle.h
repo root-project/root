@@ -10,7 +10,7 @@ public:
   CandStripHandle();
   virtual ~CandStripHandle();
 
-ClassDef(CandStripHandle,1)           // User access handle to CandStrip
+  ClassDefOverride(CandStripHandle,1)           // User access handle to CandStrip
 };
 
 #endif                                              // CANDSTRIPHANDLE_H
