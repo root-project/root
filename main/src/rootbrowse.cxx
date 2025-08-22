@@ -4,21 +4,22 @@
 ///
 /// \author Giacomo Parolini <giacomo.parolini@cern.ch>
 /// \date 2025-08-21
-#include <cstring>
-#include <iostream>
-#include <thread>
-#include <chrono>
-#include <memory>
-
 #include <ROOT/RLogger.hxx>
 
+#include <TApplication.h>
+#include <TBrowser.h>
 #include <TError.h>
 #include <TFile.h>
 #include <TROOT.h>
 #include <TSystem.h>
-#include <TBrowser.h>
-#include <TApplication.h>
 
+#include <chrono>
+#include <cstring>
+#include <iostream>
+#include <memory>
+#include <thread>
+
+static const char *const kShortHelp = "usage: rootbrowse [-w WEB|-wf] <file.root>\n";
 static const char *const kLongHelp = R"(
 Open a ROOT file in a TBrowser
 
@@ -29,7 +30,7 @@ options:
   -h, --help     show this help message and exit
   -w, --web WEB  Configure webdisplay. For all possible values, see:
                  https://root.cern/doc/v636/classTROOT.html#a1749472696545b76a6b8e79769e7e773
-  -wf, --webOff  Invoke the normal TBrowser (not the web version)
+  -wf, --webOff  Invoke the classic TBrowser (not the web version)
 
 Examples:
 - rootbrowse
@@ -96,7 +97,7 @@ int main(int argc, char **argv)
 {
    auto args = ParseArgs(const_cast<const char **>(argv) + 1, argc - 1);
    if (args.fPrintHelp != RootBrowseArgs::EPrintUsage::kNo) {
-      std::cerr << "usage: rootbrowse [-w WEB|-wf] <file.root>\n";
+      std::cerr << kShortHelp;
       if (args.fPrintHelp == RootBrowseArgs::EPrintUsage::kLong) {
          std::cerr << kLongHelp;
          return 0;
