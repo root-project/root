@@ -82,7 +82,7 @@ public:
       kUnknownStructure,
    };
 
-   using RCategory R__DEPRECATED(6, 40, "enum renamed to ECategory") = ECategory;
+   using RCategory R__DEPRECATED(6, 42, "enum renamed to ECategory") = ECategory;
 
 private:
    std::string fError;
