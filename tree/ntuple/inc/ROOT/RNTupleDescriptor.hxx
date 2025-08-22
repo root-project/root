@@ -891,8 +891,8 @@ public:
          ++fIndex;
          return *this;
       }
-      reference operator*() { return fNTuple.GetColumnDescriptor(fColumns.at(fIndex)); }
-      pointer operator->() { return &fNTuple.GetColumnDescriptor(fColumns.at(fIndex)); }
+      reference operator*() const { return fNTuple.GetColumnDescriptor(fColumns.at(fIndex)); }
+      pointer operator->() const { return &fNTuple.GetColumnDescriptor(fColumns.at(fIndex)); }
       bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
       bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
    };
@@ -934,7 +934,7 @@ public:
       using iterator = RIterator;
       using value_type = RFieldDescriptor;
       using difference_type = std::ptrdiff_t;
-      using pointer = RFieldDescriptor *;
+      using pointer = const RFieldDescriptor *;
       using reference = const RFieldDescriptor &;
 
       RIterator(const RNTupleDescriptor &ntuple, const std::vector<ROOT::DescriptorId_t> &fieldChildren,
@@ -947,7 +947,8 @@ public:
          ++fIndex;
          return *this;
       }
-      reference operator*() { return fNTuple.GetFieldDescriptor(fFieldChildren.at(fIndex)); }
+      reference operator*() const { return fNTuple.GetFieldDescriptor(fFieldChildren.at(fIndex)); }
+      pointer operator->() const { return &fNTuple.GetFieldDescriptor(fFieldChildren.at(fIndex)); }
       bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
       bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
    };
