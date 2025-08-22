@@ -613,4 +613,33 @@ The list of issues addressed for this release is the following:
   * [[#18665](https://github.com/root-project/root/issues/18665)] - hadd: Error in header does not cause hadd failure
   * [[#7470](https://github.com/root-project/root/issues/7470)] - Dictionary generation fails for typedef to template specialization with default parameters
 
+## Release 6.36.02
+
+Published on August 26, 2025
+
+### Items addressed in this release
+
+This release features a few minor fixes. It will also be compatible with macOS 26 Tahoe and XCode 26.
+
+The list of issues addressed for this release is the following:
+
+  * [[#19592](https://github.com/root-project/root/issues/19592)] - No Constant Properties exported for Optical surfaces
+  * [[#19560](https://github.com/root-project/root/issues/19560)] - TTreeIndex fails under Valgrind due to long double emulation
+  * [[#19497](https://github.com/root-project/root/issues/19497)] - EL9:: EPEL:: root tags/6-36-02@6-36-02 :: cppyy warning in rootls
+  * [[#19477](https://github.com/root-project/root/pull/19477)] - [636][hist] clip color to minimum if below with COLZ TH2
+  * [[#19476](https://github.com/root-project/root/issues/19476)] - `std::string_view` adds characters to strings in Python
+  * [[#19442](https://github.com/root-project/root/issues/19442)] - [ntuple] Unable to read back RNTuples without normalized type names from v6.34
+  * [[#19438](https://github.com/root-project/root/issues/19438)] - TH2D COLZ0 option color bug
+  * [[#19419](https://github.com/root-project/root/issues/19419)] - [RF] FrequentistCalculator cannot handle non-parametric Pdfs
+  * [[#19412](https://github.com/root-project/root/issues/19412)] - TASImage Issue with latest libafterimage
+  * [[#19366](https://github.com/root-project/root/issues/19366)] - `THnSparse::CreateSparse` creates histograms that are not sparse
+  * [[#19359](https://github.com/root-project/root/issues/19359)] - Incorrect bin error with `TH1::SetBuffer` and `TH1::Sumw2`
+  * [[#19327](https://github.com/root-project/root/issues/19327)] - Build Fails on MacOS (ARM, 15)
+  * [[#19267](https://github.com/root-project/root/issues/19267)] - [cppyy] New crash when iterating over polymorphic std::vector
+  * [[#19134](https://github.com/root-project/root/issues/19134)] - Installation issue for ROOT 6.36 RPATHs through Spack on MacOS
+  * [[#11651](https://github.com/root-project/root/issues/11651)] - Syntax error leads to interpreter assert with `Must not nest within unloading transaction` when reading object
+  * [[#11460](https://github.com/root-project/root/issues/11460)] - TF2 (with same name) construction can not be made thread safe without taking a lock
+  * [[#10522](https://github.com/root-project/root/issues/10522)] - complex numbers in RDataFrame (PyROOT)
+  * [[#8899](https://github.com/root-project/root/issues/8899)] - dataframe_concurrency LLVM valgrind error: SelectionDAG::Combine
+
 ## HEAD of the v6-36-00-patches branch
