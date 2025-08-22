@@ -18,7 +18,7 @@ public:
   std::map<CandStripHandle *,  AltCandStpProbHandle *> fLikelihoods2;
 
 
-  ClassDef(AlgClusterSRList,1)                // ClusterSRList Algorithm Class
+  ClassDefOverride(AlgClusterSRList,1)                // ClusterSRList Algorithm Class
 };
 
 #endif                                                 // ALGCLUSTERSRLIST_H
