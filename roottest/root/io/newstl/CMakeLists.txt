@@ -1,13 +1,19 @@
 ROOTTEST_COMPILE_MACRO(TestHelpers.C
                        FIXTURES_SETUP root-io-newstl-TestHelpers-fixture)
 
-foreach(holder rvecHolder vectorHolder dequeHolder listHolder setHolder multisetHolder mapHolder multimapHolder)
-  ROOTTEST_COMPILE_MACRO(${holder}.C
-                         FIXTURES_SETUP root-io-newstl-holder-fixture)
-endforeach()
+set(_holders rvecHolder vectorHolder dequeHolder listHolder setHolder multisetHolder mapHolder multimapHolder)
+set(_tests rtest vtest dtest ltest stest ttest mtest ntest)
 
-foreach(test rtest vtest dtest ltest stest ttest mtest ntest)
+foreach(index RANGE 7)
+  list(GET _holders ${index} holder)
+  list(GET _tests ${index} test)
+  ROOTTEST_COMPILE_MACRO(${holder}.C
+                         BUILDLIB TestHelpers_C
+                         FIXTURES_REQUIRED root-io-newstl-TestHelpers-fixture
+                         FIXTURES_SETUP root-io-newstl-${holder}-fixture)
   ROOTTEST_COMPILE_MACRO(${test}.C
+                         BUILDLIB ${holder}_C
+                         FIXTURES_REQUIRED root-io-newstl-${holder}-fixture
                          FIXTURES_SETUP root-io-newstl-test-fixture)
 endforeach()
 
@@ -15,9 +21,7 @@ ROOTTEST_ADD_TEST(run
                   MACRO srun.C
                   MACROARG "\"${CMAKE_CURRENT_SOURCE_DIR}/\""
                   OUTREF stlIoTest.ref
-                  FIXTURES_REQUIRED root-io-newstl-TestHelpers-fixture
-                                    root-io-newstl-holder-fixture
-                                    root-io-newstl-test-fixture
+                  FIXTURES_REQUIRED root-io-newstl-test-fixture
                   FIXTURES_SETUP root-io-newstl-run-fixture)
 
 # failing tests, crashes ROOT, was disabled in Makefile
