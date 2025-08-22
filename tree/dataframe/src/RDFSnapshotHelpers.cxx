@@ -41,6 +41,9 @@
 #include <utility>
 
 using ROOT::Internal::RDF::RBranchData;
+// Maintaining the following allows for faster vector resize:
+static_assert(std::is_nothrow_move_assignable_v<RBranchData>);
+static_assert(std::is_nothrow_move_constructible_v<RBranchData>);
 
 namespace {
 
@@ -117,8 +120,7 @@ std::vector<RBranchData>::iterator CreateCStyleArrayBranch(TTree &outputTree, st
             // The size leaf is not part of the output branches yet, so emplace an empty slot for it.
             // This means that iterators need to be updated in case the container reallocates.
             const auto indexBeforeEmplace = std::distance(outputBranches.begin(), thisBranch);
-            outputBranches.emplace_back("", sizeLeafName, /*isDefine=*/false, /*typeID=*/nullptr,
-                                        /*outputBranch=*/nullptr);
+            outputBranches.emplace_back("", sizeLeafName, /*isDefine=*/false, /*typeID=*/nullptr);
             thisBranch = outputBranches.begin() + indexBeforeEmplace;
             sizeLeafIt = outputBranches.end() - 1;
          }
@@ -363,6 +365,69 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree,
       "RDataFrame::Snapshot: something went wrong when creating a TTree branch, please report this as a bug.");
 }
 } // namespace
+
+ROOT::Internal::RDF::RBranchData::RBranchData(std::string inputBranchName, std::string outputBranchName, bool isDefine,
+                                              const std::type_info *typeID)
+   : fInputBranchName{std::move(inputBranchName)},
+     fOutputBranchName{std::move(outputBranchName)},
+     fInputTypeID{typeID},
+     fIsDefine{isDefine}
+{
+   auto *dictionary = TDictionary::GetDictionary(*fInputTypeID);
+   if (auto datatype = dynamic_cast<TDataType *>(dictionary); datatype) {
+      fTypeData = FundamentalType(datatype->Size());
+   } else if (auto tclass = dynamic_cast<TClass *>(dictionary); tclass) {
+      fTypeData = EmptyDynamicType{tclass};
+   }
+}
+
+/// @brief Return a pointer to an empty instance of the type represented by this branch.
+/// For fundamental types, this is simply an 8-byte region of zeroes. For classes, it is an instance created with
+/// TClass::New.
+/// @param pointerToPointer Return a pointer to a pointer, so it can be used directly in TTree::SetBranchAddress().
+void *ROOT::Internal::RDF::RBranchData::EmptyInstance(bool pointerToPointer)
+{
+   if (auto fundamental = std::get_if<FundamentalType>(&fTypeData); fundamental) {
+      assert(!pointerToPointer); // Not used for fundamental types
+      return fundamental->fBytes.data();
+   }
+
+   auto &dynamic = std::get<EmptyDynamicType>(fTypeData);
+   if (!dynamic.fEmptyInstance) {
+      auto *dictionary = TDictionary::GetDictionary(*fInputTypeID);
+      assert(dynamic_cast<TDataType *>(dictionary) ==
+             nullptr); // TDataType should be handled by writing into the local buffer
+
+      auto tclass = dynamic_cast<TClass *>(dictionary);
+      assert(tclass);
+      dynamic.fEmptyInstance = std::shared_ptr<void>{tclass->New(), tclass->GetDestructor()};
+   }
+
+   if (pointerToPointer) {
+      // Make TTree happy (needs a pointer to pointer):
+      dynamic.fRawPtrToEmptyInstance = dynamic.fEmptyInstance.get();
+      return &dynamic.fRawPtrToEmptyInstance;
+   } else {
+      return dynamic.fEmptyInstance.get();
+   }
+}
+
+/// Point the branch address to an empty instance of the type represented by this branch
+/// or write null bytes into the space used by the fundamental type.
+/// This is used in case of variations, when certain defines/actions don't execute. We
+/// nevertheless need to write something, so we point the branch to an empty instance.
+void ROOT::Internal::RDF::RBranchData::ClearBranchContents()
+{
+   if (!fOutputBranch)
+      return;
+
+   if (auto fundamental = std::get_if<FundamentalType>(&fTypeData); fundamental) {
+      fundamental->fBytes.fill(std::byte{0});
+   } else {
+      // TTree expects pointer to pointer, to figure out who allocates the object:
+      fOutputBranch->SetAddress(EmptyInstance(/*pointerToPointer=*/true));
+   }
+}
 
 ROOT::Internal::RDF::UntypedSnapshotTTreeHelper::UntypedSnapshotTTreeHelper(
    std::string_view filename, std::string_view dirname, std::string_view treename, const ColumnNames_t &vbnames,
@@ -641,7 +706,7 @@ void ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::FinalizeTask(unsigned in
    if (fOutputTrees[slot]->GetEntries() > 0)
       fOutputFiles[slot]->Write();
    for (auto &branchData : fBranchData[slot])
-      branchData.ClearBranchPointers(); // Pointers might go to an old tree, so they are stale now
+      branchData.ClearBranchPointers(); // The branch pointers will go stale below
    // clear now to avoid concurrent destruction of output trees and input tree (which has them listed as fClones)
    fOutputTrees[slot].reset(nullptr);
 }
@@ -929,4 +994,262 @@ ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::MakeNew(void *newName)
    return UntypedSnapshotRNTupleHelper{
       fNSlots,           finalName, fDirName,          fNTupleName,        fInputFieldNames,
       fOutputFieldNames, fOptions,  fInputLoopManager, fOutputLoopManager, fInputColumnTypeIDs};
+}
+
+/*
+ * ------------------------------------
+ * Snapshot with systematic variations
+ * ------------------------------------
+ */
+namespace ROOT::Internal::RDF {
+/// An object to store an output file and a tree in one common place to share them between instances
+/// of Snapshot with systematic uncertainties.
+struct SnapshotOutputWriter {
+   std::unique_ptr<TFile> fFile;
+   std::unique_ptr<TTree> fTree;
+   std::string fDirectoryName;
+   RLoopManager *fOutputLoopManager;
+
+   // Bitmasks to indicate whether syst. uncertainties have been computed. Bound to TBranches, so need to be stable in
+   // memory.
+   struct Bitmask {
+      std::string branchName;
+      std::bitset<64> bitset{};
+      std::unique_ptr<uint64_t> branchBuffer{new uint64_t{}};
+   };
+   std::vector<Bitmask> fBitMasks;
+
+   std::unordered_map<std::string, unsigned int> fBranchToVariationMapping;
+   // The corresponding ROOT dictionary is declared in core/clingutils/src
+   std::unordered_map<std::string, std::pair<std::string, unsigned int>> fBranchToBitmaskMapping;
+   unsigned int fNBits = 0;
+
+   SnapshotOutputWriter(TFile *file) : fFile{file} { assert(fFile); }
+   ~SnapshotOutputWriter()
+   {
+      if (!fBranchToBitmaskMapping.empty()) {
+         fFile->WriteObject(&fBranchToBitmaskMapping,
+                            (std::string{"R_rdf_branchToBitmaskMapping_"} + fTree->GetName()).c_str());
+      }
+      if (fTree) {
+         // use AutoSave to flush TTree contents because TTree::Write writes in gDirectory, not in fDirectory
+         fTree->AutoSave("flushbaskets");
+
+         // Now connect the data source to the loop manager so it can be used for further processing
+         std::string tree = fTree->GetName();
+         if (!fDirectoryName.empty())
+            tree = fDirectoryName + '/' + tree;
+         std::string file = fFile->GetName();
+
+         fTree.reset();
+         fFile.reset();
+
+         if (fOutputLoopManager)
+            fOutputLoopManager->SetDataSource(std::make_unique<ROOT::Internal::RDF::RTTreeDS>(tree, file));
+      }
+   }
+   SnapshotOutputWriter(SnapshotOutputWriter const &) = delete; // Anyway deleted because of the unique_ptrs
+   SnapshotOutputWriter &operator=(SnapshotOutputWriter const &) = delete;
+   SnapshotOutputWriter(SnapshotOutputWriter &&) noexcept =
+      delete; // Can be done, but need to make move-from object safe to destruct
+   SnapshotOutputWriter &operator=(SnapshotOutputWriter &&) noexcept = delete;
+
+   /// Register a branch and corresponding systematic uncertainty.
+   /// This will create an entry in the mapping from branch names to bitmasks, so the corresponding
+   /// column can be masked if it doesn't contain valid entries. This mapping is written next to the
+   /// tree into the output file.
+   void RegisterBranch(std::string const &branchName, unsigned int variationIndex)
+   {
+      if (auto it = fBranchToVariationMapping.find(branchName); it != fBranchToVariationMapping.end()) {
+         if (variationIndex != it->second) {
+            throw std::logic_error("Branch " + branchName +
+                                   " is being registered with different variation index than the expected one: " +
+                                   std::to_string(variationIndex));
+         }
+         return;
+      }
+
+      // Neither branch nor systematic are known, so a new entry needs to be created
+      fNBits = std::max(fNBits, variationIndex);
+      const auto vectorIndex = variationIndex / 64u;
+      const auto bitIndex = variationIndex % 64u;
+
+      // Create bitmask branches as long as necessary to capture the bit
+      while (vectorIndex >= fBitMasks.size()) {
+         std::string bitmaskBranchName =
+            std::string{"R_rdf_mask_"} + fTree->GetName() + '_' + std::to_string(fBitMasks.size());
+         fBitMasks.push_back(Bitmask{bitmaskBranchName});
+         fTree->Branch(bitmaskBranchName.c_str(), fBitMasks.back().branchBuffer.get());
+      }
+
+      fBranchToVariationMapping[branchName] = variationIndex;
+      fBranchToBitmaskMapping[branchName] = std::make_pair(fBitMasks[vectorIndex].branchName, bitIndex);
+   }
+
+   /// Clear all bits, as if none of the variations passed its filter.
+   void ClearMaskBits()
+   {
+      for (auto &mask : fBitMasks)
+         mask.bitset.reset();
+   }
+
+   /// Set a bit signalling that the variation at `index` passed its filter.
+   void SetMaskBit(unsigned int index)
+   {
+      const auto vectorIndex = index / 64;
+      const auto bitIndex = index % 64;
+      fBitMasks[vectorIndex].bitset.set(bitIndex, true);
+   }
+
+   /// Test if any of the mask bits are set.
+   bool MaskEmpty() const
+   {
+      return std::none_of(fBitMasks.begin(), fBitMasks.end(), [](Bitmask const &mask) { return mask.bitset.any(); });
+   }
+
+   /// Write the current event and the bitmask to the output dataset.
+   void Write() const
+   {
+      if (!fTree)
+         throw std::runtime_error("The TTree associated to the Snapshot action doesn't exist, any more.");
+
+      for (auto const &mask : fBitMasks) {
+         *mask.branchBuffer = mask.bitset.to_ullong();
+      }
+
+      fTree->Fill();
+   }
+};
+
+} // namespace ROOT::Internal::RDF
+
+ROOT::Internal::RDF::SnapshotHelperWithVariations::SnapshotHelperWithVariations(
+   std::string_view filename, std::string_view dirname, std::string_view treename, const ColumnNames_t &vbnames,
+   const ColumnNames_t &bnames, const RSnapshotOptions &options, std::vector<bool> &&isDefine,
+   ROOT::Detail::RDF::RLoopManager *outputLoopMgr, ROOT::Detail::RDF::RLoopManager *inputLoopMgr,
+   const std::vector<const std::type_info *> &colTypeIDs)
+   : fOptions(options), fInputLoopManager{inputLoopMgr}, fOutputLoopManager{outputLoopMgr}
+{
+   EnsureValidSnapshotTTreeOutput(fOptions, std::string(treename), std::string(filename));
+
+   TDirectory::TContext fileCtxt;
+   fOutputHandle = std::make_shared<SnapshotOutputWriter>(
+      TFile::Open(filename.data(), fOptions.fMode.c_str(), /*ftitle=*/"",
+                  ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel)));
+   if (!fOutputHandle->fFile)
+      throw std::runtime_error(std::string{"Snapshot: could not create output file "} + std::string{filename});
+
+   TDirectory *outputDir = fOutputHandle->fFile.get();
+   if (!dirname.empty()) {
+      fOutputHandle->fDirectoryName = dirname;
+      TString checkupdate = fOptions.fMode;
+      checkupdate.ToLower();
+      if (checkupdate == "update")
+         outputDir =
+            fOutputHandle->fFile->mkdir(std::string{dirname}.c_str(), "", true); // do not overwrite existing directory
+      else
+         outputDir = fOutputHandle->fFile->mkdir(std::string{dirname}.c_str());
+   }
+
+   fOutputHandle->fTree = std::make_unique<TTree>(std::string{treename}.c_str(), std::string{treename}.c_str(),
+                                                  fOptions.fSplitLevel, /*dir=*/outputDir);
+   fOutputHandle->fOutputLoopManager = fOutputLoopManager;
+   if (fOptions.fAutoFlush)
+      fOutputHandle->fTree->SetAutoFlush(fOptions.fAutoFlush);
+
+   auto outputBranchNames = ReplaceDotWithUnderscore(bnames);
+
+   fBranchData.reserve(vbnames.size());
+   for (unsigned int i = 0; i < vbnames.size(); ++i) {
+      fOutputHandle->RegisterBranch(outputBranchNames[i], 0);
+      fBranchData.emplace_back(vbnames[i], outputBranchNames[i], isDefine[i], colTypeIDs[i]);
+   }
+}
+
+/// Register a new column as a variation of the column at `originalColumnIndex`, and clone its properties.
+/// If a nominal column is registered here, it is written without changes, but it means that it will be masked
+/// in case its selection cuts don't pass.
+/// \param slot Task ID for MT runs.
+/// \param columnIndex Index where the data of this column will be passed into the helper.
+/// \param originalColumnIndex If the column being registered is a variation of a "nominal" column, this designates the
+/// original.
+///         Properties such as name and output type are cloned from the original.
+/// \param variationName The variation that this column belongs to. If "nominal" is used, this column is considered as
+/// the original.
+void ROOT::Internal::RDF::SnapshotHelperWithVariations::RegisterVariedColumn(unsigned int /*slot*/,
+                                                                             unsigned int columnIndex,
+                                                                             unsigned int originalColumnIndex,
+                                                                             unsigned int variationIndex,
+                                                                             std::string const &variationName)
+{
+   if (columnIndex == originalColumnIndex) {
+      fBranchData[columnIndex].fVariationIndex = variationIndex; // The base column has variations
+      fOutputHandle->RegisterBranch(fBranchData[columnIndex].fOutputBranchName, variationIndex);
+   } else if (columnIndex >= fBranchData.size()) {
+      // First task, need to create branches
+      fBranchData.resize(columnIndex + 1);
+      auto &bd = fBranchData[columnIndex];
+      bd = fBranchData[originalColumnIndex];
+      std::string newOutputName = bd.fOutputBranchName + "__" + variationName;
+      std::replace(newOutputName.begin(), newOutputName.end(), ':', '_');
+      bd.fOutputBranchName = std::move(newOutputName);
+      bd.fVariationIndex = variationIndex;
+
+      fOutputHandle->RegisterBranch(bd.fOutputBranchName, variationIndex);
+   } else {
+      assert(static_cast<unsigned int>(fBranchData[columnIndex].fVariationIndex) == variationIndex);
+   }
+}
+
+/// Bind all output branches to RDF columns for the given slots.
+void ROOT::Internal::RDF::SnapshotHelperWithVariations::InitTask(TTreeReader *, unsigned int)
+{
+   // We ask the input RLoopManager if it has a TTree. We cannot rely on getting this information when constructing
+   // this action helper, since the TTree might change e.g. when ChangeSpec is called in-between distributed tasks.
+   if (auto treeDS = dynamic_cast<ROOT::Internal::RDF::RTTreeDS *>(fInputLoopManager->GetDataSource()))
+      fInputTree = treeDS->GetTree();
+
+   // Create all output branches; and bind them to empty values
+   for (std::size_t i = 0; i < fBranchData.size(); i++) { // fBranchData can grow due to insertions
+      SetBranchesHelper(fInputTree, *fOutputHandle->fTree, fBranchData, i, fOptions.fBasketSize,
+                        fBranchData[i].EmptyInstance(/*pointerToPointer=*/false));
+   }
+
+   AssertNoNullBranchAddresses(fBranchData);
+}
+
+/// Connect all output fields to the values pointed to by `values`, fill the output dataset,
+/// call the Fill of the output tree, and clear the mask bits that show whether a variation was reached.
+void ROOT::Internal::RDF::SnapshotHelperWithVariations::Exec(unsigned int /*slot*/, const std::vector<void *> &values,
+                                                             std::vector<bool> const &filterPassed)
+{
+   // Rebind branch pointers to RDF values
+   assert(fBranchData.size() == values.size());
+   for (std::size_t i = 0; i < values.size(); i++) {
+      const auto variationIndex = fBranchData[i].fVariationIndex;
+      if (variationIndex < 0) {
+         // Branch without variations
+         SetBranchesHelper(fInputTree, *fOutputHandle->fTree, fBranchData, i, fOptions.fBasketSize, values[i]);
+      } else if (filterPassed[variationIndex]) {
+         // Branch with variations
+         const bool fundamentalType = fBranchData[i].WriteValueIfFundamental(values[i]);
+         if (!fundamentalType) {
+            SetBranchesHelper(fInputTree, *fOutputHandle->fTree, fBranchData, i, fOptions.fBasketSize, values[i]);
+         }
+         fOutputHandle->SetMaskBit(variationIndex);
+      }
+   }
+
+   assert(!fOutputHandle->MaskEmpty()); // Exec should not have been called if nothing passes
+
+   fOutputHandle->Write();
+   fOutputHandle->ClearMaskBits();
+   for (auto &branchData : fBranchData) {
+      branchData.ClearBranchContents();
+   }
+}
+
+void ROOT::Internal::RDF::SnapshotHelperWithVariations::Finalize()
+{
+   fOutputHandle.reset();
 }
