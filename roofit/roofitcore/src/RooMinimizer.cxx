@@ -930,6 +930,13 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
 
    const size_t nPdfs = pdfIndices.size();
 
+
+      // Identify floating continuous parameters (RooRealVar)
+   RooArgSet floatReals;
+   for (auto arg : _fcn->allParams()) {
+      if (!arg->isCategory() && !arg->isConstant()) floatReals.add(*arg);
+   }
+
    if (nPdfs == 0) {
       // No floating categories: just minimize continuous parameters
       // RooMinimizer m(*nll);
@@ -943,7 +950,7 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
       return isValid;
    }
 
-   // --- Prepare discrete indices ---
+   //  Prepare discrete indices 
    std::vector<int> maxIndices;
    for (auto *cat : pdfIndices)
       maxIndices.push_back(cat->size());
@@ -954,7 +961,7 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
    double bestNLL = 1e30;
    bool improved = true;
 
-   auto startDP = std::chrono::high_resolution_clock::now();
+  
 
    while (improved) {
       improved = false;
@@ -997,7 +1004,7 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
    for (size_t i = 0; i < nPdfs; ++i)
       pdfIndices[i]->setIndex(bestIndices[i]);
 
-   auto endDP = std::chrono::high_resolution_clock::now();
+  
 
    std::cout << "All NLL Values per Combination:\n";
    for (const auto &entry : nllMap) {
