@@ -1,18 +1,21 @@
 
-ROOTTEST_GENERATE_REFLEX_DICTIONARY(StringDict 
-   stringIO_allClasses.h SELECTION stringIO_allClasses_selection.xml)
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(StringDict
+                                    stringIO_allClasses.h
+                                    SELECTION stringIO_allClasses_selection.xml
+                                    FIXTURES_SETUP root-meta-genreflex-5881-dict-fixture)
 
-ROOTTEST_GENERATE_EXECUTABLE(writeTreeBinary writeTree.cpp
-                             LIBRARIES Core RIO Tree)
+ROOTTEST_GENERATE_EXECUTABLE(writeTreeBinary
+                             writeTree.cpp
+                             LIBRARIES Core RIO Tree
+                             FIXTURES_SETUP root-meta-genreflex-5881-exec-fixture)
 
 ROOTTEST_ADD_TEST(execStringInputFiles
                   EXEC ${CMAKE_CURRENT_BINARY_DIR}/writeTreeBinary
-                  DEPENDS ${GENERATE_REFLEX_TEST} ${GENERATE_EXECUTABLE_TEST}
-                  FIXTURES_SETUP execStringInputFiles)
+                  FIXTURES_REQUIRED root-meta-genreflex-5881-dict-fixture
+                                    root-meta-genreflex-5881-exec-fixture
+                  FIXTURES_SETUP root-meta-genreflex-5881-inputfiles-fixture)
 
 ROOTTEST_ADD_TEST(execstringI
-  MACRO execstringI.C
-  OUTREF execstringI.ref
-  DEPENDS execStringInputFiles
-  FIXTURES_REQUIRED execStringInputFiles
-)
+                  MACRO execstringI.C
+                  OUTREF execstringI.ref
+                  FIXTURES_REQUIRED root-meta-genreflex-5881-inputfiles-fixture)

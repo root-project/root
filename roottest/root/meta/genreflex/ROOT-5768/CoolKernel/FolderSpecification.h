@@ -59,13 +59,13 @@ namespace cool
     */
 
     /// Get the versioning mode (const).
-    const FolderVersioning::Mode& versioningMode() const;
+    const FolderVersioning::Mode& versioningMode() const override;
 
     /// Get the versioning mode (to modify it).
     FolderVersioning::Mode& versioningMode();
 
     /// Get the payload specification (const).
-    const IRecordSpecification& payloadSpecification() const;
+    const IRecordSpecification& payloadSpecification() const override;
 
     /// Get the payload specification (to modify it).
     RecordSpecification& payloadSpecification();
@@ -80,7 +80,7 @@ namespace cool
 
     /// Get the payload table flag (const).
     /// DEPRECATED in COOL290VP (will be removed in COOL300)
-    const bool& hasPayloadTable() const;
+    const bool& hasPayloadTable() const override;
 
     /// Get the payload table flag (to modify it).
     /// DEPRECATED in COOL290VP (will be removed in COOL300)
