@@ -59,7 +59,7 @@ protected:
 protected:
    TString                  fClassName;     ///<  Class name of referenced object
    TString                  fParentName;    ///<  Name of parent class
-   TString                  fClonesName;    ///<  Name of class in TClonesArray (if any)
+   TString                  fClonesName;    ///<  Name of class in TClonesArray or (STL) collection (if any)
    TVirtualCollectionProxy *fCollProxy;     ///<! collection interface (if any)
    UInt_t                   fCheckSum;      ///<  CheckSum of class
    Version_t                fClassVersion;  ///<  Version number of class
