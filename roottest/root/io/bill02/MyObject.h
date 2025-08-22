@@ -4,5 +4,5 @@
 class MyObject : public TObject, public BaseMyObject {
 public:
 	MyObject() : BaseMyObject()  {}
-	ClassDef(MyObject, 1)
+	ClassDefOverride(MyObject, 1)
 };
