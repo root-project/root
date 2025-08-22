@@ -176,8 +176,8 @@ inline std::ostream &Warn()
 
 inline std::ostream &Info()
 {
-   std::cerr << "Info in <hadd>: ";
-   return std::cerr;
+   std::cout << "Info in <hadd>: ";
+   return std::cout;
 }
 
 using IntFlag_t = uint32_t;
@@ -644,7 +644,7 @@ int main(int argc, char **argv)
       nProcesses = s.fCpus;
    }
    if (multiproc)
-      Info() << "parallelizing  with " << nProcesses << " processes.\n";
+      Info() << "parallelizing with " << nProcesses << " processes.\n";
 
    // If the user specified a workingDir, use that. Otherwise, default to the system temp dir.
    std::string workingDir;
