@@ -12,6 +12,11 @@
 #include "bar.h"
 #include "foo.h"
 
+#ifdef __ROOTCLING__
+#pragma link C++ class bar+;
+#pragma link C++ class foo+;
+#endif
+
 using namespace std;
 
 int run()
