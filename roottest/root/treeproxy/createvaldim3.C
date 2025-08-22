@@ -1,19 +1,17 @@
 #include <TFile.h>
 #include <TTree.h>
+#include <TClass.h>
 #include <TClonesArray.h>
+#include "Track.h"
 
-#if defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_5)
-# include "Track.C"
-#else
-# if defined(__CINT__) && !defined(__MAKECINT__)
-#  include "Track.C+"
-# else
-#  include "Track.h"
-# endif
-#endif
-
-void createvaldim3(bool process = false) 
+void createvaldim3(bool process = false)
 {
+   auto cl = TClass::GetClass("Track");
+
+  printf("Track class %p\n", cl);
+
+  if (cl) printf("Declaration file %s\n", cl->GetDeclFileName());
+
   Double_t a[2][3][4];
   Double_t bb[2][3];
   Int_t c[2];
@@ -47,5 +45,5 @@ void createvaldim3(bool process = false)
 
   t->MakeProxy("val3dimSel","val3dim.C");
   if (process) t->Process("val3dimSel.h+");
-  
+
 }
