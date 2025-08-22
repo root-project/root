@@ -613,7 +613,7 @@ The list of issues addressed for this release is the following:
   * [[#18665](https://github.com/root-project/root/issues/18665)] - hadd: Error in header does not cause hadd failure
   * [[#7470](https://github.com/root-project/root/issues/7470)] - Dictionary generation fails for typedef to template specialization with default parameters
 
-## Release 6.36.02
+## Release 6.36.04
 
 Published on August 26, 2025
 
