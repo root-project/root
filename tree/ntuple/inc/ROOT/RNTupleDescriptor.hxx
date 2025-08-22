@@ -495,10 +495,16 @@ public:
       using reference = const RColumnRange &;
 
       RIterator(Iter_t iter) : fIter(iter) {}
-      iterator operator++()
+      iterator &operator++() /* prefix */
       {
          ++fIter;
          return *this;
+      }
+      iterator operator++(int) /* postfix */
+      {
+         auto old = *this;
+         operator++();
+         return old;
       }
       reference operator*() const { return fIter->second; }
       pointer operator->() const { return &fIter->second; }
@@ -886,10 +892,16 @@ public:
          : fNTuple(ntuple), fColumns(columns), fIndex(index)
       {
       }
-      iterator operator++()
+      iterator &operator++() /* prefix */
       {
          ++fIndex;
          return *this;
+      }
+      iterator operator++(int) /* postfix */
+      {
+         auto old = *this;
+         operator++();
+         return old;
       }
       reference operator*() const { return fNTuple.GetColumnDescriptor(fColumns.at(fIndex)); }
       pointer operator->() const { return &fNTuple.GetColumnDescriptor(fColumns.at(fIndex)); }
@@ -942,10 +954,16 @@ public:
          : fNTuple(ntuple), fFieldChildren(fieldChildren), fIndex(index)
       {
       }
-      iterator operator++()
+      iterator &operator++() /* prefix */
       {
          ++fIndex;
          return *this;
+      }
+      iterator operator++(int) /* postfix */
+      {
+         auto old = *this;
+         operator++();
+         return old;
       }
       reference operator*() const { return fNTuple.GetFieldDescriptor(fFieldChildren.at(fIndex)); }
       pointer operator->() const { return &fNTuple.GetFieldDescriptor(fFieldChildren.at(fIndex)); }
@@ -997,10 +1015,16 @@ public:
       using reference = const RClusterGroupDescriptor &;
 
       RIterator(Iter_t iter) : fIter(iter) {}
-      iterator operator++()
+      iterator &operator++() /* prefix */
       {
          ++fIter;
          return *this;
+      }
+      iterator operator++(int) /* postfix */
+      {
+         auto old = *this;
+         operator++();
+         return old;
       }
       reference operator*() const { return fIter->second; }
       pointer operator->() const { return &fIter->second; }
@@ -1045,10 +1069,16 @@ public:
       using reference = const RClusterDescriptor &;
 
       RIterator(Iter_t iter) : fIter(iter) {}
-      iterator operator++()
+      iterator &operator++() /* prefix */
       {
          ++fIter;
          return *this;
+      }
+      iterator operator++(int) /* postfix */
+      {
+         auto old = *this;
+         operator++();
+         return old;
       }
       reference operator*() const { return fIter->second; }
       pointer operator->() const { return &fIter->second; }
@@ -1089,10 +1119,16 @@ public:
       using reference = const RExtraTypeInfoDescriptor &;
 
       RIterator(Iter_t iter) : fIter(iter) {}
-      iterator operator++()
+      iterator &operator++() /* prefix */
       {
          ++fIter;
          return *this;
+      }
+      iterator operator++(int) /* postfix */
+      {
+         auto old = *this;
+         operator++();
+         return old;
       }
       reference operator*() const { return *fIter; }
       pointer operator->() const { return &*fIter; }
