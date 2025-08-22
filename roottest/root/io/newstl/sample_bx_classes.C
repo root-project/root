@@ -1,5 +1,6 @@
-#ifndef SAMPLE_BX_CLASS
-#define SAMPLE_BX_CLASS
+#ifndef SAMPLE_BX_CLASSES_C
+#define SAMPLE_BX_CLASSES_C
+
 #include "TClonesArray.h"
 #include <vector>
 
@@ -17,14 +18,14 @@ class BxLabenCluster: public TObject {
     Int_t nhits;
     std::vector<Float_t> times; //->
 
-  ClassDef(BxLabenCluster, 1)
+  ClassDefOverride(BxLabenCluster, 1)
 
 };
 
 #ifdef __MAKECINT__
 #pragma link C++ class std::vector<BxLabenCluster>+;
 #pragma link C++ class std::vector<float>;
-#endif 
+#endif
 
 class BxLaben: public TObject {
   public:
@@ -41,7 +42,7 @@ class BxLaben: public TObject {
     Double_t trigger_time;
     std::vector<BxLabenCluster> clusters; //->
 
-  ClassDef(BxLaben, 1)
+  ClassDefOverride(BxLaben, 1)
 };
 
 
@@ -63,7 +64,7 @@ class BxEvent : public TObject {
     Int_t evnum;
     BxLaben   laben;
 
-  ClassDef(BxEvent, 1)
+  ClassDefOverride(BxEvent, 1)
 };
 
 
@@ -93,8 +94,8 @@ void BxLaben::Assign(int i) {
 BxEvent::BxEvent() : laben() {
 }
 
-void BxEvent::Assign(int i) { 
-  evnum = i; 
+void BxEvent::Assign(int i) {
+  evnum = i;
   laben.Assign(i);
 }
 

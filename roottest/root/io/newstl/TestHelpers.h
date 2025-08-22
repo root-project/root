@@ -15,8 +15,8 @@ bool IsEquiv(float orig, float copy) {
 bool IsEquiv(double orig, double copy) {
    double epsilon = 1e-14;
    double diff = orig-copy;
-// std::cerr << "epsilon = " << epsilon 
-//              << " diff = " << diff 
+// std::cerr << "epsilon = " << epsilon
+//              << " diff = " << diff
 //              << " div  = " << diff/copy
 //              << " abs = " << TMath::Abs( diff/copy )
 //              << " bool = " << (TMath::Abs( diff/copy ) < epsilon) << std::endl;
@@ -39,7 +39,7 @@ public:
 class Helper {
 public:
    unsigned int val;
-   double dval;   
+   double dval;
    Helper() : val(0),dval(0) {}
    explicit Helper(int v,double d) : val(v),dval(d) {}
    virtual ~Helper() {};
@@ -71,8 +71,8 @@ class HelperDerived : public HelperClassDef {
    float f;
    HelperDerived() : f(-1) {};
    explicit HelperDerived(int v,double d, float finput) : HelperClassDef(v,d),f(finput) {};
- 
-   virtual bool IsEquiv(const Helper &rhs) const { 
+
+   virtual bool IsEquiv(const Helper &rhs) const {
       bool result = Helper::IsEquiv(rhs);
       if (result) {
          const HelperDerived *drhs = dynamic_cast<const HelperDerived*>(&rhs);
@@ -92,7 +92,7 @@ class HelperDerived : public HelperClassDef {
       return Form("HelperDerived object wrote %d %g %f and read %d %g %f\n",val,dval,f,drhs->val,drhs->dval,drhs->f);
    }
 
-   ClassDef(HelperDerived,1);
+   ClassDefOverride(HelperDerived,1);
 };
 
 class THelper : public Helper, public TObject {
@@ -104,7 +104,7 @@ public:
       if (copy==0) return "Wrong type (expected THelper)\n";
       return Form("THelper object wrote %d %g and read %d %g\n",val,dval,copy->val,copy->dval);
    }
-   ClassDef(THelper,1);
+   ClassDefOverride(THelper,1);
 };
 
 class THelperDerived : public THelper {
@@ -112,8 +112,8 @@ class THelperDerived : public THelper {
    float f;
    THelperDerived() : f(-1) {};
    explicit THelperDerived(int v,double d, float finput) : THelper(v,d),f(finput) {};
- 
-   virtual bool IsEquiv(const Helper &rhs) const { 
+
+   virtual bool IsEquiv(const Helper &rhs) const {
       bool result = Helper::IsEquiv(rhs);
       if (result) {
          const THelperDerived *drhs = dynamic_cast<const THelperDerived*>(&rhs);
@@ -133,7 +133,7 @@ class THelperDerived : public THelper {
       return Form("THelperDerived object wrote %d %g %f and read %d %g %f\n",val,dval,f,drhs->val,drhs->dval,drhs->f);
    }
 
-   ClassDef(THelperDerived,1);
+   ClassDefOverride(THelperDerived,1);
 };
 
 template <class T> class GHelper {
