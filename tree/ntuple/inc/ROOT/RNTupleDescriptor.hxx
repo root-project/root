@@ -500,8 +500,8 @@ public:
          ++fIter;
          return *this;
       }
-      reference operator*() { return fIter->second; }
-      pointer operator->() { return &fIter->second; }
+      reference operator*() const { return fIter->second; }
+      pointer operator->() const { return &fIter->second; }
       bool operator!=(const iterator &rh) const { return fIter != rh.fIter; }
       bool operator==(const iterator &rh) const { return fIter == rh.fIter; }
    };
@@ -509,7 +509,7 @@ public:
    explicit RColumnRangeIterable(const RClusterDescriptor &desc) : fDesc(desc) {}
 
    RIterator begin() { return RIterator{fDesc.fColumnRanges.cbegin()}; }
-   RIterator end() { return fDesc.fColumnRanges.cend(); }
+   RIterator end() { return RIterator{fDesc.fColumnRanges.cend()}; }
    size_t size() { return fDesc.fColumnRanges.size(); }
 };
 
@@ -984,37 +984,33 @@ private:
 public:
    class RIterator final {
    private:
-      /// The enclosing range's RNTuple.
-      const RNTupleDescriptor &fNTuple;
-      std::size_t fIndex = 0;
+      using Iter_t = std::unordered_map<ROOT::DescriptorId_t, RClusterGroupDescriptor>::const_iterator;
+      /// The wrapped map iterator
+      Iter_t fIter;
 
    public:
       using iterator_category = std::forward_iterator_tag;
       using iterator = RIterator;
       using value_type = RClusterGroupDescriptor;
       using difference_type = std::ptrdiff_t;
-      using pointer = RClusterGroupDescriptor *;
+      using pointer = const RClusterGroupDescriptor *;
       using reference = const RClusterGroupDescriptor &;
 
-      RIterator(const RNTupleDescriptor &ntuple, std::size_t index) : fNTuple(ntuple), fIndex(index) {}
+      RIterator(Iter_t iter) : fIter(iter) {}
       iterator operator++()
       {
-         ++fIndex;
+         ++fIter;
          return *this;
       }
-      reference operator*()
-      {
-         auto it = fNTuple.fClusterGroupDescriptors.begin();
-         std::advance(it, fIndex);
-         return it->second;
-      }
-      bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
-      bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
+      reference operator*() const { return fIter->second; }
+      pointer operator->() const { return &fIter->second; }
+      bool operator!=(const iterator &rh) const { return fIter != rh.fIter; }
+      bool operator==(const iterator &rh) const { return fIter == rh.fIter; }
    };
 
    RClusterGroupDescriptorIterable(const RNTupleDescriptor &ntuple) : fNTuple(ntuple) {}
-   RIterator begin() { return RIterator(fNTuple, 0); }
-   RIterator end() { return RIterator(fNTuple, fNTuple.GetNClusterGroups()); }
+   RIterator begin() { return RIterator(fNTuple.fClusterGroupDescriptors.cbegin()); }
+   RIterator end() { return RIterator(fNTuple.fClusterGroupDescriptors.cend()); }
 };
 
 // clang-format off
@@ -1036,37 +1032,33 @@ private:
 public:
    class RIterator final {
    private:
-      /// The enclosing range's RNTuple.
-      const RNTupleDescriptor &fNTuple;
-      std::size_t fIndex = 0;
+      using Iter_t = std::unordered_map<ROOT::DescriptorId_t, RClusterDescriptor>::const_iterator;
+      /// The wrapped map iterator
+      Iter_t fIter;
 
    public:
       using iterator_category = std::forward_iterator_tag;
       using iterator = RIterator;
       using value_type = RClusterDescriptor;
       using difference_type = std::ptrdiff_t;
-      using pointer = RClusterDescriptor *;
+      using pointer = const RClusterDescriptor *;
       using reference = const RClusterDescriptor &;
 
-      RIterator(const RNTupleDescriptor &ntuple, std::size_t index) : fNTuple(ntuple), fIndex(index) {}
+      RIterator(Iter_t iter) : fIter(iter) {}
       iterator operator++()
       {
-         ++fIndex;
+         ++fIter;
          return *this;
       }
-      reference operator*()
-      {
-         auto it = fNTuple.fClusterDescriptors.begin();
-         std::advance(it, fIndex);
-         return it->second;
-      }
-      bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
-      bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
+      reference operator*() const { return fIter->second; }
+      pointer operator->() const { return &fIter->second; }
+      bool operator!=(const iterator &rh) const { return fIter != rh.fIter; }
+      bool operator==(const iterator &rh) const { return fIter == rh.fIter; }
    };
 
    RClusterDescriptorIterable(const RNTupleDescriptor &ntuple) : fNTuple(ntuple) {}
-   RIterator begin() { return RIterator(fNTuple, 0); }
-   RIterator end() { return RIterator(fNTuple, fNTuple.GetNActiveClusters()); }
+   RIterator begin() { return RIterator(fNTuple.fClusterDescriptors.cbegin()); }
+   RIterator end() { return RIterator(fNTuple.fClusterDescriptors.cend()); }
 };
 
 // clang-format off
