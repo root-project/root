@@ -57,6 +57,8 @@ if(WIN32 AND R_EXECUTABLE MATCHES "R_EXECUTABLE-NOTFOUND")
         if (R_EXECUTABLE AND R_SCRIPT)
           break()
         endif()
+        unset(R_EXECUTABLE)
+        unset(R_SCRIPT)
       endif()
     endforeach()
   # ...or the 32-bit installation
