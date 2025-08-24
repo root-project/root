@@ -23,6 +23,8 @@ Minimal implementation of a TObject holding a double value.
 **/
 
 #include "RooDouble.h"
+
+#include <sstream>
 #include <string>
 
 
@@ -31,7 +33,9 @@ Minimal implementation of a TObject holding a double value.
 
 RooDouble::RooDouble(double value) : _value(value)
 {
-  SetName(Form("%f",value)) ;
+   std::stringstream ss;
+   ss << value;
+   SetName(ss.str().c_str());
 }
 
 
