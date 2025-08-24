@@ -356,7 +356,7 @@ void codegenImpl(RooConstVar &arg, CodegenContext &ctx)
 {
    // Just return a stringy-field version of the const value.
    // Formats to the maximum precision.
-   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
+   constexpr auto max_precision{std::numeric_limits<double>::max_digits10};
    std::stringstream ss;
    ss.precision(max_precision);
    // Just use toString to make sure we do not output 'inf'.
@@ -652,7 +652,7 @@ void codegenImpl(RooRealVar &arg, CodegenContext &ctx)
    }
    // Just return a formatted version of the const value.
    // Formats to the maximum precision.
-   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
+   constexpr auto max_precision{std::numeric_limits<double>::max_digits10};
    std::stringstream ss;
    ss.precision(max_precision);
    // Just use toString to make sure we do not output 'inf'.
