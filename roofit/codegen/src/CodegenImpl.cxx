@@ -502,15 +502,16 @@ void codegenImpl(RooParamHistFunc &arg, CodegenContext &ctx)
 {
    std::string const &idx = arg.dataHist().calculateTreeIndexForCodeSquash(ctx, arg.xList());
    std::string arrName = ctx.buildArg(arg.paramList());
-   std::string result = arrName + "[" + idx + "]";
+   std::stringstream result;
+   result << arrName << "[" << idx << "]";
    if (arg.relParam()) {
       // get weight[idx] * binv[idx]. Here we get the bin volume for the first element as we assume the distribution to
       // be binned uniformly.
       double binV = arg.dataHist().binVolume(0);
       std::string weightArr = arg.dataHist().declWeightArrayForCodeSquash(ctx, false);
-      result += " * *(" + weightArr + " + " + idx + ") * " + doubleToString(binV);
+      result << " * *(" << weightArr << " + " << idx + ") * " << doubleToString(binV);
    }
-   ctx.addResult(&arg, result);
+   ctx.addResult(&arg, result.str());
 }
 
 void codegenImpl(RooPoisson &arg, CodegenContext &ctx)

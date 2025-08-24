@@ -29,9 +29,9 @@ inline nlohmann::json parseWrapper(std::istream &is)
 
 // TJSONTree methods
 
-TJSONTree::TJSONTree() : root(this){};
+TJSONTree::TJSONTree() : root(this) {};
 
-TJSONTree::TJSONTree(std::istream &is) : root(this, is){};
+TJSONTree::TJSONTree(std::istream &is) : root(this, is) {};
 
 TJSONTree::~TJSONTree()
 {
@@ -248,7 +248,11 @@ std::string TJSONTree::Node::val() const
    case nlohmann::json::value_t::boolean: return node->get().get<bool>() ? "true" : "false";
    case nlohmann::json::value_t::number_integer: return std::to_string(node->get().get<int>());
    case nlohmann::json::value_t::number_unsigned: return std::to_string(node->get().get<unsigned int>());
-   case nlohmann::json::value_t::number_float: return std::to_string(node->get().get<double>());
+   case nlohmann::json::value_t::number_float: {
+      std::stringstream ss;
+      ss << node->get().get<double>();
+      return ss.str();
+   }
    default:
       throw std::runtime_error("node \"" + node->key() + "\": implicit string conversion for type " +
                                node->get().type_name() + " not supported!");
@@ -321,9 +325,12 @@ using const_json_iterator = nlohmann::basic_json<>::const_iterator;
 template <class Nd, class NdType, class json_it>
 class TJSONTree::Node::ChildItImpl final : public RooFit::Detail::JSONNode::child_iterator_t<Nd>::Impl {
 public:
-   enum class POS { BEGIN, END };
+   enum class POS {
+      BEGIN,
+      END
+   };
    ChildItImpl(NdType &n, POS p)
-      : node(n), iter(p == POS::BEGIN ? n.get_node().get().begin() : n.get_node().get().end()){};
+      : node(n), iter(p == POS::BEGIN ? n.get_node().get().begin() : n.get_node().get().end()) {};
    ChildItImpl(NdType &n, json_it it) : node(n), iter(it) {}
    ChildItImpl(const ChildItImpl &other) : node(other.node), iter(other.iter) {}
    using child_iterator = RooFit::Detail::JSONNode::child_iterator_t<Nd>;

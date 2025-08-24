@@ -225,10 +225,12 @@ std::string CodegenContext::buildArgSpanImpl(std::span<const T> arr)
 {
    unsigned int n = arr.size();
    std::string arrName = getTmpVarName();
-   std::string arrDecl = typeName<T>() + " " + arrName + "[" + std::to_string(n) + "] = {";
+   std::stringstream ss;
+   ss << typeName<T>() << " " << arrName << "[" << n << "] = {";
    for (unsigned int i = 0; i < n; i++) {
-      arrDecl += " " + std::to_string(arr[i]) + ",";
+      ss << " " << arr[i] << ",";
    }
+   std::string arrDecl = ss.str();
    arrDecl.back() = '}';
    arrDecl += ";\n";
    addToCodeBody(arrDecl, true);
