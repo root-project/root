@@ -1263,65 +1263,50 @@ string RooFactoryWSTool::varTag(string& func, vector<string>& args)
 /// - If list has three args, these are interpreted as `xinit,xmin,xmax`
 /// - If list has one arg, this is interpreted as `xinit` and the variable is set as constant
 
-string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
+string RooFactoryWSTool::processCreateVar(string &func, vector<string> &args)
 {
+   // Determine if first arg is numeric
+   string first = *(args.begin());
+   bool isNumeric = isdigit(first[0]) || first[0] == '.' || first[0] == '+' || first[0] == '-';
 
-  // Determine if first arg is numeric
-  string first = *(args.begin()) ;
-  if (isdigit(first[0]) || first[0]=='.' || first[0]=='+' || first[0]=='-') {
-
-    // Create a RooRealVar
-    vector<string>::iterator ai = args.begin() ;
-    if (args.size()==1) {
-
-      // One argument, create constant variable with given value
-      double xinit = atof((ai)->c_str()) ;
-      cxcoutD(ObjectHandling) << "CREATE variable " << func << " xinit = " << xinit << std::endl ;
-      RooRealVar tmp(func.c_str(),func.c_str(),xinit) ;
-      tmp.setStringAttribute("factory_tag",varTag(func,args).c_str()) ;
-      if (_ws->import(tmp,Silence())) {
-   logError() ;
+   if (!isNumeric) {
+      // Create a RooAbsCategory
+      string allStates;
+      for (auto const &ai : args) {
+         if (!allStates.empty()) {
+            allStates += ",";
+         }
+         allStates += ai;
       }
+      createCategory(func.c_str(), allStates.c_str());
 
-    } else if (args.size()==2) {
+      return func;
+   }
+   std::unique_ptr<RooRealVar> tmp;
 
-      // Two arguments, create variable with given range
-      double xlo = atof((ai++)->c_str()) ;
-      double xhi = atof(ai->c_str()) ;
-      cxcoutD(ObjectHandling) << "CREATE variable " << func << " xlo = " << xlo << " xhi = " << xhi << std::endl ;
-      RooRealVar tmp(func.c_str(),func.c_str(),xlo,xhi) ;
-      tmp.setStringAttribute("factory_tag",varTag(func,args).c_str()) ;
-      if (_ws->import(tmp,Silence())) {
-   logError() ;
+   if (args.size() == 1) {
+      double xinit = atof(args[0].c_str());
+      tmp = std::make_unique<RooRealVar>(func.c_str(), func.c_str(), xinit);
+
+   } else if (args.size() == 2) {
+      double xlo = atof(args[0].c_str());
+      double xhi = atof(args[1].c_str());
+      tmp = std::make_unique<RooRealVar>(func.c_str(), func.c_str(), xlo, xhi);
+
+   } else if (args.size() == 3) {
+      double xinit = atof(args[0].c_str());
+      double xlo = atof(args[1].c_str());
+      double xhi = atof(args[2].c_str());
+      tmp = std::make_unique<RooRealVar>(func.c_str(), func.c_str(), xinit, xlo, xhi);
+   }
+
+   if (tmp) {
+      tmp->setStringAttribute("factory_tag", varTag(func, args).c_str());
+      if (_ws->import(*tmp, Silence())) {
+         logError();
       }
-
-    } else if (args.size()==3) {
-
-      // Three arguments, create variable with given initial value and range
-      double xinit = atof((ai++)->c_str()) ;
-      double xlo = atof((ai++)->c_str()) ;
-      double xhi = atof(ai->c_str()) ;
-      cxcoutD(ObjectHandling) << "CREATE variable " << func << " xinit = " << xinit << " xlo = " << xlo << " xhi = " << xhi << std::endl ;
-      RooRealVar tmp(func.c_str(),func.c_str(),xinit,xlo,xhi) ;
-      tmp.setStringAttribute("factory_tag",varTag(func,args).c_str()) ;
-      if (_ws->import(tmp,Silence())) {
-   logError() ;
-      }
-    }
-  } else {
-
-    // Create a RooAbsCategory
-    string allStates ;
-    for (vector<string>::iterator ai = args.begin() ; ai!=args.end() ; ++ai) {
-      if (!allStates.empty()) {
-   allStates += "," ;
-      }
-      allStates += *ai ;
-    }
-    createCategory(func.c_str(),allStates.c_str()) ;
-
-  }
-  return func ;
+   }
+   return func;
 }
 
 
