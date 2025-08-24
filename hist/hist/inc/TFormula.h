@@ -248,7 +248,7 @@ public:
 #ifdef R__HAS_VECCORE
    ROOT::Double_v EvalParVec(const ROOT::Double_v *x, const Double_t *params = nullptr) const;
 #endif
-   TString        GetExpFormula(Option_t *option = "", const char *fl_format = "%g") const;
+   TString        GetExpFormula(Option_t *option = "") const;
    TString        GetGradientFormula() const;
    TString        GetHessianFormula() const;
    TString        GetUniqueFuncName() const {
