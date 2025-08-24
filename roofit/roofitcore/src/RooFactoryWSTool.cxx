@@ -56,6 +56,7 @@ It interprets all expressions for RooWorkspace::factory(const char*).
 #include "RooDerivative.h"
 #include "RooStringVar.h"
 #include "TROOT.h"
+#include "RooFitImplHelpers.h"
 
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include "RooChi2Var.h"
@@ -1285,18 +1286,18 @@ string RooFactoryWSTool::processCreateVar(string &func, vector<string> &args)
    std::unique_ptr<RooRealVar> tmp;
 
    if (args.size() == 1) {
-      double xinit = atof(args[0].c_str());
+      double xinit = toDouble(args[0]);
       tmp = std::make_unique<RooRealVar>(func.c_str(), func.c_str(), xinit);
 
    } else if (args.size() == 2) {
-      double xlo = atof(args[0].c_str());
-      double xhi = atof(args[1].c_str());
+      double xlo = toDouble(args[0]);
+      double xhi = toDouble(args[1]);
       tmp = std::make_unique<RooRealVar>(func.c_str(), func.c_str(), xlo, xhi);
 
    } else if (args.size() == 3) {
-      double xinit = atof(args[0].c_str());
-      double xlo = atof(args[1].c_str());
-      double xhi = atof(args[2].c_str());
+      double xinit = toDouble(args[0]);
+      double xlo = toDouble(args[1]);
+      double xhi = toDouble(args[2]);
       tmp = std::make_unique<RooRealVar>(func.c_str(), func.c_str(), xinit, xlo, xhi);
    }
 
@@ -1513,7 +1514,7 @@ RooAbsArg& RooFactoryWSTool::asARG(const char* arg)
   {
   // If arg is a numeric string, make a RooConst() of it here
   if (arg[0]=='.' || arg[0]=='+' || arg[0] == '-' || isdigit(arg[0])) {
-    return RooConst(atof(arg)) ;
+     return RooConst(toDouble(arg));
   }
 
   // Otherwise look it up by name in the workspace
@@ -1533,7 +1534,7 @@ RooAbsReal& RooFactoryWSTool::asFUNC(const char* arg)
 {
   // If arg is a numeric string, make a RooConst() of it here
   if (arg[0]=='.' || arg[0]=='+' || arg[0] == '-' || isdigit(arg[0])) {
-    return RooConst(atof(arg)) ;
+     return RooConst(toDouble(arg));
   }
 
   RooAbsArg* rarg = ws().arg(arg) ;
@@ -1702,7 +1703,7 @@ RooArgSet RooFactoryWSTool::asSET(const char* arg)
 
     // If arg is a numeric string, make a RooConst() of it here
     if (tok[0]=='.' || tok[0]=='+' || tok[0] == '-' || isdigit(tok[0])) {
-      s.add(RooConst(atof(tok))) ;
+       s.add(RooConst(toDouble(tok)));
     } else if (tok[0] == '\'') {
        tok[strlen(tok) - 1] = 0;
        RooStringVar *sv = new RooStringVar(Form("string_set_item%03d", i++), "string_set_item", tok + 1);
@@ -1738,7 +1739,7 @@ RooArgList RooFactoryWSTool::asLIST(const char* arg)
 
     // If arg is a numeric string, make a RooConst() of it here
     if (tok[0]=='.' || tok[0]=='+' || tok[0] == '-' || isdigit(tok[0])) {
-      l.add(RooConst(atof(tok))) ;
+       l.add(RooConst(toDouble(tok)));
     } else if (tok[0] == '\'') {
        tok[strlen(tok) - 1] = 0;
        RooStringVar *sv = new RooStringVar("listarg", "listarg", tok + 1);
@@ -1865,7 +1866,7 @@ Int_t RooFactoryWSTool::asINT(const char* arg)
 
 double RooFactoryWSTool::asDOUBLE(const char* arg)
 {
-  return atof(arg) ;
+   return toDouble(arg);
 }
 
 
@@ -2013,16 +2014,16 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
    throw string(
       Form("taylorexpand::%s, factory syntax supports expansion only around same value for all observables", instName));
       } else {
-   observablesValue = atof(pargv[2].c_str());
+         observablesValue = toDouble(pargv[2]);
       }
     }
 
     if (pargv.size() > 3)
       order = atoi(pargv[3].c_str());
     if (pargv.size() > 4)
-      eps1 = atof(pargv[4].c_str());
+       eps1 = toDouble(pargv[4]);
     if (pargv.size() > 5)
-      eps2 = atof(pargv[5].c_str());
+       eps2 = toDouble(pargv[5]);
 
     if (pargv.size() > 6) {
       throw string(
