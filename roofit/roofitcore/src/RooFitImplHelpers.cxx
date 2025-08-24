@@ -338,4 +338,29 @@ std::string makeSliceCutString(RooArgSet const &sliceDataSet)
 } // namespace Detail
 } // namespace RooFit
 
+namespace {
+
+double stringToDoubleImpl(std::stringstream &ss)
+{
+   double output;
+   if (!(ss >> output)) {
+      throw std::invalid_argument("Conversion to floating point failed");
+   }
+   return output;
+}
+
+} // namespace
+
+double toDouble(const char *s)
+{
+   std::stringstream ss(s);
+   return stringToDoubleImpl(ss);
+}
+
+double toDouble(const std::string &s)
+{
+   std::stringstream ss(s);
+   return stringToDoubleImpl(ss);
+}
+
 /// \endcond

@@ -51,6 +51,14 @@ namespace Detail {
 template class JSONNode::child_iterator_t<JSONNode>;
 template class JSONNode::child_iterator_t<const JSONNode>;
 
+double JSONNode::val_double() const
+{
+   double out;
+   std::stringstream ss{val()};
+   ss >> out;
+   return out;
+}
+
 JSONNode::children_view JSONNode::children()
 {
    return {child_iterator(std::make_unique<::ChildItImpl<JSONNode>>(*this, 0)),
