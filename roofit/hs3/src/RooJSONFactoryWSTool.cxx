@@ -26,6 +26,7 @@
 #include <RooSimultaneous.h>
 #include <RooFormulaVar.h>
 #include <RooFit/ModelConfig.h>
+#include <RooFitImplHelpers.h>
 
 #include "JSONIOUtils.h"
 #include "Domains.h"
@@ -949,7 +950,7 @@ RooAbsReal *RooJSONFactoryWSTool::requestImpl<RooAbsReal>(const std::string &obj
    if (RooAbsReal *retval = _workspace.function(objname))
       return retval;
    if (isNumber(objname))
-      return &RooFit::RooConst(std::stod(objname));
+      return &RooFit::RooConst(toDouble(objname));
    if (RooAbsPdf *pdf = requestImpl<RooAbsPdf>(objname))
       return pdf;
    if (RooRealVar *var = requestImpl<RooRealVar>(objname))
