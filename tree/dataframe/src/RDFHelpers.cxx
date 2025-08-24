@@ -15,6 +15,7 @@
 #include "ROOT/RDF/RLoopManager.hxx" // for RLoopManager
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RResultHandle.hxx" // for RResultHandle, RunGraphs
+#include "ROOT/RResultPtr.hxx"
 
 #include "TROOT.h"      // IsImplicitMTEnabled
 #include "TError.h"     // Warning
@@ -157,7 +158,8 @@ void ThreadsPerTH3(unsigned int N)
 }
 
 ProgressHelper::ProgressHelper(std::size_t increment, unsigned int totalFiles, unsigned int progressBarWidth,
-                               unsigned int printInterval, bool useColors)
+                              unsigned int printInterval, bool useColors,
+                              ROOT::RDF::RResultPtr<ULong64_t> totalEntries)
    : fPrintInterval(printInterval),
      fIncrement{increment},
      fBarWidth{progressBarWidth = int(get_tty_size() / 4)},
@@ -169,6 +171,7 @@ ProgressHelper::ProgressHelper(std::size_t increment, unsigned int totalFiles, u
      fIsTTY{isatty(fileno(stdout)) == 1},
      fUseShellColours{useColors && fIsTTY} // Control characters only with terminals.
 #endif
+      , fTotalEntries(std::move(totalEntries))
 {
 }
 
@@ -241,7 +244,7 @@ void ProgressHelper::PrintStats(std::ostream &stream, std::size_t currentEventCo
 {
    RestoreStreamState restore(stream);
    auto evtpersec = EvtPerSec();
-   auto GetNEventsOfCurrentFile = ComputeNEventsSoFar();
+   auto GetNEventsOfCurrentFile = fTotalEntries && fTotalEntries.IsReady() ? const_cast<ROOT::RDF::RResultPtr<ULong64_t>&>(fTotalEntries).GetValue() : ComputeNEventsSoFar();
    auto currentFileIdx = ComputeCurrentFileIdx();
    auto totalFiles = fTotalFiles;
 
@@ -287,7 +290,7 @@ void ProgressHelper::PrintStats(std::ostream &stream, std::size_t currentEventCo
 void ProgressHelper::PrintStatsFinal(std::ostream &stream, std::chrono::seconds elapsedSeconds) const
 {
    RestoreStreamState restore(stream);
-   auto totalEvents = ComputeNEventsSoFar();
+   auto totalEvents = fTotalEntries && fTotalEntries.IsReady() ? const_cast<ROOT::RDF::RResultPtr<ULong64_t>&>(fTotalEntries).GetValue() : ComputeNEventsSoFar();
    auto totalFiles = fTotalFiles;
 
    if (fUseShellColours)
@@ -316,7 +319,7 @@ void ProgressHelper::PrintStatsFinal(std::ostream &stream, std::chrono::seconds 
 /// Print a progress bar of width `ProgressHelper::fBarWidth` if `fGetNEventsOfCurrentFile` is known.
 void ProgressHelper::PrintProgressBar(std::ostream &stream, std::size_t currentEventCount) const
 {
-   auto GetNEventsOfCurrentFile = ComputeNEventsSoFar();
+   auto GetNEventsOfCurrentFile = fTotalEntries && fTotalEntries.IsReady() ? const_cast<ROOT::RDF::RResultPtr<ULong64_t>&>(fTotalEntries).GetValue() : ComputeNEventsSoFar();
    if (GetNEventsOfCurrentFile == 0)
       return;
 
@@ -387,7 +390,8 @@ public:
 void AddProgressBar(ROOT::RDF::RNode node)
 {
    auto total_files = node.GetNFiles();
-   auto progress = std::make_shared<ProgressHelper>(1000, total_files);
+   auto totalEntries = node.Count();
+   auto progress = std::make_shared<ProgressHelper>(1000, total_files, 40, 1, true, totalEntries);
    ProgressBarAction c(progress);
    auto r = node.Book<>(c);
    r.OnPartialResultSlot(1000, [progress](unsigned int slot, auto &&arg) { (*progress)(slot, arg); });
