@@ -16,11 +16,11 @@
 
 #include <RooAbsCollection.h>
 #include <RooFit/EvalContext.h>
-#include <RooNumber.h>
 
 #include <ROOT/RSpan.hxx>
 
 #include <cstddef>
+#include <iomanip>
 #include <map>
 #include <sstream>
 #include <string>
@@ -150,7 +150,9 @@ private:
    template <class T, typename std::enable_if<std::is_floating_point<T>{}, bool>::type = true>
    std::string buildArg(T x)
    {
-      return RooNumber::toString(x);
+      std::stringstream ss;
+      ss << std::setprecision(std::numeric_limits<double>::max_digits10) << x;
+      return ss.str();
    }
 
    // If input is integer, we want to print it into the code like one (i.e. avoid the unnecessary '.0000').
