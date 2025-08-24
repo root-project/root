@@ -536,9 +536,9 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::save(const char *userName, const c
       return nullptr;
    }
 
-   TString name = userName ? userName : Form("%s", _fcn->getFunctionName().c_str());
-   TString title = userTitle ? userTitle : Form("%s", _fcn->getFunctionTitle().c_str());
-   auto fitRes = std::make_unique<RooFitResult>(name, title);
+   std::string name = userName ? std::string{userName} : _fcn->getFunctionName();
+   std::string title = userTitle ? std::string{userTitle} : _fcn->getFunctionTitle();
+   auto fitRes = std::make_unique<RooFitResult>(name.c_str(), title.c_str());
 
    fitRes->setConstParList(_fcn->constParams());
 
@@ -682,7 +682,9 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
             ycoor[npoints] = ycoor[0];
             TGraph *graph = new TGraph(npoints + 1, xcoor.data(), ycoor.data());
 
-            graph->SetName(Form("contour_%s_n%f", _fcn->getFunctionName().c_str(), n[ic]));
+            std::stringstream name;
+            name << "contour_" << _fcn->getFunctionName() << "_n" << n[ic];
+            graph->SetName(name.str().c_str());
             graph->SetLineStyle(ic + 1);
             graph->SetLineWidth(2);
             graph->SetLineColor(kBlue);
