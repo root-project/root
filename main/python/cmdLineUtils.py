@@ -790,40 +790,6 @@ REPLACE_HELP = "replace object if already existing"
 ##########
 
 ##########
-# ROOTBROWSE
-
-
-def _openBrowser(rootFile=None):
-    browser = ROOT.TBrowser()
-    if ROOT.gSystem.InheritsFrom("TMacOSXSystem") or browser.IsWeb():
-        print("Press ctrl+c to exit.")
-        try:
-            while True:
-                if ROOT.gROOT.IsInterrupted() or ROOT.gSystem.ProcessEvents():
-                    break
-                sleep(0.01)
-        except (KeyboardInterrupt, SystemExit):
-            pass
-    else:
-        input("Press enter to exit.")
-
-
-def rootBrowse(fileName=None):
-    if fileName:
-        rootFile = openROOTFile(fileName)
-        if not rootFile:
-            return 1
-        _openBrowser(rootFile)
-        rootFile.Close()
-    else:
-        _openBrowser()
-    return 0
-
-
-# End of ROOTBROWSE
-##########
-
-##########
 # ROOTCP
 
 
