@@ -641,6 +641,7 @@ set (multithreaded
      machine_learning/TMVA_CNN_Classification.py
      machine_learning/TMVA_Higgs_Classification.py
      machine_learning/TMVA_RNN_Classification.py
+     machine_learning/RBatchGenerator_TensorFlow.py
      )
 file(GLOB multithreaded_all_cores RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded_all_cores})
 file(GLOB multithreaded RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded})

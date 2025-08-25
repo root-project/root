@@ -189,6 +189,7 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
 TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
 {
    RNTupleDescriptorBuilder descBuilder;
+   descBuilder.SetVersionForWriting();
 
    // empty string is not a valid NTuple name
    descBuilder.SetNTuple("", "");
@@ -204,6 +205,7 @@ TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
 TEST(RFieldDescriptorBuilder, HeaderExtension)
 {
    RNTupleDescriptorBuilder descBuilder;
+   descBuilder.SetVersionForWriting();
    descBuilder.SetNTuple("ntpl", "");
    descBuilder.AddField(
       RFieldDescriptorBuilder().FieldId(0).Structure(ROOT::ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
@@ -334,6 +336,40 @@ TEST(RNTupleDescriptor, QualifiedFieldName)
    auto fldIdInner = desc.FindFieldId("_0", fldIdJets);
    EXPECT_STREQ("jets", desc.GetQualifiedFieldName(fldIdJets).c_str());
    EXPECT_STREQ("jets._0", desc.GetQualifiedFieldName(fldIdInner).c_str());
+}
+
+// https://github.com/root-project/root/issues/19442
+TEST(RNTupleDescriptor, GetTypeNameForComparison)
+{
+   static const std::string MetaTypeName = "Template<Template<float> >";
+   static const std::string RenormalizedTypeName = "Template<Template<float>>";
+
+   RFieldDescriptor fieldDesc = RFieldDescriptorBuilder()
+                                   .FieldId(1)
+                                   .Structure(ROOT::ENTupleStructure::kRecord)
+                                   .FieldName("f")
+                                   .TypeName(MetaTypeName)
+                                   .MakeDescriptor()
+                                   .Unwrap();
+   {
+      RNTupleDescriptorBuilder descBuilder;
+      // Pretend the descriptor was created before the spec version that clarified type normalization (ROOT v6.34)
+      descBuilder.SetVersion(1, 0, 0, 0);
+      descBuilder.SetNTuple("ntpl", "");
+
+      auto desc = descBuilder.MoveDescriptor();
+      ASSERT_EQ(desc.GetTypeNameForComparison(fieldDesc), RenormalizedTypeName);
+   }
+
+   {
+      RNTupleDescriptorBuilder descBuilder;
+      // For later spec versions, we should not hide the problem
+      descBuilder.SetVersion(1, 0, 0, 1);
+      descBuilder.SetNTuple("ntpl", "");
+
+      auto desc = descBuilder.MoveDescriptor();
+      ASSERT_EQ(desc.GetTypeNameForComparison(fieldDesc), MetaTypeName);
+   }
 }
 
 TEST(RFieldDescriptorIterable, IterateOverFieldNames)

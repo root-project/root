@@ -80,7 +80,7 @@ TChainIndex::TChainIndex(): TVirtualIndex()
 /// If some subtrees don't have indices the indices are created and stored inside this
 /// TChainIndex.
 
-TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *minorname)
+TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *minorname, bool long64major, bool long64minor)
            : TVirtualIndex()
 {
    fTree = nullptr;
@@ -117,7 +117,7 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
          }
       }
       if (!index) {
-         chain->GetTree()->BuildIndex(majorname, minorname);
+         chain->GetTree()->BuildIndex(majorname, minorname, long64major, long64minor);
          index = chain->GetTree()->GetTreeIndex();
          chain->GetTree()->SetTreeIndex(nullptr);
          entry.fTreeIndex = index;

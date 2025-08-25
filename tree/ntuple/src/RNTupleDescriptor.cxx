@@ -14,6 +14,7 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RFieldBase.hxx>
+#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
@@ -87,6 +88,7 @@ ROOT::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc, const ROO
       }
    }
 
+   // Untyped records and collections
    if (GetTypeName().empty()) {
       switch (GetStructure()) {
       case ROOT::ENTupleStructure::kRecord: {
@@ -138,7 +140,7 @@ ROOT::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc, const ROO
       }
 
       return field;
-   } catch (RException &ex) {
+   } catch (const RException &ex) {
       if (options.GetReturnInvalidOnError())
          return std::make_unique<ROOT::RInvalidField>(GetFieldName(), GetTypeName(), ex.GetError().GetReport(),
                                                       ROOT::RInvalidField::RCategory::kGeneric);
@@ -367,6 +369,19 @@ std::string ROOT::RNTupleDescriptor::GetQualifiedFieldName(ROOT::DescriptorId_t 
    if (prefix.empty())
       return fieldDescriptor.GetFieldName();
    return prefix + "." + fieldDescriptor.GetFieldName();
+}
+
+std::string ROOT::RNTupleDescriptor::GetTypeNameForComparison(const RFieldDescriptor &fieldDesc) const
+{
+   std::string typeName = fieldDesc.GetTypeName();
+
+   // ROOT v6.34, with spec versions before 1.0.0.1, did not properly renormalize the type name.
+   R__ASSERT(fVersionEpoch == 1);
+   if (fVersionMajor == 0 && fVersionMinor == 0 && fVersionPatch < 1) {
+      typeName = ROOT::Internal::GetRenormalizedTypeName(typeName);
+   }
+
+   return typeName;
 }
 
 ROOT::DescriptorId_t ROOT::RNTupleDescriptor::FindFieldId(std::string_view fieldName) const
@@ -639,6 +654,31 @@ ROOT::RResult<void> ROOT::RNTupleDescriptor::DropClusterGroupDetails(ROOT::Descr
 
 std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleDescriptor::CreateModel(const RCreateModelOptions &options) const
 {
+   // Collect all top-level fields that have invalid columns (recursively): by default if we find any we throw an
+   // exception; if we are in ForwardCompatible mode, we proceed but skip of all those top-level fields.
+   std::unordered_set<ROOT::DescriptorId_t> invalidFields;
+   for (const auto &colDesc : GetColumnIterable()) {
+      if (colDesc.GetType() == ROOT::ENTupleColumnType::kUnknown) {
+         auto fieldId = colDesc.GetFieldId();
+         while (1) {
+            const auto &field = GetFieldDescriptor(fieldId);
+            if (field.GetParentId() == GetFieldZeroId())
+               break;
+            fieldId = field.GetParentId();
+         }
+         invalidFields.insert(fieldId);
+
+         // No need to look for all invalid fields if we're gonna error out anyway
+         if (!options.GetForwardCompatible())
+            break;
+      }
+   }
+
+   if (!options.GetForwardCompatible() && !invalidFields.empty())
+      throw ROOT::RException(R__FAIL(
+         "cannot create Model: descriptor contains unknown column types. Use 'SetForwardCompatible(true)' on the "
+         "RCreateModelOptions to create a partial model containing only the fields made up by known columns."));
+
    auto fieldZero = std::make_unique<ROOT::RFieldZero>();
    fieldZero->SetOnDiskId(GetFieldZeroId());
    auto model = options.GetCreateBare() ? RNTupleModel::CreateBare(std::move(fieldZero))
@@ -647,9 +687,27 @@ std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleDescriptor::CreateModel(const R
    createFieldOpts.SetReturnInvalidOnError(options.GetForwardCompatible());
    createFieldOpts.SetEmulateUnknownTypes(options.GetEmulateUnknownTypes());
    for (const auto &topDesc : GetTopLevelFields()) {
-      auto field = topDesc.CreateField(*this, createFieldOpts);
-      if (field->GetTraits() & ROOT::RFieldBase::kTraitInvalidField)
+      if (invalidFields.count(topDesc.GetId()) > 0) {
+         // Field contains invalid columns: skip it
          continue;
+      }
+
+      auto field = topDesc.CreateField(*this, createFieldOpts);
+
+      // If we got an InvalidField here, figure out if it's a hard error or if the field must simply be skipped.
+      // The only case where it's not a hard error is if the field has an unknown structure, as that case is
+      // covered by the ForwardCompatible flag (note that if the flag is off we would not get here
+      // in the first place, so we don't need to check for that flag again).
+      if (field->GetTraits() & ROOT::RFieldBase::kTraitInvalidField) {
+         const auto &invalid = static_cast<const RInvalidField &>(*field);
+         const auto cat = invalid.GetCategory();
+         bool mustThrow = cat != RInvalidField::RCategory::kUnknownStructure;
+         if (mustThrow)
+            throw invalid.GetError();
+
+         // Not a hard error: skip the field and go on.
+         continue;
+      }
 
       if (options.GetReconstructProjections() && topDesc.IsProjectedField()) {
          model->AddProjectedField(std::move(field), [this](const std::string &targetName) -> std::string {
@@ -691,6 +749,11 @@ ROOT::RNTupleDescriptor ROOT::RNTupleDescriptor::CloneSchema() const
 ROOT::RNTupleDescriptor ROOT::RNTupleDescriptor::Clone() const
 {
    RNTupleDescriptor clone = CloneSchema();
+
+   clone.fVersionEpoch = fVersionEpoch;
+   clone.fVersionMajor = fVersionMajor;
+   clone.fVersionMinor = fVersionMinor;
+   clone.fVersionPatch = fVersionPatch;
 
    clone.fOnDiskHeaderSize = fOnDiskHeaderSize;
    clone.fOnDiskHeaderXxHash3 = fOnDiskHeaderXxHash3;
@@ -936,6 +999,10 @@ ROOT::RResult<void> ROOT::Internal::RNTupleDescriptorBuilder::EnsureFieldExists(
 
 ROOT::RResult<void> ROOT::Internal::RNTupleDescriptorBuilder::EnsureValidDescriptor() const
 {
+   if (fDescriptor.fVersionEpoch != RNTuple::kVersionEpoch) {
+      return R__FAIL("unset or unsupported RNTuple epoch version");
+   }
+
    // Reuse field name validity check
    auto validName = ROOT::Internal::EnsureValidNameForRNTuple(fDescriptor.GetName(), "Field");
    if (!validName) {
@@ -983,6 +1050,26 @@ ROOT::RNTupleDescriptor ROOT::Internal::RNTupleDescriptorBuilder::MoveDescriptor
    RNTupleDescriptor result;
    std::swap(result, fDescriptor);
    return result;
+}
+
+void ROOT::Internal::RNTupleDescriptorBuilder::SetVersion(std::uint16_t versionEpoch, std::uint16_t versionMajor,
+                                                          std::uint16_t versionMinor, std::uint16_t versionPatch)
+{
+   if (versionEpoch != RNTuple::kVersionEpoch) {
+      throw RException(R__FAIL("unsupported RNTuple epoch version: " + std::to_string(versionEpoch)));
+   }
+   fDescriptor.fVersionEpoch = versionEpoch;
+   fDescriptor.fVersionMajor = versionMajor;
+   fDescriptor.fVersionMinor = versionMinor;
+   fDescriptor.fVersionPatch = versionPatch;
+}
+
+void ROOT::Internal::RNTupleDescriptorBuilder::SetVersionForWriting()
+{
+   fDescriptor.fVersionEpoch = RNTuple::kVersionEpoch;
+   fDescriptor.fVersionMajor = RNTuple::kVersionMajor;
+   fDescriptor.fVersionMinor = RNTuple::kVersionMinor;
+   fDescriptor.fVersionPatch = RNTuple::kVersionPatch;
 }
 
 void ROOT::Internal::RNTupleDescriptorBuilder::SetNTuple(const std::string_view name,
