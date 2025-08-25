@@ -2319,9 +2319,16 @@ void TBranchElement::InitInfo()
                   if (!subbranch->fInfo)
                      subbranch->SetupInfo();
 
-                  if (subbranch->fInfo == info)
+                  // We previously checked for subbranch->fInfo == info. However, this fails for split collections
+                  // where the value class was renamed. Eventually, the subbranch will get its target class properly
+                  // set and use the conversion streamer info. However, we hit the current code path from the collection
+                  // parent's TBranchElement::SetAddressImpl() _before_ we fix up the target class of the child branch.
+                  // So the previous call to subbranch->SetupInfo() doesn't return the conversion streamer info but
+                  // streamer info of the old class.
+                  if (strcmp(subbranch->fInfo->GetName(), info->GetName()) == 0 &&
+                      subbranch->fInfo->GetClassVersion() == info->GetClassVersion()) {
                      match = true;
-                  else if (subbranch->fInfo == nullptr && subbranch->fBranchClass == currentClass) {
+                  } else if (subbranch->fInfo == nullptr && subbranch->fBranchClass == currentClass) {
                      if (!toplevel) {
                         if (subbranch->fCheckSum == fCheckSum)
                            match = true;
