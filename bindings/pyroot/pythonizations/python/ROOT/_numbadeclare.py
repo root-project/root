@@ -34,9 +34,9 @@ def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
         import cffi
     except ImportError:
         raise Exception("Failed to import cffi")
+    import ctypes
     import re
     from typing import Union
-    import ctypes
 
     if hasattr(nb, "version_info") and nb.version_info >= (0, 54):
         pass
@@ -149,7 +149,7 @@ def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
             "unsigned int": (nb.uint32, ctypes.c_uint32),
             "long": (nb.int64, ctypes.c_int64),
             "unsigned long": (nb.uint64, ctypes.c_uint64),
-            "bool": (nb.boolean, ctypes.c_bool)
+            "bool": (nb.boolean, ctypes.c_bool),
         }
         if t in typemap:
             return typemap[t][0] if not as_ctypes else typemap[t][1]
@@ -245,9 +245,8 @@ def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
         except:  # noqa E722
             try:
                 # Fallback to letting numba infer the signature
-                import cppyy.numba_ext
+                import cppyy.numba_ext  # noqa F401
                 import platform
-                import warnings
 
                 if not (platform.system() == "Linux" and platform.machine() == "x86_64"):
                     raise RuntimeError(
@@ -256,7 +255,7 @@ def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
                         "See https://cppyy.readthedocs.io/en/latest/numba.html#numba-support"
                     )
                 nbjit = nb.jit(nopython=True, inline="always")(func)
-            except:
+            except:  # noqa E722
                 raise Exception("Failed to jit Python callable {} with numba.jit".format(func))
         func.numba_func = nbjit
         if return_type is None:
@@ -318,7 +317,7 @@ def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
 
         # bind the arguments that are passed as void* pointers to the correct type
         pywrapper_bind_lines = "\n    ".join(
-            f"x_{i} = cppyy.bind_object(x_{i}, \"{t}\")"
+            f'x_{i} = cppyy.bind_object(x_{i}, "{t}")'
             for i, t in enumerate(input_types)
             if not is_container_type(t) and map_cpp_type(t, as_ctypes=True) == ctypes.c_void_p
         )
