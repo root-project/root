@@ -6,7 +6,9 @@
 #include "TMVA/RModel.hxx"
 
 #include <cassert>
+#include <cctype>
 #include <sstream>
+#include <algorithm>
 
 namespace TMVA{
 namespace Experimental{
@@ -100,25 +102,55 @@ public:
                tmp.erase(tmp.begin() + i);
                auto tmp_length = ConvertDimShapeToLength(tmp);
                auto input_length = ConvertDimShapeToLength(input_shape);
+               if (fVerbose)
+                  std::cout << "reshape- try simplifying " << ConvertDimShapeToString(input_shape) << " with length "
+                            << input_length << " to " << tmp_length << std::endl;
+
                if (IsInteger(tmp_length) && IsInteger(input_length))
                   output_shape[i] = Dim{static_cast<size_t>(std::stoi(input_length) / std::stoi(tmp_length))};
                else {
                   //we can try simplifying expression if tmp_length is integer and part of input_length
                   // contains tmp_length
                   bool canSimplify = false;
+                  std::vector <Dim> reduced_input;
                   if (IsInteger(tmp_length)) {
-                     std::vector<Dim> reduced_input = input_shape;
-                     for (auto & s : input_shape) {
-                        if (s.GetVal() == tmp_length) {
-                           //erase value in the reduced_input vector
-                           auto itr = std::find(reduced_input.begin(), reduced_input.end(), s);
-                           reduced_input.erase(itr);
+
+                     // try to tokenize with * the input length
+
+                     std::stringstream ss(input_length);
+
+                     std::string token;
+
+                     // Tokenizing w.r.t. space '*'
+                     while(getline(ss, token, '*'))
+                     {
+                        // remove any whitespace
+                        token.erase(std::remove_if(token.begin(), token.end(),
+                                                   [](unsigned char x) { return std::isspace(x); }), token.end());
+                        if (token != tmp_length) {
+                           if (IsInteger(token)) {
+                                 size_t il = static_cast<size_t>(std::stoi(input_length));
+                                 size_t tl = static_cast<size_t>(std::stoi(tmp_length));
+                                 if ((il % tl) == 0) {
+                                 canSimplify = true;
+                                 reduced_input.push_back(Dim{il / tl});
+                                 }
+                           } else {
+                              reduced_input.push_back(Dim{token});
+                           }
+                        } else {
+                           // token is equal to tmp_length, can be not considered and is simplified
                            canSimplify = true;
-                           break;
                         }
                      }
-                     if (canSimplify)
-                        output_shape[i] = Dim{std::string("(") + ConvertDimShapeToLength(reduced_input) + ")", static_cast<size_t>(-1)};
+                  }
+                  if (canSimplify) {
+                     // if length contains * we need to add some brackets
+                     std::string res_shape = ConvertDimShapeToLength(reduced_input);
+                     if (res_shape.find('*') != std::string::npos)
+                        output_shape[i] = Dim{std::string("(") + res_shape + ")", static_cast<size_t>(-1)};
+                     else
+                        output_shape[i] = Dim{res_shape};
                   }
                   if (!canSimplify)
                      output_shape[i] = Dim{std::string("(") + input_length + " / (" + tmp_length + "))", static_cast<size_t>(-1)};
