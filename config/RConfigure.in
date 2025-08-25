@@ -47,6 +47,7 @@
 #@hascefweb@ R__HAS_CEFWEB  /**/
 #@hasqt6webengine@ R__HAS_QT6WEB  /**/
 #@hasdavix@ R__HAS_DAVIX  /**/
+#@hascurl@ R__HAS_CURL  /**/
 #@hasdataframe@ R__HAS_DATAFRAME /**/
 #@hasroot7@ R__HAS_ROOT7 /**/
 #@use_less_includes@ R__LESS_INCLUDES /**/

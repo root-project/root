@@ -169,6 +169,16 @@ endif()
 
 set(buildnetxng ${value${netxng}})
 
+set(buildcurl ${value${curl}})
+set(curllibdir ${CURL_LIBRARY_DIR})
+set(curllib ${CURL_LIBRARY})
+set(curlincdir ${CURL_INCLUDE_DIR})
+if(curl)
+  set(hascurl define)
+else()
+  set(hascurl undef)
+endif()
+
 set(builddcap ${value${dcap}})
 set(dcaplibdir ${DCAP_LIBRARY_DIR})
 set(dcaplib ${DCAP_LIBRARY})

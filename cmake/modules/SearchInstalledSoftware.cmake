@@ -1192,6 +1192,32 @@ if(builtin_davix)
   endif()
 endif()
 
+#---Check for curl library-----------------------------------------------------------
+foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)
+  unset(CURL_${suffix} CACHE)
+endforeach()
+
+if(curl)
+  message(STATUS "Looking for libcurl")
+  if(MSVC)
+    # On Windows, we must initialize libcurl lazily (not in a static [DLL] initializer), and this
+    # works only safely as of 7.84 with the threadsafe option
+    find_package(CURL 7.84 COMPONENTS HTTP HTTPS threadsafe)
+  else()
+    # Matches the libcurl version on EL9/10
+    find_package(CURL 7.76 COMPONENTS HTTP HTTPS)
+  endif()
+
+  if(NOT CURL_FOUND)
+    if(fail-on-missing)
+      message(SEND_ERROR "libcurl not found and curl option required")
+    else()
+      message(STATUS "libcurl not found. Switching off curl option")
+      set(curl OFF CACHE BOOL "Disabled because libcurl was not found (${curl_description})" FORCE)
+    endif()
+  endif()
+endif()
+
 #---Check for liburing----------------------------------------------------------------
 if (uring)
   if(NOT CMAKE_SYSTEM_NAME MATCHES Linux)
