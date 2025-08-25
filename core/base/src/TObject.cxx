@@ -798,7 +798,7 @@ TString TObject::SavePrimitiveVector(std::ostream &out, const char *prefix, Int_
    out << "   std::vector<Double_t> " << vectame;
    if (len > 0) {
       const auto old_precision{out.precision()};
-      constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
+      constexpr auto max_precision{std::numeric_limits<double>::max_digits10};
       out << std::setprecision(max_precision);
       Bool_t use_new_lines = len > 15;
 
