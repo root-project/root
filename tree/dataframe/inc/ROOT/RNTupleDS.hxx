@@ -7,7 +7,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2025, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -17,6 +17,7 @@
 #ifndef ROOT_RNTupleDS
 #define ROOT_RNTupleDS
 
+#include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDataSource.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleTypes.hxx>
@@ -26,10 +27,37 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <thread>
 #include <vector>
 #include <unordered_map>
+
+// Follow RDF namespace convention
+namespace ROOT {
+class RDataFrame;
+}
+namespace ROOT::Internal::RDF {
+/**
+ * \brief Internal overload of the function that allows passing a range of entries
+ *
+ * The event range will be respected when processing this RNTuple. It is assumed
+ * that processing happens within one thread only.
+ */
+ROOT::RDataFrame FromRNTuple(std::string_view ntupleName, const std::vector<std::string> &fileNames,
+                             const std::pair<ULong64_t, ULong64_t> &range);
+/**
+ * \brief Retrieves the cluster boundaries and the number of entries for the input RNTuple
+ *
+ * \param[in] ntupleName The name of the RNTuple dataset
+ * \param[in] location The location of the RNTuple dataset (e.g. a path to a file)
+ *
+ * \note This function is a helper for the Python side to avoid having to deal
+ *       with the shared descriptor guard.
+ */
+std::pair<std::vector<ROOT::Internal::RNTupleClusterBoundaries>, ROOT::NTupleSize_t>
+GetClustersAndEntries(std::string_view ntupleName, std::string_view location);
+} // namespace ROOT::Internal::RDF
 
 namespace ROOT {
 class RFieldBase;
@@ -174,6 +202,13 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    explicit RNTupleDS(std::unique_ptr<ROOT::Internal::RPageSource> pageSource);
 
    ROOT::RFieldBase *GetFieldWithTypeChecks(std::string_view fieldName, const std::type_info &tid);
+
+   friend ROOT::RDataFrame ROOT::Internal::RDF::FromRNTuple(std::string_view ntupleName,
+                                                            const ROOT::RDF::ColumnNames_t &fileNames,
+                                                            const std::pair<ULong64_t, ULong64_t> &range);
+
+   explicit RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames,
+                      const std::pair<ULong64_t, ULong64_t> &range);
 
 public:
    RNTupleDS(std::string_view ntupleName, std::string_view fileName);
