@@ -1,5 +1,5 @@
 void CreateTreeWithStdArray(){
-   TFile f("test.root", "RECREATE");
+   TFile f("testStdArray.root", "RECREATE");
    TTree t("tree", "tree");
    std::array<Double_t,3> arr;
    arr[0] = 10.1;
@@ -14,7 +14,7 @@ void CreateTreeWithStdArray(){
 int execStdArray()
 {
    CreateTreeWithStdArray();
-   TFile f("test.root", "READ");
+   TFile f("testStdArray.root", "READ");
    TTree *t = f.Get<TTree>("tree");
    if (!t) {
       Error("execStdArray","Could not find the TTree 'tree'");
