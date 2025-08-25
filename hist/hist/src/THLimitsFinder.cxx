@@ -12,6 +12,8 @@
 #include "TMath.h"
 #include "THLimitsFinder.h"
 
+#include <algorithm>
+
 THLimitsFinder *THLimitsFinder::fgLimitsFinder = nullptr;
 
 ClassImp(THLimitsFinder);
@@ -381,8 +383,8 @@ void THLimitsFinder::OptimizeLimits(Int_t nbins, Int_t &newbins, Double_t &xmin,
       xmin = -1;
       xmax = 1;
    } else {
-      xmin    = binlow;
-      xmax    = binhigh;
+      xmin = std::min(binlow, xmin);
+      xmax = std::max(binhigh, xmax + 0.01 * (xmax - xmin));
    }
    if (isInteger) {
       Long64_t ixmin = Long64_t(xmin);
