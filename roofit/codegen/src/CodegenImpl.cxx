@@ -501,15 +501,16 @@ void codegenImpl(RooParamHistFunc &arg, CodegenContext &ctx)
 {
    std::string const &idx = arg.dataHist().calculateTreeIndexForCodeSquash(ctx, arg.xList());
    std::string arrName = ctx.buildArg(arg.paramList());
-   std::string result = arrName + "[" + idx + "]";
+   std::stringstream result;
+   result << arrName << "[" << idx << "]";
    if (arg.relParam()) {
       // get weight[idx] * binv[idx]. Here we get the bin volume for the first element as we assume the distribution to
       // be binned uniformly.
       double binV = arg.dataHist().binVolume(0);
       std::string weightArr = arg.dataHist().declWeightArrayForCodeSquash(ctx, false);
-      result += " * *(" + weightArr + " + " + idx + ") * " + std::to_string(binV);
+      result << " * *(" << weightArr << " + " << idx + ") * " << binV;
    }
-   ctx.addResult(&arg, result);
+   ctx.addResult(&arg, result.str());
 }
 
 void codegenImpl(RooPoisson &arg, CodegenContext &ctx)
@@ -812,7 +813,9 @@ std::string rooHistIntegralTranslateImpl(int code, RooAbsArg const &arg, RooData
                                     << std::endl;
       return "";
    }
-   return std::to_string(dataHist.sum(histFuncMode));
+   std::stringstream ss;
+   ss << dataHist.sum(histFuncMode);
+   return ss.str();
 }
 
 } // namespace
@@ -853,7 +856,9 @@ std::string codegenIntegralImpl(RooMultiVarGaussian &arg, int code, const char *
       throw std::runtime_error(errorMsg.str().c_str());
    }
 
-   return std::to_string(arg.analyticalIntegral(code, rangeName));
+   std::stringstream ss;
+   ss << arg.analyticalIntegral(code, rangeName);
+   return ss.str();
 }
 
 std::string codegenIntegralImpl(RooPoisson &arg, int code, const char *rangeName, CodegenContext &ctx)

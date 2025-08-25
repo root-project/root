@@ -170,11 +170,13 @@ TEST(RooJohnson, Integral)
             << theMu << " " << theSig << " " << theGamma << " " << theDelta;
           }
 
-//          auto frame = mass.frame();
-//          johnson.plotOn(frame, RooFit::LineColor(kBlue));
-//          TCanvas canv;
-//          frame->Draw();
-//          canv.SaveAs(Form("/tmp/Johnson_%f_%f_%f_%f.png", theMu, theSig, theGamma, theDelta));
+          // auto frame = mass.frame();
+          // johnson.plotOn(frame, RooFit::LineColor(kBlue));
+          // TCanvas canv;
+          // frame->Draw();
+          // std::stringstream ss;
+          // ss << "/tmp/Johnson_" << theMu << "_" << theSig << "_" << theGamma << "_" << theDelta << ".png";
+          // canv.SaveAs(ss.str().s_str());
         }
       }
     }

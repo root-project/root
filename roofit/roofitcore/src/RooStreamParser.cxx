@@ -44,7 +44,7 @@
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
 #include "RooNumber.h"
-
+#include "RooFitImplHelpers.h"
 
 using std::istream, std::endl;
 
@@ -418,30 +418,13 @@ bool RooStreamParser::readDouble(double& value, bool /*zapOnError*/)
 
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert given string to a double. Return true if the conversion fails.
+/// Convert given string to a double. Throws exceptions if the conversion fails.
 
 bool RooStreamParser::convertToDouble(const TString &token, double &value)
 {
-   char *endptr = nullptr;
-   const char *data = token.Data();
-
-   // Handle +/- infinity cases, (token is guaranteed to be >1 char long)
-   if (!strcasecmp(data, "inf") || !strcasecmp(data + 1, "inf")) {
-      value = (data[0] == '-') ? -RooNumber::infinity() : RooNumber::infinity();
-      return false;
-   }
-
-   value = strtod(data, &endptr);
-   bool error = (endptr - data != token.Length());
-
-   if (error && !_prefix.IsNull()) {
-      oocoutE(nullptr, InputArguments) << _prefix << ": parse error, cannot convert '" << token << "'"
-                                       << " to double precision" << std::endl;
-   }
-   return error;
+   value = toDouble(token.Data());
+   return false;
 }
 
 
