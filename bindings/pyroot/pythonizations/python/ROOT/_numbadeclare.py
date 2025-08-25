@@ -10,10 +10,12 @@ def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
     wrapper functions with the given C++ types for input and return types. Eventually,
     the Python callable is accessible in the Numba namespace in C++.
 
-    The implementation first jits with numba the Python callable. We support fundamental types and
-    ROOT::VecOps::RVecs thereof. Note that you can get the jitted Python callable by the attribute
-    numba_func. The C++ types are converted to the respective numba types and RVecs are accessible
-    in Python by numpy arrays. After jitting the actual Python callable, we jit another Python wrapper,
+    The implementation first jits with numba the Python callable. We support fundamental types as well as
+    ROOT::VecOps::RVec, std::vector, and std::array thereof, along with ROOT C++ classes recognized
+    by the cppyy Numba extension (see https://cppyy.readthedocs.io/en/latest/numba.html).
+    Note that you can get the jitted Python callable by the attribute numba_func.
+    The C++ types are converted to the respective numba types and RVecs are accessible in Python
+    by numpy arrays. After jitting the actual Python callable, we jit another Python wrapper,
     which converts the Python signature to a C-friendly signature. The wrapper code is accessible by
     the attribute __py_wrapper__. Next, the Python wrapper is given to cling to jit a C++ wrapper function,
     making the original Python callable accessible in C++. The wrapper code in C++ is accessible by
@@ -32,6 +34,7 @@ def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
         import cffi
     except ImportError:
         raise Exception("Failed to import cffi")
+    import ctypes
     import re
     from typing import Union
 
@@ -40,40 +43,63 @@ def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
 
     CONTAINER_TYPES = {
         "RVec": {
-            "match_pattern": r"RVec\w+|RVec<[\w\s]+>",
-            "cpp_name": "ROOT::RVec",
+            "match_pattern": r"(?:ROOT::)?(?:VecOps::)?RVec\w+|(?:ROOT::)?(?:VecOps::)?RVec<[\w\s]+>",
+            "cpp_name": ["ROOT::RVec", "ROOT::VecOps::RVec"],
         },
         "std::vector": {
             "match_pattern": r"std::vector<[\w\s]+>",
-            "cpp_name": "std::vector",
+            "cpp_name": ["std::vector"],
         },
         "std::array": {
             "match_pattern": r"std::array<[\w\s,<>]+>",
-            "cpp_name": "std::array",
+            "cpp_name": ["std::array"],
         },
     }
 
-    def get_container_type(cpp_type: str) -> Union[str, None]:
-        return next((name for name in CONTAINER_TYPES if name in cpp_type), None)
+    def get_container_short_name(full_typename: str) -> Union[str, None]:
+        """
+        Return the high-level container type present in a C++ type string.
 
-    def is_container_type(cpp_type: str) -> bool:
-        return get_container_type(cpp_type) is not None
+        e.g. get_container_short_name("ROOT::RVecI&") -> "RVec"
+             get_container_short_name("std::vector<float>") -> "std::vector"
+        """
+        return next((c_short_name for c_short_name in CONTAINER_TYPES if c_short_name in full_typename), None)
 
-    def get_container_cpp_name(cpp_type: str) -> Union[str, None]:
-        container_type = get_container_type(cpp_type)
-        if container_type is None:
+    def is_container_type(full_typename: str) -> bool:
+        """
+        Return True if the C++ type is a recognized container type.
+
+        e.g. is_container_type("RVec<int>") -> True
+             is_container_type("int") -> False
+        """
+        return get_container_short_name(full_typename) is not None
+
+    def get_container_cpp_names(full_typename: str) -> Union[str, None]:
+        """
+        Return the full C++ name(s) for a container type.
+
+        e.g. get_container_cpp_names("RVec<int>") -> ["ROOT::RVec", "ROOT::VecOps::RVec"]
+        """
+        c_short_name = get_container_short_name(full_typename)
+        if c_short_name is None:
             return None
-        return CONTAINER_TYPES[container_type]["cpp_name"]
+        return CONTAINER_TYPES[c_short_name]["cpp_name"]
 
-    # Normalize input types by stripping ROOT and VecOps namespaces from input types
-    def normalize_typename(t):
+    def normalize_container_type(full_typename: str) -> str:
         """
-        Remove ROOT:: and VecOps:: namespaces
-        """
-        return t.replace("ROOT::", "").replace("VecOps::", "")
+        Make sure all namespaces are included.
 
-    input_types = [normalize_typename(t) for t in input_types]
-    return_type = normalize_typename(return_type) if return_type is not None else None
+        e.g. normalize_container_type("RVecI") -> "ROOT::RVecI"
+             normalize_container_type("ROOT::RVec<int>") -> "ROOT::RVec<int>"
+        """
+        c_short_name = get_container_short_name(full_typename)
+        cpp_names = get_container_cpp_names(full_typename)
+
+        if cpp_names is None or any(full_typename.startswith(name) for name in cpp_names):
+            return full_typename
+
+        # Replace short name with the first full C++ namespace-qualified name
+        return full_typename.replace(c_short_name, cpp_names[0])
 
     # Helper functions to determine types
     def get_inner_type(t: str, with_dims: bool = False) -> str:
@@ -110,54 +136,58 @@ def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
         except:  # noqa E722
             raise Exception("Failed to extract template argument of type {}".format(t))
 
-    def get_numba_type(t):
+    def map_cpp_type(t, as_ctypes=False):
         """
-        Get numba type object from a C++ fundamental typename
+        Get numba type object or ctype from a C++ fundamental typename
 
         These are the types we use to jit the Python callable.
         """
         typemap = {
-            "float": nb.float32,
-            "double": nb.float64,
-            "int": nb.int32,
-            "unsigned int": nb.uint32,
-            "long": nb.int64,
-            "unsigned long": nb.uint64,
-            "bool": nb.boolean,
+            "float": (nb.float32, ctypes.c_float),
+            "double": (nb.float64, ctypes.c_double),
+            "int": (nb.int32, ctypes.c_int32),
+            "unsigned int": (nb.uint32, ctypes.c_uint32),
+            "long": (nb.int64, ctypes.c_int64),
+            "unsigned long": (nb.uint64, ctypes.c_uint64),
+            "bool": (nb.boolean, ctypes.c_bool),
         }
         if t in typemap:
-            return typemap[t]
-        raise Exception(
-            "Type {} is not supported for jitting with numba. Valid fundamental types and container types (RVec, std::vector, std::array) thereof are {}".format(
-                t, list(typemap.keys())
-            )
-        )
+            return typemap[t][0] if not as_ctypes else typemap[t][1]
+        # fall back to void* for CFUNCTYPE
+        return ctypes.c_void_p if as_ctypes else t
 
-    def get_c_signature(input_types, return_type):
+    def get_c_signature(input_types, return_type, as_ctypes=False):
         """
-        Get C friendly signature as numba type objects from C++ typenames
+        Get C friendly signature as numba type objects or ctypes from C++ typenames
 
         We need the types to jit a Python wrapper, which can be accessed as a function pointer in C++.
         """
         c_input_types = []
         for t in input_types:
             if is_container_type(t):
-                c_input_types += [nb.types.CPointer(get_numba_type(get_inner_type(t))), nb.int32]
+                c_input_types += [nb.types.CPointer(map_cpp_type(get_inner_type(t))), nb.int32]
             else:
-                c_input_types.append(get_numba_type(t))
+                c_input_types.append(map_cpp_type(t, as_ctypes))
         if is_container_type(return_type):
             # We return an container through pointers as part of the input arguments. Note that the
             # pointer type in numba is always an int64 and is later on cast in C++ to the correct type.
             # In addition, we provide the size of the data type of the array for preallocating memory of
             # the returned array.
             # See the Python wrapper for further information why we are using these types.
-            c_return_type = nb.void
-            c_input_types += [
-                nb.types.CPointer(nb.int64),  # Pointer to the data (the first element of the array)
-                nb.types.CPointer(nb.int64),
-            ]  # Size of the array in elements
+            if as_ctypes:
+                c_return_type = ctypes.c_void_p
+                c_input_types += [
+                    ctypes.POINTER(ctypes.c_int64),  # Pointer to the data (the first element of the array)
+                    ctypes.POINTER(ctypes.c_int64),
+                ]  # Size of the array in elements
+            else:
+                c_return_type = nb.void
+                c_input_types += [
+                    nb.types.CPointer(nb.int64),  # Pointer to the data (the first element of the array)
+                    nb.types.CPointer(nb.int64),
+                ]  # Size of the array in elements
         else:
-            c_return_type = get_numba_type(return_type)
+            c_return_type = map_cpp_type(return_type, as_ctypes)
         return c_return_type, c_input_types
 
     def get_numba_signature(input_types, return_type):
@@ -167,14 +197,14 @@ def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
         nb_input_types = []
         for t in input_types:
             if is_container_type(t):
-                nb_input_types.append(get_numba_type(get_inner_type(t))[:])
+                nb_input_types.append(map_cpp_type(get_inner_type(t))[:])
             else:
-                nb_input_types.append(get_numba_type(t))
+                nb_input_types.append(map_cpp_type(t))
         if return_type is not None:
             if is_container_type(return_type):
-                nb_return_type = get_numba_type(get_inner_type(return_type))[:]
+                nb_return_type = map_cpp_type(get_inner_type(return_type))[:]
             else:
-                nb_return_type = get_numba_type(return_type)
+                nb_return_type = map_cpp_type(return_type)
         else:
             nb_return_type = None
         return nb_return_type, nb_input_types
@@ -184,10 +214,7 @@ def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
         Construct the type of a container input parameter for its use in the C++
         wrapper function signature.
         """
-        container_base = get_container_type(container_t)
-        cpp_name = get_container_cpp_name(container_t)
-        full_type = container_t.replace(container_base, cpp_name, 1)
-        tref = f"{const_mod}{full_type}&"
+        tref = f"{const_mod}{container_t}&"
         input_types_ref.append(tref)
 
     def add_container_func_ptr_input_type(func_ptr_input_types: list, const_mod: str, container_t: str) -> None:
@@ -208,17 +235,29 @@ def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
         """
 
         # Jit the given Python callable with numba
-        nb_return_type, nb_input_types = get_numba_signature(input_types, return_type)
         try:
+            nb_return_type, nb_input_types = get_numba_signature(input_types, return_type)
             if nb_return_type is not None:
                 nbjit = nb.jit(nb_return_type(*nb_input_types), nopython=True, inline="always")(func)
             else:
                 nbjit = nb.jit(tuple(nb_input_types), nopython=True, inline="always")(func)
                 nb_return_type = nbjit.nopython_signatures[-1].return_type
         except:  # noqa E722
-            raise Exception("Failed to jit Python callable {} with numba.jit".format(func))
+            try:
+                # Fallback to letting numba infer the signature
+                import cppyy.numba_ext  # noqa F401
+                import platform
+
+                if not (platform.system() == "Linux" and platform.machine() == "x86_64"):
+                    raise RuntimeError(
+                        "Numba integration for cppyy is experimental and only tested on Linux x86_64. "
+                        f"You are running on '{platform.machine()}', so behavior may be incorrect or fail. "
+                        "See https://cppyy.readthedocs.io/en/latest/numba.html#numba-support"
+                    )
+                nbjit = nb.jit(nopython=True, inline="always")(func)
+            except:  # noqa E722
+                raise Exception("Failed to jit Python callable {} with numba.jit".format(func))
         func.numba_func = nbjit
-        # return_type = "int"
         if return_type is None:
             type_map = {
                 nb.types.boolean: "bool",
@@ -261,7 +300,7 @@ def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
         # Define return operation
         if is_container_type(return_type):
             innert = get_inner_type(return_type)
-            dtypesize = 1 if innert == "bool" else int(get_numba_type(innert).bitwidth / 8)
+            dtypesize = 1 if innert == "bool" else int(map_cpp_type(innert).bitwidth / 8)
             pywrapper_return = "\n    ".join(
                 [
                     "# Because we cannot manipulate the memory management of the numpy array we copy the data",
@@ -276,6 +315,18 @@ def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
         else:
             pywrapper_return = "return r"
 
+        # bind the arguments that are passed as void* pointers to the correct type
+        pywrapper_bind_lines = "\n    ".join(
+            f'x_{i} = cppyy.bind_object(x_{i}, "{t}")'
+            for i, t in enumerate(input_types)
+            if not is_container_type(t) and map_cpp_type(t, as_ctypes=True) == ctypes.c_void_p
+        )
+        # Only import cppyy if we have objects to bind.
+        # Importing cppyy inside a Numba cfunc call will fail, so we do it only if we know
+        # we will actually go through ctypes.CFUNTYPE
+        if pywrapper_bind_lines:
+            pywrapper_bind_lines = "import cppyy\n    " + pywrapper_bind_lines
+
         # Build wrapper code
         pywrappercode = '''\
 def pywrapper({SIGNATURE}):
@@ -284,6 +335,8 @@ def pywrapper({SIGNATURE}):
     """
     # If a container is given, define numba carray wrapper for the input types
     {ARGS_DEF}
+    # If an object was passed as a void*, bind it to the correct type
+    {BIND_LINES}
     # Call the jitted Python function
     r = nbjit({ARGS})
     # Return the result
@@ -291,6 +344,7 @@ def pywrapper({SIGNATURE}):
         '''.format(
             SIGNATURE=", ".join(pywrapper_signature),
             ARGS_DEF="\n    ".join(pywrapper_args_def),
+            BIND_LINES=pywrapper_bind_lines,
             ARGS=", ".join(pywrapper_args),
             RETURN=pywrapper_return,
         )
@@ -305,7 +359,7 @@ def pywrapper({SIGNATURE}):
         glob["malloc"] = C.malloc
 
         if is_container_type(return_type):
-            glob["dtype_r"] = get_numba_type(get_inner_type(return_type))
+            glob["dtype_r"] = map_cpp_type(get_inner_type(return_type))
 
         # Execute the pywrapper code and generate the wrapper function
         # which calls the jitted C function
@@ -326,12 +380,18 @@ def pywrapper({SIGNATURE}):
         try:
             nbcfunc = nb.cfunc(c_return_type(*c_input_types), nopython=True)(local_objects["pywrapper"])
         except:  # noqa E722
-            raise Exception("Failed to jit Python wrapper with numba.cfunc")
+            try:
+                # Fallback to using ctypes.CFUNCTYPE if numba.cfunc fails
+                c_return_type, c_input_types = get_c_signature(input_types, return_type, as_ctypes=True)
+                cfunc_type = ctypes.CFUNCTYPE(c_return_type, *c_input_types)
+                nbcfunc = cfunc_type(local_objects["pywrapper"])
+            except:  # noqa E722
+                raise Exception("Failed to jit Python wrapper with numba.cfunc")
         func.__py_wrapper__ = pywrappercode
         func.__numba_cfunc__ = nbcfunc
 
         # Get address of jitted wrapper function
-        address = nbcfunc.address
+        address = nbcfunc.address if hasattr(nbcfunc, "address") else ctypes.cast(nbcfunc, ctypes.c_void_p).value
 
         # Infer name of the C++ wrapper function
         if not name:
@@ -350,6 +410,8 @@ def pywrapper({SIGNATURE}):
             if m:
                 const_mod = "" if m.group(1) is None else "const "
                 container_t = m.group(2)
+                # add namespaces if missing
+                container_t = normalize_container_type(container_t)
 
                 add_container_input_type_ref(input_types_ref, const_mod, container_t)
                 add_container_func_ptr_input_type(func_ptr_input_types, const_mod, container_t)
@@ -360,6 +422,7 @@ def pywrapper({SIGNATURE}):
         input_signature = ", ".join("{} x_{}".format(t, i) for i, t in enumerate(input_types_ref))
 
         if is_container_type(return_type):
+            return_type = normalize_container_type(return_type)
             # See C++ wrapper code for the reason using these types
             innert = get_inner_type(return_type)
             func_ptr_input_types += ["{}**, long*".format("char" if innert == "bool" else innert)]
@@ -377,7 +440,7 @@ def pywrapper({SIGNATURE}):
                 if get_inner_type(t) == "bool":
                     # Copy the container<bool> to a container<char> to match the numpy memory layout
                     func_args[-1] = func_args[-1].replace("x_", "xb_")
-                    vecbool_conversion += [f"{get_container_cpp_name(t)}<char> xb_{i} = x_{i};"]
+                    vecbool_conversion += [f"{get_container_cpp_names(t)[0]}<char> xb_{i} = x_{i};"]
             else:
                 func_args += ["x_{}".format(i)]
         if is_container_type(return_type):
@@ -387,7 +450,7 @@ def pywrapper({SIGNATURE}):
         # Define return operation
         if is_container_type(return_type):
             innert = get_inner_type(return_type)
-            container_cpp = get_container_cpp_name(return_type)
+            container_cpp = get_container_cpp_names(return_type)[0]
             inner_with_dims = get_inner_type(return_type, with_dims=True)
 
             if innert == "bool":
@@ -434,7 +497,7 @@ namespace Numba {{
     {RETURN_OP}
 }}
 }}""".format(
-            RETURN_TYPE="ROOT::" + return_type if "RVec" in return_type else return_type,
+            RETURN_TYPE=return_type,
             FUNC_NAME=name,
             INPUT_SIGNATURE=input_signature,
             FUNC_PTR=address,
