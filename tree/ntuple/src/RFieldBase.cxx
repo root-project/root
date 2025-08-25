@@ -997,6 +997,11 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
 
    BeforeConnectPageSource(pageSource);
 
+   if (!fIsArtificial) {
+      R__ASSERT(fOnDiskId != kInvalidDescriptorId);
+      ReconcileOnDiskField(pageSource.GetSharedDescriptorGuard().GetRef());
+   }
+
    for (auto &f : fSubfields) {
       if (f->GetOnDiskId() == ROOT::kInvalidDescriptorId) {
          f->SetOnDiskId(pageSource.GetSharedDescriptorGuard()->FindFieldId(f->GetFieldName(), GetOnDiskId()));
@@ -1032,23 +1037,12 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
    fState = EState::kConnectedToSource;
 }
 
-void ROOT::RFieldBase::BeforeConnectPageSource(ROOT::Internal::RPageSource &source)
+void ROOT::RFieldBase::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   // The default implementation throws an exception if the on-disk ID is set and there are any differences
-   // to the on-disk field. Derived classes may overwrite this and losen the checks to support automatic schema
+   // The default implementation throws an exception if the on-disk ID is set and there are any meaningful differences
+   // to the on-disk field. Derived classes may overwrite this and relax the checks to support automatic schema
    // evolution.
-   EnsureCompatibleOnDiskField(source);
-}
-
-void ROOT::RFieldBase::EnsureCompatibleOnDiskField(const ROOT::Internal::RPageSource &source,
-                                                   std::uint32_t ignoreBits) const
-{
-   // For computed fields added by schema evolution (e.g., new class member, new base class,
-   // field targeted by I/O customization rule), ignore on-disk information.
-   if (!fIsArtificial) {
-      const auto descriptorGuard = source.GetSharedDescriptorGuard();
-      EnsureCompatibleOnDiskField(descriptorGuard->GetFieldDescriptor(GetOnDiskId()), ignoreBits);
-   }
+   EnsureCompatibleOnDiskField(desc.GetFieldDescriptor(fOnDiskId));
 }
 
 void ROOT::RFieldBase::EnsureCompatibleOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits) const
