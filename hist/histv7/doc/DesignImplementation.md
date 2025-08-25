@@ -28,7 +28,7 @@ Many member functions have two overloads: one accepting a function parameter pac
 ### Arguments with Different Types
 
 Functions that take arguments with different types expect a `std::tuple`.
-An example is `template <typename A...> void Fill(const std::tuple<A...> &args)`.
+An example is `template <typename... A> void Fill(const std::tuple<A...> &args)`.
 
 For user-convenience, a variadic function template forwards to the `std::tuple` overload:
 ```cpp
@@ -41,13 +41,13 @@ This will forward the arguments as references, so no copy-constructors are calle
 ### Arguments with Same Type
 
 In this case, the function has a `std::size_t N` template argument and accepts a `std::array`.
-An example is `template <std::size_t N> const T &GetBinContent(const std::array<RBinIndex, N> &args)`
+An example is `template <std::size_t N> const T &GetBinContent(const std::array<RBinIndex, N> &indices)`
 
 For user-convenience, a variadic function template forwards to the `std::array` overload:
 ```cpp
 template <typename... A> const T &GetBinContent(const A &...args) {
-   std::array<RBinIndex, sizeof...(A)> a{args...};
-   return GetBinContent(a);
+   std::array<RBinIndex, sizeof...(A)> indices{args...};
+   return GetBinContent(indices);
 }
 ```
 This will copy the arguments, which is fine in this case because `RBinIndex` is small (see below).
@@ -58,7 +58,7 @@ Special arguments are passed last.
 Examples include
 ```cpp
 template <typename... A> void Fill(const std::tuple<A...> &args, RWeight w);
-template <std::size_t N> void SetBinContent(const std::array<RBinIndex, N> &args, const T &content);
+template <std::size_t N> void SetBinContent(const std::array<RBinIndex, N> &indices, const T &content);
 ```
 The same works for the variadic function templates that will check the type of the last argument.
 
