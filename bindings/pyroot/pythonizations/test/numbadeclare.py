@@ -1,7 +1,7 @@
 import gc
+import platform
 import sys
 import unittest
-import platform
 
 import numba as nb
 import numpy as np
@@ -158,6 +158,7 @@ class NumbaDeclareSimple(unittest.TestCase):
         """
         Test function call as part of RDataFrame with ROOT::Math::LorentzVector
         """
+
         @ROOT.Numba.Declare(["ROOT::Math::PtEtaPhiMVector"], "float")
         def get_m(v):
             return v.M()
