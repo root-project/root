@@ -626,7 +626,6 @@ The list of issues addressed for this release is the following:
   * [[#19592](https://github.com/root-project/root/issues/19592)] - No Constant Properties exported for Optical surfaces
   * [[#19560](https://github.com/root-project/root/issues/19560)] - TTreeIndex fails under Valgrind due to long double emulation
   * [[#19497](https://github.com/root-project/root/issues/19497)] - EL9:: EPEL:: root tags/6-36-02@6-36-02 :: cppyy warning in rootls
-  * [[#19477](https://github.com/root-project/root/pull/19477)] - [636][hist] clip color to minimum if below with COLZ TH2
   * [[#19476](https://github.com/root-project/root/issues/19476)] - `std::string_view` adds characters to strings in Python
   * [[#19442](https://github.com/root-project/root/issues/19442)] - [ntuple] Unable to read back RNTuples without normalized type names from v6.34
   * [[#19438](https://github.com/root-project/root/issues/19438)] - TH2D COLZ0 option color bug
