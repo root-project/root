@@ -43,10 +43,6 @@ if(NOT MSVC)
 endif()
 
 
-if (NOT builtin_clang AND MSVC AND NOT CLANG_INCLUDE_DIRS)
-  set (CLANG_INCLUDE_DIRS "${LLVM_BINARY_DIR}/tools/clang/include")
-endif()
-
 # Register the llvm include directories after clangs. This instructs the compiler to resolve
 # headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off
 # and we have installed clang headers, too.
