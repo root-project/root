@@ -47,9 +47,24 @@ namespace ROOT {
 class RNTupleModel;
 
 namespace Internal {
+class RMiniFileReader;
+class RPageSource;
+class RPagePersistentSink;
+} // namespace Internal
+
+namespace Experimental::Internal {
+ROOT::Internal::RMiniFileReader *GetUnderlyingReader(ROOT::Internal::RPageSource &pageSource);
+} // namespace Experimental::Internal
+
+namespace Experimental {
+class RNTupleAttrSetReader;
+}
+
+namespace Internal {
 
 class RPageAllocator;
 class RColumn;
+class RRawFile;
 struct RNTupleModelChangeset;
 
 enum class EPageStorageType {
@@ -313,6 +328,8 @@ public:
 
    virtual ROOT::NTupleSize_t GetNEntries() const = 0;
 
+   virtual TDirectory *GetUnderlyingDirectory() const { return nullptr; }
+
    /// Physically creates the storage container to hold the ntuple (e.g., a keys a TFile or an S3 bucket)
    /// Init() associates column handles to the columns referenced by the model
    void Init(RNTupleModel &model)
@@ -333,8 +350,8 @@ public:
    struct RSealPageConfig {
       const ROOT::Internal::RPage *fPage = nullptr; ///< Input page to be sealed
       const ROOT::Internal::RColumnElementBase *fElement =
-         nullptr;                                   ///< Corresponds to the page's elements, for size calculation etc.
-      std::uint32_t fCompressionSettings = 0;       ///< Compression algorithm and level to apply
+         nullptr;                             ///< Corresponds to the page's elements, for size calculation etc.
+      std::uint32_t fCompressionSettings = 0; ///< Compression algorithm and level to apply
       /// Adds a 8 byte little-endian xxhash3 checksum to the page payload. The buffer has to be large enough to
       /// to store the additional 8 bytes.
       bool fWriteChecksum = true;
@@ -385,6 +402,12 @@ public:
    /// Write out the page locations (page list envelope) for all the committed clusters since the last call of
    /// CommitClusterGroup (or the beginning of writing).
    virtual void CommitClusterGroup() = 0;
+   /// Given the Attribute Set's PageSink, adds its information (name + locator) into the main RNTuple's descriptor.
+   /// The Attribute Set must already have been written to storage via `RNTupleAttrSetWriter::Commit()`.
+   // TODO: make this pure virtual
+   virtual void CommitAttributeSet(RPageSink &/* attrSink */) {}
+   // TODO: make this pure virtual (also probably not public)
+   virtual ROOT::Experimental::Internal::RNTupleAttrSetDescriptor CommitAttributeSetInternal() { return {}; }
 
    /// The registered callback is executed at the beginning of CommitDataset();
    void RegisterOnCommitDatasetCallback(Callback_t callback) { fOnDatasetCommitCallbacks.emplace_back(callback); }
@@ -609,9 +632,9 @@ public:
 private:
    ROOT::RNTupleDescriptor fDescriptor;
    mutable std::shared_mutex fDescriptorLock;
-   REntryRange fEntryRange;    ///< Used by the cluster pool to prevent reading beyond the given range
-   bool fHasStructure = false; ///< Set to true once `LoadStructure()` is called
-   bool fIsAttached = false;   ///< Set to true once `Attach()` is called
+   REntryRange fEntryRange;                  ///< Used by the cluster pool to prevent reading beyond the given range
+   bool fHasStructure = false;               ///< Set to true once `LoadStructure()` is called
+   bool fIsAttached = false;                 ///< Set to true once `Attach()` is called
    bool fHasStreamerInfosRegistered = false; ///< Set to true when RegisterStreamerInfos() is called.
 
    /// Remembers the last cluster id from which a page was requested
@@ -808,6 +831,8 @@ public:
    virtual std::vector<std::unique_ptr<ROOT::Internal::RCluster>>
    LoadClusters(std::span<ROOT::Internal::RCluster::RKey> clusterKeys) = 0;
 
+   virtual RMiniFileReader *GetUnderlyingReader() { return nullptr; }
+
    /// Parallel decompression and unpacking of the pages in the given cluster. The unzipped pages are supposed
    /// to be preloaded in a page pool attached to the source. The method is triggered by the cluster pool's
    /// unzip thread. It is an optional optimization, the method can safely do nothing. In particular, the
@@ -822,6 +847,8 @@ public:
    /// Builds the streamer info records from the descriptor's extra type info section. This is necessary when
    /// connecting streamer fields so that emulated classes can be read.
    void RegisterStreamerInfos();
+
+   std::unique_ptr<RPageSource> ReadAttributeSet(ROOT::RNTupleLocator locator, std::uint64_t uncomPLen);
 }; // class RPageSource
 
 } // namespace Internal

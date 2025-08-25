@@ -24,6 +24,7 @@
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorageFile.hxx>
+#include <ROOT/RNTupleReader.hxx>
 #ifdef R__ENABLE_DAOS
 #include <ROOT/RPageStorageDaos.hxx>
 #endif
@@ -1196,8 +1197,8 @@ void ROOT::Internal::RPagePersistentSink::CommitStagedClusters(std::span<RStaged
          if (!columnInfo.fIsSuppressed)
             continue;
          const auto colId = columnInfo.fPageRange.GetPhysicalColumnId();
-         // For suppressed columns, we need to reset the first element index to the first element of the next (upcoming)
-         // cluster. This information has been determined for the committed cluster descriptor through
+         // For suppressed columns, we need to reset the first element index to the first element of the next
+         // (upcoming) cluster. This information has been determined for the committed cluster descriptor through
          // CommitSuppressedColumnRanges(), so we can use the information from the descriptor.
          const auto &columnRangeFromDesc = clusterBuilder.GetColumnRange(colId);
          fOpenColumnRanges[colId].SetFirstElementIndex(columnRangeFromDesc.GetFirstElementIndex() +
@@ -1294,4 +1295,23 @@ void ROOT::Internal::RPagePersistentSink::EnableDefaultMetrics(const std::string
       *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter> *>("timeCpuWrite", "ns", "CPU time spent writing"),
       *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter> *>("timeCpuZip", "ns",
                                                                         "CPU time spent compressing")});
+}
+
+std::unique_ptr<ROOT::Internal::RPageSource>
+ROOT::Internal::RPageSource::ReadAttributeSet(ROOT::RNTupleLocator locator, std::uint64_t uncompLen)
+{
+   ROOT::Internal::RMiniFileReader *reader = GetUnderlyingReader();
+   // #TODO(gparolini)
+   if (!reader)
+      throw ROOT::RException(R__FAIL("GetAttributeSet is only supported for file-based page sources"));
+
+   assert(locator.GetType() == RNTupleLocator::kTypeFile);
+   auto attrAnchor =
+      reader->GetNTupleProperAtOffset(locator.GetPosition<std::uint64_t>(), locator.GetNBytesOnStorage(), uncompLen)
+         .Unwrap();
+
+   // NOTE: this static_cast assumes that GetUnderlyingReader() returns non-null only for RPageSourceFile.
+   // This should be made more robust. Maybe just make this method virtual?
+   auto attrSource = static_cast<Internal::RPageSourceFile &>(*this).OpenWithDifferentAnchor(attrAnchor);
+   return attrSource;
 }

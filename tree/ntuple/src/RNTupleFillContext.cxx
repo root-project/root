@@ -23,6 +23,10 @@
 #include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
 #include <ROOT/RPageStorage.hxx>
+#include <ROOT/RNTupleAttributes.hxx>
+
+#include <TDirectory.h>
+#include <TKey.h>
 
 #include <algorithm>
 #include <utility>
@@ -102,4 +106,60 @@ void ROOT::Experimental::RNTupleFillContext::CommitStagedClusters()
 
    fSink->CommitStagedClusters(fStagedClusters);
    fStagedClusters.clear();
+}
+
+ROOT::Experimental::RNTupleAttrSetWriterHandle
+ROOT::Experimental::RNTupleFillContext::CreateAttributeSet(std::string_view name,
+                                                           std::unique_ptr<ROOT::RNTupleModel> model)
+{
+   TDirectory *dir = fSink->GetUnderlyingDirectory();
+   if (!dir)
+      throw ROOT::RException(R__FAIL("AttributeSetWriter can only be created from a TFile-based RNTupleWriter!"));
+
+   std::string nameStr{name};
+   auto attrSet = Experimental::RNTupleAttrSetWriter::Create(name, std::move(model), *this, *dir);
+
+   auto [attrSetIter, wasInserted] = fAttributeSets.try_emplace(nameStr, std::move(attrSet));
+   if (!wasInserted)
+      throw ROOT::RException(R__FAIL(std::string("Attempted to create an Attribute Set named '") + nameStr +
+                                     "', but one already exists with that name"));
+
+   // NOTE(gparolini): pointers into unordered_map are guaranteed to be stable. cppreference states:
+   // "References and pointers to either key or data stored in the container are only invalidated by
+   // erasing that element"
+   return Experimental::RNTupleAttrSetWriterHandle{attrSetIter->second};
+}
+
+void ROOT::Experimental::RNTupleFillContext::CloseAttributeSetInternal(
+   ROOT::Experimental::RNTupleAttrSetWriter &attrSet)
+{
+   attrSet.Commit(); // XXX: maybe could be moved to CommitAttributeSet()
+   fSink->CommitAttributeSet(*attrSet.fFillContext.fSink);
+}
+
+void ROOT::Experimental::RNTupleFillContext::CloseAttributeSet(RNTupleAttrSetWriterHandle handle)
+{
+   if (handle.fWriter.expired()) {
+      throw ROOT::RException(R__FAIL("Tried to close an invalid AttributeSetWriter"));
+   }
+   auto writer = handle.fWriter.lock();
+
+   CloseAttributeSetInternal(*writer);
+
+   bool erased = false;
+   for (auto it = fAttributeSets.begin(), end = fAttributeSets.end(); it != end; ++it) {
+      if (it->second.get() == writer.get()) {
+         fAttributeSets.erase(it);
+         erased = true;
+         break;
+      }
+   }
+   R__ASSERT(erased);
+}
+
+void ROOT::Experimental::RNTupleFillContext::CommitAttributes()
+{
+   for (auto &[_, attrSet] : fAttributeSets) {
+      CloseAttributeSetInternal(*attrSet);
+   }
 }
