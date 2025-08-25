@@ -3374,3 +3374,66 @@ TEST(ONNX, HardSwish)
       EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
    }
 }
+
+TEST(ONNX, ComparisonBroadcast)
+{
+   // A shape [1, 4]
+   std::vector<float> input_A = {0.0f, 1.0f, 2.0f, 3.0f};
+
+   // B shape [4]
+   std::vector<float> input_B = {4.0f, 4.0f, 2.0f, 2.0f};
+
+   // (A < B)
+   std::vector<uint8_t> expected_output_less = {1, 1, 0, 0};
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<uint8_t>>, "Comparison_broadcast", input_A, input_B);
+
+   const std::vector<uint8_t> &output_less = output[2];
+
+   EXPECT_EQ(output_less.size(), expected_output_less.size());
+
+   for (size_t i = 0; i < output_less.size(); ++i) {
+      EXPECT_EQ(output_less[i], expected_output_less[i]);
+   }
+}
+
+TEST(ONNX, ComparisonBroadcast3d)
+{
+   std::vector<float> input_A = {1.0f, 6.0f, 2.0f, 9.0f, 0.0f, 5.0f, 3.0f, 1.0f,
+                                 2.0f, 4.0f, 4.0f, 2.0f, 1.0f, 7.0f, 0.0f, 3.0f};
+
+   std::vector<float> input_B = {1.0f, 5.0f, 3.0f, 2.0f};
+
+   // (A > B)
+   // [
+   //   [[F, T, F, T], [F, F, F, F]], -> {0,1,0,1, 0,0,0,0}
+   //   [[T, F, T, F], [F, T, F, T]]  -> {1,0,1,0, 0,1,0,1}
+   // ]
+   std::vector<uint8_t> expected_greater = {0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1};
+
+   // (A == B)
+   // [
+   //   [[T, F, F, F], [F, T, T, F]], -> {1,0,0,0, 0,1,1,0}
+   //   [[F, F, F, T], [T, F, F, F]]  -> {0,0,0,1, 1,0,0,0}
+   // ]
+   std::vector<uint8_t> expected_equal = {1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0};
+
+   // (A < B)
+   // [
+   //   [[F, F, T, F], [T, F, F, T]], -> {0,0,1,0, 1,0,0,1}
+   //   [[F, T, F, F], [F, F, T, F]]  -> {0,1,0,0, 0,0,1,0}
+   // ]
+   std::vector<uint8_t> expected_less = {0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0};
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<uint8_t>>, "Comparison_broadcast_3d", input_A, input_B);
+
+   ASSERT_EQ(output.size(), 3);
+
+   const std::vector<uint8_t> &output_greater = output[0];
+   const std::vector<uint8_t> &output_equal = output[1];
+   const std::vector<uint8_t> &output_less = output[2];
+
+   ASSERT_EQ(output_greater, expected_greater);
+   ASSERT_EQ(output_equal, expected_equal);
+   ASSERT_EQ(output_less, expected_less);
+}
