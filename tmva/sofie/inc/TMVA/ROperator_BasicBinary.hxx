@@ -309,55 +309,73 @@ public:
                // we allocate here output vector
                out << SP << SP << "if (" << fDimShapeA[i] << " != " << fDimShapeB[i] << " && (" << fDimShapeA[i]
                    << " != 1 || " << fDimShapeB[i] << " != 1))\n";
-               out << SP << SP << "throw std::runtime_error(\"SOFIE - Cannot broadcast shapes in operator " << opName
+               out << SP << SP << SP << "throw std::runtime_error(\"SOFIE - Cannot broadcast shapes in operator " << opName
                    << "\");\n";
             }
          }
+         out << SP << "}\n";
       }
 
-      auto stridesA = UTILITY::ComputeStrideFromShape(fShapeA);
-      auto stridesB = UTILITY::ComputeStrideFromShape(fShapeB);
-      auto stridesY = UTILITY::ComputeStrideFromShape(fShapeY);
+      auto stridesA = UTILITY::ComputeStrideFromShape(fDimShapeA);
+      auto stridesB = UTILITY::ComputeStrideFromShape(fDimShapeB);
+      auto stridesY = UTILITY::ComputeStrideFromShape(fDimShapeY);
 
       std::string compute_idx_A, compute_idx_B, compute_idx_Y;
-      if (std::all_of(fShapeA.begin(), fShapeA.end(), [](size_t x) { return x == 1; })) {
+      if (std::all_of(fDimShapeA.begin(), fDimShapeA.end(), [](Dim d) { return d.dim == 1 || d.GetVal() == "1"; })) {
          compute_idx_A = "0";
       } else {
-         for (size_t i = 0; i < fShapeA.size(); ++i) {
-            if (fShapeA[i] == 1)
+         for (size_t i = 0; i < fDimShapeA.size(); ++i) {
+            if (fDimShapeA[i].dim == 1 || fDimShapeA[i].GetVal() == "1")
                continue;
-            compute_idx_A +=
-               " idx_" + std::to_string(i + (fShapeY.size() - fShapeA.size())) + " * " + stridesA[i] + " +";
+            compute_idx_A += "idx_" + std::to_string(i + (fDimShapeY.size() - fDimShapeA.size()));
+            if (stridesA[i].GetVal() != "1")
+               compute_idx_A += " * " + stridesA[i].GetVal();
+            compute_idx_A += " + ";
          }
-         compute_idx_A.pop_back();
+         // remove last 3 character " + "
+         for (int j = 0; j < 3; j++)
+            compute_idx_A.pop_back();
       }
-      if (std::all_of(fShapeB.begin(), fShapeB.end(), [](size_t x) { return x == 1; })) {
+      if (std::all_of(fDimShapeB.begin(), fDimShapeB.end(), [](Dim d) { return d.dim == 1 || d.GetVal() == "1"; })) {
          compute_idx_B = "0";
       } else {
-         for (size_t i = 0; i < fShapeB.size(); ++i) {
-            if (fShapeB[i] == 1)
+         for (size_t i = 0; i < fDimShapeB.size(); ++i) {
+            if (fDimShapeB[i].dim == 1 || fDimShapeB[i].GetVal() == "1")
                continue;
-            compute_idx_B +=
-               " idx_" + std::to_string(i + (fShapeY.size() - fShapeB.size())) + " * " + stridesB[i] + " +";
+            compute_idx_B += "idx_" + std::to_string(i + (fDimShapeY.size() - fDimShapeB.size()));
+            if (stridesB[i].GetVal() != "1")
+               compute_idx_B += " * " + stridesB[i].GetVal();
+            compute_idx_B += " + ";
          }
-         compute_idx_B.pop_back();
+          // remove last 3 character " + "
+         for (int j = 0; j < 3; j++)
+            compute_idx_B.pop_back();
       }
-      for (size_t i = 0; i < fShapeY.size(); ++i) {
-         if (fShapeY[i] != 1) {
-            out << std::string(i + 1, ' ') << "for(size_t idx_" << i << "=0; idx_" << i << "<" << fShapeY[i]
+      int nloop = 0;
+      for (size_t i = 0; i < fDimShapeY.size(); ++i) {
+         if (fDimShapeY[i].dim != 1 && fDimShapeY[i].GetVal() != "1") {
+            nloop++;
+            for (int j = 0; j < nloop; j++) out << SP;
+            out << "for (size_t idx_" << i << " = 0; idx_" << i << " < " << fDimShapeY[i]
                 << "; ++idx_" << i << "){\n";
-            compute_idx_Y += "idx_" + std::to_string(i) + "*" + stridesY[i] + "+";
+            compute_idx_Y += "idx_" + std::to_string(i);
+            if (stridesY[i].GetVal() != "1")
+               compute_idx_Y += " * " + stridesY[i].GetVal();
+            compute_idx_Y += " + ";
          }
       }
-      compute_idx_Y.pop_back();
-      out << SP << SP << "tensor_" << fNY << "[" << compute_idx_Y << "] = "
+      // remove last 3 characters " + "
+      for (int j = 0; j < 3; j++)
+         compute_idx_Y.pop_back();
+      for (int j = 0; j < nloop+1; j++) out << SP;
+      out << "tensor_" << fNY << "[" << compute_idx_Y << "] = "
           << BinaryOperatorTrait<T, Op>::Op("tensor_" + fNA + "[" + compute_idx_A + "]",
                                             "tensor_" + fNB + "[" + compute_idx_B + "]")
           << " ;\n";
-      for (size_t i = 0; i < fShapeY.size(); ++i) {
-         if (fShapeY[i] != 1) {
-            out << std::string(fShapeY.size() - i + 1, ' ') << "}\n";
-         }
+
+      for (int i = nloop; i > 0; i--) {
+         for (int j = 0; j < i; j++) out << SP;
+         out << "}\n";
       }
       return out.str();
    }
