@@ -74,6 +74,15 @@ void ROOT::RArrayField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to
    }
 }
 
+void ROOT::RArrayField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   static const std::vector<std::string> prefixes = {"std::array<"};
+
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   EnsureCompatibleOnDiskField(fieldDesc, kDiffTypeName);
+   EnsureCompatibleTypePrefix(fieldDesc, prefixes);
+}
+
 void ROOT::RArrayField::ConstructValue(void *where) const
 {
    if (fSubfields[0]->GetTraits() & kTraitTriviallyConstructible)
@@ -83,19 +92,6 @@ void ROOT::RArrayField::ConstructValue(void *where) const
    for (unsigned i = 0; i < fArrayLength; ++i) {
       CallConstructValueOn(*fSubfields[0], arrayPtr + (i * fItemSize));
    }
-}
-
-void ROOT::RArrayField::BeforeConnectPageSource(Internal::RPageSource &source)
-{
-   if (IsArtificial())
-      return;
-
-   static const std::vector<std::string> prefixes = {"std::array<"};
-
-   const auto descriptorGuard = source.GetSharedDescriptorGuard();
-   const auto &fieldDesc = descriptorGuard->GetFieldDescriptor(GetOnDiskId());
-   EnsureCompatibleOnDiskField(fieldDesc, kDiffTypeName);
-   EnsureCompatibleTypePrefix(fieldDesc, prefixes);
 }
 
 void ROOT::RArrayField::RArrayDeleter::operator()(void *objPtr, bool dtorOnly)
@@ -416,6 +412,11 @@ void ROOT::RRVecField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
+void ROOT::RRVecField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureCompatibleOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName);
+}
+
 void ROOT::RRVecField::ConstructValue(void *where) const
 {
    // initialize data members fBegin, fSize, fCapacity
@@ -594,6 +595,11 @@ void ROOT::RVectorField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
+void ROOT::RVectorField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureCompatibleOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName);
+}
+
 void ROOT::RVectorField::RVectorDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    auto vecPtr = static_cast<std::vector<char> *>(objPtr);
@@ -693,6 +699,11 @@ void ROOT::RField<std::vector<bool>>::GenerateColumns(const ROOT::RNTupleDescrip
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
+void ROOT::RField<std::vector<bool>>::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureCompatibleOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName);
+}
+
 std::vector<ROOT::RFieldBase::RValue> ROOT::RField<std::vector<bool>>::SplitValue(const RValue &value) const
 {
    const auto &typedValue = value.GetRef<std::vector<bool>>();
@@ -706,16 +717,6 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RField<std::vector<bool>>::SplitValu
          result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<bool>(new bool(false))));
    }
    return result;
-}
-
-void ROOT::RField<std::vector<bool>>::BeforeConnectPageSource(Internal::RPageSource &source)
-{
-   if (IsArtificial())
-      return;
-
-   const auto descriptorGuard = source.GetSharedDescriptorGuard();
-   const auto &fieldDesc = descriptorGuard->GetFieldDescriptor(GetOnDiskId());
-   EnsureCompatibleOnDiskField(fieldDesc, kDiffTypeName);
 }
 
 void ROOT::RField<std::vector<bool>>::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
@@ -842,12 +843,9 @@ void ROOT::RArrayAsRVecField::ReadInClusterImpl(RNTupleLocalIndex localIndex, vo
    }
 }
 
-void ROOT::RArrayAsRVecField::BeforeConnectPageSource(Internal::RPageSource &source)
+void ROOT::RArrayAsRVecField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   R__ASSERT(!IsArtificial());
-
-   const auto descriptorGuard = source.GetSharedDescriptorGuard();
-   const auto &fieldDesc = descriptorGuard->GetFieldDescriptor(GetOnDiskId());
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    EnsureCompatibleOnDiskField(fieldDesc, kDiffTypeName | kDiffTypeVersion | kDiffStructure | kDiffNRepetitions);
    if (fieldDesc.GetTypeName().rfind("std::array<", 0) != 0) {
       throw RException(R__FAIL("RArrayAsRVecField " + GetQualifiedFieldName() + " expects an on-disk array field"));

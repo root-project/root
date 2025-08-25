@@ -54,7 +54,7 @@ protected:
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final { CallReadOn(*fSubfields[0], globalIndex, to); }
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final { CallReadOn(*fSubfields[0], localIndex, to); }
 
-   void BeforeConnectPageSource(Internal::RPageSource &source) final;
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
    RAtomicField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
@@ -203,7 +203,7 @@ protected:
    std::size_t AppendValue(const void *from);
    void CommitClusterImpl() final { fNWritten = 0; }
 
-   void BeforeConnectPageSource(Internal::RPageSource &source) final;
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
    /// Given the index of the nullable field, returns the corresponding global index of the subfield or,
    /// if it is null, returns `kInvalidNTupleIndex`

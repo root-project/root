@@ -59,13 +59,9 @@ void ROOT::RCardinalityField::GenerateColumns(const ROOT::RNTupleDescriptor &des
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
-void ROOT::RCardinalityField::BeforeConnectPageSource(Internal::RPageSource &source)
+void ROOT::RCardinalityField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   if (IsArtificial())
-      return;
-
-   const auto descriptorGuard = source.GetSharedDescriptorGuard();
-   const auto &fieldDesc = descriptorGuard->GetFieldDescriptor(GetOnDiskId());
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    EnsureCompatibleOnDiskField(fieldDesc, kDiffTypeVersion | kDiffStructure | kDiffTypeName);
    if (fieldDesc.GetStructure() == ENTupleStructure::kPlain) {
       if (fieldDesc.GetTypeName().rfind("ROOT::RNTupleCardinality<", 0) != 0) {
@@ -607,6 +603,11 @@ void ROOT::RRecordField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *t
    }
 }
 
+void ROOT::RRecordField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureCompatibleOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName | kDiffTypeVersion);
+}
+
 void ROOT::RRecordField::ConstructValue(void *where) const
 {
    for (unsigned i = 0; i < fSubfields.size(); ++i) {
@@ -801,15 +802,11 @@ std::size_t ROOT::RNullableField::AppendValue(const void *from)
    return sizeof(ROOT::Internal::RColumnIndex) + nbytesItem;
 }
 
-void ROOT::RNullableField::BeforeConnectPageSource(Internal::RPageSource &source)
+void ROOT::RNullableField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   if (IsArtificial())
-      return;
-
    static const std::vector<std::string> prefixes = {"std::optional<", "std::unique_ptr<"};
 
-   const auto descriptorGuard = source.GetSharedDescriptorGuard();
-   const auto &fieldDesc = descriptorGuard->GetFieldDescriptor(GetOnDiskId());
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    EnsureCompatibleOnDiskField(fieldDesc, kDiffTypeName);
    EnsureCompatibleTypePrefix(fieldDesc, prefixes);
 }
@@ -1027,24 +1024,20 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RAtomicField::CloneImpl(std::string_view
    return std::make_unique<RAtomicField>(newName, GetTypeName(), std::move(newItemField));
 }
 
+void ROOT::RAtomicField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   static const std::vector<std::string> prefixes = {"std::atomic<"};
+
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   EnsureCompatibleOnDiskField(fieldDesc, kDiffTypeName);
+   EnsureCompatibleTypePrefix(fieldDesc, prefixes);
+}
+
 std::vector<ROOT::RFieldBase::RValue> ROOT::RAtomicField::SplitValue(const RValue &value) const
 {
    std::vector<RValue> result;
    result.emplace_back(fSubfields[0]->BindValue(value.GetPtr<void>()));
    return result;
-}
-
-void ROOT::RAtomicField::BeforeConnectPageSource(Internal::RPageSource &source)
-{
-   if (IsArtificial())
-      return;
-
-   static const std::vector<std::string> prefixes = {"std::atomic<"};
-
-   const auto descriptorGuard = source.GetSharedDescriptorGuard();
-   const auto &fieldDesc = descriptorGuard->GetFieldDescriptor(GetOnDiskId());
-   EnsureCompatibleOnDiskField(fieldDesc, kDiffTypeName);
-   EnsureCompatibleTypePrefix(fieldDesc, prefixes);
 }
 
 void ROOT::RAtomicField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
