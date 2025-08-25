@@ -186,8 +186,8 @@ jobs:
       run: |
         pwd
         ls -l
-        aws s3 sync --delete ${DOC_DIR}/html/ s3://root/doc/${WEB_DIR_NAME}/
-        aws s3 sync --delete ${DOC_DIR}/ s3://root/doc/${WEB_DIR_NAME}/ --exclude "${DOC_DIR}/html/*"
+        aws s3 sync ${DOC_DIR}/html/ s3://root/doc/${WEB_DIR_NAME}/
+        aws s3 sync ${DOC_DIR}/ s3://root/doc/${WEB_DIR_NAME}/ --exclude "${DOC_DIR}/html/*"
         aws s3 cp ${TAR_NAME}.gz s3://root/download/
 
     - name: Install Kerberos utilities
@@ -213,66 +213,18 @@ jobs:
       run: |
         echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
         kinit -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
-
-        EOS_HOST=${EOS_ENDPOINT#root://}
-        TMP_DIR=${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}_tmp
-        OLD_DIR=${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}_old
-        FINAL_DIR=${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
-
-        # Recursive cleanup function that ignores EOS special directories
-        cleanup_dir() {
-          local dir="$1"
-          if xrdfs "${EOS_HOST}" stat "${dir}" >/dev/null 2>&1; then
-            for f in $(xrdfs "${EOS_HOST}" ls "${dir}" 2>/dev/null); do
-              # Skip EOS special directories
-              if [[ "$f" == *.sys* ]]; then
-                echo "Skipping special EOS directory: $f"
-                continue
-              fi
-              # Recurse into directories
-              if xrdfs "${EOS_HOST}" stat "$f" 2>/dev/null | grep -q '^Directory:'; then
-                cleanup_dir "$f"
-              else
-                echo "Removing file: $f"
-                xrdfs "${EOS_HOST}" rm "$f" || true
-              fi
-            done
-            xrdfs "${EOS_HOST}" rmdir "${dir}" || true
-          fi
-        }
-
-        # Clean temporary directory
-        cleanup_dir "${TMP_DIR}"
-
-        # Ensure tmp dir exists on EOS
-        xrdfs "${EOS_HOST}" mkdir -p "${TMP_DIR}"
-
-        # Upload documentation files (with / final so EOS sees directory)
         cd ${DOC_DIR}/html/
-        xrdcp --parallel 64 -f ./*.html ${EOS_ENDPOINT}/${TMP_DIR}/ || true
-        xrdcp --parallel 64 -f ./*.svg  ${EOS_ENDPOINT}/${TMP_DIR}/ || true
-        xrdcp --parallel 64 -f ./*.map  ${EOS_ENDPOINT}/${TMP_DIR}/ || true
-        xrdcp --parallel 64 -f ./*.md5  ${EOS_ENDPOINT}/${TMP_DIR}/ || true
-
-        # Upload entire folder content
-        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${TMP_DIR}/
-
+        xrdcp --parallel 64 -rf ./*.html ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        rm -rf *.html
+        xrdcp --parallel 64 -rf ./*.svg ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        rm -rf *.svg
+        xrdcp --parallel 64 -rf ./*.map ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        rm -rf *.map
+        xrdcp --parallel 64 -rf ./*.md5 ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        rm -rf *.md5
+        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
         cd ..
         rm -r html
-        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${TMP_DIR}/
+        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
         cd ..
-
-        # Remove previous backup
-        cleanup_dir "${OLD_DIR}"
-
-        # Rename current live directory to old
-        xrdfs "${EOS_HOST}" mv "${FINAL_DIR}" "${OLD_DIR}" || true
-
-        # Rename temporary directory to live
-        xrdfs "${EOS_HOST}" mv "${TMP_DIR}" "${FINAL_DIR}"
-
-        # Delete the old directory after successful swap
-        cleanup_dir "${OLD_DIR}"
-
-        # Upload tar.gz archive
-        xrdcp -f ${TAR_NAME}.gz ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download/
+        xrdcp -rf ${TAR_NAME}.gz ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download
