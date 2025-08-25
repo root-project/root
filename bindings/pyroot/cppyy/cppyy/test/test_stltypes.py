@@ -1,8 +1,7 @@
 # -*- coding: UTF-8 -*-
 import py, sys, pytest, os
 from pytest import mark, raises, skip
-from support import setup_make, pylong, pyunicode, maxvalue, ispypy
-
+from support import setup_make, pylong, pyunicode, maxvalue, ispypy, no_root_errors
 
 currpath = os.getcwd()
 test_dct = currpath + "/libstltypesDict"
@@ -820,6 +819,30 @@ class TestSTLVECTOR:
 
             for i, d in zip(range(-5, 5, 1), data):
                 assert d == i
+
+    def test24_vector_to_span(self):
+        """Vectors should convert to std::span without errors"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+        double calc_cumsum(std::size_t n, std::span<double> v)
+        {
+            double sum = 0.0;
+            for (int i = 0; i < n; i += 1) {
+                sum += v[i];
+            }
+            return sum;
+        }
+        """)
+
+        l = list(range(4))
+        v = cppyy.gbl.std.vector["double"](l)
+
+        with no_root_errors():
+            result = cppyy.gbl.calc_cumsum(len(v), v)
+
+        assert result == sum(l)
 
 
 class TestSTLSTRING:
