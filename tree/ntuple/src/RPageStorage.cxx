@@ -1008,6 +1008,8 @@ ROOT::Internal::RPagePersistentSink::InitFromDescriptor(const ROOT::RNTupleDescr
    // Create model
    auto modelOpts = ROOT::RNTupleDescriptor::RCreateModelOptions();
    modelOpts.SetReconstructProjections(true);
+   // We want to emulate unknown types to allow merging RNTuples containing types that we lack dictionaries for.
+   modelOpts.SetEmulateUnknownTypes(true);
    auto model = descriptor.CreateModel(modelOpts);
    if (!copyClusters) {
       auto &projectedFields = ROOT::Internal::GetProjectedFieldsOfModel(*model);
