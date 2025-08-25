@@ -506,11 +506,15 @@ protected:
    /// Add a new subfield to the list of nested fields
    void Attach(std::unique_ptr<RFieldBase> child);
 
-   /// Called by ConnectPageSource() before connecting; derived classes may override this as appropriate.
-   /// Used to check compatibility of the in-memory field and the on-disk field. In the process,
-   /// the field at hand or its subfields may be marked as "artifical", i.e. introduced by schema evolution
-   /// and not backed by on-disk information.
-   virtual void BeforeConnectPageSource(ROOT::Internal::RPageSource &source);
+   /// Called by ConnectPageSource() before connecting; derived classes may override this as appropriate, e.g.
+   /// for the application of I/O rules. In the process, the field at hand or its subfields may be marked as
+   /// "artifical", i.e. introduced by schema evolution and not backed by on-disk information.
+   virtual void BeforeConnectPageSource(ROOT::Internal::RPageSource & /* source */) {}
+
+   /// For non-artificial fields, check compatibility of the in-memory field and the on-disk field. In the process,
+   /// the field at hand may change its on-disk ID or perform other tasks related to automatic schema evolution.
+   /// If the on-disk field is incompatible with the in-memory field at hand, an exception is thrown.
+   virtual void ReconcileOnDiskField(const RNTupleDescriptor &desc);
 
    /// Returns a combination of kDiff... flags, indicating peroperties that are different between the field at hand
    /// and the given on-disk field
@@ -518,8 +522,6 @@ protected:
    /// Compares the field to the provieded on-disk field descriptor. Throws an exception if the fields don't match.
    /// Optionally, a set of bits can be provided that should be ignored in the comparison.
    void EnsureCompatibleOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits = 0) const;
-   /// Convenience wrapper to be used from within BeforeConnectPageSource()
-   void EnsureCompatibleOnDiskField(const ROOT::Internal::RPageSource &source, std::uint32_t ignoreBits = 0) const;
    /// Many fields accept a range of type prefixes for schema evolution,
    /// e.g. std::unique_ptr< and std::optional< for nullable fields
    void EnsureCompatibleTypePrefix(const RFieldDescriptor &fieldDesc, const std::vector<std::string> &prefixes) const;

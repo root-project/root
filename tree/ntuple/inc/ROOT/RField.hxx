@@ -186,7 +186,9 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
+
    void BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
    RClassField(std::string_view fieldName, std::string_view className);
@@ -241,6 +243,7 @@ protected:
    ROOT::RExtraTypeInfoDescriptor GetExtraTypeInfo() const final;
 
    void BeforeConnectPageSource(ROOT::Internal::RPageSource &source) final;
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
    RStreamerField(std::string_view fieldName, std::string_view className, std::string_view typeAlias = "");
@@ -270,11 +273,7 @@ protected:
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final { CallReadOn(*fSubfields[0], globalIndex, to); }
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final { CallReadOn(*fSubfields[0], localIndex, to); }
 
-   void BeforeConnectPageSource(Internal::RPageSource &source) final
-   {
-      // TODO(jblomer): allow enum to enum conversion only by rename rule
-      EnsureCompatibleOnDiskField(source, kDiffTypeName | kDiffTypeVersion);
-   }
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
    REnumField(std::string_view fieldName, std::string_view enumName);
@@ -340,7 +339,8 @@ protected:
    // Field is only used for reading
    void GenerateColumns() final { throw RException(R__FAIL("Cardinality fields must only be used for reading")); }
    void GenerateColumns(const ROOT::RNTupleDescriptor &) final;
-   void BeforeConnectPageSource(Internal::RPageSource &source) final;
+
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
    RCardinalityField(RCardinalityField &&other) = default;
@@ -361,11 +361,11 @@ protected:
 
    void ConstructValue(void *where) const final { new (where) T{0}; }
 
-   void BeforeConnectPageSource(ROOT::Internal::RPageSource &source) final
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final
    {
       // Differences in the type name don't matter for simple fields; the valid column representations take
       // care of (allowed) schema differences.
-      EnsureCompatibleOnDiskField(source, kDiffTypeName);
+      EnsureCompatibleOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName);
    }
 
    RSimpleField(std::string_view name, std::string_view type)

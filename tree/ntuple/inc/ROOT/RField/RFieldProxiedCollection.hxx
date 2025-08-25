@@ -168,10 +168,7 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
 
-   void BeforeConnectPageSource(Internal::RPageSource &source) final
-   {
-      EnsureCompatibleOnDiskField(source, kDiffTypeName);
-   }
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
    void CommitClusterImpl() final { fNWritten = 0; }
 
