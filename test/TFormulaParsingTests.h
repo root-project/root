@@ -308,7 +308,7 @@ bool test16()  {
    // test GetExpFormula
    TFormula f("f","[2] + [0]*x + [1]*x*x");
    f.SetParameters(1,2,3);
-   return (f.GetExpFormula("CLING P", "%f") == TString("3.000000+1.000000*x[0]+2.000000*x[0]*x[0] "));
+   return (f.GetExpFormula("CLING P") == TString("3+1*x[0]+2*x[0]*x[0] "));
 }
 
 bool test17() {
