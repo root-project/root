@@ -365,7 +365,7 @@ protected:
    {
       // Differences in the type name don't matter for simple fields; the valid column representations take
       // care of (allowed) schema differences.
-      EnsureCompatibleOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName);
+      EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName);
    }
 
    RSimpleField(std::string_view name, std::string_view type)
