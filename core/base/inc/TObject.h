@@ -12,7 +12,6 @@
 #ifndef ROOT_TObject
 #define ROOT_TObject
 
-
 // #include "RConfigure.h"  // included via Rtypes.h
 #include "Rtypes.h"
 #include "TStorage.h"
