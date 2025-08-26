@@ -3136,8 +3136,9 @@ bool CPyCppyy::InitializerListConverter::SetArg(
             PyObject* item = PySequence_GetItem(pyobject, i);
             bool convert_ok = false;
             if (item) {
-                Converter *converter = CreateConverter(fValueTypeName);
-                if (!converter) {
+                if (fConverters.empty())
+                    fConverters.emplace_back(CreateConverter(fValueTypeName));
+                if (!fConverters.back()) {
                     if (CPPInstance_Check(item)) {
                     // by convention, use byte copy
                         memcpy((char*)fake->_M_array + i*fValueSize,
@@ -3158,9 +3159,11 @@ bool CPyCppyy::InitializerListConverter::SetArg(
                         }
                     }
                     if (memloc) {
-                        convert_ok = converter->ToMemory(item, memloc);
+                        if (i >= fConverters.size()) {
+                            fConverters.emplace_back(CreateConverter(fValueTypeName));
+                        }
+                        convert_ok = fConverters[i]->ToMemory(item, memloc);
                     }
-                    fConverters.emplace_back(converter);
                 }
 
 
