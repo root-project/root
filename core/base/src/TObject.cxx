@@ -37,6 +37,7 @@ class hierarchies (watch out for overlaps).
    that the object was allocated on the heap).
 */
 
+
 #include <cstring>
 #if !defined(WIN32) && !defined(__MWERKS__) && !defined(R__SOLARIS)
 #include <strings.h>
