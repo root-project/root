@@ -44,7 +44,9 @@ jobs:
          sudo apt-get install -y clang-format-20
          PATH=/usr/lib/llvm-20/bin:${PATH}
     - name: run clang-format script
-      run: .ci/format_script.sh
+      run: |
+        PATH=/usr/lib/llvm-20/bin:${PATH}
+        .ci/format_script.sh
 
   ruff:
     if: |
