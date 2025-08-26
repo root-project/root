@@ -1500,7 +1500,7 @@ template <typename T> Double_t TMath::ModeHalfSample(Long64_t n, const T *a, con
       return values[wmaxidx];
    }
 
-   // All elements are unique and have equal weights
+   // All elements have equal weights
 
    // Initialize search
    n = sn;
