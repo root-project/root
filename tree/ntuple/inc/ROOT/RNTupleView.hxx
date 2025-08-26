@@ -362,9 +362,20 @@ private:
 
 public:
    RNTupleCollectionView(const RNTupleCollectionView &other) = delete;
-   RNTupleCollectionView(RNTupleCollectionView &&other) = default;
    RNTupleCollectionView &operator=(const RNTupleCollectionView &other) = delete;
-   RNTupleCollectionView &operator=(RNTupleCollectionView &&other) = default;
+   RNTupleCollectionView(RNTupleCollectionView &&other)
+      : fSource(other.fSource), fField(std::move(other.fField)), fValue(fField.CreateValue())
+   {
+   }
+   RNTupleCollectionView &operator=(RNTupleCollectionView &&other)
+   {
+      if (this == &other)
+         return *this;
+      std::swap(fSource, other.fSource);
+      std::swap(fField, other.fField);
+      fValue = fField.CreateValue();
+      return *this;
+   }
    ~RNTupleCollectionView() = default;
 
    ROOT::RNTupleLocalRange GetCollectionRange(ROOT::NTupleSize_t globalIndex)
