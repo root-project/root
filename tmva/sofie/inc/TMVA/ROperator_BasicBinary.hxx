@@ -283,6 +283,7 @@ public:
       std::string typeName = TensorType<T>::Name();
 
       // we need to check if we can broadcast (case flag has bit 4 set)
+
       if (fBroadcastFlag & 4) {
          // need to check if shapes are the same
          auto lengthA = ConvertDimShapeToLength(fDimShapeA);
@@ -321,7 +322,8 @@ public:
       auto stridesY = UTILITY::ComputeStrideFromShape(fDimShapeY);
 
       std::string compute_idx_A, compute_idx_B, compute_idx_Y;
-      if (std::all_of(fDimShapeA.begin(), fDimShapeA.end(), [](Dim d) { return d.dim == 1 || d.GetVal() == "1"; })) {
+      if (fDimShapeA.empty() ||
+          std::all_of(fDimShapeA.begin(), fDimShapeA.end(), [](Dim d) { return d.dim == 1 || d.GetVal() == "1"; })) {
          compute_idx_A = "0";
       } else {
          for (size_t i = 0; i < fDimShapeA.size(); ++i) {
@@ -336,7 +338,8 @@ public:
          for (int j = 0; j < 3; j++)
             compute_idx_A.pop_back();
       }
-      if (std::all_of(fDimShapeB.begin(), fDimShapeB.end(), [](Dim d) { return d.dim == 1 || d.GetVal() == "1"; })) {
+      if (fDimShapeB.empty() ||
+          std::all_of(fDimShapeB.begin(), fDimShapeB.end(), [](Dim d) { return d.dim == 1 || d.GetVal() == "1"; })) {
          compute_idx_B = "0";
       } else {
          for (size_t i = 0; i < fDimShapeB.size(); ++i) {
@@ -352,22 +355,27 @@ public:
             compute_idx_B.pop_back();
       }
       int nloop = 0;
-      for (size_t i = 0; i < fDimShapeY.size(); ++i) {
-         if (fDimShapeY[i].dim != 1 && fDimShapeY[i].GetVal() != "1") {
-            nloop++;
-            for (int j = 0; j < nloop; j++) out << SP;
-            out << "for (size_t idx_" << i << " = 0; idx_" << i << " < " << fDimShapeY[i]
-                << "; ++idx_" << i << "){\n";
-            compute_idx_Y += "idx_" + std::to_string(i);
-            if (stridesY[i].GetVal() != "1")
-               compute_idx_Y += " * " + stridesY[i].GetVal();
-            compute_idx_Y += " + ";
+      if (fDimShapeY.empty() ||
+          std::all_of(fDimShapeY.begin(), fDimShapeY.end(), [](Dim d) { return d.dim == 1 || d.GetVal() == "1"; })) {
+         compute_idx_Y = "0";
+      } else {
+         for (size_t i = 0; i < fDimShapeY.size(); ++i) {
+            if (fDimShapeY[i].dim != 1 && fDimShapeY[i].GetVal() != "1") {
+               nloop++;
+               for (int j = 0; j < nloop; j++) out << SP;
+               out << "for (size_t idx_" << i << " = 0; idx_" << i << " < " << fDimShapeY[i]
+                   << "; ++idx_" << i << "){\n";
+               compute_idx_Y += "idx_" + std::to_string(i);
+               if (stridesY[i].GetVal() != "1")
+                  compute_idx_Y += " * " + stridesY[i].GetVal();
+               compute_idx_Y += " + ";
+            }
          }
+         // remove last 3 characters " + "
+         for (int j = 0; j < 3; j++)
+            compute_idx_Y.pop_back();
       }
-      // remove last 3 characters " + "
-      for (int j = 0; j < 3; j++)
-         compute_idx_Y.pop_back();
-      for (int j = 0; j < nloop+1; j++) out << SP;
+      for (int j = 0; j < nloop + 1; j++) out << SP;
       out << "tensor_" << fNY << "[" << compute_idx_Y << "] = "
           << BinaryOperatorTrait<T, Op>::Op("tensor_" + fNA + "[" + compute_idx_A + "]",
                                             "tensor_" + fNB + "[" + compute_idx_B + "]")
