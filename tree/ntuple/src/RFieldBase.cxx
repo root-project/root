@@ -1042,10 +1042,10 @@ void ROOT::RFieldBase::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    // The default implementation throws an exception if the on-disk ID is set and there are any meaningful differences
    // to the on-disk field. Derived classes may overwrite this and relax the checks to support automatic schema
    // evolution.
-   EnsureCompatibleOnDiskField(desc.GetFieldDescriptor(fOnDiskId));
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(fOnDiskId));
 }
 
-void ROOT::RFieldBase::EnsureCompatibleOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits) const
+void ROOT::RFieldBase::EnsureMatchingOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits) const
 {
    const std::uint32_t diffBits = CompareOnDiskField(fieldDesc) & ~ignoreBits;
    if (diffBits == 0)
@@ -1072,8 +1072,8 @@ void ROOT::RFieldBase::EnsureCompatibleOnDiskField(const RFieldDescriptor &field
    throw RException(R__FAIL(errMsg.str()));
 }
 
-void ROOT::RFieldBase::EnsureCompatibleTypePrefix(const RFieldDescriptor &fieldDesc,
-                                                  const std::vector<std::string> &prefixes) const
+void ROOT::RFieldBase::EnsureMatchingTypePrefix(const RFieldDescriptor &fieldDesc,
+                                                const std::vector<std::string> &prefixes) const
 {
    for (const auto &p : prefixes) {
       if (fieldDesc.GetTypeName().rfind(p, 0) == 0)
