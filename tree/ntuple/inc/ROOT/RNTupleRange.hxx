@@ -80,9 +80,9 @@ public:
 // clang-format on
 class RNTupleLocalRange {
 private:
-   const ROOT::DescriptorId_t fClusterId;
-   const ROOT::NTupleSize_t fStart;
-   const ROOT::NTupleSize_t fEnd;
+   ROOT::DescriptorId_t fClusterId;
+   ROOT::NTupleSize_t fStart;
+   ROOT::NTupleSize_t fEnd;
 
 public:
    class RIterator {
