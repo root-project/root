@@ -518,7 +518,7 @@ protected:
 
    /// Returns a combination of kDiff... flags, indicating peroperties that are different between the field at hand
    /// and the given on-disk field
-   std::uint32_t CompareOnDiskField(const RFieldDescriptor &fieldDesc) const;
+   std::uint32_t CompareOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits) const;
    /// Compares the field to the provieded on-disk field descriptor. Throws an exception if the fields don't match.
    /// Optionally, a set of bits can be provided that should be ignored in the comparison.
    void EnsureMatchingOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits = 0) const;

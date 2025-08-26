@@ -1047,7 +1047,7 @@ void ROOT::RFieldBase::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 
 void ROOT::RFieldBase::EnsureMatchingOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits) const
 {
-   const std::uint32_t diffBits = CompareOnDiskField(fieldDesc) & ~ignoreBits;
+   const std::uint32_t diffBits = CompareOnDiskField(fieldDesc, ignoreBits);
    if (diffBits == 0)
       return;
 
@@ -1082,18 +1082,18 @@ void ROOT::RFieldBase::EnsureMatchingTypePrefix(const RFieldDescriptor &fieldDes
    throw RException(R__FAIL("incompatible type " + fieldDesc.GetTypeName() + " for field " + GetQualifiedFieldName()));
 }
 
-std::uint32_t ROOT::RFieldBase::CompareOnDiskField(const RFieldDescriptor &fieldDesc) const
+std::uint32_t ROOT::RFieldBase::CompareOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits) const
 {
    std::uint32_t diffBits = 0;
-   if (GetFieldVersion() != fieldDesc.GetFieldVersion())
+   if ((~ignoreBits & kDiffFieldVersion) && (GetFieldVersion() != fieldDesc.GetFieldVersion()))
       diffBits |= kDiffFieldVersion;
-   if (GetTypeVersion() != fieldDesc.GetTypeVersion())
+   if ((~ignoreBits & kDiffTypeVersion) && (GetTypeVersion() != fieldDesc.GetTypeVersion()))
       diffBits |= kDiffTypeVersion;
-   if (GetStructure() != fieldDesc.GetStructure())
+   if ((~ignoreBits & kDiffStructure) && (GetStructure() != fieldDesc.GetStructure()))
       diffBits |= kDiffStructure;
-   if (GetTypeName() != fieldDesc.GetTypeName())
+   if ((~ignoreBits & kDiffTypeName) && (GetTypeName() != fieldDesc.GetTypeName()))
       diffBits |= kDiffTypeName;
-   if (GetNRepetitions() != fieldDesc.GetNRepetitions())
+   if ((~ignoreBits & kDiffNRepetitions) && (GetNRepetitions() != fieldDesc.GetNRepetitions()))
       diffBits |= kDiffNRepetitions;
 
    return diffBits;
