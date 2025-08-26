@@ -62,7 +62,7 @@ void ROOT::RCardinalityField::GenerateColumns(const ROOT::RNTupleDescriptor &des
 void ROOT::RCardinalityField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureCompatibleOnDiskField(fieldDesc, kDiffTypeVersion | kDiffStructure | kDiffTypeName);
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeVersion | kDiffStructure | kDiffTypeName);
    if (fieldDesc.GetStructure() == ENTupleStructure::kPlain) {
       if (fieldDesc.GetTypeName().rfind("ROOT::RNTupleCardinality<", 0) != 0) {
          throw RException(R__FAIL("RCardinalityField " + GetQualifiedFieldName() +
@@ -605,7 +605,7 @@ void ROOT::RRecordField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *t
 
 void ROOT::RRecordField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureCompatibleOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName | kDiffTypeVersion);
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName | kDiffTypeVersion);
 }
 
 void ROOT::RRecordField::ConstructValue(void *where) const
@@ -807,8 +807,8 @@ void ROOT::RNullableField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    static const std::vector<std::string> prefixes = {"std::optional<", "std::unique_ptr<"};
 
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureCompatibleOnDiskField(fieldDesc, kDiffTypeName);
-   EnsureCompatibleTypePrefix(fieldDesc, prefixes);
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
+   EnsureMatchingTypePrefix(fieldDesc, prefixes);
 }
 
 ROOT::RNTupleLocalIndex ROOT::RNullableField::GetItemIndex(ROOT::NTupleSize_t globalIndex)
@@ -1029,8 +1029,8 @@ void ROOT::RAtomicField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    static const std::vector<std::string> prefixes = {"std::atomic<"};
 
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureCompatibleOnDiskField(fieldDesc, kDiffTypeName);
-   EnsureCompatibleTypePrefix(fieldDesc, prefixes);
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
+   EnsureMatchingTypePrefix(fieldDesc, prefixes);
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RAtomicField::SplitValue(const RValue &value) const

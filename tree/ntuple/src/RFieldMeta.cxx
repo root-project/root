@@ -474,7 +474,7 @@ void ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pag
 
 void ROOT::RClassField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureCompatibleOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeVersion | kDiffTypeName);
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeVersion | kDiffTypeName);
 }
 
 void ROOT::RClassField::ConstructValue(void *where) const
@@ -571,7 +571,7 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::REnumField::CloneImpl(std::string_view n
 void ROOT::REnumField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    // TODO(jblomer): allow enum to enum conversion only by rename rule
-   EnsureCompatibleOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName | kDiffTypeVersion);
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName | kDiffTypeVersion);
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::REnumField::SplitValue(const RValue &value) const
@@ -764,7 +764,7 @@ void ROOT::RProxiedCollectionField::GenerateColumns(const ROOT::RNTupleDescripto
 
 void ROOT::RProxiedCollectionField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureCompatibleOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName);
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName);
 }
 
 void ROOT::RProxiedCollectionField::ConstructValue(void *where) const
@@ -931,7 +931,7 @@ void ROOT::RStreamerField::BeforeConnectPageSource(ROOT::Internal::RPageSource &
 
 void ROOT::RStreamerField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureCompatibleOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName | kDiffTypeVersion);
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName | kDiffTypeVersion);
 }
 
 void ROOT::RStreamerField::ConstructValue(void *where) const
