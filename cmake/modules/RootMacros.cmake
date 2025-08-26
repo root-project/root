@@ -608,11 +608,19 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   #---what rootcling command to use--------------------------
+  if(WIN32)
+    # TODO: investigate why the general definition with ${ld_library_path}
+    # doesn't work on Windows. It should resolve to the following and work:
+    #    set(rootcling_env "PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}")
+    set(rootcling_env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}")
+  else()
+    set(rootcling_env "${ld_library_path}=${localruntimedir}:$ENV{${ld_library_path}}")
+  endif()
   if(ARG_STAGE1)
     if(MSVC AND CMAKE_ROOTTEST_DICT)
       set(command ${CMAKE_COMMAND} -E ${CMAKE_BINARY_DIR}/bin/rootcling_stage1.exe)
     else()
-      set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}" $<TARGET_FILE:rootcling_stage1>)
+      set(command ${CMAKE_COMMAND} -E env ${rootcling_env} $<TARGET_FILE:rootcling_stage1>)
     endif()
     set(ROOTCINTDEP rconfigure)
     set(pcm_name)
@@ -621,17 +629,13 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       if(MSVC AND CMAKE_ROOTTEST_DICT)
         set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${CMAKE_BINARY_DIR}/bin/rootcling.exe)
       else()
-        set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}"
+        set(command ${CMAKE_COMMAND} -E env ${rootcling_env}
                     "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> -rootbuild)
         # Modules need RConfigure.h copied into include/.
         set(ROOTCINTDEP rootcling rconfigure)
       endif()
     elseif(TARGET ROOT::rootcling)
-      if(APPLE)
-        set(command ${CMAKE_COMMAND} -E env "DYLD_LIBRARY_PATH=${ROOT_LIBRARY_DIR}:$ENV{DYLD_LIBRARY_PATH}" $<TARGET_FILE:ROOT::rootcling>)
-      else()
-        set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${ROOT_LIBRARY_DIR}:$ENV{LD_LIBRARY_PATH}" $<TARGET_FILE:ROOT::rootcling>)
-      endif()
+      set(command ${CMAKE_COMMAND} -E env ${rootcling_env} $<TARGET_FILE:ROOT::rootcling>)
     else()
       set(command ${CMAKE_COMMAND} -E env rootcling)
     endif()
@@ -1955,7 +1959,7 @@ function(ROOT_ADD_PYUNITTESTS name)
   else()
     set(ROOT_ENV ROOTSYS=${ROOTSYS}
         PATH=${ROOTSYS}/bin:$ENV{PATH}
-        LD_LIBRARY_PATH=${ROOTSYS}/lib:$ENV{LD_LIBRARY_PATH}
+        ${ld_library_path}=${ROOTSYS}/lib:$ENV{${ld_library_path}}
         PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
   endif()
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
@@ -1981,7 +1985,7 @@ function(ROOT_ADD_PYUNITTEST name file)
   else()
     set(ROOT_ENV ROOTSYS=${ROOTSYS}
         PATH=${ROOTSYS}/bin:$ENV{PATH}
-        LD_LIBRARY_PATH=${ROOTSYS}/lib:$ENV{LD_LIBRARY_PATH}
+        ${ld_library_path}=${ROOTSYS}/lib:$ENV{${ld_library_path}}
         PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
   endif()
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
