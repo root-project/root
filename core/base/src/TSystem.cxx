@@ -3828,6 +3828,10 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          ForeachSharedLibDep(library, CollectF);
 
          TString relink_cmd = cmd.Strip(TString::kTrailing, ';');
+#ifdef R__MACOSX
+         // Allow linking to succeed despite the missing symbols.
+         relink_cmd.ReplaceAll("-dynamiclib", "-dynamiclib -Wl,-w -Wl,-undefined,dynamic_lookup");
+#endif
          relink_cmd += depLibsFullPaths;
          if (verboseLevel > 3 && withInfo) {
             ::Info("ACLiC", "relinking against all dependencies");
