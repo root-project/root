@@ -147,8 +147,7 @@ ROOTTEST_ADD_TEST(ursula
 #for some classes
 if(NOT MSVC OR win_broken_tests)
   ROOTTEST_COMPILE_MACRO(ConfigRecord.cxx
-                         FIXTURES_SETUP root-tree-addresses-ConfigRecord-fixture
-                         FIXTURES_REQUIRED root-tree-addresses-sueloader-fixture)
+                         FIXTURES_SETUP root-tree-addresses-ConfigRecord-fixture)
 
   ROOTTEST_COMPILE_MACRO(sueloader.C
                          FIXTURES_SETUP root-tree-addresses-sueloader-fixture)
