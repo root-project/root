@@ -2817,7 +2817,7 @@ void TROOT::SetBatch(Bool_t batch)
 /// `webdisplay` parameter may contain:
 ///
 ///  - "firefox": select Mozilla Firefox browser for interactive web display
-///  - "chrome": select Google Chrome browser for interactive web display. Can also be set to "chromium-browser"
+///  - "chrome": select Google Chrome browser for interactive web display. Can also be set to "chromium"
 ///  - "edge": select Microsoft Edge browser for interactive web display
 ///  - "native": select one of the natively-supported web browsers firefox/chrome/edge for interactive web display
 ///  - "qt6": uses QWebEngine from Qt6, no real http server started (requires `qt6web` component build for ROOT)
