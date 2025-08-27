@@ -46,12 +46,12 @@ def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
             "match_pattern": r"(?:ROOT::)?(?:VecOps::)?RVec\w+|(?:ROOT::)?(?:VecOps::)?RVec<[\w\s]+>",
             "cpp_name": ["ROOT::RVec", "ROOT::VecOps::RVec"],
         },
-        "std::vector": {
-            "match_pattern": r"std::vector<[\w\s]+>",
+        "vector": {
+            "match_pattern": r"(?:std::)?vector<[\w\s]+>",
             "cpp_name": ["std::vector"],
         },
-        "std::array": {
-            "match_pattern": r"std::array<[\w\s,<>]+>",
+        "array": {
+            "match_pattern": r"(?:std::)?array<[\w\s,<>]+>",
             "cpp_name": ["std::array"],
         },
     }
@@ -233,7 +233,6 @@ def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
         """
         Inner decorator without arguments, see outer decorator for documentation
         """
-
         # Jit the given Python callable with numba
         try:
             nb_return_type, nb_input_types = get_numba_signature(input_types, return_type)
@@ -255,6 +254,13 @@ def _NumbaDeclareDecorator(input_types, return_type=None, name=None):
                         "See https://cppyy.readthedocs.io/en/latest/numba.html#numba-support"
                     )
                 nbjit = nb.jit(nopython=True, inline="always")(func)
+                # In this case, the user has to explictly provide the return type, cannot be inferred
+                if return_type is None:
+                    raise RuntimeError(
+                        "Failed to infer the return type for the provided function. "
+                        "Please specify the signature explicitly in the decorator, e.g.: "
+                        "@ROOT.NumbaDeclare(['double'], 'double')"
+                    )
             except:  # noqa E722
                 raise Exception("Failed to jit Python callable {} with numba.jit".format(func))
         func.numba_func = nbjit
