@@ -262,6 +262,13 @@ using namespace ROOT;
 
 \image html v7_rbrowser.png
 
+For normal interactive mode, any modern web browser should be able to display it.
+Chrome or Firefox browsers are though required when running ROOT in batch mode.
+
+Most configuration options for RBrowser, such as default web browser, server mode are not specific to this class,
+but are rather applied for all web widgets: canvases, geometry viewer, eve7, browser, fit panel, etc.
+
+\note See major settings in RWebWindowWindowsManager::CreateServer and RWebWindowsManager::ShowWindow
 */
 
 //////////////////////////////////////////////////////////////////////////////////////////////
