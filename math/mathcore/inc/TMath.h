@@ -15,6 +15,8 @@
 #include "TMathBase.h"
 
 #include "TError.h"
+#include "ROOT/RSpan.hxx"
+
 #include <algorithm>
 #include <limits>
 #include <cmath>
@@ -574,6 +576,9 @@ struct Limits {
    Double_t Gamma(Double_t a,Double_t x);
    Double_t GammaDist(Double_t x, Double_t gamma, Double_t mu=0, Double_t beta=1);
    Double_t LnGamma(Double_t z);
+
+   void KNNDensity(std::span<const double> observations, std::span<const double> queries, std::span<double> result,
+                   int k, double dmin = 0.0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

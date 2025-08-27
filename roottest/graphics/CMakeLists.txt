@@ -112,7 +112,6 @@ set(TEST_DESCRIPTIONS
     "h2_cut a hist"
     "h2proj a hist"
     "histpalettecolor a hist"
-    "hksimple a hist"
     "hlHisto1 a hist"
     "hlHisto2 a hist"
     #"hlHisto4 a hist" TODO: Fails on all platforms!

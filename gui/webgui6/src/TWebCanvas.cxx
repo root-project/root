@@ -36,7 +36,6 @@
 #include "TF2.h"
 #include "TH1.h"
 #include "TH2.h"
-#include "TH1K.h"
 #include "THStack.h"
 #include "TMultiGraph.h"
 #include "TEnv.h"
@@ -935,27 +934,6 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          CreatePadSnapshot(paddata.NewSubPad(), (TPad *)obj, version, nullptr);
       } else if (!process_primitives) {
          continue;
-      } else if (obj->InheritsFrom(TH1K::Class())) {
-         flush_master();
-         TH1K *hist = static_cast<TH1K *>(obj);
-
-         Int_t nbins = hist->GetXaxis()->GetNbins();
-
-         TH1D *h1 = new TH1D("__dummy_name__", hist->GetTitle(), nbins, hist->GetXaxis()->GetXmin(), hist->GetXaxis()->GetXmax());
-         h1->SetDirectory(nullptr);
-         h1->SetName(hist->GetName());
-         hist->TAttLine::Copy(*h1);
-         hist->TAttFill::Copy(*h1);
-         hist->TAttMarker::Copy(*h1);
-         for (Int_t n = 1; n <= nbins; ++n)
-             h1->SetBinContent(n, hist->GetBinContent(n));
-
-         TIter fiter(hist->GetListOfFunctions());
-         while (auto fobj = fiter())
-            h1->GetListOfFunctions()->Add(fobj->Clone());
-
-         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, h1, kTRUE);
-
       } else if (obj->InheritsFrom(TH1::Class())) {
          flush_master();
 
