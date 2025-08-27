@@ -60,10 +60,10 @@ public:
       std::stringstream out;
       size_t size = fShape.size();
       auto length_str = ConvertDimShapeToLength(fShape);
-      int axis = fAttrAxis < 0 ? size + fAttrAxis : fAttrAxis;
+      size_t axis = fAttrAxis < 0 ? size + fAttrAxis : fAttrAxis;
 
       // Check if this is the special case where memory is contiguous.
-      if (axis == static_cast<int>(size - 1)) {
+      if (axis == size - 1) {
          std::string axis_size = fShape[axis].GetVal();
          std::string num_rows;
          if (IsInteger(length_str) && IsInteger(axis_size)) {
@@ -73,24 +73,24 @@ public:
          }
          
          out << "\n" << SP << "//------ SOFTMAX - " << size << "  " << length_str << "  " << axis << "\n";
-         out << SP << "for (size_t i = 0; i < " << num_rows << "; ++i) {\n";
+         out << SP << "for (int i = 0; i < " << num_rows << "; ++i) {\n";
          out << SP << SP << "size_t offset = i * " << axis_size << ";\n";
          out << SP << SP << fType << " const * x_ptr = &tensor_" << fNX << "[offset];\n";
          out << SP << SP << fType << " * y_ptr = &tensor_" << fNY << "[offset];\n";
          
          out << SP << SP << fType << " vmax = x_ptr[0];\n";
-         out << SP << SP << "for (size_t j = 1; j < " << axis_size << "; ++j) {\n";
+         out << SP << SP << "for (int j = 1; j < " << axis_size << "; ++j) {\n";
          out << SP << SP << SP << "if (x_ptr[j] > vmax) vmax = x_ptr[j];\n";
          out << SP << SP << "}\n";
 
          out << SP << SP << fType << " sum = 0.0;\n";
-         out << SP << SP << "for (size_t j = 0; j < " << axis_size << "; ++j) {\n";
+         out << SP << SP << "for (int j = 0; j < " << axis_size << "; ++j) {\n";
          out << SP << SP << SP << "y_ptr[j] = std::exp(x_ptr[j] - vmax);\n";
          out << SP << SP << SP << "sum += y_ptr[j];\n";
          out << SP << SP << "}\n";
 
          out << SP << SP << fType << " inv_sum = 1.0f / sum;\n";
-         out << SP << SP << "for (size_t j = 0; j < " << axis_size << "; ++j) {\n";
+         out << SP << SP << "for (int j = 0; j < " << axis_size << "; ++j) {\n";
          out << SP << SP << SP << "y_ptr[j] *= inv_sum;\n";
          out << SP << SP << "}\n";
          out << SP << "}\n";
@@ -100,7 +100,7 @@ public:
          size_t k = 0;
          std::vector<std::string> l(size);
          for (size_t i = 0; i < size; i++) {
-            if (static_cast<int>(i) != axis) {
+            if (i != axis) {
                for (size_t j = 0; j < k; j++) out << SP;
                l[i] = std::string("i") + std::to_string(i);
                out << "for (int " << l[i] << " = 0; " << l[i] << " < " << fShape[i] << "; " << l[i] << "++) {\n";
@@ -113,7 +113,7 @@ public:
          out << "size_t index = ";
          bool first = true;
          for (size_t i = 0; i < size; i++) {
-            if (static_cast<int>(i) == axis) continue;
+            if (i == axis) continue;
             if (!first) out << " + ";
             if (stride[i].GetVal() != "1")
                out << stride[i] << "*";
