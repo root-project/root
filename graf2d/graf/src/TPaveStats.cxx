@@ -333,7 +333,7 @@ void TPaveStats::SetOption(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Invalid method to change drawing option for stats box
 /// While stats box should never appear in pad list of primitives, this method cannot work
-/// Please use SetOption() method insted
+/// Please use SetOption() method instead
 /// Redefined here to remove **MENU** qualifier and exclude it from context menu
 
 void TPaveStats::SetDrawOption(Option_t *option)
@@ -490,6 +490,7 @@ void TPaveStats::Paint(Option_t *option)
             latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
                                           titlesize,
                                           sl);
+            TAttLine::Modify();
             gPad->PaintLine(x1ref,y2ref-yspace,x2ref,y2ref-yspace);
          }
          delete [] sl;
