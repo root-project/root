@@ -139,20 +139,18 @@ ROOTTEST_ADD_TEST(fixarr1
                   FIXTURES_REQUIRED root-io-evolution-fixarr1-fixture
                   FIXTURES_SETUP root-io-evolution-fixarrfile-fixture)
 
-# tests fails on some Mac platforms generating stacktrace
-if(NOT APPLE)
-  ROOTTEST_ADD_TEST(fixarr2
-                    MACRO fixarr2.C+
-                    OUTREF fixarr2.ref
-                    LABELS longtest io
-                    FIXTURES_REQUIRED root-io-evolution-fixarr2-fixture root-io-evolution-fixarrfile-fixture)
-endif()
+ROOTTEST_ADD_TEST(fixarr2
+                  MACRO fixarr2.C+
+                  OUTREF fixarr2.ref
+                  LABELS longtest io
+                  FIXTURES_REQUIRED root-io-evolution-fixarr2-fixture root-io-evolution-fixarrfile-fixture
+                  FIXTURES_SETUP root-io-evolution-fixarr2read-fixture)
 
 ROOTTEST_ADD_TEST(fixarr3
                   MACRO fixarr3.C+
                   OUTREF fixarr3.ref
                   LABELS longtest io
-                  FIXTURES_REQUIRED root-io-evolution-fixarr3-fixture root-io-evolution-fixarrfile-fixture)
+                  FIXTURES_REQUIRED root-io-evolution-fixarr3-fixture root-io-evolution-fixarr2read-fixture)
 
 
 ROOTTEST_ADD_TEST(WriteFixedArrayOld
