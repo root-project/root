@@ -68,6 +68,6 @@ public:
    void    SetKOrd(Int_t k){fKOrd=k;}
 
    ClassDefOverride(TH1K,2)  //1-Dim Nearest Kth neighbour method
-};
+} R__DEPRECATED(6, 40, "Use TMath::KNNDensity");
 
 #endif
