@@ -12,7 +12,7 @@ def _special_setting(hist):
     # For these classes, SetBinContent works differently than for other classes,
     # as in it does not set the bin content to the specified value, but does some other calculations
     # for that, these classes will be tested differently
-    return isinstance(hist, (ROOT.TProfile, ROOT.TProfile2D, ROOT.TProfile2Poly, ROOT.TProfile3D, ROOT.TH1K))
+    return isinstance(hist, (ROOT.TProfile, ROOT.TProfile2D, ROOT.TProfile2Poly, ROOT.TProfile3D))
 
 
 def _get_index_for_dimension(hist, index):

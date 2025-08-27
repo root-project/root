@@ -28,6 +28,9 @@ In this method :
              that DistanceToNearestKthNeighbour > BinWidth and K >=3
 
 This class has been implemented by Victor Perevoztchikov <perev@bnl.gov>
+
+
+\deprecated The `TH1K` class is deprecated and will be removed in 6.40. It did not implement the `TH1` interface consistently, and limited the usability of the k-neighbors method it implemented by closely coupling the algorithm with the histogram class. Please use the new `TMath::KNNDensity` function that implements the same mathematical logic.
 */
 
 
