@@ -58,8 +58,11 @@ ROOTTEST_ADD_TEST(val3dimSel
                   FIXTURES_REQUIRED root-treeproxy-createvaldim3-fixture
                   FIXTURES_SETUP root-treeproxy-val3dimSel-fixture)
 
+ROOTTEST_COMPILE_MACRO(${CMAKE_CURRENT_BINARY_DIR}/val3dimSel.h
+                       FIXTURES_REQUIRED root-treeproxy-val3dimSel-fixture
+                       FIXTURES_SETUP root-treeproxy-val3dimSel_compile-fixture)
+
 ROOTTEST_COMPILE_MACRO(runvaldim3.C
-                       FIXTURES_REQUIRED root-treeproxy-Track-fixture
                        FIXTURES_SETUP root-treeproxy-runvaldim3-fixture)
 
 ROOTTEST_ADD_TEST(valdim3
@@ -68,11 +71,12 @@ ROOTTEST_ADD_TEST(valdim3
                   ROOTEXE_OPTS -e "(void)gROOT->SetMacroPath(\"${CMAKE_CURRENT_BINARY_DIR}\")"
                                -e "(void)gSystem->Load(\"Track_C\")"
                   FIXTURES_REQUIRED root-treeproxy-val3dimSel-fixture
+                                    root-treeproxy-val3dimSel_compile-fixture
+                                    root-treeproxy-Track-fixture
                                     root-treeproxy-runvaldim3-fixture)
 
 ROOTTEST_COMPILE_MACRO(runfullmc.C
                        FIXTURES_SETUP root-treeproxy-runfullmc-fixture)
-
 ROOTTEST_ADD_TEST(fullmcsel
                   MACRO runfullmc.C+
                   MACROARG 4
