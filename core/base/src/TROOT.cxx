@@ -2817,7 +2817,7 @@ void TROOT::SetBatch(Bool_t batch)
 /// `webdisplay` parameter may contain:
 ///
 ///  - "firefox": select Mozilla Firefox browser for interactive web display
-///  - "chrome": select Google Chrome browser for interactive web display
+///  - "chrome": select Google Chrome browser for interactive web display. Can also be set to "chromium-browser"
 ///  - "edge": select Microsoft Edge browser for interactive web display
 ///  - "native": select one of the natively-supported web browsers firefox/chrome/edge for interactive web display
 ///  - "qt6": uses QWebEngine from Qt6, no real http server started (requires `qt6web` component build for ROOT)
@@ -2829,6 +2829,8 @@ void TROOT::SetBatch(Bool_t batch)
 ///    interactive mode.
 ///  - "server:port": turns the web display into server mode with specified port. Web widgets will not be displayed,
 ///    only text message with window URL will be printed on standard output
+///  
+/// \note See more details related to webdisplay on RWebWindowsManager::ShowWindow
 
 void TROOT::SetWebDisplay(const char *webdisplay)
 {
