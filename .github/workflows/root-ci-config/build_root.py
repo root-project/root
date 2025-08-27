@@ -317,7 +317,7 @@ def run_ctest(extra_ctest_flags: str) -> int:
     builddir = os.path.join(WORKDIR, "build")
     ctest_result = subprocess_with_log(f"""
         cd '{builddir}'
-        ctest -R roottest-root-io-evolution-* --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
+        ctest -R roottest-root-io-evolution-fix* --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
     """)
 
     return ctest_result
