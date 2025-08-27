@@ -3195,6 +3195,87 @@ Double_t TMath::VavilovDenEval(Double_t rlam, Double_t *AC, Double_t *HC, Int_t 
    return v;
 }
 
+/// \brief Computes a 1D k-nearest neighbor density estimate for a set of query points.
+///
+/// For each query point, this function estimates the local density based on
+/// the distance to the k-th nearest neighbor. A minimum distance threshold
+/// `dmin` is used to avoid division by zero and numerical instability when a
+/// query point coincides with an observation or neighbors are extremely close.
+///
+/// \param observations Data points used for density estimation.
+/// \param queries Points at which to estimate the density.
+/// \param result Output for the density estimates. Must have the same size as `queries`.
+/// \param k Number of nearest neighbors to consider. If k >= number of observations,
+///          it is automatically reduced to n-1.
+/// \param dmin Minimum allowed neighbor distance to prevent division by zero. Default is zero.
+///
+/// The density estimate for each query point x is:
+///
+/// \f[
+/// \hat{p}(x) = \frac{n}{2(n+1)} \frac{k_{\text{actual}}}{d_\(k_{\text{actual}}\)(x)},
+/// \f]
+///
+/// where \(d_\(k_{\text{actual}}\)(x)\) is the distance and \(k_{\text{actual}}\) may be different from \(k\)
+/// when it needs to be greater than \(k\) to keep the \(d > d_{\text{min}} constraint.
+/// If no neighbor is outside `dmin`, the minimum allowed distance will be used as the distance itself.
+///
+/// \note This function implements the math of the former `TH1K` class. There are some differences:
+///
+///   1. The `TH1K` class additionally multiplied all density estimates with the bin width.
+///   2. If the `k` parameter was not specified by the user, the `TH1K` class used the bin width as `dmin`.
+///   3. If the `k` parameter was explicitly specified, the `dmin` parameter was set to 1.e-6.
+void TMath::KNNDensity(std::span<const double> observations, std::span<const double> queries, std::span<double> result,
+                       int k, double dmin)
+{
+   int n = observations.size();
+   if (k < 0) {
+      Error("KNNDensity", "k must be positive");
+      return;
+   }
+   if (k >= static_cast<int>(n))
+      k = static_cast<int>(n - 1);
+
+   if (result.size() != queries.size()) {
+      Error("KNNDensity", "Result span size must match query span size");
+      return;
+   }
+
+   // Make a sorted copy of the observations for binary search
+   std::vector<double> sorted_obs(observations.begin(), observations.end());
+   std::sort(sorted_obs.begin(), sorted_obs.end());
+
+   // constant factor in the output
+   const double factor = n * 0.5 / (n + 1.0);
+
+   for (std::size_t i = 0; i < queries.size(); ++i) {
+      double x = queries[i];
+
+      // Find index in sorted_obs
+      int jr = std::distance(sorted_obs.begin(), std::lower_bound(sorted_obs.begin(), sorted_obs.end(), x));
+      int jl = jr - 1;
+
+      double ff = 0.0;
+      int k_actual = 0;
+
+      for (; k_actual + 1 <= k || ff <= dmin; ++k_actual) {
+
+         double fl = (jl >= 0) ? std::abs(sorted_obs[jl] - x) : std::numeric_limits<double>::max();
+         double fr = (jr < n) ? std::abs(sorted_obs[jr] - x) : std::numeric_limits<double>::max();
+
+         if (jl < 0 && jr >= n)
+            break;
+
+         ff = std::min(fl, fr);
+         fl < fr ? --jl : ++jr;
+      }
+
+      if (ff == 0.0)
+         ff = dmin; // avoid division by zero
+
+      // Modified kNN density formula
+      result[i] = factor == 0.0 ? 0.0 : factor * k_actual / ff;
+   }
+}
 
 //explicitly instantiate template functions from VecCore
 #ifdef R__HAS_VECCORE
