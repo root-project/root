@@ -2049,8 +2049,8 @@ bool RooWorkspace::cd(const char* path)
 
 bool RooWorkspace::writeToFile(const char* fileName, bool recreate)
 {
-  TFile f(fileName, recreate ? "RECREATE" : "UPDATE");
-  if (f.IsZombie())
+  std::unique_ptr<TFile> f{ TFile::Open(fileName, recreate ? "RECREATE" : "UPDATE") };
+  if (!f || f->IsZombie())
     return false;
   auto bytes = Write();
   return bytes > 0;
