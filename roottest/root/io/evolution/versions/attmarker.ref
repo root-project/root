@@ -5,4 +5,3 @@ hadd Source file 2: hsimple20.root
 Warning in <hadd>: Sources and Target have different compression settings
 hadd merging will be slower
 hadd Target path: result.root:/
-Info in <hadd>: merged 2 (2) input (partial) files into result.root

@@ -174,7 +174,8 @@
 // gHaddVerbosity = 1: only print hadd errors + warnings
 // gHaddVerbosity = 2: print hadd errors + warnings and TFileMerger messages
 // gHaddVerbosity > 2: print all hadd and TFileMerger messages.
-static int gHaddVerbosity = 2;
+static constexpr int kDefaultHaddVerbosity = 2;
+static int gHaddVerbosity = kDefaultHaddVerbosity;
 
 namespace {
 
@@ -571,7 +572,7 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "cachesize", args.fCacheSize, {}, ConvertCacheSize);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "experimental-io-features", args.fFeatures);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "n", args.fMaxOpenedFiles);
-         PARSE_FLAG(FlagArg, argc, argv, argIdx, "v", args.fVerbosity, {99});
+         PARSE_FLAG(FlagArg, argc, argv, argIdx, "v", args.fVerbosity, {kDefaultHaddVerbosity});
          PARSE_FLAG(FlagF, arg, args);
 
 #undef PARSE_FLAG
@@ -664,7 +665,7 @@ int main(int argc, char **argv)
 
    ROOT::TIOFeatures features = args.fFeatures.value_or(ROOT::TIOFeatures{});
    Int_t maxopenedfiles = args.fMaxOpenedFiles.value_or(0);
-   gHaddVerbosity = args.fVerbosity.value_or(99);
+   gHaddVerbosity = args.fVerbosity.value_or(kDefaultHaddVerbosity);
    Int_t newcomp = args.fCompressionSettings.value_or(-1);
    TString cacheSize = args.fCacheSize.value_or("");
 
@@ -682,7 +683,7 @@ int main(int argc, char **argv)
       nProcesses = s.fCpus;
    }
    if (multiproc)
-      Info(3) << "parallelizing  with " << nProcesses << " processes.\n";
+      Info(2) << "parallelizing  with " << nProcesses << " processes.\n";
 
    // If the user specified a workingDir, use that. Otherwise, default to the system temp dir.
    std::string workingDir;
@@ -715,7 +716,7 @@ int main(int argc, char **argv)
    Info(2) << "target file: " << targetname << "\n";
 
    if (args.fCacheSize)
-      Info(3) << "Using " << cacheSize << "\n";
+      Info(2) << "Using " << cacheSize << "\n";
 
    ////////////////////////////// end flags processing /////////////////////////////////
 
