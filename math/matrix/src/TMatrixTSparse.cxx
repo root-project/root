@@ -31,14 +31,15 @@
  As an example how to access all sparse data elements:
 
 ~~~
- for (Int_t irow = 0; irow < this->fNrows; irow++) {
-   const Int_t sIndex = fRowIndex[irow];
-   const Int_t eIndex = fRowIndex[irow+1];
+ TMatrixTSparse<double> M;
+ for (Int_t irow = 0; irow < M.GetNrows(); irow++) {
+   auto rowIndex = M.GetRowIndexArray();
+   const Int_t sIndex = rowIndex[irow];
+   const Int_t eIndex = rowIndex[irow+1];
    for (Int_t index = sIndex; index < eIndex; index++) {
-     const Int_t icol = fColIndex[index];
-     const Element data = fElements[index];
-     printf("data(%d,%d) = %.4e\n",irow+this->fRowLwb,icol+
-                                               this->fColLwb,data);
+     const Int_t icol = M.GetColIndexArray()[index];
+     const double data = m.GetMatrixArray()[index];
+     printf("data(%d,%d) = %.4e\n", irow + M.GetRowLwb(), icol +  M.GetColLwb(), data);
    }
  }
 ~~~
