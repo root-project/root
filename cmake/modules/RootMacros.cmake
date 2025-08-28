@@ -613,27 +613,19 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   #---what rootcling command to use--------------------------
-  if(WIN32)
-    # TODO: investigate why the general definition with ${ld_library_path}
-    # doesn't work on Windows. It should resolve to the following and work:
-    #    set(rootcling_env "PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}")
-    set(rootcling_env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}")
-  else()
-    set(rootcling_env "${ld_library_path}=${localruntimedir}:$ENV{${ld_library_path}}")
-  endif()
   if(ARG_STAGE1)
-    set(command ${CMAKE_COMMAND} -E env ${rootcling_env} $<TARGET_FILE:rootcling_stage1>)
+    set(command $<TARGET_FILE:rootcling_stage1>)
     set(ROOTCINTDEP rconfigure)
     set(pcm_name)
   else()
     if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-      set(command ${CMAKE_COMMAND} -E env ${rootcling_env} "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> -rootbuild)
+      set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> -rootbuild)
       # Modules need RConfigure.h copied into include/.
       set(ROOTCINTDEP rootcling rconfigure)
     elseif(TARGET ROOT::rootcling)
-      set(command ${CMAKE_COMMAND} -E env ${rootcling_env} $<TARGET_FILE:ROOT::rootcling>)
+      set(command $<TARGET_FILE:ROOT::rootcling>)
     else()
-      set(command ${CMAKE_COMMAND} -E env rootcling)
+      set(command rootcling)
     endif()
   endif()
 
@@ -919,13 +911,13 @@ function(ROOT_LINKER_LIBRARY library)
   if(WIN32 AND ARG_TYPE STREQUAL SHARED AND NOT ARG_DLLEXPORT)
     #---create a shared library with the .def file------------------------
     add_library(${library} ${_all} SHARED ${lib_srcs})
-    set_target_properties(${library} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   else()
     add_library( ${library} ${_all} ${ARG_TYPE} ${lib_srcs})
     if(ARG_TYPE STREQUAL SHARED)
       set_target_properties(${library} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
     endif()
   endif()
+  set_target_properties(${library} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
   if(DEFINED CMAKE_CXX_STANDARD)
     target_compile_features(${library} INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
@@ -988,6 +980,9 @@ function(ROOT_LINKER_LIBRARY library)
                     DESTINATION ${CMAKE_INSTALL_BINDIR}
                     COMPONENT libraries)
     endif()
+  else()
+    # If the target is not installed, it doesn't make sense to build it with the INSTALL_RPATH
+    set_property(TARGET ${library} PROPERTY BUILD_WITH_INSTALL_RPATH OFF)
   endif()
 endfunction()
 
@@ -1047,9 +1042,7 @@ function(ROOT_OBJECT_LIBRARY library)
   # creates extra module variants, and not useful because we don't use these
   # macros.
   set_target_properties(${library} PROPERTIES DEFINE_SYMBOL "")
-  if(WIN32)
-    set_target_properties(${library} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-  endif()
+  set_target_properties(${library} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
   if(ARG_BUILTINS)
     foreach(arg1 ${ARG_BUILTINS})
@@ -1436,6 +1429,14 @@ function(ROOT_EXECUTABLE executable)
   if(NOT ARG_NOINSTALL AND CMAKE_RUNTIME_OUTPUT_DIRECTORY)
     if(NOT MSVC)
       ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH(${executable} ${CMAKE_INSTALL_BINDIR})
+
+      # The rootcling executable needs to run during build, so even if
+      # CMAKE_BUILD_WITH_INSTALL_RPATH=ON was specified at config time, we have to
+      # override it. Otherwise, the RPATH of rootcling inside the build tree is wrong
+      # if the install tree doesn't mirror the build tree (e.g. for gnuinstall=ON).
+      # All the other executables need the correct path in the build tree too, for testing.
+      set_property(TARGET ${executable} PROPERTY BUILD_WITH_INSTALL_RPATH OFF)
+
     endif()
     if(ARG_CMAKENOEXPORT)
       install(TARGETS ${executable} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
@@ -1448,6 +1449,9 @@ function(ROOT_EXECUTABLE executable)
               DESTINATION ${CMAKE_INSTALL_BINDIR}
               COMPONENT applications)
     endif()
+  else()
+    # If the target is not installed, it doesn't make sense to build it with the INSTALL_RPATH
+    set_property(TARGET ${executable} PROPERTY BUILD_WITH_INSTALL_RPATH OFF)
   endif()
 endfunction()
 
@@ -2435,6 +2439,7 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   set(targetname_libgen ${dictname}libgen)
 
   add_library(${targetname_libgen} EXCLUDE_FROM_ALL SHARED ${dictname}.cxx)
+  set_property(TARGET ${executable} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
 
   if(ARG_SOURCES)
     target_sources(${targetname_libgen} PUBLIC ${ARG_SOURCES})
@@ -2445,9 +2450,7 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   endif()
 
   set_target_properties(${targetname_libgen} PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
-  if(MSVC)
-    set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-  endif()
+  set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
   target_link_libraries(${targetname_libgen} ${ROOT_LIBRARIES})
 
@@ -2547,9 +2550,8 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
 
   add_library(${targetname_libgen} EXCLUDE_FROM_ALL SHARED ${dictionary}.cxx)
   set_target_properties(${targetname_libgen} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
-  if(MSVC)
-    set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-  endif()
+  set_property(TARGET ${executable} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
+  set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
   if(ARG_LIBNAME)
     set_target_properties(${targetname_libgen} PROPERTIES PREFIX "")
@@ -2635,6 +2637,7 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
 
   add_executable(${executable} EXCLUDE_FROM_ALL ${ARG_UNPARSED_ARGUMENTS})
   set_target_properties(${executable} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  set_property(TARGET ${executable} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
 
   set_property(TARGET ${executable}
                APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR})
@@ -3272,6 +3275,7 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
 
   add_executable(${binary} ${unittests_SRC})
   target_link_libraries(${binary} PRIVATE GTest::gtest GTest::gtest_main ${libraries})
+  set_property(TARGET ${binary} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
 
   if(MSVC AND DEFINED ROOT_SOURCE_DIR)
     if(TARGET ROOTStaticSanitizerConfig)
