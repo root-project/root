@@ -30,8 +30,8 @@ positional arguments:
 
 options:
   -h, --help     show this help message and exit
-  -w, --web WEB  Configure webdisplay. For all possible values, see:
-                 https://root.cern/doc/v636/classTROOT.html#a1749472696545b76a6b8e79769e7e773
+  -w, --web WEB  Configure webdisplay. For all possible values, see TROOT::SetWebDisplay():
+                 https://root.cern/doc/latest-stable/classTROOT.html#a1749472696545b76a6b8e79769e7e773
   -wf, --webOff  Invoke the classic TBrowser (not the web version)
 
 Examples:
