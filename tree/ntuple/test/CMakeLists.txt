@@ -111,12 +111,10 @@ ROOT_GENERATE_DICTIONARY(StreamerFieldDict ${CMAKE_CURRENT_SOURCE_DIR}/StreamerF
                          DEPENDENCIES RIO)
 
 if(MSVC)
-  set(genreflex ${CMAKE_BINARY_DIR}/bin/genreflex.exe)
-  set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${genreflex})
+  set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" $<TARGET_FILE:genreflex>)
 else()
-  set(genreflex ${CMAKE_BINARY_DIR}/bin/genreflex)
   set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}"
-              "ROOTIGNOREPREFIX=1" ${genreflex})
+              "ROOTIGNOREPREFIX=1" $<TARGET_FILE:genreflex>)
 endif()
 
 configure_file(StreamerFieldXML.h . COPYONLY)
