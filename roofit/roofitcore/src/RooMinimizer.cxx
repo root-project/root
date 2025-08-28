@@ -354,7 +354,6 @@ int RooMinimizer::minimize(const char *type, const char *alg)
 
       bool ret = fitFCN(*_fcn->getMultiGenFcn());
       determineStatus(ret);
-     
    }
    profileStop();
    _fcn->BackProp();
@@ -919,8 +918,6 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
    // initiate  the minimizer
    initMinimizer();
 
-
-   
    // Identify floating RooCategory parameters
    RooArgSet floatingCats;
 
@@ -928,16 +925,13 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
       if (arg->isCategory() && !arg->isConstant())
          floatingCats.add(*arg);
    }
-   
 
-  
    std::vector<RooCategory *> pdfIndices;
    for (auto *arg : floatingCats) {
       if (auto *cat = dynamic_cast<RooCategory *>(arg))
          pdfIndices.push_back(cat);
    }
 
-  
    const size_t nPdfs = pdfIndices.size();
 
    // Identify floating continuous parameters (RooRealVar)
@@ -947,9 +941,8 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
          floatReals.add(*arg);
    }
 
-  
    if (nPdfs == 0) {
-     
+
       bool isValid = _minimizer->Minimize();
       if (!_result)
          _result = std::make_unique<FitResult>();
@@ -975,7 +968,6 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
    while (improved) {
       improved = false;
 
-   
       auto combos = generateOrthogonalCombinations(maxIndices);
       reorderCombinations(combos, maxIndices, bestIndices);
 
@@ -1006,36 +998,30 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
             bestNLL = val;
             bestIndices = combo;
             improved = true;
-         
          }
-
-
-
       }
-   
    }
 
-for (size_t i = 0; i < nPdfs; ++i)
-    pdfIndices[i]->setIndex(bestIndices[i]);
+   for (size_t i = 0; i < nPdfs; ++i)
+      pdfIndices[i]->setIndex(bestIndices[i]);
 
-coutI(Minimization) << "All NLL Values per Combination:\n"<< std::endl;
-for (const auto &entry : nllMap) {
-    const auto &combo = entry.first;
-    double val = entry.second;
-    coutI(Minimization) << "Combo: [" << std::endl;
-    for (size_t i = 0; i < combo.size(); ++i)
-        std::cout << combo[i] << (i + 1 < combo.size() ? ", " : "");
-    coutI(Minimization) << "], NLL: " << val << "\n" << std::endl;
-}
+   coutI(Minimization) << "All NLL Values per Combination:\n" << std::endl;
+   for (const auto &entry : nllMap) {
+      const auto &combo = entry.first;
+      double val = entry.second;
+      coutI(Minimization) << "Combo: [" << std::endl;
+      for (size_t i = 0; i < combo.size(); ++i)
+         std::cout << combo[i] << (i + 1 < combo.size() ? ", " : "");
+      coutI(Minimization) << "], NLL: " << val << "\n" << std::endl;
+   }
 
-coutI(Minimization) << "DP Best Indices: [" << std::endl;
-for (size_t i = 0; i < bestIndices.size(); ++i) {
-   coutI(Minimization) <<  bestIndices[i] << std::endl;
-    if (i + 1 < bestIndices.size())
-        coutI(Minimization)<< ", " << std::endl;
-}
-coutI(Minimization) << "], NLL = " << bestNLL << "\n" << std::endl;
-   
+   coutI(Minimization) << "DP Best Indices: [" << std::endl;
+   for (size_t i = 0; i < bestIndices.size(); ++i) {
+      coutI(Minimization) << bestIndices[i] << std::endl;
+      if (i + 1 < bestIndices.size())
+         coutI(Minimization) << ", " << std::endl;
+   }
+   coutI(Minimization) << "], NLL = " << bestNLL << "\n" << std::endl;
 
    // Fill FitResult and update FitConfig
    if (!_result)
