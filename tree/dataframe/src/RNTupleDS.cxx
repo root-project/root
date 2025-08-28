@@ -64,6 +64,9 @@ protected:
    }
    void ConstructValue(void *where) const final { *static_cast<std::size_t *>(where) = 0; }
 
+   // We construct these fields and know that they match the page source
+   void ReconcileOnDiskField(const RNTupleDescriptor &) final {}
+
 public:
    RRDFCardinalityField() : ROOT::RFieldBase("", "std::size_t", ROOT::ENTupleStructure::kPlain, false /* isSimple */) {}
    RRDFCardinalityField(RRDFCardinalityField &&other) = default;
@@ -132,6 +135,9 @@ private:
    {
       *static_cast<std::size_t *>(to) = fArrayLength;
    }
+
+   // We construct these fields and know that they match the page source
+   void ReconcileOnDiskField(const RNTupleDescriptor &) final {}
 
 public:
    RArraySizeField(std::size_t arrayLength)

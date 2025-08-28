@@ -186,7 +186,9 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
+
    void BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
    RClassField(std::string_view fieldName, std::string_view className);
@@ -240,7 +242,8 @@ protected:
    // Returns the list of seen streamer infos
    ROOT::RExtraTypeInfoDescriptor GetExtraTypeInfo() const final;
 
-   void BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
+   void BeforeConnectPageSource(ROOT::Internal::RPageSource &source) final;
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
    RStreamerField(std::string_view fieldName, std::string_view className, std::string_view typeAlias = "");
@@ -269,6 +272,8 @@ protected:
    std::size_t AppendImpl(const void *from) final { return CallAppendOn(*fSubfields[0], from); }
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final { CallReadOn(*fSubfields[0], globalIndex, to); }
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final { CallReadOn(*fSubfields[0], localIndex, to); }
+
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
    REnumField(std::string_view fieldName, std::string_view enumName);
@@ -335,6 +340,8 @@ protected:
    void GenerateColumns() final { throw RException(R__FAIL("Cardinality fields must only be used for reading")); }
    void GenerateColumns(const ROOT::RNTupleDescriptor &) final;
 
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
+
 public:
    RCardinalityField(RCardinalityField &&other) = default;
    RCardinalityField &operator=(RCardinalityField &&other) = default;
@@ -353,6 +360,13 @@ protected:
    void GenerateColumns(const ROOT::RNTupleDescriptor &desc) override { GenerateColumnsImpl<T>(desc); }
 
    void ConstructValue(void *where) const final { new (where) T{0}; }
+
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final
+   {
+      // Differences in the type name don't matter for simple fields; the valid column representations take
+      // care of (allowed) schema differences.
+      EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName);
+   }
 
    RSimpleField(std::string_view name, std::string_view type)
       : RFieldBase(name, type, ROOT::ENTupleStructure::kPlain, true /* isSimple */)
@@ -481,8 +495,6 @@ protected:
    void ReadTObject(void *to, UInt_t uniqueID, UInt_t bits);
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
-
-   void AfterConnectPageSource() final;
 
 public:
    static std::string TypeName() { return "TObject"; }
