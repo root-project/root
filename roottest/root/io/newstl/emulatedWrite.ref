@@ -17,4 +17,3 @@ Warning in <TClass::Init>: no dictionary for class CaloJet is available
 Warning in <TClass::Init>: no dictionary for class edm::EDCollection<CaloJet> is available
 hadd Source file 2: cmsJets_1.root
 hadd Target path: result.root:/
-Info in <hadd>: merged 2 (2) input (partial) files into result.root
