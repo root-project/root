@@ -32,13 +32,15 @@
 
 ~~~
  TMatrixTSparse<double> M;
+ auto rowIndex = M.GetRowIndexArray();
+ auto colIndex = M.GetColIndexArray();
+ auto matrix = M.GetMatrixArray();
  for (Int_t irow = 0; irow < M.GetNrows(); irow++) {
-   auto rowIndex = M.GetRowIndexArray();
    const Int_t sIndex = rowIndex[irow];
    const Int_t eIndex = rowIndex[irow+1];
    for (Int_t index = sIndex; index < eIndex; index++) {
-     const Int_t icol = M.GetColIndexArray()[index];
-     const double data = m.GetMatrixArray()[index];
+     const Int_t icol = colIndex[index];
+     const double data = matrix[index];
      printf("data(%d,%d) = %.4e\n", irow + M.GetRowLwb(), icol +  M.GetColLwb(), data);
    }
  }
