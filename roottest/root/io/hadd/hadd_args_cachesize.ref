@@ -3,4 +3,3 @@ Info in <hadd>: Using cachesize=100M
 Info in <hadd>: compression setting for all output: 101
 hadd Source file 1: hadd_args_in.root
 hadd Target path: hadd_args_cachesize_out.root:/
-Info in <hadd>: merged 1 (1) input (partial) files into hadd_args_cachesize_out.root
