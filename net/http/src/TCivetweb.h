@@ -16,7 +16,7 @@
 
 #include <mutex>
 
-#include "../civetweb/civetweb.h"
+#include "civetweb.h"
 
 class TCivetweb : public THttpEngine {
 protected:

@@ -19,7 +19,7 @@
 #endif
 
 #include <ROOT/RFieldBase.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RVec.hxx>
 
 #include <array>
@@ -31,6 +31,11 @@ namespace ROOT {
 namespace Detail {
 class RFieldVisitor;
 } // namespace Detail
+
+namespace Internal {
+std::unique_ptr<RFieldBase> CreateEmulatedVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
+                                                      std::string_view emulatedFromType);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Template specializations for C++ std::array and C-style arrays
@@ -189,7 +194,10 @@ public:
 /// The generic field for a (nested) `std::vector<Type>` except for `std::vector<bool>`
 /// The field can be constructed as untyped collection through CreateUntyped().
 class RVectorField : public RFieldBase {
-private:
+   friend std::unique_ptr<RFieldBase> Internal::CreateEmulatedVectorField(std::string_view fieldName,
+                                                                          std::unique_ptr<RFieldBase> itemField,
+                                                                          std::string_view emulatedFromType);
+
    class RVectorDeleter : public RDeleter {
    private:
       std::size_t fItemSize = 0;
@@ -209,7 +217,11 @@ private:
    std::unique_ptr<RDeleter> fItemDeleter;
 
 protected:
-   RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField, bool isUntyped);
+   /// Creates a possibly-untyped VectorField.
+   /// If `emulatedFromType` is not nullopt, the field is untyped. If the string is empty, it is a "regular"
+   /// untyped vector field; otherwise, it was created as an emulated field from the given type name.
+   RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
+                std::optional<std::string_view> emulatedFromType);
 
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 

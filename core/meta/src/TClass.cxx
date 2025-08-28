@@ -753,7 +753,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
          } else {
             line[kvalue] = '-';
             line[kvalue+1] = '>';
-            strncpy(&line[kvalue+2], membertype->AsString(p3pointer), TMath::Min(kline-1-kvalue-2,(int)strlen(membertype->AsString(p3pointer))));
+            strncpy(&line[kvalue+2], membertype->AsString(p3pointer), std::min(kline-1-kvalue-2,(int)strlen(membertype->AsString(p3pointer))));
          }
       } else if (!strcmp(memberFullTypeName, "char*") ||
                  !strcmp(memberFullTypeName, "const char*")) {
@@ -785,7 +785,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
       } else if (isbits) {
          snprintf(&line[kvalue],kline-kvalue,"0x%08x", *(UInt_t*)pointer);
       } else {
-         strncpy(&line[kvalue], membertype->AsString(pointer), TMath::Min(kline-1-kvalue,(int)strlen(membertype->AsString(pointer))));
+         strncpy(&line[kvalue], membertype->AsString(pointer), std::min(kline-1-kvalue,(int)strlen(membertype->AsString(pointer))));
       }
    } else {
       if (isStdString) {
@@ -1137,23 +1137,7 @@ ClassImp(TClass);
 
 TClass::TClass() :
    TDictionary(),
-   fPersistentRef(nullptr),
-   fStreamerInfo(nullptr), fConversionStreamerInfo(nullptr), fRealData(nullptr),
-   fBase(nullptr), fData(nullptr), fUsingData(nullptr), fEnums(nullptr), fFuncTemplate(nullptr), fMethod(nullptr), fAllPubData(nullptr),
-   fAllPubMethod(nullptr), fClassMenuList(nullptr),
-   fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
-   fInstanceCount(0), fOnHeap(0),
-   fCheckSum(0), fCollectionProxy(nullptr), fClassVersion(0), fClassInfo(nullptr),
-   fTypeInfo(nullptr), fShowMembers(nullptr),
-   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr), fBrowse(nullptr),
-   fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
-   fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
-   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
-   fState(kNoInfo),
-   fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
-   fSchemaRules(nullptr), fStreamerImpl(&TClass::StreamerDefault)
-
+   fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE)
 {
    // Default ctor.
 
@@ -1175,22 +1159,7 @@ TClass::TClass() :
 
 TClass::TClass(const char *name, Bool_t silent) :
    TDictionary(name),
-   fPersistentRef(nullptr),
-   fStreamerInfo(nullptr), fConversionStreamerInfo(nullptr), fRealData(nullptr),
-   fBase(nullptr), fData(nullptr), fUsingData(nullptr), fEnums(nullptr), fFuncTemplate(nullptr), fMethod(nullptr), fAllPubData(nullptr),
-   fAllPubMethod(nullptr), fClassMenuList(nullptr),
-   fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
-   fInstanceCount(0), fOnHeap(0),
-   fCheckSum(0), fCollectionProxy(nullptr), fClassVersion(0), fClassInfo(nullptr),
-   fTypeInfo(nullptr), fShowMembers(nullptr),
-   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr), fBrowse(nullptr),
-   fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
-   fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
-   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
-   fState(kNoInfo),
-   fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
-   fSchemaRules(nullptr), fStreamerImpl(&TClass::StreamerDefault)
+   fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE)
 {
    R__LOCKGUARD(gInterpreterMutex);
 
@@ -1223,22 +1192,7 @@ TClass::TClass(const char *name, Bool_t silent) :
 
 TClass::TClass(const char *name, Version_t cversion, Bool_t silent) :
    TDictionary(name),
-   fPersistentRef(nullptr),
-   fStreamerInfo(nullptr), fConversionStreamerInfo(nullptr), fRealData(nullptr),
-   fBase(nullptr), fData(nullptr), fUsingData(nullptr), fEnums(nullptr), fFuncTemplate(nullptr), fMethod(nullptr), fAllPubData(nullptr),
-   fAllPubMethod(nullptr), fClassMenuList(nullptr),
-   fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
-   fInstanceCount(0), fOnHeap(0),
-   fCheckSum(0), fCollectionProxy(nullptr), fClassVersion(0), fClassInfo(nullptr),
-   fTypeInfo(nullptr), fShowMembers(nullptr),
-   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr), fBrowse(nullptr),
-   fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
-   fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
-   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
-   fState(kNoInfo),
-   fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
-   fSchemaRules(nullptr), fStreamerImpl(&TClass::StreamerDefault)
+   fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE)
 {
    R__LOCKGUARD(gInterpreterMutex);
    Init(name, cversion, nullptr, nullptr, nullptr, nullptr, -1, -1, nullptr, silent);
@@ -1251,22 +1205,8 @@ TClass::TClass(const char *name, Version_t cversion, Bool_t silent) :
 
 TClass::TClass(const char *name, Version_t cversion, EState theState, Bool_t silent) :
    TDictionary(name),
-   fPersistentRef(nullptr),
-   fStreamerInfo(nullptr), fConversionStreamerInfo(nullptr), fRealData(nullptr),
-   fBase(nullptr), fData(nullptr), fUsingData(nullptr), fEnums(nullptr), fFuncTemplate(nullptr), fMethod(nullptr), fAllPubData(nullptr),
-   fAllPubMethod(nullptr), fClassMenuList(nullptr),
-   fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
-   fInstanceCount(0), fOnHeap(0),
-   fCheckSum(0), fCollectionProxy(nullptr), fClassVersion(0), fClassInfo(nullptr),
-   fTypeInfo(nullptr), fShowMembers(nullptr),
-   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr), fBrowse(nullptr),
-   fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
-   fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
-   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
-   fState(theState),
-   fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
-   fSchemaRules(nullptr), fStreamerImpl(&TClass::StreamerDefault)
+   fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE),
+   fState(theState)
 {
    R__LOCKGUARD(gInterpreterMutex);
 
@@ -1297,22 +1237,7 @@ TClass::TClass(const char *name, Version_t cversion, EState theState, Bool_t sil
 TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il, Bool_t silent) :
    TDictionary(""),
-   fPersistentRef(nullptr),
-   fStreamerInfo(nullptr), fConversionStreamerInfo(nullptr), fRealData(nullptr),
-   fBase(nullptr), fData(nullptr), fUsingData(nullptr), fEnums(nullptr), fFuncTemplate(nullptr), fMethod(nullptr), fAllPubData(nullptr),
-   fAllPubMethod(nullptr), fClassMenuList(nullptr),
-   fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
-   fInstanceCount(0), fOnHeap(0),
-   fCheckSum(0), fCollectionProxy(nullptr), fClassVersion(0), fClassInfo(nullptr),
-   fTypeInfo(nullptr), fShowMembers(nullptr),
-   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr), fBrowse(nullptr),
-   fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
-   fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
-   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
-   fState(kNoInfo),
-   fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
-   fSchemaRules(nullptr), fStreamerImpl(&TClass::StreamerDefault)
+   fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE)
 {
    R__LOCKGUARD(gInterpreterMutex);
 
@@ -1348,22 +1273,7 @@ TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
 TClass::TClass(const char *name, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il, Bool_t silent) :
    TDictionary(name),
-   fPersistentRef(nullptr),
-   fStreamerInfo(nullptr), fConversionStreamerInfo(nullptr), fRealData(nullptr),
-   fBase(nullptr), fData(nullptr), fUsingData(nullptr), fEnums(nullptr), fFuncTemplate(nullptr), fMethod(nullptr), fAllPubData(nullptr),
-   fAllPubMethod(nullptr), fClassMenuList(nullptr),
-   fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
-   fInstanceCount(0), fOnHeap(0),
-   fCheckSum(0), fCollectionProxy(nullptr), fClassVersion(0), fClassInfo(nullptr),
-   fTypeInfo(nullptr), fShowMembers(nullptr),
-   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr), fBrowse(nullptr),
-   fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
-   fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
-   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
-   fState(kNoInfo),
-   fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
-   fSchemaRules(nullptr), fStreamerImpl(&TClass::StreamerDefault)
+   fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE)
 {
    R__LOCKGUARD(gInterpreterMutex);
    Init(name,cversion, nullptr, nullptr, dfil, ifil, dl, il, nullptr, silent);
@@ -1379,23 +1289,8 @@ TClass::TClass(const char *name, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il,
                Bool_t silent) :
    TDictionary(name),
-   fPersistentRef(nullptr),
-   fStreamerInfo(nullptr), fConversionStreamerInfo(nullptr), fRealData(nullptr),
-   fBase(nullptr), fData(nullptr), fUsingData(nullptr), fEnums(nullptr), fFuncTemplate(nullptr), fMethod(nullptr), fAllPubData(nullptr),
-   fAllPubMethod(nullptr),
-   fClassMenuList(nullptr),
-   fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
-   fInstanceCount(0), fOnHeap(0),
-   fCheckSum(0), fCollectionProxy(nullptr), fClassVersion(0), fClassInfo(nullptr),
-   fTypeInfo(nullptr), fShowMembers(nullptr),
-   fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr), fBrowse(nullptr),
-   fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
-   fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
-   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
-   fState(kHasTClassInit),
-   fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
-   fSchemaRules(nullptr), fStreamerImpl(&TClass::StreamerDefault)
+   fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE),
+   fState(kHasTClassInit)
 {
    R__LOCKGUARD(gInterpreterMutex);
    // use info

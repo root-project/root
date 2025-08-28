@@ -85,8 +85,8 @@ TBufferFile::TBufferFile(TBuffer::EMode mode)
 /// Create an I/O buffer object. Mode should be either TBuffer::kRead or
 /// TBuffer::kWrite.
 
-TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz)
-            :TBufferIO(mode,bufsiz),
+TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsize)
+            :TBufferIO(mode,bufsize),
              fInfo(nullptr), fInfoStack()
 {
 }
@@ -102,8 +102,8 @@ TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz)
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
 
-TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc) :
-   TBufferIO(mode,bufsiz,buf,adopt,reallocfunc),
+TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsize, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc) :
+   TBufferIO(mode,bufsize,buf,adopt,reallocfunc),
    fInfo(nullptr), fInfoStack()
 {
 }
@@ -3339,7 +3339,7 @@ Int_t TBufferFile::ReadBuf(void *buf, Int_t max)
 
    if (max == 0) return 0;
 
-   Int_t n = TMath::Min(max, (Int_t)(fBufMax - fBufCur));
+   Int_t n = std::min(max, (Int_t)(fBufMax - fBufCur));
 
    memcpy(buf, fBufCur, n);
    fBufCur += n;

@@ -34,20 +34,15 @@ is therefore identical to that of <pre>f->createProjection(RooArgSet(x,y))</pre>
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooNameReg.h"
+#include "RooWrapperPdf.h"
 
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Default constructor
 
+ RooProjectedPdf::RooProjectedPdf() : _cacheMgr(this, 10) {}
 
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooProjectedPdf::RooProjectedPdf() : _cacheMgr(this,10)
-{
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Construct projection of input pdf '_intpdf' over observables 'intObs'
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Construct projection of input pdf '_intpdf' over observables 'intObs'
 
  RooProjectedPdf::RooProjectedPdf(const char *name, const char *title, RooAbsReal& _intpdf, const RooArgSet& intObs) :
    RooAbsPdf(name,title),
@@ -286,6 +281,15 @@ RooProjectedPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
    nset2.add(intobs);
 
    auto newArg = std::unique_ptr<RooAbsReal>{intpdf->createIntegral(intobs, &nset2)};
+
+   std::string namePdf = std::string{newArg->GetName()} + "_wrapped_pdf";
+
+   auto newArgPdf = std::make_unique<RooWrapperPdf>(namePdf.c_str(), namePdf.c_str(), *newArg);
+
    ctx.markAsCompiled(*newArg);
-   return newArg;
+   ctx.markAsCompiled(*newArgPdf);
+
+   newArgPdf->addOwnedComponents(std::move(newArg));
+
+   return newArgPdf;
 }

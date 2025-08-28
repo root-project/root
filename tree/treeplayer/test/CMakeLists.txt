@@ -17,6 +17,8 @@ endif()
 
 ROOT_ADD_GTEST(treeplayer_gh16804 gh16804.cxx LIBRARIES TreePlayer)
 
+ROOT_ADD_GTEST(treeplayer_gh16805 gh16805.cxx LIBRARIES TreePlayer)
+
 ROOT_ADD_GTEST(treeplayer_leafs leafs.cxx LIBRARIES TreePlayer)
 add_custom_command(TARGET treeplayer_leafs POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/data.h data.h)
@@ -39,3 +41,5 @@ if(imt)
       ROOT_ADD_GTEST(treeprocessormt_remotefiles treeprocs/treeprocessormt_remotefiles.cxx LIBRARIES TreePlayer)
    endif()
 endif()
+
+

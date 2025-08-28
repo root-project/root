@@ -5063,7 +5063,8 @@ static Bool_t ContainsTImage(TList *li)
 ///  generated in some loop one needs to detect the special cases of first
 ///  and last page and then munge the argument to Print() accordingly.
 ///
-///  The "[" and "]" can be used instead of "(" and ")".
+///  The "[" and "]" can be used instead of "(" and ")" to open / close without
+///  actual printing.
 ///
 /// Example:
 /// ~~~ {.cpp}
@@ -5123,6 +5124,9 @@ void TPad::Print(const char *filename, Option_t *option)
    TString opt = !option ? opt_default : option;
    Bool_t image = kFALSE;
 
+   Bool_t title = kFALSE;
+   if (strstr(opt,"Title:")) title = kTRUE;
+
    if (!fs1.Length())  {
       psname = GetName();
       psname += opt;
@@ -5140,25 +5144,25 @@ void TPad::Print(const char *filename, Option_t *option)
 
    // Save pad/canvas in alternative formats
    TImage::EImageFileTypes gtype = TImage::kUnknown;
-   if (strstr(opt, "gif+")) {
+   if (!title && strstr(opt, "gif+")) {
       gtype = TImage::kAnimGif;
       image = kTRUE;
-   } else if (strstr(opt, "gif")) {
+   } else if (!title && strstr(opt, "gif")) {
       gtype = TImage::kGif;
       image = kTRUE;
-   } else if (strstr(opt, "png")) {
+   } else if (!title && strstr(opt, "png")) {
       gtype = TImage::kPng;
       image = kTRUE;
-   } else if (strstr(opt, "jpg")) {
+   } else if (!title && strstr(opt, "jpg")) {
       gtype = TImage::kJpeg;
       image = kTRUE;
-   } else if (strstr(opt, "tiff")) {
+   } else if (!title && strstr(opt, "tiff")) {
       gtype = TImage::kTiff;
       image = kTRUE;
-   } else if (strstr(opt, "xpm")) {
+   } else if (!title && strstr(opt, "xpm")) {
       gtype = TImage::kXpm;
       image = kTRUE;
-   } else if (strstr(opt, "bmp")) {
+   } else if (!title && strstr(opt, "bmp")) {
       gtype = TImage::kBmp;
       image = kTRUE;
    }
@@ -5209,32 +5213,32 @@ void TPad::Print(const char *filename, Option_t *option)
    }
 
    //==============Save pad/canvas as a C++ script==============================
-   if (strstr(opt,"cxx")) {
+   if (!title && strstr(opt,"cxx")) {
       GetCanvas()->SaveSource(psname, "");
       return;
    }
 
    //==============Save pad/canvas as a root file===============================
-   if (strstr(opt,"root")) {
+   if (!title && strstr(opt,"root")) {
       if (gDirectory) gDirectory->SaveObjectAs(this,psname.Data(),"");
       return;
    }
 
    //==============Save pad/canvas as a XML file================================
-   if (strstr(opt,"xml")) {
+   if (!title && strstr(opt,"xml")) {
       // Plugin XML driver
       if (gDirectory) gDirectory->SaveObjectAs(this,psname.Data(),"");
       return;
    }
 
    //==============Save pad/canvas as a JSON file================================
-   if (strstr(opt,"json")) {
+   if (!title && strstr(opt,"json")) {
       if (gDirectory) gDirectory->SaveObjectAs(this,psname.Data(),"");
       return;
    }
 
    //==============Save pad/canvas as a SVG file================================
-   if (strstr(opt,"svg")) {
+   if (!title && strstr(opt,"svg")) {
       gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
 
       Bool_t noScreen = kFALSE;
@@ -5275,7 +5279,7 @@ void TPad::Print(const char *filename, Option_t *option)
    }
 
    //==============Save pad/canvas as a TeX file================================
-   if (strstr(opt,"tex") || strstr(opt,"Standalone")) {
+   if (!title && (strstr(opt,"tex") || strstr(opt,"Standalone"))) {
       gVirtualPS = (TVirtualPS*)gROOT->GetListOfSpecials()->FindObject(psname);
 
       Bool_t noScreen = kFALSE;
@@ -5363,7 +5367,7 @@ void TPad::Print(const char *filename, Option_t *option)
    if (!gVirtualPS || mustOpen) {
 
       const char *pluginName = "ps"; // Plugin Postscript driver
-      if (strstr(opt,"pdf") || strstr(opt,"Title:") || strstr(opt,"EmbedFonts"))
+      if (strstr(opt,"pdf") || title || strstr(opt,"EmbedFonts"))
          pluginName = "pdf";
       else if (image)
          pluginName = "image"; // Plugin TImageDump driver

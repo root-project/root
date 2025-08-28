@@ -26,7 +26,7 @@ std::underlying_type_t<Options> operator|(std::underlying_type_t<Options> opA, O
     return opA | static_cast<std::underlying_type_t<Options>>(opB);
 }
 
-const std::vector<size_t>& RModel::GetTensorShape(std::string name) const {
+std::vector<size_t> RModel::GetTensorShape(const std::string & name) const {
     auto f = fReadyInputTensorInfos.find(name);
     if (f != fReadyInputTensorInfos.end()) {
         return f->second.shape;
@@ -43,6 +43,16 @@ const std::vector<size_t>& RModel::GetTensorShape(std::string name) const {
     if (f4 != fIntermediateTensorInfos.end()) {
         return f4->second.shape;
     }
+    // case of shape tensors
+    auto f5 = fShapeTensors.find(name);
+    if (f5 != fShapeTensors.end()) {
+      // shape is vector of size 1 with size of shape values or just a scalar
+      if (f5->second.second)  // check scalar flag
+         return std::vector<size_t>{};
+      else
+         return std::vector<size_t>{f5->second.first.size()};
+    }
+
     if (fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end())
       throw std::runtime_error("TMVA SOFIE tensor [" + name + "] is a dynamic tensor. Use GetDynamicTensorShape instead of GetTensorShape");
 
@@ -52,7 +62,7 @@ const std::vector<size_t>& RModel::GetTensorShape(std::string name) const {
     throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the shape is requested is not found");
 }
 
-std::vector<Dim> RModel::GetDynamicTensorShape(std::string name) const {
+std::vector<Dim> RModel::GetDimTensorShape(const std::string & name) const {
    if (auto f = fDynamicTensorInfos.find(name); f != fDynamicTensorInfos.end()) {
       return f->second.shape;
    }
@@ -63,8 +73,21 @@ std::vector<Dim> RModel::GetDynamicTensorShape(std::string name) const {
    // for this we need to return the vector by value
    return ConvertShapeToDim(GetTensorShape(name));
 }
+std::vector<Dim> RModel::GetDynamicTensorShape(const std::string & name) const {
+   if (auto f = fDynamicTensorInfos.find(name); f != fDynamicTensorInfos.end()) {
+      return f->second.shape;
+   }
+   if (auto f = fInputTensorInfos.find(name); f != fInputTensorInfos.end()) {
+      return f->second.shape;
+   }
+   // throw error if shape is not dynamic
+   if (!IsDynamicTensor(name))
+      throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the shape is requested is not dynamic");
 
-const ETensorType& RModel::GetTensorType(std::string name) const {
+   throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the shape is requested is not found");
+}
+
+ETensorType RModel::GetTensorType(std::string name) const {
     auto f = fReadyInputTensorInfos.find(name);
     if (f != fReadyInputTensorInfos.end()) {
         return f->second.type;
@@ -85,6 +108,10 @@ const ETensorType& RModel::GetTensorType(std::string name) const {
     if (f5 != fDynamicTensorInfos.end()){
       return f5->second.type;
     }
+    // case of shape tensor type is INT64
+    if (fShapeTensors.find(name) != fShapeTensors.end()){
+      return ETensorType::INT64;
+    }
 
     if (fIsSubGraph && fParentGraph)
       return fParentGraph->GetTensorType(name);
@@ -98,6 +125,7 @@ bool RModel::CheckIfTensorAlreadyExist(std::string tensor_name) {
     if (fInitializedTensors.find(tensor_name) != fInitializedTensors.end()) return true;
     if (fIntermediateTensorInfos.find(tensor_name) != fIntermediateTensorInfos.end()) return true;
     if (fDynamicTensorInfos.find(tensor_name) != fDynamicTensorInfos.end()) return true;
+    if (fShapeTensors.find(tensor_name) != fShapeTensors.end()) return true;
     if (fIsSubGraph && fParentGraph) return fParentGraph->CheckIfTensorAlreadyExist(tensor_name);
     return false;
 }
@@ -166,10 +194,27 @@ void RModel::AddConstantTensor(std::string tensor_name, ETensorType type, std::v
     tensor_name = UTILITY::Clean_name(tensor_name);
     //NB: own data
     if (CheckIfTensorAlreadyExist(tensor_name)) {
-        throw std::runtime_error("TMVA-SOFIE: initialized tensor with name " + tensor_name + " already exists \n");
+        throw std::runtime_error("TMVA-SOFIE: constant tensor with name " + tensor_name + " already exists \n");
     }
     InitializedTensor new_tensor {type, shape, data, true};   // add here flag to specify is a constant tensor
     fInitializedTensors[tensor_name] = new_tensor;
+}
+
+void RModel::AddShapeTensor(const std::string & name, const std::vector<Dim> & shape_values, bool scalar){
+   auto tensor_name = UTILITY::Clean_name(name);
+   if (fShapeTensors.count(tensor_name) != 0) {
+      throw std::runtime_error("TMVA-SOFIE: shape tensor with name " + tensor_name + " already exists \n");
+   }
+   fShapeTensors[tensor_name] = std::make_pair(shape_values, scalar);
+}
+
+bool RModel::IsShapeTensor(const std::string & tensor_name) const {
+   return fShapeTensors.count(tensor_name) != 0;
+}
+
+const std::vector<Dim> & RModel::GetShapeTensorValues(const std::string & tensor_name) const {
+   //if (!IsShapeTensor(tensor_name) ) return std::vector<Dim>{};
+   return fShapeTensors.at(tensor_name).first;
 }
 
 bool RModel::IsInitializedTensor(const std::string& tensorName) const {
@@ -183,9 +228,11 @@ bool RModel::IsConstantTensor(const std::string& tensorName) const {
     return itr->second.IsConstantTensor();
 }
 
+// dynamic tensors include also Dim input tensors
 bool RModel::IsDynamicTensor(const std::string& tensorName) const {
    std::string name = UTILITY::Clean_name(tensorName);
-   return fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end();
+   bool ret = fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end();
+   return (ret) ? true : IsDimInputTensor(tensorName);
 }
 bool RModel::IsDimInputTensor(const std::string& tensorName) const {
    std::string name = UTILITY::Clean_name(tensorName);
@@ -224,14 +271,18 @@ void RModel::AddDynamicTensor(std::string tensor_name, ETensorType type, std::ve
    // store shape parameter if not existing
    for (auto &d : shape) {
       if (d.isParam) {
-         if (fShapeParams.count(d.param) == 0) {
-            // case parameter is an expression of some other existing parameter, no need to
-            // register it
-            if (d.dim != size_t(-1)) {
-              fShapeParams[d.param] = std::to_string(d.dim);
-            }
+         if (d.dim != size_t(-1)) {
+            AddShapeParam(d.param, d.dim);
          }
       }
+   }
+}
+
+void RModel::AddShapeParam(const std::string & param, size_t default_value) {
+   if (fShapeParams.count(param) == 0) {
+      fShapeParams[param] = std::to_string(default_value);
+      // add also in the vector list (used to keep the order)
+      fDimShapeNames.push_back(param);
    }
 }
 
@@ -279,6 +330,13 @@ std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view>
 {
    std::stringstream code;
 
+   if (fVerbose) {
+      std::cout << "Total chunks allocated\n";
+      for (auto chunk = fIntermediateMemoryInfo.total_stack.begin(); chunk != fIntermediateMemoryInfo.total_stack.end(); ++chunk) {
+         std::cout << "..... chunk " << chunk->first << " size " << chunk->second.tensor_size << " " << chunk->second.tensor_name << std::endl;
+      }
+   }
+
    auto declareIntermediateTensor = [this, &code](std::string const &name, size_t size, size_t location) {
       std::string typeName = ConvertTypeToString(GetTensorType(name));
       code << "\n // Allocating memory for intermediate tensor " << name << " with size " << size << " bytes";
@@ -287,88 +345,160 @@ std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view>
            << "*>(fIntermediateMemoryPool.data() + " << location << ");\n";
    };
 
+   if (fVerbose) std::cout << "*** AllocateIntermediateMemory: Loop on op output tensors\n";
+   // order output tensors by size
+   std::vector<TensorMemoryInfo> ordered_output_tensors;
+
    for (auto &it : op_output_tensors) {
-         std::string name = std::string{it};
-         bool allocated = false;
-         if (GetTensorType(name) == ETensorType::BOOL ||
-            fInitializedTensors.find(name) != fInitializedTensors.end() ||
-            fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end()) continue;
+      auto name = std::string(it);
+      if (GetTensorType(name) == ETensorType::BOOL || fInitializedTensors.find(name) != fInitializedTensors.end() ||
+          fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end())
+         continue;
 
-         auto tensor_size = GetTypeSize(GetTensorType(name)) * ConvertShapeToLength(GetTensorShape(name));
+      auto tensor_size = GetTypeSize(GetTensorType(name)) * ConvertShapeToLength(GetTensorShape(name));
+      // important fill the pair in the ordered output tensors with the string view and not the string
+      TensorMemoryInfo tmi = {it, tensor_size};
+      ordered_output_tensors.push_back(tmi);
+   }
+   std::sort(ordered_output_tensors.begin(), ordered_output_tensors.end(),
+             [](const TensorMemoryInfo &a, const TensorMemoryInfo &b) { return a.tensor_size > b.tensor_size; });
 
-            for (auto chunk = fIntermediateMemoryInfo.available_stack.begin(); chunk != fIntermediateMemoryInfo.available_stack.end(); ) {
+   for (auto &it : ordered_output_tensors) {
+      bool allocated = false;
+      std::string name = std::string{it.tensor_name};
+      size_t tensor_size = it.tensor_size;
+      if (fVerbose)
+         std::cout << "output tensor " << name << " size " << tensor_size << std::endl;
 
-                  // check if available memory chunks can accommodate the tensor
-                  if (chunk->second >= tensor_size) {
-                     auto new_chunk = fIntermediateMemoryInfo.total_stack[chunk->first].split(it, tensor_size);
-                     auto new_chunk_location = chunk->first+chunk->second-tensor_size;
-                     fIntermediateMemoryInfo.total_stack[new_chunk_location] = new_chunk;
+      for (auto chunk = fIntermediateMemoryInfo.available_stack.begin();
+           chunk != fIntermediateMemoryInfo.available_stack.end();) {
 
-                     declareIntermediateTensor(name, tensor_size, new_chunk_location);
-                     chunk->second -= tensor_size;
+         if (fVerbose) std::cout << ".. available chunk " << chunk->first << " with size = " << chunk->second;
+         // check if available memory chunks can accommodate the tensor
+         if (chunk->second >= tensor_size) {
+            // need to use here string_view (i.e it.tensor_name)
+            // split returns the new chunk with size of new tensor. The free chunk is before the used one
+            auto new_chunk = fIntermediateMemoryInfo.total_stack[chunk->first].split(it.tensor_name, tensor_size);
+            auto new_chunk_location = chunk->first + chunk->second - tensor_size;
+            fIntermediateMemoryInfo.total_stack[new_chunk_location] = new_chunk;
 
-                     allocated = true;
+            declareIntermediateTensor(name, tensor_size, new_chunk_location);
+            chunk->second -= tensor_size;
 
-                     if (chunk->second == 0) {
-                        chunk = fIntermediateMemoryInfo.available_stack.erase(chunk);
-                     }
+            allocated = true;
 
-                     break;
-                  }
-                  ++chunk;
+            if (fVerbose) std::cout << " is re-used and split in a new of size " << new_chunk.tensor_size << " at " << new_chunk_location;
+
+            if (chunk->second == 0) {
+               if (fVerbose) std::cout << " and deleted since size matches";
+               fIntermediateMemoryInfo.available_stack.erase(chunk);
             }
-
-         if (!allocated) {
-               size_t chunk_idx = fIntermediateMemoryInfo.total_stack.empty()
-                                 ? 0
-                                 : fIntermediateMemoryInfo.total_stack.rbegin()->first + fIntermediateMemoryInfo.total_stack.rbegin()->second.tensor_size;
-
-               fIntermediateMemoryInfo.total_stack[chunk_idx] = {it, tensor_size};
-
-               declareIntermediateTensor(name, tensor_size, chunk_idx);
+            if (fVerbose) std::cout << std::endl;
+            break;
+         } else if (chunk->first == fIntermediateMemoryInfo.available_stack.rbegin()->first &&
+                    fIntermediateMemoryInfo.total_stack.rbegin()->first == chunk->first) {
+            // case last available chunk is the last in the memory, we can increase that one
+            fIntermediateMemoryInfo.total_stack[chunk->first] = {it.tensor_name, tensor_size};
+            declareIntermediateTensor(name, tensor_size, chunk->first);
+            fIntermediateMemoryInfo.available_stack.erase(chunk);
+            allocated = true;
+            if (fVerbose) std::cout << " is extended  with a bigger one of size " << tensor_size << std::endl;
+            break;
          }
+         ++chunk;
+         if (fVerbose) std::cout << std::endl;
+      }
+
+      if (!allocated) {
+         size_t chunk_idx = fIntermediateMemoryInfo.total_stack.empty()
+                               ? 0
+                               : fIntermediateMemoryInfo.total_stack.rbegin()->first +
+                                    fIntermediateMemoryInfo.total_stack.rbegin()->second.tensor_size;
+
+         fIntermediateMemoryInfo.total_stack[chunk_idx] = it;
+
+         declareIntermediateTensor(name, tensor_size, chunk_idx);
+
+         if (fVerbose) std::cout << "no chunk available - add in total stack a new chunk with size of tensor and idx : " << chunk_idx
+                   << std::endl;
+      }
    }
    return code.str();
 }
 
 void RModel::CheckAndFlushIntermediateMemory(std::span<const std::string_view> op_input_tensors, const size_t& op_idx){
-   for (auto &it : op_input_tensors){
+   if (fVerbose) std::cout << "*** CheckAndFlushIntermediateMemory: Loop on input tensors for op " << op_idx << "\n";
+   //print available chunks
+   if (fVerbose) std::cout << "available chunks before freeing them : \n";
+   for (auto chunk = fIntermediateMemoryInfo.available_stack.begin();
+        chunk != fIntermediateMemoryInfo.available_stack.end(); chunk++) {
+      if (fVerbose) std::cout << "-- free chunk " << chunk->first <<  " size = " << chunk->second << std::endl;
+   }
+   for (auto &it : op_input_tensors) {
       // last occurence of the tensor is reached => flush it from memory
+      if (fVerbose) std::cout << ".. input tensors : " << it;
       if (fIntermediateTensorFrequencyLookup[it] == op_idx) {
+         if (fVerbose) std::cout << "  flash condition is met - looping on chunks to find matching one \n";
          for (auto chunk = fIntermediateMemoryInfo.total_stack.begin();
-               chunk != fIntermediateMemoryInfo.total_stack.end(); ++chunk ) {
-               if (chunk->second.tensor_name == it) {
+              chunk != fIntermediateMemoryInfo.total_stack.end(); ++chunk) {
+            if (fVerbose) std::cout << "---  chunk " << chunk->first << " , " << chunk->second.tensor_name << " size " << chunk->second.tensor_size;
+            if (chunk->second.tensor_name == it) {
+               if (fVerbose) std::cout << " --  Found chunk corresponding to input tensor:  " << chunk->first;
+               // check if nearby chunks in available memory can coalesce
+               auto first_greater = fIntermediateMemoryInfo.available_stack.upper_bound(
+                  chunk->first); // smallest element greater than the flushed chunk idx
+               auto last_smaller = (first_greater == fIntermediateMemoryInfo.available_stack.begin())
+                                      ? fIntermediateMemoryInfo.available_stack.end()
+                                      : std::prev(first_greater); // largest element smaller than the flushed chunk idx
 
-                     // check if nearby chunks in available memory can coalesce
-                     auto first_greater = fIntermediateMemoryInfo.available_stack.upper_bound(chunk->first); // smallest element greater than the flushed chunk idx
-                     auto last_smaller = (first_greater == fIntermediateMemoryInfo.available_stack.begin()) ? fIntermediateMemoryInfo.available_stack.end() : std::prev(first_greater); // largest element smaller than the flushed chunk idx
+               // check if the next stack entry is actually adjacent in memory
 
-                     // check if the next stack entry is actually adjacent in memory
-                     if (last_smaller->first+last_smaller->second + 1 == chunk->first){
-                        last_smaller->second += chunk->second.tensor_size;
-                        fIntermediateMemoryInfo.total_stack[last_smaller->first].merge(chunk->second);
-
-                        if (last_smaller->first + last_smaller->second + 1 == first_greater->first){
-                              fIntermediateMemoryInfo.total_stack[last_smaller->first].merge(fIntermediateMemoryInfo.total_stack[first_greater->first]);
-                              first_greater = fIntermediateMemoryInfo.available_stack.erase(first_greater);
-                        }
-                     } else{
-                        if (chunk->first + chunk->second.tensor_size + 1 == first_greater->first){
-                           fIntermediateMemoryInfo.total_stack[chunk->first].merge(fIntermediateMemoryInfo.total_stack[first_greater->first]);
-                           first_greater = fIntermediateMemoryInfo.available_stack.erase(first_greater);
-                        }
-                        fIntermediateMemoryInfo.available_stack.insert({
-                           chunk->first,
-                           chunk->second.tensor_size
-        });
-                     }
+               if (last_smaller != fIntermediateMemoryInfo.available_stack.end() &&
+                   last_smaller->first + last_smaller->second == chunk->first) {
+                  // merge chunk with previous one
+                  last_smaller->second += chunk->second.tensor_size;
+                  fIntermediateMemoryInfo.total_stack[last_smaller->first].merge(chunk->second);
+                  if (fVerbose) std::cout << " is adjacent in memory with previous one - merge ";
+                  if (first_greater != fIntermediateMemoryInfo.available_stack.end() &&
+                      last_smaller->first + last_smaller->second == first_greater->first) {
+                     // merge also with following one
+                     last_smaller->second += first_greater->second;
+                     fIntermediateMemoryInfo.total_stack[last_smaller->first].merge(
+                        fIntermediateMemoryInfo.total_stack[first_greater->first]);
+                     // delete merged one in available stack and in total stack
+                     fIntermediateMemoryInfo.total_stack.erase(first_greater->first);
+                     fIntermediateMemoryInfo.available_stack.erase(first_greater);
+                     if (fVerbose) std::cout << " merge also with following that is free ";
+                  }
+                  fIntermediateMemoryInfo.total_stack.erase(chunk->first);
+                  if (fVerbose) std::cout << std::endl;
+                  break;
+               } else if (first_greater != fIntermediateMemoryInfo.available_stack.end() &&
+                          chunk->first + chunk->second.tensor_size == first_greater->first) {
+                  // merge with first greater
+                  if (fVerbose) std::cout << " is adjacent in memory with following one - merge \n";
+                  // cannot modify idx of first_greter. Insert a new one and delete previous one
+                  size_t new_size = chunk->second.tensor_size + first_greater->second;
+                  size_t first_greater_idx = first_greater->first;
+                  fIntermediateMemoryInfo.available_stack.erase(first_greater);
+                  // cannot use anymore first_greater
+                  fIntermediateMemoryInfo.available_stack.insert({chunk->first, new_size});
+                  fIntermediateMemoryInfo.total_stack[chunk->first].merge(
+                     fIntermediateMemoryInfo.total_stack[first_greater_idx]);
+                  fIntermediateMemoryInfo.total_stack.erase(first_greater_idx);
+               } else {
+                  fIntermediateMemoryInfo.available_stack.insert({chunk->first, chunk->second.tensor_size});
+                  if (fVerbose) std::cout << " insert in the available stack the chunk with size " << chunk->second.tensor_size << std::endl;
                }
+               chunk->second.tensor_name = "free";
+               break;
+            }
          }
+      } else {
+         if (fVerbose) std::cout << std::endl;
       }
    }
 }
-
-
 
 void RModel::Initialize(int batchSize, bool verbose) {
    std::map<std::string, size_t> inputParams;
@@ -417,7 +547,7 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
       auto shape = ConvertShapeToInt(input.second.shape);
       if (verbose)
          std::cout << "converting input shape for " << input.first << " " << ConvertShapeToString(shape) << " from "
-            << ConvertDynamicShapeToString(input.second.shape) << std::endl;
+            << ConvertShapeToString(input.second.shape) << std::endl;
       if (!shape.empty()) {
          // case shape is defined (not parametric) we add the tensor in the fReadyInputTensorInfos map and
          // we remove the tensor from the fInputTensorInfo where th eold parametric shape was stored
@@ -431,8 +561,12 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
       else {
          // store the found parametric shape parameters
          for (auto &d : input.second.shape) {
-            if (d.isParam)
-               fShapeParams[d.param] = std::to_string(d.dim);
+            if (d.isParam) {
+               if (fShapeParams.count(d.param) == 0) {
+                  fDimShapeNames.push_back(d.param);
+                  fShapeParams[d.param] = std::to_string(d.dim);
+               }
+            }
          }
       }
    }
@@ -554,10 +688,13 @@ void RModel::GenerateInitializedTensorInfo()
 
    for (auto &i : fInitializedTensors) {
       if (!fUseWeightFile || i.second.IsConstantTensor()) {
-         if (i.second.type() == ETensorType::FLOAT)
+         if (i.second.type() == ETensorType::FLOAT) {
             fGC += GenerateConstantTensorCode<float>(i);
-         else if (i.second.type() == ETensorType::INT64)
+            fConstantTensorSize += ConvertShapeToLength(i.second.shape()) * 4;
+         } else if (i.second.type() == ETensorType::INT64) {
             fGC += GenerateConstantTensorCode<int64_t>(i);
+            fConstantTensorSize += ConvertShapeToLength(i.second.shape()) * 8;
+         }
 
       } else {
          // case of tensors which are read from a file
@@ -565,6 +702,7 @@ void RModel::GenerateInitializedTensorInfo()
          if (i.second.type() == ETensorType::FLOAT) {
             fGC += "std::vector<float> fTensor_" + i.first + " = std::vector<float>(" + std::to_string(length) + ");\n";
             fGC += "float * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
+            fWeightsTensorSize += ConvertShapeToLength(i.second.shape()) * 4;
          }
       }
    }
@@ -602,14 +740,17 @@ void RModel::GenerateIntermediateTensorInfo() {
             if (i.second.type == ETensorType::FLOAT) {
                tensor_declaration_block += "std::vector<float> fTensor_" + i.first + " = std::vector<float>(" + std::to_string(length) + ");\n";
                tensor_declaration_block += "float * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
+               fOtherTensorSize += 4 * length;
             }
             else if (i.second.type == ETensorType::DOUBLE) {
                tensor_declaration_block += "std::vector<double> fTensor_" + i.first + " = std::vector<double>(" + std::to_string(length) + ");\n";
                tensor_declaration_block += "double * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
+               fOtherTensorSize += 8 * length;
             }
             else if (i.second.type == ETensorType::INT64) {
                tensor_declaration_block += "std::vector<int64_t> fTensor_" + i.first + " = std::vector<int64_t>(" + std::to_string(length) + ");\n";
                tensor_declaration_block += "int64_t * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
+               fOtherTensorSize += 8 * length;
             }
          }
       }
@@ -791,6 +932,11 @@ void RModel::GenerateSessionCode()
       std::string intermediate_memory_alloc_string = "";
       intermediate_memory_alloc_string += "\n// --- Positioning intermediate tensor memory --";
       for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
+         if (fVerbose) {
+            auto op = fOperators[op_idx].get();
+            std::cout << "\n******************\n analyzing input/output operator " << op_idx << "  "
+                      << typeid(*op).name() << std::endl;
+         }
          intermediate_memory_alloc_string += AllocateIntermediateMemory(fOperators[op_idx]->GetOpOutputTensors());
          CheckAndFlushIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx);
       }
@@ -849,10 +995,10 @@ void RModel::GenerateSessionCode()
       }
       // add initialization of shape parameters
       // assume all parameters are of type size_t
-      if (!fShapeParams.empty()) {
-         for (auto &p : fShapeParams) {
+      if (!fDimShapeNames.empty()) {
+         for (auto &p : fDimShapeNames) {
             fGC += ",\n";
-            fGC += "        size_t " + p.first + " = " + p.second;
+            fGC += "        size_t " + p + " = " + fShapeParams[p];
          }
       }
       fGC += ") {\n";
@@ -898,7 +1044,7 @@ void RModel::GenerateSessionCode()
       // larger size) in that case better to copy
       bool isIntermediate = fIntermediateTensorInfos.count(name) > 0;
       std::string n = isIntermediate ? std::to_string(ConvertShapeToLength(GetTensorShape(name)))
-                                     : ConvertDynamicShapeToLength(GetDynamicTensorShape(name));
+                                     : ConvertDimShapeToLength(GetDimTensorShape(name));
       fGC += SP + "FillOutput(tensor_" + name + ", output_tensor_" + name + ", " + n + ");\n";
    }
 
@@ -1238,9 +1384,9 @@ void RModel::PrintOutputTensors() {
     for (auto& it: fOutputTensorNames) {
         std::cout << "Tensor name: \"" << it << "\"\t";
         if (!IsDynamicTensor(it))
-          std::cout << "shape: " << ConvertShapeToString(GetTensorShape(it)) << std::endl;
-       else
-          std::cout << "shape: " << ConvertDynamicShapeToString(GetDynamicTensorShape(it)) << std::endl;
+           std::cout << "shape: " << ConvertShapeToString(GetTensorShape(it)) << std::endl;
+        else
+          std::cout << "shape: " << ConvertShapeToString(GetDynamicTensorShape(it)) << std::endl;
     }
     std::cout << "\n";
 }

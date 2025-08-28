@@ -1,0 +1,47 @@
+
+Processing verify.cxx+...
+Info in <TUnixSystem::ACLiC>: creating shared library /home/linev/build/webgui/roottest/root/tree/pointers/verify_cxx.so
+The indirect pointer is still null
+******************************************************************************
+*Tree    :T         : T                                                      *
+*Entries :        1 : Total =            6143 bytes  File  Size =       6199 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+*Br    0 :split0.   : myclass                                                *
+*Entries :        1 : Total  Size=        618 bytes  File Size  =        121 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Branch  :split1.                                                            *
+*Entries :        1 : BranchElement (see below)                              *
+*............................................................................*
+*Br    1 :split1.myself : myclass*                                           *
+*Entries :        1 : Total  Size=        614 bytes  File Size  =         93 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    2 :split1.indirect : wrapper*                                         *
+*Entries :        1 : Total  Size=        650 bytes  File Size  =        121 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    3 :split1.fValue : Int_t                                              *
+*Entries :        1 : Total  Size=        602 bytes  File Size  =         81 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Branch  :split99.                                                           *
+*Entries :        1 : BranchElement (see below)                              *
+*............................................................................*
+*Br    4 :split99.myself : myclass*                                          *
+*Entries :        1 : Total  Size=        619 bytes  File Size  =         94 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    5 :split99.indirect : wrapper*                                        *
+*Entries :        1 : Total  Size=        655 bytes  File Size  =        122 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+*Br    6 :split99.fValue : Int_t                                             *
+*Entries :        1 : Total  Size=        607 bytes  File Size  =         82 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
+*............................................................................*
+Verifying split0.
+Verifying split1.
+Verifying split99.
+(int) 0

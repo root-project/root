@@ -137,11 +137,11 @@ TEST(RDataFrameUtils, FindUnknownColumns)
    TTree t("t", "t");
    t.Branch("a", &i);
 
-   ROOT::Detail::RDF::RLoopManager lm{1};
+   ROOT::Detail::RDF::RLoopManager lm{&t, {}};
    RDFInt::RColumnRegister defs(&lm);
    defs.AddAlias("b", "a");
 
-   auto ncols = RDFInt::FindUnknownColumns({"a", "b", "c", "d"}, RDFInt::GetBranchNames(t), defs, {});
+   auto ncols = RDFInt::FindUnknownColumns({"a", "b", "c", "d"}, defs, lm.GetDataSource()->GetColumnNames());
    EXPECT_EQ(ncols.size(), 2u);
    EXPECT_STREQ("c", ncols[0].c_str());
    EXPECT_STREQ("d", ncols[1].c_str());
@@ -152,12 +152,13 @@ TEST(RDataFrameUtils, FindUnknownColumnsWithDataSource)
    int i;
    TTree t("t", "t");
    t.Branch("a", &i);
+   t.Branch("c", &i);
 
-   ROOT::Detail::RDF::RLoopManager lm{1};
+   ROOT::Detail::RDF::RLoopManager lm{&t, {}};
    RDFInt::RColumnRegister defs(&lm);
    defs.AddAlias("b", "a");
 
-   auto ncols = RDFInt::FindUnknownColumns({"a", "b", "c", "d"}, RDFInt::GetBranchNames(t), defs, {"c"});
+   auto ncols = RDFInt::FindUnknownColumns({"a", "b", "c", "d"}, defs, lm.GetDataSource()->GetColumnNames());
    EXPECT_EQ(ncols.size(), 1u);
    EXPECT_STREQ("d", ncols[0].c_str());
 }
@@ -173,9 +174,9 @@ TEST(RDataFrameUtils, FindUnknownColumnsNestedNames)
    DummyStruct s{1, 2};
    t.Branch("s", &s, "a/I:b/I");
 
-   ROOT::Detail::RDF::RLoopManager lm{1};
-   auto unknownCols = RDFInt::FindUnknownColumns({"s.a", "s.b", "s", "s.", ".s", "_asd_"}, RDFInt::GetBranchNames(t),
-                                                 RDFInt::RColumnRegister{&lm}, {});
+   ROOT::Detail::RDF::RLoopManager lm{&t, {}};
+   auto unknownCols = RDFInt::FindUnknownColumns({"s.a", "s.b", "s", "s.", ".s", "_asd_"}, RDFInt::RColumnRegister{&lm},
+                                                 lm.GetDataSource()->GetColumnNames());
    const auto trueUnknownCols = std::vector<std::string>({"s", "s.", ".s", "_asd_"});
    EXPECT_EQ(unknownCols, trueUnknownCols);
 }
@@ -202,9 +203,9 @@ TEST(RDataFrameUtils, FindUnknownColumnsFriendTrees)
    t1.AddFriend(&t2);
    t1.AddFriend(&t4);
 
-   ROOT::Detail::RDF::RLoopManager lm{1};
-   auto ncols =
-      RDFInt::FindUnknownColumns({"c2", "c3", "c4"}, RDFInt::GetBranchNames(t1), RDFInt::RColumnRegister{&lm}, {});
+   ROOT::Detail::RDF::RLoopManager lm{&t1, {}};
+   auto ncols = RDFInt::FindUnknownColumns({"c2", "c3", "c4"}, RDFInt::RColumnRegister{&lm},
+                                           lm.GetDataSource()->GetColumnNames());
    EXPECT_EQ(ncols.size(), 0u) << "Cannot find column in friend trees.";
 }
 

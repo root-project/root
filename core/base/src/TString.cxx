@@ -23,6 +23,14 @@ strings (<15 on 64-bit and <11 on 32-bit) are contained in the
 TString internal data structure without the need for mallocing the
 required space.
 
+\note TString can store a maximum of MaxSize()=2147483646 characters; ie 2147483647 bytes if you include the terminating null.
+Trying to allocate larger buffers might throw std::bad_alloc or raise
+Fatal errors or lead to undefined behavior. Likewise, there is no safety
+check if you pass a Long64_t to the class functions, they will be silently
+rounded to Int_t and lead to an integer overflow (negative value).
+For future designs, consider using std::string instead, which has a larger
+maximum size.
+
 Substring operations are provided by the TSubString class, which
 holds a reference to the original string and its data, along with
 the offset and length of the substring. To retrieve the substring
@@ -1033,7 +1041,7 @@ TString &TString::Replace(Ssiz_t pos, Ssiz_t n1, const char *cs, Ssiz_t n2)
       return *this;
    }
 
-   n1 = TMath::Min(n1, len - pos);
+   n1 = std::min(n1, len - pos);
    if (!cs) n2 = 0;
 
    Long64_t tot = static_cast<Long64_t>(len) - n1 + n2;  // Final string length, use 64-bit long instead of 32-bit int to check for overflows
@@ -1220,12 +1228,11 @@ void TString::AssertElement(Ssiz_t i) const
 Ssiz_t TString::AdjustCapacity(Ssiz_t oldCap, Ssiz_t newCap)
 {
    Ssiz_t ms = MaxSize();
-   if (newCap > ms - 1) {
+   if (newCap > ms) {
       Fatal("TString::AdjustCapacity", "capacity too large (%d, max = %d)",
             newCap, ms);
    }
-   Ssiz_t cap = oldCap < ms / 2 - kAlignment ?
-                Recommend(TMath::Max(newCap, 2 * oldCap)) : ms - 1;
+   Ssiz_t cap = oldCap <= ms / 2 ? Recommend(std::max(newCap, 2 * oldCap)) : ms;
    return cap;
 }
 
@@ -2101,7 +2108,7 @@ TString TString::Itoa(Int_t value, Int_t base)
    Int_t quotient = value;
    // Translating number to string with base:
    do {
-      buf += "0123456789abcdefghijklmnopqrstuvwxyz"[ TMath::Abs(quotient % base) ];
+      buf += "0123456789abcdefghijklmnopqrstuvwxyz"[ std::abs(quotient % base) ];
       quotient /= base;
    } while (quotient);
    // Append the negative sign
@@ -2153,7 +2160,7 @@ TString TString::LLtoa(Long64_t value, Int_t base)
    Long64_t quotient = value;
    // Translating number to string with base:
    do {
-      buf += "0123456789abcdefghijklmnopqrstuvwxyz"[ TMath::Abs(quotient % base) ];
+      buf += "0123456789abcdefghijklmnopqrstuvwxyz"[ std::abs(quotient % base) ];
       quotient /= base;
    } while (quotient);
    // Append the negative sign

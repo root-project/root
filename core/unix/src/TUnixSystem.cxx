@@ -788,11 +788,11 @@ void TUnixSystem::AddFileHandler(TFileHandler *h)
       int fd = h->GetFd();
       if (h->HasReadInterest()) {
          fReadmask->Set(fd);
-         fMaxrfd = TMath::Max(fMaxrfd, fd);
+         fMaxrfd = std::max(fMaxrfd, fd);
       }
       if (h->HasWriteInterest()) {
          fWritemask->Set(fd);
-         fMaxwfd = TMath::Max(fMaxwfd, fd);
+         fMaxwfd = std::max(fMaxwfd, fd);
       }
    }
 }
@@ -819,11 +819,11 @@ TFileHandler *TUnixSystem::RemoveFileHandler(TFileHandler *h)
          int fd = th->GetFd();
          if (th->HasReadInterest()) {
             fReadmask->Set(fd);
-            fMaxrfd = TMath::Max(fMaxrfd, fd);
+            fMaxrfd = std::max(fMaxrfd, fd);
          }
          if (th->HasWriteInterest()) {
             fWritemask->Set(fd);
-            fMaxwfd = TMath::Max(fMaxwfd, fd);
+            fMaxwfd = std::max(fMaxwfd, fd);
          }
       }
    }
@@ -1145,7 +1145,7 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
       *fReadready  = *fReadmask;
       *fWriteready = *fWritemask;
 
-      int mxfd = TMath::Max(fMaxrfd, fMaxwfd);
+      int mxfd = std::max(fMaxrfd, fMaxwfd);
       mxfd++;
 
       // if nothing to select (socket or timer) return
@@ -1212,11 +1212,11 @@ Int_t TUnixSystem::Select(TList *act, Long_t to)
       if (fd > -1) {
          if (h->HasReadInterest()) {
             rd.Set(fd);
-            mxfd = TMath::Max(mxfd, fd);
+            mxfd = std::max(mxfd, fd);
          }
          if (h->HasWriteInterest()) {
             wr.Set(fd);
-            mxfd = TMath::Max(mxfd, fd);
+            mxfd = std::max(mxfd, fd);
          }
          h->ResetReadyMask();
       }
@@ -5111,6 +5111,19 @@ static void GetDarwinProcInfo(ProcInfo_t *procinfo)
 #endif
 
 #if defined(R__LINUX)
+
+namespace {
+bool parseLine(TString &s, const char *prefix, Int_t &field)
+{
+   if (s.BeginsWith(prefix)) {
+      TPRegexp{"^.+: *([^ ]+).*"}.Substitute(s, "$1");
+      field = (s.Atoi() / 1024);
+      return true;
+   }
+   return false;
+};
+} // namespace
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Get system info for Linux. Only fBusSpeed is not set.
 
@@ -5124,17 +5137,9 @@ static void GetLinuxSysInfo(SysInfo_t *sysinfo)
             TPRegexp("^.+: *(.*$)").Substitute(s, "$1");
             sysinfo->fModel = s;
          }
-         if (s.BeginsWith("cpu MHz")) {
-            TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-            sysinfo->fCpuSpeed = s.Atoi();
-         }
-         if (s.BeginsWith("cache size")) {
-            TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-            sysinfo->fL2Cache = s.Atoi();
-         }
-         if (s.BeginsWith("processor")) {
-            TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-            sysinfo->fCpus = s.Atoi();
+         parseLine(s, "cpu MHz", sysinfo->fCpuSpeed);
+         parseLine(s, "cache size", sysinfo->fL2Cache);
+         if (parseLine(s, "processor", sysinfo->fCpus)) {
             sysinfo->fCpus++;
          }
       }
@@ -5144,9 +5149,7 @@ static void GetLinuxSysInfo(SysInfo_t *sysinfo)
    f = fopen("/proc/meminfo", "r");
    if (f) {
       while (s.Gets(f)) {
-         if (s.BeginsWith("MemTotal")) {
-            TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-            sysinfo->fPhysRam = (s.Atoi() / 1024);
+         if (parseLine(s, "MemTotal", sysinfo->fPhysRam)) {
             break;
          }
       }
@@ -5225,49 +5228,20 @@ static void GetLinuxMemInfo(MemInfo_t *meminfo)
 {
    TString s;
    FILE *f = fopen("/proc/meminfo", "r");
-   if (!f) return;
+   if (!f)
+      return;
+
    while (s.Gets(f)) {
-      if (s.BeginsWith("MemTotal")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         meminfo->fMemTotal = (s.Atoi() / 1024);
-      }
-      if (s.BeginsWith("MemFree")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         meminfo->fMemFree = (s.Atoi() / 1024);
-      }
-      if (s.BeginsWith("MemAvailable")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         meminfo->fMemAvailable = (s.Atoi() / 1024);
-      }
-      if (s.BeginsWith("Cached")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         meminfo->fMemCached = (s.Atoi() / 1024);
-      }
-      if (s.BeginsWith("Buffers")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         meminfo->fMemBuffer = (s.Atoi() / 1024);
-      }
-      if (s.BeginsWith("Shmem")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         meminfo->fMemShared = (s.Atoi() / 1024);
-      }
-      if (s.BeginsWith("SwapTotal")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         meminfo->fSwapTotal = (s.Atoi() / 1024);
-      }
-      if (s.BeginsWith("SwapFree")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         meminfo->fSwapFree = (s.Atoi() / 1024);
-      }
-      if (s.BeginsWith("SwapCached")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         meminfo->fSwapCached = (s.Atoi() / 1024);
-      }
-      if (s.BeginsWith("SReclaimable")) {
-         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
-         meminfo->fSReclaimable = (s.Atoi() / 1024);
-      }
-      
+      parseLine(s, "MemTotal", meminfo->fMemTotal);
+      parseLine(s, "MemFree", meminfo->fMemFree);
+      parseLine(s, "MemAvailable", meminfo->fMemAvailable);
+      parseLine(s, "Cached", meminfo->fMemCached);
+      parseLine(s, "Buffers", meminfo->fMemBuffer);
+      parseLine(s, "Shmem", meminfo->fMemShared);
+      parseLine(s, "SwapTotal", meminfo->fSwapTotal);
+      parseLine(s, "SwapFree", meminfo->fSwapFree);
+      parseLine(s, "SwapCached", meminfo->fSwapCached);
+      parseLine(s, "SReclaimable", meminfo->fSReclaimable);
    }
    fclose(f);
 

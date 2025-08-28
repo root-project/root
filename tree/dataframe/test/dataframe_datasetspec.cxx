@@ -9,9 +9,14 @@
 #include <ROOT/RDF/RMetaData.hxx>
 #include <TSystem.h>
 
+#include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleWriter.hxx>
+
 #include <thread> // std::thread::hardware_concurrency
 
 #include <TFile.h>
+#include <TTree.h>
 
 using namespace ROOT;
 using namespace ROOT::RDF::Experimental;
@@ -830,6 +835,228 @@ TEST_P(RDatasetSpecTest, TreeInSubdir)
    auto sample_ids = df_sample.Take<std::string>("sample_id");
    EXPECT_EQ(sample_ids->size(), 1);
    EXPECT_EQ(sample_ids->at(0), fraii.GetPath() + std::string("/subdir/T"));
+}
+
+// // Tests with RNTuple
+struct InputRNTuplesRAII {
+   unsigned int fNFiles = 0;
+   std::string fPrefix;
+
+   InputRNTuplesRAII(unsigned int nFiles, std::string prefix) : fNFiles(nFiles), fPrefix(std::move(prefix))
+   {
+      unsigned int fNEntries{5};
+      for (auto i = 0u; i < fNFiles; ++i) {
+         auto model = ROOT::RNTupleModel::Create();
+         auto fldX = model->MakeField<int>("x");
+         auto fn = fPrefix + std::to_string(i) + ".root";
+         auto ntpl = ROOT::RNTupleWriter::Recreate(std::move(model), "ntuple", fn);
+         for (ULong64_t entry = 0; entry < fNEntries; entry++) {
+            *fldX = entry;
+            ntpl->Fill();
+         }
+      }
+   }
+   ~InputRNTuplesRAII()
+   {
+      for (auto i = 0u; i < fNFiles; ++i)
+         std::remove((fPrefix + std::to_string(i) + ".root").c_str());
+   }
+};
+
+struct InputRNTuplesRAIIRanges {
+   unsigned int fNFiles = 0;
+   std::string fPrefix;
+   InputRNTuplesRAIIRanges(unsigned int nFiles, std::string prefix) : fNFiles(nFiles), fPrefix(std::move(prefix))
+   {
+      unsigned int fNEntries{5};
+      for (auto i = 0u; i < fNFiles; ++i) {
+         auto model = ROOT::RNTupleModel::Create();
+         auto fldX = model->MakeField<int>("x");
+         auto fn = fPrefix + std::to_string(i) + ".root";
+         auto ntpl = ROOT::RNTupleWriter::Recreate(std::move(model), "ntuple", fn);
+         for (ULong64_t entry = 0; entry < fNEntries; entry++) {
+            *fldX = i * entry;
+            ntpl->Fill();
+         }
+      }
+   }
+   ~InputRNTuplesRAIIRanges()
+   {
+      for (auto i = 0u; i < fNFiles; ++i)
+         std::remove((fPrefix + std::to_string(i) + ".root").c_str());
+   }
+};
+
+TEST_P(RDatasetSpecTest, RNTupleSingle)
+{
+   const std::string prefix = "rdatasetspec_rntuple";
+   InputRNTuplesRAII file(1u, prefix);
+   auto samp = ROOT::RDF::Experimental::RSample("mysample", "ntuple", prefix + "0.root");
+   RDatasetSpec spec;
+   spec.AddSample(samp);
+   auto df1 = ROOT::RDataFrame(spec);
+   auto count = df1.Filter("x > 3").Count();
+   EXPECT_EQ(count.GetValue(), 1);
+}
+
+TEST_P(RDatasetSpecTest, RNTupleMultiple)
+{
+   const std::string prefix = "rdatasetspec_rntuple";
+   InputRNTuplesRAII file(4u, prefix);
+   ROOT::RDF::Experimental::RMetaData meta, meta1, meta2;
+   meta.Add("lum", 10.0);
+   meta1.Add("lum", 20.0);
+   meta2.Add("lum", 30.0);
+   auto samp = ROOT::RDF::Experimental::RSample("mysample", "ntuple",
+                                                std::vector<std::string>{prefix + "0.root", prefix + "3.root"}, meta);
+   auto samp1 = ROOT::RDF::Experimental::RSample("mysample1", "ntuple", prefix + "1.root", meta1);
+   auto samp2 = ROOT::RDF::Experimental::RSample("mysample2", "ntuple", prefix + "2.root", meta2);
+   RDatasetSpec spec;
+   spec.AddSample(samp);
+   spec.AddSample(samp1);
+   spec.AddSample(samp2);
+   auto df1 = ROOT::RDataFrame(spec);
+
+   auto df_final = df1.Filter("x > 3").Count();
+
+   auto definepersamp =
+      df1.DefinePerSample("lum", [](unsigned int, const ROOT::RDF::RSampleInfo &id) { return id.GetD("lum"); });
+   auto df_filtered = definepersamp.Filter("lum == 10.").Count();
+
+   EXPECT_EQ(df_final.GetValue(), 4);
+   EXPECT_EQ(df_filtered.GetValue(), 10);
+}
+
+TEST_P(RDatasetSpecTest, RNTupleWithGlobalRanges)
+{
+   const std::string prefix = "rdatasetspec_ranges_rntuple";
+   InputRNTuplesRAIIRanges file(5u, prefix);
+   ROOT::RDF::Experimental::RMetaData meta, meta1, meta2;
+   meta.Add("lum", 10.0);
+   meta1.Add("lum", 20.0);
+   meta2.Add("lum", 30.0);
+   auto samp = ROOT::RDF::Experimental::RSample(
+      "mysample", "ntuple",
+      std::vector<std::string>{"rdatasetspec_ranges_rntuple1.root", "rdatasetspec_ranges_rntuple4.root"}, meta);
+   auto samp1 = ROOT::RDF::Experimental::RSample("mysample1", "ntuple", "rdatasetspec_ranges_rntuple2.root", meta1);
+   auto samp2 = ROOT::RDF::Experimental::RSample("mysample2", "ntuple", "rdatasetspec_ranges_rntuple3.root", meta2);
+   RDatasetSpec spec;
+   spec.AddSample(samp);
+   spec.AddSample(samp1);
+   spec.AddSample(samp2);
+   auto df1 = ROOT::RDataFrame(spec);
+
+   std::vector<RDatasetSpec::REntryRange> goodRanges = {{1, 4}, {2, 7}, {6, 19}, {16, 20}};
+
+   auto df_final = df1.Filter("x > 3").Count();
+
+   auto definepersamp =
+      df1.DefinePerSample("lum", [](unsigned int, const ROOT::RDF::RSampleInfo &id) { return id.GetD("lum"); });
+   auto df_filtered = definepersamp.Filter("lum == 10.").Count();
+
+   auto df = RDataFrame(spec.WithGlobalRange(goodRanges[0]));
+   auto filt = df.Filter("rdfentry_ == 2");
+   auto result = filt.Take<ULong64_t>("x");
+   auto res = result.GetValue();
+   auto count_entries = df.Count().GetValue();
+   EXPECT_EQ(res[0], 2);
+   EXPECT_EQ(count_entries, 3);
+
+   auto df2 = RDataFrame(spec.WithGlobalRange(goodRanges[1]));
+   auto filt2 = df2.Filter("rdfentry_ == 3");
+   auto result2 = filt2.Take<ULong64_t>("x");
+   auto res2 = result2.GetValue();
+   auto count_entries_2 = df2.Count().GetValue();
+   EXPECT_EQ(res2[0], 3);
+   EXPECT_EQ(count_entries_2, 5);
+
+   auto df3 = RDataFrame(spec.WithGlobalRange(goodRanges[2]));
+   auto filt3 = df3.Filter("rdfentry_ == 8");
+   auto result3 = filt3.Take<ULong64_t>("x");
+   auto res3 = result3.GetValue();
+   auto count_entries_3 = df3.Count().GetValue();
+   EXPECT_EQ(res3[0], 12);
+   EXPECT_EQ(count_entries_3, 13);
+
+   auto df4 = RDataFrame(spec.WithGlobalRange(goodRanges[3]));
+   auto filt4 = df4.Filter("rdfentry_ == 19");
+   auto result4 = filt4.Take<ULong64_t>("x");
+   auto res4 = result4.GetValue();
+   auto count_entries_4 = df4.Count().GetValue();
+   EXPECT_EQ(res4[0], 12);
+   EXPECT_EQ(count_entries_4, 4);
+
+   EXPECT_EQ(df_final.GetValue(), 11);
+   EXPECT_EQ(df_filtered.GetValue(), 10);
+}
+
+TEST_P(RDatasetSpecTest, FromSpecRNTuple)
+{
+   const std::string prefix = "rdatasetspec_rntuple";
+   InputRNTuplesRAII file(3u, prefix);
+   auto df_fromspec = ROOT::RDF::Experimental::FromSpec("spec_rntuple.json");
+   auto df_final = df_fromspec.Filter("x > 3").Count();
+   auto definepersamp =
+      df_fromspec.DefinePerSample("lum", [](unsigned int, const ROOT::RDF::RSampleInfo &id) { return id.GetD("lum"); });
+   auto df_filtered = definepersamp.Filter("lum == 20.").Count();
+
+   EXPECT_EQ(df_final.GetValue(), 3);
+   EXPECT_EQ(df_filtered.GetValue(), 5);
+}
+
+TEST_P(RDatasetSpecTest, RNTupleWrong)
+{
+   const std::string prefix = "rdatasetspec_rntuple";
+   InputRNTuplesRAII file(1u, prefix);
+
+   auto model = ROOT::RNTupleModel::Create();
+   auto fldX = model->MakeField<int>("x");
+   auto ntpl = ROOT::RNTupleWriter::Recreate(std::move(model), "mytuple", "rntuple_wrong.root");
+   *fldX = 2;
+   ntpl->Fill();
+
+   EXPECT_THROW(
+      try {
+         auto samp = ROOT::RDF::Experimental::RSample("mysample", "ntuple", prefix + "0.root");
+         auto samp1 = ROOT::RDF::Experimental::RSample("mysample1", "mytuple", "rntuple_wrong.root");
+
+         RDatasetSpec spec;
+         spec.AddSample(samp);
+         spec.AddSample(samp1);
+         auto df_error = ROOT::RDataFrame(spec);
+      }
+
+      catch (const std::runtime_error &err) {
+         EXPECT_EQ(std::string(err.what()),
+                   "More than one RNTuple name was found, please make sure to use RNTuples with the same name.");
+         throw;
+      },
+      std::runtime_error);
+}
+
+TEST_P(RDatasetSpecTest, CompareWithRNTupleReader)
+{
+   const std::string prefix = "rdatasetspec_rntuple";
+   InputRNTuplesRAII file(1u, prefix);
+
+   auto model = ROOT::RNTupleModel::Create();
+   std::shared_ptr<int> x = model->MakeField<int>("x");
+   auto reader = ROOT::RNTupleReader::Open(std::move(model), "ntuple", "rdatasetspec_rntuple0.root");
+
+   TH1I h("h", "x", 5, 0, 5);
+   for (auto i = 0u; i < 5; ++i) {
+      reader->LoadEntry(i);
+      h.Fill(*x);
+   }
+
+   auto samp = ROOT::RDF::Experimental::RSample("mysample", "ntuple", "rdatasetspec_rntuple0.root");
+   RDatasetSpec spec;
+   spec.AddSample(samp);
+   auto df1 = ROOT::RDataFrame(spec);
+
+   auto mean = df1.Mean("x");
+
+   EXPECT_FLOAT_EQ(h.GetMean(), mean.GetValue());
 }
 
 // instantiate single-thread tests

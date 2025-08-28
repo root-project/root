@@ -16,6 +16,7 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RMiniFile.hxx>
 #include <ROOT/RRawFile.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
@@ -754,14 +755,6 @@ ROOT::RResult<ROOT::RNTuple> ROOT::Internal::RMiniFileReader::GetNTupleProper(st
       return R__FAIL("no RNTuple named '" + std::string(ntupleName) + "' in file '" + fRawFile->GetUrl() + "'");
    }
 
-   auto res = GetNTupleProperAtOffset(offset);
-   return res;
-}
-
-ROOT::RResult<ROOT::RNTuple> ROOT::Internal::RMiniFileReader::GetNTupleProperAtOffset(std::uint64_t keyOffset)
-{
-   auto offset = keyOffset;
-   RTFKey key;
    ReadBuffer(&key, sizeof(key), offset);
    offset = key.GetSeekKey() + key.fKeyLen;
 
@@ -772,29 +765,37 @@ ROOT::RResult<ROOT::RNTuple> ROOT::Internal::RMiniFileReader::GetNTupleProperAtO
       return R__FAIL("invalid anchor size: " + std::to_string(key.fObjLen) + " < " + std::to_string(sizeof(RTFNTuple)));
    }
 
+   const auto objNbytes = key.GetSize() - key.fKeyLen;
+   auto res = GetNTupleProperAtOffset(offset, objNbytes, key.fObjLen);
+   return res;
+}
+
+ROOT::RResult<ROOT::RNTuple> ROOT::Internal::RMiniFileReader::GetNTupleProperAtOffset(std::uint64_t payloadOffset,
+                                                                                      std::uint64_t compSize,
+                                                                                      std::uint64_t uncompLen)
+{
    // The object length can be smaller than the size of RTFNTuple if it comes from a past RNTuple class version,
    // or larger than it if it comes from a future RNTuple class version.
-   auto bufAnchor = MakeUninitArray<unsigned char>(std::max<size_t>(key.fObjLen, sizeof(RTFNTuple)));
+   auto bufAnchor = MakeUninitArray<unsigned char>(std::max<size_t>(uncompLen, sizeof(RTFNTuple)));
    RTFNTuple *ntuple = new (bufAnchor.get()) RTFNTuple;
 
-   const auto objNbytes = key.GetSize() - key.fKeyLen;
-   if (objNbytes != key.fObjLen) {
+   if (compSize != uncompLen) {
       // Read into a temporary buffer
-      auto unzipBuf = MakeUninitArray<unsigned char>(std::max<size_t>(key.fObjLen, sizeof(RTFNTuple)));
-      ReadBuffer(unzipBuf.get(), objNbytes, offset);
+      auto unzipBuf = MakeUninitArray<unsigned char>(std::max<size_t>(uncompLen, sizeof(RTFNTuple)));
+      ReadBuffer(unzipBuf.get(), compSize, payloadOffset);
       // Unzip into the final buffer
-      RNTupleDecompressor::Unzip(unzipBuf.get(), objNbytes, key.fObjLen, ntuple);
+      RNTupleDecompressor::Unzip(unzipBuf.get(), compSize, uncompLen, ntuple);
    } else {
-      ReadBuffer(ntuple, objNbytes, offset);
+      ReadBuffer(ntuple, compSize, payloadOffset);
    }
 
    // We require that future class versions only append members and store the checksum in the last 8 bytes
    // Checksum calculation: strip byte count, class version, fChecksum member
-   const auto lenCkData = key.fObjLen - ntuple->GetOffsetCkData() - sizeof(uint64_t);
+   const auto lenCkData = uncompLen - ntuple->GetOffsetCkData() - sizeof(uint64_t);
    const auto ckCalc = XXH3_64bits(ntuple->GetPtrCkData(), lenCkData);
    uint64_t ckOnDisk;
 
-   RUInt64BE *ckOnDiskPtr = reinterpret_cast<RUInt64BE *>(bufAnchor.get() + key.fObjLen - sizeof(uint64_t));
+   RUInt64BE *ckOnDiskPtr = reinterpret_cast<RUInt64BE *>(bufAnchor.get() + uncompLen - sizeof(uint64_t));
    ckOnDisk = static_cast<uint64_t>(*ckOnDiskPtr);
    if (ckCalc != ckOnDisk) {
       return R__FAIL("RNTuple anchor checksum mismatch");

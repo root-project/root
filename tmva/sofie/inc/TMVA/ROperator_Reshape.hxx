@@ -6,7 +6,9 @@
 #include "TMVA/RModel.hxx"
 
 #include <cassert>
+#include <cctype>
 #include <sstream>
+#include <algorithm>
 
 namespace TMVA{
 namespace Experimental{
@@ -21,17 +23,20 @@ class ROperator_Reshape final : public ROperator
 private:
 
    bool fVerbose = false;
+   bool fDimInput = false;
+   bool fDynamicShape = false;
    ReshapeOpMode fOpMode = Reshape;   // type of Reshape operator
 
    int fAllowZero = 0; // (for Reshape) zero in tensor shape makes output shape equal to input tensor shape
    int fAxis = 1;      // (for Flatten)
 
    std::string fNData;        // input data tensor name
-   std::string fNShape;       // reshape tensor name
+   std::string fNInput2;       // reshape or axes tensor name depending on operator
    std::string fNOutput;               // output tensor name
-   std::vector<size_t> fShapeInput;     // input shape data
-   std::vector<size_t> fShapeOutput;   // output shape data
+   std::vector<Dim> fShapeInput;     // input shape data
+   std::vector<Dim> fShapeOutput;   // output shape data
    std::vector<int64_t> fAttrAxes;         // axes attributes (provided for all version of Squeeze/Unsqueeze)
+   std::vector<int64_t> fShape;     // shape tensor values provided for Reshape
 
 public:
 
@@ -44,16 +49,16 @@ public:
    }
 
    ROperator_Reshape(){}
-   ROperator_Reshape(ReshapeOpMode opMode, int attr_value, std::string nameData, std::string nameShape, std::string nameOutput)
-      : fOpMode(opMode), fNData(UTILITY::Clean_name(nameData)), fNShape(UTILITY::Clean_name(nameShape)),
-      fNOutput(UTILITY::Clean_name(nameOutput))
+   ROperator_Reshape(ReshapeOpMode opMode, int attr_value, std::string nameData, std::string nameInput2, std::string nameOutput)
+      : fOpMode(opMode), fNData(UTILITY::Clean_name(nameData)), fNInput2(UTILITY::Clean_name(nameInput2)),
+         fNOutput(UTILITY::Clean_name(nameOutput))
    {
       if (opMode == Reshape) fAllowZero = attr_value;
       if (opMode == Flatten) fAxis = attr_value;
 
       fInputTensorNames = { fNData };
-      if(!fNShape.empty()){
-         fInputTensorNames.emplace_back(fNShape);
+      if(!fNInput2.empty()){
+         fInputTensorNames.emplace_back(fNInput2);
       }
       fOutputTensorNames = { fNOutput };
    }
@@ -72,94 +77,153 @@ public:
       auto ret = std::vector<ETensorType>(1, input[0]);
       return ret;
    }
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
+      return input;
+   }
 
    // output shape
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
-      std::vector<std::vector<size_t>> ret;
+   std::vector<std::vector<Dim>> ShapeInference(const std::vector<std::vector<Dim>> & input)  {
+      std::vector<std::vector<Dim>> ret;
       auto & input_shape = input[0];
-
       if (fOpMode == Reshape) {
-         if (input.size() != 2) throw std::runtime_error("TMVA SOFIE Reshape Op needs 2 input tensors");
-         auto output_shape = input[1]; // the provided shape
-         size_t input_length = ConvertShapeToLength(input_shape);
-         size_t output_length = ConvertShapeToLength(output_shape);
-         // (input_length == output_length) is the easy case : (2,3,4) -> (2,12)
-         if (input_length != output_length) {
-            if ((output_length == 0 && fAllowZero == 0) || static_cast<long>(output_length)  < 0) {
-               // in this case value 0 or -1 in shape are automatically corrected
-               bool replacementDone = false;
-               for (size_t i = 0; i < output_shape.size(); i++) {
-                  if (output_shape[i] == 0 || output_shape[i] == static_cast<size_t>(-1)) {
-                     if (replacementDone) {
-                        throw std::runtime_error("TMVA Reshape Op : output shape has multiple negative or zero values");
-                     }
-                     auto tmp = output_shape;
-                     tmp.erase(tmp.begin() + i);
-                     auto tmp_length = ConvertShapeToLength(tmp);
-                     output_shape[i] = input_length / tmp_length;
-                     replacementDone = true;
-                  }
-               }
+         // correct the provided shape (here we have the value) for 0 or -1
+         std::vector<Dim> output_shape(fShape.size());
+         assert(!fShape.empty() && !fDynamicShape);
+         for (size_t i = 0; i < output_shape.size(); i++) {
+            if (fShape[i] > 0 || (fAllowZero && fShape[i] >= 0))
+               output_shape[i] = Dim{ static_cast<size_t>(fShape[i]) };
+            else if (!fAllowZero && fShape[i] == 0)
+               output_shape[i] = input_shape[i];
+         }
+         // now case of -1 in shape
+         for (size_t i = 0; i < output_shape.size(); i++) {
+            if (fShape[i] == -1) {
+               auto tmp = output_shape;
+               tmp.erase(tmp.begin() + i);
+               auto tmp_length = ConvertDimShapeToLength(tmp);
+               auto input_length = ConvertDimShapeToLength(input_shape);
                if (fVerbose)
-                  std::cout << "Reshape: correct output shape from " << ConvertShapeToString(input[1])
-                        << " to " << ConvertShapeToString(output_shape) << std::endl;
+                  std::cout << "reshape- try simplifying " << ConvertDimShapeToString(input_shape) << " with length "
+                            << input_length << " to " << tmp_length << std::endl;
+
+               if (IsInteger(tmp_length) && IsInteger(input_length))
+                  output_shape[i] = Dim{static_cast<size_t>(std::stoi(input_length) / std::stoi(tmp_length))};
+               else {
+                  //we can try simplifying expression if tmp_length is integer and part of input_length
+                  // contains tmp_length
+                  bool canSimplify = false;
+                  std::vector <Dim> reduced_input;
+                  if (IsInteger(tmp_length)) {
+
+                     // try to tokenize with * the input length
+
+                     std::stringstream ss(input_length);
+
+                     std::string token;
+
+                     // Tokenizing w.r.t. space '*'
+                     while(getline(ss, token, '*'))
+                     {
+                        // remove any whitespace
+                        token.erase(std::remove_if(token.begin(), token.end(),
+                                                   [](unsigned char x) { return std::isspace(x); }), token.end());
+                        if (token != tmp_length) {
+                           if (IsInteger(token)) {
+                                 size_t il = static_cast<size_t>(std::stoi(input_length));
+                                 size_t tl = static_cast<size_t>(std::stoi(tmp_length));
+                                 if ((il % tl) == 0) {
+                                 canSimplify = true;
+                                 reduced_input.push_back(Dim{il / tl});
+                                 }
+                           } else {
+                              reduced_input.push_back(Dim{token});
+                           }
+                        } else {
+                           // token is equal to tmp_length, can be not considered and is simplified
+                           canSimplify = true;
+                        }
+                     }
+                  }
+                  if (canSimplify) {
+                     // if length contains * we need to add some brackets
+                     std::string res_shape = ConvertDimShapeToLength(reduced_input);
+                     if (res_shape.find('*') != std::string::npos)
+                        output_shape[i] = Dim{std::string("(") + res_shape + ")", static_cast<size_t>(-1)};
+                     else
+                        output_shape[i] = Dim{res_shape};
+                  }
+                  if (!canSimplify)
+                     output_shape[i] = Dim{std::string("(") + input_length + " / (" + tmp_length + "))", static_cast<size_t>(-1)};
+               }
+
+               break; // cannot have more than -1
             }
-            if (ConvertShapeToLength(output_shape) != input_length) {
-               throw std::runtime_error("TMVA Reshape Op : Invalid  shapes : " + ConvertShapeToString(input_shape) +
-                                        ConvertShapeToString(output_shape));
-            }
+            //  throw std::runtime_error(
+            //                   "TMVA Reshape Op : output shape has multiple negative or zero values");
+         }
+
+         if (fVerbose)
+            std::cout << "Reshape: correct output shape  to " << ConvertShapeToString(output_shape) << std::endl;
+
+         if (!fDimInput && ConvertDimShapeToLength(output_shape) != ConvertDimShapeToLength(input_shape)) {
+            throw std::runtime_error("TMVA Reshape Op : Invalid  shapes : " + ConvertShapeToString(input_shape) +
+                                     ConvertShapeToString(output_shape));
          }
          ret.push_back(output_shape);
 
       } else if (fOpMode == Flatten) {
-         // flattenig case
-         size_t inputSize = ConvertShapeToLength(input_shape);
-         size_t b = input[0][0];
-         std::vector<size_t> newShape = {b, inputSize / b};
+         // flatten case
+         if (fAxis < 0)
+            fAxis += input_shape.size();
+         auto s1 = std::vector<Dim>(input_shape.begin(), input_shape.begin() + fAxis);
+         auto s2 = std::vector<Dim>(input_shape.begin() + fAxis, input_shape.end());
+         auto l1 = ConvertDimShapeToLength(s1);
+         auto l2 = ConvertDimShapeToLength(s2);
+         std::vector<Dim> newShape = {Dim{l1}, Dim{l2}};
          ret.push_back(newShape);
-
       } else if (fOpMode == Squeeze) {
          // squeeze
          // assume no axis is provided - remove all axes with value equal to 1
-         auto output_shape = input[0];
-         if (input.size() == 1) {
+         auto output_shape = input_shape;
+         if (fAttrAxes.empty()) {
             size_t i = 0;
             while (i < output_shape.size()) {
-               if (output_shape[i] == 1 ) {
+               if (output_shape[i] == Dim{1}) {
                   output_shape.erase(output_shape.begin() + i);
-               }
-               else {
+               } else {
                   i++;
                }
             }
-         } else if (input.size() == 2) {
-            auto & axes = input[1];
-            for (size_t i = 0; i < axes.size(); i++){
-               if (output_shape[axes[i]] != 1)
-                  throw std::runtime_error("TMVA Squeeze Op : Invalid  axes : " + ConvertShapeToString(axes) +
-                                           ConvertShapeToString(output_shape));
+         } else {
+            auto &axes = fAttrAxes;
+            for (size_t i = 0; i < axes.size(); i++) {
+               if (axes[i] < 0)
+                  axes[i] += input_shape.size();
+               if (!(output_shape[axes[i]] == Dim{1}))
+                  throw std::runtime_error("TMVA Squeeze Op : Invalid  axis value " + std::to_string(axes[i]) +
+                                           " for " + ConvertShapeToString(output_shape));
                output_shape.erase(output_shape.begin() + axes[i]);
             }
          }
          ret.push_back(output_shape);
       }
-
       else if (fOpMode == Unsqueeze) {
          // unsqueeze
-         assert(input.size() == 2);
-         auto output_shape = input[0];
-         auto &axes = input[1];
+         std::cout << "doing unsqueeze....\n";
+         assert(!fAttrAxes.empty());
+         auto output_shape = input_shape;
+         auto &axes = fAttrAxes;
          // output rank
          int64_t r = input[0].size() + axes.size();
-         for (auto & a : axes) {
+         for (auto &a : axes) {
             int64_t i = static_cast<int64_t>(a);
-            if ( i < -r  || i > r - 1 )
+            if (i < -r || i > r - 1)
                throw std::runtime_error("TMVA Unsqueeze Op - axes input is not in correct range");
             if (i >= 0)
-               output_shape.insert(output_shape.begin() + i, 1);
+               output_shape.insert(output_shape.begin() + i, Dim{1});
             else
-               //negative axes
-               output_shape.insert(output_shape.end() + i + 1, 1);
+               // negative axes
+               output_shape.insert(output_shape.end() + i + 1, Dim{1});
          }
          ret.push_back(output_shape);
       }
@@ -168,34 +232,51 @@ public:
 
    void Initialize(RModel& model) override {
 
+      std::cout << "initialize reshape op type " << fOpMode << " - " << fNInput2 << " " << fNData << std::endl;
       fVerbose = model.Verbose();
       if (model.CheckIfTensorAlreadyExist(fNData) == false) {
           // input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA Reshape Op Input Tensor " + fNData + "  is not found in model");
       }
-      fShapeInput = model.GetTensorShape(fNData);
-      // check if optional shape tensor exist
-      if (!fNShape.empty()) {
-         if (model.CheckIfTensorAlreadyExist(fNShape)) {
-            auto dptr = model.GetInitializedTensorData(fNShape);
-            auto input_shape = static_cast<int64_t *>(dptr.get());
-            auto vec = model.GetTensorShape(fNShape);
-            assert(vec.size() == 1);
-            size_t n = vec[0]; // size of shape input tensor
+      fShapeInput = model.GetDimTensorShape(fNData);
+      fDimInput = model.IsDynamicTensor(fNData);
+      // check if optional tensor exists defining shape or axes
+      if (!fNInput2.empty()) {
+         if (model.CheckIfTensorAlreadyExist(fNInput2)) {
+            if (model.IsConstantTensor(fNInput2) || model.IsInitializedTensor(fNInput2)) {
+               // assume input shape is an initialized tensor
+               auto dptr = model.GetInitializedTensorData(fNInput2);
+               auto values = static_cast<int64_t *>(dptr.get());
+               auto vec = model.GetTensorShape(fNInput2);
+               size_t n = 1;
+               if (vec.size() > 0)
+                  n = vec[0]; // size of shape input tensor
+               // copy values in fShape vector or fAttrAxes
+               if (fOpMode == Reshape)
+                  fShape = std::vector<int64_t>(values, values + n);
+               else
+                  fAttrAxes = std::vector<int64_t>(values, values + n);
 
-            std::vector<size_t> descShape(n);
-            std::copy(input_shape, input_shape + n, descShape.begin());
-            fShapeOutput = ShapeInference({fShapeInput, descShape})[0];
-            // set flag to not write tensor in weight file. Its data will be hard-coded in way model is constructed
-            model.SetNotWritableInitializedTensor(fNShape);
+               fShapeOutput = ShapeInference({fShapeInput})[0];
+               // set flag to not write tensor in weight file. Its data will be hard-coded in way model is constructed
+               model.SetNotWritableInitializedTensor(fNInput2);
+            } else {
+               // we cannot get shape at initialization time but at run-time
+               fDynamicShape = true;
+               // size of shape output us given by size of shape input tensor
+               auto shapeInput2 = model.GetTensorShape(fNInput2);
+               fShapeOutput.resize(shapeInput2[0]);
+               for (size_t i = 0; i < fShapeOutput.size(); i++) {
+                  fShapeOutput[i] = Dim{ std::string("s_") + fNOutput + "_" + std::to_string(i)};
+               }
+            }
          } else {
-            throw std::runtime_error("TMVA Reshape Op Shape Tensor " + fNShape + " is not found in model");
+            throw std::runtime_error("TMVA Reshape Op 2nd input Tensor " + fNInput2 + " is not found in model");
          }
       } else if (!fAttrAxes.empty()) {
-         // case fNShape is empty and axes are provided as attributes
-         std::vector<size_t> descShape(fAttrAxes.size());
-         std::copy(fAttrAxes.begin(), fAttrAxes.end(), descShape.begin());
-         fShapeOutput = ShapeInference({fShapeInput, descShape})[0];
+         // case fNShape is empty and axes are provided as attributes (e.g. for Unsqueeze)
+         std::cout << "attribute axes exists\n";
+         fShapeOutput = ShapeInference({fShapeInput})[0];
       } else if (fOpMode == Flatten || fOpMode == Squeeze) {
          fShapeOutput = ShapeInference({fShapeInput})[0];
       } else {
@@ -205,14 +286,26 @@ public:
       if (model.IsInitializedTensor(fNData) && model.GetTensorType(fNData) == ETensorType::INT64) {
          fIsOutputConstant = true;
          auto inputData = static_cast<int64_t*>(model.GetInitializedTensorData(fNData).get());
-         if (ConvertShapeToLength(fShapeInput) != ConvertShapeToLength(fShapeOutput))
+         auto o_shape = ConvertShapeToInt(fShapeOutput);
+         if (ConvertShapeToLength(ConvertShapeToInt(fShapeInput)) != ConvertShapeToLength(o_shape) )
             throw std::runtime_error("TMVA Reshape Op : Invalid Input/Output lengths");
-         model.AddConstantTensor<int64_t>(fNOutput, fShapeOutput, inputData);
+         model.AddConstantTensor<int64_t>(fNOutput, o_shape, inputData);
          if (model.Verbose()) {
             std::cout << Name() << " : " << fNData << " " << ConvertShapeToString(fShapeInput) << " -->  " << fNOutput << " (constant) " << ConvertShapeToString(fShapeOutput)  << " : " <<
-            ConvertValuesToString(ConvertShapeToLength(fShapeOutput), inputData) << std::endl;
+            ConvertValuesToString(ConvertShapeToLength(o_shape), inputData) << std::endl;
          }
-      } else {
+      }
+      // for shape tensors we can have it if output shape is size==1 or a scalar
+      else if (model.IsShapeTensor(fNData) && fShapeOutput.size() <=1) {
+         fIsOutputConstant = true;
+         auto inputData = model.GetShapeTensorValues(fNData);
+         model.AddShapeTensor(fNOutput, inputData);
+         if (model.Verbose()) {
+            std::cout << Name() << " : " << fNData << " " << ConvertShapeToString(fShapeInput) << " -->  " << fNOutput << " (shape) " << ConvertShapeToString(fShapeOutput)  << " : " <<
+            ConvertShapeToString(inputData) << std::endl;
+         }
+      }
+      else {
          // non-constant case
          model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
          if (model.Verbose())
@@ -220,29 +313,43 @@ public:
       }
    }
 
-   std::string Generate(std::string OpName) override {
+   std::string Generate(std::string opName) override {
       if (fIsOutputConstant) return "";  //no op for constant tensors
 
-      OpName = "op_" + OpName;
+      std::stringstream out;
+      std::string opType = "Reshape";
+      if (fOpMode == Flatten)
+         opType = "Flatten";
+      else if (fOpMode == Squeeze)
+         opType = "Squeeze";
+      else if (fOpMode == Unsqueeze)
+         opType = "Unsquueze";
+
+      out << SP << "///--------" << opType << " operator " << opName << " --> " << ConvertShapeToString(fShapeOutput) << "\n";
+
+      // in case of dynamic output shape we need to set the shape value from input shape tensor
+      // and take case of the zero values
+      if (fDynamicShape) {
+         for (size_t i = 0; i < fShapeOutput.size(); i++) {
+            // since fNInput2 values are int64_t, should we check if they are negative?
+            out << SP << "size_t " << fShapeOutput[i].param << " = " << "tensor_" << fNInput2 << "[" << i << "];\n";
+            if (!fAllowZero)
+               out << SP << "if (tensor_" << fNInput2 << "[" << i << "] <= 0 ) "
+                         <<  fShapeOutput[i].param << " = " <<  fShapeInput[i] << ";\n";
+         }
+      }
 
       // output of reshape is same as input
-      size_t length = ConvertShapeToLength(fShapeOutput);
-      if (length != ConvertShapeToLength(fShapeInput)) {
-         throw std::runtime_error("TMVA SOFIE Reshape Op : wrong output shape - is " +
-                                  ConvertShapeToString(fShapeOutput) + " and input is " +
-                                  ConvertShapeToString(fShapeInput));
+      auto lengthOut = ConvertDimShapeToLength(fShapeOutput);
+      auto lengthIn = ConvertDimShapeToLength(fShapeInput);
+      if (lengthOut != lengthIn) {
+         // check needs to be done at run-time
+         out << SP << "if (" << lengthOut << "!=" << lengthIn << ")\n";
+         out << "throw std::runtime_error(\"TMVA SOFIE Reshape Op : output lengths is different than input one\");\n";
       }
-      std::stringstream out;
-      std::string opName = "Reshape";
-      if (fOpMode == Flatten)
-         opName = "Flatten";
-      else if (fOpMode == Squeeze)
-         opName = "Squeeze";
-      else if (fOpMode == Unsqueeze)
-         opName = "Unsquueze";
 
-      out << SP << "///--------" << opName << " operator\n" << std::endl;
-      out << SP << "std::copy( tensor_" << fNData << ", tensor_" << fNData << " + " << length << ", " << "tensor_" << fNOutput
+
+      out << SP << "std::copy( tensor_" << fNData << ", tensor_" << fNData << " + " << lengthIn << ", " << "tensor_" << fNOutput
           << ");\n";
       return out.str();
    }

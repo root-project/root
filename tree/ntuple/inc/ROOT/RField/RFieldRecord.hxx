@@ -19,7 +19,7 @@
 #endif
 
 #include <ROOT/RFieldBase.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 
 #include <string>
 #include <string_view>
@@ -34,17 +34,17 @@ class RFieldVisitor;
 } // namespace Detail
 
 namespace Internal {
-std::unique_ptr<RFieldBase> CreateEmulatedField(std::string_view fieldName,
-                                                std::vector<std::unique_ptr<RFieldBase>> itemFields,
-                                                std::string_view emulatedFromType);
-}
+std::unique_ptr<RFieldBase> CreateEmulatedRecordField(std::string_view fieldName,
+                                                      std::vector<std::unique_ptr<RFieldBase>> itemFields,
+                                                      std::string_view emulatedFromType);
+} // namespace Internal
 
 /// The field for an untyped record. The subfields are stored consecutively in a memory block, i.e.
 /// the memory layout is identical to one that a C++ struct would have
 class RRecordField : public RFieldBase {
-   friend std::unique_ptr<RFieldBase> Internal::CreateEmulatedField(std::string_view fieldName,
-                                                                    std::vector<std::unique_ptr<RFieldBase>> itemFields,
-                                                                    std::string_view emulatedFromType);
+   friend std::unique_ptr<RFieldBase>
+   Internal::CreateEmulatedRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
+                                       std::string_view emulatedFromType);
 
    class RRecordDeleter : public RDeleter {
    private:

@@ -1,7 +1,3 @@
-# disable tests which are failing on Windows because of their PATH being too long
-# (>260 characters) when run in the CI (Jenkins)
-if(NOT MSVC OR NOT DEFINED ENV{JENKINS_HOME} OR win_broken_tests)
-
 ROOTTEST_ADD_TESTDIRS()
 
 # ------------------------------------------------------------------------------
@@ -46,5 +42,3 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(noInputOperator_rflx foo_custom_input_operat
 
 #   noInputOperator = false
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(noInputOperator_false_rflx foo_custom_input_operator.h SELECTION noInputOperator_false_selection.xml NO_ROOTMAP)
-
-endif()

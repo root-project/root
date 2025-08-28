@@ -2103,8 +2103,8 @@ void TRecGuiEvent::ReplayEvent(Bool_t showMouseCursor)
                                       e->fX, e->fY, px, py, wtarget);
       dx = px - gCursorWin->GetX();
       dy = py - gCursorWin->GetY();
-      if (TMath::Abs(dx) > 5) gDecorWidth += dx;
-      if (TMath::Abs(dy) > 5) gDecorHeight += dy;
+      if (std::abs(dx) > 5) gDecorWidth += dx;
+      if (std::abs(dy) > 5) gDecorHeight += dy;
    }
    // Displays fake mouse cursor for MotionNotify event
    if (showMouseCursor && e->fType == kMotionNotify) {

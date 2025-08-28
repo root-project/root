@@ -1730,11 +1730,10 @@ bool RooProdPdf::isDirectGenSafe(const RooAbsArg& arg) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Look up user specified normalization set for given input PDF component
 
-RooArgSet* RooProdPdf::findPdfNSet(RooAbsPdf const& pdf) const
+RooArgSet *RooProdPdf::findPdfNSet(RooAbsPdf const &pdf) const
 {
-  Int_t idx = _pdfList.index(&pdf) ;
-  if (idx<0) return nullptr;
-  return _pdfNSetList[idx].get() ;
+   Int_t idx = _pdfList.index(&pdf);
+   return idx < 0 ? nullptr : _pdfNSetList[idx].get();
 }
 
 
@@ -1842,9 +1841,10 @@ bool sortedNamePtrsOverlap(std::vector<TNamed const*> const& ptrsA, std::vector<
 /// The pdfParams output parameter communicates to the caller which parameter
 /// are used in the pdfs that are not constraints.
 
-RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet const& constrainedParams, RooArgSet &pdfParams) const
+std::unique_ptr<RooArgSet>
+RooProdPdf::getConstraints(const RooArgSet &observables, RooArgSet const &constrainedParams, RooArgSet &pdfParams) const
 {
-  auto constraints = new RooArgSet{"constraints"};
+  auto constraints = std::make_unique<RooArgSet>("constraints");
 
   // For the optimized implementation of checking if two collections overlap by name.
   auto observablesNamePtrs = sortedNamePtrs(observables);
@@ -1919,42 +1919,6 @@ RooArgSet* RooProdPdf::getConnectedParameters(const RooArgSet& observables) cons
   }
   return connectedPars ;
 }
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-void RooProdPdf::getParametersHook(const RooArgSet* nset, RooArgSet* params, bool stripDisconnected) const
-{
-  if (!stripDisconnected) return ;
-  if (!nset || nset->empty()) return ;
-
-  // Get/create appropriate term list for this normalization set
-  Int_t code = getPartIntList(nset, nullptr);
-  RooArgList & plist = static_cast<CacheElem*>(_cacheMgr.getObj(nset, &code))->_partList;
-
-  // Strip any terms from params that do not depend on any term
-  RooArgSet tostrip ;
-  for (auto param : *params) {
-    bool anyDep(false) ;
-    for (auto term : plist) {
-      if (term->dependsOnValue(*param)) {
-        anyDep=true ;
-      }
-    }
-    if (!anyDep) {
-      tostrip.add(*param) ;
-    }
-  }
-
-  if (!tostrip.empty()) {
-    params->remove(tostrip,true,true);
-  }
-
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface function used by test statistics to freeze choice of range

@@ -25,7 +25,6 @@
 
 #include "Rtypes.h"
 
-#include "TMathBase.h"
 #include <string_view>
 #include "ROOT/TypeTraits.hxx"
 #include "snprintf.h"
@@ -231,7 +230,16 @@ protected:
 
    enum { kAlignment = 16 };
    static Ssiz_t  Align(Ssiz_t s) { return (s + (kAlignment-1)) & ~(kAlignment-1); }
-   static Ssiz_t  Recommend(Ssiz_t s) { return (s < kMinCap ? kMinCap : Align(s+1)) - 1; }
+   // `s` is expected to be <= MaxSize() = (kMaxInt-1) ; `s + 1` includes the terminating nullchar
+   static Ssiz_t  Recommend(Ssiz_t s)
+   {
+      if (s < kMinCap)
+         return kMinCap;
+      else if (s > MaxSize() - (kAlignment - 1))
+         return s;
+      else
+         return Align(s + 1) - 1;
+   }
    static Ssiz_t  AdjustCapacity(Ssiz_t oldCap, Ssiz_t newCap);
 
 private:
@@ -256,9 +264,9 @@ private:
    char          *GetPointer() { return IsLong() ? GetLongPointer() : GetShortPointer(); }
    const char    *GetPointer() const { return IsLong() ? GetLongPointer() : GetShortPointer(); }
 #ifdef R__BYTESWAP
-   static Ssiz_t  MaxSize() { return kMaxInt - 1; }
+   static constexpr Ssiz_t MaxSize() { return kMaxInt - 1; }
 #else
-   static Ssiz_t  MaxSize() { return (kMaxInt >> 1) - 1; }
+   static constexpr Ssiz_t MaxSize() { return (kMaxInt >> 1) - 1; }
 #endif
    void           UnLink() const { if (IsLong()) delete [] fRep.fLong.fData; }
    void           Zero() {
@@ -579,7 +587,7 @@ inline TString &TString::Append(const TString &s)
 { return Replace(Length(), 0, s.Data(), s.Length()); }
 
 inline TString &TString::Append(const TString &s, Ssiz_t n)
-{ return Replace(Length(), 0, s.Data(), TMath::Min(n, s.Length())); }
+{ return Replace(Length(), 0, s.Data(), std::min(n, s.Length())); }
 
 inline TString &TString::operator+=(const char *cs)
 { return Append(cs, cs ? (Ssiz_t)strlen(cs) : 0); }
@@ -668,7 +676,7 @@ inline TString &TString::Insert(Ssiz_t pos, const TString &s)
 { return Replace(pos, 0, s.Data(), s.Length()); }
 
 inline TString &TString::Insert(Ssiz_t pos, const TString &s, Ssiz_t n)
-{ return Replace(pos, 0, s.Data(), TMath::Min(n, s.Length())); }
+{ return Replace(pos, 0, s.Data(), std::min(n, s.Length())); }
 
 inline TString &TString::Prepend(const char *cs)
 { return Replace(0, 0, cs, cs ? (Ssiz_t)strlen(cs) : 0); }
@@ -680,16 +688,16 @@ inline TString &TString::Prepend(const TString &s)
 { return Replace(0, 0, s.Data(), s.Length()); }
 
 inline TString &TString::Prepend(const TString &s, Ssiz_t n)
-{ return Replace(0, 0, s.Data(), TMath::Min(n, s.Length())); }
+{ return Replace(0, 0, s.Data(), std::min(n, s.Length())); }
 
 inline TString &TString::Remove(Ssiz_t pos)
-{ return Replace(pos, TMath::Max(0, Length()-pos), nullptr, 0); }
+{ return Replace(pos, std::max(0, Length()-pos), nullptr, 0); }
 
 inline TString &TString::Remove(Ssiz_t pos, Ssiz_t n)
 { return Replace(pos, n, nullptr, 0); }
 
 inline TString &TString::Chop()
-{ return Remove(TMath::Max(0, Length()-1)); }
+{ return Remove(std::max(0, Length()-1)); }
 
 inline TString &TString::Replace(Ssiz_t pos, Ssiz_t n, const char *cs)
 { return Replace(pos, n, cs, cs ? (Ssiz_t)strlen(cs) : 0); }
@@ -699,7 +707,7 @@ inline TString &TString::Replace(Ssiz_t pos, Ssiz_t n, const TString& s)
 
 inline TString &TString::Replace(Ssiz_t pos, Ssiz_t n1, const TString &s,
                                  Ssiz_t n2)
-{ return Replace(pos, n1, s.Data(), TMath::Min(s.Length(), n2)); }
+{ return Replace(pos, n1, s.Data(), std::min(s.Length(), n2)); }
 
 inline TString &TString::ReplaceAll(const TString &s1, const TString &s2)
 { return ReplaceAll(s1.Data(), s1.Length(), s2.Data(), s2.Length()) ; }

@@ -38,6 +38,7 @@
 #pragma link C++ class DataVector < int, float> ::Nested < int, double> + ;
 #pragma link C++ class DataVector < int, float> ::Nested < int, float> + ;
 #pragma link C++ class InnerCV < const int, const volatile int, volatile const int, volatile int> + ;
+#pragma link C++ class InnerCV < const std::vector<std::string[2]>, int, int, int> + ;
 #pragma link C++ class IntegerTemplates < 0, 0> + ;
 #pragma link C++ class IntegerTemplates < -1, 1> + ;
 #pragma link C++ class IntegerTemplates < -2147483650ll, 9223372036854775810ull> + ;
@@ -152,5 +153,11 @@
 #pragma link C++ class ThrowForVariant + ;
 
 #pragma link C++ class RelativelyLargeStruct + ;
+
+#pragma link C++ class v1::Vector3D+;
+#pragma link C++ class v1::ExampleMC+;
+#pragma link C++ class v2::ExampleMC+;
+#pragma read sourceClass = "v1::ExampleMC" source = "v1::Vector3D fSpin" version="[1-]" targetClass = \
+   "v2::ExampleMC" target = "fHelicity" code = "{ fHelicity = onfile.fSpin.fZ; }"
 
 #endif

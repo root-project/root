@@ -85,6 +85,7 @@ ROOT_BUILD_OPTION(builtin_cfitsio OFF "Build CFITSIO internally (requires networ
 ROOT_BUILD_OPTION(builtin_clang ON "Build bundled copy of Clang")
 ROOT_BUILD_OPTION(builtin_cling ON "Build bundled copy of Cling. Only build with an external cling if you know what you are doing: associating ROOT commits with cling commits is tricky.")
 MARK_AS_ADVANCED(builtin_cling)
+ROOT_BUILD_OPTION(builtin_civetweb ON "Use civetweb distributed with ROOT")
 ROOT_BUILD_OPTION(builtin_cppzmq OFF "Use ZeroMQ C++ bindings installed by ROOT (requires network)")
 ROOT_BUILD_OPTION(builtin_davix OFF "Build Davix internally (requires network)")
 ROOT_BUILD_OPTION(builtin_fftw3 OFF "Build FFTW3 internally (requires network)")
@@ -154,7 +155,6 @@ ROOT_BUILD_OPTION(r OFF "Enable support for R bindings (requires R, Rcpp, and RI
 ROOT_BUILD_OPTION(roofit ON "Build the advanced fitting package RooFit, and RooStats for statistical tests. If xml is available, also build HistFactory.")
 ROOT_BUILD_OPTION(roofit_multiprocess OFF "Build RooFit::MultiProcess and multi-process RooFit::TestStatistics classes (requires ZeroMQ >= 3.4.5 built with -DENABLE_DRAFTS and cppzmq).")
 ROOT_BUILD_OPTION(root7 ON "Build ROOT 7 components of ROOT")
-ROOT_BUILD_OPTION(rpath ON "Link libraries with built-in RPATH (run-time search path)")
 ROOT_BUILD_OPTION(runtime_cxxmodules ON "Enable runtime support for C++ modules")
 ROOT_BUILD_OPTION(shadowpw OFF "Enable support for shadow passwords")
 ROOT_BUILD_OPTION(shared ON "Use shared 3rd party libraries if possible")
@@ -170,7 +170,7 @@ ROOT_BUILD_OPTION(tmva ON "Build TMVA multi variate analysis library")
 ROOT_BUILD_OPTION(tmva-cpu ON "Build TMVA with CPU support for deep learning (requires BLAS)")
 ROOT_BUILD_OPTION(tmva-cudnn ON "Enable support for cuDNN (default when CUDA is enabled)")
 ROOT_BUILD_OPTION(tmva-gpu OFF "Build TMVA with GPU support for deep learning (requires CUDA)")
-ROOT_BUILD_OPTION(tmva-pymva ON "Enable support for Python in TMVA (requires numpy)")
+ROOT_BUILD_OPTION(tmva-pymva OFF "Enable usage of Python ML libraries in TMVA (requires NumPy, works only with TensorFlow<=2.15)")
 ROOT_BUILD_OPTION(tmva-rmva OFF "Enable support for R in TMVA")
 ROOT_BUILD_OPTION(tmva-sofie OFF "Build TMVA with support for sofie - fast inference code generation (requires protobuf 3)")
 ROOT_BUILD_OPTION(tpython ON "Build the TPython class that allows you to run Python code from C++")
@@ -267,6 +267,7 @@ endif()
 #--- The 'builtin_all' option switches ON all the built in options but GPL-------------------------------
 if(builtin_all)
   set(builtin_cfitsio_defvalue ON)
+  set(builtin_civetweb_defvalue ON)
   set(builtin_clang_defvalue ON)
   set(builtin_cling_defvalue ON)
   set(builtin_cppzmq_defvalue ON)
@@ -307,7 +308,6 @@ if(WIN32)
   set(davix_defvalue OFF)
   set(roofit_multiprocess_defvalue OFF)
   set(roottest_defvalue OFF)
-  set(rpath_defvalue OFF)
   set(runtime_cxxmodules_defvalue OFF)
   set(testing_defvalue OFF)
   set(vdt_defvalue OFF)
@@ -406,6 +406,13 @@ foreach(opt )
   endif()
 endforeach()
 
+if(DEFINED rpath)
+  message(DEPRECATION ">>> Option 'rpath' is deprecated and without effect."
+      " Relative RPATHs to the main ROOT libraries are unconditionally appended to all ROOT"
+      " executables and libraries."
+      "") # empty line at the end to make the deprecation message more visible
+endif()
+
 foreach(opt minuit2_mpi)
   if(${opt})
       message(WARNING "The option '${opt}' can only be used to minimise thread-safe functions in Minuit2. It cannot be used for Histogram/Graph fitting and for RooFit. If you want to use Minuit2 with MPI support, it is better to build Minuit2 as a standalone library.")
@@ -422,23 +429,6 @@ include(RootInstallDirs)
 
 # add to RPATH any directories outside the project that are in the linker search path
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-if(rpath)
-  file(RELATIVE_PATH BINDIR_TO_LIBDIR "${CMAKE_INSTALL_FULL_BINDIR}" "${CMAKE_INSTALL_FULL_LIBDIR}")
-
-  if(APPLE)
-    set(CMAKE_MACOSX_RPATH TRUE)
-    set(CMAKE_INSTALL_NAME_DIR "@rpath")
-
-    set(_rpath_values "@loader_path" "@loader_path/${BINDIR_TO_LIBDIR}")
-  else()
-    set(_rpath_values "$ORIGIN" "$ORIGIN/${BINDIR_TO_LIBDIR}")
-  endif()
-
-  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH-CACHED};${_rpath_values}" CACHE STRING "Install RPATH" FORCE)
-
-  unset(BINDIR_TO_LIBDIR)
-endif()
 
 #---deal with the DCMAKE_IGNORE_PATH------------------------------------------------------------
 if(macos_native)

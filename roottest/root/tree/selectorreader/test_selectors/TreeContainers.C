@@ -1,6 +1,6 @@
 #define TreeContainers_cxx
 
-#include "../generated_selectors/TreeContainers.h"
+#include "generated_selectors/TreeContainers.h"
 #include <TH2.h>
 #include <TStyle.h>
 

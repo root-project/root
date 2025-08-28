@@ -91,7 +91,8 @@ private:
       fFieldTypes.push_back(field.GetTypeName());
       auto value = field.CreateValue();
       fValues.emplace_back(value);
-      return value.template GetPtr<T>();
+      // We know that the created RValue has the right type, skip the unnecessary check.
+      return std::static_pointer_cast<T>(value.template GetPtr<void>());
    }
 
    void Read(ROOT::NTupleSize_t index)
@@ -135,7 +136,7 @@ private:
    void EnsureMatchingType(ROOT::RFieldToken token [[maybe_unused]]) const
    {
       if constexpr (!std::is_void_v<T>) {
-         if (fFieldTypes[token.fIndex] != ROOT::RField<T>::TypeName()) {
+         if (!Internal::IsMatchingFieldType<T>(fFieldTypes[token.fIndex])) {
             throw RException(R__FAIL("type mismatch for field " + FindFieldName(token) + ": " +
                                      fFieldTypes[token.fIndex] + " vs. " + ROOT::RField<T>::TypeName()));
          }

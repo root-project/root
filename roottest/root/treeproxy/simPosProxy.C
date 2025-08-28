@@ -1,5 +1,5 @@
 double simPosProxy() {
-   cout << simPos.X << " " << simPos.Y << " " << simPos.Z << endl;
+   std::cout << simPos.X << " " << simPos.Y << " " << simPos.Z << std::endl;
    return simPos.X;
 }
 

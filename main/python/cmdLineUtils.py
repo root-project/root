@@ -562,7 +562,7 @@ def getSourceDestListOptDict(parser, wildcards=True):
 # Several functions shared by rootcp, rootmv and rootrm
 
 TARGET_ERROR = "target '{0}' is not a directory"
-OMITTING_ERROR = "omitting {0} '{1}'. Did you forget to specify the -r option for a recursive copy?"
+OMITTING_ERROR = "{0} '{1}' will be copied but not its subdirectories (if any). Use the -r option if you need a recursive copy."
 OVERWRITE_ERROR = "cannot overwrite non-directory '{0}' with directory '{1}'"
 
 
@@ -583,13 +583,12 @@ def copyRootObject(sourceFile, sourcePathSplit, destFile, destPathSplit, oneSour
         logging.warning(TARGET_ERROR.format(destPathSplit[-1]))
         retcode += 1
     # Entire ROOT file or directory in input omitting "-r" option
-    # OMITTING_FILE_ERROR or OMITTING_DIRECTORY_ERROR
     if not recursiveOption:
         if sourcePathSplit == []:
             logging.warning(OMITTING_ERROR.format("file", sourceFile.GetName()))
             retcode += 1
         elif isDirectory(sourceFile, sourcePathSplit):
-            logging.warning(OMITTING_DIRECTORY_ERROR.format("directory", sourcePathSplit[-1]))
+            logging.warning(OMITTING_ERROR.format("directory", sourcePathSplit[-1]))
             retcode += 1
     # Run copyRootObjectRecursive function with the wish
     # to follow the unix copy behaviour

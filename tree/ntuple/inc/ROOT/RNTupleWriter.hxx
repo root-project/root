@@ -21,7 +21,7 @@
 #include <ROOT/RNTupleFillStatus.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RRawPtrWriteEntry.hxx>
 
@@ -53,7 +53,7 @@ RNTupleWriter is an interface for writing RNTuples to storage. It can be instant
 Append() and Recreate(), providing an RNTupleModel that defines the schema of the data to be written.
 
 An RNTuple can be thought of as a table, whose columns are defined by its schema (i.e. by its associated RNTupleModel,
-whose Fields map to 0 or more columns). 
+whose Fields map to 0 or more columns).
 Writing into an RNTuple happens by filling *entries* into the RNTupleWriter, which make up the rows of the table.
 The simplest way to do so is by:
 
@@ -104,9 +104,6 @@ class RNTupleWriter {
       Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel>, std::unique_ptr<Internal::RPageSink>);
 
 private:
-   /// The page sink's parallel page compression scheduler if IMT is on.
-   /// Needs to be destructed after the page sink (in the fill context) is destructed and so declared before.
-   std::unique_ptr<Internal::RPageStorage::RTaskScheduler> fZipTasks;
    Experimental::RNTupleFillContext fFillContext;
    Experimental::Detail::RNTupleMetrics fMetrics;
 
@@ -219,6 +216,8 @@ public:
 
    /// Get a RNTupleModel::RUpdater that provides limited support for incremental updates to the underlying
    /// model, e.g. addition of new fields.
+   ///
+   /// Note that a Model may not be extended with Streamer fields.
    ///
    /// **Example: add a new field after the model has been used to construct a `RNTupleWriter` object**
    /// ~~~ {.cpp}

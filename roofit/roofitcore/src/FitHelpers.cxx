@@ -30,9 +30,9 @@
 #include <RooFit/TestStatistics/RooRealL.h>
 #include <RooFit/TestStatistics/buildLikelihood.h>
 #include <RooFitResult.h>
-#include <RooFuncWrapper.h>
 #include <RooLinkedList.h>
 #include <RooMinimizer.h>
+#include <RooConstVar.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooFormulaVar.h>
@@ -746,7 +746,7 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
       RooArgSet normSet;
       pdf.getObservables(data.get(), normSet);
 
-      if (dynamic_cast<RooSimultaneous const*>(&pdf)) {
+      if (dynamic_cast<RooSimultaneous const *>(&pdf)) {
          for (auto i : projDeps) {
             auto res = normSet.find(i->GetName());
             if (res != nullptr) {
@@ -763,7 +763,7 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
       RooFit::Detail::CompileContext ctx{normSet};
       ctx.setLikelihoodMode(true);
       std::unique_ptr<RooAbsArg> head = pdf.compileForNormSet(normSet, ctx);
-      std::unique_ptr<RooAbsPdf> pdfClone = std::unique_ptr<RooAbsPdf>{static_cast<RooAbsPdf *>(head.release())};
+      std::unique_ptr<RooAbsPdf> pdfClone = std::unique_ptr<RooAbsPdf>{&dynamic_cast<RooAbsPdf &>(*head.release())};
 
       // reset attributes
       pdf.setAttribute("SplitRange", false);
@@ -788,30 +788,44 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
       auto nll = createNLLNew(*pdfClone, data, std::move(compiledConstr), rangeName ? rangeName : "", projDeps, ext,
                               pc.getDouble("IntegrateBins"), offset);
 
-      std::unique_ptr<RooAbsReal> nllWrapper;
+      const double correction = pdfClone->getCorrection();
 
-      if (evalBackend == RooFit::EvalBackend::Value::Codegen ||
-          evalBackend == RooFit::EvalBackend::Value::CodegenNoGrad) {
-         bool createGradient = evalBackend == RooFit::EvalBackend::Value::Codegen;
-         auto simPdf = dynamic_cast<RooSimultaneous const *>(pdfClone.get());
+      if (correction > 0) {
+         oocoutI(&pdf, Fitting) << "[FitHelpers] Detected correction term from RooAbsPdf::getCorrection(). "
+                                << "Adding penalty to NLL." << std::endl;
 
-         // We destroy the timing scrope for createNLL prematurely, because we
-         // separately measure the time for jitting and gradient creation
-         // inside the RooFuncWrapper.
-         timingScope.reset();
+         // Convert the multiplicative correction to an additive term in -log L
+         auto penaltyTerm = std::make_unique<RooConstVar>((baseName + "_Penalty").c_str(),
+                                                          "Penalty term from getCorrection()", correction);
 
-         nllWrapper = std::make_unique<RooFit::Experimental::RooFuncWrapper>("nll_func_wrapper", "nll_func_wrapper",
-                                                                             *nll, &data, simPdf, createGradient);
-         if (createGradient)
-            static_cast<Experimental::RooFuncWrapper &>(*nllWrapper).createGradient();
-      } else {
-         nllWrapper = std::make_unique<RooEvaluatorWrapper>(
-            *nll, &data, evalBackend == RooFit::EvalBackend::Value::Cuda, rangeName ? rangeName : "", pdfClone.get(),
-            takeGlobalObservablesFromData);
+         // add penalty and NLL
+         auto correctedNLL = std::make_unique<RooAddition>((baseName + "_corrected").c_str(), "NLL + penalty",
+                                                           RooArgSet{*nll, *penaltyTerm});
+
+         // transfer ownership of terms
+         correctedNLL->addOwnedComponents(std::move(nll), std::move(penaltyTerm));
+         nll = std::move(correctedNLL);
+      }
+
+      auto nllWrapper = std::make_unique<RooEvaluatorWrapper>(
+         *nll, &data, evalBackend == RooFit::EvalBackend::Value::Cuda, rangeName ? rangeName : "", pdfClone.get(),
+         takeGlobalObservablesFromData);
+
+      // We destroy the timing scrope for createNLL prematurely, because we
+      // separately measure the time for jitting and gradient creation
+      // inside the RooFuncWrapper.
+      timingScope.reset();
+
+      if (evalBackend == RooFit::EvalBackend::Value::Codegen) {
+         nllWrapper->generateGradient();
+      }
+      if (evalBackend == RooFit::EvalBackend::Value::CodegenNoGrad) {
+         nllWrapper->setUseGeneratedFunctionCode(true);
       }
 
       nllWrapper->addOwnedComponents(std::move(nll));
       nllWrapper->addOwnedComponents(std::move(pdfClone));
+
       return nllWrapper;
    }
 
@@ -883,6 +897,23 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
 
    if (offset == RooFit::OffsetMode::Initial) {
       nll->enableOffsetting(true);
+   }
+
+   if (const double correction = pdf.getCorrection(); correction > 0) {
+      oocoutI(&pdf, Fitting) << "[FitHelpers] Detected correction term from RooAbsPdf::getCorrection(). "
+                             << "Adding penalty to NLL." << std::endl;
+
+      // Convert the multiplicative correction to an additive term in -log L
+      auto penaltyTerm = std::make_unique<RooConstVar>((baseName + "_Penalty").c_str(),
+                                                       "Penalty term from getCorrection()", correction);
+
+      auto correctedNLL = std::make_unique<RooAddition>(
+         // add penalty and NLL
+         (baseName + "_corrected").c_str(), "NLL + penalty", RooArgSet(*nll, *penaltyTerm));
+
+      // transfer ownership of terms
+      correctedNLL->addOwnedComponents(std::move(nll), std::move(penaltyTerm));
+      nll = std::move(correctedNLL);
    }
 #else
    throw std::runtime_error("RooFit was not built with the legacy evaluation backend");

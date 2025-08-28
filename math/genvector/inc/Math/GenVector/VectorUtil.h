@@ -45,6 +45,8 @@ namespace ROOT {
 
       namespace VectorUtil {
 
+      /// \addtogroup GenVector
+      /// @{
 
          // methods for 3D vectors
 
@@ -258,6 +260,8 @@ namespace ROOT {
             //return ( v1 + v2).mag();
          }
 
+         /// @brief Returns the square of what InvariantMass(const Vector1&, const Vector2&) would return.
+         /// This is mostly useful for speed optimisations, because the expensive sqrt operation is skipped.
          template <class Vector1, class Vector2>
          inline typename Vector1::Scalar InvariantMass2( const Vector1 & v1, const Vector2 & v2) {
             typedef typename  Vector1::Scalar Scalar;
@@ -350,7 +354,7 @@ namespace ROOT {
                return v;
             const double ll = std::sqrt(axis.X() * axis.X() + axis.Y() * axis.Y() + axis.Z() * axis.Z());
             if (ll == 0.)
-               GenVector::Throw("Axis Vector has zero magnitude");
+               GenVector_Throw("Axis Vector has zero magnitude");
             const double sa = std::sin(alpha);
             const double ca = std::cos(alpha);
             const double dx = axis.X() / ll;
@@ -407,7 +411,7 @@ namespace ROOT {
             double bz = b.Z();
             double b2 = bx*bx + by*by + bz*bz;
             if (b2 >= 1) {
-               GenVector::Throw ( "Beta Vector supplied to set Boost represents speed >= c");
+               GenVector_Throw("Beta Vector supplied to set Boost represents speed >= c");
                return LVector();
             }
             using std::sqrt;
@@ -433,7 +437,7 @@ namespace ROOT {
          template <class LVector, class T>
          LVector boostX(const LVector & v, T beta) {
             if (beta >= 1) {
-               GenVector::Throw ("Beta Vector supplied to set Boost represents speed >= c");
+               GenVector_Throw("Beta Vector supplied to set Boost represents speed >= c");
                return LVector();
             }
             using std::sqrt;
@@ -455,7 +459,7 @@ namespace ROOT {
          template <class LVector>
          LVector boostY(const LVector & v, double beta) {
             if (beta >= 1) {
-               GenVector::Throw ("Beta Vector supplied to set Boost represents speed >= c");
+               GenVector_Throw("Beta Vector supplied to set Boost represents speed >= c");
                return LVector();
             }
             using std::sqrt;
@@ -476,7 +480,7 @@ namespace ROOT {
          template <class LVector>
          LVector boostZ(const LVector & v, double beta) {
             if (beta >= 1) {
-               GenVector::Throw ( "Beta Vector supplied to set Boost represents speed >= c");
+               GenVector_Throw("Beta Vector supplied to set Boost represents speed >= c");
                return LVector();
             }
             using std::sqrt;
@@ -553,7 +557,8 @@ namespace ROOT {
           */
          double  Phi_mpi_pi(double phi);
 
-
+         // Close of doxygen group:
+         /// @}
 
       }  // end namespace Vector Util
 

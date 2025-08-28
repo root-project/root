@@ -49,6 +49,7 @@ private:
    TChain& operator=(const TChain&); // not implemented
    void
    ParseTreeFilename(const char *name, TString &filename, TString &treename, TString &query, TString &suffix) const;
+   Long64_t RefreshFriendAddresses();
 
 protected:
    void InvalidateCurrentTree();
@@ -103,7 +104,7 @@ public:
    Long64_t  GetEntries(const char *sel) override { return TTree::GetEntries(sel); }
    Int_t     GetEntry(Long64_t entry=0, Int_t getall=0) override;
    Long64_t  GetEntryNumber(Long64_t entry) const override;
-   Int_t     GetEntryWithIndex(Int_t major, Int_t minor=0) override;
+   Int_t     GetEntryWithIndex(Long64_t major, Long64_t minor=0) override;
    TFile            *GetFile() const;
    TLeaf    *GetLeaf(const char* branchname, const char* leafname) override;
    TLeaf    *GetLeaf(const char* name) override;

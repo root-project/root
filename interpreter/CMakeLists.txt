@@ -176,8 +176,12 @@ if(builtin_llvm)
     if(CMAKE_BUILD_TYPE MATCHES "Debug"
      OR LLVM_BUILD_TYPE MATCHES "(Debug|RelWithDebInfo)")
       set(LLVM_ENABLE_ASSERTIONS TRUE)
+      if(NOT DEFINED LLVM_ENABLE_DUMP)
+        set(LLVM_ENABLE_DUMP TRUE)
+      endif()
     else()
       set(LLVM_ENABLE_ASSERTIONS FALSE)
+      set(LLVM_ENABLE_DUMP FALSE)
     endif()
   endif()
 
@@ -185,6 +189,8 @@ if(builtin_llvm)
   # "optimize llvm_unreachable() as undefined behavior" but trap if we hit this
   # in production builds.
   set(LLVM_UNREACHABLE_OPTIMIZE FALSE)
+
+  set(_build_type ${CMAKE_BUILD_TYPE})
 
   # Multi-configuration generators ignore CMAKE_BUILD_TYPE, so
   # in that case we set the flags for all configurations to the
@@ -237,6 +243,7 @@ if(builtin_llvm)
   endif()
 
   set(CMAKE_CXX_STANDARD ${_cxx_standard})
+  set(CMAKE_BUILD_TYPE ${_build_type})
 
   set(LLVM_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm/include
     ${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm/include
@@ -550,9 +557,13 @@ set(CPPINTEROP_USE_CLING ON CACHE BOOL "" FORCE)
 set(CPPINTEROP_USE_REPL OFF CACHE BOOL "" FORCE)
 
 #---Disable testing on InterOp if ROOT's testing is OFF (InterOp tests are enabled by default) -------------------------------------------------------
-if(testing)
+ROOT_CHECK_CONNECTION("CPPINTEROP_ENABLE_TESTING=OFF")
+if(testing AND NOT NO_CONNECTION)
   set(CPPINTEROP_ENABLE_TESTING ON CACHE BOOL "" FORCE)
 else()
+  if(NO_CONNECTION)
+    message(STATUS "No internet connection, disabling the `CppInterOp testing infrastructure` option")
+  endif()
   set(CPPINTEROP_ENABLE_TESTING OFF CACHE BOOL "")
 endif()
 

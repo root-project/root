@@ -74,7 +74,7 @@ protected:
       R__ASSERT(!variationName.empty() && "Must provide a variation name.");
 
       for (auto &colName : colNames) {
-         RDFInternal::CheckForDefinition("Vary", colName, fColRegister, fLoopManager->GetBranchNames(),
+         RDFInternal::CheckForDefinition("Vary", colName, fColRegister,
                                          GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{});
       }
       RDFInternal::CheckValidCppVarName(variationName, "Vary");
@@ -196,7 +196,6 @@ protected:
       const auto validColumnNames = GetValidatedColumnNames(realNColumns, columns);
       const unsigned int nSlots = fLoopManager->GetNSlots();
 
-      auto *tree = fLoopManager->GetTree();
       auto *helperArgOnHeap = RDFInternal::MakeSharedOnHeap(helperArg);
 
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(proxiedPtr));
@@ -206,7 +205,7 @@ protected:
       auto jittedActionOnHeap = RDFInternal::MakeWeakOnHeap(jittedAction);
 
       auto toJit = RDFInternal::JitBuildAction(validColumnNames, upcastNodeOnHeap, typeid(HelperArgType),
-                                               typeid(ActionTag), helperArgOnHeap, tree, nSlots, fColRegister,
+                                               typeid(ActionTag), helperArgOnHeap, nullptr, nSlots, fColRegister,
                                                GetDataSource(), jittedActionOnHeap, vector2RVec);
       fLoopManager->ToJitExec(toJit);
       return MakeResultPtr(r, *fLoopManager, std::move(jittedAction));

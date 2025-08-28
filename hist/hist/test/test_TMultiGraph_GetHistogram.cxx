@@ -8,6 +8,8 @@
 #include "TGraph.h"
 #include "TH1.h"
 
+#include <cmath>
+
 TEST(TMultiGraph, GetHistogram)
 {
    gROOT->SetBatch(true);

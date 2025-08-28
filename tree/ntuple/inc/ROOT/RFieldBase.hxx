@@ -16,9 +16,12 @@
 
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RCreateFieldOptions.hxx>
+#include <ROOT/RError.hxx>
+#include <ROOT/RFieldUtils.hxx>
 #include <ROOT/RNTupleRange.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 
+#include <atomic>
 #include <cstddef>
 #include <functional>
 #include <iterator>
@@ -26,10 +29,13 @@
 #include <new>
 #include <string>
 #include <string_view>
+#include <typeinfo>
+#include <type_traits>
 #include <vector>
 
 namespace ROOT {
 
+class REntry;
 class RFieldBase;
 class RClassField;
 
@@ -697,25 +703,67 @@ public:
 /// Points to an object with RNTuple I/O support and keeps a pointer to the corresponding field.
 /// Fields can create RValue objects through RFieldBase::CreateValue(), RFieldBase::BindValue()) or
 /// RFieldBase::SplitValue().
-class RFieldBase::RValue {
+class RFieldBase::RValue final {
    friend class RFieldBase;
+   friend class ROOT::REntry;
 
 private:
    RFieldBase *fField = nullptr;  ///< The field that created the RValue
    /// Set by Bind() or by RFieldBase::CreateValue(), RFieldBase::SplitValue() or RFieldBase::BindValue()
    std::shared_ptr<void> fObjPtr;
+   mutable std::atomic<const std::type_info *> fTypeInfo = nullptr;
+
    RValue(RFieldBase *field, std::shared_ptr<void> objPtr) : fField(field), fObjPtr(objPtr) {}
 
 public:
-   RValue(const RValue &) = default;
-   RValue &operator=(const RValue &) = default;
-   RValue(RValue &&other) = default;
-   RValue &operator=(RValue &&other) = default;
+   RValue(const RValue &other) : fField(other.fField), fObjPtr(other.fObjPtr) {}
+   RValue &operator=(const RValue &other)
+   {
+      fField = other.fField;
+      fObjPtr = other.fObjPtr;
+      // We could copy over the cached type info, or just start with a fresh state...
+      fTypeInfo = nullptr;
+      return *this;
+   }
+   RValue(RValue &&other) : fField(other.fField), fObjPtr(other.fObjPtr) {}
+   RValue &operator=(RValue &&other)
+   {
+      fField = other.fField;
+      fObjPtr = other.fObjPtr;
+      // We could copy over the cached type info, or just start with a fresh state...
+      fTypeInfo = nullptr;
+      return *this;
+   }
    ~RValue() = default;
 
+private:
+   template <typename T>
+   void EnsureMatchingType() const
+   {
+      if constexpr (!std::is_void_v<T>) {
+         const std::type_info &ti = typeid(T);
+         // Fast path: if we had a matching type before, try comparing the type_info's. This may still fail in case the
+         // type has a suppressed template argument that may change the typeid.
+         auto *cachedTypeInfo = fTypeInfo.load();
+         if (cachedTypeInfo != nullptr && *cachedTypeInfo == ti) {
+            return;
+         }
+         std::string renormalizedTypeName = Internal::GetRenormalizedTypeName(ti);
+         if (Internal::IsMatchingFieldType(fField->GetTypeName(), renormalizedTypeName, ti)) {
+            fTypeInfo.store(&ti);
+            return;
+         }
+         throw RException(R__FAIL("type mismatch for field \"" + fField->GetFieldName() + "\": expected " +
+                                  fField->GetTypeName() + ", got " + renormalizedTypeName));
+      }
+   }
+
    std::size_t Append() { return fField->Append(fObjPtr.get()); }
+
+public:
    void Read(ROOT::NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr.get()); }
    void Read(RNTupleLocalIndex localIndex) { fField->Read(localIndex, fObjPtr.get()); }
+
    void Bind(std::shared_ptr<void> objPtr) { fObjPtr = objPtr; }
    void BindRawPtr(void *rawPtr);
    /// Replace the current object pointer by a pointer to a new object constructed by the field
@@ -724,12 +772,14 @@ public:
    template <typename T>
    std::shared_ptr<T> GetPtr() const
    {
+      EnsureMatchingType<T>();
       return std::static_pointer_cast<T>(fObjPtr);
    }
 
    template <typename T>
    const T &GetRef() const
    {
+      EnsureMatchingType<T>();
       return *static_cast<T *>(fObjPtr.get());
    }
 
@@ -769,7 +819,7 @@ on the same range, where in each read operation a different subset of values is 
 The memory of the value array is managed by the RBulkValues class.
 */
 // clang-format on
-class RFieldBase::RBulkValues {
+class RFieldBase::RBulkValues final {
 private:
    friend class RFieldBase;
 

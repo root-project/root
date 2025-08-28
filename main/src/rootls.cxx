@@ -1,4 +1,4 @@
-/// \file rootls.cxx
+// \file rootls.cxx
 ///
 /// Native implementation of rootls, partially based on rootls.py.
 ///
@@ -32,6 +32,8 @@
 
 #include <ROOT/StringUtils.hxx>
 #include <ROOT/RError.hxx>
+#include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleReader.hxx>
 
 #if defined(R__UNIX)
 #include <sys/ioctl.h>
@@ -71,6 +73,7 @@ options:
   -1, --oneColumn       Print content in one column
   -l, --longListing     Use a long listing format.
   -t, --treeListing     Print tree recursively and use a long listing format.
+  -R, --rntupleListing  Print RNTuples recursively and use a long listing format.
   -r, --recursiveListing
                         Traverse file recursively entering any TDirectory.
 
@@ -156,11 +159,12 @@ struct RootLsSource {
 
 struct RootLsArgs {
    enum Flags {
-      kNone = 0,
-      kOneColumn = 1,
-      kLongListing = 2,
-      kTreeListing = 4,
-      kRecursiveListing = 8
+      kNone = 0x0,
+      kOneColumn = 0x1,
+      kLongListing = 0x2,
+      kTreeListing = 0x4,
+      kRNTupleListing = 0x8,
+      kRecursiveListing = 0x10,
    };
 
    enum class PrintUsage {
@@ -246,7 +250,7 @@ static void PrintTTree(std::ostream &stream, T &tree, Indent indent)
       stream << std::setw(maxTitleLen) << titleStr;
       stream << std::setw(1) << branch->GetTotBytes();
       stream << '\n';
-      PrintTTree(stream, *branch, Indent(indent + 2));
+      PrintTTree(stream, *branch, indent + 2);
    }
 }
 
@@ -269,8 +273,42 @@ static void PrintClusters(std::ostream &stream, TTree &tree, Indent indent)
    stream << Color(kAnsiBold) << "The total number of clusters is " << nTotClusters << "\n";
 }
 
+// Prints an RNTuple field tree recursively.
+static void PrintRNTuple(std::ostream &stream, const ROOT::RNTupleDescriptor &desc, Indent indent,
+                         const ROOT::RFieldDescriptor &rootField, std::size_t minNameLen = 0,
+                         std::size_t minTypeLen = 0)
+{
+   std::size_t maxNameLen = 0, maxTypeLen = 0;
+   std::vector<const ROOT::RFieldDescriptor *> fields;
+   fields.reserve(rootField.GetLinkIds().size());
+   for (const auto &field: desc.GetFieldIterable(rootField.GetId())) {
+      fields.push_back(&field);
+      maxNameLen = std::max(maxNameLen, field.GetFieldName().length());
+      maxTypeLen = std::max(maxTypeLen, field.GetTypeName().length());
+   }
+   maxNameLen = std::max(minNameLen, maxNameLen + 2);
+   maxTypeLen = std::max(minTypeLen, maxTypeLen + 4);
+
+   std::sort(fields.begin(), fields.end(),
+             [](const auto &a, const auto &b) { return a->GetFieldName() < b->GetFieldName(); });
+
+   // To aid readability a bit, we use a '.' fill for all nested subfields.
+   const char fillChar = minNameLen == 0 ? ' ' : '.';
+   for (const auto *field : fields) {
+      PrintIndent(stream, indent);
+      stream << std::left << std::setfill(fillChar) << std::setw(maxNameLen) << field->GetFieldName();
+      stream << std::setfill(' ') << std::setw(maxTypeLen) << field->GetTypeName();
+      if (!field->GetFieldDescription().empty()) {
+         std::string descStr = '"' + field->GetFieldDescription() + '"';
+         stream << std::setw(1) << descStr;
+      }
+      stream << '\n';
+      PrintRNTuple(stream, desc, indent + 2, *field, maxNameLen - 2, maxTypeLen - 2);
+   }
+}
+
 static void PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx nodeIdx, std::uint32_t flags,
-                                  Indent indent);
+                                  Indent indent, std::size_t minNameLen = 0, std::size_t minClassLen = 0);
 
 /// Prints a `ls -l`-like output:
 ///
@@ -288,7 +326,8 @@ static void PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, 
 /// \param indent Each line of the output will have these many leading whitespaces
 static void PrintNodesDetailed(std::ostream &stream, const RootLsTree &tree,
                                std::vector<NodeIdx>::const_iterator nodesBegin,
-                               std::vector<NodeIdx>::const_iterator nodesEnd, std::uint32_t flags, Indent indent)
+                               std::vector<NodeIdx>::const_iterator nodesEnd, std::uint32_t flags, Indent indent,
+                               std::size_t minNameLen = 0, std::size_t minClassLen = 0)
 {
    std::size_t maxClassLen = 0, maxNameLen = 0;
    for (auto childIt = nodesBegin; childIt != nodesEnd; ++childIt) {
@@ -296,8 +335,8 @@ static void PrintNodesDetailed(std::ostream &stream, const RootLsTree &tree,
       maxClassLen = std::max(maxClassLen, child.fClassName.length());
       maxNameLen = std::max(maxNameLen, child.fName.length());
    }
-   maxClassLen += 2;
-   maxNameLen += 2;
+   maxClassLen = std::max(minClassLen, maxClassLen + 2);
+   maxNameLen = std::max(minNameLen, maxNameLen + 2);
 
    for (auto childIt = nodesBegin; childIt != nodesEnd; ++childIt) {
       NodeIdx childIdx = *childIt;
@@ -332,21 +371,33 @@ static void PrintNodesDetailed(std::ostream &stream, const RootLsTree &tree,
          if (ClassInheritsFrom(child.fClassName.c_str(), "TTree")) {
             TTree *ttree = child.fKey->ReadObject<TTree>();
             if (ttree) {
-               PrintTTree(stream, *ttree, Indent(indent + 2));
-               PrintClusters(stream, *ttree, Indent(indent + 2));
+               PrintTTree(stream, *ttree, indent + 2);
+               PrintClusters(stream, *ttree, indent + 2);
+            }
+         }
+      }
+      if (flags & RootLsArgs::kRNTupleListing) {
+         if (ClassInheritsFrom(child.fClassName.c_str(), "ROOT::RNTuple")) {
+            auto *rntuple = child.fKey->ReadObject<ROOT::RNTuple>();
+            if (rntuple) {
+               auto reader = ROOT::RNTupleReader::Open(*rntuple);
+               const auto &desc = reader->GetDescriptor();
+               PrintRNTuple(stream, desc, indent + 2, desc.GetFieldZero());
+            } else {
+               R__LOG_ERROR(RootLsChannel()) << "failed to read RNTuple object: " << child.fName;
             }
          }
       }
       if ((flags & RootLsArgs::kRecursiveListing) && ClassInheritsFrom(child.fClassName.c_str(), "TDirectory")) {
-         PrintChildrenDetailed(stream, tree, childIdx, flags, Indent(indent + 2));
+         PrintChildrenDetailed(stream, tree, childIdx, flags, indent + 2, maxNameLen - 2, maxClassLen - 2);
       }
    }
    stream << std::flush;
 }
 
 /// \param nodeIdx The index of the node whose children should be printed
-static void
-PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx nodeIdx, std::uint32_t flags, Indent indent)
+static void PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx nodeIdx, std::uint32_t flags,
+                                  Indent indent, std::size_t minNameLen, std::size_t minClassLen)
 {
 
    const auto &node = tree.fNodes[nodeIdx];
@@ -355,7 +406,7 @@ PrintChildrenDetailed(std::ostream &stream, const RootLsTree &tree, NodeIdx node
 
    std::vector<NodeIdx> children(node.fNChildren);
    std::iota(children.begin(), children.end(), node.fFirstChild);
-   PrintNodesDetailed(stream, tree, children.begin(), children.end(), flags, indent);
+   PrintNodesDetailed(stream, tree, children.begin(), children.end(), flags, indent, minNameLen, minClassLen);
 }
 
 // Prints all children of `nodeIdx`-th node in a ls-like fashion.
@@ -461,7 +512,7 @@ static void PrintNodesInColumns(std::ostream &stream, const RootLsTree &tree,
       if (isDir && (flags & RootLsArgs::kRecursiveListing)) {
          if (!isExtremal)
             stream << "\n";
-         PrintChildrenInColumns(stream, tree, childIdx, flags, Indent(indent + 2));
+         PrintChildrenInColumns(stream, tree, childIdx, flags, indent + 2);
          mustIndent = true;
       }
    }
@@ -509,7 +560,7 @@ static void RootLs(const RootLsArgs &args, std::ostream &stream = std::cout)
          stream << source.fFileName << " :\n";
       }
 
-      if (args.fFlags & (RootLsArgs::kLongListing | RootLsArgs::kTreeListing))
+      if (args.fFlags & (RootLsArgs::kLongListing | RootLsArgs::kTreeListing | RootLsArgs::kRNTupleListing))
          PrintNodesDetailed(stream, source.fObjectTree, source.fObjectTree.fLeafList.begin(),
                             source.fObjectTree.fLeafList.end(), args.fFlags, outerIndent);
       else
@@ -524,7 +575,7 @@ static void RootLs(const RootLsArgs &args, std::ostream &stream = std::cout)
             stream << NodeFullPath(source.fObjectTree, rootIdx) << " :\n";
          }
 
-         if (args.fFlags & (RootLsArgs::kLongListing | RootLsArgs::kTreeListing))
+         if (args.fFlags & (RootLsArgs::kLongListing | RootLsArgs::kTreeListing | RootLsArgs::kRNTupleListing))
             PrintChildrenDetailed(stream, source.fObjectTree, rootIdx, args.fFlags, indent);
          else
             PrintChildrenInColumns(stream, source.fObjectTree, rootIdx, args.fFlags, indent);
@@ -660,7 +711,8 @@ static RootLsArgs ParseArgs(const char **args, int nArgs)
             bool matched = MatchLongFlag(arg, "oneColumn", RootLsArgs::kOneColumn, outArgs.fFlags) ||
                            MatchLongFlag(arg, "longListing", RootLsArgs::kLongListing, outArgs.fFlags) ||
                            MatchLongFlag(arg, "treeListing", RootLsArgs::kTreeListing, outArgs.fFlags) ||
-                           MatchLongFlag(arg, "recursiveListing", RootLsArgs::kRecursiveListing, outArgs.fFlags);
+                           MatchLongFlag(arg, "recursiveListing", RootLsArgs::kRecursiveListing, outArgs.fFlags) ||
+                           MatchLongFlag(arg, "rntupleListing", RootLsArgs::kRNTupleListing, outArgs.fFlags);
             if (!matched) {
                if (strcmp(arg, "help") == 0) {
                   outArgs.fPrintUsageAndExit = RootLsArgs::PrintUsage::kLong;
@@ -676,7 +728,8 @@ static RootLsArgs ParseArgs(const char **args, int nArgs)
                bool matched = MatchShortFlag(*arg, '1', RootLsArgs::kOneColumn, outArgs.fFlags) ||
                               MatchShortFlag(*arg, 'l', RootLsArgs::kLongListing, outArgs.fFlags) ||
                               MatchShortFlag(*arg, 't', RootLsArgs::kTreeListing, outArgs.fFlags) ||
-                              MatchShortFlag(*arg, 'r', RootLsArgs::kRecursiveListing, outArgs.fFlags);
+                              MatchShortFlag(*arg, 'r', RootLsArgs::kRecursiveListing, outArgs.fFlags) ||
+                              MatchShortFlag(*arg, 'R', RootLsArgs::kRNTupleListing, outArgs.fFlags);
                if (!matched) {
                   if (*arg == 'h') {
                      outArgs.fPrintUsageAndExit = RootLsArgs::PrintUsage::kLong;

@@ -7,7 +7,8 @@
 // definitions are implementation details and should not be exposed to a public interface.
 
 #include <ROOT/RColumnElementBase.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RConfig.hxx>
 #include <ROOT/RError.hxx>
 #include <Byteswap.h>
@@ -996,7 +997,7 @@ using Quantized_t = std::uint32_t;
       return static_cast<std::size_t>(31 - idx);
    return 32;
 #else
-   return static_cast<std::size_t>(__builtin_clzl(x));
+   return static_cast<std::size_t>(__builtin_clz(x));
 #endif
 }
 
@@ -1011,7 +1012,7 @@ using Quantized_t = std::uint32_t;
       return static_cast<std::size_t>(idx);
    return 32;
 #else
-   return static_cast<std::size_t>(__builtin_ctzl(x));
+   return static_cast<std::size_t>(__builtin_ctz(x));
 #endif
 }
 
@@ -1042,14 +1043,15 @@ int QuantizeReals(Quantized_t *dst, const T *src, std::size_t count, double min,
    for (std::size_t i = 0; i < count; ++i) {
       const T elem = src[i];
 
-      nOutOfRange += !(min <= elem && elem <= max);
+      bool outOfRange = !(min <= elem && elem <= max);
+      nOutOfRange += outOfRange;
 
       const double e = 0.5 + (elem - min) * scale;
       Quantized_t q = static_cast<Quantized_t>(e);
       ByteSwapIfNecessary(q);
 
       // double-check we actually used at most `nQuantBits`
-      assert(LeadingZeroes(q) >= unusedBits);
+      assert(outOfRange || LeadingZeroes(q) >= unusedBits);
 
       // we want to leave zeroes in the LSB, not the MSB, because we'll then drop the LSB
       // when bit packing.

@@ -127,15 +127,13 @@ LorentzRotation::Rectify() {
 
    typedef LorentzVector< PxPyPzE4D<Scalar> > FourVector;
    if (fM[kTT] <= 0) {
-      GenVector::Throw (
-                              "LorentzRotation:Rectify(): Non-positive TT component - cannot rectify");
+      GenVector_Throw("LorentzRotation:Rectify(): Non-positive TT component - cannot rectify");
       return;
    }
    FourVector t ( fM[kTX], fM[kTY], fM[kTZ], fM[kTT] );
    Scalar m2 = t.M2();
    if ( m2 <= 0 ) {
-      GenVector::Throw (
-                              "LorentzRotation:Rectify(): Non-timelike time row - cannot rectify");
+      GenVector_Throw("LorentzRotation:Rectify(): Non-timelike time row - cannot rectify");
       return;
    }
    t /= std::sqrt(m2);
@@ -143,9 +141,8 @@ LorentzRotation::Rectify() {
    z = z - z.Dot(t)*t;
    m2 = z.M2();
    if ( m2 >= 0 ) {
-      GenVector::Throw (
-                              "LorentzRotation:Rectify(): Non-spacelike Z row projection - "
-                              "cannot rectify");
+      GenVector_Throw("LorentzRotation:Rectify(): Non-spacelike Z row projection - "
+                      "cannot rectify");
       return;
    }
    z /= std::sqrt(-m2);
@@ -153,9 +150,8 @@ LorentzRotation::Rectify() {
    y = y - y.Dot(t)*t - y.Dot(z)*z;
    m2 = y.M2();
    if ( m2 >= 0 ) {
-      GenVector::Throw (
-                              "LorentzRotation:Rectify(): Non-spacelike Y row projection - "
-                              "cannot rectify");
+      GenVector_Throw("LorentzRotation:Rectify(): Non-spacelike Y row projection - "
+                      "cannot rectify");
       return;
    }
    y /= std::sqrt(-m2);
@@ -163,9 +159,8 @@ LorentzRotation::Rectify() {
    x = x - x.Dot(t)*t - x.Dot(z)*z - x.Dot(y)*y;
    m2 = x.M2();
    if ( m2 >= 0 ) {
-      GenVector::Throw (
-                              "LorentzRotation:Rectify(): Non-spacelike X row projection - "
-                              "cannot rectify");
+      GenVector_Throw("LorentzRotation:Rectify(): Non-spacelike X row projection - "
+                      "cannot rectify");
       return;
    }
    x /= std::sqrt(-m2);

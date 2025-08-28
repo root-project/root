@@ -251,3 +251,21 @@ TEST(TFile, WalkTKeys)
    EXPECT_EQ(it->fKeyName, kLongerKey);
    EXPECT_EQ(it->fClassName, "string");
 }
+
+// https://its.cern.ch/jira/browse/ROOT-10352
+TEST(TDirectoryFile, SeekParent)
+{
+   // create test file
+   TMemFile f("subdirTest10352.root", "RECREATE");
+   auto dir1 = f.mkdir("dir-1");
+   dir1->cd();
+   auto dir11 = dir1->mkdir("dir-11");
+   dir11->cd();
+   f.Write();
+   dir1 = static_cast<TDirectory*>(f.Get("dir-1"));
+   EXPECT_EQ(dir1->GetSeekDir(), 239);
+   EXPECT_EQ(dir1->GetSeekParent(), 100);
+   dir11 = static_cast<TDirectory*>(dir1->Get("dir-11"));
+   EXPECT_EQ(dir11->GetSeekDir(), 348);
+   EXPECT_EQ(dir11->GetSeekParent(), 239);
+}

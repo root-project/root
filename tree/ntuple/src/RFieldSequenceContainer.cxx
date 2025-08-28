@@ -17,7 +17,7 @@ ROOT::RArrayField::RArrayField(std::string_view fieldName, std::unique_ptr<RFiel
    : ROOT::RFieldBase(fieldName,
                       "std::array<" + itemField->GetTypeName() + "," +
                          Internal::GetNormalizedInteger(static_cast<unsigned long long>(arrayLength)) + ">",
-                      ROOT::ENTupleStructure::kLeaf, false /* isSimple */, arrayLength),
+                      ROOT::ENTupleStructure::kPlain, false /* isSimple */, arrayLength),
      fItemSize(itemField->GetValueSize()),
      fArrayLength(arrayLength)
 {
@@ -464,33 +464,38 @@ void ROOT::RRVecField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 
 //------------------------------------------------------------------------------
 
-ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField, bool isUntyped)
-   : ROOT::RFieldBase(fieldName, isUntyped ? "" : "std::vector<" + itemField->GetTypeName() + ">",
+ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
+                                 std::optional<std::string_view> emulatedFromType)
+   : ROOT::RFieldBase(fieldName, emulatedFromType ? *emulatedFromType : "std::vector<" + itemField->GetTypeName() + ">",
                       ROOT::ENTupleStructure::kCollection, false /* isSimple */),
      fItemSize(itemField->GetValueSize()),
      fNWritten(0)
 {
+   if (emulatedFromType && !emulatedFromType->empty())
+      fTraits |= kTraitEmulatedField;
+
    if (!(itemField->GetTraits() & kTraitTriviallyDestructible))
       fItemDeleter = GetDeleterOf(*itemField);
    Attach(std::move(itemField));
 }
 
 ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
-   : RVectorField(fieldName, std::move(itemField), false)
+   : RVectorField(fieldName, std::move(itemField), {})
 {
 }
 
 std::unique_ptr<ROOT::RVectorField>
 ROOT::RVectorField::CreateUntyped(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
 {
-   return std::unique_ptr<ROOT::RVectorField>(new RVectorField(fieldName, std::move(itemField), true));
+   return std::unique_ptr<ROOT::RVectorField>(new RVectorField(fieldName, std::move(itemField), ""));
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RVectorField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
-   return std::unique_ptr<ROOT::RVectorField>(
-      new RVectorField(newName, std::move(newItemField), GetTypeName().empty()));
+   auto isUntyped = GetTypeName().empty() || ((fTraits & kTraitEmulatedField) != 0);
+   auto emulatedFromType = isUntyped ? std::make_optional(GetTypeName()) : std::nullopt;
+   return std::unique_ptr<ROOT::RVectorField>(new RVectorField(newName, std::move(newItemField), emulatedFromType));
 }
 
 std::size_t ROOT::RVectorField::AppendImpl(const void *from)

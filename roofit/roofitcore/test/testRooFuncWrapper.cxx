@@ -21,7 +21,7 @@
 #include <RooDataSet.h>
 #include <RooExponential.h>
 #include <RooFitResult.h>
-#include <RooFuncWrapper.h>
+#include <../src/RooEvaluatorWrapper.h>
 #include <RooGaussian.h>
 #include <RooHelpers.h>
 #include <RooHistFunc.h>
@@ -86,88 +86,6 @@ void randomizeParameters(const RooArgSet &parameters)
 }
 
 } // namespace
-
-TEST(RooFuncWrapper, GaussianNormalized)
-{
-   RooHelpers::LocalChangeMsgLevel changeMsgLevel{RooFit::WARNING};
-
-   RooWorkspace ws;
-   ws.import(RooRealVar{"x", "x", 0, -10, std::numeric_limits<double>::infinity()}, RooFit::Silence());
-   ws.factory("sum::mu_shifted(mu[0, -10, 10], shift[1.0, -10, 10])");
-   ws.factory("prod::sigma_scaled(sigma[2.0, 0.01, 10], 1.5)");
-   ws.factory("Gaussian::gauss(x, mu_shifted, sigma_scaled)");
-
-   RooAbsPdf &gauss = *ws.pdf("gauss");
-   RooRealVar &x = *ws.var("x");
-   RooRealVar &mu = *ws.var("mu");
-
-   RooArgSet normSet{x};
-   std::unique_ptr<RooAbsReal> gaussNormalized = RooFit::Detail::compileForNormSet(gauss, normSet);
-
-   RooFit::Experimental::RooFuncWrapper gaussFunc("myGauss3", "myGauss3", *gaussNormalized, nullptr, nullptr, false);
-   gaussFunc.createGradient();
-
-   RooArgSet paramsGauss;
-   gauss.getParameters(nullptr, paramsGauss);
-
-   // Check if functions results are the same even after changing parameters.
-   EXPECT_NEAR(gauss.getVal(normSet), gaussFunc.getVal(), 1e-8);
-
-   mu.setVal(1);
-   EXPECT_NEAR(gauss.getVal(normSet), gaussFunc.getVal(), 1e-8);
-
-   // Get AD based derivative
-   std::vector<double> dMyGauss(gaussFunc.getNumParams(), 0);
-   gaussFunc.gradient(dMyGauss.data());
-
-   // Check if derivatives are equal
-   for (std::size_t i = 0; i < paramsGauss.size(); ++i) {
-      EXPECT_NEAR(getNumDerivative(gauss, static_cast<RooRealVar &>(*paramsGauss[i]), normSet), dMyGauss[i], 1e-8);
-   }
-}
-
-TEST(RooFuncWrapper, Exponential)
-{
-   RooHelpers::LocalChangeMsgLevel changeMsgLevel{RooFit::WARNING};
-
-   for (auto negateCoefficient : {false, true}) {
-
-      RooWorkspace ws;
-      if (negateCoefficient) {
-         ws.factory("Exponential::expo_2(x[1.0, 0, 10], c[0.1, 0, 10], true)");
-      } else {
-         ws.factory("Exponential::expo_1(x[1.0, 0, 10], c[0.1, 0, 10], false)");
-      }
-
-      std::string name = negateCoefficient ? "expo_2" : "expo_1";
-
-      RooAbsPdf &expo = *ws.pdf(name);
-      RooRealVar &x = *ws.var("x");
-
-      RooArgSet normSet{x};
-
-      std::unique_ptr<RooAbsReal> expoNormalized = RooFit::Detail::compileForNormSet(expo, normSet);
-
-      RooFit::Experimental::RooFuncWrapper expoFunc(name.c_str(), name.c_str(), *expoNormalized, nullptr, nullptr,
-                                                    false);
-      expoFunc.createGradient();
-
-      RooArgSet params;
-      expo.getParameters(nullptr, params);
-
-      EXPECT_NEAR(expo.getVal(normSet), expoFunc.getVal(), 1e-8);
-
-      // Get AD based derivative
-      std::vector<double> dExpo(expoFunc.getNumParams(), 0);
-      expoFunc.gradient(dExpo.data());
-
-      // Check if derivatives are equal
-      for (std::size_t i = 0; i < params.size(); ++i) {
-         EXPECT_NEAR(getNumDerivative(expo, static_cast<RooRealVar &>(*params[i]), normSet), dExpo[i], 1e-8)
-            << params[i]->GetName();
-      }
-   }
-}
 
 using CreateNLLFunc =
    std::function<std::unique_ptr<RooAbsReal>(RooAbsPdf &, RooAbsData &, RooWorkspace &, RooFit::EvalBackend)>;
@@ -241,9 +159,9 @@ TEST_P(FactoryTest, NLLFit)
    std::unique_ptr<RooAbsReal> nllRef = _params._createNLL(model, *data, ws, RooFit::EvalBackend::Cpu());
    std::unique_ptr<RooAbsReal> nllFunc = _params._createNLL(model, *data, ws, RooFit::EvalBackend::Codegen());
 
-   // We don't use the RooFit::Evaluator for the nominal likelihood. Like this,
-   // we make sure to validate also the NLL values of the generated code.
-   static_cast<RooFit::Experimental::RooFuncWrapper &>(*nllFunc).disableEvaluator();
+   // We want to use the generated code also for the nominal likelihood. Like
+   // this, we make sure to validate also the NLL values of the generated code.
+   static_cast<RooEvaluatorWrapper &>(*nllFunc).setUseGeneratedFunctionCode(true);
 
    double tol = _params._fitResultTolerance;
 
@@ -301,7 +219,9 @@ TEST_P(FactoryTest, NLLFit)
 /// Initial minimization that was not based on any other tutorial/test.
 FactoryTestParams param1{"Gaussian",
                          [](RooWorkspace &ws) {
-                            ws.factory("sum::mu_shifted(mu[0, -10, 10], shift[1.0, -10, 10])");
+                            constexpr double inf = std::numeric_limits<double>::infinity();
+                            ws.import(RooRealVar{"mu", "mu", -inf, inf});
+                            ws.factory("sum::mu_shifted(mu, shift[1.0, -10, 10])");
                             ws.factory("prod::sigma_scaled(sigma[3.0, 0.01, 10], 1.5)");
                             ws.factory("Gaussian::model(x[0, -10, 10], mu_shifted, sigma_scaled)");
 
@@ -510,7 +430,10 @@ FactoryTestParams param9{"Poisson",
 // A RooPoisson where x is not rounded, like it is used in HistFactory
 FactoryTestParams param10{"PoissonNoRounding",
                           [](RooWorkspace &ws) {
-                             ws.factory("Poisson::model(x[5, 0, 10], mu[5, 0, 10])");
+                             constexpr double inf = std::numeric_limits<double>::infinity();
+                             RooRealVar mu{"mu", "mu", 5., 0., inf};
+                             ws.import(mu);
+                             ws.factory("Poisson::model(x[5, 0, 10], mu)");
                              auto poisson = static_cast<RooPoisson *>(ws.pdf("model"));
                              poisson->setNoRounding(true);
                              ws.defineSet("observables", "x");

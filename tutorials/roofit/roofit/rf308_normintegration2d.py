@@ -34,7 +34,7 @@ gxy = ROOT.RooProdPdf("gxy", "gxy", [gx, gy])
 print("gxy = ", gxy.getVal())
 
 # Return value of gxy normalized over x _and_ y in range [-10,10]
-nset_xy = {x, y}
+nset_xy = ROOT.RooArgSet(x, y)
 print("gx_Norm[x,y] = ", gxy.getVal(nset_xy))
 
 # Create object representing integral over gx
@@ -47,12 +47,12 @@ print("gx_Int[x,y] = ", igxy.getVal())
 
 # Return value of gxy normalized over x in range [-10,10] (i.e. treating y
 # as parameter)
-nset_x = {x}
+nset_x = ROOT.RooArgSet(x)
 print("gx_Norm[x] = ", gxy.getVal(nset_x))
 
 # Return value of gxy normalized over y in range [-10,10] (i.e. treating x
 # as parameter)
-nset_y = {y}
+nset_y = ROOT.RooArgSet(y)
 print("gx_Norm[y] = ", gxy.getVal(nset_y))
 
 # Integrate normalized pdf over subrange

@@ -263,6 +263,7 @@ static void DummyTimeOutHandler(int /* Sig */) {}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Display given URL in web browser
+/// \note See more details related to webdisplay on RWebWindowsManager::ShowWindow
 
 std::unique_ptr<RWebDisplayHandle>
 RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)

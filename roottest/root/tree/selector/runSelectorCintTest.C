@@ -26,7 +26,6 @@
    c->Process(&isel);
 # endif
 
-#if !defined(ClingWorkAroundUnloadingVTABLES)
    gROOT->ProcessLine(".L sel01.C+");
 # ifdef ClingWorkAroundMissingDynamicScope
    TSelector *csel = (TSelector*)TClass::GetClass("sel01")->New();
@@ -43,39 +42,12 @@
       tree->Process(&csel);
 # endif
 
-   auto c = new TChain("T1");
+   c = new TChain("T1");
    c->Add("Event1.root");
 # ifdef ClingWorkAroundMissingDynamicScope
    c->Process(csel);
 # else
    c->Process(&csel);
 # endif
-
-#else // !defined(ClingWorkAroundUnloadingVTABLES)
-      fprintf(stderr,"Info in <ACLiC>: script has already been loaded in interpreted mode\n");
-      fprintf(stderr,"Info in <ACLiC>: unloading sel01.C and compiling it\n");
-
-      fprintf(stderr,"Running Compiled Process 0\n");
-      fprintf(stderr,"Running Compiled Process 1\n");
-      fprintf(stderr,"Running Compiled Process 2\n");
-      fprintf(stderr,"Running Compiled Process 3\n");
-      fprintf(stderr,"Running Compiled Process 4\n");
-      fprintf(stderr,"Running Compiled Process 5\n");
-      fprintf(stderr,"Running Compiled Process 6\n");
-      fprintf(stderr,"Running Compiled Process 7\n");
-      fprintf(stderr,"Running Compiled Process 8\n");
-      fprintf(stderr,"Running Compiled Process 9\n");
-      fprintf(stderr,"Running Compiled Process 0\n");
-      fprintf(stderr,"Running Compiled Process 1\n");
-      fprintf(stderr,"Running Compiled Process 2\n");
-      fprintf(stderr,"Running Compiled Process 3\n");
-      fprintf(stderr,"Running Compiled Process 4\n");
-      fprintf(stderr,"Running Compiled Process 5\n");
-      fprintf(stderr,"Running Compiled Process 6\n");
-      fprintf(stderr,"Running Compiled Process 7\n");
-      fprintf(stderr,"Running Compiled Process 8\n");
-      fprintf(stderr,"Running Compiled Process 9\n");
-
-#endif // !defined(ClingWorkAroundUnloadingVTABLES)
 
 }

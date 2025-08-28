@@ -20,7 +20,7 @@ ROOT_ADD_GTEST(testRooLandau testRooLandau.cxx LIBRARIES RooFit)
 ROOT_ADD_GTEST(testRooParamHistFunc testRooParamHistFunc.cxx LIBRARIES Gpad RooFit)
 ROOT_ADD_GTEST(testRooPoisson testRooPoisson.cxx LIBRARIES RooFit)
 ROOT_ADD_GTEST(testRooStepFunc testRooStepFunc.cxx LIBRARIES RooFit)
-ROOT_ADD_GTEST(testRooMultiPdf testRooMultiPdf.cxx LIBRARIES RooFit)
+
 if(mathmore)
   ROOT_EXECUTABLE(testRooFit testRooFit.cxx LIBRARIES RooFit MathMore)
   ROOT_ADD_TEST(test-fit-testRooFit COMMAND testRooFit)

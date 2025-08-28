@@ -1,6 +1,7 @@
 #include "TTree.h"
 
-TTree *create() {
+TTree *create()
+{
    TTree *t = new TTree("t","t");
    TNamed data("name","title");
    t->Branch("data.",&data);
@@ -10,7 +11,8 @@ TTree *create() {
    return t;
 }
 
-void execmakeclass() {
+void execmakeclass()
+{
    TTree *t = create();
    t->SetMakeClass(1);
    Int_t bits = 0;

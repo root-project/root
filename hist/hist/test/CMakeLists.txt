@@ -5,6 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ROOT_ADD_GTEST(testTProfile2Poly test_tprofile2poly.cxx LIBRARIES Hist Matrix MathCore RIO)
+ROOT_ADD_GTEST(testTFractionFitter test_TFractionFitter.cxx LIBRARIES Hist MathCore)
 ROOT_ADD_GTEST(testTH2PolyBinError test_TH2Poly_BinError.cxx LIBRARIES Hist Matrix MathCore RIO)
 ROOT_ADD_GTEST(testTH2PolyAdd test_TH2Poly_Add.cxx LIBRARIES Hist Matrix MathCore RIO)
 ROOT_ADD_GTEST(testTH2PolyGetNumberOfBins test_TH2Poly_GetNumberOfBins.cxx LIBRARIES Hist Matrix MathCore RIO)
@@ -27,6 +28,7 @@ ROOT_ADD_GTEST(testMapCppName test_MapCppName.cxx LIBRARIES Hist Gpad)
 ROOT_ADD_GTEST(testTGraphSorting test_TGraph_sorting.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testSpline test_spline.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(testTF1Simple test_tf1_simple.cxx LIBRARIES Hist RIO)
+ROOT_ADD_GTEST(testTF1DrawCopy test_tf1_drawcopy.cxx LIBRARIES Hist)
 
 if(fftw3)
   ROOT_ADD_GTEST(testTF1 test_tf1.cxx LIBRARIES Hist)

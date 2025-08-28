@@ -79,13 +79,13 @@ TGInputDialog::TGInputDialog(const TGWindow *p, const TGWindow *main,
    fOk = new TGTextButton(hf, "&Ok", 1);
    fOk->Associate(this);
    hf->AddFrame(fOk, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 5, 5, 0, 0));
-   width  = TMath::Max(width, fOk->GetDefaultWidth());
+   width  = std::max(width, fOk->GetDefaultWidth());
 
    fCancel = new TGTextButton(hf, "&Cancel", 2);
    fCancel->Associate(this);
    hf->AddFrame(fCancel, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX, 5, 5, 0, 0));
    height = fCancel->GetDefaultHeight();
-   width  = TMath::Max(width, fCancel->GetDefaultWidth());
+   width  = std::max(width, fCancel->GetDefaultWidth());
 
    // place button frame (hf) at the bottom
    AddFrame(hf, new TGLayoutHints(kLHintsBottom | kLHintsCenterX, 0, 0, 5, 5));

@@ -370,9 +370,9 @@ void TBranchClones::SetAddress(void* addr)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset basket size for all sub-branches.
 
-void TBranchClones::SetBasketSize(Int_t buffsize)
+void TBranchClones::SetBasketSize(Int_t bufsize)
 {
-   TBranch::SetBasketSize(buffsize);
+   TBranch::SetBasketSize(bufsize);
 
    Int_t nbranches = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < nbranches; i++)  {

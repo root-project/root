@@ -279,3 +279,13 @@ TEST(TTreeRegressions, TTreeFormulaMemberIndex)
    ASSERT_FLOAT_EQ(mc.Get(-2)->x, h3->GetMean());
    delete h3;
 }
+
+// https://its.cern.ch/jira/browse/ROOT-5567
+TEST(TTreeRegressions, FindBranchBrackets)
+{
+   TTree t("t", "");
+   UShort_t branch[3];
+   t.Branch("branch[3]", branch);
+   EXPECT_NE(t.FindBranch("branch[3]"), nullptr);
+   EXPECT_EQ(t.FindBranch("branch[3]"), t.GetBranch("branch[3]"));
+}

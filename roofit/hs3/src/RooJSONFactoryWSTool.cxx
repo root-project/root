@@ -26,6 +26,7 @@
 #include <RooSimultaneous.h>
 #include <RooFormulaVar.h>
 #include <RooFit/ModelConfig.h>
+#include <RooFitImplHelpers.h>
 
 #include "JSONIOUtils.h"
 #include "Domains.h"
@@ -949,7 +950,7 @@ RooAbsReal *RooJSONFactoryWSTool::requestImpl<RooAbsReal>(const std::string &obj
    if (RooAbsReal *retval = _workspace.function(objname))
       return retval;
    if (isNumber(objname))
-      return &RooFit::RooConst(std::stod(objname));
+      return &RooFit::RooConst(toDouble(objname));
    if (RooAbsPdf *pdf = requestImpl<RooAbsPdf>(objname))
       return pdf;
    if (RooRealVar *var = requestImpl<RooRealVar>(objname))
@@ -1867,6 +1868,18 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    sortByName(allpdfs);
    std::set<std::string> exportedObjectNames;
    exportObjects(allpdfs, exportedObjectNames);
+
+   // export all toplevel functions
+   std::vector<RooAbsReal *> allfuncs;
+   for (auto &arg : _workspace.allFunctions()) {
+      if (!arg->hasClients()) {
+         if (auto *func = dynamic_cast<RooAbsReal *>(arg)) {
+            allfuncs.push_back(func);
+         }
+      }
+   }
+   sortByName(allfuncs);
+   exportObjects(allfuncs, exportedObjectNames);
 
    // export attributes of all objects
    for (RooAbsArg *arg : _workspace.components()) {

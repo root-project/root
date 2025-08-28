@@ -1,0 +1,94 @@
+
+Processing macroFriends2.C...
+------MyClass::MyClass------
+------MyClass::CreateTrees------
+------MyClass::CreateTrees------
+------MyClass::AddTree------
+------MyClass::AddTree------
+------MyClass::AddTree------
+------MyClass::AddTree------
+------MyClass::AddTree------
+------MyClass::AddTree------
+------MyClass::AddTree------
+------MyClass::AddTree------
+------MyClass::CopyTrees1------
+nfriends(fTree) = 7
+nentries(fTree) = 100
+treej[0] = TreeX0
+treej[1] = TreeX1
+treej[2] = TreeX2
+treej[3] = TreeX3
+treej[4] = TreeY0
+treej[5] = TreeY1
+treej[6] = TreeY2
+treej[7] = TreeY3
+file = TreeZ1.root
+alias = TreeX0=TreeX0
+i= 0 j= 0  data= 0.61217
+i= 2 j= 0  data= 0.16907
+alias = TreeX1=TreeX1
+i= 0 j= 1  data= 0.481278
+i= 2 j= 1  data= 0.966759
+alias = TreeX2=TreeX2
+i= 0 j= 2  data= 0.0591071
+i= 2 j= 2  data= 0.308223
+alias = TreeX3=TreeX3
+i= 0 j= 3  data= 0.721412
+i= 2 j= 3  data= 0.660892
+alias = TreeY0=TreeY0
+i= 0 j= 4  data= 0.61217
+i= 2 j= 4  data= 0.16907
+alias = TreeY1=TreeY1
+i= 0 j= 5  data= 0.481278
+i= 2 j= 5  data= 0.966759
+alias = TreeY2=TreeY2
+i= 0 j= 6  data= 0.0591071
+i= 2 j= 6  data= 0.308223
+alias = TreeY3=TreeY3
+i= 0 j= 7  data= 0.721412
+i= 2 j= 7  data= 0.660892
+------MyClass::GetTree------
+fTreeName  = TreeX0
+fTreeTitle = trees
+nentries(tree) = 50
+nfriends(tree) = 7
+------MyClass::CopyTrees2------
+nfriends(fTree) = 7
+nentries(fTree) = 50
+treej[0] = TreeX0
+treej[1] = TreeX1
+treej[2] = TreeX2
+treej[3] = TreeX3
+treej[4] = TreeY0
+treej[5] = TreeY1
+treej[6] = TreeY2
+treej[7] = TreeY3
+file = TreeZ2.root
+tree[0]= TreeX0
+j= 0  x[0]= 0.61217
+j= 0  x[2]= 0.436059
+tree[1]= TreeX1
+j= 1  x[0]= 0.481278
+j= 1  x[2]= 0.416979
+tree[2]= TreeX2
+j= 2  x[0]= 0.0591071
+j= 2  x[2]= 0.207367
+tree[3]= TreeX3
+j= 3  x[0]= 0.721412
+j= 3  x[2]= 0.0777567
+tree[4]= TreeY0
+j= 4  x[0]= 0.61217
+j= 4  x[2]= 0.436059
+tree[5]= TreeY1
+j= 5  x[0]= 0.481278
+j= 5  x[2]= 0.416979
+tree[6]= TreeY2
+j= 6  x[0]= 0.0591071
+j= 6  x[2]= 0.207367
+tree[7]= TreeY3
+j= 7  x[0]= 0.721412
+j= 7  x[2]= 0.0777567
+------MyClass::GetTreeZ------
+nentries(treeZ) = 25
+nfriends(treeZ) = 7
+------MyClass::~MyClass------

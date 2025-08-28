@@ -22,7 +22,7 @@
 #include <ROOT/RNTupleReadOptions.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPagePool.hxx>
 #include <ROOT/RSpan.hxx>
@@ -320,8 +320,8 @@ public:
       if (fIsInitialized) {
          throw RException(R__FAIL("already initialized"));
       }
-      fIsInitialized = true;
       InitImpl(model);
+      fIsInitialized = true;
    }
 
 protected:

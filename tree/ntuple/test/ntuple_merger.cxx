@@ -3506,3 +3506,212 @@ TEST(RNTupleMerger, GenerateZeroPagesIncremental)
       }
    }
 }
+
+TEST(RNTupleMerger, MergeStreamerFields)
+{
+   // Merge two files with custom streamer fields
+   FileRaii fileGuard1("test_ntuple_merge_streamer1.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(std::make_unique<ROOT::RStreamerField>("foo", "CustomStruct"));
+      model->AddField(std::make_unique<ROOT::RStreamerField>("bar", "CustomStruct"));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      auto fieldFoo = ntuple->GetModel().GetDefaultEntry().GetPtr<CustomStruct>("foo");
+      auto fieldBar = ntuple->GetModel().GetDefaultEntry().GetPtr<CustomStruct>("bar");
+      for (int i = 0; i < 10; ++i) {
+         CustomStruct foo;
+         foo.v1.push_back(i);
+         foo.s = std::to_string(i);
+         *fieldFoo = foo;
+         CustomStruct bar;
+         bar.a = i;
+         *fieldBar = bar;
+         ntuple->Fill();
+      }
+   }
+   FileRaii fileGuard2("test_ntuple_merge_streamer2.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(std::make_unique<ROOT::RStreamerField>("bar", "CustomStruct"));
+      model->AddField(std::make_unique<ROOT::RStreamerField>("foo", "CustomStruct"));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      auto fieldFoo = ntuple->GetModel().GetDefaultEntry().GetPtr<CustomStruct>("foo");
+      auto fieldBar = ntuple->GetModel().GetDefaultEntry().GetPtr<CustomStruct>("bar");
+      for (int i = 0; i < 10; ++i) {
+         CustomStruct foo;
+         foo.v1.push_back(i);
+         foo.s = std::to_string(i);
+         *fieldFoo = foo;
+         CustomStruct bar;
+         bar.a = 2.f * i;
+         *fieldBar = bar;
+         ntuple->Fill();
+      }
+   }
+   
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      // Now merge the inputs
+      for (const auto mmode : {ENTupleMergingMode::kFilter, ENTupleMergingMode::kStrict, ENTupleMergingMode::kUnion}) {
+         SCOPED_TRACE(std::string("with merging mode = ") + ToString(mmode));
+         FileRaii fileGuardOut("test_ntuple_merge_streamer_out.root");
+         {
+            auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
+            RNTupleMerger merger{std::move(destination)};
+            RNTupleMergeOptions opts;
+            opts.fMergingMode = mmode;
+            auto res = merger.Merge(sourcePtrs, opts);
+            ASSERT_TRUE(bool(res));
+         }
+
+         auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+         EXPECT_EQ(reader->GetNEntries(), 20);
+         auto pFoo = reader->GetModel().GetDefaultEntry().GetPtr<CustomStruct>("foo");
+         auto pBar = reader->GetModel().GetDefaultEntry().GetPtr<CustomStruct>("bar");
+         EXPECT_EQ(reader->GetModel().GetConstField("foo").GetStructure(), ROOT::ENTupleStructure::kStreamer);
+         EXPECT_EQ(reader->GetModel().GetConstField("bar").GetStructure(), ROOT::ENTupleStructure::kStreamer);
+         for (auto idx : reader->GetEntryRange()) {
+            reader->LoadEntry(idx);
+            ASSERT_EQ(pFoo->v1.size(), 1);
+            EXPECT_FLOAT_EQ(pFoo->v1[0], idx % 10);
+            EXPECT_EQ(pFoo->s, std::to_string(idx % 10));
+            EXPECT_FLOAT_EQ(pBar->a, idx < 10 ? idx : 2.f * (idx - 10));
+         }
+      }
+   }
+}
+
+TEST(RNTupleMerger, MergeStreamerFieldsFirstMissing)
+{
+   // Merge two files where the second has an additional streamer field - should fail except in Filter mode.
+   FileRaii fileGuard1("test_ntuple_merge_streamer_firstmissing1.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(std::make_unique<ROOT::RStreamerField>("foo", "CustomStruct"));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      auto fieldFoo = ntuple->GetModel().GetDefaultEntry().GetPtr<CustomStruct>("foo");
+      for (int i = 0; i < 10; ++i) {
+         CustomStruct foo;
+         foo.v1.push_back(i);
+         foo.s = std::to_string(i);
+         *fieldFoo = foo;
+      }
+   }
+   FileRaii fileGuard2("test_ntuple_merge_streamer_firstmissing2.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(std::make_unique<ROOT::RStreamerField>("foo", "CustomStruct"));
+      model->AddField(std::make_unique<ROOT::RStreamerField>("bar", "CustomStruct"));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      auto fieldFoo = ntuple->GetModel().GetDefaultEntry().GetPtr<CustomStruct>("foo");
+      auto fieldBar = ntuple->GetModel().GetDefaultEntry().GetPtr<CustomStruct>("bar");
+      for (int i = 0; i < 10; ++i) {
+         CustomStruct foo;
+         foo.v1.push_back(i);
+         foo.s = std::to_string(i);
+         *fieldFoo = foo;
+         CustomStruct bar;
+         bar.a = 2.f * i;
+         *fieldBar = bar;
+         ntuple->Fill();
+      }
+   }
+   
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      // Now merge the inputs
+      for (const auto mmode : {ENTupleMergingMode::kFilter, ENTupleMergingMode::kStrict, ENTupleMergingMode::kUnion}) {
+         SCOPED_TRACE(std::string("with merging mode = ") + ToString(mmode));
+         FileRaii fileGuardOut("test_ntuple_merge_streamer_firstmissing_out.root");
+         {
+            auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
+            RNTupleMerger merger{std::move(destination)};
+            RNTupleMergeOptions opts;
+            opts.fMergingMode = mmode;
+            auto res = merger.Merge(sourcePtrs, opts);
+            if (mmode == ENTupleMergingMode::kFilter)
+               EXPECT_TRUE(bool(res));
+            else
+               EXPECT_FALSE(bool(res));
+         }
+      }
+   }
+}
+
+TEST(RNTupleMerger, MergeStreamerFieldsSecondMissing)
+{
+   // Merge two files where the first has an additional streamer field - should fail.
+   FileRaii fileGuard1("test_ntuple_merge_streamer_secondmissing1.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(std::make_unique<ROOT::RStreamerField>("foo", "CustomStruct"));
+      model->AddField(std::make_unique<ROOT::RStreamerField>("bar", "CustomStruct"));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      auto fieldFoo = ntuple->GetModel().GetDefaultEntry().GetPtr<CustomStruct>("foo");
+      auto fieldBar = ntuple->GetModel().GetDefaultEntry().GetPtr<CustomStruct>("bar");
+      for (int i = 0; i < 10; ++i) {
+         CustomStruct foo;
+         foo.v1.push_back(i);
+         foo.s = std::to_string(i);
+         *fieldFoo = foo;
+         CustomStruct bar;
+         bar.a = 2.f * i;
+         *fieldBar = bar;
+         ntuple->Fill();
+      }
+   }
+   FileRaii fileGuard2("test_ntuple_merge_streamer_secondmissing2.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(std::make_unique<ROOT::RStreamerField>("foo", "CustomStruct"));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      auto fieldFoo = ntuple->GetModel().GetDefaultEntry().GetPtr<CustomStruct>("foo");
+      for (int i = 0; i < 10; ++i) {
+         CustomStruct foo;
+         foo.v1.push_back(i);
+         foo.s = std::to_string(i);
+         *fieldFoo = foo;
+         ntuple->Fill();
+      }
+   }
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      // Now merge the inputs
+      for (const auto mmode : {ENTupleMergingMode::kFilter, ENTupleMergingMode::kStrict, ENTupleMergingMode::kUnion}) {
+         SCOPED_TRACE(std::string("with merging mode = ") + ToString(mmode));
+         FileRaii fileGuardOut("test_ntuple_merge_streamer_secondmissing_out.root");
+         {
+            auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
+            RNTupleMerger merger{std::move(destination)};
+            RNTupleMergeOptions opts;
+            opts.fMergingMode = mmode;
+            auto res = merger.Merge(sourcePtrs, opts);
+            EXPECT_FALSE(bool(res));
+         }
+      }
+   }
+}

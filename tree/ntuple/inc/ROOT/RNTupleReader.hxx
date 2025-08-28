@@ -21,7 +21,7 @@
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleReadOptions.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RNTupleView.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RSpan.hxx>
@@ -171,6 +171,21 @@ public:
    }
    ~RNTupleReader();
 
+   /// Returns the number of entries in this RNTuple.
+   /// \attention This method requires locking a mutex, therefore it can become relatively expensive to call repeatedly
+   /// (even in the absence of contention). Unless necessary, you should not call this method in the condition of a
+   /// `for` loop. Instead, either call it once and cache the result, use the faster `GetEntryRange()` or, equivalently,
+   /// use the RNTupleReader directly as an iterator.
+   ///
+   /// ~~~ {.cpp}
+   /// // BAD for performance:
+   /// for (auto i = 0u; i < reader->GetNEntries(); ++i) { ... }
+   ///
+   /// // GOOD for performance (all equivalent):
+   /// for (auto i = 0u, n = reader->GetNEntries(); i < n; ++i) { ... }
+   /// for (auto i : reader->GetEntryRange()) { ... }
+   /// for (auto i : *reader) { ... }
+   /// ~~~
    ROOT::NTupleSize_t GetNEntries() const { return fSource->GetNEntries(); }
    const ROOT::RNTupleModel &GetModel();
    std::unique_ptr<ROOT::REntry> CreateEntry();
@@ -214,9 +229,8 @@ public:
    {
       // TODO(jblomer): can be templated depending on the factory method / constructor
       if (R__unlikely(!fModel)) {
-         fModel = fSource->GetSharedDescriptorGuard()->CreateModel(
-            fCreateModelOptions.value_or(ROOT::RNTupleDescriptor::RCreateModelOptions{}));
-         ConnectModel(*fModel);
+         // Will create the fModel.
+         GetModel();
       }
       LoadEntry(index, fModel->GetDefaultEntry());
    }
@@ -324,7 +338,7 @@ public:
    /// \sa GetView(std::string_view, std::shared_ptr<T>)
    ROOT::RNTupleView<void> GetView(std::string_view fieldName, void *rawPtr, const std::type_info &ti)
    {
-      return GetView(RetrieveFieldId(fieldName), rawPtr, ROOT::Internal::GetRenormalizedDemangledTypeName(ti));
+      return GetView(RetrieveFieldId(fieldName), rawPtr, ROOT::Internal::GetRenormalizedTypeName(ti));
    }
 
    /// Provides access to an individual (sub)field from its on-disk ID.
@@ -377,7 +391,7 @@ public:
    /// \sa GetView(std::string_view, std::shared_ptr<T>)
    ROOT::RNTupleView<void> GetView(ROOT::DescriptorId_t fieldId, void *rawPtr, const std::type_info &ti)
    {
-      return GetView(fieldId, rawPtr, ROOT::Internal::GetRenormalizedDemangledTypeName(ti));
+      return GetView(fieldId, rawPtr, ROOT::Internal::GetRenormalizedTypeName(ti));
    }
 
    /// Provides direct access to the I/O buffers of a **mappable** (sub)field.

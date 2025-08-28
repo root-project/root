@@ -9,7 +9,9 @@
 ################################################################################
 import re
 import typing
+
 from .._numbadeclare import _NumbaDeclareDecorator
+
 
 class FunctionJitter:
     """
@@ -38,11 +40,12 @@ class FunctionJitter:
     fil1 = rdf.Filter( "Numba::" + func_call, "x is greater than 2")
 
     """
+
     # Variable to store previous functions so as to not rejit.
     function_cache = {}
     lambda_function_counter = 0  # Counter to name the lambda functions
 
-    def __init__(self, rdf: 'RDataFrame') -> None:
+    def __init__(self, rdf: "RDataFrame") -> None:
         self.rdf = rdf
         self.col_names: typing.List[str] = rdf.GetColumnNames()
         self.func: typing.Callable
@@ -61,7 +64,7 @@ class FunctionJitter:
         Else it is an a numpy array and maps it to corresponding RVec.
         Otherwise flags a type error
         Args:
-	    `   x: Variable whose type is to be determined
+            `   x: Variable whose type is to be determined
 
         Returns:
             type of the variable x
@@ -69,20 +72,21 @@ class FunctionJitter:
         try:
             import numpy as np
         except:
-            raise ImportError(
-                "Failed to import numpy during call to determine function signature.")
-        from ._rdf_conversion_maps import FUNDAMENTAL_PYTHON_TYPES, TREE_TO_NUMBA, NUMPY_TO_TREE
+            raise ImportError("Failed to import numpy during call to determine function signature.")
+        from ._rdf_conversion_maps import FUNDAMENTAL_PYTHON_TYPES, NUMPY_TO_TREE, TREE_TO_NUMBA
+
         if isinstance(x, str):
             # Can be string constant or can be column name
             if x in self.col_names:  # If x is a column
                 t = self.rdf.GetColumnType(x)
                 if t in TREE_TO_NUMBA:  # The column is a fundamental type from tree
                     return TREE_TO_NUMBA[t]
-                elif '<' in t:  # The column type is a RVec<type>
-                    if '>>' in t:  # It is a RVec<RVec<T>>
+                elif "<" in t:  # The column type is a RVec<type>
+                    if ">>" in t:  # It is a RVec<RVec<T>>
                         raise TypeError(
-                            f"Only columns with 'RVec<T>' where T is is a fundamental type are supported, not '{t}'.")
-                    g = re.match('(.*)<(.*)>', t).groups(0)
+                            f"Only columns with 'RVec<T>' where T is is a fundamental type are supported, not '{t}'."
+                        )
+                    g = re.match("(.*)<(.*)>", t).groups(0)
                     if g[1] in TREE_TO_NUMBA:
                         return "RVec<" + TREE_TO_NUMBA[g[1]] + ">"
                     # There are data type that leak into here. Not sure from where. But need to implement something here such that this condition is never met.
@@ -91,7 +95,7 @@ class FunctionJitter:
                 else:
                     return t
             else:
-                return 'str'
+                return "str"
                 #! Numba Declare does not support "string" type. Check _numbadeclare.Thus, Cannot pass string constants to the filter/Defines..
         elif type(x) in FUNDAMENTAL_PYTHON_TYPES:
             return FUNDAMENTAL_PYTHON_TYPES[type(x)]
@@ -99,12 +103,10 @@ class FunctionJitter:
             if x.dtype.type in NUMPY_TO_TREE:
                 return "RVec<" + NUMPY_TO_TREE[x.dtype.type] + ">"
             else:
-                raise TypeError(
-                    f"Support for {x.dtype.type} arrays is not yet supported.")
+                raise TypeError(f"Support for {x.dtype.type} arrays is not yet supported.")
         #! Need to work out how to map things like tuples, dicts, lists...
         else:
-                raise TypeError(
-                    f"Type of {type(x).__name__}:  {x} cannot be jitted.")
+            raise TypeError(f"Type of {type(x).__name__}:  {x} cannot be jitted.")
 
     def find_function_params(self, func):
         """
@@ -116,6 +118,7 @@ class FunctionJitter:
 
         """
         import inspect
+
         func_sign = inspect.signature(func)
         # Find the Return type
         if func_sign.return_annotation is inspect.Signature.empty:
@@ -145,8 +148,11 @@ class FunctionJitter:
         if n_cols > 0:
             # Check to see if all the parameters have been provided.
             if n_params != n_cols + n_constants:
-                raise ValueError("Not Enough values provided in the column list and extra_args. The function required {} parameters only {} provided.".format(
-                    n_params, n_cols+n_constants))
+                raise ValueError(
+                    "Not Enough values provided in the column list and extra_args. The function required {} parameters only {} provided.".format(
+                        n_params, n_cols + n_constants
+                    )
+                )
 
         # Mapping the column list to the first input parameters of the function.
         for idx, p in enumerate(self.params):
@@ -168,12 +174,15 @@ class FunctionJitter:
                 type_of_p = self.find_type(value_of_p)
                 # Bool(s) in python are represented as True/False but in C++ are true/false. The following if statements are to account for that
                 if type(value_of_p) == bool:
-                    if value_of_p: value_of_p = 'true'
-                    else: value_of_p = 'false'
+                    if value_of_p:
+                        value_of_p = "true"
+                    else:
+                        value_of_p = "false"
             else:  # the parameter was not in func_args. Thus this parameter has to be mapped to a column of rdf
                 if p not in self.col_names:
                     raise Exception(
-                        f"Unable to map function argument {p} to a column.\nUse correct name of column or pass a list of column names.")
+                        f"Unable to map function argument {p} to a column.\nUse correct name of column or pass a list of column names."
+                    )
                 value_of_p = p
                 type_of_p = self.find_type(p)
             self.args_info[p] = (type_of_p, value_of_p)
@@ -184,7 +193,7 @@ class FunctionJitter:
         Updates the class with new attributes func_call and func_sign to hold them,
         """
         func = self.func
-        if func.__name__ == '<lambda>':
+        if func.__name__ == "<lambda>":
             func.__name__ = f"_lambda_func_number_{FunctionJitter.lambda_function_counter}"
             FunctionJitter.lambda_function_counter += 1
         self.func_call = f"{func.__name__}({', '.join(str(arg_info[1]) for arg_info in self.args_info.values())})"
@@ -214,14 +223,14 @@ class FunctionJitter:
             func_call, func_sign = FunctionJitter.function_cache[func.__name__]
             self.get_function_params_args_call(func, cols_list, extra_args)
             if self.func_sign != func_sign:
-                raise ValueError(
-                    "Trying to re-use a function. Do not change function signature.".format(func))
+                raise ValueError("Trying to re-use a function. Do not change function signature.")
             return self.func_call
 
         self.get_function_params_args_call(func, cols_list, extra_args)
         _NumbaDeclareDecorator(self.func_sign, self.return_type)(self.func)
         FunctionJitter.function_cache[self.func.__name__] = (self.func_call, self.func_sign)
         return self.func_call
+
 
 def _convert_to_vector(args):
     """
@@ -243,21 +252,114 @@ def _convert_to_vector(args):
         return args
 
     try:
-        v = ROOT.std.vector['std::string'](args[0])
+        v = ROOT.std.vector["std::string"](args[0])
     except TypeError:
-        raise TypeError(
-            f"The list of columns of a Filter operation can only contain strings. Please check: {args[0]}")
+        raise TypeError(f"The list of columns of a Filter operation can only contain strings. Please check: {args[0]}")
 
     return (v, *args[1:])
 
-def _handle_cpp_callables(func, original_template, *args):
+
+def remove_fn_name_from_signature(signature):
+    """
+    Removes the function name from a signature string.
+    The signature is expected to be in the form of "return_type function_name(type param1, type param2, ...)".
+    """
+    if "(" not in signature or ")" not in signature:
+        raise ValueError(f"Invalid signature format: {signature}")
+
+    return signature[: signature.index(" ")] + signature[signature.index("(") :]
+
+
+def get_cpp_overload_from_templ_proxy(func, types=None):
+    """
+    Gets the C++ overload from a cppyy TemplateProxy using the input
+    and template arguments types.
+    """
+    signature = ", ".join(types) if types else ""
+    template_args = func.__template_args__[1:-1] if func.__template_args__ else ""
+    return func.__overload__(signature, template_args)
+
+
+def get_column_types(rdf, cols):
+    return [rdf.GetColumnType(col) for col in cols]
+
+
+def get_overload_based_on_args(overload_types, types):
+    """
+    Gets the C++ overloads for a function based on the provided signatures and types.
+    """
+    if not isinstance(overload_types, dict):
+        raise TypeError("Overload types must be a dictionary.")
+
+    if not isinstance(types, list) or not all(isinstance(t, str) for t in types):
+        raise TypeError("Types must be a list of strings.")
+
+    if len(overload_types) == 1:
+        # If there is only one signature, return it directly
+        return next(iter(overload_types))
+
+    for full_sig, info in overload_types.items():
+        input_types = info.get("input_types", ())
+
+        if len(input_types) != len(types):
+            continue
+
+        match = True
+        for expected, actual in zip(input_types, types):
+            # Loose match: require actual to appear somewhere in expected (e.g. "int" in "const int&")
+            if actual not in expected:
+                match = False
+                break
+
+        if match:
+            return full_sig
+
+    raise ValueError(
+        f"No matching overload found for types: {types} in signatures: {overload_types.keys()}. Please check the function overloads."
+    )
+
+
+def _get_cpp_signature(func, rdf, cols):
+    """
+    Gets the C++ signature of a cppyy callable.
+    """
+    import cppyy
+
+    if isinstance(func, cppyy._backend.TemplateProxy):
+        func = get_cpp_overload_from_templ_proxy(func, get_column_types(rdf, cols))
+
+    if not isinstance(func, cppyy._backend.CPPOverload):
+        raise TypeError(f"Expected a cppyy callable, got {type(func).__name__}")
+
+    overload_types = func.func_overloads_types
+    matched_overload = get_overload_based_on_args(overload_types, get_column_types(rdf, cols))
+    return remove_fn_name_from_signature(matched_overload)
+
+
+def _to_std_function(func, rdf, cols):
+    """
+    Converts a cppyy callable to std::function.
+    """
+    import cppyy
+
+    if not isinstance(func, cppyy._backend.CPPOverload) and not isinstance(func, cppyy._backend.TemplateProxy):
+        raise TypeError(f"Expected a cppyy callable, got {type(func).__name__}")
+
+    signature = _get_cpp_signature(func, rdf, cols)
+    return cppyy.gbl.std.function(signature)
+
+
+def _handle_cpp_callables(func, original_template, *args, rdf=None, cols=None):
     """
     Checks whether the callable `func` is a cppyy proxy of one of these:
     1. C++ functor
     2. std::function
+    3. C++ free function
 
-    The cases above are supported by cppyy, so we can just invoke the original
+    Cases 1 and 2 above are supported by cppyy, so we can just invoke the original
     cppyy TemplateProxy (Filter or Define) with the callable as argument.
+    For case 3, we need to convert the callable to a std::function
+    before invoking the original cppyy TemplateProxy.
 
     Prior to the invocation of the original cppyy TemplateProxy, though, we
     need to explicitly instantiate the template using the type of the `func`
@@ -275,11 +377,23 @@ def _handle_cpp_callables(func, original_template, *args):
 
     import cppyy
 
-    is_cpp_functor  = lambda : isinstance(getattr(func, '__call__', None), cppyy._backend.CPPOverload)
-    is_std_function = lambda : isinstance(getattr(func, 'target_type', None), cppyy._backend.CPPOverload)
+    is_cpp_functor = lambda: isinstance(getattr(func, "__call__", None), cppyy._backend.CPPOverload)
+
+    is_std_function = lambda: isinstance(getattr(func, "target_type", None), cppyy._backend.CPPOverload)
+
+    # handle free functions
+    if callable(func) and not is_cpp_functor() and not is_std_function():
+        try:
+            func = _to_std_function(func, rdf, cols)
+        except TypeError as e:
+            if "Expected a cppyy callable" in str(e):
+                pass  # this function is not convertible to std::function, move on to the next check
+            else:
+                raise
 
     if is_cpp_functor() or is_std_function():
         return original_template[type(func)](*args)
+
 
 def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
     """
@@ -322,43 +436,47 @@ def _PyFilter(rdf, callable_or_str, *args, extra_args={}):
     # The 1st argument is either a string or a python callable.
     if not callable(callable_or_str):
         raise TypeError(
-            f"The first argument of a Filter operation should be a callable. {type(callable_or_str).__name__} object is not callable.")
+            f"The first argument of a Filter operation should be a callable. {type(callable_or_str).__name__} object is not callable."
+        )
 
     if len(args) > 2:
-        raise TypeError(
-            f"Filter takes at most 3 positional arguments but {len(args) + 1} were given")
+        raise TypeError(f"Filter takes at most 3 positional arguments but {len(args) + 1} were given")
 
     func = callable_or_str
-    rdf_node = _handle_cpp_callables(func, rdf._OriginalFilter, func, *_convert_to_vector(args))
-    if rdf_node is not None:
-        return rdf_node
-
-    jitter = FunctionJitter(rdf)
-    func.__annotations__['return'] = 'bool' # return type for Filters is bool # Note: You can keep double and Filter still works.
-
     col_list = []
-    filter_name  = ""
-    
+    filter_name = ""
+
     if len(args) == 1:
-        if isinstance(args[0], list): 
+        if isinstance(args[0], list):
             col_list = args[0]
         elif isinstance(args[0], str):
             filter_name = args[0]
         else:
             raise ValueError(f"Argument should be either 'list' or 'str', not {type(args[0]).__name__}.")
-    
+
     elif len(args) == 2:
         if isinstance(args[0], list) and isinstance(args[1], str):
             col_list = args[0]
             filter_name = args[1]
         else:
-            raise ValueError(f"Arguments should be ('list', 'str',) not ({type(args[0]).__name__,type(args[1]).__name__}.")
-            
-    
+            raise ValueError(
+                f"Arguments should be ('list', 'str',) not ({type(args[0]).__name__, type(args[1]).__name__}."
+            )
+
+    rdf_node = _handle_cpp_callables(func, rdf._OriginalFilter, func, *_convert_to_vector(args), rdf=rdf, cols=col_list)
+    if rdf_node is not None:
+        return rdf_node
+
+    jitter = FunctionJitter(rdf)
+    func.__annotations__["return"] = (
+        "bool"  # return type for Filters is bool # Note: You can keep double and Filter still works.
+    )
+
     func_call = jitter.jit_function(func, col_list, extra_args)
     return rdf._OriginalFilter("Numba::" + func_call, filter_name)
 
-def _PyDefine(rdf, col_name, callable_or_str, cols = [] , extra_args = {} ):
+
+def _PyDefine(rdf, col_name, callable_or_str, cols=[], extra_args={}):
     """
     Defines a new column in the RDataFrame.
     Arguments:
@@ -370,7 +488,7 @@ def _PyDefine(rdf, col_name, callable_or_str, cols = [] , extra_args = {} ):
     4. extra_args: non-columnar arguments to be passed to the callable.
     Returns:
         RDataFrame: rdf with new column defined
-    
+
     Examples:
     1. rdf.Define("x", lambda: np.random.rand())
         Define using a python lambda
@@ -388,22 +506,26 @@ def _PyDefine(rdf, col_name, callable_or_str, cols = [] , extra_args = {} ):
 
     """
     if not isinstance(col_name, str):
-        raise TypeError(f"First argument of Define must be a valid string for the new column name. {type(col_name).__name__} is not a string.")
+        raise TypeError(
+            f"First argument of Define must be a valid string for the new column name. {type(col_name).__name__} is not a string."
+        )
 
-    if isinstance(callable_or_str, str): # If string argument is passed. Invoke the Original Define.
+    if isinstance(callable_or_str, str):  # If string argument is passed. Invoke the Original Define.
         return rdf._OriginalDefine(col_name, callable_or_str)
 
-    if not callable(callable_or_str): # The 2st argument is either a string or a python callable.
-        raise TypeError(f"The second argument of a Define operation should be a callable. {type(callable_or_str).__name__} object is not callable.")
-    
-    if not isinstance(cols, list):        
+    if not callable(callable_or_str):  # The 2st argument is either a string or a python callable.
+        raise TypeError(
+            f"The second argument of a Define operation should be a callable. {type(callable_or_str).__name__} object is not callable."
+        )
+
+    if not isinstance(cols, list):
         raise TypeError(f"Define takes a column list as third arguments but {type(cols).__name__} was given.")
-    
+
     func = callable_or_str
-    rdf_node = _handle_cpp_callables(func, rdf._OriginalDefine, col_name, func, cols)
+    rdf_node = _handle_cpp_callables(func, rdf._OriginalDefine, col_name, func, cols, rdf=rdf, cols=cols)
     if rdf_node is not None:
         return rdf_node
 
-    jitter = FunctionJitter(rdf)    
+    jitter = FunctionJitter(rdf)
     func_call = jitter.jit_function(func, cols, extra_args)
     return rdf._OriginalDefine(col_name, "Numba::" + func_call)

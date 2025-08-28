@@ -9,11 +9,7 @@
 #include <stdint.h>
 
 // import/export (after precommondefs.h from PyPy)
-#ifdef _MSC_VER
-#define CPPYY_IMPORT extern __declspec(dllimport)
-#else
 #define CPPYY_IMPORT extern
-#endif
 
 // some more types; assumes Cppyy.h follows Python.h
 #ifndef PY_LONG_LONG
@@ -251,6 +247,8 @@ namespace Cppyy {
     bool IsDestructor(TCppMethod_t method);
     CPPYY_IMPORT
     bool IsStaticMethod(TCppMethod_t method);
+    CPPYY_IMPORT
+    bool IsExplicit(TCppMethod_t method);
 
 // data member reflection information ----------------------------------------
     CPPYY_IMPORT

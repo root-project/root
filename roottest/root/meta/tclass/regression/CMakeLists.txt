@@ -9,9 +9,7 @@ ROOTTEST_ADD_TEST(execNormalizationInf
 if(pyroot)
     ROOTTEST_ADD_TEST(execNormalizationInfPy
                   MACRO execNormalizationInf.py
-                  OUTREF execNormalizationInf.py.ref
-                  ENVIRONMENT CLING_STANDARD_PCH=none
-                  CPPYY_BACKEND_LIBRARY=${CMAKE_BINARY_DIR}/lib/libcppyy_backend.so)
+                  OUTREF execNormalizationInf.py.ref)
 endif()
 
 ROOTTEST_ADD_TEST(6038

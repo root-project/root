@@ -2,8 +2,8 @@
    // usage: root[0] .x testrd.C
 
 #ifndef ClingWorkAroundMissingDynamicScope
-   gSystem->Load("sueloader_C");
-   gSystem->Load("ConfigRecord_cxx");
+   // gSystem->Load("sueloader_C");
+   // gSystem->Load("ConfigRecord_cxx");
 #endif
 
    ConfigRecord* record = 0;

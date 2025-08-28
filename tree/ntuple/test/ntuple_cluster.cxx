@@ -8,7 +8,7 @@
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleReader.hxx>
 #include <ROOT/RNTupleReadOptions.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageStorage.hxx>
@@ -51,6 +51,8 @@ public:
    RPageSourceMock() : RPageSource("test", RNTupleReadOptions())
    {
       ROOT::Internal::RNTupleDescriptorBuilder descBuilder;
+      // Should set the version from the anchor; here it is fine to use the same version as for writing.
+      descBuilder.SetVersionForWriting();
       descBuilder.SetNTuple("ntpl", "");
       for (unsigned i = 0; i <= 5; ++i) {
          descBuilder.AddCluster(ROOT::Internal::RClusterDescriptorBuilder()

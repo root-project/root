@@ -266,14 +266,11 @@ else()
   endif()
 endif()
 
-# Resolve symbolic links for the ROOTTEST_DIR variable.
-get_filename_component(ROOTTEST_DIR ${CMAKE_CURRENT_SOURCE_DIR} ABSOLUTE)
-
 # Set some variables that customizes the behaviour of the ROOT macros
 set(CMAKE_ROOTTEST_DICT ON)
 
 # Set the CMake module path. Here are all the custom CMake modules.
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${ROOTTEST_DIR}/cmake/modules")
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${ROOT_SOURCE_DIR}/roottest/cmake/modules")
 
 # Find python.
 if(ROOT_pyroot_FOUND)
@@ -305,6 +302,9 @@ set(CMAKE_MACOSX_RPATH TRUE)              # use RPATH for MacOSX
 
 include(RoottestCTest)
 include(SearchInstalledSoftwareRoottest)
+
+ROOTTEST_COMPILE_MACRO(scripts/utils.cc
+                       FIXTURES_SETUP roottest-scripts-utils-fixture)
 
 message("-- Scanning subdirectories for tests...")
 ROOTTEST_ADD_TESTDIRS()

@@ -21,11 +21,11 @@ class Particle {
         void Clear() { nt = 2; t[1] = t[0] = 1; }
 
         int print() {
-           fprintf(stderr,"Particle at 0x%p\n",this);
+           // fprintf(stderr,"Particle at 0x%p\n",this);
            fprintf(stderr,"   nt  ==%d\n",nt);
            fprintf(stderr,"   t[0]==%d\n",t[0]);
            fprintf(stderr,"   t[1]==%d\n",t[1]);
-           return 0; 
+           return 0;
         }
 }; // Particle
 
@@ -44,13 +44,13 @@ class Reconstruction: public TObject {
            TObject::Clear(opt);
         }
         int print() {
-           fprintf(stderr,"Reconstruction at 0x%p\n",this);
+           // fprintf(stderr,"Reconstruction at 0x%p\n",this);
            fprintf(stderr,"   np==%d\n",np);
            p[0].print();
            p[1].print();
            return 0;
         }
-        
+
                 private:
 //      static const bool gInitted;
 //      static bool StaticInit() { Class()->IgnoreTObjectStreamer(); }
@@ -70,7 +70,7 @@ class AllReconstructions {
         void Clear() { for (int i = 0; i < 6; ++i) r[i]->Clear(); }
 
         int print() {
-           fprintf(stderr,"AllReconstructions at 0x%p\n",this);
+           // fprintf(stderr,"AllReconstructions at 0x%p\n",this);
            for(int i = 0; i < 6; ++i) {
               Reconstruction *obj = (Reconstruction *)r[i];
               obj->print();
@@ -79,5 +79,7 @@ class AllReconstructions {
         }
 
 }; // AllReconostructions
+
+extern void save();
 
 #endif // __TESTOBJ_H

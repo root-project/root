@@ -7,7 +7,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2025, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -18,18 +18,45 @@
 #define ROOT_RNTupleDS
 
 #include <ROOT/RDataSource.hxx>
-#include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <string_view>
 
 #include <condition_variable>
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <thread>
 #include <vector>
 #include <unordered_map>
+
+// Follow RDF namespace convention
+namespace ROOT {
+class RDataFrame;
+}
+namespace ROOT::Internal::RDF {
+/**
+ * \brief Internal overload of the function that allows passing a range of entries
+ *
+ * The event range will be respected when processing this RNTuple. It is assumed
+ * that processing happens within one thread only.
+ */
+ROOT::RDataFrame FromRNTuple(std::string_view ntupleName, const std::vector<std::string> &fileNames,
+                             const std::pair<ULong64_t, ULong64_t> &range);
+/**
+ * \brief Retrieves the cluster boundaries and the number of entries for the input RNTuple
+ *
+ * \param[in] ntupleName The name of the RNTuple dataset
+ * \param[in] location The location of the RNTuple dataset (e.g. a path to a file)
+ *
+ * \note This function is a helper for the Python side to avoid having to deal
+ *       with the shared descriptor guard.
+ */
+std::pair<std::vector<ROOT::Internal::RNTupleClusterBoundaries>, ROOT::NTupleSize_t>
+GetClustersAndEntries(std::string_view ntupleName, std::string_view location);
+} // namespace ROOT::Internal::RDF
 
 namespace ROOT {
 class RFieldBase;
@@ -103,13 +130,16 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// to new page sources when the files in the chain change.
    std::vector<std::vector<ROOT::Internal::RDF::RNTupleColumnReader *>> fActiveColumnReaders;
 
-   ULong64_t fSeenEntries = 0;                ///< The number of entries so far returned by GetEntryRanges()
+   ULong64_t fSeenEntriesNoGlobalRange = 0; ///< The number of entries seen so far in GetEntryRanges()
+
    std::vector<REntryRangeDS> fCurrentRanges; ///< Basis for the ranges returned by the last GetEntryRanges() call
    std::vector<REntryRangeDS> fNextRanges;    ///< Basis for the ranges populated by the PrepareNextRanges() call
    /// Maps the first entries from the ranges of the last GetEntryRanges() call to their corresponding index in
    /// the fCurrentRanges vectors.  This is necessary because the returned ranges get distributed arbitrarily
    /// onto slots.  In the InitSlot method, the column readers use this map to find the correct range to connect to.
    std::unordered_map<ULong64_t, std::size_t> fFirstEntry2RangeIdx;
+   // Keep track of the scheduled entries - necessary for processing of GlobalEntries
+   std::vector<std::pair<ULong64_t, ULong64_t>> fOriginalRanges;
    /// One element per slot, corresponding to the current range index for that slot, as filled by InitSlot
    std::vector<std::size_t> fSlotsToRangeIdxs;
 
@@ -171,6 +201,13 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    explicit RNTupleDS(std::unique_ptr<ROOT::Internal::RPageSource> pageSource);
 
    ROOT::RFieldBase *GetFieldWithTypeChecks(std::string_view fieldName, const std::type_info &tid);
+
+   friend ROOT::RDataFrame ROOT::Internal::RDF::FromRNTuple(std::string_view ntupleName,
+                                                            const std::vector<std::string> &fileNames,
+                                                            const std::pair<ULong64_t, ULong64_t> &range);
+
+   explicit RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames,
+                      const std::pair<ULong64_t, ULong64_t> &range);
 
 public:
    RNTupleDS(std::string_view ntupleName, std::string_view fileName);

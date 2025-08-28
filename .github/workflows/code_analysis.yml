@@ -15,7 +15,11 @@ jobs:
     # can be skipped if the tag [skip-ci] is written in the title.
     if: |
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
+        (github.event_name == 'pull_request' && !(
+          contains(github.event.pull_request.title, '[skip-ci]') ||
+          contains(github.event.pull_request.labels.*.name, 'skip ci') ||
+          contains(github.event.pull_request.labels.*.name, 'skip code analysis')
+        ))
 
     runs-on: ubuntu-latest
     env:
@@ -40,7 +44,11 @@ jobs:
   ruff:
     if: |
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
+        (github.event_name == 'pull_request' && !(
+          contains(github.event.pull_request.title, '[skip-ci]') ||
+          contains(github.event.pull_request.labels.*.name, 'skip ci') ||
+          contains(github.event.pull_request.labels.*.name, 'skip code analysis')
+        ))
 
     runs-on: ubuntu-latest
     steps:

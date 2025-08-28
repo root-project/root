@@ -1341,8 +1341,8 @@ void TGTable::GotoTableRange(Int_t xtl,  Int_t ytl, Int_t xbr,  Int_t ybr)
       return;
    }
 
-   Int_t nrows    = TMath::Abs(ybr - ytl);
-   Int_t ncolumns = TMath::Abs(xbr - xtl);
+   Int_t nrows    = std::abs(ybr - ytl);
+   Int_t ncolumns = std::abs(xbr - xtl);
 
    if (xtl > xbr) {
       Info("TGTable::GotoTableRange","Swapping x-range boundries");
@@ -1363,7 +1363,7 @@ void TGTable::GotoTableRange(Int_t xtl,  Int_t ytl, Int_t xbr,  Int_t ybr)
       xbr = ncolumns;
       if (xbr > (Int_t)fDataRange->fXbr) {
          xbr = fDataRange->fXbr;
-         ncolumns = TMath::Abs(xbr - xtl);
+         ncolumns = std::abs(xbr - xtl);
       }
    }
 
@@ -1373,7 +1373,7 @@ void TGTable::GotoTableRange(Int_t xtl,  Int_t ytl, Int_t xbr,  Int_t ybr)
       ybr = nrows;
       if (ybr > (Int_t)fDataRange->fYbr) {
          ybr = fDataRange->fYbr;
-         nrows =  TMath::Abs(ybr - ytl);
+         nrows =  std::abs(ybr - ytl);
       }
    }
 
@@ -1401,8 +1401,8 @@ void TGTable::GotoTableRange(Int_t xtl,  Int_t ytl, Int_t xbr,  Int_t ybr)
       }
    }
 
-   nrows    = TMath::Abs(ybr - ytl);
-   ncolumns = TMath::Abs(xbr - xtl);
+   nrows    = std::abs(ybr - ytl);
+   ncolumns = std::abs(xbr - xtl);
 
    // Resize rows and columns if needed
    ResizeTable(nrows, ncolumns);

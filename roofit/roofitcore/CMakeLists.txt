@@ -144,7 +144,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFitResult.h
     RooFormulaVar.h
     RooFracRemainder.h
-    RooFuncWrapper.h
     RooFunctor.h
     RooGenContext.h
     RooGenFitStudy.h
@@ -171,6 +170,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooMsgService.h
     RooMultiCategory.h
     RooMultiVarGaussian.h
+    RooMultiPdf.h
+    RooMultiReal.h
     RooNameReg.h
     RooNormSetCache.h
     RooNumCdf.h
@@ -336,7 +337,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooFormula.cxx
     src/RooFormulaVar.cxx
     src/RooFracRemainder.cxx
-    src/RooFuncWrapper.cxx
     src/RooFunctor.cxx
     src/RooGenContext.cxx
     src/RooGenFitStudy.cxx
@@ -366,6 +366,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooMsgService.cxx
     src/RooMultiCategory.cxx
     src/RooMultiVarGaussian.cxx
+    src/RooMultiPdf.cxx
+    src/RooMultiReal.cxx
     src/RooNLLVarNew.cxx
     src/RooNameReg.cxx
     src/RooNormSetCache.cxx

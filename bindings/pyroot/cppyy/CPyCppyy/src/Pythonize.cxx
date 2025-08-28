@@ -148,30 +148,20 @@ inline PyObject* CallSelfIndex(CPPInstance* self, PyObject* idx, PyObject* pymet
 }
 
 //- "smart pointer" behavior ---------------------------------------------------
-PyObject* DeRefGetAttr(PyObject* self, PyObject* name)
+static PyObject* smart_follow(PyObject* self, PyObject* name, PyObject* method)
 {
-// Follow operator*() if present (available in python as __deref__), so that
-// smart pointers behave as expected.
-    if (name == PyStrings::gTypeCode || name == PyStrings::gCTypesType) {
-    // TODO: these calls come from TemplateProxy and are unlikely to be needed in practice,
-    // whereas as-is, they can accidentally dereference the result of end() on some STL
-    // containers. Obviously, this is a dumb hack that should be resolved more fundamentally.
-        PyErr_SetString(PyExc_AttributeError, CPyCppyy_PyText_AsString(name));
-        return nullptr;
-    }
-
     if (!CPyCppyy_PyText_Check(name))
         PyErr_SetString(PyExc_TypeError, "getattr(): attribute name must be string");
 
-    PyObject* pyptr = PyObject_CallMethodNoArgs(self, PyStrings::gDeref);
+    PyObject* pyptr = PyObject_CallMethodNoArgs(self, method);
     if (!pyptr)
         return nullptr;
 
 // prevent a potential infinite loop
     if (Py_TYPE(pyptr) == Py_TYPE(self)) {
-        PyObject* val1 = PyObject_Str(self);
+        PyObject* val1 = PyObject_Str((PyObject*)Py_TYPE(self));
         PyObject* val2 = PyObject_Str(name);
-        PyErr_Format(PyExc_AttributeError, "%s has no attribute \'%s\'",
+        PyErr_Format(PyExc_AttributeError, "%s object has no attribute \'%s\'",
             CPyCppyy_PyText_AsString(val1), CPyCppyy_PyText_AsString(val2));
         Py_DECREF(val2);
         Py_DECREF(val1);
@@ -185,21 +175,28 @@ PyObject* DeRefGetAttr(PyObject* self, PyObject* name)
     return result;
 }
 
+PyObject* DeRefGetAttr(PyObject* self, PyObject* name)
+{
+// Follow operator*() if present (available in python as __deref__), so that
+// smart pointers behave as expected.
+    if (name == PyStrings::gTypeCode || name == PyStrings::gCTypesType) {
+    // TODO: these calls come from TemplateProxy and are unlikely to be needed in practice,
+    // whereas as-is, they can accidentally dereference the result of end() on some STL
+    // containers. Obviously, this is a dumb hack that should be resolved more fundamentally.
+        PyErr_SetString(PyExc_AttributeError, CPyCppyy_PyText_AsString(name));
+        return nullptr;
+    }
+
+
+    return smart_follow(self, name, PyStrings::gDeref);
+}
+
 //-----------------------------------------------------------------------------
 PyObject* FollowGetAttr(PyObject* self, PyObject* name)
 {
 // Follow operator->() if present (available in python as __follow__), so that
 // smart pointers behave as expected.
-    if (!CPyCppyy_PyText_Check(name))
-        PyErr_SetString(PyExc_TypeError, "getattr(): attribute name must be string");
-
-    PyObject* pyptr = PyObject_CallMethodNoArgs(self, PyStrings::gFollow);
-    if (!pyptr)
-         return nullptr;
-
-    PyObject* result = PyObject_GetAttr(pyptr, name);
-    Py_DECREF(pyptr);
-    return result;
+    return smart_follow(self, name, PyStrings::gFollow);
 }
 
 //- pointer checking bool converter -------------------------------------------
@@ -1139,15 +1136,15 @@ static int PyObject_Compare(PyObject* one, PyObject* other) {
 }
 #endif
 static inline
-PyObject* CPyCppyy_PyString_FromCppString(std::string* s, bool native=true) {
+PyObject* CPyCppyy_PyString_FromCppString(std::string_view s, bool native=true) {
     if (native)
-        return PyBytes_FromStringAndSize(s->data(), s->size());
-    return CPyCppyy_PyText_FromStringAndSize(s->data(), s->size());
+        return PyBytes_FromStringAndSize(s.data(), s.size());
+    return CPyCppyy_PyText_FromStringAndSize(s.data(), s.size());
 }
 
 static inline
-PyObject* CPyCppyy_PyString_FromCppString(std::wstring* s, bool native=true) {
-    PyObject* pyobj = PyUnicode_FromWideChar(s->data(), s->size());
+PyObject* CPyCppyy_PyString_FromCppString(std::wstring_view s, bool native=true) {
+    PyObject* pyobj = PyUnicode_FromWideChar(s.data(), s.size());
     if (pyobj && native) {
         PyObject* pybytes = PyUnicode_AsEncodedString(pyobj, "UTF-8", "strict");
         Py_DECREF(pyobj);
@@ -1162,7 +1159,7 @@ PyObject* name##StringGetData(PyObject* self, bool native=true)              \
 {                                                                            \
     if (CPyCppyy::CPPInstance_Check(self)) {                                 \
         type* obj = ((type*)((CPPInstance*)self)->GetObject());              \
-        if (obj) return CPyCppyy_PyString_FromCppString(obj, native);        \
+        if (obj) return CPyCppyy_PyString_FromCppString(*obj, native);        \
     }                                                                        \
     PyErr_Format(PyExc_TypeError, "object mismatch (%s expected)", #type);   \
     return nullptr;                                                          \
@@ -1239,6 +1236,7 @@ PyObject* name##StringCompare(PyObject* self, PyObject* obj)                 \
 
 CPPYY_IMPL_STRING_PYTHONIZATION_CMP(std::string, STL)
 CPPYY_IMPL_STRING_PYTHONIZATION_CMP(std::wstring, STLW)
+CPPYY_IMPL_STRING_PYTHONIZATION_CMP(std::string_view, STLView)
 
 static inline std::string* GetSTLString(CPPInstance* self) {
     if (!CPPInstance_Check(self)) {
@@ -1938,9 +1936,15 @@ bool CPyCppyy::Pythonize(PyObject* pyclass, const std::string& name)
         ((PyTypeObject*)pyclass)->tp_hash = (hashfunc)STLStringHash;
     }
 
-    else if (name == "basic_string_view<char>" || name == "std::basic_string_view<char>") {
+    else if (name == "basic_string_view<char,char_traits<char> >" || name == "std::basic_string_view<char>") {
         Utility::AddToClass(pyclass, "__real_init", "__init__");
-        Utility::AddToClass(pyclass, "__init__", (PyCFunction)StringViewInit, METH_VARARGS | METH_KEYWORDS);
+        Utility::AddToClass(pyclass, "__init__",  (PyCFunction)StringViewInit, METH_VARARGS | METH_KEYWORDS);
+        Utility::AddToClass(pyclass, "__bytes__", (PyCFunction)STLViewStringBytes,      METH_NOARGS);
+        Utility::AddToClass(pyclass, "__cmp__",   (PyCFunction)STLViewStringCompare,    METH_O);
+        Utility::AddToClass(pyclass, "__eq__",    (PyCFunction)STLViewStringIsEqual,    METH_O);
+        Utility::AddToClass(pyclass, "__ne__",    (PyCFunction)STLViewStringIsNotEqual, METH_O);
+        Utility::AddToClass(pyclass, "__repr__",  (PyCFunction)STLViewStringRepr,       METH_NOARGS);
+        Utility::AddToClass(pyclass, "__str__",   (PyCFunction)STLViewStringStr,        METH_NOARGS);
     }
 
     else if (name == "basic_string<wchar_t,char_traits<wchar_t>,allocator<wchar_t> >" || name == "std::basic_string<wchar_t,std::char_traits<wchar_t>,std::allocator<wchar_t> >") {

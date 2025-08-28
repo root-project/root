@@ -126,7 +126,7 @@ void TAttLineEditor::SetModel(TObject* obj)
    fStyleCombo->Select(fAttLine->GetLineStyle());
 
    if (obj->InheritsFrom(TGraph::Class())) {
-      fWidthCombo->Select(TMath::Abs(fAttLine->GetLineWidth()%100));
+      fWidthCombo->Select(std::abs(fAttLine->GetLineWidth()%100));
    } else {
       fWidthCombo->Select(fAttLine->GetLineWidth());
    }
@@ -199,7 +199,7 @@ void TAttLineEditor::DoLineWidth(Int_t width)
       if (graphLineWidth >= 0) {
          fAttLine->SetLineWidth(graphLineWidth+width);
       } else {
-         fAttLine->SetLineWidth(-(TMath::Abs(graphLineWidth)+width));
+         fAttLine->SetLineWidth(-(std::abs(graphLineWidth)+width));
       }
    } else if (fAttLine) {
       fAttLine->SetLineWidth(width);

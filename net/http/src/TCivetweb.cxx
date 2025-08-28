@@ -463,8 +463,15 @@ static int begin_request_handler(struct mg_connection *conn, void *)
       case THttpCallArg::kZipAlways: dozip = kTRUE; break;
       }
 
+      #ifdef _EXTERNAL_CIVETWEB
+      // with external civeweb one gets failure R__memcompress
+      // while it is not critical, try to avoid for now
+      // to be tested later
+      (void) dozip;
+      #else
       if (dozip)
          arg->CompressWithGzip();
+      #endif
 
       std::string hdr = arg->FillHttpHeader("HTTP/1.1");
       mg_printf(conn, "%s", hdr.c_str());
@@ -528,6 +535,8 @@ TCivetweb::~TCivetweb()
 {
    if (fCtx && !fTerminating)
       mg_stop(fCtx);
+
+   mg_exit_library();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -535,7 +544,7 @@ TCivetweb::~TCivetweb()
 
 Int_t TCivetweb::ProcessLog(const char *message)
 {
-   if ((gDebug > 0) || (strstr(message, "cannot bind to") != 0))
+   if ((gDebug > 0) || strstr(message, "cannot bind to"))
       Error("Log", "%s", message);
 
    return 0;
@@ -776,6 +785,29 @@ Bool_t TCivetweb::Create(const char *args)
    options[op++] = dir_listening.Data();
 
    options[op++] = nullptr;
+
+   if (is_socket && !mg_check_feature(MG_FEATURES_X_DOMAIN_SOCKET)) {
+      Error("Create", "civetweb compiled without sockets binding support");
+      return kFALSE;
+   }
+
+   if (IsSecured() && !mg_check_feature(MG_FEATURES_SSL)) {
+      Error("Create", "civetweb compiled without SSL support");
+      return kFALSE;
+   }
+
+   if (!mg_check_feature(MG_FEATURES_WEBSOCKET)) {
+      Error("Create", "civetweb compiled without websockets support");
+      return kFALSE;
+   }
+
+   if (IsSecured()) {
+		/* Initialize with SSL support */
+		mg_init_library(MG_FEATURES_TLS);
+	} else {
+		/* Initialize without SSL support */
+		mg_init_library(MG_FEATURES_DEFAULT);
+	}
 
    // try to remove socket file - if any
    if (is_socket && !sport.Contains(","))

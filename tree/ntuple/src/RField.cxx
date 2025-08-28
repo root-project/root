@@ -19,7 +19,7 @@
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 
 #include <algorithm>
 #include <cstdint>
@@ -510,10 +510,20 @@ void ROOT::RRecordField::AttachItemFields(std::vector<std::unique_ptr<RFieldBase
 }
 
 std::unique_ptr<ROOT::RFieldBase>
-ROOT::Internal::CreateEmulatedField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
-                                    std::string_view emulatedFromType)
+ROOT::Internal::CreateEmulatedRecordField(std::string_view fieldName,
+                                          std::vector<std::unique_ptr<RFieldBase>> itemFields,
+                                          std::string_view emulatedFromType)
 {
+   R__ASSERT(!emulatedFromType.empty());
    return std::unique_ptr<RFieldBase>(new RRecordField(fieldName, std::move(itemFields), emulatedFromType));
+}
+
+std::unique_ptr<ROOT::RFieldBase> ROOT::Internal::CreateEmulatedVectorField(std::string_view fieldName,
+                                                                            std::unique_ptr<RFieldBase> itemField,
+                                                                            std::string_view emulatedFromType)
+{
+   R__ASSERT(!emulatedFromType.empty());
+   return std::unique_ptr<RFieldBase>(new RVectorField(fieldName, std::move(itemField), emulatedFromType));
 }
 
 ROOT::RRecordField::RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
@@ -624,7 +634,7 @@ void ROOT::RRecordField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) con
 //------------------------------------------------------------------------------
 
 ROOT::RBitsetField::RBitsetField(std::string_view fieldName, std::size_t N)
-   : ROOT::RFieldBase(fieldName, "std::bitset<" + std::to_string(N) + ">", ROOT::ENTupleStructure::kLeaf,
+   : ROOT::RFieldBase(fieldName, "std::bitset<" + std::to_string(N) + ">", ROOT::ENTupleStructure::kPlain,
                       false /* isSimple */, N),
      fN(N)
 {
@@ -647,43 +657,82 @@ void ROOT::RBitsetField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
    GenerateColumnsImpl<bool>(desc);
 }
 
-std::size_t ROOT::RBitsetField::AppendImpl(const void *from)
+template <typename FUlong, typename FUlonglong, typename... Args>
+void ROOT::RBitsetField::SelectWordSize(FUlong &&fUlong, FUlonglong &&fUlonglong, Args &&...args)
 {
-   const auto *asULongArray = static_cast<const Word_t *>(from);
+   if (WordSize() == sizeof(unsigned long)) {
+      fUlong(std::forward<Args>(args)..., fN, *fPrincipalColumn);
+   } else if (WordSize() == sizeof(unsigned long long)) {
+      // NOTE: this can only happen on Windows; see the comment on the RBitsetField class.
+      fUlonglong(std::forward<Args>(args)..., fN, *fPrincipalColumn);
+   } else {
+      R__ASSERT(false);
+   }
+}
+
+template <typename Word_t>
+static void BitsetAppendImpl(const void *from, size_t nBits, ROOT::Internal::RColumn &column)
+{
+   constexpr auto kBitsPerWord = sizeof(Word_t) * 8;
+
+   const auto *asWordArray = static_cast<const Word_t *>(from);
    bool elementValue;
    std::size_t i = 0;
-   for (std::size_t word = 0; word < (fN + kBitsPerWord - 1) / kBitsPerWord; ++word) {
-      for (std::size_t mask = 0; (mask < kBitsPerWord) && (i < fN); ++mask, ++i) {
-         elementValue = (asULongArray[word] & (static_cast<Word_t>(1) << mask)) != 0;
-         fPrincipalColumn->Append(&elementValue);
+   for (std::size_t word = 0; word < (nBits + kBitsPerWord - 1) / kBitsPerWord; ++word) {
+      for (std::size_t mask = 0; (mask < kBitsPerWord) && (i < nBits); ++mask, ++i) {
+         elementValue = (asWordArray[word] & (static_cast<Word_t>(1) << mask)) != 0;
+         column.Append(&elementValue);
       }
    }
+}
+
+std::size_t ROOT::RBitsetField::AppendImpl(const void *from)
+{
+   SelectWordSize(BitsetAppendImpl<unsigned long>, BitsetAppendImpl<unsigned long long>, from);
    return fN;
+}
+
+template <typename Word_t>
+static void
+BitsetReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to, size_t nBits, ROOT::Internal::RColumn &column)
+{
+   constexpr auto kBitsPerWord = sizeof(Word_t) * 8;
+
+   auto *asWordArray = static_cast<Word_t *>(to);
+   bool elementValue;
+   for (std::size_t i = 0; i < nBits; ++i) {
+      column.Read(globalIndex * nBits + i, &elementValue);
+      Word_t mask = static_cast<Word_t>(1) << (i % kBitsPerWord);
+      Word_t bit = static_cast<Word_t>(elementValue) << (i % kBitsPerWord);
+      asWordArray[i / kBitsPerWord] = (asWordArray[i / kBitsPerWord] & ~mask) | bit;
+   }
 }
 
 void ROOT::RBitsetField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
-   auto *asULongArray = static_cast<Word_t *>(to);
+   SelectWordSize(BitsetReadGlobalImpl<unsigned long>, BitsetReadGlobalImpl<unsigned long long>, globalIndex, to);
+}
+
+template <typename Word_t>
+static void
+BitsetReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to, size_t nBits, ROOT::Internal::RColumn &column)
+{
+   constexpr auto kBitsPerWord = sizeof(Word_t) * 8;
+
+   auto *asWordArray = static_cast<Word_t *>(to);
    bool elementValue;
-   for (std::size_t i = 0; i < fN; ++i) {
-      fPrincipalColumn->Read(globalIndex * fN + i, &elementValue);
+   for (std::size_t i = 0; i < nBits; ++i) {
+      column.Read(ROOT::RNTupleLocalIndex(localIndex.GetClusterId(), localIndex.GetIndexInCluster() * nBits) + i,
+                  &elementValue);
       Word_t mask = static_cast<Word_t>(1) << (i % kBitsPerWord);
       Word_t bit = static_cast<Word_t>(elementValue) << (i % kBitsPerWord);
-      asULongArray[i / kBitsPerWord] = (asULongArray[i / kBitsPerWord] & ~mask) | bit;
+      asWordArray[i / kBitsPerWord] = (asWordArray[i / kBitsPerWord] & ~mask) | bit;
    }
 }
 
 void ROOT::RBitsetField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to)
 {
-   auto *asULongArray = static_cast<Word_t *>(to);
-   bool elementValue;
-   for (std::size_t i = 0; i < fN; ++i) {
-      fPrincipalColumn->Read(RNTupleLocalIndex(localIndex.GetClusterId(), localIndex.GetIndexInCluster() * fN) + i,
-                             &elementValue);
-      Word_t mask = static_cast<Word_t>(1) << (i % kBitsPerWord);
-      Word_t bit = static_cast<Word_t>(elementValue) << (i % kBitsPerWord);
-      asULongArray[i / kBitsPerWord] = (asULongArray[i / kBitsPerWord] & ~mask) | bit;
-   }
+   SelectWordSize(BitsetReadInClusterImpl<unsigned long>, BitsetReadInClusterImpl<unsigned long long>, localIndex, to);
 }
 
 void ROOT::RBitsetField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
@@ -932,7 +981,7 @@ size_t ROOT::ROptionalField::GetAlignment() const
 
 ROOT::RAtomicField::RAtomicField(std::string_view fieldName, std::string_view typeName,
                                  std::unique_ptr<RFieldBase> itemField)
-   : RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
+   : RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kPlain, false /* isSimple */)
 {
    if (itemField->GetTraits() & kTraitTriviallyConstructible)
       fTraits |= kTraitTriviallyConstructible;

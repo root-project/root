@@ -3,7 +3,7 @@
 
   clone(filename in, filename out)
 
-  addref(filename in, filename out, 
+  addref(filename in, filename out,
          branch name to add, branch name to reference)
 
   readall(filename)
@@ -27,7 +27,7 @@
 class tref_test_pid: public TNamed {
 public:
    tref_test_pid() {}
-   virtual ~tref_test_pid() {}
+   ~tref_test_pid() override {}
 
    tref_test_pid(const char* name, TObject* ref) {
       fName.Form("%s_%d", name, GetID());
@@ -37,13 +37,13 @@ public:
       static Int_t currentMax=0;
       return currentMax++;
    }
-   void Dump() const {
+   void Dump() const override {
       TNamed* r=(TNamed*)fRef.GetObject();
       printf("TTP %s ref: %s\n", GetName(), r ? r->GetName() : "(!NULL!)");
    }
 
    TRef  fRef; // a reference
-   ClassDef(tref_test_pid,1) // a roottest TRef autoloading object
+   ClassDefOverride(tref_test_pid,1) // a roottest TRef autoloading object
 };
 
 void create(const char *filename) {
@@ -71,7 +71,7 @@ void clone(const char* filein, const char* fileout) {
    TFile* fIn = new TFile(filein);
    TTree* tIn = 0;
    fIn->GetObject("T", tIn);
-   
+
    TFile* fOut = new TFile(fileout, "RECREATE");
    TTree* tOut = tIn->CloneTree();
    tOut->Write();
@@ -79,7 +79,7 @@ void clone(const char* filein, const char* fileout) {
    delete fOut;
 }
 
-void addref(const char* filenameIn, const char* filenameOut, 
+void addref(const char* filenameIn, const char* filenameOut,
             const char* addbranch, const char* refbranch) {
    TFile* fIn = new TFile(filenameIn);
    TTree* tIn = 0;
@@ -97,7 +97,7 @@ void addref(const char* filenameIn, const char* filenameOut,
              refbranch, tIn->GetBranch(refbranch)->IsA()->GetName());
       return;
    }
-   
+
    TClonesArray* caN = new TClonesArray(brRef->GetClonesName());
    tIn->SetBranchAddress(refbranch, &caN);
 
@@ -157,7 +157,7 @@ void readauto(const char* filename, const char* branch) {
                TString name(n->GetName());
                // check that auto-loading doesn't reload
                // branches, overwriting our modified object
-               name+=" GOOD!"; 
+               name+=" GOOD!";
                n->SetName(name);
             }
             o->Dump();
@@ -166,3 +166,4 @@ void readauto(const char* filename, const char* branch) {
    }
    delete oaBranches;
 }
+

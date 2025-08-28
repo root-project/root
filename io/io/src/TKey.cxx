@@ -251,7 +251,7 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
    ROOT::RCompressionSetting::EAlgorithm::EValues cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(GetFile() ? GetFile()->GetCompressionAlgorithm() : 0);
    if (cxlevel > 0 && fObjlen > 256) {
       Int_t nbuffers = 1 + (fObjlen - 1)/kMAXZIPBUF;
-      Int_t buflen = TMath::Max(512,fKeylen + fObjlen + 9*nbuffers + 28); //add 28 bytes in case object is placed in a deleted gap
+      Int_t buflen = std::max(512,fKeylen + fObjlen + 9*nbuffers + 28); //add 28 bytes in case object is placed in a deleted gap
       fBuffer = new char[buflen];
       char *objbuf = fBufferRef->Buffer() + fKeylen;
       char *bufcur = &fBuffer[fKeylen];
@@ -327,7 +327,6 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
 
    fBufferRef = new TBufferFile(TBuffer::kWrite, bufsize);
    fBufferRef->SetParent(GetFile());
-   fCycle     = fMotherDir->AppendKey(this);
 
    Streamer(*fBufferRef);         //write key itself
    fKeylen    = fBufferRef->Length();
@@ -339,11 +338,15 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
    lbuf       = fBufferRef->Length();
    fObjlen    = lbuf - fKeylen;
 
+   // Append to mother directory only after the call to Streamer() was
+   // successful (and didn't throw).
+   fCycle = fMotherDir->AppendKey(this);
+
    Int_t cxlevel = GetFile() ? GetFile()->GetCompressionLevel() : 0;
    ROOT::RCompressionSetting::EAlgorithm::EValues cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(GetFile() ? GetFile()->GetCompressionAlgorithm() : 0);
    if (cxlevel > 0 && fObjlen > 256) {
       Int_t nbuffers = 1 + (fObjlen - 1)/kMAXZIPBUF;
-      Int_t buflen = TMath::Max(512,fKeylen + fObjlen + 9*nbuffers + 28); //add 28 bytes in case object is placed in a deleted gap
+      Int_t buflen = std::max(512,fKeylen + fObjlen + 9*nbuffers + 28); //add 28 bytes in case object is placed in a deleted gap
       fBuffer = new char[buflen];
       char *objbuf = fBufferRef->Buffer() + fKeylen;
       char *bufcur = &fBuffer[fKeylen];

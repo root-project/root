@@ -17,7 +17,8 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RNTupleRange.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <string_view>
 
 #include <iterator>
@@ -180,6 +181,13 @@ protected:
    {
    }
 
+   const T &GetValueRef() const
+   {
+      // We created the RValue and know its type, avoid extra checks.
+      void *ptr = RNTupleViewBase<T>::fValue.template GetPtr<void>().get();
+      return *static_cast<T *>(ptr);
+   }
+
 public:
    RNTupleView(const RNTupleView &other) = delete;
    RNTupleView(RNTupleView &&other) = default;
@@ -191,7 +199,7 @@ public:
    const T &operator()(ROOT::NTupleSize_t globalIndex)
    {
       RNTupleViewBase<T>::fValue.Read(globalIndex);
-      return RNTupleViewBase<T>::fValue.template GetRef<T>();
+      return GetValueRef();
    }
 
    /// Reads the value of this view for the entry with the provided `localIndex`.
@@ -199,7 +207,7 @@ public:
    const T &operator()(RNTupleLocalIndex localIndex)
    {
       RNTupleViewBase<T>::fValue.Read(localIndex);
-      return RNTupleViewBase<T>::fValue.template GetRef<T>();
+      return GetValueRef();
    }
 };
 
@@ -264,7 +272,7 @@ protected:
    {
       const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
       const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
-      if (fieldDesc.GetTypeName() != ROOT::RField<T>::TypeName()) {
+      if (!Internal::IsMatchingFieldType<T>(fieldDesc.GetTypeName())) {
          throw RException(R__FAIL("type mismatch for field " + fieldDesc.GetFieldName() + ": " +
                                   fieldDesc.GetTypeName() + " vs. " + ROOT::RField<T>::TypeName()));
       }

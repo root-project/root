@@ -126,7 +126,12 @@ inline Cppyy::TCppType_t CPPInstance::ObjectIsA(bool check_smart) const
 
 
 //- object proxy type and type verification ----------------------------------
-CPYCPPYY_IMPORT PyTypeObject CPPInstance_Type;
+// Needs to be extern because the libROOTPythonizations is secretly using it
+#ifdef _MSC_VER
+extern __declspec(dllimport) PyTypeObject CPPInstance_Type;
+#else
+extern PyTypeObject CPPInstance_Type;
+#endif
 
 template<typename T>
 inline bool CPPInstance_Check(T* object)

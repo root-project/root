@@ -1,0 +1,17 @@
+
+Processing runJet.C...
+In event 0 jet #0 value are correct 0,33,44,55,0
+In event 0 jet #1 value are correct 0,33,44,55,1
+In event 0 jet #2 value are correct 0,33,44,55,2
+In event 0 jet #3 value are correct 0,33,44,55,3
+In event 0 jet #4 value are correct 0,33,44,55,4
+In event 1 jet #0 value are correct 1,33,44,55,0
+In event 1 jet #1 value are correct 1,33,44,55,1
+In event 1 jet #2 value are correct 1,33,44,55,2
+In event 1 jet #3 value are correct 1,33,44,55,3
+In event 1 jet #4 value are correct 1,33,44,55,4
+In event 2 jet #0 value are correct 2,33,44,55,0
+In event 2 jet #1 value are correct 2,33,44,55,1
+In event 2 jet #2 value are correct 2,33,44,55,2
+In event 2 jet #3 value are correct 2,33,44,55,3
+In event 2 jet #4 value are correct 2,33,44,55,4

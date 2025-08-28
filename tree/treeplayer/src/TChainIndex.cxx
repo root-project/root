@@ -85,7 +85,7 @@ TChainIndex::TChainIndex(): TVirtualIndex()
 /// ignore this warning except for special cases with prior knowledge that sorting the files and/or entries is actually
 /// more expensive, or just not possible.
 
-TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *minorname)
+TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *minorname, bool long64major, bool long64minor)
            : TVirtualIndex()
 {
    fTree = nullptr;
@@ -122,7 +122,7 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
          }
       }
       if (!index) {
-         chain->GetTree()->BuildIndex(majorname, minorname);
+         chain->GetTree()->BuildIndex(majorname, minorname, long64major, long64minor);
          index = chain->GetTree()->GetTreeIndex();
          chain->GetTree()->SetTreeIndex(nullptr);
          entry.fTreeIndex = index;

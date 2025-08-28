@@ -2,7 +2,7 @@
 #include "TTree.h"
 #include "TFile.h"
 #include "TList.h"
-#include <TBenchmark.h>
+#include "TBenchmark.h"
 
 int gHasLibrary = kFALSE;
 int gBranchStyle = 1;
@@ -19,13 +19,13 @@ void DrawSkippable(TTree* tree, const char* what, const char* where, Bool_t draw
   } else {
     gSkipped.Add(new TNamed(where,where));
   }
-  
+
 };
 
 void DrawSkippable(TTree* tree, const char* what, const char* cond,
                    const char* where, Bool_t draw) {
    //cerr << "Doing " << what << " which is " << skip << endl;
-   if (draw) { 
+   if (draw) {
       TString cut = what;
       cut.Append(">>");
       cut.Append(where);
@@ -46,11 +46,11 @@ void DrawMarks() {
   Float_t ct = gBenchmark->GetCpuTime("DrawTest");
 
   // gBenchmark->Print("DrawTest");
-  
+
   Float_t rootmarks = 200*(rt_base + cp_base)/(rt + ct);
-  
+
   printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),gROOT->GetVersionDate(),gROOT->GetVersionTime());
- 
+
 }
 
 
@@ -69,7 +69,7 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 3, int quietLevel = 0)
 
    gBenchmark = new TBenchmark();
    gBenchmark->Start("DrawTest");
-   
+
    // Each tree->Draw generates an histogram
    DrawSkippable(tree,"GetNtrack()","hGetNtrack",(level>0 && gHasLibrary));
 
@@ -105,7 +105,7 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 3, int quietLevel = 0)
    tree->Draw("fCharge>>hCharge","fPx < 0","goff");
    tree->Draw("fNpoint>>hNpoint","fPx < 0","goff");
    tree->Draw("fValid>>hValid",  "fPx < 0","goff");
-   DrawSkippable(tree,"fPointValue","hPointValue", gBranchStyle!=0);
+   DrawSkippable(tree,"fTracks.fPointValue","hPointValue", gBranchStyle!=0);
    tree->SetAlias("mult","fPx*fPy");
    DrawSkippable(tree,"fEvtHdr.fEvtNum*6+mult", "hAlias", 1);
 
@@ -128,7 +128,7 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 3, int quietLevel = 0)
    tree->Draw("fClosestDistance>>hClosestDistance","","goff");
    tree->Draw("fClosestDistance[2]>>hClosestDistance2","","goff");
    tree->Draw("fClosestDistance[9]>>hClosestDistance9","","goff");
-   
+
    // Test variable indexing
    DrawSkippable(tree,"fClosestDistance[fNvertex/2]","hClosestDistanceIndex",
                  (level>0));
@@ -138,21 +138,20 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 3, int quietLevel = 0)
    tree->Draw("fVClosestDistance>>hVClosestDistance","","goff");
    tree->Draw("fVClosestDistance[2]>>hVClosestDistance2","","goff");
    tree->Draw("fVClosestDistance[9]>>hVClosestDistance9","","goff");
-   DrawSkippable(tree,"fVClosestDistance[fNvertex/2]","hVClosestDistanceIndex",
-                 (level>0));
+   DrawSkippable(tree,"fVClosestDistance[fNvertex/2]","hVClosestDistanceIndex", (level>0));
 
    // Test on vector of objects:
-   DrawSkippable(tree,"fVEvtHdr.fRun","hVRun",(level>2));
+   DrawSkippable(tree,"fVEvtHdr.fRun","hRun",(level>2));
    DrawSkippable(tree,"fVEvtHdr.fRun[2]","hVRun2",(level>2));
    DrawSkippable(tree,"fVEvtHdr.fRun[fNvertex/2]","hVRunIndex",(level>2));
-   DrawSkippable(tree,"fVEvtHdr.GetRun()","hVRunFunc",(level>2 && gHasLibrary));
-   
+   DrawSkippable(tree,"fVEvtHdr.GetRun()","hRunFunc",(level>2 && gHasLibrary));
+
    // Test on vector of pointer
    DrawSkippable(tree,"fVTracks.fPx","hVPx",(level>2));
    DrawSkippable(tree,"fVTracks.fCharge","fVTracks.fPx < 0","hVCharge",(level>2));
 
    // Test of simple function calls
-   DrawSkippable(tree,"sqrt(fNtrack)","hSqrtNtrack",(level>0));   
+   DrawSkippable(tree,"sqrt(fNtrack)","hSqrtNtrack",(level>0));
 
    // Test string operations
    DrawSkippable(tree,"fEvtHdr.fEvtNum","fType==\"type1\" ","hString",(level>0));
@@ -195,8 +194,8 @@ TDirectory* GenerateDrawHist(TTree *tree,int level = 3, int quietLevel = 0)
                  "",
                  "hAlt", level>1 && gBranchStyle!=0);
 
-   if (quietLevel<2) gBenchmark->Show("DrawTest");   
-   else gBenchmark->Stop("DrawTest");  
+   if (quietLevel<2) gBenchmark->Show("DrawTest");
+   else gBenchmark->Stop("DrawTest");
    gBenchmark->Start("DrawTest");
 
    return hfile;

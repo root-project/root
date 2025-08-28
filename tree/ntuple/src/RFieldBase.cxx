@@ -8,6 +8,7 @@
 #include <ROOT/RFieldBase.hxx>
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RFieldUtils.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 
 #include <TClass.h>
 #include <TClassEdit.h>
@@ -292,7 +293,6 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
                          const ROOT::RCreateFieldOptions &options, const ROOT::RNTupleDescriptor *desc,
                          ROOT::DescriptorId_t fieldId)
 {
-   using ROOT::Internal::ParseArrayType;
    using ROOT::Internal::ParseUIntTypeToken;
    using ROOT::Internal::TokenizeTypeList;
 
@@ -305,8 +305,8 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
 
    auto fnFail = [&fieldName,
                   &resolvedType](const std::string &errMsg,
-                                 RInvalidField::RCategory cat =
-                                    RInvalidField::RCategory::kTypeError) -> RResult<std::unique_ptr<RFieldBase>> {
+                                 RInvalidField::ECategory cat =
+                                    RInvalidField::ECategory::kTypeError) -> RResult<std::unique_ptr<RFieldBase>> {
       if (createContext.GetContinueOnError()) {
          return std::unique_ptr<RFieldBase>(std::make_unique<RInvalidField>(fieldName, resolvedType, errMsg, cat));
       } else {
@@ -331,15 +331,6 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
    // try-catch block to intercept any exception that may be thrown by Unwrap() so that this
    // function never throws but returns RResult::Error instead.
    try {
-      if (auto [arrayBaseType, arraySizes] = ParseArrayType(resolvedType); !arraySizes.empty()) {
-         std::unique_ptr<RFieldBase> arrayField = Create("_0", arrayBaseType, options, desc, fieldId).Unwrap();
-         for (int i = arraySizes.size() - 1; i >= 0; --i) {
-            arrayField =
-               std::make_unique<RArrayField>((i == 0) ? fieldName : "_0", std::move(arrayField), arraySizes[i]);
-         }
-         return arrayField;
-      }
-
       if (resolvedType == "bool") {
          result = std::make_unique<RField<bool>>(fieldName);
       } else if (resolvedType == "char") {
@@ -554,15 +545,17 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
 
       if (!result) {
          auto cl = TClass::GetClass(typeName.c_str());
-         // NOTE: if the class is not at least "Interpreted" we currently don't try to construct
-         // the RClassField, as in that case we'd need to fetch the information from the StreamerInfo
-         // rather than from TClass. This might be desirable in the future, but for now in this
-         // situation we rely on field emulation instead.
-         if (cl != nullptr && cl->GetState() >= TClass::kInterpreted) {
+
+         if (cl && cl->GetState() > TClass::kForwardDeclared) {
             createContextGuard.AddClassToStack(resolvedType);
             if (cl->GetCollectionProxy()) {
                result = std::make_unique<RProxiedCollectionField>(fieldName, typeName);
-            } else {
+            }
+            // NOTE: if the class is not at least "Interpreted" we currently don't try to construct
+            // the RClassField, as in that case we'd need to fetch the information from the StreamerInfo
+            // rather than from TClass. This might be desirable in the future, but for now in this
+            // situation we rely on field emulation instead.
+            else if (cl->GetState() >= TClass::kInterpreted) {
                if (ROOT::Internal::GetRNTupleSerializationMode(cl) ==
                    ROOT::Internal::ERNTupleSerializationMode::kForceStreamerMode) {
                   result = std::make_unique<RStreamerField>(fieldName, typeName);
@@ -570,37 +563,55 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
                   result = std::make_unique<RClassField>(fieldName, typeName);
                }
             }
-         } else if (options.GetEmulateUnknownTypes()) {
+         }
+
+         // If we get here then we failed to meet all the conditions to create a "properly typed" field.
+         // Resort to field emulation if the user asked us to.
+         if (!result && options.GetEmulateUnknownTypes()) {
             assert(desc);
             const auto &fieldDesc = desc->GetFieldDescriptor(fieldId);
+            if (fieldDesc.GetStructure() == ENTupleStructure::kRecord) {
+               std::vector<std::unique_ptr<RFieldBase>> memberFields;
+               memberFields.reserve(fieldDesc.GetLinkIds().size());
+               for (auto id : fieldDesc.GetLinkIds()) {
+                  const auto &memberDesc = desc->GetFieldDescriptor(id);
+                  auto field = Create(memberDesc.GetFieldName(), memberDesc.GetTypeName(), options, desc, id).Unwrap();
+                  memberFields.emplace_back(std::move(field));
+               }
+               R__ASSERT(typeName == fieldDesc.GetTypeName());
+               auto recordField =
+                  Internal::CreateEmulatedRecordField(fieldName, std::move(memberFields), fieldDesc.GetTypeName());
+               recordField->fTypeAlias = fieldDesc.GetTypeAlias();
+               return recordField;
+            } else if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
+               if (fieldDesc.GetLinkIds().size() != 1)
+                  throw ROOT::RException(R__FAIL("invalid structure for collection field " + fieldName));
 
-            std::vector<std::unique_ptr<RFieldBase>> memberFields;
-            memberFields.reserve(fieldDesc.GetLinkIds().size());
-            for (auto id : fieldDesc.GetLinkIds()) {
-               const auto &memberDesc = desc->GetFieldDescriptor(id);
-               auto field = Create(memberDesc.GetFieldName(), memberDesc.GetTypeName(), options, desc, id).Unwrap();
-               memberFields.emplace_back(std::move(field));
+               auto itemFieldId = fieldDesc.GetLinkIds()[0];
+               const auto &itemFieldDesc = desc->GetFieldDescriptor(itemFieldId);
+               auto itemField =
+                  Create(itemFieldDesc.GetFieldName(), itemFieldDesc.GetTypeName(), options, desc, itemFieldId)
+                     .Unwrap();
+               auto vecField =
+                  ROOT::Internal::CreateEmulatedVectorField(fieldName, std::move(itemField), fieldDesc.GetTypeName());
+               vecField->fTypeAlias = fieldDesc.GetTypeAlias();
+               return vecField;
             }
-            R__ASSERT(typeName == fieldDesc.GetTypeName());
-            auto recordField =
-               Internal::CreateEmulatedField(fieldName, std::move(memberFields), fieldDesc.GetTypeName());
-            recordField->fTypeAlias = fieldDesc.GetTypeAlias();
-            return recordField;
          }
       }
-   } catch (RException &e) {
+   } catch (const RException &e) {
       auto error = e.GetError();
       if (createContext.GetContinueOnError()) {
          return std::unique_ptr<RFieldBase>(std::make_unique<RInvalidField>(fieldName, typeName, error.GetReport(),
-                                                                            RInvalidField::RCategory::kGeneric));
+                                                                            RInvalidField::ECategory::kGeneric));
       } else {
          return error;
       }
-   } catch (std::logic_error &e) {
+   } catch (const std::logic_error &e) {
       // Integer parsing error
       if (createContext.GetContinueOnError()) {
          return std::unique_ptr<RFieldBase>(
-            std::make_unique<RInvalidField>(fieldName, typeName, e.what(), RInvalidField::RCategory::kGeneric));
+            std::make_unique<RInvalidField>(fieldName, typeName, e.what(), RInvalidField::ECategory::kGeneric));
       } else {
          return R__FAIL(e.what());
       }
@@ -613,7 +624,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
       }
       return result;
    }
-   return R__FORWARD_RESULT(fnFail("unknown type: " + typeName, RInvalidField::RCategory::kUnknownType));
+   return R__FORWARD_RESULT(fnFail("unknown type: " + typeName, RInvalidField::ECategory::kUnknownType));
 }
 
 const ROOT::RFieldBase::RColumnRepresentations &ROOT::RFieldBase::GetColumnRepresentations() const

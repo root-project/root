@@ -28,27 +28,28 @@ macro(ROOT_CHECK_CONNECTION option)
       # If the connection check is disabled, just assume there is internet
       # connection
       set(NO_CONNECTION FALSE)
-    endif()
-    message(STATUS "Checking internet connectivity")
-    file(DOWNLOAD https://root.cern/files/cmake_connectivity_test.txt ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt
-      TIMEOUT 10 STATUS DOWNLOAD_STATUS
-    )
-    # Get the status code from the download status
-    list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
-    # Check if download was successful.
-    if(${STATUS_CODE} EQUAL 0)
-      # Success
-      message(STATUS "Checking internet connectivity - found")
-      # Now let's delete the file
-      file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt)
-      set(NO_CONNECTION FALSE)
     else()
-      # Error
-      if(fail-on-missing)
-        message(FATAL_ERROR "No internet connection. Please check your connection, set '-D${option}' or disable 'fail-on-missing' to automatically disable options requiring internet access. You can also bypass the connection check with -Dcheck_connection=OFF.")
+      message(STATUS "Checking internet connectivity")
+      file(DOWNLOAD https://root.cern/files/cmake_connectivity_test.txt ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt
+        TIMEOUT 10 STATUS DOWNLOAD_STATUS
+      )
+      # Get the status code from the download status
+      list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
+      # Check if download was successful.
+      if(${STATUS_CODE} EQUAL 0)
+        # Success
+        message(STATUS "Checking internet connectivity - found")
+        # Now let's delete the file
+        file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt)
+        set(NO_CONNECTION FALSE)
+      else()
+        # Error
+        if(fail-on-missing)
+          message(FATAL_ERROR "No internet connection. Please check your connection, set '-D${option}' or disable 'fail-on-missing' to automatically disable options requiring internet access. You can also bypass the connection check with -Dcheck_connection=OFF.")
+        endif()
+        message(STATUS "Checking internet connectivity - failed: will not automatically download external dependencies. You can bypass the connection check with -Dcheck_connection=OFF.")
+        set(NO_CONNECTION TRUE)
       endif()
-      message(STATUS "Checking internet connectivity - failed: will not automatically download external dependencies. You can bypass the connection check with -Dcheck_connection=OFF.")
-      set(NO_CONNECTION TRUE)
     endif()
   endif()
 endmacro()
@@ -165,6 +166,27 @@ if(builtin_nlohmannjson)
   add_subdirectory(builtins/nlohmann)
 endif()
 
+#--- Check for civetweb ---------------------------------------------------------
+if(http AND NOT builtin_civetweb)
+  message(STATUS "Looking for civetweb")
+  if(NOT "$ENV{CIVETWEB_BUILD}" STREQUAL "" AND NOT "$ENV{CIVETWEB_SRC}" STREQUAL "")
+     set(civetweb_LIBRARIES $ENV{CIVETWEB_BUILD}/src/libcivetweb.so)
+     set(civetweb_INCLUDE_DIR $ENV{CIVETWEB_SRC}/include)
+     message(STATUS "Use civetweb ${civetweb_LIBRARIES} and ${civetweb_INCLUDE_DIR}")
+  else()
+    if(fail-on-missing)
+      find_package(civetweb 1.15 REQUIRED)
+    else()
+      find_package(civetweb 1.15 QUIET)
+      if(civetweb_FOUND)
+        message(STATUS "Found civetweb version ${civetweb_VERSION}")
+      else()
+        message(STATUS "civetweb not found. Switching on builtin_civetweb option")
+        set(builtin_civetweb ON CACHE BOOL "Enabled because civetweb not found" FORCE)
+      endif()
+    endif()
+  endif()
+endif()
 
 #---Check for Unuran ------------------------------------------------------------------
 if(unuran AND NOT builtin_unuran)
@@ -551,7 +573,7 @@ if(asimage)
       list(APPEND afterimage_extra_args --with-builtin-jpeg)
     endif()
     if(NOT builtin_gif)
-      list(APPEND afterimage_extra_args --with-gif-includes=${GIF_INCLUDE_DIR} --without-builtin-gif)
+      list(APPEND afterimage_extra_args --with-gif --with-gif-includes=${GIF_INCLUDE_DIR} --without-builtin-gif)
     else()
       list(APPEND afterimage_extra_args --with-builtin-ungif)
     endif()
@@ -676,7 +698,11 @@ set(Python3_FIND_FRAMEWORK LAST)
 
 # Even if we don't build PyROOT, one still need python executable to run some scripts
 list(APPEND python_components Interpreter)
-if(pyroot OR tmva-pymva)
+if(pyroot AND NOT (tpython OR tmva-pymva))
+  # We have to only look for the Python development module in order to be able to build ROOT with a pip backend
+  # In particular, it is forbidden to link against libPython.so, see https://peps.python.org/pep-0513/#libpythonx-y-so-1
+  list(APPEND python_components Development.Module)
+elseif(tpython OR tmva-pymva)
   list(APPEND python_components Development)
 endif()
 if(tmva-pymva)
@@ -1759,7 +1785,7 @@ endif(tmva)
 #---Check for PyROOT---------------------------------------------------------------------
 if(pyroot)
 
-  if(Python3_Development_FOUND)
+  if(Python3_Development.Module_FOUND)
     message(STATUS "PyROOT: development package found. Building for version ${Python3_VERSION}")
   else()
     if(fail-on-missing)

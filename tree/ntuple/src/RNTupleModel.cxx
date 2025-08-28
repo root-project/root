@@ -15,6 +15,7 @@
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldToken.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/StringUtils.hxx>
 
@@ -72,7 +73,7 @@ ROOT::Internal::RProjectedFields::EnsureValidMapping(const ROOT::RFieldBase *tar
                                         dynamic_cast<const ROOT::RCardinalityField *>(target));
    if (!hasCompatibleStructure)
       return R__FAIL("field mapping structural mismatch: " + source->GetFieldName() + " --> " + target->GetFieldName());
-   if ((source->GetStructure() == ROOT::ENTupleStructure::kLeaf) ||
+   if ((source->GetStructure() == ROOT::ENTupleStructure::kPlain) ||
        (source->GetStructure() == ROOT::ENTupleStructure::kStreamer)) {
       if (target->GetTypeName() != source->GetTypeName())
          return R__FAIL("field mapping type mismatch: " + source->GetFieldName() + " --> " + target->GetFieldName());
@@ -99,7 +100,7 @@ ROOT::Internal::RProjectedFields::EnsureValidMapping(const ROOT::RFieldBase *tar
       auto parent = f->GetParent();
       while (parent) {
          if ((parent->GetStructure() != ROOT::ENTupleStructure::kRecord) &&
-             (parent->GetStructure() != ROOT::ENTupleStructure::kLeaf)) {
+             (parent->GetStructure() != ROOT::ENTupleStructure::kPlain)) {
             return parent;
          }
          parent = parent->GetParent();

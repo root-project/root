@@ -1,7 +1,5 @@
 CMAKE_BUILD_TYPE=RelWithDebInfo
-pythia8=OFF
 cuda=ON
-ccache=ON
 tmva=ON
 tmva-cpu=ON
 tmva-gpu=ON

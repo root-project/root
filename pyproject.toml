@@ -1,0 +1,30 @@
+[build-system]
+requires = ["cmake", "setuptools<72", "wheel", "numpy"]
+
+[project]
+name = "ROOT"
+version = "0.1a8"
+requires-python = ">=3.8"
+maintainers = [
+  {name = "Vincenzo Eduardo Padulano", email = "vincenzo.eduardo.padulano@cern.ch"}
+]
+description = "An open-source data analysis framework used by high energy physics and others."
+readme = "README.md"
+license = {file = "LICENSE"}
+dependencies = [
+  "numpy",
+]
+
+# Demonstrate how to expose ROOT CLI tools the Python way. For now only include
+# `root`, other tools can be added later using the same approach.
+[project.scripts]
+root = "ROOT._rootcli:main"
+
+[tool.cibuildwheel]
+# Increase pip debugging output
+build-verbosity = 1
+manylinux-x86_64-image = "manylinux_2_28"
+
+# Install system libraries
+[tool.cibuildwheel.linux]
+before-all = "dnf install -y epel-release && /usr/bin/crb enable && dnf install -y openssl-devel libX11-devel libXpm-devel libXft-devel libXext-devel libuuid-devel libjpeg-devel giflib-devel"

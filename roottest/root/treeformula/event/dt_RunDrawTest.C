@@ -8,7 +8,7 @@
 
 #include "TBranchElement.h"
 
-#include "Riostream.h"
+#include <iostream>
 
 #include "dt_DrawTest.C"
 
@@ -40,15 +40,16 @@ Int_t HistCompare(TH1 *ref, TH1 *comp)
 
    Float_t xrange = ref->GetXaxis()->GetXmax() - ref->GetXaxis()->GetXmin();
    if (xrange==0) { fprintf(stderr,"no range for %s\n",ref->GetName()); return -4; }
-   if (xrange>0.0001 && TMath::Abs((mean1-mean2)/xrange) > 0.001)  return -1;
-   if (mean2> 0.0001 && TMath::Abs((mean1-mean2)/mean2) > 0.01)    return -2;
-   if (rms1 > 0.0001 && TMath::Abs((rms1-rms2)/rms1) > 0.0001)     return -3;
+   if (xrange>0.0001 && std::abs((mean1-mean2)/xrange) > 0.001)  return -1;
+   if (mean2> 0.0001 && std::abs((mean1-mean2)/mean2) > 0.01)    return -2;
+   if (rms1 > 0.0001 && std::abs((rms1-rms2)/rms1) > 0.0001)     return -3;
    return n1*factor-n2;
 }
 
-Int_t Compare(TDirectory* from) {
+Int_t Compare(TDirectory* from)
+{
    TFile * reffile = new TFile("dt_reference.root");
-   
+
    TIter next(reffile->GetListOfKeys());
    TH1 *ref, *draw;
    const char* name;
@@ -58,7 +59,7 @@ Int_t Compare(TDirectory* from) {
 
    while ((key=(TKey*)next())) {
       if (strcmp(key->GetClassName(),"TH1F")
-          && strcmp(key->GetClassName(),"TH2F") ) 
+          && strcmp(key->GetClassName(),"TH2F") )
         continue; //may be a TList of TStreamerInfo
       ref = (TH1*)reffile->Get(key->GetName());
       name = ref->GetName();
@@ -67,19 +68,19 @@ Int_t Compare(TDirectory* from) {
       draw = (TH1*)from->Get(name);
       if (!draw) {
          if (!gSkipped.FindObject(name)) {
-            cerr << "Miss: " << name << endl;
+            std::cerr << "Miss: " << name << std::endl;
             fail++;
          }
          continue;
       }
       comp = HistCompare(ref,draw);
       if (comp!=0) {
-         cerr << "Fail: " << name << ":" << comp << endl;
+         std::cerr << "Fail: " << name << ":" << comp << std::endl;
          fail++;
          if (gInteractiveTest) {
             TCanvas * canv = new TCanvas();
             canv->Divide(2,1);
-            canv->cd(1); 
+            canv->cd(1);
             TString reftitle = "Ref: ";
             reftitle.Append(ref->GetTitle());
             ref->SetTitle(reftitle);
@@ -88,7 +89,8 @@ Int_t Compare(TDirectory* from) {
             return 1;
          }
       } else {
-         if (gQuietLevel<1) cerr << "Succ: " << name << ":" << comp << endl;
+         if (gQuietLevel<1)
+            std::cerr << "Succ: " << name << ":" << comp << std::endl;
       }
    }
    delete reffile;
@@ -112,7 +114,8 @@ void SetVerboseLevel(Int_t verboseLevel) {
    }
 }
 
-bool dt_RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
+int dt_RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0)
+{
   // This launch a test a TTree::Draw.
   // The mode currently available are:
   //    0: Do not load the shared library
@@ -125,14 +128,15 @@ bool dt_RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
   //    1: Output 0 + label for the start of each phase
   //    2: Output 1 + more details on the different phase being done
   //    3: Output 2 + stop at the first and draw a canvas showing the differences
+  //  Returns 0 if everything ok
 
 //gDebug = 5;
    SetVerboseLevel(verboseLevel);
 
    if (mode == 1) {
       if (!TClassTable::GetDict("Event")) {
-         gSystem->Load("libEvent");
-     }     
+         gSystem->Load("libTestIoEvent");
+     }
       gHasLibrary = kTRUE;
    }
 
@@ -145,10 +149,9 @@ bool dt_RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
 
    if (mode >= 2 && mode <= 4) {
       if (!TClassTable::GetDict("Event")) {
-         gSystem->Load("libEvent");
+         gSystem->Load("libTestIoEvent");
       } else {
-         cerr << "Since libEvent.so has already been loaded, mode 2 can not be tested!";
-         cerr << endl;
+         std::cerr << "Since libTestIoEvent.so has already been loaded, mode 2 can not be tested!" << std::endl;
       }
       gHasLibrary = kTRUE;
    }
@@ -169,22 +172,25 @@ bool dt_RunDrawTest(const char* from, Int_t mode = 0, Int_t verboseLevel = 0) {
 
    TBranch *eb = tree->GetBranch("event");
    gBranchStyle = (int) eb->InheritsFrom(TBranchElement::Class());
-   // cerr << "Branch style is " << gBranchStyle << endl;
+   // std::cerr << "Branch style is " << gBranchStyle << std::endl;
 
-   if (gQuietLevel<2) cout << "Generating histograms from TTree::Draw" << endl;
+   if (gQuietLevel<2)
+      std::cout << "Generating histograms from TTree::Draw" << std::endl;
    TDirectory* where = GenerateDrawHist(tree,2,gQuietLevel);
- 
-   if (gQuietLevel<2) cout << "Comparing histograms" << endl;
+
+   if (gQuietLevel<2)
+      std::cout << "Comparing histograms" << std::endl;
    if (Compare(where)>0) {
-     cout << "DrawTest: Comparison failed" << endl;
-     return false;
+     std::cout << "DrawTest: Comparison failed" << std::endl;
+     return 1;
    }
    DrawMarks();
 
-   if (gQuietLevel<2) cout << "DrawTest: Comparison was successfull" << endl;
+   if (gQuietLevel<2)
+      std::cout << "DrawTest: Comparison was successfull" << std::endl;
    if (hfile) delete hfile;
-   else delete tree;
+         else delete tree;
    gROOT->GetList()->Delete();
 
-   return true;
-}   
+   return 0;
+}

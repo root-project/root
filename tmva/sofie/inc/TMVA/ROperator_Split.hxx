@@ -21,9 +21,9 @@ private:
    std::string fNX;
    std::string fNSplit;
    std::vector<std::string> fNYs;
-   std::vector<size_t> fInputShape;
+   std::vector<Dim> fInputShape;
    std::vector<int64_t> fSplit;
-   std::vector<std::vector<size_t>> fOutputShapes;
+   std::vector<std::vector<Dim>> fOutputShapes;
 
 
 
@@ -54,28 +54,35 @@ public:
       if (model.CheckIfTensorAlreadyExist(fNX) == false){   //input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA SOFIE Split Op Input Tensor is not found in model");
       }
-      fInputShape = model.GetTensorShape(fNX);
+      fInputShape = model.GetDimTensorShape(fNX);
 
       // correct for negative axis
       if (fAxis < 0) fAxis += fInputShape.size();
       if (fAxis < 0 || fAxis >= static_cast<int>(fInputShape.size()) )
          throw std::runtime_error("TMVA SOFIE Split - invalid axis " + std::to_string(fAxis));
 
+      // support for time being split in axis whi are defined not parametrics
+      if (fInputShape[fAxis].isParam)
+         throw std::runtime_error("TMVA SOFIE Split - splitting in dynamic axis is not supported");
+
+      size_t origValue = fInputShape[fAxis].dim;
+
       // compute output shapes
       size_t nsplit = fNYs.size();
       // case split tensor is empty
       if (fNSplit.empty()) {
          int64_t splitValue = 0;
-         if (fInputShape[fAxis] % nsplit == 0) {
-            splitValue = fInputShape[fAxis]/nsplit;
+         if (origValue % nsplit == 0) {
+            splitValue = origValue/nsplit;
             fSplit = std::vector<int64_t>(nsplit, splitValue);
          } else {
             // case of not equal splitting
-            splitValue = std::ceil(double(fInputShape[fAxis])/nsplit);
+            splitValue = std::ceil(double(origValue)/nsplit);
             fSplit = std::vector<int64_t>(nsplit-1, splitValue);
-            fSplit.push_back(fInputShape[fAxis] % splitValue);
+            fSplit.push_back(origValue % splitValue);
          }
       } else {
+         // NB : in this case we could support dynamic split axes
          // get split tensor values
          if (!model.IsInitializedTensor(fNSplit))
             throw std::runtime_error("TMVA SOFIE Split - non-initialized split tensors are not supported");
@@ -88,13 +95,13 @@ public:
       // compute now the output shapes
       size_t tot_split = 0;
       for (size_t i = 0; i < fNYs.size(); i++) {
-         std::vector<size_t> outputShape = fInputShape;
-         outputShape[fAxis] = fSplit[i];
+         std::vector<Dim> outputShape = fInputShape;
+         outputShape[fAxis] = Dim{ static_cast<size_t>(fSplit[i]) };
          tot_split += fSplit[i];
          model.AddIntermediateTensor(fNYs[i], model.GetTensorType(fNX), outputShape);
          fOutputShapes.push_back(outputShape);
       }
-      if (tot_split != fInputShape[fAxis])
+      if (tot_split != origValue)
          throw std::runtime_error("TMVA SOFIE Split - Sum of split sizes must match the input dimension along the axis");
 
 
@@ -121,7 +128,7 @@ public:
       out << SP << "size_t " << OpName << "_axis_offset = 0;\n";
       // unroll the loop on split outputs
       for (size_t i = 0; i < fNYs.size(); i++)  {
-         size_t length = ConvertShapeToLength(fOutputShapes[i]);
+         auto length = ConvertDimShapeToLength(fOutputShapes[i]);
          auto output_strides = UTILITY::ComputeStrideFromShape(fOutputShapes[i]);
 
          out << SP << "for (int id = 0; id < " << length << " ; id++){\n";

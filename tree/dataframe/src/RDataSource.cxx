@@ -11,8 +11,6 @@
 ROOT::RDF::RSampleInfo ROOT::RDF::RDataSource::CreateSampleInfo(
    unsigned int, const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &) const
 {
-   // Currently not implemented for the generic data source, only works correctly for TTree.
-   // TODO: Implement the feature also for the generic data source.
    return ROOT::RDF::RSampleInfo{};
 }
 

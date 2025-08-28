@@ -1,7 +1,3 @@
-if(NOT ROOT_root7_FOUND)
-  return()
-endif()
-
 # Generate common dictionary for custom class
 ROOTTEST_GENERATE_DICTIONARY(
   rntuple_event_dict
@@ -15,15 +11,10 @@ ROOTTEST_GENERATE_DICTIONARY(
 # Write the RNTuple with the custom class field
 ROOTTEST_GENERATE_EXECUTABLE(
   write_rntuple
+  write_rntuple.cxx rntuple_event_dict.cxx
   LIBRARIES Core RIO ROOTNTuple
   FIXTURES_REQUIRED generated_event_dictionary_rntuple
   FIXTURES_SETUP write_rntuple_executable)
-
-# Specify more than one input source for the generated executable
-target_sources(
-  write_rntuple
-  PRIVATE write_rntuple.cxx rntuple_event_dict.cxx
-)
 
 ROOTTEST_ADD_TEST(write_rntuple
                   EXEC ./write_rntuple

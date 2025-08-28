@@ -256,7 +256,7 @@ TEST(RooCrystalBall, FullyParametrized)
 
 TEST(RooCrystalBall, Integral)
 {
-   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
 
    auto ws = makeWorkspace();
    auto &x = *ws->var("x");

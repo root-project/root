@@ -43,11 +43,11 @@ public:
          throw std::runtime_error("TMVA SOFIE Relu Op Input Tensor " + fNX + " is not found in model");
       }
 
-      fShape = model.GetDynamicTensorShape(fNX);
+      fShape = model.GetDimTensorShape(fNX);
 
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShape);
       if (model.Verbose()) {
-         std::cout << "Relu : " << fNX << " -> " << fNY << " " << ConvertDynamicShapeToString(fShape) << std::endl;
+         std::cout << "Relu : " << fNX << " -> " << fNY << " " << ConvertShapeToString(fShape) << std::endl;
       }
    }
 

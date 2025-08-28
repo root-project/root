@@ -14,6 +14,7 @@
 #include "NTupleStruct.hxx"
 
 #include <TFile.h>
+#include <TTree.h>
 
 using ROOT::RNTupleModel;
 using ROOT::RNTupleReader;
@@ -35,9 +36,21 @@ public:
    std::string GetPath() const { return fPath; }
 };
 
-TEST(RDFSnapshotRNTuple, FromScratchTemplated)
+template <typename T>
+void expect_vec_eq(const ROOT::RVec<T> &v1, const ROOT::RVec<T> &v2)
 {
-   FileRAII fileGuard{"RDFSnapshotRNTuple_from_scratch_templated.root"};
+   ASSERT_EQ(v1.size(), v2.size()) << "Vectors 'v1' and 'v2' are of unequal length";
+   for (std::size_t i = 0ull; i < v1.size(); ++i) {
+      if constexpr (std::is_floating_point_v<T>)
+         EXPECT_FLOAT_EQ(v1[i], v2[i]) << "Vectors 'v1' and 'v2' differ at index " << i;
+      else
+         EXPECT_EQ(v1[i], v2[i]) << "Vectors 'v1' and 'v2' differ at index " << i;
+   }
+}
+
+TEST(RDFSnapshotRNTuple, FromScratch)
+{
+   FileRAII fileGuard{"RDFSnapshotRNTuple_from_scratch.root"};
    const std::vector<std::string> columns = {"x"};
 
    auto df = ROOT::RDataFrame(25ull).Define("x", [] { return 10; });
@@ -46,30 +59,6 @@ TEST(RDFSnapshotRNTuple, FromScratchTemplated)
    opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
 
    auto sdf = df.Snapshot("ntuple", fileGuard.GetPath(), columns, opts);
-
-   EXPECT_EQ(columns, sdf->GetColumnNames());
-
-   // Verify we actually snapshotted to an RNTuple.
-   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(25ull, ntuple->GetNEntries());
-
-   auto x = ntuple->GetView<int>("x");
-   for (const auto i : ntuple->GetEntryRange()) {
-      EXPECT_EQ(10, x(i));
-   }
-}
-
-TEST(RDFSnapshotRNTuple, FromScratchJITted)
-{
-   FileRAII fileGuard{"RDFSnapshotRNTuple_from_scratch_jitted.root"};
-   const std::vector<std::string> columns = {"x"};
-
-   auto df = ROOT::RDataFrame(25ull).Define("x", [] { return 10; });
-
-   RSnapshotOptions opts;
-   opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
-
-   auto sdf = df.Snapshot("ntuple", fileGuard.GetPath(), "x", opts);
 
    EXPECT_EQ(columns, sdf->GetColumnNames());
 
@@ -172,9 +161,9 @@ TEST_F(RDFSnapshotRNTupleTest, DefaultFormatWarning)
                        "in RSnapshotOptions. Note that this current default behaviour might change in the future.");
 }
 
-TEST_F(RDFSnapshotRNTupleTest, DefaultToRNTupleTemplated)
+TEST_F(RDFSnapshotRNTupleTest, DefaultToRNTuple)
 {
-   FileRAII fileGuard{"RDFSnapshotRNTuple_snap_templated.root"};
+   FileRAII fileGuard{"RDFSnapshotRNTuple_snap.root"};
 
    auto df = ROOT::RDataFrame(fNtplName, fFileName);
    auto sdf = df.Define("x", [] { return 10; }).Snapshot("ntuple", fileGuard.GetPath(), {"pt", "x"}, fSnapshotOpts);
@@ -189,52 +178,9 @@ TEST_F(RDFSnapshotRNTupleTest, DefaultToRNTupleTemplated)
    EXPECT_EQ(10, x(0));
 }
 
-TEST_F(RDFSnapshotRNTupleTest, DefaultToRNTupleJITted)
+TEST_F(RDFSnapshotRNTupleTest, ToTTree)
 {
-   FileRAII fileGuard{"RDFSnapshotRNTuple_snap_jitted.root"};
-
-   auto df = ROOT::RDataFrame(fNtplName, fFileName);
-   auto sdf = df.Define("x", [] { return 10; }).Snapshot("ntuple", fileGuard.GetPath(), {"pt", "x"}, fSnapshotOpts);
-
-   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(1ull, ntuple->GetNEntries());
-
-   auto pt = ntuple->GetView<float>("pt");
-   auto x = ntuple->GetView<int>("x");
-
-   EXPECT_FLOAT_EQ(42.0, pt(0));
-   EXPECT_EQ(10, x(0));
-}
-
-TEST_F(RDFSnapshotRNTupleTest, ToTTreeTemplated)
-{
-   FileRAII fileGuard{"RDFSnapshotRNTuple_to_ttree_templated.root"};
-
-   auto df = ROOT::RDataFrame(fNtplName, fFileName);
-
-   fSnapshotOpts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kTTree;
-
-   auto sdf = df.Define("x", [] { return 10; }).Snapshot("tree", fileGuard.GetPath(), {"pt", "x"}, fSnapshotOpts);
-
-   TFile file(fileGuard.GetPath().c_str());
-   auto tree = file.Get<TTree>("tree");
-   EXPECT_EQ(1ull, tree->GetEntries());
-
-   float pt;
-   int x;
-
-   tree->SetBranchAddress("pt", &pt);
-   tree->SetBranchAddress("x", &x);
-
-   tree->GetEntry(0);
-
-   EXPECT_FLOAT_EQ(42.0, pt);
-   EXPECT_EQ(10, x);
-}
-
-TEST_F(RDFSnapshotRNTupleTest, ToTTreeJITted)
-{
-   FileRAII fileGuard{"RDFSnapshotRNTuple_to_ttree_jitted.root"};
+   FileRAII fileGuard{"RDFSnapshotRNTuple_to_ttree.root"};
 
    auto df = ROOT::RDataFrame(fNtplName, fFileName);
 
@@ -511,59 +457,155 @@ TEST(RDFSnapshotRNTuple, TDirectory)
    EXPECT_EQ(expected, sdf.GetColumnNames());
 }
 
-void WriteTestTree(const std::string &tname, const std::string &fname)
+class RDFSnapshotRNTupleFromTTreeTest : public ::testing::Test {
+protected:
+   const std::string fFileName = "RDFSnapshotRNTuple_ttree_fixture.root";
+   const std::string fTreeName = "tree";
+
+   void SetUp() override
+   {
+      TFile file(fFileName.c_str(), "RECREATE");
+      TTree t(fTreeName.c_str(), fTreeName.c_str());
+
+      float pt = 42.f;
+      std::vector<float> photons{1.f, 2.f, 3.f};
+      Electron electron{137.f};
+      Jet jets;
+      jets.electrons.emplace_back(Electron{122.f});
+      jets.electrons.emplace_back(Electron{125.f});
+      jets.electrons.emplace_back(Electron{129.f});
+
+      Int_t nmuons = 1;
+      float muon_pt[3] = {10.f, 20.f, 30.f};
+
+      struct {
+         Int_t x = 1;
+         Int_t y = 2;
+      } point;
+
+      t.Branch("pt", &pt);
+      t.Branch("photons", &photons);
+      t.Branch("electron", &electron);
+      t.Branch("jets", &jets);
+      t.Branch("nmuons", &nmuons);
+      t.Branch("muon_pt", muon_pt, "muon_pt[nmuons]");
+      t.Branch("point", &point, "x/I:y/I");
+
+      t.Fill();
+      t.Write();
+   }
+
+   void TearDown() override { gSystem->Unlink(fFileName.c_str()); }
+
+   void TestFromTTree(const std::string &fname, bool vector2RVec = false)
+   {
+      FileRAII fileGuard{fname};
+
+      auto df = ROOT::RDataFrame(fTreeName, fFileName);
+
+      {
+         RSnapshotOptions opts;
+         opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+         opts.fVector2RVec = vector2RVec;
+
+         // FIXME(fdegeus): snapshotting leaflist branches as-is (i.e. without explicitly providing their leafs) is not
+         // supported, because we have no way of reconstructing the memory layout of the branch itself from only the
+         // TTree's on-disk information without JITting. For RNTuple, we would be able to do this using anonymous record
+         // fields, however. Once this is implemented, this test should be changed to check the result of snapshotting
+         // "point" fully.
+         auto sdf = df.Define("x", [] { return 10; })
+                       .Snapshot("ntuple", fileGuard.GetPath(),
+                                 {"x", "pt", "photons", "electron", "jets", "muon_pt", "point.x", "point.y"}, opts);
+
+         auto x = sdf->Take<int>("x");
+         auto pt = sdf->Take<float>("pt");
+         auto photons = sdf->Take<ROOT::RVec<float>>("photons");
+         auto electron = sdf->Take<Electron>("electron");
+         auto jet_electrons = sdf->Take<ROOT::RVec<Electron>>("jets.electrons");
+         auto nMuons = sdf->Take<int>("nmuons");
+         auto muonPt = sdf->Take<ROOT::RVec<float>>("muon_pt");
+         auto pointX = sdf->Take<int>("point_x");
+         auto pointY = sdf->Take<int>("point_y");
+
+         ASSERT_EQ(1UL, x->size());
+         ASSERT_EQ(1UL, pt->size());
+         ASSERT_EQ(1UL, photons->size());
+         ASSERT_EQ(1UL, electron->size());
+         ASSERT_EQ(1UL, jet_electrons->size());
+         ASSERT_EQ(1UL, nMuons->size());
+         ASSERT_EQ(1UL, muonPt->size());
+         ASSERT_EQ(1UL, pointX->size());
+         ASSERT_EQ(1UL, pointY->size());
+
+         EXPECT_EQ(10, x->front());
+         EXPECT_EQ(42.f, pt->front());
+         expect_vec_eq<float>({1.f, 2.f, 3.f}, photons->front());
+         EXPECT_EQ(Electron{137.f}, electron->front());
+         expect_vec_eq({Electron{122.f}, Electron{125.f}, Electron{129.f}}, jet_electrons->front());
+         EXPECT_EQ(1, nMuons->front());
+         expect_vec_eq({10.f}, muonPt->front());
+         EXPECT_EQ(1, pointX->front());
+         EXPECT_EQ(2, pointY->front());
+      }
+
+      auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+
+      auto &descriptor = reader->GetDescriptor();
+
+      int nTopLevelFields = std::distance(descriptor.GetTopLevelFields().begin(), descriptor.GetTopLevelFields().end());
+      EXPECT_EQ(9, nTopLevelFields);
+      EXPECT_EQ("std::int32_t", descriptor.GetFieldDescriptor(descriptor.FindFieldId("x")).GetTypeName());
+      EXPECT_EQ("float", descriptor.GetFieldDescriptor(descriptor.FindFieldId("pt")).GetTypeName());
+      if (vector2RVec) {
+         EXPECT_EQ("ROOT::VecOps::RVec<float>",
+                   descriptor.GetFieldDescriptor(descriptor.FindFieldId("photons")).GetTypeName());
+      } else {
+         EXPECT_EQ("std::vector<float>",
+                   descriptor.GetFieldDescriptor(descriptor.FindFieldId("photons")).GetTypeName());
+      }
+      EXPECT_EQ("Electron", descriptor.GetFieldDescriptor(descriptor.FindFieldId("electron")).GetTypeName());
+      auto jetsId = descriptor.FindFieldId("jets");
+      EXPECT_EQ("Jet", descriptor.GetFieldDescriptor(jetsId).GetTypeName());
+      auto electronsId = descriptor.FindFieldId("electrons", jetsId);
+      EXPECT_EQ("std::vector<Electron>", descriptor.GetFieldDescriptor(electronsId).GetTypeName());
+      EXPECT_EQ("std::int32_t", descriptor.GetFieldDescriptor(descriptor.FindFieldId("nmuons")).GetTypeName());
+      EXPECT_EQ("ROOT::VecOps::RVec<float>",
+                descriptor.GetFieldDescriptor(descriptor.FindFieldId("muon_pt")).GetTypeName());
+      EXPECT_EQ("std::int32_t", descriptor.GetFieldDescriptor(descriptor.FindFieldId("point_x")).GetTypeName());
+      EXPECT_EQ("std::int32_t", descriptor.GetFieldDescriptor(descriptor.FindFieldId("point_y")).GetTypeName());
+      // sanity check to make sure we don't snapshot the internal RDF size columns
+      EXPECT_EQ(ROOT::kInvalidDescriptorId, descriptor.FindFieldId("R_rdf_sizeof_photons"));
+
+      auto x = reader->GetView<int>("x");
+      auto pt = reader->GetView<float>("pt");
+      auto photons = reader->GetView<ROOT::RVec<float>>("photons");
+      auto electron = reader->GetView<Electron>("electron");
+      auto jet_electrons = reader->GetView<ROOT::RVec<Electron>>("jets.electrons");
+      auto nMuons = reader->GetView<int>("nmuons");
+      auto muonPt = reader->GetView<ROOT::RVec<float>>("muon_pt");
+      auto pointX = reader->GetView<int>("point_x");
+      auto pointY = reader->GetView<int>("point_y");
+
+      EXPECT_EQ(10, x(0));
+      EXPECT_EQ(42.f, pt(0));
+      expect_vec_eq<float>({1.f, 2.f, 3.f}, photons(0));
+      EXPECT_EQ(Electron{137.f}, electron(0));
+      expect_vec_eq({Electron{122.f}, Electron{125.f}, Electron{129.f}}, jet_electrons(0));
+      EXPECT_EQ(1, nMuons(0));
+      expect_vec_eq({10.f}, muonPt(0));
+      EXPECT_EQ(1, pointX(0));
+      EXPECT_EQ(2, pointY(0));
+   }
+};
+
+TEST_F(RDFSnapshotRNTupleFromTTreeTest, FromTTree)
 {
-   TFile file(fname.c_str(), "RECREATE");
-   TTree t(tname.c_str(), tname.c_str());
-   float pt;
-   t.Branch("pt", &pt);
-
-   pt = 42.0;
-   t.Fill();
-
-   t.Write();
+   TestFromTTree("RDFSnapshotRNTuple_from_ttree.root");
 }
 
-TEST(RDFSnapshotRNTuple, DisallowFromTTreeTemplated)
+TEST_F(RDFSnapshotRNTupleFromTTreeTest, FromTTreeNoVector2RVec)
 {
-   const auto treename = "tree";
-   FileRAII fileGuard{"RDFSnapshotRNTuple_disallow_from_ttree_templated.root"};
-
-   WriteTestTree(treename, fileGuard.GetPath());
-
-   auto df = ROOT::RDataFrame(treename, fileGuard.GetPath());
-
-   RSnapshotOptions opts;
-   opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
-
-   try {
-      auto sdf = df.Define("x", [] { return 10; }).Snapshot("ntuple", fileGuard.GetPath(), {"pt", "x"}, opts);
-      FAIL() << "snapshotting from RNTuple to TTree is not (yet) possible";
-   } catch (const std::runtime_error &err) {
-      EXPECT_STREQ(err.what(), "Snapshotting from TTree to RNTuple is not yet supported. The current recommended way "
-                               "to convert TTrees to RNTuple is through the RNTupleImporter.");
-   }
-}
-
-TEST(RDFSnapshotRNTuple, DisallowFromTTreeJITted)
-{
-   const auto treename = "tree";
-   FileRAII fileGuard{"RDFSnapshotRNTuple_disallow_from_ttree_jitted.root"};
-
-   WriteTestTree(treename, fileGuard.GetPath());
-
-   auto df = ROOT::RDataFrame(treename, fileGuard.GetPath());
-
-   RSnapshotOptions opts;
-   opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
-
-   try {
-      auto sdf = df.Define("x", [] { return 10; }).Snapshot("ntuple", fileGuard.GetPath(), {"pt", "x"}, opts);
-      FAIL() << "snapshotting from RNTuple to TTree is not (yet) possible";
-   } catch (const std::runtime_error &err) {
-      EXPECT_STREQ(err.what(), "Snapshotting from TTree to RNTuple is not yet supported. The current recommended way "
-                               "to convert TTrees to RNTuple is through the RNTupleImporter.");
-   }
+   TestFromTTree("RDFSnapshotRNTuple_from_ttree_novec2rvec.root", /*vector2RVec=*/false);
 }
 
 #ifdef R__USE_IMT

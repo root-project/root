@@ -479,7 +479,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                   // Not a class name, nothing to do.
                } else if ((stlType = TClassEdit::IsSTLCont(incName))) {
                   const char *what = "";
-                  switch (TMath::Abs(stlType))  {
+                  switch (std::abs(stlType))  {
                      case ROOT::kSTLvector:
                         what = "vector";
                         break;
@@ -573,26 +573,24 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
       std::vector<std::string> inside;
       int nestedLoc;
       TClassEdit::GetSplit( clname, inside, nestedLoc, TClassEdit::kLong64 );
-      Int_t stlkind =  TClassEdit::STLKind(inside[0]);
+      auto stlkind = TClassEdit::STLKind(inside[0]);
       TClass *key = TClass::GetClass(inside[1].c_str());
       if (key) {
          TString what;
-         switch (stlkind)  {
-            case ROOT::kSTLmap:
-            case ROOT::kSTLmultimap: {
-                  what = "pair<";
-                  what += UpdateAssociativeToVector( inside[1].c_str() );
-                  what += ",";
-                  what += UpdateAssociativeToVector( inside[2].c_str() );
-                  what += " >";
-                  what.ReplaceAll("std::","");
-                  // Only ask for it if needed.
-                  TClass *paircl = TClass::GetClass(what.Data());
-                  if (paircl == 0 || !paircl->HasInterpreterInfo()) {
-                     AddUniqueStatement(fp, TString::Format("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n", what.Data()), inclist);
-                  }
-                  break;
-               }
+         if (stlkind == ROOT::kSTLmap || stlkind == ROOT::kSTLmultimap) {
+            what = "pair<";
+            what += UpdateAssociativeToVector(inside[1].c_str());
+            what += ",";
+            what += UpdateAssociativeToVector(inside[2].c_str());
+            what += " >";
+            what.ReplaceAll("std::", "");
+            // Only ask for it if needed.
+            TClass *paircl = TClass::GetClass(what.Data());
+            if (paircl == 0 || !paircl->HasInterpreterInfo()) {
+               AddUniqueStatement(
+                  fp, TString::Format("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n", what.Data()),
+                  inclist);
+            }
          }
       }
    }
@@ -615,7 +613,7 @@ void TMakeProject::GeneratePostDeclaration(FILE *fp, const TVirtualStreamerInfo 
          std::vector<std::string> inside;
          int nestedLoc;
          TClassEdit::GetSplit( element->GetTypeName(), inside, nestedLoc, TClassEdit::kLong64 );
-         Int_t stlkind =  TClassEdit::STLKind(inside[0]);
+         auto stlkind = TClassEdit::STLKind(inside[0]);
          TClass *key = TClass::GetClass(inside[1].c_str());
          TString what;
          if (TClassEdit::IsStdPair(inside[1])) {
@@ -669,7 +667,7 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
       int nestedLoc;
       unsigned int narg = TClassEdit::GetSplit( name, inside, nestedLoc, TClassEdit::kLong64 );
 
-      Int_t stlkind =  TMath::Abs(TClassEdit::STLKind(inside[0]));
+      auto stlkind = TClassEdit::STLKind(inside[0]);
 
       for(unsigned int i = 1; i<narg; ++i) {
          inside[i] = UpdateAssociativeToVector( inside[i].c_str() );
@@ -714,12 +712,15 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
                --narg;
             }
             break;
+         default:
+            // No default allocators for other STL types.
+            break;
       }
       if (stlkind!=0) {
          TClass *key = TClass::GetClass(inside[1].c_str());
 
          if (key) {
-            // We only need to translate to a vector is the key is a class
+            // We only need to translate to a vector if the key is a class
             // (for which we do not know the sorting).
             std::string what;
             switch ( stlkind )  {
@@ -747,6 +748,9 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
                case ROOT::kSTLmultiset:
                case ROOT::kSTLunorderedmultiset:
                   inside[0] = "std::vector";
+                  break;
+               default:
+                  // Nothing.
                   break;
             }
          }

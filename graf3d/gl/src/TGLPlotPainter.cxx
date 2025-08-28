@@ -243,7 +243,7 @@ void TGLPlotPainter::PrintPlot()const
 
    Int_t gl2psFormat = GL2PS_EPS;
    Int_t gl2psSort   = GL2PS_BSP_SORT;
-   Int_t buffsize    = 0;
+   Int_t bufsize    = 0;
    Int_t state       = GL2PS_OVERFLOW;
    GLint gl2psoption = GL2PS_USE_CURRENT_VIEWPORT |
                        GL2PS_SILENT               |
@@ -252,11 +252,11 @@ void TGLPlotPainter::PrintPlot()const
                        0;
 
    while (state == GL2PS_OVERFLOW) {
-      buffsize += 1024*1024;
+      bufsize += 1024*1024;
       gl2psBeginPage ("ROOT Scene Graph", "ROOT", nullptr,
                       gl2psFormat, gl2psSort, gl2psoption,
                       GL_RGBA, 0, nullptr,0, 0, 0,
-                      buffsize, output, nullptr);
+                      bufsize, output, nullptr);
       DrawPlot();
       state = gl2psEndPage();
    }

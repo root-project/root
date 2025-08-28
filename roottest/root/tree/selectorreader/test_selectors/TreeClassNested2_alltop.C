@@ -1,6 +1,6 @@
 #define TreeClassNested2_alltop_cxx
 
-#include "../generated_selectors/TreeClassNested2_alltop.h"
+#include "generated_selectors/TreeClassNested2_alltop.h"
 #include <TH2.h>
 #include <TStyle.h>
 

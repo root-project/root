@@ -1225,7 +1225,7 @@ RooPlot* RooAbsData::statOn(RooPlot* frame, const char* what, const char *label,
   // create the box and set its options
   TPaveText *box= new TPaveText(xmin,ymax,xmax,ymin,"BRNDC");
   if(!box) return nullptr;
-  box->SetName(Form("%s_statBox",GetName())) ;
+  box->SetName((std::string{GetName()} + "_statBox").c_str());
   box->SetFillColor(0);
   box->SetBorderSize(1);
   box->SetTextAlign(12);
@@ -2010,7 +2010,7 @@ RooPlot* RooAbsData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asym
 
   // convert this histogram to a RooHist object on the heap
   RooHist *graph= new RooHist(*hist1,*hist2,0,1,o.etype,o.xErrorSize,false,o.scaleFactor);
-  graph->setYAxisLabel(Form("Asymmetry in %s",asymCat.GetName())) ;
+  graph->setYAxisLabel((std::string{"Asymmetry in "} + asymCat.GetName()).c_str());
 
   // initialize the frame's normalization setup, if necessary
   frame->updateNormVars(_vars);
@@ -2019,14 +2019,15 @@ RooPlot* RooAbsData::plotAsymOn(RooPlot* frame, const RooAbsCategoryLValue& asym
   if (o.histName) {
     graph->SetName(o.histName) ;
   } else {
-    std::string hname{Form("h_%s_Asym[%s]",GetName(),asymCat.GetName())};
-    if (o.cutRange && strlen(o.cutRange)>0) {
-      hname += Form("_CutRange[%s]",o.cutRange);
+     std::stringstream hname;
+     hname << "h_" << GetName() << "_Asym[" << asymCat.GetName() << "]";
+     if (o.cutRange && strlen(o.cutRange) > 0) {
+        hname << "_CutRange[" << o.cutRange << "]";
     }
     if (o.cuts && strlen(o.cuts)>0) {
-      hname += Form("_Cut[%s]",o.cuts);
+       hname << "_Cut[" << o.cuts << "]";
     }
-    graph->SetName(hname.c_str()) ;
+    graph->SetName(hname.str().c_str());
   }
 
   // add the RooHist to the specified plot

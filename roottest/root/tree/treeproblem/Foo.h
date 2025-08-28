@@ -7,23 +7,22 @@
 //
 #ifndef TREEPROBLEM_Foo
 #define TREEPROBLEM_Foo
-#ifndef ROOT_TObject
+
 #include "TObject.h"
-#endif
 
 class Foo : public TObject
 {
 private:
-  Int_t fFoo; 
+  Int_t fFoo;
 public:
-  Foo()  : fFoo(0) {}
+  Foo() : fFoo(0) {}
   Foo(Int_t foo) : fFoo(foo) {}
-  Foo(const Foo& foo) { fFoo = foo.GetFoo(); }
+  Foo(const Foo& foo) : TObject(foo) { fFoo = foo.GetFoo(); }
   ~Foo() override {}
 
-  void  SetFoo(Int_t foo=0) { fFoo = foo; }
+  void  SetFoo(Int_t foo = 0) { fFoo = foo; }
   Int_t GetFoo() const { return fFoo; }
-  void  Print(Option_t* option="") const override;
+  void  Print(Option_t * = "") const override;
 
   ClassDefOverride(Foo,1) // DOCUMENT ME
 };

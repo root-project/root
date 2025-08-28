@@ -24,6 +24,7 @@ Implement TBuffer for a SQL backend.
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <limits>
 
 ClassImp(TBufferSQL);
 
@@ -41,9 +42,9 @@ TBufferSQL::TBufferSQL(TBuffer::EMode mode, std::vector<Int_t> *vc,
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc,
+TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsize, std::vector<Int_t> *vc,
                        TString *insert_query, TSQLRow ** r) :
-   TBufferFile(mode,bufsiz),
+   TBufferFile(mode,bufsize),
    fColumnVec(vc), fInsertQuery(insert_query), fRowPtr(r)
 {
    fIter = fColumnVec->begin();
@@ -52,10 +53,10 @@ TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc,
+TBufferSQL::TBufferSQL(TBuffer::EMode mode, Int_t bufsize, std::vector<Int_t> *vc,
                        TString *insert_query, TSQLRow ** r,
                        void *buf, bool adopt) :
-   TBufferFile(mode,bufsiz,buf,adopt),
+   TBufferFile(mode,bufsize,buf,adopt),
    fColumnVec(vc), fInsertQuery(insert_query), fRowPtr(r)
 {
    fIter = fColumnVec->begin();

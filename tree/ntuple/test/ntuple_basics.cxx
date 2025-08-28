@@ -734,7 +734,12 @@ TEST(RNTuple, FillBytesWritten)
    *fieldStr = "abc";
    // A 32bit integer + "abc" literal + one 64bit integer for each index column
    EXPECT_EQ(7U + (3 * sizeof(std::uint64_t)), ntuple->Fill());
-   *fieldBoolVec = {true, false, true};
+   // For the bool vector, we can't assign an initializer list. It would lead
+   // to memory copy routines trying to operate on the packed bits that are
+   // particular to vector<bool> - resulting in invalid offset warnings.
+   for (bool b : {true, false, true}) {
+      fieldBoolVec->push_back(b);
+   }
    *fieldFloatVec = {42.0f, 1.1f};
    // A 32bit integer + "abc" literal + one 64bit integer for each index column + 3 bools + 2 floats
    EXPECT_EQ(18U + (3 * sizeof(std::uint64_t)), ntuple->Fill());
@@ -752,6 +757,14 @@ TEST(RNTuple, RValue)
    auto p = v3.GetPtr<void>();
    v3.EmplaceNew();
    EXPECT_NE(p.get(), v3.GetPtr<void>().get());
+
+   // The templated API checks the type.
+   EXPECT_THROW(v1.GetPtr<float>(), ROOT::RException);
+   EXPECT_THROW(v1.GetRef<float>(), ROOT::RException);
+   EXPECT_THROW(v2.GetPtr<std::vector<char>>(), ROOT::RException);
+   EXPECT_THROW(v2.GetRef<std::vector<char>>(), ROOT::RException);
+   EXPECT_THROW(v3.GetPtr<std::variant<float>>(), ROOT::RException);
+   EXPECT_THROW(v3.GetRef<std::variant<float>>(), ROOT::RException);
 
    // Destruct fields to check if the deleters work without the fields
    f1 = nullptr;

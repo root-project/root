@@ -322,7 +322,7 @@ xRooNode::xRooNode(const char *name, const std::shared_ptr<TObject> &comp, const
    if (auto _ws = get<RooWorkspace>(); _ws && (!parent || parent->get<TFile>())) {
       RooMsgService::instance()
          .getStream(RooFit::INFO)
-         .removeTopic(RooFit::NumIntegration); // stop info message every time
+         .removeTopic(RooFit::NumericIntegration); // stop info message every time
 
       // check if any of the open files have version numbers greater than our major version
       // may not read correctly

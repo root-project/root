@@ -19,7 +19,7 @@
 #endif
 
 #include <ROOT/RFieldBase.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 
 #include <TVirtualCollectionProxy.h>
 
@@ -265,7 +265,7 @@ struct IsCollectionProxy : HasCollectionProxyMemberType<T> {
 template <typename T>
 class RField<T, typename std::enable_if<IsCollectionProxy<T>::value>::type> final : public RProxiedCollectionField {
 public:
-   static std::string TypeName() { return ROOT::Internal::GetRenormalizedDemangledTypeName(typeid(T)); }
+   static std::string TypeName() { return ROOT::Internal::GetRenormalizedTypeName(typeid(T)); }
    RField(std::string_view name) : RProxiedCollectionField(name, TypeName())
    {
       static_assert(std::is_class<T>::value, "collection proxy unsupported for fundamental types");

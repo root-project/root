@@ -75,6 +75,8 @@ for (auto br : TRangeDynCast<TBranch>( tree->GetListOfBranches() )) {
 #include "TError.h"
 #include "TSystem.h"
 #include "TObjArray.h"
+#include "TMathBase.h"
+
 #include <iostream>
 #include <sstream>
 
@@ -676,17 +678,17 @@ void TCollection::Streamer(TBuffer &b)
 /// objects using a single key specify a name and set option to
 /// TObject::kSingleKey (i.e. 1).
 
-Int_t TCollection::Write(const char *name, Int_t option, Int_t bsize) const
+Int_t TCollection::Write(const char *name, Int_t option, Int_t bufsize) const
 {
    if ((option & kSingleKey)) {
-      return TObject::Write(name, option, bsize);
+      return TObject::Write(name, option, bufsize);
    } else {
       option &= ~kSingleKey;
       Int_t nbytes = 0;
       TIter next(this);
       TObject *obj;
       while ((obj = next())) {
-         nbytes += obj->Write(name, option, bsize);
+         nbytes += obj->Write(name, option, bufsize);
       }
       return nbytes;
    }
@@ -700,9 +702,9 @@ Int_t TCollection::Write(const char *name, Int_t option, Int_t bsize) const
 /// objects using a single key specify a name and set option to
 /// TObject::kSingleKey (i.e. 1).
 
-Int_t TCollection::Write(const char *name, Int_t option, Int_t bsize)
+Int_t TCollection::Write(const char *name, Int_t option, Int_t bufsize)
 {
-   return ((const TCollection*)this)->Write(name,option,bsize);
+   return ((const TCollection*)this)->Write(name,option,bufsize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

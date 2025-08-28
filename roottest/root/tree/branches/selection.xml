@@ -1,0 +1,5 @@
+<rootdict>
+   <class name="BaseABC"/>
+   <class name="Derived"/>
+   <class name="Holder"/>
+</rootdict>

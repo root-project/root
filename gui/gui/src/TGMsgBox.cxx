@@ -142,91 +142,91 @@ void TGMsgBox::PMsgBox(const char *title, const char *msg,
       fYes = new TGTextButton(fButtonFrame, new TGHotString("&Yes"), kMBYes);
       fYes->Associate(this);
       fButtonFrame->AddFrame(fYes, fL1);
-      width = TMath::Max(width, fYes->GetDefaultWidth()); ++nb;
+      width = std::max(width, fYes->GetDefaultWidth()); ++nb;
    }
 
    if (buttons & kMBNo) {
       fNo = new TGTextButton(fButtonFrame, new TGHotString("&No"), kMBNo);
       fNo->Associate(this);
       fButtonFrame->AddFrame(fNo, fL1);
-      width = TMath::Max(width, fNo->GetDefaultWidth()); ++nb;
+      width = std::max(width, fNo->GetDefaultWidth()); ++nb;
    }
 
    if (buttons & kMBOk) {
       fOK = new TGTextButton(fButtonFrame, new TGHotString("&OK"), kMBOk);
       fOK->Associate(this);
       fButtonFrame->AddFrame(fOK, fL1);
-      width = TMath::Max(width, fOK->GetDefaultWidth()); ++nb;
+      width = std::max(width, fOK->GetDefaultWidth()); ++nb;
    }
 
    if (buttons & kMBApply) {
       fApply = new TGTextButton(fButtonFrame, new TGHotString("&Apply"), kMBApply);
       fApply->Associate(this);
       fButtonFrame->AddFrame(fApply, fL1);
-      width = TMath::Max(width, fApply->GetDefaultWidth()); ++nb;
+      width = std::max(width, fApply->GetDefaultWidth()); ++nb;
    }
 
    if (buttons & kMBRetry) {
       fRetry = new TGTextButton(fButtonFrame, new TGHotString("&Retry"), kMBRetry);
       fRetry->Associate(this);
       fButtonFrame->AddFrame(fRetry, fL1);
-      width = TMath::Max(width, fRetry->GetDefaultWidth()); ++nb;
+      width = std::max(width, fRetry->GetDefaultWidth()); ++nb;
    }
 
    if (buttons & kMBIgnore) {
       fIgnore = new TGTextButton(fButtonFrame, new TGHotString("&Ignore"), kMBIgnore);
       fIgnore->Associate(this);
       fButtonFrame->AddFrame(fIgnore, fL1);
-      width = TMath::Max(width, fIgnore->GetDefaultWidth()); ++nb;
+      width = std::max(width, fIgnore->GetDefaultWidth()); ++nb;
    }
 
    if (buttons & kMBCancel) {
       fCancel = new TGTextButton(fButtonFrame, new TGHotString("&Cancel"), kMBCancel);
       fCancel->Associate(this);
       fButtonFrame->AddFrame(fCancel, fL1);
-      width = TMath::Max(width, fCancel->GetDefaultWidth()); ++nb;
+      width = std::max(width, fCancel->GetDefaultWidth()); ++nb;
    }
 
    if (buttons & kMBClose) {
       fClose = new TGTextButton(fButtonFrame, new TGHotString("C&lose"), kMBClose);
       fClose->Associate(this);
       fButtonFrame->AddFrame(fClose, fL1);
-      width = TMath::Max(width, fClose->GetDefaultWidth()); ++nb;
+      width = std::max(width, fClose->GetDefaultWidth()); ++nb;
    }
 
    if (buttons & kMBYesAll) {
       fYesAll = new TGTextButton(fButtonFrame, new TGHotString("Y&es to All"), kMBYesAll);
       fYesAll->Associate(this);
       fButtonFrame->AddFrame(fYesAll, fL1);
-      width = TMath::Max(width, fYesAll->GetDefaultWidth()); ++nb;
+      width = std::max(width, fYesAll->GetDefaultWidth()); ++nb;
    }
 
    if (buttons & kMBNoAll) {
       fNoAll = new TGTextButton(fButtonFrame, new TGHotString("No &to All"), kMBNoAll);
       fNoAll->Associate(this);
       fButtonFrame->AddFrame(fNoAll, fL1);
-      width = TMath::Max(width, fNoAll->GetDefaultWidth()); ++nb;
+      width = std::max(width, fNoAll->GetDefaultWidth()); ++nb;
    }
 
    if (buttons & kMBNewer) {
       fNewer = new TGTextButton(fButtonFrame, new TGHotString("Ne&wer Only"), kMBNewer);
       fNewer->Associate(this);
       fButtonFrame->AddFrame(fNewer, fL1);
-      width = TMath::Max(width, fNewer->GetDefaultWidth()); ++nb;
+      width = std::max(width, fNewer->GetDefaultWidth()); ++nb;
    }
 
    if (buttons & kMBAppend) {
       fAppend = new TGTextButton(fButtonFrame, new TGHotString("A&ppend"), kMBAppend);
       fAppend->Associate(this);
       fButtonFrame->AddFrame(fAppend, fL1);
-      width = TMath::Max(width, fAppend->GetDefaultWidth()); ++nb;
+      width = std::max(width, fAppend->GetDefaultWidth()); ++nb;
    }
 
    if (buttons & kMBDismiss) {
       fDismiss = new TGTextButton(fButtonFrame, new TGHotString("&Dismiss"), kMBDismiss);
       fDismiss->Associate(this);
       fButtonFrame->AddFrame(fDismiss, fL1);
-      width = TMath::Max(width, fDismiss->GetDefaultWidth()); ++nb;
+      width = std::max(width, fDismiss->GetDefaultWidth()); ++nb;
    }
 
    // place buttons at the bottom

@@ -84,7 +84,7 @@ void TMVA::paracoor(TString dataset, TString fin , Bool_t useTMVAStyle )
 
          para->AddSelection("-1");
 
-         for (Int_t ivar=1; ivar<TMath::Min(Int_t(vars.size()) + 1,3); ivar++) {
+         for (Int_t ivar=1; ivar<std::min(Int_t(vars.size()) + 1,3); ivar++) {
             TParallelCoordVar* var = (TParallelCoordVar*)para->GetVarList()->FindObject( vars[ivar] );
             minrange = tree->GetMinimum( var->GetName() );
             maxrange = tree->GetMaximum( var->GetName() );

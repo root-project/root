@@ -18,6 +18,7 @@
 #include <ROOT/RFieldBase.hxx>
 #include <ROOT/RFieldUtils.hxx>
 #include <ROOT/RFieldVisitor.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RSpan.hxx>
 
 #include <TBaseClass.h>
@@ -329,7 +330,7 @@ ROOT::DescriptorId_t ROOT::RClassField::LookupMember(const ROOT::RNTupleDescript
 void ROOT::RClassField::SetStagingClass(const std::string &className, unsigned int classVersion)
 {
    TClass::GetClass(className.c_str())->GetStreamerInfo(classVersion);
-   if (classVersion != GetTypeVersion()) {
+   if (classVersion != GetTypeVersion() || className != GetTypeName()) {
       fStagingClass = TClass::GetClass((className + std::string("@@") + std::to_string(classVersion)).c_str());
       if (!fStagingClass) {
          // For a rename rule, we may simply ask for the old class name
@@ -428,11 +429,17 @@ void ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pag
 
       rules = FindRules(&fieldDesc);
 
-      // If the field's type name is not the on-disk name but we found a rule, we know it is valid to read
-      // on-disk data because we found the rule according to the on-disk (source) type name and version/checksum.
-      if ((GetTypeName() != fieldDesc.GetTypeName()) && rules.empty()) {
-         throw RException(R__FAIL("incompatible type name for field " + GetFieldName() + ": " + GetTypeName() +
-                                  " vs. " + fieldDesc.GetTypeName()));
+      // If we found a rule, we know it is valid to read on-disk data because we found the rule according to the on-disk
+      // (source) type name and version/checksum.
+      if (rules.empty()) {
+         // Otherwise we require compatible type names, after renormalization. GetTypeName() is already renormalized,
+         // but RNTuple data written with ROOT v6.34 might not have renormalized the field type name. Ask the
+         // RNTupleDescriptor, which knows about the spec version, for a fixed up type name.
+         std::string descTypeName = desc.GetTypeNameForComparison(fieldDesc);
+         if (GetTypeName() != descTypeName) {
+            throw RException(R__FAIL("incompatible type name for field " + GetFieldName() + ": " + GetTypeName() +
+                                     " vs. " + descTypeName));
+         }
       }
 
       if (!rules.empty()) {
@@ -517,7 +524,7 @@ ROOT::REnumField::REnumField(std::string_view fieldName, std::string_view enumNa
 }
 
 ROOT::REnumField::REnumField(std::string_view fieldName, TEnum *enump)
-   : ROOT::RFieldBase(fieldName, GetRenormalizedTypeName(enump->GetQualifiedName()), ROOT::ENTupleStructure::kLeaf,
+   : ROOT::RFieldBase(fieldName, GetRenormalizedTypeName(enump->GetQualifiedName()), ROOT::ENTupleStructure::kPlain,
                       false /* isSimple */)
 {
    // Avoid accidentally supporting std types through TEnum.
@@ -526,16 +533,16 @@ ROOT::REnumField::REnumField(std::string_view fieldName, TEnum *enump)
    }
 
    switch (enump->GetUnderlyingType()) {
-   case kChar_t: Attach(std::make_unique<RField<int8_t>>("_0")); break;
-   case kUChar_t: Attach(std::make_unique<RField<uint8_t>>("_0")); break;
-   case kShort_t: Attach(std::make_unique<RField<int16_t>>("_0")); break;
-   case kUShort_t: Attach(std::make_unique<RField<uint16_t>>("_0")); break;
-   case kInt_t: Attach(std::make_unique<RField<int32_t>>("_0")); break;
-   case kUInt_t: Attach(std::make_unique<RField<uint32_t>>("_0")); break;
-   case kLong_t:
-   case kLong64_t: Attach(std::make_unique<RField<int64_t>>("_0")); break;
-   case kULong_t:
-   case kULong64_t: Attach(std::make_unique<RField<uint64_t>>("_0")); break;
+   case kChar_t: Attach(std::make_unique<RField<Char_t>>("_0")); break;
+   case kUChar_t: Attach(std::make_unique<RField<UChar_t>>("_0")); break;
+   case kShort_t: Attach(std::make_unique<RField<Short_t>>("_0")); break;
+   case kUShort_t: Attach(std::make_unique<RField<UShort_t>>("_0")); break;
+   case kInt_t: Attach(std::make_unique<RField<Int_t>>("_0")); break;
+   case kUInt_t: Attach(std::make_unique<RField<UInt_t>>("_0")); break;
+   case kLong_t: Attach(std::make_unique<RField<Long_t>>("_0")); break;
+   case kLong64_t: Attach(std::make_unique<RField<Long64_t>>("_0")); break;
+   case kULong_t: Attach(std::make_unique<RField<ULong_t>>("_0")); break;
+   case kULong64_t: Attach(std::make_unique<RField<ULong64_t>>("_0")); break;
    default: throw RException(R__FAIL("Unsupported underlying integral type for enum type " + GetTypeName()));
    }
 
@@ -544,7 +551,7 @@ ROOT::REnumField::REnumField(std::string_view fieldName, TEnum *enump)
 
 ROOT::REnumField::REnumField(std::string_view fieldName, std::string_view enumName,
                              std::unique_ptr<RFieldBase> intField)
-   : ROOT::RFieldBase(fieldName, enumName, ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
+   : ROOT::RFieldBase(fieldName, enumName, ROOT::ENTupleStructure::kPlain, false /* isSimple */)
 {
    Attach(std::move(intField));
    fTraits |= kTraitTriviallyConstructible | kTraitTriviallyDestructible;
@@ -634,10 +641,6 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
    fCollectionType = fProxy->GetCollectionType();
    if (fProxy->HasPointers())
       throw RException(R__FAIL("collection proxies whose value type is a pointer are not supported"));
-   if (!fProxy->GetCollectionClass()->HasDictionary()) {
-      throw RException(R__FAIL("dictionary not available for type " +
-                               GetRenormalizedTypeName(fProxy->GetCollectionClass()->GetName())));
-   }
 
    fIFuncsRead = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), true /* readFromDisk */);
    fIFuncsWrite = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), false /* readFromDisk */);
@@ -665,19 +668,19 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
       itemField = RFieldBase::Create("_0", valueClass->GetName()).Unwrap();
    } else {
       switch (fProxy->GetType()) {
-      case EDataType::kChar_t: itemField = std::make_unique<RField<char>>("_0"); break;
-      case EDataType::kUChar_t: itemField = std::make_unique<RField<std::uint8_t>>("_0"); break;
-      case EDataType::kShort_t: itemField = std::make_unique<RField<std::int16_t>>("_0"); break;
-      case EDataType::kUShort_t: itemField = std::make_unique<RField<std::uint16_t>>("_0"); break;
-      case EDataType::kInt_t: itemField = std::make_unique<RField<std::int32_t>>("_0"); break;
-      case EDataType::kUInt_t: itemField = std::make_unique<RField<std::uint32_t>>("_0"); break;
-      case EDataType::kLong_t:
-      case EDataType::kLong64_t: itemField = std::make_unique<RField<std::int64_t>>("_0"); break;
-      case EDataType::kULong_t:
-      case EDataType::kULong64_t: itemField = std::make_unique<RField<std::uint64_t>>("_0"); break;
-      case EDataType::kFloat_t: itemField = std::make_unique<RField<float>>("_0"); break;
-      case EDataType::kDouble_t: itemField = std::make_unique<RField<double>>("_0"); break;
-      case EDataType::kBool_t: itemField = std::make_unique<RField<bool>>("_0"); break;
+      case EDataType::kChar_t: itemField = std::make_unique<RField<Char_t>>("_0"); break;
+      case EDataType::kUChar_t: itemField = std::make_unique<RField<UChar_t>>("_0"); break;
+      case EDataType::kShort_t: itemField = std::make_unique<RField<Short_t>>("_0"); break;
+      case EDataType::kUShort_t: itemField = std::make_unique<RField<UShort_t>>("_0"); break;
+      case EDataType::kInt_t: itemField = std::make_unique<RField<Int_t>>("_0"); break;
+      case EDataType::kUInt_t: itemField = std::make_unique<RField<UInt_t>>("_0"); break;
+      case EDataType::kLong_t: itemField = std::make_unique<RField<Long_t>>("_0"); break;
+      case EDataType::kLong64_t: itemField = std::make_unique<RField<Long64_t>>("_0"); break;
+      case EDataType::kULong_t: itemField = std::make_unique<RField<ULong_t>>("_0"); break;
+      case EDataType::kULong64_t: itemField = std::make_unique<RField<ULong64_t>>("_0"); break;
+      case EDataType::kFloat_t: itemField = std::make_unique<RField<Float_t>>("_0"); break;
+      case EDataType::kDouble_t: itemField = std::make_unique<RField<Double_t>>("_0"); break;
+      case EDataType::kBool_t: itemField = std::make_unique<RField<Bool_t>>("_0"); break;
       default: throw RException(R__FAIL("unsupported value type"));
       }
    }
@@ -825,8 +828,8 @@ private:
    RCallbackStreamerInfo fCallbackStreamerInfo;
 
 public:
-   TBufferRecStreamer(TBuffer::EMode mode, Int_t bufsiz, RCallbackStreamerInfo callbackStreamerInfo)
-      : TBufferFile(mode, bufsiz), fCallbackStreamerInfo(callbackStreamerInfo)
+   TBufferRecStreamer(TBuffer::EMode mode, Int_t bufsize, RCallbackStreamerInfo callbackStreamerInfo)
+      : TBufferFile(mode, bufsize), fCallbackStreamerInfo(callbackStreamerInfo)
    {
    }
    void TagStreamerInfo(TVirtualStreamerInfo *info) final { fCallbackStreamerInfo(info); }

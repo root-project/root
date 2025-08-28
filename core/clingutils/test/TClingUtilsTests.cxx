@@ -15,15 +15,18 @@
  *************************************************************************/
 
 #include <TClingUtils.h>
-#include <TClass.h>
-#include <TInterpreter.h>
 
+// This test must under no circumstances include other ROOT headers. It must not call into Cling, TInterpreter, TClass.
+// It is meant for unit testing of TClingUtils and statically links ClingUtils and Cling/Clang/LLVM libraries. If the
+// test was to do any of the above, there would be two copies of functions around (in libCling.so and the test binary)
+// with not much guarantees which ones are called at which moment.
+
+#include <DllImport.h>
 #include <ROOT/FoundationUtils.hxx>
 
 #include "gtest/gtest.h"
 
 #include <fstream>
-#include <deque>
 
 TEST(TClingUtilsTests, GetCppName)
 {
@@ -89,24 +92,12 @@ TEST(TClingUtilsTests, GetRealPath)
 #endif // not R__WIN32
 }
 
-TEST(TClingUtilsTests, CollectionSizeof)
-{
-   // https://its.cern.ch/jira/browse/ROOT-9889
-   EXPECT_EQ(sizeof(std::deque<short>), TClass::GetClass("std::deque<short>")->GetClassSize());
-   EXPECT_EQ(sizeof(std::deque<unsigned short>), TClass::GetClass("std::deque<unsigned short>")->GetClassSize());
-   EXPECT_EQ(sizeof(std::deque<int>), TClass::GetClass("std::deque<int>")->GetClassSize());
-   EXPECT_EQ(sizeof(std::deque<unsigned int>), TClass::GetClass("std::deque<unsigned int>")->GetClassSize());
-   EXPECT_EQ(sizeof(std::deque<long>), TClass::GetClass("std::deque<long>")->GetClassSize());
-   EXPECT_EQ(sizeof(std::deque<unsigned long>), TClass::GetClass("std::deque<unsigned long>")->GetClassSize());
-}
+// Forward-declare gCling to not include TInterpreter.h just for checking that the interpreter has not been initialized.
+class TInterpreter;
+R__EXTERN TInterpreter *gCling;
 
-TEST(TClingUtilsTests, ReSubstTemplateArg)
-{
-   // #18811
-   gInterpreter->Declare("template <typename T> struct S {};"
-                         "template <typename T1, typename T2> struct Two { using value_type = S<T2>; };"
-                         "template <typename T> struct One { Two<int, int>::value_type *t; };");
+class InterpreterCheck : public testing::Environment {
+   void TearDown() override { ASSERT_EQ(gCling, nullptr); }
+};
 
-   auto c = TClass::GetClass("One<std::string>");
-   c->BuildRealData();
-}
+testing::Environment *gInterpreterCheck = testing::AddGlobalTestEnvironment(new InterpreterCheck);

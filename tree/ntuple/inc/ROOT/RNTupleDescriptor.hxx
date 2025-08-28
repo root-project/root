@@ -18,7 +18,7 @@
 #include <ROOT/RCreateFieldOptions.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RSpan.hxx>
 
 #include <TError.h>
@@ -59,6 +59,12 @@ class RFieldDescriptorBuilder;
 class RNTupleDescriptorBuilder;
 
 RNTupleDescriptor CloneDescriptorSchema(const RNTupleDescriptor &desc);
+struct RNTupleClusterBoundaries {
+   ROOT::NTupleSize_t fFirstEntry = kInvalidNTupleIndex;
+   ROOT::NTupleSize_t fLastEntryPlusOne = kInvalidNTupleIndex;
+};
+
+std::vector<ROOT::Internal::RNTupleClusterBoundaries> GetClusterBoundaries(const RNTupleDescriptor &desc);
 } // namespace Internal
 
 // clang-format off
@@ -657,6 +663,11 @@ private:
    //// All fields above are part of the schema and are cloned when creating a new descriptor from a given one
    //// (see CloneSchema())
 
+   std::uint16_t fVersionEpoch = 0; ///< Set by the descriptor builder when deserialized
+   std::uint16_t fVersionMajor = 0; ///< Set by the descriptor builder when deserialized
+   std::uint16_t fVersionMinor = 0; ///< Set by the descriptor builder when deserialized
+   std::uint16_t fVersionPatch = 0; ///< Set by the descriptor builder when deserialized
+
    std::uint64_t fOnDiskHeaderSize = 0;    ///< Set by the descriptor builder when deserialized
    std::uint64_t fOnDiskHeaderXxHash3 = 0; ///< Set by the descriptor builder when deserialized
    std::uint64_t fOnDiskFooterSize = 0; ///< Like fOnDiskHeaderSize, contains both cluster summaries and page locations
@@ -704,9 +715,10 @@ public:
       /// If set to true, projected fields will be reconstructed as such. This will prevent the model to be used
       /// with an RNTupleReader, but it is useful, e.g., to accurately merge data.
       bool fReconstructProjections = false;
+      /// By default, creating a model will fail if any of the reconstructed fields contains an unknown column type
+      /// or an unknown field structural role.
       /// If this option is enabled, the model will be created and all fields containing unknown data (directly
       /// or indirectly) will be skipped instead.
-      /// Normally creating a model will fail if any of the reconstructed fields contains an unknown column type.
       bool fForwardCompatible = false;
       /// If true, the model will be created without a default entry (bare model).
       bool fCreateBare = false;
@@ -816,6 +828,9 @@ public:
    /// Walks up the parents of the field ID and returns a field name of the form a.b.c.d
    /// In case of invalid field ID, an empty string is returned.
    std::string GetQualifiedFieldName(ROOT::DescriptorId_t fieldId) const;
+
+   /// Adjust the type name of the passed RFieldDescriptor for comparison with another renormalized type name.
+   std::string GetTypeNameForComparison(const RFieldDescriptor &fieldDesc) const;
 
    bool HasFeature(unsigned int flag) const { return fFeatureFlags.count(flag) > 0; }
    std::vector<std::uint64_t> GetFeatureFlags() const;
@@ -1527,6 +1542,7 @@ private:
 
 public:
    /// Checks whether invariants hold:
+   /// * RNTuple epoch is valid
    /// * RNTuple name is valid
    /// * Fields have valid parents
    /// * Number of columns is constant across column representations
@@ -1537,6 +1553,10 @@ public:
    /// Copies the "schema" part of `descriptor` into the builder's descriptor.
    /// This resets the builder's descriptor.
    void SetSchemaFromExisting(const RNTupleDescriptor &descriptor);
+
+   void SetVersion(std::uint16_t versionEpoch, std::uint16_t versionMajor, std::uint16_t versionMinor,
+                   std::uint16_t versionPatch);
+   void SetVersionForWriting();
 
    void SetNTuple(const std::string_view name, const std::string_view description);
    void SetFeature(unsigned int flag);

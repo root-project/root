@@ -20,7 +20,8 @@
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleWriteOptionsDaos.hxx>
-#include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleTypes.hxx>
+#include <ROOT/RNTupleUtils.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageAllocator.hxx>
@@ -174,10 +175,8 @@ struct RDaosContainerNTupleLocator {
       }
 
       anchor.Deserialize(buffer.get(), anchorSize).Unwrap();
-      if (anchor.fVersionEpoch != ROOT::RNTuple::kVersionEpoch) {
-         throw ROOT::RException(R__FAIL("unsupported RNTuple epoch version: " + std::to_string(anchor.fVersionEpoch)));
-      }
 
+      builder.SetVersion(anchor.fVersionEpoch, anchor.fVersionMajor, anchor.fVersionMinor, anchor.fVersionPatch);
       builder.SetOnDiskHeaderSize(anchor.fNBytesHeader);
       buffer = MakeUninitArray<unsigned char>(anchor.fLenHeader);
       zipBuffer = MakeUninitArray<unsigned char>(anchor.fNBytesHeader);

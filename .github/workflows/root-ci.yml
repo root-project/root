@@ -373,7 +373,6 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - image: fedora41
           - image: fedora42
             overrides: ["CMAKE_CXX_STANDARD=23"]
           - image: fedora43
@@ -388,6 +387,9 @@ jobs:
           - image: ubuntu2404
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2504
+            overrides: ["CMAKE_CXX_STANDARD=23"]
+          - image: ubuntu2510
+            is_special: true
             overrides: ["CMAKE_CXX_STANDARD=23"]
           - image: debian125
             overrides: ["CMAKE_CXX_STANDARD=20", "dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
@@ -439,6 +441,11 @@ jobs:
       env:
         CONTAINER_IMAGE: "registry.cern.ch/root-ci/${{ matrix.image }}:buildready" #KEEP IN SYNC WITH ABOVE
         CONTAINER_OPTIONS: "--security-opt label=disable --rm ${{ matrix.property == 'gpu' && '--device nvidia.com/gpu=all' || '' }}" #KEEP IN SYNC WITH ABOVE
+
+    env:
+      BUILD_DIR: /github/home/ROOT-CI/build
+      INSTALL_DIR: /github/home/ROOT-CI/install
+      POST_INSTALL_DIR: /github/home/ROOT-CI/PostInstall
 
     steps:
       - name: Configure large ccache
@@ -583,3 +590,31 @@ jobs:
       - name: ccache info (post)
         run: |
           ccache -s || true
+
+      - name: Install
+        run: "cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.INSTALL_DIR }}"
+
+      - name: Build post-install test project
+        run: |
+          cmake -S test/PostInstall/ -B ${{ env.POST_INSTALL_DIR }} -DCMAKE_PREFIX_PATH=${{ env.INSTALL_DIR }};
+          cmake --build ${{ env.POST_INSTALL_DIR }};
+
+      - name: CTest in post-install test project
+        working-directory: ${{ env.POST_INSTALL_DIR }}
+        run: ctest -j $(nproc)
+
+  event_file:
+    # For any event that is not a PR, the CI will always run. In PRs, the CI
+    # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
+    if: |
+        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+        (github.event_name == 'pull_request' && !(contains(github.event.pull_request.title, '[skip-ci]') || contains(github.event.pull_request.title, '[skip ci]')))
+
+    name: "Upload Event Payload"
+    runs-on: ubuntu-latest
+    steps:
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: Event File
+        path: ${{ github.event_path }}

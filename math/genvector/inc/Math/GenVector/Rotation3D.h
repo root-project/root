@@ -356,8 +356,8 @@ public:
       if (i < 3 && j < 3)
          return fM[i + 3 * j];
       else
-         GenVector::Throw("Rotation3D::operator(size_t i, size_t j):\n"
-                          "    indices i and j must range in {0,1,2}");
+         GenVector_Throw("Rotation3D::operator(size_t i, size_t j):\n"
+                         "    indices i and j must range in {0,1,2}");
       return 0.0;
    }
 

@@ -63,7 +63,7 @@ void TOrdCollection::AddAt(TObject *obj, Int_t idx)
    if (idx > fSize) idx = fSize;
 
    if (fGapSize <= 0)
-      SetCapacity(GrowBy(TMath::Max(fCapacity, (int)kMinExpand)));
+      SetCapacity(GrowBy(std::max(fCapacity, (int)kMinExpand)));
 
    if (idx == fGapStart) {
       physIdx = fGapStart;
@@ -352,7 +352,7 @@ TObject *TOrdCollection::RemoveAt(Int_t idx)
    Changed();
 
    if (LowWaterMark()) {
-      Int_t newCapacity = TMath::Max(int(fCapacity / kShrinkFactor), 1);
+      Int_t newCapacity = std::max(int(fCapacity / kShrinkFactor), 1);
       if (fCapacity > newCapacity)
          SetCapacity(newCapacity);
    }

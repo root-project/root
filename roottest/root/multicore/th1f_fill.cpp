@@ -1,6 +1,8 @@
+#include <cmath>
 #include <vector>
 #include <thread>
 #include <map>
+
 #include "TH1F.h"
 #include "TFile.h"
 #include "TNtuple.h"
@@ -8,7 +10,8 @@
 #include "TROOT.h"
 
 void fillHisto(const char* filename, TH1F& histo){
-  printf("Reading file %s\n",filename);
+  // do not print name from thread - it may appear in random order
+  // printf("Reading file %s\n",filename);
   TFile f(filename);
   TNtuple* ntuple;
   f.GetObject("ntuple", ntuple);

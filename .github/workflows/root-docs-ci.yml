@@ -208,7 +208,7 @@ jobs:
       working-directory: ${{ env.DOC_LOCATION }}
       # Because of https://github.com/xrootd/xrootd/issues/2235 , the xrd client can copy
       # only at most 65536 in one go. For this reason, we copy files in batches, dividing
-      # them by extension. Once that is fixed in XRootD, a single command can be used 
+      # them by extension. Once that is fixed in XRootD, a single command can be used
       # instead.
       run: |
         echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}

@@ -451,7 +451,10 @@ public:
    virtual TBranch        *BranchOld(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 1);
    virtual TBranch        *BranchRef();
            void            Browse(TBrowser*) override;
-   virtual Int_t           BuildIndex(const char *majorname, const char *minorname = "0");
+   virtual Int_t           BuildIndex(const char *majorname, const char *minorname = "0", bool long64major = false, bool long64minor = false);
+   /// Build index with only a major formula. Minor formula will be set to "0" ie skip.
+   /// \see TTree::BuildIndex(const char *, const char *, bool, bool)
+           Int_t           BuildIndex(const char *majorname, bool long64major) { return BuildIndex(majorname, "0", long64major, false); } 
    TStreamerInfo          *BuildStreamerInfo(TClass* cl, void *pointer = nullptr, bool canOptimize = true);
    virtual TFile          *ChangeFile(TFile* file);
    virtual TTree          *CloneTree(Long64_t nentries = -1, Option_t* option = "");
@@ -541,7 +544,7 @@ public:
    virtual Long64_t        GetEstimate() const { return fEstimate; }
    virtual Int_t           GetEntry(Long64_t entry, Int_t getall = 0);
            Int_t           GetEvent(Long64_t entry, Int_t getall = 0) { return GetEntry(entry, getall); }
-   virtual Int_t           GetEntryWithIndex(Int_t major, Int_t minor = 0);
+   virtual Int_t           GetEntryWithIndex(Long64_t major, Long64_t minor = 0);
    virtual Long64_t        GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor = 0) const;
    virtual Long64_t        GetEntryNumberWithIndex(Long64_t major, Long64_t minor = 0) const;
    TEventList             *GetEventList() const { return fEventList; }

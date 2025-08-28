@@ -98,7 +98,7 @@ void *ROOT::Internal::gMmallocDesc = nullptr; //is used and set in TMapFile
 
 void TStorage::EnterStat(size_t size, void *p)
 {
-   TStorage::SetMaxBlockSize(TMath::Max(TStorage::GetMaxBlockSize(), size));
+   TStorage::SetMaxBlockSize(std::max(TStorage::GetMaxBlockSize(), size));
 
    if (!gMemStatistics) return;
 

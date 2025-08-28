@@ -19,6 +19,9 @@
 #include <cassert>
 #include <math.h>
 
+namespace ROOT {
+namespace Math {
+
 /// \brief class representing a data point
 ///
 /// This class can be used for describing data points in a high-dimensional space.
@@ -29,10 +32,6 @@
 /// of fields in high dimensions.
 /// Basic functionality for accessing/modifying the coordinates/weight are provided
 /// as well as a comparison method and the basic euclidean metric.
-
-namespace ROOT {
-namespace Math {
-
 template <unsigned int K, typename _val_type = float>
 class TDataPoint {
 public:

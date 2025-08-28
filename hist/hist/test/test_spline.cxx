@@ -6,6 +6,7 @@
 
 #include <fstream>
 #include <string>
+#include <cmath>
 
 class FileDeleterRAII {
    const std::string fFileName;

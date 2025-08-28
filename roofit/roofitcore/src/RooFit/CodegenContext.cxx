@@ -350,6 +350,7 @@ CodegenContext::buildFunction(RooAbsArg const &arg, std::map<RooFit::Detail::Dat
    // Declare the function
    std::stringstream bodyWithSigStrm;
    bodyWithSigStrm << "double " << funcName << "(double* params, double const* obs, double const* xlArr) {\n"
+                   << "constexpr double inf = std::numeric_limits<double>::infinity();\n"
                    << funcBody << "\n}";
    ctx._collectedFunctions.emplace_back(funcName);
    if (!gInterpreter->Declare(bodyWithSigStrm.str().c_str())) {

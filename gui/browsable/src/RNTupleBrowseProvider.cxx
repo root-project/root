@@ -12,6 +12,7 @@
 #include <ROOT/Browsable/RItem.hxx>
 
 #include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleBrowseUtils.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 
 #include "TClass.h"
@@ -36,15 +37,14 @@ using namespace ROOT::Browsable;
 class RFieldElement : public RElement {
 protected:
    std::shared_ptr<ROOT::RNTupleReader> fNtplReader;
-
    std::string fParentName;
-
    ROOT::DescriptorId_t fFieldId;
+   std::string fDisplayName;
 
 public:
    RFieldElement(std::shared_ptr<ROOT::RNTupleReader> ntplReader, const std::string &parent_name,
-                 const ROOT::DescriptorId_t id)
-      : RElement(), fNtplReader(ntplReader), fParentName(parent_name), fFieldId(id)
+                 const ROOT::DescriptorId_t id, const std::string &displayName)
+      : RElement(), fNtplReader(ntplReader), fParentName(parent_name), fFieldId(id), fDisplayName(displayName)
    {
    }
 
@@ -70,7 +70,7 @@ public:
 
    std::unique_ptr<RHolder> GetObject() override
    {
-      return std::make_unique<RFieldHolder>(fNtplReader, fParentName, fFieldId);
+      return std::make_unique<RFieldHolder>(fNtplReader, fParentName, fFieldId, fDisplayName);
    }
 
    EActionKind GetDefaultAction() const override
@@ -153,32 +153,35 @@ public:
 class RFieldsIterator : public RLevelIter {
 
    std::shared_ptr<ROOT::RNTupleReader> fNtplReader;
-   std::vector<ROOT::DescriptorId_t> fFieldIds;
+   std::vector<ROOT::DescriptorId_t> fProvidedFieldIds;
+   std::vector<ROOT::DescriptorId_t> fActualFieldIds;
    std::string fParentName;
    int fCounter{-1};
 
 public:
    RFieldsIterator(std::shared_ptr<ROOT::RNTupleReader> ntplReader, std::vector<ROOT::DescriptorId_t> &&ids,
                    const std::string &parent_name = "")
-      : fNtplReader(ntplReader), fFieldIds(ids), fParentName(parent_name)
+      : fNtplReader(ntplReader), fProvidedFieldIds(ids), fParentName(parent_name)
    {
+      const auto &desc = fNtplReader->GetDescriptor();
+      fActualFieldIds.reserve(fProvidedFieldIds.size());
+      for (auto fid : fProvidedFieldIds) {
+         fActualFieldIds.emplace_back(ROOT::Internal::GetNextBrowsableField(fid, desc));
+      }
    }
 
    ~RFieldsIterator() override = default;
 
-   bool Next() override
-   {
-      return ++fCounter < (int) fFieldIds.size();
-   }
+   bool Next() override { return ++fCounter < (int)fProvidedFieldIds.size(); }
 
    std::string GetItemName() const override
    {
-      return fNtplReader->GetDescriptor().GetFieldDescriptor(fFieldIds[fCounter]).GetFieldName();
+      return fNtplReader->GetDescriptor().GetFieldDescriptor(fProvidedFieldIds[fCounter]).GetFieldName();
    }
 
    bool CanItemHaveChilds() const override
    {
-      auto subrange = fNtplReader->GetDescriptor().GetFieldIterable(fFieldIds[fCounter]);
+      auto subrange = fNtplReader->GetDescriptor().GetFieldIterable(fActualFieldIds[fCounter]);
       return subrange.begin() != subrange.end();
    }
 
@@ -186,12 +189,12 @@ public:
    std::unique_ptr<RItem> CreateItem() override
    {
       int nchilds = 0;
-      for (auto &sub : fNtplReader->GetDescriptor().GetFieldIterable(fFieldIds[fCounter])) {
+      for (auto &sub : fNtplReader->GetDescriptor().GetFieldIterable(fActualFieldIds[fCounter])) {
          (void)sub;
          nchilds++;
       }
 
-      const auto &field = fNtplReader->GetDescriptor().GetFieldDescriptor(fFieldIds[fCounter]);
+      const auto &field = fNtplReader->GetDescriptor().GetFieldDescriptor(fProvidedFieldIds[fCounter]);
 
       auto item =
          std::make_unique<RItem>(field.GetFieldName(), nchilds, nchilds > 0 ? "sap-icon://split" : "sap-icon://e-care");
@@ -203,7 +206,8 @@ public:
 
    std::shared_ptr<RElement> GetElement() override
    {
-      return std::make_shared<RFieldElement>(fNtplReader, fParentName, fFieldIds[fCounter]);
+      const auto name = fNtplReader->GetDescriptor().GetFieldDescriptor(fProvidedFieldIds[fCounter]).GetFieldName();
+      return std::make_shared<RFieldElement>(fNtplReader, fParentName, fActualFieldIds[fCounter], name);
    }
 };
 
@@ -213,14 +217,15 @@ std::unique_ptr<RLevelIter> RFieldElement::GetChildsIter()
    std::vector<ROOT::DescriptorId_t> ids;
    std::string prefix;
 
-   for (auto &f : fNtplReader->GetDescriptor().GetFieldIterable(fFieldId))
+   const auto &desc = fNtplReader->GetDescriptor();
+   for (auto &f : fNtplReader->GetDescriptor().GetFieldIterable(ROOT::Internal::GetNextBrowsableField(fFieldId, desc)))
       ids.emplace_back(f.GetId());
 
    if (ids.size() == 0)
       return nullptr;
 
    prefix = fParentName;
-   const auto &fld = fNtplReader->GetDescriptor().GetFieldDescriptor(fFieldId);
+   const auto &fld = desc.GetFieldDescriptor(fFieldId);
    prefix.append(fld.GetFieldName());
    prefix.append(".");
 

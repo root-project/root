@@ -692,7 +692,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, Op
 /// Same constructor as above (for TFormula based function) but passing an option strings
 ///  available options
 ///  VEC -  vectorize the formula expressions (not possible for lambda based expressions)
-///  NL   - function is not stores in the global list of functions
+///  NL   - function is not stored in the global list of functions
 ///  GL   -  function will be always stored in the global list of functions ,
 ///         independently of the global setting of TF1::DefaultAddToGlobalList
 ///////////////////////////////////////////////////////////////////////////////////
@@ -1029,7 +1029,13 @@ void TF1::Copy(TObject &obj) const
    ((TF1 &)obj).fParMax    = fParMax;
    ((TF1 &)obj).fParent    = fParent;
    ((TF1 &)obj).fSave      = fSave;
-   ((TF1 &)obj).fHistogram = nullptr;
+   if (fHistogram) {
+      auto *h1 = (TH1 *)fHistogram->Clone();
+      h1->SetDirectory(nullptr);
+      ((TF1 &)obj).fHistogram = h1;
+   } else {
+      ((TF1 &)obj).fHistogram = nullptr;
+   }
    ((TF1 &)obj).fMethodCall = nullptr;
    ((TF1 &)obj).fNormalized = fNormalized;
    ((TF1 &)obj).fNormIntegral = fNormIntegral;

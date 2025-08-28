@@ -12,9 +12,6 @@ import importlib
 import os
 import sys
 
-# Prevent cppyy's check for the PCH
-os.environ["CLING_STANDARD_PCH"] = "none"
-
 # Prevent cppyy's check for extra header directory
 os.environ["CPPYY_API_PATH"] = "none"
 
@@ -27,8 +24,9 @@ os.environ["CPPYY_NO_ROOT_FILTER"] = "1"
 # if the ROOT Python module is in $ROOTSYS/bin/ROOT/__init__.py, the libraries
 # are usually in $ROOTSYS/bin.
 if 'win32' in sys.platform:
-    root_module_path = os.path.dirname(__file__) # expected to be $ROOTSYS/bin/ROOT
-    os.add_dll_directory(os.path.dirname(root_module_path)) # expected to be $ROOTSYS/bin
+    root_module_path = os.path.dirname(__file__) # expected to be ${CMAKE_INSTALL_PYTHONDIR}/ROOT
+    root_install_pythondir = os.path.dirname(root_module_path) # expected to be ${CMAKE_INSTALL_PYTHONDIR}
+    os.add_dll_directory(root_install_pythondir)
 
 # Do setup specific to AddressSanitizer environments
 from . import _asan
