@@ -333,8 +333,8 @@ public:
    struct RSealPageConfig {
       const ROOT::Internal::RPage *fPage = nullptr; ///< Input page to be sealed
       const ROOT::Internal::RColumnElementBase *fElement =
-         nullptr;                                   ///< Corresponds to the page's elements, for size calculation etc.
-      std::uint32_t fCompressionSettings = 0;       ///< Compression algorithm and level to apply
+         nullptr;                             ///< Corresponds to the page's elements, for size calculation etc.
+      std::uint32_t fCompressionSettings = 0; ///< Compression algorithm and level to apply
       /// Adds a 8 byte little-endian xxhash3 checksum to the page payload. The buffer has to be large enough to
       /// to store the additional 8 bytes.
       bool fWriteChecksum = true;
@@ -609,9 +609,9 @@ public:
 private:
    ROOT::RNTupleDescriptor fDescriptor;
    mutable std::shared_mutex fDescriptorLock;
-   REntryRange fEntryRange;    ///< Used by the cluster pool to prevent reading beyond the given range
-   bool fHasStructure = false; ///< Set to true once `LoadStructure()` is called
-   bool fIsAttached = false;   ///< Set to true once `Attach()` is called
+   REntryRange fEntryRange;                  ///< Used by the cluster pool to prevent reading beyond the given range
+   bool fHasStructure = false;               ///< Set to true once `LoadStructure()` is called
+   bool fIsAttached = false;                 ///< Set to true once `Attach()` is called
    bool fHasStreamerInfosRegistered = false; ///< Set to true when RegisterStreamerInfos() is called.
 
    /// Remembers the last cluster id from which a page was requested
@@ -822,6 +822,10 @@ public:
    /// Builds the streamer info records from the descriptor's extra type info section. This is necessary when
    /// connecting streamer fields so that emulated classes can be read.
    void RegisterStreamerInfos();
+
+   /// Forces the loading of ROOT StreamerInfo from the underlying file. This currently only has an effect for
+   /// TFile-backed sources.
+   virtual void LoadStreamerInfo() = 0;
 }; // class RPageSource
 
 } // namespace Internal

@@ -88,6 +88,8 @@ public:
    /// If `nbytes > fMaxKeySize` it will perform chunked read from multiple blobs,
    /// whose addresses are listed at the end of the first chunk.
    void ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset);
+   /// Attempts to load the streamer info from the file.
+   void LoadStreamerInfo();
 
    std::uint64_t GetMaxKeySize() const { return fMaxKeySize; }
    /// If the reader is not used to retrieve the anchor, we need to set the max key size manually
