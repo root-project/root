@@ -2038,12 +2038,15 @@ bool RooWorkspace::cd(const char* path)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save this current workspace into given file
+/// @return true if file correctly written, false in case of error
 
 bool RooWorkspace::writeToFile(const char* fileName, bool recreate)
 {
-  TFile f(fileName,recreate?"RECREATE":"UPDATE") ;
-  Write() ;
-  return false ;
+  TFile f(fileName, recreate ? "RECREATE" : "UPDATE");
+  if (f.IsZombie())
+    return false;
+  auto bytes = Write();
+  return bytes > 0;
 }
 
 
