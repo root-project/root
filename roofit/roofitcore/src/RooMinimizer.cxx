@@ -354,6 +354,7 @@ int RooMinimizer::minimize(const char *type, const char *alg)
 
       bool ret = fitFCN(*_fcn->getMultiGenFcn());
       determineStatus(ret);
+     
    }
    profileStop();
    _fcn->BackProp();
@@ -906,30 +907,37 @@ std::unique_ptr<RooAbsReal::EvalErrorContext> RooMinimizer::makeEvalErrorContext
 
 bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
 {
-   // --- Check number of parameters ---
+   // fit a user provided FCN function
+   // create fit parameter settings
+   // Check number of parameters
    unsigned int npar = fcn.NDim();
    if (npar == 0) {
       coutE(Minimization) << "RooMinimizer::fitFCN(): FCN function has zero parameters" << std::endl;
       return false;
    }
 
+   // initiate  the minimizer
    initMinimizer();
 
+
+   
    // Identify floating RooCategory parameters
    RooArgSet floatingCats;
-   //_fcn->allParams().Print("v");
+
    for (auto arg : _fcn->allParams()) {
       if (arg->isCategory() && !arg->isConstant())
          floatingCats.add(*arg);
    }
-   floatingCats.Print("v");
+   
 
+  
    std::vector<RooCategory *> pdfIndices;
    for (auto *arg : floatingCats) {
       if (auto *cat = dynamic_cast<RooCategory *>(arg))
          pdfIndices.push_back(cat);
    }
 
+  
    const size_t nPdfs = pdfIndices.size();
 
    // Identify floating continuous parameters (RooRealVar)
@@ -939,10 +947,9 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
          floatReals.add(*arg);
    }
 
+  
    if (nPdfs == 0) {
-      // No floating categories: just minimize continuous parameters
-      // RooMinimizer m(*nll);
-      // m.setPrintLevel(-1);
+     
       bool isValid = _minimizer->Minimize();
       if (!_result)
          _result = std::make_unique<FitResult>();
@@ -951,6 +958,8 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
          updateFitConfig();
       return isValid;
    }
+
+   // set also new parameter values and errors in FitConfig
 
    //  Prepare discrete indices
    std::vector<int> maxIndices;
@@ -966,6 +975,7 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
    while (improved) {
       improved = false;
 
+   
       auto combos = generateOrthogonalCombinations(maxIndices);
       reorderCombinations(combos, maxIndices, bestIndices);
 
@@ -996,31 +1006,36 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
             bestNLL = val;
             bestIndices = combo;
             improved = true;
+         
          }
+
+
+
       }
+   
    }
 
-   // Set the best category indices
-   for (size_t i = 0; i < nPdfs; ++i)
-      pdfIndices[i]->setIndex(bestIndices[i]);
+for (size_t i = 0; i < nPdfs; ++i)
+    pdfIndices[i]->setIndex(bestIndices[i]);
 
-   std::cout << "All NLL Values per Combination:\n";
-   for (const auto &entry : nllMap) {
-      const auto &combo = entry.first;
-      double val = entry.second;
-      std::cout << "Combo: [";
-      for (size_t i = 0; i < combo.size(); ++i)
-         std::cout << combo[i] << (i + 1 < combo.size() ? ", " : "");
-      std::cout << "], NLL: " << val << "\n";
-   }
+coutI(Minimization) << "All NLL Values per Combination:\n"<< std::endl;
+for (const auto &entry : nllMap) {
+    const auto &combo = entry.first;
+    double val = entry.second;
+    coutI(Minimization) << "Combo: [" << std::endl;
+    for (size_t i = 0; i < combo.size(); ++i)
+        std::cout << combo[i] << (i + 1 < combo.size() ? ", " : "");
+    coutI(Minimization) << "], NLL: " << val << "\n" << std::endl;
+}
 
-   std::cout << "DP Best Indices: [";
-   for (size_t i = 0; i < bestIndices.size(); ++i) {
-      std::cout << bestIndices[i];
-      if (i + 1 < bestIndices.size())
-         std::cout << ", ";
-   }
-   std::cout << "], NLL = " << bestNLL << "\n";
+coutI(Minimization) << "DP Best Indices: [" << std::endl;
+for (size_t i = 0; i < bestIndices.size(); ++i) {
+   coutI(Minimization) <<  bestIndices[i] << std::endl;
+    if (i + 1 < bestIndices.size())
+        coutI(Minimization)<< ", " << std::endl;
+}
+coutI(Minimization) << "], NLL = " << bestNLL << "\n" << std::endl;
+   
 
    // Fill FitResult and update FitConfig
    if (!_result)
