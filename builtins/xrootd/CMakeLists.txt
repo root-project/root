@@ -18,6 +18,12 @@ set(XROOTD_CLIENT_LIBRARIES ${XROOTD_PREFIX}/lib/${XRDCL_NAME} CACHE INTERNAL ""
 set(XROOTD_UTILS_LIBRARIES ${XROOTD_PREFIX}/lib/${XRDUTILS_NAME} CACHE INTERNAL "" FORCE)
 set(XROOTD_LIBRARIES ${XROOTD_PREFIX}/lib/${XRDCL_NAME} CACHE INTERNAL "" FORCE)
 
+if(APPLE)
+  set(rpath_origin "@loader_path")
+else()
+  set(rpath_origin "$ORIGIN")
+endif()
+
 ExternalProject_Add(
     BUILTIN_XROOTD
     URL http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/xrootd-${XROOTD_VERSION}.tar.gz
@@ -36,7 +42,9 @@ ExternalProject_Add(
                -DENABLE_PYTHON=OFF
                -DENABLE_CEPH=OFF
                -DXRDCL_LIB_ONLY=ON
-               -DCMAKE_INSTALL_RPATH:STRING=${XROOTD_PREFIX}/lib
+               # The INSTALL_RPATH has to be relative, so we can relocate the
+               # XRootD install to the ROOT install directory:
+               -DCMAKE_INSTALL_RPATH:STRING=${rpath_origin}
                -DOpenSSL_ROOT=${OPENSSL_ROOT} #For CMake <3.27
                -DOPENSSL_ROOT=${OPENSSL_ROOT}
     INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
@@ -57,15 +65,3 @@ install(DIRECTORY ${XROOTD_PREFIX}/include/xrootd/ DESTINATION ${CMAKE_INSTALL_I
 set(CMAKE_BUILD_RPATH ${CMAKE_BUILD_RPATH} ${XROOTD_PREFIX}/lib PARENT_SCOPE)
 
 set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS BUILTIN_XROOTD)
-
-if(APPLE)
-  # XRootD libraries on mac need the LC_RPATH variable set. The build process already takes care of setting
-  #   * BUILD_RPATH = build/XROOTD-prefix/../src
-  #   * INSTALL_RPATH = build/lib
-  # Since the install directory for the builtin_xrootd target corresponds to the build directory of the main project.
-  # Use a post install script to change the LC_RPATH variable of the libraries in the ROOT install folder.
-  install(SCRIPT ${CMAKE_CURRENT_LIST_DIR}/XROOTDApplePostInstall.cmake
-          CODE "xrootd_libs_change_rpath(${XROOTD_PREFIX}/lib ${CMAKE_INSTALL_FULL_LIBDIR})"
-  )
-endif()
-
