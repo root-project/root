@@ -1,3 +1,9 @@
+# building shared library with missing symbols does not work on windows
+# probably one can manipulate linker flags via rootlogon.C script - as it done for Linux and Mac
+if(MSVC AND NOT win_broken_tests)
+  return()
+endif()
+
 ROOTTEST_ADD_TEST(build1
                   MACRO link.C
                   PRECMD ${CMAKE_COMMAND} -E remove "script1_C.* script2_C.*"
