@@ -1,0 +1,32 @@
+comparison_broadcast_demo:ä
+
+A
+B
+OutGreater"Greater
+
+A
+BOutEqual"Equal
+
+A
+BOutLess"LessComparisonOpsWithBroadcastZ
+A
+
+
+Z
+B
+
+
+b
+
+OutGreater
+	
+
+b
+OutEqual
+	
+
+b
+OutLess
+	
+
+B
