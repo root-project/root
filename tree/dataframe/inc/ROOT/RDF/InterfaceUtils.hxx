@@ -30,6 +30,7 @@
 #include <ROOT/TypeTraits.hxx>
 #include <TError.h> // gErrorIgnoreLevel
 #include <TH1.h>
+#include <TMatrixDSym.h>
 #include <TROOT.h> // IsImplicitMTEnabled
 
 #include <deque>
@@ -99,6 +100,7 @@ struct Sum{};
 struct Mean{};
 struct Fill{};
 struct StdDev{};
+struct Cov{};
 struct Display{};
 struct Snapshot{};
 struct Book{};
@@ -245,6 +247,17 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<double> &stdDeviation
    using Helper_t = StdDevHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColType>>;
    return std::make_unique<Action_t>(Helper_t(stdDeviationV, nSlots), bl, prevNode, colRegister);
+}
+
+// Covariance action
+template <typename... ColTypes, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &bl, const std::shared_ptr<TMatrixDSym> &covV, const unsigned int nSlots,
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Cov, const RColumnRegister &colRegister)
+{
+   using Helper_t = CovHelper;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+   return std::make_unique<Action_t>(Helper_t(covV, nSlots, sizeof...(ColTypes)), bl, std::move(prevNode), colRegister);
 }
 
 using displayHelperArgs_t = std::pair<size_t, std::shared_ptr<ROOT::RDF::RDisplay>>;
