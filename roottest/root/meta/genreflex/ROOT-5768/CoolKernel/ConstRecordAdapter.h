@@ -43,7 +43,7 @@ namespace cool
                         const coral::AttributeList& al );
 
     /// Return the specification of this record.
-    const IRecordSpecification& specification() const;
+    const IRecordSpecification& specification() const override;
 
     /// Return a field in this record by its name (const).
     const IField& operator[] ( const std::string& name ) const;
@@ -55,15 +55,15 @@ namespace cool
     /// The AttributeList returned by this method contains only the attributes
     /// listed in the input IRecordSpecification, which may be fewer than
     /// those contained in the wrapped constant AttributeList reference.
-    const coral::AttributeList& attributeList() const;
+    const coral::AttributeList& attributeList() const override;
 
   private:
 
     /// Return a field in this record by its index in [0, N-1] (const).
-    const IField& field( UInt32 index ) const;
+    const IField& field( UInt32 index ) const override;
 
     /// This method THROWS an exception because this is a read-only class.
-    IField& field( UInt32 index ); // THROWS...
+    IField& field( UInt32 index ) override; // THROWS...
 
   private:
 
