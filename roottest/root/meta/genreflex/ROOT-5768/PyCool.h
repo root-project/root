@@ -40,6 +40,9 @@
 // See http://www.gccxml.org/Bug/bug.php?op=show&bugid=895
 // See also SealBase/DebugAids.h:83 (NDEBUG is defined as 1 else problems)
 #ifdef _WIN32
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
 #define NDEBUG 1
 #include <assert.h>
 #endif
