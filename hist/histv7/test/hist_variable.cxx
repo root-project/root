@@ -1,6 +1,8 @@
 #include "hist_test.hxx"
 
+#include <iterator>
 #include <limits>
+#include <stdexcept>
 #include <vector>
 
 TEST(RVariableBinAxis, Constructor)
@@ -192,5 +194,84 @@ TEST(RVariableBinAxis, GetLinearizedIndex)
       EXPECT_FALSE(linIndex.fValid);
       linIndex = axisNoFlowBins.GetLinearizedIndex(invalid);
       EXPECT_FALSE(linIndex.fValid);
+   }
+}
+
+TEST(RVariableBinAxis, GetNormalRange)
+{
+   static constexpr std::size_t Bins = 20;
+   std::vector<double> bins;
+   for (std::size_t i = 0; i < Bins; i++) {
+      bins.push_back(i);
+   }
+   bins.push_back(Bins);
+
+   const RVariableBinAxis axis(bins);
+   const auto index0 = RBinIndex(0);
+   const auto indexBins = RBinIndex(Bins);
+
+   {
+      const auto normal = axis.GetNormalRange();
+      EXPECT_EQ(normal.GetBegin(), index0);
+      EXPECT_EQ(normal.GetEnd(), indexBins);
+      EXPECT_EQ(std::distance(normal.begin(), normal.end()), Bins);
+   }
+
+   {
+      const auto normal = axis.GetNormalRange(index0, indexBins);
+      EXPECT_EQ(normal.GetBegin(), index0);
+      EXPECT_EQ(normal.GetEnd(), indexBins);
+      EXPECT_EQ(std::distance(normal.begin(), normal.end()), Bins);
+   }
+
+   {
+      const auto index1 = RBinIndex(1);
+      const auto index5 = RBinIndex(5);
+      const auto normal = axis.GetNormalRange(index1, index5);
+      EXPECT_EQ(normal.GetBegin(), index1);
+      EXPECT_EQ(normal.GetEnd(), index5);
+      EXPECT_EQ(std::distance(normal.begin(), normal.end()), 4);
+   }
+
+   {
+      const auto index1 = RBinIndex(1);
+      const auto empty = axis.GetNormalRange(index1, index1);
+      EXPECT_EQ(empty.GetBegin(), index1);
+      EXPECT_EQ(empty.GetEnd(), index1);
+      EXPECT_EQ(empty.begin(), empty.end());
+      EXPECT_EQ(std::distance(empty.begin(), empty.end()), 0);
+   }
+
+   const auto underflow = RBinIndex::Underflow();
+   const auto overflow = RBinIndex::Overflow();
+   EXPECT_THROW(axis.GetNormalRange(underflow, index0), std::invalid_argument);
+   EXPECT_THROW(axis.GetNormalRange(indexBins, indexBins), std::invalid_argument);
+   EXPECT_THROW(axis.GetNormalRange(index0, overflow), std::invalid_argument);
+   EXPECT_THROW(axis.GetNormalRange(index0, indexBins + 1), std::invalid_argument);
+}
+
+TEST(RVariableBinAxis, GetFullRange)
+{
+   static constexpr std::size_t Bins = 20;
+   std::vector<double> bins;
+   for (std::size_t i = 0; i < Bins; i++) {
+      bins.push_back(i);
+   }
+   bins.push_back(Bins);
+
+   {
+      const RVariableBinAxis axis(bins);
+      const auto full = axis.GetFullRange();
+      EXPECT_EQ(full.GetBegin(), RBinIndex::Underflow());
+      EXPECT_EQ(full.GetEnd(), RBinIndex());
+      EXPECT_EQ(std::distance(full.begin(), full.end()), Bins + 2);
+   }
+
+   {
+      const RVariableBinAxis axisNoFlowBins(bins, /*enableFlowBins=*/false);
+      const auto full = axisNoFlowBins.GetFullRange();
+      EXPECT_EQ(full.GetBegin(), RBinIndex(0));
+      EXPECT_EQ(full.GetEnd(), RBinIndex(Bins));
+      EXPECT_EQ(std::distance(full.begin(), full.end()), Bins);
    }
 }
