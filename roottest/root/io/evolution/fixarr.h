@@ -9,6 +9,7 @@ const int arrsize = 3;
 const int arrsize = 7;
 #endif
 
+
 class One {
 public:
    int myarr[arrsize];
