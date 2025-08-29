@@ -1,5 +1,5 @@
 
-Processing /home/linev/git/webgui/roottest/root/io/datamodelevolution/cms-00/read_test1.cxx+("r")...
+Processing read_test1.cxx+("r")...
 [i] Reading test data model version 1
 MATCH: reflex_test01_wv1.log - reflex_test01_rv1.log
 MATCH: reflex_test01_wv1.log - reflex_test01_rv1ns.log
