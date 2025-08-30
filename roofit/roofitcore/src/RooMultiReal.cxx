@@ -58,5 +58,5 @@ void RooMultiReal::getParametersHook(const RooArgSet *nset, RooArgSet *list, boo
    }
 
    absReal->getParameters(nset, *list, stripDisconnected);
-   list->add(_index.arg());
+   list->add(*_index);
 }
