@@ -2340,29 +2340,14 @@ macro(ROOTTEST_COMPILE_MACRO filename)
                             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
   if(ARG_DEPENDS)
-    set(deps ${ARG_DEPENDS})
+    message(WARNING "Specifying DEPENDS in ROOTTEST_COMPILE_MACRO has no effect.")
   endif()
 
   ROOTTEST_TARGETNAME_FROM_FILE(COMPILE_MACRO_TEST ${filename})
 
-  set(compile_target ${COMPILE_MACRO_TEST}-compile-macro)
-
-  add_custom_target(${compile_target}
-                    COMMAND ${compile_macro_command}
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                    VERBATIM)
-
-  if(ARG_DEPENDS)
-    add_dependencies(${compile_target} ${deps})
-  endif()
-
   set(COMPILE_MACRO_TEST ${COMPILE_MACRO_TEST}-build)
 
-  add_test(NAME ${COMPILE_MACRO_TEST}
-           COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
-                                    ${build_config}
-                                    --target ${compile_target}${fast}
-                                    -- ${always-make})
+  add_test(NAME ${COMPILE_MACRO_TEST} COMMAND ${compile_macro_command})
   if(NOT MSVC OR win_broken_tests)
     set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY FAIL_REGULAR_EXPRESSION "Warning in")
   endif()
