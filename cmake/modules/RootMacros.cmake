@@ -2295,8 +2295,7 @@ endfunction(ROOTTEST_ADD_AUTOMACROS)
 #-------------------------------------------------------------------------------
 #
 # macro ROOTTEST_COMPILE_MACRO(<filename> [BUILDOBJ object] [BUILDLIB lib]
-#                                         [FIXTURES_SETUP ...] [FIXTURES_CLEANUP ...] [FIXTURES_REQUIRED ...]
-#                                         [DEPENDS dependencies...])
+#                                         [FIXTURES_SETUP ...] [FIXTURES_CLEANUP ...] [FIXTURES_REQUIRED ...])
 #
 # This macro creates and loads a shared library containing the code from
 # the file <filename>. A test that performs the compilation is created.
@@ -2306,7 +2305,7 @@ endfunction(ROOTTEST_ADD_AUTOMACROS)
 #
 #-------------------------------------------------------------------------------
 macro(ROOTTEST_COMPILE_MACRO filename)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "BUILDOBJ;BUILDLIB" "DEPENDS;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED"  ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "" "BUILDOBJ;BUILDLIB" "FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED"  ${ARGN})
 
   # Add defines to root_compile_macro, in order to have out-of-source builds
   # when using the scripts/build.C macro.
@@ -2344,37 +2343,15 @@ macro(ROOTTEST_COMPILE_MACRO filename)
                             ${BuildScriptFile}${BuildScriptArg}
                             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
-  if(ARG_DEPENDS)
-    set(deps ${ARG_DEPENDS})
-  endif()
-
   ROOTTEST_TARGETNAME_FROM_FILE(COMPILE_MACRO_TEST ${filename})
-
-  set(compile_target ${COMPILE_MACRO_TEST}-compile-macro)
-
-  add_custom_target(${compile_target}
-                    COMMAND ${compile_macro_command}
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                    VERBATIM)
-
-  if(ARG_DEPENDS)
-    add_dependencies(${compile_target} ${deps})
-  endif()
 
   set(COMPILE_MACRO_TEST ${COMPILE_MACRO_TEST}-build)
 
-  add_test(NAME ${COMPILE_MACRO_TEST}
-           COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
-                                    ${build_config}
-                                    --target ${compile_target}${fast}
-                                    -- ${always-make})
+  add_test(NAME ${COMPILE_MACRO_TEST} COMMAND ${compile_macro_command})
   if(NOT MSVC OR win_broken_tests)
     set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY FAIL_REGULAR_EXPRESSION "Warning in")
   endif()
   set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
-  if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
-    set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY RUN_SERIAL true)
-  endif()
   if (ARG_FIXTURES_SETUP)
     set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY
       FIXTURES_SETUP ${ARG_FIXTURES_SETUP})
