@@ -89,7 +89,6 @@ class MemoryStlString(unittest.TestCase):
             "TH1L": ("h", "h", 10, 0, 10),
             "TH1F": ("h", "h", 10, 0, 10),
             "TH1D": ("h", "h", 10, 0, 10),
-            "TH1K": ("h", "h", 10, 0, 10),
             "TProfile": ("h", "h", 10, 0, 10),
             "TH2C": ("h", "h", 10, 0, 10, 10, 0, 10),
             "TH2S": ("h", "h", 10, 0, 10, 10, 0, 10),
