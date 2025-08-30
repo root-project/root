@@ -2439,7 +2439,7 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   set(targetname_libgen ${dictname}libgen)
 
   add_library(${targetname_libgen} EXCLUDE_FROM_ALL SHARED ${dictname}.cxx)
-  set_property(TARGET ${executable} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
+  set_property(TARGET ${targetname_libgen} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
 
   if(ARG_SOURCES)
     target_sources(${targetname_libgen} PUBLIC ${ARG_SOURCES})
@@ -2550,7 +2550,7 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
 
   add_library(${targetname_libgen} EXCLUDE_FROM_ALL SHARED ${dictionary}.cxx)
   set_target_properties(${targetname_libgen} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
-  set_property(TARGET ${executable} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
+  set_property(TARGET ${targetname_libgen} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
   set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
   if(ARG_LIBNAME)
