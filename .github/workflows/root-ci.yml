@@ -388,9 +388,11 @@ jobs:
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2504
             overrides: ["CMAKE_CXX_STANDARD=23"]
-          - image: ubuntu2510
-            is_special: true
-            overrides: ["CMAKE_CXX_STANDARD=23"]
+          # Disable until binutils 2.45-5 is part of the distro, as it fixes the ".cfi_escape with op" warning.
+          # See https://launchpad.net/debian/+source/binutils/2.45-5
+          # - image: ubuntu2510
+          #   is_special: true
+          #   overrides: ["CMAKE_CXX_STANDARD=23"]
           - image: debian125
             overrides: ["CMAKE_CXX_STANDARD=20", "dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
           # Special builds
