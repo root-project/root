@@ -672,7 +672,7 @@ Int_t stressEntryList(Int_t nentries, Int_t nfiles)
    return retval;
 }
 //_____________________________batch only_____________________
-#ifndef __CINT__
+#ifndef __ICLING__
 
 int main(int argc, char *argv[])
 {

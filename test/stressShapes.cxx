@@ -1,5 +1,5 @@
 // Author : Mihaela Gheata   12-01-03
-#ifndef __CINT__
+#ifndef __ICLING__
 #include <TRandom3.h>
 #include <TROOT.h>
 #include <snprintf.h>
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 //
 // This test program is automatically created by $ROOTSYS/test/Makefile.
 // To run it in batch, execute stressGeom.
-// To run this test with interactive CINT, do
+// To run this test with interactive CLING, do
 // root > .x stressShapes.cxx++
 // or
 // root > .x stressShapes.cxx
@@ -177,7 +177,7 @@ void stressShapes()
 //  - generate 10000 random directions and propagate from the center
 //    of each volume -> compute total step length to exit current shape
 
-#ifdef __CINT__
+#ifdef __ICLING__
    gSystem->Load("libGeom");
 #endif
 
