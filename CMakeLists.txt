@@ -421,20 +421,11 @@ get_property(__allBuiltins GLOBAL PROPERTY ROOT_BUILTIN_TARGETS)
 add_custom_target(move_headers ALL DEPENDS ${__allHeaders} ${__allBuiltins} gitinfotxt)
 
 #---CXX MODULES-----------------------------------------------------------------------------------
-if(MSVC)
-  set(_os_cat "type")
-else()
-  set(_os_cat "cat")
-endif()
-cmake_path(CONVERT "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" TO_NATIVE_PATH_LIST _from_native)
-cmake_path(CONVERT "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" TO_NATIVE_PATH_LIST _to_native)
-
 add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/ROOT.modulemap")
 add_custom_command(
 		  OUTPUT "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
                   DEPENDS cmake/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
-		  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/cmake/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
-                  COMMAND ${_os_cat} "${_from_native}" >> "${_to_native}"
+                  COMMAND ${CMAKE_COMMAND} -E cat "${CMAKE_SOURCE_DIR}/cmake/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" >> "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
 )
 install(FILES "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 
@@ -506,22 +497,22 @@ else()
       ${CMAKE_SOURCE_DIR} . ${pyroot_legacy} ${__cling_pch}
     COMMAND
       ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${Python3_EXECUTABLE}
-      ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch
-      ${__allIncludes} -I${CMAKE_BINARY_DIR}/include -I${CMAKE_SOURCE_DIR}/core
+      "${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py" etc/allDict.cxx.pch
+      ${__allIncludes} -I"${CMAKE_BINARY_DIR}/include" -I"${CMAKE_SOURCE_DIR}/core"
     DEPENDS
       rootcling ${__pch_dependencies} ${__pch_dictionaries}
-      ${CMAKE_SOURCE_DIR}/cmake/unix/makepchinput.py
-      ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
+      "${CMAKE_SOURCE_DIR}/cmake/unix/makepchinput.py"
+      "${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py"
   )
   add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
-  install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
-  install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+  install(FILES "${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch" DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+  install(DIRECTORY "${CMAKE_BINARY_DIR}/etc/dictpch" DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 endif()
 
 # FIXME: move installation of PCMS in ROOT_GENERATE_DICTIONARY().
 # We are excluding directories, which are accidentaly copied via unxpected behaviour of install(DIRECTORY ..)
 install(
-   DIRECTORY ${CMAKE_BINARY_DIR}/lib/
+   DIRECTORY "${CMAKE_BINARY_DIR}/lib/"
    DESTINATION ${CMAKE_INSTALL_LIBDIR}
    FILES_MATCHING
    PATTERN "*.pcm"
