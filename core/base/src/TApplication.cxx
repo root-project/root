@@ -1724,7 +1724,7 @@ Longptr_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
       return 0;
 
 #if 0
-      // delete the ROOT dictionary since CINT will destroy all objects
+      // delete the ROOT dictionary since CLING will destroy all objects
       // referenced by the dictionary classes (TClass et. al.)
       gROOT->GetListOfClasses()->Delete();
       // fall through
@@ -1810,12 +1810,12 @@ Longptr_t TApplication::ExecuteFile(const char *file, Int_t *error, Bool_t keep)
       while (s && (*s == ' ' || *s == '\t')) s++;   // strip-off leading blanks
 
       // very simple minded pre-processor parsing, only works in case macro file
-      // starts with "#ifndef __CINT__". In that case everything till next
+      // starts with "#ifndef __CINT__" or "#ifndef __ICLING__". In that case everything till next
       // "#else" or "#endif" will be skipped.
       if (*s == '#') {
          char *cs = Compress(currentline);
-         if (strstr(cs, "#ifndef__CINT__") ||
-             strstr(cs, "#if!defined(__CINT__)"))
+         if (strstr(cs, "#ifndef__CINT__") || strstr(cs, "#ifndef__ICLING__") ||
+             strstr(cs, "#if!defined(__CINT__)") || strstr(cs, "#if!defined(__ICLING__)"))
             ifndefc = 1;
          else if (ifndefc && (strstr(cs, "#ifdef") || strstr(cs, "#ifndef") ||
                   strstr(cs, "#ifdefined") || strstr(cs, "#if!defined")))
