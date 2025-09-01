@@ -421,21 +421,18 @@ get_property(__allBuiltins GLOBAL PROPERTY ROOT_BUILTIN_TARGETS)
 add_custom_target(move_headers ALL DEPENDS ${__allHeaders} ${__allBuiltins} gitinfotxt)
 
 #---CXX MODULES-----------------------------------------------------------------------------------
-if(MSVC)
-  set(_os_cat "type")
-else()
-  set(_os_cat "cat")
-endif()
-cmake_path(CONVERT "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" TO_NATIVE_PATH_LIST _from_native)
-cmake_path(CONVERT "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" TO_NATIVE_PATH_LIST _to_native)
+cmake_path(CONVERT ${CMAKE_BINARY_DIR}/include/module.modulemap.extra TO_NATIVE_PATH_LIST _from_native)
+cmake_path(CONVERT ${CMAKE_BINARY_DIR}/include/ROOT.modulemap TO_NATIVE_PATH_LIST _to_native)
 
 add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/ROOT.modulemap")
 add_custom_command(
-		  OUTPUT "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
+                  OUTPUT "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
                   DEPENDS cmake/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
-		  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/cmake/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
-                  COMMAND ${_os_cat} "${_from_native}" >> "${_to_native}"
+                  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/cmake/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
+                  COMMAND ${CMAKE_COMMAND} -E cat "${_from_native}" "${_to_native}" OUTPUT_VARIABLE JOINED_MAPS
 )
+file(WRITE ROOT.modulemap.in ${JOINED_MAPS})
+configure_file(ROOT.modulemap.in "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" COPYONLY)
 install(FILES "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 
 add_dependencies(move_headers copymodulemap)
