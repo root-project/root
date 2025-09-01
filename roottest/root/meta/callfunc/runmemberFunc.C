@@ -61,15 +61,38 @@ void runAllThroughTInterpreterInterfaces() {
 
 #include "TMethodCall.h"
 
-void runAllThroughTMethodCall() {
+void runAllThroughTMethodCall() 
+{
    printf("Running through TMethodCall...\n");
-   TMethodCall method;
-   Long_t result_long = 0;
-   Double_t result_double;
 
+   A obj;
+
+   auto cl = TClass::GetClass("A");
+   if (!cl) {
+      printf("Class instance is not there\n");
+      return;
+   }
+
+   
+   TMethodCall method1(cl, "inlineNoArgsNoReturn", "");
+   if (!method1.IsValid()) {
+      printf("method1 instance is not valid\n");
+      return;
+   }
+
+   method1.Execute(&obj);
+
+   TMethodCall method2(cl, "outlinedNoArgsNoReturn", "");
+   if (!method2.IsValid()) {
+      printf("method2 instance is not valid\n");
+      return;
+   }
+
+   method2.Execute(&obj);
 }
 
-void runmemberFunc() {
+void runmemberFunc() 
+{
    runAllThroughTInterpreterInterfaces();
    printf("======================================================\n");
    runAllThroughTMethodCall();
