@@ -179,7 +179,7 @@ void   stress_backward_io          ();
 void   cleanup                     ();
 
 //_____________________________batch only_____________________
-#ifndef __CINT__
+#ifndef __ICLING__
 
 int main(int argc,const char *argv[])
 {
@@ -234,7 +234,7 @@ void stressLinear(Int_t maxSizeReq,Int_t verbose)
     mstress_binary_ebe_op(maxSize/2,maxSize);
     mstress_transposition(maxSize);
     mstress_special_creation(maxSize);
-#ifndef __CINT__
+#ifndef __ICLING__
     mstress_matrix_promises(maxSize);
 #endif
     mstress_norms(maxSize,maxSize/2);
@@ -462,7 +462,7 @@ void mstress_matrix_fill(Int_t rsize,Int_t csize)
   if (gVerbose)
     std::cout << "Creating m  with Apply function..." << std::endl;
   TMatrixD m(-1,rsize-2,1,csize);
-#ifndef __CINT__
+#ifndef __ICLING__
   FillMatrix f(m);
   m.Apply(f);
 #else
@@ -736,7 +736,7 @@ void mstress_element_op(Int_t rsize,Int_t csize)
   if (gVerbose)
     std::cout << "\nCheck out to see that sin^2(x) + cos^2(x) = 1" << std::endl;
   {
-#ifndef __CINT__
+#ifndef __ICLING__
     FillMatrix f(m);
     m.Apply(f);
 #else
@@ -747,7 +747,7 @@ void mstress_element_op(Int_t rsize,Int_t csize)
   }
   m1 = m;
   {
-#ifndef __CINT__
+#ifndef __ICLING__
     ApplyFunction s(&TMath::Sin);
     ApplyFunction c(&TMath::Cos);
     m.Apply(s);
@@ -936,7 +936,7 @@ public:
   MakeHilbert() { }
 };
 
-#if !defined (__CINT__) || defined (__MAKECINT__)
+#if !defined (__ICLING__) || defined (__MAKECLING__)
 class TestUnit : public TElementPosActionD {
   mutable Int_t fIsUnit;
   void Operation(Double_t &element) const override
@@ -971,7 +971,7 @@ void mstress_special_creation(Int_t dim)
     TMatrixD m1(TMatrixD::kZero,m);
     ok &= ( !(m == m1) ) ? kTRUE : kFALSE;
     ok &= ( m != 0 ) ? kTRUE : kFALSE;
-#ifndef __CINT__
+#ifndef __ICLING__
     MakeHilbert mh;
     m1.Apply(mh);
 #else
@@ -999,7 +999,7 @@ void mstress_special_creation(Int_t dim)
     if (gVerbose)
       std::cout << "test creating unit matrices" << std::endl;
     TMatrixD m(dim,dim);
-#ifndef __CINT__
+#ifndef __ICLING__
     {
       TestUnit test_unit;
       m.Apply(test_unit);
@@ -1009,7 +1009,7 @@ void mstress_special_creation(Int_t dim)
     ok &= ( !is_indeed_unit(m) ) ? kTRUE : kFALSE;
 #endif
     m.UnitMatrix();
-#ifndef __CINT__
+#ifndef __ICLING__
     {
       TestUnit test_unit;
        m.Apply(test_unit);
@@ -1020,7 +1020,7 @@ void mstress_special_creation(Int_t dim)
 #endif
     m.ResizeTo(dim-1,dim);
     TMatrixD m2(TMatrixD::kUnit,m);
-#ifndef __CINT__
+#ifndef __ICLING__
     {
       TestUnit test_unit;
       m2.Apply(test_unit);
@@ -1031,7 +1031,7 @@ void mstress_special_creation(Int_t dim)
 #endif
     m.ResizeTo(dim,dim-2);
     m.UnitMatrix();
-#ifndef __CINT__
+#ifndef __ICLING__
     {
       TestUnit test_unit;
       m.Apply(test_unit);
@@ -1081,7 +1081,7 @@ void mstress_special_creation(Int_t dim)
   StatusPrint(6,"Haar/Hilbert Matrix",ok);
 }
 
-#ifndef __CINT__
+#ifndef __ICLING__
 //
 //------------------------------------------------------------------------
 //           Test matrix promises
@@ -1535,7 +1535,7 @@ void mstress_mm_multiplications()
       ok &= VerifyMatrixIdentity(mm1,mm2,verbose,epsilon);
     }
 
-#ifndef __CINT__
+#ifndef __ICLING__
     if (nr >= Int_t(1.0e+5/msize/msize)) {
 #else
     if (nr >= Int_t(1.0e+3/msize/msize)) {
@@ -1879,7 +1879,7 @@ void mstress_vm_multiplications()
       ok &= VerifyMatrixIdentity(mvb,mvm,verbose,epsilon);
     }
 
-#ifndef __CINT__
+#ifndef __ICLING__
     if (nr >= Int_t(1.0e+5/msize/msize)) {
 #else
     if (nr >= Int_t(1.0e+3/msize/msize)) {
@@ -2009,7 +2009,7 @@ void mstress_inversion()
       ok &= VerifyMatrixIdentity(mmi,unit,verbose,epsilon);
     }
 
-#ifndef __CINT__
+#ifndef __ICLING__
     if (nr >= Int_t(1.0e+5/msize/msize)) {
 #else
     if (nr >= Int_t(1.0e+3/msize/msize)) {
@@ -2870,7 +2870,7 @@ void spstress_mm_multiplications()
       ok &= VerifyMatrixIdentity(m,mp3,verbose,epsilon);
     }
 
-#ifndef __CINT__
+#ifndef __ICLING__
     if (nr >= Int_t(1.0e+5/msize/msize)) {
 #else
     if (nr >= Int_t(1.0e+3/msize/msize)) {
@@ -3002,7 +3002,7 @@ void spstress_vm_multiplications()
       ok &= VerifyMatrixIdentity(mvb,mvm,verbose,epsilon);
     }
 
-#ifndef __CINT__
+#ifndef __ICLING__
     if (nr >= Int_t(1.0e+5/msize/msize)) {
 #else
     if (nr >= Int_t(1.0e+3/msize/msize)) {
@@ -3379,7 +3379,7 @@ void vstress_element_op(Int_t vsize)
       std::cout << "\nCheck out to see that sin^2(x) + cos^2(x) = 1" << std::endl;
     for (Int_t i = v.GetLwb(); i <= v.GetUpb(); i++)
       v(i) = 2*TMath::Pi()/v.GetNoElements()*i;
-#ifndef __CINT__
+#ifndef __ICLING__
     SinAction s;
     v.Apply(s);
     CosAction c(v.GetNoElements());
@@ -3400,7 +3400,7 @@ void vstress_element_op(Int_t vsize)
 
   if (gVerbose)
     std::cout << "\nVerify constructor with initialization" << std::endl;
-#ifndef __CINT__
+#ifndef __ICLING__
   TVectorD vi(0,4,0.0,1.0,2.0,3.0,4.0,"END");
 #else
   Double_t vval[] = {0.0,1.0,2.0,3.0,4.0};
@@ -3887,7 +3887,7 @@ Bool_t test_svd_expansion(const TMatrixD &A)
   return ok;
 }
 
-#ifndef __CINT__
+#ifndef __ICLING__
 // Make a matrix from an array (read it row-by-row)
 class MakeMatrix : public TMatrixDLazy {
   const Double_t *array;
@@ -4122,7 +4122,7 @@ void astress_lineqn()
         ok &= VerifyVectorValue(b1,1.0,verbose,msize*EPSILON);
     }
 
-#ifndef __CINT__
+#ifndef __ICLING__
     if (nr >= Int_t(1.0e+5/msize/msize)) {
 #else
     if (nr >= Int_t(1.0e+3/msize/msize)) {
@@ -4162,7 +4162,7 @@ void astress_pseudo()
 
   // Allocate and fill matrix A
   enum {nrows = 4, ncols = 3};
-#ifndef __CINT__
+#ifndef __ICLING__
   const Double_t A_data [nrows*ncols] =
 #else
   const Double_t A_data [12] =

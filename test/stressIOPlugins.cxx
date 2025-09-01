@@ -53,7 +53,7 @@
 //         : filename with a url query in Add...................... OK
 // ****************************************************************************
 //_____________________________batch only_____________________
-#ifndef __CINT__
+#ifndef __ICLING__
 
 #include <cstdlib>
 #include <snprintf.h>
@@ -144,7 +144,7 @@ TFile *openTestFile(const char *fn, const char *title) {
 
    Bprint(0, title);
    return f;
-}   
+}
 
 Bool_t isFeatureAvailable(const char *name) {
    TString configfeatures = gROOT->GetConfigFeatures();

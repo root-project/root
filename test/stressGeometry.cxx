@@ -21,7 +21,7 @@
 //
 //  The ReadRef case is also used as a benchmark
 //  The ROOTMARKS reported are relative to a Linux/P IV 2.8 GHz gcc3.2.3 machine
-//  normalized at 800 ROOTMARKS when running with CINT.
+//  normalized at 800 ROOTMARKS when running with CLING.
 //
 // To run this script, do
 //   stressGeometry
@@ -57,7 +57,7 @@
 Double_t tpstot = 0;
 Double_t tpsref = 112.1; //time including the generation of the ref files
 Bool_t testfailed = kFALSE;
-#ifndef __CINT__
+#ifndef __ICLING__
 void stressGeometry(const char*, Bool_t, Bool_t);
 
 int main(int argc, char **argv)
@@ -277,7 +277,7 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE, Bool_t vecg
       TGeoManager::Import(Form("root://eospublic.cern.ch//eos/root-eos/testfiles/%s",fname.Data()));
       if (!gGeoManager) return;
       if (vecgeom) TVirtualGeoConverter::Instance()->ConvertGeometry();
-      
+
       fname = TString::Format("files/%s_ref_%d.root", exps[i],versions[i]);
 
       if (gen_ref || !TFile::Open(Form("root://eospublic.cern.ch//eos/root-eos/testfiles//%s_ref_%d.root",exps[i],versions[i]),"CACHEREAD")) {
