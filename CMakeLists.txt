@@ -425,7 +425,7 @@ add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/ROOT.module
 add_custom_command(
                   OUTPUT "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
                   DEPENDS cmake/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
-                  COMMAND ${CMAKE_COMMAND} -E cat "${CMAKE_SOURCE_DIR}/cmake/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" >> "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
+                  COMMAND ${CMAKE_COMMAND} -E cat "${CMAKE_SOURCE_DIR}/cmake/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" > "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
 )
 install(FILES "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 
