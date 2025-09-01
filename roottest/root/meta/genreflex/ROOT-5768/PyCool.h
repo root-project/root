@@ -39,10 +39,10 @@
 // (the problem occurs within asserts, hence disable all asserts!)
 // See http://www.gccxml.org/Bug/bug.php?op=show&bugid=895
 // See also SealBase/DebugAids.h:83 (NDEBUG is defined as 1 else problems)
-#ifdef _WIN32
-#define NDEBUG 1
-#include <assert.h>
-#endif
+//#ifdef _WIN32
+//#define NDEBUG 1
+//#include <assert.h>
+//#endif
 
 // Disable compilation warning C4345 ('behavior change: an object of POD type
 // constructed with an initializer of the form () will be default-initialized')
