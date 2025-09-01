@@ -23,9 +23,9 @@ namespace Experimental {
 A regular axis with equidistant bins in the interval \f$[fLow, fHigh)\f$.
 
 For example, the following creates a regular axis with 10 normal bins between 5 and 15:
-~~~ {.cxx}
+\code
 ROOT::Experimental::RRegularAxis axis(10, 5, 15);
-~~~
+\endcode
 
 It is possible to disable underflow and overflow bins by passing `enableFlowBins = false`. In that case, arguments
 outside the axis will be silently discarded.
