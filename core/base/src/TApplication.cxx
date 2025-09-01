@@ -1724,7 +1724,7 @@ Longptr_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
       return 0;
 
 #if 0
-      // delete the ROOT dictionary since CINT will destroy all objects
+      // delete the ROOT dictionary since CLING will destroy all objects
       // referenced by the dictionary classes (TClass et. al.)
       gROOT->GetListOfClasses()->Delete();
       // fall through
@@ -1814,8 +1814,8 @@ Longptr_t TApplication::ExecuteFile(const char *file, Int_t *error, Bool_t keep)
       // "#else" or "#endif" will be skipped.
       if (*s == '#') {
          char *cs = Compress(currentline);
-         if (strstr(cs, "#ifndef__CINT__") ||
-             strstr(cs, "#if!defined(__CINT__)"))
+         if (strstr(cs, "#ifndef__CINT__") || strstr(cs, "#ifndef__CLING__") ||
+             strstr(cs, "#if!defined(__CINT__)") || strstr(cs, "#if!defined(__CLING__)"))
             ifndefc = 1;
          else if (ifndefc && (strstr(cs, "#ifdef") || strstr(cs, "#ifndef") ||
                   strstr(cs, "#ifdefined") || strstr(cs, "#if!defined")))
