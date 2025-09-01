@@ -86,4 +86,5 @@ void RooMultiPdf::getParametersHook(const RooArgSet *nset, RooArgSet *list, bool
 
    list->removeAll();
    getCurrentPdf()->getParameters(nset, *list, stripDisconnected);
+   list->add(*x);
 }
