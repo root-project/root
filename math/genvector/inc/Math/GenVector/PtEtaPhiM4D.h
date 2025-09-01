@@ -345,7 +345,7 @@ public:
    Scalar t() const { return E(); }
 
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__MAKECLING__) || defined(G__DICTIONARY)
 
    // ====== Set member functions for coordinates in other systems =======
 
@@ -389,7 +389,7 @@ inline void PtEtaPhiM4D<ScalarType>::SetPxPyPzE(Scalar px, Scalar py, Scalar pz,
 }
 
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__MAKECLING__) || defined(G__DICTIONARY)
 
   // ====== Set member functions for coordinates in other systems =======
 
@@ -418,7 +418,7 @@ void PtEtaPhiM4D<ScalarType>::SetE(Scalar energy) {
    PxPyPzE4D<Scalar> v(*this); v.SetE(energy);   *this = PtEtaPhiM4D<Scalar>(v);
 }
 
-#endif  // endif __MAKE__CINT || G__DICTIONARY
+#endif  // endif __MAKECLING__ || G__DICTIONARY
 
 } // end namespace Math
 

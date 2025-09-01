@@ -597,8 +597,8 @@ TFile::~TFile()
    }
 
    if (IsOnHeap()) {
-      // Delete object from CINT symbol table so it can not be used anymore.
-      // CINT object are always on the heap.
+      // Delete object from CLING symbol table so it can not be used anymore.
+      // CLING objects are always on the heap.
       gInterpreter->ResetGlobalVar(this);
    }
 
@@ -2717,14 +2717,14 @@ void TFile::WriteHeader()
 /// new (default) | A new directory dirname is created. If dirname already exist, an error message is printed and the function returns.
 /// recreate      | If dirname does not exist, it is created (like in "new"). If dirname already exist, all existing files in dirname are deleted before creating the new files.
 /// update        | New classes are added to the existing directory. Existing classes with the same name are replaced by the new definition. If the directory dirname doest not exist, same effect as "new".
-/// genreflex     | Use genreflex rather than rootcint to generate the dictionary.
+/// genreflex     | Use genreflex rather than rootcling to generate the dictionary.
 /// par           | Create a PAR file with the minimal set of code needed to read the content of the ROOT file. The name of the PAR file is basename(dirname), with extension '.par' enforced; the PAR file will be created at dirname(dirname).
 ///
 /// If, in addition to one of the 3 above options, the option "+" is specified,
 /// the function will generate:
 ///   - a script called MAKEP to build the shared lib
 ///   - a dirnameLinkDef.h file
-///   - rootcint will be run to generate a dirnameProjectDict.cxx file
+///   - rootcling will be run to generate a dirnameProjectDict.cxx file
 ///   - dirnameProjectDict.cxx will be compiled with the current options in compiledata.h
 ///   - a shared lib dirname.so will be created.
 /// If the option "++" is specified, the generated shared lib is dynamically
@@ -2736,10 +2736,10 @@ void TFile::WriteHeader()
 ///   - creates a new directory demo unless it already exist
 ///   - clear the previous directory content
 ///   - generate the xxx.h files for all classes xxx found in this file
-///    and not yet known to the CINT dictionary.
+///    and not yet known to the CLING dictionary.
 ///   - creates the build script MAKEP
 ///   - creates a LinkDef.h file
-///   - runs rootcint generating demoProjectDict.cxx
+///   - runs rootcling generating demoProjectDict.cxx
 ///   - compiles demoProjectDict.cxx into demoProjectDict.o
 ///   - generates a shared lib demo.so
 ///   - dynamically links the shared lib demo.so to the executable
@@ -3006,7 +3006,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       return;
    }
 
-   // Add rootcint/genreflex statement generating ProjectDict.cxx
+   // Add rootcling/genreflex statement generating ProjectDict.cxx
    FILE *ifp = nullptr;
    path.Form("%s/%sProjectInstances.h",clean_dirname.Data(),subdirname.Data());
 #ifdef R__WINGCC
@@ -3027,7 +3027,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       fprintf(fpMAKE,"genreflex %sProjectHeaders.h -o %sProjectDict.cxx --comments --iocomments %s ",subdirname.Data(),subdirname.Data(),gSystem->GetIncludePath());
       path.Form("%s/%sSelection.xml",clean_dirname.Data(),subdirname.Data());
    } else {
-      fprintf(fpMAKE,"rootcint -v1 -f %sProjectDict.cxx %s ", subdirname.Data(), gSystem->GetIncludePath());
+      fprintf(fpMAKE,"rootcling -v1 -f %sProjectDict.cxx %s ", subdirname.Data(), gSystem->GetIncludePath());
       path.Form("%s/%sLinkDef.h",clean_dirname.Data(),subdirname.Data());
    }
 
@@ -3051,7 +3051,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       fprintf(fp,"<lcgdict>\n");
       fprintf(fp,"\n");
    } else {
-      fprintf(fp,"#ifdef __CINT__\n");
+      fprintf(fp,"#ifdef __ICLING__\n");
       fprintf(fp,"\n");
    }
 

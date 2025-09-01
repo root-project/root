@@ -29,9 +29,9 @@
 
   When using in interpreted mode understand why the reloading reloads the calling script and then crashes :(
 
-  CINT does not properly call the custom operators when doing return fNtrack.
+  CLING does not properly call the custom operators when doing return fNtrack.
 
-  CINT does not handle fMatrix[2][1] well.
+  CLING does not handle fMatrix[2][1] well.
 
   The user's function in script.h are not exposed by ACLiC.
 
@@ -1880,7 +1880,7 @@ namespace Internal {
       fprintf(hf,"#endif\n");
       fprintf(hf,"\n\n");
 
-      fprintf(hf,"#ifdef __MAKECINT__\n");
+      fprintf(hf,"#ifdef __MAKECLING__\n");
       if (fListOfClasses.LastIndex()>=0) {
          TBranchProxyClassDescriptor *clp;
          next = &fListOfClasses;

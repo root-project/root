@@ -26,10 +26,10 @@ is no other option.
 2. The dictionaries
 
    The most convenient place to specify the conversion rules is a dictionary. One can
-do that either in CINT's LinkDef file or in the selection xml file being fed to genreflex.
+do that either in CLING's LinkDef file or in the selection xml file being fed to genreflex.
 The syntax of the rules is the following:
 
-   * For CINT dictionaries:
+   * For CLING dictionaries:
 
 #pragma read                                              \
     sourceClass="ClassA"                                  \

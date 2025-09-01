@@ -295,7 +295,7 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
          if (implementEmptyClass==1) {
             if (strchr(fullname, ':') == 0) {
                // yes this is too aggressive, this needs to be fixed properly by moving the #pragma out of band.
-               fprintf(fp, "#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n", fullname);
+               fprintf(fp, "#ifdef __MAKECLING__\n#pragma link C++ class %s+;\n#endif\n", fullname);
             }
             fprintf(fp, "#endif\n");
          }
@@ -588,7 +588,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
             TClass *paircl = TClass::GetClass(what.Data());
             if (paircl == 0 || !paircl->HasInterpreterInfo()) {
                AddUniqueStatement(
-                  fp, TString::Format("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n", what.Data()),
+                  fp, TString::Format("#ifdef __MAKECLING__\n#pragma link C++ class %s+;\n#endif\n", what.Data()),
                   inclist);
             }
          }
@@ -634,7 +634,7 @@ void TMakeProject::GeneratePostDeclaration(FILE *fp, const TVirtualStreamerInfo 
             // Only ask for it if needed.
             TClass *paircl = TClass::GetClass(what.Data());
             if (paircl == 0 || !paircl->HasInterpreterInfo()) {
-               AddUniqueStatement(fp, TString::Format("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n",what.Data()), inclist);
+               AddUniqueStatement(fp, TString::Format("#ifdef __MAKECLING__\n#pragma link C++ class %s+;\n#endif\n",what.Data()), inclist);
             }
          }
       }

@@ -35,7 +35,7 @@
 #pragma link C++ function TMath::Limits<Int_t>::Max();
 #pragma link C++ function TMath::Limits<Int_t>::Min();
 
-// exclude these since they do not work in CINT
+// exclude these since they do not work in CLING
 //#pragma link C++ function TMath::Limits<Long64_t>::Max();
 //#pragma link C++ function TMath::Limits<Long64_t>::Min();
 

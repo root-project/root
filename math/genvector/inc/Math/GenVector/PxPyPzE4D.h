@@ -302,7 +302,7 @@ public :
 
 
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__MAKECLING__) || defined(G__DICTIONARY)
 
    // ====== Set member functions for coordinates in other systems =======
 
@@ -333,7 +333,7 @@ private:
 
 
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__MAKECLING__) || defined(G__DICTIONARY)
 // move implementations here to avoid circle dependencies
 
 #include "Math/GenVector/PtEtaPhiE4D.h"
@@ -379,7 +379,7 @@ void PxPyPzE4D<ScalarType>::SetM(Scalar m) {
 
 } // end namespace ROOT
 
-#endif  // endif __MAKE__CINT || G__DICTIONARY
+#endif  // endif __MAKECLING__ || G__DICTIONARY
 
 
 #endif // ROOT_Math_GenVector_PxPyPzE4D

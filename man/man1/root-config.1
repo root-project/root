@@ -20,8 +20,8 @@ CPPFLAGS  += $(shell root-config \-\-cflags)
 LDLIBS    += $(shell root-config \-\-libs)
 LDFLAGS   += $(shell root-config \-\-ldflags)
 
-%Cint.cxx:Include.h LinkDef.h
-        rootcint \-f $@ \-c $^ 
+%Cling.cxx:Include.h LinkDef.h
+        rootcling \-f $@ \-c $^ 
 
 .fi
 .RE
@@ -38,19 +38,19 @@ the directories you use \fBROOT\fR libraries, have in your
 
 lib_LTLIBRARIES         = libFoo.la
 pkginclude_HEADERS      = Foo.h
-noinst_HEADERS          = FooCint.h
-libFoo_la_SOURCES       = Foo.cxx FooCint.cxx   
+noinst_HEADERS          = FooCling.h
+libFoo_la_SOURCES       = Foo.cxx FooCling.cxx   
 libFoo_la_LDFLAGS       = \-version-info 1:0 \-R @ROOTLIBDIR@
-libFoo_la_LDADD         = \-lCore \-lCint @ROOTAUXLIBS@
+libFoo_la_LDADD         = \-lCore \-lCling @ROOTAUXLIBS@
 
-BUILT_SOURCES           = FooCint.cxx FooCint.h 
+BUILT_SOURCES           = FooCling.cxx FooCling.h 
 
 AM_CPPFLAGS             = \-I@ROOTINCDIR@
 AM_LDFLAGS              = \-L@ROOTLIBDIR@
-CLEANFILES              = *Cint.cxx *Cint.h *~ core 
+CLEANFILES              = *Cling.cxx *Cling.h *~ core 
 
-%Cint.cxx %Cint.h:Include.h LinkDef.h
-        @ROOTCINT@ \-f $*Cint.cxx -c $(INCLUDES) $(AM_CPPFLAGS) $^  
+%Cling.cxx %Cling.h:Include.h LinkDef.h
+        @ROOTCLING@ \-f $*Cling.cxx -c $(INCLUDES) $(AM_CPPFLAGS) $^  
 
 .fi
 .RE
@@ -119,8 +119,8 @@ full path to \fIroot-config\fR
 .B ROOTEXEC
 full path to \fIroot\fR
 .TP
-.B ROOTCINT
-full path to \fIrootcint\fR
+.B ROOTCLING
+full path to \fIrootcling\fR
 .TP
 .B ROOTLIBDIR
 Where the \fBROOT\fR libraries are 
@@ -254,7 +254,7 @@ Print alternative Fortran compiler specified when ROOT was built
 .B \-\-ld
 Print alternative Linker specified when ROOT was built
 .SH "SEE ALSO"
-\fIroot\fR(1), \fIroot-cint\fR(1)
+\fIroot\fR(1), \fIrootcling\fR(1)
 .PP
 See also the \fBROOT\fR webpages:
 .UR http://root.cern

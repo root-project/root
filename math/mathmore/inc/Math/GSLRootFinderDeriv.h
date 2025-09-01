@@ -83,7 +83,7 @@ public:
    GSLRootFinderDeriv(GSLRootFinderDeriv &&) = delete;
    GSLRootFinderDeriv &operator=(GSLRootFinderDeriv &&) = delete;
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__MAKECLING__) || defined(G__DICTIONARY)
    bool SetFunction( const IGenFunction & , double , double ) override {
       std::cerr <<"GSLRootFinderDeriv - Error : Algorithm requirs derivatives" << std::endl;
       return false;

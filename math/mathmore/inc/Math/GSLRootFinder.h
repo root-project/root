@@ -82,7 +82,7 @@ namespace Math {
     GSLRootFinder(GSLRootFinder &&) = delete;
     GSLRootFinder &operator=(GSLRootFinder &&) = delete;
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__MAKECLING__) || defined(G__DICTIONARY)
     bool SetFunction( const IGradFunction & , double ) override {
        std::cerr <<"GSLRootFinder - Error : this method must be used with a Root Finder algorithm using derivatives" << std::endl;
        return false;

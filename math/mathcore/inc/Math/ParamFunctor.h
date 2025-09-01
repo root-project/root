@@ -142,8 +142,8 @@ private :
 };
 
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
-// needed since CINT initialize it with TRootIOCtor
+#if defined(__MAKECLING__) || defined(G__DICTIONARY)
+// needed since CLING initialize it with TRootIOCtor
 //class TRootIOCtor;
 template<class ParentFunctor>
 class ParamFunctorHandler<ParentFunctor,TRootIOCtor *> : public ParentFunctor::Impl

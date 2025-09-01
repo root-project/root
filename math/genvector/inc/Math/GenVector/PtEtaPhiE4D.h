@@ -327,7 +327,7 @@ public:
 
 
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__MAKECLING__) || defined(G__DICTIONARY)
 
    // ====== Set member functions for coordinates in other systems =======
 
@@ -356,7 +356,7 @@ private:
 
 // move implementations here to avoid circle dependencies
 #include "Math/GenVector/PxPyPzE4D.h"
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__MAKECLING__) || defined(G__DICTIONARY)
 #include "Math/GenVector/PtEtaPhiM4D.h"
 #endif
 
@@ -370,7 +370,7 @@ inline void PtEtaPhiE4D<ScalarType>::SetPxPyPzE(Scalar px, Scalar py, Scalar pz,
 }
 
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__MAKECLING__) || defined(G__DICTIONARY)
 
   // ====== Set member functions for coordinates in other systems =======
 
@@ -400,7 +400,7 @@ inline void PtEtaPhiE4D<ScalarType>::SetM(Scalar m) {
    *this = PtEtaPhiE4D<Scalar>(v);
 }
 
-#endif  // endif __MAKE__CINT || G__DICTIONARY
+#endif  // endif __MAKECLING__ || G__DICTIONARY
 
 } // end namespace Math
 

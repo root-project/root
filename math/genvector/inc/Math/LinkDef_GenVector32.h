@@ -149,8 +149,8 @@
 // using a tag (only cartesian and cylindrical eta)
 
 #ifdef __CLING__
-// Work around CINT and autoloader deficiency with template default parameter
-// Those requests as solely for rlibmap, they do no need to be seen by rootcint
+// Work around CLING and autoloader deficiency with template default parameter
+// Those requests as solely for rlibmap, they do no need to be seen by rootcling
 #pragma link C++ class    ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<Double32_t>,ROOT::Math::DefaultCoordinateSystemTag >+;
 #pragma read sourceClass="ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<double>,ROOT::Math::DefaultCoordinateSystemTag >"    \
              targetClass="ROOT::Math::DisplacementVector3D<ROOT::Math::Cartesian3D<Double32_t>,ROOT::Math::DefaultCoordinateSystemTag >";

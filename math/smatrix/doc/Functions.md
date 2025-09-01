@@ -105,5 +105,5 @@ std::cout << v << std::endl;
 ~~~
 
 
-In the ROOT distribution, the CINT dictionary is generated for SMatrix and SVector for double types and sizes up to 5\. This allows the storage of them in a ROOT file.
+In the ROOT distribution, the CLING dictionary is generated for SMatrix and SVector for double types and sizes up to 5\. This allows the storage of them in a ROOT file.
 

@@ -203,7 +203,7 @@ public :
 
 
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__MAKECLING__) || defined(G__DICTIONARY)
 
    // ====== Set member functions for coordinates in other systems =======
 
@@ -232,7 +232,7 @@ private:
 } // end namespace ROOT
 
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__MAKECLING__) || defined(G__DICTIONARY)
 // need to put here setter methods to resolve nasty cyclical dependencies
 // I need to include other coordinate systems only when Cartesian is already defined
 // since they depend on it
