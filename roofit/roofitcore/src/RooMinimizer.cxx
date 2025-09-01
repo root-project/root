@@ -332,7 +332,6 @@ void RooMinimizer::determineStatus(bool fitterReturnValue)
 /// \param[in] alg  Fit algorithm to use. (Optional)
 int RooMinimizer::minimize(const char *type, const char *alg)
 {
-   FreezeDisconnectedParametersRAII freeze(this, *_fcn);
 
    if (_cfg.timingAnalysis) {
 #ifdef ROOFIT_MULTIPROCESS
@@ -778,6 +777,7 @@ void RooMinimizer::profileStop()
 
 ROOT::Math::IMultiGenFunction *RooMinimizer::getMultiGenFcn() const
 {
+
    return _fcn->getMultiGenFcn();
 }
 
@@ -908,6 +908,7 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
 {
    // fit a user provided FCN function
    // create fit parameter settings
+
    // Check number of parameters
    unsigned int npar = fcn.NDim();
    if (npar == 0) {
@@ -915,12 +916,11 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
       return false;
    }
 
-   // initiate  the minimizer
+   // initiate the minimizer
    initMinimizer();
 
    // Identify floating RooCategory parameters
    RooArgSet floatingCats;
-
    for (auto arg : _fcn->allParams()) {
       if (arg->isCategory() && !arg->isConstant())
          floatingCats.add(*arg);
@@ -942,7 +942,8 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
    }
 
    if (nPdfs == 0) {
-
+      coutI(Minimization) << "[fitFCN] No discrete parameters, performing continuous minimization only" << std::endl;
+      FreezeDisconnectedParametersRAII freeze(this, *_fcn);
       bool isValid = _minimizer->Minimize();
       if (!_result)
          _result = std::make_unique<FitResult>();
@@ -953,8 +954,7 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
    }
 
    // set also new parameter values and errors in FitConfig
-
-   //  Prepare discrete indices
+   // Prepare discrete indices
    std::vector<int> maxIndices;
    for (auto *cat : pdfIndices)
       maxIndices.push_back(cat->size());
@@ -963,11 +963,10 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
    std::map<std::vector<int>, double> nllMap;
    std::vector<int> bestIndices(nPdfs, 0);
    double bestNLL = 1e30;
-   bool improved = true;
 
+   bool improved = true;
    while (improved) {
       improved = false;
-
       auto combos = generateOrthogonalCombinations(maxIndices);
       reorderCombinations(combos, maxIndices, bestIndices);
 
@@ -984,7 +983,7 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
             wasConst[i] = pdfIndices[i]->isConstant();
             pdfIndices[i]->setConstant(true);
          }
-
+         FreezeDisconnectedParametersRAII freeze(this, *_fcn);
          _minimizer->Minimize();
 
          for (size_t i = 0; i < nPdfs; ++i)
@@ -1002,28 +1001,42 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
       }
    }
 
-   for (size_t i = 0; i < nPdfs; ++i)
+   for (size_t i = 0; i < nPdfs; ++i) {
       pdfIndices[i]->setIndex(bestIndices[i]);
+      pdfIndices[i]->setConstant(true);
+   }
 
-   coutI(Minimization) << "All NLL Values per Combination:\n" << std::endl;
+   FreezeDisconnectedParametersRAII freeze(this, *_fcn);
+   _minimizer->Minimize();
+
+   coutI(Minimization) << "All NLL Values per Combination:" << std::endl;
    for (const auto &entry : nllMap) {
       const auto &combo = entry.first;
       double val = entry.second;
-      coutI(Minimization) << "Combo: [" << std::endl;
-      for (size_t i = 0; i < combo.size(); ++i)
-         std::cout << combo[i] << (i + 1 < combo.size() ? ", " : "");
-      coutI(Minimization) << "], NLL: " << val << "\n" << std::endl;
+
+      std::stringstream ss;
+      ss << "Combo: [";
+      for (size_t i = 0; i < combo.size(); ++i) {
+         ss << combo[i];
+         if (i + 1 < combo.size())
+            ss << ", ";
+      }
+      ss << "], NLL: " << val;
+
+      coutI(Minimization) << ss.str() << std::endl;
    }
 
-   coutI(Minimization) << "DP Best Indices: [" << std::endl;
+   std::stringstream ssBest;
+   ssBest << "DP Best Indices: [";
    for (size_t i = 0; i < bestIndices.size(); ++i) {
-      coutI(Minimization) << bestIndices[i] << std::endl;
+      ssBest << bestIndices[i];
       if (i + 1 < bestIndices.size())
-         coutI(Minimization) << ", " << std::endl;
+         ssBest << ", ";
    }
-   coutI(Minimization) << "], NLL = " << bestNLL << "\n" << std::endl;
+   ssBest << "], NLL = " << bestNLL;
 
-   // Fill FitResult and update FitConfig
+   coutI(Minimization) << ssBest.str() << std::endl;
+
    if (!_result)
       _result = std::make_unique<FitResult>();
    fillResult(true);
@@ -1031,7 +1044,6 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
 
    return true;
 }
-
 bool RooMinimizer::calculateHessErrors()
 {
    // compute the Hesse errors according to configuration
