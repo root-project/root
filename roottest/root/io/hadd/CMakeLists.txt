@@ -1,13 +1,14 @@
-if(NOT pyroot)
-  return()
+if(pyroot)
+  ROOT_ADD_PYUNITTEST(input_validation input_validation.py GENERIC PYTHON_DEPS pytest)
 endif()
 
-ROOT_ADD_PYUNITTEST(input_validation input_validation.py GENERIC PYTHON_DEPS pytest)
 
 ################################################################
 #                    compression tests                         #
 ################################################################
-ROOT_ADD_PYUNITTEST(compression_settings test_compression_settings.py GENERIC PYTHON_DEPS pytest)
+if(pyroot)
+  ROOT_ADD_PYUNITTEST(compression_settings test_compression_settings.py GENERIC PYTHON_DEPS pytest)
+endif()
 
 # merge 2 RNTuples passing an explicit compression
 ROOTTEST_ADD_TEST(test_MergeChangeComp_explicit
