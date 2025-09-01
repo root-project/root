@@ -1858,7 +1858,8 @@ endfunction()
 # ROOT_ADD_TEST_SUBDIRECTORY( <name> )
 #----------------------------------------------------------------------------
 function(ROOT_ADD_TEST_SUBDIRECTORY subdir)
-  cmake_path(RELATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${subdir} BASE_DIRECTORY ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE subdir)
+  set(fullsubdir ${CMAKE_CURRENT_SOURCE_DIR}/${subdir})
+  cmake_path(RELATIVE_PATH fullsubdir BASE_DIRECTORY ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE subdir)
   set_property(GLOBAL APPEND PROPERTY ROOT_TEST_SUBDIRS ${subdir})
 endfunction()
 
@@ -2089,7 +2090,7 @@ endfunction()
 #   install_dir  - The install subdirectory relative to CMAKE_INSTALL_PREFIX
 #----------------------------------------------------------------------------
 function(ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH target install_dir)
-  cmake_path(RELATIVE_PATH "${CMAKE_INSTALL_FULL_LIBDIR}" BASE_DIRECTORY "${CMAKE_INSTALL_PREFIX}/${install_dir}" OUTPUT_VARIABLE to_libdir)
+  cmake_path(RELATIVE_PATH CMAKE_INSTALL_FULL_LIBDIR BASE_DIRECTORY "${CMAKE_INSTALL_PREFIX}/${install_dir}" OUTPUT_VARIABLE to_libdir)
 
   # New path
   if(APPLE)

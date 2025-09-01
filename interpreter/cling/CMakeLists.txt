@@ -295,7 +295,7 @@ macro(add_cling_library name)
   set(srcs)
   if(MSVC_IDE OR XCODE)
     # Add public headers
-    cmake_path(RELATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR} BASE_DIRECTORY ${CLING_SOURCE_DIR}/lib/ OUTPUT_VARIABLE lib_path)
+    cmake_path(RELATIVE_PATH CMAKE_CURRENT_SOURCE_DIR BASE_DIRECTORY ${CLING_SOURCE_DIR}/lib/ OUTPUT_VARIABLE lib_path)
     if(NOT lib_path MATCHES "^[.][.]")
       file( GLOB_RECURSE headers
         ${CLING_SOURCE_DIR}/include/cling/${lib_path}/*.h
