@@ -1,6 +1,6 @@
 /// \file
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+/// \warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
+/// Feedback is welcome!
 
 #ifndef ROOT_RAxes
 #define ROOT_RAxes
@@ -139,7 +139,7 @@ public:
       return {globalIndex, true};
    }
 
-   /// ROOT Streamer function to throw when trying to store an object of this class.
+   /// %ROOT Streamer function to throw when trying to store an object of this class.
    void Streamer(TBuffer &) { throw std::runtime_error("unable to store RAxes"); }
 };
 
