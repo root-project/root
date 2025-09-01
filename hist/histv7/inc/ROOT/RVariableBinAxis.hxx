@@ -1,6 +1,6 @@
 /// \file
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+/// \warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
+/// Feedback is welcome!
 
 #ifndef ROOT_RVariableBinAxis
 #define ROOT_RVariableBinAxis
@@ -33,8 +33,8 @@ ROOT::Experimental::RVariableBinAxis axis(binEdges);
 It is possible to disable underflow and overflow bins by passing `enableFlowBins = false`. In that case, arguments
 outside the axis will be silently discarded.
 
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is
-welcome!
+\warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
+Feedback is welcome!
 */
 class RVariableBinAxis final {
    /// The (ordered) edges of the normal bins
@@ -166,7 +166,7 @@ public:
                              : GetNormalRange();
    }
 
-   /// ROOT Streamer function to throw when trying to store an object of this class.
+   /// %ROOT Streamer function to throw when trying to store an object of this class.
    void Streamer(TBuffer &) { throw std::runtime_error("unable to store RVariableBinAxis"); }
 };
 

@@ -1,6 +1,6 @@
 /// \file
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+/// \warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
+/// Feedback is welcome!
 
 #ifndef ROOT_RBinIndexRange
 #define ROOT_RBinIndexRange
@@ -36,8 +36,8 @@ for (auto index : axis.GetFullRange()) {
 }
 \endcode
 
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is
-welcome!
+\warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
+Feedback is welcome!
 */
 class RBinIndexRange final {
    friend RBinIndexRange Internal::CreateBinIndexRange(RBinIndex, RBinIndex, std::size_t);
