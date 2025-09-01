@@ -358,7 +358,7 @@ function(arrow_find_package
 endfunction()
 
 if(NOT "$ENV{ARROW_HOME}" STREQUAL "")
-  file(TO_CMAKE_PATH "$ENV{ARROW_HOME}" ARROW_HOME)
+  cmake_path(CONVERT "$ENV{ARROW_HOME}" TO_CMAKE_PATH_LIST ARROW_HOME)
 endif()
 arrow_find_package(ARROW
                    "${ARROW_HOME}"

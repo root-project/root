@@ -426,8 +426,8 @@ if(MSVC)
 else()
   set(_os_cat "cat")
 endif()
-file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" _from_native)
-file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" _to_native)
+cmake_path(CONVERT "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" TO_NATIVE_PATH_LIST _from_native)
+cmake_path(CONVERT "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" TO_NATIVE_PATH_LIST _to_native)
 
 add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/ROOT.modulemap")
 add_custom_command(
