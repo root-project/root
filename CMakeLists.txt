@@ -514,22 +514,22 @@ else()
       ${CMAKE_SOURCE_DIR} . ${pyroot_legacy} ${__cling_pch}
     COMMAND
       ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${Python3_EXECUTABLE}
-      ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch
-      ${__allIncludes} -I${CMAKE_BINARY_DIR}/include -I${CMAKE_SOURCE_DIR}/core
+      "${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py" etc/allDict.cxx.pch
+      ${__allIncludes} -I"${CMAKE_BINARY_DIR}/include" -I"${CMAKE_SOURCE_DIR}/core"
     DEPENDS
       rootcling ${__pch_dependencies} ${__pch_dictionaries}
-      ${CMAKE_SOURCE_DIR}/cmake/unix/makepchinput.py
-      ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
+      "${CMAKE_SOURCE_DIR}/cmake/unix/makepchinput.py"
+      "${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py"
   )
   add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
-  install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
-  install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+  install(FILES "${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch" DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+  install(DIRECTORY "${CMAKE_BINARY_DIR}/etc/dictpch" DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 endif()
 
 # FIXME: move installation of PCMS in ROOT_GENERATE_DICTIONARY().
 # We are excluding directories, which are accidentaly copied via unxpected behaviour of install(DIRECTORY ..)
 install(
-   DIRECTORY ${CMAKE_BINARY_DIR}/lib/
+   DIRECTORY "${CMAKE_BINARY_DIR}/lib/"
    DESTINATION ${CMAKE_INSTALL_LIBDIR}
    FILES_MATCHING
    PATTERN "*.pcm"
@@ -553,7 +553,8 @@ if(runtime_cxxmodules)
     set(modules_idx_cmd COMMAND ${CMAKE_COMMAND} -E env PATH="${library_output_dir}\\\;%PATH%"
                                 ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b)
   else()
-    set(modules_idx_cmd COMMAND ${ld_library_path}=${library_output_dir}:$ENV{${ld_library_path}}
+    cmake_path(CONVERT ${library_output_dir} TO_NATIVE_PATH_LIST library_output_dir)
+    set(modules_idx_cmd COMMAND ${CMAKE_COMMAND} -E env ${ld_library_path}=${library_output_dir}:$ENV{${ld_library_path}}
                                 ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b)
   endif()
   add_custom_command(OUTPUT ${library_output_dir}/modules.idx
@@ -577,7 +578,7 @@ if(WIN32)
   set(hsimple_cmd COMMAND ${CMAKE_COMMAND} -E env PATH="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}\\\;%PATH%"
                           ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x ${CMAKE_SOURCE_DIR}/tutorials/hsimple.C -e return)
 else()
-  set(hsimple_cmd COMMAND ${MODULES_ROOT_INCPATH} ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
+  set(hsimple_cmd COMMAND ${CMAKE_COMMAND} -E env ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
                           ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x ${CMAKE_SOURCE_DIR}/tutorials/hsimple.C -e return)
 endif()
 add_custom_command(OUTPUT tutorials/hsimple.root
