@@ -24,7 +24,7 @@ class my_shared_ptr
   // reference counting mechanism
    void PF(const char* func) {
       std::string clname;
-#if defined(__CINT__) || defined(_MSC_VER)
+#if defined(__ICLING__) || defined(_MSC_VER)
       clname = T::ClassName();
 #else
       clname = __PRETTY_FUNCTION__;
@@ -54,7 +54,7 @@ public:
   };
 };
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class my_shared_ptr<Parent>+;
 #pragma link C++ class my_shared_ptr<Child>+;
 #endif
@@ -69,7 +69,7 @@ int templatefriend()
   return 0;
 }
 
-#ifndef __MAKECINT__
+#ifndef __MAKECLING__
 int main() { return templatefriend(); }
 #endif
 

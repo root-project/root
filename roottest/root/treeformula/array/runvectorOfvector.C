@@ -6,7 +6,7 @@ typedef std::vector<unsigned int> subUCollection;
 typedef std::vector<subUCollection> Ucollection;
 typedef std::vector<int> subCollection;
 typedef std::vector<subCollection> collection;
-#ifndef __CINT__
+#ifndef __ICLING__
 typedef std::vector<collection> third;
 #endif
 

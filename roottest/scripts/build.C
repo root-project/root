@@ -31,7 +31,7 @@ void build(const char *filename, const char *lib = 0, const char *obj = 0, const
       libstolink.Append(what);
       s.ReplaceAll(what,libstolink);
       gSystem->SetMakeSharedLib(s);
-      
+
    }
 #ifdef __CLING__
    TString r;

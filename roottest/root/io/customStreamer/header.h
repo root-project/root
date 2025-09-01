@@ -2,7 +2,7 @@
 #include "TClass.h"
 class Hard2Stream {
 private:
-#ifndef __CINT__
+#ifndef __ICLING__
    double val;
 #endif
 public:

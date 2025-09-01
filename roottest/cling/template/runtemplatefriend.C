@@ -1,5 +1,5 @@
 {
-// Make sure the library is not loaded instead of 
+// Make sure the library is not loaded instead of
 // the script
 gInterpreter->UnloadLibraryMap("templatefriend_cxx");
 

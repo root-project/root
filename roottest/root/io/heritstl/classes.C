@@ -64,7 +64,7 @@ void testing() {
    f->Close();
 }
 
-#ifndef __CINT__
+#ifndef __ICLING__
 ClassImp(PlexSTL)
 ClassImp(PlexItem)
 ClassImp(Object)

@@ -1,6 +1,6 @@
 #include "A.h"
 
-#if !defined(__CINT__)
+#if !defined(__ICLING__)
 ClassImp(A);
 #endif
 

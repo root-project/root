@@ -43,7 +43,7 @@ public:
 
 #include "TBufferFile.h"
 #include "TClass.h"
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class list<simple>+;
 #endif
 

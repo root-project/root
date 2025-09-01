@@ -151,7 +151,7 @@ void jetwrite(const char* ofname="jetclass.root", Int_t num=5)
 //------------------------ jetclass_linkdef.h ------------------------------
 
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class Jet+;
 #pragma link C++ class Event+;
 #endif

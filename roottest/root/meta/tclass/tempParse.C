@@ -16,7 +16,7 @@ private:
   T m_value;   
 };
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class SimpleProperty<std::string>;
 #endif
 

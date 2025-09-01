@@ -9,7 +9,7 @@
    if (TFile *f = (TFile*)gROOT->ProcessLine("gFile;"))
 #else
       if (gFile!=0)
-#endif         
+#endif
    {
 #ifdef ClingWorkAroundMissingDynamicScope
       TTree *mk; f->GetObject("mk",mk);

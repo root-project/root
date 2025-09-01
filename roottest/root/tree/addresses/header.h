@@ -49,7 +49,7 @@ class SubSTreeEvent: public STreeEvent {
   ClassDefOverride(SubSTreeEvent,1) //event encapsulated in a tree
 }; // STreeEvent
 
-#ifdef __CINT__
+#ifdef __ICLING__
 
 #pragma link off all globals;
 #pragma link off all classes;

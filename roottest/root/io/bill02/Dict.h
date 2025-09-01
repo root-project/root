@@ -1,7 +1,7 @@
 /********************************************************************
 * Dict.h
 ********************************************************************/
-#ifdef __CINT__
+#ifdef __ICLING__
 #error Dict.h/C is only for compilation. Abort cint.
 #endif
 #include <stddef.h>

@@ -33,7 +33,7 @@ public:
    virtual ~INav4MomAssocs_p2();
 
 };
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class pair<ElementLink_p2<unsigned int>,vector<ElementLink_p2<unsigned int> > >+;
 #endif
 #endif

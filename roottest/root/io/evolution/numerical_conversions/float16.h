@@ -230,7 +230,7 @@ bool readfile(const char *filename, Bool_t checkValue = kTRUE)
    }
 }
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class myclass+;
 #pragma link C++ function readfile;
 #pragma link C++ function write;

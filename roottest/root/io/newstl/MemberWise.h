@@ -150,7 +150,7 @@ public:
    std::vector<NeverWritten> fAlwaysEmpty;
 };
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class Member-;
 #pragma link C++ class Content+;
 #pragma link C++ class Holder+;

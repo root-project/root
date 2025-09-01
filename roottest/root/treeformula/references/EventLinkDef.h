@@ -1,4 +1,4 @@
-#ifdef __CINT__
+#ifdef __ICLING__
 
 #pragma link C++ nestedclasses;
 #pragma link C++ nestedtypedef;

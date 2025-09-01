@@ -33,7 +33,7 @@ using std::multiset;
 
     
 //  	static members init
-#ifndef __CINT__ 
+#ifndef __ICLING__ 
 Int_t  TOffset::fgAlign[16]  	= {0};    
 
 

@@ -11,7 +11,7 @@ namespace LoKi {
 
 } // namespace Loki
 
-#ifdef __CINT__
+#ifdef __ICLING__
 #pragma link C++ class LoKi::Constant< const LHCb::Particle* >;
 #pragma link C++ class LoKi::BooleanConstant< const LHCb::Particle* >;
 #endif

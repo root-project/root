@@ -14,7 +14,7 @@ private:
    TYPE val;
    */
     typedef            TYPE                              value_type ;
-#ifndef __CINT__
+#ifndef __ICLING__
     typedef            ::ValueVector<value_type>         self_type ;
     typedef  typename  std::vector<value_type>           collection_type ;
 #else

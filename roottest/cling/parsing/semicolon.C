@@ -3,7 +3,7 @@ void semicolon(const char *string = "/star/simu/simu/jwebb/11-12-2010-pp500-pile
   cout << string << endl;
 }
 
-#if !defined(__CINT__) && !defined(__CLING__)
+#if !defined(__ICLING__) && !defined(__CLING__)
 int main(int /* argc */, char **argv) {
   semicolon(argv[1]);
   return 0;

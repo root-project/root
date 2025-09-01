@@ -101,7 +101,7 @@ public:
 #endif
 
 #undef TopLevel
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #ifdef WITHCLASSDEF
 #pragma link C++ class TopLevelCl+;
 #else

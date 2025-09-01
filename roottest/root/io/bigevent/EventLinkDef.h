@@ -1,4 +1,4 @@
-#ifdef __CINT__
+#ifdef __ICLING__
 
 //#ppragma link off all globals;
 //#ppragma link off all classes;

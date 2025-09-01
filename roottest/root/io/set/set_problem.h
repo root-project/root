@@ -32,7 +32,7 @@ public:
 
 };
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ typedef set_t;
 #pragma link C++ class SetProblem+;
 #endif

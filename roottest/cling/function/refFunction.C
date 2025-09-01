@@ -1,4 +1,4 @@
-#if defined(__MAKECINT__) || !defined(__CINT__)
+#if defined(__MAKECLING__) || !defined(__ICLING__)
 #include "refClasses.cxx"
 #endif
 

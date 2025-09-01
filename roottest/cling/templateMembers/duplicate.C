@@ -38,7 +38,7 @@ public:
    template <class THType> THType *grab2(const char*) { return 0; };
 };
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 
 #pragma link C++ class HistMan;
 #pragma link C++ function HistMan::Book<TH1D>(const char*, const char*, int, Axis_t, Axis_t, const char*);

@@ -5,7 +5,7 @@
 
 template <class T> class something {};
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class something<std::string>;
 #endif
 

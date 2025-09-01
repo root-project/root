@@ -9,7 +9,7 @@ typedef list<UHTDecay> DecayListType;
 class UHTTimeFitter : public TObject{
  public:
 
-#if defined(__CINT__) && 0
+#if defined(__ICLING__) && 0
   list<UHTDecay> decayList;
 #else
   DecayListType decayList;

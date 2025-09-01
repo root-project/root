@@ -4,7 +4,7 @@
 #include "TSelector.h"
 #include "TError.h"
 
-#ifndef __CINT__
+#ifndef __ICLING__
 #include "emptysel.h"
 #endif
 
