@@ -95,7 +95,7 @@ public:
 };
 
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ options=version(8) class ACache+;
 #pragma link C++ options=version(2) class Container+;
 #pragma link C++ class Unversioned+;

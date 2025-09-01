@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class vector<TLorentzVector>+; 
 #endif 
 

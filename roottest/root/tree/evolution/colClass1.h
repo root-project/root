@@ -45,7 +45,7 @@ public:
    ClassDef(colClass,2);
 };
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class MoreNested+;
 #pragma link C++ class Nested+;
 #pragma link C++ class Inside+;

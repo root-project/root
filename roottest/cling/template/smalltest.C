@@ -13,7 +13,7 @@ template <class T> Buffer& operator>>(Buffer &buf, Array<T> *&obj) {
   fprintf(stderr,"Array operator>>\n");
   return buf;
 }
-#elif defined(__CINT__)
+#elif defined(__ICLING__)
 template <class Tmpl> Buffer &operator>>(Buffer &buf, Tmpl *&obj) {
   fprintf(stderr,"Generic operator>>\n");
   return buf;

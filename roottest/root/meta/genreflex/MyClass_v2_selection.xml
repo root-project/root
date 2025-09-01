@@ -27,7 +27,7 @@
 <!--
 The rule for a linkdef:
 
-#ifdef __CINT__
+#ifdef __ICLING__
 #pragma link off all globals;
 #pragma link off all classes;
 #pragma link off all functions;

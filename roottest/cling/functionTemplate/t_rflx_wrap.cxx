@@ -1,4 +1,4 @@
-#ifndef __CINT__
+#ifndef __ICLING__
 #include "t_rflx.cpp"
 #endif
 

@@ -1,4 +1,4 @@
-#if !defined(__CINT__) || defined(__MAKECINT__)
+#if !defined(__ICLING__) || defined(__MAKECLING__)
 #include <TFile.h>
 #include <TTree.h>
 #include <TBranch.h>

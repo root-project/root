@@ -472,7 +472,7 @@ typedef string cstring;
 # 13 "/home/wmtan/root/cint/stl/_string" 2
 
 
-// __MAKECINT__// __MAKECINT__
+// __MAKECLING__// __MAKECLING__
 # 63 "/home/wmtan/root/cint/stl/_string"
 
 
@@ -3269,7 +3269,7 @@ void G__list_memfunc(char *classname) {
 
 /* of G__TYPEINFO_H */
 
-/* __CINT__ */
+/* __ICLING__ */
 # 2 "/home/wmtan/root/cint/include/typeinfo" 2
 
 }

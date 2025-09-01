@@ -19,7 +19,7 @@ namespace A {
 #endif
    };
    
-#ifndef __MAKECINT__
+#ifndef __MAKECLING__
   ClassDefT2(Class2,T)
 #endif
 }

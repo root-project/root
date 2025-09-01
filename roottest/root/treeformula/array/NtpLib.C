@@ -1,7 +1,7 @@
 #include "FillNtp.cxx"
 #include "NtpRecord.cxx"
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class NtpShower+;
 #pragma link C++ class NtpEvent+;
 #pragma link C++ class NtpRecord+;

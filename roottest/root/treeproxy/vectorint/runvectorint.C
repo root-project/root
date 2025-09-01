@@ -15,7 +15,7 @@ public:
    ClassDefOverride(Track,1);
 };
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class vector<vector<double> >+;
 //NOTYET #pragma link C++ class vector<vector<vector<double> > >+;
 #pragma link C++ class Track+;

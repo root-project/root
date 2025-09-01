@@ -15,6 +15,6 @@ namespace ns1 {
    }
 }
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class ns1::ns2::ns3::SomeClass+;
 #endif

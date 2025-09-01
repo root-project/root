@@ -195,7 +195,7 @@ namespace genie {
 
 
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 
 #pragma link C++ namespace genie;
 #pragma link C++ class genie::ConfigPool;
@@ -209,4 +209,4 @@ namespace genie {
 #pragma link C++ class genie::RegistryItem<genie__Wrapper<double> >+; // wont work because the friend parsing does not handle scope in  template param
 #pragma link C++ class genie::RegistryItemI;
 
-#endif // __MAKECINT__
+#endif // __MAKECLING__

@@ -1,4 +1,4 @@
 #include "templateMembersClasses.h"
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #include "templateMembersLinkdef.h"
 #endif

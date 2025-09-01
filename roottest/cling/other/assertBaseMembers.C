@@ -1,4 +1,4 @@
-#ifdef __CINT__
+#ifdef __ICLING__
 // GCC and clang disagree with CINT, i.e. CINT fails for those.
 # define HIDEKNOWNFAILURES
 #endif

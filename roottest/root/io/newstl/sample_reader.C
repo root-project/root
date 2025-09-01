@@ -9,7 +9,7 @@
 #include <iostream>
 #include <vector>
 
-void sample_reader() 
+void sample_reader()
 {
   TFile f("samplerootfile.root");
   TTree* bxtree = 0;

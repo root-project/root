@@ -1,6 +1,6 @@
 class TopLevel { public: virtual ~TopLevel() {} };
 class BottomOne : public TopLevel {};
-#ifndef __CINT__
+#ifndef __ICLING__
 #ifndef __CLING__
 class BottomMissing : public TopLevel {};
 #endif
@@ -17,11 +17,11 @@ void missingInfo() {
    TopLevel *missing = new BottomMissing;
 
    TClass *cl;
-   
+
    cl = TClass::GetClass(typeid(TopLevel));
    TClass *top = cl;
    if (cl) {
-      cout << "For toplevel found " << endl; 
+      cout << "For toplevel found " << endl;
       //cout << (void*)cl << endl;
       cl->Print();
    } else {
@@ -30,7 +30,7 @@ void missingInfo() {
 
    cl = TClass::GetClass(typeid(*one));
    if (cl) {
-      cout << "For one found " << endl; 
+      cout << "For one found " << endl;
       //cout << (void*)cl << endl;
       cl->Print();
    } else {
@@ -39,7 +39,7 @@ void missingInfo() {
 
    cl = TClass::GetClass(typeid(*missing));
    if (cl) {
-      cout << "For missing found " << endl; 
+      cout << "For missing found " << endl;
       //cout << (void*)cl << endl;
       cl->Print();
    } else {
@@ -49,7 +49,7 @@ void missingInfo() {
    if (top) {
       cl = top->GetActualClass(one);
       if (cl) {
-         cout << "For one found " << endl; 
+         cout << "For one found " << endl;
          //cout << (void*)cl << endl;
          cl->Print();
       } else {
@@ -58,7 +58,7 @@ void missingInfo() {
 
       cl = top->GetActualClass(missing);
       if (cl) {
-         cout << "For missing found " << endl; 
+         cout << "For missing found " << endl;
          //cout << (void*)cl << endl;
          cl->Print();
       } else {

@@ -1,5 +1,5 @@
 // autoloading fails! so we need to include <vector>:
-#if !defined(__CINT__) || 1
+#if !defined(__ICLING__) || 1
 #include <vector> // loads the cintdlls
 #include <algorithm>
 #include "TROOT.h"

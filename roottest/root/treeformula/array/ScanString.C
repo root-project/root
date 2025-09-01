@@ -27,7 +27,7 @@ void ScanString() {
    t->Scan("tops.i:tops.title.fData","");
 }
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class vector<ScanStringClass>;
 #endif
 

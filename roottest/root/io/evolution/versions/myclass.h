@@ -23,7 +23,7 @@ public:
 
 #include "TFile.h"
 
-#ifndef __CINT__
+#ifndef __ICLING__
 #if VERSION==3
 RootClassVersion(MyClass,3)
 #endif

@@ -14,7 +14,7 @@ public:
    }
 };
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class pair<int,std::vector<int> >+;
 #endif
 

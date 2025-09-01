@@ -1,7 +1,7 @@
 #include "runtemplate32.h"
 #include "longExample.h"
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class WithDouble+;
 #pragma link C++ class MyVector<Double32_t>+;
 #pragma link C++ class MyVector<float>+;

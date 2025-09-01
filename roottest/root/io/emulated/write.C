@@ -1,4 +1,4 @@
-#if defined(__CLING__) && !defined(__MAKECINT__) && !defined(ClingWorkAroundMissingSmartInclude)
+#if defined(__CLING__) && !defined(__MAKECLING__) && !defined(ClingWorkAroundMissingSmartInclude)
 #include "classes.h+"
 #else
 #include "classes.h"
@@ -20,7 +20,7 @@ void write(const char *filename = "inherit.root")
    h->Init();
    TTree *tree = new TTree("tree","tree testing inheritance");
    tree->Branch("holder",&h);
-   
+
    tree->Fill();
    file->Write();
    delete file;

@@ -10,7 +10,7 @@
 #include <vector>
 
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 using namespace std;
 #pragma link C++ class vector< vector< float > >;
 #pragma link C++ class vector< vector< float > >::iterator;

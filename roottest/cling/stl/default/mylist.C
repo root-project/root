@@ -10,7 +10,7 @@ template<class Star> class StarList : public list <Star*> {
 
 typedef list<BaseStar*> blist;
 
-#ifdef __CINT__
+#ifdef __ICLING__
 #pragma link C++ nestedclass;
 #pragma link C++ nestedtypedef;
 #pragma link C++ class BaseStar;

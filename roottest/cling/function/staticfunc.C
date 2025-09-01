@@ -1,4 +1,4 @@
-#ifndef __CINT__
+#ifndef __ICLING__
 #include "TString.h"
 #include "Riostream.h"
 #include <TLorentzVector.h>

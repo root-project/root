@@ -4,7 +4,7 @@ template <class T> class A {
   T a;
 };
 
-#ifdef __CINT__
+#ifdef __ICLING__
 #pragma link C++ class A<int>;
 #pragma link C++ class A<unsigned int>;
 #endif

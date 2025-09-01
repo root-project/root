@@ -1,5 +1,5 @@
 #include "mapHolder.h"
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class mapHolder+;
 #endif

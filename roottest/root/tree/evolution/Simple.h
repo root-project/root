@@ -4,7 +4,7 @@ class Content {
 public:
    int fValues;
 };
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class Content+;
 #endif
 

@@ -62,7 +62,7 @@ ClassImp(STreeEvent)
 
 
 // begin of code - STreeEventLinkDef.h
-#ifdef __CINT__
+#ifdef __ICLING__
 
 #pragma link C++ class TopTrack+;
 #pragma link C++ class BottomTrack+;

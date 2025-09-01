@@ -1,4 +1,4 @@
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 
 #endif
 
@@ -31,7 +31,7 @@ namespace edm {
    
 } // namespace edm
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ namespace edm; 
 #endif
 

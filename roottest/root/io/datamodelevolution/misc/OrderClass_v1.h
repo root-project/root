@@ -23,7 +23,7 @@ private:
    ClassDefOverride(MyClass, 1)
 };
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class MyClass+;
 #endif
 

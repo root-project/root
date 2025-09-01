@@ -19,7 +19,7 @@ struct A {
   template <class U>
    A(const U&) { 
       cout << "c'tor taking " << 
-#if defined(__CINT__) || defined(_MSC_VER)
+#if defined(__ICLING__) || defined(_MSC_VER)
       nameof((U*)0)
 #else
       PF2cl(__PRETTY_FUNCTION__)
@@ -30,7 +30,7 @@ struct A {
   template <class U>
    void doit(const U&) { 
       cout << "doit taking " << 
-#if defined(__CINT__) || defined(_MSC_VER)
+#if defined(__ICLING__) || defined(_MSC_VER)
       nameof((U*)0)
 #else
       PF2cl(__PRETTY_FUNCTION__)
@@ -40,7 +40,7 @@ struct A {
 
 };
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class A+;
 #pragma link C++ class TemplateArgument+;
 #pragma link C++ function A::A(const TemplateArgument&);

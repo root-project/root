@@ -3,7 +3,7 @@
 #include "TString.h"
 #include <exception>
 
-#ifndef __CINT__
+#ifndef __ICLING__
 class myexception
    {
    public:

@@ -25,10 +25,10 @@ public:
    ClassDefOverride(EventTcaMember, 1)
 };
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class Track+;
 #pragma link C++ class EventTcaMember+;
-#endif // __MAKECINT__
+#endif // __MAKECLING__
    
 #endif // ! _EVENT_TCA_MEMBER_H
 

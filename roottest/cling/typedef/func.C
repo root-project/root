@@ -12,7 +12,7 @@ typedef void (funcval)(int);
 // wrinting the prototype 'void val(int)'.
 extern funcval val; 
 
-#ifdef __CINT__
+#ifdef __ICLING__
 funcptr ptr = func;
 #else
 funcptr ptr(func);

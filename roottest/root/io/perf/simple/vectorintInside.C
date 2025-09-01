@@ -15,7 +15,7 @@ public:
 #include "TBufferFile.h"
 #include "TClass.h"
 #include <vector> 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 // #pragma link C++ class vector<int>+;
 #endif
 

@@ -23,7 +23,7 @@ template <class Config> class DecayDataT {
    
    };
 
-#ifdef __CINT__
+#ifdef __ICLING__
 // This was necessary to work around a bug in 
 // the lookup code that prevented the class to use itself
 // to instantiate templates.
@@ -52,7 +52,7 @@ class  DefaultConfig {
    };
 
 ////// File alinkdef.h
-#ifdef __CINT__
+#ifdef __ICLING__
 
 #pragma link C++ nestedclasses;
 #pragma link C++ nestedtypedefs;

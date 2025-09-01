@@ -61,7 +61,7 @@ public:
 typedef DataVectorTmplt<Content> DataVector;
 
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class DataVectorTmplt<Content>+;
 #pragma link C++ class vector<Content>+;
 #pragma link C++ class DataVector+;
