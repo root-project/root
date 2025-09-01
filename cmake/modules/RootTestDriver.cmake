@@ -86,7 +86,7 @@ endif()
 
 if(SYS)
   if(WIN32)
-    file(TO_NATIVE_PATH ${SYS}/bin _path)
+    cmake_path(CONVERT "${SYS}/bin" TO_NATIVE_PATH_LIST _path)
     set(ENV{PATH} "${_path};$ENV{PATH}")
   elseif(APPLE)
     set(ENV{PATH} ${SYS}/bin:$ENV{PATH})

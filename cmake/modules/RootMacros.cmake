@@ -1858,7 +1858,7 @@ endfunction()
 # ROOT_ADD_TEST_SUBDIRECTORY( <name> )
 #----------------------------------------------------------------------------
 function(ROOT_ADD_TEST_SUBDIRECTORY subdir)
-  file(RELATIVE_PATH subdir ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/${subdir})
+  cmake_path(RELATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${subdir} BASE_DIRECTORY ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE subdir)
   set_property(GLOBAL APPEND PROPERTY ROOT_TEST_SUBDIRS ${subdir})
 endfunction()
 
@@ -2089,7 +2089,7 @@ endfunction()
 #   install_dir  - The install subdirectory relative to CMAKE_INSTALL_PREFIX
 #----------------------------------------------------------------------------
 function(ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH target install_dir)
-  file(RELATIVE_PATH to_libdir "${CMAKE_INSTALL_PREFIX}/${install_dir}" "${CMAKE_INSTALL_FULL_LIBDIR}")
+  cmake_path(RELATIVE_PATH "${CMAKE_INSTALL_FULL_LIBDIR}" BASE_DIRECTORY "${CMAKE_INSTALL_PREFIX}/${install_dir}" OUTPUT_VARIABLE to_libdir)
 
   # New path
   if(APPLE)
@@ -3056,7 +3056,7 @@ function(ROOTTEST_ADD_TEST testname)
         string(REPLACE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} fpath ${fpath})
         string(REPLACE ${fext} "" fpath ${fpath})
         string(REPLACE "." "" fext ${fext})
-        file(TO_NATIVE_PATH "${fpath}" fpath)
+        cmake_path(CONVERT "${fpath}" TO_NATIVE_PATH_LIST fpath)
         set(postcmd POSTCMD cmd /c if exist ${fpath}_${fext}.rootmap del ${fpath}_${fext}.rootmap)
       endif()
     endif()
