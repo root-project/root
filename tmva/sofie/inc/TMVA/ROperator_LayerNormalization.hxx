@@ -224,7 +224,7 @@ public:
       }
       out << SP << SP << "tensor_" << fNMean << "[" << axesIndex << "] = sum / " << fType << "(";
       out << fNormalizedLength << ");\n";
-      for (size_t i = fAxis; i < fSize; i++) {
+      for (size_t i = 0; i < fAxis; i++) {
          out << SP << "}\n";
       }
 
@@ -273,7 +273,7 @@ public:
          for (size_t j = fAxis; j < fSize; j++) {
             out << SP << SP << "}\n";
          }
-         for (size_t i = fAxis; i < fSize; i++) {
+         for (size_t i = 0; i < fAxis; i++) {
             out << SP << "}\n";
          }
          out << "// Y = Scale o NormalizedX";
@@ -293,7 +293,7 @@ public:
          for (size_t j = fAxis; j < fSize; j++) {
             out << SP << SP << "}\n";
          }
-         for (size_t i = fAxis; i < fSize; i++) {
+         for (size_t i = 0; i < fAxis; i++) {
             out << SP << "}\n";
          }
       } else {
@@ -315,7 +315,7 @@ public:
          for (size_t j = fAxis; j < fSize; j++) {
             out << SP << SP << "}\n";
          }
-         for (size_t i = fAxis; i < fSize; i++) {
+         for (size_t i = 0; i < fAxis; i++) {
             out << SP << "}\n";
          }
       }
