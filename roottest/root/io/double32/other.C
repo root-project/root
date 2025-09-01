@@ -1,6 +1,6 @@
 #include "runtemplate32.h"
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class MyVector<double>+;
 #endif
 

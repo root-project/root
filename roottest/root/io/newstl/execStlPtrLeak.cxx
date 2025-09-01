@@ -21,7 +21,7 @@ public:
 Int_t MyClass::fCounter = 0;
 Int_t MyClass::fTotal = 0;
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class vector<MyClass*>;
 #pragma link C++ class vector<vector<MyClass*> > ;
 #pragma link C++ class vector<vector<MyClass*> *> ;

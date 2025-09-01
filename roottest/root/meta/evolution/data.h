@@ -78,7 +78,7 @@ public:
 #error missing case
 #endif
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class data+;
 #pragma link C++ class Tdata+;
 #endif

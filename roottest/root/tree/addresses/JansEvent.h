@@ -201,7 +201,7 @@ struct JansEventHeader : public TObject
 struct JansEvent : public TObject
 {
 //WLAV: commented out the following three lines:
-//#if !defined(__CINT__)
+//#if !defined(__CLING__)
 //    typedef GClonesArray<B_Parameters> B_List;
 //#else
     typedef TClonesArray B_List;

@@ -71,7 +71,7 @@ void Print(const std::map<key,value> &fMap) {
    }
 }
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma read sourceClass="Holder" targetClass="listHolder";
 #endif
 

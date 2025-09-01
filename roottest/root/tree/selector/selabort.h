@@ -14,7 +14,7 @@
 #include <TFile.h>
 #include <TSelector.h>
 #include <TRef.h>
-#ifndef __CINT__
+#ifndef __CLING__
 #include <Riostream.h>
 #endif
 #include <stdio.h>

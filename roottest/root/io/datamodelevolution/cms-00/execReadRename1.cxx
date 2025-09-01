@@ -16,7 +16,7 @@ public:
    ClassDefNV(Flow,4);
 };
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma read sourceClass="Flow" targetClass="Flow" version="[2]" source="float charged" target="sumCharged" code="{ sumCharged = onfile.charged; }"
 #pragma read sourceClass="Flow" targetClass="Flow" version="[2]" source="float neutral" target="sumNeutral" code="{ sumNeutral = onfile.neutral; }"
 #endif

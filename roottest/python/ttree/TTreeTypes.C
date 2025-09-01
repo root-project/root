@@ -11,7 +11,7 @@
 #include "TH1D.h"
 #include "TTree.h"
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class std::vector< vector< float > >;
 #pragma link C++ class std::vector< vector< float > >::iterator;
 #pragma link C++ class std::vector< vector< float > >::const_iterator;

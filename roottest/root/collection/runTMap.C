@@ -1,6 +1,6 @@
 // Test object (key,value) ownership behaviour of TMap.
 
-#if !defined(__CINT__) || defined(__MAKECINT__)
+#if !defined(__CLING__) || defined(__MAKECLING__)
 #include "TObjString.h"
 #include "TMap.h"
 #include "TObjectSpy.h"

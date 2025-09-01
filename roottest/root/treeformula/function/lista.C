@@ -32,7 +32,7 @@ private:
   ClassDefOverride(TPlate,1); // a plate
 };
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class TStrip+;
 #pragma link C++ class TPlate+;
 #endif

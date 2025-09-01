@@ -32,10 +32,10 @@ void runStaticDataMember()
    B b;
 }
 
-#ifndef __MAKECINT__
+#ifndef __MAKECLING__
 int main()
 {
    runStaticDataMember();
    return 0;
 }
-#endif // __MAKECINT__
+#endif // __MAKECLING__

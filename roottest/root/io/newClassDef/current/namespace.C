@@ -1,7 +1,7 @@
 #include "namespace.h"
 #include "TBufferFile.h"
 
-#ifndef __CINT__
+#ifndef __CLING__
 //namespace MySpace {
   ClassImp(MySpace::A)
   ClassImp(MySpace::MyClass)

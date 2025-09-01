@@ -33,7 +33,7 @@ public:
    virtual ~TrigInDetTrackTruth_p1();
 
 };
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class pair<unsigned int,unsigned int>+;
 #endif
 #endif

@@ -16,7 +16,7 @@ private:
 };
 
 
-#if defined(__MAKECINT__)
+#if defined(__MAKECLING__)
 #pragma link C++ class MyClass;
 #endif
 

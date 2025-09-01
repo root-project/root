@@ -80,7 +80,7 @@ bool abstractInVector() {
    return false;
 }
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class SimuModule+;
 #pragma link C++ class Module+;
 #pragma link C++ class SimuModuleFactory+;

@@ -1,4 +1,4 @@
-#if defined(__CINT__) && !defined(__MAKECINT__)
+#if defined(__CLING__) && !defined(__MAKECLING__)
 #include "operators_dict.h+"
 #else 
 #include "operators.h"

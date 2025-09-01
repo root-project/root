@@ -7,7 +7,7 @@
 #include <iostream>
 #include <cassert>
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class mytypes::FirstBase+;
 #pragma link C++ class mytypes::OtherBase+;
 #pragma link C++ class mytypes::Trajectory+;

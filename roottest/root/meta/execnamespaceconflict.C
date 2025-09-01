@@ -7,7 +7,7 @@ namespace Test {
   };
 }
 
-#if defined(__MAKECINT__)
+#if defined(__MAKECLING__)
 #pragma link off all globals;
 #pragma link off all classes;
 #pragma link off all functions;

@@ -69,7 +69,7 @@ class D {
    A<T>& operator/(A<T> &a) {printf("D::op /(A<T>)\n"); return a;}
 };
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class A<B>+;
 #pragma link C++ class A<float>+;
 #pragma link C++ class A<int>+;

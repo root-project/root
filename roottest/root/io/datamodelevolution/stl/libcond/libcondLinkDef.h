@@ -1,4 +1,4 @@
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma link C++ class DetCondKeyTrans+;
 #pragma link C++ class HepGeom::Transform3D+;

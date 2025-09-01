@@ -143,7 +143,7 @@ public:
    ClassDef(Holder,2);
 };
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class vector<TopLevel*>;
 #endif
 

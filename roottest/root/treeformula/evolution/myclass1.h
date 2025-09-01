@@ -11,7 +11,7 @@ class myclass: public TNamed
   ClassDefOverride(myclass,1); 
 }; 
 
-#ifdef __MAKECINT__ 
+#ifdef __MAKECLING__ 
 #pragma link C++ class myclass+; 
 #endif
 

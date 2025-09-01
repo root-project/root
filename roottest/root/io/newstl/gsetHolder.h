@@ -1,4 +1,4 @@
-#if !defined(__CINT__) || defined(__MAKECINT__)
+#if !defined(__CLING__) || defined(__MAKECLING__)
 #include "TClass.h"
 #include "TError.h"
 #include "TObject.h"

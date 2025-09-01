@@ -1,6 +1,6 @@
 #include "class1.h"
 
-//#ifndef __MAKECINT__
+//#ifndef __MAKECLING__
 class1::class1(int i, int j):
   m_i(i),
   m_j(j){};

@@ -37,7 +37,7 @@ class MyClass: public TNamed {
       void GetTree();
       void GetTreeZ();
 
-#if !defined (__CINT__) || defined (__MAKECINT__)
+#if !defined (__CLING__) || defined (__MAKECLING__)
       ClassDefOverride(MyClass,1) //MyClass
 #endif
 };
@@ -59,13 +59,13 @@ class MyData {
       Int_t    GetID() const {return fID;}
       Double_t GetX()  const {return fX;}
 
-#if !defined (__CINT__) || defined (__MAKECINT__)
+#if !defined (__CLING__) || defined (__MAKECLING__)
       ClassDef(MyData,1) //MyData
 #endif
 };
 
 
-#if !defined (__CINT__) || defined (__MAKECINT__)
+#if !defined (__CLING__) || defined (__MAKECLING__)
 ClassImp(MyClass);
 ClassImp(MyData);
 #endif

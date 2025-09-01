@@ -13,7 +13,7 @@ class Eigen {};
 #include "Riostream.h"
 #include <map>
 #include "HepGeom__Transform3D.h"
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class pair<string,HepGeom::Transform3D >+;
 #pragma link C++ class Eigen+;
 #pragma link C++ class pair<string,Eigen>+;

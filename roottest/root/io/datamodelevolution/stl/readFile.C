@@ -37,7 +37,7 @@ public:
 typedef Track Values;
 #endif
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma read sourceClass="Values" targetClass="Track";
 #pragma link C++ class vector<Track>+;
 #pragma read sourceClass="Holder" targetClass="listHolder";

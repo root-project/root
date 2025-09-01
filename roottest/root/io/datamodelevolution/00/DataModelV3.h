@@ -46,7 +46,7 @@ public:
 };
 
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++  options=version(2) class Axis+;
 #pragma read sourceClass="ACache" targetClass="Axis" source="int x; int y;"  version="[8]" target="z" \
    code="{ z = onfile.x*1000 + onfile.y*10; }"

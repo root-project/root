@@ -1,6 +1,6 @@
 #include "operators.h"
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class myiterator;
 #pragma link C++ operators myiterator;
 #endif
@@ -12,14 +12,14 @@ namespace enclosing {
    #include "operators.h"
 }
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class enclosing::myiterator;
 #pragma link C++ operators enclosing::myiterator;
 #endif
 #endif
 
 #include <vector>
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class vector<myiterator>;
 #pragma link C++ class vector<myiterator>::const_iterator;
 #pragma link C++ class vector<myiterator>::iterator;

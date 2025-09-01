@@ -1,4 +1,4 @@
-#if defined(__CLING__) && !defined(__MAKECINT__) && !defined(ClingWorkAroundMissingSmartInclude)
+#if defined(__CLING__) && !defined(__MAKECLING__) && !defined(ClingWorkAroundMissingSmartInclude)
 #include "classes.h+"
 #else
 #include "classes.h"

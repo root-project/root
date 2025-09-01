@@ -13,6 +13,6 @@ class cloning {
 #endif
 };
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class cloning+;
 #endif

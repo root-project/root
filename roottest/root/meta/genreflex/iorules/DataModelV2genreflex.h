@@ -49,7 +49,7 @@ public:
    ACache a;
 };
 /*
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ options=version(9) class ACache+;
 #pragma read sourceClass="ACache" targetClass="ACache" source="int x; int y; char c"  version="[8]" target="z" include="TMath.h,math.h" \
    code="{ z = onfile.x*1000 + onfile.y*10; }"

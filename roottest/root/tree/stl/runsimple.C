@@ -4,7 +4,7 @@
 #include <vector>
 #include <iostream>
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 //#pragma link C++ class pair<int,long>+;
 #pragma link C++ class vector<pair<int,long> >+;
 #endif
