@@ -10,6 +10,7 @@ mathmore=ON
 minuit2_omp=ON
 roofit_multiprocess=ON
 roottest=ON
+tbb=ON
 test_distrdf_dask=ON
 test_distrdf_pyspark=ON
 testing=ON
