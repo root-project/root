@@ -25,10 +25,10 @@ namespace Experimental {
 An axis with variable bins defined by their edges.
 
 For example, the following creates an axis with 3 log-spaced bins:
-~~~ {.cxx}
+\code
 std::vector<double> binEdges = {1, 10, 100, 1000};
 ROOT::Experimental::RVariableBinAxis axis(binEdges);
-~~~
+\endcode
 
 It is possible to disable underflow and overflow bins by passing `enableFlowBins = false`. In that case, arguments
 outside the axis will be silently discarded.
