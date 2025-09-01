@@ -23,7 +23,7 @@
 void fcnk0(int &npar, double *gin, double &f, double *x, int iflag);
 int minexam();
 
-#ifndef __CINT__
+#ifndef __CLING__
 #include "TVirtualFitter.h"
 #include "TMath.h"
 #include "TStopwatch.h"

@@ -10,7 +10,7 @@
 //         pdf, cdf and quantiles. cdf are estimated directly and compared with calculated integral from pdf
 //     - physics vectors (2D, 3D and 4D) including I/O for every type and for both double and Double32_t
 //     - SMatrix and SVectors including I/O for double and Double32_t types
-//     - I/O of complex objects which dictionary has been generated using CINT (default) or Reflex
+//     - I/O of complex objects which dictionary has been generated using CLING (default) or Reflex
 //           TrackD and TrackD32 which contain  physics vectors of double and Double32_t
 //           TrackErrD and TrackErrD32 which contain physics vectors and an SMatrix of double and Double32_t
 //           VecTrackD which contains an std::vector<TrackD>
@@ -30,7 +30,7 @@
 //    > ./stressMathMore
 //
 // to run inside ROOT using ACliC
-//  for using CINT you need first to have the library libTrackMathCoreDict.so
+//  for using CLING you need first to have the library libTrackMathCoreDict.so
 //   (type:  make libTrackMathCoreDict.so to make it)
 //
 //   root> gSystem->Load("libMathCore");
@@ -52,7 +52,7 @@
 //
 
 
-#ifndef __CINT__
+#ifndef __CLING__
 
 
 #include "Math/DistFuncMathCore.h"
@@ -154,7 +154,7 @@ int compare( std::string name, double v1, double v2, double scale = 2.0) {
    return iret;
 }
 
-#ifndef __CINT__
+#ifndef __CLING__
 
 
 // trait class  for distinguishing the number of parameters for the various functions
@@ -1489,7 +1489,7 @@ int testCompositeObj(int ngen) {
    std::cout << "\tTest of a Composite Object (containing Vector's and Matrices)\n";
    std::cout <<"******************************************************************************\n";
 
-   std::cout << "Test Using CINT library\n\n";
+   std::cout << "Test Using CLING library\n\n";
 
    // put path relative to LD_LIBRARY_PATH
 
@@ -1524,14 +1524,14 @@ int testCompositeObj(int ngen) {
 }
 
 
-#endif // endif ifndef __CINT__
+#endif // endif ifndef __CLING__
 
 
 int stressMathCore(double nscale = 1) {
 
    int iret = 0;
 
-#ifdef __CINT__
+#ifdef __CLING__
    std::cout << "Test must be run in compile mode - use ACLIC to compile!!" << std::endl;
 
 
