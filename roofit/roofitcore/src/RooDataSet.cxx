@@ -67,7 +67,7 @@ For the inverse conversion, see `RooAbsData::convertToVectorStore()`.
 
 
 ### Creating a dataset using RDataFrame
-\see RooAbsDataHelper, rf408_RDataFrameToRooFit.C
+See RooAbsDataHelper, rf408_RDataFrameToRooFit.C
 
 ### Uniquely identifying RooDataSet objects
 
