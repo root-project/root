@@ -15,6 +15,10 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(Cluster
                                     SELECTION inc/cluster_selection.xml
                                     FIXTURES_SETUP root-meta-cmsUnload-Cluster-fixture)
 
+ROOTTEST_ADD_TEST(copyfiles
+                  COMMAND ${CMAKE_COMMAND} -E echo "copy step2.cxx"
+                  COPY_TO_BUILDDIR step2.cxx
+                  FIXTURES_SETUP root-meta-cmsUnload-copyfiles-fixture)                                    
 
 macro(CMS_UNLOAD_TEST name use_rmap)
   if(${use_rmap} STREQUAL "true")
@@ -25,13 +29,13 @@ macro(CMS_UNLOAD_TEST name use_rmap)
 
   ROOTTEST_ADD_TEST(${testname}
                     MACRO runscript.C
-                    COPY_TO_BUILDDIR step2.cxx
                     MACROARG "\"${CMAKE_CURRENT_SOURCE_DIR}/scripts/${name}.script\",${use_rmap}"
                     ROOTEXE_OPTS -e "gInterpreter->AddIncludePath(\"-I${CMAKE_CURRENT_SOURCE_DIR}\")"
                     OUTREF ${testname}.ref
                     FIXTURES_REQUIRED root-meta-cmsUnload-Edm-fixture
                                       root-meta-cmsUnload-Strip-fixture
-                                      root-meta-cmsUnload-Cluster-fixture)
+                                      root-meta-cmsUnload-Cluster-fixture
+                                      root-meta-cmsUnload-copyfiles-fixture)
 endmacro(CMS_UNLOAD_TEST)
 
 CMS_UNLOAD_TEST(case1 false)
