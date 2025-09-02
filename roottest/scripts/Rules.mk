@@ -613,7 +613,7 @@ ifneq ($(GCCTOOLCHAIN),)
 CXXFLAGS    += --gcc-toolchain=$(GCCTOOLCHAIN)
 LDFLAGS     += --gcc-toolchain=$(GCCTOOLCHAIN)
 endif
-
+CXXFLAGS    += -DNDEBUG
 ifeq ($(PT),)
 CALLROOTEXE  ?= root.exe
 else
