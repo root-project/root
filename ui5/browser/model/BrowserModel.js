@@ -29,7 +29,7 @@ sap.ui.define([
          this.showHidden = false;
          this.appendToCanvas = false;
          this.handleDoubleClick = true;
-         this.onlyLastCycle = 0; // 0 - not changed, -1 off , +1 on
+         this.onlyLastCycle = false;
 
          this.threshold = 100; // default threshold to prefetch items
       },
@@ -280,7 +280,6 @@ sap.ui.define([
             sort: this.sortMethod || '',
             reverse: this.reverseOrder || false,
             hidden: this.showHidden ? true : false,
-            lastcycle: this.onlyLastCycle ?? 0,
             reload: force_reload ? true : false,  // re-scan items by server even when path was not changed
             regex
          };

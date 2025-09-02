@@ -268,11 +268,6 @@ bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowse
 
 std::string RBrowserData::ProcessRequest(const RBrowserRequest &request)
 {
-   if (request.lastcycle < 0)
-      Browsable::RElement::SetLastKeyCycle(false);
-   else if (request.lastcycle > 0)
-      Browsable::RElement::SetLastKeyCycle(true);
-
    RBrowserReply reply;
 
    reply.path = request.path;
