@@ -2,9 +2,10 @@ import argparse
 
 def get_argparse():
 	parser = argparse.ArgumentParser(add_help=False, prog='root',
-	description = """ROOTs Object-Oriented Technologies.\n
-root is an interactive interpreter of C++ code. It uses the ROOT  framework.  For  more information on ROOT, please refer to\n
-An extensive Users Guide is available from that site (see below).
+	description = """
+root is an interactive interpreter of C++ code using Cling and the ROOT framework.
+For more information on ROOT, please refer to https://root.cern/
+An extensive Users Guide and API Reference are available from that website.
 """)
 	parser.add_argument('-b', help='Run in batch mode without graphics')
 	parser.add_argument('-x', help='Exit on exceptions')
