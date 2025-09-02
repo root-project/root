@@ -1,0 +1,153 @@
+name: 'ROOT conda nightlies'
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Run the conda nightly workflow'
+        type: string
+        required: true
+        default: "master"
+  schedule:
+    - cron: '01 1 * * *'
+  pull_request:
+  push:
+    branches: 
+      - 'conda-nightly-workflow'
+
+env:
+  PYTHONUNBUFFERED: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+
+  remove-channel-packages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out ROOT
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+      - name: Remove conda packages from channel
+        env:
+          ROOT_PREFIX_CHANNEL_API_TOKEN: ${{ secrets.ROOT_PREFIX_CHANNEL_API_TOKEN }}
+        run: |
+          python .github/workflows/conda_nightly_remove_packages.py
+
+  # llvmdev-feedstock:
+  #   runs-on: ubuntu-latest
+  #   steps:
+
+  #   - name: Clone llvmdev feedstock
+  #     run: |
+  #       git clone --single-branch --branch 18.x https://github.com/conda-forge/llvmdev-feedstock.git
+
+  #   - uses: mamba-org/setup-micromamba@v2
+  #     with:
+  #       environment-name: build-env
+  #       create-args: rattler-build python
+
+  #   - name: Run Python script with Docker privileges
+  #     shell: bash -leo pipefail {0}
+  #     run: |
+  #       cd llvmdev-feedstock
+  #       ./build-locally.py linux_64_variantroot_63604
+  #     env:
+  #       # Ensure Docker daemon is accessible
+  #       DOCKER_HOST: unix:///var/run/docker.sock
+
+  #   - name: Upload artifacts to prefix.dev
+  #     shell: bash -leo pipefail {0}
+  #     run: |
+  #       cd llvmdev-feedstock
+  #       shopt -s nullglob
+  #       EXIT_CODE=0
+  #       # Find all conda packages (usually in build_artifacts/ or similar directory)
+  #       for pkg in $(find build_artifacts/linux-64 -type f -name "*.conda" ); do
+  #         echo "Uploading: $pkg"
+  #         if ! rattler-build upload prefix --skip-existing -c root "${pkg}"; then
+  #           echo "Failed to upload: $pkg"
+  #           EXIT_CODE=1
+  #         fi
+  #       done
+  #       exit $EXIT_CODE
+
+  # clangdev-feedstock:
+  #   runs-on: ubuntu-latest
+  #   steps:
+
+  #   - name: Clone clangdev feedstock
+  #     run: |
+  #       git clone --single-branch --branch 18.x https://github.com/conda-forge/clangdev-feedstock.git
+
+  #   - uses: mamba-org/setup-micromamba@v2
+  #     with:
+  #       environment-name: build-env
+  #       create-args: rattler-build python
+
+  #   - name: Run Python script with Docker privileges
+  #     shell: bash -leo pipefail {0}
+  #     run: |
+  #       cd clangdev-feedstock
+  #       ./build-locally.py linux_64_variantroot_63604
+  #     env:
+  #       # Ensure Docker daemon is accessible
+  #       DOCKER_HOST: unix:///var/run/docker.sock
+
+  #   - name: Upload artifacts to prefix.dev
+  #     shell: bash -leo pipefail {0}
+  #     run: |
+  #       cd clangdev-feedstock
+  #       shopt -s nullglob
+  #       EXIT_CODE=0
+  #       # Find all conda packages (usually in build_artifacts/ or similar directory)
+  #       for pkg in $(find build_artifacts/linux-64 -type f -name "*.conda" ); do
+  #         echo "Uploading: $pkg"
+  #         if ! rattler-build upload prefix --skip-existing -c root "${pkg}"; then
+  #           echo "Failed to upload: $pkg"
+  #           EXIT_CODE=1
+  #         fi
+  #       done
+  #       exit $EXIT_CODE
+
+  # root-feedstock:
+  #   runs-on: ubuntu-latest
+  #   # needs: [llvmdev-feedstock, clangdev-feedstock]
+  #   steps:
+
+  #   - name: Clone ROOT feedstock
+  #     run: |
+  #       git clone --single-branch --branch test-channel-sources https://github.com/vepadulano/root-feedstock.git
+
+  #   - uses: mamba-org/setup-micromamba@v2
+  #     with:
+  #       environment-name: build-env
+  #       create-args: rattler-build python
+
+  #   - name: Run Python script with Docker privileges
+  #     shell: bash -leo pipefail {0}
+  #     run: |
+  #       cd root-feedstock
+  #       ./build-locally.py linux_64_python3.13.____cp313
+  #     env:
+  #       # Ensure Docker daemon is accessible
+  #       DOCKER_HOST: unix:///var/run/docker.sock
+
+  #   - name: Upload artifacts to prefix.dev
+  #     shell: bash -leo pipefail {0}
+  #     run: |
+  #       cd root-feedstock
+  #       shopt -s nullglob
+  #       EXIT_CODE=0
+  #       # Find all conda packages (usually in build_artifacts/ or similar directory)
+  #       for pkg in $(find build_artifacts/linux-64 -type f -name "*.conda" ); do
+  #         echo "Uploading: $pkg"
+  #         if ! rattler-build upload prefix --skip-existing -c root "${pkg}"; then
+  #           echo "Failed to upload: $pkg"
+  #           EXIT_CODE=1
+  #         fi
+  #       done
+  #       exit $EXIT_CODE
