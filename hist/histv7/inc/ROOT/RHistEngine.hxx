@@ -181,7 +181,7 @@ public:
       if (sizeof...(A) != GetNDimensions()) {
          throw std::invalid_argument("invalid number of arguments to Fill");
       }
-      RLinearizedIndex index = fAxes.ComputeGlobalIndex(args);
+      RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<sizeof...(A)>(args);
       if (index.fValid) {
          assert(index.fIndex < fBinContents.size());
          fBinContents[index.fIndex]++;
@@ -218,7 +218,7 @@ public:
       if (sizeof...(A) != GetNDimensions()) {
          throw std::invalid_argument("invalid number of arguments to Fill");
       }
-      RLinearizedIndex index = fAxes.ComputeGlobalIndex(args);
+      RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<sizeof...(A)>(args);
       if (index.fValid) {
          assert(index.fIndex < fBinContents.size());
          fBinContents[index.fIndex] += weight.fValue;
