@@ -117,7 +117,7 @@ if(MSVC)
     enable_testing()
   endif()
 else()
-
+  set(CMAKE_CXX_FLAGS "-DNDEBUG ${CMAKE_CXX_FLAGS}")
   # We can not use CMAKE_SHARED_LIBRARY_SUFFIX as on macos it uses the standard dylib rather than the .so
   set(libsuffix .so)
   set(grep_cmd grep)
