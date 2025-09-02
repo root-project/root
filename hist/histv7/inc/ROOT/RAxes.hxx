@@ -12,6 +12,7 @@
 
 #include <array>
 #include <cassert>
+#include <cstddef>
 #include <stdexcept>
 #include <tuple>
 #include <utility>
@@ -26,12 +27,19 @@ namespace Experimental {
 /// Variant of all supported axis types.
 using RAxisVariant = std::variant<RRegularAxis, RVariableBinAxis>;
 
+// forward declaration for friend declaration
+template <typename T>
+class RHistEngine;
+
 namespace Internal {
 
 /**
 Bin configurations for all dimensions of a histogram.
 */
 class RAxes final {
+   template <typename T>
+   friend class ::ROOT::Experimental::RHistEngine;
+
    std::vector<RAxisVariant> fAxes;
 
 public:
@@ -69,8 +77,8 @@ public:
    }
 
 private:
-   template <std::size_t I, typename... A>
-   RLinearizedIndex ComputeGlobalIndex(std::size_t index, const std::tuple<A...> &args) const
+   template <std::size_t I, std::size_t N, typename... A>
+   RLinearizedIndex ComputeGlobalIndexImpl(std::size_t index, const std::tuple<A...> &args) const
    {
       const auto &axis = fAxes[I];
       RLinearizedIndex linIndex;
@@ -87,10 +95,16 @@ private:
          return {0, false};
       }
       index += linIndex.fIndex;
-      if constexpr (I + 1 < sizeof...(A)) {
-         return ComputeGlobalIndex<I + 1>(index, args);
+      if constexpr (I + 1 < N) {
+         return ComputeGlobalIndexImpl<I + 1, N>(index, args);
       }
       return {index, true};
+   }
+
+   template <std::size_t N, typename... A>
+   RLinearizedIndex ComputeGlobalIndexImpl(const std::tuple<A...> &args) const
+   {
+      return ComputeGlobalIndexImpl<0, N>(0, args);
    }
 
 public:
@@ -104,7 +118,7 @@ public:
       if (sizeof...(A) != fAxes.size()) {
          throw std::invalid_argument("invalid number of arguments to ComputeGlobalIndex");
       }
-      return ComputeGlobalIndex<0, A...>(0, args);
+      return ComputeGlobalIndexImpl<sizeof...(A)>(args);
    }
 
    /// Compute the global index for all axes.
