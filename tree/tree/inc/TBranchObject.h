@@ -42,12 +42,12 @@ protected:
    TString     fClassName;        ///< Class name of referenced object
    TObject     *fOldObject;       ///< !Pointer to old object
 
-   void Init(TTree *tree, TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, bool isptrptr);
+   void Init(TTree *tree, TBranch *parent, const char *name, const char *classname, void *addobj, Long64_t basketsize, Int_t splitlevel, Int_t compress, bool isptrptr);
 
 public:
    TBranchObject();
-   TBranchObject(TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit, bool isptrptr = true);
-   TBranchObject(TTree *tree, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit, bool isptrptr = true);
+   TBranchObject(TBranch *parent, const char *name, const char *classname, void *addobj, Long64_t basketsize=32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit, bool isptrptr = true);
+   TBranchObject(TTree *tree, const char *name, const char *classname, void *addobj, Long64_t basketsize=32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit, bool isptrptr = true);
    ~TBranchObject() override;
 
            void        Browse(TBrowser *b) override;
@@ -61,7 +61,7 @@ public:
            void        ResetAfterMerge(TFileMergeInfo *) override;
            void        SetAddress(void *addobj) override;
            void        SetAutoDelete(bool autodel=true) override;
-           void        SetBasketSize(Int_t bufsize) override;
+           void        SetBasketSize(Long64_t bufsize) override;
            void        SetupAddresses() override;
            void        UpdateAddress() override;
 
