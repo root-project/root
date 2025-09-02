@@ -83,8 +83,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
         const SortMethod =  this.websocket.getUserArgs('sort') ?? 'name',
               ReverseOrder = this.websocket.getUserArgs('reverse') ?? false,
-              ShowHiddenFiles = this.websocket.getUserArgs('hidden') ?? false,
-              LastCycle = this.websocket.getUserArgs('lastcycle') ?? 0;
+              ShowHiddenFiles = this.websocket.getUserArgs('hidden') ?? false;
 
         this._oSettingsModel = new JSONModel({
             SortMethods: [
@@ -95,7 +94,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             SortMethod,
             ReverseOrder,
             ShowHiddenFiles,
-            OnlyLastCycle: (LastCycle > 0),
+            OnlyLastCycle: false,
             AppendToCanvas: false,
             HandleDoubleClick: true,
             DBLCLKRun: false,
@@ -194,7 +193,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.model.setSortMethod(SortMethod);
          this.model.setReverseOrder(ReverseOrder);
          this.model.setShowHidden(ShowHiddenFiles);
-         this.model.setOnlyLastCycle(LastCycle);
 
          // copy extra attributes from element to node in the browser
          // later can be done automatically
@@ -785,7 +783,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       onSettingsPress() {
          this._oSettingsModel.setProperty("/AppendToCanvas", this.model.isAppendToCanvas());
          this._oSettingsModel.setProperty("/HandleDoubleClick", this.model.isHandleDoubleClick());
-         this._oSettingsModel.setProperty("/OnlyLastCycle", (this.model.getOnlyLastCycle() > 0));
+         this._oSettingsModel.setProperty("/OnlyLastCycle", this.model.getOnlyLastCycle());
          this._oSettingsModel.setProperty("/ShowHiddenFiles", this.model.isShowHidden());
          this._oSettingsModel.setProperty("/SortMethod", this.model.getSortMethod());
          this._oSettingsModel.setProperty("/ReverseOrder", this.model.isReverseOrder());
@@ -826,9 +824,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             changed_dblclick = true;
          }
 
-         if (lastcycle != (this.model.getOnlyLastCycle() > 0)) {
+         if (lastcycle != this.model.getOnlyLastCycle()) {
             changed = true;
-            this.model.setOnlyLastCycle(lastcycle ? 1 : -1);
+            this.model.setOnlyLastCycle(lastcycle);
+            this.websocket.send('LASTCYCLE:' + (lastcycle ? '1' : '0'));
          }
 
          if (hidden != this.model.isShowHidden()) {
@@ -1420,8 +1419,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                this._oSettingsModel.setProperty('/optTProfile', arr[k][3]|| '<dflt>');
             } else if (kind == "settings") {
                const expand = (arr[k][1] == 'on' || arr[k][1] == 'yes' || arr[k][1] == '1');
-               if (expand) 
+               if (expand)
                   this.onExpandMaster();
+               this.model.setOnlyLastCycle(arr[k][2] == '1');
             } else {
                const pr = this.createElement(kind, arr[k][1], arr[k][2], arr[k][3], arr[k][4]);
                Promise.resolve(pr).then(tab => {
