@@ -271,9 +271,10 @@ but are rather applied for all web widgets: canvases, geometry viewer, eve7, bro
 
 Following .rootrc parameters can be configured for the browser:
 
-   * WebGui.Browser.SortBy:  sort by "name", "size", "none" (default "name") 
+   * WebGui.Browser.SortBy:  sort by "name", "size", "none" (default "name")
    * WebGui.Browser.Reverse: reverse item order (default off)
    * WebGui.Browser.ShowHidden: show hidden files (default off)
+   * WebGui.Browser.LastCycle: show only last key cycle (default off)
 
 \note See major settings in RWebWindowWindowsManager::CreateServer and RWebWindowsManager::ShowWindow
 */
@@ -308,18 +309,19 @@ RBrowser::RBrowser(bool use_rcanvas)
 
    if (sortby != "name" && sortby != "size" && sortby != "none")
       sortby = "name";
-   
+
    reverse = (reverse == "on" || reverse == "yes" || reverse == "1") ? "true" : "false";
    hidden = (hidden == "on" || hidden == "yes" || hidden == "1") ? "true" : "false";
-   if (lastcycle == "on" || lastcycle == "yes" || lastcycle == "1")
+   if (lastcycle == "on" || lastcycle == "yes" || lastcycle == "1") {
       lastcycle = "1";
-   else if (lastcycle == "off" || lastcycle == "no" || lastcycle == "0")
+      Browsable::RElement::SetLastKeyCycle(true);
+   } else if (lastcycle == "off" || lastcycle == "no" || lastcycle == "0") {
       lastcycle = "-1";
-   else 
-      lastcycle = "0";
+      Browsable::RElement::SetLastKeyCycle(false);
+   } else
+      lastcycle = Browsable::RElement::IsLastKeyCycle() ? "1" : "0";
 
-   fWebWindow->SetUserArgs(TString::Format("{ sort: \"%s\", reverse: %s, hidden: %s, lastcycle: %s }", sortby.c_str(), reverse.c_str(), hidden.c_str(), lastcycle.c_str()).Data());            
-
+   fWebWindow->SetUserArgs(TString::Format("{ sort: \"%s\", reverse: %s, hidden: %s, lastcycle: %s }", sortby.c_str(), reverse.c_str(), hidden.c_str(), lastcycle.c_str()).Data());
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetCallBacks([this](unsigned connid) { fConnId = connid; SendInitMsg(connid); },

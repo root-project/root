@@ -269,9 +269,9 @@ bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowse
 std::string RBrowserData::ProcessRequest(const RBrowserRequest &request)
 {
    if (request.lastcycle < 0)
-      gEnv->SetValue("WebGui.LastCycle", "no");
+      Browsable::RElement::SetLastKeyCycle(false);
    else if (request.lastcycle > 0)
-      gEnv->SetValue("WebGui.LastCycle", "yes");
+      Browsable::RElement::SetLastKeyCycle(true);
 
    RBrowserReply reply;
 
