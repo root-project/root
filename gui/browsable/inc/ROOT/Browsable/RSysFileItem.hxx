@@ -80,7 +80,7 @@ public:
       if (method == "size") {
          auto fb = dynamic_cast<const RSysFileItem *> (b);
          if (fb)
-            return size < fb->size;
+            return size > fb->size;
       }
 
       return GetName() < b->GetName();
