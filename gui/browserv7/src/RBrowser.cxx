@@ -27,6 +27,7 @@
 #include "TSystem.h"
 #include "TError.h"
 #include "TTimer.h"
+#include "TEnv.h"
 #include "TROOT.h"
 #include "TBufferJSON.h"
 #include "TApplication.h"
@@ -268,6 +269,12 @@ Chrome or Firefox browsers are though required when running ROOT in batch mode.
 Most configuration options for RBrowser, such as default web browser, server mode are not specific to this class,
 but are rather applied for all web widgets: canvases, geometry viewer, eve7, browser, fit panel, etc.
 
+Following .rootrc parameters can be configured for the browser:
+
+   * WebGui.Browser.SortBy:  sort by "name", "size", "none" (default "name") 
+   * WebGui.Browser.Reverse: reverse item order (default off)
+   * WebGui.Browser.ShowHidden: show hidden files (default off)
+
 \note See major settings in RWebWindowWindowsManager::CreateServer and RWebWindowsManager::ShowWindow
 */
 
@@ -293,6 +300,26 @@ RBrowser::RBrowser(bool use_rcanvas)
 
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
+
+   std::string sortby = gEnv->GetValue("WebGui.Browser.SortBy", "name"),
+               reverse = gEnv->GetValue("WebGui.Browser.Reverse", "no"),
+               hidden = gEnv->GetValue("WebGui.Browser.ShowHidden", "no"),
+               lastcycle = gEnv->GetValue("WebGui.Browser.LastCycle", "");
+
+   if (sortby != "name" && sortby != "size" && sortby != "none")
+      sortby = "name";
+   
+   reverse = (reverse == "on" || reverse == "yes" || reverse == "1") ? "true" : "false";
+   hidden = (hidden == "on" || hidden == "yes" || hidden == "1") ? "true" : "false";
+   if (lastcycle == "on" || lastcycle == "yes" || lastcycle == "1")
+      lastcycle = "1";
+   else if (lastcycle == "off" || lastcycle == "no" || lastcycle == "0")
+      lastcycle = "-1";
+   else 
+      lastcycle = "0";
+
+   fWebWindow->SetUserArgs(TString::Format("{ sort: \"%s\", reverse: %s, hidden: %s, lastcycle: %s }", sortby.c_str(), reverse.c_str(), hidden.c_str(), lastcycle.c_str()).Data());            
+
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetCallBacks([this](unsigned connid) { fConnId = connid; SendInitMsg(connid); },
@@ -741,6 +768,11 @@ void RBrowser::SendInitMsg(unsigned connid)
       Browsable::RProvider::GetClassDrawOption("TH1"),
       Browsable::RProvider::GetClassDrawOption("TH2"),
       Browsable::RProvider::GetClassDrawOption("TProfile")
+   }));
+
+   reply.emplace_back(std::vector<std::string>({
+      "settings"s,
+      gEnv->GetValue("WebGui.Browser.Expand", "no")
    }));
 
    std::string msg = "INMSG:";
