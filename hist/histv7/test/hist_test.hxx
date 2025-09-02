@@ -7,6 +7,7 @@
 #include <ROOT/RHistEngine.hxx>
 #include <ROOT/RRegularAxis.hxx>
 #include <ROOT/RVariableBinAxis.hxx>
+#include <ROOT/RWeight.hxx>
 
 #include "gtest/gtest.h"
 
@@ -16,6 +17,7 @@ using ROOT::Experimental::RBinIndexRange;
 using ROOT::Experimental::RHistEngine;
 using ROOT::Experimental::RRegularAxis;
 using ROOT::Experimental::RVariableBinAxis;
+using ROOT::Experimental::RWeight;
 using ROOT::Experimental::Internal::RAxes;
 
 #endif

@@ -7,13 +7,16 @@
 
 #include "RAxes.hxx"
 #include "RBinIndex.hxx"
+#include "RHistUtils.hxx"
 #include "RLinearizedIndex.hxx"
 #include "RRegularAxis.hxx"
+#include "RWeight.hxx"
 
 #include <array>
 #include <cassert>
 #include <stdexcept>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -150,6 +153,9 @@ public:
       return GetBinContent(indices);
    }
 
+   /// Whether this histogram engine type supported weighted filling.
+   static constexpr bool SupportsWeightedFilling = std::is_floating_point_v<BinContentType>;
+
    /// Fill an entry into the histogram.
    ///
    /// \code
@@ -165,7 +171,8 @@ public:
    ///
    /// \param[in] args the arguments for each axis
    /// \par See also
-   /// the \ref Fill(const A &... args) "variadic function template overload" accepting arguments directly
+   /// the \ref Fill(const A &... args) "variadic function template overload" accepting arguments directly and the
+   /// \ref Fill(const std::tuple<A...> &args, RWeight weight) "overload for weighted filling"
    template <typename... A>
    void Fill(const std::tuple<A...> &args)
    {
@@ -181,11 +188,14 @@ public:
       }
    }
 
-   /// Fill an entry into the histogram.
+   /// Fill an entry into the histogram with a weight.
+   ///
+   /// This overload is only available for floating-point bin content types (see \ref SupportsWeightedFilling).
    ///
    /// \code
-   /// ROOT::Experimental::RHistEngine<int> hist({/* two dimensions */});
-   /// hist.Fill(8.5, 10.5);
+   /// ROOT::Experimental::RHistEngine<float> hist({/* two dimensions */});
+   /// auto args = std::make_tuple(8.5, 10.5);
+   /// hist.Fill(args, ROOT::Experimental::RWeight(0.8));
    /// \endcode
    ///
    /// If one of the arguments is outside the corresponding axis and flow bins are disabled, the entry will be silently
@@ -194,12 +204,70 @@ public:
    /// Throws an exception if the number of arguments does not match the axis configuration.
    ///
    /// \param[in] args the arguments for each axis
+   /// \param[in] weight the weight for this entry
    /// \par See also
-   /// the \ref Fill(const std::tuple<A...> &args) "function overload" accepting `std::tuple`
+   /// the \ref Fill(const A &... args) "variadic function template overload" accepting arguments directly and the
+   /// \ref Fill(const std::tuple<A...> &args) "overload for unweighted filling"
+   template <typename... A>
+   void Fill(const std::tuple<A...> &args, RWeight weight)
+   {
+      static_assert(SupportsWeightedFilling, "weighted filling is only supported for floating-point bin content types");
+
+      // We could rely on RAxes::ComputeGlobalIndex to check the number of arguments, but its exception message might
+      // be confusing for users.
+      if (sizeof...(A) != GetNDimensions()) {
+         throw std::invalid_argument("invalid number of arguments to Fill");
+      }
+      RLinearizedIndex index = fAxes.ComputeGlobalIndex(args);
+      if (index.fValid) {
+         assert(index.fIndex < fBinContents.size());
+         fBinContents[index.fIndex] += weight.fValue;
+      }
+   }
+
+   /// Fill an entry into the histogram.
+   ///
+   /// \code
+   /// ROOT::Experimental::RHistEngine<int> hist({/* two dimensions */});
+   /// hist.Fill(8.5, 10.5);
+   /// \endcode
+   ///
+   /// For weighted filling, pass an RWeight as the last argument:
+   /// \code
+   /// ROOT::Experimental::RHistEngine<float> hist({/* two dimensions */});
+   /// hist.Fill(8.5, 10.5, ROOT::Experimental::RWeight(0.8));
+   /// \endcode
+   /// This is only available for floating-point bin content types (see \ref SupportsWeightedFilling).
+   ///
+   /// If one of the arguments is outside the corresponding axis and flow bins are disabled, the entry will be silently
+   /// discarded.
+   ///
+   /// Throws an exception if the number of arguments does not match the axis configuration.
+   ///
+   /// \param[in] args the arguments for each axis
+   /// \par See also
+   /// the function overloads accepting `std::tuple` \ref Fill(const std::tuple<A...> &args) "for unweighted filling"
+   /// and \ref Fill(const std::tuple<A...> &args, RWeight) "for weighted filling"
    template <typename... A>
    void Fill(const A &...args)
    {
-      Fill(std::forward_as_tuple(args...));
+      auto t = std::forward_as_tuple(args...);
+      if constexpr (std::is_same_v<typename Internal::LastType<A...>::type, RWeight>) {
+         static_assert(SupportsWeightedFilling,
+                       "weighted filling is only supported for floating-point bin content types");
+         static constexpr std::size_t N = sizeof...(A) - 1;
+         if (N != fAxes.GetNDimensions()) {
+            throw std::invalid_argument("invalid number of arguments to Fill");
+         }
+         RWeight weight = std::get<N>(t);
+         RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<N>(t);
+         if (index.fValid) {
+            assert(index.fIndex < fBinContents.size());
+            fBinContents[index.fIndex] += weight.fValue;
+         }
+      } else {
+         Fill(t);
+      }
    }
 
    /// %ROOT Streamer function to throw when trying to store an object of this class.

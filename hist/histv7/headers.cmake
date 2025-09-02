@@ -3,7 +3,9 @@ set(histv7_headers
     ROOT/RBinIndex.hxx
     ROOT/RBinIndexRange.hxx
     ROOT/RHistEngine.hxx
+    ROOT/RHistUtils.hxx
     ROOT/RLinearizedIndex.hxx
     ROOT/RRegularAxis.hxx
     ROOT/RVariableBinAxis.hxx
+    ROOT/RWeight.hxx
 )
