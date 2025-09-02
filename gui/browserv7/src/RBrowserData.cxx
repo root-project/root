@@ -214,7 +214,7 @@ bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowse
        (fLastSortReverse != request.reverse)) {
       fLastSortedItems.resize(fLastItems.size(), nullptr);
       int id = 0;
-      if (request.sort.empty()) {
+      if (request.sort.empty() || (request.sort == "none")) {
          // no sorting, just move all folders up
          for (auto &item : fLastItems)
             if (item->IsFolder())
