@@ -1,0 +1,49 @@
+name: 'ROOT conda nightlies'
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Run the conda nightly workflow'
+        type: string
+        required: true
+        default: "master"
+  schedule:
+    - cron: '01 1 * * *'
+  pull_request:
+  push:
+    branches: 
+      - 'conda-nightlies'
+
+env:
+  PYTHONUNBUFFERED: true
+  OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
+  OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+  OS_AUTH_TYPE: 'v3applicationcredential'
+  OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+  OS_IDENTITY_API_VERSION: 3
+  OS_INTERFACE: 'public'
+  OS_REGION_NAME: 'cern'
+
+jobs:
+  nightly-build:
+    runs-on:
+      - self-hosted
+      - linux
+      - X64
+    container:
+      image: registry.cern.ch/root-ci/ubuntu2404:buildready
+      options: '--security-opt label=disable --rm'
+    steps:
+      - name: Set up Python Virtual Env
+        # if the `if` expr is false, `if` still has exit code 0.
+        # if the `if` block is entered, the block's exit code becomes the exit
+        # code of the `if`.
+        run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
+      - name: Run the build
+        run: |
+          git clone https://github.com/root-project/root-conda-nightly.git
+          cd root-conda-nightly
+          python build_all.py
+          cd ..
+          rm -rf root-conda-nightly
