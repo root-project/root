@@ -1059,14 +1059,14 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 
          RooAddition* tmpadd = static_cast<RooAddition*>(parg) ;
 
-         RooCustomizer cust(*tmpadd->list1().first(),Form("blah_%s",iter->c_str())) ;
+         RooCustomizer cust(*tmpadd->list1().first(), ("blah_" + *iter).c_str());
          cust.replaceArg(*ratio,*specializedRatio) ;
          partCust = cust.build() ;
 
        } else {
-         RooCustomizer cust(*parg,Form("blah_%s",iter->c_str())) ;
-         cust.replaceArg(*ratio,*specializedRatio) ;
-         partCust = cust.build() ;
+          RooCustomizer cust(*parg, ("blah_" + *iter).c_str());
+          cust.replaceArg(*ratio, *specializedRatio);
+          partCust = cust.build();
        }
 
        // Print customized denominator
@@ -1139,7 +1139,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
     return ;
   }
 
-  string name = Form("%s_numerator",GetName()) ;
+  string name = std::string{GetName()} + "_numerator";
   // WVE FIX THIS (2)
 
   std::unique_ptr<RooAbsReal> numerator = std::make_unique<RooProduct>(name.c_str(),name.c_str(),nomList) ;

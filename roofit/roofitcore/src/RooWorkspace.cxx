@@ -532,7 +532,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
       string origName = cnode2->GetName() ;
       cnode2->SetName(Form("%s_%s",cnode2->GetName(),suffix)) ;
       cnode2->SetTitle(Form("%s (%s)",cnode2->GetTitle(),suffix)) ;
-      string tag = Form("ORIGNAME:%s",origName.c_str()) ;
+      string tag = "ORIGNAME:" + origName;
       cnode2->setAttribute(tag.c_str()) ;
       if (!cnode2->getStringAttribute("origName")) {
         cnode2->setStringAttribute("origName",origName.c_str());
@@ -598,7 +598,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
       if (varMap.find(cnode->GetName())!=varMap.end()) {
         string origName = cnode->GetName() ;
         cnode->SetName(varMap[cnode->GetName()].c_str()) ;
-        string tag = Form("ORIGNAME:%s",origName.c_str()) ;
+        string tag = "ORIGNAME:" + origName;
         cnode->setAttribute(tag.c_str()) ;
         if (!cnode->getStringAttribute("origName")) {
           cnode->setStringAttribute("origName",origName.c_str()) ;
