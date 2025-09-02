@@ -669,7 +669,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntObj(const RooArgSet& iset2, c
     if (!cacheParams.empty()) {
       cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams.size()
            << "-dim value cache for integral over " << iset2 << " as a function of " << cacheParams << " in range " << (rangeName?rangeName:"<none>") <<  std::endl ;
-      std::string name = Form("%s_CACHE_[%s]",integral->GetName(),cacheParams.contentsString().c_str()) ;
+      std::string name = std::string{integral->GetName()} + "_CACHE_[" + cacheParams.contentsString() + "]";
       auto cachedIntegral = std::make_unique<RooCachedReal>(name.c_str(),name.c_str(),*integral,cacheParams);
       cachedIntegral->setInterpolationOrder(2) ;
       cachedIntegral->addOwnedComponents(std::move(integral));
@@ -1943,9 +1943,9 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 
   // Inform user about projections
   if (!projectedVars.empty()) {
-    coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName()
-          << " integrates over variables " << projectedVars
-          << (o.projectionRangeName?Form(" in range %s",o.projectionRangeName):"") << std::endl;
+     coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName()
+                     << " integrates over variables " << projectedVars
+                     << (o.projectionRangeName ? (" in range " + std::string{o.projectionRangeName}) : "") << std::endl;
   }
   if (projDataNeededVars && !projDataNeededVars->empty()) {
     coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName()
@@ -2387,15 +2387,16 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
 
     // Set default name of curve
-    TString curveName(funcAsym.GetName()) ;
+    std::stringstream curveName;
+    curveName << funcAsym.GetName();
     if (!sliceSet.empty()) {
-      curveName.Append(Form("_Slice[%s]",sliceSet.contentsString().c_str())) ;
+       curveName << "_Slice[" << sliceSet.contentsString() << "]";
     }
     if (o.curveNameSuffix) {
       // Append any suffixes imported from RooAbsPdf::plotOn
-      curveName.Append(o.curveNameSuffix) ;
+      curveName << o.curveNameSuffix;
     }
-    curve->SetName(curveName.Data()) ;
+    curve->SetName(curveName.str().c_str());
 
     // add this new curve to the specified plot frame
     frame->addPlotable(curve, o.drawOptions);

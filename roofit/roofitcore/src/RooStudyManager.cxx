@@ -41,10 +41,6 @@ repeated applications of generate-and-fit operations on a workspace
 #include "TROOT.h"
 #include "TSystem.h"
 
-using std::string, std::endl, std::ios, std::list, std::ofstream;
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 RooStudyManager::RooStudyManager(RooWorkspace &w) : _pkg(new RooStudyPackage(w)) {}
@@ -62,10 +58,10 @@ RooStudyManager::RooStudyManager(RooWorkspace &w, RooAbsStudy &study) : _pkg(new
 
 RooStudyManager::RooStudyManager(const char* studyPackFileName)
 {
-  string pwd = gDirectory->GetName() ;
-  std::unique_ptr<TFile> f{TFile::Open(studyPackFileName, "READ")};
-  _pkg = dynamic_cast<RooStudyPackage*>(f->Get("studypack")) ;
-  gDirectory->cd(Form("%s:",pwd.c_str())) ;
+   std::string pwd = gDirectory->GetName();
+   std::unique_ptr<TFile> f{TFile::Open(studyPackFileName, "READ")};
+   _pkg = dynamic_cast<RooStudyPackage *>(f->Get("studypack"));
+   gDirectory->cd((pwd + ":").c_str());
 }
 
 
@@ -99,7 +95,7 @@ void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob,
   if (unifiedInput) {
 
     // Write header of driver script
-    ofstream bdr(Form("study_driver_%s.sh",studyName)) ;
+    std::ofstream bdr(Form("study_driver_%s.sh", studyName));
     bdr << "#!/bin/sh" << std::endl
         << Form("if [ ! -f study_data_%s.root ] ; then",studyName) << std::endl
         << "uudecode <<EOR" << std::endl ;
@@ -109,7 +105,7 @@ void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob,
     gSystem->Exec(Form("cat study_data_%s.root | uuencode -m study_data_%s.root >> study_driver_%s.sh",studyName,studyName,studyName)) ;
 
     // Write remainder of driver script
-    ofstream bdr2 (Form("study_driver_%s.sh",studyName),ios::app) ;
+    std::ofstream bdr2(Form("study_driver_%s.sh", studyName), std::ios::app);
     bdr2 << "EOR" << std::endl
     << "fi" << std::endl
     << "root -l -b <<EOR" << std::endl
@@ -124,15 +120,16 @@ void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob,
 
   } else {
 
-    ofstream bdr(Form("study_driver_%s.sh",studyName)) ;
-    bdr << "#!/bin/sh" << std::endl
-   << "root -l -b <<EOR" << std::endl
-   << Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << std::endl
-   << ".q" << std::endl
-   << "EOR" << std::endl ;
+     std::ofstream bdr(Form("study_driver_%s.sh", studyName));
+     bdr << "#!/bin/sh" << std::endl
+         << "root -l -b <<EOR" << std::endl
+         << Form("RooStudyPackage::processFile(\"%s\",%d) ;", studyName, nExpPerJob) << std::endl
+         << ".q" << std::endl
+         << "EOR" << std::endl;
 
-    coutI(DataHandling) << "RooStudyManager::prepareBatchInput batch driver file is '" << Form("study_driver_%s.sh",studyName) << "," << std::endl
-         << "     input data file is " << Form("study_data_%s.root",studyName) << std::endl ;
+     coutI(DataHandling) << "RooStudyManager::prepareBatchInput batch driver file is '"
+                         << Form("study_driver_%s.sh", studyName) << "," << std::endl
+                         << "     input data file is " << Form("study_data_%s.root", studyName) << std::endl;
 
   }
 }
@@ -144,20 +141,20 @@ void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob,
 
 void RooStudyManager::processBatchOutput(const char* filePat)
 {
-  list<string> flist ;
-  expandWildCardSpec(filePat,flist) ;
+   std::list<std::string> flist;
+   expandWildCardSpec(filePat, flist);
 
-  TList olist ;
+   TList olist;
 
-  for (list<string>::iterator iter = flist.begin() ; iter!=flist.end() ; ++iter) {
-    coutP(DataHandling) << "RooStudyManager::processBatchOutput() now reading file " << *iter << std::endl ;
-    TFile f(iter->c_str()) ;
+   for (auto iter = flist.begin(); iter != flist.end(); ++iter) {
+      coutP(DataHandling) << "RooStudyManager::processBatchOutput() now reading file " << *iter << std::endl;
+      TFile f(iter->c_str());
 
-    for(auto * key : static_range_cast<TKey*>(*f.GetListOfKeys())) {
-      TObject * obj = f.Get(key->GetName()) ;
-      olist.Add(obj->Clone(obj->GetName())) ;
-    }
-  }
+      for (auto *key : static_range_cast<TKey *>(*f.GetListOfKeys())) {
+         TObject *obj = f.Get(key->GetName());
+         olist.Add(obj->Clone(obj->GetName()));
+      }
+   }
   aggregateData(&olist) ;
   olist.Delete() ;
 }
@@ -165,11 +162,11 @@ void RooStudyManager::processBatchOutput(const char* filePat)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooStudyManager::aggregateData(TList* olist)
+void RooStudyManager::aggregateData(TList *olist)
 {
-  for (list<RooAbsStudy*>::iterator iter=_pkg->studies().begin() ; iter!=_pkg->studies().end() ; ++iter) {
-    (*iter)->aggregateSummaryOutput(olist) ;
-  }
+   for (auto study : _pkg->studies()) {
+      study->aggregateSummaryOutput(olist);
+   }
 }
 
 
@@ -178,7 +175,7 @@ void RooStudyManager::aggregateData(TList* olist)
 ////////////////////////////////////////////////////////////////////////////////
 /// case with one single file
 
-void RooStudyManager::expandWildCardSpec(const char* name, list<string>& result)
+void RooStudyManager::expandWildCardSpec(const char *name, std::list<std::string> &result)
 {
   if (!TString(name).MaybeWildcard()) {
     result.push_back(name) ;
