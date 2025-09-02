@@ -250,15 +250,15 @@ auto gMutex = new TMutex(kTRUE);
 auto gRWMutex = new TRWMutexImp<TMutex>();
 auto gRWMutexSpin = new TRWMutexImp<ROOT::TSpinMutex>();
 auto gRWMutexStd = new TRWMutexImp<std::mutex>();
+auto gRWMutexStdThreadLocal = new TRWMutexImp<std::mutex, ROOT::Internal::RecurseCountsThreadLocal>();
 #ifdef R__HAS_TBB
-auto gRWMutexStdTBB = new TRWMutexImp<std::mutex, ROOT::Internal::RecurseCountsTBB>();
 auto gRWMutexStdTBBUnique = new TRWMutexImp<std::mutex, ROOT::Internal::RecurseCountsTBBUnique>();
 #endif
 auto gReentrantRWMutex = new ROOT::TReentrantRWLock<TMutex>();
 auto gReentrantRWMutexSM = new ROOT::TReentrantRWLock<ROOT::TSpinMutex>();
 auto gReentrantRWMutexStd = new ROOT::TReentrantRWLock<std::mutex>();
+auto gReentrantRWMutexStdThreadLocal = new ROOT::TReentrantRWLock<std::mutex, ROOT::Internal::RecurseCountsThreadLocal>();
 #ifdef R__HAS_TBB
-auto gReentrantRWMutexStdTBB = new ROOT::TReentrantRWLock<std::mutex, ROOT::Internal::RecurseCountsTBB>();
 auto gReentrantRWMutexStdTBBUnique = new ROOT::TReentrantRWLock<std::mutex, ROOT::Internal::RecurseCountsTBBUnique>();
 #endif
 auto gSpinMutex = new ROOT::TSpinMutex();
@@ -335,17 +335,17 @@ TEST(RWLock, WriteStdDirectUnLock)
    testWriteUnLock(gReentrantRWMutexStd, gRepetition, gWriteHint);
 }
 
+TEST(RWLock, WriteStdThreadLocalDirectLock)
+{
+   gWriteHint = testWriteLock(gReentrantRWMutexStdThreadLocal, gRepetition);
+}
+
+TEST(RWLock, WriteStdThreadLocalDirectUnLock)
+{
+   testWriteUnLock(gReentrantRWMutexStdThreadLocal, gRepetition, gWriteHint);
+}
+
 #ifdef R__HAS_TBB
-TEST(RWLock, WriteStdTBBDirectLock)
-{
-   gWriteHint = testWriteLock(gReentrantRWMutexStdTBB, gRepetition);
-}
-
-TEST(RWLock, WriteStdTBBDirectUnLock)
-{
-   testWriteUnLock(gReentrantRWMutexStdTBB, gRepetition, gWriteHint);
-}
-
 TEST(RWLock, WriteStdTBBUniqueDirectLock)
 {
    gWriteHint = testWriteLock(gReentrantRWMutexStdTBBUnique, gRepetition);
@@ -387,17 +387,17 @@ TEST(RWLock, ReadUnLockStdDirect)
    testReadUnLock(gReentrantRWMutexStd, gRepetition, gReadHint);
 }
 
+TEST(RWLock, ReadLockStdThreadLocalDirect)
+{
+   gReadHint = testReadLock(gReentrantRWMutexStdThreadLocal, gRepetition);
+}
+
+TEST(RWLock, ReadUnLockStdThreadLocalDirect)
+{
+   testReadUnLock(gReentrantRWMutexStdThreadLocal, gRepetition, gReadHint);
+}
+
 #ifdef R__HAS_TBB
-TEST(RWLock, ReadLockStdTBBDirect)
-{
-   gReadHint = testReadLock(gReentrantRWMutexStdTBB, gRepetition);
-}
-
-TEST(RWLock, ReadUnLockStdTBBDirect)
-{
-   testReadUnLock(gReentrantRWMutexStdTBB, gRepetition, gReadHint);
-}
-
 TEST(RWLock, ReadLockStdTBBUniqueDirect)
 {
    gReadHint = testReadLock(gReentrantRWMutexStdTBBUnique, gRepetition);
@@ -494,12 +494,12 @@ TEST(RWLock, ReentrantStd)
    Reentrant(*gReentrantRWMutexStd);
 }
 
-#ifdef R__HAS_TBB
-TEST(RWLock, ReentrantStdTBB)
+TEST(RWLock, ReentrantStdThreadLocal)
 {
-   Reentrant(*gReentrantRWMutexStdTBB);
+   Reentrant(*gReentrantRWMutexStdThreadLocal);
 }
 
+#ifdef R__HAS_TBB
 TEST(RWLock, ReentrantStdTBBUnique)
 {
    Reentrant(*gReentrantRWMutexStdTBBUnique);
@@ -531,12 +531,12 @@ TEST(RWLock, ResetRestoreStd)
    ResetRestore(*gReentrantRWMutexStd);
 }
 
-#ifdef R__HAS_TBB
-TEST(RWLock, ResetRestoreStdTBB)
+TEST(RWLock, ResetRestoreStdThreadLocal)
 {
-   ResetRestore(*gReentrantRWMutexStdTBB);
+   ResetRestore(*gReentrantRWMutexStdThreadLocal);
 }
 
+#ifdef R__HAS_TBB
 TEST(RWLock, ResetRestoreStdTBBUnique)
 {
    ResetRestore(*gReentrantRWMutexStdTBBUnique);
@@ -579,12 +579,12 @@ TEST(RWLock, concurrentResetRestoreStd)
    concurrentResetRestore(gRWMutexStd, 2, gRepetition / 10000);
 }
 
-#ifdef R__HAS_TBB
-TEST(RWLock, concurrentResetRestoreStdTBB)
+TEST(RWLock, concurrentResetRestoreStdThreadLocal)
 {
-   concurrentResetRestore(gRWMutexStdTBB, 2, gRepetition / 10000);
+   concurrentResetRestore(gRWMutexStdThreadLocal, 2, gRepetition / 10000);
 }
 
+#ifdef R__HAS_TBB
 TEST(RWLock, concurrentResetRestoreStdTBBUnique)
 {
    concurrentResetRestore(gRWMutexStdTBBUnique, 2, gRepetition / 10000);
@@ -629,12 +629,12 @@ TEST(RWLock, concurrentReadsAndWritesStd)
    concurrentReadsAndWrites(gRWMutexStd, 1, 2, gRepetition / 10000);
 }
 
-#ifdef R__HAS_TBB
-TEST(RWLock, concurrentReadsAndWritesStdTBB)
+TEST(RWLock, concurrentReadsAndWritesStdThreadLocal)
 {
-   concurrentReadsAndWrites(gRWMutexStdTBB, 1, 2, gRepetition / 10000);
+   concurrentReadsAndWrites(gRWMutexStdThreadLocal, 1, 2, gRepetition / 10000);
 }
 
+#ifdef R__HAS_TBB
 TEST(RWLock, concurrentReadsAndWritesStdTBBUnique)
 {
    concurrentReadsAndWrites(gRWMutexStdTBBUnique, 1, 2, gRepetition / 10000);
@@ -651,12 +651,12 @@ TEST(RWLock, LargeconcurrentReadsAndWritesStd)
    concurrentReadsAndWrites(gRWMutex, 10, 20, gRepetition / 10000);
 }
 
-#ifdef R__HAS_TBB
-TEST(RWLock, LargeconcurrentReadsAndWritesStdTBB)
+TEST(RWLock, LargeconcurrentReadsAndWritesStdThreadLocal)
 {
-   concurrentReadsAndWrites(gRWMutexStdTBB, 10, 20, gRepetition / 10000);
+   concurrentReadsAndWrites(gRWMutexStdThreadLocal, 10, 20, gRepetition / 10000);
 }
 
+#ifdef R__HAS_TBB
 TEST(RWLock, LargeconcurrentReadsAndWritesStdTBBUnique)
 {
    concurrentReadsAndWrites(gRWMutexStdTBBUnique, 10, 20, gRepetition / 10000);
@@ -678,12 +678,12 @@ TEST(RWLock, VeryLargeconcurrentReadsAndWritesStd)
    concurrentReadsAndWrites(gRWMutexStd, 10, 200, gRepetition / 10000);
 }
 
-#ifdef R__HAS_TBB
-TEST(RWLock, VeryLargeconcurrentReadsAndWritesStdTBB)
+TEST(RWLock, VeryLargeconcurrentReadsAndWritesStdThreadLocal)
 {
-   concurrentReadsAndWrites(gRWMutexStdTBB, 10, 200, gRepetition / 10000);
+   concurrentReadsAndWrites(gRWMutexStdThreadLocal, 10, 200, gRepetition / 10000);
 }
 
+#ifdef R__HAS_TBB
 TEST(RWLock, VeryLargeconcurrentReadsAndWritesStdTBBUnique)
 {
    concurrentReadsAndWrites(gRWMutexStdTBBUnique, 10, 200, gRepetition / 10000);
@@ -706,12 +706,12 @@ TEST(RWLock, VeryLargeconcurrentReadsStd)
    concurrentReadsAndWrites(gRWMutexStd, 0, 200, gRepetition / 10000);
 }
 
-#ifdef R__HAS_TBB
-TEST(RWLock, VeryLargeconcurrentReadsStdTBB)
+TEST(RWLock, VeryLargeconcurrentReadsStdThreadLocal)
 {
-   concurrentReadsAndWrites(gRWMutexStdTBB, 0, 200, gRepetition / 10000);
+   concurrentReadsAndWrites(gRWMutexStdThreadLocal, 0, 200, gRepetition / 10000);
 }
 
+#ifdef R__HAS_TBB
 TEST(RWLock, VeryLargeconcurrentReadsStdTBBUnique)
 {
    concurrentReadsAndWrites(gRWMutexStdTBBUnique, 0, 200, gRepetition / 10000);
