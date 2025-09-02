@@ -2318,17 +2318,14 @@ macro(ROOTTEST_COMPILE_MACRO filename)
     list(APPEND RootMacroDirDefines "-e;#define ${d}")
   endforeach()
 
-  set(RootMacroBuildDefines
-        -e "#define CMakeEnvironment"
-        -e "#define CMakeBuildDir \"${CMAKE_CURRENT_BINARY_DIR}\""
-        -e "gSystem->AddDynamicPath(\"${CMAKE_CURRENT_BINARY_DIR}\")"
-        -e "gROOT->SetMacroPath(\"${CMAKE_CURRENT_SOURCE_DIR}\")"
-        -e "gInterpreter->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
-        -e "gSystem->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
-        -e "gSystem->SetBuildDir(\"${CMAKE_CURRENT_BINARY_DIR}\", true)"
-        ${RootMacroDirDefines})
-
-  set(root_compile_macro ${ROOT_root_CMD} ${RootMacroBuildDefines} -q -l -b)
+  set(root_compile_macro ${CMAKE_COMMAND} -E env
+      ROOT_LIBRARY_PATH="${CMAKE_CURRENT_BINARY_DIR}"
+      ROOT_INCLUDE_PATH="${CMAKE_CURRENT_BINARY_DIR}"
+      ${ROOT_root_CMD}
+      -e "gSystem->SetBuildDir(\"${CMAKE_CURRENT_BINARY_DIR}\", true)"
+      ${RootMacroDirDefines}
+      -q -l -b
+  )
 
   get_filename_component(realfp ${filename} ABSOLUTE)
   if(MSVC)
