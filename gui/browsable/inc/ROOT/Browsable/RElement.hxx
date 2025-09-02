@@ -113,6 +113,10 @@ public:
    static std::string GetPathAsString(const RElementPath_t &path);
 
    static int ExtractItemIndex(std::string &name);
+
+   static bool IsLastKeyCycle();
+
+   static void SetLastKeyCycle(bool on = true);
 };
 
 } // namespace Browsable
