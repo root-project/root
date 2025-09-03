@@ -84,6 +84,9 @@ if(MSVC AND NOT win_broken_tests)
   list(APPEND dataframe_veto analysis/dataframe/df037_TTreeEventMatching.py)
   # The RooFit SBI tutorials fail on Windows for unknown reasons
   list(APPEND roofit_veto roofit/roofit/rf617_simulation_based_inference_multidimensional.py)
+  # Fails on Windows x86 with IncrementalExecutor::executeFunction:
+  # symbol '__std_find_trivial_4@12' unresolved while linking [cling interface function]!
+  list(APPEND roofit_veto roofit/roofit/rf619_discrete_profiling.C)
   # The tmva100_DataPreparation.py fails on Windows with the following error:
   # CMake Error at C:/ROOT-CI/build/RootTestDriver.cmake:232 (message):
   #   error code: -529697949
