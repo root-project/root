@@ -89,7 +89,7 @@ public:
             fIndex = RBinIndex();
          } else if (fIndex.IsInvalid()) {
             // This should never happen! In the worst case, when built with NDEBUG, the iterator stays at Invalid.
-            assert(0);
+            assert(0); // GCOVR_EXCL_LINE
          } else {
             fIndex++;
             if (fIndex.GetIndex() == fNNormalBins) {
