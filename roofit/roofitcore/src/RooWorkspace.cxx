@@ -178,7 +178,7 @@ RooWorkspace::RooWorkspace(const char* name, const char* title) :
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct empty workspace with given name and option to export reference to
-/// all workspace contents to a CINT namespace with the same name.
+/// all workspace contents to a CLING namespace with the same name.
 
 RooWorkspace::RooWorkspace(const char* name, bool /*doCINTExport*/)  :
   TNamed(name,name), _classes(this)
@@ -1075,7 +1075,7 @@ bool RooWorkspace::commitTransaction()
     return false ;
   }
 
-  // Publish sandbox nodes in directory and/or CINT if requested
+  // Publish sandbox nodes in directory and/or CLING if requested
   for(RooAbsArg* sarg : _sandboxNodes) {
     if (_dir && sarg->IsA() != RooConstVar::Class()) {
       _dir->InternalAppend(sarg) ;

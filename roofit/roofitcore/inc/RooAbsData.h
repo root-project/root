@@ -176,7 +176,7 @@ public:
 
   virtual RooPlot* plotOn(RooPlot* frame, const RooLinkedList& cmdList) const ;
 
-  // WVE --- This needs to be public to avoid CINT problems
+  // WVE --- This needs to be public to avoid CLING problems
   struct PlotOpt {
    const char* cuts = "";
    Option_t* drawOptions = "P";
