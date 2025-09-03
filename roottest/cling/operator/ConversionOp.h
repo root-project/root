@@ -28,7 +28,7 @@ namespace N {
    class B {
    public:
       B(const ::B& b): fB(b) {}
-      // Make sure that CINT doesn't confuse
+      // Make sure that CLING doesn't confuse
       // N::B::op ::B() with
       // N::B::op N::B() when writing the dictionary
       operator ::B() const {return fB;}

@@ -10,7 +10,7 @@
 #pragma link C++ class Relation1D<int,float>+;
 //#pragma link C++ class std::pair<int,float>+;
 #pragma link C++ class std::vector<std::pair<int,float> >;
-//the next line work around issue with CINT's typedef mechanism
+//the next line work around issue with CLING's typedef mechanism
 //#pragma link C++ class std::vector<pair<int,float> >;
 #pragma link C++ class IRelation<int,float>+;
 #pragma link C++ class Relation<int,float>+;

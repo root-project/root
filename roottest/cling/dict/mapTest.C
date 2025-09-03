@@ -19,7 +19,7 @@ void mapTest()
   //mymap.erase(it);
   //mymap.erase(mymap.find('d'));
 
-  /*TODO: CINT doesn't interpret the opearor -> properly
+  /*TODO: CLING doesn't interpret the opearor -> properly
   // print content:
   std::cout << "elements in mymap:" << std::endl;
   std::cout << "a => " << mymap.find('a')->second << std::endl;
@@ -37,7 +37,7 @@ void mapTest()
 #endif
 
   
-  /*TODO: CINT doesn't interpret the opearor -> properly
+  /*TODO: CLING doesn't interpret the opearor -> properly
    std::map<int, MyTemplateClass<int> >::iterator mapIt;
 
   //mapIt = tmpmap.find(1);

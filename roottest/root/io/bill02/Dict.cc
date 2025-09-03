@@ -20,7 +20,7 @@
 #define G__ROOT
 #endif
 
-// Since CINT ignores the std namespace, we need to do so in this file.
+// Since CLING ignores the std namespace, we need to do so in this file.
 namespace std {} using namespace std;
 
 #include "RtypesImp.h"

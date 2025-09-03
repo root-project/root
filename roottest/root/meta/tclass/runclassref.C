@@ -8,7 +8,7 @@
 
    TClassRef clref("MyClass");
 #ifdef __ICLING__
-   TClass *cl = clref.GetClass(); // CINT does not properly handle operator Cast
+   TClass *cl = clref.GetClass(); // CLING does not properly handle operator Cast
 #else
    TClass *cl = clref;
 #endif
@@ -18,7 +18,7 @@
    }
    TFile *f = TFile::Open("myclass.root");
 #ifdef __ICLING__
-   cl = clref.GetClass(); // CINT does not properly handle operrator Cast
+   cl = clref.GetClass(); // CLING does not properly handle operator Cast
 #else
    cl = clref;
 #endif
@@ -32,7 +32,7 @@
    TClass *cl2;
    gROOT->ProcessLine(".L RunMyClass.C+");
 #ifdef __ICLING__
-   cl2 = clref.GetClass(); // CINT does not properly handle operrator Cast
+   cl2 = clref.GetClass(); // CLING does not properly handle operator Cast
 #else
    cl2 = clref;
 #endif

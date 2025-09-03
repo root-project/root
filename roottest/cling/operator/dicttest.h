@@ -1,4 +1,4 @@
-// make sure "private" is seen by the compiler - CINT's dict hides it
+// make sure "private" is seen by the compiler - CLING's dict hides it
 #ifdef private
 # undef private
 # define private private

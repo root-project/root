@@ -1,6 +1,6 @@
 // autoloading fails! so we need to include <vector>:
 #if !defined(__ICLING__) || 1
-#include <vector> // loads the cintdlls
+#include <vector>
 #include <algorithm>
 #include "TROOT.h"
 #endif
@@ -40,7 +40,7 @@ int VectorSort() {
    //gROOT->ProcessLine(".class vector<unsigned int>");
 
    // check the availability and validity of the iterator type
-   // (this should be "const_iterator" btw - it's a CINT bug)
+   // (this should be "const_iterator" btw - it's a CLING bug)
    gROOT->ProcessLine(Form("((const vector<unsigned int>*)0x%lx)->end()", (long)&vui));
 
    // is the iterator dict valid? (not really - it ignores the const_)

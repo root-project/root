@@ -6,7 +6,7 @@
 #endif
 
 #if 0
-// This trick does not quite work in CINT because it does not
+// This trick does not quite work in CLING because it does not
 // properly lookup the arguments.
 namespace enclosing {
    #include "operators.h"

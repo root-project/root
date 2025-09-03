@@ -62,7 +62,7 @@ public:
   }
 
   Int_t v[3];
-#ifdef _2_CINT__
+#ifdef __ICLING__
   foo  fo [2]; //[2]
 #else
   foobj *fop[2]; //

@@ -8,7 +8,7 @@
 //     in the friend Tree
 //
 // You can run this tutorial with:
-//  root > .x treefriend.C  (interpreted via CINT)
+//  root > .x treefriend.C  (interpreted via CLING)
 //  root > .x treefriend.C+ (executed via ACLIC & the native compiler)
 // or, variants like:
 //  root > .L treefriend.C+
