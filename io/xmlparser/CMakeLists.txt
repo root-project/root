@@ -28,10 +28,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(XMLParser
     Core
 )
 
+if(MSVC AND NOT builtin_clang)
+  # fixes an issue when building with conda not finding iconv.h
+  set(CONDA_INCLUDE_DIR ${LIBXML2_INCLUDE_DIR}/../)
+endif()
+
 # not needed to propagate includes to rootcling
 target_include_directories(XMLParser PRIVATE
    ${LIBXML2_INCLUDE_DIR}
    ${LIBXML2_INCLUDE_DIRS}
+   ${CONDA_INCLUDE_DIR}
 )
 
 target_link_libraries(XMLParser

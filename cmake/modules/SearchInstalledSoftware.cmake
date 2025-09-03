@@ -1278,7 +1278,11 @@ int main() { return 0; }" tbb_exception_result)
     endif()
   endif()
 
-  set(TBB_CXXFLAGS "-DTBB_SUPPRESS_DEPRECATED_MESSAGES=1")
+  if(MSVC)
+    set(TBB_CXXFLAGS "-D__TBB_NO_IMPLICIT_LINKAGE=1 -DTBB_SUPPRESS_DEPRECATED_MESSAGES=1")
+  else()
+    set(TBB_CXXFLAGS "-DTBB_SUPPRESS_DEPRECATED_MESSAGES=1")
+  endif()
 endif()
 
 if(builtin_tbb)
