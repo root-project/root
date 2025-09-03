@@ -62,7 +62,7 @@ public:
          } else if (auto *variable = std::get_if<RVariableBinAxis>(&axis)) {
             totalNBins *= variable->GetTotalNBins();
          } else {
-            throw std::logic_error("unimplemented axis type");
+            throw std::logic_error("unimplemented axis type"); // GCOVR_EXCL_LINE
          }
       }
       return totalNBins;
@@ -81,7 +81,7 @@ private:
          index *= variable->GetTotalNBins();
          linIndex = variable->ComputeLinearizedIndex(std::get<I>(args));
       } else {
-         throw std::logic_error("unimplemented axis type");
+         throw std::logic_error("unimplemented axis type"); // GCOVR_EXCL_LINE
       }
       if (!linIndex.fValid) {
          return {0, false};
@@ -129,7 +129,7 @@ public:
             globalIndex *= variable->GetTotalNBins();
             linIndex = variable->GetLinearizedIndex(index);
          } else {
-            throw std::logic_error("unimplemented axis type");
+            throw std::logic_error("unimplemented axis type"); // GCOVR_EXCL_LINE
          }
          if (!linIndex.fValid) {
             return {0, false};
