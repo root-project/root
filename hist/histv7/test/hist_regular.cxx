@@ -171,6 +171,7 @@ TEST(RRegularAxis, GetNormalRange)
    static constexpr std::size_t Bins = 20;
    const RRegularAxis axis(Bins, 0, Bins);
    const auto index0 = RBinIndex(0);
+   const auto index1 = RBinIndex(1);
    const auto indexBins = RBinIndex(Bins);
 
    {
@@ -188,7 +189,6 @@ TEST(RRegularAxis, GetNormalRange)
    }
 
    {
-      const auto index1 = RBinIndex(1);
       const auto index5 = RBinIndex(5);
       const auto normal = axis.GetNormalRange(index1, index5);
       EXPECT_EQ(normal.GetBegin(), index1);
@@ -197,7 +197,6 @@ TEST(RRegularAxis, GetNormalRange)
    }
 
    {
-      const auto index1 = RBinIndex(1);
       const auto empty = axis.GetNormalRange(index1, index1);
       EXPECT_EQ(empty.GetBegin(), index1);
       EXPECT_EQ(empty.GetEnd(), index1);
@@ -211,6 +210,7 @@ TEST(RRegularAxis, GetNormalRange)
    EXPECT_THROW(axis.GetNormalRange(indexBins, indexBins), std::invalid_argument);
    EXPECT_THROW(axis.GetNormalRange(index0, overflow), std::invalid_argument);
    EXPECT_THROW(axis.GetNormalRange(index0, indexBins + 1), std::invalid_argument);
+   EXPECT_THROW(axis.GetNormalRange(index1, index0), std::invalid_argument);
 }
 
 TEST(RRegularAxis, GetFullRange)
