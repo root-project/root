@@ -191,7 +191,7 @@ TArrayF &StockReturn(TFile *f,const TString &name,Int_t sDay,Int_t eDay)
   return *r;
 }
 
-#ifndef __MAKECINT__
+#ifndef __MAKECLING__
 //---------------------------------------------------------------------------
 TVectorD OptimalInvest(Double_t riskFactor,TVectorD r,TMatrixDSym Covar)
 {

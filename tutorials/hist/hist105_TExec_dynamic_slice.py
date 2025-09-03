@@ -7,7 +7,7 @@
 ## of the mouse. The resulting histogram is fitted with a gaussian.
 ## A "dynamic" line shows the current bin position in Y.
 ## This more elaborated example can be used as a starting point
-## to develop more powerful interactive applications exploiting CINT
+## to develop more powerful interactive applications exploiting CLING
 ## as a development engine.
 ##
 ## Note that a class is used to hold on to the canvas that display

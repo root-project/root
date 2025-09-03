@@ -53,7 +53,7 @@ void geom_cms_stereo(Bool_t quad_buf = kTRUE)
 
    // --- Fix editor ---
 
-   // EClipType not exported to CINT (see TGLUtil.h):
+   // EClipType not exported to CLING (see TGLUtil.h):
    // 0 - no clip, 1 - clip plane, 2 - clip box
    auto v = gEve->GetDefaultGLViewer();
    v->GetClipSet()->SetClipType(TGLClip::EType(1));

@@ -64,7 +64,7 @@
 
 // uncomment this to read the binning schemes from the root file
 // by default the binning is read from the XML file
-// #define READ_BINNING_CINT
+// #define READ_BINNING_CLING
 
 
 #include <iostream>
@@ -73,7 +73,7 @@
 #include <TFile.h>
 #include <TTree.h>
 #include <TH1.h>
-#ifndef READ_BINNING_CINT
+#ifndef READ_BINNING_CLING
 #include <TDOMParser.h>
 #include <TXMLDocument.h>
 #include "TUnfoldBinningXML.h"
@@ -98,7 +98,7 @@ void testUnfold5c()
   // Step 2: read binning from XML
   //         and save them to output file
 
-#ifdef READ_BINNING_CINT
+#ifdef READ_BINNING_CLING
   TFile *binningSchemes=new TFile("testUnfold5_binning.root");
 #endif
 
@@ -107,7 +107,7 @@ void testUnfold5c()
   outputFile->cd();
 
   // read binning schemes in XML format
-#ifndef READ_BINNING_CINT
+#ifndef READ_BINNING_CLING
   TDOMParser parser;
   Int_t error=parser.ParseFile("testUnfold5binning.xml");
   if(error) cout<<"error="<<error<<" from TDOMParser\n";

@@ -93,7 +93,7 @@ void treeClient(Bool_t evol=kFALSE)
          mess.Reset(kMESS_ANY);              // re-use TMessage object
          mess.WriteInt(idx);
          mess.WriteTString(file->GetName());
-         mess.WriteLong64(file->GetEND());   // 'mess << file->GetEND();' is broken in CINT for Long64_t
+         mess.WriteLong64(file->GetEND());   // 'mess << file->GetEND();' is broken in CLING for Long64_t
          file->CopyTo(mess);
          sock->Send(mess);          // send message
          messlen  += mess.Length();
