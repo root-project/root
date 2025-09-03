@@ -25,7 +25,7 @@ This extends (and isolates) struct timespec
 ~~~
 No accounting of leap seconds is made.
 
-Due to ROOT/CINT limitations TTimeStamp does not explicitly
+Due to ROOT/CLING limitations TTimeStamp does not explicitly
 hold a timespec struct; attempting to do so means the Streamer
 must be hand written.  Instead we have chosen to simply contain
 similar fields within the private area of this class.

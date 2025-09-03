@@ -29,7 +29,7 @@ namespace ROOT {
 namespace MacOSX {
 namespace Details {
 
-//'Private' pimpl class to hide Apple's specific things from CINT.
+//'Private' pimpl class to hide Apple's specific things from CLING.
 class MacOSXSystem;
 
 }

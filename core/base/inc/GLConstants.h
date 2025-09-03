@@ -12,7 +12,7 @@
 #define ROOT_GLConstants
 
 //*-*   This contains the map for those OpenGL package constant the ROOT uses
-//*-*   We need the second table since CINT doesn't understand the "define" pre-processor command
+//*-*   We need the second table since CLING doesn't understand the "define" pre-processor command
 
 
 #ifndef GLConstants

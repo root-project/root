@@ -11,12 +11,12 @@
 
 /** \class TClingClassInfo
 
-Emulation of the CINT ClassInfo class.
+Emulation of the CLING ClassInfo class.
 
-The CINT C++ interpreter provides an interface to metadata about
+The CLING C++ interpreter provides an interface to metadata about
 a class through the ClassInfo class.  This class provides the same
 functionality, using an interface as close as possible to ClassInfo
-but the class metadata comes from the Clang C++ compiler, not CINT.
+but the class metadata comes from the Clang C++ compiler, not CLING.
 */
 
 #include "TClingClassInfo.h"
@@ -151,11 +151,11 @@ long TClingClassInfo::ClassProperty() const
 
    if (!RD) {
       // We are an enum or namespace.
-      // The cint interface always returns 0L for these guys.
+      // The CLING interface always returns 0L for these guys.
       return property;
    }
    if (RD->isUnion()) {
-      // The cint interface always returns 0L for these guys.
+      // The CLING interface always returns 0L for these guys.
       return property;
    }
    // We now have a class or a struct.
@@ -539,7 +539,7 @@ TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
       return tmi;
    }
    if (!strcmp(arglist, ")")) {
-      // CINT accepted a single right paren as meaning no arguments.
+      // compatibility: CINT accepted a single right paren as meaning no arguments.
       arglist = "";
    }
    const cling::LookupHelper &lh = fInterp->getLookupHelper();
@@ -681,7 +681,7 @@ ROOT::TMetaUtils::EIOCtorCategory TClingClassInfo::HasDefaultConstructor(bool ch
    // compiler elides it.
    //
    // Note: This is could enhanced to also know about the ROOT ioctor
-   // but this was not the case in CINT.
+   // but this was not the case in CLING.
    //
 
    using namespace ROOT::TMetaUtils;
@@ -886,7 +886,7 @@ EDataType TClingClassInfo::GetUnderlyingType() const
 
 bool TClingClassInfo::IsLoaded() const
 {
-   // IsLoaded in CINT was meaning is known to the interpreter
+   // IsLoaded in CLING was meaning is known to the interpreter
    // and has a complete definition.
    // IsValid in Cling (as in CING) means 'just' is known to the
    // interpreter.
@@ -969,7 +969,7 @@ int TClingClassInfo::InternalNext()
    while (true) {
       // Advance to next usable decl, or return if there is no next usable decl.
       if (fFirstTime) {
-         // The cint semantics are strange.
+         // The CLING semantics are strange.
          fFirstTime = false;
          if (!*fIter) {
             return 0;
@@ -1331,11 +1331,11 @@ int TClingClassInfo::Size() const
 
    Decl::Kind DK = GetDecl()->getKind();
    if (DK == Decl::Namespace) {
-      // Namespaces are special for cint.
+      // Namespaces are special for CLING.
       return 1;
    }
    else if (DK == Decl::Enum) {
-      // Enums are special for cint.
+      // Enums are special for CLING.
       return 0;
    }
    const RecordDecl *RD = llvm::dyn_cast<RecordDecl>(GetDecl());

@@ -2190,7 +2190,7 @@ int TUnixSystem::GetPid()
 void TUnixSystem::Exit(int code, Bool_t mode)
 {
    // Insures that the files and sockets are closed before any library is unloaded
-   // and before emptying CINT.
+   // and before emptying CLING.
    TROOT::ShutDown();
 
    if (mode)

@@ -45,8 +45,8 @@ Slightly modified TMethodCall class used in the object communication mechanism.
 class TQSlot : public TObject, public TRefCnt {
 
 protected:
-   CallFunc_t    *fFunc;      // CINT method invocation environment
-   ClassInfo_t   *fClass;     // CINT class for fFunc
+   CallFunc_t    *fFunc;      // CLING method invocation environment
+   ClassInfo_t   *fClass;     // CLING class for fFunc
    TFunction     *fMethod;    // slot method or global function
    Longptr_t      fOffset;    // offset added to object pointer
    TString        fName;      // full name of method

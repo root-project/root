@@ -531,7 +531,7 @@ public:
    virtual int             GetMemInfo(MemInfo_t *info) const;
    virtual int             GetProcInfo(ProcInfo_t *info) const;
 
-   //---- ACLiC (Automatic Compiler of Shared Library for CINT)
+   //---- ACLiC (Automatic Compiler of Shared Library for CLING)
    virtual void            AddIncludePath(const char *includePath);
    virtual void            AddLinkedLibs(const char *linkedLib);
    virtual int             CompileMacro(const char *filename, Option_t *opt = "", const char *library_name = "", const char *build_dir = "", UInt_t dirmode = 0);

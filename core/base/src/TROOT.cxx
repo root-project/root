@@ -621,7 +621,7 @@ namespace Internal {
 TROOT *ROOT::Internal::gROOTLocal = ROOT::GetROOT();
 
 // Global debug flag (set to > 0 to get debug output).
-// Can be set either via the interpreter (gDebug is exported to CINT),
+// Can be set either via the interpreter (gDebug is exported to CLING),
 // via the rootrc resource "Root.Debug", via the shell environment variable
 // ROOTDEBUG, or via the debugger.
 Int_t gDebug;
@@ -695,7 +695,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc) : TDi
 
    TDirectory::BuildDirectory(nullptr, nullptr);
 
-   // Initialize interface to CINT C++ interpreter
+   // Initialize interface to CLING C++ interpreter
    fVersionInt      = 0;  // check in TROOT dtor in case TCling fails
    fClasses         = nullptr;  // might be checked via TCling ctor
    fEnums           = nullptr;
@@ -1029,7 +1029,7 @@ void TROOT::AddClass(TClass *cl)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a class generator.  This generator will be called by TClass::GetClass
-/// in case its does not find a loaded rootcint dictionary to request the
+/// in case its does not find a loaded rootcling dictionary to request the
 /// creation of a TClass object.
 
 void TROOT::AddClassGenerator(TClassGenerator *generator)
@@ -1448,7 +1448,7 @@ TObject *TROOT::FindObjectAnyFile(const char *name) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns class name of a ROOT object including CINT globals.
+/// Returns class name of a ROOT object including CLING globals.
 
 const char *TROOT::FindObjectClassName(const char *name) const
 {
@@ -1626,7 +1626,7 @@ TFunctionTemplate *TROOT::GetFunctionTemplate(const char *name)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to global variable by name. If load is true force
-/// reading of all currently defined globals from CINT (more expensive).
+/// reading of all currently defined globals from CLING (more expensive).
 
 TGlobal *TROOT::GetGlobal(const char *name, Bool_t load) const
 {
@@ -1712,7 +1712,7 @@ TFunction *TROOT::GetGlobalFunction(const char *function, const char *params,
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to global function by name. If proto != 0
 /// it will also resolve overloading. If load is true force reading
-/// of all currently defined global functions from CINT (more expensive).
+/// of all currently defined global functions from CLING (more expensive).
 /// The proto string must be of the form: "int, char*, float".
 
 TFunction *TROOT::GetGlobalFunctionWithPrototype(const char *function,
@@ -2360,12 +2360,12 @@ void  TROOT::Message(Int_t id, const TObject *obj)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process interpreter command via TApplication::ProcessLine().
 /// On Win32 the line will be processed asynchronously by sending
-/// it to the CINT interpreter thread. For explicit synchronous processing
+/// it to the CLING interpreter thread. For explicit synchronous processing
 /// use ProcessLineSync(). On non-Win32 platforms there is no difference
 /// between ProcessLine() and ProcessLineSync().
 /// The possible error codes are defined by TInterpreter::EErrorCode. In
 /// particular, error will equal to TInterpreter::kProcessing until the
-/// CINT interpreted thread has finished executing the line.
+/// CLING interpreted thread has finished executing the line.
 /// Returns the result of the command, cast to a Longptr_t.
 
 Longptr_t TROOT::ProcessLine(const char *line, Int_t *error)
@@ -2382,7 +2382,7 @@ Longptr_t TROOT::ProcessLine(const char *line, Int_t *error)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process interpreter command via TApplication::ProcessLine().
 /// On Win32 the line will be processed synchronously (i.e. it will
-/// only return when the CINT interpreter thread has finished executing
+/// only return when the CLING interpreter thread has finished executing
 /// the line). On non-Win32 platforms there is no difference between
 /// ProcessLine() and ProcessLineSync().
 /// The possible error codes are defined by TInterpreter::EErrorCode.
@@ -2400,7 +2400,7 @@ Longptr_t TROOT::ProcessLineSync(const char *line, Int_t *error)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Process interpreter command directly via CINT interpreter.
+/// Process interpreter command directly via CLING interpreter.
 /// Only executable statements are allowed (no variable declarations),
 /// In all other cases use TROOT::ProcessLine().
 /// The possible error codes are defined by TInterpreter::EErrorCode.

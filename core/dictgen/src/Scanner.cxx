@@ -6,7 +6,6 @@
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/rootcint.            *
  *************************************************************************/
 
 #include "Scanner.h"
@@ -651,7 +650,7 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
 
    if (fRecordDeclCallback) {
       // Pass on any declaration.   This is usually used to record dependency.
-      // Since rootcint see C++ compliant header files, we can assume that
+      // Since rootcling see C++ compliant header files, we can assume that
       // if a forward declaration or declaration has been inserted, the
       // classes for which we are creating a dictionary will be using
       // them either directly or indirectly.   Any false positive can be

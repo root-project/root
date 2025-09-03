@@ -102,7 +102,7 @@ extern "C" {
 class TCling final : public TInterpreter {
 private: // Static Data Members
 
-   static void* fgSetOfSpecials; // set of TObjects used in CINT variables
+   static void* fgSetOfSpecials; // set of TObjects used in CLING variables
 
 private: // Data Members
 

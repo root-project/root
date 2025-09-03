@@ -33,7 +33,7 @@ enum EMessageTypes {
    kMESS_NOTOK           = 2,            //things are NOT OK
    kMESS_STRING          = 3,            //string follows
    kMESS_OBJECT          = 4,            //object follows
-   kMESS_CINT            = 5,            //cint command follows
+   kMESS_CINT            = 5,            //CLING command follows
    kMESS_STREAMERINFO    = 6,            //TStreamerInfo object follows
    kMESS_PROCESSID       = 7,            //TProcessID object follows
 

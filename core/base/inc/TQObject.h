@@ -259,7 +259,7 @@ public:
 // Global function which simplifies making connections in interpreted
 // ROOT session
 //
-//  ConnectCINT      - connects to interpreter(CINT) command
+//  ConnectCINT      - connects to interpreter(CLING) command
 
 extern Bool_t ConnectCINT(TQObject *sender, const char *signal,
                           const char *slot);

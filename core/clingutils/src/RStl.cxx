@@ -32,7 +32,7 @@ using namespace TClassEdit;
 #include "Varargs.h"
 
 //
-// ROOT::Internal::RStl is the rootcint STL handling class.
+// ROOT::Internal::RStl is the rootcling STL handling class.
 //
 
 static int fgCount = 0;

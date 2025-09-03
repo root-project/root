@@ -16,13 +16,13 @@
 //                                                                      //
 // TClingTypedefInfo                                                    //
 //                                                                      //
-// Emulation of the CINT TypedefInfo class.                             //
+// Emulation of the CLING TypedefInfo class.                            //
 //                                                                      //
-// The CINT C++ interpreter provides an interface to metadata about     //
+// The CLING C++ interpreter provides an interface to metadata about    //
 // a typedef through the TypedefInfo class.  This class provides the    //
 // same functionality, using an interface as close as possible to       //
 // TypedefInfo but the typedef metadata comes from the Clang C++        //
-// compiler, not CINT.                                                  //
+// compiler, not CLING.                                                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -47,7 +47,7 @@ class TClingTypedefInfo final : public TClingDeclInfo {
 private:
 
    cling::Interpreter  *fInterp; // Cling interpreter, we do *not* own.
-   bool                 fFirstTime; // We need to skip the first increment to support the cint Next() semantics.
+   bool                 fFirstTime; // We need to skip the first increment to support the CLING Next() semantics.
    bool                 fDescend; // Flag for signaling the need to descend on this advancement.
    clang::DeclContext::decl_iterator fIter; // Current decl in scope.
    std::vector<clang::DeclContext::decl_iterator> fIterStack; // Recursion stack for traversing nested scopes.

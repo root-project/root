@@ -19,7 +19,7 @@
 /** \class TMethodArg
 Each ROOT method (see TMethod) has a linked list of its arguments.
 This class describes one single method argument.
-The method argument info is obtained via the CINT api.
+The method argument info is obtained via the CLING api.
 See class TCling.
 
 The method argument information is used a.o. in the TContextMenu
@@ -44,7 +44,7 @@ TMethodArg::TMethodArg(MethodArgInfo_t *info, TFunction *method) : TDictionary()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TMethodArg dtor deletes adopted CINT MethodArgInfo object.
+/// TMethodArg dtor deletes adopted CLING MethodArgInfo object.
 
 TMethodArg::~TMethodArg()
 {

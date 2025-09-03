@@ -41,7 +41,7 @@ private:
    TMethodArg(const TMethodArg&) = delete;
    TMethodArg& operator=(const TMethodArg&) = delete;
 
-   MethodArgInfo_t   *fInfo;         //pointer to CINT method argument info
+   MethodArgInfo_t   *fInfo;         //pointer to CLING method argument info
    TFunction         *fMethod;       //pointer to the method or global function
    TDataMember       *fDataMember;   //TDataMember pointed by this arg,to get values and options from.
 

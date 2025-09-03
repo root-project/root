@@ -385,7 +385,7 @@ TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE *
 
    //create a buffer where the object will be streamed
    //We are forced to go via the I/O package (ie TBufferFile).
-   //Invoking TBufferFile via CINT will automatically load the I/O library
+   //Invoking TBufferFile via CLING will automatically load the I/O library
    TBuffer *buffer = R__CreateBuffer();
    if (!buffer) {
       Fatal("CloneObject","Not able to create a TBuffer!");

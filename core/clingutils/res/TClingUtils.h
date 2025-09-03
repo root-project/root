@@ -283,7 +283,7 @@ public:
    const std::string &GetDemangledTypeInfo() const { return fDemangledTypeInfo; }
    bool HasClassVersion() const { return fRequestedVersionNumber >=0 ; }
    bool RequestStreamerInfo() const {
-      // Equivalent to CINT's cl.RootFlag() & G__USEBYTECOUNT
+      // Equivalent to CLING's cl.RootFlag() & G__USEBYTECOUNT
       return fRequestStreamerInfo;
    }
    // clang-format off

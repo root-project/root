@@ -10,13 +10,13 @@
  *************************************************************************/
 
 /** \class TClingMethodInfo
-Emulation of the CINT MethodInfo class.
+Emulation of the CLING MethodInfo class.
 
-The CINT C++ interpreter provides an interface to metadata about
+The CLING C++ interpreter provides an interface to metadata about
 a function through the MethodInfo class.  This class provides the
 same functionality, using an interface as close as possible to
 MethodInfo but the typedef metadata comes from the Clang C++
-compiler, not CINT.
+compiler, not CLING.
 */
 
 #include "TClingMethodInfo.h"
@@ -382,7 +382,7 @@ int TClingMethodInfo::NArg() const
    // The next call locks the interpreter mutex.
    const clang::FunctionDecl *fd = GetTargetFunctionDecl();
    unsigned num_params = fd->getNumParams();
-   // Truncate cast to fit cint interface.
+   // Truncate cast to fit CLING interface.
    return static_cast<int>(num_params);
 }
 
@@ -396,7 +396,7 @@ int TClingMethodInfo::NDefaultArg() const
    unsigned num_params = fd->getNumParams();
    unsigned min_args = fd->getMinRequiredArguments();
    unsigned defaulted_params = num_params - min_args;
-   // Truncate cast to fit cint interface.
+   // Truncate cast to fit CLING interface.
    return static_cast<int>(defaulted_params);
 }
 
@@ -426,7 +426,7 @@ int TClingMethodInfo::Next()
    }
    // Advance to the next decl.
    if (fFirstTime) {
-      // The cint semantics are weird.
+      // The CLING semantics are weird.
       fFirstTime = false;
    } else {
       fIter.Next();
@@ -574,7 +574,7 @@ TClingTypeInfo *TClingMethodInfo::Type() const
    // The next part interacts with clang, thus needs locking.
    R__LOCKGUARD(gInterpreterMutex);
    if (llvm::isa<clang::CXXConstructorDecl>(GetTargetFunctionDecl())) {
-      // CINT claims that constructors return the class object.
+      // CLING claims that constructors return the class object.
       // For using-ctors of a base, claim that it "returns" the derived class.
       const clang::TypeDecl* ctorClass = llvm::dyn_cast_or_null<clang::TypeDecl>
          (GetDecl()->getDeclContext());
@@ -682,7 +682,7 @@ const char *TClingMethodInfo::Name() const
 const char *TClingMethodInfo::TypeName() const
 {
    if (!IsValid()) {
-      // FIXME: Cint does not check!
+      // FIXME: CLING does not check!
       return nullptr;
    }
    // The next *two* calls lock the interpreter mutex. Lock here first instead

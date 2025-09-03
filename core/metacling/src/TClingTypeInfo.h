@@ -16,12 +16,12 @@
 //                                                                      //
 // TClingTypeInfo                                                       //
 //                                                                      //
-// Emulation of the CINT TypeInfo class.                                //
+// Emulation of the CLING TypeInfo class.                               //
 //                                                                      //
-// The CINT C++ interpreter provides an interface to metadata about     //
+// The CLING C++ interpreter provides an interface to metadata about    //
 // a type through the TypeInfo class.  This class provides the same     //
 // functionality, using an interface as close as possible to TypeInfo   //
-// but the type metadata comes from the Clang C++ compiler, not CINT.   //
+// but the type metadata comes from the Clang C++ compiler, not CLING.  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -67,7 +67,7 @@ public:
    bool                 IsValid() const override { return !fQualType.isNull(); }
    const char          *Name() const override; // Get name of type.
    long                 Property() const; // Get properties of type.
-   int                  RefType() const; // Get CINT reftype of type.
+   int                  RefType() const; // Get CLING reftype of type.
    int                  Size() const; // Get size in bytes of type.
    const char          *TrueName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const; // Get name of type with no typedefs.
    std::string          NormalizedName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const; // Get name of type with no typedefs.

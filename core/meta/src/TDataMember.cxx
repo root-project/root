@@ -334,7 +334,7 @@ TDataMember& TDataMember::operator=(const TDataMember& dm)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TDataMember dtor deletes adopted CINT DataMemberInfo object.
+/// TDataMember dtor deletes adopted CLING DataMemberInfo object.
 
 TDataMember::~TDataMember()
 {
@@ -492,7 +492,7 @@ Longptr_t TDataMember::GetOffset() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get offset from "this" using the information in CINT only.
+/// Get offset from "this" using the information in CLING only.
 
 Longptr_t TDataMember::GetOffsetCint() const
 {

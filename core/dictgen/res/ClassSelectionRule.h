@@ -86,7 +86,7 @@ public:
 
    bool RequestOnlyTClass() const;      // True if the user want the TClass intiliazer but *not* the interpreter meta data
    bool RequestNoStreamer() const;      // Request no Streamer function in the dictionary
-   bool RequestNoInputOperator() const; // Request no generation on a default input operator by rootcint or the compiler.
+   bool RequestNoInputOperator() const; // Request no generation on a default input operator by rootcling or the compiler.
    bool RequestStreamerInfo() const;    // Request the ROOT 4+ I/O streamer
    bool RequestProtected() const;
    bool RequestPrivate() const;

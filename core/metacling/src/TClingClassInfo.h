@@ -16,12 +16,12 @@
 //                                                                      //
 // TClingClassInfo                                                      //
 //                                                                      //
-// Emulation of the CINT ClassInfo class.                               //
+// Emulation of the CLING ClassInfo class.                              //
 //                                                                      //
-// The CINT C++ interpreter provides an interface to metadata about     //
+// The CLING C++ interpreter provides an interface to metadata about    //
 // a class through the ClassInfo class.  This class provides the same   //
 // functionality, using an interface as close as possible to ClassInfo  //
-// but the class metadata comes from the Clang C++ compiler, not CINT.  //
+// but the class metadata comes from the Clang C++ compiler, not CLING. //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -61,7 +61,7 @@ class TClingClassInfo final : public TClingDeclInfo {
 private:
 
    cling::Interpreter   *fInterp = nullptr; // Cling interpreter, we do *not* own.
-   bool                  fFirstTime: 1; // We need to skip the first increment to support the cint Next() semantics.
+   bool                  fFirstTime: 1; // We need to skip the first increment to support the CLING Next() semantics.
    bool                  fDescend : 1;  // Flag for signaling the need to descend on this advancement.
    bool                  fIterAll : 1;  // Flag whether iteration should be as complete as possible.
    bool                  fIsIter : 1;   // Flag whether this object was setup for iteration.

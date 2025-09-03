@@ -55,7 +55,7 @@ one plugin that can extend the same base class. The "<constructor>"
 should be the constructor or a static method that generates an
 instance of the specified class. Global methods should start with
 "::" in their name, like "::CreateFitter()".
-Instead of being a shared library a plugin can also be a CINT
+Instead of being a shared library a plugin can also be a CLING
 script, so instead of libDialog.so one can have Dialog.C.
 The * is a placeholder in case there is no need for a URI to
 differentiate between different plugins for the same base class.

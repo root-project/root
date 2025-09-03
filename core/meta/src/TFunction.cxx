@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TFunction
-Global functions class (global functions are obtained from CINT).
+Global functions class (global functions are obtained from CLING).
 This class describes one single global function.
 The TROOT class contains a list of all currently defined global
 functions (accessible via TROOT::GetListOfGlobalFunctions()).
@@ -85,7 +85,7 @@ TFunction& TFunction::operator=(const TFunction &rhs)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TFunction dtor deletes adopted CINT MethodInfo.
+/// TFunction dtor deletes adopted CLING MethodInfo.
 
 TFunction::~TFunction()
 {
@@ -107,7 +107,7 @@ TObject *TFunction::Clone(const char *newname) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Using the CINT method arg information to create a complete signature string.
+/// Using the CLING method arg information to create a complete signature string.
 
 void TFunction::CreateSignature()
 {
@@ -215,7 +215,7 @@ TDictionary::DeclId_t TFunction::GetDeclId() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to the interface method. Using this pointer we
-/// can find which TFunction belongs to a CINT MethodInfo object.
+/// can find which TFunction belongs to a CLING MethodInfo object.
 /// Both need to have the same InterfaceMethod pointer.
 
 void *TFunction::InterfaceMethod() const
@@ -247,7 +247,7 @@ Bool_t TFunction::IsValid()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the mangled name as defined by CINT, or 0 in case of error.
+/// Returns the mangled name as defined by CLING, or 0 in case of error.
 
 const char *TFunction::GetMangledName() const
 {
@@ -255,7 +255,7 @@ const char *TFunction::GetMangledName() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the prototype of a function as defined by CINT, or 0 in
+/// Returns the prototype of a function as defined by CLING, or 0 in
 /// case of error.
 
 const char *TFunction::GetPrototype() const

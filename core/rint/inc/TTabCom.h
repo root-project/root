@@ -126,7 +126,7 @@ public: // enums
       kCINT_stderr,  // stderr
       kCINT_stdin,   // stdin
 
-      // CINT "." instructions
+      // CLING "." instructions
       // the position of these guys is irrelevant since each of
       // these commands will always be the only command on the line.
       kCINT_Edit,  // .E
@@ -134,7 +134,7 @@ public: // enums
       kCINT_Exec,  // .x
       kCINT_EXec,  // .X
 
-      // specific preprocessor directives.
+      // specific CLING preprocessor directives.
       kCINT_pragma,
       kCINT_includeSYS,  // system files
       kCINT_includePWD,  // local files
@@ -142,7 +142,7 @@ public: // enums
       // specific preprocessor directives
       // must come before general preprocessor directives
 
-      // general preprocessor directives
+      // general CLING preprocessor directives
       // must come after specific preprocessor directives
       kCINT_cpp,
 

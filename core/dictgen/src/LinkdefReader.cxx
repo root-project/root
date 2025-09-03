@@ -14,13 +14,13 @@
 // LinkdefReader                                                        //
 //                                                                      //
 //                                                                      //
-// Note: some inconsistency in the way CINT parsed the #pragma:         //
+// Note: some inconsistency in the way CLING parsed the #pragma:        //
 //   "#pragma link C++ class" is terminated by either a ';' or a newline//
 //      which ever come first and does NOT support line continuation.   //
 //   "#pragma read ..." is terminated by newline but support line       //
 //      continuation (i.e. '\' followed by newline means to also use the//
 //      next line.                                                      //
-//   This was change in CINT to consistently ignore the continuation    //
+//   This was changed in CLING to consistently ignore the continuation  //
 //                                                                      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
@@ -123,7 +123,7 @@ bool LinkdefReader::AddInclude(const std::string& include)
 
 /*
  * The method that processes the pragma statement.
- * Sometimes I had to do strange things to reflect the strange behavior of rootcint
+ * Sometimes I had to do strange things to reflect the strange behavior of rootcling
  */
 bool LinkdefReader::AddRule(const std::string& ruletype,
                             const std::string& identifier,
@@ -294,7 +294,7 @@ bool LinkdefReader::AddRule(const std::string& ruletype,
             if (localIdentifier.at(localIdentifier.length() - 1) == '*') fsr.SetAttributeValue("pattern", localIdentifier);
             else if (name_or_proto) fsr.SetAttributeValue("name", localIdentifier);
             else {
-               int pos = localIdentifier.find("(*)"); //rootcint generates error here but I decided to implement that pattern
+               int pos = localIdentifier.find("(*)"); //rootcling generates error here but I decided to implement that pattern
                if (pos > -1) fsr.SetAttributeValue("proto_pattern", localIdentifier);
                else {
                   // No multiline
@@ -424,7 +424,7 @@ bool LinkdefReader::AddRule(const std::string& ruletype,
             if (linkOn) {
                csr.SetSelected(BaseSelectionRule::kYes);
 
-               if (localIdentifier == "*") { // rootcint generates error here, but I decided to implement it
+               if (localIdentifier == "*") { // rootcling generates error here, but I decided to implement it
                   ClassSelectionRule csr2(fCount++, fInterp);
                   csr2.SetSelected(BaseSelectionRule::kYes);
                   csr2.SetAttributeValue("pattern", "*::*");
@@ -437,13 +437,13 @@ bool LinkdefReader::AddRule(const std::string& ruletype,
                }
             } else {
                csr.SetSelected(BaseSelectionRule::kNo);
-               if (localIdentifier == "*") { // rootcint generates error here, but I decided to implement it
+               if (localIdentifier == "*") { // rootcling generates error here, but I decided to implement it
                   ClassSelectionRule csr2(fCount++, fInterp);
                   csr2.SetSelected(BaseSelectionRule::kNo);
                   csr2.SetAttributeValue("pattern", "*::*");
                   fSelectionRules->AddClassSelectionRule(csr2);
 
-                  EnumSelectionRule esr(fCount++, fInterp); // we need this because of implicit/explicit rules - check my notes on rootcint
+                  EnumSelectionRule esr(fCount++, fInterp); // we need this because of implicit/explicit rules - check my notes on rootcling
                   esr.SetSelected(BaseSelectionRule::kNo);
                   esr.SetAttributeValue("pattern", "*::*");
                   fSelectionRules->AddEnumSelectionRule(esr);
@@ -453,13 +453,13 @@ bool LinkdefReader::AddRule(const std::string& ruletype,
                // should be off by default.  Note that anyway, this is not yet relevant since the pcm actually ignore the on/off
                // request and contains everything (for now).
                // else {
-               //    EnumSelectionRule esr(fCount++); // we need this because of implicit/explicit rules - check my notes on rootcint
+               //    EnumSelectionRule esr(fCount++); // we need this because of implicit/explicit rules - check my notes on rootcling
                //    esr.SetSelected(BaseSelectionRule::kNo);
                //    esr.SetAttributeValue("pattern", localIdentifier+"::*");
                //    fSelectionRules->AddEnumSelectionRule(esr);
 
                //    if (fSelectionRules->GetHasFileNameRule()) {
-               //       FunctionSelectionRule fsr(fCount++); // we need this because of implicit/explicit rules - check my notes on rootcint
+               //       FunctionSelectionRule fsr(fCount++); // we need this because of implicit/explicit rules - check my notes on rootcling
                //       fsr.SetSelected(BaseSelectionRule::kNo);
                //       std::string value = localIdentifier + "::*";
                //       fsr.SetAttributeValue("pattern", value);
@@ -544,7 +544,7 @@ bool LinkdefReader::ProcessFunctionPrototype(std::string &proto, bool &name)
          return false;
       }
 
-      // I don't have to escape the *-s because in rootcint there is no pattern recognition
+      // I don't have to escape the *-s because in rootcling there is no pattern recognition
       int pos3 = pos1;
       while (true) {
          pos3 = proto.find("  ", pos3);

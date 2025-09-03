@@ -17,7 +17,7 @@
 // RStl                                                                 //
 //                                                                      //
 // Use to manage the code that needs to be generated for the STL        //
-// by rootcint.  This class is reserved for rootcint and is a           //
+// by rootcling.  This class is reserved for rootcling and is a         //
 // singleton.                                                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////

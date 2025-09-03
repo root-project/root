@@ -16,13 +16,13 @@
 //                                                                      //
 // TClingBaseClassInfo                                                  //
 //                                                                      //
-// Emulation of the CINT BaseClassInfo class.                           //
+// Emulation of the CLING BaseClassInfo class.                          //
 //                                                                      //
-// The CINT C++ interpreter provides an interface to metadata about     //
+// The CLING C++ interpreter provides an interface to metadata about    //
 // the base classes of a class through the BaseClassInfo class.  This   //
 // class provides the same functionality, using an interface as close   //
 // as possible to BaseClassInfo but the base class metadata comes from  //
-// the Clang C++ compiler, not CINT.                                    //
+// the Clang C++ compiler, not CLING.                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -46,7 +46,7 @@ private:
 
    cling::Interpreter           *fInterp; // Cling interpreter, we do *not* own.
    TClingClassInfo              *fClassInfo; // Class we were intialized with, we own.
-   bool                          fFirstTime; // Flag to provide Cint semantics for iterator advancement (not first time)
+   bool                          fFirstTime; // Flag to provide CLING semantics for iterator advancement (not first time)
    bool                          fDescend; // Flag for signaling the need to descend on this advancement.
    const clang::Decl            *fDecl; // Current class whose bases we are iterating through, we do *not* own.
    clang::CXXRecordDecl::base_class_const_iterator fIter; // Current iterator.

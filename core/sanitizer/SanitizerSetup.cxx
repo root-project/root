@@ -64,7 +64,7 @@ const char* __lsan_default_suppressions() {
           "leak:clang::TextDiagnosticPrinter \n"
           "leak:clang-tblgen \n"
           "leak:cling::IncrementalExecutor\n" //cling macro execution
-          "leak:bin/rootcint\n"  // direct calls into non-sanitised libstdc++
+          "leak:bin/rootcint\n"  // compatibility: direct calls into non-sanitised libstdc++
           "leak:bin/rootcling\n" // direct calls into non-sanitised libstdc++
           "leak:bin/bash\n";     // When python imports ROOT
 }

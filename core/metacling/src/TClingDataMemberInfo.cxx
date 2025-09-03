@@ -11,13 +11,13 @@
 
 /** \class TClingDataMemberInfo
 
-Emulation of the CINT DataMemberInfo class.
+Emulation of the CLING DataMemberInfo class.
 
-The CINT C++ interpreter provides an interface to metadata about
+The CLING C++ interpreter provides an interface to metadata about
 the data members of a class through the DataMemberInfo class.  This
 class provides the same functionality, using an interface as close
 as possible to DataMemberInfo but the data member metadata comes
-from the Clang C++ compiler, not CINT.
+from the Clang C++ compiler, not CLING.
 */
 
 #include "TClingDataMemberInfo.h"
@@ -319,7 +319,7 @@ int TClingDataMemberInfo::Next()
    }
    // Advance to the next decl.
    if (fFirstTime) {
-      // The cint semantics are weird.
+      // The CLING semantics are weird.
       fFirstTime = false;
    } else {
       fIter.Next();
@@ -488,12 +488,12 @@ long TClingDataMemberInfo::Property() const
          property |= kIsStatic;
       } else if (nonTransparentDC->isNamespace()) {
          // Data members of a namespace are global variable which were
-         // considered to be 'static' in the CINT (and thus ROOT) scheme.
+         // considered to be 'static' in the CLING (and thus ROOT) scheme.
          property |= kIsStatic;
       }
    } else if (llvm::isa<clang::EnumConstantDecl>(vd)) {
       // Enumeration constant are considered to be 'static' data member in
-      // the CINT (and thus ROOT) scheme.
+      // the CLING (and thus ROOT) scheme.
       property |= kIsStatic;
    }
    clang::QualType qt = vd->getType();
@@ -573,7 +573,7 @@ const char *TClingDataMemberInfo::TypeName() const
    buf.clear();
    const clang::ValueDecl *vd = GetTargetValueDecl();
    clang::QualType vdType = vd->getType();
-   // In CINT's version, the type name returns did *not* include any array
+   // In CLING's version, the type name returns did *not* include any array
    // information, ROOT's existing code depends on it.
    while (vdType->isArrayType()) {
       vdType = GetDecl()->getASTContext().getQualifiedType(vdType->getBaseElementTypeUnsafe(),vdType.getQualifiers());
@@ -605,7 +605,7 @@ const char *TClingDataMemberInfo::TypeTrueName(const ROOT::TMetaUtils::TNormaliz
 
    ROOT::TMetaUtils::GetNormalizedName(buf, vdType, *fInterp, normCtxt);
 
-   // In CINT's version, the type name returns did *not* include any array
+   // In CLING's version, the type name returns did *not* include any array
    // information, ROOT's existing code depends on it.
    // This might become part of the implementation of GetNormalizedName.
    while (buf.length() && buf[buf.length()-1] == ']') {

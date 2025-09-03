@@ -20,7 +20,7 @@
 /** \class TBaseClass
 Each class (see TClass) has a linked list of its base class(es).
 This class describes one single base class.
-The base class info is obtained via the CINT api.
+The base class info is obtained via the CLING api.
    see class TCling.
 
 The base class information is used a.o. in to find all inherited methods.
@@ -41,7 +41,7 @@ TBaseClass::TBaseClass(BaseClassInfo_t *info, TClass *cl) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TBaseClass dtor deletes adopted CINT BaseClassInfo object.
+/// TBaseClass dtor deletes adopted CLING BaseClassInfo object.
 
 TBaseClass::~TBaseClass()
 {
