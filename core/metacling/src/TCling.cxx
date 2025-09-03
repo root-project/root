@@ -6381,6 +6381,9 @@ Int_t TCling::AutoLoad(const char *cls, Bool_t knowDictNotLoaded /* = kFALSE */)
    // quality of the search (i.e. bad in case of library with no pcm and no rootmap
    // file).
    TInterpreter::SuspendAutoParsing autoParseRaii(this);
+   // During the process, we might need to look at member properties which could
+   // trigger deserialization with modules enabled.
+   cling::Interpreter::PushTransactionRAII deserRaii(GetInterpreterImpl());
    std::unordered_set<std::string> visited;
    return DeepAutoLoadImpl(cls, visited, false /*normalized*/);
 }
