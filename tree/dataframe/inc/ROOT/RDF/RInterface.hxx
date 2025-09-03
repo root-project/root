@@ -1327,6 +1327,7 @@ public:
    /// opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
    /// df.Snapshot("outputNTuple", "outputFile.root", {"x"}, opts);
    /// ~~~
+   /// TODO: explain snapshot with variations
    RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
                                                  const ColumnNames_t &columnList,
                                                  const RSnapshotOptions &options = RSnapshotOptions())
