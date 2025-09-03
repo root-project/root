@@ -600,7 +600,7 @@ void CheckClassNameForRootMap(const std::string &classname, map<string, string> 
          if (k) {
             string base = classname.substr(0, k);
             if (base == "std") {
-               // std is not declared but is also ignored by CINT!
+               // std is not declared but is also ignored by CLING!
                break;
             } else {
                autoloads[base] = ""; // We never load namespaces on their own.
@@ -4752,7 +4752,7 @@ int RootClingMain(int argc,
       // interpPragmaSource and we still need to process it.
 
       LinkdefReader ldefr(interp, constructorTypes);
-      clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap
+      clingArgs.push_back("-Ietc/cling/icling"); // For multiset and multimap
 
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
                        llvmResourceDir.c_str())) {

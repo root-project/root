@@ -580,8 +580,8 @@ the Cling limitations, you can use the C preprocessor symbols defined
 for Cling and `rootcling`.
 
 The preprocessor symbol `__CLING__` is defined for both ROOT and
-`rootcling`. The symbol `__ROOTCLING__` (and `__MAKECINT__` for backward
-compatibility) is only defined in `rootcling`.
+`rootcling`. The symbols `__ROOTCLING__`,  `__ICLING__` and `__MAKECLING__`
+(and `__MAKEINT__` for backward compatibility) is only defined in `rootcling`.
 
 Use `!defined(__CLING__) || defined(__ROOTCLING__)` to bracket code that
 needs to be seen by the compiler and `rootcling`, but will be invisible
