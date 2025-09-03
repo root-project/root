@@ -33,7 +33,10 @@ ROOTTEST_ADD_TEST(StatusBitsCheck
                   OUTREF execStatusBitsCheck.ref)
 
 add_test(NAME root_exe_exitStatus COMMAND $<TARGET_FILE:root.exe> "-e invalid" "--no_exist")
-set_property(TEST root_exe_exitStatus PROPERTY WILL_FAIL True)
+set_tests_properties(root_exe_exitStatus PROPERTIES
+	WILL_FAIL True
+	ENVIRONMENT ROOTIGNOREPREFIX=1)
 add_test(NAME root_exe_errorMessage COMMAND $<TARGET_FILE:root.exe> "-e invalid" "--no_exist")
-set_property(TEST root_exe_errorMessage PROPERTY
-             PASS_REGULAR_EXPRESSION "root: unrecognized option '-e invalid'.*--no_exist.*Try 'root --help'")
+set_tests_properties(root_exe_errorMessage PROPERTIES
+    PASS_REGULAR_EXPRESSION "root: unrecognized option '-e invalid'.*--no_exist.*Try 'root --help'"
+    ENVIRONMENT ROOTIGNOREPREFIX=1)
