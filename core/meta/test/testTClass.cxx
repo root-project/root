@@ -159,3 +159,31 @@ TEST(TClass, TemplateTemplate)
    //                  "_gnu_cxx::__common_pool_policy<double32t_test__gnu_cxx::__pool,Double32_t> > >"),
    //           0);
 }
+
+TEST(TClass, RecoveryExpr)
+{
+   gInterpreter->ProcessLine(R"(
+      namespace test_RecoveryExpr {
+         class CaloTowerTest;
+
+         template<class> struct id {};
+         constexpr bool alwaysFalse(...) { return false; }
+
+         template<class T>
+         struct try_recovery_expr {
+            static_assert(alwaysFalse(id<T>{}));
+         };
+
+         template<class T>
+         inline constexpr bool try_recovery_expr_v =
+         try_recovery_expr<T>::value;
+
+         template <class T, bool = try_recovery_expr_v<T>>
+         struct S {};
+      }
+   )");
+
+   // This made Clang build a RecoveryExpr in LLVM 20 (and trigger an assert)
+   TClass *c = TClass::GetClass("test_RecoveryExpr::S<test_RecoveryExpr::CaloTowerTest>");
+   EXPECT_EQ(c, nullptr);
+}
