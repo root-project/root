@@ -93,7 +93,7 @@ public:
    }
 
    /// Forwards to THnBase::SetBinContent().
-   /// Non-virtual, CINT-compatible replacement of a using declaration.
+   /// Non-virtual, CLING-compatible replacement of a using declaration.
    void SetBinContent(const Int_t* idx, Double_t v) {
       THnBase::SetBinContent(idx, v);
    }
@@ -105,7 +105,7 @@ public:
       fSumw2.At(bin) = e2;
    }
    /// Forwards to THnBase::SetBinContent().
-   /// Non-virtual, CINT-compatible replacement of a using declaration.
+   /// Non-virtual, CLING-compatible replacement of a using declaration.
    void AddBinContent(const Int_t* idx, Double_t v = 1.) {
       THnBase::AddBinContent(idx, v);
    }
@@ -116,7 +116,7 @@ public:
       fSumw2.At(bin) += e2;
    }
    /// Forwards to THnBase::GetBinContent() overload.
-   /// Non-virtual, CINT-compatible replacement of a using declaration.
+   /// Non-virtual, CLING-compatible replacement of a using declaration.
    Double_t GetBinContent(const Int_t *idx) const {
       return THnBase::GetBinContent(idx);
    }
@@ -143,20 +143,20 @@ public:
    void Sumw2() override;
 
    /// Forwards to THnBase::Projection().
-   /// Non-virtual, as a CINT-compatible replacement of a using declaration.
+   /// Non-virtual, as a CLING-compatible replacement of a using declaration.
    TH1D*      Projection(Int_t xDim, Option_t* option = "") const {
       return THnBase::Projection(xDim, option);
    }
 
    /// Forwards to THnBase::Projection().
-   /// Non-virtual, as a CINT-compatible replacement of a using declaration.
+   /// Non-virtual, as a CLING-compatible replacement of a using declaration.
    TH2D*      Projection(Int_t yDim, Int_t xDim,
                          Option_t* option = "") const {
       return THnBase::Projection(yDim, xDim, option);
    }
 
    /// Forwards to THnBase::Projection().
-   /// Non-virtual, as a CINT-compatible replacement of a using declaration.
+   /// Non-virtual, as a CLING-compatible replacement of a using declaration.
    TH3D*      Projection(Int_t xDim, Int_t yDim, Int_t zDim,
                          Option_t* option = "") const {
       return THnBase::Projection(xDim, yDim, zDim, option);

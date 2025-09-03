@@ -37,13 +37,13 @@ int main()
 
 /*
    * From here on, the code can also be used as a macro
-   * Note though, that CINT may report errors where there are none
-     in C++. E.g. this happens here where CINT says that f1 is
+   * Note though, that CLING may report errors where there are none
+     in C++. E.g. this happens here where CLING says that f1 is
      out of scope ...
 
      ==>>  put your code here
       (remember to update the name of you Macro in the
-       lines above if you intend to comile the code)
+       lines above if you intend to compile the code)
                                                                      */
 void ExampleMacro() {
   // Create a histogram, fill it with random gaussian numbers

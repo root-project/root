@@ -108,11 +108,11 @@ fi
 # The recommendations are based on the following assumptions:
 #   * More often than not, the crash is caused by user code.
 #   * The crash can be caused by the user's interpreted code,
-#     in which case sighandler() is called from CINT (G__...)
+#     in which case sighandler() is called from CLING (G__...)
 #   * The crash can be called by the user's library code,
-#     in which case sighandler() is called from non-CINT and
+#     in which case sighandler() is called from non-CLING and
 #     it's worth dumping the stack frames.
-#   * The user doesn't call CINT directly, so whenever we reach
+#   * The user doesn't call CLING directly, so whenever we reach
 #     a stack frame with "G__" we can stop.
 #   * The crash is caused by only one thread, the one which
 #     invokes sighandler()

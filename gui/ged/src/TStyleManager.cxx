@@ -78,7 +78,7 @@ style is removed from the list of all available styles for the
 current ROOT session. WARRNING: it will be lost if you didn't saved
 it in a C++ macro file before its deletion. Also, you cannot delete
 the selected style if it is set to gStyle. A message 'Can not delete
-gStyle' will be displayed on the CINT prompt.
+gStyle' will be displayed on the CLING prompt.
 
 Editor's buttons:
 Open / close the style editor:

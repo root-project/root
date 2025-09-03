@@ -352,7 +352,7 @@ Rint.History:            $(HOME)/.root_hist
 # Rint.WelcomeLite:      no
 # When the interactive ROOT starts, it can automatically load some frequently
 # used includes. However, this introduces several overheads
-#  - A long list of CINT and system files will be kept open during the session
+#  - A long list of CLING and system files will be kept open during the session
 #  - The initialisation takes more time (noticeable when using gdb or valgrind)
 #  - Memory overhead of about 5 Mbytes (1/3 of the base ROOT executable) when
 #    including <vector>
