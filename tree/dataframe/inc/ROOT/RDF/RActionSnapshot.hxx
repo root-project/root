@@ -151,6 +151,7 @@ public:
 
    void CallExec(unsigned int slot, Long64_t entry)
    {
+      // TODO: don't allocate
       std::vector<void *> untypedValues;
       auto nReaders = fValues[slot].size();
       untypedValues.reserve(nReaders);
