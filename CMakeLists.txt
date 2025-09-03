@@ -113,6 +113,14 @@ include(RootMacros)
 include(CheckAssembler)
 include(CheckIntrinsics)
 
+#---Enable testing------------------------------------------------------------------------------
+if(testing)
+  enable_testing()
+endif()
+
+#---Here we look for installed software and switch on and off the different build options-------
+include(SearchInstalledSoftware)
+
 # relatedrepo_GetClosestMatch(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
 #                             FETCHURL_VARIABLE <output_url> FETCHREF_VARIABLE <output_ref>)
 # Return the clone URL and head/tag of the closest match for `repo` (e.g. roottest), based on the
@@ -284,15 +292,6 @@ if(asan)
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ASAN_EXTRA_SHARED_LINKER_FLAGS}")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ASAN_EXTRA_EXE_LINKER_FLAGS}")
 endif()
-
-#---Enable CTest package -----------------------------------------------------------------------
-#include(CTest)
-if(testing)
-  enable_testing()
-endif()
-
-#---Here we look for installed software and switch on and of the different build options--------
-include(SearchInstalledSoftware)
 
 #---Here we add tcmalloc to the linker flags if needed------------------------------------------
 if (TCMALLOC_FOUND)
