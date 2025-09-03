@@ -182,6 +182,8 @@ else()
   target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all)
 endif()
 
+ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH(${libname} ${CMAKE_INSTALL_LIBDIR})
+
 target_include_directories(${libname}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>)
 
