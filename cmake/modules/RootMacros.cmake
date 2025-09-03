@@ -3432,3 +3432,26 @@ function(ROOTTEST_LINKER_LIBRARY library)
                                            ${CMAKE_CURRENT_BINARY_DIR}/lib${library}.lib)
    endif()
 endfunction()
+
+#---------------------------------------------------------------------------------------------------
+# ROOT_GET_CLANG_LIBRARIES( clang_libraries )
+#
+# this function is used to collect the required libraries when building ROOT with external
+# LLVM & Clang, like in Conda for example.
+#---------------------------------------------------------------------------------------------------
+function (ROOT_GET_CLANG_LIBRARIES clang_libraries)
+  set(found_libraries "")
+  FILE(GLOB clangLibs ${LLVM_LIBRARY_DIR}/clang*.lib)
+  foreach(lib_path IN LISTS clangLibs)
+    get_filename_component(lib_name ${lib_path} NAME)
+    if (NOT ${lib_name} IN_LIST found_libraries)
+      list(APPEND found_libraries ${lib_name})
+    endif()
+  endforeach(lib_path)
+  foreach(extra_lib "LLVMFrontendDriver.lib" "LLVMFrontendHLSL.lib" "Version.lib")
+    if (NOT ${extra_lib} IN_LIST found_libraries)
+      list(APPEND found_libraries ${extra_lib})
+    endif()
+  endforeach(extra_lib)
+  SET(${clang_libraries} "${found_libraries}" PARENT_SCOPE)
+endfunction(ROOT_GET_CLANG_LIBRARIES)
