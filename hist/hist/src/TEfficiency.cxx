@@ -1503,7 +1503,8 @@ Double_t TEfficiency::BetaMode(Double_t a,Double_t b)
 /// Notes:
 /// - calls: SetName(name), SetTitle(title)
 /// - set the statistic option to the default (kFCP)
-/// - appends this object to the current directory SetDirectory(gDirectory)
+/// - appends this object to the current directory SetDirectory(gDirectory) if
+///   TH1::AddDirectoryStatus() is active.
 
 void TEfficiency::Build(const char* name,const char* title)
 {
@@ -1511,7 +1512,8 @@ void TEfficiency::Build(const char* name,const char* title)
    SetTitle(title);
 
    SetStatisticOption(kDefStatOpt);
-   SetDirectory(gDirectory);
+   if (TH1::AddDirectoryStatus())
+      SetDirectory(gDirectory);
 
    SetBit(kPosteriorMode,false);
    SetBit(kShortestInterval,false);
