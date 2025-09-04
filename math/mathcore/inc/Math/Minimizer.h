@@ -283,7 +283,7 @@ public:
       return ( tmp < 0) ? 0 : CovMatrix(i,j) / std::sqrt( tmp );
    }
 
-   virtual double GlobalCC(unsigned int ivar) const;
+   virtual std::vector<double> GlobalCC() const;
 
    virtual bool GetMinosError(unsigned int ivar , double & errLow, double & errUp, int option = 0);
    virtual bool Hesse();
