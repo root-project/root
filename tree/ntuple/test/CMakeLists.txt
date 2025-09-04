@@ -78,7 +78,13 @@ if(MSVC)
 endif()
 ROOT_ADD_GTEST(rfield_vector rfield_vector.cxx LIBRARIES ROOTNTuple CustomStruct)
 
-ROOT_ADD_GTEST(ntuple_minifile ntuple_minifile.cxx LIBRARIES ROOTNTuple Physics Tree)
+if(NOT MSVC OR builtin_gtest)
+  # As of 2025-09, the external gtest provided by Conda is not link compatible with ROOT.
+  # As is this test fails with the following error:
+  # error LNK2019: unresolved external symbol "class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > testing::FLAGS_gtest_death_test_style"
+  # Addressing locally this missing symbol leads to other errors with symbols being defined multiple times in the other tests.
+  ROOT_ADD_GTEST(ntuple_minifile ntuple_minifile.cxx LIBRARIES ROOTNTuple Physics Tree)
+endif()
 ROOT_ADD_GTEST(ntuple_show ntuple_show.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_storage ntuple_storage.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
 ROOT_ADD_GTEST(ntuple_extended ntuple_extended.cxx LIBRARIES ROOTNTuple MathCore)

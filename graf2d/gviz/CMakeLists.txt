@@ -26,5 +26,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gviz
     Hist
     Graf
 )
-
+if(MSVC)
+  set_target_properties(Gviz PROPERTIES COMPILE_FLAGS "-DGVDLL")
+endif()
 target_include_directories(Gviz PRIVATE ${GRAPHVIZ_INCLUDE_DIR}/graphviz)
