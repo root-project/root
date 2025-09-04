@@ -18,7 +18,7 @@ public:
    ClassDefNV(Flow,3);
 };
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma read sourceClass="Flow" targetClass="Flow" version="[2]" source="float charged" target="sumCharged" code="{ sumCharged = onfile.charged; }"
 #endif
 

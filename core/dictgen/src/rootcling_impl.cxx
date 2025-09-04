@@ -1840,7 +1840,7 @@ void CallWriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
 void GenerateLinkdef(llvm::cl::list<std::string> &InputFiles,
                      std::string &code_for_parser)
 {
-   code_for_parser += "#if defined(__CINT__) or defined(__ICLING__)\n\n"; // CINT for bacward compatibility
+   code_for_parser += "#if defined(__CINT__) or defined(__CLING__)\n\n"; // CINT for bacward compatibility
    code_for_parser += "#pragma link off all globals;\n";
    code_for_parser += "#pragma link off all classes;\n";
    code_for_parser += "#pragma link off all functions;\n\n";
@@ -4274,8 +4274,8 @@ int RootClingMain(int argc,
    // Data is in 'outputFile', therefore in the same scope.
    llvm::StringRef moduleName;
    std::string vfsArg;
-   // Adding -fmodules to the args will break lexing with __ICLING__(__CINT__) defined,
-   // and we actually do lex with __ICLING__(__CINT__) and reuse this variable later,
+   // Adding -fmodules to the args will break lexing with __CLING__(__CINT__) defined,
+   // and we actually do lex with __CLING__(__CINT__) and reuse this variable later,
    // we have to copy it now.
    auto clingArgsInterpreter = clingArgs;
 
@@ -4486,10 +4486,8 @@ int RootClingMain(int argc,
    TClassEdit::Init(&helper);
 
    // flags used only for the pragma parser, for compatibility:
-   clingArgs.push_back("-D__CINT__"); // bw compatibility
-   clingArgs.push_back("-D__MAKECINT__"); // bw compatibility
-   clingArgs.push_back("-D__ICLING__");
-   clingArgs.push_back("-D__MAKECLING__");
+   clingArgs.push_back("-D__CINT__"); // use now __CLING__ instead
+   clingArgs.push_back("-D__MAKECINT__"); // use now __ROOTCLING__ instead
 
    AddPlatformDefines(clingArgs);
 

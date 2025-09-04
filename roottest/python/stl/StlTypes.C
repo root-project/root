@@ -91,7 +91,7 @@ namespace {
    std::list< JustAClass >    jl1;
 }
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 using namespace std;  // instead of std:: to make cint7 happy
 #pragma link C++ class vector< JustAClass >-;
 #pragma link C++ class vector< JustAClass >::iterator-;

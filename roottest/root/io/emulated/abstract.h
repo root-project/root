@@ -13,7 +13,7 @@ public:
    virtual void Action() = 0;
 };
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma link C++ class Abstract+;
 #endif
 

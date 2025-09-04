@@ -24,7 +24,7 @@
 
 
 // case of dictionary generator
-#if defined(__MAKECLING__) || defined(G__DICTIONARY)
+#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
 
 #include "Math/MConfig.h"
 #include <iostream>

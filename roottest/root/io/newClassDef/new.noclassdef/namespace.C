@@ -2,7 +2,7 @@
 
 #include "TBufferFile.h"
 
-#ifndef __ICLING__
+#ifndef __CLING__
 namespace MySpace {
   ClassImp(MySpace::A)
   ClassImp(MyClass)

@@ -129,7 +129,7 @@ int run() {
 
 }
 
-#ifndef __ICLING__
+#ifndef __CLING__
 int
 main()
 {

@@ -234,7 +234,7 @@ void testJan() {
 
 
 
-#if defined(__MAKECLING__)
+#if defined(__ROOTCLING__)
 #pragma link C++ class CandidateParameters;
 #pragma link C++ class CandParametersMC;
 #pragma link C++ class LambdaParameters;

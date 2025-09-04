@@ -1,4 +1,4 @@
-#ifdef __ICLING__
+#ifdef __CLING__
 
 //#ppragma link off all globals;
 //#ppragma link off all classes;

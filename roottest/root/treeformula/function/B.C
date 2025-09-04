@@ -1,6 +1,6 @@
 #include "B.h"
 
-#if !defined(__ICLING__)
+#if !defined(__CLING__)
 #endif
 
 

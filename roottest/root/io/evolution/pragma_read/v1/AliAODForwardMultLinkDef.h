@@ -1,4 +1,4 @@
-#if !defined( __MAKECLING__ ) && !defined(__CLING__)
+#if !defined( __ROOTCLING__ ) && !defined(__CLING__)
 # error Not for compilation
 #else
 

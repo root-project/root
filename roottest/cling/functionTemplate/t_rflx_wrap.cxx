@@ -1,4 +1,4 @@
-#ifndef __ICLING__
+#ifndef __CLING__
 #include "t_rflx.cpp"
 #endif
 

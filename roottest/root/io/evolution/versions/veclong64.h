@@ -58,7 +58,7 @@ int write_what(const char * /* version */) {
    return writefile();
 }
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma link C++ class MyClass+;
 #pragma link C++ function writefile;
 #pragma link C++ function readfile;

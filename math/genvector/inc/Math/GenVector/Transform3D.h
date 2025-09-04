@@ -215,7 +215,7 @@ public:
    */
    explicit constexpr Transform3D(const Translation3D<T> &t) { AssignFrom(t.Vect()); }
 
-   //#if !defined(__MAKECLING__) && !defined(G__DICTIONARY)  // this is ambiguous with double * , double *
+   //#if !defined(__ROOTCLING__) && !defined(G__DICTIONARY)  // this is ambiguous with double * , double *
 
 
 #ifdef OLD_VERSION

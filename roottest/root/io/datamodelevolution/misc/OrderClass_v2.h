@@ -21,7 +21,7 @@ private:
    ClassDefOverride(MyClass, 2)
 };
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma link C++ class MyClass+;
 
 #pragma read sourceClass="MyClass" version="[1]" source="int ver" \

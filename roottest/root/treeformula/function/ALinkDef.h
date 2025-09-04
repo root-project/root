@@ -1,4 +1,4 @@
-#ifdef __ICLING__
+#ifdef __CLING__
 #pragma link C++ class A+;
 
 

@@ -10,7 +10,7 @@ public:
   map_type map_;
 };
 
-#ifdef __ICLING__
+#ifdef __CLING__
 
 //#pragma link C++ class StoragePolicy+;
 #pragma link C++ class StoragePolicy<int>+;

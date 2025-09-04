@@ -4,7 +4,7 @@ template <class T> class AnInnocentTemplate{};
 template <template <class T> class C> class Wooha{};
 Wooha<AnInnocentTemplate> b;
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma link C++ class Wooha<AnInnocentTemplate>;
 #endif
 

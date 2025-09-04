@@ -1,6 +1,6 @@
 #include "twodimvar.h"
 
-#if !defined(__ICLING__)
+#if !defined(__CLING__)
 ClassImp(A);
 #endif
 

@@ -1,4 +1,4 @@
-#ifndef __ICLING__
+#ifndef __CLING__
 
 #include "TExMap.h"
 #include "Riostream.h"

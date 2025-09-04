@@ -1810,12 +1810,12 @@ Longptr_t TApplication::ExecuteFile(const char *file, Int_t *error, Bool_t keep)
       while (s && (*s == ' ' || *s == '\t')) s++;   // strip-off leading blanks
 
       // very simple minded pre-processor parsing, only works in case macro file
-      // starts with "#ifndef __CINT__" or "#ifndef __ICLING__". In that case everything till next
+      // starts with "#ifndef __CINT__" or "#ifndef __CLING__". In that case everything till next
       // "#else" or "#endif" will be skipped.
       if (*s == '#') {
          char *cs = Compress(currentline);
-         if (strstr(cs, "#ifndef__CINT__") || strstr(cs, "#ifndef__ICLING__") ||
-             strstr(cs, "#if!defined(__CINT__)") || strstr(cs, "#if!defined(__ICLING__)"))
+         if (strstr(cs, "#ifndef__CINT__") || strstr(cs, "#ifndef__CLING__") ||
+             strstr(cs, "#if!defined(__CINT__)") || strstr(cs, "#if!defined(__CLING__)"))
             ifndefc = 1;
          else if (ifndefc && (strstr(cs, "#ifdef") || strstr(cs, "#ifndef") ||
                   strstr(cs, "#ifdefined") || strstr(cs, "#if!defined")))

@@ -36,7 +36,7 @@ ClassDef(A,1)
 
 // and b.h:-
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma link C++ class A+;
 #pragma link C++ class B+;
 #endif

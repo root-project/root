@@ -1,4 +1,4 @@
-#ifdef __ICLING__
+#ifdef __CLING__
 
 #pragma link off all globals;
 #pragma link off all classes;
@@ -14,4 +14,4 @@
 #pragma link C++ typedef FdUtil::Fd::PixelNumberRec;
 #pragma link C++ typedef FdUtil::Fd::PixelNumber;
 
-#endif // __ICLING__
+#endif // __CLING__

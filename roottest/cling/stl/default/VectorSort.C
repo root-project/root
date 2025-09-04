@@ -1,5 +1,5 @@
 // autoloading fails! so we need to include <vector>:
-#if !defined(__ICLING__) || 1
+#if !defined(__CLING__) || 1
 #include <vector>
 #include <algorithm>
 #include "TROOT.h"

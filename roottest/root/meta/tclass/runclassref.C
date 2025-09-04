@@ -7,7 +7,7 @@
    bool success = true;
 
    TClassRef clref("MyClass");
-#ifdef __ICLING__
+#ifdef __CLING__
    TClass *cl = clref.GetClass(); // CLING does not properly handle operator Cast
 #else
    TClass *cl = clref;
@@ -17,7 +17,7 @@
       cout << "Error: Ref to unknown class MyClass points to something (" << (void*)cl << ")\n";
    }
    TFile *f = TFile::Open("myclass.root");
-#ifdef __ICLING__
+#ifdef __CLING__
    cl = clref.GetClass(); // CLING does not properly handle operator Cast
 #else
    cl = clref;
@@ -31,7 +31,7 @@
    }
    TClass *cl2;
    gROOT->ProcessLine(".L RunMyClass.C+");
-#ifdef __ICLING__
+#ifdef __CLING__
    cl2 = clref.GetClass(); // CLING does not properly handle operator Cast
 #else
    cl2 = clref;

@@ -1,4 +1,4 @@
 #include "customConstructor.C"
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #include "linkdef.h"
 #endif

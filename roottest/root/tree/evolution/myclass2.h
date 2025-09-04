@@ -72,6 +72,6 @@ public:
    ClassDefOverride(myclass,2)
 }; 
 
-#ifdef __MAKECLING__ 
+#ifdef __ROOTCLING__ 
 #pragma link C++ class myclass+; 
 #endif

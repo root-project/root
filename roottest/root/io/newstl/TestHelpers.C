@@ -68,7 +68,7 @@ void fillListOfDir(TList &l) {
    }
 }
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma link C++ function DebugTest;
 //#pragma link C++ class pair<float,int>+;
 //#pragma link C++ class pair<std::string,double>+;'

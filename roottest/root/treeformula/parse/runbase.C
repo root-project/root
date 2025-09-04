@@ -1,6 +1,6 @@
 #include "ClassDefinitions.C"
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma link C++ class QRawPulseR+;
 #pragma link C++ class QRawTriggerPulseR+;
 #pragma link C++ class QRawEventR+;

@@ -27,7 +27,7 @@ class Track : public STLMapStoragePolicy<int>
 
   ClassDef(Track,1);
 };
-#ifdef __ICLING__
+#ifdef __CLING__
 
 #pragma link C++ class Track+;
 #pragma link C++ class STLMapStoragePolicy<int>+;

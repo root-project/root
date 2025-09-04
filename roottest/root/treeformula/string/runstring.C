@@ -36,7 +36,7 @@ public:
       
 
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma link C++ class vector<string>+;
 #endif
 

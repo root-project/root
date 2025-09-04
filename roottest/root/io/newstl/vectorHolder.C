@@ -1,6 +1,6 @@
 #include "vectorHolder.h"
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma link C++ class vectorHolder+;
 #endif
 

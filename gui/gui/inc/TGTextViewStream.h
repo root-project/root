@@ -17,7 +17,7 @@
 #include <streambuf>
 #include <iostream>
 
-#if defined (R__WIN32) && defined (__MAKECLING__)
+#if defined (R__WIN32) && defined (__ROOTCLING__)
 typedef basic_streambuf<char, char_traits<char> > streambuf;
 #endif
 

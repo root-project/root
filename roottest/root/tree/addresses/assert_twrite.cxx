@@ -5,7 +5,7 @@
 #include "mytypes.h"
 
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma link C++ class mytypes::FirstBase+;
 #pragma link C++ class mytypes::OtherBase+;
 #pragma link C++ class mytypes::Trajectory+;

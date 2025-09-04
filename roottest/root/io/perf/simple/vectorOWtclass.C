@@ -40,7 +40,7 @@ public:
 #include "TBufferFile.h"
 #include "TClass.h"
 #include <vector> 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma link C++ class vector<simple>+;
 #endif
 

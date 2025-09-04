@@ -142,7 +142,7 @@ private :
 };
 
 
-#if defined(__MAKECLING__) || defined(G__DICTIONARY)
+#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
 // needed since CLING initialize it with TRootIOCtor
 //class TRootIOCtor;
 template<class ParentFunctor>

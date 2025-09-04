@@ -16,7 +16,7 @@ private:
 };
 
 
-#if defined(__MAKECLING__)
+#if defined(__ROOTCLING__)
 #pragma link C++ class MyClass;
 #endif
 

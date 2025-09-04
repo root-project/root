@@ -71,7 +71,7 @@ void Print(const std::map<key,value> &fMap) {
    }
 }
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma read sourceClass="Holder" targetClass="listHolder";
 #endif
 

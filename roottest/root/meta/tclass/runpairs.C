@@ -1,4 +1,4 @@
-#ifdef __ICLING__
+#ifdef __CLING__
 
 
 #include <vector>
@@ -57,7 +57,7 @@ public:
    int get() { return val1*sizeof(val2)*val3.size()*val4.size(); }
 };
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma link C++ class std::vector<std::pair<Char_t, UChar_t> >+;
 #pragma link C++ class std::pair<Char_t, UChar_t>+;
 #pragma link C++ class regular+;

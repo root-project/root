@@ -28,7 +28,7 @@ class Singleton
 // If this isn't hidden from rootcint, the build fails
 template <class T> Singleton<T>* Singleton<T>::instance = 0;
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma link C++ class Singleton<int>;
 #pragma link C++ class Singleton<double>;
 #endif

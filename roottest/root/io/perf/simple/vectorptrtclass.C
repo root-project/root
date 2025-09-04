@@ -35,7 +35,7 @@ public:
 #include <vector> 
 #include "TVirtualCollectionProxy.h"
 #include "TStreamerInfo.h"
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma link C++ class vector<simple*>+;
 #endif
 

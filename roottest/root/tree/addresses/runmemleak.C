@@ -1,4 +1,4 @@
-#if !defined(__ICLING__) || defined(__MAKECLING__)
+#if !defined(__CLING__) || defined(__ROOTCLING__)
 #include <TFile.h>
 #include <TTree.h>
 #include <TBranch.h>

@@ -1880,7 +1880,7 @@ namespace Internal {
       fprintf(hf,"#endif\n");
       fprintf(hf,"\n\n");
 
-      fprintf(hf,"#ifdef __MAKECLING__\n");
+      fprintf(hf,"#ifdef __ROOTCLING__\n");
       if (fListOfClasses.LastIndex()>=0) {
          TBranchProxyClassDescriptor *clp;
          next = &fListOfClasses;

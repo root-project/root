@@ -151,7 +151,7 @@ void jetwrite(const char* ofname="jetclass.root", Int_t num=5)
 //------------------------ jetclass_linkdef.h ------------------------------
 
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma link C++ class Jet+;
 #pragma link C++ class Event+;
 #endif

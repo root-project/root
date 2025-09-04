@@ -269,7 +269,7 @@ void stressSpectrum(Int_t ntimes=100) {
    printf("****************************************************************************\n");
 }
 
-#ifndef __ICLING__
+#ifndef __CLING__
 
 int main(int argc, char **argv)
 {

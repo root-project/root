@@ -78,7 +78,7 @@ public:
 #error missing case
 #endif
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma link C++ class data+;
 #pragma link C++ class Tdata+;
 #endif

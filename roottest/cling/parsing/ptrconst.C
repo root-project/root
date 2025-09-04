@@ -6,7 +6,7 @@ public:
    Object * const &front() const {return mTo;}
    Object *mTo;
 };
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma link C++ class myClass;
 #endif
 

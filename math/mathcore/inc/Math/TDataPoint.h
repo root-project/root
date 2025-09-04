@@ -50,7 +50,7 @@ public:
       for (UInt_t k = 0; k < K; ++k)
          m_vCoordinates[k] = 0;
    }
-#ifndef __MAKECLING__
+#ifndef __ROOTCLING__
    /// constructor initialising the data point from an array
    ///
    /// Input: pData   - array with kDimension coordinates

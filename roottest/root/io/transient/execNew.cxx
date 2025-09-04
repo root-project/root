@@ -36,7 +36,7 @@ void execNew() {
    read();
 }
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma read sourceClass="MyClass" targetClass="MyClass" source="int fOld" \
          version="[1-]" target="fOld" \
          code="{ fOld = onfile.fOld; }"

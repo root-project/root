@@ -6,7 +6,7 @@ public:
     template<class X> StThreeVector<T>&  operator+= (const StThreeVector<X>&) { return *this; };
 };
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma link C++ class StThreeVector+;
 #pragma link C++ function StThreeVector<double>::func(float);
 #pragma link C++ function StThreeVector<double>::operator+=(const StThreeVector<float>&);

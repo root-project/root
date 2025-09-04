@@ -1,7 +1,7 @@
 #include "FillNtp.cxx"
 #include "NtpRecord.cxx"
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma link C++ class NtpShower+;
 #pragma link C++ class NtpEvent+;
 #pragma link C++ class NtpRecord+;

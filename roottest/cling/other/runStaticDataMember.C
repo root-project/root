@@ -32,10 +32,10 @@ void runStaticDataMember()
    B b;
 }
 
-#ifndef __MAKECLING__
+#ifndef __ROOTCLING__
 int main()
 {
    runStaticDataMember();
    return 0;
 }
-#endif // __MAKECLING__
+#endif // __ROOTCLING__

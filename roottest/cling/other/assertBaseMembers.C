@@ -1,4 +1,4 @@
-#ifdef __ICLING__
+#ifdef __CLING__
 // GCC and clang disagree with CLING, i.e. CLING fails for those.
 # define HIDEKNOWNFAILURES
 #endif

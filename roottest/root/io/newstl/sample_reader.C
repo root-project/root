@@ -1,4 +1,4 @@
-#if defined(__CLING__) && !defined(__MAKECLING__) && !defined(ClingWorkAroundMissingSmartInclude)
+#if defined(__CLING__) && !defined(__ROOTCLING__) && !defined(ClingWorkAroundMissingSmartInclude)
 #include "sample_bx_classes.C+"
 #else
 #include "sample_bx_classes.C"

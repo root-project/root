@@ -9,7 +9,7 @@ public:
     ~MyFCN(){}
 };
 
-#ifdef __MAKECLING__
+#ifdef __ROOTCLING__
 #pragma link C++ class MyFCN-;
 #endif
 

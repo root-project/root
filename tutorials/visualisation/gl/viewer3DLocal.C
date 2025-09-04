@@ -16,7 +16,7 @@
 /// code, this script must also be compiled to work correctly.
 ///
 /// ~~~{.cpp}
-/// #if defined(__ICLING__) && !defined(__MAKECLING__)
+/// #if defined(__CLING__) && !defined(__ROOTCLING__)
 /// {
 ///    gSystem->CompileMacro("viewer3DLocal.C");
 ///    viewer3DLocal();

@@ -2,7 +2,7 @@
 #include "Riostream.h"
 #include "TRandom.h"
 
-#ifndef __ICLING__
+#ifndef __CLING__
 #include <bitset>
 using namespace std;
 #endif

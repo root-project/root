@@ -1,4 +1,4 @@
-#if defined(__MAKECLING__) || !defined(__ICLING__)
+#if defined(__ROOTCLING__) || !defined(__CLING__)
 #include "refClasses.cxx"
 #endif
 
