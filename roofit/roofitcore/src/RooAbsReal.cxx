@@ -3885,8 +3885,8 @@ RooDerivative* RooAbsReal::derivative(RooRealVar& obs, Int_t order, double eps)
 
 RooDerivative* RooAbsReal::derivative(RooRealVar& obs, const RooArgSet& normSet, Int_t order, double eps)
 {
-  std::string name=Form("%s_DERIV_%s",GetName(),obs.GetName()) ;
-  std::string title=Form("Derivative of %s w.r.t %s ",GetName(),obs.GetName()) ;
+  std::string name=Form("%s_DERIV_%d%s",order,GetName(),obs.GetName()) ;
+  std::string title=Form("%dDerivative of %s w.r.t %s ",order,GetName(),obs.GetName()) ;
   return new RooDerivative(name.c_str(),title.c_str(),*this,obs,normSet,order,eps) ;
 }
 
