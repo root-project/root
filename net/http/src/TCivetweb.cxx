@@ -476,7 +476,20 @@ static int begin_request_handler(struct mg_connection *conn, void *)
       std::string hdr = arg->FillHttpHeader("HTTP/1.1");
       mg_printf(conn, "%s", hdr.c_str());
 
-      if (arg->GetContentLength() > 0)
+      if (arg->IsChunked()) {
+         // send first portion
+         mg_send_chunk(conn, (const char *)arg->GetContent(), (unsigned)arg->GetContentLength());
+
+         while (arg->IsChunked() && arg->GetContentLength()) {
+            // loop
+            arg->SetContent("");
+
+            serv->ExecuteHttp(arg);
+
+            mg_send_chunk(conn, (const char *)arg->GetContent(), (unsigned)arg->GetContentLength());
+         }
+
+      } else if (arg->GetContentLength() > 0)
          mg_write(conn, arg->GetContent(), (size_t)arg->GetContentLength());
    }
 
