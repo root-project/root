@@ -359,12 +359,11 @@ void THttpCallArg::AddNoCacheHeader()
 ///
 /// Data to the client transferred in chunks.
 /// So many ProcessRequests will be invoked and produced data will be send as next chunk
-/// - until empty conent will be returned
+/// - until empty conent will be returned or chunked flag is cleared
 
-/** mark as chunked - several chunks can be send to the client without closing connection */
-void THttpCallArg::SetChunked()
+void THttpCallArg::SetChunked(Bool_t on)
 {
-   AccessHeader(fHeader, "Transfer-Encoding", "chunked", kTRUE);
+   AccessHeader(fHeader, "Transfer-Encoding", on ? "chunked" : nullptr, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
