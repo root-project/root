@@ -1,7 +1,7 @@
 // @(#)root/test:$Id$
 // Author: Peter Malzacher   19/06/99
 
-#ifndef __CINT__
+#ifndef __CLING__
 #include <Riostream.h>
 #include <TMath.h>
 #include <TVector3.h>
