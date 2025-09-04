@@ -369,9 +369,13 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
       fFitDb->cd();
       if (auto myDb = dynamic_cast<TMemFile *>(fFitDb.get())) {
          // need to unlock the database
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 37, 00)
+      myDb->SetWritable(true);
+#else
          *reinterpret_cast<Bool_t *>(reinterpret_cast<unsigned char *>(myDb) +
                                      myDb->Class()->GetDataMemberOffset("fWritable")) = true;
       }
+#endif
    }
    if (!gDirectory || !gDirectory->IsWritable()) {
       // locate a TMemFile in the open list of files and move to that
@@ -446,10 +450,13 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
 
    if (auto myDb = dynamic_cast<TMemFile *>(fFitDb.get())) {
       // need to lock the database, because if its writable when pyroot closes it causes a crash
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 37, 00)
+      myDb->SetWritable(false);
+#else
       *reinterpret_cast<Bool_t *>(reinterpret_cast<unsigned char *>(myDb) +
                                   myDb->Class()->GetDataMemberOffset("fWritable")) = false;
    }
-
+#endif
    return out;
 }
 
