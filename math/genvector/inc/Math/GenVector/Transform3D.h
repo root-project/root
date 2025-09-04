@@ -215,9 +215,6 @@ public:
    */
    explicit constexpr Transform3D(const Translation3D<T> &t) { AssignFrom(t.Vect()); }
 
-   //#if !defined(__MAKECINT__) && !defined(G__DICTIONARY)  // this is ambiguous with double * , double *
-
-
 #ifdef OLD_VERSION
    /**
       Construct from a translation (using any type of DisplacementVector )
