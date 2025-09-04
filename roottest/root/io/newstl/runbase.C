@@ -59,7 +59,7 @@ private:
 }; 
 
 
-#ifdef __CINT__
+#ifdef __CLING__
 // pragma link C++ class std::map<int, int>;
 #endif
 

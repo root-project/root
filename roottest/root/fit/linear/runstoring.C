@@ -6,7 +6,7 @@
 
 void writefitter()
 {
-#ifdef __CINT__
+#ifdef __CLING__
    G__SetCatchException(0);  
 #endif
    Int_t npoints = 100;
@@ -43,7 +43,7 @@ void writefitter()
 
 void readfitter()
 {
-#ifdef __CINT__
+#ifdef __CLING__
    // G__SetCatchException(0);
 #endif
    TVectorD vect;  
@@ -102,7 +102,7 @@ void readfitter()
 
 void writeformula()
 {
-#ifdef __CINT__
+#ifdef __CLING__
    G__SetCatchException(0);  
 #endif
    TFormula *f = new TFormula("ffffff", "x[0]++x[1]++x[2]");
