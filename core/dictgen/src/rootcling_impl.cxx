@@ -4750,8 +4750,7 @@ int RootClingMain(int argc,
       // interpPragmaSource and we still need to process it.
 
       LinkdefReader ldefr(interp, constructorTypes);
-      clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap
-
+      
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
                        llvmResourceDir.c_str())) {
          ROOT::TMetaUtils::Error(nullptr, "Parsing #pragma failed %s\n", linkdefFilename.c_str());
