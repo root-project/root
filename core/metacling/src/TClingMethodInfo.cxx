@@ -10,13 +10,13 @@
  *************************************************************************/
 
 /** \class TClingMethodInfo
-Emulation of the CLING MethodInfo class.
+Emulation of the historical CINT MethodInfo class.
 
 The CLING C++ interpreter provides an interface to metadata about
 a function through the MethodInfo class.  This class provides the
 same functionality, using an interface as close as possible to
 MethodInfo but the typedef metadata comes from the Clang C++
-compiler, not CLING.
+compiler, not CINT.
 */
 
 #include "TClingMethodInfo.h"
@@ -382,7 +382,7 @@ int TClingMethodInfo::NArg() const
    // The next call locks the interpreter mutex.
    const clang::FunctionDecl *fd = GetTargetFunctionDecl();
    unsigned num_params = fd->getNumParams();
-   // Truncate cast to fit CLING interface.
+   // Truncate cast to fit TInterpreter interface.
    return static_cast<int>(num_params);
 }
 
@@ -396,7 +396,7 @@ int TClingMethodInfo::NDefaultArg() const
    unsigned num_params = fd->getNumParams();
    unsigned min_args = fd->getMinRequiredArguments();
    unsigned defaulted_params = num_params - min_args;
-   // Truncate cast to fit CLING interface.
+   // Truncate cast to fit TInterpreter interface.
    return static_cast<int>(defaulted_params);
 }
 
@@ -426,7 +426,7 @@ int TClingMethodInfo::Next()
    }
    // Advance to the next decl.
    if (fFirstTime) {
-      // The CLING semantics are weird.
+      // The CINT semantics were weird.
       fFirstTime = false;
    } else {
       fIter.Next();

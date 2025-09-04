@@ -16,13 +16,13 @@
 //                                                                      //
 // TClingMethodArgInfo                                                  //
 //                                                                      //
-// Emulation of the CLING MethodInfo class.                             //
+// Emulation of the historical CINT MethodInfo class.                   //
 //                                                                      //
 // The CLING C++ interpreter provides an interface to metadata about    //
 // the arguments to a function through the MethodArgInfo class.  This   //
 // class provides the same functionality, using an interface as close   //
 // as possible to MethodArgInfo but the typedef metadata comes from     //
-// the Clang C++ compiler, not CLING.                                   //
+// the Clang C++ compiler, not CINT.                                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

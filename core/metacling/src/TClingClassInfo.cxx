@@ -681,7 +681,7 @@ ROOT::TMetaUtils::EIOCtorCategory TClingClassInfo::HasDefaultConstructor(bool ch
    // compiler elides it.
    //
    // Note: This is could enhanced to also know about the ROOT ioctor
-   // but this was not the case in CLING.
+   // but this was not the case in CINT.
    //
 
    using namespace ROOT::TMetaUtils;
@@ -886,8 +886,8 @@ EDataType TClingClassInfo::GetUnderlyingType() const
 
 bool TClingClassInfo::IsLoaded() const
 {
-   // IsLoaded in CLING was meaning is known to the interpreter
-   // and has a complete definition.
+   // IsLoaded in CINT was meaning is known to the interpreter
+   // and had a complete definition.
    // IsValid in Cling (as in CING) means 'just' is known to the
    // interpreter.
    if (!IsValid()) {
@@ -1335,7 +1335,7 @@ int TClingClassInfo::Size() const
       return 1;
    }
    else if (DK == Decl::Enum) {
-      // Enums are special for CLING.
+      // Enums were special for cint.
       return 0;
    }
    const RecordDecl *RD = llvm::dyn_cast<RecordDecl>(GetDecl());

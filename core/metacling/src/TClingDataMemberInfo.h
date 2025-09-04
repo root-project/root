@@ -16,13 +16,13 @@
 //                                                                      //
 // TClingDataMemberInfo                                                 //
 //                                                                      //
-// Emulation of the CLING DataMemberInfo class.                         //
+// Emulation of the historical CINT DataMemberInfo class.               //
 //                                                                      //
 // The CLING C++ interpreter provides an interface to metadata about    //
 // the data members of a class through the DataMemberInfo class.  This  //
 // class provides the same functionality, using an interface as close   //
 // as possible to DataMemberInfo but the data member metadata comes     //
-// from the Clang C++ compiler, not CLING.                              //
+// from the Clang C++ compiler, not CINT.                               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -76,7 +76,7 @@ private:
    TClingClassInfo        fClassInfo; // ClassInfo for the decl context, for X<Float16_t> vs X<float>.
    TClingDataMemberIter   fIter; // Current decl.
    std::string            fTitle; // The meta info for the member.
-   bool                   fFirstTime = true; // We need to skip the first increment to support the CLING Next() semantics.
+   bool                   fFirstTime = true; // We needed to skip the first increment to support the historical cint Next() semantics.
    int64_t                fEnumValue; // Special case to handle enums
 
    mutable std::string fIoType;
