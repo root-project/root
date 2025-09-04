@@ -131,9 +131,6 @@ int compare( std::string name, double v1, double v2, double scale = 2.0) {
    return iret;
 }
 
-#ifndef __CLING__
-
-
 // trait class  for distinguishing the number of parameters for the various functions
 template<class Func, unsigned int NPAR>
 struct Evaluator {
@@ -1499,10 +1496,6 @@ int testCompositeObj(int ngen) {
 
    return iret;
 }
-
-
-#endif // endif ifndef __CLING__
-
 
 int stressMathCore(double nscale = 1) {
 
