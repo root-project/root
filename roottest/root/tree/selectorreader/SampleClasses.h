@@ -6,7 +6,7 @@
 #include "TClonesArray.h"
 #include <vector>
 
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ class vector<EventData>+;
 #pragma link C++ class vector<Particle>+;
 #pragma link C++ class vector<ClassWithArray>+;
