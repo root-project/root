@@ -10,7 +10,7 @@ MainEvent.cxx      - Simple test program that creates a ROOT Tree object and
                      histograms. This program uses the files Event.cxx,
                      and Event.h. An example of a procedure to
                      link this program is in bind_Event. Note that the CMake
-                     invokes the rootcling utility to generate the dictionary.
+                     invokes the rootcling utility to generate the dictionaries.
 
 Event.cxx          - Implementation for classes Event and Track.
 

@@ -3,16 +3,6 @@
 /// \notebook -nodraw
 /// Macro illustrating  I/O with Lorentz Vectors of floats.
 ///
-/// The dictionary for LorentzVector of float is not in the libMathCore, therefore
-/// is generated when parsed the file with CLING.
-///
-///  To run  this macro you must do
-///
-/// ~~~{.cpp}
-/// root[0] .L  mathcoreVectorFloatIO.C+
-/// root[1] runIt();
-/// ~~~
-///
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
@@ -30,17 +20,6 @@
 #include "TLorentzVector.h"
 
 #include "Math/Vector4D.h"
-
-
-// Now the dictionary contains the vector's with float types
-// No need to force dictionary generation
-// You need to run ACLIC with old ROOT version
-// and uncomment these lines below
-// #ifdef __ROOTCLING__
-// #pragma link C++ class ROOT::Math::PxPyPzE4D<float>+;
-// #pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> >+;
-// #pragma link C++ typedef ROOT::Math::XYZTVectorF;
-// #endif
 
 using namespace ROOT::Math;
 
@@ -101,30 +80,11 @@ void read() {
 }
 
 void runIt() {
-
-#if defined(__CLING__) && !defined(__ROOTCLING__)
-   gSystem->Load("libMathCore");
-   gSystem->Load("libPhysics");
-   using namespace ROOT::Math ;
-
-   cout << "This tutorial can run only using ACliC, you must run it by doing: " << endl;
-   cout << "\t  .L tutorials/math/mathcoreVectorFloatIO.C+" << endl;
-   cout << "\t  runIt()" << endl;
-#endif
    int nEvents = 100000;
    write(nEvents);
    read();
 }
 
 void mathcoreVectorFloatIO() {
-#if defined(__CLING__) && !defined(__ROOTCLING__)
-   gSystem->Load("libMathCore");
-   gSystem->Load("libPhysics");
-   using namespace ROOT::Math ;
-
-   cout << "This tutorial can run only using ACliC, you must run it by doing: " << endl;
-   cout << "\t  .L tutorials/math/mathcoreVectorFloatIO.C+" << endl;
-   cout << "\t  runIt()" << endl;
-
-#endif
+   runIt();
 }

@@ -134,7 +134,7 @@ private:
 template <class Func>
 class LSResidualFunc : public IMultiGradFunction {
 public:
-   // default ctor (required by CLING)
+   // default ctor
    LSResidualFunc() : fIndex(0), fChi2(0) {}
 
    LSResidualFunc(const Func &func, unsigned int i) : fIndex(i), fChi2(&func) {}

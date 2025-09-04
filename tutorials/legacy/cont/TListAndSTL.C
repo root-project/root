@@ -37,7 +37,7 @@ struct SEnumFunctor {
 
 // A functor for the find_if algorithm
 struct SFind {
-   // using this ugly constructor, since there is problems with std::bindX in CLING
+   // using this ugly constructor, since there were historical problems with std::bindX in CINT
 
    SFind(const TString &aStr): fToFind(aStr) {
 

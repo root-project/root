@@ -28,7 +28,7 @@ void geom_alias()
 
    gEve->FullRedraw3D(kTRUE);
 
-   // EClipType not exported to CLING (see TGLUtil.h):
+   // Historial reason: EClipType was not exported to Cling (see TGLUtil.h):
    // 0 - no clip, 1 - clip plane, 2 - clip box
    auto v = gEve->GetDefaultGLViewer();
    v->GetClipSet()->SetClipType(TGLClip::EType(2));
