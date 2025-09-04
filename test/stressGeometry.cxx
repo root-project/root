@@ -57,7 +57,7 @@
 Double_t tpstot = 0;
 Double_t tpsref = 112.1; //time including the generation of the ref files
 Bool_t testfailed = kFALSE;
-#ifndef __CINT__
+#ifndef __CLING__
 void stressGeometry(const char*, Bool_t, Bool_t);
 
 int main(int argc, char **argv)
