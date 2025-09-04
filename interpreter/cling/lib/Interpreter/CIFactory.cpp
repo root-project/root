@@ -112,9 +112,14 @@ namespace {
                                        bool Verbose) {
     std::string CppInclQuery("LC_ALL=C ");
     CppInclQuery.append(Compiler);
-
+#ifdef __NVCOMPILER
+    CppInclQuery.append(" -drygccinc 2>&1 |"
+                        " sed 's/:/\\n/g' |"
+                        " sed -n '/^\\/.*++/p'");
+#else
     CppInclQuery.append(" -xc++ -E -v /dev/null 2>&1 |"
                         " sed -n -e '/^.include/,${' -e '/^ \\/.*++/p' -e '}'");
+#endif
 
     if (Verbose)
       cling::log() << "Looking for C++ headers with:\n  " << CppInclQuery << "\n";

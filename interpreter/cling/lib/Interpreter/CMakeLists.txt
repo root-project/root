@@ -244,11 +244,13 @@ if (UNIX)
   if(NOT CLING_CXX_HEADERS)
     
     if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "NVHPC")
-        execute_process(COMMAND ${CLING_CXX_RLTV} -drygccinc
+      message(WARNING,"cmp: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER}")
+        execute_process(COMMAND ${CMAKE_CXX_COMPILER} -drygccinc
                       OUTPUT_QUIET ERROR_VARIABLE CLING_CXX_HEADERS)
         execute_process(
           COMMAND echo ${CLING_CXX_HEADERS}
-          COMMAND sed s/:/\\\n/g
+          COMMAND sed "s/:/\\n/g"
+          COMMAND sed -n "/^\\/.*++/p"
         OUTPUT_VARIABLE CLING_CXX_HEADERS)
     else()
        if (CLING_CXX_PATH)
