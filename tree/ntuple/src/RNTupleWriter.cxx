@@ -135,6 +135,7 @@ void ROOT::RNTupleWriter::CommitDataset()
       return;
 
    CommitCluster(true /* commitClusterGroup */);
+   fFillContext.CommitAttributes();
    fFillContext.fSink->CommitDataset();
    fFillContext.fModel->Expire();
 }
@@ -144,4 +145,20 @@ ROOT::Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model,
                                     std::unique_ptr<ROOT::Internal::RPageSink> sink)
 {
    return std::unique_ptr<ROOT::RNTupleWriter>(new ROOT::RNTupleWriter(std::move(model), std::move(sink)));
+}
+
+ROOT::Experimental::RNTupleAttrSetWriterHandle
+ROOT::RNTupleWriter::CreateAttributeSet(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view name)
+{
+   if (ROOT::Experimental::IsReservedRNTupleAttrSetName(name)) {
+      throw ROOT::RException(
+         R__FAIL("Cannot create Attribute Set named \"" + std::string(name) +
+                 "\": the name \"ROOT\" and any name starting with \"ROOT.\" are reserved for internal use."));
+   }
+   return fFillContext.CreateAttributeSet(name, std::move(model));
+}
+
+void ROOT::RNTupleWriter::CloseAttributeSet(Experimental::RNTupleAttrSetWriterHandle handle)
+{
+   fFillContext.CloseAttributeSet(std::move(handle));
 }

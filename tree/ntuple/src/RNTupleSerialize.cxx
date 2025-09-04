@@ -1799,6 +1799,24 @@ ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeFooter(
       return R__FORWARD_ERROR(res);
    }
 
+   // Attributes
+   frame = pos;
+   const auto &attrSets = ROOT::Experimental::Internal::GetAttributeSets(desc);
+   const auto nAttributeSets = attrSets.size();
+   pos += SerializeListFramePreamble(nAttributeSets, *where);
+   for (const auto &[attrSetName, attrSetLocator, uncompLen] : attrSets) {
+      if (auto res = SerializeAttributeSet(attrSetName, attrSetLocator, uncompLen, *where)) {
+         pos += res.Unwrap();
+      } else {
+         return R__FORWARD_ERROR(res);
+      }
+   }
+   if (auto res = SerializeFramePostscript(buffer ? frame : nullptr, pos - frame)) {
+      pos += res.Unwrap();
+   } else {
+      return R__FORWARD_ERROR(res);
+   }
+
    std::uint32_t size = pos - base;
    if (auto res = SerializeEnvelopePostscript(base, size)) {
       size += res.Unwrap();
@@ -1806,6 +1824,31 @@ ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeFooter(
       return R__FORWARD_ERROR(res);
    }
    return size;
+}
+
+ROOT::RResult<std::uint32_t>
+ROOT::Internal::RNTupleSerializer::SerializeAttributeSet(const std::string &name, const RNTupleLocator &locator,
+                                                         std::uint64_t uncompLen, void *buffer)
+{
+   auto base = reinterpret_cast<unsigned char *>(buffer);
+   auto pos = base;
+   void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
+
+   auto frame = pos;
+   pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
+   if (auto res = SerializeLocator(locator, *where)) {
+      pos += res.Unwrap();
+   } else {
+      return R__FORWARD_ERROR(res);
+   }
+   pos += SerializeUInt64(uncompLen, *where);
+   pos += SerializeString(name, *where);
+   auto size = pos - frame;
+   if (auto res = SerializeFramePostscript(buffer ? frame : nullptr, size)) {
+      return size;
+   } else {
+      return R__FORWARD_ERROR(res);
+   }
 }
 
 ROOT::RResult<void> ROOT::Internal::RNTupleSerializer::DeserializeHeader(const void *buffer, std::uint64_t bufSize,
@@ -1918,34 +1961,91 @@ ROOT::RResult<void> ROOT::Internal::RNTupleSerializer::DeserializeFooter(const v
    }
    bytes = frame + frameSize;
 
-   std::uint32_t nClusterGroups;
-   frame = bytes;
-   if (auto res = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nClusterGroups)) {
-      bytes += res.Unwrap();
-   } else {
-      return R__FORWARD_ERROR(res);
-   }
-   for (std::uint32_t groupId = 0; groupId < nClusterGroups; ++groupId) {
-      RClusterGroup clusterGroup;
-      if (auto res = DeserializeClusterGroup(bytes, fnFrameSizeLeft(), clusterGroup)) {
+   {
+      std::uint32_t nClusterGroups;
+      frame = bytes;
+      if (auto res = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nClusterGroups)) {
          bytes += res.Unwrap();
       } else {
          return R__FORWARD_ERROR(res);
       }
+      for (std::uint32_t groupId = 0; groupId < nClusterGroups; ++groupId) {
+         RClusterGroup clusterGroup;
+         if (auto res = DeserializeClusterGroup(bytes, fnFrameSizeLeft(), clusterGroup)) {
+            bytes += res.Unwrap();
+         } else {
+            return R__FORWARD_ERROR(res);
+         }
 
-      descBuilder.AddToOnDiskFooterSize(clusterGroup.fPageListEnvelopeLink.fLocator.GetNBytesOnStorage());
-      RClusterGroupDescriptorBuilder clusterGroupBuilder;
-      clusterGroupBuilder.ClusterGroupId(groupId)
-         .PageListLocator(clusterGroup.fPageListEnvelopeLink.fLocator)
-         .PageListLength(clusterGroup.fPageListEnvelopeLink.fLength)
-         .MinEntry(clusterGroup.fMinEntry)
-         .EntrySpan(clusterGroup.fEntrySpan)
-         .NClusters(clusterGroup.fNClusters);
-      descBuilder.AddClusterGroup(clusterGroupBuilder.MoveDescriptor().Unwrap());
+         descBuilder.AddToOnDiskFooterSize(clusterGroup.fPageListEnvelopeLink.fLocator.GetNBytesOnStorage());
+         RClusterGroupDescriptorBuilder clusterGroupBuilder;
+         clusterGroupBuilder.ClusterGroupId(groupId)
+            .PageListLocator(clusterGroup.fPageListEnvelopeLink.fLocator)
+            .PageListLength(clusterGroup.fPageListEnvelopeLink.fLength)
+            .MinEntry(clusterGroup.fMinEntry)
+            .EntrySpan(clusterGroup.fEntrySpan)
+            .NClusters(clusterGroup.fNClusters);
+         descBuilder.AddClusterGroup(clusterGroupBuilder.MoveDescriptor().Unwrap());
+      }
+      bytes = frame + frameSize;
    }
-   bytes = frame + frameSize;
+
+   // NOTE: Attributes were introduced in v1.0.1.0, so this section may be missing.
+   // Testing for > 8 because bufSize includes the checksum.
+   if (fnBufSizeLeft() > 8) {
+      std::uint32_t nAttributeSets;
+      frame = bytes;
+      if (auto res = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nAttributeSets)) {
+         bytes += res.Unwrap();
+      } else {
+         return R__FORWARD_ERROR(res);
+      }
+      for (std::uint32_t attrSetId = 0; attrSetId < nAttributeSets; ++attrSetId) {
+         if (auto res = DeserializeAttributeSet(bytes, fnBufSizeLeft(), descBuilder)) {
+            bytes += res.Unwrap();
+         } else {
+            return R__FORWARD_ERROR(res);
+         }
+      }
+      bytes = frame + frameSize;
+   }
 
    return RResult<void>::Success();
+}
+
+ROOT::RResult<std::uint32_t>
+ROOT::Internal::RNTupleSerializer::DeserializeAttributeSet(const void *buffer, std::uint64_t bufSize,
+                                                           ROOT::Internal::RNTupleDescriptorBuilder &descBuilder)
+{
+   auto base = reinterpret_cast<const unsigned char *>(buffer);
+   auto bytes = base;
+   auto fnBufSizeLeft = [&]() { return bufSize - (bytes - base); };
+
+   std::uint64_t frameSize;
+   if (auto res = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize)) {
+      bytes += res.Unwrap();
+   } else {
+      return R__FORWARD_ERROR(res);
+   }
+   RNTupleLocator attrSetLocator;
+   if (auto res = DeserializeLocator(bytes, fnBufSizeLeft(), attrSetLocator)) {
+      bytes += res.Unwrap();
+   } else {
+      return R__FORWARD_ERROR(res);
+   }
+   std::uint64_t uncompLen;
+   bytes += DeserializeUInt64(bytes, uncompLen);
+   std::string attrSetName;
+   if (auto res = DeserializeString(bytes, fnBufSizeLeft(), attrSetName)) {
+      bytes += res.Unwrap();
+   } else {
+      return R__FORWARD_ERROR(res);
+   }
+   if (auto res = descBuilder.AddAttributeSet({attrSetName, attrSetLocator, uncompLen}); !res) {
+      return R__FORWARD_ERROR(res);
+   }
+
+   return frameSize;
 }
 
 ROOT::RResult<std::vector<ROOT::Internal::RClusterDescriptorBuilder>>

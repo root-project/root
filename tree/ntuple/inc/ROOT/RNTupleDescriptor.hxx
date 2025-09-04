@@ -67,6 +67,20 @@ struct RNTupleClusterBoundaries {
 std::vector<ROOT::Internal::RNTupleClusterBoundaries> GetClusterBoundaries(const RNTupleDescriptor &desc);
 } // namespace Internal
 
+namespace Experimental::Internal {
+
+struct RNTupleAttrSetDescriptor {
+   std::string fName;
+   // The locator of the AttributeSet anchor.
+   // In case of kTypeFile, it points to the beginning of the Anchor's payload.
+   // NOTE: Only kTypeFile is supported at the moment.
+   RNTupleLocator fLocator;
+   std::uint64_t fAnchorUncompLen = 0;
+};
+
+const std::vector<RNTupleAttrSetDescriptor> &GetAttributeSets(const RNTupleDescriptor &desc);
+} // namespace Experimental::Internal
+
 // clang-format off
 /**
 \class ROOT::RFieldDescriptor
@@ -645,6 +659,8 @@ and backward compatibility when the metadata evolves.
 class RNTupleDescriptor final {
    friend class Internal::RNTupleDescriptorBuilder;
    friend RNTupleDescriptor Internal::CloneDescriptorSchema(const RNTupleDescriptor &desc);
+   friend const std::vector<Experimental::Internal::RNTupleAttrSetDescriptor> &
+   ROOT::Experimental::Internal::GetAttributeSets(const RNTupleDescriptor &desc);
 
 public:
    class RHeaderExtension;
@@ -697,6 +713,8 @@ private:
    std::vector<ROOT::DescriptorId_t> fSortedClusterGroupIds;
    /// Potentially a subset of all the available clusters
    std::unordered_map<ROOT::DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
+
+   std::vector<Experimental::Internal::RNTupleAttrSetDescriptor> fAttributeSets;
 
    // We don't expose this publicly because when we add sharded clusters, this interface does not make sense anymore
    ROOT::DescriptorId_t FindClusterId(ROOT::NTupleSize_t entryIdx) const;
@@ -840,6 +858,10 @@ public:
 
    bool HasFeature(unsigned int flag) const { return fFeatureFlags.count(flag) > 0; }
    std::vector<std::uint64_t> GetFeatureFlags() const;
+
+   // XXX: this might become an iterable over strings, which would potentially allow us to avoid copies.
+   // On the other hand this vector is usually very small...
+   std::vector<std::string> GetAttributeSetNames() const;
 
    /// Return header extension information; if the descriptor does not have a header extension, return `nullptr`
    const RHeaderExtension *GetHeaderExtension() const { return fHeaderExtension.get(); }
@@ -1605,6 +1627,8 @@ public:
    RResult<void> AddExtraTypeInfo(RExtraTypeInfoDescriptor &&extraTypeInfoDesc);
    void ReplaceExtraTypeInfo(RExtraTypeInfoDescriptor &&extraTypeInfoDesc);
 
+   RResult<void> AddAttributeSet(Experimental::Internal::RNTupleAttrSetDescriptor &&attrSetDesc);
+
    /// Clears so-far stored clusters, fields, and columns and return to a pristine RNTupleDescriptor
    void Reset();
 
@@ -1641,6 +1665,13 @@ inline RNTupleDescriptor CloneDescriptorSchema(const RNTupleDescriptor &desc)
 }
 
 } // namespace Internal
+
+inline const std::vector<Experimental::Internal::RNTupleAttrSetDescriptor> &
+Experimental::Internal::GetAttributeSets(const RNTupleDescriptor &desc)
+{
+   return desc.fAttributeSets;
+}
+
 } // namespace ROOT
 
 #endif // ROOT_RNTupleDescriptor

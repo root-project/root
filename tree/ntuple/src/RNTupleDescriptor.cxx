@@ -785,6 +785,7 @@ ROOT::RNTupleDescriptor ROOT::RNTupleDescriptor::Clone() const
    clone.fSortedClusterGroupIds = fSortedClusterGroupIds;
    for (const auto &d : fClusterDescriptors)
       clone.fClusterDescriptors.emplace(d.first, d.second.Clone());
+   clone.fAttributeSets = fAttributeSets;
    return clone;
 }
 
@@ -1378,6 +1379,18 @@ void ROOT::Internal::RNTupleDescriptorBuilder::ReplaceExtraTypeInfo(RExtraTypeIn
       fDescriptor.fExtraTypeInfoDescriptors.emplace_back(std::move(extraTypeInfoDesc));
 }
 
+ROOT::RResult<void> ROOT::Internal::RNTupleDescriptorBuilder::AddAttributeSet(
+   Experimental::Internal::RNTupleAttrSetDescriptor &&attrSetDesc)
+{
+   auto &attrSets = fDescriptor.fAttributeSets;
+   if (std::find_if(attrSets.begin(), attrSets.end(),
+                    [&name = attrSetDesc.fName](const auto &desc) { return desc.fName == name; }) != attrSets.end()) {
+      return R__FAIL("attribute sets with duplicate names");
+   }
+   attrSets.push_back(attrSetDesc);
+   return RResult<void>::Success();
+}
+
 RNTupleSerializer::StreamerInfoMap_t ROOT::Internal::RNTupleDescriptorBuilder::BuildStreamerInfos() const
 {
    RNTupleSerializer::StreamerInfoMap_t streamerInfoMap;
@@ -1492,4 +1505,13 @@ ROOT::RNTupleDescriptor::RClusterDescriptorIterable ROOT::RNTupleDescriptor::Get
 ROOT::RNTupleDescriptor::RExtraTypeInfoDescriptorIterable ROOT::RNTupleDescriptor::GetExtraTypeInfoIterable() const
 {
    return RExtraTypeInfoDescriptorIterable(*this);
+}
+
+std::vector<std::string> ROOT::RNTupleDescriptor::GetAttributeSetNames() const
+{
+   std::vector<std::string> names;
+   names.reserve(fAttributeSets.size());
+   for (const auto &desc : fAttributeSets)
+      names.push_back(desc.fName);
+   return names;
 }

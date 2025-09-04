@@ -49,6 +49,12 @@ namespace Detail {
 class RRawPtrWriteEntry;
 } // namespace Detail
 
+class RNTupleAttrSetReader;
+
+namespace Internal {
+struct RNTupleAttrEntryPair;   
+}
+
 } // namespace Experimental
 
 namespace Internal {
@@ -97,6 +103,7 @@ class RFieldBase {
    Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName,
                                  const ROOT::RCreateFieldOptions &options, const ROOT::RNTupleDescriptor *desc,
                                  ROOT::DescriptorId_t fieldId);
+   friend class ROOT::Experimental::RNTupleAttrSetReader;
 
    using ReadCallback_t = std::function<void(void *)>;
 
@@ -706,6 +713,7 @@ public:
 class RFieldBase::RValue final {
    friend class RFieldBase;
    friend class ROOT::REntry;
+   friend struct ROOT::Experimental::Internal::RNTupleAttrEntryPair;
 
 private:
    RFieldBase *fField = nullptr;  ///< The field that created the RValue

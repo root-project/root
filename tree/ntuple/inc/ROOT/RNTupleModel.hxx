@@ -44,7 +44,9 @@ class RRawPtrWriteEntry;
 namespace Internal {
 class RProjectedFields;
 
+/// Retrieves the mutable field zero of a model even if the model is Frozen.
 ROOT::RFieldZero &GetFieldZeroOfModel(RNTupleModel &model);
+const RProjectedFields &GetProjectedFieldsOfModel(const RNTupleModel &model);
 RProjectedFields &GetProjectedFieldsOfModel(RNTupleModel &model);
 
 // clang-format off
@@ -138,6 +140,7 @@ that were used for writing and are no longer connected to a page sink.
 // clang-format on
 class RNTupleModel {
    friend ROOT::RFieldZero &Internal::GetFieldZeroOfModel(RNTupleModel &);
+   friend const Internal::RProjectedFields &Internal::GetProjectedFieldsOfModel(const RNTupleModel &);
    friend Internal::RProjectedFields &Internal::GetProjectedFieldsOfModel(RNTupleModel &);
 
 public:

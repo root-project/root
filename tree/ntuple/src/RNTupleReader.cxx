@@ -19,6 +19,7 @@
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RPageStorageFile.hxx>
+#include <ROOT/RNTupleAttributes.hxx>
 
 #include <TROOT.h>
 
@@ -266,4 +267,21 @@ ROOT::DescriptorId_t ROOT::RNTupleReader::RetrieveFieldId(std::string_view field
                                fSource->GetSharedDescriptorGuard()->GetName() + "'"));
    }
    return fieldId;
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleAttrSetReader>
+ROOT::RNTupleReader::OpenAttributeSet(std::string_view attrSetName)
+{
+   const auto &attrSets = ROOT::Experimental::Internal::GetAttributeSets(GetDescriptor());
+   const auto it =
+      std::find_if(attrSets.begin(), attrSets.end(), [&](const auto &d) { return d.fName == attrSetName; });
+   if (it == attrSets.end())
+      throw ROOT::RException(R__FAIL(std::string("No such AttributeSet: ") + std::string(attrSetName)));
+
+   auto attrSource = fSource->ReadAttributeSet(it->fLocator, it->fAnchorUncompLen);
+   auto newReader = std::unique_ptr<RNTupleReader>(new RNTupleReader(std::move(attrSource), RNTupleReadOptions{}));
+   R__ASSERT(newReader);
+   auto attrSetReader = std::unique_ptr<ROOT::Experimental::RNTupleAttrSetReader>(
+      new ROOT::Experimental::RNTupleAttrSetReader(std::move(newReader)));
+   return attrSetReader;
 }

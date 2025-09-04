@@ -42,6 +42,10 @@ enum class ENTupleInfo {
    kMetrics,        // internals performance counters, requires that EnableMetrics() was called
 };
 
+namespace Experimental {
+class RNTupleAttrSetReader;
+}
+
 // clang-format off
 /**
 \class ROOT::RNTupleReader
@@ -64,6 +68,8 @@ std::cout << "myNTuple has " << reader->GetNEntries() << " entries\n";
 */
 // clang-format on
 class RNTupleReader {
+   friend class ROOT::Internal::RPageSource;
+   
 private:
    /// Set as the page source's scheduler for parallel page decompression if implicit multi-threading (IMT) is on.
    /// Needs to be destructed after the page source is destructed (and thus be declared before)
@@ -464,6 +470,9 @@ public:
    /// ~~~
    void EnableMetrics() { fMetrics.Enable(); }
    const Experimental::Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
+
+   std::unique_ptr<Experimental::RNTupleAttrSetReader> OpenAttributeSet(std::string_view attrSetName);
+
 }; // class RNTupleReader
 
 } // namespace ROOT
