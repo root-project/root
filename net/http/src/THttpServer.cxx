@@ -662,6 +662,7 @@ Bool_t THttpServer::ExecuteHttp(std::shared_ptr<THttpCallArg> arg)
 
    // add call arg to the list
    std::unique_lock<std::mutex> lk(fMutex);
+   arg->fNotifyFlag = kFALSE;
    fArgs.push(arg);
    // and now wait until request is processed
    arg->fCond.wait(lk);
