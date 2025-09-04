@@ -267,7 +267,7 @@ TEST(TTreeFormulaRegressions, WrongName)
 // https://github.com/root-project/root/issues/19814
 TEST(TTreeReaderRegressions, UninitializedChain)
 {
-   auto filename = "eve19814.root"
+   auto filename = "eve19814.root";
    auto treename = "events";
    auto brname = "x";
    const int refval = 19814;
