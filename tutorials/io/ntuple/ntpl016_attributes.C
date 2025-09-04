@@ -75,7 +75,7 @@ static void Read()
 
    // Read attributes belonging to a specific entry index.
    // (Just read the first 5 values to avoid spamming)
-   auto attrEntry = attrSet->CreateEntry();
+   auto attrEntry = attrSet->CreateAttrEntry();
    auto pAttr = attrEntry->GetPtr<std::string>("myAttr");
    for (int i = 0; i < 5; ++i) {
       // Note that an entry may have multiple attributes associated, so we need to loop over them.

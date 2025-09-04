@@ -226,7 +226,7 @@ public:
    void CommitRange(RNTupleAttrPendingRange range);
    void CommitRange(RNTupleAttrPendingRange range, REntry &entry);
 
-   std::unique_ptr<REntry> CreateEntry() { return fUserModel->CreateEntry(); }
+   std::unique_ptr<REntry> CreateAttrEntry() { return fUserModel->CreateEntry(); }
 };
 
 class RNTupleAttrSetWriterHandle final {
@@ -315,7 +315,7 @@ public:
    const ROOT::RNTupleDescriptor &GetDescriptor() const;
    const ROOT::RNTupleModel &GetModel() const { return *fUserModel; }
 
-   std::unique_ptr<REntry> CreateEntry() { return fUserModel->CreateEntry(); }
+   std::unique_ptr<REntry> CreateAttrEntry() { return fUserModel->CreateEntry(); }
    RNTupleAttrRange LoadAttrEntry(NTupleSize_t index);
    RNTupleAttrRange LoadAttrEntry(NTupleSize_t index, REntry &entry);
 

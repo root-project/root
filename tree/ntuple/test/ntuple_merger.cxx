@@ -3904,7 +3904,7 @@ TEST(RNTupleMerger, MergeAttributes)
       ASSERT_TRUE(bool(attrSet));
 
       auto attrs = attrSet->GetAttributes();
-      auto attrEntry = attrSet->CreateEntry();
+      auto attrEntry = attrSet->CreateAttrEntry();
       ASSERT_EQ(Count(attrs), 2);
       auto range = attrSet->LoadAttrEntry(0, *attrEntry);
       EXPECT_EQ(range.Start(), 0);
@@ -4074,7 +4074,7 @@ TEST_P(RNTupleMergerAttributesEmpty, MergeEmptyAttribute)
          attrModel->MakeField<std::string>("string");
 
          auto attrSet = writer->CreateAttributeSet(std::move(attrModel), "MyAttrSet");
-         auto attrEntry = attrSet->CreateEntry();
+         auto attrEntry = attrSet->CreateAttrEntry();
          auto attrRange = attrSet->BeginRange();
          auto pMyAttr = attrEntry->GetPtr<std::string>("string");
          *pMyAttr = "This is file " + std::to_string(fileNo);
@@ -4118,7 +4118,7 @@ TEST_P(RNTupleMergerAttributesEmpty, MergeEmptyAttribute)
       ASSERT_TRUE(bool(attrSet));
 
       auto attrs = attrSet->GetAttributes();
-      auto attrEntry = attrSet->CreateEntry();
+      auto attrEntry = attrSet->CreateAttrEntry();
       ASSERT_EQ(Count(attrs), 3);
       ROOT::NTupleSize_t expectedStart = 0;
       for (int fileNo = 0; fileNo < 3; ++fileNo) {

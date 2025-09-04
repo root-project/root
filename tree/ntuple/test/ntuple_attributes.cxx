@@ -88,7 +88,7 @@ TEST(RNTupleAttributes, AttributeBasicsExplicitEntry)
       attrModel->MakeField<std::string>("myAttr");
 
       auto attrSet = writer->CreateAttributeSet(std::move(attrModel), "MyAttrSet");
-      auto attrEntry = attrSet->CreateEntry();
+      auto attrEntry = attrSet->CreateAttrEntry();
       auto attrRange = attrSet->BeginRange();
       EXPECT_TRUE(attrRange);
       auto pMyAttr = attrEntry->GetPtr<std::string>("myAttr");
@@ -109,7 +109,7 @@ TEST(RNTupleAttributes, AttributeBasicsExplicitEntry)
       }
 
       auto attrSet = reader->OpenAttributeSet("MyAttrSet");
-      auto attrEntry = attrSet->CreateEntry();
+      auto attrEntry = attrSet->CreateAttrEntry();
       for (int i = 0; i < 100; ++i) {
          int nAttrs = 0;
          for (const auto idx : attrSet->GetAttributes(i)) {
@@ -216,9 +216,9 @@ TEST(RNTupleAttributes, InterleavingRanges)
       attrModel->MakeField<int>("attrInt");
       auto attrSet = writer->CreateAttributeSet(attrModel->Clone(), "MyAttrSet");
 
-      auto attrEntry1 = attrSet->CreateEntry();
+      auto attrEntry1 = attrSet->CreateAttrEntry();
       auto attrRange1 = attrSet->BeginRange();
-      auto attrEntry2 = attrSet->CreateEntry();
+      auto attrEntry2 = attrSet->CreateAttrEntry();
       auto attrRange2 = attrSet->BeginRange();
       int i1 = 0, i2 = 0;
       *attrEntry1->GetPtr<int>("attrInt") = i1++;
@@ -244,7 +244,7 @@ TEST(RNTupleAttributes, InterleavingRanges)
    // read back
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
    auto attrSet = reader->OpenAttributeSet("MyAttrSet");
-   auto attrEntry = attrSet->CreateEntry();
+   auto attrEntry = attrSet->CreateAttrEntry();
    for (auto i : reader->GetEntryRange()) {
       auto attrs = attrSet->GetAttributes(i);
       const auto nAttrs = Count(attrs);
@@ -370,7 +370,7 @@ TEST(RNTupleAttributes, AssignMetadataAfterData)
       // Fetch a specific attribute set
       auto attrSet = reader->OpenAttributeSet("MyAttrSet");
       auto nAttrs = 0;
-      auto attrEntry = attrSet->CreateEntry();
+      auto attrEntry = attrSet->CreateAttrEntry();
       for (const auto idx : attrSet->GetAttributes()) {
          const auto range = attrSet->LoadAttrEntry(idx, *attrEntry);
          auto pAttrStr = attrEntry->GetPtr<std::string>("string");
