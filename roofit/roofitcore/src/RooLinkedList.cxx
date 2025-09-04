@@ -327,33 +327,25 @@ RooLinkedList& RooLinkedList::operator=(const RooLinkedList& other)
 
 void RooLinkedList::setHashTableSize(Int_t size)
 {
-  if (size<0) {
-    coutE(InputArguments) << "RooLinkedList::setHashTable() ERROR size must be positive" << std::endl ;
-    return ;
-  }
-  if (size==0) {
-    if (!_htableName) {
-      // No hash table present
-      return ;
-    } else {
+   if (size < 0) {
+      coutE(InputArguments) << "RooLinkedList::setHashTable() ERROR size must be positive" << std::endl;
+      return;
+   }
+   if (size == 0) {
       // Remove existing hash table
       _htableName.reset();
       _htableLink.reset();
-    }
-  } else {
+      return;
+   }
 
-    // (Re)create hash tables
-    _htableName = std::make_unique<HashTableByName>(size) ;
-    _htableLink = std::make_unique<HashTableByLink>(size) ;
+   if (!_htableName) {
+      // (Re)create hash tables
+      _htableName = std::make_unique<HashTableByName>(size);
+      _htableLink = std::make_unique<HashTableByLink>(size);
+   }
 
-    // Fill hash table with existing entries
-    RooLinkedListElem* ptr = _first ;
-    while(ptr) {
-      _htableName->insert({ptr->_arg->GetName(), ptr->_arg}) ;
-      _htableLink->insert({ptr->_arg, reinterpret_cast<TObject*>(ptr)}) ;
-      ptr = ptr->_next ;
-    }
-  }
+   _htableName->reserve(size);
+   _htableLink->reserve(size);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
