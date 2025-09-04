@@ -90,6 +90,7 @@ TEST(RNTupleAttributes, AttributeBasicsExplicitEntry)
       auto attrSet = writer->CreateAttributeSet(std::move(attrModel), "MyAttrSet");
       auto attrEntry = attrSet->CreateEntry();
       auto attrRange = attrSet->BeginRange();
+      EXPECT_TRUE(attrRange);
       auto pMyAttr = attrEntry->GetPtr<std::string>("myAttr");
       *pMyAttr = "This is a custom attribute";
       for (int i = 0; i < 100; ++i) {
@@ -285,7 +286,12 @@ TEST(RNTupleAttributes, MultipleCommitRange)
       writer->Fill(*entry);
    }
    attrSet->CommitRange(std::move(attrRange));
-   EXPECT_THROW(attrSet->CommitRange(std::move(attrRange)), ROOT::RException);
+   try {
+      attrSet->CommitRange(std::move(attrRange));
+      FAIL() << "committing the same range twice should fail.";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("was not created by it or was already committed"));
+   }
 }
 
 TEST(RNTupleAttributes, AccessPastCommitRange)
@@ -749,5 +755,26 @@ TEST(RNTupleAttributes, UserPassingInternalNames)
          ++nAttrs;
       }
       EXPECT_EQ(nAttrs, 1);
+   }
+}
+
+TEST(RNTupleAttributes, InvalidPendingRange)
+{
+   FileRaii fileGuard("test_ntuple_attr_invalid_pendingrange.root");
+
+   auto model = RNTupleModel::Create();
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file);
+
+   auto attrModel = RNTupleModel::Create();
+   auto attrSet = writer->CreateAttributeSet(std::move(attrModel), "MyAttributes");
+
+   ROOT::Experimental::RNTupleAttrPendingRange attrRange;
+   EXPECT_FALSE(attrRange);
+   try {
+      attrSet->CommitRange(std::move(attrRange));
+      FAIL() << "committing the same range twice should fail.";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.what(), testing::HasSubstr("was not created by it or was already committed"));
    }
 }

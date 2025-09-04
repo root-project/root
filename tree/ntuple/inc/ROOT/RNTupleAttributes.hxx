@@ -114,6 +114,7 @@ class RNTupleAttrPendingRange final {
    }
 
 public:
+   RNTupleAttrPendingRange() = default;
    RNTupleAttrPendingRange(const RNTupleAttrPendingRange &) = delete;
    RNTupleAttrPendingRange &operator=(const RNTupleAttrPendingRange &) = delete;
 
@@ -139,11 +140,15 @@ public:
    ROOT::NTupleSize_t Start() const
    {
       if (fModelId == kInvalidDescriptorId)
-         throw ROOT::RException(R__FAIL("Tried to commit an already-committed attribute range."));
+         throw ROOT::RException(R__FAIL("Tried to get the start of an invalid AttrPendingRange."));
       return fStart;
    }
 
    ROOT::DescriptorId_t GetModelId() const { return fModelId; }
+
+   /// Returns true if this PendingRange is valid
+   operator bool() const { return IsValid(); }
+   bool IsValid() const { return fModelId != kInvalidDescriptorId; }
 };
 
 // clang-format off
