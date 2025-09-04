@@ -68,7 +68,7 @@
 //******************************************************************
 //
 //_____________________________batch only_____________________
-#ifndef __CINT__
+#ifndef __CLING__
 
 #include <cstdlib>
 #include <TROOT.h>
@@ -221,7 +221,7 @@ void stress(Int_t nevent, Int_t style = 1,
    Float_t mbtot1 = mbin1+mbout1;
    printf("stress    : Compr I/O =%7.1f Mbytes, I =%7.1f, O =%6.1f\n",mbtot1,mbin1,mbout1);
    gBenchmark->Print("stress");
-#ifndef __CINT__
+#ifndef __CLING__
    Float_t cp_brun_30   = 12.73;
    Float_t cp_brun_1000 = 61.88;
 #else
