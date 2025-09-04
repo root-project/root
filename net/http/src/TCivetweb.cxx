@@ -478,16 +478,24 @@ static int begin_request_handler(struct mg_connection *conn, void *)
 
       if (arg->IsChunked()) {
          // send first portion
-         mg_send_chunk(conn, (const char *)arg->GetContent(), (unsigned)arg->GetContentLength());
 
-         while (arg->IsChunked() && arg->GetContentLength()) {
+         unsigned last_send = arg->GetContentLength();
+         mg_send_chunk(conn, (const char *)arg->GetContent(), last_send);
+
+         while (arg->IsChunked() && last_send) {
             // loop
             arg->SetContent("");
 
             serv->ExecuteHttp(arg);
 
-            mg_send_chunk(conn, (const char *)arg->GetContent(), (unsigned)arg->GetContentLength());
+            last_send = arg->GetContentLength();
+
+            mg_send_chunk(conn, (const char *)arg->GetContent(), last_send);
          }
+
+         // to correctly complete chunk operation, send 0 buffer at the end
+         if (last_send)
+            mg_send_chunk(conn, "", 0);
 
       } else if (arg->GetContentLength() > 0)
          mg_write(conn, arg->GetContent(), (size_t)arg->GetContentLength());
