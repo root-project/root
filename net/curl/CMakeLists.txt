@@ -10,9 +10,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RCurlHttp
   HEADERS
     ROOT/RCurlConnection.hxx
     ROOT/RRawFileCurl.hxx
+    TCurlFile.h
   SOURCES
     src/RCurlConnection.cxx
     src/RRawFileCurl.cxx
+    src/TCurlFile.cxx
   LIBRARIES
     CURL::libcurl
   DEPENDENCIES
