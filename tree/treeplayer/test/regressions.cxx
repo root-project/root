@@ -285,7 +285,7 @@ TEST(TTreeReaderRegressions, UninitializedChain)
       TTreeReader reader(&ch);
       reader.SetEntriesRange(0, ch.GetEntries());
       EXPECT_EQ(reader.GetEntries(), 1);
-      TTreeReaderValue x(reader, brname);
+      TTreeReaderValue<int> x(reader, brname);
       EXPECT_TRUE(reader.Next());
       EXPECT_EQ(*x, refval);
    }
