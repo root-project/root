@@ -43,7 +43,7 @@ using namespace ROOT::Math;
 
 
 
-#ifdef __CINT__
+#ifdef __CLING__
 #define INF 1.7E308
 #else
 #define INF std::numeric_limits<double>::infinity()
@@ -554,7 +554,7 @@ int stressMathMore(double nscale = 1) {
 
    int iret = 0;
 
-#ifdef __CINT__
+#ifdef __CLING__
    std::cout << "Test must be run in compile mode - please use ACLIC !!" << std::endl;
    return 0;
 #endif
