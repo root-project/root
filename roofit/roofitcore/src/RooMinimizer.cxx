@@ -1003,7 +1003,6 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
 
    for (size_t i = 0; i < nPdfs; ++i) {
       pdfIndices[i]->setIndex(bestIndices[i]);
-      pdfIndices[i]->setConstant(true);
    }
 
    FreezeDisconnectedParametersRAII freeze(this, *_fcn);
