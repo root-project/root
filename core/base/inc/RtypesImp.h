@@ -44,9 +44,6 @@ inline void operator delete(void*, ROOT::Internal::TOperatorNewHelper*) { }
 
 // The STL GenerateInitInstance are not unique and hence are declared static
 // (not accessible outside the dictionary and not linker error for duplicate)
-#if defined(__CINT__)
-#define RootStlStreamer(name,STREAMER)
-#else
 #define RootStlStreamer(name,STREAMER)                               \
 namespace ROOT {                                                     \
    static TGenericClassInfo *GenerateInitInstance(const name*);      \
@@ -54,8 +51,6 @@ namespace ROOT {                                                     \
            GenerateInitInstance((name*)0x0)->SetStreamer(STREAMER);  \
    R__UseDummy(_R__UNIQUE_(R__dummyStreamer));                       \
 }
-#endif
-
 
 #if defined(__cplusplus)
 /* Helper class to avoid compiler warning about casting function pointer
