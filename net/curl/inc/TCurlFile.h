@@ -12,9 +12,14 @@
 #ifndef ROOT_TCurlFile
 #define ROOT_TCurlFile
 
+#include "ROOT/RCurlConnection.hxx"
 #include "TFile.h"
 
+#include <memory>
+
 class TCurlFile : public TFile {
+   std::unique_ptr<ROOT::Internal::RCurlConnection> fConnection;
+
 public:
    TCurlFile(const char *url, Option_t *option = "");
 
