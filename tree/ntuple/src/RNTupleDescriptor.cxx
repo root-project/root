@@ -1128,14 +1128,6 @@ ROOT::RResult<ROOT::RColumnDescriptor> ROOT::Internal::RColumnDescriptorBuilder:
    return fColumn.Clone();
 }
 
-ROOT::Internal::RFieldDescriptorBuilder::RFieldDescriptorBuilder(const RFieldDescriptor &fieldDesc)
-   : fField(fieldDesc.Clone())
-{
-   fField.fParentId = ROOT::kInvalidDescriptorId;
-   fField.fLinkIds = {};
-   fField.fLogicalColumnIds = {};
-}
-
 ROOT::Internal::RFieldDescriptorBuilder
 ROOT::Internal::RFieldDescriptorBuilder::FromField(const ROOT::RFieldBase &field)
 {

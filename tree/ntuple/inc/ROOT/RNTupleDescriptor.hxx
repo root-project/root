@@ -1319,14 +1319,6 @@ private:
 public:
    /// Make an empty dangling field descriptor.
    RFieldDescriptorBuilder() = default;
-   /// Make a new RFieldDescriptorBuilder based off an existing descriptor.
-   /// Relationship information is lost during the conversion to a
-   /// dangling descriptor:
-   /// * Parent id is reset to an invalid id.
-   /// * Field children ids are forgotten.
-   ///
-   /// These properties must be set using RNTupleDescriptorBuilder::AddFieldLink().
-   explicit RFieldDescriptorBuilder(const RFieldDescriptor &fieldDesc);
 
    /// Make a new RFieldDescriptorBuilder based off a live RNTuple field.
    static RFieldDescriptorBuilder FromField(const ROOT::RFieldBase &field);
