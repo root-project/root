@@ -56,6 +56,7 @@ object onto a one-dimensional plot.
 #include "TH1D.h"
 #include "TBrowser.h"
 #include "TVirtualPad.h"
+#include "TROOT.h"
 
 #include "TAttLine.h"
 #include "TAttFill.h"
@@ -83,9 +84,9 @@ bool RooPlot::setAddDirectoryStatus(bool flag) { bool ret = flag ; _addDirStatus
 
 RooPlot::RooPlot()
 {
-  if (gDirectory && addDirectoryStatus()) {
-    SetDirectory(gDirectory);
-  }
+   if (gDirectory && ROOT::Experimental::ObjectAutoRegistrationEnabled() && addDirectoryStatus()) {
+      SetDirectory(gDirectory);
+   }
 }
 
 
@@ -242,8 +243,8 @@ void RooPlot::initialize()
 {
   SetName(histName()) ;
 
-  if (gDirectory && addDirectoryStatus()) {
-    SetDirectory(gDirectory);
+  if (gDirectory && ROOT::Experimental::ObjectAutoRegistrationEnabled() && addDirectoryStatus()) {
+     SetDirectory(gDirectory);
   }
 
   // We do not have useful stats of our own
