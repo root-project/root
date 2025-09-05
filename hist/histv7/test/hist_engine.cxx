@@ -107,6 +107,27 @@ TEST(RHistEngine, AddDifferent)
    EXPECT_THROW(engineA.Add(engineB), std::invalid_argument);
 }
 
+TEST(RHistEngine, Clear)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, 0, Bins);
+   RHistEngine<int> engine({axis});
+
+   engine.Fill(-100);
+   for (std::size_t i = 0; i < Bins; i++) {
+      engine.Fill(i);
+   }
+   engine.Fill(100);
+
+   engine.Clear();
+
+   EXPECT_EQ(engine.GetBinContent(RBinIndex::Underflow()), 0);
+   for (auto index : axis.GetNormalRange()) {
+      EXPECT_EQ(engine.GetBinContent(index), 0);
+   }
+   EXPECT_EQ(engine.GetBinContent(RBinIndex::Overflow()), 0);
+}
+
 TEST(RHistEngine, Fill)
 {
    static constexpr std::size_t Bins = 20;

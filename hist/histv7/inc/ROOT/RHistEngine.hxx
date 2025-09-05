@@ -168,6 +168,14 @@ public:
       }
    }
 
+   /// Clear all bin contents.
+   void Clear()
+   {
+      for (std::size_t i = 0; i < fBinContents.size(); i++) {
+         fBinContents[i] = {};
+      }
+   }
+
    /// Whether this histogram engine type supported weighted filling.
    static constexpr bool SupportsWeightedFilling = std::is_floating_point_v<BinContentType>;
 
