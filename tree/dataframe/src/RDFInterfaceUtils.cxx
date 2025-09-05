@@ -382,19 +382,6 @@ ColumnNames_t FilterArraySizeColNames(const ColumnNames_t &columnNames, const st
    return columnListWithoutSizeColumns;
 }
 
-std::string ResolveAlias(const std::string &col, const std::map<std::string, std::string> &aliasMap)
-{
-   const auto it = aliasMap.find(col);
-   if (it != aliasMap.end())
-      return it->second;
-
-   // #var is an alias for R_rdf_sizeof_var
-   if (col.size() > 1 && col[0] == '#')
-      return "R_rdf_sizeof_" + col.substr(1);
-
-   return col;
-}
-
 void CheckValidCppVarName(std::string_view var, const std::string &where)
 {
    bool isValid = true;
