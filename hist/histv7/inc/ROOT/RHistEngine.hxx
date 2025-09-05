@@ -176,6 +176,18 @@ public:
       }
    }
 
+   /// Clone this histogram engine.
+   ///
+   /// \return the cloned object
+   RHistEngine<BinContentType> Clone() const
+   {
+      RHistEngine<BinContentType> h(fAxes.Get());
+      for (std::size_t i = 0; i < fBinContents.size(); i++) {
+         h.fBinContents[i] = fBinContents[i];
+      }
+      return h;
+   }
+
    /// Whether this histogram engine type supported weighted filling.
    static constexpr bool SupportsWeightedFilling = std::is_floating_point_v<BinContentType>;
 
