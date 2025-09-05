@@ -12,7 +12,7 @@ runs:
       shell: bash
       run: |
         sudo apt install -y binutils cmake dpkg-dev g++ gcc libssl-dev git libx11-dev \
-        libxext-dev libxft-dev libxpm-dev python3 libtbb-dev libvdt-dev libgif-dev
+        libxext-dev libxft-dev libxpm-dev libtbb-dev libvdt-dev libgif-dev
 
     - name: Build wheel
       uses: pypa/cibuildwheel@v3.0.1
@@ -22,8 +22,8 @@ runs:
         CIBW_TEST_REQUIRES: "-r test_tutorials/requirements.txt"
         CIBW_BEFORE_TEST: >
           yum install -y git make cmake gcc-c++ gcc binutils \
-          libX11-devel libXpm-devel libXft-devel libXext-devel python openssl-devel \
-          xrootd-client-devel xrootd-libs-devel
+          libXpm-devel libXft-devel libXext-devel openssl-devel \
+          || true
         CIBW_TEST_SOURCES: "test_tutorials"
         CIBW_TEST_COMMAND: "pytest -vv -rF"
 
