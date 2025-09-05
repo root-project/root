@@ -12,6 +12,7 @@
 
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
+#include <RooAbsCachedPdf.h>
 #include <RooAddPdf.h>
 #include <RooAddModel.h>
 #include <RooBinSamplingPdf.h>
@@ -19,7 +20,9 @@
 #include <RooCategory.h>
 #include <RooDataHist.h>
 #include <RooDecay.h>
+#include <RooDerivative.h>
 #include <RooExponential.h>
+#include <RooFFTConvPdf.h>
 #include <RooFit/Detail/JSONInterface.h>
 #include <RooFitHS3/JSONIO.h>
 #include <RooFormulaVar.h>
@@ -245,7 +248,8 @@ public:
       return true;
    }
 };
-/*
+
+
 class RooDecayFactory : public RooFit::JSONIO::Importer {
 public:
    bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
@@ -253,15 +257,13 @@ public:
       std::string name(RooJSONFactoryWSTool::name(p));
       RooRealVar *t = tool->requestArg<RooRealVar>(p, "t");
       RooAbsReal *tau = tool->requestArg<RooAbsReal>(p, "tau");
-      RooResolutionModel *model = tool->requestArg<RooResolutionModel>(p, "resolutionModel");
-      RooDecay::DecayType *decayType = tool->request<RooDecay::DecayType>(p, "decayType");
-      tool->wsEmplace<RooDecay>(name, *t, *tau, *model, *decayType);
+      RooResolutionModel *model = dynamic_cast<RooResolutionModel*>(tool->requestArg<RooAbsPdf>(p, "resolutionModel"));
+      RooDecay::DecayType decayType = static_cast<RooDecay::DecayType>(p["decayType"].val_int());
+      tool->wsEmplace<RooDecay>(name, *t, *tau, *model, decayType);
       return true;
    }
 };
-*/
 
-/*
 class RooTruthModelFactory : public RooFit::JSONIO::Importer {
 public:
    bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
@@ -272,9 +274,8 @@ public:
       return true;
    }
 };
-*/
 
-/*
+
 class RooGaussModelFactory : public RooFit::JSONIO::Importer {
 public:
    bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
@@ -287,7 +288,6 @@ public:
       return true;
    }
 };
-*/
 
 class RooRealIntegralFactory : public RooFit::JSONIO::Importer {
 public:
@@ -313,6 +313,47 @@ public:
       return true;
    }
 };
+
+class RooDerivativeFactory : public RooFit::JSONIO::Importer {
+public:
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      std::string name(RooJSONFactoryWSTool::name(p));
+      RooAbsReal *func = tool->requestArg<RooAbsReal>(p, "function");
+      RooRealVar *x = tool->requestArg<RooRealVar>(p, "x");
+      Int_t order = p["order"].val_int();
+      double eps = p["eps"].val_double();
+      if (p.has_child("normalization")) {
+         RooArgSet normSet;
+         normSet.add(tool->requestArgSet<RooAbsReal>(p, "normalization"));
+         tool->wsEmplace<RooDerivative>(name, *func, *x, normSet, order, eps);
+         return true;
+      }
+      tool->wsEmplace<RooDerivative>(name, *func, *x, order, eps);
+      return true;
+   }
+};
+
+
+class RooFFTConvPdfFactory : public RooFit::JSONIO::Importer {
+public:
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      std::string name(RooJSONFactoryWSTool::name(p));
+      RooRealVar *convVar = tool->requestArg<RooRealVar>(p, "conv_var");
+      Int_t order = p["ipOrder"].val_int();
+      RooAbsPdf *pdf1 = tool->requestArg<RooAbsPdf>(p, "pdf1");
+      RooAbsPdf *pdf2 = tool->requestArg<RooAbsPdf>(p, "pdf2");
+      if (p.has_child("conv_func")) {
+         RooAbsReal* convFunc = tool->requestArg<RooAbsReal>(p, "conv_func");
+         tool->wsEmplace<RooFFTConvPdf>(name, *convFunc, *convVar, *pdf1, *pdf2, order);
+         return true;
+      }
+      tool->wsEmplace<RooFFTConvPdf>(name, *convVar, *pdf1, *pdf2, order);
+      return true;
+   }
+};
+
 
 class RooLogNormalFactory : public RooFit::JSONIO::Importer {
 public:
@@ -796,6 +837,24 @@ public:
    }
 };
 
+class RooDerivativeStreamer : public RooFit::JSONIO::Exporter {
+public:
+   std::string const &key() const override;
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   {
+      auto *pdf = static_cast<const RooDerivative *>(func);
+      elem["type"] << key();
+      elem["x"] << pdf->getX().GetName();
+      elem["function"] << pdf->getFunc().GetName();
+      if (!pdf->getNset().empty()) {
+         RooJSONFactoryWSTool::fillSeq(elem["normalization"], pdf->getNset());
+      }
+      elem["order"] << pdf->order();
+      elem["eps"] << pdf->eps();
+      return true;
+   }
+};
+
 class RooRealIntegralStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override;
@@ -811,7 +870,14 @@ public:
       name.erase(std::remove(name.begin(), name.end(), ']'), name.end());
       elem["name"] << name;
       elem["type"] << key();
-      elem["integrand"] << integral->integrand().GetName();
+      std::string integrand = integral->integrand().GetName();
+      for (char& c : integrand ) {
+        if (c == '[' || c == '|' || c==',') {
+            c = '_';
+         }
+      }
+      integrand.erase(std::remove(integrand.begin(), integrand.end(), ']'), integrand.end());
+      elem["integrand"] << integrand;
       if (integral->intRange()) {
          elem["domain"] << integral->intRange();
       }
@@ -819,6 +885,24 @@ public:
       if (RooArgSet const *funcNormSet = integral->funcNormSet()) {
          RooJSONFactoryWSTool::fillSeq(elem["normalization"], *funcNormSet);
       }
+      return true;
+   }
+};
+
+class RooFFTConvPdfStreamer : public RooFit::JSONIO::Exporter {
+public:
+   std::string const &key() const override;
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   {
+      auto *pdf = static_cast<const RooFFTConvPdf *>(func);
+      elem["type"] << key();
+      if (auto convFunc = pdf->getPdfConvVar()) {
+         elem["conv_func"] << convFunc->GetName();
+      }
+      elem["conv_var"] << pdf->getConvVar().GetName();
+      elem["pdf1"] << pdf->getPdf1().GetName();
+      elem["pdf2"] << pdf->getPdf2().GetName();
+      elem["ipOrder"] << pdf->getInterpolationOrder();
       return true;
    }
 };
@@ -857,6 +941,8 @@ DEFINE_EXPORTER_KEY(RooRealSumFuncStreamer, "weighted_sum");
 DEFINE_EXPORTER_KEY(RooRealSumPdfStreamer, "weighted_sum_dist");
 DEFINE_EXPORTER_KEY(RooTFnBindingStreamer, "generic_function");
 DEFINE_EXPORTER_KEY(RooRealIntegralStreamer, "integral");
+DEFINE_EXPORTER_KEY(RooDerivativeStreamer, "derivative");
+DEFINE_EXPORTER_KEY(RooFFTConvPdfStreamer, "fft_conv_pdf");
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // instantiate all importers and exporters
@@ -878,14 +964,16 @@ STATIC_EXECUTE([]() {
    registerImporter<RooLogNormalFactory>("lognormal_dist", false);
    registerImporter<RooMultiVarGaussianFactory>("multivariate_normal_dist", false);
    registerImporter<RooPoissonFactory>("poisson_dist", false);
-//   registerImporter<RooDecayFactory>("decay_dist", false);
-//   registerImporter<RooTruthModelFactory>("truth_model_function", false);
-//   registerImporter<RooGaussModelFactory>("gauss_model_function", false);
+   registerImporter<RooDecayFactory>("decay_dist", false);
+   registerImporter<RooTruthModelFactory>("truth_model_function", false);
+   registerImporter<RooGaussModelFactory>("gauss_model_function", false);
    registerImporter<RooPolynomialFactory<RooPolynomial>>("polynomial_dist", false);
    registerImporter<RooPolynomialFactory<RooPolyVar>>("polynomial", false);
    registerImporter<RooRealSumPdfFactory>("weighted_sum_dist", false);
    registerImporter<RooRealSumFuncFactory>("weighted_sum", false);
    registerImporter<RooRealIntegralFactory>("integral", false);
+   registerImporter<RooDerivativeFactory>("derivative", false);
+   registerImporter<RooFFTConvPdfFactory>("fft_conv_pdf", false);
 
    registerExporter<RooAddPdfStreamer<RooAddPdf>>(RooAddPdf::Class(), false);
    registerExporter<RooAddPdfStreamer<RooAddModel>>(RooAddModel::Class(), false);
@@ -909,6 +997,8 @@ STATIC_EXECUTE([]() {
    registerExporter<RooRealSumPdfStreamer>(RooRealSumPdf::Class(), false);
    registerExporter<RooTFnBindingStreamer>(RooTFnBinding::Class(), false);
    registerExporter<RooRealIntegralStreamer>(RooRealIntegral::Class(), false);
+   registerExporter<RooDerivativeStreamer>(RooDerivative::Class(), false);
+   registerExporter<RooFFTConvPdfStreamer>(RooFFTConvPdf::Class(), false);   
 });
 
 } // namespace

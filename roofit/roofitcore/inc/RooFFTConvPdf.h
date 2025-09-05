@@ -60,7 +60,14 @@ public:
   // Propagate maximum value estimate of pdf1 as convolution can only result in lower max values
   Int_t getMaxVal(const RooArgSet& vars) const override { return _pdf1.arg().getMaxVal(vars) ; }
   double maxVal(Int_t code) const override { return _pdf1.arg().maxVal(code) ; }
+  
+  RooAbsReal const& getConvVar() const { return *_x; }
 
+  RooAbsReal const& getPdf1() const { return *_pdf1; }  
+
+  RooAbsReal const& getPdf2() const { return *_pdf2; }  
+
+  RooAbsReal const* getPdfConvVar() const { return dynamic_cast<RooAbsReal*>(_xprime.absArg()); }  
 
 protected:
 
