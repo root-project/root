@@ -45,7 +45,7 @@ TEST(ColNames, ContainedNames)
    EXPECT_EQ(1U, *c);
 }
 
-// ROOT-19834
+// Test for https://github.com/root-project/root/issues/19834
 TEST(ColNames, NoSource)
 {
    auto df = ROOT::RDataFrame(1);
