@@ -60,6 +60,7 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
       // to report the size _in memory_ of column elements.
       std::uint32_t elemSize = RColumnElementBase::Generate(colDesc.GetType())->GetSize();
       std::uint64_t nElems = 0;
+      std::unordered_set<std::uint64_t> seenPages{};
       std::vector<std::uint64_t> compressedPageSizes{};
 
       for (const auto &clusterDescriptor : fDescriptor.GetClusterIterable()) {
@@ -88,8 +89,16 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
 
          const auto &pageRange = clusterDescriptor.GetPageRange(colId);
 
+         std::uint64_t locatorOffset;
          for (const auto &page : pageRange.GetPageInfos()) {
-            compressedPageSizes.emplace_back(page.GetLocator().GetNBytesOnStorage());
+            locatorOffset = page.GetLocator().GetType() == ROOT::RNTupleLocator::ELocatorType::kTypeDAOS
+                               ? page.GetLocator().GetPosition<RNTupleLocatorObject64>().GetLocation()
+                               : page.GetLocator().GetPosition<std::uint64_t>();
+            auto [_, pageAdded] = seenPages.emplace(locatorOffset);
+            if (pageAdded) {
+               compressedPageSizes.emplace_back(page.GetLocator().GetNBytesOnStorage());
+            }
+            // For the moment, we actually load and decompress aliased pages multiple times
             fUncompressedSize += page.GetNElements() * elemSize;
          }
       }
