@@ -128,6 +128,39 @@ TEST(RHistEngine, Clear)
    EXPECT_EQ(engine.GetBinContent(RBinIndex::Overflow()), 0);
 }
 
+TEST(RHistEngine, Clone)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, 0, Bins);
+   RHistEngine<int> engineA({axis});
+
+   engineA.Fill(-100);
+   for (std::size_t i = 0; i < Bins; i++) {
+      engineA.Fill(i);
+   }
+   engineA.Fill(100);
+
+   RHistEngine<int> engineB = engineA.Clone();
+   ASSERT_EQ(engineB.GetNDimensions(), 1);
+   ASSERT_EQ(engineB.GetTotalNBins(), Bins + 2);
+
+   EXPECT_EQ(engineB.GetBinContent(RBinIndex::Underflow()), 1);
+   for (auto index : axis.GetNormalRange()) {
+      EXPECT_EQ(engineB.GetBinContent(index), 1);
+   }
+   EXPECT_EQ(engineB.GetBinContent(RBinIndex::Overflow()), 1);
+
+   // Check that we can continue filling the clone.
+   for (std::size_t i = 0; i < Bins; i++) {
+      engineB.Fill(i);
+   }
+
+   for (auto index : axis.GetNormalRange()) {
+      EXPECT_EQ(engineA.GetBinContent(index), 1);
+      EXPECT_EQ(engineB.GetBinContent(index), 2);
+   }
+}
+
 TEST(RHistEngine, Fill)
 {
    static constexpr std::size_t Bins = 20;
