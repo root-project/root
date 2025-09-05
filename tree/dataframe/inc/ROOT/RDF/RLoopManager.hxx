@@ -245,8 +245,6 @@ public:
    bool HasDataSourceColumnReaders(std::string_view col, const std::type_info &ti) const;
    void AddDataSourceColumnReaders(std::string_view col, std::vector<std::unique_ptr<RColumnReaderBase>> &&readers,
                                    const std::type_info &ti);
-   RColumnReaderBase *AddTreeColumnReader(unsigned int slot, std::string_view col,
-                                          std::unique_ptr<RColumnReaderBase> &&reader, const std::type_info &ti);
    RColumnReaderBase *GetDatasetColumnReader(unsigned int slot, std::string_view col, const std::type_info &ti) const;
    RColumnReaderBase *AddDataSourceColumnReader(unsigned int slot, std::string_view col, const std::type_info &ti,
                                                 TTreeReader *treeReader);
