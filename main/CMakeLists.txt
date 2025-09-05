@@ -45,6 +45,9 @@ ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core CMAKENOEXPORT)
 #---ReadSpeed-------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(rootreadspeed src/readspeed.cxx LIBRARIES RIO Tree TreePlayer ReadSpeed CMAKENOEXPORT)
 
+#---RNTupleTTreeChecker-------------------------------------------------------------------------------------
+ROOT_EXECUTABLE(rntuplevsttree src/rntuplevsttree.cxx LIBRARIES RIO Tree ROOTNTuple ROOTNTupleUtil)
+
 #---CreateHaddCommandLineOptions------------------------------------------------------------------
 generateHeader(hadd
   ${CMAKE_SOURCE_DIR}/main/src/hadd-argparse.py
