@@ -926,18 +926,6 @@ std::vector<std::string> GetValidatedArgTypes(const ColumnNames_t &colNames, con
    return colTypes;
 }
 
-/// Return a bitset each element of which indicates whether the corresponding element in `selectedColumns` is the
-/// name of a column that must be defined via datasource. All elements of the returned vector are false if no
-/// data-source is present.
-std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, const ColumnNames_t &definedCols)
-{
-   const auto nColumns = requestedCols.size();
-   std::vector<bool> mustBeDefined(nColumns, false);
-   for (auto i = 0u; i < nColumns; ++i)
-      mustBeDefined[i] = std::find(definedCols.begin(), definedCols.end(), requestedCols[i]) == definedCols.end();
-   return mustBeDefined;
-}
-
 void CheckForDuplicateSnapshotColumns(const ColumnNames_t &cols)
 {
    std::unordered_set<std::string> uniqueCols;
