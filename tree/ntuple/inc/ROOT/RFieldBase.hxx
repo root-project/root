@@ -891,8 +891,8 @@ public:
    ~RBulkValues();
    RBulkValues(const RBulkValues &) = delete;
    RBulkValues &operator=(const RBulkValues &) = delete;
-   RBulkValues(RBulkValues &&other);
-   RBulkValues &operator=(RBulkValues &&other);
+   RBulkValues(RBulkValues &&other) = default;
+   RBulkValues &operator=(RBulkValues &&other) = default;
 
    // Sets `fValues` and `fSize`/`fCapacity` to the given values. The capacity is specified in number of values.
    // Once a buffer is adopted, an attempt to read more values then available throws an exception.

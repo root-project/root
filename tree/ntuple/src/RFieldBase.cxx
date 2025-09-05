@@ -122,35 +122,6 @@ void ROOT::RFieldBase::RValue::BindRawPtr(void *rawPtr)
 
 //------------------------------------------------------------------------------
 
-ROOT::RFieldBase::RBulkValues::RBulkValues(RBulkValues &&other)
-   : fField(other.fField),
-     fValueSize(other.fValueSize),
-     fCapacity(other.fCapacity),
-     fSize(other.fSize),
-     fIsAdopted(other.fIsAdopted),
-     fNValidValues(other.fNValidValues),
-     fFirstIndex(other.fFirstIndex)
-{
-   std::swap(fDeleter, other.fDeleter);
-   std::swap(fValues, other.fValues);
-   std::swap(fMaskAvail, other.fMaskAvail);
-}
-
-ROOT::RFieldBase::RBulkValues &ROOT::RFieldBase::RBulkValues::operator=(RBulkValues &&other)
-{
-   std::swap(fField, other.fField);
-   std::swap(fDeleter, other.fDeleter);
-   std::swap(fValues, other.fValues);
-   std::swap(fValueSize, other.fValueSize);
-   std::swap(fCapacity, other.fCapacity);
-   std::swap(fSize, other.fSize);
-   std::swap(fIsAdopted, other.fIsAdopted);
-   std::swap(fMaskAvail, other.fMaskAvail);
-   std::swap(fNValidValues, other.fNValidValues);
-   std::swap(fFirstIndex, other.fFirstIndex);
-   return *this;
-}
-
 ROOT::RFieldBase::RBulkValues::~RBulkValues()
 {
    if (fValues)
