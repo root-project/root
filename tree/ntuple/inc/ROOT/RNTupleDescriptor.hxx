@@ -1597,9 +1597,6 @@ public:
    RResult<void> AddExtraTypeInfo(RExtraTypeInfoDescriptor &&extraTypeInfoDesc);
    void ReplaceExtraTypeInfo(RExtraTypeInfoDescriptor &&extraTypeInfoDesc);
 
-   /// Clears so-far stored clusters, fields, and columns and return to a pristine RNTupleDescriptor
-   void Reset();
-
    /// Mark the beginning of the header extension; any fields and columns added after a call to this function are
    /// annotated as begin part of the header extension.
    void BeginHeaderExtension();
