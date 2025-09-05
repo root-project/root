@@ -205,6 +205,7 @@ std::string TypeID2TypeName(const std::type_info &id)
 
 char TypeID2ROOTTypeName(const std::type_info &tid)
 {
+   // GCOVR_EXCL_START
    const static std::unordered_map<TypeInfoRef, char, TypeInfoRefHash, TypeInfoRefEqualComp> typeID2ROOTTypeNameMap{
       {typeid(char), 'B'},      {typeid(Char_t), 'B'},   {typeid(unsigned char), 'b'},      {typeid(UChar_t), 'b'},
       {typeid(int), 'I'},       {typeid(Int_t), 'I'},    {typeid(unsigned int), 'i'},       {typeid(UInt_t), 'i'},
@@ -213,6 +214,7 @@ char TypeID2ROOTTypeName(const std::type_info &tid)
       {typeid(long long), 'L'}, {typeid(Long64_t), 'L'}, {typeid(unsigned long long), 'l'}, {typeid(ULong64_t), 'l'},
       {typeid(float), 'F'},     {typeid(Float_t), 'F'},  {typeid(Double_t), 'D'},           {typeid(double), 'D'},
       {typeid(bool), 'O'},      {typeid(Bool_t), 'O'}};
+   // GCOVR_EXCL_STOP
 
    if (auto it = typeID2ROOTTypeNameMap.find(tid); it != typeID2ROOTTypeNameMap.end())
       return it->second;
@@ -341,6 +343,7 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, R
 /// Return a space ' ' in case no match was found.
 char TypeName2ROOTTypeName(const std::string &b)
 {
+   // GCOVR_EXCL_START
    const static std::unordered_map<std::string, char> typeName2ROOTTypeNameMap{{"char", 'B'},
                                                                                {"Char_t", 'B'},
                                                                                {"unsigned char", 'b'},
@@ -374,6 +377,7 @@ char TypeName2ROOTTypeName(const std::string &b)
                                                                                {"ULong64_t", 'l'},
                                                                                {"bool", 'O'},
                                                                                {"Bool_t", 'O'}};
+   // GCOVR_EXCL_STOP
 
    if (auto it = typeName2ROOTTypeNameMap.find(b); it != typeName2ROOTTypeNameMap.end())
       return it->second;
