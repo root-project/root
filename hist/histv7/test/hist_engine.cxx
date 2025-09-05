@@ -63,6 +63,50 @@ TEST(RHistEngine, GetBinContentNotFound)
    EXPECT_THROW(engine.GetBinContent(Bins), std::invalid_argument);
 }
 
+TEST(RHistEngine, Add)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, 0, Bins);
+   RHistEngine<int> engineA({axis});
+   RHistEngine<int> engineB({axis});
+   RHistEngine<int> engineC({axis});
+
+   engineA.Fill(-100);
+   for (std::size_t i = 0; i < Bins; i++) {
+      engineA.Fill(i);
+      engineA.Fill(i);
+      engineB.Fill(i);
+   }
+   engineB.Fill(100);
+
+   engineC.Add(engineA);
+   engineC.Add(engineB);
+
+   engineA.Add(engineB);
+
+   EXPECT_EQ(engineA.GetBinContent(RBinIndex::Underflow()), 1);
+   EXPECT_EQ(engineB.GetBinContent(RBinIndex::Underflow()), 0);
+   EXPECT_EQ(engineC.GetBinContent(RBinIndex::Underflow()), 1);
+   for (auto index : axis.GetNormalRange()) {
+      EXPECT_EQ(engineA.GetBinContent(index), 3);
+      EXPECT_EQ(engineB.GetBinContent(index), 1);
+      EXPECT_EQ(engineC.GetBinContent(index), 3);
+   }
+   EXPECT_EQ(engineA.GetBinContent(RBinIndex::Overflow()), 1);
+   EXPECT_EQ(engineB.GetBinContent(RBinIndex::Overflow()), 1);
+   EXPECT_EQ(engineC.GetBinContent(RBinIndex::Overflow()), 1);
+}
+
+TEST(RHistEngine, AddDifferent)
+{
+   // The equality operators of RAxes and the axis objects are already unit-tested separately, so here we only check one
+   // case with different the number of bins.
+   RHistEngine<int> engineA(10, 0, 1);
+   RHistEngine<int> engineB(20, 0, 1);
+
+   EXPECT_THROW(engineA.Add(engineB), std::invalid_argument);
+}
+
 TEST(RHistEngine, Fill)
 {
    static constexpr std::size_t Bins = 20;

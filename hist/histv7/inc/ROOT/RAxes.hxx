@@ -55,6 +55,7 @@ public:
    const std::vector<RAxisVariant> &Get() const { return fAxes; }
 
    friend bool operator==(const RAxes &lhs, const RAxes &rhs) { return lhs.fAxes == rhs.fAxes; }
+   friend bool operator!=(const RAxes &lhs, const RAxes &rhs) { return !(lhs == rhs); }
 
    /// Compute the total number of bins for all axes.
    ///
