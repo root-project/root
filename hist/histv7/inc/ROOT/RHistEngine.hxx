@@ -173,6 +173,18 @@ public:
       }
    }
 
+   /// Clone this histogram engine.
+   ///
+   /// \return the clone object
+   RHistEngine<BinContentType> Clone() const
+   {
+      RHistEngine<BinContentType> h(fAxes.Get());
+      for (std::size_t i = 0; i < fBinContents.size(); i++) {
+         h.fBinContents[i] = fBinContents[i];
+      }
+      return h;
+   }
+
    /// Fill an entry into the histogram.
    ///
    /// \code
