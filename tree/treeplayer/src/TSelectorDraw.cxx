@@ -578,6 +578,7 @@ void TSelectorDraw::Begin(TTree *tree)
          } else {
             hist = new TH1D(hname, htitle.Data(), fNbins[0], fVmin[0], fVmax[0]);
          }
+         hist->SetDirectory(gDirectory);
          hist->SetLineColor(fTree->GetLineColor());
          hist->SetLineWidth(fTree->GetLineWidth());
          hist->SetLineStyle(fTree->GetLineStyle());
@@ -661,6 +662,7 @@ void TSelectorDraw::Begin(TTree *tree)
             } else {
                hp = new TProfile(hname, htitle.Data(), fNbins[1], fVmin[1], fVmax[1], "");
             }
+            hp->SetDirectory(gDirectory);
             if (!hkeep) {
                hp->SetBit(kCanDelete);
                if (!opt.Contains("goff")) hp->SetDirectory(nullptr);
@@ -689,6 +691,7 @@ void TSelectorDraw::Begin(TTree *tree)
             } else {
                h2 = new TH2D(hname, htitle.Data(), fNbins[1], fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
             }
+            h2->SetDirectory(gDirectory);
             h2->SetLineColor(fTree->GetLineColor());
             h2->SetLineWidth(fTree->GetLineWidth());
             h2->SetLineStyle(fTree->GetLineStyle());
@@ -803,6 +806,7 @@ void TSelectorDraw::Begin(TTree *tree)
             } else {
                hp = new TProfile2D(hname, htitle.Data(), fNbins[2], fVmin[2], fVmax[2], fNbins[1], fVmin[1], fVmax[1], "");
             }
+            hp->SetDirectory(gDirectory);
             if (!hkeep) {
                hp->SetBit(kCanDelete);
                if (!opt.Contains("goff")) hp->SetDirectory(nullptr);
@@ -826,6 +830,7 @@ void TSelectorDraw::Begin(TTree *tree)
             h2 = (TH2F*)fOldHistogram;
          } else {
             h2 = new TH2F(hname, htitle.Data(), fNbins[1], fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
+            h2->SetDirectory(gDirectory);
             h2->SetLineColor(fTree->GetLineColor());
             h2->SetLineWidth(fTree->GetLineWidth());
             h2->SetLineStyle(fTree->GetLineStyle());
@@ -859,6 +864,7 @@ void TSelectorDraw::Begin(TTree *tree)
             } else {
                h3 = new TH3D(hname, htitle.Data(), fNbins[2], fVmin[2], fVmax[2], fNbins[1], fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
             }
+            h3->SetDirectory(gDirectory);
             h3->SetLineColor(fTree->GetLineColor());
             h3->SetLineWidth(fTree->GetLineWidth());
             h3->SetLineStyle(fTree->GetLineStyle());
