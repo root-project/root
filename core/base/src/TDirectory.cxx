@@ -164,20 +164,8 @@ TDirectory::TContext::~TContext()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Sets the flag controlling the automatic add objects like histograms, TGraph2D, etc
-/// in memory
-///
-/// By default (fAddDirectory = kTRUE), these objects are automatically added
-/// to the list of objects in memory.
-/// Note that in the classes like TH1, TGraph2D supporting this facility,
-/// one object can be removed from its support directory
-/// by calling object->SetDirectory(nullptr) or object->SetDirectory(dir) to add it
-/// to the list of objects in the directory dir.
-///
-///  NOTE that this is a static function. To call it, use:
-/// ~~~ {.cpp}
-///     TDirectory::AddDirectory
-/// ~~~
+/// Set the value returned by TDirectory::AddDirectoryStatus().
+/// \deprecated This function is not used in ROOT.
 
 void TDirectory::AddDirectory(Bool_t add)
 {
@@ -185,7 +173,8 @@ void TDirectory::AddDirectory(Bool_t add)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function: see TDirectory::AddDirectory for more comments.
+/// Return the value set by TDirectory::AddDirectory.
+/// \deprecated This function is not used in ROOT.
 
 Bool_t TDirectory::AddDirectoryStatus()
 {
