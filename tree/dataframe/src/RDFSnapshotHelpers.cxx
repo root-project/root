@@ -20,9 +20,11 @@
 #include <ROOT/RDF/SnapshotHelpers.hxx>
 
 #include <ROOT/REntry.hxx>
+#include <ROOT/RFieldToken.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDS.hxx>
-#include <ROOT/RNTupleWriter.hxx>
+#include <ROOT/RNTupleFillContext.hxx>
+#include <ROOT/RNTupleParallelWriter.hxx>
 #include <ROOT/RTTreeDS.hxx>
 #include <ROOT/TBufferMerger.hxx>
 
@@ -244,7 +246,7 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, ROOT::Internal::RDF:
                        void *&actionHelperBranchPtrAddress, bool isDefine)
 {
 
-   auto *inputBranch = SearchForBranch(inputTree, inputBranchName);
+   auto *inputBranch = isDefine ? nullptr : SearchForBranch(inputTree, inputBranchName);
 
    // Respect the original bufsize and splitlevel arguments
    // In particular, by keeping splitlevel equal to 0 if this was the case for `inputBranch`, we avoid
@@ -799,22 +801,21 @@ ROOT::Internal::RDF::UntypedSnapshotTTreeHelperMT::MakeNew(void *newName, std::s
 }
 
 ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::UntypedSnapshotRNTupleHelper(
-   std::string_view filename, std::string_view dirname, std::string_view ntuplename, const ColumnNames_t &vfnames,
-   const ColumnNames_t &fnames, const RSnapshotOptions &options, ROOT::Detail::RDF::RLoopManager *inputLM,
-   ROOT::Detail::RDF::RLoopManager *outputLM, std::vector<bool> &&isDefine,
+   unsigned int nSlots, std::string_view filename, std::string_view dirname, std::string_view ntuplename,
+   const ColumnNames_t &vfnames, const ColumnNames_t &fnames, const RSnapshotOptions &options,
+   ROOT::Detail::RDF::RLoopManager *inputLM, ROOT::Detail::RDF::RLoopManager *outputLM,
    const std::vector<const std::type_info *> &colTypeIDs)
    : fFileName(filename),
      fDirName(dirname),
      fNTupleName(ntuplename),
-     fOutputFile(nullptr),
      fOptions(options),
      fInputLoopManager(inputLM),
      fOutputLoopManager(outputLM),
      fInputFieldNames(vfnames),
      fOutputFieldNames(ReplaceDotWithUnderscore(fnames)),
-     fWriter(nullptr),
-     fOutputEntry(nullptr),
-     fIsDefine(std::move(isDefine)),
+     fNSlots(nSlots),
+     fFillContexts(nSlots),
+     fEntries(nSlots),
      fInputColumnTypeIDs(colTypeIDs)
 {
    EnsureValidSnapshotRNTupleOutput(fOptions, fNTupleName, fFileName);
@@ -828,23 +829,15 @@ ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper &ROOT::Internal::RDF::UntypedS
 
 ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::~UntypedSnapshotRNTupleHelper()
 {
-   if (!fNTupleName.empty() && !fOutputLoopManager->GetDataSource() && fOptions.fLazy)
+   if (!fNTupleName.empty() /* not moved from */ && !fOutputFile /* did not run */ && fOptions.fLazy)
       Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
-}
-
-void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Exec(unsigned int /* slot */, const std::vector<void *> &values)
-{
-   assert(values.size() == fOutputFieldNames.size());
-   for (decltype(values.size()) i = 0; i < values.size(); i++) {
-      fOutputEntry->BindRawPtr(fOutputFieldNames[i], values[i]);
-   }
-   fWriter->Fill();
 }
 
 void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
 {
-   auto model = ROOT::RNTupleModel::Create();
+   auto model = ROOT::RNTupleModel::CreateBare();
    auto nFields = fOutputFieldNames.size();
+   fFieldTokens.resize(nFields);
    for (decltype(nFields) i = 0; i < nFields; i++) {
       // Need to retrieve the type of every field to create as a string
       // If the input type for a field does not have RTTI, internally we store it as the tag UseNativeDataType. When
@@ -854,8 +847,9 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
                                                                           fInputFieldNames[i], fOptions.fVector2RVec)
                                : ROOT::Internal::RDF::TypeID2TypeName(*fInputColumnTypeIDs[i]);
       model->AddField(ROOT::RFieldBase::Create(fOutputFieldNames[i], typeName).Unwrap());
+      fFieldTokens[i] = model->GetToken(fOutputFieldNames[i]);
    }
-   fOutputEntry = &model->GetDefaultEntry();
+   model->Freeze();
 
    ROOT::RNTupleWriteOptions writeOptions;
    writeOptions.SetCompression(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel);
@@ -874,11 +868,43 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
          outputDir = fOutputFile->mkdir(fDirName.c_str());
    }
 
-   fWriter = ROOT::RNTupleWriter::Append(std::move(model), fNTupleName, *outputDir, writeOptions);
+   // The RNTupleParallelWriter has exclusive access to the underlying TFile, no further synchronization is needed for
+   // calls to Fill() (in Exec) and FlushCluster() (in FinalizeTask).
+   fWriter = ROOT::Experimental::RNTupleParallelWriter::Append(std::move(model), fNTupleName, *outputDir, writeOptions);
+}
+
+void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::InitTask(TTreeReader *, unsigned int slot)
+{
+   if (!fFillContexts[slot]) {
+      fFillContexts[slot] = fWriter->CreateFillContext();
+      fEntries[slot] = fFillContexts[slot]->GetModel().CreateBareEntry();
+   }
+}
+
+void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Exec(unsigned int slot, const std::vector<void *> &values)
+{
+   auto &fillContext = fFillContexts[slot];
+   auto &outputEntry = fEntries[slot];
+   assert(values.size() == fFieldTokens.size());
+   for (decltype(values.size()) i = 0; i < values.size(); i++) {
+      outputEntry->BindRawPtr(fFieldTokens[i], values[i]);
+   }
+   fillContext->Fill(*outputEntry);
+}
+
+void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::FinalizeTask(unsigned int slot)
+{
+   // In principle we would not need to flush a cluster here, but we want to benefit from parallelism for compression.
+   // NB: RNTupleFillContext::FlushCluster() is a nop if there is no new entry since the last flush.
+   fFillContexts[slot]->FlushCluster();
 }
 
 void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Finalize()
 {
+   // First clear and destroy all entries, which were created from the RNTupleFillContexts.
+   fEntries.clear();
+   fFillContexts.clear();
+   // Then destroy the RNTupleParallelWriter and write the metadata.
    fWriter.reset();
    // We can now set the data source of the loop manager for the RDataFrame that is returned by the Snapshot call.
    fOutputLoopManager->SetDataSource(std::make_unique<ROOT::RDF::RNTupleDS>(fDirName + "/" + fNTupleName, fFileName));
@@ -899,8 +925,7 @@ ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper
 ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::MakeNew(void *newName)
 {
    const std::string finalName = *reinterpret_cast<const std::string *>(newName);
-   return UntypedSnapshotRNTupleHelper{finalName,          fDirName,           fNTupleName,
-                                       fInputFieldNames,   fOutputFieldNames,  fOptions,
-                                       fInputLoopManager,  fOutputLoopManager, std::vector<bool>(fIsDefine),
-                                       fInputColumnTypeIDs};
+   return UntypedSnapshotRNTupleHelper{
+      fNSlots,           finalName, fDirName,          fNTupleName,        fInputFieldNames,
+      fOutputFieldNames, fOptions,  fInputLoopManager, fOutputLoopManager, fInputColumnTypeIDs};
 }

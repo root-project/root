@@ -17,7 +17,7 @@ ROOT::RArrayField::RArrayField(std::string_view fieldName, std::unique_ptr<RFiel
    : ROOT::RFieldBase(fieldName,
                       "std::array<" + itemField->GetTypeName() + "," +
                          Internal::GetNormalizedInteger(static_cast<unsigned long long>(arrayLength)) + ">",
-                      ROOT::ENTupleStructure::kLeaf, false /* isSimple */, arrayLength),
+                      ROOT::ENTupleStructure::kPlain, false /* isSimple */, arrayLength),
      fItemSize(itemField->GetValueSize()),
      fArrayLength(arrayLength)
 {
@@ -72,6 +72,15 @@ void ROOT::RArrayField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to
                     arrayPtr + (i * fItemSize));
       }
    }
+}
+
+void ROOT::RArrayField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   static const std::vector<std::string> prefixes = {"std::array<"};
+
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
+   EnsureMatchingTypePrefix(fieldDesc, prefixes);
 }
 
 void ROOT::RArrayField::ConstructValue(void *where) const
@@ -403,6 +412,11 @@ void ROOT::RRVecField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
+void ROOT::RRVecField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName);
+}
+
 void ROOT::RRVecField::ConstructValue(void *where) const
 {
    // initialize data members fBegin, fSize, fCapacity
@@ -581,6 +595,11 @@ void ROOT::RVectorField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
+void ROOT::RVectorField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName);
+}
+
 void ROOT::RVectorField::RVectorDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    auto vecPtr = static_cast<std::vector<char> *>(objPtr);
@@ -678,6 +697,11 @@ void ROOT::RField<std::vector<bool>>::GenerateColumns()
 void ROOT::RField<std::vector<bool>>::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 {
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
+}
+
+void ROOT::RField<std::vector<bool>>::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName);
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RField<std::vector<bool>>::SplitValue(const RValue &value) const
@@ -816,6 +840,15 @@ void ROOT::RArrayAsRVecField::ReadInClusterImpl(RNTupleLocalIndex localIndex, vo
    for (std::size_t i = 0; i < fArrayLength; ++i) {
       CallReadOn(*fSubfields[0], RNTupleLocalIndex(clusterId, indexInCluster * fArrayLength + i),
                  rvecBeginPtr + (i * fItemSize));
+   }
+}
+
+void ROOT::RArrayAsRVecField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName | kDiffTypeVersion | kDiffStructure | kDiffNRepetitions);
+   if (fieldDesc.GetTypeName().rfind("std::array<", 0) != 0) {
+      throw RException(R__FAIL("RArrayAsRVecField " + GetQualifiedFieldName() + " expects an on-disk array field"));
    }
 }
 

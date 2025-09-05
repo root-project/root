@@ -175,10 +175,8 @@ struct RDaosContainerNTupleLocator {
       }
 
       anchor.Deserialize(buffer.get(), anchorSize).Unwrap();
-      if (anchor.fVersionEpoch != ROOT::RNTuple::kVersionEpoch) {
-         throw ROOT::RException(R__FAIL("unsupported RNTuple epoch version: " + std::to_string(anchor.fVersionEpoch)));
-      }
 
+      builder.SetVersion(anchor.fVersionEpoch, anchor.fVersionMajor, anchor.fVersionMinor, anchor.fVersionPatch);
       builder.SetOnDiskHeaderSize(anchor.fNBytesHeader);
       buffer = MakeUninitArray<unsigned char>(anchor.fLenHeader);
       zipBuffer = MakeUninitArray<unsigned char>(anchor.fNBytesHeader);
@@ -769,4 +767,9 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
    fCounters->fNRead.Add(readRequests.size());
 
    return clusters;
+}
+
+void ROOT::Experimental::Internal::RPageSourceDaos::LoadStreamerInfo()
+{
+   R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "DAOS-backed sources have no associated StreamerInfo to load.";
 }

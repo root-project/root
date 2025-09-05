@@ -12,11 +12,6 @@
 ## \date August 2019
 ## \author Stefan Wunsch
 
-# XGBoost has to be imported before ROOT to avoid crashes because of clashing
-# std::regexp symbols that are exported by cppyy.
-# See also: https://github.com/wlav/cppyy/issues/227
-from xgboost import XGBClassifier
-
 import ROOT
 import numpy as np
 
@@ -44,7 +39,11 @@ def load_data(signal_filename, background_filename):
 
     return x, y, w
 
+
 if __name__ == "__main__":
+
+    from xgboost import XGBClassifier
+
     # Load data
     x, y, w = load_data("train_signal.root", "train_background.root")
 
@@ -53,5 +52,5 @@ if __name__ == "__main__":
     bdt.fit(x, y, sample_weight=w)
 
     # Save model in TMVA format
-    print("Training done on ",x.shape[0],"events. Saving model in tmva101.root")
+    print("Training done on ", x.shape[0], "events. Saving model in tmva101.root")
     ROOT.TMVA.Experimental.SaveXGBoost(bdt, "myBDT", "tmva101.root", num_inputs=x.shape[1])

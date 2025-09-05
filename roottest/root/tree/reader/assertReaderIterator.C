@@ -3,7 +3,7 @@
 #include <iterator>
 
 int assertReaderIterator() {
-   TFile f("$ROOTSYS/tutorials/hsimple.root");
+   TFile f("hsimple.root");
    if (f.IsZombie()) {
       Error("assertReaderIterator()", "cannot open hsimple.root\n");
       return 2;

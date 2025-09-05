@@ -83,13 +83,13 @@ TEST(RooProdPdf, TestGetPartIntList)
 
    RooWorkspace ws;
 
-   double a = 10.;
-   double b = 4.;
-   double c = 2.5;
+   auto &x = static_cast<RooRealVar &>(*ws.factory("x[0, 0, 10.]"));
+   auto &y = static_cast<RooRealVar &>(*ws.factory("y[0, 0, 4.]"));
+   auto &z = static_cast<RooRealVar &>(*ws.factory("z[0, 0, 2.5]"));
 
-   auto &x = static_cast<RooRealVar &>(*ws.factory("x[0, 0, " + std::to_string(a) + "]"));
-   auto &y = static_cast<RooRealVar &>(*ws.factory("y[0, 0, " + std::to_string(b) + "]"));
-   auto &z = static_cast<RooRealVar &>(*ws.factory("z[0, 0, " + std::to_string(c) + "]"));
+   double a = x.getMax();
+   double b = y.getMax();
+   double c = z.getMax();
 
    // Factorize the product in one 1D and one 2D pdf to get a more complicated
    // and complete test case.

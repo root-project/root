@@ -9,14 +9,12 @@ if(NOT MSVC OR win_broken_tests)
                     MACRO PyROOT_datatypetest.py
                     COPY_TO_BUILDDIR DataTypes.C DataTypes.h
                     PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ DataTypes.C+
-                    FIXTURES_SETUP python-basic-datatype-fixture
-                    ENVIRONMENT CLING_STANDARD_PCH=none)
+                    FIXTURES_SETUP python-basic-datatype-fixture)
 
   ROOTTEST_ADD_TEST(datatype-numpy
                     MACRO PyROOT_datatypetest_numpy.py
                     FIXTURES_REQUIRED python-basic-datatype-fixture
-                    PYTHON_DEPS numpy
-                    ENVIRONMENT CLING_STANDARD_PCH=none)
+                    PYTHON_DEPS numpy)
 endif()
 
   ROOTTEST_ADD_TEST(operator
@@ -28,7 +26,6 @@ if(NOT MSVC OR win_broken_tests)
   ROOTTEST_ADD_TEST(overload
                     MACRO PyROOT_overloadtests.py
                     COPY_TO_BUILDDIR Overloads.C Overloads.h
-                    PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Overloads.C+
-                    ENVIRONMENT CLING_STANDARD_PCH=none)
+                    PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ Overloads.C+)
 endif()
 endif()

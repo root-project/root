@@ -28,6 +28,11 @@ endif()
 
 if(NOT builtin_clang)
   link_directories("${LLVM_LIBRARY_DIR}")
+  if(MSVC)
+    set(clang_libraries)
+    ROOT_GET_CLANG_LIBRARIES(clang_libraries)
+    list(APPEND CLING_LIBRARIES "${clang_libraries}")
+  endif()
 endif()
 
-ROOT_ADD_UNITTEST_DIR(Core RIO ${CLING_LIBRARIES} $<TARGET_OBJECTS:ClingUtils>)
+ROOT_ADD_UNITTEST_DIR(Core ${CLING_LIBRARIES} $<TARGET_OBJECTS:ClingUtils>)

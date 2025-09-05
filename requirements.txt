@@ -11,13 +11,13 @@ onnx
 
 # TMVA: PyMVA interfaces
 scikit-learn
-tensorflow ; python_version < "3.13" # TensorFlow doesn't support Python 3.13 yet
+tensorflow
 torch
 xgboost
 
 # PyROOT: ROOT.Numba.Declare decorator
-numba>=0.48
-cffi>=1.9.1
+numba
+cffi
 
 # Notebooks: ROOT C++ kernel
 IPython
@@ -26,7 +26,7 @@ metakernel>=0.20.0
 notebook>=4.4.1
 
 # Distributed RDataFrame
-pyspark>=2.4 # Spark backend
+pyspark # Spark backend
 dask>=2022.08.1 # Dask backend
 distributed>=2022.08.1 # Dask backend
 

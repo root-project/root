@@ -71,6 +71,7 @@ of a main program creating an interactive version is shown below:
 #include <ROOT/RVersion.hxx>
 #include "RConfigure.h"
 #include "RConfigOptions.h"
+#include <filesystem>
 #include <string>
 #include <map>
 #include <set>
@@ -109,8 +110,12 @@ FARPROC dlsym(void *library, const char *function_name)
       return ::GetProcAddress((HMODULE)library, function_name);
    }
 }
+#elif defined(__APPLE__)
+#include <dlfcn.h>
+#include <mach-o/dyld.h>
 #else
 #include <dlfcn.h>
+#include <link.h>
 #endif
 
 #include <iostream>
@@ -2812,7 +2817,7 @@ void TROOT::SetBatch(Bool_t batch)
 /// `webdisplay` parameter may contain:
 ///
 ///  - "firefox": select Mozilla Firefox browser for interactive web display
-///  - "chrome": select Google Chrome browser for interactive web display
+///  - "chrome": select Google Chrome browser for interactive web display. Can also be set to "chromium"
 ///  - "edge": select Microsoft Edge browser for interactive web display
 ///  - "native": select one of the natively-supported web browsers firefox/chrome/edge for interactive web display
 ///  - "qt6": uses QWebEngine from Qt6, no real http server started (requires `qt6web` component build for ROOT)
@@ -2824,6 +2829,8 @@ void TROOT::SetBatch(Bool_t batch)
 ///    interactive mode.
 ///  - "server:port": turns the web display into server mode with specified port. Web widgets will not be displayed,
 ///    only text message with window URL will be printed on standard output
+///  
+/// \note See more details related to webdisplay on RWebWindowsManager::ShowWindow
 
 void TROOT::SetWebDisplay(const char *webdisplay)
 {
@@ -3007,23 +3014,71 @@ const TString& TROOT::GetBinDir() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the library directory in the installation. Static utility function.
+///
+/// This function inspects the libraries currently loaded in the process to
+/// locate the ROOT Core library. Once found, it extracts and returns the
+/// directory containing that library. If the ROOT Core library was not found,
+/// it will return an empty string.
+///
+/// The result is cached in a static variable so the lookup is only performed
+/// once per process, and the implementation is platform-specific.
+///
+/// \return The directory path (as a `TString`) containing the ROOT core library.
 
-const TString& TROOT::GetLibDir() {
-#ifdef ROOTLIBDIR
-   if (IgnorePrefix()) {
-#endif
-      static TString rootlibdir;
-      if (rootlibdir.IsNull()) {
-         rootlibdir = "lib";
-         gSystem->PrependPathName(GetRootSys(), rootlibdir);
+const TString &TROOT::GetLibDir()
+{
+   static bool haveLooked = false;
+   static TString rootlibdir;
+   if (haveLooked)
+      return rootlibdir;
+
+   haveLooked = true;
+
+   namespace fs = std::filesystem;
+
+#define TO_LITERAL(string) _QUOTE_(string)
+
+#if defined(__APPLE__)
+
+   uint32_t count = _dyld_image_count();
+   for (uint32_t i = 0; i < count; i++) {
+      const char *path = _dyld_get_image_name(i);
+      if (!path)
+         continue;
+
+      fs::path p(path);
+      if (p.filename() == TO_LITERAL(LIB_CORE_NAME)) {
+         rootlibdir = p.parent_path().c_str();
+         break;
       }
-      return rootlibdir;
-#ifdef ROOTLIBDIR
-   } else {
-      const static TString rootlibdir = ROOTLIBDIR;
-      return rootlibdir;
    }
+
+#elif defined(_WIN32)
+
+   // Or Windows, the original hardcoded path is kept for now.
+   rootlibdir = "lib";
+   gSystem->PrependPathName(GetRootSys(), rootlibdir);
+
+#else
+
+   auto callback = +[](struct dl_phdr_info *info, size_t /*size*/, void *data) -> int {
+      TString &libdir = *static_cast<TString *>(data);
+      if (!info->dlpi_name)
+         return 0;
+
+      fs::path p = info->dlpi_name;
+      if (p.filename() == TO_LITERAL(LIB_CORE_NAME)) {
+         libdir = p.parent_path().c_str();
+         return 1; // stop iteration
+      }
+      return 0; // continue
+   };
+
+   dl_iterate_phdr(callback, &rootlibdir);
+
 #endif
+
+   return rootlibdir;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

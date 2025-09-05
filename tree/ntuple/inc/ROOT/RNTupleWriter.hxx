@@ -104,9 +104,6 @@ class RNTupleWriter {
       Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel>, std::unique_ptr<Internal::RPageSink>);
 
 private:
-   /// The page sink's parallel page compression scheduler if IMT is on.
-   /// Needs to be destructed after the page sink (in the fill context) is destructed and so declared before.
-   std::unique_ptr<Internal::RPageStorage::RTaskScheduler> fZipTasks;
    Experimental::RNTupleFillContext fFillContext;
    Experimental::Detail::RNTupleMetrics fMetrics;
 

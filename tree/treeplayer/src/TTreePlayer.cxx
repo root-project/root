@@ -153,11 +153,11 @@ TTreePlayer::~TTreePlayer()
 /// ignore the warning except for special cases with prior knowledge that sorting the files and/or entries is actually
 /// more expensive, or just not possible.
 
-TVirtualIndex *TTreePlayer::BuildIndex(const TTree *T, const char *majorname, const char *minorname)
+TVirtualIndex *TTreePlayer::BuildIndex(const TTree *T, const char *majorname, const char *minorname, bool long64major, bool long64minor)
 {
    TVirtualIndex *index;
    if (dynamic_cast<const TChain*>(T)) {
-      index = new TChainIndex(T, majorname, minorname);
+      index = new TChainIndex(T, majorname, minorname, long64major, long64minor);
       if (index->IsZombie()) {
          delete index;
          Warning("BuildIndex", "Creating a TChainIndex unsuccessful - switching to TTreeIndex (much slower)");
@@ -165,7 +165,7 @@ TVirtualIndex *TTreePlayer::BuildIndex(const TTree *T, const char *majorname, co
       else
          return index;
    }
-   return new TTreeIndex(T,majorname,minorname);
+   return new TTreeIndex(T, majorname, minorname, long64major, long64minor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

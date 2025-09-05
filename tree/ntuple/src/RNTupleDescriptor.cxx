@@ -14,6 +14,7 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RFieldBase.hxx>
+#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleTypes.hxx>
@@ -80,7 +81,7 @@ ROOT::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc, const ROO
    if (GetStructure() == ROOT::ENTupleStructure::kUnknown) {
       if (options.GetReturnInvalidOnError()) {
          auto invalidField = std::make_unique<ROOT::RInvalidField>(GetFieldName(), GetTypeName(), "",
-                                                                   ROOT::RInvalidField::RCategory::kUnknownStructure);
+                                                                   ROOT::RInvalidField::ECategory::kUnknownStructure);
          invalidField->SetOnDiskId(fFieldId);
          return invalidField;
       } else {
@@ -143,7 +144,7 @@ ROOT::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc, const ROO
    } catch (const RException &ex) {
       if (options.GetReturnInvalidOnError())
          return std::make_unique<ROOT::RInvalidField>(GetFieldName(), GetTypeName(), ex.GetError().GetReport(),
-                                                      ROOT::RInvalidField::RCategory::kGeneric);
+                                                      ROOT::RInvalidField::ECategory::kGeneric);
       else
          throw ex;
    }
@@ -339,6 +340,24 @@ ROOT::NTupleSize_t ROOT::RNTupleDescriptor::GetNElements(ROOT::DescriptorId_t ph
    return result;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the cluster boundaries for each cluster in this RNTuple.
+std::vector<ROOT::Internal::RNTupleClusterBoundaries>
+ROOT::Internal::GetClusterBoundaries(const ROOT::RNTupleDescriptor &desc)
+{
+   std::vector<Internal::RNTupleClusterBoundaries> boundaries;
+   boundaries.reserve(desc.GetNClusters());
+   auto clusterId = desc.FindClusterId(0, 0);
+   while (clusterId != ROOT::kInvalidDescriptorId) {
+      const auto &clusterDesc = desc.GetClusterDescriptor(clusterId);
+      R__ASSERT(clusterDesc.GetNEntries() > 0);
+      boundaries.emplace_back(ROOT::Internal::RNTupleClusterBoundaries{
+         clusterDesc.GetFirstEntryIndex(), clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries()});
+      clusterId = desc.FindNextClusterId(clusterId);
+   }
+   return boundaries;
+}
+
 ROOT::DescriptorId_t
 ROOT::RNTupleDescriptor::FindFieldId(std::string_view fieldName, ROOT::DescriptorId_t parentId) const
 {
@@ -369,6 +388,19 @@ std::string ROOT::RNTupleDescriptor::GetQualifiedFieldName(ROOT::DescriptorId_t 
    if (prefix.empty())
       return fieldDescriptor.GetFieldName();
    return prefix + "." + fieldDescriptor.GetFieldName();
+}
+
+std::string ROOT::RNTupleDescriptor::GetTypeNameForComparison(const RFieldDescriptor &fieldDesc) const
+{
+   std::string typeName = fieldDesc.GetTypeName();
+
+   // ROOT v6.34, with spec versions before 1.0.0.1, did not properly renormalize the type name.
+   R__ASSERT(fVersionEpoch == 1);
+   if (fVersionMajor == 0 && fVersionMinor == 0 && fVersionPatch < 1) {
+      typeName = ROOT::Internal::GetRenormalizedTypeName(typeName);
+   }
+
+   return typeName;
 }
 
 ROOT::DescriptorId_t ROOT::RNTupleDescriptor::FindFieldId(std::string_view fieldName) const
@@ -688,7 +720,7 @@ std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleDescriptor::CreateModel(const R
       if (field->GetTraits() & ROOT::RFieldBase::kTraitInvalidField) {
          const auto &invalid = static_cast<const RInvalidField &>(*field);
          const auto cat = invalid.GetCategory();
-         bool mustThrow = cat != RInvalidField::RCategory::kUnknownStructure;
+         bool mustThrow = cat != RInvalidField::ECategory::kUnknownStructure;
          if (mustThrow)
             throw invalid.GetError();
 
@@ -736,6 +768,11 @@ ROOT::RNTupleDescriptor ROOT::RNTupleDescriptor::CloneSchema() const
 ROOT::RNTupleDescriptor ROOT::RNTupleDescriptor::Clone() const
 {
    RNTupleDescriptor clone = CloneSchema();
+
+   clone.fVersionEpoch = fVersionEpoch;
+   clone.fVersionMajor = fVersionMajor;
+   clone.fVersionMinor = fVersionMinor;
+   clone.fVersionPatch = fVersionPatch;
 
    clone.fOnDiskHeaderSize = fOnDiskHeaderSize;
    clone.fOnDiskHeaderXxHash3 = fOnDiskHeaderXxHash3;
@@ -981,6 +1018,10 @@ ROOT::RResult<void> ROOT::Internal::RNTupleDescriptorBuilder::EnsureFieldExists(
 
 ROOT::RResult<void> ROOT::Internal::RNTupleDescriptorBuilder::EnsureValidDescriptor() const
 {
+   if (fDescriptor.fVersionEpoch != RNTuple::kVersionEpoch) {
+      return R__FAIL("unset or unsupported RNTuple epoch version");
+   }
+
    // Reuse field name validity check
    auto validName = ROOT::Internal::EnsureValidNameForRNTuple(fDescriptor.GetName(), "Field");
    if (!validName) {
@@ -1028,6 +1069,26 @@ ROOT::RNTupleDescriptor ROOT::Internal::RNTupleDescriptorBuilder::MoveDescriptor
    RNTupleDescriptor result;
    std::swap(result, fDescriptor);
    return result;
+}
+
+void ROOT::Internal::RNTupleDescriptorBuilder::SetVersion(std::uint16_t versionEpoch, std::uint16_t versionMajor,
+                                                          std::uint16_t versionMinor, std::uint16_t versionPatch)
+{
+   if (versionEpoch != RNTuple::kVersionEpoch) {
+      throw RException(R__FAIL("unsupported RNTuple epoch version: " + std::to_string(versionEpoch)));
+   }
+   fDescriptor.fVersionEpoch = versionEpoch;
+   fDescriptor.fVersionMajor = versionMajor;
+   fDescriptor.fVersionMinor = versionMinor;
+   fDescriptor.fVersionPatch = versionPatch;
+}
+
+void ROOT::Internal::RNTupleDescriptorBuilder::SetVersionForWriting()
+{
+   fDescriptor.fVersionEpoch = RNTuple::kVersionEpoch;
+   fDescriptor.fVersionMajor = RNTuple::kVersionMajor;
+   fDescriptor.fVersionMinor = RNTuple::kVersionMinor;
+   fDescriptor.fVersionPatch = RNTuple::kVersionPatch;
 }
 
 void ROOT::Internal::RNTupleDescriptorBuilder::SetNTuple(const std::string_view name,

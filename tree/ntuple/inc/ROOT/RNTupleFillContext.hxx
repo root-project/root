@@ -54,6 +54,9 @@ class RNTupleFillContext {
    friend class RNTupleParallelWriter;
 
 private:
+   /// The page sink's parallel page compression scheduler if IMT is on.
+   /// Needs to be destructed after the page sink is destructed and so declared before.
+   std::unique_ptr<ROOT::Internal::RPageStorage::RTaskScheduler> fZipTasks;
    std::unique_ptr<ROOT::Internal::RPageSink> fSink;
    /// Needs to be destructed before fSink
    std::unique_ptr<ROOT::RNTupleModel> fModel;

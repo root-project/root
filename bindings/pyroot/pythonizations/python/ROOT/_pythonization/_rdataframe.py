@@ -540,11 +540,6 @@ def _make_name_rvec_pair(key, value):
     return ROOT.std.pair["std::string", type(pyvec)](key, ROOT.std.move(pyvec))
 
 
-# For references to keep alive the NumPy arrays that are read by
-# MakeNumpyDataFrame.
-_numpy_data = {}
-
-
 def _MakeNumpyDataFrame(np_dict):
     r"""
     Make an RDataFrame from a dictionary of numpy arrays
@@ -567,23 +562,40 @@ def _MakeNumpyDataFrame(np_dict):
 
     # How we keep the NumPy arrays around as long as the RDataSource is alive:
     #
-    #  1. Cache a container with references to the NumPy arrays in a global
-    #     dictionary. Note that we use a copy of the original dict as the
-    #     container, because otherwise the caller of _MakeNumpyDataFrame can
-    #     invalidate our cache by mutating the np_dict after the call.
+    # 1. Create a new dict with references to the NumPy arrays and take
+    #    ownership of it on the C++ side (Py_INCREF). We use a copy of the
+    #    original dict, because otherwise the caller of _MakeNumpyDataFrame
+    #    can invalidate our cache by mutating the np_dict after the call.
     #
-    # 2. Together with the array data, store a deleter function to delete the
-    #    cache element in the cache itself.
-    #
-    # 3. The C++ side gets a reference to the deleter function via
-    #    std::function. Note that the C++ side can only get a non-owning
-    #    reference to the Python function, which is the reason why we have to
-    #    keep the deleter alive in the cache itself.
-    #
-    # 4. The RDataSource calls the deleter in its destructor.
+    # 2. The C++ side gets a deleter std::function, calling Py_DECREF when the
+    #    RDataSource is destroyed.
+
+    def _ensure_deleter_declared():
+        # If the function is already known to ROOT, skip declaring again
+        try:
+            ROOT.__ROOT_Internal.MakePyDeleter
+            return
+        except AttributeError:
+            pass
+
+        ROOT.gInterpreter.Declare(
+            r"""
+    #include <Python.h>
+
+    namespace __ROOT_Internal {
+
+    inline std::function<void()> MakePyDeleter(std::uintptr_t ptr) {
+        PyObject *obj = reinterpret_cast<PyObject*>(ptr);
+        Py_INCREF(obj);
+        return [obj](){ Py_DECREF(obj); };
+    }
+
+    } // namespace __ROOT_Internal
+    """
+        )
+
+    _ensure_deleter_declared()
 
     np_dict_copy = dict(**np_dict)
     key = id(np_dict_copy)
-    _numpy_data[key] = (lambda: _numpy_data.pop(key), np_dict_copy)
-    deleter = ROOT.std.function["void()"](_numpy_data[key][0])
-    return ROOT.Internal.RDF.MakeRVecDataFrame(deleter, *args)
+    return ROOT.Internal.RDF.MakeRVecDataFrame(ROOT.__ROOT_Internal.MakePyDeleter(key), *args)

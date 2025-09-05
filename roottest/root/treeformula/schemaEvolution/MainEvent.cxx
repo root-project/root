@@ -80,9 +80,9 @@
 //
 ////////////////////////////////////////////////////////////////////////
 
-#include <stdlib.h>
+#include <cstdlib>
+#include <iostream>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TFile.h"
 #include "TNetFile.h"
@@ -202,7 +202,7 @@ int main(int argc, char **argv)
      }
 
      // Create a ROOT Tree and one superbranch
-      TTree *tree = new TTree("T","An example of a ROOT tree");
+      tree = new TTree("T","An example of a ROOT tree");
       tree->SetAutoSave(1000000000);  // autosave when 1 Gbyte written
       bufsize = 64000;
       if (split)  bufsize /= 4;

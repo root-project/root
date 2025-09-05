@@ -21,8 +21,7 @@ endif()
   ROOTTEST_ADD_TEST(root_6023
                     MACRO exec_root_6023.py
                     COPY_TO_BUILDDIR root_6023.h
-                    PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ root_6023.h+
-                    ENVIRONMENT CLING_STANDARD_PCH=none)
+                    PRECMD ${ROOT_root_CMD} -b -q -l -e .L\ root_6023.h+)
 
   ROOTTEST_ADD_TEST(gh_16406
                     MACRO gh_16406.py

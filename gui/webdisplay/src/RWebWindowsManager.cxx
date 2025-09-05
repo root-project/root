@@ -800,6 +800,10 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 ///      WebGui.DarkMode: "no" (default), "yes" - switch to JSROOT dark mode and will use sap_fiori_3_dark theme
 ///
 /// THttpServer-related parameters documented in \ref CreateServer method
+///
+/// In case of using web browsers based on snap sandboxing, if you see a runtime error about unauthorized access to the system
+/// `/tmp/` folder, try callign `export TMPDIR=/home/user/` (adapt path to a real folder) before running ROOT. This workaround should
+/// no longer be needed for recognized snap-installed firefox or chrome browsers if ROOT version >= 6.38
 
 unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &user_args)
 {

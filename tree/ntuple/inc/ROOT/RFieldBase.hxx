@@ -277,6 +277,20 @@ private:
 protected:
    struct RBulkSpec;
 
+   /// Bits used in CompareOnDisk()
+   enum {
+      /// The in-memory field and the on-disk field differ in the field version
+      kDiffFieldVersion = 0x01,
+      /// The in-memory field and the on-disk field differ in the type version
+      kDiffTypeVersion = 0x02,
+      /// The in-memory field and the on-disk field differ in their structural roles
+      kDiffStructure = 0x04,
+      /// The in-memory field and the on-disk field have different type names
+      kDiffTypeName = 0x08,
+      /// The in-memory field and the on-disk field have different repetition counts
+      kDiffNRepetitions = 0x10
+   };
+
    /// Collections and classes own subfields
    std::vector<std::unique_ptr<RFieldBase>> fSubfields;
    /// Subfields point to their mother field
@@ -492,11 +506,25 @@ protected:
    /// Add a new subfield to the list of nested fields
    void Attach(std::unique_ptr<RFieldBase> child);
 
-   /// Called by ConnectPageSource() before connecting; derived classes may override this as appropriate
-   virtual void BeforeConnectPageSource(ROOT::Internal::RPageSource &) {}
+   /// Called by ConnectPageSource() before connecting; derived classes may override this as appropriate, e.g.
+   /// for the application of I/O rules. In the process, the field at hand or its subfields may be marked as
+   /// "artifical", i.e. introduced by schema evolution and not backed by on-disk information.
+   virtual void BeforeConnectPageSource(ROOT::Internal::RPageSource & /* source */) {}
 
-   /// Called by ConnectPageSource() once connected; derived classes may override this as appropriate
-   virtual void AfterConnectPageSource() {}
+   /// For non-artificial fields, check compatibility of the in-memory field and the on-disk field. In the process,
+   /// the field at hand may change its on-disk ID or perform other tasks related to automatic schema evolution.
+   /// If the on-disk field is incompatible with the in-memory field at hand, an exception is thrown.
+   virtual void ReconcileOnDiskField(const RNTupleDescriptor &desc);
+
+   /// Returns a combination of kDiff... flags, indicating peroperties that are different between the field at hand
+   /// and the given on-disk field
+   std::uint32_t CompareOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits) const;
+   /// Compares the field to the provieded on-disk field descriptor. Throws an exception if the fields don't match.
+   /// Optionally, a set of bits can be provided that should be ignored in the comparison.
+   void EnsureMatchingOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits = 0) const;
+   /// Many fields accept a range of type prefixes for schema evolution,
+   /// e.g. std::unique_ptr< and std::optional< for nullable fields
+   void EnsureMatchingTypePrefix(const RFieldDescriptor &fieldDesc, const std::vector<std::string> &prefixes) const;
 
    /// Factory method to resurrect a field from the stored on-disk type information.  This overload takes an already
    /// normalized type name and type alias.

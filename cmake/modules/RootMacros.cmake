@@ -614,31 +614,18 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   #---what rootcling command to use--------------------------
   if(ARG_STAGE1)
-    if(MSVC AND CMAKE_ROOTTEST_DICT)
-      set(command ${CMAKE_COMMAND} -E ${CMAKE_BINARY_DIR}/bin/rootcling_stage1.exe)
-    else()
-      set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}" $<TARGET_FILE:rootcling_stage1>)
-    endif()
+    set(command $<TARGET_FILE:rootcling_stage1>)
     set(ROOTCINTDEP rconfigure)
     set(pcm_name)
   else()
     if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-      if(MSVC AND CMAKE_ROOTTEST_DICT)
-        set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${CMAKE_BINARY_DIR}/bin/rootcling.exe)
-      else()
-        set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}"
-                    "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> -rootbuild)
-        # Modules need RConfigure.h copied into include/.
-        set(ROOTCINTDEP rootcling rconfigure)
-      endif()
+      set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> -rootbuild)
+      # Modules need RConfigure.h copied into include/.
+      set(ROOTCINTDEP rootcling rconfigure)
     elseif(TARGET ROOT::rootcling)
-      if(APPLE)
-        set(command ${CMAKE_COMMAND} -E env "DYLD_LIBRARY_PATH=${ROOT_LIBRARY_DIR}:$ENV{DYLD_LIBRARY_PATH}" $<TARGET_FILE:ROOT::rootcling>)
-      else()
-        set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${ROOT_LIBRARY_DIR}:$ENV{LD_LIBRARY_PATH}" $<TARGET_FILE:ROOT::rootcling>)
-      endif()
+      set(command $<TARGET_FILE:ROOT::rootcling>)
     else()
-      set(command ${CMAKE_COMMAND} -E env rootcling)
+      set(command rootcling)
     endif()
   endif()
 
@@ -918,23 +905,19 @@ function(ROOT_LINKER_LIBRARY library)
   if(ARG_TEST) # we are building a test, so add EXCLUDE_FROM_ALL
     set(_all EXCLUDE_FROM_ALL)
   endif()
-  set(library_name ${library})
   if(TARGET ${library})
     message(FATAL_ERROR "Target ${library} already exists.")
   endif()
   if(WIN32 AND ARG_TYPE STREQUAL SHARED AND NOT ARG_DLLEXPORT)
-    if(MSVC)
-      set(library_name ${libprefix}${library})
-    endif()
     #---create a shared library with the .def file------------------------
     add_library(${library} ${_all} SHARED ${lib_srcs})
-    set_target_properties(${library} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   else()
     add_library( ${library} ${_all} ${ARG_TYPE} ${lib_srcs})
     if(ARG_TYPE STREQUAL SHARED)
       set_target_properties(${library} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
     endif()
   endif()
+  set_target_properties(${library} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
   if(DEFINED CMAKE_CXX_STANDARD)
     target_compile_features(${library} INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
@@ -958,7 +941,10 @@ function(ROOT_LINKER_LIBRARY library)
     endif()
   endif()
 
-  set_target_properties(${library} PROPERTIES OUTPUT_NAME ${library_name})
+  set_target_properties(${library} PROPERTIES
+      PREFIX ${libprefix}
+      IMPORT_PREFIX ${libprefix} # affects the .lib import library (MSVC)
+  )
   target_include_directories(${library} INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
   # Do not add -Dname_EXPORTS to the command-line when building files in this
   # target. Doing so is actively harmful for the modules build because it
@@ -994,6 +980,9 @@ function(ROOT_LINKER_LIBRARY library)
                     DESTINATION ${CMAKE_INSTALL_BINDIR}
                     COMPONENT libraries)
     endif()
+  else()
+    # If the target is not installed, it doesn't make sense to build it with the INSTALL_RPATH
+    set_property(TARGET ${library} PROPERTY BUILD_WITH_INSTALL_RPATH OFF)
   endif()
 endfunction()
 
@@ -1053,9 +1042,7 @@ function(ROOT_OBJECT_LIBRARY library)
   # creates extra module variants, and not useful because we don't use these
   # macros.
   set_target_properties(${library} PROPERTIES DEFINE_SYMBOL "")
-  if(WIN32)
-    set_target_properties(${library} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-  endif()
+  set_target_properties(${library} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
   if(ARG_BUILTINS)
     foreach(arg1 ${ARG_BUILTINS})
@@ -1442,6 +1429,14 @@ function(ROOT_EXECUTABLE executable)
   if(NOT ARG_NOINSTALL AND CMAKE_RUNTIME_OUTPUT_DIRECTORY)
     if(NOT MSVC)
       ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH(${executable} ${CMAKE_INSTALL_BINDIR})
+
+      # The rootcling executable needs to run during build, so even if
+      # CMAKE_BUILD_WITH_INSTALL_RPATH=ON was specified at config time, we have to
+      # override it. Otherwise, the RPATH of rootcling inside the build tree is wrong
+      # if the install tree doesn't mirror the build tree (e.g. for gnuinstall=ON).
+      # All the other executables need the correct path in the build tree too, for testing.
+      set_property(TARGET ${executable} PROPERTY BUILD_WITH_INSTALL_RPATH OFF)
+
     endif()
     if(ARG_CMAKENOEXPORT)
       install(TARGETS ${executable} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
@@ -1454,6 +1449,9 @@ function(ROOT_EXECUTABLE executable)
               DESTINATION ${CMAKE_INSTALL_BINDIR}
               COMPONENT applications)
     endif()
+  else()
+    # If the target is not installed, it doesn't make sense to build it with the INSTALL_RPATH
+    set_property(TARGET ${executable} PROPERTY BUILD_WITH_INSTALL_RPATH OFF)
   endif()
 endfunction()
 
@@ -1860,7 +1858,8 @@ endfunction()
 # ROOT_ADD_TEST_SUBDIRECTORY( <name> )
 #----------------------------------------------------------------------------
 function(ROOT_ADD_TEST_SUBDIRECTORY subdir)
-  file(RELATIVE_PATH subdir ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/${subdir})
+  set(fullsubdir ${CMAKE_CURRENT_SOURCE_DIR}/${subdir})
+  cmake_path(RELATIVE_PATH fullsubdir BASE_DIRECTORY ${CMAKE_SOURCE_DIR} OUTPUT_VARIABLE subdir)
   set_property(GLOBAL APPEND PROPERTY ROOT_TEST_SUBDIRS ${subdir})
 endfunction()
 
@@ -1874,7 +1873,7 @@ function(ROOT_ADD_PYUNITTESTS name)
   else()
     set(ROOT_ENV ROOTSYS=${ROOTSYS}
         PATH=${ROOTSYS}/bin:$ENV{PATH}
-        LD_LIBRARY_PATH=${ROOTSYS}/lib:$ENV{LD_LIBRARY_PATH}
+        ${ld_library_path}=${ROOTSYS}/lib:$ENV{${ld_library_path}}
         PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
   endif()
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
@@ -1900,7 +1899,7 @@ function(ROOT_ADD_PYUNITTEST name file)
   else()
     set(ROOT_ENV ROOTSYS=${ROOTSYS}
         PATH=${ROOTSYS}/bin:$ENV{PATH}
-        LD_LIBRARY_PATH=${ROOTSYS}/lib:$ENV{LD_LIBRARY_PATH}
+        ${ld_library_path}=${ROOTSYS}/lib:$ENV{${ld_library_path}}
         PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
   endif()
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
@@ -2091,7 +2090,7 @@ endfunction()
 #   install_dir  - The install subdirectory relative to CMAKE_INSTALL_PREFIX
 #----------------------------------------------------------------------------
 function(ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH target install_dir)
-  file(RELATIVE_PATH to_libdir "${CMAKE_INSTALL_PREFIX}/${install_dir}" "${CMAKE_INSTALL_FULL_LIBDIR}")
+  cmake_path(RELATIVE_PATH CMAKE_INSTALL_FULL_LIBDIR BASE_DIRECTORY "${CMAKE_INSTALL_PREFIX}/${install_dir}" OUTPUT_VARIABLE to_libdir)
 
   # New path
   if(APPLE)
@@ -2441,6 +2440,7 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   set(targetname_libgen ${dictname}libgen)
 
   add_library(${targetname_libgen} EXCLUDE_FROM_ALL SHARED ${dictname}.cxx)
+  set_property(TARGET ${executable} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
 
   if(ARG_SOURCES)
     target_sources(${targetname_libgen} PUBLIC ${ARG_SOURCES})
@@ -2451,9 +2451,7 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   endif()
 
   set_target_properties(${targetname_libgen} PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
-  if(MSVC)
-    set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-  endif()
+  set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
   target_link_libraries(${targetname_libgen} ${ROOT_LIBRARIES})
 
@@ -2553,9 +2551,8 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
 
   add_library(${targetname_libgen} EXCLUDE_FROM_ALL SHARED ${dictionary}.cxx)
   set_target_properties(${targetname_libgen} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
-  if(MSVC)
-    set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-  endif()
+  set_property(TARGET ${executable} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
+  set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 
   if(ARG_LIBNAME)
     set_target_properties(${targetname_libgen} PROPERTIES PREFIX "")
@@ -2641,6 +2638,7 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
 
   add_executable(${executable} EXCLUDE_FROM_ALL ${ARG_UNPARSED_ARGUMENTS})
   set_target_properties(${executable} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  set_property(TARGET ${executable} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
 
   set_property(TARGET ${executable}
                APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR})
@@ -2784,7 +2782,7 @@ macro(ROOTTEST_SETUP_MACROTEST)
   set(root_buildcmd ${ROOT_root_CMD} ${RootExeDefines} -q -l -b)
 
   # Compile macro, then add to CTest.
-  if(ARG_MACRO MATCHES "[.]C\\+" OR ARG_MACRO MATCHES "[.]cxx\\+")
+  if(ARG_MACRO MATCHES "[.]C\\+" OR ARG_MACRO MATCHES "[.]cxx\\+" OR ARG_MACRO MATCHES "[.]cpp\\+" OR ARG_MACRO MATCHES "[.]cc\\+")
     string(REPLACE "+" "" compile_name "${ARG_MACRO}")
     get_filename_component(realfp ${compile_name} REALPATH)
 
@@ -2795,7 +2793,7 @@ macro(ROOTTEST_SETUP_MACROTEST)
     endif()
 
   # Add interpreted macro to CTest.
-  elseif(ARG_MACRO MATCHES "[.]C" OR ARG_MACRO MATCHES "[.]cxx")
+  elseif(ARG_MACRO MATCHES "[.]C" OR ARG_MACRO MATCHES "[.]cxx" OR ARG_MACRO MATCHES "[.]cpp" OR ARG_MACRO MATCHES "[.]cc")
     get_filename_component(realfp ${ARG_MACRO} REALPATH)
     if(DEFINED ARG_MACROARG)
       set(realfp "${realfp}(${ARG_MACROARG})")
@@ -2883,7 +2881,7 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 #
 #-------------------------------------------------------------------------------
 function(ROOTTEST_ADD_TEST testname)
-  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;RUN_SERIAL"
+  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;RUN_SERIAL;STOREOUT"
                             "OUTREF;ERRREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR;INPUT;ENABLE_IF;DISABLE_IF;TIMEOUT;RESOURCE_LOCK"
                             "TESTOWNER;COPY_TO_BUILDDIR;MACRO;ROOTEXE_OPTS;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS;ENVIRONMENT;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED;PROPERTIES;PYTHON_DEPS"
                             ${ARGN})
@@ -2938,6 +2936,10 @@ function(ROOTTEST_ADD_TEST testname)
       set(checkstdout CHECKOUT)
       set(checkstderr CHECKERR)
     endif()
+  endif()
+  if(ARG_STOREOUT)
+    set(checkstdout CHECKOUT)
+    set(checkstderr CHECKERR)
   endif()
 
   # Reference output given?
@@ -3055,7 +3057,7 @@ function(ROOTTEST_ADD_TEST testname)
         string(REPLACE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} fpath ${fpath})
         string(REPLACE ${fext} "" fpath ${fpath})
         string(REPLACE "." "" fext ${fext})
-        file(TO_NATIVE_PATH "${fpath}" fpath)
+        cmake_path(CONVERT "${fpath}" TO_NATIVE_PATH_LIST fpath)
         set(postcmd POSTCMD cmd /c if exist ${fpath}_${fext}.rootmap del ${fpath}_${fext}.rootmap)
       endif()
     endif()
@@ -3274,6 +3276,7 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
 
   add_executable(${binary} ${unittests_SRC})
   target_link_libraries(${binary} PRIVATE GTest::gtest GTest::gtest_main ${libraries})
+  set_property(TARGET ${binary} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
 
   if(MSVC AND DEFINED ROOT_SOURCE_DIR)
     if(TARGET ROOTStaticSanitizerConfig)
@@ -3429,3 +3432,26 @@ function(ROOTTEST_LINKER_LIBRARY library)
                                            ${CMAKE_CURRENT_BINARY_DIR}/lib${library}.lib)
    endif()
 endfunction()
+
+#---------------------------------------------------------------------------------------------------
+# ROOT_GET_CLANG_LIBRARIES( clang_libraries )
+#
+# this function is used to collect the required libraries when building ROOT with external
+# LLVM & Clang, like in Conda for example.
+#---------------------------------------------------------------------------------------------------
+function (ROOT_GET_CLANG_LIBRARIES clang_libraries)
+  set(found_libraries "")
+  FILE(GLOB clangLibs ${LLVM_LIBRARY_DIR}/clang*.lib)
+  foreach(lib_path IN LISTS clangLibs)
+    get_filename_component(lib_name ${lib_path} NAME)
+    if (NOT ${lib_name} IN_LIST found_libraries)
+      list(APPEND found_libraries ${lib_name})
+    endif()
+  endforeach(lib_path)
+  foreach(extra_lib "LLVMFrontendDriver.lib" "LLVMFrontendHLSL.lib" "Version.lib")
+    if (NOT ${extra_lib} IN_LIST found_libraries)
+      list(APPEND found_libraries ${extra_lib})
+    endif()
+  endforeach(extra_lib)
+  SET(${clang_libraries} "${found_libraries}" PARENT_SCOPE)
+endfunction(ROOT_GET_CLANG_LIBRARIES)

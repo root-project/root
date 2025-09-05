@@ -28,7 +28,5 @@ builtin_zstd=ON
 cocoa=ON
 fortran=OFF
 minuit2_omp=OFF
-test_distrdf_dask=ON
-test_distrdf_pyspark=ON
 tmva-sofie=ON
 x11=OFF

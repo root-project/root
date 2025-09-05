@@ -51,8 +51,8 @@ TF12::TF12()
 /// for a fix value of Y if option="X" or X if option="Y"
 /// This value may be changed at any time via TF12::SetXY(xy)
 
-TF12::TF12(const char *name, TF2 *f2, Double_t xy, Option_t *option)
-      :TF1(name,"x",0,0)
+TF12::TF12(const char *name, TF2 *f2, Double_t xy, Option_t *option, EAddToList addToGlobList)
+      :TF1(name, "x", 0, 0, addToGlobList)
 {
    SetName(name);
    fF2 = f2;

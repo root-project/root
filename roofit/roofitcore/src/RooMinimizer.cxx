@@ -47,6 +47,8 @@ automatic PDF optimization.
 #include "RooRealVar.h"
 #include "RooSentinel.h"
 #include "RooMsgService.h"
+#include "RooCategory.h"
+#include "RooMultiPdf.h"
 #include "RooPlot.h"
 #include "RooHelpers.h"
 #include "RooMinimizerFcn.h"
@@ -92,6 +94,31 @@ private:
    RooMinimizer const *_minimizer = nullptr;
    RooArgSet _frozen;
 };
+
+std::vector<std::vector<int>> generateOrthogonalCombinations(const std::vector<int> &maxValues)
+{
+   std::vector<std::vector<int>> combos;
+   std::vector<int> base(maxValues.size(), 0);
+   combos.push_back(base);
+   for (size_t i = 0; i < maxValues.size(); ++i) {
+      for (int v = 1; v < maxValues[i]; ++v) {
+         std::vector<int> tmp = base;
+         tmp[i] = v;
+         combos.push_back(tmp);
+      }
+   }
+   return combos;
+}
+
+void reorderCombinations(std::vector<std::vector<int>> &combos, const std::vector<int> &max,
+                         const std::vector<int> &base)
+{
+   for (auto &combo : combos) {
+      for (size_t i = 0; i < combo.size(); ++i) {
+         combo[i] = (combo[i] + base[i]) % max[i];
+      }
+   }
+}
 
 } // namespace
 
@@ -305,7 +332,6 @@ void RooMinimizer::determineStatus(bool fitterReturnValue)
 /// \param[in] alg  Fit algorithm to use. (Optional)
 int RooMinimizer::minimize(const char *type, const char *alg)
 {
-   FreezeDisconnectedParametersRAII freeze(this, *_fcn);
 
    if (_cfg.timingAnalysis) {
 #ifdef ROOFIT_MULTIPROCESS
@@ -536,9 +562,9 @@ RooFit::OwningPtr<RooFitResult> RooMinimizer::save(const char *userName, const c
       return nullptr;
    }
 
-   TString name = userName ? userName : Form("%s", _fcn->getFunctionName().c_str());
-   TString title = userTitle ? userTitle : Form("%s", _fcn->getFunctionTitle().c_str());
-   auto fitRes = std::make_unique<RooFitResult>(name, title);
+   std::string name = userName ? std::string{userName} : _fcn->getFunctionName();
+   std::string title = userTitle ? std::string{userTitle} : _fcn->getFunctionTitle();
+   auto fitRes = std::make_unique<RooFitResult>(name.c_str(), title.c_str());
 
    fitRes->setConstParList(_fcn->constParams());
 
@@ -682,7 +708,9 @@ RooPlot *RooMinimizer::contour(RooRealVar &var1, RooRealVar &var2, double n1, do
             ycoor[npoints] = ycoor[0];
             TGraph *graph = new TGraph(npoints + 1, xcoor.data(), ycoor.data());
 
-            graph->SetName(Form("contour_%s_n%f", _fcn->getFunctionName().c_str(), n[ic]));
+            std::stringstream name;
+            name << "contour_" << _fcn->getFunctionName() << "_n" << n[ic];
+            graph->SetName(name.str().c_str());
             graph->SetLineStyle(ic + 1);
             graph->SetLineWidth(2);
             graph->SetLineColor(kBlue);
@@ -749,6 +777,7 @@ void RooMinimizer::profileStop()
 
 ROOT::Math::IMultiGenFunction *RooMinimizer::getMultiGenFcn() const
 {
+
    return _fcn->getMultiGenFcn();
 }
 
@@ -879,32 +908,142 @@ bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
 {
    // fit a user provided FCN function
    // create fit parameter settings
+
+   // Check number of parameters
    unsigned int npar = fcn.NDim();
    if (npar == 0) {
       coutE(Minimization) << "RooMinimizer::fitFCN(): FCN function has zero parameters" << std::endl;
       return false;
    }
 
-   // init the minimizer
+   // initiate the minimizer
    initMinimizer();
-   // perform the minimization
 
-   // perform the minimization (assume we have already initialized the minimizer)
+   // Identify floating RooCategory parameters
+   RooArgSet floatingCats;
+   for (auto arg : _fcn->allParams()) {
+      if (arg->isCategory() && !arg->isConstant())
+         floatingCats.add(*arg);
+   }
 
-   bool isValid = _minimizer->Minimize();
+   std::vector<RooCategory *> pdfIndices;
+   for (auto *arg : floatingCats) {
+      if (auto *cat = dynamic_cast<RooCategory *>(arg))
+         pdfIndices.push_back(cat);
+   }
+
+   const size_t nPdfs = pdfIndices.size();
+
+   // Identify floating continuous parameters (RooRealVar)
+   RooArgSet floatReals;
+   for (auto arg : _fcn->allParams()) {
+      if (!arg->isCategory() && !arg->isConstant())
+         floatReals.add(*arg);
+   }
+
+   if (nPdfs == 0) {
+      coutI(Minimization) << "[fitFCN] No discrete parameters, performing continuous minimization only" << std::endl;
+      FreezeDisconnectedParametersRAII freeze(this, *_fcn);
+      bool isValid = _minimizer->Minimize();
+      if (!_result)
+         _result = std::make_unique<FitResult>();
+      fillResult(isValid);
+      if (isValid)
+         updateFitConfig();
+      return isValid;
+   }
+
+   // set also new parameter values and errors in FitConfig
+   // Prepare discrete indices
+   std::vector<int> maxIndices;
+   for (auto *cat : pdfIndices)
+      maxIndices.push_back(cat->size());
+
+   std::set<std::vector<int>> tried;
+   std::map<std::vector<int>, double> nllMap;
+   std::vector<int> bestIndices(nPdfs, 0);
+   double bestNLL = 1e30;
+
+   bool improved = true;
+   while (improved) {
+      improved = false;
+      auto combos = generateOrthogonalCombinations(maxIndices);
+      reorderCombinations(combos, maxIndices, bestIndices);
+
+      for (const auto &combo : combos) {
+         if (tried.count(combo))
+            continue;
+
+         for (size_t i = 0; i < nPdfs; ++i)
+            pdfIndices[i]->setIndex(combo[i]);
+
+         // Freeze categories during continuous minimization
+         std::vector<bool> wasConst(nPdfs);
+         for (size_t i = 0; i < nPdfs; ++i) {
+            wasConst[i] = pdfIndices[i]->isConstant();
+            pdfIndices[i]->setConstant(true);
+         }
+         FreezeDisconnectedParametersRAII freeze(this, *_fcn);
+         _minimizer->Minimize();
+
+         for (size_t i = 0; i < nPdfs; ++i)
+            pdfIndices[i]->setConstant(wasConst[i]);
+
+         double val = _minimizer->MinValue();
+         tried.insert(combo);
+         nllMap[combo] = val;
+
+         if (val < bestNLL) {
+            bestNLL = val;
+            bestIndices = combo;
+            improved = true;
+         }
+      }
+   }
+
+   for (size_t i = 0; i < nPdfs; ++i) {
+      pdfIndices[i]->setIndex(bestIndices[i]);
+      pdfIndices[i]->setConstant(true);
+   }
+
+   FreezeDisconnectedParametersRAII freeze(this, *_fcn);
+   _minimizer->Minimize();
+
+   coutI(Minimization) << "All NLL Values per Combination:" << std::endl;
+   for (const auto &entry : nllMap) {
+      const auto &combo = entry.first;
+      double val = entry.second;
+
+      std::stringstream ss;
+      ss << "Combo: [";
+      for (size_t i = 0; i < combo.size(); ++i) {
+         ss << combo[i];
+         if (i + 1 < combo.size())
+            ss << ", ";
+      }
+      ss << "], NLL: " << val;
+
+      coutI(Minimization) << ss.str() << std::endl;
+   }
+
+   std::stringstream ssBest;
+   ssBest << "DP Best Indices: [";
+   for (size_t i = 0; i < bestIndices.size(); ++i) {
+      ssBest << bestIndices[i];
+      if (i + 1 < bestIndices.size())
+         ssBest << ", ";
+   }
+   ssBest << "], NLL = " << bestNLL;
+
+   coutI(Minimization) << ssBest.str() << std::endl;
 
    if (!_result)
       _result = std::make_unique<FitResult>();
+   fillResult(true);
+   updateFitConfig();
 
-   fillResult(isValid);
-
-   // set also new parameter values and errors in FitConfig
-   if (isValid)
-      updateFitConfig();
-
-   return isValid;
+   return true;
 }
-
 bool RooMinimizer::calculateHessErrors()
 {
    // compute the Hesse errors according to configuration

@@ -1,7 +1,3 @@
-# disable tests which are failing on Windows because of their PATH being too long
-# (>260 characters) when run in the CI (Jenkins)
-if(NOT MSVC OR NOT DEFINED ENV{JENKINS_HOME} OR win_broken_tests)
-
 ROOTTEST_ADD_TESTDIRS()
 
 # ------------------------------------------------------------------------------
@@ -25,7 +21,7 @@ ROOTTEST_ADD_TEST(customStreamer
 #   generated streamer
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(noStreamer_false_rflx foo.h SELECTION noStreamer_false_selection.xml)
 
-file(TO_NATIVE_PATH "${CMAKE_CURRENT_BINARY_DIR}/noStreamer_false_rflx.cxx" NOSTREAMER_FALSE_RFLX)
+cmake_path(CONVERT "${CMAKE_CURRENT_BINARY_DIR}/noStreamer_false_rflx.cxx" TO_NATIVE_PATH_LIST NOSTREAMER_FALSE_RFLX)
 ROOTTEST_ADD_TEST(noStreamerFalseDict
                   COMMAND ${grep_cmd} "void Foo::Streamer(TBuffer &R__b)" ${NOSTREAMER_FALSE_RFLX}
                   WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
@@ -46,5 +42,3 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(noInputOperator_rflx foo_custom_input_operat
 
 #   noInputOperator = false
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(noInputOperator_false_rflx foo_custom_input_operator.h SELECTION noInputOperator_false_selection.xml NO_ROOTMAP)
-
-endif()

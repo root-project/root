@@ -12,6 +12,7 @@
 #include "rootclingCommandLineOptionsHelp.h"
 
 #include "RConfigure.h"
+#include "RConversionRuleParser.h"
 #include <ROOT/RConfig.hxx>
 #include <ROOT/FoundationUtils.hxx>
 #include "snprintf.h"

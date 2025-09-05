@@ -12,19 +12,6 @@ if(WIN32)
   cmake_policy(SET CMP0091 OLD)
   set(CMAKE_SKIP_TEST_ALL_DEPENDENCY TRUE)
 endif()
-if(APPLE AND (NOT CMAKE_OSX_SYSROOT OR CMAKE_OSX_SYSROOT STREQUAL ""))
-  # The SYSROOT *must* be set before the project() call
-  execute_process(COMMAND xcrun --sdk macosx --show-sdk-path
-    OUTPUT_VARIABLE SDK_PATH
-    ERROR_QUIET
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-  if(NOT EXISTS "${SDK_PATH}")
-    message(FATAL_ERROR "Could not detect macOS SDK path")
-  endif()
-
-  set(CMAKE_OSX_SYSROOT "${SDK_PATH}" CACHE PATH "SDK path" FORCE)
-endif()
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT ALLOW_IN_SOURCE)
   message(FATAL_ERROR
@@ -125,6 +112,14 @@ include(RootBuildOptions)
 include(RootMacros)
 include(CheckAssembler)
 include(CheckIntrinsics)
+
+#---Enable testing------------------------------------------------------------------------------
+if(testing)
+  enable_testing()
+endif()
+
+#---Here we look for installed software and switch on and off the different build options-------
+include(SearchInstalledSoftware)
 
 # relatedrepo_GetClosestMatch(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
 #                             FETCHURL_VARIABLE <output_url> FETCHREF_VARIABLE <output_ref>)
@@ -298,15 +293,6 @@ if(asan)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ASAN_EXTRA_EXE_LINKER_FLAGS}")
 endif()
 
-#---Enable CTest package -----------------------------------------------------------------------
-#include(CTest)
-if(testing)
-  enable_testing()
-endif()
-
-#---Here we look for installed software and switch on and of the different build options--------
-include(SearchInstalledSoftware)
-
 #---Here we add tcmalloc to the linker flags if needed------------------------------------------
 if (TCMALLOC_FOUND)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc -L${TCMALLOC_LIBRARY_PATH}")
@@ -381,9 +367,14 @@ add_custom_target(move_artifacts DEPENDS ${stamp_file} ${all_artifacts})
 add_subdirectory (interpreter)
 
 # Update etc/gitinfo.txt for every build.
+find_package(Git)
 add_custom_target(gitinfotxt
   ALL
-  COMMAND ${CMAKE_COMMAND} -DSRCDIR=${CMAKE_SOURCE_DIR} -DBINDIR=${CMAKE_BINARY_DIR} -P ${CMAKE_SOURCE_DIR}/cmake/modules/UpdateGitInfo.cmake
+  COMMAND ${CMAKE_COMMAND}
+          -DSRCDIR=${CMAKE_SOURCE_DIR} -DBINDIR=${CMAKE_BINARY_DIR}
+          # Forward git executable info so that the script doesn't have to find it again
+          -DGit_FOUND=${Git_FOUND} -DGIT_EXECUTABLE=${GIT_EXECUTABLE}
+          -P ${CMAKE_SOURCE_DIR}/cmake/modules/UpdateGitInfo.cmake
   COMMENT "Updating etc/gitinfo.txt."
   BYPRODUCTS ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
 )
@@ -419,7 +410,6 @@ if(roofit)
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
-ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 
 # Each subdirectory added above will register headers to be copied to the build tree.
 # Here, the copy targets are created:
@@ -435,8 +425,8 @@ if(MSVC)
 else()
   set(_os_cat "cat")
 endif()
-file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" _from_native)
-file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" _to_native)
+cmake_path(CONVERT "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" TO_NATIVE_PATH_LIST _from_native)
+cmake_path(CONVERT "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" TO_NATIVE_PATH_LIST _to_native)
 
 add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/ROOT.modulemap")
 add_custom_command(
@@ -568,6 +558,8 @@ if(runtime_cxxmodules)
   set_property(TARGET modules_idx PROPERTY modules_idx_file ${library_output_dir}/modules.idx)
   set_directory_properties(PROPERTIES ADDITIONAL_CLEAN_FILES "${library_output_dir}/modules.timestamp")
 endif()
+
+ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
 add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)

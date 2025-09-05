@@ -1970,12 +1970,14 @@ void RooAbsArg::graphVizTree(std::ostream &os, const char *delimiter, bool useTi
       std::string typeFormat = "\\texttt{";
       std::string nodeType = (useLatex) ? typeFormat + node->ClassName() + "}" : node->ClassName();
 
+      os << "\"" << nodeName << "\" [ color=" << (node->isFundamental() ? "blue" : "red") << ", label=\"" << nodeType
+         << delimiter << nodeLabel;
+
       if (auto realNode = dynamic_cast<RooAbsReal *>(node)) {
-         nodeLabel += delimiter + std::to_string(realNode->getVal());
+         os << delimiter << realNode->getVal();
       }
 
-      os << "\"" << nodeName << "\" [ color=" << (node->isFundamental() ? "blue" : "red") << ", label=\"" << nodeType
-         << delimiter << nodeLabel << "\"];" << std::endl;
+      os << "\"];" << std::endl;
    }
 
    // Get set of all server links

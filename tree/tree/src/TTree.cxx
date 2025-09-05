@@ -93,7 +93,7 @@ It is strongly recommended to persistify those as objects rather than lists of l
   assumed of type F by default. The list of currently supported
   types is given below:
    - `C` : a character string terminated by the 0 character
-   - `B` : an 8 bit signed integer (`Char_t`); Treated as a character when in an array.
+   - `B` : an 8 bit integer (`Char_t`); Mostly signed, might be unsigned in special platforms or depending on compiler flags, thus do not use std::int8_t as underlying variable since they are not equivalent; Treated as a character when in an array.
    - `b` : an 8 bit unsigned integer (`UChar_t`)
    - `S` : a 16 bit signed integer (`Short_t`)
    - `s` : a 16 bit unsigned integer (`UShort_t`)
@@ -173,7 +173,7 @@ It is strongly recommended to persistify those as objects rather than lists of l
 ## Adding a column holding STL collection instances (e.g. std::vector or std::list)
 
 ~~~ {.cpp}
-    auto branch = tree.Branch( branchname, STLcollection, buffsize, splitlevel);
+    auto branch = tree.Branch( branchname, STLcollection, bufsize, splitlevel);
 ~~~
 `STLcollection` is the address of a pointer to a container of the standard
 library such as `std::vector`, `std::list`, containing pointers, fundamental types
@@ -1971,7 +1971,7 @@ Int_t TTree::Branch(const char* foldername, Int_t bufsize /* = 32000 */, Int_t s
 ///      variable. If the first variable does not have a type, it is assumed
 ///      of type F by default. The list of currently supported types is given below:
 ///         - `C` : a character string terminated by the 0 character
-///         - `B` : an 8 bit signed integer (`Char_t`); Treated as a character when in an array.
+///         - `B` : an 8 bit integer (`Char_t`); Mostly signed, might be unsigned in special platforms or depending on compiler flags, thus do not use std::int8_t as underlying variable since they are not equivalent; Treated as a character when in an array.
 ///         - `b` : an 8 bit unsigned integer (`UChar_t`)
 ///         - `S` : a 16 bit signed integer (`Short_t`)
 ///         - `s` : a 16 bit unsigned integer (`UShort_t`)
@@ -2666,9 +2666,9 @@ void TTree::Browse(TBrowser* b)
 /// assigned to the TTree via the TTree::SetTreeIndex() method.
 /// \see TTree::SetTreeIndex()
 
-Int_t TTree::BuildIndex(const char* majorname, const char* minorname /* = "0" */)
+Int_t TTree::BuildIndex(const char* majorname, const char* minorname /* = "0" */, bool long64major, bool long64minor)
 {
-   fTreeIndex = GetPlayer()->BuildIndex(this, majorname, minorname);
+   fTreeIndex = GetPlayer()->BuildIndex(this, majorname, minorname, long64major, long64minor);
    if (fTreeIndex->IsZombie()) {
       delete fTreeIndex;
       fTreeIndex = nullptr;
@@ -4852,7 +4852,7 @@ static TBranch *R__FindBranchHelper(TObjArray *list, const char *branchname) {
 
       const char *name = where->GetName();
       UInt_t len = strlen(name);
-      if (len && name[len-1]==']') {
+      if (len && name[len - 1] == ']' && (brlen == 0 || branchname[brlen - 1] != ']')) {
          const  char *dim = strchr(name,'[');
          if (dim) {
             len = dim - name;
@@ -4887,6 +4887,7 @@ static TBranch *R__FindBranchHelper(TObjArray *list, const char *branchname) {
 /// Return the branch that correspond to the path 'branchname', which can
 /// include the name of the tree or the omitted name of the parent branches.
 /// In case of ambiguity, returns the first match.
+/// \sa TTree::GetBranch
 
 TBranch* TTree::FindBranch(const char* branchname)
 {
@@ -4961,7 +4962,7 @@ TBranch* TTree::FindBranch(const char* branchname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find leaf..
+/// Find first leaf containing searchname.
 
 TLeaf* TTree::FindLeaf(const char* searchname)
 {
@@ -5426,6 +5427,7 @@ TBranch *TTree::GetBranchFromFriends(const char *branchName)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to the branch with the given name in this tree or its friends.
 /// The search is done breadth first.
+/// \sa TTree::FindBranch
 
 TBranch *TTree::GetBranch(const char *name)
 {
@@ -8522,9 +8524,9 @@ void TTree::SetAutoSave(Long64_t autos)
 /// - if bname="xxx*", apply to all branches with name starting with xxx
 ///
 /// see TRegexp for wildcarding options
-/// buffsize = branc basket size
+/// bufsize = branch basket size
 
-void TTree::SetBasketSize(const char* bname, Int_t buffsize)
+void TTree::SetBasketSize(const char* bname, Int_t bufsize)
 {
    Int_t nleaves = fLeaves.GetEntriesFast();
    TRegexp re(bname, true);
@@ -8537,7 +8539,7 @@ void TTree::SetBasketSize(const char* bname, Int_t buffsize)
          continue;
       }
       nb++;
-      branch->SetBasketSize(buffsize);
+      branch->SetBasketSize(bufsize);
    }
    if (!nb) {
       Error("SetBasketSize", "unknown branch -> '%s'", bname);

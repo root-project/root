@@ -1,6 +1,6 @@
 #define TreeNestedVector_cxx
 
-#include "../generated_selectors/TreeNestedVector.h"
+#include "generated_selectors/TreeNestedVector.h"
 #include <TH2.h>
 #include <TStyle.h>
 

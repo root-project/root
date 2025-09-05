@@ -1,12 +1,15 @@
 /// \file
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+/// \warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
+/// Feedback is welcome!
 
 #ifndef ROOT_RVariableBinAxis
 #define ROOT_RVariableBinAxis
 
+#include "RBinIndex.hxx"
+#include "RBinIndexRange.hxx"
 #include "RLinearizedIndex.hxx"
 
+#include <cassert>
 #include <cstddef>
 #include <stdexcept>
 #include <string>
@@ -22,16 +25,16 @@ namespace Experimental {
 An axis with variable bins defined by their edges.
 
 For example, the following creates an axis with 3 log-spaced bins:
-~~~ {.cxx}
+\code
 std::vector<double> binEdges = {1, 10, 100, 1000};
 ROOT::Experimental::RVariableBinAxis axis(binEdges);
-~~~
+\endcode
 
 It is possible to disable underflow and overflow bins by passing `enableFlowBins = false`. In that case, arguments
 outside the axis will be silently discarded.
 
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is
-welcome!
+\warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
+Feedback is welcome!
 */
 class RVariableBinAxis final {
    /// The (ordered) edges of the normal bins
@@ -44,7 +47,7 @@ public:
    ///
    /// \param[in] binEdges the (ordered) edges of the normal bins, must define at least one bin (i.e. size >= 2)
    /// \param[in] enableFlowBins whether to enable underflow and overflow bins
-   RVariableBinAxis(std::vector<double> binEdges, bool enableFlowBins = true)
+   explicit RVariableBinAxis(std::vector<double> binEdges, bool enableFlowBins = true)
       : fBinEdges(std::move(binEdges)), fEnableFlowBins(enableFlowBins)
    {
       if (fBinEdges.size() < 2) {
@@ -59,8 +62,8 @@ public:
       }
    }
 
-   std::size_t GetNumNormalBins() const { return fBinEdges.size() - 1; }
-   std::size_t GetTotalNumBins() const { return fEnableFlowBins ? fBinEdges.size() + 1 : fBinEdges.size() - 1; }
+   std::size_t GetNNormalBins() const { return fBinEdges.size() - 1; }
+   std::size_t GetTotalNBins() const { return fEnableFlowBins ? fBinEdges.size() + 1 : fBinEdges.size() - 1; }
    const std::vector<double> &GetBinEdges() const { return fBinEdges; }
    bool HasFlowBins() const { return fEnableFlowBins; }
 
@@ -98,7 +101,72 @@ public:
       return {bin, true};
    }
 
-   /// ROOT Streamer function to throw when trying to store an object of this class.
+   /// Get the linearized index for an RBinIndex.
+   ///
+   /// The normal bins have indices \f$0\f$ to \f$fBinEdges.size() - 2\f$, the underflow bin has index
+   /// \f$fBinEdges.size() - 1\f$, and the overflow bin has index \f$fBinEdges.size()\f$.
+   ///
+   /// \param[in] index the RBinIndex
+   /// \return the linearized index that may be invalid
+   RLinearizedIndex GetLinearizedIndex(RBinIndex index) const
+   {
+      if (index.IsUnderflow()) {
+         return {fBinEdges.size() - 1, fEnableFlowBins};
+      } else if (index.IsOverflow()) {
+         return {fBinEdges.size(), fEnableFlowBins};
+      } else if (index.IsInvalid()) {
+         return {0, false};
+      }
+      assert(index.IsNormal());
+      std::size_t bin = index.GetIndex();
+      return {bin, bin < fBinEdges.size() - 1};
+   }
+
+   /// Get the range of all normal bins.
+   ///
+   /// \return the bin index range from the first to the last normal bin, inclusive
+   RBinIndexRange GetNormalRange() const
+   {
+      return Internal::CreateBinIndexRange(RBinIndex(0), RBinIndex(fBinEdges.size() - 1), 0);
+   }
+
+   /// Get a range of normal bins.
+   ///
+   /// \param[in] begin the begin of the bin index range (inclusive), must be normal
+   /// \param[in] end the end of the bin index range (exclusive), must be normal and >= begin
+   /// \return a bin index range \f$[begin, end)\f$
+   RBinIndexRange GetNormalRange(RBinIndex begin, RBinIndex end) const
+   {
+      if (!begin.IsNormal()) {
+         throw std::invalid_argument("begin must be a normal bin");
+      }
+      if (begin.GetIndex() >= fBinEdges.size() - 1) {
+         throw std::invalid_argument("begin must be inside the axis");
+      }
+      if (!end.IsNormal()) {
+         throw std::invalid_argument("end must be a normal bin");
+      }
+      if (end.GetIndex() > fBinEdges.size() - 1) {
+         throw std::invalid_argument("end must be inside or past the axis");
+      }
+      if (!(end >= begin)) {
+         throw std::invalid_argument("end must be >= begin");
+      }
+      return Internal::CreateBinIndexRange(begin, end, 0);
+   }
+
+   /// Get the full range of all bins.
+   ///
+   /// This includes underflow and overflow bins, if enabled.
+   ///
+   /// \return the bin index range of all bins
+   RBinIndexRange GetFullRange() const
+   {
+      return fEnableFlowBins ? Internal::CreateBinIndexRange(RBinIndex::Underflow(), RBinIndex(), fBinEdges.size() - 1)
+                             : GetNormalRange();
+   }
+
+   /// %ROOT Streamer function to throw when trying to store an object of this class.
    void Streamer(TBuffer &) { throw std::runtime_error("unable to store RVariableBinAxis"); }
 };
 

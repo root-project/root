@@ -14,7 +14,7 @@
 #include "TStopwatch.h"
 
 // matrix size
-constexpr unsigned int N = 5;
+constexpr int N = 5;
 
 bool doSelfTest = true;
 
@@ -98,7 +98,7 @@ void printMatrix<TMatrixTSym<double> >(const TMatrixTSym<double> & m ) {
 
 // generate matrices
 template<class M>
-void genMatrix(M  & m ) {
+void genMatrix(M  &m) {
    TRandom & r = *gRandom;
    // generate first diagonal elemets
    for (int i = 0; i < N; ++i) {
@@ -369,8 +369,4 @@ int testInversion(int n = 100000) {
    if (ok) std::cerr << "OK \n";
    else std::cerr << "FAILED \n";
    return (ok) ? 0 : -1;
-}
-
-int main() {
-   return testInversion();
 }

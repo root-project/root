@@ -316,3 +316,31 @@ TEST(RNTuple, TClassReadRules)
    auto viewRename = reader->GetView<NewName<OldName<int>>>("rename");
    EXPECT_EQ(42, viewRename(0).fValue.fValue);
 }
+
+// Adjusted from
+// https://root-forum.cern.ch/t/manual-schema-evolution-with-i-o-rules-and-branches-containing-vector-t/64026
+TEST(RNTuple, TClassInnerReadRule)
+{
+   FileRaii fileGuard("test_ntuple_tclassinnerreadrule.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto f = model->MakeField<std::vector<v1::ExampleMC>>("f");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      f->emplace_back(v1::ExampleMC{1.0, {2.0, 3.0, 4.0}});
+      writer->Fill();
+      f->clear();
+      writer->Fill();
+   }
+
+   auto model = RNTupleModel::Create();
+   auto f = model->MakeField<std::vector<v2::ExampleMC>>("f");
+   auto reader = RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
+   ASSERT_EQ(2u, reader->GetNEntries());
+
+   reader->LoadEntry(0);
+   ASSERT_EQ(1u, f->size());
+   EXPECT_FLOAT_EQ(4., f->at(0).fHelicity);
+   reader->LoadEntry(1);
+   EXPECT_TRUE(f->empty());
+}

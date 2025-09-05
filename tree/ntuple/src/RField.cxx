@@ -59,6 +59,20 @@ void ROOT::RCardinalityField::GenerateColumns(const ROOT::RNTupleDescriptor &des
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
+void ROOT::RCardinalityField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeVersion | kDiffStructure | kDiffTypeName);
+   if (fieldDesc.GetStructure() == ENTupleStructure::kPlain) {
+      if (fieldDesc.GetTypeName().rfind("ROOT::RNTupleCardinality<", 0) != 0) {
+         throw RException(R__FAIL("RCardinalityField " + GetQualifiedFieldName() +
+                                  " expects an on-disk leaf field of the same type"));
+      }
+   } else if (fieldDesc.GetStructure() != ENTupleStructure::kCollection) {
+      throw RException(R__FAIL("invalid on-disk structural role for RCardinalityField " + GetQualifiedFieldName()));
+   }
+}
+
 void ROOT::RCardinalityField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitCardinalityField(*this);
@@ -589,6 +603,11 @@ void ROOT::RRecordField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *t
    }
 }
 
+void ROOT::RRecordField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName | kDiffTypeVersion);
+}
+
 void ROOT::RRecordField::ConstructValue(void *where) const
 {
    for (unsigned i = 0; i < fSubfields.size(); ++i) {
@@ -634,7 +653,7 @@ void ROOT::RRecordField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) con
 //------------------------------------------------------------------------------
 
 ROOT::RBitsetField::RBitsetField(std::string_view fieldName, std::size_t N)
-   : ROOT::RFieldBase(fieldName, "std::bitset<" + std::to_string(N) + ">", ROOT::ENTupleStructure::kLeaf,
+   : ROOT::RFieldBase(fieldName, "std::bitset<" + std::to_string(N) + ">", ROOT::ENTupleStructure::kPlain,
                       false /* isSimple */, N),
      fN(N)
 {
@@ -781,6 +800,15 @@ std::size_t ROOT::RNullableField::AppendValue(const void *from)
    fNWritten++;
    fPrincipalColumn->Append(&fNWritten);
    return sizeof(ROOT::Internal::RColumnIndex) + nbytesItem;
+}
+
+void ROOT::RNullableField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   static const std::vector<std::string> prefixes = {"std::optional<", "std::unique_ptr<"};
+
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
+   EnsureMatchingTypePrefix(fieldDesc, prefixes);
 }
 
 ROOT::RNTupleLocalIndex ROOT::RNullableField::GetItemIndex(ROOT::NTupleSize_t globalIndex)
@@ -981,7 +1009,7 @@ size_t ROOT::ROptionalField::GetAlignment() const
 
 ROOT::RAtomicField::RAtomicField(std::string_view fieldName, std::string_view typeName,
                                  std::unique_ptr<RFieldBase> itemField)
-   : RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
+   : RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kPlain, false /* isSimple */)
 {
    if (itemField->GetTraits() & kTraitTriviallyConstructible)
       fTraits |= kTraitTriviallyConstructible;
@@ -994,6 +1022,15 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RAtomicField::CloneImpl(std::string_view
 {
    auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
    return std::make_unique<RAtomicField>(newName, GetTypeName(), std::move(newItemField));
+}
+
+void ROOT::RAtomicField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   static const std::vector<std::string> prefixes = {"std::atomic<"};
+
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
+   EnsureMatchingTypePrefix(fieldDesc, prefixes);
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RAtomicField::SplitValue(const RValue &value) const

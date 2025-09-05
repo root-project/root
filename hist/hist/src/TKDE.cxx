@@ -1245,9 +1245,7 @@ TF1* TKDE::GetKDEFunction(UInt_t npx, Double_t xMin , Double_t xMax) {
    TString title = "KDE "; title+= GetTitle();
    if (xMin >= xMax) { xMin = fXMin; xMax = fXMax; }
    //Do not register the TF1 to global list
-   bool previous = TF1::DefaultAddToGlobalList(kFALSE);
-   TF1 * pdf = new TF1(name.Data(), this, xMin, xMax, 0);
-   TF1::DefaultAddToGlobalList(previous);
+   TF1 * pdf = new TF1(name.Data(), this, xMin, xMax, 0, 1, TF1::EAddToList::kNo);
    if (npx > 0) pdf->SetNpx(npx);
    pdf->SetTitle(title);
    return pdf;

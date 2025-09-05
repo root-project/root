@@ -1,8 +1,8 @@
 
 Processing execWithAbort.C...
-Warning in <TClass::TClass>: no dictionary for class Event is available
-Warning in <TClass::TClass>: no dictionary for class EventHeader is available
-Warning in <TClass::TClass>: no dictionary for class Track is available
+Warning in <TClass::Init>: no dictionary for class Event is available
+Warning in <TClass::Init>: no dictionary for class EventHeader is available
+Warning in <TClass::Init>: no dictionary for class Track is available
 My option are thefirstoption
 My name is T
 tree number: 0 T1

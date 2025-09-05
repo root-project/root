@@ -105,11 +105,11 @@ public:
 
    public:
       using iterator = RIterator;
-      using iterator_category = std::forward_iterator_tag;
+      using iterator_category = std::input_iterator_tag;
       using value_type = ROOT::NTupleSize_t;
-      using difference_type = ROOT::NTupleSize_t;
-      using pointer = ROOT::NTupleSize_t *;
-      using reference = ROOT::NTupleSize_t &;
+      using difference_type = std::ptrdiff_t;
+      using pointer = const ROOT::NTupleSize_t *;
+      using reference = const ROOT::NTupleSize_t &;
 
       RIterator() = default;
       explicit RIterator(ROOT::NTupleSize_t index) : fIndex(index) {}
@@ -126,8 +126,8 @@ public:
          ++fIndex;
          return *this;
       }
-      reference operator*() { return fIndex; }
-      pointer operator->() { return &fIndex; }
+      reference operator*() const { return fIndex; }
+      pointer operator->() const { return &fIndex; }
       bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
       bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
    };
@@ -171,6 +171,21 @@ public:
    }
    ~RNTupleReader();
 
+   /// Returns the number of entries in this RNTuple.
+   /// \attention This method requires locking a mutex, therefore it can become relatively expensive to call repeatedly
+   /// (even in the absence of contention). Unless necessary, you should not call this method in the condition of a
+   /// `for` loop. Instead, either call it once and cache the result, use the faster `GetEntryRange()` or, equivalently,
+   /// use the RNTupleReader directly as an iterator.
+   ///
+   /// ~~~ {.cpp}
+   /// // BAD for performance:
+   /// for (auto i = 0u; i < reader->GetNEntries(); ++i) { ... }
+   ///
+   /// // GOOD for performance (all equivalent):
+   /// for (auto i = 0u, n = reader->GetNEntries(); i < n; ++i) { ... }
+   /// for (auto i : reader->GetEntryRange()) { ... }
+   /// for (auto i : *reader) { ... }
+   /// ~~~
    ROOT::NTupleSize_t GetNEntries() const { return fSource->GetNEntries(); }
    const ROOT::RNTupleModel &GetModel();
    std::unique_ptr<ROOT::REntry> CreateEntry();

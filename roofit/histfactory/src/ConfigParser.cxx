@@ -20,6 +20,8 @@
 #include "RooStats/HistFactory/HistFactoryException.h"
 #include "RooStats/HistFactory/Measurement.h"
 
+#include "RooFitImplHelpers.h"
+
 #include "HFMsgService.h"
 
 #include <TXMLAttr.h>
@@ -96,7 +98,7 @@ namespace {
    else {
 
      std::string param_name = param.substr(0,eql_location);
-     double param_val = atof( param.substr(eql_location+1, param.size()).c_str() );
+     double param_val = toDouble(param.substr(eql_location + 1, param.size()));
 
      std::cout << "ASIMOV - Param Name: " << param_name
           << " Param Val: " << param_val << std::endl;
@@ -370,9 +372,9 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode(TXMLNode 
       } else if (curAttrName == "Name") {
          measurement.SetName(curAttrValue.c_str());
       } else if (curAttrName == "Lumi") {
-         measurement.SetLumi(std::stof(curAttrValue));
+         measurement.SetLumi(toDouble(curAttrValue));
       } else if (curAttrName == "LumiRelErr") {
-         measurement.SetLumiRelErr(std::stof(curAttrValue));
+         measurement.SetLumiRelErr(toDouble(curAttrValue));
       } else if (curAttrName == "BinLow") {
          measurement.SetBinLow(std::stoi(curAttrValue));
       } else if (curAttrName == "BinHigh") {
@@ -423,7 +425,7 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode(TXMLNode 
                   AddSubStrings(measurement.GetConstantParams(), childText);
                }
             } else if (curParamName == "Val") {
-               double val = atof(curParam->GetValue());
+               double val = toDouble(curParam->GetValue());
                if (childText.empty()) {
                   cxcoutEHF << "Error: node: " << childName << " has no text.\n";
                   throw hf_exc();
@@ -495,7 +497,7 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode(TXMLNode 
             } else if (curAttrName == "Type") {
                type = curAttrValue;
             } else if (curAttrName == "RelativeUncertainty") {
-               rel = std::stof(curAttrValue);
+               rel = toDouble(curAttrValue);
             } else {
                cxcoutEHF << "Found tag attribute with unknown name in ConstraintTerm: " << curAttrName << "\n";
                throw hf_exc();
@@ -802,7 +804,7 @@ HistFactory::StatErrorConfig ConfigParser::CreateStatErrorConfigElement( TXMLNod
     std::string attrVal = curAttr->GetValue();
 
     if( attrName == TString( "RelErrorThreshold" ) ) {
-      config.SetRelErrorThreshold( atof(attrVal.c_str()) );
+       config.SetRelErrorThreshold(toDouble(attrVal));
     }
 
     if( attrName == TString( "ConstraintType" ) ) {
@@ -1010,13 +1012,13 @@ HistFactory::NormFactor ConfigParser::MakeNormFactor( TXMLNode* node ) {
       norm.SetName( attrVal );
     }
     else if( curAttr->GetName() == TString( "Val" ) ) {
-      norm.SetVal( atof(attrVal.c_str()) );
+       norm.SetVal(toDouble(attrVal));
     }
     else if( curAttr->GetName() == TString( "Low" ) ) {
-      norm.SetLow( atof(attrVal.c_str()) );
+       norm.SetLow(toDouble(attrVal));
     }
     else if( curAttr->GetName() == TString( "High" ) ) {
-      norm.SetHigh( atof(attrVal.c_str()) );
+       norm.SetHigh(toDouble(attrVal));
     }
 
     else {
@@ -1194,10 +1196,10 @@ HistFactory::OverallSys ConfigParser::MakeOverallSys( TXMLNode* node ) {
       overallSys.SetName( attrVal );
     }
     else if( attrName == TString( "High" ) ) {
-      overallSys.SetHigh( atof(attrVal.c_str()) );
+       overallSys.SetHigh(toDouble(attrVal));
     }
     else if( attrName == TString( "Low" ) ) {
-      overallSys.SetLow( atof(attrVal.c_str()) );
+       overallSys.SetLow(toDouble(attrVal));
     }
 
     else {

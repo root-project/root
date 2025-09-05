@@ -36,7 +36,7 @@ class R__CLING_PTRCHECK(off) RActionSnapshot final : public RActionBase {
    Helper fHelper;
 
    /// Pointer to the previous node in this branch of the computation graph
-   std::shared_ptr<PrevNode> fPrevNode;
+   std::vector<std::shared_ptr<PrevNode>> fPrevNodes;
 
    /// Column readers per slot and per input column
    std::vector<std::vector<RColumnReaderBase *>> fValues;
@@ -54,8 +54,8 @@ public:
                    const std::vector<const std::type_info *> &colTypeIDs, std::shared_ptr<PrevNode> pd,
                    const RColumnRegister &colRegister)
       : RActionBase(pd->GetLoopManagerUnchecked(), columns, colRegister, pd->GetVariations()),
-        fHelper(std::forward<Helper>(h)),
-        fPrevNode(std::move(pd)),
+        fHelper(std::move(h)),
+        fPrevNodes{std::move(pd)},
         fValues(GetNSlots()),
         fColTypeIDs(colTypeIDs)
    {
@@ -94,6 +94,8 @@ public:
 
    void *GetValue(unsigned int slot, std::size_t readerIdx, Long64_t entry)
    {
+      assert(slot < fValues.size());
+      assert(readerIdx < fValues[slot].size());
       if (auto *val = fValues[slot][readerIdx]->template TryGet<void>(entry))
          return val;
 
@@ -118,11 +120,15 @@ public:
    void Run(unsigned int slot, Long64_t entry) final
    {
       // check if entry passes all filters
-      if (fPrevNode->CheckFilters(slot, entry))
+      if (fPrevNodes.front()->CheckFilters(slot, entry))
          CallExec(slot, entry);
    }
 
-   void TriggerChildrenCount() final { fPrevNode->IncrChildrenCount(); }
+   void TriggerChildrenCount() final
+   {
+      for (auto const &node : fPrevNodes)
+         node->IncrChildrenCount();
+   }
 
    /// Clean-up operations to be performed at the end of a task.
    void FinalizeSlot(unsigned int slot) final
@@ -142,18 +148,19 @@ public:
    std::shared_ptr<GraphDrawing::GraphNode>
    GetGraph(std::unordered_map<void *, std::shared_ptr<GraphDrawing::GraphNode>> &visitedMap) final
    {
-      auto prevNode = fPrevNode->GetGraph(visitedMap);
-      const auto &prevColumns = prevNode->GetDefinedColumns();
-
       // Action nodes do not need to go through CreateFilterNode: they are never common nodes between multiple branches
       const auto nodeType = HasRun() ? GraphDrawing::ENodeType::kUsedAction : GraphDrawing::ENodeType::kAction;
       auto thisNode = std::make_shared<GraphDrawing::GraphNode>(fHelper.GetActionName(), visitedMap.size(), nodeType);
       visitedMap[(void *)this] = thisNode;
 
-      auto upmostNode = AddDefinesToGraph(thisNode, GetColRegister(), prevColumns, visitedMap);
+      for (auto const &node : fPrevNodes) {
+         auto prevNode = node->GetGraph(visitedMap);
+         const auto &prevColumns = prevNode->GetDefinedColumns();
+         auto upmostNode = AddDefinesToGraph(thisNode, GetColRegister(), prevColumns, visitedMap);
 
-      thisNode->AddDefinedColumns(GetColRegister().GenerateColumnNames());
-      upmostNode->SetPrevNode(prevNode);
+         thisNode->AddDefinedColumns(GetColRegister().GenerateColumnNames());
+         upmostNode->SetPrevNode(prevNode);
+      }
       return thisNode;
    }
 
@@ -175,8 +182,8 @@ public:
     */
    std::unique_ptr<RActionBase> CloneAction(void *newResult) final
    {
-      return std::make_unique<RActionSnapshot>(fHelper.CallMakeNew(newResult), GetColumnNames(), fColTypeIDs, fPrevNode,
-                                               GetColRegister());
+      return std::make_unique<RActionSnapshot>(fHelper.CallMakeNew(newResult), GetColumnNames(), fColTypeIDs,
+                                               fPrevNodes.front(), GetColRegister());
    }
 };
 

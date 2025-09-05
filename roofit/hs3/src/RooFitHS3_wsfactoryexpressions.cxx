@@ -36,6 +36,13 @@ auto RooFitHS3_wsfactoryexpressions = R"({
             "n"
         ]
     },
+    "chebychev_dist": {
+        "class": "RooChebychev",
+        "arguments": [
+            "x",
+            "coefficients"
+        ]
+    },
     "gamma_dist": {
         "class": "RooGamma",
         "arguments": [

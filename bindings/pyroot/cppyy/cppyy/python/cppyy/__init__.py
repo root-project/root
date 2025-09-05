@@ -56,20 +56,6 @@ import sys
 import sysconfig
 import warnings
 
-if not 'CLING_STANDARD_PCH' in os.environ:
-    def _set_pch():
-        try:
-            import cppyy_backend as cpb
-            local_pch = os.path.join(
-                    os.path.dirname(__file__), 'allDict.cxx.pch.'+str(cpb.__version__))
-            if os.path.exists(local_pch):
-                os.putenv('CLING_STANDARD_PCH', local_pch)
-                os.environ['CLING_STANDARD_PCH'] = local_pch
-        except (ImportError, AttributeError):
-            pass
-    _set_pch()
-    del _set_pch
-
 try:
     import __pypy__
     del __pypy__

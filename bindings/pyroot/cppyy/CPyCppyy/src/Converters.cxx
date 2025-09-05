@@ -1966,7 +1966,6 @@ bool CPyCppyy::name##Converter::ToMemory(                                    \
     return InstanceConverter::ToMemory(value, address, ctxt);                \
 }
 
-CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(TString, TString, Data, Length)
 CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(STLString, std::string, c_str, size)
 
 
@@ -3137,8 +3136,9 @@ bool CPyCppyy::InitializerListConverter::SetArg(
             PyObject* item = PySequence_GetItem(pyobject, i);
             bool convert_ok = false;
             if (item) {
-                Converter *converter = CreateConverter(fValueTypeName);
-                if (!converter) {
+                if (fConverters.empty())
+                    fConverters.emplace_back(CreateConverter(fValueTypeName));
+                if (!fConverters.back()) {
                     if (CPPInstance_Check(item)) {
                     // by convention, use byte copy
                         memcpy((char*)fake->_M_array + i*fValueSize,
@@ -3159,9 +3159,11 @@ bool CPyCppyy::InitializerListConverter::SetArg(
                         }
                     }
                     if (memloc) {
-                        convert_ok = converter->ToMemory(item, memloc);
+                        if (i >= fConverters.size()) {
+                            fConverters.emplace_back(CreateConverter(fValueTypeName));
+                        }
+                        convert_ok = fConverters[i]->ToMemory(item, memloc);
                     }
-                    fConverters.emplace_back(converter);
                 }
 
 
@@ -3631,9 +3633,6 @@ public:
         gf[CCOMPLEX_D " ptr"] =             gf["std::complex<double> ptr"];
 
     // factories for special cases
-        gf["TString"] =                     (cf_t)+[](cdims_t) { return new TStringConverter{}; };
-        gf["TString&"] =                    gf["TString"];
-        gf["const TString&"] =              gf["TString"];
         gf["nullptr_t"] =                   (cf_t)+[](cdims_t) { static NullptrConverter c{};        return &c;};
         gf["const char*"] =                 (cf_t)+[](cdims_t) { return new CStringConverter{}; };
         gf["const signed char*"] =          gf["const char*"];

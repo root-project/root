@@ -146,8 +146,9 @@ int execWriteCustomCollection() {
       tree->SetBranchAddress("coll",&tvp);
       tree->GetEntry(0);
       if (tvp) tvp->Print();
+      tree->Scan();
+      tree->ResetBranchAddresses(); // since tvp pointer goes out of scope
    }
-   tree->Scan();
    delete file;
 
    printf("Reading file with just a TTree\n");
@@ -158,8 +159,9 @@ int execWriteCustomCollection() {
       tree->SetBranchAddress("coll",&tvp);
       tree->GetEntry(0);
       if (tvp) tvp->Print();
+      tree->Scan();
+      tree->ResetBranchAddresses(); // since tvp pointer goes out of scope
    }
-   tree->Scan();
    delete file;
 
    return 0;

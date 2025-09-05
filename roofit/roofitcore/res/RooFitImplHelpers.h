@@ -108,4 +108,7 @@ std::string makeSliceCutString(RooArgSet const &sliceDataSet);
 } // namespace Detail
 } // namespace RooFit
 
+double toDouble(const char *s);
+double toDouble(const std::string &s);
+
 #endif

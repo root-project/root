@@ -39,9 +39,9 @@ private:
    Int_t fNshorts;   //length of STL std::vector (duplicated info)
 
 public:
-   UShortVector(){;}
+   UShortVector() {}
    UShortVector(Int_t n);
-   virtual ~UShortVector(){;}
+   virtual ~UShortVector() {}
 
    ClassDef(UShortVector,1)  //Encapsulated STL vector of UShorts
 };
@@ -62,8 +62,8 @@ public:
    Int_t  GetEvtNum() const { return fEvtNum; }
    Int_t  GetRun() const { return fRun; }
    Int_t  GetDate() const { return fDate; }
-//friend Bool_t  operator==(const EventHeader& h1, const EventHeader& h2);
-friend Bool_t  operator<=(const EventHeader& h1, const EventHeader& h2);
+   //friend Bool_t  operator==(const EventHeader& h1, const EventHeader& h2);
+   friend Bool_t  operator<=(const EventHeader& h1, const EventHeader& h2);
 
    ClassDef(EventHeader,1)  //Event Header
 };

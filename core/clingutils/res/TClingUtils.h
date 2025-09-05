@@ -12,8 +12,6 @@
 #ifndef ROOT_TMetaUtils
 #define ROOT_TMetaUtils
 
-#include "RConversionRuleParser.h"
-
 #include <functional>
 #include <set>
 #include <string>

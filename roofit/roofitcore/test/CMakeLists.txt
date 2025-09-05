@@ -60,7 +60,7 @@ ROOT_ADD_GTEST(testRooExtendedBinding testRooExtendedBinding.cxx LIBRARIES RooFi
 ROOT_ADD_GTEST(testRooHist testRooHist.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooHistPdf testRooHistPdf.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooMinimizer testRooMinimizer.cxx LIBRARIES RooFitCore RooFit)
-ROOT_ADD_GTEST(testRooMultiPdf testRooMultiPdf.cxx LIBRARIES RooFitCore RooFit)
+ROOT_ADD_GTEST(testRooMulti testRooMulti.cxx LIBRARIES RooFitCore RooFit)
 ROOT_ADD_GTEST(testRooPolyFunc testRooPolyFunc.cxx LIBRARIES Gpad RooFitCore)
 ROOT_ADD_GTEST(testRooRealL TestStatistics/testRooRealL.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooRombergIntegrator testRooRombergIntegrator.cxx LIBRARIES MathCore RooFitCore)

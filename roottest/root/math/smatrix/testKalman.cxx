@@ -554,15 +554,10 @@ int testKalman() {
 
    test_smatrix_kalman();
    test_tmatrix_kalman();
+
 #ifdef HAVE_CLHEP
    test_clhep_kalman();
 #endif
 
    return 0;
-
-
-}
-
-int main() {
-   return testKalman();
 }

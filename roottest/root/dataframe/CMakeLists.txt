@@ -4,11 +4,6 @@ endif()
 
 ROOTTEST_ADD_TESTDIRS()
 
-# Workaround (k)ubuntu bug: runtime issue when using pthread and gcc48
-if(ROOTTEST_OS_ID MATCHES Ubuntu)
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
-endif()
-
 set(DFLIBRARIES Core RIO Hist Tree MathCore TreePlayer ROOTDataFrame ROOTVecOps ROOTNTuple)
 
 # ROOT-9975

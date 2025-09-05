@@ -48,7 +48,7 @@ class TRootIOCtor;
 
 //---- types -------------------------------------------------------------------
 
-typedef char           Char_t;      ///< Signed Character 1 byte (char) \deprecated Consider replacing with `char` or `std::int8_t`
+typedef char           Char_t;      ///< Character 1 byte (char) \warning Can be signed (most common) or unsigned depending on platform and compiler flags. \deprecated Consider replacing with `char`, `signed char` or `std::int8_t`
 typedef unsigned char  UChar_t;     ///< Unsigned Character 1 byte (unsigned char) \deprecated Consider replacing with `unsigned char` or `std::uint8_t`
 typedef short          Short_t;     ///< Signed Short integer 2 bytes (short) \deprecated Consider replacing with `short` or `std::int16_t`
 typedef unsigned short UShort_t;    ///< Unsigned Short integer 2 bytes (unsigned short) \deprecated Consider replacing with `unsigned short` or `std::uint16_t`

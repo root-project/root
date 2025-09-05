@@ -44,7 +44,8 @@ or integrals to sub ranges. The range without any name is used as default range.
 #include "TTree.h"
 #include "TBuffer.h"
 #include "TBranch.h"
-#include "snprintf.h"
+
+#include <iomanip>
 
 using std::endl, std::ostream, std::istream;
 
@@ -753,63 +754,63 @@ bool RooRealVar::readFromStream(istream& is, bool compact, bool verbose)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object contents to given stream
 
-void RooRealVar::writeToStream(ostream& os, bool compact) const
+void RooRealVar::writeToStream(ostream &os, bool compact) const
 {
-  if (compact) {
-    // Write value only
-    os << getVal() ;
-  } else {
+   if (compact) {
+      // Write value only
+      os << getVal();
+      return;
+   }
 
-    // Write value with error (if not zero)
-    if (_printScientific) {
-      char fmtVal[16];
-      char fmtErr[16];
-      snprintf(fmtVal,16,"%%.%de",_printSigDigits) ;
-      snprintf(fmtErr,16,"%%.%de",(_printSigDigits+1)/2) ;
-      if (_value>=0) os << " " ;
-      os << Form(fmtVal,_value) ;
+   // Write value with error (if not zero)
+   if (_printScientific) {
+      std::stringstream text;
 
+      int nDigitsVal = _printSigDigits;
+      int nDigitsErr = (_printSigDigits + 1) / 2;
+
+      text << std::scientific;
+
+      if (_value >= 0)
+         text << " ";
+      text << std::setprecision(nDigitsVal) << _value;
+
+      text << std::setprecision(nDigitsErr) << " +/- ";
       if (hasAsymError()) {
-   os << " +/- (" << Form(fmtErr,getAsymErrorLo())
-      << ", " << Form(fmtErr,getAsymErrorHi()) << ")" ;
-      } else  if (hasError()) {
-   os << " +/- " << Form(fmtErr,getError()) ;
+         text << "(" << getAsymErrorLo() << ", " << getAsymErrorHi() << ")";
+      } else if (hasError()) {
+         text << getError();
       }
 
-      os << " " ;
-    } else {
-      os << format(_printSigDigits,"EFA") << " " ;
-    }
+      os << text.str() << " ";
+   } else {
+      os << format(_printSigDigits, "EFA") << " ";
+   }
 
-    // Append limits if not constants
-    if (isConstant()) {
-      os << "C " ;
-    }
+   // Append limits if not constants
+   if (isConstant()) {
+      os << "C ";
+   }
 
-    // Append fit limits
-    os << "L(" ;
-    if(hasMin()) {
-      os << getMin();
-    }
-    else {
-      os << "-INF";
-    }
-    if(hasMax()) {
-      os << " - " << getMax() ;
-    }
-    else {
-      os << " - +INF";
-    }
-    os << ") " ;
+   // Append fit limits
+   if (hasMin()) {
+      os << "L(" << getMin();
+   } else {
+      os << "L(-INF";
+   }
+   if (hasMax()) {
+      os << " - " << getMax() << ") ";
+   } else {
+      os << " - +INF) ";
+   }
 
-    if (getBins()!=100) {
-      os << "B(" << getBins() << ") " ;
-    }
+   if (getBins() != 100) {
+      os << "B(" << getBins() << ") ";
+   }
 
-    // Add comment with unit, if unit exists
-    if (!_unit.IsNull())
-      os << "// [" << getUnit() << "]" ;
-  }
+   // Add comment with unit, if unit exists
+   if (!_unit.IsNull())
+      os << "// [" << getUnit() << "]";
 }
 
 
@@ -1009,107 +1010,74 @@ std::string RooRealVar::format(Int_t sigDigits, const char *options) const
   }
   Int_t leadingDigitErr= (Int_t)floor(log10(std::abs(_error+1e-10)));
   Int_t whereVal= leadingDigitVal - sigDigits + 1;
-  Int_t whereErr= leadingDigitErr - sigDigits + 1;
-  char fmtVal[16];
-  char fmtErr[16];
+  Int_t whereErr = leadingDigitErr - sigDigits + 1;
 
   if (_value<0) whereVal -= 1 ;
-  snprintf(fmtVal,16,"%%.%df", whereVal < 0 ? -whereVal : 0);
-  snprintf(fmtErr,16,"%%.%df", whereErr < 0 ? -whereErr : 0);
-  std::string text;
-  if(latexMode) text += "$";
+  int nDigitsVal = whereVal < 0 ? -whereVal : 0;
+  int nDigitsErr = whereErr < 0 ? -whereErr : 0;
+
+  std::stringstream text;
+
+  if (latexMode)
+     text << "$";
   // begin the string with "<name> = " if requested
   if(showName || showTitle) {
     if (latexTableMode && latexVerbatimName) {
-      text += "\\verb+";
+       text << "\\verb+";
     }
-    text += label;
-    if (latexVerbatimName) text += "+";
+    text << label;
+    if (latexVerbatimName)
+       text << "+";
 
     if (!latexTableMode) {
-      text += " = ";
+       text << " = ";
     } else {
-      text += " $ & $ ";
+       text << " $ & $ ";
     }
   }
 
   // Add leading space if value is positive
-  if (_value>=0) text += " ";
+  if (_value >= 0)
+     text << " ";
 
   // append our value if requested
-  char buffer[256];
+  text << std::fixed;
   if(!hideValue) {
-    chopAt(_value, whereVal);
-    snprintf(buffer, 256,fmtVal, _value);
-    text += buffer;
+     text << std::setprecision(nDigitsVal) << _value;
   }
+  text << std::setprecision(nDigitsErr); // we only print errors from now on
 
   // append our error if requested and this variable is not constant
   if(hasError(false) && showError && !(asymError && hasAsymError(false))) {
     if(tlatexMode) {
-      text += " #pm ";
+       text << " #pm " << getError();
     }
     else {
-      text += latexMode ? "\\pm " : " +/- ";
+       text << (latexMode ? "\\pm " : " +/- ") << getError();
     }
-    snprintf(buffer, 256,fmtErr, getError());
-    text += buffer;
   }
 
   if (asymError && hasAsymError() && showError) {
     if(tlatexMode) {
-      text += " #pm _{";
-      snprintf(buffer, 256,fmtErr, getAsymErrorLo());
-      text += buffer;
-      text += "}^{+";
-      snprintf(buffer, 256,fmtErr, getAsymErrorHi());
-      text += buffer;
-      text += "}";
+       text << " #pm _{" << getAsymErrorLo() << "}^{+" << getAsymErrorHi() << "}";
     }
     else if(latexMode) {
-      text += "\\pm _{";
-      snprintf(buffer, 256,fmtErr, getAsymErrorLo());
-      text += buffer;
-      text += "}^{+";
-      snprintf(buffer, 256,fmtErr, getAsymErrorHi());
-      text += buffer;
-      text += "}";
+       text << "\\pm _{" << getAsymErrorLo() << "}^{+" << getAsymErrorHi() << "}";
     }
     else {
-      text += " +/-  (";
-      snprintf(buffer, 256, fmtErr, getAsymErrorLo());
-      text += buffer;
-      text += ", ";
-      snprintf(buffer, 256, fmtErr, getAsymErrorHi());
-      text += buffer;
-      text += ")";
+       text << " +/-  (" << getAsymErrorLo() << ", " << getAsymErrorHi() << ")";
     }
 
   }
 
   // append our units if requested
   if(!_unit.IsNull() && showUnit) {
-    text += ' ';
-    text += _unit;
+     text << ' ' << _unit;
   }
-  if(latexMode) text += "$";
-  return text;
+  if (latexMode)
+     text << "$";
+  return text.str();
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Utility to calculate number of decimals to show
-/// based on magnitude of error
-
-double RooRealVar::chopAt(double what, Int_t where) const
-{
-  double scale= pow(10.0,where);
-  Int_t trunc= (Int_t)floor(what/scale + 0.5);
-  return (double)trunc*scale;
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Overload RooAbsReal::attachToTree to also attach

@@ -154,4 +154,10 @@
 
 #pragma link C++ class RelativelyLargeStruct + ;
 
+#pragma link C++ class v1::Vector3D+;
+#pragma link C++ class v1::ExampleMC+;
+#pragma link C++ class v2::ExampleMC+;
+#pragma read sourceClass = "v1::ExampleMC" source = "v1::Vector3D fSpin" version="[1-]" targetClass = \
+   "v2::ExampleMC" target = "fHelicity" code = "{ fHelicity = onfile.fSpin.fZ; }"
+
 #endif

@@ -42,7 +42,7 @@ class ROOTBuild(_build):
             "cmake "
             # gminimal=ON enables only a minimal set of components (cling+core+I/O+graphics)
             "-Dgminimal=ON -Dasimage=ON -Dopengl=OFF "
-            "-Druntime_cxxmodules=ON -Drpath=ON -Dfail-on-missing=ON "  # Generic build configuration
+            "-Druntime_cxxmodules=ON -Dfail-on-missing=ON "  # Generic build configuration
             # Explicitly turned off components, even though they are already off because of gminimal, we want to keep
             # them listed here for documentation purposes:
             # - tmva-pymva, tpython: these components link against libPython, forbidden for manylinux compatibility,

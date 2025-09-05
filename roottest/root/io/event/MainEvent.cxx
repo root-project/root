@@ -178,7 +178,7 @@ int main(int argc, char** argv)
 
    if (read) {
       // -- Read case
-      TFile* hfile = 0;
+      TFile* hfile = nullptr;
       if (netf) {
          hfile = new TNetFile("root://localhost/root/test/EventNet.root");
       } else {
@@ -186,7 +186,7 @@ int main(int argc, char** argv)
       }
       TTree* tree = (TTree*) hfile->Get("T");
       TBranch* branch = tree->GetBranch("event");
-      Event* event = 0;
+      Event* event = nullptr;
       branch->SetAddress(&event);
       Int_t nentries = (Int_t)tree->GetEntries();
       nevent = std::max(nevent, nentries);
@@ -195,7 +195,7 @@ int main(int argc, char** argv)
          for (ev = 0; ev < nevent; ev++) {
             if ((ev % printev) == 0) {
                tnew = timer.RealTime();
-               std::printf("event:%d, rtime=%f s\n", ev, tnew - told);
+               printf("event:%d, rtime=%f s\n", ev, tnew - told);
                told = tnew;
                timer.Continue();
             }
@@ -214,9 +214,9 @@ int main(int argc, char** argv)
             nb += tree->GetEntry(evrandom);
          }
       }
-      branch->SetAddress(0);
+      branch->SetAddress(nullptr);
       delete tree;
-      tree = 0;
+      tree = nullptr;
       hfile->Close();
    } else {
       // -- Write case
@@ -259,7 +259,7 @@ int main(int argc, char** argv)
       for (ev = 0; ev < nevent; ev++) {
          if ((ev % printev) == 0) {
             tnew = timer.RealTime();
-            std::printf("event:%d, rtime=%f s\n", ev, tnew-told);
+            printf("event:%d, rtime=%f s\n", ev, tnew-told);
             htime->Fill(curtime, tnew - told);
             curtime++;
             told = tnew;
@@ -281,11 +281,11 @@ int main(int argc, char** argv)
          hfile->Write();
          tree->Print();
       }
-      branch->SetAddress(0);
+      branch->SetAddress(nullptr);
       delete event;
-      event = 0;
+      event = nullptr;
       delete tree;
-      tree = 0;
+      tree = nullptr;
       hfile->Close();
    }
 
@@ -295,15 +295,15 @@ int main(int argc, char** argv)
    Double_t rtime = timer.RealTime();
    Double_t ctime = timer.CpuTime();
 
-   std::printf("\n%d events and %lld bytes processed.\n", nevent, nb);
-   std::printf("RealTime=%f seconds, CpuTime=%f seconds\n", rtime, ctime);
+   printf("\n%d events and %lld bytes processed.\n", nevent, nb);
+   printf("RealTime=%f seconds, CpuTime=%f seconds\n", rtime, ctime);
    if (read) {
-      std::printf("You read %f Mbytes/Realtime seconds\n", mbytes / rtime);
-      std::printf("You read %f Mbytes/Cputime seconds\n", mbytes / ctime);
+      printf("You read %f Mbytes/Realtime seconds\n", mbytes / rtime);
+      printf("You read %f Mbytes/Cputime seconds\n", mbytes / ctime);
    } else {
-      std::printf("compression level=%d, split=%d, arg4=%d\n", comp, split, arg4);
-      std::printf("You write %f Mbytes/Realtime seconds\n", mbytes / rtime);
-      std::printf("You write %f Mbytes/Cputime seconds\n",mbytes/ctime);
+      printf("compression level=%d, split=%d, arg4=%d\n", comp, split, arg4);
+      printf("You write %f Mbytes/Realtime seconds\n", mbytes / rtime);
+      printf("You write %f Mbytes/Cputime seconds\n",mbytes/ctime);
    }
    return 0;
 }

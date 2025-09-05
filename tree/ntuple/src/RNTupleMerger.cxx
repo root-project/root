@@ -700,7 +700,7 @@ GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<const RColumnMe
 
       // NOTE: we cannot have a Record here because it has no associated columns.
       R__ASSERT(structure == ROOT::ENTupleStructure::kCollection || structure == ROOT::ENTupleStructure::kVariant ||
-                structure == ROOT::ENTupleStructure::kLeaf);
+                structure == ROOT::ENTupleStructure::kPlain);
 
       const auto &columnDesc = dstDescriptor.GetColumnDescriptor(column.fOutputId);
       const auto colElement = RColumnElementBase::Generate(columnDesc.GetType());
@@ -1159,6 +1159,10 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
 
    // Merge main loop
    for (RPageSource *source : sources) {
+      // We need to make sure the streamer info from the source files is loaded otherwise we may not be able
+      // to build the streamer info of user-defined types unless we have their dictionaries available.
+      source->LoadStreamerInfo();
+
       source->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
       auto srcDescriptor = source->GetSharedDescriptorGuard();
       mergeData.fSrcDescriptor = &srcDescriptor.GetRef();

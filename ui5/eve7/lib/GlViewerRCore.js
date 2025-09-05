@@ -491,9 +491,14 @@ sap.ui.define([
          if (this._logLevel >= 2)
             console.log("GlViewerRenderCore.resetRenderer", sbbox, posV, negV, extV, extR);
 
+         let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
+         let v1 = eveView.camera.V1;
+         let v2 = eveView.camera.V2;
+
+
          if (this.camera.isPerspectiveCamera)
          {
-            this.controls.setCamBaseMtx(new RC.Vector3(-1, 0, 0), new RC.Vector3(0, 1, 0)); //XOZ floor
+            this.controls.setCamBaseMtx(new RC.Vector3(v1[0], v1[1], v1[2]), new RC.Vector3(v2[0], v2[1], v2[2]));
             this.controls.screenSpacePanning = true;
 
             let lc = this.lights.children;
@@ -508,7 +513,7 @@ sap.ui.define([
          }
          else
          {
-            this.controls.setCamBaseMtx(new RC.Vector3(0, 0, 1), new RC.Vector3(0, 1, 0)); // XOY floor
+            this.controls.setCamBaseMtx(new RC.Vector3(v1[0], v1[1], v1[2]), new RC.Vector3(v2[0], v2[1], v2[2]));
             let ey = 1.02 * extV.y;
             let ex = ey / this.get_height() * this.get_width();
             this.camera._left   = -ex;

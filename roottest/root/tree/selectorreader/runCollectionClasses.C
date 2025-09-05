@@ -212,9 +212,8 @@ void generateAll() {
 //   'test_selectors/NameOfTree.C'), which has been already filled with code accessing
 //   the data. (Regarding the header file, it needs no modification, so the newly
 //   generated one is used.)
-void runCollectionClasses() {
-   const char *dirSaved = gSystem->pwd(); // Save working directory
-
+void runCollectionClasses(const std::string &srcdir = ".")
+{
    // Loop through test trees
    std::vector<std::string> trees = {"TreeVectorClass0",
                                      "TreeVectorClass2",
@@ -229,13 +228,12 @@ void runCollectionClasses() {
    {
       fprintf(stderr, "Testing tree %s\n", treeName.c_str());
 
-      TFile f(("./trees/" + treeName + ".root").c_str()); // Load file
-      TTree *t = (TTree*)f.Get(treeName.c_str());         // Load tree
+      TFile f((srcdir + "/trees/" + treeName + ".root").c_str()); // Load file
+      TTree *t = (TTree*) f.Get(treeName.c_str());         // Load tree
       gSystem->cd("./generated_selectors");               // Go to gen. folder
       t->MakeSelector();                                  // Generate selector
       gSystem->cd("..");                                  // Go back
-      t->Process(("./test_selectors/" + treeName + ".C").c_str()); // Run (pre-filled) selector
+      t->Process((srcdir + "/test_selectors/" + treeName + ".C").c_str()); // Run (pre-filled) selector
    }
-   gSystem->cd(dirSaved); // Restore working directory
 }
 

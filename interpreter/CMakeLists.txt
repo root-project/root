@@ -190,6 +190,8 @@ if(builtin_llvm)
   # in production builds.
   set(LLVM_UNREACHABLE_OPTIMIZE FALSE)
 
+  set(_build_type ${CMAKE_BUILD_TYPE})
+
   # Multi-configuration generators ignore CMAKE_BUILD_TYPE, so
   # in that case we set the flags for all configurations to the
   # flags of the build type assigned to LLVM_BUILD_TYPE.
@@ -241,6 +243,7 @@ if(builtin_llvm)
   endif()
 
   set(CMAKE_CXX_STANDARD ${_cxx_standard})
+  set(CMAKE_BUILD_TYPE ${_build_type})
 
   set(LLVM_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm/include
     ${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm/include

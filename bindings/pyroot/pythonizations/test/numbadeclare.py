@@ -1,4 +1,5 @@
 import gc
+import platform
 import sys
 import unittest
 
@@ -148,6 +149,23 @@ class NumbaDeclareSimple(unittest.TestCase):
         df.Display().Print()
         self.assertEqual(df.Sum("x").GetValue(), 24)
         self.assertEqual(df.Sum("x_sq").GetValue(), 56)
+
+    @unittest.skipIf(
+        not (platform.system() == "Linux" and platform.machine() == "x86_64"),
+        "Numba integration is experimental and only tested on Linux x86_64",
+    )
+    def test_rdataframe_LorentzVector(self):
+        """
+        Test function call as part of RDataFrame with ROOT::Math::LorentzVector
+        """
+
+        @ROOT.Numba.Declare(["ROOT::Math::PtEtaPhiMVector"], "float")
+        def get_m(v):
+            return v.M()
+
+        df = ROOT.RDataFrame(4).Define("v", "ROOT::Math::PtEtaPhiMVector(1, 2, 3, 4)").Define("v_m", "Numba::get_m(v)")
+
+        self.assertEqual(df.Sum("v_m").GetValue(), 16.0)
 
     # Test wrappings
     def test_wrapper_in_void(self):

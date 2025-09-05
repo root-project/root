@@ -38,7 +38,7 @@ datahist->get(1)->Print("V"); std::cout << "w=" << datahist->weight(1) << std::e
 See RooAbsData::plotOn().
 
 ### Creating a datahist using RDataFrame
-\see RooAbsDataHelper, rf408_RDataFrameToRooFit.C
+See RooAbsDataHelper, rf408_RDataFrameToRooFit.C
 
 **/
 

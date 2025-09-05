@@ -1,14 +1,38 @@
-#execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/generated_selectors)
-#execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/trees ${CMAKE_CURRENT_BINARY_DIR}/trees)
+ROOTTEST_ADD_TEST(mkdir
+                  COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_CURRENT_BINARY_DIR}/generated_selectors
+                  FIXTURES_SETUP root-tree-selectorreader-mkdir-fixture)
 
-#ROOTTEST_COMPILE_MACRO(SampleClasses.h)
-#ROOTTEST_ADD_TEST(Classes
-#                  COPY_TO_BUILDDIR  SampleClasses.h
-#                  MACRO runClasses.C
-#                  OUTREF Classes.ref
-#                  DEPENDS ${COMPILE_MACRO_TEST})
+ROOTTEST_COMPILE_MACRO(SampleClasses.h
+                       FIXTURES_SETUP root-tree-selectorreader-SampleClasses-fixture)
 
-# It relies very heavily that these tests are run in the source directory
-# so using the old method....
+ROOTTEST_ADD_TEST(Classes
+                  MACRO runClasses.C
+                  MACROARG "\"${CMAKE_CURRENT_SOURCE_DIR}\""
+                  OUTREF Classes.ref
+                  FIXTURES_REQUIRED root-tree-selectorreader-mkdir-fixture root-tree-selectorreader-SampleClasses-fixture)
 
-ROOTTEST_ADD_OLDTEST()
+ROOTTEST_ADD_TEST(CollectionClasses
+                  MACRO runCollectionClasses.C
+                  MACROARG "\"${CMAKE_CURRENT_SOURCE_DIR}\""
+                  OUTREF CollectionClasses.ref
+                  FIXTURES_REQUIRED root-tree-selectorreader-mkdir-fixture root-tree-selectorreader-SampleClasses-fixture)
+
+ROOTTEST_ADD_TEST(Collections
+                  MACRO runCollections.C
+                  MACROARG "\"${CMAKE_CURRENT_SOURCE_DIR}\""
+                  OUTREF Collections.ref
+                  FIXTURES_REQUIRED root-tree-selectorreader-mkdir-fixture root-tree-selectorreader-SampleClasses-fixture)
+
+ROOTTEST_ADD_TEST(Options
+                  MACRO runOptions.C
+                  MACROARG "\"${CMAKE_CURRENT_SOURCE_DIR}\""
+                  OUTREF Options.ref
+                  FIXTURES_REQUIRED root-tree-selectorreader-mkdir-fixture root-tree-selectorreader-SampleClasses-fixture)
+
+ROOTTEST_ADD_TEST(Simple
+                  MACRO runSimple.C
+                  MACROARG "\"${CMAKE_CURRENT_SOURCE_DIR}\""
+                  OUTREF Simple.ref
+                  FIXTURES_REQUIRED root-tree-selectorreader-mkdir-fixture)
+
+

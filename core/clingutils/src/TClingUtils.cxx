@@ -25,6 +25,7 @@
 #include <cctype>
 
 #include "RConfigure.h"
+#include "RConversionRuleParser.h"
 #include <ROOT/RConfig.hxx>
 #include <ROOT/FoundationUtils.hxx>
 #include "Rtypes.h"

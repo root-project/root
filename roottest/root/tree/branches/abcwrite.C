@@ -1,7 +1,5 @@
-#include "abcsetup.h"
-
-void abcwrite(const char* mode) {
-   abcsetup(mode);
+void abcwrite(const char* mode)
+{
    Holder h;
 
    TFile f(TString::Format("abc_%s.root", mode), "recreate");
@@ -9,9 +7,7 @@ void abcwrite(const char* mode) {
    tree->Branch("h", &h);
    for (int e = 0; e < 100; ++e) {
       h.Set(e);
-//      gDebug = 3;
-	tree->Fill();
-	gDebug = 0;
+	   tree->Fill();
    }
    tree->Write();
    delete tree;

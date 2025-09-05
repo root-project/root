@@ -330,7 +330,7 @@ ROOT::DescriptorId_t ROOT::RClassField::LookupMember(const ROOT::RNTupleDescript
 void ROOT::RClassField::SetStagingClass(const std::string &className, unsigned int classVersion)
 {
    TClass::GetClass(className.c_str())->GetStreamerInfo(classVersion);
-   if (classVersion != GetTypeVersion()) {
+   if (classVersion != GetTypeVersion() || className != GetTypeName()) {
       fStagingClass = TClass::GetClass((className + std::string("@@") + std::to_string(classVersion)).c_str());
       if (!fStagingClass) {
          // For a rename rule, we may simply ask for the old class name
@@ -429,11 +429,17 @@ void ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pag
 
       rules = FindRules(&fieldDesc);
 
-      // If the field's type name is not the on-disk name but we found a rule, we know it is valid to read
-      // on-disk data because we found the rule according to the on-disk (source) type name and version/checksum.
-      if ((GetTypeName() != fieldDesc.GetTypeName()) && rules.empty()) {
-         throw RException(R__FAIL("incompatible type name for field " + GetFieldName() + ": " + GetTypeName() +
-                                  " vs. " + fieldDesc.GetTypeName()));
+      // If we found a rule, we know it is valid to read on-disk data because we found the rule according to the on-disk
+      // (source) type name and version/checksum.
+      if (rules.empty()) {
+         // Otherwise we require compatible type names, after renormalization. GetTypeName() is already renormalized,
+         // but RNTuple data written with ROOT v6.34 might not have renormalized the field type name. Ask the
+         // RNTupleDescriptor, which knows about the spec version, for a fixed up type name.
+         std::string descTypeName = desc.GetTypeNameForComparison(fieldDesc);
+         if (GetTypeName() != descTypeName) {
+            throw RException(R__FAIL("incompatible type name for field " + GetFieldName() + ": " + GetTypeName() +
+                                     " vs. " + descTypeName));
+         }
       }
 
       if (!rules.empty()) {
@@ -464,6 +470,11 @@ void ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pag
          field->SetArtificial();
       }
    }
+}
+
+void ROOT::RClassField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeVersion | kDiffTypeName);
 }
 
 void ROOT::RClassField::ConstructValue(void *where) const
@@ -518,7 +529,7 @@ ROOT::REnumField::REnumField(std::string_view fieldName, std::string_view enumNa
 }
 
 ROOT::REnumField::REnumField(std::string_view fieldName, TEnum *enump)
-   : ROOT::RFieldBase(fieldName, GetRenormalizedTypeName(enump->GetQualifiedName()), ROOT::ENTupleStructure::kLeaf,
+   : ROOT::RFieldBase(fieldName, GetRenormalizedTypeName(enump->GetQualifiedName()), ROOT::ENTupleStructure::kPlain,
                       false /* isSimple */)
 {
    // Avoid accidentally supporting std types through TEnum.
@@ -545,7 +556,7 @@ ROOT::REnumField::REnumField(std::string_view fieldName, TEnum *enump)
 
 ROOT::REnumField::REnumField(std::string_view fieldName, std::string_view enumName,
                              std::unique_ptr<RFieldBase> intField)
-   : ROOT::RFieldBase(fieldName, enumName, ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
+   : ROOT::RFieldBase(fieldName, enumName, ROOT::ENTupleStructure::kPlain, false /* isSimple */)
 {
    Attach(std::move(intField));
    fTraits |= kTraitTriviallyConstructible | kTraitTriviallyDestructible;
@@ -555,6 +566,12 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::REnumField::CloneImpl(std::string_view n
 {
    auto newIntField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
    return std::unique_ptr<REnumField>(new REnumField(newName, GetTypeName(), std::move(newIntField)));
+}
+
+void ROOT::REnumField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   // TODO(jblomer): allow enum to enum conversion only by rename rule
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName | kDiffTypeVersion);
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::REnumField::SplitValue(const RValue &value) const
@@ -745,6 +762,11 @@ void ROOT::RProxiedCollectionField::GenerateColumns(const ROOT::RNTupleDescripto
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
+void ROOT::RProxiedCollectionField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName);
+}
+
 void ROOT::RProxiedCollectionField::ConstructValue(void *where) const
 {
    fProxy->New(where);
@@ -822,8 +844,8 @@ private:
    RCallbackStreamerInfo fCallbackStreamerInfo;
 
 public:
-   TBufferRecStreamer(TBuffer::EMode mode, Int_t bufsiz, RCallbackStreamerInfo callbackStreamerInfo)
-      : TBufferFile(mode, bufsiz), fCallbackStreamerInfo(callbackStreamerInfo)
+   TBufferRecStreamer(TBuffer::EMode mode, Int_t bufsize, RCallbackStreamerInfo callbackStreamerInfo)
+      : TBufferFile(mode, bufsize), fCallbackStreamerInfo(callbackStreamerInfo)
    {
    }
    void TagStreamerInfo(TVirtualStreamerInfo *info) final { fCallbackStreamerInfo(info); }
@@ -851,11 +873,6 @@ ROOT::RStreamerField::RStreamerField(std::string_view fieldName, TClass *classp)
       fTraits |= kTraitTriviallyConstructible;
    if (!(fClass->ClassProperty() & (kClassHasExplicitDtor | kClassHasImplicitDtor)))
       fTraits |= kTraitTriviallyDestructible;
-}
-
-void ROOT::RStreamerField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource)
-{
-   pageSource.RegisterStreamerInfos();
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RStreamerField::CloneImpl(std::string_view newName) const
@@ -905,6 +922,16 @@ void ROOT::RStreamerField::GenerateColumns()
 void ROOT::RStreamerField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 {
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex, std::byte>(desc);
+}
+
+void ROOT::RStreamerField::BeforeConnectPageSource(ROOT::Internal::RPageSource &source)
+{
+   source.RegisterStreamerInfos();
+}
+
+void ROOT::RStreamerField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName | kDiffTypeVersion);
 }
 
 void ROOT::RStreamerField::ConstructValue(void *where) const
@@ -1035,13 +1062,6 @@ void ROOT::RField<TObject>::ReadInClusterImpl(RNTupleLocalIndex localIndex, void
    CallReadOn(*fSubfields[0], localIndex, &uniqueID);
    CallReadOn(*fSubfields[1], localIndex, &bits);
    ReadTObject(to, uniqueID, bits);
-}
-
-void ROOT::RField<TObject>::AfterConnectPageSource()
-{
-   if (GetOnDiskTypeVersion() != 1) {
-      throw RException(R__FAIL("unsupported on-disk version of TObject: " + std::to_string(GetTypeVersion())));
-   }
 }
 
 std::uint32_t ROOT::RField<TObject>::GetTypeVersion() const

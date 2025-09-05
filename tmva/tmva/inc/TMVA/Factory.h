@@ -96,14 +96,23 @@ namespace TMVA {
       // use TName::GetName and define correct name in constructor
       //virtual const char*  GetName() const { return "Factory"; }
 
+      // Internal wrapper type that can be constructed either like a TString or
+      // from a Types::EMVA enum value and stores the resolved TString. This
+      // avoids the need for multiple overloads of BookMethod.
+      class MethodName {
+      public:
+         template <typename T, typename = std::enable_if_t<std::is_constructible_v<TString, T &&>>>
+         MethodName(T &&name) : fName(std::forward<T>(name))
+         {
+         }
+         MethodName(Types::EMVA method) : fName(Types::Instance().GetMethodName(method)) {}
+         TString const &tString() const { return fName; }
 
-      MethodBase* BookMethod( DataLoader *loader, TString theMethodName, TString methodTitle, TString theOption = "" );
-      MethodBase* BookMethod( DataLoader *loader, Types::EMVA theMethod,  TString methodTitle, TString theOption = "" );
-      MethodBase* BookMethod( DataLoader *, TMVA::Types::EMVA /*theMethod*/,
-                              TString /*methodTitle*/,
-                              TString /*methodOption*/,
-                              TMVA::Types::EMVA /*theComposite*/,
-                              TString /*compositeOption = ""*/ ) { return nullptr; }
+      private:
+         TString fName;
+      };
+
+      MethodBase* BookMethod( DataLoader *loader, MethodName theMethodName, TString methodTitle, TString theOption = "" );
 
       // optimize all booked methods (well, if desired by the method)
       std::map<TString,Double_t> OptimizeAllMethods                 (TString fomType="ROCIntegral", TString fitType="FitGA");

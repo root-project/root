@@ -1,6 +1,6 @@
 #define TreeClassNested2_complex_cxx
 
-#include "../generated_selectors/TreeClassNested2_complex.h"
+#include "generated_selectors/TreeClassNested2_complex.h"
 #include <TH2.h>
 #include <TStyle.h>
 

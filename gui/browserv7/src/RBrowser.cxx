@@ -27,6 +27,7 @@
 #include "TSystem.h"
 #include "TError.h"
 #include "TTimer.h"
+#include "TEnv.h"
 #include "TROOT.h"
 #include "TBufferJSON.h"
 #include "TApplication.h"
@@ -262,6 +263,21 @@ using namespace ROOT;
 
 \image html v7_rbrowser.png
 
+For normal interactive mode, any modern web browser should be able to display it.
+Chrome or Firefox browsers are though required when running ROOT in batch mode.
+
+Most configuration options for RBrowser, such as default web browser, server mode are not specific to this class,
+but are rather applied for all web widgets: canvases, geometry viewer, eve7, browser, fit panel, etc.
+
+Following `.rootrc` parameters can be configured for the browser:
+
+   * WebGui.Browser.SortBy:  sort by "name", "size", "none" (default "name")
+   * WebGui.Browser.Reverse: reverse item order (default off)
+   * WebGui.Browser.ShowHidden: show hidden files (default off)
+   * WebGui.Browser.LastCycle: show only last key cycle (default off)
+   * WebGui.Browser.Expand: expand browsable area (default off)
+
+\note See major settings in RWebWindowWindowsManager::CreateServer and RWebWindowsManager::ShowWindow
 */
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -286,6 +302,23 @@ RBrowser::RBrowser(bool use_rcanvas)
 
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
+
+   std::string sortby = gEnv->GetValue("WebGui.Browser.SortBy", "name"),
+               reverse = gEnv->GetValue("WebGui.Browser.Reverse", "no"),
+               hidden = gEnv->GetValue("WebGui.Browser.ShowHidden", "no"),
+               lastcycle = gEnv->GetValue("WebGui.Browser.LastCycle", "");
+
+   if (sortby != "name" && sortby != "size" && sortby != "none")
+      sortby = "name";
+
+   reverse = (reverse == "on" || reverse == "yes" || reverse == "1") ? "true" : "false";
+   hidden = (hidden == "on" || hidden == "yes" || hidden == "1") ? "true" : "false";
+   if (lastcycle == "on" || lastcycle == "yes" || lastcycle == "1")
+      Browsable::RElement::SetLastKeyCycle(true);
+   else if (lastcycle == "off" || lastcycle == "no" || lastcycle == "0")
+      Browsable::RElement::SetLastKeyCycle(false);
+
+   fWebWindow->SetUserArgs(TString::Format("{ sort: \"%s\", reverse: %s, hidden: %s }", sortby.c_str(), reverse.c_str(), hidden.c_str()).Data());
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetCallBacks([this](unsigned connid) { fConnId = connid; SendInitMsg(connid); },
@@ -736,6 +769,12 @@ void RBrowser::SendInitMsg(unsigned connid)
       Browsable::RProvider::GetClassDrawOption("TProfile")
    }));
 
+   reply.emplace_back(std::vector<std::string>({
+      "settings"s,
+      gEnv->GetValue("WebGui.Browser.Expand", "no"),
+      Browsable::RElement::IsLastKeyCycle() ? "1" : "0"
+   }));
+
    std::string msg = "INMSG:";
    msg.append(TBufferJSON::ToJSON(&reply, TBufferJSON::kNoSpaces).Data());
 
@@ -856,6 +895,10 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
       // central place for processing browser requests
       auto json = ProcessBrowserRequest(msg);
       if (!json.empty()) fWebWindow->Send(connid, json);
+
+   } else if (kind == "LASTCYCLE") {
+      // when changed on clients side
+      Browsable::RElement::SetLastKeyCycle(msg == "1");
 
    } else if (kind == "DBLCLK") {
 

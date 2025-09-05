@@ -14,7 +14,7 @@ public:
          }
       }
    }
-   ClassDef(Track,1);
+   ClassDefOverride(Track,1);
 };
 #endif
 

@@ -35,9 +35,9 @@ ROOT::RNTupleWriter::RNTupleWriter(std::unique_ptr<ROOT::RNTupleModel> model,
 {
 #ifdef R__USE_IMT
    if (IsImplicitMTEnabled() &&
-       fFillContext.fSink->GetWriteOptions().GetUseImplicitMT() == ROOT::RNTupleWriteOptions::EImplicitMT::kDefault) {
-      fZipTasks = std::make_unique<ROOT::Experimental::Internal::RNTupleImtTaskScheduler>();
-      fFillContext.fSink->SetTaskScheduler(fZipTasks.get());
+       fFillContext.fSink->GetWriteOptions().GetUseImplicitMT() != ROOT::RNTupleWriteOptions::EImplicitMT::kOff) {
+      fFillContext.fZipTasks = std::make_unique<ROOT::Experimental::Internal::RNTupleImtTaskScheduler>();
+      fFillContext.fSink->SetTaskScheduler(fFillContext.fZipTasks.get());
    }
 #endif
    // Observe directly the sink's metrics to avoid an additional prefix from the fill context.

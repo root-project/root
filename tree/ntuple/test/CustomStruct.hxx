@@ -399,4 +399,27 @@ struct RelativelyLargeStruct {
    char fDummy[250];
 };
 
+// Adjusted from
+// https://root-forum.cern.ch/t/manual-schema-evolution-with-i-o-rules-and-branches-containing-vector-t/64026
+
+namespace v1 {
+struct Vector3D {
+   float fX = 0.;
+   float fY = 0.;
+   float fZ = 0.;
+};
+
+struct ExampleMC {
+   float fEnergy = 0.;
+   v1::Vector3D fSpin;
+};
+} // namespace v1
+
+namespace v2 {
+struct ExampleMC {
+   float fEnergy = 0.;
+   float fHelicity = 0.;
+};
+} // namespace v2
+
 #endif
