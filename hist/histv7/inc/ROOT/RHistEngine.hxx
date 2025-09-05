@@ -165,6 +165,14 @@ public:
       }
    }
 
+   /// Clear all bin contents.
+   void Clear()
+   {
+      for (std::size_t i = 0; i < fBinContents.size(); i++) {
+         fBinContents[i] = {};
+      }
+   }
+
    /// Fill an entry into the histogram.
    ///
    /// \code
