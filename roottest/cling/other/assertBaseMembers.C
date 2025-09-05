@@ -1,5 +1,5 @@
-#ifdef __CINT__
-// GCC and clang disagree with CINT, i.e. CINT fails for those.
+#ifdef __CLING__
+// GCC and clang disagree with CLING, i.e. CLING fails for those.
 # define HIDEKNOWNFAILURES
 #endif
 

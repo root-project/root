@@ -82,9 +82,9 @@ public:
   std::vector<std::string> splitFunctionArgs(const char* funcExpr) ;
 
 
-  // --- Internal stuff that must be public so that CINT can access it ---
+  // --- Internal stuff that must be public so that CLING can access it ---
 
-  // CINT constructor interface
+  // CLING constructor interface
   static RooAbsArg& as_ARG(UInt_t idx) { checkIndex(idx) ; return of()->of()->asARG(of()->_args[idx].c_str()) ; }
 
   static RooAbsPdf& as_PDF(UInt_t idx) { checkIndex(idx) ; return of()->asPDF(of()->_args[idx].c_str()) ; }
@@ -178,7 +178,7 @@ protected:
 
   TClass* resolveClassName(const char* className) ;
 
-  // CINT constructor interface back end
+  // CLING constructor interface back end
   static RooFactoryWSTool* of() ;
   static RooFactoryWSTool* _of ;
   std::vector<std::string> _args ;

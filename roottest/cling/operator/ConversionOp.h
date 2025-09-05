@@ -28,7 +28,7 @@ namespace N {
    class B {
    public:
       B(const ::B& b): fB(b) {}
-      // Make sure that CINT doesn't confuse
+      // Make sure that CLING doesn't confuse
       // N::B::op ::B() with
       // N::B::op N::B() when writing the dictionary
       operator ::B() const {return fB;}
@@ -69,7 +69,7 @@ class D {
    A<T>& operator/(A<T> &a) {printf("D::op /(A<T>)\n"); return a;}
 };
 
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ class A<B>+;
 #pragma link C++ class A<float>+;
 #pragma link C++ class A<int>+;

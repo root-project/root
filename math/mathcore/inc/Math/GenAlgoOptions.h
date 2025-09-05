@@ -48,7 +48,7 @@ public:
       return new GenAlgoOptions(*this);
    }
 
-   // t.b.d need probably to implement in a .cxx file for CINT
+   // t.b.d need probably to implement in a .cxx file for CLING
 
 
    bool GetRealValue(const char * name, double & val) const override {

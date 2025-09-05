@@ -13,9 +13,9 @@ int Read(TString library, TString rootfilename, Bool_t ref = kFALSE)
    std::string markfilename = "NuEvent_DST.mark";
    const int tolerance = 100;
 
-   gSystem->Load(library);  
+   gSystem->Load(library);
 
-   gBenchmark = new TBenchmark(); 
+   gBenchmark = new TBenchmark();
    gBenchmark->Start("Read");
 
    // Open the input file and prepare for event reading
@@ -37,11 +37,11 @@ int Read(TString library, TString rootfilename, Bool_t ref = kFALSE)
    for (Int_t i=0;i<input.GetEntries();++i) {
       // Print the progress
       if (i%10 == 0) cout << "Reading event " << i << endl;
-      
+
       if (i >= 100) {
          break;
       }
-      
+
       // Get the event
       branch->GetEntry(i);
    }

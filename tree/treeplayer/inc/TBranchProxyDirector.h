@@ -47,7 +47,7 @@ namespace Internal{
    public:
 
       TBranchProxyDirector(TTree* tree, Long64_t i);
-      TBranchProxyDirector(TTree* tree, Int_t i);     // cint has (had?) a problem casting int to long long
+      TBranchProxyDirector(TTree* tree, Int_t i);     // cling has (had?) a problem casting int to long long
 
       void     Attach(Detail::TBranchProxy* p);
       void     Attach(TFriendProxy* f);

@@ -16,9 +16,9 @@
 //                                                                      //
 // TClingMethodInfo                                                     //
 //                                                                      //
-// Emulation of the CINT MethodInfo class.                              //
+// Emulation of the historical CINT MethodInfo class.                   //
 //                                                                      //
-// The CINT C++ interpreter provides an interface to metadata about     //
+// The CLING C++ interpreter provides an interface to metadata about    //
 // a function through the MethodInfo class.  This class provides the    //
 // same functionality, using an interface as close as possible to       //
 // MethodInfo but the typedef metadata comes from the Clang C++         //
@@ -124,7 +124,7 @@ public:
 class TClingMethodInfo final : public TClingDeclInfo {
 private:
    cling::Interpreter                          *fInterp; // Cling interpreter, we do *not* own.
-   bool                                         fFirstTime; // Flag for first time incrementing iterator, cint semantics are weird.
+   bool                                         fFirstTime; // Flag for first time incrementing iterator, CINT semantics were weird.
    TClingCXXRecMethIter                         fIter; // Our iterator.
    std::string                                  fTitle; // The meta info for the method.
 

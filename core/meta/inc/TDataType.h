@@ -18,7 +18,7 @@
 // TDataType                                                            //
 //                                                                      //
 // Basic data type descriptor (datatype information is obtained from    //
-// CINT).                                                               //
+// CLING).                                                              //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -44,7 +44,7 @@ enum EDataType {
 class TDataType : public TDictionary {
 
 private:
-   TypedefInfo_t    *fInfo;     //!pointer to CINT typedef info
+   TypedefInfo_t    *fInfo;     //!pointer to CLING typedef info
    Int_t             fSize;     //size of type
    EDataType         fType;     //type id
    Long_t            fProperty; //The property information for the (potential) underlying class

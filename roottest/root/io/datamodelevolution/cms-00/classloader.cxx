@@ -7,7 +7,7 @@
 //        Author     : M.Frank
 //====================================================================
 
-#ifndef __CINT__
+#ifndef __CLING__
 #include "Cintex/Cintex.h"
 #endif
 #include "Reflex/Reflex.h"
@@ -21,7 +21,7 @@
 #include "TDataMember.h"
 
 #include "TCollectionProxyFactory.h"
-#ifndef __CINT__
+#ifndef __CLING__
 #include "Api.h"
 #endif
 
@@ -45,14 +45,14 @@ void patchClass(TClass* cl, TypeH& ) {
 #include <utility>
 #include <vector>
 
-#ifndef __CINT__
+#ifndef __CLING__
 namespace ROOT { namespace Cintex  {
   bool IsSTLinternal(const std::string& nam);
   bool IsSTL(const std::string& nam);
   bool IsSTLext(const std::string& nam);
   bool IsTypeOf(TypeH& typ, const std::string& base_name);
   TypeH CleanType(const TypeH& t);
-  /// Retrieve CINT class name (in Type.cpp)
+  /// Retrieve CLING class name (in Type.cpp)
   std::string CintName(const TypeH&);
   std::string CintName(const std::string&);
 }}
@@ -71,7 +71,7 @@ namespace pool {
   // Small debug function to dump real data members of a given class
   void showRealData(TClass* cl)   {
     TRealData *dm;
-    //    DbPrint log("CINT");
+    //    DbPrint log("CLING");
     std::ostream &log(std::cout);
 
     TIter   next(cl->GetListOfRealData());
@@ -92,7 +92,7 @@ namespace pool {
   // Small debug function to dump real data members of a given class
   void showDataMembers(TClass* cl)   {
     TDataMember *dm;
-    //    DbPrint log("CINT");
+    //    DbPrint log("CLING");
     std::ostream &log(std::cout);
 
     TIter   next(cl->GetListOfDataMembers());

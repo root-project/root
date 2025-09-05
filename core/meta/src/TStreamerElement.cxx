@@ -391,7 +391,7 @@ TMemberStreamer *TStreamerElement::GetStreamer() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return type name of this element
 /// in case the type name is not a standard basic type, return
-/// the basic type name known to CINT.
+/// the basic type name known to CLING.
 
 const char *TStreamerElement::GetTypeNameBasic() const
 {
@@ -1923,7 +1923,7 @@ Int_t TStreamerSTL::GetSize() const
    if (cl==nullptr) {
       if (!TestBit(kWarned)) {
          Error("GetSize","Could not find the TClass for %s.\n"
-               "This is likely to have been a typedef, if possible please declare it in CINT to work around the issue\n",fTypeName.Data());
+               "This is likely to have been a typedef, if possible please declare it in CLING to work around the issue\n",fTypeName.Data());
          const_cast<TStreamerSTL*>(this)->SetBit(kWarned);
       }
    } else {

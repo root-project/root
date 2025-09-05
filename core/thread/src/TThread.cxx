@@ -52,8 +52,8 @@ void **volatile TThread::fgXArr = nullptr;
 volatile Int_t  TThread::fgXAnb = 0;
 volatile Int_t  TThread::fgXArt = 0;
 
-static void CINT_alloc_lock()   { gGlobalMutex->Lock(); }
-static void CINT_alloc_unlock() { gGlobalMutex->UnLock(); }
+static void CLING_alloc_lock()   { gGlobalMutex->Lock(); }
+static void CLING_alloc_unlock() { gGlobalMutex->UnLock(); }
 
 static TMutex  *gMainInternalMutex = nullptr;
 
@@ -336,8 +336,8 @@ void TThread::Init()
    // Create the single global mutex
    gGlobalMutex = new TMutex(kTRUE);
    // We need to make sure that gCling is initialized.
-   TInterpreter::Instance()->SetAlloclockfunc(CINT_alloc_lock);
-   gCling->SetAllocunlockfunc(CINT_alloc_unlock);
+   TInterpreter::Instance()->SetAlloclockfunc(CLING_alloc_lock);
+   gCling->SetAllocunlockfunc(CLING_alloc_unlock);
 
    // To avoid deadlocks, gInterpreterMutex and gROOTMutex need
    // to point at the same instance.

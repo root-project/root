@@ -6,7 +6,6 @@
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/rootcint.            *
  *************************************************************************/
 
 #ifndef __DICTSELECTIONREADER__

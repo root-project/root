@@ -11,7 +11,7 @@
 #include <typeinfo>
 #include <string>
 
-#if !defined(_WIN32) && !defined(__CINT__)
+#if !defined(_WIN32) && !defined(__CLING__)
 #include <cxxabi.h>
 #endif
 

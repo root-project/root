@@ -47,7 +47,7 @@ def filter(lines, ignoreWhiteSpace = False):
       continue
     else:
       nline = line
-    #---Remove Addresses in cling/cint-------------------------------------------
+    #---Remove Addresses in cling/icling-----------------------------------------
     nline = re.sub(r'[ ]@0x[a-fA-F0-9]+', '', nline)
     #---Remove versioning in std-------------------------------------------------
     nline = re.sub(r'std::__[0-9]::', 'std::', nline)

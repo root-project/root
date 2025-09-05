@@ -18,7 +18,7 @@
 // TMethodCall                                                          //
 //                                                                      //
 // Method or function calling interface. Objects of this class contain  //
-// the (CINT) environment to call a global function or a method for an  //
+// the (CLING) environment to call a global function or a method for an //
 // object of a specific class with the desired arguments. This class is //
 // espicially useful when a method has to be called more times for      //
 // different objects and/or with different arguments. If a function or  //
@@ -51,7 +51,7 @@ public:
    // enum EReturnType { kLong, kDouble, kString, kOther, kNone };
 
 private:
-   CallFunc_t    *fFunc;      //CINT method invocation environment
+   CallFunc_t    *fFunc;      //CLING method invocation environment
    Longptr_t      fOffset;    //offset added to object pointer before method invocation
    TClass        *fClass;     //pointer to the class info
    TFunction     *fMetPtr;    //pointer to the method or function info

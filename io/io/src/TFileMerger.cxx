@@ -62,7 +62,7 @@ static const Int_t kCpProgress = BIT(14);
 static const Int_t kCintFileNumber = 100;
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the maximum number of allowed opened files minus some wiggle room
-/// for CINT or at least of the standard library (stdio).
+/// for CLING or at least of the standard library (stdio).
 
 static Int_t R__GetSystemMaxOpenedFiles()
 {

@@ -12,7 +12,7 @@
 /** \class TMethod
  Each ROOT class (see TClass) has a linked list of methods.
  This class describes one single method (member function).
- The method info is obtained via the CINT api. See class TCling.
+ The method info is obtained via the CLING api. See class TCling.
 
  The method information is used a.o. by the THml class and by the
  TTree class.
@@ -111,7 +111,7 @@ const char *TMethod::GetCommentString()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Using the CINT method arg information create a complete signature string.
+/// Using the CLING method arg information create a complete signature string.
 
 void TMethod::CreateSignature()
 {

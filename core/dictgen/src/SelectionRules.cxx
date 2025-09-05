@@ -548,9 +548,9 @@ bool SelectionRules::GetParentName(const clang::Decl* D, std::string& parent_nam
 
 
 // isClassSelected checks if a class is selected or not. Thre is a difference between the
-// behaviour of rootcint and genreflex especially with regard to class pattern processing.
+// behaviour of rootcling and genreflex especially with regard to class pattern processing.
 // In genreflex if we have <class pattern = "*" /> this will select all the classes
-// (and structs) found in the header file. In rootcint if we have something similar, i.e.
+// (and structs) found in the header file. In rootcling if we have something similar, i.e.
 // #pragma link C++ class *, we will select only the outer classes - for the nested
 // classes we have to specifie #pragma link C++ class *::*. And yet this is only valid
 // for one level of nesting - if you need it for many levels of nesting, you will
@@ -593,7 +593,7 @@ const ClassSelectionRule *SelectionRules::IsNamespaceSelected(const clang::Decl*
          if (it->GetSelected() == BaseSelectionRule::kYes) {
             selector = &(*it);
             if (IsLinkdefFile()){
-               // rootcint prefers explicit rules over pattern rules
+               // rootcling prefers explicit rules over pattern rules
                if (match == BaseSelectionRule::kName) {
                   explicit_selector = &(*it);
                } else if (match == BaseSelectionRule::kPattern) {
@@ -636,7 +636,7 @@ const ClassSelectionRule *SelectionRules::IsNamespaceSelected(const clang::Decl*
       }
    }
    if (IsLinkdefFile()) {
-      // for rootcint explicit (name) Yes is stronger than implicit (pattern) No which is stronger than implicit (pattern) Yes
+      // for rootcling explicit (name) Yes is stronger than implicit (pattern) No which is stronger than implicit (pattern) Yes
 
 #ifdef SELECTION_DEBUG
       std::cout<<"\n\tfYes = "<<fYes<<", fImplNo = "<<fImplNo<<std::endl;
@@ -721,7 +721,7 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(const clang::Decl* D, 
          if (rule.GetSelected() == BaseSelectionRule::kYes) {
 
             if (isLinkDefFile){
-               // rootcint prefers explicit rules over pattern rules
+               // rootcling prefers explicit rules over pattern rules
                if (match == BaseSelectionRule::kName) {
                   explicit_selector = &(rule);
                } else if (match == BaseSelectionRule::kPattern) {
@@ -762,7 +762,7 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(const clang::Decl* D, 
    if (earlyReturn) return retval;
 
    if (isLinkDefFile) {
-      // for rootcint explicit (name) Yes is stronger than implicit (pattern) No which is stronger than implicit (pattern) Yes
+      // for rootcling explicit (name) Yes is stronger than implicit (pattern) No which is stronger than implicit (pattern) Yes
       if (explicit_selector) return explicit_selector;
       else if (specific_pattern_selector) return specific_pattern_selector;
       else if (fImplNo > 0) return nullptr;
@@ -864,7 +864,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefVarSelected(const clang::VarDe
          = selRule.Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", false);
       if (match != BaseSelectionRule::kNoMatch) {
          if (selRule.GetSelected() == BaseSelectionRule::kYes) {
-            // explicit rules are with stronger priority in rootcint
+            // explicit rules are with stronger priority in rootcling
             if (IsLinkdefFile()){
                if (match == BaseSelectionRule::kName) {
                   explicit_selector = &selRule;
@@ -929,7 +929,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefFunSelected(const clang::Funct
          = selRule.Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, prototype, false);
       if (match != BaseSelectionRule::kNoMatch) {
          if (selRule.GetSelected() == BaseSelectionRule::kYes) {
-            // explicit rules are with stronger priority in rootcint
+            // explicit rules are with stronger priority in rootcling
             if (IsLinkdefFile()){
                if (match == BaseSelectionRule::kName) {
                   explicit_selector = &selRule;
@@ -986,7 +986,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefEnumSelected(const clang::Enum
          it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", false);
       if (match != BaseSelectionRule::kNoMatch) {
          if (it->GetSelected() == BaseSelectionRule::kYes) {
-            // explicit rules are with stronger priority in rootcint
+            // explicit rules are with stronger priority in rootcling
             if (IsLinkdefFile()){
                if (match == BaseSelectionRule::kName){
                   explicit_selector = &(*it);
@@ -1027,7 +1027,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefEnumSelected(const clang::Enum
    }
 }
 
-// In rootcint we could select and deselect methods independantly of the class/struct/union rules
+// In rootcling we could select and deselect methods independently of the class/struct/union rules
 // That's why we first have to check the explicit rules for the functions - to see if there
 // is rule corresponding to our method.
 // Which is more - if we have (and we can have) a pattern for the parent class, than a pattern for the

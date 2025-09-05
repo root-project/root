@@ -17,7 +17,7 @@
 //                                                                      //
 // TGlobal                                                              //
 //                                                                      //
-// Global variables class (global variables are obtained from CINT).    //
+// Global variables class (global variables are obtained from CLING).   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

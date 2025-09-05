@@ -3847,7 +3847,7 @@ void TTree::Delete(Option_t* option /* = "" */)
       ResetBit(kMustCleanup);
    }
 
-   // Delete object from CINT symbol table so it can not be used anymore.
+   // Delete object from CLING symbol table so it can not be used anymore.
    gCling->DeleteGlobal(this);
 
    // Warning: We have intentional invalidated this object while inside a member function!

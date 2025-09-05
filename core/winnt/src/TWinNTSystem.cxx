@@ -3920,7 +3920,7 @@ HANDLE TWinNTSystem::GetProcess()
 void TWinNTSystem::Exit(int code, Bool_t mode)
 {
    // Insures that the files and sockets are closed before any library is unloaded
-   // and before emptying CINT.
+   // and before emptying CLING.
    // FIXME: Unify with TROOT::ShutDown.
    if (gROOT) {
       gROOT->CloseFiles();

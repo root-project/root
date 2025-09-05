@@ -106,7 +106,7 @@ class THnSparse: public THnBase {
    Long64_t GetBin(const char* name[], Bool_t allocate = kTRUE) override;
 
    /// Forwards to THnBase::SetBinContent().
-   /// Non-virtual, CINT-compatible replacement of a using declaration.
+   /// Non-virtual, CLING-compatible replacement of a using declaration.
    void SetBinContent(const Int_t* idx, Double_t v) {
       THnBase::SetBinContent(idx, v);
    }
@@ -114,7 +114,7 @@ class THnSparse: public THnBase {
    void SetBinError2(Long64_t bin, Double_t e2) override;
 
    /// Forwards to THnBase::AddBinContent().
-   /// Non-virtual, CINT-compatible replacement of a using declaration.
+   /// Non-virtual, CLING-compatible replacement of a using declaration.
    void AddBinContent(const Int_t* idx, Double_t v = 1.) {
       THnBase::AddBinContent(idx, v);
    }
@@ -122,7 +122,7 @@ class THnSparse: public THnBase {
    void AddBinError2(Long64_t bin, Double_t e2) override;
 
    /// Forwards to THnBase::GetBinContent() overload.
-   /// Non-virtual, CINT-compatible replacement of a using declaration.
+   /// Non-virtual, CLING-compatible replacement of a using declaration.
    Double_t GetBinContent(const Int_t *idx) const {
 
       return THnBase::GetBinContent(idx);
@@ -134,14 +134,14 @@ class THnSparse: public THnBase {
    Double_t GetSparseFractionMem() const;
 
    /// Forwards to THnBase::Projection().
-   /// Non-virtual, as a CINT-compatible replacement of a using
+   /// Non-virtual, as a CLING-compatible replacement of a using
    /// declaration.
    TH1D*      Projection(Int_t xDim, Option_t* option = "") const{
       return THnBase::Projection(xDim, option);
    }
 
    /// Forwards to THnBase::Projection().
-   /// Non-virtual, as a CINT-compatible replacement of a using
+   /// Non-virtual, as a CLING-compatible replacement of a using
    /// declaration.
    TH2D*      Projection(Int_t yDim, Int_t xDim,
                          Option_t* option = "") const {
@@ -149,7 +149,7 @@ class THnSparse: public THnBase {
    }
 
    /// Forwards to THnBase::Projection().
-   /// Non-virtual, as a CINT-compatible replacement of a using
+   /// Non-virtual, as a CLING-compatible replacement of a using
    /// declaration.
    TH3D*      Projection(Int_t xDim, Int_t yDim, Int_t zDim,
                          Option_t* option = "") const {

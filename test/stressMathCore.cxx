@@ -10,7 +10,7 @@
 //         pdf, cdf and quantiles. cdf are estimated directly and compared with calculated integral from pdf
 //     - physics vectors (2D, 3D and 4D) including I/O for every type and for both double and Double32_t
 //     - SMatrix and SVectors including I/O for double and Double32_t types
-//     - I/O of complex objects which dictionary has been generated using CINT (default) or Reflex
+//     - I/O of complex objects which dictionary has been generated using rootcling
 //           TrackD and TrackD32 which contain  physics vectors of double and Double32_t
 //           TrackErrD and TrackErrD32 which contain physics vectors and an SMatrix of double and Double32_t
 //           VecTrackD which contains an std::vector<TrackD>
@@ -23,14 +23,9 @@
 //    > make stressMathMore
 //    > ./stressMathMore
 //
-//  to run using REflex set before compiling the environment variable useReflex.
-//
-//    > export useReflex=1
-//    > make stressMathMore
-//    > ./stressMathMore
 //
 // to run inside ROOT using ACliC
-//  for using CINT you need first to have the library libTrackMathCoreDict.so
+//  for using CLING you need first to have the library libTrackMathCoreDict.so
 //   (type:  make libTrackMathCoreDict.so to make it)
 //
 //   root> gSystem->Load("libMathCore");
@@ -38,22 +33,6 @@
 //   root> gSystem->Load("libHist");
 //   root> .x stressMathCore.cxx+
 //
-
-// for using Reflex dictionaries you need first to have the library libTrackMathCoreRflx.so
-//   (type:  make libTrackMathCoreRflx.so to make it)
-//
-//   root> gSystem->Load("libMathCore");
-//   root> gSystem->Load("libTree");
-//   root> gSystem->Load("libHist");
-//   root> gSystem->Load("libReflex");
-//   root> gSystem->SetIncludePath("-DUSE_REFLEX");
-//   root> .x stressMathCore.cxx+
-//
-//
-
-
-#ifndef __CINT__
-
 
 #include "Math/DistFuncMathCore.h"
 //#define USE_MATHMORE
@@ -91,8 +70,6 @@ R__ADD_INCLUDE_PATH($ROOTSYS/test)
 #include "Math/GenVector/RotationZ.h" // Workaround to autoload libGenVector ROOT-7056
 
 using namespace ROOT::Math;
-
-#endif
 
 
 //#define DEBUG
@@ -153,9 +130,6 @@ int compare( std::string name, double v1, double v2, double scale = 2.0) {
 
    return iret;
 }
-
-#ifndef __CINT__
-
 
 // trait class  for distinguishing the number of parameters for the various functions
 template<class Func, unsigned int NPAR>
@@ -1489,7 +1463,7 @@ int testCompositeObj(int ngen) {
    std::cout << "\tTest of a Composite Object (containing Vector's and Matrices)\n";
    std::cout <<"******************************************************************************\n";
 
-   std::cout << "Test Using CINT library\n\n";
+   std::cout << "Test Using the Cling interpreter\n\n";
 
    // put path relative to LD_LIBRARY_PATH
 
@@ -1523,15 +1497,11 @@ int testCompositeObj(int ngen) {
    return iret;
 }
 
-
-#endif // endif ifndef __CINT__
-
-
 int stressMathCore(double nscale = 1) {
 
    int iret = 0;
 
-#ifdef __CINT__
+#ifdef __CLING__
    std::cout << "Test must be run in compile mode - use ACLIC to compile!!" << std::endl;
 
 

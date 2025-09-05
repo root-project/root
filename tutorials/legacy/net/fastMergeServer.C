@@ -116,7 +116,7 @@ void fastMergeServer(bool cache = false) {
          Int_t clientId;
          mess->ReadInt(clientId);
          mess->ReadTString(filename);
-         mess->ReadLong64(length); // '*mess >> length;' is broken in CINT for Long64_t.
+         mess->ReadLong64(length); // '*mess >> length;' was broken in CINT for Long64_t.
 
          Info("fastMergeServer","Receive input from client %d for %s",clientId,filename.Data());
 

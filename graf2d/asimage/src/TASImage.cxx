@@ -6742,7 +6742,7 @@ void TASImage::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    char *buf = nullptr;
    int sz;
 
-   if (GetWidth() > 500) { // workaround CINT limitations
+   if (GetWidth() > 500) { // workaround CLING limitations
       UInt_t w = 500;
       Double_t scale = 500./GetWidth();
       UInt_t h = TMath::Nint(GetHeight()*scale);

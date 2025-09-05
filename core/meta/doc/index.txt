@@ -1,4 +1,4 @@
-This directory contains the Dictionary classes (interface to CINT)
+This directory contains the Dictionary classes (interface to CLING)
 BEGIN_HTML
  See:
 <ul>

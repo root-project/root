@@ -20,7 +20,7 @@ void runConst() {
 /*
 >It seems (and you might already know :) ) that the function matching
 >algorithm does not use the constness of the argument.  The following
->code acts differenty in CINT or C++:
+>code acts differenty in CLING or C++:
 >
 >root [0] .L const.C 
 >root [1] run()

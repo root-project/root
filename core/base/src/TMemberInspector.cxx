@@ -107,7 +107,7 @@ void TMemberInspector::GenericShowMembers(const char *topClassName, const void *
    // Call ShowMember() on obj.
 
    // This could be faster if we implemented this either as a templated
-   // function or by rootcint-generated code using the typeid (i.e. the
+   // function or by rootcling-generated code using the typeid (i.e. the
    // difference is a lookup in a TList instead of in a map).
 
    // To avoid a spurious error message in case the data member is

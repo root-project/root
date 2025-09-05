@@ -600,7 +600,7 @@ void CheckClassNameForRootMap(const std::string &classname, map<string, string> 
          if (k) {
             string base = classname.substr(0, k);
             if (base == "std") {
-               // std is not declared but is also ignored by CINT!
+               // std is not declared but is also ignored by CLING!
                break;
             } else {
                autoloads[base] = ""; // We never load namespaces on their own.
@@ -1840,7 +1840,7 @@ void CallWriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
 void GenerateLinkdef(llvm::cl::list<std::string> &InputFiles,
                      std::string &code_for_parser)
 {
-   code_for_parser += "#ifdef __CINT__\n\n";
+   code_for_parser += "#if defined(__CINT__) or defined(__CLING__)\n\n"; // CINT for bacward compatibility
    code_for_parser += "#pragma link off all globals;\n";
    code_for_parser += "#pragma link off all classes;\n";
    code_for_parser += "#pragma link off all functions;\n\n";
@@ -4059,7 +4059,7 @@ int RootClingMain(int argc,
 
    const char *etcDir = gDriverConfig->fTROOT__GetEtcDir();
    std::string llvmResourceDir = etcDir ? std::string(etcDir) + "/cling" : "";
-   
+
    if (gBareClingSubcommand) {
       std::vector<const char *> clingArgsC;
       clingArgsC.push_back(executableFileName);
@@ -4235,7 +4235,7 @@ int RootClingMain(int argc,
    // cling-only arguments
    if (etcDir)
       clingArgs.push_back(std::string("-I") + llvm::sys::path::convert_to_slash(etcDir));
-   
+
    // We do not want __ROOTCLING__ in the pch!
    if (!gOptGeneratePCH) {
       clingArgs.push_back("-D__ROOTCLING__");
@@ -4274,8 +4274,8 @@ int RootClingMain(int argc,
    // Data is in 'outputFile', therefore in the same scope.
    llvm::StringRef moduleName;
    std::string vfsArg;
-   // Adding -fmodules to the args will break lexing with __CINT__ defined,
-   // and we actually do lex with __CINT__ and reuse this variable later,
+   // Adding -fmodules to the args will break lexing with __CLING__(__CINT__) defined,
+   // and we actually do lex with __CLING__(__CINT__) and reuse this variable later,
    // we have to copy it now.
    auto clingArgsInterpreter = clingArgs;
 
@@ -4485,9 +4485,9 @@ int RootClingMain(int argc,
    ROOT::TMetaUtils::TClingLookupHelper helper(interp, normCtxt, nullptr, nullptr, nullptr, nullptr);
    TClassEdit::Init(&helper);
 
-   // flags used only for the pragma parser:
-   clingArgs.push_back("-D__CINT__");
-   clingArgs.push_back("-D__MAKECINT__");
+   // flags used only for the pragma parser, for compatibility:
+   clingArgs.push_back("-D__CINT__"); // use now __CLING__ instead
+   clingArgs.push_back("-D__MAKECINT__"); // use now __ROOTCLING__ instead
 
    AddPlatformDefines(clingArgs);
 
@@ -4750,7 +4750,7 @@ int RootClingMain(int argc,
       // interpPragmaSource and we still need to process it.
 
       LinkdefReader ldefr(interp, constructorTypes);
-      clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap
+      clingArgs.push_back("-Ietc/cling/icling"); // For multiset and multimap
 
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
                        llvmResourceDir.c_str())) {

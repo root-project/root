@@ -64,7 +64,7 @@ TFunctionTemplate& TFunctionTemplate::operator=(const TFunctionTemplate &rhs)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TFunctionTemplate dtor deletes adopted CINT FuncTempInfo.
+/// TFunctionTemplate dtor deletes adopted CLING FuncTempInfo.
 
 TFunctionTemplate::~TFunctionTemplate()
 {

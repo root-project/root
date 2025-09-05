@@ -320,7 +320,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
   }
   _args.push_back(tmp.substr(start_tok, end_tok));
 
-  // Try CINT interface
+  // Try CLING interface
   pair<list<string>,unsigned int> ca = ctorArgs(className,_args.size()+2) ;
   if (ca.first.empty()) {
     coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR no suitable constructor found for class " << className << std::endl ;
@@ -343,10 +343,10 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
     return nullptr ;
   }
 
-  // Now construct CINT constructor spec, start with mandatory name and title args
-  string cintExpr(Form("new %s(\"%s\",\"%s\"",className,objName,objName)) ;
+  // Now construct CLING constructor spec, start with mandatory name and title args
+  string clingExpr(Form("new %s(\"%s\",\"%s\"",className,objName,objName)) ;
 
-  // Install argument in static data member to be accessed below through static CINT interface functions
+  // Install argument in static data member to be accessed below through static CLING interface functions
   _of = this ;
 
 
@@ -356,55 +356,55 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
     for (vector<string>::iterator ai = _args.begin() ; ai != _args.end() ; ++ai,++ti,++i) {
       if ((*ti)=="RooAbsReal&" || (*ti)=="const RooAbsReal&" || (*ti)=="RooAbsReal::Ref") {
    RooFactoryWSTool::as_FUNC(i) ;
-   cintExpr += Form(",RooFactoryWSTool::as_FUNC(%d)",i) ;
+   clingExpr += Form(",RooFactoryWSTool::as_FUNC(%d)",i) ;
       } else if ((*ti)=="RooAbsArg&" || (*ti)=="const RooAbsArg&") {
    RooFactoryWSTool::as_ARG(i) ;
-   cintExpr += Form(",RooFactoryWSTool::as_ARG(%d)",i) ;
+   clingExpr += Form(",RooFactoryWSTool::as_ARG(%d)",i) ;
       } else if ((*ti)=="RooRealVar&" || (*ti)=="const RooRealVar&") {
    RooFactoryWSTool::as_VAR(i) ;
-   cintExpr += Form(",RooFactoryWSTool::as_VAR(%d)",i) ;
+   clingExpr += Form(",RooFactoryWSTool::as_VAR(%d)",i) ;
       } else if ((*ti)=="RooAbsRealLValue&" || (*ti)=="const RooAbsRealLValue&") {
    RooFactoryWSTool::as_VARLV(i) ;
-   cintExpr += Form(",RooFactoryWSTool::as_VARLV(%d)",i) ;
+   clingExpr += Form(",RooFactoryWSTool::as_VARLV(%d)",i) ;
       } else if ((*ti)=="RooCategory&" || (*ti)=="const RooCategory&") {
    RooFactoryWSTool::as_CAT(i) ;
-   cintExpr += Form(",RooFactoryWSTool::as_CAT(%d)",i) ;
+   clingExpr += Form(",RooFactoryWSTool::as_CAT(%d)",i) ;
       } else if ((*ti)=="RooAbsCategory&" || (*ti)=="const RooAbsCategory&") {
    RooFactoryWSTool::as_CATFUNC(i) ;
-   cintExpr += Form(",RooFactoryWSTool::as_CATFUNC(%d)",i) ;
+   clingExpr += Form(",RooFactoryWSTool::as_CATFUNC(%d)",i) ;
       } else if ((*ti)=="RooAbsCategoryLValue&" || (*ti)=="const RooAbsCategoryLValue&") {
    RooFactoryWSTool::as_CATLV(i) ;
-   cintExpr += Form(",RooFactoryWSTool::as_CATLV(%d)",i) ;
+   clingExpr += Form(",RooFactoryWSTool::as_CATLV(%d)",i) ;
       } else if ((*ti)=="RooAbsPdf&" || (*ti)=="const RooAbsPdf&") {
    RooFactoryWSTool::as_PDF(i) ;
-   cintExpr += Form(",RooFactoryWSTool::as_PDF(%d)",i) ;
+   clingExpr += Form(",RooFactoryWSTool::as_PDF(%d)",i) ;
       } else if ((*ti)=="RooResolutionModel&" || (*ti)=="const RooResolutionModel&") {
    RooFactoryWSTool::as_RMODEL(i) ;
-   cintExpr += Form(",RooFactoryWSTool::as_RMODEL(%d)",i) ;
+   clingExpr += Form(",RooFactoryWSTool::as_RMODEL(%d)",i) ;
       } else if ((*ti)=="RooAbsData&" || (*ti)=="const RooAbsData&") {
    RooFactoryWSTool::as_DATA(i) ;
-   cintExpr += Form(",RooFactoryWSTool::as_DATA(%d)",i) ;
+   clingExpr += Form(",RooFactoryWSTool::as_DATA(%d)",i) ;
       } else if ((*ti)=="RooDataSet&" || (*ti)=="const RooDataSet&") {
    RooFactoryWSTool::as_DSET(i) ;
-   cintExpr += Form(",RooFactoryWSTool::as_DSET(%d)",i) ;
+   clingExpr += Form(",RooFactoryWSTool::as_DSET(%d)",i) ;
       } else if ((*ti)=="RooDataHist&" || (*ti)=="const RooDataHist&") {
    RooFactoryWSTool::as_DHIST(i) ;
-   cintExpr += Form(",RooFactoryWSTool::as_DHIST(%d)",i) ;
+   clingExpr += Form(",RooFactoryWSTool::as_DHIST(%d)",i) ;
       } else if ((*ti)=="const RooArgSet&") {
    RooFactoryWSTool::as_SET(i) ;
-   cintExpr += Form(",RooFactoryWSTool::as_SET(%d)",i) ;
+   clingExpr += Form(",RooFactoryWSTool::as_SET(%d)",i) ;
       } else if ((*ti)=="const RooArgList&") {
    RooFactoryWSTool::as_LIST(i) ;
-   cintExpr += Form(",RooFactoryWSTool::as_LIST(%d)",i) ;
+   clingExpr += Form(",RooFactoryWSTool::as_LIST(%d)",i) ;
       } else if ((*ti)=="const char*") {
    RooFactoryWSTool::as_STRING(i) ;
-   cintExpr += Form(",RooFactoryWSTool::as_STRING(%d)",i) ;
+   clingExpr += Form(",RooFactoryWSTool::as_STRING(%d)",i) ;
       } else if ((*ti)=="Int_t" || (*ti)=="int" || (*ti)=="bool" || (*ti)=="bool") {
    RooFactoryWSTool::as_INT(i) ;
-   cintExpr += Form(",RooFactoryWSTool::as_INT(%d)",i) ;
+   clingExpr += Form(",RooFactoryWSTool::as_INT(%d)",i) ;
       } else if ((*ti)=="double") {
    RooFactoryWSTool::as_DOUBLE(i) ;
-   cintExpr += Form(",RooFactoryWSTool::as_DOUBLE(%d)",i) ;
+   clingExpr += Form(",RooFactoryWSTool::as_DOUBLE(%d)",i) ;
       } else if (isEnum(ti->c_str())) {
 
    string qualvalue ;
@@ -414,7 +414,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
      qualvalue =  Form("%s::%s",className,_args[i].c_str()) ;
    }
    if (isValidEnumValue(ti->c_str(),qualvalue.c_str())) {
-     cintExpr += Form(",(%s)%s",ti->c_str(),qualvalue.c_str()) ;
+     clingExpr += Form(",(%s)%s",ti->c_str(),qualvalue.c_str()) ;
    } else {
      throw string(Form("Supplied argument %s does not represent a valid state of enum %s",_args[i].c_str(),ti->c_str())) ;
      }
@@ -437,23 +437,23 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
    btype = string(TEnum::GetEnum(btype.c_str())->GetName());
 
    if (obj.InheritsFrom(btype.c_str())) {
-     cintExpr += Form(",(%s&)RooFactoryWSTool::as_OBJ(%d)",ti->c_str(),i) ;
+     clingExpr += Form(",(%s&)RooFactoryWSTool::as_OBJ(%d)",ti->c_str(),i) ;
    } else {
      throw string(Form("Required argument with name %s of type '%s' is not in the workspace",_args[i].c_str(),ti->c_str())) ;
    }
       }
     }
-    cintExpr += ") ;" ;
+    clingExpr += ") ;" ;
   } catch (const string &err) {
     coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR constructing " << className << "::" << objName << ": " << err << std::endl ;
     logError() ;
     return nullptr ;
   }
 
-  cxcoutD(ObjectHandling) << "RooFactoryWSTool::createArg() Construct expression is " << cintExpr << std::endl ;
+  cxcoutD(ObjectHandling) << "RooFactoryWSTool::createArg() Construct expression is " << clingExpr << std::endl ;
 
-  // Call CINT to perform constructor call. Catch any error thrown by argument conversion method
-  if (std::unique_ptr<RooAbsArg> arg{reinterpret_cast<RooAbsArg*>(gROOT->ProcessLineFast(cintExpr.c_str()))}) {
+  // Call CLING to perform constructor call. Catch any error thrown by argument conversion method
+  if (std::unique_ptr<RooAbsArg> arg{reinterpret_cast<RooAbsArg*>(gROOT->ProcessLineFast(clingExpr.c_str()))}) {
     if (string(className)=="RooGenericPdf") {
       arg->setStringAttribute("factory_tag",Form("EXPR::%s(%s)",objName,varList)) ;
     } else if (string(className)=="RooFormulaVar") {
@@ -465,7 +465,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
     RooAbsArg* ret = _ws->arg(objName) ;
     return ret ;
   } else {
-    coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR in CINT constructor call to create object" << std::endl ;
+    coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR in CLING constructor call to create object" << std::endl ;
     logError() ;
     return nullptr ;
   }
@@ -1508,7 +1508,7 @@ void RooFactoryWSTool::checkIndex(UInt_t idx)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooAbsArg reference found in workspace
+/// CLING constructor interface, return constructor string argument `#idx` as RooAbsArg reference found in workspace
 
 RooAbsArg& RooFactoryWSTool::asARG(const char* arg)
   {
@@ -1528,7 +1528,7 @@ RooAbsArg& RooFactoryWSTool::asARG(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooAbsReal reference found in workspace
+/// CLING constructor interface, return constructor string argument `#idx` as RooAbsReal reference found in workspace
 
 RooAbsReal& RooFactoryWSTool::asFUNC(const char* arg)
 {
@@ -1551,7 +1551,7 @@ RooAbsReal& RooFactoryWSTool::asFUNC(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooAbsRealLValue reference found in workspace
+/// CLING constructor interface, return constructor string argument `#idx` as RooAbsRealLValue reference found in workspace
 
 RooAbsRealLValue& RooFactoryWSTool::asVARLV(const char* arg)
 {
@@ -1574,7 +1574,7 @@ RooAbsRealLValue& RooFactoryWSTool::asVARLV(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooRealVar reference found in workspace
+/// CLING constructor interface, return constructor string argument `#idx` as RooRealVar reference found in workspace
 
 RooRealVar& RooFactoryWSTool::asVAR(const char* arg)
 {
@@ -1589,7 +1589,7 @@ RooRealVar& RooFactoryWSTool::asVAR(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooAbsPdf reference found in workspace
+/// CLING constructor interface, return constructor string argument `#idx` as RooAbsPdf reference found in workspace
 
 RooAbsPdf& RooFactoryWSTool::asPDF(const char* arg)
 {
@@ -1604,7 +1604,7 @@ RooAbsPdf& RooFactoryWSTool::asPDF(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooResolutionModel reference found in workspace
+/// CLING constructor interface, return constructor string argument `#idx` as RooResolutionModel reference found in workspace
 
 RooResolutionModel& RooFactoryWSTool::asRMODEL(const char* arg)
 {
@@ -1623,7 +1623,7 @@ RooResolutionModel& RooFactoryWSTool::asRMODEL(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooAbsCategory reference found in workspace
+/// CLING constructor interface, return constructor string argument `#idx` as RooAbsCategory reference found in workspace
 
 RooAbsCategory& RooFactoryWSTool::asCATFUNC(const char* arg)
 {
@@ -1641,7 +1641,7 @@ RooAbsCategory& RooFactoryWSTool::asCATFUNC(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooAbsCategoryLValue reference found in workspace
+/// CLING constructor interface, return constructor string argument `#idx` as RooAbsCategoryLValue reference found in workspace
 
 RooAbsCategoryLValue& RooFactoryWSTool::asCATLV(const char* arg)
 {
@@ -1660,7 +1660,7 @@ RooAbsCategoryLValue& RooFactoryWSTool::asCATLV(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooCategory reference found in workspace
+/// CLING constructor interface, return constructor string argument `#idx` as RooCategory reference found in workspace
 
 RooCategory& RooFactoryWSTool::asCAT(const char* arg)
 {
@@ -1676,7 +1676,7 @@ RooCategory& RooFactoryWSTool::asCAT(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooArgSet of objects found in workspace
+/// CLING constructor interface, return constructor string argument `#idx` as RooArgSet of objects found in workspace
 
 RooArgSet RooFactoryWSTool::asSET(const char* arg)
 {
@@ -1725,7 +1725,7 @@ RooArgSet RooFactoryWSTool::asSET(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooArgList of objects found in workspace
+/// CLING constructor interface, return constructor string argument `#idx` as RooArgList of objects found in workspace
 
 RooArgList RooFactoryWSTool::asLIST(const char* arg)
 {
@@ -1761,7 +1761,7 @@ RooArgList RooFactoryWSTool::asLIST(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooAbsData object found in workspace
+/// CLING constructor interface, return constructor string argument `#idx` as RooAbsData object found in workspace
 
 RooAbsData& RooFactoryWSTool::asDATA(const char* arg)
 {
@@ -1775,7 +1775,7 @@ RooAbsData& RooFactoryWSTool::asDATA(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooDataHist object found in workspace
+/// CLING constructor interface, return constructor string argument `#idx` as RooDataHist object found in workspace
 
 RooDataHist& RooFactoryWSTool::asDHIST(const char* arg)
 {
@@ -1792,7 +1792,7 @@ RooDataHist& RooFactoryWSTool::asDHIST(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as RooDataSet object found in workspace
+/// CLING constructor interface, return constructor string argument `#idx` as RooDataSet object found in workspace
 
 RooDataSet& RooFactoryWSTool::asDSET(const char* arg)
 {
@@ -1823,7 +1823,7 @@ TObject& RooFactoryWSTool::asOBJ(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as const char*
+/// CLING constructor interface, return constructor string argument `#idx` as const char*
 
 const char* RooFactoryWSTool::asSTRING(const char* arg)
 {
@@ -1853,7 +1853,7 @@ const char* RooFactoryWSTool::asSTRING(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as Int_t
+/// CLING constructor interface, return constructor string argument `#idx` as Int_t
 
 Int_t RooFactoryWSTool::asINT(const char* arg)
 {
@@ -1862,7 +1862,7 @@ Int_t RooFactoryWSTool::asINT(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument `#idx` as double
+/// CLING constructor interface, return constructor string argument `#idx` as double
 
 double RooFactoryWSTool::asDOUBLE(const char* arg)
 {

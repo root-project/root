@@ -34,7 +34,7 @@ void geom_alice_its()
 // Demonstrate extraction of volumes matching certain criteria.
 //==============================================================================
 
-// Should be run in compiled mode -- CINT has issues with recursion.
+// Should be run in compiled mode -- CLING has issues with recursion.
 //
 // 1. Creation:
 //    root

@@ -43,7 +43,7 @@ using namespace ROOT::Math;
 
 
 
-#ifdef __CINT__
+#ifdef __CLING__
 #define INF 1.7E308
 #else
 #define INF std::numeric_limits<double>::infinity()
@@ -108,7 +108,7 @@ int compare( std::string name, double v1, double v2, double scale = 2.0) {
 }
 
 // typedef for a free function like gamma(double x, double a, double b)
-// (dont have blank spaces between for not confusing CINT parser)
+// (dont have blank spaces between for not confusing CLING parser)
 typedef double (*FreeFunc3)(double, double, double );
 typedef double (*FreeFunc4)(double, double, double, double );
 
@@ -554,7 +554,7 @@ int stressMathMore(double nscale = 1) {
 
    int iret = 0;
 
-#ifdef __CINT__
+#ifdef __CLING__
    std::cout << "Test must be run in compile mode - please use ACLIC !!" << std::endl;
    return 0;
 #endif

@@ -51,7 +51,7 @@ set_target_properties(ClingUtils PROPERTIES
 
 ROOT_INSTALL_HEADERS()
 
-#### STL dictionary (replacement for cintdlls)##############################
+#### STL dictionaries ##############################
 
 set(stldicts
     vector
@@ -77,7 +77,7 @@ foreach(dict ${stldicts})
                                 LINKDEF src/${dict}Linkdef.h
                                 DICTIONARY_OPTIONS --noIncludePaths
                                 DEPENDENCIES Core)
-  target_include_directories(${dict}Dict PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/cint)
+  target_include_directories(${dict}Dict PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/icling)
 endforeach()
 
 set(CLANG_RESOURCE_DIR_STEM)
@@ -186,9 +186,9 @@ foreach(file ${custom_modulemaps}
 endforeach()
 
 foreach(file  multimap  multiset)
-  list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/cint/${file} ${CMAKE_BINARY_DIR}/etc/cling/cint/${file})
-  list(APPEND files_to_copy ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/cint/${file})
-  install(FILES ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/cint/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/cint)
+  list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/icling/${file} ${CMAKE_BINARY_DIR}/etc/cling/icling/${file})
+  list(APPEND files_to_copy ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/icling/${file})
+  install(FILES ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/icling/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/icling)
 endforeach()
 
 set(stamp_file ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/LLVMRES.stamp)

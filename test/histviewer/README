@@ -21,7 +21,7 @@ from the last beam test in GSI (December 1998), then
 
 LinkDef.h
 
-necessary for the ROOT CINT and finally
+necessary for the ROOT CLING and finally
 
 rootlogon.C
 

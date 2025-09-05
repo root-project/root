@@ -3,9 +3,9 @@
 //one column with a string.
 //The script may be executed with a different number of rows.
 //It shows the time to write & read in compress and no compress mode.
-//The script can be executed using interpreted (CINT) or compiled code
+//The script can be executed using interpreted (CLING) or compiled code
 //Example of a ROOT session
-// root > .x julius.C  (script executed via CINT)
+// root > .x julius.C  (script executed via CLING)
 //or
 // root > .x julius.C+ (script executed via the compiler)
 //

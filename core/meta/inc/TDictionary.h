@@ -35,7 +35,7 @@
 // The ROOT dictionary system provides a very extensive RTTI            //
 // environment that facilitates a.o. object inspectors, object I/O,     //
 // ROOT Trees, etc. Most of the type information is provided by the     //
-// CINT C++ interpreter.                                                //
+// CLING C++ interpreter.                                               //
 //                                                                      //
 // TMethodCall                            (method call environment)     //
 //                                                                      //

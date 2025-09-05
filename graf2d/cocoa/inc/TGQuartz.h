@@ -96,7 +96,7 @@ private:
    void AlignTTFString();
    Bool_t IsTTFStringVisible(Int_t x, Int_t y, UInt_t w, UInt_t h);
    void RenderTTFString(Int_t x, Int_t y, ETextMode mode);
-   //I have to use void * instead of QuartzPixmap * because of CINT :(
+   //I have to use void * instead of QuartzPixmap * because of CLING :(
    void DrawFTGlyphIntoPixmap(void *pixmap, FT_Bitmap *source, ULong_t fore, ULong_t back, Int_t bx, Int_t by);
 
    void SetAA();

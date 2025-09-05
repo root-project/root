@@ -80,7 +80,7 @@ void properties_test() {
       RflxEqualT(string("Reflex comment property ") + memco[i].name,
                  mem.Properties().PropertyAsString("comment"),
                  memco[i].comment);
-      // check CINT comment:
+      // check CLING comment:
       if (memco[i].comment && memco[i].comment[0]) {
          TDataMember* dm = (TDataMember*)cl->GetListOfDataMembers()->FindObject(memco[i].name);
          RflxAssertT(string("TDataMember ") + memco[i].name, dm);

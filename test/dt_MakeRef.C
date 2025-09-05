@@ -7,9 +7,7 @@
 #include "TH2.h"
 #include "TSystem.h"
 
-#ifndef __CINT__
 #include "Event.h"
-#endif
 
 R__LOAD_LIBRARY(libEvent)
 

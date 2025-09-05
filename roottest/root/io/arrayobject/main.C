@@ -129,7 +129,7 @@ int run() {
 
 }
 
-#ifndef __CINT__
+#ifndef __CLING__
 int
 main()
 {

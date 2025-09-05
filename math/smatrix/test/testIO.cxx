@@ -762,11 +762,11 @@ int testRead(double & r1, double & r2, double & r3) {
     iret = 2;
   }
 
-  std::cout << "try to read file written with Reflex using CINT Dictionaries " << std::endl;
+  std::cout << "try to read file written with Reflex using CLING Dictionaries " << std::endl;
 
   r3 = readSMatrix(sfile2);
   if ( r3 != -1. && fabs(r2-r3) > tol) {
-    std::cout << "\nERROR: Differeces Reflex-CINT found  when reading SMatrices" << std::endl;
+    std::cout << "\nERROR: Differeces Reflex-CLING found  when reading SMatrices" << std::endl;
     int pr = std::cout.precision(18);  std::cout << r2 << "   !=    " << r3 << std::endl; std::cout.precision(pr);
     iret = 3;
   }
@@ -814,11 +814,11 @@ int testReadSym(double & r1, double & r2, double & r3) {
     iret = 12;
   }
 
-  std::cout << "try to read file written with Reflex using CINT Dictionaries " << std::endl;
+  std::cout << "try to read file written with Reflex using CLING Dictionaries " << std::endl;
 
   r3 = readSMatrixSym(symfile2);
   if ( r3 != -1. && fabs(r2-r3) > tol) {
-    std::cout << "\nERROR: Differeces Reflex-CINT found  when reading SMatricesSym" << std::endl;
+    std::cout << "\nERROR: Differeces Reflex-CLING found  when reading SMatricesSym" << std::endl;
     int pr = std::cout.precision(18);  std::cout << r2 << "   !=    " << r3 << std::endl; std::cout.precision(pr);
     iret = 13;
   }

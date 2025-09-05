@@ -466,13 +466,13 @@ Specialization of TRootBrowser for Eve.
 ClassImp(TEveBrowser);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add "Export to CINT" into context-menu for class cl.
+/// Add "Export to CLING" into context-menu for class cl.
 
 void TEveBrowser::SetupCintExport(TClass* cl)
 {
    TList* l = cl->GetMenuList();
    TClassMenuItem* n = new TClassMenuItem(TClassMenuItem::kPopupUserFunction, cl,
-                                          "Export to CINT", "ExportToCINT", this, "const char*,TObject*", 1);
+                                          "Export to CLING", "ExportToCINT", this, "const char*,TObject*", 1);
 
    l->AddFirst(n);
 }

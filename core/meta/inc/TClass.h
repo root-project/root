@@ -223,7 +223,7 @@ private:
    mutable std::atomic<UInt_t>  fCheckSum = 0; //checksum of data members and base classes
    TVirtualCollectionProxy *fCollectionProxy = nullptr; //Collection interface
    Version_t          fClassVersion = 0;    //Class version Identifier
-   ClassInfo_t       *fClassInfo = nullptr; //pointer to CINT class info class
+   ClassInfo_t       *fClassInfo = nullptr; //pointer to CLING class info class
    TString            fContextMenuTitle; //context menu title
    const std::type_info *fTypeInfo = nullptr; //pointer to the C++ type information.
    ShowMembersFunc_t  fShowMembers = nullptr; //pointer to the class's ShowMembers function

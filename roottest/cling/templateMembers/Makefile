@@ -57,7 +57,7 @@ templateMembers.log: runtemplateMembers.C  templateMembers_C.$(DllSuf) templateM
 templateMembers: templateMembers.log  templateMembers.ref
 ifeq ($(FAIL),)
 	$(WarnFailTest)
-	$(CMDECHO)echo This failures is due to the odd object life time in CINT.
+	$(CMDECHO)echo This failures is due to the odd object life time in CLING.
 	$(CMDECHO)diff -wb templateMembersNoMem.ref templateMembersNoMem.log 
 else
 	$(TestDiff)

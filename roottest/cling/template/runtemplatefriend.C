@@ -1,9 +1,9 @@
 {
-// Make sure the library is not loaded instead of 
+// Make sure the library is not loaded instead of
 // the script
 gInterpreter->UnloadLibraryMap("templatefriend_cxx");
 
-// fails due to CINT's autodict facility:
+// fails due to CLING's autodict facility:
 // when dict for shared_ptr is generated no dict for the templated constructor is requested
 gROOT->ProcessLine(".autodict");
 #ifdef __CLING__

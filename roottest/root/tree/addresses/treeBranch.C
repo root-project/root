@@ -7,7 +7,7 @@
 #include "userClass.C"
 #endif
 
-void treeBranch() 
+void treeBranch()
 {
    if (TClass::GetClass("TopLevel")==0) gROOT->ProcessLine(".L userClass.C+");
    TopLevel *one = new BottomOne;

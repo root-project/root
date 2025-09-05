@@ -37,7 +37,7 @@ Represents the product of a given set of RooAbsReal objects.
 
 class RooProduct::ProdMap : public  std::vector<std::pair<RooArgSet*,RooArgList*> > {} ;
 
-// Namespace with helper functions that have STL stuff that we don't want to expose to CINT
+// Namespace with helper functions that have STL stuff that we don't want to expose to CLING
 namespace {
   typedef RooProduct::ProdMap::iterator RPPMIter ;
   std::pair<RPPMIter,RPPMIter> findOverlap2nd(RPPMIter i, RPPMIter end)  ;

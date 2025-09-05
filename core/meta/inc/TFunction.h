@@ -34,7 +34,7 @@ friend class TMethodCall;
 
 protected:
    MethodInfo_t   *fInfo;            //pointer to Interpreter function info
-   TString         fMangledName;     //Mangled name as determined by CINT.
+   TString         fMangledName;     //Mangled name as determined by CLING.
    TString         fSignature;       //string containing function signature
    TList          *fMethodArgs;      //list of function arguments
 

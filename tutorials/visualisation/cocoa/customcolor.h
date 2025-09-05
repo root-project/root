@@ -32,7 +32,7 @@ inline Color_t FindFreeCustomColorIndex(Color_t start = 1000)
 }
 
 //
-// Ho-ho-ho! Say good-bye to CINT and hello CLING ... and good old templates!!!
+// Ho-ho-ho! Say good-bye to CLING and hello CLING ... and good old templates!!!
 //___________________________________________________________
 template <unsigned N>
 inline unsigned FindFreeCustomColorIndices(Color_t (&indices)[N])

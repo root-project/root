@@ -1064,7 +1064,7 @@ Bool_t TQObject::BlockAllSignals(Bool_t b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Global function which simplifies making connection in interpreted ROOT session
 ///
-///  ConnectCINT      - connects to interpreter(CINT) command
+///  ConnectCINT      - connects to interpreter(CLING) command
 
 Bool_t ConnectCINT(TQObject *sender, const char *signal, const char *slot)
 {

@@ -96,10 +96,10 @@
 //  Interrupt; by clicking on the corresponding toolbar button, or by   //
 //  using Shift+F5 accelerator keys.                                    //
 //                                                                      //
-//  Interface to CINT Interpreter                                       //
+//  Interface to CLING                                                  //
 //                                                                      //
 //  Any command entered in the Command combo box will be passed to      //
-//  the CINT interpreter. This combo box will keep the commands history //
+//  the CLING. This combo box will keep the commands history            //
 //  and will allow you to re-execute the same commands during an editor //
 //  session.                                                            //
 //                                                                      //
