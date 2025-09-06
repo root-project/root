@@ -4,7 +4,7 @@
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- *                                             *
+ *                                                                                *
  *                                                                                *
  * Description:                                                                   *
  *      Functionality for parsing a saved Keras .H5 model into RModel object      *
@@ -18,7 +18,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (see tmva/doc/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                                         *
  **********************************************************************************/
 
 
@@ -40,18 +40,8 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
     
-class RModelParser_Keras{};
-namespace PyKeras{
+    class RModelParser_Keras{};
 
-
-/// Parser function for translatng Keras .h5 model into a RModel object.
-/// Accepts the file location of a Keras model and returns the
-/// equivalent RModel object.
-/// One can specify as option a batch size that can be used when the input Keras model
-/// has not a defined input batch size : e.g. for input = (input_dim,)
-RModel Parse(std::string filename, int batch_size = -1);
-
-}//PyKeras
 }//SOFIE
 }//Experimental
 }//TMVA

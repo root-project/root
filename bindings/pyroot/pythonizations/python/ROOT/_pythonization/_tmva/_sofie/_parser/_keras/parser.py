@@ -1,12 +1,12 @@
 from ......_pythonization import pythonization
 from cppyy import gbl as gbl_namespace
-import keras
 import numpy as np
 import os
 import time
 
 from .layers.permute import MakeKerasPermute
 from .layers.batchnorm import MakeKerasBatchNorm
+from .layers.layernorm import MakeKerasLayerNorm
 from .layers.reshape import MakeKerasReshape
 from .layers.flatten import MakeKerasFlatten
 from .layers.concat import MakeKerasConcat
@@ -16,9 +16,10 @@ from .layers.softmax import MakeKerasSoftmax
 from .layers.tanh import MakeKerasTanh
 from .layers.identity import MakeKerasIdentity
 from .layers.relu import MakeKerasReLU
+from .layers.elu import MakeKerasELU
 from .layers.selu import MakeKerasSeLU
 from .layers.sigmoid import MakeKerasSigmoid
-from .layers.leakyrelu import MakeKerasLeakyRelu
+from .layers.leaky_relu import MakeKerasLeakyRelu
 from .layers.pooling import MakeKerasPooling
 from .layers.rnn import MakeKerasRNN
 from .layers.dense import MakeKerasDense
@@ -40,6 +41,7 @@ def MakeKerasActivation(layer):
 mapKerasLayer = {"Activation": MakeKerasActivation,
                  "Permute": MakeKerasPermute,
                  "BatchNormalization": MakeKerasBatchNorm,
+                 "LayerNormalization": MakeKerasLayerNorm,
                  "Reshape": MakeKerasReshape,
                  "Flatten": MakeKerasFlatten,
                  "Concatenate": MakeKerasConcat,
@@ -50,18 +52,23 @@ mapKerasLayer = {"Activation": MakeKerasActivation,
                  "Multiply": MakeKerasBinary,
                  "Softmax": MakeKerasSoftmax,
                  "tanh": MakeKerasTanh,
-                 "Identity": MakeKerasIdentity,
-                 "Dropout": MakeKerasIdentity,
+                #  "Identity": MakeKerasIdentity,
+                #  "Dropout": MakeKerasIdentity,
                  "ReLU": MakeKerasReLU,
                  "relu": MakeKerasReLU,
+                 "ELU": MakeKerasELU,
+                 "elu": MakeKerasELU,
                  "selu": MakeKerasSeLU,
                  "sigmoid": MakeKerasSigmoid,
-                 "LeakyReLU": MakeKerasLeakyRelu, 
+                 "LeakyReLU": MakeKerasLeakyRelu,
+                 "leaky_relu": MakeKerasLeakyRelu,
                  "softmax": MakeKerasSoftmax, 
                  "MaxPooling2D": MakeKerasPooling,
-                 "SimpleRNN": MakeKerasRNN,
-                 "GRU": MakeKerasRNN,
-                 "LSTM": MakeKerasRNN,
+                 "AveragePooling2D": MakeKerasPooling,
+                 "GlobalAveragePooling2D": MakeKerasPooling,
+                #  "SimpleRNN": MakeKerasRNN,
+                #  "GRU": MakeKerasRNN,
+                #  "LSTM": MakeKerasRNN,
                  }
 
 mapKerasLayerWithActivation = {"Dense": MakeKerasDense,"Conv2D": MakeKerasConv}
@@ -127,31 +134,75 @@ def add_layer_into_RModel(rmodel, layer_data):
         else:
             LayerName = Attributes['name']
         
-        # Pooling layers in keras by default assume the channels dimension is the last one, 
-        # while in onnx (and the SOFIE's RModel) it is the first one (other than batch size), 
-        # so a transpose is needed before and after the pooling, if the data format is channels 
-        # last (can be set to channels first by the user). In case of MaxPool2D and Conv2D (with
-        # linear activation) channels last, the transpose layers are added as:
+        # Convoltion/Pooling layers in keras by default assume the channels dimension is the 
+        # last one, while in onnx (and the SOFIE's RModel) it is the first one (other than batch 
+        # size), so a transpose is needed before and after the pooling, if the data format is 
+        # channels last (can be set to channels first by the user). In case of MaxPool2D and 
+        # Conv2D (with linear activation) channels last, the transpose layers are added as:
+        
         #                   input                   output
         # transpose layer   input_layer_name        layer_name + PreTrans
         # actual layer      layer_name + PreTrans   layer_name + PostTrans
         # transpose layer   layer_name + PostTrans  output_layer_name
         
         fLayerOutput = outputs[0]
-        if fLayerType == 'MaxPooling2D':
+        if fLayerType == 'GlobalAveragePooling2D':
+            if layer_data['channels_last']:
+                op = gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Transpose('float')([0, 3, 1, 2], inputs[0], LayerName+"PreTrans")
+                rmodel.AddOperatorReference(op)
+                inputs[0] = LayerName+"PreTrans"
+            outputs[0] = LayerName+"Squeeze"
+            rmodel.AddOperatorReference(mapKerasLayer[fLayerType](layer_data))
+            op = gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Reshape(
+                gbl_namespace.TMVA.Experimental.SOFIE.ReshapeOpMode.Squeeze,
+                [2, 3],
+                LayerName + "Squeeze",
+                fLayerOutput
+            )
+            rmodel.AddOperatorReference(op)
+        
+        # Similar case is with Batchnorm, ONNX assumes that the 'axis' is always 1, but Keras
+        # gives the user the choice of specifying it. So, we have to transpose the input layer
+        # as 'axis' as the first dimension, apply the BatchNormalization operator and then
+        # again tranpose it to bring back the original dimensions
+        elif fLayerType == 'BatchNormalization':
+            if '_build_input_shape' in Attributes.keys():
+                num_input_shapes = len(Attributes['_build_input_shape'])
+            elif '_build_shapes_dict' in Attributes.keys():
+                num_input_shapes = len(list(Attributes['_build_shapes_dict']['input_shape']))
+            
+            axis = Attributes['axis']
+            if axis < 0:
+                axis += num_input_shapes
+            fAttrPerm = list(range(0, num_input_shapes))
+            fAttrPerm[1] = axis
+            fAttrPerm[axis] = 1
+            op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Transpose('float')(fAttrPerm, inputs[0], 
+                                                                                     LayerName+"PreTrans")
+            rmodel.AddOperatorReference(op)
+            inputs[0] = LayerName + "PreTrans"
+            outputs[0] = LayerName + "PostTrans"
+            rmodel.AddOperatorReference(mapKerasLayer[fLayerType](layer_data))
+            op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Transpose('float')(fAttrPerm, LayerName+"PostTrans", 
+                                                                                     fLayerOutput)
+            rmodel.AddOperatorReference(op)
+        
+        elif fLayerType == 'MaxPooling2D' or fLayerType == 'AveragePooling2D':
             if layer_data['channels_last']:
                 op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Transpose('float')([0,3,1,2], inputs[0],
                                                                                          LayerName+"PreTrans")
                 rmodel.AddOperatorReference(op)
                 inputs[0] = LayerName+"PreTrans"
-                layer_data["layerInput"] = inputs
                 outputs[0] = LayerName+"PostTrans"
-        rmodel.AddOperatorReference(mapKerasLayer[fLayerType](layer_data))
-        if fLayerType == 'MaxPooling2D':
+            rmodel.AddOperatorReference(mapKerasLayer[fLayerType](layer_data))
             if layer_data['channels_last']:
                 op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Transpose('float')([0,2,3,1], 
                                                                                     LayerName+"PostTrans", fLayerOutput)
                 rmodel.AddOperatorReference(op)
+        
+        else:
+            rmodel.AddOperatorReference(mapKerasLayer[fLayerType](layer_data))
+            
         return rmodel
     
     # These layers require two operators - dense/conv and their activation function
@@ -225,6 +276,16 @@ def add_layer_into_RModel(rmodel, layer_data):
 class RModelParser_Keras:
 
     def Parse(filename, batch_size=1):  # If a model does not have a defined batch size, then assuming it is 1
+        
+        # TensoFlow/Keras is too fragile to import unconditionally. As its presence might break several ROOT 
+        # usecases and importing keras globally will slow down importing ROOT, which is not desired. For this,
+        # we import keras within the functions instead of importing it at the start of the file (i.e. globally). 
+        # So, whenever the parser function is called, only then keras will be imported, and not everytime we 
+        # import ROOT. Also, we can import keras in multiple functions as many times as we want since Python 
+        # caches the imported packages.
+        
+        import keras
+        
         #Check if file exists
         if not os.path.exists(filename):
             raise RuntimeError("Model file {} not found!".format(filename))
@@ -256,7 +317,7 @@ class RModelParser_Keras:
         #           layer   |       name
         # input     dense   |   keras_tensor_1
         # output    dense   |   keras_tensor_2 --
-        #                   |                    |=> layer name matches
+        #                   |                    |=> layer names match
         # input     maxpool |   keras_tensor_2 --
         # output    maxpool |   keras_tensor_3
         #
@@ -264,7 +325,7 @@ class RModelParser_Keras:
         #           layer   |       name
         # input     dense   |   keras_tensor_1
         # output    dense   |   keras_tensor_2 --
-        #                   |                    |=> different layer name 
+        #                   |                    |=> different layer names
         # input     maxpool |   keras_tensor_3 --
         # output    maxpool |   keras_tensor_4  
         #
@@ -294,8 +355,9 @@ class RModelParser_Keras:
                 output_layer_name = layer.output.name[:13] + str(layer_iter+1)
                 layer_data['layerOutput']=[x.name for x in layer.output] if isinstance(layer.output,list) else [output_layer_name]
                 layer_iter += 1
-            
-            layer_data['layerDType']=layer.dtype
+                
+            fLayerType = layer_data['layerType']
+            layer_data['layerDType'] = layer.dtype
             
             if len(layer.weights) > 0:
                 if keras_version < '2.16':
@@ -306,7 +368,7 @@ class RModelParser_Keras:
                 layer_data['layerWeight'] = []
             
             # for convolutional and pooling layers we need to know the format of the data
-            if layer_data['layerType'] in ['Conv2D', 'MaxPooling2D']:
+            if layer_data['layerType'] in ['Conv2D', 'MaxPooling2D', 'AveragePooling2D', 'GlobalAveragePooling2D']:
                 layer_data['channels_last'] = True if layer.data_format == 'channels_last' else False
                 
             # for recurrent type layers we need to extract additional unique information
@@ -325,7 +387,6 @@ class RModelParser_Keras:
                 if layer_data['layerType'] == "GRU":
                     layer_data['layerAttributes']['linear_before_reset'] = 1 if layer.reset_after and layer.recurrent_activation.__name__ == "sigmoid" else 0
             
-            fLayerType = layer_data['layerType']
             # Ignoring the input layer of the model
             if(fLayerType == "InputLayer"):
                 continue;
@@ -429,7 +490,7 @@ class RModelParser_Keras:
         fPInputDType = []
         for idx in range(len(keras_model.inputs)):
             dtype = keras_model.inputs[idx].dtype.__str__()
-            if (dtype == "float32"):
+            if dtype == "float32":
                 fPInputDType.append(dtype)
             else:
                 fPInputDType.append(dtype[9:-2])
@@ -462,12 +523,12 @@ class RModelParser_Keras:
         outputNames = []
         if keras_version < '2.16' or is_functional_model:
             for layerName in keras_model.output_names:
-                output_layer= keras_model.get_layer(layerName)
-                output_layer_name = output_layer.output.name
+                final_layer = keras_model.get_layer(layerName)
+                output_layer_name = final_layer.output.name
                 outputNames.append(output_layer_name)
         else:
-            output_layer = keras_model.layers[-1]
-            output_layer.name = output_layer.name[:13] + str(layer_iter)
+            final_layer = keras_model.outputs[-1]
+            output_layer_name = final_layer.name[:13] + str(layer_iter)
             outputNames.append(output_layer_name)
         rmodel.AddOutputTensorNameList(outputNames)
         return rmodel

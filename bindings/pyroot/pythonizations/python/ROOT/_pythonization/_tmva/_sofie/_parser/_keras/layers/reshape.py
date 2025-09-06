@@ -1,5 +1,5 @@
 from cppyy import gbl as gbl_namespace
-from ..._keras import keras_version
+from .. import keras_version
 
 def MakeKerasReshape(layer):
     """
