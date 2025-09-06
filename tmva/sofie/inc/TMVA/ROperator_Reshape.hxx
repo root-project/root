@@ -68,6 +68,7 @@ public:
         fAttrAxes(attrAxes)
    {
       assert(fOpMode == Squeeze || fOpMode == Unsqueeze);
+      fOutputTensorNames = { fNOutput };
    }
 
    // output type is same as input

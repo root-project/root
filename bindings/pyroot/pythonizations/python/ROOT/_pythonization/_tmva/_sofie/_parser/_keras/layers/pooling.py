@@ -17,7 +17,7 @@ def MakeKerasPooling(layer):
     ROperator_Pool: A SOFIE framework operator representing the pooling layer operation.
     """
     
-    #extract attributes from layer data
+    # Extract attributes from layer data
     fLayerDType = layer['layerDType']
     finput = layer['layerInput']
     foutput = layer['layerOutput']
@@ -26,11 +26,16 @@ def MakeKerasPooling(layer):
     fLayerOutputName = foutput[0]
     pool_atrr = gbl_namespace.TMVA.Experimental.SOFIE.RAttributes_Pool()
     attributes = layer['layerAttributes']
-    fAttrKernelShape = attributes["pool_size"]
-    fKerasPadding = str(attributes["padding"])
-    fAttrStrides = attributes["strides"]
+    # Set default values for GlobalAveragePooling2D
+    fAttrKernelShape = []
+    fKerasPadding = 'valid'
+    fAttrStrides = []
+    if fLayerType != 'GlobalAveragePooling2D':
+        fAttrKernelShape = attributes["pool_size"]
+        fKerasPadding = str(attributes["padding"])
+        fAttrStrides = attributes["strides"]
     
-    #Set default values
+    # Set default values
     fAttrDilations = (1,1)
     fpads = [0,0,0,0,0,0]
     pool_atrr.ceil_mode = 0
@@ -43,7 +48,7 @@ def MakeKerasPooling(layer):
         fAttrAutopad = 'NOTSET'
     else:
         raise RuntimeError(
-            "TMVA::SOFIE - RModel Keras Parser doesn't yet supports Convolution layer with padding " + fKerasPadding
+            "TMVA::SOFIE - RModel Keras Parser doesn't yet support Pooling layer with padding " + fKerasPadding
         )
     pool_atrr.dilations = list(fAttrDilations)
     pool_atrr.strides = list(fAttrStrides)
@@ -51,7 +56,7 @@ def MakeKerasPooling(layer):
     pool_atrr.kernel_shape = list(fAttrKernelShape)
     pool_atrr.auto_pad = fAttrAutopad    
     
-    #choose pooling type
+    # Choose pooling type
     if 'Max' in fLayerType:
         PoolMode =  gbl_namespace.TMVA.Experimental.SOFIE.PoolOpMode.MaxPool
     elif 'AveragePool' in fLayerType:
@@ -63,7 +68,7 @@ def MakeKerasPooling(layer):
             "TMVA::SOFIE - Unsupported - Operator poolong does not yet support pooling type " + fLayerType
         )
     
-    #create operator
+    # Create operator
     if  gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fLayerDType) ==  gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT:
         op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_Pool['float'](PoolMode, pool_atrr, fLayerInputName, fLayerOutputName)
         return op

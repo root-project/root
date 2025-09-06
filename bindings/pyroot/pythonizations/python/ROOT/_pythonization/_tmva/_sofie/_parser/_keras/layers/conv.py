@@ -1,6 +1,6 @@
 from cppyy import gbl as gbl_namespace
 import math
-from ..._keras import keras_version
+from .. import keras_version
 
 def MakeKerasConv(layer): 
     """
@@ -66,5 +66,5 @@ def MakeKerasConv(layer):
         return op
     else:
         raise RuntimeError(
-            "TMVA::SOFIE - Unsupported - Operator Gemm does not yet support input type " + fLayerDType
+            "TMVA::SOFIE - Unsupported - Operator Conv does not yet support input type " + fLayerDType
         )
