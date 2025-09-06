@@ -12,33 +12,40 @@ def make_testname(test_case: str):
     return test_case_name
 
 models = [
-    "BatchNorm1D",
+    "AveragePooling2D_channels_first",
+    "AveragePooling2D_channels_last",
+    "BatchNorm",
     "Conv2D_channels_first",
     "Conv2D_channels_last",
     "Conv2D_padding_same",
     "Conv2D_padding_valid",
     "Dense",
+    "ELU",
     "Flatten",
+    "GlobalAveragePooling2D_channels_first",
+    "GlobalAveragePooling2D_channels_last",
     # "GRU",
+    "LayerNorm",
     "LeakyReLU",
     # "LSTM",
     "MaxPool2D_channels_first",
     "MaxPool2D_channels_last",
     "Permute",
-    "Relu",
+    "ReLU",
     "Reshape",
-    "Selu",
-    "Sigmoid",
     # "SimpleRNN",
     "Softmax",
-    "Swish",
-    "Tanh",
-] + [f"Layer_Combination_{i}" for i in range(1, 4)]
+] + ([f"Activation_layer_{activation_function.capitalize()}" for activation_function in 
+      ['relu', 'elu', 'leaky_relu', 'selu', 'sigmoid', 'softmax', 'swish', 'tanh']] + 
+     
+     [f"Layer_Combination_{i}" for i in range(1, 4)])
 
 class SOFIE_Keras_Parser(unittest.TestCase):
     
     def setUp(self):
         base_dir = self._testMethodName[5:]
+        if os.path.isdir(base_dir):
+            shutil.rmtree(base_dir)
         os.makedirs(base_dir + "/input_models")
         os.makedirs(base_dir + "/generated_header_files_dir") 
     
@@ -57,10 +64,6 @@ class SOFIE_Keras_Parser(unittest.TestCase):
     def test_functional(self):
         functional_models = models + ["Add", "Concat", "Multiply", "Subtract"]
         self.run_model_tests("functional", generate_keras_functional, functional_models)
-    
-    # def tearDown(self):
-    #     base_dir = self._testMethodName[5:]
-    #     shutil.rmtree(base_dir)
     
     @classmethod
     def tearDownClass(self):

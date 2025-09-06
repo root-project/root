@@ -1,5 +1,5 @@
 from cppyy import gbl as gbl_namespace
-from ..._keras import keras_version
+from .. import keras_version
 
 def MakeKerasBatchNorm(layer): 
     """
@@ -44,5 +44,10 @@ def MakeKerasBatchNorm(layer):
     epsilon = attributes["epsilon"]
     momentum = attributes["momentum"]
     
-    op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_BatchNormalization('float')(epsilon, momentum, 0, fNX, fNScale, fNB, fNMean, fNVar, fNY)
+    if  gbl_namespace.TMVA.Experimental.SOFIE.ConvertStringToType(fLayerDType) ==  gbl_namespace.TMVA.Experimental.SOFIE.ETensorType.FLOAT:
+        op =  gbl_namespace.TMVA.Experimental.SOFIE.ROperator_BatchNormalization('float')(epsilon, momentum, 0, fNX, fNScale, fNB, fNMean, fNVar, fNY)
+    else:
+        raise RuntimeError(
+            "TMVA::SOFIE - Unsupported - Operator BatchNormalization does not yet support input type " + fLayerDType
+        )
     return op

@@ -1,6 +1,5 @@
 import ROOT
 import numpy as np
-import keras
 
 '''
 The test file contains two types of functions:
@@ -46,6 +45,9 @@ def is_accurate(tensor_a, tensor_b, tolerance=1e-3):
     return True
 
 def generate_and_test_inference(model_file_path: str, generated_header_file_dir: str = None, batch_size=1):
+    
+    import keras
+    
     model_name = model_file_path[model_file_path.rfind('/')+1:].removesuffix(".h5")
     rmodel = ROOT.TMVA.Experimental.SOFIE.RModelParser_Keras.Parse(model_file_path, batch_size)
     if generated_header_file_dir is None:
@@ -63,7 +65,7 @@ def generate_and_test_inference(model_file_path: str, generated_header_file_dir:
     if not compile_status:
         raise AssertionError(f"Error compiling header file {generated_header_file_path}")
     sofie_model_namespace = getattr(ROOT, "TMVA_SOFIE_" + model_name)
-    inference_session = sofie_model_namespace.Session(generated_header_file_path[:-4] + ".dat")
+    inference_session = sofie_model_namespace.Session(generated_header_file_path.removesuffix(".hxx") + ".dat")
     keras_model = keras.models.load_model(model_file_path)
     keras_model.load_weights(model_file_path)
     if len(keras_model.inputs) == 1:

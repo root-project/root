@@ -26,10 +26,10 @@ def MakeKerasLeakyRelu(layer):
     
     if 'alpha' in attributes.keys():
         fAlpha = float(attributes["alpha"])
-    elif 'activation' in attributes.keys():
-        fAlpha = float(attributes['activation'].alpha)
     elif 'negative_slope' in attributes.keys():
         fAlpha = float(attributes['negative_slope'])
+    elif 'activation' in attributes.keys():
+        fAlpha = 0.2
     else:
         raise RuntimeError (
             "Failed to extract alpha value from LeakyReLU"
