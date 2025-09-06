@@ -5,7 +5,7 @@
 #include "ROOT/RRawFileCurl.hxx"
 
 ROOT::Internal::RRawFileCurl::RRawFileCurl(std::string_view url, ROptions options)
-   : RRawFile(url, options), fCurlConnection(new RCurlConnection(url))
+   : RRawFile(url, options), fCurlConnection(new RCurlConnection(std::string(url)))
 {
 }
 
