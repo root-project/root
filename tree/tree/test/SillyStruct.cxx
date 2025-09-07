@@ -1,3 +1,3 @@
 #include "SillyStruct.h"
 
-ClassImp(SillyStruct)
+// ClassImp(SillyStruct)
