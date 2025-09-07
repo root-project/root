@@ -2303,13 +2303,49 @@ void RooDataHist::printMultiline(ostream& os, Int_t content, bool verbose, TStri
   }
 }
 
-void RooDataHist::printDataHistogram(ostream& os, RooRealVar* obs) const
+/**
+ * \brief Prints the contents of the RooDataHist to the specified output stream.
+ *
+ * This function iterates through all bins of the histogram and prints the
+ * coordinates of each bin, along with its weight and statistical error.
+ * It is designed to be robust, handling empty or invalid datasets,
+ * and works for histograms of any dimension.
+ *
+ * \param os The output stream (e.g., std::cout) to write the contents to.
+ */
+void RooDataHist::printContents(std::ostream& os) const
 {
-  for(Int_t i=0; i<obs->getBins(); ++i){
-    this->get(i);
-    obs->setBin(i);
-    os << this->weight() << " +/- " << this->weightSquared() << std::endl;
-  }
+    os << "Contents of RooDataHist \"" << GetName() << "\"" << std::endl;
+
+    if (numEntries() == 0) {
+        os << "(dataset is empty)" << std::endl;
+        return;
+    }
+
+    for (int i = 0; i < numEntries(); ++i) {
+        const RooArgSet* obs = get(i); // load i-th bin
+        os << "  Bin " << i << ": ";
+
+        bool first = true;
+        for (const auto* var : *obs) {
+            if (!first) os << ", ";
+            first = false;
+
+            os << var->GetName() << "=";
+            if (auto realVar = dynamic_cast<const RooRealVar*>(var)) {
+                os << realVar->getVal();
+            } else if (auto catVar = dynamic_cast<const RooCategory*>(var)) {
+                os << catVar->getCurrentLabel();
+            } else {
+                os << "(unsupported type)"; //added as a precaution
+            }
+        }
+
+        double lo, hi;
+        weightError(lo, hi, RooAbsData::SumW2);
+        os << ", weight=" << weight() << " +/- [" << lo << "," << hi << "]"
+           << std::endl;
+    }
 }
 
 
