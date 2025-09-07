@@ -1689,3 +1689,58 @@ void RooDataSet::loadValuesFromSlices(RooCategory &indexCat, std::map<std::strin
       _dstore->loadValues(sliceData->store(), cutVar, rangeName);
    }
 }
+
+/**
+ * \brief Prints the contents of the RooDataSet to the specified output stream.
+ *
+ * This function iterates through all events (rows) of the dataset and prints
+ * the value of each observable, along with the event's weight.
+ * It is designed to be robust, handling empty or invalid datasets gracefully,
+ * and works for datasets of any dimension.
+ *
+ * \param os The output stream (e.g., std::cout) to write the contents to.
+ */
+void RooDataSet::printContents(std::ostream& os) const
+{
+    os << "Contents of RooDataSet \"" << GetName() << "\"" << std::endl;
+
+    if (numEntries() == 0) {
+        os << "(dataset is empty)" << std::endl;
+        return;
+    }
+
+    if (get() == nullptr || get()->empty()) {
+        os << "(dataset has no observables)" << std::endl;
+        return;
+    }
+
+    for (int i = 0; i < numEntries(); ++i) {
+        const RooArgSet* row = get(i); // reuses internal buffers
+        os << "  Entry " << i << ": ";
+
+        bool first = true;
+        for (const auto* var : *row) {
+            if (!first) os << ", ";
+            first = false;
+
+            os << var->GetName() << "=";
+            if (auto realVar = dynamic_cast<const RooRealVar*>(var)) {
+                os << realVar->getVal();
+            } else if (auto catVar = dynamic_cast<const RooCategory*>(var)) {
+                os << catVar->getLabel();
+            } else {
+                os << "(unsupported type)"; //added as a precaution
+            }
+        }
+
+        os << ", weight=" << weight();
+
+        double lo, hi;
+        weightError(lo, hi);
+        if (lo != 0.0 || hi != 0.0) {
+            os << " ±[" << lo << "," << hi << "]";
+        }
+
+        os << std::endl;
+    }
+}
