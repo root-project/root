@@ -21,6 +21,7 @@ ROOTTEST_COMPILE_MACRO(readPtrColls.C
 
 ROOTTEST_ADD_TEST(readPtrColls
                   MACRO readPtrColls.C+
+                  DEPENDS writePtrColls
                   FIXTURES_REQUIRED root-io-uniquePointer-readPtrColls-compile-fixture
                                     root-io-uniquePointer-writePtrColls-fixture)
 
@@ -33,6 +34,7 @@ ROOTTEST_ADD_TEST(crossReadPtrColls
 ROOTTEST_ADD_TEST(crossReadUniqPtrColls
                   MACRO readUniqPtrColls.C+
                   MACROARG "\"ptrColls.root\""
+                  DEPENDS writePtrColls
                   FIXTURES_REQUIRED root-io-uniquePointer-readUniqPtrColls-compile-fixture
                                     root-io-uniquePointer-writePtrColls-fixture)
 
