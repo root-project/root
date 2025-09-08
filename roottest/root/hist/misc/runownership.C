@@ -54,9 +54,15 @@ bool read(const char *filename = "histo.root")
 
 int runownership(const char *filename = "histo.root")
 {
+   bool failure = false;
    write(filename);
-   cout << "So far: " << TH1F_inst::fgCount << '\n';
+   failure |= TH1F_inst::fgCount;
+   if (failure)
+      std::cerr << "After write, instance count was " << TH1F_inst::fgCount << "\n";
    read(filename);
-   cout << "So far: " << TH1F_inst::fgCount << '\n';
-   return 0;
+   failure |= TH1F_inst::fgCount;
+   if (failure)
+      std::cerr << "After read, instance count was " << TH1F_inst::fgCount << "\n";
+
+   return failure;
 }
