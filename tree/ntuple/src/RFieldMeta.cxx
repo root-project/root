@@ -1297,6 +1297,19 @@ void ROOT::RVariantField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
    GenerateColumnsImpl<ROOT::Internal::RColumnSwitch>(desc);
 }
 
+void ROOT::RVariantField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   static const std::vector<std::string> prefixes = {"std::variant<"};
+
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
+   EnsureMatchingTypePrefix(fieldDesc, prefixes);
+
+   if (fSubfields.size() != fieldDesc.GetLinkIds().size()) {
+      throw RException(R__FAIL("number of variants on-disk do not match for " + GetQualifiedFieldName()));
+   }
+}
+
 void ROOT::RVariantField::ConstructValue(void *where) const
 {
    memset(where, 0, GetValueSize());
