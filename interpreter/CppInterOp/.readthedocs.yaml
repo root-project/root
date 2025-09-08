@@ -9,8 +9,8 @@ build:
   tools:
     python: "3.11"
   apt_packages:
-    - clang-16
+    - clang-18
     - cmake
-    - libclang-16-dev
-    - llvm-16-dev
-    - llvm-16-tools
+    - libclang-18-dev
+    - llvm-18-dev
+    - llvm-18-tools

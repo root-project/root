@@ -145,19 +145,22 @@ std::string DynamicLibraryManager::lookupLibInPaths(
 
   LLVM_DEBUG(dbgs() << "Dyld::lookupLibInPaths: \n");
   LLVM_DEBUG(dbgs() << ":: RPATH\n");
+#ifndef NDEBUG
   for (auto Info : RPath) {
     LLVM_DEBUG(dbgs() << ":::: " << Info.str() << "\n");
   }
+#endif
   LLVM_DEBUG(dbgs() << ":: SearchPaths (LD_LIBRARY_PATH, etc...)\n");
   for (auto Info : getSearchPaths()) {
     LLVM_DEBUG(dbgs() << ":::: " << Info.Path
                       << ", user=" << (Info.IsUser ? "true" : "false") << "\n");
   }
   LLVM_DEBUG(dbgs() << ":: RUNPATH\n");
+#ifndef NDEBUG
   for (auto Info : RunPath) {
     LLVM_DEBUG(dbgs() << ":::: " << Info.str() << "\n");
   }
-
+#endif
   SmallString<512> ThisPath;
   // RPATH
   for (auto Info : RPath) {

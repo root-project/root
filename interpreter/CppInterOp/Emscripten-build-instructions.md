@@ -63,9 +63,8 @@ On Windows execute the following
 ```powershell
 cd .\llvm-project\
 cp -r ..\patches\llvm\emscripten-clang20*
-cp -r ..\patches\llvm\Windows-emscripten-clang20*
-git apply -v Windows-emscripten-clang20-1-CrossCompile.patch
 git apply -v emscripten-clang20-2-shift-temporary-files-to-tmp-dir.patch
+git apply -v emscripten-clang20-3-enable_exception_handling.patch
 ```
 
 We are now in a position to build an emscripten build of llvm by executing the following on Linux
@@ -81,7 +80,6 @@ mkdir build
 cd build
 emcmake cmake -DCMAKE_BUILD_TYPE=Release \
                         -DLLVM_HOST_TRIPLE=wasm32-unknown-emscripten \
-                        -DLLVM_ENABLE_ASSERTIONS=ON                        \
                         -DLLVM_TARGETS_TO_BUILD="WebAssembly" \
                         -DLLVM_ENABLE_LIBEDIT=OFF \
                         -DLLVM_ENABLE_PROJECTS="clang;lld" \
@@ -99,6 +97,9 @@ emcmake cmake -DCMAKE_BUILD_TYPE=Release \
                         -DLLVM_ENABLE_LIBPFM=OFF                        \
                         -DCLANG_BUILD_TOOLS=OFF                         \
                         -DLLVM_NATIVE_TOOL_DIR=$NATIVE_DIR              \
+                        -DCMAKE_C_FLAGS_RELEASE="-Oz -g0 -DNDEBUG" \
+                        -DCMAKE_CXX_FLAGS_RELEASE="-Oz -g0 -DNDEBUG" \
+                        -DLLVM_ENABLE_LTO=Full \
                         ../llvm
 emmake make libclang -j $(nproc --all)
 emmake make clangInterpreter clangStaticAnalyzerCore -j $(nproc --all)
@@ -108,11 +109,17 @@ emmake make lldWasm -j $(nproc --all)
 or executing
 
 ```powershell
+mkdir native_build
+cd native_build
+cmake -DLLVM_ENABLE_PROJECTS=clang -DLLVM_TARGETS_TO_BUILD=host -DCMAKE_BUILD_TYPE=Release -G Ninja ../llvm/
+cmake --build . --target llvm-tblgen clang-tblgen --parallel $(nproc --all)
+$env:PWD_DIR= $PWD.Path
+$env:NATIVE_DIR="$env:PWD_DIR/bin/"
+cd ..
 mkdir build
 cd build
 emcmake cmake -DCMAKE_BUILD_TYPE=Release `
                         -DLLVM_HOST_TRIPLE=wasm32-unknown-emscripten `
-                        -DLLVM_ENABLE_ASSERTIONS=ON                        `
                         -DLLVM_TARGETS_TO_BUILD="WebAssembly" `
                         -DLLVM_ENABLE_LIBEDIT=OFF `
                         -DLLVM_ENABLE_PROJECTS="clang;lld" `
@@ -129,7 +136,11 @@ emcmake cmake -DCMAKE_BUILD_TYPE=Release `
                         -DLLVM_BUILD_TOOLS=OFF                          `
                         -DLLVM_ENABLE_LIBPFM=OFF                        `
                         -DCLANG_BUILD_TOOLS=OFF                         `
+                        -DLLVM_NATIVE_TOOL_DIR="$env:NATIVE_DIR"        `
                         -G Ninja `
+                        -DCMAKE_C_FLAGS_RELEASE="-Oz -g0 -DNDEBUG" `
+                        -DCMAKE_CXX_FLAGS_RELEASE="-Oz -g0 -DNDEBUG" `
+                        -DLLVM_ENABLE_LTO=Full `
                         ..\llvm
 emmake ninja libclang clangInterpreter clangStaticAnalyzerCore lldWasm
 ```
@@ -208,14 +219,14 @@ emcmake cmake -DCMAKE_BUILD_TYPE=Release    `
     emmake make -j $(nproc --all) check-cppinterop
 ```
 
-It is possible to run the Emscripten tests in a headless browser on Linux and osx (in future we plan to include instructions on how to run the tests in a browser on Windows too). To do this we will first move to the tests directory
+It is possible to run the Emscripten tests in a headless browser. To do this we will first move to the tests directory
 
 
 ```bash
     cd ./unittests/CppInterOp/
 ```
 
-We will run our tests in a fresh installed browser. Installing the browsers, and running the tests within the installed browsers will be platform dependent. To do this on MacOS execute the following
+We will run our tests in a fresh installed browser. Installing the browsers, and running the tests within the installed browsers will be platform dependent. To do this for Chrome and Firefox on MacOS execute the following
 
 ```bash
 wget "https://download.mozilla.org/?product=firefox-latest&os=osx&lang=en-US" -O Firefox-latest.dmg
@@ -240,6 +251,19 @@ echo "Running CppInterOpTests in Google Chrome"
 emrun --browser="Google Chrome" --kill_exit --timeout 60 --browser-args="--headless --no-sandbox"  CppInterOpTests.html
 echo "Running DynamicLibraryManagerTests in Google Chrome"          
 emrun --browser="Google Chrome" --kill_exit --timeout 60 --browser-args="--headless --no-sandbox"  DynamicLibraryManagerTests.html
+```
+
+To run tests in Safari you can make use of safaridriver. How to enable this will depend on
+your MacOS operating system, and is best to consult [safaridriver](https://developer.apple.com/documentation/webkit/testing-with-webdriver-in-safari). You will also need to install the Selenium
+python package. This only needs to be enable once, and then you can execute the following to run the tests in Safari
+
+```bash
+echo "Running CppInterOpTests in Safari"
+emrun --no_browser --kill_exit --timeout 60 --browser-args="--headless --no-sandbox"  CppInterOpTests.html &
+python ../../../scripts/browser_tests_safari.py CppInterOpTests.html
+echo "Running DynamicLibraryManagerTests in Safari"          
+emrun --no_browser --kill_exit --timeout 60 --browser-args="--headless --no-sandbox"  DynamicLibraryManagerTests.html &
+python ../../../scripts/browser_tests_safari.py DynamicLibraryManagerTests.html
 ```
 
 To do this on Ubuntu x86 execute the following
@@ -283,6 +307,26 @@ echo "Running DynamicLibraryManagerTests in Firefox"
 emrun --browser="firefox" --kill_exit --timeout 60 --browser-args="--headless"  DynamicLibraryManagerTests.html
 ```
 
+To do this on Windows x86 execute the following
+
+```powershell
+Invoke-WebRequest -Uri "https://commondatastorage.googleapis.com/chromium-browser-snapshots/Win/1411573/chrome-win.zip" -OutFile "$PWD\chrome-win.zip" -Verbose
+Expand-Archive -Path "$PWD\chrome-win.zip" -DestinationPath "$PWD" -Force -Verbose
+Invoke-WebRequest -Uri "https://download.mozilla.org/?product=firefox-latest-ssl&os=win64&lang=en-US" -OutFile "firefox-setup.exe" -Verbose
+& "C:\Program Files\7-Zip\7z.exe" x "firefox-setup.exe"
+$env:PATH="$PWD\core;$PWD\chrome-win;$env:PATH"
+echo "PATH=$env:PATH"
+echo "PATH=$env:PATH" >> $env:GITHUB_ENV
+echo "Running CppInterOpTests in Firefox"
+emrun.bat --browser="firefox.exe" --kill_exit --timeout 60 --browser-args="--headless"  CppInterOpTests.html
+echo "Running DynamicLibraryManagerTests in Firefox"
+emrun.bat --browser="firefox.exe" --kill_exit --timeout 60 --browser-args="--headless"  DynamicLibraryManagerTests.html
+echo "Running CppInterOpTests in Chromium"
+emrun.bat --browser="chrome.exe" --kill_exit --timeout 60 --browser-args="--headless --no-sandbox"  CppInterOpTests.html
+echo "Running DynamicLibraryManagerTests in Chromium"
+emrun.bat --browser="chrome.exe" --kill_exit --timeout 60 --browser-args="--headless --no-sandbox"  DynamicLibraryManagerTests.html
+```
+
 Assuming it passes all test you can install by executing the following
 
 ```bash
@@ -293,12 +337,13 @@ emmake make -j $(nproc --all) install
 ## Xeus-cpp-lite Wasm Build Instructions
 
 A project which makes use of the wasm build of CppInterOp is xeus-cpp. xeus-cpp is a C++ Jupyter kernel. Assuming you are in  
-the CppInterOp build folder, you can build the wasm version of xeus-cpp by executing (replace $LLVM_VERSION with the version
+the CppInterOp build folder, you can build the wasm version of xeus-cpp by executing (replace LLVM_VERSION with the version
 of llvm you are building against)
 
 ```bash
 cd ../..
 git clone --depth=1 https://github.com/compiler-research/xeus-cpp.git
+export LLVM_VERSION=20
 cd ./xeus-cpp
 mkdir build
 cd build
@@ -308,29 +353,23 @@ emcmake cmake \
           -DCMAKE_INSTALL_PREFIX=$PREFIX                                 \
           -DXEUS_CPP_EMSCRIPTEN_WASM_BUILD=ON                            \
           -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ON                         \
-          -DXEUS_CPP_RESOURCE_DIR=$LLVM_BUILD_DIR/lib/clang/$LLVM_VERSION \
+          -DXEUS_CPP_RESOURCE_DIR="$LLVM_BUILD_DIR/lib/clang/$LLVM_VERSION" \
           -DSYSROOT_PATH=$SYSROOT_PATH                                   \
           ..
  emmake make -j $(nproc --all) install
 ```
 
-To build Jupyter Lite website with this kernel locally that you can use for testing execute the following
+To build and test Jupyter Lite with this kernel locally you can execute the following
 
 ```bash
 cd ../..
 micromamba create -n xeus-lite-host jupyterlite-core=0.6 jupyterlite-xeus jupyter_server jupyterlab notebook python-libarchive-c -c conda-forge
 micromamba activate xeus-lite-host
-jupyter lite build --XeusAddon.prefix=$PREFIX \
+jupyter lite serve --XeusAddon.prefix=$PREFIX \
                    --contents xeus-cpp/notebooks/xeus-cpp-lite-demo.ipynb \
                    --contents xeus-cpp/notebooks/smallpt.ipynb \
                    --contents xeus-cpp/notebooks/images/marie.png \
                    --contents xeus-cpp/notebooks/audio/audio.wav \
                    --XeusAddon.mounts="$PREFIX/share/xeus-cpp/tagfiles:/share/xeus-cpp/tagfiles" \
                    --XeusAddon.mounts="$PREFIX/etc/xeus-cpp/tags.d:/etc/xeus-cpp/tags.d"
-```
-
-Once the Jupyter Lite site has built you can test the website locally by executing
-
-```bash
-jupyter lite serve --XeusAddon.prefix=$PREFIX
 ```
