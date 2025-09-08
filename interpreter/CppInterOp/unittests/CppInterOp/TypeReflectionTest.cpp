@@ -620,3 +620,69 @@ TEST(TypeReflectionTest, OperatorSpelling) {
   EXPECT_EQ(Cpp::GetOperatorFromSpelling("()"), Cpp::OP_Call);
   EXPECT_EQ(Cpp::GetOperatorFromSpelling("invalid"), Cpp::OP_None);
 }
+
+TEST(TypeReflectionTest, TypeQualifiers) {
+  Cpp::CreateInterpreter();
+  Cpp::Declare(R"(
+    int *a;
+    int *__restrict__ b;
+    int *const c = 0;
+    int *volatile d;
+    int *const volatile e = nullptr;
+    int *__restrict__ const f = nullptr;
+    int *__restrict__ volatile g;
+    int *__restrict__ const volatile h = nullptr;
+  )");
+
+  Cpp::TCppType_t a = Cpp::GetVariableType(Cpp::GetNamed("a"));
+  Cpp::TCppType_t b = Cpp::GetVariableType(Cpp::GetNamed("b"));
+  Cpp::TCppType_t c = Cpp::GetVariableType(Cpp::GetNamed("c"));
+  Cpp::TCppType_t d = Cpp::GetVariableType(Cpp::GetNamed("d"));
+  Cpp::TCppType_t e = Cpp::GetVariableType(Cpp::GetNamed("e"));
+  Cpp::TCppType_t f = Cpp::GetVariableType(Cpp::GetNamed("f"));
+  Cpp::TCppType_t g = Cpp::GetVariableType(Cpp::GetNamed("g"));
+  Cpp::TCppType_t h = Cpp::GetVariableType(Cpp::GetNamed("h"));
+
+  EXPECT_FALSE(Cpp::HasTypeQualifier(nullptr, Cpp::QualKind::Const));
+  EXPECT_FALSE(Cpp::RemoveTypeQualifier(nullptr, Cpp::QualKind::Const));
+  EXPECT_FALSE(Cpp::AddTypeQualifier(nullptr, Cpp::QualKind::Const));
+
+  EXPECT_FALSE(Cpp::HasTypeQualifier(a, Cpp::QualKind::Const));
+  EXPECT_FALSE(Cpp::HasTypeQualifier(a, Cpp::QualKind::Volatile));
+  EXPECT_FALSE(Cpp::HasTypeQualifier(a, Cpp::QualKind::Restrict));
+  EXPECT_TRUE(Cpp::HasTypeQualifier(b, Cpp::QualKind::Restrict));
+  EXPECT_TRUE(Cpp::HasTypeQualifier(c, Cpp::QualKind::Const));
+  EXPECT_TRUE(Cpp::HasTypeQualifier(d, Cpp::QualKind::Volatile));
+  EXPECT_TRUE(
+      Cpp::HasTypeQualifier(e, Cpp::QualKind::Const | Cpp::QualKind::Volatile));
+  EXPECT_TRUE(
+      Cpp::HasTypeQualifier(f, Cpp::QualKind::Const | Cpp::QualKind::Restrict));
+  EXPECT_TRUE(Cpp::HasTypeQualifier(g, Cpp::QualKind::Volatile |
+                                           Cpp::QualKind::Restrict));
+  EXPECT_TRUE(Cpp::HasTypeQualifier(h, Cpp::QualKind::Const |
+                                           Cpp::QualKind::Volatile |
+                                           Cpp::QualKind::Restrict));
+
+  EXPECT_EQ(a, Cpp::RemoveTypeQualifier(b, Cpp::QualKind::Restrict));
+  EXPECT_EQ(a, Cpp::RemoveTypeQualifier(c, Cpp::QualKind::Const));
+  EXPECT_EQ(a, Cpp::RemoveTypeQualifier(d, Cpp::QualKind::Volatile));
+  EXPECT_EQ(a, Cpp::RemoveTypeQualifier(e, Cpp::QualKind::Const |
+                                               Cpp::QualKind::Volatile));
+  EXPECT_EQ(a, Cpp::RemoveTypeQualifier(f, Cpp::QualKind::Const |
+                                               Cpp::QualKind::Restrict));
+  EXPECT_EQ(a, Cpp::RemoveTypeQualifier(g, Cpp::QualKind::Volatile |
+                                               Cpp::QualKind::Restrict));
+  EXPECT_EQ(a, Cpp::RemoveTypeQualifier(h, Cpp::QualKind::Const |
+                                               Cpp::QualKind::Volatile |
+                                               Cpp::QualKind::Restrict));
+  EXPECT_EQ(e, Cpp::RemoveTypeQualifier(h, Cpp::QualKind::Restrict));
+  EXPECT_EQ(b, Cpp::RemoveTypeQualifier(h, Cpp::QualKind::Const |
+                                               Cpp::QualKind::Volatile));
+
+  EXPECT_EQ(c, Cpp::AddTypeQualifier(a, Cpp::QualKind::Const));
+  EXPECT_EQ(d, Cpp::AddTypeQualifier(a, Cpp::QualKind::Volatile));
+  EXPECT_EQ(b, Cpp::AddTypeQualifier(a, Cpp::QualKind::Restrict));
+  EXPECT_EQ(h, Cpp::AddTypeQualifier(a, Cpp::QualKind::Const |
+                                            Cpp::QualKind::Volatile |
+                                            Cpp::QualKind::Restrict));
+}

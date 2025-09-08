@@ -69,6 +69,9 @@ endif()
             continue()
           endif()
           foreach(transitive_lib ${transitive_libs})
+            if(NOT TARGET ${transitive_lib})
+              continue()
+            endif()
             get_target_property(lib_type ${transitive_lib} TYPE)
             if("${lib_type}" STREQUAL "STATIC_LIBRARY")
               list(APPEND static_transitive_libs ${transitive_lib})
@@ -127,10 +130,16 @@ if(EMSCRIPTEN)
   set_target_properties(clangCppInterOp
     PROPERTIES NO_SONAME 1
   )
+  target_compile_options(clangCppInterOp
+    PRIVATE "SHELL: -Oz"
+    PRIVATE "SHELL: -flto"
+  )
   target_link_options(clangCppInterOp
     PRIVATE "SHELL: -s WASM_BIGINT"
     PRIVATE "SHELL: -s SIDE_MODULE=1"
     PRIVATE "SHELL: ${SYMBOLS_LIST}"
+    PRIVATE "SHELL: -Oz"
+    PRIVATE "SHELL: -flto"
   )
 else()
   target_link_options(clangCppInterOp

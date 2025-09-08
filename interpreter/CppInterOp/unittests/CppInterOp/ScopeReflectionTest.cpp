@@ -191,7 +191,6 @@ TEST(ScopeReflectionTest, IsBuiltin) {
   EXPECT_TRUE(Cpp::IsBuiltin(C.getComplexType(C.Float128Ty).getAsOpaquePtr()));
 
   // std::complex
-  std::vector<Decl*> Decls;
   Interp->declare("#include <complex>");
   Sema &S = Interp->getCI()->getSema();
   auto lookup = S.getStdNamespace()->lookup(&C.Idents.get("complex"));
@@ -334,6 +333,9 @@ TEST(ScopeReflectionTest, GetCompleteName) {
                         A<int> a;
 
                         enum { enum1 };
+
+                        template<typename T1, typename T2>
+                        void fn(T1 t1, T2 t2) {}
                        )";
   GetAllTopLevelDecls(code, Decls);
 
@@ -350,7 +352,15 @@ TEST(ScopeReflectionTest, GetCompleteName) {
                                              Cpp::GetVariableType(
                                                      Decls[9]))), "A<int>");
   EXPECT_EQ(Cpp::GetCompleteName(Decls[10]), "(unnamed)");
+  EXPECT_EQ(Cpp::GetCompleteName(Decls[11]), "fn");
   EXPECT_EQ(Cpp::GetCompleteName(nullptr), "<unnamed>");
+
+  ASTContext& C = Interp->getCI()->getASTContext();
+  Cpp::TemplateArgInfo template_args[2] = {C.IntTy.getAsOpaquePtr(),
+                                           C.DoubleTy.getAsOpaquePtr()};
+  Cpp::TCppScope_t fn = Cpp::InstantiateTemplate(Decls[11], template_args, 2);
+  EXPECT_TRUE(fn);
+  EXPECT_EQ(Cpp::GetCompleteName(fn), "fn<int, double>");
 }
 
 TEST(ScopeReflectionTest, GetQualifiedName) {
@@ -630,6 +640,13 @@ TEST(ScopeReflectionTest, GetNumBases) {
     class D : public B, public C {};
     class E : public D {};
     class NoDef;
+
+    template<typename T, int N>
+    struct Klass : public A {
+        T t{N};
+    };
+
+    typedef Klass<int, 1> TKlass;
   )";
 
   GetAllTopLevelDecls(code, Decls);
@@ -642,6 +659,7 @@ TEST(ScopeReflectionTest, GetNumBases) {
   // FIXME: Perhaps we should have a special number or error out as this
   // operation is not well defined if a class has no definition.
   EXPECT_EQ(Cpp::GetNumBases(Decls[5]), 0);
+  EXPECT_EQ(Cpp::GetNumBases(Cpp::GetUnderlyingScope(Decls[7])), 1);
 }
 
 TEST(ScopeReflectionTest, GetBaseClass) {
@@ -863,7 +881,7 @@ template<class T> constexpr T pi = T(3.1415926535897932385L);
   auto* VD = cast<VarTemplateSpecializationDecl>((Decl*)Instance1);
   VarTemplateDecl* VDTD1 = VD->getSpecializedTemplate();
   EXPECT_TRUE(VDTD1->isThisDeclarationADefinition());
-#if CLANG_VERSION_MAJOR <= 18
+#if CLANG_VERSION_MAJOR == 18
   TemplateArgument TA1 = (*VD->getTemplateArgsInfo())[0].getArgument();
 #else
   TemplateArgument TA1 = (*VD->getTemplateArgsAsWritten())[0].getArgument();
