@@ -489,7 +489,7 @@ namespace Internal {
             int desiredValue = -1;
             bool silent = false;
             if (auto env = gSystem->Getenv("ROOT_IMPLICIT_OWNERSHIP"); env) {
-               if (strcmp(env, "silent") == 0) {
+               if (strcmp(env, "silentOff") == 0) {
                   implicitOwnership = false;
                   silent = true;
                } else {
