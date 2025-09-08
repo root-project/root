@@ -1128,14 +1128,6 @@ ROOT::RResult<ROOT::RColumnDescriptor> ROOT::Internal::RColumnDescriptorBuilder:
    return fColumn.Clone();
 }
 
-ROOT::Internal::RFieldDescriptorBuilder::RFieldDescriptorBuilder(const RFieldDescriptor &fieldDesc)
-   : fField(fieldDesc.Clone())
-{
-   fField.fParentId = ROOT::kInvalidDescriptorId;
-   fField.fLinkIds = {};
-   fField.fLogicalColumnIds = {};
-}
-
 ROOT::Internal::RFieldDescriptorBuilder
 ROOT::Internal::RFieldDescriptorBuilder::FromField(const ROOT::RFieldBase &field)
 {
@@ -1300,17 +1292,6 @@ ROOT::RResult<void> ROOT::Internal::RNTupleDescriptorBuilder::AddClusterGroup(RC
    fDescriptor.fNClusters += clusterGroup.GetNClusters();
    fDescriptor.fClusterGroupDescriptors.emplace(id, std::move(clusterGroup));
    return RResult<void>::Success();
-}
-
-void ROOT::Internal::RNTupleDescriptorBuilder::Reset()
-{
-   fDescriptor.fName = "";
-   fDescriptor.fDescription = "";
-   fDescriptor.fFieldDescriptors.clear();
-   fDescriptor.fColumnDescriptors.clear();
-   fDescriptor.fClusterDescriptors.clear();
-   fDescriptor.fClusterGroupDescriptors.clear();
-   fDescriptor.fHeaderExtension.reset();
 }
 
 void ROOT::Internal::RNTupleDescriptorBuilder::SetSchemaFromExisting(const RNTupleDescriptor &descriptor)

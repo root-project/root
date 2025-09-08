@@ -712,7 +712,10 @@ inline double cbShapeIntegral(double mMin, double mMax, double m0, double sigma,
       double b = r - absAlpha;
 
       if (useLog) {
-         result += a * std::pow(r, n - 1) * sig * (std::log(b - tmin) - std::log(b - tmax));
+         double log_b_tmin = std::log(b - tmin);
+         double log_b_tmax = std::log(b - tmax);
+         result += a * std::pow(r, n - 1) * sig *
+                   (log_b_tmin - log_b_tmax + 0.5 * (1.0 - n) * (log_b_tmin * log_b_tmin - log_b_tmax * log_b_tmax));
       } else {
          result += a * sig / (1.0 - n) * (std::pow(r / (b - tmin), n - 1.0) - std::pow(r / (b - tmax), n - 1.0));
       }
@@ -723,7 +726,10 @@ inline double cbShapeIntegral(double mMin, double mMax, double m0, double sigma,
 
       double term1 = 0.0;
       if (useLog) {
-         term1 = a * std::pow(r, n - 1) * sig * (std::log(b - tmin) - std::log(r));
+         double log_b_tmin = std::log(b - tmin);
+         double log_r = std::log(r);
+         term1 = a * std::pow(r, n - 1) * sig *
+                 (log_b_tmin - log_r + 0.5 * (1.0 - n) * (log_b_tmin * log_b_tmin - log_r * log_r));
       } else {
          term1 = a * sig / (1.0 - n) * (std::pow(r / (b - tmin), n - 1.0) - 1.0);
       }

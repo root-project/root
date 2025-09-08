@@ -584,7 +584,7 @@ def _MakeNumpyDataFrame(np_dict):
 
     namespace __ROOT_Internal {
 
-    inline std::function<void()> MakePyDeleter(std::intptr_t ptr) {
+    inline std::function<void()> MakePyDeleter(std::uintptr_t ptr) {
         PyObject *obj = reinterpret_cast<PyObject*>(ptr);
         Py_INCREF(obj);
         return [obj](){ Py_DECREF(obj); };

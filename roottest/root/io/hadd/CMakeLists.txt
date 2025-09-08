@@ -1,13 +1,14 @@
-if(NOT pyroot)
-  return()
+if(pyroot)
+  ROOT_ADD_PYUNITTEST(input_validation input_validation.py GENERIC PYTHON_DEPS pytest)
 endif()
 
-ROOT_ADD_PYUNITTEST(input_validation input_validation.py GENERIC PYTHON_DEPS pytest)
 
 ################################################################
 #                    compression tests                         #
 ################################################################
-ROOT_ADD_PYUNITTEST(compression_settings test_compression_settings.py GENERIC PYTHON_DEPS pytest)
+if(pyroot)
+  ROOT_ADD_PYUNITTEST(compression_settings test_compression_settings.py GENERIC PYTHON_DEPS pytest)
+endif()
 
 # merge 2 RNTuples passing an explicit compression
 ROOTTEST_ADD_TEST(test_MergeChangeComp_explicit
@@ -201,4 +202,18 @@ ROOTTEST_ADD_TEST(test_hadd_args_missing_l
                   PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_missing_l.root
                   COMMAND ${ROOT_hadd_CMD} hadd_args_missing_l.root hadd_args_in.root -Ltype SkipListed
                   PASSREGEX "Error in <hadd>: -L must always be passed along with -Ltype"
+)
+
+ROOTTEST_ADD_TEST(test_hadd_args_quiet
+                  FIXTURES_REQUIRED root-io-hadd-test_hadd_args_gen_input-fixture
+                  PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_quiet.root
+                  COMMAND ${ROOT_hadd_CMD} hadd_args_quiet.root hadd_args_in.root -v2
+                  OUTREF hadd_args_quiet.ref
+)
+
+ROOTTEST_ADD_TEST(test_hadd_args_quieter
+                  FIXTURES_REQUIRED root-io-hadd-test_hadd_args_gen_input-fixture
+                  PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_quieter.root
+                  COMMAND ${ROOT_hadd_CMD} hadd_args_quieter.root hadd_args_in.root -v1
+                  OUTREF hadd_args_quieter.ref
 )

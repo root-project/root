@@ -263,6 +263,7 @@ RooWorkspace::~RooWorkspace()
 /// Import a RooAbsArg or RooAbsData set from a workspace in a file. Filespec should be constructed as "filename:wspacename:objectname"
 /// The arguments will be passed to the relevant import() or import(RooAbsData&, ...) import calls
 /// \note From python, use `Import()`, since `import` is a reserved keyword.
+/// \return due to historical reasons: false (0) on success and true (1) on failure
 bool RooWorkspace::import(const char* fileSpec,
              const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
              const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6,
@@ -323,6 +324,7 @@ bool RooWorkspace::import(const char* fileSpec,
 /// Import multiple RooAbsArg objects into workspace. For details on arguments see documentation
 /// of import() method for single RooAbsArg
 /// \note From python, use `Import()`, since `import` is a reserved keyword.
+/// \return due to historical reasons: false (0) on success and true (1) on failure
 bool RooWorkspace::import(const RooArgSet& args,
              const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
              const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6,
@@ -363,6 +365,7 @@ bool RooWorkspace::import(const RooArgSet& args,
 ///  as often as necessary to rename multiple variables. Alternatively, a single RenameVariable argument can be given with
 ///  two comma separated lists.
 /// \note From python, use `Import()`, since `import` is a reserved keyword.
+/// \return due to historical reasons: false (0) on success and true (1) on failure
 bool RooWorkspace::import(const RooAbsArg& inArg,
     const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
     const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6,
@@ -529,7 +532,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
       string origName = cnode2->GetName() ;
       cnode2->SetName(Form("%s_%s",cnode2->GetName(),suffix)) ;
       cnode2->SetTitle(Form("%s (%s)",cnode2->GetTitle(),suffix)) ;
-      string tag = Form("ORIGNAME:%s",origName.c_str()) ;
+      string tag = "ORIGNAME:" + origName;
       cnode2->setAttribute(tag.c_str()) ;
       if (!cnode2->getStringAttribute("origName")) {
         cnode2->setStringAttribute("origName",origName.c_str());
@@ -595,7 +598,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
       if (varMap.find(cnode->GetName())!=varMap.end()) {
         string origName = cnode->GetName() ;
         cnode->SetName(varMap[cnode->GetName()].c_str()) ;
-        string tag = Form("ORIGNAME:%s",origName.c_str()) ;
+        string tag = "ORIGNAME:" + origName;
         cnode->setAttribute(tag.c_str()) ;
         if (!cnode->getStringAttribute("origName")) {
           cnode->setStringAttribute("origName",origName.c_str()) ;
@@ -719,6 +722,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
 /// <tr><td> `RenameVariable(const char* inputName, const char* outputName)` <td> Change names of observables in dataset upon insertion
 /// <tr><td> `Silence` <td> Be quiet, except in case of errors
 /// \note From python, use `Import()`, since `import` is a reserved keyword.
+/// \return due to historical reasons: false (0) on success and true (1) on failure
 bool RooWorkspace::import(RooAbsData const& inData,
              const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
              const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6,
@@ -836,7 +840,7 @@ bool RooWorkspace::import(RooAbsData const& inData,
 /// Define a named RooArgSet with given constituents. If importMissing is true, any constituents
 /// of aset that are not in the workspace will be imported, otherwise an error is returned
 /// for missing components
-
+/// \return due to historical reasons: false (0) on success and true (1) on failure
 bool RooWorkspace::defineSet(const char* name, const RooArgSet& aset, bool importMissing)
 {
   // Check if set was previously defined, if so print warning
@@ -871,6 +875,7 @@ bool RooWorkspace::defineSet(const char* name, const RooArgSet& aset, bool impor
 }
 
 //_____________________________________________________________________________
+// \return due to historical reasons: false (0) on success (always)
 bool RooWorkspace::defineSetInternal(const char *name, const RooArgSet &aset)
 {
    // Define a named RooArgSet with given constituents. If importMissing is true, any constituents
@@ -894,7 +899,7 @@ bool RooWorkspace::defineSetInternal(const char *name, const RooArgSet &aset)
 ////////////////////////////////////////////////////////////////////////////////
 /// Define a named set in the workspace through a comma separated list of
 /// names of objects already in the workspace
-
+/// \return due to historical reasons: false (0) on success and true (1) on failure
 bool RooWorkspace::defineSet(const char* name, const char* contentList)
 {
   // Check if set was previously defined, if so print warning
@@ -929,7 +934,7 @@ bool RooWorkspace::defineSet(const char* name, const char* contentList)
 ////////////////////////////////////////////////////////////////////////////////
 /// Define a named set in the workspace through a comma separated list of
 /// names of objects already in the workspace
-
+/// \return due to historical reasons: false (0) on success and true (1) on failure
 bool RooWorkspace::extendSet(const char* name, const char* newContents)
 {
   RooArgSet wsargs ;
@@ -968,7 +973,7 @@ const RooArgSet* RooWorkspace::set(RooStringView name)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Rename set to a new name
-
+/// \return due to historical reasons: false (0) on success and true (1) on failure
 bool RooWorkspace::renameSet(const char* name, const char* newName)
 {
   // First check if set exists
@@ -999,7 +1004,7 @@ bool RooWorkspace::renameSet(const char* name, const char* newName)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove a named set from the workspace
-
+/// \return due to historical reasons: false (0) on success and true (1) on failure
 bool RooWorkspace::removeSet(const char* name)
 {
   // First check if set exists
@@ -1019,8 +1024,8 @@ bool RooWorkspace::removeSet(const char* name)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Open an import transaction operations. Returns true if successful, false
-/// if there is already an ongoing transaction
+/// Open an import transaction operations.
+/// \return true if successful, false if there is already an ongoing transaction
 
 bool RooWorkspace::startTransaction()
 {
@@ -1039,8 +1044,8 @@ bool RooWorkspace::startTransaction()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Cancel an ongoing import transaction. All objects imported since startTransaction()
-/// will be removed and the transaction will be terminated. Return true if cancel operation
-/// succeeds, return false if there was no open transaction
+/// will be removed and the transaction will be terminated.
+/// \return true if cancel operation succeeds, return false if there was no open transaction
 
 bool RooWorkspace::cancelTransaction()
 {
@@ -1061,11 +1066,10 @@ bool RooWorkspace::cancelTransaction()
   return true ;
 }
 
+/// Commit an ongoing import transaction.
+/// \return  true if commit succeeded, return false if there was no ongoing transaction
 bool RooWorkspace::commitTransaction()
 {
-  // Commit an ongoing import transaction. Returns true if commit succeeded,
-  // return false if there was no ongoing transaction
-
   // Check that there is an ongoing transaction
   if (!_openTrans) {
     return false ;
@@ -1091,7 +1095,8 @@ bool RooWorkspace::commitTransaction()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// \return true on success, false on failure
+/// \see RooWorkspace::CodeRepo::autoImportClass
 bool RooWorkspace::importClassCode(TClass* theClass, bool doReplace)
 {
   return _classes.autoImportClass(theClass,doReplace) ;
@@ -1104,7 +1109,7 @@ bool RooWorkspace::importClassCode(TClass* theClass, bool doReplace)
 /// that matches pattern 'pat' and which are not found to be part of
 /// the standard ROOT distribution. If doReplace is true any existing
 /// class code saved in the workspace is replaced
-
+/// \return true on success, false on failure
 bool RooWorkspace::importClassCode(const char* pat, bool doReplace)
 {
   bool ret(true) ;
@@ -1130,6 +1135,7 @@ bool RooWorkspace::importClassCode(const char* pat, bool doReplace)
 /// Save snapshot of values and attributes (including "Constant") of given parameters.
 /// \param[in] name Name of the snapshot.
 /// \param[in] paramNames Comma-separated list of parameter names to be snapshot.
+/// \return true always (success)
 bool RooWorkspace::saveSnapshot(RooStringView name, const char* paramNames)
 {
   return saveSnapshot(name,argSet(paramNames),false) ;
@@ -1144,7 +1150,7 @@ bool RooWorkspace::saveSnapshot(RooStringView name, const char* paramNames)
 /// If importValues is FALSE, the present values from the object in the workspace are
 /// saved. If importValues is TRUE, the values of the objects passed in the 'params'
 /// argument are saved
-
+/// \return true always (success)
 bool RooWorkspace::saveSnapshot(RooStringView name, const RooArgSet& params, bool importValues)
 {
   RooArgSet actualParams;
@@ -1174,7 +1180,7 @@ bool RooWorkspace::saveSnapshot(RooStringView name, const RooArgSet& params, boo
 ////////////////////////////////////////////////////////////////////////////////
 /// Load the values and attributes of the parameters in the snapshot saved with
 /// the given name
-
+/// \return true on success, false on failure
 bool RooWorkspace::loadSnapshot(const char* name)
 {
   RooArgSet* snap = static_cast<RooArgSet*>(_snapshots.find(name)) ;
@@ -1508,7 +1514,7 @@ std::string findFileInPath(std::string const &file, std::list<std::string> const
 /// search path, defined by addClassDeclImportDir() and addClassImplImportDir() for declaration and implementation
 /// files respectively. If files cannot be found, abort with error status, otherwise update the internal
 /// class-to-file map and import the contents of the files, if they are not imported yet.
-
+/// \return true on success, false on failure
 bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
 {
 
@@ -1870,7 +1876,7 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
 /// ROOT object like TH1 automatically insert themselves into the current directory
 /// when constructed. This will give error messages when done in a workspace
 /// directory.
-
+/// \return true (success) always
 bool RooWorkspace::makeDir()
 {
   if (_dir) return true ;
@@ -1894,7 +1900,7 @@ bool RooWorkspace::makeDir()
 /// object can be retrieved by name through the obj() method. The object is cloned upon
 /// importation and the input argument does not need to live beyond the import call
 ///
-/// Returns true if an error has occurred.
+/// \return due to historical reasons: false (0) on success and true (1) on failure
 
 bool RooWorkspace::import(TObject const& object, bool replaceExisting)
 {
@@ -1934,7 +1940,7 @@ bool RooWorkspace::import(TObject const& object, bool replaceExisting)
 /// The object is cloned upon importation and the input argument does not need to live beyond the import call
 /// This method is mostly useful for importing objects that do not have a settable name such as TMatrix
 ///
-/// Returns true if an error has occurred.
+/// \return due to historical reasons: false (0) on success and true (1) on failure
 
 bool RooWorkspace::import(TObject const& object, const char* aliasName, bool replaceExisting)
 {
@@ -1966,7 +1972,7 @@ bool RooWorkspace::import(TObject const& object, const char* aliasName, bool rep
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Insert RooStudyManager module
-
+/// \return due to historical reasons: false (0) on success and true (1) on failure
 bool RooWorkspace::addStudy(RooAbsStudy& study)
 {
   RooAbsStudy* clone = static_cast<RooAbsStudy*>(study.Clone()) ;
@@ -2027,7 +2033,8 @@ TObject* RooWorkspace::genobj(RooStringView name)  const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// \return true on success, false on failure
+/// \see TDirectoryFile::cd
 bool RooWorkspace::cd(const char* path)
 {
   makeDir() ;
@@ -2038,12 +2045,15 @@ bool RooWorkspace::cd(const char* path)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save this current workspace into given file
+/// \return true if file correctly written, false in case of error
 
 bool RooWorkspace::writeToFile(const char* fileName, bool recreate)
 {
-  TFile f(fileName,recreate?"RECREATE":"UPDATE") ;
-  Write() ;
-  return false ;
+  std::unique_ptr<TFile> f{ TFile::Open(fileName, recreate ? "RECREATE" : "UPDATE") };
+  if (!f || f->IsZombie())
+    return false;
+  auto bytes = Write();
+  return bytes > 0;
 }
 
 
@@ -2673,6 +2683,7 @@ UInt_t crc32(const char* data)
 /// current ROOT session. If a compilation error occurs print
 /// instructions for user how to fix errors and recover workspace and
 /// abort import procedure.
+/// \return true on success, false on failure
 
 bool RooWorkspace::CodeRepo::compileClasses()
 {

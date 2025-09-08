@@ -111,6 +111,7 @@ if(WIN32)
   set_property(TARGET rootcling APPEND_STRING PROPERTY LINK_FLAGS " -STACK:4000000")
 endif()
 
+ROOT_EXECUTABLE(rootbrowse src/rootbrowse.cxx LIBRARIES RIO Core Rint Gui)
 ROOT_EXECUTABLE(rootls src/rootls.cxx LIBRARIES RIO Tree Core Rint ROOTNTuple)
 
 # Create aliases: rootcint, genreflex.

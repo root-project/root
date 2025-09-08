@@ -1012,22 +1012,6 @@ void RLoopManager::AddDataSourceColumnReaders(std::string_view col,
    }
 }
 
-// Differently from AddDataSourceColumnReaders, this can be called from multiple threads concurrently
-/// \brief Register a new RTreeColumnReader with this RLoopManager.
-/// \return A shared pointer to the inserted column reader.
-RColumnReaderBase *RLoopManager::AddTreeColumnReader(unsigned int slot, std::string_view col,
-                                                     std::unique_ptr<RColumnReaderBase> &&reader,
-                                                     const std::type_info &ti)
-{
-   auto &readers = fDatasetColumnReaders[slot];
-   const auto key = MakeDatasetColReadersKey(col, ti);
-   // if a reader for this column and this slot was already there, we are doing something wrong
-   assert(readers.find(key) == readers.end() || readers[key] == nullptr);
-   auto *rptr = reader.get();
-   readers[key] = std::move(reader);
-   return rptr;
-}
-
 RColumnReaderBase *RLoopManager::AddDataSourceColumnReader(unsigned int slot, std::string_view col,
                                                            const std::type_info &ti, TTreeReader *treeReader)
 {

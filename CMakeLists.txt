@@ -113,6 +113,14 @@ include(RootMacros)
 include(CheckAssembler)
 include(CheckIntrinsics)
 
+#---Enable testing------------------------------------------------------------------------------
+if(testing)
+  enable_testing()
+endif()
+
+#---Here we look for installed software and switch on and off the different build options-------
+include(SearchInstalledSoftware)
+
 # relatedrepo_GetClosestMatch(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
 #                             FETCHURL_VARIABLE <output_url> FETCHREF_VARIABLE <output_ref>)
 # Return the clone URL and head/tag of the closest match for `repo` (e.g. roottest), based on the
@@ -285,15 +293,6 @@ if(asan)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ASAN_EXTRA_EXE_LINKER_FLAGS}")
 endif()
 
-#---Enable CTest package -----------------------------------------------------------------------
-#include(CTest)
-if(testing)
-  enable_testing()
-endif()
-
-#---Here we look for installed software and switch on and of the different build options--------
-include(SearchInstalledSoftware)
-
 #---Here we add tcmalloc to the linker flags if needed------------------------------------------
 if (TCMALLOC_FOUND)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc -L${TCMALLOC_LIBRARY_PATH}")
@@ -426,8 +425,8 @@ if(MSVC)
 else()
   set(_os_cat "cat")
 endif()
-file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" _from_native)
-file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" _to_native)
+cmake_path(CONVERT "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" TO_NATIVE_PATH_LIST _from_native)
+cmake_path(CONVERT "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" TO_NATIVE_PATH_LIST _to_native)
 
 add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/ROOT.modulemap")
 add_custom_command(

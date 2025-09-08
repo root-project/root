@@ -186,3 +186,21 @@ int RElement::ExtractItemIndex(std::string &name)
    name.resize(p1);
    return indx;
 }
+
+bool gRElementLastKeyCycle = false;
+
+/////////////////////////////////////////////////////////////////////
+/// Is only last cycle from the list of keys is shown
+
+bool RElement::IsLastKeyCycle()
+{
+   return gRElementLastKeyCycle;
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Set flag to show only last cycle from the list of keys
+
+void RElement::SetLastKeyCycle(bool on)
+{
+   gRElementLastKeyCycle = on;
+}

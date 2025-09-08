@@ -185,7 +185,10 @@ inline double integrateTailLogVersion(double sigma, double alpha, double n, doub
    double a = std::pow(r, n) * exp(-0.5 * alpha * alpha);
    double b = r - alpha;
 
-   return a * sigma * (log(b - tmin) - log(b - tmax));
+   double log_b_tmin = log(b - tmin);
+   double log_b_tmax = log(b - tmax);
+
+   return a * sigma * (log_b_tmin - log_b_tmax + 0.5 * (1.0 - n) * (log_b_tmin * log_b_tmin - log_b_tmax * log_b_tmax));
 }
 
 inline double integrateTailRegular(double sigma, double alpha, double n, double tmin, double tmax)
