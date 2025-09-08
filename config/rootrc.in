@@ -593,6 +593,9 @@ Davix.UseOldClient: @useoldwebfile@
 # S3_ACCESS_KEY, S3_SECRET_KEY, S3_REGION, S3_TOKEN
 # The gEnv vars have higher priority over the these envvars.
 
+# If set to yes, use the curl TFile and RRawFile backend even if davix is available
+Curl.ReplaceDavix: no
+
 # Example of custom setting for the Rint application (root.exe).
 # This overrides the default specified above for a generic application.
 # Color 5 is yellow.
