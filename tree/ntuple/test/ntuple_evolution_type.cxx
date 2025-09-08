@@ -5,6 +5,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <variant>
 
 class RNewStringField final : public ROOT::RFieldBase {
 private:
@@ -121,4 +122,41 @@ TEST(RNTupleEvolution, CheckRepetitionCount)
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("repetition count 3 vs. 2"));
    }
+}
+
+TEST(RNTupleEvolution, CheckVariant)
+{
+   FileRaii fileGuard("test_ntuple_evolution_check_variant.root");
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      auto v = model->MakeField<std::variant<std::int32_t, std::vector<char>>>("f");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *v = 137;
+      writer->Fill();
+      *v = std::vector<char>{'R', 'O', 'O', 'T'};
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   try {
+      reader->GetView<std::variant<std::int32_t>>("f");
+      FAIL() << "non-matching number of variants should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("number of variants on-disk do not match"));
+   }
+
+   try {
+      reader->GetView<std::variant<std::int32_t, std::vector<char>, float>>("f");
+      FAIL() << "non-matching number of variants should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("number of variants on-disk do not match"));
+   }
+
+   auto v = reader->GetView<std::variant<std::int64_t, ROOT::RVec<int>>>("f");
+   EXPECT_EQ(137, std::get<std::int64_t>(v(0)));
+   EXPECT_EQ('R', std::get<ROOT::RVec<int>>(v(1))[0]);
+   EXPECT_EQ('O', std::get<ROOT::RVec<int>>(v(1))[1]);
+   EXPECT_EQ('O', std::get<ROOT::RVec<int>>(v(1))[2]);
+   EXPECT_EQ('T', std::get<ROOT::RVec<int>>(v(1))[3]);
 }
