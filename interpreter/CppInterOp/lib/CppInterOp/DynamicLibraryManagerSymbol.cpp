@@ -620,10 +620,11 @@ void Dyld::ScanForLibraries(bool searchSystemLibraries /* = false*/) {
 
   LLVM_DEBUG(dbgs() << "Dyld::ScanForLibraries: system="
                     << (searchSystemLibraries ? "true" : "false") << "\n");
+#ifndef NDEBUG
   for (const DynamicLibraryManager::SearchPathInfo& Info : searchPaths)
     LLVM_DEBUG(dbgs() << ">>>" << Info.Path << ", "
                       << (Info.IsUser ? "user\n" : "system\n"));
-
+#endif
   llvm::SmallSet<const BasePath*, 32> ScannedPaths;
 
   for (const DynamicLibraryManager::SearchPathInfo& Info : searchPaths) {
@@ -769,11 +770,12 @@ void Dyld::ScanForLibraries(bool searchSystemLibraries /* = false*/) {
                               << RPathToStr(RPath) << "\n");
             LLVM_DEBUG(dbgs() << "Dyld::ScanForLibraries:   RUNPATH="
                               << RPathToStr(RunPath) << "\n");
+#ifndef NDEBUG
             int x = 0;
             for (StringRef dep : Deps)
               LLVM_DEBUG(dbgs() << "Dyld::ScanForLibraries:   Deps[" << x++
                                 << "]=" << dep.str() << "\n");
-
+#endif
             // Heuristics for workaround performance problems:
             // (H1) If RPATH and RUNPATH == "" -> skip handling Deps
             if (RPath.empty() && RunPath.empty()) {
@@ -965,10 +967,11 @@ void Dyld::BuildBloomFilter(LibraryPath* Lib,
   }
 
   LLVM_DEBUG(dbgs() << "Dyld::BuildBloomFilter: Symbols:\n");
+#ifndef NDEBUG
   for (auto it : symbols)
     LLVM_DEBUG(dbgs() << "Dyld::BuildBloomFilter"
                       << "- " << it << "\n");
-
+#endif
   // Generate BloomFilter
   for (const auto& S : symbols) {
     if (m_UseHashTable)
@@ -1036,7 +1039,11 @@ bool Dyld::ContainsSymbol(const LibraryPath* Lib, StringRef mangledName,
   }
 
   auto ForeachSymbol =
+#ifndef NDEBUG
       [&library_filename](
+#else
+      [](
+#endif
           llvm::iterator_range<llvm::object::symbol_iterator> range,
           unsigned IgnoreSymbolFlags, llvm::StringRef mangledName) -> bool {
     for (const llvm::object::SymbolRef& S : range) {
@@ -1157,6 +1164,7 @@ bool Dyld::ShouldPermanentlyIgnore(StringRef FileName) const {
 void Dyld::dumpDebugInfo() const {
 #define DEBUG_TYPE "Dyld:"
   LLVM_DEBUG(dbgs() << "---\n");
+#ifndef NDEBUG
   size_t x = 0;
   for (auto const& item : m_BasePaths.m_Paths) {
     LLVM_DEBUG(dbgs() << "Dyld: - m_BasePaths[" << x++ << "]:" << &item << ": "
@@ -1174,6 +1182,7 @@ void Dyld::dumpDebugInfo() const {
                       << ": " << item->m_Path << ", " << item->m_LibName
                       << "\n");
   }
+#endif
 #undef DEBUG_TYPE
 }
 
@@ -1213,12 +1222,13 @@ std::string Dyld::searchLibrariesForSymbol(StringRef mangledName,
     // from our lists of not-yet-loaded libs.
 
     LLVM_DEBUG(dbgs() << "Dyld::ResolveSymbol: m_QueriedLibraries:\n");
+#ifndef NDEBUG
     size_t x = 0;
     for (auto item : m_QueriedLibraries.GetLibraries()) {
       LLVM_DEBUG(dbgs() << "Dyld::ResolveSymbol - [" << x++ << "]:" << &item
                         << ": " << item->GetFullName() << "\n");
     }
-
+#endif
     for (const LibraryPath* P : m_QueriedLibraries.GetLibraries()) {
       const std::string LibName = P->GetFullName();
       if (!m_DynamicLibraryManager.isLibraryLoaded(LibName))
