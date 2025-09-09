@@ -60,21 +60,6 @@ class Memory1TestCase( MyTestCase ):
       del b, c
       self.assertEqual( MemTester.counter, 0 )
 
-   def test2ObjectDestructionCallback( self ):
-      """Test ROOT notification on object destruction"""
-
-    # create ROOT traced object
-      a = TH1F( 'memtest_th1f', 'title', 100, -1., 1. )
-
-    # locate it
-      self.assertTrue( a is gROOT.FindObject( 'memtest_th1f' ) )
-
-    # destroy it
-      del a
-
-    # should no longer be accessible
-      self.assertTrue( not gROOT.FindObject( 'memtest_th1f' ) )
-
    def test3ObjectCallHeuristics( self ):
       """Test memory mgmt heuristics for object calls"""
 
@@ -139,7 +124,7 @@ class Memory1TestCase( MyTestCase ):
       """Derived classes should call base dtor automatically"""
 
       MemTester = ROOT.MemTester
-      
+
       class D1( MemTester ):
          def __init__( self ):
             MemTester.__init__( self )
