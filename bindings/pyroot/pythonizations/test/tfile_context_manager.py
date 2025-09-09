@@ -64,6 +64,7 @@ class TFileContextManager(unittest.TestCase):
         histoname = "myhisto_3"
         with TFile(filename, "recreate") as outfile:
             hout = ROOT.TH1F(histoname, histoname, self.NBINS, self.XMIN, self.XMAX)
+            hout.SetDirectory(outfile)
             outfile.Write()
 
         self.check_file_data(outfile, filename, histoname)
