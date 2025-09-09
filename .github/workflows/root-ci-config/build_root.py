@@ -45,7 +45,6 @@ except Exception as exc:
     print("Failed to open the S3 connection:", exc, file=sys.stderr)
     CONNECTION = None
 
-MACOS = (sys.platform == "darwin")
 WINDOWS = (os.name == 'nt')
 WORKDIR = (os.environ['HOME'] + '/ROOT-CI') if not WINDOWS else 'C:/ROOT-CI'
 COMPRESSIONLEVEL = 6 if not WINDOWS else 1
@@ -232,9 +231,9 @@ def cleanup_previous_build():
         result = subprocess_with_log(f"""
             rm -rf {WORKDIR}/*
         """)
-        if MACOS:
+        if is_macos():
            subprocess_with_log(f"""
-              rm -rf {WORKDIR}/*
+              source /Users/sftnight/py-venv/ROOT-CI/bin/activate
            """)
     if result != 0:
         die(result, "Failed to clean up previous artifacts")
