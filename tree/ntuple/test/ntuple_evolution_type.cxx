@@ -4,6 +4,7 @@
 #include <new>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <utility>
 #include <variant>
 
@@ -159,4 +160,50 @@ TEST(RNTupleEvolution, CheckVariant)
    EXPECT_EQ('O', std::get<ROOT::RVec<int>>(v(1))[1]);
    EXPECT_EQ('O', std::get<ROOT::RVec<int>>(v(1))[2]);
    EXPECT_EQ('T', std::get<ROOT::RVec<int>>(v(1))[3]);
+}
+
+TEST(RNTupleEvolution, CheckPairTuple)
+{
+   FileRaii fileGuard("test_ntuple_evolution_check_pair_tuple.root");
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      auto p = model->MakeField<std::pair<char, float>>("p");
+      auto t2 = model->MakeField<std::tuple<char, float>>("t2");
+      model->MakeField<std::tuple<char, float, float>>("t3");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      *p = {1, 2.0};
+      *t2 = {3, 4.0};
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   try {
+      reader->GetView<std::tuple<char>>("p");
+      FAIL() << "non-matching number of subfields for pair/tuple should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid number of on-disk subfields"));
+   }
+
+   try {
+      reader->GetView<std::tuple<char, float, float>>("p");
+      FAIL() << "non-matching number of subfields for pair/tuple should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid number of on-disk subfields"));
+   }
+
+   try {
+      reader->GetView<std::pair<char, float>>("t3");
+      FAIL() << "non-matching number of subfields for pair/tuple should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid number of on-disk subfields"));
+   }
+
+   auto t2 = reader->GetView<std::pair<char, double>>("t2");
+   auto p = reader->GetView<std::tuple<int, double>>("p");
+   EXPECT_EQ(3, t2(0).first);
+   EXPECT_DOUBLE_EQ(4.0, t2(0).second);
+   EXPECT_EQ(1, std::get<0>(p(0)));
+   EXPECT_DOUBLE_EQ(2.0, std::get<1>(p(0)));
 }
