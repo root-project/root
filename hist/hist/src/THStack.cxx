@@ -370,6 +370,7 @@ void THStack::Add(TH1 *h1, Option_t *option)
    }
    if (!fHists) fHists = new TList();
    fHists->Add(h1,option);
+   h1->SetBit(kMustCleanup); // The histogram is likely in multiple lists now
    Modified(); //invalidate stack
 }
 
