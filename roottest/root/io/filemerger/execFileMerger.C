@@ -6,13 +6,14 @@
 #include "THStack.h"
 #include "TTree.h"
 
-void createInputs(int n = 2) 
+void createInputs(int n = 2)
 {
    for(UInt_t i = 0; i < (UInt_t)n; ++i ) {
       TFile *file = TFile::Open(TString::Format("input%d.root",i),"RECREATE");
       TH1F * h = new TH1F("h1","",10,0,100);
+      h->SetDirectory(file);
       h->Fill(10.5); h->Fill(20.5);
- 
+
       Int_t nbins[5];
       Double_t xmin[5];
       Double_t xmax[5];
