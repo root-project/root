@@ -1,1 +1,2 @@
 tmva-sofie=ON
+experimental_adaptivecpp=ON

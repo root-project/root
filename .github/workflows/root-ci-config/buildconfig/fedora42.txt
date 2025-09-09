@@ -1,4 +1,5 @@
 builtin_zlib=ON
 builtin_zstd=ON
+experimental_adaptivecpp=ON
 pythia8=ON
 vdt=OFF
