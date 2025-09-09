@@ -14,10 +14,13 @@ import os
 import ROOT
 from ROOT import TFile, gROOT
 
-# By default, objects of some ROOT types such as `TH1` and its derived types
+# By default, in ROOT 6, objects of some ROOT types such as `TH1` and its derived types
 # are automatically attached to a ROOT.TDirectory when they are created.
-# Specifically, at any given point of a ROOT application, the ROOT.gDirectory
-# object tells which is the current directory where objects will be attached to.
+# Objects are attached to the current directory denoted by ROOT.gDirectory.
+# For ROOT 7, the default will be *not* to attach objects to ROOT.gDirectory, except for
+# cases where the documentation states it explicitly, such as TTree.
+# In ROOT 6, this mode can be tested by setting ROOT.Experimental.DisableObjectAutoRegistration().
+
 # The next line will print 'PyROOT' as the name of the current directory.
 # That is the global directory created when using ROOT from Python, which is
 # the ROOT.gROOT object.
@@ -25,7 +28,11 @@ print("Current directory: '{}'.\n".format(ROOT.gDirectory.GetName()))
 
 # We can check to which directory a newly created histogram is attached.
 histo_1 = ROOT.TH1F("histo_1", "histo_1", 10, 0, 10)
-print("Histogram '{}' is attached to: '{}'.\n".format(histo_1.GetName(), histo_1.GetDirectory().GetName()))
+print(
+    "Histogram '{}' is attached to: '{}'.\n".format(
+        histo_1.GetName(), "Nothing" if not histo_1.GetDirectory() else histo_1.GetDirectory().GetName()
+    )
+)
 
 # For quick saving and forgetting of objects into ROOT files, it is possible to
 # open a TFile as a Python context manager. In the context, objects can be
@@ -37,8 +44,19 @@ with TFile.Open(filename, "recreate") as f:
     histo_2 = ROOT.TH1F("histo_2", "histo_2", 10, 0, 10)
     # Inside the context, the current directory is the open file
     print("Current directory: '{}'.\n".format(ROOT.gDirectory.GetName()))
-    # And the created histogram is automatically attached to the file
-    print("Histogram '{}' is attached to: '{}'.\n".format(histo_2.GetName(), histo_2.GetDirectory().GetName()))
+    # In ROOT 6, the created histogram is automatically attached to the file
+    print(
+        "Histogram '{}' is attached to: '{}'.\n".format(
+            histo_2.GetName(), histo_2.GetDirectory().GetName() if histo_2.GetDirectory() else "Nothing"
+        )
+    )
+    # When auto registration is off, this can be done explicitly:
+    histo_2.SetDirectory(f)
+    print(
+        "After setting the directory, histogram '{}' is attached to: '{}'.\n".format(
+            histo_2.GetName(), histo_2.GetDirectory().GetName()
+        )
+    )
     # Before exiting the context, objects can be written to the file
     f.WriteObject(histo_2, "my_histogram")
 
