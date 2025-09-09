@@ -60,11 +60,14 @@ TFile *hsimple(Int_t getFile=0)
    hfile = (TFile*)gROOT->FindObject(filename); if (hfile) hfile->Close();
    hfile = new TFile(filename,"RECREATE","Demo ROOT file with histograms");
 
-   // Create some histograms, a profile histogram and an ntuple
+   // Create some histograms, a profile histogram and an ntuple, add them to hfile
    TH1F *hpx = new TH1F("hpx","This is the px distribution",100,-4,4);
+   hpx->SetDirectory(hfile);
    hpx->SetFillColor(48);
    TH2F *hpxpy = new TH2F("hpxpy","py vs px",40,-4,4,40,-4,4);
+   hpxpy->SetDirectory(hfile);
    TProfile *hprof = new TProfile("hprof","Profile of pz versus px",100,-4,4,0,20);
+   hprof->SetDirectory(hfile);
    TNtuple *ntuple = new TNtuple("ntuple","Demo ntuple","px:py:pz:random:i");
 
    // Set to "true" if you want to see in the output how much time it took to fill the histogram:
