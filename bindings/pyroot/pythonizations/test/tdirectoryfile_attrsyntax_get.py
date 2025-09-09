@@ -25,11 +25,13 @@ class TDirectoryFileReadWrite(unittest.TestCase):
         dir1.cd()
         h1 = ROOT.TH1F("h1", "h1", cls.nbins, cls.xmin, cls.xmax)
         ROOT.SetOwnership(h1, False)
+        h1.SetDirectory(dir1)
 
         dir2 = dir1.mkdir("dir2")
         dir2.cd()
         h2 = ROOT.TH1F("h2", "h2", cls.nbins, cls.xmin, cls.xmax)
         ROOT.SetOwnership(h2, False)
+        h2.SetDirectory(dir2)
 
     def checkHisto(self, h):
         xaxis = h.GetXaxis()
