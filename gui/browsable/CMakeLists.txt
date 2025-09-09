@@ -123,6 +123,7 @@ if(root7)
        ROOTNTuple
        ROOTNTupleBrowse
        Gpad
+       ROOTTreeMap
   )
 
   ROOT_LINKER_LIBRARY(ROOTNTupleDraw7Provider
@@ -132,6 +133,7 @@ if(root7)
        ROOTNTuple
        ROOTNTupleBrowse
        ROOTGpadv7
+       ROOTTreeMap
 )
 endif()
 
