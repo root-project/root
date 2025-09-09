@@ -85,7 +85,6 @@ This is and can only be partially enforced through C++.
 */
 // clang-format on
 class RFieldBase {
-   friend class ROOT::RClassField;                             // to mark members as artificial
    friend class ROOT::Experimental::Detail::RRawPtrWriteEntry; // to call Append()
    friend struct ROOT::Internal::RFieldCallbackInjector;       // used for unit tests
    friend struct ROOT::Internal::RFieldRepresentationModifier; // used for unit tests
@@ -420,6 +419,11 @@ protected:
    /// Allow derived classes to call ConstructValue(void *) and GetDeleter() on other (sub)fields.
    static void CallConstructValueOn(const RFieldBase &other, void *where) { other.ConstructValue(where); }
    static std::unique_ptr<RDeleter> GetDeleterOf(const RFieldBase &other) { return other.GetDeleter(); }
+
+   /// Allow parents to mark their childs as artificial fields (used in class and record fields)
+   static void CallSetArtificialOn(RFieldBase &other) { other.SetArtificial(); }
+   /// Allow class fields to adjust the type alias of their members
+   static void SetTypeAliasOf(RFieldBase &other, const std::string &alias) { other.fTypeAlias = alias; }
 
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
    /// column type exists.
