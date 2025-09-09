@@ -174,9 +174,9 @@ ROOT::RClassField::RClassField(std::string_view fieldName, TClass *classp)
 
       const auto normTypeName = ROOT::Internal::GetNormalizedUnresolvedTypeName(origTypeName);
       if (normTypeName == subField->GetTypeName()) {
-         subField->fTypeAlias = "";
+         SetTypeAliasOf(*subField, "");
       } else {
-         subField->fTypeAlias = normTypeName;
+         SetTypeAliasOf(*subField, normTypeName);
       }
 
       fTraits &= subField->GetTraits();
@@ -190,7 +190,7 @@ ROOT::RClassField::~RClassField()
    if (fStagingArea) {
       for (const auto &[_, si] : fStagingItems) {
          if (!(si.fField->GetTraits() & kTraitTriviallyDestructible)) {
-            auto deleter = si.fField->GetDeleter();
+            auto deleter = GetDeleterOf(*si.fField);
             deleter->operator()(fStagingArea.get() + si.fOffset, true /* dtorOnly */);
          }
       }
@@ -467,7 +467,7 @@ void ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pag
    // Iterate over all sub fields in memory and mark those as missing that are not in the descriptor.
    for (auto &field : fSubfields) {
       if (regularSubfields.count(field->GetFieldName()) == 0) {
-         field->SetArtificial();
+         CallSetArtificialOn(*field);
       }
    }
 }
