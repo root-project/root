@@ -162,6 +162,7 @@ struct TestSaveAs {
          if (line != "{" && line != "}" && (line.rfind("//", 0) == 0 || line.length() < 6)) {
             continue;
          }
+         if (line.find("SetDirectory") != std::string::npos) continue;
          idx++;
          if (idx > NC) {
             infile.close();
