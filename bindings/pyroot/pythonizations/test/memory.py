@@ -1,7 +1,8 @@
-import ROOT
 import gc
 import os
 import unittest
+
+import ROOT
 
 
 def _leak(obj):
@@ -127,11 +128,14 @@ class MemoryStlString(unittest.TestCase):
             "_check_object_setdirectory_in_memory_file_begin", "recreate")
 
         x = klass(*args)
-        # TEfficiency does not automatically register with the directory
-        if not classname == "TEfficiency":
-            self.assertIs(x.GetDirectory(), f1)
-            x.SetDirectory(ROOT.nullptr)
+        # Register the object to the directory in case this hasn't been done:
+        if not x.GetDirectory():
+            x.SetDirectory(f1)
+
+        self.assertIs(x.GetDirectory(), f1)
+        x.SetDirectory(ROOT.nullptr)
         self.assertFalse(x.GetDirectory())
+
         # Make sure that at this point the ownership of the object is with Python
         ROOT.SetOwnership(x, True)
 
