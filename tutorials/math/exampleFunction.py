@@ -71,23 +71,18 @@ def g(x): return 2 * x
 
 gradFunc = ROOT.Math.GradFunctor1D(f, g)
 
-#check if ROOT has mathmore
-prevLevel = ROOT.gErrorIgnoreLevel
-ROOT.gErrorIgnoreLevel=ROOT.kFatal
-ret = ROOT.gSystem.Load("libMathMore") 
-ROOT.gErrorIgnoreLevel=prevLevel
-if (ret < 0) :
-   print("ROOT has not Mathmore")
-   print("derivative value at x = 1", gradFunc.Derivative(1) )
-
-else :
+#ROOT might be built without MathMore, so we might get an exception:
+try:
    rf = ROOT.Math.RootFinder(ROOT.Math.RootFinder.kGSL_NEWTON)
+   print("instantiate")
    rf.SetFunction(gradFunc, 3)
    rf.Solve()
    value = rf.Root()
    print("Found root value x0 : f(x0) = 0  :  ", value)
    if (value != 1):
       print("Error finding a ROOT of function f(x)=x^2-1")
+except Exception as e:
+   print(e)
 
 
 print("\n\nUse GradFunctor for making a function object implementing f(x,y) and df(x,y)/dx and df(x,y)/dy")
