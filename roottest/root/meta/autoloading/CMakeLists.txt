@@ -47,6 +47,7 @@ ROOTTEST_ADD_TEST(Typeinfo
 
 ROOTTEST_ADD_TEST(MissingEntriesROOT-5759
                   MACRO runFullMissingEntriesROOT-5759.C
+                  OUTCNVCMD sed -e s,input_line_[0-9]*,input_line_FILTERED,g
                   COPY_TO_BUILDDIR MissingEntriesROOT-5759.rootmap
                   OUTREF MissingEntriesROOT-5759.ref)
 
