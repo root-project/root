@@ -82,11 +82,17 @@ set_source_files_properties(${BASE4_DICTIONARY} GENERATED)
 set_source_files_properties(${TEXTINPUT_CXX_SOURCES} PROPERTIES
                              COMPILE_FLAGS -I${CMAKE_SOURCE_DIR}/core/textinput/src )
 
-
+if(PCRE2_FOUND)
+set_source_files_properties(${CMAKE_SOURCE_DIR}/core/base/src/TPRegexp.cxx
+                            ${BASE1_DICTIONARY} ${BASE2_DICTIONARY}
+			    COMPILE_FLAGS "-I${PCRE2_INCLUDE_DIR} -DUSE_PCRE2"
+                           )
+else()
 set_source_files_properties(${CMAKE_SOURCE_DIR}/core/base/src/TPRegexp.cxx
                             ${BASE1_DICTIONARY} ${BASE2_DICTIONARY}
                             COMPILE_FLAGS -I${PCRE_INCLUDE_DIR}
                            )
+endif()
 set_source_files_properties(${CMAKE_SOURCE_DIR}/core/lzma/src/ZipLZMA.c
                             COMPILE_FLAGS -I${LZMA_INCLUDE_DIR}
                            )
@@ -136,7 +142,7 @@ if(CXX_HAS_Wno-strict-aliasing)
 endif()
 
 ROOT_LINKER_LIBRARY(Core ${LibCore_SRCS} ${CORE_DICTIONARIES}
-                    LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES}  ${LZ4_LIBRARIES}  ${ZLIB_LIB} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs}
+                    LIBRARIES ${PCRE2_LIBRARIES} ${PCRE_LIBRARIES} ${LZMA_LIBRARIES}  ${LZ4_LIBRARIES}  ${ZLIB_LIB} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${corelinklibs}
                     DEPENDENCIES Cint)
 add_Dependencies(Core CLIB_DICTIONARY CONT_DICTIONARY  META_DICTIONARY METAUTILS_DICTIONARY BASE_DICTIONARY)
 if(UNIX)
