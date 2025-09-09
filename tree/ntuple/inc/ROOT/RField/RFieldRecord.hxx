@@ -136,6 +136,8 @@ protected:
    RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> itemFields,
               const std::array<std::size_t, 2> &offsets);
 
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
+
 public:
    RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> itemFields);
    RPairField(RPairField &&other) = default;
@@ -185,6 +187,8 @@ private:
 protected:
    RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
                const std::vector<std::size_t> &offsets);
+
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
    RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields);
