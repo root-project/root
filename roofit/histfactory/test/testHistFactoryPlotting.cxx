@@ -57,7 +57,10 @@ void createToyHistos1D()
       histoData->Fill(x_sig);
    }
 
-   histoFile->Write();
+   for (auto histo : {histoBG, histoSig, histoData}) {
+      histoFile->WriteTObject(histo);
+      delete histo;
+   }
 }
 
 /// Test that plotting HistFactory components works correctly. Covers the
