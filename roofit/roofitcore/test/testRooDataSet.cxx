@@ -170,6 +170,7 @@ TEST(RooDataSet, ReducingData)
    for (int i = 0; i < 3; ++i) {
       // Check with root:
       TH1F test_hist(("h" + std::to_string(i)).c_str(), "histo", 10, massmin, massmax);
+      test_hist.SetDirectory(gDirectory); // TTree::Draw needs to find the histogram
       chi2cutval += 0.5;
 
       std::stringstream cutString;
@@ -439,6 +440,7 @@ TEST(RooDataSet, SplitDataSetWithWeightErrors)
 TEST(RooDataSet, ReadDataSetWithErrors626)
 {
    std::unique_ptr<TFile> file{TFile::Open("dataSet_with_errors_6_26_10.root", "READ")};
+   ASSERT_NE(file, nullptr);
 
    auto data = file->Get<RooDataSet>("data");
 
