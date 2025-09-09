@@ -861,6 +861,7 @@ void TH2::DoFitSlices(bool onX,
       } else {
          hlist[ipar] = new TH1D(name,title, nOutBins, &bins->fArray[firstOutBin-1]);
       }
+      hlist[ipar]->SetDirectory(gDirectory);
       hlist[ipar]->GetXaxis()->SetTitle(outerAxis.GetTitle());
       if (arr)
          (*arr)[ipar] = hlist[ipar];
@@ -873,6 +874,7 @@ void TH2::DoFitSlices(bool onX,
    } else {
       hchi2 = new TH1D(name,"chisquare", nOutBins, &bins->fArray[firstOutBin-1]);
    }
+   hchi2->SetDirectory(gDirectory);
    hchi2->GetXaxis()->SetTitle(outerAxis.GetTitle());
    if (arr)
       (*arr)[npar] = hchi2;
@@ -2137,10 +2139,10 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
    return DoProfile(false, name, firstxbin, lastxbin, option);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal (protected) method for performing projection on the X or Y axis
-/// called by ProjectionX or ProjectionY
+/// called by ProjectionX or ProjectionY.
+/// The histograms created are added to gDirectory.
 
 TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbin, Option_t *option) const
 {
@@ -2254,6 +2256,7 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
          else
             h1 = new TH1D(pname,GetTitle(),lastOutBin-firstOutBin+1,&bins->fArray[firstOutBin-1]);
       }
+      h1->SetDirectory(gDirectory);
       if (opt.Contains("e") || GetSumw2N() ) h1->Sumw2();
    }
    if (pname != name)  delete [] pname;
