@@ -28,6 +28,7 @@
 #include <iostream>
 #include <memory>
 #include <type_traits>
+#include <unordered_set>
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RFieldZero::CloneImpl(std::string_view /*newName*/) const
 {
@@ -605,7 +606,20 @@ void ROOT::RRecordField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *t
 
 void ROOT::RRecordField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName | kDiffTypeVersion);
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName | kDiffTypeVersion);
+
+   // The on-disk ID of subfields is matched by field name. So we inherently support reordering of fields
+   // and we will ignore extra on-disk fields.
+   // It remains to mark the extra in-memory fields as artificial.
+   std::unordered_set<std::string> onDiskSubfields;
+   for (const auto &subField : desc.GetFieldIterable(fieldDesc)) {
+      onDiskSubfields.insert(subField.GetFieldName());
+   }
+   for (auto &f : fSubfields) {
+      if (onDiskSubfields.count(f->GetFieldName()) == 0)
+         CallSetArtificialOn(*f);
+   }
 }
 
 void ROOT::RRecordField::ConstructValue(void *where) const
