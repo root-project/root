@@ -2,8 +2,6 @@
 void makeDataDriven()
 {
 
-  TFile* file = new TFile("dataDriven.root", "RECREATE");
-
   TH1F* FlatHist = new TH1F("FlatHist","FlatHist", 2,0,2);
   FlatHist->SetBinContent( 1, 1.0 );
   FlatHist->SetBinContent( 2, 1.0 );
@@ -35,18 +33,17 @@ void makeDataDriven()
   data->SetBinContent(2, 110);
 
 
-  file->Write();
-  file->Close();
-
-
+  auto file = std::make_unique<TFile>("dataDriven.root", "RECREATE");
+  for (auto histo : std::initializer_list<TH1*>{FlatHist, Signal, Background1, ControlRegion, StatUncert, data}) {
+    file->WriteTObject(histo);
+    delete histo;
+  }
 }
 
 
 
 void makeShapeSys2DDataset()
 {
-
-  TFile* file = new TFile("ShapeSys2D.root", "RECREATE");
 
   TH2F* signal = new TH2F("signal", "signal", 2,0,2, 2,0,2);
   signal->SetBinContent(1, 1, 10);
@@ -90,17 +87,16 @@ void makeShapeSys2DDataset()
   data->SetBinContent(1, 2, 132);
   data->SetBinContent(2, 2, 132);
 
-  file->Write();
-  file->Close();
-
-
+  auto file = std::make_unique<TFile>("ShapeSys2D.root", "RECREATE");
+  for (auto histo : {signal, background1, bkg1ShapeError, background2, bkg2ShapeError, data}) {
+    file->WriteTObject(histo);
+    delete histo;
+  }
 }
 
 
 void makeShapeSysDataset()
 {
-
-  TFile* file = new TFile("ShapeSys.root", "RECREATE");
 
   TH1F* signal = new TH1F("signal", "signal", 2,0,2);
   signal->SetBinContent(1, 20);
@@ -132,18 +128,16 @@ void makeShapeSysDataset()
   data->SetBinContent(1, 122);
   data->SetBinContent(2, 112);
 
-  file->Write();
-  file->Close();
-
-
+  auto file = std::make_unique<TFile>("ShapeSys.root", "RECREATE");
+  for (auto histo : {signal, background1, bkg1ShapeError, background2, bkg2ShapeError, data}) {
+     file->WriteTObject(histo);
+     delete histo;
+  }
 }
 
 
 void makeStatErrorDataSet()
 {
-
-  TFile* file = new TFile("StatError.root", "RECREATE");
-
   TH1F* FlatHist = new TH1F("FlatHist","FlatHist", 2,0,2);
   FlatHist->SetBinContent( 1, 1.0 );
   FlatHist->SetBinContent( 2, 1.0 );
@@ -171,17 +165,16 @@ void makeStatErrorDataSet()
   data->SetBinContent(1, 122);
   data->SetBinContent(2, 112);
 
-
-  file->Write();
-  file->Close();
-
-
+  auto file = std::make_unique<TFile>("StatError.root", "RECREATE");
+  for (auto histo : {FlatHist, signal, background1, bkg1StatUncert, background2, data}) {
+     file->WriteTObject(histo);
+     delete histo;
+  }
 }
 
 
 
 void makeSimpleExample(){
-  TFile* example = new TFile("example.root","RECREATE");
   TH1F* data = new TH1F("data","data", 2,1,2);
   TH1F* signal = new TH1F("signal","signal histogram (pb)", 2,1,2);
   TH1F* background1 = new TH1F("background1","background 1 histogram (pb)", 2,1,2);
@@ -202,12 +195,11 @@ void makeSimpleExample(){
   statUncert->SetBinContent(1, .05);  // 5% uncertainty
   statUncert->SetBinContent(2, .05);  // 5% uncertainty
 
-
-  example->Write();
-  example->Close();
-  //////////////////////
-
-
+  auto example = std::make_unique<TFile>("example.root","RECREATE");
+  for (auto histo : {data, signal, background1, background2, statUncert}) {
+     example->WriteTObject(histo);
+     delete histo;
+  }
 }
 
 void makeExample(){
