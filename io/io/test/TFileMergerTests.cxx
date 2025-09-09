@@ -91,6 +91,8 @@ TEST(TFileMerger, MergeSingleOnlyListed)
    auto hist2 = new TH1F("hist2", "hist2", 1 , 0 , 2);
    auto hist3 = new TH1F("hist3", "hist3", 1 , 0 , 2);
    auto hist4 = new TH1F("hist4", "hist4", 1 , 0 , 2);
+   for (auto hist : {hist1, hist2, hist3, hist4})
+      hist->SetDirectory(&a);
    hist1->Fill(1);
    hist2->Fill(1);   hist2->Fill(2);
    hist3->Fill(1);   hist3->Fill(1);   hist3->Fill(1);
