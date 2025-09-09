@@ -54,7 +54,7 @@ public:
 
    struct Node final : public ROOT::Experimental::RTreeMapBase::Node, public TObject {
    public:
-      ClassDef(Node, 1);
+      ClassDefOverride(Node, 1);
    };
    RTreeMapPainter() = default;
    void Paint(Option_t *opt) override;
