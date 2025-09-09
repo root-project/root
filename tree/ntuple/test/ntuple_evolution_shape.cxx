@@ -1012,3 +1012,48 @@ struct StreamerField {
    EXPECT_EVALUATE_EQ("ptrStreamerField->fInt", 2);
    EXPECT_EVALUATE_EQ("ptrStreamerField->fAdded", 137);
 }
+
+TEST(RNTupleEvolution, RecordField)
+{
+   FileRaii fileGuard("test_ntuple_evolution_record_field.root");
+   {
+      std::vector<std::unique_ptr<RFieldBase>> items;
+      items.emplace_back(std::make_unique<RField<char>>("f1"));
+      items.emplace_back(std::make_unique<RField<float>>("f2"));
+      items.emplace_back(std::make_unique<RField<std::string>>("f3"));
+
+      auto model = ROOT::RNTupleModel::Create();
+      model->AddField(std::make_unique<ROOT::RRecordField>("r", std::move(items)));
+
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      auto r = writer->GetModel().GetDefaultEntry().GetPtr<void>("r");
+      const auto &rf = static_cast<const ROOT::RRecordField &>(writer->GetModel().GetConstField("r"));
+
+      auto f1 = reinterpret_cast<char *>(reinterpret_cast<unsigned char *>(r.get()) + rf.GetOffsets()[0]);
+      auto f3 = reinterpret_cast<std::string *>(reinterpret_cast<unsigned char *>(r.get()) + rf.GetOffsets()[2]);
+      *f1 = 'x';
+      *f3 = "ROOT";
+
+      writer->Fill();
+   }
+
+   std::vector<std::unique_ptr<RFieldBase>> items;
+   items.emplace_back(std::make_unique<RField<std::string>>("f3"));
+   items.emplace_back(std::make_unique<RField<std::vector<float>>>("f4"));
+   items.emplace_back(std::make_unique<RField<int>>("f1"));
+
+   auto model = ROOT::RNTupleModel::Create();
+   model->AddField(std::make_unique<ROOT::RRecordField>("r", std::move(items)));
+
+   auto reader = RNTupleReader::Open(std::move(model), "ntpl", fileGuard.GetPath());
+   auto r = reader->GetModel().GetDefaultEntry().GetPtr<void>("r");
+   const auto &rf = static_cast<const ROOT::RRecordField &>(reader->GetModel().GetConstField("r"));
+   auto f3 = reinterpret_cast<std::string *>(reinterpret_cast<unsigned char *>(r.get()) + rf.GetOffsets()[0]);
+   auto f4 = reinterpret_cast<std::vector<float> *>(reinterpret_cast<unsigned char *>(r.get()) + rf.GetOffsets()[1]);
+   auto f1 = reinterpret_cast<int *>(reinterpret_cast<unsigned char *>(r.get()) + rf.GetOffsets()[2]);
+   reader->LoadEntry(0);
+   EXPECT_EQ("ROOT", *f3);
+   EXPECT_TRUE(f4->empty());
+   EXPECT_EQ('x', *f1);
+}
