@@ -17,7 +17,6 @@
 Camera for TGLPlotPainter and sub-classes.
 */
 
-ClassImp(TGLPlotCamera);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Construct camera for plot painters.

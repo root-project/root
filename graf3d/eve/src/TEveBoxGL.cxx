@@ -22,7 +22,6 @@
 OpenGL renderer class for TEveBox.
 */
 
-ClassImp(TEveBoxGL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -229,7 +228,6 @@ void TEveBoxGL::DirectDraw(TGLRnrCtx&) const
 OpenGL renderer class for TEveBoxProjected.
 */
 
-ClassImp(TEveBoxProjectedGL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

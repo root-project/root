@@ -12,7 +12,6 @@
 #include "TPGON.h"
 #include "TMath.h"
 
-ClassImp(TPGON);
 
 /** \class TPGON
 \ingroup g3d

@@ -112,7 +112,6 @@ Parametric equations can be specified:
 
 */
 
-ClassImp(TGLParametricEquation);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Surface is defined by three strings.
@@ -289,7 +288,6 @@ void TGLParametricEquation::Paint(Option_t * /*option*/)
 \ingroup opengl
 */
 
-ClassImp(TGLParametricPlot);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Constructor.

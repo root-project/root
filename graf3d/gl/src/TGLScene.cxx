@@ -271,7 +271,6 @@ efficiency and synchronisation reasons. Hence viewer variant objects
 camera, clips etc being owned by viewer and passed at draw/select
 */
 
-ClassImp(TGLScene);
 
 ////////////////////////////////////////////////////////////////////////////////
 

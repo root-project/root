@@ -101,7 +101,6 @@ will draw all axes and labels with yellow color.
 */
 
 const Char_t *TAxis3D::fgRulerName = "axis3druler";
-ClassImp(TAxis3D);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor.

@@ -28,7 +28,6 @@ Implements a native ROOT-GL sphere that can be rendered at
 different levels of detail.
 */
 
-ClassImp(TGLSphere);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor

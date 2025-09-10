@@ -24,7 +24,6 @@ Arcball sphere constants:
   - Radius is         1.0f
 */
 
-ClassImp(TArcBall);
 
 
 

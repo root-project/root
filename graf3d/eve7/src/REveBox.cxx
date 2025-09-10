@@ -32,7 +32,6 @@ by the size of the REveTrans object).
 Currently only supports 3D -> 2D projections.
 */
 
-//ClassImp(REveBox);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
