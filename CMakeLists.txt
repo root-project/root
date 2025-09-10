@@ -14,16 +14,21 @@ if(WIN32)
 endif()
 if(CMAKE_HOST_APPLE AND (NOT CMAKE_OSX_SYSROOT OR CMAKE_OSX_SYSROOT STREQUAL ""))
   # The SYSROOT *must* be set before the project() call
-  execute_process(COMMAND xcrun --sdk macosx --show-sdk-path
-    OUTPUT_VARIABLE SDK_PATH
-    ERROR_QUIET
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  find_program(XCRUN_EXECUTABLE xcrun)
+  if(EXISTS ${XCRUN_EXECUTABLE})
+    execute_process(COMMAND ${XCRUN_EXECUTABLE} --sdk macosx --show-sdk-path
+      OUTPUT_VARIABLE SDK_PATH
+      ERROR_QUIET
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(NOT EXISTS "${SDK_PATH}")
+      message(FATAL_ERROR "Could not detect macOS SDK path")
+    endif()
 
-  if(NOT EXISTS "${SDK_PATH}")
-    message(FATAL_ERROR "Could not detect macOS SDK path")
+    set(CMAKE_OSX_SYSROOT "${SDK_PATH}" CACHE PATH "SDK path" FORCE)
+  else()
+    message(WARNING "The CMAKE_OSX_SYSROOT variable is not set and the 'xcrun' executable is not available. "
+                    "This build of ROOT might not be able to find the correct MacOS SDK.")
   endif()
-
-  set(CMAKE_OSX_SYSROOT "${SDK_PATH}" CACHE PATH "SDK path" FORCE)
 endif()
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT ALLOW_IN_SOURCE)
