@@ -13,7 +13,6 @@
 #include <TROOT.h>
 #include <snprintf.h>
 
-ClassImp(CanvSave);
 
 
 CanvSave::CanvSave(const TGWindow *p, const TGWindow *main, UInt_t w,
