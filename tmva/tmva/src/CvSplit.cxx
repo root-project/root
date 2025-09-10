@@ -25,8 +25,6 @@
 #include <numeric>
 #include <stdexcept>
 
-ClassImp(TMVA::CvSplit);
-ClassImp(TMVA::CvSplitKFolds);
 
 /* =============================================================================
       TMVA::CvSplit

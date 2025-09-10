@@ -89,7 +89,6 @@ using std::stringstream;
 using std::make_pair;
 using std::atoi;
 
-ClassImp(TMVA::MethodCFMlpANN);
 
 
 

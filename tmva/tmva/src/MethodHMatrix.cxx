@@ -46,7 +46,6 @@
 
 REGISTER_METHOD(HMatrix)
 
-ClassImp(TMVA::MethodHMatrix);
 
 /*! \class TMVA::MethodHMatrix
 \ingroup TMVA

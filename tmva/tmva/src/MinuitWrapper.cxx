@@ -30,7 +30,6 @@ Wrapper around MINUIT
 
 #include "TMVA/IFitterTarget.h"
 
-ClassImp(TMVA::MinuitWrapper);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

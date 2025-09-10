@@ -55,7 +55,6 @@ public:
 
 REGISTER_METHOD(PyRandomForest)
 
-ClassImp(MethodPyRandomForest);
 
 //_______________________________________________________________________
 MethodPyRandomForest::MethodPyRandomForest(const TString &jobName,

@@ -36,7 +36,6 @@ Range definition for genetic algorithm.
 #include "TMVA/GeneticRange.h"
 #include "TMVA/Interval.h"
 
-ClassImp(TMVA::GeneticRange);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// defines the "f" (from) and "t" (to) of the coefficient

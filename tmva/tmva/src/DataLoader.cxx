@@ -56,7 +56,6 @@
 #include "TMVA/VariableNormalizeTransform.h"
 #include "TMVA/VarTransformHandler.h"
 
-ClassImp(TMVA::DataLoader);
 
 ////////////////////////////////////////////////////////////////////////////////
 /*** Create a data loader

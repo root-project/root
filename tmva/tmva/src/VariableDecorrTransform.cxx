@@ -49,7 +49,6 @@ Linear interpolation class
 #include <iomanip>
 #include <algorithm>
 
-ClassImp(TMVA::VariableDecorrTransform);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

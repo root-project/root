@@ -134,7 +134,6 @@ non-linear methods must be applied.
 
 REGISTER_METHOD(Likelihood)
 
-ClassImp(TMVA::MethodLikelihood);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor

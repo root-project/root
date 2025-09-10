@@ -54,7 +54,6 @@ Analysis of k-nearest neighbor.
 
 REGISTER_METHOD(KNN)
 
-ClassImp(TMVA::MethodKNN);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor

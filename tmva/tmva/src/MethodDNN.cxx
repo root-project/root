@@ -68,7 +68,6 @@ Deep Neural Network Implementation.
 
 REGISTER_METHOD(DNN)
 
-ClassImp(TMVA::MethodDNN);
 
 namespace TMVA
 {

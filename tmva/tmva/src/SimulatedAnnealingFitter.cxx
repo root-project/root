@@ -43,7 +43,6 @@ Fitter using a Simulated Annealing Algorithm
 #include "Rtypes.h"
 #include "TString.h"
 
-ClassImp(TMVA::SimulatedAnnealingFitter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

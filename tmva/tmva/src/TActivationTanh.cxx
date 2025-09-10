@@ -35,7 +35,6 @@ Tanh activation function for ANN.
 
 #include <iostream>
 
-ClassImp(TMVA::TActivationTanh);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// a fast tanh approximation

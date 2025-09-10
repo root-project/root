@@ -127,7 +127,6 @@ The corresponding numbers are printed on standard output.
 
 REGISTER_METHOD(Fisher)
 
-ClassImp(TMVA::MethodFisher);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor for the "Fisher"

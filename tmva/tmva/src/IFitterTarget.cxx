@@ -35,7 +35,6 @@ Interface for a fitter 'target'. Defines interface to the estimator function
 
 #include "Rtypes.h"
 
-ClassImp(TMVA::IFitterTarget);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
