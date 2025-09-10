@@ -52,10 +52,6 @@ This file contains the TGMdiMainFrame class.
 
 #include <iostream>
 
-ClassImp(TGMdiMainFrame);
-ClassImp(TGMdiContainer);
-ClassImp(TGMdiGeometry);
-ClassImp(TGMdiFrameList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a MDI main frame.

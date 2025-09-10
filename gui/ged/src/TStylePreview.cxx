@@ -28,7 +28,6 @@ This class may be used to preview the result of applying a style
 #include <TStyle.h>
 #include <TROOT.h>
 
-ClassImp(TStylePreview);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Constructor. Create a new window and draw a clone of

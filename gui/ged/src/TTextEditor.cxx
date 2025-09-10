@@ -12,7 +12,6 @@
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TTextEditor);
 
 
 /** \class TTextEditor

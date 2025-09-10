@@ -41,8 +41,6 @@ select marker style.
 
 #include <iostream>
 
-ClassImp(TGedMarkerSelect);
-ClassImp(TGedMarkerPopup);
 
 struct MarkerDescription_t {
    const char* fFilename;  // xpm file name

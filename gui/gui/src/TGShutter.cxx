@@ -29,8 +29,6 @@ a number of categories.
 #include <iostream>
 
 
-ClassImp(TGShutterItem);
-ClassImp(TGShutter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create shutter frame.

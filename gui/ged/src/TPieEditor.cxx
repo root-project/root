@@ -35,7 +35,6 @@ Implements GUI for pie-chart attributes.
 #include "TVirtualX.h"
 #include "snprintf.h"
 
-ClassImp(TPieEditor);
 
 enum EPieWid {
    kPie = 0,

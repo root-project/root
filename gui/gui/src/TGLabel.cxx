@@ -43,7 +43,6 @@ This class handles GUI labels.
 const TGFont *TGLabel::fgDefaultFont = nullptr;
 const TGGC   *TGLabel::fgDefaultGC = nullptr;
 
-ClassImp(TGLabel);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a label GUI object. TGLabel will become the owner of the

@@ -28,7 +28,6 @@ Implements GUI for editing fill attributes.
 #include "TCanvas.h"
 #include "TROOT.h"
 
-ClassImp(TAttFillEditor);
 
 enum EFillWid {
    kCOLOR,

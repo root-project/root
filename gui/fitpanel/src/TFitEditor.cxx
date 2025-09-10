@@ -319,7 +319,6 @@ void GetTreeVarsAndCuts(TGComboBox* dataSet, TString& variablesStr, TString& cut
 }
 
 
-ClassImp(TFitEditor);
 
 TFitEditor *TFitEditor::fgFitDialog = 0;
 

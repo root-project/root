@@ -102,7 +102,6 @@ This class is the real core of the ROOT browser.
 */
 
 
-ClassImp(TGFileBrowser);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGFileBrowser constructor.

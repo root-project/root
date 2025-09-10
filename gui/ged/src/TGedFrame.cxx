@@ -27,7 +27,6 @@ Base frame for implementing GUI - a service class.
 #include "TGScrollBar.h"
 
 
-ClassImp(TGedFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of the base GUI attribute frame.

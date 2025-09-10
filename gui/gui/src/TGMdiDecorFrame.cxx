@@ -52,14 +52,6 @@ This file contains all different MDI frame decoration classes.
 #include "TVirtualX.h"
 
 
-ClassImp(TGMdiDecorFrame);
-ClassImp(TGMdiTitleBar);
-ClassImp(TGMdiButtons);
-ClassImp(TGMdiTitleIcon);
-ClassImp(TGMdiWinResizer);
-ClassImp(TGMdiVerticalWinResizer);
-ClassImp(TGMdiHorizontalWinResizer);
-ClassImp(TGMdiCornerWinResizer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGMdiDecorFrame constructor.

@@ -34,7 +34,6 @@ This small class is useful to ask the user for a name and a title,
 
 #include <cstdlib>
 
-ClassImp(TStyleDialog);
 
 enum EStyleDialogWid {
    kName,

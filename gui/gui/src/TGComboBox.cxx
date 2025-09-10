@@ -56,12 +56,7 @@ Selecting an item in the combobox will generate the event:
 #include <iostream>
 
 
-ClassImp(TGComboBoxPopup);
-ClassImp(TGComboBox);
 
-ClassImp(TGLineStyleComboBox);
-ClassImp(TGLineWidthComboBox);
-ClassImp(TGFontTypeComboBox);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a combo box popup frame.

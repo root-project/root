@@ -296,7 +296,6 @@ Bool_t TRootContainer::HandleButton(Event_t *event)
    return fCanvas->HandleContainerButton(event);
 }
 
-ClassImp(TRootCanvas);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a basic ROOT canvas.

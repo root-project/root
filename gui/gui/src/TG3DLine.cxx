@@ -31,8 +31,6 @@ widgets.
 #include <iostream>
 
 
-ClassImp(TGHorizontal3DLine);
-ClassImp(TGVertical3DLine);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

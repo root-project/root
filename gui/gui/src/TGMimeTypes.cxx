@@ -36,7 +36,6 @@ to applications and icons.
 #include "TRegexp.h"
 #include "strlcpy.h"
 
-ClassImp(TGMimeTypes);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a mime type cache. Read the mime types file "filename" and
