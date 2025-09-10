@@ -56,7 +56,6 @@ public:
 
 REGISTER_METHOD(PyAdaBoost)
 
-ClassImp(MethodPyAdaBoost);
 
 //_______________________________________________________________________
 MethodPyAdaBoost::MethodPyAdaBoost(const TString &jobName,

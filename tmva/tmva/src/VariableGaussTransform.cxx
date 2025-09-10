@@ -52,7 +52,6 @@ Gaussian Transformation of input variables.
 #include <limits>
 #include <stdexcept>
 
-ClassImp(TMVA::VariableGaussTransform);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

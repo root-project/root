@@ -38,7 +38,6 @@ Synapse class used by TMVA artificial neural network methods
 
 static const Int_t fgUNINITIALIZED = -1;
 
-ClassImp(TMVA::TSynapse);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

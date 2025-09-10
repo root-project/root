@@ -56,7 +56,6 @@ Linear interpolation class.
 
 bool advanced;
 
-ClassImp(TMVA::VariableTransformBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor

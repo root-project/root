@@ -38,7 +38,6 @@ Rearrangement of input variables
 #include <iostream>
 #include <stdexcept>
 
-ClassImp(TMVA::VariableRearrangeTransform);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

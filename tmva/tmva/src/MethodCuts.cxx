@@ -119,7 +119,6 @@ using std::atof;
 
 REGISTER_METHOD(Cuts)
 
-ClassImp(TMVA::MethodCuts);
 
    const Double_t TMVA::MethodCuts::fgMaxAbsCutVal = 1.0e30;
 
