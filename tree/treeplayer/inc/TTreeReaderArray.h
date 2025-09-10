@@ -52,8 +52,7 @@ protected:
 
    std::unique_ptr<TVirtualCollectionReader> fImpl; // Common interface to collections
 
-   // FIXME: re-introduce once we have ClassDefInline!
-   // ClassDefOverride(TTreeReaderArrayBase, 0);//Accessor to member of an object stored in a collection
+   ClassDefInlineOverride(TTreeReaderArrayBase, 0);//Accessor to member of an object stored in a collection
 };
 
 class R__CLING_PTRCHECK(off) TTreeReaderUntypedArray final : public TTreeReaderArrayBase {
@@ -241,8 +240,7 @@ protected:
 #define R__TTreeReaderArray_TypeString(T) #T
    const char *GetDerivedTypeName() const override { return R__TTreeReaderArray_TypeString(T); }
 #undef R__TTreeReaderArray_TypeString
-   // FIXME: re-introduce once we have ClassDefTInline!
-   // ClassDefT(TTreeReaderArray, 0);//Accessor to member of an object stored in a collection
+   ClassDefInline(TTreeReaderArray, 0);//Accessor to member of an object stored in a collection
 };
 
 namespace cling {

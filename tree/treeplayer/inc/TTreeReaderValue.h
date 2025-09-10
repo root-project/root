@@ -150,8 +150,7 @@ protected:
     */
    bool fOpaqueRead{false};
 
-   // FIXME: re-introduce once we have ClassDefInline!
-   // ClassDefOverride(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader
+   ClassDefInlineOverride(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader
 
    friend class ::TTreeReader;
 };
@@ -238,7 +237,7 @@ public:
    T &operator*() { return *Get(); }
 
 protected:
-   // FIXME: use IsA() instead once we have ClassDefTInline
+   // FIXME: use IsA() instead
    /// Get the template argument as a string.
    const char *GetDerivedTypeName() const override
    {
@@ -246,8 +245,7 @@ protected:
       return sElementTypeName.data();
    }
 
-   // FIXME: re-introduce once we have ClassDefTInline!
-   // ClassDefT(TTreeReaderValue, 0);//Accessor to data via TTreeReader
+   ClassDefInlineOverride(TTreeReaderValue, 0);//Accessor to data via TTreeReader
 };
 
 namespace cling {
