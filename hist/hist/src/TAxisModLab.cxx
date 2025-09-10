@@ -13,7 +13,6 @@
 
 #include "TAxisModLab.h"
 
-ClassImp(TAxisModLab);
 
 /** \class TAxisModLab
 \ingroup BasicGraphics

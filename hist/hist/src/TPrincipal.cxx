@@ -221,7 +221,6 @@ Christian Holm August 2000, CERN
 #include "Riostream.h"
 
 
-ClassImp(TPrincipal);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Empty constructor. Do not use.

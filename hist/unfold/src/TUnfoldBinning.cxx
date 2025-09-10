@@ -120,7 +120,6 @@ binned multidimensional histograms.
 
 using std::ostream;
 
-ClassImp(TUnfoldBinning)
 
 ////////////////////////////////////////////////////////////////////////
 TUnfoldBinning::~TUnfoldBinning(void)

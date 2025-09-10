@@ -33,7 +33,6 @@
 
 extern void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k, Double_t *b);
 
-ClassImp(TMultiGraph);
 
 
 ////////////////////////////////////////////////////////////////////////////////

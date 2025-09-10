@@ -20,7 +20,6 @@
 
 Bool_t TProfile2D::fgApproximate = kFALSE;
 
-ClassImp(TProfile2D);
 
 /** \class TProfile2D
     \ingroup Histograms

@@ -23,7 +23,6 @@
 
 Bool_t TProfile::fgApproximate = kFALSE;
 
-ClassImp(TProfile);
 
 /** \class TProfile
     \ingroup Histograms

@@ -35,7 +35,6 @@
 #include "Fit/DataRange.h"
 #include "Math/MinimizerOptions.h"
 
-ClassImp(TGraph2D);
 
 
 /** \class TGraph2D

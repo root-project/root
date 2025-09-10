@@ -20,7 +20,6 @@ In addition it provides an automatic conversion to an integer. In this way it ca
 returned from the TH1::Fit method and the change in TH1::Fit be backward compatible.
  */
 
-ClassImp(TFitResultPtr);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from a TFitResult pointer

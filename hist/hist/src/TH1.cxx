@@ -595,7 +595,6 @@ extern void H1LeastSquareFit(Int_t n, Int_t m, Double_t *a);
 extern void H1LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifail);
 extern void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k, Double_t *b);
 
-ClassImp(TH1);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Histogram default constructor.
@@ -9474,7 +9473,6 @@ std::string cling::printValue(TH1 *val) {
 // TH1C : histograms with one byte per channel.   Maximum bin content = 127
 //______________________________________________________________________________
 
-ClassImp(TH1C);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -9660,7 +9658,6 @@ TH1C operator/(const TH1C &h1, const TH1C &h2)
 // TH1S : histograms with one short per channel.  Maximum bin content = 32767
 //______________________________________________________________________________
 
-ClassImp(TH1S);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -9847,7 +9844,6 @@ TH1S operator/(const TH1S &h1, const TH1S &h2)
 // 2147483647 = INT_MAX
 //______________________________________________________________________________
 
-ClassImp(TH1I);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -10035,7 +10031,6 @@ TH1I operator/(const TH1I &h1, const TH1I &h2)
 // 9223372036854775807 = LLONG_MAX
 //______________________________________________________________________________
 
-ClassImp(TH1L);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -10222,7 +10217,6 @@ TH1L operator/(const TH1L &h1, const TH1L &h2)
 // TH1F : histograms with one float per channel. Maximum precision 7 digits, maximum integer bin content = +/-16777216
 //______________________________________________________________________________
 
-ClassImp(TH1F);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -10403,7 +10397,6 @@ TH1F operator/(const TH1F &h1, const TH1F &h2)
 // TH1D : histograms with one double per channel. Maximum precision 14 digits, maximum integer bin content = +/-9007199254740992
 //______________________________________________________________________________
 
-ClassImp(TH1D);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

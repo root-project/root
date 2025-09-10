@@ -174,7 +174,6 @@ created THn will have compatble storage type, i.e. calling CreateHn() on
 a TH2F will create a THnF.
 */
 
-ClassImp(THn);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a THn.

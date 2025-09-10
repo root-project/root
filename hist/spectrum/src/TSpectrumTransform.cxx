@@ -32,7 +32,6 @@
 #include "TSpectrumTransform.h"
 #include "TMath.h"
 
-ClassImp(TSpectrumTransform);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///default constructor

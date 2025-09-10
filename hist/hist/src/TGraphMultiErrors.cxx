@@ -24,7 +24,6 @@
 
 #include "TGraphMultiErrors.h"
 
-ClassImp(TGraphMultiErrors)
 
 /** \class TGraphMultiErrors
     \ingroup Graphs

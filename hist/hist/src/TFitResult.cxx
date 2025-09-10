@@ -22,7 +22,6 @@ Extends the ROOT::Fit::Result class with a TNamed inheritance
 providing easy possibility for I/O
 */
 
-ClassImp(TFitResult);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from a ROOT::Fit::FitResult

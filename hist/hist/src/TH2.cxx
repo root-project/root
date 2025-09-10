@@ -28,7 +28,6 @@
 #include "TVirtualHistPainter.h"
 #include "snprintf.h"
 
-ClassImp(TH2);
 
 /** \addtogroup Histograms
 @{
@@ -2816,7 +2815,6 @@ void TH2::Streamer(TBuffer &R__b)
 //  TH2C a 2-D histogram with one byte per cell (char)
 //______________________________________________________________________________
 
-ClassImp(TH2C);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3078,7 +3076,6 @@ TH2C operator/(TH2C const &h1, TH2C const &h2)
 //  TH2S a 2-D histogram with two bytes per cell (short integer)
 //______________________________________________________________________________
 
-ClassImp(TH2S);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3342,7 +3339,6 @@ TH2S operator/(TH2S const &h1, TH2S const &h2)
 //  TH2I a 2-D histogram with four bytes per cell (32 bit integer)
 //______________________________________________________________________________
 
-ClassImp(TH2I);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3571,7 +3567,6 @@ TH2I operator/(TH2I const &h1, TH2I const &h2)
 //  TH2L a 2-D histogram with eight bytes per cell (64 bit integer)
 //______________________________________________________________________________
 
-ClassImp(TH2L);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3800,7 +3795,6 @@ TH2L operator/(TH2L const &h1, TH2L const &h2)
 //  TH2F a 2-D histogram with four bytes per cell (float). Maximum precision 7 digits, maximum integer bin content = +/-16777216
 //______________________________________________________________________________
 
-ClassImp(TH2F);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4072,7 +4066,6 @@ TH2F operator/(TH2F const &h1, TH2F const &h2)
 //  TH2D a 2-D histogram with eight bytes per cell (double). Maximum precision 14 digits, maximum integer bin content = +/-9007199254740992
 //______________________________________________________________________________
 
-ClassImp(TH2D);
 
 
 ////////////////////////////////////////////////////////////////////////////////

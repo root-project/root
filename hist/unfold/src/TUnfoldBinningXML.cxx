@@ -137,7 +137,6 @@ scheme consists of two two-dimensional distributions, signal and background.
 
 using std::ofstream, std::stringstream;
 
-ClassImp(TUnfoldBinningXML)
 
 /********************* XML **********************/
 

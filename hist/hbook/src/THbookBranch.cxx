@@ -12,7 +12,6 @@
 #include "THbookBranch.h"
 #include "THbookTree.h"
 
-ClassImp(THbookBranch);
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class THbookBranch

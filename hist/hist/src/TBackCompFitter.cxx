@@ -66,7 +66,6 @@ class before issuing a new fit to avoid deleting this information.
 //#define DEBUG 1
 
 
-ClassImp(TBackCompFitter);
 
 
 
