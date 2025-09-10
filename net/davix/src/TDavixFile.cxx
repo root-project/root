@@ -213,14 +213,14 @@ bool findTokenInFile(const std::string &token_file, std::string &output_token)
 // https://github.com/WLCG-AuthZ-WG/bearer-token-discovery/blob/master/specification.md
 std::string DiscoverToken()
 {
-   const char *bearer_token = getenv("BEARER_TOKEN");
+   const char *bearer_token = std::getenv("BEARER_TOKEN");
    std::string token;
    if (bearer_token && *bearer_token){
       if (!normalizeToken(bearer_token, token)) {return "";}
       if (!token.empty()) {return token;}
    }
 
-   const char *bearer_token_file = getenv("BEARER_TOKEN_FILE");
+   const char *bearer_token_file = std::getenv("BEARER_TOKEN_FILE");
    if (bearer_token_file) {
       if (!findTokenInFile(bearer_token_file, token)) {return "";}
       if (!token.empty()) {return token;}
@@ -231,7 +231,7 @@ std::string DiscoverToken()
    std::string fname = "/bt_u";
    fname += std::to_string(euid);
 
-   const char *xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
+   const char *xdg_runtime_dir = std::getenv("XDG_RUNTIME_DIR");
    if (xdg_runtime_dir) {
       std::string xdg_token_file = std::string(xdg_runtime_dir) + fname;
       if (!findTokenInFile(xdg_token_file, token)) {return "";}
@@ -266,10 +266,10 @@ static void TDavixFile_http_get_ucert(std::string &ucert, std::string &ukey)
    }
 
    // Try explicit environment for proxy
-   if (getenv("X509_USER_PROXY")) {
+   if (std::getenv("X509_USER_PROXY")) {
       if (gDebug > 0)
          Info("TDavixFile_http_get_ucert", "Found proxy in X509_USER_PROXY");
-      ucert = ukey = getenv("X509_USER_PROXY");
+      ucert = ukey = std::getenv("X509_USER_PROXY");
       return;
    }
 
@@ -297,10 +297,10 @@ static void TDavixFile_http_get_ucert(std::string &ucert, std::string &ukey)
    }
 
    // try with X509_* environment
-   if (getenv("X509_USER_CERT"))
-      ucert = getenv("X509_USER_CERT");
-   if (getenv("X509_USER_KEY"))
-      ukey = getenv("X509_USER_KEY");
+   if (std::getenv("X509_USER_CERT"))
+      ucert = std::getenv("X509_USER_CERT");
+   if (std::getenv("X509_USER_KEY"))
+      ukey = std::getenv("X509_USER_KEY");
 
    if ((ucert.size() > 0) || (ukey.size() > 0)) {
       if (gDebug > 0)
@@ -411,7 +411,7 @@ void TDavixFileInternal::enableGridMode()
    if (gDebug > 1)
       Info("enableGridMode", " grid mode enabled !");
 
-   if( ( env_var = getenv("X509_CERT_DIR")) == NULL){
+   if( ( env_var = std::getenv("X509_CERT_DIR")) == NULL){
       env_var= "/etc/grid-security/certificates/";
    }
    davixParam->addCertificateAuthorityPath(env_var);
@@ -533,21 +533,21 @@ void TDavixFileInternal::parseConfig()
    }
 
    // S3 Auth
-   if (((env_var = gEnv->GetValue("Davix.S3.SecretKey", getenv("S3_SECRET_KEY"))) != NULL)
-         && ((env_var2 = gEnv->GetValue("Davix.S3.AccessKey", getenv("S3_ACCESS_KEY"))) != NULL)) {
+   if (((env_var = gEnv->GetValue("Davix.S3.SecretKey", std::getenv("S3_SECRET_KEY"))) != NULL)
+         && ((env_var2 = gEnv->GetValue("Davix.S3.AccessKey", std::getenv("S3_ACCESS_KEY"))) != NULL)) {
       Info("parseConfig", "Setting S3 SecretKey and AccessKey. Access Key : %s ", env_var2);
       davixParam->setAwsAuthorizationKeys(env_var, env_var2);
 
       // need to set region?
-      if ( (env_var = gEnv->GetValue("Davix.S3.Region", getenv("S3_REGION"))) != NULL) {
+      if ( (env_var = gEnv->GetValue("Davix.S3.Region", std::getenv("S3_REGION"))) != NULL) {
          setAwsRegion(env_var);
       }
       // need to set STS token?
-      if( (env_var = gEnv->GetValue("Davix.S3.Token", getenv("S3_TOKEN"))) != NULL) {
+      if( (env_var = gEnv->GetValue("Davix.S3.Token", std::getenv("S3_TOKEN"))) != NULL) {
          setAwsToken(env_var);
       }
       // need to set aws alternate?
-      if( (env_var = gEnv->GetValue("Davix.S3.Alternate", getenv("S3_ALTERNATE"))) != NULL) {
+      if( (env_var = gEnv->GetValue("Davix.S3.Alternate", std::getenv("S3_ALTERNATE"))) != NULL) {
          setAwsAlternate(strToBool(env_var, false));
       }
    }

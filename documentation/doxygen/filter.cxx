@@ -85,8 +85,8 @@
 #include <cstring>
 #include <iostream>
 #include <fstream>
-#include <stdlib.h>
-#include <stdarg.h>
+#include <cstdlib>
+#include <cstdarg>
 #include <memory>
 
 using std::string;
@@ -161,15 +161,15 @@ int main(int argc, char *argv[])
    gCwd     = gFileName.substr(0,last);
 
    // Retrieve the output directory
-   gOutDir = getenv("DOXYGEN_OUTPUT_DIRECTORY");
+   gOutDir = std::getenv("DOXYGEN_OUTPUT_DIRECTORY");
    ReplaceAll(gOutDir,"\"","");
 
    // Retrieve the source directory
-   gSourceDir = getenv("DOXYGEN_SOURCE_DIRECTORY");
+   gSourceDir = std::getenv("DOXYGEN_SOURCE_DIRECTORY");
    ReplaceAll(gSourceDir,"\"","");
 
    // Retrieve the python executable
-   gPythonExec = getenv("Python3_EXECUTABLE");
+   gPythonExec = std::getenv("Python3_EXECUTABLE");
    ReplaceAll(gPythonExec,"\"","");
 
    // Open the input file name.

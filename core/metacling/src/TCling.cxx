@@ -3547,7 +3547,7 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
    // Check that this is not a system library
    static const int bufsize = 260;
    char posixwindir[bufsize];
-   char *windir = getenv("WINDIR");
+   char *windir = std::getenv("WINDIR");
    if (windir)
       cygwin_conv_path(CCP_WIN_A_TO_POSIX, windir, posixwindir, bufsize);
    else

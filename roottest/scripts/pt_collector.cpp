@@ -1,17 +1,17 @@
-#include <errno.h>
+#include <cerrno>
 #include <iostream>
 #include <fcntl.h>
-#include <math.h>
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cmath>
+#include <csignal>
+#include <cstdio>
+#include <cstdlib>
 #include <string>
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <time.h>
+#include <ctime>
 #include <unistd.h>
 
 #include "TAxis.h"
