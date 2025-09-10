@@ -161,16 +161,12 @@ jobs:
 
       - name: Set up curl CA bundle for Davix to work with https
         run: 'echo SSL_CERT_FILE=/opt/local/share/curl/curl-ca-bundle.crt >> $GITHUB_ENV'  
-      - name: Source python venv
-        run: 'source /Users/sftnight/py-venv/ROOT-CI/bin/activate && python -m site'
-      - name: Check python venv
-        run: 'python -m site'
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
         env:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
-        run: ".github/workflows/root-ci-config/build_root.py
+        run: "source /Users/sftnight/py-venv/ROOT-CI/bin/activate && .github/workflows/root-ci-config/build_root.py
                     --buildtype       RelWithDebInfo
                     --incremental     $INCREMENTAL
                     --base_ref        ${{ github.base_ref }}
@@ -183,7 +179,7 @@ jobs:
 
       - name: Workflow dispatch
         if: ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
-        run: ".github/workflows/root-ci-config/build_root.py
+        run: "source /Users/sftnight/py-venv/ROOT-CI/bin/activate && .github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ inputs.buildtype }}
                     --platform       ${{ matrix.platform }}
                     --incremental    ${{ inputs.incremental }}
@@ -194,7 +190,7 @@ jobs:
 
       - name: Nightly build
         if:   github.event_name == 'schedule'
-        run: ".github/workflows/root-ci-config/build_root.py
+        run: "source /Users/sftnight/py-venv/ROOT-CI/bin/activate && .github/workflows/root-ci-config/build_root.py
                     --buildtype      Release
                     --platform       ${{ matrix.platform }}
                     --incremental    false
@@ -204,7 +200,7 @@ jobs:
 
       - name: Update build cache after push to release branch
         if:   github.event_name == 'push'
-        run: ".github/workflows/root-ci-config/build_root.py
+        run: "source /Users/sftnight/py-venv/ROOT-CI/bin/activate && .github/workflows/root-ci-config/build_root.py
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.platform }}
                     --incremental    false
