@@ -21,7 +21,6 @@ Author: Andreas Morsch   04/07/2008
 #include "TPythia8.h"
 #include "TPythia8Decayer.h"
 
-ClassImp(TPythia8Decayer);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///constructor

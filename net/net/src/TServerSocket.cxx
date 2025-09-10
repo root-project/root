@@ -38,7 +38,6 @@ UChar_t TServerSocket::fgAcceptOpt = kSrvNoAuth;
 
 TVirtualMutex *gSrvAuthenticateMutex = 0;
 
-ClassImp(TServerSocket);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Kind of macro to parse input options

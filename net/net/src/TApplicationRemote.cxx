@@ -56,7 +56,6 @@ Bool_t TARInterruptHandler::Notify()
 }
 
 
-ClassImp(TApplicationRemote);
 
 static const char *gScript = "roots";
 static const char *gScriptCmd = "\\\"%s %d localhost:%d/%s -d=%d\\\"";
