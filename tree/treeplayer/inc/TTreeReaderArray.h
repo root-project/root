@@ -240,7 +240,7 @@ protected:
 #define R__TTreeReaderArray_TypeString(T) #T
    const char *GetDerivedTypeName() const override { return R__TTreeReaderArray_TypeString(T); }
 #undef R__TTreeReaderArray_TypeString
-   ClassDefInline(TTreeReaderArray, 0);//Accessor to member of an object stored in a collection
+   ClassDefInlineOverride(TTreeReaderArray, 0);//Accessor to member of an object stored in a collection
 };
 
 namespace cling {
