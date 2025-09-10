@@ -116,7 +116,7 @@ jobs:
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
-      - macOS
+      - macOS-VM
       - ${{ matrix.arch }}
       - ${{ matrix.platform }}
 
