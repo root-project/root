@@ -39,7 +39,6 @@ using std::map, std::pair, std::make_pair, std::list, std::max, std::string;
 #endif
 #include "v5/TFormula.h"
 
-ClassImp(TFormula);
 
 namespace {
 

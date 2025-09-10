@@ -28,12 +28,6 @@
 #include <iostream>
 #include <fstream>
 
-ClassImp(TSplinePoly);
-ClassImp(TSplinePoly3);
-ClassImp(TSplinePoly5);
-ClassImp(TSpline3);
-ClassImp(TSpline5);
-ClassImp(TSpline);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.

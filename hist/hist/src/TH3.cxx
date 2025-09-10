@@ -28,7 +28,6 @@
 #include <atomic>
 #include <stdexcept>
 
-ClassImp(TH3);
 
 /** \addtogroup Histograms
 @{
@@ -3538,7 +3537,6 @@ TH2D *TH3::DoProject2D(const TH3 &h, const char *name, const char *title, const 
 //  TH3C a 3-D histogram with one byte per cell (char)
 //______________________________________________________________________________
 
-ClassImp(TH3C);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3807,7 +3805,6 @@ TH3C operator/(TH3C const &h1, TH3C const &h2)
 //  TH3S a 3-D histogram with two bytes per cell (short integer)
 //______________________________________________________________________________
 
-ClassImp(TH3S);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4047,7 +4044,6 @@ TH3S operator/(TH3S const &h1, TH3S const &h2)
 //  TH3I a 3-D histogram with four bytes per cell (32 bit integer)
 //______________________________________________________________________________
 
-ClassImp(TH3I);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4254,7 +4250,6 @@ TH3I operator/(TH3I const &h1, TH3I const &h2)
 //  TH3L a 3-D histogram with eight bytes per cell (64 bit integer)
 //______________________________________________________________________________
 
-ClassImp(TH3L);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4461,7 +4456,6 @@ TH3L operator/(TH3L const &h1, TH3L const &h2)
 //  TH3F a 3-D histogram with four bytes per cell (float). Maximum precision 7 digits, maximum integer bin content = +/-16777216
 //______________________________________________________________________________
 
-ClassImp(TH3F);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4677,7 +4671,6 @@ TH3F operator/(TH3F const &h1, TH3F const &h2)
 //  TH3D a 3-D histogram with eight bytes per cell (double). Maximum precision 14 digits, maximum integer bin content = +/-9007199254740992
 //______________________________________________________________________________
 
-ClassImp(TH3D);
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -24,7 +24,6 @@
 #include "Math/IntegratorOptions.h"
 #include <cassert>
 
-ClassImp(TF3);
 
 /** \class TF3
     \ingroup Functions

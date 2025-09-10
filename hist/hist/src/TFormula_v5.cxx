@@ -35,7 +35,6 @@ static Int_t gMAXOP=1000,gMAXPAR=1000,gMAXCONST=1000;
 const Int_t  gMAXSTRINGFOUND = 10;
 const UInt_t kOptimizationError = BIT(19);
 
-ClassImp(ROOT::v5::TFormula);
 
 namespace ROOT {
 

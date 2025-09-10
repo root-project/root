@@ -418,7 +418,6 @@ of the chunks holds an array of THnSparseCompactBinCoord and the content
 THnSparse) and passed in at construction time.
 */
 
-ClassImp(THnSparseArrayChunk);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// (Default) initialize a chunk. Takes ownership of cont (~THnSparseArrayChunk deletes it),
@@ -581,7 +580,6 @@ retrieve the matching bin.
 */
 
 
-ClassImp(THnSparse);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct an empty THnSparse.

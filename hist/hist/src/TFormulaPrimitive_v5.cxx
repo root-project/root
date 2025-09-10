@@ -25,7 +25,6 @@
 static TVirtualMutex* gTFormulaPrimativeListMutex = nullptr;
 
 
-ClassImp(ROOT::v5::TFormulaPrimitive);
 
 namespace ROOT  {
    namespace v5 {

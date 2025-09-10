@@ -31,7 +31,6 @@
 #include <fstream>
 
 
-ClassImp(TGraphAsymmErrors);
 
 /** \class TGraphAsymmErrors
     \ingroup Graphs
