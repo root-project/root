@@ -91,7 +91,7 @@
 //
 ////////////////////////////////////////////////////////////////////////
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "Riostream.h"
 #include "TROOT.h"
@@ -185,7 +185,7 @@ int MainEvent(int nevent, int comp, int split, int arg4, int arg5, int enable_im
       Int_t nentries = (Int_t)tree->GetEntries();
       nevent = TMath::Min(nevent,nentries);
       if (read == 1) {  //read sequential
-         ioperf = getenv("ENABLE_TTREEPERFSTATS") ? new TTreePerfStats("Perf Stats", tree) : nullptr;
+         ioperf = std::getenv("ENABLE_TTREEPERFSTATS") ? new TTreePerfStats("Perf Stats", tree) : nullptr;
          //by setting the read cache to -1 we set it to the AutoFlush value when writing
          Int_t cachesize = -1;
          if (punzip) tree->SetParallelUnzip();

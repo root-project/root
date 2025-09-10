@@ -2805,11 +2805,11 @@ void CreateDictHeader(std::ostream &dictStream, const std::string &main_dictname
                // write one and include in there a few things for backward
                // compatibility.
                << "\n/*******************************************************************/\n"
-               << "#include <stddef.h>\n"
-               << "#include <stdio.h>\n"
-               << "#include <stdlib.h>\n"
-               << "#include <string.h>\n"
-               << "#include <assert.h>\n"
+               << "#include <cstddef>\n"
+               << "#include <cstdio>\n"
+               << "#include <cstdlib>\n"
+               << "#include <cstring>\n"
+               << "#include <cassert>\n"
                << "#define G__DICTIONARY\n"
                << "#include \"ROOT/RConfig.hxx\"\n"
                << "#include \"TClass.h\"\n"
@@ -3661,7 +3661,7 @@ static void MaybeSuppressWin32CrashDialogs() {
    // Suppress error dialogs to avoid hangs on build nodes.
    // One can use an environment variable (Cling_GuiOnAssert) to enable
    // the error dialogs.
-   const char *EnablePopups = getenv("Cling_GuiOnAssert");
+   const char *EnablePopups = std::getenv("Cling_GuiOnAssert");
    if (EnablePopups == nullptr || EnablePopups[0] == '0') {
       ::_set_error_mode(_OUT_TO_STDERR);
       _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
@@ -6018,7 +6018,7 @@ int GenReflexMain(int argc, char **argv)
    //std::string verbosityOption("-v4"); // To be uncommented for the testing phase. It should be -v
    std::string verbosityOption("-v2");
    if (options[SILENT]) verbosityOption = "-v0";
-   if (options[VERBOSE] || getenv ("VERBOSE")) verbosityOption = "-v3";
+   if (options[VERBOSE] || std::getenv ("VERBOSE")) verbosityOption = "-v3";
    if (options[DEBUG]) verbosityOption = "-v4";
 
    genreflex::verbose = verbosityOption == "-v4";

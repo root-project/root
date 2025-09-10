@@ -39,7 +39,7 @@
 #include "TThread.h"
 
 // Standard
-#include <assert.h>
+#include <cassert>
 #include <algorithm>     // for std::count, std::remove
 #include <climits>
 #include <stdexcept>
@@ -47,9 +47,9 @@
 #include <new>
 #include <set>
 #include <sstream>
-#include <signal.h>
-#include <stdlib.h>      // for getenv
-#include <string.h>
+#include <csignal>
+#include <cstdlib>      // for getenv
+#include <cstring>
 #include <typeinfo>
 
 // temp
@@ -229,7 +229,7 @@ public:
                 gInterpreter->ClearFileBusy();
             }
 
-            if (!getenv("CPPYY_CRASH_QUIET"))
+            if (!std::getenv("CPPYY_CRASH_QUIET"))
                 do_trace(sig);
 
         // jump back, if catch point set
@@ -263,7 +263,7 @@ public:
         g_globalidx[nullptr] = 0;
 
     // disable fast path if requested
-        if (getenv("CPPYY_DISABLE_FASTPATH")) gEnableFastPath = false;
+        if (std::getenv("CPPYY_DISABLE_FASTPATH")) gEnableFastPath = false;
 
     // fill the set of STL names
         const char* stl_names[] = {"allocator", "auto_ptr", "bad_alloc", "bad_cast",
@@ -296,7 +296,7 @@ public:
 
     // set opt level (default to 2 if not given; Cling itself defaults to 0)
         int optLevel = 2;
-        if (getenv("CPPYY_OPT_LEVEL")) optLevel = atoi(getenv("CPPYY_OPT_LEVEL"));
+        if (std::getenv("CPPYY_OPT_LEVEL")) optLevel = atoi(std::getenv("CPPYY_OPT_LEVEL"));
         if (optLevel != 0) {
             std::ostringstream s;
             s << "#pragma cling optimize " << optLevel;
@@ -324,7 +324,7 @@ public:
         gInterpreter->Declare("namespace __cppyy_internal { struct Sep; }");
 
     // retrieve all initial (ROOT) C++ names in the global scope to allow filtering later
-        if (!getenv("CPPYY_NO_ROOT_FILTER")) {
+        if (!std::getenv("CPPYY_NO_ROOT_FILTER")) {
             gROOT->GetListOfGlobals(true);             // force initialize
             gROOT->GetListOfGlobalFunctions(true);     // id.
             std::set<std::string> initial;

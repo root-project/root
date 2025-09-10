@@ -46,7 +46,7 @@
 //#define G__OLDEXPAND
 
 #include <unistd.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <sys/types.h>
 #if defined(R__SUN) || defined(R__AIX) || \
     defined(R__LINUX) || defined(R__SOLARIS) || \
@@ -704,7 +704,7 @@ void TUnixSystem::SetDisplay()
          }
       }
 #ifndef R__HAS_COCOA
-      if (!gROOT->IsBatch() && !getenv("DISPLAY")) {
+      if (!gROOT->IsBatch() && !std::getenv("DISPLAY")) {
          Error("SetDisplay", "Can't figure out DISPLAY, set it manually\n"
             "In case you run a remote ssh session, restart your ssh session with:\n"
             "=========>  ssh -Y");
@@ -2139,7 +2139,7 @@ void TUnixSystem::Setenv(const char *name, const char *value)
 
 const char *TUnixSystem::Getenv(const char *name)
 {
-   return ::getenv(name);
+   return std::getenv(name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

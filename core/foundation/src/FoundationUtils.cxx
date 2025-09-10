@@ -24,8 +24,8 @@
 #include <cassert>
 #include <cstdlib>
 
-#include <errno.h>
-#include <string.h>
+#include <cerrno>
+#include <cstring>
 
 #ifdef _WIN32
 #include <direct.h>
