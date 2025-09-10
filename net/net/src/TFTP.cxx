@@ -60,7 +60,6 @@ Long64_t TFTP::fgBytesWrite = 0;
 Long64_t TFTP::fgBytesRead  = 0;
 
 
-ClassImp(TFTP);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open connection to host specified by the url using par parallel sockets.

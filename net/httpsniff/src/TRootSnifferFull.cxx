@@ -50,7 +50,6 @@ Provides access to different ROOT collections and containers
 like TTree, TCanvas, TFile, ...
 */
 
-ClassImp(TRootSnifferFull);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

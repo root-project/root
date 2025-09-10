@@ -122,7 +122,6 @@ TVirtualMutex *gAuthenticateMutex = 0;
 Int_t StdCheckSecCtx(const char *, TRootSecContext *);
 
 
-ClassImp(TAuthenticate);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// rand() implementation using /udev/random or /dev/random, if available
