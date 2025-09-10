@@ -7,16 +7,6 @@
 #include "TMath.h"
 #include "TFile.h"
 
-ClassImp(CandidateParameters);
-ClassImp(CandParametersMC);
-ClassImp(B_GammaParameters);
-ClassImp(B_ProtonParameters);
-ClassImp(LambdaPionParameters);
-ClassImp(LambdaProtonParameters);
-ClassImp(LambdaParameters);
-ClassImp(B_Parameters);
-ClassImp(JansEventHeader);
-ClassImp(JansEvent);
 
 CandidateParameters::CandidateParameters()
 {

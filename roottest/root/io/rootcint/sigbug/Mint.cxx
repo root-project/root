@@ -4,7 +4,6 @@
 
 Mint* gMint = 0;
 
-ClassImp(Mint)
 
 Mint::Mint()
 {

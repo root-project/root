@@ -4,7 +4,6 @@
 #include "TestClass.hh"
 #include "TObjArray.h"
 #include "TExec.h"
-ClassImp(TestClass)
 
 TestClass::TestClass(const std::string& name) : TObject(), fName(name)
 {
