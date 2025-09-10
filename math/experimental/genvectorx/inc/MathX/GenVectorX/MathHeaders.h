@@ -23,6 +23,12 @@ namespace ROOT_MATH_ARCH {
 
 #if defined(ROOT_MATH_SYCL)
 template <class Scalar>
+inline Scalar math_fmod(Scalar x, Scalar y)
+{
+   return sycl::fmod(x, y);
+}
+
+template <class Scalar>
 inline Scalar math_sin(Scalar x)
 {
    return sycl::sin(x);
@@ -173,6 +179,12 @@ inline Scalar math_pow(Scalar x, Scalar y)
 
 #elif defined(ROOT_MATH_CUDA)
 template <class Scalar>
+__roohost__ __roodevice__ inline Scalar math_fmod(Scalar x, Scalar y)
+{
+   return std::fmod(x, y);
+}
+
+template <class Scalar>
 __roohost__ __roodevice__ inline Scalar math_sin(Scalar x)
 {
    return std::sin(x);
@@ -315,6 +327,12 @@ __roohost__ __roodevice__ inline Scalar Eta_FromTheta(Scalar theta, Scalar r)
 }
 
 #else
+
+template <class Scalar>
+inline Scalar math_fmod(Scalar x, Scalar y)
+{
+   return std::fmod(x, y);
+}
 
 template <class Scalar>
 inline Scalar math_sin(Scalar x)
