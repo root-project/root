@@ -187,7 +187,6 @@ TVector3 class:
 #include "TQuaternion.h"
 #include <cmath>
 
-ClassImp(TRotation);
 
 #define TOLERANCE (1.0E-6)
 

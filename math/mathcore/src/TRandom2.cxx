@@ -27,7 +27,6 @@ The publications are available online at
 #include "TUUID.h"
 
 
-ClassImp(TRandom2);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

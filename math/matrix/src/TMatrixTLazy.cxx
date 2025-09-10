@@ -27,11 +27,6 @@
 #include "TMatrixTLazy.h"
 #include "TMath.h"
 
-templateClassImp(TMatrixTLazy);
-templateClassImp(TMatrixTSymLazy);
-templateClassImp(THaarMatrixT);
-templateClassImp(THilbertMatrixT);
-templateClassImp(THilbertMatrixTSym);
 
 
 ////////////////////////////////////////////////////////////////////////////////

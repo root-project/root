@@ -256,7 +256,6 @@ neurons, hidden layers and inputs/outputs that does not apply to TMultiLayerPerc
 #include "TObjString.h"
 #include <cstdlib>
 
-ClassImp(TMultiLayerPerceptron);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
