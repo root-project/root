@@ -19,7 +19,6 @@
 #include "TGL5DPainter.h"
 #include "TGL5D.h"
 
-ClassImp(TGL5DDataSet);
 
 /** \class TGL5DDataSet
 \ingroup opengl

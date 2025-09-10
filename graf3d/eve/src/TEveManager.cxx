@@ -52,7 +52,6 @@ Central application manager for Eve.
 Manages elements, GUI, GL scenes and GL viewers.
 */
 
-ClassImp(TEveManager);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -930,7 +929,6 @@ void TEveManager::Terminate()
 Exception handler for Eve exceptions.
 */
 
-ClassImp(TEveManager::TExceptionHandler);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle exceptions deriving from TEveException.

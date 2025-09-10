@@ -65,7 +65,6 @@ Shorthands in method-names:
 LF ~ LocalFrame; PF ~ ParentFrame; IP ~ InPlace
 */
 
-ClassImp(TEveTrans);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

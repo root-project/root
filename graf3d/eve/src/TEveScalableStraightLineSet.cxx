@@ -18,7 +18,6 @@ Straight-line-set with extra scaling, useful for projectables that need
 to be scaled in accordance with an external object.
 */
 
-ClassImp(TEveScalableStraightLineSet);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

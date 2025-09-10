@@ -19,7 +19,6 @@ when the shape is destroyed.
 Could also deliver 'change' notifications.
 */
 
-ClassImp(TGLPShapeRef);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

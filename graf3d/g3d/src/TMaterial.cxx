@@ -14,7 +14,6 @@
 #include "TBuffer.h"
 #include "TGeometry.h"
 
-ClassImp(TMaterial);
 
 /** \class TMaterial
 \ingroup g3d

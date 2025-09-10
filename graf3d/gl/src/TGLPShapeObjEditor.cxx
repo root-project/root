@@ -31,7 +31,6 @@
 GUI editor for TGLPShapeObj.
 */
 
-ClassImp(TGLPShapeObjEditor);
 
 enum EGeometry {
       kCenterX,

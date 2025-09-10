@@ -24,7 +24,6 @@
 Minimal GL-viewer that can be embedded in a standard ROOT frames.
 */
 
-ClassImp(TGLEmbeddedViewer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

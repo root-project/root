@@ -12,7 +12,6 @@
 #include "TPoints3DABC.h"
 #include "TMath.h"
 
-ClassImp(TPoints3DABC);
 
 /** \class TPoints3DABC
 \ingroup g3d

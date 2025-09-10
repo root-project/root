@@ -24,7 +24,6 @@ Draws arrows showing camera orientation in the overlay.
 X, Y position is in range 0, 1.
 */
 
-ClassImp(TGLCameraGuide);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
