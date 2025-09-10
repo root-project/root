@@ -160,10 +160,12 @@ jobs:
           build-directory: /Users/sftnight/ROOT-CI/src/
 
       - name: what am i
+        shell: bash -leo pipefail {0}
         run: "whoami && env && echo $0 && echo $SHELL && pwd"
       - name: Set up curl CA bundle for Davix to work with https
         run: 'echo SSL_CERT_FILE=/opt/local/share/curl/curl-ca-bundle.crt >> $GITHUB_ENV'  
       - name: Pull Request Build
+        shell: bash -leo pipefail {0}
         if: github.event_name == 'pull_request'
         env:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
@@ -180,6 +182,7 @@ jobs:
                     --platform        ${{ matrix.platform }}"
 
       - name: Workflow dispatch
+        shell: bash -leo pipefail {0}
         if: ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
         run: "export HOME='/Users/sftnight' && source /Users/sftnight/py-venv/ROOT-CI/bin/activate && .github/workflows/root-ci-config/build_root.py 
                     --buildtype      ${{ inputs.buildtype }}
@@ -191,6 +194,7 @@ jobs:
                     --repository     ${{ github.server_url }}/${{ github.repository }}"
 
       - name: Nightly build
+        shell: bash -leo pipefail {0}
         if:   github.event_name == 'schedule'
         run: "export HOME='/Users/sftnight' && source /Users/sftnight/py-venv/ROOT-CI/bin/activate && .github/workflows/root-ci-config/build_root.py 
                     --buildtype      Release
@@ -201,6 +205,7 @@ jobs:
                     --repository     ${{ github.server_url }}/${{ github.repository }}"
 
       - name: Update build cache after push to release branch
+        shell: bash -leo pipefail {0}
         if:   github.event_name == 'push'
         run: "export HOME='/Users/sftnight' && source /Users/sftnight/py-venv/ROOT-CI/bin/activate && .github/workflows/root-ci-config/build_root.py 
                     --buildtype      RelWithDebInfo
