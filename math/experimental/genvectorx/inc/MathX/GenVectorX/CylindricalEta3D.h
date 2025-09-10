@@ -57,12 +57,15 @@ public:
    /**
       Default constructor with rho=eta=phi=0
     */
-   CylindricalEta3D() : fRho(0), fEta(0), fPhi(0) {}
+   constexpr CylindricalEta3D() noexcept = default;
 
    /**
       Construct from rho eta and phi values
     */
-   CylindricalEta3D(Scalar rho, Scalar eta, Scalar phi) : fRho(rho), fEta(eta), fPhi(phi) { Restrict(); }
+   constexpr CylindricalEta3D(Scalar rho, Scalar eta, Scalar phi) noexcept : fRho(rho), fEta(eta), fPhi(phi)
+   {
+      Restrict();
+   }
 
    /**
       Construct from any Vector or coordinate system implementing
@@ -78,25 +81,6 @@ public:
          // improvement in the faithfullness of reproducing z.
          fRho *= v.Z() / Z();
       }
-   }
-
-   // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower
-   // re-implement them ( there is no no need to have them with g++4)
-
-   /**
-      copy constructor
-   */
-   CylindricalEta3D(const CylindricalEta3D &v) : fRho(v.Rho()), fEta(v.Eta()), fPhi(v.Phi()) {}
-
-   /**
-      assignment operator
-   */
-   CylindricalEta3D &operator=(const CylindricalEta3D &v)
-   {
-      fRho = v.Rho();
-      fEta = v.Eta();
-      fPhi = v.Phi();
-      return *this;
    }
 
    /**
@@ -286,9 +270,9 @@ public:
 #endif
 
 private:
-   T fRho;
-   T fEta;
-   T fPhi;
+   T fRho = 0;
+   T fEta = 0;
+   T fPhi = 0;
 };
 
 } // end namespace ROOT_MATH_ARCH

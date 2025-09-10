@@ -53,40 +53,21 @@ public:
    /**
       Default constructor with rho=z=phi=0
    */
-   Cylindrical3D() : fRho(0), fZ(0), fPhi(0) {}
+   constexpr Cylindrical3D() noexcept = default;
 
    /**
       Construct from rho eta and phi values
    */
-   Cylindrical3D(Scalar rho, Scalar zz, Scalar phi) : fRho(rho), fZ(zz), fPhi(phi) { Restrict(); }
+   constexpr Cylindrical3D(Scalar rho, Scalar zz, Scalar phi) noexcept : fRho(rho), fZ(zz), fPhi(phi) { Restrict(); }
 
    /**
       Construct from any Vector or coordinate system implementing
       Rho(), Z() and Phi()
    */
    template <class CoordSystem>
-   explicit Cylindrical3D(const CoordSystem &v) : fRho(v.Rho()), fZ(v.Z()), fPhi(v.Phi())
+   explicit constexpr Cylindrical3D(const CoordSystem &v) : fRho(v.Rho()), fZ(v.Z()), fPhi(v.Phi())
    {
       Restrict();
-   }
-
-   // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower
-   // re-implement them ( there is no no need to have them with g++4)
-
-   /**
-      copy constructor
-    */
-   Cylindrical3D(const Cylindrical3D &v) : fRho(v.Rho()), fZ(v.Z()), fPhi(v.Phi()) {}
-
-   /**
-      assignment operator
-    */
-   Cylindrical3D &operator=(const Cylindrical3D &v)
-   {
-      fRho = v.Rho();
-      fZ = v.Z();
-      fPhi = v.Phi();
-      return *this;
    }
 
    /**
@@ -253,9 +234,9 @@ public:
 #endif
 
 private:
-   T fRho;
-   T fZ;
-   T fPhi;
+   T fRho = 0;
+   T fZ = 0;
+   T fPhi = 0;
 };
 
 } // end namespace ROOT_MATH_ARCH

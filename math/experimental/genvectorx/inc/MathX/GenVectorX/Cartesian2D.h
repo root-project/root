@@ -49,7 +49,7 @@ public:
    /**
       Default constructor  with x=y=0
    */
-   Cartesian2D() : fX(0.0), fY(0.0) {}
+   constexpr Cartesian2D() noexcept = default;
 
    /**
       Constructor from x,y  coordinates
@@ -61,25 +61,8 @@ public:
       X() and Y()
    */
    template <class CoordSystem>
-   explicit Cartesian2D(const CoordSystem &v) : fX(v.X()), fY(v.Y())
+   explicit constexpr Cartesian2D(const CoordSystem &v) : fX(v.X()), fY(v.Y())
    {
-   }
-
-   // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower
-   // re-implement them ( there is no no need to have them with g++4)
-   /**
-      copy constructor
-    */
-   Cartesian2D(const Cartesian2D &v) : fX(v.X()), fY(v.Y()) {}
-
-   /**
-      assignment operator
-    */
-   Cartesian2D &operator=(const Cartesian2D &v)
-   {
-      fX = v.X();
-      fY = v.Y();
-      return *this;
    }
 
    /**
@@ -216,8 +199,8 @@ private:
    /**
       (Contiguous) data containing the coordinates values x and y
    */
-   T fX;
-   T fY;
+   T fX = 0;
+   T fY = 0;
 };
 
 } // end namespace ROOT_MATH_ARCH
