@@ -154,7 +154,6 @@ This is especially useful for example with TVirtualMC or similar.
 #include <iostream>
 
 
-ClassImp(TGenerator);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Event generator default constructor

@@ -26,7 +26,6 @@
 #include "TFileCollection.h"
 #include <XrdCl/XrdClFileSystem.hh>
 
-ClassImp( TNetXNGFileStager);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

@@ -25,7 +25,6 @@ Must be used in THttpEngine to process incoming http requests
 */
 
 
-ClassImp(THttpCallArg);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor

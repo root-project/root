@@ -31,8 +31,6 @@
 #include "TError.h"
 #include "TVirtualMutex.h"
 
-ClassImp(TSecContext);
-ClassImp(TSecContextCleanup);
 
 const TDatime kROOTTZERO = 788914800;
 

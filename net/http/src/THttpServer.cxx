@@ -124,7 +124,6 @@ will be regularly updated.
 More information: https://root.cern/root/htmldoc/guides/HttpServer/HttpServer.html
 */
 
-ClassImp(THttpServer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

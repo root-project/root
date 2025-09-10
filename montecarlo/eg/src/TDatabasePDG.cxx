@@ -50,7 +50,6 @@ The current default pdg_table file displays lifetime 0 for some unstable particl
 
 */
 
-ClassImp(TDatabasePDG);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function holding the instance.

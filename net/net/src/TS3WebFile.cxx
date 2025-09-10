@@ -68,7 +68,6 @@ http://docs.amazonwebservices.com/AmazonS3/latest/dev/Welcome.html
 #include "TEnv.h"
 
 
-ClassImp(TS3WebFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a TS3WebFile object. The path argument is a URL of one of the

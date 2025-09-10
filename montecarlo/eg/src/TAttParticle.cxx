@@ -20,7 +20,6 @@ Particle definition, partly based on GEANT3 particle definition
 #include "TMath.h"
 #include "TRandom.h"
 
-ClassImp(TAttParticle);
 
 THashList *TAttParticle::fgList = new THashList;
 

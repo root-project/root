@@ -100,7 +100,6 @@ Bool_t TTimeOutTimer::Notify()
 //------------------------------------------------------------------------------
 
 
-ClassImp(TMonitor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a monitor object. If mainloop is true the monitoring will be
