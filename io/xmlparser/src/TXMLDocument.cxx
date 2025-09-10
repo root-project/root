@@ -22,7 +22,6 @@ parser returns a tree built during the document analysis.
 #include <libxml/tree.h>
 
 
-ClassImp(TXMLDocument);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TXMLDocument constructor.

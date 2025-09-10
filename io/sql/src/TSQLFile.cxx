@@ -187,7 +187,6 @@ Author: S.Linev, GSI Darmstadt,   S.Linev@gsi.de
 #include <iostream>
 #include <fstream>
 
-ClassImp(TSQLFile);
 
 const char *mysql_BasicTypes[21] = {"VARCHAR(255)",      // kBase     =  0,  used for text
                                     "TINYINT UNSIGNED",  // kChar     =  1,

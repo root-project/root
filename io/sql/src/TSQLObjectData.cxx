@@ -38,7 +38,6 @@ will be kept in single TSQLObjectData instance.
 Info (classname, version) about object in database
 */
 
-ClassImp(TSQLObjectInfo);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -59,7 +58,6 @@ TSQLObjectInfo::~TSQLObjectInfo()
 {
 }
 
-ClassImp(TSQLObjectData);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor
@@ -377,7 +375,6 @@ Bool_t TSQLObjectData::PrepareForRawData()
 //
 //________________________________________________________________________
 
-ClassImp(TSQLObjectDataPool);
 
 ////////////////////////////////////////////////////////////////////////////////
 

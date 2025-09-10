@@ -40,7 +40,6 @@ only from memory.
 #define TRACE(x);
 #endif
 
-ClassImp(TMemFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor allocating the memory buffer.

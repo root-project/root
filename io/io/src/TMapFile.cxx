@@ -203,7 +203,6 @@ TObject *TMapRec::GetObject() const
 
 
 
-ClassImp(TMapFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor. Does not much except setting some basic values.

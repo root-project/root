@@ -40,7 +40,6 @@
 #include <iostream>
 #include <cstdlib>
 
-ClassImp(TXMLSetup);
 
 namespace xmlio {
 

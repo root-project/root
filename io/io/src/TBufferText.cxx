@@ -34,7 +34,6 @@ actions list for both are the same.
 
 #include <cmath>
 
-ClassImp(TBufferText);
 
 const char *TBufferText::fgFloatFmt = "%e";
 const char *TBufferText::fgDoubleFmt = "%.14e";

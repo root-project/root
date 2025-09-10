@@ -183,7 +183,6 @@ ROOT::Internal::RConcurrentHashColl TFile::fgTsSIHashes;
 
 const Int_t kBEGIN = 100;
 
-ClassImp(TFile);
 
 //*-*x17 macros/layout_file
 // Needed to add the "fake" global gFile to the list of globals.

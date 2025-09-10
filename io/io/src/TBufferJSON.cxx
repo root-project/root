@@ -136,7 +136,6 @@ class Container {
 
 #include <nlohmann/json.hpp>
 
-ClassImp(TBufferJSON);
 
 enum { json_TArray = 100, json_TCollection = -130, json_TString = 110, json_stdstring = 120 };
 
