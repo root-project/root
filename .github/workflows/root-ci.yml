@@ -160,6 +160,8 @@ jobs:
           build-directory: /Users/sftnight/ROOT-CI/src/
 
       - name: what am i
+        env:
+          HOME: /Users/sftnight
         shell: bash -leo pipefail {0}
         run: "whoami && env && echo $0 && echo $SHELL && pwd && python3 -m site && which python3 && echo $PATH"
       - name: Set up curl CA bundle for Davix to work with https
@@ -168,9 +170,10 @@ jobs:
         shell: bash -leo pipefail {0}
         if: github.event_name == 'pull_request'
         env:
+          HOME: /Users/sftnight
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
-        run: "export HOME='/Users/sftnight' && .github/workflows/root-ci-config/build_root.py 
+        run: ".github/workflows/root-ci-config/build_root.py 
                     --buildtype       RelWithDebInfo
                     --incremental     $INCREMENTAL
                     --base_ref        ${{ github.base_ref }}
@@ -184,7 +187,7 @@ jobs:
       - name: Workflow dispatch
         shell: bash -leo pipefail {0}
         if: ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
-        run: "export HOME='/Users/sftnight' && .github/workflows/root-ci-config/build_root.py 
+        run: ".github/workflows/root-ci-config/build_root.py 
                     --buildtype      ${{ inputs.buildtype }}
                     --platform       ${{ matrix.platform }}
                     --incremental    ${{ inputs.incremental }}
@@ -196,7 +199,7 @@ jobs:
       - name: Nightly build
         shell: bash -leo pipefail {0}
         if:   github.event_name == 'schedule'
-        run: "export HOME='/Users/sftnight' && .github/workflows/root-ci-config/build_root.py 
+        run: ".github/workflows/root-ci-config/build_root.py 
                     --buildtype      Release
                     --platform       ${{ matrix.platform }}
                     --incremental    false
@@ -207,7 +210,7 @@ jobs:
       - name: Update build cache after push to release branch
         shell: bash -leo pipefail {0}
         if:   github.event_name == 'push'
-        run: "export HOME='/Users/sftnight' && .github/workflows/root-ci-config/build_root.py 
+        run: ".github/workflows/root-ci-config/build_root.py 
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.platform }}
                     --incremental    false
