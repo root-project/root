@@ -39,7 +39,7 @@ void BoostZ::SetComponents(Scalar bz)
    Scalar bp2 = bz * bz;
    if (bp2 >= 1) {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-      GenVector::Throw("Beta Vector supplied to set BoostZ represents speed >= c");
+      GenVector_Throw("Beta Vector supplied to set BoostZ represents speed >= c");
 #endif
       return;
    }
@@ -89,7 +89,7 @@ void BoostZ::Rectify()
 
    if (fGamma <= 0) {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-      GenVector::Throw("Attempt to rectify a boost with non-positive gamma");
+      GenVector_Throw("Attempt to rectify a boost with non-positive gamma");
 #endif
       return;
    }

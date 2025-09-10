@@ -192,7 +192,7 @@ void LorentzRotation::Rectify()
    typedef LorentzVector<PxPyPzE4D<Scalar>> FourVector;
    if (fM[kTT] <= 0) {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-      GenVector::Throw("LorentzRotation:Rectify(): Non-positive TT component - cannot rectify");
+      GenVector_Throw("LorentzRotation:Rectify(): Non-positive TT component - cannot rectify");
 #endif
       return;
    }
@@ -200,7 +200,7 @@ void LorentzRotation::Rectify()
    Scalar m2 = t.M2();
    if (m2 <= 0) {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-      GenVector::Throw("LorentzRotation:Rectify(): Non-timelike time row - cannot rectify");
+      GenVector_Throw("LorentzRotation:Rectify(): Non-timelike time row - cannot rectify");
 #endif
       return;
    }
@@ -210,8 +210,8 @@ void LorentzRotation::Rectify()
    m2 = z.M2();
    if (m2 >= 0) {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-      GenVector::Throw("LorentzRotation:Rectify(): Non-spacelike Z row projection - "
-                       "cannot rectify");
+      GenVector_Throw("LorentzRotation:Rectify(): Non-spacelike Z row projection - "
+                      "cannot rectify");
 #endif
       return;
    }
@@ -221,8 +221,8 @@ void LorentzRotation::Rectify()
    m2 = y.M2();
    if (m2 >= 0) {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-      GenVector::Throw("LorentzRotation:Rectify(): Non-spacelike Y row projection - "
-                       "cannot rectify");
+      GenVector_Throw("LorentzRotation:Rectify(): Non-spacelike Y row projection - "
+                      "cannot rectify");
 #endif
       return;
    }
@@ -232,8 +232,8 @@ void LorentzRotation::Rectify()
    m2 = x.M2();
    if (m2 >= 0) {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-      GenVector::Throw("LorentzRotation:Rectify(): Non-spacelike X row projection - "
-                       "cannot rectify");
+      GenVector_Throw("LorentzRotation:Rectify(): Non-spacelike X row projection - "
+                      "cannot rectify");
 #endif
       return;
    }

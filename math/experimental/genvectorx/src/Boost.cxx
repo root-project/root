@@ -89,7 +89,7 @@ void Boost::SetComponents(Scalar bx, Scalar by, Scalar bz)
    Scalar bp2 = bx * bx + by * by + bz * bz;
    if (bp2 >= 1) {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-      GenVector::Throw("Beta Vector supplied to set Boost represents speed >= c");
+      GenVector_Throw("Beta Vector supplied to set Boost represents speed >= c");
 #endif
       // SetIdentity();
       return;
@@ -154,7 +154,7 @@ void Boost::Rectify()
 
    if (fM[kTT] <= 0) {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-      GenVector::Throw("Attempt to rectify a boost with non-positive gamma");
+      GenVector_Throw("Attempt to rectify a boost with non-positive gamma");
 #endif
       return;
    }
