@@ -150,7 +150,7 @@ protected:
     */
    bool fOpaqueRead{false};
 
-   ClassDefInlineOverride(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader
+   ClassDefInline(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader
 
    friend class ::TTreeReader;
 };
