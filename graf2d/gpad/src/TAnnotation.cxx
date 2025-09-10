@@ -16,7 +16,6 @@
 #include "TVirtualViewer3D.h"
 
 
-ClassImp(TAnnotation);
 
 /** \class TAnnotation
 \ingroup gpad

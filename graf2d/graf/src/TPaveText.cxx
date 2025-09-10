@@ -27,7 +27,6 @@
 #include "TColor.h"
 #include "TLine.h"
 
-ClassImp(TPaveText);
 
 /** \class TPaveText
 \ingroup BasicGraphics

@@ -21,7 +21,6 @@
 #include "TMath.h"
 #include "TPoint.h"
 
-ClassImp(TLine);
 
 /** \class TLine
 \ingroup BasicGraphics

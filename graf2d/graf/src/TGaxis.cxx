@@ -38,7 +38,6 @@
 
 const Int_t kHori = BIT(9);
 
-ClassImp(TGaxis);
 
 /** \class TGaxis
 \ingroup BasicGraphics

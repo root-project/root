@@ -18,7 +18,6 @@
 #include "TClass.h"
 #include "TMath.h"
 
-ClassImp(TPave);
 
 /** \class TPave
 \ingroup BasicGraphics

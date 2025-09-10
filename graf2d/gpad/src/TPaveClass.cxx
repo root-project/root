@@ -15,7 +15,6 @@
 
 #include <iostream>
 
-ClassImp(TPaveClass);
 
 
 /** \class TPaveClass

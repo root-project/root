@@ -49,7 +49,6 @@ End_Macro
 #include "TEllipse.h"
 #include "TMath.h"
 
-ClassImp(TGraphPolargram);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraphPolargram Constructor.
