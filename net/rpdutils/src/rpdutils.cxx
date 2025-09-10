@@ -25,19 +25,19 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <pwd.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <string>
-#include <stdlib.h>
+#include <cstdlib>
 #include <unistd.h>
-#include <time.h>
+#include <ctime>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <errno.h>
+#include <cerrno>
 #include <netdb.h>
-#include <math.h>
+#include <cmath>
 #include "snprintf.h"
 
 #if defined(__CYGWIN__) && defined(__GNUC__)
@@ -1509,8 +1509,8 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
    std::string theDaemonRc;
 
    // Check if a non-standard file has been requested
-   if (getenv("ROOTDAEMONRC"))
-      theDaemonRc = getenv("ROOTDAEMONRC");
+   if (std::getenv("ROOTDAEMONRC"))
+      theDaemonRc = std::getenv("ROOTDAEMONRC");
 
    if (theDaemonRc.length() <= 0) {
       if (getuid()) {
@@ -1520,16 +1520,16 @@ int RpdCheckAuthAllow(int Sec, const char *Host)
             theDaemonRc = std::string(pw->pw_dir).append("/");
             theDaemonRc.append(gDaemonRc);
          } else {
-            if (getenv("ROOTETCDIR")) {
-               theDaemonRc = std::string(getenv("ROOTETCDIR")).append("/system");
+            if (std::getenv("ROOTETCDIR")) {
+               theDaemonRc = std::string(std::getenv("ROOTETCDIR")).append("/system");
                theDaemonRc.append(gDaemonRc);
             } else
                theDaemonRc = std::string("/etc/root/system").append(gDaemonRc);
          }
       } else {
          // If running as super-user, check system file only
-         if (getenv("ROOTETCDIR")) {
-            theDaemonRc = std::string(getenv("ROOTETCDIR")).append("/system");
+         if (std::getenv("ROOTETCDIR")) {
+            theDaemonRc = std::string(std::getenv("ROOTETCDIR")).append("/system");
             theDaemonRc.append(gDaemonRc);
          } else
             theDaemonRc = std::string("/etc/root/system").append(gDaemonRc);

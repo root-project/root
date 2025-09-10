@@ -19,8 +19,8 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <unordered_set>
 #include <cctype>
 
@@ -5188,7 +5188,7 @@ static void replaceEnvVars(const char* varname, std::string& txt)
          endVar = endVarName;
       }
 
-      const char* val = getenv(txt.substr(beginVarName,
+      const char* val = std::getenv(txt.substr(beginVarName,
                                           endVarName - beginVarName).c_str());
       if (!val) val = "";
 
@@ -5210,7 +5210,7 @@ static void replaceEnvVars(const char* varname, std::string& txt)
 
 void ROOT::TMetaUtils::SetPathsForRelocatability(std::vector<std::string>& clingArgs )
 {
-   const char* envInclPath = getenv("ROOT_INCLUDE_PATH");
+   const char* envInclPath = std::getenv("ROOT_INCLUDE_PATH");
 
    if (!envInclPath)
       return;

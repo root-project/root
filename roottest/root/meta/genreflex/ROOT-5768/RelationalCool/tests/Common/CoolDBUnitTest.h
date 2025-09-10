@@ -66,9 +66,9 @@ namespace cool
         s_app = new CoralApplication();
 
         // Connection string
-        if ( getenv( COOLTESTDB ) )
+        if ( std::getenv( COOLTESTDB ) )
         {
-          s_connectionString = getenv( COOLTESTDB );
+          s_connectionString = std::getenv( COOLTESTDB );
         }
         else
         {
@@ -94,7 +94,7 @@ namespace cool
           if ( sleepFor01466Prefix == "" )
           {
             sleepFor01466Prefix = s_coolDBName;
-            if ( ::getenv( "CORAL_TESTSUITE_SLEEPFOR01466" ) )
+            if ( std::getenv( "CORAL_TESTSUITE_SLEEPFOR01466" ) )
               ::setenv( "CORAL_TESTSUITE_SLEEPFOR01466_PREFIX", sleepFor01466Prefix.c_str(), 1 );
           }
           // Workaround for ORA-01466 (bug #87935) - END

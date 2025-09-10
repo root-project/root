@@ -50,9 +50,9 @@
 #include <ctype.h>
 #include <float.h>
 #include <sys/stat.h>
-#include <signal.h>
-#include <stdio.h>
-#include <errno.h>
+#include <csignal>
+#include <cstdio>
+#include <cerrno>
 #include <lm.h>
 #include <dbghelp.h>
 #include <Tlhelp32.h>
@@ -61,7 +61,7 @@
 #include <list>
 #include <shlobj.h>
 #include <conio.h>
-#include <time.h>
+#include <ctime>
 #include <bcrypt.h>
 #include <chrono>
 #include <thread>
@@ -827,7 +827,7 @@ namespace {
       // determine the fileopen.C file path:
       TString fileopen = "fileopen.C";
       TString rootmacrodir = "macros";
-      sys->PrependPathName(getenv("ROOTSYS"), rootmacrodir);
+      sys->PrependPathName(std::getenv("ROOTSYS"), rootmacrodir);
       sys->PrependPathName(rootmacrodir.Data(), fileopen);
 
       if (regROOTwrite) {
@@ -1283,7 +1283,7 @@ Int_t TWinNTSystem::GetCryptoRandom(void *buf, Int_t len)
 const char *TWinNTSystem::HostName()
 {
    if (fHostname == "")
-      fHostname = ::getenv("COMPUTERNAME");
+      fHostname = std::getenv("COMPUTERNAME");
    if (fHostname == "") {
       // This requires a DNS query - but we need it for fallback
       char hn[64];
@@ -2225,23 +2225,23 @@ std::string TWinNTSystem::GetHomeDirectory(const char *userName) const
 void TWinNTSystem::FillWithHomeDirectory(const char *userName, char *mydir) const
 {
    const char *h = nullptr;
-   if (!(h = ::getenv("home"))) h = ::getenv("HOME");
+   if (!(h = std::getenv("home"))) h = std::getenv("HOME");
 
    if (h) {
       strlcpy(mydir, h,kMAXPATHLEN);
    } else {
       // for Windows NT HOME might be defined as either $(HOMESHARE)/$(HOMEPATH)
       //                                         or     $(HOMEDRIVE)/$(HOMEPATH)
-      h = ::getenv("HOMESHARE");
-      if (!h)  h = ::getenv("HOMEDRIVE");
+      h = std::getenv("HOMESHARE");
+      if (!h)  h = std::getenv("HOMEDRIVE");
       if (h) {
          strlcpy(mydir, h,kMAXPATHLEN);
-         h = ::getenv("HOMEPATH");
+         h = std::getenv("HOMEPATH");
          if(h) strlcat(mydir, h,kMAXPATHLEN);
       }
       // on Windows Vista HOME is usually defined as $(USERPROFILE)
       if (!h) {
-         h = ::getenv("USERPROFILE");
+         h = std::getenv("USERPROFILE");
          if (h) strlcpy(mydir, h,kMAXPATHLEN);
       }
    }
@@ -3861,7 +3861,7 @@ void TWinNTSystem::Setenv(const char *name, const char *value)
 
 const char *TWinNTSystem::Getenv(const char *name)
 {
-   const char *env = ::getenv(name);
+   const char *env = std::getenv(name);
    if (!env) {
       if (::_stricmp(name,"home") == 0 ) {
         env = HomeDirectory();
