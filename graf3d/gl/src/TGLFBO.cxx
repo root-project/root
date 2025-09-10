@@ -32,7 +32,6 @@ See also:
    http://www.opengl.org/registry/specs/EXT/framebuffer_object.txt
 */
 
-ClassImp(TGLFBO);
 
 Bool_t TGLFBO::fgRescaleToPow2       = kTRUE; // For ATI.
 Bool_t TGLFBO::fgMultiSampleNAWarned = kFALSE;

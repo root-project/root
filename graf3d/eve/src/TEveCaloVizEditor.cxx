@@ -35,7 +35,6 @@
 GUI editor for TEveCaloEditor.
 */
 
-ClassImp(TEveCaloVizEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -384,7 +383,6 @@ void TEveCaloVizEditor::DoSliceTransparency(Long_t t)
 GUI editor for TEveCalo3D.
 */
 
-ClassImp(TEveCalo3DEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

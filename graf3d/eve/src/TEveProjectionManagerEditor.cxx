@@ -21,7 +21,6 @@
 GUI editor for TEveProjectionManager class.
 */
 
-ClassImp(TEveProjectionManagerEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

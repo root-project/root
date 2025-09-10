@@ -31,7 +31,6 @@ Paints TH3 histograms by rendering variable-sized boxes matching the
 bin contents.
 */
 
-ClassImp(TGLBoxPainter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor.

@@ -36,7 +36,6 @@ static Int_t gGeomLevel = 0;
 
 TNode *gNode;
 
-ClassImp(TNode);
 
 /** \class TNode
 \ingroup g3d

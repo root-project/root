@@ -19,7 +19,6 @@
 Projected copy of a TEveTrack.
 */
 
-ClassImp(TEveTrackProjected);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -251,7 +250,6 @@ void TEveTrackProjected::SecSelected(TEveTrack* /*track*/)
 Specialization of TEveTrackList for holding TEveTrackProjected objects.
 */
 
-ClassImp(TEveTrackListProjected);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

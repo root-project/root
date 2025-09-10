@@ -18,7 +18,6 @@
 Set of straight lines with optional markers along the lines.
 */
 
-ClassImp(TEveStraightLineSet);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -202,7 +201,6 @@ void TEveStraightLineSet::Paint(Option_t*)
 Projected replica of a TEveStraightLineSet.
 */
 
-ClassImp(TEveStraightLineSetProjected);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

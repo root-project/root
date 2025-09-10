@@ -25,7 +25,6 @@ Enables to define an external center of distortion and a scale to
 fixate a bounding box of a projected point.
 */
 
-ClassImp(TEveProjection);
 
 Float_t TEveProjection::fgEps    = 0.005f;
 Float_t TEveProjection::fgEpsSqr = 0.000025f;
@@ -544,7 +543,6 @@ Transformation from 3D to 2D. X axis represent Z coordinate. Y axis have value o
 radius with a sign of Y coordinate.
 */
 
-ClassImp(TEveRhoZProjection);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -696,7 +694,6 @@ Bool_t TEveRhoZProjection::IsOnSubSpaceBoundrary(const TEveVector& v) const
 XY projection with distortion around given center.
 */
 
-ClassImp(TEveRPhiProjection);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -770,7 +767,6 @@ void TEveRPhiProjection::ProjectPoint(Float_t& x, Float_t& y, Float_t& z,
 XZ projection with distortion around given center.
 */
 
-ClassImp(TEveXZProjection);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -881,7 +877,6 @@ void TEveXZProjection::SetDirectionalVector(Int_t screenAxis, TEveVector& vec)
 YZ projection with distortion around given center.
 */
 
-ClassImp(TEveYZProjection);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -993,7 +988,6 @@ void TEveYZProjection::SetDirectionalVector(Int_t screenAxis, TEveVector& vec)
 ZX projection with distortion around given center.
 */
 
-ClassImp(TEveZXProjection);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -1105,7 +1099,6 @@ void TEveZXProjection::SetDirectionalVector(Int_t screenAxis, TEveVector& vec)
 ZY projection with distortion around given center.
 */
 
-ClassImp(TEveZYProjection);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -1216,7 +1209,6 @@ void TEveZYProjection::SetDirectionalVector(Int_t screenAxis, TEveVector& vec)
 3D scaling projection. One has to use pre-scaling to make any ise of this.
 */
 
-ClassImp(TEve3DProjection);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

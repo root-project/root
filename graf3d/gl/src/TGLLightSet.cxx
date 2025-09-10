@@ -21,7 +21,6 @@
 Encapsulates a set of lights for OpenGL.
 */
 
-ClassImp(TGLLightSet);
 
 TGLLightSet::TGLLightSet() :
    TObject(),

@@ -142,7 +142,6 @@ private:
    TX11GLImpl &operator = (const TX11GLImpl &) = delete;
 };
 
-ClassImp(TX11GLManager);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

@@ -75,7 +75,6 @@ it gets forwarded to geo-manager and this tesselation detail is
 used when creating the buffer passed to GL.
 */
 
-ClassImp(TEveGeoShape);
 
 TGeoManager* TEveGeoShape::fgGeoMangeur = init_geo_mangeur();
 
@@ -456,7 +455,6 @@ TBuffer3D* TEveGeoShape::MakeBuffer3D()
 A 3D projected TEveGeoShape.
 */
 
-ClassImp(TEveGeoShapeProjected);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

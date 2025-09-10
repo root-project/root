@@ -23,7 +23,6 @@
 #include <cassert>
 #include <iostream>
 
-ClassImp(TPolyLine3D);
 
 /** \class TPolyLine3D
 \ingroup g3d

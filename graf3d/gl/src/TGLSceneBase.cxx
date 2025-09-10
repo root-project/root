@@ -40,7 +40,6 @@ be achieved on GL-context creation time; Matevz believes that by
 default all GL contexts must use shared display-lists etc).
 */
 
-ClassImp(TGLSceneBase);
 
 UInt_t TGLSceneBase::fgSceneIDSrc = 1;
 

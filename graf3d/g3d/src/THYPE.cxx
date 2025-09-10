@@ -11,7 +11,6 @@
 
 #include "THYPE.h"
 
-ClassImp(THYPE);
 
 /** \class THYPE
 \ingroup g3d

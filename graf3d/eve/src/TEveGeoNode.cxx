@@ -42,7 +42,6 @@
 Wrapper for TGeoNode that allows it to be shown in GUI and controlled as a TEveElement.
 */
 
-ClassImp(TEveGeoNode);
 
 Int_t                 TEveGeoNode::fgCSGExportNSeg = 64;
 std::list<TGeoShape*> TEveGeoNode::fgTemporaryStore;
@@ -460,7 +459,6 @@ TGeoPainter, fVisOption, fVisLevel and fMaxVisNodes. They have the
 same meaning as in TGeoManager/TGeoPainter.
 */
 
-ClassImp(TEveGeoTopNode);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

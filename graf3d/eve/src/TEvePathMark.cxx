@@ -29,8 +29,6 @@ Special-point on track:
                   - fE - vector from fV to the second vertex of line segment
 */
 
-ClassImp(TEvePathMarkT<Float_t>);
-ClassImp(TEvePathMarkT<Double_t>);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the name of path-mark type.

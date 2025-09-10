@@ -26,7 +26,6 @@ Vessel to carry hand-picked geometry from gled to reve.
 This class exists in both frameworks.
 */
 
-ClassImp(TEveGeoShapeExtract);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

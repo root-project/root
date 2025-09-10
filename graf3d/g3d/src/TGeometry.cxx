@@ -20,7 +20,6 @@
 
 TGeometry *gGeometry = nullptr;
 
-ClassImp(TGeometry);
 
 /** \class TGeometry
 \ingroup g3d

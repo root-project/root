@@ -22,7 +22,6 @@
 A class encapsulating GL rendering of TEveFrameBox via a static member function.
 */
 
-ClassImp(TEveFrameBoxGL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Render the frame with GL.

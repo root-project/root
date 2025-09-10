@@ -26,7 +26,6 @@
 Wrapper class for GL capture & output routines
 */
 
-ClassImp(TGLOutput);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Capture viewer to file. Arguments are:

@@ -21,7 +21,6 @@
 Base class for composite GUI elements for setting of numeric values.
 */
 
-ClassImp(TEveGValuatorBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -48,7 +47,6 @@ Composite GUI element for single value selection (supports label,
 number-entry and slider).
 */
 
-ClassImp(TEveGValuator);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -243,7 +241,6 @@ Composite GUI element for selection of range (label, two
 number-entries and double-slider).
 */
 
-ClassImp(TEveGDoubleValuator);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -415,7 +412,6 @@ three number-entries). All three values have the same number-format
 and value-range.
 */
 
-ClassImp(TEveGTriVecValuator);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

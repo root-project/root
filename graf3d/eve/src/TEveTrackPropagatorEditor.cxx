@@ -26,7 +26,6 @@
 Sub-editor for TEveTrackPropagator class.
 */
 
-ClassImp(TEveTrackPropagatorSubEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -419,7 +418,6 @@ It's only a wrapper around a TEveTrackPropagatorSubEditor that holds actual
 widgets.
 */
 
-ClassImp(TEveTrackPropagatorEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

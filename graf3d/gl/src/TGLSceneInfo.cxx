@@ -29,7 +29,6 @@ inner class SceneInfo; note that some casting is needed in actual
 methods as TGLRnrCtx holds the base-class pointer.
 */
 
-ClassImp(TGLSceneInfo);
 
 ////////////////////////////////////////////////////////////////////////////////
 

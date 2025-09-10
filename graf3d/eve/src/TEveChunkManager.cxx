@@ -21,8 +21,6 @@ Holes in the structure are not supported, neither is removal of atoms.
 The structure can be Refit() to occupy a single contiguous array.
 */
 
-ClassImp(TEveChunkManager);
-ClassImp(TEveChunkManager::iterator);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Release all memory chunks.

@@ -25,7 +25,6 @@ we need to perform GL flushing to get accurate times + we record
 timing overheads here.
 */
 
-ClassImp(TGLStopwatch);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct stopwatch object.

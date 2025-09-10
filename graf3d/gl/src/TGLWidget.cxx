@@ -61,7 +61,6 @@ By default you want, but for example when not - see TGLPShapeObjEditor.
 Non-copyable.
 */
 
-ClassImp(TGLWidget);
 
 //==============================================================================
 // TGLWidget - system-independent methods

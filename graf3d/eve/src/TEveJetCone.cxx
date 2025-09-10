@@ -43,7 +43,6 @@ TEveVector fLimits encodes the following information:
   - fX    :  scaling for length of the cone
 */
 
-ClassImp(TEveJetCone);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

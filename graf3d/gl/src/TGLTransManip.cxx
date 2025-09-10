@@ -22,7 +22,6 @@ L click/drag to translate along this axis.
 Widgets use standard 3D package axes colours: X red, Y green, Z blue.
 */
 
-ClassImp(TGLTransManip);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct translation manipulator not bound to any physical shape.

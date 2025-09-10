@@ -22,7 +22,6 @@ GL-renderer for TEveTriangleSet class.
 See also: TGLObject, TGLLogicalShape.
 */
 
-ClassImp(TEveTriangleSetGL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

@@ -13,7 +13,6 @@
 #include "TNode.h"
 #include "TMath.h"
 
-ClassImp(TTRAP);
 
 /** \class TTRAP
 \ingroup g3d

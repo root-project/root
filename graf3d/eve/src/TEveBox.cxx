@@ -25,7 +25,6 @@ by the size of the TEveTrans object).
 Currently only supports 3D -> 2D projections.
 */
 
-ClassImp(TEveBox);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -102,7 +101,6 @@ TClass* TEveBox::ProjectedClass(const TEveProjection*) const
 Projection of TEveBox.
 */
 
-ClassImp(TEveBoxProjected);
 
 Bool_t TEveBoxProjected::fgDebugCornerPoints = kFALSE;
 

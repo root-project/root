@@ -26,7 +26,6 @@
 Sub-editor for TEveRGBAPalette class.
 */
 
-ClassImp(TEveRGBAPaletteSubEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -300,7 +299,6 @@ void TEveRGBAPaletteSubEditor::DoOverflowAction(Int_t mode)
 Editor for TEveRGBAPalette class.
 */
 
-ClassImp(TEveRGBAPaletteEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

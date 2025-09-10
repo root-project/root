@@ -33,7 +33,6 @@ single class) but then it seemed somehow messy.
 Maybe next time.
 */
 
-ClassImp(TGLManipSet);
 
 TGLManipSet::TGLManipSet() :
    TGLOverlayElement(kViewer),

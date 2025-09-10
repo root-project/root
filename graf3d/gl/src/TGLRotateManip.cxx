@@ -25,7 +25,6 @@ rotate attached physical round the ring center.
 Widgets use standard 3D package axes colours: X red, Y green, Z blue.
 */
 
-ClassImp(TGLRotateManip);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate unsigned angle between vectors v1 and v2

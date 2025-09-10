@@ -22,7 +22,6 @@
 GUI sub-editor for TGLClipSet.
 */
 
-ClassImp(TGLClipSetSubEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -233,7 +232,6 @@ void TGLClipSetSubEditor::ResetViewerClip()
 GUI editor for TGLClipSet.
 */
 
-ClassImp(TGLClipSetEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

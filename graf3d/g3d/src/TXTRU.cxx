@@ -19,7 +19,6 @@
 #include <iostream>
 #include <iomanip>
 
-ClassImp(TXTRU);
 
 /** \class TXTRU
 \ingroup g3d

@@ -37,7 +37,6 @@ not fix the momentum according to the distance travelled from the previous
 pathmark.
 */
 
-ClassImp(TEveTrack);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -554,7 +553,6 @@ A list of tracks supporting change of common attributes and
 selection based on track parameters.
 */
 
-ClassImp(TEveTrackList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. If track-propagator argument is 0, a new default

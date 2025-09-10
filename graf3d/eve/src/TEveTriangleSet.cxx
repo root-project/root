@@ -28,7 +28,6 @@ one should consider finding all occurrences of the same vertex
 and specifying it only once.
 */
 
-ClassImp(TEveTriangleSet);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

@@ -48,7 +48,6 @@ extern "C"
 Implements a native ROOT-GL representation of an arbitrary set of polygons.
 */
 
-ClassImp(TGLFaceSet);
 
 Bool_t TGLFaceSet::fgEnforceTriangles = kFALSE;
 

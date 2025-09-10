@@ -44,7 +44,6 @@ Holds pointer to FTFont object and its description: face size, font file
 and class ID. It  wraps Render and BBox functions.
 */
 
-ClassImp(TGLFont);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -416,7 +415,6 @@ Each GL rendering context has an instance of FTGLManager.
 This enables FTGL fonts to be shared same way as textures and display lists.
 */
 
-ClassImp(TGLFontManager);
 
 TObjArray   TGLFontManager::fgFontFileArray;
 Int_t TGLFontManager::fgExtendedFontStart;
