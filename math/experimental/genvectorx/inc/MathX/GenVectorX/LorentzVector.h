@@ -47,10 +47,10 @@ In the case of LorentzVector we don't distinguish the concepts
 of points and displacement vectors as in the 3D case,
 since the main use case for 4D Vectors is to describe the kinematics of
 relativistic particles. A LorentzVector behaves like a
-DisplacementVector in 4D.  The Minkowski components could be viewed as
+DisplacementVector in 4D. The Minkowski components could be viewed as
 v and t, or for kinematic 4-vectors, as p and E.
 
-ROOT provides specialisations and aliases to them of the ROOT::ROOT_MATH_ARCH::LorentzVector template:
+ROOT provides specialisations (and aliases to them) of the ROOT::ROOT_MATH_ARCH::LorentzVector template:
 - ROOT::ROOT_MATH_ARCH::PtEtaPhiMVector based on pt (rho),eta,phi and M (t) coordinates in double precision
 - ROOT::ROOT_MATH_ARCH::PtEtaPhiEVector based on pt (rho),eta,phi and E (t) coordinates in double precision
 - ROOT::ROOT_MATH_ARCH::PxPyPzMVector based on px,py,pz and M (mass) coordinates in double precision
@@ -58,6 +58,7 @@ ROOT provides specialisations and aliases to them of the ROOT::ROOT_MATH_ARCH::L
 - ROOT::ROOT_MATH_ARCH::XYZTVector based on x,y,z,t coordinates (cartesian) in double precision (same as PxPyPzEVector)
 - ROOT::ROOT_MATH_ARCH::XYZTVectorF based on x,y,z,t coordinates (cartesian) in float precision (same as PxPyPzEVector
 but float)
+Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity. M is mass, E is energy, p is momentum.
 
 @see GenVectorX
 */
