@@ -20,7 +20,6 @@
 #include <cstdlib>
 #include <sstream>
 
-ClassImp(TSchemaRule);
 
 using namespace ROOT;
 

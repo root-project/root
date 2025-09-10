@@ -37,7 +37,6 @@ collection of TFile names.
 #include <fstream>
 
 
-ClassImp(TFileCollection);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TFileCollection constructor. Specify a name and title describing

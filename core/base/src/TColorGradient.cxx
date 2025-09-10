@@ -32,7 +32,6 @@ without re-writing all the graphics code.
 #include "TError.h"
 #include "TROOT.h"
 
-ClassImp(TColorGradient);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// There is no way to validate parameters here, so it's up to user

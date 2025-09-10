@@ -31,7 +31,6 @@
 #include "TDataMember.h"
 
 
-ClassImp(TMethod);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TMethod ctor. TMethods are constructed in TClass.

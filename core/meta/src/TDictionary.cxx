@@ -43,7 +43,6 @@ TMethodCall                            (method call environment)
 #include "TEnum.h"
 
 
-ClassImp(TDictionary);
 
 TDictionary::TDictionary(const TDictionary& dict):
    TNamed(dict),

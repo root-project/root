@@ -545,7 +545,7 @@ namespace Internal {
 
    Int_t TGenericClassInfo::GetImplFileLine()
    {
-      // Get the ClassImp line number.
+      // Get the ClassDef line number.
 
       if (!fImplFileLine) SetFromTemplate();
       return fImplFileLine;

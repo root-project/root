@@ -27,7 +27,6 @@ The base class information is used a.o. in to find all inherited methods.
 */
 
 
-ClassImp(TBaseClass);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TBaseClass ctor. TBaseClasses are constructed in TClass

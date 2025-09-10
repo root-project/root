@@ -58,7 +58,6 @@ struct PCREPriv_t {
 };
 
 
-ClassImp(TPRegexp);
 
 Bool_t TPRegexp::fgThrowAtCompileError = kFALSE;
 
@@ -669,7 +668,6 @@ operator[] returning a TString.
 See regexp_pme.C for example.
 */
 
-ClassImp(TPMERegexp);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor. This regexp will match an empty string.
@@ -1046,7 +1044,6 @@ During construction no match is done, use NextToken() to get the first
 and all subsequent tokens.
 */
 
-ClassImp(TStringToken);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

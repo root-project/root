@@ -1346,8 +1346,8 @@ static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
 
       PreIncludes += gClassDefInterpMacro + "\n"
                      + gInterpreterClassDef + "\n"
-                     "#undef ClassImp\n"
-                     "#define ClassImp(X);\n";
+                     "#undef ClassImp\n"       // bw compatibility
+                     "#define ClassImp(X);\n"; // bw compatibility
    }
    if (!hasCxxModules)
       PreIncludes += "#include <string>\n";

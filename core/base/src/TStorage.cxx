@@ -68,7 +68,6 @@ ReAllocCFun_t TStorage::fgReAllocCHook;
 Bool_t        TStorage::fgHasCustomNewDelete;
 
 
-ClassImp(TStorage);
 
 //------------------------------------------------------------------------------
 

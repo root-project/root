@@ -28,7 +28,6 @@ use THashList instead.
 #include "TROOT.h"
 #include "TMathBase.h"
 
-ClassImp(THashTable);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a THashTable object. Capacity is the initial hashtable capacity
@@ -465,7 +464,6 @@ TObject *THashTable::RemoveSlow(TObject *obj)
 Iterator of hash table.
 */
 
-ClassImp(THashTableIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a hashtable iterator. By default the iteration direction

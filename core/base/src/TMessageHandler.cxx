@@ -32,7 +32,6 @@ added when needed.
 #include "TROOT.h"
 #include "TVirtualMutex.h"
 
-ClassImp(TMessageHandler);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new message handler for class cl and add it to the list

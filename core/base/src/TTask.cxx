@@ -90,7 +90,6 @@ the following script:
 TTask *TTask::fgBeginTask  = nullptr;
 TTask *TTask::fgBreakPoint = nullptr;
 
-ClassImp(TTask);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor invoked when reading a TTask object from a file.

@@ -134,7 +134,6 @@ Bool_t TTermInputHandler::Notify()
 }
 
 
-ClassImp(TRint);
 
 
 namespace {

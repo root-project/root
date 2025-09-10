@@ -162,7 +162,6 @@ but also in Dump() and Inspect() methods and by the THtml class.
 #include <cstdlib>
 
 
-ClassImp(TDataMember);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TDataMember ctor. TDataMembers are constructed in TClass

@@ -568,7 +568,6 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
 }
 #endif
 
-ClassImp(TUnixSystem);
 
 ////////////////////////////////////////////////////////////////////////////////
 

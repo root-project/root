@@ -135,7 +135,6 @@ When investigating misuse of TClonesArray, please make sure of the following:
 
 #include <cstdlib>
 
-ClassImp(TClonesArray);
 
 // To allow backward compatibility of TClonesArray of v5 TF1 objects
 // that were stored member-wise.

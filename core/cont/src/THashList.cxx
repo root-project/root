@@ -24,7 +24,6 @@ can override Hash() as it sees fit.
 #include "TClass.h"
 
 
-ClassImp(THashList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a THashList object. Capacity is the initial hashtable capacity

@@ -23,8 +23,6 @@ Class describing a generic file including meta information.
 #include "TUUID.h"
 #include "TMD5.h"
 
-ClassImp(TFileInfo);
-ClassImp(TFileInfoMeta);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

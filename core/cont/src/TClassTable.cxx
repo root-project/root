@@ -14,7 +14,7 @@
 This class registers for all classes their name, id and dictionary
 function in a hash table. Classes are automatically added by the
 ctor of a special init class when a global of this init class is
-initialized when the program starts (see the ClassImp macro).
+initialized when the program starts (see the ClassDef macro).
 
 All functions in TClassTable are thread-safe.
 */
@@ -56,7 +56,6 @@ Bool_t                TClassTable::fgSorted;
 UInt_t                TClassTable::fgCursor;
 TClassTable::IdMap_t *TClassTable::fgIdMap;
 
-ClassImp(TClassTable);
 
 static std::mutex &GetClassTableMutex()
 {
@@ -910,7 +909,7 @@ void TClassTable::Terminate()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Global function called by the ctor of a class's init class
-/// (see the ClassImp macro).
+/// (see the ClassDef macro).
 
 void ROOT::AddClass(const char *cname, Version_t id,
                     const std::type_info& info,
@@ -932,7 +931,7 @@ void ROOT::AddClass(const char *cname, Version_t id,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Global function called by GenerateInitInstance.
-/// (see the ClassImp macro).
+/// (see the ClassDef macro).
 
 ROOT::TClassAlt* ROOT::AddClassAlternate(const char *normName, const char *alternate)
 {
@@ -998,7 +997,7 @@ void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Global function called by the dtor of a class's init class
-/// (see the ClassImp macro).
+/// (see the ClassDef macro).
 /// The caller of this function should be holding the ROOT Write lock.
 
 void ROOT::RemoveClass(const char *cname, TClass *oldcl)

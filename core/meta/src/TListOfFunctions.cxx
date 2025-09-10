@@ -24,7 +24,6 @@ unloaded function.
 #include "TVirtualMutex.h"
 #include "TROOT.h"
 
-ClassImp(TListOfFunctions);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -554,7 +553,6 @@ Int_t TListOfFunctions::GetSize() const
 Iterator for TListOfFunctions.
 */
 
-ClassImp(TListOfFunctionsIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 

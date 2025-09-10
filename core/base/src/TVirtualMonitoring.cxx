@@ -20,8 +20,6 @@ Provides the interface for externel Monitoring
 
 #include "TList.h"
 
-ClassImp(TVirtualMonitoringWriter);
-ClassImp(TVirtualMonitoringReader);
 
 
 TVirtualMonitoringWriter *gMonitoringWriter = nullptr;

@@ -81,7 +81,6 @@ LastLink() and lnk->Prev() or by using the Before() member.
 
 #include <string>
 
-ClassImp(TList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete the list. Objects are not deleted unless the TList is the
@@ -1046,7 +1045,6 @@ iterator, and TCollection documentation for more modern alternatives
 that dynamically cast the derived class.
 */
 
-ClassImp(TListIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new list iterator. By default the iteration direction

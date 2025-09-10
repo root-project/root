@@ -88,7 +88,6 @@ Different options are explained in the function comments
 TVirtualFFT *TVirtualFFT::fgFFT    = nullptr;
 TString      TVirtualFFT::fgDefault   = "";
 
-ClassImp(TVirtualFFT);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///destructor

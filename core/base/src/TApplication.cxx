@@ -74,7 +74,6 @@ Bool_t TIdleTimer::Notify()
 }
 
 
-ClassImp(TApplication);
 
 static void CallEndOfProcessCleanups()
 {

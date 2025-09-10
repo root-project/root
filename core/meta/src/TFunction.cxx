@@ -26,7 +26,6 @@ functions (accessible via TROOT::GetListOfGlobalFunctions()).
 #include <iostream>
 #include "TVirtualMutex.h"
 
-ClassImp(TFunction);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TFunction ctor. TFunctions are constructed in TROOT via

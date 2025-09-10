@@ -280,7 +280,6 @@ extern Bool_t ConnectCINT(TQObject *sender, const char *signal,
 // all objects of the same class.
 // *** It is now obsolete ***
 
-#define ClassImpQ(name) \
-   ClassImp(name)
+#define ClassImpQ(name) // deprecated
 
 #endif

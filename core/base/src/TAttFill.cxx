@@ -17,7 +17,6 @@
 #include "TVirtualPadEditor.h"
 #include "TColor.h"
 
-ClassImp(TAttFill);
 
 /** \class TAttFill
 \ingroup Base

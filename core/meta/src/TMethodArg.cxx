@@ -26,7 +26,6 @@ The method argument information is used a.o. in the TContextMenu
 and THtml classes.
 */
 
-ClassImp(TMethodArg);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TMethodArg ctor. TMethodArgs are constructed in TFunction

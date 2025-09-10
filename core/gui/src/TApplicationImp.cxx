@@ -17,4 +17,3 @@ ABC describing GUI independent application implementation protocol.
 
 #include "TApplicationImp.h"
 
-ClassImp(TApplicationImp);
