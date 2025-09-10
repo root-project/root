@@ -25,7 +25,6 @@ extern "C"
 #include "TEnv.h"
 #endif
 using namespace ROOT::R;
-ClassImp(TRInterface);
 
 static ROOT::R::TRInterface *gR = nullptr;
 static Bool_t statusEventLoop;

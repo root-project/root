@@ -10,7 +10,6 @@
 #include<TRFunctionExport.h>
 
 using namespace ROOT::R;
-ClassImp(TRFunctionExport);
 
 
 //______________________________________________________________________________
