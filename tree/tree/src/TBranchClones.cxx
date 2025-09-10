@@ -24,7 +24,6 @@
 
 #include <cstring>
 
-ClassImp(TBranchClones);
 
 /** \class TBranchClones
 \ingroup tree

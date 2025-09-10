@@ -30,7 +30,6 @@
 #include "TMarker.h"
 #include "snprintf.h"
 
-ClassImp(TParallelCoordVar);
 
 /** \class TParallelCoordVar
 

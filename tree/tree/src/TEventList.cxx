@@ -55,7 +55,6 @@ the TEventList object created in the above commands:
 #include "strlcpy.h"
 #include "snprintf.h"
 
-ClassImp(TEventList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for a EventList.

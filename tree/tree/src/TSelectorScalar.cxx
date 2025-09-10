@@ -19,7 +19,6 @@ mergeable.
 #include "TSelectorScalar.h"
 #include "TCollection.h"
 
-ClassImp(TSelectorScalar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment scalar value by n.

@@ -31,7 +31,6 @@
 const UInt_t kDisplacementMask = 0xFF000000;  // In the streamer the two highest bytes of
                                               // the fEntryOffset are used to stored displacement.
 
-ClassImp(TBasket);
 
 /** \class TBasket
 \ingroup tree

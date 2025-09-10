@@ -31,7 +31,6 @@
 #include <cfloat>
 #include "TEnv.h"
 
-ClassImp(TSpider);
 
 /** \class TSpider
 Spider class.

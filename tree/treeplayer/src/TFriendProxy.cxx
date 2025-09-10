@@ -19,7 +19,6 @@ Concrete implementation of the proxy around a Friend Tree.
 #include "TList.h"
 #include "TFriendElement.h"
 
-ClassImp(ROOT::Internal::TFriendProxy);
 
 namespace ROOT {
 namespace Internal {

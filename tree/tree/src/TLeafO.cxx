@@ -21,7 +21,6 @@ A TLeaf for a bool data type.
 #include "TClonesArray.h"
 #include <iostream>
 
-ClassImp(TLeafO);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for LeafO.

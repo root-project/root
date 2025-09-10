@@ -174,7 +174,6 @@ bool analyze(TFile* file) {
 */
 // clang-format on
 
-ClassImp(TTreeReader);
 
 using namespace ROOT::Internal;
 

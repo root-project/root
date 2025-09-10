@@ -525,7 +525,6 @@ public:
 };
 } // namespace
 
-ClassImp(TTreeReaderArrayBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the proxy object for our branch.

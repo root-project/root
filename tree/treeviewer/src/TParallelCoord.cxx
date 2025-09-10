@@ -34,7 +34,6 @@
 #include "TGaxis.h"
 #include "TFile.h"
 
-ClassImp(TParallelCoord);
 
 /** \class TParallelCoord
 Parallel Coordinates class.

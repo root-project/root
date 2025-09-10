@@ -22,7 +22,6 @@ A Tree Index with majorname and minorname.
 
 #include <cstring> // std::strlen
 
-ClassImp(TTreeIndex);
 
 
 struct IndexSortComparator {

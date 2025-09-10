@@ -161,7 +161,6 @@ End_Macro
 #include "TSystem.h"
 #include "TObjString.h"
 
-ClassImp(TEntryList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default c-tor

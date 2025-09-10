@@ -64,7 +64,6 @@ the trees in the chain.
 #include "strlcpy.h"
 #include "snprintf.h"
 
-ClassImp(TChain);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

@@ -11,7 +11,6 @@
 #include "TGTreeTable.h"
 #include "TTreeTableInterface.h"
 
-ClassImp(TGTreeTable);
 
 /** \class TGTreeTable
 
