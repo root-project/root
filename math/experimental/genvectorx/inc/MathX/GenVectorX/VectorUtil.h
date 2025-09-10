@@ -351,7 +351,7 @@ Vector Rotate(const Vector &v, double alpha, const Vector &axis)
    const double ll = math_sqrt(axis.X() * axis.X() + axis.Y() * axis.Y() + axis.Z() * axis.Z());
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
    if (ll == 0.)
-      GenVector::Throw("Axis Vector has zero magnitude");
+      GenVector_Throw("Axis Vector has zero magnitude");
 #endif
    const double sa = math_sin(alpha);
    const double ca = math_cos(alpha);
@@ -412,7 +412,7 @@ LVector boost(const LVector &v, const BoostVector &b)
    double b2 = bx * bx + by * by + bz * bz;
    if (b2 >= 1) {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-      GenVector::Throw("Beta Vector supplied to set Boost represents speed >= c");
+      GenVector_Throw("Beta Vector supplied to set Boost represents speed >= c");
 #endif
       return LVector();
    }
@@ -439,7 +439,7 @@ LVector boostX(const LVector &v, T beta)
 {
    if (beta >= 1) {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-      GenVector::Throw("Beta Vector supplied to set Boost represents speed >= c");
+      GenVector_Throw("Beta Vector supplied to set Boost represents speed >= c");
 #endif
       return LVector();
    }
@@ -463,7 +463,7 @@ LVector boostY(const LVector &v, double beta)
 {
    if (beta >= 1) {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-      GenVector::Throw("Beta Vector supplied to set Boost represents speed >= c");
+      GenVector_Throw("Beta Vector supplied to set Boost represents speed >= c");
 #endif
       return LVector();
    }
@@ -486,7 +486,7 @@ LVector boostZ(const LVector &v, double beta)
 {
    if (beta >= 1) {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-      GenVector::Throw("Beta Vector supplied to set Boost represents speed >= c");
+      GenVector_Throw("Beta Vector supplied to set Boost represents speed >= c");
 #endif
       return LVector();
    }

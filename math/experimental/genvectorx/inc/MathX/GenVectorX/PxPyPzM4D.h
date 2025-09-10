@@ -223,8 +223,8 @@ public:
          return math_sqrt(mm);
       } else {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-         GenVector::Throw("PxPyPzM4D::Mt() - Tachyonic:\n"
-                          "    Pz^2 > E^2 so the transverse mass would be imaginary");
+         GenVector_Throw("PxPyPzM4D::Mt() - Tachyonic:\n"
+                         "    Pz^2 > E^2 so the transverse mass would be imaginary");
 #endif
          return -math_sqrt(-mm);
       }
@@ -306,7 +306,7 @@ public:
       fY = -fY;
       fZ = -fZ;
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-      GenVector::Throw("PxPyPzM4D::Negate - cannot negate the energy - can negate only the spatial components");
+      GenVector_Throw("PxPyPzM4D::Negate - cannot negate the energy - can negate only the spatial components");
 #endif
    }
 
@@ -359,7 +359,7 @@ private:
          return;
       if (P2() - fM * fM < 0) {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-         GenVector::Throw("PxPyPzM4D::unphysical value of mass, set to closest physical value");
+         GenVector_Throw("PxPyPzM4D::unphysical value of mass, set to closest physical value");
 #endif
          fM = -P();
       }

@@ -159,8 +159,8 @@ public:
          return math_sqrt(mm);
       } else {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-         GenVector::Throw("PxPyPzE4D::M() - Tachyonic:\n"
-                          "    P^2 > E^2 so the mass would be imaginary");
+         GenVector_Throw("PxPyPzE4D::M() - Tachyonic:\n"
+                         "    P^2 > E^2 so the mass would be imaginary");
 #endif
          return -math_sqrt(-mm);
       }
@@ -195,8 +195,8 @@ public:
          return math_sqrt(mm);
       } else {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-         GenVector::Throw("PxPyPzE4D::Mt() - Tachyonic:\n"
-                          "    Pz^2 > E^2 so the transverse mass would be imaginary");
+         GenVector_Throw("PxPyPzE4D::Mt() - Tachyonic:\n"
+                         "    Pz^2 > E^2 so the transverse mass would be imaginary");
 #endif
          return -math_sqrt(-mm);
       }
