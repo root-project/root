@@ -152,7 +152,7 @@ protected:
    bool fOpaqueRead{false};
 
    ClassDefInline(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader
-
+   friend class ::ClassDefGenerateInitInstanceLocalInjector<TTreeReaderValueBase>;
    friend class ::TTreeReader;
 };
 
