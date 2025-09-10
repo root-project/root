@@ -91,7 +91,6 @@ S. Jadach, Computer Physics Communications 152 (2003) 55.
 #include "TMath.h"
 #include "TInterpreter.h"
 
-ClassImp(TFoam);
 
 //FFFFFF  BoX-FORMATs for nice and flexible outputs
 #define BXOPE std::cout<<\

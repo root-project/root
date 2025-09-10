@@ -20,7 +20,6 @@ used for the cartesian geometry of the TFoam cells
 
 */
 
-ClassImp(TFoamVect);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for streamer

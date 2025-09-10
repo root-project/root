@@ -246,7 +246,6 @@ const UInt_t fgSeedTable[215][2] = {
                              {      242242374, 1863206182   },
                              {      957935844, 1490681416   }};
 
-ClassImp(TRandom1);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \brief Luxury level is set in the same way as the original FORTRAN routine.

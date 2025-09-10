@@ -52,7 +52,6 @@
 #include <limits>
 #include <cmath>
 
-ClassImp(TMatrixDEigen);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for eigen-problem of matrix A .

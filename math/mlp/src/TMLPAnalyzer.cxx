@@ -37,7 +37,6 @@ the network structure.
 #include <iostream>
 #include <cstdlib>
 
-ClassImp(TMLPAnalyzer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor

@@ -20,7 +20,6 @@
 #include "Fit/BinData.h"
 #include "TBuffer.h"
 
-ClassImp(TKDTreeBinning);
 
 /**
 \class TKDTreeBinning

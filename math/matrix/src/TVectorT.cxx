@@ -43,7 +43,6 @@ For usage examples see `$ROOTSYS/test/stressLinear.cxx`
 #include "TROOT.h"
 #include "Varargs.h"
 
-templateClassImp(TVectorT);
 
 
 ////////////////////////////////////////////////////////////////////////////////

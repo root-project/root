@@ -179,7 +179,6 @@ A TRandom object may be written to a Root file
 #include "TUUID.h"
 #include "TError.h"
 
-ClassImp(TRandom);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor. For seed see SetSeed().

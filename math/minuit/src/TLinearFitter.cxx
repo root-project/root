@@ -27,7 +27,6 @@
 
 #include <string>
 
-ClassImp(TLinearFitter);
 
 
 std::map<TString,TFormula*> TLinearFitter::fgFormulaMap;
