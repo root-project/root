@@ -162,7 +162,9 @@ jobs:
       - name: Set up curl CA bundle for Davix to work with https
         run: 'echo SSL_CERT_FILE=/opt/local/share/curl/curl-ca-bundle.crt >> $GITHUB_ENV'  
       - name: Source python venv
-        run: 'source /Users/sftnight/py-venv/ROOT-CI/bin/activate'
+        run: 'source /Users/sftnight/py-venv/ROOT-CI/bin/activate && python -m site'
+      - name: Check python venv
+        run: 'python -m site'
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
         env:
