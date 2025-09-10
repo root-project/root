@@ -30,7 +30,6 @@ Double_t *norm[3]);
 #include "TGeoHalfSpace.h"
 #include "TMath.h"
 
-ClassImp(TGeoHalfSpace);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Dummy constructor

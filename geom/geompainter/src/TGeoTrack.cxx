@@ -32,7 +32,6 @@ of all tracks that will be deleted on destruction of
 gGeoManager.
 */
 
-ClassImp(TGeoTrack);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

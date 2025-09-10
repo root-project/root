@@ -92,7 +92,6 @@ End_Macro
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-ClassImp(TGeoCone);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -1254,7 +1253,6 @@ void TGeoCone::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *
       safe[i] = Safety(&points[3 * i], inside[i]);
 }
 
-ClassImp(TGeoConeSeg);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

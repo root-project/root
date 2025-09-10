@@ -102,7 +102,6 @@ Double_t y0, Double_t scale);
 #include "TGeoVolume.h"
 #include "TGeoPolygon.h"
 
-ClassImp(TGeoXtru);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

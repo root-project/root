@@ -58,7 +58,6 @@ Double_t Dphi);
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-ClassImp(TGeoTorus);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

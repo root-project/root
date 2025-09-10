@@ -156,7 +156,6 @@ are interpreted and which is their result inside specific shape classes.
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-ClassImp(TGeoShape);
 
 TGeoMatrix *TGeoShape::fgTransform = nullptr;
 Double_t TGeoShape::fgEpsMch = 2.220446049250313e-16;

@@ -32,7 +32,6 @@ Editor for a TGeoTrap.
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TGeoTrapEditor);
 
 enum ETGeoTrapWid {
    kTRAP_NAME,
@@ -518,7 +517,6 @@ void TGeoTrapEditor::DoPhi()
       DoApply();
 }
 
-ClassImp(TGeoGtraEditor);
 
 enum ETGeoGtraWid { kGTRA_TWIST };
 

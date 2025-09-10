@@ -14,7 +14,6 @@ Common base class for geombuilder editors.
 #include "TGTab.h"
 #include "TVirtualPad.h"
 
-ClassImp(TGeoGedFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

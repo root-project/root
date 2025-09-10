@@ -40,7 +40,6 @@ One can directly call the Field() method of a field via the global field manager
 ~~~
 */
 
-ClassImp(TGeoGlobalMagField);
 
 TGeoGlobalMagField *TGeoGlobalMagField::fgInstance = nullptr;
 

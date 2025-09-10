@@ -26,7 +26,6 @@ Editor for a TGeoTranslation.
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TGeoTranslationEditor);
 
 enum ETGeoMatrixWid {
    kMATRIX_NAME,
@@ -297,7 +296,6 @@ Editor for a TGeoRotation.
 
 */
 
-ClassImp(TGeoRotationEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for rotation editor
@@ -626,7 +624,6 @@ Editor for a TGeoCombiTrans.
 
 */
 
-ClassImp(TGeoCombiTransEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for combi matrix editor

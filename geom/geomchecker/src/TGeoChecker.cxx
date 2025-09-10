@@ -86,7 +86,6 @@ volume by material sampling. Accepts as input the desired precision.
 
 // statics and globals
 
-ClassImp(TGeoChecker);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

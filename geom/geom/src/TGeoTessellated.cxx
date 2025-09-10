@@ -33,7 +33,6 @@ for the composing faces.
 #include <array>
 #include <vector>
 
-ClassImp(TGeoTessellated);
 
 using Vertex_t = Tessellated::Vertex_t;
 

@@ -192,7 +192,6 @@ criteria. Volumes created based on composite shapes cannot be divided.
 #include "TBuffer3DTypes.h"
 
 #include "TGeoCompositeShape.h"
-ClassImp(TGeoCompositeShape);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Needed just for cleanup.

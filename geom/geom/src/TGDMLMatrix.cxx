@@ -20,7 +20,6 @@ in double precision.
 
 #include <cassert>
 
-ClassImp(TGDMLMatrix);
 
 //_____________________________________________________________________________
 TGDMLMatrix::TGDMLMatrix(const char *name, size_t rows, size_t cols) : TNamed(name, "")

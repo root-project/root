@@ -31,7 +31,6 @@ Editor for a TGeoPgon.
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TGeoPgonEditor);
 
 enum ETGeoPgonWid { kPGON_NEDGES };
 

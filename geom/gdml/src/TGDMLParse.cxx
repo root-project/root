@@ -119,7 +119,6 @@ When most solids or volumes are added to the geometry they
 #include <sstream>
 #include <locale>
 
-ClassImp(TGDMLParse);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
@@ -4607,7 +4606,6 @@ file.
 
 */
 
-ClassImp(TGDMLRefl);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This constructor method stores the values brought in as params.

@@ -36,20 +36,6 @@ on different axis. Implemented patterns are:
 #include "TGeoManager.h"
 #include "TMath.h"
 
-ClassImp(TGeoPatternFinder);
-ClassImp(TGeoPatternX);
-ClassImp(TGeoPatternY);
-ClassImp(TGeoPatternZ);
-ClassImp(TGeoPatternParaX);
-ClassImp(TGeoPatternParaY);
-ClassImp(TGeoPatternParaZ);
-ClassImp(TGeoPatternTrapZ);
-ClassImp(TGeoPatternCylR);
-ClassImp(TGeoPatternCylPhi);
-ClassImp(TGeoPatternSphR);
-ClassImp(TGeoPatternSphTheta);
-ClassImp(TGeoPatternSphPhi);
-ClassImp(TGeoPatternHoneycomb);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
