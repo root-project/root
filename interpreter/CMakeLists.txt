@@ -1,6 +1,10 @@
 # Do not depend on CMake scripts from the rest of the ROOT build
 set(CMAKE_MODULE_PATH "")
 
+message(WARNING "CMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}")
+message(WARNING "SDKROOT=$ENV{SDKROOT}")
+message(FATAL_ERROR "See debugging messages above")
+
 #--- Check if we need to build llvm and clang ------------------------------------------------------
 if (builtin_llvm AND NOT builtin_clang)
   message(FATAL_ERROR "Cannot enable builtin LLVM, but provide external Clang")
