@@ -478,7 +478,6 @@ constexpr Float_t kNEntriesResortInv = 1.f/kNEntriesResort;
 Int_t    TTree::fgBranchStyle = 1;  // Use new TBranch style with TBranchElement.
 Long64_t TTree::fgMaxTreeSize = 100000000000LL;
 
-ClassImp(TTree);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -9982,7 +9981,6 @@ Int_t TTree::Write(const char *name, Int_t option, Int_t bufsize)
 ///
 /// Iterator on all the leaves in a TTree and its friend
 
-ClassImp(TTreeFriendLeafIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new iterator. By default the iteration direction

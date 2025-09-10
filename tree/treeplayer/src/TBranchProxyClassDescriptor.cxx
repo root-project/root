@@ -25,7 +25,6 @@ fragment in the result of MakeProxy.
 #include "TVirtualStreamerInfo.h"
 #include "TVirtualCollectionProxy.h"
 
-ClassImp(ROOT::Internal::TBranchProxyClassDescriptor);
 
 namespace ROOT {
 namespace Internal {

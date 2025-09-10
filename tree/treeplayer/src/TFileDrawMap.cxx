@@ -73,7 +73,6 @@ then all keys with names = "uv*" in a second pass, etc.
 #include "TSystem.h"
 #include "strlcpy.h"
 
-ClassImp(TFileDrawMap);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TreeFileMap constructor.

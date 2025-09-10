@@ -333,7 +333,6 @@ enum EButtonIdentifiers {
    kBGLast
 };
 
-ClassImp(TTreeViewer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TTreeViewer default constructor

@@ -26,7 +26,6 @@
 #include "TFormLeafInfo.h"
 #include <cctype>
 
-ClassImp(ROOT::Internal::TBranchProxyDescriptor);
 
 namespace ROOT {
 namespace Internal {
