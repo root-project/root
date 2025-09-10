@@ -232,7 +232,6 @@ public:
 TEveProjectionManager *gRPhiMgr = nullptr;
 TEveProjectionManager *gRhoZMgr = nullptr;
 
-ClassImp(TGShapedToolTip) ClassImp(HtmlObjTable) ClassImp(HtmlSummary) ClassImp(SplitGLView)
 
    HtmlSummary *SplitGLView::fgHtmlSummary = nullptr;
 TGHtml *SplitGLView::fgHtml = nullptr;

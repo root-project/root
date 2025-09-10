@@ -53,7 +53,6 @@ public:
 }
   ClassDef(TFDISTR,1) //Class of testing functions for FOAM
 };
-ClassImp(TFDISTR)
 
 Int_t foam_demo()
 {

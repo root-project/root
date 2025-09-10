@@ -108,7 +108,6 @@ protected:
    ClassDef(BinCountTestStat, 1)
 };
 
-ClassImp(BinCountTestStat)
 
 // ----------------------------------
 // The Actual Tutorial Macro

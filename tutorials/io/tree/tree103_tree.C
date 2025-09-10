@@ -8,7 +8,7 @@
 ///  You have to copy it first to a directory where you have write access!
 ///  Note that .x tree103_tree.C cannot work with this example
 ///
-/// ### Effect of ClassDef() and ClassImp() macros
+/// ### Effect of ClassDef() macro
 ///
 /// After running this macro create an instance of Det and Event
 ///
@@ -17,7 +17,7 @@
 ///   Event e;
 /// ~~~
 ///
-/// now you can see the effect of the  ClassDef() and ClassImp() macros.
+/// now you can see the effect of the ClassDef() macro.
 /// (for the Det class these commands are commented!)
 /// For instance 'e' now knows who it is:
 ///
@@ -27,7 +27,7 @@
 ///
 /// whereas d does not.
 ///
-/// The methods that are added by the ClassDef()/Imp() macro can be listed with
+/// The methods that are added by the ClassDef() macro can be listed with
 ///
 /// ~~~
 /// .class
@@ -55,8 +55,6 @@ public:
 //   ClassDef(Det,1)
 };
 
-//ClassImp(Det)
-
 //class Event { //TObject is not required by this example
 class Event : public TObject {
 public:
@@ -65,8 +63,6 @@ public:
 
    ClassDefOverride(Event,1)
 };
-
-ClassImp(Event)
 
 void tree103_tree()
 {
