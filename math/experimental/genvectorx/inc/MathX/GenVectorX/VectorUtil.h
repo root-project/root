@@ -280,12 +280,14 @@ inline typename Vector1::Scalar InvariantMass2(const Vector1 &v1, const Vector2 
 /**
  rotation along X axis for a generic vector by an Angle alpha
  returning a new vector.
- The only pre requisite on the Vector is that it has to implement the X() , Y() and Z()
+ The only pre requisite on the Vector is that it has to implement the X(), Y() and Z()
  and SetXYZ methods.
  */
 template <class Vector>
 Vector RotateX(const Vector &v, double alpha)
 {
+   if (math_fmod(alpha, 2 * M_PI) == 0.)
+      return v;
    double sina = math_sin(alpha);
    double cosa = math_cos(alpha);
    double y2 = v.Y() * cosa - v.Z() * sina;
@@ -298,12 +300,14 @@ Vector RotateX(const Vector &v, double alpha)
 /**
  rotation along Y axis for a generic vector by an Angle alpha
  returning a new vector.
- The only pre requisite on the Vector is that it has to implement the X() , Y() and Z()
+ The only pre requisite on the Vector is that it has to implement the X(), Y() and Z()
  and SetXYZ methods.
  */
 template <class Vector>
 Vector RotateY(const Vector &v, double alpha)
 {
+   if (math_fmod(alpha, 2 * M_PI) == 0.)
+      return v;
    double sina = math_sin(alpha);
    double cosa = math_cos(alpha);
    double x2 = v.X() * cosa + v.Z() * sina;
@@ -316,18 +320,57 @@ Vector RotateY(const Vector &v, double alpha)
 /**
  rotation along Z axis for a generic vector by an Angle alpha
  returning a new vector.
- The only pre requisite on the Vector is that it has to implement the X() , Y() and Z()
+ The only pre requisite on the Vector is that it has to implement the X(), Y() and Z()
  and SetXYZ methods.
  */
 template <class Vector>
 Vector RotateZ(const Vector &v, double alpha)
 {
+   if (math_fmod(alpha, 2 * M_PI) == 0.)
+      return v;
    double sina = math_sin(alpha);
    double cosa = math_cos(alpha);
    double x2 = v.X() * cosa - v.Y() * sina;
    double y2 = v.Y() * cosa + v.X() * sina;
    Vector vrot;
    vrot.SetXYZ(x2, y2, v.Z());
+   return vrot;
+}
+
+/**
+ rotation along a custom axis for a generic vector by an Angle alpha (in rad)
+ returning a new vector.
+ The only pre requisite on the Vector is that it has to implement the X(), Y() and Z()
+ and SetXYZ methods.
+ */
+template <class Vector>
+Vector Rotate(const Vector &v, double alpha, const Vector &axis)
+{
+   if (math_fmod(alpha, 2 * M_PI) == 0.)
+      return v;
+   const double ll = math_sqrt(axis.X() * axis.X() + axis.Y() * axis.Y() + axis.Z() * axis.Z());
+#if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
+   if (ll == 0.)
+      GenVector::Throw("Axis Vector has zero magnitude");
+#endif
+   const double sa = math_sin(alpha);
+   const double ca = math_cos(alpha);
+   const double dx = axis.X() / ll;
+   const double dy = axis.Y() / ll;
+   const double dz = axis.Z() / ll;
+   // clang-format off
+   const double rot00 = (1 - ca) * dx * dx + ca     , rot01 = (1 - ca) * dx * dy - sa * dz, rot02 = (1 - ca) * dx * dz + sa * dy,
+                rot10 = (1 - ca) * dy * dx + sa * dz, rot11 = (1 - ca) * dy * dy + ca     , rot12 = (1 - ca) * dy * dz - sa * dx,
+                rot20 = (1 - ca) * dz * dx - sa * dy, rot21 = (1 - ca) * dz * dy + sa * dx, rot22 = (1 - ca) * dz * dz + ca     ;
+   // clang-format on
+   const double xX = v.X();
+   const double yY = v.Y();
+   const double zZ = v.Z();
+   const double x2 = rot00 * xX + rot01 * yY + rot02 * zZ;
+   const double y2 = rot10 * xX + rot11 * yY + rot12 * zZ;
+   const double z2 = rot20 * xX + rot21 * yY + rot22 * zZ;
+   Vector vrot;
+   vrot.SetXYZ(x2, y2, z2);
    return vrot;
 }
 
