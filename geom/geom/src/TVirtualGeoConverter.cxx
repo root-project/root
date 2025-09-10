@@ -24,7 +24,6 @@ Abstract class for geometry converters
 
 TVirtualGeoConverter *TVirtualGeoConverter::fgGeoConverter = nullptr;
 
-ClassImp(TVirtualGeoConverter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Geometry converter default constructor

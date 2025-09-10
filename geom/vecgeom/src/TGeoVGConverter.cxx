@@ -17,7 +17,6 @@ Geometry converter to VecGeom
 #include "TGeoVGConverter.h"
 #include "TGeoVGShape.h"
 
-ClassImp(TGeoVGConverter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

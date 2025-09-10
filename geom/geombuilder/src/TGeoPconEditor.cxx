@@ -33,7 +33,6 @@ Editor for a TGeoPcon.
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TGeoPconEditor);
 
 enum ETGeoPconWid { kPCON_NAME, kPCON_NZ, kPCON_PHI1, kPCON_DPHI, kPCON_APPLY, kPCON_UNDO };
 
@@ -490,7 +489,6 @@ Utility frame used by TGeoPcon editor.
 
 */
 
-ClassImp(TGeoPconSection);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

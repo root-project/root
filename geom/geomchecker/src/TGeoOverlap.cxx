@@ -22,7 +22,6 @@
 
 #include "TGeoOverlap.h"
 
-ClassImp(TGeoOverlap);
 
 /** \class TGeoOverlap
 \ingroup Geometry_painter

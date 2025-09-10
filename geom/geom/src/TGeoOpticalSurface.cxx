@@ -24,7 +24,6 @@ This is a wrapper class to G4OpticalSurface
 #include "TGeoNode.h"
 #include "TGDMLMatrix.h"
 
-ClassImp(TGeoOpticalSurface);
 
 //_____________________________________________________________________________
 TGeoOpticalSurface::TGeoOpticalSurface(const char *name, ESurfaceModel model, ESurfaceFinish finish, ESurfaceType type,
@@ -351,7 +350,6 @@ void TGeoOpticalSurface::Print(Option_t *) const
    }
 }
 
-ClassImp(TGeoSkinSurface);
 
 //_____________________________________________________________________________
 void TGeoSkinSurface::Print(Option_t *) const
@@ -364,7 +362,6 @@ void TGeoSkinSurface::Print(Option_t *) const
    printf("*** skinsurface: %s   surfaceproperty: %s   volumeref: %s \n", GetName(), GetTitle(), fVolume->GetName());
 }
 
-ClassImp(TGeoBorderSurface);
 
 //_____________________________________________________________________________
 void TGeoBorderSurface::Print(Option_t *) const

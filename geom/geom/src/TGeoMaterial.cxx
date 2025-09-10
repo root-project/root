@@ -52,7 +52,6 @@ to be called before creating the TGeoManager instance:
 
 // statics and globals
 
-ClassImp(TGeoMaterial);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -771,7 +770,6 @@ Mixtures of elements.
 
 */
 
-ClassImp(TGeoMixture);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
