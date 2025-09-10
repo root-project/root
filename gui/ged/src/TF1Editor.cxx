@@ -31,7 +31,6 @@ GUI for TF1 attributes and parameters.
 #include "TVirtualPad.h"
 
 
-ClassImp(TF1Editor);
 
 enum ETF1Wid {
    kTF1_TIT,  kTF1_NPX,

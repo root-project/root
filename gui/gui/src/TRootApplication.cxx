@@ -27,7 +27,6 @@ the TApplication class (since all graphic will go via TVirtualX).
 #include "TGClient.h"
 #include "TVirtualX.h"
 
-ClassImp(TRootApplication);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create ROOT application environment.

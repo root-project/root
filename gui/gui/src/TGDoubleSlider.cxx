@@ -82,9 +82,6 @@ GetPosition() to retrieve the position of the slider.
 #include <iostream>
 
 
-ClassImp(TGDoubleSlider);
-ClassImp(TGDoubleVSlider);
-ClassImp(TGDoubleHSlider);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slider constructor.

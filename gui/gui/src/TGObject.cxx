@@ -36,7 +36,6 @@ is based on the XClass'95 code (see Copyleft in source).
 #include "TImage.h"
 #include "TROOT.h"
 
-ClassImp(TGObject);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGObject destructor.

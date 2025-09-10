@@ -75,10 +75,6 @@ and the signal:
 
 #include <iostream>
 
-ClassImp(TGColorFrame);
-ClassImp(TG16ColorSelector);
-ClassImp(TGColorPopup);
-ClassImp(TGColorSelect);
 
 
 ////////////////////////////////////////////////////////////////////////////////

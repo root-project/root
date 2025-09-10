@@ -52,7 +52,6 @@ event messages:
 #include "RConfigure.h"
 #include "TVirtualX.h"
 
-ClassImp(TGViewFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a editor frame.
@@ -83,7 +82,6 @@ TGViewFrame::TGViewFrame(TGView *v, UInt_t w, UInt_t h, UInt_t options,
 }
 
 
-ClassImp(TGView);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an editor view, containing an TGEditorFrame and (optionally)

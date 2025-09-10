@@ -26,7 +26,6 @@ Implements GUI for editing CurlyLine attributes: shape, size, angle.
 #include "TCurlyLine.h"
 #include <iostream>
 
-ClassImp(TCurlyLineEditor);
 
 enum ECurlyLineWid {
    kCRLL_AMPL,

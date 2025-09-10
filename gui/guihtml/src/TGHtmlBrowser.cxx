@@ -48,7 +48,6 @@ A very simple HTML browser.
 */
 
 
-ClassImp(TGHtmlBrowser);
 
 enum EMyMessageTypes {
    kM_FILE_OPEN,

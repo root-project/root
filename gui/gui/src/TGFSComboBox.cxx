@@ -47,8 +47,6 @@ TGGC         *TGTreeLBEntry::fgDefaultGC = nullptr;
 
 //--- this is temp here...
 
-ClassImp(TGTreeLBEntry);
-ClassImp(TGFSComboBox);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a tree (i.e. entry can be indented) listbox entry.
