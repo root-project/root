@@ -20,7 +20,6 @@
 
 #include <vector>
 
-ClassImp(TBasketSQL);
 
 /** \class TBasketSQL
 \ingroup tree

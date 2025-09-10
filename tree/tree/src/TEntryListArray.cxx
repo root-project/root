@@ -74,7 +74,6 @@ TEntryListArray's:
 #include "TList.h"
 #include <iostream>
 
-ClassImp(TEntryListArray);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize data members, called by Reset

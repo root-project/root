@@ -49,7 +49,6 @@
 */
 // clang-format on
 
-ClassImp(ROOT::Internal::TTreeReaderValueBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a tree value reader and register it with the reader object.

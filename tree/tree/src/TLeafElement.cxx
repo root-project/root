@@ -22,7 +22,6 @@ a TStreamerInfo (i.e. using TBranchElement).
 #include "Bytes.h"
 #include "TBuffer.h"
 
-ClassImp(TLeafElement);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for LeafObject.

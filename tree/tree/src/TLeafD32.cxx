@@ -22,7 +22,6 @@ A TLeaf for a 24 bit truncated floating point data type.
 #include "TStreamerElement.h"
 #include <iostream>
 
-ClassImp(TLeafD32);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for LeafD32.

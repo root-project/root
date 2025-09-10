@@ -26,7 +26,6 @@ Implement TBuffer for a SQL backend.
 #include <iostream>
 #include <limits>
 
-ClassImp(TBufferSQL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
