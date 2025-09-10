@@ -25,7 +25,6 @@
 #include <cerrno>
 
 
-ClassImp(TPosixCondition);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create Condition variable. Ctor must be given a pointer to an

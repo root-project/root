@@ -18,7 +18,6 @@
 #include <cstdlib>
 #include <iostream>
 
-ClassImp(TAttAxis);
 
 /** \class TAttAxis
 \ingroup Base

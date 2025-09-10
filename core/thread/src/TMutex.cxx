@@ -25,7 +25,6 @@
 #include <cerrno>
 #include "TError.h"
 
-ClassImp(TMutex);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a mutex lock. The actual mutex implementation will be

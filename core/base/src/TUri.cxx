@@ -44,7 +44,6 @@ const char* const kURI_unreserved   = "[[:alpha:][:digit:]\\-._~]";
 //const char* const kURI_subdelims    = "[!$&'()*+,;=]";
 
 
-ClassImp(TUri);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor that calls SetUri with a complete URI.

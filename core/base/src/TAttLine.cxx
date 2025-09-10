@@ -18,7 +18,6 @@
 #include <cmath>
 #include <iostream>
 
-ClassImp(TAttLine);
 using std::sqrt;
 
 /** \class TAttLine

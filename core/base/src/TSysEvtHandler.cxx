@@ -19,10 +19,6 @@ Abstract base class for handling system events.
 #include "TSystem.h"
 
 
-ClassImp(TSysEvtHandler);
-ClassImp(TFileHandler);
-ClassImp(TSignalHandler);
-ClassImp(TStdExceptionHandler);
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -22,7 +22,6 @@
 
 TThreadFactory *gThreadFactory = nullptr;
 
-ClassImp(TThreadFactory);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TThreadFactory ctor only called by derived classes.
