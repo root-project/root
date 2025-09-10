@@ -51,7 +51,6 @@ TMinuit * TMinuitMinimizer::fgMinuit = nullptr;
 bool TMinuitMinimizer::fgUsed = false;
 bool TMinuitMinimizer::fgUseStaticMinuit = true;   // default case use static Minuit instance
 
-ClassImp(TMinuitMinimizer);
 
 
 TMinuitMinimizer::TMinuitMinimizer(ROOT::Minuit::EMinimizerType type, unsigned int ndim ) :
