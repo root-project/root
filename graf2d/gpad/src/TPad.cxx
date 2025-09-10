@@ -67,8 +67,6 @@ static Int_t gReadLevel = 0;
 
 Int_t TPad::fgMaxPickDistance = 5;
 
-ClassImpQ(TPad)
-
 /** \class TPad
 \ingroup gpad
 

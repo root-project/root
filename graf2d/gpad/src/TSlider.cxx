@@ -16,7 +16,6 @@
 #include <cstring>
 #include <iostream>
 
-ClassImp(TSlider);
 
 /** \class TSlider
 \ingroup gpad

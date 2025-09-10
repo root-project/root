@@ -47,7 +47,6 @@ const Int_t kIsBasic     = BIT(21);
 
 static Float_t gXsize, gYsize, gDx, gDy, gLabdx, gLabdy, gDxx, gCsize;
 
-ClassImp(TClassTree);
 
 /** \class TClassTree
 \ingroup gpad

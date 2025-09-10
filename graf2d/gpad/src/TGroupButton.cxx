@@ -22,7 +22,6 @@
 #include <cstring>
 #include <iostream>
 
-ClassImp(TGroupButton);
 
 
 /** \class TGroupButton

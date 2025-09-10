@@ -18,7 +18,6 @@
 #include "TVirtualX.h"
 #include "TPolyLine.h"
 
-ClassImp(TPolyLine);
 
 /** \class TPolyLine
 \ingroup BasicGraphics

@@ -21,7 +21,6 @@
 #include "TMath.h"
 #include "TPoint.h"
 
-ClassImp(TBox);
 
 /** \class TBox
 \ingroup BasicGraphics

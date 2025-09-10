@@ -14,7 +14,6 @@
 
 #include <iostream>
 
-ClassImp(TArc);
 
 /** \class TArc
 \ingroup BasicGraphics

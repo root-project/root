@@ -28,7 +28,6 @@ const char *kDStr = "DRAWNBUTTON";
 const char *kSStr = "SEPARATOR";
 
 
-ClassImp(TControlBarButton);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default control bar button ctor.

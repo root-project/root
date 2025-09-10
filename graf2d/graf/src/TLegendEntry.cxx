@@ -16,7 +16,6 @@
 #include "TROOT.h"
 #include <iostream>
 
-ClassImp(TLegendEntry);
 
 /** \class TLegendEntry
 \ingroup BasicGraphics

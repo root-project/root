@@ -12,7 +12,6 @@
 
 #include "TPoints.h"
 
-ClassImp(TPoints);
 
 /** \class TPoints
 \ingroup BasicGraphics

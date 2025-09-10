@@ -58,7 +58,6 @@ End_Macro
 #include "TGraphPolar.h"
 #include "TGraphPolargram.h"
 
-ClassImp(TGraphPolar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraphPolar default constructor.

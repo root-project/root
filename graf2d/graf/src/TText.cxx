@@ -26,7 +26,6 @@
 #include <cstdlib>
 #include <iostream>
 
-ClassImp(TText);
 
 
 /** \class TText

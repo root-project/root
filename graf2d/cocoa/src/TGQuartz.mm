@@ -47,7 +47,6 @@
 // To scale fonts to the same size as the TTF version
 const Float_t kScale = 0.93376068;
 
-ClassImp(TGQuartz)
 
 namespace X11 = ROOT::MacOSX::X11;
 namespace Quartz = ROOT::Quartz;

@@ -33,7 +33,6 @@
 Int_t TSVG::fgLineJoin = 0;
 Int_t TSVG::fgLineCap  = 0;
 
-ClassImp(TSVG);
 
 /** \class TSVG
 \ingroup PS

@@ -23,7 +23,6 @@
 #include "TLatex.h"
 #include "strlcpy.h"
 
-ClassImp(TPaveStats);
 
 /** \class TPaveStats
 \ingroup BasicGraphics

@@ -15,7 +15,6 @@
 #include <iostream>
 #include <cstring>
 
-ClassImp(TPieSlice);
 
 /** \class TPieSlice
 \ingroup BasicGraphics

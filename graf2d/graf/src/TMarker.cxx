@@ -22,7 +22,6 @@
 #include "TText.h"
 #include "snprintf.h"
 
-ClassImp(TMarker);
 
 
 /** \class TMarker

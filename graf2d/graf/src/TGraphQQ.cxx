@@ -14,7 +14,6 @@
 #include "TF1.h"
 #include "TMath.h"
 
-ClassImp(TGraphQQ);
 
 /** \class TGraphQQ
 \ingroup BasicGraphics
