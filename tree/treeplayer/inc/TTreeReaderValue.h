@@ -103,6 +103,7 @@ public:
    virtual ~TTreeReaderValueBase();
 
 protected:
+   TTreeReaderValueBase() = default;
    TTreeReaderValueBase(TTreeReader *reader, const char *branchname, TDictionary *dict, bool opaqueRead = false);
    TTreeReaderValueBase(const TTreeReaderValueBase &);
    TTreeReaderValueBase &operator=(const TTreeReaderValueBase &);
@@ -114,7 +115,7 @@ protected:
    virtual void CreateProxy();
    static const char *GetBranchDataType(TBranch *branch, TDictionary *&dict, TDictionary const *curDict);
 
-   virtual const char *GetDerivedTypeName() const = 0;
+   virtual const char *GetDerivedTypeName() const { return nullptr; };
 
    Detail::TBranchProxy *GetProxy() const { return fProxy; }
 
