@@ -31,7 +31,6 @@
 #include <cstdlib>
 #include <cstring>
 
-ClassImp(TXMLEngine);
 
 struct SXmlAttr_t {
    SXmlAttr_t *fNext;

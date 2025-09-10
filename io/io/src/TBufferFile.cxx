@@ -56,7 +56,6 @@ const Version_t kMaxVersion     = 0x3FFF;      // highest possible version numbe
 const Int_t  kMapOffset         = 2;   // first 2 map entries are taken by null obj and self obj
 
 
-ClassImp(TBufferFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Thread-safe check on StreamerInfos of a TClass

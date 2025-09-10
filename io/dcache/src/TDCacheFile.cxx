@@ -53,7 +53,6 @@ static const char* const DCAP_PREFIX = "dcap:";
 static const size_t DCAP_PREFIX_LEN = strlen(DCAP_PREFIX);
 
 
-ClassImp(TDCacheFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a dCache file object.

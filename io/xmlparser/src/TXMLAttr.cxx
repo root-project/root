@@ -19,5 +19,4 @@ and the value of the attribute.
 
 #include "TXMLAttr.h"
 
-ClassImp(TXMLAttr);
 

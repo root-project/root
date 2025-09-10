@@ -51,7 +51,6 @@ namespace {
    } gInitAndCleanupTheXMLParserOnlyOnceCommaEver;
 }
 
-ClassImp(TXMLParser);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initializes parser variables.
