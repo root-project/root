@@ -2,7 +2,6 @@
 
 #include <iostream>
 
-ClassImp(Context)
 
 //_____________________________________________________________________________
 void Context::Print(Option_t *) const

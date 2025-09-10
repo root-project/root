@@ -7,7 +7,6 @@
 #include "TFile.h"
 #include "TTree.h"
 
-ClassImp(Reconstruction)
 //const bool Reconstruction::gInitted = Reconstruction::StaticInit();
 
 

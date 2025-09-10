@@ -6,9 +6,6 @@
 
 namespace std {} using namespace std;
 
-ClassImp(Simple)
-ClassImp(Simple)
-ClassImp(Simple)
 
 Simple::~Simple() {
 // Destructor

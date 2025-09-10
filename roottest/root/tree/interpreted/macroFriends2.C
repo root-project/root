@@ -66,8 +66,6 @@ class MyData {
 
 
 #if !defined (__CINT__) || defined (__MAKECINT__)
-ClassImp(MyClass);
-ClassImp(MyData);
 #endif
 
 //______________________________________________________________________________

@@ -16,7 +16,6 @@
 #include <iomanip>
 using namespace std;
 
-ClassImp(SEIdAltLItem)
 
 //______________________________________________________________________________
 std::ostream& operator<<(std::ostream& os, const SEIdAltLItem& item)

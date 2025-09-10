@@ -1,7 +1,6 @@
 
 #include "MyClass.h"
 
-ClassImp(MyClass)
 
 void MyClass::Print(Option_t* /* option */) const
 {

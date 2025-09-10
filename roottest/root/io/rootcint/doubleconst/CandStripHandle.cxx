@@ -1,6 +1,5 @@
 #include "CandStripHandle.h"
 
-ClassImp(CandStripHandle)
 
 //______________________________________________________________________
 CandStripHandle::CandStripHandle()

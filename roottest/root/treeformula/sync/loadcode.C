@@ -87,9 +87,7 @@ public:
 
 using std::cout;     using std::endl;
 
-// #4 C/C++ macro ClassImp
-ClassImp(Jet)
-ClassImp(Event)
+// #4 C/C++ macro Class Imp
 
 void jetwrite(const char* ofname="jetclass.root", Int_t num=5)
 {

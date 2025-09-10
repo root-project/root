@@ -3,5 +3,3 @@
 
 
 
-ClassImp(foo)
-ClassImp(foobj)
