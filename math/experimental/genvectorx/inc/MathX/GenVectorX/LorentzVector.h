@@ -365,6 +365,29 @@ public:
    Scalar Eta() const { return fCoordinates.Eta(); }
 
    /**
+      deltaRapidity between this and vector v
+      \f[ \Delta R = \sqrt { \Delta \eta ^2 + \Delta \phi ^2 } \f]
+      \param useRapidity true to use Rapidity(), false to use Eta()
+   */
+   template <class OtherLorentzVector>
+   Scalar DeltaR(const OtherLorentzVector &v, const bool useRapidity = false) const
+   {
+      const double delta = useRapidity ? Rapidity() - v.Rapidity() : Eta() - v.Eta();
+      double dphi = Phi() - v.Phi();
+      // convert dphi angle to the interval (-PI,PI]
+      if (dphi > M_PI || dphi <= -M_PI) {
+         if (dphi > 0) {
+            int n = static_cast<int>(dphi / (2 * M_PI) + 0.5);
+            dphi -= (2 * M_PI) * n;
+         } else {
+            int n = static_cast<int>(0.5 - dphi / (2 * M_PI));
+            dphi += (2 * M_PI) * n;
+         }
+      }
+      return math_sqrt(delta * delta + dphi * dphi);
+   }
+
+   /**
       get the spatial components of the Vector in a
       DisplacementVector based on Cartesian Coordinates
    */
