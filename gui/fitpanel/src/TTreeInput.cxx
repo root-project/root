@@ -31,7 +31,6 @@ enum ETreeInput {
    kTI_TEVARS, kTI_TECUTS
 };
 
-ClassImp(TTreeInput);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create simple input dialog.

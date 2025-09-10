@@ -24,7 +24,6 @@ dialog window). There is on OK button to popdown the dialog.
 #include "TGTextView.h"
 
 
-ClassImp(TRootHelpDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a help text dialog.

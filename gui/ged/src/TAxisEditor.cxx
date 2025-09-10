@@ -43,7 +43,6 @@ Implements GUI for axis attributes.
 #include "TVirtualPad.h"
 #include "TStyle.h"
 
-ClassImp(TAxisEditor);
 
 enum EAxisWid {
    kCOL_AXIS,

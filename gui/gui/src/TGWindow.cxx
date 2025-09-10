@@ -36,8 +36,6 @@ ROOT GUI Window base class.
 #include "TError.h"
 #include "TSystem.h"
 
-ClassImp(TGWindow);
-ClassImp(TGUnknownWindowHandler);
 
 Int_t TGWindow::fgCounter = 0;
 

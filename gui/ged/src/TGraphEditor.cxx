@@ -35,7 +35,6 @@ Check box: 'Marker On/Off' Set Marker visible/invisible
 #include "TGraphErrors.h"
 #include "TVirtualX.h"
 
-ClassImp(TGraphEditor);
 
 enum EGraphWid {
    kShape = 0,

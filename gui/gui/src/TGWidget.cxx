@@ -32,4 +32,3 @@ inheritance), see for example TGButton.
 
 #include "TGWidget.h"
 
-ClassImp(TGWidget);

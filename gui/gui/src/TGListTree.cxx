@@ -77,9 +77,6 @@ const TGPicture *TGListTree::fgCheckedPic = nullptr;
 const TGPicture *TGListTree::fgUncheckedPic = nullptr;
 
 
-ClassImp(TGListTreeItem);
-ClassImp(TGListTreeItemStd);
-ClassImp(TGListTree);
 
 /******************************************************************************/
 /******************************************************************************/

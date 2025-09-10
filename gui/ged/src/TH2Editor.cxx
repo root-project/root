@@ -128,7 +128,6 @@ Histogram drawn from an ntuple:
 #include "TVirtualX.h"
 
 
-ClassImp(TH2Editor);
 
 enum ETH2Wid {
    kTH2_TITLE,

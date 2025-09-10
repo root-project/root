@@ -29,7 +29,6 @@ Implements GUI for editing line attributes.
 #include "TCanvas.h"
 #include "TROOT.h"
 
-ClassImp(TAttLineEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of line attributes GUI.
