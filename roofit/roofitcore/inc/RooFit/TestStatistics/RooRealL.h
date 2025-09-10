@@ -16,7 +16,7 @@
 #include "RooAbsReal.h"
 #include "RooSetProxy.h"
 
-#include "Rtypes.h" // ClassDef, ClassImp
+#include "Rtypes.h" // ClassDef
 
 #include <memory> // shared_ptr
 
