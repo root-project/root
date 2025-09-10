@@ -31,7 +31,6 @@ Use it in scope-blocks like:
 #include "TFile.h"
 #include <time.h>
 
-ClassImp(TLockFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

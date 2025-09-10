@@ -152,7 +152,6 @@ Long64_t sqlio::atol64(const char *value)
 \ingroup IO
 */
 
-ClassImp(TSQLColumnData);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// normal constructor of TSQLColumnData class
@@ -172,7 +171,6 @@ TSQLColumnData::TSQLColumnData(const char *name, Long64_t value)
    fValue.Form("%lld", value);
 }
 
-ClassImp(TSQLTableData);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// normal constructor
@@ -322,7 +320,6 @@ TObjArray *TSQLTableData::TakeColInfos()
 
 //________________________________________________________________________
 
-ClassImp(TSQLStructure);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
