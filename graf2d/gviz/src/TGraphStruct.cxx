@@ -32,7 +32,6 @@ lt_symlist_t lt_preloaded_symbols[] = {
 };
 #endif
 
-ClassImp(TGraphStruct);
 
 /** \class TGraphStruct
 \ingroup gviz

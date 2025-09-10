@@ -37,7 +37,6 @@ Double_t TCurlyLine::fgDefaultWaveLength = 0.02;
 Double_t TCurlyLine::fgDefaultAmplitude  = 0.01;
 Bool_t   TCurlyLine::fgDefaultIsCurly    = kTRUE;
 
-ClassImp(TCurlyLine);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

@@ -16,7 +16,6 @@
 #include "TLatex.h"
 #include "TVirtualPad.h"
 
-ClassImp(TPaveLabel);
 
 /** \class TPaveLabel
 \ingroup BasicGraphics

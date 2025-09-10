@@ -17,7 +17,6 @@
 #include <cstring>
 #include <iostream>
 
-ClassImp(TButton);
 
 /** \class TButton
 \ingroup gpad

@@ -23,7 +23,6 @@
 #include "strlcpy.h"
 #include "snprintf.h"
 
-ClassImp(TInspectCanvas);
 
 
 /** \class TInspectorObject
