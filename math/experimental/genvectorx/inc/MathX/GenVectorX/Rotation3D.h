@@ -33,6 +33,8 @@
 #include "MathX/GenVectorX/RotationYfwd.h"
 #include "MathX/GenVectorX/RotationZfwd.h"
 
+#include "Math/GenVector/GenVector_exception.h"
+
 #include <algorithm>
 #include <cassert>
 #include <iostream>
@@ -369,6 +371,23 @@ public:
    }
 
    // =========== operations ==============
+
+   /**
+      Access operator, used to have direct access to rotation matrix's entries
+      \param i row index in {0,1,2}
+      \param j column index in {0,1,2}
+   */
+   Scalar operator()(size_t i, size_t j) const
+   {
+      if (i < 3 && j < 3)
+         return fM[i + 3 * j];
+#if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
+      else
+         GenVector_Throw("Rotation3D::operator(size_t i, size_t j):\n"
+                         "    indices i and j must range in {0,1,2}");
+#endif
+      return 0.0;
+   }
 
    /**
       Rotation operation on a displacement vector in any coordinate system
