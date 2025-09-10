@@ -24,7 +24,6 @@
 #include "TGraphSmooth.h"
 #include "TGraphErrors.h"
 
-ClassImp(TGraphSmooth);
 
 //______________________________________________________________________
 /** \class TGraphSmooth

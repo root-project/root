@@ -17,7 +17,6 @@
 #include "TVirtualFitter.h"
 #include "THLimitsFinder.h"
 
-ClassImp(TGraph2DErrors);
 
 /** \class TGraph2DErrors
     \ingroup Graphs

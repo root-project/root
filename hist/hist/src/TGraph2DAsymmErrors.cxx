@@ -18,7 +18,6 @@
 #include "TVirtualFitter.h"
 #include "THLimitsFinder.h"
 
-ClassImp(TGraph2DAsymmErrors);
 
 /** \class TGraph2DAsymmErrors
     \ingroup Graphs

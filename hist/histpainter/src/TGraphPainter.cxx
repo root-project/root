@@ -47,7 +47,6 @@ static Int_t    gHighlightPoint  = -1;         // highlight point of graph
 static TGraph  *gHighlightGraph  = nullptr;    // pointer to graph with highlight point
 static std::unique_ptr<TMarker> gHighlightMarker;    // highlight marker
 
-ClassImp(TGraphPainter);
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -14,7 +14,6 @@
 
 THLimitsFinder *THLimitsFinder::fgLimitsFinder = nullptr;
 
-ClassImp(THLimitsFinder);
 
 /** \class THLimitsFinder
     \ingroup Histograms

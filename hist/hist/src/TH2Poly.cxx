@@ -19,7 +19,6 @@
 #include "TMath.h"
 #include <cassert>
 
-ClassImp(TH2Poly);
 
 /** \class TH2Poly
     \ingroup Histograms

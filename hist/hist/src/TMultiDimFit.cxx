@@ -420,7 +420,6 @@ static void mdfHelper(int&, double*, double&, double*, int);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(TMultiDimFit);
 
 //____________________________________________________________________
 // Static instance. Used with mdfHelper and TMinuit
