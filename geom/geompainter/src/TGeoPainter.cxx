@@ -56,7 +56,6 @@ using TBuffer3D mechanism.
 #include "TVirtualViewer3D.h"
 #include "TVirtualX.h"
 
-ClassImp(TGeoPainter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

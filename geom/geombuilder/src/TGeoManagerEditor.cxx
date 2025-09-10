@@ -83,7 +83,6 @@ following categories:
 #include "TGeoManagerEditor.h"
 #include "TGedEditor.h"
 
-ClassImp(TGeoManagerEditor);
 
 enum ETGeoVolumeWid {
    kMANAGER_NAME,
