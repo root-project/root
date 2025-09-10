@@ -21,7 +21,6 @@ and event tracing.
 #include "TThreadSlots.h"
 
 
-ClassImp(TVirtualPerfStats);
 
 
 static const char *gEventTypeNames[] = {

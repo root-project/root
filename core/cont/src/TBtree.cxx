@@ -172,7 +172,6 @@ item's own key).
 #include <stdlib.h>
 
 
-ClassImp(TBtree);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a B-tree of certain order (by default 3).
@@ -569,7 +568,6 @@ TBtNode::~TBtNode()
 // Iterator of btree.
 */
 
-ClassImp(TBtreeIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a B-tree iterator.

@@ -18,7 +18,6 @@ Array of chars or bytes (8 bits per element).
 #include "TBuffer.h"
 
 
-ClassImp(TArrayC);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TArrayC ctor.

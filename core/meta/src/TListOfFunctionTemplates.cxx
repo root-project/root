@@ -24,7 +24,6 @@ unloaded function.
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
 
-ClassImp(TListOfFunctionTemplates);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

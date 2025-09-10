@@ -21,7 +21,6 @@ modern alternatives that dynamically cast the derived class.
 #include "TIterator.h"
 #include "TError.h"
 
-ClassImp(TIterator);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compare two iterator objects.

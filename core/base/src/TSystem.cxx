@@ -73,7 +73,6 @@ static Int_t  gLibraryVersionMax = 256;
 
 // Pin vtable
 ProcInfo_t::~ProcInfo_t() {}
-ClassImp(TProcessEventTimer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create async event processor timer. Delay is in milliseconds.
@@ -105,7 +104,6 @@ Bool_t TProcessEventTimer::ProcessEvents()
 
 
 
-ClassImp(TSystem);
 
 TVirtualMutex* gSystemMutex = nullptr;
 

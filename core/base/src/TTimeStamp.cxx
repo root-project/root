@@ -51,7 +51,6 @@ NOTE: the use of time_t (and its default implementation as a 32 int)
 
 #include <cmath>
 
-ClassImp(TTimeStamp);
 
 
 TVirtualMutex *gTimeMutex = nullptr; // local mutex

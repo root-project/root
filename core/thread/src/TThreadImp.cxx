@@ -22,4 +22,3 @@
 
 #include "TThreadImp.h"
 
-ClassImp(TThreadImp);

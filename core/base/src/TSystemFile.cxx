@@ -22,7 +22,6 @@ The information is used by the browser (see TBrowser).
 #include "TEnv.h"
 
 
-ClassImp(TSystemFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TSystemFile default constructor

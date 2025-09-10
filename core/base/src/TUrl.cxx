@@ -54,7 +54,6 @@ namespace {
 }
 #endif
 
-ClassImp(TUrl);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Parse url character string and split in its different subcomponents.
