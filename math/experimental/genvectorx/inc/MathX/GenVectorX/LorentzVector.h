@@ -772,7 +772,7 @@ private:
 /**
    Scale of a LorentzVector with a scalar quantity a
    \param a  scalar quantity of type a
-   \param v  mathcore::LorentzVector based on any coordinate system
+   \param v  LorentzVector based on any coordinate system
    \return a new mathcoreLorentzVector q = v * a same type as v
  */
 template <class CoordSystem>
