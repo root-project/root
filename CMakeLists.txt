@@ -14,6 +14,14 @@ if(WIN32)
 endif()
 if(CMAKE_HOST_APPLE AND (NOT CMAKE_OSX_SYSROOT OR CMAKE_OSX_SYSROOT STREQUAL ""))
   # The SYSROOT *must* be set before the project() call
+  # TODO: The following code is *necessary* on a standard MacOS platform (e.g. an Apple MacOS machine), but may not
+  # be as necessary on other MacOS platforms (e.g. Nix). A PR removed the following code https://github.com/root-project/root/pull/19718
+  # and the CI was happy with it, but unfortunately it was working simply because during our CI run jobs something is
+  # setting the SDKROOT environment variable, which implicitly sets the CMAKE_OSX_SYSROOT variable. This was highlighted
+  # by another PR https://github.com/root-project/root/pull/19855. On a standard Apple MacOS system, where the SDKROOT
+  # variable is not set by default, the build of ROOT would fail without the following code. It is unclear what is setting
+  # the SDKROOT variable only during our CI jobs, logging to the same CI machines and launching a build manually shows
+  # the same build error.
   find_program(XCRUN_EXECUTABLE xcrun)
   if(EXISTS ${XCRUN_EXECUTABLE})
     execute_process(COMMAND ${XCRUN_EXECUTABLE} --sdk macosx --show-sdk-path
