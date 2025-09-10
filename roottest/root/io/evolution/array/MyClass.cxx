@@ -7,7 +7,6 @@
 #include <Riostream.h>
 #include <TObject.h>
 
-ClassImp(MyClass)
 
 #if MYCLASS == 1
 // old version, classdef = 1

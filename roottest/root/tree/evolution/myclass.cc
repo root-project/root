@@ -6,4 +6,3 @@
 #include "myclass2.h"
 #endif
 
-ClassImp(myclass) 

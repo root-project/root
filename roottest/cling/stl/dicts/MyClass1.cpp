@@ -1,5 +1,4 @@
 #include "MyClass1.h"
-ClassImp(MyClass1)
 
 MyClass1::MyClass1():
   m_id( 0 ),

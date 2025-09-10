@@ -1,7 +1,6 @@
 #include "CustomStreamClass.h"
 #include "TBuffer.h"
 
-ClassImp(MyClass)
 
 #ifdef CUSTOM_STREAMER
 void MyClass::Streamer(TBuffer &R__b)

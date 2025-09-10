@@ -3,6 +3,5 @@
 
 #include "ConfigRecord.h"
 
-ClassImp(ConfigRecord)
 
 #endif

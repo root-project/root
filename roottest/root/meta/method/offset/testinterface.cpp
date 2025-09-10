@@ -2,7 +2,6 @@
 
 #include "testobject.h"
 
-ClassImp(TestInterface);
 
 void TestInterface::foo() const {
    //printf("<TestInterface>Performing dynamic_cast of thisptr %lx to TObject inside TestInterface...\n", (Longptr_t) this);

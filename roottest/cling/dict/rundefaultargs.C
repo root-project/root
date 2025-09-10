@@ -88,7 +88,6 @@ private:
    ClassDef(TDefaultArgs,0);
 };
 
-ClassImp(TDefaultArgs)
 
 void rundefaultargs() 
 {

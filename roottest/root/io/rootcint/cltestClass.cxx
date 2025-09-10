@@ -10,10 +10,6 @@
 #include <TObjString.h>
 
 
-ClassImp(TestClass)
-ClassImpT(TestClass::IE_t, T)
-
-
 //________________________________________________________________________
 TestClass::TestClass() 
    : TObject(),

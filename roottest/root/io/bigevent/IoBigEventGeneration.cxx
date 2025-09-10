@@ -70,12 +70,6 @@
 #include "Event.h"
 
 
-ClassImp(EventHeader)
-ClassImp(Event)
-ClassImp(Track)
-ClassImp(UShortVector)
-ClassImp(BigTrack)
-ClassImp(HistogramManager)
 
 TClonesArray *Event::fgTracks = 0;
 TH1F *Event::fgHist = 0;

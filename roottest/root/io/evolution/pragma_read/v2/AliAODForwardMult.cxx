@@ -21,7 +21,6 @@
 #include <TObjString.h>
 #include <TObjArray.h>
 // #include "AliLog.h"
-ClassImp(AliAODForwardMult)
 #ifdef DOXY_INPUT
 ; // For Emacs 
 #endif

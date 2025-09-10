@@ -4,13 +4,10 @@
 
 const double dvalue = 33.3;
 
-ClassImp(MySpace::MyTemplate<const double*>)
 
-templateClassImp(MySpace::MyTemplate)
 
 namespace MySpace {
 
-  ClassImp(MyTemplate<int>)
 
   static MyTemplate<int> dummy(1);
   static MyTemplate <const double*> dummy4(&dvalue);

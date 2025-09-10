@@ -1,6 +1,5 @@
 #include "testobject.h"
 
-ClassImp(TestObj);
 
 TestObj::TestObj()
 {

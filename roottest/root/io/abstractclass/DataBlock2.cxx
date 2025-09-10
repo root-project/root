@@ -1,6 +1,5 @@
 #include "DataBlock2.h"
 
-ClassImp(DataBlock2)
 
 DataBlock2::DataBlock2()
   : DataBlockBase()

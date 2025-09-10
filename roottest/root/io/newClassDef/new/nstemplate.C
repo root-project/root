@@ -3,12 +3,9 @@
 
 const double dvalue = 33.3;
 
-ClassImp(MySpace::MyTemplate<const double*>)
 
-templateClassImp(MySpace::MyTemplate)
 
    //problem should be in namespace
-  ClassImp(MySpace::MyTemplate<int>)
 
 namespace MySpace {
 

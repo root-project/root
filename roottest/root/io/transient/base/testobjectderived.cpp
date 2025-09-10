@@ -1,6 +1,5 @@
 #include "testobjectderived.h"
 
-ClassImp(TestObj);
 
 TestObjDerived::TestObjDerived() : TestObj()
 {

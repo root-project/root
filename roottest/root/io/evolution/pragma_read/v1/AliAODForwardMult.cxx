@@ -22,7 +22,6 @@
 #include <TObjArray.h>
 // #include "AliLog.h"
 #define AliWarningGeneral(X, fmt, Y) do { ::Warning((X), (fmt), (Y)); } while(false)
-ClassImp(AliAODForwardMult)
 #ifdef DOXY_INPUT
 ; // For Emacs
 #endif

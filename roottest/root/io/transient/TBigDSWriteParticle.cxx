@@ -8,7 +8,6 @@ Class to handle tracks witch clusters
 
 */
 
-ClassImp(TBigDSWriteParticle)
 
 TBigDSWriteParticle::TBigDSWriteParticle()
 {

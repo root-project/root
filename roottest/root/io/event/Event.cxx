@@ -82,10 +82,6 @@
 #include "TRefArray.h"
 
 
-ClassImp(EventHeader)
-ClassImp(Event)
-ClassImp(Track)
-ClassImp(HistogramManager)
 
 //______________________________________________________________________________
 Event::Event()

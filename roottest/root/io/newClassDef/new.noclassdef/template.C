@@ -4,13 +4,9 @@
 
 const double dvalue = 33.3;
 
-ClassImp( MyTemplate<const double*> )
 
 typedef  MyPairTemplate<int, double> type001;
-ClassImp( type001 )
 
-templateClassImp(MyTemplate)
-templateClassImp(MyPairTemplate)
 
 static MyTemplate<int> dummy(1);
 static MyPairTemplate<int,int> dummy2(1,2);

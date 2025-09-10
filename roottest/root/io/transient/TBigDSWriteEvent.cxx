@@ -15,7 +15,6 @@
 // Author: Ondrej Chvala, based on TWriteEvent and TBigDSWriteEvent by Michal Kreps
 //
 
-ClassImp(TBigDSWriteEvent)
 
 TBigDSWriteEvent::TBigDSWriteEvent()
 {
