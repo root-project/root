@@ -199,8 +199,8 @@ public:
          return math_sqrt(mm);
       } else {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-         GenVector::Throw("PtEtaPhiE4D::M() - Tachyonic:\n"
-                          "    Pt and Eta give P such that P^2 > E^2, so the mass would be imaginary");
+         GenVector_Throw("PtEtaPhiE4D::M() - Tachyonic:\n"
+                         "    Pt and Eta give P such that P^2 > E^2, so the mass would be imaginary");
 #endif
          return -math_sqrt(-mm);
       }
@@ -232,8 +232,8 @@ public:
          return math_sqrt(mm);
       } else {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-         GenVector::Throw("PtEtaPhiE4D::Mt() - Tachyonic:\n"
-                          "    Pt and Eta give Pz such that Pz^2 > E^2, so the mass would be imaginary");
+         GenVector_Throw("PtEtaPhiE4D::Mt() - Tachyonic:\n"
+                         "    Pt and Eta give Pz such that Pz^2 > E^2, so the mass would be imaginary");
 #endif
          return -math_sqrt(-mm);
       }

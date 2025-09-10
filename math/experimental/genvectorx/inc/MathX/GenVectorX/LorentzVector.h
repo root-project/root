@@ -645,7 +645,7 @@ public:
             return 0;
          else {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-            GenVector::Throw(
+            GenVector_Throw(
                "LorentzVector::Beta() - beta computed for LorentzVector with t = 0. Return an Infinite result");
 #endif
             return 1. / E();
@@ -653,7 +653,7 @@ public:
       }
       if (M2() <= 0) {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-         GenVector::Throw(
+         GenVector_Throw(
             "LorentzVector::Beta() - beta computed for non-timelike LorentzVector . Result is physically meaningless");
 #endif
       }
@@ -671,19 +671,19 @@ public:
             return 1;
          } else {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-            GenVector::Throw(
+            GenVector_Throw(
                "LorentzVector::Gamma() - gamma computed for LorentzVector with t = 0. Return a zero result");
 #endif
          }
       }
       if (t2 < v2) {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-         GenVector::Throw("LorentzVector::Gamma() - gamma computed for a spacelike LorentzVector. Imaginary result");
+         GenVector_Throw("LorentzVector::Gamma() - gamma computed for a spacelike LorentzVector. Imaginary result");
 #endif
          return 0;
       } else if (t2 == v2) {
 #if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
-         GenVector::Throw("LorentzVector::Gamma() - gamma computed for a lightlike LorentzVector. Infinite result");
+         GenVector_Throw("LorentzVector::Gamma() - gamma computed for a lightlike LorentzVector. Infinite result");
 #endif
       }
       return Scalar(1) / math_sqrt(Scalar(1) - v2 / t2);
