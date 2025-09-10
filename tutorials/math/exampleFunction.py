@@ -2,7 +2,7 @@
 ## \ingroup tutorial_math
 ## \notebook
 ## Example of using Python functions as inputs to numerical algorithms
-## using the ROOT Functor class. 
+## using the ROOT Functor class.
 ##
 ## \macro_image
 ## \macro_output
@@ -37,7 +37,7 @@ print("integral-1D value = ", value)
 expValue = 6
 if (not ROOT.TMath.AreEqualRel(value, expValue, 1.E-15)) :
    print("Error computing integral - computed value - different than expected, diff = ", value - expValue)
-   
+
 # example multi-dim function
 
 print("\n\nUse Functor for wrapping a multi-dimensional function, the Rosenbrock Function r(x,y) and find its minimum")
@@ -55,7 +55,7 @@ func2D = ROOT.Math.Functor(RosenbrockFunction,2)
 ### minimize multi-dim function using fitter class
 
 fitter = ROOT.Fit.Fitter()
-#use a numpy array to pass initial parameter array 
+#use a numpy array to pass initial parameter array
 initialParams = np.array([0.,0.], dtype='d')
 fitter.FitFCN(func2D, initialParams)
 fitter.Result().Print(ROOT.std.cout)
@@ -71,23 +71,18 @@ def g(x): return 2 * x
 
 gradFunc = ROOT.Math.GradFunctor1D(f, g)
 
-#check if ROOT has mathmore
-prevLevel = ROOT.gErrorIgnoreLevel
-ROOT.gErrorIgnoreLevel=ROOT.kFatal
-ret = ROOT.gSystem.Load("libMathMore") 
-ROOT.gErrorIgnoreLevel=prevLevel
-if (ret < 0) :
-   print("ROOT has not Mathmore")
-   print("derivative value at x = 1", gradFunc.Derivative(1) )
-
-else :
+#ROOT might be built without MathMore, so we might get an exception:
+try:
    rf = ROOT.Math.RootFinder(ROOT.Math.RootFinder.kGSL_NEWTON)
+   print("instantiate")
    rf.SetFunction(gradFunc, 3)
    rf.Solve()
    value = rf.Root()
    print("Found root value x0 : f(x0) = 0  :  ", value)
    if (value != 1):
       print("Error finding a ROOT of function f(x)=x^2-1")
+except Exception as e:
+   print(e)
 
 
 print("\n\nUse GradFunctor for making a function object implementing f(x,y) and df(x,y)/dx and df(x,y)/dy")
@@ -95,12 +90,12 @@ print("\n\nUse GradFunctor for making a function object implementing f(x,y) and 
 def RosenbrockDerivatives(xx, icoord):
   x = xx[0]
   y = xx[1]
-  #derivative w.r.t x 
+  #derivative w.r.t x
   if (icoord == 0) :
     return 2*(200*x*x*x-200*x*y+x-1)
-  else : 
+  else :
     return 200 * (y - x * x)
-    
+
 gradFunc2d = ROOT.Math.GradFunctor(RosenbrockFunction, RosenbrockDerivatives, 2)
 
 fitter = ROOT.Fit.Fitter()

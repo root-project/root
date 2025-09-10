@@ -179,6 +179,8 @@ TDirectory::TContext::~TContext()
 /// ~~~ {.cpp}
 ///     TDirectory::AddDirectory
 /// ~~~
+/// \note When ROOT::Experimental::IsImplicitObjectOwnershipEnabled() is off, these settings
+/// are without effect.
 
 void TDirectory::AddDirectory(Bool_t add)
 {
@@ -186,11 +188,13 @@ void TDirectory::AddDirectory(Bool_t add)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function: see TDirectory::AddDirectory for more comments.
-
+/// Check whether objects such as histograms or TGraphs2D should be owned by the current directory.
+/// \copydetails AddDirectory(Bool_t)
+/// \note ROOT::Experimental::IsImplicitObjectOwnershipEnabled() might lead to this
+/// setting being always off, since it has higher precedence.
 Bool_t TDirectory::AddDirectoryStatus()
 {
-   return fgAddDirectory;
+   return ROOT::Experimental::IsImplicitObjectOwnershipEnabled() && fgAddDirectory;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

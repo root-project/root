@@ -97,6 +97,11 @@ namespace ROOT {
    void DisableImplicitMT();
    Bool_t IsImplicitMTEnabled();
    UInt_t GetThreadPoolSize();
+   namespace Experimental {
+      void EnableImplicitObjectOwnership();
+      void DisableImplicitObjectOwnerhsip();
+      bool IsImplicitObjectOwnershipEnabled();
+   }
 }
 
 class TROOT : public TDirectory {

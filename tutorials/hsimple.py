@@ -40,6 +40,10 @@ hpx    = TH1F( 'hpx', 'This is the px distribution', 100, -4, 4 )
 hpxpy  = TH2F( 'hpxpy', 'py vs px', 40, -4, 4, 40, -4, 4 )
 hprof  = TProfile( 'hprof', 'Profile of pz versus px', 100, -4, 4, 0, 20 )
 ntuple = TNtuple( 'ntuple', 'Demo ntuple', 'px:py:pz:random:i' )
+# Add them to the output file. This is only necessary of ROOT's implicit object
+# ownership is off, but has no effect if it is on
+for obj in [hpx, hpxpy, hprof]:
+   obj.SetDirectory(hfile)
 
 # Set canvas/frame attributes.
 hpx.SetFillColor( 48 )
