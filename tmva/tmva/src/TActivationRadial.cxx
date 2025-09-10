@@ -36,7 +36,6 @@ Radial basis  activation function for ANN.
 #include <iostream>
 
 
-ClassImp(TMVA::TActivationRadial);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// evaluate gaussian

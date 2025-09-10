@@ -50,7 +50,6 @@ namespace TMVA {
    const Bool_t GeneticAlgorithm__DEBUG__ = kFALSE;
 }
 
-ClassImp(TMVA::GeneticAlgorithm);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

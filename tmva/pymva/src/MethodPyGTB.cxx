@@ -57,7 +57,6 @@ public:
 
 REGISTER_METHOD(PyGTB)
 
-ClassImp(MethodPyGTB);
 
 //_______________________________________________________________________
 MethodPyGTB::MethodPyGTB(const TString &jobName,

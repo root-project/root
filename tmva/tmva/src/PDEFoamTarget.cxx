@@ -49,7 +49,6 @@ phase space point during the foam build-up.
 
 #include "Rtypes.h"
 
-ClassImp(TMVA::PDEFoamTarget);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for streamer, user should not use it.

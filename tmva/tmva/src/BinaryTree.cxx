@@ -47,7 +47,6 @@ Base class for BinarySearch and Decision Trees.
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 
-ClassImp(TMVA::BinaryTree);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor for a yet "empty" tree. Needs to be filled afterwards

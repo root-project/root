@@ -60,7 +60,6 @@ build-up.
 
 class TString;
 
-ClassImp(TMVA::PDEFoamMultiTarget);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for streamer, user should not use it.
