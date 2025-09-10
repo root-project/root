@@ -337,7 +337,7 @@ void RFileDialog::ProcessMsg(unsigned connid, const std::string &arg)
 
 void RFileDialog::SetWorkingPath(const std::string &path)
 {
-   auto p = Browsable::RElement::ParsePath(path);
+   auto p = Browsable::RSysFile::GetWorkingPath(path);
    auto elem = fBrowsable.GetSubElement(p);
    if (elem) {
       fBrowsable.SetWorkingPath(p);
