@@ -17,69 +17,103 @@
 /** \class RooUniform
     \ingroup Roofit
 
-Flat p.d.f. in N dimensions or in 1D with explicit, fittable bounds.
+A uniform (flat) PDF in N dimensions with explicit, fittable bounds.
 
-This class can be used in two ways:
-1.  **Multi-dimensional (Legacy):** By providing a RooArgSet of observables in the constructor, it creates
-    a PDF that is uniform over the full range of all observables. This is the original behavior.
+This class defines a probability density function that is constant within a defined
+N-dimensional rectangular region and zero everywhere else. It can be used in two ways:
 
-2.  **1D with Fittable Bounds:** By providing a single observable (`x`) and two RooAbsReal
-    parameters for the lower (`x_low`) and upper (`x_up`) bounds, it creates a 1D PDF that is uniform
-    only between those bounds and zero everywhere else.
+1.  **N-Dimensional with Fittable Bounds (Recommended):**
+    By providing `RooArgSet`s for the observables, lower bounds, and upper bounds,
+    you can create a fully flexible N-dimensional PDF where the boundaries of the
+    uniform region are themselves fittable parameters. This is the standard way to
+    model a flat background with unknown boundaries.
 
-    Example of the 1D bounded mode:
+    Example of a 2D bounded mode:
     ```
+    // Define observables and their full range
     RooRealVar x("x", "x", 0, 10);
-    RooRealVar low("low", "low", 2, 0, 10);
-    RooRealVar high("high", "high", 8, 0, 10);
-    RooUniform bounded_uniform("bounded", "bounded", x, low, high);
+    RooRealVar y("y", "y", 0, 10);
+
+    // Define fittable parameters for the bounds
+    RooRealVar x_low("x_low", "x_low", 2, 0, 10);
+    RooRealVar x_high("x_high", "x_high", 8, 0, 10);
+    RooRealVar y_low("y_low", "y_low", 3, 0, 10);
+    RooRealVar y_high("y_high", "y_high", 7, 0, 10);
+
+    // Create the 2D uniform PDF
+    RooUniform model("model", "2D Bounded Uniform", {x, y}, {x_low, y_low}, {x_high, y_high});
     ```
+
+2.  **Backward-Compatible Legacy Mode:**
+    For backward compatibility, you can still call the constructor with only a `RooArgSet` of
+    observables. In this mode, the PDF will be uniform over the full pre-defined range
+    of each observable. This is achieved internally by creating constant bounds from each
+    observable's `getMin()` and `getMax()` values.
 **/
 
 #include "RooArgSet.h"
 #include "RooRealVar.h"
 #include "RooUniform.h"
 #include "RooRandom.h"
+#include "RooConstVar.h"
 #include <algorithm>
 
-ClassImp(RooUniform);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Legacy constructor for an N-dimensional uniform PDF.
+/// This constructor creates a uniform PDF over the full range of the provided
+/// observables by creating RooConstVars for the min and max of each observable
+/// and delegating to the bounded constructor.
 
 RooUniform::RooUniform(const char *name, const char *title, const RooArgSet &vars)
    : RooAbsPdf(name, title),
-     x("x", "Observables", this, true, false),
-     x_single("x_single", "", this),
-     x_low("x_low", "", this),
-     x_up("x_up", "", this)
+     _observables("observables", "List of observables", this),
+     _lowerBounds("lowerBounds", "List of lower bounds", this),
+     _upperBounds("upperBounds", "List of upper bounds", this)
 {
-   x.add(vars);
+   RooArgSet lowerBounds;
+   RooArgSet upperBounds;
+   for (const auto *var : vars) {
+      const RooRealVar *rrv = static_cast<const RooRealVar *>(var);
+      if (rrv) {
+         lowerBounds.add(*new RooConstVar(TString::Format("%s_low", rrv->GetName()), "", rrv->getMin()));
+         upperBounds.add(*new RooConstVar(TString::Format("%s_high", rrv->GetName()), "", rrv->getMax()));
+      }
+   }
+
+   _observables.add(vars);
+   _lowerBounds.add(lowerBounds);
+   _upperBounds.add(upperBounds);
 }
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor for a 1D uniform PDF with fittable bounds.
+/// Constructor for an N-dimensional uniform PDF with fittable bounds.
+/// The number of observables, lower bounds, and upper bounds must be the same.
 
-RooUniform::RooUniform(const char *name, const char *title, RooAbsReal &var, RooAbsReal &low, RooAbsReal &up)
-   : RooAbsPdf(name, title),
-     x("x", "Observables", this, true, false),
-     x_single("x_single", "Observable", this, var),
-     x_low("x_low", "Lower Bound", this, low),
-     x_up("x_up", "Upper Bound", this, up)
+RooUniform::RooUniform(const char *name, const char *title, const RooArgSet& observables, const RooArgSet& lowerBounds, const RooArgSet& upperBounds) :
+  RooAbsPdf(name,title),
+  _observables("observables","List of observables",this),
+  _lowerBounds("lowerBounds","List of lower bounds",this),
+  _upperBounds("upperBounds","List of upper bounds",this)
 {
-   // Add the single observable to the list proxy for compatibility with legacy code
-   x.add(var);
+  if (observables.size() != lowerBounds.size() || observables.size() != upperBounds.size()) {
+    coutE(InputArguments) << "RooUniform::constructor :" << GetName() 
+                          << " ERROR: Number of observables, lower bounds, and upper bounds must be the same." << std::endl;
+    return;
+  }
+
+  _observables.add(observables);
+  _lowerBounds.add(lowerBounds);
+  _upperBounds.add(upperBounds);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooUniform::RooUniform(const RooUniform &other, const char *name)
-   : RooAbsPdf(other, name),
-     x("x", this, other.x),
-     x_single("x_single", this, other.x_single),
-     x_low("x_low", this, other.x_low),
-     x_up("x_up", this, other.x_up)
+RooUniform::RooUniform(const RooUniform& other, const char* name) :
+  RooAbsPdf(other,name),
+  _observables("observables", this, other._observables),
+  _lowerBounds("lowerBounds", this, other._lowerBounds),
+  _upperBounds("upperBounds", this, other._upperBounds)
 {
 }
 
@@ -87,115 +121,73 @@ RooUniform::RooUniform(const RooUniform &other, const char *name)
 
 double RooUniform::evaluate() const
 {
-   // If 1D bounded mode (check if proxies are valid)
-   if (x_single.absArg() && x_low.absArg() && x_up.absArg()) {
-      double low = x_low;
-      double up = x_up;
+  // Loop through all dimensions
+  for (unsigned int i = 0; i < _observables.size(); ++i) {
+    const RooAbsReal* obs = static_cast<const RooAbsReal*>(_observables.at(i));
+    const RooAbsReal* low = static_cast<const RooAbsReal*>(_lowerBounds.at(i));
+    const RooAbsReal* high = static_cast<const RooAbsReal*>(_upperBounds.at(i));
 
-      if (low >= up)
-         return 0.0; // Unphysical bounds
+    // Check for unphysical bounds in this dimension
+    if (low->getVal() >= high->getVal()) return 0.0;
 
-      double val = x_single;
-      if (val >= low && val <= up) {
-         // Return the correctly normalized value for a uniform PDF
-         return 1.0;
-      } else {
-         return 0.0;
-      }
-   }
-   // uniform over observable range
-   return 1.0;
+    // Check if the point is outside the bounds in this dimension
+    if (obs->getVal() < low->getVal() || obs->getVal() > high->getVal()) {
+      return 0.0;
+    }
+  }
+
+  // If the point is inside the N-dimensional box, return 1.0
+  return 1.0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Advertise analytical integral
 
-Int_t RooUniform::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char * /*rangeName*/) const
+Int_t RooUniform::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
-   // 1D explicit bounds mode
-   if (x_single.absArg() && x_low.absArg() && x_up.absArg()) {
-      if (matchArgs(allVars, analVars, x_single))
-         return 1;
-      return 0;
-   }
-   // multi-dimensional mode
-   Int_t nx = x.size();
-   if (nx > 31) {
-      coutW(Integration) << "RooUniform::getAnalyticalIntegral(" << GetName() << ") WARNING: p.d.f. has " << x.size()
-                         << " observables, analytical integration is only implemented for the first 31 observables"
-                         << std::endl;
-      nx = 31;
-   }
-   Int_t code(0);
-   for (std::size_t i = 0; i < x.size(); i++) {
-      if (allVars.find(x.at(i)->GetName())) {
-         code |= (1 << i);
-         analVars.add(*allVars.find(x.at(i)->GetName()));
-      }
-   }
-   return code;
+  // We can integrate over any subset of our observables
+  if (matchArgs(allVars, analVars, _observables)) return 1;
+  return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Implement analytical integral
 
-double RooUniform::analyticalIntegral(Int_t code, const char *rangeName) const
+double RooUniform::analyticalIntegral(Int_t code, const char* rangeName) const
 {
-   // 1D explicit bounds mode
-   if (code == 1 && x_single.absArg() && x_low.absArg() && x_up.absArg()) {
-      const RooAbsRealLValue &var = static_cast<const RooAbsRealLValue &>(x_single.arg());
-      double low = x_low;
-      double up = x_up;
+  if (code != 1) return 0.0;
 
-      if (low >= up)
-         return 0.0;
+  double volume = 1.0;
 
-      double xmin = std::max(var.getMin(rangeName), low);
-      double xmax = std::min(var.getMax(rangeName), up);
+  // Loop through all dimensions and multiply the widths
+  for (unsigned int i = 0; i < _observables.size(); ++i) {
+    const RooAbsRealLValue* obs = static_cast<const RooAbsRealLValue*>(_observables.at(i));
+    const RooAbsReal* low = static_cast<const RooAbsReal*>(_lowerBounds.at(i));
+    const RooAbsReal* high = static_cast<const RooAbsReal*>(_upperBounds.at(i));
 
-      if (xmax > xmin)
-         return (xmax - xmin);
-      return 0.0;
-   }
+    if (low->getVal() >= high->getVal()) return 0.0;
 
-   // multi-dimensional mode
-   double ret(1);
-   for (int i = 0; i < 32; i++) {
-      if (code & (1 << i)) {
-         RooAbsRealLValue *var = static_cast<RooAbsRealLValue *>(x.at(i));
-         ret *= (var->getMax(rangeName) - var->getMin(rangeName));
-      }
-   }
-   return ret;
+    // Calculate the width of the valid integration range in this dimension
+    double xmin = std::max(obs->getMin(rangeName), low->getVal());
+    double xmax = std::min(obs->getMax(rangeName), high->getVal());
+    
+    if (xmax > xmin) {
+        volume *= (xmax - xmin);
+    } else {
+        return 0.0; // If any dimension has zero width, the total volume is zero
+    }
+  }
+
+  return volume;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Advertise internal generator
 
-Int_t RooUniform::getGenerator(const RooArgSet &directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
+Int_t RooUniform::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
-   if (x_single.absArg() && x_low.absArg() && x_up.absArg()) {
-      if (matchArgs(directVars, generateVars, x_single))
-         return 2;
-      return 0;
-   }
-   Int_t nx = x.size();
-   if (nx > 31) {
-      // Warn that analytical integration is only provided for the first 31 observables
-      coutW(Integration) << "RooUniform::getGenerator(" << GetName() << ") WARNING: p.d.f. has " << x.size()
-                         << " observables, internal integrator is only implemented for the first 31 observables"
-                         << std::endl;
-      nx = 31;
-   }
-
-   Int_t code(0);
-   for (std::size_t i = 0; i < x.size(); i++) {
-      if (directVars.find(x.at(i)->GetName())) {
-         code |= (1 << i);
-         generateVars.add(*directVars.find(x.at(i)->GetName()));
-      }
-   }
-   return code;
+  if (matchArgs(directVars, generateVars, _observables)) return 1;
+  return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -203,27 +195,16 @@ Int_t RooUniform::getGenerator(const RooArgSet &directVars, RooArgSet &generateV
 
 void RooUniform::generateEvent(Int_t code)
 {
-   if (code == 2) { // 1D Bounded case
-      double low = x_low;
-      double up = x_up;
-      if (low < up) {
-         static_cast<RooAbsRealLValue *>(x_single.absArg())->setVal(low + (up - low) * RooRandom::uniform());
-      }
-      return;
-   }
+  if (code != 1) return;
 
-   // multi-dimensional case
-
-   // Fast-track handling of one-observable case
-   if (code == 1) {
-      (static_cast<RooAbsRealLValue *>(x.at(0)))->randomize();
-      return;
-   }
-   
-   for (int i = 0; i < 32; i++) {
-      if (code & (1 << i)) {
-         RooAbsRealLValue *var = static_cast<RooAbsRealLValue *>(x.at(i));
-         var->randomize();
-      }
-   }
+  // Loop through all dimensions and generate a random number in each
+  for (unsigned int i = 0; i < _observables.size(); ++i) {
+    RooAbsRealLValue* obs = static_cast<RooAbsRealLValue*>(_observables.at(i));
+    const RooAbsReal* low = static_cast<const RooAbsReal*>(_lowerBounds.at(i));
+    const RooAbsReal* high = static_cast<const RooAbsReal*>(_upperBounds.at(i));
+    
+    if (low->getVal() < high->getVal()) {
+        obs->setVal(low->getVal() + (high->getVal() - low->getVal()) * RooRandom::uniform());
+    }
+  }
 }

@@ -26,9 +26,11 @@ class RooAbsReal;
 class RooUniform : public RooAbsPdf {
 public:
    RooUniform() {};
-   RooUniform(const char *name, const char *title, const RooArgSet &_x);
-   /// Constructor for a 1D uniform PDF with fittable bounds.
-   RooUniform(const char *name, const char *title, RooAbsReal &x, RooAbsReal &x_low, RooAbsReal &x_up);
+   /// old constructor
+   RooUniform(const char *name, const char *title, const RooArgSet& observables);
+   /// Constructor for an N-dimensional uniform PDF with fittable bounds.
+   RooUniform(const char *name, const char *title, const RooArgSet& observables, const RooArgSet& lowerBounds, const RooArgSet& upperBounds);
+
    RooUniform(const RooUniform &other, const char *name = nullptr);
    TObject *clone(const char *newname = nullptr) const override { return new RooUniform(*this, newname); }
 
@@ -39,15 +41,14 @@ public:
    void generateEvent(Int_t code) override;
 
 protected:
-   RooListProxy x;        ///< List of observables for N-dimensional uniform PDF
-   RooRealProxy x_single; ///< Single observable for 1D bounded mode
-   RooRealProxy x_low { -std::inf;};    ///< Lower bound for 1D bounded mode
-   RooRealProxy x_up { std::inf;};     ///< Upper bound for 1D bounded mode
+   RooListProxy _observables; ///< List of observables
+   RooListProxy _lowerBounds; ///< List of lower bounds
+   RooListProxy _upperBounds; ///< List of upper bounds
 
    double evaluate() const override;
 
 private:
-   ClassDefOverride(RooUniform, 2) // Flat PDF in N dimensions
+   ClassDefOverride(RooUniform, 2)
 };
 
 #endif
