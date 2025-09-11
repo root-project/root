@@ -66,14 +66,14 @@ class hierarchies (watch out for overlaps).
 #include "TProcessID.h"
 
 Longptr_t TObject::fgDtorOnly = 0;
-Bool_t TObject::fgObjectStat = kTRUE;
+Bool_t    TObject::fgObjectStat = kTRUE;
 
 ClassImp(TObject);
 
-#if defined(__clang__) || defined (__GNUC__)
-# define ATTRIBUTE_NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
+#if defined(__clang__) || defined(__GNUC__)
+#define ATTRIBUTE_NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
 #else
-# define ATTRIBUTE_NO_SANITIZE_ADDRESS
+#define ATTRIBUTE_NO_SANITIZE_ADDRESS
 #endif
 
 namespace ROOT {
@@ -98,18 +98,16 @@ bool DeleteChangesMemoryImpl()
    UInt_t *o_fbits = &(o->fBits);
 
    if (*o_fuid != kGoldenUUID) {
-      Error("CheckingDeleteSideEffects",
-            "fUniqueID is not as expected, we got 0x%.8x instead of 0x%.8x",
-            *o_fuid, kGoldenUUID);
+      Error("CheckingDeleteSideEffects", "fUniqueID is not as expected, we got 0x%.8x instead of 0x%.8x", *o_fuid,
+            kGoldenUUID);
    }
    if (*o_fbits != kGoldenbits) {
-      Error("CheckingDeleteSideEffects",
-            "fBits is not as expected, we got 0x%.8x instead of 0x%.8x",
-            *o_fbits, kGoldenbits);
+      Error("CheckingDeleteSideEffects", "fBits is not as expected, we got 0x%.8x instead of 0x%.8x", *o_fbits,
+            kGoldenbits);
    }
    if (gDebug >= 9) {
       unsigned char *oc = reinterpret_cast<unsigned char *>(o); // for address calculations
-      unsigned char references[sizeof(TObject)];
+      unsigned char  references[sizeof(TObject)];
       memcpy(references, oc, sizeof(TObject));
 
       // The effective part of this code (the else statement is just that without
@@ -118,13 +116,12 @@ bool DeleteChangesMemoryImpl()
 
       // Not using the error logger, as there routine is meant to be called
       // during library initialization/loading.
-      fprintf(stderr,
-              "DEBUG: Checking before and after delete the content of a TObject with uniqueID 0x21\n");
-      for(size_t i = 0; i < sizeof(TObject); i += 4) {
-        fprintf(stderr, "DEBUG: 0x%.8x vs 0x%.8x\n", *(int*)(references +i), *(int*)(oc + i));
+      fprintf(stderr, "DEBUG: Checking before and after delete the content of a TObject with uniqueID 0x21\n");
+      for (size_t i = 0; i < sizeof(TObject); i += 4) {
+         fprintf(stderr, "DEBUG: 0x%.8x vs 0x%.8x\n", *(int *)(references + i), *(int *)(oc + i));
       }
    } else
-      delete o;  // the 'if' part is that surrounded by the debug code.
+      delete o; // the 'if' part is that surrounded by the debug code.
 
    // Intentionally accessing the deleted memory to check whether it has been changed as
    // a consequence (side effect) of executing operator delete.  If there no change, we
@@ -137,7 +134,7 @@ bool DeleteChangesMemoryImpl()
    // so don't even try
    return true;
 #endif
-   if ( *o_fbits != 0x01000000 ) {
+   if (*o_fbits != 0x01000000) {
       // operator delete tainted the memory, we can not rely on TestBit(kNotDeleted)
       return true;
    }
@@ -152,19 +149,20 @@ bool DeleteChangesMemory()
    return value;
 }
 
-}} // ROOT::Detail
+} // namespace Internal
+} // namespace ROOT
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this to obj.
 
 void TObject::Copy(TObject &obj) const
 {
-   obj.fUniqueID = fUniqueID;   // when really unique don't copy
-   if (obj.IsOnHeap()) {        // test uses fBits so don't move next line
-      obj.fBits  = fBits;
+   obj.fUniqueID = fUniqueID; // when really unique don't copy
+   if (obj.IsOnHeap()) {      // test uses fBits so don't move next line
+      obj.fBits = fBits;
       obj.fBits |= kIsOnHeap;
    } else {
-      obj.fBits  = fBits;
+      obj.fBits = fBits;
       obj.fBits &= ~kIsOnHeap;
    }
    obj.fBits &= ~kIsReferenced;
@@ -184,7 +182,8 @@ TObject::~TObject()
 
    fBits &= ~kNotDeleted;
 
-   if (fgObjectStat && gObjectTable) gObjectTable->RemoveQuietly(this);
+   if (fgObjectStat && gObjectTable)
+      gObjectTable->RemoveQuietly(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -217,8 +216,8 @@ void TObject::AppendPad(Option_t *option)
 
 void TObject::Browse(TBrowser *b)
 {
-   //Inspect();
-   TClass::AutoBrowse(this,b);
+   // Inspect();
+   TClass::AutoBrowse(this, b);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -243,10 +242,10 @@ const char *TObject::ClassName() const
 TObject *TObject::Clone(const char *) const
 {
    if (gDirectory) {
-     return gDirectory->CloneObject(this);
+      return gDirectory->CloneObject(this);
    } else {
-     // Some of the streamer (eg. roofit's) expect(ed?) a valid gDirectory during streaming.
-     return gROOT->CloneObject(this);
+      // Some of the streamer (eg. roofit's) expect(ed?) a valid gDirectory during streaming.
+      return gROOT->CloneObject(this);
    }
 }
 
@@ -275,7 +274,6 @@ void TObject::Delete(Option_t *)
       delete this;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Computes distance from point (px,py) to the object.
@@ -319,7 +317,7 @@ void TObject::DrawClass() const
 TObject *TObject::DrawClone(Option_t *option) const
 {
    TVirtualPad::TContext ctxt(true);
-   auto pad = gROOT->GetSelectedPad();
+   auto                  pad = gROOT->GetSelectedPad();
    if (pad)
       pad->cd();
 
@@ -367,7 +365,7 @@ TObject *TObject::DrawClone(Option_t *option) const
 void TObject::Dump() const
 {
    // Get the actual address of the object.
-   const void *actual = IsA()->DynamicCast(TObject::Class(),this,kFALSE);
+   const void *actual = IsA()->DynamicCast(TObject::Class(), this, kFALSE);
    IsA()->Dump(actual);
 }
 
@@ -377,13 +375,15 @@ void TObject::Dump() const
 
 void TObject::Execute(const char *method, const char *params, Int_t *error)
 {
-   if (!IsA()) return;
+   if (!IsA())
+      return;
 
    Bool_t must_cleanup = TestBit(kMustCleanup);
 
    gInterpreter->Execute(this, IsA(), method, params, error);
 
-   if (gPad && must_cleanup) gPad->Modified();
+   if (gPad && must_cleanup)
+      gPad->Modified();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -395,15 +395,16 @@ void TObject::Execute(const char *method, const char *params, Int_t *error)
 
 void TObject::Execute(TMethod *method, TObjArray *params, Int_t *error)
 {
-   if (!IsA()) return;
+   if (!IsA())
+      return;
 
    Bool_t must_cleanup = TestBit(kMustCleanup);
 
    gInterpreter->Execute(this, IsA(), method, params, error);
 
-   if (gPad && must_cleanup) gPad->Modified();
+   if (gPad && must_cleanup)
+      gPad->Modified();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to an event at (px,py). This method
@@ -441,7 +442,8 @@ TObject *TObject::FindObject(const TObject *) const
 
 Option_t *TObject::GetDrawOption() const
 {
-   if (!gPad) return "";
+   if (!gPad)
+      return "";
 
    TListIter next(gPad->GetListOfPrimitives());
    while (auto obj = next()) {
@@ -486,11 +488,12 @@ UInt_t TObject::GetUniqueID() const
 
 char *TObject::GetObjectInfo(Int_t px, Int_t py) const
 {
-   if (!gPad) return (char*)"";
+   if (!gPad)
+      return (char *)"";
    static char info[64];
-   Float_t x = gPad->AbsPixeltoX(px);
-   Float_t y = gPad->AbsPixeltoY(py);
-   snprintf(info,64,"x=%g, y=%g",gPad->PadtoX(x),gPad->PadtoY(y));
+   Float_t     x = gPad->AbsPixeltoX(px);
+   Float_t     y = gPad->AbsPixeltoY(py);
+   snprintf(info, 64, "x=%g, y=%g", gPad->PadtoX(x), gPad->PadtoY(y));
    return info;
 }
 
@@ -503,7 +506,6 @@ const char *TObject::GetTitle() const
 {
    return IsA()->GetTitle();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action in response of a timer timing out. This method
@@ -527,15 +529,16 @@ Bool_t TObject::HandleTimer(TTimer *)
 /// will have to be done without call Hash (and hence be linear rather than
 /// logarithmic complexity).  You will also see warnings like
 /// ~~~
-/// Error in <ROOT::Internal::TCheckHashRecursiveRemoveConsistency::CheckRecursiveRemove>: The class SomeName overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
+/// Error in <ROOT::Internal::TCheckHashRecursiveRemoveConsistency::CheckRecursiveRemove>: The class SomeName overrides
+/// TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
 /// ~~~
 ///
 
 ULong_t TObject::Hash() const
 {
-   //return (ULong_t) this >> 2;
+   // return (ULong_t) this >> 2;
    const void *ptr = this;
-   return TString::Hash(&ptr, sizeof(void*));
+   return TString::Hash(&ptr, sizeof(void *));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -593,10 +596,10 @@ Bool_t TObject::IsEqual(const TObject *obj) const
 void TObject::ls(Option_t *option) const
 {
    TROOT::IndentLevel();
-   std::cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : ";
+   std::cout << "OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : ";
    std::cout << Int_t(TestBit(kCanDelete));
-   if (option && strstr(option,"noaddr")==nullptr) {
-      std::cout <<" at: "<< this ;
+   if (option && strstr(option, "noaddr") == nullptr) {
+      std::cout << " at: " << this;
    }
    std::cout << std::endl;
 }
@@ -655,7 +658,7 @@ void TObject::Pop()
 
 void TObject::Print(Option_t *) const
 {
-   std::cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << std::endl;
+   std::cout << "OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -668,7 +671,7 @@ void TObject::Print(Option_t *) const
 Int_t TObject::Read(const char *name)
 {
    if (gDirectory)
-      return gDirectory->ReadTObject(this,name);
+      return gDirectory->ReadTObject(this, name);
    return 0;
 }
 
@@ -676,10 +679,7 @@ Int_t TObject::Read(const char *name)
 /// Recursively remove this object from a list. Typically implemented
 /// by classes that can contain multiple references to a same object.
 
-void TObject::RecursiveRemove(TObject *)
-{
-}
-
+void TObject::RecursiveRemove(TObject *) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save this object in the file specified by filename.
@@ -706,25 +706,28 @@ void TObject::RecursiveRemove(TObject *)
 void TObject::SaveAs(const char *filename, Option_t *option) const
 {
    //==============Save object as a root file===================================
-   if (filename && strstr(filename,".root")) {
-      if (gDirectory) gDirectory->SaveObjectAs(this,filename,"");
+   if (filename && strstr(filename, ".root")) {
+      if (gDirectory)
+         gDirectory->SaveObjectAs(this, filename, "");
       return;
    }
 
    //==============Save object as a XML file====================================
-   if (filename && strstr(filename,".xml")) {
-      if (gDirectory) gDirectory->SaveObjectAs(this,filename,"");
+   if (filename && strstr(filename, ".xml")) {
+      if (gDirectory)
+         gDirectory->SaveObjectAs(this, filename, "");
       return;
    }
 
    //==============Save object as a JSON file================================
-   if (filename && strstr(filename,".json")) {
-      if (gDirectory) gDirectory->SaveObjectAs(this,filename,option);
+   if (filename && strstr(filename, ".json")) {
+      if (gDirectory)
+         gDirectory->SaveObjectAs(this, filename, option);
       return;
    }
 
    //==============Save object as a C, ROOT independant, file===================
-   if (filename && strstr(filename,".cc")) {
+   if (filename && strstr(filename, ".cc")) {
       TString fname;
       if (filename && strlen(filename) > 0) {
          fname = filename;
@@ -733,11 +736,11 @@ void TObject::SaveAs(const char *filename, Option_t *option) const
       }
       std::ofstream out;
       out.open(fname.Data(), std::ios::out);
-      if (!out.good ()) {
+      if (!out.good()) {
          Error("SaveAs", "cannot open file: %s", fname.Data());
          return;
       }
-      ((TObject*)this)->SavePrimitive(out,"cc");
+      ((TObject *)this)->SavePrimitive(out, "cc");
       out.close();
       Info("SaveAs", "cc file: %s has been generated", fname.Data());
       return;
@@ -752,15 +755,15 @@ void TObject::SaveAs(const char *filename, Option_t *option) const
    }
    std::ofstream out;
    out.open(fname.Data(), std::ios::out);
-   if (!out.good ()) {
+   if (!out.good()) {
       Error("SaveAs", "cannot open file: %s", fname.Data());
       return;
    }
-   out <<"{"<<std::endl;
-   out <<"//========= Macro generated from object: "<<GetName()<<"/"<<GetTitle()<<std::endl;
-   out <<"//========= by ROOT version"<<gROOT->GetVersion()<<std::endl;
-   ((TObject*)this)->SavePrimitive(out,option);
-   out <<"}"<<std::endl;
+   out << "{" << std::endl;
+   out << "//========= Macro generated from object: " << GetName() << "/" << GetTitle() << std::endl;
+   out << "//========= by ROOT version" << gROOT->GetVersion() << std::endl;
+   ((TObject *)this)->SavePrimitive(out, option);
+   out << "}" << std::endl;
    out.close();
    Info("SaveAs", "C++ Macro file: %s has been generated", fname.Data());
 }
@@ -769,7 +772,8 @@ void TObject::SaveAs(const char *filename, Option_t *option) const
 /// Save object constructor in the output stream "out".
 /// Can be used as first statement when implementing SavePrimitive() method for the object
 
-void TObject::SavePrimitiveConstructor(std::ostream &out, TClass *cl, const char *variable_name, const char *constructor_agrs, Bool_t empty_line)
+void TObject::SavePrimitiveConstructor(std::ostream &out, TClass *cl, const char *variable_name,
+                                       const char *constructor_agrs, Bool_t empty_line)
 {
    if (empty_line)
       out << "   \n";
@@ -779,7 +783,6 @@ void TObject::SavePrimitiveConstructor(std::ostream &out, TClass *cl, const char
       out << cl->GetName() << " *";
    out << variable_name << " = new " << cl->GetName() << "(" << constructor_agrs << ");\n";
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save array in the output stream "out" as vector.
@@ -797,7 +800,7 @@ TString TObject::SavePrimitiveVector(std::ostream &out, const char *prefix, Int_
 
    out << "   std::vector<Double_t> " << vectame;
    if (len > 0) {
-      const auto old_precision{out.precision()};
+      const auto     old_precision{out.precision()};
       constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
       out << std::setprecision(max_precision);
       Bool_t use_new_lines = len > 15;
@@ -835,8 +838,8 @@ void TObject::SavePrimitiveDraw(std::ostream &out, const char *variable_name, Op
 
 void TObject::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   out << "//Primitive: " << GetName() << "/" << GetTitle()
-       <<". You must implement " << ClassName() << "::SavePrimitive" << std::endl;
+   out << "//Primitive: " << GetName() << "/" << GetTitle() << ". You must implement " << ClassName()
+       << "::SavePrimitive" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -848,7 +851,8 @@ void TObject::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
 void TObject::SetDrawOption(Option_t *option)
 {
-   if (!gPad || !option) return;
+   if (!gPad || !option)
+      return;
 
    TListIter next(gPad->GetListOfPrimitives());
    delete gPad->FindObject("Tframe");
@@ -883,9 +887,7 @@ void TObject::SetUniqueID(UInt_t uid)
 /// This function is called when either TCanvas::UseCurrentStyle
 /// or TROOT::ForceStyle have been invoked.
 
-void TObject::UseCurrentStyle()
-{
-}
+void TObject::UseCurrentStyle() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write this object to the current directory.
@@ -946,15 +948,18 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize) const
       return 0;
 
    TString opt = "";
-   if (option & kSingleKey)   opt += "SingleKey";
-   if (option & kOverwrite)   opt += "OverWrite";
-   if (option & kWriteDelete) opt += "WriteDelete";
+   if (option & kSingleKey)
+      opt += "SingleKey";
+   if (option & kOverwrite)
+      opt += "OverWrite";
+   if (option & kWriteDelete)
+      opt += "WriteDelete";
 
    if (gDirectory)
-      return gDirectory->WriteTObject(this,name,opt.Data(),bufsize);
+      return gDirectory->WriteTObject(this, name, opt.Data(), bufsize);
 
    const char *objname = name ? name : GetName();
-   Error("Write","The current directory (gDirectory) is null. The object (%s) has not been written.",objname);
+   Error("Write", "The current directory (gDirectory) is null. The object (%s) has not been written.", objname);
    return 0;
 }
 
@@ -964,7 +969,7 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize) const
 
 Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
 {
-   return ((const TObject*)this)->Write(name, option, bufsize);
+   return ((const TObject *)this)->Write(name, option, bufsize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -972,26 +977,27 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
 
 void TObject::Streamer(TBuffer &R__b)
 {
-   if (IsA()->CanIgnoreTObjectStreamer()) return;
+   if (IsA()->CanIgnoreTObjectStreamer())
+      return;
    UShort_t pidf;
    if (R__b.IsReading()) {
       R__b.SkipVersion(); // Version_t R__v = R__b.ReadVersion(); if (R__v) { }
       R__b >> fUniqueID;
       const UInt_t isonheap = fBits & kIsOnHeap; // Record how this instance was actually allocated.
       R__b >> fBits;
-      fBits |= isonheap | kNotDeleted;  // by definition de-serialized object are not yet deleted.
+      fBits |= isonheap | kNotDeleted; // by definition de-serialized object are not yet deleted.
       if (TestBit(kIsReferenced)) {
-         //if the object is referenced, we must read its old address
-         //and store it in the ProcessID map in gROOT
+         // if the object is referenced, we must read its old address
+         // and store it in the ProcessID map in gROOT
          R__b >> pidf;
          pidf += R__b.GetPidOffset();
          TProcessID *pid = R__b.ReadProcessID(pidf);
          if (pid) {
             UInt_t gpid = pid->GetUniqueID();
-            if (gpid>=0xff) {
+            if (gpid >= 0xff) {
                fUniqueID = fUniqueID | 0xff000000;
             } else {
-               fUniqueID = ( fUniqueID & 0xffffff) + (gpid<<24);
+               fUniqueID = (fUniqueID & 0xffffff) + (gpid << 24);
             }
             pid->PutObjectWithID(this);
          }
@@ -1002,7 +1008,7 @@ void TObject::Streamer(TBuffer &R__b)
       // simply hard-coding this value.
       // This **must** be equal to TFile::k630forwardCompatibility
       constexpr int TFile__k630forwardCompatibility = BIT(2);
-      const auto parent = R__b.GetParent();
+      const auto    parent = R__b.GetParent();
       if (!TestBit(kIsReferenced)) {
          R__b << fUniqueID;
          if (R__unlikely(parent && parent->TestBit(TFile__k630forwardCompatibility)))
@@ -1010,17 +1016,18 @@ void TObject::Streamer(TBuffer &R__b)
          else
             R__b << (fBits & (~kIsOnHeap & ~kNotDeleted));
       } else {
-         //if the object is referenced, we must save its address/file_pid
+         // if the object is referenced, we must save its address/file_pid
          UInt_t uid = fUniqueID & 0xffffff;
          R__b << uid;
          if (R__unlikely(parent && parent->TestBit(TFile__k630forwardCompatibility)))
             R__b << fBits;
          else
             R__b << (fBits & (~kIsOnHeap & ~kNotDeleted));
-         TProcessID *pid = TProcessID::GetProcessWithUID(fUniqueID,this);
-         //add uid to the TRefTable if there is one
+         TProcessID *pid = TProcessID::GetProcessWithUID(fUniqueID, this);
+         // add uid to the TRefTable if there is one
          TRefTable *table = TRefTable::GetRefTable();
-         if(table) table->Add(uid, pid);
+         if (table)
+            table->Add(uid, pid);
          pidf = R__b.WriteProcessID(pid);
          R__b << pidf;
       }
@@ -1177,7 +1184,7 @@ Longptr_t TObject::GetDtorOnly()
 
 void TObject::SetDtorOnly(void *obj)
 {
-   fgDtorOnly = (Longptr_t) obj;
+   fgDtorOnly = (Longptr_t)obj;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1185,7 +1192,7 @@ void TObject::SetDtorOnly(void *obj)
 
 void TObject::operator delete(void *ptr)
 {
-   if ((Longptr_t) ptr != fgDtorOnly)
+   if ((Longptr_t)ptr != fgDtorOnly)
       TStorage::ObjectDealloc(ptr);
    else
       fgDtorOnly = 0;
@@ -1196,7 +1203,7 @@ void TObject::operator delete(void *ptr)
 
 void TObject::operator delete[](void *ptr)
 {
-   if ((Longptr_t) ptr != fgDtorOnly)
+   if ((Longptr_t)ptr != fgDtorOnly)
       TStorage::ObjectDealloc(ptr);
    else
       fgDtorOnly = 0;
@@ -1207,7 +1214,7 @@ void TObject::operator delete[](void *ptr)
 
 void TObject::operator delete(void *ptr, size_t size)
 {
-   if ((Longptr_t) ptr != fgDtorOnly)
+   if ((Longptr_t)ptr != fgDtorOnly)
       TStorage::ObjectDealloc(ptr, size);
    else
       fgDtorOnly = 0;
@@ -1218,7 +1225,7 @@ void TObject::operator delete(void *ptr, size_t size)
 
 void TObject::operator delete[](void *ptr, size_t size)
 {
-   if ((Longptr_t) ptr != fgDtorOnly)
+   if ((Longptr_t)ptr != fgDtorOnly)
       TStorage::ObjectDealloc(ptr, size);
    else
       fgDtorOnly = 0;
