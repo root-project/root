@@ -57,7 +57,7 @@ protected:
    void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
-   RAtomicField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
+   RAtomicField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField);
    RAtomicField(RAtomicField &&other) = default;
    RAtomicField &operator=(RAtomicField &&other) = default;
    ~RAtomicField() override = default;
@@ -74,7 +74,7 @@ template <typename ItemT>
 class RField<std::atomic<ItemT>> final : public RAtomicField {
 public:
    static std::string TypeName() { return "std::atomic<" + RField<ItemT>::TypeName() + ">"; }
-   explicit RField(std::string_view name) : RAtomicField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
+   explicit RField(std::string_view name) : RAtomicField(name, std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
