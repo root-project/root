@@ -47,7 +47,7 @@ protected:
    double evaluate() const override;
 
 private:
-   ClassDefOverride(RooUniform, 1) // Flat PDF in N dimensions
+   ClassDefOverride(RooUniform, 2) // Flat PDF in N dimensions
 };
 
 #endif
