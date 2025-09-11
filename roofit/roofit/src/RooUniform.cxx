@@ -42,7 +42,6 @@ This class can be used in two ways:
 #include "RooRandom.h"
 #include <algorithm>
 
-ClassImp(RooUniform);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Legacy constructor for an N-dimensional uniform PDF.
