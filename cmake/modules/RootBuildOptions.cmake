@@ -129,6 +129,7 @@ ROOT_BUILD_OPTION(dcache OFF "Enable support for dCache (requires libdcap from D
 ROOT_BUILD_OPTION(dev OFF "Enable recommended developer compilation flags, reduce exposed includes")
 ROOT_BUILD_OPTION(distcc OFF "Enable distcc usage for speeding up builds (ccache is called first if enabled)")
 ROOT_BUILD_OPTION(experimental_adaptivecpp OFF "Build AdaptiveCPP for SYCL support")
+ROOT_BUILD_OPTION(experimental_genvectorx OFF "Build GenvectorX (requires SYCL support)")
 ROOT_BUILD_OPTION(fcgi OFF "Enable FastCGI support in HTTP server")
 ROOT_BUILD_OPTION(fftw3 OFF "Enable support for FFTW3 [GPL]")
 ROOT_BUILD_OPTION(fitsio ON "Enable support for reading FITS images")

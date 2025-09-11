@@ -1,2 +1,3 @@
 tmva-sofie=ON
 experimental_adaptivecpp=ON
+experimental_genvectorx=ON

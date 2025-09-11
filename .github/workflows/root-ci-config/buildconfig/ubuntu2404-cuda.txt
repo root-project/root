@@ -1,5 +1,7 @@
 CMAKE_BUILD_TYPE=RelWithDebInfo
 cuda=ON
+experimental_adaptivecpp=ON
+experimental_genvectorx=ON
 tmva=ON
 tmva-cpu=ON
 tmva-gpu=ON
