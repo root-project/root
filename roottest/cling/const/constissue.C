@@ -16,8 +16,8 @@ class TriggerCharacterizer {
   trigger_counting_map m_map;
 };
 
-#ifdef __CLING__
+//#ifdef __CLING__
 //#pragma link C++ class TriggerCharacterizer::trigger_counting_map;
-#endif
+//#endif
 
 void constissue() {}

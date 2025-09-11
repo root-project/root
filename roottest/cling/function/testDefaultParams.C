@@ -1,6 +1,4 @@
-#ifndef __CLING__
 #include "Params.h"
-#endif
 
 void testDefaultParams(const char* mode) {
    // One object of type Base and one of type derived

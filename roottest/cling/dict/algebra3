@@ -18,7 +18,6 @@
 
 namespace aux {
 
-#ifndef __CLING__
   using std::size_t;
   using std::complex;
   using std::istream;
@@ -32,7 +31,6 @@ namespace aux {
   using std::sin;
 //  using std::conj;
   using std::norm;
-#endif /* __CLING__ */
 
   /* ****************** algebra3.h begins here ****************** */
 
@@ -710,7 +708,6 @@ namespace aux {
   //  Implementation
   //
 
-#ifndef __CLING__
 
   /****************************************************************
    *                                                               *
@@ -1999,7 +1996,6 @@ namespace aux {
 		     ((_Tp)0), ((_Tp)0), ((_Tp)1), ((_Tp)0),
 		     ((_Tp)0), ((_Tp)0), ((_Tp)1) / d, ((_Tp)0)); }
 
-#endif /* __CLING__ */
 
   /* ******************* algebra3.h ends here ******************* */
 
@@ -2041,7 +2037,6 @@ namespace aux {
   template<typename _Tp> mat3<_Tp> ExtractRotation(const mat4<_Tp>& pose); // extract rotation matrix from transformation matrix
   template<typename _Tp> typename rtti<_Tp>::value_type PointToPlane(const vec3<_Tp>& point, const vec4<_Tp>& plane); // unsigned distance from a point to a plane (3D)
 
-#ifndef __CLING__
 
   //
   //	rotation2D -- convert 2x2 rotation matrix to 3x3
@@ -2176,7 +2171,6 @@ namespace aux {
     return dist;
   }
 
-#endif /* __CLING__ */
 
 #ifdef fmin
 #undef fmin                 // allow as function names

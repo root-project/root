@@ -3,7 +3,7 @@
 
 namespace std {}; using namespace std;
 
-#if defined(__CLING__) && !defined(__ROOTCLING__)
+#if defined(__CLING__) && !defined(__ROOTCLING__) && !defined(ClingWorkAroundMissingSmartInclude)
 #include "MyClass.h+"
 #else
 #include "MyClass.h"
