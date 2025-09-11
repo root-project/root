@@ -378,6 +378,7 @@ TEST(RooFitHS3, RooRealIntegral)
    status = validate(pdfContainingIntegralB);
    EXPECT_EQ(status, 0);
 }
+
 TEST(RooFitHS3, RooUniform)
 {
    int status = 0;
