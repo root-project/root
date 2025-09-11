@@ -558,7 +558,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
         set(cpp_module_file ${library_output_dir}/${cpp_module}.pcm)
         # The module depends on its modulemap file.
         if (cpp_module_file AND CMAKE_PROJECT_NAME STREQUAL ROOT)
-		set (runtime_cxxmodule_dependencies copymodulemap "${CMAKE_BINARY_DIR}/include/ROOT.modulemap")
+		set (runtime_cxxmodule_dependencies "${CMAKE_BINARY_DIR}/include/ROOT.modulemap")
         endif()
       endif(cpp_module)
     endif()
