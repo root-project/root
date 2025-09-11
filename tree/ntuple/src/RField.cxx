@@ -1007,9 +1007,9 @@ size_t ROOT::ROptionalField::GetAlignment() const
 
 //------------------------------------------------------------------------------
 
-ROOT::RAtomicField::RAtomicField(std::string_view fieldName, std::string_view typeName,
-                                 std::unique_ptr<RFieldBase> itemField)
-   : RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kPlain, false /* isSimple */)
+ROOT::RAtomicField::RAtomicField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
+   : RFieldBase(fieldName, "std::atomic<" + itemField->GetTypeName() + ">", ROOT::ENTupleStructure::kPlain,
+                false /* isSimple */)
 {
    if (itemField->GetTraits() & kTraitTriviallyConstructible)
       fTraits |= kTraitTriviallyConstructible;
@@ -1021,7 +1021,7 @@ ROOT::RAtomicField::RAtomicField(std::string_view fieldName, std::string_view ty
 std::unique_ptr<ROOT::RFieldBase> ROOT::RAtomicField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
-   return std::make_unique<RAtomicField>(newName, GetTypeName(), std::move(newItemField));
+   return std::make_unique<RAtomicField>(newName, std::move(newItemField));
 }
 
 void ROOT::RAtomicField::ReconcileOnDiskField(const RNTupleDescriptor &desc)

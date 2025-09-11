@@ -520,9 +520,7 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
       } else if (resolvedType.substr(0, 12) == "std::atomic<") {
          std::string itemTypeName = resolvedType.substr(12, resolvedType.length() - 13);
          auto itemField = Create("_0", itemTypeName, options, desc, maybeGetChildId(0)).Unwrap();
-         auto normalizedInnerTypeName = itemField->GetTypeName();
-         result = std::make_unique<RAtomicField>(fieldName, "std::atomic<" + normalizedInnerTypeName + ">",
-                                                 std::move(itemField));
+         result = std::make_unique<RAtomicField>(fieldName, std::move(itemField));
       } else if (resolvedType.substr(0, 25) == "ROOT::RNTupleCardinality<") {
          auto innerTypes = TokenizeTypeList(resolvedType.substr(25, resolvedType.length() - 26));
          if (innerTypes.size() != 1)
