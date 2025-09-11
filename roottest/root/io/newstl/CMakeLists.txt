@@ -52,7 +52,7 @@ endif()
 ROOTTEST_ADD_TEST(ComplexTest
                   MACRO runComplexTest.C
                   ROOTEXE_OPTS ${_complextest_load}
-                  OUTREF ComplexTest.ref
+                  OUTREF ComplexTest${ref_suffix}
                   FIXTURES_REQUIRED root-io-newstl-ComplexTest_h-fixture)
 
 ROOTTEST_ADD_TEST(SampleFile
