@@ -41,8 +41,8 @@ public:
 protected:
    RooListProxy x;        ///< List of observables for N-dimensional uniform PDF
    RooRealProxy x_single; ///< Single observable for 1D bounded mode
-   RooRealProxy x_low;    ///< Lower bound for 1D bounded mode
-   RooRealProxy x_up;     ///< Upper bound for 1D bounded mode
+   RooRealProxy x_low { -std::inf;};    ///< Lower bound for 1D bounded mode
+   RooRealProxy x_up { std::inf;};     ///< Upper bound for 1D bounded mode
 
    double evaluate() const override;
 
