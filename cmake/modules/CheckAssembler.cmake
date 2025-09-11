@@ -6,12 +6,12 @@
 
 # Helper macro for checking binutils available in OS
 macro(root_check_assembler)
-   execute_process(${CMAKE_CXX_COMPILER} ARGS -print-prog-name=as OUTPUT_VARIABLE _as)
+   execute_process(COMMAND ${CMAKE_CXX_COMPILER} ARGS -print-prog-name=as OUTPUT_VARIABLE _as)
    mark_as_advanced(_as)
    if(NOT _as)
       message(WARNING "Could not find 'as', the assembler used by GCC.")
    else()
-      execute_process(${_as} ARGS --version OUTPUT_VARIABLE _as_version)
+      execute_process(COMMAND ${_as} ARGS --version OUTPUT_VARIABLE _as_version)
       string(REGEX REPLACE "\\([^\\)]*\\)" "" _as_version "${_as_version}")
       string(REGEX MATCH "[1-9]\\.[0-9]+(\\.[0-9]+)?" _as_version "${_as_version}")
       if(_as_version VERSION_LESS "2.18.93")
