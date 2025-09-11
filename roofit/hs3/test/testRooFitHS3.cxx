@@ -378,8 +378,6 @@ TEST(RooFitHS3, RooRealIntegral)
    status = validate(pdfContainingIntegralB);
    EXPECT_EQ(status, 0);
 }
-// DISABLED due to a serialization incompatibility with the updated RooUniform class structure.
-// The reference file for this test needs to be regenerated. See PR #19791 for details.
 TEST(RooFitHS3, RooUniform)
 {
    int status = 0;
