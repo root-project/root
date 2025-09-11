@@ -1,4 +1,4 @@
-#if defined(__CLING__) && !defined(__ROOTCLING__)
+#if defined(__CLING__) && !defined(__ROOTCLING__) && !defined(ClingWorkAroundMissingSmartInclude)
 #include "operators_dict.h+"
 #else 
 #include "operators.h"

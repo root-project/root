@@ -7,7 +7,6 @@ ROOTTEST_ADD_TEST(runoverloadResolution
 ROOTTEST_ADD_TEST(rundefaultParams
                   MACRO rundefaultParams.C
                   OUTREF defaultParams.ref
-                  WILLFAIL
                   LABELS roottest regression cling)
 
 ROOTTEST_ADD_TEST(execrefDefaultParams
