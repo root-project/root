@@ -65,7 +65,7 @@ endif()
 
 #----Test if clang setup works----------------------------------------------------------------------
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  execute_process(COMMAND ${CMAKE_CXX_COMPILER} ARGS "--version 2>&1 | grep version" OUTPUT_VARIABLE _clang_version_info)
+  execute_process(COMMAND ${CMAKE_CXX_COMPILER} "--version 2>&1 | grep version" OUTPUT_VARIABLE _clang_version_info ERROR_VARIABLE _clang_version_info OUTPUT_STRIP_TRAILING_WHITESPACE)
   string(REGEX REPLACE "^.*[ ]version[ ]([0-9]+)\\.[0-9]+.*" "\\1" CLANG_MAJOR "${_clang_version_info}")
   string(REGEX REPLACE "^.*[ ]version[ ][0-9]+\\.([0-9]+).*" "\\1" CLANG_MINOR "${_clang_version_info}")
 
