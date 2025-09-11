@@ -404,7 +404,7 @@ void TBufferXML::XmlWriteBlock(XMLNodePointer_t node)
 
    if ((Length() > 512) && (compressionLevel > 0)) {
       int zipBufferSize = Length();
-      fZipBuffer = new char[zipBufferSize + 9];
+      fZipBuffer = new char[zipBufferSize];
       int dataSize = Length();
       int compressedSize = 0;
       R__zipMultipleAlgorithm(compressionLevel, &dataSize, Buffer(), &zipBufferSize, fZipBuffer, &compressedSize,
