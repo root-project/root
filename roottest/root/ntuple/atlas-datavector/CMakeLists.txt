@@ -74,6 +74,10 @@ ROOTTEST_ADD_TEST(read
     COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/AtlasLikeDataVector.hxx
     FIXTURES_REQUIRED "atlas_datavector_read_setup;atlas_datavector_write_done")
 
+# Regression test for the Python-only side of the issue. The lazy template
+# instantiation done by the Python bindings was leading to a faulty behaviour:
+# the user-provided class template "AtlasLikeDataVector<CustomStruct>" does not
+# correspond to what the compiler sees, so we need to inject this information.
  ROOT_ADD_PYUNITTEST(
      rentry_getptr
      rentry_getptr.py
