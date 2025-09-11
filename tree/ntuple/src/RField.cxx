@@ -783,9 +783,10 @@ void ROOT::RBitsetField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) con
 
 //------------------------------------------------------------------------------
 
-ROOT::RNullableField::RNullableField(std::string_view fieldName, std::string_view typeName,
+ROOT::RNullableField::RNullableField(std::string_view fieldName, const std::string &typePrefix,
                                      std::unique_ptr<RFieldBase> itemField)
-   : ROOT::RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kCollection, false /* isSimple */)
+   : ROOT::RFieldBase(fieldName, typePrefix + "<" + itemField->GetTypeName() + ">", ROOT::ENTupleStructure::kCollection,
+                      false /* isSimple */)
 {
    Attach(std::move(itemField));
 }
@@ -848,16 +849,15 @@ void ROOT::RNullableField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) c
 
 //------------------------------------------------------------------------------
 
-ROOT::RUniquePtrField::RUniquePtrField(std::string_view fieldName, std::string_view typeName,
-                                       std::unique_ptr<RFieldBase> itemField)
-   : RNullableField(fieldName, typeName, std::move(itemField)), fItemDeleter(GetDeleterOf(*fSubfields[0]))
+ROOT::RUniquePtrField::RUniquePtrField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
+   : RNullableField(fieldName, "std::unique_ptr", std::move(itemField)), fItemDeleter(GetDeleterOf(*fSubfields[0]))
 {
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RUniquePtrField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
-   return std::make_unique<RUniquePtrField>(newName, GetTypeName(), std::move(newItemField));
+   return std::make_unique<RUniquePtrField>(newName, std::move(newItemField));
 }
 
 std::size_t ROOT::RUniquePtrField::AppendImpl(const void *from)
@@ -927,9 +927,8 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RUniquePtrField::SplitValue(const RV
 
 //------------------------------------------------------------------------------
 
-ROOT::ROptionalField::ROptionalField(std::string_view fieldName, std::string_view typeName,
-                                     std::unique_ptr<RFieldBase> itemField)
-   : RNullableField(fieldName, typeName, std::move(itemField)), fItemDeleter(GetDeleterOf(*fSubfields[0]))
+ROOT::ROptionalField::ROptionalField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
+   : RNullableField(fieldName, "std::optional", std::move(itemField)), fItemDeleter(GetDeleterOf(*fSubfields[0]))
 {
    if (fSubfields[0]->GetTraits() & kTraitTriviallyDestructible)
       fTraits |= kTraitTriviallyDestructible;
@@ -948,7 +947,7 @@ const bool *ROOT::ROptionalField::GetEngagementPtr(const void *optionalPtr) cons
 std::unique_ptr<ROOT::RFieldBase> ROOT::ROptionalField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
-   return std::make_unique<ROptionalField>(newName, GetTypeName(), std::move(newItemField));
+   return std::make_unique<ROptionalField>(newName, std::move(newItemField));
 }
 
 std::size_t ROOT::ROptionalField::AppendImpl(const void *from)

@@ -418,15 +418,11 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
       } else if (resolvedType.substr(0, 16) == "std::unique_ptr<") {
          std::string itemTypeName = resolvedType.substr(16, resolvedType.length() - 17);
          auto itemField = Create("_0", itemTypeName, options, desc, maybeGetChildId(0)).Unwrap();
-         auto normalizedInnerTypeName = itemField->GetTypeName();
-         result = std::make_unique<RUniquePtrField>(fieldName, "std::unique_ptr<" + normalizedInnerTypeName + ">",
-                                                    std::move(itemField));
+         result = std::make_unique<RUniquePtrField>(fieldName, std::move(itemField));
       } else if (resolvedType.substr(0, 14) == "std::optional<") {
          std::string itemTypeName = resolvedType.substr(14, resolvedType.length() - 15);
          auto itemField = Create("_0", itemTypeName, options, desc, maybeGetChildId(0)).Unwrap();
-         auto normalizedInnerTypeName = itemField->GetTypeName();
-         result = std::make_unique<ROptionalField>(fieldName, "std::optional<" + normalizedInnerTypeName + ">",
-                                                   std::move(itemField));
+         result = std::make_unique<ROptionalField>(fieldName, std::move(itemField));
       } else if (resolvedType.substr(0, 9) == "std::set<") {
          std::string itemTypeName = resolvedType.substr(9, resolvedType.length() - 10);
          auto itemField = Create("_0", itemTypeName, options, desc, maybeGetChildId(0)).Unwrap();
