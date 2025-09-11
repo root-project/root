@@ -322,7 +322,7 @@ public:
    xRooNode Vary(const xRooNode &child);
    xRooNode Constrain(const xRooNode &child);
 
-   xRooNode Combine(const xRooNode &rhs); // combine rhs with this node
+   xRooNode Combine(const xRooNode &rhs, bool silent = false); // combine rhs with this node
 
    xRooNode reduced(const std::string &range = "", bool invert = false)
       const; // return a node representing reduced version of this node, will use the SetRange to reduce if blank
@@ -340,6 +340,8 @@ public:
    void _ShowVars_(bool set = true); // *TOGGLE* *GETTER=_IsShowVars_
    /** @private */
    bool _IsShowVars_() const;
+   /** @private */
+   void _SetAttribute_(const char *name, const char *value = nullptr); // *MENU*
 
    void SetHidden(bool set = true); // *TOGGLE* *GETTER=IsHidden
    bool IsHidden() const;
@@ -392,7 +394,8 @@ public:
    GetBinError(int bin, const xRooNode &fr = "", int nToys = 0, bool errorsHi = false, bool errorsLo = false) const;
    std::vector<double> GetBinErrors(int binStart = 1, int binEnd = 0, const xRooNode &fr = "", int nToys = 0,
                                     bool errorsHi = false, bool errorsLo = false) const;
-   std::pair<double, double> IntegralAndError(const xRooNode &fr = "", const char *rangeName = nullptr) const;
+   std::pair<double, double> IntegralAndError(const xRooNode &fr = "", const char *rangeName = nullptr, int nToys = 0,
+                                              bool errorsHi = false, bool errorsLo = false) const;
 
    std::vector<double> GetBinErrorsHi(int binStart = 1, int binEnd = 0, const xRooNode &fr = "", int nToys = 0) const
    {
@@ -413,10 +416,13 @@ public:
 
    // methods to access default content and error
    double GetContent() const { return GetBinContent(fBinNumber); }
-   double GetError(const xRooNode &fr = "") const
+   double GetError(const xRooNode &fr = "", int nToys = 0, bool errorsHi = false, bool errorsLo = false) const
    {
-      return (fBinNumber == -1) ? IntegralAndError(fr).second : GetBinError(fBinNumber, fr);
+      return (fBinNumber == -1) ? IntegralAndError(fr, "", nToys, errorsHi, errorsLo).second
+                                : GetBinError(fBinNumber, fr, nToys, errorsHi, errorsLo);
    }
+   double GetErrorHi(const xRooNode &fr = "", int nToys = 0) const { return GetError(fr, nToys, true, false); }
+   double GetErrorLo(const xRooNode &fr = "", int nToys = 0) const { return GetError(fr, nToys, false, true); }
    double GetData(const xRooNode &data = "obsData") { return GetBinData(fBinNumber, data); }
 
    // methods to access content and covariances of the CHILDREN of a node
@@ -441,13 +447,13 @@ public:
             int seed = 0); // generate a dataset from a pdf node using given fr - if none given will use current fit
 
    /** @private */
-   void _fit_(const char *constParValues = "", const char* options = ""); // *MENU*
+   void _fit_(const char *constParValues = "", const char *options = "GoF"); // *MENU*
    /** @private */
    void _generate_(const char *name = "", bool expected = false); // *MENU*
    /** @private */
    void _scan_(const char *what = "plr", double nToys = 0, const char *xvar = "", int nPointsX = 0, double lowX = 0,
                double highX = 0 /*, const char* yvar="", int nBinsY=0, double lowY=0, double highY=0*/,
-               const char *constParValues = "", const char* options = ""); // *MENU*
+               const char *constParValues = "", const char *options = ""); // *MENU*
    //    xRooNode fitTo(const char* datasetName) const;
    //    xRooNode fitTo(const xRooNode& _data) const;
    //    xRooNode generate(bool expected=false) const;
