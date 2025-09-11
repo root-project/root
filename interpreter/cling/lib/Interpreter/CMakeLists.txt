@@ -244,7 +244,6 @@ if (UNIX)
   if(NOT CLING_CXX_HEADERS)
     
     if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "NVHPC")
-      message(WARNING,"cmp: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER}")
         execute_process(COMMAND ${CMAKE_CXX_COMPILER} -drygccinc
                       OUTPUT_QUIET ERROR_VARIABLE CLING_CXX_HEADERS)
         execute_process(
