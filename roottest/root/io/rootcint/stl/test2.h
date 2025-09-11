@@ -11,7 +11,7 @@ template <class T>
 {
 protected:
    std::vector <T>      fData;       // all Data of this column
-   ClassDef(TFColumn, 1) // A column of TFTable
+   ClassDefOverride(TFColumn, 1) // A column of TFTable
 };
 
 #endif
