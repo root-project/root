@@ -39,6 +39,9 @@ class RooJSONFactoryWSTool {
 public:
    static constexpr bool useListsInsteadOfDicts = true;
    static bool allowExportInvalidNames;
+   static bool allowSanitizeNames;
+   static RooWorkspace sanitizeWS(const RooWorkspace &ws);
+   static RooWorkspace cleanWS(const RooWorkspace &ws);
 
    struct CombinedData {
       std::string name;
@@ -52,11 +55,13 @@ public:
    static std::string name(const RooFit::Detail::JSONNode &n);
    static bool isValidName(const std::string &str);
    static bool testValidName(const std::string &str, bool forcError);
+   static std::string sanitizeName(const std::string str);
 
    static RooFit::Detail::JSONNode &appendNamedChild(RooFit::Detail::JSONNode &node, std::string const &name);
    static RooFit::Detail::JSONNode const *findNamedChild(RooFit::Detail::JSONNode const &node, std::string const &name);
 
    static void fillSeq(RooFit::Detail::JSONNode &node, RooAbsCollection const &coll, size_t nMax = -1);
+   static void fillSeqSanitizedName(RooFit::Detail::JSONNode &node, RooAbsCollection const &coll, size_t nMax = -1);
 
    template <class T>
    T *request(const std::string &objname, const std::string &requestAuthor)
