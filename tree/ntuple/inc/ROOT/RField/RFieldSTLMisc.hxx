@@ -209,7 +209,7 @@ protected:
    /// if it is null, returns `kInvalidNTupleIndex`
    RNTupleLocalIndex GetItemIndex(ROOT::NTupleSize_t globalIndex);
 
-   RNullableField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
+   RNullableField(std::string_view fieldName, const std::string &typePrefix, std::unique_ptr<RFieldBase> itemField);
 
 public:
    RNullableField(RNullableField &&other) = default;
@@ -249,7 +249,7 @@ protected:
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
 
 public:
-   ROptionalField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
+   ROptionalField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField);
    ROptionalField(ROptionalField &&other) = default;
    ROptionalField &operator=(ROptionalField &&other) = default;
    ~ROptionalField() override = default;
@@ -263,7 +263,7 @@ template <typename ItemT>
 class RField<std::optional<ItemT>> final : public ROptionalField {
 public:
    static std::string TypeName() { return "std::optional<" + RField<ItemT>::TypeName() + ">"; }
-   explicit RField(std::string_view name) : ROptionalField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
+   explicit RField(std::string_view name) : ROptionalField(name, std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
@@ -291,7 +291,7 @@ protected:
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
 
 public:
-   RUniquePtrField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
+   RUniquePtrField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField);
    RUniquePtrField(RUniquePtrField &&other) = default;
    RUniquePtrField &operator=(RUniquePtrField &&other) = default;
    ~RUniquePtrField() override = default;
@@ -305,7 +305,7 @@ template <typename ItemT>
 class RField<std::unique_ptr<ItemT>> final : public RUniquePtrField {
 public:
    static std::string TypeName() { return "std::unique_ptr<" + RField<ItemT>::TypeName() + ">"; }
-   explicit RField(std::string_view name) : RUniquePtrField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
+   explicit RField(std::string_view name) : RUniquePtrField(name, std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
