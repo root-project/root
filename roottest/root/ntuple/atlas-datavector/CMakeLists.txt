@@ -79,11 +79,11 @@ ROOTTEST_ADD_TEST(read
 # the user-provided class template "AtlasLikeDataVector<CustomStruct>" does not
 # correspond to what the compiler sees, so we need to inject this information.
  ROOT_ADD_PYUNITTEST(
-     rentry_getptr
-     rentry_getptr.py
-     GENERIC
-     PYTHON_DEPS pytest
-     FIXTURES_REQUIRED atlas_datavector_write_done)
+    rentry_getptr
+    rentry_getptr.py
+    GENERIC
+    PYTHON_DEPS pytest
+    FIXTURES_REQUIRED atlas_datavector_write_done)
 
 ROOT_ADD_PYUNITTEST(
     template_instantiation
