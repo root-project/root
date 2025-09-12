@@ -3,7 +3,7 @@
 
 int run()
 {
-	TFile f("mytest.root","RECREATE", "", 0);
+	TFile f("mytest.root", "RECREATE", "", 0);
 	MyObject a;
 	a.Write();
 	auto sz = f.GetSize();
@@ -14,7 +14,6 @@ int run()
 		          << " to store object with 10000 integers" << std::endl;
       return 1;
 	}
-
 
 	return 0;
 }
