@@ -907,6 +907,10 @@ Long64_t TChain::GetEntries() const
          return fEntries;
       Long64_t totalEntries{};
       for (auto chainEl : ROOT::Detail::TRangeStaticCast<TChainElement>(fFiles)) {
+         if (chainEl->GetEntries() != TTree::kMaxEntries) {
+            totalEntries += chainEl->GetEntries();
+            continue;
+         }
          TDirectory::TContext ctxt;
          std::unique_ptr<TFile> curFile{TFile::Open(chainEl->GetTitle(), "READ_WITHOUT_GLOBALREGISTRATION")};
          if (!curFile || curFile->IsZombie()) {
