@@ -46,9 +46,9 @@
 #ifndef R__LYNXOS
 #include <sys/stat.h>
 #endif
-#include <errno.h>
+#include <cerrno>
 #include <sys/types.h>
-#include <time.h>
+#include <ctime>
 #if !defined(R__WIN32) && !defined(R__MACOSX) && !defined(R__FBSD) && \
     !defined(R__OBSD)
 #include <crypt.h>
@@ -59,7 +59,7 @@
 #if defined(R__LINUX) || defined(R__FBSD) || defined(R__OBSD)
 #  include <unistd.h>
 #endif
-#include <stdlib.h>
+#include <cstdlib>
 #ifndef WIN32
 #  include <sys/time.h>
 #endif /* WIN32 */

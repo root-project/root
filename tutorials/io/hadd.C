@@ -17,7 +17,7 @@
 /// \author Sven A. Schmidt, sven.schmidt@cern.ch, 13.2.2001
 
 
-#include <string.h>
+#include <cstring>
 #include "TChain.h"
 #include "TFile.h"
 #include "TH1.h"

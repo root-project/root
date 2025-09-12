@@ -22,7 +22,7 @@
 #include "TMath.h"
 #include "RooRandom.h"
 #include "RooFormulaVar.h"
-#include <math.h>
+#include <cmath>
 
 using namespace std;
 

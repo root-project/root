@@ -52,7 +52,7 @@ set to the owner of its own content.
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TVirtualMutex.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 ClassImp(TObjArray);
 

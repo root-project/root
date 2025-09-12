@@ -23,7 +23,7 @@
 #include "TTimeStamp.h"
 #include "Windows4Root.h"
 
-#include <errno.h>
+#include <cerrno>
 
 ClassImp(TWin32Condition);
 

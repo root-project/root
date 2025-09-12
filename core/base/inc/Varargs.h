@@ -20,7 +20,7 @@
 #   define va_arg(ap, mode) ((mode*) __builtin_va_arg_incr((mode*)ap))[0]
 #   define va_(arg) __builtin_va_alist
 
-#   include <stdio.h>
+#   include <cstdio>
 
    extern "C" {
       int vfprintf(FILE*, const char *fmt, va_list ap);
@@ -28,7 +28,7 @@
    };
 
 #else
-#   include <stdarg.h>
+#   include <cstdarg>
 #   if defined(sparc) && !defined(__GNUG__) && !defined(__CC_SUN21__) && !defined(__SVR4)
 #      define va_(arg) __builtin_va_alist
 #   else

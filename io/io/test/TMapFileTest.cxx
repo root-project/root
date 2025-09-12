@@ -1,5 +1,5 @@
 #include <atomic>
-#include <stdio.h>
+#include <cstdio>
 #include <future>
 #include <thread>
 

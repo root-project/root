@@ -22,7 +22,7 @@
 #include "TCanvas.h"
 #include "TMath.h"
 // eventually, load some C libraries
-#include <math.h>
+#include <cmath>
 
 void ExampleMacro();
 

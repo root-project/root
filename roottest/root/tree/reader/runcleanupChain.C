@@ -2,7 +2,7 @@
 #include "TTreeReader.h"
 #include "TROOT.h"
 #include <vector>
-#include <stdio.h>
+#include <cstdio>
 
 Bool_t FindObject_loop(TCollection *col, TObject *obj)
 {

@@ -47,7 +47,7 @@
 #endif
 
 #if defined(_WIN32) && (_MSC_VER >= 1300)
-# include <stdlib.h>
+# include <cstdlib>
 # pragma intrinsic(_byteswap_ushort,_byteswap_ulong,_byteswap_uint64)
 # define R__USEASMSWAP
 #endif

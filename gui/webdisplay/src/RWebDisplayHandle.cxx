@@ -37,8 +37,8 @@
 #include <process.h>
 #else
 #include <unistd.h>
-#include <stdlib.h>
-#include <signal.h>
+#include <cstdlib>
+#include <csignal>
 #include <spawn.h>
 #ifdef R__MACOSX
 #include <sys/wait.h>

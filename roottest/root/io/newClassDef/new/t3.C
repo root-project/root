@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 void t3()
 {
 double epsilon = 10e-7;

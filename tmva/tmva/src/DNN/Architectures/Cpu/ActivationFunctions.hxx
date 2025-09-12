@@ -15,7 +15,7 @@
  ///////////////////////////////////////////////////////////////////
 
 #include "TMVA/DNN/Architectures/Cpu.h"
-#include <math.h>
+#include <cmath>
 
 #ifdef R__HAS_VDT
 #include "vdt/tanh.h"

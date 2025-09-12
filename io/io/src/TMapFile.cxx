@@ -85,7 +85,7 @@ robust Streamer mechanism I opted for 3).
 #endif
 
 #include <fcntl.h>
-#include <errno.h>
+#include <cerrno>
 
 #include "TMapFile.h"
 #include "TKeyMapFile.h"

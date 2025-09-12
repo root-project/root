@@ -24,7 +24,7 @@
 #include <algorithm>
 #include <cstdio>
 
-#include <errno.h>
+#include <cerrno>
 #include <string>
 #include <list>
 #include <sstream>
@@ -64,7 +64,7 @@
 #endif // R__FBSD
 
 #if !defined(R__WIN32)
-#include <limits.h>
+#include <climits>
 #include <unistd.h>
 #endif
 
@@ -4463,7 +4463,7 @@ int RootClingMain(int argc,
 
    if (!isGenreflex) { // rootcling
       // ROOTCINT uses to define a few header implicitly, we need to do it explicitly.
-      if (interp.declare("#include <assert.h>\n"
+      if (interp.declare("#include <cassert>\n"
                          "#include \"Rtypes.h\"\n"
                          "#include \"TObject.h\"") != cling::Interpreter::kSuccess
          ) {

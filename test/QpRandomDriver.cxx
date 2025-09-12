@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include <cstdlib>
 #include "Riostream.h"
 
 #include "TQpDataDens.h"

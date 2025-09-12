@@ -5,10 +5,10 @@
 #error Dict.h/C is only for compilation. Abort cint.
 #endif
 #include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <cstring>
 #define G__ANSIHEADER
 #define G__DICTIONARY
 #include "G__ci.h"

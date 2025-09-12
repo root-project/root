@@ -90,7 +90,7 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #endif
 #endif
 #include <fcntl.h>
-#include <errno.h>
+#include <cerrno>
 #include <sys/stat.h>
 #ifndef WIN32
 #include <unistd.h>
@@ -151,7 +151,7 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "TGlobal.h"
 #include "ROOT/RConcurrentHashColl.hxx"
 #include <memory>
-#include <inttypes.h>
+#include <cinttypes>
 
 #ifdef R__FBSD
 #include <sys/extattr.h>

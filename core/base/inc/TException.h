@@ -22,7 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <setjmp.h>
+#include <csetjmp>
 
 #include <ROOT/RConfig.hxx>
 #include "DllImport.h"

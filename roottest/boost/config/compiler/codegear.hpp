@@ -66,7 +66,7 @@
 #     undef strcmp
 #  endif
    // fix broken errno declaration:
-#  include <errno.h>
+#  include <cerrno>
 #  ifndef errno
 #     define errno errno
 #  endif

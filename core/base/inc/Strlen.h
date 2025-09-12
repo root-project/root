@@ -14,7 +14,7 @@
 #include <ROOT/RConfig.hxx>
 
 #ifdef NEED_STRING
-#include <string.h>
+#include <cstring>
 #endif
 
 #endif

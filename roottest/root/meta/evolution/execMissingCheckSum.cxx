@@ -8,7 +8,7 @@ public:
    Int_t fValue;
 };
 
-#include <stdint.h>
+#include <cstdint>
 #include <vector>
 
 struct HcalFlagHFDigiTimeParam {

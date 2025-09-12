@@ -39,7 +39,7 @@
 #include <list>
 #include <array>
 #include <functional>
-#include <stdlib.h>
+#include <cstdlib>
 #include "TApplication.h"
 #include "TEntryList.h"
 #include "TEventList.h"

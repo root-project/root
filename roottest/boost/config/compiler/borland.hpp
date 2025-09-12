@@ -75,7 +75,7 @@
 #     undef strcmp
 #  endif
    // fix broken errno declaration:
-#  include <errno.h>
+#  include <cerrno>
 #  ifndef errno
 #     define errno errno
 #  endif
@@ -209,7 +209,7 @@
 // <climits> is partly broken, some macros define symbols that are really in
 // namespace std, so you end up having to use illegal constructs like
 // std::DBL_MAX, as a fix we'll just include float.h and have done with:
-#include <float.h>
+#include <cfloat>
 #endif
 //
 // __int64:

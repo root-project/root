@@ -149,10 +149,10 @@
 #  endif
 #elif defined(__BORLANDC__) && __BORLANDC__ < 0x560
 // STLport doesn't import std::abs correctly:
-#include <stdlib.h>
+#include <cstdlib>
 namespace std { using ::abs; }
 // and strcmp/strcpy don't get imported either ('cos they are macros)
-#include <string.h>
+#include <cstring>
 #ifdef strcpy
 #  undef strcpy
 #endif

@@ -17,7 +17,7 @@
 The concrete implementation of TBuffer for writing/reading to/from a ROOT file or socket.
 */
 
-#include <string.h>
+#include <cstring>
 #include <typeinfo>
 #include <string>
 #include <limits>

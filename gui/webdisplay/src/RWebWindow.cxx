@@ -25,7 +25,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <utility>
-#include <assert.h>
+#include <cassert>
 #include <algorithm>
 #include <fstream>
 

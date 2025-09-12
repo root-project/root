@@ -28,7 +28,7 @@
 #include "TSocket.h"
 #include "Riostream.h"
 #include "rhtml.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 #ifdef WIN32
 #include "TWin32SplashThread.h"

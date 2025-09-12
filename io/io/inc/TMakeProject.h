@@ -12,7 +12,7 @@
 #ifndef ROOT_TMakeProject
 #define ROOT_TMakeProject
 
-#include <stdio.h>
+#include <cstdio>
 #include "TString.h"
 
 class TList;

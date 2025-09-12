@@ -33,7 +33,7 @@
 
 // Routines for processing URLs.
 
-#include <ctype.h>
+#include <cctype>
 #include <cstring>
 #include <cstdlib>
 

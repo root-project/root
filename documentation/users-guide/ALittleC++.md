@@ -235,7 +235,7 @@ equation `ax**2 + bx +c = 0`.
 
 ``` {.cpp}
    #include <iostream.h>
-   #include <math.h>
+   #include <cmath>
    #include "Quad.h"
 
    Quad::Quad(Float_t a, Float_t b, Float_t c) {

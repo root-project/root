@@ -3,7 +3,7 @@
 #endif
 
 #include "MyClass.h"
-#include <stdlib.h>
+#include <cstdlib>
 #include <Riostream.h>
 #include <TObject.h>
 

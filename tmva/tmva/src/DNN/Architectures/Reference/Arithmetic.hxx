@@ -15,7 +15,7 @@
 //////////////////////////////////////////////////////////////////
 
 #include "TMVA/DNN/Architectures/Reference.h"
-#include <math.h>
+#include <cmath>
 
 namespace TMVA {
 namespace DNN {

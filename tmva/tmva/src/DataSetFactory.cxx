@@ -33,7 +33,7 @@ Class that contains all the data information
 
 */
 
-#include <assert.h>
+#include <cassert>
 
 #include <map>
 #include <vector>

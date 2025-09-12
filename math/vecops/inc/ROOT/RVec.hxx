@@ -24,7 +24,8 @@
       #ifndef _USE_MATH_DEFINES
          #define _USE_MATH_DEFINES
       #endif
-      #include <math.h>
+      #include <math.h> // for M_PI
+      // TODO once minimum standard is C++20: replace with std::numbers::pi and remove this codeblock
       #undef _USE_MATH_DEFINES
    #endif
    #define _VECOPS_USE_EXTERN_TEMPLATES false

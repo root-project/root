@@ -13,7 +13,7 @@
 
 #define BOOST_PLATFORM "HP-UX"
 
-// In principle, HP-UX has a nice <stdint.h> under the name <inttypes.h>
+// In principle, HP-UX has a nice <cstdint> under the name <cinttypes>
 // However, it has the following problem:
 // Use of UINT32_C(0) results in "0u l" for the preprocessed source
 // (verifyable with gcc 2.95.3)

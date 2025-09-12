@@ -15,7 +15,7 @@
 #define BOOST_HAS_CLOCK_GETTIME
 
 // This needs support in "boost/cstdint.hpp" exactly like FreeBSD.
-// This platform has header named <inttypes.h> which includes all
+// This platform has header named <cinttypes> which includes all
 // the things needed.
 #define BOOST_HAS_STDINT_H
 

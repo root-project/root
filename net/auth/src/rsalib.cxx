@@ -29,11 +29,11 @@ MA  02110-1301  USA
 *                                                                              *
 *******************************************************************************/
 
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <errno.h>
+#include <cstdio>
+#include <cstring>
+#include <cctype>
+#include <cstdlib>
+#include <cerrno>
 
 #include "rsaaux.h"
 #include "rsalib.h"

@@ -25,7 +25,7 @@
 #  define BOOST_NO_STD_MESSAGES
 #endif
 
-// check C lib version for <stdint.h>
+// check C lib version for <cstdint>
 #include <cstddef>
 
 #if defined(__MSL__) && (__MSL__ >= 0x5000)

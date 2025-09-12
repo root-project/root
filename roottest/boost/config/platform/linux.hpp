@@ -14,12 +14,12 @@
 #include <cstdlib>
 
 //
-// <stdint.h> added to glibc 2.1.1
+// <cstdint> added to glibc 2.1.1
 // We can only test for 2.1 though:
 //
 #if defined(__GLIBC__) && ((__GLIBC__ > 2) || ((__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1)))
-   // <stdint.h> defines int64_t unconditionally, but <sys/types.h> defines
-   // int64_t only if __GNUC__.  Thus, assume a fully usable <stdint.h>
+   // <cstdint> defines int64_t unconditionally, but <sys/types.h> defines
+   // int64_t only if __GNUC__.  Thus, assume a fully usable <cstdint>
    // only when using GCC.
 #  if defined __GNUC__
 #    define BOOST_HAS_STDINT_H
@@ -72,7 +72,7 @@
 #ifndef __GNUC__
 //
 // if the compiler is not gcc we still need to be able to parse
-// the GNU system headers, some of which (mainly <stdint.h>)
+// the GNU system headers, some of which (mainly <cstdint>)
 // use GNU specific extensions:
 //
 #  ifndef __extension__

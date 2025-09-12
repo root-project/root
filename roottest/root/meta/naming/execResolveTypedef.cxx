@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 #include <TClassEdit.h>
 #include <TClass.h>
 #include <cstdint>

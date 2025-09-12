@@ -28,7 +28,7 @@ TFile behaviour.
 #include "TROOT.h"
 
 #include <cstdlib>
-#include <errno.h>
+#include <cerrno>
 #include <sys/stat.h>
 #include <sys/types.h>
 

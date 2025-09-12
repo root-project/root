@@ -47,8 +47,8 @@
 #include <process.h>
 #include <io.h>
 #include <direct.h>
-#include <ctype.h>
-#include <float.h>
+#include <cctype>
+#include <cfloat>
 #include <sys/stat.h>
 #include <csignal>
 #include <cstdio>

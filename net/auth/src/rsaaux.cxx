@@ -29,11 +29,11 @@ MA  02110-1301  USA
 *                                                                               *
 *******************************************************************************/
 
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
-#include <stdlib.h>
-#include <time.h>
+#include <cstdio>
+#include <cctype>
+#include <cstring>
+#include <cstdlib>
+#include <ctime>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>

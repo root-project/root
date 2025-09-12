@@ -8,7 +8,7 @@
 #include <TLorentzVector.h>
 #include <TRotation.h>
 #include <TLorentzRotation.h>
-#include <assert.h>
+#include <cassert>
 #endif
 
 Double_t DEPS=1.0e-14;

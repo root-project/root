@@ -21,7 +21,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TObject.h"
-#include <string.h>
+#include <cstring>
 
 class TBits : public TObject {
 

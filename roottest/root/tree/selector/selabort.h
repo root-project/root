@@ -17,7 +17,7 @@
 #ifndef __CINT__
 #include <Riostream.h>
 #endif
-#include <stdio.h>
+#include <cstdio>
 
 class selabort : public TSelector {
    public :

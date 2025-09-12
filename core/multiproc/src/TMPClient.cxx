@@ -18,7 +18,7 @@
 #include "TSocket.h"
 #include "TSystem.h" //gSystem
 #include "TVirtualX.h" //gVirtualX
-#include <errno.h> //errno, used by socketpair
+#include <cerrno> //errno, used by socketpair
 #include <memory> //unique_ptr
 #include <sys/socket.h> //socketpair
 #include <sys/wait.h> // waitpid

@@ -169,7 +169,7 @@ item's own key).
 #include "TBuffer.h"
 #include "TObject.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 
 
 ClassImp(TBtree);

@@ -58,12 +58,12 @@
 
 #include "gl2ps.h"
 
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 #include <sys/types.h>
-#include <stdarg.h>
-#include <time.h>
-#include <float.h>
+#include <cstdarg>
+#include <ctime>
+#include <cfloat>
 #include <string>
 
 #if defined(GL2PS_HAVE_ZLIB)

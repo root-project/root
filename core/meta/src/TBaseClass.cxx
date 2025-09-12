@@ -13,7 +13,7 @@
 #include "TBuffer.h"
 #include "TClass.h"
 #include "TInterpreter.h"
-#include <limits.h>
+#include <climits>
 
 #include "TVirtualMutex.h" // For R__LOCKGUARD
 

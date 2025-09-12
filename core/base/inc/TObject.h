@@ -18,7 +18,7 @@
 #include "TStorage.h"
 #include "TVersionCheck.h"
 
-#include <stdarg.h>
+#include <cstdarg>
 #include <string>
 #include <iosfwd>
 

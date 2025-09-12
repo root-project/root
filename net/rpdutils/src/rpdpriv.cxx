@@ -23,11 +23,11 @@
 #include "RConfigure.h"
 
 #if !defined(WINDOWS)
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <unistd.h>
 #include <pwd.h>
-#include <errno.h>
+#include <cerrno>
 #include <iostream>
 using std::cout, std::endl;
 

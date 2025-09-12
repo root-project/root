@@ -1,7 +1,7 @@
 // @(#)root/test:$Id$
 // Author: Fons Rademakers   19/08/96
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "Riostream.h"
 #include "TString.h"

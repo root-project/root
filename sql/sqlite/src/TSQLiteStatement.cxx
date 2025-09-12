@@ -25,7 +25,7 @@
 
 #include <sqlite3.h>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 ClassImp(TSQLiteStatement);
 

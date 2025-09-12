@@ -13,7 +13,7 @@
 #define ROOT_TSQLFile
 
 #include "TFile.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 class TList;
 class TStreamerElement;

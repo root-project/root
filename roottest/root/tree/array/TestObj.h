@@ -8,7 +8,7 @@
 #include <TClass.h>
 #include <TClonesArray.h>
 
-#include <stdio.h>
+#include <cstdio>
 
 class Particle {
                 public:

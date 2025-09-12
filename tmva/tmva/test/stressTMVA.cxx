@@ -3216,7 +3216,7 @@ void addComplexClassificationTests(UnitTestSuite &TMVA_test, bool full = true)
       new MethodUnitTestWithComplexData(trees, prep, TMVA::Types::kSVM, "SVM", "Gamma=0.4:Tol=0.001", 0.955, 0.975));
 }
 
-// #include <fenv.h>
+// #include <cfenv>
 
 int main(int argc, char **argv)
 {
