@@ -426,27 +426,20 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
       } else if (resolvedType.substr(0, 9) == "std::set<") {
          std::string itemTypeName = resolvedType.substr(9, resolvedType.length() - 10);
          auto itemField = Create("_0", itemTypeName, options, desc, maybeGetChildId(0)).Unwrap();
-         auto normalizedInnerTypeName = itemField->GetTypeName();
-         result =
-            std::make_unique<RSetField>(fieldName, "std::set<" + normalizedInnerTypeName + ">", std::move(itemField));
+         result = std::make_unique<RSetField>(fieldName, RSetField::ESetType::kSet, std::move(itemField));
       } else if (resolvedType.substr(0, 19) == "std::unordered_set<") {
          std::string itemTypeName = resolvedType.substr(19, resolvedType.length() - 20);
          auto itemField = Create("_0", itemTypeName, options, desc, maybeGetChildId(0)).Unwrap();
-         auto normalizedInnerTypeName = itemField->GetTypeName();
-         result = std::make_unique<RSetField>(fieldName, "std::unordered_set<" + normalizedInnerTypeName + ">",
-                                              std::move(itemField));
+         result = std::make_unique<RSetField>(fieldName, RSetField::ESetType::kUnorderedSet, std::move(itemField));
       } else if (resolvedType.substr(0, 14) == "std::multiset<") {
          std::string itemTypeName = resolvedType.substr(14, resolvedType.length() - 15);
          auto itemField = Create("_0", itemTypeName, options, desc, maybeGetChildId(0)).Unwrap();
-         auto normalizedInnerTypeName = itemField->GetTypeName();
-         result = std::make_unique<RSetField>(fieldName, "std::multiset<" + normalizedInnerTypeName + ">",
-                                              std::move(itemField));
+         result = std::make_unique<RSetField>(fieldName, RSetField::ESetType::kMultiSet, std::move(itemField));
       } else if (resolvedType.substr(0, 24) == "std::unordered_multiset<") {
          std::string itemTypeName = resolvedType.substr(24, resolvedType.length() - 25);
          auto itemField = Create("_0", itemTypeName, options, desc, maybeGetChildId(0)).Unwrap();
          auto normalizedInnerTypeName = itemField->GetTypeName();
-         result = std::make_unique<RSetField>(fieldName, "std::unordered_multiset<" + normalizedInnerTypeName + ">",
-                                              std::move(itemField));
+         result = std::make_unique<RSetField>(fieldName, RSetField::ESetType::kUnorderedMultiSet, std::move(itemField));
       } else if (resolvedType.substr(0, 9) == "std::map<") {
          auto innerTypes = TokenizeTypeList(resolvedType.substr(9, resolvedType.length() - 10));
          if (innerTypes.size() != 2) {
