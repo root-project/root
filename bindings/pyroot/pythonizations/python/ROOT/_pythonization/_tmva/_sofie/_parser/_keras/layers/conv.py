@@ -1,6 +1,6 @@
 from cppyy import gbl as gbl_namespace
 import math
-from .. import keras_version
+from .. import get_keras_version
 
 def MakeKerasConv(layer): 
     """
@@ -19,6 +19,9 @@ def MakeKerasConv(layer):
     Returns:
     ROperator_Conv: A SOFIE framework operator representing the convolutional layer operation.
     """
+    
+    keras_version = get_keras_version()
+    
     finput = layer['layerInput']
     foutput = layer['layerOutput']
     fLayerDType = layer['layerDType']

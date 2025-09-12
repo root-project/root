@@ -1,5 +1,5 @@
 from cppyy import gbl as gbl_namespace
-from .. import keras_version
+from .. import get_keras_version
 
 def MakeKerasBatchNorm(layer): 
     """
@@ -18,6 +18,8 @@ def MakeKerasBatchNorm(layer):
     Returns:
     ROperator_BatchNormalization: A SOFIE framework operator representing the batch normalization operation.
     """
+    
+    keras_version = get_keras_version()
         
     finput = layer['layerInput']
     foutput = layer['layerOutput']
