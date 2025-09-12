@@ -1,10 +1,15 @@
-void FillPoly(TH2Poly& th2p){
+#include <iostream>
+using namespace std;
+
+void FillPoly(TH2Poly& th2p)
+{
    for (auto i : ROOT::TSeqI(1000)){
       th2p.Fill(gRandom->Uniform(),gRandom->Uniform(),gRandom->Uniform());
    }
 }
 
-TH2Poly *CreatePoly() {
+TH2Poly *CreatePoly()
+{
    auto h2p = new TH2Poly();
    Double_t x1[] = {0, 5, 6};
    Double_t y1[] = {0, 0, 5};
@@ -19,7 +24,8 @@ TH2Poly *CreatePoly() {
    return h2p;
 }
 
-TH2Poly *CreatePolyDiffContour() {
+TH2Poly *CreatePolyDiffContour()
+{
    auto h2p = new TH2Poly();
    Double_t x1[] = {0, 5, 6};
    Double_t y1[] = {0, 0, 5};
@@ -34,8 +40,8 @@ TH2Poly *CreatePolyDiffContour() {
    return h2p;
 }
 
-int th2PolyMerge() {
-
+int th2PolyMerge()
+{
    cout << "We expect two warnings to be printed:\n"
            " 1) About different number of bins\n"
            " 2) About different contours\n";
@@ -68,6 +74,4 @@ int th2PolyMerge() {
    if (totEntries != 0) return 3;
 
    return 0;
-
-
 }
