@@ -50,6 +50,7 @@ private:
    void
    ParseTreeFilename(const char *name, TString &filename, TString &treename, TString &query, TString &suffix) const;
    Long64_t RefreshFriendAddresses();
+   TTreeCache *CleanupCurrentFileAndTree();
 
 protected:
    void InvalidateCurrentTree();
