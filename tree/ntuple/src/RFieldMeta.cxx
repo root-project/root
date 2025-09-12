@@ -84,6 +84,24 @@ std::string BuildSetTypeName(ROOT::RSetField::ESetType setType, const ROOT::RFie
    return typePrefix + innerField.GetTypeName() + ">";
 }
 
+std::string BuildMapTypeName(ROOT::RMapField::EMapType mapType, const ROOT::RFieldBase *innerField)
+{
+   if (const auto pairField = dynamic_cast<const ROOT::RPairField *>(innerField)) {
+      std::string typePrefix;
+      switch (mapType) {
+      case ROOT::RMapField::EMapType::kMap: typePrefix = "std::map<"; break;
+      case ROOT::RMapField::EMapType::kUnorderedMap: typePrefix = "std::unordered_map<"; break;
+      case ROOT::RMapField::EMapType::kMultiMap: typePrefix = "std::multimap<"; break;
+      case ROOT::RMapField::EMapType::kUnorderedMultiMap: typePrefix = "std::unordered_multimap<"; break;
+      default: R__ASSERT(false);
+      }
+      auto subFields = pairField->GetConstSubfields();
+      return typePrefix + subFields[0]->GetTypeName() + "," + subFields[1]->GetTypeName() + ">";
+   }
+
+   throw ROOT::RException(R__FAIL("RMapField inner field type must be of RPairField"));
+}
+
 } // anonymous namespace
 
 ROOT::RClassField::RClassField(std::string_view fieldName, const RClassField &source)
@@ -820,12 +838,9 @@ void ROOT::RProxiedCollectionField::AcceptVisitor(ROOT::Detail::RFieldVisitor &v
 
 //------------------------------------------------------------------------------
 
-ROOT::RMapField::RMapField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField)
-   : RProxiedCollectionField(fieldName, EnsureValidClass(typeName))
+ROOT::RMapField::RMapField(std::string_view fieldName, EMapType mapType, std::unique_ptr<RFieldBase> itemField)
+   : RProxiedCollectionField(fieldName, EnsureValidClass(BuildMapTypeName(mapType, itemField.get())))
 {
-   if (!dynamic_cast<RPairField *>(itemField.get()))
-      throw RException(R__FAIL("RMapField inner field type must be of RPairField"));
-
    auto *itemClass = fProxy->GetValueClass();
    fItemSize = itemClass->GetClassSize();
 

@@ -445,67 +445,35 @@ ROOT::RFieldBase::Create(const std::string &fieldName, const std::string &typeNa
          if (innerTypes.size() != 2) {
             return R__FORWARD_RESULT(fnFail("the type list for std::map must have exactly two elements"));
          }
-
          auto itemField =
             Create("_0", "std::pair<" + innerTypes[0] + "," + innerTypes[1] + ">", options, desc, maybeGetChildId(0))
                .Unwrap();
-
-         // We use the type names of subfields of the newly created item fields to create the map's type name to
-         // ensure the inner type names are properly normalized.
-         auto keyTypeName = itemField->GetConstSubfields()[0]->GetTypeName();
-         auto valueTypeName = itemField->GetConstSubfields()[1]->GetTypeName();
-
-         result = std::make_unique<RMapField>(fieldName, "std::map<" + keyTypeName + "," + valueTypeName + ">",
-                                              std::move(itemField));
+         result = std::make_unique<RMapField>(fieldName, RMapField::EMapType::kMap, std::move(itemField));
       } else if (resolvedType.substr(0, 19) == "std::unordered_map<") {
          auto innerTypes = TokenizeTypeList(resolvedType.substr(19, resolvedType.length() - 20));
          if (innerTypes.size() != 2)
             return R__FORWARD_RESULT(fnFail("the type list for std::unordered_map must have exactly two elements"));
-
          auto itemField =
             Create("_0", "std::pair<" + innerTypes[0] + "," + innerTypes[1] + ">", options, desc, maybeGetChildId(0))
                .Unwrap();
-
-         // We use the type names of subfields of the newly created item fields to create the map's type name to
-         // ensure the inner type names are properly normalized.
-         auto keyTypeName = itemField->GetConstSubfields()[0]->GetTypeName();
-         auto valueTypeName = itemField->GetConstSubfields()[1]->GetTypeName();
-
-         result = std::make_unique<RMapField>(
-            fieldName, "std::unordered_map<" + keyTypeName + "," + valueTypeName + ">", std::move(itemField));
+         result = std::make_unique<RMapField>(fieldName, RMapField::EMapType::kUnorderedMap, std::move(itemField));
       } else if (resolvedType.substr(0, 14) == "std::multimap<") {
          auto innerTypes = TokenizeTypeList(resolvedType.substr(14, resolvedType.length() - 15));
          if (innerTypes.size() != 2)
             return R__FORWARD_RESULT(fnFail("the type list for std::multimap must have exactly two elements"));
-
          auto itemField =
             Create("_0", "std::pair<" + innerTypes[0] + "," + innerTypes[1] + ">", options, desc, maybeGetChildId(0))
                .Unwrap();
-
-         // We use the type names of subfields of the newly created item fields to create the map's type name to
-         // ensure the inner type names are properly normalized.
-         auto keyTypeName = itemField->GetConstSubfields()[0]->GetTypeName();
-         auto valueTypeName = itemField->GetConstSubfields()[1]->GetTypeName();
-
-         result = std::make_unique<RMapField>(fieldName, "std::multimap<" + keyTypeName + "," + valueTypeName + ">",
-                                              std::move(itemField));
+         result = std::make_unique<RMapField>(fieldName, RMapField::EMapType::kMultiMap, std::move(itemField));
       } else if (resolvedType.substr(0, 24) == "std::unordered_multimap<") {
          auto innerTypes = TokenizeTypeList(resolvedType.substr(24, resolvedType.length() - 25));
          if (innerTypes.size() != 2)
             return R__FORWARD_RESULT(
                fnFail("the type list for std::unordered_multimap must have exactly two elements"));
-
          auto itemField =
             Create("_0", "std::pair<" + innerTypes[0] + "," + innerTypes[1] + ">", options, desc, maybeGetChildId(0))
                .Unwrap();
-
-         // We use the type names of subfields of the newly created item fields to create the map's type name to
-         // ensure the inner type names are properly normalized.
-         auto keyTypeName = itemField->GetConstSubfields()[0]->GetTypeName();
-         auto valueTypeName = itemField->GetConstSubfields()[1]->GetTypeName();
-
-         result = std::make_unique<RMapField>(
-            fieldName, "std::unordered_multimap<" + keyTypeName + "," + valueTypeName + ">", std::move(itemField));
+         result = std::make_unique<RMapField>(fieldName, RMapField::EMapType::kUnorderedMultiMap, std::move(itemField));
       } else if (resolvedType.substr(0, 12) == "std::atomic<") {
          std::string itemTypeName = resolvedType.substr(12, resolvedType.length() - 13);
          auto itemField = Create("_0", itemTypeName, options, desc, maybeGetChildId(0)).Unwrap();
