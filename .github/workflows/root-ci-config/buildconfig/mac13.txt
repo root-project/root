@@ -26,6 +26,7 @@ builtin_xxhash=ON
 builtin_zeromq=ON
 builtin_zstd=ON
 cocoa=ON
+curl=OFF
 fortran=OFF
 minuit2_omp=OFF
 tmva-sofie=ON
