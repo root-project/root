@@ -720,6 +720,11 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
          pdf->setStringAttribute("combined_data_name", found->val().c_str());
       }
    }
+
+   if(analysisNode.has_child("init") && workspace.getSnapshot(analysisNode["init"].val().c_str())){
+     mc->SetSnapshot(*workspace.getSnapshot(analysisNode["init"].val().c_str()));
+   }
+   
 }
 
 void combinePdfs(const JSONNode &rootnode, RooWorkspace &ws)
@@ -1540,14 +1545,6 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       std::cerr << "Error: Could not open file for writing.\n";
    }*/
 
-   // this is a binned dataset
-   if (auto dh = dynamic_cast<RooDataHist const *>(&data)) {
-      output["type"] << "binned";
-      return exportHisto(*dh->get(), dh->numEntries(), dh->weightArray(), output);
-   }
-
-   // this is a regular unbinned dataset
-
    // This works around a problem in RooStats/HistFactory that was only fixed
    // in ROOT 6.30: until then, the weight variable of the observed dataset,
    // called "weightVar", was added to the observables. Therefore, it also got
@@ -1559,6 +1556,16 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       variables.remove(*weightVar);
    }
 
+   for (RooAbsArg *arg : variables) {
+      exportVariable(arg, output["axes"]);
+   }
+   
+   // this is a regular binned dataset
+   if (auto dh = dynamic_cast<RooDataHist const *>(&data)) {
+      output["type"] << "binned";
+      return exportHisto(*dh->get(), dh->numEntries(), dh->weightArray(), output);
+   }
+  
    // Check if this actually represents a binned dataset, and then import it
    // like a RooDataHist. This happens frequently when people create combined
    // RooDataSets from binned data to fit HistFactory models. In this case, it
@@ -1598,11 +1605,8 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       }
    }
 
+   // this really is an unbinned dataset
    output["type"] << "unbinned";
-
-   for (RooAbsArg *arg : variables) {
-      exportVariable(arg, output["axes"]);
-   }
    auto &coords = output["entries"].set_seq();
    std::vector<double> weightVals;
    bool hasNonUnityWeights = false;
