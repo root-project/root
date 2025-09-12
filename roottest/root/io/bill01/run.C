@@ -7,14 +7,14 @@ int run()
 
 	{
 	   TFile fsmall("mytest_small.root", "RECREATE", "small object", 0);
-	   MyObject asmall(100, 100);
+	   MyObject asmall(100, 50);
 	   asmall.Write();
 	   size_small = fsmall.GetSize();
 	}
 
    {
 	   TFile fbig("mytest_big.root", "RECREATE", "big object", 0);
-	   MyObject abig(10000, 10000);
+	   MyObject abig(10000, 5000);
 	   abig.Write();
 	   size_big = fbig.GetSize();
 	}
