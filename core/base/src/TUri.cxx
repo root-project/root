@@ -19,7 +19,7 @@ the different parts of an URI. The functionality is that of
 a validating parser.
 */
 
-#include <ctype.h>    // for tolower()
+#include <cctype>    // for tolower()
 #include "TUri.h"
 #include "TObjArray.h"
 #include "TObjString.h"

@@ -5,7 +5,7 @@
 #include <set>
 #include <list>
 #include <sstream>
-#include <stdlib.h>
+#include <cstdlib>
 
 using namespace std;
 

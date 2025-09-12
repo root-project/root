@@ -12,7 +12,7 @@
 
 #include <limits>
 #include <cstdlib>
-#include <stdio.h>
+#include <cstdio>
 // test of tformula neeeded to be run
 
 

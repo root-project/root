@@ -22,7 +22,7 @@
 #        define BOOST_HAS_NL_TYPES_H
 #     endif
 
-      // POSIX version 6 requires <stdint.h>
+      // POSIX version 6 requires <cstdint>
 #     if defined(_POSIX_VERSION) && (_POSIX_VERSION >= 200100)
 #        define BOOST_HAS_STDINT_H
 #     endif
@@ -32,7 +32,7 @@
 #        define BOOST_HAS_DIRENT_H
 #     endif
 
-      // POSIX version 3 requires <signal.h> to have sigaction:
+      // POSIX version 3 requires <csignal> to have sigaction:
 #     if defined(_POSIX_VERSION) && (_POSIX_VERSION >= 199506L)
 #        define BOOST_HAS_SIGACTION
 #     endif

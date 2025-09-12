@@ -28,8 +28,8 @@ int minexam();
 #include "TMath.h"
 #include "TStopwatch.h"
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 
 ////////////////////////////////////////////////////////////////////////////////
 

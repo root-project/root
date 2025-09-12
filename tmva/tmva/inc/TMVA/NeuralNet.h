@@ -49,7 +49,7 @@
 #include "TH1F.h"
 #include "TH2F.h"
 
-#include <fenv.h> // turn on or off exceptions for NaN and other numeric exceptions
+#include <cfenv> // turn on or off exceptions for NaN and other numeric exceptions
 
 
 namespace TMVA

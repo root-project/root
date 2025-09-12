@@ -31,7 +31,7 @@ This is the MVA factory.
 #include "RtypesCore.h"
 #include "TString.h"
 
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 
 class TString;

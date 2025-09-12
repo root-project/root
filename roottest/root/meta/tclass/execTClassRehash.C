@@ -6,7 +6,7 @@
 #include "TString.h"
 #include "TSystem.h"
 
-#include <stdio.h>
+#include <cstdio>
 
 void LoadAllTClass()
 {

@@ -19,7 +19,7 @@
 
 #include "RConfigure.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "TError.h"
 #include "TRootSecContext.h"

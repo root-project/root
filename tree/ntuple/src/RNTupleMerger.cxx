@@ -35,7 +35,7 @@
 
 #include <algorithm>
 #include <deque>
-#include <inttypes.h> // for PRIu64
+#include <cinttypes> // for PRIu64
 #include <initializer_list>
 #include <unordered_map>
 #include <vector>

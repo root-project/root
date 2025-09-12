@@ -22,7 +22,7 @@
 #include "TThread.h"
 
 #include <process.h>
-#include <errno.h>
+#include <cerrno>
 
 ClassImp(TWin32Thread);
 

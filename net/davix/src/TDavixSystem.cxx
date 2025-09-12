@@ -35,8 +35,8 @@
 #include "TVirtualPerfStats.h"
 #include "TDavixFileInternal.h"
 
-#include <errno.h>
-#include <stdlib.h>
+#include <cerrno>
+#include <cstdlib>
 #include <unistd.h>
 #include <fcntl.h>
 #include <davix.hpp>

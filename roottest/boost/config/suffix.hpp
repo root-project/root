@@ -47,14 +47,14 @@
 #endif
 
 //
-// look for long long by looking for the appropriate macros in <limits.h>.
+// look for long long by looking for the appropriate macros in <climits>.
 // Note that we use limits.h rather than climits for maximal portability,
 // remember that since these just declare a bunch of macros, there should be
 // no namespace issues from this.
 //
 #if !defined(BOOST_HAS_LONG_LONG) && !defined(BOOST_NO_LONG_LONG)                                              \
    && !defined(BOOST_MSVC) && !defined(__BORLANDC__)
-# include <limits.h>
+# include <climits>
 # if (defined(ULLONG_MAX) || defined(ULONG_LONG_MAX) || defined(ULONGLONG_MAX))
 #   define BOOST_HAS_LONG_LONG
 # else
@@ -289,7 +289,7 @@
 
 //
 // If the compiler claims to be C99 conformant, then it had better
-// have a <stdint.h>:
+// have a <cstdint>:
 //
 #  if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901)
 #     define BOOST_HAS_STDINT_H

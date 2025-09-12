@@ -28,7 +28,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace {
 

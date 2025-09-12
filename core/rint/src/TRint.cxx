@@ -47,7 +47,7 @@
 #include "snprintf.h"
 
 #ifdef R__UNIX
-#include <signal.h>
+#include <csignal>
 #include <unistd.h>
 #endif
 

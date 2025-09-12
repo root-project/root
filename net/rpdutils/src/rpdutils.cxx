@@ -22,7 +22,7 @@
 #include <ROOT/RConfig.hxx>
 #include "strlcpy.h"
 
-#include <ctype.h>
+#include <cctype>
 #include <fcntl.h>
 #include <pwd.h>
 #include <cstdio>
@@ -53,7 +53,7 @@
     defined(__APPLE__) || defined(__MACH__) || defined(cygwingcc)
 #include <grp.h>
 #include <sys/types.h>
-#include <signal.h>
+#include <csignal>
 #endif
 
 #ifdef _AIX

@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 
 
 void func(int a) {

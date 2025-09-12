@@ -334,7 +334,7 @@ typedef unsigned int  wint_t;
 /* A null pointer constant.  */
 
 
-/* in case <stdio.h> has defined it. */
+/* in case <cstdio> has defined it. */
 
 
 /* G++ *//* G++ */
