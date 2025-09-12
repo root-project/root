@@ -81,7 +81,7 @@ target_include_directories(Thread PUBLIC
 
 # keep include directory for ROOT/RSha256.hxx private
 set_source_files_properties(src/RConcurrentHashColl.cxx
-  PROPERTIES COMPILE_FLAGS -I${CMAKE_SOURCE_DIR}/core/foundation/res)
+  PROPERTIES COMPILE_FLAGS -I"${CMAKE_SOURCE_DIR}/core/foundation/res")
 
 if((tbb OR builtin_tbb) AND NOT MSVC)
   target_include_directories(Thread PRIVATE ${TBB_INCLUDE_DIRS})
