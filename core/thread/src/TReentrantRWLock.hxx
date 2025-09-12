@@ -20,6 +20,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <thread>
+#include <stdexcept>
 #include <unordered_map>
 
 #ifdef R__HAS_TBB
@@ -152,20 +153,40 @@ struct RecurseCounts {
 
 };
 
-#ifdef R__HAS_TBB
-struct RecurseCountsTBB {
+// This class is similar to RecurseCountsTBBUnique, but it doesn't use
+// different TLS keys for each instance of this class - just like
+// tbb::enumerable_thread_specific would do with tbb::ets_no_key.
+//
+// Instead of implementing the logic with TBB, this class implements it in
+// standard C++, using a fixed-sized array of thread local statics for the
+// data. This allows for fast lookups, just as if using different TLS keys per
+// instance (the alternative would have been the slower std::unordered_map).
+//
+// We can make this optimization because we know that only two instances of
+// this class will ever be created: one for gCoreMutex, and one for testing.
+//
+// Like this, we can reach the performance of tbb::enumerable_thread_specific
+// with tbb::ets_key_per_instance (as implemented in RecurseCountsTBBUnique),
+// but without depending on TBB.
+struct RecurseCountsThreadLocal {
+
+   RecurseCountsThreadLocal() : fId{nextId()} {}
+
    using Hint_t = TVirtualRWMutex::Hint_t;
 
    struct LocalCounts {
       size_t fReadersCount = 0;
       bool fIsWriter = false;
    };
-   tbb::enumerable_thread_specific<LocalCounts> fLocalCounts;
    size_t fWriteRecurse = 0; ///<! Number of re-entry in the lock by the same thread.
 
    using local_t = LocalCounts *;
 
-   local_t GetLocal() { return &fLocalCounts.local(); }
+   local_t GetLocal() {
+      // O(1) lookup with minimal overhead thanks to std::array
+      static thread_local std::array<LocalCounts, nMaxInstances> locals;
+      return &locals[fId];
+   }
 
    Hint_t *IncrementReadCount(local_t &local)
    {
@@ -210,8 +231,27 @@ struct RecurseCountsTBB {
    void ResetIsWriter(local_t &local) { local->fIsWriter = false; }
 
    size_t &GetLocalReadersCount(local_t &local) { return local->fReadersCount; }
+
+private:
+   // Only two instances are allowed to be created: one for gCoreMutex, and
+   // one for testing in testRWLock.cxx.
+   static constexpr std::size_t nMaxInstances = 2;
+
+   static size_t nextId()
+   {
+      static std::atomic<size_t> counter{0};
+      size_t cnt = counter++;
+      if (cnt >= nMaxInstances) {
+         throw std::runtime_error(
+            "Maximum number of ROOT::Internal::RecurseCountsThreadLocal instances reached!");
+      }
+      return cnt;
+   }
+
+   size_t fId = 0;
 };
 
+#ifdef R__HAS_TBB
 struct RecurseCountsTBBUnique {
    using Hint_t = TVirtualRWMutex::Hint_t;
 
