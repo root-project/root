@@ -82,6 +82,8 @@ private:
    /// Retrieving descriptor data from an RNTupleReader is supposed to be for testing and information purposes,
    /// not on a hot code path.
    std::optional<ROOT::RNTupleDescriptor> fCachedDescriptor;
+   /// We know that the RNTupleReader is always reading a single RNTuple, so the number of entries is fixed.
+   ROOT::NTupleSize_t fNEntries = 0;
    Experimental::Detail::RNTupleMetrics fMetrics;
    /// If not nullopt, these will be used when creating the model
    std::optional<ROOT::RNTupleDescriptor::RCreateModelOptions> fCreateModelOptions;
@@ -172,21 +174,19 @@ public:
    ~RNTupleReader();
 
    /// Returns the number of entries in this RNTuple.
-   /// \attention This method requires locking a mutex, therefore it can become relatively expensive to call repeatedly
-   /// (even in the absence of contention). Unless necessary, you should not call this method in the condition of a
-   /// `for` loop. Instead, either call it once and cache the result, use the faster `GetEntryRange()` or, equivalently,
-   /// use the RNTupleReader directly as an iterator.
-   ///
+   /// Note that the recommended way to iterate the RNTuple is using
    /// ~~~ {.cpp}
-   /// // BAD for performance:
-   /// for (auto i = 0u; i < reader->GetNEntries(); ++i) { ... }
-   ///
-   /// // GOOD for performance (all equivalent):
-   /// for (auto i = 0u, n = reader->GetNEntries(); i < n; ++i) { ... }
+   /// // RECOMMENDED way to iterate an ntuple
    /// for (auto i : reader->GetEntryRange()) { ... }
-   /// for (auto i : *reader) { ... }
    /// ~~~
-   ROOT::NTupleSize_t GetNEntries() const { return fSource->GetNEntries(); }
+   /// instead of
+   /// ~~~ {.cpp}
+   /// // DISCOURAGED way to iterate an ntuple
+   /// for (auto i = 0u; i < reader->GetNEntries(); ++i) { ... }
+   /// ~~~
+   /// The reason is that determining the number of entries, while currently cheap, may in the future be
+   /// an expensive operation.
+   ROOT::NTupleSize_t GetNEntries() const { return fNEntries; }
    const ROOT::RNTupleModel &GetModel();
    std::unique_ptr<ROOT::REntry> CreateEntry();
 
