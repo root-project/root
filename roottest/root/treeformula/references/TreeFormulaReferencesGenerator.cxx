@@ -80,7 +80,7 @@
 //
 ////////////////////////////////////////////////////////////////////////
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "Riostream.h"
 #include "TROOT.h"

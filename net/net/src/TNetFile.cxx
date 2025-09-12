@@ -48,7 +48,7 @@ started either via inetd or by hand from the command line (no need
 to be super user).
 **/
 
-#include <errno.h>
+#include <cerrno>
 
 #include "Bytes.h"
 #include "NetErrors.h"

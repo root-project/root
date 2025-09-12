@@ -15,8 +15,8 @@
 #include "Rtypes.h"
 
 #include <iostream>
-#include <stdlib.h>
-#include <stdint.h>
+#include <cstdlib>
+#include <cstdint>
 
 
 namespace ROOT {

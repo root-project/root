@@ -41,7 +41,7 @@
 // See also SealBase/DebugAids.h:83 (NDEBUG is defined as 1 else problems)
 //#ifdef _WIN32
 //#define NDEBUG 1
-//#include <assert.h>
+//#include <cassert>
 //#endif
 
 // Disable compilation warning C4345 ('behavior change: an object of POD type

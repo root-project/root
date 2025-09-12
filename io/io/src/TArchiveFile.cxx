@@ -25,7 +25,7 @@ or TAR archive.
 #include "TObjString.h"
 #include "TError.h"
 #include "TUrl.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 
 ClassImp(TArchiveFile);

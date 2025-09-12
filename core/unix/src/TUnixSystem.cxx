@@ -94,15 +94,15 @@
 #include <utime.h>
 #include <syslog.h>
 #include <sys/stat.h>
-#include <setjmp.h>
-#include <signal.h>
+#include <csetjmp>
+#include <csignal>
 #include <sys/param.h>
 #include <pwd.h>
 #include <grp.h>
-#include <errno.h>
+#include <cerrno>
 #include <sys/resource.h>
 #include <sys/wait.h>
-#include <time.h>
+#include <ctime>
 #include <sys/time.h>
 #include <sys/file.h>
 #include <sys/socket.h>
@@ -218,7 +218,7 @@ extern "C" {
 
 // FPE handling includes
 #if (defined(R__LINUX) && !defined(R__WINGCC))
-#include <fenv.h>
+#include <cfenv>
 #include <sys/prctl.h>    // for prctl() function used in StackTrace()
 #endif
 
@@ -229,11 +229,11 @@ extern "C" {
 #if defined(R__MACOSX) && !defined(__SSE2__) && !defined(__xlC__) && \
    !defined(__i386__) && !defined(__x86_64__) && !defined(__arm__) && \
    !defined(__arm64__)
-#include <fenv.h>
-#include <signal.h>
+#include <cfenv>
+#include <csignal>
 #include <ucontext.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <mach/thread_status.h>
 
 #define fegetenvd(x) asm volatile("mffs %0" : "=f" (x));
@@ -251,7 +251,7 @@ enum {
 
 #if defined(R__MACOSX) && !defined(__SSE2__) && \
     (defined(__i386__) || defined(__x86_64__) || defined(__arm__) || defined(__arm64__))
-#include <fenv.h>
+#include <cfenv>
 #endif
 // End FPE handling includes
 

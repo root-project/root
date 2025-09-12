@@ -6,8 +6,8 @@
 #include "TROOT.h"
 #include "TBits.h"
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 
 static const char *current_test;
 static unsigned test_count;

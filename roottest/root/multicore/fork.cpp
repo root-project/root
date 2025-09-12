@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 #include <unistd.h>
 #include <fstream>
 #include <iostream>

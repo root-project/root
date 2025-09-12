@@ -2,7 +2,7 @@
 #define InheritMulti_H
 
 #include "TObject.h"
-#include <stdio.h>
+#include <cstdio>
 
 // Test for multi-inheritance objects.
 

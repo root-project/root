@@ -20,7 +20,7 @@ an URL. The supported url format is:
 ~~~
 */
 
-#include <stdlib.h>
+#include <cstdlib>
 #include "TUrl.h"
 #include "THashList.h"
 #include "TObjArray.h"

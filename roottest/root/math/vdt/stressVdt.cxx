@@ -2,7 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <cmath> //for log2
-#include <assert.h>
+#include <cassert>
 #include <limits>
 #include <functional>
 #include <iostream>

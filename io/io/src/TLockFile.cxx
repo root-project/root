@@ -29,7 +29,7 @@ Use it in scope-blocks like:
 #include "TLockFile.h"
 #include "TSystem.h"
 #include "TFile.h"
-#include <time.h>
+#include <ctime>
 
 ClassImp(TLockFile);
 

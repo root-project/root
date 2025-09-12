@@ -102,7 +102,7 @@ class Container {
 #include <typeinfo>
 #include <string>
 #include <cstring>
-#include <locale.h>
+#include <clocale>
 #include <cmath>
 #include <memory>
 #include <cstdlib>

@@ -40,7 +40,7 @@ the respective cut value.
 
 #include <stdexcept>
 #include <iomanip>
-#include <assert.h>
+#include <cassert>
 #include <cstdlib>
 
 #include "TString.h"

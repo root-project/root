@@ -46,9 +46,9 @@
 #include <openssl/buffer.h>
 #endif
 
-#include <stdio.h>
-#include <time.h>
-#include <string.h>
+#include <cstdio>
+#include <ctime>
+#include <cstring>
 
 ClassImp(TS3HTTPRequest);
 

@@ -28,9 +28,9 @@
 //    root -b
 //    root [0] .x  stressGraphics.cxx
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <Riostream.h>
-#include <time.h>
+#include <ctime>
 #include <string>
 #include <map>
 #include <vector>

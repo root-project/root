@@ -35,7 +35,7 @@
 #include "RooPlot.h"
 #include <string>
 #include <vector>
-#include <stdio.h>
+#include <cstdio>
 #include <sstream>
 #include <iostream>
 

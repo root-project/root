@@ -18,17 +18,17 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 #include <unistd.h>
-#include <signal.h>
+#include <csignal>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <errno.h>
+#include <cerrno>
 
 #if defined(linux)
 #   include <features.h>

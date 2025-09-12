@@ -1,6 +1,6 @@
 // By Oliver Freyermuth; see ROOT-7103
 
-#include <string.h>
+#include <cstring>
 #include <set>
 
 #include "TClass.h"

@@ -24,7 +24,7 @@
 #include "TClingUtils.h"
 
 #include <iostream>
-#include <string.h>
+#include <cstring>
 #include <cctype>
 
 #include "clang/Basic/SourceLocation.h"

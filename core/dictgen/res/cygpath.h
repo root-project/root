@@ -9,8 +9,8 @@
  *************************************************************************/
 
 #ifndef ROOT_CygPath
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <direct.h>
 #include <string>
 

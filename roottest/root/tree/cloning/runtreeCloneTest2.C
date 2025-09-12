@@ -26,7 +26,7 @@ Use $ROOTSYS/bin/hadd to merge many histogram files
 */
 
 
-#include <string.h>
+#include <cstring>
 #include "TChain.h"
 #include "TFile.h"
 #include "TH1.h"

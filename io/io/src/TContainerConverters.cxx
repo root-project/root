@@ -31,7 +31,7 @@
 #include "TError.h"
 #include "TGenCollectionStreamer.h"
 #include "TClassStreamer.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace {
    const Int_t  kMapOffset = 2;

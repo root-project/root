@@ -20,7 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <errno.h>
+#include <cerrno>
 #include <random>
 
 #include "TApplicationRemote.h"

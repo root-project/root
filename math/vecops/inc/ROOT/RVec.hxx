@@ -24,7 +24,7 @@
       #ifndef _USE_MATH_DEFINES
          #define _USE_MATH_DEFINES
       #endif
-      #include <math.h>
+      #include <cmath>
       #undef _USE_MATH_DEFINES
    #endif
    #define _VECOPS_USE_EXTERN_TEMPLATES false

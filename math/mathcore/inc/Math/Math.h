@@ -21,7 +21,7 @@
 
 #if defined(__sun) || defined(_MSC_VER)
 //Microsoft and solaris definition of cmath does not include math.h which has the definitions of numerical constants
-#include <math.h>
+#include <cmath>
 #endif
 
 

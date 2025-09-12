@@ -135,7 +135,7 @@ clang/LLVM technology.
 #include <map>
 #include <set>
 #include <stdexcept>
-#include <stdint.h>
+#include <cstdint>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -153,8 +153,8 @@ clang/LLVM technology.
 #define R__DLLEXPORT __attribute__ ((visibility ("default")))
 #include <sys/stat.h>
 #endif
-#include <limits.h>
-#include <stdio.h>
+#include <climits>
+#include <cstdio>
 
 #ifdef __APPLE__
 #include <dlfcn.h>

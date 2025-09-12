@@ -22,7 +22,7 @@
 #include <ROOT/RConfig.hxx>
 
 #include <fcntl.h>
-#include <errno.h>
+#include <cerrno>
 #include <sys/stat.h>
 #ifndef R__WIN32
 #   include <unistd.h>
