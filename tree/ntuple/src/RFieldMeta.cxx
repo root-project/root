@@ -174,9 +174,9 @@ ROOT::RClassField::RClassField(std::string_view fieldName, TClass *classp)
 
       const auto normTypeName = ROOT::Internal::GetNormalizedUnresolvedTypeName(origTypeName);
       if (normTypeName == subField->GetTypeName()) {
-         subField->fTypeAlias = "";
+         SetTypeAliasOf(*subField, "");
       } else {
-         subField->fTypeAlias = normTypeName;
+         SetTypeAliasOf(*subField, normTypeName);
       }
 
       fTraits &= subField->GetTraits();
@@ -190,7 +190,7 @@ ROOT::RClassField::~RClassField()
    if (fStagingArea) {
       for (const auto &[_, si] : fStagingItems) {
          if (!(si.fField->GetTraits() & kTraitTriviallyDestructible)) {
-            auto deleter = si.fField->GetDeleter();
+            auto deleter = GetDeleterOf(*si.fField);
             deleter->operator()(fStagingArea.get() + si.fOffset, true /* dtorOnly */);
          }
       }
@@ -467,7 +467,7 @@ void ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pag
    // Iterate over all sub fields in memory and mark those as missing that are not in the descriptor.
    for (auto &field : fSubfields) {
       if (regularSubfields.count(field->GetFieldName()) == 0) {
-         field->SetArtificial();
+         CallSetArtificialOn(*field);
       }
    }
 }
@@ -622,6 +622,21 @@ ROOT::RPairField::RPairField(std::string_view fieldName, std::array<std::unique_
    if (!secondElem)
       throw RException(R__FAIL("second: no such member"));
    fOffsets.push_back(secondElem->GetThisOffset());
+}
+
+void ROOT::RPairField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   static const std::vector<std::string> prefixes = {"std::pair<", "std::tuple<"};
+
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
+   EnsureMatchingTypePrefix(fieldDesc, prefixes);
+
+   const auto nOnDiskSubfields = fieldDesc.GetLinkIds().size();
+   if (nOnDiskSubfields != 2) {
+      throw ROOT::RException(
+         R__FAIL("invalid number of on-disk subfields for std::pair " + std::to_string(nOnDiskSubfields)));
+   }
 }
 
 //------------------------------------------------------------------------------
@@ -1148,6 +1163,22 @@ ROOT::RTupleField::RTupleField(std::string_view fieldName, std::vector<std::uniq
       if (!member)
          throw RException(R__FAIL(memberName + ": no such member"));
       fOffsets.push_back(member->GetThisOffset());
+   }
+}
+
+void ROOT::RTupleField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   static const std::vector<std::string> prefixes = {"std::pair<", "std::tuple<"};
+
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
+   EnsureMatchingTypePrefix(fieldDesc, prefixes);
+
+   const auto nOnDiskSubfields = fieldDesc.GetLinkIds().size();
+   const auto nSubfields = fSubfields.size();
+   if (nOnDiskSubfields != nSubfields) {
+      throw ROOT::RException(R__FAIL("invalid number of on-disk subfields for std::tuple " +
+                                     std::to_string(nOnDiskSubfields) + " vs. " + std::to_string(nSubfields)));
    }
 }
 
