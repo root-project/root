@@ -258,6 +258,13 @@ const ROOT::RNTupleDescriptor &ROOT::RNTupleReader::GetDescriptor()
    return *fCachedDescriptor;
 }
 
+ROOT::NTupleSize_t ROOT::RNTupleReader::GetNEntries() const
+{
+   if (fCachedNEntries == ROOT::kInvalidNTupleIndex)
+      fCachedNEntries = fSource->GetNEntries();
+   return fCachedNEntries;
+}
+
 ROOT::DescriptorId_t ROOT::RNTupleReader::RetrieveFieldId(std::string_view fieldName) const
 {
    auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName);
