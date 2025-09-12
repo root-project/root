@@ -2211,7 +2211,7 @@ if(NOT ROOT_HAVE_NATIVE_CXX_FILESYSTEM)
   set(CMAKE_REQUIRED_LIBRARIES stdc++fs)
   check_cxx_source_compiles("${_filesystem_source}" ROOT_NEED_STDCXXFS)
   if(NOT ROOT_NEED_STDCXXFS)
-    message(FATAL_ERROR "Could not determine how to use C++17 <filesystem>")
+    message(WARNING "Could not determine how to use C++17 <filesystem>")
   endif()
 endif()
 
