@@ -43,6 +43,7 @@ public:
    std::size_t GetValueSize() const { return fImpl ? fImpl->GetValueSize(GetProxy()) : 0; }
 
 protected:
+   TTreeReaderArrayBase() = default;
    void *UntypedAt(std::size_t idx) const { return fImpl->At(GetProxy(), idx); }
    void CreateProxy() override;
    bool GetBranchAndLeaf(TBranch *&branch, TLeaf *&myLeaf, TDictionary *&branchActualType,
@@ -52,8 +53,8 @@ protected:
 
    std::unique_ptr<TVirtualCollectionReader> fImpl; // Common interface to collections
 
-   // FIXME: re-introduce once we have ClassDefInline!
-   // ClassDefOverride(TTreeReaderArrayBase, 0);//Accessor to member of an object stored in a collection
+   ClassDefInlineOverride(TTreeReaderArrayBase, 0);//Accessor to member of an object stored in a collection
+   friend class ClassDefGenerateInitInstanceLocalInjector<TTreeReaderArrayBase>;
 };
 
 class R__CLING_PTRCHECK(off) TTreeReaderUntypedArray final : public TTreeReaderArrayBase {
@@ -241,8 +242,7 @@ protected:
 #define R__TTreeReaderArray_TypeString(T) #T
    const char *GetDerivedTypeName() const override { return R__TTreeReaderArray_TypeString(T); }
 #undef R__TTreeReaderArray_TypeString
-   // FIXME: re-introduce once we have ClassDefTInline!
-   // ClassDefT(TTreeReaderArray, 0);//Accessor to member of an object stored in a collection
+   ClassDefInlineOverride(TTreeReaderArray, 0);//Accessor to member of an object stored in a collection
 };
 
 namespace cling {
