@@ -2,9 +2,9 @@
 #include "TDirectory.h"
 #include "TList.h"
 
-TH1F *h=0;
-TH1F *h2=0;
-TH1F *h3=0;
+TH1F *h = nullptr;
+TH1F *h2 = nullptr;
+TH1F *h3 = nullptr;
 
 void runcopy()
 {
