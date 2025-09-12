@@ -53,6 +53,7 @@ void ROOT::RNTupleReader::InitPageSource(bool enableMetrics)
    if (enableMetrics)
       EnableMetrics();
    fSource->Attach();
+   fNEntries = fSource->GetNEntries();
 }
 
 ROOT::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::RNTupleModel> model,
