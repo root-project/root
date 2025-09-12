@@ -271,7 +271,13 @@ public:
 /// The generic field for a `std::map<KeyType, ValueType>` and `std::unordered_map<KeyType, ValueType>`
 class RMapField : public RProxiedCollectionField {
 public:
-   RMapField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
+   enum class EMapType {
+      kMap,
+      kUnorderedMap,
+      kMultiMap,
+      kUnorderedMultiMap
+   };
+   RMapField(std::string_view fieldName, EMapType mapType, std::unique_ptr<RFieldBase> itemField);
    RMapField(RMapField &&other) = default;
    RMapField &operator=(RMapField &&other) = default;
    ~RMapField() override = default;
@@ -286,7 +292,7 @@ public:
    }
 
    explicit RField(std::string_view name)
-      : RMapField(name, TypeName(), std::make_unique<RField<std::pair<KeyT, ValueT>>>("_0"))
+      : RMapField(name, EMapType::kMap, std::make_unique<RField<std::pair<KeyT, ValueT>>>("_0"))
    {
    }
    RField(RField &&other) = default;
@@ -303,7 +309,7 @@ public:
    }
 
    explicit RField(std::string_view name)
-      : RMapField(name, TypeName(), std::make_unique<RField<std::pair<KeyT, ValueT>>>("_0"))
+      : RMapField(name, EMapType::kUnorderedMap, std::make_unique<RField<std::pair<KeyT, ValueT>>>("_0"))
    {
    }
    RField(RField &&other) = default;
@@ -320,7 +326,7 @@ public:
    }
 
    explicit RField(std::string_view name)
-      : RMapField(name, TypeName(), std::make_unique<RField<std::pair<KeyT, ValueT>>>("_0"))
+      : RMapField(name, EMapType::kMultiMap, std::make_unique<RField<std::pair<KeyT, ValueT>>>("_0"))
    {
    }
    RField(RField &&other) = default;
@@ -337,7 +343,7 @@ public:
    }
 
    explicit RField(std::string_view name)
-      : RMapField(name, TypeName(), std::make_unique<RField<std::pair<KeyT, ValueT>>>("_0"))
+      : RMapField(name, EMapType::kUnorderedMultiMap, std::make_unique<RField<std::pair<KeyT, ValueT>>>("_0"))
    {
    }
    RField(RField &&other) = default;
