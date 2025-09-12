@@ -71,6 +71,19 @@ TEnum *EnsureValidEnum(std::string_view enumName)
    return e;
 }
 
+std::string BuildSetTypeName(ROOT::RSetField::ESetType setType, const ROOT::RFieldBase &innerField)
+{
+   std::string typePrefix;
+   switch (setType) {
+   case ROOT::RSetField::ESetType::kSet: typePrefix = "std::set<"; break;
+   case ROOT::RSetField::ESetType::kUnorderedSet: typePrefix = "std::unordered_set<"; break;
+   case ROOT::RSetField::ESetType::kMultiSet: typePrefix = "std::multiset<"; break;
+   case ROOT::RSetField::ESetType::kUnorderedMultiSet: typePrefix = "std::unordered_multiset<"; break;
+   default: R__ASSERT(false);
+   }
+   return typePrefix + innerField.GetTypeName() + ">";
+}
+
 } // anonymous namespace
 
 ROOT::RClassField::RClassField(std::string_view fieldName, const RClassField &source)
@@ -681,14 +694,6 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
    fIFuncsWrite = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), false /* readFromDisk */);
 }
 
-ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName, std::string_view typeName,
-                                                       std::unique_ptr<RFieldBase> itemField)
-   : RProxiedCollectionField(fieldName, EnsureValidClass(typeName))
-{
-   fItemSize = itemField->GetValueSize();
-   Attach(std::move(itemField));
-}
-
 ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName, std::string_view typeName)
    : RProxiedCollectionField(fieldName, EnsureValidClass(typeName))
 {
@@ -727,8 +732,11 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
 std::unique_ptr<ROOT::RFieldBase> ROOT::RProxiedCollectionField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
-   return std::unique_ptr<RProxiedCollectionField>(
-      new RProxiedCollectionField(newName, GetTypeName(), std::move(newItemField)));
+   auto clone =
+      std::unique_ptr<RProxiedCollectionField>(new RProxiedCollectionField(newName, fProxy->GetCollectionClass()));
+   clone->fItemSize = fItemSize;
+   clone->Attach(std::move(newItemField));
+   return clone;
 }
 
 std::size_t ROOT::RProxiedCollectionField::AppendImpl(const void *from)
@@ -850,9 +858,11 @@ ROOT::RMapField::RMapField(std::string_view fieldName, std::string_view typeName
 
 //------------------------------------------------------------------------------
 
-ROOT::RSetField::RSetField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField)
-   : ROOT::RProxiedCollectionField(fieldName, typeName, std::move(itemField))
+ROOT::RSetField::RSetField(std::string_view fieldName, ESetType setType, std::unique_ptr<RFieldBase> itemField)
+   : ROOT::RProxiedCollectionField(fieldName, EnsureValidClass(BuildSetTypeName(setType, *itemField)))
 {
+   fItemSize = itemField->GetValueSize();
+   Attach(std::move(itemField));
 }
 
 //------------------------------------------------------------------------------
