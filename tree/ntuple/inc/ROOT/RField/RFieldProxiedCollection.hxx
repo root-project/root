@@ -156,7 +156,6 @@ protected:
    RProxiedCollectionField(std::string_view fieldName, std::string_view typeName,
                            std::unique_ptr<RFieldBase> itemField);
 
-protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
