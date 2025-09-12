@@ -195,7 +195,6 @@ def generate_keras_functional(dst_dir):
     model = models.Model(inp, out)
     train_and_save(model, "Layer_Combination_2")
 
-    
     inp1 = layers.Input(shape=(16,))
     inp2 = layers.Input(shape=(16,))
     d1 = layers.Dense(16, activation="relu")(inp1)

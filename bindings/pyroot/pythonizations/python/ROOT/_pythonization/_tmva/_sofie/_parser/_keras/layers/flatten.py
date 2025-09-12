@@ -1,5 +1,5 @@
 from cppyy import gbl as gbl_namespace
-from .. import keras_version
+from .. import get_keras_version
 
 def MakeKerasFlatten(layer):
     """
@@ -17,6 +17,9 @@ def MakeKerasFlatten(layer):
     Returns:
     ROperator_Reshape: A SOFIE framework operator representing the flattening operation.
     """
+    
+    keras_version = get_keras_version()
+    
     finput = layer['layerInput']
     foutput = layer['layerOutput']
     attributes = layer['layerAttributes']

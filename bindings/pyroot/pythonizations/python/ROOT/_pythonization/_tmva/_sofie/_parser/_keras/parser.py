@@ -25,7 +25,7 @@ from .layers.rnn import MakeKerasRNN
 from .layers.dense import MakeKerasDense
 from .layers.conv import MakeKerasConv
 
-from . import keras_version
+from . import get_keras_version
 
 def MakeKerasActivation(layer):
     attributes = layer['layerAttributes']
@@ -92,6 +92,8 @@ def add_layer_into_RModel(rmodel, layer_data):
 
     Raises exception: If the provided layer type or activation function is not supported.
     """
+    
+    keras_version = get_keras_version()
     
     fLayerType = layer_data['layerType']
     
@@ -285,6 +287,8 @@ class RModelParser_Keras:
         # caches the imported packages.
         
         import keras
+        
+        keras_version = get_keras_version()
         
         #Check if file exists
         if not os.path.exists(filename):
