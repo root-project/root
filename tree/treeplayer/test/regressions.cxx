@@ -203,3 +203,31 @@ TEST(TTreeFormulaRegressions, ConstantAlias)
    EXPECT_EQ(tf2.DefinedVariable(expr, action), 0); // was -3 during the regression
    EXPECT_FLOAT_EQ(tf2.EvalInstance(), 4.);
 }
+
+// https://github.com/root-project/root/issues/19814
+TEST(TTreeReaderRegressions, UninitializedChain)
+{
+   auto filename = "eve19814.root";
+   auto treename = "events";
+   auto brname = "x";
+   const int refval = 19814;
+   {
+      TFile f(filename, "RECREATE");
+      TTree t(treename, "");
+      int x = refval;
+      t.Branch(brname, &x);
+      t.Fill();
+      f.Write();
+   }
+   {
+      TChain ch(treename);
+      ch.Add(filename);
+      TTreeReader reader(&ch);
+      reader.SetEntriesRange(0, ch.GetEntries());
+      EXPECT_EQ(reader.GetEntries(), 1);
+      TTreeReaderValue<int> x(reader, brname);
+      EXPECT_TRUE(reader.Next());
+      EXPECT_EQ(*x, refval);
+   }
+   gSystem->Unlink(filename);
+}
