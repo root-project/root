@@ -83,6 +83,52 @@ struct AddedMember {
    EXPECT_EVALUATE_EQ("ptrAddedMember->fInt3", 93);
 }
 
+TEST(RNTupleEvolution, AddedMemberBulkRead)
+{
+   FileRaii fileGuard("test_ntuple_evolution_added_member_bulk_read.root");
+
+   ExecInFork([&] {
+      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+struct AddedMemberBulkRead {
+   int fX = 137;
+};
+)"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("f", "AddedMemberBulkRead").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      // Reset / close the writer and flush the file.
+      writer.reset();
+   });
+
+   ASSERT_TRUE(gInterpreter->Declare(R"(
+struct AddedMemberBulkRead {
+   ROOT::RVec<int> fNew;
+   int fX = 137;
+};
+)"));
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   ASSERT_EQ(1, reader->GetNEntries());
+
+   void *ptr = reader->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
+   DeclarePointer("AddedMemberBulkRead", "ptrAddedMemberBulkRead", ptr);
+
+   reader->LoadEntry(0);
+   EXPECT_EVALUATE_EQ("ptrAddedMemberBulkRead->fX", 137);
+   EXPECT_EVALUATE_EQ("ptrAddedMemberBulkRead->fNew.empty()", true);
+
+   auto bulk = reader->GetModel().CreateBulk("f.fNew");
+   auto values = static_cast<ROOT::RVec<int> *>(bulk.ReadBulk(ROOT::RNTupleLocalRange(0, 0, 1)));
+   EXPECT_TRUE(values[0].empty());
+}
+
 TEST(RNTupleEvolution, AddedMemberObject)
 {
    FileRaii fileGuard("test_ntuple_evolution_added_member_object.root");

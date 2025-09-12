@@ -815,6 +815,11 @@ std::size_t ROOT::RFieldBase::ReadBulk(const RBulkSpec &bulkSpec)
       return RBulkSpec::kAllSet;
    }
 
+   if (fIsArtificial || !fReadCallbacks.empty()) {
+      // Fields with schema evolution treatment must not go through an optimized read
+      return RFieldBase::ReadBulkImpl(bulkSpec);
+   }
+
    return ReadBulkImpl(bulkSpec);
 }
 
