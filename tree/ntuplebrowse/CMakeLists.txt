@@ -26,6 +26,7 @@ DEPENDENCIES
   Graf
   Hist
   ROOTNTuple
+  ROOTTreeMap
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

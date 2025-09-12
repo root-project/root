@@ -255,6 +255,11 @@ pattern = RNTuple-leaf
 icon = leaf_s.xpm leaf_t.xpm
 action = ->Browse()
 
+[root/rntuple-visualization]
+pattern = RNTuple-visualization
+icon = bld_listtree.xpm
+action = ->Browse()
+
 # actions used by GuiBuilder
 [root/textbutton]
 pattern = TGTextButton
