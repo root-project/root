@@ -413,6 +413,8 @@ protected:
 
    void CommitClusterImpl() final;
 
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
+
 public:
    RVariantField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields);
    RVariantField(RVariantField &&other) = default;
