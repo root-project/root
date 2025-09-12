@@ -21,7 +21,8 @@
 
 #if defined(__sun) || defined(_MSC_VER)
 //Microsoft and solaris definition of cmath does not include math.h which has the definitions of numerical constants
-#include <cmath>
+#include <math.h> // for M_PI
+// TODO replace with std::numbers::pi once minimum version is C++20, and remove this code block
 #endif
 
 
