@@ -231,7 +231,10 @@ def cleanup_previous_build():
         result = subprocess_with_log(f"""
             rm -rf {WORKDIR}/*
         """)
-
+        if is_macos():
+           subprocess_with_log(f"""
+              source /Users/sftnight/py-venv/ROOT-CI/bin/activate
+           """)
     if result != 0:
         die(result, "Failed to clean up previous artifacts")
 
