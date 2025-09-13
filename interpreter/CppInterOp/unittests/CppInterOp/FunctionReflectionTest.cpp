@@ -22,6 +22,8 @@ using namespace clang;
 TEST(FunctionReflectionTest, GetClassMethods) {
   std::vector<Decl*> Decls;
   std::string code = R"(
+    class A;
+
     class A {
     public:
       int f1(int a, int b) { return a + b; }
@@ -70,7 +72,7 @@ TEST(FunctionReflectionTest, GetClassMethods) {
   EXPECT_EQ(get_method_name(methods0[10]), "inline A::~A()");
 
   std::vector<Cpp::TCppFunction_t> methods1;
-  Cpp::GetClassMethods(Decls[1], methods1);
+  Cpp::GetClassMethods(Decls[2], methods1);
   EXPECT_EQ(methods0.size(), methods1.size());
   EXPECT_EQ(methods0[0], methods1[0]);
   EXPECT_EQ(methods0[1], methods1[1]);
@@ -79,7 +81,7 @@ TEST(FunctionReflectionTest, GetClassMethods) {
   EXPECT_EQ(methods0[4], methods1[4]);
 
   std::vector<Cpp::TCppFunction_t> methods2;
-  Cpp::GetClassMethods(Decls[2], methods2);
+  Cpp::GetClassMethods(Decls[3], methods2);
 
   EXPECT_EQ(methods2.size(), 6);
   EXPECT_EQ(get_method_name(methods2[0]), "B::B(int n)");
@@ -90,26 +92,69 @@ TEST(FunctionReflectionTest, GetClassMethods) {
   EXPECT_EQ(get_method_name(methods2[5]), "inline B &B::operator=(B &&)");
 
   std::vector<Cpp::TCppFunction_t> methods3;
-  Cpp::GetClassMethods(Decls[3], methods3);
+  Cpp::GetClassMethods(Decls[4], methods3);
 
   EXPECT_EQ(methods3.size(), 9);
-  EXPECT_EQ(get_method_name(methods3[0]), "B::B(int n)");
-  EXPECT_EQ(get_method_name(methods3[1]), "inline constexpr B::B(const B &)");
-  EXPECT_EQ(get_method_name(methods3[3]), "inline C::C()");
-  EXPECT_EQ(get_method_name(methods3[4]), "inline constexpr C::C(const C &)");
-  EXPECT_EQ(get_method_name(methods3[5]), "inline constexpr C::C(C &&)");
-  EXPECT_EQ(get_method_name(methods3[6]), "inline C &C::operator=(const C &)");
-  EXPECT_EQ(get_method_name(methods3[7]), "inline C &C::operator=(C &&)");
-  EXPECT_EQ(get_method_name(methods3[8]), "inline C::~C()");
+  EXPECT_EQ(get_method_name(methods3[0]), "inline C::C()");
+  EXPECT_EQ(get_method_name(methods3[1]), "inline constexpr C::C(const C &)");
+  EXPECT_EQ(get_method_name(methods3[2]), "inline constexpr C::C(C &&)");
+  EXPECT_EQ(get_method_name(methods3[3]), "inline C &C::operator=(const C &)");
+  EXPECT_EQ(get_method_name(methods3[4]), "inline C &C::operator=(C &&)");
+  EXPECT_EQ(get_method_name(methods3[5]), "inline C::~C()");
+  EXPECT_EQ(get_method_name(methods3[6]), "inline C::B(int)");
+  EXPECT_EQ(get_method_name(methods3[7]), "inline constexpr C::B(const B &)");
 
   // Should not crash.
   std::vector<Cpp::TCppFunction_t> methods4;
-  Cpp::GetClassMethods(Decls[4], methods4);
+  Cpp::GetClassMethods(Decls[5], methods4);
   EXPECT_EQ(methods4.size(), 0);
 
   std::vector<Cpp::TCppFunction_t> methods5;
   Cpp::GetClassMethods(nullptr, methods5);
   EXPECT_EQ(methods5.size(), 0);
+
+  Decls.clear();
+  code = R"(
+    struct T {
+    template<typename Tmpl>
+    T(Tmpl x) : n(x) {}
+    T(const T&) = delete;
+    T(T&&) = delete;
+    void fn() {}
+    int n;
+    };
+
+    struct TT: public T {
+      using T::T;
+      using T::fn;
+    };
+    )";
+
+  GetAllTopLevelDecls(code, Decls);
+  EXPECT_EQ(Decls.size(), 2);
+
+  std::vector<Cpp::TCppFunction_t> templ_methods1;
+  Cpp::GetClassMethods(Decls[0], templ_methods1);
+  EXPECT_EQ(templ_methods1.size(), 5);
+  EXPECT_EQ(get_method_name(templ_methods1[0]), "T::T(const T &) = delete");
+  EXPECT_EQ(get_method_name(templ_methods1[1]), "T::T(T &&) = delete");
+  EXPECT_EQ(get_method_name(templ_methods1[2]), "void T::fn()");
+  EXPECT_EQ(get_method_name(templ_methods1[3]),
+            "inline T &T::operator=(const T &)");
+  EXPECT_EQ(get_method_name(templ_methods1[4]), "inline T::~T()");
+
+  std::vector<Cpp::TCppFunction_t> templ_methods2;
+  Cpp::GetClassMethods(Decls[1], templ_methods2);
+  EXPECT_EQ(templ_methods2.size(), 7);
+  EXPECT_EQ(get_method_name(templ_methods2[0]), "void T::fn()");
+  EXPECT_EQ(get_method_name(templ_methods2[1]), "inline TT::TT()");
+  EXPECT_EQ(get_method_name(templ_methods2[2]), "inline TT::TT(const TT &)");
+  EXPECT_EQ(get_method_name(templ_methods2[3]), "inline TT::TT(TT &&)");
+  EXPECT_EQ(get_method_name(templ_methods2[4]),
+            "inline TT &TT::operator=(const TT &)");
+  EXPECT_EQ(get_method_name(templ_methods2[5]),
+            "inline TT &TT::operator=(TT &&)");
+  EXPECT_EQ(get_method_name(templ_methods2[6]), "inline TT::~TT()");
 
   // C API
   auto* I = clang_createInterpreterFromRawPtr(Cpp::GetInterpreter());
@@ -517,7 +562,7 @@ TEST(FunctionReflectionTest, GetFunctionRequiredArgs) {
 }
 
 TEST(FunctionReflectionTest, GetFunctionArgType) {
-  std::vector<Decl*> Decls, SubDecls;
+  std::vector<Decl*> Decls;
   std::string code = R"(
     void f1(int i, double d, long l, char ch) {}
     void f2(const int i, double d[], long *l, char ch[4]) {}
@@ -537,7 +582,7 @@ TEST(FunctionReflectionTest, GetFunctionArgType) {
 }
 
 TEST(FunctionReflectionTest, GetFunctionSignature) {
-  std::vector<Decl*> Decls, SubDecls;
+  std::vector<Decl*> Decls;
   std::string code = R"(
     class C {
       void f(int i, double d, long l = 0, char ch = 'a') {}
@@ -581,7 +626,8 @@ TEST(FunctionReflectionTest, GetFunctionSignature) {
 }
 
 TEST(FunctionReflectionTest, IsTemplatedFunction) {
-  std::vector<Decl*> Decls, SubDeclsC1, SubDeclsC2;
+  std::vector<Decl*> Decls;
+  std::vector<Decl*> SubDeclsC1;
   std::string code = R"(
     void f1(int a) {}
 
@@ -1403,7 +1449,7 @@ TEST(FunctionReflectionTest, GetFunctionAddress) {
 #ifdef _WIN32
   GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
 #endif
-  std::vector<Decl*> Decls, SubDecls;
+  std::vector<Decl*> Decls;
   std::string code = "int f1(int i) { return i * i; }";
   std::vector<const char*> interpreter_args = {"-include", "new"};
 
@@ -1423,6 +1469,23 @@ TEST(FunctionReflectionTest, GetFunctionAddress) {
   EXPECT_EQ(address.str(), output);
 
   EXPECT_FALSE(Cpp::GetFunctionAddress(Cpp::GetGlobalScope()));
+
+  Interp->declare(R"(
+    template <typename T>
+    T add1(T t) { return t + 1; }
+  )");
+
+  std::vector<Cpp::TCppFunction_t> funcs;
+  Cpp::GetClassTemplatedMethods("add1", Cpp::GetGlobalScope(), funcs);
+  EXPECT_EQ(funcs.size(), 1);
+
+  ASTContext& C = Interp->getCI()->getASTContext();
+  std::vector<Cpp::TemplateArgInfo> argument = {C.DoubleTy.getAsOpaquePtr()};
+  Cpp::TCppScope_t add1_double =
+      Cpp::InstantiateTemplate(funcs[0], argument.data(), argument.size());
+  EXPECT_TRUE(add1_double);
+
+  EXPECT_TRUE(Cpp::GetFunctionAddress(add1_double));
 }
 
 TEST(FunctionReflectionTest, IsVirtualMethod) {
@@ -1653,7 +1716,6 @@ TEST(FunctionReflectionTest, GetFunctionCallWrapper) {
   FCI4.Invoke(&ret4);
   EXPECT_EQ(ret4, 4);
 
-#if CLANG_VERSION_MAJOR > 16
   Cpp::JitCall FCI5 =
       Cpp::MakeFunctionCallable(Cpp::GetNamed("f5", Cpp::GetNamed("NS")));
   EXPECT_TRUE(FCI5.getKind() == Cpp::JitCall::kGenericCall);
@@ -1663,7 +1725,6 @@ TEST(FunctionReflectionTest, GetFunctionCallWrapper) {
   FCI5.Invoke((void*)&callback);
   EXPECT_TRUE(callback);
   EXPECT_EQ(callback(), 3);
-#endif
 
   // FIXME: Do we need to support private ctors?
   Interp->process(R"(
@@ -1740,9 +1801,6 @@ TEST(FunctionReflectionTest, GetFunctionCallWrapper) {
   set_5_f.Invoke(nullptr, {set_5_args, 1});
   EXPECT_EQ(b, 5);
 
-#if CLANG_VERSION_MAJOR > 16
-  // typedef resolution testing
-  // supported for clang version >16 only
   Interp->process(R"(
   class TypedefToPrivateClass {
   private:
@@ -1770,7 +1828,6 @@ TEST(FunctionReflectionTest, GetFunctionCallWrapper) {
   void* res = nullptr;
   FCI_f.Invoke(&res, {nullptr, 0});
   EXPECT_TRUE(res);
-#endif
 
   // templated operators
   Interp->process(R"(
@@ -2009,6 +2066,124 @@ TEST(FunctionReflectionTest, GetFunctionCallWrapper) {
 
   auto bar_callable = Cpp::MakeFunctionCallable(bar);
   EXPECT_EQ(bar_callable.getKind(), Cpp::JitCall::kGenericCall);
+
+  Cpp::Declare(R"(
+  struct A {
+    A() {}
+    A(A&& other) {};
+  };
+
+  A consumable;
+
+  template<typename T>
+  void consume(T t) {}
+  )");
+
+  unresolved_candidate_methods.clear();
+  Cpp::GetClassTemplatedMethods("consume", Cpp::GetGlobalScope(),
+                                unresolved_candidate_methods);
+  EXPECT_EQ(unresolved_candidate_methods.size(), 1);
+
+  Cpp::TCppScope_t consume = Cpp::BestOverloadFunctionMatch(
+      unresolved_candidate_methods, {},
+      {Cpp::GetVariableType(Cpp::GetNamed("consumable"))});
+  EXPECT_TRUE(consume);
+
+  auto consume_callable = Cpp::MakeFunctionCallable(consume);
+  EXPECT_EQ(consume_callable.getKind(), Cpp::JitCall::kGenericCall);
+
+  Cpp::Declare(R"(
+  template<typename T1, typename T2>
+  struct Product {};
+
+  template<typename T>
+  struct KlassProduct {
+    template<typename O>
+    const Product<T, O>
+    operator*(const KlassProduct<O> &other) const { return Product<T, O>(); }
+
+    template<typename TT, typename O>
+    const Product<TT, O>
+    operator*(const KlassProduct<O> &other) const { return Product<TT, O>(); }
+  };
+  )");
+
+  Cpp::TCppScope_t KlassProduct = Cpp::GetNamed("KlassProduct");
+  EXPECT_TRUE(KlassProduct);
+
+  Cpp::TCppScope_t KlassProduct_int =
+      Cpp::InstantiateTemplate(KlassProduct, &TAI, 1);
+  EXPECT_TRUE(KlassProduct_int);
+  TAI = Cpp::TemplateArgInfo(Cpp::GetType("float"));
+  Cpp::TCppScope_t KlassProduct_float =
+      Cpp::InstantiateTemplate(KlassProduct, &TAI, 1);
+  EXPECT_TRUE(KlassProduct_float);
+
+  operators.clear();
+  Cpp::GetOperator(KlassProduct_int, Cpp::OP_Star, operators);
+  EXPECT_EQ(operators.size(), 2);
+
+  op = Cpp::BestOverloadFunctionMatch(
+      operators, {}, {{Cpp::GetTypeFromScope(KlassProduct_float)}});
+  EXPECT_TRUE(op);
+
+  auto op_callable = Cpp::MakeFunctionCallable(op);
+  EXPECT_EQ(op_callable.getKind(), Cpp::JitCall::kGenericCall);
+
+  Cpp::Declare(R"(
+    enum class MyEnum { A, B, C };
+    template <MyEnum E>
+    class TemplatedEnum {};
+
+    namespace MyNameSpace {
+    enum class MyEnum { A, B, C };
+    template <MyEnum E>
+    class TemplatedEnum {};
+    }
+  )");
+
+  Cpp::TCppScope_t TemplatedEnum = Cpp::GetScope("TemplatedEnum");
+  EXPECT_TRUE(TemplatedEnum);
+
+  auto TAI_enum =
+      Cpp::TemplateArgInfo(Cpp::GetTypeFromScope(Cpp::GetNamed("MyEnum")), "1");
+  Cpp::TCppScope_t TemplatedEnum_instantiated =
+      Cpp::InstantiateTemplate(TemplatedEnum, &TAI_enum, 1);
+  EXPECT_TRUE(TemplatedEnum_instantiated);
+
+  Cpp::TCppObject_t obj = Cpp::Construct(TemplatedEnum_instantiated);
+  EXPECT_TRUE(obj);
+  Cpp::Destruct(obj, TemplatedEnum_instantiated);
+  obj = nullptr;
+
+  Cpp::TCppScope_t MyNameSpace_TemplatedEnum =
+      Cpp::GetScope("TemplatedEnum", Cpp::GetScope("MyNameSpace"));
+  EXPECT_TRUE(TemplatedEnum);
+
+  TAI_enum = Cpp::TemplateArgInfo(Cpp::GetTypeFromScope(Cpp::GetNamed(
+                                      "MyEnum", Cpp::GetScope("MyNameSpace"))),
+                                  "1");
+  Cpp::TCppScope_t MyNameSpace_TemplatedEnum_instantiated =
+      Cpp::InstantiateTemplate(MyNameSpace_TemplatedEnum, &TAI_enum, 1);
+  EXPECT_TRUE(TemplatedEnum_instantiated);
+
+  obj = Cpp::Construct(MyNameSpace_TemplatedEnum_instantiated);
+  EXPECT_TRUE(obj);
+  Cpp::Destruct(obj, MyNameSpace_TemplatedEnum_instantiated);
+  obj = nullptr;
+
+  Cpp::Declare(R"(
+    auto get_fn(int x) { return [x](int y){ return x + y; }; }
+  )");
+
+  Cpp::TCppScope_t get_fn = Cpp::GetNamed("get_fn");
+  EXPECT_TRUE(get_fn);
+
+  auto get_fn_callable = Cpp::MakeFunctionCallable(get_fn);
+  EXPECT_EQ(get_fn_callable.getKind(), Cpp::JitCall::kGenericCall);
+
+  EXPECT_TRUE(Cpp::IsLambdaClass(Cpp::GetFunctionReturnType(get_fn)));
+  EXPECT_FALSE(Cpp::IsLambdaClass(Cpp::GetFunctionReturnType(bar)));
 }
 
 TEST(FunctionReflectionTest, IsConstMethod) {
@@ -2030,7 +2205,7 @@ TEST(FunctionReflectionTest, IsConstMethod) {
 }
 
 TEST(FunctionReflectionTest, GetFunctionArgName) {
-  std::vector<Decl*> Decls, SubDecls;
+  std::vector<Decl*> Decls;
   std::string code = R"(
     void f1(int i, double d, long l, char ch) {}
     void f2(const int i, double d[], long *l, char ch[4]) {}
@@ -2070,7 +2245,7 @@ TEST(FunctionReflectionTest, GetFunctionArgName) {
 }
 
 TEST(FunctionReflectionTest, GetFunctionArgDefault) {
-  std::vector<Decl*> Decls, SubDecls;
+  std::vector<Decl*> Decls;
   std::string code = R"(
     void f1(int i, double d = 4.0, const char *s = "default", char ch = 'c') {}
     void f2(float i = 0.0, double d = 3.123, long m = 34126) {}
@@ -2084,6 +2259,15 @@ TEST(FunctionReflectionTest, GetFunctionArgDefault) {
     template<class A>
     void get_size(long k, A, char ch = 'a', double l = 0.0) {}
 
+    template<typename T>
+    struct Other {};
+
+    template <typename T, typename S = Other<T>>
+    struct MyStruct {
+      T t;
+      S s;
+      void fn(T t, S s = S()) {}
+    };
     )";
 
   GetAllTopLevelDecls(code, Decls);
@@ -2108,6 +2292,20 @@ TEST(FunctionReflectionTest, GetFunctionArgDefault) {
   EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[4], 1), "");
   EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[4], 2), "\'a\'");
   EXPECT_EQ(Cpp::GetFunctionArgDefault(Decls[4], 3), "0.");
+
+  ASTContext& C = Interp->getCI()->getASTContext();
+  Cpp::TemplateArgInfo template_args[1] = {C.IntTy.getAsOpaquePtr()};
+  Cpp::TCppScope_t my_struct =
+      Cpp::InstantiateTemplate(Decls[6], template_args, 1);
+  EXPECT_TRUE(my_struct);
+
+  std::vector<Cpp::TCppFunction_t> fns =
+      Cpp::GetFunctionsUsingName(my_struct, "fn");
+  EXPECT_EQ(fns.size(), 1);
+
+  Cpp::TCppScope_t fn = fns[0];
+  EXPECT_EQ(Cpp::GetFunctionArgDefault(fn, 0), "");
+  EXPECT_EQ(Cpp::GetFunctionArgDefault(fn, 1), "S()");
 }
 
 TEST(FunctionReflectionTest, Construct) {
@@ -2305,9 +2503,6 @@ TEST(FunctionReflectionTest, ConstructArray) {
 #ifdef _WIN32
   GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
 #endif
-#if defined(__APPLE__) && (CLANG_VERSION_MAJOR == 16)
-  GTEST_SKIP() << "Test fails on Clang16 OS X";
-#endif
 
   Cpp::CreateInterpreter();
 
@@ -2431,9 +2626,6 @@ TEST(FunctionReflectionTest, DestructArray) {
 
 #ifdef _WIN32
   GTEST_SKIP() << "Disabled on Windows. Needs fixing.";
-#endif
-#if defined(__APPLE__) && (CLANG_VERSION_MAJOR == 16)
-  GTEST_SKIP() << "Test fails on Clang16 OS X";
 #endif
 
   std::vector<const char*> interpreter_args = {"-include", "new"};

@@ -41,23 +41,6 @@ Clone the 20.x release of the LLVM project repository.
    git clone --depth=1 --branch release/20.x https://github.com/llvm/llvm-project.git
    cd llvm-project
 
-For Clang 16 & 17, the following patches required for development work. To apply
-these patches on Linux and MacOS execute the following command(substitute
-`{version}` with your clang version):
-
-.. code:: bash
-
-   git apply -v ../CppInterOp/patches/llvm/clang{version}-*.patch
-
-and
-
-.. code:: powershell
-
-   cp -r ..\CppInterOp\patches\llvm\clang17* .
-   git apply -v clang{version}-*.patch
-
-on Windows.
-
 ******************
  Build Clang-REPL
 ******************
