@@ -150,6 +150,41 @@ public:
       return GetBinContent(indices);
    }
 
+   /// Add all bin contents of another histogram.
+   ///
+   /// Throws an exception if the axes configurations are not identical.
+   ///
+   /// \param[in] other another histogram
+   void Add(const RHistEngine<BinContentType> &other)
+   {
+      if (fAxes != other.fAxes) {
+         throw std::invalid_argument("axes configurations not identical in Add");
+      }
+      for (std::size_t i = 0; i < fBinContents.size(); i++) {
+         fBinContents[i] += other.fBinContents[i];
+      }
+   }
+
+   /// Clear all bin contents.
+   void Clear()
+   {
+      for (std::size_t i = 0; i < fBinContents.size(); i++) {
+         fBinContents[i] = {};
+      }
+   }
+
+   /// Clone this histogram engine.
+   ///
+   /// \return the clone object
+   RHistEngine<BinContentType> Clone() const
+   {
+      RHistEngine<BinContentType> h(fAxes.Get());
+      for (std::size_t i = 0; i < fBinContents.size(); i++) {
+         h.fBinContents[i] = fBinContents[i];
+      }
+      return h;
+   }
+
    /// Fill an entry into the histogram.
    ///
    /// \code
