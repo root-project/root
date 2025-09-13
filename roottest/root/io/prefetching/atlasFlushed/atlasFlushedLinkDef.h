@@ -1,4 +1,4 @@
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma link C++ class TPCnvTokenList_p1+;
 #pragma link C++ class Trk::TrackCollection_p1+;

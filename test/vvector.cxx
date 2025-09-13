@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 //_____________________________batch only_____________________
-#ifndef __CINT__
+#ifndef __CLING__
 
 #include "TFile.h"
 #include <iostream>
@@ -298,7 +298,7 @@ void stress_element_op(Int_t vsize)
       std::cout << "\nCheck out to see that sin^2(x) + cos^2(x) = 1" << std::endl;
     for (Int_t i = v.GetLwb(); i <= v.GetUpb(); i++)
       v(i) = 2*TMath::Pi()/v.GetNoElements()*i;
-#ifndef __CINT__
+#ifndef __CLING__
     SinAction s;
     v.Apply(s);
     CosAction c(v.GetNoElements());
@@ -319,7 +319,7 @@ void stress_element_op(Int_t vsize)
 
   if (gVerbose)
     std::cout << "\nVerify constructor with initialization" << std::endl;
-#ifndef __CINT__
+#ifndef __CLING__
   TVectorD vi(0,4,0.0,1.0,2.0,3.0,4.0,"END");
 #else
   Double_t vval[] = {0.0,1.0,2.0,3.0,4.0};

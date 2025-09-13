@@ -142,7 +142,7 @@ private :
 };
 
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
 // needed since CINT initialize it with TRootIOCtor
 //class TRootIOCtor;
 template<class ParentFunctor>
