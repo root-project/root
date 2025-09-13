@@ -102,6 +102,9 @@ public:
   void printArgs(std::ostream& os) const override;
   void printValue(std::ostream& os) const override;
 
+  /// Print the contents of the dataset to the specified output stream.
+  void printContents(std::ostream& os = std::cout) const override;
+
   void SetName(const char *name) override;
   void SetNameTitle(const char *name, const char* title) override;
 

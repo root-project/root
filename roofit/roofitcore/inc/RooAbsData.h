@@ -236,6 +236,9 @@ public:
 
   Int_t defaultPrintContents(Option_t* opt) const override ;
 
+  /// Print the contents of the dataset to the specified output stream.
+  virtual void printContents(std::ostream& os = std::cout) const = 0;
+  
   void setDirtyProp(bool flag) ;
 
   double moment(const RooRealVar& var, double order, const char* cutSpec=nullptr, const char* cutRange=nullptr) const ;
