@@ -904,14 +904,24 @@ Long64_t TChain::GetEntries() const
       // and `LoadTree` will be no-op.
       if (kLoadTree & fFriendLockStatus)
          return fEntries;
-      const auto readEntry = fReadEntry;
-      auto *thisChain = const_cast<TChain *>(this);
-      thisChain->LoadTree(TTree::kMaxEntries - 1);
-      thisChain->InvalidateCurrentTree();
-      if (readEntry >= 0)
-         thisChain->LoadTree(readEntry);
-      else
-         thisChain->fReadEntry = readEntry;
+      Long64_t totalEntries{};
+      for (auto chainEl : ROOT::Detail::TRangeStaticCast<TChainElement>(fFiles)) {
+         if (chainEl->GetEntries() != TTree::kMaxEntries) {
+            totalEntries += chainEl->GetEntries();
+            continue;
+         }
+         TDirectory::TContext ctxt;
+         std::unique_ptr<TFile> curFile{TFile::Open(chainEl->GetTitle(), "READ_WITHOUT_GLOBALREGISTRATION")};
+         if (!curFile || curFile->IsZombie()) {
+            continue;
+         }
+         std::unique_ptr<TTree> curTree{curFile->Get<TTree>(chainEl->GetName())};
+         if (!curTree) {
+            continue;
+         }
+         totalEntries += curTree->GetEntries();
+      }
+      const_cast<TChain *>(this)->fEntries = totalEntries;
    }
    return fEntries;
 }
