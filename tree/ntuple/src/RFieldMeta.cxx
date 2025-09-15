@@ -624,6 +624,14 @@ ROOT::RPairField::RPairField(std::string_view fieldName, std::array<std::unique_
    fOffsets.push_back(secondElem->GetThisOffset());
 }
 
+std::unique_ptr<ROOT::RFieldBase> ROOT::RPairField::CloneImpl(std::string_view newName) const
+{
+   std::array<std::size_t, 2> offsets = {fOffsets[0], fOffsets[1]};
+   std::array<std::unique_ptr<RFieldBase>, 2> itemClones = {fSubfields[0]->Clone(fSubfields[0]->GetFieldName()),
+                                                            fSubfields[1]->Clone(fSubfields[1]->GetFieldName())};
+   return std::unique_ptr<RPairField>(new RPairField(newName, std::move(itemClones), offsets));
+}
+
 void ROOT::RPairField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    static const std::vector<std::string> prefixes = {"std::pair<", "std::tuple<"};
@@ -1164,6 +1172,16 @@ ROOT::RTupleField::RTupleField(std::string_view fieldName, std::vector<std::uniq
          throw RException(R__FAIL(memberName + ": no such member"));
       fOffsets.push_back(member->GetThisOffset());
    }
+}
+
+std::unique_ptr<ROOT::RFieldBase> ROOT::RTupleField::CloneImpl(std::string_view newName) const
+{
+   std::vector<std::unique_ptr<RFieldBase>> itemClones;
+   itemClones.reserve(fSubfields.size());
+   for (const auto &f : fSubfields) {
+      itemClones.emplace_back(f->Clone(f->GetFieldName()));
+   }
+   return std::unique_ptr<RTupleField>(new RTupleField(newName, std::move(itemClones), fOffsets));
 }
 
 void ROOT::RTupleField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
