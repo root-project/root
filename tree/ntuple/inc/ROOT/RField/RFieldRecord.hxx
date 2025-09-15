@@ -73,7 +73,7 @@ protected:
 
    std::size_t GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment) const;
 
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
 
    void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final;
@@ -136,6 +136,8 @@ protected:
    RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> itemFields,
               const std::array<std::size_t, 2> &offsets);
 
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+
    void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
@@ -187,6 +189,8 @@ private:
 protected:
    RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
                const std::vector<std::size_t> &offsets);
+
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
    void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
