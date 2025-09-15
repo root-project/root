@@ -1,9 +1,9 @@
-{ 
+{
 gSystem->Setenv("LINES","-1");
-gSystem->Load("libmaster");
+gSystem->Load("libmasterSeparateNS");
 gROOT->ProcessLine(".Class Master::Container");
-gSystem->Load("libslave1");
+gSystem->Load("libslave1SeparateNS");
 gROOT->ProcessLine(".Class Master::Container");
-gSystem->Load("libslave2");
+gSystem->Load("libslave2SeparateNS");
 gROOT->ProcessLine(".Class Master::Container");
 }
