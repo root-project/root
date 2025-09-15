@@ -15,11 +15,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTreeMap
     ROOT/RTreeMapPainter.hxx
   SOURCES
     RTreeMapBase.cxx
-    RTreeMapImporter.cxx
     RTreeMapPainter.cxx
   DEPENDENCIES
-    ROOTNTuple
-    ROOTNTupleUtil
     Gpad
     RIO
 )

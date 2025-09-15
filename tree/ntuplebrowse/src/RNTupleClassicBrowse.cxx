@@ -17,16 +17,12 @@
 #include <ROOT/RNTupleDrawVisitor.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleReader.hxx>
-#include <ROOT/RTreeMapPainter.hxx>
-#include <ROOT/RNTupleInspector.hxx>
+#include <ROOT/RNTupleTreeMap.hxx>
 
 #include <TBrowser.h>
 #include <TObject.h>
 #include <TPad.h>
 #include <TText.h>
-
-#include <memory>
-#include <string>
 
 namespace {
 
@@ -108,7 +104,7 @@ public:
       if (!b || !gPad)
          return;
       gPad->GetListOfPrimitives()->Clear();
-      fTreeMap = ROOT::Experimental::RTreeMapPainter::ImportRNTuple(*fInspector);
+      fTreeMap = ROOT::Experimental::CreateTreeMapFromRNTuple(*fInspector);
       fTreeMap->Paint("");
       gPad->Update();
    }
