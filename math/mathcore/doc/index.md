@@ -1,4 +1,4 @@
-\defgroup MathCore  MathCore
+\defgroup MathCore  Core Math Functionality (MathCore)
 \ingroup Math
 \brief The Core Mathematical Library of %ROOT.
 
