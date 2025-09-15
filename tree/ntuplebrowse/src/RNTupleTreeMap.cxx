@@ -1,7 +1,7 @@
-/// \file RTreeMapImporter.cxx
-/// \ingroup TreeMap ROOT7
+/// \file ROOT/RNTupleTreeMap.cxx
+/// \ingroup NTuple
 /// \author Patryk Tymoteusz Pilichowski <patryk.tymoteusz.pilichowski@cern.ch>
-/// \date 2025-08-21
+/// \date 2025-09-15
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
 
@@ -13,32 +13,31 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RTreeMapPainter.hxx>
-#include <ROOT/RNTupleInspector.hxx>
+#include <ROOT/RNTupleTreeMap.hxx>
 #include <ROOT/RColumnElementBase.hxx>
 
 #include <queue>
 
-using namespace ROOT::Experimental;
-
-static RTreeMapBase::Node CreateNode(const RNTupleInspector &insp, const ROOT::RFieldDescriptor &fldDesc,
-                                     std::uint64_t childrenIdx, std::uint64_t nChildren, ROOT::DescriptorId_t rootId,
-                                     size_t rootSize)
+static ROOT::Experimental::RTreeMapBase::Node
+CreateNode(const ROOT::Experimental::RNTupleInspector &insp, const ROOT::RFieldDescriptor &fldDesc,
+           std::uint64_t childrenIdx, std::uint64_t nChildren, ROOT::DescriptorId_t rootId, size_t rootSize)
 {
    uint64_t size =
       (rootId != fldDesc.GetId()) ? insp.GetFieldTreeInspector(fldDesc.GetId()).GetCompressedSize() : rootSize;
    return {fldDesc.GetFieldName(), "", size, childrenIdx, nChildren};
 }
 
-static RTreeMapBase::Node CreateNode(const RNTupleInspector::RColumnInspector &colInsp, std::uint64_t childrenIdx)
+static ROOT::Experimental::RTreeMapBase::Node
+CreateNode(const ROOT::Experimental::RNTupleInspector::RColumnInspector &colInsp, std::uint64_t childrenIdx)
 {
    return {"", ROOT::Internal::RColumnElementBase::GetColumnTypeName(colInsp.GetType()), colInsp.GetCompressedSize(),
            childrenIdx, 0};
 }
 
-std::unique_ptr<RTreeMapPainter> RTreeMapPainter::ImportRNTuple(const ROOT::Experimental::RNTupleInspector &insp)
+std::unique_ptr<ROOT::Experimental::RTreeMapPainter>
+ROOT::Experimental::CreateTreeMapFromRNTuple(const ROOT::Experimental::RNTupleInspector &insp)
 {
-   auto treemap = std::make_unique<RTreeMapPainter>();
+   auto treemap = std::make_unique<ROOT::Experimental::RTreeMapPainter>();
    const auto &descriptor = insp.GetDescriptor();
    const auto rootId = descriptor.GetFieldZero().GetId();
    size_t rootSize = 0;
@@ -83,8 +82,9 @@ std::unique_ptr<RTreeMapPainter> RTreeMapPainter::ImportRNTuple(const ROOT::Expe
    return treemap;
 }
 
-std::unique_ptr<RTreeMapPainter> RTreeMapPainter::ImportRNTuple(std::string_view sourceFileName, std::string_view tupleName)
+std::unique_ptr<ROOT::Experimental::RTreeMapPainter>
+ROOT::Experimental::CreateTreeMapFromRNTuple(std::string_view sourceFileName, std::string_view tupleName)
 {
-   auto insp = RNTupleInspector::Create(tupleName, sourceFileName);
-   return RTreeMapPainter::ImportRNTuple(*insp);
+   auto insp = ROOT::Experimental::RNTupleInspector::Create(tupleName, sourceFileName);
+   return CreateTreeMapFromRNTuple(*insp);
 }
