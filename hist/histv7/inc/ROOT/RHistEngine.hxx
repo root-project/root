@@ -82,11 +82,26 @@ public:
    {
    }
 
-   // Copy constructor and assignment operator are deleted to avoid surprises.
+   /// The copy constructor is deleted.
+   ///
+   /// Copying all bin contents can be an expensive operation, depending on the number of bins. If required, users can
+   /// explicitly call Clone().
    RHistEngine(const RHistEngine<BinContentType> &) = delete;
+   /// Efficiently move construct a histogram engine.
+   ///
+   /// After this operation, the moved-from object is invalid.
    RHistEngine(RHistEngine<BinContentType> &&) = default;
+
+   /// The copy assignment operator is deleted.
+   ///
+   /// Copying all bin contents can be an expensive operation, depending on the number of bins. If required, users can
+   /// explicitly call Clone().
    RHistEngine<BinContentType> &operator=(const RHistEngine<BinContentType> &) = delete;
+   /// Efficiently move a histogram engine.
+   ///
+   /// After this operation, the moved-from object is invalid.
    RHistEngine<BinContentType> &operator=(RHistEngine<BinContentType> &&) = default;
+
    ~RHistEngine() = default;
 
    const std::vector<RAxisVariant> &GetAxes() const { return fAxes.Get(); }
@@ -177,6 +192,8 @@ public:
    }
 
    /// Clone this histogram engine.
+   ///
+   /// Copying all bin contents can be an expensive operation, depending on the number of bins.
    ///
    /// \return the cloned object
    RHistEngine<BinContentType> Clone() const
