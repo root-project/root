@@ -607,6 +607,13 @@ void ROOT::RRecordField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *t
 
 void ROOT::RRecordField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
+   if (fTraits & kTraitEmulatedField) {
+      // The field has been explicitly constructed following the on-disk information. No further reconcilation needed.
+      return;
+   }
+   // Note that the RPairField and RTupleField descendants have their own reconcilation logic
+   R__ASSERT(GetTypeName().empty());
+
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName | kDiffTypeVersion);
 
