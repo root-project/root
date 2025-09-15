@@ -8,8 +8,6 @@
  *                                                                    *
  **********************************************************************/
 
-
-
 /**
 
 Probability density functions, cumulative distribution functions
@@ -23,15 +21,11 @@ user must calculate the shift themselves if they wish.
 
 MathCore provides the majority of the probability density functions, of the
 cumulative distributions and of the quantiles (inverses of the cumulatives).
-Additional distributions are also provided by the
-<A HREF="../../MathMore/html/group__StatFunc.html">MathMore</A> library.
+Additional distributions are also provided by the \ref MathMore library.
 
 
 @defgroup StatFunc Statistical functions
-
 @ingroup  MathCore
-@ingroup  MathMore
-
 */
 
 #ifndef ROOT_Math_PdfFuncMathCore
@@ -58,12 +52,11 @@ namespace Math {
    *
    */
 
-   /** @name Probability Density Functions from MathCore
-   *   Additional PDF's are provided in the MathMore library
-   *   (see PDF functions from MathMore)
-   */
+/** @name Probability Density Functions from MathCore
+ *   Additional PDFs are provided in the MathMore library when the GSL is available.
+ */
 
-  //@{
+//@{
 
   /**
 
