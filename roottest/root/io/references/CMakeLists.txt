@@ -30,12 +30,13 @@ ROOTTEST_ADD_TEST(lotsRef1
                   MACRO lotsRef.C+
                   MACROARG 1
                   OUTREF lotsRef1.ref
-                  FIXTURES_REQUIRED root-io-references-lotsRef2-fixture)
+                  FIXTURES_REQUIRED root-io-references-lotsRef2-fixture
+                  FIXTURES_SETUP root-io-references-lotsRef1-fixture)
 
 ROOTTEST_ADD_TEST(lotsRef
                   MACRO runlotsRef.C
                   OUTREF lotsRef.ref
-                  FIXTURES_REQUIRED root-io-references-lotsRef2-fixture)
+                  FIXTURES_REQUIRED root-io-references-lotsRef1-fixture)
 
 ROOTTEST_COMPILE_MACRO(refarray.C
                        FIXTURES_SETUP root-io-references-refarray-fixture)
