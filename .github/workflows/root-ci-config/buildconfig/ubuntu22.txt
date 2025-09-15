@@ -1,5 +1,6 @@
 builtin_unuran=ON
 builtin_vdt=ON
+curl=OFF
 r=ON
 test_distrdf_dask=OFF
 test_distrdf_pyspark=OFF

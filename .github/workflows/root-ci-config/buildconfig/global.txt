@@ -2,6 +2,7 @@ builtin_cppzmq=ON
 builtin_zeromq=ON
 ccache=ON
 check_connection=OFF
+curl=ON
 fail-on-missing=ON
 fftw3=ON
 fitsio=ON
