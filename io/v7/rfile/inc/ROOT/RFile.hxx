@@ -140,50 +140,25 @@ class RFile final {
 
    std::unique_ptr<TFile> fFile;
 
-   /// Returns an empty string if `path` is a suitable path to store an object into a RFile,
-   /// otherwise returns a description of why that is not the case.
-   ///
-   /// A valid object path must:
-   ///   - not be empty
-   ///   - not contain the character '.'
-   ///   - not contain ASCII control characters or whitespace characters (including tab or newline).
-   ///   - not contain more than RFile::kMaxPathNesting path fragments (i.e. more than RFile::kMaxPathNesting - 1 '/')
-   ///
-   /// In addition, when *writing* an object to RFile, the character ';' is also banned.
-   ///
-   /// Passing an invalid path to Put will cause it to throw an exception, and
-   /// passing an invalid path to Get will always return nullptr.
-   static std::string ValidatePath(std::string_view path);
-
    explicit RFile(std::unique_ptr<TFile> file) : fFile(std::move(file)) {}
 
    // NOTE: these strings are const char * because they need to be passed to TFile.
    /// Gets object `path` from the file and returns an **owning** pointer to it.
    /// The caller should immediately wrap it into a unique_ptr of the type described by `type`.
-   [[nodiscard]] void *GetUntyped(const char *path, const TClass *type) const;
+   [[nodiscard]] void *GetUntyped(std::string_view path, const TClass &type) const;
 
    /// Writes `obj` to file, without taking its ownership.
-   void PutUntyped(const char *path, const TClass *type, const void *obj, std::uint32_t flags);
+   void PutUntyped(std::string_view path, const TClass &type, const void *obj, std::uint32_t flags);
 
    // XXX: consider exposing this function
    template <typename T>
    void PutInternal(std::string_view path, const T &obj, std::uint32_t flags)
    {
-      if (auto err = ValidatePath(path); !err.empty()) {
-         throw RException(R__FAIL("Invalid object path '" + std::string(path) + "': " + err));
-      }
-      if (path.find_first_of(';') != std::string_view::npos) {
-         throw RException(
-            R__FAIL("Invalid object path '" + std::string(path) +
-                    "': character ';' is used to specify an object cycle, which only makes sense when reading."));
-      }
-
-      std::string pathStr(path);
       const TClass *cls = TClass::GetClass(typeid(T));
       if (!cls) {
-         throw ROOT::RException(R__FAIL(std::string("Could not determine type of object ") + pathStr));
+         throw ROOT::RException(R__FAIL(std::string("Could not determine type of object ") + std::string(path)));
       }
-      PutUntyped(pathStr.c_str(), cls, &obj, flags);
+      PutUntyped(path, *cls, &obj, flags);
    }
 
    /// Retrieves the TKey with path (and cycle) `path`. It will first look at a top-level key with name
@@ -218,17 +193,11 @@ public:
    template <typename T>
    std::unique_ptr<T> Get(std::string_view path) const
    {
-      if (auto err = ValidatePath(path); !err.empty()) {
-         R__LOG_ERROR(Internal::RFileLog()) << "Invalid object path '" << path << "': " << err;
-         return nullptr;
-      }
-
-      std::string pathStr(path);
       const TClass *cls = TClass::GetClass(typeid(T));
       if (!cls) {
-         throw ROOT::RException(R__FAIL(std::string("Could not determine type of object ") + pathStr));
+         throw ROOT::RException(R__FAIL(std::string("Could not determine type of object ") + std::string(path)));
       }
-      void *obj = GetUntyped(pathStr.c_str(), cls);
+      void *obj = GetUntyped(path, *cls);
       return std::unique_ptr<T>(static_cast<T *>(obj));
    }
 

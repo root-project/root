@@ -251,20 +251,20 @@ static ROOT::RResult<RTFileKey> ReadKeyFromFile(TFile *file, std::uint64_t keyAd
    return key;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////
-
-std::pair<std::string_view, std::string_view> ROOT::Experimental::DecomposePath(std::string_view path)
-{
-   auto lastSlashIdx = path.rfind('/');
-   if (lastSlashIdx == std::string_view::npos)
-      return {{}, path};
-
-   auto dirName = path.substr(0, lastSlashIdx + 1);
-   auto pathName = path.substr(lastSlashIdx + 1);
-   return {dirName, pathName};
-}
-
-std::string RFile::ValidatePath(std::string_view path)
+/// Returns an empty string if `path` is a suitable path to store an object into a RFile,
+/// otherwise returns a description of why that is not the case.
+///
+/// A valid object path must:
+///   - not be empty
+///   - not contain the character '.'
+///   - not contain ASCII control characters or whitespace characters (including tab or newline).
+///   - not contain more than RFile::kMaxPathNesting path fragments (i.e. more than RFile::kMaxPathNesting - 1 '/')
+///
+/// In addition, when *writing* an object to RFile, the character ';' is also banned.
+///
+/// Passing an invalid path to Put will cause it to throw an exception, and
+/// passing an invalid path to Get will always return nullptr.
+static std::string ValidatePath(std::string_view path)
 {
    if (path.empty())
       return "path cannot be empty";
@@ -293,6 +293,19 @@ std::string RFile::ValidatePath(std::string_view path)
    }
 
    return "";
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+
+std::pair<std::string_view, std::string_view> ROOT::Experimental::DecomposePath(std::string_view path)
+{
+   auto lastSlashIdx = path.rfind('/');
+   if (lastSlashIdx == std::string_view::npos)
+      return {{}, path};
+
+   auto dirName = path.substr(0, lastSlashIdx + 1);
+   auto pathName = path.substr(lastSlashIdx + 1);
+   return {dirName, pathName};
 }
 
 std::unique_ptr<RFile> RFile::OpenForReading(std::string_view path)
@@ -368,38 +381,46 @@ TKey *RFile::GetTKey(const char *path) const
    return key;
 }
 
-void *RFile::GetUntyped(const char *path, const TClass *type) const
+void *RFile::GetUntyped(std::string_view path, const TClass &type) const
 {
-   assert(path);
-   assert(type);
+   if (auto err = ValidatePath(path); !err.empty()) {
+      R__LOG_ERROR(Internal::RFileLog()) << "Invalid object path '" << path << "': " << err;
+      return nullptr;
+   }
 
    if (!fFile)
       throw ROOT::RException(R__FAIL("File has been closed"));
 
-   TKey *key = GetTKey(path);
-   void *obj = key ? key->ReadObjectAny(type) : nullptr;
+   TKey *key = GetTKey(std::string(path).c_str());
+   void *obj = key ? key->ReadObjectAny(&type) : nullptr;
 
    if (obj) {
       // Disavow any ownership on `obj`
       // NOTE: all these objects inherit from TObject as their first parent, so we can use static_cast.
-      if (type->InheritsFrom("TTree"))
+      if (type.InheritsFrom("TTree"))
          static_cast<TTree *>(obj)->SetDirectory(nullptr);
-      else if (type->InheritsFrom("TH1"))
+      else if (type.InheritsFrom("TH1"))
          static_cast<TH1 *>(obj)->SetDirectory(nullptr);
-      else if (type->InheritsFrom("TGraph2D"))
+      else if (type.InheritsFrom("TGraph2D"))
          static_cast<TGraph2D *>(obj)->SetDirectory(nullptr);
    } else if (key && !GetROOT()->IsBatch()) { // XXX: do we really want this?
-      R__LOG_WARNING(RFileLog()) << "Tried to get object '" << path << "' of type " << type->GetName()
+      R__LOG_WARNING(RFileLog()) << "Tried to get object '" << path << "' of type " << type.GetName()
                                  << " but that path contains an object of type " << key->GetClassName();
    }
 
    return obj;
 }
 
-void RFile::PutUntyped(const char *path, const TClass *type, const void *obj, std::uint32_t flags)
+void RFile::PutUntyped(std::string_view path, const TClass &type, const void *obj, std::uint32_t flags)
 {
-   assert(path);
-   assert(type);
+   if (auto err = ValidatePath(path); !err.empty())
+      throw RException(R__FAIL("Invalid object path '" + std::string(path) + "': " + err));
+
+   if (path.find_first_of(';') != std::string_view::npos) {
+      throw RException(
+         R__FAIL("Invalid object path '" + std::string(path) +
+                 "': character ';' is used to specify an object cycle, which only makes sense when reading."));
+   }
 
    if (!fFile)
       throw ROOT::RException(R__FAIL("File has been closed"));
@@ -441,17 +462,17 @@ void RFile::PutUntyped(const char *path, const TClass *type, const void *obj, st
    if (!allowOverwrite) {
       const TKey *existing = dir->GetKey(tokens[tokens.size() - 1].c_str());
       if (existing) {
-         throw ROOT::RException(R__FAIL(std::string("trying to overwrite object ") + path + " of type " +
-                                        existing->GetClassName() + " with another object of type " + type->GetName()));
+         throw ROOT::RException(R__FAIL(std::string("trying to overwrite object ") + std::string(path) + " of type " +
+                                        existing->GetClassName() + " with another object of type " + type.GetName()));
       }
    } else if (!backupCycle) {
       writeOpts = "WriteDelete";
    }
 
-   int success = dir->WriteObjectAny(obj, type, tokens[tokens.size() - 1].c_str(), writeOpts);
+   int success = dir->WriteObjectAny(obj, &type, tokens[tokens.size() - 1].c_str(), writeOpts);
 
    if (!success) {
-      throw ROOT::RException(R__FAIL(std::string("Failed to write ") + path + " to file"));
+      throw ROOT::RException(R__FAIL(std::string("Failed to write ") + std::string(path) + " to file"));
    }
 }
 
@@ -585,6 +606,6 @@ void *ROOT::Experimental::Internal::GetRFileObjectFromKey(RFile &file, const RFi
    const auto *cls = TClass::GetClass(key.fClassName.c_str());
    void *obj = nullptr;
    if (cls)
-      obj = file.GetUntyped(key.fName.c_str(), cls);
+      obj = file.GetUntyped(key.fName, *cls);
    return obj;
 }
