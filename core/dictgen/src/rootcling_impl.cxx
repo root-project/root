@@ -2805,6 +2805,7 @@ void CreateDictHeader(std::ostream &dictStream, const std::string &main_dictname
                // write one and include in there a few things for backward
                // compatibility.
                << "\n/*******************************************************************/\n"
+               << "#include <stdlib.h>\n" // Has been included historically and CMSSW relies on that
                << "#include <cstddef>\n"
                << "#include <cstdio>\n"
                << "#include <cstdlib>\n"
@@ -4473,7 +4474,8 @@ int RootClingMain(int argc,
       }
    }
 
-   if (interp.declare("#include <string>\n" // For the list of 'opaque' typedef to also include string.
+   if (interp.declare("#include <stdlib.h>\n" // Has been implicitly included historically and CMSSW relies on that
+                      "#include <string>\n" // For the list of 'opaque' typedef to also include string.
                       "#include <RtypesCore.h>\n" // For initializing TNormalizedCtxt.
                       "namespace std {} using namespace std;") != cling::Interpreter::kSuccess) {
       ROOT::TMetaUtils::Error(nullptr, "Error loading the default header files.\n");
