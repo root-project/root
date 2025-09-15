@@ -63,6 +63,7 @@ class RRecordField : public RFieldBase {
 
    /// If `emulatedFromType` is non-empty, this field was created as a replacement for a ClassField that we lack a
    /// dictionary for and reconstructed from the on-disk information.
+   /// Used by the public constructor and by Internal::CreateEmulatedRecordField().
    RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
                 std::string_view emulatedFromType);
 
@@ -82,6 +83,8 @@ protected:
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
 
+   /// Used by RPairField and RTupleField descendants. These descendants have their own logic to attach the subfields
+   /// that ensure that the resulting memory layout matches std::pair or std::tuple, resp.
    RRecordField(std::string_view fieldName, std::string_view typeName);
 
    void AttachItemFields(std::vector<std::unique_ptr<RFieldBase>> itemFields);
@@ -106,6 +109,8 @@ protected:
 public:
    /// Construct a RRecordField based on a vector of child fields. The ownership of the child fields is transferred
    /// to the RRecordField instance.
+   /// The resulting field uses a memory layout for its values as if there was a struct consisting of the passed
+   /// item fields.
    RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields);
    RRecordField(RRecordField &&other) = default;
    RRecordField &operator=(RRecordField &&other) = default;
