@@ -10,6 +10,7 @@ add_subdirectory(fitpanel)
 add_subdirectory(guibuilder)
 add_subdirectory(guihtml)
 add_subdirectory(recorder)
+add_subdirectory(treemap)
 
 if(webgui)
    if(cefweb)
@@ -25,8 +26,6 @@ if(webgui)
 
    add_subdirectory(browsable)
    add_subdirectory(browserv7)
-
-   add_subdirectory(treemap)
 
    if(root7)
       add_subdirectory(canvaspainter)
