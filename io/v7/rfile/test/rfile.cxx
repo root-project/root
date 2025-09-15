@@ -566,3 +566,28 @@ TEST(RFile, LongKeyName)
    auto it = keys.begin();
    EXPECT_EQ(it->fName, kKeyLong);
 }
+
+TEST(RFile, NormalizedPaths)
+{
+   FileRaii fileGuard("test_rfile_normalizedpaths.root");
+
+   auto file = RFile::Recreate(fileGuard.GetPath());
+   std::string obj = "obj";
+   file->Put("/s", obj);
+   // "a" and "/a" are equivalent paths, so we cannot overwrite it using Put()...
+   EXPECT_THROW(file->Put("s", obj), ROOT::RException);
+   // ...and this is true no matter how many leading slashes we have.
+   EXPECT_THROW(file->Put("////s", obj), ROOT::RException);
+   EXPECT_EQ(*file->Get<std::string>("s"), obj);
+   EXPECT_EQ(*file->Get<std::string>("//s"), obj);
+
+   TH1D h("h", "h", 10, -10, 10);
+   // Cannot write directory 's': already taken by `obj`.
+   EXPECT_THROW(file->Put("s/b//c", h), ROOT::RException);
+   file->Put("a/b//c", h);
+   EXPECT_THROW(file->Put("a/b/c", h), ROOT::RException);
+   EXPECT_NE(file->Get<TH1D>("a/b/c"), nullptr);
+   EXPECT_NE(file->Get<TH1D>("//a////b/c"), nullptr);
+   // Trailing '/' is not stripped.
+   EXPECT_EQ(file->Get<TH1D>("a/b/c/"), nullptr);
+}

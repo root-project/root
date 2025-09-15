@@ -251,6 +251,8 @@ static ROOT::RResult<RTFileKey> ReadKeyFromFile(TFile *file, std::uint64_t keyAd
    return key;
 }
 
+/// This function first validates, then normalizes the given path in place.
+///
 /// Returns an empty string if `path` is a suitable path to store an object into a RFile,
 /// otherwise returns a description of why that is not the case.
 ///
@@ -264,8 +266,16 @@ static ROOT::RResult<RTFileKey> ReadKeyFromFile(TFile *file, std::uint64_t keyAd
 ///
 /// Passing an invalid path to Put will cause it to throw an exception, and
 /// passing an invalid path to Get will always return nullptr.
-static std::string ValidatePath(std::string_view path)
+///
+/// If required, `path` is modified to make its hierarchy-related meaning consistent. This entails:
+/// - combining any consecutive '/' into a single one;
+/// - stripping any leading '/'.
+///
+/// Note that trailing '/' are NOT removed.
+static std::string ValidateAndNormalizePath(std::string &path)
 {
+   ////// First, validate path.
+
    if (path.empty())
       return "path cannot be empty";
 
@@ -278,19 +288,27 @@ static std::string ValidatePath(std::string_view path)
    if (!valid)
       return "path cannot contain control characters, whitespaces or dots";
 
-   // NOTE: this modifies `path`!
-   {
-      auto slashIdx = path.find_first_of('/');
-      int nesting = 0;
-      while (slashIdx < std::string_view::npos) {
-         ++nesting;
-         if (nesting > RFile::kMaxPathNesting)
-            return "path contains too many levels of nesting";
+   //// Path is valid so far, normalize it.
 
-         path = path.substr(slashIdx + 1);
-         slashIdx = path.find_first_of('/');
-      }
+   // Strip all leading '/'
+   {
+      auto nToStrip = 0u;
+      const auto len = path.length();
+      while (nToStrip < len && path[nToStrip] == '/')
+         ++nToStrip;
+
+      if (nToStrip > 0)
+         path.erase(0, nToStrip);
    }
+
+   // Remove duplicate consecutive '/'
+   const auto it = std::unique(path.begin(), path.end(), [](char a, char b) { return (a == '/' && b == '/'); });
+   path.erase(it, path.end());
+
+   //// After the path has been normalized, check the nesting level by counting how many slashes it contains.
+   const auto nesting = std::count(path.begin(), path.end(), '/');
+   if (nesting > RFile::kMaxPathNesting)
+      return "pathView contains too many levels of nesting";
 
    return "";
 }
@@ -381,9 +399,11 @@ TKey *RFile::GetTKey(const char *path) const
    return key;
 }
 
-void *RFile::GetUntyped(std::string_view path, const TClass &type) const
+void *RFile::GetUntyped(std::string_view pathSV, const TClass &type) const
 {
-   if (auto err = ValidatePath(path); !err.empty()) {
+   std::string path{pathSV};
+
+   if (auto err = ValidateAndNormalizePath(path); !err.empty()) {
       R__LOG_ERROR(Internal::RFileLog()) << "Invalid object path '" << path << "': " << err;
       return nullptr;
    }
@@ -391,7 +411,7 @@ void *RFile::GetUntyped(std::string_view path, const TClass &type) const
    if (!fFile)
       throw ROOT::RException(R__FAIL("File has been closed"));
 
-   TKey *key = GetTKey(std::string(path).c_str());
+   TKey *key = GetTKey(path.c_str());
    void *obj = key ? key->ReadObjectAny(&type) : nullptr;
 
    if (obj) {
@@ -411,14 +431,15 @@ void *RFile::GetUntyped(std::string_view path, const TClass &type) const
    return obj;
 }
 
-void RFile::PutUntyped(std::string_view path, const TClass &type, const void *obj, std::uint32_t flags)
+void RFile::PutUntyped(std::string_view pathSV, const TClass &type, const void *obj, std::uint32_t flags)
 {
-   if (auto err = ValidatePath(path); !err.empty())
-      throw RException(R__FAIL("Invalid object path '" + std::string(path) + "': " + err));
+   std::string path{pathSV};
+   if (auto err = ValidateAndNormalizePath(path); !err.empty())
+      throw RException(R__FAIL("Invalid object path '" + path + "': " + err));
 
    if (path.find_first_of(';') != std::string_view::npos) {
       throw RException(
-         R__FAIL("Invalid object path '" + std::string(path) +
+         R__FAIL("Invalid object path '" + path +
                  "': character ';' is used to specify an object cycle, which only makes sense when reading."));
    }
 
@@ -446,9 +467,9 @@ void RFile::PutUntyped(std::string_view path, const TClass &type, const void *ob
       const TKey *existing = dir->GetKey(tokens[tokIdx].c_str());
       if (existing && strcmp(existing->GetClassName(), "TDirectory") != 0 &&
           strcmp(existing->GetClassName(), "TDirectoryFile") != 0) {
-         throw ROOT::RException(R__FAIL(
-            "error adding object '" + std::string(path) + "': failed to create directory '" + FullPathUntil(tokIdx) +
-            "': name already taken by an object of type '" + existing->GetClassName() + "'"));
+         throw ROOT::RException(R__FAIL("error adding object '" + path + "': failed to create directory '" +
+                                        FullPathUntil(tokIdx) + "': name already taken by an object of type '" +
+                                        existing->GetClassName() + "'"));
       }
       dir = dir->mkdir(tokens[tokIdx].c_str(), "", true);
       if (!dir) {
@@ -462,7 +483,7 @@ void RFile::PutUntyped(std::string_view path, const TClass &type, const void *ob
    if (!allowOverwrite) {
       const TKey *existing = dir->GetKey(tokens[tokens.size() - 1].c_str());
       if (existing) {
-         throw ROOT::RException(R__FAIL(std::string("trying to overwrite object ") + std::string(path) + " of type " +
+         throw ROOT::RException(R__FAIL(std::string("trying to overwrite object ") + path + " of type " +
                                         existing->GetClassName() + " with another object of type " + type.GetName()));
       }
    } else if (!backupCycle) {
@@ -472,7 +493,7 @@ void RFile::PutUntyped(std::string_view path, const TClass &type, const void *ob
    int success = dir->WriteObjectAny(obj, &type, tokens[tokens.size() - 1].c_str(), writeOpts);
 
    if (!success) {
-      throw ROOT::RException(R__FAIL(std::string("Failed to write ") + std::string(path) + " to file"));
+      throw ROOT::RException(R__FAIL(std::string("Failed to write ") + path + " to file"));
    }
 }
 
