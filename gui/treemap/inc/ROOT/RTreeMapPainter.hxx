@@ -26,8 +26,6 @@
 #include <vector>
 
 namespace ROOT::Experimental {
-class RNTupleInspector;
-
 // clang-format off
 /**
 \class ROOT::Experimental::RTreeMapPainter
@@ -36,7 +34,7 @@ class RNTupleInspector;
 
 One can visualize an RNTuple in a TCanvas as a treemap like this:
 ~~~ {.cpp}
-auto tm = RTreeMapPainter::ImportRNTuple("file.root", "ntuple_name");
+auto tm = ROOT::Experimental::CreateTreeMapFromRNTuple("file.root", "ntuple_name");
 auto c = new TCanvas("c_tm","TreeMap");
 c->Add(tm.release());
 ~~~
@@ -44,14 +42,6 @@ c->Add(tm.release());
 // clang-format on
 class RTreeMapPainter final : public ROOT::Experimental::RTreeMapBase, public TObject {
 public:
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Logic for converting an RNTuple to RTreeMapPainter given RNTupleInspector
-   static std::unique_ptr<RTreeMapPainter> ImportRNTuple(const ROOT::Experimental::RNTupleInspector &insp);
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Logic for converting an RNTuple to RTreeMapPainter given file and tuple names
-   static std::unique_ptr<RTreeMapPainter> ImportRNTuple(std::string_view sourceFileName, std::string_view tupleName);
-
    struct Node final : public ROOT::Experimental::RTreeMapBase::Node, public TObject {
    public:
       ClassDefOverride(Node, 1);
