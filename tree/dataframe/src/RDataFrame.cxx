@@ -1616,14 +1616,14 @@ RDataFrame has experimental support for verbose logging of the event loop runtim
 #include <ROOT/RLogger.hxx>
 
 // this increases RDF's verbosity level as long as the `verbosity` variable is in scope
-auto verbosity = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::Experimental::ELogLevel::kInfo);
+auto verbosity = ROOT::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::ELogLevel::kInfo);
 ~~~
 
 or in Python:
 ~~~{.python}
 import ROOT
 
-verbosity = ROOT.Experimental.RLogScopedVerbosity(ROOT.Detail.RDF.RDFLogChannel(), ROOT.Experimental.ELogLevel.kInfo)
+verbosity = ROOT.RLogScopedVerbosity(ROOT.Detail.RDF.RDFLogChannel(), ROOT.ELogLevel.kInfo)
 ~~~
 
 More information (e.g. start and end of each multi-thread task) is printed using `ELogLevel.kDebug` and even more
