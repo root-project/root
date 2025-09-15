@@ -42,7 +42,7 @@ interpreter/cling/tools/packaging @vgvassilev
 /tree/readspeed/ @martamaja10
 /tree/ntuple/ @jblomer
 /tree/ntuplebrowse/ @jblomer
-/tree/ntupleutil/v7/ @jblomer
+/tree/ntupleutil/ @jblomer
 /tutorials/sql/ @linev
 
 # Projects that span over several code modules:
