@@ -2788,6 +2788,8 @@ public:
    ///
    /// If T is not specified, RDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
+   /// Note that internally, the summations are executed with Kahan sums in double precision, irrespective
+   /// of the type of column that is read.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. Also see RResultPtr.
