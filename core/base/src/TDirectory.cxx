@@ -205,6 +205,7 @@ void TDirectory::Append(TObject *obj, Bool_t replace /* = kFALSE */)
    if (replace && obj->GetName() && obj->GetName()[0]) {
       TObject *old;
       while (nullptr != (old = GetList()->FindObject(obj->GetName()))) {
+         if (old == obj) return;
          Warning("Append","Replacing existing %s: %s (Potential memory leak).",
                  obj->IsA()->GetName(),obj->GetName());
          ROOT::DirAutoAdd_t func = old->IsA()->GetDirectoryAutoAdd();
