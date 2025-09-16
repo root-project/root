@@ -36,6 +36,13 @@ class RNTupleDescriptor;
 class RClusterDescriptor;
 enum class EExtraTypeInfoIds;
 
+namespace Experimental {
+class RNTupleAttrSetDescriptor;
+namespace Internal {
+class RNTupleAttrSetDescriptorBuilder;
+} // namespace Internal
+} // namespace Experimental
+
 namespace Internal {
 
 class RClusterDescriptorBuilder;
@@ -270,6 +277,12 @@ public:
                                                             const RContext &context, bool forHeaderExtension = false);
    static RResult<std::uint32_t> DeserializeSchemaDescription(const void *buffer, std::uint64_t bufSize,
                                                               ROOT::Internal::RNTupleDescriptorBuilder &descBuilder);
+
+   static RResult<std::uint32_t>
+   SerializeAttributeSet(const Experimental::RNTupleAttrSetDescriptor &attrSetDesc, void *buffer);
+   static RResult<std::uint32_t>
+   DeserializeAttributeSet(const void *buffer, std::uint64_t bufSize,
+                           Experimental::Internal::RNTupleAttrSetDescriptorBuilder &attrSetDescBld);
 
    static RResult<RContext> SerializeHeader(void *buffer, const RNTupleDescriptor &desc);
    static RResult<std::uint32_t> SerializePageList(void *buffer, const RNTupleDescriptor &desc,
