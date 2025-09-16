@@ -1535,12 +1535,36 @@ splitImpl(RooAbsData const &data, const RooAbsCategory &cloneCat, bool createEmp
  * channel depends on. This is much faster in case of many channels, and the
  * resulting sub-datasets don't waste memory for unused columns.
  *
+ * \throws `std::runtime_error` if an error occurs.
+ *
  * \param splitCat The categorical variable used for splitting the dataset.
  * \param createEmptyDataSets Flag indicating whether to create empty datasets
  *                            for missing categories (`false` by default).
  *
- * \return An owning pointer to a TList of subsets of the dataset.
- *         Returns `nullptr` if an error occurs.
+ * \return Subsets of the dataset.
+ *
+ * \note **Backwards compatibility:**
+ * In releases before ROOT 6.38.00, this function returned a `TList*`. If you
+ * still need a `TList*`, you can convert the return value with a small helper:
+ *
+ * ```cpp
+ * TList *splitsToTList(std::vector<std::unique_ptr<RooAbsData>> &&vec) {
+ *     auto *tlist = new TList;
+ *     for (auto &d : vec)
+ *         tlist->Add(d.release());
+ *     return tlist;
+ * }
+ *
+ * // Example usage:
+ * TList *splits = splitsToTList(data->split(*category));
+ * // ... do something with splits ...
+ * splits->Delete();
+ * delete splits;
+ * ```
+ *
+ * This way, you can continue to work with `TList` while adopting the new
+ * `std::vector<std::unique_ptr<RooAbsData>>` API over time, which ensures
+ * automatic cleanup of resources.
  */
 
 std::vector<std::unique_ptr<RooAbsData>>
@@ -1569,12 +1593,13 @@ RooAbsData::split(const RooAbsCategory &splitCat, bool createEmptyDataSets) cons
  * only contain variables that the pdf for the corresponding channel depends
  * on.
  *
+ * \throws `std::runtime_error` if an error occurs.
+ *
  * \param simPdf The simultaneous pdf used for splitting the dataset.
  * \param createEmptyDataSets Flag indicating whether to create empty datasets
  *                            for missing categories (`false` by default).
  *
- * \return An owning pointer to a TList of subsets of the dataset.
- *         Returns `nullptr` if an error occurs.
+ * \return Subsets of the dataset.
  */
 std::vector<std::unique_ptr<RooAbsData>>
 RooAbsData::split(const RooSimultaneous &simPdf, bool createEmptyDataSets) const
