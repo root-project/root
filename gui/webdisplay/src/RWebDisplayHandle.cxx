@@ -1389,9 +1389,13 @@ try_again:
 
    auto handle = RWebDisplayHandle::Display(args);
 
-   if (!handle) {
-      R__LOG_DEBUG(0, WebGUILog()) << "Cannot start " << args.GetBrowserName() << " to produce image " << fdebug;
-      return false;
+   // ensure file is created by browser draw
+   if (use_browser_draw && handle) {
+      Int_t batch_timeout = gEnv->GetValue("WebGui.BatchTimeout", 30) * 10;
+      while (gSystem->AccessPathName(wait_file_name.Data()) && (--batch_timeout > 0)) {
+         gSystem->ProcessEvents();
+         gSystem->Sleep(100);
+      }
    }
 
    // delete temporary HTML file
@@ -1402,12 +1406,18 @@ try_again:
          gSystem->Unlink(html_name.Data());
    }
 
-   if (!wait_file_name.IsNull() && gSystem->AccessPathName(wait_file_name.Data())) {
-      R__LOG_ERROR(WebGUILog()) << "Fail to produce image " << fdebug;
+   if (!handle) {
+      R__LOG_DEBUG(0, WebGUILog()) << "Cannot start " << args.GetBrowserName() << " to produce image " << fdebug;
       return false;
    }
 
    if (use_browser_draw) {
+
+      if (gSystem->AccessPathName(wait_file_name.Data())) {
+         R__LOG_ERROR(WebGUILog()) << "Fail to produce image " << fdebug;
+         return false;
+      }
+
       if (fmts[0] == "s.pdf")
          ::Info("ProduceImages", "PDF file %s with %d pages has been created", fnames[0].c_str(), (int) jsons.size());
       else {
