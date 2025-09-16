@@ -8,7 +8,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/ExecutionEngine/Orc/Shared/LibraryScanner.h"
-#include "llvm/ExecutionEngine/Orc/Shared/DynamicLoader.h"
+#include "llvm/ExecutionEngine/Orc/Shared/LibraryResolver.h"
 
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Support/FileSystem.h"
@@ -60,7 +60,19 @@ bool ObjectFileLoader::isArchitectureCompatible(const object::ObjectFile &Obj) {
            << ", Object triple: " << ObjTriple.str() << "\n";
   });
 
-  return HostTriple.getArch() == ObjTriple.getArch();
+  if (ObjTriple.getArch() != Triple::UnknownArch &&
+      HostTriple.getArch() != ObjTriple.getArch())
+    return false;
+
+  if (ObjTriple.getOS() != Triple::UnknownOS &&
+      HostTriple.getOS() != ObjTriple.getOS())
+    return false;
+
+  if (ObjTriple.getEnvironment() != Triple::UnknownEnvironment &&
+      HostTriple.getEnvironment() != ObjTriple.getEnvironment())
+    return false;
+
+  return true;
 }
 
 Expected<object::OwningBinary<object::ObjectFile>>
@@ -222,7 +234,7 @@ bool DylibPathValidator::isSharedLibrary(StringRef Path) {
   if (MagicCode == file_magic::archive)
     return false;
 
-    // Universal binary handling.
+  // Universal binary handling.
 #if defined(__APPLE__)
   if (MagicCode == file_magic::macho_universal_binary) {
     ObjectFileLoader ObjLoader(Path);
@@ -277,14 +289,15 @@ void DylibSubstitutor::configure(StringRef loaderPath) {
     loaderDir = execPath;
   } else {
     loaderDir = loaderPath.str();
-    sys::path::remove_filename(loaderDir);
+    if (!sys::fs::is_directory(loaderPath))
+      sys::path::remove_filename(loaderDir);
   }
 
 #ifdef __APPLE__
-  placeholders_["@loader_path"] = std::string(loaderDir);
-  placeholders_["@executable_path"] = std::string(execPath);
+  placeholders["@loader_path"] = std::string(loaderDir);
+  placeholders["@executable_path"] = std::string(execPath);
 #else
-  placeholders_["$origin"] = std::string(loaderDir);
+  placeholders["$origin"] = std::string(loaderDir);
 #endif
 }
 
@@ -295,10 +308,13 @@ SearchPathResolver::resolve(StringRef stem, const DylibSubstitutor &subst,
     std::string base = subst.substitute(searchPath);
 
     SmallString<512> fullPath(base);
-    if (stem.starts_with(placeholderPrefix))
+    if (!placeholderPrefix.empty() && stem.starts_with(placeholderPrefix))
       fullPath.append(stem.drop_front(placeholderPrefix.size()));
     else
       sys::path::append(fullPath, stem);
+
+    LLVM_DEBUG(dbgs() << "SearchPathResolver::resolve FullPath = " << fullPath
+                      << "\n";);
 
     if (auto valid = validator.validate(fullPath.str()))
       return valid;
@@ -311,7 +327,6 @@ std::optional<std::string>
 DylibResolverImpl::tryWithExtensions(StringRef libStem) const {
   LLVM_DEBUG(dbgs() << "tryWithExtensions: baseName = " << libStem << "\n";);
   SmallVector<StringRef, 4> candidates;
-  candidates.push_back(libStem); // original
 
   // Add extensions by platform
 #if defined(__APPLE__)
@@ -379,16 +394,18 @@ DylibResolverImpl::resolve(StringRef libStem, bool variateLibStem) const {
 
       return norm;
     }
-  } else {
-    for (const auto &resolver : resolvers) {
-      if (auto result = resolver.resolve(libStem, substitutor, validator)) {
-        LLVM_DEBUG(dbgs() << "  -> Resolved via search path: " << *result
-                          << "\n";);
+  }
 
-        return result;
-      }
+  for (const auto &resolver : resolvers) {
+    LLVM_DEBUG(dbgs() << "  -> Resolving via search path ... \n";);
+    if (auto result = resolver.resolve(libStem, substitutor, validator)) {
+      LLVM_DEBUG(dbgs() << "  -> Resolved via search path: " << *result
+                        << "\n";);
+
+      return result;
     }
   }
+
   // Expand libStem with paths, extensions, etc.
   // std::string foundName;
   if (variateLibStem) {
@@ -414,7 +431,7 @@ mode_t PathResolver::lstatCached(StringRef path) {
     return *cache;
 
   // Not cached: perform lstat and store
-  struct stat buf {};
+  struct stat buf{};
   mode_t st_mode = (lstat(path.str().c_str(), &buf) == -1) ? 0 : buf.st_mode;
 
   m_cache->insert_lstat(path, st_mode);
@@ -659,11 +676,11 @@ void LibraryScanHelper::addBasePath(const std::string &path, PathType kind) {
   if (kind == PathType::User) {
     LLVM_DEBUG(dbgs() << "LibraryScanHelper::addBasePath: Added User path: "
                       << canon << "\n";);
-    m_unscannedUsr.push_back(canon);
+    m_unscannedUsr.push_back(StringRef(unit->basePath));
   } else {
     LLVM_DEBUG(dbgs() << "LibraryScanHelper::addBasePath: Added System path: "
                       << canon << "\n";);
-    m_unscannedSys.push_back(canon);
+    m_unscannedSys.push_back(StringRef(unit->basePath));
   }
 }
 
@@ -674,8 +691,8 @@ LibraryScanHelper::getNextBatch(PathType kind, size_t batchSize) {
 
   std::unique_lock<std::shared_mutex> lock(m_mutex);
 
-  while (!queue.empty() && result.size() < batchSize) {
-    const std::string &base = queue.front(); // no copy
+  while (!queue.empty() && (batchSize == 0 || result.size() < batchSize)) {
+    StringRef base = queue.front();
     auto it = m_units.find(base);
     if (it != m_units.end()) {
       auto &unit = it->second;
@@ -733,7 +750,7 @@ PathType LibraryScanHelper::classifyKind(StringRef path) const {
 
   static const std::array<std::string, 5> userPrefixes = {
       "/usr/local",    // often used by users for manual installs
-      "/opt/homebrew", // common on macOS M1/M2
+      "/opt/homebrew", // common on macOS
       "/opt/local",    // MacPorts
       "/home",         // Linux home dirs
       "/Users",        // macOS user dirs
@@ -904,7 +921,7 @@ Expected<LibraryDepsInfo> LibraryScanner::extractDeps(StringRef filePath) {
     return parseMachODeps(*macho);
   }
 
-  if (auto *coff = dyn_cast<object::COFFObjectFile>(Obj)) {
+  if (Obj->isCOFF()) {
     // TODO: COFF support
     return LibraryDepsInfo();
   }
@@ -1054,7 +1071,10 @@ void LibraryScanner::handleLibrary(StringRef filePath, PathType K, int level) {
 
   DylibPathValidator validator(m_helper.getPathResolver());
   DylibResolver m_libResolver(validator);
-  m_libResolver.configure(CanonicalPath, Deps.rpath, Deps.runPath);
+  m_libResolver.configure(
+      CanonicalPath, {{Deps.rpath, SearchPathType::RPath},
+                      {m_helper.getSearchPaths(), SearchPathType::UsrOrSys},
+                      {Deps.runPath, SearchPathType::RunPath}});
   for (StringRef dep : Deps.deps) {
     LLVM_DEBUG(dbgs() << "  Resolving dep: " << dep << "\n";);
     auto dep_fullopt = m_libResolver.resolve(dep);

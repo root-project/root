@@ -1,6 +1,6 @@
 add_llvm_component_library(LLVMOrcShared
   AllocationActions.cpp
-  DynamicLoader.cpp
+  LibraryResolver.cpp
   LibraryScanner.cpp
   MachOObjectFormat.cpp
   ObjectFormats.cpp

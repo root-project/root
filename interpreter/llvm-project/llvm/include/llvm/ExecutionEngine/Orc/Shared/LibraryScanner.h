@@ -32,7 +32,6 @@
 #include <unordered_map>
 #include <unordered_set>
 
-
 namespace llvm {
 namespace orc {
 
@@ -62,7 +61,6 @@ public:
   bool hasSeen(StringRef canon_path) const {
     std::shared_lock<std::shared_mutex> lock(m_mutex);
     return m_seen.contains(canon_path);
-    // return m_seen.count(canon_path) > 0;
   }
 
   bool hasSeenOrMark(StringRef canon_path) {
@@ -95,9 +93,9 @@ private:
   std::optional<PathInfo> read_realpath(StringRef path) const {
     std::shared_lock<std::shared_mutex> lock(m_mutex);
     auto it = m_realpathCache.find(path);
-    if (it != m_realpathCache.end()) {
+    if (it != m_realpathCache.end())
       return it->second;
-    }
+
     return std::nullopt;
   }
 
@@ -116,9 +114,9 @@ private:
   std::optional<std::string> read_link(StringRef path) const {
     std::shared_lock<std::shared_mutex> lock(m_mutex);
     auto it = m_readlinkCache.find(path);
-    if (it != m_readlinkCache.end()) {
+    if (it != m_readlinkCache.end())
       return it->second;
-    }
+
     return std::nullopt;
   }
 
@@ -130,9 +128,9 @@ private:
   std::optional<mode_t> read_lstat(StringRef path) const {
     std::shared_lock<std::shared_mutex> lock(m_mutex);
     auto it = m_lstatCache.find(path);
-    if (it != m_lstatCache.end()) {
+    if (it != m_lstatCache.end())
       return it->second;
-    }
+
     return std::nullopt;
   }
 
@@ -145,6 +143,9 @@ private:
 /// relative to a base and handle symbolic links. Caches results to reduce
 /// repeated system calls when enabled.
 class PathResolver {
+private:
+  std::shared_ptr<LibraryPathCache> m_cache;
+
 public:
   PathResolver(std::shared_ptr<LibraryPathCache> cache)
       : m_cache(std::move(cache)) {}
@@ -160,29 +161,32 @@ public:
                                             StringRef base = "",
                                             bool baseIsResolved = false,
                                             long symloopLevel = 40);
-
-private:
-  // mutable std::shared_mutex m_mutex;
-  std::shared_ptr<LibraryPathCache> m_cache;
 };
 
+/// Performs placeholder substitution in dynamic library paths.
+///
+/// Configures known placeholders (like @loader_path) and replaces them
+/// in input paths with their resolved values.
 class DylibSubstitutor {
 public:
   void configure(StringRef loaderPath);
 
   std::string substitute(StringRef input) const {
-    for (const auto &[ph, value] : placeholders_) {
-      if (input.starts_with(ph)) {
+    for (const auto &[ph, value] : placeholders) {
+      if (input.starts_with(ph))
         return (Twine(value) + input.drop_front(ph.size())).str();
-      }
     }
     return input.str();
   }
 
 private:
-  StringMap<std::string> placeholders_;
+  StringMap<std::string> placeholders;
 };
 
+/// Validates and normalizes dynamic library paths.
+///
+/// Uses a `PathResolver` to resolve paths to their canonical form and
+/// checks whether they point to valid shared libraries.
 class DylibPathValidator {
 public:
   DylibPathValidator(PathResolver &PR) : m_pathResolver(PR) {}
@@ -198,6 +202,7 @@ public:
     return real;
   }
 
+  /// Validate the given path as a shared library.
   std::optional<std::string> validate(StringRef path) const {
     auto realOpt = normalize(path);
     if (!realOpt)
@@ -213,21 +218,34 @@ private:
   PathResolver &m_pathResolver;
 };
 
+enum class SearchPathType {
+  RPath,
+  UsrOrSys,
+  RunPath,
+};
+
+struct SearchPathConfig {
+  ArrayRef<StringRef> Paths;
+  SearchPathType type;
+};
+
 class SearchPathResolver {
 public:
-  SearchPathResolver(ArrayRef<StringRef> searchPaths,
-                     StringRef placeholderPrefix = "@rpath")
-      : placeholderPrefix(placeholderPrefix) {
-    for (auto &path : searchPaths)
+  SearchPathResolver(const SearchPathConfig &Cfg,
+                     StringRef placeholderPrefix = "")
+      : Kind(Cfg.type), placeholderPrefix(placeholderPrefix) {
+    for (auto &path : Cfg.Paths)
       paths.emplace_back(path.str());
   }
 
   std::optional<std::string> resolve(StringRef stem,
                                      const DylibSubstitutor &subst,
                                      DylibPathValidator &validator) const;
+  SearchPathType searchPathType() const { return Kind; }
 
 private:
   std::vector<std::string> paths;
+  SearchPathType Kind;
   std::string placeholderPrefix;
 };
 
@@ -253,16 +271,16 @@ class DylibResolver {
 public:
   DylibResolver(DylibPathValidator &validator) : validator(validator) {}
 
-  void configure(StringRef loaderPath, ArrayRef<StringRef> rpaths,
-                 ArrayRef<StringRef> runpaths) {
+  void configure(StringRef loaderPath,
+                 ArrayRef<SearchPathConfig> SearchPathCfg) {
     DylibSubstitutor substitutor;
     substitutor.configure(loaderPath);
 
     std::vector<SearchPathResolver> resolvers;
-    if (!rpaths.empty())
-      resolvers.emplace_back(rpaths, "@rpath");
-    if (!runpaths.empty())
-      resolvers.emplace_back(runpaths, "@rpath"); // still usually @rpath
+    for (const auto &cfg : SearchPathCfg) {
+      resolvers.emplace_back(cfg,
+                             cfg.type == SearchPathType::RPath ? "@rpath" : "");
+    }
 
     impl_ = std::make_unique<DylibResolverImpl>(
         std::move(substitutor), validator, std::move(resolvers));
@@ -277,9 +295,6 @@ public:
 
   static std::string resolvelinkerFlag(StringRef libStem,
                                        StringRef loaderPath) {
-    // StringRef rpath("@rpath");
-    // if (libStem.starts_with(rpath))
-    //   return libStem.drop_front(rpath.size()).str();
     DylibSubstitutor substitutor;
     substitutor.configure(loaderPath);
     return substitutor.substitute(libStem);
@@ -332,6 +347,13 @@ public:
   bool isTrackedBasePath(StringRef path) const;
   std::vector<std::shared_ptr<LibraryUnit>> getAllUnits() const;
 
+  SmallVector<StringRef> getSearchPaths() const {
+    SmallVector<StringRef> searchPaths;
+    for (const auto &unit : m_units)
+      searchPaths.push_back(unit.second->basePath);
+    return searchPaths;
+  }
+
   PathResolver &getPathResolver() const { return *m_resolver; }
 
   LibraryPathCache &getCache() const { return *m_cache; }
@@ -354,12 +376,18 @@ private:
   std::shared_ptr<PathResolver> m_resolver;
 
   StringMap<std::shared_ptr<LibraryUnit>> m_units; // key: canonical path
-  std::deque<std::string> m_unscannedUsr;
-  std::deque<std::string> m_unscannedSys;
+  std::deque<StringRef> m_unscannedUsr;
+  std::deque<StringRef> m_unscannedSys;
 };
 
+/// Loads an object file and provides access to it.
+///
+/// Owns the underlying `ObjectFile` and ensures it is valid.
+/// Any errors encountered during construction are stored and
+/// returned when attempting to access the file.
 class ObjectFileLoader {
 public:
+  /// Construct an object file loader from the given path.
   explicit ObjectFileLoader(StringRef Path) {
     auto ObjOrErr = loadObjectFileWithOwnership(Path);
     if (ObjOrErr)
@@ -376,6 +404,7 @@ public:
   ObjectFileLoader(ObjectFileLoader &&) = default;
   ObjectFileLoader &operator=(ObjectFileLoader &&) = default;
 
+  /// Get the loaded object file, or return an error if loading failed.
   Expected<object::ObjectFile &> getObjectFile() {
     if (Err)
       return std::move(Err);
@@ -392,6 +421,7 @@ private:
   loadObjectFileWithOwnership(StringRef FilePath);
 };
 
+/// Scans libraries, resolves dependencies, and registers them.
 class LibraryScanner {
 public:
   using shouldScanFn = std::function<bool(StringRef)>;
@@ -400,11 +430,11 @@ public:
       LibraryScanHelper &H, LibraryManager &m_libMgr,
       shouldScanFn shouldScanCall = [](StringRef path) { return true; })
       : m_helper(H), m_libMgr(m_libMgr),
-        // m_libResolver(DylibPathResolver(H)),
         shouldScanCall(std::move(shouldScanCall)) {}
 
   void scanNext(PathType kind, size_t batchSize = 1);
 
+  /// Dependency info for a library.
   struct LibraryDepsInfo {
     llvm::BumpPtrAllocator Alloc;
     llvm::StringSaver Saver{Alloc};
@@ -424,7 +454,6 @@ public:
 private:
   LibraryScanHelper &m_helper;
   LibraryManager &m_libMgr;
-  // DylibPathResolver m_libResolver;
   shouldScanFn shouldScanCall;
 
   std::optional<std::string> shouldScan(StringRef filePath);
