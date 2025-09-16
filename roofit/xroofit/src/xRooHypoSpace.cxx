@@ -369,13 +369,13 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
       fFitDb->cd();
       if (auto myDb = dynamic_cast<TMemFile *>(fFitDb.get())) {
          // need to unlock the database
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 37, 00)
-      myDb->SetWritable(true);
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 38, 00)
+         myDb->SetWritable(true);
 #else
          *reinterpret_cast<Bool_t *>(reinterpret_cast<unsigned char *>(myDb) +
-                                     myDb->Class()->GetDataMemberOffset("fWritable")) = true;
-      }
+                            myDb->Class()->GetDataMemberOffset("fWritable")) = true;
 #endif
+      }
    }
    if (!gDirectory || !gDirectory->IsWritable()) {
       // locate a TMemFile in the open list of files and move to that
@@ -458,7 +458,7 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
 #endif
    }
    return out;
-   }
+}
 
 std::map<std::string, xRooNLLVar::xValueWithError>
 xRooNLLVar::xRooHypoSpace::limits(const char *opt, const std::vector<double> &nSigmas, double relUncert)
