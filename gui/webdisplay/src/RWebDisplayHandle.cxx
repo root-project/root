@@ -297,6 +297,13 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
 
    ProcessGeometry(exec, args);
 
+   std::string extra = args.GetExtraArgs();
+   if (!extra.empty()) {
+      auto p = exec.find("$url");
+      if (p != std::string::npos)
+         exec.insert(p, extra + " ");
+   }
+
    std::string rmdir = MakeProfile(exec, args.IsBatchMode() || args.IsHeadless());
 
    std::string tmpfile;
@@ -685,11 +692,6 @@ void RWebDisplayHandle::ChromeCreator::ProcessGeometry(std::string &exec, const 
       if (!geometry.empty()) geometry.append(" ");
       geometry.append("--window-position="s + std::to_string(args.GetX() >= 0 ? args.GetX() : 0) + ","s +
                                            std::to_string(args.GetY() >= 0 ? args.GetY() : 0));
-   }
-
-   if (!args.GetExtraArgs().empty()) {
-      if (!geometry.empty()) geometry.append(" ");
-      geometry.append(args.GetExtraArgs());
    }
 
    exec = std::regex_replace(exec, std::regex("\\$geometry"), geometry);
