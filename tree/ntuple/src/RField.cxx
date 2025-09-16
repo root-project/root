@@ -98,6 +98,11 @@ void ROOT::RSimpleField<T>::ReconcileIntegralField(const RNTupleDescriptor &desc
    const RFieldDescriptor &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
 
+   if (fieldDesc.IsCustomEnum(desc)) {
+      SetOnDiskId(desc.FindFieldId("_0", GetOnDiskId()));
+      return;
+   }
+
    static const std::string gIntegralTypeNames[] = {"bool",         "char",          "std::int8_t",  "std::uint8_t",
                                                     "std::int16_t", "std::uint16_t", "std::int32_t", "std::uint32_t",
                                                     "std::int64_t", "std::uint64_t"};
