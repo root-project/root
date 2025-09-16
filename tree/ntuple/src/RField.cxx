@@ -92,6 +92,36 @@ const ROOT::RField<ROOT::RNTupleCardinality<std::uint64_t>> *ROOT::RCardinalityF
 
 //------------------------------------------------------------------------------
 
+template <typename T>
+void ROOT::RSimpleField<T>::ReconcileIntegralField(const RNTupleDescriptor &desc)
+{
+   const RFieldDescriptor &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
+
+   static const std::string gIntegralTypeNames[] = {"bool",         "char",          "std::int8_t",  "std::uint8_t",
+                                                    "std::int16_t", "std::uint16_t", "std::int32_t", "std::uint32_t",
+                                                    "std::int64_t", "std::uint64_t"};
+   if (std::find(std::begin(gIntegralTypeNames), std::end(gIntegralTypeNames), fieldDesc.GetTypeName()) ==
+       std::end(gIntegralTypeNames)) {
+      throw RException(R__FAIL("unexpected on-disk type name '" + fieldDesc.GetTypeName() + "' for field of type '" +
+                               GetTypeName() + "'"));
+   }
+}
+
+template <typename T>
+void ROOT::RSimpleField<T>::ReconcileFloatingPointField(const RNTupleDescriptor &desc)
+{
+   const RFieldDescriptor &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
+
+   if (!(fieldDesc.GetTypeName() == "float" || fieldDesc.GetTypeName() == "double")) {
+      throw RException(R__FAIL("unexpected on-disk type name '" + fieldDesc.GetTypeName() + "' for field of type '" +
+                               GetTypeName() + "'"));
+   }
+}
+
+//------------------------------------------------------------------------------
+
 template class ROOT::RSimpleField<char>;
 
 const ROOT::RFieldBase::RColumnRepresentations &ROOT::RField<char>::GetColumnRepresentations() const
