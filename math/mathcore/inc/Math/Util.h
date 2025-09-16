@@ -13,6 +13,7 @@
 #ifndef ROOT_Math_Util
 #define ROOT_Math_Util
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <functional>
