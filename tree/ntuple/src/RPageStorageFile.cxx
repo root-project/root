@@ -552,18 +552,17 @@ ROOT::Internal::RPageSourceFile::PrepareSingleCluster(const RCluster::RKey &clus
    std::vector<ROnDiskPageLocator> onDiskPages;
    auto activeSize = 0;
    auto pageZeroMap = std::make_unique<ROnDiskPageMap>();
-   PrepareLoadCluster(clusterKey, *pageZeroMap,
-                      [&](ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t pageNo,
-                          const ROOT::RClusterDescriptor::RPageInfo &pageInfo) {
-                         const auto &pageLocator = pageInfo.GetLocator();
-                         if (pageLocator.GetType() == RNTupleLocator::kTypeUnknown)
-                            throw RException(R__FAIL("tried to read a page with an unknown locator"));
-                         const auto nBytes =
-                            pageLocator.GetNBytesOnStorage() + pageInfo.HasChecksum() * kNBytesPageChecksum;
-                         activeSize += nBytes;
-                         onDiskPages.push_back(
-                            {physicalColumnId, pageNo, pageLocator.GetPosition<std::uint64_t>(), nBytes, 0});
-                      });
+   PrepareLoadCluster(
+      clusterKey, *pageZeroMap,
+      [&](ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t pageNo,
+          const ROOT::RClusterDescriptor::RPageInfo &pageInfo) {
+         const auto &pageLocator = pageInfo.GetLocator();
+         if (pageLocator.GetType() == RNTupleLocator::kTypeUnknown)
+            throw RException(R__FAIL("tried to read a page with an unknown locator"));
+         const auto nBytes = pageLocator.GetNBytesOnStorage() + pageInfo.HasChecksum() * kNBytesPageChecksum;
+         activeSize += nBytes;
+         onDiskPages.push_back({physicalColumnId, pageNo, pageLocator.GetPosition<std::uint64_t>(), nBytes, 0});
+      });
 
    // Linearize the page requests by file offset
    std::sort(onDiskPages.begin(), onDiskPages.end(),
