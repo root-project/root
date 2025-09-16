@@ -6,6 +6,7 @@
 #pragma link C++ class ROOT::Experimental::RHistEngine<float>-;
 #pragma link C++ class ROOT::Experimental::RHistEngine<double>-;
 
+#pragma link C++ class ROOT::Experimental::RHistStats-;
 #pragma link C++ class ROOT::Experimental::RRegularAxis-;
 #pragma link C++ class ROOT::Experimental::RVariableBinAxis-;
 #pragma link C++ class ROOT::Experimental::Internal::RAxes-;

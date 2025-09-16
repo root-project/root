@@ -1,0 +1,222 @@
+/// \file
+/// \warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
+/// Feedback is welcome!
+
+#ifndef ROOT_RHistStats
+#define ROOT_RHistStats
+
+#include "RLinearizedIndex.hxx"
+
+#include <cmath>
+#include <cstdint>
+#include <stdexcept>
+#include <tuple>
+#include <vector>
+
+class TBuffer;
+
+namespace ROOT {
+namespace Experimental {
+
+/**
+Histogram statistics of unbinned values.
+
+Every call to \ref Fill(const A &... args) "Fill" updates sums to compute the number of effective entries as well as the
+arithmetic mean and other statistical quantities per dimension:
+\code
+ROOT::Experimental::RHistStats stats(1);
+stats.Fill(8.5);
+stats.Fill(1.5);
+// stats.ComputeMean() will return 5.0
+\endcode
+
+\warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
+Feedback is welcome!
+*/
+class RHistStats final {
+public:
+   /// Statistics for one dimension.
+   struct RDimensionStats final {
+      double fSumWX = 0.0;
+      double fSumWX2 = 0.0;
+      double fSumWX3 = 0.0;
+      double fSumWX4 = 0.0;
+
+      void Add(double x)
+      {
+         fSumWX += x;
+         fSumWX2 += x * x;
+         fSumWX3 += x * x * x;
+         fSumWX4 += x * x * x * x;
+      }
+   };
+
+private:
+   /// The number of entries
+   std::uint64_t fNEntries = 0;
+   /// The sum of weights
+   double fSumW = 0.0;
+   /// The sum of weights squared
+   double fSumW2 = 0.0;
+   /// The sums per dimension
+   std::vector<RDimensionStats> fDimensionStats;
+
+public:
+   /// Construct a statistics object.
+   ///
+   /// \param[in] nDimensions the number of dimensions, must be > 0
+   explicit RHistStats(std::size_t nDimensions)
+   {
+      if (nDimensions == 0) {
+         throw std::invalid_argument("nDimensions must be > 0");
+      }
+      fDimensionStats.resize(nDimensions);
+   }
+
+   std::size_t GetNDimensions() const { return fDimensionStats.size(); }
+
+   std::uint64_t GetNEntries() const { return fNEntries; }
+   double GetSumW() const { return fSumW; }
+   double GetSumW2() const { return fSumW2; }
+
+   const RDimensionStats &GetDimensionStats(std::size_t dim = 0) const { return fDimensionStats.at(dim); }
+
+   /// Compute the number of effective entries.
+   ///
+   /// \f[
+   /// \frac{(\sum w_i)^2}{\sum w_i^2}
+   /// \f]
+   ///
+   /// \return the number of effective entries
+   double ComputeNEffectiveEntries() const
+   {
+      if (fSumW2 == 0) {
+         return 0;
+      }
+      return fSumW * fSumW / fSumW2;
+   }
+
+   /// Compute the arithmetic mean of unbinned values.
+   ///
+   /// \f[
+   /// \mu = \frac{\sum w_i \cdot x_i}{\sum w_i}
+   /// \f]
+   ///
+   /// \param[in] dim the dimension index, starting at 0
+   /// \return the arithmetic mean of unbinned values
+   double ComputeMean(std::size_t dim = 0) const
+   {
+      // First get the statistics, which includes checking the argument.
+      auto &stats = fDimensionStats.at(dim);
+      if (fSumW == 0) {
+         return 0;
+      }
+      return stats.fSumWX / fSumW;
+   }
+
+   /// Compute the variance of unbinned values.
+   ///
+   /// This function computes the uncorrected sample variance:
+   /// \f[
+   /// \sigma^2 = \frac{1}{\sum w_i} \sum(w_i \cdot x_i - \mu)^2
+   /// \f]
+   /// With some rewriting, this is equivalent to:
+   /// \f[
+   /// \sigma^2 = \frac{\sum w_i \cdot x_i^2}{\sum w_i} - \frac{(\sum w_i \cdot x_i)^2}{(\sum w_i)^2}
+   /// \f]
+   ///
+   /// This function does not include Bessel's correction needed for an unbiased estimator of population variance.
+   /// In other words, the return value is a biased estimation lower than the actual population variance.
+   ///
+   /// \param[in] dim the dimension index, starting at 0
+   /// \return the variance of unbinned values
+   double ComputeVariance(std::size_t dim = 0) const
+   {
+      // First get the statistics, which includes checking the argument.
+      auto &stats = fDimensionStats.at(dim);
+      if (fSumW == 0) {
+         return 0;
+      }
+      return (stats.fSumWX2 - stats.fSumWX * stats.fSumWX / fSumW) / fSumW;
+   }
+
+   /// Compute the standard deviation of unbinned values.
+   ///
+   /// This function computes the uncorrected sample standard deviation:
+   /// \f[
+   /// \sigma = \sqrt{\frac{1}{\sum w_i} \sum(w_i \cdot x_i - \mu)^2}
+   /// \f]
+   /// With some rewriting, this is equivalent to:
+   /// \f[
+   /// \sigma = \sqrt{\frac{\sum w_i \cdot x_i^2}{\sum w_i} - \frac{(\sum w_i \cdot x_i)^2}{(\sum w_i)^2}}
+   /// \f]
+   ///
+   /// This function does not include Bessel's correction needed for an unbiased estimator of population variance.
+   /// In other words, the return value is a biased estimation lower than the actual population standard deviation.
+   ///
+   /// \param[in] dim the dimension index, starting at 0
+   /// \return the standard deviation of unbinned values
+   double ComputeStdDev(std::size_t dim = 0) const { return std::sqrt(ComputeVariance(dim)); }
+
+private:
+   template <std::size_t I, typename... A>
+   void FillImpl(const std::tuple<A...> &args)
+   {
+      fDimensionStats[I].Add(std::get<I>(args));
+      if constexpr (I + 1 < sizeof...(A)) {
+         FillImpl<I + 1>(args);
+      }
+   }
+
+public:
+   /// Fill an entry into this statistics object.
+   ///
+   /// \code
+   /// ROOT::Experimental::RHistStats stats(2);
+   /// auto args = std::make_tuple(8.5, 10.5);
+   /// stats.Fill(args);
+   /// \endcode
+   ///
+   /// Throws an exception if the number of arguments does not match the number of dimensions.
+   ///
+   /// \param[in] args the arguments for each dimension
+   /// \par See also
+   /// the \ref Fill(const A &... args) "variadic function template overload" accepting arguments directly
+   template <typename... A>
+   void Fill(const std::tuple<A...> &args)
+   {
+      if (sizeof...(A) != fDimensionStats.size()) {
+         throw std::invalid_argument("invalid number of arguments to Fill");
+      }
+      fNEntries++;
+      fSumW++;
+      fSumW2++;
+      FillImpl<0>(args);
+   }
+
+   /// Fill an entry into this statistics object.
+   ///
+   /// \code
+   /// ROOT::Experimental::RHistStats stats(2);
+   /// stats.Fill(8.5, 10.5);
+   /// \endcode
+   ///
+   /// Throws an exception if the number of arguments does not match the number of dimensions.
+   ///
+   /// \param[in] args the arguments for each dimension
+   /// \par See also
+   /// the \ref Fill(const std::tuple<A...> &args) "function overload" accepting `std::tuple`
+   template <typename... A>
+   void Fill(const A &...args)
+   {
+      Fill(std::forward_as_tuple(args...));
+   }
+
+   /// %ROOT Streamer function to throw when trying to store an object of this class.
+   void Streamer(TBuffer &) { throw std::runtime_error("unable to store RHistStats"); }
+};
+
+} // namespace Experimental
+} // namespace ROOT
+
+#endif
