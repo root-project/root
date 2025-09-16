@@ -355,17 +355,24 @@ public:
 
 template <typename T>
 class RSimpleField : public RFieldBase {
+   void ReconcileIntegralField(const RNTupleDescriptor &desc);
+   void ReconcileFloatingPointField(const RNTupleDescriptor &desc);
+
 protected:
    void GenerateColumns() override { GenerateColumnsImpl<T>(); }
    void GenerateColumns(const ROOT::RNTupleDescriptor &desc) override { GenerateColumnsImpl<T>(desc); }
 
    void ConstructValue(void *where) const final { new (where) T{0}; }
 
-   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) override
    {
-      // Differences in the type name don't matter for simple fields; the valid column representations take
-      // care of (allowed) schema differences.
-      EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName);
+      if constexpr (std::is_integral_v<T>) {
+         ReconcileIntegralField(desc);
+      } else if constexpr (std::is_floating_point_v<T>) {
+         ReconcileFloatingPointField(desc);
+      } else {
+         RFieldBase::ReconcileOnDiskField(desc);
+      }
    }
 
    RSimpleField(std::string_view name, std::string_view type)
