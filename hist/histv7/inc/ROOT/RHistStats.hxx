@@ -158,6 +158,70 @@ public:
    /// \return the standard deviation of unbinned values
    double ComputeStdDev(std::size_t dim = 0) const { return std::sqrt(ComputeVariance(dim)); }
 
+   // clang-format off
+   /// Compute the skewness of unbinned values.
+   ///
+   /// The skewness is the third standardized moment:
+   /// \f[
+   /// E\left[\left(\frac{X - \mu}{\sigma}\right)^3\right]
+   /// \f]
+   /// With support for weighted filling and after some rewriting, it is computed as:
+   /// \f[
+   /// \frac{\frac{\sum w_i \cdot x_i^3}{\sum w_i} - 3 \cdot \frac{\sum w_i \cdot x_i^2}{\sum w_i} \cdot \mu + 2 \cdot \mu^3}{\sigma^3}
+   /// \f]
+   ///
+   /// \param[in] dim the dimension index, starting at 0
+   /// \return the skewness of unbinned values
+   // clang-format on
+   double ComputeSkewness(std::size_t dim = 0) const
+   {
+      // First get the statistics, which includes checking the argument.
+      auto &stats = fDimensionStats.at(dim);
+      if (fSumW == 0) {
+         return 0;
+      }
+      double mean = ComputeMean(dim);
+      double var = ComputeVariance(dim);
+      double EWX3 = stats.fSumWX3 / fSumW;
+      double EWX2 = stats.fSumWX2 / fSumW;
+      return (EWX3 - 3 * EWX2 * mean + 2 * mean * mean * mean) / std::pow(var, 1.5);
+   }
+
+   // clang-format off
+   /// Compute the (excess) kurtosis of unbinned values.
+   ///
+   /// The kurtosis is based on the fourth standardized moment:
+   /// \f[
+   /// E\left[\left(\frac{X - \mu}{\sigma}\right)^4\right]
+   /// \f]
+   /// The excess kurtosis subtracts 3 from the standardized moment to have a value of 0 for a normal distribution:
+   /// \f[
+   /// E\left[\left(\frac{X - \mu}{\sigma}\right)^4\right] - 3
+   /// \f]
+   ///
+   /// With support for weighted filling and after some rewriting, the (excess kurtosis) is computed as:
+   /// \f[
+   /// \frac{\frac{\sum w_i \cdot x_i^4}{\sum w_i} - 4 \cdot \frac{\sum w_i \cdot x_i^3}{\sum w_i} \cdot \mu + 6 \cdot \frac{\sum w_i \cdot x_i^2}{\sum w_i} \cdot \mu^2 - 3 \cdot \mu^4}{\sigma^4} - 3
+   /// \f]
+   ///
+   /// \param[in] dim the dimension index, starting at 0
+   /// \return the (excess) kurtosis of unbinned values
+   // clang-format on
+   double ComputeKurtosis(std::size_t dim = 0) const
+   {
+      // First get the statistics, which includes checking the argument.
+      auto &stats = fDimensionStats.at(dim);
+      if (fSumW == 0) {
+         return 0;
+      }
+      double mean = ComputeMean(dim);
+      double var = ComputeVariance(dim);
+      double EWX4 = stats.fSumWX4 / fSumW;
+      double EWX3 = stats.fSumWX3 / fSumW;
+      double EWX2 = stats.fSumWX2 / fSumW;
+      return (EWX4 - 4 * EWX3 * mean + 6 * EWX2 * mean * mean - 3 * mean * mean * mean * mean) / (var * var) - 3;
+   }
+
 private:
    template <std::size_t I, typename... A>
    void FillImpl(const std::tuple<A...> &args)
