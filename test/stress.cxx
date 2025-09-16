@@ -1,5 +1,6 @@
 // @(#)root/test:$Id$
 // Author: Rene Brun   05/11/98
+// clang-format off
 
 /////////////////////////////////////////////////////////////////
 //
@@ -574,9 +575,11 @@ void stress6()
          snprintf(hname,20,"h%d_%dN",i,j);
          snprintf(htitle,80,"hist for counter:%d in plane:%d North",j,i);
          hn[j] = new TH1S(hname,htitle,100,0,100);
+         hn[j]->SetDirectory(cdplane);
          snprintf(hname,20,"h%d_%dS",i,j);
          snprintf(htitle,80,"hist for counter:%d in plane:%d South",j,i);
          hs[j] = new TH1S(hname,htitle,100,0,100);
+         hs[j]->SetDirectory(cdplane);
       }
       // fill counter histograms randomly
       for (k=0;k<10000;k++) {
@@ -668,6 +671,7 @@ void stress7()
    cutg->SetPoint(7,-1.27161,1.01523);
    cutg->SetPoint(8,-1.75713,2.46193);
    TH2F *hpxpy = new TH2F("hpxpy","px vx py with cutg",40,-4,4,40,-4,4);
+   hpxpy->SetDirectory(&f);
    ntuple->Draw("px:py>>hpxpy","cutg","goff");
    Int_t npxpy = (Int_t)hpxpy->GetEntries();
    Int_t npxpyGood = 27918;
@@ -1015,40 +1019,40 @@ void stress9tree(TTree *tree, Int_t realTestNum)
    //We make clones of the generated histograms
    //We set new names and reset the clones.
    //We want to have identical histogram limits
-   TH1F *bNtrack = (TH1F*)hNtrack->Clone(); bNtrack->SetName("bNtrack"); bNtrack->Reset();
-   TH1F *bNseg   = (TH1F*)hNseg->Clone();   bNseg->SetName("bNseg");     bNseg->Reset();
-   TH1F *bTemp   = (TH1F*)hTemp->Clone();   bTemp->SetName("bTemp");     bTemp->Reset();
-   TH1F *bHmean  = (TH1F*)hHmean->Clone();  bHmean->SetName("bHmean");   bHmean->Reset();
-   TH1F *bPx     = (TH1F*)hPx->Clone();     bPx->SetName("bPx");         bPx->Reset();
-   TH1F *bPy     = (TH1F*)hPy->Clone();     bPy->SetName("bPy");         bPy->Reset();
-   TH1F *bPz     = (TH1F*)hPz->Clone();     bPz->SetName("bPz");         bPz->Reset();
-   TH1F *bRandom = (TH1F*)hRandom->Clone(); bRandom->SetName("bRandom"); bRandom->Reset();
-   TH1F *bMass2  = (TH1F*)hMass2->Clone();  bMass2->SetName("bMass2");   bMass2->Reset();
-   TH1F *bBx     = (TH1F*)hBx->Clone();     bBx->SetName("bBx");         bBx->Reset();
-   TH1F *bBy     = (TH1F*)hBy->Clone();     bBy->SetName("bBy");         bBy->Reset();
-   TH1F *bXfirst = (TH1F*)hXfirst->Clone(); bXfirst->SetName("bXfirst"); bXfirst->Reset();
-   TH1F *bYfirst = (TH1F*)hYfirst->Clone(); bYfirst->SetName("bYfirst"); bYfirst->Reset();
-   TH1F *bZfirst = (TH1F*)hZfirst->Clone(); bZfirst->SetName("bZfirst"); bZfirst->Reset();
-   TH1F *bXlast  = (TH1F*)hXlast->Clone();  bXlast->SetName("bXlast");   bXlast->Reset();
-   TH1F *bYlast  = (TH1F*)hYlast->Clone();  bYlast->SetName("bYlast");   bYlast->Reset();
-   TH1F *bZlast  = (TH1F*)hZlast->Clone();  bZlast->SetName("bZlast");   bZlast->Reset();
-   TH1F *bCharge = (TH1F*)hCharge->Clone(); bCharge->SetName("bCharge"); bCharge->Reset();
-   TH1F *bNpoint = (TH1F*)hNpoint->Clone(); bNpoint->SetName("bNpoint"); bNpoint->Reset();
-   TH1F *bValid  = (TH1F*)hValid->Clone();  bValid->SetName("bValid");   bValid->Reset();
+   TH1F *bNtrack = (TH1F*)hNtrack->Clone("bNtrack");  bNtrack->SetDirectory(hfile); bNtrack->Reset();
+   TH1F *bNseg   = (TH1F*)hNseg->Clone("bNseg");      bNseg->SetDirectory(hfile);     bNseg->Reset();
+   TH1F *bTemp   = (TH1F*)hTemp->Clone("bTemp");      bTemp->SetDirectory(hfile);     bTemp->Reset();
+   TH1F *bHmean  = (TH1F*)hHmean->Clone("bHmean");    bHmean->SetDirectory(hfile);   bHmean->Reset();
+   TH1F *bPx     = (TH1F*)hPx->Clone("bPx");          bPx->SetDirectory(hfile);         bPx->Reset();
+   TH1F *bPy     = (TH1F*)hPy->Clone("bPy");          bPy->SetDirectory(hfile);         bPy->Reset();
+   TH1F *bPz     = (TH1F*)hPz->Clone("bPz");          bPz->SetDirectory(hfile);         bPz->Reset();
+   TH1F *bRandom = (TH1F*)hRandom->Clone("bRandom");  bRandom->SetDirectory(hfile); bRandom->Reset();
+   TH1F *bMass2  = (TH1F*)hMass2->Clone("bMass2");    bMass2->SetDirectory(hfile);   bMass2->Reset();
+   TH1F *bBx     = (TH1F*)hBx->Clone("bBx");          bBx->SetDirectory(hfile);         bBx->Reset();
+   TH1F *bBy     = (TH1F*)hBy->Clone("bBy");          bBy->SetDirectory(hfile);         bBy->Reset();
+   TH1F *bXfirst = (TH1F*)hXfirst->Clone("bXfirst");  bXfirst->SetDirectory(hfile); bXfirst->Reset();
+   TH1F *bYfirst = (TH1F*)hYfirst->Clone("bYfirst");  bYfirst->SetDirectory(hfile); bYfirst->Reset();
+   TH1F *bZfirst = (TH1F*)hZfirst->Clone("bZfirst");  bZfirst->SetDirectory(hfile); bZfirst->Reset();
+   TH1F *bXlast  = (TH1F*)hXlast->Clone("bXlast");    bXlast->SetDirectory(hfile);   bXlast->Reset();
+   TH1F *bYlast  = (TH1F*)hYlast->Clone("bYlast");    bYlast->SetDirectory(hfile);   bYlast->Reset();
+   TH1F *bZlast  = (TH1F*)hZlast->Clone("bZlast");    bZlast->SetDirectory(hfile);   bZlast->Reset();
+   TH1F *bCharge = (TH1F*)hCharge->Clone("bCharge");  bCharge->SetDirectory(hfile); bCharge->Reset();
+   TH1F *bNpoint = (TH1F*)hNpoint->Clone("bNpoint");  bNpoint->SetDirectory(hfile); bNpoint->Reset();
+   TH1F *bValid  = (TH1F*)hValid->Clone("bValid");    bValid->SetDirectory(hfile);   bValid->Reset();
 
-   TH1F *bFullMatrix    =(TH1F*)hFullMatrix->Clone();    bFullMatrix->SetName("bFullMatrix");       bFullMatrix->Reset();
-   TH1F *bColMatrix    = (TH1F*)hColMatrix->Clone();     bColMatrix->SetName("bColMatrix");         bColMatrix->Reset();
-   TH1F *bRowMatrix    = (TH1F*)hRowMatrix->Clone();     bRowMatrix->SetName("bRowMatrix");         bRowMatrix->Reset();
-   TH1F *bCellMatrix   = (TH1F*)hCellMatrix->Clone();    bCellMatrix->SetName("bCellMatrix");       bCellMatrix->Reset();
-   TH1F *bFullOper     = (TH1F*)hFullOper->Clone();      bFullOper->SetName("bFullOper");           bFullOper->Reset();
-   TH1F *bCellOper     = (TH1F*)hCellOper->Clone();      bCellOper->SetName("bCellOper");           bCellOper->Reset();
-   TH1F *bColOper      = (TH1F*)hColOper->Clone();       bColOper->SetName("bColOper");             bColOper->Reset();
-   TH1F *bRowOper      = (TH1F*)hRowOper->Clone();       bRowOper->SetName("bRowOper");             bRowOper->Reset();
-   TH1F *bMatchRowOper = (TH1F*)hMatchRowOper->Clone();  bMatchRowOper->SetName("bMatchRowOper");   bMatchRowOper->Reset();
-   TH1F *bMatchColOper = (TH1F*)hMatchColOper->Clone();  bMatchColOper->SetName("bMatchColOper");   bMatchColOper->Reset();
-   TH1F *bRowMatOper   = (TH1F*)hRowMatOper->Clone();    bRowMatOper->SetName("bRowMatOper");       bRowMatOper->Reset();
-   TH1F *bMatchDiffOper= (TH1F*)hMatchDiffOper->Clone(); bMatchDiffOper->SetName("bMatchDiffOper"); bMatchDiffOper->Reset();
-   TH1F *bFullOper2    = (TH1F*)hFullOper2->Clone();     bFullOper2->SetName("bFullOper2");         bFullOper2->Reset();
+   TH1F *bFullMatrix    =(TH1F*)hFullMatrix->Clone("bFullMatrix");   bFullMatrix->SetDirectory(hfile);       bFullMatrix->Reset();
+   TH1F *bColMatrix    = (TH1F*)hColMatrix->Clone("bColMatrix");     bColMatrix->SetDirectory(hfile);         bColMatrix->Reset();
+   TH1F *bRowMatrix    = (TH1F*)hRowMatrix->Clone("bRowMatrix");     bRowMatrix->SetDirectory(hfile);         bRowMatrix->Reset();
+   TH1F *bCellMatrix   = (TH1F*)hCellMatrix->Clone("bCellMatrix");   bCellMatrix->SetDirectory(hfile);       bCellMatrix->Reset();
+   TH1F *bFullOper     = (TH1F*)hFullOper->Clone("bFullOper");       bFullOper->SetDirectory(hfile);           bFullOper->Reset();
+   TH1F *bCellOper     = (TH1F*)hCellOper->Clone("bCellOper");       bCellOper->SetDirectory(hfile);           bCellOper->Reset();
+   TH1F *bColOper      = (TH1F*)hColOper->Clone("bColOper");         bColOper->SetDirectory(hfile);             bColOper->Reset();
+   TH1F *bRowOper      = (TH1F*)hRowOper->Clone("bRowOper");         bRowOper->SetDirectory(hfile);             bRowOper->Reset();
+   TH1F *bMatchRowOper = (TH1F*)hMatchRowOper->Clone("bMatchRowOper");  bMatchRowOper->SetDirectory(hfile);   bMatchRowOper->Reset();
+   TH1F *bMatchColOper = (TH1F*)hMatchColOper->Clone("bMatchColOper");  bMatchColOper->SetDirectory(hfile);   bMatchColOper->Reset();
+   TH1F *bRowMatOper   = (TH1F*)hRowMatOper->Clone("bRowMatOper");      bRowMatOper->SetDirectory(hfile);       bRowMatOper->Reset();
+   TH1F *bMatchDiffOper= (TH1F*)hMatchDiffOper->Clone("bMatchDiffOper");bMatchDiffOper->SetDirectory(hfile); bMatchDiffOper->Reset();
+   TH1F *bFullOper2    = (TH1F*)hFullOper2->Clone("bFullOper2");        bFullOper2->SetDirectory(hfile);         bFullOper2->Reset();
 
    // Loop with user code on all events and fill the b histograms
    // The code below should produce identical results to the tree->Draw above
@@ -1336,9 +1340,16 @@ void stress12(Int_t testid)
       if (strcmp(key->GetClassName(),"TH1F")) continue; //may be a TList of TStreamerInfo
       h9  = (TH1F*)f9.Get(key->GetName());
       h11 = (TH1F*)f11.Get(key->GetName());
-      if (h9 == 0 || h11 == 0) continue;
+      if (h9 == 0 || h11 == 0) {
+         std::cerr << "Missing " << key->GetName();
+         if (!h9) std::cerr << " in stress_test9.root";
+         if (!h11) std::cerr << " in stress_test11.root";
+         std::cerr << "\n";
+         continue;
+      }
       comp = HistCompare(h9,h11);
       if (comp == 0) ngood++;
+      else std::cerr << key->GetName() << " not equal\n";
    }
    ntotin += f9.GetBytesRead();
    ntotin += f11.GetBytesRead();
