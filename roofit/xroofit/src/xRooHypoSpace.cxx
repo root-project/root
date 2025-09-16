@@ -450,15 +450,15 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
 
    if (auto myDb = dynamic_cast<TMemFile *>(fFitDb.get())) {
       // need to lock the database, because if its writable when pyroot closes it causes a crash
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 37, 00)
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 38, 00)
       myDb->SetWritable(false);
 #else
       *reinterpret_cast<Bool_t *>(reinterpret_cast<unsigned char *>(myDb) +
                                   myDb->Class()->GetDataMemberOffset("fWritable")) = false;
-   }
 #endif
+   }
    return out;
-}
+   }
 
 std::map<std::string, xRooNLLVar::xValueWithError>
 xRooNLLVar::xRooHypoSpace::limits(const char *opt, const std::vector<double> &nSigmas, double relUncert)
