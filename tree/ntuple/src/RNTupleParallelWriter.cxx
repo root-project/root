@@ -113,6 +113,10 @@ public:
    {
       throw ROOT::RException(R__FAIL("should never commit dataset via RPageSynchronizingSink"));
    }
+   std::unique_ptr<RPageSink> CloneWithNewRNTuple(std::string_view) const final
+   {
+      throw ROOT::RException(R__FAIL("CloneWithNewRNTuple unavailable for RPageSynchronizingSink"));
+   }
 
    RSinkGuard GetSinkGuard() final { return RSinkGuard(fMutex); }
 };

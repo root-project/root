@@ -252,6 +252,18 @@ void ROOT::Internal::RPageSinkFile::CommitDatasetImpl(unsigned char *serializedF
    fWriter->Commit(GetWriteOptions().GetCompression());
 }
 
+std::unique_ptr<ROOT::Internal::RPageSink>
+ROOT::Internal::RPageSinkFile::CloneWithNewRNTuple(std::string_view newName) const
+{
+   if (auto *dir = Internal::GetUnderlyingDirectory(*fWriter)) {
+      auto opts = ROOT::RNTupleWriteOptions();
+      opts.SetCompression(GetWriteOptions().GetCompression());
+      return std::make_unique<ROOT::Internal::RPageSinkFile>(newName, *dir, opts);
+   }
+   // TODO: support this method also for non-TFile-based writers
+   throw ROOT::RException(R__FAIL("cannot CloneWithNewRNTuple a non-TFile-based Sink."));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName, const ROOT::RNTupleReadOptions &opts)
@@ -300,6 +312,15 @@ ROOT::Internal::RPageSourceFile::CreateFromAnchor(const RNTuple &anchor, const R
    }
 
    auto pageSource = std::make_unique<RPageSourceFile>("", std::move(rawFile), options);
+   pageSource->fAnchor = anchor;
+   pageSource->fNTupleName = pageSource->fDescriptorBuilder.GetDescriptor().GetName();
+   return pageSource;
+}
+
+std::unique_ptr<ROOT::Internal::RPageSourceFile>
+ROOT::Internal::RPageSourceFile::OpenWithDifferentAnchor(const RNTuple &anchor, const ROOT::RNTupleReadOptions &options)
+{
+   auto pageSource = std::make_unique<RPageSourceFile>("", fFile->Clone(), options);
    pageSource->fAnchor = anchor;
    pageSource->fNTupleName = pageSource->fDescriptorBuilder.GetDescriptor().GetName();
    return pageSource;
