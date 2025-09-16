@@ -63,7 +63,7 @@ The following people have contributed to this new version:
  Silia Taider, CERN/EP-SFT,\
  Florian Uhlig, GSI,\
  Devajith Valaparambil Sreeramaswamy, CERN/EP-SFT,\
- Vassil Vasilev, Princeton,\
+ Vassil Vassilev, Princeton,\
  Dongliang Zhang, University of Science and Technology of China
 
 ## Deprecation and Removal
