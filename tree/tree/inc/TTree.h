@@ -259,7 +259,9 @@ protected:
    };
 
 public:
-   // Used as the max value for any TTree range operation.
+   /// Used as the max value for any TTree range operation.
+   /// The maximum number of entries allowed in a TTree is strictly smaller than this value
+   /// (`maxTreeEntries<= kMaxEntries-1`), ie the last entry index is at maximum `kMaxEntries-2`.
    static constexpr Long64_t kMaxEntries = TVirtualTreePlayer::kMaxEntries;
 
    // SetBranchAddress return values
