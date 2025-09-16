@@ -1669,8 +1669,7 @@ TEST(RNTuple, Casting)
       auto reader = RNTupleReader::Open(std::move(modelB), "ntuple", fileGuard.GetPath());
       FAIL() << "should not be able to cast int to float";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("On-disk column types"));
-      EXPECT_THAT(err.what(), testing::HasSubstr("cannot be matched"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("unexpected on-disk type name"));
    }
 
    auto modelC = RNTupleModel::Create();
