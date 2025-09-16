@@ -372,6 +372,39 @@ TEST(RNTupleDescriptor, GetTypeNameForComparison)
    }
 }
 
+TEST(RNTupleDescriptor, AttributeSets)
+{
+   RNTupleLocator locator;
+   locator.SetType(ROOT::RNTupleLocator::kTypeFile);
+   locator.SetPosition(128ul);
+   ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder builder;
+   builder.SchemaVersion(1, 0).AnchorLength(1024).AnchorLocator(locator).Name("AttrSetName");
+   RNTupleDescriptorBuilder descBuilder;
+   descBuilder.SetVersion(1, 0, 1, 0);
+   descBuilder.SetNTuple("ntpl", "");
+   descBuilder.AddAttributeSet(builder.MoveDescriptor().Unwrap());
+
+   locator.SetPosition(555ul);
+   builder.SchemaVersion(2, 4).AnchorLength(200).AnchorLocator(locator).Name("AttrSetName 2");
+   descBuilder.AddAttributeSet(builder.MoveDescriptor().Unwrap());
+
+   auto desc = descBuilder.MoveDescriptor();
+   ASSERT_EQ(desc.GetNAttributeSets(), 2);
+   auto attrSets = desc.GetAttrSetIterable().begin();
+   EXPECT_EQ(attrSets->GetName(), "AttrSetName");
+   EXPECT_EQ(attrSets->GetAnchorLength(), 1024);
+   EXPECT_EQ(attrSets->GetSchemaVersionMajor(), 1);
+   EXPECT_EQ(attrSets->GetSchemaVersionMinor(), 0);
+   EXPECT_EQ(attrSets->GetAnchorLocator().GetPosition<std::uint64_t>(), 128);
+
+   ++attrSets;
+   EXPECT_EQ(attrSets->GetName(), "AttrSetName 2");
+   EXPECT_EQ(attrSets->GetAnchorLength(), 200);
+   EXPECT_EQ(attrSets->GetSchemaVersionMajor(), 2);
+   EXPECT_EQ(attrSets->GetSchemaVersionMinor(), 4);
+   EXPECT_EQ(attrSets->GetAnchorLocator().GetPosition<std::uint64_t>(), 555);
+}
+
 TEST(RFieldDescriptorIterable, IterateOverFieldNames)
 {
    auto model = RNTupleModel::Create();
