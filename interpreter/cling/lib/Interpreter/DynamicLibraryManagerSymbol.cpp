@@ -1347,7 +1347,9 @@ namespace cling {
 
     llvm::orc::LibraryResolver::Setup S =
         llvm::orc::LibraryResolver::Setup::create({});
-    S.shouldScan = shouldPermanentlyIgnore;
+    S.shouldScan = [&](llvm::StringRef lib) -> bool {
+      return !shouldPermanentlyIgnore(lib);
+    };
     m_DyldController = llvm::orc::LibraryResolutionDriver::create(S);
 
     for (const auto& info : m_SearchPaths) {
