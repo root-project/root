@@ -683,20 +683,27 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   #---call rootcint------------------------------------------
-  add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file}
-                     COMMAND ${command} -v2 -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
-                                        ${ARG_OPTIONS}
-                                        ${definitions} "$<$<BOOL:${module_defs}>:-D$<JOIN:${module_defs},;-D>>"
-                                        ${compIncPaths}
-                                        "$<$<BOOL:${module_sysincs}>:-isystem;$<JOIN:${module_sysincs},;-isystem;>>"
-                                        ${includedirs} "$<$<BOOL:${module_incs}>:-I$<JOIN:${module_incs},;-I>>"
-                                        ${headerfiles} ${_linkdef}
-                     IMPLICIT_DEPENDS ${_implicitdeps}
-                     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP}
-                             ${pcm_dependencies}
-                             ${MODULE_LIB_DEPENDENCY} ${ARG_EXTRA_DEPENDENCIES}
-                             ${runtime_cxxmodule_dependencies}
-                     COMMAND_EXPAND_LISTS)
+  add_custom_command(
+    OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file}
+    COMMAND ${command} -v2 -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
+                       ${ARG_OPTIONS}
+                       ${definitions} "$<$<BOOL:${module_defs}>:-D$<JOIN:${module_defs},;-D>>"
+                       ${compIncPaths}
+                       "$<$<BOOL:${module_sysincs}>:-isystem;$<JOIN:${module_sysincs},;-isystem;>>"
+                       ${includedirs} "$<$<BOOL:${module_incs}>:-I$<JOIN:${module_incs},;-I>>"
+                       ${headerfiles} ${_linkdef}
+                       # Add random dummy macro including the CMAKE_CXX_STANDARD variable. This the easiest way to
+                       # make the dictionary generation command depend on the C++ standard, ensuring that the
+                       # dictionaries will be rebuilt if the C++ standard is changed in an incremental build.
+                       -DR__DUMMY_CXX_STANDARD_${CMAKE_CXX_STANDARD}
+    IMPLICIT_DEPENDS ${_implicitdeps}
+    DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP}
+            ${pcm_dependencies}
+            ${MODULE_LIB_DEPENDENCY} ${ARG_EXTRA_DEPENDENCIES}
+            ${runtime_cxxmodule_dependencies}
+            ${cxx_std_stamp}
+    COMMAND_EXPAND_LISTS
+  )
 
   # If we are adding to an existing target and it's not the dictionary itself,
   # we make an object library and add its output object file as source to the target.
