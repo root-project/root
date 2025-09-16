@@ -10,7 +10,7 @@
 #ifndef CLING_DYNAMIC_LIBRARY_MANAGER_H
 #define CLING_DYNAMIC_LIBRARY_MANAGER_H
 
-#include "llvm/ExecutionEngine/Orc/Shared/DynamicLoader.h"
+#include "llvm/ExecutionEngine/Orc/Shared/LibraryResolver.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
@@ -131,9 +131,9 @@ namespace cling {
               return;
           auto pos = prepend ? m_SearchPaths.begin() : m_SearchPaths.end();
           m_SearchPaths.insert(pos, SearchPathInfo{dir.str(), isUser});
-          m_DyldController->addScanPath(dir.str(),
-                                        isUser ? llvm::orc::PathType::User
-                                               : llvm::orc::PathType::System);
+          // m_DyldController->addScanPath(dir.str(),
+          //                               isUser ? llvm::orc::PathType::User
+          //                                      : llvm::orc::PathType::System);
        }
     }
 
