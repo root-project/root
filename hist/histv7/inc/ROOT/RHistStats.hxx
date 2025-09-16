@@ -5,7 +5,9 @@
 #ifndef ROOT_RHistStats
 #define ROOT_RHistStats
 
+#include "RHistUtils.hxx"
 #include "RLinearizedIndex.hxx"
+#include "RWeight.hxx"
 
 #include <cmath>
 #include <cstdint>
@@ -48,6 +50,14 @@ public:
          fSumWX2 += x * x;
          fSumWX3 += x * x * x;
          fSumWX4 += x * x * x * x;
+      }
+
+      void Add(double x, double w)
+      {
+         fSumWX += w * x;
+         fSumWX2 += w * x * x;
+         fSumWX3 += w * x * x * x;
+         fSumWX4 += w * x * x * x * x;
       }
    };
 
@@ -232,6 +242,15 @@ private:
       }
    }
 
+   template <std::size_t I, std::size_t N, typename... A>
+   void FillImpl(const std::tuple<A...> &args, double w)
+   {
+      fDimensionStats[I].Add(std::get<I>(args), w);
+      if constexpr (I + 1 < N) {
+         FillImpl<I + 1, N>(args, w);
+      }
+   }
+
 public:
    /// Fill an entry into this statistics object.
    ///
@@ -245,7 +264,8 @@ public:
    ///
    /// \param[in] args the arguments for each dimension
    /// \par See also
-   /// the \ref Fill(const A &... args) "variadic function template overload" accepting arguments directly
+   /// the \ref Fill(const A &... args) "variadic function template overload" accepting arguments directly and the
+   /// \ref Fill(const std::tuple<A...> &args, RWeight weight) "overload for weighted filling"
    template <typename... A>
    void Fill(const std::tuple<A...> &args)
    {
@@ -258,22 +278,67 @@ public:
       FillImpl<0>(args);
    }
 
+   /// Fill an entry into this statistics object with a weight.
+   ///
+   /// \code
+   /// ROOT::Experimental::RHistStats stats(2);
+   /// auto args = std::make_tuple(8.5, 10.5);
+   /// stats.Fill(args, ROOT::Experimental::RWeight(0.8));
+   /// \endcode
+   ///
+   /// \param[in] args the arguments for each dimension
+   /// \param[in] weight the weight for this entry
+   /// \par See also
+   /// the \ref Fill(const A &... args) "variadic function template overload" accepting arguments directly and the
+   /// \ref Fill(const std::tuple<A...> &args) "overload for unweighted filling"
+   template <typename... A>
+   void Fill(const std::tuple<A...> &args, RWeight weight)
+   {
+      if (sizeof...(A) != fDimensionStats.size()) {
+         throw std::invalid_argument("invalid number of arguments to Fill");
+      }
+      fNEntries++;
+      double w = weight.fValue;
+      fSumW += w;
+      fSumW2 += w * w;
+      FillImpl<0, sizeof...(A)>(args, w);
+   }
+
    /// Fill an entry into this statistics object.
    ///
    /// \code
    /// ROOT::Experimental::RHistStats stats(2);
    /// stats.Fill(8.5, 10.5);
    /// \endcode
+   /// For weighted filling, pass an RWeight as the last argument:
+   /// \code
+   /// ROOT::Experimental::RHistStats stats(2);
+   /// stats.Fill(8.5, 10.5, ROOT::Experimental::RWeight(0.8));
+   /// \endcode
    ///
    /// Throws an exception if the number of arguments does not match the number of dimensions.
    ///
    /// \param[in] args the arguments for each dimension
    /// \par See also
-   /// the \ref Fill(const std::tuple<A...> &args) "function overload" accepting `std::tuple`
+   /// the function overloads accepting `std::tuple` \ref Fill(const std::tuple<A...> &args) "for unweighted filling"
+   /// and \ref Fill(const std::tuple<A...> &args, RWeight) "for weighted filling"
    template <typename... A>
    void Fill(const A &...args)
    {
-      Fill(std::forward_as_tuple(args...));
+      auto t = std::forward_as_tuple(args...);
+      if constexpr (std::is_same_v<typename Internal::LastType<A...>::type, RWeight>) {
+         static constexpr std::size_t N = sizeof...(A) - 1;
+         if (N != fDimensionStats.size()) {
+            throw std::invalid_argument("invalid number of arguments to Fill");
+         }
+         fNEntries++;
+         double w = std::get<N>(t).fValue;
+         fSumW += w;
+         fSumW2 += w * w;
+         FillImpl<0, N>(t, w);
+      } else {
+         Fill(t);
+      }
    }
 
    /// %ROOT Streamer function to throw when trying to store an object of this class.
