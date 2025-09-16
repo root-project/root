@@ -141,6 +141,8 @@ protected:
 public:
    RPageSinkDaos(std::string_view ntupleName, std::string_view uri, const ROOT::RNTupleWriteOptions &options);
    ~RPageSinkDaos() override;
+
+   std::unique_ptr<RPageSink> DeriveFor(std::string_view, const ROOT::RNTupleWriteOptions &) const final;
 }; // class RPageSinkDaos
 
 // clang-format off

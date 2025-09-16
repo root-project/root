@@ -106,6 +106,10 @@ public:
    void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
    void CommitDatasetImpl() final {}
+   std::unique_ptr<RPageSink> DeriveFor(std::string_view, const ROOT::RNTupleWriteOptions &) const final
+   {
+      return nullptr;
+   }
 };
 
 } // namespace Internal

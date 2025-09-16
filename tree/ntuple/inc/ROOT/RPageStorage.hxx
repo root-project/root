@@ -47,9 +47,9 @@ namespace ROOT {
 class RNTupleModel;
 
 namespace Internal {
-
-class RPageAllocator;
 class RColumn;
+class RMiniFileReader;
+class RPageAllocator;
 struct RNTupleModelChangeset;
 
 enum class EPageStorageType {
@@ -312,6 +312,10 @@ public:
    virtual const ROOT::RNTupleDescriptor &GetDescriptor() const = 0;
 
    virtual ROOT::NTupleSize_t GetNEntries() const = 0;
+
+   /// Creates a new RPageSink linked to the same underlying storage as this, writing to a new RNTuple called `newName`.
+   /// The existing sink will stay valid. The existing sink and the new one must not write concurrently.
+   virtual std::unique_ptr<RPageSink> DeriveFor(std::string_view newName, const RNTupleWriteOptions &opts) const = 0;
 
    /// Physically creates the storage container to hold the ntuple (e.g., a keys a TFile or an S3 bucket)
    /// Init() associates column handles to the columns referenced by the model
@@ -807,6 +811,8 @@ public:
    /// concurrently to other methods of the page source.
    virtual std::vector<std::unique_ptr<ROOT::Internal::RCluster>>
    LoadClusters(std::span<ROOT::Internal::RCluster::RKey> clusterKeys) = 0;
+
+   virtual RMiniFileReader *GetUnderlyingReader() { return nullptr; }
 
    /// Parallel decompression and unpacking of the pages in the given cluster. The unzipped pages are supposed
    /// to be preloaded in a page pool attached to the source. The method is triggered by the cluster pool's
