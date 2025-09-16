@@ -301,6 +301,9 @@ RBrowser::RBrowser(bool use_rcanvas)
    fTimer = std::make_unique<RBrowserTimer>(10, kTRUE, *this);
 
    fWebWindow = RWebWindow::Create();
+   if (!fWebWindow)
+      return;
+   
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
 
    std::string sortby = gEnv->GetValue("WebGui.Browser.SortBy", "name"),
