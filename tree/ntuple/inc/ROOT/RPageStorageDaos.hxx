@@ -77,7 +77,8 @@ struct RDaosNTupleAnchor {
    /// The object class for user data OIDs, e.g. `SX`
    std::string fObjClass{};
 
-   bool operator ==(const RDaosNTupleAnchor &other) const {
+   bool operator==(const RDaosNTupleAnchor &other) const
+   {
       return fVersionAnchor == other.fVersionAnchor && fVersionEpoch == other.fVersionEpoch &&
              fVersionMajor == other.fVersionMajor && fVersionMinor == other.fVersionMinor &&
              fVersionPatch == other.fVersionPatch && fNBytesHeader == other.fNBytesHeader &&
