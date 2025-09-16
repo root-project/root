@@ -99,6 +99,8 @@ RooAbsData *dataForChan = found != splits.end() ? found->get() : nullptr;
 // ... do something with channelData ...
 ```
 
+If you want to keep using `TList*` return values, you can write a small adapter function as described in the documentation of `RooAbsData::split()`.
+
 ### RooCrystalBall alternative
 
 - A [simpler alternative](http://arxiv.org/abs/1603.08591v1) to RooCrystalBall using a Gaussian with exponential tails has been implemented: `class RooGaussExpTails`.
