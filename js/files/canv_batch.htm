@@ -152,14 +152,16 @@
 
    drawNext(0).then(() => {
 
-      appendResult(null, '###batch###job###done###');
+      if (!keep_as_is) {
+         appendResult(null, '###batch###job###done###');
 
-      current_dom?.remove();
+         current_dom?.remove();
+      }
 
       // remove main script from dump
       document.getElementById('main').remove();
 
-      if (JSROOT.browser.isFirefox && window && (typeof window.dump == "function")) {
+      if (JSROOT.browser.isFirefox && window && (typeof window.dump == "function") && !keep_as_is) {
          window.dump(document.body.innerHTML);
          window.close();
       }
