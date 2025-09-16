@@ -122,6 +122,46 @@ TEST(RHistStats, ComputeStdDev)
    EXPECT_DOUBLE_EQ(stats.ComputeStdDev(2), std::sqrt(12881.05));
 }
 
+TEST(RHistStats, ComputeSkewness)
+{
+   RHistStats stats(3);
+   ASSERT_EQ(stats.GetNEntries(), 0);
+   EXPECT_EQ(stats.ComputeSkewness(/*=0*/), 0);
+   EXPECT_EQ(stats.ComputeSkewness(1), 0);
+   EXPECT_EQ(stats.ComputeSkewness(2), 0);
+
+   static constexpr std::size_t Entries = 20;
+   for (std::size_t i = 0; i < Entries; i++) {
+      stats.Fill(i, 2 * i, i * i);
+   }
+
+   ASSERT_EQ(stats.GetNEntries(), Entries);
+   EXPECT_DOUBLE_EQ(stats.ComputeSkewness(/*=0*/), 0);
+   EXPECT_DOUBLE_EQ(stats.ComputeSkewness(1), 0);
+   // Cross-checked with TH1 and SciPy, numerical differences with EXPECT_DOUBLE_EQ
+   EXPECT_FLOAT_EQ(stats.ComputeSkewness(2), 0.66125456);
+}
+
+TEST(RHistStats, ComputeKurtosis)
+{
+   RHistStats stats(3);
+   ASSERT_EQ(stats.GetNEntries(), 0);
+   EXPECT_EQ(stats.ComputeKurtosis(/*=0*/), 0);
+   EXPECT_EQ(stats.ComputeKurtosis(1), 0);
+   EXPECT_EQ(stats.ComputeKurtosis(2), 0);
+
+   static constexpr std::size_t Entries = 20;
+   for (std::size_t i = 0; i < Entries; i++) {
+      stats.Fill(i, 2 * i, i * i);
+   }
+
+   ASSERT_EQ(stats.GetNEntries(), Entries);
+   // Cross-checked with TH1 and SciPy, numerical differences with EXPECT_DOUBLE_EQ
+   EXPECT_FLOAT_EQ(stats.ComputeKurtosis(/*=0*/), -1.2060150);
+   EXPECT_FLOAT_EQ(stats.ComputeKurtosis(1), -1.2060150);
+   EXPECT_FLOAT_EQ(stats.ComputeKurtosis(2), -0.84198253);
+}
+
 TEST(RHistStats, FillInvalidNumberOfArguments)
 {
    RHistStats stats1(1);
