@@ -76,3 +76,9 @@ TEST(RHistEngine, Streamer)
    const RHistEngine<double> engineD({axis});
    ExpectThrowOnWriteObject(engineD);
 }
+
+TEST(RHistStats, Streamer)
+{
+   const RHistStats stats(1);
+   ExpectThrowOnWriteObject(stats);
+}
