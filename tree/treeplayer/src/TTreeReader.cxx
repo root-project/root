@@ -566,12 +566,20 @@ void TTreeReader::Restart()
    fDirector->SetReadEntry(-1);
    fProxiesSet = false; // we might get more value readers, meaning new proxies.
    fEntry = -1;
-   if (const auto curFile = fTree->GetCurrentFile()) {
-      if (auto tc = fTree->GetTree()->GetReadCache(curFile, true)) {
-         tc->DropBranch("*", true);
-         tc->ResetCache();
-      }
-   }
+   // Find if there is an active TTreeCache and reset it if so
+   if (!fTree)
+      return;
+   const auto curFile = fTree->GetCurrentFile();
+   if (!curFile)
+      return;
+   auto curTree = fTree->GetTree();
+   if (!curTree)
+      return;
+   auto tc = curTree->GetReadCache(curFile, true);
+   if (!tc)
+      return;
+   tc->DropBranch("*", true);
+   tc->ResetCache();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
