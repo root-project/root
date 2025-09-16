@@ -52,11 +52,64 @@
 #include <cstring>
 #include <typeinfo>
 
+#if defined(__arm64__)
+#include <exception>
+#include <setjmp.h>
+#define CLING_CATCH_UNCAUGHT_                                                \
+ARMUncaughtException guard;                                                  \
+if (setjmp(gExcJumBuf) == 0) {
+#define _CLING_CATCH_UNCAUGHT                                                \
+} else {                                                                     \
+    if (!std::getenv("CPPYY_UNCAUGHT_QUIET"))                                     \
+        std::cerr << "Warning: uncaught exception in JIT is rethrown; resources may leak" \
+                  << " (suppress with \"CPPYY_UNCAUGHT_QUIET=1\")" << std::endl;\
+    std::rethrow_exception(std::current_exception());                        \
+}
+#else
+#define CLING_CATCH_UNCAUGHT_
+#define _CLING_CATCH_UNCAUGHT
+#endif
+
+#if 0
+// force std::string and allocator instantation, otherwise Clang 13+ fails to JIT
+// symbols that rely on some private helpers (e.g. _M_use_local_data) when used in
+// in conjunction with the PCH; hat tip:
+//  https://github.com/sxs-collaboration/spectre/pull/5222/files#diff-093aadf224e5fee0d33ae1810f2f1c23304fb5ca398ba6b96c4e7918e0811729
+#if defined(__GLIBCXX__) && __GLIBCXX__ >= 20220506
+template class std::allocator<char>;
+template class std::basic_string<char>;
+template class std::basic_string<wchar_t>;
+#endif
+
+using namespace CppyyLegacy;
+#endif
+
 // temp
 #include <iostream>
 typedef CPyCppyy::Parameter Parameter;
 // --temp
 
+#if 0
+#if defined(__arm64__)
+namespace {
+
+// Trap uncaught exceptions and longjump back to the point of JIT wrapper entry
+jmp_buf gExcJumBuf;
+
+void arm_uncaught_exception() {
+    longjmp(gExcJumBuf, 1);
+}
+
+class ARMUncaughtException {
+    std::terminate_handler m_Handler;
+public:
+    ARMUncaughtException() { m_Handler = std::set_terminate(arm_uncaught_exception); }
+    ~ARMUncaughtException() { std::set_terminate(m_Handler); }
+};
+
+} // unnamed namespace
+#endif // __arm64__
+#endif
 
 // small number that allows use of stack for argument passing
 const int SMALL_ARGS_N = 8;
@@ -75,6 +128,7 @@ static const ClassRefs_t::size_type STD_HANDLE = GLOBAL_HANDLE + 1;
 
 typedef std::map<std::string, ClassRefs_t::size_type> Name2ClassRefIndex_t;
 static Name2ClassRefIndex_t g_name2classrefidx;
+
 static std::map<std::string, std::string> resolved_enum_types;
 
 namespace {
@@ -245,7 +299,7 @@ class ApplicationStarter {
 public:
     ApplicationStarter() {
     // initialize ROOT early to guarantee proper order of shutdown later on (gROOT is a
-    // macro that resolves to the ROOT::GetROOT() function call)
+    // macro that resolves to the ::CppyyLegacy::GetROOT() function call)
         (void)gROOT;
 
     // setup dummy holders for global and std namespaces
@@ -261,6 +315,13 @@ public:
     // add a dummy global to refer to as null at index 0
         g_globalvars.push_back(nullptr);
         g_globalidx[nullptr] = 0;
+
+    // fill out the builtins
+        std::set<std::string> bi{g_builtins};
+        for (const auto& name : bi) {
+            for (const char* a : {"*", "&", "*&", "[]", "*[]"})
+                g_builtins.insert(name+a);
+        }
 
     // disable fast path if requested
         if (std::getenv("CPPYY_DISABLE_FASTPATH")) gEnableFastPath = false;
@@ -324,25 +385,23 @@ public:
         gInterpreter->Declare("namespace __cppyy_internal { struct Sep; }");
 
     // retrieve all initial (ROOT) C++ names in the global scope to allow filtering later
-        if (!std::getenv("CPPYY_NO_ROOT_FILTER")) {
-            gROOT->GetListOfGlobals(true);             // force initialize
-            gROOT->GetListOfGlobalFunctions(true);     // id.
-            std::set<std::string> initial;
-            Cppyy::GetAllCppNames(GLOBAL_HANDLE, initial);
-            gInitialNames = initial;
+        gROOT->GetListOfGlobals(true);             // force initialize
+        gROOT->GetListOfGlobalFunctions(true);     // id.
+        std::set<std::string> initial;
+        Cppyy::GetAllCppNames(GLOBAL_HANDLE, initial);
+        gInitialNames = initial;
 
 #ifndef WIN32
-            gRootSOs.insert("libCore.so ");
-            gRootSOs.insert("libRIO.so ");
-            gRootSOs.insert("libThread.so ");
-            gRootSOs.insert("libMathCore.so ");
+        gRootSOs.insert("libCore.so ");
+        gRootSOs.insert("libRIO.so ");
+        gRootSOs.insert("libThread.so ");
+        gRootSOs.insert("libMathCore.so ");
 #else
-            gRootSOs.insert("libCore.dll ");
-            gRootSOs.insert("libRIO.dll ");
-            gRootSOs.insert("libThread.dll ");
-            gRootSOs.insert("libMathCore.dll ");
+        gRootSOs.insert("libCore.dll ");
+        gRootSOs.insert("libRIO.dll ");
+        gRootSOs.insert("libThread.dll ");
+        gRootSOs.insert("libMathCore.dll ");
 #endif
-        }
 
     // start off with a reasonable size placeholder for wrappers
         gWrapperHolder.reserve(1024);
@@ -467,10 +526,10 @@ std::string Cppyy::ResolveName(const std::string& cppitem_name)
     if (tclean.compare(0, 9, "std::byte") == 0)
         return tclean;
 
-
 // check data types list (accept only builtins as typedefs will
 // otherwise not be resolved)
     if (IsBuiltin(tclean)) return tclean;
+
 // special case for enums
     if (IsEnum(cppitem_name))
         return ResolveEnum(cppitem_name);
@@ -517,6 +576,36 @@ std::string Cppyy::ResolveName(const std::string& cppitem_name)
     return "const " + TClassEdit::ShortType(tclean.c_str(), 2);
 }
 
+#if 0
+//----------------------------------------------------------------------------
+static std::string extract_namespace(const std::string& name)
+{
+// Find the namespace the named class lives in, take care of templates
+// Note: this code also lives in CPyCppyy (TODO: refactor?)
+    if (name.empty())
+        return name;
+
+    int tpl_open = 0;
+    for (std::string::size_type pos = name.size()-1; 0 < pos; --pos) {
+        std::string::value_type c = name[pos];
+
+    // count '<' and '>' to be able to skip template contents
+        if (c == '>')
+            ++tpl_open;
+        else if (c == '<')
+            --tpl_open;
+
+    // collect name up to "::"
+        else if (tpl_open == 0 && c == ':' && name[pos-1] == ':') {
+        // found the extend of the scope ... done
+            return name.substr(0, pos-1);
+        }
+    }
+
+// no namespace; assume outer scope
+    return "";
+}
+#endif
 
 std::string Cppyy::ResolveEnum(const std::string& enum_type)
 {
@@ -570,6 +659,30 @@ std::string Cppyy::ResolveEnum(const std::string& enum_type)
     resolved_enum_types[enum_type] = restype;
     return restype;     // should default to some int variant
 }
+
+#if 0
+static Cppyy::TCppIndex_t ArgSimilarityScore(void *argqtp, void *reqqtp)
+{
+// This scoring is not based on any particular rules
+    if (gInterpreter->IsSameType(argqtp, reqqtp))
+        return 0; // Best match
+    else if ((gInterpreter->IsSignedIntegerType(argqtp) && gInterpreter->IsSignedIntegerType(reqqtp)) ||
+             (gInterpreter->IsUnsignedIntegerType(argqtp) && gInterpreter->IsUnsignedIntegerType(reqqtp)) ||
+             (gInterpreter->IsFloatingType(argqtp) && gInterpreter->IsFloatingType(reqqtp)))
+        return 1;
+    else if ((gInterpreter->IsSignedIntegerType(argqtp) && gInterpreter->IsUnsignedIntegerType(reqqtp)) ||
+             (gInterpreter->IsFloatingType(argqtp) && gInterpreter->IsUnsignedIntegerType(reqqtp)))
+        return 2;
+    else if ((gInterpreter->IsIntegerType(argqtp) && gInterpreter->IsIntegerType(reqqtp)))
+        return 3;
+    else if ((gInterpreter->IsIntegralType(argqtp) && gInterpreter->IsIntegralType(reqqtp)))
+        return 4;
+    else if ((gInterpreter->IsVoidPointerType(argqtp) && gInterpreter->IsPointerType(reqqtp)))
+        return 5;
+    else
+        return 10; // Penalize heavily for no possible match
+}
+#endif
 
 Cppyy::TCppScope_t Cppyy::GetScope(const std::string& sname)
 {
@@ -707,7 +820,7 @@ Cppyy::TCppType_t Cppyy::GetActualClass(TCppType_t klass, TCppObject_t obj)
 #endif
 
     TClass* clActual = cr->GetActualClass((void*)obj);
-    // The additional check using TClass::GetClassInfo is to prevent returning classes of which the Interpreter has no info
+    // The additional check using TClass::GetClassInfo is to prevent returning classes of which the Interpreter has no info (see https://github.com/root-project/root/pull/16177)
     if (clActual && clActual != cr.GetClass() && clActual->GetClassInfo()) {
         auto itt = g_name2classrefidx.find(clActual->GetName());
         if (itt != g_name2classrefidx.end())
@@ -733,7 +846,6 @@ size_t Cppyy::SizeOf(const std::string& type_name)
     return SizeOf(GetScope(type_name));
 }
 
-
 bool Cppyy::IsBuiltin(const std::string& type_name)
 {
     if (g_builtins.find(type_name) != g_builtins.end())
@@ -756,7 +868,7 @@ bool Cppyy::IsComplete(const std::string& type_name)
 
     int oldEIL = gErrorIgnoreLevel;
     gErrorIgnoreLevel = 3000;
-    TClass* klass = TClass::GetClass(TClassEdit::ShortType(type_name.c_str(), 1).c_str());
+    TClass* klass = TClass::GetClass(type_name.c_str());
     if (klass && klass->GetClassInfo())     // works for normal case w/ dict
         b = gInterpreter->ClassInfo_IsLoaded(klass->GetClassInfo());
     else {    // special case for forward declared classes
@@ -802,11 +914,11 @@ void Cppyy::Destruct(TCppType_t type, TCppObject_t instance)
         else {
             auto ib = sHasOperatorDelete.find(type);
             if (ib == sHasOperatorDelete.end()) {
-               TFunction *f = (TFunction *)cr->GetMethodAllAny("operator delete");
-               sHasOperatorDelete[type] = (bool)(f && (f->Property() & kIsPublic));
-               ib = sHasOperatorDelete.find(type);
+                TFunction *f = (TFunction *)cr->GetMethodAllAny("operator delete");
+                sHasOperatorDelete[type] = (bool)(f && (f->Property() & kIsPublic));
+                ib = sHasOperatorDelete.find(type);
             }
-            ib->second ? cr->Destructor((void *)instance) : ::operator delete((void *)instance);
+            ib->second ? cr->Destructor((void*)instance) : ::operator delete((void*)instance);
         }
     }
 }
@@ -869,7 +981,8 @@ bool copy_args(Parameter* args, size_t nargs, void** vargs)
 }
 
 static inline
-void release_args(Parameter* args, size_t nargs) {
+void release_args(Parameter* args, size_t nargs)
+{
     for (size_t i = 0; i < nargs; ++i) {
         if (args[i].fTypeCode == 'X')
             free(args[i].fValue.fVoidp);
@@ -1106,15 +1219,19 @@ bool Cppyy::IsAbstract(TCppType_t klass)
 bool Cppyy::IsEnum(const std::string& type_name)
 {
     if (type_name.empty()) return false;
+
+    if (type_name.rfind("enum ", 0) == 0)
+        return true;    // by definition (C-style)
+
     std::string tn_short = TClassEdit::ShortType(type_name.c_str(), 1);
     if (tn_short.empty()) return false;
     return gInterpreter->ClassInfo_IsEnum(tn_short.c_str());
 }
 
-bool Cppyy::IsAggregate(TCppType_t klass)
+bool Cppyy::IsAggregate(TCppType_t type)
 {
-// Test if this type is an aggregate type
-    TClassRef& cr = type_from_handle(klass);
+// Test if this type is a "plain old data" type
+    TClassRef& cr = type_from_handle(type);
     if (cr.GetClass())
         return cr->ClassProperty() & kClassIsAggregate;
     return false;
@@ -1183,7 +1300,7 @@ static inline
 void cond_add(Cppyy::TCppScope_t scope, const std::string& ns_scope,
     std::set<std::string>& cppnames, const char* name, bool nofilter = false)
 {
-    if (!name || name[0] == '_' || strstr(name, ".h") != 0 || strncmp(name, "operator", 8) == 0)
+    if (!name || strstr(name, ".h") != 0)
         return;
 
     if (scope == GLOBAL_HANDLE) {
@@ -1238,6 +1355,21 @@ void Cppyy::GetAllCppNames(TCppScope_t scope, std::set<std::string>& cppnames)
         cond_add(scope, ns_scope, cppnames, gClassTable->Next());
 */
 
+#if 0
+// add interpreted classes (no load)
+    {
+        ClassInfo_t* ci = gInterpreter->ClassInfo_FactoryWithScope(
+            false /* all */, scope == GLOBAL_HANDLE ? nullptr : cr->GetName());
+        while (gInterpreter->ClassInfo_Next(ci)) {
+            const char* className = gInterpreter->ClassInfo_FullName(ci);
+            if (strstr(className, "(anonymous)") || strstr(className, "(unnamed)"))
+                continue;
+            cond_add(scope, ns_scope, cppnames, className);
+        }
+        gInterpreter->ClassInfo_Delete(ci);
+    }
+#endif
+
 // any other types (e.g. that may have come from parsing headers)
     coll = gROOT->GetListOfTypes();
     {
@@ -1252,23 +1384,21 @@ void Cppyy::GetAllCppNames(TCppScope_t scope, std::set<std::string>& cppnames)
 
 // add functions
     coll = (scope == GLOBAL_HANDLE) ?
-        gROOT->GetListOfGlobalFunctions() : cr->GetListOfMethods();
+        gROOT->GetListOfGlobalFunctions(true) : cr->GetListOfMethods(true);
     {
         TIter itr{coll};
         TFunction* obj = nullptr;
         while ((obj = (TFunction*)itr.Next())) {
             const char* nm = obj->GetName();
         // skip templated functions, adding only the un-instantiated ones
-            if (nm && nm[0] != '_' && strstr(nm, "<") == 0 && strncmp(nm, "operator", 8) != 0) {
-                if (gInitialNames.find(nm) == gInitialNames.end())
-                    cppnames.insert(nm);
-            }
+            if (nm && gInitialNames.find(nm) == gInitialNames.end())
+                cppnames.insert(nm);
         }
     }
 
 // add uninstantiated templates
     coll = (scope == GLOBAL_HANDLE) ?
-        gROOT->GetListOfFunctionTemplates() : cr->GetListOfFunctionTemplates();
+        gROOT->GetListOfFunctionTemplates() : cr->GetListOfFunctionTemplates(true);
     FILL_COLL(TFunctionTemplate, kIsPrivate | kIsProtected)
 
 // add (global) data members
@@ -1350,7 +1480,7 @@ std::string Cppyy::GetScopedFinalName(TCppType_t klass)
             return std::string("std::")+cr->GetName();
         return cr->GetName();
     }
-    return "";
+    return "<unknown>";
 }
 
 bool Cppyy::HasVirtualDestructor(TCppType_t klass)
@@ -1512,10 +1642,8 @@ bool Cppyy::GetSmartPtrInfo(
         TClassRef& cr = type_from_handle(GetScope(tname));
         if (cr.GetClass()) {
             TFunction* func = cr->GetMethod("operator->", "");
-            if (!func) {
-                gInterpreter->UpdateListOfMethods(cr.GetClass());
+            if (!func)
                 func = cr->GetMethod("operator->", "");
-            }
             if (func) {
                if (deref) *deref = (TCppMethod_t)new_CallWrapper(func);
                if (raw) *raw = GetScope(TClassEdit::ShortType(
@@ -2234,6 +2362,31 @@ std::string Cppyy::GetDatamemberType(TCppScope_t scope, TCppIndex_t idata)
                 s << '[' << m->GetMaxIndex(i) << ']';
             fullType.append(s.str());
         }
+
+#if 0
+    // this is the only place where anonymous structs are uniquely identified, so setup
+    // a class if needed, such that subsequent GetScope() and GetScopedFinalName() calls
+    // return the uniquely named class
+        auto declid = m->GetTagDeclId(); //GetDeclId();
+        if (declid && (m->Property() & (kIsClass | kIsStruct | kIsUnion)) &&\
+                (fullType.find("(anonymous)") != std::string::npos || fullType.find("(unnamed)") != std::string::npos)) {
+
+        // use the (fixed) decl id address to guarantee a unique name, even when there
+        // are multiple anonymous structs in the parent scope
+            std::ostringstream fulls;
+            fulls << fullType << "@" << (void*)declid;
+            fullType = fulls.str();
+
+            if (g_name2classrefidx.find(fullType) == g_name2classrefidx.end()) {
+                ClassInfo_t* ci = gInterpreter->ClassInfo_Factory(declid);
+                TClass* cl = gInterpreter->GenerateTClass(ci, kTRUE /* silent */);
+                gInterpreter->ClassInfo_Delete(ci);
+                if (cl) cl->SetName(fullType.c_str());
+                g_name2classrefidx[fullType] = g_classrefs.size();
+                g_classrefs.emplace_back(cl);
+            }
+        }
+#endif
         return fullType;
     }
 
@@ -2483,3 +2636,5 @@ long long Cppyy::GetEnumDataValue(TCppEnum_t etype, TCppIndex_t idata)
      TEnumConstant* ecst = (TEnumConstant*)((TEnum*)etype)->GetConstants()->At((int)idata);
      return (long long)ecst->GetValue();
 }
+
+
