@@ -202,19 +202,34 @@ void TDirectory::Append(TObject *obj, Bool_t replace /* = kFALSE */)
 {
    if (!obj || !fList) return;
 
+   bool alreadyPresent = false;
    if (replace && obj->GetName() && obj->GetName()[0]) {
-      TObject *old;
-      while (nullptr != (old = GetList()->FindObject(obj->GetName()))) {
-         Warning("Append","Replacing existing %s: %s (Potential memory leak).",
-                 obj->IsA()->GetName(),obj->GetName());
-         ROOT::DirAutoAdd_t func = old->IsA()->GetDirectoryAutoAdd();
-         if (func) {
-            func(old,nullptr);
+      std::vector<TObject *> toRemoveList;
+      for (TObject *old : *GetList()) {
+         if (obj == old) {
+            if (alreadyPresent)
+               toRemoveList.push_back(obj);
+            else
+               alreadyPresent = true;
+         } else if (old->GetName() && strcmp(obj->GetName(), old->GetName()) == 0) {
+            toRemoveList.push_back(old);
+            Warning("Append", "Replacing existing %s: %s (Potential memory leak).", old->IsA()->GetName(),
+                    old->GetName());
+         }
+      }
+
+      for (auto toRemove : toRemoveList) {
+         ROOT::DirAutoAdd_t func = toRemove->IsA()->GetDirectoryAutoAdd();
+         if (func && toRemove != obj) {
+            func(toRemove, nullptr);
          } else {
-            Remove(old);
+            Remove(toRemove);
          }
       }
    }
+
+   if (alreadyPresent)
+      return;
 
    fList->Add(obj);
    // A priori, a `TDirectory` object is assumed to not have shared ownership.
