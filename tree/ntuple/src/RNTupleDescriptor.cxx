@@ -169,6 +169,24 @@ bool ROOT::RFieldDescriptor::IsCustomClass() const
    return true;
 }
 
+bool ROOT::RFieldDescriptor::IsCustomEnum(const RNTupleDescriptor &desc) const
+{
+   if (fStructure != ROOT::ENTupleStructure::kPlain)
+      return false;
+   if (fTypeName.rfind("std::", 0) == 0)
+      return false;
+
+   auto subFieldId = desc.FindFieldId("_0", fFieldId);
+   if (subFieldId == kInvalidDescriptorId)
+      return false;
+
+   static const std::string gIntTypeNames[] = {"bool",         "char",          "std::int8_t",  "std::uint8_t",
+                                               "std::int16_t", "std::uint16_t", "std::int32_t", "std::uint32_t",
+                                               "std::int64_t", "std::uint64_t"};
+   return std::find(std::begin(gIntTypeNames), std::end(gIntTypeNames),
+                    desc.GetFieldDescriptor(subFieldId).GetTypeName()) != std::end(gIntTypeNames);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool ROOT::RColumnDescriptor::operator==(const RColumnDescriptor &other) const
