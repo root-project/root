@@ -149,6 +149,10 @@ public:
    /// natively supported stdlib classes.
    /// The dictionary does not need to be available for this method.
    bool IsCustomClass() const;
+   /// Tells if the field describes a user-defined enum type.
+   /// The dictionary does not need to be available for this method.
+   /// Needs the full descriptor to look up sub fields.
+   bool IsCustomEnum(const RNTupleDescriptor &desc) const;
 };
 
 // clang-format off
