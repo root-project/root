@@ -103,7 +103,7 @@ private:
    std::size_t FillImpl(Entry &entry)
    {
       ROOT::RNTupleFillStatus status;
-      FillNoFlush(entry, status);
+      FillNoFlushImpl(entry, status);
       if (status.ShouldFlushCluster())
          FlushCluster();
       return status.GetLastEntrySize();
@@ -114,6 +114,9 @@ private:
    RNTupleFillContext &operator=(const RNTupleFillContext &) = delete;
 
 public:
+   RNTupleFillContext(RNTupleFillContext &&) = default;
+   RNTupleFillContext &operator=(RNTupleFillContext &&) = default;
+
    ~RNTupleFillContext();
 
    /// Fill an entry into this context, but don't commit the cluster. The calling code must pass an RNTupleFillStatus
