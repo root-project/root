@@ -6,7 +6,7 @@
 
 add_subdirectory(tree)
 add_subdirectory(treeplayer)
-if(TARGET Gui)
+if(NOT minimal)
   add_subdirectory(treeviewer)
   add_subdirectory(ntuplebrowse)
 endif()
