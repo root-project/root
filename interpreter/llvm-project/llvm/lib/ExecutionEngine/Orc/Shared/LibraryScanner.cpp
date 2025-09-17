@@ -69,6 +69,7 @@ bool ObjectFileLoader::isArchitectureCompatible(const object::ObjectFile &Obj) {
     return false;
 
   if (ObjTriple.getEnvironment() != Triple::UnknownEnvironment &&
+      HostTriple.getEnvironment() != Triple::UnknownEnvironment &&
       HostTriple.getEnvironment() != ObjTriple.getEnvironment())
     return false;
 
