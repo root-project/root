@@ -131,9 +131,10 @@ namespace cling {
               return;
           auto pos = prepend ? m_SearchPaths.begin() : m_SearchPaths.end();
           m_SearchPaths.insert(pos, SearchPathInfo{dir.str(), isUser});
-          // m_DyldController->addScanPath(dir.str(),
-          //                               isUser ? llvm::orc::PathType::User
-          //                                      : llvm::orc::PathType::System);
+          if (m_DyldController)
+            m_DyldController->addScanPath(dir.str(),
+                                          isUser ? llvm::orc::PathType::User
+                                                 : llvm::orc::PathType::System);
        }
     }
 
