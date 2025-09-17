@@ -201,8 +201,8 @@ namespace cling {
     clang::FileManager& FM = m_Interpreter.getSema().getSourceManager().getFileManager();
 
     std::string pathname(m_Interpreter.lookupFileOrLibrary(file));
-    const auto FE = FM.getFile(pathname, /*OpenFile=*/false,
-                               /*CacheFailure=*/false);
+    auto FE = FM.getFileRef(pathname, /*OpenFile=*/false,
+                            /*CacheFailure=*/false);
     if (!FE)
       return AR_Failure;
 
@@ -486,7 +486,8 @@ namespace cling {
       pathname = filename.str();
 
     clang::FileManager& FM = m_Interpreter.getSema().getSourceManager().getFileManager();
-    auto FE = FM.getFile(pathname, /*OpenFile=*/false, /*CacheFailure=*/false);
+    auto FE =
+        FM.getFileRef(pathname, /*OpenFile=*/false, /*CacheFailure=*/false);
     if (!FE)
       return;
 
