@@ -1341,14 +1341,20 @@ namespace cling {
 
   void DynamicLibraryManager::initializeDyld(
                  std::function<bool(llvm::StringRef)> shouldPermanentlyIgnore) {
-     //assert(!m_Dyld && "Already initialized!");
+    //  assert(!m_Dyld && "Already initialized!");
+    // if (m_Dyld)
+    //   delete m_Dyld;
     if (m_DyldController)
       m_DyldController.reset();
 
     llvm::orc::LibraryResolver::Setup S =
         llvm::orc::LibraryResolver::Setup::create({});
-    S.shouldScan = [&](llvm::StringRef lib) -> bool {
-      return !shouldPermanentlyIgnore(lib);
+    S.shouldScan = [&, shouldPermanentlyIgnore](llvm::StringRef lib) -> bool {
+      if (shouldPermanentlyIgnore) {
+        return !shouldPermanentlyIgnore(lib) || !isLibraryLoaded(lib);
+      }
+      // fallback behavior if no callback provided
+      return !isLibraryLoaded(lib);
     };
     m_DyldController = llvm::orc::LibraryResolutionDriver::create(S);
 
@@ -1377,7 +1383,8 @@ namespace cling {
     std::string res = "";
     std::vector<std::string> sym;
     sym.push_back(mangledName.str());
-    llvm::orc::SearchPolicy policy = {
+    llvm::orc::SearchConfig config;
+    config.policy = {
         {{llvm::orc::LibraryManager::State::Queried, llvm::orc::PathType::User},
          {llvm::orc::LibraryManager::State::Unloaded,
           llvm::orc::PathType::User},
@@ -1385,8 +1392,6 @@ namespace cling {
           llvm::orc::PathType::System},
          {llvm::orc::LibraryManager::State::Unloaded,
           llvm::orc::PathType::System}}};
-    llvm::orc::SearchConfig config;
-    config.policy = policy;
     config.options.FilterFlags =
         llvm::orc::SymbolEnumeratorOptions::IgnoreUndefined;
     m_DyldController->resolveSymbols(
