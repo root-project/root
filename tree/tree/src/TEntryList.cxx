@@ -286,8 +286,8 @@ TEntryList::TEntryList(const TEntryList &elist) : TNamed(elist)
    fFileName = elist.fFileName;
    fStringHash = elist.fStringHash;
    fTreeNumber = elist.fTreeNumber;
-   fLastIndexQueried = -1;
-   fLastIndexReturned = 0;
+   fLastIndexQueried = elist.fLastIndexQueried;
+   fLastIndexReturned = elist.fLastIndexReturned;
    fN = elist.fN;
    fShift = elist.fShift;
    fLists = nullptr;
