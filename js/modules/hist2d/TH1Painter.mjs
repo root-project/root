@@ -278,7 +278,8 @@ class TH1Painter extends THistPainter {
       for (i = left; i < right; ++i) {
          xx = xaxis.GetBinCoord(i + 0.5);
 
-         if (cond && !cond(xx)) continue;
+         if (cond && !cond(xx))
+            continue;
 
          if (profile) {
             w = histo.fBinEntries[i + 1];
@@ -350,10 +351,13 @@ class TH1Painter extends THistPainter {
    /** @summary Fill stat box */
    fillStatistic(stat, dostat, dofit) {
       // no need to refill statistic if histogram is dummy
-      if (this.isIgnoreStatsFill()) return false;
+      if (this.isIgnoreStatsFill())
+         return false;
 
-      if (dostat === 1) dostat = 1111;
-      if (dofit === 1) dofit = 111;
+      if (dostat === 1)
+         dostat = 1111;
+      if (dofit === 1)
+         dofit = 111;
 
       const histo = this.getHisto(),
             print_name = dostat % 10,
@@ -417,7 +421,8 @@ class TH1Painter extends THistPainter {
             stat.addText(`Kurtosis = ${stat.format(data.kurtx)}`);
       }
 
-      if (dofit) stat.fillFunctionStat(this.findFunction(clTF1), dofit, 1);
+      if (dofit)
+         stat.fillFunctionStat(this.findFunction(clTF1), dofit, 1);
 
       return true;
    }
@@ -440,9 +445,11 @@ class TH1Painter extends THistPainter {
             xaxis = histo.fXaxis,
             show_text = o.Text;
       let text_col, text_angle, text_size,
-          side = (o.BarStyle > 10) ? o.BarStyle % 10 : 0, pr = Promise.resolve();
+          side = (o.BarStyle > 10) ? o.BarStyle % 10 : 0,
+          pr = Promise.resolve();
 
-      if (side > 4) side = 4;
+      if (side > 4)
+         side = 4;
       const gry2 = this.getBarBaseline(funcs, height);
 
       if (show_text) {
@@ -463,14 +470,16 @@ class TH1Painter extends THistPainter {
             const x1 = xaxis.GetBinLowEdge(i + 1),
                   x2 = xaxis.GetBinLowEdge(i + 2);
 
-            if (funcs.logx && (x2 <= 0)) continue;
+            if (funcs.logx && (x2 <= 0))
+               continue;
 
             let grx1 = Math.round(funcs.grx(x1)),
                 grx2 = Math.round(funcs.grx(x2)),
                 w = grx2 - grx1;
             const y = histo.getBinContent(i+1);
 
-            if (funcs.logy && (y < funcs.scale_ymin)) continue;
+            if (funcs.logy && (y < funcs.scale_ymin))
+               continue;
             const gry1 = Math.round(funcs.gry(y));
 
             grx1 += Math.round(histo.fBarOffset/1000*w);
@@ -535,7 +544,8 @@ class TH1Painter extends THistPainter {
 
       for (let i = left; i < right; ++i) {
          const x = histo.fXaxis.GetBinCoord(i+0.5);
-         if (funcs.logx && (x <= 0)) continue;
+         if (funcs.logx && (x <= 0))
+            continue;
          const grx = Math.round(funcs.grx(x)),
                y = histo.getBinContent(i+1),
                yerrs = this.getBinErrors(histo, i + 1, y);
@@ -574,7 +584,7 @@ class TH1Painter extends THistPainter {
           show_line = o.Line,
           startx, startmidx, currx, curry, x, grx, y, gry, curry_min, curry_max, prevy, prevx, i, bestimin, bestimax,
           path_fill = null, path_err = null, path_marker = null, path_line = '',
-          hints_err = null, hints_marker = null, hsz = 5,
+          hints_err = null, hints_text = null, hints_marker = null, hsz = 5,
           do_marker = false, do_err = false,
           dend = 0, dlw = 0, my, yerr1, yerr2, bincont, binerr, mx1, mx2, midx, lx, ly, mmx1, mmx2,
           text_col, text_angle, text_size,
@@ -639,6 +649,9 @@ class TH1Painter extends THistPainter {
                 text_size = Math.round(space*0.7);
              }
          }
+
+         if (want_tooltip && !draw_hist)
+            hints_text = '';
 
          pr = this.startTextDrawingAsync(42, text_size, undefined, text_size);
       }
@@ -709,6 +722,8 @@ class TH1Painter extends THistPainter {
                         arg.y = Math.round(midx - text_size/2);
                      }
                      this.drawText(arg);
+                     if (hints_text !== null)
+                        hints_text += `M${mx1},${my-hsz}v${2*hsz}h${mx2-mx1}v${-2*hsz}z`;
                   }
                }
 
@@ -908,6 +923,12 @@ class TH1Painter extends THistPainter {
          if (res && draw_hist)
             add_hist();
 
+         if (hints_text) {
+            this.appendPath(hints_text)
+                .style('fill', 'none')
+                .style('pointer-events', this.isBatchMode() ? null : 'visibleFill');
+         }
+
          if (show_text)
             return this.finishTextDrawing();
       });
@@ -971,7 +992,8 @@ class TH1Painter extends THistPainter {
          }
       } else {
          tips.push(`bin = ${bin+1}`, `x = ${xlbl}`);
-         if (histo.$baseh) cont -= histo.$baseh.getBinContent(bin+1);
+         if (histo.$baseh)
+            cont -= histo.$baseh.getBinContent(bin+1);
          if (cont === Math.round(cont))
             tips.push(`entries = ${cont}`);
          else
@@ -992,7 +1014,8 @@ class TH1Painter extends THistPainter {
       const funcs = this.getHistGrFuncs(),
             histo = this.getHisto(),
             left = this.getSelectIndex('x', 'left', -1),
-            right = this.getSelectIndex('x', 'right', 2);
+            right = this.getSelectIndex('x', 'right', 2),
+            draw_hist = this.options.Hist && (!this.lineatt.empty() || !this.fillatt.empty());
       let width = funcs.getFrameWidth(),
           height = funcs.getFrameHeight(),
           show_rect, grx1, grx2, gry1, gry2, gapx = 2,
@@ -1076,11 +1099,12 @@ class TH1Painter extends THistPainter {
 
          if (!pnt.touch && (pnt.nproc === 1))
             if ((pnt_y < gry1) || (pnt_y > gry2)) findbin = null;
-      } else if ((o.Error && (o.Hist !== true)) || o.Mark || o.Line || o.Curve) {
+      } else if ((o.Error && (o.Hist !== true)) || o.Mark || o.Line || o.Curve || (o.Text && !draw_hist)) {
          show_rect = !this.isTF1();
 
          let msize = 3;
-         if (this.markeratt) msize = Math.max(msize, this.markeratt.getFullSize());
+         if (this.markeratt)
+            msize = Math.max(msize, this.markeratt.getFullSize());
 
          if (o.Error) {
             const cont = histo.getBinContent(findbin + 1),
@@ -1092,7 +1116,7 @@ class TH1Painter extends THistPainter {
             if ((cont === 0) && this.isTProfile())
                findbin = null;
 
-            const dx = (grx2 - grx1)*o.errorX;
+            const dx = (grx2 - grx1) * o.errorX;
             grx1 = Math.round(midx - dx);
             grx2 = Math.round(midx + dx);
          }
@@ -1103,12 +1127,14 @@ class TH1Painter extends THistPainter {
          gry1 = Math.min(gry1, midy - msize);
          gry2 = Math.max(gry2, midy + msize);
 
-         if (!pnt.touch && (pnt.nproc === 1))
-            if ((pnt_y < gry1) || (pnt_y > gry2)) findbin = null;
+         if (!pnt.touch && (pnt.nproc === 1)) {
+            if ((pnt_y < gry1) || (pnt_y > gry2))
+               findbin = null;
+         }
       } else {
          // if histogram alone, use old-style with rects
          // if there are too many points at pixel, use circle
-         show_rect = (pnt.nproc === 1) && (right-left < width);
+         show_rect = (pnt.nproc === 1) && (right - left < width);
 
          if (show_rect) {
             gry2 = height;
@@ -1176,7 +1202,7 @@ class TH1Painter extends THistPainter {
 
          res.menu = res.exact; // one could show context menu when histogram is selected
          // distance to middle point, use to decide which menu to activate
-         res.menu_dist = Math.sqrt((midx-pnt_x)**2 + (midy-pnt_y)**2);
+         res.menu_dist = Math.sqrt((midx - pnt_x)**2 + (midy - pnt_y)**2);
       } else {
          const radius = this.lineatt.width + 3;
 
@@ -1239,8 +1265,9 @@ class TH1Painter extends THistPainter {
    rebinHist(sz) {
       const histo = this.getHisto(),
             xaxis = histo.fXaxis,
-            nbins = Math.floor(xaxis.fNbins/ sz);
-      if (nbins < 2) return;
+            nbins = Math.floor(xaxis.fNbins / sz);
+      if (nbins < 2)
+         return;
 
       const arr = new Array(nbins+2),
             xbins = xaxis.fXbins.length ? new Array(nbins) : null;
@@ -1286,13 +1313,15 @@ class TH1Painter extends THistPainter {
       const dist = right - left,
             histo = this.getHisto();
 
-      if ((dist === 0) || !histo) return;
+      if ((dist === 0) || !histo)
+         return;
 
       // first find minimum
       let min = histo.getBinContent(left + 1);
       for (let indx = left; indx < right; ++indx)
          min = Math.min(min, histo.getBinContent(indx+1));
-      if (min > 0) return; // if all points positive, no chance for auto-scale
+      if (min > 0)
+         return; // if all points positive, no chance for auto-scale
 
       while ((left < right) && (histo.getBinContent(left+1) <= min)) ++left;
       while ((left < right) && (histo.getBinContent(right) <= min)) --right;
@@ -1310,9 +1339,11 @@ class TH1Painter extends THistPainter {
    canZoomInside(axis, min, max) {
       const histo = this.getHisto();
 
-      if ((axis === 'x') && histo && (histo.fXaxis.FindBin(max, 0.5) - histo.fXaxis.FindBin(min, 0) > 1)) return true;
+      if ((axis === 'x') && histo && (histo.fXaxis.FindBin(max, 0.5) - histo.fXaxis.FindBin(min, 0) > 1))
+         return true;
 
-      if ((axis === 'y') && (Math.abs(max-min) > Math.abs(this.ymax-this.ymin)*1e-6)) return true;
+      if ((axis === 'y') && (Math.abs(max - min) > Math.abs(this.ymax - this.ymin)*1e-6))
+         return true;
 
       return false;
    }

@@ -10,7 +10,8 @@ import { gamma_quantile, gamma_quantile_c } from '../base/math.mjs';
 
 
 const kCARTESIAN = 1, kPOLAR = 2, kCYLINDRICAL = 3, kSPHERICAL = 4, kRAPIDITY = 5,
-      kNormal = 0, kPoisson = 1, kPoisson2 = 2;
+      kNormal = 0, kPoisson = 1, kPoisson2 = 2,
+      kOnlyCheck = 'only-check';
 /**
  * @summary Class to decode histograms draw options
  * @desc All options started from capital letter are major drawing options
@@ -1396,7 +1397,7 @@ class THistPainter extends ObjectPainter {
       const histo = this.getHisto();
       if (!this.isMainPainter() || !histo)
          return false;
-      if (arg === 'only-check')
+      if (arg === kOnlyCheck)
          return !histo.TestBit(kNoTitle);
       histo.InvertBit(kNoTitle);
       this.updateHistTitle().then(() => this.processOnlineChange(`exec:SetBit(TH1::kNoTitle,${histo.TestBit(kNoTitle)?1:0})`));
@@ -1421,7 +1422,8 @@ class THistPainter extends ObjectPainter {
             draw_title = !histo.TestBit(kNoTitle) && (gStyle.fOptTitle > 0);
 
       pt.Clear();
-      if (draw_title) pt.AddText(histo.fTitle);
+      if (draw_title)
+         pt.AddText(histo.fTitle);
       return tpainter.redraw().then(() => this);
    }
 
@@ -1503,21 +1505,23 @@ class THistPainter extends ObjectPainter {
       if (!arg) arg = '';
 
       if (!stat) {
-         if (arg.indexOf('-check') > 0) return false;
+         if (arg.indexOf('-check') > 0)
+            return false;
          // when stat box created first time, one need to draw it
          stat = this.createStat(true);
       } else
          statpainter = pp.findPainterFor(stat);
 
 
-      if (arg === 'only-check')
+      if (arg === kOnlyCheck)
          return statpainter?.Enabled || false;
 
       if (arg === 'fitpar-check')
          return stat?.fOptFit || false;
 
       if (arg === 'fitpar-toggle') {
-         if (!stat) return false;
+         if (!stat)
+            return false;
          stat.fOptFit = stat.fOptFit ? 0 : 1111; // for websocket command should be send to server
          statpainter?.redraw();
          return true;
@@ -1601,12 +1605,14 @@ class THistPainter extends ObjectPainter {
    /** @summary Find function in histogram list of functions */
    findFunction(type_name, obj_name) {
       const funcs = this.getHisto()?.fFunctions?.arr;
-      if (!funcs) return null;
+      if (!funcs)
+         return null;
 
       for (let i = 0; i < funcs.length; ++i) {
          const f = funcs[i];
          if (obj_name && (f.fName !== obj_name)) continue;
-         if (f._typename === type_name) return f;
+         if (f._typename === type_name)
+            return f;
       }
 
       return null;
@@ -1729,17 +1735,23 @@ class THistPainter extends ObjectPainter {
       },
 
       uzoomMinMax = ndim => {
-         if (this.getDimension() !== ndim) return false;
-         if ((o.minimum === kNoZoom) && (o.maximum === kNoZoom)) return false;
-         if (!this.draw_content) return false; // if not drawing content, not change min/max
+         if (this.getDimension() !== ndim)
+            return false;
+         if ((o.minimum === kNoZoom) && (o.maximum === kNoZoom))
+            return false;
+         if (!this.draw_content)
+            return false; // if not drawing content, not change min/max
          o.minimum = o.maximum = kNoZoom;
          this.scanContent(); // to reset ymin/ymax
          return true;
       };
 
-      if (dox && unzoomTAxis(histo.fXaxis)) res = true;
-      if (doy && (unzoomTAxis(histo.fYaxis) || uzoomMinMax(1))) res = true;
-      if (doz && (unzoomTAxis(histo.fZaxis) || uzoomMinMax(2))) res = true;
+      if (dox && unzoomTAxis(histo.fXaxis))
+         res = true;
+      if (doy && (unzoomTAxis(histo.fYaxis) || uzoomMinMax(1)))
+         res = true;
+      if (doz && (unzoomTAxis(histo.fZaxis) || uzoomMinMax(2)))
+         res = true;
 
       return res;
    }
@@ -1845,11 +1857,11 @@ class THistPainter extends ObjectPainter {
          return;
 
       if ((o.Axis <= 0) && !this.isTF1())
-         menu.addchk(this.toggleStat('only-check'), 'Show statbox', () => this.toggleStat());
+         menu.addchk(this.toggleStat(kOnlyCheck), 'Show statbox', () => this.toggleStat());
 
       if (this.isMainPainter()) {
          menu.sub('Title');
-         menu.addchk(this.toggleTitle('only-check'), 'Show', () => this.toggleTitle());
+         menu.addchk(this.toggleTitle(kOnlyCheck), 'Show', () => this.toggleTitle());
          menu.add('Edit', () => menu.input('Enter histogram title', histo.fTitle).then(res => {
             setHistogramTitle(histo, res);
             this.interactiveRedraw();
@@ -2022,7 +2034,8 @@ class THistPainter extends ObjectPainter {
       if (custom_levels)
          cntr.createCustom(custom_levels);
       else {
-         if (nlevels < 2) nlevels = gStyle.fNumberContours;
+         if (nlevels < 2)
+            nlevels = gStyle.fNumberContours;
          const pad = this.getPadPainter().getRootPad(true),
                logv = pad?.fLogv ?? ((ndim === 2) && pad?.fLogz);
 
@@ -2181,20 +2194,19 @@ class THistPainter extends ObjectPainter {
    /** @summary draw color palette
      * @return {Promise} when done */
    async drawColorPalette(enabled, postpone_draw, can_move) {
-      const o = this.getOptions();
+      const o = this.getOptions(),
+            do_toggle = can_move === 'toggle';
 
       // in special cases like scatter palette drawing is ignored
       if (o.IgnorePalette)
          return null;
 
       // only when create new palette, one could change frame size
-      const mp = this.getMainPainter(),
-            pp = this.getPadPainter();
-      if (mp !== this) {
-         if (mp && (mp.draw_content !== false) && mp.options.Zscale)
-            return null;
-      }
+      const mp = this.getMainPainter();
+      if (mp && (mp !== this) && (mp.draw_content !== false) && mp.options.Zscale)
+         return null;
 
+      const pp = this.getPadPainter();
       let pal = this.findFunction(clTPaletteAxis),
           pal_painter = pp?.findPainterFor(pal);
 
@@ -2247,7 +2259,7 @@ class THistPainter extends ObjectPainter {
 
          // place colz in the beginning, that stat box is always drawn on the top
          this.addFunction(pal, true);
-      } else if (pal_painter?.isPaletteVertical() !== undefined)
+      } else if ((pal_painter?.isPaletteVertical() !== undefined) && !do_toggle)
          o.Zvert = pal_painter.isPaletteVertical();
 
       const fp = this.getFramePainter();
@@ -2255,7 +2267,7 @@ class THistPainter extends ObjectPainter {
       // keep palette width
       if (can_move && fp && pal.$can_move) {
          if (o.Zvert) {
-            if (can_move === 'toggle') {
+            if (do_toggle) {
                const d = pal.fY2NDC - pal.fY1NDC;
                pal.fX1NDC = fp.fX2NDC + 0.005;
                pal.fX2NDC = pal.fX1NDC + d;
@@ -2270,7 +2282,7 @@ class THistPainter extends ObjectPainter {
             pal.fY1NDC = fp.fY1NDC;
             pal.fY2NDC = fp.fY2NDC;
          } else {
-            if (can_move === 'toggle') {
+            if (do_toggle) {
                const d = pal.fX2NDC - pal.fX1NDC;
                pal.fY1NDC = fp.fY2NDC + 0.005;
                pal.fY2NDC = pal.fY1NDC + d;

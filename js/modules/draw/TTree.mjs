@@ -465,4 +465,4 @@ async function drawTree(dom, obj, opt) {
    return pr.then(res => args.progress(res, true));
 }
 
-export { drawTree, drawTreePlayer, drawTreePlayerKey, drawLeafPlayer };
+export { drawTree, drawTreePlayer, drawTreePlayerKey, drawLeafPlayer, treeDrawProgress };
