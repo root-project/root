@@ -1048,38 +1048,53 @@ class TPavePainter extends ObjectPainter {
          for (let i = 0; i < levels.length - 1; ++i) {
             let z0 = Math.round(this.z_handle.gr(levels[i])),
                 z1 = Math.round(this.z_handle.gr(levels[i+1])),
-                lvl = (levels[i] + levels[i+1])*0.5, d;
+                portion = 0.5, d;
+
+            // when not full range fit to the drawn range,
+            // calculate portion value that it approximately in the
+            // middle of the still visible area
 
             if (this.#palette_vertical) {
-               if ((z1 >= s_height) || (z0 < 0)) continue;
+               if ((z1 >= s_height) || (z0 < 0))
+                  continue;
                z0 += 1; // ensure correct gap filling between colors
 
                if (z0 > s_height) {
+                  if (z0 > z1 + 1)
+                     portion = 0.5 * (s_height - z1) / (z0 - z1 - 1);
                   z0 = s_height;
-                  lvl = levels[i]*0.001 + levels[i+1]*0.999;
-                  if (z1 < 0) z1 = 0;
+                  if (z1 < 0)
+                     z1 = 0;
                } else if (z1 < 0) {
+                  if (z0 > 1)
+                     portion = 1 - 0.5 * z0 / (z0 - z1 - 1);
                   z1 = 0;
-                  lvl = levels[i]*0.999 + levels[i+1]*0.001;
                }
                d = `M0,${z1}H${s_width}V${z0}H0Z`;
             } else {
-               if ((z0 >= s_width) || (z1 < 0)) continue;
+               if ((z0 >= s_width) || (z1 < 0))
+                  continue;
                z1 += 1; // ensure correct gap filling between colors
 
                if (z1 > s_width) {
+                  if (z1 > z0 + 1)
+                     portion = 1 - 0.5 * (s_width - z0) / (z1 - z0 - 1);
                   z1 = s_width;
-                  lvl = levels[i]*0.999 + levels[i+1]*0.001;
-                  if (z0 < 0) z0 = 0;
+                  if (z0 < 0)
+                     z0 = 0;
                } else if (z0 < 0) {
+                  if (z1 > 1)
+                     portion = 0.5 * (z1 - 1) / (z1 - z0 - 1);
                   z0 = 0;
-                  lvl = levels[i]*0.001 + levels[i+1]*0.999;
                }
                d = `M${z0},0V${s_height}H${z1}V0Z`;
             }
 
-            const col = contour.getPaletteColor(draw_palette, lvl);
+            const lvl = levels[i] * portion + levels[i+1] * (1 - portion),
+                  col = contour.getPaletteColor(draw_palette, lvl);
             if (!col) continue;
+
+            // console.log('z0, z1', z0, z1, 'height', s_height, 'col', col, 'portion', portion)
 
             const r = this.appendPath(d)
                           .style('fill', col)

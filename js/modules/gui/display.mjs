@@ -244,7 +244,6 @@ class GridDisplay extends MDIDisplay {
          } else
             sizex = sizey = parseInt(kind);
 
-
          if (!Number.isInteger(sizex)) sizex = 3;
          if (!Number.isInteger(sizey)) sizey = 3;
 
@@ -343,7 +342,6 @@ class GridDisplay extends MDIDisplay {
          } else
             elem.style('display', 'flex').style('flex-direction', handle.vertical ? 'row' : 'column');
 
-
          if (childs && (childs[cnt] > 1)) {
             group.vertical = !handle.vertical;
             group.groups = [];
@@ -417,7 +415,7 @@ class GridDisplay extends MDIDisplay {
          if (Math.abs(diff) < 0.3) return; // if no significant change, do nothing
 
          // do not change if size too small
-         if (Math.min(handle.groups[id-1].size - diff, group.size+diff) < 3) return;
+         if (Math.min(handle.groups[id-1].size - diff, group.size + diff) < 3) return;
 
          handle.groups[id-1].size -= diff;
          group.size += diff;
@@ -495,16 +493,12 @@ class GridDisplay extends MDIDisplay {
          main.on('touchmove', () => {});
    }
 
-
    /** @summary Call function for each frame */
    forEachFrame(userfunc) {
       if (this.simple_layout)
          userfunc(this.getGridFrame());
-      else {
-         this.selectDom().selectAll('.jsroot_newgrid').each(function() {
-            userfunc(this);
-         });
-      }
+      else
+         this.selectDom().selectAll('.jsroot_newgrid').each(function() { userfunc(this); });
    }
 
    /** @summary Returns active frame */
@@ -528,7 +522,8 @@ class GridDisplay extends MDIDisplay {
          return this.selectDom('origin').node();
       let res = null;
       this.selectDom().selectAll('.jsroot_newgrid').each(function() {
-         if (id-- === 0) res = this;
+         if (id-- === 0)
+            res = this;
       });
       return res;
    }
@@ -583,7 +578,8 @@ class TabsDisplay extends MDIDisplay {
 
    /** @summary call function for each frame */
    forEachFrame(userfunc, only_visible) {
-      if (!isFunc(userfunc)) return;
+      if (!isFunc(userfunc))
+         return;
 
       if (only_visible) {
          const active = this.getActiveFrame();
@@ -601,13 +597,13 @@ class TabsDisplay extends MDIDisplay {
    /** @summary modify tab state by id */
    modifyTabsFrame(frame_id, action) {
       const top = this.selectDom().select('.jsroot_tabs'),
-          labels = top.select('.jsroot_tabs_labels'),
-          main = top.select('.jsroot_tabs_main');
+            labels = top.select('.jsroot_tabs_labels'),
+            main = top.select('.jsroot_tabs_main');
 
       labels.selectAll('.jsroot_tabs_label').each(function() {
          const id = d3_select(this).property('frame_id'),
-             is_same = (id === frame_id),
-             active_color = settings.DarkMode ? '#333' : 'white';
+               is_same = (id === frame_id),
+               active_color = settings.DarkMode ? '#333' : 'white';
 
          if (action === 'activate') {
             d3_select(this).style('background', is_same ? active_color : (settings.DarkMode ? 'black' : '#ddd'))
@@ -939,26 +935,26 @@ class FlexibleDisplay extends MDIDisplay {
                 '<div class=\'jsroot_flex_resize\' style=\'position: absolute; right: 3px; bottom: 1px; overflow: hidden; cursor: nwse-resize\'>&#x25FF;</div>');
 
       main.attr('class', 'jsroot_flex_frame')
-         .style('position', 'absolute')
-         .style('left', Math.round(w * (this.cnt % 5)/10) + 'px')
-         .style('top', Math.round(h * (this.cnt % 5)/10) + 'px')
-         .style('width', Math.round(w * 0.58) + 'px')
-         .style('height', Math.round(h * 0.58) + 'px')
-         .style('border', '1px solid black')
-         .style('box-shadow', '1px 1px 2px 2px #aaa')
-         .property('state', 'normal')
-         .select('.jsroot_flex_header')
-         .on('contextmenu', evnt => mdi.showContextMenu(evnt, true))
-         .on('click', function() { mdi.activateFrame(d3_select(this.parentNode).select('.jsroot_flex_draw').node()); })
-         .selectAll('button')
-         .data([{ n: '&#x2715;', t: 'close' }, { n: '&#x2594;', t: 'maximize' }, { n: '&#x2581;', t: 'minimize' }])
-         .enter()
-         .append('button')
-         .attr('type', 'button')
-         .attr('style', 'float: right; padding: 0; width: 1.4em; text-align: center; font-size: 10px; margin-top: 2px; margin-right: 4px')
-         .attr('title', d => d.t)
-         .html(d => d.n)
-         .on('click', function() { mdi._clickButton(this); });
+          .style('position', 'absolute')
+          .style('left', Math.round(w * (this.cnt % 5)/10) + 'px')
+          .style('top', Math.round(h * (this.cnt % 5)/10) + 'px')
+          .style('width', Math.round(w * 0.58) + 'px')
+          .style('height', Math.round(h * 0.58) + 'px')
+          .style('border', '1px solid black')
+          .style('box-shadow', '1px 1px 2px 2px #aaa')
+          .property('state', 'normal')
+          .select('.jsroot_flex_header')
+          .on('contextmenu', evnt => mdi.showContextMenu(evnt, true))
+          .on('click', function() { mdi.activateFrame(d3_select(this.parentNode).select('.jsroot_flex_draw').node()); })
+          .selectAll('button')
+          .data([{ n: '&#x2715;', t: 'close' }, { n: '&#x2594;', t: 'maximize' }, { n: '&#x2581;', t: 'minimize' }])
+          .enter()
+          .append('button')
+          .attr('type', 'button')
+          .attr('style', 'float: right; padding: 0; width: 1.4em; text-align: center; font-size: 10px; margin-top: 2px; margin-right: 4px')
+          .attr('title', d => d.t)
+          .html(d => d.n)
+          .on('click', function() { mdi._clickButton(this); });
 
       let moving_frame = null, moving_div = null, doing_move = false, current = [];
       const drag_object = d3_drag().subject(Object);

@@ -105,7 +105,8 @@ function getRGBfromTColor(col) {
 function getGrayColors(rgb_array) {
    const gray_colors = [];
 
-   if (!rgb_array) rgb_array = getRootColors();
+   if (!rgb_array)
+      rgb_array = getRootColors();
 
    for (let n = 0; n < rgb_array.length; ++n) {
       if (!rgb_array[n]) continue;
