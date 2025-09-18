@@ -93,6 +93,12 @@ namespace {
             return false;
       }
    }
+   void RecursiveResetReadEntry(TBranch *br)
+   {
+      br->ResetReadEntry();
+      for (auto sub : *br->GetListOfBranches())
+         RecursiveResetReadEntry(static_cast<TBranch *>(sub));
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2687,6 +2693,7 @@ TClass* TBranchElement::GetCurrentClass()
 Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
 {
    // Remember which entry we are reading.
+   auto prevEntry = fReadEntry;
    fReadEntry = entry;
 
    // If our tree has a branch ref, make it remember the entry and
@@ -2778,18 +2785,29 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
       }
    } else {
       // -- Terminal branch.
+
       if (fBranchCount && (fBranchCount->GetReadEntry() != entry)) {
          Int_t nb = fBranchCount->TBranch::GetEntry(entry, getall);
+         if (nb < 0)
+            return nb;
+         nbytes += nb;
+      }
+      // For associative containers, the count branch is actually
+      // reading the subbranches (including this one) and in the case
+      // of a compiled proxy the necessary staging area is only available
+      // during the call to the count branch GetEntry.
+      // We detect this code path by checking the position of the cursor,
+      // which is explicitly reset by the count branch's GetEntry.
+      // One down-side, if the user call twice GetEntry on the same entry,
+      // the second call will not re-read the sub-branches (unlike all the other
+      // types of branches).
+      if (!fBranchCount || (prevEntry != entry) || !IsAssociativeContainer(fBranchCount->fSTLtype)) {
+         Int_t nb = TBranch::GetEntry(entry, getall);
          if (nb < 0) {
             return nb;
          }
          nbytes += nb;
       }
-      Int_t nb = TBranch::GetEntry(entry, getall);
-      if (nb < 0) {
-         return nb;
-      }
-      nbytes += nb;
    }
 
    if (R__unlikely(fTree->Debug() > 0)) {
@@ -4324,9 +4342,13 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
    }
 
    if (IsAssociativeContainer(fSTLtype)) {
+
       Int_t nbranches = fBranches.GetEntriesFast();
       for (Int_t i = 0; i < nbranches; ++i) {
          TBranch *branch = (TBranch*) fBranches[i];
+         // To ensure that the sub-branches are read, we need
+         // reset their entry cursor.
+         RecursiveResetReadEntry(branch);
          Int_t nb = branch->GetEntry(GetReadEntry(), 1);
          if (nb < 0) {
             // Give up on i/o failure.
