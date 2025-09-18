@@ -95,6 +95,7 @@ public:
    static  void      Approximate(Bool_t approx=kTRUE);
    void              BuildOptions(Double_t zmin, Double_t zmax, Option_t *option);
    Int_t     BufferEmpty(Int_t action=0) override;
+   Double_t  Chi2Test(const TH1* h2, Option_t *option = "WW", Double_t *res = nullptr) const override;
    void      Copy(TObject &hnew) const override;
    Bool_t    Divide(TF1 *h1, Double_t c1=1) override;
    Bool_t    Divide(const TH1 *h1) override;

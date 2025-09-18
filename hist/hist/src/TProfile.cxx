@@ -417,6 +417,34 @@ Int_t TProfile::BufferFill(Double_t x, Double_t y, Double_t w)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Run a Chi2Test between a TProfileD and another histogram.
+/// If the argument is also a TProfileD, this calls TH1::Chi2Test() with the option "WW".
+/// \see TH1::Chi2Test()
+
+Double_t TProfile::Chi2Test(const TH1 *h2, Option_t *option, Double_t *res) const
+{
+   TString opt = option;
+   opt.ToUpper();
+
+   if (auto other = dynamic_cast<const TProfile *>(h2); other) {
+      if (fErrorMode != kERRORMEAN || other->fErrorMode != kERRORMEAN) {
+         Error("Chi2Test", "Chi2 tests need TProfiles in 'error of mean' mode.");
+         return 0;
+      }
+
+      opt += "WW";
+      opt.ReplaceAll("UU", "WW");
+      opt.ReplaceAll("UW", "WW");
+   } else if (!opt.Contains("WW")) {
+      Error("Chi2Test", "TProfiles need to be tested with the 'W' option. Either use option 'WW' or use "
+                        "histogram.Chi2Test(<profile>, 'UW')");
+      return 0;
+   }
+
+   return TH1::Chi2Test(h2, opt, res);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Copy a Profile histogram to a new profile histogram.
 
 void TProfile::Copy(TObject &obj) const
