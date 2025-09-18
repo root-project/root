@@ -70,3 +70,4 @@ module "Graf3D.X3DBuffer.h_C" {
 }
 
 // From this point on the contents of this file are automatically generated.
+@ROOT_GENERATED_MODULEMAP_CONTENT@
