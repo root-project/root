@@ -39,10 +39,11 @@ endif()
 
 # - Set the environment for the tutorials, which is the eventual ROOT_environ
 # plus some environment variables related to limiting the number of threads
-# used by NumPy.
+# used by NumPy and enabling batch mode.
 # See: https://stackoverflow.com/questions/30791550/limit-number-of-threads-in-numpy
 # - For matplotlib, disable a blocking event loop on show() using a non-interactive backend
-set(TUTORIAL_ENV ${ROOT_environ} OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=AGG)
+set(TUTORIAL_ENV ${ROOT_environ} ROOT_BATCH=1 OMP_NUM_THREADS=1 
+                 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=AGG)
 
 #---Copy the CTestCustom.cmake file into the build directory--------
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
@@ -767,9 +768,6 @@ endforeach()
 
 #---Python tutorials-----------------------------------------------------
 if(ROOT_pyroot_FOUND)
-
-  # Copy .rootlogon.py file into the build directory. It disables graphics for the Python tutorials
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/.rootlogon.py ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
   file(GLOB_RECURSE pytutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.py)
 
