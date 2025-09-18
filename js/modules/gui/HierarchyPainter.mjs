@@ -1262,7 +1262,7 @@ class HierarchyPainter extends BasePainter {
 
       if (isroot) {
          // for root node no extra code
-      } else if (has_childs && !break_list) {
+      } else if ((has_childs && !break_list) || handle?.pm) {
          icon_class = hitem._isopen ? 'img_minus' : 'img_plus';
          plusminus = true;
       } else
@@ -1600,7 +1600,8 @@ class HierarchyPainter extends BasePainter {
          let upcnt = d3_select(node).property('upcnt') || 1;
          while (upcnt-- > 0)
             hitem = hitem?._parent;
-         if (!hitem) return;
+         if (!hitem)
+            return;
          itemname = this.itemFullName(hitem);
          d3cont = d3_select(hitem?._d3cont || null);
          place = kPM;
@@ -1617,11 +1618,12 @@ class HierarchyPainter extends BasePainter {
          const prnt = hitem._parent, indx = prnt._childs.indexOf(hitem),
                d3chlds = d3_select(d3cont.node().parentNode);
 
-         if (indx < 0) return console.error('internal error');
+         if (indx < 0)
+            return console.error('internal error');
 
          prnt._show_limit = (prnt._show_limit || settings.HierarchyLimit) * 2;
 
-         for (let n = indx+1; n < prnt._childs.length; ++n) {
+         for (let n = indx + 1; n < prnt._childs.length; ++n) {
             const chld = prnt._childs[n];
             chld._parent = prnt;
             if (!this.addItemHtml(chld, d3chlds, n)) break; // if too many items, skip rest
@@ -1636,7 +1638,8 @@ class HierarchyPainter extends BasePainter {
          prnt = prnt._parent;
       }
 
-      if (!place) place = 'item';
+      if (!place)
+         place = 'item';
       const selector = (hitem._kind === getKindForType(clTKey) && hitem._more) ? 'noinspect' : '',
             sett = getDrawSettings(hitem._kind, selector), handle = sett.handle;
 
@@ -1657,6 +1660,7 @@ class HierarchyPainter extends BasePainter {
 
       // special case - one should expand item
       if (((place === kPM) && !('_childs' in hitem) && hitem._more) ||
+          ((place === kPM) && handle?.pm) ||
           ((place === 'item') && (dflt === kExpand)))
          return this.expandItem(itemname, d3cont);
 
@@ -1670,7 +1674,8 @@ class HierarchyPainter extends BasePainter {
          if (handle?.execute)
             return this.executeCommand(itemname, node.parentNode);
 
-         if (handle?.ignore_online && this.isOnlineItem(hitem)) return;
+         if (handle?.ignore_online && this.isOnlineItem(hitem))
+            return;
 
          const dflt_expand = (this.default_by_click === kExpand);
          let can_draw = hitem._can_draw,
@@ -1679,7 +1684,8 @@ class HierarchyPainter extends BasePainter {
 
          if (evnt.shiftKey) {
             drawopt = handle?.shift || kInspect;
-            if (isStr(drawopt) && (drawopt.indexOf(kInspect) === 0) && handle?.noinspect) drawopt = '';
+            if (isStr(drawopt) && (drawopt.indexOf(kInspect) === 0) && handle?.noinspect)
+               drawopt = '';
          }
          if (evnt.ctrlKey && handle?.ctrl)
             drawopt = handle.ctrl;
@@ -1722,7 +1728,8 @@ class HierarchyPainter extends BasePainter {
          if (getTypeForKind(hitem._kind) && sett.inspect && (can_draw !== false))
             return this.display(itemname, kInspect, null, true);
 
-         if (!hitem._childs || (hitem === this.h)) return;
+         if (!hitem._childs || (hitem === this.h))
+            return;
       }
 
       if (hitem._isopen)

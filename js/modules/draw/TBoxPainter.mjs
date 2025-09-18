@@ -12,6 +12,9 @@ import { assignContextMenu } from '../gui/menu.mjs';
 
 class TBoxPainter extends ObjectPainter {
 
+   #border_mode;
+   #border_size;
+
    /** @summary start of drag handler
      * @private */
    moveStart(x, y) {
@@ -72,9 +75,9 @@ class TBoxPainter extends ObjectPainter {
             ww = Math.round(Math.abs(this.x2 - this.x1)),
             hh = Math.round(Math.abs(this.y1 - this.y2)),
             path = `M${xx},${yy}h${ww}v${hh}h${-ww}z`;
-      if (!this.borderMode)
+      if (!this.#border_mode)
          return [path];
-      return [path].concat(getBoxDecorations(xx, yy, ww, hh, this.borderMode, this.borderSize, this.borderSize));
+      return [path].concat(getBoxDecorations(xx, yy, ww, hh, this.#border_mode, this.#border_size, this.#border_size));
    }
 
    /** @summary Redraw box */
@@ -103,8 +106,8 @@ class TBoxPainter extends ObjectPainter {
       if (this.swap_xy)
          [this.x1, this.x2, this.y1, this.y2] = [this.y1, this.y2, this.x1, this.x2];
 
-      this.borderMode = (box.fBorderMode && this.fillatt.hasColor()) ? box.fBorderMode : 0;
-      this.borderSize = box.fBorderSize || 2;
+      this.#border_mode = (box.fBorderMode && this.fillatt.hasColor()) ? box.fBorderMode : 0;
+      this.#border_size = box.fBorderSize || 2;
 
       const paths = this.getPathes();
 
@@ -113,7 +116,7 @@ class TBoxPainter extends ObjectPainter {
        .call(this.lineatt.func)
        .call(this.fillatt.func);
 
-      if (this.borderMode) {
+      if (this.#border_mode) {
          g.append('svg:path')
           .attr('d', paths[1])
           .call(this.fillatt.func)

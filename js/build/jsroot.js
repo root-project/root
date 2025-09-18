@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '4/07/2025',
+version_date = '18/09/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -7133,7 +7133,7 @@ var frame = 0, // is an animation frame pending?
     clock = typeof performance === "object" && performance.now ? performance : Date,
     setFrame = typeof window === "object" && window.requestAnimationFrame ? window.requestAnimationFrame.bind(window) : function(f) { setTimeout(f, 17); };
 
-function now$1() {
+function now() {
   return clockNow || (setFrame(clearNow), clockNow = clock.now() + clockSkew);
 }
 
@@ -7151,7 +7151,7 @@ Timer.prototype = timer.prototype = {
   constructor: Timer,
   restart: function(callback, delay, time) {
     if (typeof callback !== "function") throw new TypeError("callback is not a function");
-    time = (time == null ? now$1() : +time) + (delay == null ? 0 : +delay);
+    time = (time == null ? now() : +time) + (delay == null ? 0 : +delay);
     if (!this._next && taskTail !== this) {
       if (taskTail) taskTail._next = this;
       else taskHead = this;
@@ -7177,7 +7177,7 @@ function timer(callback, delay, time) {
 }
 
 function timerFlush() {
-  now$1(); // Get the current time, if not already set.
+  now(); // Get the current time, if not already set.
   ++frame; // Pretend we’ve set an alarm, if we haven’t already.
   var t = taskHead, e;
   while (t) {
@@ -8092,7 +8092,7 @@ function selection_transition(name) {
   if (name instanceof Transition) {
     id = name._id, name = name._name;
   } else {
-    id = newId(), (timing = defaultTiming).time = now$1(), name = name == null ? null : name + "";
+    id = newId(), (timing = defaultTiming).time = now(), name = name == null ? null : name + "";
   }
 
   for (var groups = this._groups, m = groups.length, j = 0; j < m; ++j) {
@@ -8213,7 +8213,8 @@ function getRGBfromTColor(col) {
 function getGrayColors(rgb_array) {
    const gray_colors = [];
 
-   if (!rgb_array) rgb_array = getRootColors();
+   if (!rgb_array)
+      rgb_array = getRootColors();
 
    for (let n = 0; n < rgb_array.length; ++n) {
       if (!rgb_array[n]) continue;
@@ -14177,7 +14178,7 @@ Object.assign(internals.jsroot, { ObjectPainter, cleanup, resize });
  * Copyright 2010-2025 Three.js Authors
  * SPDX-License-Identifier: MIT
  */
-const REVISION = '177';
+const REVISION = '180';
 
 /**
  * Represents mouse buttons and interaction types in context of controls.
@@ -14864,6 +14865,14 @@ const UnsignedInt248Type = 1020;
 const UnsignedInt5999Type = 35902;
 
 /**
+ * An unsigned int 10_11_11 (packed) data type for textures.
+ *
+ * @type {number}
+ * @constant
+ */
+const UnsignedInt101111Type = 35899;
+
+/**
  * Discards the red, green and blue components and reads just the alpha component.
  *
  * @type {number}
@@ -15434,8 +15443,8 @@ const WebGPUCoordinateSystem = 2001;
  * @property {string} NORMAL - Normal sampling mode.
  * @property {string} CENTROID - Centroid sampling mode.
  * @property {string} SAMPLE - Sample-specific sampling mode.
- * @property {string} FLAT_FIRST - Flat interpolation using the first vertex.
- * @property {string} FLAT_EITHER - Flat interpolation using either vertex.
+ * @property {string} FIRST - Flat interpolation using the first vertex.
+ * @property {string} EITHER - Flat interpolation using either vertex.
  */
 
 /**
@@ -17663,7 +17672,7 @@ class Quaternion {
 
 		let r = vFrom.dot( vTo ) + 1;
 
-		if ( r < Number.EPSILON ) {
+		if ( r < 1e-8 ) { // the epsilon value has been discussed in #31286
 
 			// vFrom and vTo point in opposite directions
 
@@ -20058,38 +20067,6 @@ function probeAsync( gl, sync, interval ) {
 
 }
 
-function toNormalizedProjectionMatrix( projectionMatrix ) {
-
-	const m = projectionMatrix.elements;
-
-	// Convert [-1, 1] to [0, 1] projection matrix
-	m[ 2 ] = 0.5 * m[ 2 ] + 0.5 * m[ 3 ];
-	m[ 6 ] = 0.5 * m[ 6 ] + 0.5 * m[ 7 ];
-	m[ 10 ] = 0.5 * m[ 10 ] + 0.5 * m[ 11 ];
-	m[ 14 ] = 0.5 * m[ 14 ] + 0.5 * m[ 15 ];
-
-}
-
-function toReversedProjectionMatrix( projectionMatrix ) {
-
-	const m = projectionMatrix.elements;
-	const isPerspectiveMatrix = m[ 11 ] === -1;
-
-	// Reverse [0, 1] projection matrix
-	if ( isPerspectiveMatrix ) {
-
-		m[ 10 ] = - m[ 10 ] - 1;
-		m[ 14 ] = - m[ 14 ];
-
-	} else {
-
-		m[ 10 ] = - m[ 10 ];
-		m[ 14 ] = - m[ 14 ] + 1;
-
-	}
-
-}
-
 const LINEAR_REC709_TO_XYZ = /*@__PURE__*/ new Matrix3().set(
 	0.4123908, 0.3575843, 0.1804808,
 	0.2126390, 0.7151687, 0.0721923,
@@ -20122,7 +20099,7 @@ function createColorManagement() {
 		 *	- luminanceCoefficients: RGB luminance coefficients
 		 *
 		 * Optional:
-		 *  - outputColorSpaceConfig: { drawingBufferColorSpace: ColorSpace }
+		 *  - outputColorSpaceConfig: { drawingBufferColorSpace: ColorSpace, toneMappingMode: 'extended' | 'standard' }
 		 *  - workingColorSpaceConfig: { unpackColorSpace: ColorSpace }
 		 *
 		 * Reference:
@@ -20188,6 +20165,12 @@ function createColorManagement() {
 			if ( colorSpace === NoColorSpace ) return LinearTransfer;
 
 			return this.spaces[ colorSpace ].transfer;
+
+		},
+
+		getToneMappingMode: function ( colorSpace ) {
+
+			return this.spaces[ colorSpace ].outputColorSpaceConfig.toneMappingMode || 'standard';
 
 		},
 
@@ -20501,13 +20484,23 @@ class Source {
 
 	}
 
+	/**
+	 * Returns the dimensions of the source into the given target vector.
+	 *
+	 * @param {(Vector2|Vector3)} target - The target object the result is written into.
+	 * @return {(Vector2|Vector3)} The dimensions of the source.
+	 */
 	getSize( target ) {
 
 		const data = this.data;
 
-		if ( data instanceof HTMLVideoElement ) {
+		if ( ( typeof HTMLVideoElement !== 'undefined' ) && ( data instanceof HTMLVideoElement ) ) {
 
-			target.set( data.videoWidth, data.videoHeight );
+			target.set( data.videoWidth, data.videoHeight, 0 );
+
+		} else if ( data instanceof VideoFrame ) {
+
+			target.set( data.displayHeight, data.displayWidth, 0 );
 
 		} else if ( data !== null ) {
 
@@ -25435,6 +25428,7 @@ class Plane {
 }
 
 const _sphere$6 = /*@__PURE__*/ new Sphere();
+const _defaultSpriteCenter = /*@__PURE__*/ new Vector2( 0.5, 0.5 );
 const _vector$6 = /*@__PURE__*/ new Vector3();
 
 /**
@@ -25518,9 +25512,10 @@ class Frustum {
 	 *
 	 * @param {Matrix4} m - The projection matrix.
 	 * @param {(WebGLCoordinateSystem|WebGPUCoordinateSystem)} coordinateSystem - The coordinate system.
+	 * @param {boolean} [reversedDepth=false] - Whether to use a reversed depth.
 	 * @return {Frustum} A reference to this frustum.
 	 */
-	setFromProjectionMatrix( m, coordinateSystem = WebGLCoordinateSystem ) {
+	setFromProjectionMatrix( m, coordinateSystem = WebGLCoordinateSystem, reversedDepth = false ) {
 
 		const planes = this.planes;
 		const me = m.elements;
@@ -25533,19 +25528,29 @@ class Frustum {
 		planes[ 1 ].setComponents( me3 + me0, me7 + me4, me11 + me8, me15 + me12 ).normalize();
 		planes[ 2 ].setComponents( me3 + me1, me7 + me5, me11 + me9, me15 + me13 ).normalize();
 		planes[ 3 ].setComponents( me3 - me1, me7 - me5, me11 - me9, me15 - me13 ).normalize();
-		planes[ 4 ].setComponents( me3 - me2, me7 - me6, me11 - me10, me15 - me14 ).normalize();
 
-		if ( coordinateSystem === WebGLCoordinateSystem ) {
+		if ( reversedDepth ) {
 
-			planes[ 5 ].setComponents( me3 + me2, me7 + me6, me11 + me10, me15 + me14 ).normalize();
-
-		} else if ( coordinateSystem === WebGPUCoordinateSystem ) {
-
-			planes[ 5 ].setComponents( me2, me6, me10, me14 ).normalize();
+			planes[ 4 ].setComponents( me2, me6, me10, me14 ).normalize(); // far
+			planes[ 5 ].setComponents( me3 - me2, me7 - me6, me11 - me10, me15 - me14 ).normalize(); // near
 
 		} else {
 
-			throw new Error( 'THREE.Frustum.setFromProjectionMatrix(): Invalid coordinate system: ' + coordinateSystem );
+			planes[ 4 ].setComponents( me3 - me2, me7 - me6, me11 - me10, me15 - me14 ).normalize(); // far
+
+			if ( coordinateSystem === WebGLCoordinateSystem ) {
+
+				planes[ 5 ].setComponents( me3 + me2, me7 + me6, me11 + me10, me15 + me14 ).normalize(); // near
+
+			} else if ( coordinateSystem === WebGPUCoordinateSystem ) {
+
+				planes[ 5 ].setComponents( me2, me6, me10, me14 ).normalize(); // near
+
+			} else {
+
+				throw new Error( 'THREE.Frustum.setFromProjectionMatrix(): Invalid coordinate system: ' + coordinateSystem );
+
+			}
 
 		}
 
@@ -25592,7 +25597,10 @@ class Frustum {
 	intersectsSprite( sprite ) {
 
 		_sphere$6.center.set( 0, 0, 0 );
-		_sphere$6.radius = 0.7071067811865476;
+
+		const offset = _defaultSpriteCenter.distanceTo( sprite.center );
+
+		_sphere$6.radius = 0.7071067811865476 + offset;
 		_sphere$6.applyMatrix4( sprite.matrixWorld );
 
 		return this.intersectsSphere( _sphere$6 );
@@ -26798,11 +26806,13 @@ class Matrix4 {
 	 * @param {number} near - The distance from the camera to the near plane.
 	 * @param {number} far - The distance from the camera to the far plane.
 	 * @param {(WebGLCoordinateSystem|WebGPUCoordinateSystem)} [coordinateSystem=WebGLCoordinateSystem] - The coordinate system.
+	 * @param {boolean} [reversedDepth=false] - Whether to use a reversed depth.
 	 * @return {Matrix4} A reference to this matrix.
 	 */
-	makePerspective( left, right, top, bottom, near, far, coordinateSystem = WebGLCoordinateSystem ) {
+	makePerspective( left, right, top, bottom, near, far, coordinateSystem = WebGLCoordinateSystem, reversedDepth = false ) {
 
 		const te = this.elements;
+
 		const x = 2 * near / ( right - left );
 		const y = 2 * near / ( top - bottom );
 
@@ -26811,19 +26821,28 @@ class Matrix4 {
 
 		let c, d;
 
-		if ( coordinateSystem === WebGLCoordinateSystem ) {
+		if ( reversedDepth ) {
 
-			c = - ( far + near ) / ( far - near );
-			d = ( -2 * far * near ) / ( far - near );
-
-		} else if ( coordinateSystem === WebGPUCoordinateSystem ) {
-
-			c = - far / ( far - near );
-			d = ( - far * near ) / ( far - near );
+			c = near / ( far - near );
+			d = ( far * near ) / ( far - near );
 
 		} else {
 
-			throw new Error( 'THREE.Matrix4.makePerspective(): Invalid coordinate system: ' + coordinateSystem );
+			if ( coordinateSystem === WebGLCoordinateSystem ) {
+
+				c = - ( far + near ) / ( far - near );
+				d = ( -2 * far * near ) / ( far - near );
+
+			} else if ( coordinateSystem === WebGPUCoordinateSystem ) {
+
+				c = - far / ( far - near );
+				d = ( - far * near ) / ( far - near );
+
+			} else {
+
+				throw new Error( 'THREE.Matrix4.makePerspective(): Invalid coordinate system: ' + coordinateSystem );
+
+			}
 
 		}
 
@@ -26847,39 +26866,49 @@ class Matrix4 {
 	 * @param {number} near - The distance from the camera to the near plane.
 	 * @param {number} far - The distance from the camera to the far plane.
 	 * @param {(WebGLCoordinateSystem|WebGPUCoordinateSystem)} [coordinateSystem=WebGLCoordinateSystem] - The coordinate system.
+	 * @param {boolean} [reversedDepth=false] - Whether to use a reversed depth.
 	 * @return {Matrix4} A reference to this matrix.
 	 */
-	makeOrthographic( left, right, top, bottom, near, far, coordinateSystem = WebGLCoordinateSystem ) {
+	makeOrthographic( left, right, top, bottom, near, far, coordinateSystem = WebGLCoordinateSystem, reversedDepth = false ) {
 
 		const te = this.elements;
-		const w = 1.0 / ( right - left );
-		const h = 1.0 / ( top - bottom );
-		const p = 1.0 / ( far - near );
 
-		const x = ( right + left ) * w;
-		const y = ( top + bottom ) * h;
+		const x = 2 / ( right - left );
+		const y = 2 / ( top - bottom );
 
-		let z, zInv;
+		const a = - ( right + left ) / ( right - left );
+		const b = - ( top + bottom ) / ( top - bottom );
 
-		if ( coordinateSystem === WebGLCoordinateSystem ) {
+		let c, d;
 
-			z = ( far + near ) * p;
-			zInv = -2 * p;
+		if ( reversedDepth ) {
 
-		} else if ( coordinateSystem === WebGPUCoordinateSystem ) {
-
-			z = near * p;
-			zInv = -1 * p;
+			c = 1 / ( far - near );
+			d = far / ( far - near );
 
 		} else {
 
-			throw new Error( 'THREE.Matrix4.makeOrthographic(): Invalid coordinate system: ' + coordinateSystem );
+			if ( coordinateSystem === WebGLCoordinateSystem ) {
+
+				c = -2 / ( far - near );
+				d = - ( far + near ) / ( far - near );
+
+			} else if ( coordinateSystem === WebGPUCoordinateSystem ) {
+
+				c = -1 / ( far - near );
+				d = - near / ( far - near );
+
+			} else {
+
+				throw new Error( 'THREE.Matrix4.makeOrthographic(): Invalid coordinate system: ' + coordinateSystem );
+
+			}
 
 		}
 
-		te[ 0 ] = 2 * w;	te[ 4 ] = 0;		te[ 8 ] = 0; 		te[ 12 ] = - x;
-		te[ 1 ] = 0; 		te[ 5 ] = 2 * h;	te[ 9 ] = 0; 		te[ 13 ] = - y;
-		te[ 2 ] = 0; 		te[ 6 ] = 0;		te[ 10 ] = zInv;	te[ 14 ] = - z;
+		te[ 0 ] = x;		te[ 4 ] = 0;		te[ 8 ] = 0; 		te[ 12 ] = a;
+		te[ 1 ] = 0; 		te[ 5 ] = y;		te[ 9 ] = 0; 		te[ 13 ] = b;
+		te[ 2 ] = 0; 		te[ 6 ] = 0;		te[ 10 ] = c;		te[ 14 ] = d;
 		te[ 3 ] = 0; 		te[ 7 ] = 0;		te[ 11 ] = 0;		te[ 15 ] = 1;
 
 		return this;
@@ -27046,6 +27075,10 @@ function WebGLAttributes( gl ) {
 		if ( array instanceof Float32Array ) {
 
 			type = gl.FLOAT;
+
+		} else if ( typeof Float16Array !== 'undefined' && array instanceof Float16Array ) {
+
+			type = gl.HALF_FLOAT;
 
 		} else if ( array instanceof Uint16Array ) {
 
@@ -27339,7 +27372,7 @@ class BufferAttribute {
 		/**
 		 * Applies to integer data only. Indicates how the underlying data in the buffer maps to
 		 * the values in the GLSL code. For instance, if `array` is an instance of `UInt16Array`,
-		 * and `normalized` is `true`, the values `0 -+65535` in the array data will be mapped to
+		 * and `normalized` is `true`, the values `0 - +65535` in the array data will be mapped to
 		 * `0.0f - +1.0f` in the GLSL attribute. If `normalized` is `false`, the values will be converted
 		 * to floats unmodified, i.e. `65535` becomes `65535.0f`.
 		 *
@@ -28598,7 +28631,7 @@ const _removedEvent = { type: 'removed' };
 const _childaddedEvent = { type: 'childadded', child: null };
 
 /**
- * Fires when a new child object has been added.
+ * Fires when a child object has been removed.
  *
  * @event Object3D#childremoved
  * @type {Object}
@@ -30312,7 +30345,7 @@ class BufferGeometry extends EventDispatcher {
 		/**
 		 * Bounding box for the geometry which can be calculated with `computeBoundingBox()`.
 		 *
-		 * @type {Box3}
+		 * @type {?Box3}
 		 * @default null
 		 */
 		this.boundingBox = null;
@@ -30320,7 +30353,7 @@ class BufferGeometry extends EventDispatcher {
 		/**
 		 * Bounding sphere for the geometry which can be calculated with `computeBoundingSphere()`.
 		 *
-		 * @type {Sphere}
+		 * @type {?Sphere}
 		 * @default null
 		 */
 		this.boundingSphere = null;
@@ -32601,6 +32634,18 @@ class Material extends EventDispatcher {
 
 		}
 
+		if ( this.sheenColorMap && this.sheenColorMap.isTexture ) {
+
+			data.sheenColorMap = this.sheenColorMap.toJSON( meta ).uuid;
+
+		}
+
+		if ( this.sheenRoughnessMap && this.sheenRoughnessMap.isTexture ) {
+
+			data.sheenRoughnessMap = this.sheenRoughnessMap.toJSON( meta ).uuid;
+
+		}
+
 		if ( this.dispersion !== undefined ) data.dispersion = this.dispersion;
 
 		if ( this.iridescence !== undefined ) data.iridescence = this.iridescence;
@@ -34650,7 +34695,7 @@ class MeshBasicMaterial extends Material {
 		 * @type {Color}
 		 * @default (1,1,1)
 		 */
-		this.color = new Color( 0xffffff ); // emissive
+		this.color = new Color( 0xffffff ); // diffuse
 
 		/**
 		 * The color map. May optionally include an alpha channel, typically combined
@@ -35450,13 +35495,13 @@ var lights_fragment_maps = "#if defined( RE_IndirectDiffuse )\n\t#ifdef USE_LIGH
 
 var lights_fragment_end = "#if defined( RE_IndirectDiffuse )\n\tRE_IndirectDiffuse( irradiance, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );\n#endif\n#if defined( RE_IndirectSpecular )\n\tRE_IndirectSpecular( radiance, iblIrradiance, clearcoatRadiance, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );\n#endif";
 
-var logdepthbuf_fragment = "#if defined( USE_LOGDEPTHBUF )\n\tgl_FragDepth = vIsPerspective == 0.0 ? gl_FragCoord.z : log2( vFragDepth ) * logDepthBufFC * 0.5;\n#endif";
+var logdepthbuf_fragment = "#if defined( USE_LOGARITHMIC_DEPTH_BUFFER )\n\tgl_FragDepth = vIsPerspective == 0.0 ? gl_FragCoord.z : log2( vFragDepth ) * logDepthBufFC * 0.5;\n#endif";
 
-var logdepthbuf_pars_fragment = "#if defined( USE_LOGDEPTHBUF )\n\tuniform float logDepthBufFC;\n\tvarying float vFragDepth;\n\tvarying float vIsPerspective;\n#endif";
+var logdepthbuf_pars_fragment = "#if defined( USE_LOGARITHMIC_DEPTH_BUFFER )\n\tuniform float logDepthBufFC;\n\tvarying float vFragDepth;\n\tvarying float vIsPerspective;\n#endif";
 
-var logdepthbuf_pars_vertex = "#ifdef USE_LOGDEPTHBUF\n\tvarying float vFragDepth;\n\tvarying float vIsPerspective;\n#endif";
+var logdepthbuf_pars_vertex = "#ifdef USE_LOGARITHMIC_DEPTH_BUFFER\n\tvarying float vFragDepth;\n\tvarying float vIsPerspective;\n#endif";
 
-var logdepthbuf_vertex = "#ifdef USE_LOGDEPTHBUF\n\tvFragDepth = 1.0 + gl_Position.w;\n\tvIsPerspective = float( isPerspectiveMatrix( projectionMatrix ) );\n#endif";
+var logdepthbuf_vertex = "#ifdef USE_LOGARITHMIC_DEPTH_BUFFER\n\tvFragDepth = 1.0 + gl_Position.w;\n\tvIsPerspective = float( isPerspectiveMatrix( projectionMatrix ) );\n#endif";
 
 var map_fragment = "#ifdef USE_MAP\n\tvec4 sampledDiffuseColor = texture2D( map, vMapUv );\n\t#ifdef DECODE_VIDEO_TEXTURE\n\t\tsampledDiffuseColor = sRGBTransferEOTF( sampledDiffuseColor );\n\t#endif\n\tdiffuseColor *= sampledDiffuseColor;\n#endif";
 
@@ -35516,7 +35561,7 @@ var roughnessmap_fragment = "float roughnessFactor = roughness;\n#ifdef USE_ROUG
 
 var roughnessmap_pars_fragment = "#ifdef USE_ROUGHNESSMAP\n\tuniform sampler2D roughnessMap;\n#endif";
 
-var shadowmap_pars_fragment = "#if NUM_SPOT_LIGHT_COORDS > 0\n\tvarying vec4 vSpotLightCoord[ NUM_SPOT_LIGHT_COORDS ];\n#endif\n#if NUM_SPOT_LIGHT_MAPS > 0\n\tuniform sampler2D spotLightMap[ NUM_SPOT_LIGHT_MAPS ];\n#endif\n#ifdef USE_SHADOWMAP\n\t#if NUM_DIR_LIGHT_SHADOWS > 0\n\t\tuniform sampler2D directionalShadowMap[ NUM_DIR_LIGHT_SHADOWS ];\n\t\tvarying vec4 vDirectionalShadowCoord[ NUM_DIR_LIGHT_SHADOWS ];\n\t\tstruct DirectionalLightShadow {\n\t\t\tfloat shadowIntensity;\n\t\t\tfloat shadowBias;\n\t\t\tfloat shadowNormalBias;\n\t\t\tfloat shadowRadius;\n\t\t\tvec2 shadowMapSize;\n\t\t};\n\t\tuniform DirectionalLightShadow directionalLightShadows[ NUM_DIR_LIGHT_SHADOWS ];\n\t#endif\n\t#if NUM_SPOT_LIGHT_SHADOWS > 0\n\t\tuniform sampler2D spotShadowMap[ NUM_SPOT_LIGHT_SHADOWS ];\n\t\tstruct SpotLightShadow {\n\t\t\tfloat shadowIntensity;\n\t\t\tfloat shadowBias;\n\t\t\tfloat shadowNormalBias;\n\t\t\tfloat shadowRadius;\n\t\t\tvec2 shadowMapSize;\n\t\t};\n\t\tuniform SpotLightShadow spotLightShadows[ NUM_SPOT_LIGHT_SHADOWS ];\n\t#endif\n\t#if NUM_POINT_LIGHT_SHADOWS > 0\n\t\tuniform sampler2D pointShadowMap[ NUM_POINT_LIGHT_SHADOWS ];\n\t\tvarying vec4 vPointShadowCoord[ NUM_POINT_LIGHT_SHADOWS ];\n\t\tstruct PointLightShadow {\n\t\t\tfloat shadowIntensity;\n\t\t\tfloat shadowBias;\n\t\t\tfloat shadowNormalBias;\n\t\t\tfloat shadowRadius;\n\t\t\tvec2 shadowMapSize;\n\t\t\tfloat shadowCameraNear;\n\t\t\tfloat shadowCameraFar;\n\t\t};\n\t\tuniform PointLightShadow pointLightShadows[ NUM_POINT_LIGHT_SHADOWS ];\n\t#endif\n\tfloat texture2DCompare( sampler2D depths, vec2 uv, float compare ) {\n\t\treturn step( compare, unpackRGBAToDepth( texture2D( depths, uv ) ) );\n\t}\n\tvec2 texture2DDistribution( sampler2D shadow, vec2 uv ) {\n\t\treturn unpackRGBATo2Half( texture2D( shadow, uv ) );\n\t}\n\tfloat VSMShadow (sampler2D shadow, vec2 uv, float compare ){\n\t\tfloat occlusion = 1.0;\n\t\tvec2 distribution = texture2DDistribution( shadow, uv );\n\t\tfloat hard_shadow = step( compare , distribution.x );\n\t\tif (hard_shadow != 1.0 ) {\n\t\t\tfloat distance = compare - distribution.x ;\n\t\t\tfloat variance = max( 0.00000, distribution.y * distribution.y );\n\t\t\tfloat softness_probability = variance / (variance + distance * distance );\t\t\tsoftness_probability = clamp( ( softness_probability - 0.3 ) / ( 0.95 - 0.3 ), 0.0, 1.0 );\t\t\tocclusion = clamp( max( hard_shadow, softness_probability ), 0.0, 1.0 );\n\t\t}\n\t\treturn occlusion;\n\t}\n\tfloat getShadow( sampler2D shadowMap, vec2 shadowMapSize, float shadowIntensity, float shadowBias, float shadowRadius, vec4 shadowCoord ) {\n\t\tfloat shadow = 1.0;\n\t\tshadowCoord.xyz /= shadowCoord.w;\n\t\tshadowCoord.z += shadowBias;\n\t\tbool inFrustum = shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0;\n\t\tbool frustumTest = inFrustum && shadowCoord.z <= 1.0;\n\t\tif ( frustumTest ) {\n\t\t#if defined( SHADOWMAP_TYPE_PCF )\n\t\t\tvec2 texelSize = vec2( 1.0 ) / shadowMapSize;\n\t\t\tfloat dx0 = - texelSize.x * shadowRadius;\n\t\t\tfloat dy0 = - texelSize.y * shadowRadius;\n\t\t\tfloat dx1 = + texelSize.x * shadowRadius;\n\t\t\tfloat dy1 = + texelSize.y * shadowRadius;\n\t\t\tfloat dx2 = dx0 / 2.0;\n\t\t\tfloat dy2 = dy0 / 2.0;\n\t\t\tfloat dx3 = dx1 / 2.0;\n\t\t\tfloat dy3 = dy1 / 2.0;\n\t\t\tshadow = (\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx0, dy0 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( 0.0, dy0 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx1, dy0 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx2, dy2 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( 0.0, dy2 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx3, dy2 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx0, 0.0 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx2, 0.0 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy, shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx3, 0.0 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx1, 0.0 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx2, dy3 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( 0.0, dy3 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx3, dy3 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx0, dy1 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( 0.0, dy1 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx1, dy1 ), shadowCoord.z )\n\t\t\t) * ( 1.0 / 17.0 );\n\t\t#elif defined( SHADOWMAP_TYPE_PCF_SOFT )\n\t\t\tvec2 texelSize = vec2( 1.0 ) / shadowMapSize;\n\t\t\tfloat dx = texelSize.x;\n\t\t\tfloat dy = texelSize.y;\n\t\t\tvec2 uv = shadowCoord.xy;\n\t\t\tvec2 f = fract( uv * shadowMapSize + 0.5 );\n\t\t\tuv -= f * texelSize;\n\t\t\tshadow = (\n\t\t\t\ttexture2DCompare( shadowMap, uv, shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, uv + vec2( dx, 0.0 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, uv + vec2( 0.0, dy ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, uv + texelSize, shadowCoord.z ) +\n\t\t\t\tmix( texture2DCompare( shadowMap, uv + vec2( -dx, 0.0 ), shadowCoord.z ),\n\t\t\t\t\t texture2DCompare( shadowMap, uv + vec2( 2.0 * dx, 0.0 ), shadowCoord.z ),\n\t\t\t\t\t f.x ) +\n\t\t\t\tmix( texture2DCompare( shadowMap, uv + vec2( -dx, dy ), shadowCoord.z ),\n\t\t\t\t\t texture2DCompare( shadowMap, uv + vec2( 2.0 * dx, dy ), shadowCoord.z ),\n\t\t\t\t\t f.x ) +\n\t\t\t\tmix( texture2DCompare( shadowMap, uv + vec2( 0.0, -dy ), shadowCoord.z ),\n\t\t\t\t\t texture2DCompare( shadowMap, uv + vec2( 0.0, 2.0 * dy ), shadowCoord.z ),\n\t\t\t\t\t f.y ) +\n\t\t\t\tmix( texture2DCompare( shadowMap, uv + vec2( dx, -dy ), shadowCoord.z ),\n\t\t\t\t\t texture2DCompare( shadowMap, uv + vec2( dx, 2.0 * dy ), shadowCoord.z ),\n\t\t\t\t\t f.y ) +\n\t\t\t\tmix( mix( texture2DCompare( shadowMap, uv + vec2( -dx, -dy ), shadowCoord.z ),\n\t\t\t\t\t\t  texture2DCompare( shadowMap, uv + vec2( 2.0 * dx, -dy ), shadowCoord.z ),\n\t\t\t\t\t\t  f.x ),\n\t\t\t\t\t mix( texture2DCompare( shadowMap, uv + vec2( -dx, 2.0 * dy ), shadowCoord.z ),\n\t\t\t\t\t\t  texture2DCompare( shadowMap, uv + vec2( 2.0 * dx, 2.0 * dy ), shadowCoord.z ),\n\t\t\t\t\t\t  f.x ),\n\t\t\t\t\t f.y )\n\t\t\t) * ( 1.0 / 9.0 );\n\t\t#elif defined( SHADOWMAP_TYPE_VSM )\n\t\t\tshadow = VSMShadow( shadowMap, shadowCoord.xy, shadowCoord.z );\n\t\t#else\n\t\t\tshadow = texture2DCompare( shadowMap, shadowCoord.xy, shadowCoord.z );\n\t\t#endif\n\t\t}\n\t\treturn mix( 1.0, shadow, shadowIntensity );\n\t}\n\tvec2 cubeToUV( vec3 v, float texelSizeY ) {\n\t\tvec3 absV = abs( v );\n\t\tfloat scaleToCube = 1.0 / max( absV.x, max( absV.y, absV.z ) );\n\t\tabsV *= scaleToCube;\n\t\tv *= scaleToCube * ( 1.0 - 2.0 * texelSizeY );\n\t\tvec2 planar = v.xy;\n\t\tfloat almostATexel = 1.5 * texelSizeY;\n\t\tfloat almostOne = 1.0 - almostATexel;\n\t\tif ( absV.z >= almostOne ) {\n\t\t\tif ( v.z > 0.0 )\n\t\t\t\tplanar.x = 4.0 - v.x;\n\t\t} else if ( absV.x >= almostOne ) {\n\t\t\tfloat signX = sign( v.x );\n\t\t\tplanar.x = v.z * signX + 2.0 * signX;\n\t\t} else if ( absV.y >= almostOne ) {\n\t\t\tfloat signY = sign( v.y );\n\t\t\tplanar.x = v.x + 2.0 * signY + 2.0;\n\t\t\tplanar.y = v.z * signY - 2.0;\n\t\t}\n\t\treturn vec2( 0.125, 0.25 ) * planar + vec2( 0.375, 0.75 );\n\t}\n\tfloat getPointShadow( sampler2D shadowMap, vec2 shadowMapSize, float shadowIntensity, float shadowBias, float shadowRadius, vec4 shadowCoord, float shadowCameraNear, float shadowCameraFar ) {\n\t\tfloat shadow = 1.0;\n\t\tvec3 lightToPosition = shadowCoord.xyz;\n\t\t\n\t\tfloat lightToPositionLength = length( lightToPosition );\n\t\tif ( lightToPositionLength - shadowCameraFar <= 0.0 && lightToPositionLength - shadowCameraNear >= 0.0 ) {\n\t\t\tfloat dp = ( lightToPositionLength - shadowCameraNear ) / ( shadowCameraFar - shadowCameraNear );\t\t\tdp += shadowBias;\n\t\t\tvec3 bd3D = normalize( lightToPosition );\n\t\t\tvec2 texelSize = vec2( 1.0 ) / ( shadowMapSize * vec2( 4.0, 2.0 ) );\n\t\t\t#if defined( SHADOWMAP_TYPE_PCF ) || defined( SHADOWMAP_TYPE_PCF_SOFT ) || defined( SHADOWMAP_TYPE_VSM )\n\t\t\t\tvec2 offset = vec2( - 1, 1 ) * shadowRadius * texelSize.y;\n\t\t\t\tshadow = (\n\t\t\t\t\ttexture2DCompare( shadowMap, cubeToUV( bd3D + offset.xyy, texelSize.y ), dp ) +\n\t\t\t\t\ttexture2DCompare( shadowMap, cubeToUV( bd3D + offset.yyy, texelSize.y ), dp ) +\n\t\t\t\t\ttexture2DCompare( shadowMap, cubeToUV( bd3D + offset.xyx, texelSize.y ), dp ) +\n\t\t\t\t\ttexture2DCompare( shadowMap, cubeToUV( bd3D + offset.yyx, texelSize.y ), dp ) +\n\t\t\t\t\ttexture2DCompare( shadowMap, cubeToUV( bd3D, texelSize.y ), dp ) +\n\t\t\t\t\ttexture2DCompare( shadowMap, cubeToUV( bd3D + offset.xxy, texelSize.y ), dp ) +\n\t\t\t\t\ttexture2DCompare( shadowMap, cubeToUV( bd3D + offset.yxy, texelSize.y ), dp ) +\n\t\t\t\t\ttexture2DCompare( shadowMap, cubeToUV( bd3D + offset.xxx, texelSize.y ), dp ) +\n\t\t\t\t\ttexture2DCompare( shadowMap, cubeToUV( bd3D + offset.yxx, texelSize.y ), dp )\n\t\t\t\t) * ( 1.0 / 9.0 );\n\t\t\t#else\n\t\t\t\tshadow = texture2DCompare( shadowMap, cubeToUV( bd3D, texelSize.y ), dp );\n\t\t\t#endif\n\t\t}\n\t\treturn mix( 1.0, shadow, shadowIntensity );\n\t}\n#endif";
+var shadowmap_pars_fragment = "#if NUM_SPOT_LIGHT_COORDS > 0\n\tvarying vec4 vSpotLightCoord[ NUM_SPOT_LIGHT_COORDS ];\n#endif\n#if NUM_SPOT_LIGHT_MAPS > 0\n\tuniform sampler2D spotLightMap[ NUM_SPOT_LIGHT_MAPS ];\n#endif\n#ifdef USE_SHADOWMAP\n\t#if NUM_DIR_LIGHT_SHADOWS > 0\n\t\tuniform sampler2D directionalShadowMap[ NUM_DIR_LIGHT_SHADOWS ];\n\t\tvarying vec4 vDirectionalShadowCoord[ NUM_DIR_LIGHT_SHADOWS ];\n\t\tstruct DirectionalLightShadow {\n\t\t\tfloat shadowIntensity;\n\t\t\tfloat shadowBias;\n\t\t\tfloat shadowNormalBias;\n\t\t\tfloat shadowRadius;\n\t\t\tvec2 shadowMapSize;\n\t\t};\n\t\tuniform DirectionalLightShadow directionalLightShadows[ NUM_DIR_LIGHT_SHADOWS ];\n\t#endif\n\t#if NUM_SPOT_LIGHT_SHADOWS > 0\n\t\tuniform sampler2D spotShadowMap[ NUM_SPOT_LIGHT_SHADOWS ];\n\t\tstruct SpotLightShadow {\n\t\t\tfloat shadowIntensity;\n\t\t\tfloat shadowBias;\n\t\t\tfloat shadowNormalBias;\n\t\t\tfloat shadowRadius;\n\t\t\tvec2 shadowMapSize;\n\t\t};\n\t\tuniform SpotLightShadow spotLightShadows[ NUM_SPOT_LIGHT_SHADOWS ];\n\t#endif\n\t#if NUM_POINT_LIGHT_SHADOWS > 0\n\t\tuniform sampler2D pointShadowMap[ NUM_POINT_LIGHT_SHADOWS ];\n\t\tvarying vec4 vPointShadowCoord[ NUM_POINT_LIGHT_SHADOWS ];\n\t\tstruct PointLightShadow {\n\t\t\tfloat shadowIntensity;\n\t\t\tfloat shadowBias;\n\t\t\tfloat shadowNormalBias;\n\t\t\tfloat shadowRadius;\n\t\t\tvec2 shadowMapSize;\n\t\t\tfloat shadowCameraNear;\n\t\t\tfloat shadowCameraFar;\n\t\t};\n\t\tuniform PointLightShadow pointLightShadows[ NUM_POINT_LIGHT_SHADOWS ];\n\t#endif\n\tfloat texture2DCompare( sampler2D depths, vec2 uv, float compare ) {\n\t\tfloat depth = unpackRGBAToDepth( texture2D( depths, uv ) );\n\t\t#ifdef USE_REVERSED_DEPTH_BUFFER\n\t\t\treturn step( depth, compare );\n\t\t#else\n\t\t\treturn step( compare, depth );\n\t\t#endif\n\t}\n\tvec2 texture2DDistribution( sampler2D shadow, vec2 uv ) {\n\t\treturn unpackRGBATo2Half( texture2D( shadow, uv ) );\n\t}\n\tfloat VSMShadow( sampler2D shadow, vec2 uv, float compare ) {\n\t\tfloat occlusion = 1.0;\n\t\tvec2 distribution = texture2DDistribution( shadow, uv );\n\t\t#ifdef USE_REVERSED_DEPTH_BUFFER\n\t\t\tfloat hard_shadow = step( distribution.x, compare );\n\t\t#else\n\t\t\tfloat hard_shadow = step( compare, distribution.x );\n\t\t#endif\n\t\tif ( hard_shadow != 1.0 ) {\n\t\t\tfloat distance = compare - distribution.x;\n\t\t\tfloat variance = max( 0.00000, distribution.y * distribution.y );\n\t\t\tfloat softness_probability = variance / (variance + distance * distance );\t\t\tsoftness_probability = clamp( ( softness_probability - 0.3 ) / ( 0.95 - 0.3 ), 0.0, 1.0 );\t\t\tocclusion = clamp( max( hard_shadow, softness_probability ), 0.0, 1.0 );\n\t\t}\n\t\treturn occlusion;\n\t}\n\tfloat getShadow( sampler2D shadowMap, vec2 shadowMapSize, float shadowIntensity, float shadowBias, float shadowRadius, vec4 shadowCoord ) {\n\t\tfloat shadow = 1.0;\n\t\tshadowCoord.xyz /= shadowCoord.w;\n\t\tshadowCoord.z += shadowBias;\n\t\tbool inFrustum = shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0;\n\t\tbool frustumTest = inFrustum && shadowCoord.z <= 1.0;\n\t\tif ( frustumTest ) {\n\t\t#if defined( SHADOWMAP_TYPE_PCF )\n\t\t\tvec2 texelSize = vec2( 1.0 ) / shadowMapSize;\n\t\t\tfloat dx0 = - texelSize.x * shadowRadius;\n\t\t\tfloat dy0 = - texelSize.y * shadowRadius;\n\t\t\tfloat dx1 = + texelSize.x * shadowRadius;\n\t\t\tfloat dy1 = + texelSize.y * shadowRadius;\n\t\t\tfloat dx2 = dx0 / 2.0;\n\t\t\tfloat dy2 = dy0 / 2.0;\n\t\t\tfloat dx3 = dx1 / 2.0;\n\t\t\tfloat dy3 = dy1 / 2.0;\n\t\t\tshadow = (\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx0, dy0 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( 0.0, dy0 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx1, dy0 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx2, dy2 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( 0.0, dy2 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx3, dy2 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx0, 0.0 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx2, 0.0 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy, shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx3, 0.0 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx1, 0.0 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx2, dy3 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( 0.0, dy3 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx3, dy3 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx0, dy1 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( 0.0, dy1 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( dx1, dy1 ), shadowCoord.z )\n\t\t\t) * ( 1.0 / 17.0 );\n\t\t#elif defined( SHADOWMAP_TYPE_PCF_SOFT )\n\t\t\tvec2 texelSize = vec2( 1.0 ) / shadowMapSize;\n\t\t\tfloat dx = texelSize.x;\n\t\t\tfloat dy = texelSize.y;\n\t\t\tvec2 uv = shadowCoord.xy;\n\t\t\tvec2 f = fract( uv * shadowMapSize + 0.5 );\n\t\t\tuv -= f * texelSize;\n\t\t\tshadow = (\n\t\t\t\ttexture2DCompare( shadowMap, uv, shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, uv + vec2( dx, 0.0 ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, uv + vec2( 0.0, dy ), shadowCoord.z ) +\n\t\t\t\ttexture2DCompare( shadowMap, uv + texelSize, shadowCoord.z ) +\n\t\t\t\tmix( texture2DCompare( shadowMap, uv + vec2( -dx, 0.0 ), shadowCoord.z ),\n\t\t\t\t\t texture2DCompare( shadowMap, uv + vec2( 2.0 * dx, 0.0 ), shadowCoord.z ),\n\t\t\t\t\t f.x ) +\n\t\t\t\tmix( texture2DCompare( shadowMap, uv + vec2( -dx, dy ), shadowCoord.z ),\n\t\t\t\t\t texture2DCompare( shadowMap, uv + vec2( 2.0 * dx, dy ), shadowCoord.z ),\n\t\t\t\t\t f.x ) +\n\t\t\t\tmix( texture2DCompare( shadowMap, uv + vec2( 0.0, -dy ), shadowCoord.z ),\n\t\t\t\t\t texture2DCompare( shadowMap, uv + vec2( 0.0, 2.0 * dy ), shadowCoord.z ),\n\t\t\t\t\t f.y ) +\n\t\t\t\tmix( texture2DCompare( shadowMap, uv + vec2( dx, -dy ), shadowCoord.z ),\n\t\t\t\t\t texture2DCompare( shadowMap, uv + vec2( dx, 2.0 * dy ), shadowCoord.z ),\n\t\t\t\t\t f.y ) +\n\t\t\t\tmix( mix( texture2DCompare( shadowMap, uv + vec2( -dx, -dy ), shadowCoord.z ),\n\t\t\t\t\t\t  texture2DCompare( shadowMap, uv + vec2( 2.0 * dx, -dy ), shadowCoord.z ),\n\t\t\t\t\t\t  f.x ),\n\t\t\t\t\t mix( texture2DCompare( shadowMap, uv + vec2( -dx, 2.0 * dy ), shadowCoord.z ),\n\t\t\t\t\t\t  texture2DCompare( shadowMap, uv + vec2( 2.0 * dx, 2.0 * dy ), shadowCoord.z ),\n\t\t\t\t\t\t  f.x ),\n\t\t\t\t\t f.y )\n\t\t\t) * ( 1.0 / 9.0 );\n\t\t#elif defined( SHADOWMAP_TYPE_VSM )\n\t\t\tshadow = VSMShadow( shadowMap, shadowCoord.xy, shadowCoord.z );\n\t\t#else\n\t\t\tshadow = texture2DCompare( shadowMap, shadowCoord.xy, shadowCoord.z );\n\t\t#endif\n\t\t}\n\t\treturn mix( 1.0, shadow, shadowIntensity );\n\t}\n\tvec2 cubeToUV( vec3 v, float texelSizeY ) {\n\t\tvec3 absV = abs( v );\n\t\tfloat scaleToCube = 1.0 / max( absV.x, max( absV.y, absV.z ) );\n\t\tabsV *= scaleToCube;\n\t\tv *= scaleToCube * ( 1.0 - 2.0 * texelSizeY );\n\t\tvec2 planar = v.xy;\n\t\tfloat almostATexel = 1.5 * texelSizeY;\n\t\tfloat almostOne = 1.0 - almostATexel;\n\t\tif ( absV.z >= almostOne ) {\n\t\t\tif ( v.z > 0.0 )\n\t\t\t\tplanar.x = 4.0 - v.x;\n\t\t} else if ( absV.x >= almostOne ) {\n\t\t\tfloat signX = sign( v.x );\n\t\t\tplanar.x = v.z * signX + 2.0 * signX;\n\t\t} else if ( absV.y >= almostOne ) {\n\t\t\tfloat signY = sign( v.y );\n\t\t\tplanar.x = v.x + 2.0 * signY + 2.0;\n\t\t\tplanar.y = v.z * signY - 2.0;\n\t\t}\n\t\treturn vec2( 0.125, 0.25 ) * planar + vec2( 0.375, 0.75 );\n\t}\n\tfloat getPointShadow( sampler2D shadowMap, vec2 shadowMapSize, float shadowIntensity, float shadowBias, float shadowRadius, vec4 shadowCoord, float shadowCameraNear, float shadowCameraFar ) {\n\t\tfloat shadow = 1.0;\n\t\tvec3 lightToPosition = shadowCoord.xyz;\n\t\t\n\t\tfloat lightToPositionLength = length( lightToPosition );\n\t\tif ( lightToPositionLength - shadowCameraFar <= 0.0 && lightToPositionLength - shadowCameraNear >= 0.0 ) {\n\t\t\tfloat dp = ( lightToPositionLength - shadowCameraNear ) / ( shadowCameraFar - shadowCameraNear );\t\t\tdp += shadowBias;\n\t\t\tvec3 bd3D = normalize( lightToPosition );\n\t\t\tvec2 texelSize = vec2( 1.0 ) / ( shadowMapSize * vec2( 4.0, 2.0 ) );\n\t\t\t#if defined( SHADOWMAP_TYPE_PCF ) || defined( SHADOWMAP_TYPE_PCF_SOFT ) || defined( SHADOWMAP_TYPE_VSM )\n\t\t\t\tvec2 offset = vec2( - 1, 1 ) * shadowRadius * texelSize.y;\n\t\t\t\tshadow = (\n\t\t\t\t\ttexture2DCompare( shadowMap, cubeToUV( bd3D + offset.xyy, texelSize.y ), dp ) +\n\t\t\t\t\ttexture2DCompare( shadowMap, cubeToUV( bd3D + offset.yyy, texelSize.y ), dp ) +\n\t\t\t\t\ttexture2DCompare( shadowMap, cubeToUV( bd3D + offset.xyx, texelSize.y ), dp ) +\n\t\t\t\t\ttexture2DCompare( shadowMap, cubeToUV( bd3D + offset.yyx, texelSize.y ), dp ) +\n\t\t\t\t\ttexture2DCompare( shadowMap, cubeToUV( bd3D, texelSize.y ), dp ) +\n\t\t\t\t\ttexture2DCompare( shadowMap, cubeToUV( bd3D + offset.xxy, texelSize.y ), dp ) +\n\t\t\t\t\ttexture2DCompare( shadowMap, cubeToUV( bd3D + offset.yxy, texelSize.y ), dp ) +\n\t\t\t\t\ttexture2DCompare( shadowMap, cubeToUV( bd3D + offset.xxx, texelSize.y ), dp ) +\n\t\t\t\t\ttexture2DCompare( shadowMap, cubeToUV( bd3D + offset.yxx, texelSize.y ), dp )\n\t\t\t\t) * ( 1.0 / 9.0 );\n\t\t\t#else\n\t\t\t\tshadow = texture2DCompare( shadowMap, cubeToUV( bd3D, texelSize.y ), dp );\n\t\t\t#endif\n\t\t}\n\t\treturn mix( 1.0, shadow, shadowIntensity );\n\t}\n#endif";
 
 var shadowmap_pars_vertex = "#if NUM_SPOT_LIGHT_COORDS > 0\n\tuniform mat4 spotLightMatrix[ NUM_SPOT_LIGHT_COORDS ];\n\tvarying vec4 vSpotLightCoord[ NUM_SPOT_LIGHT_COORDS ];\n#endif\n#ifdef USE_SHADOWMAP\n\t#if NUM_DIR_LIGHT_SHADOWS > 0\n\t\tuniform mat4 directionalShadowMatrix[ NUM_DIR_LIGHT_SHADOWS ];\n\t\tvarying vec4 vDirectionalShadowCoord[ NUM_DIR_LIGHT_SHADOWS ];\n\t\tstruct DirectionalLightShadow {\n\t\t\tfloat shadowIntensity;\n\t\t\tfloat shadowBias;\n\t\t\tfloat shadowNormalBias;\n\t\t\tfloat shadowRadius;\n\t\t\tvec2 shadowMapSize;\n\t\t};\n\t\tuniform DirectionalLightShadow directionalLightShadows[ NUM_DIR_LIGHT_SHADOWS ];\n\t#endif\n\t#if NUM_SPOT_LIGHT_SHADOWS > 0\n\t\tstruct SpotLightShadow {\n\t\t\tfloat shadowIntensity;\n\t\t\tfloat shadowBias;\n\t\t\tfloat shadowNormalBias;\n\t\t\tfloat shadowRadius;\n\t\t\tvec2 shadowMapSize;\n\t\t};\n\t\tuniform SpotLightShadow spotLightShadows[ NUM_SPOT_LIGHT_SHADOWS ];\n\t#endif\n\t#if NUM_POINT_LIGHT_SHADOWS > 0\n\t\tuniform mat4 pointShadowMatrix[ NUM_POINT_LIGHT_SHADOWS ];\n\t\tvarying vec4 vPointShadowCoord[ NUM_POINT_LIGHT_SHADOWS ];\n\t\tstruct PointLightShadow {\n\t\t\tfloat shadowIntensity;\n\t\t\tfloat shadowBias;\n\t\t\tfloat shadowNormalBias;\n\t\t\tfloat shadowRadius;\n\t\t\tvec2 shadowMapSize;\n\t\t\tfloat shadowCameraNear;\n\t\t\tfloat shadowCameraFar;\n\t\t};\n\t\tuniform PointLightShadow pointLightShadows[ NUM_POINT_LIGHT_SHADOWS ];\n\t#endif\n#endif";
 
@@ -35566,7 +35611,7 @@ const fragment$f = "uniform samplerCube tCube;\nuniform float tFlip;\nuniform fl
 
 const vertex$e = "#include <common>\n#include <batching_pars_vertex>\n#include <uv_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvarying vec2 vHighPrecisionZW;\nvoid main() {\n\t#include <uv_vertex>\n\t#include <batching_vertex>\n\t#include <skinbase_vertex>\n\t#include <morphinstance_vertex>\n\t#ifdef USE_DISPLACEMENTMAP\n\t\t#include <beginnormal_vertex>\n\t\t#include <morphnormal_vertex>\n\t\t#include <skinnormal_vertex>\n\t#endif\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\tvHighPrecisionZW = gl_Position.zw;\n}";
 
-const fragment$e = "#if DEPTH_PACKING == 3200\n\tuniform float opacity;\n#endif\n#include <common>\n#include <packing>\n#include <uv_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <alphatest_pars_fragment>\n#include <alphahash_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvarying vec2 vHighPrecisionZW;\nvoid main() {\n\tvec4 diffuseColor = vec4( 1.0 );\n\t#include <clipping_planes_fragment>\n\t#if DEPTH_PACKING == 3200\n\t\tdiffuseColor.a = opacity;\n\t#endif\n\t#include <map_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <alphahash_fragment>\n\t#include <logdepthbuf_fragment>\n\tfloat fragCoordZ = 0.5 * vHighPrecisionZW[0] / vHighPrecisionZW[1] + 0.5;\n\t#if DEPTH_PACKING == 3200\n\t\tgl_FragColor = vec4( vec3( 1.0 - fragCoordZ ), opacity );\n\t#elif DEPTH_PACKING == 3201\n\t\tgl_FragColor = packDepthToRGBA( fragCoordZ );\n\t#elif DEPTH_PACKING == 3202\n\t\tgl_FragColor = vec4( packDepthToRGB( fragCoordZ ), 1.0 );\n\t#elif DEPTH_PACKING == 3203\n\t\tgl_FragColor = vec4( packDepthToRG( fragCoordZ ), 0.0, 1.0 );\n\t#endif\n}";
+const fragment$e = "#if DEPTH_PACKING == 3200\n\tuniform float opacity;\n#endif\n#include <common>\n#include <packing>\n#include <uv_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <alphatest_pars_fragment>\n#include <alphahash_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvarying vec2 vHighPrecisionZW;\nvoid main() {\n\tvec4 diffuseColor = vec4( 1.0 );\n\t#include <clipping_planes_fragment>\n\t#if DEPTH_PACKING == 3200\n\t\tdiffuseColor.a = opacity;\n\t#endif\n\t#include <map_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <alphahash_fragment>\n\t#include <logdepthbuf_fragment>\n\t#ifdef USE_REVERSED_DEPTH_BUFFER\n\t\tfloat fragCoordZ = vHighPrecisionZW[ 0 ] / vHighPrecisionZW[ 1 ];\n\t#else\n\t\tfloat fragCoordZ = 0.5 * vHighPrecisionZW[ 0 ] / vHighPrecisionZW[ 1 ] + 0.5;\n\t#endif\n\t#if DEPTH_PACKING == 3200\n\t\tgl_FragColor = vec4( vec3( 1.0 - fragCoordZ ), opacity );\n\t#elif DEPTH_PACKING == 3201\n\t\tgl_FragColor = packDepthToRGBA( fragCoordZ );\n\t#elif DEPTH_PACKING == 3202\n\t\tgl_FragColor = vec4( packDepthToRGB( fragCoordZ ), 1.0 );\n\t#elif DEPTH_PACKING == 3203\n\t\tgl_FragColor = vec4( packDepthToRG( fragCoordZ ), 0.0, 1.0 );\n\t#endif\n}";
 
 const vertex$d = "#define DISTANCE\nvarying vec3 vWorldPosition;\n#include <common>\n#include <batching_pars_vertex>\n#include <uv_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\t#include <batching_vertex>\n\t#include <skinbase_vertex>\n\t#include <morphinstance_vertex>\n\t#ifdef USE_DISPLACEMENTMAP\n\t\t#include <beginnormal_vertex>\n\t\t#include <morphnormal_vertex>\n\t\t#include <skinnormal_vertex>\n\t#endif\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <worldpos_vertex>\n\t#include <clipping_planes_vertex>\n\tvWorldPosition = worldPosition.xyz;\n}";
 
@@ -37400,7 +37445,7 @@ function WebGLCapabilities( gl, extensions, parameters, utils ) {
 	}
 
 	const logarithmicDepthBuffer = parameters.logarithmicDepthBuffer === true;
-	const reverseDepthBuffer = parameters.reverseDepthBuffer === true && extensions.has( 'EXT_clip_control' );
+	const reversedDepthBuffer = parameters.reversedDepthBuffer === true && extensions.has( 'EXT_clip_control' );
 
 	const maxTextures = gl.getParameter( gl.MAX_TEXTURE_IMAGE_UNITS );
 	const maxVertexTextures = gl.getParameter( gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS );
@@ -37428,7 +37473,7 @@ function WebGLCapabilities( gl, extensions, parameters, utils ) {
 
 		precision: precision,
 		logarithmicDepthBuffer: logarithmicDepthBuffer,
-		reverseDepthBuffer: reverseDepthBuffer,
+		reversedDepthBuffer: reversedDepthBuffer,
 
 		maxTextures: maxTextures,
 		maxVertexTextures: maxVertexTextures,
@@ -37668,6 +37713,20 @@ class Camera extends Object3D {
 		 * @type {(WebGLCoordinateSystem|WebGPUCoordinateSystem)}
 		 */
 		this.coordinateSystem = WebGLCoordinateSystem;
+
+		this._reversedDepth = false;
+
+	}
+
+	/**
+	 * The flag that indicates whether the camera uses a reversed depth buffer.
+	 *
+	 * @type {boolean}
+	 * @default false
+	 */
+	get reversedDepth() {
+
+		return this._reversedDepth;
 
 	}
 
@@ -38096,7 +38155,7 @@ class PerspectiveCamera extends Camera {
 		const skew = this.filmOffset;
 		if ( skew !== 0 ) left += near * skew / this.getFilmWidth();
 
-		this.projectionMatrix.makePerspective( left, left + width, top, top - height, near, this.far, this.coordinateSystem );
+		this.projectionMatrix.makePerspective( left, left + width, top, top - height, near, this.far, this.coordinateSystem, this.reversedDepth );
 
 		this.projectionMatrixInverse.copy( this.projectionMatrix ).invert();
 
@@ -38920,7 +38979,7 @@ class OrthographicCamera extends Camera {
 
 		}
 
-		this.projectionMatrix.makeOrthographic( left, right, top, bottom, this.near, this.far, this.coordinateSystem );
+		this.projectionMatrix.makeOrthographic( left, right, top, bottom, this.near, this.far, this.coordinateSystem, this.reversedDepth );
 
 		this.projectionMatrixInverse.copy( this.projectionMatrix ).invert();
 
@@ -39269,6 +39328,17 @@ class PMREMGenerator {
 
 		renderer.toneMapping = NoToneMapping;
 		renderer.autoClear = false;
+
+		// https://github.com/mrdoob/three.js/issues/31413#issuecomment-3095966812
+		const reversedDepthBuffer = renderer.state.buffers.depth.getReversed();
+
+		if ( reversedDepthBuffer ) {
+
+			renderer.setRenderTarget( cubeUVRenderTarget );
+			renderer.clearDepth();
+			renderer.setRenderTarget( null );
+
+		}
 
 		const backgroundMaterial = new MeshBasicMaterial( {
 			name: 'PMREM.Background',
@@ -42238,7 +42308,9 @@ function getEncodingComponents( colorSpace ) {
 function getShaderErrors( gl, shader, type ) {
 
 	const status = gl.getShaderParameter( shader, gl.COMPILE_STATUS );
-	const errors = gl.getShaderInfoLog( shader ).trim();
+
+	const shaderInfoLog = gl.getShaderInfoLog( shader ) || '';
+	const errors = shaderInfoLog.trim();
 
 	if ( status && errors === '' ) return '';
 
@@ -42832,8 +42904,8 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 
 			parameters.numLightProbes > 0 ? '#define USE_LIGHT_PROBES' : '',
 
-			parameters.logarithmicDepthBuffer ? '#define USE_LOGDEPTHBUF' : '',
-			parameters.reverseDepthBuffer ? '#define USE_REVERSEDEPTHBUF' : '',
+			parameters.logarithmicDepthBuffer ? '#define USE_LOGARITHMIC_DEPTH_BUFFER' : '',
+			parameters.reversedDepthBuffer ? '#define USE_REVERSED_DEPTH_BUFFER' : '',
 
 			'uniform mat4 modelMatrix;',
 			'uniform mat4 modelViewMatrix;',
@@ -42999,8 +43071,8 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 			parameters.decodeVideoTexture ? '#define DECODE_VIDEO_TEXTURE' : '',
 			parameters.decodeVideoTextureEmissive ? '#define DECODE_VIDEO_TEXTURE_EMISSIVE' : '',
 
-			parameters.logarithmicDepthBuffer ? '#define USE_LOGDEPTHBUF' : '',
-			parameters.reverseDepthBuffer ? '#define USE_REVERSEDEPTHBUF' : '',
+			parameters.logarithmicDepthBuffer ? '#define USE_LOGARITHMIC_DEPTH_BUFFER' : '',
+			parameters.reversedDepthBuffer ? '#define USE_REVERSED_DEPTH_BUFFER' : '',
 
 			'uniform mat4 viewMatrix;',
 			'uniform vec3 cameraPosition;',
@@ -43099,9 +43171,13 @@ function WebGLProgram( renderer, cacheKey, parameters, bindingStates ) {
 		// check for link errors
 		if ( renderer.debug.checkShaderErrors ) {
 
-			const programLog = gl.getProgramInfoLog( program ).trim();
-			const vertexLog = gl.getShaderInfoLog( glVertexShader ).trim();
-			const fragmentLog = gl.getShaderInfoLog( glFragmentShader ).trim();
+			const programInfoLog = gl.getProgramInfoLog( program ) || '';
+			const vertexShaderInfoLog = gl.getShaderInfoLog( glVertexShader ) || '';
+			const fragmentShaderInfoLog = gl.getShaderInfoLog( glFragmentShader ) || '';
+
+			const programLog = programInfoLog.trim();
+			const vertexLog = vertexShaderInfoLog.trim();
+			const fragmentLog = fragmentShaderInfoLog.trim();
 
 			let runnable = true;
 			let haveDiagnostics = true;
@@ -43487,7 +43563,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 		}
 
 		const currentRenderTarget = renderer.getRenderTarget();
-		const reverseDepthBuffer = renderer.state.buffers.depth.getReversed();
+		const reversedDepthBuffer = renderer.state.buffers.depth.getReversed();
 
 		const IS_INSTANCEDMESH = object.isInstancedMesh === true;
 		const IS_BATCHEDMESH = object.isBatchedMesh === true;
@@ -43681,11 +43757,11 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			useFog: material.fog === true,
 			fogExp2: ( !! fog && fog.isFogExp2 ),
 
-			flatShading: material.flatShading === true,
+			flatShading: ( material.flatShading === true && material.wireframe === false ),
 
 			sizeAttenuation: material.sizeAttenuation === true,
 			logarithmicDepthBuffer: logarithmicDepthBuffer,
-			reverseDepthBuffer: reverseDepthBuffer,
+			reversedDepthBuffer: reversedDepthBuffer,
 
 			skinning: object.isSkinnedMesh === true,
 
@@ -43894,6 +43970,8 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			_programLayers.enable( 20 );
 		if ( parameters.batchingColor )
 			_programLayers.enable( 21 );
+		if ( parameters.gradientMap )
+			_programLayers.enable( 22 );
 
 		array.push( _programLayers.mask );
 		_programLayers.disableAll();
@@ -43906,7 +43984,7 @@ function WebGLPrograms( renderer, cubemaps, cubeuvmaps, extensions, capabilities
 			_programLayers.enable( 2 );
 		if ( parameters.logarithmicDepthBuffer )
 			_programLayers.enable( 3 );
-		if ( parameters.reverseDepthBuffer )
+		if ( parameters.reversedDepthBuffer )
 			_programLayers.enable( 4 );
 		if ( parameters.skinning )
 			_programLayers.enable( 5 );
@@ -45147,7 +45225,7 @@ class MeshDepthMaterial extends Material {
  * Can also be used to customize the shadow casting of an object by assigning
  * an instance of `MeshDistanceMaterial` to {@link Object3D#customDistanceMaterial}.
  * The following examples demonstrates this approach in order to ensure
- * transparent parts of objects do no cast shadows.
+ * transparent parts of objects do not cast shadows.
  *
  * @augments Material
  */
@@ -45332,7 +45410,17 @@ function WebGLShadowMap( renderer, objects, capabilities ) {
 
 		// Set GL state for depth map.
 		_state.setBlending( NoBlending );
-		_state.buffers.color.setClear( 1, 1, 1, 1 );
+
+		if ( _state.buffers.depth.getReversed() === true ) {
+
+			_state.buffers.color.setClear( 0, 0, 0, 0 );
+
+		} else {
+
+			_state.buffers.color.setClear( 1, 1, 1, 1 );
+
+		}
+
 		_state.buffers.depth.setTest( true );
 		_state.setScissorTest( false );
 
@@ -46334,7 +46422,7 @@ function WebGLState( gl, extensions ) {
 							break;
 
 						case MultiplyBlending:
-							gl.blendFuncSeparate( gl.ZERO, gl.SRC_COLOR, gl.ZERO, gl.SRC_ALPHA );
+							gl.blendFuncSeparate( gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA, gl.ZERO, gl.ONE );
 							break;
 
 						default:
@@ -46352,15 +46440,15 @@ function WebGLState( gl, extensions ) {
 							break;
 
 						case AdditiveBlending:
-							gl.blendFunc( gl.SRC_ALPHA, gl.ONE );
+							gl.blendFuncSeparate( gl.SRC_ALPHA, gl.ONE, gl.ONE, gl.ONE );
 							break;
 
 						case SubtractiveBlending:
-							gl.blendFuncSeparate( gl.ZERO, gl.ONE_MINUS_SRC_COLOR, gl.ZERO, gl.ONE );
+							console.error( 'THREE.WebGLState: SubtractiveBlending requires material.premultipliedAlpha = true' );
 							break;
 
 						case MultiplyBlending:
-							gl.blendFunc( gl.ZERO, gl.SRC_COLOR );
+							console.error( 'THREE.WebGLState: MultiplyBlending requires material.premultipliedAlpha = true' );
 							break;
 
 						default:
@@ -47122,6 +47210,7 @@ function getTextureTypeByteLength( type ) {
 		case FloatType:
 			return { byteLength: 4, components: 1 };
 		case UnsignedInt5999Type:
+		case UnsignedInt101111Type:
 			return { byteLength: 4, components: 3 };
 
 	}
@@ -47327,6 +47416,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 		if ( glFormat === _gl.RGB ) {
 
 			if ( glType === _gl.UNSIGNED_INT_5_9_9_9_REV ) internalFormat = _gl.RGB9_E5;
+			if ( glType === _gl.UNSIGNED_INT_10F_11F_11F_REV ) internalFormat = _gl.R11F_G11F_B10F;
 
 		}
 
@@ -47641,7 +47731,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		if ( texture.isVideoTexture ) updateVideoTexture( texture );
 
-		if ( texture.isRenderTargetTexture === false && texture.version > 0 && textureProperties.__version !== texture.version ) {
+		if ( texture.isRenderTargetTexture === false && texture.isExternalTexture !== true && texture.version > 0 && textureProperties.__version !== texture.version ) {
 
 			const image = texture.image;
 
@@ -47660,6 +47750,10 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 			}
 
+		} else if ( texture.isExternalTexture ) {
+
+			textureProperties.__webglTexture = texture.sourceTexture ? texture.sourceTexture : null;
+
 		}
 
 		state.bindTexture( _gl.TEXTURE_2D, textureProperties.__webglTexture, _gl.TEXTURE0 + slot );
@@ -47670,7 +47764,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		const textureProperties = properties.get( texture );
 
-		if ( texture.version > 0 && textureProperties.__version !== texture.version ) {
+		if ( texture.isRenderTargetTexture === false && texture.version > 0 && textureProperties.__version !== texture.version ) {
 
 			uploadTexture( textureProperties, texture, slot );
 			return;
@@ -47685,7 +47779,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 
 		const textureProperties = properties.get( texture );
 
-		if ( texture.version > 0 && textureProperties.__version !== texture.version ) {
+		if ( texture.isRenderTargetTexture === false && texture.version > 0 && textureProperties.__version !== texture.version ) {
 
 			uploadTexture( textureProperties, texture, slot );
 			return;
@@ -49128,13 +49222,21 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 				const attachment = textures[ i ];
 				const attachmentProperties = properties.get( attachment );
 
-				state.bindTexture( _gl.TEXTURE_2D, attachmentProperties.__webglTexture );
-				setTextureParameters( _gl.TEXTURE_2D, attachment );
-				setupFrameBufferTexture( renderTargetProperties.__webglFramebuffer, renderTarget, attachment, _gl.COLOR_ATTACHMENT0 + i, _gl.TEXTURE_2D, 0 );
+				let glTextureType = _gl.TEXTURE_2D;
+
+				if ( renderTarget.isWebGL3DRenderTarget || renderTarget.isWebGLArrayRenderTarget ) {
+
+					glTextureType = renderTarget.isWebGL3DRenderTarget ? _gl.TEXTURE_3D : _gl.TEXTURE_2D_ARRAY;
+
+				}
+
+				state.bindTexture( glTextureType, attachmentProperties.__webglTexture );
+				setTextureParameters( glTextureType, attachment );
+				setupFrameBufferTexture( renderTargetProperties.__webglFramebuffer, renderTarget, attachment, _gl.COLOR_ATTACHMENT0 + i, glTextureType, 0 );
 
 				if ( textureNeedsGenerateMipmaps( attachment ) ) {
 
-					generateMipmap( _gl.TEXTURE_2D );
+					generateMipmap( glTextureType );
 
 				}
 
@@ -49460,6 +49562,7 @@ function WebGLUtils( gl, extensions ) {
 		if ( p === UnsignedShort4444Type ) return gl.UNSIGNED_SHORT_4_4_4_4;
 		if ( p === UnsignedShort5551Type ) return gl.UNSIGNED_SHORT_5_5_5_1;
 		if ( p === UnsignedInt5999Type ) return gl.UNSIGNED_INT_5_9_9_9_REV;
+		if ( p === UnsignedInt101111Type ) return gl.UNSIGNED_INT_10F_11F_11F_REV;
 
 		if ( p === ByteType ) return gl.BYTE;
 		if ( p === ShortType ) return gl.SHORT;
@@ -49628,7 +49731,7 @@ function WebGLUtils( gl, extensions ) {
 
 			if ( extension !== null ) {
 
-				if ( p === RGBA_BPTC_Format ) return extension.COMPRESSED_RED_RGTC1_EXT;
+				if ( p === RED_RGTC1_Format ) return extension.COMPRESSED_RED_RGTC1_EXT;
 				if ( p === SIGNED_RED_RGTC1_Format ) return extension.COMPRESSED_SIGNED_RED_RGTC1_EXT;
 				if ( p === RED_GREEN_RGTC2_Format ) return extension.COMPRESSED_RED_GREEN_RGTC2_EXT;
 				if ( p === SIGNED_RED_GREEN_RGTC2_Format ) return extension.COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT;
@@ -50167,6 +50270,59 @@ class WebXRController {
 
 }
 
+/**
+ * Represents a texture created externally with the same renderer context.
+ *
+ * This may be a texture from a protected media stream, device camera feed,
+ * or other data feeds like a depth sensor.
+ *
+ * Note that this class is only supported in {@link WebGLRenderer}, and in
+ * the {@link WebGPURenderer} WebGPU backend.
+ *
+ * @augments Texture
+ */
+class ExternalTexture extends Texture {
+
+	/**
+	 * Creates a new raw texture.
+	 *
+	 * @param {?(WebGLTexture|GPUTexture)} [sourceTexture=null] - The external texture.
+	 */
+	constructor( sourceTexture = null ) {
+
+		super();
+
+		/**
+		 * The external source texture.
+		 *
+		 * @type {?(WebGLTexture|GPUTexture)}
+		 * @default null
+		 */
+		this.sourceTexture = sourceTexture;
+
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
+		this.isExternalTexture = true;
+
+	}
+
+	copy( source ) {
+
+		super.copy( source );
+
+		this.sourceTexture = source.sourceTexture;
+
+		return this;
+
+	}
+
+}
+
 const _occlusion_vertex = `
 void main() {
 
@@ -50206,9 +50362,9 @@ class WebXRDepthSensing {
 	constructor() {
 
 		/**
-		 * A texture representing the depth of the user's environment.
+		 * An opaque texture representing the depth of the user's environment.
 		 *
-		 * @type {?Texture}
+		 * @type {?ExternalTexture}
 		 */
 		this.texture = null;
 
@@ -50238,18 +50394,14 @@ class WebXRDepthSensing {
 	/**
 	 * Inits the depth sensing module
 	 *
-	 * @param {WebGLRenderer} renderer - The renderer.
 	 * @param {XRWebGLDepthInformation} depthData - The XR depth data.
 	 * @param {XRRenderState} renderState - The XR render state.
 	 */
-	init( renderer, depthData, renderState ) {
+	init( depthData, renderState ) {
 
 		if ( this.texture === null ) {
 
-			const texture = new Texture();
-
-			const texProps = renderer.properties.get( texture );
-			texProps.__webglTexture = depthData.texture;
+			const texture = new ExternalTexture( depthData.texture );
 
 			if ( ( depthData.depthNear !== renderState.depthNear ) || ( depthData.depthFar !== renderState.depthFar ) ) {
 
@@ -50310,7 +50462,7 @@ class WebXRDepthSensing {
 	/**
 	 * Returns a texture representing the depth of the user's environment.
 	 *
-	 * @return {?Texture} The depth texture.
+	 * @return {?ExternalTexture} The depth texture.
 	 */
 	getDepthTexture() {
 
@@ -50359,7 +50511,10 @@ class WebXRManager extends EventDispatcher {
 		let glBaseLayer = null;
 		let xrFrame = null;
 
+		const supportsGlBinding = typeof XRWebGLBinding !== 'undefined';
+
 		const depthSensing = new WebXRDepthSensing();
+		const cameraAccessTextures = {};
 		const attributes = gl.getContextAttributes();
 
 		let initialRenderTarget = null;
@@ -50540,6 +50695,11 @@ class WebXRManager extends EventDispatcher {
 			_currentDepthFar = null;
 
 			depthSensing.reset();
+			for ( const key in cameraAccessTextures ) {
+
+				delete cameraAccessTextures[ key ];
+
+			}
 
 			// restore framebuffer/rendering state
 
@@ -50630,6 +50790,9 @@ class WebXRManager extends EventDispatcher {
 		/**
 		 * Returns the current base layer.
 		 *
+		 * This is an `XRProjectionLayer` when the targeted XR device supports the
+		 * WebXR Layers API, or an `XRWebGLLayer` otherwise.
+		 *
 		 * @return {?(XRWebGLLayer|XRProjectionLayer)} The XR base layer.
 		 */
 		this.getBaseLayer = function () {
@@ -50641,9 +50804,18 @@ class WebXRManager extends EventDispatcher {
 		/**
 		 * Returns the current XR binding.
 		 *
-		 * @return {?XRWebGLBinding} The XR binding.
+		 * Creates a new binding if needed and the browser is
+		 * capable of doing so.
+		 *
+		 * @return {?XRWebGLBinding} The XR binding. Returns `null` if one cannot be created.
 		 */
 		this.getBinding = function () {
+
+			if ( glBinding === null && supportsGlBinding ) {
+
+				glBinding = new XRWebGLBinding( session, gl );
+
+			}
 
 			return glBinding;
 
@@ -50706,11 +50878,12 @@ class WebXRManager extends EventDispatcher {
 				currentPixelRatio = renderer.getPixelRatio();
 				renderer.getSize( currentSize );
 
+
 				// Check that the browser implements the necessary APIs to use an
 				// XRProjectionLayer rather than an XRWebGLLayer
-				const useLayers = typeof XRWebGLBinding !== 'undefined' && 'createProjectionLayer' in XRWebGLBinding.prototype;
+				const supportsLayers = supportsGlBinding && 'createProjectionLayer' in XRWebGLBinding.prototype;
 
-				if ( ! useLayers ) {
+				if ( ! supportsLayers ) {
 
 					const layerInit = {
 						antialias: attributes.antialias,
@@ -50761,7 +50934,7 @@ class WebXRManager extends EventDispatcher {
 						scaleFactor: framebufferScaleFactor
 					};
 
-					glBinding = new XRWebGLBinding( session, gl );
+					glBinding = this.getBinding();
 
 					glProjLayer = glBinding.createProjectionLayer( projectionlayerInit );
 
@@ -50821,6 +50994,8 @@ class WebXRManager extends EventDispatcher {
 
 		/**
 		 * Returns the current depth texture computed via depth sensing.
+		 *
+		 * See {@link WebXRDepthSensing#getDepthTexture}.
 		 *
 		 * @return {?Texture} The depth texture.
 		 */
@@ -50992,7 +51167,7 @@ class WebXRManager extends EventDispatcher {
 
 		/**
 		 * Updates the state of the XR camera. Use this method on app level if you
-		 * set cameraAutoUpdate` to `false`. The method requires the non-XR
+		 * set `cameraAutoUpdate` to `false`. The method requires the non-XR
 		 * camera of the scene as a parameter. The passed in camera's transformation
 		 * is automatically adjusted to the position of the XR camera when calling
 		 * this method.
@@ -51030,9 +51205,10 @@ class WebXRManager extends EventDispatcher {
 
 			}
 
-			cameraL.layers.mask = camera.layers.mask | 0b010;
-			cameraR.layers.mask = camera.layers.mask | 0b100;
-			cameraXR.layers.mask = cameraL.layers.mask | cameraR.layers.mask;
+			// inherit camera layers and enable eye layers (1 = left, 2 = right)
+			cameraXR.layers.mask = camera.layers.mask | 0b110;
+			cameraL.layers.mask = cameraXR.layers.mask & 0b011;
+			cameraR.layers.mask = cameraXR.layers.mask & 0b101;
 
 			const parent = camera.parent;
 			const cameras = cameraXR.cameras;
@@ -51113,7 +51289,7 @@ class WebXRManager extends EventDispatcher {
 		/**
 		 * Returns the amount of foveation used by the XR compositor for the projection layer.
 		 *
-		 * @return {number} The amount of foveation.
+		 * @return {number|undefined} The amount of foveation.
 		 */
 		this.getFoveation = function () {
 
@@ -51168,11 +51344,26 @@ class WebXRManager extends EventDispatcher {
 		/**
 		 * Returns the depth sensing mesh.
 		 *
+		 * See {@link WebXRDepthSensing#getMesh}.
+		 *
 		 * @return {Mesh} The depth sensing mesh.
 		 */
 		this.getDepthSensingMesh = function () {
 
 			return depthSensing.getMesh( cameraXR );
+
+		};
+
+		/**
+		 * Retrieves an opaque texture from the view-aligned {@link XRCamera}.
+		 * Only available during the current animation loop.
+		 *
+		 * @param {XRCamera} xrCamera - The camera to query.
+		 * @return {?Texture} An opaque texture representing the current raw camera frame.
+		 */
+		this.getCameraTexture = function ( xrCamera ) {
+
+			return cameraAccessTextures[ xrCamera ];
 
 		};
 
@@ -51275,13 +51466,48 @@ class WebXRManager extends EventDispatcher {
 					enabledFeatures.includes( 'depth-sensing' ) &&
 					session.depthUsage == 'gpu-optimized';
 
-				if ( gpuDepthSensingEnabled && glBinding ) {
+				if ( gpuDepthSensingEnabled && supportsGlBinding ) {
+
+					glBinding = scope.getBinding();
 
 					const depthData = glBinding.getDepthInformation( views[ 0 ] );
 
 					if ( depthData && depthData.isValid && depthData.texture ) {
 
-						depthSensing.init( renderer, depthData, session.renderState );
+						depthSensing.init( depthData, session.renderState );
+
+					}
+
+				}
+
+				const cameraAccessEnabled = enabledFeatures &&
+				    enabledFeatures.includes( 'camera-access' );
+
+				if ( cameraAccessEnabled && supportsGlBinding ) {
+
+					renderer.state.unbindTexture();
+
+					glBinding = scope.getBinding();
+
+					for ( let i = 0; i < views.length; i ++ ) {
+
+						const camera = views[ i ].camera;
+
+						if ( camera ) {
+
+							let cameraTex = cameraAccessTextures[ camera ];
+
+							if ( ! cameraTex ) {
+
+								cameraTex = new ExternalTexture();
+								cameraAccessTextures[ camera ] = cameraTex;
+
+							}
+
+							const glTexture = glBinding.getCameraImage( camera );
+							cameraTex.sourceTexture = glTexture;
+
+						}
 
 					}
 
@@ -52332,7 +52558,7 @@ class WebGLRenderer {
 			preserveDrawingBuffer = false,
 			powerPreference = 'default',
 			failIfMajorPerformanceCaveat = false,
-			reverseDepthBuffer = false,
+			reversedDepthBuffer = false,
 		} = parameters;
 
 		/**
@@ -52565,7 +52791,6 @@ class WebGLRenderer {
 
 		// camera matrices cache
 
-		const _currentProjectionMatrix = new Matrix4();
 		const _projScreenMatrix = new Matrix4();
 
 		const _vector3 = new Vector3();
@@ -52661,7 +52886,7 @@ class WebGLRenderer {
 
 			state = new WebGLState( _gl, extensions );
 
-			if ( capabilities.reverseDepthBuffer && reverseDepthBuffer ) {
+			if ( capabilities.reversedDepthBuffer && reversedDepthBuffer ) {
 
 				state.buffers.depth.setReversed( true );
 
@@ -53809,7 +54034,7 @@ class WebGLRenderer {
 			renderStateStack.push( currentRenderState );
 
 			_projScreenMatrix.multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse );
-			_frustum.setFromProjectionMatrix( _projScreenMatrix );
+			_frustum.setFromProjectionMatrix( _projScreenMatrix, WebGLCoordinateSystem, camera.reversedDepth );
 
 			_localClippingEnabled = this.localClippingEnabled;
 			_clippingEnabled = clipping.init( this.clippingPlanes, _localClippingEnabled );
@@ -54142,6 +54367,9 @@ class WebGLRenderer {
 			//
 
 			const currentRenderTarget = _this.getRenderTarget();
+			const currentActiveCubeFace = _this.getActiveCubeFace();
+			const currentActiveMipmapLevel = _this.getActiveMipmapLevel();
+
 			_this.setRenderTarget( transmissionRenderTarget );
 
 			_this.getClearColor( _currentClearColor );
@@ -54211,7 +54439,7 @@ class WebGLRenderer {
 
 			}
 
-			_this.setRenderTarget( currentRenderTarget );
+			_this.setRenderTarget( currentRenderTarget, currentActiveCubeFace, currentActiveMipmapLevel );
 
 			_this.setClearColor( _currentClearColor, _currentClearAlpha );
 
@@ -54629,22 +54857,16 @@ class WebGLRenderer {
 
 				// common camera uniforms
 
-				const reverseDepthBuffer = state.buffers.depth.getReversed();
+				const reversedDepthBuffer = state.buffers.depth.getReversed();
 
-				if ( reverseDepthBuffer ) {
+				if ( reversedDepthBuffer && camera.reversedDepth !== true ) {
 
-					_currentProjectionMatrix.copy( camera.projectionMatrix );
-
-					toNormalizedProjectionMatrix( _currentProjectionMatrix );
-					toReversedProjectionMatrix( _currentProjectionMatrix );
-
-					p_uniforms.setValue( _gl, 'projectionMatrix', _currentProjectionMatrix );
-
-				} else {
-
-					p_uniforms.setValue( _gl, 'projectionMatrix', camera.projectionMatrix );
+					camera._reversedDepth = true;
+					camera.updateProjectionMatrix();
 
 				}
+
+				p_uniforms.setValue( _gl, 'projectionMatrix', camera.projectionMatrix );
 
 				p_uniforms.setValue( _gl, 'viewMatrix', camera.matrixWorldInverse );
 
@@ -55067,9 +55289,15 @@ class WebGLRenderer {
 
 			} else if ( isRenderTarget3D ) {
 
-				const textureProperties = properties.get( renderTarget.texture );
 				const layer = activeCubeFace;
-				_gl.framebufferTextureLayer( _gl.FRAMEBUFFER, _gl.COLOR_ATTACHMENT0, textureProperties.__webglTexture, activeMipmapLevel, layer );
+
+				for ( let i = 0; i < renderTarget.textures.length; i ++ ) {
+
+					const textureProperties = properties.get( renderTarget.textures[ i ] );
+
+					_gl.framebufferTextureLayer( _gl.FRAMEBUFFER, _gl.COLOR_ATTACHMENT0 + i, textureProperties.__webglTexture, activeMipmapLevel, layer );
+
+				}
 
 			} else if ( renderTarget !== null && activeMipmapLevel !== 0 ) {
 
@@ -55141,7 +55369,7 @@ class WebGLRenderer {
 
 					if ( ( x >= 0 && x <= ( renderTarget.width - width ) ) && ( y >= 0 && y <= ( renderTarget.height - height ) ) ) {
 
-						// when using MRT, select the corect color buffer for the subsequent read command
+						// when using MRT, select the correct color buffer for the subsequent read command
 
 						if ( renderTarget.textures.length > 1 ) _gl.readBuffer( _gl.COLOR_ATTACHMENT0 + textureIndex );
 
@@ -55221,7 +55449,7 @@ class WebGLRenderer {
 					_gl.bindBuffer( _gl.PIXEL_PACK_BUFFER, glBuffer );
 					_gl.bufferData( _gl.PIXEL_PACK_BUFFER, buffer.byteLength, _gl.STREAM_READ );
 
-					// when using MRT, select the corect color buffer for the subsequent read command
+					// when using MRT, select the correct color buffer for the subsequent read command
 
 					if ( renderTarget.textures.length > 1 ) _gl.readBuffer( _gl.COLOR_ATTACHMENT0 + textureIndex );
 
@@ -55545,15 +55773,6 @@ class WebGLRenderer {
 			}
 
 			state.unbindTexture();
-
-		};
-
-		this.copyTextureToTexture3D = function ( srcTexture, dstTexture, srcRegion = null, dstPosition = null, level = 0 ) {
-
-			// @deprecated, r170
-			warnOnce( 'WebGLRenderer: copyTextureToTexture3D function has been deprecated. Use "copyTextureToTexture" instead.' );
-
-			return this.copyTextureToTexture( srcTexture, dstTexture, srcRegion, dstPosition, level );
 
 		};
 
@@ -60098,11 +60317,11 @@ let Path$1 = class Path extends CurvePath {
 	 * Adds an arc as an instance of {@link EllipseCurve} to the path, positioned relative
 	 * to the current point.
 	 *
-	 * @param {number} aX - The x coordinate of the center of the arc offsetted from the previous curve.
-	 * @param {number} aY - The y coordinate of the center of the arc offsetted from the previous curve.
-	 * @param {number} aRadius - The radius of the arc.
-	 * @param {number} aStartAngle - The start angle in radians.
-	 * @param {number} aEndAngle - The end angle in radians.
+	 * @param {number} [aX=0] - The x coordinate of the center of the arc offsetted from the previous curve.
+	 * @param {number} [aY=0] - The y coordinate of the center of the arc offsetted from the previous curve.
+	 * @param {number} [aRadius=1] - The radius of the arc.
+	 * @param {number} [aStartAngle=0] - The start angle in radians.
+	 * @param {number} [aEndAngle=Math.PI*2] - The end angle in radians.
 	 * @param {boolean} [aClockwise=false] - Whether to sweep the arc clockwise or not.
 	 * @return {Path} A reference to this path.
 	 */
@@ -60121,11 +60340,11 @@ let Path$1 = class Path extends CurvePath {
 	/**
 	 * Adds an absolutely positioned arc as an instance of {@link EllipseCurve} to the path.
 	 *
-	 * @param {number} aX - The x coordinate of the center of the arc.
-	 * @param {number} aY - The y coordinate of the center of the arc.
-	 * @param {number} aRadius - The radius of the arc.
-	 * @param {number} aStartAngle - The start angle in radians.
-	 * @param {number} aEndAngle - The end angle in radians.
+	 * @param {number} [aX=0] - The x coordinate of the center of the arc.
+	 * @param {number} [aY=0] - The y coordinate of the center of the arc.
+	 * @param {number} [aRadius=1] - The radius of the arc.
+	 * @param {number} [aStartAngle=0] - The start angle in radians.
+	 * @param {number} [aEndAngle=Math.PI*2] - The end angle in radians.
 	 * @param {boolean} [aClockwise=false] - Whether to sweep the arc clockwise or not.
 	 * @return {Path} A reference to this path.
 	 */
@@ -60141,12 +60360,12 @@ let Path$1 = class Path extends CurvePath {
 	 * Adds an ellipse as an instance of {@link EllipseCurve} to the path, positioned relative
 	 * to the current point
 	 *
-	 * @param {number} aX - The x coordinate of the center of the ellipse offsetted from the previous curve.
-	 * @param {number} aY - The y coordinate of the center of the ellipse offsetted from the previous curve.
-	 * @param {number} xRadius - The radius of the ellipse in the x axis.
-	 * @param {number} yRadius - The radius of the ellipse in the y axis.
-	 * @param {number} aStartAngle - The start angle in radians.
-	 * @param {number} aEndAngle - The end angle in radians.
+	 * @param {number} [aX=0] - The x coordinate of the center of the ellipse offsetted from the previous curve.
+	 * @param {number} [aY=0] - The y coordinate of the center of the ellipse offsetted from the previous curve.
+	 * @param {number} [xRadius=1] - The radius of the ellipse in the x axis.
+	 * @param {number} [yRadius=1] - The radius of the ellipse in the y axis.
+	 * @param {number} [aStartAngle=0] - The start angle in radians.
+	 * @param {number} [aEndAngle=Math.PI*2] - The end angle in radians.
 	 * @param {boolean} [aClockwise=false] - Whether to sweep the ellipse clockwise or not.
 	 * @param {number} [aRotation=0] - The rotation angle of the ellipse in radians, counterclockwise from the positive X axis.
 	 * @return {Path} A reference to this path.
@@ -60165,12 +60384,12 @@ let Path$1 = class Path extends CurvePath {
 	/**
 	 * Adds an absolutely positioned ellipse as an instance of {@link EllipseCurve} to the path.
 	 *
-	 * @param {number} aX - The x coordinate of the absolute center of the ellipse.
-	 * @param {number} aY - The y coordinate of the absolute center of the ellipse.
-	 * @param {number} xRadius - The radius of the ellipse in the x axis.
-	 * @param {number} yRadius - The radius of the ellipse in the y axis.
-	 * @param {number} aStartAngle - The start angle in radians.
-	 * @param {number} aEndAngle - The end angle in radians.
+	 * @param {number} [aX=0] - The x coordinate of the absolute center of the ellipse.
+	 * @param {number} [aY=0] - The y coordinate of the absolute center of the ellipse.
+	 * @param {number} [xRadius=1] - The radius of the ellipse in the x axis.
+	 * @param {number} [yRadius=1] - The radius of the ellipse in the y axis.
+	 * @param {number} [aStartAngle=0] - The start angle in radians.
+	 * @param {number} [aEndAngle=Math.PI*2] - The end angle in radians.
 	 * @param {boolean} [aClockwise=false] - Whether to sweep the ellipse clockwise or not.
 	 * @param {number} [aRotation=0] - The rotation angle of the ellipse in radians, counterclockwise from the positive X axis.
 	 * @return {Path} A reference to this path.
@@ -60882,7 +61101,7 @@ function pointInTriangleExceptFirst(ax, ay, bx, by, cx, cy, px, py) {
 
 // check if a diagonal between two polygon nodes is valid (lies in polygon interior)
 function isValidDiagonal(a, b) {
-    return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) && // dones't intersect other edges
+    return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) && // doesn't intersect other edges
            (locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b) && // locally visible
             (area(a.prev, a, b.prev) || area(a, b.prev, b)) || // does not create opposite-facing sectors
             equals(a, b) && area(a.prev, a, a.next) > 0 && area(b.prev, b, b.next) > 0); // special zero-length case
@@ -64886,6 +65105,13 @@ class LoadingManager {
 		this.onError = onError;
 
 		/**
+		 * Used for aborting ongoing requests in loaders using this manager.
+		 *
+		 * @type {AbortController}
+		 */
+		this.abortController = new AbortController();
+
+		/**
 		 * This should be called by any loader using the manager when the loader
 		 * starts loading an item.
 		 *
@@ -65085,6 +65311,22 @@ class LoadingManager {
 
 		};
 
+		/**
+		 * Can be used to abort ongoing loading requests in loaders using this manager.
+		 * The abort only works if the loaders implement {@link Loader#abort} and `AbortSignal.any()`
+		 * is supported in the browser.
+		 *
+		 * @return {LoadingManager} A reference to this loading manager.
+		 */
+		this.abort = function () {
+
+			this.abortController.abort();
+			this.abortController = new AbortController();
+
+			return this;
+
+		};
+
 	}
 
 }
@@ -65164,6 +65406,7 @@ class Loader {
 	 * This method needs to be implemented by all concrete loaders. It holds the
 	 * logic for loading assets from the backend.
 	 *
+	 * @abstract
 	 * @param {string} url - The path/URL of the file to be loaded.
 	 * @param {Function} onLoad - Executed when the loading process has been finished.
 	 * @param {onProgressCallback} [onProgress] - Executed while the loading is in progress.
@@ -65194,6 +65437,7 @@ class Loader {
 	 * This method needs to be implemented by all concrete loaders. It holds the
 	 * logic for parsing the asset into three.js entities.
 	 *
+	 * @abstract
 	 * @param {any} data - The data to parse.
 	 */
 	parse( /* data */ ) {}
@@ -65268,6 +65512,18 @@ class Loader {
 
 	}
 
+	/**
+	 * This method can be implemented in loaders for aborting ongoing requests.
+	 *
+	 * @abstract
+	 * @return {Loader} A reference to this instance.
+	 */
+	abort() {
+
+		return this;
+
+	}
+
 }
 
 /**
@@ -65295,6 +65551,8 @@ class Loader {
  * @default '__DEFAULT'
  */
 Loader.DEFAULT_MATERIAL_NAME = '__DEFAULT';
+
+const _loading = new WeakMap();
 
 /**
  * A loader for loading images. The class loads images with the HTML `Image` API.
@@ -65342,19 +65600,36 @@ class ImageLoader extends Loader {
 
 		const scope = this;
 
-		const cached = Cache.get( url );
+		const cached = Cache.get( `image:${url}` );
 
 		if ( cached !== undefined ) {
 
-			scope.manager.itemStart( url );
+			if ( cached.complete === true ) {
 
-			setTimeout( function () {
+				scope.manager.itemStart( url );
 
-				if ( onLoad ) onLoad( cached );
+				setTimeout( function () {
 
-				scope.manager.itemEnd( url );
+					if ( onLoad ) onLoad( cached );
 
-			}, 0 );
+					scope.manager.itemEnd( url );
+
+				}, 0 );
+
+			} else {
+
+				let arr = _loading.get( cached );
+
+				if ( arr === undefined ) {
+
+					arr = [];
+					_loading.set( cached, arr );
+
+				}
+
+				arr.push( { onLoad, onError } );
+
+			}
 
 			return cached;
 
@@ -65366,9 +65641,20 @@ class ImageLoader extends Loader {
 
 			removeEventListeners();
 
-			Cache.add( url, this );
-
 			if ( onLoad ) onLoad( this );
+
+			//
+
+			const callbacks = _loading.get( this ) || [];
+
+			for ( let i = 0; i < callbacks.length; i ++ ) {
+
+				const callback = callbacks[ i ];
+				if ( callback.onLoad ) callback.onLoad( this );
+
+			}
+
+			_loading.delete( this );
 
 			scope.manager.itemEnd( url );
 
@@ -65379,6 +65665,22 @@ class ImageLoader extends Loader {
 			removeEventListeners();
 
 			if ( onError ) onError( event );
+
+			Cache.remove( `image:${url}` );
+
+			//
+
+			const callbacks = _loading.get( this ) || [];
+
+			for ( let i = 0; i < callbacks.length; i ++ ) {
+
+				const callback = callbacks[ i ];
+				if ( callback.onError ) callback.onError( event );
+
+			}
+
+			_loading.delete( this );
+
 
 			scope.manager.itemError( url );
 			scope.manager.itemEnd( url );
@@ -65401,6 +65703,7 @@ class ImageLoader extends Loader {
 
 		}
 
+		Cache.add( `image:${url}`, image );
 		scope.manager.itemStart( url );
 
 		image.src = url;
@@ -65830,14 +66133,27 @@ class LightShadow {
 		shadowCamera.updateMatrixWorld();
 
 		_projScreenMatrix$1.multiplyMatrices( shadowCamera.projectionMatrix, shadowCamera.matrixWorldInverse );
-		this._frustum.setFromProjectionMatrix( _projScreenMatrix$1 );
+		this._frustum.setFromProjectionMatrix( _projScreenMatrix$1, shadowCamera.coordinateSystem, shadowCamera.reversedDepth );
 
-		shadowMatrix.set(
-			0.5, 0.0, 0.0, 0.5,
-			0.0, 0.5, 0.0, 0.5,
-			0.0, 0.0, 0.5, 0.5,
-			0.0, 0.0, 0.0, 1.0
-		);
+		if ( shadowCamera.reversedDepth ) {
+
+			shadowMatrix.set(
+				0.5, 0.0, 0.0, 0.5,
+				0.0, 0.5, 0.0, 0.5,
+				0.0, 0.0, 1.0, 0.0,
+				0.0, 0.0, 0.0, 1.0
+			);
+
+		} else {
+
+			shadowMatrix.set(
+				0.5, 0.0, 0.0, 0.5,
+				0.0, 0.5, 0.0, 0.5,
+				0.0, 0.0, 0.5, 0.5,
+				0.0, 0.0, 0.0, 1.0
+			);
+
+		}
 
 		shadowMatrix.multiply( _projScreenMatrix$1 );
 
@@ -66428,7 +66744,7 @@ class Clock {
 	 */
 	start() {
 
-		this.startTime = now();
+		this.startTime = performance.now();
 
 		this.oldTime = this.startTime;
 		this.elapsedTime = 0;
@@ -66477,7 +66793,7 @@ class Clock {
 
 		if ( this.running ) {
 
-			const newTime = now();
+			const newTime = performance.now();
 
 			diff = ( newTime - this.oldTime ) / 1000;
 			this.oldTime = newTime;
@@ -66489,12 +66805,6 @@ class Clock {
 		return diff;
 
 	}
-
-}
-
-function now() {
-
-	return performance.now();
 
 }
 
@@ -66605,8 +66915,8 @@ class Spherical {
 	 * Sets the spherical components from the given Cartesian coordinates.
 	 *
 	 * @param {number} x - The x value.
-	 * @param {number} y - The x value.
-	 * @param {number} z - The x value.
+	 * @param {number} y - The y value.
+	 * @param {number} z - The z value.
 	 * @return {Spherical} A reference to this spherical.
 	 */
 	setFromCartesianCoords( x, y, z ) {
@@ -67023,6 +67333,12 @@ class Box2 {
 const _startP = /*@__PURE__*/ new Vector3();
 const _startEnd = /*@__PURE__*/ new Vector3();
 
+const _d1 = /*@__PURE__*/ new Vector3();
+const _d2 = /*@__PURE__*/ new Vector3();
+const _r = /*@__PURE__*/ new Vector3();
+const _c1 = /*@__PURE__*/ new Vector3();
+const _c2 = /*@__PURE__*/ new Vector3();
+
 /**
  * An analytical line segment in 3D space represented by a start and end point.
  */
@@ -67170,11 +67486,11 @@ class Line3 {
 	}
 
 	/**
-	 * Returns the closets point on the line for a given point.
+	 * Returns the closest point on the line for a given point.
 	 *
 	 * @param {Vector3} point - The point to compute the closest point on the line for.
 	 * @param {boolean} clampToLine - Whether to clamp the result to the range `[0,1]` or not.
-	 * @param {Vector3} target -  The target vector that is used to store the method's result.
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
 	 * @return {Vector3} The closest point on the line.
 	 */
 	closestPointToPoint( point, clampToLine, target ) {
@@ -67182,6 +67498,127 @@ class Line3 {
 		const t = this.closestPointToPointParameter( point, clampToLine );
 
 		return this.delta( target ).multiplyScalar( t ).add( this.start );
+
+	}
+
+	/**
+	 * Returns the closest squared distance between this line segment and the given one.
+	 *
+	 * @param {Line3} line - The line segment to compute the closest squared distance to.
+	 * @param {Vector3} [c1] - The closest point on this line segment.
+	 * @param {Vector3} [c2] - The closest point on the given line segment.
+	 * @return {number} The squared distance between this line segment and the given one.
+	 */
+	distanceSqToLine3( line, c1 = _c1, c2 = _c2 ) {
+
+		// from Real-Time Collision Detection by Christer Ericson, chapter 5.1.9
+
+		// Computes closest points C1 and C2 of S1(s)=P1+s*(Q1-P1) and
+		// S2(t)=P2+t*(Q2-P2), returning s and t. Function result is squared
+		// distance between between S1(s) and S2(t)
+
+		const EPSILON = 1e-8 * 1e-8; // must be squared since we compare squared length
+		let s, t;
+
+		const p1 = this.start;
+		const p2 = line.start;
+		const q1 = this.end;
+		const q2 = line.end;
+
+		_d1.subVectors( q1, p1 ); // Direction vector of segment S1
+		_d2.subVectors( q2, p2 ); // Direction vector of segment S2
+		_r.subVectors( p1, p2 );
+
+		const a = _d1.dot( _d1 ); // Squared length of segment S1, always nonnegative
+		const e = _d2.dot( _d2 ); // Squared length of segment S2, always nonnegative
+		const f = _d2.dot( _r );
+
+		// Check if either or both segments degenerate into points
+
+		if ( a <= EPSILON && e <= EPSILON ) {
+
+			// Both segments degenerate into points
+
+			c1.copy( p1 );
+			c2.copy( p2 );
+
+			c1.sub( c2 );
+
+			return c1.dot( c1 );
+
+		}
+
+		if ( a <= EPSILON ) {
+
+			// First segment degenerates into a point
+
+			s = 0;
+			t = f / e; // s = 0 => t = (b*s + f) / e = f / e
+			t = clamp( t, 0, 1 );
+
+
+		} else {
+
+			const c = _d1.dot( _r );
+
+			if ( e <= EPSILON ) {
+
+				// Second segment degenerates into a point
+
+				t = 0;
+				s = clamp( - c / a, 0, 1 ); // t = 0 => s = (b*t - c) / a = -c / a
+
+			} else {
+
+				// The general nondegenerate case starts here
+
+				const b = _d1.dot( _d2 );
+				const denom = a * e - b * b; // Always nonnegative
+
+				// If segments not parallel, compute closest point on L1 to L2 and
+				// clamp to segment S1. Else pick arbitrary s (here 0)
+
+				if ( denom !== 0 ) {
+
+					s = clamp( ( b * f - c * e ) / denom, 0, 1 );
+
+				} else {
+
+					s = 0;
+
+				}
+
+				// Compute point on L2 closest to S1(s) using
+				// t = Dot((P1 + D1*s) - P2,D2) / Dot(D2,D2) = (b*s + f) / e
+
+				t = ( b * s + f ) / e;
+
+				// If t in [0,1] done. Else clamp t, recompute s for the new value
+				// of t using s = Dot((P2 + D2*t) - P1,D1) / Dot(D1,D1)= (t*b - c) / a
+				// and clamp s to [0, 1]
+
+				if ( t < 0 ) {
+
+					t = 0.;
+					s = clamp( - c / a, 0, 1 );
+
+				} else if ( t > 1 ) {
+
+					t = 1;
+					s = clamp( ( b - c ) / a, 0, 1 );
+
+				}
+
+			}
+
+		}
+
+		c1.copy( p1 ).add( _d1.multiplyScalar( s ) );
+		c2.copy( p2 ).add( _d2.multiplyScalar( t ) );
+
+		c1.sub( c2 );
+
+		return c1.dot( c1 );
 
 	}
 
@@ -74885,7 +75322,7 @@ function erfc(a) {
 
    z = -a * a;
 
-   if (z < -709.782712893384)
+   if (z < -kMAXLOG)
       return (a < 0) ? 2.0 : 0.0;
 
    z = Math.exp(z);
@@ -75197,7 +75634,7 @@ function igamc(a,x) {
       return (1.0 - igam(a,x));
 
    let ax = a * Math.log(x) - x - lgam(a);
-   if ( ax < -709.782712893384 )
+   if ( ax < -kMAXLOG )
       return 0.0;
 
    ax = Math.exp(ax);
@@ -75258,7 +75695,7 @@ function igam(a, x) {
 
    /* Compute  x**a * exp(-x) / gamma(a)  */
    let ax = a * Math.log(x) - x - lgam(a);
-   if ( ax < -709.782712893384 )
+   if ( ax < -kMAXLOG )
       return 0.0;
 
    ax = Math.exp(ax);
@@ -75316,7 +75753,7 @@ function igami(a, y0) {
       }
       /* compute the derivative of the function at this point */
       d = (a - 1.0) * Math.log(x) - x - lgm;
-      if ( d < -709.782712893384 )
+      if ( d < -kMAXLOG )
          break;
       d = -Math.exp(d);
       /* compute the step to the next approximation of x */
@@ -84045,7 +84482,6 @@ class GridDisplay extends MDIDisplay {
          } else
             sizex = sizey = parseInt(kind);
 
-
          if (!Number.isInteger(sizex)) sizex = 3;
          if (!Number.isInteger(sizey)) sizey = 3;
 
@@ -84144,7 +84580,6 @@ class GridDisplay extends MDIDisplay {
          } else
             elem.style('display', 'flex').style('flex-direction', handle.vertical ? 'row' : 'column');
 
-
          if (childs && (childs[cnt] > 1)) {
             group.vertical = !handle.vertical;
             group.groups = [];
@@ -84218,7 +84653,7 @@ class GridDisplay extends MDIDisplay {
          if (Math.abs(diff) < 0.3) return; // if no significant change, do nothing
 
          // do not change if size too small
-         if (Math.min(handle.groups[id-1].size - diff, group.size+diff) < 3) return;
+         if (Math.min(handle.groups[id-1].size - diff, group.size + diff) < 3) return;
 
          handle.groups[id-1].size -= diff;
          group.size += diff;
@@ -84296,16 +84731,12 @@ class GridDisplay extends MDIDisplay {
          main.on('touchmove', () => {});
    }
 
-
    /** @summary Call function for each frame */
    forEachFrame(userfunc) {
       if (this.simple_layout)
          userfunc(this.getGridFrame());
-      else {
-         this.selectDom().selectAll('.jsroot_newgrid').each(function() {
-            userfunc(this);
-         });
-      }
+      else
+         this.selectDom().selectAll('.jsroot_newgrid').each(function() { userfunc(this); });
    }
 
    /** @summary Returns active frame */
@@ -84329,7 +84760,8 @@ class GridDisplay extends MDIDisplay {
          return this.selectDom('origin').node();
       let res = null;
       this.selectDom().selectAll('.jsroot_newgrid').each(function() {
-         if (id-- === 0) res = this;
+         if (id-- === 0)
+            res = this;
       });
       return res;
    }
@@ -84384,7 +84816,8 @@ class TabsDisplay extends MDIDisplay {
 
    /** @summary call function for each frame */
    forEachFrame(userfunc, only_visible) {
-      if (!isFunc(userfunc)) return;
+      if (!isFunc(userfunc))
+         return;
 
       if (only_visible) {
          const active = this.getActiveFrame();
@@ -84402,13 +84835,13 @@ class TabsDisplay extends MDIDisplay {
    /** @summary modify tab state by id */
    modifyTabsFrame(frame_id, action) {
       const top = this.selectDom().select('.jsroot_tabs'),
-          labels = top.select('.jsroot_tabs_labels'),
-          main = top.select('.jsroot_tabs_main');
+            labels = top.select('.jsroot_tabs_labels'),
+            main = top.select('.jsroot_tabs_main');
 
       labels.selectAll('.jsroot_tabs_label').each(function() {
          const id = select(this).property('frame_id'),
-             is_same = (id === frame_id),
-             active_color = settings.DarkMode ? '#333' : 'white';
+               is_same = (id === frame_id),
+               active_color = settings.DarkMode ? '#333' : 'white';
 
          if (action === 'activate') {
             select(this).style('background', is_same ? active_color : (settings.DarkMode ? 'black' : '#ddd'))
@@ -84740,26 +85173,26 @@ class FlexibleDisplay extends MDIDisplay {
                 '<div class=\'jsroot_flex_resize\' style=\'position: absolute; right: 3px; bottom: 1px; overflow: hidden; cursor: nwse-resize\'>&#x25FF;</div>');
 
       main.attr('class', 'jsroot_flex_frame')
-         .style('position', 'absolute')
-         .style('left', Math.round(w * (this.cnt % 5)/10) + 'px')
-         .style('top', Math.round(h * (this.cnt % 5)/10) + 'px')
-         .style('width', Math.round(w * 0.58) + 'px')
-         .style('height', Math.round(h * 0.58) + 'px')
-         .style('border', '1px solid black')
-         .style('box-shadow', '1px 1px 2px 2px #aaa')
-         .property('state', 'normal')
-         .select('.jsroot_flex_header')
-         .on('contextmenu', evnt => mdi.showContextMenu(evnt, true))
-         .on('click', function() { mdi.activateFrame(select(this.parentNode).select('.jsroot_flex_draw').node()); })
-         .selectAll('button')
-         .data([{ n: '&#x2715;', t: 'close' }, { n: '&#x2594;', t: 'maximize' }, { n: '&#x2581;', t: 'minimize' }])
-         .enter()
-         .append('button')
-         .attr('type', 'button')
-         .attr('style', 'float: right; padding: 0; width: 1.4em; text-align: center; font-size: 10px; margin-top: 2px; margin-right: 4px')
-         .attr('title', d => d.t)
-         .html(d => d.n)
-         .on('click', function() { mdi._clickButton(this); });
+          .style('position', 'absolute')
+          .style('left', Math.round(w * (this.cnt % 5)/10) + 'px')
+          .style('top', Math.round(h * (this.cnt % 5)/10) + 'px')
+          .style('width', Math.round(w * 0.58) + 'px')
+          .style('height', Math.round(h * 0.58) + 'px')
+          .style('border', '1px solid black')
+          .style('box-shadow', '1px 1px 2px 2px #aaa')
+          .property('state', 'normal')
+          .select('.jsroot_flex_header')
+          .on('contextmenu', evnt => mdi.showContextMenu(evnt, true))
+          .on('click', function() { mdi.activateFrame(select(this.parentNode).select('.jsroot_flex_draw').node()); })
+          .selectAll('button')
+          .data([{ n: '&#x2715;', t: 'close' }, { n: '&#x2594;', t: 'maximize' }, { n: '&#x2581;', t: 'minimize' }])
+          .enter()
+          .append('button')
+          .attr('type', 'button')
+          .attr('style', 'float: right; padding: 0; width: 1.4em; text-align: center; font-size: 10px; margin-top: 2px; margin-right: 4px')
+          .attr('title', d => d.t)
+          .html(d => d.n)
+          .on('click', function() { mdi._clickButton(this); });
 
       let moving_frame = null, moving_div = null, doing_move = false, current = [];
       const drag_object = drag().subject(Object);
@@ -90433,38 +90866,53 @@ class TPavePainter extends ObjectPainter {
          for (let i = 0; i < levels.length - 1; ++i) {
             let z0 = Math.round(this.z_handle.gr(levels[i])),
                 z1 = Math.round(this.z_handle.gr(levels[i+1])),
-                lvl = (levels[i] + levels[i+1])*0.5, d;
+                portion = 0.5, d;
+
+            // when not full range fit to the drawn range,
+            // calculate portion value that it approximately in the
+            // middle of the still visible area
 
             if (this.#palette_vertical) {
-               if ((z1 >= s_height) || (z0 < 0)) continue;
+               if ((z1 >= s_height) || (z0 < 0))
+                  continue;
                z0 += 1; // ensure correct gap filling between colors
 
                if (z0 > s_height) {
+                  if (z0 > z1 + 1)
+                     portion = 0.5 * (s_height - z1) / (z0 - z1 - 1);
                   z0 = s_height;
-                  lvl = levels[i]*0.001 + levels[i+1]*0.999;
-                  if (z1 < 0) z1 = 0;
+                  if (z1 < 0)
+                     z1 = 0;
                } else if (z1 < 0) {
+                  if (z0 > 1)
+                     portion = 1 - 0.5 * z0 / (z0 - z1 - 1);
                   z1 = 0;
-                  lvl = levels[i]*0.999 + levels[i+1]*0.001;
                }
                d = `M0,${z1}H${s_width}V${z0}H0Z`;
             } else {
-               if ((z0 >= s_width) || (z1 < 0)) continue;
+               if ((z0 >= s_width) || (z1 < 0))
+                  continue;
                z1 += 1; // ensure correct gap filling between colors
 
                if (z1 > s_width) {
+                  if (z1 > z0 + 1)
+                     portion = 1 - 0.5 * (s_width - z0) / (z1 - z0 - 1);
                   z1 = s_width;
-                  lvl = levels[i]*0.999 + levels[i+1]*0.001;
-                  if (z0 < 0) z0 = 0;
+                  if (z0 < 0)
+                     z0 = 0;
                } else if (z0 < 0) {
+                  if (z1 > 1)
+                     portion = 0.5 * (z1 - 1) / (z1 - z0 - 1);
                   z0 = 0;
-                  lvl = levels[i]*0.001 + levels[i+1]*0.999;
                }
                d = `M${z0},0V${s_height}H${z1}V0Z`;
             }
 
-            const col = contour.getPaletteColor(draw_palette, lvl);
+            const lvl = levels[i] * portion + levels[i+1] * (1 - portion),
+                  col = contour.getPaletteColor(draw_palette, lvl);
             if (!col) continue;
+
+            // console.log('z0, z1', z0, z1, 'height', s_height, 'col', col, 'portion', portion)
 
             const r = this.appendPath(d)
                           .style('fill', col)
@@ -91126,7 +91574,8 @@ kPosTitle: kPosTitle
 });
 
 const kCARTESIAN = 1, kPOLAR = 2, kCYLINDRICAL = 3, kSPHERICAL = 4, kRAPIDITY = 5,
-      kNormal$1 = 0, kPoisson = 1, kPoisson2 = 2;
+      kNormal$1 = 0, kPoisson = 1, kPoisson2 = 2,
+      kOnlyCheck = 'only-check';
 /**
  * @summary Class to decode histograms draw options
  * @desc All options started from capital letter are major drawing options
@@ -92512,7 +92961,7 @@ class THistPainter extends ObjectPainter {
       const histo = this.getHisto();
       if (!this.isMainPainter() || !histo)
          return false;
-      if (arg === 'only-check')
+      if (arg === kOnlyCheck)
          return !histo.TestBit(kNoTitle$1);
       histo.InvertBit(kNoTitle$1);
       this.updateHistTitle().then(() => this.processOnlineChange(`exec:SetBit(TH1::kNoTitle,${histo.TestBit(kNoTitle$1)?1:0})`));
@@ -92537,7 +92986,8 @@ class THistPainter extends ObjectPainter {
             draw_title = !histo.TestBit(kNoTitle$1) && (gStyle.fOptTitle > 0);
 
       pt.Clear();
-      if (draw_title) pt.AddText(histo.fTitle);
+      if (draw_title)
+         pt.AddText(histo.fTitle);
       return tpainter.redraw().then(() => this);
    }
 
@@ -92619,21 +93069,23 @@ class THistPainter extends ObjectPainter {
       if (!arg) arg = '';
 
       if (!stat) {
-         if (arg.indexOf('-check') > 0) return false;
+         if (arg.indexOf('-check') > 0)
+            return false;
          // when stat box created first time, one need to draw it
          stat = this.createStat(true);
       } else
          statpainter = pp.findPainterFor(stat);
 
 
-      if (arg === 'only-check')
+      if (arg === kOnlyCheck)
          return statpainter?.Enabled || false;
 
       if (arg === 'fitpar-check')
          return stat?.fOptFit || false;
 
       if (arg === 'fitpar-toggle') {
-         if (!stat) return false;
+         if (!stat)
+            return false;
          stat.fOptFit = stat.fOptFit ? 0 : 1111; // for websocket command should be send to server
          statpainter?.redraw();
          return true;
@@ -92717,12 +93169,14 @@ class THistPainter extends ObjectPainter {
    /** @summary Find function in histogram list of functions */
    findFunction(type_name, obj_name) {
       const funcs = this.getHisto()?.fFunctions?.arr;
-      if (!funcs) return null;
+      if (!funcs)
+         return null;
 
       for (let i = 0; i < funcs.length; ++i) {
          const f = funcs[i];
          if (obj_name && (f.fName !== obj_name)) continue;
-         if (f._typename === type_name) return f;
+         if (f._typename === type_name)
+            return f;
       }
 
       return null;
@@ -92845,17 +93299,23 @@ class THistPainter extends ObjectPainter {
       },
 
       uzoomMinMax = ndim => {
-         if (this.getDimension() !== ndim) return false;
-         if ((o.minimum === kNoZoom) && (o.maximum === kNoZoom)) return false;
-         if (!this.draw_content) return false; // if not drawing content, not change min/max
+         if (this.getDimension() !== ndim)
+            return false;
+         if ((o.minimum === kNoZoom) && (o.maximum === kNoZoom))
+            return false;
+         if (!this.draw_content)
+            return false; // if not drawing content, not change min/max
          o.minimum = o.maximum = kNoZoom;
          this.scanContent(); // to reset ymin/ymax
          return true;
       };
 
-      if (dox && unzoomTAxis(histo.fXaxis)) res = true;
-      if (doy && (unzoomTAxis(histo.fYaxis) || uzoomMinMax(1))) res = true;
-      if (doz && (unzoomTAxis(histo.fZaxis) || uzoomMinMax(2))) res = true;
+      if (dox && unzoomTAxis(histo.fXaxis))
+         res = true;
+      if (doy && (unzoomTAxis(histo.fYaxis) || uzoomMinMax(1)))
+         res = true;
+      if (doz && (unzoomTAxis(histo.fZaxis) || uzoomMinMax(2)))
+         res = true;
 
       return res;
    }
@@ -92961,11 +93421,11 @@ class THistPainter extends ObjectPainter {
          return;
 
       if ((o.Axis <= 0) && !this.isTF1())
-         menu.addchk(this.toggleStat('only-check'), 'Show statbox', () => this.toggleStat());
+         menu.addchk(this.toggleStat(kOnlyCheck), 'Show statbox', () => this.toggleStat());
 
       if (this.isMainPainter()) {
          menu.sub('Title');
-         menu.addchk(this.toggleTitle('only-check'), 'Show', () => this.toggleTitle());
+         menu.addchk(this.toggleTitle(kOnlyCheck), 'Show', () => this.toggleTitle());
          menu.add('Edit', () => menu.input('Enter histogram title', histo.fTitle).then(res => {
             setHistogramTitle(histo, res);
             this.interactiveRedraw();
@@ -93138,7 +93598,8 @@ class THistPainter extends ObjectPainter {
       if (custom_levels)
          cntr.createCustom(custom_levels);
       else {
-         if (nlevels < 2) nlevels = gStyle.fNumberContours;
+         if (nlevels < 2)
+            nlevels = gStyle.fNumberContours;
          const pad = this.getPadPainter().getRootPad(true),
                logv = pad?.fLogv ?? ((ndim === 2) && pad?.fLogz);
 
@@ -93297,20 +93758,19 @@ class THistPainter extends ObjectPainter {
    /** @summary draw color palette
      * @return {Promise} when done */
    async drawColorPalette(enabled, postpone_draw, can_move) {
-      const o = this.getOptions();
+      const o = this.getOptions(),
+            do_toggle = can_move === 'toggle';
 
       // in special cases like scatter palette drawing is ignored
       if (o.IgnorePalette)
          return null;
 
       // only when create new palette, one could change frame size
-      const mp = this.getMainPainter(),
-            pp = this.getPadPainter();
-      if (mp !== this) {
-         if (mp && (mp.draw_content !== false) && mp.options.Zscale)
-            return null;
-      }
+      const mp = this.getMainPainter();
+      if (mp && (mp !== this) && (mp.draw_content !== false) && mp.options.Zscale)
+         return null;
 
+      const pp = this.getPadPainter();
       let pal = this.findFunction(clTPaletteAxis),
           pal_painter = pp?.findPainterFor(pal);
 
@@ -93363,7 +93823,7 @@ class THistPainter extends ObjectPainter {
 
          // place colz in the beginning, that stat box is always drawn on the top
          this.addFunction(pal, true);
-      } else if (pal_painter?.isPaletteVertical() !== undefined)
+      } else if ((pal_painter?.isPaletteVertical() !== undefined) && !do_toggle)
          o.Zvert = pal_painter.isPaletteVertical();
 
       const fp = this.getFramePainter();
@@ -93371,7 +93831,7 @@ class THistPainter extends ObjectPainter {
       // keep palette width
       if (can_move && fp && pal.$can_move) {
          if (o.Zvert) {
-            if (can_move === 'toggle') {
+            if (do_toggle) {
                const d = pal.fY2NDC - pal.fY1NDC;
                pal.fX1NDC = fp.fX2NDC + 0.005;
                pal.fX2NDC = pal.fX1NDC + d;
@@ -93386,7 +93846,7 @@ class THistPainter extends ObjectPainter {
             pal.fY1NDC = fp.fY1NDC;
             pal.fY2NDC = fp.fY2NDC;
          } else {
-            if (can_move === 'toggle') {
+            if (do_toggle) {
                const d = pal.fX2NDC - pal.fX1NDC;
                pal.fY1NDC = fp.fY2NDC + 0.005;
                pal.fY2NDC = pal.fY1NDC + d;
@@ -93951,7 +94411,8 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
                }
             }
 
-            if (count > 100) continue;
+            if (count > 100)
+               continue;
 
             for (ix = 1; ix <= lj - 2; ix += 2) {
                ipoly = itarr[ix-1];
@@ -94040,7 +94501,8 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
             }
          }
 
-         if (istart === 0) break;
+         if (istart === 0)
+             break;
       }
    }
 }
@@ -94203,7 +94665,12 @@ class Triangles3DHandler {
             gridcnt = 0;
 
             pntindx = 0;
-            if (side1 === 0) { pntbuf[pntindx] = x1; pntbuf[pntindx+1] = y1; pntbuf[pntindx+2] = z1; pntindx += 3; }
+            if (side1 === 0) {
+               pntbuf[pntindx] = x1;
+               pntbuf[pntindx+1] = y1;
+               pntbuf[pntindx+2] = z1;
+               pntindx += 3;
+            }
 
             if (side1 !== side2) {
                // order is important, should move from 1->2 point, checked via lastpart
@@ -94278,7 +94745,7 @@ class Triangles3DHandler {
       };
     }
 
-}
+} // class Triangles3DHandler
 
 
 /** @summary Build 3d surface
@@ -94315,8 +94782,10 @@ function buildSurf3D(histo, handle, ilevels, meshFunc, linesFunc) {
             triangles.addLineSegment(x1, y2, z12, x1, y1, z11);
             triangles.addLineSegment(x1, y1, z11, x2, y1, z21);
 
-            if (i === handle.i2 - 2) triangles.addLineSegment(x2, y1, z21, x2, y2, z22);
-            if (j === handle.j2 - 2) triangles.addLineSegment(x1, y2, z12, x2, y2, z22);
+            if (i === handle.i2 - 2)
+               triangles.addLineSegment(x2, y1, z21, x2, y2, z22);
+            if (j === handle.j2 - 2)
+               triangles.addLineSegment(x1, y2, z12, x2, y2, z22);
          }
       }
    }
@@ -94599,7 +95068,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
    /** @summary Process click on histogram-defined buttons */
    clickButton(funcname) {
       const res = super.clickButton(funcname);
-      if (res) return res;
+      if (res)
+         return res;
 
       if (this.isMainPainter()) {
          switch (funcname) {
@@ -94618,7 +95088,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
       const pp = this.getPadPainter(),
             o = this.getOptions();
-      if (!pp) return;
+      if (!pp)
+         return;
 
       if (!this.isTH2Poly() && !o.Axis)
          pp.addPadButton('th2color', 'Toggle color', 'ToggleColor');
@@ -94666,7 +95137,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          for (let j = j1; j < j2; ++j)
             min = Math.min(min, histo.getBinContent(i + 1, j + 1));
       }
-      if (min > 0) return; // if all points positive, no chance for auto-scale
+      if (min > 0)
+         return; // if all points positive, no chance for auto-scale
 
       let ileft = i2, iright = i1, jleft = j2, jright = j1;
 
@@ -94786,7 +95258,6 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       const histo = this.getHisto();
       return { minx: histo.fXaxis.fXmin, maxx: histo.fXaxis.fXmax, miny: histo.fYaxis.fXmin, maxy: histo.fYaxis.fXmax };
    }
-
 
    /** @summary Count TH2 histogram statistic
      * @desc Optionally one could provide condition function to select special range */
@@ -95130,10 +95601,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       }
 
       entries.forEach((entry, ecolindx) => {
-         if (entry) {
-            this.appendPath(entry.path)
-                .attr('fill', palette.getColor(ecolindx));
-         }
+         if (entry)
+            this.appendPath(entry.path).attr('fill', palette.getColor(ecolindx));
       });
 
       return handle;
@@ -95201,18 +95670,20 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          const radius = Math.abs(Math.cos(angle)) > 0.5 ? (x - x0) / Math.cos(angle) / this.width * 2 : (y - y0) / Math.sin(angle) / this.height * 2;
 
          if (angle < 0)
-            angle += 2*Math.PI;
+            angle += 2 * Math.PI;
 
          for (i = this.i1; i < this.i2; ++i) {
             const a1 = 2 * Math.PI * this.grx[i] / this.width,
                   a2 = 2 * Math.PI * this.grx[i + 1] / this.width;
-            if ((a1 <= angle) && (angle <= a2)) break;
+            if ((a1 <= angle) && (angle <= a2))
+               break;
          }
 
          for (j = this.j1; j < this.j2; ++j) {
             const r2 = this.gry[j] / this.height,
                   r1 = this.gry[j + 1] / this.height;
-            if ((r1 <= radius) && (radius <= r2)) break;
+            if ((r1 <= radius) && (radius <= r2))
+               break;
          }
 
          return { i, j };
@@ -95250,10 +95721,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       }
 
       entries.forEach((entry, ecolindx) => {
-         if (entry) {
-            this.appendPath(entry.path)
-                .attr('fill', palette.getColor(ecolindx));
-         }
+         if (entry)
+            this.appendPath(entry.path).attr('fill', palette.getColor(ecolindx));
       });
 
       return handle;
@@ -95367,7 +95836,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
          const points = [{ x: 0, y: 0 }, { x: handle.width, y: 0 }, { x: handle.width, y: handle.height }, { x: 0, y: handle.height }],
 
-          get_intersect = (indx, di) => {
+         get_intersect = (indx, di) => {
             const segm = { x1: xp[indx], y1: yp[indx], x2: 2*xp[indx] - xp[indx+di], y2: 2*yp[indx] - yp[indx+di] };
             for (let i = 0; i < 4; ++i) {
                const res = get_segm_intersection(segm, { x1: points[i].x, y1: points[i].y, x2: points[(i+1)%4].x, y2: points[(i+1)%4].y });
@@ -95487,7 +95956,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          }
       }
 
-      if (textbin) addPoint(grx, gry, grx0, gry0);
+      if (textbin)
+         addPoint(grx, gry, grx0, gry0);
       flush();
 
       return grcmd ? `M${grx0},${gry0}` + grcmd + 'z' : '';
@@ -95566,7 +96036,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       // draw bins
       for (i = 0; i < len; ++i) {
          bin = histo.fBins.arr[i];
-         if (rejectBin(bin)) continue;
+         if (rejectBin(bin))
+            continue;
 
          const draw_bin = bin.fContent || o.Zero,
                arr = (bin.fPoly._typename === clTMultiGraph) ? bin.fPoly.fGraphs.arr : [bin.fPoly];
@@ -95584,7 +96055,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
             }
 
             cmd = this.createPolyGr(funcs, gr, textbin);
-            if (!cmd) continue;
+            if (!cmd)
+               continue;
 
             if (optimize_draw)
                full_cmd += cmd;
@@ -95704,10 +96176,12 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
             const binw = handle.grx[i+1] - handle.grx[i];
             for (let j = handle.j1; j < handle.j2; ++j) {
                const binz = histo.getBinContent(i + 1, j + 1);
-               if ((binz === 0) && !o.ShowEmpty) continue;
+               if ((binz === 0) && !o.ShowEmpty)
+                  continue;
 
                if (test_cutg && !test_cutg.IsInside(histo.fXaxis.GetBinCoord(i + 0.5),
-                        histo.fYaxis.GetBinCoord(j + 0.5))) continue;
+                  histo.fYaxis.GetBinCoord(j + 0.5)))
+                  continue;
 
                const binh = handle.gry[j] - handle.gry[j+1];
 
@@ -95772,23 +96246,24 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          for (let i = handle.i1; i < handle.i2; ++i) {
             for (let j = handle.j1; j < handle.j2; ++j) {
                if (test_cutg && !test_cutg.IsInside(histo.fXaxis.GetBinCoord(i + 0.5),
-                     histo.fYaxis.GetBinCoord(j + 0.5))) continue;
+                  histo.fYaxis.GetBinCoord(j + 0.5)))
+                  continue;
 
-               const bincont = histo.getBinContent(i+1, j+1);
+               const bincont = histo.getBinContent(i + 1, j + 1);
 
                if (i === handle.i1)
-                  dx = histo.getBinContent(i+2, j+1) - bincont;
-               else if (i === handle.i2-1)
-                  dx = bincont - histo.getBinContent(i, j+1);
+                  dx = histo.getBinContent(i + 2, j + 1) - bincont;
+               else if (i === handle.i2 - 1)
+                  dx = bincont - histo.getBinContent(i, j + 1);
                else
-                  dx = 0.5*(histo.getBinContent(i+2, j+1) - histo.getBinContent(i, j+1));
+                  dx = 0.5*(histo.getBinContent(i+2, j + 1) - histo.getBinContent(i, j+1));
 
                if (j === handle.j1)
-                  dy = histo.getBinContent(i+1, j+2) - bincont;
-               else if (j === handle.j2-1)
-                  dy = bincont - histo.getBinContent(i+1, j);
+                  dy = histo.getBinContent(i + 1, j + 2) - bincont;
+               else if (j === handle.j2 - 1)
+                  dy = bincont - histo.getBinContent(i + 1, j);
                else
-                  dy = 0.5*(histo.getBinContent(i+1, j+2) - histo.getBinContent(i+1, j));
+                  dy = 0.5*(histo.getBinContent(i + 1, j + 2) - histo.getBinContent(i + 1, j));
 
                if (loop === 0)
                   dn = Math.max(dn, Math.abs(dx), Math.abs(dy));
@@ -95887,10 +96362,12 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          for (j = handle.j1; j < handle.j2; ++j) {
             binz = histo.getBinContent(i + 1, j + 1);
             absz = Math.abs(binz);
-            if ((absz === 0) || (absz < absmin)) continue;
+            if ((absz === 0) || (absz < absmin))
+               continue;
 
             if (test_cutg && !test_cutg.IsInside(histo.fXaxis.GetBinCoord(i + 0.5),
-                 histo.fYaxis.GetBinCoord(j + 0.5))) continue;
+               histo.fYaxis.GetBinCoord(j + 0.5)))
+               continue;
 
             zdiff = uselogz ? ((absz > 0) ? Math.log(absz) - logmin : 0) : (absz - absmin);
             // area of the box should be proportional to absolute bin content
@@ -95986,10 +96463,14 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          let direction = '', preset = '', res = kNoOption;
          const c0 = opt[0], c1 = opt[1];
 
-         if (c0 >= 'A' && c0 <= 'Z') direction = c0;
-         if (c0 >= '1' && c0 <= '9') preset = c0;
-         if (c1 >= 'A' && c1 <= 'Z' && preset) direction = c1;
-         if (c1 >= '1' && c1 <= '9' && direction) preset = c1;
+         if (c0 >= 'A' && c0 <= 'Z')
+            direction = c0;
+         if (c0 >= '1' && c0 <= '9')
+            preset = c0;
+         if (c1 >= 'A' && c1 <= 'Z' && preset)
+            direction = c1;
+         if (c1 >= '1' && c1 <= '9' && direction)
+            preset = c1;
 
          if (is_candle) {
             switch (preset) {
@@ -96052,7 +96533,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
             while ((prob[cnt] >= v) && (prob[cnt] < nextv)) {
                res.indx[cnt] = j;
                res.quantiles[cnt] = x + ((prob[cnt] - v) / (nextv - v)) * (xx[j + 1] - x);
-               if (cnt++ === prob.length) return res;
+               if (cnt++ === prob.length)
+                  return res;
                x = xx[j];
             }
          }
@@ -96136,10 +96618,10 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       // Determining the quintiles
       const wRange = gStyle.fCandleWhiskerRange, bRange = gStyle.fCandleBoxRange,
             prob = [(wRange >= 1) ? 1e-15 : 0.5 - wRange/2.0,
-                     (bRange >= 1) ? 1E-14 : 0.5 - bRange/2.0,
+                     (bRange >= 1) ? 1e-14 : 0.5 - bRange/2.0,
                      0.5,
-                     (bRange >= 1) ? 1-1E-14 : 0.5 + bRange/2.0,
-                     (wRange >= 1) ? 1-1e-15 : 0.5 + wRange/2.0],
+                     (bRange >= 1) ? 1 - 1e-14 : 0.5 + bRange/2.0,
+                     (wRange >= 1) ? 1 - 1e-15 : 0.5 + wRange/2.0],
 
        produceCandlePoint = (bin_indx, grx_left, grx_right, xindx1, xindx2) => {
          const res = extractQuantiles(xx, proj, prob);
@@ -96166,8 +96648,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          // estimate quantiles... simple function... not so nice as GetQuantiles
 
          // exclude points with negative y when log scale is specified
-         if (fWhiskerDown <= 0)
-           if ((swapXY && funcs.logx) || (!swapXY && funcs.logy)) return;
+         if ((fWhiskerDown <= 0) && ((swapXY && funcs.logx) || (!swapXY && funcs.logy)))
+            return;
 
          const w = (grx_right - grx_left);
          let candleWidth, histoWidth,
@@ -96289,7 +96771,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
                   const curr_x = Math.round(center - scale*proj[ii]),
                         curr_y = Math.round(ff(xx[ii]));
                   if (curr_x !== prev_x) {
-                     if (ii !== xindx2) arr.push('V', prev_y);
+                     if (ii !== xindx2)
+                        arr.push('V', prev_y);
                      arr.push('H', curr_x);
                   }
                   prev_x = curr_x;
@@ -96428,10 +96911,12 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
                binz = histo.getBinContent(i + 1, j + 1);
 
                const npix = Math.round(scale*binz);
-               if (npix <= 0) continue;
+               if (npix <= 0)
+                  continue;
 
                if (test_cutg && !test_cutg.IsInside(histo.fXaxis.GetBinCoord(i + 0.5),
-                     histo.fYaxis.GetBinCoord(j + 0.5))) continue;
+                  histo.fYaxis.GetBinCoord(j + 0.5)))
+                  continue;
 
                for (let k = 0; k < npix; ++k) {
                   path += this.markeratt.create(
@@ -96644,7 +97129,10 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
             pnts.push({ x: cx, y: cy, a, color }); // remember points coordinates
 
-            if ((rotate < -90) || (rotate > 90)) { rotate += 180; align = 32; }
+            if ((rotate < -90) || (rotate > 90)) {
+               rotate += 180;
+               align = 32;
+            }
 
             const s2 = Math.round(text_size/2), s1 = 2*s2;
 
@@ -96803,7 +97291,10 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          if (axis.fLabels) {
             for (let k = 0; k < axis.fLabels.arr.length; ++k) {
                const tstr = axis.fLabels.arr[k];
-               if (tstr.fUniqueID === used[i]+1) { lbl = tstr.fString; break; }
+               if (tstr.fUniqueID === used[i]+1) {
+                  lbl = tstr.fString;
+                  break;
+               }
             }
          }
          labels.push(lbl);
@@ -97155,10 +97646,10 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          if (o.Color && !is_pol) {
             // take into account bar settings
             const dx = x2 - x1, dy = y2 - y1;
-            x2 = Math.round(x1 + dx*h.xbar2);
-            x1 = Math.round(x1 + dx*h.xbar1);
-            y2 = Math.round(y1 + dy*h.ybar2);
-            y1 = Math.round(y1 + dy*h.ybar1);
+            x2 = Math.round(x1 + dx * h.xbar2);
+            x1 = Math.round(x1 + dx * h.xbar1);
+            y2 = Math.round(y1 + dy * h.ybar2);
+            y1 = Math.round(y1 + dy * h.ybar1);
             if (fp.reverse_x()) {
                if ((pnt.x > x1) || (pnt.x <= x2))
                   match = false;
@@ -97270,7 +97761,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
       if (res.changed) {
          res.user_info = { obj: histo, name: histo.fName,
-                           bin: histo.getBin(i+1, j+1), cont: binz, binx: i+1, biny: j+1,
+                           bin: histo.getBin(i + 1, j + 1),
+                           cont: binz, binx: i + 1, biny: j + 1,
                            grx: pnt.x, gry: pnt.y };
       }
 
@@ -97306,7 +97798,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       }
 
       let obj = this.getHisto();
-      if (obj) obj = (axis === 'y') ? obj.fYaxis : obj.fXaxis;
+      if (obj)
+         obj = (axis === 'y') ? obj.fYaxis : obj.fXaxis;
 
       return !obj || (obj.FindBin(max, 0.5) - obj.FindBin(min, 0) > 1);
    }
@@ -100143,7 +100636,8 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       for (i = left; i < right; ++i) {
          xx = xaxis.GetBinCoord(i + 0.5);
 
-         if (cond && !cond(xx)) continue;
+         if (cond && !cond(xx))
+            continue;
 
          if (profile) {
             w = histo.fBinEntries[i + 1];
@@ -100215,10 +100709,13 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
    /** @summary Fill stat box */
    fillStatistic(stat, dostat, dofit) {
       // no need to refill statistic if histogram is dummy
-      if (this.isIgnoreStatsFill()) return false;
+      if (this.isIgnoreStatsFill())
+         return false;
 
-      if (dostat === 1) dostat = 1111;
-      if (dofit === 1) dofit = 111;
+      if (dostat === 1)
+         dostat = 1111;
+      if (dofit === 1)
+         dofit = 111;
 
       const histo = this.getHisto(),
             print_name = dostat % 10,
@@ -100282,7 +100779,8 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             stat.addText(`Kurtosis = ${stat.format(data.kurtx)}`);
       }
 
-      if (dofit) stat.fillFunctionStat(this.findFunction(clTF1), dofit, 1);
+      if (dofit)
+         stat.fillFunctionStat(this.findFunction(clTF1), dofit, 1);
 
       return true;
    }
@@ -100305,9 +100803,11 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             xaxis = histo.fXaxis,
             show_text = o.Text;
       let text_col, text_angle, text_size,
-          side = (o.BarStyle > 10) ? o.BarStyle % 10 : 0, pr = Promise.resolve();
+          side = (o.BarStyle > 10) ? o.BarStyle % 10 : 0,
+          pr = Promise.resolve();
 
-      if (side > 4) side = 4;
+      if (side > 4)
+         side = 4;
       const gry2 = this.getBarBaseline(funcs, height);
 
       if (show_text) {
@@ -100328,14 +100828,16 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             const x1 = xaxis.GetBinLowEdge(i + 1),
                   x2 = xaxis.GetBinLowEdge(i + 2);
 
-            if (funcs.logx && (x2 <= 0)) continue;
+            if (funcs.logx && (x2 <= 0))
+               continue;
 
             let grx1 = Math.round(funcs.grx(x1)),
                 grx2 = Math.round(funcs.grx(x2)),
                 w = grx2 - grx1;
             const y = histo.getBinContent(i+1);
 
-            if (funcs.logy && (y < funcs.scale_ymin)) continue;
+            if (funcs.logy && (y < funcs.scale_ymin))
+               continue;
             const gry1 = Math.round(funcs.gry(y));
 
             grx1 += Math.round(histo.fBarOffset/1000*w);
@@ -100400,7 +100902,8 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
 
       for (let i = left; i < right; ++i) {
          const x = histo.fXaxis.GetBinCoord(i+0.5);
-         if (funcs.logx && (x <= 0)) continue;
+         if (funcs.logx && (x <= 0))
+            continue;
          const grx = Math.round(funcs.grx(x)),
                y = histo.getBinContent(i+1),
                yerrs = this.getBinErrors(histo, i + 1, y);
@@ -100439,7 +100942,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
           show_line = o.Line,
           startx, startmidx, currx, curry, x, grx, y, gry, curry_min, curry_max, prevy, prevx, i, bestimin, bestimax,
           path_fill = null, path_err = null, path_marker = null, path_line = '',
-          hints_err = null, hints_marker = null, hsz = 5,
+          hints_err = null, hints_text = null, hints_marker = null, hsz = 5,
           do_marker = false, do_err = false,
           dend = 0, dlw = 0, my, yerr1, yerr2, bincont, binerr, mx1, mx2, midx, lx, ly, mmx1, mmx2,
           text_col, text_angle, text_size,
@@ -100504,6 +101007,9 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
                 text_size = Math.round(space*0.7);
              }
          }
+
+         if (want_tooltip && !draw_hist)
+            hints_text = '';
 
          pr = this.startTextDrawingAsync(42, text_size, undefined, text_size);
       }
@@ -100574,6 +101080,8 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
                         arg.y = Math.round(midx - text_size/2);
                      }
                      this.drawText(arg);
+                     if (hints_text !== null)
+                        hints_text += `M${mx1},${my-hsz}v${2*hsz}h${mx2-mx1}v${ -2*hsz}z`;
                   }
                }
 
@@ -100773,6 +101281,12 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          if (res && draw_hist)
             add_hist();
 
+         if (hints_text) {
+            this.appendPath(hints_text)
+                .style('fill', 'none')
+                .style('pointer-events', this.isBatchMode() ? null : 'visibleFill');
+         }
+
          if (show_text)
             return this.finishTextDrawing();
       });
@@ -100836,7 +101350,8 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          }
       } else {
          tips.push(`bin = ${bin+1}`, `x = ${xlbl}`);
-         if (histo.$baseh) cont -= histo.$baseh.getBinContent(bin+1);
+         if (histo.$baseh)
+            cont -= histo.$baseh.getBinContent(bin+1);
          if (cont === Math.round(cont))
             tips.push(`entries = ${cont}`);
          else
@@ -100857,7 +101372,8 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       const funcs = this.getHistGrFuncs(),
             histo = this.getHisto(),
             left = this.getSelectIndex('x', 'left', -1),
-            right = this.getSelectIndex('x', 'right', 2);
+            right = this.getSelectIndex('x', 'right', 2),
+            draw_hist = this.options.Hist && (!this.lineatt.empty() || !this.fillatt.empty());
       let width = funcs.getFrameWidth(),
           height = funcs.getFrameHeight(),
           show_rect, grx1, grx2, gry1, gry2, gapx = 2,
@@ -100941,11 +101457,12 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
 
          if (!pnt.touch && (pnt.nproc === 1))
             if ((pnt_y < gry1) || (pnt_y > gry2)) findbin = null;
-      } else if ((o.Error && (o.Hist !== true)) || o.Mark || o.Line || o.Curve) {
+      } else if ((o.Error && (o.Hist !== true)) || o.Mark || o.Line || o.Curve || (o.Text && !draw_hist)) {
          show_rect = !this.isTF1();
 
          let msize = 3;
-         if (this.markeratt) msize = Math.max(msize, this.markeratt.getFullSize());
+         if (this.markeratt)
+            msize = Math.max(msize, this.markeratt.getFullSize());
 
          if (o.Error) {
             const cont = histo.getBinContent(findbin + 1),
@@ -100957,7 +101474,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             if ((cont === 0) && this.isTProfile())
                findbin = null;
 
-            const dx = (grx2 - grx1)*o.errorX;
+            const dx = (grx2 - grx1) * o.errorX;
             grx1 = Math.round(midx - dx);
             grx2 = Math.round(midx + dx);
          }
@@ -100968,12 +101485,14 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          gry1 = Math.min(gry1, midy - msize);
          gry2 = Math.max(gry2, midy + msize);
 
-         if (!pnt.touch && (pnt.nproc === 1))
-            if ((pnt_y < gry1) || (pnt_y > gry2)) findbin = null;
+         if (!pnt.touch && (pnt.nproc === 1)) {
+            if ((pnt_y < gry1) || (pnt_y > gry2))
+               findbin = null;
+         }
       } else {
          // if histogram alone, use old-style with rects
          // if there are too many points at pixel, use circle
-         show_rect = (pnt.nproc === 1) && (right-left < width);
+         show_rect = (pnt.nproc === 1) && (right - left < width);
 
          if (show_rect) {
             gry2 = height;
@@ -101041,7 +101560,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
 
          res.menu = res.exact; // one could show context menu when histogram is selected
          // distance to middle point, use to decide which menu to activate
-         res.menu_dist = Math.sqrt((midx-pnt_x)**2 + (midy-pnt_y)**2);
+         res.menu_dist = Math.sqrt((midx - pnt_x)**2 + (midy - pnt_y)**2);
       } else {
          const radius = this.lineatt.width + 3;
 
@@ -101104,8 +101623,9 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
    rebinHist(sz) {
       const histo = this.getHisto(),
             xaxis = histo.fXaxis,
-            nbins = Math.floor(xaxis.fNbins/ sz);
-      if (nbins < 2) return;
+            nbins = Math.floor(xaxis.fNbins / sz);
+      if (nbins < 2)
+         return;
 
       const arr = new Array(nbins+2),
             xbins = xaxis.fXbins.length ? new Array(nbins) : null;
@@ -101151,13 +101671,15 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       const dist = right - left,
             histo = this.getHisto();
 
-      if ((dist === 0) || !histo) return;
+      if ((dist === 0) || !histo)
+         return;
 
       // first find minimum
       let min = histo.getBinContent(left + 1);
       for (let indx = left; indx < right; ++indx)
          min = Math.min(min, histo.getBinContent(indx+1));
-      if (min > 0) return; // if all points positive, no chance for auto-scale
+      if (min > 0)
+         return; // if all points positive, no chance for auto-scale
 
       while ((left < right) && (histo.getBinContent(left+1) <= min)) ++left;
       while ((left < right) && (histo.getBinContent(right) <= min)) --right;
@@ -101175,9 +101697,11 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
    canZoomInside(axis, min, max) {
       const histo = this.getHisto();
 
-      if ((axis === 'x') && histo && (histo.fXaxis.FindBin(max, 0.5) - histo.fXaxis.FindBin(min, 0) > 1)) return true;
+      if ((axis === 'x') && histo && (histo.fXaxis.FindBin(max, 0.5) - histo.fXaxis.FindBin(min, 0) > 1))
+         return true;
 
-      if ((axis === 'y') && (Math.abs(max-min) > Math.abs(this.ymax-this.ymin)*1e-6)) return true;
+      if ((axis === 'y') && (Math.abs(max - min) > Math.abs(this.ymax - this.ymin)*1e-6))
+         return true;
 
       return false;
    }
@@ -102426,16 +102950,20 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
    #move_y0;       // initial y position
    #pos_dx;        // accumulated x change
    #pos_dy;        // accumulated y change
+   #has_errors;    // if has errors
+   #is_bent;       // if graph has bent errors
+   #draw_kind;     // way how graph is drawn
 
    constructor(dom, graph) {
       super(dom, graph);
       this.axes_draw = false; // indicate if graph histogram was drawn for axes
       this.xmin = this.ymin = this.xmax = this.ymax = 0;
-      this.is_bent = (graph._typename === clTGraphBentErrors);
-      this.has_errors = (graph._typename === clTGraphErrors) ||
-                        (graph._typename === clTGraphMultiErrors) ||
-                        (graph._typename === clTGraphAsymmErrors) ||
-                         this.is_bent || graph._typename.match(/^RooHist/);
+      this.#is_bent = (graph._typename === clTGraphBentErrors);
+      this.#has_errors = (graph._typename === clTGraphErrors) ||
+                         (graph._typename === clTGraphMultiErrors) ||
+                         (graph._typename === clTGraphAsymmErrors) ||
+                          this.#is_bent || graph._typename.match(/^RooHist/);
+      this.#draw_kind = '';
    }
 
    /** @summary Use in frame painter to check zoom Y is allowed
@@ -102545,8 +103073,10 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       let d = new DrawOptions(opt), hopt = '';
 
       PadDrawOptions.forEach(name => { if (d.check(name)) hopt += ';' + name; });
-      if (d.check('XAXIS_', true)) hopt += ';XAXIS_' + d.part;
-      if (d.check('YAXIS_', true)) hopt += ';YAXIS_' + d.part;
+      if (d.check('XAXIS_', true))
+         hopt += ';XAXIS_' + d.part;
+      if (d.check('YAXIS_', true))
+         hopt += ';YAXIS_' + d.part;
 
       if (d.empty()) {
          res.original = has_main ? 'lp' : 'alp';
@@ -102567,9 +103097,11 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       if (d.check('WIDTH_', true))
          res.graphLineWidth = d.partAsInt();
 
-      if (d.check('NOOPT')) res.NoOpt = 1;
+      if (d.check('NOOPT'))
+         res.NoOpt = 1;
 
-      if (d.check('POS3D_', true)) res.pos3d = d.partAsInt() - 0.5;
+      if (d.check('POS3D_', true))
+         res.pos3d = d.partAsInt() - 0.5;
 
       if (d.check('PFC') && !res._pfc)
          res._pfc = 2;
@@ -102599,7 +103131,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       // if (d.check('E')) res.Errors = 1; // E option only defined for TGraphPolar
 
       if (res.Errors === undefined)
-         res.Errors = this.has_errors && (!is_gme || !blocks_gme.length) ? 1 : 0;
+         res.Errors = this.#has_errors && (!is_gme || !blocks_gme.length) ? 1 : 0;
 
       // special case - one could use svg:path to draw many pixels (
       if ((res.Mark === 1) && (graph.fMarkerStyle === 1)) res.Mark = 101;
@@ -102626,7 +103158,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          // either graph drawn directly or
          // graph is first object in list of primitives
          const pad = this.getPadPainter()?.getRootPad(true);
-         if (!pad || (pad?.fPrimitives?.arr[0] === this.getObject())) res.Axis = ' ';
+         if (!pad || (pad?.fPrimitives?.arr[0] === this.getObject()))
+            res.Axis = ' ';
       }
 
       res.Axis += hopt;
@@ -102942,8 +103475,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
              dlen = Math.sqrt(bin.dgrx**2 + bin.dgry**2);
          if (dlen > 1e-10) {
             // shift point
-            bin.grx += excl_width*bin.dgry/dlen;
-            bin.gry -= excl_width*bin.dgrx/dlen;
+            bin.grx += excl_width * bin.dgry / dlen;
+            bin.gry -= excl_width * bin.dgrx / dlen;
          }
          extrabins.push(bin);
       }
@@ -102983,7 +103516,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          }
 
          const path1 = buildSvgCurve(drawbins, { line: options.EF < 2, qubic: true }),
-             bins2 = [];
+               bins2 = [];
 
          for (let n = drawbins.length - 1; n >= 0; --n) {
             const bin = drawbins[n];
@@ -103001,7 +103534,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          if (fillatt.empty() && fillatt.colorindx)
             area.style('stroke', this.getColor(fillatt.colorindx));
          if (main_block)
-            this.draw_kind = 'lines';
+            this.#draw_kind = 'lines';
       }
 
       if (options.Line || options.Fill) {
@@ -103042,12 +103575,12 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
             elem.style('fill', 'none');
 
          if (main_block)
-            this.draw_kind = 'lines';
+            this.#draw_kind = 'lines';
       }
 
       if (options.Curve) {
          let curvebins = drawbins;
-         if ((this.draw_kind !== 'lines') || !curvebins || ((options.Curve === 1) && (curvebins.length > 20000))) {
+         if ((this.#draw_kind !== 'lines') || !curvebins || ((options.Curve === 1) && (curvebins.length > 20000))) {
             curvebins = this.optimizeBins((options.Curve === 1) ? 20000 : 0);
             for (let n = 0; n < curvebins.length; ++n) {
                const bin = curvebins[n];
@@ -103066,7 +103599,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
                .style('fill', 'none')
                .style('pointer-events', line_events_handling);
          if (main_block)
-            this.draw_kind = 'lines'; // handled same way as lines
+            this.#draw_kind = 'lines'; // handled same way as lines
       }
 
       let nodes = null;
@@ -103076,22 +103609,24 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
             const grx = funcs.grx(pnt.x);
 
             // when drawing bars, take all points
-            if (!options.Bar && ((grx < 0) || (grx > w))) return true;
+            if (!options.Bar && ((grx < 0) || (grx > w)))
+               return true;
 
             const gry = funcs.gry(pnt.y);
 
-            if (!options.Bar && !options.OutRange && ((gry < 0) || (gry > h))) return true;
+            if (!options.Bar && !options.OutRange && ((gry < 0) || (gry > h)))
+               return true;
 
             pnt.grx1 = Math.round(grx);
             pnt.gry1 = Math.round(gry);
 
-            if (this.has_errors) {
+            if (this.#has_errors) {
                pnt.grx0 = Math.round(funcs.grx(pnt.x - options.ScaleErrX*pnt.exlow) - grx);
                pnt.grx2 = Math.round(funcs.grx(pnt.x + options.ScaleErrX*pnt.exhigh) - grx);
                pnt.gry0 = Math.round(funcs.gry(pnt.y - pnt.eylow) - gry);
                pnt.gry2 = Math.round(funcs.gry(pnt.y + pnt.eyhigh) - gry);
 
-               if (this.is_bent) {
+               if (this.#is_bent) {
                   pnt.grdx0 = Math.round(funcs.gry(pnt.y + graph.fEXlowd[i]) - gry);
                   pnt.grdx2 = Math.round(funcs.gry(pnt.y + graph.fEXhighd[i]) - gry);
                   pnt.grdy0 = Math.round(funcs.grx(pnt.x + graph.fEYlowd[i]) - grx);
@@ -103104,7 +103639,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          });
 
          if (main_block)
-            this.draw_kind = 'nodes';
+            this.#draw_kind = 'nodes';
 
          nodes = draw_g.selectAll('.grpoint')
                        .data(drawbins)
@@ -103272,8 +103807,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
             draw_g.append('svg:path')
                   .attr('d', path)
                   .call(this.markeratt.func);
-            if ((nodes === null) && (this.draw_kind === 'none') && main_block)
-               this.draw_kind = (options.Mark === 101) ? 'path' : 'mark';
+            if ((nodes === null) && (this.#draw_kind === 'none') && main_block)
+               this.#draw_kind = (options.Mark === 101) ? 'path' : 'mark';
          }
          if (want_tooltip && hints_marker) {
             draw_g.append('svg:path')
@@ -103367,7 +103902,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
       this.fillatt.used = false; // mark used only when really used
 
-      this.draw_kind = 'none'; // indicate if special svg:g were created for each bin
+      this.#draw_kind = 'none'; // indicate if special svg:g were created for each bin
       this.#marker_size = 0; // indicate if markers are drawn
       const draw_g = is_gme ? g.append('svg:g') : g;
 
@@ -103402,10 +103937,10 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       if (!pnt)
          return null;
 
-      if ((this.draw_kind === 'lines') || (this.draw_kind === 'path') || (this.draw_kind === 'mark'))
+      if ((this.#draw_kind === 'lines') || (this.#draw_kind === 'path') || (this.#draw_kind === 'mark'))
          return this.extractTooltipForPath(pnt);
 
-      if (this.draw_kind !== 'nodes')
+      if (this.#draw_kind !== 'nodes')
          return null;
 
       const fp = this.get_fp(),
@@ -103421,10 +103956,13 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
       this.getG().selectAll('.grpoint').each(function() {
          const d = select(this).datum();
-         if (d === undefined) return;
+         if (d === undefined)
+            return;
          let dist2 = (pnt.x - d.grx1) ** 2;
-         if (pnt.nproc === 1) dist2 += (pnt.y - d.gry1) ** 2;
-         if (dist2 >= best_dist2) return;
+         if (pnt.nproc === 1)
+            dist2 += (pnt.y - d.gry1) ** 2;
+         if (dist2 >= best_dist2)
+            return;
 
          let rect;
 
@@ -103434,7 +103972,10 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
                      y1: Math.min(-esz, d.gry2, -msize),
                      y2: Math.max(esz, d.gry0, msize) };
          } else if (d.bar) {
-             rect = { x1: boff - bw / 2, x2: boff + bw / 2, y1: 0, y2: height - d.gry1 };
+             rect = { x1: boff - bw / 2,
+                      x2: boff + bw / 2,
+                      y1: 0,
+                      y2: height - d.gry1 };
 
              if (isbar1) {
                 const yy0 = funcs.gry(0);
@@ -103455,7 +103996,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
           }
        });
 
-      if (findbin === null) return null;
+      if (findbin === null)
+         return null;
 
       const d = select(findbin).datum(),
             gr = this.getGraph(),
@@ -103470,7 +104012,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       if (this.fillatt?.used && !this.fillatt?.empty())
          res.color2 = this.fillatt.getFillColor();
 
-      if (best.exact) res.exact = true;
+      if (best.exact)
+         res.exact = true;
       res.menu = res.exact; // activate menu only when exactly locate bin
       res.menu_dist = 3; // distance always fixed
       res.bin = d;
@@ -103525,7 +104068,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       if (!this.#bins)
          return null;
 
-      const islines = (this.draw_kind === 'lines'),
+      const islines = (this.#draw_kind === 'lines'),
             o = this.getOptions(),
             funcs = this.get_fp().getGrFuncs(o.second_x, o.second_y);
       let bestindx = -1,
@@ -103560,7 +104103,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       if (!islines && (bestdist > radius))
          bestbin = null;
 
-      if (!bestbin) bestindx = -1;
+      if (!bestbin)
+         bestindx = -1;
 
       const res = { bin: bestbin, indx: bestindx, dist: bestdist, radius: Math.round(radius) };
 
@@ -103612,7 +104156,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
      * @desc if arg specified changes or toggles editable flag */
    testEditable(arg) {
       const obj = this.getGraph();
-      if (!obj) return false;
+      if (!obj)
+         return false;
       if ((arg === 'toggle') || (arg !== undefined))
          obj.SetBit(kNotEditable, !arg);
       return !obj.TestBit(kNotEditable);
@@ -103625,10 +104170,11 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
       const best = this.findBestBin(pnt);
 
-      if (!best || (!best.bin && !best.closeline)) return null;
+      if (!best || (!best.bin && !best.closeline))
+         return null;
 
-      const islines = (this.draw_kind === 'lines'),
-            ismark = (this.draw_kind === 'mark'),
+      const islines = (this.#draw_kind === 'lines'),
+            ismark = (this.#draw_kind === 'mark'),
             fp = this.get_fp(),
             o = this.getOptions(),
             funcs = fp.getGrFuncs(o.second_x, o.second_y),
@@ -103638,12 +104184,9 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
                     y: best.bin ? funcs.gry(best.bin.y) : best.liney,
                     color1: this.lineatt.color,
                     lines: this.getTooltips(best.bin),
-                    usepath: true };
+                    usepath: true, ismark, islines };
 
       res.user_info = { obj: gr, name: gr.fName, bin: 0, cont: 0, grx: res.x, gry: res.y };
-
-      res.ismark = ismark;
-      res.islines = islines;
 
       if (best.closeline) {
          res.menu = res.exact = true;
@@ -103959,9 +104502,11 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
    /** @summary Process click on graph-defined buttons */
    clickButton(funcname) {
-      if (funcname !== 'ToggleZoom') return false;
+      if (funcname !== 'ToggleZoom')
+         return false;
 
-      if ((this.xmin === this.xmax) && (this.ymin === this.ymax)) return false;
+      if ((this.xmin === this.xmax) && (this.ymin === this.ymax))
+         return false;
 
       return this.getFramePainter()?.zoom(this.xmin, this.xmax, this.ymin, this.ymax);
    }
@@ -104127,6 +104672,498 @@ class TGraphPainter extends TGraphPainter$1 {
    }
 
 } // class TGraphPainter
+
+class RTreeMapTooltip {
+
+   static CONSTANTS = { DELAY: 0, OFFSET_X: 10, OFFSET_Y: -10, PADDING: 8, BORDER_RADIUS: 4 };
+
+   constructor(painter)
+   {
+      this.painter = painter;
+      this.tooltip = null;
+      this.content = '';
+      this.x = 0;
+      this.y = 0;
+   }
+
+   cleanup() {
+      if (this.tooltip !== null) document.body.removeChild(this.tooltip);
+   }
+
+   createTooltip()
+   {
+      if (this.tooltip)
+         return;
+
+      this.tooltip = document.createElement('div');
+      this.tooltip.style.cssText = `
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: ${RTreeMapTooltip.CONSTANTS.PADDING}px;
+            border-radius: ${RTreeMapTooltip.CONSTANTS.BORDER_RADIUS}px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.2s;
+            max-width: 200px;
+            word-wrap: break-word;
+        `;
+      document.body.appendChild(this.tooltip);
+   }
+
+   showTooltip()
+   {
+      if (!this.tooltip)
+         this.createTooltip();
+
+      this.tooltip.innerHTML = this.content;
+      this.tooltip.style.left = (this.x + RTreeMapTooltip.CONSTANTS.OFFSET_X) + 'px';
+      this.tooltip.style.top = (this.y + RTreeMapTooltip.CONSTANTS.OFFSET_Y) + 'px';
+      this.tooltip.style.opacity = '1';
+   }
+
+   hideTooltip()
+   {
+      if (this.tooltip) 
+         this.tooltip.style.opacity = '0';
+   }
+
+   generateTooltipContent(node)
+   {
+      const isLeaf = node.fNChildren === 0;
+      let content = (node.fName.length > 0) ? `<strong>${node.fName}</strong><br>` : '';
+
+      content += `<i>${(isLeaf ? 'Column' : 'Field')}</i><br>`;
+      content += `Size: ${this.painter.getDataStr(node.fSize)}<br>`;
+
+      if (isLeaf && node.fType !== undefined) 
+         content += `Type: ${node.fType}<br>`;
+      
+
+      if (!isLeaf) 
+         content += `Children: ${node.fNChildren}<br>`;
+      
+
+      const obj = this.painter.getObject();
+      if (obj.fNodes && obj.fNodes.length > 0) {
+         const totalSize = obj.fNodes[0].fSize,
+          percentage = ((node.fSize / totalSize) * 100).toFixed(2);
+         content += `Disk Usage: ${percentage}%`;
+      }
+
+      return content;
+   }
+
+}
+
+function computeFnv(str)
+{
+   const FNV_offset = 14695981039346656037n, FNV_prime = 1099511628211n;
+   let h = FNV_offset;
+   for (let i = 0; i < str.length; ++i) {
+      const octet = BigInt(str.charCodeAt(i) & 0xFF);
+      h ^= octet;
+      h *= FNV_prime;
+   }
+   return h;
+}
+
+class RTreeMapPainter extends ObjectPainter {
+
+   static CONSTANTS = {
+      STROKE_WIDTH: 0.15,
+      STROKE_COLOR: 'black',
+
+      COLOR_HOVER_BOOST: 10,
+
+      DATA_UNITS: ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB'],
+
+      MAIN_TREEMAP: { LEFT: 0.025, BOTTOM: 0.05, RIGHT: 0.825, TOP: 0.9 },
+
+      LEGEND: {
+         START_Y: 0.835,
+         ITEM_HEIGHT: 0.05,
+         BOX_WIDTH: 0.05,
+         TEXT_OFFSET_X: 0.01,
+         TEXT_OFFSET_Y: 0.01,
+         TEXT_LINE_SPACING: 0.015,
+         MAX_ITEMS: 10
+      },
+
+      TEXT: { SIZE_VW: 0.6, MIN_RECT_WIDTH: 0.025, MIN_RECT_HEIGHT: 0.05, PADDING: 10, LEAF_OFFSET_Y: 0.015 },
+
+      INDENT: 0.005,
+      LEGEND_INDENT_MULTIPLIER: 4
+   };
+
+   constructor(dom, obj, opt)
+   {
+      super(dom, obj, opt);
+      this.tooltip = new RTreeMapTooltip(this);
+      this.rootIndex = 0;
+      this.parentIndices = [];
+   }
+
+   cleanup() {
+      if (this._frame_hidden) {
+         delete this._frame_hidden;
+         this.getPadPainter()?.getFrameSvg().style('display', null);
+      }
+
+      this.tooltip.cleanup();
+      super.cleanup();
+   }
+
+   appendRect(begin, end, color, strokeColor = RTreeMapPainter.CONSTANTS.STROKE_COLOR,
+              strokeWidth = RTreeMapPainter.CONSTANTS.STROKE_WIDTH, node = null)
+   {
+      const rect = this.getG()
+                      .append('rect')
+                      .attr('x', this.axisToSvg('x', begin.x, this.isndc))
+                      .attr('y', this.axisToSvg('y', begin.y, this.isndc))
+                      .attr('width', `${Math.abs(end.x - begin.x) * 100}%`)
+                      .attr('height', `${Math.abs(end.y - begin.y) * 100}%`)
+                      .attr('fill', color)
+                      .attr('stroke', strokeColor)
+                      .attr('stroke-width', strokeWidth)
+                      .attr('pointer-events', 'fill');
+
+      if (node) {
+         rect.datum(node);
+         this.attachPointerEventsTreeMap(rect, node);
+      }
+      return rect;
+   }
+
+   appendText(content, pos, size, color, anchor = 'start')
+   {
+      return this.getG()
+         .append('text')
+         .attr('x', this.axisToSvg('x', pos.x, this.isndc))
+         .attr('y', this.axisToSvg('y', pos.y, this.isndc))
+         .attr('font-size', `${size}vw`)
+         .attr('fill', color)
+         .attr('text-anchor', anchor)
+         .attr('pointer-events', 'none')
+         .text(content);
+   }
+
+   getRgbList(rgbStr) { return rgbStr.slice(4, -1).split(',').map((x) => parseInt(x)); }
+
+   toRgbStr(rgbList) { return `rgb(${rgbList.join()})`; }
+
+   attachPointerEventsTreeMap(element, node)
+   {
+      const original_color = element.attr('fill'), hovered_color = this.toRgbStr(this.getRgbList(original_color)
+                          .map((color) => Math.min(color + RTreeMapPainter.CONSTANTS.COLOR_HOVER_BOOST, 255))),
+       mouseEnter = () => {
+         element.attr('fill', hovered_color);
+         this.tooltip.content = this.tooltip.generateTooltipContent(node);
+         this.tooltip.x = 0;
+         this.tooltip.y = 0;
+      },
+       mouseLeave = () => {
+         element.attr('fill', original_color);
+         this.tooltip.hideTooltip();
+      },
+       mouseMove = (event) => {
+         this.tooltip.x = event.pageX;
+         this.tooltip.y = event.pageY;
+         this.tooltip.showTooltip();
+      },
+       click = () => {
+         const obj = this.getObject(), nodeIndex = obj.fNodes.findIndex((elem) => elem === node);
+         if (nodeIndex === this.rootIndex) this.rootIndex = this.parentIndices[nodeIndex];
+         else {
+            let parentIndex = nodeIndex;
+            while (this.parentIndices[parentIndex] !== this.rootIndex) parentIndex = this.parentIndices[parentIndex];
+            this.rootIndex = parentIndex;
+            if (obj.fNodes[parentIndex].fNChildren === 0) this.rootIndex = this.parentIndices[nodeIndex];
+         }
+         this.redraw();
+      };
+      this.attachPointerEvents(element, {
+         'mouseenter': mouseEnter,
+         'mouseleave': mouseLeave,
+         'mousemove': mouseMove,
+         click
+      });
+   }
+
+   attachPointerEventsLegend(element, type)
+   {
+      const rects = this.getG().selectAll('rect'), mouseEnter =
+         () => { rects.filter((node) => node !== undefined && node.fType !== type).attr('opacity', '0.5'); },
+       mouseLeave = () => { rects.attr('opacity', '1'); };
+      this.attachPointerEvents(
+         element, { 'mouseenter': mouseEnter, 'mouseleave': mouseLeave, 'mousemove': () => {}, 'click': () => {} });
+   }
+
+   attachPointerEvents(element, events)
+   {
+      for (const [key, value] of Object.entries(events)) 
+         element.on(key, value);
+   }
+
+   computeColor(n)
+   {
+      const hash = Number(computeFnv(String(n)) & 0xFFFFFFFFn),
+       r = (hash >> 16) & 0xFF,
+       g = (hash >> 8) & 0xFF,
+       b = hash & 0xFF;
+      return this.toRgbStr([r, g, b]);
+   }
+
+   getDataStr(bytes)
+   {
+      const units = RTreeMapPainter.CONSTANTS.DATA_UNITS,
+       order = Math.floor(Math.log10(bytes) / 3),
+       finalSize = bytes / Math.pow(1000, order);
+      return `${finalSize.toFixed(2)}${units[order]}`;
+   }
+
+   computeWorstRatio(row, width, height, totalSize, horizontalRows)
+   {
+      if (row.length === 0)
+         return 0;
+
+      const sumRow = row.reduce((sum, child) => sum + child.fSize, 0);
+      if (sumRow === 0)
+         return 0;
+
+      let worstRatio = 0;
+      for (const child of row) {
+         const ratio = horizontalRows ? (child.fSize * width * totalSize) / (sumRow * sumRow * height)
+                                      : (child.fSize * height * totalSize) / (sumRow * sumRow * width),
+          aspectRatio = Math.max(ratio, 1 / ratio);
+         if (aspectRatio > worstRatio)
+            worstRatio = aspectRatio;
+      }
+      return worstRatio;
+   }
+
+   squarifyChildren(children, rect, horizontalRows, totalSize)
+   {
+      const width = rect.topRight.x - rect.bottomLeft.x,
+       height = rect.topRight.y - rect.bottomLeft.y,
+       remaining = [...children].sort((a, b) => b.fSize - a.fSize),
+       result = [],
+       remainingBegin = { ...rect.bottomLeft };
+
+      while (remaining.length > 0) {
+         const row = [];
+         let currentWorstRatio = Infinity;
+         const remainingWidth = rect.topRight.x - remainingBegin.x,
+          remainingHeight = rect.topRight.y - remainingBegin.y;
+
+         if (remainingWidth <= 0 || remainingHeight <= 0)
+            break;
+
+         while (remaining.length > 0) {
+            row.push(remaining.shift());
+            const newWorstRatio =
+               this.computeWorstRatio(row, remainingWidth, remainingHeight, totalSize, horizontalRows);
+            if (newWorstRatio > currentWorstRatio) {
+               remaining.unshift(row.pop());
+               break;
+            }
+            currentWorstRatio = newWorstRatio;
+         }
+
+         const sumRow = row.reduce((sum, child) => sum + child.fSize, 0);
+         if (sumRow === 0)
+            continue;
+
+         const dimension = horizontalRows ? (sumRow / totalSize * height) : (sumRow / totalSize * width);
+         let position = 0;
+
+         for (const child of row) {
+            const childDimension = child.fSize / sumRow * (horizontalRows ? width : height),
+             childBegin = horizontalRows ? { x: remainingBegin.x + position, y: remainingBegin.y }
+                                              : { x: remainingBegin.x, y: remainingBegin.y + position },
+             childEnd = horizontalRows
+                                ? { x: remainingBegin.x + position + childDimension, y: remainingBegin.y + dimension }
+                                : { x: remainingBegin.x + dimension, y: remainingBegin.y + position + childDimension };
+
+            result.push({ node: child, rect: { bottomLeft: childBegin, topRight: childEnd } });
+            position += childDimension;
+         }
+
+         if (horizontalRows)
+            remainingBegin.y += dimension;
+         else
+            remainingBegin.x += dimension;
+      }
+      return result;
+   }
+
+   drawLegend()
+   {
+      const obj = this.getObject(),
+       diskMap = {};
+
+      let stack = [this.rootIndex];
+      while (stack.length > 0) {
+         const node = obj.fNodes[stack.pop()];
+         if (node.fNChildren === 0)
+            diskMap[node.fType] = (diskMap[node.fType] || 0) + node.fSize;
+         stack = stack.concat(Array.from({ length: node.fNChildren }, (_, a) => a + node.fChildrenIdx));
+      }
+
+      const diskEntries = Object.entries(diskMap)
+                             .sort((a, b) => b[1] - a[1])
+                             .slice(0, RTreeMapPainter.CONSTANTS.LEGEND.MAX_ITEMS)
+                             .filter(([, size]) => size > 0),
+
+       legend = RTreeMapPainter.CONSTANTS.LEGEND;
+
+      diskEntries.forEach(([typeName, size], index) => {
+         const posY = legend.START_Y - index * legend.ITEM_HEIGHT,
+          posX = legend.START_Y + legend.ITEM_HEIGHT + legend.TEXT_OFFSET_X,
+          textSize = RTreeMapPainter.CONSTANTS.TEXT.SIZE_VW,
+
+          rect = this.appendRect({ x: legend.START_Y, y: posY },
+                                      { x: legend.START_Y + legend.ITEM_HEIGHT, y: posY - legend.ITEM_HEIGHT },
+                                      this.computeColor(typeName));
+         this.attachPointerEventsLegend(rect, typeName);
+
+         const diskOccupPercent = `${(size / obj.fNodes[this.rootIndex].fSize * 100).toFixed(2)}%`,
+          diskOccup = `(${this.getDataStr(size)} / ${this.getDataStr(obj.fNodes[this.rootIndex].fSize)})`;
+
+         [typeName, diskOccup, diskOccupPercent].forEach(
+            (content, i) =>
+               this.appendText(content, { x: posX, y: posY - legend.TEXT_OFFSET_Y - legend.TEXT_LINE_SPACING * (i) },
+                               textSize, 'black'));
+      });
+   }
+
+   trimText(textElement, rect)
+   {
+      const nodeElem = textElement.node();
+      let textContent = nodeElem.textContent;
+      const availablePx = Math.abs(this.axisToSvg('x', rect.topRight.x, this.isndc) -
+                                   this.axisToSvg('x', rect.bottomLeft.x, this.isndc)) -
+                          RTreeMapPainter.CONSTANTS.TEXT.PADDING;
+
+      while (nodeElem.getComputedTextLength && nodeElem.getComputedTextLength() > availablePx && textContent.length > 0) {
+         textContent = textContent.slice(0, -1);
+         nodeElem.textContent = textContent + '…';
+      }
+      return textContent;
+   }
+
+   drawTreeMap(node, rect, depth = 0)
+   {
+      const isLeaf = node.fNChildren === 0,
+       color = isLeaf ? this.computeColor(node.fType) : 'rgb(100,100,100)';
+      this.appendRect({ x: rect.bottomLeft.x, y: rect.topRight.y }, { x: rect.topRight.x, y: rect.bottomLeft.y }, color,
+                      RTreeMapPainter.CONSTANTS.STROKE_COLOR, RTreeMapPainter.CONSTANTS.STROKE_WIDTH, node);
+
+      const rectWidth = rect.topRight.x - rect.bottomLeft.x,
+       rectHeight = rect.topRight.y - rect.bottomLeft.y,
+       labelBase = `${node.fName} (${this.getDataStr(node.fSize)})`,
+
+       textConstants = RTreeMapPainter.CONSTANTS.TEXT,
+       textSize = (rectWidth <= textConstants.MIN_RECT_WIDTH || rectHeight <= textConstants.MIN_RECT_HEIGHT)
+                          ? 0
+                          : textConstants.SIZE_VW;
+
+      if (textSize > 0) {
+         const textElement = this.appendText(labelBase, {
+            x: rect.bottomLeft.x + (isLeaf ? rectWidth / 2 : RTreeMapPainter.CONSTANTS.INDENT),
+            y: isLeaf ? (rect.bottomLeft.y + rect.topRight.y) / 2 : (rect.topRight.y - textConstants.LEAF_OFFSET_Y)
+         },
+                                             textSize, 'white', isLeaf ? 'middle' : 'start');
+         textElement.textContent = this.trimText(textElement, rect);
+      }
+
+      if (!isLeaf && node.fNChildren > 0) {
+         const obj = this.getObject(),
+          children = obj.fNodes.slice(node.fChildrenIdx, node.fChildrenIdx + node.fNChildren),
+          totalSize = children.reduce((sum, child) => sum + child.fSize, 0);
+
+         if (totalSize > 0) {
+            const indent = RTreeMapPainter.CONSTANTS.INDENT,
+             innerRect = {
+               bottomLeft: { x: rect.bottomLeft.x + indent, y: rect.bottomLeft.y + indent },
+               topRight: {
+                  x: rect.topRight.x - indent,
+                  y: rect.topRight.y - indent * RTreeMapPainter.CONSTANTS.LEGEND_INDENT_MULTIPLIER
+               }
+            },
+
+             width = innerRect.topRight.x - innerRect.bottomLeft.x,
+             height = innerRect.topRight.y - innerRect.bottomLeft.y,
+             horizontalRows = width > height,
+
+             rects = this.squarifyChildren(children, innerRect, horizontalRows, totalSize);
+            rects.forEach(
+               ({ node: childNode, rect: childRect }) => { this.drawTreeMap(childNode, childRect, depth + 1); });
+         }
+      }
+   }
+
+   createParentIndices()
+   {
+      const obj = this.getObject();
+      this.parentIndices = new Array(obj.fNodes.length).fill(0);
+      obj.fNodes.forEach((node, index) => {
+         for (let i = node.fChildrenIdx; i < node.fChildrenIdx + node.fNChildren; i++) 
+            this.parentIndices[i] = index;
+      });
+   }
+
+   getDirectory()
+   {
+      const obj = this.getObject();
+      let result = '',
+       currentIndex = this.rootIndex;
+      while (currentIndex !== 0) {
+         result = obj.fNodes[currentIndex].fName + '/' + result;
+         currentIndex = this.parentIndices[currentIndex];
+      }
+      return result;
+   }
+
+   redraw()
+   {
+      const svg = this.getPadPainter().getFrameSvg();
+      if (!svg.empty()) {
+         svg.style('display', 'none');
+         this._frame_hidden = true;
+      }
+
+      const obj = this.getObject();
+      this.createG();
+      this.isndc = true;
+
+      if (obj.fNodes && obj.fNodes.length > 0) {
+         this.createParentIndices();
+         const mainArea = RTreeMapPainter.CONSTANTS.MAIN_TREEMAP;
+         this.drawTreeMap(
+            obj.fNodes[this.rootIndex],
+            { bottomLeft: { x: mainArea.LEFT, y: mainArea.BOTTOM }, topRight: { x: mainArea.RIGHT, y: mainArea.TOP } });
+         this.drawLegend();
+         this.appendText(this.getDirectory(), { x: RTreeMapPainter.CONSTANTS.MAIN_TREEMAP.LEFT, y: RTreeMapPainter.CONSTANTS.MAIN_TREEMAP.TOP+0.01 },
+             RTreeMapPainter.CONSTANTS.TEXT.SIZE_VW, 'black');
+      }
+      return this;
+   }
+
+   static async draw(dom, obj, opt)
+   {
+      const painter = new RTreeMapPainter(dom, obj, opt);
+      return ensureTCanvas(painter, false).then(() => painter.redraw());
+   }
+
+}
+
+var RTreeMapPainter$1 = /*#__PURE__*/Object.freeze({
+__proto__: null,
+RTreeMapPainter: RTreeMapPainter
+});
 
 // CSG library for THREE.js
 
@@ -104339,7 +105376,7 @@ let Polygon$1 = class Polygon {
    classifyVertex(vertex) {
       const side_value = this.nsign * (this.normal.dot(vertex) - this.w);
 
-      if (side_value < -1e-5) return BACK;
+      if (side_value < -EPSILON) return BACK;
       if (side_value > EPSILON) return FRONT;
       return COPLANAR;
    }
@@ -104943,7 +105980,7 @@ function createNormal(axis_name, pos, size) {
 const _cfg = {
    GradPerSegm: 6,       // grad per segment in cylinder/spherical symmetry shapes
    CompressComp: true    // use faces compression in composite shapes
-};
+}, kShapeType = '$$Shape$$';
 
 /** @summary Returns or set geometry config values
  * @desc Supported 'GradPerSegm' and 'CompressComp'
@@ -104959,6 +105996,9 @@ function geoCfg(name, value) {
 const kindGeo = 0,    // TGeoNode / TGeoShape
       kindEve = 1,    // TEveShape / TEveGeoShapeExtract
       kindShape = 2,  // special kind for single shape handling
+
+      kGetMesh = 'mesh',  // return mesh from createObject3D
+      kDeleteMesh = 'delete_mesh', // delete mesh in createObject3D
 
       /** @summary TGeo-related bits
        * @private */
@@ -105056,8 +106096,10 @@ function getNodeKind(obj) {
   * @desc Used to count total shapes number in composites
   * @private */
 function countNumShapes(shape) {
-   if (!shape) return 0;
-   if (shape._typename !== clTGeoCompositeShape) return 1;
+   if (!shape)
+      return 0;
+   if (shape._typename !== clTGeoCompositeShape)
+      return 1;
    return countNumShapes(shape.fNode.fLeft) + countNumShapes(shape.fNode.fRight);
 }
 
@@ -105080,7 +106122,8 @@ function checkDuplicates(parent, chlds) {
    const names = [], cnts = [];
    for (let k = 0; k < chlds.length; ++k) {
       const chld = chlds[k];
-      if (!chld?.fName) continue;
+      if (!chld?.fName)
+         continue;
       if (!chld.$geo_suffix) {
          const indx = names.indexOf(chld.fName);
          if (indx >= 0) {
@@ -105359,14 +106402,11 @@ class PolygonsCreator {
      * @desc From four vertices one normally creates two faces (1,2,3) and (1,3,4)
      * if (reduce === 1), first face is reduced
      * if (reduce === 2), second face is reduced */
-   addFace4(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, reduce) {
-      if (reduce === undefined) reduce = 0;
-
+   addFace4(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, reduce = 0) {
       this.v1 = new Vertex(x1, y1, z1, 0, 0, 0);
       this.v2 = (reduce === 1) ? null : new Vertex(x2, y2, z2, 0, 0, 0);
       this.v3 = new Vertex(x3, y3, z3, 0, 0, 0);
       this.v4 = (reduce === 2) ? null : new Vertex(x4, y4, z4, 0, 0, 0);
-
       this.reduce = reduce;
 
       if (this.multi) {
@@ -105399,19 +106439,15 @@ class PolygonsCreator {
             polygon.vertices.push(this.v3);
           else
             polygon.vertices.unshift(this.v2);
-
-         return;
+      } else {
+         const polygon = new Polygon$1();
+         switch (reduce) {
+            case 0: polygon.vertices.push(this.v1, this.v2, this.v3, this.v4); break;
+            case 1: polygon.vertices.push(this.v1, this.v3, this.v4); break;
+            case 2: polygon.vertices.push(this.v1, this.v2, this.v3); break;
+         }
+         this.polygons.push(polygon);
       }
-
-      const polygon = new Polygon$1();
-
-      switch (reduce) {
-         case 0: polygon.vertices.push(this.v1, this.v2, this.v3, this.v4); break;
-         case 1: polygon.vertices.push(this.v1, this.v3, this.v4); break;
-         case 2: polygon.vertices.push(this.v1, this.v2, this.v3); break;
-      }
-
-      this.polygons.push(polygon);
    }
 
    /** @summary Specify normal for face with 4 vertices
@@ -105419,18 +106455,18 @@ class PolygonsCreator {
      * reduce has same meaning and should be the same */
    setNormal4(nx1, ny1, nz1, nx2, ny2, nz2, nx3, ny3, nz3, nx4, ny4, nz4) {
       this.v1.setnormal(nx1, ny1, nz1);
-      if (this.v2) this.v2.setnormal(nx2, ny2, nz2);
+      this.v2?.setnormal(nx2, ny2, nz2);
       this.v3.setnormal(nx3, ny3, nz3);
-      if (this.v4) this.v4.setnormal(nx4, ny4, nz4);
+      this.v4?.setnormal(nx4, ny4, nz4);
    }
 
    /** @summary Set normal
      * @desc special shortcut, when same normals can be applied for 1-2 point and 3-4 point */
    setNormal_12_34(nx12, ny12, nz12, nx34, ny34, nz34) {
       this.v1.setnormal(nx12, ny12, nz12);
-      if (this.v2) this.v2.setnormal(nx12, ny12, nz12);
+      this.v2?.setnormal(nx12, ny12, nz12);
       this.v3.setnormal(nx34, ny34, nz34);
-      if (this.v4) this.v4.setnormal(nx34, ny34, nz34);
+      this.v4?.setnormal(nx34, ny34, nz34);
    }
 
    /** @summary Calculate normal */
@@ -105463,9 +106499,9 @@ class PolygonsCreator {
    /** @summary Set normal */
    setNormal(nx, ny, nz) {
       this.v1.setnormal(nx, ny, nz);
-      if (this.v2) this.v2.setnormal(nx, ny, nz);
+      this.v2?.setnormal(nx, ny, nz);
       this.v3.setnormal(nx, ny, nz);
-      if (this.v4) this.v4.setnormal(nx, ny, nz);
+      this.v4?.setnormal(nx, ny, nz);
    }
 
    /** @summary Recalculate Z with provided func */
@@ -105489,7 +106525,8 @@ class PolygonsCreator {
 /** @summary Creates cube geometry
   * @private */
 function createCubeBuffer(shape, faces_limit) {
-   if (faces_limit < 0) return 12;
+   if (faces_limit < 0)
+      return 12;
 
    const dx = shape.fDX, dy = shape.fDY, dz = shape.fDZ,
          creator = faces_limit ? new PolygonsCreator() : new GeometryCreator(12);
@@ -105536,7 +106573,8 @@ function create8edgesBuffer(v, faces_limit) {
 /** @summary Creates PARA geometry
   * @private */
 function createParaBuffer(shape, faces_limit) {
-   if (faces_limit < 0) return 12;
+   if (faces_limit < 0)
+      return 12;
 
    const txy = shape.fTxy, txz = shape.fTxz, tyz = shape.fTyz, v = [
        -shape.fZ*txz-txy*shape.fY-shape.fX, -shape.fY-shape.fZ*tyz, -shape.fZ,
@@ -105554,7 +106592,8 @@ function createParaBuffer(shape, faces_limit) {
 /** @summary Creates trapezoid geometry
   * @private */
 function createTrapezoidBuffer(shape, faces_limit) {
-   if (faces_limit < 0) return 12;
+   if (faces_limit < 0)
+      return 12;
 
    let y1, y2;
    if (shape._typename === clTGeoTrd1)
@@ -105581,7 +106620,8 @@ function createTrapezoidBuffer(shape, faces_limit) {
 /** @summary Creates arb8 geometry
   * @private */
 function createArb8Buffer(shape, faces_limit) {
-   if (faces_limit < 0) return 12;
+   if (faces_limit < 0)
+      return 12;
 
    const vertices = [
       shape.fXY[0][0], shape.fXY[0][1], -shape.fDZ,
@@ -105605,8 +106645,10 @@ function createArb8Buffer(shape, faces_limit) {
              if ((vertices[n1] === vertices[n2]) &&
                 (vertices[n1+1] === vertices[n2+1]) &&
                 (vertices[n1+2] === vertices[n2+2])) {
-                   for (let k=0; k<indicies.length; ++k)
-                     if (indicies[k] === n2/3) indicies[k] = n1/3;
+                   for (let k = 0; k < indicies.length; ++k) {
+                     if (indicies[k] === n2 / 3)
+                        indicies[k] = n1 / 3;
+                  }
                }
          }
       }
@@ -105715,12 +106757,13 @@ function createSphereBuffer(shape, faces_limit) {
    const numcut = (phiLength === 360) ? 0 : heightSegments * (noInside ? 2 : 4),
          epsilon = 1e-10;
 
-   if (faces_limit < 0) return numoutside * (noInside ? 1 : 2) + numtop + numbottom + numcut;
+   if (faces_limit < 0)
+      return numoutside * (noInside ? 1 : 2) + numtop + numbottom + numcut;
 
    const _sinp = new Float32Array(widthSegments+1),
-       _cosp = new Float32Array(widthSegments+1),
-       _sint = new Float32Array(heightSegments+1),
-       _cost = new Float32Array(heightSegments+1);
+         _cosp = new Float32Array(widthSegments+1),
+         _sint = new Float32Array(heightSegments+1),
+         _cost = new Float32Array(heightSegments+1);
 
    for (let n = 0; n <= heightSegments; ++n) {
       const theta = (thetaStart + thetaLength/heightSegments*n)*Math.PI/180;
@@ -105734,8 +106777,14 @@ function createSphereBuffer(shape, faces_limit) {
       _cosp[n] = Math.cos(phi);
    }
 
-   if (Math.abs(_sint[0]) <= epsilon) { numoutside -= widthSegments; numtop = 0; }
-   if (Math.abs(_sint[heightSegments]) <= epsilon) { numoutside -= widthSegments; numbottom = 0; }
+   if (Math.abs(_sint[0]) <= epsilon) {
+      numoutside -= widthSegments;
+      numtop = 0;
+   }
+   if (Math.abs(_sint[heightSegments]) <= epsilon) {
+      numoutside -= widthSegments;
+      numbottom = 0;
+   }
 
    const numfaces = numoutside * (noInside ? 1 : 2) + numtop + numbottom + numcut,
          creator = faces_limit ? new PolygonsCreator() : new GeometryCreator(numfaces);
@@ -105839,14 +106888,17 @@ function createTubeBuffer(shape, faces_limit) {
       numfaces += radiusSegments * (((innerR[0] <= 0) || (innerR[1] <= 0)) ? 1 : 2);
 
    // upper cap
-   if (outerR[0] > 0) numfaces += radiusSegments * ((innerR[0] > 0) ? 2 : 1);
+   if (outerR[0] > 0)
+      numfaces += radiusSegments * ((innerR[0] > 0) ? 2 : 1);
    // bottom cup
-   if (outerR[1] > 0) numfaces += radiusSegments * ((innerR[1] > 0) ? 2 : 1);
+   if (outerR[1] > 0)
+      numfaces += radiusSegments * ((innerR[1] > 0) ? 2 : 1);
 
    if (thetaLength < 360)
       numfaces += ((outerR[0] > innerR[0]) ? 2 : 0) + ((outerR[1] > innerR[1]) ? 2 : 0);
 
-   if (faces_limit < 0) return numfaces;
+   if (faces_limit < 0)
+      return numfaces;
 
    const phi0 = thetaStart*Math.PI/180,
          dphi = thetaLength/radiusSegments*Math.PI/180,
@@ -105891,7 +106943,8 @@ function createTubeBuffer(shape, faces_limit) {
                R[0] * _cos[seg+d2], R[0] * _sin[seg+d2], shape.fDZ,
                reduce);
 
-         if (calcZ) creator.recalcZ(calcZ);
+         if (calcZ)
+            creator.recalcZ(calcZ);
 
          creator.setNormal_12_34(nxy*_cos[seg+d1], nxy*_sin[seg+d1], nz,
                                  nxy*_cos[seg+d2], nxy*_sin[seg+d2], nz,
@@ -105901,11 +106954,12 @@ function createTubeBuffer(shape, faces_limit) {
 
    // create upper/bottom part
    for (let side = 0; side < 2; ++side) {
-      if (outerR[side] <= 0) continue;
+      if (outerR[side] <= 0)
+         continue;
 
       const d1 = side, d2 = 1- side,
-          sign = (side === 0) ? 1 : -1,
-          reduce = (innerR[side] <= 0) ? 2 : 0;
+            sign = (side === 0) ? 1 : -1,
+            reduce = (innerR[side] <= 0) ? 2 : 0;
       if ((reduce === 2) && (thetaLength === 360) && !calcZ)
          creator.startPolygon(side === 0);
       for (let seg = 0; seg < radiusSegments; ++seg) {
@@ -105932,7 +106986,8 @@ function createTubeBuffer(shape, faces_limit) {
                        outerR[0] * _cos[0], outerR[0] * _sin[0], shape.fDZ,
                        innerR[0] * _cos[0], innerR[0] * _sin[0], shape.fDZ,
                        (outerR[0] === innerR[0]) ? 2 : ((innerR[1] === outerR[1]) ? 1 : 0));
-      if (calcZ) creator.recalcZ(calcZ);
+      if (calcZ)
+         creator.recalcZ(calcZ);
       creator.calcNormal();
 
       creator.addFace4(innerR[0] * _cos[radiusSegments], innerR[0] * _sin[radiusSegments], shape.fDZ,
@@ -105941,7 +106996,8 @@ function createTubeBuffer(shape, faces_limit) {
                        innerR[1] * _cos[radiusSegments], innerR[1] * _sin[radiusSegments], -shape.fDZ,
                        (outerR[0] === innerR[0]) ? 1 : ((innerR[1] === outerR[1]) ? 2 : 0));
 
-      if (calcZ) creator.recalcZ(calcZ);
+      if (calcZ)
+         creator.recalcZ(calcZ);
       creator.calcNormal();
    }
 
@@ -105953,7 +107009,8 @@ function createTubeBuffer(shape, faces_limit) {
 function createEltuBuffer(shape, faces_limit) {
    const radiusSegments = Math.max(4, Math.round(360 / _cfg.GradPerSegm));
 
-   if (faces_limit < 0) return radiusSegments*4;
+   if (faces_limit < 0)
+      return radiusSegments*4;
 
    // calculate all sin/cos tables in advance
    const x = new Float32Array(radiusSegments+1),
@@ -106007,7 +107064,8 @@ function createTorusBuffer(shape, faces_limit) {
        tubularSegments = Math.max(8, Math.round(shape.fDphi / _cfg.GradPerSegm)),
        numfaces = (shape.fRmin > 0 ? 4 : 2) * radialSegments * (tubularSegments + (shape.fDphi !== 360 ? 1 : 0));
 
-   if (faces_limit < 0) return numfaces;
+   if (faces_limit < 0)
+      return numfaces;
 
    if ((faces_limit > 0) && (numfaces > faces_limit)) {
       radialSegments = Math.floor(radialSegments/Math.sqrt(numfaces / faces_limit));
@@ -106134,7 +107192,6 @@ function createPolygonBuffer(shape, faces_limit) {
                 ((shape[rside][layer+1] === rad) && (shape[rside][layer-1] === rad))) {
                // same Z and R as before - ignore
                // or same R before and after
-
                continue;
             }
          }
@@ -106342,10 +107399,13 @@ function createParaboloidBuffer(shape, faces_limit) {
    const rmin = shape.fRlo, rmax = shape.fRhi;
    let numfaces = (heightSegments+1) * radiusSegments*2;
 
-   if (rmin === 0) numfaces -= radiusSegments*2; // complete layer
-   if (rmax === 0) numfaces -= radiusSegments*2; // complete layer
+   if (rmin === 0)
+      numfaces -= radiusSegments*2; // complete layer
+   if (rmax === 0)
+      numfaces -= radiusSegments*2; // complete layer
 
-   if (faces_limit < 0) return numfaces;
+   if (faces_limit < 0)
+      return numfaces;
 
    let zmin = -shape.fDZ, zmax = shape.fDZ;
 
@@ -106497,7 +107557,8 @@ function createTessellatedBuffer(shape, faces_limit) {
    let numfaces = 0;
    for (let i = 0; i < shape.fFacets.length; ++i)
       numfaces += (shape.fFacets[i].fNvert === 4) ? 2 : 1;
-   if (faces_limit < 0) return numfaces;
+   if (faces_limit < 0)
+      return numfaces;
 
    const creator = faces_limit ? new PolygonsCreator() : new GeometryCreator(numfaces);
 
@@ -106536,7 +107597,7 @@ function createMatrix(matrix) {
       // eslint-disable-next-line  no-fallthrough
       case 'TGeoCombiTrans':
          translation = matrix.fTranslation;
-         if (matrix.fRotation) rotation = matrix.fRotation.fRotationMatrix;
+         rotation = matrix.fRotation?.fRotationMatrix;
          break;
       case 'TGeoHMatrix':
          translation = matrix.fTranslation;
@@ -106549,7 +107610,8 @@ function createMatrix(matrix) {
          console.warn(`unsupported matrix ${matrix._typename}`);
    }
 
-   if (!translation && !rotation && !scale) return null;
+   if (!translation && !rotation && !scale)
+      return null;
 
    const res = new THREE.Matrix4();
 
@@ -106579,7 +107641,6 @@ function getNodeMatrix(kind, node) {
       // special handling for EVE nodes
 
       matrix = new THREE.Matrix4();
-
       if (node.fTrans) {
          matrix.set(node.fTrans[0], node.fTrans[4], node.fTrans[8], 0,
                     node.fTrans[1], node.fTrans[5], node.fTrans[9], 0,
@@ -106647,10 +107708,11 @@ function getNodeMatrix(kind, node) {
 }
 
 /** @summary Returns number of faces for provided geometry
-  * @param {Object} geom  - can be BufferGeometry, CsgGeometry or interim array of polygons
+  * @param geom  - can be BufferGeometry, CsgGeometry or interim array of polygons
   * @private */
 function numGeometryFaces(geom) {
-   if (!geom) return 0;
+   if (!geom)
+      return 0;
 
    if (geom instanceof Geometry)
       return geom.tree.numPolygons();
@@ -106666,7 +107728,8 @@ function numGeometryFaces(geom) {
 /** @summary Returns geometry bounding box
   * @private */
 function geomBoundingBox(geom) {
-   if (!geom) return null;
+   if (!geom)
+      return null;
 
    let polygons = null;
 
@@ -106695,7 +107758,8 @@ function geomBoundingBox(geom) {
   * @desc Just big-enough triangle to make BSP calculations
   * @private */
 function createHalfSpace(shape, geom) {
-   if (!shape?.fN || !shape?.fP) return null;
+   if (!shape?.fN || !shape?.fP)
+      return null;
 
    const vertex = new THREE.Vector3(shape.fP[0], shape.fP[1], shape.fP[2]),
          normal = new THREE.Vector3(shape.fN[0], shape.fN[1], shape.fN[2]);
@@ -106733,23 +107797,6 @@ function createHalfSpace(shape, geom) {
    return geometry;
 }
 
-/** @summary Returns number of faces for provided geometry
-  * @param geom  - can be BufferGeometry, CsgGeometry or interim array of polygons
-  * @private */
-function countGeometryFaces(geom) {
-   if (!geom) return 0;
-
-   if (geom instanceof Geometry)
-      return geom.tree.numPolygons();
-
-   // special array of polygons
-   if (geom.polygons)
-      return geom.polygons.length;
-
-   const attr = geom.getAttribute('position');
-   return attr?.count ? Math.round(attr.count / 3) : 0;
-}
-
 let createGeometry = null;
 
 /** @summary Creates geometry for composite shape
@@ -106778,9 +107825,10 @@ function createComposite(shape, faces_limit) {
     else
       geom1 = createGeometry(shape.fNode.fLeft, faces_limit);
 
-   if (!geom1) return null;
+   if (!geom1)
+      return null;
 
-   let n1 = countGeometryFaces(geom1), n2 = 0;
+   let n1 = numGeometryFaces(geom1), n2 = 0;
    if (geom1._exceed_limit) n1 += faces_limit;
 
    if (n1 < faces_limit) {
@@ -106790,13 +107838,14 @@ function createComposite(shape, faces_limit) {
          geom2 = createGeometry(shape.fNode.fRight, faces_limit);
 
 
-      n2 = countGeometryFaces(geom2);
+      n2 = numGeometryFaces(geom2);
    }
 
    if ((n1 + n2 >= faces_limit) || !geom2) {
       if (geom1.polygons)
          geom1 = createBufferGeometry(geom1.polygons);
-      if (matrix1) geom1.applyMatrix4(matrix1);
+      if (matrix1)
+         geom1.applyMatrix4(matrix1);
       geom1._exceed_limit = true;
       return geom1;
    }
@@ -106816,10 +107865,10 @@ function createComposite(shape, faces_limit) {
          geoWarn('unsupported bool operation ' + shape.fNode._typename + ', use first geom');
    }
 
-   if (countGeometryFaces(bsp1) === 0) {
+   if (numGeometryFaces(bsp1) === 0) {
       geoWarn('Zero faces in comp shape' +
-             ` left: ${shape.fNode.fLeft._typename} ${countGeometryFaces(geom1)} faces` +
-             ` right: ${shape.fNode.fRight._typename} ${countGeometryFaces(geom2)} faces` +
+             ` left: ${shape.fNode.fLeft._typename} ${numGeometryFaces(geom1)} faces` +
+             ` right: ${shape.fNode.fRight._typename} ${numGeometryFaces(geom2)} faces` +
              '  use first');
       bsp1 = new Geometry(geom1, matrix1);
    }
@@ -106829,14 +107878,13 @@ function createComposite(shape, faces_limit) {
 
 /** @summary Try to create projected geometry
   * @private */
-function projectGeometry(geom, matrix, projection, position, flippedMesh) {
-   if (!geom.boundingBox) geom.computeBoundingBox();
+function projectGeometry(geom, matrix, projection, position = 0, flippedMesh = false) {
+   if (!geom.boundingBox)
+      geom.computeBoundingBox();
 
    const box = geom.boundingBox.clone();
 
    box.applyMatrix4(matrix);
-
-   if (!position) position = 0;
 
    if (((box.min[projection] >= position) && (box.max[projection] >= position)) ||
        ((box.min[projection] <= position) && (box.max[projection] <= position)))
@@ -106870,9 +107918,7 @@ function projectGeometry(geom, matrix, projection, position, flippedMesh) {
   *  - if limit < 0 just returns estimated number of faces
   *  - if limit > 0 return list of CsgPolygons (used only for composite shapes)
   * @private */
-createGeometry = function(shape, limit) {
-   if (limit === undefined) limit = 0;
-
+createGeometry = function(shape, limit = 0) {
    try {
       switch (shape._typename) {
          case clTGeoBBox: return createCubeBuffer(shape, limit);
@@ -106971,8 +108017,7 @@ function makeEveGeometry(rd) {
   * @private */
 function makeViewerGeometry(rd) {
    const vtxBuff = new Float32Array(rd.raw.buffer, 0, rd.raw.buffer.byteLength/4),
-
-   body = new THREE.BufferGeometry();
+         body = new THREE.BufferGeometry();
    body.setAttribute('position', new THREE.BufferAttribute(vtxBuff, 3));
    body.setIndex(new THREE.BufferAttribute(new Uint32Array(rd.idx), 1));
    body.computeVertexNormals();
@@ -107004,7 +108049,7 @@ function createServerGeometry(rd, nsegm) {
 
    // shape handle is similar to created in TGeoPainter
    return {
-      _typename: '$$Shape$$', // indicate that shape can be used as is
+      _typename: kShapeType, // indicate that shape can be used as is
       ready: true,
       geom,
       nfaces: numGeometryFaces(geom)
@@ -107113,7 +108158,8 @@ function createProjectionMatrix(camera) {
 /** @summary Creates frustum
   * @private */
 function createFrustum(source) {
-   if (!source) return null;
+   if (!source)
+      return null;
 
    if (source instanceof THREE.PerspectiveCamera)
       source = createProjectionMatrix(source);
@@ -107142,32 +108188,27 @@ function createFrustum(source) {
          pnt.x = corners[i] * shape.fDX;
          pnt.y = corners[i+1] * shape.fDY;
          pnt.z = corners[i+2] * shape.fDZ;
-         if (this.containsPoint(pnt.applyMatrix4(matrix))) return true;
+         if (this.containsPoint(pnt.applyMatrix4(matrix)))
+            return true;
      }
 
      return false;
    };
 
+   frustum.CheckPoint = function(x, y, z) {
+      return this.containsPoint(this.test.set(x, y, z)) ? 1 : 0;
+   };
+
    frustum.CheckBox = function(box) {
-      const pnt = this.test;
-      let cnt = 0;
-      pnt.set(box.min.x, box.min.y, box.min.z);
-      if (this.containsPoint(pnt)) cnt++;
-      pnt.set(box.min.x, box.min.y, box.max.z);
-      if (this.containsPoint(pnt)) cnt++;
-      pnt.set(box.min.x, box.max.y, box.min.z);
-      if (this.containsPoint(pnt)) cnt++;
-      pnt.set(box.min.x, box.max.y, box.max.z);
-      if (this.containsPoint(pnt)) cnt++;
-      pnt.set(box.max.x, box.max.y, box.max.z);
-      if (this.containsPoint(pnt)) cnt++;
-      pnt.set(box.max.x, box.min.y, box.max.z);
-      if (this.containsPoint(pnt)) cnt++;
-      pnt.set(box.max.x, box.max.y, box.min.z);
-      if (this.containsPoint(pnt)) cnt++;
-      pnt.set(box.max.x, box.max.y, box.max.z);
-      if (this.containsPoint(pnt)) cnt++;
-      return cnt > 5; // only if 6 edges and more are seen, we think that box is fully visible
+      // only if 6 edges and more are seen, we think that box is fully visible
+      return this.CheckPoint(box.min.x, box.min.y, box.min.z) +
+             this.CheckPoint(box.min.x, box.min.y, box.max.z) +
+             this.CheckPoint(box.min.x, box.max.y, box.min.z) +
+             this.CheckPoint(box.min.x, box.max.y, box.max.z) +
+             this.CheckPoint(box.max.x, box.max.y, box.max.z) +
+             this.CheckPoint(box.max.x, box.min.y, box.max.z) +
+             this.CheckPoint(box.max.x, box.max.y, box.min.z) +
+             this.CheckPoint(box.max.x, box.max.y, box.max.z) > 5;
    };
 
    return frustum;
@@ -107176,7 +108217,8 @@ function createFrustum(source) {
 /** @summary Create node material
   * @private */
 function createMaterial(cfg, args0) {
-   if (!cfg) cfg = { material_kind: 'lambert' };
+   if (!cfg)
+      cfg = { material_kind: 'lambert' };
 
    const args = Object.assign({}, args0);
 
@@ -107187,7 +108229,8 @@ function createMaterial(cfg, args0) {
       args.opacity = Math.min(1 - cfg.transparency, args.opacity);
 
    args.wireframe = cfg.wireframe ?? false;
-   if (!args.color) args.color = 'red';
+   if (!args.color)
+      args.color = 'red';
    args.side = THREE.FrontSide;
    args.transparent = args.opacity < 1;
    args.depthWrite = args.opactity === 1;
@@ -107257,9 +108300,12 @@ function compare_stacks(stack1, stack2) {
 /** @summary Checks if two stack arrays are identical
   * @private */
 function isSameStack(stack1, stack2) {
-   if (!stack1 || !stack2) return false;
-   if (stack1 === stack2) return true;
-   if (stack1.length !== stack2.length) return false;
+   if (!stack1 || !stack2)
+      return false;
+   if (stack1 === stack2)
+      return true;
+   if (stack1.length !== stack2.length)
+      return false;
    for (let k = 0; k < stack1.length; ++k)
       if (stack1[k] !== stack2[k]) return false;
    return true;
@@ -107398,15 +108444,12 @@ class ClonedNodes {
 
    /** @summary Returns TGeoShape for element with given indx */
    getNodeShape(indx) {
-      if (!this.origin || !this.nodes) return null;
+      if (!this.origin || !this.nodes)
+         return null;
       const obj = this.origin[indx], clone = this.nodes[indx];
-      if (!obj || !clone) return null;
-      if (clone.kind === kindGeo) {
-         if (obj.fVolume) return obj.fVolume.fShape;
-      } else
-         return obj.fShape;
-
-      return null;
+      if (!obj || !clone)
+         return null;
+      return clone.kind === kindGeo ? obj.fVolume?.fShape : obj.fShape;
    }
 
    /** @summary function to cleanup as much as possible structures
@@ -107442,7 +108485,7 @@ class ClonedNodes {
    /** @summary Create complete description for provided Geo object */
    createClones(obj, sublevel, kind) {
       if (!sublevel) {
-         if (obj?._typename === '$$Shape$$')
+         if (obj?._typename === kShapeType)
             return this.createClonesForShape(obj);
 
          this.origin = [];
@@ -107605,7 +108648,8 @@ class ClonedNodes {
 
                   // special handling for top node
                   if (n === 0) {
-                     if (hide_top_volume) clone.vis = 0;
+                     if (hide_top_volume)
+                        clone.vis = 0;
                      delete clone.nochlds;
                   }
                }
@@ -107620,9 +108664,11 @@ class ClonedNodes {
          }
 
          // shape with zero volume or without faces will not be observed
-         if ((clone.vol <= 0) || (clone.nfaces <= 0)) clone.vis = 0;
+         if ((clone.vol <= 0) || (clone.nfaces <= 0))
+            clone.vis = 0;
 
-         if (clone.vis) res++;
+         if (clone.vis)
+            res++;
       }
 
       return res;
@@ -107682,7 +108728,8 @@ class ClonedNodes {
          return;
       } else if (on === 'clear') {
          do_clear = true;
-         if (!this.fVisibility) return;
+         if (!this.fVisibility)
+            return;
       } else
          on = Boolean(on);
       if (!stack)
@@ -107736,13 +108783,16 @@ class ClonedNodes {
    /** @summary Scan visible nodes in hierarchy, starting from nodeid
      * @desc Each entry in hierarchy get its unique id, which is not changed with visibility flags */
    scanVisible(arg, vislvl) {
-      if (!this.nodes) return 0;
+      if (!this.nodes)
+         return 0;
 
       if (vislvl === undefined) {
-         if (!arg) arg = {};
+         if (!arg)
+            arg = {};
 
          vislvl = arg.vislvl || this.vislevel || 4; // default 3 in ROOT
-         if (vislvl > 88) vislvl = 88;
+         if (vislvl > 88)
+            vislvl = 88;
 
          arg.stack = new Array(100); // current stack
          arg.nodeid = 0;
@@ -107864,7 +108914,8 @@ class ClonedNodes {
 
       if (withmatrix) {
          res.matrix = new THREE.Matrix4();
-         if (res.node.matrix) res.matrix.fromArray(res.node.matrix);
+         if (res.node.matrix)
+            res.matrix.fromArray(res.node.matrix);
       }
 
       if (this.origin)
@@ -107917,7 +108968,8 @@ class ClonedNodes {
 
       for (let k = 1; k < ids.length; ++k) {
          const nodeid = ids[k];
-         if (!node) return null;
+         if (!node)
+            return null;
          const chindx = node.chlds.indexOf(nodeid);
          if (chindx < 0) {
             console.error(`wrong nodes ids ${ids[k]} is not child of ${ids[k-1]}`);
@@ -107984,7 +109036,8 @@ class ClonedNodes {
 
       for (let n = 1; n < names.length; ++n) {
          const node = this.nodes[currid];
-         if (!node.chlds) return null;
+         if (!node.chlds)
+            return null;
 
          for (let k = 0; k < node.chlds.length; ++k) {
             const chldid = node.chlds[k];
@@ -108039,7 +109092,7 @@ class ClonedNodes {
 
       if (clone.kind === kindShape) {
          const prop = { name: clone.name, nname: clone.name, shape: null, material: null, chlds: null },
-             opacity = entry.opacity || 1, col = entry.color || '#0000FF';
+               opacity = entry.opacity || 1, col = entry.color || '#0000FF';
          prop.fillcolor = new THREE.Color(col[0] === '#' ? col : `rgb(${col})`);
          prop.material = createMaterial(this._cfg, { opacity, color: prop.fillcolor });
          return prop;
@@ -108057,7 +109110,8 @@ class ClonedNodes {
 
          const prop = { name: getObjectName(node), nname: getObjectName(node), shape: node.fShape, material: null, chlds: null };
 
-         if (node.fElements !== null) prop.chlds = node.fElements.arr;
+         if (node.fElements !== null)
+            prop.chlds = node.fElements.arr;
 
          {
             const opacity = Math.min(1, node.fRGBA[3]);
@@ -108073,9 +109127,9 @@ class ClonedNodes {
                      chlds: volume.fNodes?.arr, linewidth: volume.fLineWidth };
 
       {
-         // TODO: maybe correctly extract ROOT colors here?
          let opacity = 1.0;
-         if (!root_colors) root_colors = ['white', 'black', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan'];
+         if (!root_colors)
+            root_colors = getRootColors();
 
          if (entry.custom_color)
             prop.fillcolor = entry.custom_color;
@@ -108141,11 +109195,13 @@ class ClonedNodes {
 
          if (obj3d) {
             three_prnt = obj3d;
-            if (obj3d.$jsroot_drawable) draw_depth++;
+            if (obj3d.$jsroot_drawable)
+               draw_depth++;
             continue;
          }
 
-         if (!force) return null;
+         if (!force)
+            return null;
 
          obj3d = new THREE.Object3D();
 
@@ -108182,16 +109238,17 @@ class ClonedNodes {
          three_prnt = obj3d;
       }
 
-      if ((options === 'mesh') || (options === 'delete_mesh')) {
+      if ((options === kGetMesh) || (options === kDeleteMesh)) {
          let mesh = null;
          if (three_prnt) {
             for (let n = 0; (n < three_prnt.children.length) && !mesh; ++n) {
                const chld = three_prnt.children[n];
-               if ((chld.type === 'Mesh') && (chld.nchld === undefined)) mesh = chld;
+               if ((chld.type === 'Mesh') && (chld.nchld === undefined))
+                  mesh = chld;
             }
          }
 
-         if ((options === 'mesh') || !mesh)
+         if ((options === kGetMesh) || !mesh)
             return mesh;
 
          const res = three_prnt;
@@ -108222,7 +109279,7 @@ class ClonedNodes {
 
       if (!shape.geom || !shape.nfaces) {
          // node is visible, but shape does not created
-         this.createObject3D(entry.stack, toplevel, 'delete_mesh');
+         this.createObject3D(entry.stack, toplevel, kDeleteMesh);
          return null;
       }
 
@@ -108322,7 +109379,7 @@ class ClonedNodes {
          shape.used = true;
          shape.instances.forEach(instance => {
             const entry0 = instance.entries[0],
-                prop = this.getDrawEntryProperties(entry0, colors);
+                  prop = this.getDrawEntryProperties(entry0, colors);
 
             prop.material.wireframe = ctrl.wireframe;
 
@@ -108419,9 +109476,11 @@ class ClonedNodes {
 
       for (let n = 0; (n < this.sortmap.length) && (cnt < nodeslimit) && (facecnt < facelimit); ++n) {
          const id = this.sortmap[n];
-         if (viscnt[id] === 0) continue;
+         if (viscnt[id] === 0)
+            continue;
          currNode = this.nodes[id];
-         if (!maxNode) maxNode = currNode;
+         if (!maxNode)
+            maxNode = currNode;
          cnt += viscnt[id];
          facecnt += viscnt[id] * currNode.nfaces;
       }
@@ -108579,7 +109638,8 @@ class ClonedNodes {
          const entry = lst[i],
              shape = this.getNodeShape(entry.nodeid);
 
-         if (!shape) continue; // strange, but avoid misleading
+         if (!shape)
+            continue; // strange, but avoid misleading
 
          if (shape._id === undefined) {
             shape._id = shapes.length;
@@ -108675,13 +109735,14 @@ class ClonedNodes {
          if (res.done) { item.ready = true; continue; }
 
          if (!item.ready) {
-            item._typename = '$$Shape$$'; // let reuse item for direct drawing
+            item._typename = kShapeType; // let reuse item for direct drawing
             item.ready = true;
             if (item.geom === undefined) {
                item.geom = createGeometry(item.shape);
-               if (item.geom) created++; // indicate that at least one shape was created
+               if (item.geom)
+                  created++; // indicate that at least one shape was created
             }
-            item.nfaces = countGeometryFaces(item.geom);
+            item.nfaces = numGeometryFaces(item.geom);
          }
 
          res.shapes++;
@@ -108692,7 +109753,8 @@ class ClonedNodes {
             res.done = true;
          else if ((created > 0.01*lst.length) && (timelimit !== undefined)) {
             const tm2 = new Date().getTime();
-            if (tm2 - tm1 > timelimit) return res;
+            if (tm2 - tm1 > timelimit)
+               return res;
          }
       }
 
@@ -108740,9 +109802,11 @@ class ClonedNodes {
   * @desc Major difference - do not traverse hierarchy, support InstancedMesh
   * @private */
 function getBoundingBox(node, box3, local_coordinates) {
-   if (!node?.geometry) return box3;
+   if (!node?.geometry)
+      return box3;
 
-   if (!box3) box3 = new THREE.Box3().makeEmpty();
+   if (!box3)
+      box3 = new THREE.Box3().makeEmpty();
 
    if (node.isInstancedMesh) {
       const m = new THREE.Matrix4(), b = new THREE.Box3().makeEmpty();
@@ -108757,7 +109821,8 @@ function getBoundingBox(node, box3, local_coordinates) {
       return box3;
    }
 
-   if (!local_coordinates) node.updateWorldMatrix(false, false);
+   if (!local_coordinates)
+      node.updateWorldMatrix(false, false);
 
    const v1 = new THREE.Vector3(), attribute = node.geometry.attributes?.position;
 
@@ -108765,7 +109830,8 @@ function getBoundingBox(node, box3, local_coordinates) {
       for (let i = 0, l = attribute.count; i < l; i++) {
          // v1.fromAttribute( attribute, i ).applyMatrix4( node.matrixWorld );
          v1.fromBufferAttribute(attribute, i);
-         if (!local_coordinates) v1.applyMatrix4(node.matrixWorld);
+         if (!local_coordinates)
+            v1.applyMatrix4(node.matrixWorld);
          box3.expandByPoint(v1);
       }
    }
@@ -108776,7 +109842,8 @@ function getBoundingBox(node, box3, local_coordinates) {
 /** @summary Cleanup shape entity
   * @private */
 function cleanupShape(shape) {
-   if (!shape) return;
+   if (!shape)
+      return;
 
    if (isFunc(shape.geom?.dispose))
       shape.geom.dispose();
@@ -108797,10 +109864,10 @@ function produceRenderOrder(toplevel, origin, method, clones) {
    const raycast = new THREE.Raycaster();
 
    function setdefaults(top) {
-      if (!top) return;
-      top.traverse(obj => {
+      top?.traverse(obj => {
          obj.renderOrder = obj.defaultOrder || 0;
-         if (obj.material) obj.material.depthWrite = true; // by default depthWriting enabled
+         if (obj.material)
+            obj.material.depthWrite = true; // by default depthWriting enabled
       });
    }
 
@@ -108808,7 +109875,8 @@ function produceRenderOrder(toplevel, origin, method, clones) {
       // traverse hierarchy and extract all children of given level
       // if (obj.$jsroot_depth === undefined) return;
 
-      if (!obj.children) return;
+      if (!obj.children)
+         return;
 
       for (let k = 0; k < obj.children.length; ++k) {
          const chld = obj.children[k];
@@ -108909,7 +109977,8 @@ function produceRenderOrder(toplevel, origin, method, clones) {
                if ((intersects.indexOf(mesh) < 0) && (ntry > 0))
                   console.log(`MISS ${clones?.resolveStack(mesh.stack)?.name}`);
 
-               if ((intersects.indexOf(mesh) >= 0) || (ntry > 0)) break;
+               if ((intersects.indexOf(mesh) >= 0) || (ntry > 0))
+                  break;
 
                const pos = mesh.geometry.attributes.position.array;
 
@@ -108922,7 +109991,8 @@ function produceRenderOrder(toplevel, origin, method, clones) {
             for (let k1 = 0; k1 < intersects.length - 1; ++k1) {
                const mesh1 = intersects[k1], mesh2 = intersects[k1+1],
                      i1 = mesh1.$jsroot_index, i2 = mesh2.$jsroot_index;
-               if (i1 < i2) continue;
+               if (i1 < i2)
+                  continue;
                for (let ii = i2; ii < i1; ++ii) {
                   resort[ii] = resort[ii+1];
                   resort[ii].$jsroot_index = ii;
@@ -108948,14 +110018,16 @@ function produceRenderOrder(toplevel, origin, method, clones) {
 
       traverse(obj, lvl, arr);
 
-      if (!arr.length) return;
+      if (!arr.length)
+         return;
 
       if (minorder === maxorder) {
          for (let k = 0; k < arr.length; ++k)
             arr[k].renderOrder = minorder;
       } else {
         did_sort = sort(arr, minorder, maxorder);
-        if (!did_sort) minorder = maxorder = (minorder + maxorder) / 2;
+        if (!did_sort)
+         minorder = maxorder = (minorder + maxorder) / 2;
       }
 
       for (let k = 0; k < arr.length; ++k) {
@@ -112499,8 +113571,9 @@ class TGeoPainter extends ObjectPainter {
          func: (/* node */) => {
             let m2 = this.getmatrix();
             const entry = this.copyStack(),
-                  mesh = this.#clones.createObject3D(entry.stack, this.#toplevel, 'mesh');
-            if (!mesh) return true;
+                  mesh = this.#clones.createObject3D(entry.stack, this.#toplevel, kGetMesh);
+            if (!mesh)
+               return true;
 
             totalcnt++;
 
@@ -113729,7 +114802,7 @@ class TGeoPainter extends ObjectPainter {
 
             // remove should be fast, do it here
             for (let n = 0; n < del.length; ++n)
-               this.#clones.createObject3D(del[n].stack, this.#toplevel, 'delete_mesh');
+               this.#clones.createObject3D(del[n].stack, this.#toplevel, kDeleteMesh);
 
             if (del.length)
                this.#drawing_log = `Delete ${del.length} nodes`;
@@ -113764,7 +114837,7 @@ class TGeoPainter extends ObjectPainter {
                // only submit not-done items
                if (item.ready || item.geom) {
                   // this is place holder for existing geometry
-                  job.shapes.push({ id: item.id, ready: true, nfaces: countGeometryFaces(item.geom), refcnt: item.refcnt });
+                  job.shapes.push({ id: item.id, ready: true, nfaces: numGeometryFaces(item.geom), refcnt: item.refcnt });
                } else {
                   job.shapes.push(clone(item, null, true));
                   cnt++;
@@ -113892,7 +114965,7 @@ class TGeoPainter extends ObjectPainter {
       if (this.#more_nodes) {
          for (let n = 0; n < this.#more_nodes.length; ++n) {
             const entry = this.#more_nodes[n],
-                obj3d = this.#clones.createObject3D(entry.stack, this.#toplevel, 'delete_mesh');
+                obj3d = this.#clones.createObject3D(entry.stack, this.#toplevel, kDeleteMesh);
             disposeThreejsObject(obj3d);
             cleanupShape(entry.server_shape);
             delete entry.server_shape;
@@ -113905,8 +114978,9 @@ class TGeoPainter extends ObjectPainter {
       const real_nodes = [];
       for (let k = 0; k < nodes.length; ++k) {
          const entry = nodes[k],
-             shape = entry.server_shape;
-         if (!shape?.ready) continue;
+               shape = entry.server_shape;
+         if (!shape?.ready)
+            continue;
 
          if (this.createEntryMesh(entry, shape, this.#toplevel))
             real_nodes.push(entry);
@@ -116488,7 +117562,7 @@ class TGeoPainter extends ObjectPainter {
       for (let n = 0; n < this.#draw_nodes.length; ++n) {
          const entry = this.#draw_nodes[n];
          if ((entry.nodeid === nodeid) || this.#clones.isIdInStack(nodeid, entry.stack))
-            this.#clones.createObject3D(entry.stack, this.#toplevel, 'delete_mesh');
+            this.#clones.createObject3D(entry.stack, this.#toplevel, kDeleteMesh);
           else
             new_nodes.push(entry);
       }
@@ -117827,6 +118901,39 @@ CustomStreamers = {
    TTree: {
       name: '$file',
       func(buf, obj) { obj.$kind = 'TTree'; obj.$file = buf.fFile; }
+   },
+
+   TBranch(buf, obj) {
+      const v = buf.last_read_version;
+      if (v > 9)
+         buf.streamClassMembers(obj, 'TBranch', v);
+      else {
+         buf.classStreamer(obj, clTNamed);
+         if (v > 7)
+            buf.classStreamer(obj, clTAttFill);
+         obj.fCompress = buf.ntoi4();
+         obj.fBasketSize = buf.ntoi4();
+         obj.fEntryOffsetLen = buf.ntoi4();
+         obj.fWriteBasket = buf.ntoi4();
+         obj.fEntryNumber = buf.ntoi4();
+         obj.fOffset = buf.ntoi4();
+         obj.fMaxBaskets = buf.ntoi4();
+         if (v > 6)
+            obj.fSplitLevel = buf.ntoi4();
+         obj.fEntries = buf.ntod();
+         obj.fTotBytes = buf.ntod();
+         obj.fZipBytes = buf.ntod();
+         obj.fBranches = buf.classStreamer({}, clTObjArray);
+         obj.fLeaves = buf.classStreamer({}, clTObjArray);
+         obj.fBaskets = buf.classStreamer({}, clTObjArray);
+         buf.ntoi1(); // isArray
+         obj.fBasketBytes = buf.readFastArray(obj.fMaxBaskets, kInt);
+         buf.ntoi1(); // isArray
+         obj.fBasketEntry = buf.readFastArray(obj.fMaxBaskets, kInt);
+         const isArray = buf.ntoi1();
+         obj.fBasketSeek = buf.readFastArray(obj.fMaxBaskets, isArray === 2 ? kLong64 : kInt);
+         obj.fFileName = buf.readTString();
+      }
    },
 
    'ROOT::RNTuple': {
@@ -119715,7 +120822,7 @@ class TBuffer {
    checkByteCount(ver, where) {
       if ((ver.bytecnt !== undefined) && (ver.off + ver.bytecnt !== this.o)) {
          if (where)
-            console.log(`Missmatch in ${where} bytecount expected = ${ver.bytecnt}  got = ${this.o - ver.off}`);
+            console.log(`Missmatch in ${where}:${ver.val} bytecount expected = ${ver.bytecnt}  got = ${this.o - ver.off}`);
          this.o = ver.off + ver.bytecnt;
          return false;
       }
@@ -120033,7 +121140,7 @@ class TBuffer {
             this.mapClass(this.fTagOffset + startpos + kMapOffset, classInfo.name);
       } else {
          // got a tag to an already seen class
-         const clTag = (tag & 2147483647) + this.fDisplacement;
+         const clTag = (tag & ~kClassMask) + this.fDisplacement;
          classInfo.name = this.getMappedClass(clTag);
 
          if (classInfo.name === -1)
@@ -120076,7 +121183,8 @@ class TBuffer {
 
    /** @summary Invoke streamer for specified class  */
    classStreamer(obj, classname) {
-      if (obj._typename === undefined) obj._typename = classname;
+      if (obj._typename === undefined)
+         obj._typename = classname;
 
       const direct = DirectStreamers[classname];
       if (direct) {
@@ -120099,6 +121207,17 @@ class TBuffer {
 
       this.checkByteCount(ver, classname);
 
+      return obj;
+   }
+
+   /** @summary Stream class members using normal streamer */
+   streamClassMembers(obj, classname, version) {
+      const streamer = this.fFile.getStreamer(classname, { val: version }, undefined, true);
+      if (streamer !== null) {
+         const len = streamer.length;
+         for (let n = 0; n < len; ++n)
+            streamer[n].func(this, obj);
+      }
       return obj;
    }
 
@@ -120135,7 +121254,7 @@ DirectStreamers[clTBasket] = function(buf, obj) {
          obj.fEntryOffset = buf.readFastArray(buf.ntoi4(), kInt);
          if ((flag > 20) && (flag < 40)) {
             for (let i = 0, kDisplacementMask = 0xFF000000; i < obj.fNevBuf; ++i)
-               obj.fEntryOffset[i] &= 16777215;
+               obj.fEntryOffset[i] &= ~kDisplacementMask;
          }
       }
 
@@ -121020,9 +122139,10 @@ class TFile {
    /** @summary Returns streamer for the class 'clname',
      * @desc From the list of streamers or generate it from the streamer infos and add it to the list
      * @private */
-   getStreamer(clname, ver, s_i) {
+   getStreamer(clname, ver, s_i, only_plain) {
       // these are special cases, which are handled separately
-      if (clname === clTQObject || clname === clTBasket) return null;
+      if (clname === clTQObject || clname === clTBasket)
+         return null;
 
       let streamer, fullname = clname;
 
@@ -121033,7 +122153,7 @@ class TFile {
             return streamer;
       }
 
-      const custom = CustomStreamers[clname];
+      const custom = only_plain ? null : CustomStreamers[clname];
 
       // one can define in the user streamers just aliases
       if (isStr(custom))
@@ -121048,7 +122168,8 @@ class TFile {
       streamer = [];
 
       if (isObject(custom)) {
-         if (!custom.name && !custom.func) return custom;
+         if (!custom.name && !custom.func)
+            return custom;
          streamer.push(custom); // special read entry, add in the beginning of streamer
       }
 
@@ -121909,7 +123030,7 @@ class TDrawVariable {
                }
             }
 
-            br = findBranchComplex(tree, code.slice(pos, pos2));
+            br = selector.findBranch(tree, code.slice(pos, pos2));
             if (!br) { pos = pos2 + 1; continue; }
 
             // when full id includes branch name, replace only part of extracted expression
@@ -121956,16 +123077,9 @@ class TDrawVariable {
                if (code[pos2] === '(') { pos2 = prev - 1; break; }
 
                // this is selection of member, but probably we need to activate iterator for ROOT collection
-               if (!arriter.length) {
-                  // TODO: if selected member is simple data type - no need to make other checks - just break here
-                  if ((br.fType === kClonesNode) || (br.fType === kSTLNode))
-                     arriter.push(undefined);
-                  else {
-                     const objclass = getBranchObjectClass(br, tree, false, true);
-                     if (objclass && isRootCollection(null, objclass))
-                        arriter.push(undefined);
-                  }
-               }
+               // TODO: if selected member is simple data type - no need to make other checks - just break here
+               if (!arriter.length && selector.isArrayBranch(tree, br))
+                  arriter.push(undefined);
                arriter.push(code.slice(prev, pos2));
                continue;
             }
@@ -121994,7 +123108,8 @@ class TDrawVariable {
                   else {
                      // try to compile code as draw variable
                      const subvar = new TDrawVariable(this.globals);
-                     if (!subvar.parse(tree, selector, sub)) return false;
+                     if (!subvar.parse(tree, selector, sub))
+                        return false;
                      arriter.push(subvar);
                   }
             }
@@ -122007,7 +123122,8 @@ class TDrawVariable {
             arriter = true;
 
          let indx = selector.indexOfBranch(br);
-         if (indx < 0) indx = selector.addBranch(br, undefined, branch_mode);
+         if (indx < 0)
+            indx = selector.addBranch(br, undefined, branch_mode);
 
          branch_mode = undefined;
 
@@ -122148,6 +123264,21 @@ class TDrawSelector extends TSelector {
       this.aver_diff = 0;
    }
 
+   /** @summary Return number of entries in the tree */
+   getNumEntries(tree) { return tree?.fEntries || 0; }
+
+   /** @summary Find branch in the tree */
+   findBranch(tree, name) { return findBranchComplex(tree, name); }
+
+   /** @summary Returns true if one can use branch as array */
+   isArrayBranch(tree, br) {
+      if ((br.fType === kClonesNode) || (br.fType === kSTLNode))
+         return true;
+      const objclass = getBranchObjectClass(br, tree, false, true);
+      if (objclass && isRootCollection(null, objclass))
+         return true;
+   }
+
    /** @summary Set draw selector callbacks */
    setCallback(result_callback, progress_callback) {
       this.result_callback = result_callback;
@@ -122214,9 +123345,9 @@ class TDrawSelector extends TSelector {
             case 'num':
             case 'numentries':
                if (parvalue === 'all')
-                  args.numentries = tree.fEntries;
+                  args.numentries = this.getNumEntries(tree);
                else if (parvalue === 'half')
-                  args.numentries = Math.round(tree.fEntries / 2);
+                  args.numentries = Math.round(this.getNumEntries(tree) / 2);
                else if (intvalue !== undefined)
                   args.numentries = intvalue;
                break;
@@ -122376,7 +123507,9 @@ class TDrawSelector extends TSelector {
       let expr = this.parseParameters(tree, args, args.expr), cut = '';
 
       // parse option for histogram creation
-      this.draw_title = `drawing '${expr}' from ${tree.fName}`;
+      this.draw_title = `drawing '${expr}'`;
+      if (tree?.fName)
+         this.draw_title += ` from ${tree.fName}`;
 
       let pos;
       if (args.cut)
@@ -122456,7 +123589,7 @@ class TDrawSelector extends TSelector {
       this.vars[0] = new TDrawVariable(this.globals);
       if (!this.vars[0].parse(tree, this, expr, branch, args.direct_branch))
          return false;
-      this.draw_title = `drawing branch ${branch.fName} ${expr?' expr:'+expr:''} from ${tree.fName}`;
+      this.draw_title = `drawing branch ${branch.fName} ${expr?' expr:'+expr:''} from ${tree.fName ?? ''}`;
 
       this.cut = new TDrawVariable(this.globals);
 
@@ -122468,7 +123601,7 @@ class TDrawSelector extends TSelector {
 
    /** @summary Begin processing */
    Begin(tree) {
-      this.globals.entries = tree.fEntries;
+      this.globals.entries = this.getNumEntries(tree);
 
       if (this.monitoring)
          this.lasttm = new Date().getTime();
@@ -122522,25 +123655,16 @@ class TDrawSelector extends TSelector {
          }
       }
 
-      if (this.vars[axisid].kind === 'string') {
+      if (this.vars[axisid].kind === 'boolean') {
+         res.lbls = ['false', 'true'];
+         this.fill1DHistogram = this.fillBooleanHistogram;
+      } else if (this.vars[axisid].kind === 'string') {
          res.lbls = []; // all labels
-
          for (let k = 0; k < arr.length; ++k) {
             if (res.lbls.indexOf(arr[k]) < 0)
                res.lbls.push(arr[k]);
          }
-
          res.lbls.sort();
-         res.max = res.nbins = res.lbls.length;
-
-         res.fLabels = create$1(clTHashList);
-         for (let k = 0; k < res.lbls.length; ++k) {
-            const s = create$1(clTObjString);
-            s.fString = res.lbls[k];
-            s.fUniqueID = k + 1;
-            if (s.fString === '') s.fString = '<empty>';
-            res.fLabels.Add(s);
-         }
       } else if ((axisid === 0) && (this.hist_name === 'bits') && (this.hist_args.length <= 1)) {
          this.fill1DHistogram = this.fillBitsHistogram;
          return this.getBitsBins(this.hist_args[0] || 32, res);
@@ -122593,10 +123717,23 @@ class TDrawSelector extends TSelector {
             res.max += (res.max - res.min) / res.nbins;
       }
 
+      if (res.lbls) {
+         res.max = res.nbins = res.lbls.length;
+
+         res.fLabels = create$1(clTHashList);
+         for (let k = 0; k < res.lbls.length; ++k) {
+            const s = create$1(clTObjString);
+            s.fString = res.lbls[k];
+            s.fUniqueID = k + 1;
+            if (s.fString === '') s.fString = '<empty>';
+            res.fLabels.Add(s);
+         }
+      }
+
       res.k = res.nbins / (res.max - res.min);
 
       res.GetBin = function(value) {
-         const bin = this.lbls?.indexOf(value) ?? Number.isFinite(value) ? Math.floor((value - this.min) * this.k) : this.nbins + 1;
+         const bin = this.lbls?.indexOf(value) ?? (Number.isFinite(value) ? Math.floor((value - this.min) * this.k) : this.nbins + 1);
          return bin < 0 ? 0 : ((bin > this.nbins) ? this.nbins + 1 : bin + 1);
       };
 
@@ -122623,12 +123760,14 @@ class TDrawSelector extends TSelector {
       hist.fXaxis.fXmax = x.max;
       hist.fXaxis.fLabels = x.fLabels;
 
-      if (this.ndim > 1) hist.fYaxis.fTitle = y.title;
+      if (this.ndim > 1)
+         hist.fYaxis.fTitle = y.title;
       hist.fYaxis.fXmin = y.min;
       hist.fYaxis.fXmax = y.max;
       hist.fYaxis.fLabels = y.fLabels;
 
-      if (this.ndim > 2) hist.fZaxis.fTitle = z.title;
+      if (this.ndim > 2)
+         hist.fZaxis.fTitle = z.title;
       hist.fZaxis.fXmin = z.min;
       hist.fZaxis.fXmax = z.max;
       hist.fZaxis.fLabels = z.fLabels;
@@ -122755,6 +123894,16 @@ class TDrawSelector extends TSelector {
          if (xvalue & mask) this.hist.fArray[bit + 1] += weight;
          mask *= 2;
       }
+   }
+
+   /** @summary Fill boolean histogram */
+   fillBooleanHistogram(boolvalue, weight) {
+      if (!weight) return;
+      const xvalue = boolvalue ? 1 : 0;
+      this.hist.fArray[xvalue + 1] += weight;
+      this.hist.fTsumw += weight;
+      this.hist.fTsumwx += weight * xvalue;
+      this.hist.fTsumwx2 += weight * xvalue * xvalue;
    }
 
    /** @summary Fill 1D histogram */
@@ -124140,7 +125289,12 @@ async function treeDraw(tree, args) {
    if (!isStr(args.expr))
       args.expr = '';
 
-   const selector = new TDrawSelector();
+   if (!args.SelectorClass)
+      args.SelectorClass = TDrawSelector;
+   if (!args.processFunction)
+      args.processFunction = treeProcess;
+
+   const selector = new args.SelectorClass();
 
    if (args.branch) {
       if (!selector.drawOnlyBranch(tree, args.branch, args.expr, args))
@@ -124150,13 +125304,13 @@ async function treeDraw(tree, args) {
 
    selector.setCallback(null, args.progress);
 
-   return treeProcess(tree, selector, args).then(sel => {
+   return args.processFunction(tree, selector, args).then(sel => {
       if (!args.staged)
          return sel;
 
       delete args.dump_entries;
 
-      const selector2 = new TDrawSelector(),
+      const selector2 = new args.SelectorClass(),
             args2 = Object.assign({}, args);
       args2.staged = false;
       args2.elist = sel.hist; // assign entries found in first selection
@@ -124164,7 +125318,7 @@ async function treeDraw(tree, args) {
          return Promise.reject(Error(`Fail to create final draw expression ${args.expr}`));
       ['arr_limit', 'htype', 'nmatch', 'want_hist', 'hist_nbins', 'hist_name', 'hist_args', 'draw_title']
         .forEach(name => { selector2[name] = selector[name]; });
-      return treeProcess(tree, selector2, args2);
+      return args.processFunction(tree, selector2, args2);
    }).then(sel => sel.hist);
 }
 
@@ -162681,7 +163835,7 @@ drawFuncs = { lst: [
    { name: 'TEveGeoShapeExtract', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;dflt' },
    { name: nsREX+'REveGeoShapeExtract', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;dflt' },
    { name: 'TGeoOverlap', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;dflt', dflt: 'dflt', ctrl: 'expand' },
-   { name: 'TGeoManager', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;tracks;no_screen;dflt', dflt: 'expand', ctrl: 'dflt', noappend: true, exapnd_after_draw: true },
+   { name: 'TGeoManager', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;tracks;no_screen;dflt', dflt: 'expand', pm: true, ctrl: 'dflt', noappend: true, exapnd_after_draw: true },
    { name: 'TGeoVolumeAssembly', sameas: clTGeoVolume, /* icon: 'img_geoassembly', */ opt: ';more;all;count' },
    { name: /^TGeo/, class: () => import_geo().then(h => h.TGeoPainter), get_expand: () => import_geo().then(h => h.expandGeoObject), opt: ';more;all;axis;compa;count;projx;projz;wire;no_screen;dflt', dflt: 'dflt', ctrl: 'expand' },
    { name: 'TAxis3D', icon: 'img_graph', draw: () => import_geo().then(h => h.drawAxis3D), direct: true },
@@ -162689,14 +163843,14 @@ drawFuncs = { lst: [
    { name: 'kind:Command', icon: 'img_execute', execute: true },
    { name: 'TFolder', icon: 'img_folder', icon2: 'img_folderopen', noinspect: true, get_expand: () => import_h().then(h => h.folderHierarchy) },
    { name: 'TTask', icon: 'img_task', get_expand: () => import_h().then(h => h.taskHierarchy), for_derived: true },
-   { name: clTTree, icon: 'img_tree', get_expand: () => Promise.resolve().then(function () { return tree; }).then(h => h.treeHierarchy), draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: 'player;testio', shift: kInspect },
+   { name: clTTree, icon: 'img_tree', get_expand: () => Promise.resolve().then(function () { return tree; }).then(h => h.treeHierarchy), draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: 'player;testio', shift: kInspect, pm: true },
    { name: 'TNtuple', sameas: clTTree },
    { name: 'TNtupleD', sameas: clTTree },
    { name: clTBranchFunc, icon: 'img_leaf_method', draw: () => import_tree().then(h => h.drawTree), opt: ';dump', noinspect: true },
    { name: /^TBranch/, icon: 'img_branch', draw: () => import_tree().then(h => h.drawTree), dflt: 'expand', opt: ';dump', ctrl: 'dump', shift: kInspect, ignore_online: true, always_draw: true },
    { name: /^TLeaf/, icon: 'img_leaf', noexpand: true, draw: () => import_tree().then(h => h.drawTree), opt: ';dump', ctrl: 'dump', ignore_online: true, always_draw: true },
-   { name: 'ROOT::RNTuple', icon: 'img_tree', get_expand: () => Promise.resolve().then(function () { return rntuple; }).then(h => h.tupleHierarchy) },
-   { name: 'ROOT::RNTupleField', icon: 'img_leaf', opt: 'inspect', ctrl: 'inspect' },
+   { name: 'ROOT::RNTuple', icon: 'img_tree', get_expand: () => Promise.resolve().then(function () { return rntuple; }).then(h => h.tupleHierarchy), draw: () => Promise.resolve().then(function () { return RNTuple; }).then(h => h.drawRNTuple), dflt: 'expand', pm: true },
+   { name: 'ROOT::RNTupleField', icon: 'img_leaf', draw: () => Promise.resolve().then(function () { return RNTuple; }).then(h => h.drawRNTuple), opt: ';dump', ctrl: 'dump', shift: kInspect, ignore_online: true, always_draw: true },
    { name: clTList, icon: 'img_list', draw: () => import_h().then(h => h.drawList), get_expand: () => import_h().then(h => h.listHierarchy), dflt: 'expand' },
    { name: clTHashList, sameas: clTList },
    { name: clTObjArray, sameas: clTList },
@@ -162722,7 +163876,8 @@ drawFuncs = { lst: [
    { name: nsREX+'RPaveText', icon: 'img_pavetext', class: () => import_v7('pave').then(h => h.RPaveTextPainter), opt: '' },
    { name: nsREX+'RFrame', icon: 'img_frame', draw: () => import_v7().then(h => h.drawRFrame), opt: '' },
    { name: nsREX+'RFont', icon: 'img_text', draw: () => import_v7().then(h => h.drawRFont), opt: '', direct: 'v7', csstype: 'font' },
-   { name: nsREX+'RAxisDrawable', icon: 'img_frame', draw: () => import_v7().then(h => h.drawRAxis), opt: '' }
+   { name: nsREX+'RAxisDrawable', icon: 'img_frame', draw: () => import_v7().then(h => h.drawRAxis), opt: '' },
+   { name: nsREX+'RTreeMapPainter', class: () => Promise.resolve().then(function () { return RTreeMapPainter$1; }).then(h => h.RTreeMapPainter), opt: '' }
 ], cache: {} };
 
 
@@ -164547,7 +165702,7 @@ class HierarchyPainter extends BasePainter {
 
       let icon_class = '', plusminus = false;
 
-      if (isroot) ; else if (has_childs && !break_list) {
+      if (isroot) ; else if ((has_childs && !break_list) || handle?.pm) {
          icon_class = hitem._isopen ? 'img_minus' : 'img_plus';
          plusminus = true;
       } else
@@ -164885,7 +166040,8 @@ class HierarchyPainter extends BasePainter {
          let upcnt = select(node).property('upcnt') || 1;
          while (upcnt-- > 0)
             hitem = hitem?._parent;
-         if (!hitem) return;
+         if (!hitem)
+            return;
          itemname = this.itemFullName(hitem);
          d3cont = select(hitem?._d3cont || null);
          place = kPM;
@@ -164902,11 +166058,12 @@ class HierarchyPainter extends BasePainter {
          const prnt = hitem._parent, indx = prnt._childs.indexOf(hitem),
                d3chlds = select(d3cont.node().parentNode);
 
-         if (indx < 0) return console.error('internal error');
+         if (indx < 0)
+            return console.error('internal error');
 
          prnt._show_limit = (prnt._show_limit || settings.HierarchyLimit) * 2;
 
-         for (let n = indx+1; n < prnt._childs.length; ++n) {
+         for (let n = indx + 1; n < prnt._childs.length; ++n) {
             const chld = prnt._childs[n];
             chld._parent = prnt;
             if (!this.addItemHtml(chld, d3chlds, n)) break; // if too many items, skip rest
@@ -164921,7 +166078,8 @@ class HierarchyPainter extends BasePainter {
          prnt = prnt._parent;
       }
 
-      if (!place) place = 'item';
+      if (!place)
+         place = 'item';
       const selector = (hitem._kind === getKindForType(clTKey) && hitem._more) ? 'noinspect' : '',
             sett = getDrawSettings(hitem._kind, selector), handle = sett.handle;
 
@@ -164942,6 +166100,7 @@ class HierarchyPainter extends BasePainter {
 
       // special case - one should expand item
       if (((place === kPM) && !('_childs' in hitem) && hitem._more) ||
+          ((place === kPM) && handle?.pm) ||
           ((place === 'item') && (dflt === kExpand)))
          return this.expandItem(itemname, d3cont);
 
@@ -164955,7 +166114,8 @@ class HierarchyPainter extends BasePainter {
          if (handle?.execute)
             return this.executeCommand(itemname, node.parentNode);
 
-         if (handle?.ignore_online && this.isOnlineItem(hitem)) return;
+         if (handle?.ignore_online && this.isOnlineItem(hitem))
+            return;
 
          const dflt_expand = (this.default_by_click === kExpand);
          let can_draw = hitem._can_draw,
@@ -164964,7 +166124,8 @@ class HierarchyPainter extends BasePainter {
 
          if (evnt.shiftKey) {
             drawopt = handle?.shift || kInspect;
-            if (isStr(drawopt) && (drawopt.indexOf(kInspect) === 0) && handle?.noinspect) drawopt = '';
+            if (isStr(drawopt) && (drawopt.indexOf(kInspect) === 0) && handle?.noinspect)
+               drawopt = '';
          }
          if (evnt.ctrlKey && handle?.ctrl)
             drawopt = handle.ctrl;
@@ -165007,7 +166168,8 @@ class HierarchyPainter extends BasePainter {
          if (getTypeForKind(hitem._kind) && sett.inspect && (can_draw !== false))
             return this.display(itemname, kInspect, null, true);
 
-         if (!hitem._childs || (hitem === this.h)) return;
+         if (!hitem._childs || (hitem === this.h))
+            return;
       }
 
       if (hitem._isopen)
@@ -168669,7 +169831,8 @@ __proto__: null,
 drawLeafPlayer: drawLeafPlayer,
 drawTree: drawTree,
 drawTreePlayer: drawTreePlayer,
-drawTreePlayerKey: drawTreePlayerKey
+drawTreePlayerKey: drawTreePlayerKey,
+treeDrawProgress: treeDrawProgress
 });
 
 const kIsZoomed = BIT(16); // bit set when zooming on Y axis
@@ -175032,6 +176195,9 @@ TGaxisPainter: TGaxisPainter
 
 class TBoxPainter extends ObjectPainter {
 
+   #border_mode;
+   #border_size;
+
    /** @summary start of drag handler
      * @private */
    moveStart(x, y) {
@@ -175092,9 +176258,9 @@ class TBoxPainter extends ObjectPainter {
             ww = Math.round(Math.abs(this.x2 - this.x1)),
             hh = Math.round(Math.abs(this.y1 - this.y2)),
             path = `M${xx},${yy}h${ww}v${hh}h${-ww}z`;
-      if (!this.borderMode)
+      if (!this.#border_mode)
          return [path];
-      return [path].concat(getBoxDecorations(xx, yy, ww, hh, this.borderMode, this.borderSize, this.borderSize));
+      return [path].concat(getBoxDecorations(xx, yy, ww, hh, this.#border_mode, this.#border_size, this.#border_size));
    }
 
    /** @summary Redraw box */
@@ -175123,8 +176289,8 @@ class TBoxPainter extends ObjectPainter {
       if (this.swap_xy)
          [this.x1, this.x2, this.y1, this.y2] = [this.y1, this.y2, this.x1, this.x2];
 
-      this.borderMode = (box.fBorderMode && this.fillatt.hasColor()) ? box.fBorderMode : 0;
-      this.borderSize = box.fBorderSize || 2;
+      this.#border_mode = (box.fBorderMode && this.fillatt.hasColor()) ? box.fBorderMode : 0;
+      this.#border_size = box.fBorderSize || 2;
 
       const paths = this.getPathes();
 
@@ -175133,7 +176299,7 @@ class TBoxPainter extends ObjectPainter {
        .call(this.lineatt.func)
        .call(this.fillatt.func);
 
-      if (this.borderMode) {
+      if (this.#border_mode) {
          g.append('svg:path')
           .attr('d', paths[1])
           .call(this.fillatt.func)
@@ -175615,641 +176781,1241 @@ TASImagePainter: TASImagePainter
 const LITTLE_ENDIAN = true;
 class RBufferReader {
 
-  constructor(buffer) {
-    if (buffer instanceof ArrayBuffer) {
-    this.buffer = buffer;
-    this.byteOffset = 0;
-    this.byteLength = buffer.byteLength;
-    } else if (ArrayBuffer.isView(buffer)) {
-    this.buffer = buffer.buffer;
-    this.byteOffset = buffer.byteOffset;
-    this.byteLength = buffer.byteLength;
-    } else
-      throw new TypeError('Invalid buffer type');
+    constructor(buffer) {
+        if (buffer instanceof ArrayBuffer) {
+            this.buffer = buffer;
+            this.byteOffset = 0;
+            this.byteLength = buffer.byteLength;
+        } else if (ArrayBuffer.isView(buffer)) {
+            this.buffer = buffer.buffer;
+            this.byteOffset = buffer.byteOffset;
+            this.byteLength = buffer.byteLength;
+        } else
+            throw new TypeError('Invalid buffer type');
 
-    this.view = new DataView(this.buffer);
-    this.offset = 0;
-  }
+        this.view = new DataView(this.buffer);
+        // important - offset should start from actual place in the buffer
+        this.offset = this.byteOffset;
+    }
 
-  // Move to a specific position in the buffer
-  seek(position) {
-  if (typeof position === 'bigint') {
-    if (position > BigInt(Number.MAX_SAFE_INTEGER))
-      throw new Error(`Offset too large to seek safely: ${position}`);
-    this.offset = Number(position); 
-  } else 
-    this.offset = position;
-}
+    // Move to a specific position in the buffer
+    seek(position) {
+        if (typeof position === 'bigint') {
+            if (position > BigInt(Number.MAX_SAFE_INTEGER))
+                throw new Error(`Offset too large to seek safely: ${position}`);
+            this.offset = Number(position);
+        } else
+            this.offset = position;
+    }
 
 
-  // Read unsigned 8-bit integer (1 BYTE)
-  readU8() {
-    const val = this.view.getUint8(this.offset);
-    this.offset += 1;
-    return val;
-  }
+    // Read unsigned 8-bit integer (1 BYTE)
+    readU8() {
+        const val = this.view.getUint8(this.offset);
+        this.offset += 1;
+        return val;
+    }
 
-  // Read unsigned 16-bit integer (2 BYTES)
-  readU16() {
-    const val = this.view.getUint16(this.offset, LITTLE_ENDIAN);
-    this.offset += 2;
-    return val;
-  }
+    // Read unsigned 16-bit integer (2 BYTES)
+    readU16() {
+        const val = this.view.getUint16(this.offset, LITTLE_ENDIAN);
+        this.offset += 2;
+        return val;
+    }
 
-  // Read unsigned 32-bit integer (4 BYTES)
-  readU32() {
-    const val = this.view.getUint32(this.offset, LITTLE_ENDIAN);
-    this.offset += 4;
-    return val;
-  }
+    // Read unsigned 32-bit integer (4 BYTES)
+    readU32() {
+        const val = this.view.getUint32(this.offset, LITTLE_ENDIAN);
+        this.offset += 4;
+        return val;
+    }
 
-  // Read signed 8-bit integer (1 BYTE)
-  readS8() {
-    const val = this.view.getInt8(this.offset);
-    this.offset += 1;
-    return val;
-  }
+    // Read signed 8-bit integer (1 BYTE)
+    readS8() {
+        const val = this.view.getInt8(this.offset);
+        this.offset += 1;
+        return val;
+    }
 
-  // Read signed 16-bit integer (2 BYTES)
-  readS16() {
-    const val = this.view.getInt16(this.offset, LITTLE_ENDIAN);
-    this.offset += 2;
-    return val;
-  }
+    // Read signed 16-bit integer (2 BYTES)
+    readS16() {
+        const val = this.view.getInt16(this.offset, LITTLE_ENDIAN);
+        this.offset += 2;
+        return val;
+    }
 
-  // Read signed 32-bit integer (4 BYTES)
-  readS32() {
-    const val = this.view.getInt32(this.offset, LITTLE_ENDIAN);
-    this.offset += 4;
-    return val;
-  }
+    // Read signed 32-bit integer (4 BYTES)
+    readS32() {
+        const val = this.view.getInt32(this.offset, LITTLE_ENDIAN);
+        this.offset += 4;
+        return val;
+    }
 
-  // Read 32-bit float (4 BYTES)
-  readF32() {
-    const val = this.view.getFloat32(this.offset, LITTLE_ENDIAN);
-    this.offset += 4;
-    return val;
-  }
+    // Read 32-bit float (4 BYTES)
+    readF32() {
+        const val = this.view.getFloat32(this.offset, LITTLE_ENDIAN);
+        this.offset += 4;
+        return val;
+    }
 
-  // Read 64-bit float (8 BYTES)
-  readF64() {
-    const val = this.view.getFloat64(this.offset, LITTLE_ENDIAN);
-    this.offset += 8;
-    return val;
-  }
+    // Read 64-bit float (8 BYTES)
+    readF64() {
+        const val = this.view.getFloat64(this.offset, LITTLE_ENDIAN);
+        this.offset += 8;
+        return val;
+    }
 
-  // Read a string with 32-bit length prefix
-  readString() {
-    const length = this.readU32();
-    let str = '';
-    for (let i = 0; i < length; i++)
-      str += String.fromCharCode(this.readU8());
-    return str;
-  }
+    // Read a string with 32-bit length prefix
+    readString() {
+        const length = this.readU32();
+        let str = '';
+        for (let i = 0; i < length; i++)
+            str += String.fromCharCode(this.readU8());
+        return str;
+    }
 
     // Read unsigned 64-bit integer (8 BYTES)
-  readU64() {
-    const val = this.view.getBigUint64(this.offset, LITTLE_ENDIAN);
-    this.offset += 8;
-    return val;
-  }
+    readU64() {
+        const val = this.view.getBigUint64(this.offset, LITTLE_ENDIAN);
+        this.offset += 8;
+        return val;
+    }
 
-  // Read signed 64-bit integer (8 BYTES)
-  readS64() {
-    const val = this.view.getBigInt64(this.offset, LITTLE_ENDIAN);
-    this.offset += 8;
-    return val;
-  }
+    // Read signed 64-bit integer (8 BYTES)
+    readS64() {
+        const val = this.view.getBigInt64(this.offset, LITTLE_ENDIAN);
+        this.offset += 8;
+        return val;
+    }
 
 }
 
+const ENTupleColumnType = {
+    kBit: 0x00,
+    kByte: 0x01,
+    kChar: 0x02,
+    kInt8: 0x03,
+    kUInt8: 0x04,
+    kInt16: 0x05,
+    kUInt16: 0x06,
+    kInt32: 0x07,
+    kUInt32: 0x08,
+    kInt64: 0x09,
+    kUInt64: 0x0A,
+    kReal16: 0x0B,
+    kReal32: 0x0C,
+    kReal64: 0x0D,
+    kIndex32: 0x0E,
+    kIndex64: 0x0F,
+    kSplitInt16: 0x11,
+    kSplitUInt16: 0x12,
+    kSplitInt32: 0x13,
+    kSplitUInt32: 0x14,
+    kSplitInt64: 0x15,
+    kSplitUInt64: 0x16,
+    kSplitReal16: 0x17,
+    kSplitReal32: 0x18,
+    kSplitReal64: 0x19,
+    kSplitIndex32: 0x1A,
+    kSplitIndex64: 0x1B};
+
+
+/**
+ * @summary Rearrange bytes from split format to normal format (row-wise) for decoding
+ */
+function recontructUnsplitBuffer(blob, columnDescriptor) {
+    const { coltype } = columnDescriptor;
+
+    if (
+        coltype === ENTupleColumnType.kSplitUInt16 ||
+        coltype === ENTupleColumnType.kSplitUInt32 ||
+        coltype === ENTupleColumnType.kSplitUInt64 ||
+        coltype === ENTupleColumnType.kSplitReal16 ||
+        coltype === ENTupleColumnType.kSplitReal32 ||
+        coltype === ENTupleColumnType.kSplitReal64 ||
+        coltype === ENTupleColumnType.kSplitIndex32 ||
+        coltype === ENTupleColumnType.kSplitIndex64 ||
+        coltype === ENTupleColumnType.kSplitInt16 ||
+        coltype === ENTupleColumnType.kSplitInt32 ||
+        coltype === ENTupleColumnType.kSplitInt64
+    ) {
+        // Determine byte size based on column type
+        let byteSize;
+        switch (coltype) {
+            case ENTupleColumnType.kSplitReal64:
+            case ENTupleColumnType.kSplitInt64:
+            case ENTupleColumnType.kSplitUInt64:
+            case ENTupleColumnType.kSplitIndex64:
+                byteSize = 8;
+                break;
+            case ENTupleColumnType.kSplitReal32:
+            case ENTupleColumnType.kSplitInt32:
+            case ENTupleColumnType.kSplitIndex32:
+            case ENTupleColumnType.kSplitUInt32:
+                byteSize = 4;
+                break;
+            case ENTupleColumnType.kSplitInt16:
+            case ENTupleColumnType.kSplitUInt16:
+            case ENTupleColumnType.kSplitReal16:
+                byteSize = 2;
+                break;
+            default:
+                throw new Error(`Unsupported split coltype: ${coltype} (0x${coltype.toString(16).padStart(2, '0')})`);
+        }
+
+        const splitView = new DataView(blob.buffer, blob.byteOffset, blob.byteLength),
+              count = blob.byteLength / byteSize,
+              outBuffer = new ArrayBuffer(blob.byteLength),
+              outBytes = new Uint8Array(outBuffer);
+
+        for (let i = 0; i < count; ++i) {
+            for (let b = 0; b < byteSize; ++b) {
+                const splitIndex = b * count + i,
+                byte = splitView.getUint8(splitIndex),
+                writeIndex = i * byteSize + b;
+                outBytes[writeIndex] = byte;
+            }
+        }
+
+        // Return updated blob and remapped coltype
+        const newBlob = outBuffer;
+        let newColtype;
+        switch (coltype) {
+                case ENTupleColumnType.kSplitUInt16:
+                  newColtype = ENTupleColumnType.kUInt16;
+                  break;
+                case ENTupleColumnType.kSplitUInt32:
+                  newColtype = ENTupleColumnType.kUInt32;
+                  break;
+                case ENTupleColumnType.kSplitUInt64:
+                  newColtype = ENTupleColumnType.kUInt64;
+                  break;
+                case ENTupleColumnType.kSplitIndex32:
+                  newColtype = ENTupleColumnType.kIndex32;
+                  break;
+                case ENTupleColumnType.kSplitIndex64:
+                  newColtype = ENTupleColumnType.kIndex64;
+                  break;
+                case ENTupleColumnType.kSplitReal16:
+                  newColtype = ENTupleColumnType.kReal16;
+                  break;
+                case ENTupleColumnType.kSplitReal32:
+                  newColtype = ENTupleColumnType.kReal32;
+                  break;
+                case ENTupleColumnType.kSplitReal64:
+                  newColtype = ENTupleColumnType.kReal64;
+                  break;
+                case ENTupleColumnType.kSplitInt16:
+                    newColtype = ENTupleColumnType.kInt16;
+                    break;
+                case ENTupleColumnType.kSplitInt32:
+                    newColtype = ENTupleColumnType.kInt32;
+                    break;
+                case ENTupleColumnType.kSplitInt64:
+                    newColtype = ENTupleColumnType.kInt64;
+                    break;
+                default:
+                  throw new Error(`Unsupported split coltype for reassembly: ${coltype}`);
+            }
+
+        return { blob: newBlob, coltype: newColtype };
+    }
+
+    // If no split type, return original blob and coltype
+    return { blob, coltype };
+}
+
+
+/**
+ * @summary Decode a reconstructed index buffer (32- or 64-bit deltas to absolute indices)
+ */
+function DecodeDeltaIndex(blob, coltype) {
+  let deltas, result;
+
+  if (coltype === ENTupleColumnType.kIndex32) {
+    deltas = new Int32Array(blob.buffer || blob, blob.byteOffset || 0, blob.byteLength / 4);
+    result = new Int32Array(deltas.length);
+  } else if (coltype === ENTupleColumnType.kIndex64) {
+    deltas = new BigInt64Array(blob.buffer || blob, blob.byteOffset || 0, blob.byteLength / 8);
+    result = new BigInt64Array(deltas.length);
+  } else
+    throw new Error(`DecodeDeltaIndex: unsupported column type ${coltype}`);
+
+  if (deltas.length > 0) result[0] = deltas[0];
+  for (let i = 1; i < deltas.length; ++i)
+    result[i] = result[i - 1] + deltas[i];
+
+  return { blob: result, coltype };
+}
+
+/**
+ * @summary Decode a reconstructed signed integer buffer using ZigZag encoding
+  */
+function decodeZigzag(blob, coltype) {
+  let zigzag, result;
+
+  if (coltype === ENTupleColumnType.kInt16) {
+    zigzag = new Uint16Array(blob.buffer || blob, blob.byteOffset || 0, blob.byteLength / 2);
+    result = new Int16Array(zigzag.length);
+  } else if (coltype === ENTupleColumnType.kInt32) {
+    zigzag = new Uint32Array(blob.buffer || blob, blob.byteOffset || 0, blob.byteLength / 4);
+    result = new Int32Array(zigzag.length);
+  } else if (coltype === ENTupleColumnType.kInt64) {
+        zigzag = new BigUint64Array(blob.buffer || blob, blob.byteOffset || 0, blob.byteLength / 8);
+        result = new BigInt64Array(zigzag.length);
+  } else
+    throw new Error(`decodeZigzag: unsupported column type ${coltype}`);
+
+  for (let i = 0; i < zigzag.length; ++i) {
+    // ZigZag decode: (x >>> 1) ^ (-(x & 1))
+    const x = zigzag[i];
+    result[i] = (x >>> 1) ^ (-(x & 1));
+  }
+
+  return { blob: result, coltype };
+}
+
+// Envelope Types
+// TODO: Define usage logic for envelope types in future
+// const kEnvelopeTypeHeader = 0x01,
+//       kEnvelopeTypeFooter = 0x02,
+//       kEnvelopeTypePageList = 0x03,
+
+// Field Flags
+const kFlagRepetitiveField = 0x01,
+    kFlagProjectedField = 0x02,
+    kFlagHasTypeChecksum = 0x04,
+
+    // Column Flags
+    kFlagDeferredColumn = 0x01,
+    kFlagHasValueRange = 0x02;
 
 class RNTupleDescriptorBuilder {
 
-deserializeHeader(header_blob) {
-    if (!header_blob) return;
+    deserializeHeader(header_blob) {
+        if (!header_blob) return;
 
-  const reader = new RBufferReader(header_blob),
- 
-  payloadStart = reader.offset,
-  // Read the envelope metadata
-  { envelopeLength } = this._readEnvelopeMetadata(reader),
+        const reader = new RBufferReader(header_blob),
 
-  // Seek to end of envelope to get checksum
-  checksumPos = payloadStart + envelopeLength - 8,
-  currentPos = reader.offset;
+            payloadStart = reader.offset,
+            // Read the envelope metadata
+            {
+                envelopeLength
+            } = this._readEnvelopeMetadata(reader),
 
-  reader.seek(checksumPos);
-  this.headerEnvelopeChecksum = reader.readU64(); 
+            // Seek to end of envelope to get checksum
+            checksumPos = payloadStart + envelopeLength - 8,
+            currentPos = reader.offset;
 
-  reader.seek(currentPos);
+        reader.seek(checksumPos);
+        this.headerEnvelopeChecksum = reader.readU64();
 
-  //  Read feature flags list (may span multiple 64-bit words)
-  this._readFeatureFlags(reader);
+        reader.seek(currentPos);
 
-  //  Read metadata strings
-  this.name = reader.readString();
-  this.description = reader.readString();
-  this.writer = reader.readString();
+        //  Read feature flags list (may span multiple 64-bit words)
+        this._readFeatureFlags(reader);
 
-  // 4 list frames inside the header envelope
-  this._readSchemaDescription(reader);
-  }
+        //  Read metadata strings
+        this.name = reader.readString();
+        this.description = reader.readString();
+        this.writer = reader.readString();
 
-deserializeFooter(footer_blob) {
-    if (!footer_blob) return;
-
-    const reader = new RBufferReader(footer_blob);
-
-    // Read the envelope metadata
-    this._readEnvelopeMetadata(reader);
-
-
-    // Feature flag(32 bits)
-    this._readFeatureFlags(reader);
-    // Header checksum (64-bit xxhash3)
-    const headerChecksumFromFooter = reader.readU64(); 
-    if (headerChecksumFromFooter !== this.headerEnvelopeChecksum)
-    throw new Error('RNTuple corrupted: header checksum does not match footer checksum.');
-
-    const schemaExtensionSize = reader.readS64(); 
-
-    console.log('Schema extension frame size:', schemaExtensionSize);
-    if (schemaExtensionSize < 0)
-      throw new Error('Schema extension frame is not a record frame, which is unexpected.');      
-    
-    // Schema extension record frame (4 list frames inside)
-    this._readSchemaDescription(reader);
-
-    // Cluster Group record frame
-    this._readClusterGroups(reader);
-  }
-
-
-_readEnvelopeMetadata(reader) {
-  const typeAndLength = reader.readU64(),
-
-  // Envelope metadata
-  // The 16 bits are the envelope type ID, and the 48 bits are the envelope length
-  envelopeType = Number(typeAndLength & 0xFFFFn),
-  envelopeLength = Number((typeAndLength >> 16n) & 0xFFFFFFFFFFFFn);
-
-  console.log('Envelope Type ID:', envelopeType);
-  console.log('Envelope Length:', envelopeLength);
-  return { envelopeType, envelopeLength };
-}
-
-_readSchemaDescription(reader) {
-  // Reading new descriptor arrays from the input
-  const newFields = this._readFieldDescriptors(reader),
-  newColumns = this._readColumnDescriptors(reader),
-  newAliases = this._readAliasColumn(reader),
-  newExtra = this._readExtraTypeInformation(reader);
-
-  // Merging these new arrays into existing arrays
-  this.fieldDescriptors = (this.fieldDescriptors || []).concat(newFields);
-  this.columnDescriptors = (this.columnDescriptors || []).concat(newColumns);
-  this.aliasColumns = (this.aliasColumns || []).concat(newAliases);
-  this.extraTypeInfo = (this.extraTypeInfo || []).concat(newExtra);
-}
-
-
-_readFeatureFlags(reader) {
-  this.featureFlags = [];
-  while (true) {
-    const val = reader.readU64();
-    this.featureFlags.push(val);
-    if ((val & 0x8000000000000000n) === 0n) break; // MSB not set: end of list
-  }
-
-  // verify all feature flags are zero
-  if (this.featureFlags.some(v => v !== 0n))
-  throw new Error('Unexpected non-zero feature flags: ' + this.featureFlags);
-}
-
-_readFieldDescriptors(reader) {
-const fieldListSize = reader.readS64(), // signed 64-bit
-fieldListIsList = fieldListSize < 0;
-
-
-  if (!fieldListIsList)
-    throw new Error('Field list frame is not a list frame, which is required.');
-
-  const fieldListCount = reader.readU32(); // number of field entries
-  console.log('Field List Count:', fieldListCount);
-
-  // List frame: list of field record frames
-
-  const fieldDescriptors = [];
-  for (let i = 0; i < fieldListCount; ++i) {
-    const fieldRecordSize = reader.readS64(),
-    fieldVersion = reader.readU32(),
-    typeVersion = reader.readU32(),
-    parentFieldId = reader.readU32(),
-    structRole = reader.readU16(),
-    flags = reader.readU16(),
-
-    fieldName = reader.readString(),
-    typeName = reader.readString(),
-    typeAlias = reader.readString(),
-    description = reader.readString();
-    console.log(`Field Record Size: ${fieldRecordSize}`);
-    let arraySize = null, sourceFieldId = null, checksum = null;
-
-    if (flags & 0x1) arraySize = reader.readU64();
-    if (flags & 0x2) sourceFieldId = reader.readU32();
-    if (flags & 0x4) checksum = reader.readU32();
-
-     fieldDescriptors.push({
-        fieldVersion,
-        typeVersion,
-        parentFieldId,
-        structRole,
-        flags,
-        fieldName,
-        typeName,
-        typeAlias,
-        description,
-        arraySize,
-        sourceFieldId,
-        checksum
-    });
-}
-  return fieldDescriptors;
-}
-
-_readColumnDescriptors(reader) {
-  const columnListSize = reader.readS64(),
-  columnListIsList = columnListSize < 0;
-  if (!columnListIsList)
-    throw new Error('Column list frame is not a list frame, which is required.');
-  const columnListCount = reader.readU32(); // number of column entries
-  console.log('Column List Count:', columnListCount);
-  const columnDescriptors = [];
-  for (let i = 0; i < columnListCount; ++i) {
-  const columnRecordSize = reader.readS64(), 
-  coltype = reader.readU16(),
-  bitsOnStorage = reader.readU16(),
-  fieldId = reader.readU32(),
-  flags = reader.readU16(),
-  representationIndex = reader.readU16();
-  console.log(`Column Record Size: ${columnRecordSize}`);
-   let firstElementIndex = null, minValue = null, maxValue = null;
-  if (flags & 0x1) firstElementIndex = reader.readU64();
-  if (flags & 0x2){
-    minValue = reader.readF64();
-    maxValue = reader.readF64();    
-  }
-
-
-  const column = {
-      coltype,
-      bitsOnStorage,
-      fieldId,
-      flags,
-      representationIndex,
-      firstElementIndex,
-      minValue,
-      maxValue
-    };
-    column.isDeferred = function() {
-      return (this.flags & 0x01) !== 0;
-    };
-    column.isSuppressed = function() {
-      return this.firstElementIndex !== null && this.firstElementIndex < 0;
-    };
-
-    columnDescriptors.push(column);
-  }
- return columnDescriptors;
-}
-_readAliasColumn(reader){
-  const aliasColumnListSize = reader.readS64(),
-  aliasListisList = aliasColumnListSize < 0;
-  if (!aliasListisList)
-    throw new Error('Alias column list frame is not a list frame, which is required.');
-  const aliasColumnCount = reader.readU32(); // number of alias column entries
-  console.log('Alias Column List Count:', aliasColumnCount);
-  const aliasColumns = [];
-  for (let i = 0; i < aliasColumnCount; ++i){
-  const aliasColumnRecordSize = reader.readS64(),
-    physicalColumnId = reader.readU32(),
-    fieldId = reader.readU32();
-    console.log(`Alias Column Record Size: ${aliasColumnRecordSize}`);
-    aliasColumns.push({
-      physicalColumnId,
-      fieldId
-    });
-  }
-  return aliasColumns;
-}
-_readExtraTypeInformation(reader) {
-  const extraTypeInfoListSize = reader.readS64(),
-  isList = extraTypeInfoListSize < 0;
-
-  if (!isList)
-    throw new Error('Extra type info frame is not a list frame, which is required.');
-
-  const entryCount = reader.readU32(); 
-  console.log('Extra Type Info Count:', entryCount);
-
-  const extraTypeInfo = [];
-  for (let i = 0; i < entryCount; ++i) {
-    const extraTypeInfoRecordSize = reader.readS64(),
-    contentId = reader.readU32(),
-    typeVersion = reader.readU32();
-    console.log(`Extra Type Info Record Size: ${extraTypeInfoRecordSize}`);
-    extraTypeInfo.push({
-      contentId,
-      typeVersion
-    });
-  }
-  return extraTypeInfo;
-}
-_readClusterGroups(reader) {
-  const clusterGroupListSize = reader.readS64(),
-  isList = clusterGroupListSize < 0;
-  if (!isList) throw new Error('Cluster group frame is not a list frame');
-
-  const groupCount = reader.readU32();
-  console.log('Cluster Group Count:', groupCount);
-
-  const clusterGroups = [];
-
-  for (let i = 0; i < groupCount; ++i) {
-    const clusterRecordSize = reader.readS64(),
-    minEntry = reader.readU64(),
-    entrySpan = reader.readU64(),
-    numClusters = reader.readU32(),
-    pageListLength = reader.readU64();
-
-    console.log(`Cluster Record Size: ${clusterRecordSize}`);
-    
-    // Locator method to get the page list locator offset
-    const pageListLocator = this._readLocator(reader);
-
-    console.log('Page Length', pageListLength);
-  console.log(`Page List Locator Offset (hex): 0x${pageListLocator.offset.toString(16).toUpperCase()}`);
-
- const group = {
-  minEntry,
-  entrySpan,
-  numClusters,
-  pageListLocator,
-  pageListLength
-    }; 
-    clusterGroups.push(group);
-  }
-  this.clusterGroups = clusterGroups;
-}
-
-_readLocator(reader) {
-  const sizeAndType = reader.readU32();           // 4 bytes: size + T bit
-  if ((sizeAndType | 0) < 0)  // | makes the sizeAndType as signed
-    throw new Error('Non-standard locators (T=1) not supported yet');
-  const size = sizeAndType,            
-  offset = reader.readU64();               // 8 bytes: offset
-  return {
-    size,
-    offset
-  };
-}
-deserializePageList(page_list_blob){
-    if (!page_list_blob)         
-      throw new Error('deserializePageList: received an invalid or empty page list blob');
-
-  const reader = new RBufferReader(page_list_blob);  
-  this._readEnvelopeMetadata(reader);
-  // Page list checksum (64-bit xxhash3)
-  const pageListHeaderChecksum = reader.readU64();
-  if (pageListHeaderChecksum !== this.headerEnvelopeChecksum)
-    throw new Error('RNTuple corrupted: header checksum does not match Page List Header checksum.');
-  
-
-  // Read cluster summaries list frame
-  const clusterSummaryListSize = reader.readS64();
-  if (clusterSummaryListSize>=0) 
-    throw new Error('Expected a list frame for cluster summaries');
-  const clusterSummaryCount = reader.readU32(),
-
-  clusterSummaries = [];
-
-  for (let i = 0; i < clusterSummaryCount; ++i) {
-  const clusterSummaryRecordSize = reader.readS64(), 
-  firstEntry = reader.readU64(),
-  combined = reader.readU64(),
-  flags = combined >> 56n;
-  if (flags & 0x01n)
-    throw new Error('Cluster summary uses unsupported sharded flag (0x01)');
-  const numEntries = Number(combined & 0x00FFFFFFFFFFFFFFn);
-  console.log(`Cluster Summary Record Size : ${clusterSummaryRecordSize}`);
-  clusterSummaries.push({
-    firstEntry,
-    numEntries,
-    flags
-  });
-}
-this.clusterSummaries = clusterSummaries;
-this._readNestedFrames(reader);
-
-const checksumPagelist = reader.readU64();
-console.log('Page List Checksum', checksumPagelist);
-}
-
-_readNestedFrames(reader) {
-  const clusterPageLocations = [],
- numListClusters = reader.readS64();
- if (numListClusters>=0)
-  throw new Error('Expected list frame for clusters');
-const numRecordCluster = reader.readU32();
-
-  for (let i = 0; i < numRecordCluster; ++i) {
-    const outerListSize = reader.readS64();
-    if (outerListSize >= 0)
-      throw new Error('Expected outer list frame for columns');
-
-    const numColumns = reader.readU32(),
-    columns = [];
-
-    for (let c = 0; c < numColumns; ++c) {
-      const innerListSize = reader.readS64();
-      if (innerListSize >= 0)     
-        throw new Error('Expected inner list frame for pages');
-
-      const numPages = reader.readU32();
-      console.log(`Column ${c} has ${numPages} page(s)`);
-     const pages = [];
-
-      for (let p = 0; p < numPages; ++p) {
-        const numElementsWithBit = reader.readS32(),
-        hasChecksum = numElementsWithBit < 0,
-        numElements = BigInt(Math.abs(Number(numElementsWithBit))),
-
-        locator = this._readLocator(reader);
-         console.log(`Page ${p} → elements: ${numElements}, checksum: ${hasChecksum}, locator offset: ${locator.offset}, size: ${locator.size}`);
-        pages.push({ numElements, hasChecksum, locator });
-      }
-
-      const elementOffset = reader.readS64(),
-      isSuppressed = elementOffset < 0;
-
-      let compression = null;
-      if (!isSuppressed) {
-        compression = reader.readU32();
-        console.log(`Column ${c} is NOT suppressed, offset: ${elementOffset}, compression: ${compression}`);
-      } else 
-        console.log(`Column ${c} is suppressed, offset: ${elementOffset}`);
-
-      columns.push({ pages, elementOffset, isSuppressed, compression });
+        // 4 list frames inside the header envelope
+        this._readSchemaDescription(reader);
     }
 
-    clusterPageLocations.push(columns);
-  }
+    deserializeFooter(footer_blob) {
+        if (!footer_blob) return;
 
-  this.pageLocations = clusterPageLocations;
-}
+        const reader = new RBufferReader(footer_blob);
 
-// Example Of Deserializing Page Content
-deserializePage(blob, columnDescriptor, fieldDescriptor) {
-   const reader = new RBufferReader(blob);
-
-   // Validate the column type before decoding
-   if (columnDescriptor.coltype !== 13)
-      throw new Error(`Expected column type 13 (kReal64), got ${columnDescriptor.coltype}`);
-
-   console.log(`Field: ${fieldDescriptor?.fieldName ?? 'undefined'} | Type: ${fieldDescriptor?.typeName ?? 'unknown'}`);
-   console.log('Deserializing first 10 double values from data page');
-
-   for (let i = 0; i < 10; ++i) {
-      const val = reader.readF64();
-      console.log(val);
-   }
-}
+        // Read the envelope metadata
+        this._readEnvelopeMetadata(reader);
 
 
-}
+        // Feature flag(32 bits)
+        this._readFeatureFlags(reader);
+        // Header checksum (64-bit xxhash3)
+        const headerChecksumFromFooter = reader.readU64();
+        if (headerChecksumFromFooter !== this.headerEnvelopeChecksum)
+            throw new Error('RNTuple corrupted: header checksum does not match footer checksum.');
+
+        const schemaExtensionSize = reader.readS64();
+
+        if (schemaExtensionSize < 0)
+            throw new Error('Schema extension frame is not a record frame, which is unexpected.');
+
+        // Schema extension record frame (4 list frames inside)
+        this._readSchemaDescription(reader);
+
+        // Cluster Group record frame
+        this._readClusterGroups(reader);
+    }
+
+
+    _readEnvelopeMetadata(reader) {
+        const typeAndLength = reader.readU64(),
+
+            // Envelope metadata
+            // The 16 bits are the envelope type ID, and the 48 bits are the envelope length
+            envelopeType = Number(typeAndLength & 0xFFFFn),
+            envelopeLength = Number((typeAndLength >> 16n) & 0xFFFFFFFFFFFFn);
+
+        return {
+            envelopeType,
+            envelopeLength
+        };
+    }
+
+    _readSchemaDescription(reader) {
+        // Reading new descriptor arrays from the input
+        const newFields = this._readFieldDescriptors(reader),
+            newColumns = this._readColumnDescriptors(reader),
+            newAliases = this._readAliasColumn(reader),
+            newExtra = this._readExtraTypeInformation(reader);
+
+        // Merging these new arrays into existing arrays
+        this.fieldDescriptors = (this.fieldDescriptors || []).concat(newFields);
+        this.columnDescriptors = (this.columnDescriptors || []).concat(newColumns);
+        this.aliasColumns = (this.aliasColumns || []).concat(newAliases);
+        this.extraTypeInfo = (this.extraTypeInfo || []).concat(newExtra);
+    }
+
+
+    _readFeatureFlags(reader) {
+        this.featureFlags = [];
+        while (true) {
+            const val = reader.readU64();
+            this.featureFlags.push(val);
+            if ((val & 0x8000000000000000n) === 0n) break; // MSB not set: end of list
+        }
+
+        // verify all feature flags are zero
+        if (this.featureFlags.some(v => v !== 0n))
+            throw new Error('Unexpected non-zero feature flags: ' + this.featureFlags);
+    }
+
+    _readFieldDescriptors(reader) {
+        const startOffset = BigInt(reader.offset),
+            fieldListSize = reader.readS64(), // signed 64-bit
+            fieldListIsList = fieldListSize < 0;
+
+
+        if (!fieldListIsList)
+            throw new Error('Field list frame is not a list frame, which is required.');
+
+        const fieldListCount = reader.readU32(), // number of field entries
+            // List frame: list of field record frames
+
+            fieldDescriptors = [];
+        for (let i = 0; i < fieldListCount; ++i) {
+            const recordStart = BigInt(reader.offset),
+                fieldRecordSize = reader.readS64(),
+                fieldVersion = reader.readU32(),
+                typeVersion = reader.readU32(),
+                parentFieldId = reader.readU32(),
+                structRole = reader.readU16(),
+                flags = reader.readU16(),
+
+                fieldName = reader.readString(),
+                typeName = reader.readString(),
+                typeAlias = reader.readString(),
+                description = reader.readString();
+            let arraySize = null,
+                sourceFieldId = null,
+                checksum = null;
+
+            if (flags & kFlagRepetitiveField)
+                arraySize = reader.readU64();
+
+            if (flags & kFlagProjectedField)
+                sourceFieldId = reader.readU32();
+
+            if (flags & kFlagHasTypeChecksum)
+                checksum = reader.readU32();
+
+
+            fieldDescriptors.push({
+                fieldVersion,
+                typeVersion,
+                parentFieldId,
+                structRole,
+                flags,
+                fieldName,
+                typeName,
+                typeAlias,
+                description,
+                arraySize,
+                sourceFieldId,
+                checksum
+            });
+            reader.seek(Number(recordStart + fieldRecordSize));
+        }
+        reader.seek(Number(startOffset - fieldListSize));
+        return fieldDescriptors;
+    }
+
+    _readColumnDescriptors(reader) {
+        const startOffset = BigInt(reader.offset),
+            columnListSize = reader.readS64(),
+            columnListIsList = columnListSize < 0;
+        if (!columnListIsList)
+            throw new Error('Column list frame is not a list frame, which is required.');
+        const columnListCount = reader.readU32(), // number of column entries
+            columnDescriptors = [];
+        for (let i = 0; i < columnListCount; ++i) {
+            const recordStart = BigInt(reader.offset),
+                columnRecordSize = reader.readS64(),
+                coltype = reader.readU16(),
+                bitsOnStorage = reader.readU16(),
+                fieldId = reader.readU32(),
+                flags = reader.readU16(),
+                representationIndex = reader.readU16();
+            let firstElementIndex = null,
+                minValue = null,
+                maxValue = null;
+
+            if (flags & kFlagDeferredColumn)
+                firstElementIndex = reader.readU64();
+
+            if (flags & kFlagHasValueRange) {
+                minValue = reader.readF64();
+                maxValue = reader.readF64();
+            }
+
+
+            const column = {
+                coltype,
+                bitsOnStorage,
+                fieldId,
+                flags,
+                representationIndex,
+                firstElementIndex,
+                minValue,
+                maxValue,
+                index: i
+            };
+            column.isDeferred = function() {
+                return (this.flags & RNTupleDescriptorBuilder.kFlagDeferredColumn) !== 0;
+            };
+            column.isSuppressed = function() {
+                return this.firstElementIndex !== null && this.firstElementIndex < 0;
+            };
+
+            columnDescriptors.push(column);
+            reader.seek(Number(recordStart + columnRecordSize));
+        }
+        reader.seek(Number(startOffset - columnListSize));
+        return columnDescriptors;
+    }
+    _readAliasColumn(reader) {
+        const startOffset = BigInt(reader.offset),
+            aliasColumnListSize = reader.readS64(),
+            aliasListisList = aliasColumnListSize < 0;
+        if (!aliasListisList)
+            throw new Error('Alias column list frame is not a list frame, which is required.');
+        const aliasColumnCount = reader.readU32(), // number of alias column entries
+            aliasColumns = [];
+        for (let i = 0; i < aliasColumnCount; ++i) {
+            const recordStart = BigInt(reader.offset),
+                aliasColumnRecordSize = reader.readS64(),
+                physicalColumnId = reader.readU32(),
+                fieldId = reader.readU32();
+            aliasColumns.push({
+                physicalColumnId,
+                fieldId
+            });
+            reader.seek(Number(recordStart+aliasColumnRecordSize));
+        }
+        reader.seek(Number(startOffset - aliasColumnListSize));
+        return aliasColumns;
+    }
+    _readExtraTypeInformation(reader) {
+        const startOffset = BigInt(reader.offset),
+            extraTypeInfoListSize = reader.readS64(),
+            isList = extraTypeInfoListSize < 0;
+
+        if (!isList)
+            throw new Error('Extra type info frame is not a list frame, which is required.');
+
+        const entryCount = reader.readU32(),
+
+            extraTypeInfo = [];
+        for (let i = 0; i < entryCount; ++i) {
+            const recordStart = BigInt(reader.offset),
+                extraTypeInfoRecordSize = reader.readS64(),
+                contentId = reader.readU32(),
+                typeVersion = reader.readU32();
+            extraTypeInfo.push({
+                contentId,
+                typeVersion
+            });
+            reader.seek(Number(recordStart + extraTypeInfoRecordSize));
+        }
+        reader.seek(Number(startOffset - extraTypeInfoListSize));
+        return extraTypeInfo;
+    }
+    _readClusterGroups(reader) {
+        const startOffset = BigInt(reader.offset),
+            clusterGroupListSize = reader.readS64(),
+            isList = clusterGroupListSize < 0;
+        if (!isList) throw new Error('Cluster group frame is not a list frame');
+
+        const groupCount = reader.readU32(),
+
+            clusterGroups = [];
+
+        for (let i = 0; i < groupCount; ++i) {
+            const recordStart = BigInt(reader.offset),
+                clusterRecordSize = reader.readS64(),
+                minEntry = reader.readU64(),
+                entrySpan = reader.readU64(),
+                numClusters = reader.readU32(),
+                pageListLength = reader.readU64(),
+
+
+                // Locator method to get the page list locator offset
+                pageListLocator = this._readLocator(reader),
+
+
+                group = {
+                    minEntry,
+                    entrySpan,
+                    numClusters,
+                    pageListLocator,
+                    pageListLength
+                };
+            clusterGroups.push(group);
+            reader.seek(Number(recordStart + clusterRecordSize));
+        }
+        reader.seek(Number(startOffset - clusterGroupListSize));
+        this.clusterGroups = clusterGroups;
+    }
+
+    _readLocator(reader) {
+        const sizeAndType = reader.readU32(); // 4 bytes: size + T bit
+        if ((sizeAndType | 0) < 0) // | makes the sizeAndType as signed
+            throw new Error('Non-standard locators (T=1) not supported yet');
+        const size = sizeAndType,
+            offset = reader.readU64(); // 8 bytes: offset
+        return {
+            size,
+            offset
+        };
+    }
+    deserializePageList(page_list_blob) {
+        if (!page_list_blob)
+            throw new Error('deserializePageList: received an invalid or empty page list blob');
+
+        const reader = new RBufferReader(page_list_blob);
+        this._readEnvelopeMetadata(reader);
+        // Page list checksum (64-bit xxhash3)
+        const pageListHeaderChecksum = reader.readU64();
+        if (pageListHeaderChecksum !== this.headerEnvelopeChecksum)
+            throw new Error('RNTuple corrupted: header checksum does not match Page List Header checksum.');
+
+        const listStartOffset = BigInt(reader.offset),
+            // Read cluster summaries list frame
+            clusterSummaryListSize = reader.readS64();
+        if (clusterSummaryListSize >= 0)
+            throw new Error('Expected a list frame for cluster summaries');
+        const clusterSummaryCount = reader.readU32(),
+
+            clusterSummaries = [];
+
+        for (let i = 0; i < clusterSummaryCount; ++i) {
+            const recordStart = BigInt(reader.offset),
+                clusterSummaryRecordSize = reader.readS64(),
+                firstEntry = reader.readU64(),
+                combined = reader.readU64(),
+                flags = combined >> 56n;
+            if (flags & 0x01n)
+                throw new Error('Cluster summary uses unsupported sharded flag (0x01)');
+            const numEntries = Number(combined & 0x00FFFFFFFFFFFFFFn);
+            clusterSummaries.push({
+                firstEntry,
+                numEntries,
+                flags
+            });
+            reader.seek(Number(recordStart + clusterSummaryRecordSize));
+        }
+        reader.seek(Number(listStartOffset - clusterSummaryListSize));
+        this.clusterSummaries = clusterSummaries;
+        this._readNestedFrames(reader);
+
+        const checksumPagelist = reader.readU64();
+        console.log(checksumPagelist);
+    }
+
+    _readNestedFrames(reader) {
+        const clusterPageLocations = [],
+            numListClusters = reader.readS64();
+        if (numListClusters >= 0)
+            throw new Error('Expected list frame for clusters');
+        const numRecordCluster = reader.readU32();
+
+        for (let i = 0; i < numRecordCluster; ++i) {
+            const outerListSize = reader.readS64();
+            if (outerListSize >= 0)
+                throw new Error('Expected outer list frame for columns');
+
+            const numColumns = reader.readU32(),
+                columns = [];
+
+            for (let c = 0; c < numColumns; ++c) {
+                const innerListSize = reader.readS64();
+                if (innerListSize >= 0)
+                    throw new Error('Expected inner list frame for pages');
+
+                const numPages = reader.readU32(),
+                    pages = [];
+
+                for (let p = 0; p < numPages; ++p) {
+                    const numElementsWithBit = reader.readS32(),
+                        hasChecksum = numElementsWithBit < 0,
+                        numElements = BigInt(Math.abs(Number(numElementsWithBit))),
+
+                        locator = this._readLocator(reader);
+                    pages.push({
+                        numElements,
+                        hasChecksum,
+                        locator
+                    });
+                }
+
+                const elementOffset = reader.readS64(),
+                    isSuppressed = elementOffset < 0;
+
+                let compression = null;
+                if (!isSuppressed)
+                    compression = reader.readU32();
+
+                columns.push({
+                    pages,
+                    elementOffset,
+                    isSuppressed,
+                    compression
+                });
+            }
+
+            clusterPageLocations.push(columns);
+        }
+
+        this.pageLocations = clusterPageLocations;
+    }
+
+    // Example Of Deserializing Page Content
+    deserializePage(blob, columnDescriptor, pageInfo) {
+        const originalColtype = columnDescriptor.coltype,
+            {
+                coltype
+            } = recontructUnsplitBuffer(blob, columnDescriptor);
+        let {
+            blob: processedBlob
+        } = recontructUnsplitBuffer(blob, columnDescriptor);
+    
+    
+        // Handle split index types
+        if (originalColtype === ENTupleColumnType.kSplitIndex32 || originalColtype === ENTupleColumnType.kSplitIndex64) {
+            const {
+                blob: decodedArray
+            } = DecodeDeltaIndex(processedBlob, coltype);
+            processedBlob = decodedArray;
+        }
+    
+        // Handle Split Signed Int types
+        if (originalColtype === ENTupleColumnType.kSplitInt16 || originalColtype === ENTupleColumnType.kSplitInt32 || originalColtype === ENTupleColumnType.kSplitInt64) {
+            const {
+                blob: decodedArray
+            } = decodeZigzag(processedBlob, coltype);
+            processedBlob = decodedArray;
+        }
+    
+        const reader = new RBufferReader(processedBlob),
+            values = [],
+    
+            // Use numElements from pageInfo parameter
+            numValues = Number(pageInfo.numElements),
+            // Helper for all simple types
+            extractValues = (readFunc) => {
+                for (let i = 0; i < numValues; ++i)
+                    values.push(readFunc());
+            };
+        switch (coltype) {
+            case ENTupleColumnType.kBit: {
+                let bitCount = 0;
+                const totalBitsInBuffer = processedBlob.byteLength * 8;
+                if (totalBitsInBuffer < numValues)
+                    throw new Error(`kBit: Not enough bits in buffer (${totalBitsInBuffer}) for numValues (${numValues})`);
+    
+                for (let byteIndex = 0; byteIndex < processedBlob.byteLength; ++byteIndex) {
+                    const byte = reader.readU8();
+    
+                    // Extract 8 bits from this byte
+                    for (let bitPos = 0; bitPos < 8 && bitCount < numValues; ++bitPos, ++bitCount) {
+                        const bitValue = (byte >>> bitPos) & 1,
+                            boolValue = bitValue === 1;
+                        values.push(boolValue);
+                    }
+                }
+                break;
+            }
+    
+            case ENTupleColumnType.kReal64:
+                extractValues(reader.readF64.bind(reader));
+                break;
+            case ENTupleColumnType.kReal32:
+                extractValues(reader.readF32.bind(reader));
+                break;
+            case ENTupleColumnType.kInt64:
+                extractValues(reader.readS64.bind(reader));
+                break;
+            case ENTupleColumnType.kUInt64:
+                extractValues(reader.readU64.bind(reader));
+                break;
+            case ENTupleColumnType.kInt32:
+                extractValues(reader.readS32.bind(reader));
+                break;
+            case ENTupleColumnType.kUInt32:
+                extractValues(reader.readU32.bind(reader));
+                break;
+            case ENTupleColumnType.kInt16:
+                extractValues(reader.readS16.bind(reader));
+                break;
+            case ENTupleColumnType.kUInt16:
+                extractValues(reader.readU16.bind(reader));
+                break;
+            case ENTupleColumnType.kInt8:
+                extractValues(reader.readS8.bind(reader));
+                break;
+            case ENTupleColumnType.kUInt8:
+            case ENTupleColumnType.kByte:
+                extractValues(reader.readU8.bind(reader));
+                break;
+            case ENTupleColumnType.kChar:
+                extractValues(() => String.fromCharCode(reader.readS8()));
+                break;
+            case ENTupleColumnType.kIndex32:
+                extractValues(reader.readS32.bind(reader));
+                break;
+            case ENTupleColumnType.kIndex64:
+                extractValues(reader.readS64.bind(reader));
+                break;
+            default:
+                throw new Error(`Unsupported column type: ${columnDescriptor.coltype}`);
+        }
+        return values;
+    }
+
+} // class RNTupleDescriptorBuilder
 
 
 /** @summary Very preliminary function to read header/footer from RNTuple
-  * @private */
+ * @private */
 async function readHeaderFooter(tuple) {
-   if (!tuple.$file)
-      return false;
+    // if already read - return immediately, make possible to call several times
+    if (tuple?.builder)
+        return true;
 
-   // request header and footer buffers from the file
-   return tuple.$file.readBuffer([tuple.fSeekHeader, tuple.fNBytesHeader, tuple.fSeekFooter, tuple.fNBytesFooter]).then(blobs => {
-      if (blobs?.length !== 2)
-         return false;
+    if (!tuple.$file)
+        return false;
 
-      // unzip both buffers
-      return Promise.all([
-         R__unzip(blobs[0], tuple.fLenHeader),
-         R__unzip(blobs[1], tuple.fLenFooter)
-      ]).then(unzip_blobs => {
-         const header_blob = unzip_blobs[0],
-               footer_blob = unzip_blobs[1];
-         if (!header_blob || !footer_blob)
+    // request header and footer buffers from the file
+    return tuple.$file.readBuffer([tuple.fSeekHeader, tuple.fNBytesHeader, tuple.fSeekFooter, tuple.fNBytesFooter]).then(blobs => {
+        if (blobs?.length !== 2)
             return false;
 
-         // create builder description and decode it - dummy for the moment
+        // Handle both compressed and uncompressed cases
+        const processBlob = (blob, uncompressedSize) => {
+            // If uncompressedSize matches blob size, it's uncompressed
+            if (blob.byteLength === uncompressedSize)
+                return Promise.resolve(blob);
+            return R__unzip(blob, uncompressedSize);
+        };
 
-         tuple.builder = new RNTupleDescriptorBuilder;
+        return Promise.all([
+            processBlob(blobs[0], tuple.fLenHeader),
+            processBlob(blobs[1], tuple.fLenFooter)
+        ]).then(unzip_blobs => {
+            const [header_blob, footer_blob] = unzip_blobs;
+            if (!header_blob || !footer_blob)
+                return false;
 
-         tuple.builder.deserializeHeader(header_blob);
+            tuple.builder = new RNTupleDescriptorBuilder;
+            tuple.builder.deserializeHeader(header_blob);
+            tuple.builder.deserializeFooter(footer_blob);
 
-         tuple.builder.deserializeFooter(footer_blob);
+            // Build fieldToColumns mapping
+            tuple.fieldToColumns = {};
+            for (const colDesc of tuple.builder.columnDescriptors) {
+                const fieldDesc = tuple.builder.fieldDescriptors[colDesc.fieldId],
+                    fieldName = fieldDesc.fieldName;
+                if (!tuple.fieldToColumns[fieldName])
+                    tuple.fieldToColumns[fieldName] = [];
+                tuple.fieldToColumns[fieldName].push(colDesc);
+            }
 
-         // Extract first column and corresponding field
-        const firstColumn = tuple.builder.columnDescriptors?.[0];
-        if (!firstColumn)
-          throw new Error('No column descriptor found');
+            // Deserialize Page List
+            const group = tuple.builder.clusterGroups?.[0];
+            if (!group || !group.pageListLocator)
+                throw new Error('No valid cluster group or page list locator found');
 
-        const field = tuple.builder.fieldDescriptors?.[firstColumn.fieldId],
+            const offset = Number(group.pageListLocator.offset),
+                size = Number(group.pageListLocator.size),
+                uncompressedSize = Number(group.pageListLength);
 
-        // Deserialize the Page List Envelope
-         group = tuple.builder.clusterGroups?.[0];
-         if (!group || !group.pageListLocator)
-            throw new Error('No valid cluster group or page list locator found');
+            return tuple.$file.readBuffer([offset, size]).then(page_list_blob => {
+                if (!(page_list_blob instanceof DataView))
+                    throw new Error(`Expected DataView from readBuffer, got ${Object.prototype.toString.call(page_list_blob)}`);
 
-         const offset = Number(group.pageListLocator.offset),
-               size = Number(group.pageListLocator.size),
-               uncompressedSize = Number(group.pageListLength);
+                // Check if page list data is uncompressed
+                if (page_list_blob.byteLength === uncompressedSize) {
+                    // Data is uncompressed, use directly
+                    tuple.builder.deserializePageList(page_list_blob);
+                    return true;
+                }
+                // Attempt to decompress the page list
+                return R__unzip(page_list_blob, uncompressedSize).then(unzipped_blob => {
+                    if (!(unzipped_blob instanceof DataView))
+                        throw new Error(`Unzipped page list is not a DataView, got ${Object.prototype.toString.call(unzipped_blob)}`);
 
-         return tuple.$file.readBuffer([offset, size]).then(page_list_blob => {
-            if (!(page_list_blob instanceof DataView))
-               throw new Error(`Expected DataView from readBuffer, got ${Object.prototype.toString.call(page_list_blob)}`);
-
-            return R__unzip(page_list_blob, uncompressedSize).then(unzipped_blob => {
-               if (!(unzipped_blob instanceof DataView))
-                  throw new Error(`Unzipped page list is not a DataView, got ${Object.prototype.toString.call(unzipped_blob)}`);
-
-               tuple.builder.deserializePageList(unzipped_blob);
-              
-
-               // Access first page metadata
-               const firstPage = tuple.builder?.pageLocations?.[0]?.[0]?.pages?.[0];
-               if (!firstPage || !firstPage.locator)
-                  throw new Error('No valid first page found in pageLocations');
-
-               const pageOffset = Number(firstPage.locator.offset),
-                     pageSize = Number(firstPage.locator.size),
-                     elementSize = firstColumn.bitsOnStorage / 8,
-                     numElements = Number(firstPage.numElements),
-                     uncompressedPageSize = elementSize * numElements;
-
-               console.log(`Uncompressed page size: ${uncompressedPageSize}`);
-               console.log(`Compressed page size: ${pageSize}`);
-
-               return tuple.$file.readBuffer([pageOffset, pageSize]).then(compressedPage => {
-                  if (!(compressedPage instanceof DataView))
-                     throw new Error('Compressed page readBuffer did not return a DataView');
-
-                  return R__unzip(compressedPage, uncompressedPageSize).then(unzippedPage => {
-                     if (!(unzippedPage instanceof DataView))
-                        throw new Error('Unzipped page is not a DataView');
-
-                    tuple.builder.deserializePage(unzippedPage, firstColumn, field);
-                     return true;
-                  });
+                    tuple.builder.deserializePageList(unzipped_blob);
+                    return true;
                 });
             });
-         });
-      });
-   }).catch(err => {
-      console.error('Error during readHeaderFooter execution:', err);
-      throw err;
-   });
+        });
+    }).catch(err => {
+        console.error('Error during readHeaderFooter execution:', err);
+        throw err;
+    });
 }
 
+function readEntry(rntuple, fieldName, entryIndex) {
+    const builder = rntuple.builder,
+        field = builder.fieldDescriptors.find(f => f.fieldName === fieldName),
+        fieldData = rntuple._clusterData[fieldName];
+
+    if (!field)
+        throw new Error(`No descriptor for field ${fieldName}`);
+    if (!fieldData)
+        throw new Error(`No data for field ${fieldName}`);
+
+    // Detect and decode string fields
+    if (Array.isArray(fieldData) && fieldData.length === 2) {
+        const [offsets, payload] = fieldData,
+        start = entryIndex === 0 ? 0 : Number(offsets[entryIndex - 1]),
+            end = Number(offsets[entryIndex]),
+            decoded = payload.slice(start, end).join(''); // Convert to string
+        return decoded;
+    }
+
+    // Fallback: primitive type (e.g. int, float)
+    return fieldData[0][entryIndex];
+}
+
+/** @summary Return field name for specified branch index
+ * @desc API let use field name in selector or field object itself */
+function getSelectorFieldName(selector, i) {
+    const br = selector.getBranch(i);
+    return isStr(br) ? br : br?.fieldName;
+}
+
+// Read and process the next data cluster from the RNTuple
+function readNextCluster(rntuple, selector) {
+    const builder = rntuple.builder;
+
+    // Add validation
+    if (!builder.clusterSummaries || builder.clusterSummaries.length === 0)
+        throw new Error('No cluster summaries available - possibly incomplete file reading');
+
+    const clusterIndex = selector.currentCluster,
+        clusterSummary = builder.clusterSummaries[clusterIndex],
+
+        // Gather all pages for this cluster from selected fields only
+        pages = [],
+
+        // Collect only selected field names from selector
+        selectedFields = [];
+    for (let i = 0; i < selector.numBranches(); ++i)
+        selectedFields.push(getSelectorFieldName(selector, i));
+
+    console.log('selector fields', selectedFields);
+
+    // For each selected field, collect its columns' pages
+    for (const fieldName of selectedFields) {
+        const columns = rntuple.fieldToColumns[fieldName];
+        if (!columns)
+            throw new Error(`Selected field '${fieldName}' not found in RNTuple`);
+
+        for (const colDesc of columns) {
+            const colEntry = builder.pageLocations[clusterIndex]?.[colDesc.index];
+
+            // When the data is missing or broken
+            if (!colEntry || !colEntry.pages)
+                throw new Error(`No pages for column ${colDesc.index} in cluster ${clusterIndex}`);
+
+            for (const page of colEntry.pages)
+                pages.push({ page, colDesc, fieldName });
+        }
+    }
+
+    selector.currentCluster++;
+
+    // Early exit if no pages to read (i.e., no selected fields matched)
+    if (pages.length === 0) {
+        selector.Terminate(false);
+        return Promise.resolve();
+    }
+
+    // Build flat array of [offset, size, offset, size, ...] to read pages
+    const dataToRead = pages.flatMap(p =>
+        [Number(p.page.locator.offset), Number(p.page.locator.size)]
+    );
+
+    return rntuple.$file.readBuffer(dataToRead).then(blobsRaw => {
+        const blobs = Array.isArray(blobsRaw) ? blobsRaw : [blobsRaw],
+        unzipPromises = blobs.map((blob, idx) => {
+            const { page, colDesc } = pages[idx],
+                    colEntry = builder.pageLocations[clusterIndex][colDesc.index], // Access column entry
+                numElements = Number(page.numElements),
+                elementSize = colDesc.bitsOnStorage / 8;
+
+                // Check if data is compressed
+                if (colEntry.compression === 0)
+                    return Promise.resolve(blob); // Uncompressed: use blob directly
+                const expectedSize = numElements * elementSize;
+
+            // Special handling for boolean fields
+            if (colDesc.coltype === ENTupleColumnType.kBit) {
+                const expectedBoolSize = Math.ceil(numElements / 8);
+                if (blob.byteLength === expectedBoolSize)
+                    return Promise.resolve(blob);
+                // Try decompression but catch errors for boolean fields
+                return R__unzip(blob, expectedBoolSize).catch(err => {
+                    throw new Error(`Failed to unzip boolean page ${idx}: ${err.message}`);
+                });
+            }
+
+            // If the blob is already the expected size, treat as uncompressed
+            if (blob.byteLength === expectedSize)
+                return Promise.resolve(blob);
+
+            // Try decompression
+            return R__unzip(blob, expectedSize).then(result => {
+                if (!result)
+                    return blob; // Fallback to original blob
+                return result;
+            }).catch(err => {
+                throw new Error(`Failed to unzip page ${idx}: ${err.message}`);
+            });
+        });
+
+        return Promise.all(unzipPromises).then(unzipBlobs => {
+            rntuple._clusterData = {}; // store deserialized data per field
+
+            for (let i = 0; i < unzipBlobs.length; ++i) {
+                const blob = unzipBlobs[i];
+                // Ensure blob is a DataView
+                if (!(blob instanceof DataView))
+                    throw new Error(`Invalid blob type for page ${i}: ${Object.prototype.toString.call(blob)}`);
+                const {
+                    page,
+                    colDesc
+                } = pages[i],
+                    field = builder.fieldDescriptors[colDesc.fieldId],
+                    values = builder.deserializePage(blob, colDesc, page);
+
+                // Support multiple representations (e.g., string fields with offsets + payload)
+                if (!rntuple._clusterData[field.fieldName])
+                    rntuple._clusterData[field.fieldName] = [];
+
+                // splitting string fields into offset and payload components
+                if (field.typeName === 'std::string') {
+                    if (
+                        colDesc.coltype === ENTupleColumnType.kIndex64 ||
+                        colDesc.coltype === ENTupleColumnType.kIndex32 ||
+                        colDesc.coltype === ENTupleColumnType.kSplitIndex64 ||
+                        colDesc.coltype === ENTupleColumnType.kSplitIndex32
+                        ) // Index64/Index32
+                        rntuple._clusterData[field.fieldName][0] = values; // Offsets
+                    else if (colDesc.coltype === ENTupleColumnType.kChar)
+                        rntuple._clusterData[field.fieldName][1] = values; // Payload
+                    else
+                        throw new Error(`Unsupported column type for string field: ${colDesc.coltype}`);
+                } else
+                    rntuple._clusterData[field.fieldName][0] = values;
+            }
+
+            // Ensure string fields have ending offset for proper reconstruction of the last entry
+            for (const fieldName of selectedFields) {
+                const field = builder.fieldDescriptors.find(f => f.fieldName === fieldName),
+                    colData = rntuple._clusterData[fieldName];
+                if (field.typeName === 'std::string') {
+                    if (!Array.isArray(colData) || colData.length !== 2)
+                        throw new Error(`String field '${fieldName}' must have 2 columns`);
+                    if (colData[0].length !== builder.clusterSummaries[clusterIndex].numEntries)
+                        throw new Error(`Malformed string field '${fieldName}': missing final offset`);
+                }
+            }
+
+            const numEntries = clusterSummary.numEntries;
+            for (let i = 0; i < numEntries; ++i) {
+                for (let b = 0; b < selector.numBranches(); ++b) {
+                    const fieldName = getSelectorFieldName(selector, b),
+                        tgtName = selector.nameOfBranch(b),
+                        values = rntuple._clusterData[fieldName];
+
+                    if (!values)
+                        throw new Error(`Missing values for selected field: ${fieldName}`);
+                    selector.tgtobj[tgtName] = readEntry(rntuple, fieldName, i);
+                    // console.log('fieldName', fieldName, 'tgtname', tgtName, 'result', selector.tgtobj[tgtName]);
+                }
+                selector.Process();
+            }
+
+            selector.Terminate(true);
+        });
+    });
+}
+
+// TODO args can later be used to filter fields, limit entries, etc.
+// Create reader and deserialize doubles from the buffer
+function rntupleProcess(rntuple, selector, args) {
+    return readHeaderFooter(rntuple).then(() => {
+        selector.Begin();
+        selector.currentCluster = 0;
+        return readNextCluster(rntuple, selector);
+    }).then(() => selector);
+}
+
+class TDrawSelectorTuple extends TDrawSelector {
+
+    /** @summary Return total number of entries
+     * @desc TODO: check implementation details !!!! */
+    getNumEntries(tuple) {
+        let cnt = 0;
+       tuple?.builder.clusterSummaries.forEach(summary => { cnt += summary.numEntries; });
+        return cnt;
+    }
+
+    /** @summary Search for field in tuple
+     * @desc TODO: Can be more complex when name includes extra parts referencing member or collection size or more  */
+    findBranch(tuple, name) {
+        return tuple.builder?.fieldDescriptors.find(field => {
+            return field.fieldName === name;
+        });
+    }
+
+    /** @summary Returns true if field can be used as array */
+   isArrayBranch(/* tuple, br */) { return false; }
+
+} // class TDrawSelectorTuple
+
+
+/** @summary implementation of drawing for RNTuple
+ * @param {object|string} args - different setting or simply draw expression
+ * @param {string} args.expr - draw expression
+ * @param {string} [args.cut=undefined] - cut expression (also can be part of 'expr' after '::')
+ * @param {string} [args.drawopt=undefined] - draw options for result histogram
+ * @param {number} [args.firstentry=0] - first entry to process
+ * @param {number} [args.numentries=undefined] - number of entries to process, all by default
+ * @param {Array} [args.elist=undefined] - array of entries id to process, all by default
+ * @param {boolean} [args.staged] - staged processing, first apply cut to select entries and then perform drawing for selected entries
+ * @param {object} [args.branch=undefined] - TBranch object from TTree itself for the direct drawing
+ * @param {function} [args.progress=undefined] - function called during histogram accumulation with obj argument
+ * @return {Promise} with produced object */
+
+async function rntupleDraw(rntuple, args) {
+    if (isStr(args))
+        args = { expr: args };
+    else if (!isObject(args))
+        args = {};
+
+    args.SelectorClass = TDrawSelectorTuple;
+    args.processFunction = rntupleProcess;
+
+    return readHeaderFooter(rntuple).then(res_header_footer => {
+        return res_header_footer ? treeDraw(rntuple, args) : null;
+    });
+}
+
+
 /** @summary Create hierarchy of ROOT::RNTuple object
-  * @desc Used by hierarchy painter to explore sub-elements
-  * @private */
+ * @desc Used by hierarchy painter to explore sub-elements
+ * @private */
 async function tupleHierarchy(tuple_node, tuple) {
-   tuple_node._childs = [];
-   // tuple_node._tuple = tuple;  // set reference, will be used later by RNTuple::Draw
+    tuple_node._childs = [];
+    // tuple_node._tuple = tuple;  // set reference, will be used later by RNTuple::Draw
 
-   return readHeaderFooter(tuple).then(res => {
-      if (!res)
-         return res;
+    return readHeaderFooter(tuple).then(res => {
+        if (!res)
+            return res;
 
-      tuple.builder?.fieldDescriptors.forEach(field => {
-          tuple_node._childs.push({
-            _name: field.fieldName,
-            _kind: 'ROOT::RNTupleField', // pseudo class name, used in draw.mjs
-            _title: `Filed of type ${field.typeName}`,
-            _obj: field
-         });
-      });
+        tuple.builder?.fieldDescriptors.forEach(field => {
+            const item = {
+                _name: field.fieldName,
+                _typename: 'ROOT::RNTupleField', // pseudo class name, used in draw.mjs
+                _kind: 'ROOT::RNTupleField',
+                _title: `Filed of type ${field.typeName}`,
+                $tuple: tuple, // reference on tuple, need for drawing
+                $field: field
+            };
 
-      return true;
-   });
+            item._obj = item;
+
+            tuple_node._childs.push(item);
+        });
+
+        return true;
+    });
 }
 
 var rntuple = /*#__PURE__*/Object.freeze({
 __proto__: null,
 RBufferReader: RBufferReader,
+readEntry: readEntry,
 readHeaderFooter: readHeaderFooter,
+rntupleDraw: rntupleDraw,
+rntupleProcess: rntupleProcess,
 tupleHierarchy: tupleHierarchy
+});
+
+/** @summary function called from draw()
+  * @desc just envelope for real TTree::Draw method which do the main job
+  * Can be also used for the branch and leaf object
+  * @private */
+async function drawRNTuple(dom, obj, opt) {
+   const args = {};
+   let tuple;
+
+   if (obj?.$tuple) {
+      // case of fictional ROOT::RNTupleField
+      tuple = obj.$tuple;
+      args.expr = obj._name;
+      if (isStr(opt) && opt.indexOf('dump') === 0)
+         args.expr += '>>' + opt;
+      else if (opt)
+         args.expr += opt;
+   } else {
+      tuple = obj;
+      args.expr = opt;
+   }
+
+   if (!tuple)
+      throw Error('No RNTuple object available for drawing');
+
+   console.log('expression', args.expr);
+
+   args.drawid = dom;
+
+   args.progress = treeDrawProgress.bind(args);
+
+   return rntupleDraw(tuple, args).then(res => args.progress(res, true));
+}
+
+var RNTuple = /*#__PURE__*/Object.freeze({
+__proto__: null,
+drawRNTuple: drawRNTuple
 });
 
 const kNormal = 1, /* kLessTraffic = 2, */ kOffline = 3;
@@ -182331,6 +184097,7 @@ exports.GridDisplay = GridDisplay;
 exports.HierarchyPainter = HierarchyPainter;
 exports.MDIDisplay = MDIDisplay;
 exports.ObjectPainter = ObjectPainter;
+exports.RTreeMapPainter = RTreeMapPainter;
 exports.TCanvasPainter = TCanvasPainter;
 exports.TGeoPainter = TGeoPainter;
 exports.TGraphPainter = TGraphPainter;

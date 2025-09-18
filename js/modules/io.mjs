@@ -375,6 +375,39 @@ CustomStreamers = {
       func(buf, obj) { obj.$kind = 'TTree'; obj.$file = buf.fFile; }
    },
 
+   TBranch(buf, obj) {
+      const v = buf.last_read_version;
+      if (v > 9)
+         buf.streamClassMembers(obj, 'TBranch', v);
+      else {
+         buf.classStreamer(obj, clTNamed);
+         if (v > 7)
+            buf.classStreamer(obj, clTAttFill);
+         obj.fCompress = buf.ntoi4();
+         obj.fBasketSize = buf.ntoi4();
+         obj.fEntryOffsetLen = buf.ntoi4();
+         obj.fWriteBasket = buf.ntoi4();
+         obj.fEntryNumber = buf.ntoi4();
+         obj.fOffset = buf.ntoi4();
+         obj.fMaxBaskets = buf.ntoi4();
+         if (v > 6)
+            obj.fSplitLevel = buf.ntoi4();
+         obj.fEntries = buf.ntod();
+         obj.fTotBytes = buf.ntod();
+         obj.fZipBytes = buf.ntod();
+         obj.fBranches = buf.classStreamer({}, clTObjArray);
+         obj.fLeaves = buf.classStreamer({}, clTObjArray);
+         obj.fBaskets = buf.classStreamer({}, clTObjArray);
+         buf.ntoi1(); // isArray
+         obj.fBasketBytes = buf.readFastArray(obj.fMaxBaskets, kInt);
+         buf.ntoi1(); // isArray
+         obj.fBasketEntry = buf.readFastArray(obj.fMaxBaskets, kInt);
+         const isArray = buf.ntoi1();
+         obj.fBasketSeek = buf.readFastArray(obj.fMaxBaskets, isArray === 2 ? kLong64 : kInt);
+         obj.fFileName = buf.readTString();
+      }
+   },
+
    'ROOT::RNTuple': {
       name: '$file',
       func(buf, obj) { obj.$kind = 'ROOT::RNTuple'; obj.$file = buf.fFile; }
@@ -2261,7 +2294,7 @@ class TBuffer {
    checkByteCount(ver, where) {
       if ((ver.bytecnt !== undefined) && (ver.off + ver.bytecnt !== this.o)) {
          if (where)
-            console.log(`Missmatch in ${where} bytecount expected = ${ver.bytecnt}  got = ${this.o - ver.off}`);
+            console.log(`Missmatch in ${where}:${ver.val} bytecount expected = ${ver.bytecnt}  got = ${this.o - ver.off}`);
          this.o = ver.off + ver.bytecnt;
          return false;
       }
@@ -2622,7 +2655,8 @@ class TBuffer {
 
    /** @summary Invoke streamer for specified class  */
    classStreamer(obj, classname) {
-      if (obj._typename === undefined) obj._typename = classname;
+      if (obj._typename === undefined)
+         obj._typename = classname;
 
       const direct = DirectStreamers[classname];
       if (direct) {
@@ -2645,6 +2679,17 @@ class TBuffer {
 
       this.checkByteCount(ver, classname);
 
+      return obj;
+   }
+
+   /** @summary Stream class members using normal streamer */
+   streamClassMembers(obj, classname, version) {
+      const streamer = this.fFile.getStreamer(classname, { val: version }, undefined, true);
+      if (streamer !== null) {
+         const len = streamer.length;
+         for (let n = 0; n < len; ++n)
+            streamer[n].func(this, obj);
+      }
       return obj;
    }
 
@@ -3566,9 +3611,10 @@ class TFile {
    /** @summary Returns streamer for the class 'clname',
      * @desc From the list of streamers or generate it from the streamer infos and add it to the list
      * @private */
-   getStreamer(clname, ver, s_i) {
+   getStreamer(clname, ver, s_i, only_plain) {
       // these are special cases, which are handled separately
-      if (clname === clTQObject || clname === clTBasket) return null;
+      if (clname === clTQObject || clname === clTBasket)
+         return null;
 
       let streamer, fullname = clname;
 
@@ -3579,7 +3625,7 @@ class TFile {
             return streamer;
       }
 
-      const custom = CustomStreamers[clname];
+      const custom = only_plain ? null : CustomStreamers[clname];
 
       // one can define in the user streamers just aliases
       if (isStr(custom))
@@ -3594,7 +3640,8 @@ class TFile {
       streamer = [];
 
       if (isObject(custom)) {
-         if (!custom.name && !custom.func) return custom;
+         if (!custom.name && !custom.func)
+            return custom;
          streamer.push(custom); // special read entry, add in the beginning of streamer
       }
 
