@@ -1,0 +1,8 @@
+
+Processing runComplexTest.C...
+Warning in <TStreamerInfo::Build>: _Complex_base<double,_C_double_complex>: base class _C_double_complex has no streamer or dictionary it will not be saved
+Warning in <TStreamerInfo::Build>: complex<double>: base class _Complex_base<double,_C_double_complex> has no streamer or dictionary it will not be saved
+The complex object was set properly:
+3 6
+The complex object was read properly:
+3 6
