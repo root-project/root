@@ -78,6 +78,21 @@ namespace {
          if (fOnfileObject) fBuffer.PopDataCache();
       }
    };
+   bool IsAssociativeContainer(Int_t stltype) {
+      switch (stltype) {
+         case ROOT::kSTLset:
+         case ROOT::kSTLmultiset:
+         case ROOT::kSTLunorderedset:
+         case ROOT::kSTLunorderedmultiset:
+         case ROOT::kSTLmap:
+         case ROOT::kSTLmultimap:
+         case ROOT::kSTLunorderedmap:
+         case ROOT::kSTLunorderedmultimap:
+            return true;
+         default:
+            return false;
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2711,27 +2726,16 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
          }
          nbytes += nb;
       }
-      switch(fSTLtype) {
-         case ROOT::kSTLset:
-         case ROOT::kSTLmultiset:
-         case ROOT::kSTLunorderedset:
-         case ROOT::kSTLunorderedmultiset:
-         case ROOT::kSTLmap:
-         case ROOT::kSTLmultimap:
-         case ROOT::kSTLunorderedmap:
-         case ROOT::kSTLunorderedmultimap:
-            break;
-         default:
-            ValidateAddress(); // There is no ReadLeave for this node, so we need to do the validation here.
-            for (Int_t i = 0; i < nbranches; ++i) {
-               TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
-               Int_t nb = branch->GetEntry(entry, getall);
-               if (nb < 0) {
-                  return nb;
-               }
-               nbytes += nb;
+      if (!IsAssociativeContainer(fSTLtype)) {
+         ValidateAddress(); // There is no ReadLeave for this node, so we need to do the validation here.
+         for (Int_t i = 0; i < nbranches; ++i) {
+            TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
+            Int_t nb = branch->GetEntry(entry, getall);
+            if (nb < 0) {
+               return nb;
             }
-            break;
+            nbytes += nb;
+         }
       }
       if (!TestBit(kDecomposedObj) && fReadActionSequence && !fReadActionSequence->fActions.empty()) {
          if (fType == 3) {
@@ -4060,23 +4064,14 @@ void TBranchElement::ReadLeavesMakeClass(TBuffer& b)
          }
       }
       fNdata = n[0];
-      if (fType == 4)   {
+      if (fType == 4 && IsAssociativeContainer(fSTLtype)) {
          Int_t nbranches = fBranches.GetEntriesFast();
-         switch(fSTLtype) {
-            case ROOT::kSTLset:
-            case ROOT::kSTLmultiset:
-            case ROOT::kSTLmap:
-            case ROOT::kSTLmultimap:
-               for (Int_t i=0; i<nbranches; i++) {
-                  TBranch *branch = (TBranch*)fBranches[i];
-                  Int_t nb = branch->GetEntry(GetReadEntry(), 1);
-                  if (nb < 0) {
-                     break;
-                  }
-               }
+         for (Int_t i=0; i<nbranches; i++) {
+            TBranch *branch = (TBranch*)fBranches[i];
+            Int_t nb = branch->GetEntry(GetReadEntry(), 1);
+            if (nb < 0) {
                break;
-            default:
-               break;
+            }
          }
       }
       return;
@@ -4328,28 +4323,17 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
       fIterators->CreateIterators(alternate, proxy);
    }
 
-   Int_t nbranches = fBranches.GetEntriesFast();
-   switch (fSTLtype) {
-      case ROOT::kSTLset:
-      case ROOT::kSTLunorderedset:
-      case ROOT::kSTLunorderedmultiset:
-      case ROOT::kSTLmultiset:
-      case ROOT::kSTLmap:
-      case ROOT::kSTLmultimap:
-      case ROOT::kSTLunorderedmap:
-      case ROOT::kSTLunorderedmultimap:
-         for (Int_t i = 0; i < nbranches; ++i) {
-            TBranch *branch = (TBranch*) fBranches[i];
-            Int_t nb = branch->GetEntry(GetReadEntry(), 1);
-            if (nb < 0) {
-               // Give up on i/o failure.
-               // FIXME: We need an error message here.
-               break;
-            }
+   if (IsAssociativeContainer(fSTLtype)) {
+      Int_t nbranches = fBranches.GetEntriesFast();
+      for (Int_t i = 0; i < nbranches; ++i) {
+         TBranch *branch = (TBranch*) fBranches[i];
+         Int_t nb = branch->GetEntry(GetReadEntry(), 1);
+         if (nb < 0) {
+            // Give up on i/o failure.
+            // FIXME: We need an error message here.
+            break;
          }
-         break;
-      default:
-         break;
+      }
    }
    //------------------------------------------------------------------------
    // We have split this stuff, so we need to create the pointers
