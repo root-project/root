@@ -102,7 +102,7 @@ public:
    virtual Double_t GetBinErrorUp(Int_t binx, Int_t biny) { return TH1::GetBinErrorUp( GetBin(binx, biny) ); }
    virtual Double_t GetCorrelationFactor(Int_t axis1=1,Int_t axis2=2) const;
    virtual Double_t GetCovariance(Int_t axis1=1,Int_t axis2=2) const;
-   virtual void     GetRandom2(Double_t &x, Double_t &y, TRandom * rng = nullptr);
+   virtual void     GetRandom2(Double_t &x, Double_t &y, TRandom * rng = nullptr, Option_t *option = "");
            void     GetStats(Double_t *stats) const override;
            Double_t Integral(Option_t *option="") const override;
    //virtual Double_t Integral(Int_t, Int_t, Option_t * ="") const {return 0;}
