@@ -380,6 +380,25 @@ Int_t TProfile2D::BufferFill(Double_t x, Double_t y, Double_t z, Double_t w)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Run a Chi2Test between two TProfile2D.
+/// This calls TH1::Chi2Test() with the option "WW".
+
+Double_t TProfile2D::Chi2Test(const TH1 *h2, Option_t *option, Double_t *res) const
+{
+   TString opt = option;
+   opt.ToUpper();
+   opt += "WW";
+   opt.ReplaceAll("UU", "WW");
+   opt.ReplaceAll("UW", "WW");
+
+   if (auto other = dynamic_cast<const TProfile2D *>(h2);
+       fErrorMode != kERRORMEAN || (other && other->fErrorMode != kERRORMEAN))
+      Warning("TProfile3D::Chi2Test", "Chi2 tests only make sense if the error on the mean is used.");
+
+   return TH1::Chi2Test(h2, opt, res);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Copy a Profile2D histogram to a new profile2D histogram.
 
 void TProfile2D::Copy(TObject &obj) const

@@ -89,7 +89,8 @@ public:
    Bool_t   Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1) override; // *MENU*
    static  void     Approximate(Bool_t approx=kTRUE);
    Int_t    BufferEmpty(Int_t action=0) override;
-           void     BuildOptions(Double_t ymin, Double_t ymax, Option_t *option);
+   void     BuildOptions(Double_t ymin, Double_t ymax, Option_t *option);
+   Double_t Chi2Test(const TH1* h2, Option_t *option = "WW", Double_t *res = nullptr) const override;
    void     Copy(TObject &hnew) const override;
    Bool_t   Divide(TF1 *h1, Double_t c1=1) override;
    Bool_t   Divide(const TH1 *h1) override;
