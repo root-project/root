@@ -5,7 +5,9 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 add_subdirectory(tmva)
-add_subdirectory(tmvagui)
+if(TARGET Gui AND TARGET TreeViewer)
+   add_subdirectory(tmvagui)
+endif()
 
 # Build pyMVA. Allows users to call python mva's from c++ ROOT/TMVA.
 if(tmva-pymva)

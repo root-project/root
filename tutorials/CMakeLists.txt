@@ -302,6 +302,15 @@ set(gui_veto math/fit/fitpanel_playback.C
 if (NOT webgui)
   list(APPEND gui_veto visualisation/graphics/save_batch.C visualisation/rcanvas/df104.py visualisation/rcanvas/df105.py)
 endif()
+if(NOT TARGET Gui)
+  list(APPEND gui_veto io/tree/tree140_spider.C io/tree/tree141_parallelcoord.C io/tree/tree142_parallelcoordtrans.C io/tree/tree143_drawsparse.C
+    machine_learning/TMVAClassification.C machine_learning/TMVAClassificationApplication.C machine_learning/TMVAClassificationCategory.C
+    machine_learning/TMVAClassificationCategoryApplication.C machine_learning/TMVACrossValidation.C machine_learning/TMVACrossValidationApplication.C
+    machine_learning/TMVACrossValidationRegression.C machine_learning/TMVAMulticlass.C machine_learning/TMVARegression.C
+    machine_learning/TMVARegressionApplication.C math/multidimSampling.C visualization/gl/parallelcoordtrans.C
+    legacy/thread/threadsh2.C
+  )
+endif()
 
 if (NOT ROOT_tmva_FOUND)
   list(APPEND tmva_veto machine_learning/*.C machine_learning/*.py machine_learning/envelope/*.C machine_learning/keras/*.C machine_learning/keras/*.py machine_learning/pytorch/*.py )
