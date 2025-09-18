@@ -4260,7 +4260,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// -  `Length$`     : return the total number of element of this formula for this
 ///     entry (`==TTreeFormula::GetNdata()`)
 /// -  `Iteration$`  : return the current iteration over this formula for this
-///     entry (i.e. varies from 0 to `Length$`).
+///     entry (i.e. varies from 0 to `Length$ - 1`).
 /// -  `Length$(formula )`  : return the total number of element of the formula
 ///     given as a parameter.
 /// -  `Sum$(formula )`  : return the sum of the value of the elements of the
