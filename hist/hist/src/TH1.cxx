@@ -2513,7 +2513,7 @@ void TH1::ClearUnderflowAndOverflow()
 Double_t TH1::ComputeIntegral(Bool_t onlyPositive, Option_t *option)
 {
    if (fBuffer) BufferEmpty();
-   bool useArea = TString(option).ToLower().Contains("width");
+   bool useArea = TString(option).Contains("width", TString::kIgnoreCase);
    // delete previously computed integral (if any)
    if (fIntegral) delete [] fIntegral;
 
@@ -2526,9 +2526,6 @@ Double_t TH1::ComputeIntegral(Bool_t onlyPositive, Option_t *option)
    fIntegral = new Double_t[nbins + 2];
    Int_t ibin = 0; fIntegral[ibin] = 0;
 
-       
-	    
-	    y=y*xWidth*yWidth*zWidth;
    for (Int_t binz=1; binz <= nbinsz; ++binz) {
       Double_t zWidth = (fDimension > 2) ? fZaxis.GetBinWidth(binz) : 1;
       for (Int_t biny=1; biny <= nbinsy; ++biny) {
