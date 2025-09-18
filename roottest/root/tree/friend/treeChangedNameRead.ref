@@ -1,0 +1,10 @@
+
+Processing treeChangedNameRead.C...
+TFile**		ftest7743.root	
+ TFile*		ftest7743.root	
+  KEY: TTree	tree1;1	a test tree
+  KEY: TTree	treeW;1	another test tree
+Collection name='TList', class='TList', size=1
+ OBJ: TFriendElement	tree1	
+Info in <TCanvas::MakeDefCanvas>:  created default TCanvas with name c1
+(double) 1000.0000
