@@ -103,6 +103,7 @@ public:
    virtual ~TTreeReaderValueBase();
 
 protected:
+   TTreeReaderValueBase() = default;
    TTreeReaderValueBase(TTreeReader *reader, const char *branchname, TDictionary *dict, bool opaqueRead = false);
    TTreeReaderValueBase(const TTreeReaderValueBase &);
    TTreeReaderValueBase &operator=(const TTreeReaderValueBase &);
@@ -114,7 +115,7 @@ protected:
    virtual void CreateProxy();
    static const char *GetBranchDataType(TBranch *branch, TDictionary *&dict, TDictionary const *curDict);
 
-   virtual const char *GetDerivedTypeName() const = 0;
+   virtual const char *GetDerivedTypeName() const { return nullptr; };
 
    Detail::TBranchProxy *GetProxy() const { return fProxy; }
 
@@ -150,9 +151,8 @@ protected:
     */
    bool fOpaqueRead{false};
 
-   // FIXME: re-introduce once we have ClassDefInline!
-   // ClassDefOverride(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader
-
+   ClassDefInline(TTreeReaderValueBase, 0);//Base class for accessors to data via TTreeReader
+   friend class ClassDefGenerateInitInstanceLocalInjector<TTreeReaderValueBase>;
    friend class ::TTreeReader;
 };
 
@@ -238,7 +238,7 @@ public:
    T &operator*() { return *Get(); }
 
 protected:
-   // FIXME: use IsA() instead once we have ClassDefTInline
+   // FIXME: use IsA() instead
    /// Get the template argument as a string.
    const char *GetDerivedTypeName() const override
    {
@@ -246,8 +246,7 @@ protected:
       return sElementTypeName.data();
    }
 
-   // FIXME: re-introduce once we have ClassDefTInline!
-   // ClassDefT(TTreeReaderValue, 0);//Accessor to data via TTreeReader
+   ClassDefInlineOverride(TTreeReaderValue, 0);//Accessor to data via TTreeReader
 };
 
 namespace cling {
