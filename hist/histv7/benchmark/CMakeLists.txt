@@ -6,3 +6,6 @@ target_link_libraries(hist_benchmark_engine ROOTHist benchmark::benchmark)
 
 add_executable(hist_benchmark_regular hist_benchmark_regular.cxx)
 target_link_libraries(hist_benchmark_regular ROOTHist benchmark::benchmark)
+
+add_executable(hist_benchmark_stats hist_benchmark_stats.cxx)
+target_link_libraries(hist_benchmark_stats ROOTHist benchmark::benchmark)
