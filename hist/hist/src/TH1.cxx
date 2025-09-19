@@ -5033,10 +5033,10 @@ Double_t TH1::GetRandom(TRandom * rng, Option_t *option) const
    Double_t integral = 0;
    // compute integral checking that all bins have positive content (see ROOT-5894)
    if (fIntegral) {
-      if (fIntegral[nbinsx+1] != fEntries) integral = ComputeIntegral(true, option);
+      if (fIntegral[nbinsx+1] != fEntries) integral = const_cast<TH1*>(this)->ComputeIntegral(true, option);
       else  integral = fIntegral[nbinsx];
    } else {
-      integral = ComputeIntegral(true, option);
+      integral = const_cast<TH1*>(this)->ComputeIntegral(true, option);
    }
    if (integral == 0) return 0;
    // return a NaN in case some bins have negative content
