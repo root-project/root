@@ -102,6 +102,8 @@ jobs:
           - platform: mac15
             arch: ARM64
             overrides: ["CMAKE_CXX_STANDARD=23"]
+          - platform: mac26
+            arch: ARM64
           - platform: mac-beta
             is_special: true
             arch: ARM64
