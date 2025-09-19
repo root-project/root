@@ -609,7 +609,6 @@ TEST(RNTuple, VoidWithExternalAddressAndTypeName)
       void *bazAsIntsPtr = &intVec;
       reader->GetView("baz", bazAsIntsPtr, "std::vector<int>");
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("On-disk column types {`SplitReal32`} for field `baz._0` cannot be "
-                                                 "matched to its in-memory type `std::int32_t`"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("unexpected on-disk type"));
    }
 }

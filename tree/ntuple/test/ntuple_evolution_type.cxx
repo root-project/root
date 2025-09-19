@@ -207,3 +207,25 @@ TEST(RNTupleEvolution, CheckPairTuple)
    EXPECT_EQ(1, std::get<0>(p(0)));
    EXPECT_DOUBLE_EQ(2.0, std::get<1>(p(0)));
 }
+
+TEST(RNTupleEvolution, Enum)
+{
+   FileRaii fileGuard("test_ntuple_evolution_check_pair_tuple.root");
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      auto e1 = model->MakeField<CustomEnumInt8>("e1");
+      auto e2 = model->MakeField<CustomEnum>("e2");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      *e1 = static_cast<CustomEnumInt8>(42);
+      *e2 = static_cast<CustomEnum>(137);
+
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto ve1 = reader->GetView<int>("e1");
+   auto ve2 = reader->GetView<int>("e2");
+   EXPECT_EQ(42, ve1(0));
+   EXPECT_EQ(137, ve2(0));
+}
