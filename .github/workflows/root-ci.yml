@@ -116,7 +116,7 @@ jobs:
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
-      - macOS-VM
+      - macOS
       - ${{ matrix.arch }}
       - ${{ matrix.platform }}
 
@@ -159,13 +159,9 @@ jobs:
         with:
           build-directory: /Users/sftnight/ROOT-CI/src/
 
-      - name: what am i
-        env:
-          HOME: /Users/sftnight
-        shell: bash -leo pipefail {0}
-        run: "whoami && env && echo $0 && echo $SHELL && pwd && python3 -m site && which python3 && echo $PATH"
       - name: Set up curl CA bundle for Davix to work with https
-        run: 'echo SSL_CERT_FILE=/opt/local/share/curl/curl-ca-bundle.crt >> $GITHUB_ENV'  
+        run: 'echo SSL_CERT_FILE=/opt/local/share/curl/curl-ca-bundle.crt >> $GITHUB_ENV'
+        
       - name: Pull Request Build
         shell: bash -leo pipefail {0}
         if: github.event_name == 'pull_request'
