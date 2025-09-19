@@ -71,6 +71,37 @@ TEnum *EnsureValidEnum(std::string_view enumName)
    return e;
 }
 
+std::string BuildSetTypeName(ROOT::RSetField::ESetType setType, const ROOT::RFieldBase &innerField)
+{
+   std::string typePrefix;
+   switch (setType) {
+   case ROOT::RSetField::ESetType::kSet: typePrefix = "std::set<"; break;
+   case ROOT::RSetField::ESetType::kUnorderedSet: typePrefix = "std::unordered_set<"; break;
+   case ROOT::RSetField::ESetType::kMultiSet: typePrefix = "std::multiset<"; break;
+   case ROOT::RSetField::ESetType::kUnorderedMultiSet: typePrefix = "std::unordered_multiset<"; break;
+   default: R__ASSERT(false);
+   }
+   return typePrefix + innerField.GetTypeName() + ">";
+}
+
+std::string BuildMapTypeName(ROOT::RMapField::EMapType mapType, const ROOT::RFieldBase *innerField)
+{
+   if (const auto pairField = dynamic_cast<const ROOT::RPairField *>(innerField)) {
+      std::string typePrefix;
+      switch (mapType) {
+      case ROOT::RMapField::EMapType::kMap: typePrefix = "std::map<"; break;
+      case ROOT::RMapField::EMapType::kUnorderedMap: typePrefix = "std::unordered_map<"; break;
+      case ROOT::RMapField::EMapType::kMultiMap: typePrefix = "std::multimap<"; break;
+      case ROOT::RMapField::EMapType::kUnorderedMultiMap: typePrefix = "std::unordered_multimap<"; break;
+      default: R__ASSERT(false);
+      }
+      auto subFields = pairField->GetConstSubfields();
+      return typePrefix + subFields[0]->GetTypeName() + "," + subFields[1]->GetTypeName() + ">";
+   }
+
+   throw ROOT::RException(R__FAIL("RMapField inner field type must be of RPairField"));
+}
+
 } // anonymous namespace
 
 ROOT::RClassField::RClassField(std::string_view fieldName, const RClassField &source)
@@ -681,14 +712,6 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
    fIFuncsWrite = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), false /* readFromDisk */);
 }
 
-ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName, std::string_view typeName,
-                                                       std::unique_ptr<RFieldBase> itemField)
-   : RProxiedCollectionField(fieldName, EnsureValidClass(typeName))
-{
-   fItemSize = itemField->GetValueSize();
-   Attach(std::move(itemField));
-}
-
 ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName, std::string_view typeName)
    : RProxiedCollectionField(fieldName, EnsureValidClass(typeName))
 {
@@ -727,8 +750,11 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
 std::unique_ptr<ROOT::RFieldBase> ROOT::RProxiedCollectionField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
-   return std::unique_ptr<RProxiedCollectionField>(
-      new RProxiedCollectionField(newName, GetTypeName(), std::move(newItemField)));
+   auto clone =
+      std::unique_ptr<RProxiedCollectionField>(new RProxiedCollectionField(newName, fProxy->GetCollectionClass()));
+   clone->fItemSize = fItemSize;
+   clone->Attach(std::move(newItemField));
+   return clone;
 }
 
 std::size_t ROOT::RProxiedCollectionField::AppendImpl(const void *from)
@@ -836,12 +862,9 @@ void ROOT::RProxiedCollectionField::AcceptVisitor(ROOT::Detail::RFieldVisitor &v
 
 //------------------------------------------------------------------------------
 
-ROOT::RMapField::RMapField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField)
-   : RProxiedCollectionField(fieldName, EnsureValidClass(typeName))
+ROOT::RMapField::RMapField(std::string_view fieldName, EMapType mapType, std::unique_ptr<RFieldBase> itemField)
+   : RProxiedCollectionField(fieldName, EnsureValidClass(BuildMapTypeName(mapType, itemField.get())))
 {
-   if (!dynamic_cast<RPairField *>(itemField.get()))
-      throw RException(R__FAIL("RMapField inner field type must be of RPairField"));
-
    auto *itemClass = fProxy->GetValueClass();
    fItemSize = itemClass->GetClassSize();
 
@@ -850,9 +873,11 @@ ROOT::RMapField::RMapField(std::string_view fieldName, std::string_view typeName
 
 //------------------------------------------------------------------------------
 
-ROOT::RSetField::RSetField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField)
-   : ROOT::RProxiedCollectionField(fieldName, typeName, std::move(itemField))
+ROOT::RSetField::RSetField(std::string_view fieldName, ESetType setType, std::unique_ptr<RFieldBase> itemField)
+   : ROOT::RProxiedCollectionField(fieldName, EnsureValidClass(BuildSetTypeName(setType, *itemField)))
 {
+   fItemSize = itemField->GetValueSize();
+   Attach(std::move(itemField));
 }
 
 //------------------------------------------------------------------------------
