@@ -7,6 +7,7 @@
 
 #include "RAxes.hxx"
 #include "RBinIndex.hxx"
+#include "RBinWithError.hxx"
 #include "RHistUtils.hxx"
 #include "RLinearizedIndex.hxx"
 #include "RRegularAxis.hxx"
@@ -39,7 +40,8 @@ hist.Fill(8.5);
 The class is templated on the bin content type. For counting, as in the example above, it may be an integer type such as
 `int` or `long`. Narrower types such as `unsigned char` or `short` are supported, but may overflow due to their limited
 range and must be used with care. For weighted filling, the bin content type must be a floating-point type such as
-`float` or `double`. Note that `float` has a limited significant precision of 24 bits.
+`float` or `double`, or the special type RBinWithError. Note that `float` has a limited significant precision of 24
+bits.
 
 An object can have arbitrary dimensionality determined at run-time. The axis configuration is passed as a vector of
 RAxisVariant:
@@ -205,8 +207,9 @@ public:
       return h;
    }
 
-   /// Whether this histogram engine type supported weighted filling.
-   static constexpr bool SupportsWeightedFilling = std::is_floating_point_v<BinContentType>;
+   /// Whether this histogram engine type supports weighted filling.
+   static constexpr bool SupportsWeightedFilling =
+      std::is_floating_point_v<BinContentType> || std::is_same_v<BinContentType, RBinWithError>;
 
    /// Fill an entry into the histogram.
    ///

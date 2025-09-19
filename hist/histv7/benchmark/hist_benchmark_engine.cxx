@@ -1,3 +1,4 @@
+#include <ROOT/RBinWithError.hxx>
 #include <ROOT/RHistEngine.hxx>
 #include <ROOT/RRegularAxis.hxx>
 #include <ROOT/RWeight.hxx>
@@ -146,5 +147,85 @@ BENCHMARK_DEFINE_F(RHistEngine_float_Regular2, FillWeight)(benchmark::State &sta
    }
 }
 BENCHMARK_REGISTER_F(RHistEngine_float_Regular2, FillWeight)->Range(0, 32768);
+
+struct RHistEngine_RBinWithError_Regular1 : public benchmark::Fixture {
+   // The objects are stored and constructed in the fixture to avoid compiler optimizations in the benchmark body taking
+   // advantage of the (constant) constructor parameters.
+   ROOT::Experimental::RRegularAxis axis{20, 0.0, 1.0};
+   ROOT::Experimental::RHistEngine<ROOT::Experimental::RBinWithError> engine{{axis}};
+   std::vector<double> fNumbers;
+
+   // Avoid GCC warning
+   using benchmark::Fixture::SetUp;
+   void SetUp(benchmark::State &state) final
+   {
+      std::mt19937 gen;
+      std::uniform_real_distribution<> dis;
+      fNumbers.resize(state.range(0));
+      for (std::size_t i = 0; i < fNumbers.size(); i++) {
+         fNumbers[i] = dis(gen);
+      }
+   }
+};
+
+BENCHMARK_DEFINE_F(RHistEngine_RBinWithError_Regular1, Fill)(benchmark::State &state)
+{
+   for (auto _ : state) {
+      for (double number : fNumbers) {
+         engine.Fill(number);
+      }
+   }
+}
+BENCHMARK_REGISTER_F(RHistEngine_RBinWithError_Regular1, Fill)->Range(0, 32768);
+
+BENCHMARK_DEFINE_F(RHistEngine_RBinWithError_Regular1, FillWeight)(benchmark::State &state)
+{
+   for (auto _ : state) {
+      for (double number : fNumbers) {
+         engine.Fill(number, ROOT::Experimental::RWeight(0.8));
+      }
+   }
+}
+BENCHMARK_REGISTER_F(RHistEngine_RBinWithError_Regular1, FillWeight)->Range(0, 32768);
+
+struct RHistEngine_RBinWithError_Regular2 : public benchmark::Fixture {
+   // The objects are stored and constructed in the fixture to avoid compiler optimizations in the benchmark body taking
+   // advantage of the (constant) constructor parameters.
+   ROOT::Experimental::RRegularAxis axis{20, 0.0, 1.0};
+   ROOT::Experimental::RHistEngine<ROOT::Experimental::RBinWithError> engine{{axis, axis}};
+   std::vector<double> fNumbers;
+
+   // Avoid GCC warning
+   using benchmark::Fixture::SetUp;
+   void SetUp(benchmark::State &state) final
+   {
+      std::mt19937 gen;
+      std::uniform_real_distribution<> dis;
+      fNumbers.resize(2 * state.range(0));
+      for (std::size_t i = 0; i < fNumbers.size(); i++) {
+         fNumbers[i] = dis(gen);
+      }
+   }
+};
+
+BENCHMARK_DEFINE_F(RHistEngine_RBinWithError_Regular2, Fill)(benchmark::State &state)
+{
+   for (auto _ : state) {
+      for (std::size_t i = 0; i < fNumbers.size(); i += 2) {
+         engine.Fill(fNumbers[i], fNumbers[i + 1]);
+      }
+   }
+}
+BENCHMARK_REGISTER_F(RHistEngine_RBinWithError_Regular2, Fill)->Range(0, 32768);
+
+BENCHMARK_DEFINE_F(RHistEngine_RBinWithError_Regular2, FillWeight)(benchmark::State &state)
+{
+   for (auto _ : state) {
+      for (std::size_t i = 0; i < fNumbers.size(); i += 2) {
+         engine.Fill(fNumbers[i], fNumbers[i + 1], ROOT::Experimental::RWeight(0.8));
+      }
+   }
+}
+BENCHMARK_REGISTER_F(RHistEngine_RBinWithError_Regular2, FillWeight)->Range(0, 32768);
 
 BENCHMARK_MAIN();

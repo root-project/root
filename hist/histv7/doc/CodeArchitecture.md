@@ -53,7 +53,7 @@ During `Fill`, it delegates to `RHistEngine::Fill` but also updates the histogra
 
 ## Classes for Weighted Filling
 
-### `RDoubleBinWithError`
+### `RBinWithError`
 
 A special bin content type that also accumulates the sum of weights squared.
 It can be used as a template argument to `RHistEngine` and `RHist`.
