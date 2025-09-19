@@ -159,13 +159,15 @@ jobs:
 
       - name: Set up curl CA bundle for Davix to work with https
         run: 'echo SSL_CERT_FILE=/opt/local/share/curl/curl-ca-bundle.crt >> $GITHUB_ENV'
-
+        
       - name: Pull Request Build
+        shell: bash -leo pipefail {0}
         if: github.event_name == 'pull_request'
         env:
+          HOME: /Users/sftnight
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
-        run: ".github/workflows/root-ci-config/build_root.py
+        run: ".github/workflows/root-ci-config/build_root.py 
                     --buildtype       RelWithDebInfo
                     --incremental     $INCREMENTAL
                     --base_ref        ${{ github.base_ref }}
@@ -177,8 +179,9 @@ jobs:
                     --platform        ${{ matrix.platform }}"
 
       - name: Workflow dispatch
+        shell: bash -leo pipefail {0}
         if: ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
-        run: ".github/workflows/root-ci-config/build_root.py
+        run: ".github/workflows/root-ci-config/build_root.py 
                     --buildtype      ${{ inputs.buildtype }}
                     --platform       ${{ matrix.platform }}
                     --incremental    ${{ inputs.incremental }}
@@ -188,8 +191,9 @@ jobs:
                     --repository     ${{ github.server_url }}/${{ github.repository }}"
 
       - name: Nightly build
+        shell: bash -leo pipefail {0}
         if:   github.event_name == 'schedule'
-        run: ".github/workflows/root-ci-config/build_root.py
+        run: ".github/workflows/root-ci-config/build_root.py 
                     --buildtype      Release
                     --platform       ${{ matrix.platform }}
                     --incremental    false
@@ -198,8 +202,9 @@ jobs:
                     --repository     ${{ github.server_url }}/${{ github.repository }}"
 
       - name: Update build cache after push to release branch
+        shell: bash -leo pipefail {0}
         if:   github.event_name == 'push'
-        run: ".github/workflows/root-ci-config/build_root.py
+        run: ".github/workflows/root-ci-config/build_root.py 
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.platform }}
                     --incremental    false
