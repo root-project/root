@@ -538,6 +538,7 @@ ROOT::REnumField::REnumField(std::string_view fieldName, TEnum *enump)
    }
 
    switch (enump->GetUnderlyingType()) {
+   case kBool_t: Attach(std::make_unique<RField<Bool_t>>("_0")); break;
    case kChar_t: Attach(std::make_unique<RField<Char_t>>("_0")); break;
    case kUChar_t: Attach(std::make_unique<RField<UChar_t>>("_0")); break;
    case kShort_t: Attach(std::make_unique<RField<Short_t>>("_0")); break;
