@@ -123,7 +123,7 @@ public:
    explicit TKeyMapIterable(TFile *file) : fFile(file) {}
 
    TIterator begin() const { return TIterator(fFile, 0); }
-   TIterator end() const { return TIterator(fFile, -1); }
+   TIterator end() const { return TIterator(fFile, (std::uint64_t) -1); }
 };
 
 } // namespace ROOT::Detail
