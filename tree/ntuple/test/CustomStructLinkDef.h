@@ -1,6 +1,7 @@
 #ifdef __CLING__
 
 #pragma link C++ enum CustomEnum;
+#pragma link C++ enum CustomEnumBool;
 #pragma link C++ enum CustomEnumInt8;
 #pragma link C++ enum CustomEnumUInt8;
 #pragma link C++ enum CustomEnumInt16;
