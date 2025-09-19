@@ -2505,9 +2505,11 @@ void TH1::ClearUnderflowAndOverflow()
 ///  The resulting integral is normalized to 1.
 ///  If the routine is called with the onlyPositive flag set an error will
 ///  be produced in case of negative bin content and a NaN value returned
-///  \param option (optional) Set it to "width" if your non-uniform bin contents
-///  represent a density rather than counts. In that case, we internally multiply
-///  by the bin width/area so that fIntegral is in the "counts" and not on the original "density" domain.
+///  \param onlyPositive If set to true, an error will be produced and NaN will be returned
+///  when a bin with negative number of entries is encountered.
+///  \param option
+///  - `""` (default) Compute the cumulative density function assuming current bin contents represent counts.
+///  - `"width"` Computes the cumulative density function assuming current bin contents represent densities.
 ///  \return 1 if success, 0 if integral is zero, NAN if onlyPositive-test fails
 
 Double_t TH1::ComputeIntegral(Bool_t onlyPositive, Option_t *option)
@@ -5019,7 +5021,7 @@ void TH1::GetBinXYZ(Int_t binglobal, Int_t &binx, Int_t &biny, Int_t &binz) cons
 /// The integral is automatically recomputed if the number of entries
 /// is not the same then when the integral was computed.
 /// @note Only valid for 1-d histograms. Use GetRandom2 or GetRandom3 otherwise.
-/// If the histogram has a bin with negative content a NaN is returned
+/// If the histogram has a bin with negative content, a NaN is returned.
 
 Double_t TH1::GetRandom(TRandom * rng, Option_t *option) const
 {
@@ -5031,10 +5033,10 @@ Double_t TH1::GetRandom(TRandom * rng, Option_t *option) const
    Double_t integral = 0;
    // compute integral checking that all bins have positive content (see ROOT-5894)
    if (fIntegral) {
-      if (fIntegral[nbinsx+1] != fEntries) integral = ((TH1*)this)->ComputeIntegral(true, option);
+      if (fIntegral[nbinsx+1] != fEntries) integral = ComputeIntegral(true, option);
       else  integral = fIntegral[nbinsx];
    } else {
-      integral = ((TH1*)this)->ComputeIntegral(true, option);
+      integral = ComputeIntegral(true, option);
    }
    if (integral == 0) return 0;
    // return a NaN in case some bins have negative content
