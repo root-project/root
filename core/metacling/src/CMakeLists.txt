@@ -225,6 +225,8 @@ if(APPLE)
   target_link_libraries(Cling PUBLIC -Wl,-w -Wl,-bind_at_load -Wl,-undefined,dynamic_lookup)
 elseif(NOT MSVC)
   target_link_libraries(Cling PUBLIC -Wl,--unresolved-symbols=ignore-in-object-files)
+  target_link_libraries(Cling PRIVATE -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/libCling.script)
+  set_target_properties(Cling PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/libCling.script)
 endif()
 
 if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
