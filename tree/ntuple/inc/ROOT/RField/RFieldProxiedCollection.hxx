@@ -180,16 +180,6 @@ public:
    size_t GetValueSize() const final { return fProxy->Sizeof(); }
    size_t GetAlignment() const final { return alignof(std::max_align_t); }
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
-   void
-   GetCollectionInfo(ROOT::NTupleSize_t globalIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size) const
-   {
-      fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
-   }
-   void
-   GetCollectionInfo(RNTupleLocalIndex localIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size) const
-   {
-      fPrincipalColumn->GetCollectionInfo(localIndex, collectionStart, size);
-   }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
