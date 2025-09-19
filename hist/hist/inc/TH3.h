@@ -119,7 +119,7 @@ public:
    virtual Double_t GetBinWithContent3(Double_t c, Int_t &binx, Int_t &biny, Int_t &binz, Int_t firstx=0, Int_t lastx=0,Int_t firsty=0, Int_t lasty=0, Int_t firstz=0, Int_t lastz=0, Double_t maxdiff=0) const;
    virtual Double_t GetCorrelationFactor(Int_t axis1=1,Int_t axis2=2) const;
    virtual Double_t GetCovariance(Int_t axis1=1,Int_t axis2=2) const;
-   virtual void     GetRandom3(Double_t &x, Double_t &y, Double_t &, TRandom * rng = nullptr);
+   virtual void     GetRandom3(Double_t &x, Double_t &y, Double_t &, TRandom * rng = nullptr, Option_t *option = "");
            void     GetStats(Double_t *stats) const override;
            Double_t Integral(Option_t *option="") const override;
    virtual Double_t Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Option_t *option="") const;
