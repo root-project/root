@@ -680,20 +680,13 @@ TEST(RNTupleEmulated, CollectionProxy)
    EXPECT_NE(field.GetTraits() & RFieldBase::kTraitEmulatedField, 0);
    EXPECT_EQ(field.GetValueSize(), sizeof(std::vector<char>));
 
-   const auto *vec = dynamic_cast<const ROOT::RVectorField *>(&field);
-   ASSERT_NE(vec, nullptr);
-   RNTupleLocalIndex collectionStart;
-   ROOT::NTupleSize_t size;
-   vec->GetCollectionInfo(0, &collectionStart, &size);
-   EXPECT_EQ(collectionStart.GetClusterId(), 0);
-   EXPECT_EQ(collectionStart.GetIndexInCluster(), 0);
-   EXPECT_EQ(size, 100);
-   vec->GetCollectionInfo(1, &collectionStart, &size);
-   EXPECT_EQ(collectionStart.GetClusterId(), 0);
-   EXPECT_EQ(collectionStart.GetIndexInCluster(), 100);
-   EXPECT_EQ(size, 0);
-
+   auto vec = std::static_pointer_cast<std::vector<char>>(reader->GetModel().GetDefaultEntry().GetPtr<void>("proxyC"));
    reader->LoadEntry(0);
+   EXPECT_EQ(100u, vec->size());
+   EXPECT_EQ(0x42, vec->at(0));
+   EXPECT_EQ(0x42, vec->at(99));
+   reader->LoadEntry(1);
+   EXPECT_EQ(0u, vec->size());
 }
 
 TEST(RNTupleEmulated, MergeEmulated)
