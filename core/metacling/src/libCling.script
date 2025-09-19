@@ -1,0 +1,13 @@
+{
+  global:
+    CreateInterpreter;
+    DestroyInterpreter;
+    TCling__*;
+    _Z26TCling__TEST_isInvalidDeclP11ClassInfo_t;
+    TROOT__*;
+    ROOT_rootcling_Driver;
+    _ZN5cling*;
+    cling_runtime_internal_throwIfInvalidPointer;
+  local:
+    *;
+};

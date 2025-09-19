@@ -229,6 +229,8 @@ if(NOT APPLE AND NOT MSVC)
   # and by ALICE in https://github.com/root-project/root/issues/19889
   # Only needed for Linux: Mac uses linker namespaces and  Windows explicit export/import
   target_link_libraries(Cling PRIVATE -Wl,-Bsymbolic)
+  target_link_libraries(Cling PRIVATE -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/libCling.script)
+  set_target_properties(Cling PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/libCling.script)
 endif()
 
 if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
