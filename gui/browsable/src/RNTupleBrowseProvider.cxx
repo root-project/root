@@ -68,13 +68,10 @@ public:
    }
 
    /** Default action is to draw the treemap */
-   EActionKind GetDefaultAction() const override { return kActDraw6; /*temporary, replace with kActDraw7; */ }
+   EActionKind GetDefaultAction() const override { return kActDraw7; }
 
    /** Check if visualization is capable of being drawn */
-   bool IsCapable(EActionKind kind) const override
-   {
-      return kind == kActDraw6;
-   }
+   bool IsCapable(EActionKind kind) const override { return kind == kActDraw6 || kind == kActDraw7; }
 
    /** Create item with TreeMap icon */
    std::unique_ptr<RItem> CreateItem() const override
@@ -476,4 +473,3 @@ public:
    ~RNTupleBrowseProvider() override { RegisterNTupleFunc(nullptr); }
 
 } newRNTupleBrowseProvider;
-
