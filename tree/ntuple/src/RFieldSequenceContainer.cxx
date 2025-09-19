@@ -341,7 +341,7 @@ std::size_t ROOT::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSpec)
    // Get size of the first RVec of the bulk
    RNTupleLocalIndex firstItemIndex;
    ROOT::NTupleSize_t collectionSize;
-   this->GetCollectionInfo(bulkSpec.fFirstIndex, &firstItemIndex, &collectionSize);
+   fPrincipalColumn->GetCollectionInfo(bulkSpec.fFirstIndex, &firstItemIndex, &collectionSize);
    *beginPtr = itemValueArray;
    *sizePtr = collectionSize;
    *capacityPtr = -1;
