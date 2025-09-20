@@ -1383,6 +1383,7 @@ elseif(vc)
   endif()
   if(Vc_FOUND)
     set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES ${Vc_INCLUDE_DIR})
+    BUILD_ROOT_INCLUDE_PATH("${Vc_INCLUDE_DIR}")
   endif()
 endif()
 
@@ -1616,6 +1617,8 @@ if(vdt OR builtin_vdt)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT extra-headers)
     set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS VDT::VDT)
+  else()
+    BUILD_ROOT_INCLUDE_PATH("${VDT_INCLUDE_DIR}")
   endif()
 endif()
 
