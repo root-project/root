@@ -94,9 +94,9 @@ class RooDataSet(object):
             the DataHandling topic.
             """
             log = ROOT.RooMsgService.instance().log(dataset, ROOT.RooFit.WARNING, ROOT.RooFit.DataHandling)
-            b = bytes(s, "utf-8")
-            log.write(b, len(b))
-            log.write("\n", 1)
+            s = ROOT.std.string(s)
+            s.append('\n')
+            log.write(s.data(), s.size())
 
         range_mask = np.ones_like(list(data.values())[0], dtype=bool)
 
@@ -155,7 +155,7 @@ class RooDataSet(object):
 
         if range_mask is not None:
             n_out_of_range = len(range_mask) - range_mask.sum()
-            log_warning("RooDataSet.from_numpy({0}) Ignored {1} out-of-range events".format(name, n_out_of_range))
+            log_warning(f"RooDataSet.from_numpy({name}) Ignored {n_out_of_range} out-of-range events")
 
         return dataset
 

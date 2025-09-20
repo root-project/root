@@ -120,6 +120,8 @@ class TestRooDataSetNumpy(unittest.TestCase):
         real-valued columns and categories.
         """
 
+        print("hello", 1)
+
         n_events = 100
         # Dataset with "x" randomly distributed between -3 and 3, and "cat"
         # being either -1, 0, or +1.
@@ -128,12 +130,16 @@ class TestRooDataSetNumpy(unittest.TestCase):
             "cat": np.random.randint(3, size=n_events) - 1,
         }
 
+        print("hello", 2)
+
         # The RooFit variable "x" is only defined from -1 to 2, and the
         # category doesn't have the 0-state.
         x = ROOT.RooRealVar("x", "x", 0.0, -2.0, 2.0)
         cat = ROOT.RooCategory("cat", "cat")
         cat.defineType("minus", -1)
         cat.defineType("plus", +1)
+
+        print("hello", 3)
 
         # Use manual loop because we had some problems with numpys boolean
         # comparisons in the past (see GitHub issue #12162).
@@ -145,9 +151,15 @@ class TestRooDataSetNumpy(unittest.TestCase):
             if is_in_range:
                 n_in_range = n_in_range + 1
 
-        dataset_numpy = ROOT.RooDataSet.from_numpy(data, {x, cat}, name="dataSetNumpy")
+        print("hello", 4)
+
+        dataset_numpy = ROOT.RooDataSet.from_numpy(data, (x, cat), name="dataSetNumpy")
+
+        print("hello", 5)
 
         self.assertEqual(dataset_numpy.numEntries(), n_in_range)
+
+        print("hello", 6)
 
     def test_non_contiguous_arrays(self):
         """Test whether the import also works with non-contiguous arrays.
