@@ -47,7 +47,7 @@ namespace HepExp {
 
 //typedef HepExp::Inner Alias;
 
-//#ifdef __MAKECINT__
+//#ifdef __ROOTCLING__
 //  #pragma read sourceClass="Alias" targetClass="HepExp::Inner";
 //#endif
 
