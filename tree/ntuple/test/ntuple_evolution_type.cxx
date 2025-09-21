@@ -229,3 +229,25 @@ TEST(RNTupleEvolution, Enum)
    EXPECT_EQ(42, ve1(0));
    EXPECT_EQ(137, ve2(0));
 }
+
+TEST(RNTupleEvolution, ArrayAsRVec)
+{
+   FileRaii fileGuard("test_ntuple_evolution_array_as_rvec.root");
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      auto a = model->MakeField<std::array<int, 2>>("a");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      *a = {1, 2};
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   auto a = reader->GetView<ROOT::RVec<short>>("a");
+   const auto &f = a.GetField(); // necessary to silence clang warning
+   EXPECT_EQ(typeid(f), typeid(ROOT::RArrayAsRVecField));
+   EXPECT_EQ(2u, a(0).size());
+   EXPECT_EQ(1, a(0)[0]);
+   EXPECT_EQ(2, a(0)[1]);
+}
