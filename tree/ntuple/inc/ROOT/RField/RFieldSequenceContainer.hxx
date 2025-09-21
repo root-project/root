@@ -154,6 +154,7 @@ protected:
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec) final;
 
+   std::unique_ptr<RFieldBase> BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
    void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
    void CommitClusterImpl() final { fNWritten = 0; }
