@@ -959,7 +959,26 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
    if (!fDescription.empty())
       throw RException(R__FAIL("setting description only valid when connecting to a page sink"));
 
-   BeforeConnectPageSource(pageSource);
+   auto substitute = BeforeConnectPageSource(pageSource);
+   if (substitute) {
+      const RFieldBase *itr = this;
+      while (itr->GetParent()) {
+         itr = itr->GetParent();
+      }
+      if (typeid(*itr) == typeid(RFieldZero) && static_cast<const RFieldZero *>(itr)->GetAllowFieldSubstitutions()) {
+         for (auto &f : fParent->fSubfields) {
+            if (f.get() != this)
+               continue;
+
+            f = std::move(substitute);
+            f->ConnectPageSource(pageSource);
+            return;
+         }
+         R__ASSERT(false); // never here
+      } else {
+         throw RException(R__FAIL("invalid attempt to substitute field " + GetQualifiedFieldName()));
+      }
+   }
 
    if (!fIsArtificial) {
       R__ASSERT(fOnDiskId != kInvalidDescriptorId);
