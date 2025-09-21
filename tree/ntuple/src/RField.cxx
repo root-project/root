@@ -31,6 +31,11 @@
 #include <type_traits>
 #include <unordered_set>
 
+void ROOT::Internal::SetAllowFieldSubstitutions(RFieldZero &fieldZero, bool val)
+{
+   fieldZero.fAllowFieldSubstitutions = val;
+}
+
 std::unique_ptr<ROOT::RFieldBase> ROOT::RFieldZero::CloneImpl(std::string_view /*newName*/) const
 {
    auto result = std::make_unique<RFieldZero>();
