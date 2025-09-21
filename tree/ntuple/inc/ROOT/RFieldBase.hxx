@@ -85,6 +85,7 @@ This is and can only be partially enforced through C++.
 */
 // clang-format on
 class RFieldBase {
+   friend class RFieldZero;                                    // to reset fParent pointer in ReleaseSubfields()
    friend class ROOT::Experimental::Detail::RRawPtrWriteEntry; // to call Append()
    friend struct ROOT::Internal::RFieldCallbackInjector;       // used for unit tests
    friend struct ROOT::Internal::RFieldRepresentationModifier; // used for unit tests

@@ -83,6 +83,8 @@ public:
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 
    bool GetAllowFieldSubstitutions() const { return fAllowFieldSubstitutions; }
+   /// Moves all subfields into the returned vector.
+   std::vector<std::unique_ptr<RFieldBase>> ReleaseSubfields();
 };
 
 /// Used in RFieldBase::Check() to record field creation failures.
