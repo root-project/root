@@ -44,6 +44,15 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RFieldZero::CloneImpl(std::string_view /
    return result;
 }
 
+std::vector<std::unique_ptr<ROOT::RFieldBase>> ROOT::RFieldZero::ReleaseSubfields()
+{
+   std::vector<std::unique_ptr<ROOT::RFieldBase>> result;
+   std::swap(fSubfields, result);
+   for (auto &f : result)
+      f->fParent = nullptr;
+   return result;
+}
+
 void ROOT::RFieldZero::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitFieldZero(*this);
