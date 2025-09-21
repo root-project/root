@@ -93,7 +93,7 @@ private:
    /// The model is generated from the RNTuple metadata on storage.
    explicit RNTupleReader(std::unique_ptr<Internal::RPageSource> source, const ROOT::RNTupleReadOptions &options);
 
-   void ConnectModel(ROOT::RNTupleModel &model);
+   void ConnectModel(ROOT::RNTupleModel &model, bool allowFieldSubstitutions);
    RNTupleReader *GetDisplayReader();
    void InitPageSource(bool enableMetrics);
 

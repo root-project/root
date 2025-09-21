@@ -208,6 +208,7 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect()
    auto &fieldZero = ROOT::Internal::GetFieldZeroOfModel(*fModel);
    auto fieldZeroId = desc->GetFieldZeroId();
    fieldZero.SetOnDiskId(fieldZeroId);
+   ROOT::Internal::SetAllowFieldSubstitutions(fieldZero, true);
 
    for (auto &field : fieldZero.GetMutableSubfields()) {
       auto onDiskId = desc->FindFieldId(field->GetQualifiedFieldName(), fieldZeroId);
@@ -223,6 +224,7 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect()
 
       ROOT::Internal::CallConnectPageSourceOnField(*field, *fPageSource);
    }
+   ROOT::Internal::SetAllowFieldSubstitutions(fieldZero, false);
 }
 
 void ROOT::Experimental::RNTupleSingleProcessor::AddEntriesToJoinTable(Internal::RNTupleJoinTable &joinTable,
