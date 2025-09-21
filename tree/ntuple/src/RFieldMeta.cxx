@@ -440,7 +440,7 @@ void ROOT::RClassField::AddReadCallbacksFromIORule(const TSchemaRule *rule)
    });
 }
 
-void ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource)
+std::unique_ptr<ROOT::RFieldBase> ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource)
 {
    std::vector<const TSchemaRule *> rules;
    // On-disk members that are not targeted by an I/O rule; all other sub fields of the in-memory class
@@ -507,6 +507,8 @@ void ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pag
          CallSetArtificialOn(*field);
       }
    }
+
+   return nullptr;
 }
 
 void ROOT::RClassField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
@@ -979,9 +981,10 @@ void ROOT::RStreamerField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex, std::byte>(desc);
 }
 
-void ROOT::RStreamerField::BeforeConnectPageSource(ROOT::Internal::RPageSource &source)
+std::unique_ptr<ROOT::RFieldBase> ROOT::RStreamerField::BeforeConnectPageSource(ROOT::Internal::RPageSource &source)
 {
    source.RegisterStreamerInfos();
+   return nullptr;
 }
 
 void ROOT::RStreamerField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
