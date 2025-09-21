@@ -945,8 +945,12 @@ void ROOT::RFieldBase::ConnectPageSink(ROOT::Internal::RPageSink &pageSink, ROOT
 
 void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource)
 {
-   if (dynamic_cast<ROOT::RFieldZero *>(this))
-      throw RException(R__FAIL("invalid attempt to connect zero field to page source"));
+   if (dynamic_cast<ROOT::RFieldZero *>(this)) {
+      for (auto &f : fSubfields)
+         f->ConnectPageSource(pageSource);
+      return;
+   }
+
    if (fState != EState::kUnconnected)
       throw RException(R__FAIL("invalid attempt to connect an already connected field to a page source"));
 

@@ -89,6 +89,8 @@ protected:
    static std::unique_ptr<ROOT::RFieldBase>
    CreateField(ROOT::DescriptorId_t fieldId, Internal::RPageSource &pageSource, std::string_view typeName = "")
    {
+      RFieldZero fieldZero;
+      Internal::SetAllowFieldSubstitutions(fieldZero, true);
       std::unique_ptr<ROOT::RFieldBase> field;
       {
          const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
@@ -103,8 +105,9 @@ protected:
          }
       }
       field->SetOnDiskId(fieldId);
-      ROOT::Internal::CallConnectPageSourceOnField(*field, pageSource);
-      return field;
+      fieldZero.Attach(std::move(field));
+      ROOT::Internal::CallConnectPageSourceOnField(fieldZero, pageSource);
+      return std::move(fieldZero.ReleaseSubfields()[0]);
    }
 
    RNTupleViewBase(std::unique_ptr<ROOT::RFieldBase> field, ROOT::RNTupleGlobalRange range)
