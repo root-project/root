@@ -393,17 +393,20 @@ void ROOT::RClassField::PrepareStagingArea(const std::vector<const TSchemaRule *
             throw RException(R__FAIL(std::string("cannot find on disk rule source member ") + GetTypeName() + "." +
                                      source->GetName()));
          }
-         const auto &memberFieldDesc = desc.GetFieldDescriptor(memberFieldId);
 
          auto memberType = source->GetTypeForDeclaration() + source->GetDimensions();
-         stagingItem.fField = Create("" /* we don't need a field name */, std::string(memberType)).Unwrap();
-         stagingItem.fField->SetOnDiskId(memberFieldDesc.GetId());
+         auto memberField = Create("" /* we don't need a field name */, std::string(memberType)).Unwrap();
+         memberField->SetOnDiskId(memberFieldId);
+         auto fieldZero = std::make_unique<RFieldZero>();
+         Internal::SetAllowFieldSubstitutions(*fieldZero, true);
+         fieldZero->Attach(std::move(memberField));
+         stagingItem.fField = std::move(fieldZero);
 
          stagingItem.fOffset = fStagingClass->GetDataMemberOffset(source->GetName());
          // Since we successfully looked up the source member in the RNTuple on-disk metadata, we expect it
          // to be present in the TClass instance, too.
          R__ASSERT(stagingItem.fOffset != TVirtualStreamerInfo::kMissing);
-         stagingAreaSize = std::max(stagingAreaSize, stagingItem.fOffset + stagingItem.fField->GetValueSize());
+         stagingAreaSize = std::max(stagingAreaSize, stagingItem.fOffset + stagingItem.fField->begin()->GetValueSize());
       }
    }
 
@@ -413,8 +416,9 @@ void ROOT::RClassField::PrepareStagingArea(const std::vector<const TSchemaRule *
       fStagingArea = std::make_unique<unsigned char[]>(stagingAreaSize);
 
       for (const auto &[_, si] : fStagingItems) {
-         if (!(si.fField->GetTraits() & kTraitTriviallyConstructible)) {
-            CallConstructValueOn(*si.fField, fStagingArea.get() + si.fOffset);
+         const auto &memberField = *si.fField->cbegin();
+         if (!(memberField.GetTraits() & kTraitTriviallyConstructible)) {
+            CallConstructValueOn(memberField, fStagingArea.get() + si.fOffset);
          }
       }
    }
@@ -476,8 +480,10 @@ void ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pag
       if (!rules.empty()) {
          SetStagingClass(fieldDesc.GetTypeName(), fieldDesc.GetTypeVersion());
          PrepareStagingArea(rules, desc, fieldDesc);
-         for (auto &[_, si] : fStagingItems)
+         for (auto &[_, si] : fStagingItems) {
             Internal::CallConnectPageSourceOnField(*si.fField, pageSource);
+            si.fField = std::move(static_cast<RFieldZero *>(si.fField.get())->ReleaseSubfields()[0]);
+         }
 
          // Remove target member of read rules from the list of regular members of the underlying on-disk field
          for (const auto rule : rules) {
