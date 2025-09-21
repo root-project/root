@@ -514,7 +514,13 @@ protected:
    /// Called by ConnectPageSource() before connecting; derived classes may override this as appropriate, e.g.
    /// for the application of I/O rules. In the process, the field at hand or its subfields may be marked as
    /// "artifical", i.e. introduced by schema evolution and not backed by on-disk information.
-   virtual void BeforeConnectPageSource(ROOT::Internal::RPageSource & /* source */) {}
+   /// May return a field substitute that fits the on-disk schema as a replacement for the field at hand.
+   /// A field substitute must read into the same in-memory layout than the original field and field substitutions
+   /// must not be cyclic.
+   virtual std::unique_ptr<RFieldBase> BeforeConnectPageSource(ROOT::Internal::RPageSource & /* source */)
+   {
+      return nullptr;
+   }
 
    /// For non-artificial fields, check compatibility of the in-memory field and the on-disk field. In the process,
    /// the field at hand may change its on-disk ID or perform other tasks related to automatic schema evolution.
