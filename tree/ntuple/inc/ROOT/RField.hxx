@@ -49,9 +49,26 @@ namespace Detail {
 class RFieldVisitor;
 } // namespace Detail
 
+class RFieldZero;
+namespace Internal {
+void SetAllowFieldSubstitutions(RFieldZero &fieldZero, bool val);
+}
+
 /// The container field for an ntuple model, which itself has no physical representation.
 /// Therefore, the zero field must not be connected to a page source or sink.
 class RFieldZero final : public RFieldBase {
+   friend void ROOT::Internal::SetAllowFieldSubstitutions(RFieldZero &, bool);
+
+   /// If field substitutions are allowed, upon connecting to a page source the field hierarchy will replace created
+   /// fields by fields that match the on-disk schema. This happens for
+   ///     - Vector fields (RVectorField, RRVecField) that connect to an on-disk fixed-size array
+   ///     - Streamer fields that connect to an on-disk class field
+   /// Field substitutions must not be enabled when the field hierarchy already handed out RValue objects because
+   /// they would leave dangling field pointers to the replaced fields. This is used in cases when the field/model
+   /// is created by RNTuple (not imposed), before it is made available to the user.
+   /// This flag is reset on Clone().
+   bool fAllowFieldSubstitutions = false;
+
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
    void ConstructValue(void *) const final {}
@@ -64,6 +81,8 @@ public:
    size_t GetAlignment() const final { return 0; }
 
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
+
+   bool GetAllowFieldSubstitutions() const { return fAllowFieldSubstitutions; }
 };
 
 /// Used in RFieldBase::Check() to record field creation failures.
