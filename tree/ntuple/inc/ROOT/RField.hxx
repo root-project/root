@@ -208,7 +208,7 @@ protected:
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
 
-   void BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
+   std::unique_ptr<RFieldBase> BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
    void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
@@ -263,7 +263,7 @@ protected:
    // Returns the list of seen streamer infos
    ROOT::RExtraTypeInfoDescriptor GetExtraTypeInfo() const final;
 
-   void BeforeConnectPageSource(ROOT::Internal::RPageSource &source) final;
+   std::unique_ptr<RFieldBase> BeforeConnectPageSource(ROOT::Internal::RPageSource &source) final;
    void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
