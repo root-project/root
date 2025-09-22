@@ -4,7 +4,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.23 FATAL_ERROR)
 
 if(WIN32)
   # Set CMP0091 (MSVC runtime library flags are selected by an abstraction) to OLD
@@ -41,6 +41,13 @@ set(policy_new CMP0072 CMP0076 CMP0077 CMP0079
 foreach(policy ${policy_new})
   if(POLICY ${policy})
     cmake_policy(SET ${policy} NEW)
+  endif()
+endforeach()
+
+set(policy_old CMP0126)
+foreach(policy ${policy_old})
+  if(POLICY ${policy})
+    cmake_policy(SET ${policy} OLD)
   endif()
 endforeach()
 
