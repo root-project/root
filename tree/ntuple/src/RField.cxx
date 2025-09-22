@@ -1099,8 +1099,11 @@ void ROOT::RAtomicField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    static const std::vector<std::string> prefixes = {"std::atomic<"};
 
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
-   EnsureMatchingTypePrefix(fieldDesc, prefixes);
+   if (fieldDesc.GetTypeName().rfind("std::atomic<", 0) == 0) {
+      EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
+   } else {
+      fSubfields[0]->SetOnDiskId(GetOnDiskId());
+   }
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RAtomicField::SplitValue(const RValue &value) const

@@ -251,3 +251,35 @@ TEST(RNTupleEvolution, ArrayAsRVec)
    EXPECT_EQ(1, a(0)[0]);
    EXPECT_EQ(2, a(0)[1]);
 }
+
+TEST(RNTupleEvolution, CheckAtomic)
+{
+   FileRaii fileGuard("test_ntuple_evolution_check_atomic.root");
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      auto a = model->MakeField<std::atomic<std::int32_t>>("a");
+      auto i = model->MakeField<std::int32_t>("i");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      *a = 7;
+      *i = 13;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   auto v1 = reader->GetView<std::atomic<std::int64_t>>("a");
+   auto v2 = reader->GetView<std::atomic<std::int64_t>>("i");
+   auto v3 = reader->GetView<std::int64_t>("a");
+
+   try {
+      reader->GetView<std::atomic<std::byte>>("a");
+      FAIL() << "automatic evolution into an invalid atomic inner type should fail";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("cannot be matched to its in-memory type"));
+   }
+
+   EXPECT_EQ(7, v1(0));
+   EXPECT_EQ(13, v2(0));
+   EXPECT_EQ(7, v3(0));
+}

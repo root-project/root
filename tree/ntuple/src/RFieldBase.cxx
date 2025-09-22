@@ -975,7 +975,13 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
 
    if (!fIsArtificial) {
       R__ASSERT(fOnDiskId != kInvalidDescriptorId);
-      ReconcileOnDiskField(pageSource.GetSharedDescriptorGuard().GetRef());
+      // Handle moving from on-disk std::atomic<T> to (compatible of) T in memory centrally because otherwise
+      // we would need to handle it in each and every ReconcileOnDiskField()
+      const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
+      if (!dynamic_cast<RAtomicField *>(this) && desc.GetFieldDescriptor(GetOnDiskId()).IsStdAtomic()) {
+         SetOnDiskId(desc.GetFieldDescriptor(GetOnDiskId()).GetLinkIds()[0]);
+      }
+      ReconcileOnDiskField(desc);
    }
 
    for (auto &f : fSubfields) {
