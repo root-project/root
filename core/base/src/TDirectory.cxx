@@ -342,11 +342,12 @@ static TBuffer* R__CreateBuffer()
    if (!creator) {
       R__LOCKGUARD(gROOTMutex);
       TClass *c = TClass::GetClass("TBufferFile");
-      TMethod *m = c->GetMethodWithPrototype("TBufferFile","TBuffer::EMode,Int_t",kFALSE,ROOT::kExactMatch);
+      TMethod *m = c->GetMethodWithPrototype("TBufferFile","TBuffer::EMode,Long64_t",kFALSE,ROOT::kExactMatch);
+      assert(m != nullptr);
       creator = (tcling_callfunc_Wrapper_t)( m->InterfaceMethod() );
    }
    TBuffer::EMode mode = TBuffer::kWrite;
-   Int_t size = 10000;
+   Long64_t size = 10000;
    void *args[] = { &mode, &size };
    TBuffer *result;
    creator(nullptr,2,args,&result);
@@ -1423,9 +1424,9 @@ void TDirectory::RegisterGDirectory(TDirectory::SharedGDirectory_t &gdirectory_p
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \copydoc TDirectoryFile::WriteObject(const T*,const char*,Option_t*,Int_t).
+/// \copydoc TDirectoryFile::WriteObject(const T*,const char*,Option_t*,Long64_t).
 
-Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t * /*option*/, Int_t /*bufsize*/)
+Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t * /*option*/, Long64_t /*bufsize*/)
 {
    const char *objname = "no name specified";
    if (name) objname = name;

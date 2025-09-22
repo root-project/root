@@ -49,7 +49,7 @@ TBranchClones::TBranchClones()
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TBranchClones::TBranchClones(TTree *tree, const char* name, void* pointer, Int_t basketsize, Int_t compress, Int_t splitlevel)
+TBranchClones::TBranchClones(TTree *tree, const char* name, void* pointer, Long64_t basketsize, Int_t compress, Int_t splitlevel)
 : TBranch()
 , fList(nullptr)
 , fRead(0)
@@ -63,7 +63,7 @@ TBranchClones::TBranchClones(TTree *tree, const char* name, void* pointer, Int_t
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TBranchClones::TBranchClones(TBranch *parent, const char* name, void* pointer, Int_t basketsize, Int_t compress, Int_t splitlevel)
+TBranchClones::TBranchClones(TBranch *parent, const char* name, void* pointer, Long64_t basketsize, Int_t compress, Int_t splitlevel)
 : TBranch()
 , fList(nullptr)
 , fRead(0)
@@ -77,7 +77,7 @@ TBranchClones::TBranchClones(TBranch *parent, const char* name, void* pointer, I
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialization (non-virtual, to be called from constructor).
 
-void TBranchClones::Init(TTree *tree, TBranch *parent, const char* name, void* pointer, Int_t basketsize, Int_t compress, Int_t splitlevel)
+void TBranchClones::Init(TTree *tree, TBranch *parent, const char* name, void* pointer, Long64_t basketsize, Int_t compress, Int_t splitlevel)
 {
    if (tree==nullptr && parent!=nullptr) tree = parent->GetTree();
    fTree   = tree;
@@ -110,6 +110,8 @@ void TBranchClones::Init(TTree *tree, TBranch *parent, const char* name, void* p
    fSplitLevel = splitlevel;
 
    // Create a branch to store the array count.
+   if (basketsize > kMaxInt)
+      Fatal("Init", "Integer overflow in basket size: 0x%llx for a max of 0x%x.", basketsize, kMaxInt);
    if (basketsize < 100) {
       basketsize = 100;
    }
@@ -369,7 +371,7 @@ void TBranchClones::SetAddress(void* addr)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset basket size for all sub-branches.
 
-void TBranchClones::SetBasketSize(Int_t bufsize)
+void TBranchClones::SetBasketSize(Long64_t bufsize)
 {
    TBranch::SetBasketSize(bufsize);
 
