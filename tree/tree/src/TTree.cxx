@@ -5477,7 +5477,7 @@ Int_t TTree::GetBranchStyle()
 ////////////////////////////////////////////////////////////////////////////////
 /// Used for automatic sizing of the cache.
 ///
-/// Estimates a suitable size for the tree cache based on AutoFlush.
+/// Estimates a suitable size in bytes for the tree cache based on AutoFlush.
 /// A cache sizing factor is taken from the configuration. If this yields zero
 /// and withDefault is true the historical algorithm for default size is used.
 
@@ -8876,13 +8876,17 @@ void TTree::SetBranchStyle(Int_t style)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set maximum size of the file cache .
+/// Set maximum size of the file cache (TTreeCache) in bytes.
 //
-/// - if cachesize = 0 the existing cache (if any) is deleted.
+/// - if cachesize = 0 the existing cache (if any) is disabled (deleted if any).
+/// - if cachesize > 0, the cache is enabled or extended, if necessary
 /// - if cachesize = -1 (default) it is set to the AutoFlush value when writing
 ///    the Tree (default is 30 MBytes).
 ///
 /// The cacheSize might be clamped, see TFileCacheRead::SetBufferSize
+///
+/// TTreeCache's 'real' job is to actually prefetch (early grab from disk) the compressed data.
+/// The cachesize controls the size of the read bytes from disk.
 ///
 /// Returns:
 /// - 0 size set, cache was created if possible
@@ -8897,19 +8901,24 @@ Int_t TTree::SetCacheSize(Long64_t cacheSize)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the size of the file cache and create it if possible.
+/// Set the maximum size of the file cache (TTreeCache) in bytes and create it if possible.
 ///
 /// If autocache is true:
 /// this may be an autocreated cache, possibly enlarging an existing
 /// autocreated cache. The size is calculated. The value passed in cacheSize:
-/// - cacheSize =  0  make cache if default cache creation is enabled
+/// - cacheSize =  0  make cache if default cache creation is enabled.
+/// - cachesize >  0  the cache is enabled or extended, if necessary
 /// - cacheSize = -1  make a default sized cache in any case
 ///
 /// If autocache is false:
 /// this is a user requested cache. cacheSize is used to size the cache.
-/// This cache should never be automatically adjusted.
+/// This cache should never be automatically adjusted. If cachesize is
+/// 0, the cache is disabled (deleted if any).
 ///
 /// The cacheSize might be clamped, see TFileCacheRead::SetBufferSize
+///
+/// TTreeCache's 'real' job is to actually prefetch (early grab from disk) the compressed data.
+/// The cachesize controls the size of the read bytes from disk.
 ///
 /// Returns:
 /// - 0 size set, or existing autosized cache almost large enough.
