@@ -86,6 +86,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern/d
    - [Creating an RDataFrame from a dataset specification file](\ref rdf-from-spec)
    - [Adding a progress bar](\ref progressbar)
    - [Working with missing values in the dataset](\ref missing-values)
+   - [Dealing with NaN or Inf values in the dataset](\ref special-values)
 - [Python interface](classROOT_1_1RDataFrame.html#python)
 - <a class="el" href="classROOT_1_1RDataFrame.html#reference" onclick="javascript:toggleInherit('pub_methods_classROOT_1_1RDF_1_1RInterface')">Class reference</a>
 
@@ -1855,6 +1856,19 @@ df_filtered.Display({"twice"})->Print();
 Note that working with missing values is currently supported with a TTree-based
 data source. Support of this functionality for other data sources may come in
 the future.
+
+\anchor special-values
+### Dealing with NaN or Inf values in the dataset
+
+RDataFrame does not treat NaNs or Inf values in any special way, ie they will
+propagate to the final result. There is no configurable flag such as Scipy's
+`nan_policy=propagate,omit,raise`.
+The `omit` behavior can be easily mimicked by a user call to a filter, e.g.:
+
+\code{.py}
+df.Filter("!std::isnan(x)").Mean("x")
+df.Filter("!std::isinf(x)").Mean("x")
+\endcode
 
 */
 // clang-format on
