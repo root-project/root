@@ -4,7 +4,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.23 FATAL_ERROR)
 if("${CMAKE_VERSION}" VERSION_LESS "3.26.0")
   message(WARNING
     "Your CMake version is ${CMAKE_VERSION}. Starting with ROOT 6.44, the "
@@ -53,6 +53,13 @@ set(policy_new CMP0072 CMP0076 CMP0077 CMP0079
 foreach(policy ${policy_new})
   if(POLICY ${policy})
     cmake_policy(SET ${policy} NEW)
+  endif()
+endforeach()
+
+set(policy_old CMP0126)
+foreach(policy ${policy_old})
+  if(POLICY ${policy})
+    cmake_policy(SET ${policy} OLD)
   endif()
 endforeach()
 
