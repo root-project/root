@@ -234,6 +234,47 @@ TEST(RNTupleEvolution, Enum)
    EXPECT_EQ(kRenamedCustomEnumVal, ve3(0));
 }
 
+TEST(RNTupleEvolution, CheckAtomic)
+{
+   // TODO(jblomer): enable test with CustomAtomicNotLockFree once linking of libatomic is sorted out.
+
+   FileRaii fileGuard("test_ntuple_evolution_check_atomic.root");
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      auto atomicInt = model->MakeField<std::atomic<std::int32_t>>("atomicInt");
+      auto regularInt = model->MakeField<std::int32_t>("regularInt");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      *atomicInt = 7;
+      *regularInt = 13;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   auto v1 = reader->GetView<std::atomic<std::int64_t>>("atomicInt");
+   auto v2 = reader->GetView<std::atomic<std::int64_t>>("regularInt");
+   auto v3 = reader->GetView<std::int64_t>("atomicInt");
+
+   try {
+      reader->GetView<std::atomic<std::byte>>("atomicInt");
+      FAIL() << "automatic evolution into an invalid atomic inner type should fail";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("incompatible with on-disk field"));
+   }
+
+   try {
+      reader->GetView<CustomAtomicNotLockFree>("atomicInt");
+      FAIL() << "automatic evolution into an invalid non-atomic inner type should fail";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type name for field"));
+   }
+
+   EXPECT_EQ(7, v1(0));
+   EXPECT_EQ(13, v2(0));
+   EXPECT_EQ(7, v3(0));
+}
+
 TEST(RNTupleEvolution, ArrayAsRVec)
 {
    FileRaii fileGuard("test_ntuple_evolution_array_as_rvec.root");

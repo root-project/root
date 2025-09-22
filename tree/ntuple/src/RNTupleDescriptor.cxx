@@ -187,6 +187,13 @@ bool ROOT::RFieldDescriptor::IsCustomEnum(const RNTupleDescriptor &desc) const
                     desc.GetFieldDescriptor(subFieldId).GetTypeName()) != std::end(gIntTypeNames);
 }
 
+bool ROOT::RFieldDescriptor::IsStdAtomic() const
+{
+   if (fStructure != ROOT::ENTupleStructure::kPlain)
+      return false;
+   return (fTypeName.rfind("std::atomic<", 0) == 0);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool ROOT::RColumnDescriptor::operator==(const RColumnDescriptor &other) const

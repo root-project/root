@@ -153,6 +153,7 @@ public:
    /// The dictionary does not need to be available for this method.
    /// Needs the full descriptor to look up sub fields.
    bool IsCustomEnum(const RNTupleDescriptor &desc) const;
+   bool IsStdAtomic() const;
 };
 
 // clang-format off

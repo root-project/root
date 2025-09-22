@@ -1165,10 +1165,12 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RAtomicField::CloneImpl(std::string_view
 
 void ROOT::RAtomicField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   static const std::vector<std::string> prefixes = {"std::atomic<"};
-
-   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
-   EnsureMatchingTypePrefix(desc, prefixes).ThrowOnError();
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   if (fieldDesc.GetTypeName().rfind("std::atomic<", 0) == 0) {
+      EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+   } else {
+      fSubfields[0]->SetOnDiskId(GetOnDiskId());
+   }
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RAtomicField::SplitValue(const RValue &value) const
