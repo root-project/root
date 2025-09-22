@@ -8,10 +8,6 @@
 // Rootx is a small front-end program that starts the main ROOT module. //
 // This program is called "root" in the $ROOTSYS/bin directory and the  //
 // real ROOT executable is now called "root.exe" (formerly "root").     //
-// Rootx puts up a splash screen giving some info about the current     //
-// version of ROOT and, more importantly, it sets up the required       //
-// LD_LIBRARY_PATH, SHLIB_PATH and LIBPATH environment variables        //
-// (depending on the platform).                                         //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -118,74 +114,6 @@ static void SetRootSys()
       }
    }
 }
-
-#ifndef IS_RPATH_BUILD
-static void SetLibraryPath()
-{
-# ifdef ROOTPREFIX
-   if (std::getenv("ROOTIGNOREPREFIX")) {
-# endif
-   // Set library path for the different platforms.
-
-      char *msg;
-
-#if defined(__hpux) || defined(_HIUX_SOURCE)
-      if (std::getenv("SHLIB_PATH")) {
-         const auto msgLen = strlen(std::getenv("ROOTSYS")) + strlen(std::getenv("SHLIB_PATH")) + 100;
-         msg = new char[msgLen];
-         snprintf(msg, msgLen, "SHLIB_PATH=%s/lib:%s", std::getenv("ROOTSYS"), std::getenv("SHLIB_PATH"));
-      } else {
-         const auto msgLen = strlen(std::getenv("ROOTSYS")) + 100;
-         msg = new char[msgLen];
-         snprintf(msg, msgLen, "SHLIB_PATH=%s/lib", std::getenv("ROOTSYS"));
-      }
-#elif defined(_AIX)
-   if (std::getenv("LIBPATH")) {
-      const auto msgLen = strlen(std::getenv("ROOTSYS")) + strlen(std::getenv("LIBPATH")) + 100;
-      msg = new char[msgLen];
-      snprintf(msg, msgLen, "LIBPATH=%s/lib:%s", std::getenv("ROOTSYS"), std::getenv("LIBPATH"));
-   } else {
-      const auto msgLen = strlen(std::getenv("ROOTSYS")) + 100;
-      msg = new char[msgLen];
-      snprintf(msg, msgLen, "LIBPATH=%s/lib:/lib:/usr/lib", std::getenv("ROOTSYS"));
-   }
-#elif defined(__APPLE__)
-   if (std::getenv("DYLD_LIBRARY_PATH")) {
-      const auto msgLen = strlen(std::getenv("ROOTSYS")) + strlen(std::getenv("DYLD_LIBRARY_PATH")) + 100;
-      msg = new char[msgLen];
-      snprintf(msg, msgLen, "DYLD_LIBRARY_PATH=%s/lib:%s", std::getenv("ROOTSYS"), std::getenv("DYLD_LIBRARY_PATH"));
-   } else {
-      const auto msgLen = strlen(std::getenv("ROOTSYS")) + 100;
-      msg = new char[msgLen];
-      snprintf(msg, msgLen, "DYLD_LIBRARY_PATH=%s/lib", std::getenv("ROOTSYS"));
-   }
-#else
-   if (std::getenv("LD_LIBRARY_PATH")) {
-      const auto msgLen = strlen(std::getenv("ROOTSYS")) + strlen(std::getenv("LD_LIBRARY_PATH")) + 100;
-      msg = new char[msgLen];
-      snprintf(msg, msgLen, "LD_LIBRARY_PATH=%s/lib:%s", std::getenv("ROOTSYS"), std::getenv("LD_LIBRARY_PATH"));
-   } else {
-      const auto msgLen = strlen(std::getenv("ROOTSYS")) + 100;
-      msg = new char[msgLen];
-#if defined(__sun)
-      snprintf(msg, msgLen, "LD_LIBRARY_PATH=%s/lib:/usr/dt/lib", std::getenv("ROOTSYS"));
-#else
-      snprintf(msg, msgLen, "LD_LIBRARY_PATH=%s/lib", std::getenv("ROOTSYS"));
-#endif
-   }
-#endif
-      putenv(msg);
-# ifdef ROOTPREFIX
-   } else /* if (std::getenv("ROOTIGNOREPREFIX")) */ {
-      std::string ldLibPath = "LD_LIBRARY_PATH=" ROOTLIBDIR;
-      if (const char *oldLdLibPath = std::getenv("LD_LIBRARY_PATH"))
-         ldLibPath += std::string(":") + oldLdLibPath;
-      char *msg = strdup(ldLibPath.c_str());
-      putenv(msg);
-   }
-# endif
-}
-#endif
 
 extern "C" {
    static void SigTerm(int);
@@ -327,11 +255,6 @@ int main(int argc, char **argv)
    for (i = 1; i < argc; i++)
       argvv[i] = argv[i];
    argvv[i] = 0;
-
-#ifndef IS_RPATH_BUILD
-   // Make sure library path is set
-   SetLibraryPath();
-#endif
 
    // Execute actual ROOT module
    execv(arg0, argvv);
