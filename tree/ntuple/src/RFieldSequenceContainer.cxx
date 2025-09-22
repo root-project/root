@@ -9,6 +9,7 @@
 #include <ROOT/RFieldUtils.hxx>
 
 #include <cstdlib> // for malloc, free
+#include <limits>
 #include <memory>
 #include <new> // hardware_destructive_interference_size
 
@@ -134,19 +135,20 @@ namespace {
 
 /// Retrieve the addresses of the data members of a generic RVec from a pointer to the beginning of the RVec object.
 /// Returns pointers to fBegin, fSize and fCapacity in a std::tuple.
-std::tuple<void **, std::int32_t *, std::int32_t *> GetRVecDataMembers(void *rvecPtr)
+std::tuple<unsigned char **, std::int32_t *, std::int32_t *> GetRVecDataMembers(void *rvecPtr)
 {
-   void **begin = reinterpret_cast<void **>(rvecPtr);
+   unsigned char **beginPtr = reinterpret_cast<unsigned char **>(rvecPtr);
    // int32_t fSize is the second data member (after 1 void*)
-   std::int32_t *size = reinterpret_cast<std::int32_t *>(begin + 1);
+   std::int32_t *size = reinterpret_cast<std::int32_t *>(beginPtr + 1);
    R__ASSERT(*size >= 0);
    // int32_t fCapacity is the third data member (1 int32_t after fSize)
    std::int32_t *capacity = size + 1;
    R__ASSERT(*capacity >= -1);
-   return {begin, size, capacity};
+   return {beginPtr, size, capacity};
 }
 
-std::tuple<const void *const *, const std::int32_t *, const std::int32_t *> GetRVecDataMembers(const void *rvecPtr)
+std::tuple<const unsigned char *const *, const std::int32_t *, const std::int32_t *>
+GetRVecDataMembers(const void *rvecPtr)
 {
    return {GetRVecDataMembers(const_cast<void *>(rvecPtr))};
 }
@@ -198,7 +200,7 @@ std::size_t EvalRVecAlignment(std::size_t alignOfSubfield)
    return std::max({alignof(void *), alignof(std::int32_t), alignOfSubfield});
 }
 
-void DestroyRVecWithChecks(std::size_t alignOfT, void **beginPtr, char *begin, std::int32_t *capacityPtr)
+void DestroyRVecWithChecks(std::size_t alignOfT, unsigned char **beginPtr, std::int32_t *capacityPtr)
 {
    // figure out if we are in the small state, i.e. begin == &inlineBuffer
    // there might be padding between fCapacity and the inline buffer, so we compute it here
@@ -206,11 +208,11 @@ void DestroyRVecWithChecks(std::size_t alignOfT, void **beginPtr, char *begin, s
    auto paddingMiddle = dataMemberSz % alignOfT;
    if (paddingMiddle != 0)
       paddingMiddle = alignOfT - paddingMiddle;
-   const bool isSmall = (begin == (reinterpret_cast<char *>(beginPtr) + dataMemberSz + paddingMiddle));
+   const bool isSmall = (*beginPtr == (reinterpret_cast<unsigned char *>(beginPtr) + dataMemberSz + paddingMiddle));
 
    const bool owns = (*capacityPtr != -1);
    if (!isSmall && owns)
-      free(begin);
+      free(*beginPtr);
 }
 
 } // anonymous namespace
@@ -242,9 +244,8 @@ std::size_t ROOT::RRVecField::AppendImpl(const void *from)
       GetPrincipalColumnOf(*fSubfields[0])->AppendV(*beginPtr, *sizePtr);
       nbytes += *sizePtr * GetPrincipalColumnOf(*fSubfields[0])->GetElement()->GetPackedSize();
    } else {
-      auto begin = reinterpret_cast<const char *>(*beginPtr); // for pointer arithmetics
       for (std::int32_t i = 0; i < *sizePtr; ++i) {
-         nbytes += CallAppendOn(*fSubfields[0], begin + i * fItemSize);
+         nbytes += CallAppendOn(*fSubfields[0], *beginPtr + i * fItemSize);
       }
    }
 
@@ -253,30 +254,27 @@ std::size_t ROOT::RRVecField::AppendImpl(const void *from)
    return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
-void ROOT::RRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
+unsigned char *ROOT::RRVecField::ResizeRVec(void *rvec, std::size_t nItems, std::size_t itemSize,
+                                            const RFieldBase *itemField, RDeleter *itemDeleter)
+
 {
-   // TODO as a performance optimization, we could assign values to elements of the inline buffer:
-   // if size < inline buffer size: we save one allocation here and usage of the RVec skips a pointer indirection
+   if (nItems > static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max())) {
+      throw RException(R__FAIL("RVec too large: " + std::to_string(nItems)));
+   }
 
-   auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(to);
-
-   // Read collection info for this entry
-   ROOT::NTupleSize_t nItems;
-   RNTupleLocalIndex collectionStart;
-   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
-   char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
+   auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(rvec);
    const std::size_t oldSize = *sizePtr;
 
    // See "semantics of reading non-trivial objects" in RNTuple's Architecture.md for details
    // on the element construction/destrution.
    const bool owns = (*capacityPtr != -1);
-   const bool needsConstruct = !(fSubfields[0]->GetTraits() & kTraitTriviallyConstructible);
-   const bool needsDestruct = owns && fItemDeleter;
+   const bool needsConstruct = !(itemField->GetTraits() & kTraitTriviallyConstructible);
+   const bool needsDestruct = owns && itemDeleter;
 
    // Destroy excess elements, if any
    if (needsDestruct) {
       for (std::size_t i = nItems; i < oldSize; ++i) {
-         fItemDeleter->operator()(begin + (i * fItemSize), true /* dtorOnly */);
+         itemDeleter->operator()(*beginPtr + (i * itemSize), true /* dtorOnly */);
       }
    }
 
@@ -286,7 +284,7 @@ void ROOT::RRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
       // allocates memory we need to release it here to avoid memleaks (e.g. if this is an RVec<RVec<int>>)
       if (needsDestruct) {
          for (std::size_t i = 0u; i < oldSize; ++i) {
-            fItemDeleter->operator()(begin + (i * fItemSize), true /* dtorOnly */);
+            itemDeleter->operator()(*beginPtr + (i * itemSize), true /* dtorOnly */);
          }
       }
 
@@ -297,15 +295,14 @@ void ROOT::RRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
       }
       // We trust that malloc returns a buffer with large enough alignment.
       // This might not be the case if T in RVec<T> is over-aligned.
-      *beginPtr = malloc(nItems * fItemSize);
+      *beginPtr = static_cast<unsigned char *>(malloc(nItems * itemSize));
       R__ASSERT(*beginPtr != nullptr);
-      begin = reinterpret_cast<char *>(*beginPtr);
       *capacityPtr = nItems;
 
       // Placement new for elements that were already there before the resize
       if (needsConstruct) {
          for (std::size_t i = 0u; i < oldSize; ++i)
-            CallConstructValueOn(*fSubfields[0], begin + (i * fItemSize));
+            CallConstructValueOn(*itemField, *beginPtr + (i * itemSize));
       }
    }
    *sizePtr = nItems;
@@ -313,8 +310,23 @@ void ROOT::RRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
    // Placement new for new elements, if any
    if (needsConstruct) {
       for (std::size_t i = oldSize; i < nItems; ++i)
-         CallConstructValueOn(*fSubfields[0], begin + (i * fItemSize));
+         CallConstructValueOn(*itemField, *beginPtr + (i * itemSize));
    }
+
+   return *beginPtr;
+}
+
+void ROOT::RRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
+{
+   // TODO as a performance optimization, we could assign values to elements of the inline buffer:
+   // if size < inline buffer size: we save one allocation here and usage of the RVec skips a pointer indirection
+
+   // Read collection info for this entry
+   ROOT::NTupleSize_t nItems;
+   RNTupleLocalIndex collectionStart;
+   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
+
+   auto begin = ResizeRVec(to, nItems, fItemSize, fSubfields[0].get(), fItemDeleter.get());
 
    if (fSubfields[0]->IsSimple() && nItems) {
       GetPrincipalColumnOf(*fSubfields[0])->ReadV(collectionStart, nItems, begin);
@@ -430,14 +442,13 @@ void ROOT::RRVecField::RRVecDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(objPtr);
 
-   char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
    if (fItemDeleter) {
       for (std::int32_t i = 0; i < *sizePtr; ++i) {
-         fItemDeleter->operator()(begin + i * fItemSize, true /* dtorOnly */);
+         fItemDeleter->operator()(*beginPtr + i * fItemSize, true /* dtorOnly */);
       }
    }
 
-   DestroyRVecWithChecks(fItemAlignment, beginPtr, begin, capacityPtr);
+   DestroyRVecWithChecks(fItemAlignment, beginPtr, capacityPtr);
    RDeleter::operator()(objPtr, dtorOnly);
 }
 
@@ -453,10 +464,10 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RRVecField::SplitValue(const RValue 
    auto [beginPtr, sizePtr, _] = GetRVecDataMembers(value.GetPtr<void>().get());
 
    std::vector<RValue> result;
-   char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
    result.reserve(*sizePtr);
    for (std::int32_t i = 0; i < *sizePtr; ++i) {
-      result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), begin + i * fItemSize)));
+      result.emplace_back(
+         fSubfields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), *beginPtr + i * fItemSize)));
    }
    return result;
 }
@@ -748,52 +759,10 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RArrayAsRVecField::CloneImpl(std::string
 void ROOT::RArrayAsRVecField::ConstructValue(void *where) const
 {
    // initialize data members fBegin, fSize, fCapacity
+   // currently the inline buffer is left uninitialized
    void **beginPtr = new (where)(void *)(nullptr);
-   std::int32_t *sizePtr = new (reinterpret_cast<void *>(beginPtr + 1)) std::int32_t(0);
-   std::int32_t *capacityPtr = new (sizePtr + 1) std::int32_t(0);
-
-   // Create the RVec with the known fixed size, do it once here instead of
-   // every time the value is read in `Read*Impl` functions
-   char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
-
-   // Early return if the RVec has already been allocated.
-   if (*sizePtr == std::int32_t(fArrayLength))
-      return;
-
-   // Need to allocate the RVec if it is the first time the value is being created.
-   // See "semantics of reading non-trivial objects" in RNTuple's Architecture.md for details
-   // on the element construction.
-   const bool owns = (*capacityPtr != -1); // RVec is adopting the memory
-   const bool needsConstruct = !(fSubfields[0]->GetTraits() & kTraitTriviallyConstructible);
-   const bool needsDestruct = owns && fItemDeleter;
-
-   // Destroy old elements: useless work for trivial types, but in case the element type's constructor
-   // allocates memory we need to release it here to avoid memleaks (e.g. if this is an RVec<RVec<int>>)
-   if (needsDestruct) {
-      for (std::int32_t i = 0; i < *sizePtr; ++i) {
-         fItemDeleter->operator()(begin + (i * fItemSize), true /* dtorOnly */);
-      }
-   }
-
-   // TODO: Isn't the RVec always owning in this case?
-   if (owns) {
-      // *beginPtr points to the array of item values (allocated in an earlier call by the following malloc())
-      free(*beginPtr);
-   }
-
-   *beginPtr = malloc(fArrayLength * fItemSize);
-   R__ASSERT(*beginPtr != nullptr);
-   // Re-assign begin pointer after allocation
-   begin = reinterpret_cast<char *>(*beginPtr);
-   // Size and capacity are equal since the field data type is std::array
-   *sizePtr = fArrayLength;
-   *capacityPtr = fArrayLength;
-
-   // Placement new for the array elements
-   if (needsConstruct) {
-      for (std::size_t i = 0; i < fArrayLength; ++i)
-         CallConstructValueOn(*fSubfields[0], begin + (i * fItemSize));
-   }
+   std::int32_t *sizePtr = new (static_cast<void *>(beginPtr + 1)) std::int32_t(0);
+   new (sizePtr + 1) std::int32_t(-1);
 }
 
 std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RArrayAsRVecField::GetDeleter() const
@@ -807,39 +776,36 @@ std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RArrayAsRVecField::GetDeleter(
 
 void ROOT::RArrayAsRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
-
-   auto [beginPtr, _, __] = GetRVecDataMembers(to);
-   auto rvecBeginPtr = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
+   auto begin = RRVecField::ResizeRVec(to, fArrayLength, fItemSize, fSubfields[0].get(), fItemDeleter.get());
 
    if (fSubfields[0]->IsSimple()) {
-      GetPrincipalColumnOf(*fSubfields[0])->ReadV(globalIndex * fArrayLength, fArrayLength, rvecBeginPtr);
+      GetPrincipalColumnOf(*fSubfields[0])->ReadV(globalIndex * fArrayLength, fArrayLength, begin);
       return;
    }
 
    // Read the new values into the collection elements
    for (std::size_t i = 0; i < fArrayLength; ++i) {
-      CallReadOn(*fSubfields[0], globalIndex * fArrayLength + i, rvecBeginPtr + (i * fItemSize));
+      CallReadOn(*fSubfields[0], globalIndex * fArrayLength + i, begin + (i * fItemSize));
    }
 }
 
 void ROOT::RArrayAsRVecField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to)
 {
-   auto [beginPtr, _, __] = GetRVecDataMembers(to);
-   auto rvecBeginPtr = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
+   auto begin = RRVecField::ResizeRVec(to, fArrayLength, fItemSize, fSubfields[0].get(), fItemDeleter.get());
 
    const auto &clusterId = localIndex.GetClusterId();
    const auto &indexInCluster = localIndex.GetIndexInCluster();
 
    if (fSubfields[0]->IsSimple()) {
       GetPrincipalColumnOf(*fSubfields[0])
-         ->ReadV(RNTupleLocalIndex(clusterId, indexInCluster * fArrayLength), fArrayLength, rvecBeginPtr);
+         ->ReadV(RNTupleLocalIndex(clusterId, indexInCluster * fArrayLength), fArrayLength, begin);
       return;
    }
 
    // Read the new values into the collection elements
    for (std::size_t i = 0; i < fArrayLength; ++i) {
       CallReadOn(*fSubfields[0], RNTupleLocalIndex(clusterId, indexInCluster * fArrayLength + i),
-                 rvecBeginPtr + (i * fItemSize));
+                 begin + (i * fItemSize));
    }
 }
 
