@@ -687,6 +687,11 @@ public:
    virtual void            SetCacheLearnEntries(Int_t n=10);
    virtual void            SetChainOffset(Long64_t offset = 0) { fChainOffset=offset; }
    virtual void            SetCircular(Long64_t maxEntries);
+   /// Enables (or disables) the early decompression of the baskets of the current cluster
+   /// (whose compressed data is already in memory if used in conjunction with the TTreeCache).
+   /// This affects performance only in conjunction with non-sequential use/load/read of the entries, ie
+   /// within a cluster you can have cheap random access to the entries (instead of having to decompress again and again).
+   /// \note This setting is totally different from SetCacheSize and from TFile.AsyncPrefetching, which save read calls
    virtual void            SetClusterPrefetch(bool enabled) { fCacheDoClusterPrefetch = enabled; }
    virtual void            SetDebug(Int_t level = 1, Long64_t min = 0, Long64_t max = 9999999); // *MENU*
    virtual void            SetDefaultEntryOffsetLen(Int_t newdefault, bool updateExisting = false);
