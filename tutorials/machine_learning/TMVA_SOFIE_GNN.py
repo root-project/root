@@ -6,6 +6,10 @@
 
 import ROOT
 
+# Load system openblas library explicitly if available. This avoids pulling in
+# NumPys builtin openblas later, which will conflict with the system openblas.
+ROOT.gInterpreter.Load("libopenblaso.so")
+
 import numpy as np
 import graph_nets as gn
 from graph_nets import utils_tf

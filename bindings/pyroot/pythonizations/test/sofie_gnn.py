@@ -1,6 +1,10 @@
 import unittest
 import ROOT
 
+# Load system openblas library explicitly if available. This avoids pulling in
+# NumPys builtin openblas later, which will conflict with the system openblas.
+ROOT.gInterpreter.Load("libopenblaso.so")
+
 import numpy as np
 from numpy.testing import assert_almost_equal
 
