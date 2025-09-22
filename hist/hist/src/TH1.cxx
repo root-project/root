@@ -2531,7 +2531,7 @@ Double_t TH1::ComputeIntegral(Bool_t onlyPositive, Option_t *option)
    for (Int_t binz=1; binz <= nbinsz; ++binz) {
       Double_t zWidth = (fDimension > 2) ? fZaxis.GetBinWidth(binz) : 1;
       for (Int_t biny=1; biny <= nbinsy; ++biny) {
-         Double_t yWidth= (fDimension > 1) ? fYaxis.GetBinWidth(biny) : 1;
+         Double_t yWidth = (fDimension > 1) ? fYaxis.GetBinWidth(biny) : 1;
          for (Int_t binx=1; binx <= nbinsx; ++binx) {
             Double_t xWidth = fXaxis.GetBinWidth(binx);
             ++ibin;
@@ -5023,7 +5023,7 @@ void TH1::GetBinXYZ(Int_t binglobal, Int_t &binx, Int_t &biny, Int_t &binz) cons
 /// @note Only valid for 1-d histograms. Use GetRandom2 or GetRandom3 otherwise.
 /// If the histogram has a bin with negative content, a NaN is returned.
 
-Double_t TH1::GetRandom(TRandom * rng, Option_t *option) const
+Double_t TH1::GetRandom(TRandom *rng, Option_t *option) const
 {
    if (fDimension > 1) {
       Error("GetRandom","Function only valid for 1-d histograms");
@@ -5033,10 +5033,11 @@ Double_t TH1::GetRandom(TRandom * rng, Option_t *option) const
    Double_t integral = 0;
    // compute integral checking that all bins have positive content (see ROOT-5894)
    if (fIntegral) {
-      if (fIntegral[nbinsx+1] != fEntries) integral = const_cast<TH1*>(this)->ComputeIntegral(true, option);
+      if (fIntegral[nbinsx + 1] != fEntries)
+         integral = const_cast<TH1 *>(this)->ComputeIntegral(true, option);
       else  integral = fIntegral[nbinsx];
    } else {
-      integral = const_cast<TH1*>(this)->ComputeIntegral(true, option);
+      integral = const_cast<TH1 *>(this)->ComputeIntegral(true, option);
    }
    if (integral == 0) return 0;
    // return a NaN in case some bins have negative content

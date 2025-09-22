@@ -550,7 +550,7 @@ public:
    TVirtualHistPainter *GetPainter(Option_t *option="");
 
    virtual Int_t    GetQuantiles(Int_t n, Double_t *xp, const Double_t *p = nullptr);
-   virtual Double_t GetRandom(TRandom * rng = nullptr, Option_t *option = "") const;
+   virtual Double_t GetRandom(TRandom *rng = nullptr, Option_t *option = "") const;
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t GetStdDev(Int_t axis=1) const;
    virtual Double_t GetStdDevError(Int_t axis=1) const;
