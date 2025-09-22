@@ -444,7 +444,7 @@ public:
    virtual Double_t Chisquare(TF1 * f1, Option_t *option = "") const;
    static  Int_t    CheckConsistency(const TH1* h1, const TH1* h2);
    virtual void     ClearUnderflowAndOverflow();
-   virtual Double_t ComputeIntegral(Bool_t onlyPositive = false);
+   virtual Double_t ComputeIntegral(Bool_t onlyPositive = false, Option_t *option = "");
            TObject* Clone(const char *newname = "") const override;
            void     Copy(TObject &hnew) const override;
    virtual void     DirectoryAutoAdd(TDirectory *);
@@ -550,7 +550,7 @@ public:
    TVirtualHistPainter *GetPainter(Option_t *option="");
 
    virtual Int_t    GetQuantiles(Int_t n, Double_t *xp, const Double_t *p = nullptr);
-   virtual Double_t GetRandom(TRandom * rng = nullptr) const;
+   virtual Double_t GetRandom(TRandom *rng = nullptr, Option_t *option = "") const;
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t GetStdDev(Int_t axis=1) const;
    virtual Double_t GetStdDevError(Int_t axis=1) const;

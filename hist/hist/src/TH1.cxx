@@ -2505,12 +2505,17 @@ void TH1::ClearUnderflowAndOverflow()
 ///  The resulting integral is normalized to 1.
 ///  If the routine is called with the onlyPositive flag set an error will
 ///  be produced in case of negative bin content and a NaN value returned
+///  \param onlyPositive If set to true, an error will be produced and NaN will be returned
+///  when a bin with negative number of entries is encountered.
+///  \param option
+///  - `""` (default) Compute the cumulative density function assuming current bin contents represent counts.
+///  - `"width"` Computes the cumulative density function assuming current bin contents represent densities.
 ///  \return 1 if success, 0 if integral is zero, NAN if onlyPositive-test fails
 
-Double_t TH1::ComputeIntegral(Bool_t onlyPositive)
+Double_t TH1::ComputeIntegral(Bool_t onlyPositive, Option_t *option)
 {
    if (fBuffer) BufferEmpty();
-
+   bool useArea = TString(option).Contains("width", TString::kIgnoreCase);
    // delete previously computed integral (if any)
    if (fIntegral) delete [] fIntegral;
 
@@ -2524,10 +2529,16 @@ Double_t TH1::ComputeIntegral(Bool_t onlyPositive)
    Int_t ibin = 0; fIntegral[ibin] = 0;
 
    for (Int_t binz=1; binz <= nbinsz; ++binz) {
+      Double_t zWidth = (fDimension > 2) ? fZaxis.GetBinWidth(binz) : 1;
       for (Int_t biny=1; biny <= nbinsy; ++biny) {
+         Double_t yWidth = (fDimension > 1) ? fYaxis.GetBinWidth(biny) : 1;
          for (Int_t binx=1; binx <= nbinsx; ++binx) {
+            Double_t xWidth = fXaxis.GetBinWidth(binx);
             ++ibin;
             Double_t y = RetrieveBinContent(GetBin(binx, biny, binz));
+            if (useArea)
+               y *= xWidth * yWidth * zWidth;
+
             if (onlyPositive && y < 0) {
                  Error("ComputeIntegral","Bin content is negative - return a NaN value");
                  fIntegral[nbins] = TMath::QuietNaN();
@@ -5005,13 +5016,14 @@ void TH1::GetBinXYZ(Int_t binglobal, Int_t &binx, Int_t &biny, Int_t &binz) cons
 /// is evaluated, normalized to one.
 ///
 /// @param rng (optional) Random number generator pointer used (default is gRandom)
+/// @param option (optional) Set it to "width" if your non-uniform bin contents represent a density rather than counts
 ///
 /// The integral is automatically recomputed if the number of entries
 /// is not the same then when the integral was computed.
-/// NB Only valid for 1-d histograms. Use GetRandom2 or 3 otherwise.
-/// If the histogram has a bin with negative content a NaN is returned
+/// @note Only valid for 1-d histograms. Use GetRandom2 or GetRandom3 otherwise.
+/// If the histogram has a bin with negative content, a NaN is returned.
 
-Double_t TH1::GetRandom(TRandom * rng) const
+Double_t TH1::GetRandom(TRandom *rng, Option_t *option) const
 {
    if (fDimension > 1) {
       Error("GetRandom","Function only valid for 1-d histograms");
@@ -5021,10 +5033,11 @@ Double_t TH1::GetRandom(TRandom * rng) const
    Double_t integral = 0;
    // compute integral checking that all bins have positive content (see ROOT-5894)
    if (fIntegral) {
-      if (fIntegral[nbinsx+1] != fEntries) integral = ((TH1*)this)->ComputeIntegral(true);
+      if (fIntegral[nbinsx + 1] != fEntries)
+         integral = const_cast<TH1 *>(this)->ComputeIntegral(true, option);
       else  integral = fIntegral[nbinsx];
    } else {
-      integral = ((TH1*)this)->ComputeIntegral(true);
+      integral = const_cast<TH1 *>(this)->ComputeIntegral(true, option);
    }
    if (integral == 0) return 0;
    // return a NaN in case some bins have negative content

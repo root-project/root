@@ -1263,16 +1263,17 @@ Double_t TH3::GetCovariance(Int_t axis1, Int_t axis2) const
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Return 3 random numbers along axis x , y and z distributed according
+/// Return 3 random numbers along axis x, y and z distributed according
 /// to the cell-contents of this 3-dim histogram
 /// @param[out] x  reference to random generated x value
 /// @param[out] y  reference to random generated y value
 /// @param[out] z  reference to random generated z value
 /// @param[in] rng (optional) Random number generator pointer used (default is gRandom)
+/// @param[in] option (optional) Set it to "width" if your non-uniform bin contents represent a density rather than
+/// counts
 
-void TH3::GetRandom3(Double_t &x, Double_t &y, Double_t &z, TRandom * rng)
+void TH3::GetRandom3(Double_t &x, Double_t &y, Double_t &z, TRandom *rng, Option_t *option)
 {
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
@@ -1282,10 +1283,11 @@ void TH3::GetRandom3(Double_t &x, Double_t &y, Double_t &z, TRandom * rng)
    Double_t integral;
    // compute integral checking that all bins have positive content (see ROOT-5894)
    if (fIntegral) {
-      if (fIntegral[nbins+1] != fEntries) integral = ComputeIntegral(true);
+      if (fIntegral[nbins + 1] != fEntries)
+         integral = ComputeIntegral(true, option);
       else integral = fIntegral[nbins];
    } else {
-      integral = ComputeIntegral(true);
+      integral = ComputeIntegral(true, option);
    }
    if (integral == 0 ) { x = 0; y = 0; z = 0; return;}
    // case histogram has negative bins

@@ -1695,7 +1695,7 @@ Bool_t TH2Poly::Multiply(TF1 *, Double_t)
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// NOT IMPLEMENTED for TH2Poly
-Double_t TH2Poly::ComputeIntegral(Bool_t )
+Double_t TH2Poly::ComputeIntegral(Bool_t, Option_t *)
 {
    Error("ComputeIntegral", "Not implemented for TH2Poly");
    return TMath::QuietNaN();

@@ -88,7 +88,7 @@ public:
    using TH2::Interpolate;
    Bool_t Divide(TF1 *, Double_t) override;
    Bool_t Multiply(TF1 *, Double_t) override;
-   Double_t ComputeIntegral(Bool_t) override;
+   Double_t ComputeIntegral(Bool_t, Option_t *) override;
    TH1 *  FFT(TH1*, Option_t * ) override;
    virtual TH1 *  GetAsymmetry(TH1* , Double_t,  Double_t);
    virtual Double_t Interpolate(Double_t, Double_t);
