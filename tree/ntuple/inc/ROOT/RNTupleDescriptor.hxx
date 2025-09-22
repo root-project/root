@@ -149,6 +149,7 @@ public:
    /// natively supported stdlib classes.
    /// The dictionary does not need to be available for this method.
    bool IsCustomClass() const;
+   bool IsStdAtomic() const;
 };
 
 // clang-format off
