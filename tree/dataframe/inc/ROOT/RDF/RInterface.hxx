@@ -2675,7 +2675,7 @@ public:
       if (std::is_same<V, RDFDetail::RInferredType>::value) {
          return Fill(TStatistic(std::string(name).c_str()), validColumnNames);
       } else {
-         return Fill<V>(std::string(name).c_str(), validColumnNames);
+         return Fill<V>(TStatistic(std::string(name).c_str()), validColumnNames);
       }
    }
 
