@@ -2653,6 +2653,7 @@ public:
    ///
    /// \tparam V The type of the value column
    /// \param[in] value The name of the column with the values to fill the statistics with.
+   /// \param[in] name optional name for the returned TStatistic object
    /// \return the filled TStatistic object wrapped in a RResultPtr.
    ///
    /// ### Example usage:
@@ -2664,7 +2665,7 @@ public:
    /// ~~~
    ///
    template <typename V = RDFDetail::RInferredType>
-   RResultPtr<TStatistic> Stats(std::string_view value = "")
+   RResultPtr<TStatistic> Stats(std::string_view value = "", std::string_view name = "")
    {
       ColumnNames_t columns;
       if (!value.empty()) {
@@ -2672,9 +2673,9 @@ public:
       }
       const auto validColumnNames = GetValidatedColumnNames(1, columns);
       if (std::is_same<V, RDFDetail::RInferredType>::value) {
-         return Fill(TStatistic(), validColumnNames);
+         return Fill(TStatistic(std::string(name).c_str()), validColumnNames);
       } else {
-         return Fill<V>(TStatistic(), validColumnNames);
+         return Fill<V>(std::string(name).c_str(), validColumnNames);
       }
    }
 
@@ -2685,6 +2686,7 @@ public:
    /// \tparam W The type of the weight column
    /// \param[in] value The name of the column with the values to fill the statistics with.
    /// \param[in] weight The name of the column with the weights to fill the statistics with.
+   /// \param[in] name optional name for the returned TStatistic object
    /// \return the filled TStatistic object wrapped in a RResultPtr.
    ///
    /// ### Example usage:
@@ -2696,7 +2698,7 @@ public:
    /// ~~~
    ///
    template <typename V = RDFDetail::RInferredType, typename W = RDFDetail::RInferredType>
-   RResultPtr<TStatistic> Stats(std::string_view value, std::string_view weight)
+   RResultPtr<TStatistic> Stats(std::string_view value, std::string_view weight, std::string_view name = "")
    {
       ColumnNames_t columns{std::string(value), std::string(weight)};
       constexpr auto vIsInferred = std::is_same<V, RDFDetail::RInferredType>::value;
@@ -2707,7 +2709,7 @@ public:
       // 2. One of the two types is explicit and the other one is inferred: the case is not supported.
       // 3. Both types are explicit: we invoke the fully compiled Fill method.
       if (vIsInferred && wIsInferred) {
-         return Fill(TStatistic(), validColumnNames);
+         return Fill(TStatistic(std::string(name).c_str()), validColumnNames);
       } else if (vIsInferred != wIsInferred) {
          std::string error("The ");
          error += vIsInferred ? "value " : "weight ";
@@ -2716,7 +2718,7 @@ public:
          error += " is specified to be inferred. This case is not supported: please specify both types or none.";
          throw std::runtime_error(error);
       } else {
-         return Fill<V, W>(TStatistic(), validColumnNames);
+         return Fill<V, W>(TStatistic(std::string(name).c_str()), validColumnNames);
       }
    }
 
