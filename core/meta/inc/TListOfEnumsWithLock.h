@@ -14,7 +14,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TListOfEnumsWithLock                                                         //
+// TListOfEnumsWithLock                                                 //
 //                                                                      //
 // A collection of TEnum objects designed for fast access given a       //
 // DeclId_t and for keep track of TEnum that were described             //
@@ -68,10 +68,15 @@ public:
    void       AddLast(TObject *obj) override;
    void       AddLast(TObject *obj, Option_t *opt) override;
    void       AddAt(TObject *obj, Int_t idx) override;
+   void       AddAt(TObject *obj, Int_t idx, Option_t *opt) override;
    void       AddAfter(const TObject *after, TObject *obj) override;
    void       AddAfter(TObjLink *after, TObject *obj) override;
+   void       AddAfter(const TObject *after, TObject *obj, Option_t *opt) override;
+   void       AddAfter(TObjLink *after, TObject *obj, Option_t *opt) override;
    void       AddBefore(const TObject *before, TObject *obj) override;
    void       AddBefore(TObjLink *before, TObject *obj) override;
+   void       AddBefore(const TObject *before, TObject *obj, Option_t *opt) override;
+   void       AddBefore(TObjLink *before, TObject *obj, Option_t *opt) override;
 
    void       RecursiveRemove(TObject *obj) override;
    TObject   *Remove(TObject *obj) override;
