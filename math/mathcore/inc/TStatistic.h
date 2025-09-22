@@ -73,6 +73,8 @@ public:
    // Print
    void Print(Option_t * = "") const override;
    void ls(Option_t *opt = "") const override { Print(opt); }
+   // Setters
+   void SetName(const char *name) { fName = name; }
 
    ClassDefOverride(TStatistic,3)  // Named statistical variable
 };
