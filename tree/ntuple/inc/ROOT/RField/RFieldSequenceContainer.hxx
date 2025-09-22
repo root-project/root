@@ -111,6 +111,13 @@ public:
 
 /// The type-erased field for a RVec<Type>
 class RRVecField : public RFieldBase {
+   friend class RArrayAsRVecField; // to call ResizeRVec()
+
+   // Ensures that the RVec pointed to by rvec has at least nItems valid elements
+   // Returns the possibly new "begin pointer" of the RVec, i.e. the pointer to the data area.
+   static unsigned char *
+   ResizeRVec(void *rvec, std::size_t nItems, std::size_t itemSize, const RFieldBase *itemField, RDeleter *itemDeleter);
+
 public:
    /// the RRVecDeleter is also used by RArrayAsRVecField and therefore declared public
    class RRVecDeleter : public RDeleter {
