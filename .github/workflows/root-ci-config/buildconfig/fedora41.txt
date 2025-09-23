@@ -1,5 +1,0 @@
-builtin_vdt=On
-builtin_zlib=ON
-builtin_zstd=ON
-ccache=On
-tmva=OFF
