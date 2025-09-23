@@ -3,6 +3,7 @@ set(histv7_headers
     ROOT/RBinIndex.hxx
     ROOT/RBinIndexRange.hxx
     ROOT/RBinWithError.hxx
+    ROOT/RHist.hxx
     ROOT/RHistEngine.hxx
     ROOT/RHistStats.hxx
     ROOT/RHistUtils.hxx
