@@ -125,7 +125,7 @@ public:
    /**
       The beta vector for this boost
    */
-   typedef DisplacementVector3D<Cartesian3D<double>, DefaultCoordinateSystemTag> XYZVector;
+   typedef ::ROOT::ROOT_MATH_ARCH::DisplacementVector3D<::ROOT::ROOT_MATH_ARCH::Cartesian3D<double>, ::ROOT::ROOT_MATH_ARCH::DefaultCoordinateSystemTag> XYZVector;
    XYZVector BetaVector() const;
 
    /**
@@ -142,7 +142,7 @@ public:
       Lorentz transformation operation on a Minkowski ('Cartesian')
       LorentzVector
    */
-   LorentzVector<PxPyPzE4D<double>> operator()(const LorentzVector<PxPyPzE4D<double>> &v) const;
+   LorentzVector<::ROOT::ROOT_MATH_ARCH::PxPyPzE4D<double>> operator()(const LorentzVector<::ROOT::ROOT_MATH_ARCH::PxPyPzE4D<double>> &v) const;
 
    /**
       Lorentz transformation operation on a LorentzVector in any
@@ -151,8 +151,8 @@ public:
    template <class CoordSystem>
    LorentzVector<CoordSystem> operator()(const LorentzVector<CoordSystem> &v) const
    {
-      LorentzVector<PxPyPzE4D<double>> xyzt(v);
-      LorentzVector<PxPyPzE4D<double>> r_xyzt = operator()(xyzt);
+      LorentzVector<::ROOT::ROOT_MATH_ARCH::PxPyPzE4D<double>> xyzt(v);
+      LorentzVector<::ROOT::ROOT_MATH_ARCH::PxPyPzE4D<double>> r_xyzt = operator()(xyzt);
       return LorentzVector<CoordSystem>(r_xyzt);
    }
 
@@ -164,8 +164,8 @@ public:
    template <class Foreign4Vector>
    Foreign4Vector operator()(const Foreign4Vector &v) const
    {
-      LorentzVector<PxPyPzE4D<double>> xyzt(v);
-      LorentzVector<PxPyPzE4D<double>> r_xyzt = operator()(xyzt);
+      LorentzVector<::ROOT::ROOT_MATH_ARCH::PxPyPzE4D<double>> xyzt(v);
+      LorentzVector<::ROOT::ROOT_MATH_ARCH::PxPyPzE4D<double>> r_xyzt = operator()(xyzt);
       return Foreign4Vector(r_xyzt.X(), r_xyzt.Y(), r_xyzt.Z(), r_xyzt.T());
    }
 

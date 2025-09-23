@@ -59,61 +59,61 @@ void convert(Rotation3D const &from, RotationZYX &to);
 // ----------------------------------------------------------------------
 // conversions from AxisAngle
 
-void convert(AxisAngle const &from, Rotation3D &to);
-void convert(AxisAngle const &from, EulerAngles &to);
-void convert(AxisAngle const &from, Quaternion &to);
-void convert(AxisAngle const &from, RotationZYX &to);
+void convert(::ROOT::ROOT_MATH_ARCH::AxisAngle const &from, ::ROOT::ROOT_MATH_ARCH::Rotation3D &to);
+void convert(::ROOT::ROOT_MATH_ARCH::AxisAngle const &from, ::ROOT::ROOT_MATH_ARCH::EulerAngles &to);
+void convert(::ROOT::ROOT_MATH_ARCH::AxisAngle const &from, ::ROOT::ROOT_MATH_ARCH::Quaternion &to);
+void convert(::ROOT::ROOT_MATH_ARCH::AxisAngle const &from, ::ROOT::ROOT_MATH_ARCH::RotationZYX &to);
 
 // ----------------------------------------------------------------------
 // conversions from EulerAngles
 
-void convert(EulerAngles const &from, Rotation3D &to);
-void convert(EulerAngles const &from, AxisAngle &to);
-void convert(EulerAngles const &from, Quaternion &to);
-void convert(EulerAngles const &from, RotationZYX &to);
+void convert(::ROOT::ROOT_MATH_ARCH::EulerAngles const &from, ::ROOT::ROOT_MATH_ARCH::Rotation3D &to);
+void convert(::ROOT::ROOT_MATH_ARCH::EulerAngles const &from, ::ROOT::ROOT_MATH_ARCH::AxisAngle &to);
+void convert(::ROOT::ROOT_MATH_ARCH::EulerAngles const &from, ::ROOT::ROOT_MATH_ARCH::Quaternion &to);
+void convert(::ROOT::ROOT_MATH_ARCH::EulerAngles const &from, ::ROOT::ROOT_MATH_ARCH::RotationZYX &to);
 
 // ----------------------------------------------------------------------
 // conversions from Quaternion
 
-void convert(Quaternion const &from, Rotation3D &to);
-void convert(Quaternion const &from, AxisAngle &to);
-void convert(Quaternion const &from, EulerAngles &to);
-void convert(Quaternion const &from, RotationZYX &to);
+void convert(::ROOT::ROOT_MATH_ARCH::Quaternion const &from, ::ROOT::ROOT_MATH_ARCH::Rotation3D &to);
+void convert(::ROOT::ROOT_MATH_ARCH::Quaternion const &from, ::ROOT::ROOT_MATH_ARCH::AxisAngle &to);
+void convert(::ROOT::ROOT_MATH_ARCH::Quaternion const &from, ::ROOT::ROOT_MATH_ARCH::EulerAngles &to);
+void convert(::ROOT::ROOT_MATH_ARCH::Quaternion const &from, ::ROOT::ROOT_MATH_ARCH::RotationZYX &to);
 
 // ----------------------------------------------------------------------
 // conversions from RotationZYX
 
-void convert(RotationZYX const &from, Rotation3D &to);
-void convert(RotationZYX const &from, AxisAngle &to);
-void convert(RotationZYX const &from, EulerAngles &to);
-void convert(RotationZYX const &from, Quaternion &to);
+void convert(::ROOT::ROOT_MATH_ARCH::RotationZYX const &from, ::ROOT::ROOT_MATH_ARCH::Rotation3D &to);
+void convert(::ROOT::ROOT_MATH_ARCH::RotationZYX const &from, ::ROOT::ROOT_MATH_ARCH::AxisAngle &to);
+void convert(::ROOT::ROOT_MATH_ARCH::RotationZYX const &from, ::ROOT::ROOT_MATH_ARCH::EulerAngles &to);
+void convert(::ROOT::ROOT_MATH_ARCH::RotationZYX const &from, ::ROOT::ROOT_MATH_ARCH::Quaternion &to);
 
 // ----------------------------------------------------------------------
 // conversions from RotationX
 
-void convert(RotationX const &from, Rotation3D &to);
-void convert(RotationX const &from, RotationZYX &to);
-void convert(RotationX const &from, AxisAngle &to);
-void convert(RotationX const &from, EulerAngles &to);
-void convert(RotationX const &from, Quaternion &to);
+void convert(::ROOT::ROOT_MATH_ARCH::RotationX const &from, ::ROOT::ROOT_MATH_ARCH::Rotation3D &to);
+void convert(::ROOT::ROOT_MATH_ARCH::RotationX const &from, ::ROOT::ROOT_MATH_ARCH::RotationZYX &to);
+void convert(::ROOT::ROOT_MATH_ARCH::RotationX const &from, ::ROOT::ROOT_MATH_ARCH::AxisAngle &to);
+void convert(::ROOT::ROOT_MATH_ARCH::RotationX const &from, ::ROOT::ROOT_MATH_ARCH::EulerAngles &to);
+void convert(::ROOT::ROOT_MATH_ARCH::RotationX const &from, ::ROOT::ROOT_MATH_ARCH::Quaternion &to);
 
 // ----------------------------------------------------------------------
 // conversions from RotationY
 
-void convert(RotationY const &from, Rotation3D &to);
-void convert(RotationY const &from, RotationZYX &to);
-void convert(RotationY const &from, AxisAngle &to);
-void convert(RotationY const &from, EulerAngles &to);
-void convert(RotationY const &from, Quaternion &to);
+void convert(::ROOT::ROOT_MATH_ARCH::RotationY const &from, ::ROOT::ROOT_MATH_ARCH::Rotation3D &to);
+void convert(::ROOT::ROOT_MATH_ARCH::RotationY const &from, ::ROOT::ROOT_MATH_ARCH::RotationZYX &to);
+void convert(::ROOT::ROOT_MATH_ARCH::RotationY const &from, ::ROOT::ROOT_MATH_ARCH::AxisAngle &to);
+void convert(::ROOT::ROOT_MATH_ARCH::RotationY const &from, ::ROOT::ROOT_MATH_ARCH::EulerAngles &to);
+void convert(::ROOT::ROOT_MATH_ARCH::RotationY const &from, ::ROOT::ROOT_MATH_ARCH::Quaternion &to);
 
 // ----------------------------------------------------------------------
 // conversions from RotationZ
 
-void convert(RotationZ const &from, Rotation3D &to);
-void convert(RotationZ const &from, RotationZYX &to);
-void convert(RotationZ const &from, AxisAngle &to);
-void convert(RotationZ const &from, EulerAngles &to);
-void convert(RotationZ const &from, Quaternion &to);
+void convert(::ROOT::ROOT_MATH_ARCH::RotationZ const &from, ::ROOT::ROOT_MATH_ARCH::Rotation3D &to);
+void convert(::ROOT::ROOT_MATH_ARCH::RotationZ const &from, ::ROOT::ROOT_MATH_ARCH::RotationZYX &to);
+void convert(::ROOT::ROOT_MATH_ARCH::RotationZ const &from, ::ROOT::ROOT_MATH_ARCH::AxisAngle &to);
+void convert(::ROOT::ROOT_MATH_ARCH::RotationZ const &from, ::ROOT::ROOT_MATH_ARCH::EulerAngles &to);
+void convert(::ROOT::ROOT_MATH_ARCH::RotationZ const &from, ::ROOT::ROOT_MATH_ARCH::Quaternion &to);
 
 } // namespace gv_detail
 } // namespace ROOT_MATH_ARCH

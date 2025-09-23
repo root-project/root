@@ -34,9 +34,9 @@ inline void GenVector_Throw(const char *);
 // is not possible because of missing symbols.
 // This is due to the fact that the Throw function is used in the inline
 // code bu this function is implemented in the Genvector library.
-class GenVector_exception : public std::runtime_error {
+class GenVector_exception : public ::std::runtime_error {
 public:
-   GenVector_exception(const std::string &s) : runtime_error(s) {}
+   GenVector_exception(const ::std::string &s) : runtime_error(s) {}
 
    // Compiler-generated copy ctor, copy assignment, dtor are fine
    // Inherited what() from runtime_error is fine

@@ -44,7 +44,7 @@ void BoostX::SetComponents(Scalar bx)
       return;
    }
    fBeta = bx;
-   fGamma = 1.0 / math_sqrt(1.0 - bp2);
+   fGamma = 1.0 / ::ROOT::ROOT_MATH_ARCH::math_sqrt(1.0 - bp2);
 }
 
 void BoostX::GetComponents(Scalar &bx) const
@@ -53,10 +53,10 @@ void BoostX::GetComponents(Scalar &bx) const
    bx = fBeta;
 }
 
-DisplacementVector3D<Cartesian3D<BoostX::Scalar>> BoostX::BetaVector() const
+::ROOT::ROOT_MATH_ARCH::DisplacementVector3D<::ROOT::ROOT_MATH_ARCH::Cartesian3D<BoostX::Scalar>> BoostX::BetaVector() const
 {
    // return beta vector
-   return DisplacementVector3D<Cartesian3D<Scalar>>(fBeta, 0.0, 0.0);
+   return ::ROOT::ROOT_MATH_ARCH::DisplacementVector3D<::ROOT::ROOT_MATH_ARCH::Cartesian3D<Scalar>>(fBeta, 0.0, 0.0);
 }
 
 void BoostX::GetLorentzRotation(Scalar r[]) const
@@ -100,12 +100,12 @@ void BoostX::Rectify()
    SetComponents(beta);
 }
 
-LorentzVector<PxPyPzE4D<double>> BoostX::operator()(const LorentzVector<PxPyPzE4D<double>> &v) const
+LorentzVector<::ROOT::ROOT_MATH_ARCH::PxPyPzE4D<double>> BoostX::operator()(const LorentzVector<::ROOT::ROOT_MATH_ARCH::PxPyPzE4D<double>> &v) const
 {
    // apply boost to a LV
    Scalar x = v.Px();
    Scalar t = v.E();
-   return LorentzVector<PxPyPzE4D<double>>(fGamma * x + fGamma * fBeta * t, v.Py(), v.Pz(),
+   return LorentzVector<::ROOT::ROOT_MATH_ARCH::PxPyPzE4D<double>>(fGamma * x + fGamma * fBeta * t, v.Py(), v.Pz(),
                                            fGamma * fBeta * x + fGamma * t);
 }
 

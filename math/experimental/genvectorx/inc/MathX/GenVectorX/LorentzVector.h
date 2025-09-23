@@ -383,16 +383,16 @@ public:
             dphi += (2 * M_PI) * n;
          }
       }
-      return math_sqrt(delta * delta + dphi * dphi);
+      return ::ROOT::ROOT_MATH_ARCH::math_sqrt(delta * delta + dphi * dphi);
    }
 
    /**
       get the spatial components of the Vector in a
       DisplacementVector based on Cartesian Coordinates
    */
-   DisplacementVector3D<Cartesian3D<Scalar>> Vect() const
+   ::ROOT::ROOT_MATH_ARCH::DisplacementVector3D<::ROOT::ROOT_MATH_ARCH::Cartesian3D<Scalar>> Vect() const
    {
-      return DisplacementVector3D<Cartesian3D<Scalar>>(X(), Y(), Z());
+      return DisplacementVector3D<::ROOT::ROOT_MATH_ARCH::Cartesian3D<Scalar>>(X(), Y(), Z());
    }
 
    // ------ Operations combining two Lorentz vectors ------
@@ -584,7 +584,7 @@ public:
       return ee * ee < pp * pp;
    }
 
-   typedef DisplacementVector3D<Cartesian3D<Scalar>> BetaVector;
+   typedef ::ROOT::ROOT_MATH_ARCH::DisplacementVector3D<::ROOT::ROOT_MATH_ARCH::Cartesian3D<Scalar>> BetaVector;
 
    /**
       The beta vector for the boost that would bring this vector into
@@ -616,7 +616,7 @@ public:
    BetaVector BoostToCM(const Other4Vector &v) const
    {
       Scalar eSum = E() + v.E();
-      DisplacementVector3D<Cartesian3D<Scalar>> vecSum = Vect() + v.Vect();
+      ::ROOT::ROOT_MATH_ARCH::DisplacementVector3D<::ROOT::ROOT_MATH_ARCH::Cartesian3D<Scalar>> vecSum = Vect() + v.Vect();
       if (eSum == 0) {
          if (vecSum.Mag2() == 0) {
             return BetaVector();
@@ -823,8 +823,8 @@ template <class CoordSystem>
 typename LorentzVector<CoordSystem>::Scalar
 AsymmetryVectorial(LorentzVector<CoordSystem> const &pp, LorentzVector<CoordSystem> const &pm)
 {
-   XYVector vp(pp.Px(), pp.Py());
-   XYVector vm(pm.Px(), pm.Py());
+   ::ROOT::ROOT_MATH_ARCH::XYVector vp(pp.Px(), pp.Py());
+   ::ROOT::ROOT_MATH_ARCH::XYVector vm(pm.Px(), pm.Py());
    auto denom = (vp + vm).R();
    if (denom == 0.)
       return -1;
@@ -933,9 +933,9 @@ typename CoordSystem::Scalar get(LorentzVector<CoordSystem> const& p)
 #include <tuple>
 namespace std {
    template <class CoordSystem>
-   struct tuple_size<ROOT::ROOT_MATH_ARCH::LorentzVector<CoordSystem>> : integral_constant<size_t, 4> {};
+   struct ::std::tuple_size<ROOT::ROOT_MATH_ARCH::LorentzVector<CoordSystem>> : integral_constant<size_t, 4> {};
    template <size_t I, class CoordSystem>
-   struct tuple_element<I, ROOT::ROOT_MATH_ARCH::LorentzVector<CoordSystem>> {
+   struct ::std::tuple_element<I, ROOT::ROOT_MATH_ARCH::LorentzVector<CoordSystem>> {
       static_assert(I < 4);
       using type = typename CoordSystem::Scalar;
    };

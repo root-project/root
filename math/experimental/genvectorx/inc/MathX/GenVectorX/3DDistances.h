@@ -49,95 +49,95 @@ namespace gv_detail {
 // ----------------------------------------------------------------------
 // Distance from Rotation3D
 
-double dist(Rotation3D const &r1, Rotation3D const &r2);
-double dist(Rotation3D const &r1, AxisAngle const &r2);
-double dist(Rotation3D const &r1, EulerAngles const &r2);
-double dist(Rotation3D const &r1, Quaternion const &r2);
-double dist(Rotation3D const &r1, RotationZYX const &r2);
-double dist(Rotation3D const &r1, RotationX const &r2);
-double dist(Rotation3D const &r1, RotationY const &r2);
-double dist(Rotation3D const &r1, RotationZ const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::Rotation3D const &r1, ::ROOT::ROOT_MATH_ARCH::Rotation3D const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::Rotation3D const &r1, ::ROOT::ROOT_MATH_ARCH::AxisAngle const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::Rotation3D const &r1, ::ROOT::ROOT_MATH_ARCH::EulerAngles const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::Rotation3D const &r1, ::ROOT::ROOT_MATH_ARCH::Quaternion const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::Rotation3D const &r1, ::ROOT::ROOT_MATH_ARCH::RotationZYX const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::Rotation3D const &r1, ::ROOT::ROOT_MATH_ARCH::RotationX const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::Rotation3D const &r1, ::ROOT::ROOT_MATH_ARCH::RotationY const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::Rotation3D const &r1, ::ROOT::ROOT_MATH_ARCH::RotationZ const &r2);
 
 // ----------------------------------------------------------------------
 // Distance from AxisAngle
 
-double dist(AxisAngle const &r1, Rotation3D const &r2);
-double dist(AxisAngle const &r1, AxisAngle const &r2);
-double dist(AxisAngle const &r1, EulerAngles const &r2);
-double dist(AxisAngle const &r1, Quaternion const &r2);
-double dist(AxisAngle const &r1, RotationZYX const &r2);
-double dist(AxisAngle const &r1, RotationX const &r2);
-double dist(AxisAngle const &r1, RotationY const &r2);
-double dist(AxisAngle const &r1, RotationZ const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::AxisAngle const &r1, ::ROOT::ROOT_MATH_ARCH::Rotation3D const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::AxisAngle const &r1, ::ROOT::ROOT_MATH_ARCH::AxisAngle const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::AxisAngle const &r1, ::ROOT::ROOT_MATH_ARCH::EulerAngles const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::AxisAngle const &r1, ::ROOT::ROOT_MATH_ARCH::Quaternion const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::AxisAngle const &r1, ::ROOT::ROOT_MATH_ARCH::RotationZYX const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::AxisAngle const &r1, ::ROOT::ROOT_MATH_ARCH::RotationX const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::AxisAngle const &r1, ::ROOT::ROOT_MATH_ARCH::RotationY const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::AxisAngle const &r1, ::ROOT::ROOT_MATH_ARCH::RotationZ const &r2);
 
 // ----------------------------------------------------------------------
 // Distance from EulerAngles
 
-double dist(EulerAngles const &r1, Rotation3D const &r2);
-double dist(EulerAngles const &r1, AxisAngle const &r2);
-double dist(EulerAngles const &r1, EulerAngles const &r2);
-double dist(EulerAngles const &r1, Quaternion const &r2);
-double dist(EulerAngles const &r1, RotationZYX const &r2);
-double dist(EulerAngles const &r1, RotationX const &r2);
-double dist(EulerAngles const &r1, RotationY const &r2);
-double dist(EulerAngles const &r1, RotationZ const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::EulerAngles const &r1, ::ROOT::ROOT_MATH_ARCH::Rotation3D const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::EulerAngles const &r1, ::ROOT::ROOT_MATH_ARCH::AxisAngle const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::EulerAngles const &r1, ::ROOT::ROOT_MATH_ARCH::EulerAngles const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::EulerAngles const &r1, ::ROOT::ROOT_MATH_ARCH::Quaternion const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::EulerAngles const &r1, ::ROOT::ROOT_MATH_ARCH::RotationZYX const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::EulerAngles const &r1, ::ROOT::ROOT_MATH_ARCH::RotationX const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::EulerAngles const &r1, ::ROOT::ROOT_MATH_ARCH::RotationY const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::EulerAngles const &r1, ::ROOT::ROOT_MATH_ARCH::RotationZ const &r2);
 
 // ----------------------------------------------------------------------
 // Distance from Quaternion
 
-double dist(Quaternion const &r1, Rotation3D const &r2);
-double dist(Quaternion const &r1, AxisAngle const &r2);
-double dist(Quaternion const &r1, EulerAngles const &r2);
-double dist(Quaternion const &r1, Quaternion const &r2);
-double dist(Quaternion const &r1, RotationZYX const &r2);
-double dist(Quaternion const &r1, RotationX const &r2);
-double dist(Quaternion const &r1, RotationY const &r2);
-double dist(Quaternion const &r1, RotationZ const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::Quaternion const &r1, ::ROOT::ROOT_MATH_ARCH::Rotation3D const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::Quaternion const &r1, ::ROOT::ROOT_MATH_ARCH::AxisAngle const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::Quaternion const &r1, ::ROOT::ROOT_MATH_ARCH::EulerAngles const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::Quaternion const &r1, ::ROOT::ROOT_MATH_ARCH::Quaternion const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::Quaternion const &r1, ::ROOT::ROOT_MATH_ARCH::RotationZYX const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::Quaternion const &r1, ::ROOT::ROOT_MATH_ARCH::RotationX const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::Quaternion const &r1, ::ROOT::ROOT_MATH_ARCH::RotationY const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::Quaternion const &r1, ::ROOT::ROOT_MATH_ARCH::RotationZ const &r2);
 
 // ----------------------------------------------------------------------
 // Distance from RotationZYX
 
-double dist(RotationZYX const &r1, Rotation3D const &r2);
-double dist(RotationZYX const &r1, AxisAngle const &r2);
-double dist(RotationZYX const &r1, EulerAngles const &r2);
-double dist(RotationZYX const &r1, Quaternion const &r2);
-double dist(RotationZYX const &r1, RotationZYX const &r2);
-double dist(RotationZYX const &r1, RotationX const &r2);
-double dist(RotationZYX const &r1, RotationY const &r2);
-double dist(RotationZYX const &r1, RotationZ const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationZYX const &r1, ::ROOT::ROOT_MATH_ARCH::Rotation3D const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationZYX const &r1, ::ROOT::ROOT_MATH_ARCH::AxisAngle const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationZYX const &r1, ::ROOT::ROOT_MATH_ARCH::EulerAngles const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationZYX const &r1, ::ROOT::ROOT_MATH_ARCH::Quaternion const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationZYX const &r1, ::ROOT::ROOT_MATH_ARCH::RotationZYX const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationZYX const &r1, ::ROOT::ROOT_MATH_ARCH::RotationX const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationZYX const &r1, ::ROOT::ROOT_MATH_ARCH::RotationY const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationZYX const &r1, ::ROOT::ROOT_MATH_ARCH::RotationZ const &r2);
 
 // ----------------------------------------------------------------------
 // Distance from RotationX
 
-double dist(RotationX const &r1, Rotation3D const &r2);
-double dist(RotationX const &r1, AxisAngle const &r2);
-double dist(RotationX const &r1, EulerAngles const &r2);
-double dist(RotationX const &r1, Quaternion const &r2);
-double dist(RotationX const &r1, RotationX const &r2);
-double dist(RotationX const &r1, RotationY const &r2);
-double dist(RotationX const &r1, RotationZ const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationX const &r1, ::ROOT::ROOT_MATH_ARCH::Rotation3D const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationX const &r1, ::ROOT::ROOT_MATH_ARCH::AxisAngle const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationX const &r1, ::ROOT::ROOT_MATH_ARCH::EulerAngles const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationX const &r1, ::ROOT::ROOT_MATH_ARCH::Quaternion const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationX const &r1, ::ROOT::ROOT_MATH_ARCH::RotationX const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationX const &r1, ::ROOT::ROOT_MATH_ARCH::RotationY const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationX const &r1, ::ROOT::ROOT_MATH_ARCH::RotationZ const &r2);
 
 // ----------------------------------------------------------------------
 // Distance from RotationY
 
-double dist(RotationY const &r1, Rotation3D const &r2);
-double dist(RotationY const &r1, AxisAngle const &r2);
-double dist(RotationY const &r1, EulerAngles const &r2);
-double dist(RotationY const &r1, Quaternion const &r2);
-double dist(RotationY const &r1, RotationX const &r2);
-double dist(RotationY const &r1, RotationY const &r2);
-double dist(RotationY const &r1, RotationZ const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationY const &r1, ::ROOT::ROOT_MATH_ARCH::Rotation3D const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationY const &r1, ::ROOT::ROOT_MATH_ARCH::AxisAngle const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationY const &r1, ::ROOT::ROOT_MATH_ARCH::EulerAngles const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationY const &r1, ::ROOT::ROOT_MATH_ARCH::Quaternion const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationY const &r1, ::ROOT::ROOT_MATH_ARCH::RotationX const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationY const &r1, ::ROOT::ROOT_MATH_ARCH::RotationY const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationY const &r1, ::ROOT::ROOT_MATH_ARCH::RotationZ const &r2);
 
 // ----------------------------------------------------------------------
 // Distance from RotationZ
 
-double dist(RotationZ const &r1, Rotation3D const &r2);
-double dist(RotationZ const &r1, AxisAngle const &r2);
-double dist(RotationZ const &r1, EulerAngles const &r2);
-double dist(RotationZ const &r1, Quaternion const &r2);
-double dist(RotationZ const &r1, RotationX const &r2);
-double dist(RotationZ const &r1, RotationY const &r2);
-double dist(RotationZ const &r1, RotationZ const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationZ const &r1, ::ROOT::ROOT_MATH_ARCH::Rotation3D const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationZ const &r1, ::ROOT::ROOT_MATH_ARCH::AxisAngle const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationZ const &r1, ::ROOT::ROOT_MATH_ARCH::EulerAngles const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationZ const &r1, ::ROOT::ROOT_MATH_ARCH::Quaternion const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationZ const &r1, ::ROOT::ROOT_MATH_ARCH::RotationX const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationZ const &r1, ::ROOT::ROOT_MATH_ARCH::RotationY const &r2);
+double dist(::ROOT::ROOT_MATH_ARCH::RotationZ const &r1, ::ROOT::ROOT_MATH_ARCH::RotationZ const &r2);
 
 } // namespace gv_detail
 } // namespace ROOT_MATH_ARCH

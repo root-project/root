@@ -108,29 +108,29 @@ public:
    /**
       Construct from an AxisAngle
    */
-   explicit Rotation3D(AxisAngle const &a) { gv_detail::convert(a, *this); }
+   explicit Rotation3D(::ROOT::ROOT_MATH_ARCH::AxisAngle const &a) { gv_detail::convert(a, *this); }
 
    /**
       Construct from EulerAngles
    */
-   explicit Rotation3D(EulerAngles const &e) { gv_detail::convert(e, *this); }
+   explicit Rotation3D(::ROOT::ROOT_MATH_ARCH::EulerAngles const &e) { gv_detail::convert(e, *this); }
 
    /**
       Construct from RotationZYX
    */
-   explicit Rotation3D(RotationZYX const &e) { gv_detail::convert(e, *this); }
+   explicit Rotation3D(::ROOT::ROOT_MATH_ARCH::RotationZYX const &e) { gv_detail::convert(e, *this); }
 
    /**
       Construct from a Quaternion
    */
-   explicit Rotation3D(Quaternion const &q) { gv_detail::convert(q, *this); }
+   explicit Rotation3D(::ROOT::ROOT_MATH_ARCH::Quaternion const &q) { gv_detail::convert(q, *this); }
 
    /**
       Construct from an axial rotation
    */
-   explicit Rotation3D(RotationZ const &r) { gv_detail::convert(r, *this); }
-   explicit Rotation3D(RotationY const &r) { gv_detail::convert(r, *this); }
-   explicit Rotation3D(RotationX const &r) { gv_detail::convert(r, *this); }
+   explicit Rotation3D(::ROOT::ROOT_MATH_ARCH::RotationZ const &r) { gv_detail::convert(r, *this); }
+   explicit Rotation3D(::ROOT::ROOT_MATH_ARCH::RotationY const &r) { gv_detail::convert(r, *this); }
+   explicit Rotation3D(::ROOT::ROOT_MATH_ARCH::RotationX const &r) { gv_detail::convert(r, *this); }
 
    /**
       Construct from a linear algebra matrix of size at least 3x3,
@@ -190,7 +190,7 @@ public:
    /**
       Assign from RotationZYX
    */
-   Rotation3D &operator=(RotationZYX const &r) { return operator=(Rotation3D(r)); }
+   Rotation3D &operator=(::ROOT::ROOT_MATH_ARCH::RotationZYX const &r) { return operator=(Rotation3D(r)); }
 
    /**
       Assign from a Quaternion
@@ -391,9 +391,9 @@ public:
       Rotation operation on a displacement vector in any coordinate system
    */
    template <class CoordSystem, class U>
-   DisplacementVector3D<CoordSystem, U> operator()(const DisplacementVector3D<CoordSystem, U> &v) const
+   ::ROOT::ROOT_MATH_ARCH::DisplacementVector3D<CoordSystem, U> operator()(const ::ROOT::ROOT_MATH_ARCH::DisplacementVector3D<CoordSystem, U> &v) const
    {
-      DisplacementVector3D<Cartesian3D<double>, U> xyz;
+      ::ROOT::ROOT_MATH_ARCH::DisplacementVector3D<::ROOT::ROOT_MATH_ARCH::Cartesian3D<double>, U> xyz;
       xyz.SetXYZ(fM[kXX] * v.X() + fM[kXY] * v.Y() + fM[kXZ] * v.Z(),
                  fM[kYX] * v.X() + fM[kYY] * v.Y() + fM[kYZ] * v.Z(),
                  fM[kZX] * v.X() + fM[kZY] * v.Y() + fM[kZZ] * v.Z());
@@ -404,10 +404,10 @@ public:
       Rotation operation on a position vector in any coordinate system
    */
    template <class CoordSystem, class U>
-   PositionVector3D<CoordSystem, U> operator()(const PositionVector3D<CoordSystem, U> &v) const
+   ::ROOT::ROOT_MATH_ARCH::PositionVector3D<CoordSystem, U> operator()(const ::ROOT::ROOT_MATH_ARCH::PositionVector3D<CoordSystem, U> &v) const
    {
-      DisplacementVector3D<Cartesian3D<double>, U> xyz(v);
-      DisplacementVector3D<Cartesian3D<double>, U> rxyz = operator()(xyz);
+      ::ROOT::ROOT_MATH_ARCH::DisplacementVector3D<::ROOT::ROOT_MATH_ARCH::Cartesian3D<double>, U> xyz(v);
+      ::ROOT::ROOT_MATH_ARCH::DisplacementVector3D<::ROOT::ROOT_MATH_ARCH::Cartesian3D<double>, U> rxyz = operator()(xyz);
       return PositionVector3D<CoordSystem, U>(rxyz);
    }
 
@@ -417,9 +417,9 @@ public:
    template <class CoordSystem>
    LorentzVector<CoordSystem> operator()(const LorentzVector<CoordSystem> &v) const
    {
-      DisplacementVector3D<Cartesian3D<double>> xyz(v.Vect());
+      ::ROOT::ROOT_MATH_ARCH::DisplacementVector3D<::ROOT::ROOT_MATH_ARCH::Cartesian3D<double>> xyz(v.Vect());
       xyz = operator()(xyz);
-      LorentzVector<PxPyPzE4D<double>> xyzt(xyz.X(), xyz.Y(), xyz.Z(), v.E());
+      LorentzVector<::ROOT::ROOT_MATH_ARCH::PxPyPzE4D<double>> xyzt(xyz.X(), xyz.Y(), xyz.Z(), v.E());
       return LorentzVector<CoordSystem>(xyzt);
    }
 
@@ -431,8 +431,8 @@ public:
    template <class ForeignVector>
    ForeignVector operator()(const ForeignVector &v) const
    {
-      DisplacementVector3D<Cartesian3D<double>> xyz(v);
-      DisplacementVector3D<Cartesian3D<double>> rxyz = operator()(xyz);
+      ::ROOT::ROOT_MATH_ARCH::DisplacementVector3D<::ROOT::ROOT_MATH_ARCH::Cartesian3D<double>> xyz(v);
+      ::ROOT::ROOT_MATH_ARCH::DisplacementVector3D<::ROOT::ROOT_MATH_ARCH::Cartesian3D<double>> rxyz = operator()(xyz);
       return ForeignVector(rxyz.X(), rxyz.Y(), rxyz.Z());
    }
 
