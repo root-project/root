@@ -31,8 +31,6 @@
 
 #include "MathX/GenVectorX/AccHeaders.h"
 
-using namespace ROOT::ROOT_MATH_ARCH;
-
 #include <cassert>
 
 namespace ROOT {

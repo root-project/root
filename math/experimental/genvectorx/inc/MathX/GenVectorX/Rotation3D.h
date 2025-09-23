@@ -43,8 +43,6 @@
 
 #include "MathX/GenVectorX/MathHeaders.h"
 
-using namespace ROOT::ROOT_MATH_ARCH;
-
 namespace ROOT {
 namespace ROOT_MATH_ARCH {
 
@@ -295,7 +293,7 @@ public:
    template <class IT>
    void GetComponents(IT begin) const
    {
-      std::copy(fM, fM + 9, begin);
+      ::std::copy(fM, fM + 9, begin);
    }
 
    /**

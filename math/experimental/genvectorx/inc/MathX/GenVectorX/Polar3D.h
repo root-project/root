@@ -27,8 +27,6 @@
 
 #include "MathX/GenVectorX/AccHeaders.h"
 
-using namespace ROOT::ROOT_MATH_ARCH;
-
 #include <cmath>
 
 namespace ROOT {

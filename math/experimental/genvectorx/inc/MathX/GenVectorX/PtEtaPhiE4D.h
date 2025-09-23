@@ -29,8 +29,6 @@
 
 #include "MathX/GenVectorX/AccHeaders.h"
 
-using namespace ROOT::ROOT_MATH_ARCH;
-
 // #define TRACE_CE
 #ifdef TRACE_CE
 #include <iostream>
