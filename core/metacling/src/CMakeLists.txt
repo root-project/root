@@ -225,6 +225,13 @@ if(APPLE)
   target_link_libraries(Cling PUBLIC -Wl,-w -Wl,-bind_at_load -Wl,-undefined,dynamic_lookup)
 elseif(NOT MSVC)
   target_link_libraries(Cling PUBLIC -Wl,--unresolved-symbols=ignore-in-object-files)
+  # Require the linker to resolve the symbol internally and prevent
+  # conflicts when linked with another software using also LLVM like in
+  # the problem reported for Julia in
+  # https://github.com/JuliaHEP/ROOT.jl/issues/17#issuecomment-882719292
+  # and by ALICE in https://github.com/root-project/root/issues/19889
+  # Only needed for Linux: Mac uses linker namespaces and  Windows explicit export/import
+  target_link_libraries(Cling PUBLIC -Wl,-Bsymbolic)
 endif()
 
 if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
