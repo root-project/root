@@ -55,6 +55,7 @@ ROOT_LINKER_LIBRARY(RIO
   src/TStreamerInfoReadBuffer.cxx
   src/TStreamerInfoWriteBuffer.cxx
   src/TZIPFile.cxx
+  src/RFile.cxx
   $<TARGET_OBJECTS:RootPcmObjs>
   LIBRARIES
     ${CMAKE_DL_LIBS}
@@ -73,6 +74,7 @@ if(uring)
 endif()
 
 ROOT_GENERATE_DICTIONARY(G__RIO
+  ROOT/RFile.hxx
   ROOT/RRawFile.hxx
   ROOT/RRawFileTFile.hxx
   ${rawfile_local_headers}
