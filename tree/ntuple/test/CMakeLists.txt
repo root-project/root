@@ -92,6 +92,7 @@ ROOT_ADD_GTEST(ntuple_extended ntuple_extended.cxx LIBRARIES ROOTNTuple MathCore
 if(NOT MSVC OR win_broken_tests)
   ROOT_ADD_GTEST(ntuple_largefile1 ntuple_largefile1.cxx LIBRARIES ROOTNTuple MathCore)
   ROOT_ADD_GTEST(ntuple_largefile2 ntuple_largefile2.cxx LIBRARIES ROOTNTuple MathCore)
+  ROOT_ADD_GTEST(ntuple_largevector ntuple_largevector.cxx LIBRARIES ROOTNTuple)
 endif()
 ROOT_ADD_GTEST(ntuple_randomaccess ntuple_randomaccess.cxx LIBRARIES ROOTNTuple MathCore)
 
