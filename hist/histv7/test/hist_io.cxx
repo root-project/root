@@ -64,21 +64,66 @@ TEST(RHistEngine, Streamer)
    const RHistEngine<int> engineI({axis});
    ExpectThrowOnWriteObject(engineI);
 
+   const RHistEngine<unsigned> engineU({axis});
+   ExpectThrowOnWriteObject(engineU);
+
    const RHistEngine<long> engineL({axis});
    ExpectThrowOnWriteObject(engineL);
 
+   const RHistEngine<unsigned long> engineUL({axis});
+   ExpectThrowOnWriteObject(engineUL);
+
    const RHistEngine<long long> engineLL({axis});
    ExpectThrowOnWriteObject(engineLL);
+
+   const RHistEngine<unsigned long long> engineULL({axis});
+   ExpectThrowOnWriteObject(engineULL);
 
    const RHistEngine<float> engineF({axis});
    ExpectThrowOnWriteObject(engineF);
 
    const RHistEngine<double> engineD({axis});
    ExpectThrowOnWriteObject(engineD);
+
+   const RHistEngine<RBinWithError> engineE({axis});
+   ExpectThrowOnWriteObject(engineE);
 }
 
 TEST(RHistStats, Streamer)
 {
    const RHistStats stats(1);
    ExpectThrowOnWriteObject(stats);
+}
+
+TEST(RHist, Streamer)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, 0, Bins);
+
+   const RHist<int> histI({axis});
+   ExpectThrowOnWriteObject(histI);
+
+   const RHist<unsigned> histU({axis});
+   ExpectThrowOnWriteObject(histU);
+
+   const RHist<long> histL({axis});
+   ExpectThrowOnWriteObject(histL);
+
+   const RHist<unsigned long> histUL({axis});
+   ExpectThrowOnWriteObject(histUL);
+
+   const RHist<long long> histLL({axis});
+   ExpectThrowOnWriteObject(histLL);
+
+   const RHist<unsigned long long> histULL({axis});
+   ExpectThrowOnWriteObject(histULL);
+
+   const RHist<float> histF({axis});
+   ExpectThrowOnWriteObject(histF);
+
+   const RHist<double> histD({axis});
+   ExpectThrowOnWriteObject(histD);
+
+   const RHist<RBinWithError> histE({axis});
+   ExpectThrowOnWriteObject(histE);
 }
