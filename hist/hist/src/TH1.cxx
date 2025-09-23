@@ -75,6 +75,8 @@
 @}
 */
 
+// clang-format off
+
 /** \class TH1
     \ingroup Histograms
 TH1 is the base class of all histogram classes in %ROOT.
@@ -113,22 +115,28 @@ ROOT supports the following histogram types:
       - TH1S : histograms with one short per channel.  Maximum bin content = 32767
       - TH1I : histograms with one int per channel.    Maximum bin content = INT_MAX (\ref intmax "*")
       - TH1L : histograms with one long64 per channel. Maximum bin content = LLONG_MAX (\ref llongmax "**")
-      - TH1F : histograms with one float per channel.  Maximum precision 7 digits, maximum integer bin content = +/-16777216 (\ref floatmax "***")
-      - TH1D : histograms with one double per channel. Maximum precision 14 digits, maximum integer bin content = +/-9007199254740992 (\ref doublemax "****")
+      - TH1F : histograms with one float per channel.  Maximum precision 7 digits, maximum integer bin content =
++/-16777216 (\ref floatmax "***")
+      - TH1D : histograms with one double per channel. Maximum precision 14 digits, maximum integer bin content =
++/-9007199254740992 (\ref doublemax "****")
   - 2-D histograms:
       - TH2C : histograms with one byte per channel.   Maximum bin content = 127
       - TH2S : histograms with one short per channel.  Maximum bin content = 32767
       - TH2I : histograms with one int per channel.    Maximum bin content = INT_MAX (\ref intmax "*")
       - TH2L : histograms with one long64 per channel. Maximum bin content = LLONG_MAX (\ref llongmax "**")
-      - TH2F : histograms with one float per channel.  Maximum precision 7 digits, maximum integer bin content = +/-16777216 (\ref floatmax "***")
-      - TH2D : histograms with one double per channel. Maximum precision 14 digits, maximum integer bin content = +/-9007199254740992 (\ref doublemax "****")
+      - TH2F : histograms with one float per channel.  Maximum precision 7 digits, maximum integer bin content =
++/-16777216 (\ref floatmax "***")
+      - TH2D : histograms with one double per channel. Maximum precision 14 digits, maximum integer bin content =
++/-9007199254740992 (\ref doublemax "****")
   - 3-D histograms:
       - TH3C : histograms with one byte per channel.   Maximum bin content = 127
       - TH3S : histograms with one short per channel.  Maximum bin content = 32767
       - TH3I : histograms with one int per channel.    Maximum bin content = INT_MAX (\ref intmax "*")
       - TH3L : histograms with one long64 per channel. Maximum bin content = LLONG_MAX (\ref llongmax "**")
-      - TH3F : histograms with one float per channel.  Maximum precision 7 digits, maximum integer bin content = +/-16777216 (\ref floatmax "***")
-      - TH3D : histograms with one double per channel. Maximum precision 14 digits, maximum integer bin content = +/-9007199254740992 (\ref doublemax "****")
+      - TH3F : histograms with one float per channel.  Maximum precision 7 digits, maximum integer bin content =
++/-16777216 (\ref floatmax "***")
+      - TH3D : histograms with one double per channel. Maximum precision 14 digits, maximum integer bin content =
++/-9007199254740992 (\ref doublemax "****")
   - Profile histograms: See classes  TProfile, TProfile2D and TProfile3D.
       Profile histograms are used to display the mean value of Y and its standard deviation
       for each bin in X. Profile histograms are in many cases an elegant
@@ -586,6 +594,8 @@ When using the options 2 or 3 above, the labels are automatically
  To ensure that the returned values are always those of the binned data stored in the
  histogram, call TH1::ResetStats. See TH1::GetStats.
 */
+
+// clang-format on
 
 TF1 *gF1=nullptr;  //left for back compatibility (use TVirtualFitter::GetUserFunc instead)
 
@@ -2806,11 +2816,10 @@ TObject* TH1::Clone(const char* newname) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Perform the automatic addition of the histogram to the given directory
+/// Callback to perform the automatic addition of the histogram to the given directory.
 ///
-/// Note this function is called in place when the semantic requires
-/// this object to be added to a directory (I.e. when being read from
-/// a TKey or being Cloned)
+/// This callback is used to register a histogram to the current directory when a TKey
+/// is read or an object is being cloned using TDirectory::CloneObject().
 
 void TH1::DirectoryAutoAdd(TDirectory *dir)
 {

@@ -707,13 +707,11 @@ void TGraph2D::Clear(Option_t * /*option = "" */)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Perform the automatic addition of the graph to the given directory
+/// Registration of the graph to the given directory.
 ///
-/// Note this function is called in place when the semantic requires
-/// this object to be added to a directory (I.e. when being read from
-/// a TKey or being Cloned)
+/// This callback is used to register a TGraph2D to the current directory when a TKey
+/// is read or an object is being cloned using TDirectory::CloneObject().
 
 void TGraph2D::DirectoryAutoAdd(TDirectory *dir)
 {
