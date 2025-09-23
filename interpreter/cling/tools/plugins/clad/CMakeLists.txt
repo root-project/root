@@ -73,8 +73,8 @@ set(_clad_extra_settings
 if (DEFINED CLAD_SOURCE_DIR)
   list(APPEND _clad_extra_settings SOURCE_DIR ${CLAD_SOURCE_DIR})
 else()
-  list(APPEND _clad_extra_settings GIT_REPOSITORY https://github.com/vgvassilev/clad.git)
-  list(APPEND _clad_extra_settings GIT_TAG v2.0)
+  list(APPEND _clad_extra_settings GIT_REPOSITORY https://github.com/PetroZarytskyi/clad.git)
+  list(APPEND _clad_extra_settings GIT_TAG issue-1557)
 endif()
 
 # list(APPEND _clad_patches_list "patch1.patch" "patch2.patch")
