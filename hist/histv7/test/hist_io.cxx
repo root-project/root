@@ -75,10 +75,37 @@ TEST(RHistEngine, Streamer)
 
    const RHistEngine<double> engineD({axis});
    ExpectThrowOnWriteObject(engineD);
+
+   const RHistEngine<RBinWithError> engineE({axis});
+   ExpectThrowOnWriteObject(engineE);
 }
 
 TEST(RHistStats, Streamer)
 {
    const RHistStats stats(1);
    ExpectThrowOnWriteObject(stats);
+}
+
+TEST(RHist, Streamer)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, 0, Bins);
+
+   const RHist<int> histI({axis});
+   ExpectThrowOnWriteObject(histI);
+
+   const RHist<long> histL({axis});
+   ExpectThrowOnWriteObject(histL);
+
+   const RHist<long long> histLL({axis});
+   ExpectThrowOnWriteObject(histLL);
+
+   const RHist<float> histF({axis});
+   ExpectThrowOnWriteObject(histF);
+
+   const RHist<double> histD({axis});
+   ExpectThrowOnWriteObject(histD);
+
+   const RHist<RBinWithError> histE({axis});
+   ExpectThrowOnWriteObject(histE);
 }
