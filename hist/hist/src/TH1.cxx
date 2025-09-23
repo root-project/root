@@ -2780,16 +2780,13 @@ TObject* TH1::Clone(const char* newname) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Perform the automatic addition of the histogram to the given directory
+/// Callback to perform the automatic addition of the histogram to the given directory.
 ///
-/// Note this function is called in place when the semantic requires
-/// this object to be added to a directory (I.e. when being read from
-/// a TKey or being Cloned)
+/// This callback is called when a TKey is read or an object is being Cloned.
 
 void TH1::DirectoryAutoAdd(TDirectory *dir)
 {
-   Bool_t addStatus = TH1::AddDirectoryStatus();
-   if (addStatus) {
+   if (fgAddDirectory) {
       SetDirectory(dir);
       if (dir) {
          ResetBit(kCanDelete);
