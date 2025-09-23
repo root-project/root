@@ -2734,7 +2734,8 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
          nbytes += nb;
       }
       if (!IsAssociativeContainer(fSTLtype)) {
-         ValidateAddress(); // There is no ReadLeave for this node, so we need to do the validation here.
+         ValidateAddress(); // There is no ReadLeave for the node of a top level split object, so we need to do the
+                            // validation here.
          for (Int_t i = 0; i < nbranches; ++i) {
             TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
             Int_t nb = branch->GetEntry(entry, getall);
