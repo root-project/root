@@ -632,6 +632,9 @@ extern "C" R__DLLEXPORT TInterpreter *CreateInterpreter(void* interpLibHandle,
 extern "C" R__DLLEXPORT void DestroyInterpreter(TInterpreter *interp)
 {
    delete interp;
+   // Destroy llvm::ManagedStatic variables. CppInterOp uses ManagedStatic to
+   // maintain a stack of multiple interpreters.
+   llvm::llvm_shutdown();
 }
 
 // Load library containing specified class. Returns 0 in case of error
