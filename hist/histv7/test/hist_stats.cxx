@@ -82,6 +82,47 @@ TEST(RHistStats, GetDimensionStatsWeighted)
    }
 }
 
+TEST(RHistStats, Add)
+{
+   RHistStats statsA(2);
+   RHistStats statsB(2);
+
+   static constexpr std::size_t Entries = 20;
+   for (std::size_t i = 0; i < Entries; i++) {
+      statsA.Fill(i, 2 * i);
+      statsB.Fill(2 * i, 3 * i, RWeight(0.1 + 0.03 * i));
+   }
+
+   statsA.Add(statsB);
+
+   ASSERT_EQ(statsA.GetNEntries(), 2 * Entries);
+   EXPECT_DOUBLE_EQ(statsA.GetSumW(), 27.7);
+   EXPECT_DOUBLE_EQ(statsA.GetSumW2(), 23.563);
+
+   {
+      const auto &dimensionStats = statsA.GetDimensionStats(/*=0*/);
+      EXPECT_FLOAT_EQ(dimensionStats.fSumWX, 376.2);
+      EXPECT_FLOAT_EQ(dimensionStats.fSumWX2, 7790);
+      EXPECT_FLOAT_EQ(dimensionStats.fSumWX3, 200019.84);
+      EXPECT_FLOAT_EQ(dimensionStats.fSumWX4, 5846915.6);
+   }
+   {
+      const auto &dimensionStats = statsA.GetDimensionStats(1);
+      EXPECT_FLOAT_EQ(dimensionStats.fSumWX, 659.3);
+      EXPECT_FLOAT_EQ(dimensionStats.fSumWX2, 21850);
+      EXPECT_FLOAT_EQ(dimensionStats.fSumWX3, 842029.46);
+      EXPECT_FLOAT_EQ(dimensionStats.fSumWX4, 35754169.6);
+   }
+}
+
+TEST(RHistStats, AddDifferent)
+{
+   RHistStats statsA(2);
+   RHistStats statsB(3);
+
+   EXPECT_THROW(statsA.Add(statsB), std::invalid_argument);
+}
+
 TEST(RHistStats, ComputeNEffectiveEntries)
 {
    RHistStats stats(1);
