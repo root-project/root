@@ -35,7 +35,7 @@ namespace ROOT {
     // for LorentzVector have only double classes (define the vector in the global ref frame)
 
     /**
-       LorentzVector based on x,y,x,t (or px,py,pz,E) coordinates in double precision with metric (-,-,-,+)
+       LorentzVector based on x,y,z,t (or px,py,pz,E) coordinates in double precision with metric (-,-,-,+)
 
        To use it add the line `#include <Math/Vector4D.h>`
 
@@ -47,7 +47,7 @@ namespace ROOT {
 
 
     /**
-       LorentzVector based on x,y,x,t (or px,py,pz,E) coordinates in float precision with metric (-,-,-,+)
+       LorentzVector based on x,y,z,t (or px,py,pz,E) coordinates in float precision with metric (-,-,-,+)
 
        To use it add the line `#include <Math/Vector4D.h>`
 
@@ -57,7 +57,7 @@ namespace ROOT {
 
 
     /**
-       LorentzVector based on the x, y, z,  and Mass in double precision
+       LorentzVector based on the x, y, z and Mass in double precision
 
        To use it add the line `#include <Math/Vector4D.h>`
 

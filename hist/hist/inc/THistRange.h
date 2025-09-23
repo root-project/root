@@ -45,7 +45,7 @@ private:
 
    int fDim;   ///< Histogram dimension
 
-   /// Compute global bin number given x,y,x bin numbers
+   /// Compute global bin number given x,y,z bin numbers
    void SetGlobalBin()
    {
       if (fDim == 1)
