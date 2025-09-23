@@ -130,12 +130,8 @@ else()
   set(CMAKE_C_VISIBILITY_PRESET hidden)
 endif()
 if (NOT MSVC AND NOT APPLE)
-  # Requires the linker to resolve the symbol internally and prevents
-  # conflicts when linked with another software using also LLVM like in
-  # the problem reported for Julia in
-  # https://github.com/JuliaHEP/ROOT.jl/issues/17#issuecomment-882719292
-  # Only needed for Linux: Mac uses linker namespaces and  Windows explicit export/import
-  string(APPEND CMAKE_SHARED_LINKER_FLAGS " -Wl,-Bsymbolic")
+  # Allow the compiler to optimize knowing that symbols defined in libCling.so
+  # are not interposed.
   ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS "-fno-semantic-interposition")
 endif()
 set(CMAKE_VISIBILITY_INLINES_HIDDEN "ON")
