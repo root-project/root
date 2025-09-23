@@ -33,8 +33,6 @@
 
 #include "MathX/GenVectorX/AccHeaders.h"
 
-using namespace ROOT::ROOT_MATH_ARCH;
-
 namespace ROOT {
 
 namespace ROOT_MATH_ARCH {
@@ -160,6 +158,7 @@ public:
    /**
       get internal data into 2 Scalar numbers.
       These are for example (x,y) for a cartesian vector or (r,phi) for a polar vector
+      \note Alternatively, you may use structured bindings: `auto const [a, b] = v`.
    */
    void GetCoordinates(Scalar &a, Scalar &b) const { fCoordinates.GetCoordinates(a, b); }
 
@@ -502,8 +501,31 @@ operator>>(std::basic_istream<char_t, traits_t> &is, DisplacementVector2D<T, U> 
 
 #endif
 
+// Structured bindings
+template <std::size_t I, class CoordSystem, class Tag>
+typename CoordSystem::Scalar get(DisplacementVector2D<CoordSystem, Tag> const& p)
+{
+   static_assert(I < 2);
+   if constexpr (I == 0) {
+      return p.x();
+   } else {
+      return p.y();
+   }
+}
+
 } // namespace ROOT_MATH_ARCH
 
 } // namespace ROOT
+
+// Structured bindings
+#include <tuple>
+namespace std {
+   template <class CoordSystem, class Tag>
+   struct tuple_size<ROOT::ROOT_MATH_ARCH::DisplacementVector2D<CoordSystem, Tag>> : integral_constant<size_t, 2> {};
+   template <size_t I, class CoordSystem, class Tag>
+   struct tuple_element<I, ROOT::ROOT_MATH_ARCH::DisplacementVector2D<CoordSystem, Tag>> {
+      static_assert(I < 2);
+      using type = typename CoordSystem::Scalar;
+   };
 
 #endif /* ROOT_MathX_GenVectorX_DisplacementVector2D  */
