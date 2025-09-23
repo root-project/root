@@ -12,7 +12,7 @@
 // Header file for class Cartesian3D
 //
 // Created by: Lorenzo Moneta  at Mon May 30 11:16:56 2005
-// Major revamp:  M. FIschler  at Wed Jun  8 2005
+// Major revamp:  M. Fischler  at Wed Jun  8 2005
 //
 // Last update: $ID: $
 //

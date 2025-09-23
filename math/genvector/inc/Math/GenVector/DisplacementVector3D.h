@@ -12,7 +12,7 @@
 // Header source file for class DisplacementVector3D
 //
 // Created by: Lorenzo Moneta  at Mon May 30 12:21:43 2005
-// Major rewrite: M. FIschler  at Wed Jun  8  2005
+// Major rewrite: M. Fischler  at Wed Jun  8  2005
 //
 // Last update: $Id$
 //
