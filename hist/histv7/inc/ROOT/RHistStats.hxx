@@ -67,6 +67,14 @@ public:
          fSumWX3 += other.fSumWX3;
          fSumWX4 += other.fSumWX4;
       }
+
+      void Clear()
+      {
+         fSumWX = 0.0;
+         fSumWX2 = 0.0;
+         fSumWX3 = 0.0;
+         fSumWX4 = 0.0;
+      }
    };
 
 private:
@@ -114,6 +122,17 @@ public:
       fSumW2 += other.fSumW2;
       for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
          fDimensionStats[i].Add(other.fDimensionStats[i]);
+      }
+   }
+
+   /// Clear this statistics object.
+   void Clear()
+   {
+      fNEntries = 0;
+      fSumW = 0;
+      fSumW2 = 0;
+      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
+         fDimensionStats[i].Clear();
       }
    }
 

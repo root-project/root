@@ -123,6 +123,30 @@ TEST(RHistStats, AddDifferent)
    EXPECT_THROW(statsA.Add(statsB), std::invalid_argument);
 }
 
+TEST(RHistStats, Clear)
+{
+   RHistStats stats(2);
+
+   static constexpr std::size_t Entries = 20;
+   for (std::size_t i = 0; i < Entries; i++) {
+      stats.Fill(i, 2 * i);
+   }
+
+   stats.Clear();
+
+   EXPECT_EQ(stats.GetNEntries(), 0);
+   EXPECT_DOUBLE_EQ(stats.GetSumW(), 0);
+   EXPECT_DOUBLE_EQ(stats.GetSumW2(), 0);
+
+   for (std::size_t dim = 0; dim < 2; dim++) {
+      const auto &dimensionStats = stats.GetDimensionStats(dim);
+      EXPECT_FLOAT_EQ(dimensionStats.fSumWX, 0);
+      EXPECT_FLOAT_EQ(dimensionStats.fSumWX2, 0);
+      EXPECT_FLOAT_EQ(dimensionStats.fSumWX3, 0);
+      EXPECT_FLOAT_EQ(dimensionStats.fSumWX4, 0);
+   }
+}
+
 TEST(RHistStats, ComputeNEffectiveEntries)
 {
    RHistStats stats(1);
