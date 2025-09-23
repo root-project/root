@@ -35,6 +35,63 @@ TEST(RHist, Constructor)
    EXPECT_EQ(regular->GetHigh(), Bins);
 }
 
+TEST(RHist, Add)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, 0, Bins);
+   RHist<int> histA({axis});
+   RHist<int> histB({axis});
+
+   histA.Fill(8.5);
+   histB.Fill(9.5);
+
+   histA.Add(histB);
+
+   EXPECT_EQ(histA.GetNEntries(), 2);
+   EXPECT_EQ(histA.GetBinContent(RBinIndex(8)), 1);
+   EXPECT_EQ(histA.GetBinContent(RBinIndex(9)), 1);
+}
+
+TEST(RHist, Clear)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, 0, Bins);
+   RHist<int> hist({axis});
+
+   hist.Fill(8.5);
+   hist.Fill(9.5);
+
+   hist.Clear();
+
+   EXPECT_EQ(hist.GetNEntries(), 0);
+   EXPECT_EQ(hist.GetBinContent(RBinIndex(8)), 0);
+   EXPECT_EQ(hist.GetBinContent(RBinIndex(9)), 0);
+}
+
+TEST(RHist, Clone)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, 0, Bins);
+   RHist<int> histA({axis});
+
+   histA.Fill(8.5);
+
+   RHist<int> histB = histA.Clone();
+   ASSERT_EQ(histB.GetNDimensions(), 1);
+   ASSERT_EQ(histB.GetTotalNBins(), Bins + 2);
+
+   EXPECT_EQ(histB.GetNEntries(), 1);
+   EXPECT_EQ(histB.GetBinContent(8), 1);
+
+   // Check that we can continue filling the clone.
+   histB.Fill(9.5);
+
+   EXPECT_EQ(histA.GetNEntries(), 1);
+   EXPECT_EQ(histB.GetNEntries(), 2);
+   EXPECT_EQ(histA.GetBinContent(9), 0);
+   EXPECT_EQ(histB.GetBinContent(9), 1);
+}
+
 TEST(RHist, Fill)
 {
    static constexpr std::size_t Bins = 20;
