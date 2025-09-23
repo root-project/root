@@ -58,6 +58,9 @@ class RHist final {
    /// The global histogram statistics.
    RHistStats fStats;
 
+   /// Private constructor based off an engine.
+   RHist(RHistEngine<BinContentType> engine) : fEngine(std::move(engine)), fStats(fEngine.GetNDimensions()) {}
+
 public:
    /// Construct a histogram.
    ///
@@ -158,6 +161,36 @@ public:
    const BinContentType &GetBinContent(const A &...args) const
    {
       return fEngine.GetBinContent(args...);
+   }
+
+   /// Add all bin contents and statistics of another histogram.
+   ///
+   /// Throws an exception if the axes configurations are not identical.
+   ///
+   /// \param[in] other another histogram
+   void Add(const RHist<BinContentType> &other)
+   {
+      fEngine.Add(other.fEngine);
+      fStats.Add(other.fStats);
+   }
+
+   /// Clear all bin contents and statistics.
+   void Clear()
+   {
+      fEngine.Clear();
+      fStats.Clear();
+   }
+
+   /// Clone this histogram.
+   ///
+   /// Copying all bin contents can be an expensive operation, depending on the number of bins.
+   ///
+   /// \return the cloned object
+   RHist<BinContentType> Clone() const
+   {
+      RHist<BinContentType> h(fEngine.Clone());
+      h.fStats = fStats;
+      return h;
    }
 
    /// Fill an entry into the histogram.
