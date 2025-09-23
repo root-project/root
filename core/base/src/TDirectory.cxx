@@ -364,7 +364,7 @@ static TBuffer* R__CreateBuffer()
 ///
 /// If autoadd is true and if the object class has a
 /// DirectoryAutoAdd function, it will be called at the end of the
-/// function with the parameter gDirector.  This usually means that
+/// function with the parameter gDirectory.  This usually means that
 /// the object will be appended to the current ROOT directory.
 
 TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE */)
