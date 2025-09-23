@@ -1,8 +1,12 @@
 #include "hist_test.hxx"
 
 #include <stdexcept>
+#include <type_traits>
 #include <variant>
 #include <vector>
+
+static_assert(std::is_nothrow_move_constructible_v<RHistEngine<int>>);
+static_assert(std::is_nothrow_move_assignable_v<RHistEngine<int>>);
 
 TEST(RHistEngine, Constructor)
 {
