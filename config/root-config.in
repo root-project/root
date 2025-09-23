@@ -326,11 +326,9 @@ case $arch in
 freebsd*)
    auxcflags="-pthread $auxcflags"
    auxlibs="-pthread $auxlibs"
+   auxlibs="-Wl,-rpath,$libdir $auxlibs"
 
    for f in $features ; do
-      if test "x$f" = "xrpath" ; then
-         auxlibs="-Wl,-rpath,$libdir $auxlibs"
-      fi
       if test "x$f" = "xlibcxx" ; then
          auxcflags="-stdlib=libc++ $auxcflags"
          auxlibs="-stdlib=libc++ $auxlibs"
@@ -340,11 +338,9 @@ freebsd*)
 openbsd* | linux*)
    auxcflags="-pthread $auxcflags"
    auxlibs="-pthread $auxlibs"
+   auxlibs="-Wl,-rpath,$libdir $auxlibs"
 
    for f in $features ; do
-      if test "x$f" = "xrpath" ; then
-         auxlibs="-Wl,-rpath,$libdir $auxlibs"
-      fi
       if test "x$f" = "xlibcxx" ; then
          auxcflags="-stdlib=libc++ $auxcflags"
          auxlibs="-stdlib=libc++ $auxlibs"
@@ -354,10 +350,9 @@ openbsd* | linux*)
 macosx*)
    auxcflags="-pthread $auxcflags"
    auxlibs="-lpthread $auxlibs"
+   auxlibs="-Wl,-rpath,$libdir $auxlibs"
+
    for f in $features ; do
-      if test "x$f" = "xrpath" ; then
-         auxlibs="-Wl,-rpath,$libdir $auxlibs"
-      fi
       if test "x$f" = "xlibcxx" ; then
          auxcflags="-stdlib=libc++ $auxcflags"
          auxlibs="-stdlib=libc++ $auxlibs"
