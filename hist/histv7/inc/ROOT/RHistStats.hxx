@@ -59,6 +59,14 @@ public:
          fSumWX3 += w * x * x * x;
          fSumWX4 += w * x * x * x * x;
       }
+
+      void Add(const RDimensionStats &other)
+      {
+         fSumWX += other.fSumWX;
+         fSumWX2 += other.fSumWX2;
+         fSumWX3 += other.fSumWX3;
+         fSumWX4 += other.fSumWX4;
+      }
    };
 
 private:
@@ -90,6 +98,24 @@ public:
    double GetSumW2() const { return fSumW2; }
 
    const RDimensionStats &GetDimensionStats(std::size_t dim = 0) const { return fDimensionStats.at(dim); }
+
+   /// Add all entries from another statistics object.
+   ///
+   /// Throws an exception if the number of dimensions are not identical.
+   ///
+   /// \param[in] other another statistics object
+   void Add(const RHistStats &other)
+   {
+      if (fDimensionStats.size() != other.fDimensionStats.size()) {
+         throw std::invalid_argument("number of dimensions not identical in Add");
+      }
+      fNEntries += other.fNEntries;
+      fSumW += other.fSumW;
+      fSumW2 += other.fSumW2;
+      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
+         fDimensionStats[i].Add(other.fDimensionStats[i]);
+      }
+   }
 
    /// Compute the number of effective entries.
    ///
