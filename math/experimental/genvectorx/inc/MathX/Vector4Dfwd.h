@@ -41,7 +41,7 @@ class PtEtaPhiM4D;
 // for LorentzVector have only double classes (define the vector in the global ref frame)
 
 /**
-   LorentzVector based on x,y,x,t (or px,py,pz,E) coordinates in double precision with metric (-,-,-,+)
+   LorentzVector based on x,y,z,t (or px,py,pz,E) coordinates in double precision with metric (-,-,-,+)
 
    To use it add the line `#include <MathX/Vector4D.h>`
 
@@ -52,7 +52,7 @@ typedef LorentzVector<PxPyPzE4D<double>> XYZTVector;
 typedef LorentzVector<PxPyPzE4D<double>> PxPyPzEVector;
 
 /**
-   LorentzVector based on x,y,x,t (or px,py,pz,E) coordinates in float precision with metric (-,-,-,+)
+   LorentzVector based on x,y,z,t (or px,py,pz,E) coordinates in float precision with metric (-,-,-,+)
 
    To use it add the line `#include <MathX/Vector4D.h>`
 
@@ -61,7 +61,7 @@ typedef LorentzVector<PxPyPzE4D<double>> PxPyPzEVector;
 typedef LorentzVector<PxPyPzE4D<float>> XYZTVectorF;
 
 /**
-   LorentzVector based on the x, y, z,  and Mass in double precision
+   LorentzVector based on the x, y, z and Mass in double precision
 
    To use it add the line `#include <MathX/Vector4D.h>`
 
