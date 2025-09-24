@@ -304,7 +304,7 @@ THnDModel::~THnDModel() {}
 
 THnSparseDModel::THnSparseDModel(const ::THnSparseD &h)
    : fName(h.GetName()), fTitle(h.GetTitle()), fDim(h.GetNdimensions()), fNbins(fDim), fXmin(fDim), fXmax(fDim),
-     fBinEdges(fDim)
+     fBinEdges(fDim), fChunkSize(h.GetChunkSize())
 {
    for (int idim = 0; idim < fDim; ++idim) {
       fNbins[idim] = h.GetAxis(idim)->GetNbins();
@@ -313,8 +313,8 @@ THnSparseDModel::THnSparseDModel(const ::THnSparseD &h)
 }
 
 THnSparseDModel::THnSparseDModel(const char *name, const char *title, int dim, const int *nbins, const double *xmin,
-                     const double *xmax)
-   : fName(name), fTitle(title), fDim(dim), fBinEdges(dim)
+                     const double *xmax, Int_t chunksize)
+   : fName(name), fTitle(title), fDim(dim), fBinEdges(dim), fChunkSize(chunksize)
 {
    fNbins.reserve(fDim);
    fXmin.reserve(fDim);
@@ -327,14 +327,14 @@ THnSparseDModel::THnSparseDModel(const char *name, const char *title, int dim, c
 }
 
 THnSparseDModel::THnSparseDModel(const char *name, const char *title, int dim, const std::vector<int> &nbins,
-                     const std::vector<double> &xmin, const std::vector<double> &xmax)
-   : fName(name), fTitle(title), fDim(dim), fNbins(nbins), fXmin(xmin), fXmax(xmax), fBinEdges(dim)
+                     const std::vector<double> &xmin, const std::vector<double> &xmax, Int_t chunksize)
+   : fName(name), fTitle(title), fDim(dim), fNbins(nbins), fXmin(xmin), fXmax(xmax), fBinEdges(dim), fChunkSize(chunksize)
 {
 }
 
 THnSparseDModel::THnSparseDModel(const char *name, const char *title, int dim, const int *nbins,
-                     const std::vector<std::vector<double>> &xbins)
-   : fName(name), fTitle(title), fDim(dim), fXmin(dim, 0.), fXmax(dim, 64.), fBinEdges(xbins)
+                     const std::vector<std::vector<double>> &xbins, Int_t chunksize)
+   : fName(name), fTitle(title), fDim(dim), fXmin(dim, 0.), fXmax(dim, 64.), fBinEdges(xbins), fChunkSize(chunksize)
 {
    fNbins.reserve(fDim);
    for (int idim = 0; idim < fDim; ++idim) {
@@ -343,8 +343,8 @@ THnSparseDModel::THnSparseDModel(const char *name, const char *title, int dim, c
 }
 
 THnSparseDModel::THnSparseDModel(const char *name, const char *title, int dim, const std::vector<int> &nbins,
-                     const std::vector<std::vector<double>> &xbins)
-   : fName(name), fTitle(title), fDim(dim), fNbins(nbins), fXmin(dim, 0.), fXmax(dim, 64.), fBinEdges(xbins)
+                     const std::vector<std::vector<double>> &xbins, Int_t chunksize)
+   : fName(name), fTitle(title), fDim(dim), fNbins(nbins), fXmin(dim, 0.), fXmax(dim, 64.), fBinEdges(xbins), fChunkSize(chunksize)
 {
 }
 
@@ -359,9 +359,9 @@ std::shared_ptr<::THnSparseD> THnSparseDModel::GetHistogram() const
    }
    std::shared_ptr<::THnSparseD> h;
    if (varbinning) {
-      h = std::make_shared<::THnSparseD>(fName, fTitle, fDim, fNbins.data(), fBinEdges);
+      h = std::make_shared<::THnSparseD>(fName, fTitle, fDim, fNbins.data(), fBinEdges, fChunkSize);
    } else {
-      h = std::make_shared<::THnSparseD>(fName, fTitle, fDim, fNbins.data(), fXmin.data(), fXmax.data());
+      h = std::make_shared<::THnSparseD>(fName, fTitle, fDim, fNbins.data(), fXmin.data(), fXmax.data(), fChunkSize);
    }
    return h;
 }
