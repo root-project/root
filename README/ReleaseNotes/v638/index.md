@@ -32,7 +32,8 @@ The following people have contributed to this new version:
  Florian Uhlig, GSI,\
  Devajith Valaparambil Sreeramaswamy, CERN/EP-SFT,\
  Vassil Vassilev, Princeton,\
- Sandro Wenzel, CERN/ALICE
+ Sandro Wenzel, CERN/ALICE,\
+ Petr Jacka, Czech Technical University in Prague
 
 ## Deprecation and Removal
 
@@ -134,6 +135,7 @@ If you want to keep using `TList*` return values, you can write a small adapter 
   to numbers such as 8 would share one 3-d histogram among 8 threads, greatly reducing the memory consumption. This might slow down execution if the histograms
   are filled at very high rates. Use lower number in this case.
 - The Snapshot method has been refactored so that it does not need anymore compile-time information (i.e. either template arguments or JIT-ting) to know the input column types. This means that any Snapshot call that specifies the template arguments, e.g. `Snapshot<int, float>(..., {"intCol", "floatCol"})` is now redundant and the template arguments can safely be removed from the call. At the same time, Snapshot does not need to JIT compile the column types, practically giving huge speedups depending on the number of columns that need to be written to disk. In certain cases (e.g. when writing O(10000) columns) the speedup can be larger than an order of magnitude. The Snapshot template is now deprecated and it will issue a compile-time warning when called. The function overload is scheduled for removal in ROOT 6.40.
+- Add HistoNSparseD action that fills a sparse N-dimensional histogram.
 
 ## Python Interface
 
