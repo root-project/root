@@ -45,3 +45,10 @@ ROOTTEST_ADD_TEST(simple
                   OUTREF simple.ref
                   FIXTURES_REQUIRED root-tree-stl-copylogon-fixture root-tree-stl-runsimple-fixture)
 
+ROOTTEST_COMPILE_MACRO(execPartialMap.cxx
+                       FIXTURES_SETUP root-tree-stl-execPartialMap-fixture)
+
+ROOTTEST_ADD_TEST(PartialMap
+                  MACRO execPartialMap.cxx+
+                  OUTREF execPartialMap.ref
+                  FIXTURES_REQUIRED root-tree-stl-execPartialMap-fixture)
