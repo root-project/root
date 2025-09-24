@@ -893,6 +893,14 @@ ROOT::RNTupleLocalIndex ROOT::RNullableField::GetItemIndex(ROOT::NTupleSize_t gl
    return (collectionSize == 0) ? RNTupleLocalIndex() : collectionStart;
 }
 
+ROOT::RNTupleLocalIndex ROOT::RNullableField::GetItemIndex(ROOT::RNTupleLocalIndex localIndex)
+{
+   RNTupleLocalIndex collectionStart;
+   ROOT::NTupleSize_t collectionSize;
+   fPrincipalColumn->GetCollectionInfo(localIndex, &collectionStart, &collectionSize);
+   return (collectionSize == 0) ? RNTupleLocalIndex() : collectionStart;
+}
+
 void ROOT::RNullableField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitNullableField(*this);
@@ -921,33 +929,42 @@ std::size_t ROOT::RUniquePtrField::AppendImpl(const void *from)
    }
 }
 
-void ROOT::RUniquePtrField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
+void *ROOT::RUniquePtrField::PrepareRead(void *to, bool hasOnDiskValue)
 {
    auto ptr = static_cast<std::unique_ptr<char> *>(to);
    bool isValidValue = static_cast<bool>(*ptr);
-
-   auto itemIndex = GetItemIndex(globalIndex);
-   bool isValidItem = itemIndex.GetIndexInCluster() != ROOT::kInvalidNTupleIndex;
 
    void *valuePtr = nullptr;
    if (isValidValue)
       valuePtr = ptr->get();
 
-   if (isValidValue && !isValidItem) {
+   if (isValidValue && !hasOnDiskValue) {
       ptr->release();
       fItemDeleter->operator()(valuePtr, false /* dtorOnly */);
-      return;
-   }
-
-   if (!isValidItem) // On-disk value missing; nothing else to do
-      return;
-
-   if (!isValidValue) {
+   } else if (!isValidValue && hasOnDiskValue) {
       valuePtr = CallCreateObjectRawPtrOn(*fSubfields[0]);
       ptr->reset(reinterpret_cast<char *>(valuePtr));
    }
 
-   CallReadOn(*fSubfields[0], itemIndex, valuePtr);
+   return valuePtr;
+}
+
+void ROOT::RUniquePtrField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
+{
+   auto itemIndex = GetItemIndex(globalIndex);
+   const bool hasOnDiskValue = itemIndex.GetIndexInCluster() != ROOT::kInvalidNTupleIndex;
+   auto valuePtr = PrepareRead(to, hasOnDiskValue);
+   if (hasOnDiskValue)
+      CallReadOn(*fSubfields[0], itemIndex, valuePtr);
+}
+
+void ROOT::RUniquePtrField::ReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to)
+{
+   auto itemIndex = GetItemIndex(localIndex);
+   const bool hasOnDiskValue = itemIndex.GetIndexInCluster() != ROOT::kInvalidNTupleIndex;
+   auto valuePtr = PrepareRead(to, hasOnDiskValue);
+   if (hasOnDiskValue)
+      CallReadOn(*fSubfields[0], itemIndex, valuePtr);
 }
 
 void ROOT::RUniquePtrField::RUniquePtrDeleter::operator()(void *objPtr, bool dtorOnly)
@@ -1010,20 +1027,36 @@ std::size_t ROOT::ROptionalField::AppendImpl(const void *from)
    }
 }
 
-void ROOT::ROptionalField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
+void ROOT::ROptionalField::PrepareRead(void *to, bool hasOnDiskValue)
 {
    auto engagementPtr = GetEngagementPtr(to);
-   auto itemIndex = GetItemIndex(globalIndex);
-   if (itemIndex.GetIndexInCluster() == ROOT::kInvalidNTupleIndex) {
+   if (hasOnDiskValue) {
+      if (!(*engagementPtr) && !(fSubfields[0]->GetTraits() & kTraitTriviallyConstructible))
+         CallConstructValueOn(*fSubfields[0], to);
+      *engagementPtr = true;
+   } else {
       if (*engagementPtr && !(fSubfields[0]->GetTraits() & kTraitTriviallyDestructible))
          fItemDeleter->operator()(to, true /* dtorOnly */);
       *engagementPtr = false;
-   } else {
-      if (!(*engagementPtr) && !(fSubfields[0]->GetTraits() & kTraitTriviallyConstructible))
-         CallConstructValueOn(*fSubfields[0], to);
-      CallReadOn(*fSubfields[0], itemIndex, to);
-      *engagementPtr = true;
    }
+}
+
+void ROOT::ROptionalField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
+{
+   auto itemIndex = GetItemIndex(globalIndex);
+   const bool hasOnDiskValue = itemIndex.GetIndexInCluster() != ROOT::kInvalidNTupleIndex;
+   PrepareRead(to, hasOnDiskValue);
+   if (hasOnDiskValue)
+      CallReadOn(*fSubfields[0], itemIndex, to);
+}
+
+void ROOT::ROptionalField::ReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to)
+{
+   auto itemIndex = GetItemIndex(localIndex);
+   const bool hasOnDiskValue = itemIndex.GetIndexInCluster() != ROOT::kInvalidNTupleIndex;
+   PrepareRead(to, hasOnDiskValue);
+   if (hasOnDiskValue)
+      CallReadOn(*fSubfields[0], itemIndex, to);
 }
 
 void ROOT::ROptionalField::ConstructValue(void *where) const
