@@ -4873,7 +4873,7 @@ TInterpreter::DeclId_t TCling::GetDataMember(ClassInfo_t *opaque_cl, const char 
    DeclarationName DName = &SemaR.Context.Idents.get(name);
 
    LookupResult R(SemaR, DName, SourceLocation(), Sema::LookupOrdinaryName,
-                  Sema::ForExternalRedeclaration);
+                  RedeclarationKind::ForExternalRedeclaration);
 
    cling::utils::Lookup::Named(&SemaR, R);
 
@@ -5147,8 +5147,8 @@ void TCling::GetFunctionOverloads(ClassInfo_t *cl, const char *funcname,
    }
 
    // NotForRedeclaration: we want to find names in inline namespaces etc.
-   clang::LookupResult R(S, DName, clang::SourceLocation(),
-                         Sema::LookupOrdinaryName, clang::Sema::NotForRedeclaration);
+   clang::LookupResult R(S, DName, clang::SourceLocation(), Sema::LookupOrdinaryName,
+                         RedeclarationKind::NotForRedeclaration);
    R.suppressDiagnostics(); // else lookup with NotForRedeclaration will check access etc
    S.LookupQualifiedName(R, const_cast<DeclContext*>(DeclCtx));
    if (R.empty()) return;
@@ -7016,8 +7016,7 @@ void TCling::InvalidateCachedDecl(const std::tuple<TListOfDataMembers*,
             InvalidateCachedDecl(Lists, I);
 
          // For NamespaceDecl (redeclarable), only invalidate this redecl.
-         if (D->getKind() != Decl::Namespace
-             || cast<NamespaceDecl>(D)->isOriginalNamespace())
+         if (D->getKind() != Decl::Namespace || cast<NamespaceDecl>(D)->isFirstDecl())
             C->ResetClassInfo();
       }
    }
