@@ -195,6 +195,9 @@ class RNullableField : public RFieldBase {
    ROOT::Internal::RColumnIndex fNWritten{0};
 
 protected:
+   // For reading, indicates that we read type T as a nullable field of type T, i.e. the value is always present
+   bool fIsEvolvedFromInnerType = false;
+
    const RFieldBase::RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
    void GenerateColumns(const ROOT::RNTupleDescriptor &) final;
