@@ -68,6 +68,24 @@ class TGraphPainter extends ObjectPainter {
    /** @summary Return histogram object used for axis drawings */
    getHistogram() { return this.getObject()?.fHistogram; }
 
+   /** @summary Return true if histogram not present or has dummy ranges (for requested axis) */
+   isDummyHistogram(check_axis) {
+      const histo = this.getHistogram();
+      if (!histo)
+         return true;
+
+      let is_normal = false;
+      if (check_axis !== 'y')
+         is_normal ||= (histo.fXaxis.fXmin !== 0.0011) || (histo.fXaxis.fXmax !== 1.1);
+
+      if (check_axis !== 'x') {
+         is_normal ||= (histo.fYaxis.fXmin !== 0.0011) || (histo.fYaxis.fXmax !== 1.1) ||
+                       (histo.fMinimum !== 0.0011) || (histo.fMaximum !== 1.1);
+      }
+
+      return !is_normal;
+   }
+
    /** @summary Set histogram object to graph */
    setHistogram(histo) {
       const obj = this.getObject();
@@ -386,7 +404,7 @@ class TGraphPainter extends ObjectPainter {
          histo.fBits |= kNoStats;
          this.#own_histogram = true;
          this.setHistogram(histo);
-      } else if ((histo.fMaximum !== kNoZoom) && (histo.fMinimum !== kNoZoom)) {
+      } else if ((histo.fMaximum !== kNoZoom) && (histo.fMinimum !== kNoZoom) && !this.isDummyHistogram('y')) {
          minimum = histo.fMinimum;
          maximum = histo.fMaximum;
       }
@@ -1249,7 +1267,7 @@ class TGraphPainter extends ObjectPainter {
      * @desc if arg specified changes or toggles editable flag */
    testEditable(arg) {
       const obj = this.getGraph();
-      if (!obj)
+      if (!isFunc(obj?.TestBit))
          return false;
       if ((arg === 'toggle') || (arg !== undefined))
          obj.SetBit(kNotEditable, !arg);
@@ -1665,8 +1683,9 @@ class TGraphPainter extends ObjectPainter {
    /** @summary Draw axis histogram
      * @private */
    async drawAxisHisto() {
-      const need_histo = !this.getHistogram(),
-            histo = this.createHistogram(need_histo, need_histo);
+      const set_x = this.isDummyHistogram('x'),
+            set_y = this.isDummyHistogram('y'),
+            histo = this.createHistogram(set_x, set_y);
       return TH1Painter.draw(this.getDrawDom(), histo, this.getOptions().Axis);
    }
 

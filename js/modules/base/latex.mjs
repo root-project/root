@@ -705,6 +705,7 @@ function parseLatex(node, arg, label, curr) {
 
       const extractLowUp = name => {
          const res = {};
+
          if (name) {
             label = '{' + label;
             res[name] = extractSubLabel(name === 'low' ? '_' : '^');
@@ -712,16 +713,16 @@ function parseLatex(node, arg, label, curr) {
          }
 
          while (label) {
-            if (label[0] === '_') {
+            if ((label[0] === '_') && !res.low) {
                label = label.slice(1);
-               res.low = !res.low ? extractSubLabel('_') : -1;
+               res.low = extractSubLabel('_');
                if (res.low === -1) {
-                  console.log(`error with ${found.name} low limit`);
+                  console.log(`error with ${found.name} low limit ${label}`);
                   return false;
                }
-            } else if (label[0] === '^') {
+            } else if ((label[0] === '^') && !res.up) {
                label = label.slice(1);
-               res.up = !res.up ? extractSubLabel('^') : -1;
+               res.up = extractSubLabel('^');
                if (res.up === -1) {
                   console.log(`error with ${found.name} upper limit ${label}`);
                   return false;

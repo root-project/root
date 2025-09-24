@@ -35,7 +35,7 @@ export { draw, redraw, makeSVG, makeImage, addDrawFunc, setDefaultDrawOpt } from
 
 export * from './gpad/TCanvasPainter.mjs';
 
-export { openFile, FileProxy, addUserStreamer } from './io.mjs';
+export { openFile, FileProxy, addUserStreamer, unzipJSON } from './io.mjs';
 
 export * from './gui/display.mjs';
 
