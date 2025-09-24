@@ -646,6 +646,14 @@ class BasePainter {
 
       rect.changed = false;
 
+      if (!rect.width && !rect.height && !main.empty() && main.attr('style')) {
+         const ws = main.style('width'), hs = main.style('height');
+         if (isStr(ws) && isStr(hs) && ws.match(/^\d+px$/) && hs.match(/^\d+px$/)) {
+            rect.width = parseInt(ws.slice(0, ws.length-2));
+            rect.height = parseInt(hs.slice(0, hs.length-2));
+         }
+      }
+
       if (old_h && old_w && (old_h > 0) && (old_w > 0)) {
          if ((old_h !== rect.height) || (old_w !== rect.width))
             rect.changed = (check_level > 1) || (rect.width / old_w < 0.99) || (rect.width / old_w > 1.01) || (rect.height / old_h < 0.99) || (rect.height / old_h > 1.01);

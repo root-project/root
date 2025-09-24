@@ -12,7 +12,10 @@ class RTreeMapTooltip {
    }
 
    cleanup() {
-      if (this.tooltip !== null) document.body.removeChild(this.tooltip);
+      if (this.tooltip !== null) {
+         document.body.removeChild(this.tooltip);
+         this.tooltip = null;
+      }
    }
 
    createTooltip()
@@ -51,7 +54,7 @@ class RTreeMapTooltip {
 
    hideTooltip()
    {
-      if (this.tooltip) 
+      if (this.tooltip)
          this.tooltip.style.opacity = '0';
    }
 
@@ -63,13 +66,13 @@ class RTreeMapTooltip {
       content += `<i>${(isLeaf ? 'Column' : 'Field')}</i><br>`;
       content += `Size: ${this.painter.getDataStr(node.fSize)}<br>`;
 
-      if (isLeaf && node.fType !== undefined) 
+      if (isLeaf && node.fType !== undefined)
          content += `Type: ${node.fType}<br>`;
-      
 
-      if (!isLeaf) 
+
+      if (!isLeaf)
          content += `Children: ${node.fNChildren}<br>`;
-      
+
 
       const obj = this.painter.getObject();
       if (obj.fNodes && obj.fNodes.length > 0) {

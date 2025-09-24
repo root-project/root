@@ -1,7 +1,7 @@
 import { createHttpRequest, BIT, internals, settings, browser,
          create, getMethods, addMethods, isNodeJs, isObject, isFunc, isStr,
          clTObject, clTNamed, clTString, clTObjString, clTKey, clTFile, clTList, clTMap, clTObjArray, clTClonesArray,
-         clTAttLine, clTAttFill, clTAttMarker, clTStyle, clTImagePalette,
+         clTAttLine, clTAttFill, clTAttMarker, clTStyle, clTImagePalette, atob_func,
          clTPad, clTCanvas, clTAttCanvas, clTPolyMarker3D, clTF1, clTF12, clTF2 } from './core.mjs';
 
 const clTStreamerElement = 'TStreamerElement', clTStreamerObject = 'TStreamerObject',
@@ -4044,6 +4044,27 @@ function openFile(arg, opts) {
    return file._open();
 }
 
+/** @summary Unzip JSON string
+ * @desc Should be used for buffer produced with TBufferJSON::zipJSON() method
+ * @param tgtsize - original length of json string
+ * @param src - string with data returned by TBufferJSON::zipJSON
+ * @return {Promise} with unzipped string */
+
+async function unzipJSON(tgtsize, src) {
+   const bindata = atob_func(src),
+         buf = new ArrayBuffer(bindata.length),
+         bufView = new DataView(buf);
+   for (let i = 0; i < bindata.length; i++)
+      bufView.setUint8(i, bindata.charCodeAt(i));
+
+   return R__unzip(bufView, tgtsize).then(resView => {
+      let resstr = '';
+      for (let i = 0; i < tgtsize; i++)
+         resstr += String.fromCharCode(resView.getUint8(i));
+      return resstr;
+   });
+}
+
 // special way to assign methods when streaming objects
 addClassMethods(clTNamed, CustomStreamers[clTNamed]);
 addClassMethods(clTObjString, CustomStreamers[clTObjString]);
@@ -4055,5 +4076,5 @@ export { kChar, kShort, kInt, kLong, kFloat, kCounter,
    kBase, kOffsetL, kOffsetP, kObject, kAny, kObjectp, kObjectP, kTString,
    kAnyP, kStreamer, kStreamLoop, kSTLp, kSTL, kBaseClass,
    clTStreamerInfoList, clTDirectory, clTDirectoryFile, nameStreamerInfo, clTBasket,
-   R__unzip, addUserStreamer, createStreamerElement, createMemberStreamer,
+   R__unzip, unzipJSON, addUserStreamer, createStreamerElement, createMemberStreamer,
    openFile, reconstructObject, FileProxy, TBuffer };

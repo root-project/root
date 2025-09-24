@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '18/09/2025',
+version_date = '24/09/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1567,7 +1567,8 @@ function createHistogram(typename, nbinsx, nbinsy, nbinsz) {
  * @desc Title may include axes titles, provided with ';' symbol like "Title;x;y;z" */
 
 function setHistogramTitle(histo, title) {
-   if (!histo) return;
+   if (!histo || !isStr(title))
+      return;
    if (title.indexOf(';') < 0)
       histo.fTitle = title;
    else {
@@ -9231,6 +9232,14 @@ class BasePainter {
 
       rect.changed = false;
 
+      if (!rect.width && !rect.height && !main.empty() && main.attr('style')) {
+         const ws = main.style('width'), hs = main.style('height');
+         if (isStr(ws) && isStr(hs) && ws.match(/^\d+px$/) && hs.match(/^\d+px$/)) {
+            rect.width = parseInt(ws.slice(0, ws.length-2));
+            rect.height = parseInt(hs.slice(0, hs.length-2));
+         }
+      }
+
       if (old_h && old_w && (old_h > 0) && (old_w > 0)) {
          if ((old_h !== rect.height) || (old_w !== rect.width))
             rect.changed = (check_level > 1) || (rect.width / old_w < 0.99) || (rect.width / old_w > 1.01) || (rect.height / old_h < 0.99) || (rect.height / old_h > 1.01);
@@ -10490,6 +10499,7 @@ function parseLatex(node, arg, label, curr) {
 
       const extractLowUp = name => {
          const res = {};
+
          if (name) {
             label = '{' + label;
             res[name] = extractSubLabel(name === 'low' ? '_' : '^');
@@ -10497,16 +10507,16 @@ function parseLatex(node, arg, label, curr) {
          }
 
          while (label) {
-            if (label[0] === '_') {
+            if ((label[0] === '_') && !res.low) {
                label = label.slice(1);
-               res.low = !res.low ? extractSubLabel('_') : -1;
+               res.low = extractSubLabel('_');
                if (res.low === -1) {
-                  console.log(`error with ${found.name} low limit`);
+                  console.log(`error with ${found.name} low limit ${label}`);
                   return false;
                }
-            } else if (label[0] === '^') {
+            } else if ((label[0] === '^') && !res.up) {
                label = label.slice(1);
-               res.up = !res.up ? extractSubLabel('^') : -1;
+               res.up = extractSubLabel('^');
                if (res.up === -1) {
                   console.log(`error with ${found.name} upper limit ${label}`);
                   return false;
@@ -86869,7 +86879,7 @@ class TPadPainter extends ObjectPainter {
       this.createAttFill({ attr: this.#pad });
 
       if ((rect.width <= lmt) || (rect.height <= lmt)) {
-         if (this.hasSnapId()) {
+         if (!this.hasSnapId()) {
             svg.style('display', 'none');
             console.warn(`Hide canvas while geometry too small w=${rect.width} h=${rect.height}`);
          }
@@ -102976,6 +102986,24 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
    /** @summary Return histogram object used for axis drawings */
    getHistogram() { return this.getObject()?.fHistogram; }
 
+   /** @summary Return true if histogram not present or has dummy ranges (for requested axis) */
+   isDummyHistogram(check_axis) {
+      const histo = this.getHistogram();
+      if (!histo)
+         return true;
+
+      let is_normal = false;
+      if (check_axis !== 'y')
+         is_normal ||= (histo.fXaxis.fXmin !== 0.0011) || (histo.fXaxis.fXmax !== 1.1);
+
+      if (check_axis !== 'x') {
+         is_normal ||= (histo.fYaxis.fXmin !== 0.0011) || (histo.fYaxis.fXmax !== 1.1) ||
+                       (histo.fMinimum !== 0.0011) || (histo.fMaximum !== 1.1);
+      }
+
+      return !is_normal;
+   }
+
    /** @summary Set histogram object to graph */
    setHistogram(histo) {
       const obj = this.getObject();
@@ -103293,7 +103321,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          histo.fBits |= kNoStats;
          this.#own_histogram = true;
          this.setHistogram(histo);
-      } else if ((histo.fMaximum !== kNoZoom) && (histo.fMinimum !== kNoZoom)) {
+      } else if ((histo.fMaximum !== kNoZoom) && (histo.fMinimum !== kNoZoom) && !this.isDummyHistogram('y')) {
          minimum = histo.fMinimum;
          maximum = histo.fMaximum;
       }
@@ -104156,7 +104184,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
      * @desc if arg specified changes or toggles editable flag */
    testEditable(arg) {
       const obj = this.getGraph();
-      if (!obj)
+      if (!isFunc(obj?.TestBit))
          return false;
       if ((arg === 'toggle') || (arg !== undefined))
          obj.SetBit(kNotEditable, !arg);
@@ -104572,8 +104600,9 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
    /** @summary Draw axis histogram
      * @private */
    async drawAxisHisto() {
-      const need_histo = !this.getHistogram(),
-            histo = this.createHistogram(need_histo, need_histo);
+      const set_x = this.isDummyHistogram('x'),
+            set_y = this.isDummyHistogram('y'),
+            histo = this.createHistogram(set_x, set_y);
       return TH1Painter$2.draw(this.getDrawDom(), histo, this.getOptions().Axis);
    }
 
@@ -104687,7 +104716,10 @@ class RTreeMapTooltip {
    }
 
    cleanup() {
-      if (this.tooltip !== null) document.body.removeChild(this.tooltip);
+      if (this.tooltip !== null) {
+         document.body.removeChild(this.tooltip);
+         this.tooltip = null;
+      }
    }
 
    createTooltip()
@@ -104726,7 +104758,7 @@ class RTreeMapTooltip {
 
    hideTooltip()
    {
-      if (this.tooltip) 
+      if (this.tooltip)
          this.tooltip.style.opacity = '0';
    }
 
@@ -104738,13 +104770,13 @@ class RTreeMapTooltip {
       content += `<i>${(isLeaf ? 'Column' : 'Field')}</i><br>`;
       content += `Size: ${this.painter.getDataStr(node.fSize)}<br>`;
 
-      if (isLeaf && node.fType !== undefined) 
+      if (isLeaf && node.fType !== undefined)
          content += `Type: ${node.fType}<br>`;
-      
 
-      if (!isLeaf) 
+
+      if (!isLeaf)
          content += `Children: ${node.fNChildren}<br>`;
-      
+
 
       const obj = this.painter.getObject();
       if (obj.fNodes && obj.fNodes.length > 0) {
@@ -122529,6 +122561,27 @@ function openFile(arg, opts) {
    }
 
    return file._open();
+}
+
+/** @summary Unzip JSON string
+ * @desc Should be used for buffer produced with TBufferJSON::zipJSON() method
+ * @param tgtsize - original length of json string
+ * @param src - string with data returned by TBufferJSON::zipJSON
+ * @return {Promise} with unzipped string */
+
+async function unzipJSON(tgtsize, src) {
+   const bindata = atob_func(src),
+         buf = new ArrayBuffer(bindata.length),
+         bufView = new DataView(buf);
+   for (let i = 0; i < bindata.length; i++)
+      bufView.setUint8(i, bindata.charCodeAt(i));
+
+   return R__unzip(bufView, tgtsize).then(resView => {
+      let resstr = '';
+      for (let i = 0; i < tgtsize; i++)
+         resstr += String.fromCharCode(resView.getUint8(i));
+      return resstr;
+   });
 }
 
 // special way to assign methods when streaming objects
@@ -173683,8 +173736,9 @@ class TScatterPainter extends TGraphPainter$1 {
   /** @summary Draw axis histogram
     * @private */
    async drawAxisHisto() {
-      const need_histo = !this.getHistogram(),
-            histo = this.createHistogram(need_histo, need_histo);
+      const set_x = this.isDummyHistogram('x'),
+            set_y = this.isDummyHistogram('y'),
+            histo = this.createHistogram(set_x, set_y);
       return TH2Painter$2.draw(this.getDrawDom(), histo, this.getOptions().Axis + ';IGNORE_PALETTE');
    }
 
@@ -184295,6 +184349,7 @@ exports.svgToImage = svgToImage;
 exports.toJSON = toJSON;
 exports.treeDraw = treeDraw;
 exports.treeProcess = treeProcess;
+exports.unzipJSON = unzipJSON;
 exports.urlClassPrefix = urlClassPrefix;
 exports.version = version;
 exports.version_date = version_date;
