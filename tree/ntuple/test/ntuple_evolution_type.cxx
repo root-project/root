@@ -207,3 +207,32 @@ TEST(RNTupleEvolution, CheckPairTuple)
    EXPECT_EQ(1, std::get<0>(p(0)));
    EXPECT_DOUBLE_EQ(2.0, std::get<1>(p(0)));
 }
+
+TEST(RNTupleEvolution, CheckNullable)
+{
+   FileRaii fileGuard("test_ntuple_evolution_check_nullable.root");
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      auto o = model->MakeField<std::optional<std::int32_t>>("o");
+      auto u = model->MakeField<std::unique_ptr<std::int32_t>>("u");
+      auto i = model->MakeField<std::int32_t>("i");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      *o = 7;
+      *u = std::make_unique<std::int32_t>(11);
+      *i = 13;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   auto v1 = reader->GetView<std::unique_ptr<std::int64_t>>("o");
+   auto v2 = reader->GetView<std::optional<std::int64_t>>("u");
+   auto v3 = reader->GetView<std::unique_ptr<std::int64_t>>("i");
+   auto v4 = reader->GetView<std::optional<std::int64_t>>("i");
+
+   EXPECT_EQ(7, *v1(0));
+   EXPECT_EQ(11, *v2(0));
+   EXPECT_EQ(13, *v3(0));
+   EXPECT_EQ(13, *v4(0));
+}

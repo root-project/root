@@ -797,7 +797,7 @@ const ROOT::RFieldBase::RColumnRepresentations &ROOT::RNullableField::GetColumnR
                                                   {ENTupleColumnType::kIndex64},
                                                   {ENTupleColumnType::kSplitIndex32},
                                                   {ENTupleColumnType::kIndex32}},
-                                                 {});
+                                                 {{}});
    return representations;
 }
 
@@ -808,7 +808,8 @@ void ROOT::RNullableField::GenerateColumns()
 
 void ROOT::RNullableField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
+   if (!fIsEvolvedFromInnerType)
+      GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
 std::size_t ROOT::RNullableField::AppendNull()
@@ -830,8 +831,13 @@ void ROOT::RNullableField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    static const std::vector<std::string> prefixes = {"std::optional<", "std::unique_ptr<"};
 
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
-   EnsureMatchingTypePrefix(fieldDesc, prefixes);
+   try {
+      EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
+      EnsureMatchingTypePrefix(fieldDesc, prefixes);
+   } catch (const RException &) {
+      fSubfields[0]->SetOnDiskId(GetOnDiskId());
+      fIsEvolvedFromInnerType = true;
+   }
 }
 
 ROOT::RNTupleLocalIndex ROOT::RNullableField::GetItemIndex(ROOT::NTupleSize_t globalIndex)
@@ -900,16 +906,28 @@ void *ROOT::RUniquePtrField::PrepareRead(void *to, bool hasOnDiskValue)
 
 void ROOT::RUniquePtrField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
-   auto itemIndex = GetItemIndex(globalIndex);
-   const bool hasOnDiskValue = itemIndex.GetIndexInCluster() != ROOT::kInvalidNTupleIndex;
+   RNTupleLocalIndex itemIndex;
+   if (!fIsEvolvedFromInnerType)
+      itemIndex = GetItemIndex(globalIndex);
+   const bool hasOnDiskValue = fIsEvolvedFromInnerType || itemIndex.GetIndexInCluster() != ROOT::kInvalidNTupleIndex;
    auto valuePtr = PrepareRead(to, hasOnDiskValue);
-   if (hasOnDiskValue)
-      CallReadOn(*fSubfields[0], itemIndex, valuePtr);
+   if (hasOnDiskValue) {
+      if (fIsEvolvedFromInnerType) {
+         CallReadOn(*fSubfields[0], globalIndex, valuePtr);
+      } else {
+         CallReadOn(*fSubfields[0], itemIndex, valuePtr);
+      }
+   }
 }
 
 void ROOT::RUniquePtrField::ReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to)
 {
-   auto itemIndex = GetItemIndex(localIndex);
+   RNTupleLocalIndex itemIndex;
+   if (!fIsEvolvedFromInnerType) {
+      itemIndex = GetItemIndex(localIndex);
+   } else {
+      itemIndex = localIndex;
+   }
    const bool hasOnDiskValue = itemIndex.GetIndexInCluster() != ROOT::kInvalidNTupleIndex;
    auto valuePtr = PrepareRead(to, hasOnDiskValue);
    if (hasOnDiskValue)
@@ -992,16 +1010,28 @@ void ROOT::ROptionalField::PrepareRead(void *to, bool hasOnDiskValue)
 
 void ROOT::ROptionalField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
-   auto itemIndex = GetItemIndex(globalIndex);
-   const bool hasOnDiskValue = itemIndex.GetIndexInCluster() != ROOT::kInvalidNTupleIndex;
+   RNTupleLocalIndex itemIndex;
+   if (!fIsEvolvedFromInnerType)
+      itemIndex = GetItemIndex(globalIndex);
+   const bool hasOnDiskValue = fIsEvolvedFromInnerType || itemIndex.GetIndexInCluster() != ROOT::kInvalidNTupleIndex;
    PrepareRead(to, hasOnDiskValue);
-   if (hasOnDiskValue)
-      CallReadOn(*fSubfields[0], itemIndex, to);
+   if (hasOnDiskValue) {
+      if (fIsEvolvedFromInnerType) {
+         CallReadOn(*fSubfields[0], globalIndex, to);
+      } else {
+         CallReadOn(*fSubfields[0], itemIndex, to);
+      }
+   }
 }
 
 void ROOT::ROptionalField::ReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to)
 {
-   auto itemIndex = GetItemIndex(localIndex);
+   RNTupleLocalIndex itemIndex;
+   if (!fIsEvolvedFromInnerType) {
+      itemIndex = GetItemIndex(localIndex);
+   } else {
+      itemIndex = localIndex;
+   }
    const bool hasOnDiskValue = itemIndex.GetIndexInCluster() != ROOT::kInvalidNTupleIndex;
    PrepareRead(to, hasOnDiskValue);
    if (hasOnDiskValue)
