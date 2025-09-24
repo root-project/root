@@ -418,7 +418,7 @@ else()
   if(MSVC AND NOT win_broken_tests)
     list(APPEND root7_veto analysis/dataframe/df013_InspectAnalysis.C)
   endif()
-  file(GLOB v7_veto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ visualisation/webgui/browserv7/*.cxx visualisation/webgui/fitpanelv7/*.cxx visualisation/rcanvas/*.py visualisation/rcanvas/*.cxx)
+  file(GLOB v7_veto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ hist/histv7/*.C visualisation/webgui/browserv7/*.cxx visualisation/webgui/fitpanelv7/*.cxx visualisation/rcanvas/*.py visualisation/rcanvas/*.cxx)
   list(APPEND root7_veto ${v7_veto_files})
   # This depends on RCanvas
   list(APPEND root7_veto io/ntuple/ntpl011_global_temperatures.C)
