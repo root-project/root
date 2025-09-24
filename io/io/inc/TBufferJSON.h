@@ -77,6 +77,8 @@ public:
       return ConvertToJSON(obj, TClass::GetClass<T>(), compact, member_name);
    }
 
+   static TString zipJSON(const char *json);
+
    template <class T>
    static Bool_t FromJSON(T *&obj, const char *json)
    {
