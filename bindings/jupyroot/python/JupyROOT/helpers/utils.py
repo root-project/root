@@ -57,10 +57,12 @@ _jsCode = """
    function process_{jsDivId}() {{
       function drawPlot(Core) {{
          Core.settings.HandleKeys = false;
-         const obj = Core.parse({jsonContent});
-         Core.draw("{jsDivId}", obj, "{jsDrawOptions}");
+         Core.unzipJSON({jsonLength},'{jsonZip}').then(json => {{
+            const obj = Core.parse(json);
+            Core.draw('{jsDivId}', obj, '{jsDrawOptions}');
+         }});
       }}
-      const servers = ['/static/', 'https://root.cern/js/7.9.1/', 'https://jsroot.gsi.de/7.9.1/'],
+      const servers = ['/static/', 'https://jsroot.gsi.de/dev/', 'https://root.cern/js/dev/'],
             path = 'build/jsroot';
       if (typeof JSROOT !== 'undefined')
          drawPlot(JSROOT);
@@ -586,6 +588,7 @@ class NotebookDrawer(object):
 
         width = _jsCanvasWidth
         height = _jsCanvasHeight
+        jsonzip = ROOT.TBufferJSON.zipJSON(json)
         options = "all"
 
         if self.isCanvas:
@@ -603,7 +606,7 @@ class NotebookDrawer(object):
             options = ""
 
         thisJsCode = _jsCode.format(
-            jsCanvasWidth=width, jsCanvasHeight=height, jsonContent=json, jsDrawOptions=options, jsDivId=divId
+            jsCanvasWidth=width, jsCanvasHeight=height, jsonLength=len(json), jsonZip=jsonzip, jsDrawOptions=options, jsDivId=divId
         )
         return thisJsCode
 
