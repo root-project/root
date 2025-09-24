@@ -513,7 +513,7 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RClassField::BeforeConnectPageSource(ROO
 
 void ROOT::RClassField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeVersion | kDiffTypeName);
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeVersion | kDiffTypeName).ThrowOnError();
 }
 
 void ROOT::RClassField::ConstructValue(void *where) const
@@ -611,7 +611,7 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::REnumField::CloneImpl(std::string_view n
 void ROOT::REnumField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    // TODO(jblomer): allow enum to enum conversion only by rename rule
-   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName | kDiffTypeVersion);
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName | kDiffTypeVersion).ThrowOnError();
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::REnumField::SplitValue(const RValue &value) const
@@ -677,8 +677,8 @@ void ROOT::RPairField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    static const std::vector<std::string> prefixes = {"std::pair<", "std::tuple<"};
 
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
-   EnsureMatchingTypePrefix(fieldDesc, prefixes);
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName).ThrowOnError();
+   EnsureMatchingTypePrefix(fieldDesc, prefixes).ThrowOnError();
 
    const auto nOnDiskSubfields = fieldDesc.GetLinkIds().size();
    if (nOnDiskSubfields != 2) {
@@ -822,7 +822,7 @@ void ROOT::RProxiedCollectionField::GenerateColumns(const ROOT::RNTupleDescripto
 
 void ROOT::RProxiedCollectionField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName);
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName).ThrowOnError();
 }
 
 void ROOT::RProxiedCollectionField::ConstructValue(void *where) const
@@ -989,7 +989,7 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RStreamerField::BeforeConnectPageSource(
 
 void ROOT::RStreamerField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName | kDiffTypeVersion);
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName | kDiffTypeVersion).ThrowOnError();
 }
 
 void ROOT::RStreamerField::ConstructValue(void *where) const
@@ -1224,8 +1224,8 @@ void ROOT::RTupleField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    static const std::vector<std::string> prefixes = {"std::pair<", "std::tuple<"};
 
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
-   EnsureMatchingTypePrefix(fieldDesc, prefixes);
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName).ThrowOnError();
+   EnsureMatchingTypePrefix(fieldDesc, prefixes).ThrowOnError();
 
    const auto nOnDiskSubfields = fieldDesc.GetLinkIds().size();
    const auto nSubfields = fSubfields.size();
@@ -1386,8 +1386,8 @@ void ROOT::RVariantField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    static const std::vector<std::string> prefixes = {"std::variant<"};
 
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
-   EnsureMatchingTypePrefix(fieldDesc, prefixes);
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName).ThrowOnError();
+   EnsureMatchingTypePrefix(fieldDesc, prefixes).ThrowOnError();
 
    if (fSubfields.size() != fieldDesc.GetLinkIds().size()) {
       throw RException(R__FAIL("number of variants on-disk do not match for " + GetQualifiedFieldName()));

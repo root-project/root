@@ -532,10 +532,11 @@ protected:
    std::uint32_t CompareOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits) const;
    /// Compares the field to the provieded on-disk field descriptor. Throws an exception if the fields don't match.
    /// Optionally, a set of bits can be provided that should be ignored in the comparison.
-   void EnsureMatchingOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits = 0) const;
+   RResult<void> EnsureMatchingOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits = 0) const;
    /// Many fields accept a range of type prefixes for schema evolution,
    /// e.g. std::unique_ptr< and std::optional< for nullable fields
-   void EnsureMatchingTypePrefix(const RFieldDescriptor &fieldDesc, const std::vector<std::string> &prefixes) const;
+   RResult<void>
+   EnsureMatchingTypePrefix(const RFieldDescriptor &fieldDesc, const std::vector<std::string> &prefixes) const;
 
    /// Factory method to resurrect a field from the stored on-disk type information.  This overload takes an already
    /// normalized type name and type alias.
