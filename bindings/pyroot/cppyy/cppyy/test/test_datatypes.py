@@ -192,7 +192,7 @@ class TestDATATYPES:
 
         c.__destruct__()
 
-    @mark.skip()
+    @mark.xfail()
     def test02_instance_data_write_access(self):
         """Test write access to instance public data and verify values"""
 
@@ -377,7 +377,7 @@ class TestDATATYPES:
 
         c.__destruct__()
 
-    @mark.skip()
+    @mark.xfail()
     def test04_class_read_access(self):
         """Test read access to class public data and verify values"""
 
@@ -542,7 +542,7 @@ class TestDATATYPES:
 
         c.__destruct__()
 
-    @mark.skip()
+    @mark.xfail()
     def test07_type_conversions(self):
         """Test conversions between builtin types"""
 
@@ -736,7 +736,7 @@ class TestDATATYPES:
         assert gbl.EnumSpace.AA == 1
         assert gbl.EnumSpace.BB == 2
 
-    @mark.skip()
+    @mark.xfail()
     def test11_typed_enums(self):
         """Determine correct types of enums"""
 
@@ -779,7 +779,7 @@ class TestDATATYPES:
         assert type(sc.vraioufaux.faux) == bool  # no bool as base class
         assert isinstance(sc.vraioufaux.faux, bool)
 
-    @mark.skip()
+    @mark.xfail()
     def test12_enum_scopes(self):
         """Enum accessibility and scopes"""
 
@@ -1108,7 +1108,7 @@ class TestDATATYPES:
 
         assert not d2
 
-    @mark.skip()
+    @mark.xfail()
     def test22_buffer_shapes(self):
         """Correctness of declared buffer shapes"""
 
@@ -1277,10 +1277,8 @@ class TestDATATYPES:
         if self.has_byte:
             run(self, cppyy.gbl.sum_byte_data, buf, total)
 
-    # @mark.xfail(run=not IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
-    # "libc++abi: terminating due to uncaught exception")
-    # Marked as skip to prevent propagation of failure to other tests
-    @mark.skip()
+    @mark.xfail(run=not IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    "libc++abi: terminating due to uncaught exception")
     def test26_function_pointers(self):
         """Function pointer passing"""
 
@@ -1562,7 +1560,7 @@ class TestDATATYPES:
                 p = (ctype * len(buf)).from_buffer(buf)
                 assert [p[j] for j in range(width*height)] == [2*j for j in range(width*height)]
 
-    @mark.skip()
+    @mark.xfail()
     def test31_anonymous_union(self):
         """Anonymous unions place there fields in the parent scope"""
 
@@ -1656,7 +1654,7 @@ class TestDATATYPES:
         assert type(p.data_c[0]) == float
         assert p.intensity == 5.
 
-    @mark.skip()
+    @mark.xfail()
     def test32_anonymous_struct(self):
         """Anonymous struct creates an unnamed type"""
 
@@ -1705,7 +1703,7 @@ class TestDATATYPES:
 
         assert 'foo' in dir(ns.libuntitled1_ExportedSymbols().kotlin.root.com.justamouse.kmmdemo)
 
-    @mark.skip()
+    @mark.xfail()
     def test33_pointer_to_array(self):
         """Usability of pointer to array"""
 
@@ -2061,7 +2059,7 @@ class TestDATATYPES:
             r2 = ns.make_R2()
             assert r2.s.x == 1
 
-    @mark.skip()
+    @mark.xfail()
     def test41_complex_numpy_arrays(self):
         """Usage of complex numpy arrays"""
 
@@ -2109,7 +2107,7 @@ class TestDATATYPES:
             Ccl = func(Acl, Bcl, 2)
             assert complex(Ccl) == pyCcl
 
-    @mark.skip()
+    @mark.xfail()
     def test42_mixed_complex_arithmetic(self):
         """Mixin of Python and C++ std::complex in arithmetic"""
 
@@ -2123,7 +2121,7 @@ class TestDATATYPES:
         assert c*(c*c) == p*(p*p)
         assert (c*c)*c == (p*p)*p
 
-    @mark.skip()
+    @mark.xfail()
     def test43_ccharp_memory_handling(self):
         """cppyy side handled memory of C strings"""
 
@@ -2240,7 +2238,7 @@ class TestDATATYPES:
         b = ns.B()
         assert b.body1.name == b.body2.name
 
-    @mark.skip()
+    @mark.xfail()
     def test46_small_int_enums(self):
         """Proper typing of small int enums"""
 
@@ -2295,7 +2293,7 @@ class TestDATATYPES:
         assert ns.func_int8()  == -1
         assert ns.func_uint8() == 255
 
-    @mark.skip()
+    @mark.xfail()
     def test47_hidden_name_enum(self):
         """Usage of hidden name enum"""
 
