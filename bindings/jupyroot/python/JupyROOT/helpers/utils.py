@@ -49,60 +49,37 @@ _jsNotDrawableClassesPatterns = ["TEve*"]
 
 _jsCanvasWidth = 800
 _jsCanvasHeight = 600
-_jsCode = """
 
+_jsCode = """
 <div id="{jsDivId}" style="width: {jsCanvasWidth}px; height: {jsCanvasHeight}px; position: relative">
 </div>
-
 <script>
-
-function display_{jsDivId}(Core) {{
-   let obj = Core.parse({jsonContent});
-   Core.settings.HandleKeys = false;
-   Core.draw("{jsDivId}", obj, "{jsDrawOptions}");
-}}
-
-function script_load_{jsDivId}(src, on_error) {{
-    let script = document.createElement('script');
-    script.src = src;
-    script.onload = function() {{ display_{jsDivId}(JSROOT); }};
-    script.onerror = function() {{ script.remove(); on_error(); }};
-    document.head.appendChild(script);
-}}
-
-if (typeof requirejs !== 'undefined') {{
-
-    // We are in jupyter notebooks, use require.js which should be configured already
-    requirejs.config({{
-       paths: {{ 'JSRootCore' : [ 'build/jsroot', 'https://root.cern/js/7.7.4/build/jsroot', 'https://jsroot.gsi.de/7.7.4/build/jsroot' ] }}
-    }})(['JSRootCore'],  function(Core) {{
-       display_{jsDivId}(Core);
-    }});
-
-}} else if (typeof JSROOT !== 'undefined') {{
-
-   // JSROOT already loaded, just use it
-   display_{jsDivId}(JSROOT);
-
-}} else {{
-
-    // We are in jupyterlab without require.js, directly loading jsroot
-    // Jupyterlab might be installed in a different base_url so we need to know it.
-    try {{
-        var base_url = JSON.parse(document.getElementById('jupyter-config-data').innerHTML).baseUrl;
-    }} catch(_) {{
-        var base_url = '/';
-    }}
-
-    // Try loading a local version of requirejs and fallback to cdn if not possible.
-    script_load_{jsDivId}(base_url + 'static/build/jsroot.js', function(){{
-        console.error('Fail to load JSROOT locally, please check your jupyter_notebook_config.py file');
-        script_load_{jsDivId}('https://root.cern/js/7.7.4/build/jsroot.js', function(){{
-            document.getElementById("{jsDivId}").innerHTML = "Failed to load JSROOT";
-        }});
-    }});
-}}
-
+   function process_{jsDivId}() {{
+      function drawPlot(Core) {{
+         Core.settings.HandleKeys = false;
+         const obj = Core.parse({jsonContent});
+         Core.draw("{jsDivId}", obj, "{jsDrawOptions}");
+      }}
+      const servers = ['/static/', 'https://root.cern/js/7.9.1/', 'https://jsroot.gsi.de/7.9.1/'],
+            path = 'build/jsroot';
+      if (typeof JSROOT !== 'undefined')
+         drawPlot(JSROOT);
+      else if (typeof requirejs !== 'undefined') {{
+         servers.forEach((s,i) => {{ servers[i] = s + path; }});
+         requirejs.config({{ paths: {{ 'jsroot' : servers }} }})(['jsroot'],  drawPlot);
+      }} else {{
+         const config = document.getElementById('jupyter-config-data');
+         if (config)
+            servers[0] = (JSON.parse(config.innerHTML || '{{}}')?.baseUrl || '/') + 'static/';
+         else
+            servers.shift();
+         function loadJsroot() {{
+            return !servers.length ? 0 : import(servers.shift() + path + '.js').catch(loadJsroot).then(() => drawPlot(JSROOT));
+         }}
+         loadJsroot();
+      }}
+   }}
+   process_{jsDivId}();
 </script>
 """
 
