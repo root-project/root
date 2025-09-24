@@ -90,8 +90,8 @@ void ROOT::RArrayField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    static const std::vector<std::string> prefixes = {"std::array<"};
 
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
-   EnsureMatchingTypePrefix(fieldDesc, prefixes);
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName).ThrowOnError();
+   EnsureMatchingTypePrefix(fieldDesc, prefixes).ThrowOnError();
 }
 
 void ROOT::RArrayField::ConstructValue(void *where) const
@@ -466,7 +466,7 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RRVecField::BeforeConnectPageSource(Inte
 
 void ROOT::RRVecField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName);
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName).ThrowOnError();
 }
 
 void ROOT::RRVecField::ConstructValue(void *where) const
@@ -648,7 +648,7 @@ void ROOT::RVectorField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 
 void ROOT::RVectorField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName);
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName).ThrowOnError();
 }
 
 void ROOT::RVectorField::RVectorDeleter::operator()(void *objPtr, bool dtorOnly)
@@ -752,7 +752,7 @@ void ROOT::RField<std::vector<bool>>::GenerateColumns(const ROOT::RNTupleDescrip
 
 void ROOT::RField<std::vector<bool>>::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName);
+   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName).ThrowOnError();
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RField<std::vector<bool>>::SplitValue(const RValue &value) const
@@ -847,7 +847,8 @@ void ROOT::RArrayAsRVecField::ReadInClusterImpl(RNTupleLocalIndex localIndex, vo
 void ROOT::RArrayAsRVecField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName | kDiffTypeVersion | kDiffStructure | kDiffNRepetitions);
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName | kDiffTypeVersion | kDiffStructure | kDiffNRepetitions)
+      .ThrowOnError();
    if (fieldDesc.GetTypeName().rfind("std::array<", 0) != 0) {
       throw RException(R__FAIL("RArrayAsRVecField " + GetQualifiedFieldName() + " expects an on-disk array field"));
    }
