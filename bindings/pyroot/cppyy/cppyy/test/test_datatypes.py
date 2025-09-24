@@ -2356,7 +2356,7 @@ class TestDATATYPES:
         assert str(bt(1)) == 'True'
         assert str(bt(0)) == 'False'
 
-    @mark.xfail(condition=IS_MAC_ARM, reason="Fails on mac-beta ARM64")
+    @mark.xfail(run = not IS_MAC_ARM, reason="Crashes on mac-beta ARM64, fails on alma9 runtime_cxxmodules=off")
     def test49_addressof_method(self):
         """Use of addressof for (const) methods"""
 
