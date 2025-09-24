@@ -1,6 +1,5 @@
 # JSROOT changelog
 
-
 ## Changes in dev
 1. RNtuple support, thanks to Kriti Mahajan (https://github.com/Krmjn09)
 1. Implement RTreeMapPainter to display RNTuple structure, thanks to Patryk Pilichowski (https://github.com/magnustymoteus)
@@ -11,6 +10,7 @@
 1. Support dark mode when store images
 1. With 'Shift' key pressed whole graph is moved by dragging action
 1. Support `Xall` and `Yall` as projections width #340
+1. Implement `unzipJSON()` function for data embeding in jupyter
 1. Support reading TBranch from old ROOT files with custom streamers
 1. Upgrade three.js r174 -> r180
 1. Upgrade lil-gui.mjs 0.19.2 -> 0.20.0
@@ -25,6 +25,7 @@
 1. Fix - TTree::Draw with strings
 1. Fix - first color in palette drawing #365
 1. Fix - toggle vertical/horizontal palette via context menu
+1. Fix - latex parsing error of `#delta_{0}_suffix` string
 
 
 ## Changes in 7.9.1

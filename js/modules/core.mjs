@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '18/09/2025',
+version_date = '24/09/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1559,7 +1559,8 @@ function createHistogram(typename, nbinsx, nbinsy, nbinsz) {
  * @desc Title may include axes titles, provided with ';' symbol like "Title;x;y;z" */
 
 function setHistogramTitle(histo, title) {
-   if (!histo) return;
+   if (!histo || !isStr(title))
+      return;
    if (title.indexOf(';') < 0)
       histo.fTitle = title;
    else {
