@@ -20,6 +20,9 @@ class TH3D;
 template <typename T>
 class THnT;
 using THnD = THnT<double>;
+template <typename T>
+class THnSparseT;
+using THnSparseD = THnSparseT<double>;
 class TProfile;
 class TProfile2D;
 
@@ -122,6 +125,32 @@ struct THnDModel {
              const std::vector<std::vector<double>> &xbins);
    std::shared_ptr<::THnD> GetHistogram() const;
 };
+
+struct THnSparseDModel {
+   TString fName;
+   TString fTitle;
+   int fDim;
+   std::vector<int> fNbins;
+   std::vector<double> fXmin;
+   std::vector<double> fXmax;
+   std::vector<std::vector<double>> fBinEdges;
+
+   THnSparseDModel() = default;
+   THnSparseDModel(const THnSparseDModel &) = default;
+   ~THnSparseDModel();
+   THnSparseDModel(const ::THnSparseD &h);
+   THnSparseDModel(const char *name, const char *title, int dim, const int *nbins, const double *xmin, const double *xmax);
+   // alternate version with std::vector to allow more convenient initialization from PyRoot
+   THnSparseDModel(const char *name, const char *title, int dim, const std::vector<int> &nbins,
+             const std::vector<double> &xmin, const std::vector<double> &xmax);
+   THnSparseDModel(const char *name, const char *title, int dim, const int *nbins,
+             const std::vector<std::vector<double>> &xbins);
+   THnSparseDModel(const char *name, const char *title, int dim, const std::vector<int> &nbins,
+             const std::vector<std::vector<double>> &xbins);
+   std::shared_ptr<::THnSparseD> GetHistogram() const;
+};
+
+
 
 struct TProfile1DModel {
    TString fName;

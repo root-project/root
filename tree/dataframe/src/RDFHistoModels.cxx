@@ -46,6 +46,12 @@
  * \note It stores only basic settings such as name, title, bins, bin edges,
  * but not others such as fSumw2.
  *
+ * \class ROOT::RDF::THnSparseDModel
+ * \ingroup dataframe
+ * \brief A struct which stores some basic parameters of a THnSparseD
+ * \note It stores only basic settings such as name, title, bins, bin edges,
+ * but not others such as fSumw2.
+ *
  * \class ROOT::RDF::TProfile1DModel
  * \ingroup dataframe
  * \brief A struct which stores some basic parameters of a TProfile
@@ -294,6 +300,73 @@ std::shared_ptr<::THnD> THnDModel::GetHistogram() const
    return h;
 }
 THnDModel::~THnDModel() {}
+
+
+THnSparseDModel::THnSparseDModel(const ::THnSparseD &h)
+   : fName(h.GetName()), fTitle(h.GetTitle()), fDim(h.GetNdimensions()), fNbins(fDim), fXmin(fDim), fXmax(fDim),
+     fBinEdges(fDim)
+{
+   for (int idim = 0; idim < fDim; ++idim) {
+      fNbins[idim] = h.GetAxis(idim)->GetNbins();
+      SetAxisProperties(h.GetAxis(idim), fXmin[idim], fXmax[idim], fBinEdges[idim]);
+   }
+}
+
+THnSparseDModel::THnSparseDModel(const char *name, const char *title, int dim, const int *nbins, const double *xmin,
+                     const double *xmax)
+   : fName(name), fTitle(title), fDim(dim), fBinEdges(dim)
+{
+   fNbins.reserve(fDim);
+   fXmin.reserve(fDim);
+   fXmax.reserve(fDim);
+   for (int idim = 0; idim < fDim; ++idim) {
+      fNbins.push_back(nbins[idim]);
+      fXmin.push_back(xmin[idim]);
+      fXmax.push_back(xmax[idim]);
+   }
+}
+
+THnSparseDModel::THnSparseDModel(const char *name, const char *title, int dim, const std::vector<int> &nbins,
+                     const std::vector<double> &xmin, const std::vector<double> &xmax)
+   : fName(name), fTitle(title), fDim(dim), fNbins(nbins), fXmin(xmin), fXmax(xmax), fBinEdges(dim)
+{
+}
+
+THnSparseDModel::THnSparseDModel(const char *name, const char *title, int dim, const int *nbins,
+                     const std::vector<std::vector<double>> &xbins)
+   : fName(name), fTitle(title), fDim(dim), fXmin(dim, 0.), fXmax(dim, 64.), fBinEdges(xbins)
+{
+   fNbins.reserve(fDim);
+   for (int idim = 0; idim < fDim; ++idim) {
+      fNbins.push_back(nbins[idim]);
+   }
+}
+
+THnSparseDModel::THnSparseDModel(const char *name, const char *title, int dim, const std::vector<int> &nbins,
+                     const std::vector<std::vector<double>> &xbins)
+   : fName(name), fTitle(title), fDim(dim), fNbins(nbins), fXmin(dim, 0.), fXmax(dim, 64.), fBinEdges(xbins)
+{
+}
+
+std::shared_ptr<::THnSparseD> THnSparseDModel::GetHistogram() const
+{
+   bool varbinning = false;
+   for (const auto &bins : fBinEdges) {
+      if (!bins.empty()) {
+         varbinning = true;
+         break;
+      }
+   }
+   std::shared_ptr<::THnSparseD> h;
+   if (varbinning) {
+      h = std::make_shared<::THnSparseD>(fName, fTitle, fDim, fNbins.data(), fBinEdges);
+   } else {
+      h = std::make_shared<::THnSparseD>(fName, fTitle, fDim, fNbins.data(), fXmin.data(), fXmax.data());
+   }
+   return h;
+}
+THnSparseDModel::~THnSparseDModel() {}
+
 
 // Profiles
 
