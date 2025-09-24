@@ -542,6 +542,28 @@ TString TBufferJSON::ConvertToJSON(const TObject *obj, Int_t compact, const char
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// zip JSON string and convert into base64 string
+/// to be used with JSROOT unzipJSON() function
+/// Main application - embed large JSON code into jupyter notebooks
+
+TString TBufferJSON::zipJSON(const char *json)
+{
+   std::string buf;
+
+   int srcsize = (int) strlen(json);
+
+   buf.resize(srcsize + 500);
+
+   int tgtsize = buf.length();
+
+   int nout = 0;
+
+   R__zipMultipleAlgorithm(ROOT::RCompressionSetting::ELevel::kDefaultZLIB, &srcsize, (char *)json, &tgtsize, (char *) buf.data(), &nout, ROOT::RCompressionSetting::EAlgorithm::kZLIB);
+
+   return TBase64::Encode(buf.data(), nout);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set level of space/newline/array compression
 /// Lower digit of compact parameter define formatting rules
 ///  - kNoCompress = 0  - no any compression, human-readable form
