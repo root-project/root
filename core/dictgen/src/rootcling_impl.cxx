@@ -2011,7 +2011,7 @@ static bool WriteAST(llvm::StringRef fileName, clang::CompilerInstance *compiler
 
    compilerInstance->getFrontendOpts().RelocatablePCH = true;
 
-   writer.WriteAST(compilerInstance->getSema(), fileName.str(), module, iSysRoot);
+   writer.WriteAST(&compilerInstance->getSema(), fileName.str(), module, iSysRoot);
 
    // Write the generated bitstream to "Out".
    out->write(&buffer.front(), buffer.size());
@@ -3477,7 +3477,7 @@ public:
    void InclusionDirective(clang::SourceLocation /*HashLoc*/, const clang::Token & /*IncludeTok*/,
                            llvm::StringRef FileName, bool IsAngled, clang::CharSourceRange /*FilenameRange*/,
                            clang::OptionalFileEntryRef /*File*/, llvm::StringRef /*SearchPath*/,
-                           llvm::StringRef /*RelativePath*/, const clang::Module * /*Imported*/,
+                           llvm::StringRef /*RelativePath*/, const clang::Module * /*Imported*/, bool /*ModuleImported*/,
                            clang::SrcMgr::CharacteristicKind /*FileType*/) override
    {
       if (isLocked) return;
