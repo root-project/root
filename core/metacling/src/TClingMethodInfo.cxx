@@ -92,7 +92,7 @@ bool TClingCXXRecMethIter::ShouldSkip(const clang::Decl *D) const
       if (const auto *RD = llvm::dyn_cast<clang::RecordDecl>(FD->getDeclContext())) {
          if (const auto *CXXMD = llvm::dyn_cast<clang::CXXMethodDecl>(FD)) {
             if (RD->isAnonymousStructOrUnion() &&
-                GetInterpreter()->getSema().getSpecialMember(CXXMD) != clang::Sema::CXXInvalid) {
+                GetInterpreter()->getSema().getSpecialMember(CXXMD) != clang::CXXSpecialMemberKind::Invalid) {
                // Do not enumerate special members of anonymous structs.
                return true;
             }
@@ -108,14 +108,14 @@ bool TClingCXXRecMethIter::ShouldSkip(const clang::UsingShadowDecl *USD) const
    if (auto *FD = llvm::dyn_cast<clang::FunctionDecl>(USD->getTargetDecl())) {
       if (const auto *CXXMD = llvm::dyn_cast<clang::CXXMethodDecl>(FD)) {
          auto SpecMemKind = GetInterpreter()->getSema().getSpecialMember(CXXMD);
-         if ((SpecMemKind == clang::Sema::CXXDefaultConstructor && CXXMD->getNumParams() == 0) ||
-             ((SpecMemKind == clang::Sema::CXXCopyConstructor || SpecMemKind == clang::Sema::CXXMoveConstructor) &&
+         if ((SpecMemKind == clang::CXXSpecialMemberKind::DefaultConstructor && CXXMD->getNumParams() == 0) ||
+             ((SpecMemKind == clang::CXXSpecialMemberKind::CopyConstructor || SpecMemKind == clang::CXXSpecialMemberKind::MoveConstructor) &&
               CXXMD->getNumParams() == 1)) {
             // This is a special member pulled in through a using decl. Special
             // members of derived classes cannot be replaced; ignore this using decl,
             // and keep only the (still possibly compiler-generated) special member of the
             // derived class.
-            // NOTE that e.g. `Klass(int = 0)` has SpecMemKind == clang::Sema::CXXDefaultConstructor,
+            // NOTE that e.g. `Klass(int = 0)` has SpecMemKind == clang::CXXSpecialMemberKind::DefaultConstructor,
             // yet this signature must be exposed, so check the argument count.
             return true;
          }
@@ -172,11 +172,11 @@ TClingCXXRecMethIter::InstantiateTemplateWithDefaults(const clang::RedeclarableT
       } else if (auto TTP = dyn_cast<TemplateTypeParmDecl>(templateParm)) {
          if (!TTP->hasDefaultArgument())
             return nullptr;
-         defaultTemplateArgs.emplace_back(TTP->getDefaultArgument());
+         defaultTemplateArgs.emplace_back(TTP->getDefaultArgument().getArgument());
       } else if (auto NTTP = dyn_cast<NonTypeTemplateParmDecl>(templateParm)) {
          if (!NTTP->hasDefaultArgument())
             return nullptr;
-         defaultTemplateArgs.emplace_back(NTTP->getDefaultArgument());
+         defaultTemplateArgs.emplace_back(NTTP->getDefaultArgument().getArgument());
       } else if (auto TTP = dyn_cast<TemplateTemplateParmDecl>(templateParm)) {
          if (!TTP->hasDefaultArgument())
             return nullptr;
@@ -204,8 +204,7 @@ TClingCXXRecMethIter::InstantiateTemplateWithDefaults(const clang::RedeclarableT
 
    // Collect the function arguments of the templated function, substituting
    // dependent types as possible.
-   TemplateArgumentList templArgList(TemplateArgumentList::OnStack, defaultTemplateArgs);
-   MultiLevelTemplateArgumentList MLTAL{FTD, templArgList.asArray(), /*Final=*/false};
+   MultiLevelTemplateArgumentList MLTAL{FTD, defaultTemplateArgs, /*Final=*/false};
    for (const clang::ParmVarDecl *param : templatedDecl->parameters()) {
       QualType paramType = param->getOriginalType();
 
