@@ -235,4 +235,35 @@ TEST(RDFConcurrency, ParallelRDFCachesEnableImplicitMT)
    ROOT::DisableImplicitMT();
 }
 
+TEST(RDFConcurrency, HistoNSparseDInMT)
+{
+   const int ncores = NUM_THREADS;
+   const int nbins_per_axis = 10;
+   const int nevents = 100000;
+
+   ROOT::EnableImplicitMT(ncores);
+
+   ROOT::RDataFrame df{nevents};
+
+   auto col1 = df.Define("x0", [=](ULong64_t e) { return double(e % nbins_per_axis); }, {"rdfentry_"});
+   auto col2 = col1.Define("x1", [=](ULong64_t e) { return double(e % nbins_per_axis); }, {"rdfentry_"});
+   auto col3 = col2.Define("x2", [=](ULong64_t e) { return double(e % nbins_per_axis); }, {"rdfentry_"});
+   auto col4 = col3.Define("x3", [=](ULong64_t e) { return double(e % nbins_per_axis); }, {"rdfentry_"});
+
+   int nbins[4] = {nbins_per_axis, nbins_per_axis, nbins_per_axis, nbins_per_axis};
+   double xmin[4] = {0., 0., 0., 0.};
+   double xmax[4] = {nbins_per_axis, nbins_per_axis, nbins_per_axis, nbins_per_axis};
+   auto hist = col4.HistoNSparseD<double, double, double, double>({"name", "title", 4, nbins, xmin, xmax},
+                                                                  {"x0", "x1", "x2", "x3"});
+
+   EXPECT_EQ(hist->GetEntries(), nevents);
+
+   for (int i = 1; i <= nbins_per_axis; ++i) {
+      std::vector<int> idx = {i, i, i, i};
+      EXPECT_EQ(hist->GetBinContent(idx.data()), nevents / nbins_per_axis);
+   }
+
+   ROOT::DisableImplicitMT();
+}
+
 #endif

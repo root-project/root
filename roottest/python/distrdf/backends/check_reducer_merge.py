@@ -125,6 +125,28 @@ class TestReducerMerge:
         assert histond_distrdf.GetEntries() == histond_rdf.GetEntries()
         assert histond_distrdf.GetNbins() == histond_rdf.GetNbins()
 
+    def test_histonsparsed_merge(self, payload):
+        """Check the working of HistoND merge operation in the reducer."""
+        nbins = (10, 10, 10, 10)
+        xmin = (0.0, 0.0, 0.0, 0.0)
+        xmax = (100.0, 100.0, 100.0, 100.0)
+        modelTHNSparseD = ("name", "title", 4, nbins, xmin, xmax)
+        colnames = ("x0", "x1", "x2", "x3")
+
+        connection, _ = payload
+        distrdf = ROOT.RDataFrame(100, executor=connection)
+
+        rdf = ROOT.RDataFrame(100)
+
+        distrdf_withcols = self.define_four_columns(distrdf, colnames)
+        rdf_withcols = self.define_four_columns(rdf, colnames)
+
+        histond_distrdf = distrdf_withcols.HistoNSparseD(modelTHNSparseD, colnames)
+        histond_rdf = rdf_withcols.HistoNSparseD(modelTHNSparseD, colnames)
+
+        assert histond_distrdf.GetEntries() == histond_rdf.GetEntries()
+        assert histond_distrdf.GetNbins() == histond_rdf.GetNbins()
+
     def test_profile1d_merge(self, payload):
         """Check the working of Profile1D merge operation in the reducer."""
         # Operations with DistRDF
