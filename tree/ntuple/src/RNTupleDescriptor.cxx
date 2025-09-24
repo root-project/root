@@ -169,6 +169,13 @@ bool ROOT::RFieldDescriptor::IsCustomClass() const
    return true;
 }
 
+bool ROOT::RFieldDescriptor::IsStdAtomic() const
+{
+   if (fStructure != ROOT::ENTupleStructure::kPlain)
+      return false;
+   return (fTypeName.rfind("std::atomic<", 0) == 0);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool ROOT::RColumnDescriptor::operator==(const RColumnDescriptor &other) const
