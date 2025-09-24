@@ -64,7 +64,7 @@ void ROOT::RCardinalityField::GenerateColumns(const ROOT::RNTupleDescriptor &des
 void ROOT::RCardinalityField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeVersion | kDiffStructure | kDiffTypeName);
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeVersion | kDiffStructure | kDiffTypeName).ThrowOnError();
    if (fieldDesc.GetStructure() == ENTupleStructure::kPlain) {
       if (fieldDesc.GetTypeName().rfind("ROOT::RNTupleCardinality<", 0) != 0) {
          throw RException(R__FAIL("RCardinalityField " + GetQualifiedFieldName() +
@@ -615,7 +615,7 @@ void ROOT::RRecordField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    R__ASSERT(GetTypeName().empty());
 
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName | kDiffTypeVersion);
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName | kDiffTypeVersion).ThrowOnError();
 
    // The on-disk ID of subfields is matched by field name. So we inherently support reordering of fields
    // and we will ignore extra on-disk fields.
@@ -830,8 +830,8 @@ void ROOT::RNullableField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    static const std::vector<std::string> prefixes = {"std::optional<", "std::unique_ptr<"};
 
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
-   EnsureMatchingTypePrefix(fieldDesc, prefixes);
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName).ThrowOnError();
+   EnsureMatchingTypePrefix(fieldDesc, prefixes).ThrowOnError();
 }
 
 ROOT::RNTupleLocalIndex ROOT::RNullableField::GetItemIndex(ROOT::NTupleSize_t globalIndex)
@@ -1050,8 +1050,8 @@ void ROOT::RAtomicField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    static const std::vector<std::string> prefixes = {"std::atomic<"};
 
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
-   EnsureMatchingTypePrefix(fieldDesc, prefixes);
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName).ThrowOnError();
+   EnsureMatchingTypePrefix(fieldDesc, prefixes).ThrowOnError();
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RAtomicField::SplitValue(const RValue &value) const
