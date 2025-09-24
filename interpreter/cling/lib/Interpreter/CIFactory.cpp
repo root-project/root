@@ -1528,8 +1528,12 @@ namespace {
           bool ReadTargetOptions(const TargetOptions &TargetOpts,
                                  bool /*Complain*/,
                                  bool /*AllowCompatibleDifferences*/) override {
+            // TODO quick workaround for enabling CUDA. The loaded PCH has an 
+            // empty SDKVersion, which causes a compilation error.
+            auto PrevSDKVersion = m_Invocation.getTargetOpts().SDKVersion; 
             m_Invocation.getTargetOpts() = TargetOpts;
             m_ReadTarget = true;
+            m_Invocation.getTargetOpts().SDKVersion = PrevSDKVersion;
             return false;
           }
           bool ReadPreprocessorOptions(
