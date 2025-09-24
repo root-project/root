@@ -77,7 +77,15 @@ namespace {
          if (fOnfileObject) fBuffer.PopDataCache();
       }
    };
-   bool IsAssociativeContainer(Int_t stltype) {
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Check if a collection proxy represents an associative collection (e.g., std::map, std::set)
+   /// rather than a sequential collection (e.g., std::vector, std::list).
+   /// Both the version based on the fSTLtype integer and the one based on the TVirtualCollectionProxy
+   /// will return the same result about the 'currently' in memory collection attached to the branch.
+   /// The main difference is that the fSTLtype can be used without checking whether
+   /// fCollProxy is set or not but might (or might not) be a tad bit slower.
+   bool IsAssociativeContainer(Int_t stltype)
+   {
       switch (stltype) {
          case ROOT::kSTLset:
          case ROOT::kSTLmultiset:
@@ -92,6 +100,11 @@ namespace {
             return false;
       }
    }
+   bool IsAssociativeContainer(const TVirtualCollectionProxy &proxy)
+   {
+      return proxy.GetProperties() & TVirtualCollectionProxy::kIsAssociative;
+   }
+
    void RecursiveResetReadEntry(TBranch *br)
    {
       br->ResetReadEntry();
@@ -1475,7 +1488,7 @@ void TBranchElement::FillLeavesCollection(TBuffer& b)
       //NOTE: this does not work for not vectors since the CreateIterators expects a TGenCollectionProxy::TStaging as its argument!
       //NOTE: and those not work in general yet, since the TStaging object is neither created nor passed.
       //  We need to review how to avoid the need for a TStaging during the writing.
-      if (proxy->GetProperties() & TVirtualCollectionProxy::kIsAssociative) {
+      if (IsAssociativeContainer(*proxy)) {
          fWriteIterators->CreateIterators(fObject, proxy);
       } else {
          fIterators->CreateIterators(fObject, proxy);
@@ -4346,7 +4359,7 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
       fIterators->CreateIterators(alternate, proxy);
    }
 
-   if (IsAssociativeContainer(fSTLtype)) {
+   if (IsAssociativeContainer(*proxy)) {
 
       Int_t nbranches = fBranches.GetEntriesFast();
       for (Int_t i = 0; i < nbranches; ++i) {
@@ -5141,7 +5154,7 @@ void TBranchElement::SetAddressImpl(void* addr, bool implied, Int_t offset)
 
             if(fSTLtype != ROOT::kSTLvector && fCollProxy->HasPointers() && fSplitLevel > TTree::kSplitCollectionOfPointers ) {
                fPtrIterators = new TVirtualCollectionPtrIterators(fCollProxy);
-            } else if (fCollProxy->GetProperties() & TVirtualCollectionProxy::kIsAssociative) {
+            } else if (IsAssociativeContainer(*fCollProxy)) {
                fWriteIterators = new TVirtualCollectionIterators(fCollProxy,false);
                fIterators = new TVirtualCollectionIterators(fCollProxy);
             } else {
@@ -5183,7 +5196,7 @@ void TBranchElement::SetAddressImpl(void* addr, bool implied, Int_t offset)
             delete fPtrIterators;
             if(fSTLtype != ROOT::kSTLvector && fCollProxy->HasPointers() && fSplitLevel > TTree::kSplitCollectionOfPointers ) {
                fPtrIterators = new TVirtualCollectionPtrIterators(fCollProxy);
-            } else if (fCollProxy->GetProperties() & TVirtualCollectionProxy::kIsAssociative) {
+            } else if (IsAssociativeContainer(*fCollProxy)) {
                fWriteIterators = new TVirtualCollectionIterators(fCollProxy,false);
                fIterators = new TVirtualCollectionIterators(fCollProxy);
             } else {
@@ -5219,7 +5232,7 @@ void TBranchElement::SetAddressImpl(void* addr, bool implied, Int_t offset)
                delete fPtrIterators;
                if(fSTLtype != ROOT::kSTLvector && fCollProxy->HasPointers() && fSplitLevel > TTree::kSplitCollectionOfPointers ) {
                   fPtrIterators = new TVirtualCollectionPtrIterators(fCollProxy);
-               } else if (fCollProxy->GetProperties() & TVirtualCollectionProxy::kIsAssociative) {
+               } else if (IsAssociativeContainer(*fCollProxy)) {
                   fWriteIterators = new TVirtualCollectionIterators(fCollProxy,false);
                   fIterators = new TVirtualCollectionIterators(fCollProxy);
                } else {
@@ -5289,7 +5302,7 @@ void TBranchElement::SetAddressImpl(void* addr, bool implied, Int_t offset)
          if (!fIterators && !fPtrIterators) {
             if(fSTLtype != ROOT::kSTLvector && GetCollectionProxy()->HasPointers() && fSplitLevel > TTree::kSplitCollectionOfPointers ) {
                fPtrIterators = new TVirtualCollectionPtrIterators(GetCollectionProxy());
-            } else if (fCollProxy->GetProperties() & TVirtualCollectionProxy::kIsAssociative) {
+            } else if (IsAssociativeContainer(*fCollProxy)) {
                fWriteIterators = new TVirtualCollectionIterators(fCollProxy,false);
                fIterators = new TVirtualCollectionIterators(fCollProxy);
             } else {
@@ -5862,7 +5875,7 @@ void TBranchElement::SetFillLeavesPtr()
          } else {
             fFillLeaves = (FillLeaves_t)&TBranchElement::FillLeavesCollectionSplitPtrMember;
          }
-      } else if (GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsAssociative) {
+      } else if (IsAssociativeContainer(*GetCollectionProxy())) {
          fFillLeaves = (FillLeaves_t)&TBranchElement::FillLeavesAssociativeCollectionMember;
       } else {
          fFillLeaves = (FillLeaves_t)&TBranchElement::FillLeavesCollectionMember;
