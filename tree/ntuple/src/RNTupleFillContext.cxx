@@ -2,8 +2,6 @@
 /// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2024-02-22
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
@@ -27,8 +25,8 @@
 #include <algorithm>
 #include <utility>
 
-ROOT::Experimental::RNTupleFillContext::RNTupleFillContext(std::unique_ptr<ROOT::RNTupleModel> model,
-                                                           std::unique_ptr<ROOT::Internal::RPageSink> sink)
+ROOT::RNTupleFillContext::RNTupleFillContext(std::unique_ptr<ROOT::RNTupleModel> model,
+                                             std::unique_ptr<ROOT::Internal::RPageSink> sink)
    : fSink(std::move(sink)), fModel(std::move(model)), fMetrics("RNTupleFillContext")
 {
    fModel->Freeze();
@@ -42,7 +40,7 @@ ROOT::Experimental::RNTupleFillContext::RNTupleFillContext(std::unique_ptr<ROOT:
    fUnzippedClusterSizeEst = scale * writeOpts.GetApproxZippedClusterSize();
 }
 
-ROOT::Experimental::RNTupleFillContext::~RNTupleFillContext()
+ROOT::RNTupleFillContext::~RNTupleFillContext()
 {
    try {
       FlushCluster();
@@ -56,14 +54,14 @@ ROOT::Experimental::RNTupleFillContext::~RNTupleFillContext()
    }
 }
 
-void ROOT::Experimental::RNTupleFillContext::FlushColumns()
+void ROOT::RNTupleFillContext::FlushColumns()
 {
    for (auto &field : ROOT::Internal::GetFieldZeroOfModel(*fModel)) {
       ROOT::Internal::CallFlushColumnsOnField(field);
    }
 }
 
-void ROOT::Experimental::RNTupleFillContext::FlushCluster()
+void ROOT::RNTupleFillContext::FlushCluster()
 {
    if (fNEntries == fLastFlushed) {
       return;
@@ -91,7 +89,7 @@ void ROOT::Experimental::RNTupleFillContext::FlushCluster()
    fUnzippedClusterSize = 0;
 }
 
-void ROOT::Experimental::RNTupleFillContext::CommitStagedClusters()
+void ROOT::RNTupleFillContext::CommitStagedClusters()
 {
    if (fStagedClusters.empty()) {
       return;
