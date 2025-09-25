@@ -20,9 +20,7 @@
 
 namespace ROOT {
 
-namespace Experimental {
 class RNTupleFillContext;
-}
 
 // clang-format off
 /**
@@ -35,7 +33,7 @@ ShouldFlushCluster() and call RNTupleWriter::FlushCluster() or RNTupleFillContex
 */
 // clang-format on
 class RNTupleFillStatus {
-   friend class Experimental::RNTupleFillContext;
+   friend class RNTupleFillContext;
 
 private:
    /// Number of entries written into the current cluster

@@ -104,7 +104,7 @@ class RNTupleWriter {
       Internal::CreateRNTupleWriter(std::unique_ptr<ROOT::RNTupleModel>, std::unique_ptr<Internal::RPageSink>);
 
 private:
-   Experimental::RNTupleFillContext fFillContext;
+   RNTupleFillContext fFillContext;
    Experimental::Detail::RNTupleMetrics fMetrics;
 
    ROOT::NTupleSize_t fLastCommittedClusterGroup = 0;

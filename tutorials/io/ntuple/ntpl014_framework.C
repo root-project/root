@@ -24,7 +24,7 @@
 /// \date September 2024
 /// \author The ROOT Team
 
-// NOTE: The RNTupleParallelWriter, RNTupleFillContext, and RRawPtrWriteEntry are experimental at this point.
+// NOTE: The RRawPtrWriteEntry is experimental at this point.
 // Functionality and interface are still subject to changes.
 
 #include <ROOT/RRawPtrWriteEntry.hxx>
@@ -50,8 +50,6 @@
 #include <vector>
 
 // Import classes from Experimental namespace for the time being
-using ROOT::Experimental::RNTupleFillContext;
-using ROOT::Experimental::RNTupleParallelWriter;
 using ROOT::Experimental::Detail::RRawPtrWriteEntry;
 
 using ModelTokensPair = std::pair<std::unique_ptr<ROOT::RNTupleModel>, std::vector<ROOT::RFieldToken>>;
@@ -92,11 +90,11 @@ public:
 // A ParallelOutputter uses an RNTupleParallelWriter to append an RNTuple to a TFile.
 class ParallelOutputter final : public Outputter {
    FileService &fFileService;
-   std::unique_ptr<RNTupleParallelWriter> fParallelWriter;
+   std::unique_ptr<ROOT::RNTupleParallelWriter> fParallelWriter;
    std::vector<ROOT::RFieldToken> fTokens;
 
    struct SlotData {
-      std::shared_ptr<RNTupleFillContext> fillContext;
+      std::shared_ptr<ROOT::RNTupleFillContext> fillContext;
       std::unique_ptr<RRawPtrWriteEntry> entry;
    };
    std::vector<SlotData> fSlots;
@@ -109,7 +107,8 @@ public:
       auto &model = modelTokens.first;
 
       std::lock_guard g(fileService.GetMutex());
-      fParallelWriter = RNTupleParallelWriter::Append(std::move(model), ntupleName, fFileService.GetFile(), options);
+      fParallelWriter =
+         ROOT::RNTupleParallelWriter::Append(std::move(model), ntupleName, fFileService.GetFile(), options);
    }
 
    void InitSlot(unsigned slot) final
