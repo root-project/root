@@ -244,6 +244,10 @@ else
    fi
 fi
 
+if ! [ -f "${ROOTSYS}/bin/root-config" ] ; then
+   echo "ERROR: root-config not found under ROOTSYS=\"${ROOTSYS}/\"" >&2
+   ROOTSYS=; export ROOTSYS
+return 1
 
 clean_environment
 set_environment
