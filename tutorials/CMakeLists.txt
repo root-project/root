@@ -127,6 +127,10 @@ if (NOT dataframe)
         roofit/roofit/rf408_RDataFrameToRooFit.py
         roofit/roofit/rf618_mixture_models.py # depends on analysis/dataframe/df106_HiggsToFourLeptons.py
     )
+    # RNTuple tutorials depending on RDataFrame
+    list(APPEND dataframe_veto io/ntuple/ntpl004_dimuon.C)
+    list(APPEND dataframe_veto io/ntuple/ntpl008_import.C)
+    list(APPEND dataframe_veto io/ntuple/ntpl011_global_temperatures.C)
 endif()
 
 if(NOT sqlite)
@@ -141,6 +145,9 @@ if(NOT davix)
     set(davix_veto
         legacy/hist040_TH2Poly_europe.C hist/hist039_TH2Poly_usa.*
         legacy/multicore/mp104_processH1.C analysis/parallel/mp_processSelector.C)
+    list(APPEND davix_veto io/ntuple/ntpl004_dimuon.C)
+    list(APPEND davix_veto io/ntuple/ntpl008_import.C)
+    list(APPEND davix_veto io/ntuple/ntpl011_global_temperatures.C)
 endif()
 
 if(NOT geom)
@@ -389,15 +396,7 @@ if(root7)
                  tutorials/visualisation/webgui/browserv7/filedialog.cxx
                  tutorials/visualisation/webgui/fitpanelv7/fitpanel6.cxx
       )
-  if(NOT davix)
-    list(APPEND root7_veto io/ntuple/ntpl004_dimuon.C)
-    list(APPEND root7_veto io/ntuple/ntpl008_import.C)
-    list(APPEND root7_veto io/ntuple/ntpl011_global_temperatures.C)
-  endif()
   if(NOT dataframe)
-    list(APPEND root7_veto io/ntuple/ntpl011_global_temperatures.C)
-    list(APPEND root7_veto io/ntuple/ntpl004_dimuon.C)
-    list(APPEND root7_veto io/ntuple/ntpl008_import.C)
     list(APPEND root7_veto visualisation/rcanvas/df104.py)
     list(APPEND root7_veto visualisation/rcanvas/df105.py)
   endif()
@@ -413,13 +412,8 @@ else()
   endif()
   file(GLOB v7_veto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ visualisation/webgui/browserv7/*.cxx visualisation/webgui/fitpanelv7/*.cxx visualisation/rcanvas/*.py visualisation/rcanvas/*.cxx)
   list(APPEND root7_veto ${v7_veto_files})
-  # This depends on ntupleutil
-  list(APPEND root7_veto io/ntuple/ntpl008_import.C)
   # This depends on RCanvas
   list(APPEND root7_veto io/ntuple/ntpl011_global_temperatures.C)
-  if((NOT davix) OR (NOT dataframe))
-    list(APPEND root7_veto io/ntuple/ntpl004_dimuon.C)
-  endif()
 endif()
 
 #---These ones are disabled !!! ------------------------------------
