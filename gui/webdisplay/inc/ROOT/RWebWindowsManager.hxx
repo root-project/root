@@ -51,6 +51,7 @@ private:
    bool fUseHttpThrd{false};              ///<! use special thread for THttpServer
    bool fUseSenderThreads{false};         ///<! use extra threads for sending data from RWebWindow to clients
    float fLaunchTmout{30.};               ///<! timeout in seconds to start browser process, default 30s
+   float fReconnectTmout{15.};            ///<! timeout in seconds to reconnect connection, default 15s
    bool fExternalProcessEvents{false};    ///<! indicate that there are external process events engine
    std::unique_ptr<TExec> fAssgnExec;     ///<! special exec to assign thread id via ProcessEvents
    WebWindowShowCallback_t fShowCallback; ///<! function called for each RWebWindow::Show call
@@ -64,6 +65,9 @@ private:
 
    /// Returns timeout for launching new browser process
    float GetLaunchTmout() const { return fLaunchTmout; }
+
+   /// Returns timeout for launching new browser process
+   float GetReconnectTmout() const { return fReconnectTmout; }
 
    void Unregister(RWebWindow &win);
 
