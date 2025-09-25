@@ -59,9 +59,9 @@ TEST(TChain, WrongCacheReadTwoTrees)
       TFile *f1 = chain.GetTree()->GetCurrentFile();
       TTree *t2 = f1->Get<TTree>("tree2");
       double var2 = 0.0;
-      t2.Branch("bDouble", &var2);
+      t2->SetBranchAddress("bDouble", &var2);
       EXPECT_NE(t2->GetEntry(0), 0);
-      EXPECT_NEAR(var2, 2.);
+      EXPECT_FLOAT_EQ(var2, 2.);
 
       // first entry in second file in chain
       Long64_t entry2 = 1;
