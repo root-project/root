@@ -13,6 +13,7 @@ class TTreeCache;
 TEST(TChain, WrongCacheReadTwoTrees)
 {
    const auto treename1 = "tree1";
+   const auto treename2 = "tree2";
    const auto filename1 = "tchain7973_file1.root";
    const auto filename2 = "tchain7973_file2.root";
    {
