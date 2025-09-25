@@ -9,13 +9,67 @@
 
 class TTreeCache;
 
+// https://its.cern.ch/jira/browse/ROOT-7973
+TEST(TChain, WrongCacheReadTwoTrees)
+{
+   const auto treename1 = "tree1";
+   const auto filename1 = "tchain7973_file1.root";
+   const auto filename2 = "tchain7973_file2.root";
+   {
+      TFile f(filename1, "RECREATE");
+      TTree t1(treename1, treename1);
+      int var = 0;
+      t1.Branch("bInt", &var);
+      var = 1;
+      t1.Fill();
+      TTree t2(treename2, treename2);
+      double var2 = 0.0;
+      t2.Branch("bDouble", &var2);
+      var2 = 2.0;
+      t2.Fill();
+      f.Write();
+      f.Close();
+   }
+   {
+      TFile f(filename2, "RECREATE");
+      TTree t1(treename1, treename1);
+      int var = 0;
+      t1.Branch("bInt", &var);
+      var = 3;
+      t1.Fill();
+      f.Write();
+      f.Close();
+   }
+   {
+      TChain chain(treename1);
+      chain.AddFile(filename1);
+      chain.AddFile(filename2);
+      
+      // first entry in first file in chain
+      Long64_t entry = 0;
+      Long64_t treeEntry = chain.LoadTree(entry);
+
+      // read another tree from the same file
+      TFile *f1 = chain.GetTree()->GetCurrentFile();
+      TTree *tree2 = f1->Get<TTree>("tree2");
+      tree2->GetEntry(0);
+
+      // first entry in second file in chain
+      Long64_t entry2 = 1;
+      Long64_t treeEntry2 = chain.LoadTree(entry2);
+      EXPECT_EQ(treeEntry2, 0);
+   }
+   gSystem->Unlink(filename1);
+   gSystem->Unlink(filename2);
+}
+
 // ROOT-10672
 TEST(TChain, GetReadCacheBug)
 {
    const auto treename = "tree";
    const auto filename = "tchain_getreadcachebug.root";
    {
-      TFile f(filename, "recreate");
+      TFile f(filename, "RECREATE");
       ASSERT_FALSE(f.IsZombie());
       TTree t(treename, treename);
       t.Fill();
