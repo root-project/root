@@ -35,10 +35,6 @@ class RNTupleReader;
 
 namespace Experimental {
 class RNTupleFillContext;
-class RNTupleProcessor;
-class RNTupleSingleProcessor;
-class RNTupleChainProcessor;
-class RNTupleJoinProcessor;
 } // namespace Experimental
 
 // clang-format off
@@ -55,10 +51,6 @@ class REntry {
    friend class RNTupleModel;
    friend class RNTupleReader;
    friend class Experimental::RNTupleFillContext;
-   friend class Experimental::RNTupleProcessor;
-   friend class Experimental::RNTupleSingleProcessor;
-   friend class Experimental::RNTupleChainProcessor;
-   friend class Experimental::RNTupleJoinProcessor;
 
 private:
    /// The entry must be linked to a specific model, identified by a model ID
