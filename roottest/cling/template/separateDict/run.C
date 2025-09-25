@@ -1,9 +1,9 @@
 {
 gSystem->Setenv("LINES","-1");
-gSystem->Load("libmaster");
+gSystem->Load("libmasterSeparate");
 gROOT->ProcessLine(".Class Name::MyClass");
-gSystem->Load("libslave1");
+gSystem->Load("libslave1Separate");
 gROOT->ProcessLine(".Class Name::MyClass");
-gSystem->Load("libslave2");
+gSystem->Load("libslave2Separate");
 gROOT->ProcessLine(".Class Name::MyClass");
 }
