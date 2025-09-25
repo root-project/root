@@ -197,13 +197,6 @@ void ROOT::RFieldBase::RBulkValues::Reset(RNTupleLocalIndex firstIndex, std::siz
    fSize = size;
 }
 
-void ROOT::RFieldBase::RBulkValues::CountValidValues()
-{
-   fNValidValues = 0;
-   for (std::size_t i = 0; i < fSize; ++i)
-      fNValidValues += static_cast<std::size_t>(fMaskAvail[i]);
-}
-
 void ROOT::RFieldBase::RBulkValues::AdoptBuffer(void *buf, std::size_t capacity)
 {
    ReleaseValues();
