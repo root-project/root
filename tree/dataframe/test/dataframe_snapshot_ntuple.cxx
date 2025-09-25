@@ -101,6 +101,28 @@ TEST(RDFSnapshotRNTuple, LazyNotTriggered)
    EXPECT_TRUE(gSystem->AccessPathName(fileGuard.GetPath().c_str()));
 }
 
+TEST(RDFSnapshotRNTuple, WriteOpts)
+{
+   FileRAII fileGuard{"RDFSnapshotRNTuple_write_opts.root"};
+   const std::vector<std::string> columns = {"x"};
+
+   auto df = ROOT::RDataFrame(25ull).Define("x", [] { return 10; });
+
+   ROOT::RNTupleWriteOptions writeOpts;
+   writeOpts.SetEnablePageChecksums(false);
+
+   RSnapshotOptions opts;
+   opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+   opts.fNTupleWriteOpts = writeOpts;
+
+   auto sdf = df.Snapshot("ntuple", fileGuard.GetPath(), "x", opts);
+
+   EXPECT_EQ(columns, sdf->GetColumnNames());
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_FALSE(reader->GetDescriptor().GetClusterDescriptor(0).GetPageRange(0).GetPageInfos()[0].HasChecksum());
+}
+
 TEST(RDFSnapshotRNTuple, Compression)
 {
    FileRAII fileGuard{"RDFSnapshotRNTuple_compression.root"};
@@ -108,18 +130,64 @@ TEST(RDFSnapshotRNTuple, Compression)
 
    auto df = ROOT::RDataFrame(25ull).Define("x", [] { return 10; });
 
-   RSnapshotOptions opts;
-   opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
-   opts.fCompressionAlgorithm = ROOT::RCompressionSetting::EAlgorithm::kLZ4;
-   opts.fCompressionLevel = 4;
+   // Default should be taken from RNTupleWriteOptions provided by RSnapshotOptions (zstd)
+   {
+      RSnapshotOptions opts;
+      opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
 
-   auto sdf = df.Snapshot("ntuple", fileGuard.GetPath(), "x", opts);
+      auto sdf = df.Snapshot("ntuple", fileGuard.GetPath(), "x", opts);
 
-   EXPECT_EQ(columns, sdf->GetColumnNames());
+      EXPECT_EQ(columns, sdf->GetColumnNames());
 
-   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   auto compSettings = *reader->GetDescriptor().GetClusterDescriptor(0).GetColumnRange(0).GetCompressionSettings();
-   EXPECT_EQ(404, compSettings);
+      auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+      auto compSettings = *reader->GetDescriptor().GetClusterDescriptor(0).GetColumnRange(0).GetCompressionSettings();
+      EXPECT_EQ(505, compSettings);
+   }
+   // Directly through RSnapshotOptions
+   {
+      RSnapshotOptions opts;
+      opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+      opts.fCompressionAlgorithm = ROOT::RCompressionSetting::EAlgorithm::kLZ4;
+      opts.fCompressionLevel = 4;
+
+      auto sdf = df.Snapshot("ntuple", fileGuard.GetPath(), "x", opts);
+
+      EXPECT_EQ(columns, sdf->GetColumnNames());
+
+      auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+      auto compSettings = *reader->GetDescriptor().GetClusterDescriptor(0).GetColumnRange(0).GetCompressionSettings();
+      EXPECT_EQ(404, compSettings);
+   }
+   // Through RNTupleWriteOptions provided by RSnapshotOptions
+   {
+      RSnapshotOptions opts;
+      opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+      opts.fNTupleWriteOpts.SetCompression(404);
+
+      auto sdf = df.Snapshot("ntuple", fileGuard.GetPath(), "x", opts);
+
+      EXPECT_EQ(columns, sdf->GetColumnNames());
+
+      auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+      auto compSettings = *reader->GetDescriptor().GetClusterDescriptor(0).GetColumnRange(0).GetCompressionSettings();
+      EXPECT_EQ(404, compSettings);
+   }
+   // When both are set, preference is given to RNTupleWriteOptions
+   {
+      RSnapshotOptions opts;
+      opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+      opts.fCompressionAlgorithm = ROOT::RCompressionSetting::EAlgorithm::kLZ4;
+      opts.fCompressionLevel = 4;
+      opts.fNTupleWriteOpts.SetCompression(207);
+
+      auto sdf = df.Snapshot("ntuple", fileGuard.GetPath(), "x", opts);
+
+      EXPECT_EQ(columns, sdf->GetColumnNames());
+
+      auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+      auto compSettings = *reader->GetDescriptor().GetClusterDescriptor(0).GetColumnRange(0).GetCompressionSettings();
+      EXPECT_EQ(207, compSettings);
+   }
 }
 
 class RDFSnapshotRNTupleTest : public ::testing::Test {

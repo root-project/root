@@ -11,8 +11,9 @@
 #ifndef ROOT_RSNAPSHOTOPTIONS
 #define ROOT_RSNAPSHOTOPTIONS
 
+#include "ROOT/RNTupleWriteOptions.hxx"
 #include <Compression.h>
-#include <optional>
+
 #include <string_view>
 #include <string>
 
@@ -31,6 +32,7 @@ struct RSnapshotOptions {
    RSnapshotOptions() = default;
    RSnapshotOptions(std::string_view mode, ECAlgo comprAlgo, int comprLevel, int autoFlush, int splitLevel, bool lazy,
                     bool overwriteIfExists = false, bool vector2RVec = true, int basketSize = -1,
+                    ROOT::RNTupleWriteOptions ntupleWriteOpts = ROOT::RNTupleWriteOptions(),
                     ESnapshotOutputFormat outputFormat = ESnapshotOutputFormat::kDefault)
       : fMode(mode),
         fCompressionAlgorithm(comprAlgo),
@@ -41,6 +43,7 @@ struct RSnapshotOptions {
         fOverwriteIfExists(overwriteIfExists),
         fVector2RVec(vector2RVec),
         fBasketSize(basketSize),
+        fNTupleWriteOpts(ntupleWriteOpts),
         fOutputFormat(outputFormat)
    {
    }
@@ -55,7 +58,8 @@ struct RSnapshotOptions {
    bool fVector2RVec = true;         ///< If set to true will convert std::vector columns to RVec when saving to disk
    int fBasketSize = -1;             ///< Set a custom basket size option. For more details, see
                                      ///< https://root.cern/manual/trees/#baskets-clusters-and-the-tree-header
-   ESnapshotOutputFormat fOutputFormat = ESnapshotOutputFormat::kDefault; ///< Which data format to write to
+   ROOT::RNTupleWriteOptions fNTupleWriteOpts = ROOT::RNTupleWriteOptions(); ///< RNTuple-specific write options
+   ESnapshotOutputFormat fOutputFormat = ESnapshotOutputFormat::kDefault;    ///< Which data format to write to
 };
 } // namespace RDF
 } // namespace ROOT
