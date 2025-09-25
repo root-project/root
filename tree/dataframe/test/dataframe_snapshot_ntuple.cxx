@@ -109,19 +109,56 @@ TEST(RDFSnapshotRNTuple, WriteOpts)
 
    auto df = ROOT::RDataFrame(25ull).Define("x", [] { return 10; });
 
-   ROOT::RNTupleWriteOptions writeOpts;
-   writeOpts.SetEnablePageChecksums(false);
+   {
+      ROOT::RNTupleWriteOptions writeOpts;
+      writeOpts.SetEnablePageChecksums(false);
 
-   RSnapshotOptions opts;
-   opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
-   opts.fNTupleWriteOpts = writeOpts;
+      RSnapshotOptions opts;
+      opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+      opts.fNTupleWriteOpts = writeOpts;
 
-   auto sdf = df.Snapshot("ntuple", fileGuard.GetPath(), "x", opts);
+      auto sdf = df.Snapshot("ntuple", fileGuard.GetPath(), "x", opts);
 
-   EXPECT_EQ(columns, sdf->GetColumnNames());
+      EXPECT_EQ(columns, sdf->GetColumnNames());
 
-   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   EXPECT_FALSE(reader->GetDescriptor().GetClusterDescriptor(0).GetPageRange(0).GetPageInfos()[0].HasChecksum());
+      auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+      EXPECT_FALSE(reader->GetDescriptor().GetClusterDescriptor(0).GetPageRange(0).GetPageInfos()[0].HasChecksum());
+   }
+
+   // Setting TTree-specific options while the output format is set to RNTuple should result in a warning
+   {
+      RSnapshotOptions opts;
+      opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+      opts.fAutoFlush = 1;
+
+      ROOT_EXPECT_WARNING(df.Snapshot("ntuple", fileGuard.GetPath(), "x", opts), "Snapshot",
+                          "The TTree-specific fAutoFlush option in RSnapshotOptions has been set, but the output "
+                          "format is set to RNTuple, so this option won't have any effect. Use the fNTupleWriteOptions "
+                          "option available in RSnapshotOptions to configure the output RNTuple. Alternatively, change "
+                          "fOutputFormat to snapshot to TTree instead.");
+   }
+   {
+      RSnapshotOptions opts;
+      opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+      opts.fSplitLevel = 1;
+
+      ROOT_EXPECT_WARNING(df.Snapshot("ntuple", fileGuard.GetPath(), "x", opts), "Snapshot",
+                          "The TTree-specific fSplitLevel option in RSnapshotOptions has been set, but the output "
+                          "format is set to RNTuple, so this option won't have any effect. Use the fNTupleWriteOptions "
+                          "option available in RSnapshotOptions to configure the output RNTuple. Alternatively, change "
+                          "fOutputFormat to snapshot to TTree instead.");
+   }
+   {
+      RSnapshotOptions opts;
+      opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+      opts.fBasketSize = 64000;
+
+      ROOT_EXPECT_WARNING(df.Snapshot("ntuple", fileGuard.GetPath(), "x", opts), "Snapshot",
+                          "The TTree-specific fBasketSize option in RSnapshotOptions has been set, but the output "
+                          "format is set to RNTuple, so this option won't have any effect. Use the fNTupleWriteOptions "
+                          "option available in RSnapshotOptions to configure the output RNTuple. Alternatively, change "
+                          "fOutputFormat to snapshot to TTree instead.");
+   }
 }
 
 TEST(RDFSnapshotRNTuple, Compression)
