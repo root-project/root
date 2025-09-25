@@ -1348,6 +1348,25 @@ TEST_P(RDFVary, VaryHistos)
    res = hNs["x:1"].Projection(3);
    EXPECT_DOUBLE_EQ(res->GetMean(), 5.);
    delete res;
+
+   auto hNSparse = df.HistoNSparseD<ROOT::RVecI, ROOT::RVecI, ROOT::RVecI, ROOT::RVecI>({"", "", 4, nbins, xmin, xmax},
+                                                                            {"x", "x", "x", "x"});
+   auto hNSparses = VariationsFor(hNSparse);
+
+   auto res = hNSparse->Projection(3);
+   EXPECT_DOUBLE_EQ(res->GetMean(), 5.);
+   delete res;
+   res = hNSparses["nominal"].Projection(3);
+   EXPECT_DOUBLE_EQ(res->GetMean(), 5.);
+   delete res;
+   res = hNSparses["x:0"].Projection(3);
+   EXPECT_DOUBLE_EQ(res->GetMean(), 0.);
+   delete res;
+   res = hNSparses["x:1"].Projection(3);
+   EXPECT_DOUBLE_EQ(res->GetMean(), 5.);
+   delete res;
+
+
 }
 
 TEST_P(RDFVary, VaryMax)
