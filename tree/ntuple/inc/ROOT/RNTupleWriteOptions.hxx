@@ -263,6 +263,20 @@ public:
    void SetEnableSamePageMerging(bool val);
 
    std::uint64_t GetMaxKeySize() const { return fMaxKeySize; }
+
+   friend bool operator==(const RNTupleWriteOptions &lhs, const RNTupleWriteOptions &rhs)
+   {
+      return lhs.fCompression == rhs.fCompression && lhs.fApproxZippedClusterSize == rhs.fApproxZippedClusterSize &&
+             lhs.fMaxUnzippedClusterSize == rhs.fMaxUnzippedClusterSize &&
+             lhs.fInitialUnzippedPageSize == rhs.fInitialUnzippedPageSize &&
+             lhs.fMaxUnzippedPageSize == rhs.fMaxUnzippedPageSize && lhs.fPageBufferBudget == rhs.fPageBufferBudget &&
+             lhs.fUseBufferedWrite == rhs.fUseBufferedWrite && lhs.fUseDirectIO == rhs.fUseDirectIO &&
+             lhs.fWriteBufferSize == rhs.fWriteBufferSize && lhs.fUseImplicitMT == rhs.fUseImplicitMT &&
+             lhs.fEnablePageChecksums == rhs.fEnablePageChecksums &&
+             lhs.fEnableSamePageMerging == rhs.fEnableSamePageMerging && lhs.fMaxKeySize == rhs.fMaxKeySize;
+   }
+
+   friend bool operator!=(const RNTupleWriteOptions &lhs, const RNTupleWriteOptions &rhs) { return !(lhs == rhs); }
 };
 
 namespace Internal {
