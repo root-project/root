@@ -874,7 +874,6 @@ private:
    /// Sets a new range for the bulk. If there is enough capacity, the `fValues` array will be reused.
    /// Otherwise a new array is allocated. After reset, fMaskAvail is false for all values.
    void Reset(RNTupleLocalIndex firstIndex, std::size_t size);
-   void CountValidValues();
 
    bool ContainsRange(RNTupleLocalIndex firstIndex, std::size_t size) const
    {
@@ -926,11 +925,14 @@ public:
       bulkSpec.fAuxData = &fAuxData;
       auto nRead = fField->ReadBulk(bulkSpec);
       if (nRead == RBulkSpec::kAllSet) {
-         if ((offset == 0) && (size == fSize)) {
-            fNValidValues = fSize;
-         } else {
-            CountValidValues();
-         }
+         // We expect that field implementations consistently return kAllSet either in all cases or never. This avoids
+         // the following case where we would have to manually count how many valid values we actually have:
+         // 1. A partial ReadBulk, according to maskReq, with values potentially missing in the middle.
+         // 2. A second ReadBulk that reads a complete subrange. If this returned kAllSet, we don't know how to update
+         // fNValidValues, other than counting. The field should return a concrete number of how many new values it read
+         // in addition to those already present.
+         R__ASSERT((offset == 0) && (size == fSize));
+         fNValidValues = fSize;
       } else {
          fNValidValues += nRead;
       }
