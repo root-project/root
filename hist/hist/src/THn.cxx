@@ -186,6 +186,16 @@ THn::THn(const char* name, const char* title,
 {
 }
 
+THn::THn(const char *name, const char *title, const std::vector<TAxis> &axes) : THnBase(name, title, axes)
+{
+   const Int_t dim = axes.size();
+   auto nbins = new Int_t[dim];
+   for (Int_t i = 0; i < dim; i++)
+      nbins[i] = axes.at(i).GetNbins();
+   fSumw2 = TNDArrayT<Double_t>(dim, nbins, kTRUE /*overflow*/);
+   delete[] nbins;
+}
+
 THn::THn(const char *name, const char *title, Int_t dim, const Int_t *nbins,
          const std::vector<std::vector<double>> &xbins)
    : THnBase(name, title, dim, nbins, xbins), fSumw2(dim, nbins, kTRUE /*overflow*/)

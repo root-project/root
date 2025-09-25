@@ -36,7 +36,7 @@ protected:
    THn() = default;
    THn(const char* name, const char* title, Int_t dim, const Int_t* nbins,
        const Double_t* xmin, const Double_t* xmax);
-
+   THn(const char *name, const char *title, const std::vector<TAxis> &axes);
    THn(const char *name, const char *title, Int_t dim, const Int_t *nbins,
        const std::vector<std::vector<double>> &xbins);
 
@@ -225,6 +225,16 @@ public:
        const Double_t* xmin, const Double_t* xmax):
    THn(name, title, dim, nbins, xmin, xmax),
    fArray(dim, nbins, true)  {}
+
+   THnT(const char *name, const char *title, const std::vector<TAxis> &axes) : THn(name, title, axes)
+   {
+      const Int_t dim = axes.size();
+      auto nbins = new Int_t[dim];
+      for (Int_t i = 0; i < dim; i++)
+         nbins[i] = axes.at(i).GetNbins();
+      fArray = TNDArrayT<T>(dim, nbins, true);
+      delete[] nbins;
+   }
 
    THnT(const char *name, const char *title, Int_t dim, const Int_t *nbins,
         const std::vector<std::vector<double>> &xbins)

@@ -43,7 +43,6 @@ class THnSparse: public THnBase {
    TExMap     fBinsContinued;               ///<! Filled bins for non-unique hashes, containing pairs of (bin index 0, bin index 1)
    THnSparseCompactBinCoord *fCompactCoord; ///<! Compact coordinate
 
-   THnSparse(const THnSparse&) = delete;
    THnSparse& operator=(const THnSparse&) = delete;
 
  protected:
@@ -76,6 +75,11 @@ class THnSparse: public THnBase {
    THnSparse(const char* name, const char* title,
              const std::vector<TAxis>& axes,
              Int_t chunksize = 1024 * 16);
+
+   THnSparse(const char *name, const char *title, Int_t dim, const Int_t *nbins,
+             const std::vector<std::vector<double>> &xbins, Int_t chunksize = 1024 * 16);
+
+   THnSparse(const THnSparse &other);
 
    ~THnSparse() override;
 
