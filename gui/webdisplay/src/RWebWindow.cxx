@@ -647,6 +647,8 @@ void RWebWindow::CheckPendingConnections()
 
    ConnectionsList_t selected;
 
+   bool do_clear_on_close = false;
+
    {
       std::lock_guard<std::mutex> grd(fConnMutex);
 
@@ -663,7 +665,12 @@ void RWebWindow::CheckPendingConnections()
       };
 
       fPendingConn.erase(std::remove_if(fPendingConn.begin(), fPendingConn.end(), pred), fPendingConn.end());
+
+      do_clear_on_close = (selected.size() > 0) && (fPendingConn.size() == 0) && (fConn.size() == 0);
    }
+
+   if (do_clear_on_close)
+      fClearOnClose.reset();
 }
 
 
