@@ -630,6 +630,44 @@ THnBase(name, title, axes),
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Construct a THnSparse with dim dimensions and unequal binning.
+/// nbins and std::vector xbins are used to describe bin edges for each dimension.
+/// chunksize represents the size of the chunks.
+
+THnSparse::THnSparse(const char *name, const char *title, Int_t dim, const Int_t *nbins,
+                     const std::vector<std::vector<double>> &xbins, Int_t chunksize)
+   : THnBase(name, title, dim, nbins, xbins), fChunkSize(chunksize), fFilledBins(0), fCompactCoord(nullptr)
+{
+   fCompactCoord = new THnSparseCompactBinCoord(dim, nbins);
+   fBinContent.SetOwner();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a THnSparse as a copy of "other"
+
+THnSparse::THnSparse(const THnSparse &other)
+   : THnBase(other),
+     fChunkSize(other.fChunkSize),
+     fFilledBins(other.fFilledBins),
+     fBins(other.fBins),
+     fBinsContinued(other.fBinsContinued),
+     fCompactCoord(nullptr)
+{
+
+   TObjArray *copiedContent = (TObjArray *)other.fBinContent.Clone();
+   fBinContent = *copiedContent;
+   copiedContent->SetOwner(kFALSE);
+   delete copiedContent;
+   fBinContent.SetOwner(kTRUE);
+
+   Int_t dim = other.GetNdimensions();
+   std::vector<Int_t> nbins(dim);
+   for (Int_t i = 0; i < dim; i++)
+      nbins[i] = other.GetAxis(i)->GetNbins();
+
+   fCompactCoord = new THnSparseCompactBinCoord(dim, nbins.data());
+}
+
 /// Destruct a THnSparse
 
 THnSparse::~THnSparse() {
