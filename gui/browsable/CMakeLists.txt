@@ -26,6 +26,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
     ROOT/Browsable/TObjectElement.hxx
     ROOT/Browsable/TObjectHolder.hxx
     ROOT/Browsable/TObjectItem.hxx
+    ROOT/Browsable/RNTupleItem.hxx
   SOURCES
     src/RElement.cxx
     src/RGroup.cxx

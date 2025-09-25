@@ -10,6 +10,7 @@
 #include <ROOT/Browsable/RProvider.hxx>
 #include <ROOT/Browsable/RLevelIter.hxx>
 #include <ROOT/Browsable/RItem.hxx>
+#include <ROOT/Browsable/RNTupleItem.hxx>
 
 #include <ROOT/RNTupleReader.hxx>
 #include <ROOT/RNTupleBrowseUtils.hxx>
@@ -76,7 +77,7 @@ public:
    /** Create item with TreeMap icon */
    std::unique_ptr<RItem> CreateItem() const override
    {
-      auto item = std::make_unique<RItem>(GetName(), 0, "sap-icon://Chart-Tree-Map");
+      auto item = std::make_unique<RNTupleItem>(GetName(), 0, "sap-icon://Chart-Tree-Map");
       item->SetTitle(GetTitle());
       return item;
    }
@@ -132,7 +133,8 @@ public:
    /** Create item with visualization folder icon */
    std::unique_ptr<RItem> CreateItem() const override
    {
-      auto item = std::make_unique<RItem>(GetName(), 1, "sap-icon://show");
+      auto item =
+         std::make_unique<RNTupleItem>(GetName(), 1, "sap-icon://show", RNTupleItem::ECategory::kVisualization);
       item->SetTitle(GetTitle());
       return item;
    }
@@ -184,7 +186,7 @@ public:
    std::unique_ptr<RItem> CreateItem() override
    {
       if (fCounter == 0) {
-         auto item = std::make_unique<RItem>("TreeMap", 0, "sap-icon://Chart-Tree-Map");
+         auto item = std::make_unique<RNTupleItem>("TreeMap", 0, "sap-icon://Chart-Tree-Map");
          item->SetTitle("TreeMap visualization of RNTuple structure and disk usage");
          return item;
       }
@@ -306,7 +308,7 @@ public:
 
    std::unique_ptr<RItem> CreateItem() const override
    {
-      auto item = std::make_unique<RItem>(GetName(), -1, "sap-icon://table-chart");
+      auto item = std::make_unique<RNTupleItem>(GetName(), -1, "sap-icon://table-chart");
       item->SetTitle(GetTitle());
       return item;
    }
@@ -382,7 +384,8 @@ public:
    std::unique_ptr<RItem> CreateItem() override
    {
       if (fHasVisualization && fCounter == 0) {
-         auto item = std::make_unique<RItem>("Visualization", 1, "sap-icon://show");
+         auto item = std::make_unique<RNTupleItem>("Visualization", 1, "sap-icon://show",
+                                                   RNTupleItem::ECategory::kVisualization);
          item->SetTitle("Visualization tools and options for RNTuple data");
          return item;
       }
@@ -396,8 +399,8 @@ public:
 
       const auto &field = fNtplReader->GetDescriptor().GetFieldDescriptor(fProvidedFieldIds[fieldIndex]);
 
-      auto item =
-         std::make_unique<RItem>(field.GetFieldName(), nchilds, nchilds > 0 ? "sap-icon://split" : "sap-icon://e-care");
+      auto item = std::make_unique<RNTupleItem>(field.GetFieldName(), nchilds,
+                                                nchilds > 0 ? "sap-icon://split" : "sap-icon://e-care");
 
       item->SetTitle("RField name "s + field.GetFieldName() + " type "s + field.GetTypeName());
       return item;
