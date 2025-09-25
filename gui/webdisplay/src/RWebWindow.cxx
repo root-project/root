@@ -914,7 +914,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
 
       if (conn) {
          bool do_clear_on_close = false;
-         if (!conn->fNewKey.empty()) {
+         if (!conn->fNewKey.empty() && (fMgr->GetReconnectTmout() > 0)) {
             // case when same handle want to be reused by client with new key
             std::lock_guard<std::mutex> grd(fConnMutex);
             conn->fKeyUsed = 0;
