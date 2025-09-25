@@ -108,25 +108,25 @@ endif()
 
 # provider for browsing and drawing of RNTuple
 
+ROOT_LINKER_LIBRARY(ROOTNTupleBrowseProvider
+     src/RNTupleBrowseProvider.cxx
+  DEPENDENCIES
+     ROOTBrowsable
+     ROOTNTuple
+     ROOTNTupleBrowse
+)
+
+ROOT_LINKER_LIBRARY(ROOTNTupleDraw6Provider
+     src/RNTupleDraw6Provider.cxx
+  DEPENDENCIES
+     ROOTBrowsable
+     ROOTNTuple
+     ROOTNTupleBrowse
+     Gpad
+     ROOTTreeMap
+)
+
 if(root7)
-  ROOT_LINKER_LIBRARY(ROOTNTupleBrowseProvider
-       src/RNTupleBrowseProvider.cxx
-    DEPENDENCIES
-       ROOTBrowsable
-       ROOTNTuple
-       ROOTNTupleBrowse
-  )
-
-  ROOT_LINKER_LIBRARY(ROOTNTupleDraw6Provider
-       src/RNTupleDraw6Provider.cxx
-    DEPENDENCIES
-       ROOTBrowsable
-       ROOTNTuple
-       ROOTNTupleBrowse
-       Gpad
-       ROOTTreeMap
-  )
-
   ROOT_LINKER_LIBRARY(ROOTNTupleDraw7Provider
        src/RNTupleDraw7Provider.cxx
     DEPENDENCIES
