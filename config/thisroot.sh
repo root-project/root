@@ -238,15 +238,16 @@ if [ -z "${SOURCE}" ]; then
       return 1
    fi
 else
-   # get param to "."
-   thisroot="$(dirname "${SOURCE}")"
-   ROOTSYS=$(cd "${thisroot}/.." > /dev/null && pwd); export ROOTSYS
-   if [ -z "$ROOTSYS" ]; then
-      echo "ERROR: \"cd ${thisroot}/..\" or \"pwd\" failed" >&2
+   thisrootdir=$(dirname $(readlink -e "${SOURCE}"))                                                                          
+   export ROOTSYS=${thisrootdir%/*}
       return 1
    fi
 fi
 
+if ! [ -f "${ROOTSYS}/bin/root-config" ] ; then
+   echo "ERROR: root-config not found under ROOTSYS=\"${ROOTSYS}/\"" >&2
+   ROOTSYS=; export ROOTSYS
+return 1
 
 clean_environment
 set_environment
