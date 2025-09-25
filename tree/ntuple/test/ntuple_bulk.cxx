@@ -78,6 +78,40 @@ TEST(RNTupleBulk, Complex)
    }
 }
 
+TEST(RNTupleBulk, Move)
+{
+   FileRaii fileGuard("test_ntuple_bulk_move.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldInt = model->MakeField<int>("int");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      for (int i = 0; i < 10; ++i) {
+         *fldInt = i;
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   RFieldBase::RBulkValues bulk = reader->GetModel().CreateBulk("int");
+
+   auto mask = std::make_unique<bool[]>(10);
+   std::fill(mask.get(), mask.get() + 10, true);
+   auto intArr10 = static_cast<int *>(bulk.ReadBulk(RNTupleLocalIndex(0, 0), mask.get(), 10));
+   for (int i = 0; i < 10; ++i) {
+      EXPECT_EQ(i, intArr10[i]);
+   }
+
+   // Moving the object should retain the same values pointer that can be reused.
+   RFieldBase::RBulkValues bulkMoved(std::move(bulk));
+   auto intArr10Moved = static_cast<int *>(bulkMoved.ReadBulk(RNTupleLocalIndex(0, 0), mask.get(), 10));
+   EXPECT_EQ(intArr10, intArr10Moved);
+
+   // Same for the move-assignment operator, back into the original object.
+   bulk = std::move(bulkMoved);
+   intArr10 = static_cast<int *>(bulk.ReadBulk(RNTupleLocalIndex(0, 0), mask.get(), 10));
+   EXPECT_EQ(intArr10, intArr10Moved);
+}
+
 TEST(RNTupleBulk, CardinalityField)
 {
    FileRaii fileGuard("test_ntuple_bulk_cardinality.root");
