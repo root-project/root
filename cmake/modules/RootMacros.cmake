@@ -2115,18 +2115,21 @@ function(ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH target install_dir)
 endfunction()
 
 #----------------------------------------------------------------------------
-# If path is a system path, set the return variable is_system_path to true.
+# If path is a system include path, set the return variable
+# is_system_include_path to true.
 # The 1st argument is the path that should be checked
 # The 2nd argument is the return value
 #----------------------------------------------------------------------------
-function (IS_SYSTEM_PATH path is_system_path)
-  foreach (dir ${CMAKE_SYSTEM_PATH})
-    if ("${path}" STREQUALS "$dir")
-      set(${is_system_path} TRUE PARENT_SCOPE)
+function (IS_SYSTEM_INCLUDE_PATH path is_system_include_path)
+  message("CMAKE_SYSTEM_INCLUDE_PATH: ${CMAKE_SYSTEM_INCLUDE_PATH}")
+  foreach (dir ${CMAKE_SYSTEM_INCLUDE_PATH})
+    message("SYSTEM_INCLUDE_DIR: ${dir}")
+    if ("${path}" STREQUAL "${dir}")
+      set(${is_system_include_path} TRUE PARENT_SCOPE)
       return()
     endif()
   endforeach()
-  set(${is_system_path} FALSE PARENT_SCOPE)
+  set(${is_system_include_path} FALSE PARENT_SCOPE)
 endfunction()
 
 #----------------------------------------------------------------------------
@@ -2142,8 +2145,8 @@ function (BUILD_ROOT_INCLUDE_PATH path)
      (${path} MATCHES "${CMAKE_INSTALL_PREFIX}(/.*)?"))
     return()
   endif()
-  IS_SYSTEM_PATH("${path}" is_system_path)
-  if (NOT is_system_path)
+  IS_SYSTEM_INCLUDE_PATH("${path}" is_system_include_path)
+  if (NOT is_system_include_path)
     if ("${DEFAULT_ROOT_INCLUDE_PATH}" STREQUAL "")
       set(DEFAULT_ROOT_INCLUDE_PATH "${path}" PARENT_SCOPE)
     else()
