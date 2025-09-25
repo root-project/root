@@ -210,6 +210,7 @@ TEST(RDFVarySnapshot, Bitmask)
       .Snapshot(treename, filename, {"entry", "x", "y"}, options);
 
    {
+      SCOPED_TRACE("Direct read of bitmask");
       TFile file(filename, "READ");
       std::unique_ptr<TTree> tree{file.Get<TTree>(treename.data())};
       ASSERT_NE(tree, nullptr);
@@ -262,6 +263,47 @@ TEST(RDFVarySnapshot, Bitmask)
          tree->ResetBranchAddresses();
          if (HasFailure())
             break;
+      }
+
+      // Test that the Masked column reader works
+      {
+         SCOPED_TRACE("Usage of bitmask in RDF");
+         auto rdf = ROOT::RDataFrame(treename, filename);
+
+         auto filterAvailable = rdf.FilterAvailable("x");
+         auto meanX = filterAvailable.Mean<int>("x");
+         auto meanY = filterAvailable.Mean<int>("y");
+         auto count = filterAvailable.Count();
+
+         EXPECT_EQ(count.GetValue(), 3ull); // 0, 6, 12
+         EXPECT_EQ(meanX.GetValue(), 6.);
+         EXPECT_EQ(meanY.GetValue(), -6.);
+
+         // Test reading invalid columns
+         auto mean = rdf.Mean<int>("x");
+         EXPECT_THROW(mean.GetValue(), std::out_of_range);
+
+         for (unsigned int systematicIndex : {0, 1, 100}) {
+            const std::string systematic = "__xVar_" + std::to_string(systematicIndex);
+            auto filterAv = rdf.FilterAvailable("x" + systematic);
+            auto meanX_sys = filterAv.Mean("x" + systematic);
+            auto meanY_sys = filterAv.Mean("y" + systematic);
+            auto count_sys = filterAv.Count();
+
+            std::vector<int> expect(N);
+            std::iota(expect.begin(), expect.end(), systematicIndex);
+
+            const auto nVal = std::count_if(expect.begin(), expect.end(), [](int v) { return v % 6 == 0; });
+            // gcc8.5 on alma8 doesn't support transform_reduce, nor reduce
+            // const int sum = std::transform_reduce(expect.begin(), expect.end(), 0, std::plus<>(),
+            //                                          [](int v) { return v % 6 == 0 ? v : 0; });
+            std::transform(expect.begin(), expect.end(), expect.begin(), [](int v) { return v % 6 == 0 ? v : 0; });
+            const int sum = std::accumulate(expect.begin(), expect.end(), 0);
+
+            ASSERT_EQ(count_sys.GetValue(), nVal) << "systematic: " << systematic;
+            EXPECT_EQ(meanX_sys.GetValue(), sum / nVal) << "systematic: " << systematic;
+            EXPECT_EQ(meanY_sys.GetValue(), -1. * sum / nVal) << "systematic: " << systematic;
+         }
       }
 
       if (HasFailure()) {
