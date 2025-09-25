@@ -9,9 +9,6 @@
 /// \date Feburary 2024
 /// \author The ROOT Team
 
-// NOTE: The RNTupleParallelWriter class is experimental at this point.
-// Functionality and interface are still subject to changes.
-
 #include <ROOT/RNTupleFillContext.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleParallelWriter.hxx>
@@ -32,9 +29,6 @@
 #include <vector>
 #include <utility>
 
-// Import classes from experimental namespace for the time being
-using ROOT::Experimental::RNTupleParallelWriter;
-
 // Where to store the ntuple of this example
 constexpr char const *kNTupleFileName = "ntpl009_parallelWriter.root";
 
@@ -45,7 +39,7 @@ constexpr int kNWriterThreads = 4;
 constexpr int kNEventsPerThread = 25000;
 
 // Thread function to generate and write events
-void FillData(RNTupleParallelWriter *writer)
+void FillData(ROOT::RNTupleParallelWriter *writer)
 {
    static std::atomic<std::uint32_t> gThreadId;
    const auto threadId = ++gThreadId;
@@ -99,7 +93,7 @@ void Write()
    options.SetApproxZippedClusterSize(1024 * 1024);
 
    // We hand-over the data model to a newly created ntuple of name "NTuple", stored in kNTupleFileName
-   auto writer = RNTupleParallelWriter::Recreate(std::move(model), "NTuple", kNTupleFileName, options);
+   auto writer = ROOT::RNTupleParallelWriter::Recreate(std::move(model), "NTuple", kNTupleFileName, options);
 
    std::vector<std::thread> threads;
    for (int i = 0; i < kNWriterThreads; ++i)

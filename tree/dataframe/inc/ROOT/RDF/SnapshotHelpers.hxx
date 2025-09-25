@@ -30,12 +30,10 @@ class TBranch;
 class TFile;
 
 namespace ROOT {
-namespace Experimental {
-class RNTupleFillContext;
-class RNTupleParallelWriter;
-} // namespace Experimental
 class REntry;
 class RFieldToken;
+class RNTupleFillContext;
+class RNTupleParallelWriter;
 class TBufferMerger;
 class TBufferMergerFile;
 } // namespace ROOT
@@ -54,11 +52,11 @@ class R__CLING_PTRCHECK(off) UntypedSnapshotRNTupleHelper final : public RAction
    ROOT::Detail::RDF::RLoopManager *fOutputLoopManager;
    ColumnNames_t fInputFieldNames; // This contains the resolved aliases
    ColumnNames_t fOutputFieldNames;
-   std::unique_ptr<ROOT::Experimental::RNTupleParallelWriter> fWriter;
+   std::unique_ptr<ROOT::RNTupleParallelWriter> fWriter;
    std::vector<ROOT::RFieldToken> fFieldTokens;
 
    unsigned int fNSlots;
-   std::vector<std::shared_ptr<ROOT::Experimental::RNTupleFillContext>> fFillContexts;
+   std::vector<std::shared_ptr<ROOT::RNTupleFillContext>> fFillContexts;
    std::vector<std::unique_ptr<ROOT::REntry>> fEntries;
 
    std::vector<const std::type_info *> fInputColumnTypeIDs; // Types for the input columns

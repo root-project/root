@@ -871,7 +871,7 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
 
    // The RNTupleParallelWriter has exclusive access to the underlying TFile, no further synchronization is needed for
    // calls to Fill() (in Exec) and FlushCluster() (in FinalizeTask).
-   fWriter = ROOT::Experimental::RNTupleParallelWriter::Append(std::move(model), fNTupleName, *outputDir, writeOptions);
+   fWriter = ROOT::RNTupleParallelWriter::Append(std::move(model), fNTupleName, *outputDir, writeOptions);
 }
 
 void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::InitTask(TTreeReader *, unsigned int slot)

@@ -2,8 +2,6 @@
 /// \ingroup NTuple
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2024-02-01
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
@@ -34,12 +32,10 @@ namespace Internal {
 class RPageSink;
 } // namespace Internal
 
-namespace Experimental {
-
 class RNTupleFillContext;
 
 /**
-\class ROOT::Experimental::RNTupleParallelWriter
+\class ROOT::RNTupleParallelWriter
 \ingroup NTuple
 \brief A writer to fill an RNTuple from multiple contexts
 
@@ -72,7 +68,7 @@ private:
    std::unique_ptr<ROOT::Internal::RPageSink> fSink;
    /// The original RNTupleModel connected to fSink; needs to be destructed before it.
    std::unique_ptr<ROOT::RNTupleModel> fModel;
-   Detail::RNTupleMetrics fMetrics;
+   Experimental::Detail::RNTupleMetrics fMetrics;
    /// List of all created helpers. They must be destroyed before this RNTupleParallelWriter is destructed.
    std::vector<std::weak_ptr<RNTupleFillContext>> fFillContexts;
 
@@ -109,10 +105,9 @@ public:
    void CommitDataset();
 
    void EnableMetrics() { fMetrics.Enable(); }
-   const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
+   const Experimental::Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif
