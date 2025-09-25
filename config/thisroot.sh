@@ -238,11 +238,27 @@ if [ -z "${SOURCE}" ]; then
       return 1
    fi
 else
-   # get param to "."
-   thisroot="$(dirname "${SOURCE}")"
-   ROOTSYS=$(cd "${thisroot}/.." > /dev/null && pwd); export ROOTSYS
-   if [ -z "$ROOTSYS" ]; then
-      echo "ERROR: \"cd ${thisroot}/..\" or \"pwd\" failed" >&2
+   if [ -L ${SOURCE} ] ; then
+      if [ -e ${SOURCE} ] ; then
+         SOURCE=`readlink "$SOURCE"`
+      else
+         echo "ERROR: Broken link ${SOURCE}"
+         ROOTSYS=; export ROOTSYS
+         return 1
+      fi
+   fi
+   if [ -f ${SOURCE} ] ; then
+      # get param to "."
+      thisroot="$(dirname "${SOURCE}")"
+      
+      ROOTSYS=$(cd "${thisroot}/.." > /dev/null && pwd); export ROOTSYS
+      if [ -z "$ROOTSYS" ]; then
+         echo "ERROR: \"cd ${thisroot}/..\" or \"pwd\" failed" >&2
+         return 1
+      fi
+   else
+      echo "Missing file ${SOURCE}"
+      ROOTSYS=; export ROOTSYS
       return 1
    fi
 fi
