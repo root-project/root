@@ -194,7 +194,8 @@ getTrueShellExeName() { # mklement0 https://stackoverflow.com/a/23011530/7471760
       # on MacOS, sh is NOT a symlink but an executable, so trueExe is 'sh' but it will
       # re-exec according to symlink at /private/var/select/sh, so resolve it
       if [ -L "/private/var/select/sh" ] && [ -e "/private/var/select/sh" ] ; then
-         while nextTarget=$(readlink "/private/var/select/sh"); do trueExe=$nextTarget; done
+         trueExe="/private/var/select/sh";
+         while nextTarget=$(readlink "$trueExe"); do trueExe=$nextTarget; done
       else
          # otherwise default to bash
          trueExe="/bin/bash"
