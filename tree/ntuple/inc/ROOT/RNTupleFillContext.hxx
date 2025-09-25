@@ -172,7 +172,7 @@ public:
 
    void EnableMetrics() { fMetrics.Enable(); }
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
-}; // class RNTupleFillContext
+};
 
 } // namespace Experimental
 } // namespace ROOT
