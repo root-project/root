@@ -45,20 +45,30 @@ TEST(TChain, WrongCacheReadTwoTrees)
       TChain chain(treename1);
       chain.AddFile(filename1);
       chain.AddFile(filename2);
+      int var = 0;
+      chain.SetBranchAddress("bInt", &var);
       
       // first entry in first file in chain
       Long64_t entry = 0;
       Long64_t treeEntry = chain.LoadTree(entry);
+      EXPECT_EQ(treeEntry, 0);
+      EXPECT_NE(chain.GetEntry(entry), 0);
+      EXPECT_EQ(var, 1);
 
       // read another tree from the same file
       TFile *f1 = chain.GetTree()->GetCurrentFile();
-      TTree *tree2 = f1->Get<TTree>("tree2");
-      tree2->GetEntry(0);
+      TTree *t2 = f1->Get<TTree>("tree2");
+      double var2 = 0.0;
+      t2.Branch("bDouble", &var2);
+      EXPECT_NE(t2->GetEntry(0), 0);
+      EXPECT_NEAR(var2, 2.);
 
       // first entry in second file in chain
       Long64_t entry2 = 1;
       Long64_t treeEntry2 = chain.LoadTree(entry2);
       EXPECT_EQ(treeEntry2, 0);
+      EXPECT_NE(chain.GetEntry(entry2), 0);
+      EXPECT_EQ(var, 3);
    }
    gSystem->Unlink(filename1);
    gSystem->Unlink(filename2);
