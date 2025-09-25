@@ -312,7 +312,8 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
       const char *name{nullptr};
       bool with_derived{false};
       bool reduse_by_many{false};
-   } supported_classes[] = {{"TH1", true},
+   } supported_classes[] = {{"ROOT::Experimental::RTreeMapPainter"},
+                            {"TH1", true},
                             {"TF1", true},
                             {"TGraph", true},
                             {"TScatter"},
@@ -3000,3 +3001,4 @@ TCanvas *TWebCanvas::CreateWebCanvas(const char *name, const char *title, UInt_t
 
    return canvas;
 }
+
