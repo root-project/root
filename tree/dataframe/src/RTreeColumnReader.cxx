@@ -3,6 +3,8 @@
 #include <TTreeReaderValue.h>
 #include <TTreeReaderArray.h>
 
+#include <bitset>
+
 void *ROOT::Internal::RDF::RTreeOpaqueColumnReader::GetImpl(Long64_t)
 {
    return fTreeValue->GetAddress();
@@ -105,3 +107,23 @@ ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::RTreeUntypedArrayColumnReade
 }
 
 ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::~RTreeUntypedArrayColumnReader() = default;
+
+ROOT::Internal::RDF::RMaskedColumnReader::RMaskedColumnReader(
+   TTreeReader &r, std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase> valueReader, std::string_view maskName,
+   unsigned int maskIndex)
+   : fValueReader{std::move(valueReader)},
+     fTreeValueMask{std::make_unique<TTreeReaderValue<uint64_t>>(r, maskName.data())},
+     fMaskIndex{maskIndex}
+{
+}
+
+ROOT::Internal::RDF::RMaskedColumnReader::~RMaskedColumnReader() = default;
+
+void *ROOT::Internal::RDF::RMaskedColumnReader::GetImpl(Long64_t event)
+{
+   const std::bitset<64> mask{*fTreeValueMask->Get()};
+   if (mask.test(fMaskIndex) == false)
+      return nullptr;
+
+   return fValueReader->TryGet<void>(event);
+}
