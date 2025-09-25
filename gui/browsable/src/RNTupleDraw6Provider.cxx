@@ -39,7 +39,7 @@ public:
                           if (!treeMap)
                              return false;
 
-                          treeMap->Paint(opt.c_str());
+                          pad->Add(treeMap.release(), opt.c_str());
                           return true;
                        }
 
