@@ -3,7 +3,6 @@
 #include "TString.h"
 #include <exception>
 
-#ifndef __CINT__
 class myexception
    {
    public:
@@ -15,7 +14,6 @@ class myexception
          return fMsg.Data();
       }
    };
-#endif
 
 void NonDefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, const char *msg)
 {

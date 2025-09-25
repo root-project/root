@@ -1,9 +1,5 @@
 #include "twodimvar.h"
 
-#if !defined(__CINT__)
-#endif
-
-
 A::A() {
   a=0;
   for(int k=0;k<3;k++) {
