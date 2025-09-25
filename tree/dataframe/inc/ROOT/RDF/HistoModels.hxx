@@ -22,7 +22,8 @@ class THnT;
 using THnD = THnT<double>;
 template <typename T>
 class THnSparseT;
-using THnSparseD = THnSparseT<double>;
+class TArrayD;
+using THnSparseD = THnSparseT<TArrayD>;
 class TProfile;
 class TProfile2D;
 

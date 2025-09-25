@@ -20,6 +20,7 @@
 #include "TH2.h"
 #include "TH3.h"
 #include "THn.h"
+#include "THnSparse.h"
 
 /**
  * \class ROOT::RDF::TH1DModel
@@ -359,7 +360,12 @@ std::shared_ptr<::THnSparseD> THnSparseDModel::GetHistogram() const
    }
    std::shared_ptr<::THnSparseD> h;
    if (varbinning) {
-      h = std::make_shared<::THnSparseD>(fName, fTitle, fDim, fNbins.data(), fBinEdges, fChunkSize);
+      std::vector<TAxis> axes(fDim);
+      for (int idim = 0; idim < fDim; ++idim) {
+         axes[idim] = TAxis(fNbins[idim], fBinEdges[idim].data());
+      }
+      h = std::make_shared<::THnSparseD>(fName, fTitle, axes, fChunkSize);
+      // h = std::make_shared<::THnSparseD>(fName, fTitle, fDim, fNbins.data(), fBinEdges, fChunkSize);
    } else {
       h = std::make_shared<::THnSparseD>(fName, fTitle, fDim, fNbins.data(), fXmin.data(), fXmax.data(), fChunkSize);
    }
