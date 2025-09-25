@@ -643,7 +643,8 @@ void RWebWindow::CheckPendingConnections()
 
    timestamp_t stamp = std::chrono::system_clock::now();
 
-   float tmout = fMgr->GetLaunchTmout();
+   float launch_tmout = fMgr->GetLaunchTmout(),
+         reconnect_tmout = fMgr->GetReconnectTmout();
 
    ConnectionsList_t selected;
 
@@ -654,6 +655,8 @@ void RWebWindow::CheckPendingConnections()
 
       auto pred = [&](std::shared_ptr<WebConn> &e) {
          std::chrono::duration<double> diff = stamp - e->fSendStamp;
+
+         float tmout = e->fWasEstablished ? reconnect_tmout : launch_tmout;
 
          if (diff.count() > tmout) {
             R__LOG_DEBUG(0, WebGUILog()) << "Remove pending connection " << e->fKey << " after " << diff.count() << " sec";
@@ -862,6 +865,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       if (conn) {
          conn->fWSId = arg.GetWSId();
          conn->fActive = true;
+         conn->fWasEstablished = true;
          conn->fRecvSeq = 0;
          conn->fSendSeq = 1;
          // preserve key for longpoll or when with session key used for HMAC hash of messages
@@ -917,6 +921,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
             conn->fKey = conn->fNewKey;
             conn->fNewKey.clear();
             conn->fConnId = ++fConnCnt; // change connection id to avoid confusion
+            conn->fWasEstablished = true;
             conn->ResetData();
             conn->ResetStamps(); // reset stamps, after timeout connection wll be removed
             fPendingConn.emplace_back(conn);
