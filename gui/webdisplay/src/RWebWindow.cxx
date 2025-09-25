@@ -643,12 +643,12 @@ void RWebWindow::CheckPendingConnections()
 
    timestamp_t stamp = std::chrono::system_clock::now();
 
-   float launch_tmout = fMgr->GetLaunchTmout(),
-         reconnect_tmout = fMgr->GetReconnectTmout();
+   float launchTmout = fMgr->GetLaunchTmout();
+   float reconnectTmout = fMgr->GetReconnectTmout();
 
    ConnectionsList_t selected;
 
-   bool do_clear_on_close = false;
+   bool doClearOnClose = false;
 
    {
       std::lock_guard<std::mutex> grd(fConnMutex);
@@ -656,7 +656,7 @@ void RWebWindow::CheckPendingConnections()
       auto pred = [&](std::shared_ptr<WebConn> &e) {
          std::chrono::duration<double> diff = stamp - e->fSendStamp;
 
-         float tmout = e->fWasEstablished ? reconnect_tmout : launch_tmout;
+         float tmout = e->fWasEstablished ? reconnectTmout : launchTmout;
 
          if (diff.count() > tmout) {
             R__LOG_DEBUG(0, WebGUILog()) << "Remove pending connection " << e->fKey << " after " << diff.count() << " sec";
@@ -669,10 +669,10 @@ void RWebWindow::CheckPendingConnections()
 
       fPendingConn.erase(std::remove_if(fPendingConn.begin(), fPendingConn.end(), pred), fPendingConn.end());
 
-      do_clear_on_close = (selected.size() > 0) && (fPendingConn.size() == 0) && (fConn.size() == 0);
+      doClearOnClose = (selected.size() > 0) && (fPendingConn.size() == 0) && (fConn.size() == 0);
    }
 
-   if (do_clear_on_close)
+   if (doClearOnClose)
       fClearOnClose.reset();
 }
 
@@ -913,7 +913,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       auto conn = RemoveConnection(arg.GetWSId(), true);
 
       if (conn) {
-         bool do_clear_on_close = false;
+         bool doClearOnClose = false;
          if (!conn->fNewKey.empty() && (fMgr->GetReconnectTmout() > 0)) {
             // case when same handle want to be reused by client with new key
             std::lock_guard<std::mutex> grd(fConnMutex);
@@ -927,10 +927,10 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
             fPendingConn.emplace_back(conn);
          } else {
             std::lock_guard<std::mutex> grd(fConnMutex);
-            do_clear_on_close = (fPendingConn.size() == 0) && (fConn.size() == 0);
+            doClearOnClose = (fPendingConn.size() == 0) && (fConn.size() == 0);
          }
 
-         if (do_clear_on_close)
+         if (doClearOnClose)
             fClearOnClose.reset();
       }
 
