@@ -391,6 +391,8 @@ jobs:
             overrides: ["CMAKE_CXX_STANDARD=23"]
           - image: debian125
             overrides: ["CMAKE_CXX_STANDARD=20", "dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
+          - image: debian13
+            overrides: ["dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
           # Special builds
           - image: alma9
             is_special: true
