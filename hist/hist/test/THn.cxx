@@ -5,6 +5,43 @@
 #include "TH1.h"
 #include "TH2.h"
 
+// Constructors for THn and THnSparse
+TEST(THn, Constructors)
+{
+
+   std::vector<int> nbins = {4, 5, 6};
+   std::vector<double> xmin = {0., 0., 0.};
+   std::vector<double> xmax = {4., 5., 6.};
+
+   std::vector<std::vector<double>> edges = {{0, 1, 2, 3, 4}, {0, 1, 2, 3, 4, 5}, {0, 1, 2, 3, 4, 5, 6}};
+
+   std::vector<TAxis> axes = {TAxis(nbins[0], xmin[0], xmax[0]), TAxis(nbins[1], xmin[1], xmax[1]),
+                              TAxis(nbins[2], xmin[2], xmax[2])};
+
+   THnD hn_v1("hn_v1", "hn_v1", 3, nbins.data(), xmin.data(), xmax.data());
+   THnD hn_v2("hn_v2", "hn_v2", 3, nbins.data(), edges);
+   THnD hn_v3("hn_v3", "hn_v3", axes);
+   THnI hn_v4("hn_v4", "hn_v4", axes);
+   THnD hn_v5(hn_v1);
+
+   THnSparseD hs_v1("hs_v1", "hs_v1", 3, nbins.data(), xmin.data(), xmax.data());
+   THnSparseD hs_v2("hs_v2", "hs_v2", 3, nbins.data(), edges);
+   THnSparseD hs_v3("hs_v3", "hs_v3", axes);
+   THnSparseI hs_v4("hs_v4", "hs_v4", axes);
+   THnSparseD hs_v5(hs_v1);
+
+   std::vector<THnBase *> hns = {&hn_v1, &hn_v2, &hn_v3, &hn_v4, &hn_v5, &hs_v1, &hs_v2, &hs_v3, &hs_v4, &hs_v5};
+   for (THnBase *hn : hns) {
+      EXPECT_EQ(hn->GetNdimensions(), 3);
+      for (int dim = 0; dim < 3; ++dim) {
+         EXPECT_EQ(hn->GetAxis(dim)->GetNbins(), nbins[dim]);
+         for (int bin = 1; bin <= (int)edges[dim].size(); ++bin) {
+            EXPECT_DOUBLE_EQ(hn->GetAxis(dim)->GetBinLowEdge(bin), edges[dim][bin - 1]);
+         }
+      }
+   }
+}
+
 // Filling THn
 TEST(THn, Fill) {
    Int_t bins[2] = {2, 3};
