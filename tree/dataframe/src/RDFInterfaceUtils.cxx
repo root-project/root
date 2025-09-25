@@ -939,6 +939,55 @@ void CheckForDuplicateSnapshotColumns(const ColumnNames_t &cols)
    }
 }
 
+void CheckSnapshotOptionsFormatCompatibility(const ROOT::RDF::RSnapshotOptions &opts)
+{
+   const ROOT::RDF::RSnapshotOptions defaultSnapshotOpts;
+   std::string optionName;
+
+   if (opts.fOutputFormat == ROOT::RDF::ESnapshotOutputFormat::kTTree ||
+       opts.fOutputFormat == ROOT::RDF::ESnapshotOutputFormat::kDefault) {
+      if (opts.fApproxZippedClusterSize != defaultSnapshotOpts.fApproxZippedClusterSize) {
+         optionName = "fApproxZippedClusterSize";
+      } else if (opts.fMaxUnzippedClusterSize != defaultSnapshotOpts.fMaxUnzippedClusterSize) {
+         optionName = "fMaxUnzippedClusterSize";
+      } else if (opts.fInitialUnzippedPageSize != defaultSnapshotOpts.fInitialUnzippedPageSize) {
+         optionName = "fInitialUnzippedPageSize";
+      } else if (opts.fMaxUnzippedPageSize != defaultSnapshotOpts.fMaxUnzippedPageSize) {
+         optionName = "fMaxUnzippedPageSize";
+      } else if (opts.fEnablePageChecksums != defaultSnapshotOpts.fEnablePageChecksums) {
+         optionName = "fEnablePageChecksums";
+      } else if (opts.fEnableSamePageMerging != defaultSnapshotOpts.fEnableSamePageMerging) {
+         optionName = "fEnableSamePageMerging";
+      }
+
+      if (!optionName.empty()) {
+         Warning("Snapshot",
+                 "The RNTuple-specific %s option in RSnapshotOptions has been set, but the output format is "
+                 "set to TTree, so this option won't have any effect. Use the other options available in "
+                 "RSnapshotOptions to "
+                 "configure the output TTree. Alternatively, change fOutputFormat to snapshot to RNTuple instead.",
+                 optionName.c_str());
+      }
+   } else if (opts.fOutputFormat == ROOT::RDF::ESnapshotOutputFormat::kRNTuple) {
+      if (opts.fAutoFlush != defaultSnapshotOpts.fAutoFlush) {
+         optionName = "fAutoFlush";
+      } else if (opts.fSplitLevel != defaultSnapshotOpts.fSplitLevel) {
+         optionName = "fSplitLevel";
+      } else if (opts.fBasketSize != defaultSnapshotOpts.fBasketSize) {
+         optionName = "fBasketSize";
+      }
+
+      if (!optionName.empty()) {
+         Warning(
+            "Snapshot",
+            "The TTree-specific %s option in RSnapshotOptions has been set, but the output format is set to RNTuple, "
+            "so this option won't have any effect. Use the fNTupleWriteOptions option available in RSnapshotOptions to "
+            "configure the output RNTuple. Alternatively, change fOutputFormat to snapshot to TTree instead.",
+            optionName.c_str());
+      }
+   }
+}
+
 /// Return copies of colsWithoutAliases and colsWithAliases with size branches for variable-sized array branches added
 /// in the right positions (i.e. before the array branches that need them).
 std::pair<std::vector<std::string>, std::vector<std::string>>
