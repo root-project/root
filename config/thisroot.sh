@@ -190,16 +190,10 @@ getTrueShellExeName() { # mklement0 https://stackoverflow.com/a/23011530/7471760
    # target.
    while nextTarget=$(readlink "$trueExe"); do trueExe=$nextTarget; done
    
-   if [ "$(basename "$trueExe")" = "sh" ]; then
-      # on MacOS, sh is NOT a symlink but an executable, so trueExe is 'sh' but it will
-      # re-exec according to symlink at /private/var/select/sh, so resolve it
-      if [ -L "/private/var/select/sh" ] && [ -e "/private/var/select/sh" ] ; then
-         trueExe="/private/var/select/sh";
-         while nextTarget=$(readlink "$trueExe"); do trueExe=$nextTarget; done
-      else
-         # otherwise default to bash
-         trueExe="/bin/bash"
-      fi
+   if [ "$(basename $trueExe)" = "sh" -a -L "/private/var/select/sh" ]; then
+      # on MacOS, sh re-execs /private/var/select/sh, so resolve it
+      trueExe="/private/var/select/sh";
+      while nextTarget=$(readlink "$trueExe"); do trueExe=$nextTarget; done
    fi
    # Output the executable name only.
    printf '%s' "$(basename "$trueExe")"
