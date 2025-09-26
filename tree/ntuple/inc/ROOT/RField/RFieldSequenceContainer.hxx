@@ -143,6 +143,11 @@ protected:
    ROOT::Internal::RColumnIndex fNWritten;
    std::size_t fValueSize;
 
+   // For bulk read optimzation
+   std::size_t fBulkNRepetition = 1;
+   /// May be a direct PoD subfield or a sub-subfield of a fixed-size array of PoD
+   RFieldBase *fBulkSubfield = nullptr;
+
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
