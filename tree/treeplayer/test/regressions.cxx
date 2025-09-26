@@ -11,7 +11,6 @@
 #include "TString.h"
 #include "TLorentzVector.h"
 #include <Math/Vector3D.h>
-#include <ROOT/RDataFrame.hxx>
 #include <ROOT/TestSupport.hxx>
 
 #include "gtest/gtest.h"
