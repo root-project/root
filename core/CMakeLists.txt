@@ -26,6 +26,14 @@ add_custom_target(rconfigure ALL DEPENDS ${CMAKE_BINARY_DIR}/include/RConfigure.
 
 ROOT_LINKER_LIBRARY(Core BUILTINS LZMA)
 
+# This sets RUNPATH for libCore, which enables it to dlopen any ROOT library in its directory.
+# If omitted, Core might try to load libraries from a ROOT that's installed in the system.
+if(APPLE)
+  set_property(TARGET Core APPEND PROPERTY BUILD_RPATH @loader_path)
+elseif(NOT WIN32)
+  set_property(TARGET Core APPEND PROPERTY BUILD_RPATH $ORIGIN)
+endif()
+
 generateHeader(Core
   ${CMAKE_SOURCE_DIR}/core/base/src/root-argparse.py
   ${CMAKE_BINARY_DIR}/ginclude/TApplicationCommandLineOptionsHelp.h
