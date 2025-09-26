@@ -6,7 +6,7 @@ if(NOT DEFINED ADAPTIVE_CPP_SOURCE_DIR)
   FetchContent_Declare(
     AdaptiveCpp
     GIT_REPOSITORY https://github.com/root-project/AdaptiveCpp.git
-    GIT_TAG ROOT-acpp-v25.02.0-20250615-01)
+    GIT_TAG ROOT-acpp-v25.02.0-20250926-01)
   FetchContent_GetProperties(AdaptiveCpp)
   if(NOT AdaptiveCpp_POPULATED)
     FetchContent_Populate(AdaptiveCpp)
