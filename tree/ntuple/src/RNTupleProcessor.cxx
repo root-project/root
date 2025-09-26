@@ -205,7 +205,7 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect(
    fieldZero.SetOnDiskId(fieldZeroId);
    ROOT::Internal::SetAllowFieldSubstitutions(fieldZero, true);
 
-   for (const auto &fieldIdx : fieldIdxs) {
+   for (const auto &fieldIdx : fFieldIdxs) {
       const auto &entryField = fEntry->GetField(fieldIdx);
 
       // TODO handle subfields

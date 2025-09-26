@@ -42,11 +42,14 @@ public:
    using FieldIndex_t = std::uint64_t;
 
 private:
-   /// Corresponds to the fields stored in the processor's proto-model
-   std::vector<ROOT::RFieldBase::RValue> fValues;
-   /// Marks whether fields are valid for reading
-   std::vector<bool> fFieldValidities;
-   /// For fast lookup of field indices given a (sub)field name present in the entry
+   struct RProcessorValue {
+      ROOT::RFieldBase::RValue fValue;
+      bool fIsValid;
+
+      RProcessorValue(ROOT::RFieldBase::RValue &&value, bool isValid) : fValue(std::move(value)), fIsValid(isValid) {}
+   };
+
+   std::vector<RProcessorValue> fProcessorValues;
    std::unordered_map<std::string, FieldIndex_t> fFieldName2Index;
    std::unordered_set<FieldIndex_t> fAuxiliaryFields;
 
@@ -58,8 +61,8 @@ public:
    /// \param[in] isValid The new validity of the field.
    void SetFieldValidity(FieldIndex_t fieldIdx, bool isValid)
    {
-      assert(fieldIdx < fValues.size());
-      fFieldValidities[fieldIdx] = isValid;
+      assert(fieldIdx < fProcessorValues.size());
+      fProcessorValues[fieldIdx].fIsValid = isValid;
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -68,8 +71,8 @@ public:
    /// \param[in] fieldIdx The index of the field in the entry.
    bool IsValidField(FieldIndex_t fieldIdx) const
    {
-      assert(fieldIdx < fValues.size());
-      return fFieldValidities[fieldIdx];
+      assert(fieldIdx < fProcessorValues.size());
+      return fProcessorValues[fieldIdx].fIsValid;
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -89,7 +92,7 @@ public:
    /// \warning This function has linear complexity, only use it for more helpful error messages!
    const std::string &FindFieldName(FieldIndex_t fieldIdx) const
    {
-      assert(fieldIdx < fValues.size());
+      assert(fieldIdx < fProcessorValues.size());
 
       for (const auto &[fieldName, index] : fFieldName2Index) {
          if (index == fieldIdx) {
@@ -135,10 +138,9 @@ public:
       auto value = field.CreateValue();
       if (valuePtr)
          value.BindRawPtr(valuePtr);
-      auto fieldIdx = fValues.size();
+      auto fieldIdx = fProcessorValues.size();
       fFieldName2Index[std::string(fieldName)] = fieldIdx;
-      fValues.emplace_back(std::move(value));
-      fFieldValidities.push_back(true);
+      fProcessorValues.emplace_back(RProcessorValue(std::move(value), true));
       if (isAuxiliary)
          fAuxiliaryFields.insert(fieldIdx);
 
@@ -152,12 +154,12 @@ public:
    /// \param[in] field The new field to use in the entry.
    void UpdateField(FieldIndex_t fieldIdx, ROOT::RFieldBase &field)
    {
-      assert(fieldIdx < fValues.size());
+      assert(fieldIdx < fProcessorValues.size());
 
-      auto currValuePtr = fValues[fieldIdx].GetPtr<void>();
+      auto currValuePtr = fProcessorValues[fieldIdx].fValue.GetPtr<void>();
       auto value = field.CreateValue();
       value.Bind(currValuePtr);
-      fValues[fieldIdx] = value;
+      fProcessorValues[fieldIdx].fValue = value;
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -167,8 +169,8 @@ public:
    /// \param[in] valuePtr Pointer to the value to bind to the field.
    void BindRawPtr(FieldIndex_t fieldIdx, void *valuePtr)
    {
-      assert(fieldIdx < fValues.size());
-      fValues[fieldIdx].BindRawPtr(valuePtr);
+      assert(fieldIdx < fProcessorValues.size());
+      fProcessorValues[fieldIdx].fValue.BindRawPtr(valuePtr);
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -178,10 +180,10 @@ public:
    /// \param[in] entryIdx The entry number to read.
    void ReadValue(FieldIndex_t fieldIdx, ROOT::NTupleSize_t entryIdx)
    {
-      assert(fieldIdx < fValues.size());
+      assert(fieldIdx < fProcessorValues.size());
 
-      if (fFieldValidities[fieldIdx]) {
-         fValues[fieldIdx].Read(entryIdx);
+      if (fProcessorValues[fieldIdx].fIsValid) {
+         fProcessorValues[fieldIdx].fValue.Read(entryIdx);
       }
    }
 
@@ -196,10 +198,10 @@ public:
    template <typename T>
    std::shared_ptr<T> GetPtr(FieldIndex_t fieldIdx) const
    {
-      assert(fieldIdx < fValues.size());
+      assert(fieldIdx < fProcessorValues.size());
 
-      if (fFieldValidities[fieldIdx])
-         return fValues[fieldIdx].GetPtr<T>();
+      if (fProcessorValues[fieldIdx].fIsValid)
+         return fProcessorValues[fieldIdx].fValue.GetPtr<T>();
 
       return nullptr;
    }
@@ -210,8 +212,8 @@ public:
    /// \param[in] fieldIdx The index of the field in the entry.
    const ROOT::RFieldBase &GetField(FieldIndex_t fieldIdx) const
    {
-      assert(fieldIdx < fValues.size());
-      return fValues[fieldIdx].GetField();
+      assert(fieldIdx < fProcessorValues.size());
+      return fProcessorValues[fieldIdx].fValue.GetField();
    }
 
    /////////////////////////////////////////////////////////////////////////////

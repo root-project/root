@@ -240,6 +240,7 @@ protected:
    std::string fProcessorName;
    std::unique_ptr<ROOT::RNTupleModel> fProtoModel = nullptr;
    std::shared_ptr<Internal::RNTupleProcessorEntry> fEntry = nullptr;
+   /// Indices of fields in the entry that can be read by the processor.
    std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> fFieldIdxs;
 
    /// Total number of entries. Only to be used internally by the processor, not meant to be exposed in the public
