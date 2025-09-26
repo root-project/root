@@ -70,6 +70,7 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
+   std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec) final;
 
    void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
