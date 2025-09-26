@@ -144,7 +144,11 @@ if(NOT davix)
 endif()
 
 if(NOT sycl)
-  list(APPEND sycl_veto heterogeneous/syclintro.C)
+  list(APPEND sycl_veto heterogeneous/syclintro.C math/mathcoreGenVectorSYCL.C)
+endif()
+
+if(NOT experimental_genvectorx)
+  list(APPEND sycl_veto math/mathcoreGenVectorSYCL.C)
 endif()
 
 if(NOT geom)
