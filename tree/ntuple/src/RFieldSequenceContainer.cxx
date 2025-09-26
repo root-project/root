@@ -809,19 +809,14 @@ void ROOT::RArrayAsRVecField::ReadInClusterImpl(RNTupleLocalIndex localIndex, vo
 {
    auto begin = RRVecField::ResizeRVec(to, fArrayLength, fItemSize, fSubfields[0].get(), fItemDeleter.get());
 
-   const auto &clusterId = localIndex.GetClusterId();
-   const auto &indexInCluster = localIndex.GetIndexInCluster();
-
    if (fSubfields[0]->IsSimple()) {
-      GetPrincipalColumnOf(*fSubfields[0])
-         ->ReadV(RNTupleLocalIndex(clusterId, indexInCluster * fArrayLength), fArrayLength, begin);
+      GetPrincipalColumnOf(*fSubfields[0])->ReadV(localIndex * fArrayLength, fArrayLength, begin);
       return;
    }
 
    // Read the new values into the collection elements
    for (std::size_t i = 0; i < fArrayLength; ++i) {
-      CallReadOn(*fSubfields[0], RNTupleLocalIndex(clusterId, indexInCluster * fArrayLength + i),
-                 begin + (i * fItemSize));
+      CallReadOn(*fSubfields[0], localIndex * fArrayLength + i, begin + (i * fItemSize));
    }
 }
 
