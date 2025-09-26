@@ -2739,11 +2739,11 @@ void TBranch::SetAutoDelete(bool autodel)
 /// Set the basket size
 /// The function makes sure that the basket size is greater than fEntryOffsetlen
 
-void TBranch::SetBasketSize(Int_t buffsize)
+void TBranch::SetBasketSize(Int_t bufsize)
 {
    Int_t minsize = 100 + fName.Length();
-   if (buffsize < minsize+fEntryOffsetLen) buffsize = minsize+fEntryOffsetLen;
-   fBasketSize = buffsize;
+   if (bufsize < minsize+fEntryOffsetLen) bufsize = minsize+fEntryOffsetLen;
+   fBasketSize = bufsize;
    TBasket *basket = (TBasket*)fBaskets[fWriteBasket];
    if (basket) {
       basket->AdjustSize(fBasketSize);

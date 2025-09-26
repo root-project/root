@@ -57,7 +57,7 @@ public:
    void    Reset(Option_t *option="") override;
    void    ResetAfterMerge(TFileMergeInfo *) override;
    void    SetAddress(void *add) override;
-   void    SetBasketSize(Int_t buffsize) override;
+   void    SetBasketSize(Int_t bufsize) override;
    void    SetTree(TTree *tree) override { fTree = tree; fBranchCount->SetTree(tree); }
    void    UpdateFile() override;
 

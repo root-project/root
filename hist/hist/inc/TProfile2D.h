@@ -145,7 +145,7 @@ public:
    void      SetBins(Int_t nbinsx, Double_t xmin, Double_t xmax, Int_t nbinsy, Double_t ymin, Double_t ymax) override;
    void      SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBins) override;
    void      SetBinsLength(Int_t n=-1) override;
-   void      SetBuffer(Int_t buffersize, Option_t *option="") override;
+   void      SetBuffer(Int_t bufsize, Option_t *option="") override;
    virtual void      SetErrorOption(Option_t *option=""); // *MENU*
    void      Sumw2(Bool_t flag = kTRUE) override;
    Double_t GetNumberOfBins() { return fBinEntries.GetSize(); }

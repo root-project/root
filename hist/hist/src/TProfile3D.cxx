@@ -1364,19 +1364,19 @@ void TProfile3D::SetBinsLength(Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the buffer size in units of 8 bytes (double).
 
-void TProfile3D::SetBuffer(Int_t buffersize, Option_t *)
+void TProfile3D::SetBuffer(Int_t bufsize, Option_t *)
 {
    if (fBuffer) {
       BufferEmpty();
       delete [] fBuffer;
       fBuffer = nullptr;
    }
-   if (buffersize <= 0) {
+   if (bufsize <= 0) {
       fBufferSize = 0;
       return;
    }
-   if (buffersize < 100) buffersize = 100;
-   fBufferSize = 1 + 5*buffersize;
+   if (bufsize < 100) bufsize = 100;
+   fBufferSize = 1 + 5*bufsize;
    fBuffer = new Double_t[fBufferSize];
    memset(fBuffer,0,sizeof(Double_t)*fBufferSize);
 }

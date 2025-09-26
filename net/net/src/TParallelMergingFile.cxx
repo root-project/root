@@ -175,9 +175,9 @@ Bool_t TParallelMergingFile::UploadAndReset()
 /// The linked list of FREE segments is written.
 /// The file header is written (bytes 1->fBEGIN).
 
-Int_t TParallelMergingFile::Write(const char *, Int_t opt, Int_t bufsiz)
+Int_t TParallelMergingFile::Write(const char *, Int_t opt, Int_t bufsize)
 {
-   Int_t nbytes = TMemFile::Write(0,opt,bufsiz);
+   Int_t nbytes = TMemFile::Write(0,opt,bufsize);
    if (nbytes) {
       UploadAndReset();
    }

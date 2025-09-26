@@ -70,12 +70,12 @@ TBuffer::TBuffer(EMode mode)
 /// Create an I/O buffer object. Mode should be either TBuffer::kRead or
 /// TBuffer::kWrite.
 
-TBuffer::TBuffer(EMode mode, Int_t bufsiz)
+TBuffer::TBuffer(EMode mode, Int_t bufsize)
 {
-   if (bufsiz < 0)
-      Fatal("TBuffer","Request to create a buffer with a negative size, likely due to an integer overflow: 0x%x for a max of 0x%x.", bufsiz, kMaxBufferSize);
-   if (bufsiz < kMinimalSize) bufsiz = kMinimalSize;
-   fBufSize  = bufsiz;
+   if (bufsize < 0)
+      Fatal("TBuffer","Request to create a buffer with a negative size, likely due to an integer overflow: 0x%x for a max of 0x%x.", bufsize, kMaxBufferSize);
+   if (bufsize < kMinimalSize) bufsize = kMinimalSize;
+   fBufSize  = bufsize;
    fMode     = mode;
    fVersion  = 0;
    fParent   = nullptr;
@@ -101,11 +101,11 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz)
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
 
-TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
+TBuffer::TBuffer(EMode mode, Int_t bufsize, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
 {
-   if (bufsiz < 0)
-      Fatal("TBuffer","Request to create a buffer with a negative size, likely due to an integer overflow: 0x%x for a max of 0x%x.", bufsiz, kMaxBufferSize);
-   fBufSize  = bufsiz;
+   if (bufsize < 0)
+      Fatal("TBuffer","Request to create a buffer with a negative size, likely due to an integer overflow: 0x%x for a max of 0x%x.", bufsize, kMaxBufferSize);
+   fBufSize  = bufsize;
    fMode     = mode;
    fVersion  = 0;
    fParent   = nullptr;
@@ -283,7 +283,7 @@ ReAllocCharFun_t TBuffer::GetReAllocFunc() const
 /// Set which memory reallocation method to use.  If reallocafunc is null,
 /// reset it to the default value (TStorage::ReAlloc)
 
-void  TBuffer::SetReAllocFunc(ReAllocCharFun_t reallocfunc )
+void  TBuffer::SetReAllocFunc(ReAllocCharFun_t reallocfunc)
 {
    if (reallocfunc) {
       fReAllocFunc = reallocfunc;

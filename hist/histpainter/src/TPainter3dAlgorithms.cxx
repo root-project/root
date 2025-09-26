@@ -2000,8 +2000,8 @@ void TPainter3dAlgorithms::InitRaster(Double_t xmin, Double_t ymin, Double_t xma
    fDYrast = ymax - ymin;
 
    //  Create buffer for raster
-   Int_t buffersize = nx*ny/30 + 1;
-   fRaster.resize(buffersize);
+   Int_t bufsize = nx*ny/30 + 1;
+   fRaster.resize(bufsize);
 
    //          S E T   M A S K S
    k = 0;
