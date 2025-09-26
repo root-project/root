@@ -70,6 +70,7 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
+   std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec) final;
 
    void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
@@ -141,6 +142,11 @@ protected:
    std::size_t fItemSize;
    ROOT::Internal::RColumnIndex fNWritten;
    std::size_t fValueSize;
+
+   // For bulk read optimzation
+   std::size_t fBulkNRepetition = 1;
+   /// May be a direct PoD subfield or a sub-subfield of a fixed-size array of PoD
+   RFieldBase *fBulkSubfield = nullptr;
 
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
    const RColumnRepresentations &GetColumnRepresentations() const final;

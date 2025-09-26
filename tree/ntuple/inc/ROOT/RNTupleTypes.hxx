@@ -163,6 +163,11 @@ public:
       return RNTupleLocalIndex(fClusterId, fIndexInCluster - off);
    }
 
+   RNTupleLocalIndex operator*(ROOT::NTupleSize_t scaleFactor) const
+   {
+      return RNTupleLocalIndex(fClusterId, fIndexInCluster * scaleFactor);
+   }
+
    RNTupleLocalIndex operator++(int) /* postfix */
    {
       auto r = *this;
