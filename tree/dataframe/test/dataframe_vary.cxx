@@ -1353,18 +1353,18 @@ TEST_P(RDFVary, VaryHistos)
                                                                             {"x", "x", "x", "x"});
    auto hNSparses = VariationsFor(hNSparse);
 
-   auto res = hNSparse->Projection(3);
-   EXPECT_DOUBLE_EQ(res->GetMean(), 5.);
-   delete res;
-   res = hNSparses["nominal"].Projection(3);
-   EXPECT_DOUBLE_EQ(res->GetMean(), 5.);
-   delete res;
-   res = hNSparses["x:0"].Projection(3);
-   EXPECT_DOUBLE_EQ(res->GetMean(), 0.);
-   delete res;
-   res = hNSparses["x:1"].Projection(3);
-   EXPECT_DOUBLE_EQ(res->GetMean(), 5.);
-   delete res;
+   auto res_sparse = hNSparse->Projection(3);
+   EXPECT_DOUBLE_EQ(res_sparse->GetMean(), 5.);
+   delete res_sparse;
+   res_sparse = hNSparses["nominal"].Projection(3);
+   EXPECT_DOUBLE_EQ(res_sparse->GetMean(), 5.);
+   delete res_sparse;
+   res_sparse = hNSparses["x:0"].Projection(3);
+   EXPECT_DOUBLE_EQ(res_sparse->GetMean(), 0.);
+   delete res_sparse;
+   res_sparse = hNSparses["x:1"].Projection(3);
+   EXPECT_DOUBLE_EQ(res_sparse->GetMean(), 5.);
+   delete res_sparse;
 
 
 }
