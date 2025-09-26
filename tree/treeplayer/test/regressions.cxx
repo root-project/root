@@ -304,7 +304,7 @@ TEST(TTreeReaderRegressions, XYZVectors)
       TFile f(filename, "RECREATE");
       TTree t(treename, treename);
       ROOT::Math::XYZVector x(1, 2, 3);
-      std::vector<ROOT::Math::XYZVector> y{ROOT::Math::XYZVector(4,5,6)};
+      std::vector<ROOT::Math::XYZVector> y{ROOT::Math::XYZVector(4, 5, 6)};
       t.Branch("x", &x);
       if (std::string(filename) == std::string(filename1)) {
          // original line:
