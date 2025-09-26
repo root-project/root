@@ -150,6 +150,10 @@ if(NOT davix)
     list(APPEND davix_veto io/ntuple/ntpl011_global_temperatures.C)
 endif()
 
+if(NOT sycl)
+  list(APPEND sycl_veto heterogeneous/syclintro.C)
+endif()
+
 if(NOT geom)
   set(geom_veto visualisation/geom/*.C geom/*.C visualisation/geom/gdml/*.C legacy/g3d/shapes.* legacy/g3d/na49view.*)
 endif()
@@ -498,6 +502,7 @@ set(all_veto hsimple.C
              ${tbb_veto}
              ${imt_veto}
              ${classic_veto}
+             ${sycl_veto}
              ${geom_veto}
              ${pythia_veto}
              ${vecgeom_veto}
