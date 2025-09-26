@@ -208,6 +208,55 @@ TEST(RNTupleBulk, RVec)
    }
 }
 
+TEST(RNTupleBulk, Array)
+{
+   FileRaii fileGuard("test_ntuple_bulk_array.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldArrI = model->MakeField<std::array<int, 2>>("aint");
+      auto fld2DArrI = model->MakeField<std::array<std::array<int, 2>, 2>>("2daint");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      for (int i = 0; i < 3; ++i) {
+         fldArrI->at(0) = 2 * i;
+         fldArrI->at(1) = 2 * i + 1;
+
+         fld2DArrI->at(0).at(0) = 4 * i;
+         fld2DArrI->at(0).at(1) = 4 * i + 1;
+         fld2DArrI->at(1).at(0) = 4 * i + 2;
+         fld2DArrI->at(1).at(1) = 4 * i + 3;
+
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   const auto &model = reader->GetModel();
+
+   RFieldBase::RBulkValues bulkI = model.CreateBulk("aint");
+   RFieldBase::RBulkValues bulk2DI = model.CreateBulk("2daint");
+
+   auto mask = std::make_unique<bool[]>(3);
+   mask[0] = true;
+   mask[1] = false; // the std::array<simple type, ...> field optimization should ignore the mask
+   mask[2] = true;
+
+   auto iArr = static_cast<std::array<int, 2> *>(bulkI.ReadBulk(RNTupleLocalIndex(0, 0), mask.get(), 3));
+   auto i2DArr =
+      static_cast<std::array<std::array<int, 2>, 2> *>(bulk2DI.ReadBulk(RNTupleLocalIndex(0, 0), mask.get(), 3));
+
+   for (int i = 0; i < 3; ++i) {
+      EXPECT_EQ(2 * i, iArr[i][0]);
+      EXPECT_EQ(2 * i + 1, iArr[i][1]);
+
+      if (mask[i]) {
+         EXPECT_EQ(4 * i, i2DArr[i][0][0]);
+         EXPECT_EQ(4 * i + 1, i2DArr[i][0][1]);
+         EXPECT_EQ(4 * i + 2, i2DArr[i][1][0]);
+         EXPECT_EQ(4 * i + 3, i2DArr[i][1][1]);
+      }
+   }
+}
+
 TEST(RNTupleBulk, Adopted)
 {
    FileRaii fileGuard("test_ntuple_bulk_adopted.root");
