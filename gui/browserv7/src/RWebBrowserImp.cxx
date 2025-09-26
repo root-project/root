@@ -20,6 +20,14 @@
 
 using namespace ROOT;
 
+class CleanupHandle {
+      RWebBrowserImp *fImp = nullptr;
+   public:
+
+      CleanupHandle(RWebBrowserImp *imp) { fImp = imp; }
+      ~CleanupHandle() { printf("CleanupHandle destroyed\n"); }
+};
+
 ////////////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
@@ -29,6 +37,8 @@ RWebBrowserImp::RWebBrowserImp(TBrowser *b) : TBrowserImp(b)
 
    fWebBrowser = std::make_shared<RBrowser>();
    fWebBrowser->AddTCanvas();
+
+   fWebBrowser->ClearOnClose(std::make_shared<CleanupHandle>(this));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -42,6 +52,8 @@ RWebBrowserImp::RWebBrowserImp(TBrowser *b, const char *title, UInt_t width, UIn
    fHeight = height;
    fWebBrowser = std::make_shared<RBrowser>();
    fWebBrowser->AddTCanvas();
+
+   fWebBrowser->ClearOnClose(std::make_shared<CleanupHandle>(this));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -57,6 +69,8 @@ RWebBrowserImp::RWebBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y,
    fHeight = height;
    fWebBrowser = std::make_shared<RBrowser>();
    fWebBrowser->AddTCanvas();
+
+   fWebBrowser->ClearOnClose(std::make_shared<CleanupHandle>(this));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
