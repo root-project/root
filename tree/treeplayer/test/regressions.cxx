@@ -323,7 +323,7 @@ TEST(TTreeReaderRegressions, XYZVectors)
       TTreeReader r(treename, &f);
       if (std::string(filename) == std::string(filename1)) {
          TTreeReaderValue<ROOT::Math::XYZVector> rx(r, "x");
-         TTreeReaderValue<ROOT::Math::XYZVector> ry(r, "y");
+         TTreeReaderValue<std::vector<ROOT::Math::XYZVector>> ry(r, "y");
          r.Next();
          EXPECT_EQ(*rx, ROOT::Math::XYZVector(1, 2, 3));
          EXPECT_EQ(*ry, std::vector<ROOT::Math::XYZVector>{ROOT::Math::XYZVector(4, 5, 6)});
