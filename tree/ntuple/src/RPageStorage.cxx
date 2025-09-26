@@ -24,6 +24,7 @@
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorageFile.hxx>
+#include <ROOT/RNTupleReader.hxx>
 #ifdef R__ENABLE_DAOS
 #include <ROOT/RPageStorageDaos.hxx>
 #endif
@@ -1198,8 +1199,8 @@ void ROOT::Internal::RPagePersistentSink::CommitStagedClusters(std::span<RStaged
          if (!columnInfo.fIsSuppressed)
             continue;
          const auto colId = columnInfo.fPageRange.GetPhysicalColumnId();
-         // For suppressed columns, we need to reset the first element index to the first element of the next (upcoming)
-         // cluster. This information has been determined for the committed cluster descriptor through
+         // For suppressed columns, we need to reset the first element index to the first element of the next
+         // (upcoming) cluster. This information has been determined for the committed cluster descriptor through
          // CommitSuppressedColumnRanges(), so we can use the information from the descriptor.
          const auto &columnRangeFromDesc = clusterBuilder.GetColumnRange(colId);
          fOpenColumnRanges[colId].SetFirstElementIndex(columnRangeFromDesc.GetFirstElementIndex() +
