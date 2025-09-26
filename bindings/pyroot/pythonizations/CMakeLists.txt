@@ -8,6 +8,8 @@
 # CMakeLists.txt file for building ROOT pythonizations libraries
 ################################################################
 
+set(PYROOT_EXTRA_PYTHON_SOURCES)
+
 if(dataframe)
     list(APPEND PYROOT_EXTRA_PYTHON_SOURCES
         ROOT/_pythonization/_rdf_utils.py
@@ -64,6 +66,8 @@ if(tmva)
           ROOT/_pythonization/_tmva/_batchgenerator.py)
     endif()
 endif()
+
+add_subdirectory(python/ROOT/_pythonization/_tmva/_sofie/_parser/_keras)
 
 list(APPEND PYROOT_EXTRA_HEADERS
      inc/TPyDispatcher.h)

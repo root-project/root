@@ -26,7 +26,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyMVA
     src/MethodPyKeras.cxx
     src/MethodPyRandomForest.cxx
     src/MethodPyTorch.cxx
-    src/RModelParser_Keras.cxx
     src/RModelParser_PyTorch.cxx
     src/PyMethodBase.cxx
   LIBRARIES
