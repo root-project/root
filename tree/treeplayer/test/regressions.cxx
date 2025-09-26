@@ -1,5 +1,6 @@
 #include "TFile.h"
 #include "TSystem.h"
+#include "TClass.h"
 #include "TChain.h"
 #include "TTree.h"
 #include "TTreeReader.h"
@@ -9,12 +10,14 @@
 #include "TTreeFormula.h"
 #include "TString.h"
 #include "TLorentzVector.h"
+#include <Math/Vector3D.h>
+#include <ROOT/RDataFrame.hxx>
 #include <ROOT/TestSupport.hxx>
 
 #include "gtest/gtest.h"
 
 #include <string>
-
+#include <vector>
 
 // ROOT-10702
 TEST(TTreeReaderRegressions, CompositeTypeWithNameClash)
@@ -290,4 +293,47 @@ TEST(TTreeReaderRegressions, UninitializedChain)
       EXPECT_EQ(*x, refval);
    }
    gSystem->Unlink(filename);
+}
+
+// https://github.com/root-project/root/issues/10423
+TEST(TTreeReaderRegressions, XYZVectors)
+{
+   auto filename1 = "f10423_a.root";
+   auto filename2 = "f10423_b.root";
+   auto treename = "t";
+   for (auto filename : {filename1, filename2}) {
+      TFile f(filename, "RECREATE");
+      TTree t(treename, treename);
+      ROOT::Math::XYZVector x(1, 2, 3);
+      std::vector<ROOT::Math::XYZVector> y{ROOT::Math::XYZVector(4,5,6)};
+      t.Branch("x", &x);
+      if (std::string(filename) == std::string(filename1)) {
+         // original line:
+         t.Branch("y", &y); // commenting this line "fixed" the crash
+      } else {
+         // Actual trigger:
+         auto c = TClass::GetClass("std::vector<ROOT::Math::XYZVector>"); // commenting this line "fixed" the crash
+         (void)c;
+      }
+      t.Fill();
+      t.Write();
+   }
+   for (auto filename : {filename1, filename2}) {
+      TFile f(filename, "READ");
+      TTreeReader r(treename, &f);
+      if (std::string(filename) == std::string(filename1)) {
+         TTreeReaderValue<ROOT::Math::XYZVector> rx(r, "x");
+         TTreeReaderValue<ROOT::Math::XYZVector> ry(r, "y");
+         r.Next();
+         EXPECT_EQ(*rx, ROOT::Math::XYZVector(1, 2, 3));
+         EXPECT_EQ(*ry, std::vector<ROOT::Math::XYZVector>{ROOT::Math::XYZVector(4, 5, 6)});
+      } else {
+         TTreeReaderValue<ROOT::Math::XYZVector> rx(r, "x");
+         r.Next();
+         EXPECT_EQ(*rx, ROOT::Math::XYZVector(1, 2, 3));
+      }
+   }
+   for (auto filename : {filename1, filename2}) {
+      gSystem->Unlink(filename);
+   }
 }
