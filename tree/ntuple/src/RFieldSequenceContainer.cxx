@@ -237,6 +237,19 @@ ROOT::RRVecField::RRVecField(std::string_view fieldName, std::unique_ptr<RFieldB
       fItemDeleter = GetDeleterOf(*itemField);
    Attach(std::move(itemField));
    fValueSize = EvalRVecValueSize(fSubfields[0]->GetAlignment(), fSubfields[0]->GetValueSize(), GetAlignment());
+
+   // Determine if we can optimimize bulk reading
+   if (fSubfields[0]->IsSimple()) {
+      fBulkSubfield = fSubfields[0].get();
+   } else {
+      if (auto f = dynamic_cast<RArrayField *>(fSubfields[0].get())) {
+         auto grandChildFields = fSubfields[0]->GetMutableSubfields();
+         if (grandChildFields[0]->IsSimple()) {
+            fBulkSubfield = grandChildFields[0];
+            fBulkNRepetition = f->GetLength();
+         }
+      }
+   }
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RRVecField::CloneImpl(std::string_view newName) const
@@ -351,14 +364,14 @@ void ROOT::RRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 
 std::size_t ROOT::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSpec)
 {
-   if (!fSubfields[0]->IsSimple())
+   if (!fBulkSubfield)
       return RFieldBase::ReadBulkImpl(bulkSpec);
 
    if (bulkSpec.fAuxData->empty()) {
       /// Initialize auxiliary memory: the first sizeof(size_t) bytes store the value size of the item field.
       /// The following bytes store the item values, consecutively.
       bulkSpec.fAuxData->resize(sizeof(std::size_t));
-      *reinterpret_cast<std::size_t *>(bulkSpec.fAuxData->data()) = fSubfields[0]->GetValueSize();
+      *reinterpret_cast<std::size_t *>(bulkSpec.fAuxData->data()) = fBulkNRepetition * fBulkSubfield->GetValueSize();
    }
    const auto itemValueSize = *reinterpret_cast<std::size_t *>(bulkSpec.fAuxData->data());
    unsigned char *itemValueArray = bulkSpec.fAuxData->data() + sizeof(std::size_t);
@@ -410,7 +423,8 @@ std::size_t ROOT::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSpec)
       }
    }
 
-   GetPrincipalColumnOf(*fSubfields[0])->ReadV(firstItemIndex, nItems, itemValueArray - delta);
+   GetPrincipalColumnOf(*fBulkSubfield)
+      ->ReadV(firstItemIndex * fBulkNRepetition, nItems * fBulkNRepetition, itemValueArray - delta);
    return RBulkSpec::kAllSet;
 }
 
