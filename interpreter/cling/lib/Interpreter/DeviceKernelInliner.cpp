@@ -9,6 +9,7 @@
 
 #include "DeviceKernelInliner.h"
 
+#include <clang/AST/ASTContext.h>
 #include <clang/AST/Attr.h>
 
 #include <llvm/Support/Casting.h>
