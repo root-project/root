@@ -2,8 +2,6 @@
 /// \ingroup NTuple
 /// \author Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
 /// \date 2024-02-01
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
@@ -34,30 +32,27 @@ namespace Internal {
 class RPageSink;
 } // namespace Internal
 
-namespace Experimental {
-
 class RNTupleFillContext;
 
 /**
-\class ROOT::Experimental::RNTupleParallelWriter
+\class ROOT::RNTupleParallelWriter
 \ingroup NTuple
 \brief A writer to fill an RNTuple from multiple contexts
 
 Compared to the sequential RNTupleWriter, a parallel writer enables the creation of multiple RNTupleFillContext (see
-RNTupleParallelWriter::CreateFillContext).  Each fill context prepares independent clusters that are appended to the
-common ntuple with internal synchronization.  Before destruction, all fill contexts must have flushed their data and
-been destroyed (or data could be lost!).
+CreateFillContext()).  Each fill context prepares independent clusters that are appended to the common RNTuple with
+internal synchronization.  Before destruction, all fill contexts must have flushed their data and been destroyed (or
+data could be lost!).
 
-For user convenience, RNTupleParallelWriter::CreateFillContext is thread-safe and may be called from multiple threads
-in parallel at any time, also after some data has already been written.  Internally, the original model is cloned and
-ownership is passed to a newly created RNTupleFillContext.  For that reason, it is recommended to use
-RNTupleModel::CreateBare when creating the model for parallel writing and avoid the allocation of a useless default
-REntry per context.
+For user convenience, CreateFillContext() is thread-safe and may be called from multiple threads in parallel at any
+time, also after some data has already been written.  Internally, the original model is cloned and ownership is passed
+to a newly created RNTupleFillContext.  For that reason, it is recommended to use RNTupleModel::CreateBare when creating
+the model for parallel writing and avoid the allocation of a useless default REntry per context.
 
 Note that the sequence of independently prepared clusters is indeterminate and therefore entries are only partially
 ordered:  Entries from one context are totally ordered as they were filled.  However, there is no orderering with other
-contexts and the entries may be appended to the ntuple either before or after other entries written in parallel into
-other contexts.  In addition, two consecutive entries in one fill context can end up separated in the final ntuple, if
+contexts and the entries may be appended to the RNTuple either before or after other entries written in parallel into
+other contexts.  In addition, two consecutive entries in one fill context can end up separated in the final RNTuple, if
 they happen to fall onto a cluster boundary and other contexts append more entries before the next cluster is full.
 
 At the moment, the parallel writer does not (yet) support incremental updates of the underlying model. Please refer to
@@ -73,7 +68,7 @@ private:
    std::unique_ptr<ROOT::Internal::RPageSink> fSink;
    /// The original RNTupleModel connected to fSink; needs to be destructed before it.
    std::unique_ptr<ROOT::RNTupleModel> fModel;
-   Detail::RNTupleMetrics fMetrics;
+   Experimental::Detail::RNTupleMetrics fMetrics;
    /// List of all created helpers. They must be destroyed before this RNTupleParallelWriter is destructed.
    std::vector<std::weak_ptr<RNTupleFillContext>> fFillContexts;
 
@@ -82,11 +77,17 @@ private:
    RNTupleParallelWriter &operator=(const RNTupleParallelWriter &) = delete;
 
 public:
-   /// Recreate a new file and return a writer to write an ntuple.
+   /// Recreate a new file and return a writer to write an RNTuple.
    static std::unique_ptr<RNTupleParallelWriter>
    Recreate(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName, std::string_view storage,
             const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
-   /// Append an ntuple to the existing file, which must not be accessed while data is filled into any created context.
+   /// Append an RNTuple to the existing file.
+   ///
+   /// While the writer synchronizes between multiple fill contexts created from the same writer, there is no
+   /// synchronization with other writers or other clients that write into the same file. The caller must ensure that
+   /// the underlying file is not be accessed while data is filled into any created context. To improve performance, it
+   /// is allowed to use special methods that are guaranteed to not interact with the underlying file, such as
+   /// RNTupleFillContext::FillNoFlush().
    static std::unique_ptr<RNTupleParallelWriter>
    Append(std::unique_ptr<ROOT::RNTupleModel> model, std::string_view ntupleName, TDirectory &fileOrDirectory,
           const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
@@ -97,17 +98,16 @@ public:
    /// thread-safe and may be called from multiple threads in parallel at any time, also after some data has already
    /// been written.
    ///
-   /// Note that all fill contexts must be destroyed before RNTupleParallelWriter::CommitDataset() is called.
+   /// Note that all fill contexts must be destroyed before CommitDataset() is called.
    std::shared_ptr<RNTupleFillContext> CreateFillContext();
 
    /// Automatically called by the destructor
    void CommitDataset();
 
    void EnableMetrics() { fMetrics.Enable(); }
-   const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
+   const Experimental::Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

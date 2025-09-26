@@ -8,9 +8,6 @@
 /// \date September 2024
 /// \author The ROOT Team
 
-// NOTE: The RNTupleParallelWriter is experimental at this point.
-// Functionality and interface are still subject to changes.
-
 #include <ROOT/RNTupleFillContext.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleParallelWriter.hxx>
@@ -23,9 +20,6 @@
 #include <random>
 #include <thread>
 #include <vector>
-
-// Import classes from experimental namespace for the time being
-using ROOT::Experimental::RNTupleParallelWriter;
 
 // Where to store the ntuple of this example
 constexpr char const *kNTupleFileName = "ntpl013_staged.root";
@@ -40,7 +34,7 @@ constexpr int kNEventsPerThread = 25000;
 constexpr int kNEventsPerBlock = 10000;
 
 // Thread function to generate and write events
-void FillData(int id, RNTupleParallelWriter *writer)
+void FillData(int id, ROOT::RNTupleParallelWriter *writer)
 {
    // static variables that are shared between threads; this is done for simplicity in this tutorial, use proper data
    // structures in real code!
@@ -99,7 +93,7 @@ void Write()
    options.SetApproxZippedClusterSize(32'000);
 
    // We hand over the data model to a newly created ntuple of name "NTuple", stored in kNTupleFileName
-   auto writer = RNTupleParallelWriter::Recreate(std::move(model), "NTuple", kNTupleFileName, options);
+   auto writer = ROOT::RNTupleParallelWriter::Recreate(std::move(model), "NTuple", kNTupleFileName, options);
 
    std::vector<std::thread> threads;
    for (int i = 0; i < kNWriterThreads; ++i)
@@ -111,7 +105,7 @@ void Write()
    // and closes the attached ROOT file.
 }
 
-void FillDataInBlocks(int id, RNTupleParallelWriter *writer)
+void FillDataInBlocks(int id, ROOT::RNTupleParallelWriter *writer)
 {
    // static variables that are shared between threads; this is done for simplicity in this tutorial, use proper data
    // structures in real code!
@@ -189,7 +183,7 @@ void WriteInBlocks()
    options.SetApproxZippedClusterSize(32'000);
 
    // We hand over the data model to a newly created ntuple of name "NTuple", stored in kNTupleFileName
-   auto writer = RNTupleParallelWriter::Recreate(std::move(model), "NTuple", kNTupleFileName, options);
+   auto writer = ROOT::RNTupleParallelWriter::Recreate(std::move(model), "NTuple", kNTupleFileName, options);
 
    std::vector<std::thread> threads;
    for (int i = 0; i < kNWriterThreads; ++i)
