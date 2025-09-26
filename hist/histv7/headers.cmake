@@ -4,6 +4,7 @@ set(histv7_headers
     ROOT/RBinIndexRange.hxx
     ROOT/RBinWithError.hxx
     ROOT/RHistEngine.hxx
+    ROOT/RHistStats.hxx
     ROOT/RHistUtils.hxx
     ROOT/RLinearizedIndex.hxx
     ROOT/RRegularAxis.hxx
