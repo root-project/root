@@ -630,6 +630,21 @@ THnBase(name, title, axes),
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Construct a THnSparse with dim dimensions and unequal binning.
+/// nbins and std::vector xbins are used to describe bin edges for each dimension.
+/// chunksize represents the size of the chunks.
+
+THnSparse::THnSparse(const char *name, const char *title, Int_t dim, const Int_t *nbins,
+         const std::vector<std::vector<double>> &xbins,
+         Int_t chunksize):
+THnBase(name, title, dim, nbins, xbins),
+  fChunkSize(chunksize), fFilledBins(0), fCompactCoord(nullptr)
+{
+   fCompactCoord = new THnSparseCompactBinCoord(dim, nbins);
+   fBinContent.SetOwner();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Destruct a THnSparse
 
 THnSparse::~THnSparse() {

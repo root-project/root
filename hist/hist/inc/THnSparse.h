@@ -76,6 +76,9 @@ class THnSparse: public THnBase {
              const std::vector<TAxis>& axes,
              Int_t chunksize = 1024 * 16);
 
+   THnSparse(const char *name, const char *title, Int_t dim, const Int_t *nbins,
+       const std::vector<std::vector<double>> &xbins, Int_t chunksize = 1024 * 16);
+
    ~THnSparse() override;
 
    static THnSparse* CreateSparse(const char* name, const char* title,
