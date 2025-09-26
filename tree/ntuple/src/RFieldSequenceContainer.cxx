@@ -75,6 +75,16 @@ void ROOT::RArrayField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to
    }
 }
 
+std::size_t ROOT::RArrayField::ReadBulkImpl(const RBulkSpec &bulkSpec)
+{
+   if (!fSubfields[0]->IsSimple())
+      return RFieldBase::ReadBulkImpl(bulkSpec);
+
+   GetPrincipalColumnOf(*fSubfields[0])
+      ->ReadV(bulkSpec.fFirstIndex * fArrayLength, bulkSpec.fCount * fArrayLength, bulkSpec.fValues);
+   return RBulkSpec::kAllSet;
+}
+
 void ROOT::RArrayField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    static const std::vector<std::string> prefixes = {"std::array<"};
