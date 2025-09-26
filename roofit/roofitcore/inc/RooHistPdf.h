@@ -104,8 +104,10 @@ protected:
 
   double evaluate() const override;
   double totalVolume() const ;
-  friend class RooAbsCachedPdf ;
   double totVolume() const ;
+
+  friend class RooAbsCachedPdf ;
+  friend class RooWorkspace ;
 
   RooArgSet _histObsList;                      ///< List of observables defining dimensions of histogram
   RooSetProxy _pdfObsList;                     ///< List of observables mapped onto histogram observables
