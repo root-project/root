@@ -1860,14 +1860,12 @@ the future.
 \anchor special-values
 ### Dealing with NaN or Inf values in the dataset
 
-RDataFrame does not treat NaNs or Inf values in any special way, ie they will
-propagate to the final result. There is no configurable flag such as Scipy's
-`nan_policy=propagate,omit,raise`.
-The `omit` behavior can be easily mimicked by a user call to a filter, e.g.:
+RDataFrame does not treat NaNs or infinities beyond what the floating-point standards require, i.e. they will
+propagate to the final result.
+Non-finite numbers can be suppressed using Filter(), e.g.:
 
 \code{.py}
-df.Filter("!std::isnan(x)").Mean("x")
-df.Filter("!std::isinf(x)").Mean("x")
+df.Filter("std::isfinite(x)").Mean("x")
 \endcode
 
 */
