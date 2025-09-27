@@ -222,6 +222,10 @@ class RVectorField : public RFieldBase {
    ROOT::Internal::RColumnIndex fNWritten;
    std::unique_ptr<RDeleter> fItemDeleter;
 
+   // Ensures that the std::vector pointed to by vec has at least nItems valid elements.
+   static void ResizeVector(void *vec, std::size_t nItems, std::size_t itemSize, const RFieldBase &itemField,
+                            RDeleter *itemDeleter);
+
 protected:
    /// Creates a possibly-untyped VectorField.
    /// If `emulatedFromType` is not nullopt, the field is untyped. If the string is empty, it is a "regular"
