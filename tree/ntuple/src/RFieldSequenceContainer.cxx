@@ -583,6 +583,30 @@ std::size_t ROOT::RVectorField::AppendImpl(const void *from)
    return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
+void ROOT::RVectorField::ResizeVector(void *vec, std::size_t nItems, std::size_t itemSize, const RFieldBase &itemField,
+                                      RDeleter *itemDeleter)
+{
+   auto typedValue = static_cast<std::vector<char> *>(vec);
+
+   // See "semantics of reading non-trivial objects" in RNTuple's Architecture.md
+   R__ASSERT(itemSize > 0);
+   const auto oldNItems = typedValue->size() / itemSize;
+   const bool canRealloc = oldNItems < nItems;
+   bool allDeallocated = false;
+   if (itemDeleter) {
+      allDeallocated = canRealloc;
+      for (std::size_t i = allDeallocated ? 0 : nItems; i < oldNItems; ++i) {
+         itemDeleter->operator()(typedValue->data() + (i * itemSize), true /* dtorOnly */);
+      }
+   }
+   typedValue->resize(nItems * itemSize);
+   if (!(itemField.GetTraits() & kTraitTriviallyConstructible)) {
+      for (std::size_t i = allDeallocated ? 0 : oldNItems; i < nItems; ++i) {
+         CallConstructValueOn(itemField, typedValue->data() + (i * itemSize));
+      }
+   }
+}
+
 void ROOT::RVectorField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
    auto typedValue = static_cast<std::vector<char> *>(to);
@@ -598,23 +622,7 @@ void ROOT::RVectorField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to
       return;
    }
 
-   // See "semantics of reading non-trivial objects" in RNTuple's Architecture.md
-   R__ASSERT(fItemSize > 0);
-   const auto oldNItems = typedValue->size() / fItemSize;
-   const bool canRealloc = oldNItems < nItems;
-   bool allDeallocated = false;
-   if (fItemDeleter) {
-      allDeallocated = canRealloc;
-      for (std::size_t i = allDeallocated ? 0 : nItems; i < oldNItems; ++i) {
-         fItemDeleter->operator()(typedValue->data() + (i * fItemSize), true /* dtorOnly */);
-      }
-   }
-   typedValue->resize(nItems * fItemSize);
-   if (!(fSubfields[0]->GetTraits() & kTraitTriviallyConstructible)) {
-      for (std::size_t i = allDeallocated ? 0 : oldNItems; i < nItems; ++i) {
-         CallConstructValueOn(*fSubfields[0], typedValue->data() + (i * fItemSize));
-      }
-   }
+   ResizeVector(to, nItems, fItemSize, *fSubfields[0], fItemDeleter.get());
 
    for (std::size_t i = 0; i < nItems; ++i) {
       CallReadOn(*fSubfields[0], collectionStart + i, typedValue->data() + (i * fItemSize));
