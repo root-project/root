@@ -13,6 +13,107 @@
 #include <memory>
 #include <new> // hardware_destructive_interference_size
 
+namespace {
+
+/// Retrieve the addresses of the data members of a generic RVec from a pointer to the beginning of the RVec object.
+/// Returns pointers to fBegin, fSize and fCapacity in a std::tuple.
+std::tuple<unsigned char **, std::int32_t *, std::int32_t *> GetRVecDataMembers(void *rvecPtr)
+{
+   unsigned char **beginPtr = reinterpret_cast<unsigned char **>(rvecPtr);
+   // int32_t fSize is the second data member (after 1 void*)
+   std::int32_t *size = reinterpret_cast<std::int32_t *>(beginPtr + 1);
+   R__ASSERT(*size >= 0);
+   // int32_t fCapacity is the third data member (1 int32_t after fSize)
+   std::int32_t *capacity = size + 1;
+   R__ASSERT(*capacity >= -1);
+   return {beginPtr, size, capacity};
+}
+
+std::tuple<const unsigned char *const *, const std::int32_t *, const std::int32_t *>
+GetRVecDataMembers(const void *rvecPtr)
+{
+   return {GetRVecDataMembers(const_cast<void *>(rvecPtr))};
+}
+
+std::size_t EvalRVecValueSize(std::size_t alignOfT, std::size_t sizeOfT, std::size_t alignOfRVecT)
+{
+   // the size of an RVec<T> is the size of its 4 data-members + optional padding:
+   //
+   // data members:
+   // - void *fBegin
+   // - int32_t fSize
+   // - int32_t fCapacity
+   // - the char[] inline storage, which is aligned like T
+   //
+   // padding might be present:
+   // - between fCapacity and the char[] buffer aligned like T
+   // - after the char[] buffer
+
+   constexpr auto dataMemberSz = sizeof(void *) + 2 * sizeof(std::int32_t);
+
+   // mimic the logic of RVecInlineStorageSize, but at runtime
+   const auto inlineStorageSz = [&] {
+      constexpr unsigned cacheLineSize = R__HARDWARE_INTERFERENCE_SIZE;
+      const unsigned elementsPerCacheLine = (cacheLineSize - dataMemberSz) / sizeOfT;
+      constexpr unsigned maxInlineByteSize = 1024;
+      const unsigned nElements =
+         elementsPerCacheLine >= 8 ? elementsPerCacheLine : (sizeOfT * 8 > maxInlineByteSize ? 0 : 8);
+      return nElements * sizeOfT;
+   }();
+
+   // compute padding between first 3 datamembers and inline buffer
+   // (there should be no padding between the first 3 data members)
+   auto paddingMiddle = dataMemberSz % alignOfT;
+   if (paddingMiddle != 0)
+      paddingMiddle = alignOfT - paddingMiddle;
+
+   // padding at the end of the object
+   auto paddingEnd = (dataMemberSz + paddingMiddle + inlineStorageSz) % alignOfRVecT;
+   if (paddingEnd != 0)
+      paddingEnd = alignOfRVecT - paddingEnd;
+
+   return dataMemberSz + inlineStorageSz + paddingMiddle + paddingEnd;
+}
+
+std::size_t EvalRVecAlignment(std::size_t alignOfSubfield)
+{
+   // the alignment of an RVec<T> is the largest among the alignments of its data members
+   // (including the inline buffer which has the same alignment as the RVec::value_type)
+   return std::max({alignof(void *), alignof(std::int32_t), alignOfSubfield});
+}
+
+void DestroyRVecWithChecks(std::size_t alignOfT, unsigned char **beginPtr, std::int32_t *capacityPtr)
+{
+   // figure out if we are in the small state, i.e. begin == &inlineBuffer
+   // there might be padding between fCapacity and the inline buffer, so we compute it here
+   constexpr auto dataMemberSz = sizeof(void *) + 2 * sizeof(std::int32_t);
+   auto paddingMiddle = dataMemberSz % alignOfT;
+   if (paddingMiddle != 0)
+      paddingMiddle = alignOfT - paddingMiddle;
+   const bool isSmall = (*beginPtr == (reinterpret_cast<unsigned char *>(beginPtr) + dataMemberSz + paddingMiddle));
+
+   const bool owns = (*capacityPtr != -1);
+   if (!isSmall && owns)
+      free(*beginPtr);
+}
+
+std::vector<ROOT::RFieldBase::RValue> SplitVector(std::shared_ptr<void> valuePtr, ROOT::RFieldBase &itemField)
+{
+   auto *vec = static_cast<std::vector<char> *>(valuePtr.get());
+   const auto itemSize = itemField.GetValueSize();
+   R__ASSERT(itemSize > 0);
+   R__ASSERT((vec->size() % itemSize) == 0);
+   const auto nItems = vec->size() / itemSize;
+   std::vector<ROOT::RFieldBase::RValue> result;
+   result.reserve(nItems);
+   for (unsigned i = 0; i < nItems; ++i) {
+      result.emplace_back(itemField.BindValue(std::shared_ptr<void>(valuePtr, vec->data() + (i * itemSize))));
+   }
+   return result;
+}
+
+} // anonymous namespace
+
 ROOT::RArrayField::RArrayField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
                                std::size_t arrayLength)
    : ROOT::RFieldBase(fieldName,
@@ -135,92 +236,6 @@ void ROOT::RArrayField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) cons
 }
 
 //------------------------------------------------------------------------------
-
-namespace {
-
-/// Retrieve the addresses of the data members of a generic RVec from a pointer to the beginning of the RVec object.
-/// Returns pointers to fBegin, fSize and fCapacity in a std::tuple.
-std::tuple<unsigned char **, std::int32_t *, std::int32_t *> GetRVecDataMembers(void *rvecPtr)
-{
-   unsigned char **beginPtr = reinterpret_cast<unsigned char **>(rvecPtr);
-   // int32_t fSize is the second data member (after 1 void*)
-   std::int32_t *size = reinterpret_cast<std::int32_t *>(beginPtr + 1);
-   R__ASSERT(*size >= 0);
-   // int32_t fCapacity is the third data member (1 int32_t after fSize)
-   std::int32_t *capacity = size + 1;
-   R__ASSERT(*capacity >= -1);
-   return {beginPtr, size, capacity};
-}
-
-std::tuple<const unsigned char *const *, const std::int32_t *, const std::int32_t *>
-GetRVecDataMembers(const void *rvecPtr)
-{
-   return {GetRVecDataMembers(const_cast<void *>(rvecPtr))};
-}
-
-std::size_t EvalRVecValueSize(std::size_t alignOfT, std::size_t sizeOfT, std::size_t alignOfRVecT)
-{
-   // the size of an RVec<T> is the size of its 4 data-members + optional padding:
-   //
-   // data members:
-   // - void *fBegin
-   // - int32_t fSize
-   // - int32_t fCapacity
-   // - the char[] inline storage, which is aligned like T
-   //
-   // padding might be present:
-   // - between fCapacity and the char[] buffer aligned like T
-   // - after the char[] buffer
-
-   constexpr auto dataMemberSz = sizeof(void *) + 2 * sizeof(std::int32_t);
-
-   // mimic the logic of RVecInlineStorageSize, but at runtime
-   const auto inlineStorageSz = [&] {
-      constexpr unsigned cacheLineSize = R__HARDWARE_INTERFERENCE_SIZE;
-      const unsigned elementsPerCacheLine = (cacheLineSize - dataMemberSz) / sizeOfT;
-      constexpr unsigned maxInlineByteSize = 1024;
-      const unsigned nElements =
-         elementsPerCacheLine >= 8 ? elementsPerCacheLine : (sizeOfT * 8 > maxInlineByteSize ? 0 : 8);
-      return nElements * sizeOfT;
-   }();
-
-   // compute padding between first 3 datamembers and inline buffer
-   // (there should be no padding between the first 3 data members)
-   auto paddingMiddle = dataMemberSz % alignOfT;
-   if (paddingMiddle != 0)
-      paddingMiddle = alignOfT - paddingMiddle;
-
-   // padding at the end of the object
-   auto paddingEnd = (dataMemberSz + paddingMiddle + inlineStorageSz) % alignOfRVecT;
-   if (paddingEnd != 0)
-      paddingEnd = alignOfRVecT - paddingEnd;
-
-   return dataMemberSz + inlineStorageSz + paddingMiddle + paddingEnd;
-}
-
-std::size_t EvalRVecAlignment(std::size_t alignOfSubfield)
-{
-   // the alignment of an RVec<T> is the largest among the alignments of its data members
-   // (including the inline buffer which has the same alignment as the RVec::value_type)
-   return std::max({alignof(void *), alignof(std::int32_t), alignOfSubfield});
-}
-
-void DestroyRVecWithChecks(std::size_t alignOfT, unsigned char **beginPtr, std::int32_t *capacityPtr)
-{
-   // figure out if we are in the small state, i.e. begin == &inlineBuffer
-   // there might be padding between fCapacity and the inline buffer, so we compute it here
-   constexpr auto dataMemberSz = sizeof(void *) + 2 * sizeof(std::int32_t);
-   auto paddingMiddle = dataMemberSz % alignOfT;
-   if (paddingMiddle != 0)
-      paddingMiddle = alignOfT - paddingMiddle;
-   const bool isSmall = (*beginPtr == (reinterpret_cast<unsigned char *>(beginPtr) + dataMemberSz + paddingMiddle));
-
-   const bool owns = (*capacityPtr != -1);
-   if (!isSmall && owns)
-      free(*beginPtr);
-}
-
-} // anonymous namespace
 
 ROOT::RRVecField::RRVecField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
    : ROOT::RFieldBase(fieldName, "ROOT::VecOps::RVec<" + itemField->GetTypeName() + ">",
@@ -678,17 +693,7 @@ std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RVectorField::GetDeleter() con
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RVectorField::SplitValue(const RValue &value) const
 {
-   auto valuePtr = value.GetPtr<void>();
-   auto *vec = static_cast<std::vector<char> *>(valuePtr.get());
-   R__ASSERT(fItemSize > 0);
-   R__ASSERT((vec->size() % fItemSize) == 0);
-   auto nItems = vec->size() / fItemSize;
-   std::vector<RValue> result;
-   result.reserve(nItems);
-   for (unsigned i = 0; i < nItems; ++i) {
-      result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<void>(valuePtr, vec->data() + (i * fItemSize))));
-   }
-   return result;
+   return SplitVector(value.GetPtr<void>(), *fSubfields[0]);
 }
 
 void ROOT::RVectorField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
