@@ -51,7 +51,7 @@ class Histo(Action):
             # positional argument. In all Histo*D overload where it is present,
             # it is always the first argument.
             if not isinstance(self.args[0],
-                              (tuple, ROOT.RDF.TH1DModel, ROOT.RDF.TH2DModel, ROOT.RDF.TH3DModel, ROOT.RDF.THnDModel)):
+                              (tuple, ROOT.RDF.TH1DModel, ROOT.RDF.TH2DModel, ROOT.RDF.TH3DModel, ROOT.RDF.THnDModel, ROOT.RDF.THnSparseDModel)):
                 message = (
                     "Creating a histogram without a model is not supported in distributed mode. Please make sure to "
                     "specify the histogram model when rerunning the distributed RDataFrame application. For example:\n\n"
@@ -104,6 +104,7 @@ SUPPORTED_OPERATIONS: Dict[str, Union[Action, InstantAction, Transformation]] = 
     "Histo2D": Histo,
     "Histo3D": Histo,
     "HistoND": Histo,
+    "HistoNSparseD": Histo,
     "Max": Action,
     "Mean": Action,
     "Min": Action,
