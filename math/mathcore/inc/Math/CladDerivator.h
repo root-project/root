@@ -151,8 +151,8 @@ ValueAndPushforward<T, T> Log2_pushforward(T x, T d_x)
    return {::TMath::Log2(x), (1.0 / (x * ::TMath::Log(2.0))) * d_x};
 }
 
-template <typename T>
-ValueAndPushforward<T, T> Power_pushforward(T x, T y, T d_x, T d_y)
+template <typename T, typename U>
+ValueAndPushforward<T, T> Power_pushforward(T x, U y, T d_x, U d_y)
 {
    T pushforward = y * ::TMath::Power(x, y - 1) * d_x;
    if (d_y) {
@@ -161,8 +161,8 @@ ValueAndPushforward<T, T> Power_pushforward(T x, T y, T d_x, T d_y)
    return {::TMath::Power(x, y), pushforward};
 }
 
-template <typename T, typename U>
-void Power_pullback(T x, T y, U p, clad::array_ref<T> d_x, clad::array_ref<T> d_y)
+template <typename T, typename U, typename V>
+void Power_pullback(T x, U y, V p, clad::array_ref<T> d_x, clad::array_ref<U> d_y)
 {
    auto t = pow_pushforward(x, y, 1, 0);
    *d_x += t.pushforward * p;
