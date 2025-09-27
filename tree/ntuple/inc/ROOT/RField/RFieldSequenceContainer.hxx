@@ -104,8 +104,8 @@ public:
 
 /// The type-erased field for a RVec<Type>
 class RRVecField : public RFieldBase {
-public:
-   /// the RRVecDeleter is also used by RArrayAsRVecField and therefore declared public
+   friend class RArrayAsRVecField; // to use the RRVecDeleter
+
    class RRVecDeleter : public RDeleter {
    private:
       std::size_t fItemAlignment;
