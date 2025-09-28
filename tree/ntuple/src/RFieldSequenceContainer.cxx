@@ -62,15 +62,11 @@ void ROOT::RArrayField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 void ROOT::RArrayField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to)
 {
    if (fSubfields[0]->IsSimple()) {
-      GetPrincipalColumnOf(*fSubfields[0])
-         ->ReadV(RNTupleLocalIndex(localIndex.GetClusterId(), localIndex.GetIndexInCluster() * fArrayLength),
-                 fArrayLength, to);
+      GetPrincipalColumnOf(*fSubfields[0])->ReadV(localIndex * fArrayLength, fArrayLength, to);
    } else {
       auto arrayPtr = static_cast<unsigned char *>(to);
       for (unsigned i = 0; i < fArrayLength; ++i) {
-         CallReadOn(*fSubfields[0],
-                    RNTupleLocalIndex(localIndex.GetClusterId(), localIndex.GetIndexInCluster() * fArrayLength + i),
-                    arrayPtr + (i * fItemSize));
+         CallReadOn(*fSubfields[0], localIndex * fArrayLength + i, arrayPtr + (i * fItemSize));
       }
    }
 }
