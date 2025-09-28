@@ -61,6 +61,7 @@ public:
    virtual void VisitFieldZero(const ROOT::RFieldZero &field) { VisitField(field); }
    virtual void VisitArrayField(const ROOT::RArrayField &field) { VisitField(field); }
    virtual void VisitArrayAsRVecField(const ROOT::RArrayAsRVecField &field) { VisitField(field); }
+   virtual void VisitArrayAsVectorField(const ROOT::RArrayAsVectorField &field) { VisitField(field); }
    virtual void VisitAtomicField(const ROOT::RAtomicField &field) { VisitField(field); }
    virtual void VisitBitsetField(const ROOT::RBitsetField &field) { VisitField(field); }
    virtual void VisitBoolField(const ROOT::RField<bool> &field) { VisitField(field); }
@@ -235,6 +236,7 @@ public:
    void VisitCardinalityField(const ROOT::RCardinalityField &field) final;
    void VisitArrayField(const ROOT::RArrayField &field) final;
    void VisitArrayAsRVecField(const ROOT::RArrayAsRVecField &field) final;
+   void VisitArrayAsVectorField(const ROOT::RArrayAsVectorField &field) final;
    void VisitClassField(const ROOT::RClassField &field) final;
    void VisitTObjectField(const ROOT::RField<TObject> &field) final;
    void VisitStreamerField(const ROOT::RStreamerField &field) final;

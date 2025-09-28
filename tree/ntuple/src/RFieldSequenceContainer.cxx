@@ -884,3 +884,88 @@ void ROOT::RArrayAsRVecField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor
 {
    visitor.VisitArrayAsRVecField(*this);
 }
+
+//------------------------------------------------------------------------------
+
+ROOT::RArrayAsVectorField::RArrayAsVectorField(std::string_view fieldName, std::unique_ptr<ROOT::RFieldBase> itemField,
+                                               std::size_t arrayLength)
+   : ROOT::RFieldBase(fieldName, "std::vector<" + itemField->GetTypeName() + ">", ROOT::ENTupleStructure::kCollection,
+                      false /* isSimple */),
+     fItemSize(itemField->GetValueSize()),
+     fArrayLength(arrayLength)
+{
+   Attach(std::move(itemField));
+   if (!(fSubfields[0]->GetTraits() & kTraitTriviallyDestructible))
+      fItemDeleter = GetDeleterOf(*fSubfields[0]);
+}
+
+std::unique_ptr<ROOT::RFieldBase> ROOT::RArrayAsVectorField::CloneImpl(std::string_view newName) const
+{
+   auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
+   return std::make_unique<RArrayAsVectorField>(newName, std::move(newItemField), fArrayLength);
+}
+
+void ROOT::RArrayAsVectorField::GenerateColumns()
+{
+   throw RException(R__FAIL("RArrayAsVectorField fields must only be used for reading"));
+}
+
+std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RArrayAsVectorField::GetDeleter() const
+{
+   if (fItemDeleter)
+      return std::make_unique<RVectorField::RVectorDeleter>(fItemSize, GetDeleterOf(*fSubfields[0]));
+   return std::make_unique<RVectorField::RVectorDeleter>();
+}
+
+void ROOT::RArrayAsVectorField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
+{
+   auto typedValue = static_cast<std::vector<char> *>(to);
+
+   if (fSubfields[0]->IsSimple()) {
+      typedValue->resize(fArrayLength * fItemSize);
+      GetPrincipalColumnOf(*fSubfields[0])->ReadV(globalIndex * fArrayLength, fArrayLength, typedValue->data());
+      return;
+   }
+
+   RVectorField::ResizeVector(to, fArrayLength, fItemSize, *fSubfields[0], fItemDeleter.get());
+
+   for (std::size_t i = 0; i < fArrayLength; ++i) {
+      CallReadOn(*fSubfields[0], globalIndex * fArrayLength + i, typedValue->data() + (i * fItemSize));
+   }
+}
+
+void ROOT::RArrayAsVectorField::ReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to)
+{
+   auto typedValue = static_cast<std::vector<char> *>(to);
+
+   if (fSubfields[0]->IsSimple()) {
+      typedValue->resize(fArrayLength * fItemSize);
+      GetPrincipalColumnOf(*fSubfields[0])->ReadV(localIndex * fArrayLength, fArrayLength, typedValue->data());
+      return;
+   }
+
+   RVectorField::ResizeVector(to, fArrayLength, fItemSize, *fSubfields[0], fItemDeleter.get());
+
+   for (std::size_t i = 0; i < fArrayLength; ++i) {
+      CallReadOn(*fSubfields[0], localIndex * fArrayLength + i, typedValue->data() + (i * fItemSize));
+   }
+}
+
+void ROOT::RArrayAsVectorField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName | kDiffTypeVersion | kDiffStructure | kDiffNRepetitions);
+   if (fieldDesc.GetTypeName().rfind("std::array<", 0) != 0) {
+      throw RException(R__FAIL("RArrayAsVectorField " + GetQualifiedFieldName() + " expects an on-disk array field"));
+   }
+}
+
+std::vector<ROOT::RFieldBase::RValue> ROOT::RArrayAsVectorField::SplitValue(const ROOT::RFieldBase::RValue &value) const
+{
+   return SplitVector(value.GetPtr<void>(), *fSubfields[0]);
+}
+
+void ROOT::RArrayAsVectorField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitArrayAsVectorField(*this);
+}

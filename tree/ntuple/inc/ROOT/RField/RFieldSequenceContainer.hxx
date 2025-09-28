@@ -200,6 +200,7 @@ public:
 /// The generic field for a (nested) `std::vector<Type>` except for `std::vector<bool>`
 /// The field can be constructed as untyped collection through CreateUntyped().
 class RVectorField : public RFieldBase {
+   friend class RArrayAsVectorField; // to get access to the RVectorDeleter
    friend std::unique_ptr<RFieldBase> Internal::CreateEmulatedVectorField(std::string_view fieldName,
                                                                           std::unique_ptr<RFieldBase> itemField,
                                                                           std::string_view emulatedFromType);
@@ -362,6 +363,50 @@ public:
 
    std::size_t GetValueSize() const final { return fValueSize; }
    std::size_t GetAlignment() const final;
+
+   std::vector<RFieldBase::RValue> SplitValue(const RFieldBase::RValue &value) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
+};
+
+/**
+\class ROOT::RArrayAsVectorField
+\brief A field for fixed-size arrays that are represented as std::vector in memory.
+\ingroup NTuple
+This class is used only for reading. In particular, it helps for schema evolution of fixed-size arrays into vectors.
+*/
+class RArrayAsVectorField final : public RFieldBase {
+private:
+   std::unique_ptr<RDeleter> fItemDeleter; /// Sub field deleter or nullptr for simple fields
+   std::size_t fItemSize;                  /// The size of a child field's item
+   std::size_t fArrayLength;               /// The length of the arrays in this field
+
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+
+   void GenerateColumns() final;
+   using RFieldBase::GenerateColumns;
+
+   void ConstructValue(void *where) const final { new (where) std::vector<char>(); }
+   /// Returns an RVectorField::RVectorDeleter
+   std::unique_ptr<RDeleter> GetDeleter() const final;
+
+   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
+   void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
+
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
+
+public:
+   /// The `itemField` argument represents the inner item of the on-disk array,
+   /// i.e. for an `std::array<float>` it is the `float`
+   RArrayAsVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField, std::size_t arrayLength);
+   RArrayAsVectorField(const RArrayAsVectorField &other) = delete;
+   RArrayAsVectorField &operator=(const RArrayAsVectorField &other) = delete;
+   RArrayAsVectorField(RArrayAsVectorField &&other) = default;
+   RArrayAsVectorField &operator=(RArrayAsVectorField &&other) = default;
+   ~RArrayAsVectorField() final = default;
+
+   size_t GetValueSize() const final { return sizeof(std::vector<char>); }
+   size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
 
    std::vector<RFieldBase::RValue> SplitValue(const RFieldBase::RValue &value) const final;
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
