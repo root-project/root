@@ -281,6 +281,9 @@ template <>
 class RField<std::vector<bool>> final : public RFieldBase {
 private:
    ROOT::Internal::RColumnIndex fNWritten{0};
+   /// If schema-evolved from an std::array, fOnDiskNRepetition is > 0 and there will be no
+   /// principal column.
+   std::size_t fOnDiskNRepetitions = 0;
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
@@ -297,6 +300,7 @@ protected:
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
+   void ReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to) final;
 
    void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
