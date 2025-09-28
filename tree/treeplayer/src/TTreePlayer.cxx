@@ -2382,7 +2382,17 @@ void TTreePlayer::RecursiveRemove(TObject *obj)
 ///   tree->Scan("*");
 ///   .>
 /// ~~~
-///  will create a file tree.log
+///  will create a file `tree.log`
+/// ### From a script
+/// One could use TSystem::RedirectOutput, but it's cleaner to call:
+/// ~~~{.cpp}
+///   ///   tree->SetScanField(0);
+///   auto logname = TString(tree->GetName())+".log";
+///   auto player = static_cast<TTreePlayer *>(tree->GetPlayer());
+///   player->SetScanFileName(logname);
+///   player->SetScanRedirect(true);
+///   tree->Scan();
+/// ~~~
 ///
 /// Arrays (within an entry) are printed in their linear forms.
 /// If several arrays with multiple dimensions are printed together,
