@@ -743,15 +743,47 @@ void ROOT::RField<std::vector<bool>>::ReadGlobalImpl(ROOT::NTupleSize_t globalIn
 {
    auto typedValue = static_cast<std::vector<bool> *>(to);
 
-   ROOT::NTupleSize_t nItems;
-   RNTupleLocalIndex collectionStart;
-   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
+   if (fOnDiskNRepetitions == 0) {
+      ROOT::NTupleSize_t nItems;
+      RNTupleLocalIndex collectionStart;
+      fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
+      typedValue->resize(nItems);
+      for (std::size_t i = 0; i < nItems; ++i) {
+         bool bval;
+         CallReadOn(*fSubfields[0], collectionStart + i, &bval);
+         (*typedValue)[i] = bval;
+      }
+   } else {
+      typedValue->resize(fOnDiskNRepetitions);
+      for (std::size_t i = 0; i < fOnDiskNRepetitions; ++i) {
+         bool bval;
+         CallReadOn(*fSubfields[0], globalIndex * fOnDiskNRepetitions + i, &bval);
+         (*typedValue)[i] = bval;
+      }
+   }
+}
 
-   typedValue->resize(nItems);
-   for (unsigned i = 0; i < nItems; ++i) {
-      bool bval;
-      CallReadOn(*fSubfields[0], collectionStart + i, &bval);
-      (*typedValue)[i] = bval;
+void ROOT::RField<std::vector<bool>>::ReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to)
+{
+   auto typedValue = static_cast<std::vector<bool> *>(to);
+
+   if (fOnDiskNRepetitions == 0) {
+      ROOT::NTupleSize_t nItems;
+      RNTupleLocalIndex collectionStart;
+      fPrincipalColumn->GetCollectionInfo(localIndex, &collectionStart, &nItems);
+      typedValue->resize(nItems);
+      for (std::size_t i = 0; i < nItems; ++i) {
+         bool bval;
+         CallReadOn(*fSubfields[0], collectionStart + i, &bval);
+         (*typedValue)[i] = bval;
+      }
+   } else {
+      typedValue->resize(fOnDiskNRepetitions);
+      for (std::size_t i = 0; i < fOnDiskNRepetitions; ++i) {
+         bool bval;
+         CallReadOn(*fSubfields[0], localIndex * fOnDiskNRepetitions + i, &bval);
+         (*typedValue)[i] = bval;
+      }
    }
 }
 
@@ -761,23 +793,35 @@ const ROOT::RFieldBase::RColumnRepresentations &ROOT::RField<std::vector<bool>>:
                                                   {ENTupleColumnType::kIndex64},
                                                   {ENTupleColumnType::kSplitIndex32},
                                                   {ENTupleColumnType::kIndex32}},
-                                                 {});
+                                                 {{}});
    return representations;
 }
 
 void ROOT::RField<std::vector<bool>>::GenerateColumns()
 {
+   R__ASSERT(fOnDiskNRepetitions == 0); // fOnDiskNRepetitions must only be used for reading
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>();
 }
 
 void ROOT::RField<std::vector<bool>>::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
+   if (fOnDiskNRepetitions == 0)
+      GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
 void ROOT::RField<std::vector<bool>>::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName).ThrowOnError();
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   if (fieldDesc.GetTypeName().rfind("std::array<", 0) == 0) {
+      EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName | kDiffStructure | kDiffNRepetitions).ThrowOnError();
+      if (fieldDesc.GetNRepetitions() == 0)
+         throw RException(R__FAIL("fixed-size array --> std::vector<bool>: expected repetition count > 0"));
+      if (fieldDesc.GetStructure() != ENTupleStructure::kPlain)
+         throw RException(R__FAIL("fixed-size array --> std::vector<bool>: expected plain on-disk field"));
+      fOnDiskNRepetitions = fieldDesc.GetNRepetitions();
+   } else {
+      EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName).ThrowOnError();
+   }
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RField<std::vector<bool>>::SplitValue(const RValue &value) const
@@ -787,10 +831,11 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RField<std::vector<bool>>::SplitValu
    std::vector<RValue> result;
    result.reserve(count);
    for (unsigned i = 0; i < count; ++i) {
-      if (typedValue[i])
+      if (typedValue[i]) {
          result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<bool>(new bool(true))));
-      else
+      } else {
          result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<bool>(new bool(false))));
+      }
    }
    return result;
 }
