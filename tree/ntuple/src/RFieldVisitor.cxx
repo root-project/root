@@ -325,6 +325,11 @@ void ROOT::Internal::RPrintValueVisitor::VisitArrayAsRVecField(const ROOT::RArra
    PrintCollection(field);
 }
 
+void ROOT::Internal::RPrintValueVisitor::VisitArrayAsVectorField(const ROOT::RArrayAsVectorField &field)
+{
+   PrintCollection(field);
+}
+
 void ROOT::Internal::RPrintValueVisitor::VisitStreamerField(const ROOT::RStreamerField &field)
 {
    PrintIndent();
