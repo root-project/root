@@ -211,7 +211,7 @@ void TDecompSparse::SetMatrix(const TMatrixDSparse &a)
          return;
       case 1 :
          Error("SetMatrix(const TMatrixDSparse &",
-               "detected %d entries out of rage in row/col indices; ignored",this->IError());
+               "detected %d entries out of range in row/col indices; ignored",this->IError());
          return;
    }
 
