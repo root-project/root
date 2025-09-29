@@ -51,64 +51,6 @@ static void ResetErrno()
    errno = 0;
 }
 
-static const char *GetExePath()
-{
-   static std::string exepath;
-   if (exepath == "") {
-#ifdef __APPLE__
-      exepath = _dyld_get_image_name(0);
-#endif
-#ifdef __linux
-      char linkname[64];      // /proc/<pid>/exe
-      char buf[kMAXPATHLEN];  // exe path name
-      pid_t pid;
-
-      // get our pid and build the name of the link in /proc
-      pid = getpid();
-      snprintf(linkname,64, "/proc/%i/exe", pid);
-      int ret = readlink(linkname, buf, kMAXPATHLEN);
-      if (ret > 0 && ret < kMAXPATHLEN) {
-         buf[ret] = 0;
-         exepath = buf;
-      }
-#endif
-#if defined(R__FBSD)
-  procstat* ps = procstat_open_sysctl();  //
-  kinfo_proc* kp = kinfo_getproc(getpid());
-
-  if (kp!=NULL) {
-     char path_str[PATH_MAX] = "";
-     procstat_getpathname(ps, kp, path_str, sizeof(path_str));
-     exepath = path_str;
-  }
-
-  free(kp);
-  procstat_close(ps);
-#endif
-   }
-   return exepath.c_str();
-}
-
-static void SetRootSys()
-{
-   const char *exepath = GetExePath();
-   if (exepath && *exepath) {
-      std::string epStr{exepath};
-      char *ep = epStr.data();
-      char *s;
-      if ((s = strrchr(ep, '/'))) {
-         *s = 0;
-         if ((s = strrchr(ep, '/'))) {
-            *s = 0;
-            int l2 = strlen(ep) + 10;
-            char *env = new char[l2];
-            snprintf(env, l2, "ROOTSYS=%s", ep);
-            putenv(env); // NOLINT: allocated memory now used by environment variable
-         }
-      }
-   }
-}
-
 extern "C" {
    static void SigTerm(int);
 }
@@ -154,21 +96,6 @@ static void PrintUsage()
 
 int main(int argc, char **argv)
 {
-#ifdef ROOTPREFIX
-   if (std::getenv("ROOTIGNOREPREFIX")) {
-#endif
-   // Try to set ROOTSYS depending on pathname of the executable
-   SetRootSys();
-
-   if (!std::getenv("ROOTSYS")) {
-      fprintf(stderr, "%s: ROOTSYS not set. Set it before trying to run %s.\n",
-              argv[0], argv[0]);
-      return 1;
-   }
-#ifdef ROOTPREFIX
-   }
-#endif
-
    // In batch mode don't show splash screen, idem for no logo mode,
    // in about mode show always splash screen
    int i;
