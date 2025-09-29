@@ -130,6 +130,8 @@ ROOT_LINKER_LIBRARY(Cling
         $<TARGET_OBJECTS:clangCppInterOp>
         LIBRARIES ${CLING_LIBRARIES} ${LINK_LIBS} ${CLING_PLUGIN_LINK_LIBS})
 
+target_link_libraries(Cling PRIVATE Core RIO)
+
 # When these two link at the same time, they can exhaust the RAM on many machines, since they both link against llvm.
 add_dependencies(Cling rootcling_stage1)
 
@@ -217,14 +219,11 @@ if(MSVC)
     set(cling_link_str "${cling_link_str} /EXPORT:${sym}")
   endforeach(sym ${cling_exports})
   set_property(TARGET Cling APPEND_STRING PROPERTY LINK_FLAGS "${cling_link_str} ${CLAD_LIBS}")
-  add_dependencies(Cling Core RIO)
-  target_link_libraries(Cling PUBLIC Core RIO)
 endif()
 
 if(APPLE)
-  target_link_libraries(Cling PUBLIC -Wl,-w -Wl,-bind_at_load -Wl,-undefined,dynamic_lookup)
+  target_link_libraries(Cling PUBLIC -Wl,-w -Wl,-bind_at_load)
 elseif(NOT MSVC)
-  target_link_libraries(Cling PUBLIC -Wl,--unresolved-symbols=ignore-in-object-files)
   # Require the linker to resolve the symbol internally and prevent
   # conflicts when linked with another software using also LLVM like in
   # the problem reported for Julia in
