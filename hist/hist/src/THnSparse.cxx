@@ -542,7 +542,7 @@ with linear index linidx. A possible call would be
 ## Efficiency
 TH1 and TH2 are generally faster than THnSparse for one and two dimensional
 distributions. THnSparse becomes competitive for a sparsely filled TH3
-with large numbers of bins per dimension. The tutorial sparsehist.C
+with large numbers of bins per dimension. The tutorial \ref hist103_THnSparse_hist.C
 shows the turning point. On a AMD64 with 8GB memory, THnSparse "wins"
 starting with a TH3 with 30 bins per dimension. Using a THnSparse for a
 one-dimensional histogram is only reasonable if it has a huge number of bins.
