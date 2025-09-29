@@ -455,7 +455,7 @@ TEST_F(RNTupleDSTest, AlternativeColumnTypes)
 
    auto multipleAlternativeTypes =
       df.Define("nJets", [](const std::vector<float> &jets) { return jets.size(); }, {"jets"})
-         .Define("smallestJet", [](const std::set<float> &jets) { return *(jets.begin()); }, {"jets"})
+         .Define("smallestJet", [](const std::multiset<float> &jets) { return *(jets.begin()); }, {"jets"})
          .Min<float>("smallestJet")
          .GetValue();
    EXPECT_FLOAT_EQ(1.f, multipleAlternativeTypes);
