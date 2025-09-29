@@ -191,18 +191,14 @@ void ModelConfig::Print(Option_t *) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// If a workspace already exists in this ModelConfig, RooWorkspace::merge(ws) will be called
-/// on the existing workspace.
+/// If a workspace already exists in this ModelConfig, this function will do nothing.
 
 void ModelConfig::SetWS(RooWorkspace &ws)
 {
    if (!fRefWS) {
       fRefWS = &ws;
    } else {
-      RooFit::MsgLevel level = RooMsgService::instance().globalKillBelow();
-      RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
-      GetWS()->merge(ws);
-      RooMsgService::instance().setGlobalKillBelow(level);
+      coutE(ObjectHandling) << "ModelConfig::SetWS(): workspace already set, not doing anything" << std::endl;
    }
 }
 
