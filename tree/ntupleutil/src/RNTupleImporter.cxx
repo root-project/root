@@ -318,8 +318,8 @@ ROOT::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSchema()
 
       c.fFieldName = "_collection" + std::to_string(iLeafCountCollection);
       auto recordField = std::make_unique<ROOT::RRecordField>("_0", std::move(c.fLeafFields));
-      c.fRecordField = recordField.get();
       auto collectionField = ROOT::RVectorField::CreateUntyped(c.fFieldName, std::move(recordField));
+      c.fRecordField = static_cast<RRecordField *>(collectionField->GetMutableSubfields()[0]);
       fModel->AddField(std::move(collectionField));
 
       // Add projected fields for all leaf count arrays
