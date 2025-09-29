@@ -192,6 +192,9 @@ public:
       }
       double mean = ComputeMean(dim);
       double var = ComputeVariance(dim);
+      if (var == 0) {
+         return 0;
+      }
       double EWX3 = stats.fSumWX3 / fSumW;
       double EWX2 = stats.fSumWX2 / fSumW;
       return (EWX3 - 3 * EWX2 * mean + 2 * mean * mean * mean) / std::pow(var, 1.5);
@@ -226,6 +229,9 @@ public:
       }
       double mean = ComputeMean(dim);
       double var = ComputeVariance(dim);
+      if (var == 0) {
+         return 0;
+      }
       double EWX4 = stats.fSumWX4 / fSumW;
       double EWX3 = stats.fSumWX3 / fSumW;
       double EWX2 = stats.fSumWX2 / fSumW;
