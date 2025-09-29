@@ -238,16 +238,15 @@ if [ -z "${SOURCE}" ]; then
       return 1
    fi
 else
-   thisrootdir=$(dirname $(realpath "${SOURCE}"))                                                                          
+   thisrootdir=$(dirname $(realpath "${SOURCE}"))
    export ROOTSYS=${thisrootdir%/*}
-      return 1
-   fi
 fi
 
 if ! [ -f "${ROOTSYS}/bin/root-config" ] ; then
    echo "ERROR: root-config not found under ROOTSYS=\"${ROOTSYS}/\"" >&2
    ROOTSYS=; export ROOTSYS
-return 1
+   return 1
+fi
 
 clean_environment
 set_environment
