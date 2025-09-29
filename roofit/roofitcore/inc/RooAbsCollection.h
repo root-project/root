@@ -216,6 +216,11 @@ public:
   /// Find object in the collection, Note: matching by object name, like the find() method
   TObject* FindObject(const TObject* obj) const override { auto arg = dynamic_cast<const RooAbsArg*>(obj); return (arg) ? find(*arg) : nullptr; }
 
+  /// Check if collection contains an argument with a specific name.
+  bool contains(const char* name) const {
+    return find(name);
+  }
+
   /// Check if collection contains an argument with the same name as var.
   /// To check for a specific instance, use containsInstance().
   bool contains(const RooAbsArg& var) const {
