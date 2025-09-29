@@ -238,7 +238,7 @@ if [ -z "${SOURCE}" ]; then
       return 1
    fi
 else
-   thisrootdir=$(dirname $(readlink -e "${SOURCE}"))                                                                          
+   thisrootdir=$(dirname $(realpath "${SOURCE}"))                                                                          
    export ROOTSYS=${thisrootdir%/*}
       return 1
    fi
