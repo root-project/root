@@ -277,6 +277,15 @@ public:
       kMultiMap,
       kUnorderedMultiMap
    };
+
+private:
+   EMapType fMapType;
+
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
+
+public:
    RMapField(std::string_view fieldName, EMapType mapType, std::unique_ptr<RFieldBase> itemField);
    RMapField(RMapField &&other) = default;
    RMapField &operator=(RMapField &&other) = default;
