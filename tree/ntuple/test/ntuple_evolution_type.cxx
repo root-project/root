@@ -210,7 +210,7 @@ TEST(RNTupleEvolution, CheckPairTuple)
 
 TEST(RNTupleEvolution, Enum)
 {
-   FileRaii fileGuard("test_ntuple_evolution_check_pair_tuple.root");
+   FileRaii fileGuard("test_ntuple_evolution_check_enum.root");
    {
       auto model = ROOT::RNTupleModel::Create();
       auto e1 = model->MakeField<CustomEnumInt8>("e1");
@@ -218,7 +218,7 @@ TEST(RNTupleEvolution, Enum)
       auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
 
       *e1 = static_cast<CustomEnumInt8>(42);
-      *e2 = static_cast<CustomEnum>(137);
+      *e2 = static_cast<CustomEnum>(kCustomEnumVal);
 
       writer->Fill();
    }
@@ -226,8 +226,10 @@ TEST(RNTupleEvolution, Enum)
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
    auto ve1 = reader->GetView<int>("e1");
    auto ve2 = reader->GetView<int>("e2");
+   auto ve3 = reader->GetView<RenamedCustomEnum>("e2");
    EXPECT_EQ(42, ve1(0));
-   EXPECT_EQ(137, ve2(0));
+   EXPECT_EQ(7, ve2(0));
+   EXPECT_EQ(kRenamedCustomEnumVal, ve3(0));
 }
 
 TEST(RNTupleEvolution, ArrayAsRVec)
