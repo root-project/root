@@ -132,7 +132,7 @@ public:
    /// \f]
    /// With some rewriting, this is equivalent to:
    /// \f[
-   /// \sigma^2 = \frac{\sum w_i \cdot x_i^2}{\sum w_i} - \frac{(\sum w_i \cdot x_i)^2}{(\sum w_i)^2}
+   /// \sigma^2 = \frac{\sum w_i \cdot x_i^2}{\sum w_i} - \mu^2
    /// \f]
    ///
    /// This function does not include Bessel's correction needed for an unbiased estimator of population variance.
@@ -147,7 +147,8 @@ public:
       if (fSumW == 0) {
          return 0;
       }
-      return (stats.fSumWX2 - stats.fSumWX * stats.fSumWX / fSumW) / fSumW;
+      double mean = ComputeMean(dim);
+      return stats.fSumWX2 / fSumW - mean * mean;
    }
 
    /// Compute the standard deviation of unbinned values.

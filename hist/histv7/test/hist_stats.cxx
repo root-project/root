@@ -342,6 +342,16 @@ TEST(RHistStats, ComputeKurtosisWeighted)
    EXPECT_FLOAT_EQ(stats.ComputeKurtosis(2), -1.2483086);
 }
 
+TEST(RHistStats, ComputeSkewnessKurtosisVar0)
+{
+   RHistStats stats(1);
+   stats.Fill(1, RWeight(0.1));
+   ASSERT_EQ(stats.GetNEntries(), 1);
+   EXPECT_EQ(stats.ComputeVariance(), 0);
+   EXPECT_EQ(stats.ComputeSkewness(), 0);
+   EXPECT_EQ(stats.ComputeKurtosis(), 0);
+}
+
 TEST(RHistStats, FillInvalidNumberOfArguments)
 {
    RHistStats stats1(1);
