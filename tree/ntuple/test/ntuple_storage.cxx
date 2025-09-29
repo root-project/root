@@ -1181,8 +1181,10 @@ TEST(RPageSourceFile, OpenDifferentAnchor)
    auto source = std::make_unique<RPageSourceFile>("ntpl1", fileGuard.GetPath(), RNTupleReadOptions());
    source->Attach();
    EXPECT_EQ(source->GetNEntries(), 100);
-   auto desc = source->GetSharedDescriptorGuard();
-   EXPECT_NE(desc->FindFieldId("f"), ROOT::kInvalidDescriptorId);
+   {
+      auto desc = source->GetSharedDescriptorGuard();
+      EXPECT_NE(desc->FindFieldId("f"), ROOT::kInvalidDescriptorId);
+   }
 
    auto anchor2 = file->Get<ROOT::RNTuple>("ntpl2");
    ASSERT_NE(anchor2, nullptr);
