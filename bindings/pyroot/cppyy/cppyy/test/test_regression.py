@@ -1020,17 +1020,16 @@ class TestREGRESSION:
 
         import cppyy
 
-        if cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") > 201402:
-            cppyy.cppdef("""\
-            #include <filesystem>
-            std::string stack_std_path() {
-                std::filesystem::path p = "/usr";
-                std::ostringstream os;
-                os << p;
-                return os.str();
-            }""")
+        cppyy.cppdef("""\
+        #include <filesystem>
+        std::string stack_std_path() {
+            std::filesystem::path p = "/usr";
+            std::ostringstream os;
+            os << p;
+            return os.str();
+        }""")
 
-            assert cppyy.gbl.stack_std_path() == '"/usr"'
+        assert cppyy.gbl.stack_std_path() == '"/usr"'
 
     def test36_ctypes_sizeof(self):
         """cppyy.sizeof forwards to ctypes.sizeof where necessary"""

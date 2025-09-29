@@ -510,9 +510,7 @@ PyObject* CPyCppyy::name##ArrayExecutor::Execute(                            \
 CPPYY_IMPL_ARRAY_EXEC(Bool,     bool,                    )
 CPPYY_IMPL_ARRAY_EXEC(SChar,    signed char,             )
 CPPYY_IMPL_ARRAY_EXEC(UChar,    unsigned char,           )
-#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 CPPYY_IMPL_ARRAY_EXEC(Byte,     std::byte,               )
-#endif
 CPPYY_IMPL_ARRAY_EXEC(Int8,     int8_t,               _i8)
 CPPYY_IMPL_ARRAY_EXEC(UInt8,    uint8_t,              _i8)
 CPPYY_IMPL_ARRAY_EXEC(Short,    short,                   )
@@ -1019,12 +1017,10 @@ public:
         gf["bool ptr"] =                    (ef_t)+[](cdims_t d) { return new BoolArrayExecutor{d};     };
         gf["unsigned char ptr"] =           (ef_t)+[](cdims_t d) { return new UCharArrayExecutor{d};    };
         gf["const unsigned char ptr"] =     gf["unsigned char ptr"];
-#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
         gf["std::byte ptr"] =               (ef_t)+[](cdims_t d) { return new ByteArrayExecutor{d};     };
         gf["const std::byte ptr"] =         gf["std::byte ptr"];
         gf["byte ptr"] =                    gf["std::byte ptr"];
         gf["const byte ptr"] =              gf["std::byte ptr"];
-#endif
         gf["int8_t ptr"] =                  (ef_t)+[](cdims_t d) { return new Int8ArrayExecutor{d};    };
         gf["uint8_t ptr"] =                 (ef_t)+[](cdims_t d) { return new UInt8ArrayExecutor{d};   };
         gf["short ptr"] =                   (ef_t)+[](cdims_t d) { return new ShortArrayExecutor{d};    };
@@ -1046,14 +1042,12 @@ public:
         gf["internal_enum_type_t"] =        gf["int"];
         gf["internal_enum_type_t&"] =       gf["int&"];
         gf["internal_enum_type_t ptr"] =    gf["int ptr"];
-#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
         gf["std::byte"] =                   gf["uint8_t"];
         gf["byte"] =                        gf["uint8_t"];
         gf["std::byte&"] =                  gf["uint8_t&"];
         gf["byte&"] =                       gf["uint8_t&"];
         gf["const std::byte&"] =            gf["const uint8_t&"];
         gf["const byte&"] =                 gf["const uint8_t&"];
-#endif
         gf["std::int8_t"] =                 gf["int8_t"];
         gf["std::int8_t&"] =                gf["int8_t&"];
         gf["const std::int8_t&"] =          gf["const int8_t&"];

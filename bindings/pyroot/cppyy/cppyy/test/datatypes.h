@@ -106,9 +106,7 @@ public:
     wchar_t              get_wchar();
     char16_t             get_char16();
     char32_t             get_char32();
-#if __cplusplus > 201402L
     std::byte            get_byte();
-#endif
     int8_t               get_int8();
     uint8_t              get_uint8();
     short                get_short();
@@ -137,10 +135,8 @@ public:
     signed char*    get_schar_array2();
     unsigned char*  get_uchar_array();
     unsigned char*  get_uchar_array2();
-#if __cplusplus > 201402L
     std::byte*      get_byte_array();
     std::byte*      get_byte_array2();
-#endif
     int8_t*         get_int8_array();
     int8_t*         get_int8_array2();
     uint8_t*        get_uint8_array();
@@ -182,9 +178,7 @@ public:
     const wchar_t&            get_wchar_cr();
     const char16_t&           get_char16_cr();
     const char32_t&           get_char32_cr();
-#if __cplusplus > 201402L
     const std::byte&          get_byte_cr();
-#endif
     const int8_t&             get_int8_cr();
     const uint8_t&            get_uint8_cr();
     const short&              get_short_cr();
@@ -213,9 +207,7 @@ public:
     wchar_t&            get_wchar_r();
     char16_t&           get_char16_r();
     char32_t&           get_char32_r();
-#if __cplusplus > 201402L
     std::byte&          get_byte_r();
-#endif
     int8_t&             get_int8_r();
     uint8_t&            get_uint8_r();
     short&              get_short_r();
@@ -244,9 +236,7 @@ public:
     void set_wchar(wchar_t);
     void set_char16(char16_t);
     void set_char32(char32_t);
-#if __cplusplus > 201402L
     void set_byte(std::byte);
-#endif
     void set_int8(int8_t);
     void set_uint8(uint8_t);
     void set_short(short);
@@ -287,9 +277,7 @@ public:
     void set_wchar_cr(const wchar_t&);
     void set_char16_cr(const char16_t&);
     void set_char32_cr(const char32_t&);
-#if __cplusplus > 201402L
     void set_byte_cr(const std::byte&);
-#endif
     void set_int8_cr(const int8_t&);
     void set_uint8_cr(const uint8_t&);
     void set_short_cr(const short&);
@@ -318,9 +306,7 @@ public:
     void set_char32_r(char32_t&);
     void set_schar_r(signed char&);
     void set_uchar_r(unsigned char&);
-#if __cplusplus > 201402L
     void set_byte_r(std::byte&);
-#endif
     void set_short_r(short&);
     void set_ushort_r(unsigned short&);
     void set_int_r(int&);
@@ -341,9 +327,7 @@ public:
     void set_char32_p(char32_t*);
     void set_schar_p(signed char*);
     void set_uchar_p(unsigned char*);
-#if __cplusplus > 201402L
     void set_byte_p(std::byte*);
-#endif
     void set_int8_p(int8_t*);
     void set_uint8_p(uint8_t*);
     void set_short_p(short*);
@@ -366,9 +350,7 @@ public:
     void set_char32_ppa(char32_t**);
     void set_schar_ppa(signed char**);
     void set_uchar_ppa(unsigned char**);
-#if __cplusplus > 201402L
     void set_byte_ppa(std::byte**);
-#endif
     void set_int8_ppa(int8_t**);
     void set_uint8_ppa(uint8_t**);
     void set_short_ppa(short**);
@@ -403,9 +385,7 @@ public:
     void set_wchar_rv(wchar_t&&);
     void set_char16_rv(char16_t&&);
     void set_char32_rv(char32_t&&);
-#if __cplusplus > 201402L
     void set_byte_rv(std::byte&&);
-#endif
     void set_int8_rv(int8_t&&);
     void set_uint8_rv(uint8_t&&);
     void set_short_rv(short&&);
@@ -470,9 +450,7 @@ public:
     wchar_t              m_wchar;
     char16_t             m_char16;
     char32_t             m_char32;
-#if __cplusplus > 201402L
     std::byte            m_byte;
-#endif
     int8_t               m_int8;
     uint8_t              m_uint8;
     short                m_short;
@@ -502,10 +480,8 @@ public:
     signed char*    m_schar_array2;
     unsigned char   m_uchar_array[N];
     unsigned char*  m_uchar_array2;
-#if __cplusplus > 201402L
     std::byte       m_byte_array[N];
     std::byte*      m_byte_array2;
-#endif
     int8_t          m_int8_array[N];
     int8_t*         m_int8_array2;
     uint8_t         m_uint8_array[N];
@@ -546,9 +522,7 @@ public:
     static wchar_t                 s_wchar;
     static char16_t                s_char16;
     static char32_t                s_char32;
-#if __cplusplus > 201402L
     static std::byte               s_byte;
-#endif
     static int8_t                  s_int8;
     static uint8_t                 s_uint8;
     static short                   s_short;
@@ -591,9 +565,7 @@ extern unsigned char      g_uchar;
 extern wchar_t            g_wchar;
 extern char16_t           g_char16;
 extern char32_t           g_char32;
-#if __cplusplus > 201402L
 extern std::byte          g_byte;
-#endif
 extern int8_t             g_int8;
 extern uint8_t            g_uint8;
 extern short              g_short;
@@ -622,9 +594,7 @@ static const unsigned char      g_c_uchar   = 'x';
 static const wchar_t            g_c_wchar   = L'U';
 static const char16_t           g_c_char16  = u'\u6c34';
 static const char32_t           g_c_char32  = U'\U0001f34c';
-#if __cplusplus > 201402L
 static const std::byte          g_c_byte    = (std::byte)'u';
-#endif
 static const int8_t             g_c_int8    =  -12;
 static const uint8_t            g_c_uint8   =   12;
 static const short              g_c_short   =  -99;
@@ -682,9 +652,7 @@ extern StorableData gData;
 
 //= special case of "byte" arrays ===========================================
 int64_t sum_uc_data(unsigned char* data, int size);
-#if __cplusplus > 201402L
 int64_t sum_byte_data(std::byte* data, int size);
-#endif
 
 
 //= function pointer passing ================================================

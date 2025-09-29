@@ -313,41 +313,39 @@ class TestCPP11FEATURES:
         assert cppyy.gbl.gMyLambda(2)  == 42
         assert cppyy.gbl.gMyLambda(40) == 80
 
-        if cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") >= 201402:
-            cppyy.cppdef("auto gime_a_lambda1() { return []() { return 42; }; }")
-            l1 = cppyy.gbl.gime_a_lambda1()
-            assert l1
-            assert l1() == 42
+        cppyy.cppdef("auto gime_a_lambda1() { return []() { return 42; }; }")
+        l1 = cppyy.gbl.gime_a_lambda1()
+        assert l1
+        assert l1() == 42
 
-            cppyy.cppdef("auto gime_a_lambda2() { int a = 4; return [a](int b) { return 42+a+b; }; }")
-            l2 = cppyy.gbl.gime_a_lambda2()
-            assert l2
-            assert l2(2) == 48
+        cppyy.cppdef("auto gime_a_lambda2() { int a = 4; return [a](int b) { return 42+a+b; }; }")
+        l2 = cppyy.gbl.gime_a_lambda2()
+        assert l2
+        assert l2(2) == 48
 
-            cppyy.cppdef("auto gime_a_lambda3(int a ) { return [a](int b) { return 42+a+b; }; }")
-            l3 = cppyy.gbl.gime_a_lambda3(4)
-            assert l3
-            assert l3(2) == 48
+        cppyy.cppdef("auto gime_a_lambda3(int a ) { return [a](int b) { return 42+a+b; }; }")
+        l3 = cppyy.gbl.gime_a_lambda3(4)
+        assert l3
+        assert l3(2) == 48
 
     def test10_optional(self):
         """Use of optional and nullopt"""
 
         import cppyy
 
-        if 201703 <= cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;"):
-            assert cppyy.gbl.std.optional
-            assert cppyy.gbl.std.nullopt
+        assert cppyy.gbl.std.optional
+        assert cppyy.gbl.std.nullopt
 
-            cppyy.cppdef("""
-            enum Enum { A = -1 };
-            bool callopt(std::optional<Enum>) { return true; }
-            """)
+        cppyy.cppdef("""
+        enum Enum { A = -1 };
+        bool callopt(std::optional<Enum>) { return true; }
+        """)
 
-            a = cppyy.gbl.std.optional[cppyy.gbl.Enum]()
-            assert cppyy.gbl.callopt(a)
+        a = cppyy.gbl.std.optional[cppyy.gbl.Enum]()
+        assert cppyy.gbl.callopt(a)
 
-            c = cppyy.gbl.std.nullopt
-            assert cppyy.gbl.callopt(c)
+        c = cppyy.gbl.std.nullopt
+        assert cppyy.gbl.callopt(c)
 
     @mark.xfail(run = False, reason = "Crashes")
     def test11_chrono(self):

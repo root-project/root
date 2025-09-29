@@ -26,10 +26,9 @@
 #include <regex>
 #include <utility>
 #include <sstream>
-#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 #include <cstddef>
 #include <string_view>
-#endif
+
 // codecvt does not exist for gcc4.8.5 and is in principle deprecated; it is
 // only used in py2 for char -> wchar_t conversion for std::wstring; if not
 // available, the conversion is done through Python (requires an extra copy)
@@ -1777,9 +1776,7 @@ bool CPyCppyy::name##ArrayConverter::ToMemory(                               \
 CPPYY_IMPL_ARRAY_CONVERTER(Bool,     c_bool,       bool,                 '?', )
 CPPYY_IMPL_ARRAY_CONVERTER(SChar,    c_char,       signed char,          'b', )
 CPPYY_IMPL_ARRAY_CONVERTER(UChar,    c_ubyte,      unsigned char,        'B', )
-#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 CPPYY_IMPL_ARRAY_CONVERTER(Byte,     c_ubyte,      std::byte,            'B', )
-#endif
 CPPYY_IMPL_ARRAY_CONVERTER(Int8,     c_byte,       int8_t,               'b', _i8)
 CPPYY_IMPL_ARRAY_CONVERTER(Int16,    c_int16,      int16_t,              'h', _i16)
 CPPYY_IMPL_ARRAY_CONVERTER(Int32,    c_int32,      int32_t,              'i', _i32)
@@ -2032,7 +2029,6 @@ bool CPyCppyy::STLWStringConverter::ToMemory(PyObject* value, void* address, PyO
 }
 
 
-#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 CPyCppyy::STLStringViewConverter::STLStringViewConverter(bool keepControl) :
     InstanceConverter(Cppyy::GetScope("std::string_view"), keepControl) {}
 
@@ -2112,7 +2108,6 @@ bool CPyCppyy::STLStringViewConverter::ToMemory(
 
     return false;
 }
-#endif
 
 
 bool CPyCppyy::STLStringMoveConverter::SetArg(
@@ -3563,9 +3558,7 @@ public:
         gf["SCharAsInt[]"] =                gf["signed char ptr"];
         gf["UCharAsInt*"] =                 gf["unsigned char ptr"];
         gf["UCharAsInt[]"] =                gf["unsigned char ptr"];
-#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
         gf["std::byte ptr"] =               (cf_t)+[](cdims_t d) { return new ByteArrayConverter{d}; };
-#endif
         gf["int8_t ptr"] =                  (cf_t)+[](cdims_t d) { return new Int8ArrayConverter{d}; };
         gf["int16_t ptr"] =                 (cf_t)+[](cdims_t d) { return new Int16ArrayConverter{d}; };
         gf["int32_t ptr"] =                 (cf_t)+[](cdims_t d) { return new Int32ArrayConverter{d}; };
@@ -3590,14 +3583,12 @@ public:
     // aliases
         gf["signed char"] =                 gf["char"];
         gf["const signed char&"] =          gf["const char&"];
-#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
         gf["std::byte"] =                   gf["uint8_t"];
         gf["byte"] =                        gf["uint8_t"];
         gf["const std::byte&"] =            gf["const uint8_t&"];
         gf["const byte&"] =                 gf["const uint8_t&"];
         gf["std::byte&"] =                  gf["uint8_t&"];
         gf["byte&"] =                       gf["uint8_t&"];
-#endif
         gf["std::int8_t"] =                 gf["int8_t"];
         gf["const std::int8_t&"] =          gf["const int8_t&"];
         gf["std::int8_t&"] =                gf["int8_t&"];
@@ -3651,13 +3642,11 @@ public:
         gf["const string&"] =               gf["std::string"];
         gf["std::string&&"] =               (cf_t)+[](cdims_t) { return new STLStringMoveConverter{}; };
         gf["string&&"] =                    gf["std::string&&"];
-#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
         gf["std::string_view"] =            (cf_t)+[](cdims_t) { return new STLStringViewConverter{}; };
         gf[STRINGVIEW] =                    gf["std::string_view"];
         gf["std::string_view&"] =           gf["std::string_view"];
         gf["const std::string_view&"] =     gf["std::string_view"];
         gf["const " STRINGVIEW "&"] =       gf["std::string_view"];
-#endif
         gf["std::wstring"] =                (cf_t)+[](cdims_t) { return new STLWStringConverter{}; };
         gf[WSTRING1] =                      gf["std::wstring"];
         gf[WSTRING2] =                      gf["std::wstring"];
