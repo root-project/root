@@ -80,6 +80,12 @@ namespace Experimental {
 RooCmdArg ParallelGradientOptions(bool enable=true, int orderStrategy=0, int chainFactor=1) ;
 RooCmdArg ParallelDescentOptions(bool enable=false, int splitStrategy=0, int numSplits=4) ;
 
+void writeCodegenDebugMacro(RooAbsReal const &absReal, std::string const &name);
+inline void writeCodegenDebugMacro(std::unique_ptr<RooAbsReal> const &absReal, std::string const &name)
+{
+   return writeCodegenDebugMacro(*absReal, name);
+}
+
 } // Experimental
 
 std::string getBatchCompute();

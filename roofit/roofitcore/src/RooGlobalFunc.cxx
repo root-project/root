@@ -32,6 +32,8 @@
 #include <RooRealConstant.h>
 #include <RooRealVar.h>
 
+#include "RooEvaluatorWrapper.h"
+
 #include <TH1.h>
 #include <TInterpreter.h>
 
@@ -127,6 +129,13 @@ RooCmdArg ParallelGradientOptions(bool enable, int orderStrategy, int chainFacto
 RooCmdArg ParallelDescentOptions(bool enable, int splitStrategy, int numSplits)
 {
    return RooCmdArg("ParallelDescentOptions", enable, numSplits, splitStrategy, 0, nullptr, nullptr, nullptr, nullptr);
+}
+
+void writeCodegenDebugMacro(RooAbsReal const &absReal, std::string const &name)
+{
+   if (auto *wrapper = dynamic_cast<RooEvaluatorWrapper const *>(&absReal)) {
+      wrapper->writeDebugMacro(name);
+   }
 }
 
 } // namespace Experimental
