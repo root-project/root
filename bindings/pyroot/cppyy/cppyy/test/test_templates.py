@@ -13,11 +13,6 @@ class TestTEMPLATES:
         import cppyy
         cls.templates = cppyy.load_reflection_info(cls.test_dct)
 
-        at_least_17 = 201402 < cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;")
-        cls.has_integral_v    = at_least_17
-        cls.has_disjunction_v = at_least_17
-        cls.has_pack_fold     = at_least_17
-
     def test00_template_back_reference(self):
         """Template reflection"""
 
@@ -299,18 +294,16 @@ class TestTEMPLATES:
         assert iavec[5] == 5
 
       # with variadic template
-        if cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") > 201402:
-            assert nsup.matryoshka[int, 3].type
-            assert nsup.matryoshka[int, 3, 4].type
-            assert nsup.make_vector[int , 3]
-            assert nsup.make_vector[int , 3]().m_val == 3
-            assert nsup.make_vector[int , 4]().m_val == 4
+        assert nsup.matryoshka[int, 3].type
+        assert nsup.matryoshka[int, 3, 4].type
+        assert nsup.make_vector[int , 3]
+        assert nsup.make_vector[int , 3]().m_val == 3
+        assert nsup.make_vector[int , 4]().m_val == 4
 
       # with inner types using
-        if cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") > 201402:
-            assert cppyy.gbl.gInterpreter.CheckClassTemplate("using_problem::Bar::Foo")
-            assert nsup.Foo
-            assert nsup.Bar.Foo        # used to fail
+        assert cppyy.gbl.gInterpreter.CheckClassTemplate("using_problem::Bar::Foo")
+        assert nsup.Foo
+        assert nsup.Bar.Foo        # used to fail
 
     @mark.xfail()
     def test13_using_templated_method(self):
@@ -502,9 +495,6 @@ class TestTEMPLATES:
 
     def test20_templated_ctor_with_defaults(self):
         """Templated constructor with defaults used to be ignored"""
-
-        if not self.has_integral_v:
-            return
 
         import cppyy
 
@@ -740,9 +730,6 @@ class TestTEMPLATES:
 
     def test27_variadic_constructor(self):
         """Use of variadic template function as contructor"""
-
-        if not self.has_disjunction_v:
-            return
 
         import cppyy
 
@@ -1151,9 +1138,6 @@ class TestTEMPLATES:
     @mark.xfail()
     def test34_cstring_template_argument(self):
         """`const char*` use over std::string"""
-
-        if not self.has_pack_fold:
-            return
 
         import cppyy
         import ctypes
