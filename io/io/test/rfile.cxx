@@ -83,6 +83,20 @@ TEST(RFile, OpenForWriting)
    EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 0);
 }
 
+TEST(RFile, CheckNoAutoRegistration)
+{
+   FileRaii fileGuard("test_rfile_noautoreg.root");
+
+   auto file = RFile::Recreate(fileGuard.GetPath());
+   auto hist = std::make_unique<TH1D>("hist", "", 100, -10, 10);
+   file->Put("hist", *hist);
+   EXPECT_EQ(hist->GetDirectory(), nullptr);
+   file->Close();
+   EXPECT_EQ(hist->GetDirectory(), nullptr);
+   hist.reset();
+   // no double free should happen when ROOT exits
+}
+
 TEST(RFile, WriteInvalidPaths)
 {
    FileRaii fileGuard("test_rfile_write_invalid.root");
