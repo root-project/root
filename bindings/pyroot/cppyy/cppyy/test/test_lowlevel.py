@@ -15,9 +15,6 @@ class TestLOWLEVEL:
         cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = cppyy.gbl.N
 
-        at_least_17 = 201402 < cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;")
-        cls.has_nested_namespace = at_least_17
-
     def test00_import_all(self):
         """Validity of `from cppyy.ll import *`"""
 
@@ -496,9 +493,6 @@ class TestLOWLEVEL:
     @mark.xfail()
     def test15_templated_arrays_gmpxx(self):
         """Use of gmpxx array types in templates"""
-
-        if not self.has_nested_namespace:
-            return
 
         import cppyy
 
