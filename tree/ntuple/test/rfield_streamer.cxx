@@ -350,6 +350,36 @@ TEST(RField, StreamerSchemaEvolution)
    EXPECT_EQ(137, ptrF->fValue);
 }
 
+TEST(RField, StreamerToClassFieldSupport)
+{
+   FileRaii fileGuard("test_ntuple_rfield_streamer_to_class_field_support.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(std::make_unique<ROOT::RStreamerField>("f", "CustomStreamerEvolution"));
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto ptr = writer->GetModel().GetDefaultEntry().GetPtr<CustomStreamerEvolution>("f");
+      ptr->x = 137;
+      writer->Fill();
+   }
+
+   auto cl = TClass::GetClass("CustomStreamerEvolution");
+   ASSERT_TRUE(cl != nullptr);
+   cl->CreateAttributeMap();
+   cl->GetAttributeMap()->AddProperty("rntuple.streamerMode", "false");
+
+   const auto inMemoryField = RFieldBase::Create("f", "CustomStreamer").Unwrap();
+   const auto inMemoryFieldPtr = inMemoryField.get(); // silence clang
+   EXPECT_EQ(typeid(*inMemoryFieldPtr), typeid(ROOT::RClassField));
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto v = reader->GetView<CustomStreamerEvolution>("f");
+   const auto &onDiskField = v.GetField();
+   EXPECT_EQ(typeid(onDiskField), typeid(ROOT::RStreamerField));
+
+   EXPECT_FLOAT_EQ(137, v(0).x);
+}
+
 TEST(RField, StreamerClassMismatch)
 {
    FileRaii fileGuard("test_ntuple_rfield_streamer_class_mismatch.root");

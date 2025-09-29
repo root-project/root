@@ -457,6 +457,14 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RClassField::BeforeConnectPageSource(ROO
       const ROOT::RNTupleDescriptor &desc = descriptorGuard.GetRef();
       const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
 
+      if (fieldDesc.GetStructure() == ENTupleStructure::kStreamer) {
+         // Streamer field on disk but meanwhile the type can be represented as a class field; replace this field
+         // by a streamer field to read the data from disk.
+         auto substitute = std::make_unique<RStreamerField>(GetFieldName(), GetTypeName());
+         substitute->SetOnDiskId(GetOnDiskId());
+         return substitute;
+      }
+
       for (auto linkId : fieldDesc.GetLinkIds()) {
          const auto &subFieldDesc = desc.GetFieldDescriptor(linkId);
          regularSubfields.insert(subFieldDesc.GetFieldName());

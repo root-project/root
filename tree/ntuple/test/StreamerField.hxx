@@ -54,6 +54,11 @@ struct CustomStreamerForceStreamed {
    float a;
 };
 
+struct CustomStreamerEvolution {
+   int x;
+   ClassDefNV(CustomStreamerEvolution, 1);
+};
+
 // For the time being, RNTuple ignores the unsplit comment marker and does _not_ use an RStreamerField for such members.
 class IgnoreUnsplitComment {
    std::vector<float> v; //||
