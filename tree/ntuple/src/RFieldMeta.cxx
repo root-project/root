@@ -882,10 +882,32 @@ ROOT::RMapField::RMapField(std::string_view fieldName, EMapType mapType, std::un
 //------------------------------------------------------------------------------
 
 ROOT::RSetField::RSetField(std::string_view fieldName, ESetType setType, std::unique_ptr<RFieldBase> itemField)
-   : ROOT::RProxiedCollectionField(fieldName, EnsureValidClass(BuildSetTypeName(setType, *itemField)))
+   : ROOT::RProxiedCollectionField(fieldName, EnsureValidClass(BuildSetTypeName(setType, *itemField))),
+     fSetType(setType)
 {
    fItemSize = itemField->GetValueSize();
    Attach(std::move(itemField));
+}
+
+std::unique_ptr<ROOT::RFieldBase> ROOT::RSetField::CloneImpl(std::string_view newName) const
+{
+   return std::make_unique<RSetField>(newName, fSetType, fSubfields[0]->Clone(fSubfields[0]->GetFieldName()));
+}
+
+void ROOT::RSetField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   static const std::vector<std::string> prefixesRegular = {"std::set<", "std::unordered_set<", "std::map<"};
+
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName).ThrowOnError();
+
+   switch (fSetType) {
+   case ESetType::kSet:
+   case ESetType::kUnorderedSet: EnsureMatchingTypePrefix(fieldDesc, prefixesRegular).ThrowOnError(); break;
+   default:
+      break;
+      // no restrictions for multisets
+   }
 }
 
 //------------------------------------------------------------------------------
