@@ -437,6 +437,8 @@ protected:
     return result;
   }
 
+  bool matchArgs(const RooArgSet &allDeps, RooArgSet &analDeps, const RooArgProxy &a) const;
+
   bool matchArgs(const RooArgSet& allDeps, RooArgSet& numDeps,
          const RooArgSet& set) const ;
 
