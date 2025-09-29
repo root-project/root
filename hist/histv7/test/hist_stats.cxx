@@ -242,8 +242,15 @@ TEST(RHistStats, ComputeSkewness)
    EXPECT_EQ(stats.ComputeSkewness(1), 0);
    EXPECT_EQ(stats.ComputeSkewness(2), 0);
 
+   stats.Fill(0, 0, 0);
+   ASSERT_EQ(stats.GetNEntries(), 1);
+   // With one entry, the variance is 0 and we define skewness to be 0 as well.
+   EXPECT_EQ(stats.ComputeSkewness(/*=0*/), 0);
+   EXPECT_EQ(stats.ComputeSkewness(1), 0);
+   EXPECT_EQ(stats.ComputeSkewness(2), 0);
+
    static constexpr std::size_t Entries = 20;
-   for (std::size_t i = 0; i < Entries; i++) {
+   for (std::size_t i = 1; i < Entries; i++) {
       stats.Fill(i, 2 * i, i * i);
    }
 
@@ -262,8 +269,15 @@ TEST(RHistStats, ComputeSkewnessWeighted)
    EXPECT_EQ(stats.ComputeSkewness(1), 0);
    EXPECT_EQ(stats.ComputeSkewness(2), 0);
 
+   stats.Fill(0, 0, 0, RWeight(0.1));
+   ASSERT_EQ(stats.GetNEntries(), 1);
+   // With one entry, the variance is 0 and we define skewness to be 0 as well.
+   EXPECT_EQ(stats.ComputeSkewness(/*=0*/), 0);
+   EXPECT_EQ(stats.ComputeSkewness(1), 0);
+   EXPECT_EQ(stats.ComputeSkewness(2), 0);
+
    static constexpr std::size_t Entries = 20;
-   for (std::size_t i = 0; i < Entries; i++) {
+   for (std::size_t i = 1; i < Entries; i++) {
       stats.Fill(i, 2 * i, i * i, RWeight(0.1 + 0.03 * i));
    }
 
@@ -282,8 +296,15 @@ TEST(RHistStats, ComputeKurtosis)
    EXPECT_EQ(stats.ComputeKurtosis(1), 0);
    EXPECT_EQ(stats.ComputeKurtosis(2), 0);
 
+   stats.Fill(0, 0, 0);
+   ASSERT_EQ(stats.GetNEntries(), 1);
+   // With one entry, the variance is 0 and we define kurtosis to be 0 as well.
+   EXPECT_EQ(stats.ComputeKurtosis(/*=0*/), 0);
+   EXPECT_EQ(stats.ComputeKurtosis(1), 0);
+   EXPECT_EQ(stats.ComputeKurtosis(2), 0);
+
    static constexpr std::size_t Entries = 20;
-   for (std::size_t i = 0; i < Entries; i++) {
+   for (std::size_t i = 1; i < Entries; i++) {
       stats.Fill(i, 2 * i, i * i);
    }
 
@@ -302,8 +323,15 @@ TEST(RHistStats, ComputeKurtosisWeighted)
    EXPECT_EQ(stats.ComputeKurtosis(1), 0);
    EXPECT_EQ(stats.ComputeKurtosis(2), 0);
 
+   stats.Fill(0, 0, 0, RWeight(0.1));
+   ASSERT_EQ(stats.GetNEntries(), 1);
+   // With one entry, the variance is 0 and we define kurtosis to be 0 as well.
+   EXPECT_EQ(stats.ComputeKurtosis(/*=0*/), 0);
+   EXPECT_EQ(stats.ComputeKurtosis(1), 0);
+   EXPECT_EQ(stats.ComputeKurtosis(2), 0);
+
    static constexpr std::size_t Entries = 20;
-   for (std::size_t i = 0; i < Entries; i++) {
+   for (std::size_t i = 1; i < Entries; i++) {
       stats.Fill(i, 2 * i, i * i, RWeight(0.1 + 0.03 * i));
    }
 
