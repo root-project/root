@@ -26,12 +26,11 @@ ROOT_ADD_GTEST(
 
   LIBRARIES
   Core
+  RIO
   GTest::gmock
 )
 
-add_dependencies(TClingTest Cling RIO)
-
-ROOT_ADD_GTEST(TClingLoadUnloadFile TClingLoadUnloadFileTests.cxx LIBRARIES Cling RIO)
+ROOT_ADD_GTEST(TClingLoadUnloadFile TClingLoadUnloadFileTests.cxx LIBRARIES Core RIO)
 
 if(pyroot)
   ROOT_ADD_PYUNITTEST(TClingCallFuncTests TClingCallFuncTests.py)
