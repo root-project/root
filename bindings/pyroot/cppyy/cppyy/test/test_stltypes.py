@@ -1868,6 +1868,13 @@ class TestSTLSET:
         for i in range(100):
             assert not (2**30 in S)
 
+        assert '__contains__' in cppyy.gbl.std.string.__dict__
+        my_string = cppyy.gbl.std.string("hello world")
+
+        assert "hello" in my_string
+        assert "world" in my_string
+        assert "bye" not in my_string
+
 
 class TestSTLTUPLE:
     def setup_class(cls):
