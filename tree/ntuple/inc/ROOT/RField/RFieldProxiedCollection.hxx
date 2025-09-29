@@ -154,7 +154,7 @@ protected:
    /// (Attach() and setting fItemSize)
    RProxiedCollectionField(std::string_view fieldName, TClass *classp);
 
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
    void GenerateColumns(const ROOT::RNTupleDescriptor &desc) final;
@@ -165,7 +165,7 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
 
-   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) override;
 
    void CommitClusterImpl() final { fNWritten = 0; }
 
@@ -364,6 +364,15 @@ public:
       kMultiSet,
       kUnorderedMultiSet
    };
+
+private:
+   ESetType fSetType;
+
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
+
+public:
    RSetField(std::string_view fieldName, ESetType setType, std::unique_ptr<RFieldBase> itemField);
    RSetField(RSetField &&other) = default;
    RSetField &operator=(RSetField &&other) = default;
