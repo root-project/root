@@ -115,18 +115,24 @@ ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(RNTupleOpenSp
    }
 }
 
-void ROOT::Experimental::RNTupleSingleProcessor::Initialize()
+void ROOT::Experimental::RNTupleSingleProcessor::Initialize(
+   std::shared_ptr<ROOT::Experimental::Internal::RNTupleProcessorEntry> entry)
 {
    // The processor has already been initialized.
    if (IsInitialized())
       return;
+
+   if (!entry)
+      fEntry = std::make_shared<Internal::RNTupleProcessorEntry>();
+   else
+      fEntry = entry;
+
    fPageSource = fNTupleSpec.CreatePageSource();
    fPageSource->Attach();
    ROOT::RNTupleDescriptor::RCreateModelOptions opts;
    opts.SetCreateBare(true);
    fProtoModel = fPageSource->GetSharedDescriptorGuard()->CreateModel(opts);
    fProtoModel->Unfreeze();
-   fEntry = std::make_shared<Internal::RNTupleProcessorEntry>();
 }
 
 bool ROOT::Experimental::RNTupleSingleProcessor::FieldExists(std::string_view fieldName)
@@ -269,14 +275,19 @@ ROOT::Experimental::RNTupleChainProcessor::RNTupleChainProcessor(
    fInnerNEntries.assign(fInnerProcessors.size(), kInvalidNTupleIndex);
 }
 
-void ROOT::Experimental::RNTupleChainProcessor::Initialize()
+void ROOT::Experimental::RNTupleChainProcessor::Initialize(
+   std::shared_ptr<ROOT::Experimental::Internal::RNTupleProcessorEntry> entry)
 {
    if (IsInitialized())
       return;
-   fInnerProcessors[0]->Initialize();
+
+   if (!entry)
+      fEntry = std::make_shared<Internal::RNTupleProcessorEntry>();
+   else
+      fEntry = entry;
+
+   fInnerProcessors[0]->Initialize(fEntry);
    fProtoModel = fInnerProcessors[0]->GetProtoModel().Clone();
-   fEntry = std::make_shared<Internal::RNTupleProcessorEntry>();
-   fInnerProcessors[0]->SetEntry(fEntry);
 }
 
 ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::GetNEntries()
@@ -416,13 +427,19 @@ ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(std::unique_ptr<R
    }
 }
 
-void ROOT::Experimental::RNTupleJoinProcessor::Initialize()
+void ROOT::Experimental::RNTupleJoinProcessor::Initialize(
+   std::shared_ptr<ROOT::Experimental::Internal::RNTupleProcessorEntry> entry)
 {
    if (IsInitialized())
       return;
 
-   fPrimaryProcessor->Initialize();
-   fAuxiliaryProcessor->Initialize();
+   if (!entry)
+      fEntry = std::make_shared<Internal::RNTupleProcessorEntry>();
+   else
+      fEntry = entry;
+
+   fPrimaryProcessor->Initialize(fEntry);
+   fAuxiliaryProcessor->Initialize(fEntry);
 
    // If the primaryProcessor has a field with the name of the auxProcessor (either as a "proper" field or because the
    // primary processor itself is a join where its auxProcessor bears the same name as the current auxProcessor), there
@@ -437,11 +454,6 @@ void ROOT::Experimental::RNTupleJoinProcessor::Initialize()
    }
 
    SetProtoModel(fPrimaryProcessor->GetProtoModel().Clone(), fAuxiliaryProcessor->GetProtoModel().Clone());
-
-   fEntry = std::make_shared<Internal::RNTupleProcessorEntry>();
-
-   fPrimaryProcessor->SetEntry(fEntry);
-   fAuxiliaryProcessor->SetEntry(fEntry);
 
    if (!fJoinFieldNames.empty()) {
       for (const auto &joinField : fJoinFieldNames) {

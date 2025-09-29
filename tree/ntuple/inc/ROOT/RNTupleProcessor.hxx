@@ -240,7 +240,7 @@ protected:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Initialize the processor, by setting `fProtoModel` and creating an (initially empty) `fEntry`.
-   virtual void Initialize() = 0;
+   virtual void Initialize(std::shared_ptr<Internal::RNTupleProcessorEntry> entry = nullptr) = 0;
 
    bool IsInitialized() { return fProtoModel && fEntry; }
 
@@ -514,7 +514,7 @@ private:
    /// \brief Initialize the processor, by setting `fProtoModel` and creating an (initially empty) `fEntry`.
    ///
    /// At this point, the page source for the underlying RNTuple of the processor will be created and opened.
-   void Initialize() final;
+   void Initialize(std::shared_ptr<Internal::RNTupleProcessorEntry> entry = nullptr) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the page source of the underlying RNTuple.
@@ -539,6 +539,7 @@ private:
    /// \brief Get the total number of entries in this processor.
    ROOT::NTupleSize_t GetNEntries() final
    {
+      Initialize();
       if (fNEntries == ROOT::kInvalidNTupleIndex)
          Connect(fEntry->GetFieldIndices(), /*updateEntry=*/false);
       return fNEntries;
@@ -592,7 +593,7 @@ private:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Initialize the processor, by setting `fProtoModel` and creating an (initially empty) `fEntry`.
-   void Initialize() final;
+   void Initialize(std::shared_ptr<Internal::RNTupleProcessorEntry> entry = nullptr) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the page source of the underlying RNTuple.
@@ -709,7 +710,7 @@ private:
    AddFieldToEntry(std::string_view fieldName, void *valuePtr = nullptr, std::string_view auxFieldPrefix = "") final;
 
    /// \brief Initialize the processor, by setting `fProtoModel` and creating an (initially empty) `fEntry`.
-   void Initialize() final;
+   void Initialize(std::shared_ptr<Internal::RNTupleProcessorEntry> entry = nullptr) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Load the entry identified by the provided entry number of the primary processor.
