@@ -88,7 +88,7 @@ icc)
    ;;
 icpx)
    cxxTemp=`$CXX -dumpfullversion -dumpversion`
-   COMPILERVERSSTR="Intel oneAPI icpx $cxxTemp"
+   COMPILERVERSSTR="Intel oneAPI icpx (LLVM $cxxTemp)"
    COMPILERVERS="icpx"
    ;;
 clang++*)
