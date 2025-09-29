@@ -2121,9 +2121,7 @@ endfunction()
 # The 2nd argument is the return value
 #----------------------------------------------------------------------------
 function (IS_SYSTEM_INCLUDE_PATH path is_system_include_path)
-  message("CMAKE_SYSTEM_INCLUDE_PATH: ${CMAKE_SYSTEM_INCLUDE_PATH}")
   foreach (dir ${CMAKE_SYSTEM_INCLUDE_PATH})
-    message("SYSTEM_INCLUDE_DIR: ${dir}")
     if ("${path}" STREQUAL "${dir}")
       set(${is_system_include_path} TRUE PARENT_SCOPE)
       return()
