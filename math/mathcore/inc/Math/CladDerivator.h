@@ -152,46 +152,6 @@ ValueAndPushforward<T, T> Log2_pushforward(T x, T d_x)
 }
 
 template <typename T>
-ValueAndPushforward<T, T> Max_pushforward(T x, T y, T d_x, T d_y)
-{
-   T derivative = 0;
-   if (x >= y)
-      derivative = d_x;
-   else
-      derivative = d_y;
-   return {::TMath::Max(x, y), derivative};
-}
-
-template <typename T, typename U>
-void Max_pullback(T a, T b, U p, clad::array_ref<T> d_a, clad::array_ref<T> d_b)
-{
-   if (a >= b)
-      *d_a += p;
-   else
-      *d_b += p;
-}
-
-template <typename T>
-ValueAndPushforward<T, T> Min_pushforward(T x, T y, T d_x, T d_y)
-{
-   T derivative = 0;
-   if (x <= y)
-      derivative = d_x;
-   else
-      derivative = d_y;
-   return {::TMath::Min(x, y), derivative};
-}
-
-template <typename T, typename U>
-void Min_pullback(T a, T b, U p, clad::array_ref<T> d_a, clad::array_ref<T> d_b)
-{
-   if (a <= b)
-      *d_a += p;
-   else
-      *d_b += p;
-}
-
-template <typename T>
 ValueAndPushforward<T, T> Power_pushforward(T x, T y, T d_x, T d_y)
 {
    T pushforward = y * ::TMath::Power(x, y - 1) * d_x;
