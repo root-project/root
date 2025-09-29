@@ -221,9 +221,7 @@ if(MSVC)
   set_property(TARGET Cling APPEND_STRING PROPERTY LINK_FLAGS "${cling_link_str} ${CLAD_LIBS}")
 endif()
 
-if(APPLE)
-  target_link_libraries(Cling PRIVATE -Wl,-w -Wl,-bind_at_load)
-elseif(NOT MSVC)
+if(NOT APPLE AND NOT MSVC)
   # Require the linker to resolve the symbol internally and prevent
   # conflicts when linked with another software using also LLVM like in
   # the problem reported for Julia in
