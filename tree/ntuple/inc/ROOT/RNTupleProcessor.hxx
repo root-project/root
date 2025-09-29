@@ -224,8 +224,11 @@ class RNTupleProcessor {
 
 protected:
    std::string fProcessorName;
+
    std::unique_ptr<ROOT::RNTupleModel> fProtoModel = nullptr;
    std::shared_ptr<Internal::RNTupleProcessorEntry> fEntry = nullptr;
+   /// Indices of fields in the entry that can be read by the processor.
+   std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> fFieldIdxs;
 
    /// Total number of entries. Only to be used internally by the processor, not meant to be exposed in the public
    /// interface.
@@ -244,7 +247,7 @@ protected:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the page source of the underlying RNTuple.
    virtual void
-   Connect(const std::vector<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs, bool updateEntry) = 0;
+   Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs, bool updateEntry) = 0;
 
    bool IsConnected() { return fEntry != nullptr; }
 
@@ -515,7 +518,8 @@ private:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the page source of the underlying RNTuple.
-   void Connect(const std::vector<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs, bool updateEntry) final;
+   void
+   Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs, bool updateEntry) final;
 
    void SetEntry(std::shared_ptr<Internal::RNTupleProcessorEntry> entry) final { fEntry = entry; }
 
@@ -585,7 +589,6 @@ class RNTupleChainProcessor : public RNTupleProcessor {
 private:
    std::vector<std::unique_ptr<RNTupleProcessor>> fInnerProcessors;
    std::vector<ROOT::NTupleSize_t> fInnerNEntries;
-   std::vector<Internal::RNTupleProcessorEntry::FieldIndex_t> fFieldIdxs;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Initialize the processor, by setting `fProtoModel` and creating an (initially empty) `fEntry`.
@@ -593,7 +596,8 @@ private:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the page source of the underlying RNTuple.
-   void Connect(const std::vector<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs, bool updateEntry) final;
+   void
+   Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs, bool updateEntry) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Update the entry to reflect any missing fields in the current inner processor.
@@ -676,12 +680,12 @@ private:
    std::unique_ptr<Internal::RNTupleJoinTable> fJoinTable;
    bool fJoinTableIsBuilt = false;
 
-   std::vector<Internal::RNTupleProcessorEntry::FieldIndex_t> fPrimaryFieldIdxs;
-   std::vector<Internal::RNTupleProcessorEntry::FieldIndex_t> fAuxiliaryFieldIdxs;
+   std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> fAuxiliaryFieldIdxs;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the page source of the underlying RNTuple.
-   void Connect(const std::vector<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs, bool updateEntry) final;
+   void
+   Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs, bool updateEntry) final;
 
    void SetEntry(std::shared_ptr<Internal::RNTupleProcessorEntry> entry) final
    {

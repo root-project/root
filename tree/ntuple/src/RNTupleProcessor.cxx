@@ -179,7 +179,8 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleSingleProcessor::LoadEntry(ROOT::N
 }
 
 void ROOT::Experimental::RNTupleSingleProcessor::Connect(
-   const std::vector<ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs, bool updateEntry)
+   const std::unordered_set<ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
+   bool updateEntry)
 {
    Initialize();
 
@@ -188,6 +189,7 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect(
       return;
 
    fNEntries = fPageSource->GetNEntries();
+   fFieldIdxs = fieldIdxs;
 
    auto desc = fPageSource->GetSharedDescriptorGuard();
    auto &fieldZero = ROOT::Internal::GetFieldZeroOfModel(*fProtoModel);
@@ -195,7 +197,7 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect(
    fieldZero.SetOnDiskId(fieldZeroId);
    ROOT::Internal::SetAllowFieldSubstitutions(fieldZero, true);
 
-   for (const auto &fieldIdx : fieldIdxs) {
+   for (const auto &fieldIdx : fFieldIdxs) {
       const auto &entryField = fEntry->GetField(fieldIdx);
 
       // TODO handle subfields
@@ -295,7 +297,7 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::GetNEntries()
 }
 
 void ROOT::Experimental::RNTupleChainProcessor::Connect(
-   const std::vector<ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
+   const std::unordered_set<ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
    bool /* updateEntry */)
 {
    Initialize();
@@ -451,7 +453,7 @@ void ROOT::Experimental::RNTupleJoinProcessor::Initialize()
          if (!fieldIdx)
             throw RException(R__FAIL("could not find join field \"" + joinField + "\" in primary processor \"" +
                                      fPrimaryProcessor->GetProcessorName() + "\""));
-         fJoinFieldIdxs.emplace_back(fieldIdx.Unwrap());
+         fJoinFieldIdxs.push_back(fieldIdx.Unwrap());
       }
 
       fJoinTable = Internal::RNTupleJoinTable::Create(fJoinFieldNames);
@@ -459,18 +461,19 @@ void ROOT::Experimental::RNTupleJoinProcessor::Initialize()
 }
 
 void ROOT::Experimental::RNTupleJoinProcessor::Connect(
-   const std::vector<ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs, bool updateEntry)
+   const std::unordered_set<ROOT::Experimental::Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
+   bool updateEntry)
 {
    Initialize();
 
    for (const auto &fieldIdx : fieldIdxs) {
       if (fEntry->FieldIsAuxiliary(fieldIdx))
-         fAuxiliaryFieldIdxs.push_back(fieldIdx);
+         fAuxiliaryFieldIdxs.insert(fieldIdx);
       else
-         fPrimaryFieldIdxs.push_back(fieldIdx);
+         fFieldIdxs.insert(fieldIdx);
    }
 
-   fPrimaryProcessor->Connect(fPrimaryFieldIdxs, updateEntry);
+   fPrimaryProcessor->Connect(fFieldIdxs, updateEntry);
    fAuxiliaryProcessor->Connect(fAuxiliaryFieldIdxs, updateEntry);
 }
 
@@ -519,12 +522,12 @@ ROOT::Experimental::RNTupleJoinProcessor::AddFieldToEntry(std::string_view field
                                  : fAuxiliaryProcessor->GetProcessorName() + "." + std::string(auxFieldPrefix);
       auto fieldIdx = fAuxiliaryProcessor->AddFieldToEntry(fieldName, valuePtr, newPrefix);
       if (fieldIdx)
-         fAuxiliaryFieldIdxs.push_back(fieldIdx.Unwrap());
+         fAuxiliaryFieldIdxs.insert(fieldIdx.Unwrap());
       return R__FORWARD_RESULT(fieldIdx);
    } else {
       auto fieldIdx = fPrimaryProcessor->AddFieldToEntry(fieldName, valuePtr, auxFieldPrefix);
       if (fieldIdx)
-         fPrimaryFieldIdxs.push_back(fieldIdx.Unwrap());
+         fFieldIdxs.insert(fieldIdx.Unwrap());
       return R__FORWARD_RESULT(fieldIdx);
    }
 }
