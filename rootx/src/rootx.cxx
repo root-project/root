@@ -40,12 +40,6 @@
 #include <libprocstat.h>
 #endif // R__FBSD
 
-#if defined(__CYGWIN__) && defined(__GNUC__)
-#define ROOTBINARY "root_exe.exe"
-#else
-#define ROOTBINARY "root.exe"
-#endif
-
 static int gChildpid;
 static int GetErrno()
 {
@@ -160,9 +154,6 @@ static void PrintUsage()
 
 int main(int argc, char **argv)
 {
-   char **argvv;
-   char  arg0[kMAXPATHLEN];
-
 #ifdef ROOTPREFIX
    if (std::getenv("ROOTIGNOREPREFIX")) {
 #endif
@@ -241,15 +232,9 @@ int main(int argc, char **argv)
    // Child is going to overlay itself with the actual ROOT module...
 
    // Build argv vector
-   argvv = new char* [argc+1];
-#ifdef ROOTBINDIR
-   if (std::getenv("ROOTIGNOREPREFIX"))
-#endif
-      snprintf(arg0, sizeof(arg0), "%s/bin/%s", std::getenv("ROOTSYS"), ROOTBINARY);
-#ifdef ROOTBINDIR
-   else
-      snprintf(arg0, sizeof(arg0), "%s/%s", ROOTBINDIR, ROOTBINARY);
-#endif
+   char  arg0[] = "root.exe\0";
+
+   std::vector<char *> argvv(argc+1);
    argvv[0] = arg0;
 
    for (i = 1; i < argc; i++)
@@ -257,13 +242,11 @@ int main(int argc, char **argv)
    argvv[i] = 0;
 
    // Execute actual ROOT module
-   execv(arg0, argvv);
+   execv("root.exe", argvv.data());
 
    // Exec failed
-   fprintf(stderr, "%s: can't start ROOT -- check that %s exists!\n",
-           argv[0], arg0);
-
-   delete [] argvv;
+   fprintf(stderr, "%s: can't start ROOT -- check that root.exe exists!\n",
+           argv[0]);
 
    return 1;
 }
