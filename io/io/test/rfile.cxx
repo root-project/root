@@ -83,17 +83,62 @@ TEST(RFile, OpenForWriting)
    EXPECT_EQ(ROOT::GetROOT()->GetListOfFiles()->GetSize(), 0);
 }
 
-TEST(RFile, CheckNoAutoRegistration)
+TEST(RFile, CheckNoAutoRegistrationWrite)
 {
-   FileRaii fileGuard("test_rfile_noautoreg.root");
+   FileRaii fileGuard("test_rfile_noautoreg_write.root");
 
    auto file = RFile::Recreate(fileGuard.GetPath());
+   EXPECT_EQ(gDirectory, gROOT);
    auto hist = std::make_unique<TH1D>("hist", "", 100, -10, 10);
    file->Put("hist", *hist);
-   EXPECT_EQ(hist->GetDirectory(), nullptr);
+   EXPECT_EQ(hist->GetDirectory(), gROOT);
    file->Close();
-   EXPECT_EQ(hist->GetDirectory(), nullptr);
+   EXPECT_EQ(hist->GetDirectory(), gROOT);
    hist.reset();
+   // no double free should happen when ROOT exits
+}
+
+TEST(RFile, CheckNoAutoRegistrationRead)
+{
+   FileRaii fileGuard("test_rfile_noautoreg_read.root");
+
+   {
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      auto hist = std::make_unique<TH1D>("hist", "", 100, -10, 10);
+      hist->Fill(4);
+      file->Put("hist", *hist);
+   }
+
+   {
+      auto file = RFile::Open(fileGuard.GetPath());
+      EXPECT_EQ(gDirectory, gROOT);
+      auto hist = file->Get<TH1D>("hist");
+      EXPECT_EQ(hist->GetDirectory(), nullptr);
+      ASSERT_NE(hist, nullptr);
+      EXPECT_FLOAT_EQ(hist->GetEntries(), 1);
+   }
+   // no double free should happen when ROOT exits
+}
+
+TEST(RFile, CheckNoAutoRegistrationUpdate)
+{
+   FileRaii fileGuard("test_rfile_noautoreg_update.root");
+
+   {
+      auto file = RFile::Recreate(fileGuard.GetPath());
+      auto hist = std::make_unique<TH1D>("hist", "", 100, -10, 10);
+      hist->Fill(4);
+      file->Put("hist", *hist);
+   }
+
+   {
+      auto file = RFile::Update(fileGuard.GetPath());
+      EXPECT_EQ(gDirectory, gROOT);
+      auto hist = file->Get<TH1D>("hist");
+      ASSERT_NE(hist, nullptr);
+      EXPECT_EQ(hist->GetDirectory(), nullptr);
+      EXPECT_FLOAT_EQ(hist->GetEntries(), 1);
+   }
    // no double free should happen when ROOT exits
 }
 
