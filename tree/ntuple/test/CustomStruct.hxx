@@ -21,6 +21,9 @@
  */
 
 enum CustomEnum { kCustomEnumVal = 7 };
+enum RenamedCustomEnum : short int {
+   kRenamedCustomEnumVal = 7
+};
 // TODO(jblomer): use standard integer types for specifying the underlying width; requires TEnum fix.
 enum class CustomEnumBool : bool {
 };
