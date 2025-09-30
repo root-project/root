@@ -22,6 +22,9 @@
 #include "Windows4Root.h"
 #endif
 
-#include <GL/glew.h>
+#include <glad/gl.h>
+
+// This used to be included through glew.h.
+#include <GL/glu.h>
 
 #endif
