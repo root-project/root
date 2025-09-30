@@ -10,10 +10,21 @@
 
 # This package is only needed for user backward compatibility! (TGLIncludes.h)
 
-add_library(RGlew INTERFACE)
-target_include_directories(RGlew INTERFACE inc/)
-target_link_libraries(RGlew INTERFACE GLEW::GLEW)
-#target_include_directories(RGlew INTERFACE $<BUILD_INTERFACE:${GLEW_INCLUDE_DIR}>)
+# Figure out how not to install wgl / glx headers and to not try to
+# compile the corresponding source files.
+# For now hardcode for linux.
+
+ROOT_LINKER_LIBRARY(RGlew
+  src/gl.c
+#  src/wgl.c
+  src/glx.c
+LIBRARIES
+  OpenGL::GL
+  ${X11_LIBRARIES}
+)
+
+# Is this needed?
+target_include_directories(RGlew PRIVATE   ${CMAKE_SOURCE_DIR}/graf3d/rglew/inc/)
 
 # We still need to install TGLIncludes.h into include/
 ROOT_INSTALL_HEADERS()

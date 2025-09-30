@@ -363,8 +363,10 @@ void TGLWidget::SetFormat()
       Error("TGLWidget::SetFormat", "Sorry, you should not call this function");
       return;
    }
-   if (!gVirtualX->IsCmdThread())
+   if (!gVirtualX->IsCmdThread()) {
       gROOT->ProcessLineFast(Form("((TGLWidget *)0x%zx)->SetFormat()", (size_t)this));
+      return;
+   }
 
    R__LOCKGUARD(gROOTMutex);
 
@@ -376,6 +378,13 @@ void TGLWidget::SetFormat()
    if (!hDC) {
       Error("TGLWidget::SetFormat", "GetWindowDC failed");
       throw std::runtime_error("GetWindowDC failed");
+   }
+
+   static bool wgl_init = false;
+   if ( ! wgl_init) {
+      wgl_init = true;
+      int status = gladLoaderLoadWGL(HDC);
+      printf("GLAD loader WGL version %d.%d\n", GLAD_VERSION_MAJOR(status), GLAD_VERSION_MINOR(status));
    }
 
    const Rgl::TGuardBase &dcGuard = Rgl::make_guard(ReleaseDC, hWND, hDC);
@@ -507,6 +516,14 @@ Window_t TGLWidget::CreateWindow(const TGWindow* parent, const TGLFormat &format
       ::Error("TGLWidget::CreateWindow", "Display is not set!");
       throw std::runtime_error("Display is not set!");
    }
+
+   static std::atomic<bool> s_glx_init_done = false;
+   bool glx_init = false;
+   if (s_glx_init_done.compare_exchange_strong(glx_init, true)) {
+      int status = gladLoaderLoadGLX(dpy, DefaultScreen(dpy));
+      printf("GLAD loader GLX version %d.%d\n", GLAD_VERSION_MAJOR(status), GLAD_VERSION_MINOR(status));
+   }
+
    XVisualInfo *visInfo = glXChooseVisual(dpy, DefaultScreen(dpy), &glxfmt[0]);
 
    if (!visInfo) {

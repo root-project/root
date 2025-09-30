@@ -86,11 +86,8 @@ void TGLContext::GlewInit()
 {
    if (!fgGlewInitDone)
    {
-      GLenum status = glewInit();
-      if (status != GLEW_OK)
-         Warning("TGLContext::GlewInit", "GLEW initalization failed.");
-      else if (gDebug > 0)
-         Info("TGLContext::GlewInit", "GLEW initalization successful.");
+      int status = gladLoaderLoadGL();
+      printf("GLAD loader GL version %d.%d\n", GLAD_VERSION_MAJOR(status), GLAD_VERSION_MINOR(status));
       fgGlewInitDone = kTRUE;
    }
 }
