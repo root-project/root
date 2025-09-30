@@ -29,13 +29,15 @@ TEST(THn, Constructors) {
    THnD hn_v2("hn_v2", "hn_v2", 3, nbins.data(), edges);
    THnD hn_v3("hn_v3", "hn_v3", axes);
    THnI hn_v4("hn_v4", "hn_v4", axes);
+   THnD hn_v5(hn_v1);
 
    THnSparseD hs_v1("hs_v1", "hs_v1", 3, nbins.data(), xmin.data(), xmax.data());
    THnSparseD hs_v2("hs_v2", "hs_v2", 3, nbins.data(), edges);
    THnSparseD hs_v3("hs_v3", "hs_v3", axes);
    THnSparseI hs_v4("hs_v4", "hs_v4", axes);
+   THnSparseD hs_v5(hs_v1);
 
-   std::vector<THnBase*> hns = {&hn_v1, &hn_v2, &hn_v3, &hn_v4, &hs_v1, &hs_v2, &hs_v3, &hs_v4};
+   std::vector<THnBase*> hns = {&hn_v1, &hn_v2, &hn_v3, &hn_v4, &hn_v5, &hs_v1, &hs_v2, &hs_v3, &hs_v4, &hs_v5};
    for (THnBase* hn : hns) {
       EXPECT_EQ(hn->GetNdimensions(), 3);
       for (int dim = 0; dim < 3; ++dim) {

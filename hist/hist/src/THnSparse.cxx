@@ -645,6 +645,26 @@ THnBase(name, title, dim, nbins, xbins),
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Construct a THnSparse as a copy of "other"
+
+THnSparse::THnSparse(const THnSparse& other):
+   THnBase(other), fChunkSize(other.fChunkSize), fFilledBins(other.fFilledBins),
+   fBinContent(other.fBinContent), fBins(other.fBins), fBinsContinued(other.fBinsContinued),
+   fCompactCoord(nullptr) {
+   
+   fBinContent.SetOwner();
+   
+   Int_t dim = other.GetNdimensions();
+   auto nbins=new Int_t[dim];
+   for (Int_t i=0; i<dim; i++)
+      nbins[i]=other.GetAxis(i)->GetNbins();
+   
+   fCompactCoord = new THnSparseCompactBinCoord(dim, nbins);
+   delete[] nbins;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Destruct a THnSparse
 
 THnSparse::~THnSparse() {
