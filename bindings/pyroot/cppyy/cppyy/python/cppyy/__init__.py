@@ -66,6 +66,12 @@ except ImportError:
 from . import _typemap
 from ._version import __version__
 
+# Help Windows locate cppyy/libcppyy, which should be in the same location as the current file:
+if "win32" in sys.platform:
+    cppyy_path = os.path.dirname(__file__)
+    os.add_dll_directory(cppyy_path)
+    os.add_dll_directory(os.path.dirname(cppyy_path))
+
 # import separately instead of in the above try/except block for easier to
 # understand tracebacks
 if ispypy:
@@ -339,7 +345,9 @@ if not ispypy:
 
         apipath_extra = os.path.join(os.path.dirname(apipath), 'site', 'python'+ldversion)
         if not os.path.exists(os.path.join(apipath_extra, 'CPyCppyy')):
-            import glob, libcppyy
+            import glob
+
+            import cppyy.libcppyy as libcppyy
             ape = os.path.dirname(libcppyy.__file__)
           # a "normal" structure finds the include directory up to 3 levels up,
           # ie. dropping lib/pythonx.y[md]/site-packages

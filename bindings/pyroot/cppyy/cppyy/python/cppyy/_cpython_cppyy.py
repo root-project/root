@@ -27,7 +27,7 @@ try:
 except ImportError:
     c = None
 
-import libcppyy as _backend
+import cppyy.libcppyy as _backend
 
 if c is not None:
     _backend._cpp_backend = c
