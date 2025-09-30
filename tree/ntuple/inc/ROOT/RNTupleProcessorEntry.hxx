@@ -28,6 +28,60 @@
 namespace ROOT {
 namespace Experimental {
 namespace Internal {
+/**
+\class ROOT::Experimental::RNTupleProcessorProvenance
+\ingroup NTuple
+\brief Identifies how a processor is composed.
+
+The processor provenance is used in RNTupleProcessorEntry to identify how an (auxiliary) field in a composed processor
+can be accessed.
+*/
+// clang-format on
+class RNTupleProcessorProvenance {
+private:
+   std::string fProvenance{};
+
+public:
+   RNTupleProcessorProvenance() = default;
+   RNTupleProcessorProvenance(const std::string &provenance) : fProvenance(provenance) {}
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get the full processor provenance, in the form of "x.y.z".
+   std::string Get() const { return fProvenance; }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Add a new processor to the provenance.
+   ///
+   /// \param[in] processorName Name of the processor to add.
+   ///
+   /// \return The updated provenance.
+   RNTupleProcessorProvenance Evolve(const std::string &processorName) const
+   {
+      if (fProvenance.empty())
+         return RNTupleProcessorProvenance(processorName);
+
+      return RNTupleProcessorProvenance(fProvenance + "." + processorName);
+   }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Check whether the provenance subsumes the provenance in `other`.
+   ///
+   /// \param[in] other The other provenance
+   bool Contains(const RNTupleProcessorProvenance &other) const
+   {
+      return fProvenance.rfind(other.fProvenance) != std::string::npos;
+   }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Check whether the provided field name contains this provenance.
+   ///
+   /// \param[in] fieldName Field name to check.
+   bool IsPresentInFieldName(std::string_view fieldName) const
+   {
+      return !fProvenance.empty() && fieldName.find(fProvenance + ".") == 0;
+   }
+};
+
 // clang-format off
 /**
 \class ROOT::Experimental::Internal::RNTupleProcessorEntry
@@ -45,13 +99,16 @@ private:
    struct RProcessorValue {
       ROOT::RFieldBase::RValue fValue;
       bool fIsValid;
+      RNTupleProcessorProvenance fProcessorProvenance;
 
-      RProcessorValue(ROOT::RFieldBase::RValue &&value, bool isValid) : fValue(std::move(value)), fIsValid(isValid) {}
+      RProcessorValue(ROOT::RFieldBase::RValue &&value, bool isValid, RNTupleProcessorProvenance provenance)
+         : fValue(std::move(value)), fIsValid(isValid), fProcessorProvenance(provenance)
+      {
+      }
    };
 
    std::vector<RProcessorValue> fProcessorValues;
    std::unordered_map<std::string, FieldIndex_t> fFieldName2Index;
-   std::unordered_set<FieldIndex_t> fAuxiliaryFields;
 
 public:
    /////////////////////////////////////////////////////////////////////////////
@@ -73,15 +130,6 @@ public:
    {
       assert(fieldIdx < fProcessorValues.size());
       return fProcessorValues[fieldIdx].fIsValid;
-   }
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Check whether a field is auxiliary.
-   ///
-   /// \param[in] fieldIdx The index of the field in the entry.
-   bool FieldIsAuxiliary(FieldIndex_t fieldIdx) const
-   {
-      return fAuxiliaryFields.find(fieldIdx) != fAuxiliaryFields.end();
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -127,10 +175,11 @@ public:
    /// \param[in] field Reference to the field to add, used to to create its corresponding RValue.
    /// \param[in] valuePtr Pointer to an object corresponding to the field's type to bind to its value. If this is a
    /// `nullptr`, a pointer will be created.
-   /// \param[in] isAuxiliary Whether the field is auxiliary.
+   /// \param[in] provenance Processor provenance of the field.
    ///
    /// \return The field index of the newly added field.
-   FieldIndex_t AddField(std::string_view fieldName, ROOT::RFieldBase &field, void *valuePtr, bool isAuxiliary = false)
+   FieldIndex_t AddField(std::string_view fieldName, ROOT::RFieldBase &field, void *valuePtr,
+                         const RNTupleProcessorProvenance &provenance)
    {
       if (FindFieldIndex(fieldName))
          throw ROOT::RException(
@@ -141,9 +190,7 @@ public:
          value.BindRawPtr(valuePtr);
       auto fieldIdx = fProcessorValues.size();
       fFieldName2Index[std::string(fieldName)] = fieldIdx;
-      fProcessorValues.emplace_back(RProcessorValue(std::move(value), true));
-      if (isAuxiliary)
-         fAuxiliaryFields.insert(fieldIdx);
+      fProcessorValues.emplace_back(RProcessorValue(std::move(value), true, provenance));
 
       return fieldIdx;
    }
@@ -215,6 +262,27 @@ public:
    {
       assert(fieldIdx < fProcessorValues.size());
       return fProcessorValues[fieldIdx].fValue.GetField();
+   }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get the processor provenance of a field in the entry.
+   ///
+   /// \param[in] fieldIdx The index of the field in the entry.
+   const RNTupleProcessorProvenance &GetFieldProvenance(FieldIndex_t fieldIdx) const
+   {
+      assert(fieldIdx < fProcessorValues.size());
+      return fProcessorValues[fieldIdx].fProcessorProvenance;
+   }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get the name of a field in the entry, including processor name prefixes in the case of auxiliary fields.
+   ///
+   /// \param[in] fieldIdx The index of the field in the entry.
+   std::string GetFieldName(FieldIndex_t fieldIdx) const
+   {
+      assert(fieldIdx < fProcessorValues.size());
+      return fProcessorValues[fieldIdx].fProcessorProvenance.Get() + "." +
+             fProcessorValues[fieldIdx].fValue.GetField().GetQualifiedFieldName();
    }
 
    /////////////////////////////////////////////////////////////////////////////
