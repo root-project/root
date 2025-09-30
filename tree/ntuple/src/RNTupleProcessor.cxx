@@ -175,7 +175,9 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleSingleProcessor::LoadEntry(ROOT::N
    if (entryNumber >= fNEntries || !fEntry)
       return kInvalidNTupleIndex;
 
-   fEntry->Read(entryNumber);
+   for (auto fieldIdx : fFieldIdxs) {
+      fEntry->ReadValue(fieldIdx, entryNumber);
+   }
 
    fNEntriesProcessed++;
    fCurrentEntryNumber = entryNumber;
@@ -460,7 +462,10 @@ void ROOT::Experimental::RNTupleJoinProcessor::Initialize(
             throw RException(R__FAIL("could not find join field \"" + joinField + "\" in auxiliary processor \"" +
                                      fAuxiliaryProcessor->GetProcessorName() + "\""));
          }
-         auto fieldIdx = AddFieldToEntry(joinField);
+         // We prepend the name of the primary processor in this case to prevent reading from the wrong join field in
+         // composed join operations.
+         auto fieldIdx =
+            AddFieldToEntry(fProcessorName + "." + joinField, nullptr, Internal::RNTupleProcessorTag(fProcessorName));
          if (!fieldIdx)
             throw RException(R__FAIL("could not find join field \"" + joinField + "\" in primary processor \"" +
                                      fPrimaryProcessor->GetProcessorName() + "\""));
@@ -548,15 +553,20 @@ void ROOT::Experimental::RNTupleJoinProcessor::SetAuxiliaryFieldValidity(bool is
 
 ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTupleSize_t entryNumber)
 {
-   if (fPrimaryProcessor->LoadEntry(entryNumber) == kInvalidNTupleIndex)
+   if (fPrimaryProcessor->LoadEntry(entryNumber) == kInvalidNTupleIndex) {
+      for (auto fieldIdx : fFieldIdxs) {
+         fEntry->SetFieldValidity(fieldIdx, false);
+      }
+      SetAuxiliaryFieldValidity(false);
       return kInvalidNTupleIndex;
+   }
 
    fCurrentEntryNumber = entryNumber;
    fNEntriesProcessed++;
 
    if (!fJoinTable) {
       // The auxiliary processor's fields are valid if the entry could be loaded.
-      SetAuxiliaryFieldValidity(fAuxiliaryProcessor->LoadEntry(entryNumber) != kInvalidNTupleIndex);
+      fAuxiliaryProcessor->LoadEntry(entryNumber);
       return entryNumber;
    }
 
