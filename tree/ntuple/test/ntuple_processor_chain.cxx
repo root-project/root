@@ -173,7 +173,7 @@ namespace ROOT::Experimental::Internal {
 struct RNTupleProcessorEntryLoader {
    static ROOT::NTupleSize_t LoadEntry(RNTupleProcessor &processor, ROOT::NTupleSize_t entryNumber)
    {
-      processor.Connect(processor.fEntry->GetFieldIndices(), /*updateEntry=*/false);
+      processor.Connect(processor.fEntry->GetFieldIndices(), RNTupleProcessorProvenance(), /*updateFields=*/false);
       return processor.LoadEntry(entryNumber);
    }
 
