@@ -246,8 +246,9 @@ protected:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the page source of the underlying RNTuple.
-   virtual void
-   Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs, bool updateEntry) = 0;
+   virtual void Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
+                        const Internal::RNTupleProcessorTag &processorTag = Internal::RNTupleProcessorTag(),
+                        bool updateFields = false) = 0;
 
    bool IsConnected() { return fEntry != nullptr; }
 
@@ -287,7 +288,8 @@ protected:
    virtual bool FieldExists(std::string_view fieldName) = 0;
 
    virtual ROOT::RResult<Internal::RNTupleProcessorEntry::FieldIndex_t>
-   AddFieldToEntry(std::string_view fieldName, void *valuePtr = nullptr, std::string_view auxFieldPrefix = "") = 0;
+   AddFieldToEntry(std::string_view fieldName, void *valuePtr = nullptr,
+                   const Internal::RNTupleProcessorTag &processorTag = Internal::RNTupleProcessorTag()) = 0;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Processor-specific implementation for printing its structure, called by PrintStructure().
@@ -398,7 +400,7 @@ public:
          // This constructor is called with kInvalidNTupleIndex for RNTupleProcessor::end(). In that case, we already
          // know there is nothing to load.
          if (fCurrentEntryNumber != ROOT::kInvalidNTupleIndex) {
-            fProcessor.Connect(fProcessor.fEntry->GetFieldIndices(), /*updateEntry=*/false);
+            fProcessor.Connect(fProcessor.fEntry->GetFieldIndices());
             fCurrentEntryNumber = fProcessor.LoadEntry(fCurrentEntryNumber);
          }
       }
@@ -517,16 +519,18 @@ private:
    void Initialize(std::shared_ptr<Internal::RNTupleProcessorEntry> entry = nullptr) final;
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Connect the page source of the underlying RNTuple.
-   void
-   Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs, bool updateEntry) final;
+   /// \brief Connect the provided fields indices in the entry to their on-disk fields.
+   void Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
+                const Internal::RNTupleProcessorTag &processorTag = Internal::RNTupleProcessorTag(),
+                bool updateFields = false) final;
 
    void SetEntry(std::shared_ptr<Internal::RNTupleProcessorEntry> entry) final { fEntry = entry; }
 
    bool FieldExists(std::string_view fieldName) final;
 
    ROOT::RResult<Internal::RNTupleProcessorEntry::FieldIndex_t>
-   AddFieldToEntry(std::string_view fieldName, void *valuePtr = nullptr, std::string_view auxFieldPrefix = "") final;
+   AddFieldToEntry(std::string_view fieldName, void *valuePtr = nullptr,
+                   const Internal::RNTupleProcessorTag &processorTag = Internal::RNTupleProcessorTag()) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Load the entry identified by the provided (global) entry number (i.e., considering all RNTuples in this
@@ -541,7 +545,7 @@ private:
    {
       Initialize();
       if (fNEntries == ROOT::kInvalidNTupleIndex)
-         Connect(fEntry->GetFieldIndices(), /*updateEntry=*/false);
+         Connect(fEntry->GetFieldIndices());
       return fNEntries;
    }
 
@@ -591,14 +595,17 @@ private:
    std::vector<std::unique_ptr<RNTupleProcessor>> fInnerProcessors;
    std::vector<ROOT::NTupleSize_t> fInnerNEntries;
 
+   Internal::RNTupleProcessorTag fProcessorTag;
+
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Initialize the processor, by setting `fProtoModel` and creating an (initially empty) `fEntry`.
    void Initialize(std::shared_ptr<Internal::RNTupleProcessorEntry> entry = nullptr) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the page source of the underlying RNTuple.
-   void
-   Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs, bool updateEntry) final;
+   void Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
+                const Internal::RNTupleProcessorTag &processorTag = Internal::RNTupleProcessorTag(),
+                bool updateFields = false) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Update the entry to reflect any missing fields in the current inner processor.
@@ -616,7 +623,8 @@ private:
    }
 
    ROOT::RResult<Internal::RNTupleProcessorEntry::FieldIndex_t>
-   AddFieldToEntry(std::string_view fieldName, void *valuePtr = nullptr, std::string_view auxFieldPrefix = "") final;
+   AddFieldToEntry(std::string_view fieldName, void *valuePtr = nullptr,
+                   const Internal::RNTupleProcessorTag &processorTag = Internal::RNTupleProcessorTag()) final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Load the entry identified by the provided (global) entry number (i.e., considering all RNTuples in this
@@ -685,8 +693,9 @@ private:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect the page source of the underlying RNTuple.
-   void
-   Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs, bool updateEntry) final;
+   void Connect(const std::unordered_set<Internal::RNTupleProcessorEntry::FieldIndex_t> &fieldIdxs,
+                const Internal::RNTupleProcessorTag &processorTag = Internal::RNTupleProcessorTag(),
+                bool updateFields = false) final;
 
    void SetEntry(std::shared_ptr<Internal::RNTupleProcessorEntry> entry) final
    {
@@ -707,7 +716,8 @@ private:
    }
 
    ROOT::RResult<Internal::RNTupleProcessorEntry::FieldIndex_t>
-   AddFieldToEntry(std::string_view fieldName, void *valuePtr = nullptr, std::string_view auxFieldPrefix = "") final;
+   AddFieldToEntry(std::string_view fieldName, void *valuePtr = nullptr,
+                   const Internal::RNTupleProcessorTag &processorTag = Internal::RNTupleProcessorTag()) final;
 
    /// \brief Initialize the processor, by setting `fProtoModel` and creating an (initially empty) `fEntry`.
    void Initialize(std::shared_ptr<Internal::RNTupleProcessorEntry> entry = nullptr) final;

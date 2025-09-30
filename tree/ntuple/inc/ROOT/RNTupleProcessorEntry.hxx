@@ -28,6 +28,44 @@
 namespace ROOT {
 namespace Experimental {
 namespace Internal {
+/**
+\class ROOT::Experimental::RNTupleProcessorTag
+\ingroup NTuple
+\brief Identifies how a processor is composed.
+
+The processor tag is used in RNTupleProcessorEntry to identify how a field in a composed processor can be accessed.
+*/
+// clang-format on
+class RNTupleProcessorTag {
+private:
+   std::vector<std::string> fTag{};
+
+   RNTupleProcessorTag(std::vector<std::string> &&tag) : fTag(tag) {}
+
+public:
+   RNTupleProcessorTag() = default;
+   RNTupleProcessorTag(const std::string &tag) : fTag(std::vector<std::string>{tag}) {}
+
+   const std::vector<std::string> &GetTag() const { return fTag; }
+   bool IsEmpty() const { return fTag.empty(); }
+   std::string GetFieldNamePrefix() const
+   {
+      if (fTag.empty())
+         return std::string{};
+
+      return std::accumulate(fTag.cbegin() + 1, fTag.cend(), fTag[0],
+                             [](std::string acc, const std::string &t) { return std::move(acc) + "." + t; });
+   }
+   const std::string &GetOutermostProcessorName() const { return fTag.back(); }
+
+   RNTupleProcessorTag Evolve(std::string_view processorName) const
+   {
+      std::vector<std::string> newTag = fTag;
+      newTag.emplace_back(processorName);
+      return RNTupleProcessorTag(std::move(newTag));
+   }
+};
+
 // clang-format off
 /**
 \class ROOT::Experimental::Internal::RNTupleProcessorEntry
@@ -45,8 +83,12 @@ private:
    struct RFieldInfo {
       ROOT::RFieldBase::RValue fValue;
       bool fIsValid;
+      RNTupleProcessorTag fProcessorTag;
 
-      RFieldInfo(ROOT::RFieldBase::RValue &&value, bool isValid) : fValue(std::move(value)), fIsValid(isValid) {}
+      RFieldInfo(ROOT::RFieldBase::RValue &&value, bool isValid, RNTupleProcessorTag processorTag)
+         : fValue(std::move(value)), fIsValid(isValid), fProcessorTag(processorTag)
+      {
+      }
    };
 
    std::vector<RFieldInfo> fFields;
@@ -57,7 +99,6 @@ private:
    // std::vector<bool> fFieldValidities;
    /// For fast lookup of field indices given a (sub)field name present in the entry
    std::unordered_map<std::string, FieldIndex_t> fFieldName2Index;
-   std::unordered_set<FieldIndex_t> fAuxiliaryFields;
 
 public:
    /////////////////////////////////////////////////////////////////////////////
@@ -79,15 +120,6 @@ public:
    {
       assert(fieldIdx < fFields.size());
       return fFields[fieldIdx].fIsValid;
-   }
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Check whether a field is auxiliary.
-   ///
-   /// \param[in] fieldIdx The index of the field in the entry.
-   bool FieldIsAuxiliary(FieldIndex_t fieldIdx) const
-   {
-      return fAuxiliaryFields.find(fieldIdx) != fAuxiliaryFields.end();
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -135,7 +167,8 @@ public:
    /// \param[in] isAuxiliary Whether the field is auxiliary.
    ///
    /// \return The field index of the newly added field.
-   FieldIndex_t AddField(std::string_view fieldName, ROOT::RFieldBase &field, void *valuePtr, bool isAuxiliary = false)
+   FieldIndex_t
+   AddField(std::string_view fieldName, ROOT::RFieldBase &field, void *valuePtr, const RNTupleProcessorTag &tag)
    {
       if (FindFieldIndex(fieldName))
          throw ROOT::RException(
@@ -148,9 +181,7 @@ public:
       fFieldName2Index[std::string(fieldName)] = fieldIdx;
       // fValues.emplace_back(std::move(value));
       // fFieldValidities.push_back(true);
-      fFields.emplace_back(RFieldInfo(std::move(value), true));
-      if (isAuxiliary)
-         fAuxiliaryFields.insert(fieldIdx);
+      fFields.emplace_back(RFieldInfo(std::move(value), true, tag));
 
       return fieldIdx;
    }
@@ -233,6 +264,17 @@ public:
    {
       assert(fieldIdx < fFields.size());
       return fFields[fieldIdx].fValue.GetField();
+   }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get the name of a field in the entry, including processor name prefixes in the case of auxiliary fields.
+   ///
+   /// \param[in] fieldIdx The index of the field in the entry.
+   std::string GetFieldName(FieldIndex_t fieldIdx)
+   {
+      assert(fieldIdx < fFields.size());
+      return fFields[fieldIdx].fProcessorTag.GetFieldNamePrefix() + "." +
+             fFields[fieldIdx].fValue.GetField().GetQualifiedFieldName();
    }
 
    /////////////////////////////////////////////////////////////////////////////
