@@ -1128,3 +1128,20 @@ TEST(RPageSinkFile, StreamerInfo)
    }
    FAIL() << "not all streamer infos found! ";
 }
+
+TEST(RPageSourceFile, NameFromAnchor)
+{
+   FileRaii fileGuard("test_ntuple_storage_namefromanchor.root");
+   {
+      auto model = RNTupleModel::Create();
+      RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+   }
+
+   auto file = std::make_unique<TFile>(fileGuard.GetPath().c_str(), "READ");
+   auto anchor = file->Get<ROOT::RNTuple>("ntpl");
+   auto source = RPageSourceFile::CreateFromAnchor(*anchor, {});
+   // When creating a source from anchor, its name doesn't get set until we Attach it.
+   EXPECT_EQ(source->GetNTupleName(), "");
+   source->Attach();
+   EXPECT_EQ(source->GetNTupleName(), "ntpl");
+}
