@@ -58,6 +58,11 @@ endif
 if ($?thisrootdir) then
 
 setenv ROOTSYS "`(dirname ${thisrootdir})`"
+if ( ! -f "$ROOTSYS/bin/root-config" ) then
+    echo "ERROR: root-config not found under ROOTSYS=\"$ROOTSYS/\"" >&2
+    set ROOTSYS =
+    return 1
+endif
 
 if ($?old_rootsys) then
    setenv PATH `set DOLLAR='$'; echo $PATH | sed -e "s;:$old_rootsys/bin:;:;g" \
