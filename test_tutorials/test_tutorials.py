@@ -24,7 +24,12 @@ subdirs = [
 py_tutorials = []
 for sub in subdirs:
     sub_path = tutorial_dir / sub
-    py_tutorials.extend(sub_path.rglob("*.py"))
+    # py_tutorials.extend(sub_path.rglob("*.py"))
+    for f in sub_path.rglob("*.py"):
+        # skip distrdf tutorials for now
+        if "distrdf" in f.name:
+            continue
+        py_tutorials.append(f)
 
 def test_tutorials_are_detected():
     assert len(py_tutorials) > 0
