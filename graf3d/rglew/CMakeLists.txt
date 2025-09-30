@@ -14,14 +14,22 @@
 # compile the corresponding source files.
 # For now hardcode for linux.
 
-ROOT_LINKER_LIBRARY(RGlew
-  src/gl.c
-#  src/wgl.c
-  src/glx.c
-LIBRARIES
-  OpenGL::GL
-  ${X11_LIBRARIES}
-)
+if(x11)
+  ROOT_LINKER_LIBRARY(RGlew
+    src/gl.c
+    src/glx.c
+  LIBRARIES
+    OpenGL::GL
+    ${X11_LIBRARIES}
+  )
+else()
+  ROOT_LINKER_LIBRARY(RGlew
+    src/gl.c
+  #  src/wgl.c
+  LIBRARIES
+    OpenGL::GL
+  )
+endif()
 
 # Is this needed?
 target_include_directories(RGlew PRIVATE   ${CMAKE_SOURCE_DIR}/graf3d/rglew/inc/)
