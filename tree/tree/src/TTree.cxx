@@ -90,7 +90,7 @@ It is strongly recommended to persistify those as objects rather than lists of l
   name of the leaf, but have no effect.) If no type is given, the
   type of the variable is assumed to be the same as the previous
   variable. If the first variable does not have a type, it is
-  assumed of type F by default. The list of currently supported
+  assumed of type `F` by default. The list of currently supported
   types is given below:
    - `C` : a character string terminated by the 0 character
    - `B` : an 8 bit integer (`Char_t`); Mostly signed, might be unsigned in special platforms or depending on compiler flags, thus do not use std::int8_t as underlying variable since they are not equivalent; Treated as a character when in an array.
@@ -1968,7 +1968,7 @@ Int_t TTree::Branch(const char* foldername, Int_t bufsize /* = 32000 */, Int_t s
 ///      The variable type may be 0,1 or 2 characters. If no type is given,
 ///      the type of the variable is assumed to be the same as the previous
 ///      variable. If the first variable does not have a type, it is assumed
-///      of type F by default. The list of currently supported types is given below:
+///      of type `F` by default. The list of currently supported types is given below:
 ///         - `C` : a character string terminated by the 0 character
 ///         - `B` : an 8 bit integer (`Char_t`); Mostly signed, might be unsigned in special platforms or depending on compiler flags, thus do not use std::int8_t as underlying variable since they are not equivalent; Treated as a character when in an array.
 ///         - `b` : an 8 bit unsigned integer (`UChar_t`)
@@ -8264,7 +8264,7 @@ void TTree::ResetBranchAddresses()
 /// \param firstentry first entry to scan
 /// \param nentries total number of entries to scan (starting from firstentry). Defaults to all entries.
 /// \note see TTree::SetScanField to control how many lines are printed between pagination breaks (Use 0 to disable pagination)
-/// \see TTreePlayer::Scan
+/// \see TTreePlayer::Scan, TTreePlayer::SetScanFileName, TTreePlayer::SetScanRedirect
 
 Long64_t TTree::Scan(const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {

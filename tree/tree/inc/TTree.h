@@ -725,7 +725,7 @@ public:
     * \brief Sets the default maximum number of lines to be shown before `<CR>` when calling Scan().
     * \param n the maximum number of lines. Default=50, if 0, all entries of the Tree are shown
     * and there is no need to press `<CR>` or `q` to exit the function.
-    * \see TTreePlayer::Scan for more details on how to redirect the output to an ASCII file
+    * \note See TTreePlayer::Scan for more details on how to redirect the output to an ASCII file
     */
    virtual void            SetScanField(Int_t n = 50) { fScanField = n; } // *MENU*
    void SetTargetMemoryRatio(Float_t ratio) { fTargetMemoryRatio = ratio; }
