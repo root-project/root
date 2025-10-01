@@ -229,8 +229,13 @@ if(NOT APPLE AND NOT MSVC)
   # and by ALICE in https://github.com/root-project/root/issues/19889
   # Only needed for Linux: Mac uses linker namespaces and  Windows explicit export/import
   target_link_libraries(Cling PRIVATE -Wl,-Bsymbolic)
+  # We compile with -fvisibility=hidden in interpreter/, but some symbols of
+  # instantiated templates remain. Use a version script to hide them.
   target_link_libraries(Cling PRIVATE -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/libCling.script)
   set_target_properties(Cling PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/libCling.script)
+  # After inlining and hiding symbols, some of them are not referenced anymore
+  # and can be collected by the linker, reducing the library size.
+  target_link_libraries(Cling PRIVATE -Wl,--gc-sections)
 endif()
 
 if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
