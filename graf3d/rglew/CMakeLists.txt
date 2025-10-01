@@ -14,20 +14,27 @@
 # compile the corresponding source files.
 # For now hardcode for linux.
 
+set(rglew_libs OpenGL::GL)
+
+find_library(DL_LIBRARY_PATH dl)
+if (DL_LIBRARY_PATH)
+  list(APPEND rglew_libs dl)
+endif()
+
 if(x11)
+  list(APPEND rglew_libs ${X11_LIBRARIES})
   ROOT_LINKER_LIBRARY(RGlew
     src/gl.c
     src/glx.c
   LIBRARIES
-    OpenGL::GL
-    ${X11_LIBRARIES}
+    ${rglew_libs}
   )
 else()
   ROOT_LINKER_LIBRARY(RGlew
     src/gl.c
   #  src/wgl.c
   LIBRARIES
-    OpenGL::GL
+    ${rglew_libs}
   )
 endif()
 
