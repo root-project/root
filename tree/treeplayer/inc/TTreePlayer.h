@@ -119,8 +119,8 @@ public:
    TSQLResult       *Query(const char *varexp, const char *selection, Option_t *option
                              ,Long64_t nentries, Long64_t firstentry) override;
    void              SetEstimate(Long64_t n) override;
-   void              SetScanRedirect(bool on=false) {fScanRedirect = on;}
-   void              SetScanFileName(const char *name) {fScanFileName=name;}
+   void              SetScanRedirect(bool on=false) {fScanRedirect = on;} ///< Redirect Scan output to a text file
+   void              SetScanFileName(const char *name) {fScanFileName=name;} ///< Set name of text file where Scan output will be dumped, if `SetScanRedirect(true)` was called
    void              SetTree(TTree *t) override {fTree = t;}
    void              StartViewer(Int_t ww, Int_t wh) override;
    Int_t             UnbinnedFit(const char *formula ,const char *varexp, const char *selection,Option_t *option
