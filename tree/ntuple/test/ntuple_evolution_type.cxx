@@ -256,6 +256,33 @@ TEST(RNTupleEvolution, ArrayAsRVec)
    EXPECT_EQ(2, a(0)[1]);
 }
 
+TEST(RNTupleEvolution, ArrayAsVector)
+{
+   FileRaii fileGuard("test_ntuple_evolution_array_as_vector.root");
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      auto a = model->MakeField<std::array<int, 2>>("a");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      *a = {0, 1};
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   auto aAsShort = reader->GetView<std::vector<short>>("a");
+   const auto &f = aAsShort.GetField(); // necessary to silence clang warning
+   EXPECT_EQ(typeid(f), typeid(ROOT::RArrayAsVectorField));
+   EXPECT_EQ(2u, aAsShort(0).size());
+   EXPECT_EQ(0, aAsShort(0)[0]);
+   EXPECT_EQ(1, aAsShort(0)[1]);
+
+   auto aAsBool = reader->GetView<std::vector<bool>>("a");
+   EXPECT_EQ(2u, aAsBool(0).size());
+   EXPECT_FALSE(aAsBool(0)[0]);
+   EXPECT_TRUE(aAsBool(0)[1]);
+}
+
 TEST(RNTupleEvolution, NullableToVector)
 {
    FileRaii fileGuard("test_ntuple_evolution_nullable_to_vector.root");
