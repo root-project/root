@@ -246,6 +246,7 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
 
+   std::unique_ptr<RFieldBase> BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
    void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
    void CommitClusterImpl() final { fNWritten = 0; }
