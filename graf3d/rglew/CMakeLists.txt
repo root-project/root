@@ -10,12 +10,7 @@
 
 # This package is only needed for user backward compatibility! (TGLIncludes.h)
 
-# Figure out how not to install wgl / glx headers and to not try to
-# compile the corresponding source files.
-# For now hardcode for linux.
-
 set(rglew_srcs src/gl.c)
-set(rglew_libs OpenGL::GL)
 
 find_library(DL_LIBRARY_PATH dl)
 if (DL_LIBRARY_PATH)
