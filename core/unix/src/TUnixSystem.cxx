@@ -4684,7 +4684,22 @@ static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFA
       dynpath_syspart = "/usr/local/lib:/usr/X11R6/lib:/usr/lib:/lib:";
       dynpath_syspart += "/lib/x86_64-linux-gnu:/usr/local/lib64:/usr/lib64:/lib64:";
    #else
-      // trick to get the system search path
+      // Generally, ROOT libraries are in the same directory as libCore. We can therefore use its current
+      // location to speed up most library searches.
+      {
+         void *handle = dlopen("libCore.so", RTLD_LAZY | RTLD_NOLOAD);
+         if (handle) {
+            char buf[PATH_MAX+1];
+            buf[PATH_MAX] = 0;
+            auto result = dlinfo(handle, RTLD_DI_ORIGIN, buf);
+            if (result == 0) {
+               dynpath_syspart = buf;
+               dynpath_syspart += ':';
+            }
+            dlclose(handle);
+         }
+      }
+      // If the above doesn't work, one can fall back to ld search paths:
       std::string cmd("LD_DEBUG=libs LD_PRELOAD=DOESNOTEXIST ls 2>&1");
       FILE *pf = popen(cmd.c_str (), "r");
       std::string result = "";
@@ -4700,7 +4715,7 @@ static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFA
          from += 12;
          std::string sys_path = result.substr(from, to-from);
          sys_path.erase(std::remove_if(sys_path.begin(), sys_path.end(), isspace), sys_path.end());
-         dynpath_syspart = sys_path.c_str();
+         dynpath_syspart += sys_path.c_str();
       }
       dynpath_envpart.ReplaceAll("::", ":");
       dynpath_syspart.ReplaceAll("::", ":");
