@@ -37,9 +37,7 @@ class TestClassDATATYPES:
         cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = cppyy.gbl.N
         # In new Cppyy, nullptr can't be found in gbl.
-        # Take it from libcppyy (we could also use ROOT.nullptr)
-        import libcppyy
-        cls.nullptr = libcppyy.nullptr
+        cls.nullptr = cppyy._backend.nullptr
 
     def test01_buffer_to_numpy(self):
         """Wrap buffer with NumPy array"""
