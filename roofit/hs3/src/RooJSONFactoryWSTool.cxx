@@ -610,8 +610,6 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    auto *mc = static_cast<RooStats::ModelConfig *>(workspace.obj(mcname));
    mc->SetWS(workspace);
 
-   std::vector<std::string> nllDataNames;
-
    auto *nllNode = RooJSONFactoryWSTool::findNamedChild(likelihoodsNode, analysisNode["likelihood"].val());
    if (!nllNode) {
       throw std::runtime_error("likelihood node not found!");
@@ -631,12 +629,14 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    }
    RooArgSet observables;
    for (auto &nameNode : (*nllNode)["data"].children()) {
-      nllDataNames.push_back(nameNode.val());
+      bool found = false;
       for (const auto &d : datasets) {
          if (d->GetName() == nameNode.val()) {
+            found = true;
             observables.add(*d->get());
          }
       }
+      if(!found) throw std::runtime_error("dataset '"+nameNode.val()+"' cannot be found!");      
    }
 
    JSONNode const *pdfNameNode = mcAuxNode ? mcAuxNode->find("pdfName") : nullptr;
@@ -712,6 +712,7 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
          nps.add(*p);
       }
    }
+     
    mc->SetGlobalObservables(globs);
    mc->SetNuisanceParameters(nps);
 
