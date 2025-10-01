@@ -14,6 +14,7 @@
 # compile the corresponding source files.
 # For now hardcode for linux.
 
+set(rglew_srcs src/gl.c)
 set(rglew_libs OpenGL::GL)
 
 find_library(DL_LIBRARY_PATH dl)
@@ -22,24 +23,15 @@ if (DL_LIBRARY_PATH)
 endif()
 
 if(x11)
+  list(APPEND rglew_srcs src/glx.c)
   list(APPEND rglew_libs ${X11_LIBRARIES})
-  ROOT_LINKER_LIBRARY(RGlew
-    src/gl.c
-    src/glx.c
-  LIBRARIES
-    ${rglew_libs}
-  )
-else()
-  ROOT_LINKER_LIBRARY(RGlew
-    src/gl.c
-  #  src/wgl.c
-  LIBRARIES
-    ${rglew_libs}
-  )
 endif()
 
-# Is this needed?
-target_include_directories(RGlew PRIVATE   ${CMAKE_SOURCE_DIR}/graf3d/rglew/inc/)
+if(MSVC)
+  list(APPEND rglew_srcs src/wgl.c)
+endif()
+
+ROOT_LINKER_LIBRARY(RGlew ${rglew_srcs} LIBRARIES ${rglew_libs})
 
 # We still need to install TGLIncludes.h into include/
 ROOT_INSTALL_HEADERS()
