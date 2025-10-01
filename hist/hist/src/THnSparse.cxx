@@ -649,10 +649,13 @@ THnBase(name, title, dim, nbins, xbins),
 
 THnSparse::THnSparse(const THnSparse& other):
    THnBase(other), fChunkSize(other.fChunkSize), fFilledBins(other.fFilledBins),
-   fBinContent(other.fBinContent), fBins(other.fBins), fBinsContinued(other.fBinsContinued),
+   fBins(other.fBins), fBinsContinued(other.fBinsContinued),
    fCompactCoord(nullptr) {
    
-   fBinContent.SetOwner();
+   TObjArray* copiedContent = (TObjArray*)other.fBinContent.Clone();
+   fBinContent = *copiedContent;
+   copiedContent->SetOwner(kFALSE);
+   delete copiedContent;
    
    Int_t dim = other.GetNdimensions();
    auto nbins=new Int_t[dim];
