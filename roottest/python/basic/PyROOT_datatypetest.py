@@ -580,7 +580,7 @@ class TestClassDATATYPES:
         raises(ValueError, setattr, gbl, 'g_uint',    -1)
         raises(ValueError, setattr, gbl, 'g_ulong',   -1)
         raises(ValueError, setattr, gbl, 'g_ulong64', -1)
-                        
+
     def test10_global_ptr(self):
         """Access of global objects through a pointer"""
 
