@@ -18,7 +18,7 @@
 #include "TGLIncludes.h"
 
 #if defined(WIN32)
-#include <glad/wglew.h>
+#include <glad/wgl.h>
 #else
 #if defined(__APPLE__) && !defined(R__HAS_COCOA)
 #define GLEW_APPLE_GLX
