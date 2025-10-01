@@ -236,6 +236,10 @@ if(NOT APPLE AND NOT MSVC)
   # After inlining and hiding symbols, some of them are not referenced anymore
   # and can be collected by the linker, reducing the library size.
   target_link_libraries(Cling PRIVATE -Wl,--gc-sections)
+  # Additionally, for Release builds, strip the binary to remove symbol tables.
+  add_custom_command(TARGET Cling POST_BUILD
+    COMMAND $<$<CONFIG:Release>:${CMAKE_STRIP}>
+    ARGS $<TARGET_FILE:Cling>)
 endif()
 
 if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
