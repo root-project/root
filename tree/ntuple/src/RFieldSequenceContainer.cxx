@@ -664,6 +664,22 @@ void ROOT::RVectorField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
+std::unique_ptr<ROOT::RFieldBase> ROOT::RVectorField::BeforeConnectPageSource(Internal::RPageSource &pageSource)
+{
+   if (GetOnDiskId() == kInvalidDescriptorId)
+      return nullptr;
+
+   const auto descGuard = pageSource.GetSharedDescriptorGuard();
+   const auto &fieldDesc = descGuard->GetFieldDescriptor(GetOnDiskId());
+   if (fieldDesc.GetTypeName().rfind("std::array<", 0) == 0) {
+      auto substitute = std::make_unique<RArrayAsVectorField>(
+         GetFieldName(), fSubfields[0]->Clone(fSubfields[0]->GetFieldName()), fieldDesc.GetNRepetitions());
+      substitute->SetOnDiskId(GetOnDiskId());
+      return substitute;
+   }
+   return nullptr;
+}
+
 void ROOT::RVectorField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
