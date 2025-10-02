@@ -7,6 +7,7 @@
 
 #include <ROOT/RField.hxx>
 #include <ROOT/RLogger.hxx>
+#include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RNTupleUtils.hxx>
 
@@ -721,4 +722,42 @@ bool ROOT::Internal::IsMatchingFieldType(std::string_view actualTypeName, std::s
    // by the ATLAS DataVector class to hide a default template parameter from the on-disk type name.
    // Thus, we check again using first ROOT Meta normalization followed by RNTuple re-normalization.
    return (actualTypeName == ROOT::Internal::GetRenormalizedTypeName(ROOT::Internal::GetDemangledTypeName(ti)));
+}
+
+std::string ROOT::Internal::GetTypeTraceReport(const RFieldBase &field, const RNTupleDescriptor &desc)
+{
+   std::vector<const RFieldBase *> inMemoryStack;
+   std::vector<const RFieldDescriptor *> onDiskStack;
+
+   auto fnGetLine = [](const std::string &fieldName, const std::string &fieldType, DescriptorId_t fieldId,
+                       int level) -> std::string {
+      return std::string(2 * level, ' ') + fieldName + " [" + fieldType + "] (id: " + std::to_string(fieldId) + ")\n";
+   };
+
+   const RFieldBase *fieldPtr = &field;
+   while (fieldPtr->GetParent()) {
+      inMemoryStack.push_back(fieldPtr);
+      fieldPtr = fieldPtr->GetParent();
+   }
+
+   auto fieldId = field.GetOnDiskId();
+   while (fieldId != kInvalidDescriptorId && fieldId != desc.GetFieldZeroId()) {
+      const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
+      onDiskStack.push_back(&fieldDesc);
+      fieldId = fieldDesc.GetParentId();
+   }
+
+   std::string report = "In-memory field/type hierarchy:\n";
+   int indentLevel = 0;
+   for (auto itr = inMemoryStack.rbegin(); itr != inMemoryStack.rend(); ++itr, ++indentLevel) {
+      report += fnGetLine((*itr)->GetFieldName(), (*itr)->GetTypeName(), (*itr)->GetOnDiskId(), indentLevel);
+   }
+
+   report += "On-disk field/type hierarchy:\n";
+   indentLevel = 0;
+   for (auto itr = onDiskStack.rbegin(); itr != onDiskStack.rend(); ++itr, ++indentLevel) {
+      report += fnGetLine((*itr)->GetFieldName(), (*itr)->GetTypeName(), (*itr)->GetId(), indentLevel);
+   }
+
+   return report;
 }
