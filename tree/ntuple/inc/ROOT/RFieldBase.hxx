@@ -537,7 +537,7 @@ protected:
    /// Many fields accept a range of type prefixes for schema evolution,
    /// e.g. std::unique_ptr< and std::optional< for nullable fields
    RResult<void>
-   EnsureMatchingTypePrefix(const RFieldDescriptor &fieldDesc, const std::vector<std::string> &prefixes) const;
+   EnsureMatchingTypePrefix(const RNTupleDescriptor &desc, const std::vector<std::string> &prefixes) const;
 
    /// Factory method to resurrect a field from the stored on-disk type information.  This overload takes an already
    /// normalized type name and type alias.
