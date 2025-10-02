@@ -690,8 +690,9 @@ void ROOT::RPairField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    const auto nOnDiskSubfields = fieldDesc.GetLinkIds().size();
    if (nOnDiskSubfields != 2) {
-      throw ROOT::RException(
-         R__FAIL("invalid number of on-disk subfields for std::pair " + std::to_string(nOnDiskSubfields)));
+      throw ROOT::RException(R__FAIL("invalid number of on-disk subfields for std::pair " +
+                                     std::to_string(nOnDiskSubfields) + "\n" +
+                                     Internal::GetTypeTraceReport(*this, desc)));
    }
 }
 
@@ -1239,7 +1240,8 @@ void ROOT::RTupleField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    const auto nSubfields = fSubfields.size();
    if (nOnDiskSubfields != nSubfields) {
       throw ROOT::RException(R__FAIL("invalid number of on-disk subfields for std::tuple " +
-                                     std::to_string(nOnDiskSubfields) + " vs. " + std::to_string(nSubfields)));
+                                     std::to_string(nOnDiskSubfields) + " vs. " + std::to_string(nSubfields) + "\n" +
+                                     Internal::GetTypeTraceReport(*this, desc)));
    }
 }
 
@@ -1398,7 +1400,8 @@ void ROOT::RVariantField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    if (fSubfields.size() != fieldDesc.GetLinkIds().size()) {
-      throw RException(R__FAIL("number of variants on-disk do not match for " + GetQualifiedFieldName()));
+      throw RException(R__FAIL("number of variants on-disk do not match for " + GetQualifiedFieldName() + "\n" +
+                               Internal::GetTypeTraceReport(*this, desc)));
    }
 }
 
