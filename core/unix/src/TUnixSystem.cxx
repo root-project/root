@@ -4708,7 +4708,7 @@ static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFA
          std::size_t to = result.find("(system search path)");
          if (from != std::string::npos && to != std::string::npos) {
             from += 12;
-            std::string sys_path = result.substr(from, to-from);
+            std::string sys_path = result.substr(from, to - from);
             sys_path.erase(std::remove_if(sys_path.begin(), sys_path.end(), isspace), sys_path.end());
             dynpath_syspart = sys_path.c_str();
          }
