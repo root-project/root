@@ -526,28 +526,33 @@ else()
   install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 endif()
 
-# FIXME: move installation of PCMS in ROOT_GENERATE_DICTIONARY().
-# We are excluding directories, which are accidentaly copied via unxpected behaviour of install(DIRECTORY ..)
-install(
-   DIRECTORY ${CMAKE_BINARY_DIR}/lib/
-   DESTINATION ${CMAKE_INSTALL_LIBDIR}
-   FILES_MATCHING
-   PATTERN "*.pcm"
-   PATTERN "modules.idx"
-   PATTERN "JupyROOT" EXCLUDE
-   PATTERN "JsMVA" EXCLUDE
-   PATTERN "python*" EXCLUDE
-   PATTERN "cmake" EXCLUDE
-   PATTERN "pkgconfig" EXCLUDE
-)
-
 if(Vc_INCLUDE_DIR)
   set(MODULES_ROOT_INCPATH "ROOT_INCLUDE_PATH=${Vc_INCLUDE_DIR}:${ROOT_INCLUDE_PATH}")
 endif()
 
 # modules.idx
 if(runtime_cxxmodules)
+
   ROOT_GET_LIBRARY_OUTPUT_DIR(library_output_dir)
+
+  # Explicitly install the the modules that are built by Clang implicitly. See
+  # also the comment in rootcling_impl.cxx about the "horrible workaround" to
+  # fix the incremental builds. The list needs to be kept up to date manually,
+  # it is better than globbing for all pcm files from the library output
+  # directory.
+  set(implicit_pcm_files
+      Cling_Runtime.pcm
+      Cling_Runtime_Extra.pcm
+      ROOT_Config.pcm
+      _Builtin_stddef.pcm
+      libc.pcm
+      std.pcm
+  )
+  foreach(implicit_pcm_file ${implicit_pcm_files})
+    install(FILES ${library_output_dir}/${implicit_pcm_file} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+  endforeach()
+  unset(implicit_pcm_files)
+
   get_property(modules_idx_deps GLOBAL PROPERTY modules_idx_deps_property)
   if(WIN32)
     set(modules_idx_cmd COMMAND ${CMAKE_COMMAND} -E env PATH="${library_output_dir}\\\;%PATH%"
@@ -566,6 +571,8 @@ if(runtime_cxxmodules)
   add_dependencies(modules_idx ${modules_idx_deps})
   set_property(TARGET modules_idx PROPERTY modules_idx_file ${library_output_dir}/modules.idx)
   set_directory_properties(PROPERTIES ADDITIONAL_CLEAN_FILES "${library_output_dir}/modules.timestamp")
+
+  install(FILES ${library_output_dir}/modules.idx DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
