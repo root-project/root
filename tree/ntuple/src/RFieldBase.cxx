@@ -1049,9 +1049,10 @@ ROOT::RFieldBase::EnsureMatchingOnDiskField(const RNTupleDescriptor &desc, std::
    return R__FAIL(errMsg.str());
 }
 
-ROOT::RResult<void> ROOT::RFieldBase::EnsureMatchingTypePrefix(const RFieldDescriptor &fieldDesc,
+ROOT::RResult<void> ROOT::RFieldBase::EnsureMatchingTypePrefix(const RNTupleDescriptor &desc,
                                                                const std::vector<std::string> &prefixes) const
 {
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    for (const auto &p : prefixes) {
       if (fieldDesc.GetTypeName().rfind(p, 0) == 0)
          return RResult<void>::Success();

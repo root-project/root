@@ -86,8 +86,7 @@ void ROOT::RArrayField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    static const std::vector<std::string> prefixes = {"std::array<"};
 
    EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
-   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingTypePrefix(fieldDesc, prefixes).ThrowOnError();
+   EnsureMatchingTypePrefix(desc, prefixes).ThrowOnError();
 }
 
 void ROOT::RArrayField::ConstructValue(void *where) const

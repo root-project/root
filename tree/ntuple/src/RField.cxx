@@ -880,8 +880,7 @@ void ROOT::RNullableField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    static const std::vector<std::string> prefixes = {"std::optional<", "std::unique_ptr<"};
 
    EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
-   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingTypePrefix(fieldDesc, prefixes).ThrowOnError();
+   EnsureMatchingTypePrefix(desc, prefixes).ThrowOnError();
 }
 
 ROOT::RNTupleLocalIndex ROOT::RNullableField::GetItemIndex(ROOT::NTupleSize_t globalIndex)
@@ -1100,8 +1099,7 @@ void ROOT::RAtomicField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    static const std::vector<std::string> prefixes = {"std::atomic<"};
 
    EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
-   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingTypePrefix(fieldDesc, prefixes).ThrowOnError();
+   EnsureMatchingTypePrefix(desc, prefixes).ThrowOnError();
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RAtomicField::SplitValue(const RValue &value) const
