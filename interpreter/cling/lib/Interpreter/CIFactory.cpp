@@ -115,10 +115,10 @@ namespace {
                                        AdditionalArgList& Args,
                                        bool Verbose) {
     // For power-users: Let's see if the path is available as a predefined env
-    // variable to save repeated system calls when ROOT/CLING is initialized for each
-    // process in a many process system. CLING_CPPSYSINCL should contain paths
-    // separated by a ":" and otherwise contain the same paths as returned from
-    // the CppInclQuery further below.
+    // variable to save repeated system calls when ROOT/CLING is initialized for
+    // each process in a many process system. CLING_CPPSYSINCL should contain
+    // paths separated by a ":" and otherwise contain the same paths as returned
+    // from the CppInclQuery further below.
     auto PrefCppSystemIncl = getenv("CLING_CPPSYSINCL");
     if (PrefCppSystemIncl != nullptr) {
       llvm::StringRef PathsString(PrefCppSystemIncl);
