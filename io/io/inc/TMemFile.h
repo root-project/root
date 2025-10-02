@@ -106,8 +106,6 @@ public:
 
            void        Print(Option_t *option="") const override;
 
-   void SetWritable(Bool_t writable=kTRUE) override { fWritable=writable; }
-
    ClassDefOverride(TMemFile, 0) // A ROOT file that reads/writes on a chunk of memory
 };
 
