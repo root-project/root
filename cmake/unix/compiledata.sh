@@ -86,6 +86,11 @@ icc)
    COMPILERVERSSTR="Intel icc $cxxTemp"
    COMPILERVERS="icc"
    ;;
+icpx)
+   cxxTemp=`$CXX -dumpfullversion -dumpversion`
+   COMPILERVERSSTR="Intel oneAPI icpx (LLVM $cxxTemp)"
+   COMPILERVERS="icpx"
+   ;;
 clang++*)
    cxxTemp=`$CXX -dumpfullversion -dumpversion`
    COMPILERVERSSTR="`$CXX --version 2>&1 | grep -i clang | sed -n '1p'`"
