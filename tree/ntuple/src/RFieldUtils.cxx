@@ -731,7 +731,7 @@ std::string ROOT::Internal::GetTypeTraceReport(const RFieldBase &field, const RN
 
    auto fnGetLine = [](const std::string &fieldName, const std::string &fieldType, DescriptorId_t fieldId,
                        int level) -> std::string {
-      return std::string(2 * level, ' ') + fieldName + " [" + fieldType + "] (" + std::to_string(fieldId) + ")\n";
+      return std::string(2 * level, ' ') + fieldName + " [" + fieldType + "] (id: " + std::to_string(fieldId) + ")\n";
    };
 
    const RFieldBase *fieldPtr = &field;
@@ -753,7 +753,7 @@ std::string ROOT::Internal::GetTypeTraceReport(const RFieldBase &field, const RN
       report += fnGetLine((*itr)->GetFieldName(), (*itr)->GetTypeName(), (*itr)->GetOnDiskId(), indentLevel);
    }
 
-   report = "On-disk field/type hierarchy:\n";
+   report += "On-disk field/type hierarchy:\n";
    indentLevel = 0;
    for (auto itr = onDiskStack.rbegin(); itr != onDiskStack.rend(); ++itr, ++indentLevel) {
       report += fnGetLine((*itr)->GetFieldName(), (*itr)->GetTypeName(), (*itr)->GetId(), indentLevel);
