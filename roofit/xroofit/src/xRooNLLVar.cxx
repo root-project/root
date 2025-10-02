@@ -161,8 +161,11 @@ xRooNLLVar::xRooNLLVar(const std::shared_ptr<RooAbsPdf> &pdf,
    : fPdf(pdf), fData(data.first), fGlobs(data.second)
 {
 
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 37, 00)
    RooMsgService::instance().getStream(RooFit::INFO).removeTopic(RooFit::NumericIntegration);
-
+#else
+   RooMsgService::instance().getStream(RooFit::INFO).removeTopic(RooFit::NumIntegration);
+#endif
    fOpts = std::shared_ptr<RooLinkedList>(new RooLinkedList, [](RooLinkedList *l) {
       if (l)
          l->Delete();

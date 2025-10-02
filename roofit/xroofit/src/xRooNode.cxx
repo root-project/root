@@ -181,6 +181,11 @@ auto GETLISTTREE(TGFileBrowser *b)
 #include "RooBinSamplingPdf.h"
 #endif
 
+#if ROOT_VERSION_CODE > ROOT_VERSION(6, 37, 00)
+#include "RooMultiReal.h"
+#include "RooMultiPdf.h"
+#endif
+
 #include "RooPoisson.h"
 #include "RooGaussian.h"
 #include "RooFormulaVar.h"
@@ -322,7 +327,13 @@ xRooNode::xRooNode(const char *name, const std::shared_ptr<TObject> &comp, const
    if (auto _ws = get<RooWorkspace>(); _ws && (!parent || parent->get<TFile>())) {
       RooMsgService::instance()
          .getStream(RooFit::INFO)
-         .removeTopic(RooFit::NumericIntegration); // stop info message every time
+         .removeTopic(
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 37, 00)
+            RooFit::NumericIntegration
+#else
+            RooFit::NumIntegration
+#endif
+            ); // stop info message every time
 
       // check if any of the open files have version numbers greater than our major version
       // may not read correctly
@@ -3825,6 +3836,38 @@ xRooNode xRooNode::Vary(const xRooNode &child)
          return out;
       }
 
+#if ROOT_VERSION_CODE > ROOT_VERSION(6, 37, 00)
+   } else if (auto pmr = get<RooMultiReal>(); pmr) {
+      TString cName(child.GetName());
+      if (cName.CountChar('=') != 1) {
+         throw std::runtime_error("unsupported variation form");
+      }
+      TString parName = cName(0, cName.Index('='));
+      TString parVal = TString(cName(cName.Index('=') + 1, cName.Length()));
+
+      // add parVal to categorical if not already there
+      if(!pmr->indexCategory()->hasLabel(parVal.Data())) {
+         dynamic_cast<RooCategory&>(*(pmr->indexCategory())).defineType(parVal);
+      }
+      auto idx = pmr->indexCategory()->lookupIndex(parVal.Data());
+      if(idx<0) {
+         throw std::runtime_error("Invalid index");
+      }
+      // add child to list ... use copy of "nominal" (0th) if child is empty
+      child.convertForAcquisition(*this);
+      auto _c = child.get<RooAbsReal>();
+      if(!_c) {
+         if(pmr->getModelList().empty()) {
+            throw std::runtime_error("No real function given for variation, and no nominal function to clone");
+         }
+         _c = std::dynamic_pointer_cast<RooAbsReal>(acquire(std::shared_ptr<TObject>(pmr->getModelList().at(0)->Clone(TString::Format("%s_%s",get()->GetName(),child.GetName()))), false, true)).get();
+         _c->setStringAttribute("alias",child.GetName());
+      }
+      const_cast<RooListProxy&>(pmr->getModelList()).add(*_c);
+      return xRooNode(*_c,*this);
+
+#endif
+
    } else if (auto p3 = get<RooConstVar>(); p3) {
 
       // never vary the universal consts ... its too dangerous
@@ -3893,7 +3936,40 @@ xRooNode xRooNode::Vary(const xRooNode &child)
       TString n = p4->GetName();
       p4->SetName(Form("%s_nominal", p4->GetName())); // if problems should perhaps not rename here
 
-      auto new_p = acquireNew<PiecewiseInterpolation>(n, p4->GetTitle(), *p4, RooArgList(), RooArgList(), RooArgList());
+
+
+#if ROOT_VERSION_CODE > ROOT_VERSION(6, 37, 00)
+      std::shared_ptr<RooAbsArg> new_p;
+      // if alphanumeric variation name is not a 1 or -1, inject a RooMultiReal not a PiecewiseInterpolation ...
+      TString cName(child.GetName());
+      if (cName.CountChar('=') == 1) {
+         TString parName = cName(0, cName.Index('='));
+         double parVal = TString(cName(cName.Index('=') + 1, cName.Length())).Atof();
+         if (parVal != 1 && parVal != -1) {
+            // get the idxCat ...
+            auto idxCat = acquire<RooCategory>(parName, parName);
+            if(!idxCat) {
+               throw std::runtime_error("Failed to acquire categorical index for RooMultiReal");
+            }
+            // add an index if none already
+            if(idxCat->numTypes()==0) {
+               idxCat->defineType("nominal");
+            }
+            Info("Vary","Creating a RooMultiReal with category %s",idxCat->GetName());
+            auto newFunc = acquireNew<RooMultiReal>(n,p4->GetTitle(),*idxCat,RooArgList()); // can't pass nominal model as that will force defining types on category
+            const_cast<RooListProxy&>(newFunc->getModelList()).add(*p4);
+            new_p = newFunc;
+
+         }
+      }
+      if(!new_p) {
+         new_p = acquireNew<PiecewiseInterpolation>(n, p4->GetTitle(), *p4, RooArgList(), RooArgList(), RooArgList());
+      }
+
+
+#else
+     auto new_p = acquireNew<PiecewiseInterpolation>(n, p4->GetTitle(), *p4, RooArgList(), RooArgList(), RooArgList());
+#endif
 
       // copy attributes over
       for (auto &a : p4->attributes())
