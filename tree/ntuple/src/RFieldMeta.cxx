@@ -685,9 +685,9 @@ void ROOT::RPairField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    static const std::vector<std::string> prefixes = {"std::pair<", "std::tuple<"};
 
    EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
-   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingTypePrefix(fieldDesc, prefixes).ThrowOnError();
+   EnsureMatchingTypePrefix(desc, prefixes).ThrowOnError();
 
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    const auto nOnDiskSubfields = fieldDesc.GetLinkIds().size();
    if (nOnDiskSubfields != 2) {
       throw ROOT::RException(
@@ -1232,9 +1232,9 @@ void ROOT::RTupleField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    static const std::vector<std::string> prefixes = {"std::pair<", "std::tuple<"};
 
    EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
-   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingTypePrefix(fieldDesc, prefixes).ThrowOnError();
+   EnsureMatchingTypePrefix(desc, prefixes).ThrowOnError();
 
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    const auto nOnDiskSubfields = fieldDesc.GetLinkIds().size();
    const auto nSubfields = fSubfields.size();
    if (nOnDiskSubfields != nSubfields) {
@@ -1394,9 +1394,9 @@ void ROOT::RVariantField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    static const std::vector<std::string> prefixes = {"std::variant<"};
 
    EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
-   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingTypePrefix(fieldDesc, prefixes).ThrowOnError();
+   EnsureMatchingTypePrefix(desc, prefixes).ThrowOnError();
 
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    if (fSubfields.size() != fieldDesc.GetLinkIds().size()) {
       throw RException(R__FAIL("number of variants on-disk do not match for " + GetQualifiedFieldName()));
    }
