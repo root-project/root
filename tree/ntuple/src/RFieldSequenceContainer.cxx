@@ -845,7 +845,8 @@ void ROOT::RArrayAsRVecField::ReconcileOnDiskField(const RNTupleDescriptor &desc
       .ThrowOnError();
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    if (fieldDesc.GetTypeName().rfind("std::array<", 0) != 0) {
-      throw RException(R__FAIL("RArrayAsRVecField " + GetQualifiedFieldName() + " expects an on-disk array field"));
+      throw RException(R__FAIL("RArrayAsRVecField " + GetQualifiedFieldName() + " expects an on-disk array field\n" +
+                               Internal::GetTypeTraceReport(*this, desc)));
    }
 }
 

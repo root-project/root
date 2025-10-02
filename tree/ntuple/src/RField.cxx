@@ -83,10 +83,12 @@ void ROOT::RCardinalityField::ReconcileOnDiskField(const RNTupleDescriptor &desc
    if (fieldDesc.GetStructure() == ENTupleStructure::kPlain) {
       if (fieldDesc.GetTypeName().rfind("ROOT::RNTupleCardinality<", 0) != 0) {
          throw RException(R__FAIL("RCardinalityField " + GetQualifiedFieldName() +
-                                  " expects an on-disk leaf field of the same type"));
+                                  " expects an on-disk leaf field of the same type\n" +
+                                  Internal::GetTypeTraceReport(*this, desc)));
       }
    } else if (fieldDesc.GetStructure() != ENTupleStructure::kCollection) {
-      throw RException(R__FAIL("invalid on-disk structural role for RCardinalityField " + GetQualifiedFieldName()));
+      throw RException(R__FAIL("invalid on-disk structural role for RCardinalityField " + GetQualifiedFieldName() +
+                               "\n" + Internal::GetTypeTraceReport(*this, desc)));
    }
 }
 
@@ -124,7 +126,7 @@ void ROOT::RSimpleField<T>::ReconcileIntegralField(const RNTupleDescriptor &desc
    if (std::find(std::begin(gIntegralTypeNames), std::end(gIntegralTypeNames), fieldDesc.GetTypeName()) ==
        std::end(gIntegralTypeNames)) {
       throw RException(R__FAIL("unexpected on-disk type name '" + fieldDesc.GetTypeName() + "' for field of type '" +
-                               GetTypeName() + "'"));
+                               GetTypeName() + "'\n" + Internal::GetTypeTraceReport(*this, desc)));
    }
 }
 
@@ -136,7 +138,7 @@ void ROOT::RSimpleField<T>::ReconcileFloatingPointField(const RNTupleDescriptor 
    const RFieldDescriptor &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    if (!(fieldDesc.GetTypeName() == "float" || fieldDesc.GetTypeName() == "double")) {
       throw RException(R__FAIL("unexpected on-disk type name '" + fieldDesc.GetTypeName() + "' for field of type '" +
-                               GetTypeName() + "'"));
+                               GetTypeName() + "'\n" + Internal::GetTypeTraceReport(*this, desc)));
    }
 }
 

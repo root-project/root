@@ -1046,7 +1046,7 @@ ROOT::RFieldBase::EnsureMatchingOnDiskField(const RNTupleDescriptor &desc, std::
    if (diffBits & kDiffNRepetitions) {
       errMsg << " repetition count " << GetNRepetitions() << " vs. " << fieldDesc.GetNRepetitions() << ";";
    }
-   return R__FAIL(errMsg.str());
+   return R__FAIL(errMsg.str() + "\n" + Internal::GetTypeTraceReport(*this, desc));
 }
 
 ROOT::RResult<void> ROOT::RFieldBase::EnsureMatchingTypePrefix(const RNTupleDescriptor &desc,
@@ -1057,7 +1057,8 @@ ROOT::RResult<void> ROOT::RFieldBase::EnsureMatchingTypePrefix(const RNTupleDesc
       if (fieldDesc.GetTypeName().rfind(p, 0) == 0)
          return RResult<void>::Success();
    }
-   return R__FAIL("incompatible type " + fieldDesc.GetTypeName() + " for field " + GetQualifiedFieldName());
+   return R__FAIL("incompatible type " + fieldDesc.GetTypeName() + " for field " + GetQualifiedFieldName() + "\n" +
+                  Internal::GetTypeTraceReport(*this, desc));
 }
 
 std::uint32_t ROOT::RFieldBase::CompareOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits) const
