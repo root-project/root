@@ -1015,15 +1015,15 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
 
 void ROOT::RFieldBase::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   // The default implementation throws an exception if the on-disk ID is set and there are any meaningful differences
-   // to the on-disk field. Derived classes may overwrite this and relax the checks to support automatic schema
-   // evolution.
-   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(fOnDiskId)).ThrowOnError();
+   // The default implementation throws an exception if there are any meaningful differences to the on-disk field.
+   // Derived classes may overwrite this and relax the checks to support automatic schema evolution.
+   EnsureMatchingOnDiskField(desc).ThrowOnError();
 }
 
 ROOT::RResult<void>
-ROOT::RFieldBase::EnsureMatchingOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits) const
+ROOT::RFieldBase::EnsureMatchingOnDiskField(const RNTupleDescriptor &desc, std::uint32_t ignoreBits) const
 {
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    const std::uint32_t diffBits = CompareOnDiskField(fieldDesc, ignoreBits);
    if (diffBits == 0)
       return RResult<void>::Success();
