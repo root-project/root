@@ -182,7 +182,7 @@ bool GetSystemLibraryPaths(llvm::SmallVectorImpl<std::string>& Paths) {
   Paths.push_back("/lib64/");
  #endif
 #else
-  // Power-user mode: See if the result if this query is cached/provided in env
+  // Power-user mode: See if the result of this query is cached/provided in env
   // variable to avoid sys-calls and spawning processes
   auto ldsyspath = getenv("CLING_LDSYSPATH");
   if (ldsyspath != nullptr) {
