@@ -521,7 +521,7 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RClassField::BeforeConnectPageSource(ROO
 
 void ROOT::RClassField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeVersion | kDiffTypeName).ThrowOnError();
+   EnsureMatchingOnDiskField(desc, kDiffTypeVersion | kDiffTypeName).ThrowOnError();
 }
 
 void ROOT::RClassField::ConstructValue(void *where) const
@@ -619,7 +619,7 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::REnumField::CloneImpl(std::string_view n
 void ROOT::REnumField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    // TODO(jblomer): allow enum to enum conversion only by rename rule
-   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName | kDiffTypeVersion).ThrowOnError();
+   EnsureMatchingOnDiskField(desc, kDiffTypeName | kDiffTypeVersion).ThrowOnError();
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::REnumField::SplitValue(const RValue &value) const
@@ -684,8 +684,8 @@ void ROOT::RPairField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    static const std::vector<std::string> prefixes = {"std::pair<", "std::tuple<"};
 
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName).ThrowOnError();
    EnsureMatchingTypePrefix(fieldDesc, prefixes).ThrowOnError();
 
    const auto nOnDiskSubfields = fieldDesc.GetLinkIds().size();
@@ -830,7 +830,7 @@ void ROOT::RProxiedCollectionField::GenerateColumns(const ROOT::RNTupleDescripto
 
 void ROOT::RProxiedCollectionField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName).ThrowOnError();
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
 }
 
 void ROOT::RProxiedCollectionField::ConstructValue(void *where) const
@@ -997,7 +997,7 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RStreamerField::BeforeConnectPageSource(
 
 void ROOT::RStreamerField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName | kDiffTypeVersion).ThrowOnError();
+   EnsureMatchingOnDiskField(desc, kDiffTypeName | kDiffTypeVersion).ThrowOnError();
 }
 
 void ROOT::RStreamerField::ConstructValue(void *where) const
@@ -1231,8 +1231,8 @@ void ROOT::RTupleField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    static const std::vector<std::string> prefixes = {"std::pair<", "std::tuple<"};
 
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName).ThrowOnError();
    EnsureMatchingTypePrefix(fieldDesc, prefixes).ThrowOnError();
 
    const auto nOnDiskSubfields = fieldDesc.GetLinkIds().size();
@@ -1393,8 +1393,8 @@ void ROOT::RVariantField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    static const std::vector<std::string> prefixes = {"std::variant<"};
 
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName).ThrowOnError();
    EnsureMatchingTypePrefix(fieldDesc, prefixes).ThrowOnError();
 
    if (fSubfields.size() != fieldDesc.GetLinkIds().size()) {

@@ -77,8 +77,9 @@ void ROOT::RCardinalityField::GenerateColumns(const ROOT::RNTupleDescriptor &des
 
 void ROOT::RCardinalityField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
+   EnsureMatchingOnDiskField(desc, kDiffTypeVersion | kDiffStructure | kDiffTypeName).ThrowOnError();
+
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeVersion | kDiffStructure | kDiffTypeName).ThrowOnError();
    if (fieldDesc.GetStructure() == ENTupleStructure::kPlain) {
       if (fieldDesc.GetTypeName().rfind("ROOT::RNTupleCardinality<", 0) != 0) {
          throw RException(R__FAIL("RCardinalityField " + GetQualifiedFieldName() +
@@ -109,9 +110,9 @@ const ROOT::RField<ROOT::RNTupleCardinality<std::uint64_t>> *ROOT::RCardinalityF
 template <typename T>
 void ROOT::RSimpleField<T>::ReconcileIntegralField(const RNTupleDescriptor &desc)
 {
-   const RFieldDescriptor &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
+   EnsureMatchingOnDiskField(desc, kDiffTypeName);
 
+   const RFieldDescriptor &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    if (fieldDesc.IsCustomEnum(desc)) {
       SetOnDiskId(desc.FindFieldId("_0", GetOnDiskId()));
       return;
@@ -130,9 +131,9 @@ void ROOT::RSimpleField<T>::ReconcileIntegralField(const RNTupleDescriptor &desc
 template <typename T>
 void ROOT::RSimpleField<T>::ReconcileFloatingPointField(const RNTupleDescriptor &desc)
 {
-   const RFieldDescriptor &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName);
+   EnsureMatchingOnDiskField(desc, kDiffTypeName);
 
+   const RFieldDescriptor &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    if (!(fieldDesc.GetTypeName() == "float" || fieldDesc.GetTypeName() == "double")) {
       throw RException(R__FAIL("unexpected on-disk type name '" + fieldDesc.GetTypeName() + "' for field of type '" +
                                GetTypeName() + "'"));
@@ -663,12 +664,12 @@ void ROOT::RRecordField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
    // Note that the RPairField and RTupleField descendants have their own reconcilation logic
    R__ASSERT(GetTypeName().empty());
 
-   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName | kDiffTypeVersion).ThrowOnError();
+   EnsureMatchingOnDiskField(desc, kDiffTypeName | kDiffTypeVersion).ThrowOnError();
 
    // The on-disk ID of subfields is matched by field name. So we inherently support reordering of fields
    // and we will ignore extra on-disk fields.
    // It remains to mark the extra in-memory fields as artificial.
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    std::unordered_set<std::string_view> onDiskSubfields;
    for (const auto &subField : desc.GetFieldIterable(fieldDesc)) {
       onDiskSubfields.insert(subField.GetFieldName());
@@ -878,8 +879,8 @@ void ROOT::RNullableField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    static const std::vector<std::string> prefixes = {"std::optional<", "std::unique_ptr<"};
 
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName).ThrowOnError();
    EnsureMatchingTypePrefix(fieldDesc, prefixes).ThrowOnError();
 }
 
@@ -1098,8 +1099,8 @@ void ROOT::RAtomicField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    static const std::vector<std::string> prefixes = {"std::atomic<"};
 
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
    const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName).ThrowOnError();
    EnsureMatchingTypePrefix(fieldDesc, prefixes).ThrowOnError();
 }
 

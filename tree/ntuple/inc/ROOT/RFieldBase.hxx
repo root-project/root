@@ -530,9 +530,10 @@ protected:
    /// Returns a combination of kDiff... flags, indicating peroperties that are different between the field at hand
    /// and the given on-disk field
    std::uint32_t CompareOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits) const;
-   /// Compares the field to the provieded on-disk field descriptor. Throws an exception if the fields don't match.
+   /// Compares the field to the corresponding on-disk field information in the provided descriptor.
+   /// Throws an exception if the fields don't match.
    /// Optionally, a set of bits can be provided that should be ignored in the comparison.
-   RResult<void> EnsureMatchingOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits = 0) const;
+   RResult<void> EnsureMatchingOnDiskField(const RNTupleDescriptor &desc, std::uint32_t ignoreBits = 0) const;
    /// Many fields accept a range of type prefixes for schema evolution,
    /// e.g. std::unique_ptr< and std::optional< for nullable fields
    RResult<void>
