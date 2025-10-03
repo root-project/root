@@ -70,6 +70,11 @@ The following people have contributed to this new version:
 ### Minuit2
 
 * Behavior change: building ROOT using `minuit2_omp=ON` option no longer enables OpenMP parallelization by default. One has to call now additionally GradientCalculator::SetParallelOMP().
+* The functionality of the `FCNGradAdapter` got absorbed into the `FCNAdapter`. This also means that the `FCNGradAdapter.h` header is gone.
+* The `ROOT::Minuit2::FCNAdapter` is no longer templated and now handle only functions with this exact signatures:
+  * `double(double const *)` for the wrapped function
+  * `void(double const *, double *)` for the gradient
+  The advantage of this restriction is that the `FCNAdapter` can now also wrap any Python function that respects this interface.
 
 ## RooFit
 
