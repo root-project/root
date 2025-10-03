@@ -279,15 +279,13 @@ public:
    /// return the minimizer state (containing values, step size , etc..)
    const ROOT::Minuit2::MnUserParameterState &State() { return fState; }
 
-   const ROOT::Minuit2::FCNBase *GetFCN() const { return fMinuitFCN; }
-   ROOT::Minuit2::FCNBase *GetFCN() { return fMinuitFCN; }
+   const ROOT::Minuit2::FCNBase *GetFCN() const { return fMinuitFCN.get(); }
+   ROOT::Minuit2::FCNBase *GetFCN() { return fMinuitFCN.get(); }
 
 protected:
    // protected function for accessing the internal Minuit2 object. Needed for derived classes
 
-   virtual const ROOT::Minuit2::ModularFunctionMinimizer *GetMinimizer() const { return fMinimizer; }
-
-   virtual void SetMinimizer(ROOT::Minuit2::ModularFunctionMinimizer *m) { fMinimizer = m; }
+   virtual const ROOT::Minuit2::ModularFunctionMinimizer *GetMinimizer() const { return fMinimizer.get(); }
 
    void SetMinimizerType(ROOT::Minuit2::EMinimizerType type);
 
@@ -309,10 +307,9 @@ private:
    int fMinosStatus = -1; // Minos status code
 
    ROOT::Minuit2::MnUserParameterState fState;
-   // std::vector<ROOT::Minuit2::MinosError> fMinosErrors;
-   ROOT::Minuit2::ModularFunctionMinimizer *fMinimizer;
-   ROOT::Minuit2::FCNBase *fMinuitFCN;
-   ROOT::Minuit2::FunctionMinimum *fMinimum;
+   std::unique_ptr<ROOT::Minuit2::ModularFunctionMinimizer> fMinimizer;
+   std::unique_ptr<ROOT::Minuit2::FCNBase> fMinuitFCN;
+   std::unique_ptr<ROOT::Minuit2::FunctionMinimum> fMinimum;
    mutable std::vector<double> fValues;
    mutable std::vector<double> fErrors;
 };
