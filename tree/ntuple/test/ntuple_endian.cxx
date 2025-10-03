@@ -59,6 +59,11 @@ protected:
    void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
    void CommitDatasetImpl() final {}
+   std::unique_ptr<RPageSink> CreateNewWithNewRNTuple(std::string_view) const final
+   {
+      R__ASSERT(false);
+      return nullptr;
+   }
 
 public:
    RPageSinkMock(const RColumnElementBase &elt) : RPageSink("test", ROOT::RNTupleWriteOptions()), fElement(elt)
