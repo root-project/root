@@ -315,13 +315,13 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
       }
    }
 
-   if (high < low || (high == low && nPoints != 1)) {
+   if (/*high < low ||*/ (high == low && nPoints != 1)) {
       // take from parameter
       low = p->getMin("scan");
       high = p->getMax("scan");
    }
    if (!std::isnan(low) && !std::isnan(high) && !(std::isinf(low) && std::isinf(high))) {
-      p->setRange("scan", low, high);
+      p->setRange("scan", std::min(low, high), std::max(low, high));
    }
    if (p->hasRange("scan")) {
       ::Info("xRooHypoSpace::scan", "Using %s scan range: %g - %g", p->GetName(), p->getMin("scan"), p->getMax("scan"));
@@ -364,6 +364,14 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
 
    // create a fitDatabase if required
    TDirectory *origDir = gDirectory;
+   if (fFitDb) {
+      // move to the db, and unlock it if this is a TMemFile
+      fFitDb->cd();
+      if (auto myDb = dynamic_cast<TMemFile *>(fFitDb.get())) {
+         // need to unlock the database
+         myDb->SetWritable(true);
+      }
+   }
    if (!gDirectory || !gDirectory->IsWritable()) {
       // locate a TMemFile in the open list of files and move to that
       // or create one if cannot find
@@ -377,14 +385,20 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
          new TMemFile("fitDatabase", "RECREATE");
       }*/
       // now we create a TMemFile of our own, so that we don't get in the way of other hypoSpaces
-      fFitDb = std::shared_ptr<TMemFile>(new TMemFile(TString::Format("fitDatabase_%s",GetName()),"RECREATE"),[](TFile *) {});
+      fFitDb = std::shared_ptr<TDirectory>(
+         new TMemFile(TString::Format("fitDatabase_%s", TUUID().AsString()), "RECREATE"), [](TDirectory *) {});
       // db can last longer than the hypoSpace, so that the fits are fully available in the browser
       // if a scan was initiated through the browser. If user wants to cleanup they can do manually
       // through root's GetListOfFiles()
-      // would like to clean it up ourself when the hypoSpace is destroyed, but would need way to keep alive for the browser
+      // would like to clean it up ourself when the hypoSpace is destroyed, but would need way to keep alive for the
+      // browser
    }
 
    int out = 0;
+
+   // enable visualizing by default if scanning in non-batch mode
+   if (!gROOT->IsBatch() && !sType.Contains("visualize"))
+      sType += " visualize";
 
    if (nPoints == 0) {
       // automatic scan
@@ -413,11 +427,15 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
       if (nPoints == 1) {
          AddPoint(TString::Format("%s=%g", poi().first()->GetName(), (high + low) / 2.));
          graphs(sType); // triggers computation
+         if (back().status() != 0)
+            out += 1;
       } else {
          double step = (high - low) / (nPoints - 1);
          for (size_t i = 0; i < nPoints; i++) {
             AddPoint(TString::Format("%s=%g", poi().first()->GetName(), low + step * i));
             graphs(sType); // triggers computation
+            if (back().status() != 0)
+               out += 1;
          }
       }
    }
@@ -425,6 +443,10 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
    if (origDir)
       origDir->cd();
 
+   if (auto myDb = dynamic_cast<TMemFile *>(fFitDb.get())) {
+      // need to lock the database, because if its writable when pyroot closes it causes a crash
+      myDb->SetWritable(false);
+   }
    return out;
 }
 
@@ -716,219 +738,6 @@ RooArgList xRooNLLVar::xRooHypoSpace::poi()
    return out;
 }
 
-void xRooNLLVar::xRooHypoSpace::LoadFits(const char *apath)
-{
-
-   if (!gDirectory)
-      return;
-   auto dir = gDirectory->GetDirectory(apath);
-   if (!dir) {
-      // try open file first
-      TString s(apath);
-      auto f = TFile::Open(s.Contains(":") ? TString(s(0, s.Index(":"))) : s);
-      if (f) {
-         if (!s.Contains(":"))
-            s += ":";
-         dir = gDirectory->GetDirectory(s);
-         if (dir) {
-            LoadFits(s);
-            return;
-         }
-      }
-      if (!dir) {
-         Error("LoadFits", "Path not found %s", apath);
-         return;
-      }
-   }
-
-   // assume for now all fits in given path will have the same pars
-   // so can just look at the float and const pars of first fit result to get all of them
-   // tuple is: parName, parValue, parAltValue (blank if nan)
-   // key represents the ufit values, value represents the sets of poi for the available cfits (subfits of the ufit)
-
-   std::map<std::set<std::tuple<std::string, double, std::string>>, std::set<std::set<std::string>>> cfits;
-   std::set<std::string> allpois;
-
-   int nFits = 0;
-   std::function<void(TDirectory *)> processDir;
-   processDir = [&](TDirectory *_dir) {
-      std::cout << "Processing " << _dir->GetName() << std::endl;
-      if (auto keys = _dir->GetListOfKeys(); keys) {
-         // first check if dir doesn't contain any RooLinkedList ... this identifies it as not an nll dir
-         // so treat any sub-dirs as new nll
-         bool isNllDir = false;
-         for (auto &&k : *keys) {
-            TKey *key = dynamic_cast<TKey *>(k);
-            if (strcmp(key->GetClassName(), "RooLinkedList") == 0) {
-               isNllDir = true;
-               break;
-            }
-         }
-
-         for (auto &&k : *keys) {
-            if (auto subdir = _dir->GetDirectory(k->GetName()); subdir) {
-               if (!isNllDir) {
-                  LoadFits(subdir->GetPath());
-               } else {
-                  processDir(subdir);
-               }
-               continue;
-            }
-            auto cl = TClass::GetClass((static_cast<TKey *>(k))->GetClassName());
-            if (cl->InheritsFrom("RooFitResult")) {
-               if (auto cachedFit = _dir->Get<RooFitResult>(k->GetName()); cachedFit) {
-                  nFits++;
-                  if (nFits == 1) {
-                     // for first fit add any missing float pars
-                     std::unique_ptr<RooAbsCollection> snap(cachedFit->floatParsFinal().snapshot());
-                     snap->remove(*fPars, true, true);
-                     fPars->addClone(*snap);
-                     // add also the non-string const pars
-                     for (auto &p : cachedFit->constPars()) {
-                        if (p->getAttribute("global"))
-                           continue; // don't consider globals
-                        auto v = dynamic_cast<RooAbsReal *>(p);
-                        if (!v) {
-                           continue;
-                        };
-                        if (!fPars->contains(*v))
-                           fPars->addClone(*v);
-                     }
-                  }
-                  // get names of all the floats
-                  std::set<std::string> floatPars;
-                  for (auto &p : cachedFit->floatParsFinal())
-                     floatPars.insert(p->GetName());
-                  // see if
-
-                  // build a set of the const par values
-                  std::set<std::tuple<std::string, double, std::string>> constPars;
-                  for (auto &p : cachedFit->constPars()) {
-                     if (p->getAttribute("global"))
-                        continue; // don't consider globals when looking for cfits
-                     auto v = dynamic_cast<RooAbsReal *>(p);
-                     if (!v) {
-                        continue;
-                     };
-                     constPars.insert(
-                        std::make_tuple(v->GetName(), v->getVal(),
-                                        v->getStringAttribute("altVal") ? v->getStringAttribute("altVal") : ""));
-                  }
-                  // now see if this is a subset of any existing cfit ...
-                  for (auto &&[key, value] : cfits) {
-                     if (constPars == key)
-                        continue; // ignore cases where we already recorded this list of constPars
-                     if (std::includes(constPars.begin(), constPars.end(), key.begin(), key.end())) {
-                        // usual case ... cachedFit has more constPars than one of the fits we have already encountered
-                        // (the ufit)
-                        // => cachedFit is a cfit of key fr ...
-                        std::set<std::string> pois;
-                        for (auto &&par : constPars) {
-                           if (key.find(par) == key.end()) {
-                              pois.insert(std::get<0>(par));
-                              allpois.insert(std::get<0>(par));
-                           }
-                        }
-                        if (!pois.empty()) {
-                           cfits[constPars].insert(pois);
-                           //                                    std::cout << cachedFit->GetName() << " ";
-                           //                                    for(auto ff: constPars) std::cout << ff.first << "=" <<
-                           //                                    ff.second << " "; std::cout << std::endl;
-                        }
-                     }
-                     /* FOR NOW we will skip cases where we encounter the cfit before the ufit - usually should eval the
-                     ufit first
-                      * else if (std::includes(key.begin(), key.end(), constPars.begin(), constPars.end())) {
-                         // constPars are subset of key
-                         // => key is a ufit of the cachedFit
-                         // add all par names of key that aren't in constPars ... these are the poi
-                         std::set<std::string> pois;
-                         for (auto &&par: key) {
-                             if (constPars.find(par) == constPars.end()) {
-                                 pois.insert(std::get<0>(par));
-                                 allpois.insert(std::get<0>(par));
-                             }
-                         }
-                         if (!pois.empty()) {
-                             std::cout << "found cfit BEFORE ufit??" << std::endl;
-                             value.insert(pois);
-                         }
-                     } */
-                  }
-                  // ensure that this combination of constPars has entry in map,
-                  // even if it doesn't end up with any poi identified from cfits to it
-                  cfits[constPars];
-                  delete cachedFit;
-               }
-            }
-         }
-      }
-   };
-   processDir(dir);
-   ::Info("xRooHypoSpace::xRooHypoSpace", "%s - Loaded %d fits", apath, nFits);
-
-   if (allpois.size() == 1) {
-      ::Info("xRooHypoSpace::xRooHypoSpace", "Detected POI: %s", allpois.begin()->c_str());
-
-      auto nll = std::make_shared<xRooNLLVar>(nullptr, nullptr);
-      auto dummyNll = std::make_shared<RooRealVar>(apath, "Dummy NLL", std::numeric_limits<double>::quiet_NaN());
-      nll->std::shared_ptr<RooAbsReal>::operator=(dummyNll);
-      dummyNll->setAttribute("readOnly");
-      // add pars as 'servers' on the dummy NLL
-      if (fPars) {
-         for (auto &&p : *fPars) {
-            dummyNll->addServer(
-               *p); // this is ok provided fPars (i.e. hypoSpace) stays alive as long as the hypoPoint ...
-         }
-         // flag poi
-         for (auto &p : allpois) {
-            fPars->find(p.c_str())->setAttribute("poi", true);
-         }
-      }
-      nll->reinitialize(); // triggers filling of par lists etc
-
-      for (auto &&[key, value] : cfits) {
-         if (value.find(allpois) != value.end()) {
-            // get the value of the poi in the key set
-            auto _coords = std::make_shared<RooArgSet>();
-            for (auto &k : key) {
-               auto v = _coords->addClone(RooRealVar(std::get<0>(k).c_str(), std::get<0>(k).c_str(), std::get<1>(k)));
-               v->setAttribute("poi", allpois.find(std::get<0>(k)) != allpois.end());
-               if (!std::get<2>(k).empty()) {
-                  v->setStringAttribute("altVal", std::get<2>(k).c_str());
-               }
-            }
-            xRooNLLVar::xRooHypoPoint hp;
-            // hp.fPOIName = allpois.begin()->c_str();
-            // hp.fNullVal = _coords->getRealValue(hp.fPOIName.c_str());
-            hp.coords = _coords;
-            hp.nllVar = nll;
-
-            //                auto altVal =
-            //                hp.null_cfit()->constPars().find(hp.fPOIName.c_str())->getStringAttribute("altVal");
-            //                if(altVal) hp.fAltVal = TString(altVal).Atof();
-            //                else hp.fAltVal = std::numeric_limits<double>::quiet_NaN();
-
-            // decide based on values
-            if (std::isnan(hp.fAltVal())) {
-               hp.fPllType = xRooFit::Asymptotics::TwoSided;
-            } else if (hp.fNullVal() >= hp.fAltVal()) {
-               hp.fPllType = xRooFit::Asymptotics::OneSidedPositive;
-            } else {
-               hp.fPllType = xRooFit::Asymptotics::Uncapped;
-            }
-
-            emplace_back(hp);
-         }
-      }
-   } else if (nFits > 0) {
-      std::cout << "possible POI: ";
-      for (auto p : allpois)
-         std::cout << p << ",";
-      std::cout << std::endl;
-   }
-}
-
 void xRooNLLVar::xRooHypoSpace::Print(Option_t * /*opt*/) const
 {
 
@@ -984,6 +793,12 @@ void xRooNLLVar::xRooHypoSpace::Print(Option_t * /*opt*/) const
          } else {
             std::cout << asi_cfit->status();
             badFits += (xRooNLLVar::xRooHypoPoint::allowedStatusCodes.count(asi_cfit->status()) == 0);
+         }
+         auto cfit_lbound = const_cast<xRooHypoPoint &>(at(i)).cfit_lbound(true);
+         if (!cfit_lbound) {
+         } else {
+            std::cout << ",cfit_lbound:" << cfit_lbound->status();
+            badFits += (xRooNLLVar::xRooHypoPoint::allowedStatusCodes.count(cfit_lbound->status()) == 0);
          }
       }
       std::cout << "]";
@@ -1252,47 +1067,59 @@ std::shared_ptr<TMultiGraph> xRooNLLVar::xRooHypoSpace::graphs(const char *opt)
          out->GetHistogram()->GetXaxis()->SetTitle(exp->GetHistogram()->GetXaxis()->GetTitle());
          out->GetHistogram()->GetYaxis()->SetTitle(exp->GetHistogram()->GetYaxis()->GetTitle());
       }
-      auto leg = new TLegend(1. - gStyle->GetPadRightMargin() - 0.3, 1. - gStyle->GetPadTopMargin() - 0.35,
-                             1. - gStyle->GetPadRightMargin() - 0.05, 1. - gStyle->GetPadTopMargin() - 0.05);
-      leg->SetName("legend");
-      leg->SetBit(kCanDelete);
+      TLegend *leg = nullptr;
+      if (out->GetListOfGraphs()->GetEntries() > 1) {
+         leg = new TLegend(1. - gStyle->GetPadRightMargin() - 0.3, 1. - gStyle->GetPadTopMargin() - 0.35,
+                           1. - gStyle->GetPadRightMargin() - 0.05, 1. - gStyle->GetPadTopMargin() - 0.05);
+         leg->SetName("legend");
+         leg->SetBit(kCanDelete);
 
-      out->GetListOfFunctions()->Add(leg);
-      // out->GetListOfFunctions()->Add(out->GetHistogram()->Clone(".axis"),"sameaxis"); // redraw axis
+         out->GetListOfFunctions()->Add(leg);
+         // out->GetListOfFunctions()->Add(out->GetHistogram()->Clone(".axis"),"sameaxis"); // redraw axis
 
-      for (auto g : *out->GetListOfGraphs()) {
-         if (auto o = dynamic_cast<TGraph *>(g)->GetListOfFunctions()->FindObject("down")) {
-            leg->AddEntry(o, "", "F");
-         } else {
-            leg->AddEntry(g, "", "LPE");
+         for (auto g : *out->GetListOfGraphs()) {
+            if (auto o = dynamic_cast<TGraph *>(g)->GetListOfFunctions()->FindObject("down")) {
+               leg->AddEntry(o, "", "F");
+            } else {
+               leg->AddEntry(g, "", "LPE");
+            }
          }
       }
+
+      auto addToLegend = [](TLegend *l, const char *label, const std::pair<double, double> val) {
+         if (l) {
+            l->AddEntry((TObject *)nullptr,
+                        TString::Format("%s%s: %g #pm %g%s", std::isfinite(val.second) ? "" : "#color[2]{", label,
+                                        val.first, val.second, std::isfinite(val.second) ? "" : "}"),
+                        "");
+         }
+      };
 
       if (sOpt.Contains("pcls")) {
          // add current limit estimates to legend
          if (exp2 && exp2->GetN() > 1) {
             auto l = xRooFit::matchPrecision(GetLimit(*graph(sOpt + "exp-2")));
-            leg->AddEntry((TObject *)nullptr, TString::Format("-2#sigma: %g +/- %g", l.first, l.second), "");
+            addToLegend(leg, "-2#sigma", l);
          }
          if (exp1 && exp1->GetN() > 1) {
             auto l = xRooFit::matchPrecision(GetLimit(*graph(sOpt + "exp-1")));
-            leg->AddEntry((TObject *)nullptr, TString::Format("-1#sigma: %g +/- %g", l.first, l.second), "");
+            addToLegend(leg, "-1#sigma", l);
          }
          if (exp && exp->GetN() > 1) {
             auto l = xRooFit::matchPrecision(GetLimit(*exp));
-            leg->AddEntry((TObject *)nullptr, TString::Format("0#sigma: %g +/- %g", l.first, l.second), "");
+            addToLegend(leg, "0#sigma", l);
          }
          if (exp1 && exp1->GetN() > 1) {
             auto l = xRooFit::matchPrecision(GetLimit(*graph(sOpt + "exp+1")));
-            leg->AddEntry((TObject *)nullptr, TString::Format("+1#sigma: %g +/- %g", l.first, l.second), "");
+            addToLegend(leg, "+1#sigma", l);
          }
          if (exp2 && exp2->GetN() > 1) {
             auto l = xRooFit::matchPrecision(GetLimit(*graph(sOpt + "exp+2")));
-            leg->AddEntry((TObject *)nullptr, TString::Format("+2#sigma: %g +/- %g", l.first, l.second), "");
+            addToLegend(leg, "+2#sigma", l);
          }
          if (obs && obs->GetN() > 1) {
             auto l = xRooFit::matchPrecision(GetLimit(*obs));
-            leg->AddEntry((TObject *)nullptr, TString::Format("Observed: %g +/- %g", l.first, l.second), "");
+            addToLegend(leg, "Observed", l);
          }
       }
       if (testedPoints)
@@ -1450,7 +1277,7 @@ xRooNLLVar::xRooHypoSpace::findlimit(const char *opt, double relUncert, unsigned
       if (!gr || gr->GetN() < 1) {
          if (maxTries == 0 || std::isnan(AddPoint(TString::Format("%s=%g", v->GetName(), muMin)).getVal(sOpt).first)) {
             // first point failed ... give up
-            Error("findlimit", "Problem evaluating %s @ %s=%g", sOpt.Data(), v->GetName(), muMin);
+            ::Error("findlimit", "Problem evaluating %s @ %s=%g", sOpt.Data(), v->GetName(), muMin);
             return std::pair(std::numeric_limits<double>::quiet_NaN(), 0.);
          }
          gr.reset();
@@ -1486,7 +1313,7 @@ xRooNLLVar::xRooHypoSpace::findlimit(const char *opt, double relUncert, unsigned
 
       if (maxTries == 0 || std::isnan(AddPoint(TString::Format("%s=%g", v->GetName(), nextPoint)).getVal(sOpt).first)) {
          // second point failed ... give up
-         Error("findlimit", "Problem evaluating %s @ %s=%g", sOpt.Data(), v->GetName(), nextPoint);
+         ::Error("xRooHypoSpace::findlimit", "Problem evaluating %s @ %s=%g", sOpt.Data(), v->GetName(), nextPoint);
          return std::pair(std::numeric_limits<double>::quiet_NaN(), 0.);
       }
       gr.reset();
@@ -1552,9 +1379,9 @@ xRooNLLVar::xRooHypoSpace::findlimit(const char *opt, double relUncert, unsigned
           nextPoint, lim.second);
    if (maxTries == 0 || std::isnan(AddPoint(TString::Format("%s=%g", v->GetName(), nextPoint)).getVal(sOpt).first)) {
       if (maxTries == 0) {
-         Warning("findlimit", "Reached max number of point evaluations");
+         ::Warning("xRooHypoSpace::findlimit", "Reached max number of point evaluations");
       } else {
-         Error("findlimit", "Problem evaluating %s @ %s=%g", sOpt.Data(), v->GetName(), nextPoint);
+         ::Error("xRooHypoSpace::findlimit", "Problem evaluating %s @ %s=%g", sOpt.Data(), v->GetName(), nextPoint);
       }
       return lim;
    }
@@ -1725,6 +1552,8 @@ void xRooNLLVar::xRooHypoSpace::Draw(Option_t *opt)
          gPad->Clear();
       }
       if (gra) {
+         if (!gPad)
+            TCanvas::MakeDefCanvas();
          auto gra2 = static_cast<TMultiGraph *>(gra->DrawClone(sOpt.Contains("same") ? "" : "A"));
          gra2->SetBit(kCanDelete);
          if (sOpt.Contains("pcls") || sOpt.Contains("pnull")) {
