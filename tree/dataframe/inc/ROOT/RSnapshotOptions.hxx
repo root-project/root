@@ -46,8 +46,8 @@ struct RSnapshotOptions {
    }
    std::string fMode = "RECREATE"; ///< Mode of creation of output file
    ECAlgo fCompressionAlgorithm =
-      ROOT::RCompressionSetting::EAlgorithm::kZLIB; ///< Compression algorithm of output file
-   int fCompressionLevel = 1;                       ///< Compression level of output file
+      ROOT::RCompressionSetting::EAlgorithm::kZSTD; ///< Compression algorithm of output file
+   int fCompressionLevel = 5;                       ///< Compression level of output file
    int fAutoFlush = 0;                              ///< AutoFlush value for output tree
    int fSplitLevel = 99;                            ///< Split level of output tree
    bool fLazy = false;                              ///< Do not start the event loop when Snapshot is called
