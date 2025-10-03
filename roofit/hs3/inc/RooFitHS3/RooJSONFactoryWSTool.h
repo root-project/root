@@ -233,9 +233,10 @@ private:
    void exportVariables(const RooArgSet &allElems, RooFit::Detail::JSONNode &n);
 
    void exportAllObjects(RooFit::Detail::JSONNode &n);
-
+  
    void exportModelConfig(RooFit::Detail::JSONNode &rootnode, RooStats::ModelConfig const &mc,
-                          const std::vector<RooJSONFactoryWSTool::CombinedData> &d);
+                          const std::vector<RooJSONFactoryWSTool::CombinedData> &combined,
+                          const std::vector<RooAbsData*> &single);			  
 
    void exportSingleModelConfig(RooFit::Detail::JSONNode &rootnode, RooStats::ModelConfig const &mc,
                                 std::string const &analysisName,

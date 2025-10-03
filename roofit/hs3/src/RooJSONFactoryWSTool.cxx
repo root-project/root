@@ -636,7 +636,7 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
             observables.add(*d->get());
          }
       }
-      if(!found) throw std::runtime_error("dataset '"+nameNode.val()+"' cannot be found!");      
+      if(nameNode.val() != "0" && !found) throw std::runtime_error("dataset '"+nameNode.val()+"' cannot be found!");      
    }
 
    JSONNode const *pdfNameNode = mcAuxNode ? mcAuxNode->find("pdfName") : nullptr;
@@ -1051,6 +1051,7 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &node)
 void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, JSONNode &n)
 {
    // export a list of RooRealVar objects
+   n.set_seq();
    for (RooAbsArg *arg : allElems) {
       exportVariable(arg, n);
    }
@@ -1357,9 +1358,9 @@ void RooJSONFactoryWSTool::exportHisto(RooArgSet const &vars, std::size_t n, dou
    auto &observablesNode = output["axes"].set_seq();
    // axes have to be ordered to get consistent bin indices
    for (auto *var : static_range_cast<RooRealVar *>(vars)) {
-      JSONNode &obsNode = observablesNode.append_child().set_map();
       std::string name = var->GetName();
       RooJSONFactoryWSTool::testValidName(name, false);
+      JSONNode &obsNode = observablesNode.append_child().set_map();
       obsNode["name"] << name;
       if (var->getBinning().isUniform()) {
          obsNode["min"] << var->getMin();
@@ -1526,6 +1527,7 @@ RooJSONFactoryWSTool::CombinedData RooJSONFactoryWSTool::exportCombinedData(RooA
 void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
 {
    // find category observables
+
    RooAbsCategory *cat = nullptr;
    for (RooAbsArg *obs : *data.get()) {
       if (dynamic_cast<RooAbsCategory *>(obs)) {
@@ -1556,15 +1558,14 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    if (auto weightVar = variables.find("weightVar")) {
       variables.remove(*weightVar);
    }
-
-   for (RooAbsArg *arg : variables) {
-      exportVariable(arg, output["axes"]);
-   }
-   
+  
    // this is a regular binned dataset
    if (auto dh = dynamic_cast<RooDataHist const *>(&data)) {
       output["type"] << "binned";
-      return exportHisto(*dh->get(), dh->numEntries(), dh->weightArray(), output);
+      for(auto* var : static_range_cast<RooRealVar*>(variables)){      
+	_domains->readVariable(*var);
+      }
+      return exportHisto(variables, dh->numEntries(), dh->weightArray(), output);
    }
   
    // Check if this actually represents a binned dataset, and then import it
@@ -1588,26 +1589,16 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
          isBinnedData = true;
       if (isBinnedData) {
          output["type"] << "binned";
-         /*std::string datasetName = data.GetName();
-         if (datasetName.find("combData_ZvvH126_5") != std::string::npos) {
-            file << variables << std::endl;
-            for (size_t idx = 0; idx < data.numEntries(); ++idx) {
-               file << data.get(idx)->getRealValue("obs_x_ZvvH126_dot_5") << std::endl;
-               
-            }
-            // Write the contents vector values to the file
-            for (const auto& val : contents) {
-               file << val << std::endl;
-            }
-         }
-         
-         file.close();*/
+	 for(auto* var : static_range_cast<RooRealVar*>(variables)){
+	   _domains->readVariable(*var);
+	 }	 
          return exportHisto(variables, data.numEntries(), contents.data(), output);
       }
    }
 
    // this really is an unbinned dataset
    output["type"] << "unbinned";
+   exportVariables(variables, output["axes"]);
    auto &coords = output["entries"].set_seq();
    std::vector<double> weightVals;
    bool hasNonUnityWeights = false;
@@ -1788,24 +1779,37 @@ void RooJSONFactoryWSTool::importDependants(const JSONNode &n)
 }
 
 void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::ModelConfig const &mc,
-                                             const std::vector<CombinedData> &combDataSets)
+                                             const std::vector<CombinedData> &combDataSets,
+                                             const std::vector<RooAbsData*> &singleDataSets)					     
 {
-   auto pdf = dynamic_cast<RooSimultaneous const *>(mc.GetPdf());
-   if (pdf == nullptr) {
-      warning("RooFitHS3 only supports ModelConfigs with RooSimultaneous! Skipping ModelConfig.");
-      return;
-   }
-
-   for (std::size_t i = 0; i < std::max(combDataSets.size(), std::size_t(1)); ++i) {
-      const bool hasdata = i < combDataSets.size();
-      if (hasdata && !matches(combDataSets.at(i), pdf))
+   auto pdf = mc.GetPdf();
+   auto simpdf = dynamic_cast<RooSimultaneous const *>(pdf);
+   if (simpdf){
+     for (std::size_t i = 0; i < std::max(combDataSets.size(), std::size_t(1)); ++i) {
+       const bool hasdata = i < combDataSets.size();
+       if (hasdata && !matches(combDataSets.at(i), simpdf))
          continue;
-
-      std::string analysisName(pdf->GetName());
-      if (hasdata)
+       
+       std::string analysisName(simpdf->GetName());
+       if (hasdata)
          analysisName += "_" + combDataSets[i].name;
-
-      exportSingleModelConfig(rootnode, mc, analysisName, hasdata ? &combDataSets[i].components : nullptr);
+       
+       exportSingleModelConfig(rootnode, mc, analysisName, hasdata ? &combDataSets[i].components : nullptr);
+     }
+   } else {
+     RooArgSet observables(*mc.GetObservables());
+     int founddata = 0;
+     for(auto* data : singleDataSets){
+       if(observables.equals(*(data->get()))){
+	 std::map<std::string,std::string> mapping;
+	 mapping[pdf->GetName()] = data->GetName();
+	 exportSingleModelConfig(rootnode, mc, std::string(pdf->GetName()) + "_" + data->GetName(), &mapping);
+	 ++founddata;
+       }
+     }
+     if(founddata == 0){
+       exportSingleModelConfig(rootnode, mc, pdf->GetName(), nullptr);
+     }
    }
 }
 
@@ -1813,7 +1817,7 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooStats:
                                                    std::string const &analysisName,
                                                    std::map<std::string, std::string> const *dataComponents)
 {
-   auto pdf = static_cast<RooSimultaneous const *>(mc.GetPdf());
+   auto pdf = mc.GetPdf();
 
    JSONNode &analysisNode = appendNamedChild(rootnode["analyses"], analysisName);
 
@@ -1826,11 +1830,22 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooStats:
    nllNode["data"].set_seq();
 
    if (dataComponents) {
-      for (auto const &item : pdf->indexCat()) {
+     auto simPdf = static_cast<RooSimultaneous const *>(pdf);
+     if(simPdf){
+       for (auto const &item : simPdf->indexCat()) {
          const auto &dataComp = dataComponents->find(item.first);
-         nllNode["distributions"].append_child() << pdf->getPdf(item.first)->GetName();
+         nllNode["distributions"].append_child() << simPdf->getPdf(item.first)->GetName();
          nllNode["data"].append_child() << dataComp->second;
-      }
+       }
+     } else {
+       for(auto it:*dataComponents){
+         nllNode["distributions"].append_child() << it.first;
+         nllNode["data"].append_child() << it.second;
+       }
+     }
+   } else {
+     nllNode["distributions"].append_child() << pdf->GetName();
+     nllNode["data"].append_child() << 0;
    }
 
    if (mc.GetExternalConstraints()) {
@@ -1842,7 +1857,7 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooStats:
    }
 
    auto writeList = [&](const char *name, RooArgSet const *args) {
-      if (!args)
+      if (!args || !args->size())
          return;
 
       std::vector<std::string> names;
@@ -1857,7 +1872,7 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooStats:
 
    auto &domainsNode = rootnode["domains"];
 
-   if (mc.GetNuisanceParameters()) {
+   if (mc.GetNuisanceParameters() && mc.GetNuisanceParameters()->size() > 0){
       std::string npDomainName = analysisName + "_nuisance_parameters";
       domains.append_child() << npDomainName;
       RooFit::JSONIO::Detail::Domains::ProductDomain npDomain;
@@ -1867,7 +1882,7 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooStats:
       npDomain.writeJSON(appendNamedChild(domainsNode, npDomainName));
    }
 
-   if (mc.GetGlobalObservables()) {
+   if (mc.GetGlobalObservables() && mc.GetGlobalObservables()->size() > 0){
       std::string globDomainName = analysisName + "_global_observables";
       domains.append_child() << globDomainName;
       RooFit::JSONIO::Detail::Domains::ProductDomain globDomain;
@@ -1877,7 +1892,7 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooStats:
       globDomain.writeJSON(appendNamedChild(domainsNode, globDomainName));
    }
 
-   if (mc.GetParametersOfInterest()) {
+   if (mc.GetParametersOfInterest() && mc.GetParametersOfInterest()->size() > 0){
       std::string poiDomainName = analysisName + "_parameters_of_interest";
       domains.append_child() << poiDomainName;
       RooFit::JSONIO::Detail::Domains::ProductDomain poiDomain;
@@ -1938,20 +1953,23 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       exportAttributes(arg, n);
    }
 
-   // export all datasets
+   // collect all datasets
    std::vector<RooAbsData *> alldata;
    for (auto &d : _workspace.allData()) {
       alldata.push_back(d);
    }
    sortByName(alldata);
    // first, take care of combined datasets
+   std::vector<RooAbsData *> singleData;   
    std::vector<RooJSONFactoryWSTool::CombinedData> combData;
    for (auto &d : alldata) {
       auto data = this->exportCombinedData(*d);
       if (!data.components.empty())
          combData.push_back(data);
+      else
+         singleData.push_back(d);
    }
-   // next, take care of regular datasets
+   // next, take care datasets
    for (auto &d : alldata) {
       this->exportData(*d);
    }
@@ -1959,7 +1977,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    // export all ModelConfig objects and attached Pdfs
    for (TObject *obj : _workspace.allGenericObjects()) {
       if (auto mc = dynamic_cast<RooStats::ModelConfig *>(obj)) {
-         exportModelConfig(n, *mc, combData);
+        exportModelConfig(n, *mc, combData, singleData);
       }
    }
 
