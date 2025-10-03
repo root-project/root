@@ -203,6 +203,7 @@ TEST(RDFVarySnapshot, Bitmask)
       TFile file(filename, "READ");
       std::unique_ptr<TTree> tree{file.Get<TTree>(treename.data())};
       ASSERT_NE(tree, nullptr);
+      EXPECT_EQ(tree->GetEntries(), N);
       TBranch *branch = tree->GetBranch(("R_rdf_mask_" + treename + "_0").c_str());
       ASSERT_NE(branch, nullptr);
 
