@@ -1436,7 +1436,7 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::getVal(const char *what)
 {
    TString sWhat(what);
    sWhat.ToLower();
-   sWhat.ReplaceAll(" =","=").ReplaceAll("= ","="); // remove spaces around equals signs
+   sWhat.ReplaceAll(" =", "=").ReplaceAll("= ", "="); // remove spaces around equals signs
    bool doTS = sWhat.Contains("ts");
    bool doCLs = sWhat.Contains("pcls");
    bool doNull = sWhat.Contains("pnull");
