@@ -32,6 +32,7 @@
 #include "ROOT/RResultPtr.hxx"
 #include "ROOT/RSnapshotOptions.hxx"
 #include <string_view>
+#include "ROOT/RLogger.hxx"
 #include "ROOT/RVec.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "RtypesCore.h" // for ULong64_t
@@ -44,8 +45,12 @@
 #include "TProfile2D.h"
 #include "TStatistic.h"
 
+#include "ROOT/RVersion.hxx"
+
 #include <algorithm>
 #include <cstddef>
+#include <cstdlib>
+#include <cstring>
 #include <initializer_list>
 #include <iterator> // std::back_insterter
 #include <limits>
@@ -1331,6 +1336,22 @@ public:
                                                  const ColumnNames_t &columnList,
                                                  const RSnapshotOptions &options = RSnapshotOptions())
    {
+      // TODO: Remove before releasing 6.40.00
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 40, 0)
+      static_assert(false && "Remove information about change of Snapshot defaut compression settings.");
+#endif
+      [[maybe_unused]] static bool once = []() {
+         if (const char *suppress = std::getenv("ROOT_RDF_SILENCE_SNAPSHOT_INFO"))
+            if (std::strcmp(suppress, "1") == 0)
+               return true;
+         RLogScopedVerbosity showInfo{ROOT::Detail::RDF::RDFLogChannel(), ROOT::ELogLevel::kInfo};
+         R__LOG_INFO(ROOT::Detail::RDF::RDFLogChannel())
+            << "In ROOT 6.38, the default compression settings of Snapshot have been changed from 101 (ZLIB with "
+               "compression level 1, the TTree default) to 505 (ZSTD with compression level 5). This change may result "
+               "in smaller Snapshot output dataset size by default. In order to suppress this message, set "
+               "ROOT_RDF_SILENCE_SNAPSHOT_INFO=1 in your environment.";
+         return true;
+      }();
       // like columnList but with `#var` columns removed
       auto colListNoPoundSizes = RDFInternal::FilterArraySizeColNames(columnList, "Snapshot");
       // like columnListWithoutSizeColumns but with aliases resolved
