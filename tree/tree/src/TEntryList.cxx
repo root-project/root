@@ -1313,11 +1313,11 @@ void TEntryList::SetTree(const TTree *tree)
       filename = tree->GetTree()->GetCurrentFile()->GetName();
       TUrl url(filename.Data(), true);
       if (!strcmp(url.GetProtocol(), "file")){
+         filename = url.GetFile(); // Get the file part, excluding the anchor, then expand
          gSystem->ExpandPathName(filename);
          if (!gSystem->IsAbsoluteFileName(filename))
             gSystem->PrependPathName(gSystem->pwd(), filename);
          filename = gSystem->UnixPathName(filename);
-         url.SetAnchor(""); // Avoid potentially duplicated # when calling SetFile below
          url.SetFile(filename);
       }
       filename = url.GetUrl();
