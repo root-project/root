@@ -1015,15 +1015,15 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
 
 void ROOT::RFieldBase::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   // The default implementation throws an exception if the on-disk ID is set and there are any meaningful differences
-   // to the on-disk field. Derived classes may overwrite this and relax the checks to support automatic schema
-   // evolution.
-   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(fOnDiskId)).ThrowOnError();
+   // The default implementation throws an exception if there are any meaningful differences to the on-disk field.
+   // Derived classes may overwrite this and relax the checks to support automatic schema evolution.
+   EnsureMatchingOnDiskField(desc).ThrowOnError();
 }
 
 ROOT::RResult<void>
-ROOT::RFieldBase::EnsureMatchingOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits) const
+ROOT::RFieldBase::EnsureMatchingOnDiskField(const RNTupleDescriptor &desc, std::uint32_t ignoreBits) const
 {
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    const std::uint32_t diffBits = CompareOnDiskField(fieldDesc, ignoreBits);
    if (diffBits == 0)
       return RResult<void>::Success();
@@ -1046,17 +1046,19 @@ ROOT::RFieldBase::EnsureMatchingOnDiskField(const RFieldDescriptor &fieldDesc, s
    if (diffBits & kDiffNRepetitions) {
       errMsg << " repetition count " << GetNRepetitions() << " vs. " << fieldDesc.GetNRepetitions() << ";";
    }
-   return R__FAIL(errMsg.str());
+   return R__FAIL(errMsg.str() + "\n" + Internal::GetTypeTraceReport(*this, desc));
 }
 
-ROOT::RResult<void> ROOT::RFieldBase::EnsureMatchingTypePrefix(const RFieldDescriptor &fieldDesc,
+ROOT::RResult<void> ROOT::RFieldBase::EnsureMatchingTypePrefix(const RNTupleDescriptor &desc,
                                                                const std::vector<std::string> &prefixes) const
 {
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    for (const auto &p : prefixes) {
       if (fieldDesc.GetTypeName().rfind(p, 0) == 0)
          return RResult<void>::Success();
    }
-   return R__FAIL("incompatible type " + fieldDesc.GetTypeName() + " for field " + GetQualifiedFieldName());
+   return R__FAIL("incompatible type " + fieldDesc.GetTypeName() + " for field " + GetQualifiedFieldName() + "\n" +
+                  Internal::GetTypeTraceReport(*this, desc));
 }
 
 std::uint32_t ROOT::RFieldBase::CompareOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits) const

@@ -521,7 +521,7 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RClassField::BeforeConnectPageSource(ROO
 
 void ROOT::RClassField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeVersion | kDiffTypeName).ThrowOnError();
+   EnsureMatchingOnDiskField(desc, kDiffTypeVersion | kDiffTypeName).ThrowOnError();
 }
 
 void ROOT::RClassField::ConstructValue(void *where) const
@@ -619,7 +619,7 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::REnumField::CloneImpl(std::string_view n
 void ROOT::REnumField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    // TODO(jblomer): allow enum to enum conversion only by rename rule
-   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName | kDiffTypeVersion).ThrowOnError();
+   EnsureMatchingOnDiskField(desc, kDiffTypeName | kDiffTypeVersion).ThrowOnError();
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::REnumField::SplitValue(const RValue &value) const
@@ -684,14 +684,15 @@ void ROOT::RPairField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    static const std::vector<std::string> prefixes = {"std::pair<", "std::tuple<"};
 
-   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName).ThrowOnError();
-   EnsureMatchingTypePrefix(fieldDesc, prefixes).ThrowOnError();
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+   EnsureMatchingTypePrefix(desc, prefixes).ThrowOnError();
 
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    const auto nOnDiskSubfields = fieldDesc.GetLinkIds().size();
    if (nOnDiskSubfields != 2) {
-      throw ROOT::RException(
-         R__FAIL("invalid number of on-disk subfields for std::pair " + std::to_string(nOnDiskSubfields)));
+      throw ROOT::RException(R__FAIL("invalid number of on-disk subfields for std::pair " +
+                                     std::to_string(nOnDiskSubfields) + "\n" +
+                                     Internal::GetTypeTraceReport(*this, desc)));
    }
 }
 
@@ -830,7 +831,7 @@ void ROOT::RProxiedCollectionField::GenerateColumns(const ROOT::RNTupleDescripto
 
 void ROOT::RProxiedCollectionField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName).ThrowOnError();
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
 }
 
 void ROOT::RProxiedCollectionField::ConstructValue(void *where) const
@@ -997,7 +998,7 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RStreamerField::BeforeConnectPageSource(
 
 void ROOT::RStreamerField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   EnsureMatchingOnDiskField(desc.GetFieldDescriptor(GetOnDiskId()), kDiffTypeName | kDiffTypeVersion).ThrowOnError();
+   EnsureMatchingOnDiskField(desc, kDiffTypeName | kDiffTypeVersion).ThrowOnError();
 }
 
 void ROOT::RStreamerField::ConstructValue(void *where) const
@@ -1231,15 +1232,16 @@ void ROOT::RTupleField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    static const std::vector<std::string> prefixes = {"std::pair<", "std::tuple<"};
 
-   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName).ThrowOnError();
-   EnsureMatchingTypePrefix(fieldDesc, prefixes).ThrowOnError();
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+   EnsureMatchingTypePrefix(desc, prefixes).ThrowOnError();
 
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    const auto nOnDiskSubfields = fieldDesc.GetLinkIds().size();
    const auto nSubfields = fSubfields.size();
    if (nOnDiskSubfields != nSubfields) {
       throw ROOT::RException(R__FAIL("invalid number of on-disk subfields for std::tuple " +
-                                     std::to_string(nOnDiskSubfields) + " vs. " + std::to_string(nSubfields)));
+                                     std::to_string(nOnDiskSubfields) + " vs. " + std::to_string(nSubfields) + "\n" +
+                                     Internal::GetTypeTraceReport(*this, desc)));
    }
 }
 
@@ -1393,12 +1395,13 @@ void ROOT::RVariantField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
    static const std::vector<std::string> prefixes = {"std::variant<"};
 
-   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   EnsureMatchingOnDiskField(fieldDesc, kDiffTypeName).ThrowOnError();
-   EnsureMatchingTypePrefix(fieldDesc, prefixes).ThrowOnError();
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+   EnsureMatchingTypePrefix(desc, prefixes).ThrowOnError();
 
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
    if (fSubfields.size() != fieldDesc.GetLinkIds().size()) {
-      throw RException(R__FAIL("number of variants on-disk do not match for " + GetQualifiedFieldName()));
+      throw RException(R__FAIL("number of variants on-disk do not match for " + GetQualifiedFieldName() + "\n" +
+                               Internal::GetTypeTraceReport(*this, desc)));
    }
 }
 
