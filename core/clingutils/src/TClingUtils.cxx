@@ -3105,7 +3105,12 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
       llvm::SmallVector<clang::TemplateArgument, 4> canonArgs;
       llvm::ArrayRef<clang::TemplateArgument> template_arguments = TST->template_arguments();
       unsigned int Idecl = 0, Edecl = TSTdecl->getTemplateArgs().size();
-      unsigned int maxAddArg = TSTdecl->getTemplateArgs().size() - dropDefault;
+      // If we have more arguments than the TSTdecl, it is a variadic template
+      // and we want all template arguments.
+      if (template_arguments.size() > Edecl) {
+         Edecl = template_arguments.size();
+      }
+      unsigned int maxAddArg = Edecl - dropDefault;
       for (const clang::TemplateArgument *I = template_arguments.begin(), *E = template_arguments.end(); Idecl != Edecl;
            I != E ? ++I : nullptr, ++Idecl, ++Param) {
 
