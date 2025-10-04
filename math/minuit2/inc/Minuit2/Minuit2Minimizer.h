@@ -279,6 +279,9 @@ public:
    /// return the minimizer state (containing values, step size , etc..)
    const ROOT::Minuit2::MnUserParameterState &State() { return fState; }
 
+   const ROOT::Minuit2::FCNBase *GetFCN() const { return fMinuitFCN; }
+   ROOT::Minuit2::FCNBase *GetFCN() { return fMinuitFCN; }
+
 protected:
    // protected function for accessing the internal Minuit2 object. Needed for derived classes
 
@@ -287,8 +290,6 @@ protected:
    virtual void SetMinimizer(ROOT::Minuit2::ModularFunctionMinimizer *m) { fMinimizer = m; }
 
    void SetMinimizerType(ROOT::Minuit2::EMinimizerType type);
-
-   virtual const ROOT::Minuit2::FCNBase *GetFCN() const { return fMinuitFCN; }
 
    /// examine the minimum result
    bool ExamineMinimum(const ROOT::Minuit2::FunctionMinimum &min);
