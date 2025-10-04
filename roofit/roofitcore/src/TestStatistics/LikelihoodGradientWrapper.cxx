@@ -55,7 +55,7 @@ void LikelihoodGradientWrapper::synchronizeWithMinimizer(const ROOT::Math::Minim
 void LikelihoodGradientWrapper::synchronizeParameterSettings(
    const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings)
 {
-   synchronizeParameterSettings(minimizer_->getMultiGenFcn(), parameter_settings);
+   synchronizeParameterSettingsImpl(parameter_settings);
 }
 
 void LikelihoodGradientWrapper::updateMinuitInternalParameterValues(const std::vector<double> & /*minuit_internal_x*/)

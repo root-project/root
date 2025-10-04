@@ -53,10 +53,10 @@ automatic PDF optimization.
 #include "RooHelpers.h"
 #include "RooMinimizerFcn.h"
 #include "RooFitResult.h"
-#include "TestStatistics/MinuitFcnGrad.h"
 #include "RooFit/TestStatistics/RooAbsL.h"
 #include "RooFit/TestStatistics/RooRealL.h"
 #ifdef ROOFIT_MULTIPROCESS
+#include "TestStatistics/MinuitFcnGrad.h"
 #include "RooFit/MultiProcess/Config.h"
 #include "RooFit/MultiProcess/ProcessTimer.h"
 #endif
@@ -351,7 +351,7 @@ int RooMinimizer::minimize(const char *type, const char *alg)
    {
       auto ctx = makeEvalErrorContext();
 
-      bool ret = fitFCN(*_fcn->getMultiGenFcn());
+      bool ret = fitFCN();
       determineStatus(ret);
    }
    profileStop();
@@ -393,7 +393,7 @@ int RooMinimizer::exec(std::string const &algoName, std::string const &statusNam
          ret = calculateMinosErrors();
       } else {
          _config.SetMinimizer(_cfg.minimizerType.c_str(), algoName.c_str());
-         ret = fitFCN(*_fcn->getMultiGenFcn());
+         ret = fitFCN();
       }
       determineStatus(ret);
    }
@@ -775,12 +775,6 @@ void RooMinimizer::profileStop()
    }
 }
 
-ROOT::Math::IMultiGenFunction *RooMinimizer::getMultiGenFcn() const
-{
-
-   return _fcn->getMultiGenFcn();
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Apply results of given external covariance matrix. i.e. propagate its errors
 /// to all RRV parameter representations and give this matrix instead of the
@@ -904,13 +898,13 @@ std::unique_ptr<RooAbsReal::EvalErrorContext> RooMinimizer::makeEvalErrorContext
    return std::make_unique<RooAbsReal::EvalErrorContext>(m);
 }
 
-bool RooMinimizer::fitFCN(const ROOT::Math::IMultiGenFunction &fcn)
+bool RooMinimizer::fitFCN()
 {
    // fit a user provided FCN function
    // create fit parameter settings
 
    // Check number of parameters
-   unsigned int npar = fcn.NDim();
+   unsigned int npar = getNPar();
    if (npar == 0) {
       coutE(Minimization) << "RooMinimizer::fitFCN(): FCN function has zero parameters" << std::endl;
       return false;
@@ -1134,7 +1128,7 @@ bool RooMinimizer::calculateMinosErrors()
 void RooMinimizer::initMinimizer()
 {
    _minimizer = std::unique_ptr<ROOT::Math::Minimizer>(_config.CreateMinimizer());
-   _minimizer->SetFunction(*getMultiGenFcn());
+   _fcn->initMinimizer(*_minimizer);
    _minimizer->SetVariables(_config.ParamsSettings().begin(), _config.ParamsSettings().end());
 
    if (_cfg.setInitialCovariance) {

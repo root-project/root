@@ -1350,6 +1350,12 @@ void Minuit2Minimizer::SetStorageLevel(int level)
       fMinimizer->Builder().SetStorageLevel(level);
 }
 
+void Minuit2Minimizer::SetFCN(unsigned int nDim, std::unique_ptr<ROOT::Minuit2::FCNBase> fcn)
+{
+   fDim = nDim;
+   fMinuitFCN = std::move(fcn);
+}
+
 } // end namespace Minuit2
 
 } // end namespace ROOT

@@ -179,4 +179,9 @@ RooArgSet RooMinimizerFcn::freezeDisconnectedParameters() const
    return changedSet;
 }
 
+void RooMinimizerFcn::initMinimizer(ROOT::Math::Minimizer &minim)
+{
+   minim.SetFunction(*_multiGenFcn);
+}
+
 /// \endcond

@@ -12,6 +12,7 @@
 
 #include "LikelihoodGradientJob.h"
 
+#include <RooFit/TestStatistics/LikelihoodWrapper.h>
 #include "RooFit/MultiProcess/JobManager.h"
 #include "RooFit/MultiProcess/Messenger.h"
 #include "RooFit/MultiProcess/ProcessTimer.h"
@@ -21,7 +22,6 @@
 #include "RooMinimizer.h"
 
 #include "Minuit2/Minuit2Minimizer.h"
-
 #include "Minuit2/MnStrategy.h"
 
 namespace RooFit {
@@ -39,14 +39,8 @@ LikelihoodGradientJob::LikelihoodGradientJob(std::shared_ptr<RooAbsL> likelihood
    offsets_previous_ = shared_offset_.offsets();
 }
 
-void LikelihoodGradientJob::synchronizeParameterSettings(
+void LikelihoodGradientJob::synchronizeParameterSettingsImpl(
    const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings)
-{
-   LikelihoodGradientWrapper::synchronizeParameterSettings(parameter_settings);
-}
-
-void LikelihoodGradientJob::synchronizeParameterSettings(
-   ROOT::Math::IMultiGenFunction * /*function*/, const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings)
 {
    gradf_.SetInitialGradient(parameter_settings, grad_);
 }

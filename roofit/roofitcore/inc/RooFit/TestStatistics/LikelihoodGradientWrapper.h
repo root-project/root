@@ -58,8 +58,8 @@ public:
    /// Synchronize minimizer settings with calculators in child classes.
    virtual void synchronizeWithMinimizer(const ROOT::Math::MinimizerOptions &options);
    virtual void synchronizeParameterSettings(const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings);
-   virtual void synchronizeParameterSettings(ROOT::Math::IMultiGenFunction *function,
-                                             const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) = 0;
+   virtual void
+   synchronizeParameterSettingsImpl(const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) = 0;
    /// Minuit passes in parameter values that may not conform to RooFit internal standards (like applying range
    /// clipping), but that the specific calculator does need. This function can be implemented to receive these
    /// Minuit-internal values.

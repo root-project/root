@@ -26,6 +26,8 @@
 #include "RooMinimizer.h"
 #include "RooRealVar.h"
 
+#include <Math/Minimizer.h>
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -36,6 +38,8 @@ class RooAbsMinimizerFcn {
 public:
    RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *context);
    virtual ~RooAbsMinimizerFcn() = default;
+
+   virtual void initMinimizer(ROOT::Math::Minimizer &) = 0;
 
    /// Informs Minuit through its parameter_settings vector of RooFit parameter properties.
    bool synchronizeParameterSettings(std::vector<ROOT::Fit::ParameterSettings> &parameters, bool optConst);
@@ -79,7 +83,6 @@ public:
 
    /// Enable or disable offsetting on the function to be minimized, which enhances numerical precision.
    virtual void setOffsetting(bool flag) = 0;
-   virtual ROOT::Math::IMultiGenFunction *getMultiGenFcn() = 0;
 
    RooMinimizer::Config const &cfg() const { return _context->_cfg; }
 
