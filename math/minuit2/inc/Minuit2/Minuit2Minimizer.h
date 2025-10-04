@@ -279,6 +279,9 @@ public:
    /// return the minimizer state (containing values, step size , etc..)
    const ROOT::Minuit2::MnUserParameterState &State() { return fState; }
 
+   /// To set the function directly to a Minuit 2 function.
+   void SetFCN(unsigned int nDim, std::unique_ptr<ROOT::Minuit2::FCNBase> fcn);
+
    const ROOT::Minuit2::FCNBase *GetFCN() const { return fMinuitFCN.get(); }
    ROOT::Minuit2::FCNBase *GetFCN() { return fMinuitFCN.get(); }
 
