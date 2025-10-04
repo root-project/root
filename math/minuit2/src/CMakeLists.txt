@@ -16,7 +16,6 @@ set(MINUIT2_HEADERS
     ExternalInternalGradientCalculator.h
     FCNAdapter.h
     FCNBase.h
-    FCNGradAdapter.h
     FCNGradientBase.h
     FumiliBuilder.h
     FumiliChi2FCN.h

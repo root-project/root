@@ -113,6 +113,10 @@ public:
    virtual bool HasGradient() const { return false; }
 
    virtual std::vector<double> Gradient(std::vector<double> const&) const { return {}; }
+
+   /// In some cases, the gradient algorithm will use information from the previous step, these can be passed
+   /// in with this overload. The `previous_*` arrays can also be used to return second derivative and step size
+   /// so that these can be passed forward again as well at the call site, if necessary.
    virtual std::vector<double> GradientWithPrevResult(std::vector<double> const& parameters, double * /*previous_grad*/,
                                                       double * /*previous_g2*/, double * /*previous_gstep*/) const
    {
