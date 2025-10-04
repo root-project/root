@@ -19,7 +19,6 @@
 
 #include "Minuit2/FCNAdapter.h"
 #include "Minuit2/FumiliFCNAdapter.h"
-#include "Minuit2/FCNGradAdapter.h"
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/MnMigrad.h"
 #include "Minuit2/MnMinos.h"
@@ -375,11 +374,14 @@ void Minuit2Minimizer::SetFunction(const ROOT::Math::IMultiGenFunction &func)
    fDim = func.NDim();
    const bool hasGrad = func.HasGradient();
    if (!fUseFumili) {
-      if (hasGrad)
-         fMinuitFCN = std::make_unique<ROOT::Minuit2::FCNGradAdapter<ROOT::Math::IMultiGradFunction>>(
-            dynamic_cast<ROOT::Math::IMultiGradFunction const &>(func), ErrorDef());
-      else
-         fMinuitFCN = std::make_unique<ROOT::Minuit2::FCNAdapter<ROOT::Math::IMultiGenFunction>>(func, ErrorDef());
+      auto lambdaFunc = [&func](double const *params) { return func(params); };
+      auto adapter = std::make_unique<ROOT::Minuit2::FCNAdapter>(lambdaFunc, ErrorDef());
+      if (hasGrad) {
+         auto const &gradFunc = dynamic_cast<ROOT::Math::IMultiGradFunction const &>(func);
+         auto lambdaGrad = [&gradFunc](double const *params, double *grad) { return gradFunc.Gradient(params, grad); };
+         adapter->SetGradientFunction(lambdaGrad);
+      }
+      fMinuitFCN = std::move(adapter);
       return;
    }
    if (hasGrad) {
@@ -409,7 +411,7 @@ void Minuit2Minimizer::SetHessianFunction(std::function<bool(std::span<const dou
 {
    // for Fumili not supported for the time being
    if (fUseFumili) return;
-   auto fcn = static_cast<ROOT::Minuit2::FCNGradAdapter<ROOT::Math::IMultiGradFunction> *>(fMinuitFCN.get());
+   auto fcn = static_cast<ROOT::Minuit2::FCNAdapter *>(fMinuitFCN.get());
    if (!fcn) return;
    fcn->SetHessianFunction(hfunc);
 }
