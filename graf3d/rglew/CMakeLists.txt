@@ -10,10 +10,23 @@
 
 # This package is only needed for user backward compatibility! (TGLIncludes.h)
 
-add_library(RGlew INTERFACE)
-target_include_directories(RGlew INTERFACE inc/)
-target_link_libraries(RGlew INTERFACE GLEW::GLEW)
-#target_include_directories(RGlew INTERFACE $<BUILD_INTERFACE:${GLEW_INCLUDE_DIR}>)
+set(rglew_srcs src/gl.c)
+
+find_library(DL_LIBRARY_PATH dl)
+if (DL_LIBRARY_PATH)
+  list(APPEND rglew_libs dl)
+endif()
+
+if(x11)
+  list(APPEND rglew_srcs src/glx.c)
+  list(APPEND rglew_libs ${X11_LIBRARIES})
+endif()
+
+if(MSVC)
+  list(APPEND rglew_srcs src/wgl.c)
+endif()
+
+ROOT_LINKER_LIBRARY(RGlew ${rglew_srcs} LIBRARIES ${rglew_libs})
 
 # We still need to install TGLIncludes.h into include/
 ROOT_INSTALL_HEADERS()
