@@ -7,7 +7,7 @@
 #include "TH2.h"
 #include "TSystem.h"
 
-#ifndef __CINT__
+#ifndef __CLING__
 #include "Event.h"
 #endif
 

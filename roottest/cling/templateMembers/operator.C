@@ -1,4 +1,4 @@
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 
 #endif
 
@@ -31,7 +31,7 @@ namespace edm {
    
 } // namespace edm
 
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ namespace edm; 
 #endif
 
