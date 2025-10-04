@@ -48,3 +48,7 @@ ROOTTEST_ADD_TEST(streamerInfoStdFunction
 ROOTTEST_ADD_TEST(selectTemplateInvalidArg
                   COMMAND ${ROOT_rootcling_CMD} -f selectTemplateInvalidArg.Dict.cc ${CMAKE_CURRENT_SOURCE_DIR}/selectTemplateInvalidArg.h ${CMAKE_CURRENT_SOURCE_DIR}/selectTemplateInvalidArg.LinkDef.h
                   ERRREF selectTemplateInvalidArg.ref)
+
+# Test reproducing a failure seen in CMS builds with LLVM 20
+# ROOT get confused normalizing variadic template arguments
+ROOTTEST_GENERATE_DICTIONARY(VariadicTemplateConflict variadicTemplate.h LINKDEF variadicTemplate.xml)
