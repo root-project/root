@@ -24,7 +24,6 @@
 #include <TFile.h>
 #include <TH1F.h>
 #include <TMath.h>
-#include <TMinuit.h>
 #include <TString.h>
 #include <TSystem.h>
 
@@ -428,24 +427,8 @@ private:
       pVars1->assign(*pVars2);
 
       // do the fit
-      std::string minimizerType = "Minuit2";
-      int prec = gErrorIgnoreLevel;
-      gErrorIgnoreLevel = kFatal;
-      if (gSystem->Load("libMinuit2") < 0)
-         minimizerType = "Minuit";
-      gErrorIgnoreLevel = prec;
-
-      std::unique_ptr<RooFitResult> r1{
-         rPDF1.fitTo(rTestData, Save(), PrintLevel(-1), Minimizer(minimizerType.c_str()))};
-      // L.M:  for minuit we need to rest otherwise fit could fail
-      if (minimizerType == "Minuit") {
-         if (gMinuit) {
-            delete gMinuit;
-            gMinuit = nullptr;
-         }
-      }
-      std::unique_ptr<RooFitResult> r2{
-         rPDF2.fitTo(rTestData, Save(), PrintLevel(-1), Minimizer(minimizerType.c_str()))};
+      std::unique_ptr<RooFitResult> r1{rPDF1.fitTo(rTestData, Save(), PrintLevel(-1))};
+      std::unique_ptr<RooFitResult> r2{rPDF2.fitTo(rTestData, Save(), PrintLevel(-1))};
 
       if (_verb > 0) {
          r1->Print("v");
