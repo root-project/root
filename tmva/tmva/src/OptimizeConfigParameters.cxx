@@ -38,7 +38,9 @@
 #include "TMVA/MethodBase.h"
 #include "TMVA/MethodFDA.h"
 #include "TMVA/MsgLogger.h"
+#ifdef TMVA_MINUIT_1
 #include "TMVA/MinuitFitter.h"
+#endif
 #include "TMVA/PDF.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
@@ -263,9 +265,13 @@ void TMVA::OptimizeConfigParameters::optimizeFit()
       TString opt="FitStrategy=0:UseImprove=False:UseMinos=False:Tolerance=100";
       if (!TMVA::gConfig().IsSilent() ) opt += TString(":PrintLevel=0");
 
+#ifdef TMVA_MINUIT_1
       fitter = new MinuitFitter(  *this,
                                   "FitterMinuit_BDTOptimize",
                                   ranges, opt );
+#else
+      Log() << kFATAL << "Can't use MINUIT optimizer because ROOT was build without MINUIT 1" << Endl;
+#endif
    }else if ( fOptimizationFitType == "FitGA"  ) {
       TString opt="PopSize=20:Steps=30:Cycles=3:ConvCrit=0.01:SaveBestCycle=5";
       fitter = new GeneticFitter( *this,

@@ -146,6 +146,7 @@ ROOT_BUILD_OPTION(llvm13_broken_tests OFF "Enable broken tests with LLVM 13 on W
 ROOT_BUILD_OPTION(macos_native OFF "Disable looking for libraries, includes and binaries in locations other than a native installation (MacOS only)")
 ROOT_BUILD_OPTION(mathmore OFF "Build libMathMore extended math library (requires GSL) [GPL]")
 ROOT_BUILD_OPTION(memory_termination OFF "Free internal ROOT memory before process termination (experimental, used for leak checking)")
+ROOT_BUILD_OPTION(minuit1 ON "Build also the original C++ implementation of Minuit, alongside Minuit 2. This flag has no effect on Minuit 2, which is always built.")
 ROOT_BUILD_OPTION(minuit2_mpi OFF "Enable support for MPI in Minuit2")
 ROOT_BUILD_OPTION(minuit2_omp OFF "Enable support for OpenMP in Minuit2")
 ROOT_BUILD_OPTION(mpi OFF "Enable support for Message Passing Interface (MPI)")

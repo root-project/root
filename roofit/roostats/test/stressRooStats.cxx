@@ -313,7 +313,7 @@ int main(int argc, const char *argv[])
 
    // string refFileName = "http://root.cern/files/stressRooStats_v534_ref.root" ;
    string refFileName = "stressRooStats_ref.root";
-   string minimizerName = "Minuit";
+   string minimizerName = "Minuit2";
 
    // Parse command line arguments
    for (int i = 1; i < argc; i++) {

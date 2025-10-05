@@ -492,6 +492,10 @@ if(fftw3)
   target_compile_definitions(RooFitCore PUBLIC ROOFIT_MATH_FFTW3)
 endif()
 
+if(minuit1)
+  target_compile_definitions(RooFitCore PUBLIC ROOFIT_MINUIT_1)
+endif()
+
 target_include_directories(RooFitCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
 
 # The SMatrix package is header-only, but it's only exposed via the Smatrix
