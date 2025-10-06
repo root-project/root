@@ -1438,7 +1438,8 @@ std::string RooProdPdf::makeRGPPName(const char* pfx, const RooArgSet& term, con
 {
   // Make an appropriate automatic name for a RooGenProdProj object in getPartIntList()
 
-  std::ostringstream os(pfx);
+  std::ostringstream os;
+  os << pfx;
   os << "[";
 
   // Encode component names
