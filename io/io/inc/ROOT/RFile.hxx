@@ -131,13 +131,18 @@ public:
 
    ///// Factory methods /////
 
-   /// Opens the file for reading
+   /// Opens the file for reading. `path` may be a regular file path or a remote URL.
+   /// \throw ROOT::RException if the file at `path` could not be opened.
    static std::unique_ptr<RFile> Open(std::string_view path);
 
-   /// Opens the file for reading/writing, overwriting it if it already exists
+   /// Opens the file for reading/writing, overwriting it if it already exists.
+   /// \throw ROOT::RException if a file could not be created at `path` (e.g. if the specified
+   /// directory tree does not exist).
    static std::unique_ptr<RFile> Recreate(std::string_view path);
 
-   /// Opens the file for updating
+   /// Opens the file for updating, creating a new one if it doesn't exist.
+   /// \throw ROOT::RException if the file at `path` could neither be read nor created
+   /// (e.g. if the specified directory tree does not exist).
    static std::unique_ptr<RFile> Update(std::string_view path);
 
    ///// Instance methods /////
@@ -185,7 +190,7 @@ public:
       PutInternal(path, obj, flags);
    }
 
-   /// Writes all objects to disk with the file structure.
+   /// Writes all objects and the file structure to disk.
    /// Returns the number of bytes written.
    size_t Flush();
 

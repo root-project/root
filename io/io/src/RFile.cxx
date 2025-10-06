@@ -190,6 +190,9 @@ std::unique_ptr<RFile> RFile::Open(std::string_view path)
 
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
    auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "READ_WITHOUT_GLOBALREGISTRATION"));
+   if (!tfile || tfile->IsZombie())
+      throw ROOT::RException(R__FAIL("failed to open file " + std::string(path) + " for reading"));
+
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
    return rfile;
 }
@@ -200,6 +203,9 @@ std::unique_ptr<RFile> RFile::Update(std::string_view path)
 
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
    auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "UPDATE_WITHOUT_GLOBALREGISTRATION"));
+   if (!tfile || tfile->IsZombie())
+      throw ROOT::RException(R__FAIL("failed to open file " + std::string(path) + " for updating"));
+
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
    return rfile;
 }
@@ -210,6 +216,9 @@ std::unique_ptr<RFile> RFile::Recreate(std::string_view path)
 
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
    auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "RECREATE_WITHOUT_GLOBALREGISTRATION"));
+   if (!tfile || tfile->IsZombie())
+      throw ROOT::RException(R__FAIL("failed to open file " + std::string(path) + " for writing"));
+
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
    return rfile;
 }
@@ -281,7 +290,7 @@ void *RFile::GetUntyped(std::string_view pathSV, const std::type_info &type) con
       if (auto autoAddFunc = cls->GetDirectoryAutoAdd(); autoAddFunc) {
          autoAddFunc(obj, nullptr);
       }
-   } else if (key && !GetROOT()->IsBatch()) { // XXX: do we really want this warning?
+   } else if (key && !GetROOT()->IsBatch()) {
       R__LOG_WARNING(RFileLog()) << "Tried to get object '" << path << "' of type " << cls->GetName()
                                  << " but that path contains an object of type " << key->GetClassName();
    }
