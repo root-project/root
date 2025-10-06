@@ -167,7 +167,7 @@ TEST(RNTupleShow, Vectors)
    std::ostringstream os;
    ntuple2->Show(0, os);
    // clang-format off
-   std::string fString{ 
+   std::string fString{
 R"({
   "intVec": [4, 5, 6],
   "floatVecVec": [[0.1, 0.2], [1.1, 1.2]],
@@ -312,7 +312,7 @@ TEST(RNTupleShow, Objects)
    std::ostringstream os;
    ntuple2->Show(0, os);
    // clang-format off
-   std::string fString{ 
+   std::string fString{
 R"({
   "CustomStruct": {
     "a": 4.1,
@@ -641,25 +641,4 @@ R"({
 )");
    // clang-format on
    EXPECT_EQ(os1.str(), expected);
-}
-
-TEST(RNTupleShow, Friends)
-{
-   FileRaii fileGuard1("test_ntuple_show_friends1.ntuple");
-   {
-      auto model = RNTupleModel::Create();
-      auto foo = model->MakeField<float>("foo");
-      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl1", fileGuard1.GetPath());
-      *foo = 3.14;
-      writer->Fill();
-   }
-
-   FileRaii fileGuard2("test_ntuple_show_friends2.ntuple");
-   {
-      auto model = RNTupleModel::Create();
-      auto bar = model->MakeField<float>("bar");
-      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl2", fileGuard2.GetPath());
-      *bar = 2.72;
-      writer->Fill();
-   }
 }
