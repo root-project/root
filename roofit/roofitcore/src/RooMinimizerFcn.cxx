@@ -78,6 +78,27 @@ void RooMinimizerFcn::setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, 
 /// Evaluate function given the parameters in `x`.
 double RooMinimizerFcn::operator()(const double *x) const
 {
+   unsigned nDim = getNDim();
+   int nChanged = 0;
+   for (unsigned i = 0; i < _cachedInput.size(); ++i) {
+      if (_cachedInput[i] != x[i]) ++nChanged;
+      _cachedInput[i] = x[i];
+   }
+
+   if(_cachedInput.empty()) {
+      _cachedInput.resize(nDim);
+      for (unsigned i = 0; i < nDim; i++) {
+         _cachedInput[i] = x[i];
+      }
+   }
+
+   // TODO: doc
+   const bool shouldDirtyInhibit = nChanged > 2;
+
+   if (shouldDirtyInhibit) {
+      RooAbsArg::setDirtyInhibit(true);
+   }
+
    // Set the parameter values for this iteration
    for (unsigned index = 0; index < getNDim(); index++) {
       if (_logfile)
@@ -89,6 +110,10 @@ double RooMinimizerFcn::operator()(const double *x) const
    RooAbsReal::setHideOffset(false);
    double fvalue = _funct->getVal();
    RooAbsReal::setHideOffset(true);
+
+   if (shouldDirtyInhibit) {
+      RooAbsArg::setDirtyInhibit(false);
+   }
 
    fvalue = applyEvalErrorHandling(fvalue);
 

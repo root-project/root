@@ -53,6 +53,7 @@ private:
    RooAbsReal *_funct = nullptr;
    std::unique_ptr<ROOT::Math::IBaseFunctionMultiDim> _multiGenFcn;
    mutable std::vector<double> _gradientOutput;
+   mutable std::vector<double> _cachedInput;
 };
 
 #endif
