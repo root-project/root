@@ -642,3 +642,41 @@ R"({
    // clang-format on
    EXPECT_EQ(os1.str(), expected);
 }
+
+TEST(RNTupleShow, TypeTraceReport)
+{
+   FileRaii fileGuard("test_ntuple_show_type_trace_report.ntuple");
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<std::variant<double, std::vector<std::pair<float, bool>>>>("f");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   // Get the field for the `bool` member of the inner `pair`
+   const auto field = reader->GetModel()
+                         .GetDefaultEntry()
+                         .begin()
+                         ->GetField()
+                         .GetConstSubfields()[1]
+                         ->GetConstSubfields()[0]
+                         ->GetConstSubfields()[1];
+
+   const auto report = ROOT::Internal::GetTypeTraceReport(*field, reader->GetDescriptor());
+
+   const std::string expected{
+      R"(In-memory field/type hierarchy:
+f [std::variant<double,std::vector<std::pair<float,bool>>>] (id: 0)
+  _1 [std::vector<std::pair<float,bool>>] (id: 2)
+    _0 [std::pair<float,bool>] (id: 3)
+      _1 [bool] (id: 5)
+On-disk field/type hierarchy:
+f [std::variant<double,std::vector<std::pair<float,bool>>>] (id: 0)
+  _1 [std::vector<std::pair<float,bool>>] (id: 2)
+    _0 [std::pair<float,bool>] (id: 3)
+      _1 [bool] (id: 5)
+)"};
+
+   EXPECT_EQ(expected, report);
+}
