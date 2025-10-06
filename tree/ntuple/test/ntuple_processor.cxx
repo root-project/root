@@ -83,9 +83,9 @@ TEST(RNTupleProcessor, TDirectory)
 
 class RNTupleProcessorTest : public testing::Test {
 protected:
-   const std::array<std::string, 3> fFileNames{"test_ntuple_processor1.root", "test_ntuple_processor2.root",
-                                               "test_ntuple_processor3.root"};
-   const std::array<std::string, 3> fNTupleNames{"ntuple", "ntuple_aux", "ntuple_aux"};
+   const std::array<std::string, 4> fFileNames{"test_ntuple_processor1.root", "test_ntuple_processor2.root",
+                                               "test_ntuple_processor3.root", "test_ntuple_processor4.root"};
+   const std::array<std::string, 4> fNTupleNames{"ntuple", "ntuple_aux", "ntuple_aux", "ntuple_aux"};
 
    void SetUp() override
    {
@@ -124,7 +124,22 @@ protected:
 
          for (int i = 4; i >= 0; --i) {
             *fldI = i;
-            *fldZ = i * 2.f;
+            *fldZ = i * 3.f;
+            ntuple->Fill();
+         }
+      }
+      // Same as above, but the second and fourth entry are missing
+      {
+         auto model = RNTupleModel::Create();
+         auto fldI = model->MakeField<int>("i");
+         auto fldZ = model->MakeField<float>("z");
+         auto ntuple = RNTupleWriter::Recreate(std::move(model), fNTupleNames[3], fFileNames[3]);
+
+         for (unsigned i = 0; i < 5; ++i) {
+            if (i % 2 == 1)
+               continue;
+            *fldI = i;
+            *fldZ = i * 4.f;
             ntuple->Fill();
          }
       }
@@ -299,7 +314,38 @@ TEST_F(RNTupleProcessorTest, ChainedJoinUnaligned)
       EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
-      EXPECT_EQ(*x * 2, *z);
+      EXPECT_EQ(*x * 3, *z);
+   }
+   EXPECT_EQ(10, proc->GetNEntriesProcessed());
+}
+
+TEST_F(RNTupleProcessorTest, ChainedJoinMissingEntries)
+{
+   std::vector<std::unique_ptr<RNTupleProcessor>> innerProcs;
+   innerProcs.push_back(
+      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]}, {"i"}));
+   innerProcs.push_back(
+      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]}, {"i"}));
+
+   auto proc = RNTupleProcessor::CreateChain(std::move(innerProcs));
+
+   auto i = proc->RequestField<int>("i");
+   auto x = proc->RequestField<float>("x");
+   auto z = proc->RequestField<float>("ntuple_aux.z");
+
+   for (auto idx : *proc) {
+      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
+      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+
+      EXPECT_EQ(static_cast<float>(*i), *x);
+
+      if ((idx % 5) % 2 == 1) {
+         EXPECT_FALSE(z.HasValue());
+      } else {
+         EXPECT_TRUE(z.HasValue());
+         EXPECT_EQ(*x * 4, *z);
+      }
    }
    EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
@@ -349,7 +395,38 @@ TEST_F(RNTupleProcessorTest, JoinedChainUnaligned)
       EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
 
       EXPECT_EQ(static_cast<float>(*i), *x);
-      EXPECT_EQ(*x * 2, *z);
+      EXPECT_EQ(*x * 3, *z);
+   }
+   EXPECT_EQ(10, proc->GetNEntriesProcessed());
+}
+
+TEST_F(RNTupleProcessorTest, JoinedChainMissingEntries)
+{
+   auto primaryChain =
+      RNTupleProcessor::CreateChain({{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[0], fFileNames[0]}});
+
+   auto auxiliaryChain =
+      RNTupleProcessor::CreateChain({{fNTupleNames[3], fFileNames[3]}, {fNTupleNames[3], fFileNames[3]}});
+
+   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryChain), std::move(auxiliaryChain), {"i"});
+
+   auto i = proc->RequestField<int>("i");
+   auto x = proc->RequestField<float>("x");
+   auto z = proc->RequestField<float>("ntuple_aux.z");
+
+   for (auto idx : *proc) {
+      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
+      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+
+      EXPECT_EQ(static_cast<float>(*i), *x);
+
+      if ((idx % 5) % 2 == 1) {
+         EXPECT_FALSE(z.HasValue());
+      } else {
+         EXPECT_TRUE(z.HasValue());
+         EXPECT_EQ(*x * 4, *z);
+      }
    }
    EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
@@ -360,6 +437,32 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimary)
       RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {});
 
    auto auxProc = RNTupleProcessor::Create({fNTupleNames[2], fFileNames[2]}, "ntuple_aux2");
+
+   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {"i"}, "joined_ntuple");
+
+   auto i = proc->RequestField<int>("i");
+   auto x = proc->RequestField<float>("x");
+   auto z1 = proc->RequestField<float>("ntuple_aux.z");
+   auto z2 = proc->RequestField<float>("ntuple_aux2.z");
+
+   for (auto idx : *proc) {
+      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
+      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+
+      EXPECT_EQ(static_cast<float>(*i), *x);
+      EXPECT_EQ(*x * 2, *z1);
+      EXPECT_EQ(*x * 3, *z2);
+   }
+   EXPECT_EQ(5, proc->GetNEntriesProcessed());
+}
+
+TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimaryMissingEntries)
+{
+   auto primaryProc =
+      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {});
+
+   auto auxProc = RNTupleProcessor::Create({fNTupleNames[3], fFileNames[3]}, "ntuple_aux2");
 
    auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {"i"});
 
@@ -375,7 +478,13 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedPrimary)
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z1);
-      EXPECT_EQ(*z1, *z2);
+
+      if (idx % 2 == 1) {
+         EXPECT_FALSE(z2.HasValue());
+      } else {
+         EXPECT_TRUE(z2.HasValue());
+         EXPECT_EQ(*x * 4, *z2);
+      }
    }
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
 }
@@ -403,7 +512,42 @@ TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliary)
 
       EXPECT_EQ(static_cast<float>(*i), *x);
       EXPECT_EQ(*x * 2, *z1);
-      EXPECT_EQ(*z1, *z2);
+      EXPECT_EQ(*x * 3, *z2);
+   }
+
+   EXPECT_EQ(5, proc->GetNEntriesProcessed());
+}
+
+TEST_F(RNTupleProcessorTest, JoinedJoinComposedAuxiliaryMissingEntries)
+{
+   auto primaryProc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+
+   auto auxProcIntermediate = RNTupleProcessor::Create({fNTupleNames[3], fFileNames[3]}, "ntuple_aux2");
+
+   auto auxProc = RNTupleProcessor::CreateJoin(RNTupleProcessor::Create({fNTupleNames[1], fFileNames[1]}),
+                                               std::move(auxProcIntermediate), {"i"});
+
+   auto proc = RNTupleProcessor::CreateJoin(std::move(primaryProc), std::move(auxProc), {});
+
+   auto i = proc->RequestField<int>("i");
+   auto x = proc->RequestField<float>("x");
+   auto z1 = proc->RequestField<float>("ntuple_aux.z");
+   auto z2 = proc->RequestField<float>("ntuple_aux.ntuple_aux2.z");
+
+   for (auto idx : *proc) {
+      EXPECT_EQ(idx + 1, proc->GetNEntriesProcessed());
+      EXPECT_EQ(idx, proc->GetCurrentEntryNumber());
+      EXPECT_EQ(*i, proc->GetCurrentEntryNumber() % 5);
+
+      EXPECT_EQ(static_cast<float>(*i), *x);
+      EXPECT_EQ(*x * 2, *z1);
+
+      if (idx % 2 == 1) {
+         EXPECT_FALSE(z2.HasValue());
+      } else {
+         EXPECT_TRUE(z2.HasValue());
+         EXPECT_EQ(*x * 4, *z2);
+      }
    }
 
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
