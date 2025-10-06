@@ -446,6 +446,9 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RClassField::BeforeConnectPageSource(ROO
    // On-disk members that are not targeted by an I/O rule; all other sub fields of the in-memory class
    // will be marked as artificial (added member in a new class version or member set by rule).
    std::unordered_set<std::string> regularSubfields;
+   // We generally don't support changing the number of base classes, with the exception of changing from/to zero
+   // base classes. The variable stores the number of on-disk base classes.
+   int nOnDiskBaseClasses = 0;
 
    if (GetOnDiskId() == kInvalidDescriptorId) {
       // This can happen for added base classes or added members of class type
@@ -468,6 +471,8 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RClassField::BeforeConnectPageSource(ROO
       for (auto linkId : fieldDesc.GetLinkIds()) {
          const auto &subFieldDesc = desc.GetFieldDescriptor(linkId);
          regularSubfields.insert(subFieldDesc.GetFieldName());
+         if (!subFieldDesc.GetFieldName().empty() && subFieldDesc.GetFieldName()[0] == ':')
+            nOnDiskBaseClasses++;
       }
 
       rules = FindRules(&fieldDesc);
@@ -510,10 +515,23 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RClassField::BeforeConnectPageSource(ROO
    }
 
    // Iterate over all sub fields in memory and mark those as missing that are not in the descriptor.
+   int nInMemoryBaseClasses = 0;
    for (auto &field : fSubfields) {
-      if (regularSubfields.count(field->GetFieldName()) == 0) {
+      const auto &fieldName = field->GetFieldName();
+      if (regularSubfields.count(fieldName) == 0) {
          CallSetArtificialOn(*field);
       }
+      if (!fieldName.empty() && fieldName[0] == ':')
+         nInMemoryBaseClasses++;
+   }
+
+   if (nInMemoryBaseClasses != 0 && nOnDiskBaseClasses != 0 && nInMemoryBaseClasses != nOnDiskBaseClasses) {
+      throw RException(R__FAIL(std::string("incompatible number of base classes for field ") + GetFieldName() + ": " +
+                               GetTypeName() + ", " + std::to_string(nInMemoryBaseClasses) +
+                               " base classes in memory "
+                               " vs. " +
+                               std::to_string(nOnDiskBaseClasses) + " base classes on-disk\n" +
+                               Internal::GetTypeTraceReport(*this, pageSource.GetSharedDescriptorGuard().GetRef())));
    }
 
    return nullptr;
