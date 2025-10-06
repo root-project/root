@@ -593,20 +593,12 @@ struct AddedSecondBaseDerived : public AddedSecondBaseFirst, public AddedSecondB
 )"));
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-   ASSERT_EQ(2, reader->GetNEntries());
-
-   void *ptr = reader->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
-   DeclarePointer("AddedSecondBaseDerived", "ptrAddedSecondBaseDerived", ptr);
-
-   reader->LoadEntry(0);
-   EXPECT_EVALUATE_EQ("ptrAddedSecondBaseDerived->fFirstBase", 1);
-   EXPECT_EVALUATE_EQ("ptrAddedSecondBaseDerived->fSecondBase", 2);
-   EXPECT_EVALUATE_EQ("ptrAddedSecondBaseDerived->fDerived", 3);
-
-   reader->LoadEntry(1);
-   EXPECT_EVALUATE_EQ("ptrAddedSecondBaseDerived->fFirstBase", 71);
-   EXPECT_EVALUATE_EQ("ptrAddedSecondBaseDerived->fSecondBase", 2);
-   EXPECT_EVALUATE_EQ("ptrAddedSecondBaseDerived->fDerived", 93);
+   try {
+      reader->GetModel();
+      FAIL() << "model reconstruction should fail";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("incompatible number of base classes"));
+   }
 }
 
 TEST(RNTupleEvolution, PrependSecondBaseClass)
@@ -662,7 +654,7 @@ struct PrependSecondBaseDerived : public PrependSecondBaseSecond, public Prepend
       reader->GetModel();
       FAIL() << "model reconstruction should fail";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type name for field"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("incompatible number of base classes"));
    }
 }
 
@@ -841,6 +833,61 @@ struct RemovedIntermediateDerived : public RemovedIntermediateBase {
       FAIL() << "model reconstruction should fail";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type name for field"));
+   }
+}
+
+TEST(RNTupleEvolution, RemovedSecondBaseClass)
+{
+   FileRaii fileGuard("test_ntuple_evolution_removed_second_base_class.root");
+
+   ExecInFork([&] {
+      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+struct RemovedSecondBaseFirst {
+   int fFirstBase = 1;
+};
+struct RemovedSecondBaseSecond {
+   int fSecondBase = 2;
+};
+struct RemovedSecondBaseDerived : public RemovedSecondBaseFirst, public RemovedSecondBaseSecond {
+   int fDerived = 3;
+};
+)"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("f", "RemovedSecondBaseDerived").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      // Reset / close the writer and flush the file.
+      {
+         // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
+         // See also https://github.com/root-project/root/issues/9371
+         ROOT::TestSupport::CheckDiagsRAII diagRAII;
+         diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                               /*matchFullMessage=*/false);
+         writer.reset();
+      }
+   });
+
+   ASSERT_TRUE(gInterpreter->Declare(R"(
+struct RemovedSecondBaseFirst {
+   int fFirstBase = 1;
+};
+struct RemovedSecondBaseDerived : public RemovedSecondBaseFirst {
+   int fDerived = 3;
+};
+)"));
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   try {
+      reader->GetModel();
+      FAIL() << "model reconstruction should fail";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("incompatible number of base classes"));
    }
 }
 
