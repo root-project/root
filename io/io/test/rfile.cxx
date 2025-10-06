@@ -4,6 +4,7 @@
 #include <TFile.h>
 #include <TH1D.h>
 #include <TROOT.h>
+#include <TSystem.h>
 #include <ROOT/RError.hxx>
 #include <ROOT/RFile.hxx>
 #include <ROOT/TestSupport.hxx>
@@ -67,6 +68,40 @@ TEST(RFile, Open)
 
    std::string foo = "foo";
    EXPECT_THROW(file->Put("foo", foo), ROOT::RException);
+}
+
+TEST(RFile, OpenInexistent)
+{
+   FileRaii fileGuard("does_not_exist.root");
+
+   // make sure that the file really does not exist, in case a previous test didn't clean it up.
+   gSystem->Unlink(fileGuard.GetPath().c_str());
+
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.optionalDiag(kSysError, "TFile::TFile", "", false);
+   diags.optionalDiag(kError, "TFile::TFile", "", false);
+   
+   try {
+      auto f = RFile::Open("does_not_exist.root");
+      FAIL() << "trying to open an inexistent file should throw";
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), testing::HasSubstr("failed to open file"));
+   }
+   try {
+      auto f = RFile::Update("/a/random/directory/that/definitely/does_not_exist.root");
+      FAIL() << "trying to update a file under an inexistent directory should throw";
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), testing::HasSubstr("failed to open file"));
+   }
+   try {
+      auto f = RFile::Recreate("/a/random/directory/that/definitely/does_not_exist.root");
+      FAIL() << "trying to create a file under an inexistent directory should throw";
+   } catch (const ROOT::RException &e) {
+      EXPECT_THAT(e.what(), testing::HasSubstr("failed to open file"));
+   }
+
+   // This succeeds because Update creates the file if it doesn't exist.
+   EXPECT_NO_THROW(RFile::Update("does_not_exist.root"));
 }
 
 TEST(RFile, OpenForWriting)
