@@ -223,7 +223,8 @@ public:
    /// If one of the arguments is outside the corresponding axis and flow bins are disabled, the entry will be silently
    /// discarded.
    ///
-   /// Throws an exception if the number of arguments does not match the axis configuration.
+   /// Throws an exception if the number of arguments does not match the axis configuration, or if an argument cannot be
+   /// converted for the axis type at run-time.
    ///
    /// \param[in] args the arguments for each axis
    /// \par See also
@@ -257,7 +258,8 @@ public:
    /// If one of the arguments is outside the corresponding axis and flow bins are disabled, the entry will be silently
    /// discarded.
    ///
-   /// Throws an exception if the number of arguments does not match the axis configuration.
+   /// Throws an exception if the number of arguments does not match the axis configuration, or if an argument cannot be
+   /// converted for the axis type at run-time.
    ///
    /// \param[in] args the arguments for each axis
    /// \param[in] weight the weight for this entry
@@ -298,7 +300,8 @@ public:
    /// If one of the arguments is outside the corresponding axis and flow bins are disabled, the entry will be silently
    /// discarded.
    ///
-   /// Throws an exception if the number of arguments does not match the axis configuration.
+   /// Throws an exception if the number of arguments does not match the axis configuration, or if an argument cannot be
+   /// converted for the axis type at run-time.
    ///
    /// \param[in] args the arguments for each axis
    /// \par See also
