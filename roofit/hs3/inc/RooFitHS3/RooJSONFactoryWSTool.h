@@ -41,7 +41,7 @@ public:
    static bool allowExportInvalidNames;
    static bool allowSanitizeNames;
    static RooWorkspace sanitizeWS(const RooWorkspace &ws);
-   static RooWorkspace cleanWS(const RooWorkspace &ws);
+   static RooWorkspace cleanWS(const RooWorkspace& ws, bool onlyModelConfig = false);
 
    struct CombinedData {
       std::string name;
@@ -56,6 +56,7 @@ public:
    static bool isValidName(const std::string &str);
    static bool testValidName(const std::string &str, bool forcError);
    static std::string sanitizeName(const std::string str);
+   static void rebuildModelConfigInWorkspace(RooStats::ModelConfig* mc, RooWorkspace& ws);
 
    static RooFit::Detail::JSONNode &appendNamedChild(RooFit::Detail::JSONNode &node, std::string const &name);
    static RooFit::Detail::JSONNode const *findNamedChild(RooFit::Detail::JSONNode const &node, std::string const &name);
@@ -204,7 +205,6 @@ public:
 private:
    template <class T>
    T *requestImpl(const std::string &objname);
-
    void exportObject(RooAbsArg const &func, std::set<std::string> &exportedObjectNames);
 
    // To export multiple objects sorted alphabetically

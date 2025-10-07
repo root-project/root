@@ -547,9 +547,13 @@ public:
       const RooArg_t *pdf = static_cast<const RooArg_t *>(func);
       elem["type"] << key();
       std::string name = elem["name"].val();
-      elem["name"] << RooJSONFactoryWSTool::sanitizeName(name);
+      /*elem["name"] << RooJSONFactoryWSTool::sanitizeName(name);
       RooJSONFactoryWSTool::fillSeqSanitizedName(elem["summands"], pdf->pdfList());
       RooJSONFactoryWSTool::fillSeqSanitizedName(elem["coefficients"], pdf->coefList());
+      */
+      elem["name"] << name;
+      RooJSONFactoryWSTool::fillSeq(elem["summands"], pdf->pdfList());
+      RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf->coefList());
       elem["extended"] << (pdf->extendMode() != RooArg_t::CanNotBeExtended);
       return true;
    }
@@ -563,9 +567,13 @@ public:
       const RooRealSumPdf *pdf = static_cast<const RooRealSumPdf *>(func);
       elem["type"] << key();
       std::string name = elem["name"].val();
-      elem["name"] << RooJSONFactoryWSTool::sanitizeName(name);
+      /*elem["name"] << RooJSONFactoryWSTool::sanitizeName(name);
       RooJSONFactoryWSTool::fillSeqSanitizedName(elem["samples"], pdf->funcList());
       RooJSONFactoryWSTool::fillSeqSanitizedName(elem["coefficients"], pdf->coefList());
+      */
+      elem["name"] << name;
+      RooJSONFactoryWSTool::fillSeq(elem["samples"], pdf->funcList());
+      RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf->coefList());
       elem["extended"] << (pdf->extendMode() != RooAbsPdf::CanNotBeExtended);
       return true;
    }
@@ -579,9 +587,13 @@ public:
       const RooRealSumFunc *pdf = static_cast<const RooRealSumFunc *>(func);
       elem["type"] << key();
       std::string name = elem["name"].val();
-      elem["name"] << RooJSONFactoryWSTool::sanitizeName(name);
+      /*elem["name"] << RooJSONFactoryWSTool::sanitizeName(name);
       RooJSONFactoryWSTool::fillSeqSanitizedName(elem["samples"], pdf->funcList());
       RooJSONFactoryWSTool::fillSeqSanitizedName(elem["coefficients"], pdf->coefList());
+      */
+      elem["name"] << name;
+      RooJSONFactoryWSTool::fillSeq(elem["samples"], pdf->funcList());
+      RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf->coefList());
       return true;
    }
 };
@@ -776,7 +788,8 @@ public:
       auto *pdf = static_cast<const RooTruthModel *>(func);
       elem["type"] << key();
       std::string name = elem["name"].val();
-      elem["name"] << RooJSONFactoryWSTool::sanitizeName(name);
+      //elem["name"] << RooJSONFactoryWSTool::sanitizeName(name);
+      elem["name"] << name;
       elem["x"] << pdf->convVar().GetName();
       
       return true;
@@ -791,7 +804,8 @@ public:
       auto *pdf = static_cast<const RooGaussModel *>(func);
       elem["type"] << key();
       std::string name = elem["name"].val();
-      elem["name"] << RooJSONFactoryWSTool::sanitizeName(name);
+      //elem["name"] << RooJSONFactoryWSTool::sanitizeName(name);
+      elem["name"] << name;
       elem["x"] << pdf->convVar().GetName();
       elem["mean"] << pdf->getMean().GetName();
       elem["sigma"] << pdf->getSigma().GetName();
@@ -903,25 +917,13 @@ public:
    {
       auto *integral = static_cast<const RooRealIntegral *>(func);
       std::string name = elem["name"].val();
-      /*for (char& c : name ) {
-        if (c == '[' || c == '|' || c==',') {
-            c = '_';
-         }
-      }
-      name.erase(std::remove(name.begin(), name.end(), ']'), name.end());
-      */
-      elem["name"] << RooJSONFactoryWSTool::sanitizeName(name);
+      //elem["name"] << RooJSONFactoryWSTool::sanitizeName(name);
+      elem["name"] << name;
+
       elem["type"] << key();
       std::string integrand = integral->integrand().GetName();
-      /*for (char& c : integrand ) {
-        if (c == '[' || c == '|' || c==',') {
-            c = '_';
-         }
-      }
-      integrand.erase(std::remove(integrand.begin(), integrand.end(), ']'), integrand.end());
+      //elem["integrand"] << RooJSONFactoryWSTool::sanitizeName(integrand);
       elem["integrand"] << integrand;
-      */
-      elem["integrand"] << RooJSONFactoryWSTool::sanitizeName(integrand);
       if (integral->intRange()) {
          elem["domain"] << integral->intRange();
       }

@@ -1074,7 +1074,8 @@ std::string RooJSONFactoryWSTool::exportTransformed(const RooAbsReal *original, 
  */
 void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::string> &exportedObjectNames)
 {
-   const std::string name = sanitizeName(func.GetName());
+   //const std::string name = sanitizeName(func.GetName());
+   std::string name = func.GetName();
 
    // if this element was already exported, skip
    if (exportedObjectNames.find(name) != exportedObjectNames.end())
@@ -1534,6 +1535,10 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       return;
 
    JSONNode &output = appendNamedChild((*_rootnodeOutput)["data"], data.GetName());
+   /*std::ofstream file("/home/scello/Data/ZvvH126_5.txt", std::ios::app);
+   if (!file.is_open()) {
+      std::cerr << "Error: Could not open file for writing.\n";
+   }*/
 
    // this is a binned dataset
    if (auto dh = dynamic_cast<RooDataHist const *>(&data)) {
@@ -1575,6 +1580,20 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
          isBinnedData = true;
       if (isBinnedData) {
          output["type"] << "binned";
+         /*std::string datasetName = data.GetName();
+         if (datasetName.find("combData_ZvvH126_5") != std::string::npos) {
+            file << variables << std::endl;
+            for (size_t idx = 0; idx < data.numEntries(); ++idx) {
+               file << data.get(idx)->getRealValue("obs_x_ZvvH126_dot_5") << std::endl;
+               
+            }
+            // Write the contents vector values to the file
+            for (const auto& val : contents) {
+               file << val << std::endl;
+            }
+         }
+         
+         file.close();*/
          return exportHisto(variables, data.numEntries(), contents.data(), output);
       }
    }
@@ -1590,6 +1609,10 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    for (int i = 0; i < data.numEntries(); ++i) {
       data.get(i);
       coords.append_child().fill_seq(variables, [](auto x) { return static_cast<RooRealVar *>(x)->getVal(); });
+      std::string datasetName = data.GetName();
+      /*if (datasetName.find("combData_ZvvH126.5") != std::string::npos) {
+         file << dynamic_cast<RooAbsReal *>(data.get(i)->find("atlas_invMass_PttEtaConvVBFCat1"))->getVal() << std::endl;
+      }*/
       if (data.isWeighted()) {
          weightVals.push_back(data.weight());
          if (data.weight() != 1.)
@@ -1599,6 +1622,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    if (data.isWeighted() && hasNonUnityWeights) {
       output["weights"].fill_seq(weightVals);
    }
+   //file.close();
 }
 
 /**
@@ -2436,30 +2460,84 @@ std::string RooJSONFactoryWSTool::sanitizeName(const std::string str) {
    return str;
 }
 
-RooWorkspace RooJSONFactoryWSTool::cleanWS(const RooWorkspace& ws) {
+RooWorkspace RooJSONFactoryWSTool::cleanWS(const RooWorkspace& ws, bool onlyModelConfig) {
    // Variables
    
    RooWorkspace tmpWS = RooWorkspace();
+   if (onlyModelConfig){
+      for (auto* obj : ws.allGenericObjects()){
+         if (auto* mc = dynamic_cast<RooStats::ModelConfig*>(obj)){
+            tmpWS.import(*mc->GetPdf(), RooFit::RecycleConflictNodes(true));
+         }
+      }
+
+   } else { 
+   
    for (auto* pdf : ws.allPdfs()) {
       if (!pdf->hasClients()) {
          tmpWS.import(*pdf, RooFit::RecycleConflictNodes(true));
       }
    }
+
    for (auto* func : ws.allFunctions()) {
       if (!func->hasClients()) {
          tmpWS.import(*func, RooFit::RecycleConflictNodes(true));
       }
    }
+
+   }
+
    for (auto* data: ws.allData()) {
       tmpWS.import(*data);
    }
+
    for (auto* obj : ws.allGenericObjects()) {
+      tmpWS.import(*obj); 
+}
+
+/*
+if (auto* mc = dynamic_cast<RooStats::ModelConfig*>(obj)) {
+      // Import the PDF
+tmpWS.import(*mc->GetPdf());
+
+// Import all observables
+RooArgSet* obs = (RooArgSet*)mc->GetObservables()->snapshot();
+tmpWS.import(*obs);
+
+// Import global observables
+RooArgSet* globObs = (RooArgSet*)mc->GetGlobalObservables()->snapshot();
+tmpWS.import(*globObs);
+
+// Import POIs
+RooArgSet* pois = (RooArgSet*)mc->GetParametersOfInterest()->snapshot();
+tmpWS.import(*pois);
+
+// Import nuisance parameters
+RooArgSet* nuis = (RooArgSet*)mc->GetNuisanceParameters()->snapshot();
+tmpWS.import(*nuis);
+
+   
+RooStats::ModelConfig* mc_new = new RooStats::ModelConfig(mc->GetName(), mc->GetName());
+
+mc_new->SetPdf(*tmpWS.pdf(mc->GetPdf()->GetName()));
+mc_new->SetObservables(*tmpWS.set(obs->GetName()));
+mc_new->SetGlobalObservables(*tmpWS.set(globObs->GetName()));
+mc_new->SetParametersOfInterest(*tmpWS.set(pois->GetName()));
+mc_new->SetNuisanceParameters(*tmpWS.set(nuis->GetName()));
+
+// Import the ModelConfig into the new workspace
+tmpWS.import(*mc_new);
+   }else {
+
       tmpWS.import(*obj);
-   }
+      }
+*/
+      
+   
    for (auto*snsh : ws.getSnapshots()) {
       auto* snshSet = dynamic_cast<RooArgSet*>(snsh);
       if (snshSet) {
-         tmpWS.import(*snshSet);
+         tmpWS.saveSnapshot(snshSet->GetName(), *snshSet, true);
       }
    }
 
@@ -2470,7 +2548,7 @@ RooWorkspace RooJSONFactoryWSTool::cleanWS(const RooWorkspace& ws) {
 RooWorkspace RooJSONFactoryWSTool::sanitizeWS(const RooWorkspace& ws) {
    // Variables
    
-   RooWorkspace tmpWS = cleanWS(ws);
+   RooWorkspace tmpWS = cleanWS(ws, false);
 
    for (auto* obj : tmpWS.allVars()) {
          if (!isValidName(obj->GetName())) {
@@ -2561,7 +2639,7 @@ for (auto* snshObj : tmpWS.getSnapshots()) {
                std::cerr << "Warning: object " << obj->GetName() << " is not TNamed, cannot rename.\n";
             }
          }
-                  
+
 if (auto* mc = dynamic_cast<RooStats::ModelConfig*>(obj)) {
     // Sanitize ModelConfig name
     if (!isValidName(mc->GetName())) {
@@ -2589,7 +2667,8 @@ if (auto* mc = dynamic_cast<RooStats::ModelConfig*>(obj)) {
 }
 }
 std::string wsName = std::string{ws.GetName()} + "_sanitized";
-RooWorkspace newWS = cleanWS(tmpWS);
+RooWorkspace newWS = cleanWS(tmpWS, false);
 newWS.SetName(wsName.c_str());
+
 return newWS;
 }
