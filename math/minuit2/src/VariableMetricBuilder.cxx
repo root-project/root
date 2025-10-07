@@ -130,7 +130,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
       edm = result.back().Edm();
       // need to correct again for Dcovar: edm *= (1. + 3. * e.Dcovar()) ???
 
-      if ((strategy.Strategy() >= 2) || (strategy.Strategy() == 1 && min.Error().Dcovar() > 0.05)) {
+      if (min.Error().Dcovar() > strategy.HessianRecomputeThreshold()) {
 
          print.Debug("MnMigrad will verify convergence and Error matrix; dcov =", min.Error().Dcovar());
 
