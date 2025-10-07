@@ -84,7 +84,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
    print.Debug("Minos error for p0:  ",ey.first,ey.second);
 
    // if Minos is not at limits we can use migrad to find the other corresponding point coordinate
-   MnMigrad migrad0(fFCN, fMinimum.UserState(), MnStrategy(std::max(0, int(fStrategy.Strategy() - 1))));
+   MnMigrad migrad0(fFCN, fMinimum.UserState(), fStrategy.NextLower());
 
 // function cross for a single parameter - copy the state
    MnUserParameterState ustate = fMinimum.UserState();
@@ -190,7 +190,7 @@ ContoursError MnContours::Contour(unsigned int px, unsigned int py, unsigned int
 
    // now look for x values when y is fixed
 
-   MnMigrad migrad1(fFCN, fMinimum.UserState(), MnStrategy(std::max(0, int(fStrategy.Strategy() - 1))));
+   MnMigrad migrad1(fFCN, fMinimum.UserState(), fStrategy.NextLower());
    migrad1.State().Fix(py);
    std::vector<double> xvalues_ylo(1);
    migrad1.State().SetValue(py, valy + ey.first);

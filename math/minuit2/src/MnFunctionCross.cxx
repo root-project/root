@@ -104,7 +104,7 @@ MnCross MnFunctionCross::operator()(std::span<const unsigned int> par, std::span
    if (aulim < aopt + tla)
       limset = true;
 
-   MnMigrad migrad(fFCN, fState, MnStrategy(std::max(0, int(fStrategy.Strategy() - 1))));
+   MnMigrad migrad(fFCN, fState, fStrategy.NextLower());
 
    print.Info([&](std::ostream &os) {
       os << "Run Migrad with fixed parameters:";
