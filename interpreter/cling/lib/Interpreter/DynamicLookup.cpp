@@ -173,7 +173,7 @@ namespace cling {
     DeclarationName Name = &m_Context->Idents.get("EvaluateT");
 
     LookupResult R(*m_Sema, Name, SourceLocation(), Sema::LookupOrdinaryName,
-                     Sema::ForVisibleRedeclaration);
+                   RedeclarationKind::ForVisibleRedeclaration);
     assert(NSD && "There must be a valid namespace.");
     m_Sema->LookupQualifiedName(R, NSD);
     // We have specialized EvaluateT but we don't care because the templated
@@ -851,9 +851,7 @@ namespace cling {
     Sema::InstantiatingTemplate Inst(*m_Sema, m_NoSLoc, m_EvalDecl);
     // Before instantiation we need the canonical type
     TemplateArgument Arg(InstTy.getCanonicalType());
-    TemplateArgumentList TemplateArgs(TemplateArgumentList::OnStack, Arg);
-    MultiLevelTemplateArgumentList MLTAL(m_EvalDecl, TemplateArgs.asArray(),
-                                         /*Final=*/false);
+    MultiLevelTemplateArgumentList MLTAL(m_EvalDecl, Arg, /*Final=*/false);
 
     // Substitute the declaration of the templated function, with the
     // specified template argument

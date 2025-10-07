@@ -36,6 +36,7 @@
 #include "clang/Serialization/GlobalModuleIndex.h"
 #include "clang/Basic/DiagnosticSema.h"
 
+#include "llvm/ExecutionEngine/Orc/AbsoluteSymbols.h"
 #include "llvm/ExecutionEngine/Orc/Core.h"
 
 #include "llvm/Support/Error.h"
@@ -179,6 +180,7 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
                                          llvm::StringRef /*SearchPath*/,
                                          llvm::StringRef /*RelativePath*/,
                                          const clang::Module * Imported,
+                                         bool ModuleImported,
                                          clang::SrcMgr::CharacteristicKind FileType) {
    // We found a module. Do not try to do anything else.
    Sema &SemaR = m_Interpreter->getSema();

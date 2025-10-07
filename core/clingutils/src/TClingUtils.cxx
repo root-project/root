@@ -222,7 +222,7 @@ static const clang::FieldDecl *GetDataMemberFromAllParents(clang::Sema &SemaR, c
    clang::DeclarationName DName = &SemaR.Context.Idents.get(what);
    clang::LookupResult R(SemaR, DName, clang::SourceLocation(),
                          clang::Sema::LookupOrdinaryName,
-                         clang::Sema::ForExternalRedeclaration);
+                         RedeclarationKind::ForExternalRedeclaration);
    SemaR.LookupInSuper(R, &const_cast<clang::CXXRecordDecl&>(cl));
    if (R.empty())
       return nullptr;
@@ -2828,7 +2828,7 @@ void ROOT::TMetaUtils::foreachHeaderInModule(const clang::Module &module,
       // We want to check for all headers except the list of excluded headers here.
       for (auto HK : {clang::Module::HK_Normal, clang::Module::HK_Textual, clang::Module::HK_Private,
                       clang::Module::HK_PrivateTextual}) {
-         auto &headerList = m->Headers[HK];
+         const auto &headerList = m->getHeaders(HK);
          for (const clang::Module::Header &moduleHeader : headerList) {
             closure(moduleHeader);
          }
@@ -3105,7 +3105,12 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
       llvm::SmallVector<clang::TemplateArgument, 4> canonArgs;
       llvm::ArrayRef<clang::TemplateArgument> template_arguments = TST->template_arguments();
       unsigned int Idecl = 0, Edecl = TSTdecl->getTemplateArgs().size();
-      unsigned int maxAddArg = TSTdecl->getTemplateArgs().size() - dropDefault;
+      // If we have more arguments than the TSTdecl, it is a variadic template
+      // and we want all template arguments.
+      if (template_arguments.size() > Edecl) {
+         Edecl = template_arguments.size();
+      }
+      unsigned int maxAddArg = Edecl - dropDefault;
       for (const clang::TemplateArgument *I = template_arguments.begin(), *E = template_arguments.end(); Idecl != Edecl;
            I != E ? ++I : nullptr, ++Idecl, ++Param) {
 
@@ -3736,7 +3741,7 @@ static bool areEqualTypes(const clang::TemplateArgument& tArg,
    if (!ttpdPtr->hasDefaultArgument()) return false; // we should not be here in this case, but we protect us.
 
    // Try the fast solution
-   QualType tParQualType = ttpdPtr->getDefaultArgument();
+   QualType tParQualType = ttpdPtr->getDefaultArgument().getArgument().getAsType();
    const QualType tArgQualType = tArg.getAsType();
 
    // Now the equality tests for non template specialisations.
@@ -3836,7 +3841,7 @@ static bool areEqualValues(const clang::TemplateArgument& tArg,
 
    // 64 bits wide and signed (non unsigned, that is why "false")
    llvm::APSInt defaultValueAPSInt(64, false);
-   if (Expr* defArgExpr = nttpd.getDefaultArgument()) {
+   if (Expr* defArgExpr = nttpd.getDefaultArgument().getArgument().getAsExpr()) {
       const ASTContext& astCtxt = nttpdPtr->getASTContext();
       if (auto Value = defArgExpr->getIntegerConstantExpr(astCtxt))
          defaultValueAPSInt = *Value;

@@ -384,7 +384,7 @@ namespace cling {
       closeBraces = PrintEnclosingDeclContexts(Out(), D->getDeclContext());
     if (!m_Policy.SuppressSpecifiers && D->isModulePrivate())
       Out() << "__module_private__ ";
-    Out() << D->getKindName();
+    Out() << D->getKindName() << ' ';
     prettyPrintAttributes(D);
     if (D->getIdentifier())
       Out() << ' ' << *D << ';' << closeBraces << '\n';
@@ -892,7 +892,7 @@ namespace cling {
                                                          D->getDeclContext());
     if (!m_Policy.SuppressSpecifiers && D->isModulePrivate())
       Out() << "__module_private__ ";
-    Out() << D->getKindName();
+    Out() << D->getKindName() << ' ';
 
 //    if (D->isCompleteDefinition())
       prettyPrintAttributes(D);
@@ -938,7 +938,7 @@ namespace cling {
            ArgQT = Args->get(i).getAsType();
         }
         else if (TTP->hasDefaultArgument()) {
-           ArgQT = TTP->getDefaultArgument();
+           ArgQT = TTP->getDefaultArgument().getArgument().getAsType();
         }
         if (!ArgQT.isNull()) {
           QualType ArgFQQT
@@ -964,7 +964,7 @@ namespace cling {
           Args->get(i).print(m_Policy, Stream, /*IncludeType=*/true);
         }
         else if (NTTP->hasDefaultArgument()) {
-          Expr* DefArg = NTTP->getDefaultArgument()->IgnoreImpCasts();
+          Expr* DefArg = NTTP->getDefaultArgument().getArgument().getAsExpr()->IgnoreImpCasts();
           if (DeclRefExpr* DRE = dyn_cast<DeclRefExpr>(DefArg)) {
             Visit(DRE->getFoundDecl());
             if (m_SkipFlag) {
