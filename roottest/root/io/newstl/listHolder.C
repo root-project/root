@@ -1,5 +1,5 @@
 #include "listHolder.h"
 
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ class listHolder+;
 #endif
