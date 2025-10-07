@@ -152,7 +152,7 @@ produce many different results in one event loop. Instant actions trigger the ev
 |---------------------|-----------------|
 | Foreach() | Execute a user-defined function on each entry. Users are responsible for the thread-safety of this callable when executing with implicit multi-threading enabled. |
 | ForeachSlot() | Same as Foreach(), but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe Foreach() actions when using RDataFrame after ROOT::EnableImplicitMT(). ForeachSlot() works just as well with single-thread execution: in that case `slot` will always be `0`. |
-| Snapshot() | Write the processed dataset to disk, in a new TTree or RNTuple and TFile. Custom columns can be saved as well, filtered entries are not saved. Users can specify which columns to save (default is all). Snapshot, by default, overwrites the output file if it already exists. Snapshot() can be made *lazy* setting the appropriate flag in the snapshot options.|
+| Snapshot() | Write the processed dataset to disk, in a new TTree or RNTuple and TFile. Custom columns can be saved as well, filtered entries are not saved. Users can specify which columns to save (default is all nominal columns). Columns resulting from Vary() can be included by setting the corresponding flag in \ref RSnapshotOptions. Snapshot, by default, overwrites the output file if it already exists. Snapshot() can be made *lazy* setting the appropriate flag in the snapshot options.|
 
 
 ### Queries
@@ -1216,6 +1216,62 @@ not limited to string expressions but they can also pass any valid C++ callable,
 complex functors. The callable can be applied to zero or more existing columns and it will always receive their
 _nominal_ value in input.
 
+\note - Currently, VariationsFor() and RResultMap are in the `ROOT::RDF::Experimental` namespace, to indicate that these
+      interfaces can still evolve and improve based on user feedback. Please send feedback on https://github.com/root-project/root.
+
+\note - The results of Display() cannot be varied (i.e. it is not possible to call \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()").
+
+See the Vary() method for more information and [this tutorial](https://root.cern/doc/master/df106__HiggsToFourLeptons_8C.html)
+for an example usage of Vary and \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()" in the analysis.
+
+
+\anchor snapshot-with-variations
+#### Snapshot with Variations
+To combine Vary() and Snapshot(), the \ref ROOT::RDF::RSnapshotOptions::fIncludeVariations "fIncludeVariations" flag in \ref ROOT::RDF::RSnapshotOptions
+"RSnapshotOptions" has to be set, as demonstrated in the following example:
+
+~~~{.cpp}
+   ROOT::RDF::RSnapshotOptions options;
+   options.fIncludeVariations = true;
+
+   auto s = ROOT::RDataFrame(N)
+      .Define("x", [](ULong64_t e) -> float { return 10.f * e; }, {"rdfentry_"})
+      .Vary(
+         "x", [](float x) { return ROOT::RVecF{x - 0.5f, x + 0.5f}; }, {"x"}, 2, "xVar")
+      .Define("y", [](float x) -> double { return -1. * x; }, {"x"})
+      .Filter(cuts, {"x", "y"})
+      .Snapshot("t", filename, {"x", "y"}, options);
+~~~
+
+This snapshot action will create an output file with a dataset that includes the columns requested in the Snapshot() call
+and their corresponding variations:
+
+| Row  |           `x`   |           `y`   | `x__xVar_0`     | `y__xVar_0`     | `x__xVar_1`     | `y__xVar_1`     | `R_rdf_mask_t_0`|
+|------|----------------:|----------------:|----------------:|----------------:|----------------:|----------------:|----------------:|
+| 0 |               0 |              -0 |            -0.5 |             0.5 |             0.5 |            -0.5 |             111 |
+| 1 |              10 |             -10 |             9.5 |            -9.5 |            10.5 |           -10.5 |             111 |
+| 2 |              20 |             -20 |            19.5 |           -19.5 |            20.5 |           -20.5 |             111 |
+| 3 |              30 |             -30 |            29.5 |           -29.5 |            30.5 |           -30.5 |             111 |
+| 4 |              40 |             -40 |            39.5 |           -39.5 |            40.5 |           -40.5 |             111 |
+| 5 |               0 |               0 |            49.5 |           -49.5 |               0 |               0 |             010 |
+| 6 |`* Not written *`|                 |                 |                 |                 |                 |                 |
+| 7 |               0 |               0 |               0 |               0 |            70.5 |           -70.5 |             100 |
+
+"x" and "y" are the nominal values, and their variations are snapshot as `<ColumnName>__<VariationName>_<VariationTag>`.
+
+When Filters are employed, some variations might not pass the selection cuts (like the rows 5 and 7 in the table above).
+In that case, RDataFrame will snapshot the filtered columns in a memory-efficient way by writing zero into the memory of fundamental types, or write a
+default-constructed object in case of classes. If none of the filters pass like in row 6, the entire event is omitted from the snapshot.
+
+To tell apart a genuine `0` (like `x` in row 0) from a variation that didn't pass the selection, RDataFrame writes a bitmask for each event, indicating which variations
+are valid (see last column). A mapping of column names to this bitmask is placed in the same file as the output dataset, and automatically loaded when
+RDataFrame opens a file that was snapshot with variations.
+Attempting to read such missing values with RDataFrame will produce an error, but RDataFrame can either skip these values or fill in defaults as
+described in the \ref missing-values "section on dealing with missing values".
+
+\note Snapshot with variations is currently restricted to single-threaded TTree snapshots.
+
+
 #### Varying multiple columns in lockstep
 
 In the following Python snippet we use the Vary() signature that allows varying multiple columns simultaneously or
@@ -1258,15 +1314,6 @@ all_hs.GetKeys(); // returns {"nominal", "pt:down", "pt:up", "eta:0", "eta:1"}
 Note how we passed the integer `2` instead of a list of variation tags to the second Vary() invocation: this is a
 shorthand that automatically generates tags 0 to N-1 (in this case 0 and 1).
 
-\note Currently, VariationsFor() and RResultMap are in the `ROOT::RDF::Experimental` namespace, to indicate that these
-      interfaces might still evolve and improve based on user feedback. We expect that some aspects of the related
-      programming model will be streamlined in future versions.
-
-\note Currently, the results of a Snapshot() or Display() call cannot be varied (i.e. it is not possible to
-      call \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()" on them. These limitations will be lifted in future releases.
-
-See the Vary() method for more information and [this tutorial](https://root.cern/doc/master/df106__HiggsToFourLeptons_8C.html) 
-for an example usage of Vary and \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()" in the analysis.
 
 \anchor rnode
 ### RDataFrame objects as function arguments and return values
