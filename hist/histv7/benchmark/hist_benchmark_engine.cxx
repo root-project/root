@@ -11,7 +11,7 @@
 struct RHistEngine_int_Regular1 : public benchmark::Fixture {
    // The objects are stored and constructed in the fixture to avoid compiler optimizations in the benchmark body taking
    // advantage of the (constant) constructor parameters.
-   ROOT::Experimental::RRegularAxis axis{20, 0.0, 1.0};
+   ROOT::Experimental::RRegularAxis axis{20, {0.0, 1.0}};
    ROOT::Experimental::RHistEngine<int> engine{{axis}};
    std::vector<double> fNumbers;
 
@@ -41,7 +41,7 @@ BENCHMARK_REGISTER_F(RHistEngine_int_Regular1, Fill)->Range(0, 32768);
 struct RHistEngine_int_Regular2 : public benchmark::Fixture {
    // The objects are stored and constructed in the fixture to avoid compiler optimizations in the benchmark body taking
    // advantage of the (constant) constructor parameters.
-   ROOT::Experimental::RRegularAxis axis{20, 0.0, 1.0};
+   ROOT::Experimental::RRegularAxis axis{20, {0.0, 1.0}};
    ROOT::Experimental::RHistEngine<int> engine{{axis, axis}};
    std::vector<double> fNumbers;
 
@@ -71,7 +71,7 @@ BENCHMARK_REGISTER_F(RHistEngine_int_Regular2, Fill)->Range(0, 32768);
 struct RHistEngine_float_Regular1 : public benchmark::Fixture {
    // The objects are stored and constructed in the fixture to avoid compiler optimizations in the benchmark body taking
    // advantage of the (constant) constructor parameters.
-   ROOT::Experimental::RRegularAxis axis{20, 0.0, 1.0};
+   ROOT::Experimental::RRegularAxis axis{20, {0.0, 1.0}};
    ROOT::Experimental::RHistEngine<float> engine{{axis}};
    std::vector<double> fNumbers;
 
@@ -111,7 +111,7 @@ BENCHMARK_REGISTER_F(RHistEngine_float_Regular1, FillWeight)->Range(0, 32768);
 struct RHistEngine_float_Regular2 : public benchmark::Fixture {
    // The objects are stored and constructed in the fixture to avoid compiler optimizations in the benchmark body taking
    // advantage of the (constant) constructor parameters.
-   ROOT::Experimental::RRegularAxis axis{20, 0.0, 1.0};
+   ROOT::Experimental::RRegularAxis axis{20, {0.0, 1.0}};
    ROOT::Experimental::RHistEngine<float> engine{{axis, axis}};
    std::vector<double> fNumbers;
 
@@ -151,7 +151,7 @@ BENCHMARK_REGISTER_F(RHistEngine_float_Regular2, FillWeight)->Range(0, 32768);
 struct RHistEngine_RBinWithError_Regular1 : public benchmark::Fixture {
    // The objects are stored and constructed in the fixture to avoid compiler optimizations in the benchmark body taking
    // advantage of the (constant) constructor parameters.
-   ROOT::Experimental::RRegularAxis axis{20, 0.0, 1.0};
+   ROOT::Experimental::RRegularAxis axis{20, {0.0, 1.0}};
    ROOT::Experimental::RHistEngine<ROOT::Experimental::RBinWithError> engine{{axis}};
    std::vector<double> fNumbers;
 
@@ -191,7 +191,7 @@ BENCHMARK_REGISTER_F(RHistEngine_RBinWithError_Regular1, FillWeight)->Range(0, 3
 struct RHistEngine_RBinWithError_Regular2 : public benchmark::Fixture {
    // The objects are stored and constructed in the fixture to avoid compiler optimizations in the benchmark body taking
    // advantage of the (constant) constructor parameters.
-   ROOT::Experimental::RRegularAxis axis{20, 0.0, 1.0};
+   ROOT::Experimental::RRegularAxis axis{20, {0.0, 1.0}};
    ROOT::Experimental::RHistEngine<ROOT::Experimental::RBinWithError> engine{{axis, axis}};
    std::vector<double> fNumbers;
 

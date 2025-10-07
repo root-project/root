@@ -18,7 +18,7 @@ static void ExpectThrowOnWriteObject(const T &obj)
 TEST(RRegularAxis, Streamer)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    ExpectThrowOnWriteObject(axis);
 }
 
@@ -38,7 +38,7 @@ TEST(RVariableBinAxis, Streamer)
 TEST(RAxes, Streamer)
 {
    static constexpr std::size_t BinsX = 20;
-   const RRegularAxis regularAxis(BinsX, 0, BinsX);
+   const RRegularAxis regularAxis(BinsX, {0, BinsX});
    static constexpr std::size_t BinsY = 30;
    std::vector<double> bins;
    for (std::size_t i = 0; i < BinsY; i++) {
@@ -54,7 +54,7 @@ TEST(RAxes, Streamer)
 TEST(RHistEngine, Streamer)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
 
    // We don't request a dictionary for RHistEngine<unsigned char>, and we generally don't recommend such narrow bin
    // content types. If used, the RAxes member will prevent streaming.
@@ -98,7 +98,7 @@ TEST(RHistStats, Streamer)
 TEST(RHist, Streamer)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
 
    const RHist<int> histI({axis});
    ExpectThrowOnWriteObject(histI);
