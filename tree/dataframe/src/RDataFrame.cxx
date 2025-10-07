@@ -479,7 +479,7 @@ h_a_val = h_a.GetValue()
 h_b_val = h_b.GetValue()
 h_c_val = h_c.GetValue()
 
-print(f"How many times was the data set processed? {df_wrong.GetNRuns()} time.") # The answer will be 1 time. 
+print(f"How many times was the data set processed? {df_wrong.GetNRuns()} time.") # The answer will be 1 time.
 ~~~
 
 An incorrect way - the dataset is processed three times.
@@ -495,7 +495,7 @@ h_b_val = h_b.GetValue()
 h_c = df_incorrect.Histo1D("c")
 h_c_val = h_c.GetValue()
 
-print(f"How many times was the data set processed? {df_wrong.GetNRuns()} times.") # The answer will be 3 times. 
+print(f"How many times was the data set processed? {df_wrong.GetNRuns()} times.") # The answer will be 3 times.
 ~~~
 
 It is therefore good practice to declare all your transformations and actions *before* accessing their results, allowing
@@ -776,7 +776,7 @@ df = ROOT.RDataFrame("mytree", "myfile.root", executor = sc)
 
 Note that with the usage above the case of `executor = None` is not supported. One
 can explicitly create a `ROOT.RDF.Distributed.Spark.RDataFrame` object
-in order to get a default instance of 
+in order to get a default instance of
 [SparkContext](https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.SparkContext.html)
 in case it is not already provided as argument.
 
@@ -803,7 +803,7 @@ if __name__ == "__main__":
 
 Note that with the usage above the case of `executor = None` is not supported. One
 can explicitly create a `ROOT.RDF.Distributed.Dask.RDataFrame` object
-in order to get a default instance of 
+in order to get a default instance of
 [distributed.Client](http://distributed.dask.org/en/stable/api.html#distributed.Client)
 in case it is not already provided as argument. This will run multiple processes
 on the local machine using all available cores.
@@ -836,13 +836,13 @@ if __name__ == "__main__":
 Note that when processing a TTree or TChain dataset, the `npartitions` value should not exceed the number of clusters in
 the dataset. The number of clusters in a TTree can be retrieved by typing `rootls -lt myfile.root` at a command line.
 
-### Distributed FromSpec 
+### Distributed FromSpec
 
-RDataFrame can be also built from a JSON sample specification file using the FromSpec function. In distributed mode, two arguments need to be provided: the path to the specification 
-jsonFile (same as for local RDF case) and an additional executor argument - in the same manner as for the RDataFrame constructors above - an executor can either be a spark connection or a dask client. 
-If no second argument is given, the local version of FromSpec will be run. Here is an example of FromSpec usage in distributed RDF using either spark or dask backends. 
-For more information on FromSpec functionality itself please refer to [FromSpec](\ref rdf-from-spec) documentation. Note that adding metadata and friend information is supported, 
-but adding the global range will not be respected in the distributed execution. 
+RDataFrame can be also built from a JSON sample specification file using the FromSpec function. In distributed mode, two arguments need to be provided: the path to the specification
+jsonFile (same as for local RDF case) and an additional executor argument - in the same manner as for the RDataFrame constructors above - an executor can either be a spark connection or a dask client.
+If no second argument is given, the local version of FromSpec will be run. Here is an example of FromSpec usage in distributed RDF using either spark or dask backends.
+For more information on FromSpec functionality itself please refer to [FromSpec](\ref rdf-from-spec) documentation. Note that adding metadata and friend information is supported,
+but adding the global range will not be respected in the distributed execution.
 
 Using spark:
 ~~~{.py}
@@ -859,7 +859,7 @@ df_fromspec = ROOT.RDF.Experimental.FromSpec("myspec.json", executor = sc)
 df_fromspec.Define("x","someoperation").Histo1D(("name", "title", 10, 0, 10), "x")
 ~~~
 
-Using dask: 
+Using dask:
 ~~~{.py}
 import ROOT
 from dask.distributed import Client
@@ -868,7 +868,7 @@ if __name__ == "__main__":
     client = Client("dask_scheduler.domain.com:8786")
 
     # The FromSpec function accepts the Dask Client object as an optional argument
-    df_fromspec = ROOT.RDF.Experimental.FromSpec("myspec.json", executor=client) 
+    df_fromspec = ROOT.RDF.Experimental.FromSpec("myspec.json", executor=client)
     # Proceed as usual
     df_fromspec.Define("x","someoperation").Histo1D(("name", "title", 10, 0, 10), "x")
 ~~~
@@ -931,10 +931,10 @@ the distributed execution.
 
 ### Live visualization in distributed mode with dask
 
-The live visualization feature allows real-time data representation of plots generated during the execution 
-of a distributed RDataFrame application. 
+The live visualization feature allows real-time data representation of plots generated during the execution
+of a distributed RDataFrame application.
 It enables visualizing intermediate results as they are computed across multiple nodes of a Dask cluster
-by creating a canvas and continuously updating it as partial results become available. 
+by creating a canvas and continuously updating it as partial results become available.
 
 The LiveVisualize() function can be imported from the Python package **ROOT.RDF.Distributed**:
 
@@ -946,14 +946,14 @@ LiveVisualize = ROOT.RDF.Distributed.LiveVisualize
 
 The function takes drawable objects (e.g. histograms) and optional callback functions as argument, it accepts 4 different input formats:
 
-- Passing a list or tuple of drawables: 
+- Passing a list or tuple of drawables:
 You can pass a list or tuple containing the plots you want to visualize. For example:
 
 ~~~{.py}
 LiveVisualize([h_gaus, h_exp, h_random])
 ~~~
 
-- Passing a list or tuple of drawables with a global callback function: 
+- Passing a list or tuple of drawables with a global callback function:
 You can also include a global callback function that will be applied to all plots. For example:
 
 ~~~{.py}
@@ -963,7 +963,7 @@ def set_fill_color(hist):
 LiveVisualize([h_gaus, h_exp, h_random], set_fill_color)
 ~~~
 
-- Passing a Dictionary of drawables and callback functions: 
+- Passing a Dictionary of drawables and callback functions:
 For more control, you can create a dictionary where keys are plots and values are corresponding (optional) callback functions. For example:
 
 ~~~{.py}
@@ -976,7 +976,7 @@ plot_callback_dict = {
 LiveVisualize(plot_callback_dict)
 ~~~
 
-- Passing a Dictionary of drawables and callback functions with a global callback function: 
+- Passing a Dictionary of drawables and callback functions with a global callback function:
 You can also combine a dictionary of plots and callbacks with a global callback function:
 
 ~~~{.py}
@@ -993,10 +993,10 @@ LiveVisualize(plot_callback_dict, write_to_tfile)
 ### Injecting C++ code and using external files into distributed RDF script
 
 Distributed RDF provides an interface for the users who want to inject the C++ code (via header files, shared libraries or declare the code directly)
-into their distributed RDF application, or their application needs to use information from external files which should be distributed 
-to the workers (for example, a JSON or a txt file with necessary parameters information). 
+into their distributed RDF application, or their application needs to use information from external files which should be distributed
+to the workers (for example, a JSON or a txt file with necessary parameters information).
 
-The examples below show the usage of these interface functions: firstly, how this is done in a local Python 
+The examples below show the usage of these interface functions: firstly, how this is done in a local Python
 RDF application and secondly, how it is done distributedly.
 
 #### Include and distribute header files.
@@ -1011,7 +1011,7 @@ ROOT.RDF.Distributed.DistributeHeaders("myheader.hxx")
 df.Define(...)
 ~~~
 
-#### Load and distribute shared libraries 
+#### Load and distribute shared libraries
 
 ~~~{.py}
 # Local RDataFrame script
@@ -1025,7 +1025,7 @@ df.Define(...)
 
 #### Declare and distribute the cpp code
 
-The cpp code is always available to all dataframes. 
+The cpp code is always available to all dataframes.
 
 ~~~{.py}
 # Local RDataFrame script
@@ -1037,10 +1037,10 @@ ROOT.RDF.Distributed.DistributeCppCode("my_code")
 df.Define(...)
 ~~~
 
-#### Distribute additional files (other than headers or shared libraries). 
+#### Distribute additional files (other than headers or shared libraries).
 
 ~~~{.py}
-# Local RDataFrame script is not applicable here as local RDF application can simply access the external files it needs. 
+# Local RDataFrame script is not applicable here as local RDF application can simply access the external files it needs.
 
 # Distributed RDF script
 ROOT.RDF.Distributed.DistributeFiles("my_file")
@@ -1063,7 +1063,7 @@ or export an environment variable:
 ~~~{.sh}
 export ROOT_MAX_THREADS=numThreads
 root.exe rdfAnalysis.cxx
-# or 
+# or
 ROOT_MAX_THREADS=4 python rdfAnalysis.py
 ~~~
 replacing `numThreads` with the number of CPUs/slots that were allocated for this job.
@@ -1181,7 +1181,7 @@ of normal RDataFrame results using \ref ROOT::RDF::Experimental::VariationsFor "
 to the analysis code is required: the presence of systematic variations for certain columns is automatically propagated
 through filters, defines and actions, and RDataFrame will take these dependencies into account when producing varied
 results. \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()" is included in header `ROOT/RDFHelpers.hxx`. The compiled C++ programs must include this header
-explicitly, this is not required for ROOT macros. 
+explicitly, this is not required for ROOT macros.
 
 An example usage of Vary() and \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()" in C++:
 
@@ -1634,7 +1634,7 @@ More information (e.g. start and end of each multi-thread task) is printed using
 \anchor rdf-from-spec
 ### Creating an RDataFrame from a dataset specification file
 
-RDataFrame can be created using a dataset specification JSON file: 
+RDataFrame can be created using a dataset specification JSON file:
 
 ~~~{.python}
 import ROOT
@@ -1656,7 +1656,7 @@ A simple example for the formatting of the specification in the JSON file is the
          "trees": ["tree1", "tree2"],
          "files": ["file1.root", "file2.root"],
          "metadata": {
-            "lumi": 10000.0, 
+            "lumi": 10000.0,
             "xsec": 1.0,
             "sample_category" = "data"
             }
@@ -1665,7 +1665,7 @@ A simple example for the formatting of the specification in the JSON file is the
          "trees": ["tree3", "tree4"],
          "files": ["file3.root", "file4.root"],
          "metadata": {
-            "lumi": 0.5, 
+            "lumi": 0.5,
             "xsec": 1.5,
             "sample_category" = "MC_background"
             }
@@ -1697,12 +1697,12 @@ An example implementation of the "FromSpec" method is available in tutorial: df1
 provides a corresponding exemplary JSON file for the dataset specification.
 
 \anchor progressbar
-### Adding a progress bar 
+### Adding a progress bar
 
 A progress bar showing the processed event statistics can be added to any RDataFrame program.
-The event statistics include elapsed time, currently processed file, currently processed events, the rate of event processing 
-and an estimated remaining time (per file being processed). It is recorded and printed in the terminal every m events and every 
-n seconds (by default m = 1000 and n = 1). The ProgressBar can be also added when the multithread (MT) mode is enabled. 
+The event statistics include elapsed time, currently processed file, currently processed events, the rate of event processing
+and an estimated remaining time (per file being processed). It is recorded and printed in the terminal every m events and every
+n seconds (by default m = 1000 and n = 1). The ProgressBar can be also added when the multithread (MT) mode is enabled.
 
 ProgressBar is added after creating the dataframe object (df):
 ~~~{.cpp}
@@ -1710,16 +1710,16 @@ ROOT::RDataFrame df("tree", "file.root");
 ROOT::RDF::Experimental::AddProgressBar(df);
 ~~~
 
-Alternatively, RDataFrame can be cast to an RNode first, giving the user more flexibility 
+Alternatively, RDataFrame can be cast to an RNode first, giving the user more flexibility
 For example, it can be called at any computational node, such as Filter or Define, not only the head node,
-with no change to the ProgressBar function itself (please see the [Python interface](classROOT_1_1RDataFrame.html#python) 
-section for appropriate usage in Python): 
+with no change to the ProgressBar function itself (please see the [Python interface](classROOT_1_1RDataFrame.html#python)
+section for appropriate usage in Python):
 ~~~{.cpp}
 ROOT::RDataFrame df("tree", "file.root");
 auto df_1 = ROOT::RDF::RNode(df.Filter("x>1"));
 ROOT::RDF::Experimental::AddProgressBar(df_1);
 ~~~
-Examples of implemented progress bars can be seen by running [Higgs to Four Lepton tutorial](https://root.cern/doc/master/df106__HiggsToFourLeptons_8py_source.html) and [Dimuon tutorial](https://root.cern/doc/master/df102__NanoAODDimuonAnalysis_8C.html). 
+Examples of implemented progress bars can be seen by running [Higgs to Four Lepton tutorial](https://root.cern/doc/master/df106__HiggsToFourLeptons_8py_source.html) and [Dimuon tutorial](https://root.cern/doc/master/df102__NanoAODDimuonAnalysis_8C.html).
 
 \anchor missing-values
 ### Working with missing values in the dataset
@@ -1806,7 +1806,7 @@ instead. Example:
 df = ROOT.RDataFrame(dataset)
 # Anytime an entry from "col" is missing, the value will be the default one
 default_value = ... # Some sensible default value here
-df = df.DefaultValueFor("col", default_value) 
+df = df.DefaultValueFor("col", default_value)
 df = df.Define("twice", "col * 2")
 \endcode
 
@@ -2005,7 +2005,7 @@ namespace Experimental {
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Create the RDataFrame from the dataset specification file.
-/// \param[in] jsonFile Path to the dataset specification JSON file. 
+/// \param[in] jsonFile Path to the dataset specification JSON file.
 ///
 /// The input dataset specification JSON file must include a number of keys that
 /// describe all the necessary samples and their associated metadata information.
@@ -2015,7 +2015,7 @@ namespace Experimental {
 /// added, as well as the friend list information.
 ///
 /// ### Example specification file JSON:
-/// The following is an example of the dataset specification JSON file formatting: 
+/// The following is an example of the dataset specification JSON file formatting:
 ///~~~{.cpp}
 /// {
 ///    "samples": {
