@@ -27,7 +27,7 @@ A histogram for aggregation of data along multiple dimensions.
 
 Every call to \ref Fill(const A &... args) "Fill" increments the bin content and is reflected in global statistics:
 \code
-ROOT::Experimental::RHist<int> hist(10, 5, 15);
+ROOT::Experimental::RHist<int> hist(10, {5, 15});
 hist.Fill(8.5);
 // hist.GetBinContent(ROOT::Experimental::RBinIndex(3)) will return 1
 \endcode
@@ -70,12 +70,12 @@ public:
    /// Construct a one-dimensional histogram engine with a regular axis.
    ///
    /// \param[in] nNormalBins the number of normal bins, must be > 0
-   /// \param[in] low the lower end of the axis interval (inclusive)
-   /// \param[in] high the upper end of the axis interval (exclusive), must be > low
+   /// \param[in] interval the axis interval (lower end inclusive, upper end exclusive)
    /// \par See also
-   /// the \ref RRegularAxis::RRegularAxis(std::size_t nNormalBins, double low, double high, bool enableFlowBins)
+   /// the
+   /// \ref RRegularAxis::RRegularAxis(std::size_t nNormalBins, std::pair<double, double> interval, bool enableFlowBins)
    /// "constructor of RRegularAxis"
-   RHist(std::size_t nNormalBins, double low, double high) : RHist({RRegularAxis(nNormalBins, low, high)}) {}
+   RHist(std::size_t nNormalBins, std::pair<double, double> interval) : RHist({RRegularAxis(nNormalBins, interval)}) {}
 
    /// The copy constructor is deleted.
    ///

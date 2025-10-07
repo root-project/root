@@ -9,7 +9,7 @@
 TEST(RAxes, Constructor)
 {
    static constexpr std::size_t BinsX = 20;
-   const RRegularAxis regularAxis(BinsX, 0, BinsX);
+   const RRegularAxis regularAxis(BinsX, {0, BinsX});
    static constexpr std::size_t BinsY = 30;
    std::vector<double> bins;
    for (std::size_t i = 0; i < BinsY; i++) {
@@ -37,7 +37,7 @@ TEST(RAxes, Constructor)
 TEST(RAxes, Equality)
 {
    static constexpr std::size_t BinsX = 20;
-   const RRegularAxis regularAxis(BinsX, 0, BinsX);
+   const RRegularAxis regularAxis(BinsX, {0, BinsX});
    static constexpr std::size_t BinsY = 30;
    std::vector<double> bins;
    for (std::size_t i = 0; i < BinsY; i++) {
@@ -69,7 +69,7 @@ TEST(RAxes, Equality)
 TEST(RAxes, ComputeTotalNBins)
 {
    static constexpr std::size_t BinsX = 20;
-   const RRegularAxis regularAxis(BinsX, 0, BinsX);
+   const RRegularAxis regularAxis(BinsX, {0, BinsX});
    static constexpr std::size_t BinsY = 30;
    std::vector<double> bins;
    for (std::size_t i = 0; i < BinsY; i++) {
@@ -86,7 +86,7 @@ TEST(RAxes, ComputeTotalNBins)
 TEST(RAxes, ComputeGlobalIndex)
 {
    static constexpr std::size_t BinsX = 20;
-   const RRegularAxis regularAxis(BinsX, 0, BinsX);
+   const RRegularAxis regularAxis(BinsX, {0, BinsX});
    static constexpr std::size_t BinsY = 30;
    std::vector<double> bins;
    for (std::size_t i = 0; i < BinsY; i++) {
@@ -132,7 +132,7 @@ TEST(RAxes, ComputeGlobalIndex)
 TEST(RAxes, ComputeGlobalIndexNoFlowBins)
 {
    static constexpr std::size_t BinsX = 20;
-   const RRegularAxis regularAxis(BinsX, 0, BinsX, /*enableFlowBins=*/false);
+   const RRegularAxis regularAxis(BinsX, {0, BinsX}, /*enableFlowBins=*/false);
    static constexpr std::size_t BinsY = 30;
    std::vector<double> bins;
    for (std::size_t i = 0; i < BinsY; i++) {
@@ -179,7 +179,7 @@ TEST(RAxes, ComputeGlobalIndexNoFlowBins)
 TEST(RAxes, ComputeGlobalIndexInvalidNumberOfArguments)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    const RAxes axes1({axis});
    ASSERT_EQ(axes1.GetNDimensions(), 1);
    const RAxes axes2({axis, axis});
