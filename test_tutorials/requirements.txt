@@ -26,9 +26,9 @@ cffi>=1.9.1
 # notebook>=4.4.1
 
 # Distributed RDataFrame
-pyspark>=2.4 # Spark backend
-dask>=2022.08.1 # Dask backend
-distributed>=2022.08.1 # Dask backend
+# pyspark>=2.4 # Spark backend
+# dask>=2022.08.1 # Dask backend
+# distributed>=2022.08.1 # Dask backend
 
 # JsMVA: Jupyter notebook magic for TMVA
 # ipywidgets

@@ -46,8 +46,6 @@ def test_tutorial(tutorial):
             check=True,
             env=env,
             timeout=60,
-            capture_output=True,
-            text=True,
         )
         print("Test stderr:", result.stderr)
     except subprocess.TimeoutExpired:
