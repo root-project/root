@@ -35,6 +35,10 @@ outside the axis will be silently discarded.
 Feedback is welcome!
 */
 class RRegularAxis final {
+public:
+   using ArgumentType = double;
+
+private:
    /// The number of normal bins
    std::size_t fNNormalBins;
    /// The lower end of the axis interval

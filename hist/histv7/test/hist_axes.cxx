@@ -203,3 +203,21 @@ TEST(RAxes, ComputeGlobalIndexInvalidNumberOfArguments)
    EXPECT_NO_THROW(axes2.ComputeGlobalIndex(indices2));
    EXPECT_THROW(axes2.ComputeGlobalIndex(indices3), std::invalid_argument);
 }
+
+TEST(RAxes, ComputeGlobalIndexInvalidArgumentType)
+{
+   static constexpr std::size_t BinsX = 20;
+   const RRegularAxis regularAxis(BinsX, {0, BinsX});
+   static constexpr std::size_t BinsY = 30;
+   std::vector<double> bins;
+   for (std::size_t i = 0; i < BinsY; i++) {
+      bins.push_back(i);
+   }
+   bins.push_back(BinsY);
+   const RVariableBinAxis variableBinAxis(bins);
+   const RAxes axes({regularAxis, variableBinAxis});
+
+   EXPECT_NO_THROW(axes.ComputeGlobalIndex(std::make_tuple(1, 2)));
+   EXPECT_THROW(axes.ComputeGlobalIndex(std::make_tuple("1", 2)), std::invalid_argument);
+   EXPECT_THROW(axes.ComputeGlobalIndex(std::make_tuple(1, "2")), std::invalid_argument);
+}
