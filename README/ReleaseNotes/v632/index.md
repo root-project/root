@@ -886,3 +886,17 @@ This branch includes minor bugfixes as well as the changes necessary to build an
 * [[#19366](https://github.com/root-project/root/issues/19366)] - THnSparse::CreateSparse creates histograms that are not sparse
 * [[#19359](https://github.com/root-project/root/issues/19359)] - Incorrect bin error with TH1::SetBuffer and TH1::Sumw2
 * [[#18953](https://github.com/root-project/root/issues/18953)] - error opening ZIP archive member (>4GB archive)
+
+## Release 6.32.18
+
+Published on October 7, 2025
+
+### Items addressed in this release
+
+This branch includes bugfixes for issues signalled by ATLAS and CMS as well as some reorganisation of the supported platforms.
+
+* [[#19560](https://github.com/root-project/root/issues/19560)] - TTreeIndex fails under Valgrind due to long double emulation
+* [[#19889](https://github.com/root-project/root/issues/19889)] - Mixing Clang 20 and ROOT causes very sporadic crashes
+
+### Platforms
+MacOS26 was added and macOS13 removed from the battery of platforms used for the integration.
