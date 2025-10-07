@@ -16,6 +16,7 @@
 #include <memory>
 #include <string_view>
 #include <typeinfo>
+#include <variant>
 
 class TFile;
 class TIterator;
@@ -24,6 +25,7 @@ class TKey;
 namespace ROOT {
 namespace Experimental {
 
+class RKeyInfo;
 class RFile;
 
 namespace Internal {
@@ -238,7 +240,8 @@ class RFile final {
 
    /// Gets object `path` from the file and returns an **owning** pointer to it.
    /// The caller should immediately wrap it into a unique_ptr of the type described by `type`.
-   [[nodiscard]] void *GetUntyped(std::string_view path, const std::type_info &type) const;
+   [[nodiscard]] void *GetUntyped(std::string_view path,
+                                  std::variant<const char *, std::reference_wrapper<const std::type_info>> type) const;
 
    /// Writes `obj` to file, without taking its ownership.
    void PutUntyped(std::string_view path, const std::type_info &type, const void *obj, std::uint32_t flags);

@@ -280,21 +280,27 @@ TKey *RFile::GetTKey(std::string_view path) const
    return key;
 }
 
-void *RFile::GetUntyped(std::string_view pathSV, const std::type_info &type) const
+void *RFile::GetUntyped(std::string_view path,
+                        std::variant<const char *, std::reference_wrapper<const std::type_info>> type) const
 {
    if (!fFile)
       throw ROOT::RException(R__FAIL("File has been closed"));
 
-   std::string path{pathSV};
+   std::string pathStr{path};
 
-   const TClass *cls = TClass::GetClass(type);
+   struct {
+      TClass *operator()(const char *name) { return TClass::GetClass(name); }
+      TClass *operator()(std::reference_wrapper<const std::type_info> ty) { return TClass::GetClass(ty.get()); }
+   } typeVisitor;
+   const TClass *cls = std::visit(std::move(typeVisitor), type);
+
    if (!cls)
-      throw ROOT::RException(R__FAIL(std::string("Could not determine type of object ") + path));
+      throw ROOT::RException(R__FAIL(std::string("Could not determine type of object ") + pathStr));
 
-   if (auto err = ValidateAndNormalizePath(path); !err.empty())
-      throw RException(R__FAIL("Invalid object path '" + path + "': " + err));
+   if (auto err = ValidateAndNormalizePath(pathStr); !err.empty())
+      throw RException(R__FAIL("Invalid object pathStr '" + pathStr + "': " + err));
 
-   TKey *key = GetTKey(path);
+   TKey *key = GetTKey(pathStr);
    void *obj = key ? key->ReadObjectAny(cls) : nullptr;
 
    if (obj) {
