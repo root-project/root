@@ -97,7 +97,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVAGui
     Tree
     TreeViewer
     MLP
-    Minuit
     XMLIO
     TMVA
     Gui

@@ -90,7 +90,7 @@ if((NOT (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64) OR M1_BROKEN_TESTS) AND
 endif()
 
 #--minexam-------------------------------------------------------------------------------------
-ROOT_EXECUTABLE(minexam minexam.cxx LIBRARIES Minuit)
+ROOT_EXECUTABLE(minexam minexam.cxx LIBRARIES Hist)
 ROOT_ADD_TEST(test-minexam COMMAND minexam)
 
 #--tstring-------------------------------------------------------------------------------------

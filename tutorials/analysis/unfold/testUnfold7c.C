@@ -82,7 +82,6 @@
 #include <TLegend.h>
 #include <TH1.h>
 #include <TF1.h>
-#include <TFitter.h>
 #include <TMatrixD.h>
 #include <TMatrixDSym.h>
 #include <TVectorD.h>

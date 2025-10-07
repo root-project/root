@@ -1,5 +1,5 @@
 #include "TROOT.h"
-#include "TMinuit.h"
+
 #include <cstdio>
 #include <fcntl.h>
 #include <iostream>
