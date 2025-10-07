@@ -1285,11 +1285,13 @@ public:
    /// When writing a variable size array through Snapshot, it is required that the column indicating its size is also
    /// written out and it appears before the array in the columnList.
    ///
-   /// By default, in case of TTree or TChain inputs, Snapshot will try to write out all top-level branches. For other
-   /// types of inputs, all columns returned by GetColumnNames() will be written out. If friend trees or chains are
-   /// present, by default all friend top-level branches that have names that do not collide with
-   /// names of branches in the main TTree/TChain will be written out. Since v6.24, Snapshot will also write out
-   /// friend branches with the same names of branches in the main TTree/TChain with names of the form
+   /// By default, in case of TTree, TChain or RNTuple inputs, Snapshot will try to write out all top-level branches.
+   /// For other types of inputs, all columns returned by GetColumnNames() will be written out. Systematic variations of
+   /// columns will be included if the corresponding flag is set in RSnapshotOptions. See \ref snapshot-with-variations
+   /// "Snapshot with Variations" for more details. If friend trees or chains are present, by default all friend
+   /// top-level branches that have names that do not collide with names of branches in the main TTree/TChain will be
+   /// written out. Since v6.24, Snapshot will also write out friend branches with the same names of branches in the
+   /// main TTree/TChain with names of the form
    /// `<friendname>_<branchname>` in order to differentiate them from the branches in the main tree/chain.
    ///
    /// ### Writing to a sub-directory
@@ -1334,6 +1336,13 @@ public:
    /// RSnapshotOptions opts;
    /// opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
    /// df.Snapshot("outputNTuple", "outputFile.root", {"x"}, opts);
+   /// ~~~
+   ///
+   /// Snapshot systematic variations resulting from a Vary() call (see details \ref snapshot-with-variations "here"):
+   /// ~~~{.cpp}
+   /// RSnapshotOptions opts;
+   /// opts.fIncludeVariations = true;
+   /// df.Snapshot("outputTree", "outputFile.root", {"x"}, opts);
    /// ~~~
    RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
                                                  const ColumnNames_t &columnList,
