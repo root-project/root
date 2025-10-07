@@ -11,7 +11,7 @@ static_assert(std::is_nothrow_move_assignable_v<RHistEngine<int>>);
 TEST(RHistEngine, Constructor)
 {
    static constexpr std::size_t BinsX = 20;
-   const RRegularAxis regularAxis(BinsX, 0, BinsX);
+   const RRegularAxis regularAxis(BinsX, {0, BinsX});
    static constexpr std::size_t BinsY = 30;
    std::vector<double> bins;
    for (std::size_t i = 0; i < BinsY; i++) {
@@ -32,7 +32,7 @@ TEST(RHistEngine, Constructor)
    // Both axes include underflow and overflow bins.
    EXPECT_EQ(engine.GetTotalNBins(), (BinsX + 2) * (BinsY + 2));
 
-   engine = RHistEngine<int>(BinsX, 0, BinsX);
+   engine = RHistEngine<int>(BinsX, {0, BinsX});
    ASSERT_EQ(engine.GetNDimensions(), 1);
    auto *regular = std::get_if<RRegularAxis>(&engine.GetAxes()[0]);
    ASSERT_TRUE(regular != nullptr);
@@ -44,7 +44,7 @@ TEST(RHistEngine, Constructor)
 TEST(RHistEngine, GetBinContentInvalidNumberOfArguments)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    const RHistEngine<int> engine1({axis});
    ASSERT_EQ(engine1.GetNDimensions(), 1);
    const RHistEngine<int> engine2({axis, axis});
@@ -61,7 +61,7 @@ TEST(RHistEngine, GetBinContentInvalidNumberOfArguments)
 TEST(RHistEngine, GetBinContentNotFound)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    const RHistEngine<int> engine({axis});
 
    EXPECT_THROW(engine.GetBinContent(Bins), std::invalid_argument);
@@ -70,7 +70,7 @@ TEST(RHistEngine, GetBinContentNotFound)
 TEST(RHistEngine, Add)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<int> engineA({axis});
    RHistEngine<int> engineB({axis});
    RHistEngine<int> engineC({axis});
@@ -105,8 +105,8 @@ TEST(RHistEngine, AddDifferent)
 {
    // The equality operators of RAxes and the axis objects are already unit-tested separately, so here we only check one
    // case with different the number of bins.
-   RHistEngine<int> engineA(10, 0, 1);
-   RHistEngine<int> engineB(20, 0, 1);
+   RHistEngine<int> engineA(10, {0, 1});
+   RHistEngine<int> engineB(20, {0, 1});
 
    EXPECT_THROW(engineA.Add(engineB), std::invalid_argument);
 }
@@ -114,7 +114,7 @@ TEST(RHistEngine, AddDifferent)
 TEST(RHistEngine, Clear)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<int> engine({axis});
 
    engine.Fill(-100);
@@ -135,7 +135,7 @@ TEST(RHistEngine, Clear)
 TEST(RHistEngine, Clone)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<int> engineA({axis});
 
    engineA.Fill(-100);
@@ -168,7 +168,7 @@ TEST(RHistEngine, Clone)
 TEST(RHistEngine, Fill)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<int> engine({axis});
 
    engine.Fill(-100);
@@ -187,7 +187,7 @@ TEST(RHistEngine, Fill)
 TEST(RHistEngine, FillDiscard)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins, /*enableFlowBins=*/false);
+   const RRegularAxis axis(Bins, {0, Bins}, /*enableFlowBins=*/false);
    RHistEngine<int> engine({axis});
 
    engine.Fill(-100);
@@ -204,9 +204,9 @@ TEST(RHistEngine, FillDiscard)
 TEST(RHistEngine, FillOnlyInner)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<int> engine({axis});
-   const RRegularAxis axisNoFlowBins(Bins, 0, Bins, /*enableFlowBins=*/false);
+   const RRegularAxis axisNoFlowBins(Bins, {0, Bins}, /*enableFlowBins=*/false);
    RHistEngine<int> engineNoFlowBins({axisNoFlowBins});
 
    for (std::size_t i = 0; i < Bins; i++) {
@@ -225,7 +225,7 @@ TEST(RHistEngine, FillOnlyInner)
 TEST(RHistEngine, FillTuple)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<int> engine({axis});
 
    engine.Fill(std::make_tuple(-100));
@@ -247,7 +247,7 @@ TEST(RHistEngine, FillTuple)
 TEST(RHistEngine, FillInvalidNumberOfArguments)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<int> engine1({axis});
    ASSERT_EQ(engine1.GetNDimensions(), 1);
    RHistEngine<int> engine2({axis, axis});
@@ -264,7 +264,7 @@ TEST(RHistEngine, FillInvalidNumberOfArguments)
 TEST(RHistEngine, FillWeight)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<float> engine({axis});
 
    engine.Fill(-100, RWeight(0.25));
@@ -283,7 +283,7 @@ TEST(RHistEngine, FillWeight)
 TEST(RHistEngine, FillTupleWeight)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<float> engine({axis});
 
    engine.Fill(std::make_tuple(-100), RWeight(0.25));
@@ -305,7 +305,7 @@ TEST(RHistEngine, FillTupleWeight)
 TEST(RHistEngine, FillWeightInvalidNumberOfArguments)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<float> engine1({axis});
    ASSERT_EQ(engine1.GetNDimensions(), 1);
    RHistEngine<float> engine2({axis, axis});
@@ -322,7 +322,7 @@ TEST(RHistEngine, FillWeightInvalidNumberOfArguments)
 TEST(RHistEngine, FillTupleWeightInvalidNumberOfArguments)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<float> engine1({axis});
    ASSERT_EQ(engine1.GetNDimensions(), 1);
    RHistEngine<float> engine2({axis, axis});
@@ -339,7 +339,7 @@ TEST(RHistEngine, FillTupleWeightInvalidNumberOfArguments)
 TEST(RHistEngine_RBinWithError, Add)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<RBinWithError> engineA({axis});
    RHistEngine<RBinWithError> engineB({axis});
 
@@ -362,7 +362,7 @@ TEST(RHistEngine_RBinWithError, Add)
 TEST(RHistEngine_RBinWithError, Fill)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<RBinWithError> engine({axis});
 
    for (std::size_t i = 0; i < Bins; i++) {
@@ -379,7 +379,7 @@ TEST(RHistEngine_RBinWithError, Fill)
 TEST(RHistEngine_RBinWithError, FillWeight)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    RHistEngine<RBinWithError> engine({axis});
 
    for (std::size_t i = 0; i < Bins; i++) {

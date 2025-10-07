@@ -14,7 +14,7 @@ static_assert(std::is_nothrow_move_assignable_v<RHistEngine<int>>);
 TEST(RHist, Constructor)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis regularAxis(Bins, 0, Bins);
+   const RRegularAxis regularAxis(Bins, {0, Bins});
 
    RHist<int> hist({regularAxis, regularAxis});
    EXPECT_EQ(hist.GetNDimensions(), 2);
@@ -26,7 +26,7 @@ TEST(RHist, Constructor)
    // Both axes include underflow and overflow bins.
    EXPECT_EQ(hist.GetTotalNBins(), (Bins + 2) * (Bins + 2));
 
-   hist = RHist<int>(Bins, 0, Bins);
+   hist = RHist<int>(Bins, {0, Bins});
    ASSERT_EQ(hist.GetNDimensions(), 1);
    auto *regular = std::get_if<RRegularAxis>(&hist.GetAxes()[0]);
    ASSERT_TRUE(regular != nullptr);
@@ -38,7 +38,7 @@ TEST(RHist, Constructor)
 TEST(RHist, Add)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    RHist<int> histA({axis});
    RHist<int> histB({axis});
 
@@ -55,7 +55,7 @@ TEST(RHist, Add)
 TEST(RHist, Clear)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    RHist<int> hist({axis});
 
    hist.Fill(8.5);
@@ -71,7 +71,7 @@ TEST(RHist, Clear)
 TEST(RHist, Clone)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    RHist<int> histA({axis});
 
    histA.Fill(8.5);
@@ -95,7 +95,7 @@ TEST(RHist, Clone)
 TEST(RHist, Fill)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    RHist<int> hist({axis});
 
    hist.Fill(8.5);
@@ -114,7 +114,7 @@ TEST(RHist, Fill)
 TEST(RHist, FillWeight)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    RHist<float> hist({axis});
 
    hist.Fill(8.5, RWeight(0.8));

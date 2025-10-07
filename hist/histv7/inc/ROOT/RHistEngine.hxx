@@ -32,7 +32,7 @@ A histogram data structure to bin data along multiple dimensions.
 Every call to \ref Fill(const A &... args) "Fill" bins the data according to the axis configuration and increments the
 bin content:
 \code
-ROOT::Experimental::RHistEngine<int> hist(10, 5, 15);
+ROOT::Experimental::RHistEngine<int> hist(10, {5, 15});
 hist.Fill(8.5);
 // hist.GetBinContent(ROOT::Experimental::RBinIndex(3)) will return 1
 \endcode
@@ -75,12 +75,13 @@ public:
    /// Construct a one-dimensional histogram engine with a regular axis.
    ///
    /// \param[in] nNormalBins the number of normal bins, must be > 0
-   /// \param[in] low the lower end of the axis interval (inclusive)
-   /// \param[in] high the upper end of the axis interval (exclusive), must be > low
+   /// \param[in] interval the axis interval (lower end inclusive, upper end exclusive)
    /// \par See also
-   /// the \ref RRegularAxis::RRegularAxis(std::size_t nNormalBins, double low, double high, bool enableFlowBins)
+   /// the
+   /// \ref RRegularAxis::RRegularAxis(std::size_t nNormalBins, std::pair<double, double> interval, bool enableFlowBins)
    /// "constructor of RRegularAxis"
-   RHistEngine(std::size_t nNormalBins, double low, double high) : RHistEngine({RRegularAxis(nNormalBins, low, high)})
+   RHistEngine(std::size_t nNormalBins, std::pair<double, double> interval)
+      : RHistEngine({RRegularAxis(nNormalBins, interval)})
    {
    }
 

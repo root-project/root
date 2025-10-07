@@ -56,7 +56,7 @@ static void DrawHistogram(const ROOT::Experimental::RHist<int> &hist)
 void hist001_RHist_basics()
 {
    // Create an axis that can be used for multiple histograms.
-   ROOT::Experimental::RRegularAxis axis(40, 0, 20);
+   ROOT::Experimental::RRegularAxis axis(40, {0, 20});
 
    // Create a first histograms and fill with random values.
    ROOT::Experimental::RHist<int> hist1({axis});

@@ -7,31 +7,31 @@
 TEST(RRegularAxis, Constructor)
 {
    static constexpr std::size_t Bins = 20;
-   RRegularAxis axis(Bins, 0, Bins);
+   RRegularAxis axis(Bins, {0, Bins});
    EXPECT_EQ(axis.GetNNormalBins(), Bins);
    EXPECT_EQ(axis.GetTotalNBins(), Bins + 2);
    EXPECT_EQ(axis.GetLow(), 0);
    EXPECT_EQ(axis.GetHigh(), Bins);
    EXPECT_TRUE(axis.HasFlowBins());
 
-   axis = RRegularAxis(Bins, 0, Bins, /*enableFlowBins=*/false);
+   axis = RRegularAxis(Bins, {0, Bins}, /*enableFlowBins=*/false);
    EXPECT_EQ(axis.GetNNormalBins(), Bins);
    EXPECT_EQ(axis.GetTotalNBins(), Bins);
    EXPECT_FALSE(axis.HasFlowBins());
 
-   EXPECT_THROW(RRegularAxis(0, 0, Bins), std::invalid_argument);
-   EXPECT_THROW(RRegularAxis(Bins, 1, 1), std::invalid_argument);
+   EXPECT_THROW(RRegularAxis(0, {0, Bins}), std::invalid_argument);
+   EXPECT_THROW(RRegularAxis(Bins, {1, 1}), std::invalid_argument);
 }
 
 TEST(RRegularAxis, Equality)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axisA(Bins, 0, Bins);
-   const RRegularAxis axisANoFlowBins(Bins, 0, Bins, /*enableFlowBins=*/false);
-   const RRegularAxis axisA2(Bins, 0, Bins);
-   const RRegularAxis axisB(Bins / 2, 0, Bins);
-   const RRegularAxis axisC(Bins, 0, Bins / 2);
-   const RRegularAxis axisD(Bins, Bins / 2, Bins);
+   const RRegularAxis axisA(Bins, {0, Bins});
+   const RRegularAxis axisANoFlowBins(Bins, {0, Bins}, /*enableFlowBins=*/false);
+   const RRegularAxis axisA2(Bins, {0, Bins});
+   const RRegularAxis axisB(Bins / 2, {0, Bins});
+   const RRegularAxis axisC(Bins, {0, Bins / 2});
+   const RRegularAxis axisD(Bins, {Bins / 2, Bins});
 
    EXPECT_TRUE(axisA == axisA);
    EXPECT_TRUE(axisA == axisA2);
@@ -53,8 +53,8 @@ TEST(RRegularAxis, Equality)
 TEST(RRegularAxis, ComputeLinearizedIndex)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
-   const RRegularAxis axisNoFlowBins(Bins, 0, Bins, /*enableFlowBins=*/false);
+   const RRegularAxis axis(Bins, {0, Bins});
+   const RRegularAxis axisNoFlowBins(Bins, {0, Bins}, /*enableFlowBins=*/false);
 
    // Underflow
    static constexpr double NegativeInfinity = -std::numeric_limits<double>::infinity();
@@ -116,8 +116,8 @@ TEST(RRegularAxis, ComputeLinearizedIndex)
 TEST(RRegularAxis, GetLinearizedIndex)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
-   const RRegularAxis axisNoFlowBins(Bins, 0, Bins, /*enableFlowBins=*/false);
+   const RRegularAxis axis(Bins, {0, Bins});
+   const RRegularAxis axisNoFlowBins(Bins, {0, Bins}, /*enableFlowBins=*/false);
 
    {
       const auto underflow = RBinIndex::Underflow();
@@ -169,7 +169,7 @@ TEST(RRegularAxis, GetLinearizedIndex)
 TEST(RRegularAxis, GetNormalRange)
 {
    static constexpr std::size_t Bins = 20;
-   const RRegularAxis axis(Bins, 0, Bins);
+   const RRegularAxis axis(Bins, {0, Bins});
    const auto index0 = RBinIndex(0);
    const auto index1 = RBinIndex(1);
    const auto indexBins = RBinIndex(Bins);
@@ -218,7 +218,7 @@ TEST(RRegularAxis, GetFullRange)
    static constexpr std::size_t Bins = 20;
 
    {
-      const RRegularAxis axis(Bins, 0, Bins);
+      const RRegularAxis axis(Bins, {0, Bins});
       const auto full = axis.GetFullRange();
       EXPECT_EQ(full.GetBegin(), RBinIndex::Underflow());
       EXPECT_EQ(full.GetEnd(), RBinIndex());
@@ -226,7 +226,7 @@ TEST(RRegularAxis, GetFullRange)
    }
 
    {
-      const RRegularAxis axisNoFlowBins(Bins, 0, Bins, /*enableFlowBins=*/false);
+      const RRegularAxis axisNoFlowBins(Bins, {0, Bins}, /*enableFlowBins=*/false);
       const auto full = axisNoFlowBins.GetFullRange();
       EXPECT_EQ(full.GetBegin(), RBinIndex(0));
       EXPECT_EQ(full.GetEnd(), RBinIndex(Bins));
