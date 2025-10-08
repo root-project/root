@@ -203,27 +203,8 @@ std::string CodegenContext::getTmpVarName() const
 /// @param valueToSave The actual string value to save as a temporary.
 void CodegenContext::addResult(RooAbsArg const *in, std::string const &valueToSave)
 {
-   std::string savedName;
-
-   // Only save values if they contain operations or they are numerals. Otherwise, we can use them directly.
-
-   // Check if string is numeric.
-   char *end;
-   std::strtod(valueToSave.c_str(), &end);
-   bool isNumeric = (*end == '\0');
-
-   const bool hasOperations = valueToSave.find_first_of(":-+/*") != std::string::npos;
-
-   // If the name is not empty and this value is worth saving, save it to the correct scope.
-   // otherwise, just return the actual value itself
-   if (hasOperations || isNumeric) {
-      savedName = "wksp[" + std::to_string(_nWksp++) + "]";
-      std::string outVarDecl = savedName + " = " + valueToSave + ";\n";
-      addToCodeBody(in, outVarDecl);
-   } else {
-      savedName = valueToSave;
-   }
-
+   std::string savedName = "wksp[" + std::to_string(_nWksp++) + "]";
+   addToCodeBody(in, savedName + " = " + valueToSave + ";\n");
    _nodeNames[in->namePtr()] = savedName;
 }
 
