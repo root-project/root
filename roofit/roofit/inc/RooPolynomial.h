@@ -44,10 +44,6 @@ public:
    /// Return the order for the first coefficient in the list.
    int lowestOrder() const { return _lowestOrder; }
 
-   // If this polynomial has no terms it's a uniform distribution, and a uniform
-   // pdf is a reducer node because it doesn't depend on the observables.
-   bool isReducerNode() const override { return _coefList.empty(); }
-
 protected:
    RooRealProxy _x;
    RooListProxy _coefList;
