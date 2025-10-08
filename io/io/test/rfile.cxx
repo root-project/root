@@ -701,3 +701,26 @@ TEST(RFile, NormalizedPaths)
    EXPECT_NE(file->Get<TH1D>("//a////b/c"), nullptr);
    EXPECT_THROW(file->Get<TH1D>("a/b/c/"), ROOT::RException);
 }
+
+TEST(RFile, GetKeyInfo)
+{
+   FileRaii fileGuard("test_rfile_getkeyinfo.root");
+
+   auto file = RFile::Recreate(fileGuard.GetPath());
+   std::string obj = "obj";
+   file->Put("/s", obj);
+   file->Put("a/b/c", obj);
+   file->Put("b", obj);
+   file->Put("/a/d", obj);
+
+   EXPECT_EQ(file->GetKeyInfo("foo"), std::nullopt);
+
+   for (const std::string_view path : { "/s", "a/b/c", "b", "/a/d" }) {
+      auto key = file->GetKeyInfo(path);
+      ASSERT_NE(key, std::nullopt);
+      EXPECT_EQ(key->GetPath(), path[0] == '/' ? path.substr(1) : path);
+      EXPECT_EQ(key->GetClassName(), "string");
+      EXPECT_EQ(key->GetTitle(), "");
+      EXPECT_EQ(key->GetCycle(), 1);
+   }
+}
