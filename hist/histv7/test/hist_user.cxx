@@ -19,6 +19,12 @@ struct User {
       return old;
    }
 
+   User &operator+=(double w)
+   {
+      fValue += w;
+      return *this;
+   }
+
    User &operator+=(const User &rhs)
    {
       fValue += rhs.fValue;
@@ -97,4 +103,19 @@ TEST(RHistEngineUser, Fill)
    EXPECT_EQ(engine.GetBinContent(RBinIndex(8)).fValue, 1);
    std::array<RBinIndex, 1> indices = {9};
    EXPECT_EQ(engine.GetBinContent(indices).fValue, 1);
+}
+
+TEST(RHistEngineUser, FillWeight)
+{
+   // Weighted filling uses operator+=(double)
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<User> engine({axis});
+
+   engine.Fill(8.5, RWeight(0.8));
+   engine.Fill(std::make_tuple(9.5), RWeight(0.9));
+
+   EXPECT_EQ(engine.GetBinContent(RBinIndex(8)).fValue, 0.8);
+   std::array<RBinIndex, 1> indices = {9};
+   EXPECT_EQ(engine.GetBinContent(indices).fValue, 0.9);
 }
