@@ -94,55 +94,33 @@ set_source_files_properties(src/rootcling.cxx PROPERTIES
   VISIBILITY_INLINES_HIDDEN "ON"
 )
 
-ROOT_EXECUTABLE(rootcling src/rootcling.cxx LIBRARIES RIO Cling Core Rint)
+set(rootcling_exe_names rootcling genreflex rootcint)
 
-# rootcling includes the ROOT complex header which would build the complex
-# dictionary with modules. To make sure that rootcling_stage1 builds this
-# dict before we use it, we add a dependency here.
-add_dependencies(rootcling complexDict)
+foreach(exe_name IN LISTS rootcling_exe_names)
+  ROOT_EXECUTABLE(${exe_name} src/rootcling.cxx LIBRARIES RIO Cling Core Rint)
 
-target_include_directories(rootcling PRIVATE
-        ${CMAKE_SOURCE_DIR}/core/metacling/res
-        ${CMAKE_SOURCE_DIR}/core/dictgen/res
-        ${CMAKE_SOURCE_DIR}/io/rootpcm/res)
-set_property(TARGET rootcling PROPERTY ENABLE_EXPORTS 1)
-if(WIN32)
-  set_target_properties(rootcling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
-  set_property(TARGET rootcling APPEND_STRING PROPERTY LINK_FLAGS " -STACK:4000000")
-endif()
+  # rootcling includes the ROOT complex header which would build the complex
+  # dictionary with modules. To make sure that rootcling_stage1 builds this
+  # dict before we use it, we add a dependency here.
+  add_dependencies(${exe_name} complexDict)
+
+  target_include_directories(${exe_name} PRIVATE
+          ${CMAKE_SOURCE_DIR}/core/metacling/res
+          ${CMAKE_SOURCE_DIR}/core/dictgen/res
+          ${CMAKE_SOURCE_DIR}/io/rootpcm/res)
+  set_property(TARGET ${exe_name} PROPERTY ENABLE_EXPORTS 1)
+  if(WIN32)
+    set_target_properties(${exe_name} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
+    set_property(TARGET ${exe_name} APPEND_STRING PROPERTY LINK_FLAGS " -STACK:4000000")
+  endif()
+endforeach()
+
+# To inherit the dependencies from rootcling
+add_dependencies(genreflex rootcling)
+add_dependencies(rootcint rootcint)
+
 
 if (TARGET Gui)
   ROOT_EXECUTABLE(rootbrowse src/rootbrowse.cxx LIBRARIES RIO Core Rint Gui)
 endif()
 ROOT_EXECUTABLE(rootls src/rootls.cxx LIBRARIES RIO Tree Core Rint ROOTNTuple)
-
-# Create aliases: rootcint, genreflex.
-if(WIN32)
-  add_custom_command(TARGET rootcling POST_BUILD
-                     COMMAND copy /y rootcling.exe rootcint.exe
-                     COMMAND copy /y rootcling.exe genreflex.exe
-                     WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-else()
-  add_custom_command(TARGET rootcling POST_BUILD
-                     COMMAND ln -f rootcling rootcint
-                     COMMAND ln -f rootcling genreflex
-                     WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-endif()
-set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES
-                         "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint;${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex")
-
-if(CMAKE_HOST_UNIX)
-  install(CODE "execute_process(COMMAND ln -f rootcling rootcint WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})" COMPONENT applications)
-  install(CODE "execute_process(COMMAND ln -f rootcling genreflex WORKING_DIRECTORY \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})" COMPONENT applications)
-else()
-  if(MSVC)
-    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcling.exe DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
-    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint.exe DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
-    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex.exe DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
-  else()
-    install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint
-                      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex
-                      ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rlibmap
-                      DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
-  endif()
-endif()
