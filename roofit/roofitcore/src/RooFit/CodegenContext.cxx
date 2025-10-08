@@ -33,7 +33,7 @@ namespace Experimental {
 /// existing code body.
 /// @param key The node to get the result string for.
 /// @return String representing the result of this node.
-std::string const &CodegenContext::getResult(RooAbsArg const &arg)
+std::string CodegenContext::getResult(RooAbsArg const &arg)
 {
    // If the result has already been recorded, just return the result.
    // It is usually the responsibility of each translate function to assign
@@ -41,15 +41,19 @@ std::string const &CodegenContext::getResult(RooAbsArg const &arg)
    // for a particular node, it means the node has already been 'translate'd and we
    // dont need to visit it again.
    auto found = _nodeNames.find(arg.namePtr());
-   if (found != _nodeNames.end())
-      return found->second;
+   std::size_t idx = 0;
+   if (found != _nodeNames.end()) {
+      idx = found->second;
+   } else {
 
-   auto RAII(OutputScopeRangeComment(&arg));
+      auto RAII(OutputScopeRangeComment(&arg));
 
-   // Now, recursively call translate into the current argument to load the correct result.
-   codegen(const_cast<RooAbsArg &>(arg), *this);
+      // Now, recursively call translate into the current argument to load the correct result.
+      codegen(const_cast<RooAbsArg &>(arg), *this);
 
-   return _nodeNames.at(arg.namePtr());
+      idx = _nodeNames.at(arg.namePtr());
+   }
+   return "wksp[" + std::to_string(idx) + "]";
 }
 
 /// @brief Adds the given string to the string block that will be emitted at the top of the squashed function. Useful
@@ -167,14 +171,14 @@ std::unique_ptr<CodegenContext::LoopScope> CodegenContext::beginLoop(RooAbsArg c
 
       std::size_t n = it.second.second;
 
-      auto savedName = "wksp[" + std::to_string(_nWksp++) + "]";
+      auto savedName = "wksp[" + std::to_string(_nWksp) + "]";
       std::string outVarDecl;
       if (n == 1)
          outVarDecl = savedName + " = obs[" + std::to_string(it.second.first) + "];\n";
       else
          outVarDecl = savedName + " = obs[" + std::to_string(it.second.first) + " + " + idx + "];\n";
       addToCodeBody(outVarDecl, n == 1);
-      _nodeNames[it.first] = savedName;
+      _nodeNames[it.first] = _nWksp++;
    }
 
    return std::make_unique<LoopScope>(*this, std::move(vars));
@@ -203,9 +207,8 @@ std::string CodegenContext::getTmpVarName() const
 /// @param valueToSave The actual string value to save as a temporary.
 void CodegenContext::addResult(RooAbsArg const *in, std::string const &valueToSave)
 {
-   std::string savedName = "wksp[" + std::to_string(_nWksp++) + "]";
-   addToCodeBody(in, savedName + " = " + valueToSave + ";\n");
-   _nodeNames[in->namePtr()] = savedName;
+   addToCodeBody(in, "wksp[" + std::to_string(_nWksp) + "]" + " = " + valueToSave + ";\n");
+   _nodeNames[in->namePtr()] = _nWksp++;
 }
 
 /// @brief Function to save a RooListProxy as an array in the squashed code.
@@ -384,20 +387,14 @@ void codegen(RooAbsArg &arg, CodegenContext &ctx)
    // parameters
    auto foundParam = ctx._paramIndices.find(&arg);
    if (foundParam != ctx._paramIndices.end()) {
-      auto savedName = "wksp[" + std::to_string(ctx._nWksp++) + "]";
-      std::string outVarDecl = savedName + " = params[" + std::to_string(foundParam->second) + "];\n";
-      ctx.addToCodeBody(outVarDecl, ctx.isScopeIndependent(&arg));
-      ctx.addResult(&arg, savedName);
+      ctx.addResult(&arg, "params[" + std::to_string(foundParam->second) + "]");
       return;
    }
 
    // observables
    auto foundObs = ctx._vecObsIndices.find(arg.namePtr());
    if (foundObs != ctx._vecObsIndices.end()) {
-      auto savedName = "wksp[" + std::to_string(ctx._nWksp++) + "]";
-      std::string outVarDecl = savedName + " = obs[" + std::to_string(foundObs->second.first) + "];\n";
-      ctx.addToCodeBody(outVarDecl, ctx.isScopeIndependent(&arg));
-      ctx.addResult(&arg, savedName);
+      ctx.addResult(&arg, "obs[" + std::to_string(foundObs->second.first) + "]");
       return;
    }
 
