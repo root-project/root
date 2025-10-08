@@ -109,7 +109,7 @@ public:
 
    std::string getTmpVarName() const;
 
-   std::string buildArg(RooAbsCollection const &x);
+   std::string buildArg(RooAbsCollection const &x, std::string const &arrayType = "double");
 
    std::string buildArg(std::span<const double> arr);
    std::string buildArg(std::span<const int> arr) { return buildArgSpanImpl(arr); }

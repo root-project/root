@@ -381,7 +381,10 @@ void codegenImpl(RooFormulaVar &arg, CodegenContext &ctx)
    arg.getVal(); // to trigger the creation of the TFormula
    std::string funcName = arg.getUniqueFuncName();
    ctx.collectFunction(funcName);
-   ctx.addResult(&arg, ctx.buildCall(funcName, arg.dependents()));
+   // We have to force the array type to be "double" because that's what the
+   // declared function wrapped by the TFormula expects.
+   auto inputVar = ctx.buildArg(arg.dependents(), /*arrayType=*/"double");
+   ctx.addResult(&arg, funcName + "(" + inputVar + ")");
 }
 
 void codegenImpl(RooEffProd &arg, CodegenContext &ctx)
@@ -424,7 +427,10 @@ void codegenImpl(RooGenericPdf &arg, CodegenContext &ctx)
    arg.getVal(); // to trigger the creation of the TFormula
    std::string funcName = arg.getUniqueFuncName();
    ctx.collectFunction(funcName);
-   ctx.addResult(&arg, ctx.buildCall(funcName, arg.dependents()));
+   // We have to force the array type to be "double" because that's what the
+   // declared function wrapped by the TFormula expects.
+   auto inputVar = ctx.buildArg(arg.dependents(), /*arrayType=*/"double");
+   ctx.addResult(&arg, funcName + "(" + inputVar + ")");
 }
 
 void codegenImpl(RooHistFunc &arg, CodegenContext &ctx)
