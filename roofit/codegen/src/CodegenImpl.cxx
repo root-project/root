@@ -294,7 +294,7 @@ void codegenImpl(RooCategory &arg, CodegenContext &ctx)
    if (idx < 0) {
 
       idx = 1;
-      ctx.addVecObs(arg.GetName(), idx);
+      ctx.addVecObs(arg.GetName(), idx, 1);
    }
 
    std::string result = std::to_string(arg.getCurrentIndex());
@@ -609,10 +609,11 @@ void codegenImpl(RooRealIntegral &arg, CodegenContext &ctx)
    auto &intVar = static_cast<RooAbsRealLValue &>(*arg.numIntRealVars()[0]);
 
    std::string obsName = ctx.getTmpVarName();
-   std::string oldIntVarResult = ctx.getResult(intVar);
-   ctx.addResult(&intVar, "obs[0]");
 
+   auto oldVecObsInfo = ctx._vecObsIndices[intVar.namePtr()];
+   ctx.addVecObs(intVar.GetName(), 0, 1);
    std::string funcName = ctx.buildFunction(arg.integrand(), {});
+   ctx._vecObsIndices[intVar.namePtr()] = oldVecObsInfo;
 
    std::stringstream ss;
 
@@ -639,8 +640,6 @@ void codegenImpl(RooRealIntegral &arg, CodegenContext &ctx)
       << "}\n";
 
    ctx.addToGlobalScope(ss.str());
-
-   ctx.addResult(&intVar, oldIntVarResult);
 }
 
 void codegenImpl(RooRealSumFunc &arg, CodegenContext &ctx)
