@@ -4,6 +4,7 @@ HIST_ADD_GTEST(hist_hist hist_hist.cxx)
 HIST_ADD_GTEST(hist_index hist_index.cxx)
 HIST_ADD_GTEST(hist_regular hist_regular.cxx)
 HIST_ADD_GTEST(hist_stats hist_stats.cxx)
+HIST_ADD_GTEST(hist_user hist_user.cxx)
 HIST_ADD_GTEST(hist_variable hist_variable.cxx)
 
 if(NOT DEFINED histv7_standalone)
