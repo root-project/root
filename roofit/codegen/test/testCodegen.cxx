@@ -68,7 +68,7 @@ CodegenFunc compileFunction(RooAbsArg &arg, RooArgList const &params, std::strin
 {
    RooFit::Experimental::CodegenContext ctx;
    for (std::size_t i = 0; i < params.size(); ++i) {
-      ctx.addResult(&params[i], "params[" + std::to_string(i) + "]");
+      ctx.addParam(&params[i], i);
    }
    const std::string funcName = ctx.buildFunction(arg);
    if (code) {

@@ -300,30 +300,25 @@ void codegenImpl(RooMultiPdf &arg, CodegenContext &ctx)
    // indices MathFunc call becomes more efficient.
    if (numPdfs > 2) {
       ctx.addResult(&arg, ctx.buildCall(mathFunc("multipdf"), arg.indexCategory(), arg.getPdfList()));
-
-      std::cout << "MathFunc call used\n";
-
-   } else {
-
-      // Ternary nested expression
-      std::string indexExpr = ctx.getResult(arg.indexCategory());
-
-      // int numPdfs = arg.getNumPdfs();
-      std::string expr;
-
-      for (int i = 0; i < numPdfs; ++i) {
-         RooAbsPdf *pdf = arg.getPdf(i);
-         std::string pdfExpr = ctx.getResult(*pdf);
-
-         expr += "(" + indexExpr + " == " + std::to_string(i) + " ? (" + pdfExpr + ") : ";
-      }
-
-      expr += "0.0";
-      expr += std::string(numPdfs, ')'); // Close all ternary operators
-
-      ctx.addResult(&arg, expr);
-      std::cout << "Ternary expression call used \n";
+      return;
    }
+   // Ternary nested expression
+   std::string indexExpr = ctx.getResult(arg.indexCategory());
+
+   // int numPdfs = arg.getNumPdfs();
+   std::string expr;
+
+   for (int i = 0; i < numPdfs; ++i) {
+      RooAbsPdf *pdf = arg.getPdf(i);
+      std::string pdfExpr = ctx.getResult(*pdf);
+
+      expr += "(" + indexExpr + " == " + std::to_string(i) + " ? (" + pdfExpr + ") : ";
+   }
+
+   expr += "0.0";
+   expr += std::string(numPdfs, ')'); // Close all ternary operators
+
+   ctx.addResult(&arg, expr);
 }
 
 void codegenImpl(RooSimultaneous &arg, CodegenContext &ctx)
@@ -379,6 +374,7 @@ void codegenImpl(RooAddition &arg, CodegenContext &ctx)
 {
    if (arg.list().empty()) {
       ctx.addResult(&arg, "0.0");
+      return;
    }
    std::string result;
    if (arg.list().size() > 1)
@@ -624,11 +620,11 @@ void codegenChi2(RooFit::Detail::RooNLLVarNew &arg, CodegenContext &ctx)
    using FuncMode = RooFit::Detail::RooNLLVarNew::FuncMode;
 
    std::string resName = RooFit::Detail::makeValidVarName(arg.GetName()) + "Result";
-   ctx.addResult(&arg, resName);
    ctx.addToGlobalScope("double " + resName + " = 0.0;\n");
 
    // DataError::None means "no errors": every bin contributes zero.
    if (arg.chi2ErrorType() == RooDataHist::None) {
+      ctx.addResult(&arg, resName);
       return;
    }
 
@@ -649,22 +645,26 @@ void codegenChi2(RooFit::Detail::RooNLLVarNew &arg, CodegenContext &ctx)
       normFactor = weightSumName;
    }
 
-   auto scope = ctx.beginLoop(&arg);
-   const std::string mu =
-      "(" + ctx.getResult(arg.func()) + " * " + ctx.getResult(*arg.binVolumes()) + " * " + normFactor + ")";
+   {
+      auto scope = ctx.beginLoop(&arg);
+      const std::string mu =
+         "(" + ctx.getResult(arg.func()) + " * " + ctx.getResult(*arg.binVolumes()) + " * " + normFactor + ")";
 
-   std::string term;
-   switch (arg.chi2ErrorType()) {
-   case RooDataHist::Expected: term = ctx.buildCall(mathFunc("chi2Expected"), mu, arg.weightVar()); break;
-   case RooDataHist::SumW2:
-      term = ctx.buildCall(mathFunc("chi2Symmetric"), mu, arg.weightVar(), arg.weightSquaredVar());
-      break;
-   case RooDataHist::Poisson:
-      term = ctx.buildCall(mathFunc("chi2Asymmetric"), mu, arg.weightVar(), *arg.weightErrLo(), *arg.weightErrHi());
-      break;
-   default: break;
+      std::string term;
+      switch (arg.chi2ErrorType()) {
+      case RooDataHist::Expected: term = ctx.buildCall(mathFunc("chi2Expected"), mu, arg.weightVar()); break;
+      case RooDataHist::SumW2:
+         term = ctx.buildCall(mathFunc("chi2Symmetric"), mu, arg.weightVar(), arg.weightSquaredVar());
+         break;
+      case RooDataHist::Poisson:
+         term = ctx.buildCall(mathFunc("chi2Asymmetric"), mu, arg.weightVar(), *arg.weightErrLo(), *arg.weightErrHi());
+         break;
+      default: break;
+      }
+      ctx.addToCodeBody(&arg, resName + " += " + term + ";");
    }
-   ctx.addToCodeBody(&arg, resName + " += " + term + ";");
+
+   ctx.addResult(&arg, resName);
 }
 
 } // namespace
@@ -686,7 +686,6 @@ void codegenImpl(RooFit::Detail::RooNLLVarNew &arg, CodegenContext &ctx)
 
    std::string weightSumName = RooFit::Detail::makeValidVarName(arg.GetName()) + "WeightSum";
    std::string resName = RooFit::Detail::makeValidVarName(arg.GetName()) + "Result";
-   ctx.addResult(&arg, resName);
    ctx.addToGlobalScope("double " + weightSumName + " = 0.0;\n");
    ctx.addToGlobalScope("double " + resName + " = 0.0;\n");
 
@@ -716,6 +715,8 @@ void codegenImpl(RooFit::Detail::RooNLLVarNew &arg, CodegenContext &ctx)
       std::string expected = ctx.getResult(*arg.expectedEvents());
       ctx.addToCodeBody(resName + " += " + expected + " - " + weightSumName + " * std::log(" + expected + ");\n");
    }
+
+   ctx.addResult(&arg, resName);
 }
 
 void codegenImpl(RooFit::Detail::RooNormalizedPdf &arg, CodegenContext &ctx)
@@ -865,17 +866,17 @@ void codegenImpl(RooRealIntegral &arg, CodegenContext &ctx)
    auto &intVar = static_cast<RooAbsRealLValue &>(*arg.numIntRealVars()[0]);
 
    std::string obsName = ctx.getTmpVarName();
-   std::string oldIntVarResult = ctx.getResult(intVar);
-   ctx.addResult(&intVar, "obs[0]");
 
+   auto oldVecObsInfo = ctx._vecObsIndices[intVar.namePtr()];
+   ctx.addVecObs(intVar.GetName(), 0);
    std::string funcName = ctx.buildFunction(arg.integrand(), {});
+   ctx._vecObsIndices[intVar.namePtr()] = oldVecObsInfo;
 
    std::stringstream ss;
 
    ss << "double " << obsName << "[1];\n";
 
    std::string resName = RooFit::Detail::makeValidVarName(arg.GetName()) + "Result";
-   ctx.addResult(&arg, resName);
    ctx.addToGlobalScope("double " + resName + " = 0.0;\n");
 
    // TODO: once Clad has support for higher-order functions (follow also the
@@ -897,7 +898,7 @@ void codegenImpl(RooRealIntegral &arg, CodegenContext &ctx)
 
    ctx.addToGlobalScope(ss.str());
 
-   ctx.addResult(&intVar, oldIntVarResult);
+   ctx.addResult(&arg, resName);
 }
 
 void codegenImpl(RooRealSumFunc &arg, CodegenContext &ctx)
@@ -912,9 +913,6 @@ void codegenImpl(RooRealSumPdf &arg, CodegenContext &ctx)
 
 void codegenImpl(RooRealVar &arg, CodegenContext &ctx)
 {
-   if (!arg.isConstant()) {
-      ctx.addResult(&arg, arg.GetName());
-   }
    ctx.addResult(&arg, doubleToString(arg.getVal()));
 }
 
