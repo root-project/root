@@ -44,12 +44,7 @@ void CodegenContext::addResult(const char *key, std::string const &value)
 {
    const TNamed *namePtr = RooNameReg::known(key);
    if (namePtr)
-      addResult(namePtr, value);
-}
-
-void CodegenContext::addResult(TNamed const *key, std::string const &value)
-{
-   _nodeNames[key] = value;
+      _nodeNames[namePtr] = value;
 }
 
 /// @brief Gets the result for the given node using the node name. This node also performs the necessary
@@ -175,7 +170,6 @@ std::unique_ptr<CodegenContext::LoopScope> CodegenContext::beginLoop(RooAbsArg c
          continue;
 
       vars.push_back(it.first);
-      _nodeNames[it.first] = "obs[" + std::to_string(it.second) + " + " + idx + "]";
    }
 
    // TODO: we are using the size of the first loop variable to the the number
@@ -192,6 +186,16 @@ std::unique_ptr<CodegenContext::LoopScope> CodegenContext::beginLoop(RooAbsArg c
 
    // Make sure that the name of this variable doesn't clash with other stuff
    addToCodeBody(in, "for(int " + idx + " = 0; " + idx + " < " + std::to_string(numEntries) + "; " + idx + "++) {\n");
+
+   // set the results of the vector observables
+   for (auto const &it : _vecObsIndices) {
+      if (!in->dependsOn(it.first))
+         continue;
+
+      auto iWksp = std::to_string(_nWksp++);
+      addToCodeBody(in, "wksp[" + iWksp + "] = obs[" + std::to_string(it.second) + " + " + idx + "];\n");
+      _nodeNames[it.first] = "wksp[" + iWksp + "]";
+   }
 
    return std::make_unique<LoopScope>(*this, std::move(vars));
 }
@@ -240,7 +244,7 @@ void CodegenContext::addResult(RooAbsArg const *in, std::string const &valueToSa
       savedName = valueToSave;
    }
 
-   addResult(in->namePtr(), savedName);
+   _nodeNames[in->namePtr()] = savedName;
 }
 
 /// @brief Function to save a RooListProxy as an array in the squashed code.
@@ -422,6 +426,26 @@ struct Caller_FUNC_NAME {
 
 void codegen(RooAbsArg &arg, CodegenContext &ctx)
 {
+   // parameters
+   auto foundParam = ctx._paramIndices.find(&arg);
+   if (foundParam != ctx._paramIndices.end()) {
+      auto savedName = "wksp[" + std::to_string(ctx._nWksp++) + "]";
+      std::string outVarDecl = savedName + " = params[" + std::to_string(foundParam->second) + "];\n";
+      ctx.addToCodeBody(outVarDecl, ctx.isScopeIndependent(&arg));
+      ctx.addResult(&arg, savedName);
+      return;
+   }
+
+   // observables
+   auto foundObs = ctx._vecObsIndices.find(&arg);
+   if (foundObs != ctx._vecObsIndices.end()) {
+      auto savedName = "wksp[" + std::to_string(ctx._nWksp++) + "]";
+      std::string outVarDecl = savedName + " = obs[" + std::to_string(foundObs->second) + "];\n";
+      ctx.addToCodeBody(outVarDecl, ctx.isScopeIndependent(&arg));
+      ctx.addResult(&arg, savedName);
+      return;
+   }
+
    static bool codeDeclared = false;
    if (!codeDeclared) {
       declareDispatcherCode("codegenImpl");
