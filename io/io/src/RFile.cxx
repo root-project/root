@@ -35,7 +35,7 @@ static void CheckExtension(std::string_view path)
    }
 
    if (!ROOT::EndsWith(path, ".root")) {
-      R__LOG_WARNING(RFileLog()) << "ROOT::RFile only supports ROOT files. The preferred file extension is \".root\"";
+      R__LOG_INFO(RFileLog()) << "ROOT::RFile only supports ROOT files. The preferred file extension is \".root\"";
    }
 }
 
