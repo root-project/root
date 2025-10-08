@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <fstream>
 #include <type_traits>
 #include <unordered_map>
@@ -216,14 +217,18 @@ void CodegenContext::addResult(RooAbsArg const *in, std::string const &valueToSa
    // std::string savedName = RooFit::Detail::makeValidVarName(in->GetName());
    std::string savedName = getTmpVarName();
 
-   // Only save values if they contain operations.
-   bool hasOperations = valueToSave.find_first_of(":-+/*") != std::string::npos;
+   // Only save values if they contain operations or they are numerals. Otherwise, we can use them directly.
+
+   // Check if string is numeric.
+   char *end;
+   std::strtod(valueToSave.c_str(), &end);
+   bool isNumeric = (*end == '\0');
+
+   const bool hasOperations = valueToSave.find_first_of(":-+/*") != std::string::npos;
 
    // If the name is not empty and this value is worth saving, save it to the correct scope.
    // otherwise, just return the actual value itself
-   if (hasOperations) {
-      // If this is a scalar result, it will go just outside the loop because
-      // it doesn't need to be recomputed inside loops.
+   if (hasOperations || isNumeric) {
       std::string outVarDecl = "const double " + savedName + " = " + valueToSave + ";\n";
       addToCodeBody(in, outVarDecl);
    } else {
