@@ -64,8 +64,8 @@ public:
 
    friend bool operator!=(const RBinIndexRange &lhs, const RBinIndexRange &rhs) { return !(lhs == rhs); }
 
-   /// %Iterator over RBinIndex.
-   class Iterator final {
+   /// Iterator over RBinIndex.
+   class RIterator final {
       /// The current bin index
       RBinIndex fIndex;
       /// The number of normal bins, after which iteration advances to RBinIndex::Overflow()
@@ -78,10 +78,10 @@ public:
       using reference = RBinIndex;
       using iterator_category = std::input_iterator_tag;
 
-      Iterator() = default;
-      Iterator(RBinIndex index, std::size_t nNormalBins) : fIndex(index), fNNormalBins(nNormalBins) {}
+      RIterator() = default;
+      RIterator(RBinIndex index, std::size_t nNormalBins) : fIndex(index), fNNormalBins(nNormalBins) {}
 
-      Iterator &operator++()
+      RIterator &operator++()
       {
          if (fIndex.IsUnderflow()) {
             fIndex = 0;
@@ -98,9 +98,9 @@ public:
          }
          return *this;
       }
-      Iterator operator++(int)
+      RIterator operator++(int)
       {
-         Iterator old = *this;
+         RIterator old = *this;
          operator++();
          return old;
       }
@@ -108,15 +108,15 @@ public:
       RBinIndex operator*() const { return fIndex; }
       const RBinIndex *operator->() const { return &fIndex; }
 
-      friend bool operator==(const Iterator &lhs, const Iterator &rhs)
+      friend bool operator==(const RIterator &lhs, const RIterator &rhs)
       {
          return lhs.fIndex == rhs.fIndex && lhs.fNNormalBins == rhs.fNNormalBins;
       }
-      friend bool operator!=(const Iterator &lhs, const Iterator &rhs) { return !(lhs == rhs); }
+      friend bool operator!=(const RIterator &lhs, const RIterator &rhs) { return !(lhs == rhs); }
    };
 
-   Iterator begin() const { return Iterator(fBegin, fNNormalBins); }
-   Iterator end() const { return Iterator(fEnd, fNNormalBins); }
+   RIterator begin() const { return RIterator(fBegin, fNNormalBins); }
+   RIterator end() const { return RIterator(fEnd, fNNormalBins); }
 };
 
 namespace Internal {
