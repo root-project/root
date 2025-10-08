@@ -266,16 +266,23 @@ TEST(RFile, PutOverwrite)
 TEST(RFile, WrongExtension)
 {
    ROOT::RLogScopedVerbosity logVerb(ROOT::ELogLevel::kInfo);
+   // Root files with unconventional extensions are supported.
    {
       FileRaii fileGuard("test_rfile_wrong.root.1");
-      ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-      diagsRaii.requiredDiag(kInfo, "ROOT.File", "preferred file extension is \".root\"", false);
       RFile::Recreate(fileGuard.GetPath());
    }
+
+   // XML files are not supported.
+   FileRaii fileGuardXml("test_rfile_wrong.xml");
    {
-      FileRaii fileGuard("test_rfile_wrong.xml");
-      ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-      EXPECT_THROW(RFile::Recreate(fileGuard.GetPath()), ROOT::RException);
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuardXml.GetPath().c_str(), "RECREATE"));
+      TH1D h("h", "h", 10, 0, 1);
+      file->WriteObject(&h, "h");
+   }
+   {
+      EXPECT_THROW(RFile::Open(fileGuardXml.GetPath()), ROOT::RException);
+      EXPECT_THROW(RFile::Update(fileGuardXml.GetPath()), ROOT::RException);
+      EXPECT_THROW(RFile::Recreate(fileGuardXml.GetPath()), ROOT::RException);
    }
 }
 

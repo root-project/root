@@ -28,17 +28,6 @@ ROOT::RLogChannel &ROOT::Experimental::Internal::RFileLog()
 using ROOT::Experimental::RFile;
 using ROOT::Experimental::Internal::RFileLog;
 
-static void CheckExtension(std::string_view path)
-{
-   if (ROOT::EndsWith(path, ".xml")) {
-      throw ROOT::RException(R__FAIL("ROOT::RFile doesn't support XML files."));
-   }
-
-   if (!ROOT::EndsWith(path, ".root")) {
-      R__LOG_INFO(RFileLog()) << "ROOT::RFile only supports ROOT files. The preferred file extension is \".root\"";
-   }
-}
-
 namespace {
 enum class ENameCycleError {
    kNoError,
@@ -186,12 +175,13 @@ RFile::~RFile() = default;
 
 std::unique_ptr<RFile> RFile::Open(std::string_view path)
 {
-   CheckExtension(path);
-
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
    auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "READ_WITHOUT_GLOBALREGISTRATION"));
    if (!tfile || tfile->IsZombie())
       throw ROOT::RException(R__FAIL("failed to open file " + std::string(path) + " for reading"));
+
+   if (tfile->IsRaw())
+      throw ROOT::RException(R__FAIL("Opened file " + std::string(path) + " is not a ROOT file"));
 
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
    return rfile;
@@ -199,12 +189,13 @@ std::unique_ptr<RFile> RFile::Open(std::string_view path)
 
 std::unique_ptr<RFile> RFile::Update(std::string_view path)
 {
-   CheckExtension(path);
-
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
    auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "UPDATE_WITHOUT_GLOBALREGISTRATION"));
    if (!tfile || tfile->IsZombie())
       throw ROOT::RException(R__FAIL("failed to open file " + std::string(path) + " for updating"));
+
+   if (tfile->IsRaw())
+      throw ROOT::RException(R__FAIL("Opened file " + std::string(path) + " is not a ROOT file"));
 
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
    return rfile;
@@ -212,12 +203,13 @@ std::unique_ptr<RFile> RFile::Update(std::string_view path)
 
 std::unique_ptr<RFile> RFile::Recreate(std::string_view path)
 {
-   CheckExtension(path);
-
    TDirectory::TContext ctx(nullptr); // XXX: probably not thread safe?
    auto tfile = std::unique_ptr<TFile>(TFile::Open(std::string(path).c_str(), "RECREATE_WITHOUT_GLOBALREGISTRATION"));
    if (!tfile || tfile->IsZombie())
       throw ROOT::RException(R__FAIL("failed to open file " + std::string(path) + " for writing"));
+
+   if (tfile->IsRaw())
+      throw ROOT::RException(R__FAIL("Opened file " + std::string(path) + " is not a ROOT file"));
 
    auto rfile = std::unique_ptr<RFile>(new RFile(std::move(tfile)));
    return rfile;
