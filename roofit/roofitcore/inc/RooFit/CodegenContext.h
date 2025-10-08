@@ -46,10 +46,10 @@ class CodegenContext {
 public:
    void addResult(RooAbsArg const *key, std::string const &value);
 
-   std::string const &getResult(RooAbsArg const &arg);
+   std::string getResult(RooAbsArg const &arg);
 
    template <class T>
-   std::string const &getResult(RooTemplateProxy<T> const &key)
+   std::string getResult(RooTemplateProxy<T> const &key)
    {
       return getResult(key.arg());
    }
@@ -134,10 +134,8 @@ public:
    };
    ScopeRAII OutputScopeRangeComment(RooAbsArg const *arg) { return {arg, *this}; }
 
-   bool isScopeIndependent(RooAbsArg const *in) const;
-
    /// @brief Map of node names to their result strings.
-   std::unordered_map<const TNamed *, std::string> _nodeNames;
+   std::unordered_map<const TNamed *, std::size_t> _nodeNames;
    std::size_t _nWksp = 0;
    std::unordered_map<const RooAbsArg *, int> _paramIndices;
    /// @brief A map to keep track of the observable indices if they are non scalar.
@@ -148,6 +146,8 @@ private:
    void popScope();
    template <class T>
    std::string buildArgSpanImpl(std::span<const T> arr);
+
+   bool isScopeIndependent(RooAbsArg const *in) const;
 
    void endLoop(LoopScope const &scope);
 
