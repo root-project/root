@@ -46,21 +46,11 @@ public:
 
    int StorageLevel() const { return fStoreLevel; }
 
-   bool IsLow() const { return fStrategy == 0; }
-   bool IsMedium() const { return fStrategy == 1; }
-   bool IsHigh() const { return fStrategy == 2; }
-   bool IsVeryHigh() const { return fStrategy >= 3; }
-
    bool RefineGradientInHessian() const { return fStrategy > 0; }
 
    bool ComputeInitialHessian() const { return fStrategy == 2; }
 
    double HessianRecomputeThreshold() const;
-
-   void SetLowStrategy();
-   void SetMediumStrategy();
-   void SetHighStrategy();
-   void SetVeryHighStrategy();
 
    void SetGradientNCycles(unsigned int n) { fGradNCyc = n; }
    void SetGradientStepTolerance(double stp) { fGradTlrStp = stp; }
@@ -87,6 +77,11 @@ private:
    friend class MnFunctionCross;
    friend class MnContours;
    MnStrategy NextLower() const;
+
+   void SetLowStrategy();
+   void SetMediumStrategy();
+   void SetHighStrategy();
+   void SetVeryHighStrategy();
 
    unsigned int fStrategy;
 
