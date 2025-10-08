@@ -30,8 +30,7 @@
 template <class T>
 class RooTemplateProxy;
 
-namespace RooFit {
-namespace Experimental {
+namespace RooFit::Experimental {
 
 template <int P>
 struct Prio {
@@ -243,7 +242,6 @@ void declareDispatcherCode(std::string const &funcName);
 
 void codegen(RooAbsArg &arg, CodegenContext &ctx);
 
-} // namespace Experimental
-} // namespace RooFit
+} // namespace RooFit::Experimental
 
 #endif
