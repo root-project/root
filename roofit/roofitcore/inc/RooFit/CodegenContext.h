@@ -140,6 +140,8 @@ public:
 
    std::size_t _nWksp = 0;
    std::unordered_map<const RooAbsArg *, int> _paramIndices;
+   /// @brief A map to keep track of the observable indices if they are non scalar.
+   std::unordered_map<const TNamed *, int> _vecObsIndices;
 
 private:
    void pushScope();
@@ -148,8 +150,6 @@ private:
    std::string buildArgSpanImpl(std::span<const T> arr);
 
    void endLoop(LoopScope const &scope);
-
-   void addResult(TNamed const *key, std::string const &value);
 
    template <class T, typename std::enable_if<std::is_floating_point<T>{}, bool>::type = true>
    std::string buildArg(T x)
@@ -197,8 +197,6 @@ private:
 
    /// @brief Map of node names to their result strings.
    std::unordered_map<const TNamed *, std::string> _nodeNames;
-   /// @brief A map to keep track of the observable indices if they are non scalar.
-   std::unordered_map<const TNamed *, int> _vecObsIndices;
    /// @brief Map of node output sizes.
    std::map<RooFit::Detail::DataKey, std::size_t> _nodeOutputSizes;
    /// @brief The code layered by lexical scopes used as a stack.

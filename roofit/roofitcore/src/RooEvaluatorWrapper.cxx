@@ -251,7 +251,6 @@ RooFuncWrapper::RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimul
       if (item.second.size == 1) {
          ctx.addResult(obsName, "obs[" + std::to_string(item.second.idx) + "]");
       } else {
-         ctx.addResult(obsName, "obs");
          ctx.addVecObs(obsName, item.second.idx);
       }
    }
