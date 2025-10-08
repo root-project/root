@@ -21,9 +21,8 @@
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
-namespace RooFit {
-namespace Detail {
-namespace MathFuncs {
+
+namespace RooFit::Detail::MathFuncs {
 
 /// Calculates the binomial coefficient n over k.
 /// Equivalent to TMath::Binomial, but inlined.
@@ -44,7 +43,8 @@ inline double binomial(int n, int k)
 }
 
 /// The caller needs to make sure that there is at least one coefficient.
-inline double bernstein(double x, double xmin, double xmax, double *coefs, int nCoefs)
+template <typename DoubleArray>
+double bernstein(double x, double xmin, double xmax, DoubleArray coefs, int nCoefs)
 {
    double xScaled = (x - xmin) / (xmax - xmin); // rescale to [0,1]
    int degree = nCoefs - 1;                     // n+1 polys of degree n
@@ -89,7 +89,8 @@ inline double gaussian(double x, double mean, double sigma)
    return std::exp(-0.5 * arg * arg / (sig * sig));
 }
 
-inline double product(double const *factors, std::size_t nFactors)
+template <typename DoubleArray>
+double product(DoubleArray factors, std::size_t nFactors)
 {
    double out = 1.0;
    for (std::size_t i = 0; i < nFactors; ++i) {
@@ -125,8 +126,8 @@ inline double efficiency(double effFuncVal, int catIndex, int sigCatIndex)
 }
 
 /// In pdfMode, a coefficient for the constant term of 1.0 is implied if lowestOrder > 0.
-template <bool pdfMode = false>
-inline double polynomial(double const *coeffs, int nCoeffs, int lowestOrder, double x)
+template <bool pdfMode = false, typename DoubleArray>
+double polynomial(DoubleArray coeffs, int nCoeffs, int lowestOrder, double x)
 {
    double retVal = coeffs[nCoeffs - 1];
    for (int i = nCoeffs - 2; i >= 0; i--) {
@@ -136,7 +137,8 @@ inline double polynomial(double const *coeffs, int nCoeffs, int lowestOrder, dou
    return retVal + (pdfMode && lowestOrder > 0 ? 1.0 : 0.0);
 }
 
-inline double chebychev(double *coeffs, unsigned int nCoeffs, double x_in, double xMin, double xMax)
+template <typename DoubleArray>
+double chebychev(DoubleArray coeffs, unsigned int nCoeffs, double x_in, double xMin, double xMax)
 {
    // transform to range [-1, +1]
    const double xPrime = (x_in - 0.5 * (xMax + xMin)) / (0.5 * (xMax - xMin));
@@ -160,7 +162,8 @@ inline double chebychev(double *coeffs, unsigned int nCoeffs, double x_in, doubl
    return sum;
 }
 
-inline double multipdf(int idx, double const *pdfs)
+template <typename DoubleArray>
+double multipdf(int idx, DoubleArray pdfs)
 {
    /* if (idx < 0 || idx >= static_cast<int>(pdfs.size())){
         throw std::out_of_range("Invalid PDF index");
@@ -169,7 +172,9 @@ inline double multipdf(int idx, double const *pdfs)
    */
    return pdfs[idx];
 }
-inline double constraintSum(double const *comp, unsigned int compSize)
+
+template <typename DoubleArray>
+double constraintSum(DoubleArray comp, unsigned int compSize)
 {
    double sum = 0;
    for (unsigned int i = 0; i < compSize; i++) {
@@ -184,10 +189,11 @@ inline unsigned int uniformBinNumber(double low, double high, double val, unsign
    return coef * (val >= high ? numBins - 1 : std::abs((val - low) / binWidth));
 }
 
-inline unsigned int rawBinNumber(double x, double const *boundaries, std::size_t nBoundaries)
+template <typename DoubleArray>
+unsigned int rawBinNumber(double x, DoubleArray boundaries, std::size_t nBoundaries)
 {
-   double const *end = boundaries + nBoundaries;
-   double const *it = std::lower_bound(boundaries, end, x);
+   DoubleArray end = boundaries + nBoundaries;
+   DoubleArray it = std::lower_bound(boundaries, end, x);
    // always return valid bin number
    while (boundaries != it && (end == it || end == it + 1 || x < *it)) {
       --it;
@@ -195,15 +201,16 @@ inline unsigned int rawBinNumber(double x, double const *boundaries, std::size_t
    return it - boundaries;
 }
 
-inline unsigned int
-binNumber(double x, double coef, double const *boundaries, unsigned int nBoundaries, int nbins, int blo)
+template <typename DoubleArray>
+unsigned int binNumber(double x, double coef, DoubleArray boundaries, unsigned int nBoundaries, int nbins, int blo)
 {
    const int rawBin = rawBinNumber(x, boundaries, nBoundaries);
    int tmp = std::min(nbins, rawBin - blo);
    return coef * std::max(0, tmp);
 }
 
-inline double interpolate1d(double low, double high, double val, unsigned int numBins, double const *vals)
+template <typename DoubleArray>
+double interpolate1d(double low, double high, double val, unsigned int numBins, DoubleArray vals)
 {
    double binWidth = (high - low) / numBins;
    int idx = val >= high ? numBins - 1 : std::abs((val - low) / binWidth);
@@ -352,8 +359,9 @@ inline double flexibleInterpSingle(unsigned int code, double low, double high, d
    return 0.0;
 }
 
-inline double flexibleInterp(unsigned int code, double const *params, unsigned int n, double const *low,
-                             double const *high, double boundary, double nominal, int doCutoff)
+template <typename ParamsArray, typename DoubleArray>
+double flexibleInterp(unsigned int code, ParamsArray params, unsigned int n, DoubleArray low, DoubleArray high,
+                      double boundary, double nominal, int doCutoff)
 {
    double total = nominal;
    for (std::size_t i = 0; i < n; ++i) {
@@ -403,7 +411,8 @@ inline double nll(double pdf, double weight, int binnedL, int doBinOffset)
    }
 }
 
-inline double recursiveFraction(double *a, unsigned int n)
+template <typename DoubleArray>
+double recursiveFraction(DoubleArray a, unsigned int n)
 {
    double prod = a[0];
 
@@ -512,8 +521,8 @@ inline double exponentialIntegral(double xMin, double xMax, double constant)
 }
 
 /// In pdfMode, a coefficient for the constant term of 1.0 is implied if lowestOrder > 0.
-template <bool pdfMode = false>
-inline double polynomialIntegral(double const *coeffs, int nCoeffs, int lowestOrder, double xMin, double xMax)
+template <bool pdfMode = false, typename DoubleArray>
+double polynomialIntegral(DoubleArray coeffs, int nCoeffs, int lowestOrder, double xMin, double xMax)
 {
    int denom = lowestOrder + nCoeffs;
    double min = coeffs[nCoeffs - 1] / double(denom);
@@ -545,8 +554,9 @@ inline double fast_fma(double x, double y, double z) noexcept
 #endif                      // defined(FP_FAST_FMA)
 }
 
-inline double chebychevIntegral(double const *coeffs, unsigned int nCoeffs, double xMin, double xMax, double xMinFull,
-                                double xMaxFull)
+template <typename DoubleArray>
+double
+chebychevIntegral(DoubleArray coeffs, unsigned int nCoeffs, double xMin, double xMax, double xMinFull, double xMaxFull)
 {
    const double halfrange = .5 * (xMax - xMin);
    const double mid = .5 * (xMax + xMin);
@@ -744,7 +754,8 @@ inline double cbShapeIntegral(double mMin, double mMax, double m0, double sigma,
    return result;
 }
 
-inline double bernsteinIntegral(double xlo, double xhi, double xmin, double xmax, double *coefs, int nCoefs)
+template <typename DoubleArray>
+double bernsteinIntegral(double xlo, double xhi, double xmin, double xmax, DoubleArray coefs, int nCoefs)
 {
    double xloScaled = (xlo - xmin) / (xmax - xmin);
    double xhiScaled = (xhi - xmin) / (xmax - xmin);
@@ -770,7 +781,8 @@ inline double bernsteinIntegral(double xlo, double xhi, double xmin, double xmax
    return norm * (xmax - xmin);
 }
 
-inline double multiVarGaussian(int n, const double *x, const double *mu, const double *covI)
+template <typename DoubleArray>
+double multiVarGaussian(int n, DoubleArray x, DoubleArray mu, DoubleArray covI)
 {
    double result = 0.0;
 
@@ -786,8 +798,8 @@ inline double multiVarGaussian(int n, const double *x, const double *mu, const d
 // Integral of a step function defined by `nBins` intervals, where the
 // intervals have values `coefs` and the boundary on the interval `iBin` is
 // given by `[boundaries[i], boundaries[i+1])`.
-inline double
-stepFunctionIntegral(double xmin, double xmax, std::size_t nBins, double const *boundaries, double const *coefs)
+template <typename DoubleArray>
+double stepFunctionIntegral(double xmin, double xmax, std::size_t nBins, DoubleArray boundaries, DoubleArray coefs)
 {
    double out = 0.0;
    for (std::size_t i = 0; i < nBins; ++i) {
@@ -798,15 +810,10 @@ stepFunctionIntegral(double xmin, double xmax, std::size_t nBins, double const *
    return out;
 }
 
-} // namespace MathFuncs
-} // namespace Detail
-} // namespace RooFit
+} // namespace RooFit::Detail::MathFuncs
 
-namespace clad {
-namespace custom_derivatives {
-namespace RooFit {
-namespace Detail {
-namespace MathFuncs {
+namespace clad::custom_derivatives {
+namespace RooFit::Detail::MathFuncs {
 
 // Clad can't generate the pullback for binNumber because of the
 // std::lower_bound usage. But since binNumber returns an integer, and such
@@ -818,10 +825,7 @@ void binNumber_pullback(Types...)
 {
 }
 
-} // namespace MathFuncs
-} // namespace Detail
-} // namespace RooFit
-} // namespace custom_derivatives
-} // namespace clad
+} // namespace RooFit::Detail::MathFuncs
+} // namespace clad::custom_derivatives
 
 #endif
