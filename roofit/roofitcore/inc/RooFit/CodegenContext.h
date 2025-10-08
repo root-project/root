@@ -46,7 +46,6 @@ using PrioLowest = Prio<10>;
 class CodegenContext {
 public:
    void addResult(RooAbsArg const *key, std::string const &value);
-   void addResult(const char *key, std::string const &value);
 
    std::string const &getResult(RooAbsArg const &arg);
 
@@ -69,7 +68,7 @@ public:
    }
 
    void addToGlobalScope(std::string const &str);
-   void addVecObs(const char *key, int idx);
+   void addVecObs(const char *key, int idx, std::size_t size);
    void addParam(const RooAbsArg *key, int idx);
    int observableIndexOf(const RooAbsArg &arg) const;
 
@@ -138,10 +137,12 @@ public:
 
    bool isScopeIndependent(RooAbsArg const *in) const;
 
+   /// @brief Map of node names to their result strings.
+   std::unordered_map<const TNamed *, std::string> _nodeNames;
    std::size_t _nWksp = 0;
    std::unordered_map<const RooAbsArg *, int> _paramIndices;
    /// @brief A map to keep track of the observable indices if they are non scalar.
-   std::unordered_map<const TNamed *, int> _vecObsIndices;
+   std::unordered_map<const TNamed *, std::pair<int, std::size_t>> _vecObsIndices;
 
 private:
    void pushScope();
@@ -195,8 +196,6 @@ private:
    template <class T>
    std::string typeName() const;
 
-   /// @brief Map of node names to their result strings.
-   std::unordered_map<const TNamed *, std::string> _nodeNames;
    /// @brief Map of node output sizes.
    std::map<RooFit::Detail::DataKey, std::size_t> _nodeOutputSizes;
    /// @brief The code layered by lexical scopes used as a stack.

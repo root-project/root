@@ -25,27 +25,8 @@
 #include <type_traits>
 #include <unordered_map>
 
-namespace {
-
-bool startsWith(std::string_view str, std::string_view prefix)
-{
-   return str.size() >= prefix.size() && 0 == str.compare(0, prefix.size(), prefix);
-}
-
-} // namespace
-
 namespace RooFit {
 namespace Experimental {
-
-/// @brief Adds (or overwrites) the string representing the result of a node.
-/// @param key The name of the node to add the result for.
-/// @param value The new name to assign/overwrite.
-void CodegenContext::addResult(const char *key, std::string const &value)
-{
-   const TNamed *namePtr = RooNameReg::known(key);
-   if (namePtr)
-      _nodeNames[namePtr] = value;
-}
 
 /// @brief Gets the result for the given node using the node name. This node also performs the necessary
 /// code generation through recursive calls to 'translate'. A call to this function modifies the already
@@ -62,14 +43,6 @@ std::string const &CodegenContext::getResult(RooAbsArg const &arg)
    auto found = _nodeNames.find(arg.namePtr());
    if (found != _nodeNames.end())
       return found->second;
-
-   // The result for vector observables should already be in the map if you
-   // opened the loop scope. This is just to check if we did not request the
-   // result of a vector-valued observable outside of the scope of a loop.
-   auto foundVecObs = _vecObsIndices.find(arg.namePtr());
-   if (foundVecObs != _vecObsIndices.end()) {
-      throw std::runtime_error("You requested the result of a vector observable outside a loop scope for it!");
-   }
 
    auto RAII(OutputScopeRangeComment(&arg));
 
@@ -93,11 +66,11 @@ void CodegenContext::addToGlobalScope(std::string const &str)
 /// element. For example, a vector valued variable x with 10 entries will be squashed to obs[start_idx + i].
 /// @param key The name of the node representing the vector valued observable.
 /// @param idx The start index (or relative position of the observable in the set of all observables).
-void CodegenContext::addVecObs(const char *key, int idx)
+void CodegenContext::addVecObs(const char *key, int idx, std::size_t size)
 {
    const TNamed *namePtr = RooNameReg::known(key);
    if (namePtr)
-      _vecObsIndices[namePtr] = idx;
+      _vecObsIndices[namePtr] = {idx, size};
 }
 
 void CodegenContext::addParam(RooAbsArg const *arg, int idx)
@@ -109,7 +82,7 @@ int CodegenContext::observableIndexOf(RooAbsArg const &arg) const
 {
    auto it = _vecObsIndices.find(arg.namePtr());
    if (it != _vecObsIndices.end()) {
-      return it->second;
+      return it->second.first;
    }
 
    return -1; // Not found
@@ -192,9 +165,16 @@ std::unique_ptr<CodegenContext::LoopScope> CodegenContext::beginLoop(RooAbsArg c
       if (!in->dependsOn(it.first))
          continue;
 
-      auto iWksp = std::to_string(_nWksp++);
-      addToCodeBody(in, "wksp[" + iWksp + "] = obs[" + std::to_string(it.second) + " + " + idx + "];\n");
-      _nodeNames[it.first] = "wksp[" + iWksp + "]";
+      std::size_t n = it.second.second;
+
+      auto savedName = "wksp[" + std::to_string(_nWksp++) + "]";
+      std::string outVarDecl;
+      if (n == 1)
+         outVarDecl = savedName + " = obs[" + std::to_string(it.second.first) + "];\n";
+      else
+         outVarDecl = savedName + " = obs[" + std::to_string(it.second.first) + " + " + idx + "];\n";
+      addToCodeBody(outVarDecl, n == 1);
+      _nodeNames[it.first] = savedName;
    }
 
    return std::make_unique<LoopScope>(*this, std::move(vars));
@@ -342,12 +322,6 @@ CodegenContext::buildFunction(RooAbsArg const &arg, std::map<RooFit::Detail::Dat
    ctx._nodeOutputSizes = outputSizes;
    ctx._vecObsIndices = _vecObsIndices;
    ctx._paramIndices = _paramIndices;
-   // We only want to take over parameters and observables
-   for (auto const &item : _nodeNames) {
-      if (startsWith(item.second, "obs[")) {
-         ctx._nodeNames.insert(item);
-      }
-   }
    ctx._xlArr = _xlArr;
    ctx._collectedFunctions = _collectedFunctions;
 
@@ -375,7 +349,7 @@ CodegenContext::buildFunction(RooAbsArg const &arg, std::map<RooFit::Detail::Dat
       std::stringstream errorMsg;
       std::string debugFileName = "_codegen_" + funcName + ".cxx";
       errorMsg << "Function " << funcName << " could not be compiled. See above for details. Full code dumped to file "
-               << debugFileName << "for debugging";
+               << debugFileName << " for debugging";
       {
          std::ofstream outFile;
          outFile.open(debugFileName.c_str());
@@ -437,10 +411,10 @@ void codegen(RooAbsArg &arg, CodegenContext &ctx)
    }
 
    // observables
-   auto foundObs = ctx._vecObsIndices.find(&arg);
+   auto foundObs = ctx._vecObsIndices.find(arg.namePtr());
    if (foundObs != ctx._vecObsIndices.end()) {
       auto savedName = "wksp[" + std::to_string(ctx._nWksp++) + "]";
-      std::string outVarDecl = savedName + " = obs[" + std::to_string(foundObs->second) + "];\n";
+      std::string outVarDecl = savedName + " = obs[" + std::to_string(foundObs->second.first) + "];\n";
       ctx.addToCodeBody(outVarDecl, ctx.isScopeIndependent(&arg));
       ctx.addResult(&arg, savedName);
       return;
