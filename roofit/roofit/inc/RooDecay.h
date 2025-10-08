@@ -34,10 +34,10 @@ public:
   double coefficient(Int_t basisIndex) const override ;
 
   /// Get the cnvolution variable.
-  RooAbsReal const& getT() const { return _t.arg(); }
+  RooAbsReal const &getT() const { return _t.arg(); }
 
   /// Get the decay constant.
-  RooAbsReal const& getTau() const { return _tau.arg(); }
+  RooAbsReal const &getTau() const { return _tau.arg(); }
 
   /// Get the decay type.
   DecayType getDecayType() const { return _type; }

@@ -50,7 +50,7 @@ int validate(RooWorkspace &ws1, std::string const &argName, bool exact = true)
    if (writeJsonFiles) {
       RooJSONFactoryWSTool{ws1}.exportJSON(argName + "_1.json");
    }
-   
+
    RooJSONFactoryWSTool{ws2}.importJSONfromString(json1);
    if (writeJsonFiles) {
       RooJSONFactoryWSTool{ws2}.exportJSON(argName + "_2.json");
@@ -76,35 +76,38 @@ int validate(RooWorkspace &ws1, std::string const &argName, bool exact = true)
       EXPECT_STREQ(comps1[i]->GetName(), comps2[i]->GetName());
    }
 
-   RooRealVar* x1 = ws1.var("x");
-   RooRealVar* x2 = ws2.var("x");
-   
-   if(!x1 || !x2) return 1;
+   RooRealVar *x1 = ws1.var("x");
+   RooRealVar *x2 = ws2.var("x");
 
-   TObject* arg1 = ws1.obj(argName);
-   TObject* arg2 = ws2.obj(argName);
+   if (!x1 || !x2)
+      return 1;
 
-   if(!arg1 || !arg2) return 1;
-   
+   TObject *arg1 = ws1.obj(argName);
+   TObject *arg2 = ws2.obj(argName);
+
+   if (!arg1 || !arg2)
+      return 1;
+
    RooArgSet nset1{*x1};
    RooArgSet nset2{*x2};
 
-   RooAbsReal* r1 = dynamic_cast<RooAbsReal*>(arg1);
-   RooAbsReal* r2 = dynamic_cast<RooAbsReal*>(arg2);
+   RooAbsReal *r1 = dynamic_cast<RooAbsReal *>(arg1);
+   RooAbsReal *r2 = dynamic_cast<RooAbsReal *>(arg2);
 
-   if(r1 && !r2) return 1;
+   if (r1 && !r2)
+      return 1;
 
-   if(r1&&r2){
-     bool allGood = true;
-     for (int i = 0; i < x1->numBins(); ++i) {
-       x1->setBin(i);
-       x2->setBin(i);
-       const double val1 = r1->getVal(nset1);
-       const double val2 = r1->getVal(nset2);
-       allGood &= (exact ? (val1 == val2) : std::abs(val1 - val2) < 1e-10);
-     }
-     
-     return allGood ? 0 : 1;
+   if (r1 && r2) {
+      bool allGood = true;
+      for (int i = 0; i < x1->numBins(); ++i) {
+         x1->setBin(i);
+         x2->setBin(i);
+         const double val1 = r1->getVal(nset1);
+         const double val2 = r1->getVal(nset2);
+         allGood &= (exact ? (val1 == val2) : std::abs(val1 - val2) < 1e-10);
+      }
+
+      return allGood ? 0 : 1;
    }
 
    return 0;
@@ -114,9 +117,8 @@ int validate(std::vector<std::string> const &expressions, bool exact = true)
 {
    RooWorkspace ws;
    for (std::size_t iExpr = 0; iExpr < expressions.size() - 1; ++iExpr) {
-     std::cout << expressions[iExpr] << std::endl;
-     ws.factory(expressions[iExpr])->Print();
-      
+      std::cout << expressions[iExpr] << std::endl;
+      ws.factory(expressions[iExpr])->Print();
    }
    const std::string argName = ws.factory(expressions.back())->GetName();
    return validate(ws, argName, exact);
@@ -466,13 +468,17 @@ TEST(RooFitHS3, WorkspaceOnlyDataset_RooDataHist)
    RooWorkspace ws1{"ws_dataset_only"};
 
    // Observable with explicit binning
-   RooRealVar x{"x", "x", 0.0, 1.0}; x.setBins(3);
+   RooRealVar x{"x", "x", 0.0, 1.0};
+   x.setBins(3);
    // Build a tiny RooDataHist
    RooDataHist dh{"dh", "dataset-only (hist)", RooArgList{x}};
    // Fill deterministic contents
-   x.setVal(0.1666667); dh.set(0, 10.0, 0.0); // bin 0
-   x.setVal(0.5000000); dh.set(1, 20.0, 0.0); // bin 1
-   x.setVal(0.8333333); dh.set(2, 15.0, 0.0); // bin 2
+   x.setVal(0.1666667);
+   dh.set(0, 10.0, 0.0); // bin 0
+   x.setVal(0.5000000);
+   dh.set(1, 20.0, 0.0); // bin 1
+   x.setVal(0.8333333);
+   dh.set(2, 15.0, 0.0); // bin 2
 
    ws1.import(dh, RooFit::Silence());
 
@@ -487,10 +493,7 @@ TEST(RooFitHS3, WorkspaceOnlyDataset_RooDataHist)
 // -----------------------------------------------------------------------------
 TEST(RooFitHS3, WorkspaceOnlyFunction)
 {
-   int status = validate({
-       std::string("x[-3, 3]"),
-       std::string("RooFormulaVar::myfunc(\"sin(x) + 0.5*x*x\",x)")
-     });	 
+   int status = validate({std::string("x[-3, 3]"), std::string("RooFormulaVar::myfunc(\"sin(x) + 0.5*x*x\",x)")});
    EXPECT_EQ(status, 0);
 }
 
@@ -502,19 +505,21 @@ TEST(RooFitHS3, ModelConfigWithMultiVarGaussian)
    using RooFit::RooConst;
 
    // Observables
-   RooRealVar x{"x","x",-5.0,5.0};
-   RooRealVar y{"y","y",-5.0,5.0};
+   RooRealVar x{"x", "x", -5.0, 5.0};
+   RooRealVar y{"y", "y", -5.0, 5.0};
 
    // Means
-   RooRealVar mx{"mx","mx", 0.5};
-   RooRealVar my{"my","my",-0.3};
+   RooRealVar mx{"mx", "mx", 0.5};
+   RooRealVar my{"my", "my", -0.3};
 
    // Covariance
    TMatrixDSym cov{2};
-   cov(0,0) = 1.2; cov(0,1) = 0.25;
-   cov(1,0) = 0.25; cov(1,1) = 0.9;
+   cov(0, 0) = 1.2;
+   cov(0, 1) = 0.25;
+   cov(1, 0) = 0.25;
+   cov(1, 1) = 0.9;
 
-   RooMultiVarGaussian mv{"mvgauss","mvgauss", RooArgList{x,y}, RooArgList{mx,my}, cov};
+   RooMultiVarGaussian mv{"mvgauss", "mvgauss", RooArgList{x, y}, RooArgList{mx, my}, cov};
 
    RooWorkspace ws1{"ws_mc"};
    ws1.import(mv, RooFit::Silence(), RooFit::RecycleConflictNodes());
@@ -525,6 +530,6 @@ TEST(RooFitHS3, ModelConfigWithMultiVarGaussian)
    mc.SetObservables("x,y");
    ws1.import(mc);
 
-   int status = validate(ws1,"mc");
-   EXPECT_EQ(status, 0);   
+   int status = validate(ws1, "mc");
+   EXPECT_EQ(status, 0);
 }

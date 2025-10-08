@@ -41,7 +41,7 @@ public:
    static bool allowExportInvalidNames;
    static bool allowSanitizeNames;
    static RooWorkspace sanitizeWS(const RooWorkspace &ws);
-   static RooWorkspace cleanWS(const RooWorkspace& ws, bool onlyModelConfig = false);
+   static RooWorkspace cleanWS(const RooWorkspace &ws, bool onlyModelConfig = false);
 
    struct CombinedData {
       std::string name;
@@ -56,7 +56,7 @@ public:
    static bool isValidName(const std::string &str);
    static bool testValidName(const std::string &str, bool forcError);
    static std::string sanitizeName(const std::string str);
-   static void rebuildModelConfigInWorkspace(RooStats::ModelConfig* mc, RooWorkspace& ws);
+   static void rebuildModelConfigInWorkspace(RooStats::ModelConfig *mc, RooWorkspace &ws);
 
    static RooFit::Detail::JSONNode &appendNamedChild(RooFit::Detail::JSONNode &node, std::string const &name);
    static RooFit::Detail::JSONNode const *findNamedChild(RooFit::Detail::JSONNode const &node, std::string const &name);
@@ -233,10 +233,10 @@ private:
    void exportVariables(const RooArgSet &allElems, RooFit::Detail::JSONNode &n);
 
    void exportAllObjects(RooFit::Detail::JSONNode &n);
-  
+
    void exportModelConfig(RooFit::Detail::JSONNode &rootnode, RooStats::ModelConfig const &mc,
                           const std::vector<RooJSONFactoryWSTool::CombinedData> &combined,
-                          const std::vector<RooAbsData*> &single);			  
+                          const std::vector<RooAbsData *> &single);
 
    void exportSingleModelConfig(RooFit::Detail::JSONNode &rootnode, RooStats::ModelConfig const &mc,
                                 std::string const &analysisName,
