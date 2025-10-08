@@ -8,7 +8,7 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RFile.hxx>
 #include <ROOT/TestSupport.hxx>
-#include <numeric>
+#include <ROOT/RLogger.hxx>
 
 using ROOT::Experimental::RFile;
 
@@ -74,9 +74,6 @@ TEST(RFile, OpenInexistent)
 {
    FileRaii fileGuard("does_not_exist.root");
 
-   // make sure that the file really does not exist, in case a previous test didn't clean it up.
-   gSystem->Unlink(fileGuard.GetPath().c_str());
-
    ROOT::TestSupport::CheckDiagsRAII diags;
    diags.optionalDiag(kSysError, "TFile::TFile", "", false);
    diags.optionalDiag(kError, "TFile::TFile", "", false);
@@ -101,7 +98,10 @@ TEST(RFile, OpenInexistent)
    }
 
    // This succeeds because Update creates the file if it doesn't exist.
-   EXPECT_NO_THROW(RFile::Update("does_not_exist.root"));
+   FileRaii fileGuard2("created_by_update.root");
+   // in case a previous run of the test failed to clean up, make sure the file doesn't exist:
+   gSystem->Unlink(fileGuard2.GetPath().c_str());
+   EXPECT_NO_THROW(RFile::Update(fileGuard2.GetPath()));
 }
 
 TEST(RFile, OpenForWriting)
@@ -148,8 +148,8 @@ TEST(RFile, CheckNoAutoRegistrationRead)
       auto file = RFile::Open(fileGuard.GetPath());
       EXPECT_EQ(gDirectory, gROOT);
       auto hist = file->Get<TH1D>("hist");
-      EXPECT_EQ(hist->GetDirectory(), nullptr);
       ASSERT_NE(hist, nullptr);
+      EXPECT_EQ(hist->GetDirectory(), nullptr);
       EXPECT_FLOAT_EQ(hist->GetEntries(), 1);
    }
    // no double free should happen when ROOT exits
@@ -265,10 +265,11 @@ TEST(RFile, PutOverwrite)
 
 TEST(RFile, WrongExtension)
 {
+   ROOT::RLogScopedVerbosity logVerb(ROOT::ELogLevel::kInfo);
    {
       FileRaii fileGuard("test_rfile_wrong.root.1");
       ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-      diagsRaii.requiredDiag(kWarning, "ROOT.File", "preferred file extension is \".root\"", false);
+      diagsRaii.requiredDiag(kInfo, "ROOT.File", "preferred file extension is \".root\"", false);
       RFile::Recreate(fileGuard.GetPath());
    }
    {
