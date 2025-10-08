@@ -25,39 +25,15 @@
 #include <type_traits>
 #include <unordered_map>
 
-namespace {
-
-bool startsWith(std::string_view str, std::string_view prefix)
-{
-   return str.size() >= prefix.size() && 0 == str.compare(0, prefix.size(), prefix);
-}
-
-} // namespace
-
 namespace RooFit {
 namespace Experimental {
-
-/// @brief Adds (or overwrites) the string representing the result of a node.
-/// @param key The name of the node to add the result for.
-/// @param value The new name to assign/overwrite.
-void CodegenContext::addResult(const char *key, std::string const &value)
-{
-   const TNamed *namePtr = RooNameReg::known(key);
-   if (namePtr)
-      addResult(namePtr, value);
-}
-
-void CodegenContext::addResult(TNamed const *key, std::string const &value)
-{
-   _nodeNames[key] = value;
-}
 
 /// @brief Gets the result for the given node using the node name. This node also performs the necessary
 /// code generation through recursive calls to 'translate'. A call to this function modifies the already
 /// existing code body.
 /// @param key The node to get the result string for.
 /// @return String representing the result of this node.
-std::string const &CodegenContext::getResult(RooAbsArg const &arg)
+std::string CodegenContext::getResult(RooAbsArg const &arg)
 {
    // If the result has already been recorded, just return the result.
    // It is usually the responsibility of each translate function to assign
@@ -65,23 +41,19 @@ std::string const &CodegenContext::getResult(RooAbsArg const &arg)
    // for a particular node, it means the node has already been 'translate'd and we
    // dont need to visit it again.
    auto found = _nodeNames.find(arg.namePtr());
-   if (found != _nodeNames.end())
-      return found->second;
+   std::size_t idx = 0;
+   if (found != _nodeNames.end()) {
+      idx = found->second;
+   } else {
 
-   // The result for vector observables should already be in the map if you
-   // opened the loop scope. This is just to check if we did not request the
-   // result of a vector-valued observable outside of the scope of a loop.
-   auto foundVecObs = _vecObsIndices.find(arg.namePtr());
-   if (foundVecObs != _vecObsIndices.end()) {
-      throw std::runtime_error("You requested the result of a vector observable outside a loop scope for it!");
+      auto RAII(OutputScopeRangeComment(&arg));
+
+      // Now, recursively call translate into the current argument to load the correct result.
+      codegen(const_cast<RooAbsArg &>(arg), *this);
+
+      idx = _nodeNames.at(arg.namePtr());
    }
-
-   auto RAII(OutputScopeRangeComment(&arg));
-
-   // Now, recursively call translate into the current argument to load the correct result.
-   codegen(const_cast<RooAbsArg &>(arg), *this);
-
-   return _nodeNames.at(arg.namePtr());
+   return "wksp[" + std::to_string(idx) + "]";
 }
 
 /// @brief Adds the given string to the string block that will be emitted at the top of the squashed function. Useful
@@ -103,6 +75,11 @@ void CodegenContext::addVecObs(const char *key, int idx)
    const TNamed *namePtr = RooNameReg::known(key);
    if (namePtr)
       _vecObsIndices[namePtr] = idx;
+}
+
+void CodegenContext::addParam(RooAbsArg const *arg, int idx)
+{
+   _paramIndices[arg] = idx;
 }
 
 int CodegenContext::observableIndexOf(RooAbsArg const &arg) const
@@ -175,7 +152,6 @@ std::unique_ptr<CodegenContext::LoopScope> CodegenContext::beginLoop(RooAbsArg c
          continue;
 
       vars.push_back(it.first);
-      _nodeNames[it.first] = "obs[static_cast<int>(obs[" + std::to_string(2 * it.second) + "]) + " + idx + "]";
       if (firstObsIdx == -1) {
          firstObsIdx = it.second;
       }
@@ -189,6 +165,18 @@ std::unique_ptr<CodegenContext::LoopScope> CodegenContext::beginLoop(RooAbsArg c
    addToCodeBody(in, "#pragma clad checkpoint loop\n");
    addToCodeBody(in, "for(int " + idx + " = 0; " + idx + " < obs[" + std::to_string(2 * firstObsIdx + 1) + "]; " + idx +
                         "++) {\n");
+
+   // set the results of the vector observables
+   for (auto const &it : _vecObsIndices) {
+      if (!in->dependsOn(it.first))
+         continue;
+
+      auto savedName = "wksp[" + std::to_string(_nWksp) + "]";
+      std::string outVarDecl;
+      outVarDecl = savedName + " = obs[static_cast<int>(obs[" + std::to_string(2 * it.second) + "]) + " + idx + "];\n";
+      addToCodeBody(outVarDecl);
+      _nodeNames[it.first] = _nWksp++;
+   }
 
    return std::make_unique<LoopScope>(*this, std::move(vars));
 }
@@ -216,28 +204,8 @@ std::string CodegenContext::getTmpVarName() const
 /// @param valueToSave The actual string value to save as a temporary.
 void CodegenContext::addResult(RooAbsArg const *in, std::string const &valueToSave)
 {
-   // std::string savedName = RooFit::Detail::makeValidVarName(in->GetName());
-   std::string savedName = getTmpVarName();
-
-   // Only save values if they contain operations or they are numerals. Otherwise, we can use them directly.
-
-   // Check if string is numeric.
-   char *end;
-   std::strtod(valueToSave.c_str(), &end);
-   bool isNumeric = (*end == '\0');
-
-   const bool hasOperations = valueToSave.find_first_of(":-+/*") != std::string::npos;
-
-   // If the name is not empty and this value is worth saving, save it to the correct scope.
-   // otherwise, just return the actual value itself
-   if (hasOperations || isNumeric) {
-      std::string outVarDecl = "const double " + savedName + " = " + valueToSave + ";\n";
-      addToCodeBody(in, outVarDecl);
-   } else {
-      savedName = valueToSave;
-   }
-
-   addResult(in->namePtr(), savedName);
+   addToCodeBody(in, "wksp[" + std::to_string(_nWksp) + "]" + " = " + valueToSave + ";\n");
+   _nodeNames[in->namePtr()] = _nWksp++;
 }
 
 /// @brief Function to save a RooListProxy as an array in the squashed code.
@@ -249,25 +217,24 @@ std::string CodegenContext::buildArg(RooAbsCollection const &in, std::string con
       return "nullptr";
    }
 
-   auto it = _listNames.find(in.uniqueId().value());
-   if (it != _listNames.end())
-      return it->second;
-
    std::string savedName = getTmpVarName();
    bool canSaveOutside = true;
 
+   std::vector<double> indices;
+   indices.reserve(in.size());
+
    std::stringstream declStrm;
-   declStrm << arrayType << " " << savedName << "[]{";
+   declStrm << arrayType << " " << savedName << "[" << in.size() << "]{};\n";
    for (const auto arg : in) {
-      declStrm << getResult(*arg) << ",";
+      getResult(*arg); // fill the result cache
+      indices.push_back(_nodeNames.at(arg->namePtr()));
       canSaveOutside = canSaveOutside && isScopeIndependent(arg);
    }
-   declStrm.seekp(-1, declStrm.cur);
-   declStrm << "};\n";
+
+   declStrm << "fillFromWorkspace(" << savedName << ", " << in.size() << ", wksp, " << buildArg(indices) << ");\n";
 
    addToCodeBody(declStrm.str(), canSaveOutside);
 
-   _listNames.insert({in.uniqueId().value(), savedName});
    return savedName;
 }
 
@@ -334,12 +301,7 @@ CodegenContext::buildFunction(RooAbsArg const &arg, std::unordered_set<RooFit::D
    ctx.pushScope(); // push our global scope.
    ctx._dependsOnData = dependsOnData;
    ctx._vecObsIndices = _vecObsIndices;
-   // We only want to take over parameters and observables
-   for (auto const &item : _nodeNames) {
-      if (startsWith(item.second, "params[") || startsWith(item.second, "obs[")) {
-         ctx._nodeNames.insert(item);
-      }
-   }
+   ctx._paramIndices = _paramIndices;
    ctx._xlArr = _xlArr;
    ctx._collectedFunctions = _collectedFunctions;
    ctx._collectedCode = _collectedCode;
@@ -355,8 +317,11 @@ CodegenContext::buildFunction(RooAbsArg const &arg, std::unordered_set<RooFit::D
    // Declare the function
    std::stringstream bodyWithSigStrm;
    bodyWithSigStrm << "double " << funcName << "(double* params, double const* obs, double const* xlArr) {\n"
-                   << "constexpr double inf = std::numeric_limits<double>::infinity();\n"
-                   << funcBody << "\n}\n\n";
+                   << "constexpr double inf = std::numeric_limits<double>::infinity();\n";
+   if (ctx._nWksp > 0) {
+      bodyWithSigStrm << "double wksp [" << ctx._nWksp << "]{};\n";
+   }
+   bodyWithSigStrm << funcBody << "\n}";
    ctx._collectedFunctions.emplace_back(funcName);
    ctx._collectedCode += bodyWithSigStrm.str();
 
@@ -402,6 +367,20 @@ struct Caller_FUNC_NAME {
 
 void codegen(RooAbsArg &arg, CodegenContext &ctx)
 {
+   // parameters
+   auto foundParam = ctx._paramIndices.find(&arg);
+   if (foundParam != ctx._paramIndices.end()) {
+      ctx.addResult(&arg, "params[" + std::to_string(foundParam->second) + "]");
+      return;
+   }
+
+   // observables
+   auto foundObs = ctx._vecObsIndices.find(arg.namePtr());
+   if (foundObs != ctx._vecObsIndices.end()) {
+      ctx.addResult(&arg, "obs[" + std::to_string(foundObs->second) + "]");
+      return;
+   }
+
    static bool codeDeclared = false;
    if (!codeDeclared) {
       declareDispatcherCode("codegenImpl");

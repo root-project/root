@@ -240,13 +240,12 @@ RooFuncWrapper::RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimul
    // First update the result variable of params in the compute graph to in[<position>].
    int idx = 0;
    for (RooAbsArg *param : _params) {
-      ctx.addResult(param, "params[" + std::to_string(idx) + "]");
+      ctx.addParam(param, idx);
       idx++;
    }
 
    for (auto const &item : _obsInfos) {
       const char *obsName = item.first->GetName();
-      ctx.addResult(obsName, "obs");
       ctx.addVecObs(obsName, item.second);
    }
 
