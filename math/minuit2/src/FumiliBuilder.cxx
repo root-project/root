@@ -97,7 +97,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
 
       // call always Hesse (error matrix from Fumili is never accurate since is approximate)
 
-      if (strategy.Strategy() > 0) {
+      if ((strategy.Strategy() >= 2) || (strategy.Strategy() == 1 && min.Error().Dcovar() > 0.05)) {
       print.Debug("FumiliBuilder will verify convergence and Error matrix; "
                   "dcov",
                   min.Error().Dcovar());
