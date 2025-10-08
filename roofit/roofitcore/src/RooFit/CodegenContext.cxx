@@ -236,7 +236,7 @@ void CodegenContext::addResult(RooAbsArg const *in, std::string const &valueToSa
 /// @brief Function to save a RooListProxy as an array in the squashed code.
 /// @param in The list to convert to array.
 /// @return Name of the array that stores the input list in the squashed code.
-std::string CodegenContext::buildArg(RooAbsCollection const &in)
+std::string CodegenContext::buildArg(RooAbsCollection const &in, std::string const &arrayType)
 {
    if (in.empty()) {
       return "nullptr";
@@ -250,7 +250,7 @@ std::string CodegenContext::buildArg(RooAbsCollection const &in)
    bool canSaveOutside = true;
 
    std::stringstream declStrm;
-   declStrm << "double " << savedName << "[] = {";
+   declStrm << arrayType << " " << savedName << "[]{";
    for (const auto arg : in) {
       declStrm << getResult(*arg) << ",";
       canSaveOutside = canSaveOutside && isScopeIndependent(arg);
