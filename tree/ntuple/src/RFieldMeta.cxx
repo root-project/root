@@ -880,7 +880,7 @@ void ROOT::RProxiedCollectionField::AcceptVisitor(ROOT::Detail::RFieldVisitor &v
 //------------------------------------------------------------------------------
 
 ROOT::RMapField::RMapField(std::string_view fieldName, EMapType mapType, std::unique_ptr<RFieldBase> itemField)
-   : RProxiedCollectionField(fieldName, EnsureValidClass(BuildMapTypeName(mapType, itemField.get())))
+   : RProxiedCollectionField(fieldName, EnsureValidClass(BuildMapTypeName(mapType, itemField.get()))), fMapType(mapType)
 {
    auto *itemClass = fProxy->GetValueClass();
    fItemSize = itemClass->GetClassSize();
@@ -888,13 +888,56 @@ ROOT::RMapField::RMapField(std::string_view fieldName, EMapType mapType, std::un
    Attach(std::move(itemField));
 }
 
+std::unique_ptr<ROOT::RFieldBase> ROOT::RMapField::CloneImpl(std::string_view newName) const
+{
+   return std::make_unique<RMapField>(newName, fMapType, fSubfields[0]->Clone(fSubfields[0]->GetFieldName()));
+}
+
+void ROOT::RMapField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   static const std::vector<std::string> prefixesRegular = {"std::map<", "std::unordered_map<", "std::set<",
+                                                            "std::unordered_set<"};
+
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+
+   switch (fMapType) {
+   case EMapType::kMap:
+   case EMapType::kUnorderedMap: EnsureMatchingTypePrefix(desc, prefixesRegular).ThrowOnError(); break;
+   default:
+      break;
+      // no restrictions for multimaps
+   }
+}
+
 //------------------------------------------------------------------------------
 
 ROOT::RSetField::RSetField(std::string_view fieldName, ESetType setType, std::unique_ptr<RFieldBase> itemField)
-   : ROOT::RProxiedCollectionField(fieldName, EnsureValidClass(BuildSetTypeName(setType, *itemField)))
+   : ROOT::RProxiedCollectionField(fieldName, EnsureValidClass(BuildSetTypeName(setType, *itemField))),
+     fSetType(setType)
 {
    fItemSize = itemField->GetValueSize();
    Attach(std::move(itemField));
+}
+
+std::unique_ptr<ROOT::RFieldBase> ROOT::RSetField::CloneImpl(std::string_view newName) const
+{
+   return std::make_unique<RSetField>(newName, fSetType, fSubfields[0]->Clone(fSubfields[0]->GetFieldName()));
+}
+
+void ROOT::RSetField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   static const std::vector<std::string> prefixesRegular = {"std::set<", "std::unordered_set<", "std::map<",
+                                                            "std::unordered_map<"};
+
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+
+   switch (fSetType) {
+   case ESetType::kSet:
+   case ESetType::kUnorderedSet: EnsureMatchingTypePrefix(desc, prefixesRegular).ThrowOnError(); break;
+   default:
+      break;
+      // no restrictions for multisets
+   }
 }
 
 //------------------------------------------------------------------------------

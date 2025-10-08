@@ -38,6 +38,11 @@ ROOT_GENERATE_DICTIONARY(RNTupleDescriptorDict ${CMAKE_CURRENT_SOURCE_DIR}/RNTup
 
 ROOT_ADD_GTEST(ntuple_endian ntuple_endian.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_evolution_type ntuple_evolution_type.cxx LIBRARIES ROOTNTuple)
+ROOT_GENERATE_DICTIONARY(STLContainerEvolutionDict ${CMAKE_CURRENT_SOURCE_DIR}/STLContainerEvolution.hxx
+                         MODULE ntuple_evolution_type
+                         LINKDEF STLContainerEvolutionLinkDef.h
+                         OPTIONS -inlineInputHeader
+                         DEPENDENCIES CustomStruct)
 if(NOT MSVC)
   # These unit tests rely on fork(), which is not available on Windows.
   ROOT_ADD_GTEST(ntuple_evolution_shape ntuple_evolution_shape.cxx LIBRARIES ROOTNTuple)

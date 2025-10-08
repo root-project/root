@@ -45,6 +45,13 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT ALLOW_IN_SOURCE)
     " Please see README/INSTALL for more information.")
 endif()
 
+set(unsupported_chars " *+")
+foreach(directoryName IN ITEMS ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} ${CMAKE_INSTALL_PREFIX})
+  if(${directoryName} MATCHES "[${unsupported_chars}]+")
+    message(FATAL_ERROR "Unsupported chars in directory \"${directoryName}\". Avoid any of \"${unsupported_chars}\".")
+  endif()
+endforeach()
+
 set(policy_new CMP0072 CMP0076 CMP0077 CMP0079
     CMP0156 CMP0179 #deduplicate static libraries when linker supports it
 )

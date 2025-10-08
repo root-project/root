@@ -1,4 +1,6 @@
 #include "ntuple_test.hxx"
+#include "SimpleCollectionProxy.hxx"
+#include "STLContainerEvolution.hxx"
 
 #include <memory>
 #include <new>
@@ -252,4 +254,383 @@ TEST(RNTupleEvolution, ArrayAsRVec)
    EXPECT_EQ(2u, a(0).size());
    EXPECT_EQ(1, a(0)[0]);
    EXPECT_EQ(2, a(0)[1]);
+}
+
+TEST(RNTupleEvolution, ArrayAsVector)
+{
+   FileRaii fileGuard("test_ntuple_evolution_array_as_vector.root");
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      auto a = model->MakeField<std::array<int, 2>>("a");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      *a = {0, 1};
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   auto aAsShort = reader->GetView<std::vector<short>>("a");
+   const auto &f = aAsShort.GetField(); // necessary to silence clang warning
+   EXPECT_EQ(typeid(f), typeid(ROOT::RArrayAsVectorField));
+   EXPECT_EQ(2u, aAsShort(0).size());
+   EXPECT_EQ(0, aAsShort(0)[0]);
+   EXPECT_EQ(1, aAsShort(0)[1]);
+
+   auto aAsBool = reader->GetView<std::vector<bool>>("a");
+   EXPECT_EQ(2u, aAsBool(0).size());
+   EXPECT_FALSE(aAsBool(0)[0]);
+   EXPECT_TRUE(aAsBool(0)[1]);
+}
+
+TEST(RNTupleEvolution, CheckNullable)
+{
+   FileRaii fileGuard("test_ntuple_evolution_check_nullable.root");
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      auto o = model->MakeField<std::optional<std::int32_t>>("o");
+      auto u = model->MakeField<std::unique_ptr<std::int32_t>>("u");
+      auto i = model->MakeField<std::int32_t>("i");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      *o = 7;
+      *u = std::make_unique<std::int32_t>(11);
+      *i = 13;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   auto v1 = reader->GetView<std::unique_ptr<std::int64_t>>("o");
+   auto v2 = reader->GetView<std::optional<std::int64_t>>("u");
+   auto v3 = reader->GetView<std::unique_ptr<std::int64_t>>("i");
+   auto v4 = reader->GetView<std::optional<std::int64_t>>("i");
+
+   try {
+      reader->GetView<std::optional<std::string>>("i");
+      FAIL() << "evolution of a nullable field with an invalid inner field should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("of type std::string is incompatible with on-disk field"));
+   }
+
+   EXPECT_EQ(7, *v1(0));
+   EXPECT_EQ(11, *v2(0));
+   EXPECT_EQ(13, *v3(0));
+   EXPECT_EQ(13, *v4(0));
+}
+
+TEST(RNTupleEvolution, NullableToVector)
+{
+   FileRaii fileGuard("test_ntuple_evolution_nullable_to_vector.root");
+   {
+      auto model = ROOT::RNTupleModel::Create();
+      auto o = model->MakeField<std::optional<int>>("o");
+      auto u = model->MakeField<std::unique_ptr<int>>("u");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      *o = 137;
+      *u = std::make_unique<int>(42);
+      writer->Fill();
+      o->reset();
+      u->reset();
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto v1 = reader->GetView<std::vector<short int>>("o");
+   auto v2 = reader->GetView<ROOT::RVec<short int>>("o");
+   auto v3 = reader->GetView<std::vector<short int>>("u");
+   auto v4 = reader->GetView<ROOT::RVec<short int>>("u");
+   EXPECT_EQ(137, v1(0)[0]);
+   EXPECT_EQ(137, v2(0)[0]);
+   EXPECT_EQ(42, v3(0)[0]);
+   EXPECT_EQ(42, v4(0)[0]);
+   EXPECT_TRUE(v1(1).empty());
+   EXPECT_TRUE(v2(1).empty());
+   EXPECT_TRUE(v3(1).empty());
+   EXPECT_TRUE(v4(1).empty());
+}
+
+namespace {
+template <typename CollectionT, bool OfPairsT>
+void WriteCollection(std::string_view ntplName, TFile &f)
+{
+   auto model = RNTupleModel::Create();
+   auto ptrCollection = model->MakeField<CollectionT>("f");
+   auto writer = ROOT::RNTupleWriter::Append(std::move(model), ntplName, f);
+   if constexpr (OfPairsT) {
+      *ptrCollection = {{1, 2}, {3, 4}, {5, 6}};
+   } else {
+      *ptrCollection = {1, 2, 3};
+   }
+   writer->Fill();
+   ptrCollection->clear();
+   writer->Fill();
+   if constexpr (OfPairsT) {
+      *ptrCollection = {{7, 8}};
+   } else {
+      *ptrCollection = {4};
+   }
+   writer->Fill();
+}
+
+template <typename CollectionT, bool OfPairsT>
+void ReadCollection(std::string_view ntplName, std::string_view path)
+{
+   auto reader = RNTupleReader::Open(ntplName, path);
+   ASSERT_EQ(3u, reader->GetNEntries());
+
+   auto view = reader->GetView<CollectionT>("f");
+   CollectionT exp0;
+   CollectionT exp2;
+   if constexpr (OfPairsT) {
+      exp0 = {{1, 2}, {3, 4}, {5, 6}};
+      exp2 = {{7, 8}};
+   } else {
+      exp0 = {1, 2, 3};
+      exp2 = {4};
+   }
+   EXPECT_EQ(exp0.size(), view(0).size());
+   for (const auto &elem : exp0) {
+      const auto &ref = view(0);
+      EXPECT_TRUE(std::find(ref.begin(), ref.end(), elem) != ref.end());
+   }
+   EXPECT_TRUE(view(1).empty());
+   EXPECT_EQ(exp2.size(), view(2).size());
+   for (std::size_t i = 0; i < exp2.size(); ++i)
+      EXPECT_EQ(*exp2.begin(), *view(2).begin());
+}
+
+template <typename CollectionT, bool OfPairsT>
+void ReadCollectionFail(std::string_view ntplName, std::string_view path)
+{
+   auto reader = RNTupleReader::Open(ntplName, path);
+   ASSERT_EQ(3u, reader->GetNEntries());
+
+   try {
+      reader->GetView<CollectionT>("f");
+      FAIL() << "this case of automatic collection schema evolution should have failed";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type"));
+   }
+}
+} // anonymous namespace
+
+namespace ROOT {
+template <>
+struct IsCollectionProxy<CollectionProxy<int>> : std::true_type {};
+template <>
+struct IsCollectionProxy<CollectionProxy<short int>> : std::true_type {};
+template <>
+struct IsCollectionProxy<CollectionProxy<std::pair<int, int>>> : std::true_type {};
+template <>
+struct IsCollectionProxy<CollectionProxy<std::pair<short int, short int>>> : std::true_type {};
+} // namespace ROOT
+
+TEST(RNTupleEvolution, Collections)
+{
+   FileRaii fileGuard("test_ntuple_evolution_collections.root");
+   auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+
+   TClass::GetClass("CollectionProxy<int>")->CopyCollectionProxy(SimpleCollectionProxy<CollectionProxy<int>>());
+   TClass::GetClass("CollectionProxy<short int>")
+      ->CopyCollectionProxy(SimpleCollectionProxy<CollectionProxy<short int>>());
+   TClass::GetClass("CollectionProxy<std::pair<int, int>>")
+      ->CopyCollectionProxy(SimpleCollectionProxy<CollectionProxy<std::pair<int, int>>>());
+   TClass::GetClass("CollectionProxy<std::pair<short int, short int>>")
+      ->CopyCollectionProxy(SimpleCollectionProxy<CollectionProxy<std::pair<short int, short int>>>());
+
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(ROOT::RVectorField::CreateUntyped("f", std::make_unique<RField<int>>("x")));
+      model->Freeze();
+      auto v = std::static_pointer_cast<std::vector<int>>(model->GetDefaultEntry().GetPtr<void>("f"));
+      auto writer = ROOT::RNTupleWriter::Append(std::move(model), "untyped", *f);
+      *v = {1, 2, 3};
+      writer->Fill();
+      v->clear();
+      writer->Fill();
+      *v = {4};
+      writer->Fill();
+   }
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(ROOT::RVectorField::CreateUntyped("f", std::make_unique<RField<std::pair<int, int>>>("x")));
+      model->Freeze();
+      auto v = std::static_pointer_cast<std::vector<std::pair<int, int>>>(model->GetDefaultEntry().GetPtr<void>("f"));
+      auto writer = ROOT::RNTupleWriter::Append(std::move(model), "untypedOfPairs", *f);
+      *v = {{1, 2}, {3, 4}, {5, 6}};
+      writer->Fill();
+      v->clear();
+      writer->Fill();
+      *v = {{7, 8}};
+      writer->Fill();
+   }
+   {
+      auto model = RNTupleModel::Create();
+      auto proxy = model->MakeField<CollectionProxy<int>>("f");
+      auto writer = RNTupleWriter::Append(std::move(model), "proxy", *f);
+      proxy->v = {1, 2, 3};
+      writer->Fill();
+      proxy->v.clear();
+      writer->Fill();
+      proxy->v = {4};
+      writer->Fill();
+   }
+   {
+      auto model = RNTupleModel::Create();
+      auto proxy = model->MakeField<CollectionProxy<std::pair<int, int>>>("f");
+      auto writer = RNTupleWriter::Append(std::move(model), "proxyOfPairs", *f);
+      proxy->v = {{1, 2}, {3, 4}, {5, 6}};
+      writer->Fill();
+      proxy->v.clear();
+      writer->Fill();
+      proxy->v = {{7, 8}};
+      writer->Fill();
+   }
+
+   WriteCollection<std::vector<int>, false>("vector", *f);
+   WriteCollection<ROOT::RVec<int>, false>("rvec", *f);
+   WriteCollection<std::set<int>, false>("set", *f);
+   WriteCollection<std::unordered_set<int>, false>("unordered_set", *f);
+   WriteCollection<std::multiset<int>, false>("multiset", *f);
+   WriteCollection<std::unordered_multiset<int>, false>("unordered_multiset", *f);
+   WriteCollection<std::map<int, int>, true>("map", *f);
+   WriteCollection<std::unordered_map<int, int>, true>("unordered_map", *f);
+   WriteCollection<std::multimap<int, int>, true>("multimap", *f);
+   WriteCollection<std::unordered_multimap<int, int>, true>("unordered_multimap", *f);
+
+   WriteCollection<std::vector<std::pair<int, int>>, true>("vectorOfPairs", *f);
+   WriteCollection<ROOT::RVec<std::pair<int, int>>, true>("rvecOfPairs", *f);
+   WriteCollection<std::set<std::pair<int, int>>, true>("setOfPairs", *f);
+   WriteCollection<std::unordered_set<std::pair<int, int>>, true>("unordered_setOfPairs", *f);
+   WriteCollection<std::multiset<std::pair<int, int>>, true>("multisetOfPairs", *f);
+   WriteCollection<std::unordered_multiset<std::pair<int, int>>, true>("unordered_multisetOfPairs", *f);
+
+   // All variations written out. Now test the collection matrix.
+
+   ReadCollection<std::vector<short int>, false>("untyped", fileGuard.GetPath());
+   ReadCollection<std::vector<short int>, false>("proxy", fileGuard.GetPath());
+   ReadCollection<std::vector<short int>, false>("rvec", fileGuard.GetPath());
+   ReadCollection<std::vector<short int>, false>("set", fileGuard.GetPath());
+   ReadCollection<std::vector<short int>, false>("unordered_set", fileGuard.GetPath());
+   ReadCollection<std::vector<short int>, false>("multiset", fileGuard.GetPath());
+   ReadCollection<std::vector<short int>, false>("unordered_multiset", fileGuard.GetPath());
+   ReadCollection<std::vector<std::pair<short int, short int>>, true>("map", fileGuard.GetPath());
+   ReadCollection<std::vector<std::pair<short int, short int>>, true>("unordered_map", fileGuard.GetPath());
+   ReadCollection<std::vector<std::pair<short int, short int>>, true>("multimap", fileGuard.GetPath());
+   ReadCollection<std::vector<std::pair<short int, short int>>, true>("unordered_multimap", fileGuard.GetPath());
+
+   ReadCollection<ROOT::RVec<short int>, false>("untyped", fileGuard.GetPath());
+   ReadCollection<ROOT::RVec<short int>, false>("proxy", fileGuard.GetPath());
+   ReadCollection<ROOT::RVec<short int>, false>("vector", fileGuard.GetPath());
+   ReadCollection<ROOT::RVec<short int>, false>("set", fileGuard.GetPath());
+   ReadCollection<ROOT::RVec<short int>, false>("unordered_set", fileGuard.GetPath());
+   ReadCollection<ROOT::RVec<short int>, false>("multiset", fileGuard.GetPath());
+   ReadCollection<ROOT::RVec<short int>, false>("unordered_multiset", fileGuard.GetPath());
+   ReadCollection<ROOT::RVec<std::pair<short int, short int>>, true>("map", fileGuard.GetPath());
+   ReadCollection<ROOT::RVec<std::pair<short int, short int>>, true>("unordered_map", fileGuard.GetPath());
+   ReadCollection<ROOT::RVec<std::pair<short int, short int>>, true>("multimap", fileGuard.GetPath());
+   ReadCollection<ROOT::RVec<std::pair<short int, short int>>, true>("unordered_multimap", fileGuard.GetPath());
+
+   ReadCollectionFail<std::set<short int>, false>("untyped", fileGuard.GetPath());
+   ReadCollectionFail<std::set<short int>, false>("proxy", fileGuard.GetPath());
+   ReadCollectionFail<std::set<short int>, false>("vector", fileGuard.GetPath());
+   ReadCollectionFail<std::set<short int>, false>("rvec", fileGuard.GetPath());
+   ReadCollection<std::set<short int>, false>("unordered_set", fileGuard.GetPath());
+   ReadCollectionFail<std::set<short int>, false>("multiset", fileGuard.GetPath());
+   ReadCollectionFail<std::set<short int>, false>("unordered_multiset", fileGuard.GetPath());
+   ReadCollection<std::set<std::pair<short int, short int>>, true>("map", fileGuard.GetPath());
+   ReadCollection<std::set<std::pair<short int, short int>>, true>("unordered_map", fileGuard.GetPath());
+   ReadCollectionFail<std::set<std::pair<short int, short int>>, true>("multimap", fileGuard.GetPath());
+   ReadCollectionFail<std::set<std::pair<short int, short int>>, true>("unordered_multimap", fileGuard.GetPath());
+
+   ReadCollectionFail<std::unordered_set<short int>, false>("untyped", fileGuard.GetPath());
+   ReadCollectionFail<std::unordered_set<short int>, false>("proxy", fileGuard.GetPath());
+   ReadCollectionFail<std::unordered_set<short int>, false>("vector", fileGuard.GetPath());
+   ReadCollectionFail<std::unordered_set<short int>, false>("rvec", fileGuard.GetPath());
+   ReadCollection<std::unordered_set<short int>, false>("set", fileGuard.GetPath());
+   ReadCollectionFail<std::unordered_set<short int>, false>("multiset", fileGuard.GetPath());
+   ReadCollectionFail<std::unordered_set<short int>, false>("unordered_multiset", fileGuard.GetPath());
+   ReadCollection<std::unordered_set<std::pair<short int, short int>>, true>("map", fileGuard.GetPath());
+   ReadCollection<std::unordered_set<std::pair<short int, short int>>, true>("unordered_map", fileGuard.GetPath());
+   ReadCollectionFail<std::unordered_set<std::pair<short int, short int>>, true>("multimap", fileGuard.GetPath());
+   ReadCollectionFail<std::unordered_set<std::pair<short int, short int>>, true>("unordered_multimap",
+                                                                                 fileGuard.GetPath());
+
+   ReadCollection<std::multiset<short int>, false>("untyped", fileGuard.GetPath());
+   ReadCollection<std::multiset<short int>, false>("proxy", fileGuard.GetPath());
+   ReadCollection<std::multiset<short int>, false>("vector", fileGuard.GetPath());
+   ReadCollection<std::multiset<short int>, false>("rvec", fileGuard.GetPath());
+   ReadCollection<std::multiset<short int>, false>("unordered_set", fileGuard.GetPath());
+   ReadCollection<std::multiset<short int>, false>("set", fileGuard.GetPath());
+   ReadCollection<std::multiset<short int>, false>("unordered_multiset", fileGuard.GetPath());
+   ReadCollection<std::multiset<std::pair<short int, short int>>, true>("map", fileGuard.GetPath());
+   ReadCollection<std::multiset<std::pair<short int, short int>>, true>("unordered_map", fileGuard.GetPath());
+   ReadCollection<std::multiset<std::pair<short int, short int>>, true>("multimap", fileGuard.GetPath());
+   ReadCollection<std::multiset<std::pair<short int, short int>>, true>("unordered_multimap", fileGuard.GetPath());
+
+   ReadCollection<std::unordered_multiset<short int>, false>("untyped", fileGuard.GetPath());
+   ReadCollection<std::unordered_multiset<short int>, false>("proxy", fileGuard.GetPath());
+   ReadCollection<std::unordered_multiset<short int>, false>("vector", fileGuard.GetPath());
+   ReadCollection<std::unordered_multiset<short int>, false>("rvec", fileGuard.GetPath());
+   ReadCollection<std::unordered_multiset<short int>, false>("unordered_set", fileGuard.GetPath());
+   ReadCollection<std::unordered_multiset<short int>, false>("set", fileGuard.GetPath());
+   ReadCollection<std::unordered_multiset<short int>, false>("multiset", fileGuard.GetPath());
+   ReadCollection<std::unordered_multiset<std::pair<short int, short int>>, true>("map", fileGuard.GetPath());
+   ReadCollection<std::unordered_multiset<std::pair<short int, short int>>, true>("unordered_map", fileGuard.GetPath());
+   ReadCollection<std::unordered_multiset<std::pair<short int, short int>>, true>("multimap", fileGuard.GetPath());
+   ReadCollection<std::unordered_multiset<std::pair<short int, short int>>, true>("unordered_multimap",
+                                                                                  fileGuard.GetPath());
+
+   ReadCollectionFail<std::map<short int, short int>, true>("untypedOfPairs", fileGuard.GetPath());
+   ReadCollectionFail<std::map<short int, short int>, true>("proxyOfPairs", fileGuard.GetPath());
+   ReadCollectionFail<std::map<short int, short int>, true>("vectorOfPairs", fileGuard.GetPath());
+   ReadCollectionFail<std::map<short int, short int>, true>("rvecOfPairs", fileGuard.GetPath());
+   ReadCollection<std::map<short int, short int>, true>("setOfPairs", fileGuard.GetPath());
+   ReadCollection<std::map<short int, short int>, true>("unordered_setOfPairs", fileGuard.GetPath());
+   ReadCollectionFail<std::map<short int, short int>, true>("multisetOfPairs", fileGuard.GetPath());
+   ReadCollectionFail<std::map<short int, short int>, true>("unordered_multisetOfPairs", fileGuard.GetPath());
+   ReadCollection<std::map<short int, short int>, true>("unordered_map", fileGuard.GetPath());
+   ReadCollectionFail<std::map<short int, short int>, true>("multimap", fileGuard.GetPath());
+   ReadCollectionFail<std::map<short int, short int>, true>("unordered_multimap", fileGuard.GetPath());
+
+   ReadCollectionFail<std::unordered_map<short int, short int>, true>("untypedOfPairs", fileGuard.GetPath());
+   ReadCollectionFail<std::unordered_map<short int, short int>, true>("proxyOfPairs", fileGuard.GetPath());
+   ReadCollectionFail<std::unordered_map<short int, short int>, true>("vectorOfPairs", fileGuard.GetPath());
+   ReadCollectionFail<std::unordered_map<short int, short int>, true>("rvecOfPairs", fileGuard.GetPath());
+   ReadCollection<std::unordered_map<short int, short int>, true>("setOfPairs", fileGuard.GetPath());
+   ReadCollection<std::unordered_map<short int, short int>, true>("unordered_setOfPairs", fileGuard.GetPath());
+   ReadCollectionFail<std::unordered_map<short int, short int>, true>("multisetOfPairs", fileGuard.GetPath());
+   ReadCollectionFail<std::unordered_map<short int, short int>, true>("unordered_multisetOfPairs", fileGuard.GetPath());
+   ReadCollection<std::unordered_map<short int, short int>, true>("map", fileGuard.GetPath());
+   ReadCollectionFail<std::unordered_map<short int, short int>, true>("multimap", fileGuard.GetPath());
+   ReadCollectionFail<std::unordered_map<short int, short int>, true>("unordered_multimap", fileGuard.GetPath());
+
+   ReadCollection<std::multimap<short int, short int>, true>("untypedOfPairs", fileGuard.GetPath());
+   ReadCollection<std::multimap<short int, short int>, true>("proxyOfPairs", fileGuard.GetPath());
+   ReadCollection<std::multimap<short int, short int>, true>("vectorOfPairs", fileGuard.GetPath());
+   ReadCollection<std::multimap<short int, short int>, true>("rvecOfPairs", fileGuard.GetPath());
+   ReadCollection<std::multimap<short int, short int>, true>("setOfPairs", fileGuard.GetPath());
+   ReadCollection<std::multimap<short int, short int>, true>("unordered_setOfPairs", fileGuard.GetPath());
+   ReadCollection<std::multimap<short int, short int>, true>("multisetOfPairs", fileGuard.GetPath());
+   ReadCollection<std::multimap<short int, short int>, true>("unordered_multisetOfPairs", fileGuard.GetPath());
+   ReadCollection<std::multimap<short int, short int>, true>("map", fileGuard.GetPath());
+   ReadCollection<std::multimap<short int, short int>, true>("unordered_map", fileGuard.GetPath());
+   ReadCollection<std::multimap<short int, short int>, true>("multimap", fileGuard.GetPath());
+   ReadCollection<std::multimap<short int, short int>, true>("unordered_multimap", fileGuard.GetPath());
+
+   ReadCollection<std::unordered_multimap<short int, short int>, true>("untypedOfPairs", fileGuard.GetPath());
+   ReadCollection<std::unordered_multimap<short int, short int>, true>("proxyOfPairs", fileGuard.GetPath());
+   ReadCollection<std::unordered_multimap<short int, short int>, true>("vectorOfPairs", fileGuard.GetPath());
+   ReadCollection<std::unordered_multimap<short int, short int>, true>("rvecOfPairs", fileGuard.GetPath());
+   ReadCollection<std::unordered_multimap<short int, short int>, true>("setOfPairs", fileGuard.GetPath());
+   ReadCollection<std::unordered_multimap<short int, short int>, true>("unordered_setOfPairs", fileGuard.GetPath());
+   ReadCollection<std::unordered_multimap<short int, short int>, true>("multisetOfPairs", fileGuard.GetPath());
+   ReadCollection<std::unordered_multimap<short int, short int>, true>("unordered_multisetOfPairs",
+                                                                       fileGuard.GetPath());
+   ReadCollection<std::unordered_multimap<short int, short int>, true>("map", fileGuard.GetPath());
+   ReadCollection<std::unordered_multimap<short int, short int>, true>("unordered_map", fileGuard.GetPath());
+   ReadCollection<std::unordered_multimap<short int, short int>, true>("multimap", fileGuard.GetPath());
+   ReadCollection<std::unordered_multimap<short int, short int>, true>("unordered_multimap", fileGuard.GetPath());
 }

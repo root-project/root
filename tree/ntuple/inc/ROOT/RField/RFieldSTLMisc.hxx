@@ -195,6 +195,9 @@ class RNullableField : public RFieldBase {
    ROOT::Internal::RColumnIndex fNWritten{0};
 
 protected:
+   // For reading, indicates that we read type T as a nullable field of type T, i.e. the value is always present
+   bool fIsEvolvedFromInnerType = false;
+
    const RFieldBase::RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
    void GenerateColumns(const ROOT::RNTupleDescriptor &) final;
@@ -205,9 +208,12 @@ protected:
 
    void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
-   /// Given the index of the nullable field, returns the corresponding global index of the subfield or,
-   /// if it is null, returns `kInvalidNTupleIndex`
-   RNTupleLocalIndex GetItemIndex(ROOT::NTupleSize_t globalIndex);
+   /// Given the global index of the nullable field, returns the corresponding cluster-local index of the subfield or,
+   /// if it is null, returns a default constructed RNTupleLocalIndex
+   RNTupleLocalIndex GetItemIndex(NTupleSize_t globalIndex);
+   /// Given the cluster-local index of the nullable field, returns the corresponding cluster-local index of
+   /// the subfield or, if it is null, returns a default constructed RNTupleLocalIndex
+   RNTupleLocalIndex GetItemIndex(RNTupleLocalIndex localIndex);
 
    RNullableField(std::string_view fieldName, const std::string &typePrefix, std::unique_ptr<RFieldBase> itemField);
 
@@ -238,6 +244,7 @@ class ROptionalField : public RNullableField {
    const bool *GetEngagementPtr(const void *optionalPtr) const;
    bool *GetEngagementPtr(void *optionalPtr) const;
    std::size_t GetEngagementPtrOffset() const;
+   void PrepareRead(void *to, bool hasOnDiskValue);
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -247,6 +254,7 @@ protected:
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
+   void ReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to) final;
 
 public:
    ROptionalField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField);
@@ -281,6 +289,9 @@ class RUniquePtrField : public RNullableField {
 
    std::unique_ptr<RDeleter> fItemDeleter;
 
+   // Returns the value pointer, i.e. where to read the subfield into
+   void *PrepareRead(void *to, bool hasOnDiskValue);
+
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
@@ -289,6 +300,7 @@ protected:
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
+   void ReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to) final;
 
 public:
    RUniquePtrField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField);

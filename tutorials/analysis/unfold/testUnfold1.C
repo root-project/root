@@ -95,7 +95,6 @@
 #include <TMath.h>
 #include <TCanvas.h>
 #include <TRandom3.h>
-#include <TFitter.h>
 #include <TF1.h>
 #include <TStyle.h>
 #include <TVector.h>
