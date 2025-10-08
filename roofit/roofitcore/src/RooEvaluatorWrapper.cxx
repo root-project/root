@@ -239,7 +239,7 @@ RooFuncWrapper::RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimul
    // First update the result variable of params in the compute graph to in[<position>].
    int idx = 0;
    for (RooAbsArg *param : _params) {
-      ctx.addResult(param, "params[" + std::to_string(idx) + "]");
+      ctx.addParam(param, idx);
       idx++;
    }
 

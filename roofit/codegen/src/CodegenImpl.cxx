@@ -655,6 +655,15 @@ void codegenImpl(RooRealSumPdf &arg, CodegenContext &ctx)
 
 void codegenImpl(RooRealVar &arg, CodegenContext &ctx)
 {
+   auto found = ctx._paramIndices.find(&arg);
+   if (found != ctx._paramIndices.end()) {
+      auto savedName = "wksp[" + std::to_string(ctx._nWksp++) + "]";
+      std::string outVarDecl = savedName + " = params[" + std::to_string(found->second) + "];\n";
+      ctx.addToCodeBody(outVarDecl, ctx.isScopeIndependent(&arg));
+      ctx.addResult(&arg, savedName);
+      return;
+   }
+
    if (!arg.isConstant()) {
       ctx.addResult(&arg, arg.GetName());
    }

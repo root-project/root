@@ -70,6 +70,7 @@ public:
 
    void addToGlobalScope(std::string const &str);
    void addVecObs(const char *key, int idx);
+   void addParam(const RooAbsArg *key, int idx);
    int observableIndexOf(const RooAbsArg &arg) const;
 
    void addToCodeBody(RooAbsArg const *klass, std::string const &in);
@@ -135,13 +136,16 @@ public:
    };
    ScopeRAII OutputScopeRangeComment(RooAbsArg const *arg) { return {arg, *this}; }
 
+   bool isScopeIndependent(RooAbsArg const *in) const;
+
+   std::size_t _nWksp = 0;
+   std::unordered_map<const RooAbsArg *, int> _paramIndices;
+
 private:
    void pushScope();
    void popScope();
    template <class T>
    std::string buildArgSpanImpl(std::span<const T> arr);
-
-   bool isScopeIndependent(RooAbsArg const *in) const;
 
    void endLoop(LoopScope const &scope);
 

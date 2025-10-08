@@ -105,6 +105,11 @@ void CodegenContext::addVecObs(const char *key, int idx)
       _vecObsIndices[namePtr] = idx;
 }
 
+void CodegenContext::addParam(RooAbsArg const *arg, int idx)
+{
+   _paramIndices[arg] = idx;
+}
+
 int CodegenContext::observableIndexOf(RooAbsArg const &arg) const
 {
    auto it = _vecObsIndices.find(arg.namePtr());
@@ -214,8 +219,7 @@ std::string CodegenContext::getTmpVarName() const
 /// @param valueToSave The actual string value to save as a temporary.
 void CodegenContext::addResult(RooAbsArg const *in, std::string const &valueToSave)
 {
-   // std::string savedName = RooFit::Detail::makeValidVarName(in->GetName());
-   std::string savedName = getTmpVarName();
+   std::string savedName;
 
    // Only save values if they contain operations or they are numerals. Otherwise, we can use them directly.
 
@@ -229,7 +233,8 @@ void CodegenContext::addResult(RooAbsArg const *in, std::string const &valueToSa
    // If the name is not empty and this value is worth saving, save it to the correct scope.
    // otherwise, just return the actual value itself
    if (hasOperations || isNumeric) {
-      std::string outVarDecl = "const double " + savedName + " = " + valueToSave + ";\n";
+      savedName = "wksp[" + std::to_string(_nWksp++) + "]";
+      std::string outVarDecl = savedName + " = " + valueToSave + ";\n";
       addToCodeBody(in, outVarDecl);
    } else {
       savedName = valueToSave;
@@ -332,9 +337,10 @@ CodegenContext::buildFunction(RooAbsArg const &arg, std::map<RooFit::Detail::Dat
    ctx.pushScope(); // push our global scope.
    ctx._nodeOutputSizes = outputSizes;
    ctx._vecObsIndices = _vecObsIndices;
+   ctx._paramIndices = _paramIndices;
    // We only want to take over parameters and observables
    for (auto const &item : _nodeNames) {
-      if (startsWith(item.second, "params[") || startsWith(item.second, "obs[")) {
+      if (startsWith(item.second, "obs[")) {
          ctx._nodeNames.insert(item);
       }
    }
@@ -355,8 +361,11 @@ CodegenContext::buildFunction(RooAbsArg const &arg, std::map<RooFit::Detail::Dat
    // Declare the function
    std::stringstream bodyWithSigStrm;
    bodyWithSigStrm << "double " << funcName << "(double* params, double const* obs, double const* xlArr) {\n"
-                   << "constexpr double inf = std::numeric_limits<double>::infinity();\n"
-                   << funcBody << "\n}";
+                   << "constexpr double inf = std::numeric_limits<double>::infinity();\n";
+   if (ctx._nWksp > 0) {
+      bodyWithSigStrm << "double wksp [" << ctx._nWksp << "]{};\n";
+   }
+   bodyWithSigStrm << funcBody << "\n}";
    ctx._collectedFunctions.emplace_back(funcName);
    if (!gInterpreter->Declare(bodyWithSigStrm.str().c_str())) {
       std::stringstream errorMsg;
