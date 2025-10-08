@@ -169,6 +169,27 @@ TEST(RBinIndexRange, ConstructorCreate)
    EXPECT_EQ(range01.GetEnd(), RBinIndex(1));
 }
 
+TEST(RBinIndexRange, Equality)
+{
+   const auto index0 = RBinIndex(0);
+   const auto index1 = RBinIndex(1);
+   const auto empty = CreateBinIndexRange(index0, index0, 0);
+   const auto empty0 = CreateBinIndexRange(index0, index0, 0);
+   const auto empty1 = CreateBinIndexRange(index1, index1, 0);
+   EXPECT_EQ(empty, empty0);
+   EXPECT_NE(empty0, empty1);
+
+   const auto range01 = CreateBinIndexRange(index0, index1, 0);
+   EXPECT_NE(empty, range01);
+
+   const auto underflow = RBinIndex::Underflow();
+   const RBinIndex invalid;
+   const auto full1 = CreateBinIndexRange(underflow, invalid, /*nNormalBins=*/1);
+   const auto full2 = CreateBinIndexRange(underflow, invalid, /*nNormalBins=*/2);
+   EXPECT_NE(range01, full1);
+   EXPECT_NE(full1, full2);
+}
+
 TEST(RBinIndexRange, Empty)
 {
    const auto index0 = RBinIndex(0);
