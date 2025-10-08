@@ -607,7 +607,7 @@ jobs:
 
       - name: CTest in post-install test project
         working-directory: ${{ env.POST_INSTALL_DIR }}
-        run: ctest -j $(nproc)
+        run: ctest --output-on-failure -j
 
   event_file:
     # For any event that is not a PR, the CI will always run. In PRs, the CI
