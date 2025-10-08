@@ -178,6 +178,17 @@ static void EnsureFileOpenAndBinary(const TFile *tfile, std::string_view path)
       throw ROOT::RException(R__FAIL("Opened file " + std::string(path) + " is not a ROOT binary file"));
 }
 
+static std::string ReconstructFullKeyPath(const TKey &key)
+{
+   std::string path = key.GetName();
+   TDirectory *parent = key.GetMotherDir();
+   while (parent && parent->GetMotherDir()) {
+      path = std::string(parent->GetName()) + "/" + path;
+      parent = parent->GetMotherDir();
+   }
+   return path;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 std::pair<std::string_view, std::string_view> ROOT::Experimental::Detail::DecomposePath(std::string_view path)
 {
@@ -512,4 +523,25 @@ void RFile::Close()
 {
    // NOTE: this also flushes the file internally
    fFile.reset();
+}
+
+std::optional<ROOT::Experimental::RKeyInfo> RFile::GetKeyInfo(std::string_view path) const
+{
+   const TKey *key = GetTKey(path);
+   if (!key)
+      return {};
+
+   RKeyInfo keyInfo;
+   keyInfo.fPath = ReconstructFullKeyPath(*key);
+   keyInfo.fClassName = key->GetClassName();
+   keyInfo.fCycle = key->GetCycle();
+   keyInfo.fTitle = key->GetTitle();
+
+   return keyInfo;
+}
+
+void *ROOT::Experimental::Internal::RFile_GetObjectFromKey(RFile &file, const RKeyInfo &key)
+{
+   void *obj = file.GetUntyped(key.GetPath(), key.GetClassName().c_str());
+   return obj;
 }
