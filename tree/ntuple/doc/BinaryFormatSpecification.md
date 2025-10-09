@@ -1,4 +1,4 @@
-# RNTuple Binary Format Specification 1.0.0.2
+# RNTuple Binary Format Specification 1.0.1.0
 
 ## Versioning Notes
 
@@ -627,6 +627,7 @@ The footer envelope has the following structure:
 - Header checksum (XxHash-3 64bit)
 - Schema extension record frame
 - List frame of cluster group record frames
+- List frame of linked attribute set record frames
 
 The header checksum can be used to cross-check that header and footer belong together.
 The meaning of the feature flags is the same as for the header.
@@ -683,6 +684,21 @@ The entry span is the number of entries that are covered by this cluster group.
 The entry range allows for finding the right page list for random access requests to entries.
 The number of clusters information allows for using consistent cluster IDs
 even if cluster groups are accessed non-sequentially.
+
+#### Linked Attribute Set Record Frame
+
+The attribute set record frame references the anchor of a linked attribute set RNTuple and gives information about it.
+It has the following contents, followed a locator to the linked RNTuple anchor and a string with the attribute set name.
+```
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|     Schema Version Major     |     Schema Version Minor       |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|             Attribute Anchor Uncompressed Size                |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
+The meaning of the Schema Version is described below.
 
 ### Page List Envelope
 
@@ -798,6 +814,47 @@ from the corresponding columns of the primary column representation.
 In every cluster, every field has exactly one primary column representation.
 All other representations must be suppressed.
 Note that the primary column representation can change from cluster to cluster.
+
+## Linked Attribute Sets
+
+An RNTuple has zero or more linked attribute sets, containing user-defined metadata.
+Each attribute set is stored on disk as an RNTuple and the anchor of each RNTuple is linked to by the main
+RNTuple's footer.
+
+An attribute set RNTuple has the following restrictions compared to a regular RNTuple:
+
+1. it cannot have linked attribute RNTuples itself;
+2. the alias columns sections, both in its header and footer, must be empty (i.e. none of the attribute set RNTuple's
+   fields can be projected fields);
+3. none of its fields may have a structural role of 0x04 (i.e. it must not contain a ROOT streamer object);
+
+All linked attribute sets must have a non-empty, distinct name.
+
+### Reserved Attribute Set Names
+
+Attribute set names starting with `__` (two underscores) are reserved for internal use by implementations: compliant
+writers should disallow users from creating attribute sets with such names and only use them for internal metadata
+(read access to internal attribute sets may be allowed).
+
+### Attribute Schema Version
+
+Each attribute set is created with a user-defined schema. This schema is not used directly by the underlying attribute
+set RNTuple, but it is augmented with internal fields used to store additional data that serve to associate each
+entry in the attribute set with those in the main RNTuple.
+
+The Attribute Schema Version describes the internal schema of the linked attribute set RNTuple.
+A change in Major version number indicates a breaking, non-forward-compatible change in the schema: readers should
+refuse reading an attribute set whose Major Schema Version is unknown.
+A change in Minor version number indicates the presence of optional additional fields in the schema: readers should
+still be able to read the attribute set as before, ignoring any new field.
+
+The current Attribute Schema Version is **1.0**. It has the following fields (in the following order):
+  1. `_rangeStart` (type `std::uint64_t`): the start of the range that each attribute entry refers to;
+  2. `_rangeLen` (type `std::uint64_t`): the length of the range that each attribute entry refers to.
+     Note that `_rangeLen == 0` is valid and refers to an empty range;
+  3. `_userData` (untyped record): a record-type field that serves as the root field to the user-provided schema description
+     of the attribute set RNTuple. Each user-defined field that was attached to the root field in the user-provided
+     schema will be attached to this field in the attribute set RNTuple.
 
 ## Mapping of C++ Types to Fields and Columns
 

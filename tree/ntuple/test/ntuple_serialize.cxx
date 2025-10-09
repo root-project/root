@@ -2059,3 +2059,121 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferredInMainHeader)
    EXPECT_EQ(expect2_0, columnRange2_0);
    EXPECT_EQ(expect2_1, columnRange2_1);
 }
+
+TEST(RNTuple, SerializeAttrSets)
+{
+   RNTupleLocator locator;
+   locator.SetType(ROOT::RNTupleLocator::kTypeFile);
+   locator.SetPosition(128ul);
+   ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder builder;
+   builder.SchemaVersion(1, 0).AnchorLength(1024).AnchorLocator(locator).Name("AttrSetName");
+   auto attrSetDesc = builder.MoveDescriptor().Unwrap();
+
+   auto res = RNTupleSerializer::SerializeAttributeSet(attrSetDesc, nullptr);
+   ASSERT_TRUE(bool(res));
+   auto buf = MakeUninitArray<std::byte>(res.Unwrap());
+   res = RNTupleSerializer::SerializeAttributeSet(attrSetDesc, buf.get());
+   ASSERT_TRUE(bool(buf));
+
+   ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder deserializedDescBld;
+   RNTupleSerializer::DeserializeAttributeSet(buf.get(), res.Unwrap(), deserializedDescBld);
+
+   ASSERT_EQ(attrSetDesc, deserializedDescBld.MoveDescriptor().Unwrap());
+}
+
+TEST(RNTuple, SerializeDescriptorWithAttrSets)
+{
+   RNTupleDescriptorBuilder builder;
+   builder.SetVersionForWriting();
+   builder.SetNTuple("ntpl", "");
+
+   builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(0)
+                       .FieldName("")
+                       .Structure(ROOT::ENTupleStructure::kRecord)
+                       .MakeDescriptor()
+                       .Unwrap());
+
+   builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(5)
+                       .FieldName("pt")
+                       .TypeName("float")
+                       .Structure(ROOT::ENTupleStructure::kPlain)
+                       .MakeDescriptor()
+                       .Unwrap());
+   builder.AddFieldLink(0, 5);
+   builder.AddColumn(RColumnDescriptorBuilder()
+                        .LogicalColumnId(0)
+                        .PhysicalColumnId(0)
+                        .FieldId(5)
+                        .BitsOnStorage(32)
+                        .Type(ROOT::ENTupleColumnType::kReal32)
+                        .FirstElementIndex(1)
+                        .MakeDescriptor()
+                        .Unwrap());
+   builder.AddColumn(RColumnDescriptorBuilder()
+                        .LogicalColumnId(1)
+                        .PhysicalColumnId(1)
+                        .FieldId(5)
+                        .BitsOnStorage(16)
+                        .Type(ROOT::ENTupleColumnType::kReal16)
+                        .RepresentationIndex(1)
+                        .FirstElementIndex(1)
+                        .SetSuppressedDeferred()
+                        .MakeDescriptor()
+                        .Unwrap());
+
+   RNTupleLocator locator;
+   locator.SetType(ROOT::RNTupleLocator::kTypeFile);
+   locator.SetPosition(128ul);
+
+   ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder attrBuilder;
+   attrBuilder.SchemaVersion(1, 0).AnchorLength(1024).AnchorLocator(locator).Name("AttrSetName");
+
+   // First cluster
+   RClusterDescriptorBuilder clusterBuilder;
+   clusterBuilder.ClusterId(0).FirstEntryIndex(0).NEntries(1);
+   builder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
+
+   RClusterGroupDescriptorBuilder cgBuilder;
+   cgBuilder.ClusterGroupId(0).NClusters(1).EntrySpan(3);
+   cgBuilder.AddSortedClusters({0});
+   builder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
+
+   builder.AddAttributeSet(attrBuilder.MoveDescriptor().Unwrap());
+   auto desc = builder.MoveDescriptor();
+
+   auto context = RNTupleSerializer::SerializeHeader(nullptr, desc).Unwrap();
+   auto bufHeader = MakeUninitArray<unsigned char>(context.GetHeaderSize());
+   ROOT::TestSupport::CheckDiagsRAII diagsRAII;
+   diagsRAII.requiredDiag(kWarning, "ROOT.NTuple", "Attributes are experimental", false);
+   context = RNTupleSerializer::SerializeHeader(bufHeader.get(), desc).Unwrap();
+
+   std::vector<ROOT::DescriptorId_t> physClusterIDs{context.MapClusterId(0)};
+   context.MapClusterGroupId(0);
+   auto sizePageList = RNTupleSerializer::SerializePageList(nullptr, desc, physClusterIDs, context).Unwrap();
+   EXPECT_GT(sizePageList, 0);
+   auto bufPageList = MakeUninitArray<unsigned char>(sizePageList);
+   EXPECT_EQ(sizePageList,
+             RNTupleSerializer::SerializePageList(bufPageList.get(), desc, physClusterIDs, context).Unwrap());
+
+   auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context).Unwrap();
+   EXPECT_GT(sizeFooter, 0);
+   auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
+   EXPECT_EQ(sizeFooter, RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context).Unwrap());
+
+   builder.SetVersionForWriting();
+   RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder).ThrowOnError();
+   RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
+   auto deserializedDesc = builder.MoveDescriptor();
+   RNTupleSerializer::DeserializePageList(bufPageList.get(), sizePageList, 0, deserializedDesc,
+                                          EDeserializeMode::kForReading);
+
+   ASSERT_EQ(desc.GetNAttributeSets(), deserializedDesc.GetNAttributeSets());
+   auto attrSets = desc.GetAttrSetIterable().begin();
+   auto deserAttrSets = deserializedDesc.GetAttrSetIterable().begin();
+   for (auto i = 0u; i < desc.GetNAttributeSets(); ++i) {
+      EXPECT_EQ(*attrSets, *deserAttrSets);
+      ++attrSets, ++deserAttrSets;
+   }
+}
