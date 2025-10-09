@@ -1,5 +1,6 @@
-#include "TObject.h"
+#pragma once
 
+#include "TObject.h"
 
 namespace ns {
 
