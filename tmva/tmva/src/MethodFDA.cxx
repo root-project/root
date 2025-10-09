@@ -53,7 +53,9 @@ Can compute regression value for one dimensional output
 #include "TMVA/IMethod.h"
 #include "TMVA/MCFitter.h"
 #include "TMVA/MethodBase.h"
+#ifdef TMVA_MINUIT_1
 #include "TMVA/MinuitFitter.h"
+#endif
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Timer.h"
 #include "TMVA/Tools.h"
@@ -300,8 +302,12 @@ void TMVA::MethodFDA::ProcessOptions()
    // create minimiser
    fConvergerFitter = (IFitterTarget*)this;
    if (fConverger == "MINUIT") {
+#ifdef TMVA_MINUIT_1
       fConvergerFitter = new MinuitFitter( *this, TString::Format("%s_Converger_Minuit", GetName()), fParRange, GetOptions() );
       SetOptions(dynamic_cast<Configurable*>(fConvergerFitter)->GetOptions());
+#else
+      Log() << kFATAL << "Can't use MINUIT converger because ROOT was build without MINUIT 1" << Endl;
+#endif
    }
 
    if(fFitMethod == "MC")
@@ -310,9 +316,13 @@ void TMVA::MethodFDA::ProcessOptions()
       fFitter = new GeneticFitter( *fConvergerFitter, TString::Format("%s_Fitter_GA", GetName()), fParRange, GetOptions() );
    else if (fFitMethod == "SA")
       fFitter = new SimulatedAnnealingFitter( *fConvergerFitter, TString::Format("%s_Fitter_SA", GetName()), fParRange, GetOptions() );
-   else if (fFitMethod == "MINUIT")
+   else if (fFitMethod == "MINUIT") {
+#ifdef TMVA_MINUIT_1
       fFitter = new MinuitFitter( *fConvergerFitter, TString::Format("%s_Fitter_Minuit", GetName()), fParRange, GetOptions() );
-   else {
+#else
+      Log() << kFATAL << "Can't use MINUIT fitter because ROOT was build without MINUIT 1" << Endl;
+#endif
+   } else {
       Log() << kFATAL << "<Train> Do not understand fit method:" << fFitMethod << Endl;
    }
 

@@ -58,7 +58,9 @@
 #include "RooFunctor.h"
 #include "RooProfileLL.h"
 
+#ifdef ROOFIT_MINUIT_1
 #include "TMinuitMinimizer.h"
+#endif
 
 #include <string>
 #include <algorithm>
@@ -260,8 +262,10 @@ bool LikelihoodInterval::CreateMinimizer() {
       ccoutE(InputArguments) << minimType << " is wrong type of minimizer for getting interval limits or contours - must use Minuit or Minuit2" << std::endl;
       return false;
    }
+#ifdef ROOFIT_MINUIT_1
    // do not use static instance of TMInuit which could interfere with RooFit
    if (minimType == "Minuit")  TMinuitMinimizer::UseStaticMinuit(false);
+#endif
    // create minimizer class
    fMinimizer = std::shared_ptr<ROOT::Math::Minimizer>(ROOT::Math::Factory::CreateMinimizer(minimType, "Migrad"));
 
