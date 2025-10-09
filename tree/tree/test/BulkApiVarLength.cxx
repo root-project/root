@@ -235,3 +235,32 @@ TEST_F(BulkApiVariableTest, serializedRead)
    printf("Bulk Serialized API: Successful read of all events.\n");
    printf("Bulk Serialized API: Total elapsed time (seconds) for API: %.2f\n", sw.RealTime());
 }
+
+// https://github.com/root-project/root/issues/13239
+TEST(TBranch, GetBulkEntriesVariableArray)
+{
+   auto filename = "repro13239_getbulkread.root";
+   auto treename = "t";
+   {
+      TFile f(filename, "RECREATE");
+      TTree t(treename, treename);
+      int n = 2;
+      double x[2];
+      x[0] = 42;
+      x[1] = 84;
+      t.Branch("n", &n);
+      t.Branch("x", x, "x[n]/D");
+      t.Fill();
+      t.Write();
+      f.Close();
+   }
+   {
+      TFile f(filename, "READ");
+      auto *t = f.Get<TTree>(treename);
+      auto *b = t->GetBranch("x");
+      TBufferFile buf(TBuffer::kWrite, 10000);
+      const auto n = b->GetBulkRead().GetBulkEntries(0, buf);
+      EXPECT_EQ(n, 2);
+   }
+   gSystem->Unlink(filename);
+}
