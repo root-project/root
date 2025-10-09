@@ -483,6 +483,12 @@ void ROOT::Experimental::Internal::RPageSinkDaos::WriteNTupleAnchor()
       kDistributionKeyDefault, kAttributeKeyAnchor, kCidMetadata);
 }
 
+std::unique_ptr<ROOT::Internal::RPageSink>
+ROOT::Experimental::Internal::RPageSinkDaos::CreateNewWithNewRNTuple(std::string_view) const
+{
+   throw ROOT::RException(R__FAIL("this method is not available for the DAOS backend"));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::Internal::RPageSourceDaos::RPageSourceDaos(std::string_view ntupleName, std::string_view uri,
