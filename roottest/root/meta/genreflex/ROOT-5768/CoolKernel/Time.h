@@ -52,55 +52,55 @@ namespace cool
     Time& operator=( const ITime& rhs );
 
     /// Returns the year.
-    int year() const
+    int year() const override
     {
       return m_year;
     }
 
     /// Returns the month [1-12].
-    int month() const
+    int month() const override
     {
       return m_month;
     }
 
     /// Returns the day [1-31].
-    int day() const
+    int day() const override
     {
       return m_day;
     }
 
     /// Returns the hour [0-23].
-    int hour() const
+    int hour() const override
     {
       return m_hour;
     }
 
     /// Returns the minute [0-59].
-    int minute() const
+    int minute() const override
     {
       return m_minute;
     }
 
     /// Returns the second [0-59].
-    int second() const
+    int second() const override
     {
       return m_second;
     }
 
     /// Returns the nanosecond [0-999999999].
-    long nanosecond() const
+    long nanosecond() const override
     {
       return m_nanosecond;
     }
 
     /// Print to an output stream.
-    std::ostream& print( std::ostream& os ) const;
+    std::ostream& print( std::ostream& os ) const override;
 
     /// Comparison operator.
-    bool operator==( const ITime& rhs ) const;
+    bool operator==( const ITime& rhs ) const override;
 
     /// Comparison operator.
-    bool operator>( const ITime& rhs ) const;
+    bool operator>( const ITime& rhs ) const override;
 
   private:
 
