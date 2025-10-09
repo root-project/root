@@ -105,7 +105,7 @@ static RootBrowseArgs ParseArgs(const char **args, int nArgs)
          } else if (argStr == "h" || argStr == "help") {
             outArgs.fPrintHelp = RootBrowseArgs::EPrintUsage::kLong;
             break;
-         } else if (argStr == "wf" || argStr == "--webOff") {
+         } else if (argStr == "wf" || argStr == "webOff") {
             outArgs.fWeb = "off";
          }
 
