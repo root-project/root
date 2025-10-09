@@ -101,7 +101,7 @@ public:
 
    public:
       using iterator = TIterator;
-      using iterator_category = std::forward_iterator_tag;
+      using iterator_category = std::input_iterator_tag;
       using difference_type = std::ptrdiff_t;
       using value_type = TKeyMapNode;
       using pointer = value_type *;
@@ -109,7 +109,7 @@ public:
 
       TIterator(TFile *file, std::uint64_t addr);
 
-      iterator operator++()
+      iterator &operator++()
       {
          Advance();
          return *this;
