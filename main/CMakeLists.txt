@@ -146,3 +146,5 @@ else()
                       DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
   endif()
 endif()
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)
