@@ -282,10 +282,11 @@ public:
    /// \brief Get all field indices of this entry.
    std::unordered_set<FieldIndex_t> GetFieldIndices() const
    {
-      std::unordered_set<FieldIndex_t> fieldIdxs;
-      for (auto &[_, fieldIdx] : fFieldName2Index) {
-         fieldIdxs.insert(fieldIdx);
-      }
+      // Field indices are sequentially assigned, and the entry (currently) offers no way to remove fields, so we can
+      // just generate and return a set {0, ..., |fProcessorValues| - 1}.
+      std::unordered_set<FieldIndex_t> fieldIdxs(fProcessorValues.size());
+      std::generate_n(std::inserter(fieldIdxs, fieldIdxs.begin()), fProcessorValues.size(),
+                      [i = 0]() mutable { return i++; });
       return fieldIdxs;
    }
 };
