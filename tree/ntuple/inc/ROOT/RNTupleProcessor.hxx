@@ -114,7 +114,7 @@ public:
    /// \brief Bind the value to `valuePtr`.
    ///
    /// \param[in] valuePtr Pointer to bind the value to.
-   void BindRawPtr(void *valuePtr) { fProcessorEntry->BindRawPtr(fFieldIndex, valuePtr); }
+   void BindRawPtr(T *valuePtr) { fProcessorEntry->BindRawPtr(fFieldIndex, valuePtr); }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get a reference to the field value managed by the processor's entry.
