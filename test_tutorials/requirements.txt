@@ -1,0 +1,49 @@
+# ROOT requirements for third-party Python packages
+
+# PyROOT: Interoperability with numpy arrays
+numpy
+pandas
+
+# TMVA: SOFIE
+# dm-sonnet # used for GNNs
+# graph_nets
+# onnx
+
+# TMVA: PyMVA interfaces
+# scikit-learn
+# tensorflow ; python_version < "3.13" # TensorFlow doesn't support Python 3.13 yet
+# torch
+# xgboost
+
+# PyROOT: ROOT.Numba.Declare decorator
+numba>=0.48
+cffi>=1.9.1
+
+# Notebooks: ROOT C++ kernel
+# IPython
+# jupyter
+# metakernel>=0.20.0
+# notebook>=4.4.1
+
+# Distributed RDataFrame
+# pyspark>=2.4 # Spark backend
+# dask>=2022.08.1 # Dask backend
+# distributed>=2022.08.1 # Dask backend
+
+# JsMVA: Jupyter notebook magic for TMVA
+# ipywidgets
+
+# Unified Histogram Interface (UHI)
+uhi
+matplotlib
+mplhep
+
+# For testing
+# nbconvert>=7.4.0
+pytest
+# setuptools
+
+scikit-learn
+
+# Look for CPU-only versions of PyTorch to avoid pulling CUDA in the CI docker images.
+# -f https://download.pytorch.org/whl/cpu/torch_stable.html
