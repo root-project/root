@@ -633,5 +633,104 @@ class NumbaDeclareArray(unittest.TestCase):
         self.assertTrue(np.array_equal(rvecf, np.array([1.0, 4.0])))
 
 
+class NumbaDeclareInferred(unittest.TestCase):
+    """
+    Test decorator created with a reconstructed list of arguments using RDF column types,
+    and a return type inferred from the numba jitted function.
+    """
+
+    def test_fund_types(self):
+        """
+        Test fundamental types
+        """
+        df = ROOT.RDataFrame(4).Define("x", "rdfentry_")
+
+        with self.subTest("function"):
+
+            def is_even(x):
+                return x % 2 == 0
+
+            df = df.Define("is_even_x_1", is_even, ["x"])
+            results = df.Take["bool"]("is_even_x_1").GetValue()[0]
+            self.assertEqual(results, True)
+
+        with self.subTest("lambda"):
+            df = df.Define("is_even_x_2", lambda x: x % 2 == 0, ["x"])
+            results = df.Take["bool"]("is_even_x_2").GetValue()[0]
+            self.assertEqual(results, True)
+
+    def test_rvec(self):
+        """
+        Test RVec
+        """
+        df = ROOT.RDataFrame(4).Define("x", "ROOT::VecOps::RVec<int>({1, 2, 3})")
+
+        with self.subTest("function"):
+
+            def square_rvec(v):
+                return v * v
+
+            df = df.Define("square_rvec_1", square_rvec, ["x"])
+            results = df.Take["RVec<int>"]("square_rvec_1").GetValue()[0]
+            self.assertTrue(np.array_equal(results, np.array([1, 4, 9])))
+
+        with self.subTest("lambda"):
+            df = df.Define("square_rvec_2", lambda v: v * v, ["x"])
+            results = df.Take["RVec<int>"]("square_rvec_2").GetValue()[0]
+            self.assertTrue(np.array_equal(results, np.array([1, 4, 9])))
+
+    def test_std_vec(self):
+        """
+        Test std::vector
+        """
+        df = ROOT.RDataFrame(4).Define("x", "std::vector<int>({1, 2, 3})")
+
+        with self.subTest("function"):
+
+            def square_std_vec(v):
+                return v * v
+
+            df = df.Define("square_std_vec_1", square_std_vec, ["x"])
+            results = df.Take["RVec<int>"]("square_std_vec_1").GetValue()[0]
+            self.assertTrue(np.array_equal(results, np.array([1, 4, 9])))
+
+        with self.subTest("lambda"):
+            df = df.Define("square_std_vec_2", lambda v: v * v, ["x"])
+            results = df.Take["RVec<int>"]("square_std_vec_2").GetValue()[0]
+            self.assertTrue(np.array_equal(results, np.array([1, 4, 9])))
+
+    def test_std_array(self):
+        """
+        Test std::array
+        """
+        df = ROOT.RDataFrame(4).Define("x", "std::array<int, 3>({1, 2, 3})")
+
+        with self.subTest("function"):
+
+            def square_std_arr(v):
+                return v * v
+
+            df = df.Define("square_std_arr_1", square_std_arr, ["x"])
+            results = df.Take["RVec<int>"]("square_std_arr_1").GetValue()[0]
+            self.assertTrue(np.array_equal(results, np.array([1, 4, 9])))
+
+        with self.subTest("lambda"):
+            df = df.Define("square_std_arr_2", lambda v: v * v, ["x"])
+            results = df.Take["RVec<int>"]("square_std_arr_2").GetValue()[0]
+            self.assertTrue(np.array_equal(results, np.array([1, 4, 9])))
+
+    def test_missing_signature_raises(self):
+        """
+        Ensure an Exception is raised when return type cannot be inferred
+        and no explicit signature is provided in the decorator.
+        """
+
+        def f(x):
+            return x.M()
+
+        with self.assertRaises(Exception):
+            ROOT.RDataFrame(4).Define("v", "ROOT::Math::PtEtaPhiMVector(1, 2, 3, 4)").Define("m", f, ["v"])
+
+
 if __name__ == "__main__":
     unittest.main()

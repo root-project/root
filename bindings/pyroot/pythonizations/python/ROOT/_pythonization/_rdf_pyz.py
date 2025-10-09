@@ -45,7 +45,7 @@ class FunctionJitter:
     function_cache = {}
     lambda_function_counter = 0  # Counter to name the lambda functions
 
-    def __init__(self, rdf: "RDataFrame") -> None:
+    def __init__(self, rdf: "RDataFrame") -> None:  # noqa F821
         self.rdf = rdf
         self.col_names: typing.List[str] = rdf.GetColumnNames()
         self.func: typing.Callable
@@ -71,7 +71,7 @@ class FunctionJitter:
         """
         try:
             import numpy as np
-        except:
+        except ImportError:
             raise ImportError("Failed to import numpy during call to determine function signature.")
         from ._rdf_conversion_maps import FUNDAMENTAL_PYTHON_TYPES, NUMPY_TO_TREE, TREE_TO_NUMBA
 
@@ -81,17 +81,14 @@ class FunctionJitter:
                 t = self.rdf.GetColumnType(x)
                 if t in TREE_TO_NUMBA:  # The column is a fundamental type from tree
                     return TREE_TO_NUMBA[t]
-                elif "<" in t:  # The column type is a RVec<type>
-                    if ">>" in t:  # It is a RVec<RVec<T>>
-                        raise TypeError(
-                            f"Only columns with 'RVec<T>' where T is is a fundamental type are supported, not '{t}'."
-                        )
-                    g = re.match("(.*)<(.*)>", t).groups(0)
-                    if g[1] in TREE_TO_NUMBA:
-                        return "RVec<" + TREE_TO_NUMBA[g[1]] + ">"
-                    # There are data type that leak into here. Not sure from where. But need to implement something here such that this condition is never met.
-                    return "RVec<" + str(g[1]) + ">"
 
+                match = re.match(r"([\w:]+)<(.+)>", t)
+                if match:
+                    container_type, inner_type = match.groups()
+                    container_type = container_type.strip()
+                    inner_type = inner_type.strip()
+                    inner_mapped = TREE_TO_NUMBA.get(inner_type, inner_type)
+                    return f"{container_type}<{inner_mapped}>"
                 else:
                     return t
             else:
@@ -173,7 +170,7 @@ class FunctionJitter:
                 value_of_p = func_args[p]
                 type_of_p = self.find_type(value_of_p)
                 # Bool(s) in python are represented as True/False but in C++ are true/false. The following if statements are to account for that
-                if type(value_of_p) == bool:
+                if type(value_of_p) is bool:
                     if value_of_p:
                         value_of_p = "true"
                     else:
@@ -377,9 +374,9 @@ def _handle_cpp_callables(func, original_template, *args, rdf=None, cols=None):
 
     import cppyy
 
-    is_cpp_functor = lambda: isinstance(getattr(func, "__call__", None), cppyy._backend.CPPOverload)
+    is_cpp_functor = lambda: isinstance(getattr(func, "__call__", None), cppyy._backend.CPPOverload)  # noqa E731
 
-    is_std_function = lambda: isinstance(getattr(func, "target_type", None), cppyy._backend.CPPOverload)
+    is_std_function = lambda: isinstance(getattr(func, "target_type", None), cppyy._backend.CPPOverload)  # noqa E731
 
     # handle free functions
     if callable(func) and not is_cpp_functor() and not is_std_function():
