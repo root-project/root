@@ -165,7 +165,7 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           HOME: /Users/sftnight
-          INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
+          INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') && !matrix.platform == 'mac15' && !matrix.platform == 'mac26'}}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
         run: ".github/workflows/root-ci-config/build_root.py 
                     --buildtype       RelWithDebInfo
