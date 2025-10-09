@@ -571,7 +571,7 @@ private:
    {
       Initialize();
       if (fNEntries == ROOT::kInvalidNTupleIndex)
-         Connect(fEntry->GetFieldIndices());
+         Connect(fFieldIdxs);
       return fNEntries;
    }
 

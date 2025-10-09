@@ -233,7 +233,7 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect(
 void ROOT::Experimental::RNTupleSingleProcessor::AddEntriesToJoinTable(Internal::RNTupleJoinTable &joinTable,
                                                                        ROOT::NTupleSize_t entryOffset)
 {
-   Connect(fEntry->GetFieldIndices());
+   Connect(fFieldIdxs);
    joinTable.Add(*fPageSource, Internal::RNTupleJoinTable::kDefaultPartitionKey, entryOffset);
 }
 
