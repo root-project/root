@@ -214,6 +214,8 @@ struct StructUsingCollectionProxy {
 /// Classes to exercise field traits
 struct TrivialTraitsBase {
    int a;
+
+   ClassDefNV(TrivialTraitsBase, 5)
 };
 
 struct TrivialTraits : TrivialTraitsBase {

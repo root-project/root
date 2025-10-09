@@ -648,34 +648,37 @@ TEST(RNTupleShow, TypeTraceReport)
    FileRaii fileGuard("test_ntuple_show_type_trace_report.ntuple");
    {
       auto model = RNTupleModel::Create();
-      model->MakeField<std::variant<double, std::vector<std::pair<float, bool>>>>("f");
+      model->MakeField<std::variant<double, std::vector<std::pair<float, TrivialTraitsBase>>>>("f");
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
    }
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
 
-   // Get the field for the `bool` member of the inner `pair`
+   // Get the field for the `a` member of the inner `TrivialTraitsBase`
    const auto field = reader->GetModel()
                          .GetDefaultEntry()
                          .begin()
                          ->GetField()
                          .GetConstSubfields()[1]
                          ->GetConstSubfields()[0]
-                         ->GetConstSubfields()[1];
+                         ->GetConstSubfields()[1]
+                         ->GetConstSubfields()[0];
 
    const auto report = ROOT::Internal::GetTypeTraceReport(*field, reader->GetDescriptor());
 
    const std::string expected{
       R"(In-memory field/type hierarchy:
-f [std::variant<double,std::vector<std::pair<float,bool>>>] (id: 0)
-  _1 [std::vector<std::pair<float,bool>>] (id: 2)
-    _0 [std::pair<float,bool>] (id: 3)
-      _1 [bool] (id: 5)
+f [std::variant<double,std::vector<std::pair<float,TrivialTraitsBase>>>] (id: 0)
+  _1 [std::vector<std::pair<float,TrivialTraitsBase>>] (id: 2)
+    _0 [std::pair<float,TrivialTraitsBase>] (id: 3)
+      _1 [TrivialTraitsBase, type version: 5, type checksum: 2623577133] (id: 5)
+        a [std::int32_t] (id: 6)
 On-disk field/type hierarchy:
-f [std::variant<double,std::vector<std::pair<float,bool>>>] (id: 0)
-  _1 [std::vector<std::pair<float,bool>>] (id: 2)
-    _0 [std::pair<float,bool>] (id: 3)
-      _1 [bool] (id: 5)
+f [std::variant<double,std::vector<std::pair<float,TrivialTraitsBase>>>] (id: 0)
+  _1 [std::vector<std::pair<float,TrivialTraitsBase>>] (id: 2)
+    _0 [std::pair<float,TrivialTraitsBase>] (id: 3)
+      _1 [TrivialTraitsBase, type version: 5, type checksum: 2623577133] (id: 5)
+        a [std::int32_t] (id: 6)
 )"};
 
    EXPECT_EQ(expected, report);
