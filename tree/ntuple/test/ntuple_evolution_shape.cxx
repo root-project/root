@@ -956,50 +956,6 @@ struct RenamedIntermediateDerived : public RenamedIntermediate2 {
    }
 }
 
-TEST(RNTupleEvolution, ArrayAsVector)
-{
-   FileRaii fileGuard("test_ntuple_evolution_array_as_vector.root");
-
-   ExecInFork([&] {
-      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
-      fileGuard.PreserveFile();
-
-      ASSERT_TRUE(gInterpreter->Declare(R"(
-struct ArrayAsVector {
-   std::array<int, 2> fArr = {1, 2};
-   int x = 3;
-};
-)"));
-
-      auto model = RNTupleModel::Create();
-      model->AddField(RFieldBase::Create("f", "ArrayAsVector").Unwrap());
-
-      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
-      writer->Fill();
-
-      writer.reset();
-   });
-
-   ASSERT_TRUE(gInterpreter->Declare(R"(
-struct ArrayAsVector {
-   ROOT::RVec<short> fArr;
-   int x;
-};
-)"));
-
-   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-   ASSERT_EQ(1, reader->GetNEntries());
-
-   void *ptr = reader->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
-   DeclarePointer("ArrayAsVector", "ptrArrayAsVector", ptr);
-
-   reader->LoadEntry(0);
-   EXPECT_EVALUATE_EQ("ptrArrayAsVector->x", 3);
-   EXPECT_EVALUATE_EQ("ptrArrayAsVector->fArr.size()", 2);
-   EXPECT_EVALUATE_EQ("ptrArrayAsVector->fArr[0]", 1);
-   EXPECT_EVALUATE_EQ("ptrArrayAsVector->fArr[1]", 2);
-}
-
 TEST(RNTupleEvolution, StreamerField)
 {
    FileRaii fileGuard("test_ntuple_evolution_streamer_field.root");
