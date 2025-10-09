@@ -220,25 +220,24 @@ std::string CodegenContext::buildArg(RooAbsCollection const &in, std::string con
       return "nullptr";
    }
 
-   auto it = _listNames.find(in.uniqueId().value());
-   if (it != _listNames.end())
-      return it->second;
-
    std::string savedName = getTmpVarName();
    bool canSaveOutside = true;
 
+   std::vector<double> indices;
+   indices.reserve(in.size());
+
    std::stringstream declStrm;
-   declStrm << arrayType << " " << savedName << "[]{";
+   declStrm << arrayType << " " << savedName << "[" << in.size() << "]{};\n";
    for (const auto arg : in) {
-      declStrm << getResult(*arg) << ",";
+      getResult(*arg); // fill the result cache
+      indices.push_back(_nodeNames.at(arg->namePtr()));
       canSaveOutside = canSaveOutside && isScopeIndependent(arg);
    }
-   declStrm.seekp(-1, declStrm.cur);
-   declStrm << "};\n";
+
+   declStrm << "fillFromWorkspace(" << savedName << ", " << in.size() << ", wksp, " << buildArg(indices) << ");\n";
 
    addToCodeBody(declStrm.str(), canSaveOutside);
 
-   _listNames.insert({in.uniqueId().value(), savedName});
    return savedName;
 }
 
