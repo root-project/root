@@ -203,8 +203,6 @@ private:
    unsigned _indent = 0;
    /// @brief Index to get unique names for temporary variables.
    mutable int _tmpVarIdx = 0;
-   /// @brief A map to keep track of list names as assigned by addResult.
-   std::unordered_map<RooFit::UniqueId<RooAbsCollection>::Value_t, std::string> _listNames;
    std::vector<double> _xlArr;
    std::vector<std::string> _collectedFunctions;
 };
