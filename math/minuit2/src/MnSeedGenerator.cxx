@@ -106,7 +106,7 @@ operator()(const MnFcn &fcn, const GradientCalculator &gc, const MnUserParameter
       }
    }
 
-   if (stra.Strategy() == 2 && !st.HasCovariance()) {
+   if (stra.ComputeInitialHessian() && !st.HasCovariance()) {
       // calculate full 2nd derivative
 
       print.Debug("calling MnHesse");
@@ -234,7 +234,7 @@ MnSeedGenerator::CallWithAnalyticalGradientCalculator(const MnFcn &fcn, const An
    }
 
    // compute Hessian above will not have posdef check as it is done if we call MnHesse
-   if (stra.Strategy() == 2 && !st.HasCovariance() && !computedHessian) {
+   if (stra.ComputeInitialHessian() && !st.HasCovariance() && !computedHessian) {
       // can calculate full 2nd derivative
       MinimumState tmpState = MnHesse(stra)(fcn, state, st.Trafo());
       print.Info("Compute full Hessian: Initial seeding state is ",tmpState);

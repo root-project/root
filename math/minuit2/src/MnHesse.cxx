@@ -310,7 +310,7 @@ MinimumState ComputeNumerical(const MnFcn &mfcn, const MinimumState &st, const M
 
    print.Debug("Second derivatives", g2);
 
-   if (strat.Strategy() > 0) {
+   if (strat.RefineGradientInHessian()) {
       // refine first derivative
       HessianGradientCalculator hgc(mfcn, trafo, strat);
       FunctionGradient gr = hgc(st.Parameters(), FunctionGradient(grd, g2, gst));
