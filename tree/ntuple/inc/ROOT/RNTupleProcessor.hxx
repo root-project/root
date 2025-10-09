@@ -433,7 +433,7 @@ public:
       ROOT::NTupleSize_t fCurrentEntryNumber;
 
    public:
-      using iterator_category = std::forward_iterator_tag;
+      using iterator_category = std::input_iterator_tag;
       using iterator = RIterator;
       using value_type = ROOT::NTupleSize_t;
       using difference_type = std::ptrdiff_t;
