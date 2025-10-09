@@ -6,6 +6,8 @@
 /// \date 2025-08-21
 #include <ROOT/RLogger.hxx>
 
+#include "optparse.hxx"
+
 #include <TApplication.h>
 #include <TBrowser.h>
 #include <TError.h>
@@ -55,67 +57,40 @@ struct RootBrowseArgs {
       kLong
    };
    EPrintUsage fPrintHelp = EPrintUsage::kNo;
-   std::string_view fWeb;
-   std::string_view fFileName;
+   std::string fWeb;
+   std::string fFileName;
 };
 
 static RootBrowseArgs ParseArgs(const char **args, int nArgs)
 {
    RootBrowseArgs outArgs;
-   bool forcePositional = false;
+   ROOT::RCmdLineOpts opts;
+   opts.AddFlag({"-h", "--help"});
+   opts.AddFlag({"-w", "--web"}, ROOT::RCmdLineOpts::EFlagType::kWithArg);
+   opts.AddFlag({"-wf", "--webOff"});
 
-   for (int i = 0; i < nArgs; ++i) {
-      const char *arg = args[i];
+   opts.Parse(args, nArgs);
 
-      if (strcmp(arg, "--") == 0) {
-         forcePositional = true;
-         continue;
-      }
-
-      bool isFlag = !forcePositional && arg[0] == '-';
-      if (isFlag) {
-         ++arg;
-         // Parse long or short flag and its argument into `argStr` / `nxtArgStr`.
-         std::string_view argStr, nxtArgStr;
-         if (arg[0] == '-') {
-            ++arg;
-            // long flag: may be either of the form `--web off` or `--web=off`
-            const char *eq = strchr(arg, '=');
-            if (eq) {
-               argStr = std::string_view(arg, eq - arg);
-               nxtArgStr = std::string_view(eq + 1);
-            } else {
-               argStr = std::string_view(arg);
-               if (i < nArgs - 1 && args[i + 1][0] != '-') {
-                  nxtArgStr = args[i + 1];
-                  ++i;
-               }
-            }
-         } else {
-            // short flag (note that it might be more than 1 character long, like `-wf`)
-            argStr = std::string_view(arg);
-            if (i < nArgs - 1 && args[i + 1][0] != '-') {
-               nxtArgStr = args[i + 1];
-               ++i;
-            }
-         }
-
-         if (argStr == "w" || argStr == "web") {
-            outArgs.fWeb = nxtArgStr.empty() ? "on" : nxtArgStr;
-         } else if (argStr == "h" || argStr == "help") {
-            outArgs.fPrintHelp = RootBrowseArgs::EPrintUsage::kLong;
-            break;
-         } else if (argStr == "wf" || argStr == "webOff") {
-            outArgs.fWeb = "off";
-         }
-
-      } else if (!outArgs.fFileName.empty()) {
-         outArgs.fPrintHelp = RootBrowseArgs::EPrintUsage::kShort;
-         break;
-      } else {
-         outArgs.fFileName = arg;
-      }
+   if (opts.ReportErrors()) {
+      outArgs.fPrintHelp = RootBrowseArgs::EPrintUsage::kShort;
+      return outArgs;
    }
+
+   if (opts.GetBooleanFlag("help")) {
+      outArgs.fPrintHelp = RootBrowseArgs::EPrintUsage::kLong;
+      return outArgs;
+   }
+
+   if (auto web = opts.GetFlagValue("web"); !web.empty())
+      outArgs.fWeb = web;
+
+   if (opts.GetBooleanFlag("webOff"))
+      outArgs.fWeb = "off";
+
+   if (opts.GetArgs().empty())
+      outArgs.fPrintHelp = RootBrowseArgs::EPrintUsage::kShort;
+   else
+      outArgs.fFileName = opts.GetArgs()[0];
 
    return outArgs;
 }

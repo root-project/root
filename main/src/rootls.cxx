@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 
+#include "optparse.hxx"
 #include "wildcards.hpp"
 
 #include <TBranch.h>
@@ -158,7 +159,7 @@ struct RootLsSource {
 };
 
 struct RootLsArgs {
-   enum Flags {
+   enum EFlags {
       kNone = 0x0,
       kOneColumn = 0x1,
       kLongListing = 0x2,
@@ -167,7 +168,7 @@ struct RootLsArgs {
       kRecursiveListing = 0x10,
    };
 
-   enum class PrintUsage {
+   enum class EPrintUsage {
       kNo,
       kShort,
       kLong
@@ -175,7 +176,7 @@ struct RootLsArgs {
 
    std::uint32_t fFlags = 0;
    std::vector<RootLsSource> fSources;
-   PrintUsage fPrintUsageAndExit = PrintUsage::kNo;
+   EPrintUsage fPrintUsageAndExit = EPrintUsage::kNo;
 };
 
 struct V2i {
@@ -677,79 +678,40 @@ static RootLsTree GetMatchingPathsInFile(std::string_view fileName, std::string_
    return nodeTree;
 }
 
-static bool MatchShortFlag(char arg, char matched, RootLsArgs::Flags flagVal, std::uint32_t &outFlags)
-{
-   if (arg == matched) {
-      outFlags |= flagVal;
-      return true;
-   }
-   return false;
-}
-
-static bool MatchLongFlag(const char *arg, const char *matched, RootLsArgs::Flags flagVal, std::uint32_t &outFlags)
-{
-   if (strcmp(arg, matched) == 0) {
-      outFlags |= flagVal;
-      return true;
-   }
-   return false;
-}
-
 static RootLsArgs ParseArgs(const char **args, int nArgs)
 {
    RootLsArgs outArgs;
-   std::vector<int> sourceArgs;
+   ROOT::RCmdLineOpts opts;
+   opts.AddFlag({"-h", "--help"});
+   opts.AddFlag({"-1", "--oneColumn"});
+   opts.AddFlag({"-l", "--longListing"});
+   opts.AddFlag({"-t", "--treeListing"});
+   opts.AddFlag({"-R", "--rntupleListing"});
+   opts.AddFlag({"-r", "--recursiveListing"});
 
-   // First match all flags, then process positional arguments (since we need the flags to properly process them).
-   for (int i = 0; i < nArgs; ++i) {
-      const char *arg = args[i];
-      if (arg[0] == '-') {
-         ++arg;
-         if (arg[0] == '-') {
-            // long flag
-            ++arg;
-            bool matched = MatchLongFlag(arg, "oneColumn", RootLsArgs::kOneColumn, outArgs.fFlags) ||
-                           MatchLongFlag(arg, "longListing", RootLsArgs::kLongListing, outArgs.fFlags) ||
-                           MatchLongFlag(arg, "treeListing", RootLsArgs::kTreeListing, outArgs.fFlags) ||
-                           MatchLongFlag(arg, "recursiveListing", RootLsArgs::kRecursiveListing, outArgs.fFlags) ||
-                           MatchLongFlag(arg, "rntupleListing", RootLsArgs::kRNTupleListing, outArgs.fFlags);
-            if (!matched) {
-               if (strcmp(arg, "help") == 0) {
-                  outArgs.fPrintUsageAndExit = RootLsArgs::PrintUsage::kLong;
-               } else {
-                  R__LOG_ERROR(RootLsChannel()) << "unrecognized argument: --" << arg << "\n";
-                  if (outArgs.fPrintUsageAndExit == RootLsArgs::PrintUsage::kNo)
-                     outArgs.fPrintUsageAndExit = RootLsArgs::PrintUsage::kShort;
-               }
-            }
-         } else {
-            // short flag
-            while (*arg) {
-               bool matched = MatchShortFlag(*arg, '1', RootLsArgs::kOneColumn, outArgs.fFlags) ||
-                              MatchShortFlag(*arg, 'l', RootLsArgs::kLongListing, outArgs.fFlags) ||
-                              MatchShortFlag(*arg, 't', RootLsArgs::kTreeListing, outArgs.fFlags) ||
-                              MatchShortFlag(*arg, 'r', RootLsArgs::kRecursiveListing, outArgs.fFlags) ||
-                              MatchShortFlag(*arg, 'R', RootLsArgs::kRNTupleListing, outArgs.fFlags);
-               if (!matched) {
-                  if (*arg == 'h') {
-                     outArgs.fPrintUsageAndExit = RootLsArgs::PrintUsage::kLong;
-                  } else {
-                     R__LOG_ERROR(RootLsChannel()) << "unrecognized argument: -" << *arg << "\n";
-                     if (outArgs.fPrintUsageAndExit == RootLsArgs::PrintUsage::kNo)
-                        outArgs.fPrintUsageAndExit = RootLsArgs::PrintUsage::kShort;
-                  }
-               }
-               ++arg;
-            }
-         }
-      } else {
-         sourceArgs.push_back(i);
-      }
+   opts.Parse(args, nArgs);
+   for (const auto &err : opts.GetErrors())
+      R__LOG_ERROR(RootLsChannel()) << err;
+
+   if (opts.GetSwitch("help")) {
+      outArgs.fPrintUsageAndExit = RootLsArgs::EPrintUsage::kLong;
+      return outArgs;
    }
 
+   if (!opts.GetErrors().empty() || opts.GetArgs().empty()) {
+      outArgs.fPrintUsageAndExit = RootLsArgs::EPrintUsage::kShort;
+      return outArgs;
+   }
+
+   outArgs.fFlags |= opts.GetSwitch("oneColumn") * RootLsArgs::kOneColumn;
+   outArgs.fFlags |= opts.GetSwitch("longListing") * RootLsArgs::kLongListing;
+   outArgs.fFlags |= opts.GetSwitch("treeListing") * RootLsArgs::kTreeListing;
+   outArgs.fFlags |= opts.GetSwitch("recursiveListing") * RootLsArgs::kRecursiveListing;
+   outArgs.fFlags |= opts.GetSwitch("rntupleListing") * RootLsArgs::kRNTupleListing;
+
    // Positional arguments
-   for (int argIdx : sourceArgs) {
-      const char *arg = args[argIdx];
+   for (const auto &argStr : opts.GetArgs()) {
+      const char *arg = argStr.c_str();
       RootLsSource &newSource = outArgs.fSources.emplace_back();
 
       // Handle known URI prefixes
@@ -784,9 +746,9 @@ int main(int argc, char **argv)
    gErrorIgnoreLevel = kError;
 
    auto args = ParseArgs(const_cast<const char **>(argv) + 1, argc - 1);
-   if (args.fPrintUsageAndExit != RootLsArgs::PrintUsage::kNo) {
+   if (args.fPrintUsageAndExit != RootLsArgs::EPrintUsage::kNo) {
       std::cerr << "usage: rootls [-1hltr] FILE [FILE ...]\n";
-      if (args.fPrintUsageAndExit == RootLsArgs::PrintUsage::kLong) {
+      if (args.fPrintUsageAndExit == RootLsArgs::EPrintUsage::kLong) {
          std::cerr << kLongHelp;
          return 0;
       }
