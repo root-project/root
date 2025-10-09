@@ -86,11 +86,6 @@ ROOT_ADD_GTEST(RanluxLCGUnit ranlux_lcg.cxx)
 ROOT_ADD_GTEST(RanluxppEngineTests RanluxppEngine.cxx
         LIBRARIES Core MathCore)
 
-if(veccore AND vc)
-  ROOT_ADD_GTEST(VectorizedTMathUnit testVectorizedTMath.cxx
-        LIBRARIES Core MathCore)
-endif()
-
 ROOT_ADD_GTEST(testRootFinder testRootFinder.cxx  LIBRARIES ${Libraries})
 
 ROOT_ADD_GTEST(testKahan testKahan.cxx LIBRARIES Core MathCore)

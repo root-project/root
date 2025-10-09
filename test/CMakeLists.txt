@@ -332,13 +332,6 @@ if(MSVC)
 endif()
 ROOT_ADD_TEST(test-TFormulaTests COMMAND TFormulaTests FAILREGEX "FAILED|Error in")
 
-#--Vc basic test-----------------------------------------------------------------------------------
-if(ROOT_vc_FOUND)
-  ROOT_EXECUTABLE(testVc testVc.cxx LIBRARIES ${Vc_LIBRARIES} BUILTINS Vc)
-  target_include_directories(testVc SYSTEM BEFORE PRIVATE ${Vc_INCLUDE_DIRS})
-  ROOT_ADD_TEST(test-Vc COMMAND testVc FAILREGEX "FAILED|Error in")
-endif()
-
 #--VecCore basic test------------------------------------------------------------------------------
 if(ROOT_veccore_FOUND)
   ROOT_EXECUTABLE(test-veccore test-veccore.cxx LIBRARIES ${VecCore_LIBRARIES} BUILTINS VECCORE)
@@ -349,13 +342,6 @@ if(ROOT_veccore_FOUND)
   else()
     ROOT_ADD_TEST(VecCore COMMAND test-veccore REGEX "Scalar")
   endif()
-endif()
-
-#--Vc GenVector test-----------------------------------------------------------------------------------
-if(ROOT_vc_FOUND)
-  ROOT_EXECUTABLE(testGenVectorVc testGenVectorVc.cxx LIBRARIES Physics GenVector ${Vc_LIBRARIES} BUILTINS Vc)
-  target_include_directories(testGenVectorVc SYSTEM BEFORE PRIVATE ${Vc_INCLUDE_DIRS})
-  ROOT_ADD_TEST(test-GenVector-Vc COMMAND testGenVectorVc FAILREGEX "FAILED|Error in")
 endif()
 
 #--g2root------------------------------------------------------------------------------------------
