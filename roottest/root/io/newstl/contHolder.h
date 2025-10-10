@@ -17,7 +17,7 @@
 #include "TestSetOrVerify.h"
 
 class TEST_CONT_HOLDER : public TObject {
-public:   
+public:
 
    TEST_CONT_HOLDER() : TObject()
       ,fScalarArrVar(0)
@@ -45,7 +45,7 @@ public:
          for(int index=0;index<4;index++) fScalarPtrArr[index]=0;
          Reset(entry);
       }
-   
+
    TEST_CONT<EHelper > fEnum;
 
 
@@ -58,9 +58,9 @@ public:
    TEST_CONT<std::pair<float,int> >         fPairFlInt;
    TEST_CONT<std::pair<std::string,double> > fPairStrDb;
 
-   TEST_CONT<GHelper<GHelper<GHelper<float> > > > fTemplates; 
+   TEST_CONT<GHelper<GHelper<GHelper<float> > > > fTemplates;
 #endif
-   
+
    UInt_t                   fScalarArrVarSize;
    TEST_CONT<char >   *fScalarArrVar; //[fScalarArrVarSize]
 
@@ -73,7 +73,7 @@ public:
    TEST_CONT<double > *fScalarPtrArr[4];
    UInt_t                   fScalarPtrArrVarSize;
    TEST_CONT<int >    *fScalarPtrArrVar; //[fScalarPtrArrVarSize]
-   
+
 
 #if defined(R__CANNOT_SPLIT_STL_CONTAINER)
    TEST_CONT<Helper >   fObject;  //||
@@ -126,7 +126,7 @@ public:
    TEST_CONT<HelperClassDef*>  fPtrHelperDerived;  //!
 #else
    TEST_CONT<THelper*>         fPtrTHelperDerived;
-   TEST_CONT<HelperClassDef*>  fPtrHelperDerived; 
+   TEST_CONT<HelperClassDef*>  fPtrHelperDerived;
 #endif
 
 #if defined(R__NO_NESTED_CONTAINER)
@@ -148,40 +148,40 @@ public:
       return utility::SetOrVerify("fEnum",fEnum,seed,entryNumber,reset,testname);
    }
    VERIFY(Enum);
-   
+
 
    bool SetOrVerifyTemplates(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {
       Int_t seed = 1 * (entryNumber+1);
       return utility::SetOrVerify("fTemplates",fTemplates,seed,entryNumber,reset,testname);
    }
    VERIFY(Templates);
-   
+
 
    bool SetOrVerifyPairFlInt(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {
       Int_t seed = 1 * (entryNumber+1);
       return utility::SetOrVerify("fPairFlInt",fPairFlInt,seed,entryNumber,reset,testname);
    }
    VERIFY(PairFlInt);
-   
+
    bool SetOrVerifyPairStrDb(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {
       Int_t seed = 1 * (entryNumber+1);
       return utility::SetOrVerify("fPairStrDb",fPairStrDb,seed,entryNumber,reset,testname);
    }
    VERIFY(PairStrDb);
-   
+
 
    bool SetOrVerifyBool(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {
       Int_t seed = 1 * (entryNumber+1);
       return utility::SetOrVerify("fBool",fBool,seed,entryNumber,reset,testname);
    }
    VERIFY(Bool);
-   
+
    bool SetOrVerifyScalar(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {
       Int_t seed = 1 * (entryNumber+1);
       return utility::SetOrVerify("fScalar",fScalar,seed,entryNumber,reset,testname);
    }
    VERIFY(Scalar);
-   
+
    bool SetOrVerifyScalarArr(Int_t entryNumber, bool reset, const std::string &testname, int /*splitlevel*/) {
       Int_t seed = 2 * (entryNumber+1);
       return utility::SetOrVerify("fScalarArr",&(fScalarArr[0]), 2 ,seed,entryNumber,reset,testname);
@@ -191,7 +191,7 @@ public:
    bool SetOrVerifyScalarArrVar(Int_t entryNumber, bool reset, const std::string &testname, int /*splitlevel*/) {
       if (!reset && gFile && !HasVarArrayOfContainers(gFile)) {
          return true;
-      }      
+      }
       Int_t seed = 3 * (entryNumber+1);
       return utility::SetOrVerifyArrVar("fScalarArrVar",fScalarArrVar,fScalarArrVarSize,seed,entryNumber,reset,testname);
    }
@@ -213,7 +213,7 @@ public:
    bool SetOrVerifyScalarPtrArrVar(Int_t entryNumber, bool reset, const std::string &testname, int /*splitlevel*/) {
       if (!reset && gFile && !HasVarArrayOfContainers(gFile)) {
          return true;
-      }      
+      }
       Int_t seed = 6 * (entryNumber+1);
       return utility::SetOrVerifyArrVar("fScalarPtrArrVar",fScalarPtrArrVar,fScalarPtrArrVarSize,seed,entryNumber,reset,testname);
    }
@@ -482,22 +482,22 @@ protected:
    }
 
 public:
-   
+
    void Reset(Int_t entryNumber) {
       SetOrVerify(entryNumber, true, "reseting", 0);
    }
-   
+
    bool Verify(Int_t entryNumber, const std::string &testname, int splitlevel) {
       return SetOrVerify(entryNumber,false,testname,splitlevel);
    }
 
 #if defined(R__NO_NESTED_CONTAINER)
-   ClassDef(TEST_CONT_HOLDER,1);
-#else 
-#if defined(R__NO_POLYMORPH_CLASSDEF_NONTOBJECT)
-   ClassDef(TEST_CONT_HOLDER,2);
+   ClassDefOverride(TEST_CONT_HOLDER,1);
 #else
-   ClassDef(TEST_CONT_HOLDER,3);
+#if defined(R__NO_POLYMORPH_CLASSDEF_NONTOBJECT)
+   ClassDefOverride(TEST_CONT_HOLDER,2);
+#else
+   ClassDefOverride(TEST_CONT_HOLDER,3);
 #endif
 #endif
 };
