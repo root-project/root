@@ -93,12 +93,12 @@ TEST(RNTupleParallelWriter, RawPtrWriteEntry)
       // Create two RNTupleFillContext to prepare clusters in parallel.
       auto c1 = writer->CreateFillContext();
       auto e1 = c1->CreateRawPtrWriteEntry();
-      float pt1;
+      float pt1 = 0.f;
       e1->BindRawPtr("pt", &pt1);
 
       auto c2 = writer->CreateFillContext();
       auto e2 = c2->CreateRawPtrWriteEntry();
-      float pt2;
+      float pt2 = 0.f;
       e2->BindRawPtr("pt", &pt2);
 
       // Fill one entry per context and commit a cluster each.

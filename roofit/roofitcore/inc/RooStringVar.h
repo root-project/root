@@ -29,10 +29,10 @@ public:
   TObject* clone(const char* newname=nullptr) const override { return new RooStringVar(*this,newname); }
 
   // Parameter value and error accessors
-  virtual operator TString() {return TString(_string.c_str()); }
+  operator TString() {return TString(_string.c_str()); }
   const char* getVal() const { clearValueDirty(); return _string.c_str(); }
   void setVal(const char* newVal) { _string = newVal ? newVal : ""; setValueDirty(); }
-  virtual RooAbsArg& operator=(const char* newVal) { setVal(newVal); return *this; }
+  RooAbsArg& operator=(const char* newVal) { setVal(newVal); return *this; }
 
   // We implement a fundamental type of AbsArg that can be stored in a dataset
   bool isFundamental() const override { return true; }
@@ -62,7 +62,7 @@ public:
 protected:
   // Internal consistency checking (needed by RooDataSet)
   bool isValid() const override { return true; }
-  virtual bool isValidString(const char*, bool /*printError=false*/) const { return true; }
+  bool isValidString(const char*, bool /*printError=false*/) const { return true; }
 
   void syncCache(const RooArgSet* /*nset*/ = nullptr) override { }
   void copyCache(const RooAbsArg* source, bool valueOnly=false, bool setValDiry=true) override;
