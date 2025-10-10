@@ -11,10 +11,12 @@
 #include <ROOT/RError.hxx>
 
 #include <memory>
+#include <iostream>
 #include <string_view>
 #include <typeinfo>
 
 class TFile;
+class TIterator;
 class TKey;
 
 namespace ROOT {
@@ -30,6 +32,95 @@ ROOT::RLogChannel &RFileLog();
 } // namespace Internal
 
 /**
+\class ROOT::Experimental::RKeyInfo
+\ingroup RFile
+\brief Information about an RFile object's Key.
+
+Every object inside a ROOT file has an associated "Key" which contains metadata on the object, such as its name, type
+etc.
+Querying this information can be done via RFile::ListKeys(). Reading an object's Key
+doesn't deserialize the full object, so it's a relatively lightweight operation.
+*/
+struct RKeyInfo {
+   enum class ECategory : std::uint16_t {
+      kInvalid,
+      kObject,
+      kDirectory
+   };
+
+   std::string fName;
+   std::string fTitle;
+   std::string fClassName;
+   std::uint16_t fCycle = 0;
+   ECategory fCategory = ECategory::kInvalid;
+};
+
+/// The iterable returned by RFile::ListKeys()
+class RFileKeyIterable final {
+   using Pattern_t = std::string;
+
+   TFile *fFile = nullptr;
+   Pattern_t fPattern;
+   std::uint32_t fFlags = 0;
+
+public:
+   class RIterator {
+      friend class RFileKeyIterable;
+
+      struct RIterStackElem {
+         // This is ugly, but TList returns an (owning) pointer to a polymorphic TIterator...and we need this class
+         // to be copy-constructible.
+         std::shared_ptr<TIterator> fIter;
+         std::string fDirPath;
+
+         // Outlined to avoid including TIterator.h
+         RIterStackElem(TIterator *it, const std::string &path = "");
+         // Outlined to avoid including TIterator.h
+         ~RIterStackElem();
+
+         // fDirPath doesn't need to be compared because it's implied by fIter.
+         bool operator==(const RIterStackElem &other) const { return fIter == other.fIter; }
+      };
+
+      std::vector<RIterStackElem> fIterStack;
+      Pattern_t fPattern;
+      const TKey *fCurKey = nullptr;
+      std::uint16_t fRootDirNesting = 0;
+      std::uint32_t fFlags = 0;
+
+      void Advance();
+
+      // NOTE: `iter` here is an owning pointer (or null)
+      RIterator(TIterator *iter, Pattern_t pattern, std::uint32_t flags);
+
+   public:
+      using iterator = RIterator;
+      using iterator_category = std::forward_iterator_tag;
+      using difference_type = std::ptrdiff_t;
+      using value_type = RKeyInfo;
+      using pointer = const value_type *;
+      using reference = const value_type &;
+
+      iterator &operator++()
+      {
+         Advance();
+         return *this;
+      }
+      value_type operator*();
+      bool operator!=(const iterator &rh) const { return !(*this == rh); }
+      bool operator==(const iterator &rh) const { return fIterStack == rh.fIterStack; }
+   };
+
+   RFileKeyIterable(TFile *file, std::string_view rootDir, std::uint32_t flags)
+      : fFile(file), fPattern(std::string(rootDir)), fFlags(flags)
+   {
+   }
+
+   RIterator begin() const;
+   RIterator end() const;
+};
+
+/**
 \class ROOT::Experimental::RFile
 \ingroup RFile
 \brief An interface to read from, or write to, a ROOT file, as well as performing other common operations.
@@ -37,16 +128,15 @@ ROOT::RLogChannel &RFileLog();
 ## When and why should you use RFile
 
 RFile is a modern and minimalistic interface to ROOT files, both local and remote, that can be used instead of TFile
-when the following conditions are met:
-- you want a simple interface that makes it easy to do things right and hard to do things wrong;
-- you only need basic Put/Get operations and don't need the more advanced TFile/TDirectory functionalities;
-- you want more robustness and better error reporting for those operations;
-- you want clearer ownership semantics expressed through the type system rather than having objects "automagically"
-  handled for you via implicit ownership of raw pointers.
+when you only need basic Put/Get operations and don't need the more advanced TFile/TDirectory functionalities.
+It provides:
+- a simple interface that makes it easy to do things right and hard to do things wrong;
+- more robustness and better error reporting for those operations;
+- clearer ownership semantics expressed through the type system.
 
-RFile doesn't try to cover the entirety of use cases covered by TFile/TDirectory/TDirectoryFile and is not
-a 1:1 replacement for them. It is meant to simplify the most common use cases and make them easier to handle by
-minimizing the amount of ROOT-specific quirks and conforming to more standard C++ practices.
+RFile doesn't cover the entirety of use cases covered by TFile/TDirectory/TDirectoryFile and is not
+a 1:1 replacement for them.  It is meant to simplify the most common use cases by following newer standard C++
+practices.
 
 ## Ownership model
 
@@ -65,13 +155,11 @@ file).
 
 ## Directories
 
-Differently from TFile, the RFile class itself is not also a "directory". In fact, there is no RDirectory class at all.
-
-Directories are still an existing concept in RFile (since they are a concept in the ROOT binary format),
-but they are usually interacted with indirectly, via the use of filesystem-like string-based paths. If you Put an object
-in an RFile under the path "path/to/object", "object" will be stored under directory "to" which is in turn stored under
-directory "path". This hierarchy is encoded in the ROOT file itself and it can provide some optimization and/or
-conveniencies when querying objects.
+Even though there is no equivalent of TDirectory in the RFile API, directories are still an existing concept in RFile
+(since they are a concept in the ROOT binary format). However they are for now only interacted with indirectly, via the
+use of filesystem-like string-based paths. If you Put an object in an RFile under the path "path/to/object", "object"
+will be stored under directory "to" which is in turn stored under directory "path". This hierarchy is encoded in the
+ROOT file itself and it can provide some optimization and/or conveniencies when querying objects.
 
 For the most part, it is convenient to think about RFile in terms of a key-value storage where string-based paths are
 used to refer to arbitrary objects. However, given the hierarchical nature of ROOT files, certain filesystem-like
@@ -96,8 +184,11 @@ auto myObj = file->Get<TH1D>("h");
 ~~~
 */
 class RFile final {
+   /// Flags used in PutInternal()
    enum PutFlags {
+      /// When encountering an object at the specified path, overwrite it with the new one instead of erroring out.
       kPutAllowOverwrite = 0x1,
+      /// When overwriting an object, preserve the existing one and create a new cycle, rather than removing it.
       kPutOverwriteKeepCycle = 0x2,
    };
 
@@ -126,6 +217,12 @@ class RFile final {
    TKey *GetTKey(std::string_view path) const;
 
 public:
+   enum EListKeyFlags {
+      kListObjects = 1 << 0,
+      kListDirs = 1 << 1,
+      kListRecursive = 1 << 2,
+   };
+
    // This is arbitrary, but it's useful to avoid pathological cases
    static constexpr int kMaxPathNesting = 1000;
 
@@ -196,6 +293,23 @@ public:
 
    /// Flushes the RFile if needed and closes it, disallowing any further reading or writing.
    void Close();
+
+   /// Returns an iterable over all paths of objects written into this RFile starting at path "rootPath".
+   /// The returned paths are always "absolute" paths: they are not relative to `rootPath`.
+   /// Keys relative to directories are not returned: only those relative to leaf objects are.
+   /// If `rootPath` is the path of a leaf object, only `rootPath` itself will be returned.
+   /// `flags` is a bitmask specifying the listing mode.
+   /// If `(flags & kListObject) != 0`, the listing will include keys of non-directory objects (default);
+   /// If `(flags & kListDirs) != 0`, the listing will include keys of directory objects;
+   /// If `(flags & kListRecursive) != 0`, the listing will recurse on all subdirectories of `rootPath` (default),
+   /// otherwise it will only list immediate children of `rootPath`.
+   RFileKeyIterable ListKeys(std::string_view rootPath = "", std::uint32_t flags = kListObjects | kListRecursive) const
+   {
+      return RFileKeyIterable(fFile.get(), rootPath, flags);
+   }
+
+   /// Prints the internal structure of this RFile to the given stream.
+   void Print(std::ostream &out = std::cout) const;
 };
 
 } // namespace Experimental
