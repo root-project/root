@@ -239,21 +239,13 @@ RooFuncWrapper::RooFuncWrapper(RooAbsReal &obj, const RooAbsData *data, RooSimul
    // First update the result variable of params in the compute graph to in[<position>].
    int idx = 0;
    for (RooAbsArg *param : _params) {
-      ctx.addResult(param, "params[" + std::to_string(idx) + "]");
+      ctx.addParam(param, idx);
       idx++;
    }
 
    for (auto const &item : _obsInfos) {
       const char *obsName = item.first->GetName();
-      // If the observable is scalar, set name to the start idx. else, store
-      // the start idx and later set the the name to obs[start_idx + curr_idx],
-      // here curr_idx is defined by a loop producing parent node.
-      if (item.second.size == 1) {
-         ctx.addResult(obsName, "obs[" + std::to_string(item.second.idx) + "]");
-      } else {
-         ctx.addResult(obsName, "obs");
-         ctx.addVecObs(obsName, item.second.idx);
-      }
+      ctx.addVecObs(obsName, item.second.idx, item.second.size);
    }
 
    gInterpreter->Declare("#pragma cling optimize(2)");
