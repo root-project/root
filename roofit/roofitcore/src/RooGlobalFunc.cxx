@@ -560,7 +560,16 @@ RooCmdArg EventRange(Int_t nStart, Int_t nStop)
 
 // RooAbsPdf::fitTo arguments
 
-EvalBackend::EvalBackend(EvalBackend::Value value) : RooCmdArg{"EvalBackend", static_cast<int>(value)} {}
+EvalBackend::EvalBackend(EvalBackend::Value value) : RooCmdArg{"EvalBackend", static_cast<int>(value)}
+{
+#ifndef ROOFIT_CLAD
+   if (value == Value::Codegen || value == Value::CodegenNoGrad) {
+      oocoutE(nullptr, InputArguments)
+         << "RooFit was built without clad. Codegen backends are unavailable. Falling back to default.\n";
+      setInt(0, static_cast<int>(defaultValue()));
+   }
+#endif
+}
 EvalBackend::EvalBackend(std::string const &name) : EvalBackend{toValue(name)} {}
 EvalBackend::Value EvalBackend::toValue(std::string const &name)
 {

@@ -35,7 +35,7 @@ void rf619_discrete_profiling()
 
    // Category 1 Pdf-s: Gaussian + Landau.
    RooRealVar mean("mean", "shared mean", 25, 0, 50);
-   RooRealVar sigmaG("sigmaG", "Gaussian width", 2.0, 0.0, 5.0);
+   RooRealVar sigmaG("sigmaG", "Gaussian width", 2.0, 0.01, 5.0);
    RooRealVar sigmaL("sigmaL", "Landau width", 3.0, 1.0, 8.0);
 
    RooGaussian gauss1("gauss1", "Gaussian", x, mean, sigmaG);
@@ -118,8 +118,8 @@ void rf619_discrete_profiling()
       data->add(vars);
    }
 
-   // Create NLL with codegen and minimize it via the discrete profiling method.
-   std::unique_ptr<RooAbsReal> nll1(simPdf.createNLL(*data, EvalBackend("codegen")));
+   // Create an NLL and minimize it via the discrete profiling method.
+   std::unique_ptr<RooAbsReal> nll1(simPdf.createNLL(*data));
    RooMinimizer minim(*nll1);
 
    minim.setStrategy(1);
