@@ -658,14 +658,14 @@ THnSparse::THnSparse(const THnSparse &other)
    fBinContent = *copiedContent;
    copiedContent->SetOwner(kFALSE);
    delete copiedContent;
+   fBinContent.SetOwner(kTRUE);
 
    Int_t dim = other.GetNdimensions();
-   auto nbins = new Int_t[dim];
+   std::vector<Int_t> nbins(dim);
    for (Int_t i = 0; i < dim; i++)
       nbins[i] = other.GetAxis(i)->GetNbins();
-
-   fCompactCoord = new THnSparseCompactBinCoord(dim, nbins);
-   delete[] nbins;
+   
+   fCompactCoord = new THnSparseCompactBinCoord(dim, nbins.data());
 }
 
 /// Destruct a THnSparse

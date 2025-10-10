@@ -189,11 +189,10 @@ THn::THn(const char* name, const char* title,
 THn::THn(const char *name, const char *title, const std::vector<TAxis> &axes) : THnBase(name, title, axes)
 {
    const Int_t dim = axes.size();
-   auto nbins = new Int_t[dim];
+   std::vector<Int_t> nbins(dim);
    for (Int_t i = 0; i < dim; i++)
       nbins[i] = axes.at(i).GetNbins();
-   fSumw2 = TNDArrayT<Double_t>(dim, nbins, kTRUE /*overflow*/);
-   delete[] nbins;
+   fSumw2 = TNDArrayT<Double_t>(dim, nbins.data(), kTRUE /*overflow*/);
 }
 
 THn::THn(const char *name, const char *title, Int_t dim, const Int_t *nbins,
