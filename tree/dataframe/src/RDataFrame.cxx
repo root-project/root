@@ -136,6 +136,7 @@ produce many different results in one event loop. Instant actions trigger the ev
 | GraphAsymmErrors() | Fills a TGraphAsymmErrors. Should be used for any type of graph with errors, including cases with errors on one of the axes only. If multi-threading is enabled, the order of the points may not be the one expected, it is therefore suggested to sort if before drawing. |
 | Histo1D(), Histo2D(), Histo3D() | Fill a one-, two-, three-dimensional histogram with the processed column values. |
 | HistoND() | Fill an N-dimensional histogram with the processed column values. |
+| HistoNSparseD() | Fill an N-dimensional sparse histogram with the processed column values. Memory is allocated only for non-empty bins. |
 | Max() | Return the maximum of processed column values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
 | Mean() | Return the mean of processed column values.|
 | Min() | Return the minimum of processed column values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
@@ -738,7 +739,7 @@ parts of the RDataFrame API currently work with this package. The subset that is
 - FilterMissing
 - Graph
 - Histo[1,2,3]D
-- HistoND
+- HistoND, HistoNSparseD
 - Max
 - Mean
 - Min
