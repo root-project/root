@@ -608,6 +608,9 @@ jobs:
         working-directory: ${{ env.POST_INSTALL_DIR }}
         run: ctest -j $(nproc)
 
+      - name: Check installed headers
+        run: bash test/PostInstall/check-headers.sh ${{ env.INSTALL_DIR }}/include/
+
   event_file:
     # For any event that is not a PR, the CI will always run. In PRs, the CI
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
