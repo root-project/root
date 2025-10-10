@@ -384,7 +384,6 @@ std::shared_ptr<::THnSparseD> THnSparseDModel::GetHistogram() const
          axes[idim] = TAxis(fNbins[idim], fBinEdges[idim].data());
       }
       h = std::make_shared<::THnSparseD>(fName, fTitle, axes, fChunkSize);
-      // h = std::make_shared<::THnSparseD>(fName, fTitle, fDim, fNbins.data(), fBinEdges, fChunkSize);
    } else {
       h = std::make_shared<::THnSparseD>(fName, fTitle, fDim, fNbins.data(), fXmin.data(), fXmax.data(), fChunkSize);
    }

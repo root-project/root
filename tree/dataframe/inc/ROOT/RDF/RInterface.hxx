@@ -2304,7 +2304,7 @@ public:
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
-   /// auto myFilledObj = myDf.HistoND<float, float, float, float>({"name","title", 4,
+   /// auto myFilledObj = myDf.HistoNSparseD<float, float, float, float>({"name","title", 4,
    ///                                                {40,40,40,40}, {20.,20.,20.,20.}, {60.,60.,60.,60.}},
    ///                                               {"col0", "col1", "col2", "col3"});
    /// ~~~

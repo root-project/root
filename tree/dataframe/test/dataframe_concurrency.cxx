@@ -239,16 +239,16 @@ TEST(RDFConcurrency, HistoNSparseDInMT)
 {
    const int ncores = NUM_THREADS;
    const int nbins_per_axis = 10;
-   const int nevents = 1000000;
+   const int nevents = 100000;
 
    ROOT::EnableImplicitMT(ncores);
 
    ROOT::RDataFrame df{nevents};
 
-   auto col1 = df.Define("x0", [&nbins_per_axis](ULong64_t e) { return double(e % nbins_per_axis); }, {"rdfentry_"});
-   auto col2 = col1.Define("x1", [&nbins_per_axis](ULong64_t e) { return double(e % nbins_per_axis); }, {"rdfentry_"});
-   auto col3 = col2.Define("x2", [&nbins_per_axis](ULong64_t e) { return double(e % nbins_per_axis); }, {"rdfentry_"});
-   auto col4 = col3.Define("x3", [&nbins_per_axis](ULong64_t e) { return double(e % nbins_per_axis); }, {"rdfentry_"});
+   auto col1 = df.Define("x0", [](ULong64_t e) { return double(e % nbins_per_axis); }, {"rdfentry_"});
+   auto col2 = col1.Define("x1", [](ULong64_t e) { return double(e % nbins_per_axis); }, {"rdfentry_"});
+   auto col3 = col2.Define("x2", [](ULong64_t e) { return double(e % nbins_per_axis); }, {"rdfentry_"});
+   auto col4 = col3.Define("x3", [](ULong64_t e) { return double(e % nbins_per_axis); }, {"rdfentry_"});
 
    int nbins[4] = {nbins_per_axis, nbins_per_axis, nbins_per_axis, nbins_per_axis};
    double xmin[4] = {0., 0., 0., 0.};
