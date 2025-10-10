@@ -13,6 +13,8 @@
 #pragma link C++ enum CustomEnumInt64;
 #pragma link C++ enum CustomEnumUInt64;
 
+#pragma link C++ class CustomAtomicNotLockFree+;
+
 #pragma link C++ class CustomStruct+;
 #pragma link C++ class DerivedA+;
 #pragma link C++ class DerivedA2+;

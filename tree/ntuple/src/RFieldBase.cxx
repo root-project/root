@@ -952,6 +952,18 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
    if (!fDescription.empty())
       throw RException(R__FAIL("setting description only valid when connecting to a page sink"));
 
+   if (!fIsArtificial) {
+      R__ASSERT(fOnDiskId != kInvalidDescriptorId);
+      // Handle moving from on-disk std::atomic<T> to (compatible of) T in memory centrally because otherwise
+      // we would need to handle it in each and every ReconcileOnDiskField()
+      // Note that we have to do this before calling BeforeConnectPageSource(), which already may compare the field
+      // to its on-disk description.
+      const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
+      if (!dynamic_cast<RAtomicField *>(this) && desc.GetFieldDescriptor(GetOnDiskId()).IsStdAtomic()) {
+         SetOnDiskId(desc.GetFieldDescriptor(GetOnDiskId()).GetLinkIds()[0]);
+      }
+   }
+
    auto substitute = BeforeConnectPageSource(pageSource);
    if (substitute) {
       const RFieldBase *itr = this;
@@ -974,8 +986,8 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
    }
 
    if (!fIsArtificial) {
-      R__ASSERT(fOnDiskId != kInvalidDescriptorId);
-      ReconcileOnDiskField(pageSource.GetSharedDescriptorGuard().GetRef());
+      const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
+      ReconcileOnDiskField(desc);
    }
 
    for (auto &f : fSubfields) {

@@ -36,6 +36,11 @@ enum class CustomEnumUInt32 : unsigned int {};
 enum class CustomEnumInt64 : long int {};
 enum class CustomEnumUInt64 : unsigned long int {};
 
+// Used for std::atomic tests as an example of a class that is not lock-free.
+struct CustomAtomicNotLockFree {
+   int a[100];
+};
+
 struct CustomStruct {
    template <typename T>
    using MyVec = std::vector<T>;
