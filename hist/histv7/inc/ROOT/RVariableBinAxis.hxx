@@ -37,6 +37,10 @@ outside the axis will be silently discarded.
 Feedback is welcome!
 */
 class RVariableBinAxis final {
+public:
+   using ArgumentType = double;
+
+private:
    /// The (ordered) edges of the normal bins
    std::vector<double> fBinEdges;
    /// Whether underflow and overflow bins are enabled
