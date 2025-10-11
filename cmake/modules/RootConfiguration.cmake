@@ -185,11 +185,6 @@ set(ftgllibdir ${FTGL_LIBRARY_DIR})
 set(ftgllibs ${FTGL_LIBRARIES})
 set(ftglincdir ${FTGL_INCLUDE_DIR})
 
-set(buildglew ${value${builtin_glew}})
-set(glewlibdir ${GLEW_LIBRARY_DIR})
-set(glewlibs ${GLEW_LIBRARIES})
-set(glewincdir ${GLEW_INCLUDE_DIR})
-
 set(buildarrow ${value${arrow}})
 set(arrowlibdir ${ARROW_LIBRARY_DIR})
 set(arrowlib ${ARROW_LIBRARY})
