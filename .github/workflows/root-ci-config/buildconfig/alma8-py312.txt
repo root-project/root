@@ -3,4 +3,5 @@ builtin_nlohmannjson=ON
 builtin_tbb=ON
 builtin_vdt=ON
 pythia8=ON
+test_distrdf_pyspark=OFF
 tmva-sofie=ON
