@@ -62,36 +62,27 @@ import cppyy
 
 from . import pythonization
 
-_array_interface_dtype_map = {
-    "Long64_t": "i",
-    "ULong64_t": "u",
-    "double": "f",
-    "float": "f",
-    "int": "i",
-    "long": "i",
-    "unsigned char": "b",
-    "unsigned int": "u",
-    "unsigned long": "u",
+
+_numpy_dtype_typeinfo_map = {
+    "i1": {"typedef": "Char_t",         "cpp": "char"},
+    "u1": {"typedef": "UChar_t",        "cpp": "unsigned char"},
+    "i2": {"typedef": "Short_t",        "cpp": "short"},
+    "u2": {"typedef": "UShort_t",       "cpp": "unsigned short"},
+    "i4": {"typedef": "Int_t",          "cpp": "int"},
+    "u4": {"typedef": "UInt_t",         "cpp": "unsigned int"},
+    "i8": {"typedef": "Long64_t",       "cpp": "long long"},
+    "u8": {"typedef": "ULong64_t",      "cpp": "unsigned long long"},
+    "f4": {"typedef": "Float_t",        "cpp": "float"},
+    "f8": {"typedef": "Double_t",       "cpp": "double"},
+    "b1": {"typedef": "Bool_t",         "cpp": "bool"}
 }
 
 
 def _get_cpp_type_from_numpy_type(dtype):
-    cpptypes = {
-        "i2": "Short_t",
-        "u2": "UShort_t",
-        "i4": "int",
-        "u4": "unsigned int",
-        "i8": "Long64_t",
-        "u8": "ULong64_t",
-        "f4": "float",
-        "f8": "double",
-        "b1": "bool",
-    }
-
-    if dtype not in cpptypes:
+    if dtype not in _numpy_dtype_typeinfo_map:
         raise RuntimeError("Object not convertible: Python object has unknown data-type '" + dtype + "'.")
 
-    return cpptypes[dtype]
+    return _numpy_dtype_typeinfo_map[dtype]['cpp']
 
 
 def _AsRVec(arr):
@@ -160,10 +151,11 @@ def _AsRVec(arr):
 
 def get_array_interface(self):
     cppname = type(self).__cpp_name__
-    for dtype in _array_interface_dtype_map:
-        if cppname.endswith("<{}>".format(dtype)):
-            dtype_numpy = _array_interface_dtype_map[dtype]
-            dtype_size = cppyy.sizeof(dtype)
+    for np_dtype, type_info in _numpy_dtype_typeinfo_map.items():
+        root_typedef = type_info["typedef"]
+        cpp_type     = type_info["cpp"]
+        if cppname.endswith("<{}>".format(root_typedef)) or cppname.endswith("<{}>".format(cpp_type)):
+            dtype_numpy = np_dtype
             endianness = "<" if sys.byteorder == "little" else ">"
             size = self.size()
             # Numpy breaks for data pointer of 0 even though the array is empty.
@@ -174,14 +166,17 @@ def get_array_interface(self):
                 pointer = cppyy.ll.addressof(self.data())
             return {
                 "shape": (size,),
-                "typestr": "{}{}{}".format(endianness, dtype_numpy, dtype_size),
+                "typestr": "{}{}".format(endianness, dtype_numpy),
                 "version": 3,
                 "data": (pointer, False),
             }
 
 
 def add_array_interface_property(klass, name):
-    if True in [name.endswith("<{}>".format(dtype)) for dtype in _array_interface_dtype_map]:
+    if any(
+        name.endswith(f"<{type_info['typedef']}>") or name.endswith(f"<{type_info['cpp']}>")
+        for type_info in _numpy_dtype_typeinfo_map.values()
+    ):
         klass.__array_interface__ = property(get_array_interface)
 
 
