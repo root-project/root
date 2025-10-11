@@ -548,10 +548,6 @@ install(
    PATTERN "pkgconfig" EXCLUDE
 )
 
-if(Vc_INCLUDE_DIR)
-  set(MODULES_ROOT_INCPATH "ROOT_INCLUDE_PATH=${Vc_INCLUDE_DIR}:${ROOT_INCLUDE_PATH}")
-endif()
-
 # modules.idx
 if(runtime_cxxmodules)
   ROOT_GET_LIBRARY_OUTPUT_DIR(library_output_dir)
@@ -561,6 +557,7 @@ if(runtime_cxxmodules)
                                 ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b)
   else()
     set(modules_idx_cmd COMMAND ${ld_library_path}=${library_output_dir}:$ENV{${ld_library_path}}
+                                ROOT_INCLUDE_PATH=${DEFAULT_ROOT_INCLUDE_PATH}
                                 ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b)
   endif()
   add_custom_command(OUTPUT ${library_output_dir}/modules.idx
@@ -582,9 +579,10 @@ add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
 add_dependencies(hsimple onepcm)
 if(WIN32)
   set(hsimple_cmd COMMAND ${CMAKE_COMMAND} -E env PATH="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}\\\;%PATH%"
+                          ROOT_INCLUDE_PATH="${DEFAULT_ROOT_INCLUDE_PATH}"
                           ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x ${CMAKE_SOURCE_DIR}/tutorials/hsimple.C -e return)
 else()
-  set(hsimple_cmd COMMAND ${MODULES_ROOT_INCPATH} ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
+  set(hsimple_cmd COMMAND ROOT_INCLUDE_PATH="${DEFAULT_ROOT_INCLUDE_PATH}" ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
                           ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x ${CMAKE_SOURCE_DIR}/tutorials/hsimple.C -e return)
 endif()
 add_custom_command(OUTPUT tutorials/hsimple.root

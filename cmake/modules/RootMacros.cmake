@@ -2114,6 +2114,49 @@ function(ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH target install_dir)
   set_property(TARGET ${target} APPEND PROPERTY INSTALL_RPATH "${new_rpath}")
 endfunction()
 
+#----------------------------------------------------------------------------
+# If path is a system include path, set the return variable
+# is_system_include_path to true.
+# The 1st argument is the path that should be checked
+# The 2nd argument is the return value
+#----------------------------------------------------------------------------
+function (IS_SYSTEM_INCLUDE_PATH path is_system_include_path)
+  foreach (dir ${CMAKE_SYSTEM_INCLUDE_PATH})
+    if ("${path}" STREQUAL "${dir}")
+      set(${is_system_include_path} TRUE PARENT_SCOPE)
+      return()
+    endif()
+  endforeach()
+  set(${is_system_include_path} FALSE PARENT_SCOPE)
+endfunction()
+
+#----------------------------------------------------------------------------
+# Include paths of third-party libraries stored outside of system directories
+# must be added to the DEFAULT_ROOT_INCLUDE_PATH variable to ensure that the
+# C++ interpreter 'cling' can locate these header files at runtime.
+# Use this function to add these paths to DEFAULT_ROOT_INCLUDE_PATH.
+#----------------------------------------------------------------------------
+function (BUILD_ROOT_INCLUDE_PATH path)
+  # filter out paths into the ROOT src, build, and install directories
+  if((${path} MATCHES "${CMAKE_SOURCE_DIR}(/.*)?") OR
+     (${path} MATCHES "${CMAKE_BINARY_DIR}(/.*)?") OR
+     (${path} MATCHES "${CMAKE_INSTALL_PREFIX}(/.*)?"))
+    return()
+  endif()
+  IS_SYSTEM_INCLUDE_PATH("${path}" is_system_include_path)
+  if (NOT is_system_include_path)
+    if ("${DEFAULT_ROOT_INCLUDE_PATH}" STREQUAL "")
+      set(DEFAULT_ROOT_INCLUDE_PATH "${path}" PARENT_SCOPE)
+    else()
+      if(WIN32)
+        set(ROOT_PATH_SEPARATOR ";")
+      elseif(UNIX)
+        set(ROOT_PATH_SEPARATOR ":")
+      endif()
+      set(DEFAULT_ROOT_INCLUDE_PATH "${DEFAULT_ROOT_INCLUDE_PATH}${ROOT_PATH_SEPARATOR}${path}" PARENT_SCOPE)
+    endif()
+  endif()
+endfunction()
 
 #-------------------------------------------------------------------------------
 #

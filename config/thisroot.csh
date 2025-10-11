@@ -169,6 +169,14 @@ if ($?old_rootsys) then
                                  -e "s;^$old_rootsys/etc/notebook${DOLLAR};;g"`
    endif
 
+   if ($?ROOT_INCLUDE_PATH) then
+      setenv ROOT_INCLUDE_PATH `set DOLLAR='$'; echo $ROOT_INCLUDE_PATH | \
+                             sed -e "s;:@DEFAULT_ROOT_INCLUDE_PATH@:;:;g" \
+                                 -e "s;:@DEFAULT_ROOT_INCLUDE_PATH@${DOLLAR};;g"   \
+                                 -e "s;^@DEFAULT_ROOT_INCLUDE_PATH@:;;g"   \
+                                 -e "s;^@DEFAULT_ROOT_INCLUDE_PATH@${DOLLAR};;g"`
+   endif
+
 endif
 
 
@@ -237,6 +245,12 @@ if ($?JUPYTER_CONFIG_PATH) then
    setenv JUPYTER_CONFIG_PATH ${ROOTSYS}/etc/notebook:$JUPYTER_CONFIG_PATH
 else
    setenv JUPYTER_CONFIG_PATH ${ROOTSYS}/etc/notebook
+endif
+
+if ($?ROOT_INCLUDE_PATH) then
+   setenv ROOT_INCLUDE_PATH @DEFAULT_ROOT_INLUCDE_PATH@:$ROOT_INCLUDE_PATH
+else
+   setenv ROOT_INCLUDE_PATH @DEFAULT_ROOT_INLUCDE_PATH@
 endif
 
 endif # if ("$thisrootdir" != "")
