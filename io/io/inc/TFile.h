@@ -109,7 +109,7 @@ public:
 
       TIterator(TFile *file, std::uint64_t addr);
 
-      iterator operator++()
+      iterator &operator++()
       {
          Advance();
          return *this;
