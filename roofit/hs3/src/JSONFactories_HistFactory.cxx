@@ -263,7 +263,6 @@ getOrCreateConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVa
       }
       return *constraint;
    } else {
-      std::cout << "creating new constraint for " << param << std::endl;
       std::string constraint_type = "Gauss";
       if (auto constrType = mod.find("constraint_type")) {
          constraint_type = constrType->val();
