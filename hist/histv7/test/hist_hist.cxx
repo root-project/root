@@ -120,6 +120,10 @@ TEST(RHist, FillWeight)
    hist.Fill(8.5, RWeight(0.8));
    hist.Fill(std::make_tuple(9.5), RWeight(0.9));
 
+   EXPECT_FLOAT_EQ(hist.GetBinContent(RBinIndex(8)), 0.8);
+   std::array<RBinIndex, 1> indices = {9};
+   EXPECT_FLOAT_EQ(hist.GetBinContent(indices), 0.9);
+
    EXPECT_EQ(hist.GetStats().GetNEntries(), 2);
    // Cross-checked with TH1
    EXPECT_FLOAT_EQ(hist.GetStats().ComputeNEffectiveEntries(), 1.9931034);

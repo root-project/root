@@ -7,7 +7,6 @@
 
 #include "RAxes.hxx"
 #include "RBinIndex.hxx"
-#include "RBinWithError.hxx"
 #include "RHistUtils.hxx"
 #include "RLinearizedIndex.hxx"
 #include "RRegularAxis.hxx"
@@ -37,11 +36,11 @@ hist.Fill(8.5);
 // hist.GetBinContent(ROOT::Experimental::RBinIndex(3)) will return 1
 \endcode
 
-The class is templated on the bin content type. For counting, as in the example above, it may be an integer type such as
-`int` or `long`. Narrower types such as `unsigned char` or `short` are supported, but may overflow due to their limited
-range and must be used with care. For weighted filling, the bin content type must be a floating-point type such as
-`float` or `double`, or the special type RBinWithError. Note that `float` has a limited significand precision of 24
-bits.
+The class is templated on the bin content type. For counting, as in the example above, it may be an integral type such
+as `int` or `long`. Narrower types such as `unsigned char` or `short` are supported, but may overflow due to their
+limited range and must be used with care. For weighted filling, the bin content type must not be an integral type, but
+a floating-point type such as `float` or `double`, or the special type RBinWithError. Note that `float` has a limited
+significand precision of 24 bits.
 
 An object can have arbitrary dimensionality determined at run-time. The axis configuration is passed as a vector of
 RAxisVariant:
@@ -209,8 +208,7 @@ public:
    }
 
    /// Whether this histogram engine type supports weighted filling.
-   static constexpr bool SupportsWeightedFilling =
-      std::is_floating_point_v<BinContentType> || std::is_same_v<BinContentType, RBinWithError>;
+   static constexpr bool SupportsWeightedFilling = !std::is_integral_v<BinContentType>;
 
    /// Fill an entry into the histogram.
    ///
@@ -246,7 +244,7 @@ public:
 
    /// Fill an entry into the histogram with a weight.
    ///
-   /// This overload is only available for floating-point bin content types (see \ref SupportsWeightedFilling).
+   /// This overload is not available for integral bin content types (see \ref SupportsWeightedFilling).
    ///
    /// \code
    /// ROOT::Experimental::RHistEngine<float> hist({/* two dimensions */});
@@ -267,7 +265,7 @@ public:
    template <typename... A>
    void Fill(const std::tuple<A...> &args, RWeight weight)
    {
-      static_assert(SupportsWeightedFilling, "weighted filling is only supported for floating-point bin content types");
+      static_assert(SupportsWeightedFilling, "weighted filling is not supported for integral bin content types");
 
       // We could rely on RAxes::ComputeGlobalIndex to check the number of arguments, but its exception message might
       // be confusing for users.
@@ -293,7 +291,7 @@ public:
    /// ROOT::Experimental::RHistEngine<float> hist({/* two dimensions */});
    /// hist.Fill(8.5, 10.5, ROOT::Experimental::RWeight(0.8));
    /// \endcode
-   /// This is only available for floating-point bin content types (see \ref SupportsWeightedFilling).
+   /// This is not available for integral bin content types (see \ref SupportsWeightedFilling).
    ///
    /// If one of the arguments is outside the corresponding axis and flow bins are disabled, the entry will be silently
    /// discarded.
@@ -309,8 +307,7 @@ public:
    {
       auto t = std::forward_as_tuple(args...);
       if constexpr (std::is_same_v<typename Internal::LastType<A...>::type, RWeight>) {
-         static_assert(SupportsWeightedFilling,
-                       "weighted filling is only supported for floating-point bin content types");
+         static_assert(SupportsWeightedFilling, "weighted filling is not supported for integral bin content types");
          static constexpr std::size_t N = sizeof...(A) - 1;
          if (N != fAxes.GetNDimensions()) {
             throw std::invalid_argument("invalid number of arguments to Fill");
