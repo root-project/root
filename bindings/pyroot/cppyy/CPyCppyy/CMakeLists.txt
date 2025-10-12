@@ -94,14 +94,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang"
   target_compile_options(CPyCppyy PRIVATE -Wno-cast-function-type)
 endif()
 
-# Disables warnings in Python 3.8 caused by the temporary extra filed for tp_print compatibility
-# (see https://github.com/python/cpython/blob/3.8/Include/cpython/object.h#L260).
-# Note that Python 3.8 is the lowers Python version that is still supported by
-# ROOT, so this compile option can be completely removed soon.
-if(NOT MSVC AND Python3_VERSION VERSION_LESS 3.9)
-  target_compile_options(CPyCppyy PRIVATE -Wno-missing-field-initializers)
-endif()
-
 target_compile_definitions(CPyCppyy PRIVATE NO_CPPYY_LEGACY_NAMESPACE)
 
 target_include_directories(CPyCppyy SYSTEM PUBLIC ${Python3_INCLUDE_DIRS})

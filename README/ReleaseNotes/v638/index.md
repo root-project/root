@@ -137,6 +137,8 @@ If you want to keep using `TList*` return values, you can write a small adapter 
 
 ## Python Interface
 
+ROOT dropped support for Python 3.8, meaning ROOT now requires at least Python 3.9.
+
 ### Deprecate the attribute pythonization of `TDirectory` in favor of item-getting syntax
 
 Since ROOT 6.32, the recommended way to get objects from a `TFile` or any `TDirectory` in general is via `__getitem__`:

@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        target: [cp38-manylinux_x86_64, cp39-manylinux_x86_64, cp310-manylinux_x86_64, cp311-manylinux_x86_64, cp312-manylinux_x86_64, cp313-manylinux_x86_64]
+        target: [cp39-manylinux_x86_64, cp310-manylinux_x86_64, cp311-manylinux_x86_64, cp312-manylinux_x86_64, cp313-manylinux_x86_64]
     name: ${{ matrix.target }}
     steps:
       - uses: actions/checkout@v4
