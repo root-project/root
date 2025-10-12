@@ -15,7 +15,7 @@ endif()
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   message(FATAL_ERROR
     " ROOT must be built out-of-source.\n"
-    " Please see README/INSTALL for more information.")
+    " Please see README/INSTALL for more information, or not.")
 endif()
 
 set(policy_new CMP0072 CMP0077)
