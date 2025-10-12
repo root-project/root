@@ -19,7 +19,7 @@ if(BUILD_TESTING)
   set_tests_properties(run-hsimple   PROPERTIES FIXTURES_SETUP    HSIMPLE)
   set_tests_properties(read-hsimple  PROPERTIES FIXTURES_REQUIRED HSIMPLE)
 
-  find_package(Python3 3.8 REQUIRED)
+  find_package(Python3 3.9 REQUIRED)
   # Need to duplicate the import ROOT test because the PASS_REGULAR_EXPRESSION
   # property will disable checking the exit code of the test so import ROOT
   # might fail but ctest would not report it
