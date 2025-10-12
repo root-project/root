@@ -1,6 +1,6 @@
 import py, sys, pytest, os
 from pytest import mark, raises, skip
-from support import setup_make, pylong, pyunicode, IS_MAC_ARM
+from support import setup_make, pylong, pyunicode, IS_MAC, IS_MAC_ARM
 
 currpath = os.getcwd()
 test_dct = currpath + "/libdatatypesDict"
@@ -1260,7 +1260,7 @@ class TestDATATYPES:
         run(self, cppyy.gbl.sum_uc_data, buf, total)
         run(self, cppyy.gbl.sum_byte_data, buf, total)
 
-    @mark.xfail(run=not IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    @mark.xfail(run=not IS_MAC, reason = "Fails on all platforms; crashes on macOS with " \
     "libc++abi: terminating due to uncaught exception")
     def test26_function_pointers(self):
         """Function pointer passing"""
