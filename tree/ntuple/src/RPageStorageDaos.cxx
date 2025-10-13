@@ -484,7 +484,7 @@ void ROOT::Experimental::Internal::RPageSinkDaos::WriteNTupleAnchor()
 }
 
 std::unique_ptr<ROOT::Internal::RPageSink>
-ROOT::Experimental::Internal::RPageSinkDaos::CreateNewWithNewRNTuple(std::string_view) const
+ROOT::Experimental::Internal::RPageSinkDaos::DeriveFor(std::string_view, const ROOT::RNTupleWriteOptions &) const
 {
    throw ROOT::RException(R__FAIL("this method is not available for the DAOS backend"));
 }

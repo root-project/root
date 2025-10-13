@@ -315,7 +315,7 @@ public:
 
    /// Creates a new RPageSink linked to the same underlying storage as this, writing to a new RNTuple called `newName`.
    /// The existing sink will stay valid. The existing sink and the new one must not write concurrently.
-   virtual std::unique_ptr<RPageSink> CreateNewWithNewRNTuple(std::string_view newName) const = 0;
+   virtual std::unique_ptr<RPageSink> DeriveFor(std::string_view newName, const RNTupleWriteOptions &opts) const = 0;
 
    /// Physically creates the storage container to hold the ntuple (e.g., a keys a TFile or an S3 bucket)
    /// Init() associates column handles to the columns referenced by the model
