@@ -36,13 +36,15 @@ class TF2Painter extends TH2Painter {
 
    /** @summary Update histogram */
    updateObject(obj /* , opt */) {
-      if (!obj || (this.getClassName() !== obj._typename)) return false;
+      if (!obj || (this.getClassName() !== obj._typename))
+         return false;
       delete obj.evalPar;
       const histo = this.getHisto();
 
       if (this._webcanv_hist) {
          const h0 = this.getPadPainter()?.findInPrimitives('Func', clTH2F);
-         if (h0) this.updateAxes(histo, h0, this.getFramePainter());
+         if (h0)
+            this.updateAxes(histo, h0, this.getFramePainter());
       }
 
       this.setFunc(obj);
@@ -66,7 +68,7 @@ class TF2Painter extends TH2Painter {
      * @private */
    createTF2Histogram(func, hist) {
       let nsave = func.fSave.length - 6;
-      if ((nsave > 0) && (nsave !== (func.fSave[nsave+4]+1) * (func.fSave[nsave+5]+1)))
+      if ((nsave > 0) && (nsave !== (func.fSave[nsave + 4] + 1) * (func.fSave[nsave + 5] + 1)))
          nsave = 0;
 
       this.#use_saved_points = (nsave > 0) && (settings.PreferSavedPoints || (this._use_saved > 1));
@@ -129,8 +131,8 @@ class TF2Painter extends TH2Painter {
 
          for (let j = 0; (j < npy) && !iserror; ++j) {
             for (let i = 0; (i < npx) && !iserror; ++i) {
-               const x = hist.fXaxis.GetBinCenter(i+1),
-                     y = hist.fYaxis.GetBinCenter(j+1);
+               const x = hist.fXaxis.GetBinCenter(i + 1),
+                     y = hist.fYaxis.GetBinCenter(j + 1);
                let z = 0;
 
                try {
@@ -152,26 +154,28 @@ class TF2Painter extends TH2Painter {
       }
 
       if (this.#use_saved_points) {
-         npx = Math.round(func.fSave[nsave+4]);
-         npy = Math.round(func.fSave[nsave+5]);
+         npx = Math.round(func.fSave[nsave + 4]);
+         npy = Math.round(func.fSave[nsave + 5]);
          xmin = func.fSave[nsave];
-         xmax = func.fSave[nsave+1];
-         ymin = func.fSave[nsave+2];
-         ymax = func.fSave[nsave+3];
+         xmax = func.fSave[nsave + 1];
+         ymin = func.fSave[nsave + 2];
+         ymax = func.fSave[nsave + 3];
          const dx = (xmax - xmin) / npx, dy = (ymax - ymin) / npy, getSave = (x, y) => {
-            if (x < xmin || x > xmax || dx <= 0) return 0;
-            if (y < ymin || y > ymax || dy <= 0) return 0;
-            const ibin = Math.min(npx-1, Math.floor((x-xmin)/dx)),
-                  jbin = Math.min(npy-1, Math.floor((y-ymin)/dy)),
-                  xlow = xmin + ibin*dx,
-                  ylow = ymin + jbin*dy,
-                  t = (x-xlow)/dx,
-                  u = (y-ylow)/dy,
-                  k1 = jbin*(npx+1) + ibin,
-                  k2 = jbin*(npx+1) + ibin +1,
-                  k3 = (jbin+1)*(npx+1) + ibin +1,
-                  k4 = (jbin+1)*(npx+1) + ibin;
-            return (1-t)*(1-u)*func.fSave[k1] +t*(1-u)*func.fSave[k2] +t*u*func.fSave[k3] + (1-t)*u*func.fSave[k4];
+            if (x < xmin || x > xmax || dx <= 0)
+               return 0;
+            if (y < ymin || y > ymax || dy <= 0)
+               return 0;
+            const ibin = Math.min(npx - 1, Math.floor((x - xmin) / dx)),
+                  jbin = Math.min(npy - 1, Math.floor((y - ymin) / dy)),
+                  xlow = xmin + ibin * dx,
+                  ylow = ymin + jbin * dy,
+                  t = (x - xlow) / dx,
+                  u = (y - ylow) / dy,
+                  k1 = jbin * (npx + 1) + ibin,
+                  k2 = jbin * (npx + 1) + ibin + 1,
+                  k3 = (jbin + 1) * (npx + 1) + ibin + 1,
+                  k4 = (jbin + 1) * (npx + 1) + ibin;
+            return (1 - t) * (1 - u) * func.fSave[k1] + t * (1 - u) * func.fSave[k2] + t * u * func.fSave[k3] + (1 - t) * u * func.fSave[k4];
          };
 
          ensureBins(func.fNpx, func.fNpy);
@@ -185,7 +189,7 @@ class TF2Painter extends TH2Painter {
             for (let i = 0; i < func.fNpx; ++i) {
                const x = hist.fXaxis.GetBinCenter(i + 1),
                      z = getSave(x, y);
-               hist.setBinContent(hist.getBin(i+1, j+1), Number.isFinite(z) ? z : 0);
+               hist.setBinContent(hist.getBin(i + 1, j + 1), Number.isFinite(z) ? z : 0);
             }
          }
       }
@@ -215,10 +219,10 @@ class TF2Painter extends TH2Painter {
       const func = this.#func, nsave = func?.fSave.length ?? 0;
 
       if (nsave > 6 && this.#use_saved_points) {
-         this.xmin = Math.min(this.xmin, func.fSave[nsave-6]);
-         this.xmax = Math.max(this.xmax, func.fSave[nsave-5]);
-         this.ymin = Math.min(this.ymin, func.fSave[nsave-4]);
-         this.ymax = Math.max(this.ymax, func.fSave[nsave-3]);
+         this.xmin = Math.min(this.xmin, func.fSave[nsave - 6]);
+         this.xmax = Math.max(this.xmax, func.fSave[nsave - 5]);
+         this.ymin = Math.min(this.ymin, func.fSave[nsave - 4]);
+         this.ymax = Math.max(this.ymax, func.fSave[nsave - 3]);
       }
       if (func) {
          this.xmin = Math.min(this.xmin, func.fXmin);
@@ -243,11 +247,11 @@ class TF2Painter extends TH2Painter {
             y = funcs.revertAxis('y', pnt.y);
       let z = 0, iserror = false;
 
-       try {
-          z = this.#func.evalPar(x, y);
-       } catch {
-          iserror = true;
-       }
+      try {
+         z = this.#func.evalPar(x, y);
+      } catch {
+         iserror = true;
+      }
 
       lines.push('x = ' + funcs.axisAsText('x', x),
                  'y = ' + funcs.axisAsText('y', y),
@@ -267,11 +271,13 @@ class TF2Painter extends TH2Painter {
          return null;
       }
 
-      const res = { name: this.#func?.fName, title: this.#func?.fTitle,
-                  x: pnt.x, y: pnt.y,
-                  color1: this.lineatt?.color ?? 'green',
-                  color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
-                  lines: this.getTF2Tooltips(pnt), exact: true, menu: true };
+      const res = {
+         name: this.#func?.fName, title: this.#func?.fTitle,
+         x: pnt.x, y: pnt.y,
+         color1: this.lineatt?.color ?? 'green',
+         color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
+         lines: this.getTF2Tooltips(pnt), exact: true, menu: true
+      };
 
       if (pnt.disabled)
          ttrect.remove();

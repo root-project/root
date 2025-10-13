@@ -22,14 +22,14 @@ class TGaxisPainter extends TAxisPainter {
             y2 = this.axisToSvg('y', gaxis.fY2);
 
       if (opt === 'ndc') {
-          const pw = this.getPadPainter().getPadWidth(),
-                ph = this.getPadPainter().getPadHeight();
+         const pw = this.getPadPainter().getPadWidth(),
+               ph = this.getPadPainter().getPadHeight();
 
-          gaxis.fX1 = x1 / pw;
-          gaxis.fX2 = x2 / pw;
-          gaxis.fY1 = (ph - y1) / ph;
-          gaxis.fY2 = (ph - y2)/ ph;
-          this.use_ndc = true;
+         gaxis.fX1 = x1 / pw;
+         gaxis.fX2 = x2 / pw;
+         gaxis.fY1 = (ph - y1) / ph;
+         gaxis.fY2 = (ph - y2) / ph;
+         this.use_ndc = true;
       } else if (opt === 'frame') {
          const rect = this.getFramePainter().getFrameRect();
          gaxis.fX1 = (x1 - rect.x) / rect.width;
@@ -49,7 +49,8 @@ class TGaxisPainter extends TAxisPainter {
 
    /** @summary Drag end handle */
    moveEnd(not_changed) {
-      if (not_changed) return;
+      if (not_changed)
+         return;
 
       const gaxis = this.getObject();
 
@@ -188,13 +189,13 @@ class TGaxisPainter extends TAxisPainter {
       const vmin = res.eval(smin), vmax = res.eval(smax);
       if ((vmin < vmax) === (smin < smax)) {
          res._vmin = vmin;
-         res._vk = 1/(vmax - vmin);
+         res._vk = 1 / (vmax - vmin);
       } else if (vmin === vmax) {
          res._vmin = 0;
          res._vk = 1;
       } else {
          res._vmin = vmax;
-         res._vk = 1/(vmin - vmax);
+         res._vk = 1 / (vmin - vmax);
       }
       res._range = [0, 100];
       res.range = function(arr) {
@@ -222,7 +223,8 @@ class TGaxisPainter extends TAxisPainter {
       const painter = new TGaxisPainter(dom, obj, false);
 
       return ensureTCanvas(painter, false).then(() => {
-         if (opt) painter.convertTo(opt);
+         if (opt)
+            painter.convertTo(opt);
          return painter.checkFuncion();
       }).then(() => painter.redraw());
    }

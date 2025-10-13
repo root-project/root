@@ -16,34 +16,35 @@ async function drawPolyMarker3D() {
 
    for (let i = 0; i < fP.length; i += 3) {
       if ((fP[i] < fp.scale_xmin) || (fP[i] > fp.scale_xmax) ||
-          (fP[i+1] < fp.scale_ymin) || (fP[i+1] > fp.scale_ymax) ||
-          (fP[i+2] < fp.scale_zmin) || (fP[i+2] > fp.scale_zmax)) continue;
+          (fP[i + 1] < fp.scale_ymin) || (fP[i + 1] > fp.scale_ymax) ||
+          (fP[i + 2] < fp.scale_zmin) || (fP[i + 2] > fp.scale_zmax))
+         continue;
       ++numselect;
    }
 
-   if ((settings.OptimizeDraw > 0) && (numselect > sizelimit)) {
-      step = Math.floor(numselect/sizelimit);
-      if (step <= 2) step = 2;
-   }
+   if ((settings.OptimizeDraw > 0) && (numselect > sizelimit))
+      step = Math.max(2, Math.floor(numselect / sizelimit));
 
-   const size = Math.floor(numselect/step),
-         pnts = new PointsCreator(size, fp.webgl, fp.size_x3d/100),
+   const size = Math.floor(numselect / step),
+         pnts = new PointsCreator(size, fp.webgl, fp.size_x3d / 100),
          index = new Int32Array(size);
    let select = 0, icnt = 0;
 
    for (let i = 0; i < fP.length; i += 3) {
       if ((fP[i] < fp.scale_xmin) || (fP[i] > fp.scale_xmax) ||
-          (fP[i+1] < fp.scale_ymin) || (fP[i+1] > fp.scale_ymax) ||
-          (fP[i+2] < fp.scale_zmin) || (fP[i+2] > fp.scale_zmax)) continue;
+          (fP[i + 1] < fp.scale_ymin) || (fP[i + 1] > fp.scale_ymax) ||
+          (fP[i + 2] < fp.scale_zmin) || (fP[i + 2] > fp.scale_zmax))
+         continue;
 
       if (step > 1) {
          select = (select + 1) % step;
-         if (select) continue;
+         if (select)
+            continue;
       }
 
       index[icnt++] = i;
 
-      pnts.addPoint(fp.grx(fP[i]), fp.gry(fP[i+1]), fp.grz(fP[i+2]));
+      pnts.addPoint(fp.grx(fP[i]), fp.gry(fP[i + 1]), fp.grz(fP[i + 2]));
    }
 
    return pnts.createPoints({ color: this.getColor(poly.fMarkerColor), style: poly.fMarkerStyle }).then(mesh => {
@@ -51,7 +52,7 @@ async function drawPolyMarker3D() {
       mesh.tip_name = poly.fName || 'Poly3D';
       mesh.poly = poly;
       mesh.fp = fp;
-      mesh.scale0 = 0.7*pnts.scale;
+      mesh.scale0 = 0.7 * pnts.scale;
       mesh.index = index;
 
       fp.add3DMesh(mesh, this, true);
@@ -65,8 +66,8 @@ async function drawPolyMarker3D() {
 
          const fp2 = this.fp,
                grx = fp2.grx(this.poly.fP[indx]),
-               gry = fp2.gry(this.poly.fP[indx+1]),
-               grz = fp2.grz(this.poly.fP[indx+2]);
+               gry = fp2.gry(this.poly.fP[indx + 1]),
+               grz = fp2.grz(this.poly.fP[indx + 2]);
 
          return {
             x1: grx - this.scale0,
@@ -76,12 +77,13 @@ async function drawPolyMarker3D() {
             z1: grz - this.scale0,
             z2: grz + this.scale0,
             color: this.tip_color,
-            lines: [this.tip_name,
-                     'pnt: ' + indx/3,
-                     'x: ' + fp2.axisAsText('x', this.poly.fP[indx]),
-                     'y: ' + fp2.axisAsText('y', this.poly.fP[indx+1]),
-                     'z: ' + fp2.axisAsText('z', this.poly.fP[indx+2])
-                   ]
+            lines: [
+               this.tip_name,
+               'pnt: ' + indx / 3,
+               'x: ' + fp2.axisAsText('x', this.poly.fP[indx]),
+               'y: ' + fp2.axisAsText('y', this.poly.fP[indx + 1]),
+               'z: ' + fp2.axisAsText('z', this.poly.fP[indx + 2])
+            ]
          };
       };
 

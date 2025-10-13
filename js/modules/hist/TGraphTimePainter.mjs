@@ -104,7 +104,7 @@ class TGraphTimePainter extends ObjectPainter {
          if (++this.#step > gr.fSteps.arr.length) {
             if (o.repeat) {
                this.#step = 0; // start again
-               sleeptime = Math.max(5000, 5*sleeptime); // increase sleep time
+               sleeptime = Math.max(5000, 5 * sleeptime); // increase sleep time
             } else {
                this.#step = undefined;    // clear indicator that animation running
                return;
@@ -128,8 +128,8 @@ class TGraphTimePainter extends ObjectPainter {
    /** @summary Draw TGraphTime object */
    static async draw(dom, gr, opt) {
       if (!gr.fFrame) {
-        console.error('Frame histogram not exists');
-        return null;
+         console.error('Frame histogram not exists');
+         return null;
       }
 
       const painter = new TGraphTimePainter(dom, gr, opt);
@@ -142,8 +142,10 @@ class TGraphTimePainter extends ObjectPainter {
       if (!gr.fFrame.fTitle && gr.fTitle) {
          const arr = gr.fTitle.split(';');
          gr.fFrame.fTitle = arr[0];
-         if (arr[1]) gr.fFrame.fXaxis.fTitle = arr[1];
-         if (arr[2]) gr.fFrame.fYaxis.fTitle = arr[2];
+         if (arr[1])
+            gr.fFrame.fXaxis.fTitle = arr[1];
+         if (arr[2])
+            gr.fFrame.fYaxis.fTitle = arr[2];
       }
 
       return TH1Painter.draw(dom, gr.fFrame, '').then(() => {

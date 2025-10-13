@@ -70,7 +70,7 @@ class THStackPainter extends ObjectPainter {
                      (xnext.fXmax === xprev.fXmax);
 
          if (!match && (xnext.fNbins > 0) && (xnext.fNbins < xprev.fNbins) && (xnext.fXmin === xprev.fXmin) &&
-             (Math.abs((xnext.fXmax - xnext.fXmin)/xnext.fNbins - (xprev.fXmax - xprev.fXmin)/xprev.fNbins) < 0.0001)) {
+             (Math.abs((xnext.fXmax - xnext.fXmin) / xnext.fNbins - (xprev.fXmax - xprev.fXmin) / xprev.fNbins) < 0.0001)) {
             // simple extension of histogram to make sum
             const arr2 = new Array(hprev.fNcells).fill(0);
             for (let n = 1; n <= xnext.fNbins; ++n)
@@ -116,7 +116,8 @@ class THStackPainter extends ObjectPainter {
             domax = false;
          }
 
-         if (!domin && !domax) return res;
+         if (!domin && !domax)
+            return res;
 
          let i1 = 1, i2 = hist.fXaxis.fNbins, j1 = 1, j2 = 1, first = true;
 
@@ -145,7 +146,7 @@ class THStackPainter extends ObjectPainter {
                if (domax && (first || (val + err > res.max)))
                   res.max = val + err;
                first = false;
-           }
+            }
          }
 
          return res;
@@ -157,7 +158,7 @@ class THStackPainter extends ObjectPainter {
             if (i === 0) {
                themin = resh.min;
                themax = resh.max;
-             } else {
+            } else {
                themin = Math.min(themin, resh.min);
                themax = Math.max(themax, resh.max);
             }
@@ -168,7 +169,7 @@ class THStackPainter extends ObjectPainter {
       }
 
       if (logscale)
-         themin = (themin > 0) ? themin*0.9 : themax*1e-3;
+         themin = (themin > 0) ? themin * 0.9 : themax * 1e-3;
       else if (themin > 0)
          themin = 0;
 
@@ -183,13 +184,13 @@ class THStackPainter extends ObjectPainter {
       if (!o.nostack || (stack.fMaximum === kNoZoom)) {
          if (logscale) {
             if (themin > 0)
-               themax *= (1+0.2*Math.log10(themax/themin));
+               themax *= (1 + 0.2 * Math.log10(themax / themin));
          } else if (stack.fMaximum === kNoZoom)
             themax *= (1 + gStyle.fHistTopMargin);
       }
       if (!o.nostack || (stack.fMinimum === kNoZoom)) {
          if (logscale)
-            themin = (themin > 0) ? themin/(1+0.5*Math.log10(themax/themin)) : 1e-3*themax;
+            themin = (themin > 0) ? themin / (1 + 0.5 * Math.log10(themax / themin)) : 1e-3 * themax;
       }
 
       const res = { min: themin, max: themax, hopt: `;hmin:${themin};hmax:${themax}` };
@@ -227,14 +228,14 @@ class THStackPainter extends ObjectPainter {
       if (indx >= nhists)
          return this;
 
-      const rindx = o.horder ? indx : nhists-indx-1,
+      const rindx = o.horder ? indx : nhists - indx - 1,
             subid = o.nostack ? `hists_${rindx}` : `stack_${rindx}`,
             hist = hlst.arr[rindx],
             hopt = this.getHistDrawOption(hist, stack.fHists.opt[rindx]);
 
       // handling of 'pads' draw option
       if (pad_painter) {
-         const subpad_painter = pad_painter.getSubPadPainter(indx+1);
+         const subpad_painter = pad_painter.getSubPadPainter(indx + 1);
          if (!subpad_painter)
             return this;
 
@@ -245,7 +246,7 @@ class THStackPainter extends ObjectPainter {
                subp.setSecondaryId(this, subid);
                this.#painters.push(subp);
             }
-            return this.drawNextHisto(indx+1, pad_painter);
+            return this.drawNextHisto(indx + 1, pad_painter);
          });
       }
 
@@ -260,9 +261,9 @@ class THStackPainter extends ObjectPainter {
       const dom = this.#firstpainter?.getPadPainter() || this.getDrawDom();
 
       return this.drawHist(dom, hist, hopt).then(subp => {
-          subp.setSecondaryId(this, subid);
-          this.#painters.push(subp);
-          return this.drawNextHisto(indx+1, pad_painter);
+         subp.setSecondaryId(this, subid);
+         this.#painters.push(subp);
+         return this.drawNextHisto(indx + 1, pad_painter);
       });
    }
 
@@ -301,10 +302,14 @@ class THStackPainter extends ObjectPainter {
 
       d.check('NOCLEAR'); // ignore option
 
-      ['PFC', 'PLC', 'PMC'].forEach(f => { if (d.check(f)) o.auto += ' ' + f; });
+      ['PFC', 'PLC', 'PMC'].forEach(f => {
+         if (d.check(f))
+            o.auto += ' ' + f;
+      });
 
       o.pads = d.check('PADS');
-      if (o.pads) o.nostack = true;
+      if (o.pads)
+         o.nostack = true;
 
       o.hopt = d.remain().trim(); // use remaining draw options for histogram draw
 
@@ -450,7 +455,7 @@ class THStackPainter extends ObjectPainter {
          const redrawSub = indx => {
             if (indx >= this.#painters.length)
                return this;
-            return this.#painters[indx].redraw(reason).then(() => redrawSub(indx+1));
+            return this.#painters[indx].redraw(reason).then(() => redrawSub(indx + 1));
          };
          return redrawSub(0);
       });
@@ -523,7 +528,7 @@ class THStackPainter extends ObjectPainter {
          });
       } else {
          if (!o.nostack)
-             o.nostack = !this.buildStack(stack, pp);
+            o.nostack = !this.buildStack(stack, pp);
 
          if (!o.same && stack.fHists?.arr.length) {
             if (!stack.fHistogram)

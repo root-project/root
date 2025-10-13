@@ -37,10 +37,10 @@ class TSplinePainter extends ObjectPainter {
       const dx = x - knot.fX;
 
       if (knot._typename === 'TSplinePoly3')
-         return knot.fY + dx*(knot.fB + dx*(knot.fC + dx*knot.fD));
+         return knot.fY + dx * (knot.fB + dx * (knot.fC + dx * knot.fD));
 
       if (knot._typename === 'TSplinePoly5')
-         return knot.fY + dx*(knot.fB + dx*(knot.fC + dx*(knot.fD + dx*(knot.fE + dx*knot.fF))));
+         return knot.fY + dx * (knot.fB + dx * (knot.fC + dx * (knot.fD + dx * (knot.fE + dx * knot.fF))));
 
       return knot.fY + dx;
    }
@@ -58,16 +58,16 @@ class TSplinePainter extends ObjectPainter {
 
       if (spline.fKstep) {
          // Equidistant knots, use histogram
-         klow = Math.round((x - spline.fXmin)/spline.fDelta);
+         klow = Math.round((x - spline.fXmin) / spline.fDelta);
          // Correction for rounding errors
          if (x < spline.fPoly[klow].fX)
-            klow = Math.max(klow-1, 0);
-         else if ((klow < khig) && (x > spline.fPoly[klow+1].fX))
+            klow = Math.max(klow - 1, 0);
+         else if ((klow < khig) && (x > spline.fPoly[klow + 1].fX))
             ++klow;
       } else {
          // Non equidistant knots, binary search
          while (khig - klow > 1) {
-            const khalf = Math.round((klow + khig)/2);
+            const khalf = Math.round((klow + khig) / 2);
             if (x > spline.fPoly[khalf].fX)
                klow = khalf;
             else
@@ -94,8 +94,10 @@ class TSplinePainter extends ObjectPainter {
             ymax = Math.max(knot.fY, ymax);
          });
 
-         if (ymax > 0) ymax *= (1 + gStyle.fHistTopMargin);
-         if (ymin < 0) ymin *= (1 + gStyle.fHistTopMargin);
+         if (ymax > 0)
+            ymax *= (1 + gStyle.fHistTopMargin);
+         if (ymin < 0)
+            ymin *= (1 + gStyle.fHistTopMargin);
       }
 
       const histo = createHistogram(clTH1I, 10);
@@ -124,19 +126,22 @@ class TSplinePainter extends ObjectPainter {
 
       if ((pnt === null) || !spline || !funcs)
          cleanup = true;
-       else {
+      else {
          xx = funcs.revertAxis('x', pnt.x);
          indx = this.findX(xx);
          knot = spline.fPoly[indx];
          yy = this.eval(knot, xx);
 
-         if ((indx < spline.fN-1) && (Math.abs(spline.fPoly[indx+1].fX-xx) < Math.abs(xx-knot.fX))) knot = spline.fPoly[++indx];
+         if ((indx < spline.fN - 1) && (Math.abs(spline.fPoly[indx + 1].fX - xx) < Math.abs(xx - knot.fX)))
+            knot = spline.fPoly[++indx];
 
-         if (Math.abs(funcs.grx(knot.fX) - pnt.x) < 0.5*this.#knot_size) {
-            xx = knot.fX; yy = knot.fY;
+         if (Math.abs(funcs.grx(knot.fX) - pnt.x) < 0.5 * this.#knot_size) {
+            xx = knot.fX;
+            yy = knot.fY;
          } else {
             knot = null;
-            if ((xx < spline.fXmin) || (xx > spline.fXmax)) cleanup = true;
+            if ((xx < spline.fXmin) || (xx > spline.fXmax))
+               cleanup = true;
          }
       }
 
@@ -157,17 +162,19 @@ class TSplinePainter extends ObjectPainter {
                            .call(this.lineatt.func);
       }
 
-      const res = { name: this.getObject().fName,
-                  title: this.getObject().fTitle,
-                  x: funcs.grx(xx),
-                  y: funcs.gry(yy),
-                  color1: this.lineatt.color,
-                  lines: [],
-                  exact: (knot !== null) || (Math.abs(funcs.gry(yy) - pnt.y) < radius) };
+      const res = {
+         name: this.getObject().fName,
+         title: this.getObject().fTitle,
+         x: funcs.grx(xx),
+         y: funcs.gry(yy),
+         color1: this.lineatt.color,
+         lines: [],
+         exact: (knot !== null) || (Math.abs(funcs.gry(yy) - pnt.y) < radius)
+      };
 
       res.changed = gbin.property('current_xx') !== xx;
       res.menu = res.exact;
-      res.menu_dist = Math.sqrt((res.x-pnt.x)**2 + (res.y-pnt.y)**2);
+      res.menu_dist = Math.sqrt((res.x - pnt.x) ** 2 + (res.y - pnt.y) ** 2);
 
       if (res.changed) {
          gbin.attr('cx', Math.round(res.x))
@@ -176,7 +183,8 @@ class TSplinePainter extends ObjectPainter {
       }
 
       const name = this.getObjectHint();
-      if (name) res.lines.push(name);
+      if (name)
+         res.lines.push(name);
       res.lines.push(`x = ${funcs.axisAsText('x', xx)}`,
                      `y = ${funcs.axisAsText('y', yy)}`);
       if (knot !== null) {
@@ -219,10 +227,12 @@ class TSplinePainter extends ObjectPainter {
          }
 
          for (let n = 0; n < npx; ++n) {
-            let x = xmin + (xmax-xmin)/npx*(n-1);
-            if (funcs.logx) x = Math.exp(x);
+            let x = xmin + (xmax - xmin) / npx * (n - 1);
+            if (funcs.logx)
+               x = Math.exp(x);
 
-            while ((indx < spline.fNp-1) && (x > spline.fPoly[indx+1].fX)) ++indx;
+            while ((indx < spline.fNp - 1) && (x > spline.fPoly[indx + 1].fX))
+               ++indx;
 
             const y = this.eval(spline.fPoly[indx], x);
 
@@ -267,30 +277,34 @@ class TSplinePainter extends ObjectPainter {
 
    /** @summary Checks if it makes sense to zoom inside specified axis range */
    canZoomInside(axis /* , min, max */) {
-      if (axis !== 'x') return false;
-
       // spline can always be calculated and therefore one can zoom inside
-      return Boolean(this.getObject());
+      return (axis !== 'x') ? false : Boolean(this.getObject());
    }
 
    /** @summary Decode options for TSpline drawing */
    decodeOptions(opt) {
       const d = new DrawOptions(opt),
             o = this.setOptions({
-         Same: d.check('SAME'),
-         Line: d.check('L'),
-         Curve: d.check('C'),
-         Mark: d.check('P'),
-         Hopt: '',
-         second_x: false,
-         second_y: false
-      });
+               Same: d.check('SAME'),
+               Line: d.check('L'),
+               Curve: d.check('C'),
+               Mark: d.check('P'),
+               Hopt: '',
+               second_x: false,
+               second_y: false
+            });
 
       if (!o.Line && !o.Curve && !o.Mark)
          o.Curve = true;
 
-      if (d.check('X+')) { o.Hopt += 'X+'; o.second_x = Boolean(this.getMainPainter()); }
-      if (d.check('Y+')) { o.Hopt += 'Y+'; o.second_y = Boolean(this.getMainPainter()); }
+      if (d.check('X+')) {
+         o.Hopt += 'X+';
+         o.second_x = Boolean(this.getMainPainter());
+      }
+      if (d.check('Y+')) {
+         o.Hopt += 'Y+';
+         o.second_y = Boolean(this.getMainPainter());
+      }
 
       this.storeDrawOpt(opt);
    }

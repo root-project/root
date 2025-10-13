@@ -12,9 +12,8 @@ class TGraphPainter extends TGraphPainter2D {
          return console.log('Frame painter missing base 3d elements');
 
       const o = this.getOptions();
-
-      if (fp.zoom_xmin !== fp.zoom_xmax)
-        if ((o.pos3d < fp.zoom_xmin) || (o.pos3d > fp.zoom_xmax)) return;
+      if ((fp.zoom_xmin !== fp.zoom_xmax) && ((o.pos3d < fp.zoom_xmin) || (o.pos3d > fp.zoom_xmax)))
+         return;
 
       this.createGraphDrawAttributes(true);
 
@@ -22,11 +21,14 @@ class TGraphPainter extends TGraphPainter2D {
       let first = 0, last = drawbins.length - 1;
 
       if (fp.zoom_ymin !== fp.zoom_ymax) {
-         while ((first < last) && (drawbins[first].x < fp.zoom_ymin)) first++;
-         while ((first < last) && (drawbins[last].x > fp.zoom_ymax)) last--;
+         while ((first < last) && (drawbins[first].x < fp.zoom_ymin))
+            first++;
+         while ((first < last) && (drawbins[last].x > fp.zoom_ymax))
+            last--;
       }
 
-      if (first === last) return;
+      if (first === last)
+         return;
 
       const pnts = [], grx = fp.grx(o.pos3d);
       let p0 = drawbins[first];

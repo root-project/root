@@ -1,8 +1,10 @@
 # JSROOT changelog
 
 ## Changes in dev
-1. RNtuple support, thanks to Kriti Mahajan (https://github.com/Krmjn09)
-1. Implement RTreeMapPainter to display RNTuple structure, thanks to Patryk Pilichowski (https://github.com/magnustymoteus)
+1. `RNtuple` support, thanks to Kriti Mahajan https://github.com/Krmjn09
+1. Implement `RTreeMapPainter` to display `RNTuple` structure, thanks to Patryk Pilichowski https://github.com/magnustymoteus
+1. Implement `build3d` function for building three.js objects for `TH1/2/3`, `TLatex` `TGeo`, `TGraph2D` classes #368
+1. Draw `TAnnotation3D` in real 3D with handling scene rotation
 1. Let use hex colors in histogram draw options like "fill_00ff00" or "line_77aa1166"
 1. Let configure exact axis ticks position via draw option like "xticks:[-3,-1,1,3]"
 1. Support gStyle.fBarOffset for `TGraph` bar drawing
@@ -11,21 +13,30 @@
 1. With 'Shift' key pressed whole graph is moved by dragging action
 1. Support `Xall` and `Yall` as projections width #340
 1. Implement `unzipJSON()` function for data embeding in jupyter
-1. Support reading TBranch from old ROOT files with custom streamers
+1. Support reading `TBranch` from old ROOT files with custom streamers
 1. Upgrade three.js r174 -> r180
 1. Upgrade lil-gui.mjs 0.19.2 -> 0.20.0
+1. Upgrade svg2pdf.js 2.3.0 -> 2.6.0
+1. Upgrade jsPDF 2.5.2 -> 3.0.3, exclude gif, bmp, jpeg support
 1. Use ES6 modules to implement geoworker, enable node.js usage
 1. Remove countGeometryFaces function - use numGeometryFaces instead
 1. Remove experimental RHist classes, deprecated in ROOT 6.38
 1. Internal - ws members are private, new methods has to be used
 1. Fix - ticks size and labels with kMoreLogLabels axis bit
-1. Fix - reading TLeafC leafs
-1. Fix - support BigInt in object inspector
-1. Fix - svg2pdf.js URL bounding box
-1. Fix - TTree::Draw with strings
 1. Fix - first color in palette drawing #365
-1. Fix - toggle vertical/horizontal palette via context menu
 1. Fix - latex parsing error of `#delta_{0}_suffix` string
+1. Fix - store large PDF files with 3D images
+
+
+## Changes in 7.9.2
+1. Fix - reading `TLeafC` leafs
+2. Fix - support BigInt in object inspector
+3. Fix - svg2pdf.js URL bounding box
+4. Fix - `TTree::Draw` with strings
+5. Fix - toggle vertical/horizontal palette via context menu
+6. Fix - detect HTML element size from style attribute
+7. Fix - typo in `expandToLevel` method
+8. Fix - handle missed expand in hierarchy painter
 
 
 ## Changes in 7.9.1

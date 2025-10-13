@@ -30,7 +30,8 @@ class TPolyLinePainter extends ObjectPainter {
    /** @summary End dragging object
     * @private */
    moveEnd(not_changed) {
-      if (not_changed) return;
+      if (not_changed)
+         return;
       const polyline = this.getObject(),
             func = this.getAxisToSvgFunc(this.#isndc);
       let exec = '';
@@ -78,7 +79,7 @@ class TPolyLinePainter extends ObjectPainter {
 
       let cmd = '';
       for (let n = 0; n <= polyline.fLastPoint; ++n)
-         cmd += `${n > 0?'L':'M'}${func.x(polyline.fX[n])},${func.y(polyline.fY[n])}`;
+         cmd += `${n > 0 ? 'L' : 'M'}${func.x(polyline.fX[n])},${func.y(polyline.fY[n])}`;
 
       g.append('svg:path')
        .attr('d', cmd + (dofill ? 'Z' : ''))
