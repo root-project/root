@@ -34,7 +34,7 @@ arguments and dependencies between arguments.
 #include <ROOT/StringUtils.hxx>
 
 #include <iostream>
-
+#include <set>
 
 namespace {
 
@@ -286,8 +286,6 @@ void RooCmdConfig::print() const
   }
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Process given list with RooCmdArgs
 /// Emit warning if duplicate arguments
@@ -296,16 +294,16 @@ bool RooCmdConfig::process(const RooLinkedList& argList)
 {
    bool ret(false);
    std::set<std::string> opcodes;
-   for(auto *arg : static_range_cast<RooCmdArg *>(argList)) {
+   for (auto *arg : static_range_cast<RooCmdArg *>(argList)) {
       auto opc = arg->opcode();
       if (opc && opcodes.find(opc) != opcodes.end()) {
          coutW(InputArguments) << _name << " WARNING: argument " << opc << " is duplicated" << std::endl;
       } else if (opc) {
          opcodes.insert(opc);
       }
-      ret |= process(*arg) ;
+      ret |= process(*arg);
    }
-   return ret ;
+   return ret;
 }
 
 
