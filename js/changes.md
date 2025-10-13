@@ -1,9 +1,18 @@
 # JSROOT changelog
 
 ## Changes in 7.9.x
-1. Fix - reading TLeafC leafs
+1. Fix - store large PDF with 3D drawing inside
+
+
+## Changes in 7.9.2
+1. Fix - reading `TLeafC` leafs
 2. Fix - support BigInt in object inspector
 3. Fix - svg2pdf.js URL bounding box
+4. Fix - `TTree::Draw` with strings
+5. Fix - toggle vertical/horizontal palette via context menu
+6. Fix - detect HTML element size from style attribute
+7. Fix - typo in `expandToLevel` method
+8. Fix - handle missed expand in hierarchy painter
 
 
 ## Changes in 7.9.1
