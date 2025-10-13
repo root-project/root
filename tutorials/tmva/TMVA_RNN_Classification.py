@@ -154,16 +154,14 @@ maxepochs = 10
 
 nTotEvts = 2000  # total events to be generated for signal or background
 
-useKeras = True
+useKeras = False
 
 useTMVA_RNN = True
 useTMVA_DNN = True
 useTMVA_BDT = False
 
-tf_spec = importlib.util.find_spec("tensorflow")
-if tf_spec is None:
-    useKeras = False
-    ROOT.Warning("TMVA_RNN_Classificaton","Skip using Keras since tensorflow is not installed")
+if ROOT.gSystem.GetFromPipe("root-config --has-tmva-pymva") == "yes":
+    useKeras = True
 
 
 rnn_types = ["RNN", "LSTM", "GRU"]
