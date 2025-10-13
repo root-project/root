@@ -26,8 +26,6 @@ async function drawRNTuple(dom, obj, opt) {
    if (!tuple)
       throw Error('No RNTuple object available for drawing');
 
-   console.log('expression', args.expr);
-
    args.drawid = dom;
 
    args.progress = treeDrawProgress.bind(args);

@@ -33,10 +33,10 @@ class TBoxPainter extends ObjectPainter {
    /** @summary drag handler
      * @private */
    moveDrag(dx, dy) {
-      if (this.c_x1) this.x1 += dx;
-      if (this.c_x2) this.x2 += dx;
-      if (this.c_y1) this.y1 += dy;
-      if (this.c_y2) this.y2 += dy;
+      this.x1 += this.c_x1 ? dx : 0;
+      this.x2 += this.c_x2 ? dx : 0;
+      this.y1 += this.c_y1 ? dy : 0;
+      this.y2 += this.c_y2 ? dy : 0;
 
       const nodes = this.getG().selectAll('path').nodes(),
             pathes = this.getPathes();
@@ -47,13 +47,30 @@ class TBoxPainter extends ObjectPainter {
    /** @summary end of drag handler
      * @private */
    moveEnd(not_changed) {
-      if (not_changed) return;
+      if (not_changed)
+         return;
       const box = this.getObject(), X = this.swap_xy ? 'Y' : 'X', Y = this.swap_xy ? 'X' : 'Y';
       let exec = '';
-      if (this.c_x1) { const v = this.svgToAxis('x', this.x1); box[`f${X}1`] = v; exec += `Set${X}1(${v});;`; }
-      if (this.c_x2) { const v = this.svgToAxis('x', this.x2); box[`f${X}2`] = v; exec += `Set${X}2(${v});;`; }
-      if (this.c_y1) { const v = this.svgToAxis('y', this.y1); box[`f${Y}1`] = v; exec += `Set${Y}1(${v});;`; }
-      if (this.c_y2) { const v = this.svgToAxis('y', this.y2); box[`f${Y}2`] = v; exec += `Set${Y}2(${v});;`; }
+      if (this.c_x1) {
+         const v = this.svgToAxis('x', this.x1);
+         box[`f${X}1`] = v;
+         exec += `Set${X}1(${v});;`;
+      }
+      if (this.c_x2) {
+         const v = this.svgToAxis('x', this.x2);
+         box[`f${X}2`] = v;
+         exec += `Set${X}2(${v});;`;
+      }
+      if (this.c_y1) {
+         const v = this.svgToAxis('y', this.y1);
+         box[`f${Y}1`] = v;
+         exec += `Set${Y}1(${v});;`;
+      }
+      if (this.c_y2) {
+         const v = this.svgToAxis('y', this.y2);
+         box[`f${Y}2`] = v;
+         exec += `Set${Y}2(${v});;`;
+      }
       this.submitCanvExec(exec + 'Notify();;');
    }
 
