@@ -1170,30 +1170,28 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, con
    RooRealVar weightVar{"binWeightAsimov", "binWeightAsimov", 1, 0, 1.e30};
 
    if (printLevel > 1) std::cout <<" Generate Asimov data for observables"<< std::endl;
-   //RooDataSet* simData=nullptr;
-   const RooProdPdf *prodPdf = dynamic_cast<const RooProdPdf *>(&pdf);   
+   // RooDataSet *simData = nullptr;
+   const RooProdPdf *prodPdf = dynamic_cast<const RooProdPdf *>(&pdf);
    RooArgList strippedPdfSet("strippedPdfSet");
    if (prodPdf) {
       RooArgList list(prodPdf->pdfList());
-      for (auto ele : list)
-      {
+      for (auto ele : list) {
          const RooAbsPdf *pdfi = dynamic_cast<const RooAbsPdf *>(ele);
          if (pdfi->dependsOn(observables))
             strippedPdfSet.add(*pdfi);
       }
    }
    RooProdPdf observableProdPdf("observableProdPdf", "observableProdPdf", strippedPdfSet);
-   const RooAbsPdf* observablePdf;
+   const RooAbsPdf *observablePdf;
    if (prodPdf) {
-      if(strippedPdfSet.getSize() == 1)
+      if (strippedPdfSet.getSize() == 1)
          observablePdf = dynamic_cast<const RooAbsPdf *>(strippedPdfSet.at(0));
       else
          observablePdf = &observableProdPdf;
-   }
-   else {
+   } else {
       observablePdf = &pdf;
    }
-   const RooSimultaneous *simPdf = dynamic_cast<const RooSimultaneous *>(observablePdf);   
+   const RooSimultaneous *simPdf = dynamic_cast<const RooSimultaneous *>(observablePdf);
    if (!simPdf) {
       // generate data for non sim pdf
       return GenerateAsimovDataSinglePdf(*observablePdf, observables, weightVar, nullptr);
