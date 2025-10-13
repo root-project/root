@@ -938,6 +938,9 @@ class TPavePainter extends ObjectPainter {
       });
    }
 
+   /** @summary Returns true if palette drawn in vertical direction */
+   isPaletteVertical() { return this._palette_vertical; }
+
    /** @summary draw color palette with axis */
    drawPaletteAxis(s_width, s_height, arg) {
       const palette = this.getObject(),
