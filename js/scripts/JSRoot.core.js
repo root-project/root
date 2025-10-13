@@ -30,11 +30,13 @@ function _sync() {
 
 
 function loadPainter() {
-   if (jsrp) return Promise.resolve(jsrp);
+   if (jsrp)
+      return Promise.resolve(jsrp);
    return Promise.all([import('../modules/d3.mjs'), import('../modules/draw.mjs'), import('../modules/base/colors.mjs'),
                        import('../modules/base/BasePainter.mjs'), import('../modules/base/ObjectPainter.mjs'),
                        import('../modules/base/TAttLineHandler.mjs'), import('../modules/gui/menu.mjs')]).then(res => {
-      if (jsrp) return jsrp;
+      if (jsrp)
+         return jsrp;
       globalThis.d3 = res[0]; // assign global d3
       jsrp = Object.assign({}, res[1], res[2], res[3], res[4], res[5], res[6]);
       globalThis.JSROOT.Painter = jsrp;
@@ -156,7 +158,8 @@ function v6_require(need) {
          arr.push(geo ? Promise.resolve(geo) : loadPainter().then(() => Promise.all([import('../modules/geom/geobase.mjs'),
             import('../modules/geom/TGeoPainter.mjs'), import('../modules/base/base3d.mjs'), import('../modules/three.mjs'), import('../modules/three_addons.mjs')])).then(res => {
 
-            if (geo) return geo;
+            if (geo)
+               return geo;
 
             globalThis.JSROOT.GEO = geo = Object.assign({}, res[0], res[1]);
             globalThis.JSROOT.TGeoPainter = res[1].TGeoPainter;
@@ -226,17 +229,19 @@ exports.decodeUrl = function(url) {
    let res = {
       opts: {},
       has(opt) { return this.opts[opt] !== undefined; },
-      get(opt,dflt) { let v = this.opts[opt]; return v !== undefined ? v : dflt; }
+      get(opt,dflt) { return this.opts[opt] ?? dflt; }
    };
 
    if (!url || (typeof url !== 'string')) {
-      if (typeof document === 'undefined') return res;
+      if (typeof document === 'undefined')
+         return res;
       url = document.URL;
    }
    res.url = url;
 
    let p1 = url.indexOf('?');
-   if (p1 < 0) return res;
+   if (p1 < 0)
+      return res;
    url = decodeURI(url.slice(p1+1));
 
    while (url) {
@@ -258,7 +263,8 @@ exports.decodeUrl = function(url) {
             val = val.slice(1, val.length - 1);
          res.opts[url.slice(0,eq)] = val;
       }
-      if ((pos >= url.length) || (url[pos] == '#')) break;
+      if ((pos >= url.length) || (url[pos] == '#'))
+         break;
       url = url.slice(pos+1);
    }
 
@@ -291,20 +297,23 @@ exports.connectWebWindow = function(arg) {
 
    return _sync().then(() => {
       let prereq = '';
-      if (arg.prereq) prereq = arg.prereq;
-      if (arg.prereq2) prereq += ';' + arg.prereq2;
-      if (!prereq) return;
+      if (arg.prereq)
+         prereq = arg.prereq;
+      if (arg.prereq2)
+         prereq += ';' + arg.prereq2;
+      if (!prereq)
+         return;
 
       return v6_require(prereq).then(() => {
-            delete arg.prereq;
-            delete arg.prereq2;
+         delete arg.prereq;
+         delete arg.prereq2;
 
-            if (arg.prereq_logdiv && document) {
-               let elem = document.getElementById(arg.prereq_logdiv);
-               if (elem) elem.innerHTML = '';
-               delete arg.prereq_logdiv;
-            }
-         });
+         if (arg.prereq_logdiv && document) {
+            let elem = document.getElementById(arg.prereq_logdiv);
+            if (elem) elem.innerHTML = '';
+            delete arg.prereq_logdiv;
+         }
+      });
    }).then(() => import('../modules/webwindow.mjs')).then(h => {
       globalThis.JSROOT.WebWindowHandle = h.WebWindowHandle;
       return h.connectWebWindow(arg);
