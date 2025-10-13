@@ -296,15 +296,13 @@ void ROOT::Internal::RPageSinkFile::CommitDatasetImpl(unsigned char *serializedF
 }
 
 std::unique_ptr<ROOT::Internal::RPageSink>
-ROOT::Internal::RPageSinkFile::CreateNewWithNewRNTuple(std::string_view newName) const
+ROOT::Internal::RPageSinkFile::DeriveFor(std::string_view newName, const ROOT::RNTupleWriteOptions &opts) const
 {
    if (auto *dir = Internal::GetUnderlyingDirectory(*fWriter)) {
-      auto opts = ROOT::RNTupleWriteOptions();
-      opts.SetCompression(GetWriteOptions().GetCompression());
       return std::make_unique<ROOT::Internal::RPageSinkFile>(newName, *dir, opts);
    }
    // TODO: support this method also for non-TFile-based writers
-   throw ROOT::RException(R__FAIL("cannot CreateNewWithNewRNTuple a non-TFile-based Sink."));
+   throw ROOT::RException(R__FAIL("cannot call DeriveFor on a non-TFile-based Sink."));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

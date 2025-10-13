@@ -105,7 +105,7 @@ public:
 
    void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final;
 
-   std::unique_ptr<RPageSink> CreateNewWithNewRNTuple(std::string_view) const final;
+   std::unique_ptr<RPageSink> DeriveFor(std::string_view newName, const ROOT::RNTupleWriteOptions &opts) const final;
 
    ROOT::Internal::RNTupleFileWriter *GetUnderlyingWriter() const { return fWriter.get(); }
 }; // class RPageSinkFile
