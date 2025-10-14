@@ -119,7 +119,7 @@ jobs:
       - ${{ matrix.platform }}
 
     name: |
-      ${{ matrix.platform }} ${{ matrix.arch }} 
+      ${{ matrix.platform }} ${{ matrix.arch }}
       ${{ (github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && join( matrix.overrides, ', ' )) || '' }}
 
     steps:
@@ -129,7 +129,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref_name }}
           path: "src"
 
       - name: Apply option overrides from matrix for this job for non-release builds
@@ -274,7 +273,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref_name }}
           path: "src"
 
       - name: Pull Request Build
@@ -446,18 +444,33 @@ jobs:
         CONTAINER_IMAGE: "registry.cern.ch/root-ci/${{ matrix.image }}:buildready" #KEEP IN SYNC WITH ABOVE
         CONTAINER_OPTIONS: "--security-opt label=disable --rm ${{ matrix.property == 'gpu' && '--device nvidia.com/gpu=all' || '' }}" #KEEP IN SYNC WITH ABOVE
 
-    env:
-      SRC_DIR: /github/home/ROOT-CI/src
-      BUILD_DIR: /github/home/ROOT-CI/build
-      INSTALL_DIR: /github/home/ROOT-CI/install
-      POST_INSTALL_DIR: /github/home/ROOT-CI/PostInstall
-
     steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+          JOB_CONTEXT: ${{ toJSON(job) }}
+          ENV_CONTEXT: ${{ toJSON(env) }}
+        run: |
+          echo "$GITHUB_CONTEXT"
+          echo "--------------------------"
+          echo "$JOB_CONTEXT"
+          echo "--------------------------"
+          echo "$ENV_CONTEXT"
+
+      # The github.workspace context variable returns the path *outside* of the container.
+      # Therefore, we need to define environment variables inside the container
+      - name: Define environment
+        run: |
+          echo "SRC_DIR=${GITHUB_WORKSPACE}/src" >> "$GITHUB_ENV"
+          echo "BUILD_DIR=${GITHUB_WORKSPACE}/build" >> "$GITHUB_ENV"
+          echo "INSTALL_DIR=${GITHUB_WORKSPACE}/install" >> "$GITHUB_ENV"
+          echo "POST_INSTALL_DIR=${GITHUB_WORKSPACE}/postInstall" >> "$GITHUB_ENV"
+
       - name: Cleanup home
-        run: rm -rf $HOME
+        run: rm -rf ${GITHUB_WORKSPACE}/* ${GITHUB_WORKSPACE}/.github
 
       - name: Directory tree
-        run: ls -l
+        run: ls -la
 
       - name: Configure ccache
         env:
@@ -473,29 +486,10 @@ jobs:
         # code of the `if`.
         run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
 
-      - name: Directory tree
-        run: ls -l
-
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref_name }}
-          path: ${{ env.SRC_DIR }}
-
-      - name: Directory tree
-        run: ls -l
-
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJSON(github) }}
-          JOB_CONTEXT: ${{ toJSON(job) }}
-          ENV_CONTEXT: ${{ toJSON(env) }}
-        run: |
-          echo "$GITHUB_CONTEXT"
-          echo "--------------------------"
-          echo "$JOB_CONTEXT"
-          echo "--------------------------"
-          echo "$ENV_CONTEXT"
+          path: "src"
 
       - name: Print debug info
         run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
@@ -506,7 +500,7 @@ jobs:
         if: ${{ ( github.event_name != 'schedule' || matrix.is_special) && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
-          CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.image }}.txt'
+          CONFIGFILE: 'buildconfig_overrides.txt'
         shell: bash
         run: |
           set -x
@@ -537,7 +531,7 @@ jobs:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
           CMAKE_GENERATOR: ${{ matrix.cmake_generator }}
-        run: ".github/workflows/root-ci-config/build_root.py
+        run: "${SRC_DIR}/.github/workflows/root-ci-config/build_root.py
                     --buildtype       RelWithDebInfo
                     --platform        ${{ matrix.image }}
                     --dockeropts      \"$CONTAINER_OPTIONS\"
@@ -604,16 +598,17 @@ jobs:
           ccache -s || true
 
       - name: Install
-        run: "cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.INSTALL_DIR }}"
+        run: "cmake --install ${BUILD_DIR} --prefix ${INSTALL_DIR}"
 
       - name: Build post-install test project
         run: |
-          cmake -S test/PostInstall/ -B ${{ env.POST_INSTALL_DIR }} -DCMAKE_PREFIX_PATH=${{ env.INSTALL_DIR }};
-          cmake --build ${{ env.POST_INSTALL_DIR }};
+          cmake -S test/PostInstall/ -B ${POST_INSTALL_DIR} -DCMAKE_PREFIX_PATH=${INSTALL_DIR};
+          cmake --build ${POST_INSTALL_DIR};
 
       - name: CTest in post-install test project
-        working-directory: ${{ env.POST_INSTALL_DIR }}
-        run: ctest -j $(nproc)
+        run: |
+          cd ${POST_INSTALL_DIR}
+          test -j $(nproc)
 
   event_file:
     # For any event that is not a PR, the CI will always run. In PRs, the CI

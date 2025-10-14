@@ -46,12 +46,16 @@ except Exception as exc:
     CONNECTION = None
 
 WINDOWS = (os.name == 'nt')
-WORKDIR = (os.environ['HOME'] + '/ROOT-CI') if not WINDOWS else 'C:/ROOT-CI'
+try:
+    WORKDIR = (os.environ['GITHUB_WORKSPACE'])
+except:
+    WORKDIR = (os.environ['HOME'] + '/ROOT-CI') if not WINDOWS else 'C:/ROOT-CI'
 COMPRESSIONLEVEL = 6 if not WINDOWS else 1
 
 
 def main():
     # openstack.enable_logging(debug=True)
+    print("WORKDIR=" + WORKDIR)
 
     # used when uploading artifacts, calculate early since build times are inconsistent
     yyyy_mm_dd = datetime.datetime.today().strftime('%Y-%m-%d')
@@ -74,7 +78,8 @@ def main():
     options_dict = {
         **load_config(f'{this_script_dir}/buildconfig/global.txt'),
         # file below overwrites values from above
-        **load_config(f'{this_script_dir}/buildconfig/{args.platform}.txt')
+        **load_config(f'{this_script_dir}/buildconfig/{args.platform}.txt'),
+        **load_config(f'buildconfig_overrides.txt')
     }
 
     options = build_utils.cmake_options_from_dict(options_dict)
@@ -123,7 +128,7 @@ def main():
       head_ref_src, _, head_ref_dst = args.head_ref.partition(":")
       head_ref_dst = head_ref_dst or "__tmp"
 
-      rebase("src", "origin", base_head_sha, head_ref_dst, args.head_sha)
+      #rebase("src", "origin", base_head_sha, head_ref_dst, args.head_sha)
 
     testing: bool = options_dict['testing'].lower() == "on"
 
