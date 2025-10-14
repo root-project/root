@@ -41,12 +41,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Thread
     TThread.h
     TThreadImp.h
     TThreadPool.h
-    ROOT/RConcurrentHashColl.hxx
     ROOT/TRWSpinLock.hxx
     ROOT/TSpinMutex.hxx
     ROOT/TThreadedObject.hxx
   SOURCES
-    src/RConcurrentHashColl.cxx
     src/TCondition.cxx
     src/TConditionImp.cxx
     src/TMutex.cxx
@@ -78,10 +76,6 @@ target_link_libraries(Thread PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 target_include_directories(Thread PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
 )
-
-# keep include directory for ROOT/RSha256.hxx private
-set_source_files_properties(src/RConcurrentHashColl.cxx
-  PROPERTIES COMPILE_FLAGS -I${CMAKE_SOURCE_DIR}/core/foundation/res)
 
 if((tbb OR builtin_tbb) AND NOT MSVC)
   target_include_directories(Thread PRIVATE ${TBB_INCLUDE_DIRS})
