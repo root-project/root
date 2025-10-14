@@ -7,19 +7,17 @@
 #include <set>
 #include <unordered_map>
 
-namespace std
-{
-template <> struct hash<ROOT::Internal::RConcurrentHashColl::HashValue>
-{
-   std::size_t operator()(const ROOT::Internal::RConcurrentHashColl::HashValue& key) const noexcept
+namespace std {
+template <>
+struct hash<ROOT::Internal::RConcurrentHashColl::HashValue> {
+   std::size_t operator()(const ROOT::Internal::RConcurrentHashColl::HashValue &key) const noexcept
    {
       return key.Hash();
    }
 };
-}
+} // namespace std
 namespace ROOT {
 namespace Internal {
-
 
 std::ostream &operator<<(std::ostream &os, const RConcurrentHashColl::HashValue &h)
 {
@@ -43,7 +41,7 @@ RConcurrentHashColl::RConcurrentHashColl()
 
 RConcurrentHashColl::~RConcurrentHashColl() = default;
 
-const RUidColl* RConcurrentHashColl::Find(const HashValue &hash) const
+const RUidColl *RConcurrentHashColl::Find(const HashValue &hash) const
 {
    ROOT::TRWSpinLockReadGuard rg(*fRWLock);
    auto iter = fHashMap->fHashMap.find(hash);
@@ -65,5 +63,5 @@ bool RConcurrentHashColl::Insert(const HashValue &hash, RUidColl &&values) const
    return ret.second;
 }
 
-} // End NS Internal
-} // End NS ROOT
+} // namespace Internal
+} // namespace ROOT

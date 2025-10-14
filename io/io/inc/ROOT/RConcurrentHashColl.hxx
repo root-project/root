@@ -35,7 +35,8 @@ private:
 
 public:
    class HashValue {
-       friend std::ostream &operator<<(std::ostream &os, const RConcurrentHashColl::HashValue &h);
+      friend std::ostream &operator<<(std::ostream &os, const RConcurrentHashColl::HashValue &h);
+
    private:
       ULong64_t fDigest[4] = {0, 0, 0, 0};
 
@@ -45,10 +46,10 @@ public:
       ULong64_t const *Get() const { return fDigest; }
 
       /// Return the hash value for this object
-      size_t Hash() const noexcept {
+      size_t Hash() const noexcept
+      {
          std::hash<ULong64_t> hasher;
-         return hasher(fDigest[0]) ^ hasher(fDigest[1])
-               ^ hasher(fDigest[2]) ^ hasher(fDigest[3]);
+         return hasher(fDigest[0]) ^ hasher(fDigest[1]) ^ hasher(fDigest[2]) ^ hasher(fDigest[3]);
       }
    };
 
@@ -74,13 +75,14 @@ inline bool operator==(const RConcurrentHashColl::HashValue &lhs, const RConcurr
    return l[0] == r[0] && l[1] == r[1] && l[2] == r[2] && l[3] == r[3];
 }
 
-} // End NS Internal
-} // End NS ROOT
+} // namespace Internal
+} // namespace ROOT
 
 namespace std {
 template <>
 struct less<ROOT::Internal::RConcurrentHashColl::HashValue> {
-   bool operator()(const ROOT::Internal::RConcurrentHashColl::HashValue &lhs, const ROOT::Internal::RConcurrentHashColl::HashValue &rhs) const
+   bool operator()(const ROOT::Internal::RConcurrentHashColl::HashValue &lhs,
+                   const ROOT::Internal::RConcurrentHashColl::HashValue &rhs) const
    {
       /// Check piece by piece the 4 64 bits ints which make up the hash.
       auto l = lhs.Get();
@@ -96,6 +98,6 @@ struct less<ROOT::Internal::RConcurrentHashColl::HashValue> {
       // clang-format on
    }
 };
-} // End NS std
+} // namespace std
 
 #endif
