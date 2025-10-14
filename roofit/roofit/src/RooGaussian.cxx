@@ -55,6 +55,7 @@ RooGaussian::RooGaussian(const RooGaussian& other, const char* name) :
 
 double RooGaussian::evaluate() const
 {
+
    return RooFit::Detail::MathFuncs::gaussian(x, mean, sigma);
 }
 
