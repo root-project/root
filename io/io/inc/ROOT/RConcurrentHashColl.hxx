@@ -45,8 +45,8 @@ public:
       HashValue(const char *data, int len);
       ULong64_t const *Get() const { return fDigest; }
 
-      /// Return the hash value for this object
-      size_t Hash() const noexcept
+      /// Return the 64-bit hash of this 256-bit long digest/hash (4 x 64-bit)
+      size_t ShortHash() const noexcept
       {
          std::hash<ULong64_t> hasher;
          return hasher(fDigest[0]) ^ hasher(fDigest[1]) ^ hasher(fDigest[2]) ^ hasher(fDigest[3]);

@@ -12,7 +12,7 @@ template <>
 struct hash<ROOT::Internal::RConcurrentHashColl::HashValue> {
    std::size_t operator()(const ROOT::Internal::RConcurrentHashColl::HashValue &key) const noexcept
    {
-      return key.Hash();
+      return key.ShortHash();
    }
 };
 } // namespace std
