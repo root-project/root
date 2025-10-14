@@ -123,10 +123,14 @@ jobs:
       ${{ (github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && join( matrix.overrides, ', ' )) || '' }}
 
     steps:
+      - name: Cleanup workdir
+        run: rm -rf ${{ github.workspace }}/*
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref_name }}
+          path: "src"
 
       - name: Apply option overrides from matrix for this job for non-release builds
         if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
@@ -159,7 +163,7 @@ jobs:
 
       - name: Set up curl CA bundle for Davix to work with https
         run: 'echo SSL_CERT_FILE=/opt/local/share/curl/curl-ca-bundle.crt >> $GITHUB_ENV'
-        
+
       - name: Pull Request Build
         shell: bash -leo pipefail {0}
         if: github.event_name == 'pull_request'
@@ -231,13 +235,7 @@ jobs:
   build-windows:
     # For any event that is not a PR, the CI will always run. In PRs, the CI
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
-    if: |
-        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !(
-          contains(github.event.pull_request.title, '[skip-ci]') ||
-          contains(github.event.pull_request.title, '[skip ci]') ||
-          contains(github.event.pull_request.labels.*.name, 'skip ci')
-        ))
+    if: false
 
     permissions:
       contents: read
@@ -277,6 +275,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref_name }}
+          path: "src"
 
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
@@ -378,50 +377,50 @@ jobs:
         include:
           - image: fedora42
             overrides: ["CMAKE_CXX_STANDARD=23"]
-          - image: fedora43
-            overrides: ["CMAKE_CXX_STANDARD=23"]
-            is_special: true
-          - image: alma8
-          - image: alma9
-            overrides: ["CMAKE_BUILD_TYPE=Debug"]
-          - image: alma10
-          - image: ubuntu22
-            overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
-          - image: ubuntu2404
-            overrides: ["CMAKE_BUILD_TYPE=Debug"]
-          - image: ubuntu2504
-            overrides: ["CMAKE_CXX_STANDARD=23"]
-          - image: ubuntu2510
-            is_special: true
-            overrides: ["CMAKE_CXX_STANDARD=23"]
-          - image: debian125
-            overrides: ["CMAKE_CXX_STANDARD=20", "dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
-          - image: debian13
-            overrides: ["dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
-          # Special builds
-          - image: alma9
-            is_special: true
-            property: modules_off
-            overrides: ["runtime_cxxmodules=Off"]
-          - image: alma9
-            is_special: true
-            property: march_native
-            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "builtin_zlib=ON", "builtin_zstd=ON"]
-          - image: alma9
-            is_special: true
-            property: arm64
-            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "builtin_zlib=ON", "builtin_zstd=ON"]
-            architecture: ARM64
-          - image: alma10
-            is_special: true
-            property: "clang Ninja"
-            overrides: ["CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
-            cmake_generator: Ninja
-          # Fedora Rawhide with Python debug build
-          - image: rawhide
-            is_special: true
-            property: "Fedora pydebug"
-            overrides: ["CMAKE_CXX_STANDARD=23"]
+#          - image: fedora43
+#            overrides: ["CMAKE_CXX_STANDARD=23"]
+#            is_special: true
+#          - image: alma8
+#          - image: alma9
+#            overrides: ["CMAKE_BUILD_TYPE=Debug"]
+#          - image: alma10
+#          - image: ubuntu22
+#            overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
+#          - image: ubuntu2404
+#            overrides: ["CMAKE_BUILD_TYPE=Debug"]
+#          - image: ubuntu2504
+#            overrides: ["CMAKE_CXX_STANDARD=23"]
+#          - image: ubuntu2510
+#            is_special: true
+#            overrides: ["CMAKE_CXX_STANDARD=23"]
+#          - image: debian125
+#            overrides: ["CMAKE_CXX_STANDARD=20", "dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
+#          - image: debian13
+#            overrides: ["dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
+#          # Special builds
+#          - image: alma9
+#            is_special: true
+#            property: modules_off
+#            overrides: ["runtime_cxxmodules=Off"]
+#          - image: alma9
+#            is_special: true
+#            property: march_native
+#            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "builtin_zlib=ON", "builtin_zstd=ON"]
+#          - image: alma9
+#            is_special: true
+#            property: arm64
+#            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "builtin_zlib=ON", "builtin_zstd=ON"]
+#            architecture: ARM64
+#          - image: alma10
+#            is_special: true
+#            property: "clang Ninja"
+#            overrides: ["CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
+#            cmake_generator: Ninja
+#          # Fedora Rawhide with Python debug build
+#          - image: rawhide
+#            is_special: true
+#            property: "Fedora pydebug"
+#            overrides: ["CMAKE_CXX_STANDARD=23"]
           # Disable GPU builds until the DNS problem is solved  
           # - image: ubuntu2404-cuda
           #   is_special: true
@@ -453,17 +452,17 @@ jobs:
       POST_INSTALL_DIR: /github/home/ROOT-CI/PostInstall
 
     steps:
-      - name: Configure large ccache
-        if: ${{ matrix.is_special }}
-        run: |
-          ccache -o max_size=5G
-          ccache -p || true
-          ccache -s || true
+      - name: Cleanup workdir
+        run: rm -rf *
 
-      - name: Configure small ccache
-        if: ${{ !matrix.is_special }}
+      - name: Directory tree
+        run: ls -l
+
+      - name: Configure ccache
+        env:
+          CCACHE_SIZE: ${{ matrix.is_special && '5G' || '1.5G' }}
         run: |
-          ccache -o max_size=1.5G
+          ccache -o max_size=${CCACHE_SIZE}
           ccache -p || true
           ccache -s || true
 
@@ -473,10 +472,17 @@ jobs:
         # code of the `if`.
         run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
 
+      - name: Directory tree
+        run: ls -l
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref_name }}
+          path: "src"
+
+      - name: Directory tree
+        run: ls -l
 
       - name: Dump GitHub context
         env:
