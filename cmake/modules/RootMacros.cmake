@@ -2370,7 +2370,7 @@ macro(ROOTTEST_COMPILE_MACRO filename)
 
   set(root_compile_macro ${CMAKE_COMMAND} -E env
       ROOT_LIBRARY_PATH="${CMAKE_CURRENT_BINARY_DIR}"
-      ROOT_INCLUDE_PATH="${CMAKE_CURRENT_BINARY_DIR}"
+      ROOT_INCLUDE_PATH="${CMAKE_CURRENT_BINARY_DIR}:${DEFAULT_ROOT_INCLUDE_PATH}"
       ${ROOT_root_CMD}
       -e "gSystem->SetBuildDir(\"${CMAKE_CURRENT_BINARY_DIR}\", true)"
       ${RootMacroDirDefines}
