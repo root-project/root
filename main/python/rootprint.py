@@ -38,32 +38,32 @@ EPILOG = """Examples:
 """
 
 def get_argparse():
-        # Collect arguments with the module argparse
-        parser = cmdLineUtils.getParserFile(description, EPILOG)
-        parser.prog = 'rootprint'
-        parser.add_argument("-d", "--directory", help=DIRECTORY_HELP)
-        parser.add_argument("--divide", help=DIVIDE_HELP)
-        parser.add_argument("-D", "--draw", default="",  help=DRAW_HELP)
-        parser.add_argument("-f", "--format", help=FORMAT_HELP)
-        parser.add_argument("-o", "--output", help=OUTPUT_HELP)
-        parser.add_argument("-s", "--size", help=SIZE_HELP)
-        parser.add_argument("-S", "--style", help=STYLE_HELP)
-        parser.add_argument("-v", "--verbose", action="store_true", help=VERBOSE_HELP)
-        parser.add_argument("-r", "--recursive", action="store_true", help=RECURSIVE_HELP)
-        return parser
+	# Collect arguments with the module argparse
+	parser = cmdLineUtils.getParserFile(description, EPILOG)
+	parser.prog = 'rootprint'
+	parser.add_argument("-d", "--directory", help=DIRECTORY_HELP)
+	parser.add_argument("--divide", help=DIVIDE_HELP)
+	parser.add_argument("-D", "--draw", default="",  help=DRAW_HELP)
+	parser.add_argument("-f", "--format", help=FORMAT_HELP)
+	parser.add_argument("-o", "--output", help=OUTPUT_HELP)
+	parser.add_argument("-s", "--size", help=SIZE_HELP)
+	parser.add_argument("-S", "--style", help=STYLE_HELP)
+	parser.add_argument("-v", "--verbose", action="store_true", help=VERBOSE_HELP)
+  parser.add_argument("-r", "--recursive", action="store_true", help=RECURSIVE_HELP)
+	return parser
 
 def execute():
-        parser = get_argparse()
+	parser = get_argparse()
 
-        # Put arguments in shape
-        sourceList, optDict = cmdLineUtils.getSourceListOptDict(parser)
+	# Put arguments in shape
+	sourceList, optDict = cmdLineUtils.getSourceListOptDict(parser)
 
-        # Process rootPrint
-        return cmdLineUtils.rootPrint(sourceList, directoryOption = optDict["directory"], \
-                                                                divideOption = optDict["divide"], drawOption = optDict["draw"], \
-                                                                formatOption = optDict["format"], \
-                                                                outputOption = optDict["output"], sizeOption = optDict["size"], \
-                                                                styleOption = optDict["style"], verboseOption = optDict["verbose"], \
-                                                                recursiveOption = optDict["recursive"])
+	# Process rootPrint
+	return cmdLineUtils.rootPrint(sourceList, directoryOption = optDict["directory"], \
+								divideOption = optDict["divide"], drawOption = optDict["draw"], \
+								formatOption = optDict["format"], \
+								outputOption = optDict["output"], sizeOption = optDict["size"], \
+                styleOption = optDict["style"], verboseOption = optDict["verbose"], \
+                recursiveOption = optDict["recursive"])
 if __name__ == "__main__":
-        sys.exit(execute())
+	sys.exit(execute())
