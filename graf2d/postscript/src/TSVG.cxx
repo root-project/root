@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cctype>
+#include <cmath>
 #include <fstream>
 
 #include "TROOT.h"
@@ -32,7 +33,7 @@
 
 Int_t TSVG::fgLineJoin = 0;
 Int_t TSVG::fgLineCap  = 0;
-
+Bool_t TSVG::fgCompact = kFALSE;
 
 /** \class TSVG
 \ingroup PS
@@ -1512,6 +1513,9 @@ void TSVG::Initialize()
    PrintStr("@");
    PrintStr("</title>@");
 
+   if (fgCompact)
+      return;
+
    // Description
    PrintStr("<desc>@");
    PrintFast(22,"Creator: ROOT Version ");
@@ -1531,6 +1535,18 @@ void TSVG::Initialize()
    PrintStr("<defs>@");
    PrintStr("</defs>@");
 
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write real value into output stream
+/// In compact form only integer value will be written
+
+void TSVG::WriteReal(Float_t r, Bool_t space)
+{
+   if (fgCompact)
+      TVirtualPS::WriteInteger(std::lround(r), space);
+   else
+      TVirtualPS::WriteReal(r, space);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2063,4 +2079,23 @@ void TSVG::CellArrayEnd()
 void TSVG::DrawPS(Int_t, Float_t *, Float_t *)
 {
    Warning("TSVG::DrawPS", "not yet implemented");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set compact mode for svg output
+/// If enabled - discards creation of <desc> and <defs> section in the SVG file
+/// Also all float values will be rounded to nearest integer values
+/// Produced SVG file potentially can have artifacts but let create much smaller SVG files
+
+void TSVG::SetCompact(Bool_t on)
+{
+   fgCompact = on;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns compact mode for svg output
+
+Bool_t TSVG::IsCompact()
+{
+   return fgCompact;
 }
