@@ -633,7 +633,7 @@ void TDirectoryFile::Close(Option_t *option)
 /// objects (excluding those to be deleted) into a new TFile.
 ///
 /// ## WARNING
-/// If the key to be deleted contains special characters ("+","^","?", etc
+/// If the key to be deleted contains special characters ("+","^","?", etc)
 /// that have a special meaning for the regular expression parser (see TRegexp)
 /// then you must specify 2 backslash characters to escape the regular expression.
 /// For example, if the key to be deleted is namecycle = "C++", you must call
