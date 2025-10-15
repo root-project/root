@@ -68,7 +68,7 @@ ROOT_EXECUTABLE(eventexe MainEvent.cxx LIBRARIES Event RIO Tree TreePlayer Hist 
 ROOT_ADD_TEST(test-event COMMAND eventexe)
 
 #---guitest------------------------------------------------------------------------------------
-if(TARGET Gui) 
+if(TARGET Gui)
   ROOT_EXECUTABLE(guitest guitest.cxx LIBRARIES RIO Gui Gpad Hist)
 endif()
 
@@ -183,6 +183,11 @@ if(ROOT_opengl_FOUND AND TARGET TreeViewer)
                 COMMAND ${ROOT_root_CMD} -b --web=off -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressGraphics.cxx
                 FAILREGEX "FAILED|Error in"
                 DEPENDS test-stressgraphics)
+  ROOT_ADD_TEST(test-stressgraphics-svg
+                ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
+                COMMAND stressGraphics -b --web=off -p=svg --svg=${CMAKE_CURRENT_SOURCE_DIR}/svg_ref/
+                FAILREGEX "FAILED|Error in"
+                LABELS longtest)
   if(CHROME_EXECUTABLE)
     ROOT_ADD_TEST(test-stressgraphics-chrome
                   RUN_SERIAL

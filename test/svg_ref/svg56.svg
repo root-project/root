@@ -1,0 +1,28 @@
+<?xml version="1.0" standalone="no"?>
+<svg width="567" height="550" viewBox="0 0 567 550" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+<title>
+svg56.svg
+</title>
+<rect x="0.500" y="0" width="567" height="550" fill="#f2f2f2"/>
+<path d="M0.500,550l 2.0, -2.0v -545h 562l 2.0, -2.0h -566v 549z" fill="white"/>
+<path d="M0.500,550l 2.0, -2.0h 562v -545l 2.0, -2.0v 549h -566z" fill="#a9a9a9"/>
+<rect x="29" y="27" width="170" height="220" fill="#f2f2f2"/>
+<path d="M29,247l 2.0, -2.0v -215h 166l 2.0, -2.0h -170v 219z" fill="white"/>
+<path d="M29,247l 2.0, -2.0h 166v -215l 2.0, -2.0v 219h -170z" fill="#a9a9a9"/>
+<rect x="46" y="49" width="136" height="176" fill="#f2f2f2"/>
+<rect x="46" y="49" width="136" height="176" fill="none" stroke="#f2f2f2"/>
+<rect x="312" y="82" width="227" height="165" fill="#f2f2f2"/>
+<path d="M312,247l 2.0, -2.0v -160h 222l 2.0, -2.0h -226v 164z" fill="white"/>
+<path d="M312,247l 2.0, -2.0h 222v -160l 2.0, -2.0v 164h -226z" fill="#a9a9a9"/>
+<rect x="335" y="99" width="181" height="132" fill="#f2f2f2"/>
+<rect x="335" y="99" width="181" height="132" fill="none" stroke="#f2f2f2"/>
+<rect x="312" y="302" width="170" height="220" fill="#f2f2f2"/>
+<path d="M312,522l 2.0, -2.0v -215h 166l 2.0, -2.0h -170v 219z" fill="white"/>
+<path d="M312,522l 2.0, -2.0h 166v -215l 2.0, -2.0v 219h -170z" fill="#a9a9a9"/>
+<rect x="329" y="324" width="136" height="176" fill="#f2f2f2"/>
+<rect x="329" y="324" width="136" height="176" fill="none" stroke="#f2f2f2"/>
+<rect x="29" y="357" width="227" height="165" fill="#f2f2f2"/>
+<path d="M29,522l 2.0, -2.0v -160h 222l 2.0, -2.0h -226v 164z" fill="white"/>
+<path d="M29,522l 2.0, -2.0h 222v -160l 2.0, -2.0v 164h -226z" fill="#a9a9a9"/>
+<rect x="52" y="374" width="181" height="132" fill="#f2f2f2"/>
+<rect x="52" y="374" width="181" height="132" fill="none" stroke="#f2f2f2"/></svg>

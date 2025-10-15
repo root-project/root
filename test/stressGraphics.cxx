@@ -281,30 +281,43 @@ Bool_t CompareSVGFiles(const TString &filename1, const TString &filename2)
 
    std::string line1, line2;
 
-   int cnt = 0;
+   int cnt = 0, diffcnt = 0;
 
    while (std::getline(f1, line1) && std::getline(f2, line2)) {
-      cnt++;
-      // if plain format there is CreationDate comment
-      if ((line1 != line2) && (gSvgCompact || (cnt != 8))) {
-         printf("Diff in line %d\n", cnt);
-         printf("Ref: %s\n", line1.substr(0, 180).c_str());
-         printf("New: %s\n", line2.substr(0, 180).c_str());
+      ++cnt;
+
+      if (line1 == line2)
+         continue;
+
+      // ignore CreationDate comment
+      if (!gSvgCompact && (cnt == 8))
+         continue;
+
+      printf("Diff in line %d", cnt);
+      if (line1.length() != line2.length())
+         printf("  len1: %d len2: %d\n", (int) line1.length(), (int) line2.length());
+      else
+         printf("\n");
+      printf("Ref: %s\n", line1.substr(0, 200).c_str());
+      printf("New: %s\n", line2.substr(0, 200).c_str());
+      if (++diffcnt > 5)
          return kFALSE;
-      }
    }
+
+   if (diffcnt > 0)
+      return kFALSE;
 
    if (!f1.eof()) {
       printf("FAILURE ref file %s still has content\n", filename1.Data());
       printf("Diff in line %d\n", cnt);
-      printf("Ref: %s\n", line1.substr(0, 180).c_str());
+      printf("Ref: %s\n", line1.substr(0, 200).c_str());
       return kFALSE;
    }
 
    if (std::getline(f2, line2) || !f2.eof()) {
       printf("FAILURE new file %s still has content\n", filename2.Data());
       printf("Diff in line %d\n", cnt);
-      printf("New: %s\n", line2.substr(0, 180).c_str());
+      printf("New: %s\n", line2.substr(0, 200).c_str());
       return kFALSE;
    }
 
@@ -527,7 +540,7 @@ void print_reports()
       StatusPrint(e.pngfile, 0, "  PNG output", e.TestNum, FileSize(e.pngfile), ref.pngref, ref.pngerr);
 
       if (e.execute_ccode) {
-         Int_t ret_code = StatusPrint(e.psfile, -1, "  C file result", e.TestNum,
+         Int_t ret_code = StatusPrint(e.ps2file, -1, "  C file result", e.TestNum,
                                     e.IPS ? FileSize(e.ps2file) : AnalysePS(e.ps2file), ref.ps2ref, ref.ps2err);
 
 #ifndef __CLING__
@@ -1351,7 +1364,8 @@ void tgaxis4()
    h1->GetXaxis()->SetTimeFormat("%Y:%m:%d");
    h1->Draw();
 
-   TestReport(C, "TGaxis 4 (Time on axis)");
+   // test output differs on different platforms therefore skip it for the time been
+   TestReport(C, "TGaxis 4 (Time on axis)", "", kSkipSvgTest);
    delete h1;
 }
 
@@ -3357,14 +3371,16 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    if (!gVerbose)
       gErrorIgnoreLevel = 0;
 
-   const char *ref_name = "stressGraphics.ref", *ref_kind = "    ";
+   const char *ref_name = "stressGraphics.ref", *ref_kind = "       ";
    if (gWebMode) {
       ref_name = "stressGraphics_web.ref";
-      ref_kind = " WEB";
+      ref_kind = gSvgMode ? "WEB SVG" : "    WEB";
+   } else if (gSvgMode) {
+      ref_kind = "    SVG";
    } else {
 #ifdef R__HAS_CLOUDFLARE_ZLIB
       ref_name = "stressGraphics_builtinzlib.ref";
-      ref_kind = "ZLIB";
+      ref_kind = "   ZLIB";
 #endif
    }
 
@@ -3377,7 +3393,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
       PrintRefHeader();
    } else {
       std::cout << "**********************************************************************\n";
-      std::cout << "*  Starting  Graphics - S T R E S S suite                       " << ref_kind << " *\n";
+      std::cout << "*  Starting  Graphics - S T R E S S suite                    " << ref_kind << " *\n";
    }
 
    gTestNum     = 0;
@@ -3506,7 +3522,11 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
       gBenchmark->Print("stressGraphics");
 
       Double_t rootmarks = 1.;
-      if (gWebMode) {
+      if (gSvgMode) {
+         Double_t ct = gBenchmark->GetCpuTime("stressGraphics");
+         //normalize at 3945 rootmarks on hades58
+         rootmarks = 3945.*(0.99/ct);
+      } else if (gWebMode) {
          Double_t rt = gBenchmark->GetRealTime("stressGraphics");
          //normalize at 2692 rootmarks on AMD Ryzen 9 3900X with chromium browser
          rootmarks = 2692.*(52.36/rt);
@@ -3517,7 +3537,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
       }
 
       printf("**********************************************************************\n");
-      printf("*  ROOTMARKS =%6.1f   *  Root %-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),
+      printf("*  ROOTMARKS = %6.1f  *  Root %-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),
              gROOT->GetVersionDate(),gROOT->GetVersionTime());
       printf("**********************************************************************\n");
    }
