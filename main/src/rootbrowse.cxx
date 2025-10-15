@@ -76,7 +76,7 @@ static RootBrowseArgs ParseArgs(const char **args, int nArgs)
       return outArgs;
    }
 
-   if (opts.GetBooleanFlag("help")) {
+   if (opts.GetSwitch("help")) {
       outArgs.fPrintHelp = RootBrowseArgs::EPrintUsage::kLong;
       return outArgs;
    }
@@ -84,7 +84,7 @@ static RootBrowseArgs ParseArgs(const char **args, int nArgs)
    if (auto web = opts.GetFlagValue("web"); !web.empty())
       outArgs.fWeb = web;
 
-   if (opts.GetBooleanFlag("webOff"))
+   if (opts.GetSwitch("webOff"))
       outArgs.fWeb = "off";
 
    if (opts.GetArgs().empty())
