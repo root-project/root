@@ -7500,7 +7500,7 @@ void TPad::PixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert X/Y into absolute pixel coordinates
+/// Convert X/Y into absolute pixel coordinates - integer
 
 void TPad::XYtoAbsPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const
 {
@@ -7509,12 +7509,39 @@ void TPad::XYtoAbsPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) co
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert X/Y into pixel coordinates
+/// Check value for valid range for pixel values
+
+Double_t pixel_boundary(Double_t v)
+{
+   return v < -kMaxPixel ? -kMaxPixel : (v > kMaxPixel ? kMaxPixel : v);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert X/Y into absolute pixel coordinates - doble
+/// Introduced to avoid pixel rounding problems
+
+void TPad::XYtoAbsPixel(Double_t x, Double_t y, Double_t &xpixel, Double_t &ypixel) const
+{
+   xpixel = pixel_boundary(fXtoAbsPixelk + x*fXtoPixel);
+   ypixel = pixel_boundary(fYtoAbsPixelk + y*fYtoPixel);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert X/Y into pixel coordinates - integer
 
 void TPad::XYtoPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const
 {
    xpixel = XtoPixel(x);
    ypixel = YtoPixel(y);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert X/Y into pixel coordinates - double
+
+void TPad::XYtoPixel(Double_t x, Double_t y, Double_t &xpixel, Double_t &ypixel) const
+{
+   xpixel = pixel_boundary(fAbsCoord ? fXtoAbsPixelk + x*fXtoPixel : fXtoPixelk + x*fXtoPixel);
+   ypixel = pixel_boundary(fAbsCoord ? fYtoAbsPixelk + y*fYtoPixel : fYtoPixelk + y*fYtoPixel);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
