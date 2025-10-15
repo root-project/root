@@ -29,6 +29,7 @@ protected:
 
    static Int_t fgLineJoin;       ///< Appearance of joining lines
    static Int_t fgLineCap;        ///< Appearance of line caps
+   static Bool_t fgCompact;       ///< compact SVG format with integer values and no desc/defs
 
 public:
    TSVG();
@@ -72,6 +73,11 @@ public:
    void  Text(Double_t, Double_t, const wchar_t *) override {}
    void  TextNDC(Double_t u, Double_t v, const char *string);
    void  TextNDC(Double_t, Double_t, const wchar_t *) {}
+   void  WriteReal(Float_t r, Bool_t space=kTRUE) override;
+
+   static void SetCompact(Bool_t on = kTRUE);
+   static Bool_t IsCompact();
+
    Double_t UtoSVG(Double_t u);
    Double_t VtoSVG(Double_t v);
    Double_t XtoSVG(Double_t x);
