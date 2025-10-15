@@ -2207,9 +2207,11 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
 
 Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size, const Char_t *text1)
 {
-   if (!gPad) return 0;
+   if (!gPad)
+      return 0;
    TString newText = text1;
-   if( newText.Length() == 0) return 0;
+   if(newText.Length() == 0)
+      return 0;
    newText.ReplaceAll("#hbox","#mbox");
 
    fError = nullptr;
@@ -2221,7 +2223,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    fError = nullptr;
 
    // Do not use Latex if font is low precision.
-   if (fTextFont%10 < 2) {
+   if (fTextFont % 10 < 2) {
       if (gVirtualX) gVirtualX->SetTextAngle(angle);
       if (gVirtualPS) gVirtualPS->SetTextAngle(angle);
       gPad->PaintText(x,y,text1);
@@ -2247,25 +2249,25 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
          }
       } else {
          return 1;
-      };
+      }
    }
 
    Double_t saveSize = size;
    Int_t saveFont = fTextFont;
-   if (fTextFont%10 > 2) {
+   if (fTextFont % 10 > 2) {
       size = GetTextSizePercent(size);
       SetTextFont(10*(saveFont/10) + 2);
    }
 
-   Int_t length = newText.Length() ;
-   const Char_t *text = newText.Data() ;
+   Int_t length = newText.Length();
+   const Char_t *text = newText.Data();
 
    Double_t xsave = fX;
    Double_t ysave = fY;
    fX = x;
    fY = y;
    gPad->XYtoAbsPixel(fX, fY, x, y);
-   fShow = kFALSE ;
+   fShow = kFALSE;
    TLatexFormSize fs = FirstParse(angle,size,text);
 
    fOriginSize = size;
@@ -2290,14 +2292,14 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
       newSpec.fSize = size;
 
       switch (valign) {
-         case 0: y -= fs.Under() ; break;
+         case 0: y -= fs.Under(); break;
          case 1: break;
-         case 2: y += fs.Height()*0.5-fs.Under(); y++; break;
-         case 3: y += fs.Over() ; break;
+         case 2: y += fs.Height()*0.5-fs.Under() + 1.; break;
+         case 3: y += fs.Over(); break;
       }
       switch (halign) {
-         case 2: x -= fs.Width()/2  ; break;
-         case 3: x -= fs.Width()    ; break;
+         case 2: x -= fs.Width()/2; break;
+         case 3: x -= fs.Width(); break;
       }
       Analyse(x,y,newSpec,text,length);
    }
@@ -2313,8 +2315,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    fTabSize.clear();
    fX = xsave;
    fY = ysave;
-   if (fError) return 0;
-   return 1;
+   return fError ? 0 : 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
