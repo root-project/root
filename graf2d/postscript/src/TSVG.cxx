@@ -33,7 +33,6 @@
 
 Int_t TSVG::fgLineJoin = 0;
 Int_t TSVG::fgLineCap  = 0;
-Bool_t TSVG::fgCompact = kFALSE;
 
 /** \class TSVG
 \ingroup PS
@@ -82,6 +81,7 @@ TSVG::TSVG() : TVirtualPS()
 {
    fStream      = nullptr;
    fType        = 0;
+   fCompact     = kFALSE;
    gVirtualPS   = this;
    fBoundingBox = kFALSE;
    fRange       = kFALSE;
@@ -100,10 +100,11 @@ TSVG::TSVG() : TVirtualPS()
 ///            necessary to specify this parameter at creation time because it
 ///            has a default value (which is ignore in the SVG case).
 
-TSVG::TSVG(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
+TSVG::TSVG(const char *fname, Int_t wtype, Bool_t compact) : TVirtualPS(fname, wtype)
 {
    fStream = nullptr;
    SetTitle("SVG");
+   fCompact = compact;
    Open(fname, wtype);
 }
 
@@ -1513,7 +1514,7 @@ void TSVG::Initialize()
    PrintStr("@");
    PrintStr("</title>@");
 
-   if (fgCompact)
+   if (fCompact)
       return;
 
    // Description
@@ -1543,7 +1544,7 @@ void TSVG::Initialize()
 
 void TSVG::WriteReal(Float_t r, Bool_t space)
 {
-   if (fgCompact)
+   if (fCompact)
       TVirtualPS::WriteInteger(std::lround(r), space);
    else
       TVirtualPS::WriteReal(r, space);
@@ -2080,23 +2081,4 @@ void TSVG::CellArrayEnd()
 void TSVG::DrawPS(Int_t, Float_t *, Float_t *)
 {
    Warning("TSVG::DrawPS", "not yet implemented");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set compact mode for svg output
-/// If enabled - discards creation of <desc> and <defs> section in the SVG file
-/// Also all float values will be rounded to nearest integer values
-/// Produced SVG file potentially can have artifacts but let create much smaller SVG files
-
-void TSVG::SetCompact(Bool_t on)
-{
-   fgCompact = on;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Returns compact mode for svg output
-
-Bool_t TSVG::IsCompact()
-{
-   return fgCompact;
 }
