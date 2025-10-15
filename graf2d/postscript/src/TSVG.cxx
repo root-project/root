@@ -1539,14 +1539,25 @@ void TSVG::Initialize()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Write real value into output stream
-/// In compact form only integer value will be written
+/// Write float value into output stream
+/// In compact form try to store only first 2-3 significant digits
 
 void TSVG::WriteReal(Float_t r, Bool_t space)
 {
-   if (fCompact)
-      TVirtualPS::WriteInteger(std::lround(r), space);
-   else
+   if (fCompact) {
+      auto a = std::abs(r);
+      if (a > 10)
+         TVirtualPS::WriteInteger(std::lround(r), space);
+      else if (a < 0.005)
+         TVirtualPS::WriteReal(r, space);
+      else {
+         char str[15];
+         snprintf(str, 15, (a > 1) ? "%3.1f" : "%5.3f", r);
+         if(space)
+            PrintFast(1," ");
+         PrintStr(str);
+      }
+   } else
       TVirtualPS::WriteReal(r, space);
 }
 
