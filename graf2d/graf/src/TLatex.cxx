@@ -2264,8 +2264,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    Double_t ysave = fY;
    fX = x;
    fY = y;
-   x = gPad->XtoAbsPixel(x);
-   y = gPad->YtoAbsPixel(y);
+   gPad->XYtoAbsPixel(fX, fY, x, y);
    fShow = kFALSE ;
    TLatexFormSize fs = FirstParse(angle,size,text);
 
