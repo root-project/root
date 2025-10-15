@@ -49,7 +49,7 @@ def get_argparse():
 	parser.add_argument("-s", "--size", help=SIZE_HELP)
 	parser.add_argument("-S", "--style", help=STYLE_HELP)
 	parser.add_argument("-v", "--verbose", action="store_true", help=VERBOSE_HELP)
-  parser.add_argument("-r", "--recursive", action="store_true", help=RECURSIVE_HELP)
+	parser.add_argument("-r", "--recursive", action="store_true", help=RECURSIVE_HELP)
 	return parser
 
 def execute():
@@ -63,7 +63,7 @@ def execute():
 								divideOption = optDict["divide"], drawOption = optDict["draw"], \
 								formatOption = optDict["format"], \
 								outputOption = optDict["output"], sizeOption = optDict["size"], \
-                styleOption = optDict["style"], verboseOption = optDict["verbose"], \
-                recursiveOption = optDict["recursive"])
+								styleOption = optDict["style"], verboseOption = optDict["verbose"], \
+								recursiveOption = optDict["recursive"])
 if __name__ == "__main__":
 	sys.exit(execute())
