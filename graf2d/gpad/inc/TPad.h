@@ -382,8 +382,10 @@ public:
    Double_t          YtoPad(Double_t y) const override;
    Int_t             XtoPixel(Double_t x) const override;
    Int_t             YtoPixel(Double_t y) const override;
-   virtual void      XYtoAbsPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const;
-   virtual void      XYtoPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const;
+   void              XYtoAbsPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const override;
+   void              XYtoAbsPixel(Double_t x, Double_t y, Double_t &xpixel, Double_t &ypixel) const override;
+   void              XYtoPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const override;
+   void              XYtoPixel(Double_t x, Double_t y, Double_t &xpixel, Double_t &ypixel) const override;
 
    TObject          *CreateToolTip(const TBox *b, const char *text, Long_t delayms) override;
    void              DeleteToolTip(TObject *tip) override;
