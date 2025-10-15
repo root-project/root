@@ -123,6 +123,25 @@ jobs:
       ${{ (github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && join( matrix.overrides, ', ' )) || '' }}
 
     steps:
+      - name: Node state
+        shell: bash -leo pipefail {0}
+        run: |
+          echo $PATH
+          which cmake || true
+          find /opt -name cmake -type f || true
+          find /usr -name cmake -type f || true
+          cmake --version || true
+          which c++ || true
+          c++ --version || true
+          uname -a || true
+          sw_vers || true
+          uptime || true
+          df || true
+          echo $SHELL
+          echo $0
+          python3 -m site || true
+          pkgutil --pkg-info=com.apple.pkg.CLTools_Executables || true
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
