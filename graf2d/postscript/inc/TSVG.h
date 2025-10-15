@@ -23,17 +23,17 @@ protected:
    Float_t      fXsize;           ///< Page size along X
    Float_t      fYsize;           ///< Page size along Y
    Int_t        fType;            ///< Workstation type used to know if the SVG is open
+   Bool_t       fCompact;         ///< True when the SVG header is printed
    Bool_t       fBoundingBox;     ///< True when the SVG header is printed
    Bool_t       fRange;           ///< True when a range has been defined
    Double_t     fYsizeSVG;        ///< Page's Y size in SVG units
 
    static Int_t fgLineJoin;       ///< Appearance of joining lines
    static Int_t fgLineCap;        ///< Appearance of line caps
-   static Bool_t fgCompact;       ///< compact SVG format with integer values and no desc/defs
 
 public:
    TSVG();
-   TSVG(const char *filename, Int_t type=-113);
+   TSVG(const char *filename, Int_t type=-113, Bool_t compact = kFALSE);
    ~TSVG() override;
 
    void  CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2) override;
@@ -50,6 +50,7 @@ public:
    void  DrawPolyMarker(Int_t n, Double_t *x, Double_t *y) override;
    void  DrawPS(Int_t n, Float_t *xw, Float_t *yw) override;
    void  DrawPS(Int_t n, Double_t *xw, Double_t *yw) override;
+   Bool_t IsCompact() const { return fCompact; }
    void  Initialize();
    void  MovePS(Double_t x, Double_t y);
    void  NewPage() override;
@@ -74,9 +75,6 @@ public:
    void  TextNDC(Double_t u, Double_t v, const char *string);
    void  TextNDC(Double_t, Double_t, const wchar_t *) {}
    void  WriteReal(Float_t r, Bool_t space=kTRUE) override;
-
-   static void SetCompact(Bool_t on = kTRUE);
-   static Bool_t IsCompact();
 
    Double_t UtoSVG(Double_t u);
    Double_t VtoSVG(Double_t v);
