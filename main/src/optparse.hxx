@@ -56,6 +56,7 @@
 #include <charconv>
 #include <cstring>
 #include <iostream>
+#include <limits>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
@@ -208,9 +209,14 @@ public:
       static_assert(std::is_integral_v<T> || std::is_floating_point_v<T>);
 
       if (auto val = GetFlagValue(name); !val.empty()) {
+         // NOTE: on paper std::from_chars is supported since C++17, however some compilers don't properly support it
+         // (e.g. it's not available at all on MacOS < 26 and only the integer overload is available in AlmaLinux 8).
+         // There is also no compiler define that we can use to determine the availability, so we just use it only
+         // from C++20 and hope for the best.
+#if __cplusplus >= 202002L && !defined(__APPLE__)
          T converted;
          auto res = std::from_chars(val.data(), val.data() + val.size(), converted);
-         if (res.ptr == val.end() && res.ec == std::errc{}) {
+         if (res.ptr == val.data() + val.size() && res.ec == std::errc{}) {
             return converted;
          } else {
             std::stringstream err;
@@ -225,6 +231,32 @@ public:
             else
                throw std::invalid_argument(err.str());
          }
+#else
+         std::conditional_t<std::is_integral_v<T>, long long, long double> converted;
+         std::size_t unconvertedPos;
+         if constexpr (std::is_integral_v<T>) {
+            converted = std::stoll(std::string(val), &unconvertedPos);
+         } else {
+            converted = std::stold(std::string(val), &unconvertedPos);
+         }
+
+         const bool isOor = converted > std::numeric_limits<T>::max();
+         if (unconvertedPos != val.size() || isOor) {
+            std::stringstream err;
+            err << "Failed to parse flag `" << name << "` with value `" << val << "`";
+            if constexpr (std::is_integral_v<T>)
+               err << " as an integer.\n";
+            else
+               err << " as a floating point number.\n";
+
+            if (isOor)
+               throw std::out_of_range(err.str());
+            else
+               throw std::invalid_argument(err.str());
+         }
+
+         return converted;
+#endif
       }
       return std::nullopt;
    }
