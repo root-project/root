@@ -203,8 +203,8 @@ jobs:
 
       - name: Update build cache after push to release branch
         shell: bash -leo pipefail {0}
-        if:   github.event_name == 'push'
-        run: ".github/workflows/root-ci-config/build_root.py 
+        if:   ${{ github.event_name == 'push' && !matrix.platform == 'mac15' && !matrix.platform == 'mac26' }}
+        run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.platform }}
                     --incremental    false
