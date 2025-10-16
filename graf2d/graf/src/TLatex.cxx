@@ -1173,8 +1173,8 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          hbar.SetTextSize(spec.fSize);
          hbar.SetTextAngle(fTextAngle);
          hbar.SetTextAlign(11);
-         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+         Double_t xOrigin, yOrigin;
+         gPad->XYtoAbsPixel(fX, fY, xOrigin, yOrigin);
          Double_t angle   = kPI*spec.fAngle/180.;
          Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
          Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
@@ -1195,8 +1195,8 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          minus.SetTextSize(spec.fSize);
          minus.SetTextAngle(fTextAngle);
          minus.SetTextAlign(11);
-         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+         Double_t xOrigin, yOrigin;
+         gPad->XYtoAbsPixel(fX, fY, xOrigin, yOrigin);
          Double_t angle   = kPI*spec.fAngle/180.;
          Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
          Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
@@ -1216,8 +1216,8 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          plus.SetTextSize(spec.fSize);
          plus.SetTextAngle(fTextAngle);
          plus.SetTextAlign(11);
-         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+         Double_t xOrigin, yOrigin;
+         gPad->XYtoAbsPixel(fX, fY, xOrigin, yOrigin);
          Double_t angle   = kPI*spec.fAngle/180.;
          Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
          Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
@@ -1237,8 +1237,8 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          mp.SetTextSize(spec.fSize);
          mp.SetTextAngle(fTextAngle+180);
          mp.SetTextAlign(11);
-         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+         Double_t xOrigin, yOrigin;
+         gPad->XYtoAbsPixel(fX, fY, xOrigin, yOrigin);
          Double_t angle   = kPI*spec.fAngle/180.;
          Double_t xx = gPad->AbsPixeltoX(Int_t((x+square-xOrigin)*TMath::Cos(angle)+(y-1.25*square-yOrigin)*TMath::Sin(angle)+xOrigin));
          Double_t yy = gPad->AbsPixeltoY(Int_t((x+square-xOrigin)*TMath::Sin(-angle)+(y-1.25*square-yOrigin)*TMath::Cos(angle)+yOrigin));
@@ -1274,8 +1274,8 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          bs.SetTextSize(spec.fSize);
          bs.SetTextAngle(fTextAngle);
          bs.SetTextAlign(11);
-         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+         Double_t xOrigin, yOrigin;
+         gPad->XYtoAbsPixel(fX, fY, xOrigin, yOrigin);
          Double_t angle   = kPI*spec.fAngle/180.;
          Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
          Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
@@ -1459,8 +1459,8 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             if (gVirtualX->InheritsFrom("TGCocoa")) y2 -= 4.7*sub;
             Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
             Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
-            Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-            Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+            Double_t xOrigin, yOrigin;
+            gPad->XYtoAbsPixel(fX, fY, xOrigin, yOrigin);
             Double_t xx  = gPad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y2-yOrigin)*sinang+xOrigin));
             Double_t yy  = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y2-yOrigin)*cosang+yOrigin));
             TText tilde;
@@ -1915,8 +1915,8 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
 
       if (fShow) {
          // paint the Latex sub-expression per sub-expression
-         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+         Double_t xOrigin, yOrigin;
+         gPad->XYtoAbsPixel(fX, fY, xOrigin, yOrigin);
          Double_t angle   = kPI*spec.fAngle/180.;
          Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
          Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
@@ -1970,11 +1970,11 @@ TLatex *TLatex::DrawLatexNDC(Double_t x, Double_t y, const char *text)
 /// If not specified - default line width will be used
 void TLatex::DrawPolyLine(Int_t npoints, Double_t *xx, Double_t *yy, const TextSpec_t &spec, Double_t scale_width)
 {
-   if (!gPad) return ;
+   if (!gPad) return;
    Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
    Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
-   Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-   Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+   Double_t xOrigin, yOrigin;
+   gPad->XYtoAbsPixel(fX, fY, xOrigin, yOrigin);
    for (Int_t n = 0; n < npoints; ++n) {
       Double_t mx  = gPad->AbsPixeltoX(Int_t((xx[n]-xOrigin)*cosang+(yy[n]-yOrigin)*sinang+xOrigin));
       Double_t my  = gPad->AbsPixeltoY(Int_t((xx[n]-xOrigin)*-sinang+(yy[n]-yOrigin)*cosang+yOrigin));
@@ -2009,11 +2009,11 @@ void TLatex::DrawPolyLine(Int_t npoints, Double_t *xx, Double_t *yy, const TextS
 
 void TLatex::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const TextSpec_t &spec)
 {
-   if (!gPad) return ;
+   if (!gPad) return;
    Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
    Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
-   Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-   Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+   Double_t xOrigin, yOrigin;
+   gPad->XYtoAbsPixel(fX, fY, xOrigin, yOrigin);
    Double_t xx  = gPad->AbsPixeltoX(Int_t((x1-xOrigin)*cosang+(y1-yOrigin)*sinang+xOrigin));
    Double_t yy  = gPad->AbsPixeltoY(Int_t((x1-xOrigin)*-sinang+(y1-yOrigin)*cosang+yOrigin));
 
@@ -2034,8 +2034,8 @@ void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, const TextSpec_t &
    if (r < 1) r = 1;
    Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
    Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
-   Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-   Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+   Double_t xOrigin, yOrigin;
+   gPad->XYtoAbsPixel(fX, fY, xOrigin, yOrigin);
 
    const Int_t np = 40;
    Double_t dphi = 2*kPI/np;
@@ -2066,8 +2066,8 @@ void TLatex::DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
    if (r2 < 1) r2 = 1;
    Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
    Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
-   Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-   Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+   Double_t xOrigin, yOrigin;
+   gPad->XYtoAbsPixel(fX, fY, xOrigin, yOrigin);
 
    const Int_t np = 40;
    Double_t dphi = (phimax-phimin)*kPI/(180*np);
