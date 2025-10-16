@@ -261,7 +261,7 @@ def git_pull(directory: str, repository: str, branch: str):
             returncode = subprocess_with_log(f"""
                 git clone --branch {branch} --single-branch {repository} "{targetdir}"
             """)
-        
+
         if returncode == 0:
             return
 

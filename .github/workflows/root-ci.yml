@@ -158,7 +158,7 @@ jobs:
       - name: Workflow dispatch
         shell: bash -leo pipefail {0}
         if: ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
-        run: ".github/workflows/root-ci-config/build_root.py 
+        run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ inputs.buildtype }}
                     --platform       ${{ matrix.platform }}
                     --incremental    ${{ inputs.incremental }}
@@ -172,7 +172,7 @@ jobs:
         if:   github.event_name == 'schedule'
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
-        run: ".github/workflows/root-ci-config/build_root.py 
+        run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      Release
                     --platform       ${{ matrix.platform }}
                     --incremental    false
@@ -186,7 +186,7 @@ jobs:
         if:   github.event_name == 'push'
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
-        run: ".github/workflows/root-ci-config/build_root.py 
+        run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.platform }}
                     --incremental    false
@@ -401,7 +401,7 @@ jobs:
             is_special: true
             property: "Fedora pydebug"
             overrides: ["CMAKE_CXX_STANDARD=23"]
-          # Disable GPU builds until the DNS problem is solved  
+          # Disable GPU builds until the DNS problem is solved
           # - image: ubuntu2404-cuda
           #   is_special: true
           #   property: gpu
