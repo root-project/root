@@ -1332,8 +1332,10 @@ void tgaxis4()
    TCanvas *C = StartTest(600,700);
 
    TDatime T0(2003,1,1,0,0,0);
+
    int X0 = T0.Convert();
    gStyle->SetTimeOffset(X0);
+
    TDatime T1(2002,9,23,0,0,0);
    int X1 = T1.Convert()-X0;
    TDatime T2(2003,3,7,0,0,0);
@@ -1363,8 +1365,15 @@ TString stime(time_t* t, bool utc = false, bool display_time_zone = true)
    if (utc) tt = gmtime(t);
    else     tt = localtime(t);
    char buf[256];
-   if (display_time_zone) strftime(buf, sizeof(buf), "%H:%M:%S %Z", tt);
-   else                   strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", tt);
+   if (!display_time_zone)
+      strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", tt);
+   else if (utc)
+      // different platforms (especially Windows) place different time zone specifier
+      // instead %Z for GMT time, so put GMT directly
+      strftime(buf, sizeof(buf), "%H:%M:%S GMT", tt);
+   else
+      strftime(buf, sizeof(buf), "%H:%M:%S %Z", tt);
+
    return TString(buf);
 }
 
@@ -1404,9 +1413,11 @@ void tgaxis5()
    l.DrawLine(0.5, 0, 0.5, 1.);
 
    for(int i = 0; i < 4; ++i){
-      for(int gmt = 0; gmt < 2; ++gmt){
-         const char* opt = (gmt ? "gmt" : "local");
-         TVirtualPad* p = C->cd(2*i + gmt + 1);
+      for(int gg = 0; gg < 2; ++gg) {
+         // in SVG mode always use global time to create reproducible output
+         int gmt = gg || gSvgMode ? 1 : 0;
+         const char* opt = gmt ? "gmt" : "local";
+         TVirtualPad* p = C->cd(2*i + gg + 1);
          p->SetTopMargin(0); p->SetBottomMargin(0);
          p->SetLeftMargin(0); p->SetRightMargin(0);
          p->SetFillStyle(4000);
@@ -1433,7 +1444,7 @@ void tgaxis5()
          char buf[bufSize];
          if (offset[i] < t[i]) {
             snprintf(buf, bufSize, "#splitline{%s, %s}{offset: %ld, option %s}",
-                    stime(t+i).Data(), stime(t+i, true).Data(), (long) offset[i], opt);
+                    stime(t+i, gSvgMode).Data(), stime(t+i, true).Data(), (long) offset[i], opt);
          } else {
             int h = t[i] / 3600;
             int m = (t[i] - 3600 * h) / 60 ;
