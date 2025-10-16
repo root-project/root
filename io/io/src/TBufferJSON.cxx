@@ -665,8 +665,10 @@ Bool_t TBufferJSON::IsSkipClassInfo(const TClass *cl) const
 
 TString TBufferJSON::ConvertToJSON(const void *obj, const TClass *cl, Int_t compact, const char *member_name)
 {
-   if (!cl)
+   if (!cl) {
       ::Error("TBufferJSON::ConvertToJSON", "Unknown class (probably missing dictionary).");
+      return TString();
+   }
    TClass *clActual = obj ? cl->GetActualClass(obj) : nullptr;
    const void *actualStart = obj;
    if (clActual && (clActual != cl)) {
