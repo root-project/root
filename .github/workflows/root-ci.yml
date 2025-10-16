@@ -122,7 +122,7 @@ jobs:
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
-      - ${{ matrix.arch }}
+      - ${{ matrix.arch == null && 'self-hosted' || matrix.arch }}
       - ${{ matrix.platform }}
 
     name: |
@@ -131,7 +131,7 @@ jobs:
 
     steps:
       - name: Cleanup
-        run: rm -rf ${github.workspace}/{src,build}
+        run: rm -rf ${{ github.workspace }}/{src,build}
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -140,6 +140,7 @@ jobs:
           path: src/
 
       - name: Update brew packages
+        if: ${{ matrix.platform == 'experimental-brew-ci' }}
         run: |
             brew update
             echo "Installing deps: $(brew deps --direct --include-build root)"
@@ -147,12 +148,14 @@ jobs:
             brew upgrade
 
       - name: Set up python venv
+        if: ${{ matrix.platform == 'experimental-brew-ci' }}
         run: |
-          python3 -m venv ROOT_CI
+          $(brew --prefix python)/bin/python3 -m venv ROOT_CI
           source ROOT_CI/bin/activate
+          echo PATH=$PATH >> $GITHUB_PATH
           pip install --upgrade pip
-          pip install -r ${{ github.workspace }}/src/requirements.txt
-          echo PATH=$PATH >> $GITHUB_ENV
+          cat ${{ github.workspace }}/src/requirements.txt | while read PACKAGE; do pip install -U "$PACKAGE"; done || true
+          pip install openstacksdk # TODO: Remove?
 
       - name: Apply option overrides from matrix for this job for non-release builds
         if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
@@ -170,24 +173,25 @@ jobs:
         run: 'echo SSL_CERT_FILE=/opt/local/share/curl/curl-ca-bundle.crt >> $GITHUB_ENV'
 
       - name: Pull Request Build
-        shell: bash -leo pipefail {0}
         if: github.event_name == 'pull_request'
         env:
           HOME: /Users/sftnight
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') && !matrix.platform == 'mac15' && !matrix.platform == 'mac26'}}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
-        run: ".github/workflows/root-ci-config/build_root.py
-                    --buildtype       RelWithDebInfo
-                    --incremental     $INCREMENTAL
-                    --base_ref        ${{ github.base_ref }}
-                    --sha             ${{ github.sha }}
-                    --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
-                    --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
-                    --head_sha        ${{ github.event.pull_request.head.sha }}
-                    --repository      ${{ github.server_url }}/${{ github.repository }}
-                    --platform        ${{ matrix.platform }}
-                    --overrides       $GLOBAL_OVERRIDES $OVERRIDES"
+        run: |
+          source ROOT_CI/bin/activate
+          src/.github/workflows/root-ci-config/build_root.py  \
+                    --buildtype       RelWithDebInfo          \
+                    --incremental     $INCREMENTAL            \
+                    --base_ref        ${{ github.base_ref }}  \
+                    --sha             ${{ github.sha }}       \
+                    --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}  \
+                    --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}  \
+                    --head_sha        ${{ github.event.pull_request.head.sha }}         \
+                    --repository      ${{ github.server_url }}/${{ github.repository }} \
+                    --platform        ${{ matrix.platform }}                            \
+                    --overrides       $GLOBAL_OVERRIDES $OVERRIDES
 
       - name: Workflow dispatch
         shell: bash -leo pipefail {0}
