@@ -92,6 +92,11 @@ jobs:
     permissions:
       contents: read
 
+    # Use login shells to have brew and java available
+    defaults:
+      run:
+        shell: bash -le {0}
+
     strategy:
       fail-fast: false
       matrix:
@@ -106,27 +111,48 @@ jobs:
           - platform: mac15
             arch: ARM64
             overrides: ["CMAKE_CXX_STANDARD=23"]
-          - platform: mac26
-            arch: ARM64
+          - platform: experimental-brew-ci
+            # arch: ARM64
+            overrides: ["CMAKE_CXX_STANDARD=23"]
+          # - platform: mac26
+          #   arch: ARM64
           - platform: mac-beta
             is_special: true
             arch: ARM64
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
-      - macOS
       - ${{ matrix.arch }}
       - ${{ matrix.platform }}
 
     name: |
-      ${{ matrix.platform }} ${{ matrix.arch }} 
+      ${{ matrix.platform }} ${{ matrix.arch }}
       ${{ (github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && join( matrix.overrides, ', ' )) || '' }}
 
     steps:
+      - name: Cleanup
+        run: rm -rf ${github.workspace}/{src,build}
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref_name }}
+          path: src/
+
+      - name: Update brew packages
+        run: |
+            brew update
+            echo "Installing deps: $(brew deps --direct --include-build root)"
+            brew install ccache googletest pyenv $(brew deps --direct --include-build root)
+            brew upgrade
+
+      - name: Set up python venv
+        run: |
+          python3 -m venv ROOT_CI
+          source ROOT_CI/bin/activate
+          pip install --upgrade pip
+          pip install -r ${{ github.workspace }}/src/requirements.txt
+          echo PATH=$PATH >> $GITHUB_ENV
 
       - name: Apply option overrides from matrix for this job for non-release builds
         if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
