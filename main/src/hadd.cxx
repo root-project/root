@@ -230,6 +230,7 @@ struct HAddArgs {
    bool fDebug;
    bool fKeepCompressionAsIs;
    bool fUseFirstInputCompression;
+   bool fHelp;
 
    std::optional<std::string> fWorkingDir;
    std::optional<IntFlag_t> fNProcesses;
@@ -565,6 +566,10 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
          PARSE_FLAG(FlagToggle, arg, "k", args.fSkipErrors);
          PARSE_FLAG(FlagToggle, arg, "O", args.fReoptimize);
          PARSE_FLAG(FlagToggle, arg, "dbg", args.fDebug);
+         // Accept --help, -help and -h as "help"
+         PARSE_FLAG(FlagToggle, arg, "-help", args.fHelp);
+         PARSE_FLAG(FlagToggle, arg, "help", args.fHelp);
+         PARSE_FLAG(FlagToggle, arg, "h", args.fHelp);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "d", args.fWorkingDir);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "j", args.fNProcesses, {0});
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "Ltype", args.fObjectFilterType, {}, ConvertFilterType);
@@ -653,15 +658,15 @@ static Int_t ParseFilterFile(const std::optional<std::string> &filterFileName,
 
 int main(int argc, char **argv)
 {
-   if (argc < 3 || "-h" == std::string(argv[1]) || "--help" == std::string(argv[1])) {
-      fprintf(stderr, kCommandLineOptionsHelp);
-      return (argc == 2 && ("-h" == std::string(argv[1]) || "--help" == std::string(argv[1]))) ? 0 : 1;
-   }
-
    const auto argsOpt = ParseArgs(argc, argv);
    if (!argsOpt)
       return 1;
    const HAddArgs &args = *argsOpt;
+
+   if (args.fHelp) {
+      fprintf(stderr, kCommandLineOptionsHelp);
+      return 0;
+   }
 
    ROOT::TIOFeatures features = args.fFeatures.value_or(ROOT::TIOFeatures{});
    Int_t maxopenedfiles = args.fMaxOpenedFiles.value_or(0);
