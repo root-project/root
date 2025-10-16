@@ -165,9 +165,9 @@ public:
         Color_t color=-1, Short_t bordersize=-1, Short_t bordermode=-2);
    ~TPad() override;
    void              AbsCoordinates(Bool_t set) override { fAbsCoord = set; }
-   Double_t          AbsPixeltoX(Int_t px) override { return fAbsPixeltoXk + px*fPixeltoX; }
-   Double_t          AbsPixeltoY(Int_t py) override { return fAbsPixeltoYk + py*fPixeltoY; }
-   virtual void      AbsPixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y);
+   Double_t          AbsPixeltoX(Double_t px) override { return fAbsPixeltoXk + px*fPixeltoX; }
+   Double_t          AbsPixeltoY(Double_t py) override { return fAbsPixeltoYk + py*fPixeltoY; }
+   void              AbsPixeltoXY(Double_t xpixel, Double_t ypixel, Double_t &x, Double_t &y) override;
    void              Add(TObject *obj, Option_t *opt = "", Bool_t modified = kTRUE) override;
    void              AddFirst(TObject *obj, Option_t *opt = "", Bool_t modified = kTRUE) override;
    void              AddExec(const char *name, const char *command) override;
@@ -307,9 +307,9 @@ public:
    void              PaintTextNDC(Double_t u, Double_t v, const char *text) override;
    void              PaintTextNDC(Double_t u, Double_t v, const wchar_t *text) override;
    virtual TPad     *Pick(Int_t px, Int_t py, TObjLink *&pickobj);
-   Double_t          PixeltoX(Int_t px) override;
-   Double_t          PixeltoY(Int_t py) override;
-   virtual void      PixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y);
+   Double_t          PixeltoX(Double_t px) override;
+   Double_t          PixeltoY(Double_t py) override;
+   void              PixeltoXY(Double_t xpixel, Double_t ypixel, Double_t &x, Double_t &y) override;
    void              Pop() override;  // *MENU*
    void              Print(const char *filename="") const override;
    void              Print(const char *filename, Option_t *option) override;
