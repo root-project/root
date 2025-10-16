@@ -30,7 +30,6 @@ from build_utils import (
     die,
     github_log_group,
     is_macos,
-    load_config,
     subprocess_with_capture,
     subprocess_with_log,
     upload_file,
@@ -70,10 +69,12 @@ def main():
     # Load CMake options from .github/workflows/root-ci-config/buildconfig/[platform].txt
     this_script_dir = os.path.dirname(os.path.abspath(__file__))
 
+    override_dict = dict(arg.split("=") for arg in args.overrides)
     options_dict = {
-        **load_config(f'{this_script_dir}/buildconfig/global.txt'),
+        **build_utils.load_config(f"{this_script_dir}/buildconfig/global.txt"),
         # file below overwrites values from above
-        **load_config(f'{this_script_dir}/buildconfig/{args.platform}.txt')
+        **build_utils.load_config(f"{this_script_dir}/buildconfig/{args.platform}.txt"),
+        **override_dict,
     }
 
     options = build_utils.cmake_options_from_dict(options_dict)
@@ -193,6 +194,7 @@ def parse_args():
     parser.add_argument("--architecture",    default=None,      help="Windows only, target arch")
     parser.add_argument("--repository",      default="https://github.com/root-project/root.git",
                         help="url to repository")
+    parser.add_argument("--overrides",       default=None,      help="Override build options with these key-value pairs", nargs="*")
 
     args = parser.parse_args()
 
