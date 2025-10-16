@@ -3736,7 +3736,7 @@ void TBufferJSON::ReadFloat(Float_t &val)
          auto aux = json->get<std::string>();
          if (aux == "nanf") {
             val = std::numeric_limits<Float_t>::quiet_NaN();
-         } else if (aux == "+inff") {
+         } else if (aux == "inff") {
             val = std::numeric_limits<Float_t>::infinity();
          } else if (aux == "-inff") {
             val = -std::numeric_limits<Float_t>::infinity();
@@ -3762,7 +3762,7 @@ void TBufferJSON::ReadDouble(Double_t &val)
          auto aux = json->get<std::string>();
          if (aux == "nan") {
             val = std::numeric_limits<Double_t>::quiet_NaN();
-         } else if (aux == "+inf") {
+         } else if (aux == "inf") {
             val = std::numeric_limits<Double_t>::infinity();
          } else if (aux == "-inf") {
             val = -std::numeric_limits<Double_t>::infinity();
@@ -4034,7 +4034,7 @@ void TBufferJSON::JsonWriteBasic(Long64_t value)
 void TBufferJSON::JsonWriteBasic(Float_t value)
 {
    if (std::isinf(value)) {
-      fValue.Append((value < 0.) ? "-inff" : "+inff"); // JavaScript Number.MAX_VALUE is approx 1.79e308
+      fValue.Append((value < 0.) ? "-inff" : "inff"); // JavaScript Number.MAX_VALUE is approx 1.79e308
    } else if (std::isnan(value)) {
       fValue.Append("nanf");
    } else {
@@ -4050,7 +4050,7 @@ void TBufferJSON::JsonWriteBasic(Float_t value)
 void TBufferJSON::JsonWriteBasic(Double_t value)
 {
    if (std::isinf(value)) {
-      fValue.Append((value < 0.) ? "-inf" : "+inf"); // JavaScript Number.MAX_VALUE is approx 1.79e308
+      fValue.Append((value < 0.) ? "-inf" : "inf"); // JavaScript Number.MAX_VALUE is approx 1.79e308
    } else if (std::isnan(value)) {
       fValue.Append("nan");
    } else {
