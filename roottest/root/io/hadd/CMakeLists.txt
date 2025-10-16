@@ -77,11 +77,39 @@ ROOTTEST_ADD_TEST(test_MergeFilterWhitelist
 ################################################################
 #                 argument parsing tests                       #
 ################################################################
+ROOTTEST_ADD_TEST(test_hadd_args_missing_output
+                  COMMAND ${ROOT_hadd_CMD}
+                  PASSREGEX "Error in <hadd>: missing output file."
+)
+
+ROOTTEST_ADD_TEST(test_hadd_args_missing_input
+                  COMMAND ${ROOT_hadd_CMD} foo.root
+                  PASSREGEX "Error in <hadd>: missing input file."
+)
+
 ROOTTEST_ADD_TEST(test_hadd_args_gen_input
                   COPY_TO_BUILDDIR hadd_gen_input_tree.C hadd_args_verify.C
                   PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_in.root
                   COMMAND ${ROOT_root_CMD} -q -b -l "hadd_gen_input_tree.C(\"hadd_args_in.root\")"
                   FIXTURES_SETUP root-io-hadd-test_hadd_args_gen_input-fixture
+)
+
+ROOTTEST_ADD_TEST(test_hadd_args_help_short
+                  FIXTURES_REQUIRED root-io-hadd-test_hadd_args_gen_input-fixture
+                  COMMAND ${ROOT_hadd_CMD} -n0 hadd_args_n0_out.root hadd_args_in.root -h
+                  PASSREGEX "usage: hadd"
+)
+
+ROOTTEST_ADD_TEST(test_hadd_args_help_long
+                  FIXTURES_REQUIRED root-io-hadd-test_hadd_args_gen_input-fixture
+                  COMMAND ${ROOT_hadd_CMD} -n0 hadd_args_n0_out.root hadd_args_in.root -help
+                  PASSREGEX "usage: hadd"
+)
+
+ROOTTEST_ADD_TEST(test_hadd_args_help_long2
+                  FIXTURES_REQUIRED root-io-hadd-test_hadd_args_gen_input-fixture
+                  COMMAND ${ROOT_hadd_CMD} -n0 hadd_args_n0_out.root hadd_args_in.root --help
+                  PASSREGEX "usage: hadd"
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_n0
