@@ -7465,7 +7465,7 @@ void TPad::Modified(Bool_t flag)
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert absolute pixel into X/Y coordinates
 
-void TPad::AbsPixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y)
+void TPad::AbsPixeltoXY(Double_t xpixel, Double_t ypixel, Double_t &x, Double_t &y)
 {
    x = AbsPixeltoX(xpixel);
    y = AbsPixeltoY(ypixel);
@@ -7475,7 +7475,7 @@ void TPad::AbsPixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y)
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert pixel to X coordinate
 
-Double_t TPad::PixeltoX(Int_t px)
+Double_t TPad::PixeltoX(Double_t px)
 {
    if (fAbsCoord) return fAbsPixeltoXk + px*fPixeltoX;
    else           return fPixeltoXk    + px*fPixeltoX;
@@ -7484,7 +7484,7 @@ Double_t TPad::PixeltoX(Int_t px)
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert pixel to Y coordinate
 
-Double_t TPad::PixeltoY(Int_t py)
+Double_t TPad::PixeltoY(Double_t py)
 {
    if (fAbsCoord) return fAbsPixeltoYk + py*fPixeltoY;
    else           return fPixeltoYk    + py*fPixeltoY;
@@ -7493,7 +7493,7 @@ Double_t TPad::PixeltoY(Int_t py)
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert pixel to X/Y coordinates
 
-void TPad::PixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y)
+void TPad::PixeltoXY(Double_t xpixel, Double_t ypixel, Double_t &x, Double_t &y)
 {
    x = PixeltoX(xpixel);
    y = PixeltoY(ypixel);

@@ -77,8 +77,9 @@ public:
                Color_t color=19, Short_t bordersize=4, Short_t bordermode=1);
    virtual ~TVirtualPad();
    virtual void     AbsCoordinates(Bool_t set) = 0;
-   virtual Double_t AbsPixeltoX(Int_t px) = 0;
-   virtual Double_t AbsPixeltoY(Int_t py) = 0;
+   virtual Double_t AbsPixeltoX(Double_t px) = 0;
+   virtual Double_t AbsPixeltoY(Double_t py) = 0;
+   virtual void     AbsPixeltoXY(Double_t xpixel, Double_t ypixel, Double_t &x, Double_t &y) = 0;
    virtual void     Add(TObject *obj, Option_t *opt = "", Bool_t modified = kTRUE) = 0;
    virtual void     AddFirst(TObject *obj, Option_t *opt = "", Bool_t modified = kTRUE) = 0;
    virtual void     AddExec(const char *name, const char *command) = 0;
@@ -193,8 +194,9 @@ public:
    virtual void     PaintText(Double_t x, Double_t y, const wchar_t *text) = 0;
    virtual void     PaintTextNDC(Double_t u, Double_t v, const char *text) = 0;
    virtual void     PaintTextNDC(Double_t u, Double_t v, const wchar_t *text) = 0;
-   virtual Double_t PixeltoX(Int_t px) = 0;
-   virtual Double_t PixeltoY(Int_t py) = 0;
+   virtual Double_t PixeltoX(Double_t px) = 0;
+   virtual Double_t PixeltoY(Double_t py) = 0;
+   virtual void     PixeltoXY(Double_t xpixel, Double_t ypixel, Double_t &x, Double_t &y) = 0;
            void     Pop() override = 0;
            void     Print(const char *filename="") const override = 0;
    virtual void     Print(const char *filename, Option_t *option) = 0;
