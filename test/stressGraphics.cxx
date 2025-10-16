@@ -1812,6 +1812,7 @@ void tgraph3()
 
    C->cd(1);
    g1->Fit("gaus","Q");
+   g1->GetFunction("gaus")->SetParameters(162.343237, -1525754.596742, 548632.482040);
    g1->Draw("AP");
    gPad->SetLogx();
 
@@ -2056,6 +2057,8 @@ void tmultigraph2()
    gr22->SetMarkerColor(kRed+1);
    gr22->SetMarkerStyle(20);
    gr22->Fit("pol3","q ex0");
+   // fix parameters to avoid deviation on different platforms
+   gr22->GetFunction("pol3")->SetParameters(4.830338, 13.642697, 5.092961, -21.695969);
    mg2->Add(gr21,"pl");
    mg2->Add(gr22);
    mg2->Draw("ap");
@@ -2071,6 +2074,10 @@ void tmultigraph2()
    gr32->SetMarkerColor(kRed-1);
    gr32->SetMarkerStyle(20);
    gr32->Fit("pol4","q ex0");
+   // fix parameters and errors to avoid deviation on different platforms
+   gr32->GetFunction("pol4")->SetParameters(3.800743, 16.072495, 17.267410, -58.828117, 24.041571);
+   gr32->GetFunction("pol4")->SetParError(4, 8.834);
+
    mg3->Add(gr31,"pl");
    mg3->Add(gr32);
    mg3->Draw("ap");
@@ -2086,6 +2093,10 @@ void tmultigraph2()
    gr42->SetMarkerColor(kViolet);
    gr42->SetMarkerStyle(20);
    gr42->Fit("pol5","q ex0");
+   // fix parameters and errors to avoid deviation on different platforms
+   gr42->GetFunction("pol5")->SetParameters(3.784774, 16.245375, 17.266562, -60.768103, 27.670699, -1.851469);
+   Double_t pol5_errors[6] = { 0.48664, 3.23538, 5.22816, 35.7405, 62.6138, 31.6462 };
+   gr42->GetFunction("pol5")->SetParErrors(pol5_errors);
    mg4->Add(gr41,"pc");
    mg4->Add(gr42);
    mg4->Draw("ap");
@@ -2744,6 +2755,7 @@ void zoomfit()
 
    TH1 *hpx = (TH1*)gHsimple->Get("hpx");
    hpx->Fit("gaus","q");
+   hpx->GetFunction("gaus")->SetParameters(800.107852, -0.003862, 0.994740);
    hpx->GetXaxis()->SetRangeUser(.1,.3);
    gPad->Modified();
    gPad->Update();
