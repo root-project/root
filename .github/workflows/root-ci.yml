@@ -257,9 +257,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref_name }}
+        uses: actions/checkout@v5
 
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
