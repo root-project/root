@@ -3742,7 +3742,7 @@ void TBufferJSON::ReadFloat(Float_t &val)
             val = -std::numeric_limits<Float_t>::infinity();
          } else {
             Error("ReadFloat", "%s", e.what());
-            val = std::numeric_limits<Double_t>::quiet_NaN();
+            val = std::numeric_limits<Float_t>::quiet_NaN();
          }
       }
 }
