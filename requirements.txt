@@ -8,6 +8,7 @@ pandas
 dm-sonnet # used for GNNs
 graph_nets
 onnx
+onnxscript
 
 # TMVA: PyMVA interfaces
 scikit-learn
