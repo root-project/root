@@ -109,12 +109,10 @@ TEST(TBufferJSON, SpecialNumbers)
       delete p;
       p = nullptr;
       TBufferJSON::FromJSON<Content>(p, "{ \"_typename\" : \"Content\", \"d\" : \"-inff\" }");
-      delete p;
-      p = nullptr;
       EXPECT_TRUE(p && std::isinf(p->d) && (p->d < 0));
-      TBufferJSON::FromJSON<Content>(p, "{ \"_typename\" : \"Content\", \"d\" : \"nanf\" }");
       delete p;
       p = nullptr;
+      TBufferJSON::FromJSON<Content>(p, "{ \"_typename\" : \"Content\", \"d\" : \"nanf\" }");
       EXPECT_TRUE(p && std::isnan(p->d));
       delete p;
       p = nullptr;
@@ -148,16 +146,14 @@ TEST(TBufferJSON, SpecialNumbers)
       delete p;
       p = nullptr;
       TBufferJSON::FromJSON<Content>(p, "{ \"_typename\" : \"Content\", \"d\" : \"-inf\" }");
-      delete p;
-      p = nullptr;
       EXPECT_TRUE(p && std::isinf(p->d) && (p->d < 0));
-      TBufferJSON::FromJSON<Content>(p, "{ \"_typename\" : \"Content\", \"d\" : \"nan\" }");
       delete p;
       p = nullptr;
+      TBufferJSON::FromJSON<Content>(p, "{ \"_typename\" : \"Content\", \"d\" : \"nan\" }");
       EXPECT_TRUE(p && std::isnan(p->d));
       delete p;
       p = nullptr;
-
+      
       auto maxVal = std::numeric_limits<double>::max(); // 1.7976931e+308
       auto ovfVal = std::numeric_limits<double>::max() * (1 + 1e-15);
       auto infVal = std::numeric_limits<double>::infinity();
