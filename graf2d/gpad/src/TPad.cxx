@@ -7549,12 +7549,7 @@ void TPad::XYtoPixel(Double_t x, Double_t y, Double_t &xpixel, Double_t &ypixel)
 
 Int_t TPad::UtoPixel(Double_t u) const
 {
-   Double_t val;
-   if (fAbsCoord) val = fUtoAbsPixelk + u*fUtoPixel;
-   else           val = u*fUtoPixel;
-   if (val < -kMaxPixel) return -kMaxPixel;
-   if (val >  kMaxPixel) return  kMaxPixel;
-   return TMath::Nint(val);
+   return TMath::Nint(pixel_boundary(fAbsCoord ? fUtoAbsPixelk + u*fUtoPixel : fUtoPixelk + u*fUtoPixel));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7562,12 +7557,7 @@ Int_t TPad::UtoPixel(Double_t u) const
 
 Int_t TPad::VtoPixel(Double_t v) const
 {
-   Double_t val;
-   if (fAbsCoord) val = fVtoAbsPixelk + v*fVtoPixel;
-   else           val = fVtoPixelk    + v*fVtoPixel;
-   if (val < -kMaxPixel) return -kMaxPixel;
-   if (val >  kMaxPixel) return  kMaxPixel;
-   return TMath::Nint(val);
+   return TMath::Nint(pixel_boundary(fAbsCoord ? fVtoAbsPixelk + v*fVtoPixel : fVtoPixelk + v*fVtoPixel));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7591,10 +7581,7 @@ Int_t TPad::VtoAbsPixel(Double_t v) const
 
 Int_t TPad::XtoAbsPixel(Double_t x) const
 {
-   Double_t val = fXtoAbsPixelk + x*fXtoPixel;
-   if (val < -kMaxPixel) return -kMaxPixel;
-   if (val >  kMaxPixel) return  kMaxPixel;
-   return TMath::Nint(val);
+   return TMath::Nint(pixel_boundary(fXtoAbsPixelk + x*fXtoPixel));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7602,12 +7589,7 @@ Int_t TPad::XtoAbsPixel(Double_t x) const
 
 Int_t TPad::XtoPixel(Double_t x) const
 {
-   Double_t val;
-   if (fAbsCoord) val = fXtoAbsPixelk + x*fXtoPixel;
-   else           val = fXtoPixelk    + x*fXtoPixel;
-   if (val < -kMaxPixel) return -kMaxPixel;
-   if (val >  kMaxPixel) return  kMaxPixel;
-   return TMath::Nint(val);
+   return TMath::Nint(pixel_boundary(fAbsCoord ? fXtoAbsPixelk + x*fXtoPixel : fXtoPixelk + x*fXtoPixel));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7615,10 +7597,7 @@ Int_t TPad::XtoPixel(Double_t x) const
 
 Int_t TPad::YtoAbsPixel(Double_t y) const
 {
-   Double_t val = fYtoAbsPixelk + y*fYtoPixel;
-   if (val < -kMaxPixel) return -kMaxPixel;
-   if (val >  kMaxPixel) return  kMaxPixel;
-   return TMath::Nint(val);
+   return TMath::Nint(pixel_boundary(fYtoAbsPixelk + y*fYtoPixel));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7626,10 +7605,5 @@ Int_t TPad::YtoAbsPixel(Double_t y) const
 
 Int_t TPad::YtoPixel(Double_t y) const
 {
-   Double_t val;
-   if (fAbsCoord) val = fYtoAbsPixelk + y*fYtoPixel;
-   else           val = fYtoPixelk    + y*fYtoPixel;
-   if (val < -kMaxPixel) return -kMaxPixel;
-   if (val >  kMaxPixel) return  kMaxPixel;
-   return TMath::Nint(val);
+   return TMath::Nint(pixel_boundary(fAbsCoord ? fYtoAbsPixelk + y*fYtoPixel : fYtoPixelk + y*fYtoPixel));
 }
