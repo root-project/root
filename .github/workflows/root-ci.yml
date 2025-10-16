@@ -193,6 +193,7 @@ jobs:
           HOME: /Users/sftnight
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') && !matrix.platform == 'mac15' && !matrix.platform == 'mac26'}}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
+          OVERRIDES: ${{ join( matrix.overrides, ' ') }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype       RelWithDebInfo
                     --incremental     $INCREMENTAL
@@ -202,7 +203,8 @@ jobs:
                     --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
                     --head_sha        ${{ github.event.pull_request.head.sha }}
                     --repository      ${{ github.server_url }}/${{ github.repository }}
-                    --platform        ${{ matrix.platform }}"
+                    --platform        ${{ matrix.platform }}
+                    --overrides       $GLOBAL_OVERRIDES $OVERRIDES"
 
       - name: Workflow dispatch
         shell: bash -leo pipefail {0}
@@ -230,13 +232,16 @@ jobs:
       - name: Update build cache after push to release branch
         shell: bash -leo pipefail {0}
         if:   github.event_name == 'push'
+        env:
+          OVERRIDES: ${{ join( matrix.overrides, ' ') }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.platform }}
                     --incremental    false
                     --base_ref       ${{ github.ref_name }}
                     --binaries       ${{ startsWith(github.ref, 'refs/tags/') }}
-                    --repository     ${{ github.server_url }}/${{ github.repository }}"
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
+                    --overrides      $GLOBAL_OVERRIDES $OVERRIDES"
 
       - name: Upload test results
         if:   ${{ !cancelled() }}
