@@ -129,9 +129,9 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.ref_name }}
+          path: "src/"
 
       - uses: root-project/gcc-problem-matcher-improved@main
         with:
@@ -260,9 +260,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref_name }}
+        uses: actions/checkout@v5
 
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
@@ -454,9 +452,7 @@ jobs:
         run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
 
       - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref_name }}
+        uses: actions/checkout@v5
 
       - name: Dump GitHub context
         env:
