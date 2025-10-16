@@ -160,24 +160,7 @@ jobs:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
           CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.platform }}.txt'
         shell: bash
-        run: |
-          set -x
-
-          echo '' >> "$CONFIGFILE"
-
-          for ENTRY in $GLOBAL_OVERRIDES $OVERRIDES; do
-              KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
-
-              # Add entry to file if not exists, otherwise replace
-
-              if grep -q "$KEY=" "$CONFIGFILE"; then
-                  sed -i "s/$KEY=.*\$/$ENTRY/" "$CONFIGFILE"
-              else
-                  echo "$ENTRY" >> "$CONFIGFILE"
-              fi
-          done
-
-          cat "$CONFIGFILE" || true
+        run: echo "Remember to set the following overrides GLOBAL=$GLOBAL_OVERRIDES LOCAL=$OVERRIDES"
 
       - uses: root-project/gcc-problem-matcher-improved@main
         with:
