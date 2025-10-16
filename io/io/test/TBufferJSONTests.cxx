@@ -99,17 +99,19 @@ TEST(TBufferJSON, TList_Add_Without_Option)
 TEST(TBufferJSON, SpecialNumbers)
 {
    {
-      struct Content { float d; };
+      struct Content {
+         float d;
+      };
       Content *p = nullptr;
-      TBufferJSON::FromJSON<Content>(p, "{ \"_typename\" : \"Content\", \"d\" : \"inff\" }")
+      TBufferJSON::FromJSON<Content>(p, "{ \"_typename\" : \"Content\", \"d\" : \"inff\" }");
       EXPECT_TRUE(p && std::isinf(p->d) && (p->d > 0));
       delete p;
       p = nullptr;
-      TBufferJSON::FromJSON<Content>(p, "{ \"_typename\" : \"Content\", \"d\" : \"-inff\" }")
+      TBufferJSON::FromJSON<Content>(p, "{ \"_typename\" : \"Content\", \"d\" : \"-inff\" }");
       delete p;
       p = nullptr;
       EXPECT_TRUE(p && std::isinf(p->d) && (p->d < 0));
-      TBufferJSON::FromJSON<Content>(p, "{ \"_typename\" : \"Content\", \"d\" : \"nanf\" }")
+      TBufferJSON::FromJSON<Content>(p, "{ \"_typename\" : \"Content\", \"d\" : \"nanf\" }");
       delete p;
       p = nullptr;
       EXPECT_TRUE(p && std::isnan(p->d));
@@ -117,7 +119,7 @@ TEST(TBufferJSON, SpecialNumbers)
       p = nullptr;
 
       auto maxVal = std::numeric_limits<float>::max(); // 3.40282e+38f
-      auto ovfVal = std::numeric_limits<float>::max()*static_cast<float>(1+1e-7);
+      auto ovfVal = std::numeric_limits<float>::max() * static_cast<float>(1 + 1e-7);
       auto infVal = std::numeric_limits<float>::infinity();
       EXPECT_EQ(ovfVal, infVal);
       auto nanVal = std::numeric_limits<float>::quiet_NaN();
@@ -136,7 +138,9 @@ TEST(TBufferJSON, SpecialNumbers)
       p = nullptr;
    }
    {
-      struct Content { double d; };
+      struct Content {
+         double d;
+      };
       Content *p = nullptr;
       TBufferJSON::FromJSON<Content>(p, "{ \"_typename\" : \"Content\", \"d\" : \"inf\" }");
       EXPECT_TRUE(p && std::isinf(p->d) && (p->d > 0));
@@ -154,7 +158,7 @@ TEST(TBufferJSON, SpecialNumbers)
       p = nullptr;
 
       auto maxVal = std::numeric_limits<double>::max(); // 1.7976931e+308
-      auto ovfVal = std::numeric_limits<double>::max()*(1+1e-15);
+      auto ovfVal = std::numeric_limits<double>::max() * (1 + 1e-15);
       auto infVal = std::numeric_limits<double>::infinity();
       EXPECT_EQ(ovfVal, infVal);
       auto nanVal = std::numeric_limits<double>::quiet_NaN();
