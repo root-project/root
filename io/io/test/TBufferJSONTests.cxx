@@ -153,7 +153,7 @@ TEST(TBufferJSON, SpecialNumbers)
       EXPECT_TRUE(p && std::isnan(p->d));
       delete p;
       p = nullptr;
-      
+
       auto maxVal = std::numeric_limits<double>::max(); // 1.7976931e+308
       auto ovfVal = std::numeric_limits<double>::max() * (1 + 1e-15);
       auto infVal = std::numeric_limits<double>::infinity();
