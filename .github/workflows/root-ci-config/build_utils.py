@@ -108,6 +108,16 @@ def print_warning(*values, **kwargs):
 def print_error(*values, **kwargs):
     print_fancy("Fatal error: ", *values, sgr=31, **kwargs)
 
+def print_options_diff(new, old):
+    """Print difference between build option dicts"""
+
+    for key in new:
+        try:
+            if new[key] != old[key]:
+                print(f"\t{key}:\t{old[key]} --> {new[key]}")
+        except:
+            print(f"\t{key}:\tNone --> {new[key]}")
+
 
 def subprocess_with_log(command: str) -> int:
     """Runs <command> in shell and appends <command> to log"""

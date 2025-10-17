@@ -152,10 +152,13 @@ jobs:
         run: |
           $(brew --prefix python)/bin/python3 -m venv ROOT_CI
           source ROOT_CI/bin/activate
-          echo PATH=$PATH >> $GITHUB_PATH
           pip install --upgrade pip
-          cat ${{ github.workspace }}/src/requirements.txt | while read PACKAGE; do pip install -U "$PACKAGE"; done || true
+          cat ${{ github.workspace }}/src/requirements.txt | while read PACKAGE; do
+            if [ -n "${PACKAGE%%#*}" ]; then
+              pip install -U "${PACKAGE%%#*}";
+          fi; done || true
           pip install openstacksdk # TODO: Remove?
+          echo $(pwd)/ROOT_CI/bin >> $GITHUB_PATH
 
       - name: Apply option overrides from matrix for this job for non-release builds
         if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
@@ -180,7 +183,8 @@ jobs:
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
         run: |
-          source ROOT_CI/bin/activate
+          echo $PATH
+          if [ -f ROOT_CI/bin/activate ]; then source ROOT_CI/bin/activate; fi
           src/.github/workflows/root-ci-config/build_root.py  \
                     --buildtype       RelWithDebInfo          \
                     --incremental     $INCREMENTAL            \
@@ -190,7 +194,7 @@ jobs:
                     --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}  \
                     --head_sha        ${{ github.event.pull_request.head.sha }}         \
                     --repository      ${{ github.server_url }}/${{ github.repository }} \
-                    --platform        ${{ matrix.platform }}                            \
+                    --platform        ${{ matrix.platform == 'experimental-brew-ci' && 'mac15' || matrix.platform }}
                     --overrides       $GLOBAL_OVERRIDES $OVERRIDES
 
       - name: Workflow dispatch

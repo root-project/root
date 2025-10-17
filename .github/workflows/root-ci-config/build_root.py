@@ -30,6 +30,7 @@ from build_utils import (
     die,
     github_log_group,
     is_macos,
+    print_options_diff,
     subprocess_with_capture,
     subprocess_with_log,
     upload_file,
@@ -69,13 +70,17 @@ def main():
     # Load CMake options from .github/workflows/root-ci-config/buildconfig/[platform].txt
     this_script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    override_dict = dict(arg.split("=") for arg in args.overrides)
-    options_dict = {
-        **build_utils.load_config(f"{this_script_dir}/buildconfig/global.txt"),
-        # file below overwrites values from above
-        **build_utils.load_config(f"{this_script_dir}/buildconfig/{args.platform}.txt"),
-        **override_dict,
-    }
+    options_dict = build_utils.load_config(f"{this_script_dir}/buildconfig/global.txt")
+    temp = dict(options_dict)
+    options_dict.update(build_utils.load_config(f"{this_script_dir}/buildconfig/{args.platform}.txt"))
+    print(f"Build options ({args.platform})")
+    print_options_diff(options_dict, temp)
+
+    print("Build options (CI override):", args.overrides)
+    if args.overrides is not None:
+        temp = dict(options_dict)
+        options_dict.update((arg.split("=") for arg in args.overrides))
+        print_options_diff(options_dict, temp)
 
     options = build_utils.cmake_options_from_dict(options_dict)
 
