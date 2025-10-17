@@ -124,10 +124,10 @@ TEST(TBufferJSON, SpecialNumbersFloat)
    p = new Content;
    p->d = maxVal;
    EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
-             "{\n  \"_typename\" : \"Content\",\n  \"d\" : 3.40282e+38\n}");
+             "{\n  \"_typename\" : \"Content\",\n  \"d\" : 3.402823e38\n}");
    p->d = -maxVal;
    EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
-             "{\n  \"_typename\" : \"Content\",\n  \"d\" : -3.40282e+38\n}");
+             "{\n  \"_typename\" : \"Content\",\n  \"d\" : -3.402823e38\n}");
    p->d = infVal;
    EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
              "{\n  \"_typename\" : \"Content\",\n  \"d\" : \"inff\"\n}");
