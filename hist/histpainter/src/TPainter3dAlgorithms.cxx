@@ -43,6 +43,7 @@ class by Rene Brun.
 const Double_t kRad  = TMath::ATan(1)*Double_t(4)/Double_t(180);
 const Double_t kFdel = 0.;
 const Double_t kDel  = 0.0001;
+const Double_t kEps  = 1e-9; // exclude such small segments
 const Int_t kNiso  = 4;
 const Int_t kNmaxp = kNiso*13;
 const Int_t kNmaxt = kNiso*12;
@@ -593,7 +594,8 @@ void TPainter3dAlgorithms::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np,
          y[0] = p1[1] + ydel*fT[2*it + 0];
          x[1] = p1[0] + xdel*fT[2*it + 1];
          y[1] = p1[1] + ydel*fT[2*it + 1];
-         gPad->PaintPolyLine(2, x, y);
+         if (TMath::Abs(fT[2*it + 0] - fT[2*it + 1]) > kEps)
+            gPad->PaintPolyLine(2, x, y);
       }
    }
 
@@ -621,7 +623,8 @@ void TPainter3dAlgorithms::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np,
          y[0] = p1[1] + ydel*fT[2*it + 0];
          x[1] = p1[0] + xdel*fT[2*it + 1];
          y[1] = p1[1] + ydel*fT[2*it + 1];
-         gPad->PaintPolyLine(2, x, y);
+         if (TMath::Abs(fT[2*it + 0] - fT[2*it + 1]) > kEps)
+            gPad->PaintPolyLine(2, x, y);
       }
    }
 
@@ -681,7 +684,8 @@ void TPainter3dAlgorithms::DrawFaceMove2(Int_t *icodes, Double_t *xyz, Int_t np,
          y[0] = p1[1] + ydel*fT[2*it + 0];
          x[1] = p1[0] + xdel*fT[2*it + 1];
          y[1] = p1[1] + ydel*fT[2*it + 1];
-         gPad->PaintPolyLine(2, x, y);
+         if (TMath::Abs(fT[2*it + 0] - fT[2*it + 1]) > kEps)
+            gPad->PaintPolyLine(2, x, y);
       }
    }
 
@@ -763,7 +767,8 @@ void TPainter3dAlgorithms::DrawFaceMove3(Int_t *icodes, Double_t *xyz, Int_t np,
             y[0] = p1[1] + ydel*fT[2*it + 0];
             x[1] = p1[0] + xdel*fT[2*it + 1];
             y[1] = p1[1] + ydel*fT[2*it + 1];
-            gPad->PaintPolyLine(2, x, y);
+            if (TMath::Abs(fT[2*it + 0] - fT[2*it + 1]) > kEps)
+               gPad->PaintPolyLine(2, x, y);
          }
       }
    }
