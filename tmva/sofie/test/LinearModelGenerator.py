@@ -8,19 +8,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-import importlib
-import subprocess
-import sys
-
-package_name = "onnxscript"
-
-try:
-    importlib.import_module(package_name)
-except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
-finally:
-    globals()[package_name] = importlib.import_module(package_name)
-
 result = []
 
 class Net(nn.Module):
@@ -136,7 +123,8 @@ def main():
                 model,
                 xinput,
                 name + ".onnx",
-                export_params=True
+                export_params=True,
+                dynamo=False
         )
 
    if loadModel :
