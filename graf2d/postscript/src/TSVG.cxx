@@ -34,6 +34,8 @@
 Int_t TSVG::fgLineJoin = 0;
 Int_t TSVG::fgLineCap  = 0;
 
+const Double_t kEpsilon = 1e-9;
+
 /** \class TSVG
 \ingroup PS
 
@@ -468,6 +470,10 @@ void TSVG::DrawPolyLine(Int_t nn, TPoints *xy)
       iydi = YtoSVG(xy[i].GetY());
       ix   = ixdi - ixd0;
       iy   = iydi - iyd0;
+      if (fCompact && (TMath::Abs(ix) < kEpsilon))
+         ix = 0;
+      if (fCompact && (TMath::Abs(iy) < kEpsilon))
+         iy = 0;
       ixd0 = ixdi;
       iyd0 = iydi;
       if( ix && iy) {
@@ -538,6 +544,10 @@ void TSVG::DrawPolyLineNDC(Int_t nn, TPoints *xy)
       iydi = VtoSVG(xy[i].GetY());
       ix   = ixdi - ixd0;
       iy   = iydi - iyd0;
+      if (fCompact && (TMath::Abs(ix) < kEpsilon))
+         ix = 0;
+      if (fCompact && (TMath::Abs(iy) < kEpsilon))
+         iy = 0;
       ixd0 = ixdi;
       iyd0 = iydi;
       if( ix && iy) {
@@ -1442,6 +1452,10 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       iydi = YtoSVG(yw[i]);
       ix   = ixdi - ixd0;
       iy   = iydi - iyd0;
+      if (fCompact && (TMath::Abs(ix) < kEpsilon))
+         ix = 0;
+      if (fCompact && (TMath::Abs(iy) < kEpsilon))
+         iy = 0;
       ixd0 = ixdi;
       iyd0 = iydi;
       if( ix && iy) {
