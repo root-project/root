@@ -103,17 +103,17 @@ struct ContentF {
 };
 TEST(TBufferJSON, SpecialNumbersFloat)
 {
-   gInterpreter->ProcessLine("struct ContentF { float v; };");
+   gInterpreter->Declare("struct ContentF { float v; };");
    ContentF *p = nullptr;
-   TBufferJSON::FromJSON<ContentF>(p, "{ \"_typename\" : \"ContentF\", \"v\" : inff }");
+   TBufferJSON::FromJSON<ContentF>(p, "{ \"_typename\" : \"ContentF\", \"v\" : \"inff\" }");
    EXPECT_TRUE(p && std::isinf(p->v) && (p->v > 0));
    delete p;
    p = nullptr;
-   TBufferJSON::FromJSON<ContentF>(p, "{ \"_typename\" : \"ContentF\", \"v\" : -inff }");
+   TBufferJSON::FromJSON<ContentF>(p, "{ \"_typename\" : \"ContentF\", \"v\" : \"-inff\" }");
    EXPECT_TRUE(p && std::isinf(p->v) && (p->v < 0));
    delete p;
    p = nullptr;
-   TBufferJSON::FromJSON<ContentF>(p, "{ \"_typename\" : \"ContentF\", \"v\" : nanf }");
+   TBufferJSON::FromJSON<ContentF>(p, "{ \"_typename\" : \"ContentF\", \"v\" : \"nanf\" }");
    EXPECT_TRUE(p && std::isnan(p->v));
    delete p;
    p = nullptr;
