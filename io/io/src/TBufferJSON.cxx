@@ -3755,7 +3755,7 @@ void TBufferJSON::ReadFloat(Float_t &val)
          } else if (aux == "-inff") {
             val = -std::numeric_limits<Float_t>::infinity();
          } else {
-            Error("ReadFloat", "%s", e.what());
+            Error("ReadFloat", "%s '%s'", e.what(), aux.c_str());
             val = std::numeric_limits<Float_t>::quiet_NaN();
          }
       }
@@ -3781,7 +3781,7 @@ void TBufferJSON::ReadDouble(Double_t &val)
          } else if (aux == "-inf") {
             val = -std::numeric_limits<Double_t>::infinity();
          } else {
-            Error("ReadDouble", "%s", e.what());
+            Error("ReadDouble", "%s '%s'", e.what(), aux.c_str());
             val = std::numeric_limits<Double_t>::quiet_NaN();
          }
       }
