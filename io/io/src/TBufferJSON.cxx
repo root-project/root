@@ -481,7 +481,7 @@ public:
 
 TBufferJSON::TBufferJSON(TBuffer::EMode mode)
    : TBufferText(mode), fOutBuffer(), fOutput(nullptr), fValue(), fStack(), fSemicolon(" : "), fArraySepar(", "),
-     fNumericLocale(), fStoreInfNaN(), fTypeNameTag("_typename")
+     fNumericLocale(), fTypeNameTag("_typename")
 {
    fOutBuffer.Capacity(10000);
    fValue.Capacity(1000);
@@ -667,7 +667,7 @@ Bool_t TBufferJSON::IsSkipClassInfo(const TClass *cl) const
 ///  - TBufferJSON::kBase64 (30) - arrays will be coded with base64 coding
 /// Third digit of compact parameter defines typeinfo storage:
 ///  - TBufferJSON::kSkipTypeInfo (100) - "_typename" will be skipped, not always can be read back
- /// Fourth digit: (1 or 0) defines whether to set kStoreInfNaN (1000) - inf and nan to be stored as string
+/// Fourth digit: (1 or 0) defines whether to set kStoreInfNaN (1000) - inf and nan to be stored as string
 /// Maximal none-destructive compression can be achieved when
 /// compact parameter equal to TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression
 /// When member_name specified, converts only this data member
