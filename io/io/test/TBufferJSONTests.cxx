@@ -97,22 +97,22 @@ TEST(TBufferJSON, TList_Add_Without_Option)
 }
 
 // https://github.com/root-project/root/issues/19768
+struct ContentF {
+   float v;
+};
 TEST(TBufferJSON, SpecialNumbersFloat)
 {
-   struct Content {
-      float d;
-   };
-   Content *p = nullptr;
-   TBufferJSON::FromJSON<Content>(p, "{ \"_typename\" : \"Content\", \"d\" : inff }");
-   EXPECT_TRUE(p && std::isinf(p->d) && (p->d > 0));
+   ContentF *p = nullptr;
+   TBufferJSON::FromJSON<ContentF>(p, "{ \"_typename\" : \"ContentF\", \"v\" : inff }");
+   EXPECT_TRUE(p && std::isinf(p->v) && (p->v > 0));
    delete p;
    p = nullptr;
-   TBufferJSON::FromJSON<Content>(p, "{ \"_typename\" : \"Content\", \"d\" : -inff }");
-   EXPECT_TRUE(p && std::isinf(p->d) && (p->d < 0));
+   TBufferJSON::FromJSON<ContentF>(p, "{ \"_typename\" : \"ContentF\", \"v\" : -inff }");
+   EXPECT_TRUE(p && std::isinf(p->v) && (p->v < 0));
    delete p;
    p = nullptr;
-   TBufferJSON::FromJSON<Content>(p, "{ \"_typename\" : \"Content\", \"d\" : nanf }");
-   EXPECT_TRUE(p && std::isnan(p->d));
+   TBufferJSON::FromJSON<ContentF>(p, "{ \"_typename\" : \"ContentF\", \"v\" : nanf }");
+   EXPECT_TRUE(p && std::isnan(p->v));
    delete p;
    p = nullptr;
 
@@ -121,43 +121,43 @@ TEST(TBufferJSON, SpecialNumbersFloat)
    auto infVal = std::numeric_limits<float>::infinity();
    EXPECT_EQ(ovfVal, infVal);
    auto nanVal = std::numeric_limits<float>::quiet_NaN();
-   p = new Content;
-   p->d = maxVal;
+   p = new ContentF;
+   p->v = maxVal;
    EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
-             "{\n  \"_typename\" : \"Content\",\n  \"d\" : 3.402823e38\n}");
-   p->d = -maxVal;
+             "{\n  \"_typename\" : \"ContentF\",\n  \"v\" : 3.402823e38\n}");
+   p->v = -maxVal;
    EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
-             "{\n  \"_typename\" : \"Content\",\n  \"d\" : -3.402823e38\n}");
-   p->d = infVal;
+             "{\n  \"_typename\" : \"ContentF\",\n  \"v\" : -3.402823e38\n}");
+   p->v = infVal;
    EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
-             "{\n  \"_typename\" : \"Content\",\n  \"d\" : \"inff\"\n}");
-   p->d = -infVal;
+             "{\n  \"_typename\" : \"ContentF\",\n  \"v\" : \"inff\"\n}");
+   p->v = -infVal;
    EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
-             "{\n  \"_typename\" : \"Content\",\n  \"d\" : \"-inff\"\n}");
-   p->d = nanVal;
+             "{\n  \"_typename\" : \"ContentF\",\n  \"v\" : \"-inff\"\n}");
+   p->v = nanVal;
    EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
-             "{\n  \"_typename\" : \"Content\",\n  \"d\" : \"nanf\"\n}");
+             "{\n  \"_typename\" : \"ContentF\",\n  \"v\" : \"nanf\"\n}");
    delete p;
    p = nullptr;
 }
 
 // https://github.com/root-project/root/issues/19768
+struct ContentD {
+   double v;
+};
 TEST(TBufferJSON, SpecialNumbersDouble)
 {
-   struct Content {
-      double d;
-   };
-   Content *p = nullptr;
-   TBufferJSON::FromJSON<Content>(p, "{ \"_typename\" : \"Content\", \"d\" : \"inf\" }");
-   EXPECT_TRUE(p && std::isinf(p->d) && (p->d > 0));
+   ContentD *p = nullptr;
+   TBufferJSON::FromJSON<ContentD>(p, "{ \"_typename\" : \"ContentD\", \"v\" : \"inf\" }");
+   EXPECT_TRUE(p && std::isinf(p->v) && (p->v > 0));
    delete p;
    p = nullptr;
-   TBufferJSON::FromJSON<Content>(p, "{ \"_typename\" : \"Content\", \"d\" : \"-inf\" }");
-   EXPECT_TRUE(p && std::isinf(p->d) && (p->d < 0));
+   TBufferJSON::FromJSON<ContentD>(p, "{ \"_typename\" : \"ContentD\", \"v\" : \"-inf\" }");
+   EXPECT_TRUE(p && std::isinf(p->v) && (p->v < 0));
    delete p;
    p = nullptr;
-   TBufferJSON::FromJSON<Content>(p, "{ \"_typename\" : \"Content\", \"d\" : \"nan\" }");
-   EXPECT_TRUE(p && std::isnan(p->d));
+   TBufferJSON::FromJSON<ContentD>(p, "{ \"_typename\" : \"ContentD\", \"v\" : \"nan\" }");
+   EXPECT_TRUE(p && std::isnan(p->v));
    delete p;
    p = nullptr;
 
@@ -166,22 +166,22 @@ TEST(TBufferJSON, SpecialNumbersDouble)
    auto infVal = std::numeric_limits<double>::infinity();
    EXPECT_EQ(ovfVal, infVal);
    auto nanVal = std::numeric_limits<double>::quiet_NaN();
-   p = new Content;
-   p->d = maxVal;
+   p = new ContentD;
+   p->v = maxVal;
    EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
-             "{\n  \"_typename\" : \"Content\",\n  \"d\" : 1.79769313486232e308\n}");
-   p->d = -maxVal;
+             "{\n  \"_typename\" : \"ContentD\",\n  \"v\" : 1.79769313486232e308\n}");
+   p->v = -maxVal;
    EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
-             "{\n  \"_typename\" : \"Content\",\n  \"d\" : -1.79769313486232e308\n}");
-   p->d = infVal;
+             "{\n  \"_typename\" : \"ContentD\",\n  \"v\" : -1.79769313486232e308\n}");
+   p->v = infVal;
    EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
-             "{\n  \"_typename\" : \"Content\",\n  \"d\" : \"inf\"\n}");
-   p->d = -infVal;
+             "{\n  \"_typename\" : \"ContentD\",\n  \"v\" : \"inf\"\n}");
+   p->v = -infVal;
    EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
-             "{\n  \"_typename\" : \"Content\",\n  \"d\" : \"-inf\"\n}");
-   p->d = nanVal;
+             "{\n  \"_typename\" : \"ContentD\",\n  \"v\" : \"-inf\"\n}");
+   p->v = nanVal;
    EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
-             "{\n  \"_typename\" : \"Content\",\n  \"d\" : \"nan\"\n}");
+             "{\n  \"_typename\" : \"ContentD\",\n  \"v\" : \"nan\"\n}");
    delete p;
    p = nullptr;
 }
