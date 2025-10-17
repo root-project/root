@@ -40,6 +40,7 @@
 #include "TH2.h" // For Histo actions
 #include "TH3.h" // For Histo actions
 #include "THn.h"
+#include "TMatrixDSym.h" // For Cov action
 #include "TProfile.h"
 #include "TProfile2D.h"
 #include "TStatistic.h"
@@ -2836,6 +2837,31 @@ public:
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
       auto stdDeviationV = std::make_shared<double>(0);
       return CreateAction<RDFInternal::ActionTags::StdDev, T>(userColumns, stdDeviationV, stdDeviationV, fProxiedPtr);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Return the covariance matrix of processed column values (*lazy action*).
+   /// \param[in] columnNames The names of the branches/columns to be treated.
+   /// \return the covariance matrix of the selected columns wrapped in a RResultPtr.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. Also see RResultPtr.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto covMatrix = myDf.Cov({"x", "y", "z"});
+   /// ~~~
+   ///
+   RResultPtr<TMatrixDSym> Cov(const ColumnNames_t &columnNames)
+   {
+      const auto nCols = columnNames.size();
+      if (nCols < 2) {
+         throw std::invalid_argument("Covariance matrix calculation requires at least 2 columns");
+      }
+      auto covMatrixV = std::make_shared<TMatrixDSym>(static_cast<Int_t>(nCols));
+      
+      // Use type inference like HistoND to support arbitrary number of columns
+      return CreateAction<RDFInternal::ActionTags::Cov, RDFDetail::RInferredType>(columnNames, covMatrixV, covMatrixV, fProxiedPtr, columnNames.size());
    }
 
    // clang-format off
