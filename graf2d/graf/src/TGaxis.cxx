@@ -1732,7 +1732,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          if ((!optionNoopt || optionInt) && axis_length0) {
             nticks0 = Int_t(axis_length0/dxtick);
             if (nticks0 > 1000) nticks0 = 1000;
-            for (k=0; k<=nticks0; k++) {
+            xtick0 -= dxtick; // skip first major tick which already was drawn
+            for (k=1; k<=nticks0; k++) {
                ltick = 2;
                if (k%nn3 == 0) ltick = 1;
                if (k%nn2 == 0) ltick = 0;
@@ -1776,7 +1777,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
          if ((!optionNoopt || optionInt) && axis_length1) {
             nticks1 = int(axis_length1/dxtick);
             if (nticks1 > 1000) nticks1 = 1000;
-            for (k=0; k<=nticks1; k++) {
+            xtick1 += dxtick; // skip last major tick which was already drawn
+            for (k=1; k<=nticks1; k++) {
                ltick = 2;
                if (k%nn3 == 0) ltick = 1;
                if (k%nn2 == 0) ltick = 0;
