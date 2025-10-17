@@ -1,6 +1,7 @@
 #include "TBufferJSON.h"
 #include "TNamed.h"
 #include "TList.h"
+#include "TInterpreter.h"
 #include <cmath>
 #include <limits>
 #include <string>
@@ -102,6 +103,7 @@ struct ContentF {
 };
 TEST(TBufferJSON, SpecialNumbersFloat)
 {
+   gInterpreter->ProcessLine("struct ContentF { float v; };");
    ContentF *p = nullptr;
    TBufferJSON::FromJSON<ContentF>(p, "{ \"_typename\" : \"ContentF\", \"v\" : inff }");
    EXPECT_TRUE(p && std::isinf(p->v) && (p->v > 0));
@@ -147,6 +149,7 @@ struct ContentD {
 };
 TEST(TBufferJSON, SpecialNumbersDouble)
 {
+   gInterpreter->Declare("struct ContentD { double v; };");
    ContentD *p = nullptr;
    TBufferJSON::FromJSON<ContentD>(p, "{ \"_typename\" : \"ContentD\", \"v\" : \"inf\" }");
    EXPECT_TRUE(p && std::isinf(p->v) && (p->v > 0));
