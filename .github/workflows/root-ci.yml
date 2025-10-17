@@ -113,7 +113,7 @@ jobs:
             overrides: ["CMAKE_CXX_STANDARD=23"]
           - platform: experimental-brew-ci
             # arch: ARM64
-            overrides: ["CMAKE_CXX_STANDARD=23"]
+            overrides: ["CMAKE_CXX_STANDARD=23", "builtin_unuran=On"]
           # - platform: mac26
           #   arch: ARM64
           - platform: mac-beta
