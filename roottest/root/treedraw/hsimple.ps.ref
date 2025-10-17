@@ -1,7 +1,7 @@
 %!PS-Adobe-2.0
 %%Title: hsimple.ps: c1
 %%Creator: ROOT Version 6.37.01
-%%CreationDate: Thu Oct 16 12:48:46 2025
+%%CreationDate: Fri Oct 17 10:06:23 2025
 %%Orientation: Landscape
 %%DocumentNeededResources: ProcSet (FontSetInit)
 %%EndComments
@@ -81,7 +81,7 @@ newpath  gsave  90 r 0 -594 t  28 20 t .25 .25 scale  gsave
  224 m -24 Y s 568 224 m -24 Y s 618 224 m -24 Y s 667 248 m -48 Y s 717 224 m -24 Y s 766 224 m -24 Y s 816 224 m -24 Y s 866 224 m -24 Y s 915 248 m -48 Y s 965 224 m -24 Y s 1015 224 m -24 Y s 1064 224 m -24 Y s 1114 224 m -24 Y s 1164 248 m -48 Y
  s 1213 224 m -24 Y s 1263 224 m -24 Y s 1313 224 m -24 Y s 1362 224 m -24 Y s 1412 248 m -48 Y s 1462 224 m -24 Y s 1511 224 m -24 Y s 1561 224 m -24 Y s 1611 224 m -24 Y s 1660 248 m -48 Y s 1710 224 m -24 Y s 1760 224 m -24 Y s 1809 224 m -24 Y s
  1859 224 m -24 Y s 1908 248 m -48 Y s 1958 224 m -24 Y s 2008 224 m -24 Y s 2057 224 m -24 Y s 2107 224 m -24 Y s 2157 248 m -48 Y s 2206 224 m -24 Y s 2256 224 m -24 Y s 2306 224 m -24 Y s 2355 224 m -24 Y s 2405 248 m -48 Y s 2455 224 m -24 Y s
- 2504 224 m -24 Y s 2554 224 m -24 Y s 2604 224 m -24 Y s 2653 248 m -48 Y s 419 248 m -48 Y s 369 224 m -24 Y s 320 224 m -24 Y s 2653 248 m -48 Y s
+ 2504 224 m -24 Y s 2554 224 m -24 Y s 2604 224 m -24 Y s 2653 248 m -48 Y s 369 224 m -24 Y s 320 224 m -24 Y s
  gsave  2948 1999 0 0 C 419.481 133.949 t 0 r /Helvetica findfont 63.5352 sf 0 0 m (4) show NC gr 
  gsave  2948 1999 0 0 C 384.495 133.949 t 0 r /Symbol findfont 63.5352 sf 0 0 m (-) show NC gr 
  gsave  2948 1999 0 0 C 667.737 133.949 t 0 r /Helvetica findfont 63.5352 sf 0 0 m (3) show NC gr 
@@ -99,8 +99,8 @@ newpath  gsave  90 r 0 -594 t  28 20 t .25 .25 scale  gsave
  gsave  2948 1999 0 0 C 2585.46 73.1417 t 0 r /Helvetica findfont 63.5352 sf 0 0 m (py) show NC gr  295 200 m 1599 Y s 366 284 m -71 X s 330 318 m -35 X s 330 351 m -35 X s 330 385 m -35 X s 330 419 m -35 X s 366 452 m -71 X s 330 486 m -35 X s 330
  520 m -35 X s 330 553 m -35 X s 330 587 m -35 X s 366 621 m -71 X s 330 654 m -35 X s 330 688 m -35 X s 330 722 m -35 X s 330 756 m -35 X s 366 789 m -71 X s 330 823 m -35 X s 330 857 m -35 X s 330 890 m -35 X s 330 924 m -35 X s 366 958 m -71 X s
  330 991 m -35 X s 330 1025 m -35 X s 330 1059 m -35 X s 330 1092 m -35 X s 366 1126 m -71 X s 330 1160 m -35 X s 330 1193 m -35 X s 330 1227 m -35 X s 330 1261 m -35 X s 366 1294 m -71 X s 330 1328 m -35 X s 330 1362 m -35 X s 330 1395 m -35 X s 330
- 1429 m -35 X s 366 1463 m -71 X s 330 1496 m -35 X s 330 1530 m -35 X s 330 1564 m -35 X s 330 1597 m -35 X s 366 1631 m -71 X s 330 1665 m -35 X s 330 1698 m -35 X s 330 1732 m -35 X s 330 1766 m -35 X s 366 1799 m -71 X s 366 284 m -71 X s 330 250
- m -35 X s 330 217 m -35 X s 366 1799 m -71 X s
+ 1429 m -35 X s 366 1463 m -71 X s 330 1496 m -35 X s 330 1530 m -35 X s 330 1564 m -35 X s 330 1597 m -35 X s 366 1631 m -71 X s 330 1665 m -35 X s 330 1698 m -35 X s 330 1732 m -35 X s 330 1766 m -35 X s 366 1799 m -71 X s 330 250 m -35 X s 330 217
+ m -35 X s
  gsave  2948 1999 0 0 C 246.178 256.571 t 0 r /Helvetica findfont 63.5352 sf 0 0 m (4) show NC gr 
  gsave  2948 1999 0 0 C 211.191 256.571 t 0 r /Symbol findfont 63.5352 sf 0 0 m (-) show NC gr 
  gsave  2948 1999 0 0 C 246.178 427.045 t 0 r /Helvetica findfont 63.5352 sf 0 0 m (3) show NC gr 
