@@ -1161,6 +1161,7 @@ RooAbsData * GenerateAsimovDataSinglePdf(const RooAbsPdf & pdf, const RooArgSet 
 ////////////////////////////////////////////////////////////////////////////////
 /// generate the asimov data for the observables (not the global ones)
 /// need to deal with the case of a sim pdf
+/// \param pdf a RooAbsPdf. Can be also a RooSimultaneous, or a RooProPdf of a RooSimultaneous
 
 RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, const RooArgSet & observables  )  {
 
@@ -1169,11 +1170,31 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, con
    RooRealVar weightVar{"binWeightAsimov", "binWeightAsimov", 1, 0, 1.e30};
 
    if (printLevel > 1) std::cout <<" Generate Asimov data for observables"<< std::endl;
-  //RooDataSet* simData=nullptr;
-   const RooSimultaneous* simPdf = dynamic_cast<const RooSimultaneous*>(&pdf);
+   // RooDataSet *simData = nullptr;
+   const RooProdPdf *prodPdf = dynamic_cast<const RooProdPdf *>(&pdf);
+   RooArgList strippedPdfSet("strippedPdfSet");
+   if (prodPdf) {
+      RooArgList list(prodPdf->pdfList());
+      for (auto ele : list) {
+         const RooAbsPdf *pdfi = dynamic_cast<const RooAbsPdf *>(ele);
+         if (pdfi->dependsOn(observables))
+            strippedPdfSet.add(*pdfi);
+      }
+   }
+   RooProdPdf observableProdPdf("observableProdPdf", "observableProdPdf", strippedPdfSet);
+   const RooAbsPdf *observablePdf;
+   if (prodPdf) {
+      if (strippedPdfSet.getSize() == 1)
+         observablePdf = dynamic_cast<const RooAbsPdf *>(strippedPdfSet.at(0));
+      else
+         observablePdf = &observableProdPdf;
+   } else {
+      observablePdf = &pdf;
+   }
+   const RooSimultaneous *simPdf = dynamic_cast<const RooSimultaneous *>(observablePdf);
    if (!simPdf) {
       // generate data for non sim pdf
-      return GenerateAsimovDataSinglePdf( pdf, observables, weightVar, nullptr);
+      return GenerateAsimovDataSinglePdf(*observablePdf, observables, weightVar, nullptr);
    }
 
    std::map<std::string, std::unique_ptr<RooDataSet>> asimovDataMap;
