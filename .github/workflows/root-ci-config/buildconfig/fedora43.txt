@@ -1,3 +1,4 @@
+CMAKE_CXX_STANDARD=23
 builtin_zlib=ON
 builtin_zstd=ON
 experimental_adaptivecpp=ON
