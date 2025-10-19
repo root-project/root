@@ -82,6 +82,8 @@ class RBDT(unittest.TestCase):
         """
         Test model trained with multiclass XGBClassifier.
         """
+        if xgboost.__version__ >= "3.1.0":
+            self.skipTest("We don't support multiclassification with xgboost>=3.1.0 yet")
         _test_XGBMulticlass("default")
 
     def test_XGBRegression_default(self):
