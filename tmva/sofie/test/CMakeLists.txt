@@ -122,8 +122,7 @@ if (ROOT_TORCH_FOUND)
       OUTPUT_VARIABLE module_version
       OUTPUT_STRIP_TRAILING_WHITESPACE
       ERROR_QUIET)
-    message(STATUS "checking torch version - status = ${status} - module_version = ${module_version}")
-    if(${status} EQUAL 0 AND ${module_version} VERSION_GREATER_EQUAL 2.9.0)
+    if(${status} EQUAL 0 AND ${module_version} VERSION_LESS 2.9.0)
       # Disable TestSofieModels which is failing on alma8, alma10, ubuntu2204, and ubuntu2404
       # with PyTorch 2.9.0
       ROOT_ADD_GTEST(TestSofieModels TestSofieModels.cxx
