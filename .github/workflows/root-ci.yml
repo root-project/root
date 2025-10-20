@@ -95,7 +95,10 @@ jobs:
     # Use login shells to have brew and java available
     defaults:
       run:
-        shell: bash -le {0}
+        shell: bash -leo pipefail {0}
+
+    env:
+      VENV_DIR: ${{ github.workspace }}/ROOT_CI_VENV
 
     strategy:
       fail-fast: false
@@ -113,7 +116,7 @@ jobs:
             overrides: ["CMAKE_CXX_STANDARD=23"]
           - platform: experimental-brew-ci
             # arch: ARM64
-            overrides: ["CMAKE_CXX_STANDARD=23", "builtin_unuran=On"]
+            overrides: ["CMAKE_CXX_STANDARD=23", "builtin_unuran=On", "tmva-sofie=Off"]
           # - platform: mac26
           #   arch: ARM64
           - platform: mac-beta
@@ -131,7 +134,7 @@ jobs:
 
     steps:
       - name: Cleanup
-        run: rm -rf ${{ github.workspace }}/{src,build}
+        run: rm -rf ${{ github.workspace }}/build
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -143,22 +146,23 @@ jobs:
         if: ${{ matrix.platform == 'experimental-brew-ci' }}
         run: |
             brew update
-            echo "Installing deps: $(brew deps --direct --include-build root)"
-            brew install ccache googletest pyenv $(brew deps --direct --include-build root)
-            brew upgrade
+            brew install ccache googletest openjdk pyenv
+            echo "Installing official brew deps: $(brew deps --direct --include-build root)"
+            brew install $(brew deps --direct --include-build root)
+            java --version
 
       - name: Set up python venv
         if: ${{ matrix.platform == 'experimental-brew-ci' }}
         run: |
-          $(brew --prefix python)/bin/python3 -m venv ROOT_CI
-          source ROOT_CI/bin/activate
+          $(brew --prefix python)/bin/python3 -m venv ${VENV_DIR}
+          source ${VENV_DIR}/bin/activate
           pip install --upgrade pip
           cat ${{ github.workspace }}/src/requirements.txt | while read PACKAGE; do
             if [ -n "${PACKAGE%%#*}" ]; then
               pip install -U "${PACKAGE%%#*}";
           fi; done || true
           pip install openstacksdk # TODO: Remove?
-          echo $(pwd)/ROOT_CI/bin >> $GITHUB_PATH
+          echo ${VENV_DIR}/bin >> $GITHUB_PATH
 
       - name: Apply option overrides from matrix for this job for non-release builds
         if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
@@ -173,7 +177,12 @@ jobs:
           build-directory: /Users/sftnight/ROOT-CI/src/
 
       - name: Set up curl CA bundle for Davix to work with https
-        run: 'echo SSL_CERT_FILE=/opt/local/share/curl/curl-ca-bundle.crt >> $GITHUB_ENV'
+        run: |
+          for cert in /opt/homebrew/opt/ca-certificates/share/ca-certificates/cacert.pem /opt/local/share/curl/curl-ca-bundle.crt; do
+            if [ -f ${cert} ]; then
+              echo "SSL_CERT_FILE=${cert}" >> $GITHUB_ENV
+            fi
+          done
 
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
@@ -184,7 +193,7 @@ jobs:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
         run: |
           echo $PATH
-          if [ -f ROOT_CI/bin/activate ]; then source ROOT_CI/bin/activate; fi
+          if [ -f ${VENV_DIR}/bin/activate ]; then source ${VENV_DIR}/bin/activate; fi
           src/.github/workflows/root-ci-config/build_root.py  \
                     --buildtype       RelWithDebInfo          \
                     --incremental     $INCREMENTAL            \
@@ -194,7 +203,7 @@ jobs:
                     --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}  \
                     --head_sha        ${{ github.event.pull_request.head.sha }}         \
                     --repository      ${{ github.server_url }}/${{ github.repository }} \
-                    --platform        ${{ matrix.platform == 'experimental-brew-ci' && 'mac15' || matrix.platform }}
+                    --platform        ${{ matrix.platform == 'experimental-brew-ci' && 'mac15' || matrix.platform }} \
                     --overrides       $GLOBAL_OVERRIDES $OVERRIDES
 
       - name: Workflow dispatch
