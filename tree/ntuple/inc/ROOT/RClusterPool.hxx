@@ -25,6 +25,7 @@
 #include <mutex>
 #include <future>
 #include <thread>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -87,8 +88,8 @@ private:
    std::int64_t fBunchId = 0;
    /// Pinned clusters and their $2 * fClusterBunchSize - 1$ successors will not be evicted from the pool
    std::unordered_set<ROOT::DescriptorId_t> fPinnedClusters;
-   /// The cache of clusters around the currently active cluster
-   std::vector<std::unique_ptr<RCluster>> fPool;
+   /// The cache of active clusters and their successors
+   std::unordered_map<ROOT::DescriptorId_t, std::unique_ptr<RCluster>> fPool;
 
    /// Protects the shared state between the main thread and the I/O thread, namely the work queue and the in-flight
    /// clusters vector
@@ -105,10 +106,6 @@ private:
    /// main threads.
    std::thread fThreadIo;
 
-   /// Every cluster id has at most one corresponding RCluster pointer in the pool
-   RCluster *FindInPool(ROOT::DescriptorId_t clusterId) const;
-   /// Returns an index of an unused element in fPool; extends the pool if necessary
-   std::size_t FindFreeSlot();
    /// The I/O thread routine, there is exactly one I/O thread in-flight for every cluster pool
    void ExecReadClusters();
    /// Returns the given cluster from the pool, which needs to contain at least the columns `physicalColumns`.
