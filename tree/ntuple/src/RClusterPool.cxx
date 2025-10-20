@@ -49,10 +49,7 @@ bool ROOT::Internal::RClusterPool::RInFlightCluster::operator<(const RInFlightCl
 }
 
 ROOT::Internal::RClusterPool::RClusterPool(ROOT::Internal::RPageSource &pageSource, unsigned int clusterBunchSize)
-   : fPageSource(pageSource),
-     fClusterBunchSize(clusterBunchSize),
-     fPool(2 * clusterBunchSize),
-     fThreadIo(&RClusterPool::ExecReadClusters, this)
+   : fPageSource(pageSource), fClusterBunchSize(clusterBunchSize), fThreadIo(&RClusterPool::ExecReadClusters, this)
 {
    R__ASSERT(clusterBunchSize > 0);
 }
@@ -103,28 +100,6 @@ void ROOT::Internal::RClusterPool::ExecReadClusters()
       }
    } // while (true)
 }
-
-ROOT::Internal::RCluster *ROOT::Internal::RClusterPool::FindInPool(ROOT::DescriptorId_t clusterId) const
-{
-   for (const auto &cptr : fPool) {
-      if (cptr && (cptr->GetId() == clusterId))
-         return cptr.get();
-   }
-   return nullptr;
-}
-
-std::size_t ROOT::Internal::RClusterPool::FindFreeSlot()
-{
-   auto N = fPool.size();
-   for (unsigned i = 0; i < N; ++i) {
-      if (!fPool[i])
-         return i;
-   }
-
-   fPool.resize(N + 1);
-   return N;
-}
-
 
 namespace {
 
@@ -229,14 +204,16 @@ ROOT::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clusterId, const R
    } // descriptorGuard
 
    // Clear the cache from clusters not the in the look-ahead window or the set of pinned clusters
-   for (auto &cptr : fPool) {
-      if (!cptr)
+   for (auto itr = fPool.begin(); itr != fPool.end();) {
+      if (provide.Contains(itr->first) > 0) {
+         ++itr;
          continue;
-      if (provide.Contains(cptr->GetId()) > 0)
+      }
+      if (keep.count(itr->first) > 0) {
+         ++itr;
          continue;
-      if (keep.count(cptr->GetId()) > 0)
-         continue;
-      cptr.reset();
+      }
+      itr = fPool.erase(itr);
    }
 
    // Move clusters that meanwhile arrived into cache pool
@@ -272,20 +249,18 @@ ROOT::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clusterId, const R
          fPageSource.UnzipCluster(cptr.get());
 
          // We either put a fresh cluster into a free slot or we merge the cluster with an existing one
-         auto existingCluster = FindInPool(cptr->GetId());
-         if (existingCluster) {
-            existingCluster->Adopt(std::move(*cptr));
+         auto existingCluster = fPool.find(cptr->GetId());
+         if (existingCluster != fPool.end()) {
+            existingCluster->second->Adopt(std::move(*cptr));
          } else {
-            auto idxFreeSlot = FindFreeSlot();
-            fPool[idxFreeSlot] = std::move(cptr);
+            const auto cid = cptr->GetId();
+            fPool.emplace(cid, std::move(cptr));
          }
          itr = fInFlightClusters.erase(itr);
       }
 
       // Determine clusters which get triggered for background loading
-      for (auto &cptr : fPool) {
-         if (!cptr)
-            continue;
+      for (const auto &[_, cptr] : fPool) {
          provide.Erase(cptr->GetId(), cptr->GetAvailPhysicalColumns());
       }
 
@@ -335,18 +310,18 @@ ROOT::Internal::RClusterPool::WaitFor(ROOT::DescriptorId_t clusterId, const RClu
 {
    while (true) {
       // Fast exit: the cluster happens to be already present in the cache pool
-      auto result = FindInPool(clusterId);
-      if (result) {
+      auto result = fPool.find(clusterId);
+      if (result != fPool.end()) {
          bool hasMissingColumn = false;
          for (auto cid : physicalColumns) {
-            if (result->ContainsColumn(cid))
+            if (result->second->ContainsColumn(cid))
                continue;
 
             hasMissingColumn = true;
             break;
          }
          if (!hasMissingColumn)
-            return result;
+            return result->second.get();
       }
 
       // Otherwise the missing data must have been triggered for loading by now, so block and wait
@@ -372,11 +347,11 @@ ROOT::Internal::RClusterPool::WaitFor(ROOT::DescriptorId_t clusterId, const RClu
       // Noop unless the page source has a task scheduler
       fPageSource.UnzipCluster(cptr.get());
 
-      if (result) {
-         result->Adopt(std::move(*cptr));
+      if (result != fPool.end()) {
+         result->second->Adopt(std::move(*cptr));
       } else {
-         auto idxFreeSlot = FindFreeSlot();
-         fPool[idxFreeSlot] = std::move(cptr);
+         const auto cid = cptr->GetId();
+         fPool.emplace(cid, std::move(cptr));
       }
 
       std::lock_guard<std::mutex> lockGuardInFlightClusters(fLockWorkQueue);
