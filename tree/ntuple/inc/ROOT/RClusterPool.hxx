@@ -25,7 +25,7 @@
 #include <mutex>
 #include <future>
 #include <thread>
-#include <set>
+#include <unordered_set>
 #include <vector>
 
 namespace ROOT {
@@ -85,6 +85,8 @@ private:
    unsigned int fClusterBunchSize;
    /// Used as an ever-growing counter in GetCluster() to separate bunches of clusters from each other
    std::int64_t fBunchId = 0;
+   /// Pinned clusters and their $2 * fClusterBunchSize - 1$ successors will not be evicted from the pool
+   std::unordered_set<ROOT::DescriptorId_t> fPinnedClusters;
    /// The cache of clusters around the currently active cluster
    std::vector<std::unique_ptr<RCluster>> fPool;
 
@@ -105,9 +107,8 @@ private:
 
    /// Every cluster id has at most one corresponding RCluster pointer in the pool
    RCluster *FindInPool(ROOT::DescriptorId_t clusterId) const;
-   /// Returns an index of an unused element in fPool; callers of this function (GetCluster() and WaitFor())
-   /// make sure that a free slot actually exists
-   size_t FindFreeSlot() const;
+   /// Returns an index of an unused element in fPool; extends the pool if necessary
+   std::size_t FindFreeSlot();
    /// The I/O thread routine, there is exactly one I/O thread in-flight for every cluster pool
    void ExecReadClusters();
    /// Returns the given cluster from the pool, which needs to contain at least the columns `physicalColumns`.
@@ -132,6 +133,9 @@ public:
    /// uncompressed pages of the returned cluster are already pushed into the page pool associated with the page source
    /// upon return. The cluster remains valid until the next call to GetCluster().
    RCluster *GetCluster(ROOT::DescriptorId_t clusterId, const RCluster::ColumnSet_t &physicalColumns);
+
+   void PinCluster(ROOT::DescriptorId_t clusterId) { fPinnedClusters.insert(clusterId); }
+   void UnpinCluster(ROOT::DescriptorId_t clusterId) { fPinnedClusters.erase(clusterId); }
 
    /// Used by the unit tests to drain the queue of clusters to be preloaded
    void WaitForInFlightClusters();
