@@ -64,7 +64,7 @@ private:
    };
 
    /// Clusters that are currently being processed by the pipeline.  Every in-flight cluster has a corresponding
-   /// work item, first a read item and then an unzip item.
+   /// read item.
    struct RInFlightCluster {
       std::future<std::unique_ptr<RCluster>> fFuture;
       RCluster::RKey fClusterKey;
@@ -81,9 +81,6 @@ private:
    /// Every cluster pool is responsible for exactly one page source that triggers loading of the clusters
    /// (GetCluster()) and is used for implementing the I/O and cluster memory allocation (PageSource::LoadClusters()).
    ROOT::Internal::RPageSource &fPageSource;
-   /// The number of clusters before the currently active cluster that should stay in the pool if present
-   /// Reserved for later use.
-   unsigned int fWindowPre = 0;
    /// The number of clusters that are being read in a single vector read.
    unsigned int fClusterBunchSize;
    /// Used as an ever-growing counter in GetCluster() to separate bunches of clusters from each other
@@ -130,7 +127,7 @@ public:
 
    /// Returns the requested cluster either from the pool or, in case of a cache miss, lets the I/O thread load
    /// the cluster in the pool, blocks until done, and then returns it.  Triggers along the way the background loading
-   /// of the following fWindowPost number of clusters.  The returned cluster has at least all the pages of
+   /// of the following fClusterBunchSize number of clusters.  The returned cluster has at least all the pages of
    /// `physicalColumns` and possibly pages of other columns, too.  If implicit multi-threading is turned on, the
    /// uncompressed pages of the returned cluster are already pushed into the page pool associated with the page source
    /// upon return. The cluster remains valid until the next call to GetCluster().
