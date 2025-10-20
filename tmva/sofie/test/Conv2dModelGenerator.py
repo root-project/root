@@ -13,7 +13,7 @@ import torch.nn.functional as F
 result = []
 
 class Net(nn.Module):
-    
+
     def __init__(self, nc = 1, ng = 1, nl = 4, use_bn = False, use_maxpool = False, use_avgpool = False):
         super(Net, self).__init__()
 
@@ -23,7 +23,7 @@ class Net(nn.Module):
         self.use_bn = use_bn
         self.use_maxpool = use_maxpool
         self.use_avgpool = use_avgpool
-        
+
         self.conv0 = nn.Conv2d(in_channels=self.nc, out_channels=4, kernel_size=2, groups=1, stride=1, padding=1)
         if (self.use_bn): self.bn1 = nn.BatchNorm2d(4)
         if (self.use_maxpool): self.pool1 = nn.MaxPool2d(2)
@@ -33,7 +33,7 @@ class Net(nn.Module):
            self.conv1  = nn.Conv2d(in_channels=4,   out_channels=8, groups = self.ng,   kernel_size=3, stride=1, padding=1)
            #output is same 4x4
            self.conv2  = nn.Conv2d(in_channels=8,   out_channels=4, kernel_size=3, stride=1, padding=1)
-           #use stride last layer 
+           #use stride last layer
            self.conv3 =  nn.Conv2d(in_channels=4,   out_channels=1,   kernel_size=2, stride=2, padding=0)
 
 
@@ -61,7 +61,7 @@ def main():
    parser = argparse.ArgumentParser(description='PyTorch model generator')
    parser.add_argument('params', type=int, nargs='+',
                     help='parameters for the Conv network : batchSize , inputChannels, inputImageSize, nGroups, nLayers ')
-   
+
    parser.add_argument('--bn', action='store_true', default=False,
                         help='For using batch norm layer')
    parser.add_argument('--maxpool', action='store_true', default=False,
@@ -73,13 +73,13 @@ def main():
 
 
    args = parser.parse_args()
-  
+
    #args.params = (4,2,4,1,4)
 
    np = len(args.params)
    if (np < 5) : exit()
    bsize = args.params[0]
-   nc = args.params[1] 
+   nc = args.params[1]
    d = args.params[2]
    ngroups = args.params[3]
    nlayers = args.params[4]
@@ -95,7 +95,7 @@ def main():
    input  = torch.zeros([])
    for ib in range(0,bsize):
       xa = torch.ones([1, 1, d, d]) * (ib+1)
-      if (nc > 1) : 
+      if (nc > 1) :
          xb = xa.neg()
          xc = torch.cat((xa,xb),1)  # concatenate tensors
          if (nc > 2) :
@@ -103,16 +103,16 @@ def main():
             xc = torch.cat((xa,xb,xd),1)
       else:
          xc = xa
-        
-      #concatenate tensors 
-      if (ib == 0) : 
+
+      #concatenate tensors
+      if (ib == 0) :
          xinput = xc
       else :
-         xinput = torch.cat((xinput,xc),0) 
+         xinput = torch.cat((xinput,xc),0)
 
    print("input data",xinput.shape)
    print(xinput)
-   
+
    name = "Conv2dModel"
    if (use_bn): name += "_BN"
    if (use_maxpool): name += "_MAXP"
@@ -123,24 +123,33 @@ def main():
    loadModel=False
    savePtModel = False
 
-    
+
    model = Net(nc,ngroups,nlayers, use_bn, use_maxpool, use_avgpool)
    print(model)
 
    model(xinput)
- 
+
    model.forward(xinput)
 
    if savePtModel :
       torch.save({'model_state_dict':model.state_dict()}, name + ".pt")
 
+
    if saveOnnx:
-        torch.onnx.export(
-                model,
-                xinput,
-                name + ".onnx",
-                export_params=True
-        )
+
+      #new ONNX exporter does not work for batchmorm
+      dynamo_export=True
+      if (use_bn): dynamo_export=False
+
+      torch.onnx.export(
+         model,
+         xinput,
+         name + ".onnx",
+         export_params=True,
+         dynamo=dynamo_export,
+         external_data=False
+      )
+
 
    if loadModel :
         print('Loading model from file....')
@@ -161,10 +170,10 @@ def main():
 
    f = open(name + ".out", "w")
    for i in range(0,outSize):
-        f.write(str(float(yvec[i]))+" ")
-        
-        
-    
+        f.write(str(float(yvec[i].detach()))+" ")
+
+
+
 
 if __name__ == '__main__':
     main()

@@ -13,7 +13,7 @@
 #include  "gtest/gtest.h"
 #define USE_ONNXSIM
 
-bool verbose = true;
+bool verbose = false;
 int sessionId = 0;
 
 void ExecuteSofieParser(std::string modelName) {

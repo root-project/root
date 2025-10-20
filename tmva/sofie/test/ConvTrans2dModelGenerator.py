@@ -138,12 +138,14 @@ def main():
       torch.save({'model_state_dict':model.state_dict()}, name + ".pt")
 
    if saveOnnx:
-        torch.onnx.export(
-                model,
-                xinput,
-                name + ".onnx",
-                export_params=True
-        )
+      torch.onnx.export(
+         model,
+         xinput,
+         name + ".onnx",
+         export_params=True,
+         dynamo=True,
+         external_data=False
+      )
 
    if loadModel :
         print('Loading model from file....')
@@ -164,7 +166,7 @@ def main():
 
    f = open(name + ".out", "w")
    for i in range(0,outSize):
-        f.write(str(float(yvec[i]))+" ")
+        f.write(str(float(yvec[i].detach()))+" ")
 
 
 
