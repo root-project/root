@@ -136,14 +136,24 @@ if (ROOT_TORCH_FOUND)
   configure_file(RecurrentModelGenerator.py  RecurrentModelGenerator.py COPYONLY)
 
   if (BLAS_FOUND)
-    ROOT_ADD_GTEST(TestSofieModels TestSofieModels.cxx
-      LIBRARIES
-        ROOTTMVASofie
-        ROOTTMVASofieParser
-        BLAS::BLAS
-      INCLUDE_DIRS
-        ${CMAKE_CURRENT_BINARY_DIR}
-    )
+    execute_process(COMMAND "${Python3_EXECUTABLE}" "-c"
+                            "import torch; print(getattr(torch, '__version__', 'unknown'))"
+      RESULT_VARIABLE status
+      OUTPUT_VARIABLE module_version
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_QUIET)
+    if(${status} EQUAL 0 AND ${module_version} VERSION_LESS 2.9.0)
+      # Disable TestSofieModels which is failing on alma8, alma10, ubuntu2204, and ubuntu2404
+      # with PyTorch 2.9.0
+      ROOT_ADD_GTEST(TestSofieModels TestSofieModels.cxx
+        LIBRARIES
+          ROOTTMVASofie
+          ROOTTMVASofieParser
+          BLAS::BLAS
+        INCLUDE_DIRS
+          ${CMAKE_CURRENT_BINARY_DIR}
+      )
+    endif()
   endif()
 endif()
 
