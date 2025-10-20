@@ -113,7 +113,7 @@ ROOT::Internal::RCluster *ROOT::Internal::RClusterPool::FindInPool(ROOT::Descrip
    return nullptr;
 }
 
-size_t ROOT::Internal::RClusterPool::FindFreeSlot() const
+std::size_t ROOT::Internal::RClusterPool::FindFreeSlot()
 {
    auto N = fPool.size();
    for (unsigned i = 0; i < N; ++i) {
@@ -121,7 +121,7 @@ size_t ROOT::Internal::RClusterPool::FindFreeSlot() const
          return i;
    }
 
-   R__ASSERT(false);
+   fPool.resize(N + 1);
    return N;
 }
 
@@ -183,7 +183,21 @@ public:
 ROOT::Internal::RCluster *
 ROOT::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clusterId, const RCluster::ColumnSet_t &physicalColumns)
 {
-   std::set<ROOT::DescriptorId_t> keep;
+   std::unordered_set<ROOT::DescriptorId_t> keep{fPinnedClusters};
+   for (auto cid : fPinnedClusters) {
+      auto descriptorGuard = fPageSource.GetSharedDescriptorGuard();
+
+      for (ROOT::DescriptorId_t i = 1, next = cid; i < 2 * fClusterBunchSize; ++i) {
+         next = descriptorGuard->FindNextClusterId(next);
+         if (next == ROOT::kInvalidNTupleIndex ||
+             !fPageSource.GetEntryRange().IntersectsWith(descriptorGuard->GetClusterDescriptor(next))) {
+            break;
+         }
+
+         keep.insert(next);
+      }
+   }
+
    RProvides provide;
    {
       auto descriptorGuard = fPageSource.GetSharedDescriptorGuard();
@@ -214,7 +228,7 @@ ROOT::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clusterId, const R
       }
    } // descriptorGuard
 
-   // Clear the cache from clusters not the in the look-ahead window
+   // Clear the cache from clusters not the in the look-ahead window or the set of pinned clusters
    for (auto &cptr : fPool) {
       if (!cptr)
          continue;
