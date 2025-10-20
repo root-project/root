@@ -4696,13 +4696,13 @@ void TGraphPainter::PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double
       } else {
          a1  = TMath::ATan((yi1-yi0)/(xi1-xi0));
       }
-      if (xi1<xi0) a1 = a1+3.14159;
+      if (xi1<xi0) a1 = a1+TMath::Pi();
       if (xi2==xi0) {
          a2 = TMath::PiOver2();
       } else {
          a2  = TMath::ATan((yi0-yi2)/(xi0-xi2));
       }
-      if (xi0<xi2) a2 = a2+3.14159;
+      if (xi0<xi2) a2 = a2+TMath::Pi();
       x1 = xi0-w*TMath::Sin(a1);
       y1 = yi0+w*TMath::Cos(a1);
       x2 = xi0-w*TMath::Sin(a2);
@@ -4714,8 +4714,8 @@ void TGraphPainter::PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double
       } else {
          a3 = TMath::ATan((ym-yi0)/(xm-xi0));
       }
-      x3 = xi0-w*TMath::Sin(a3+1.57079);
-      y3 = yi0+w*TMath::Cos(a3+1.57079);
+      x3 = xi0-w*TMath::Sin(a3+TMath::PiOver2());
+      y3 = yi0+w*TMath::Cos(a3+TMath::PiOver2());
       // Rotate (x3,y3) by PI around (xi0,yi0) if it is not on the (xm,ym) side.
       if ((xm-xi0)*(x3-xi0)<0 && (ym-yi0)*(y3-yi0)<0) {
          x3 = 2*xi0-x3;
@@ -4738,8 +4738,8 @@ void TGraphPainter::PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double
       } else {
          a3 = TMath::ATan((ym-yf[0])/(xm-xf[0]));
       }
-      x3 = xf[0]+w*TMath::Sin(a3+1.57079);
-      y3 = yf[0]-w*TMath::Cos(a3+1.57079);
+      x3 = xf[0]+w*TMath::Sin(a3+TMath::PiOver2());
+      y3 = yf[0]-w*TMath::Cos(a3+TMath::PiOver2());
       if ((xm-xf[0])*(x3-xf[0])<0 && (ym-yf[0])*(y3-yf[0])<0) {
          x3 = 2*xf[0]-x3;
          y3 = 2*yf[0]-y3;
