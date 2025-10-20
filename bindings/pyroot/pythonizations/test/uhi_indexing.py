@@ -2,6 +2,7 @@
 Tests to verify that TH1 and derived histograms conform to the UHI Indexing interfaces (setting, accessing and slicing).
 """
 
+import numpy as np
 import pytest
 import ROOT
 from ROOT._pythonization._uhi import _get_axis, _get_processed_slices, _overflow, _shape, _underflow
@@ -324,6 +325,36 @@ class TestTH1Indexing:
         expected = np.full(_shape(hist_setup), 3, dtype=np.int64)
         hist_setup[...] = expected
         assert list(hist_setup) == expected.flatten().tolist()
+
+
+class TestInfiniteEdges:
+    def setup_method(self):
+        # create a 2D histogram with an infinite upper edge on the Y axis
+        xedges = np.array([0.0, 1.0, 2.0], dtype="float64")
+        yedges = np.array([0.0, 1.0, 2.0, np.inf], dtype="float64")
+        self.h_inf = ROOT.TH2D("h_inf", "h_inf", len(xedges) - 1, xedges, len(yedges) - 1, yedges)
+
+        for i in range(1, self.h_inf.GetNbinsX() + 1):
+            for j in range(1, self.h_inf.GetNbinsY() + 1):
+                self.h_inf.SetBinContent(i, j, 10 * i + j)
+
+    def test_uhi_projection_preserves_content(self):
+        """check that UHI projection behaves like standard projection"""
+        # projection on X axis
+        proj_x_ref = self.h_inf.ProjectionX()
+        proj_x_uhi = self.h_inf[:, ROOT.uhi.sum]
+        ref_values = proj_x_ref.values()
+        uhi_values = proj_x_uhi.values()
+
+        assert np.allclose(uhi_values, ref_values)
+
+        # projection on Y axis
+        proj_y_ref = self.h_inf.ProjectionY()
+        proj_y_uhi = self.h_inf[ROOT.uhi.sum, :]
+        ref_values = proj_y_ref.values()
+        uhi_values = proj_y_uhi.values()
+
+        assert np.allclose(uhi_values, ref_values)
 
 
 if __name__ == "__main__":
