@@ -214,17 +214,19 @@ private:
 
       // Compute new bin counts and edges
       std::array<Int_t, kMaxDim> nBins{}, totalBins{};
-      std::array<Double_t, kMaxDim> lowEdge{}, upEdge{};
+      std::array<std::vector<Double_t>, kMaxDim> edges;
       for (decltype(ndim) d = 0; d < ndim; ++d) {
          const auto &axis = (d == 0 ? fXaxis : d == 1 ? fYaxis : fZaxis);
          auto start = std::max(1, args[d * 2]);
          auto end = std::min(axis.GetNbins() + 1, args[d * 2 + 1]);
          nBins[d] = end - start;
-         lowEdge[d] = axis.GetBinLowEdge(start);
-         upEdge[d] = axis.GetBinLowEdge(end);
          totalBins[d] = axis.GetNbins() + 2;
          args[2 * d] = start;
          args[2 * d + 1] = end;
+         // Compute new edges
+         for (int b = start; b <= end; ++b)
+            edges[d].push_back(axis.GetBinLowEdge(b));
+         edges[d].push_back(axis.GetBinUpEdge(end));
       }
 
       // Compute layout sizes for slice
@@ -271,13 +273,10 @@ private:
       dataArray = newArr;
 
       // Reconfigure Axes
-      if (ndim == 1) {
-         this->SetBins(nBins[0], lowEdge[0], upEdge[0]);
-      } else if (ndim == 2) {
-         this->SetBins(nBins[0], lowEdge[0], upEdge[0], nBins[1], lowEdge[1], upEdge[1]);
-      } else if (ndim == 3) {
-         this->SetBins(nBins[0], lowEdge[0], upEdge[0], nBins[1], lowEdge[1], upEdge[1], nBins[2], lowEdge[2],
-                       upEdge[2]);
+      switch (ndim) {
+      case 1: this->SetBins(nBins[0], edges[0].data()); break;
+      case 2: this->SetBins(nBins[0], edges[0].data(), nBins[1], edges[1].data()); break;
+      case 3: this->SetBins(nBins[0], edges[0].data(), nBins[1], edges[1].data(), nBins[2], edges[2].data()); break;
       }
 
       // Update the statistics
