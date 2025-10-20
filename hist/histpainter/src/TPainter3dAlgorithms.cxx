@@ -44,6 +44,7 @@ const Double_t kRad  = TMath::ATan(1)*Double_t(4)/Double_t(180);
 const Double_t kFdel = 0.;
 const Double_t kDel  = 0.0001;
 const Double_t kEps  = 1e-9; // exclude such small segments
+const Double_t kEpsFaceMode2  = 1e-12; // minimal Z change in DrawFaceMode2
 const Int_t kNiso  = 4;
 const Int_t kNmaxp = kNiso*13;
 const Int_t kNmaxt = kNiso*12;
@@ -478,7 +479,10 @@ void TPainter3dAlgorithms::DrawFaceMode2(Int_t *, Double_t *xyz, Int_t np, Int_t
       Int_t k1 = 0, k2 = 2;
       Double_t z1 = (x[k1+1] - x[k1+0])*(y[k1+2] - y[k1+1]) - (y[k1+1] - y[k1+0])*(x[k1+2] - x[k1+1]);
       Double_t z2 = (x[k2+1] - x[k2+0])*(y[k2+2] - y[k2+1]) - (y[k2+1] - y[k2+0])*(x[k2+2] - x[k2+1]);
-      if (z1 > z2) { k1 = 2; k2 = 0; }
+      // S.Linev Exclude flipping around same z
+      // only by 'significant' difference change rendering order
+      if (z1 > z2 + kEpsFaceMode2) { k1 = 2; k2 = 0; }
+
       FillPolygon(3, &p3[3*k1], &ttt[k1]);
       if (fMesh == 1) {   // Draw border
          gPad->PaintPolyLine(3, &x[k1], &y[k1]);
