@@ -4754,20 +4754,21 @@ void TGraphPainter::PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double
    Double_t xc, yc, c1, b1, c2, b2;
    Bool_t cross = kFALSE;
    Int_t nf2 = nf;
+   const Double_t eps = 1e-12; // float precision
    for (i=nf2; i>0; i--) {
       for (j=i-1; j>0; j--) {
-         if (xt[i-1]==xt[i] || xt[j-1]==xt[j]) continue;
+         if (TMath::Abs(xt[i-1]-xt[i]) < eps || TMath::Abs(xt[j-1]-xt[j]) < eps) continue;
          c1  = (yt[i-1]-yt[i])/(xt[i-1]-xt[i]);
          b1  = yt[i]-c1*xt[i];
          c2  = (yt[j-1]-yt[j])/(xt[j-1]-xt[j]);
          b2  = yt[j]-c2*xt[j];
-         if (c1 != c2) {
+         if (TMath::Abs(c1 - c2) > eps) {
             xc = (b2-b1)/(c1-c2);
             yc = c1*xc+b1;
-            if (xc>TMath::Min(xt[i],xt[i-1]) && xc<TMath::Max(xt[i],xt[i-1]) &&
-                xc>TMath::Min(xt[j],xt[j-1]) && xc<TMath::Max(xt[j],xt[j-1]) &&
-                yc>TMath::Min(yt[i],yt[i-1]) && yc<TMath::Max(yt[i],yt[i-1]) &&
-                yc>TMath::Min(yt[j],yt[j-1]) && yc<TMath::Max(yt[j],yt[j-1])) {
+            if (xc>TMath::Min(xt[i],xt[i-1])+eps && xc<TMath::Max(xt[i],xt[i-1])-eps &&
+                xc>TMath::Min(xt[j],xt[j-1])+eps && xc<TMath::Max(xt[j],xt[j-1])-eps &&
+                yc>TMath::Min(yt[i],yt[i-1])+eps && yc<TMath::Max(yt[i],yt[i-1])-eps &&
+                yc>TMath::Min(yt[j],yt[j-1])+eps && yc<TMath::Max(yt[j],yt[j-1])-eps) {
                nf++; xf[nf] = xt[i]; yf[nf] = yt[i];
                nf++; xf[nf] = xc   ; yf[nf] = yc;
                i = j;
