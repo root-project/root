@@ -188,15 +188,6 @@ ROOT::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clusterId, const R
    {
       auto descriptorGuard = fPageSource.GetSharedDescriptorGuard();
 
-      // Determine previous cluster ids that we keep if they happen to be in the pool
-      auto prev = clusterId;
-      for (unsigned int i = 0; i < fWindowPre; ++i) {
-         prev = descriptorGuard->FindPrevClusterId(prev);
-         if (prev == ROOT::kInvalidDescriptorId)
-            break;
-         keep.insert(prev);
-      }
-
       // Determine following cluster ids and the column ids that we want to make available
       RProvides::RInfo provideInfo;
       provideInfo.fPhysicalColumnSet = physicalColumns;
@@ -223,7 +214,7 @@ ROOT::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clusterId, const R
       }
    } // descriptorGuard
 
-   // Clear the cache from clusters not the in the look-ahead or the look-back window
+   // Clear the cache from clusters not the in the look-ahead window
    for (auto &cptr : fPool) {
       if (!cptr)
          continue;
