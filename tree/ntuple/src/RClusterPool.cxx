@@ -377,13 +377,14 @@ void ROOT::Internal::RClusterPool::WaitForInFlightClusters()
       {
          std::lock_guard<std::mutex> lockGuardInFlightClusters(fLockWorkQueue);
          itr = fInFlightClusters.begin();
+         while (itr != fInFlightClusters.end() &&
+                itr->fFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+            ++itr;
+         }
          if (itr == fInFlightClusters.end())
-            return;
+            break;
       }
 
       itr->fFuture.wait();
-
-      std::lock_guard<std::mutex> lockGuardInFlightClusters(fLockWorkQueue);
-      fInFlightClusters.erase(itr);
    }
 }
