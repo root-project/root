@@ -1,6 +1,9 @@
 #include "TBufferJSON.h"
 #include "TNamed.h"
 #include "TList.h"
+#include "TInterpreter.h"
+#include <cmath>
+#include <limits>
 #include <string>
 
 #include "gtest/gtest.h"
@@ -94,3 +97,94 @@ TEST(TBufferJSON, TList_Add_Without_Option)
    EXPECT_EQ(link, nullptr);
 }
 
+// https://github.com/root-project/root/issues/19768
+struct ContentF {
+   float v;
+};
+TEST(TBufferJSON, SpecialNumbersFloat)
+{
+   gInterpreter->Declare("struct ContentF { float v; };");
+   ContentF *p = nullptr;
+   TBufferJSON::FromJSON<ContentF>(p, "{ \"_typename\" : \"ContentF\", \"v\" : \"inff\" }");
+   EXPECT_TRUE(p && std::isinf(p->v) && (p->v > 0));
+   delete p;
+   p = nullptr;
+   TBufferJSON::FromJSON<ContentF>(p, "{ \"_typename\" : \"ContentF\", \"v\" : \"-inff\" }");
+   EXPECT_TRUE(p && std::isinf(p->v) && (p->v < 0));
+   delete p;
+   p = nullptr;
+   TBufferJSON::FromJSON<ContentF>(p, "{ \"_typename\" : \"ContentF\", \"v\" : \"nanf\" }");
+   EXPECT_TRUE(p && std::isnan(p->v));
+   delete p;
+   p = nullptr;
+
+   auto maxVal = std::numeric_limits<float>::max(); // 3.40282e+38f
+   auto ovfVal = std::numeric_limits<float>::max() * static_cast<float>(1 + 1e-7);
+   auto infVal = std::numeric_limits<float>::infinity();
+   EXPECT_EQ(ovfVal, infVal);
+   auto nanVal = std::numeric_limits<float>::quiet_NaN();
+   p = new ContentF;
+   p->v = maxVal;
+   EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
+             "{\n  \"_typename\" : \"ContentF\",\n  \"v\" : 3.402823e38\n}");
+   p->v = -maxVal;
+   EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
+             "{\n  \"_typename\" : \"ContentF\",\n  \"v\" : -3.402823e38\n}");
+   p->v = infVal;
+   EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
+             "{\n  \"_typename\" : \"ContentF\",\n  \"v\" : \"inff\"\n}");
+   p->v = -infVal;
+   EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
+             "{\n  \"_typename\" : \"ContentF\",\n  \"v\" : \"-inff\"\n}");
+   p->v = nanVal;
+   EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
+             "{\n  \"_typename\" : \"ContentF\",\n  \"v\" : \"nanf\"\n}");
+   delete p;
+   p = nullptr;
+}
+
+// https://github.com/root-project/root/issues/19768
+struct ContentD {
+   double v;
+};
+TEST(TBufferJSON, SpecialNumbersDouble)
+{
+   gInterpreter->Declare("struct ContentD { double v; };");
+   ContentD *p = nullptr;
+   TBufferJSON::FromJSON<ContentD>(p, "{ \"_typename\" : \"ContentD\", \"v\" : \"inf\" }");
+   EXPECT_TRUE(p && std::isinf(p->v) && (p->v > 0));
+   delete p;
+   p = nullptr;
+   TBufferJSON::FromJSON<ContentD>(p, "{ \"_typename\" : \"ContentD\", \"v\" : \"-inf\" }");
+   EXPECT_TRUE(p && std::isinf(p->v) && (p->v < 0));
+   delete p;
+   p = nullptr;
+   TBufferJSON::FromJSON<ContentD>(p, "{ \"_typename\" : \"ContentD\", \"v\" : \"nan\" }");
+   EXPECT_TRUE(p && std::isnan(p->v));
+   delete p;
+   p = nullptr;
+
+   auto maxVal = std::numeric_limits<double>::max(); // 1.7976931e+308
+   auto ovfVal = std::numeric_limits<double>::max() * (1 + 1e-15);
+   auto infVal = std::numeric_limits<double>::infinity();
+   EXPECT_EQ(ovfVal, infVal);
+   auto nanVal = std::numeric_limits<double>::quiet_NaN();
+   p = new ContentD;
+   p->v = maxVal;
+   EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
+             "{\n  \"_typename\" : \"ContentD\",\n  \"v\" : 1.79769313486232e308\n}");
+   p->v = -maxVal;
+   EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
+             "{\n  \"_typename\" : \"ContentD\",\n  \"v\" : -1.79769313486232e308\n}");
+   p->v = infVal;
+   EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
+             "{\n  \"_typename\" : \"ContentD\",\n  \"v\" : \"inf\"\n}");
+   p->v = -infVal;
+   EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
+             "{\n  \"_typename\" : \"ContentD\",\n  \"v\" : \"-inf\"\n}");
+   p->v = nanVal;
+   EXPECT_EQ(TBufferJSON::ToJSON(p, TBufferJSON::kStoreInfNaN),
+             "{\n  \"_typename\" : \"ContentD\",\n  \"v\" : \"nan\"\n}");
+   delete p;
+   p = nullptr;
+}
