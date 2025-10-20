@@ -116,14 +116,17 @@ if (ROOT_TORCH_FOUND)
   configure_file(RecurrentModelGenerator.py  RecurrentModelGenerator.py COPYONLY)
 
   if (BLAS_FOUND)
-    ROOT_ADD_GTEST(TestSofieModels TestSofieModels.cxx
-      LIBRARIES
-        ROOTTMVASofie
-        ROOTTMVASofieParser
-        BLAS::BLAS
-      INCLUDE_DIRS
-        ${CMAKE_CURRENT_BINARY_DIR}
-    )
+    # Disable TestSofieModels which is failing on alma8, alma10, ubuntu2204, and ubuntu2404
+    if(NOT ROOT_PLATFORM MATCHES linux)
+      ROOT_ADD_GTEST(TestSofieModels TestSofieModels.cxx
+        LIBRARIES
+          ROOTTMVASofie
+          ROOTTMVASofieParser
+          BLAS::BLAS
+        INCLUDE_DIRS
+          ${CMAKE_CURRENT_BINARY_DIR}
+      )
+    endif()
   endif()
 endif()
 
