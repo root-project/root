@@ -11,7 +11,7 @@
 #include "TMVA/RModelParser_ONNX.hxx"
 
 #include  "gtest/gtest.h"
-#define USE_ONNXSIM
+//#define USE_ONNXSIM
 
 bool verbose = true;
 int sessionId = 0;
