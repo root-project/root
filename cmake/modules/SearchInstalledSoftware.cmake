@@ -1365,106 +1365,12 @@ if(builtin_tbb)
   set(TBB_TARGET TBB)
 endif()
 
-#---Check for Vc---------------------------------------------------------------------
-if(builtin_vc)
-  unset(Vc_FOUND)
-  unset(Vc_FOUND CACHE)
-  set(vc ON CACHE BOOL "Enabled because builtin_vc requested (${vc_description})" FORCE)
-elseif(vc)
-  if(fail-on-missing)
-    find_package(Vc 1.4.4 CONFIG QUIET REQUIRED)
-  else()
-    find_package(Vc 1.4.4 CONFIG QUIET)
-    if(NOT Vc_FOUND)
-      message(STATUS "Vc library not found, support for it disabled.")
-      message(STATUS "Please enable the option 'builtin_vc' to build Vc internally.")
-      set(vc OFF CACHE BOOL "Disabled because Vc not found (${vc_description})" FORCE)
-    endif()
-  endif()
-  if(Vc_FOUND)
-    set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES ${Vc_INCLUDE_DIR})
-    BUILD_ROOT_INCLUDE_PATH("${Vc_INCLUDE_DIR}")
-  endif()
-endif()
-
-if(vc AND NOT Vc_FOUND)
-  ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("vc")
-endif()
-
-if(vc AND NOT Vc_FOUND)
-  set(Vc_VERSION "1.4.4")
-  set(Vc_PROJECT "Vc-${Vc_VERSION}")
-  set(Vc_SRC_URI "${lcgpackages}/${Vc_PROJECT}.tar.gz")
-  set(Vc_DESTDIR "${CMAKE_BINARY_DIR}/externals")
-  set(Vc_ROOTDIR "${Vc_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
-  set(Vc_LIBNAME "${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  set(Vc_LIBRARY "${Vc_ROOTDIR}/lib/${Vc_LIBNAME}")
-
-  ExternalProject_Add(VC
-    URL     ${Vc_SRC_URI}
-    URL_HASH SHA256=5933108196be44c41613884cd56305df320263981fe6a49e648aebb3354d57f3
-    BUILD_IN_SOURCE 0
-    BUILD_BYPRODUCTS ${Vc_LIBRARY}
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-    CMAKE_ARGS -G ${CMAKE_GENERATOR}
-               -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-               -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-               -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-               -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-               -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-               -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
-               -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-    INSTALL_COMMAND env DESTDIR=${Vc_DESTDIR} ${CMAKE_COMMAND} --build . --target install
-    TIMEOUT 600
-  )
-
-  set(VC_TARGET Vc)
-  set(Vc_LIBRARIES Vc)
-  set(Vc_INCLUDE_DIR ${Vc_ROOTDIR}/include)
-  set(Vc_CMAKE_MODULES_DIR ${Vc_ROOTDIR}/lib/cmake/Vc)
-
-  add_library(VcExt STATIC IMPORTED)
-  set_property(TARGET VcExt PROPERTY IMPORTED_LOCATION ${Vc_LIBRARY})
-  add_dependencies(VcExt VC)
-
-  add_library(Vc INTERFACE)
-  target_include_directories(Vc SYSTEM BEFORE INTERFACE $<BUILD_INTERFACE:${Vc_INCLUDE_DIR}>)
-  target_link_libraries(Vc INTERFACE VcExt)
-
-  find_package_handle_standard_args(Vc
-    FOUND_VAR Vc_FOUND
-    REQUIRED_VARS Vc_INCLUDE_DIR Vc_LIBRARIES Vc_CMAKE_MODULES_DIR
-    VERSION_VAR Vc_VERSION)
-
-  # FIXME: This is a workaround to let ROOT find the headers at runtime if
-  # they are in the build directory. This is necessary until we decide how to
-  # treat externals with headers used by ROOT
-  if(NOT EXISTS ${CMAKE_BINARY_DIR}/include/Vc)
-    if (NOT EXISTS ${CMAKE_BINARY_DIR}/include)
-      execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/include)
-    endif()
-    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
-      ${Vc_INCLUDE_DIR}/Vc ${CMAKE_BINARY_DIR}/include/Vc)
-  endif()
-  # end of workaround
-
-  install(DIRECTORY ${Vc_ROOTDIR}/ DESTINATION ".")
-endif()
-
-if(Vc_FOUND)
-  # Missing from VcConfig.cmake
-  set(Vc_INCLUDE_DIRS ${Vc_INCLUDE_DIR})
-endif()
-
 #---Check for VecCore--------------------------------------------------------------------
 if(builtin_veccore)
   unset(VecCore_FOUND)
   unset(VecCore_FOUND CACHE)
   set(veccore ON CACHE BOOL "Enabled because builtin_veccore requested (${veccore_description})" FORCE)
 elseif(veccore)
-  if(vc)
-    set(VecCore_COMPONENTS Vc)
-  endif()
   if(fail-on-missing)
     find_package(VecCore 0.4.2 CONFIG QUIET REQUIRED COMPONENTS ${VecCore_COMPONENTS})
   else()
@@ -1520,18 +1426,6 @@ if(builtin_veccore)
   add_library(VecCore INTERFACE)
   target_include_directories(VecCore SYSTEM INTERFACE $<BUILD_INTERFACE:${VecCore_ROOTDIR}/include>)
   add_dependencies(VecCore VECCORE)
-
-  if (Vc_FOUND)
-    set(VecCore_Vc_FOUND True)
-    set(VecCore_Vc_DEFINITIONS -DVECCORE_ENABLE_VC)
-    set(VecCore_Vc_INCLUDE_DIR ${Vc_INCLUDE_DIR})
-    set(VecCore_Vc_LIBRARIES ${Vc_LIBRARIES})
-
-    set(VecCore_DEFINITIONS ${VecCore_Vc_DEFINITIONS})
-    list(APPEND VecCore_INCLUDE_DIRS ${VecCore_Vc_INCLUDE_DIR})
-    set(VecCore_LIBRARIES ${VecCore_LIBRARIES} ${Vc_LIBRARIES})
-    target_link_libraries(VecCore INTERFACE ${Vc_LIBRARIES})
-  endif()
 
   find_package_handle_standard_args(VecCore
     FOUND_VAR VecCore_FOUND
