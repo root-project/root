@@ -34,6 +34,3 @@ ipywidgets
 
 # Unified Histogram Interface (UHI)
 uhi
-
-# Look for CPU-only versions of PyTorch to avoid pulling CUDA in the CI docker images.
--f https://download.pytorch.org/whl/cpu/torch_stable.html
