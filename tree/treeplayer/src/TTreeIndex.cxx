@@ -11,6 +11,8 @@
 
 /** \class TTreeIndex
 A Tree Index with majorname and minorname.
+
+If minorname is "0" (default arg in TTree::BuildIndex), just majorname will be used.
 */
 
 #include "TTreeIndex.h"
