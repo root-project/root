@@ -365,8 +365,12 @@ void ROOT::Internal::RPageSource::UpdateLastUsedCluster(ROOT::DescriptorId_t clu
       GetSharedDescriptorGuard()->GetClusterDescriptor(clusterId).GetFirstEntryIndex();
    auto itr = fPreloadedClusters.begin();
    while ((itr != fPreloadedClusters.end()) && (itr->first < firstEntryIndex)) {
-      fPagePool.Evict(itr->second);
-      itr = fPreloadedClusters.erase(itr);
+      if (fPinnedClusters.count(itr->second) > 0) {
+         ++itr;
+      } else {
+         fPagePool.Evict(itr->second);
+         itr = fPreloadedClusters.erase(itr);
+      }
    }
    std::size_t poolWindow = 0;
    while ((itr != fPreloadedClusters.end()) &&
@@ -375,8 +379,12 @@ void ROOT::Internal::RPageSource::UpdateLastUsedCluster(ROOT::DescriptorId_t clu
       ++poolWindow;
    }
    while (itr != fPreloadedClusters.end()) {
-      fPagePool.Evict(itr->second);
-      itr = fPreloadedClusters.erase(itr);
+      if (fPinnedClusters.count(itr->second) > 0) {
+         ++itr;
+      } else {
+         fPagePool.Evict(itr->second);
+         itr = fPreloadedClusters.erase(itr);
+      }
    }
 
    fLastUsedCluster = clusterId;
