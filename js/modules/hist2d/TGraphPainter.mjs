@@ -230,7 +230,10 @@ class TGraphPainter extends ObjectPainter {
 
       let d = new DrawOptions(opt), hopt = '';
 
-      PadDrawOptions.forEach(name => { if (d.check(name)) hopt += ';' + name; });
+      PadDrawOptions.forEach(name => {
+         if (d.check(name))
+            hopt += ';' + name;
+      });
       if (d.check('XAXIS_', true))
          hopt += ';XAXIS_' + d.part;
       if (d.check('YAXIS_', true))
@@ -965,7 +968,8 @@ class TGraphPainter extends ObjectPainter {
                gry = funcs.gry(pnt.y);
                if ((gry > -this.#marker_size) && (gry < h + this.#marker_size)) {
                   path += this.markeratt.create(grx, gry);
-                  if (want_tooltip) hints_marker += `M${grx - hsz},${gry - hsz}h${2 * hsz}v${2 * hsz}h${-2 * hsz}z`;
+                  if (want_tooltip)
+                     hints_marker += `M${grx - hsz},${gry - hsz}h${2 * hsz}v${2 * hsz}h${-2 * hsz}z`;
                }
             }
          }

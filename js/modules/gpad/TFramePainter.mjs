@@ -2855,7 +2855,8 @@ class TFramePainter extends FrameInteractive {
          });
          menu.addchk(handle?.noexp ?? faxis.TestBit(EAxisBits.kNoExponent), 'No exponent', flag => {
             faxis.SetBit(EAxisBits.kNoExponent, flag);
-            if (handle) handle.noexp_changed = true;
+            if (handle)
+               handle.noexp_changed = true;
             this[`${kind}_noexp_changed`] = true;
             if (hist_painter?.getSnapId() && (kind.length === 1))
                hist_painter.interactiveRedraw('pad', `exec:SetNoExponent(${flag})`, kind);
