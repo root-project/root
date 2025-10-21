@@ -43,6 +43,3 @@ mplhep
 nbconvert>=7.4.0
 pytest
 setuptools
-
-# Look for CPU-only versions of PyTorch to avoid pulling CUDA in the CI docker images.
--f https://download.pytorch.org/whl/cpu/torch_stable.html
