@@ -1350,7 +1350,7 @@ class StandaloneMenu extends JSRootMenu {
                text.style.display = 'flex';
 
                const chk = doc.createElement('span');
-               chk.innerHTML = d.checked ? '\u2713' : '';
+               chk.innerText = d.checked ? '\u2713' : '';
                chk.style.display = 'inline-block';
                chk.style.width = '1em';
                text.appendChild(chk);
@@ -1363,7 +1363,7 @@ class StandaloneMenu extends JSRootMenu {
          } else {
             if (need_check_area) {
                const chk = doc.createElement('span');
-               chk.innerHTML = d.checked ? '\u2713' : '';
+               chk.innerText = d.checked ? '\u2713' : '';
                chk.style.display = 'inline-block';
                chk.style.width = '1em';
                text.appendChild(chk);

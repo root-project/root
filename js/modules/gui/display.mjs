@@ -933,9 +933,11 @@ class FlexibleDisplay extends MDIDisplay {
           main = top.append('div');
 
       main.html('<div class=\'jsroot_flex_header\' style=\'height: 23px; overflow: hidden; background-color: lightblue\'>' +
-                `<p style='margin: 1px; float: left; font-size: 14px; padding-left: 5px'>${title}</p></div>`+
-                `<div id='${this.frameid}_cont${this.cnt}' class='jsroot_flex_draw' style='overflow: hidden; width: 100%; height: calc(100% - 24px); background: white'></div>`+
+                '<p style=\'margin: 1px; float: left; font-size: 14px; padding-left: 5px\'></p></div>' +
+                `<div id='${this.frameid}_cont${this.cnt}' class='jsroot_flex_draw' style='overflow: hidden; width: 100%; height: calc(100% - 24px); background: white'></div>` +
                 '<div class=\'jsroot_flex_resize\' style=\'position: absolute; right: 3px; bottom: 1px; overflow: hidden; cursor: nwse-resize\'>&#x25FF;</div>');
+
+      main.select('.jsroot_flex_header p').text(title);
 
       main.attr('class', 'jsroot_flex_frame')
          .style('position', 'absolute')

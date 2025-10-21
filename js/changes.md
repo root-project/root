@@ -1,7 +1,9 @@
 # JSROOT changelog
 
-## Changes in 7.9.x
+## Changes in 7.9.3
 1. Fix - store large PDF with 3D drawing inside
+2. Fix - prevent JS code injection via `TObjString` drawing
+3. Fix - reduce use of HTML in hpainter, display and menu components
 
 
 ## Changes in 7.9.2
