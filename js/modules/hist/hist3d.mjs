@@ -2257,7 +2257,8 @@ function drawBinsSurf3D(painter, is_v7 = false) {
             color = indx > 1 ? painter.getColor(indx) : 'white';
       }
 
-      if (!color) color = 'white';
+      if (!color)
+         color = 'white';
       if (painter.options.Surf === 14)
          material = new THREE.MeshLambertMaterial(getMaterialArgs(color, { side: THREE.DoubleSide, vertexColors: false }));
       else
