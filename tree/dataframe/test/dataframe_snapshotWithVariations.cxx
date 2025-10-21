@@ -312,6 +312,61 @@ TEST(RDFVarySnapshot, Bitmask)
    }
 }
 
+TEST(RDFVarySnapshot, TwoVariationsInSameFile)
+{
+   constexpr auto filename = "VarySnapshot_bitmask_twoInSameFile.root";
+   RemoveFileRAII(filename);
+   std::string const treename1 = "testTree1";
+   std::string const treename2 = "testTree2";
+   constexpr unsigned int N = 20;
+   ROOT::RDF::RSnapshotOptions options;
+   options.fOverwriteIfExists = true;
+   options.fIncludeVariations = true;
+   options.fLazy = false;
+
+   auto rdf = ROOT::RDataFrame(N)
+                 .Define("x", [](ULong64_t e) -> int { return e; }, {"rdfentry_"})
+                 .Vary(
+                    "x", [](int x) { return ROOT::RVecI{x - 1, x + 1}; }, {"x"}, 2, "xVar")
+                 .Define("y", [](int x) -> int { return -1 * x; }, {"x"});
+
+   auto cuts1 = [](int x, int y) { return x % 2 == 0 && abs(y) <= 10; };
+   auto snap1 = rdf.Filter(cuts1, {"x", "y"}).Snapshot(treename1, filename, {"x", "y"}, options);
+
+   options.fOverwriteIfExists = false;
+   options.fMode = "UPDATE";
+   auto cuts2 = [](int x, int y) { return abs(x % 2) == 1 && abs(y) <= 10; };
+   auto snap2 = rdf.Filter(cuts2, {"x", "y"}).Snapshot(treename2, filename, {"x", "y"}, options);
+
+   std::unique_ptr<TFile> file{TFile::Open(filename)};
+   EXPECT_NE(file->GetKey(("R_rdf_branchToBitmaskMapping_" + treename1).c_str()), nullptr);
+   EXPECT_NE(file->GetKey(("R_rdf_branchToBitmaskMapping_" + treename2).c_str()), nullptr);
+
+   EXPECT_THROW(ROOT::RDataFrame(treename1, filename).Mean("x").GetValue(), std::out_of_range);
+   EXPECT_THROW(ROOT::RDataFrame(treename2, filename).Mean("x").GetValue(), std::out_of_range);
+   EXPECT_THROW(ROOT::RDataFrame(treename1, filename).FilterAvailable("x__xVar_0").Mean("x").GetValue(),
+                std::out_of_range);
+   EXPECT_THROW(ROOT::RDataFrame(treename2, filename).FilterAvailable("x__xVar_1").Mean("x").GetValue(),
+                std::out_of_range);
+
+   const std::vector<int> evens{0, 2, 4, 6, 8, 10};
+   const std::vector<int> odds{1, 3, 5, 7, 9};
+   EXPECT_EQ(ROOT::RDataFrame(treename1, filename).FilterAvailable("x").Take<int>("x").GetValue(), evens);
+   EXPECT_EQ(ROOT::RDataFrame(treename2, filename).FilterAvailable("x").Take<int>("x").GetValue(), odds);
+   const std::vector<int> evensVarDo{0, 2, 4, 6, 8, 10};
+   const std::vector<int> oddsVarDo{-1, 1, 3, 5, 7, 9};
+   EXPECT_EQ(ROOT::RDataFrame(treename1, filename).FilterAvailable("x__xVar_0").Take<int>("x__xVar_0").GetValue(),
+             evensVarDo);
+   EXPECT_EQ(ROOT::RDataFrame(treename2, filename).FilterAvailable("x__xVar_0").Take<int>("x__xVar_0").GetValue(),
+             oddsVarDo);
+   const std::vector<int> evensVarUp{2, 4, 6, 8, 10};
+   const std::vector<int> oddsVarUp{1, 3, 5, 7, 9};
+   EXPECT_EQ(ROOT::RDataFrame(treename1, filename).FilterAvailable("x__xVar_1").Take<int>("x__xVar_1").GetValue(),
+             evensVarUp);
+   EXPECT_EQ(ROOT::RDataFrame(treename2, filename).FilterAvailable("x__xVar_1").Take<int>("x__xVar_1").GetValue(),
+             oddsVarUp);
+}
+
 TEST(RDFVarySnapshot, SnapshotCollections)
 {
    constexpr auto filename = "VarySnapshot_collections.root";
