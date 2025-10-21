@@ -290,7 +290,8 @@ async function buildGUI(gui_element, gui_kind = '') {
    }
 
    const hpainter = new HierarchyPainter('root', null);
-   if (online) hpainter.is_online = drawing ? 'draw' : 'online';
+   if (online)
+      hpainter.is_online = drawing ? 'draw' : 'online';
    if (drawing || isBatchMode())
       hpainter.exclude_browser = true;
    hpainter.start_without_browser = nobrowser;

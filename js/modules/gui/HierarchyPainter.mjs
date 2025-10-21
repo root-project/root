@@ -567,7 +567,7 @@ function objectHierarchy(top, obj, args = undefined) {
          item._vclass = cssValueNum;
       } else if (isStr(fld)) {
          simple = true;
-         item._value = '&quot;' + fld.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '&quot;';
+         item._value = '"' + fld + '"';
          item._vclass = 'h_value_str';
       } else if (typeof fld === 'undefined') {
          simple = true;
@@ -1429,7 +1429,7 @@ class HierarchyPainter extends BasePainter {
          if ('_vclass' in hitem)
             d3p.attr('class', hitem._vclass);
          if (!hitem._isopen)
-            d3p.html(hitem._value);
+            d3p.text(hitem._value);
       }
 
       if (has_childs && (isroot || hitem._isopen)) {
@@ -3035,7 +3035,8 @@ class HierarchyPainter extends BasePainter {
          h1._isopen = true;
          if (!this.h) {
             this.h = h1;
-            if (this.#topname) h1._name = this.#topname;
+            if (this.#topname)
+               h1._name = this.#topname;
          } else if (this.h._kind === kTopFolder)
             this.h._childs.push(h1);
          else {
@@ -4141,7 +4142,7 @@ class HierarchyPainter extends BasePainter {
       const layout = main.select('.gui_layout');
       if (!layout.empty()) {
          ['simple', 'vert2', 'vert3', 'vert231', 'horiz2', 'horiz32', 'flex', 'tabs',
-          'grid 2x2', 'grid 1x3', 'grid 2x3', 'grid 3x3', 'grid 4x4'].forEach(kind => layout.append('option').attr('value', kind).html(kind));
+          'grid 2x2', 'grid 1x3', 'grid 2x3', 'grid 3x3', 'grid 4x4'].forEach(kind => layout.append('option').attr('value', kind).text(kind));
 
          layout.on('change', ev => {
             const kind = ev.target.value || 'flex';
@@ -4184,7 +4185,7 @@ class HierarchyPainter extends BasePainter {
          }
          if (!found) {
             const opt = document.createElement('option');
-            opt.innerHTML = opt.value = this.getLayout();
+            opt.innerText = opt.value = this.getLayout();
             selects.appendChild(opt);
             selects.selectedIndex = selects.options.length - 1;
          }

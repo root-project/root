@@ -14,7 +14,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '14/10/2025',
+version_date = '21/10/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -14416,23 +14416,23 @@ function drawRawText(dom, txt /* , opt */) {
       if (!isStr(stxt))
          stxt = '<undefined>';
 
-      const mathjax = this.txt.mathjax || (settings.Latex === constants$1.Latex.AlwaysMathJax);
-
-      if (!mathjax && !('as_is' in this.txt)) {
-         const arr = stxt.split('\n');
-         stxt = '';
-         for (let i = 0; i < arr.length; ++i)
-            stxt += `<pre style='margin:0'>${arr[i]}</pre>`;
-      }
-
-      const frame = this.selectDom();
+      const mathjax = this.txt.mathjax || (settings.Latex === constants$1.Latex.AlwaysMathJax),
+            frame = this.selectDom();
       let main = frame.select('div');
       if (main.empty())
          main = frame.append('div').attr('style', 'max-width:100%;max-height:100%;overflow:auto');
-      main.html(stxt);
+      else
+         main.html('');
 
       // (re) set painter to first child element, base painter not requires canvas
       this.setTopPainter();
+
+      if (!mathjax && !('as_is' in this.txt)) {
+         const arr = stxt.split('\n');
+         for (let i = 0; i < arr.length; ++i)
+            main.append('pre').style('margin', '0').text(arr[i]);
+      } else
+         main.text(stxt);
 
       if (mathjax)
          typesetMathjax(frame.node());
@@ -79525,6 +79525,8 @@ class JSRootMenu {
    /** @summary Fill menu to edit settings properties
      * @private */
    addSettingsMenu(with_hierarchy, alone, handle_func) {
+      if (!isFunc(handle_func))
+         handle_func = () => {};
       if (alone)
          this.header('Settings');
       else
@@ -79535,12 +79537,12 @@ class JSRootMenu {
       if (with_hierarchy) {
          this.addchk(settings.OnlyLastCycle, 'Last cycle', flag => {
             settings.OnlyLastCycle = flag;
-            if (handle_func) handle_func('refresh');
+            handle_func('refresh');
          });
 
          this.addchk(!settings.SkipStreamerInfos, 'Streamer infos', flag => {
             settings.SkipStreamerInfos = !flag;
-            if (handle_func) handle_func('refresh');
+            handle_func('refresh');
          });
       }
 
@@ -79617,18 +79619,18 @@ class JSRootMenu {
          this.sub('Browser');
          this.add('Hierarchy limit:  ' + settings.HierarchyLimit, () => this.input('Max number of items in hierarchy', settings.HierarchyLimit, 'int', 10, 100000).then(val => {
             settings.HierarchyLimit = val;
-            if (handle_func) handle_func('refresh');
+            handle_func('refresh');
          }));
          this.add('Browser width:  ' + settings.BrowserWidth, () => this.input('Browser width in px', settings.BrowserWidth, 'int', 50, 2000).then(val => {
             settings.BrowserWidth = val;
-            if (handle_func) handle_func('width');
+            handle_func('width');
          }));
          this.endsub();
       }
 
       this.add('Dark mode: ' + (settings.DarkMode ? 'On' : 'Off'), () => {
          settings.DarkMode = !settings.DarkMode;
-         if (handle_func) handle_func('dark');
+         handle_func('dark');
       });
 
       const setStyleField = arg => { gStyle[arg.slice(1)] = parseInt(arg[0]); },
@@ -80100,7 +80102,8 @@ class StandaloneMenu extends JSRootMenu {
 
          const hovArea = doc.createElement('div');
          hovArea.style = 'width: 100%; height: 100%; display: flex; justify-content: space-between; cursor: pointer;';
-         if (d.title) hovArea.setAttribute('title', d.title);
+         if (d.title)
+            hovArea.setAttribute('title', d.title);
 
          item.appendChild(hovArea);
          if (!d.text)
@@ -80114,7 +80117,7 @@ class StandaloneMenu extends JSRootMenu {
                text.style.display = 'flex';
 
                const chk = doc.createElement('span');
-               chk.innerHTML = d.checked ? '\u2713' : '';
+               chk.innerText = d.checked ? '\u2713' : '';
                chk.style.display = 'inline-block';
                chk.style.width = '1em';
                text.appendChild(chk);
@@ -80127,7 +80130,7 @@ class StandaloneMenu extends JSRootMenu {
          } else {
             if (need_check_area) {
                const chk = doc.createElement('span');
-               chk.innerHTML = d.checked ? '\u2713' : '';
+               chk.innerText = d.checked ? '\u2713' : '';
                chk.style.display = 'inline-block';
                chk.style.width = '1em';
                text.appendChild(chk);
@@ -84860,7 +84863,8 @@ class TFramePainter extends FrameInteractive {
          });
          menu.addchk(handle?.noexp ?? faxis.TestBit(EAxisBits.kNoExponent), 'No exponent', flag => {
             faxis.SetBit(EAxisBits.kNoExponent, flag);
-            if (handle) handle.noexp_changed = true;
+            if (handle)
+               handle.noexp_changed = true;
             this[`${kind}_noexp_changed`] = true;
             if (hist_painter?.getSnapId() && (kind.length === 1))
                hist_painter.interactiveRedraw('pad', `exec:SetNoExponent(${flag})`, kind);
@@ -86293,9 +86297,11 @@ class FlexibleDisplay extends MDIDisplay {
             main = top.append('div');
 
       main.html('<div class=\'jsroot_flex_header\' style=\'height: 23px; overflow: hidden; background-color: lightblue\'>' +
-                `<p style='margin: 1px; float: left; font-size: 14px; padding-left: 5px'>${title}</p></div>` +
+                '<p style=\'margin: 1px; float: left; font-size: 14px; padding-left: 5px\'></p></div>' +
                 `<div id='${this.frameid}_cont${this.cnt}' class='jsroot_flex_draw' style='overflow: hidden; width: 100%; height: calc(100% - 24px); background: white'></div>` +
                 '<div class=\'jsroot_flex_resize\' style=\'position: absolute; right: 3px; bottom: 1px; overflow: hidden; cursor: nwse-resize\'>&#x25FF;</div>');
+
+      main.select('.jsroot_flex_header p').text(title);
 
       main.attr('class', 'jsroot_flex_frame')
           .style('position', 'absolute')
@@ -99462,21 +99468,16 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          is_pol = true;
       } else {
          // search bins position
-         if (fp.reverse_x()) {
-            for (i = h.i1; i < h.i2; ++i)
-               if ((pnt.x <= h.grx[i]) && (pnt.x >= h.grx[i + 1])) break;
-         } else {
-            for (i = h.i1; i < h.i2; ++i)
-               if ((pnt.x >= h.grx[i]) && (pnt.x <= h.grx[i + 1])) break;
-         }
+         if (fp.reverse_x())
+            for (i = h.i1; (i < h.i2) && ((pnt.x > h.grx[i]) || (pnt.x < h.grx[i + 1])); ++i);
+         else
+            for (i = h.i1; (i < h.i2) && ((pnt.x < h.grx[i]) || (pnt.x > h.grx[i + 1])); ++i);
 
-         if (fp.reverse_y()) {
-            for (j = h.j1; j < h.j2; ++j)
-               if ((pnt.y <= h.gry[j + 1]) && (pnt.y >= h.gry[j])) break;
-         } else {
-            for (j = h.j1; j < h.j2; ++j)
-               if ((pnt.y >= h.gry[j + 1]) && (pnt.y <= h.gry[j])) break;
-         }
+
+         if (fp.reverse_y())
+            for (j = h.j1; (j < h.j2) && ((pnt.y > h.gry[j + 1]) || (pnt.y < h.gry[j])); ++j);
+         else
+            for (j = h.j1; (j < h.j2) && ((pnt.y < h.gry[j + 1]) || (pnt.y > h.gry[j])); ++j);
       }
 
       if ((i < h.i2) && (j < h.j2)) {
@@ -101992,7 +101993,8 @@ function drawBinsSurf3D(painter, is_v7 = false) {
             color = indx > 1 ? painter.getColor(indx) : 'white';
       }
 
-      if (!color) color = 'white';
+      if (!color)
+         color = 'white';
       if (painter.options.Surf === 14)
          material = new THREE.MeshLambertMaterial(getMaterialArgs(color, { side: THREE.DoubleSide, vertexColors: false }));
       else
@@ -105159,7 +105161,10 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
       let d = new DrawOptions(opt), hopt = '';
 
-      PadDrawOptions.forEach(name => { if (d.check(name)) hopt += ';' + name; });
+      PadDrawOptions.forEach(name => {
+         if (d.check(name))
+            hopt += ';' + name;
+      });
       if (d.check('XAXIS_', true))
          hopt += ';XAXIS_' + d.part;
       if (d.check('YAXIS_', true))
@@ -105894,7 +105899,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
                gry = funcs.gry(pnt.y);
                if ((gry > -this.#marker_size) && (gry < h + this.#marker_size)) {
                   path += this.markeratt.create(grx, gry);
-                  if (want_tooltip) hints_marker += `M${grx - hsz},${gry - hsz}h${2 * hsz}v${2 * hsz}h${ -2 * hsz}z`;
+                  if (want_tooltip)
+                     hints_marker += `M${grx - hsz},${gry - hsz}h${2 * hsz}v${2 * hsz}h${ -2 * hsz}z`;
                }
             }
          }
@@ -163791,7 +163797,8 @@ assignPadPainterDraw(TPadPainter);
 import_geo = async function() {
    return Promise.resolve().then(function () { return TGeoPainter$1; }).then(geo => {
       const handle = getDrawHandle(getKindForType('TGeoVolumeAssembly'));
-      if (handle) handle.icon = 'img_geoassembly';
+      if (handle)
+         handle.icon = 'img_geoassembly';
       return geo;
    });
 };
@@ -164367,7 +164374,7 @@ function objectHierarchy(top, obj, args = undefined) {
          item._vclass = cssValueNum;
       } else if (isStr(fld)) {
          simple = true;
-         item._value = '&quot;' + fld.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '&quot;';
+         item._value = '"' + fld + '"';
          item._vclass = 'h_value_str';
       } else if (typeof fld === 'undefined') {
          simple = true;
@@ -165227,7 +165234,7 @@ class HierarchyPainter extends BasePainter {
          if ('_vclass' in hitem)
             d3p.attr('class', hitem._vclass);
          if (!hitem._isopen)
-            d3p.html(hitem._value);
+            d3p.text(hitem._value);
       }
 
       if (has_childs && (isroot || hitem._isopen)) {
@@ -166833,7 +166840,8 @@ class HierarchyPainter extends BasePainter {
          h1._isopen = true;
          if (!this.h) {
             this.h = h1;
-            if (this.#topname) h1._name = this.#topname;
+            if (this.#topname)
+               h1._name = this.#topname;
          } else if (this.h._kind === kTopFolder)
             this.h._childs.push(h1);
          else {
@@ -167939,7 +167947,7 @@ class HierarchyPainter extends BasePainter {
       const layout = main.select('.gui_layout');
       if (!layout.empty()) {
          ['simple', 'vert2', 'vert3', 'vert231', 'horiz2', 'horiz32', 'flex', 'tabs',
-          'grid 2x2', 'grid 1x3', 'grid 2x3', 'grid 3x3', 'grid 4x4'].forEach(kind => layout.append('option').attr('value', kind).html(kind));
+          'grid 2x2', 'grid 1x3', 'grid 2x3', 'grid 3x3', 'grid 4x4'].forEach(kind => layout.append('option').attr('value', kind).text(kind));
 
          layout.on('change', ev => {
             const kind = ev.target.value || 'flex';
@@ -167982,7 +167990,7 @@ class HierarchyPainter extends BasePainter {
          }
          if (!found) {
             const opt = document.createElement('option');
-            opt.innerHTML = opt.value = this.getLayout();
+            opt.innerText = opt.value = this.getLayout();
             selects.appendChild(opt);
             selects.selectedIndex = selects.options.length - 1;
          }
@@ -168436,7 +168444,8 @@ async function buildGUI(gui_element, gui_kind = '') {
    }
 
    const hpainter = new HierarchyPainter('root', null);
-   if (online) hpainter.is_online = drawing ? 'draw' : 'online';
+   if (online)
+      hpainter.is_online = drawing ? 'draw' : 'online';
    if (drawing || isBatchMode())
       hpainter.exclude_browser = true;
    hpainter.start_without_browser = nobrowser;

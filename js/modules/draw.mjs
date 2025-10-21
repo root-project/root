@@ -761,7 +761,8 @@ assignPadPainterDraw(TPadPainter);
 import_geo = async function() {
    return import('./geom/TGeoPainter.mjs').then(geo => {
       const handle = getDrawHandle(getKindForType('TGeoVolumeAssembly'));
-      if (handle) handle.icon = 'img_geoassembly';
+      if (handle)
+         handle.icon = 'img_geoassembly';
       return geo;
    });
 };
