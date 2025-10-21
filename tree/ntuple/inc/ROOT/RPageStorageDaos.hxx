@@ -34,7 +34,6 @@ namespace ROOT {
 
 namespace Internal {
 class RCluster;
-class RClusterPool;
 } // namespace Internal
 
 namespace Experimental {
@@ -159,8 +158,6 @@ private:
    std::unique_ptr<RDaosContainer> fDaosContainer;
    /// A URI to a DAOS pool of the form 'daos://pool-label/container-label'
    std::string fURI;
-   /// The cluster pool asynchronously preloads the next few clusters
-   std::unique_ptr<ROOT::Internal::RClusterPool> fClusterPool;
 
    ROOT::Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
 

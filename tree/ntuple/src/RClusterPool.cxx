@@ -49,13 +49,29 @@ bool ROOT::Internal::RClusterPool::RInFlightCluster::operator<(const RInFlightCl
 }
 
 ROOT::Internal::RClusterPool::RClusterPool(ROOT::Internal::RPageSource &pageSource, unsigned int clusterBunchSize)
-   : fPageSource(pageSource), fClusterBunchSize(clusterBunchSize), fThreadIo(&RClusterPool::ExecReadClusters, this)
+   : fPageSource(pageSource), fClusterBunchSize(clusterBunchSize)
 {
    R__ASSERT(clusterBunchSize > 0);
 }
 
 ROOT::Internal::RClusterPool::~RClusterPool()
 {
+   StopBackgroundThread();
+}
+
+void ROOT::Internal::RClusterPool::StartBackgroundThread()
+{
+   if (fThreadIo.joinable())
+      return;
+
+   fThreadIo = std::thread(&RClusterPool::ExecReadClusters, this);
+}
+
+void ROOT::Internal::RClusterPool::StopBackgroundThread()
+{
+   if (!fThreadIo.joinable())
+      return;
+
    {
       // Controlled shutdown of the I/O thread
       std::unique_lock<std::mutex> lock(fLockWorkQueue);
@@ -158,6 +174,8 @@ public:
 ROOT::Internal::RCluster *
 ROOT::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clusterId, const RCluster::ColumnSet_t &physicalColumns)
 {
+   StartBackgroundThread(); // ensure that the thread is started (no-op if it is already running)
+
    std::unordered_set<ROOT::DescriptorId_t> keep{fPinnedClusters};
    for (auto cid : fPinnedClusters) {
       auto descriptorGuard = fPageSource.GetSharedDescriptorGuard();
