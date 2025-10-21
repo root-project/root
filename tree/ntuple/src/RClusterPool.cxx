@@ -176,7 +176,7 @@ ROOT::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clusterId, const R
 {
    StartBackgroundThread(); // ensure that the thread is started (no-op if it is already running)
 
-   std::unordered_set<ROOT::DescriptorId_t> keep{fPinnedClusters};
+   std::unordered_set<ROOT::DescriptorId_t> keep{fPageSource.GetPinnedClusters()};
    for (auto cid : keep) {
       auto descriptorGuard = fPageSource.GetSharedDescriptorGuard();
 

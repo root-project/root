@@ -695,6 +695,9 @@ protected:
    ROOT::RNTupleReadOptions fOptions;
    /// The active columns are implicitly defined by the model fields or views
    RActivePhysicalColumns fActivePhysicalColumns;
+   /// Pinned clusters and their $2 * (cluster bunch size) - 1$ successors will not be evicted from the cluster pool.
+   /// Pages of pinned clusters won't be evicted from the page pool.
+   std::unordered_set<ROOT::DescriptorId_t> fPinnedClusters;
 
    /// The cluster pool asynchronously preloads the next few clusters. Note that derived classes should call
    /// fClusterPool.StopBackgroundThread() in their destructor so that the I/O background thread does not call
@@ -819,6 +822,12 @@ public:
    /// actual implementation will only run if a task scheduler is set. In practice, a task scheduler is set
    /// if implicit multi-threading is turned on.
    void UnzipCluster(ROOT::Internal::RCluster *cluster);
+
+   /// Instructs the cluster pool and page pool to consider the given cluster as active (should stay cached).
+   void PinCluster(ROOT::DescriptorId_t clusterId) { fPinnedClusters.insert(clusterId); }
+   /// Allows the given cluster to be evicted from the cluster pool and page pool.
+   void UnpinCluster(ROOT::DescriptorId_t clusterId) { fPinnedClusters.erase(clusterId); }
+   const std::unordered_set<ROOT::DescriptorId_t> &GetPinnedClusters() const { return fPinnedClusters; }
 
    // TODO(gparolini): for symmetry with SealPage(), we should either make this private or SealPage() public.
    RResult<ROOT::Internal::RPage>
