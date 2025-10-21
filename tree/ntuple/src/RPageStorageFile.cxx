@@ -12,7 +12,6 @@
  *************************************************************************/
 
 #include <ROOT/RCluster.hxx>
-#include <ROOT/RClusterPool.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
@@ -45,7 +44,6 @@
 using ROOT::Experimental::Detail::RNTupleAtomicTimer;
 using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RCluster;
-using ROOT::Internal::RClusterPool;
 using ROOT::Internal::RNTupleCompressor;
 using ROOT::Internal::RNTupleDecompressor;
 using ROOT::Internal::RNTupleFileWriter;
@@ -255,9 +253,7 @@ void ROOT::Internal::RPageSinkFile::CommitDatasetImpl(unsigned char *serializedF
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName, const ROOT::RNTupleReadOptions &opts)
-   : RPageSource(ntupleName, opts),
-     fClusterPool(
-        std::make_unique<RClusterPool>(*this, ROOT::Internal::RNTupleReadOptionsManip::GetClusterBunchSize(opts)))
+   : RPageSource(ntupleName, opts)
 {
    EnableDefaultMetrics("RPageSourceFile");
 }
@@ -459,7 +455,7 @@ ROOT::Internal::RPageRef ROOT::Internal::RPageSourceFile::LoadPageImpl(ColumnHan
       sealedPage.SetBuffer(directReadBuffer.get());
    } else {
       if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId) || !fCurrentCluster->ContainsColumn(columnId))
-         fCurrentCluster = fClusterPool->GetCluster(clusterId, fActivePhysicalColumns.ToColumnSet());
+         fCurrentCluster = fClusterPool.GetCluster(clusterId, fActivePhysicalColumns.ToColumnSet());
       R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
 
       auto cachedPageRef =

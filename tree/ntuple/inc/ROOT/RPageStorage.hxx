@@ -16,6 +16,7 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RCluster.hxx>
+#include <ROOT/RClusterPool.hxx>
 #include <ROOT/RColumnElementBase.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
@@ -695,6 +696,8 @@ protected:
    /// The active columns are implicitly defined by the model fields or views
    RActivePhysicalColumns fActivePhysicalColumns;
 
+   /// The cluster pool asynchronously preloads the next few clusters
+   ROOT::Internal::RClusterPool fClusterPool;
    /// Pages that are unzipped with IMT are staged into the page pool
    ROOT::Internal::RPagePool fPagePool;
 

@@ -14,7 +14,6 @@
  *************************************************************************/
 
 #include <ROOT/RCluster.hxx>
-#include <ROOT/RClusterPool.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
@@ -487,10 +486,7 @@ void ROOT::Experimental::Internal::RPageSinkDaos::WriteNTupleAnchor()
 
 ROOT::Experimental::Internal::RPageSourceDaos::RPageSourceDaos(std::string_view ntupleName, std::string_view uri,
                                                                const ROOT::RNTupleReadOptions &options)
-   : RPageSource(ntupleName, options),
-     fURI(uri),
-     fClusterPool(std::make_unique<ROOT::Internal::RClusterPool>(
-        *this, ROOT::Internal::RNTupleReadOptionsManip::GetClusterBunchSize(options)))
+   : RPageSource(ntupleName, options), fURI(uri)
 {
    EnableDefaultMetrics("RPageSourceDaos");
 
@@ -634,7 +630,7 @@ ROOT::Internal::RPageRef ROOT::Experimental::Internal::RPageSourceDaos::LoadPage
       sealedPage.SetBuffer(directReadBuffer.get());
    } else {
       if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId) || !fCurrentCluster->ContainsColumn(columnId))
-         fCurrentCluster = fClusterPool->GetCluster(clusterId, fActivePhysicalColumns.ToColumnSet());
+         fCurrentCluster = fClusterPool.GetCluster(clusterId, fActivePhysicalColumns.ToColumnSet());
       R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
 
       auto cachedPageRef = fPagePool.GetPage(ROOT::Internal::RPagePool::RKey{columnId, elementInMemoryType},
