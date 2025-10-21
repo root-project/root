@@ -1642,23 +1642,23 @@ function drawRawText(dom, txt /* , opt */) {
       if (!isStr(stxt))
          stxt = '<undefined>';
 
-      const mathjax = this.txt.mathjax || (settings.Latex === constants.Latex.AlwaysMathJax);
-
-      if (!mathjax && !('as_is' in this.txt)) {
-         const arr = stxt.split('\n');
-         stxt = '';
-         for (let i = 0; i < arr.length; ++i)
-            stxt += `<pre style='margin:0'>${arr[i]}</pre>`;
-      }
-
-      const frame = this.selectDom();
+      const mathjax = this.txt.mathjax || (settings.Latex === constants.Latex.AlwaysMathJax),
+            frame = this.selectDom();
       let main = frame.select('div');
       if (main.empty())
          main = frame.append('div').attr('style', 'max-width:100%;max-height:100%;overflow:auto');
-      main.html(stxt);
+      else
+         main.html('');
 
       // (re) set painter to first child element, base painter not requires canvas
       this.setTopPainter();
+
+      if (!mathjax && !('as_is' in this.txt)) {
+         const arr = stxt.split('\n');
+         for (let i = 0; i < arr.length; ++i)
+            main.append('pre').style('margin', '0').text(arr[i]);
+      } else
+         main.text(stxt);
 
       if (mathjax)
          typesetMathjax(frame.node());
