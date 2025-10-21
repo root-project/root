@@ -3050,7 +3050,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       fprintf(fp,"<lcgdict>\n");
       fprintf(fp,"\n");
    } else {
-      fprintf(fp,"#ifdef __CINT__\n");
+      fprintf(fp,"#ifdef __CLING__\n");
       fprintf(fp,"\n");
    }
 
