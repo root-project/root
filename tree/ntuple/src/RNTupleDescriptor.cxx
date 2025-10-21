@@ -322,6 +322,11 @@ ROOT::RExtraTypeInfoDescriptor ROOT::RExtraTypeInfoDescriptor::Clone() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
+ROOT::DescriptorId_t ROOT::Internal::CallFindClusterIdOn(const RNTupleDescriptor &desc, ROOT::NTupleSize_t entryIdx)
+{
+   return desc.FindClusterId(entryIdx);
+}
+
 bool ROOT::RNTupleDescriptor::operator==(const RNTupleDescriptor &other) const
 {
    // clang-format off
