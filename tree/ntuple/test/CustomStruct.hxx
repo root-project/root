@@ -388,6 +388,14 @@ struct DuplicateBaseD : public DuplicateBaseB, public DuplicateBaseC {
    float d = 0.0;
 };
 
+struct PolymorphicBase {
+   virtual ~PolymorphicBase() {}
+};
+
+struct PolymorphicDerived : public PolymorphicBase {
+   ~PolymorphicDerived() override {}
+};
+
 class Left {
 public:
    float x = 1.0;

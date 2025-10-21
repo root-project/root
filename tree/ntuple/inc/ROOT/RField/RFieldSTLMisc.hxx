@@ -28,6 +28,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <typeinfo>
 #include <variant>
 
 namespace ROOT {
@@ -288,6 +289,9 @@ class RUniquePtrField : public RNullableField {
    };
 
    std::unique_ptr<RDeleter> fItemDeleter;
+   /// If the item type is a polymorphic class (that declares or inherits at least one virtual method), points to the
+   /// expected dynamic type of any user object; otherwise nullptr.
+   const std::type_info *fPolymorphicTypeInfo = nullptr;
 
    // Returns the value pointer, i.e. where to read the subfield into
    void *PrepareRead(void *to, bool hasOnDiskValue);
