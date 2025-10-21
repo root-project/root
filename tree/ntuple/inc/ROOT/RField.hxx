@@ -222,6 +222,9 @@ public:
    size_t GetAlignment() const final { return fMaxAlignment; }
    std::uint32_t GetTypeVersion() const final;
    std::uint32_t GetTypeChecksum() const final;
+   /// For polymorphic classes (that declare or inherit at least one virtual method), return the expected dynamic type
+   /// of any user object. If the class is not polymorphic, return nullptr.
+   const std::type_info *GetPolymorphicTypeInfo() const;
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
