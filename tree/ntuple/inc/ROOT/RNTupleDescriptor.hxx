@@ -663,6 +663,11 @@ public:
    const std::string &GetContent() const { return fContent; }
 };
 
+namespace Internal {
+// Used by the RNTupleReader to activate/deactivate entries. Needs to adapt when we have sharded clusters.
+ROOT::DescriptorId_t CallFindClusterIdOn(const ROOT::RNTupleDescriptor &desc, ROOT::NTupleSize_t entryIdx);
+} // namespace Internal
+
 // clang-format off
 /**
 \class ROOT::RNTupleDescriptor
@@ -689,6 +694,7 @@ and backward compatibility when the metadata evolves.
 class RNTupleDescriptor final {
    friend class Internal::RNTupleDescriptorBuilder;
    friend RNTupleDescriptor Internal::CloneDescriptorSchema(const RNTupleDescriptor &desc);
+   friend DescriptorId_t Internal::CallFindClusterIdOn(const RNTupleDescriptor &desc, NTupleSize_t entryIdx);
 
 public:
    class RHeaderExtension;

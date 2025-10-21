@@ -29,8 +29,10 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 
 namespace ROOT {
 class RNTuple;
@@ -65,6 +67,18 @@ std::cout << "myNTuple has " << reader->GetNEntries() << " entries\n";
 // clang-format on
 class RNTupleReader {
 private:
+   /// Shared data structure between the reader and all the issued active entry tokens.
+   struct RActiveEntriesControlBlock {
+      /// Points to the page source backing the associated RNTupleReader. When the reader is destructed, the
+      /// page source is reset to nullptr. At that point, operations on remaining active entry tokens become noops.
+      Internal::RPageSource *fPageSource = nullptr;
+      /// Reference counter of clusters pinned in the page source due to entries being marked as active.
+      std::unordered_map<ROOT::DescriptorId_t, std::uint64_t> fActiveClusters;
+      std::mutex fLock;
+
+      explicit RActiveEntriesControlBlock(Internal::RPageSource *pageSource) : fPageSource(pageSource) {}
+   };
+
    /// Set as the page source's scheduler for parallel page decompression if implicit multi-threading (IMT) is on.
    /// Needs to be destructed after the page source is destructed (and thus be declared before)
    std::unique_ptr<Internal::RPageStorage::RTaskScheduler> fUnzipTasks;
@@ -87,6 +101,9 @@ private:
    Experimental::Detail::RNTupleMetrics fMetrics;
    /// If not nullopt, these will be used when creating the model
    std::optional<ROOT::RNTupleDescriptor::RCreateModelOptions> fCreateModelOptions;
+   /// Initialized when the page source is connected. It is then shared between the reader instance and all
+   /// active entry tokens. When the reader destructs, it resets the page source pointer in the control block.
+   std::shared_ptr<RActiveEntriesControlBlock> fActiveEntriesControlBlock;
 
    RNTupleReader(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSource> source,
                  const ROOT::RNTupleReadOptions &options);
@@ -132,6 +149,43 @@ public:
       pointer operator->() const { return &fIndex; }
       bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
       bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
+   };
+
+   /// An active entry token is a pledge for the data of a certain entry number not to be evicted from the
+   /// page cache or cluster cache. An active entry token is linked to a specific reader through a control block
+   /// shared by the reader and all tokens of that reader. Active entry tokens can be destructed before or after
+   /// their reader is destructed. Once the corresponding reader is destructed, changing the entry number has no
+   /// effect.
+   /// Only the RNTuple reader can create an active entry token.
+   class RActiveEntryToken {
+      friend class RNTupleReader;
+
+      std::shared_ptr<RActiveEntriesControlBlock> fPtrControlBlock;
+      NTupleSize_t fEntryNumber = kInvalidNTupleIndex;
+
+      void ActivateEntry(NTupleSize_t entryNumber);
+      void DeactivateEntry(NTupleSize_t entryNumber);
+
+      explicit RActiveEntryToken(std::shared_ptr<RActiveEntriesControlBlock> ptrControlBlock)
+         : fPtrControlBlock(ptrControlBlock)
+      {
+      }
+
+   public:
+      ~RActiveEntryToken() { Reset(); }
+      RActiveEntryToken(const RActiveEntryToken &other);
+      RActiveEntryToken(RActiveEntryToken &&other);
+      RActiveEntryToken &operator=(const RActiveEntryToken &other);
+      RActiveEntryToken &operator=(RActiveEntryToken &&other);
+
+      NTupleSize_t GetEntryNumber() const { return fEntryNumber; }
+      /// Set or replace the entry number. If the entry number is replaced, the cluster corresponding to the new
+      /// entry is pinned _before_ the cluster of the old entry number is unpinned.
+      /// SetEntryNumber() should be called before the corresponding entry is used (through LoadEntry() or views).
+      void SetEntryNumber(NTupleSize_t entryNumber);
+      /// Release the entry number, i.e. allow the corresponding data to be evicted from caches.
+      /// Called implicitly on destruction.
+      void Reset();
    };
 
    /// Open an RNTuple for reading.
@@ -242,6 +296,10 @@ public:
 
       entry.Read(index);
    }
+
+   /// Create a new active entry token, which will not be bound to any entry number initially.
+   /// In order to bind the new token, its `SetEntryNumber()` must be called subsequently.
+   RActiveEntryToken CreateActiveEntryToken() { return RActiveEntryToken(fActiveEntriesControlBlock); }
 
    /// Returns an iterator over the entry indices of the RNTuple.
    ///
