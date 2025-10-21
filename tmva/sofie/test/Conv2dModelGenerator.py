@@ -140,14 +140,21 @@ def main():
       dynamo_export=True
       if (use_bn): dynamo_export=False
 
-      torch.onnx.export(
-         model,
-         xinput,
-         name + ".onnx",
-         export_params=True,
-         dynamo=dynamo_export,
-         external_data=False
-      )
+      #check torch version
+      v = torch.__version__
+      from packaging.version import Version
+      if (Version(v) >= Version("2.5.0")) :
+         torch.onnx.export(
+            model,
+            xinput,
+            name + ".onnx",
+            export_params=True,
+            dynamo=dynamo_export,
+            external_data=False
+         )
+      else :
+         torch.onnx.export(model, xinput,name + ".onnx", export_params=True)
+
 
 
    if loadModel :
