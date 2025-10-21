@@ -1,5 +1,10 @@
 # JSROOT changelog
 
+## Changes in 7.7.x
+1. Fix - prevent JS code injection via `TObjString` drawing
+2. Fix - reduce use of HTML in hpainter, display and menu components
+
+
 ## Changes in 7.7.6
 1. Fix - latex super-script without leading symbol, https://root-forum.cern.ch/t/63114/
 2. Fix - correctly read std::pair<> without dictionary, https://root-forum.cern.ch/t/63114/
