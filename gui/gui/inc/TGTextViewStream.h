@@ -17,9 +17,6 @@
 #include <streambuf>
 #include <iostream>
 
-#if defined (R__WIN32) && defined (__MAKECINT__)
-typedef basic_streambuf<char, char_traits<char> > streambuf;
-#endif
 
 class TGTextViewStreamBuf : public std::streambuf
 {
