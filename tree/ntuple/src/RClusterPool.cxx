@@ -160,7 +160,7 @@ public:
 ROOT::Internal::RCluster *
 ROOT::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clusterId, const RCluster::ColumnSet_t &physicalColumns)
 {
-   std::unordered_set<ROOT::DescriptorId_t> keep{fPinnedClusters};
+   std::unordered_set<ROOT::DescriptorId_t> keep{fPageSource.GetPinnedClusters()};
    for (auto cid : keep) {
       auto descriptorGuard = fPageSource.GetSharedDescriptorGuard();
 
