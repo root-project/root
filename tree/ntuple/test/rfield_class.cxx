@@ -344,3 +344,30 @@ TEST(RNTuple, TClassInnerReadRule)
    reader->LoadEntry(1);
    EXPECT_TRUE(f->empty());
 }
+
+TEST(RNTuple, PolymorphicPointer)
+{
+   FileRaii fileGuard("test_ntuple_polymorphic_pointer.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptr = model->MakeField<std::unique_ptr<PolymorphicBase>>("ptr");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      ptr->reset(new PolymorphicBase);
+      writer->Fill();
+      ptr->reset(new PolymorphicDerived);
+      EXPECT_THROW(writer->Fill(), ROOT::RException);
+   }
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrField = RFieldBase::Create("ptr", "std::unique_ptr<PolymorphicBase>").Unwrap();
+      model->AddField(std::move(ptrField));
+      auto ptr = model->GetDefaultEntry().GetPtr<std::unique_ptr<PolymorphicBase>>("ptr");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      ptr->reset(new PolymorphicBase);
+      writer->Fill();
+      ptr->reset(new PolymorphicDerived);
+      EXPECT_THROW(writer->Fill(), ROOT::RException);
+   }
+}

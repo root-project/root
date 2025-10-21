@@ -581,6 +581,15 @@ std::uint32_t ROOT::RClassField::GetTypeChecksum() const
    return fClass->GetCheckSum();
 }
 
+const std::type_info *ROOT::RClassField::GetPolymorphicTypeInfo() const
+{
+   bool polymorphic = fClass->ClassProperty() & kClassHasVirtual;
+   if (!polymorphic) {
+      return nullptr;
+   }
+   return fClass->GetTypeInfo();
+}
+
 void ROOT::RClassField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitClassField(*this);

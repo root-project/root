@@ -20,9 +20,11 @@
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleTypes.hxx>
+#include <TClassEdit.h>
 
 #include <algorithm>
 #include <cstdint>
+#include <cstdlib>
 #include <exception>
 #include <functional>
 #include <iostream>
@@ -918,9 +920,19 @@ void ROOT::RNullableField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) c
 
 //------------------------------------------------------------------------------
 
+namespace {
+// Dummy class to determine the dynamic type of any polymorphic user object.
+struct PolymorphicClass {
+   virtual ~PolymorphicClass() = default;
+};
+} // namespace
+
 ROOT::RUniquePtrField::RUniquePtrField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
    : RNullableField(fieldName, "std::unique_ptr", std::move(itemField)), fItemDeleter(GetDeleterOf(*fSubfields[0]))
 {
+   if (const auto *classField = dynamic_cast<const ROOT::RClassField *>(fSubfields[0].get())) {
+      fPolymorphicTypeInfo = classField->GetPolymorphicTypeInfo();
+   }
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RUniquePtrField::CloneImpl(std::string_view newName) const
@@ -933,7 +945,22 @@ std::size_t ROOT::RUniquePtrField::AppendImpl(const void *from)
 {
    auto typedValue = static_cast<const std::unique_ptr<char> *>(from);
    if (*typedValue) {
-      return AppendValue(typedValue->get());
+      const void *obj = typedValue->get();
+      if (fPolymorphicTypeInfo != nullptr) {
+         const std::type_info &t = typeid(*static_cast<const PolymorphicClass *>(obj));
+         if (t != *fPolymorphicTypeInfo) {
+            std::string msg = "invalid dynamic type of object, expected " + fSubfields[0]->GetTypeName();
+            int err = 0;
+            char *demangled = TClassEdit::DemangleTypeIdName(t, err);
+            if (!err) {
+               msg = msg + " but was passed " + demangled;
+               free(demangled);
+            }
+            msg += " and upcasting of polymorphic types is not supported in RNTuple";
+            throw RException(R__FAIL(msg));
+         }
+      }
+      return AppendValue(obj);
    } else {
       return AppendNull();
    }

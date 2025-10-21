@@ -151,6 +151,8 @@
 #pragma link C++ class DuplicateBaseB + ;
 #pragma link C++ class DuplicateBaseC + ;
 #pragma link C++ class DuplicateBaseD + ;
+#pragma link C++ class PolymorphicBase + ;
+#pragma link C++ class PolymorphicDerived + ;
 
 #pragma link C++ class Left + ;
 #pragma link C++ class DerivedFromLeftAndTObject+;
