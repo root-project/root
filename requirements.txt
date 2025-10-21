@@ -9,6 +9,7 @@ dm-sonnet # used for GNNs
 graph_nets
 onnx
 onnxscript
+packaging
 
 # TMVA: PyMVA interfaces
 scikit-learn
