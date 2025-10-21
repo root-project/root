@@ -16,7 +16,24 @@ if(NOT WIN32)
   endif()
   ROOT_EXECUTABLE(roots.exe roots.cxx LIBRARIES Core MathCore CMAKENOEXPORT)
 endif()
+
 ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint)
+
+if(NOT MSVC)
+  # Create a symlink in the build tree
+  add_custom_command(TARGET root.exe POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E create_symlink "root.exe" ${CMAKE_BINARY_DIR}/bin/root
+  )
+  # Create symlink in the install tree
+  install(CODE "
+      execute_process(COMMAND
+          \"${CMAKE_COMMAND}\" -E create_symlink
+          root.exe
+          \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/root\")
+  ")
+endif()
+
+
 if(MSVC)
   set(root_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch \
       /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index \
