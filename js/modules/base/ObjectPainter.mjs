@@ -1626,22 +1626,23 @@ function drawRawText(dom, txt /* , opt */) {
       let txt = (this.txt._typename === clTObjString) ? this.txt.fString : this.txt.value;
       if (!isStr(txt)) txt = '<undefined>';
 
-      const mathjax = this.txt.mathjax || (settings.Latex === constants.Latex.AlwaysMathJax);
-
-      if (!mathjax && !('as_is' in this.txt)) {
-         const arr = txt.split('\n'); txt = '';
-         for (let i = 0; i < arr.length; ++i)
-            txt += `<pre style='margin:0'>${arr[i]}</pre>`;
-      }
-
-      const frame = this.selectDom();
+      const mathjax = this.txt.mathjax || (settings.Latex === constants.Latex.AlwaysMathJax),
+            frame = this.selectDom();
       let main = frame.select('div');
       if (main.empty())
          main = frame.append('div').attr('style', 'max-width:100%;max-height:100%;overflow:auto');
-      main.html(txt);
+      else
+         main.html('');
 
       // (re) set painter to first child element, base painter not requires canvas
       this.setTopPainter();
+
+      if (!mathjax && !('as_is' in this.txt)) {
+         const arr = txt.split('\n');
+         for (let i = 0; i < arr.length; ++i)
+            main.append('pre').style('margin', '0').text(arr[i]);
+      } else
+         main.text(txt);
 
       if (mathjax)
          typesetMathjax(frame.node());

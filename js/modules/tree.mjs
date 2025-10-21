@@ -875,8 +875,12 @@ class TDrawSelector extends TSelector {
 
       if (args.drawopt !== undefined)
          this.histo_drawopt = args.drawopt;
+      else if (this.graph)
+         this.histo_drawopt = 'P';
       else
          this.histo_drawopt = (this.ndim === 2) ? 'col' : '';
+
+      args.drawopt = this.histo_drawopt;
 
       return true;
    }
@@ -1053,7 +1057,7 @@ class TDrawSelector extends TSelector {
       res.k = res.nbins / (res.max - res.min);
 
       res.GetBin = function(value) {
-         const bin = this.lbls?.indexOf(value) ?? Number.isFinite(value) ? Math.floor((value - this.min) * this.k) : this.nbins + 1;
+         const bin = this.lbls?.indexOf(value) ?? (Number.isFinite(value) ? Math.floor((value - this.min) * this.k) : this.nbins + 1);
          return bin < 0 ? 0 : ((bin > this.nbins) ? this.nbins + 1 : bin + 1);
       };
 
@@ -1582,7 +1586,7 @@ async function treeProcess(tree, selector, args) {
          default: return null;
       }
       const elem = createStreamerElement(name || leaf.fName, datakind);
-      if (leaf.fLen > 1) {
+      if ((leaf.fLen > 1) && (datakind !== kTString))  {
          elem.fType += kOffsetL;
          elem.fArrayLength = leaf.fLen;
       }

@@ -112,7 +112,7 @@ async function treeDrawProgress(obj, final) {
          if (final) console.log('no result after tree drawing');
          this.last_pr = false; // return false indicating no drawing is done
       } else {
-         this.last_pr = drawTreeDrawResult(this.drawid, obj).then(p => {
+         this.last_pr = drawTreeDrawResult(this.drawid, obj, this.drawopt).then(p => {
             this.obj_painter = p;
             if (!final) this.last_pr = null;
             return p; // return painter for histogram
