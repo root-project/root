@@ -308,14 +308,14 @@ TEST(ClusterPool, PinCluster)
 {
    RPageSourceMock p1;
    RClusterPool c1(p1, 1);
-   c1.PinCluster(3);
+   p1.PinCluster(3);
    c1.GetCluster(3, {0});
    c1.WaitForInFlightClusters();
    ASSERT_EQ(2U, p1.fReqsClusterIds.size());
    EXPECT_EQ(3U, p1.fReqsClusterIds[0]);
    EXPECT_EQ(4U, p1.fReqsClusterIds[1]);
 
-   c1.PinCluster(0);
+   p1.PinCluster(0);
    c1.GetCluster(0, {0});
    c1.WaitForInFlightClusters();
    ASSERT_EQ(4U, p1.fReqsClusterIds.size());
@@ -324,8 +324,8 @@ TEST(ClusterPool, PinCluster)
    EXPECT_EQ(0U, p1.fReqsClusterIds[2]);
    EXPECT_EQ(1U, p1.fReqsClusterIds[3]);
 
-   c1.UnpinCluster(0);
-   c1.PinCluster(1);
+   p1.UnpinCluster(0);
+   p1.PinCluster(1);
    c1.GetCluster(1, {0});
    c1.WaitForInFlightClusters();
    ASSERT_EQ(5U, p1.fReqsClusterIds.size());
