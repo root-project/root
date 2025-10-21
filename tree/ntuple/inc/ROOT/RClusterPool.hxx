@@ -123,6 +123,12 @@ public:
    RClusterPool &operator =(const RClusterPool &other) = delete;
    ~RClusterPool();
 
+   /// Spawn the I/O background thread. No-op if already started.
+   void StartBackgroundThread();
+
+   /// Stop the I/O background thread. No-op if already stopped. Called by the destructor.
+   void StopBackgroundThread();
+
    /// Returns the requested cluster either from the pool or, in case of a cache miss, lets the I/O thread load
    /// the cluster in the pool, blocks until done, and then returns it.  Triggers along the way the background loading
    /// of the following fClusterBunchSize number of clusters.  The returned cluster has at least all the pages of
