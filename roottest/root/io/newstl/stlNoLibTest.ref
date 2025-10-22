@@ -1,5 +1,5 @@
 
-Processing readNoLib.C("4-01-03/vector.root")...
+Processing readNoLib.C("vector.root")...
 Warning in <TClass::TClass>: no dictionary for class vectorHolder is available
 Warning in <TClass::TClass>: no dictionary for class pair<float,int> is available
 Warning in <TClass::TClass>: no dictionary for class GHelper<GHelper<GHelper<float> > > is available
@@ -21,7 +21,7 @@ Warning in <TClass::TClass>: no dictionary for class HelperClassDef is available
 *        2 *        2 *                             32 *
 ********************************************************
 
-*ERROR 30 : 
+*ERROR 30 :
  Bad numerical expression : "split3.fScalar"
 Error in <TBuffer::CheckByteCount>: object of class fNestedL read too many bytes: 12 instead of 10
 Warning in <TBuffer::CheckByteCount>: fNestedL::Streamer() not in sync with data on file 4-01-03/vector.root, fix Streamer()
