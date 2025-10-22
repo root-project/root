@@ -1327,7 +1327,7 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
             if (j == ny-1) y1 = 0;
             name.Form("%s_%d", GetName(), number);
             title.Form("%s_%d", GetTitle(), number);
-            pad = new TPad(name.Data(), title.Data(), x1, y1, x2, y2);
+            pad = new TPad(name.Data(), title.Data(), x1, y1, x2, y2, color);
             pad->SetNumber(number);
             pad->SetBorderMode(0);
             if (i == 0)    pad->SetLeftMargin(xl*nx);
