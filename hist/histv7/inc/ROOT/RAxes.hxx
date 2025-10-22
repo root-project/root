@@ -6,6 +6,7 @@
 #define ROOT_RAxes
 
 #include "RBinIndex.hxx"
+#include "RCategoricalAxis.hxx"
 #include "RLinearizedIndex.hxx"
 #include "RRegularAxis.hxx"
 #include "RVariableBinAxis.hxx"
@@ -26,7 +27,7 @@ namespace ROOT {
 namespace Experimental {
 
 /// Variant of all supported axis types.
-using RAxisVariant = std::variant<RRegularAxis, RVariableBinAxis>;
+using RAxisVariant = std::variant<RRegularAxis, RVariableBinAxis, RCategoricalAxis>;
 
 // forward declaration for friend declaration
 template <typename T>
@@ -71,6 +72,8 @@ public:
             totalNBins *= regular->GetTotalNBins();
          } else if (auto *variable = std::get_if<RVariableBinAxis>(&axis)) {
             totalNBins *= variable->GetTotalNBins();
+         } else if (auto *categorical = std::get_if<RCategoricalAxis>(&axis)) {
+            totalNBins *= categorical->GetTotalNBins();
          } else {
             throw std::logic_error("unimplemented axis type"); // GCOVR_EXCL_LINE
          }
@@ -96,6 +99,13 @@ private:
          if constexpr (std::is_convertible_v<ArgumentType, RVariableBinAxis::ArgumentType>) {
             index *= variable->GetTotalNBins();
             linIndex = variable->ComputeLinearizedIndex(std::get<I>(args));
+         } else {
+            throw std::invalid_argument("invalid type of argument");
+         }
+      } else if (auto *categorical = std::get_if<RCategoricalAxis>(&axis)) {
+         if constexpr (std::is_convertible_v<ArgumentType, RCategoricalAxis::ArgumentType>) {
+            index *= categorical->GetTotalNBins();
+            linIndex = categorical->ComputeLinearizedIndex(std::get<I>(args));
          } else {
             throw std::invalid_argument("invalid type of argument");
          }
@@ -156,6 +166,9 @@ public:
          } else if (auto *variable = std::get_if<RVariableBinAxis>(&axis)) {
             globalIndex *= variable->GetTotalNBins();
             linIndex = variable->GetLinearizedIndex(index);
+         } else if (auto *categorical = std::get_if<RCategoricalAxis>(&axis)) {
+            globalIndex *= categorical->GetTotalNBins();
+            linIndex = categorical->GetLinearizedIndex(index);
          } else {
             throw std::logic_error("unimplemented axis type"); // GCOVR_EXCL_LINE
          }

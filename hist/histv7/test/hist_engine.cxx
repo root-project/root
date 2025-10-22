@@ -19,18 +19,22 @@ TEST(RHistEngine, Constructor)
    }
    bins.push_back(BinsY);
    const RVariableBinAxis variableBinAxis(bins);
+   const std::vector<std::string> categories = {"a", "b", "c"};
+   const RCategoricalAxis categoricalAxis(categories);
 
-   RHistEngine<int> engine({regularAxis, variableBinAxis});
-   EXPECT_EQ(engine.GetNDimensions(), 2);
+   RHistEngine<int> engine({regularAxis, variableBinAxis, categoricalAxis});
+   EXPECT_EQ(engine.GetNDimensions(), 3);
    const auto &axes = engine.GetAxes();
-   ASSERT_EQ(axes.size(), 2);
+   ASSERT_EQ(axes.size(), 3);
    EXPECT_EQ(axes[0].index(), 0);
    EXPECT_EQ(axes[1].index(), 1);
+   EXPECT_EQ(axes[2].index(), 2);
    EXPECT_TRUE(std::get_if<RRegularAxis>(&axes[0]) != nullptr);
    EXPECT_TRUE(std::get_if<RVariableBinAxis>(&axes[1]) != nullptr);
+   EXPECT_TRUE(std::get_if<RCategoricalAxis>(&axes[2]) != nullptr);
 
    // Both axes include underflow and overflow bins.
-   EXPECT_EQ(engine.GetTotalNBins(), (BinsX + 2) * (BinsY + 2));
+   EXPECT_EQ(engine.GetTotalNBins(), (BinsX + 2) * (BinsY + 2) * (categories.size() + 1));
 
    engine = RHistEngine<int>(BinsX, {0, BinsX});
    ASSERT_EQ(engine.GetNDimensions(), 1);
