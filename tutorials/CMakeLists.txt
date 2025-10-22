@@ -37,11 +37,12 @@ else()                       # testing using an installation
   enable_testing()
 endif()
 
-# Set the environment for the tutorials, which is the eventual ROOT_environ
+# - Set the environment for the tutorials, which is the eventual ROOT_environ
 # plus some environment variables related to limiting the number of threads
 # used by NumPy.
 # See: https://stackoverflow.com/questions/30791550/limit-number-of-threads-in-numpy
-set(TUTORIAL_ENV ${ROOT_environ} OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1)
+# - For matplotlib, disable a blocking event loop on show() using a non-interactive backend
+set(TUTORIAL_ENV ${ROOT_environ} OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 MPLBACKEND=AGG)
 
 #---Copy the CTestCustom.cmake file into the build directory--------
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
