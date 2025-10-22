@@ -1,3 +1,4 @@
+HIST_ADD_GTEST(hist_atomic hist_atomic.cxx)
 HIST_ADD_GTEST(hist_axes hist_axes.cxx)
 HIST_ADD_GTEST(hist_categorical hist_categorical.cxx)
 HIST_ADD_GTEST(hist_engine hist_engine.cxx)
