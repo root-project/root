@@ -65,7 +65,9 @@ Multilayer Perceptron class built off of MethodANNBase
 
 #include "TH1.h"
 #include "TString.h"
+#ifdef MethodMLP_UseMinuit__
 #include "TFitter.h"
+#endif
 #include "TMatrixD.h"
 #include "TMath.h"
 
