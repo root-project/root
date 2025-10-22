@@ -74,3 +74,9 @@ Objects of this type are passed by value; most notably to `GetBinContent` and `S
 
 A range of `RBinIndex` from `begin` (inclusive) to `end` (exclusive).
 The class exposes an iterator interface that can be used in range-based loops.
+
+### `RHistAutoAxisFiller`
+
+A specialized class to automatically determine the axis interval during filling.
+It constructs a regular axis based on the minimum and maximum values of the initial entries.
+The implementation is currently restricted to one dimension and sequential filling.
