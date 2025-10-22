@@ -179,7 +179,7 @@ static void EnsureFileOpenAndBinary(const TFile *tfile, std::string_view path)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-std::pair<std::string_view, std::string_view> ROOT::Experimental::DecomposePath(std::string_view path)
+std::pair<std::string_view, std::string_view> ROOT::Experimental::Detail::DecomposePath(std::string_view path)
 {
    auto lastSlashIdx = path.rfind('/');
    if (lastSlashIdx == std::string_view::npos)
