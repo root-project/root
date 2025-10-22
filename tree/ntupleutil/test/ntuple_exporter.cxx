@@ -34,14 +34,14 @@ enum : bool {
    kWithChecksums = true,
 };
 
-void CreateExportRNTuple(std::string_view fileName, bool checksums)
+void CreateExportRNTuple(std::string_view fileName, bool checksums, int compression = 0)
 {
    auto model = ROOT::RNTupleModel::Create();
    auto pFlt = model->MakeField<float>("flt");
    auto pVec = model->MakeField<std::vector<int>>("vec");
 
    auto opts = ROOT::RNTupleWriteOptions();
-   opts.SetCompression(0);
+   opts.SetCompression(compression);
    opts.SetEnablePageChecksums(checksums);
    auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntuple", fileName, opts);
    for (int i = 0; i < 10; ++i) {
@@ -202,6 +202,43 @@ TEST(RNTupleExporter, ExportToFilesWithNoChecksum)
    auto vecBytes = ReadFileToString(pageVec.GetPath().c_str());
    EXPECT_EQ(vecBytes.length(), kVecBytesLenNoChecksums);
    EXPECT_EQ(memcmp(vecBytes.data(), kVecBytes, vecBytes.length()), 0);
+}
+
+TEST(RNTupleExporter, ExportToFilesUncompressed)
+{
+   FileRaii fileGuard("ntuple_exporter_uncompressed.root");
+
+   CreateExportRNTuple(fileGuard.GetPath(), kWithChecksums, 505);
+
+   auto source = RPageSource::Create("ntuple", fileGuard.GetPath());
+   auto opts = RNTupleExporter::RPagesOptions();
+   opts.fFlags |= RNTupleExporter::RPagesOptions::kIncludeChecksums | RNTupleExporter::RPagesOptions::kDecompress;
+   EXPECT_THROW(RNTupleExporter::ExportPages(*source, opts), ROOT::RException);
+   opts.fFlags &= ~RNTupleExporter::RPagesOptions::kIncludeChecksums;
+   auto res = RNTupleExporter::ExportPages(*source, opts);
+
+   EXPECT_EQ(res.fExportedFileNames.size(), 3);
+
+   FileRaii pageVecIdx("./cluster_0_vec-0_page_0_elems_10_comp_505.page");
+   FileRaii pageVec("./cluster_0_vec._0-0_page_0_elems_60_comp_505.page");
+   FileRaii pageFlt("./cluster_0_flt-0_page_0_elems_10_comp_505.page");
+
+   EXPECT_TRUE(std::find(res.fExportedFileNames.begin(), res.fExportedFileNames.end(), pageFlt.GetPath()) !=
+               res.fExportedFileNames.end());
+   EXPECT_TRUE(std::find(res.fExportedFileNames.begin(), res.fExportedFileNames.end(), pageVec.GetPath()) !=
+               res.fExportedFileNames.end());
+   EXPECT_TRUE(std::find(res.fExportedFileNames.begin(), res.fExportedFileNames.end(), pageVecIdx.GetPath()) !=
+               res.fExportedFileNames.end());
+
+   // check the file lengths now match the uncompressed sizes
+   auto fltBytes = ReadFileToString(pageFlt.GetPath().c_str());
+   EXPECT_EQ(fltBytes.length(), sizeof(float) * 10);
+
+   auto vecIdxBytes = ReadFileToString(pageVecIdx.GetPath().c_str());
+   EXPECT_EQ(vecIdxBytes.length(), sizeof(std::uint64_t) * 10);
+
+   auto vecBytes = ReadFileToString(pageVec.GetPath().c_str());
+   EXPECT_EQ(vecBytes.length(), sizeof(int) * 60);
 }
 
 TEST(RNTupleExporter, ExportToFilesManyPages)

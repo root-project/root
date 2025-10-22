@@ -50,6 +50,8 @@ public:
          kIncludeChecksums = 0x1,
          /// If enabled, the exporter will report the current progress on the stderr
          kShowProgressBar = 0x2,
+         /// If enabled, uncompress (but don't unpack) the page (mutually exclusive with kIncludeChecksums)
+         kDecompress = 0x04,
 
          kDefaults = kShowProgressBar
       };
