@@ -400,9 +400,9 @@ endif()
 
 if(root7)
   set(root7_veto analysis/dataframe/df013_InspectAnalysis.C
-                 tutorials/visualisation/webgui/browserv7/browser.cxx
-                 tutorials/visualisation/webgui/browserv7/filedialog.cxx
-                 tutorials/visualisation/webgui/fitpanelv7/fitpanel6.cxx
+                 visualisation/webgui/browserv7/browser.cxx
+                 visualisation/webgui/browserv7/filedialog.cxx
+                 visualisation/webgui/fitpanelv7/fitpanel6.cxx
       )
   if(NOT dataframe)
     list(APPEND root7_veto visualisation/rcanvas/df104.py)
@@ -519,11 +519,11 @@ set(all_veto hsimple.C
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 if(webgui)
-  file(GLOB_RECURSE visualisation/tutorials_webcanv RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} visualisation/webcanv/*.cxx)
-  list(APPEND tutorials ${visualisation/tutorials_webcanv})
+  file(GLOB_RECURSE tutorials_webcanv RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} visualisation/webcanv/*.cxx)
+  list(APPEND tutorials ${tutorials_webcanv})
 endif()
 if(root7 AND webgui)
-  file(GLOB_RECURSE tutorials_exp RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} visualisation/rcanvas/*.cxx tutorials/visualisation/webgui/browserv7/*.cxx tutorials/visualisation/webgui/fitpanelv7/*.cxx)
+  file(GLOB_RECURSE tutorials_exp RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} visualisation/rcanvas/*.cxx visualisation/webgui/browserv7/*.cxx visualisation/webgui/fitpanelv7/*.cxx)
   list(APPEND tutorials ${tutorials_exp})
 endif()
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
