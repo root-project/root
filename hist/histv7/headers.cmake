@@ -5,6 +5,7 @@ set(histv7_headers
     ROOT/RBinWithError.hxx
     ROOT/RCategoricalAxis.hxx
     ROOT/RHist.hxx
+    ROOT/RHistAutoAxisFiller.hxx
     ROOT/RHistEngine.hxx
     ROOT/RHistStats.hxx
     ROOT/RHistUtils.hxx
