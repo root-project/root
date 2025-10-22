@@ -60,7 +60,7 @@ RooBinnedGenContext::RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet
   if (prototype)
     {
       RooArgSet coefNSet(vars) ;
-      coefNSet.add(*prototype->get()) ;
+      coefNSet.add(*prototype->get(),true) ;
       _pdf->fixAddCoefNormalization(coefNSet) ;
     }
 

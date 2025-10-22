@@ -229,14 +229,14 @@ class ToyMCSampler: public TestStatSampler {
          fAdaptiveLowLimit = low_threshold;
       }
 
-      void SetProtoData(const RooDataSet* d) { fProtoData = d; }
+      void SetProtoData(const RooAbsData* d) { fProtoData = d; }
 
    protected:
 
       const RooArgList* EvaluateAllTestStatistics(RooAbsData& data, const RooArgSet& poi, DetailedOutputAggregator& detOutAgg);
 
       /// helper for GenerateToyData
-      std::unique_ptr<RooAbsData> Generate(RooAbsPdf &pdf, RooArgSet &observables, const RooDataSet *protoData=nullptr, int forceEvents=0) const;
+      std::unique_ptr<RooAbsData> Generate(RooAbsPdf &pdf, RooArgSet &observables, const RooAbsData *protoData=nullptr, int forceEvents=0) const;
 
       /// helper method for clearing  the cache
       virtual void ClearCache();
@@ -272,7 +272,7 @@ class ToyMCSampler: public TestStatSampler {
       double fAdaptiveLowLimit;
       double fAdaptiveHighLimit;
 
-      const RooDataSet *fProtoData = nullptr; ///< in dev
+      const RooAbsData *fProtoData = nullptr; ///< in dev
 
       mutable NuisanceParametersSampler *fNuisanceParametersSampler = nullptr; ///<!
 
