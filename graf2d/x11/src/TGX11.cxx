@@ -420,6 +420,8 @@ void TGX11::ClearPixmap(Drawable *pix)
 
 void TGX11::ClearWindow()
 {
+   if (!gCws) return;
+   
    if (!gCws->fIsPixmap && !gCws->fDoubleBuffer) {
       XSetWindowBackground((Display*)fDisplay, gCws->fDrawing, GetColor(0).fPixel);
       XClearWindow((Display*)fDisplay, gCws->fDrawing);
