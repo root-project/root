@@ -56,7 +56,7 @@ static std::string JoinKeyNames(const ROOT::Experimental::RFileKeyIterable &iter
 
 TEST(RFile, DecomposePath)
 {
-   using ROOT::Experimental::DecomposePath;
+   using ROOT::Experimental::Detail::DecomposePath;
 
    auto Pair = [](std::string_view a, std::string_view b) { return std::make_pair(a, b); };
 
