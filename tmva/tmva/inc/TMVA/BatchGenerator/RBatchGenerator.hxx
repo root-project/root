@@ -144,7 +144,7 @@ public:
       fChunkLoader =
          std::make_unique<RChunkLoader<Args...>>(f_rdf, fNumEntries, fEntries, fChunkSize, fBlockSize, fValidationSplit,
                                                  fCols, vecSizes, vecPadding, fShuffle, fSetSeed);
-      fBatchLoader = std::make_unique<RBatchLoader>(fChunkSize, fBatchSize, fNumChunkCols);
+      fBatchLoader = std::make_unique<RBatchLoader>(fBatchSize, fNumChunkCols);
 
       // split the dataset into training and validation sets
       fChunkLoader->SplitDataset();
