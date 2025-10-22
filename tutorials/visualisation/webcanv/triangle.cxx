@@ -79,7 +79,7 @@ void triangle(bool ignore_jsmodule = false)
       if (pos != std::string::npos)
          fdir.resize(pos);
       else
-         fdir = gROOT->GetTutorialsDir() + std::string("/webcanv/");
+         fdir = gROOT->GetTutorialsDir() + std::string("/visualisation/webcanv/");
 
       // location required to load files
       // also it is name of modules path used in importmap
