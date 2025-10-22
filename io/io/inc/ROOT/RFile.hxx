@@ -32,6 +32,8 @@ ROOT::RLogChannel &RFileLog();
 
 } // namespace Internal
 
+namespace Detail {
+
 /// Given a "path-like" string (like foo/bar/baz), returns a pair `{ dirName, baseName }`.
 /// `baseName` will be empty if the string ends with '/'.
 /// `dirName` will be empty if the string contains no '/'.
@@ -41,6 +43,8 @@ ROOT::RLogChannel &RFileLog();
 /// Moreover it doesn't trim the path in any way, so any leading or trailing whitespaces will be preserved.
 /// This function does not perform any copy: the returned string_views have the same lifetime as `path`.
 std::pair<std::string_view, std::string_view> DecomposePath(std::string_view path);
+
+}
 
 class RFileKeyIterable;
 
@@ -75,7 +79,7 @@ public:
    /// Returns the absolute path of this key, i.e. the directory part plus the object name.
    const std::string &GetPath() const { return fPath; }
    /// Returns the base name of this key, i.e. the name of the object without the directory part.
-   std::string GetBaseName() const { return std::string(DecomposePath(fPath).second); }
+   std::string GetBaseName() const { return std::string(Detail::DecomposePath(fPath).second); }
    const std::string &GetTitle() const { return fTitle; }
    const std::string &GetClassName() const { return fClassName; }
    std::uint16_t GetCycle() const { return fCycle; }
