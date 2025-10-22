@@ -20,6 +20,7 @@
 #pragma link C++ class ROOT::Experimental::RHistEngine<double>-;
 #pragma link C++ class ROOT::Experimental::RHistEngine<ROOT::Experimental::RBinWithError>-;
 
+#pragma link C++ class ROOT::Experimental::RCategoricalAxis-;
 #pragma link C++ class ROOT::Experimental::RHistStats-;
 #pragma link C++ class ROOT::Experimental::RRegularAxis-;
 #pragma link C++ class ROOT::Experimental::RVariableBinAxis-;

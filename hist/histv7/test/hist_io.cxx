@@ -35,6 +35,14 @@ TEST(RVariableBinAxis, Streamer)
    ExpectThrowOnWriteObject(axis);
 }
 
+TEST(RCategoricalAxis, Streamer)
+{
+   std::vector<std::string> categories = {"a"};
+
+   const RCategoricalAxis axis(categories);
+   ExpectThrowOnWriteObject(axis);
+}
+
 TEST(RAxes, Streamer)
 {
    static constexpr std::size_t BinsX = 20;

@@ -5,6 +5,7 @@
 #include <ROOT/RBinIndex.hxx>
 #include <ROOT/RBinIndexRange.hxx>
 #include <ROOT/RBinWithError.hxx>
+#include <ROOT/RCategoricalAxis.hxx>
 #include <ROOT/RHist.hxx>
 #include <ROOT/RHistEngine.hxx>
 #include <ROOT/RHistStats.hxx>
@@ -18,6 +19,7 @@ using ROOT::Experimental::RAxisVariant;
 using ROOT::Experimental::RBinIndex;
 using ROOT::Experimental::RBinIndexRange;
 using ROOT::Experimental::RBinWithError;
+using ROOT::Experimental::RCategoricalAxis;
 using ROOT::Experimental::RHist;
 using ROOT::Experimental::RHistEngine;
 using ROOT::Experimental::RHistStats;
