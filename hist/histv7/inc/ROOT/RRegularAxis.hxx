@@ -101,6 +101,9 @@ public:
       }
 
       std::size_t bin = (x - fLow) * fInvBinWidth;
+      if (bin >= fNNormalBins) {
+         bin = fNNormalBins - 1;
+      }
       return {bin, true};
    }
 
