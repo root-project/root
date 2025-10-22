@@ -157,3 +157,5 @@ if(pyroot)
     ROOT_ADD_PYUNITTEST(dataframe_merge_results dataframe_merge_results.py)
   endif()
 endif()
+
+configure_file(.rootrc . COPYONLY)
