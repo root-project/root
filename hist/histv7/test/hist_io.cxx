@@ -54,8 +54,10 @@ TEST(RAxes, Streamer)
    }
    bins.push_back(BinsY);
    const RVariableBinAxis variableBinAxis(bins);
+   const std::vector<std::string> categories = {"a", "b", "c"};
+   const RCategoricalAxis categoricalAxis(categories);
 
-   const RAxes axes({regularAxis, variableBinAxis});
+   const RAxes axes({regularAxis, variableBinAxis, categoricalAxis});
    ExpectThrowOnWriteObject(axes);
 }
 
