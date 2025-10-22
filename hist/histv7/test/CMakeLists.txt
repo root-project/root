@@ -1,4 +1,5 @@
 HIST_ADD_GTEST(hist_axes hist_axes.cxx)
+HIST_ADD_GTEST(hist_categorical hist_categorical.cxx)
 HIST_ADD_GTEST(hist_engine hist_engine.cxx)
 HIST_ADD_GTEST(hist_hist hist_hist.cxx)
 HIST_ADD_GTEST(hist_index hist_index.cxx)
