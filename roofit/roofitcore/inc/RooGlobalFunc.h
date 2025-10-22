@@ -358,7 +358,7 @@ RooCmdArg Conditional(const RooArgSet& pdfSet, const RooArgSet& depSet, bool dep
  * @{
  */
 // RooAbsPdf::generate arguments
-RooCmdArg ProtoData(const RooDataSet& protoData, bool randomizeOrder=false, bool resample=false) ;
+RooCmdArg ProtoData(const RooAbsData& protoData, bool randomizeOrder=false, bool resample=false) ;
 RooCmdArg NumEvents(Int_t numEvents) ;
 RooCmdArg NumEvents(double numEvents) ;
 RooCmdArg AutoBinned(bool flag=true) ;

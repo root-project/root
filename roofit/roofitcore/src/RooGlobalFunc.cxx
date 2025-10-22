@@ -807,7 +807,7 @@ RooCmdArg Conditional(const RooArgSet &pdfSet, const RooArgSet &depSet, bool dep
 };
 
 // RooAbsPdf::generate arguments
-RooCmdArg ProtoData(const RooDataSet &protoData, bool randomizeOrder, bool resample)
+RooCmdArg ProtoData(const RooAbsData &protoData, bool randomizeOrder, bool resample)
 {
    return RooCmdArg("PrototypeData", randomizeOrder, resample, 0, 0, nullptr, nullptr, &protoData, nullptr);
 }

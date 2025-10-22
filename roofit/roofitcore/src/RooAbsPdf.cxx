@@ -1200,7 +1200,7 @@ RooAbsGenContext* RooAbsPdf::autoGenContext(const RooArgSet &vars, const RooData
 ///       as binned generation is always executed at the top-level node for a regular
 ///       PDF, so for those it only mattes that the top-level node is tagged.
 ///
-/// <tr><td> ProtoData(const RooDataSet& data, bool randOrder)
+/// <tr><td> ProtoData(const RooAbsData& data, bool randOrder)
 ///          <td> Use specified dataset as prototype dataset. If randOrder in ProtoData() is set to true,
 ///               the order of the events in the dataset will be read in a random order if the requested
 ///               number of events to be generated does not match the number of events in the prototype dataset.
