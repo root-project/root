@@ -50,7 +50,11 @@ public:
 
   RooAbsPdf const& pdf() const { return *_pdf; }
 
-protected:
+  RooAbsReal const &getN() const { return *_n; }
+
+  TNamed const *getRangeName() const { return _rangeName; }
+
+  protected:
 
   RooTemplateProxy<RooAbsPdf>  _pdf;  ///< Input p.d.f
   RooTemplateProxy<RooAbsReal> _n;    ///< Number of expected events

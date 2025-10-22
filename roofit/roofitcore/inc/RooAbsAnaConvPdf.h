@@ -80,6 +80,9 @@ public:
     return const_cast<RooAbsAnaConvPdf*>(this)->convVar();
   }
 
+  /// Get the resolution model.
+  RooAbsReal const &getModel() const { return _model.arg(); }
+
   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
 protected:

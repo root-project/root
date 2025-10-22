@@ -61,8 +61,15 @@ public:
   Int_t getMaxVal(const RooArgSet& vars) const override { return _pdf1.arg().getMaxVal(vars) ; }
   double maxVal(Int_t code) const override { return _pdf1.arg().maxVal(code) ; }
 
+  RooAbsReal const &getConvVar() const { return *_x; }
 
-protected:
+  RooAbsReal const &getPdf1() const { return *_pdf1; }
+
+  RooAbsReal const &getPdf2() const { return *_pdf2; }
+
+  RooAbsReal const *getPdfConvVar() const { return dynamic_cast<RooAbsReal *>(_xprime.absArg()); }
+
+  protected:
 
   RooRealProxy _x ;      ///< Convolution observable
   RooRealProxy _xprime ; ///< Input function representing value of convolution observable

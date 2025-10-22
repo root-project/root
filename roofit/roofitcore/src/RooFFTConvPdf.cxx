@@ -241,8 +241,9 @@ RooFFTConvPdf::RooFFTConvPdf(const char *name, const char *title, RooRealVar &co
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \copydoc RooFFTConvPdf(const char*, const char*, RooRealVar&, RooAbsPdf&, RooAbsPdf&, Int_t)
-/// \param[in] pdfConvVar If the variable used for convolution is a PDF, itself, pass the PDF here, and pass the convolution variable to
-/// `convVar`. See also rf210_angularconv.C in the <a href="https://root.cern/root/html/tutorials/roofit/index.html.">roofit tutorials</a>
+/// \param[in] pdfConvVar If the variable used for convolution is a function, itself, pass the function here, and pass
+/// the convolution variable to `convVar`. See also rf210_angularconv.C in the <a
+/// href="https://root.cern/root/html/tutorials/roofit/index.html.">roofit tutorials</a>
 
 RooFFTConvPdf::RooFFTConvPdf(const char *name, const char *title, RooAbsReal &pdfConvVar, RooRealVar &convVar,
                              RooAbsPdf &pdf1, RooAbsPdf &pdf2, Int_t ipOrder)
