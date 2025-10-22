@@ -72,6 +72,8 @@ env:
   OS_INTERFACE: 'public'
   OS_REGION_NAME: 'cern'
   GLOBAL_OVERRIDES: 'asserts=ON LLVM_ENABLE_ASSERTIONS=ON'
+  ACTIONS_RUNNER_DEBUG: true
+  ACTIONS_STEP_DEBUG: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
