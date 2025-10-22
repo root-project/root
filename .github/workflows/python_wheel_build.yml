@@ -20,8 +20,9 @@ concurrency:
 jobs:
   build-wheels:
     if: |
-      github.event_name == 'schedule' ||
-      github.event_name == 'workflow_dispatch' ||
+      (github.repository_owner == 'root-project' &&
+       (github.event_name == 'schedule' ||
+        github.event_name == 'workflow_dispatch')) ||
       contains(github.event.pull_request.labels.*.name, 'build-python-wheels')
     runs-on: ubuntu-latest
     strategy:
