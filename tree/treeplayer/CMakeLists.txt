@@ -14,6 +14,7 @@ if(NOT MSVC)
     TMPWorkerTree.h
     ROOT/TTreeProcessorMP.hxx
   )
+  list(APPEND TREEPLAYER_EXTRA_DEPENDENCIES MultiProc)
 endif()
 
 if(imt)
