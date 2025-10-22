@@ -87,7 +87,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   // Optionally fix RooAddPdf normalizations
   if (prototype&&_pdfClone->dependsOn(*prototype->get())) {
     RooArgSet fullNormSet(vars) ;
-    fullNormSet.add(*prototype->get()) ;
+    fullNormSet.add(*prototype->get(),true) ;
     _pdfClone->fixAddCoefNormalization(fullNormSet) ;
   }
 
