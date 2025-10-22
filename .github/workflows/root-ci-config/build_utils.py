@@ -14,7 +14,6 @@ from http import HTTPStatus
 from shutil import which
 from typing import Callable, Dict
 
-from openstack.connection import Connection
 from requests import get
 
 
@@ -238,7 +237,7 @@ def calc_options_hash(options: str) -> str:
         options_and_defines += sp_result.stdout
     return sha1(options_and_defines.encode('utf-8')).hexdigest()
 
-def upload_file(connection: Connection, container: str, dest_object: str, src_file: str) -> None:
+def upload_file(connection, container: str, dest_object: str, src_file: str) -> None:
     print(f"Attempting to upload {src_file} to {dest_object}")
 
     if not os.path.exists(src_file):
