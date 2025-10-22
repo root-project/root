@@ -113,6 +113,16 @@ TEST(RRegularAxis, ComputeLinearizedIndex)
    }
 }
 
+TEST(RRegularAxis, ComputeLinearizedIndexMin)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {-1, std::numeric_limits<double>::min()});
+
+   auto linIndex = axis.ComputeLinearizedIndex(0);
+   EXPECT_EQ(linIndex.fIndex, Bins - 1);
+   EXPECT_TRUE(linIndex.fValid);
+}
+
 TEST(RRegularAxis, GetLinearizedIndex)
 {
    static constexpr std::size_t Bins = 20;
