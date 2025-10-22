@@ -1,0 +1,147 @@
+/// \file
+/// \warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
+/// Feedback is welcome!
+
+#ifndef ROOT_RHistAutoAxisFiller
+#define ROOT_RHistAutoAxisFiller
+
+#include "RHist.hxx"
+
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <limits>
+#include <optional>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+
+namespace ROOT {
+namespace Experimental {
+
+/**
+A histogram filler that automatically determines the axis interval.
+
+This class allows filling a regular one-dimensional histogram without specifying an axis interval during construction.
+After a configurable number of buffered entries, or upon request, a RRegularAxis is constructed using the minimum and
+maximum values until that point. This ensures all initial entries are filled into normal bins. Note that this cannot be
+guaranteed for further calls to Fill.
+
+\code
+ROOT::Experimental::RHistAutoAxisFiller<int> filler(20);
+filler.Fill(1.0);
+filler.Fill(1.5);
+filler.Fill(2.0);
+
+// The following will implicitly trigger the histogram creation
+auto &hist = filler.GetHist();
+// hist.GetNEntries() will return 3
+\endcode
+
+\warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
+Feedback is welcome!
+*/
+template <typename BinContentType>
+class RHistAutoAxisFiller final {
+   /// The filled histogram, after it has been constructed
+   std::optional<RHist<BinContentType>> fHist;
+
+   /// The number of normal bins
+   std::size_t fNNormalBins;
+   /// The maximum buffer size until Flush() is automatically called
+   std::size_t fMaxBufferSize;
+
+   /// The buffer of filled entries
+   // FIXME: need to store weights!
+   std::vector<double> fBuffer;
+   /// The minimum of the filled entries
+   double fMinimum = std::numeric_limits<double>::infinity();
+   /// The maximum of the filled entries
+   double fMaximum = -std::numeric_limits<double>::infinity();
+
+public:
+   /// Create a filler object.
+   ///
+   /// \param[in] nNormalBins the number of normal bins, must be > 0
+   /// \param[in] maxBufferSize the maximum buffer size, must be > 0
+   explicit RHistAutoAxisFiller(std::size_t nNormalBins, std::size_t maxBufferSize = 1024)
+      : fNNormalBins(nNormalBins), fMaxBufferSize(maxBufferSize)
+   {
+      if (nNormalBins == 0) {
+         throw std::invalid_argument("nNormalBins must be > 0");
+      }
+      if (maxBufferSize == 0) {
+         throw std::invalid_argument("maxBufferSize must be > 0");
+      }
+   }
+
+   std::size_t GetNNormalBins() const { return fNNormalBins; }
+   std::size_t GetMaxBufferSize() const { return fMaxBufferSize; }
+
+   /// Fill an entry into the histogram.
+   ///
+   /// \param[in] x the argument
+   void Fill(double x)
+   {
+      // If the histogram exists, forward the Fill call.
+      if (fHist) {
+         fHist->Fill(x);
+         return;
+      }
+
+      fBuffer.push_back(x);
+      fMinimum = std::min(fMinimum, x);
+      fMaximum = std::max(fMaximum, x);
+
+      if (fBuffer.size() >= fMaxBufferSize) {
+         Flush();
+      }
+   }
+
+   /// Flush the buffer of entries and construct the histogram.
+   ///
+   /// Throws an exception if the buffer is empty, the axis interval cannot be determined, or if it would be empty
+   /// because the minimum equals the maximum.
+   void Flush()
+   {
+      if (fHist) {
+         assert(fBuffer.empty() && "buffer should have been emptied");
+         return;
+      }
+
+      if (fBuffer.empty()) {
+         throw std::runtime_error("buffer is empty, cannot create histogram");
+      }
+      if (!std::isfinite(fMinimum) || !std::isfinite(fMaximum)) {
+         throw std::runtime_error("could not determine axis interval");
+      }
+      if (fMinimum == fMaximum) {
+         throw std::runtime_error("axis interval is empty");
+      }
+
+      // Slightly increase the upper limit to make sure the maximum is included in the last bin.
+      double high = std::nextafter(fMaximum, std::numeric_limits<double>::infinity());
+      assert(high > fMaximum);
+      fHist.emplace(fNNormalBins, std::make_pair(fMinimum, high));
+
+      for (double x : fBuffer) {
+         fHist->Fill(x);
+      }
+      fBuffer.clear();
+   }
+
+   /// Return the constructed histogram.
+   ///
+   /// \see Flush()
+   RHist<BinContentType> &GetHist()
+   {
+      Flush();
+      assert(fHist.has_value());
+      return *fHist;
+   }
+};
+
+} // namespace Experimental
+} // namespace ROOT
+
+#endif
