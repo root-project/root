@@ -63,8 +63,20 @@ HypoTestCalculatorGeneric::HypoTestCalculatorGeneric(
                                                   *altModel.GetPdf(),
                                                   altModel.GetSnapshot());
 
-      fDefaultSampler = new ToyMCSampler(*fDefaultTestStat, 1000);
-      fTestStatSampler = fDefaultSampler;
+      auto toymcs = new ToyMCSampler(*fDefaultTestStat, 1000);
+      const bool dataIsBinned = dynamic_cast<const RooDataHist*>(fData);
+      if (dataIsBinned) {
+         // Ensure the ToyMCSampler generates toys with the same structure as the observed data.
+         // TODO: understand why this is needed only in the RooDataHist case,
+         // but results in backwards-incompatibility for RooDataSet, which
+         // manifests for example in the stressRooStats tests.
+         // See also: https://github.com/root-project/root/pull/20171
+         toymcs->SetProtoData(&data);
+      }
+      toymcs->SetGenerateBinned(dataIsBinned);  // if observed is RooDataHist -> generate RooDataHist toys
+
+      fDefaultSampler = toymcs;
+      fTestStatSampler = toymcs;
    }
 
 
