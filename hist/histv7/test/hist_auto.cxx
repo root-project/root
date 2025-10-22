@@ -85,6 +85,36 @@ TEST(RHistAutoAxisFiller, FillMax0)
    EXPECT_EQ(hist.GetBinContent(RBinIndex::Overflow()), 0);
 }
 
+TEST(RHistAutoAxisFiller, FillFloat)
+{
+   RHistAutoAxisFiller<float> filler(3);
+
+   filler.Fill(1);
+   filler.Fill(2);
+
+   auto &hist = filler.GetHist();
+   EXPECT_EQ(hist.GetBinContent(0), 1);
+   EXPECT_EQ(hist.GetBinContent(2), 1);
+
+   filler.Fill(1.5);
+   EXPECT_EQ(hist.GetBinContent(1), 1);
+}
+
+TEST(RHistAutoAxisFiller, FillWeight)
+{
+   RHistAutoAxisFiller<float> filler(3);
+
+   filler.Fill(1, RWeight(0.8));
+   filler.Fill(2, RWeight(0.9));
+
+   auto &hist = filler.GetHist();
+   EXPECT_FLOAT_EQ(hist.GetBinContent(0), 0.8);
+   EXPECT_FLOAT_EQ(hist.GetBinContent(2), 0.9);
+
+   filler.Fill(1.5, RWeight(0.85));
+   EXPECT_FLOAT_EQ(hist.GetBinContent(1), 0.85);
+}
+
 TEST(RHistAutoAxisFiller, FlushError)
 {
    static constexpr std::size_t Bins = 20;

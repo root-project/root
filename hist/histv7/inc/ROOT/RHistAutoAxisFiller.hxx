@@ -6,6 +6,8 @@
 #define ROOT_RHistAutoAxisFiller
 
 #include "RHist.hxx"
+#include "RHistEngine.hxx"
+#include "RWeight.hxx"
 
 #include <algorithm>
 #include <cmath>
@@ -43,6 +45,10 @@ Feedback is welcome!
 */
 template <typename BinContentType>
 class RHistAutoAxisFiller final {
+public:
+   static constexpr bool SupportsWeightedFilling = RHistEngine<BinContentType>::SupportsWeightedFilling;
+
+private:
    /// The filled histogram, after it has been constructed
    std::optional<RHist<BinContentType>> fHist;
 
@@ -51,9 +57,10 @@ class RHistAutoAxisFiller final {
    /// The maximum buffer size until Flush() is automatically called
    std::size_t fMaxBufferSize;
 
+   using BufferElement = std::conditional_t<SupportsWeightedFilling, std::pair<double, RWeight>, double>;
+
    /// The buffer of filled entries
-   // FIXME: need to store weights!
-   std::vector<double> fBuffer;
+   std::vector<BufferElement> fBuffer;
    /// The minimum of the filled entries
    double fMinimum = std::numeric_limits<double>::infinity();
    /// The maximum of the filled entries
@@ -78,9 +85,31 @@ public:
    std::size_t GetNNormalBins() const { return fNNormalBins; }
    std::size_t GetMaxBufferSize() const { return fMaxBufferSize; }
 
+private:
+   void BufferImpl(double x, RWeight weight)
+   {
+      if constexpr (SupportsWeightedFilling) {
+         fBuffer.emplace_back(x, weight);
+      } else {
+         assert(weight.fValue == 1.0);
+         // Silence compiler warning about unused parameter
+         (void)weight;
+         fBuffer.push_back(x);
+      }
+      fMinimum = std::min(fMinimum, x);
+      fMaximum = std::max(fMaximum, x);
+
+      if (fBuffer.size() >= fMaxBufferSize) {
+         Flush();
+      }
+   }
+
+public:
    /// Fill an entry into the histogram.
    ///
    /// \param[in] x the argument
+   /// \par See also
+   /// the \ref Fill(double x, RWeight weight) "overload for weighted filling"
    void Fill(double x)
    {
       // If the histogram exists, forward the Fill call.
@@ -88,14 +117,26 @@ public:
          fHist->Fill(x);
          return;
       }
+      BufferImpl(x, RWeight(1.0));
+   }
 
-      fBuffer.push_back(x);
-      fMinimum = std::min(fMinimum, x);
-      fMaximum = std::max(fMaximum, x);
-
-      if (fBuffer.size() >= fMaxBufferSize) {
-         Flush();
+   /// Fill an entry into the histogram with a weight.
+   ///
+   /// This overload is only available for floating-point bin content types (see
+   /// \ref RHistEngine::SupportsWeightedFilling).
+   ///
+   /// \param[in] x the argument
+   /// \param[in] weight the weight for this entry
+   /// \par See also
+   /// the \ref Fill(double x) "overload for unweighted filling"
+   void Fill(double x, RWeight weight)
+   {
+      // If the histogram exists, forward the Fill call.
+      if (fHist) {
+         fHist->Fill(x, weight);
+         return;
       }
+      BufferImpl(x, weight);
    }
 
    /// Flush the buffer of entries and construct the histogram.
@@ -124,8 +165,12 @@ public:
       assert(high > fMaximum);
       fHist.emplace(fNNormalBins, std::make_pair(fMinimum, high));
 
-      for (double x : fBuffer) {
-         fHist->Fill(x);
+      for (auto &&x : fBuffer) {
+         if constexpr (SupportsWeightedFilling) {
+            fHist->Fill(x.first, x.second);
+         } else {
+            fHist->Fill(x);
+         }
       }
       fBuffer.clear();
    }
