@@ -664,7 +664,7 @@ int main(int argc, char **argv)
    const HAddArgs &args = *argsOpt;
 
    if (args.fHelp) {
-      fprintf(stderr, kCommandLineOptionsHelp);
+      fputs(kCommandLineOptionsHelp, stderr);
       return 0;
    }
 
@@ -710,10 +710,12 @@ int main(int argc, char **argv)
    const char *targetname = 0;
    if (!args.fOutputArgIdx) {
       Err() << "missing output file.\n";
+      fputs(kCommandLineShortHelp, stderr);
       return 1;
    }
    if (!args.fFirstInputIdx) {
       Err() << "missing input file.\n";
+      fputs(kCommandLineShortHelp, stderr);
       return 1;
    }
    targetname = argv[args.fOutputArgIdx];
