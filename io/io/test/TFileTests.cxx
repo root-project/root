@@ -269,3 +269,29 @@ TEST(TDirectoryFile, SeekParent)
    EXPECT_EQ(dir11->GetSeekDir(), 348);
    EXPECT_EQ(dir11->GetSeekParent(), 239);
 }
+
+// https://its.cern.ch/jira/browse/ROOT-10581
+TEST(TFile, PersistTObjectStdArray)
+{
+   auto filename = "foo10581.root";
+   {
+      std::array<TObject *, 2> arr;
+      arr[0] = new TObject();
+      arr[0]->SetUniqueID(123);
+      arr[1] = new TObject();
+      arr[1]->SetUniqueID(456);
+      TFile f(filename, "RECREATE");
+      f.WriteObject(&arr, "array");
+      f.Close();
+      delete arr[0];
+      delete arr[1];
+   }
+   {
+      TFile ff(filename, "READ");
+      std::array<TObject *, 2> *arr2 = nullptr;
+      ff.GetObject("array", arr2);
+      EXPECT_EQ((*arr2)[0]->GetUniqueID(), 123);
+      EXPECT_EQ((*arr2)[1]->GetUniqueID(), 456);
+   }
+   gSystem->Unlink(filename); 
+}
