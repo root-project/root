@@ -947,6 +947,8 @@ std::size_t ROOT::RUniquePtrField::AppendImpl(const void *from)
    if (*typedValue) {
       const void *obj = typedValue->get();
       if (fPolymorphicTypeInfo != nullptr) {
+         // This cast allows getting the dynamic type of polymorphic objects. A similar strategy is employed by
+         // TIsAProxy. If one of them needs updating because of changes in C++, also check the other one.
          const std::type_info &t = typeid(*static_cast<const PolymorphicClass *>(obj));
          if (t != *fPolymorphicTypeInfo) {
             std::string msg = "invalid dynamic type of object, expected " + fSubfields[0]->GetTypeName();
