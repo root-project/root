@@ -293,5 +293,5 @@ TEST(TFile, PersistTObjectStdArray)
       EXPECT_EQ((*arr2)[0]->GetUniqueID(), 123);
       EXPECT_EQ((*arr2)[1]->GetUniqueID(), 456);
    }
-   gSystem->Unlink(filename); 
+   gSystem->Unlink(filename);
 }
