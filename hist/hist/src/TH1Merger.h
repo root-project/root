@@ -16,6 +16,7 @@
 #include "TProfile2D.h"
 #include "TProfile3D.h"
 #include "TList.h"
+#include <cmath>
 
 class TH1Merger {
 
@@ -41,13 +42,30 @@ public:
       return outAxis.FindFixBin(inAxis.GetBinCenter(ibin));
    }
 
-   // find bin number estending the axis
+   /// find bin number extending the axis
    static Int_t FindBinNumber(Int_t ibin, const TAxis & inAxis, TAxis & outAxis) {
       // should I ceck in case of underflow/overflow if underflow/overflow values of input axis
       // outside  output axis ?
       if (ibin == 0 ) return 0;   // return underflow
       if (ibin == inAxis.GetNbins()+1 ) return outAxis.GetNbins()+1; // return overflow
-      return outAxis.FindBin(inAxis.GetBinCenter(ibin));
+      auto binOut = outAxis.FindBin(inAxis.GetBinCenter(ibin));
+      auto eps = 1e-12;
+      if (binOut == outAxis.GetNbins() + 1) {
+         // if upper edge is infinite, the bin center is infinite no matter what low edge is,
+         // so FindBin is in overflow since bin goes from [lower edge, infinite)
+         // Check the low edge instead of the bin center in that case
+         if (std::isinf(inAxis.GetBinUpEdge(ibin))) {
+            binOut = outAxis.FindBin(inAxis.GetBinLowEdge(ibin) + eps);
+         }
+      } else if (binOut == 0) {
+         // if lower edge is -infinite, the bin center is -infinite no matter what upper edge is,
+         // so FindBin is in underflow bin which goes from [-inf, -inf)
+         // Check the upper edge instead of the bin center in that case
+         if (std::isinf(inAxis.GetBinLowEdge(ibin))) {
+            binOut = outAxis.FindBin(inAxis.GetBinUpEdge(ibin) - eps);
+         }
+      }
+      return binOut;
    }
 
    // Function to find if axis label list  has duplicates

@@ -2293,7 +2293,23 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
          }
       }
       // find corresponding bin number in h1 for outbin
-      Int_t binOut = h1->GetXaxis()->FindBin( outAxis->GetBinCenter(outbin) );
+      Int_t binOut = h1->GetXaxis()->FindBin(outAxis->GetBinCenter(outbin));
+      auto eps = 1e-12;
+      if (binOut == h1->GetXaxis()->GetNbins() + 1) {
+         // if upper edge is infinite, the bin center is infinite no matter what low edge is,
+         // so FindBin is in overflow since bin goes from [lower edge, infinite)
+         // Check the low edge instead of the bin center in that case
+         if (std::isinf(outAxis->GetBinUpEdge(outbin))) {
+            binOut = h1->GetXaxis()->FindBin(outAxis->GetBinLowEdge(outbin) + eps);
+         }
+      } else if (binOut == 0) {
+         // if lower edge is -infinite, the bin center is -infinite no matter what upper edge is,
+         // so FindBin is in underflow bin which goes from [-inf, -inf)
+         // Check the upper edge instead of the bin center in that case
+         if (std::isinf(outAxis->GetBinLowEdge(outbin))) {
+            binOut = h1->GetXaxis()->FindBin(outAxis->GetBinUpEdge(outbin) - eps);
+         }
+      }
       h1->SetBinContent(binOut ,cont);
       if (computeErrors) h1->SetBinError(binOut,TMath::Sqrt(err2));
       // sum  all content
