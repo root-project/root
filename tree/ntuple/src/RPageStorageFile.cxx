@@ -252,6 +252,16 @@ void ROOT::Internal::RPageSinkFile::CommitDatasetImpl(unsigned char *serializedF
    fWriter->Commit(GetWriteOptions().GetCompression());
 }
 
+std::unique_ptr<ROOT::Internal::RPageSink>
+ROOT::Internal::RPageSinkFile::DeriveFor(std::string_view newName, const ROOT::RNTupleWriteOptions &opts) const
+{
+   if (auto *dir = Internal::GetUnderlyingDirectory(*fWriter)) {
+      return std::make_unique<ROOT::Internal::RPageSinkFile>(newName, *dir, opts);
+   }
+   // TODO: support this method also for non-TFile-based writers
+   throw ROOT::RException(R__FAIL("cannot call DeriveFor on a non-TFile-based Sink."));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName, const ROOT::RNTupleReadOptions &opts)
@@ -300,6 +310,15 @@ ROOT::Internal::RPageSourceFile::CreateFromAnchor(const RNTuple &anchor, const R
    }
 
    auto pageSource = std::make_unique<RPageSourceFile>("", std::move(rawFile), options);
+   pageSource->fAnchor = anchor;
+   // NOTE: fNTupleName gets set only upon Attach().
+   return pageSource;
+}
+
+std::unique_ptr<ROOT::Internal::RPageSourceFile>
+ROOT::Internal::RPageSourceFile::OpenWithDifferentAnchor(const RNTuple &anchor, const ROOT::RNTupleReadOptions &options)
+{
+   auto pageSource = std::make_unique<RPageSourceFile>("", fFile->Clone(), options);
    pageSource->fAnchor = anchor;
    // NOTE: fNTupleName gets set only upon Attach().
    return pageSource;
@@ -509,18 +528,17 @@ ROOT::Internal::RPageSourceFile::PrepareSingleCluster(const RCluster::RKey &clus
    std::vector<ROnDiskPageLocator> onDiskPages;
    auto activeSize = 0;
    auto pageZeroMap = std::make_unique<ROnDiskPageMap>();
-   PrepareLoadCluster(clusterKey, *pageZeroMap,
-                      [&](ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t pageNo,
-                          const ROOT::RClusterDescriptor::RPageInfo &pageInfo) {
-                         const auto &pageLocator = pageInfo.GetLocator();
-                         if (pageLocator.GetType() == RNTupleLocator::kTypeUnknown)
-                            throw RException(R__FAIL("tried to read a page with an unknown locator"));
-                         const auto nBytes =
-                            pageLocator.GetNBytesOnStorage() + pageInfo.HasChecksum() * kNBytesPageChecksum;
-                         activeSize += nBytes;
-                         onDiskPages.push_back(
-                            {physicalColumnId, pageNo, pageLocator.GetPosition<std::uint64_t>(), nBytes, 0});
-                      });
+   PrepareLoadCluster(
+      clusterKey, *pageZeroMap,
+      [&](ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t pageNo,
+          const ROOT::RClusterDescriptor::RPageInfo &pageInfo) {
+         const auto &pageLocator = pageInfo.GetLocator();
+         if (pageLocator.GetType() == RNTupleLocator::kTypeUnknown)
+            throw RException(R__FAIL("tried to read a page with an unknown locator"));
+         const auto nBytes = pageLocator.GetNBytesOnStorage() + pageInfo.HasChecksum() * kNBytesPageChecksum;
+         activeSize += nBytes;
+         onDiskPages.push_back({physicalColumnId, pageNo, pageLocator.GetPosition<std::uint64_t>(), nBytes, 0});
+      });
 
    // Linearize the page requests by file offset
    std::sort(onDiskPages.begin(), onDiskPages.end(),
