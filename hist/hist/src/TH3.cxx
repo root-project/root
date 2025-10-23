@@ -2058,14 +2058,25 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
             }
          }
       }
-      Int_t ix    = h1->FindBin( projX->GetBinCenter(ixbin) );
+      Int_t ix    = h1->FindBin(projX->GetBinCenter(ixbin));
+      if (ix == h1->GetNbinsX() + 1 || ix == 0) {
+         auto eps = 1e-12;
+         // if upper/lower edge is +/-infinite, the bin center is +/-infinite if the other edge is finite,
+         // so FindBin is in overflow/underflow
+         // Check close to the lower or upper edges instead of the bin center in these cases
+         if (std::isinf(projX->GetBinUpEdge(ixbin))) {
+            ix = h1->FindBin(projX->GetBinLowEdge(ixbin) + eps);
+         } else if (std::isinf(projX->GetBinLowEdge(ixbin))) {
+            ix = h1->FindBin(projX->GetBinUpEdge(ixbin) - eps);
+         }
+      }
       h1->SetBinContent(ix ,cont);
       if (computeErrors) h1->SetBinError(ix, TMath::Sqrt(err2) );
       // sum all content
       totcont += cont;
 
    }
-   if ( labels ) h1->GetXaxis()->SetCanExtend(extendable);
+   if (labels) h1->GetXaxis()->SetCanExtend(extendable);
 
    // since we use a combination of fill and SetBinError we need to reset and recalculate the statistics
    // for weighted histograms otherwise sumw2 will be wrong.
@@ -2267,11 +2278,32 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
 
    for (ixbin=0;ixbin<=1+projX->GetNbins();ixbin++) {
       if ( projX->TestBit(TAxis::kAxisRange) && ( ixbin < ixmin || ixbin > ixmax )) continue;
-      Int_t ix = h2->GetYaxis()->FindBin( projX->GetBinCenter(ixbin) );
+      Int_t ix = h2->GetYaxis()->FindBin(projX->GetBinCenter(ixbin));
+      auto eps = 1e-12;
+      if (ix == h2->GetYaxis()->GetNbins() + 1 || ix == 0) {
+         // if upper/lower edge is +/-infinite, the bin center is +/-infinite if the other edge is finite,
+         // so FindBin is in overflow/underflow
+         // Check close to the lower or upper edges instead of the bin center in these cases
+         if (std::isinf(projX->GetBinUpEdge(ixbin))) {
+            ix = h2->GetYaxis()->FindBin(projX->GetBinLowEdge(ixbin) + eps);
+         } else if (std::isinf(projX->GetBinLowEdge(ixbin))) {
+            ix = h2->GetYaxis()->FindBin(projX->GetBinUpEdge(ixbin) - eps);
+         }
+      }
 
       for (iybin=0;iybin<=1+projY->GetNbins();iybin++) {
          if ( projY->TestBit(TAxis::kAxisRange) && ( iybin < iymin || iybin > iymax )) continue;
          Int_t iy = h2->GetXaxis()->FindBin( projY->GetBinCenter(iybin) );
+         if (iy == h2->GetXaxis()->GetNbins() + 1 || iy == 0) {
+            // if upper/lower edge is +/-infinite, the bin center is +/-infinite if the other edge is finite,
+            // so FindBin is in overflow/underflow
+            // Check close to the lower or upper edges instead of the bin center in these cases
+            if (std::isinf(projY->GetBinUpEdge(iybin))) {
+               iy = h2->GetXaxis()->FindBin(projY->GetBinLowEdge(iybin) + eps);
+            } else if (std::isinf(projY->GetBinLowEdge(iybin))) {
+               iy = h2->GetXaxis()->FindBin(projY->GetBinUpEdge(iybin) - eps);
+            }
+         }
 
          Double_t cont = 0;
          Double_t err2 = 0;

@@ -477,15 +477,38 @@ Int_t TAxis::GetLast() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return center of bin
+///
+/// If fXmin is -inf, it will return -inf even if fXmax is finite
+/// If fXmax is +inf, it will return +inf even if fXmin is finite
 
 Double_t TAxis::GetBinCenter(Int_t bin) const
 {
    Double_t binwidth;
    if (!fXbins.fN || bin<1 || bin>fNbins) {
       binwidth = (fXmax - fXmin) / Double_t(fNbins);
+      if (std::isinf(binwidth)) {
+         if (std::isfinite(fXmin))
+            return fXmax;
+         else if (std::isfinite(fXmax))
+            return fXmin;
+         else if (fXmin == -std::numeric_limits<double>::infinity() && fXmax == std::numeric_limits<double>::infinity())
+            return 0.;
+         else
+            return std::numeric_limits<double>::quiet_NaN();
+      }
       return fXmin + (bin - 0.5) * binwidth;
    } else {
       binwidth = fXbins.fArray[bin] - fXbins.fArray[bin-1];
+      if (std::isinf(binwidth)) {
+         if (std::isfinite(fXbins.fArray[bin-1]))
+            return fXbins.fArray[bin];
+         else if (std::isfinite(fXbins.fArray[bin]))
+            return fXbins.fArray[bin-1];
+         else if (fXbins.fArray[bin-1] == -std::numeric_limits<double>::infinity() && fXbins.fArray[bin] == std::numeric_limits<double>::infinity())
+            return 0.;
+         else
+            return std::numeric_limits<double>::quiet_NaN();
+      }
       return fXbins.fArray[bin-1] + 0.5*binwidth;
    }
 }

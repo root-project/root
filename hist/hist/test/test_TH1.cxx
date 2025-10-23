@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <random>
 #include <vector>
+#include <limits>
 
 #include "ROOT/TestSupport.hxx"
 
@@ -319,4 +320,24 @@ TEST(TH1, SetBufferedSumw2)
 TEST(TAxis, EqualBinEdges)
 {
    ROOT_EXPECT_ERROR(TAxis _({1, 1}), "TAxis::Set", "bins must be in increasing order");
+}
+
+TEST(TH2, ProjectionYInfiniteUpperEdge)
+{
+   Double_t xedges[] = {0., 1.};
+   Double_t yedges[] = {1., std::numeric_limits<double>::infinity()};
+   TH2D h("h_inf", "h_inf;X;Y", 1, xedges, 1, yedges);
+   h.SetBinContent(1, 1, 11.);
+   auto projY = h.ProjectionY();
+   EXPECT_EQ(projY->GetBinContent(1), h.Integral(1, 1, 1, 1));
+}
+
+TEST(TH2, ProjectionYInfiniteLowerEdge)
+{
+   Double_t xedges[] = {0, 1.};
+   Double_t yedges[] = {-std::numeric_limits<double>::infinity(), 2};
+   TH2D h("h_inf", "h_inf;X;Y", 1, xedges, 1, yedges);
+   h.SetBinContent(1, 1, 11.);
+   auto projY = h.ProjectionY();
+   EXPECT_EQ(projY->GetBinContent(1), h.Integral(1, 1, 1, 1));
 }
