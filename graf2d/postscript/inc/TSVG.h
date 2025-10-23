@@ -58,7 +58,7 @@ public:
    void  On();
    void  Open(const char *filename, Int_t type=-111) override;
    void  Range(Float_t xrange, Float_t yrange);
-   void  SetColorAlpha(Int_t color = 1);
+   void  SetColorAlpha(Int_t color = 1, Bool_t fill = kTRUE, Bool_t stroke = kTRUE);
    void  SetColor(Int_t color = 1);
    void  SetColor(Float_t r, Float_t g, Float_t b) override;
    void  SetFillColor(Color_t cindex=1) override;
