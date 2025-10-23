@@ -247,7 +247,7 @@ void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
          PrintFast(10,"\" height=\"");
          WriteReal(iy1-iy2, kFALSE);
          PrintFast(7,"\" fill=");
-         SetColorAlpha(5);
+         SetColorAlpha(5, kTRUE, kFALSE);
          PrintFast(2,"/>");
       }
    }
@@ -262,7 +262,7 @@ void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       PrintFast(10,"\" height=\"");
       WriteReal(iy1-iy2, kFALSE);
       PrintFast(7,"\" fill=");
-      SetColorAlpha(fFillColor);
+      SetColorAlpha(fFillColor, kTRUE, kFALSE);
       PrintFast(2,"/>");
    }
    if (fillis == 0) {
@@ -277,7 +277,7 @@ void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       PrintFast(10,"\" height=\"");
       WriteReal(iy1-iy2, kFALSE);
       PrintFast(21,"\" fill=\"none\" stroke=");
-      SetColorAlpha(fLineColor);
+      SetColorAlpha(fLineColor, kFALSE, kTRUE);
       PrintFast(2,"/>");
    }
 }
@@ -627,11 +627,11 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
        ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
        ms == 47 || ms == 48 || ms == 49) {
       PrintStr("<g fill=");
-      SetColorAlpha(Int_t(fMarkerColor));
+      SetColorAlpha(Int_t(fMarkerColor), kTRUE, kFALSE);
       PrintStr(">");
    } else {
       PrintStr("<g stroke=");
-      SetColorAlpha(Int_t(fMarkerColor));
+      SetColorAlpha(Int_t(fMarkerColor), kFALSE, kTRUE);
       PrintStr(" stroke-width=\"");
       WriteReal(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))), kFALSE);
       PrintStr("\" fill=\"none\"");
@@ -1036,11 +1036,11 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
        ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
        ms == 47 || ms == 48 || ms == 49) {
       PrintStr("<g fill=");
-      SetColorAlpha(Int_t(fMarkerColor));
+      SetColorAlpha(Int_t(fMarkerColor), kTRUE, kFALSE);
       PrintStr(">");
    } else {
       PrintStr("<g stroke=");
-      SetColorAlpha(Int_t(fMarkerColor));
+      SetColorAlpha(Int_t(fMarkerColor), kFALSE, kTRUE);
       PrintStr(" stroke-width=\"");
       WriteReal(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))), kFALSE);
       PrintStr("\" fill=\"none\"");
@@ -1480,7 +1480,7 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
    if (nn > 0 ) {
       if (xw[0] == xw[n-1] && yw[0] == yw[n-1]) PrintFast(1,"z");
       PrintFast(21,"\" fill=\"none\" stroke=");
-      SetColorAlpha(fLineColor);
+      SetColorAlpha(fLineColor, kFALSE, kTRUE);
       if(fLineWidth > 1.) {
          PrintFast(15," stroke-width=\"");
          WriteReal(fLineWidth, kFALSE);
@@ -1503,7 +1503,7 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       PrintFast(8,"z\" fill=");
       if (fais == 0) {
          PrintFast(14,"\"none\" stroke=");
-         SetColorAlpha(fFillColor);
+         SetColorAlpha(fFillColor, kFALSE, kTRUE);
       } else {
          SetColorAlpha(fFillColor);
       }
@@ -1737,14 +1737,18 @@ void TSVG::SetMarkerColor( Color_t cindex )
 ////////////////////////////////////////////////////////////////////////////////
 /// Set RGBa color with its color index
 
-void TSVG::SetColorAlpha(Int_t color)
+void TSVG::SetColorAlpha(Int_t color, Bool_t fill, Bool_t stroke)
 {
-   if (color < 0) color = 0;
+   if (color < 0)
+      color = 0;
    TColor *col = gROOT->GetColor(color);
    if (col) {
       SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
       Float_t a = col->GetAlpha();
-      if (a<1.) PrintStr(TString::Format(" fill-opacity=\"%3.2f\" stroke-opacity=\"%3.2f\"",a,a));
+      if ((a < 1.) && fill)
+         PrintStr(TString::Format(" fill-opacity=\"%3.2f\"",a));
+      if ((a < 1.) && stroke)
+         PrintStr(TString::Format(" stroke-opacity=\"%3.2f\"",a));
    } else {
       SetColor(1., 1., 1.);
    }
@@ -1872,7 +1876,7 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
       PrintFast(18," text-anchor=\"end\"");
    }
    PrintFast(6," fill=");
-   SetColorAlpha(Int_t(fTextColor));
+   SetColorAlpha(Int_t(fTextColor), kTRUE, kFALSE);
    PrintFast(12," font-size=\"");
    WriteReal(fontsize, kFALSE);
    PrintFast(15,"\" font-family=\"");
