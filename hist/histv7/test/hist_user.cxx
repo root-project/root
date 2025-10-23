@@ -30,6 +30,10 @@ struct User {
       fValue += rhs.fValue;
       return *this;
    }
+
+   void AtomicInc() { ROOT::Experimental::Internal::AtomicInc(&fValue); }
+
+   void AtomicAdd(double w) { ROOT::Experimental::Internal::AtomicAdd(&fValue, w); }
 };
 
 static_assert(std::is_nothrow_move_constructible_v<RHistEngine<User>>);
@@ -114,6 +118,36 @@ TEST(RHistEngineUser, FillWeight)
 
    engine.Fill(8.5, RWeight(0.8));
    engine.Fill(std::make_tuple(9.5), RWeight(0.9));
+
+   EXPECT_EQ(engine.GetBinContent(RBinIndex(8)).fValue, 0.8);
+   std::array<RBinIndex, 1> indices = {9};
+   EXPECT_EQ(engine.GetBinContent(indices).fValue, 0.9);
+}
+
+TEST(RHistEngineUser, FillAtomic)
+{
+   // Unweighted filling with atomic instructions uses AtomicInc
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<User> engine({axis});
+
+   engine.FillAtomic(8.5);
+   engine.FillAtomic(std::make_tuple(9.5));
+
+   EXPECT_EQ(engine.GetBinContent(RBinIndex(8)).fValue, 1);
+   std::array<RBinIndex, 1> indices = {9};
+   EXPECT_EQ(engine.GetBinContent(indices).fValue, 1);
+}
+
+TEST(RHistEngineUser, FillAtomicWeight)
+{
+   // Weighted filling with atomic instructions uses AtomicAdd
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<User> engine({axis});
+
+   engine.FillAtomic(8.5, RWeight(0.8));
+   engine.FillAtomic(std::make_tuple(9.5), RWeight(0.9));
 
    EXPECT_EQ(engine.GetBinContent(RBinIndex(8)).fValue, 0.8);
    std::array<RBinIndex, 1> indices = {9};

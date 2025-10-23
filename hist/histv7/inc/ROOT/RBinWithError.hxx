@@ -5,6 +5,8 @@
 #ifndef ROOT_RBinWithError
 #define ROOT_RBinWithError
 
+#include "RHistUtils.hxx"
+
 namespace ROOT {
 namespace Experimental {
 
@@ -44,6 +46,18 @@ struct RBinWithError final {
       fSum += rhs.fSum;
       fSum2 += rhs.fSum2;
       return *this;
+   }
+
+   void AtomicInc()
+   {
+      Internal::AtomicInc(&fSum);
+      Internal::AtomicInc(&fSum2);
+   }
+
+   void AtomicAdd(double w)
+   {
+      Internal::AtomicAdd(&fSum, w);
+      Internal::AtomicAdd(&fSum2, w * w);
    }
 };
 

@@ -196,6 +196,18 @@ std::enable_if_t<std::is_arithmetic_v<T>> AtomicInc(T *ptr)
    AtomicAdd(ptr, static_cast<T>(1));
 }
 
+template <typename T, typename U>
+std::enable_if_t<std::is_member_function_pointer_v<decltype(&T::AtomicAdd)>> AtomicAdd(T *ptr, const U &add)
+{
+   ptr->AtomicAdd(add);
+}
+
+template <typename T>
+std::enable_if_t<std::is_member_function_pointer_v<decltype(&T::AtomicInc)>> AtomicInc(T *ptr)
+{
+   ptr->AtomicInc();
+}
+
 } // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
