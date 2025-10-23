@@ -1059,6 +1059,17 @@ TTree::~TTree()
    }
 }
 
+TObject *TTree::Clone(const char *) const
+{
+   Error("Clone", "Not implemented, use TTree::CloneTree instead.");
+   return nullptr;
+}
+
+void TTree::Copy(TObject &) const
+{
+   Error("Copy", "Not implemented, use TTree::CopyTree or TTree::CopyEntries instead.");
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the transient buffer currently used by this TTree for reading/writing baskets.
 
@@ -3204,7 +3215,7 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
 
    // Note: For a chain, the returned clone will be
    //       a clone of the chain's first tree.
-   TTree* newtree = (TTree*) thistree->Clone();
+   TTree* newtree = (TTree*) thistree->TNamed::Clone();
    if (!newtree) {
       return nullptr;
    }
