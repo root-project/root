@@ -119,6 +119,9 @@ jobs:
           - platform: experimental-brew-ci
             # arch: ARM64
             overrides: ["CMAKE_CXX_STANDARD=23", "builtin_unuran=On", "tmva-sofie=Off"]
+          - platform: experimental-brew-ci-2
+            # arch: ARM64
+            overrides: ["CMAKE_CXX_STANDARD=23", "builtin_unuran=On", "tmva-sofie=Off"]
           # - platform: mac26
           #   arch: ARM64
           - platform: mac-beta
@@ -145,16 +148,16 @@ jobs:
           path: src/
 
       - name: Update brew packages
-        if: ${{ matrix.platform == 'experimental-brew-ci' }}
+        if: ${{ contains(matrix.platform, 'experimental-brew-ci') }}
         run: |
             brew update
-            brew install ccache googletest openjdk pyenv
+            brew install ccache googletest openjdk pyenv python3
             echo "Installing official brew deps: $(brew deps --direct --include-build root)"
             brew install $(brew deps --direct --include-build root)
             java --version
 
       - name: Set up python venv
-        if: ${{ matrix.platform == 'experimental-brew-ci' }}
+        if: ${{ contains(matrix.platform, 'experimental-brew-ci') }}
         run: |
           $(brew --prefix python)/bin/python3 -m venv ${VENV_DIR}
           source ${VENV_DIR}/bin/activate
@@ -205,7 +208,7 @@ jobs:
                     --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}  \
                     --head_sha        ${{ github.event.pull_request.head.sha }}         \
                     --repository      ${{ github.server_url }}/${{ github.repository }} \
-                    --platform        ${{ matrix.platform == 'experimental-brew-ci' && 'mac15' || matrix.platform }} \
+                    --platform        ${{ contains(matrix.platform, 'experimental-brew-ci') && 'mac15' || matrix.platform }} \
                     --overrides       $GLOBAL_OVERRIDES $OVERRIDES
 
       - name: Workflow dispatch
