@@ -13,7 +13,9 @@ The following people have contributed to this new version:
  Bertrand Bellenot, CERN/EP-SFT,\
  Jakob Blomer, CERN/EP-SFT,\
  Lukas Breitwieser, CERN/EP-SFT,\
+ Carsten Burgard, University of Hamburg and TU Dortmund,\
  Philippe Canal, FNAL,\
+ Simon Cello, TU Dortmund,\
  Olivier Couet, CERN/EP-SFT,\
  Marta Czurylo, CERN/EP-SFT,\
  Florine de Geus, CERN/EP-SFT and University of Twente,\
