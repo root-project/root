@@ -615,15 +615,14 @@ void ROOT::Internal::RDF::RTTreeDS::Finalize()
 
 void ROOT::Internal::RDF::RTTreeDS::Initialize()
 {
-   if (fNSlots == 1) {
-      assert(!fTreeReader);
-      fTreeReader = std::make_unique<TTreeReader>(fTree.get(), fTree->GetEntryList(), /*warnAboutLongerFriends*/ true);
-      if (fGlobalEntryRange.has_value() && fGlobalEntryRange->first <= std::numeric_limits<Long64_t>::max() &&
-          fGlobalEntryRange->second <= std::numeric_limits<Long64_t>::max() && fTreeReader &&
-          fTreeReader->SetEntriesRange(fGlobalEntryRange->first, fGlobalEntryRange->second) !=
-             TTreeReader::kEntryValid) {
-         throw std::logic_error("Something went wrong in initializing the TTreeReader.");
-      }
+   if (ROOT::IsImplicitMTEnabled())
+      return;
+   assert(!fTreeReader);
+   fTreeReader = std::make_unique<TTreeReader>(fTree.get(), fTree->GetEntryList(), /*warnAboutLongerFriends*/ true);
+   if (fGlobalEntryRange.has_value() && fGlobalEntryRange->first <= std::numeric_limits<Long64_t>::max() &&
+       fGlobalEntryRange->second <= std::numeric_limits<Long64_t>::max() && fTreeReader &&
+       fTreeReader->SetEntriesRange(fGlobalEntryRange->first, fGlobalEntryRange->second) != TTreeReader::kEntryValid) {
+      throw std::logic_error("Something went wrong in initializing the TTreeReader.");
    }
 }
 
