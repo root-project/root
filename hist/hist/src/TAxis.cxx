@@ -477,6 +477,9 @@ Int_t TAxis::GetLast() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return center of bin
+///
+/// If fXmin is -inf, it will return -nan even if fXmax is finite
+/// If fXmax is +inf, it will return +inf even if fXmin is finite
 
 Double_t TAxis::GetBinCenter(Int_t bin) const
 {

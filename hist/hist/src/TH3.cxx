@@ -2061,17 +2061,14 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
       Int_t ix    = h1->FindBin(projX->GetBinCenter(ixbin));
       auto eps = 1e-12;
       if (ix == h1->GetNbinsX() + 1) {
-         // if upper edge is infinite, the bin center is infinite no matter what low edge is,
+         // if upper edge is infinite, the bin center is +infinite no matter what low edge is,
          // so FindBin is in overflow since bin goes from [lower edge, infinite)
-         // Check the low edge instead of the bin center in that case
+         // if lower edge is -infinite, the bin center is -nan no matter what upper edge is,
+         // so FindBin is also in overflow (not underflow)
+         // Check close to the lower or upper edges instead of the bin center in these cases
          if (std::isinf(projX->GetBinUpEdge(ixbin))) {
             ix = h1->FindBin(projX->GetBinLowEdge(ixbin) + eps);
-         }
-      } else if (ix == 0) {
-         // if lower edge is -infinite, the bin center is -infinite no matter what upper edge is,
-         // so FindBin is in underflow bin which goes from [-inf, -inf)
-         // Check the upper edge instead of the bin center in that case
-         if (std::isinf(projX->GetBinLowEdge(ixbin))) {
+         } else if (std::isinf(projX->GetBinLowEdge(ixbin))) {
             ix = h1->FindBin(projX->GetBinUpEdge(ixbin) - eps);
          }
       }
@@ -2286,17 +2283,14 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
       Int_t ix = h2->GetYaxis()->FindBin(projX->GetBinCenter(ixbin));
       auto eps = 1e-12;
       if (ix == h2->GetYaxis()->GetNbins() + 1) {
-         // if upper edge is infinite, the bin center is infinite no matter what low edge is,
+         // if upper edge is infinite, the bin center is +infinite no matter what low edge is,
          // so FindBin is in overflow since bin goes from [lower edge, infinite)
-         // Check the low edge instead of the bin center in that case
+         // if lower edge is -infinite, the bin center is -nan no matter what upper edge is,
+         // so FindBin is also in overflow (not underflow)
+         // Check close to the lower or upper edges instead of the bin center in these cases
          if (std::isinf(projX->GetBinUpEdge(ixbin))) {
             ix = h2->GetYaxis()->FindBin(projX->GetBinLowEdge(ixbin) + eps);
-         }
-      } else if (ix == 0) {
-         // if lower edge is -infinite, the bin center is -infinite no matter what upper edge is,
-         // so FindBin is in underflow bin which goes from [-inf, -inf)
-         // Check the upper edge instead of the bin center in that case
-         if (std::isinf(projX->GetBinLowEdge(ixbin))) {
+         } else if (std::isinf(projX->GetBinLowEdge(ixbin))) {
             ix = h2->GetYaxis()->FindBin(projX->GetBinUpEdge(ixbin) - eps);
          }
       }
@@ -2305,17 +2299,14 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
          if ( projY->TestBit(TAxis::kAxisRange) && ( iybin < iymin || iybin > iymax )) continue;
          Int_t iy = h2->GetXaxis()->FindBin( projY->GetBinCenter(iybin) );
          if (iy == h2->GetXaxis()->GetNbins() + 1) {
-            // if upper edge is infinite, the bin center is infinite no matter what low edge is,
-            // so FindBin is in overflow since bin goes from [lower edge, infinite)
-            // Check the low edge instead of the bin center in that case
+         // if upper edge is infinite, the bin center is +infinite no matter what low edge is,
+         // so FindBin is in overflow since bin goes from [lower edge, infinite)
+         // if lower edge is -infinite, the bin center is -nan no matter what upper edge is,
+         // so FindBin is also in overflow (not underflow)
+         // Check close to the lower or upper edges instead of the bin center in these cases
             if (std::isinf(projY->GetBinUpEdge(iybin))) {
                iy = h2->GetXaxis()->FindBin(projY->GetBinLowEdge(iybin) + eps);
-            }
-         } else if (iy == 0) {
-            // if lower edge is -infinite, the bin center is -infinite no matter what upper edge is,
-            // so FindBin is in underflow bin which goes from [-inf, -inf)
-            // Check the upper edge instead of the bin center in that case
-            if (std::isinf(projY->GetBinLowEdge(iybin))) {
+            } else if (std::isinf(projY->GetBinLowEdge(iybin))) {
                iy = h2->GetXaxis()->FindBin(projY->GetBinUpEdge(iybin) - eps);
             }
          }
