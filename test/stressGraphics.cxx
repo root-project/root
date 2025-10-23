@@ -2846,7 +2846,9 @@ void parallelcoord()
    C->cd(2);
    ntuple->Draw("px:py:pz:random:px*py*pz","","candle");
 
-   TestReport(C, "Parallel Coordinates", "", kSkipSvgTest);
+   TestReport(C, "Parallel Coordinates");
+
+   if (col25) col25->SetAlpha(1.);
 }
 
 
