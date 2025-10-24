@@ -9185,13 +9185,17 @@ bool testArrayRebin()
       h1->Fill( r.Uniform( minRange * .9 , maxRange * 1.1 ) );
 
    // Create vector - generate bin edges ( nbins is always > 2)
-   // ignore fact that array may contains bins with zero size
    Double_t * rebinArray = new Double_t[rebin];
    r.RndmArray(rebin, rebinArray);
    std::sort(rebinArray, rebinArray + rebin);
    for ( Int_t i = 0; i < rebin; ++i ) {
       rebinArray[i] = TMath::Nint( rebinArray[i] * ( h1->GetNbinsX() - 2 ) + 2 );
       rebinArray[i] = h1->GetBinLowEdge( (Int_t) rebinArray[i] );
+      // compensate for the fact that array may contain bins with zero size
+      if (i > 0) {
+         if (rebinArray[i] <= rebinArray[i - 1])
+            rebinArray[i] = rebinArray[i - 1] + 1e-15;
+      }
    }
 
 
