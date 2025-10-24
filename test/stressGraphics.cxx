@@ -100,7 +100,8 @@
 
 
 const int kMaxNumTests = 70;
-const int  kSkipSvgTest = 10;
+const int  kFineSvgTest = 10; // SVG file can slightly vary
+const int  kSkipSvgTest = 100; // do not perform SVG test
 
 // Global variables.
 Int_t     gVerbose = 0;
@@ -161,8 +162,8 @@ std::map<int, RefEntry> gRef;
 struct TestEntry {
    Int_t TestNum = 0;
    TString title, psfile, ps2file, pdffile, jpgfile, pngfile, svgfile, ccode;
-   Bool_t execute_ccode = kFALSE, testsvg = kFALSE;
-   Int_t IPS = 0;
+   Bool_t execute_ccode = kFALSE;
+   Int_t IPS = 0, testsvg = 0;
 };
 
 std::vector<TestEntry> gReports;
@@ -265,23 +266,67 @@ Int_t FileSize(const TString &filename)
    }
 }
 
-Bool_t CompareSVGFiles(const TString &filename1, const TString &filename2)
+////////////////////////////////////////////////////////////////////////////////
+/// Check if deviation in SVG line significant or can be ignored
+
+bool SpecialCompareOfSVGLines(const std::string &line1, const std::string &line2)
+{
+   if (line1.length() != line2.length())
+      return false;
+
+   int npos = -1;
+
+   // for now allow only one single deviation deviation
+   for (size_t i = 0; i < line1.length(); ++i) {
+      if (line1[i] != line2[i]) {
+         if (npos < 0)
+            npos = i;
+         else
+            return false;
+      }
+   }
+
+   if (npos < 0)
+      return true;
+
+   auto extract_float = [npos](const std::string &s) {
+      int n = npos;
+      while ((n > 0) && ((s[n]>='0' && s[n] <= '9') || (s[n] == '.') || (s[n] == '-'))) n--;
+      float res;
+      if (sscanf(s.c_str() + n + 1, "%f", &res) != 1)
+         res = 0.;
+      return res;
+   };
+
+   auto v1 = extract_float(line1);
+   auto v2 = extract_float(line2);
+
+   if (!v1 || !v2 || (v1*v2 < 0))
+      return false;
+
+   return (TMath::Abs(v2 - v1) / (v2 + v1) < 0.01);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Special compare of SVG files
+
+Int_t CompareSVGFiles(const TString &filename1, const TString &filename2, int testsvg)
 {
    std::ifstream f1(filename1.Data());
    if (!f1) {
       printf("FAILURE to open %s\n", filename1.Data());
-      return kFALSE;
+      return 0;
    }
 
    std::ifstream f2(filename2.Data());
    if (!f2) {
       printf("FAILURE to open %s\n", filename2.Data());
-      return kFALSE;
+      return 0;
    }
 
    std::string line1, line2;
 
-   int cnt = 0, diffcnt = 0;
+   int cnt = 0, diffcnt = 0, finediffcnt = 0;
 
    while (std::getline(f1, line1) && std::getline(f2, line2)) {
       ++cnt;
@@ -300,28 +345,31 @@ Bool_t CompareSVGFiles(const TString &filename1, const TString &filename2)
          printf("\n");
       printf("Ref: %s\n", line1.substr(0, 200).c_str());
       printf("New: %s\n", line2.substr(0, 200).c_str());
-      if (++diffcnt > 5)
-         return kFALSE;
+      if ((testsvg == kFineSvgTest) && SpecialCompareOfSVGLines(line1, line2)) {
+         if (finediffcnt++ > 5)
+            return 0;
+      } else if (++diffcnt > 5)
+         return 0;
    }
 
    if (diffcnt > 0)
-      return kFALSE;
+      return 0;
 
    if (!f1.eof()) {
       printf("FAILURE ref file %s still has content\n", filename1.Data());
       printf("Diff in line %d\n", cnt);
       printf("Ref: %s\n", line1.substr(0, 200).c_str());
-      return kFALSE;
+      return 0;
    }
 
    if (std::getline(f2, line2) || !f2.eof()) {
       printf("FAILURE new file %s still has content\n", filename2.Data());
       printf("Diff in line %d\n", cnt);
       printf("New: %s\n", line2.substr(0, 200).c_str());
-      return kFALSE;
+      return 0;
    }
 
-   return kTRUE;
+   return (finediffcnt > 0) ? kFineSvgTest : 1;
 }
 
 
@@ -387,10 +435,10 @@ void TestReport(TCanvas *C, const TString &title, const TString &arg = "", Int_t
    TestEntry e;
    e.TestNum = gTestNum;
    e.title = title;
-   e.testsvg = IPS < kSkipSvgTest;
-   if (!e.testsvg) IPS -= kSkipSvgTest;
+   if (IPS < kSkipSvgTest)
+      e.testsvg = (IPS  < kFineSvgTest) ? 1 : kFineSvgTest;
 
-   e.IPS = gWebMode ? 1 : IPS; // check only size of web SVG files
+   e.IPS = gWebMode ? 1 : IPS % 10; // check only size of web SVG files
    e.psfile = TString::Format("%s1_%2.2d.%s", filePrefix, e.TestNum, main_extension);
    e.ps2file = TString::Format("%s2_%2.2d.%s", filePrefix, e.TestNum, main_extension);
    e.pdffile = TString::Format("%s%2.2d.pdf", filePrefix, e.TestNum);
@@ -496,9 +544,9 @@ void print_reports()
 
       if (gSvgMode) {
 
-         Bool_t res = kTRUE;
+         Int_t res = 1;
          if (e.testsvg)
-            res = CompareSVGFiles(gSvgRefPath + e.svgfile, e.svgfile);
+            res = CompareSVGFiles(gSvgRefPath + e.svgfile, e.svgfile, e.testsvg);
 
          if (!res) {
             auto filesize = FileSize(e.svgfile);
@@ -514,10 +562,12 @@ void print_reports()
             std::cout << ".";
 
          if (res) {
-            if (e.testsvg)
-               std::cout << " OK\n";
-            else
+            if (!e.testsvg)
                std::cout << " SKIP\n";
+            else if (res == kFineSvgTest)
+               std::cout << " NEAR\n";
+            else
+               std::cout << " OK\n";
             if (!gOptionK)
                gSystem->Unlink(e.svgfile);
          } else {
@@ -2832,13 +2882,13 @@ void parallelcoord()
 {
    TCanvas *C = StartTest(800,700);
 
-   TNtuple *ntuple = (TNtuple*)gHsimple->Get("ntuple");
+   auto ntuple = static_cast<TNtuple *>(gHsimple->Get("ntuple"));
 
    C->Divide(1,2);
 
    C->cd(1);
    ntuple->Draw("px:py:pz:random:px*py*pz","","para");
-   TParallelCoord* para = (TParallelCoord*)gPad->GetListOfPrimitives()->FindObject("ParaCoord");
+   auto para = static_cast<TParallelCoord *> (gPad->GetListOfPrimitives()->FindObject("ParaCoord"));
    para->SetLineColor(25);
    TColor *col25 = gROOT->GetColor(25);
    if (col25) col25->SetAlpha(0.05);
@@ -2846,7 +2896,7 @@ void parallelcoord()
    C->cd(2);
    ntuple->Draw("px:py:pz:random:px*py*pz","","candle");
 
-   TestReport(C, "Parallel Coordinates");
+   TestReport(C, "Parallel Coordinates", "", kFineSvgTest);
 
    if (col25) col25->SetAlpha(1.);
 }
