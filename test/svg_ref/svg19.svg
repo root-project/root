@@ -4,11 +4,11 @@
 svg19.svg
 </title>
 <rect x="0.500" y="0" width="567" height="710" fill="#876656"/>
-<path d="M0.500,710l 2.0, -2.0v -706h 562l 2.0, -2.0h -566v 710z" fill="#9f7b6a"/>
-<path d="M0.500,710l 2.0, -2.0h 562v -706l 2.0, -2.0v 710h -566z" fill="#5e473c"/>
+<path d="M0.500,710l 2.0, -2.0v -706h 563l 2.0, -2.0h -567v 710z" fill="#9f7b6a"/>
+<path d="M0.500,710l 2.0, -2.0h 563v -706l 2.0, -2.0v 710h -567z" fill="#5e473c"/>
 <rect x="6.2" y="7.1" width="556" height="223" fill="#f2f2f2"/>
-<path d="M6.2,230l 2.0, -2.0v -218h 551l 2.0, -2.0h -555v 222z" fill="white"/>
-<path d="M6.2,230l 2.0, -2.0h 551v -218l 2.0, -2.0v 222h -555z" fill="#a9a9a9"/>
+<path d="M6.2,230l 2.0, -2.0v -219h 552l 2.0, -2.0h -556v 223z" fill="white"/>
+<path d="M6.2,230l 2.0, -2.0h 552v -219l 2.0, -2.0v 223h -556z" fill="#a9a9a9"/>
 <rect x="62" y="29" width="444" height="178" fill="#f2f2f2"/>
 <path d="M62,207l 1.000, -1.000v -176h 442l 1.000, -1.000h -444v 178z" fill="white"/>
 <path d="M62,207l 1.000, -1.000h 442v -176l 1.000, -1.000v 178h -444z" fill="#a9a9a9"/>
@@ -280,8 +280,8 @@ svg19.svg
 <text xml:space="preserve" x="21" y="23" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Love at first sight
 </text>
 <rect x="6.2" y="244" width="556" height="223" fill="#f2f2f2"/>
-<path d="M6.2,466l 2.0, -2.0v -218h 551l 2.0, -2.0h -555v 222z" fill="white"/>
-<path d="M6.2,466l 2.0, -2.0h 551v -218l 2.0, -2.0v 222h -555z" fill="#a9a9a9"/>
+<path d="M6.2,466l 2.0, -2.0v -219h 552l 2.0, -2.0h -556v 223z" fill="white"/>
+<path d="M6.2,466l 2.0, -2.0h 552v -219l 2.0, -2.0v 223h -556z" fill="#a9a9a9"/>
 <rect x="62" y="266" width="444" height="178" fill="#f2f2f2"/>
 <path d="M62,444l 1.000, -1.000v -176h 442l 1.000, -1.000h -444v 178z" fill="white"/>
 <path d="M62,444l 1.000, -1.000h 442v -176l 1.000, -1.000v 178h -444z" fill="#a9a9a9"/>
@@ -392,8 +392,8 @@ svg19.svg
 <text xml:space="preserve" x="22" y="260" fill="black" font-size="14" font-family="Helvetica" font-weight="bold">Politics
 </text>
 <rect x="6.2" y="481" width="556" height="223" fill="#f2f2f2"/>
-<path d="M6.2,703l 2.0, -2.0v -218h 551l 2.0, -2.0h -555v 222z" fill="white"/>
-<path d="M6.2,703l 2.0, -2.0h 551v -218l 2.0, -2.0v 222h -555z" fill="#a9a9a9"/>
+<path d="M6.2,703l 2.0, -2.0v -219h 552l 2.0, -2.0h -556v 223z" fill="white"/>
+<path d="M6.2,703l 2.0, -2.0h 552v -219l 2.0, -2.0v 223h -556z" fill="#a9a9a9"/>
 <rect x="62" y="503" width="444" height="178" fill="#f2f2f2"/>
 <path d="M62,681l 1.000, -1.000v -176h 442l 1.000, -1.000h -444v 178z" fill="white"/>
 <path d="M62,681l 1.000, -1.000h 442v -176l 1.000, -1.000v 178h -444z" fill="#a9a9a9"/>

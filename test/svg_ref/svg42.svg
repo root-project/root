@@ -4,11 +4,11 @@
 svg42.svg
 </title>
 <rect x="0.500" y="0" width="567" height="407" fill="#cccccc"/>
-<path d="M0.500,407l 2.0, -2.0v -403h 562l 2.0, -2.0h -566v 407z" fill="#f4f4f4"/>
-<path d="M0.500,407l 2.0, -2.0h 562v -403l 2.0, -2.0v 407h -566z" fill="#8e8e8e"/>
+<path d="M0.500,407l 2.0, -2.0v -403h 563l 2.0, -2.0h -567v 407z" fill="#f4f4f4"/>
+<path d="M0.500,407l 2.0, -2.0h 563v -403l 2.0, -2.0v 407h -567z" fill="#8e8e8e"/>
 <rect x="57" y="41" width="454" height="326" fill="#cccccc"/>
-<path d="M57,367l 1.000, -1.000v -323h 451l 1.000, -1.000h -453v 325z" fill="#f4f4f4"/>
-<path d="M57,367l 1.000, -1.000h 451v -323l 1.000, -1.000v 325h -453z" fill="#8e8e8e"/>
+<path d="M57,367l 1.000, -1.000v -324h 452l 1.000, -1.000h -454v 326z" fill="#f4f4f4"/>
+<path d="M57,367l 1.000, -1.000h 452v -324l 1.000, -1.000v 326h -454z" fill="#8e8e8e"/>
 <rect x="57" y="41" width="454" height="326" fill="none" stroke="black"/>
 <text xml:space="preserve" x="67" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">1
 </text>

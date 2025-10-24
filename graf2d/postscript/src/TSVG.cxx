@@ -283,6 +283,82 @@ void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Print a svg path statement for specified points
+
+void TSVG::PrintPath(Bool_t convert, Int_t n, Double_t *xps, Double_t *yps, Bool_t close_path)
+{
+   Double_t idx = 0, idy = 0;
+
+   Double_t ixd0 = convert ? XtoSVG(xps[0]) : xps[0];
+   Double_t iyd0 = convert ? YtoSVG(yps[0]) : yps[0];
+   Double_t firstx = ixd0, firsty = iyd0;
+
+   PrintFast(1,"M");
+   WriteReal(ixd0, kFALSE);
+   PrintFast(1,",");
+   WriteReal(iyd0, kFALSE);
+
+   for (Int_t i = 1; i < n; i++) {
+      Double_t ixdi = convert ? XtoSVG(xps[i]) : xps[i];
+      Double_t iydi = convert ? YtoSVG(yps[i]) : yps[i];
+      Double_t ix   = ixdi - ixd0;
+      Double_t iy   = iydi - iyd0;
+
+      if (fCompact && (TMath::Abs(ix) < kEpsilon))
+         ix = 0;
+      if (fCompact && (TMath::Abs(iy) < kEpsilon))
+         iy = 0;
+
+      ixd0 = ixdi;
+      iyd0 = iydi;
+      if(ix && iy) {
+         if(idx) {
+            MovePS(idx, 0);
+            idx = 0;
+         }
+         if(idy) {
+            MovePS(0, idy);
+            idy = 0;
+         }
+         MovePS(ix, iy);
+         continue;
+      }
+      if (ix) {
+         if(idy) {
+            MovePS(0, idy);
+            idy = 0;
+         }
+         if(!idx || (ix*idx > 0)) {
+            idx += ix;
+         } else {
+            MovePS(idx, 0);
+            idx  = ix;
+         }
+         continue;
+      }
+      if(iy) {
+         if(idx) {
+            MovePS(idx, 0);
+            idx = 0;
+         }
+         if(!idy || (iy*idy > 0)) {
+            idy += iy;
+         } else {
+            MovePS(0, idy);
+            idy  = iy;
+         }
+      }
+   }
+   if(idx)
+      MovePS(idx, 0);
+   if(idy)
+      MovePS(0, idy);
+
+   if (close_path || ((TMath::Abs(ixd0 - firstx) < kEpsilon) && (TMath::Abs(iyd0 - firsty) < kEpsilon)))
+      PrintFast(1, "z");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Draw a Frame around a box
 ///
 ///  - mode = -1  the box looks as it is behind the screen
@@ -292,15 +368,11 @@ void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 ///    part of the frame
 
 void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
-                            Int_t mode, Int_t border, Int_t dark, Int_t light)
+                     Int_t mode, Int_t border, Int_t dark, Int_t light)
 {
-   static Double_t xps[7], yps[7];
-   Int_t i;
-   Double_t ixd0, iyd0, ixdi, iydi, ix, iy;
-   Int_t idx, idy;
+   Double_t xps[7], yps[7];
 
    //- Draw top&left part of the box
-
    xps[0] = XtoSVG(xl);          yps[0] = YtoSVG(yl);
    xps[1] = xps[0] + border;     yps[1] = yps[0] - border;
    xps[2] = xps[1];              yps[2] = YtoSVG(yt) + border;
@@ -309,59 +381,13 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    xps[5] = xps[0];              yps[5] = yps[4];
    xps[6] = xps[0];              yps[6] = yps[0];
 
-   ixd0 = xps[0];
-   iyd0 = yps[0];
    PrintStr("@");
-   PrintFast(10,"<path d=\"M");
-   WriteReal(ixd0, kFALSE);
-   PrintFast(1,",");
-   WriteReal(iyd0, kFALSE);
+   PrintFast(9,"<path d=\"");
+   PrintPath(kFALSE, 7, xps, yps);
+   PrintFast(7,"\" fill=");
 
-   idx = 0;
-   idy = 0;
-   for (i=1; i<7; i++) {
-      ixdi = xps[i];
-      iydi = yps[i];
-      ix   = ixdi - ixd0;
-      iy   = iydi - iyd0;
-      ixd0 = ixdi;
-      iyd0 = iydi;
-      if( ix && iy) {
-         if( idx ) { MovePS(idx,0); idx = 0; }
-         if( idy ) { MovePS(0,idy); idy = 0; }
-         MovePS(ix,iy);
-         continue;
-      }
-      if ( ix ) {
-         if( idy )  { MovePS(0,idy); idy = 0; }
-         if( !idx ) { idx = ix; continue;}
-         if( ix*idx > 0 ) {
-            idx += ix;
-         } else {
-            MovePS(idx,0);
-            idx  = ix;
-         }
-         continue;
-      }
-      if( iy ) {
-         if( idx ) { MovePS(idx,0); idx = 0; }
-         if( !idy) { idy = iy; continue;}
-         if( iy*idy > 0 ) {
-            idy += iy;
-         } else {
-            MovePS(0,idy);
-            idy  = iy;
-         }
-      }
-   }
-   if( idx ) MovePS(idx,0);
-   if( idy ) MovePS(0,idy);
-   PrintFast(8,"z\" fill=");
-   if (mode == -1) {
-      SetColorAlpha(dark);
-   } else {
-      SetColorAlpha(light);
-   }
+   SetColorAlpha(mode == -1 ? dark : light);
+
    if (fgLineJoin)
       PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
    if (fgLineCap)
@@ -377,59 +403,11 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    xps[5] = xps[4];              yps[5] = yps[0];
    xps[6] = xps[0];              yps[6] = yps[0];
 
-   ixd0 = xps[0];
-   iyd0 = yps[0];
    PrintStr("@");
-   PrintFast(10,"<path d=\"M");
-   WriteReal(ixd0, kFALSE);
-   PrintFast(1,",");
-   WriteReal(iyd0, kFALSE);
-
-   idx = 0;
-   idy = 0;
-   for (i=1;i<7;i++) {
-      ixdi = xps[i];
-      iydi = yps[i];
-      ix   = ixdi - ixd0;
-      iy   = iydi - iyd0;
-      ixd0 = ixdi;
-      iyd0 = iydi;
-      if( ix && iy) {
-         if( idx ) { MovePS(idx,0); idx = 0; }
-         if( idy ) { MovePS(0,idy); idy = 0; }
-         MovePS(ix,iy);
-         continue;
-      }
-      if ( ix ) {
-         if( idy )  { MovePS(0,idy); idy = 0; }
-         if( !idx ) { idx = ix; continue;}
-         if( ix*idx > 0 ) {
-            idx += ix;
-         } else {
-            MovePS(idx,0);
-            idx  = ix;
-         }
-         continue;
-      }
-      if( iy ) {
-         if( idx ) { MovePS(idx,0); idx = 0; }
-         if( !idy) { idy = iy; continue;}
-         if( iy*idy > 0 ) {
-            idy += iy;
-         } else {
-            MovePS(0,idy);
-            idy  = iy;
-         }
-      }
-   }
-   if( idx ) MovePS(idx,0);
-   if( idy ) MovePS(0,idy);
-   PrintFast(8,"z\" fill=");
-   if (mode == -1) {
-      SetColorAlpha(light);
-   } else {
-      SetColorAlpha(dark);
-   }
+   PrintFast(9,"<path d=\"");
+   PrintPath(kFALSE, 7, xps, yps);
+   PrintFast(7,"\" fill=");
+   SetColorAlpha(mode == -1 ? light : dark);
    if (fgLineJoin)
       PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
    if (fgLineCap)
@@ -1412,12 +1390,11 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 
 void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 {
-   Int_t  n, fais, fasi;
-   Double_t ixd0, iyd0, idx, idy, ixdi, iydi, ix, iy;
-   fais = fasi = 0;
+   Int_t n, fais = 0, fasi = 0;
 
    if (nn > 0) {
-      if (fLineWidth<=0) return;
+      if (fLineWidth <= 0)
+         return;
       n = nn;
    } else {
       n = -nn;
@@ -1432,53 +1409,17 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       }
    }
 
-   if( n <= 1) {
+   if(n <= 1) {
       Error("DrawPS", "Two points are needed");
       return;
    }
 
-   ixd0 = XtoSVG(xw[0]);
-   iyd0 = YtoSVG(yw[0]);
-
    PrintStr("@");
-   PrintFast(10,"<path d=\"M");
-   WriteReal(ixd0, kFALSE);
-   PrintFast(1,",");
-   WriteReal(iyd0, kFALSE);
+   PrintFast(9,"<path d=\"");
 
-   idx = idy = 0;
-   for (Int_t i=1;i<n;i++) {
-      ixdi = XtoSVG(xw[i]);
-      iydi = YtoSVG(yw[i]);
-      ix   = ixdi - ixd0;
-      iy   = iydi - iyd0;
-      if (fCompact && (TMath::Abs(ix) < kEpsilon))
-         ix = 0;
-      if (fCompact && (TMath::Abs(iy) < kEpsilon))
-         iy = 0;
-      ixd0 = ixdi;
-      iyd0 = iydi;
-      if( ix && iy) {
-         if( idx ) { MovePS(idx,0); idx = 0; }
-         if( idy ) { MovePS(0,idy); idy = 0; }
-         MovePS(ix,iy);
-      } else if ( ix ) {
-         if( idy )  { MovePS(0,idy); idy = 0;}
-         if( !idx ) { idx = ix;}
-         else if( TMath::Sign(ix,idx) == ix )       idx += ix;
-         else { MovePS(idx,0);  idx  = ix;}
-      } else if( iy ) {
-         if( idx ) { MovePS(idx,0); idx = 0;}
-         if( !idy) { idy = iy;}
-         else if( TMath::Sign(iy,idy) == iy)         idy += iy;
-         else { MovePS(0,idy);    idy  = iy;}
-      }
-   }
-   if (idx) MovePS(idx,0);
-   if (idy) MovePS(0,idy);
+   PrintPath(kTRUE, n, xw, yw, nn < 0);
 
-   if (nn > 0 ) {
-      if (xw[0] == xw[n-1] && yw[0] == yw[n-1]) PrintFast(1,"z");
+   if (nn > 0) {
       PrintFast(21,"\" fill=\"none\" stroke=");
       SetColorAlpha(fLineColor, kFALSE, kTRUE);
       if(fLineWidth > 1.) {
@@ -1500,7 +1441,7 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
          PrintFast(1,"\"");
       }
    } else {
-      PrintFast(8,"z\" fill=");
+      PrintFast(7,"\" fill=");
       if (fais == 0) {
          PrintFast(14,"\"none\" stroke=");
          SetColorAlpha(fFillColor, kFALSE, kTRUE);

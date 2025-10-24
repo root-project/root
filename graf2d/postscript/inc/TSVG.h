@@ -31,6 +31,8 @@ protected:
    static Int_t fgLineJoin;       ///< Appearance of joining lines
    static Int_t fgLineCap;        ///< Appearance of line caps
 
+   void PrintPath(Bool_t convert, Int_t n, Double_t *xs, Double_t *ys, Bool_t close_path = kTRUE);
+
 public:
    TSVG();
    TSVG(const char *filename, Int_t type=-113, Bool_t compact = kFALSE);

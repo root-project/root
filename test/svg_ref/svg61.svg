@@ -4,11 +4,11 @@
 svg61.svg
 </title>
 <rect x="0.500" y="0" width="567" height="629" fill="#ddba87"/>
-<path d="M0.500,629l 2.0, -2.0v -624h 562l 2.0, -2.0h -566v 628z" fill="#eddabf"/>
-<path d="M0.500,629l 2.0, -2.0h 562v -624l 2.0, -2.0v 628h -566z" fill="#c38936"/>
+<path d="M0.500,629l 2.0, -2.0v -625h 563l 2.0, -2.0h -567v 629z" fill="#eddabf"/>
+<path d="M0.500,629l 2.0, -2.0h 563v -625l 2.0, -2.0v 629h -567z" fill="#c38936"/>
 <rect x="6.2" y="6.3" width="556" height="302" fill="#ddba87"/>
-<path d="M6.2,308l 2.0, -2.0v -297h 551l 2.0, -2.0h -555v 301z" fill="#eddabf"/>
-<path d="M6.2,308l 2.0, -2.0h 551v -297l 2.0, -2.0v 301h -555z" fill="#c38936"/>
+<path d="M6.2,308l 2.0, -2.0v -298h 552l 2.0, -2.0h -556v 302z" fill="#eddabf"/>
+<path d="M6.2,308l 2.0, -2.0h 552v -298l 2.0, -2.0v 302h -556z" fill="#c38936"/>
 <rect x="62" y="36" width="444" height="241" fill="#adbcc6"/>
 <path d="M62,278l 1.000, -1.000v -239h 442l 1.000, -1.000h -444v 241z" fill="#d9e0e5"/>
 <path d="M62,278l 1.000, -1.000h 442v -239l 1.000, -1.000v 241h -444z" fill="#6b8699"/>
@@ -222,8 +222,8 @@ svg61.svg
 <text xml:space="preserve" x="20" y="21" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">Nation
 </text>
 <rect x="6.2" y="321" width="556" height="302" fill="#ddba87"/>
-<path d="M6.2,623l 2.0, -2.0v -297h 551l 2.0, -2.0h -555v 301z" fill="#eddabf"/>
-<path d="M6.2,623l 2.0, -2.0h 551v -297l 2.0, -2.0v 301h -555z" fill="#c38936"/>
+<path d="M6.2,623l 2.0, -2.0v -298h 552l 2.0, -2.0h -556v 302z" fill="#eddabf"/>
+<path d="M6.2,623l 2.0, -2.0h 552v -298l 2.0, -2.0v 302h -556z" fill="#c38936"/>
 <rect x="62" y="351" width="444" height="241" fill="#adbcc6"/>
 <path d="M62,592l 1.000, -1.000v -239h 442l 1.000, -1.000h -444v 241z" fill="#d9e0e5"/>
 <path d="M62,592l 1.000, -1.000h 442v -239l 1.000, -1.000v 241h -444z" fill="#6b8699"/>

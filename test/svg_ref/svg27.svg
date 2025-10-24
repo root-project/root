@@ -4,8 +4,8 @@
 svg27.svg
 </title>
 <rect x="0.500" y="0" width="567" height="259" fill="#f2f2f2"/>
-<path d="M0.500,259l 2.0, -2.0v -254h 562l 2.0, -2.0h -566v 258z" fill="white"/>
-<path d="M0.500,259l 2.0, -2.0h 562v -254l 2.0, -2.0v 258h -566z" fill="#a9a9a9"/>
+<path d="M0.500,259l 2.0, -2.0v -255h 563l 2.0, -2.0h -567v 259z" fill="white"/>
+<path d="M0.500,259l 2.0, -2.0h 563v -255l 2.0, -2.0v 259h -567z" fill="#a9a9a9"/>
 <rect x="1.9" y="0.647" width="564" height="180" fill="#f2f2f2"/>
 <path d="M1.9,181l 2.0, -2.0v -176h 560l 2.0, -2.0h -564v 180z" fill="white"/>
 <path d="M1.9,181l 2.0, -2.0h 560v -176l 2.0, -2.0v 180h -564z" fill="#a9a9a9"/>
@@ -377,8 +377,8 @@ svg27.svg
 <text xml:space="preserve" x="14" y="9.9" fill="black" font-size="7.5" font-family="Helvetica" font-weight="bold">rh1
 </text>
 <rect x="1.9" y="181" width="564" height="77" fill="#f2f2f2"/>
-<path d="M1.9,258l 2.0, -2.0v -72h 560l 2.0, -2.0h -564v 76z" fill="white"/>
-<path d="M1.9,258l 2.0, -2.0h 560v -72l 2.0, -2.0v 76h -564z" fill="#a9a9a9"/>
+<path d="M1.9,258l 2.0, -2.0v -73h 560l 2.0, -2.0h -564v 77z" fill="white"/>
+<path d="M1.9,258l 2.0, -2.0h 560v -73l 2.0, -2.0v 77h -564z" fill="#a9a9a9"/>
 <rect x="58" y="185" width="451" height="50" fill="#f2f2f2"/>
 <path d="M58,235l 1.000, -1.000v -48h 449l 1.000, -1.000h -451v 50z" fill="white"/>
 <path d="M58,235l 1.000, -1.000h 449v -48l 1.000, -1.000v 50h -451z" fill="#a9a9a9"/>

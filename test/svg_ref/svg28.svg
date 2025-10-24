@@ -4,15 +4,15 @@
 svg28.svg
 </title>
 <rect x="0.500" y="0" width="567" height="384" fill="#ddba87"/>
-<path d="M0.500,384l 2.0, -2.0v -380h 562l 2.0, -2.0h -566v 384z" fill="#eddabf"/>
-<path d="M0.500,384l 2.0, -2.0h 562v -380l 2.0, -2.0v 384h -566z" fill="#c38936"/>
+<path d="M0.500,384l 2.0, -2.0v -380h 563l 2.0, -2.0h -567v 384z" fill="#eddabf"/>
+<path d="M0.500,384l 2.0, -2.0h 563v -380l 2.0, -2.0v 384h -567z" fill="#c38936"/>
 <rect x="57" y="38" width="454" height="308" fill="#ccc6aa"/>
-<path d="M57,346l 12, -12v -283h 429l 12, -12h -453v 307z" fill="#e8e6d9"/>
-<path d="M57,346l 12, -12h 429v -283l 12, -12v 307h -453z" fill="#a19864"/>
+<path d="M57,346l 12, -12v -284h 430l 12, -12h -454v 308z" fill="#e8e6d9"/>
+<path d="M57,346l 12, -12h 430v -284l 12, -12v 308h -454z" fill="#a19864"/>
 <rect x="57" y="38" width="454" height="308" fill="none" stroke="black"/>
 <rect x="57" y="38" width="454" height="308" fill="#ccc6aa"/>
-<path d="M57,346l 12, -12v -283h 429l 12, -12h -453v 307z" fill="#e8e6d9"/>
-<path d="M57,346l 12, -12h 429v -283l 12, -12v 307h -453z" fill="#a19864"/>
+<path d="M57,346l 12, -12v -284h 430l 12, -12h -454v 308z" fill="#e8e6d9"/>
+<path d="M57,346l 12, -12h 430v -284l 12, -12v 308h -454z" fill="#a19864"/>
 <rect x="57" y="38" width="454" height="308" fill="none" stroke="black"/>
 <path d="M57,346h 454" fill="none" stroke="black"/>
 <path d="M57,38v 308" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>

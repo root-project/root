@@ -4,11 +4,11 @@
 svg16.svg
 </title>
 <rect x="0.500" y="0" width="567" height="336" fill="#f2f2f2"/>
-<path d="M0.500,336l 2.0, -2.0v -332h 562l 2.0, -2.0h -566v 336z" fill="white"/>
-<path d="M0.500,336l 2.0, -2.0h 562v -332l 2.0, -2.0v 336h -566z" fill="#a9a9a9"/>
+<path d="M0.500,336l 2.0, -2.0v -332h 563l 2.0, -2.0h -567v 336z" fill="white"/>
+<path d="M0.500,336l 2.0, -2.0h 563v -332l 2.0, -2.0v 336h -567z" fill="#a9a9a9"/>
 <rect x="6.2" y="3.4" width="178" height="161" fill="#f2f2f2"/>
-<path d="M6.2,165l 2.0, -2.0v -157h 173l 2.0, -2.0h -177v 161z" fill="white"/>
-<path d="M6.2,165l 2.0, -2.0h 173v -157l 2.0, -2.0v 161h -177z" fill="#a9a9a9"/>
+<path d="M6.2,165l 2.0, -2.0v -157h 174l 2.0, -2.0h -178v 161z" fill="white"/>
+<path d="M6.2,165l 2.0, -2.0h 174v -157l 2.0, -2.0v 161h -178z" fill="#a9a9a9"/>
 <rect x="24" y="19" width="142" height="129" fill="#f2f2f2"/>
 <path d="M24,149l 1.000, -1.000v -127h 140l 1.000, -1.000h -142v 129z" fill="white"/>
 <path d="M24,149l 1.000, -1.000h 140v -127l 1.000, -1.000v 129h -142z" fill="#a9a9a9"/>
@@ -229,8 +229,8 @@ svg16.svg
 <text xml:space="preserve" x="10" y="12" fill="black" font-size="7.2" font-family="Helvetica" font-weight="bold">hsf1
 </text>
 <rect x="195" y="3.4" width="178" height="161" fill="#f2f2f2"/>
-<path d="M195,165l 2.0, -2.0v -157h 173l 2.0, -2.0h -177v 161z" fill="white"/>
-<path d="M195,165l 2.0, -2.0h 173v -157l 2.0, -2.0v 161h -177z" fill="#a9a9a9"/>
+<path d="M195,165l 2.0, -2.0v -157h 174l 2.0, -2.0h -178v 161z" fill="white"/>
+<path d="M195,165l 2.0, -2.0h 174v -157l 2.0, -2.0v 161h -178z" fill="#a9a9a9"/>
 <rect x="213" y="19" width="142" height="129" fill="#f2f2f2"/>
 <path d="M213,149l 1.000, -1.000v -127h 140l 1.000, -1.000h -142v 129z" fill="white"/>
 <path d="M213,149l 1.000, -1.000h 140v -127l 1.000, -1.000v 129h -142z" fill="#a9a9a9"/>
@@ -427,8 +427,8 @@ svg16.svg
 <text xml:space="preserve" x="199" y="12" fill="black" font-size="7.2" font-family="Helvetica" font-weight="bold">hsf2
 </text>
 <rect x="384" y="3.4" width="178" height="161" fill="#f2f2f2"/>
-<path d="M384,165l 2.0, -2.0v -157h 173l 2.0, -2.0h -177v 161z" fill="white"/>
-<path d="M384,165l 2.0, -2.0h 173v -157l 2.0, -2.0v 161h -177z" fill="#a9a9a9"/>
+<path d="M384,165l 2.0, -2.0v -157h 174l 2.0, -2.0h -178v 161z" fill="white"/>
+<path d="M384,165l 2.0, -2.0h 174v -157l 2.0, -2.0v 161h -178z" fill="#a9a9a9"/>
 <rect x="402" y="19" width="142" height="129" fill="#f2f2f2"/>
 <path d="M402,149l 1.000, -1.000v -127h 140l 1.000, -1.000h -142v 129z" fill="white"/>
 <path d="M402,149l 1.000, -1.000h 140v -127l 1.000, -1.000v 129h -142z" fill="#a9a9a9"/>
@@ -637,8 +637,8 @@ svg16.svg
 <text xml:space="preserve" x="388" y="12" fill="black" font-size="7.2" font-family="Helvetica" font-weight="bold">hsf3
 </text>
 <rect x="6.2" y="171" width="178" height="161" fill="#f2f2f2"/>
-<path d="M6.2,333l 2.0, -2.0v -157h 173l 2.0, -2.0h -177v 161z" fill="white"/>
-<path d="M6.2,333l 2.0, -2.0h 173v -157l 2.0, -2.0v 161h -177z" fill="#a9a9a9"/>
+<path d="M6.2,333l 2.0, -2.0v -157h 174l 2.0, -2.0h -178v 161z" fill="white"/>
+<path d="M6.2,333l 2.0, -2.0h 174v -157l 2.0, -2.0v 161h -178z" fill="#a9a9a9"/>
 <rect x="24" y="188" width="142" height="129" fill="#f2f2f2"/>
 <path d="M24,317l 1.000, -1.000v -127h 140l 1.000, -1.000h -142v 129z" fill="white"/>
 <path d="M24,317l 1.000, -1.000h 140v -127l 1.000, -1.000v 129h -142z" fill="#a9a9a9"/>
@@ -839,8 +839,8 @@ svg16.svg
 <text xml:space="preserve" x="10" y="180" fill="black" font-size="7.2" font-family="Helvetica" font-weight="bold">hsf4
 </text>
 <rect x="195" y="171" width="178" height="161" fill="#f2f2f2"/>
-<path d="M195,333l 2.0, -2.0v -157h 173l 2.0, -2.0h -177v 161z" fill="white"/>
-<path d="M195,333l 2.0, -2.0h 173v -157l 2.0, -2.0v 161h -177z" fill="#a9a9a9"/>
+<path d="M195,333l 2.0, -2.0v -157h 174l 2.0, -2.0h -178v 161z" fill="white"/>
+<path d="M195,333l 2.0, -2.0h 174v -157l 2.0, -2.0v 161h -178z" fill="#a9a9a9"/>
 <rect x="213" y="188" width="142" height="129" fill="#f2f2f2"/>
 <path d="M213,317l 1.000, -1.000v -127h 140l 1.000, -1.000h -142v 129z" fill="white"/>
 <path d="M213,317l 1.000, -1.000h 140v -127l 1.000, -1.000v 129h -142z" fill="#a9a9a9"/>
@@ -1053,8 +1053,8 @@ svg16.svg
 <text xml:space="preserve" x="199" y="180" fill="black" font-size="7.2" font-family="Helvetica" font-weight="bold">hsf5
 </text>
 <rect x="384" y="171" width="178" height="161" fill="#f2f2f2"/>
-<path d="M384,333l 2.0, -2.0v -157h 173l 2.0, -2.0h -177v 161z" fill="white"/>
-<path d="M384,333l 2.0, -2.0h 173v -157l 2.0, -2.0v 161h -177z" fill="#a9a9a9"/>
+<path d="M384,333l 2.0, -2.0v -157h 174l 2.0, -2.0h -178v 161z" fill="white"/>
+<path d="M384,333l 2.0, -2.0h 174v -157l 2.0, -2.0v 161h -178z" fill="#a9a9a9"/>
 <rect x="388" y="204" width="171" height="97" fill="#e5e5e5"/>
 <path d="M392,301v 2.8h 169v -95h -2.8v 93z" fill="black"/>
 <path d="M388,301v -97h 171v 97h -171z" fill="none" stroke="black"/>

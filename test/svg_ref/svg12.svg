@@ -4,8 +4,8 @@
 svg12.svg
 </title>
 <rect x="0.500" y="0" width="567" height="383" fill="#f2f2f2"/>
-<path d="M0.500,383l 2.0, -2.0v -378h 562l 2.0, -2.0h -566v 382z" fill="white"/>
-<path d="M0.500,383l 2.0, -2.0h 562v -378l 2.0, -2.0v 382h -566z" fill="#a9a9a9"/>
+<path d="M0.500,383l 2.0, -2.0v -379h 563l 2.0, -2.0h -567v 383z" fill="white"/>
+<path d="M0.500,383l 2.0, -2.0h 563v -379l 2.0, -2.0v 383h -567z" fill="#a9a9a9"/>
 <text xml:space="preserve" x="29" y="383" fill="black" font-size="7.5" font-family="Helvetica" font-weight="bold">0
 </text>
 <path d="M0.500,370h 567" fill="none" stroke="black"/>

@@ -4,8 +4,8 @@
 svg04.svg
 </title>
 <rect x="0.500" y="0" width="567" height="710" fill="#f2f2f2"/>
-<path d="M0.500,710l 2.0, -2.0v -706h 562l 2.0, -2.0h -566v 710z" fill="white"/>
-<path d="M0.500,710l 2.0, -2.0h 562v -706l 2.0, -2.0v 710h -566z" fill="#a9a9a9"/>
+<path d="M0.500,710l 2.0, -2.0v -706h 563l 2.0, -2.0h -567v 710z" fill="white"/>
+<path d="M0.500,710l 2.0, -2.0h 563v -706l 2.0, -2.0v 710h -567z" fill="#a9a9a9"/>
 <path d="M6.2,45h 102v -42h -102z" fill="black"/>
 <rect x="6.2" y="3.6" width="102" height="42" fill="none" stroke="black"/>
 <rect x="40" y="18" width="34" height="14" fill="white"/>

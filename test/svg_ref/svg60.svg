@@ -4,15 +4,15 @@
 svg60.svg
 </title>
 <rect x="0.500" y="0" width="567" height="364" fill="#f2f2f2"/>
-<path d="M0.500,364l 2.0, -2.0v -359h 562l 2.0, -2.0h -566v 363z" fill="white"/>
-<path d="M0.500,364l 2.0, -2.0h 562v -359l 2.0, -2.0v 363h -566z" fill="#a9a9a9"/>
+<path d="M0.500,364l 2.0, -2.0v -360h 563l 2.0, -2.0h -567v 364z" fill="white"/>
+<path d="M0.500,364l 2.0, -2.0h 563v -360l 2.0, -2.0v 364h -567z" fill="#a9a9a9"/>
 <rect x="57" y="36" width="454" height="291" fill="#f2f2f2"/>
-<path d="M57,327l 1.000, -1.000v -289h 451l 1.000, -1.000h -453v 291z" fill="white"/>
-<path d="M57,327l 1.000, -1.000h 451v -289l 1.000, -1.000v 291h -453z" fill="#a9a9a9"/>
+<path d="M57,327l 1.000, -1.000v -289h 452l 1.000, -1.000h -454v 291z" fill="white"/>
+<path d="M57,327l 1.000, -1.000h 452v -289l 1.000, -1.000v 291h -454z" fill="#a9a9a9"/>
 <rect x="57" y="36" width="454" height="291" fill="none" stroke="black"/>
 <rect x="57" y="36" width="454" height="291" fill="#f2f2f2"/>
-<path d="M57,327l 1.000, -1.000v -289h 451l 1.000, -1.000h -453v 291z" fill="white"/>
-<path d="M57,327l 1.000, -1.000h 451v -289l 1.000, -1.000v 291h -453z" fill="#a9a9a9"/>
+<path d="M57,327l 1.000, -1.000v -289h 452l 1.000, -1.000h -454v 291z" fill="white"/>
+<path d="M57,327l 1.000, -1.000h 452v -289l 1.000, -1.000v 291h -454z" fill="#a9a9a9"/>
 <rect x="57" y="36" width="454" height="291" fill="none" stroke="black"/>
 <rect x="352" y="320" width="11" height="7.3" fill="#263da8"/>
 <rect x="239" y="306" width="11" height="7.3" fill="#263da8"/>

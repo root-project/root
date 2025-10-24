@@ -4,11 +4,11 @@
 svg34.svg
 </title>
 <rect x="0.500" y="0" width="504" height="369" fill="white"/>
-<path d="M0.500,369l 2.0, -2.0v -364h 500l 2.0, -2.0h -504v 368z" fill="white"/>
-<path d="M0.500,369l 2.0, -2.0h 500v -364l 2.0, -2.0v 368h -504z" fill="white"/>
+<path d="M0.500,369l 2.0, -2.0v -365h 500l 2.0, -2.0h -504v 369z" fill="white"/>
+<path d="M0.500,369l 2.0, -2.0h 500v -365l 2.0, -2.0v 369h -504z" fill="white"/>
 <rect x="253" y="0" width="252" height="369" fill="#f2f2f2"/>
-<path d="M253,369l 2.0, -2.0v -364h 248l 2.0, -2.0h -252v 368z" fill="white"/>
-<path d="M253,369l 2.0, -2.0h 248v -364l 2.0, -2.0v 368h -252z" fill="#a9a9a9"/>
+<path d="M253,369l 2.0, -2.0v -365h 248l 2.0, -2.0h -252v 369z" fill="white"/>
+<path d="M253,369l 2.0, -2.0h 248v -365l 2.0, -2.0v 369h -252z" fill="#a9a9a9"/>
 <rect x="253" y="367" width="1.2" height="1.8" fill="#5b5b04"/>
 <rect x="254" y="367" width="1.2" height="1.8" fill="#5b5b04"/>
 <rect x="255" y="367" width="1.2" height="1.8" fill="#5b5b04"/>
