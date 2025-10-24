@@ -48,8 +48,8 @@ public:
    void  DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2) override;
    void  DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
                    Int_t mode, Int_t border, Int_t dark, Int_t light) override;
-   void  DrawPolyLine(Int_t n, TPoints *xy);
-   void  DrawPolyLineNDC(Int_t n, TPoints *uv);
+   void  DrawPolyLine(Int_t, TPoints *);
+   void  DrawPolyLineNDC(Int_t, TPoints *);
    void  DrawPolyMarker(Int_t n, Float_t *x, Float_t *y) override;
    void  DrawPolyMarker(Int_t n, Double_t *x, Double_t *y) override;
    void  DrawPS(Int_t n, Float_t *xw, Float_t *yw) override;
