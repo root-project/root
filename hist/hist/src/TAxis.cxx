@@ -800,7 +800,7 @@ void TAxis::Set(Int_t nbins, const Float_t *xbins)
    for (bin=0; bin<= fNbins; bin++)
       fXbins.fArray[bin] = xbins[bin];
    for (bin=1; bin<= fNbins; bin++)
-      if (fXbins.fArray[bin] < fXbins.fArray[bin-1])
+      if (fXbins.fArray[bin] <= fXbins.fArray[bin - 1])
          Error("TAxis::Set", "bins must be in increasing order");
    fXmin      = fXbins.fArray[0];
    fXmax      = fXbins.fArray[fNbins];
@@ -818,7 +818,7 @@ void TAxis::Set(Int_t nbins, const Double_t *xbins)
    for (bin=0; bin<= fNbins; bin++)
       fXbins.fArray[bin] = xbins[bin];
    for (bin=1; bin<= fNbins; bin++)
-      if (fXbins.fArray[bin] < fXbins.fArray[bin-1])
+      if (fXbins.fArray[bin] <= fXbins.fArray[bin - 1])
          Error("TAxis::Set", "bins must be in increasing order");
    fXmin      = fXbins.fArray[0];
    fXmax      = fXbins.fArray[fNbins];

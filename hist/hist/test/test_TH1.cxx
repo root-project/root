@@ -11,6 +11,8 @@
 #include <random>
 #include <vector>
 
+#include "ROOT/TestSupport.hxx"
+
 // StatOverflows TH1
 TEST(TH1, StatOverflows)
 {
@@ -311,4 +313,10 @@ TEST(TH1, SetBufferedSumw2)
 
    EXPECT_FLOAT_EQ(h1.GetBinContent(1), Entries * Weight);
    EXPECT_FLOAT_EQ(h1.GetBinError(1), std::sqrt(Entries * Weight * Weight));
+}
+
+// https://github.com/root-project/root/issues/20185
+TEST(TAxis, EqualBinEdges)
+{
+   ROOT_EXPECT_ERROR(TAxis _({1, 1}), "TAxis::Set", "bins must be in increasing order");
 }
