@@ -479,7 +479,7 @@ class ROOTFacade(types.ModuleType):
         uhi_module.__file__ = "<module ROOT>"
         uhi_module.__package__ = self
         try:
-            from ._pythonization._uhi.main import _add_module_level_uhi_helpers
+            from ._pythonization._uhi import _add_module_level_uhi_helpers
 
             _add_module_level_uhi_helpers(uhi_module)
         except ImportError:
