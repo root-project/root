@@ -22,7 +22,7 @@
 
 /** \class TScatter2D
     \ingroup Graphs
-A TScatter2D is able to draw give variables scatter plot on a single plot. The three first
+A TScatter2D is able to draw five variables scatter plot on a single plot. The three first
 variables are the x, y and z position of the markers (stored in a TGraph2D), the fourth is
 mapped on the current color map and the fifth on the marker size.
 
