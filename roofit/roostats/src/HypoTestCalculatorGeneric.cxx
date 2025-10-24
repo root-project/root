@@ -63,8 +63,14 @@ HypoTestCalculatorGeneric::HypoTestCalculatorGeneric(
                                                   *altModel.GetPdf(),
                                                   altModel.GetSnapshot());
 
-      fDefaultSampler = new ToyMCSampler(*fDefaultTestStat, 1000);
-      fTestStatSampler = fDefaultSampler;
+      auto toymcs = new ToyMCSampler(*fDefaultTestStat, 1000);
+      // --- Ensure the ToyMCSampler generates toys with the same structure as the observed data
+      toymcs->SetProtoData(&data);
+      const bool dataIsBinned = dynamic_cast<const RooDataHist *>(fData) != nullptr;
+      toymcs->SetGenerateBinned(dataIsBinned); // if observed is RooDataHist -> generate RooDataHist toys
+
+      fDefaultSampler = toymcs;
+      fTestStatSampler = toymcs;
    }
 
 
