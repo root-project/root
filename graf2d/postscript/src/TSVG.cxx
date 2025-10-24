@@ -566,9 +566,10 @@ void TSVG::DrawPolyLineNDC(Int_t nn, TPoints *xy)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint PolyMarker
+/// Implementation of polymarker printing
 
-void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
+template<class T>
+void TSVG::PrintPolyMarker(Int_t n, T *xw, T* yw)
 {
    fMarkerStyle = TMath::Abs(fMarkerStyle);
    Int_t ms = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
@@ -592,11 +593,11 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
    msize = this->UtoSVG(s2x) - this->UtoSVG(0);
 
    Double_t m  = msize;
-   Double_t m2 = m/2.;
-   Double_t m3 = m/3.;
-   Double_t m6 = m/6.;
-   Double_t m8 = m/8.;
+   Double_t m2 = m/2;
+   Double_t m3 = m/3;
+   Double_t m6 = m/6;
    Double_t m4 = m/4.;
+   Double_t m8 = m/8.;
    Double_t m0 = m/10.;
 
    // Draw the marker according to the type
@@ -619,10 +620,9 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
          PrintStr(TString::Format(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
       PrintStr(">");
    }
-   Double_t ix,iy;
-   for (Int_t i=0;i<n;i++) {
-      ix = XtoSVG(xw[i]);
-      iy = YtoSVG(yw[i]);
+   for (Int_t i = 0; i < n; i++) {
+      Double_t ix = XtoSVG(xw[i]);
+      Double_t iy = YtoSVG(yw[i]);
       PrintStr("@");
       // Dot (.)
       if (ms == 1) {
@@ -727,8 +727,7 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
          PrintStr("\" r=\"");
          if (m2<=0) m2=1;
          WriteReal(m2, kFALSE);
-         PrintStr("\" fill=\"none\"");
-         PrintStr("/>");
+         PrintStr("\"/>");
       // Square
       } else if (ms == 25 || ms == 21) {
          PrintStr("<rect x=\"");
@@ -739,8 +738,7 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
          WriteReal(m, kFALSE);
          PrintStr("\" height=\"");
          WriteReal(m, kFALSE);
-         PrintStr("\" fill=\"none\"");
-         PrintStr("/>");
+         PrintStr("\"/>");
       // Down triangle
       } else if (ms == 26 || ms == 22) {
          PrintStr("<polygon points=\"");
@@ -977,408 +975,18 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint PolyMarker
 
+void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
+{
+   PrintPolyMarker<Float_t>(n, xw, yw);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint PolyMarker
+
 void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 {
-   fMarkerStyle = TMath::Abs(fMarkerStyle);
-   Int_t ms = TAttMarker::GetMarkerStyleBase(fMarkerStyle);
-
-   if (ms == 4)
-      ms = 24;
-   else if (ms >= 6 && ms <= 8)
-      ms = 20;
-   else if (ms >= 9 && ms <= 19)
-      ms = 1;
-
-   // Define the marker size
-   Float_t msize  = fMarkerSize - TMath::Floor(TAttMarker::GetMarkerLineWidth(fMarkerStyle)/2.)/4.;
-   if (fMarkerStyle == 1 || (fMarkerStyle >= 9 && fMarkerStyle <= 19)) msize = 0.01;
-   if (fMarkerStyle == 6) msize = 0.02;
-   if (fMarkerStyle == 7) msize = 0.04;
-
-   const Int_t kBASEMARKER = 8;
-   Float_t sbase = msize*kBASEMARKER;
-   Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
-   msize = this->UtoSVG(s2x) - this->UtoSVG(0);
-
-   Double_t m  = msize;
-   Double_t m2 = m/2;
-   Double_t m3 = m/3;
-   Double_t m6 = m/6;
-   Double_t m4 = m/4.;
-   Double_t m8 = m/8.;
-   Double_t m0 = m/10.;
-
-   // Draw the marker according to the type
-   PrintStr("@");
-   if ((ms > 19 && ms < 24) || ms == 29 || ms == 33 || ms == 34 ||
-       ms == 39 || ms == 41 || ms == 43 || ms == 45 ||
-       ms == 47 || ms == 48 || ms == 49) {
-      PrintStr("<g fill=");
-      SetColorAlpha(Int_t(fMarkerColor), kTRUE, kFALSE);
-      PrintStr(">");
-   } else {
-      PrintStr("<g stroke=");
-      SetColorAlpha(Int_t(fMarkerColor), kFALSE, kTRUE);
-      PrintStr(" stroke-width=\"");
-      WriteReal(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))), kFALSE);
-      PrintStr("\" fill=\"none\"");
-      if (fgLineJoin)
-         PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
-      if (fgLineCap)
-         PrintStr(TString::Format(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
-      PrintStr(">");
-   }
-   Double_t ix,iy;
-   for (Int_t i=0;i<n;i++) {
-      ix = XtoSVG(xw[i]);
-      iy = YtoSVG(yw[i]);
-      PrintStr("@");
-      // Dot (.)
-      if (ms == 1) {
-         PrintStr("<line x1=\"");
-         WriteReal(ix-1, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\"/>");
-      // Plus (+)
-      } else if (ms == 2) {
-         PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\"/>");
-
-         PrintStr("<line x1=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy-m2, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy+m2, kFALSE);
-         PrintStr("\"/>");
-      // X shape (X)
-      } else if (ms == 5) {
-         PrintStr("<line x1=\"");
-         WriteReal(ix-m2*0.707, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy-m2*0.707, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix+m2*0.707, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy+m2*0.707, kFALSE);
-         PrintStr("\"/>");
-
-         PrintStr("<line x1=\"");
-         WriteReal(ix-m2*0.707, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy+m2*0.707, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix+m2*0.707, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy-m2*0.707, kFALSE);
-         PrintStr("\"/>");
-      // Asterisk shape (*)
-      } else if (ms == 3 || ms == 31) {
-         PrintStr("<line x1=\"");
-         WriteReal(ix-m2, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix+m2, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\"/>");
-
-         PrintStr("<line x1=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy-m2, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy+m2, kFALSE);
-         PrintStr("\"/>");
-
-         PrintStr("<line x1=\"");
-         WriteReal(ix-m2*0.707, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy-m2*0.707, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix+m2*0.707, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy+m2*0.707, kFALSE);
-         PrintStr("\"/>");
-
-         PrintStr("<line x1=\"");
-         WriteReal(ix-m2*0.707, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy+m2*0.707, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix+m2*0.707, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy-m2*0.707, kFALSE);
-         PrintStr("\"/>");
-      // Circle
-      } else if (ms == 24 || ms == 20) {
-         PrintStr("<circle cx=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" cy=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\" r=\"");
-         if (m2<=0) m2=1;
-         WriteReal(m2, kFALSE);
-         PrintStr("\"/>");
-      // Square
-      } else if (ms == 25 || ms == 21) {
-         PrintStr("<rect x=\"");
-         WriteReal(ix-m2, kFALSE);
-         PrintStr("\" y=\"");
-         WriteReal(iy-m2, kFALSE);
-         PrintStr("\" width=\"");
-         WriteReal(m, kFALSE);
-         PrintStr("\" height=\"");
-         WriteReal(m, kFALSE);
-         PrintStr("\"/>");
-      // Down triangle
-      } else if (ms == 26 || ms == 22) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m2);
-         PrintStr("\"/>");
-      // Up triangle
-      } else if (ms == 23 || ms == 32) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix); PrintStr(","); WriteReal(iy+m2);
-         PrintStr("\"/>");
-      // Diamond
-      } else if (ms == 27 || ms == 33) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m3); PrintStr(","); WriteReal(iy);
-         WriteReal(ix); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m3); PrintStr(","); WriteReal(iy);
-         PrintStr("\"/>");
-      // Cross
-      } else if (ms == 28 || ms == 34) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy-m6);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy-m6);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m6);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m6);
-         PrintStr("\"/>");
-      } else if (ms == 29 || ms == 30) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix+0.112255*m); PrintStr(","); WriteReal(iy+0.15451*m);
-         WriteReal(ix+0.47552*m); PrintStr(","); WriteReal(iy+0.15451*m);
-         WriteReal(ix+0.181635*m); PrintStr(","); WriteReal(iy-0.05902*m);
-         WriteReal(ix+0.29389*m); PrintStr(","); WriteReal(iy-0.40451*m);
-         WriteReal(ix); PrintStr(","); WriteReal(iy-0.19098*m);
-         WriteReal(ix-0.29389*m); PrintStr(","); WriteReal(iy-0.40451*m);
-         WriteReal(ix-0.181635*m); PrintStr(","); WriteReal(iy-0.05902*m);
-         WriteReal(ix-0.47552*m); PrintStr(","); WriteReal(iy+0.15451*m);
-         WriteReal(ix-0.112255*m); PrintStr(","); WriteReal(iy+0.15451*m);
-         PrintStr("\"/>");
-      } else if (ms == 35) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m2);
-         PrintStr("\"/>");
-      } else if (ms == 36) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m2);
-         PrintStr("\"/>");
-      } else if (ms == 37 || ms == 39) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         PrintStr("\"/>");
-      } else if (ms == 38) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy);
-         PrintStr("\"/>");
-      } else if (ms == 40 || ms == 41) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         PrintStr("\"/>");
-      } else if (ms == 42 || ms == 43) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m8); PrintStr(","); WriteReal(iy+m8);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m8); PrintStr(","); WriteReal(iy-m8);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m8); PrintStr(","); WriteReal(iy-m8);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m8); PrintStr(","); WriteReal(iy+m8);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m2);
-         PrintStr("\"/>");
-      } else if (ms == 44) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy   );
-         PrintStr("\"/>");
-      } else if (ms == 45) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix+m0); PrintStr(","); WriteReal(iy+m0);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m0); PrintStr(","); WriteReal(iy+m0);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix-m0); PrintStr(","); WriteReal(iy-m0);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m0); PrintStr(","); WriteReal(iy-m0);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix+m0); PrintStr(","); WriteReal(iy+m0);
-         PrintStr("\"/>");
-      } else if (ms == 46 || ms == 47) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m4);
-         PrintStr("\"/>");
-      } else if (ms == 48) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m4*1.01);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix-m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m4);
-         WriteReal(ix+m4); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m4*0.99);
-         WriteReal(ix+m4*0.99); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy-m4*0.99);
-         WriteReal(ix-m4*0.99); PrintStr(","); WriteReal(iy   );
-         WriteReal(ix   ); PrintStr(","); WriteReal(iy+m4*0.99);
-         PrintStr("\"/>");
-      } else if (ms == 49) {
-         PrintStr("<polygon points=\"");
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy-m6*1.01);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy-m2);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy-m6);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy-m6);
-         WriteReal(ix+m2); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy+m2);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix-m2); PrintStr(","); WriteReal(iy-m6);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy-m6*0.99);
-         WriteReal(ix-m6); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy+m6);
-         WriteReal(ix+m6); PrintStr(","); WriteReal(iy-m6);
-         PrintStr("\"/>");
-      } else {
-         PrintStr("<line x1=\"");
-         WriteReal(ix-1, kFALSE);
-         PrintStr("\" y1=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\" x2=\"");
-         WriteReal(ix, kFALSE);
-         PrintStr("\" y2=\"");
-         WriteReal(iy, kFALSE);
-         PrintStr("\"/>");
-      }
-   }
-   PrintStr("@");
-   PrintStr("</g>");
+   PrintPolyMarker<Double_t>(n, xw, yw);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
