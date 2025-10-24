@@ -178,6 +178,17 @@ static void EnsureFileOpenAndBinary(const TFile *tfile, std::string_view path)
       throw ROOT::RException(R__FAIL("Opened file " + std::string(path) + " is not a ROOT binary file"));
 }
 
+static std::string ReconstructFullKeyPath(const TKey &key)
+{
+   std::string path = key.GetName();
+   TDirectory *parent = key.GetMotherDir();
+   while (parent && parent->GetMotherDir()) {
+      path = std::string(parent->GetName()) + "/" + path;
+      parent = parent->GetMotherDir();
+   }
+   return path;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 std::pair<std::string_view, std::string_view> ROOT::Experimental::Detail::DecomposePath(std::string_view path)
 {
@@ -269,21 +280,27 @@ TKey *RFile::GetTKey(std::string_view path) const
    return key;
 }
 
-void *RFile::GetUntyped(std::string_view pathSV, const std::type_info &type) const
+void *RFile::GetUntyped(std::string_view path,
+                        std::variant<const char *, std::reference_wrapper<const std::type_info>> type) const
 {
    if (!fFile)
       throw ROOT::RException(R__FAIL("File has been closed"));
 
-   std::string path{pathSV};
+   std::string pathStr{path};
 
-   const TClass *cls = TClass::GetClass(type);
+   struct {
+      TClass *operator()(const char *name) { return TClass::GetClass(name); }
+      TClass *operator()(std::reference_wrapper<const std::type_info> ty) { return TClass::GetClass(ty.get()); }
+   } typeVisitor;
+   const TClass *cls = std::visit(std::move(typeVisitor), type);
+
    if (!cls)
-      throw ROOT::RException(R__FAIL(std::string("Could not determine type of object ") + path));
+      throw ROOT::RException(R__FAIL(std::string("Could not determine type of object ") + pathStr));
 
-   if (auto err = ValidateAndNormalizePath(path); !err.empty())
-      throw RException(R__FAIL("Invalid object path '" + path + "': " + err));
+   if (auto err = ValidateAndNormalizePath(pathStr); !err.empty())
+      throw RException(R__FAIL("Invalid object pathStr '" + pathStr + "': " + err));
 
-   TKey *key = GetTKey(path);
+   TKey *key = GetTKey(pathStr);
    void *obj = key ? key->ReadObjectAny(cls) : nullptr;
 
    if (obj) {
@@ -512,4 +529,25 @@ void RFile::Close()
 {
    // NOTE: this also flushes the file internally
    fFile.reset();
+}
+
+std::optional<ROOT::Experimental::RKeyInfo> RFile::GetKeyInfo(std::string_view path) const
+{
+   const TKey *key = GetTKey(path);
+   if (!key)
+      return {};
+
+   RKeyInfo keyInfo;
+   keyInfo.fPath = ReconstructFullKeyPath(*key);
+   keyInfo.fClassName = key->GetClassName();
+   keyInfo.fCycle = key->GetCycle();
+   keyInfo.fTitle = key->GetTitle();
+
+   return keyInfo;
+}
+
+void *ROOT::Experimental::Internal::RFile_GetObjectFromKey(RFile &file, const RKeyInfo &key)
+{
+   void *obj = file.GetUntyped(key.GetPath(), key.GetClassName().c_str());
+   return obj;
 }

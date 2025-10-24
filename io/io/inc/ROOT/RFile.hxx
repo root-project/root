@@ -11,10 +11,12 @@
 #include <ROOT/RError.hxx>
 
 #include <deque>
-#include <memory>
+#include <functional>
 #include <iostream>
+#include <memory>
 #include <string_view>
 #include <typeinfo>
+#include <variant>
 
 class TFile;
 class TIterator;
@@ -23,12 +25,16 @@ class TKey;
 namespace ROOT {
 namespace Experimental {
 
+class RKeyInfo;
 class RFile;
-struct RFileKeyInfo;
 
 namespace Internal {
 
 ROOT::RLogChannel &RFileLog();
+
+/// Returns an **owning** pointer to the object referenced by `key`. The caller must delete this pointer.
+/// This method is meant to only be used by the pythonization.
+[[nodiscard]] void *RFile_GetObjectFromKey(RFile &file, const RKeyInfo &key);
 
 } // namespace Internal
 
@@ -59,6 +65,7 @@ Querying this information can be done via RFile::ListKeys(). Reading an object's
 doesn't deserialize the full object, so it's a relatively lightweight operation.
 */
 class RKeyInfo final {
+   friend class ROOT::Experimental::RFile;
    friend class ROOT::Experimental::RFileKeyIterable;
 
 public:
@@ -216,6 +223,8 @@ auto myObj = file->Get<TH1D>("h");
 ~~~
 */
 class RFile final {
+   friend void *Internal::RFile_GetObjectFromKey(RFile &file, const RKeyInfo &key);
+
    /// Flags used in PutInternal()
    enum PutFlags {
       /// When encountering an object at the specified path, overwrite it with the new one instead of erroring out.
@@ -231,7 +240,8 @@ class RFile final {
 
    /// Gets object `path` from the file and returns an **owning** pointer to it.
    /// The caller should immediately wrap it into a unique_ptr of the type described by `type`.
-   [[nodiscard]] void *GetUntyped(std::string_view path, const std::type_info &type) const;
+   [[nodiscard]] void *GetUntyped(std::string_view path,
+                                  std::variant<const char *, std::reference_wrapper<const std::type_info>> type) const;
 
    /// Writes `obj` to file, without taking its ownership.
    void PutUntyped(std::string_view path, const std::type_info &type, const void *obj, std::uint32_t flags);
@@ -356,6 +366,9 @@ public:
    {
       return RFileKeyIterable(fFile.get(), basePath, flags);
    }
+
+   /// Retrieves information about the key of object at `path`, if one exists.
+   std::optional<RKeyInfo> GetKeyInfo(std::string_view path) const;
 
    /// Prints the internal structure of this RFile to the given stream.
    void Print(std::ostream &out = std::cout) const;
