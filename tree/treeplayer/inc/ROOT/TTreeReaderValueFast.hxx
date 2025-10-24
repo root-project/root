@@ -66,6 +66,11 @@ class TTreeReaderValueFastBase {
              }
              fRemaining -= adjust;
           } else {
+             if (!fBranch) {
+                fReadStatus = ROOT::Internal::TTreeReaderValueBase::kReadError;
+                // printf("Failed to retrieve branch.\n");
+                return -1;
+             }
              fRemaining = fBranch->GetBulkRead().GetEntriesSerialized(eventNum, fBuffer);
              if (R__unlikely(fRemaining < 0)) {
                 fReadStatus = ROOT::Internal::TTreeReaderValueBase::kReadError;
