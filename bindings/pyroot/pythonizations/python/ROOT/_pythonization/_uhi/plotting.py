@@ -38,6 +38,14 @@ class PlottableAxisTraits:
     def discrete(self) -> bool:
         return self._discrete
 
+    @property
+    def underflow(self) -> bool:
+        return True
+
+    @property
+    def overflow(self) -> bool:
+        return True
+
 
 class PlottableAxisBase(ABC):
     def __init__(self, tAxis: Any) -> None:
@@ -104,7 +112,7 @@ def _hasWeights(hist: Any) -> bool:
 def _axes(self) -> Tuple[Union[PlottableAxisContinuous, PlottableAxisDiscrete], ...]:
     return tuple(PlottableAxisFactory.create(_get_axis(self, i)) for i in range(self.GetDimension()))
 
-
+# TODO this is not correct?
 def _kind(self) -> Kind:
     return Kind.COUNT if not _hasWeights(self) else Kind.MEAN
 
@@ -174,6 +182,8 @@ def _counts(self) -> np.typing.NDArray[Any]:  # noqa: F821
         where=sum_of_weights_squared != 0,
     )
 
+def _get_sum_of_weights(self) -> np.typing.NDArray[Any]:  # noqa: F821
+    return self.values()
 
 def _get_sum_of_weights_squared(self) -> np.typing.NDArray[Any]:  # noqa: F821
     import numpy as np

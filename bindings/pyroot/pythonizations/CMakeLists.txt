@@ -128,6 +128,7 @@ set(py_sources
   ROOT/_pythonization/_uhi/tags.py
   ROOT/_pythonization/_uhi/indexing.py
   ROOT/_pythonization/_uhi/plotting.py
+  ROOT/_pythonization/_uhi/serialization.py
   ${PYROOT_EXTRA_PYTHON_SOURCES}
 )
 
