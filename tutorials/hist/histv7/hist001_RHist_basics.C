@@ -58,7 +58,7 @@ void hist001_RHist_basics()
    // Create an axis that can be used for multiple histograms.
    ROOT::Experimental::RRegularAxis axis(40, {0, 20});
 
-   // Create a first histograms and fill with random values.
+   // Create a first histogram and fill with random values.
    ROOT::Experimental::RHist<int> hist1({axis});
 
    // Create a normal distribution with mean 5.0 and stddev 2.0.
