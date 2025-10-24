@@ -1251,7 +1251,7 @@ Int_t TPad::DistancetoPrimitive(Int_t px, Int_t py)
 ///             points to the current pad. One can use gPad to set attributes
 ///             of the current pad.
 ///
-/// __Note3:__  in case xmargin < 0 and ymargin < 0, there is no space
+/// __Note3:__  in case xmargin < 0 or ymargin < 0, there is no space
 ///             between pads. The current pad margins are recomputed to
 ///             optimize the layout.
 
