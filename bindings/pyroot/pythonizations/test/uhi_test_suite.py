@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import ROOT
 import uhi.testing.indexing
-from ROOT._pythonization._uhi import _temporarily_disable_add_directory
+from ROOT._pythonization._uhi.indexing import _temporarily_disable_add_directory
 
 
 def th1_eq(self, other):
