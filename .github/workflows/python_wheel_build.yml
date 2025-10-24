@@ -54,7 +54,11 @@ jobs:
 
       - name: Install produced wheel
         run: |
-          pip install wheels/*.whl
+          PY_VER=$(python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')")
+          echo "Installing wheel for Python ABI: $PY_VER"
+          WHEEL=$(ls wheels/*${PY_VER}*.whl | head -n 1)
+          echo "Found wheel: $WHEEL"
+          pip install "$WHEEL"
 
       - name: Install tutorials dependencies
         run: |
