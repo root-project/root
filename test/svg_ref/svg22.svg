@@ -4,8 +4,8 @@
 svg22.svg
 </title>
 <rect x="0.500" y="0" width="567" height="172" fill="#f2f2f2"/>
-<path d="M0.500,172l 2.0, -2.0v -168h 562l 2.0, -2.0h -566v 172z" fill="white"/>
-<path d="M0.500,172l 2.0, -2.0h 562v -168l 2.0, -2.0v 172h -566z" fill="#a9a9a9"/>
+<path d="M0.500,172l 2.0, -2.0v -168h 563l 2.0, -2.0h -567v 172z" fill="white"/>
+<path d="M0.500,172l 2.0, -2.0h 563v -168l 2.0, -2.0v 172h -567z" fill="#a9a9a9"/>
 <path d="M24,126h 520" fill="none" stroke="black"/>
 <path d="M24,118v 7.9" fill="none" stroke="black"/>
 <path d="M35,122v 3.9" fill="none" stroke="black"/>

@@ -4,14 +4,14 @@
 svg40.svg
 </title>
 <rect x="0.500" y="0" width="504" height="236" fill="#f2f2f2"/>
-<path d="M0.500,236l 2.0, -2.0v -231h 500l 2.0, -2.0h -504v 235z" fill="white"/>
-<path d="M0.500,236l 2.0, -2.0h 500v -231l 2.0, -2.0v 235h -504z" fill="#a9a9a9"/>
+<path d="M0.500,236l 2.0, -2.0v -232h 500l 2.0, -2.0h -504v 236z" fill="white"/>
+<path d="M0.500,236l 2.0, -2.0h 500v -232l 2.0, -2.0v 236h -504z" fill="#a9a9a9"/>
 <rect x="5.5" y="2.4" width="158" height="231" fill="#f2f2f2"/>
-<path d="M5.5,233l 2.0, -2.0v -226h 153l 2.0, -2.0h -157v 230z" fill="white"/>
-<path d="M5.5,233l 2.0, -2.0h 153v -226l 2.0, -2.0v 230h -157z" fill="#a9a9a9"/>
+<path d="M5.5,233l 2.0, -2.0v -227h 154l 2.0, -2.0h -158v 231z" fill="white"/>
+<path d="M5.5,233l 2.0, -2.0h 154v -227l 2.0, -2.0v 231h -158z" fill="#a9a9a9"/>
 <rect x="21" y="25" width="126" height="185" fill="#f2f2f2"/>
-<path d="M21,210l 1.000, -1.000v -182h 124l 1.000, -1.000h -126v 184z" fill="white"/>
-<path d="M21,210l 1.000, -1.000h 124v -182l 1.000, -1.000v 184h -126z" fill="#a9a9a9"/>
+<path d="M21,210l 1.000, -1.000v -183h 124l 1.000, -1.000h -126v 185z" fill="white"/>
+<path d="M21,210l 1.000, -1.000h 124v -183l 1.000, -1.000v 185h -126z" fill="#a9a9a9"/>
 <rect x="21" y="25" width="126" height="185" fill="none" stroke="black"/>
 <path d="M107,122l 21, -12l -20, 2.7z" fill="#73bd80"/>
 <path d="M126,125l -20, -2.7l 21, -12z" fill="#f9f90e"/>
@@ -285,11 +285,11 @@ svg40.svg
 <text xml:space="preserve" x="11" y="12" fill="black" font-size="6.7" font-family="Helvetica" font-weight="bold">total hits
 </text>
 <rect x="174" y="2.4" width="158" height="231" fill="#f2f2f2"/>
-<path d="M174,233l 2.0, -2.0v -226h 153l 2.0, -2.0h -157v 230z" fill="white"/>
-<path d="M174,233l 2.0, -2.0h 153v -226l 2.0, -2.0v 230h -157z" fill="#a9a9a9"/>
+<path d="M174,233l 2.0, -2.0v -227h 154l 2.0, -2.0h -158v 231z" fill="white"/>
+<path d="M174,233l 2.0, -2.0h 154v -227l 2.0, -2.0v 231h -158z" fill="#a9a9a9"/>
 <rect x="189" y="25" width="126" height="185" fill="#f2f2f2"/>
-<path d="M189,210l 1.000, -1.000v -182h 124l 1.000, -1.000h -126v 184z" fill="white"/>
-<path d="M189,210l 1.000, -1.000h 124v -182l 1.000, -1.000v 184h -126z" fill="#a9a9a9"/>
+<path d="M189,210l 1.000, -1.000v -183h 124l 1.000, -1.000h -126v 185z" fill="white"/>
+<path d="M189,210l 1.000, -1.000h 124v -183l 1.000, -1.000v 185h -126z" fill="#a9a9a9"/>
 <rect x="189" y="25" width="126" height="185" fill="none" stroke="black"/>
 <path d="M275,122l 21, -12l -20, 2.7z" fill="#2db7a3"/>
 <path d="M294,125l -20, -2.7l 21, -12z" fill="#52ba91"/>
@@ -566,11 +566,11 @@ svg40.svg
 <text xml:space="preserve" x="181" y="12" fill="black" font-size="6.7" font-family="Helvetica" font-weight="bold">average charge
 </text>
 <rect x="342" y="2.4" width="158" height="231" fill="#f2f2f2"/>
-<path d="M342,233l 2.0, -2.0v -226h 153l 2.0, -2.0h -157v 230z" fill="white"/>
-<path d="M342,233l 2.0, -2.0h 153v -226l 2.0, -2.0v 230h -157z" fill="#a9a9a9"/>
+<path d="M342,233l 2.0, -2.0v -227h 154l 2.0, -2.0h -158v 231z" fill="white"/>
+<path d="M342,233l 2.0, -2.0h 154v -227l 2.0, -2.0v 231h -158z" fill="#a9a9a9"/>
 <rect x="357" y="25" width="126" height="185" fill="#f2f2f2"/>
-<path d="M357,210l 1.000, -1.000v -182h 124l 1.000, -1.000h -126v 184z" fill="white"/>
-<path d="M357,210l 1.000, -1.000h 124v -182l 1.000, -1.000v 184h -126z" fill="#a9a9a9"/>
+<path d="M357,210l 1.000, -1.000v -183h 124l 1.000, -1.000h -126v 185z" fill="white"/>
+<path d="M357,210l 1.000, -1.000h 124v -183l 1.000, -1.000v 185h -126z" fill="#a9a9a9"/>
 <rect x="357" y="25" width="126" height="185" fill="none" stroke="black"/>
 <path d="M443,122l 21, -12l -20, 2.7z" fill="#263da8"/>
 <path d="M463,125l -20, -2.7l 21, -12z" fill="#1063db"/>

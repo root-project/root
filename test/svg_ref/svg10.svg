@@ -4,8 +4,8 @@
 svg10.svg
 </title>
 <rect x="0.500" y="0" width="567" height="639" fill="#f2f2f2"/>
-<path d="M0.500,639l 2.0, -2.0v -635h 562l 2.0, -2.0h -566v 639z" fill="white"/>
-<path d="M0.500,639l 2.0, -2.0h 562v -635l 2.0, -2.0v 639h -566z" fill="#a9a9a9"/>
+<path d="M0.500,639l 2.0, -2.0v -635h 563l 2.0, -2.0h -567v 639z" fill="white"/>
+<path d="M0.500,639l 2.0, -2.0h 563v -635l 2.0, -2.0v 639h -567z" fill="#a9a9a9"/>
 <text xml:space="preserve" x="50" y="39" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Lower case
 </text>
 <text xml:space="preserve" x="237" y="37" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Upper case
