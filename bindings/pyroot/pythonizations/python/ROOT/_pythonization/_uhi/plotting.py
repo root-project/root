@@ -38,6 +38,14 @@ class PlottableAxisTraits:
     def discrete(self) -> bool:
         return self._discrete
 
+    @property
+    def underflow(self) -> bool:
+        return True
+
+    @property
+    def overflow(self) -> bool:
+        return True
+
 
 class PlottableAxisBase(ABC):
     def __init__(self, tAxis: Any) -> None:

@@ -171,6 +171,7 @@ from ROOT._pythonization._memory_utils import (
     inject_clone_releasing_ownership,
     inject_constructor_releasing_ownership,
 )
+from ROOT._pythonization._uhi import _add_plotting_features, _add_serialization_features
 
 from . import pythonization
 
@@ -241,8 +242,6 @@ _th1_derived_classes_to_pythonize = [
 for klass in _th1_derived_classes_to_pythonize:
     pythonization(klass)(inject_constructor_releasing_ownership)
 
-    from ROOT._pythonization._uhi.main import _add_plotting_features
-
     # Add UHI plotting features
     pythonization(klass)(_add_plotting_features)
 
@@ -252,12 +251,15 @@ for klass in _th1_derived_classes_to_pythonize:
         klass._Fill = klass.Fill
         klass.Fill = _FillWithArrayTH1
 
+    # Add serialization features
+    pythonization(klass)(_add_serialization_features)
+
 
 @pythonization("TH1")
 def pythonize_th1(klass):
     # Parameters:
     # klass: class to be pythonized
-    from ROOT._pythonization._uhi.main import _add_indexing_features
+    from ROOT._pythonization._uhi import _add_indexing_features
 
     # Support hist *= scalar
     klass.__imul__ = _imul
