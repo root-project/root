@@ -145,7 +145,8 @@ void TScatter2D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 TH2D *TScatter2D::GetHistogram() const
 {
-   return fGraph->GetHistogram();;
+   if (fGraph) return fGraph->GetHistogram();
+   else return nullptr;
 }
 
 
@@ -154,7 +155,8 @@ TH2D *TScatter2D::GetHistogram() const
 
 TAxis *TScatter2D::GetXaxis() const
 {
-   return fGraph->GetXaxis();
+   if (fGraph) return fGraph->GetXaxis();
+   else return nullptr;
 }
 
 
@@ -163,7 +165,8 @@ TAxis *TScatter2D::GetXaxis() const
 
 TAxis *TScatter2D::GetYaxis() const
 {
-   return fGraph->GetYaxis();
+   if (fGraph) return fGraph->GetYaxis();
+   else return nullptr;
 }
 
 
@@ -172,7 +175,8 @@ TAxis *TScatter2D::GetYaxis() const
 
 TAxis *TScatter2D::GetZaxis() const
 {
-   return fGraph->GetZaxis();
+   if (fGraph) return fGraph->GetZaxis();
+   else return nullptr;
 }
 
 
@@ -191,6 +195,8 @@ void TScatter2D::Paint(Option_t *option)
 
 void TScatter2D::Print(Option_t *) const
 {
+   if (!fGraph) return;
+
    Double_t *X = fGraph->GetX();
    Double_t *Y = fGraph->GetY();
    Double_t *Z = fGraph->GetZ();
@@ -219,6 +225,8 @@ void TScatter2D::SetMargin(Double_t margin)
 
 void TScatter2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
+   if (!fGraph) return;
+
    char quote = '"';
    out << "   " << std::endl;
    static Int_t frameNumber = 1000;
