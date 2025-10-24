@@ -4,11 +4,11 @@
 svg45.svg
 </title>
 <rect x="0.500" y="0" width="567" height="407" fill="#cccccc"/>
-<path d="M0.500,407l 2.0, -2.0v -403h 562l 2.0, -2.0h -566v 407z" fill="#f4f4f4"/>
-<path d="M0.500,407l 2.0, -2.0h 562v -403l 2.0, -2.0v 407h -566z" fill="#8e8e8e"/>
+<path d="M0.500,407l 2.0, -2.0v -403h 563l 2.0, -2.0h -567v 407z" fill="#f4f4f4"/>
+<path d="M0.500,407l 2.0, -2.0h 563v -403l 2.0, -2.0v 407h -567z" fill="#8e8e8e"/>
 <rect x="6.2" y="4.1" width="272" height="196" fill="#f2f2f2"/>
-<path d="M6.2,200l 2.0, -2.0v -191h 268l 2.0, -2.0h -272v 195z" fill="white"/>
-<path d="M6.2,200l 2.0, -2.0h 268v -191l 2.0, -2.0v 195h -272z" fill="#a9a9a9"/>
+<path d="M6.2,200l 2.0, -2.0v -192h 268l 2.0, -2.0h -272v 196z" fill="white"/>
+<path d="M6.2,200l 2.0, -2.0h 268v -192l 2.0, -2.0v 196h -272z" fill="#a9a9a9"/>
 <path d="M33,127l 138, -25" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M33,118l 138, -25" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M33,108l 138, -25" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
@@ -3526,8 +3526,8 @@ svg45.svg
 <text xml:space="preserve" x="17" y="13" fill="black" font-size="9.2" font-family="Helvetica" font-weight="bold">xygaus + xygaus(5) + xylandau(10)
 </text>
 <rect x="290" y="4.1" width="272" height="196" fill="#f2f2f2"/>
-<path d="M290,200l 2.0, -2.0v -191h 268l 2.0, -2.0h -272v 195z" fill="white"/>
-<path d="M290,200l 2.0, -2.0h 268v -191l 2.0, -2.0v 195h -272z" fill="#a9a9a9"/>
+<path d="M290,200l 2.0, -2.0v -192h 268l 2.0, -2.0h -272v 196z" fill="white"/>
+<path d="M290,200l 2.0, -2.0h 268v -192l 2.0, -2.0v 196h -272z" fill="#a9a9a9"/>
 <path d="M317,127l 138, -25" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M317,118l 138, -25" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M317,108l 138, -25" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
@@ -6350,8 +6350,8 @@ svg45.svg
 <text xml:space="preserve" x="301" y="13" fill="black" font-size="9.2" font-family="Helvetica" font-weight="bold">xygaus + xygaus(5) + xylandau(10)
 </text>
 <rect x="6.2" y="208" width="272" height="196" fill="#f2f2f2"/>
-<path d="M6.2,403l 2.0, -2.0v -191h 268l 2.0, -2.0h -272v 195z" fill="white"/>
-<path d="M6.2,403l 2.0, -2.0h 268v -191l 2.0, -2.0v 195h -272z" fill="#a9a9a9"/>
+<path d="M6.2,403l 2.0, -2.0v -192h 268l 2.0, -2.0h -272v 196z" fill="white"/>
+<path d="M6.2,403l 2.0, -2.0h 268v -192l 2.0, -2.0v 196h -272z" fill="#a9a9a9"/>
 <path d="M167,232l 6.9, -1.3l -4.0, -2.2z" fill="#263da8"/>
 <path d="M170,229l -6.9, 1.3l 4.0, 2.2z" fill="#263da8"/>
 <path d="M160,234l 6.9, -1.3l -4.0, -2.2z" fill="#263da8"/>
@@ -9767,8 +9767,8 @@ svg45.svg
 <text xml:space="preserve" x="17" y="217" fill="black" font-size="9.2" font-family="Helvetica" font-weight="bold">xygaus + xygaus(5) + xylandau(10)
 </text>
 <rect x="290" y="208" width="272" height="196" fill="#f2f2f2"/>
-<path d="M290,403l 2.0, -2.0v -191h 268l 2.0, -2.0h -272v 195z" fill="white"/>
-<path d="M290,403l 2.0, -2.0h 268v -191l 2.0, -2.0v 195h -272z" fill="#a9a9a9"/>
+<path d="M290,403l 2.0, -2.0v -192h 268l 2.0, -2.0h -272v 196z" fill="white"/>
+<path d="M290,403l 2.0, -2.0h 268v -192l 2.0, -2.0v 196h -272z" fill="#a9a9a9"/>
 <path d="M317,331l 138, -25" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M317,321l 138, -25" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
 <path d="M317,312l 138, -25" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>

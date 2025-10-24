@@ -4,14 +4,14 @@
 svg38.svg
 </title>
 <rect x="0.500" y="0" width="567" height="354" fill="white"/>
-<path d="M0.500,354l 2.0, -2.0v -349h 562l 2.0, -2.0h -566v 353z" fill="white"/>
-<path d="M0.500,354l 2.0, -2.0h 562v -349l 2.0, -2.0v 353h -566z" fill="white"/>
+<path d="M0.500,354l 2.0, -2.0v -350h 563l 2.0, -2.0h -567v 354z" fill="white"/>
+<path d="M0.500,354l 2.0, -2.0h 563v -350l 2.0, -2.0v 354h -567z" fill="white"/>
 <rect x="6.2" y="3.5" width="272" height="347" fill="#f2f2f2"/>
-<path d="M6.2,350l 2.0, -2.0v -342h 268l 2.0, -2.0h -272v 346z" fill="white"/>
-<path d="M6.2,350l 2.0, -2.0h 268v -342l 2.0, -2.0v 346h -272z" fill="#a9a9a9"/>
+<path d="M6.2,350l 2.0, -2.0v -343h 268l 2.0, -2.0h -272v 347z" fill="white"/>
+<path d="M6.2,350l 2.0, -2.0h 268v -343l 2.0, -2.0v 347h -272z" fill="#a9a9a9"/>
 <rect x="33" y="38" width="218" height="277" fill="#f2f2f2"/>
-<path d="M33,316l 1.000, -1.000v -275h 215l 1.000, -1.000h -217v 277z" fill="white"/>
-<path d="M33,316l 1.000, -1.000h 215v -275l 1.000, -1.000v 277h -217z" fill="#a9a9a9"/>
+<path d="M33,316l 1.000, -1.000v -275h 216l 1.000, -1.000h -218v 277z" fill="white"/>
+<path d="M33,316l 1.000, -1.000h 216v -275l 1.000, -1.000v 277h -218z" fill="#a9a9a9"/>
 <rect x="33" y="38" width="218" height="277" fill="none" stroke="black"/>
 <path d="M33,316h 218" fill="none" stroke="black"/>
 <path d="M33,307v 8.3" fill="none" stroke="black"/>
@@ -211,11 +211,11 @@ svg38.svg
 <text xml:space="preserve" x="24" y="19" fill="black" font-size="11" font-family="Helvetica" font-weight="bold">different confidence levels
 </text>
 <rect x="290" y="3.5" width="272" height="347" fill="#f2f2f2"/>
-<path d="M290,350l 2.0, -2.0v -342h 268l 2.0, -2.0h -272v 346z" fill="white"/>
-<path d="M290,350l 2.0, -2.0h 268v -342l 2.0, -2.0v 346h -272z" fill="#a9a9a9"/>
+<path d="M290,350l 2.0, -2.0v -343h 268l 2.0, -2.0h -272v 347z" fill="white"/>
+<path d="M290,350l 2.0, -2.0h 268v -343l 2.0, -2.0v 347h -272z" fill="#a9a9a9"/>
 <rect x="317" y="38" width="218" height="277" fill="#f2f2f2"/>
-<path d="M317,316l 1.000, -1.000v -275h 215l 1.000, -1.000h -217v 277z" fill="white"/>
-<path d="M317,316l 1.000, -1.000h 215v -275l 1.000, -1.000v 277h -217z" fill="#a9a9a9"/>
+<path d="M317,316l 1.000, -1.000v -275h 216l 1.000, -1.000h -218v 277z" fill="white"/>
+<path d="M317,316l 1.000, -1.000h 216v -275l 1.000, -1.000v 277h -218z" fill="#a9a9a9"/>
 <rect x="317" y="38" width="218" height="277" fill="none" stroke="black"/>
 <path d="M317,316h 218" fill="none" stroke="black"/>
 <path d="M317,307v 8.3" fill="none" stroke="black"/>
