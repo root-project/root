@@ -64,3 +64,14 @@ def _add_plotting_features(klass: Any) -> None:
     klass.counts = _counts
     klass.axes = property(_axes)
     klass.values = values_func_dict.get(klass.__name__, _values_default)
+
+
+"""
+Implementation of the serialization component of the UHI
+"""
+
+
+def _add_serialization_features(klass: Any) -> None:
+    from .serialization import _to_uhi_
+
+    klass._to_uhi_ = _to_uhi_
