@@ -19,6 +19,9 @@
 #include <clang/Basic/TargetOptions.h>
 #include <clang/Frontend/CompilerInstance.h>
 
+#include <llvm/ExecutionEngine/Orc/Debugging/DebugInfoSupport.h>
+#include <llvm/ExecutionEngine/Orc/Debugging/DebuggerSupport.h>
+#include <llvm/ExecutionEngine/Orc/Debugging/PerfSupportPlugin.h>
 #include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
 #include <llvm/ExecutionEngine/Orc/ObjectLinkingLayer.h>
 #include <llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h>
@@ -491,6 +494,16 @@ IncrementalJIT::IncrementalJIT(
   Builder.setDataLayout(m_TM->createDataLayout());
   Builder.setExecutorProcessControl(std::move(EPC));
 
+  if (m_JITLink &&
+      cling::utils::ConvertEnvValueToBool(std::getenv("CLING_DEBUG"))) {
+    Builder.setPrePlatformSetup([](llvm::orc::LLJIT& J) {
+      // Try to enable debugging of JIT'd code (only works with JITLink for
+      // ELF and MachO).
+      consumeError(enableDebuggerSupport(J));
+      return llvm::Error::success();
+    });
+  }
+
   // Create ObjectLinkingLayer with our own MemoryManager.
   Builder.setObjectLinkingLayerCreator([&](ExecutionSession& ES,
                                            const Triple& TT)
@@ -503,6 +516,36 @@ IncrementalJIT::IncrementalJIT(
       unsigned PageSize = cantFail(sys::Process::getPageSize());
       auto ObjLinkingLayer = std::make_unique<ObjectLinkingLayer>(
           ES, std::make_unique<ClingJITLinkMemoryManager>(PageSize));
+
+#ifdef __linux__
+      if (cling::utils::ConvertEnvValueToBool(std::getenv("CLING_PROFILE")) &&
+          TT.isOSBinFormatELF()) {
+        auto ProcessSymsJD = ES.getJITDylibByName("<Process Symbols>");
+        if (!ProcessSymsJD) {
+          Err = make_error<StringError>(
+              "MachO debugging requires process symbols",
+              inconvertibleErrorCode());
+          return ObjLinkingLayer;
+        }
+        if (Expected<std::unique_ptr<DebugInfoPreservationPlugin>>
+                debugInfoPreservationPlugin =
+                    DebugInfoPreservationPlugin::Create()) {
+          ObjLinkingLayer->addPlugin(
+              std::move(debugInfoPreservationPlugin.get()));
+        } else {
+          Err = debugInfoPreservationPlugin.takeError();
+          return ObjLinkingLayer;
+        }
+        if (Expected<std::unique_ptr<PerfSupportPlugin>> perfSupportPlugin =
+                PerfSupportPlugin::Create(ES.getExecutorProcessControl(),
+                                          *ProcessSymsJD, true, true)) {
+          ObjLinkingLayer->addPlugin(std::move(perfSupportPlugin.get()));
+        } else {
+          Err = perfSupportPlugin.takeError();
+          return ObjLinkingLayer;
+        }
+      }
+#endif
       return ObjLinkingLayer;
     }
 
