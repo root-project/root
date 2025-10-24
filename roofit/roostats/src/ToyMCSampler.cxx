@@ -476,27 +476,30 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& paramPoint, double& weight,
 /// or whether it should use the expected number of events. It also takes
 /// into account the option to generate a binned data set (*i.e.* RooDataHist).
 
-std::unique_ptr<RooAbsData> ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const RooAbsData* protoData, int forceEvents) const {
+std::unique_ptr<RooAbsData>
+ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const RooAbsData *protoData, int forceEvents) const
+{
 
-  if(fProtoData) {
-    protoData = fProtoData;
-    forceEvents = protoData->numEntries();
-  }
+   if (fProtoData) {
+      protoData = fProtoData;
+      forceEvents = protoData->numEntries();
+   }
 
-  std::unique_ptr<RooAbsData> data;
-  int events = forceEvents;
-  if(events == 0) events = fNEvents;
+   std::unique_ptr<RooAbsData> data;
+   int events = forceEvents;
+   if (events == 0)
+      events = fNEvents;
 
-  // cannot use multigen when the nuisance parameters change for every toy
-  bool useMultiGen = (fUseMultiGen || fgAlwaysUseMultiGen) && !fNuisanceParametersSampler;
+   // cannot use multigen when the nuisance parameters change for every toy
+   bool useMultiGen = (fUseMultiGen || fgAlwaysUseMultiGen) && !fNuisanceParametersSampler;
 
-  if (events == 0) {
-    if (!pdf.canBeExtended() || pdf.expectedEvents(observables) <= 0) {
-      std::stringstream ss;
-      ss << "ToyMCSampler: Error : pdf is not extended and number of events per toy is zero";
-      oocoutE(nullptr,InputArguments) << ss.str() << std::endl;
-      throw std::runtime_error(ss.str());
-    }
+   if (events == 0) {
+      if (!pdf.canBeExtended() || pdf.expectedEvents(observables) <= 0) {
+         std::stringstream ss;
+         ss << "ToyMCSampler: Error : pdf is not extended and number of events per toy is zero";
+         oocoutE(nullptr, InputArguments) << ss.str() << std::endl;
+         throw std::runtime_error(ss.str());
+      }
       if(fGenerateBinned) {
         if(protoData) data = std::unique_ptr<RooDataSet>{pdf.generate(observables, AllBinned(), Extended(), ProtoData(*protoData, true, true))};
         else          data = std::unique_ptr<RooDataSet>{pdf.generate(observables, AllBinned(), Extended())};
