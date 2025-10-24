@@ -3,7 +3,7 @@ import ROOT
 from ROOT._pythonization._th1 import _th1_derived_classes_to_pythonize
 from ROOT._pythonization._th2 import _th2_derived_classes_to_pythonize
 from ROOT._pythonization._th3 import _th3_derived_classes_to_pythonize
-from ROOT._pythonization._uhi import _temporarily_disable_add_directory
+from ROOT._pythonization._uhi.indexing import _temporarily_disable_add_directory
 
 th1_classes = {
     ("test_hist", "Test Histogram", 10, 1, 4): {
