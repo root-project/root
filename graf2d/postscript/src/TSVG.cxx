@@ -448,10 +448,6 @@ void TSVG::DrawPolyLine(Int_t nn, TPoints *xy)
       iydi = YtoSVG(xy[i].GetY());
       ix   = ixdi - ixd0;
       iy   = iydi - iyd0;
-      if (fCompact && (TMath::Abs(ix) < kEpsilon))
-         ix = 0;
-      if (fCompact && (TMath::Abs(iy) < kEpsilon))
-         iy = 0;
       ixd0 = ixdi;
       iyd0 = iydi;
       if( ix && iy) {
@@ -522,10 +518,6 @@ void TSVG::DrawPolyLineNDC(Int_t nn, TPoints *xy)
       iydi = VtoSVG(xy[i].GetY());
       ix   = ixdi - ixd0;
       iy   = iydi - iyd0;
-      if (fCompact && (TMath::Abs(ix) < kEpsilon))
-         ix = 0;
-      if (fCompact && (TMath::Abs(iy) < kEpsilon))
-         iy = 0;
       ixd0 = ixdi;
       iyd0 = iydi;
       if( ix && iy) {
