@@ -32,6 +32,8 @@ protected:
    static Int_t fgLineCap;        ///< Appearance of line caps
 
    void PrintPath(Bool_t convert, Int_t n, Double_t *xs, Double_t *ys, Bool_t close_path = kTRUE);
+   template<class T>
+   void PrintPolyMarker(Int_t n, T *x, T* y);
 
 public:
    TSVG();
