@@ -714,6 +714,19 @@ Bool_t TH1Merger::AutoP2Merge()
 
          Double_t xu = hist->GetBinCenter(ibin);
          Int_t jbin = fH0->FindBin(xu);
+         auto eps = 1e-12;
+         if (jbin == fH0->GetXaxis()->GetNbins() + 1) {
+            // if upper edge is infinite, the bin center is +infinite no matter what low edge is,
+            // so FindBin is in overflow since bin goes from [lower edge, infinite)
+            // if lower edge is -infinite, the bin center is -nan no matter what upper edge is,
+            // so FindBin is also in overflow (not underflow)
+            // Check close to the lower or upper edges instead of the bin center in these cases
+            if (std::isinf(hist->GetXaxis()->GetBinUpEdge(ibin))) {
+               jbin = fH0->GetXaxis()->FindBin(hist->GetXaxis()->GetBinLowEdge(ibin) + eps);
+            } else if (std::isinf(hist->GetXaxis()->GetBinLowEdge(ibin))) {
+               jbin = fH0->GetXaxis()->FindBin(hist->GetXaxis()->GetBinUpEdge(ibin) - eps);
+            }
+         }
 
          fH0->AddBinContent(jbin, cu);
          if (fH0->fSumw2.fN)

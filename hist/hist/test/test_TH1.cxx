@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <random>
 #include <vector>
+#include <limits>
 
 // StatOverflows TH1
 TEST(TH1, StatOverflows)
@@ -311,4 +312,24 @@ TEST(TH1, SetBufferedSumw2)
 
    EXPECT_FLOAT_EQ(h1.GetBinContent(1), Entries * Weight);
    EXPECT_FLOAT_EQ(h1.GetBinError(1), std::sqrt(Entries * Weight * Weight));
+}
+
+TEST(TH2, ProjectionYInfiniteUpperEdge)
+{
+   Double_t xedges[] = {0., 1.};
+   Double_t yedges[] = {1., std::numeric_limits<double>::infinity()};
+   TH2D h("h_inf", "h_inf;X;Y", 1, xedges, 1, yedges);
+   h.SetBinContent(1, 1, 11.);
+   auto projY = h.ProjectionY();
+   EXPECT_EQ(projY->GetBinContent(1), h.Integral(1, 1, 1, 1));
+}
+
+TEST(TH2, ProjectionYInfiniteLowerEdge)
+{
+   Double_t xedges[] = {0, 1.};
+   Double_t yedges[] = {-std::numeric_limits<double>::infinity(), 2};
+   TH2D h("h_inf", "h_inf;X;Y", 1, xedges, 1, yedges);
+   h.SetBinContent(1, 1, 11.);
+   auto projY = h.ProjectionY();
+   EXPECT_EQ(projY->GetBinContent(1), h.Integral(1, 1, 1, 1));
 }
