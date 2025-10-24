@@ -8,9 +8,10 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from . import pythonization
 from ROOT._pythonization._memory_utils import inject_constructor_releasing_ownership
+from ROOT._pythonization._uhi import _add_plotting_features, _add_serialization_features
 
+from . import pythonization
 
 # The constructors need to be pythonized for each derived class separately:
 _th3_derived_classes_to_pythonize = [
@@ -27,7 +28,8 @@ _th3_derived_classes_to_pythonize = [
 for klass in _th3_derived_classes_to_pythonize:
     pythonization(klass)(inject_constructor_releasing_ownership)
 
-    from ROOT._pythonization._uhi.main import _add_plotting_features
-
     # Add UHI plotting features
     pythonization(klass)(_add_plotting_features)
+
+    # Add serialization features
+    pythonization(klass)(_add_serialization_features)
