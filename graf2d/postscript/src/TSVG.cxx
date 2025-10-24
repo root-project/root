@@ -425,65 +425,9 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
 ///  - If NN>0 the line is clipped as a line.
 ///  - If NN<0 the line is clipped as a fill area.
 
-void TSVG::DrawPolyLine(Int_t nn, TPoints *xy)
+void TSVG::DrawPolyLine(Int_t, TPoints *)
 {
-   Int_t  n, idx, idy;
-   Double_t ixd0, iyd0, ixdi, iydi, ix, iy;
-
-   if (nn > 0) {
-      n = nn;
-   } else {
-      n = -nn;
-   }
-
-   ixd0 = XtoSVG(xy[0].GetX());
-   iyd0 = YtoSVG(xy[0].GetY());
-   if( n <= 1) return;
-
-   PrintFast(2," m");
-   idx = 0;
-   idy = 0;
-   for (Int_t i=1;i<n;i++) {
-      ixdi = XtoSVG(xy[i].GetX());
-      iydi = YtoSVG(xy[i].GetY());
-      ix   = ixdi - ixd0;
-      iy   = iydi - iyd0;
-      ixd0 = ixdi;
-      iyd0 = iydi;
-      if( ix && iy) {
-         if( idx ) { MovePS(idx,0); idx = 0; }
-         if( idy ) { MovePS(0,idy); idy = 0; }
-         MovePS(ix,iy);
-         continue;
-      }
-      if ( ix ) {
-         if( idy )  { MovePS(0,idy); idy = 0; }
-         if( !idx ) { idx = ix; continue;}
-         if( ix*idx > 0 ) {
-            idx += ix;
-         } else {
-            MovePS(idx,0);
-            idx  = ix;
-         }
-         continue;
-      }
-      if( iy ) {
-         if( idx ) { MovePS(idx,0); idx = 0; }
-         if( !idy) { idy = iy; continue;}
-         if( iy*idy > 0 ) {
-            idy += iy;
-         } else {
-            MovePS(0,idy);
-            idy  = iy;
-         }
-      }
-   }
-   if( idx ) MovePS(idx,0);
-   if( idy ) MovePS(0,idy);
-
-   if (nn > 0 ) {
-   } else {
-   }
+   Warning("DrawPolyLine", "not implemented");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -496,65 +440,9 @@ void TSVG::DrawPolyLine(Int_t nn, TPoints *xy)
 ///  --If NN>0 the line is clipped as a line.
 ///  - If NN<0 the line is clipped as a fill area.
 
-void TSVG::DrawPolyLineNDC(Int_t nn, TPoints *xy)
+void TSVG::DrawPolyLineNDC(Int_t, TPoints *)
 {
-   Int_t  n, idx, idy;
-   Double_t ixd0, iyd0, ixdi, iydi, ix, iy;
-
-   if (nn > 0) {
-      n = nn;
-   } else {
-      n = -nn;
-   }
-
-   ixd0 = UtoSVG(xy[0].GetX());
-   iyd0 = VtoSVG(xy[0].GetY());
-   if( n <= 1) return;
-
-   idx = 0;
-   idy = 0;
-   for (Int_t i=1;i<n;i++) {
-      ixdi = UtoSVG(xy[i].GetX());
-      iydi = VtoSVG(xy[i].GetY());
-      ix   = ixdi - ixd0;
-      iy   = iydi - iyd0;
-      ixd0 = ixdi;
-      iyd0 = iydi;
-      if( ix && iy) {
-         if( idx ) { MovePS(idx,0); idx = 0; }
-         if( idy ) { MovePS(0,idy); idy = 0; }
-         MovePS(ix,iy);
-         continue;
-      }
-      if ( ix ) {
-         if( idy )  { MovePS(0,idy); idy = 0; }
-         if( !idx ) { idx = ix; continue;}
-         if( ix*idx > 0 ) {
-            idx += ix;
-         } else {
-            MovePS(idx,0);
-            idx  = ix;
-         }
-         continue;
-      }
-      if( iy ) {
-         if( idx ) { MovePS(idx,0); idx = 0; }
-         if( !idy) { idy = iy; continue;}
-         if( iy*idy > 0 ) {
-            idy += iy;
-         } else {
-            MovePS(0,idy);
-            idy  = iy;
-         }
-      }
-   }
-   if( idx ) MovePS(idx,0);
-   if( idy ) MovePS(0,idy);
-
-   if (nn > 0 ) {
-      if (xy[0].GetX() == xy[n-1].GetX() && xy[0].GetY() == xy[n-1].GetY()) PrintFast(3," cl");
-   } else {
-   }
+   Warning("DrawPolyLineNDC", "not implemented");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
