@@ -4,7 +4,7 @@ Tests to verify that th1 1D histograms conform to the UHI PlottableHistogram pro
 
 import numpy as np
 import pytest
-from ROOT._pythonization._uhi import _shape
+from ROOT._pythonization._uhi.plotting import _shape
 from uhi.typing.plottable import PlottableHistogram
 
 

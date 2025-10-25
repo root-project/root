@@ -5,7 +5,9 @@ Tests to verify that TH1 and derived histograms conform to the UHI Indexing inte
 import numpy as np
 import pytest
 import ROOT
-from ROOT._pythonization._uhi import _get_axis, _get_processed_slices, _overflow, _shape, _underflow
+from ROOT._pythonization._uhi.indexing import _get_processed_slices
+from ROOT._pythonization._uhi.plotting import _shape
+from ROOT._pythonization._uhi.tags import _get_axis, _overflow, _underflow
 from ROOT.uhi import loc, overflow, rebin, sum, underflow
 
 
