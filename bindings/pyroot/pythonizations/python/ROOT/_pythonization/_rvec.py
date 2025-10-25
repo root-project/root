@@ -62,16 +62,73 @@ import cppyy
 
 from . import pythonization
 
+# This map includes all relevant C++ fundamental types found at
+# https://en.cppreference.com/w/cpp/language/types.html and the associated
+# ROOT portable types when available.
 _array_interface_dtype_map = {
+    # Integral types
+    # C++ standard integer types
+    "short": "i",
+    "short int": "i",
+    "signed short": "i",
+    "signed short int": "i",
+    "unsigned short": "u",
+    "unsigned short int": "u",
+    "int": "i",
+    "signed": "i",
+    "signed int": "i",
+    "unsigned": "u",
+    "unsigned int": "u",
+    "long": "i",
+    "long int": "i",
+    "signed long": "i",
+    "signed long int": "i",
+    "unsigned long": "u",
+    "unsigned long int": "u",
+    "long long": "i",
+    "long long int": "i",
+    "signed long long": "i",
+    "signed long long int": "i",
+    "unsigned long long": "u",
+    "unsigned long long int": "u",
+    "std::size_t": "i",
+    # Extended standard integer types
+    "std::int8_t": "i",
+    "std::int16_t": "i",
+    "std::int32_t": "i",
+    "std::int64_t": "i",
+    "std::uint8_t": "u",
+    "std::uint16_t": "u",
+    "std::uint32_t": "u",
+    "std::uint64_t": "u",
+    # ROOT integer types
+    "Int_t": "i",
+    "UInt_t": "u",
+    "Short_t": "i",
+    "UShort_t": "u",
+    "Long_t": "i",
+    "ULong_t": "u",
     "Long64_t": "i",
     "ULong64_t": "u",
-    "double": "f",
+    # Boolean type
+    "bool": "b",
+    "Bool_t": "b",
+    # Character types
+    "char": "i",
+    "Char_t": "i",
+    "signed char": "i",
+    "unsigned char": "u",
+    "UChar_t": "u",
+    "char16_t": "i",
+    "char32_t": "i",
+    # Floating-point types
+    # C++ standard floating-point types
     "float": "f",
-    "int": "i",
-    "long": "i",
-    "unsigned char": "b",
-    "unsigned int": "u",
-    "unsigned long": "u",
+    "double": "f",
+    "long double": "f",
+    # ROOT floating-point types
+    "Float_t": "f",
+    "Double_t": "f",
 }
 
 
