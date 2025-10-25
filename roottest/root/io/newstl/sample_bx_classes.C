@@ -21,7 +21,7 @@ class BxLabenCluster: public TObject {
 
 };
 
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ class std::vector<BxLabenCluster>+;
 #pragma link C++ class std::vector<float>;
 #endif 

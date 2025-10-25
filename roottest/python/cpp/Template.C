@@ -29,7 +29,7 @@ namespace MyNamespace {
    T MyTemplatedFunctionNamespace(T t) { return t; }
 };
 
-#ifdef __CINT__
+#ifdef __CLING__
 #pragma link C++ class MyTemplatedClass< vector< float > >;
 #pragma link C++ function MyTemplatedFunction< int >( int );
 #pragma link C++ function MyTemplatedFunction< double >( double );
@@ -103,6 +103,6 @@ template long MyTemplatedMethodClass::GetSizeOL< float >( const float& );
 typedef std::vector< double > MyDoubleVector_t;
 template long MyTemplatedMethodClass::GetSize< MyDoubleVector_t >();
 
-#ifdef __CINT__
+#ifdef __CLING__
 #pragma link C++ class MyTemplatedMethodClass;
 #endif

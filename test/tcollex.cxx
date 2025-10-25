@@ -390,7 +390,7 @@ int tcollex() {
    return 0;
 }
 
-#ifndef __CINT__
+#ifndef __CLING__
 int main() {
    return tcollex();
 }
