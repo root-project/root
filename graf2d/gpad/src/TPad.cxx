@@ -1251,7 +1251,7 @@ Int_t TPad::DistancetoPrimitive(Int_t px, Int_t py)
 ///             points to the current pad. One can use gPad to set attributes
 ///             of the current pad.
 ///
-/// __Note3:__  in case xmargin <=0 and ymargin <= 0, there is no space
+/// __Note3:__  in case xmargin < 0 or ymargin < 0, there is no space
 ///             between pads. The current pad margins are recomputed to
 ///             optimize the layout.
 
@@ -1277,7 +1277,7 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
    TString name, title;
    Int_t n = 0;
    if (color == 0) color = GetFillColor();
-   if (xmargin > 0 && ymargin > 0) {
+   if (xmargin >= 0 && ymargin >= 0) {
       //general case
       dy = 1/Double_t(ny);
       dx = 1/Double_t(nx);
@@ -1298,7 +1298,7 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
          }
       }
    } else {
-      // special case when xmargin <= 0 && ymargin <= 0
+      // special case when xmargin < 0 or ymargin < 0
       Double_t xl = GetLeftMargin();
       Double_t xr = GetRightMargin();
       Double_t yb = GetBottomMargin();
@@ -1327,7 +1327,7 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
             if (j == ny-1) y1 = 0;
             name.Form("%s_%d", GetName(), number);
             title.Form("%s_%d", GetTitle(), number);
-            pad = new TPad(name.Data(), title.Data(), x1, y1, x2, y2);
+            pad = new TPad(name.Data(), title.Data(), x1, y1, x2, y2, color);
             pad->SetNumber(number);
             pad->SetBorderMode(0);
             if (i == 0)    pad->SetLeftMargin(xl*nx);
