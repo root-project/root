@@ -1,5 +1,5 @@
 // @(#)root/hist:$Id$
-// Author: Olivier Couet   18/05/2022
+// Author: Olivier Couet   23/09/2025
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -11,57 +11,56 @@
 
 
 #include "TROOT.h"
-#include "TScatter.h"
-#include "TH2.h"
+#include "TScatter2D.h"
+#include "TH1.h"
 #include "TVirtualGraphPainter.h"
 
- #include <iostream>
+#include <iostream>
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/** \class TScatter
+/** \class TScatter2D
     \ingroup Graphs
-A TScatter is able to draw four variables scatter plot on a single plot. The two first
-variables are the x and y position of the markers, the third is mapped on the current
-color map and the fourth on the marker size.
+A TScatter2D is able to draw five variables scatter plot on a single plot. The three first
+variables are the x, y and z position of the markers (stored in a TGraph2D), the fourth is
+mapped on the current color map and the fifth on the marker size.
 
 The following example demonstrates how it works:
 
 Begin_Macro(source)
-../../../tutorials/visualisation/graphs/gr006_scatter.C
+../../../tutorials/visualisation/graphs/gr019_scatter2d.C
 End_Macro
 
-### TScatter's plotting options
-TScatter can be drawn with the following options:
+### TScatter2D's plotting options
+TScatter2D can be drawn with the following options:
 
-| Option    | Description                                                       |
-|-----------|-------------------------------------------------------------------|
-| "A"       | Produce a new plot with Axis around the graph |
-| "SKIPCOL" | Do not draw the points outside the color range. By default, such points' color is clipped to the minimum or maximum color, depending on whether the color is smaller or bigger than the color range |
+| Option   | Description                                                       |
+|----------|-------------------------------------------------------------------|
+| "SAME"   | Superimpose on previous picture in the same pad.|
 
 */
 
-////////////////////////////////////////////////////////////////////////////////
-/// TScatter default constructor.
 
-TScatter::TScatter()
+////////////////////////////////////////////////////////////////////////////////
+/// TScatter2D default constructor.
+
+TScatter2D::TScatter2D()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TScatter normal constructor.
+/// TScatter2D normal constructor.
 ///
 ///  the arrays are preset to zero
 
-TScatter::TScatter(Int_t n)
+TScatter2D::TScatter2D(Int_t n)
 {
-   fGraph     = new TGraph(n);
+   fGraph     = new TGraph2D(n);
    fNpoints   = fGraph->GetN();
-   fMaxSize   = fGraph->GetMaxSize();
 
-   fColor = new Double_t[fMaxSize];
-   fSize  = new Double_t[fMaxSize];
+   fColor = new Double_t[fNpoints];
+   fSize  = new Double_t[fNpoints];
 
    memset(fColor, 0, fNpoints * sizeof(Double_t));
    memset(fSize, 0, fNpoints * sizeof(Double_t));
@@ -72,63 +71,55 @@ TScatter::TScatter(Int_t n)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TScatter normal constructor.
-///
-///  if ex or ey are null, the corresponding arrays are preset to zero
+/// TScatter2D normal constructor.
 
-TScatter::TScatter(Int_t n, const Double_t *x, const Double_t *y, const Double_t *col, const Double_t *size)
+TScatter2D::TScatter2D(Int_t n, Double_t *x, Double_t *y, Double_t *z, const Double_t *col, const Double_t *size)
 {
-   fGraph     = new TGraph(n, x, y);
+   Bool_t status = TH1::AddDirectoryStatus();
+   TH1::AddDirectory(kFALSE);
+   fGraph     = new TGraph2D(n, x, y, z);
    fNpoints   = fGraph->GetN();
-   fMaxSize   = fGraph->GetMaxSize();
 
    Int_t bufsize = sizeof(Double_t) * fNpoints;
    if (col) {
-      fColor = new Double_t[fMaxSize];
+      fColor = new Double_t[fNpoints];
       memcpy(fColor, col, bufsize);
    }
    if (size) {
-      fSize  = new Double_t[fMaxSize];
+      fSize  = new Double_t[fNpoints];
       memcpy(fSize, size, bufsize);
    }
 
    fMaxMarkerSize = 5.;
    fMinMarkerSize = 1.;
    fMargin = 0.1;
+
+   TH1::AddDirectory(status);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TScatter default destructor.
+/// TScatter2D default destructor.
 
-TScatter::~TScatter()
+TScatter2D::~TScatter2D()
 {
    delete fGraph;
-   delete fHistogram;
    delete [] fColor;
    delete [] fSize;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from point px,py to a scatter plot.
+/// Compute distance from point px,py,pz to a scatter plot.
 ///
-///  Compute the closest distance of approach from point px,py to this scatter plot.
+///  Compute the closest distance of approach from point px,py,pz to this scatter plot.
 ///  The distance is computed in pixels units.
 
-Int_t TScatter::DistancetoPrimitive(Int_t px, Int_t py)
+Int_t TScatter2D::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Are we on the axis?
-   Int_t distance;
-   if (this->GetHistogram()) {
-      distance = this->GetHistogram()->DistancetoPrimitive(px,py);
-      if (distance <= 5) return distance;
-   }
-
-   TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
-   if (painter)
-      return painter->DistancetoPrimitiveHelper(this->GetGraph(), px, py);
-   return 0;
+   Int_t distance = 9999;
+   if (fGraph) distance = fGraph->DistancetoPrimitive(px, py);
+   return distance;
 }
 
 
@@ -143,87 +134,74 @@ Int_t TScatter::DistancetoPrimitive(Int_t px, Int_t py)
 ///  if Middle button clicked, the line is moved parallel to itself
 ///     until the button is released.
 
-void TScatter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
+void TScatter2D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
-   if (painter) painter->ExecuteEventHelper(this->GetGraph(), event, px, py);
+   if (fGraph) fGraph->ExecuteEvent(event, px, py);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns a pointer to the histogram used to draw the axis
 
-TH2F *TScatter::GetHistogram() const
+TH2D *TScatter2D::GetHistogram() const
 {
-   if (!fHistogram) {
-      // do not add the histogram to gDirectory
-      // use local TDirectory::TContect that will set temporarly gDirectory to a nullptr and
-      // will avoid that histogram is added in the global directory
-      TDirectory::TContext ctx(nullptr);
-      double rwxmin, rwymin, rwxmax, rwymax;
-      int npt = 50;
-      fGraph->ComputeRange(rwxmin, rwymin, rwxmax, rwymax);
-      double dx = (rwxmax-rwxmin)*fMargin;
-      double dy = (rwymax-rwymin)*fMargin;
-      auto h = new TH2F(TString::Format("%s_h",GetName()),GetTitle(),npt,rwxmin-dx,rwxmax+dx,npt,rwymin-dy,rwymax+dy);
-      h->SetBit(TH1::kNoStats);
-      h->SetDirectory(nullptr);
-      h->Sumw2(kFALSE);
-      const_cast<TScatter *>(this)->fHistogram = h;
-   }
-   return fHistogram;
+   if (fGraph) return fGraph->GetHistogram();
+   else return nullptr;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the scatter's x axis.
 
-TAxis *TScatter::GetXaxis() const
+TAxis *TScatter2D::GetXaxis() const
 {
-   auto h = GetHistogram();
-   return h ? h->GetXaxis() : nullptr;
+   if (fGraph) return fGraph->GetXaxis();
+   else return nullptr;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the scatter's y axis.
 
-TAxis *TScatter::GetYaxis() const
+TAxis *TScatter2D::GetYaxis() const
 {
-   auto h = GetHistogram();
-   return h ? h->GetYaxis() : nullptr;
+   if (fGraph) return fGraph->GetYaxis();
+   else return nullptr;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the scatter's z axis.
 
-TAxis *TScatter::GetZaxis() const
+TAxis *TScatter2D::GetZaxis() const
 {
-   auto h = GetHistogram();
-   return h ? h->GetZaxis() : nullptr;
+   if (fGraph) return fGraph->GetZaxis();
+   else return nullptr;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this scatter plot with its current attributes.
 
-void TScatter::Paint(Option_t *option)
+void TScatter2D::Paint(Option_t *option)
 {
    TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
-   if (painter) painter->PaintScatter(this, option);
+   if (painter) painter->PaintScatter2D(this, option);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print graph and errors values.
 
-void TScatter::Print(Option_t *) const
+void TScatter2D::Print(Option_t *) const
 {
+   if (!fGraph) return;
+
    Double_t *X = fGraph->GetX();
    Double_t *Y = fGraph->GetY();
+   Double_t *Z = fGraph->GetZ();
    for (Int_t i = 0; i < fNpoints; i++) {
-      printf("x[%d]=%g, y[%d]=%g", i, X[i], i, Y[i]);
+      printf("x[%d]=%g, y[%d]=%g, z[%d]=%g", i, X[i], i, Y[i], i, Z[i]);
       if (fColor) printf(", color[%d]=%g", i, fColor[i]);
       if (fSize) printf(", size[%d]=%g", i, fSize[i]);
       printf("\n");
@@ -234,11 +212,9 @@ void TScatter::Print(Option_t *) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the margin around the plot in %
 
-void TScatter::SetMargin(Double_t margin)
+void TScatter2D::SetMargin(Double_t margin)
 {
    if (fMargin != margin) {
-      delete fHistogram;
-      fHistogram = nullptr;
       fMargin = margin;
    }
 }
@@ -247,16 +223,17 @@ void TScatter::SetMargin(Double_t margin)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TScatter::SavePrimitive(std::ostream &out, Option_t *option)
+void TScatter2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    TString arr_x = SavePrimitiveVector(out, "scat_x", fNpoints, fGraph->GetX(), kTRUE);
    TString arr_y = SavePrimitiveVector(out, "scat_y", fNpoints, fGraph->GetY());
+   TString arr_z = SavePrimitiveVector(out, "scat_z", fNpoints, fGraph->GetZ());
    TString arr_col = SavePrimitiveVector(out, "scat_col", fNpoints, fColor);
    TString arr_size = SavePrimitiveVector(out, "scat_size", fNpoints, fSize);
 
    SavePrimitiveConstructor(out, Class(), "scat",
-                            TString::Format("%d, %s.data(), %s.data(), %s.data(), %s.data()", fNpoints, arr_x.Data(),
-                                            arr_y.Data(), arr_col.Data(), arr_size.Data()),
+                            TString::Format("%d, %s.data(), %s.data(), %s.data(), %s.data(), %s.data()", fNpoints, arr_x.Data(),
+                                            arr_y.Data(), arr_z.Data(), arr_col.Data(), arr_size.Data()),
                             kFALSE);
 
    SavePrimitiveNameTitle(out, "scat");
@@ -267,16 +244,6 @@ void TScatter::SavePrimitive(std::ostream &out, Option_t *option)
    out << "   scat->SetMargin(" << GetMargin() << ");\n";
    out << "   scat->SetMinMarkerSize(" << GetMinMarkerSize() << ");\n";
    out << "   scat->SetMaxMarkerSize(" << GetMaxMarkerSize() << ");\n";
-
-   if (fHistogram) {
-      static int histcnt = 0;
-      TString hname = fHistogram->GetName();
-      fHistogram->SetName(TString::Format("scat_stack_hist%d", histcnt++));
-      fHistogram->SavePrimitive(out, "nodraw");
-      out << "   scat->SetHistogram(" << fHistogram->GetName() << ");\n";
-      out << "   \n";
-      fHistogram->SetName(hname);
-   }
 
    SavePrimitiveDraw(out, "scat", option);
 }

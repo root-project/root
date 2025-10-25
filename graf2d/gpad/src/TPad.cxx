@@ -4491,8 +4491,8 @@ void TPad::PaintLine3D(Float_t *p1, Float_t *p2)
 
 void TPad::PaintLine3D(Double_t *p1, Double_t *p2)
 {
-   //take into account perspective view
    if (!fView) return;
+   
    // convert from 3-D to 2-D pad coordinate system
    Double_t xpad[6];
    Double_t temp[3];
@@ -4502,6 +4502,29 @@ void TPad::PaintLine3D(Double_t *p1, Double_t *p2)
    for (i=0;i<3;i++) temp[i] = p2[i];
    fView->WCtoNDC(temp, &xpad[3]);
    PaintLine(xpad[0],xpad[1],xpad[3],xpad[4]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint 3-D marker in the CurrentPad.
+
+void TPad::PaintMarker3D(Double_t x, Double_t y, Double_t z)
+{
+   if (!fView) return;
+   
+   Double_t rmin[3], rmax[3];
+   fView->GetRange(rmin, rmax);
+
+   // convert from 3-D to 2-D pad coordinate system
+   Double_t xpad[3];
+   Double_t temp[3];
+   temp[0] = x;
+   temp[1] = y;
+   temp[2] = z;
+   if (x<rmin[0] || x>rmax[0]) return;
+   if (y<rmin[1] || y>rmax[1]) return;
+   if (z<rmin[2] || z>rmax[2]) return;
+   fView->WCtoNDC(temp, &xpad[0]);
+   PaintPolyMarker(1, &xpad[0], &xpad[1]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
