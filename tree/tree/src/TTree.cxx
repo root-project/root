@@ -6925,12 +6925,62 @@ bool TTree::MemoryFull(Int_t nbytes)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Function merging branch structure from an outside tree into the current one
+///
+/// If the same branch name already exists in "this", it's skipped, only new ones
+/// are copied.
+/// Entries are not copied, just branch name / type is cloned
+/// Branches marked as DoNotProcess are not merged
+/// If this tree had some entries already in other branches and the new tree incorporates a new branch,
+/// when importing the branch, we backfill the branch value with default values until GetEntries is reached,
+/// to prevent misalignments in the TTree structure between branches / entries.
+/// @param tree the outside TTree whose branches will be copied into this tree
+/// @return boolean true on sucess, false otherwise
+
+bool TTree::ImportBranches(TTree *tree)
+{
+   if (tree) {
+      TObjArray *newbranches = tree->GetListOfBranches();
+      Int_t nbranches = newbranches->GetEntriesFast();
+      const Long64_t nentries = GetEntries();
+      std::vector<TBranch *> importedCollection;
+      for (Int_t i = 0; i < nbranches; ++i) {
+         TBranch *nbranch = static_cast<TBranch *>(newbranches->UncheckedAt(i));
+         if (nbranch->TestBit(kDoNotProcess)) {
+            continue;
+         }
+         if (!GetListOfBranches()->FindObject(nbranch->GetName())) {
+            auto addbranch = static_cast<TBranch *>(nbranch->Clone());
+            addbranch->ResetAddress();
+            addbranch->Reset();
+            addbranch->SetTree(this);
+            fBranches.Add(addbranch);
+            importedCollection.push_back(addbranch);
+         }
+      }
+      // Backfill mechanism to realign with TTree
+      if (!importedCollection.empty()) {
+         for (Long64_t e = 0; e < nentries; ++e) {
+            for (auto branch : importedCollection) {
+               branch->BackFill();
+            }
+         }
+      }
+      return true;
+   }
+   return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Static function merging the trees in the TList into a new tree.
 ///
 /// Trees in the list can be memory or disk-resident trees.
 /// The new tree is created in the current directory (memory if gROOT).
 /// Trees with no branches will be skipped, the branch structure
 /// will be taken from the first non-zero-branch Tree of {li}
+/// Use "ImportBranches" option to incorporate branches from the (filled) trees in
+/// the list that were not in the first TTree into the final result, backfilling
+/// with default values to prevent misalignment
 
 TTree* TTree::MergeTrees(TList* li, Option_t* options)
 {
@@ -6938,7 +6988,7 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
    TIter next(li);
    TTree *newtree = nullptr;
    TObject *obj;
-
+   const bool importBranches = TString(options).Contains("ImportBranches", TString::ECaseCompare::kIgnoreCase);
    while ((obj=next())) {
       if (!obj->InheritsFrom(TTree::Class())) continue;
       TTree *tree = (TTree*)obj;
@@ -6963,6 +7013,8 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
          tree->ResetBranchAddresses();
          newtree->ResetBranchAddresses();
          continue;
+      } else if (importBranches) {
+         newtree->ImportBranches(tree);
       }
       if (nentries == 0)
          continue;
@@ -6980,6 +7032,9 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
 /// Returns the total number of entries in the merged tree.
 /// Trees with no branches will be skipped, the branch structure
 /// will be taken from the first non-zero-branch Tree of {this+li}
+/// Use "ImportBranches" option to incorporate branches from the (filled) trees in
+/// the list that were not in this TTree into the final result, backfilling
+/// with default values to prevent misalignment
 
 Long64_t TTree::Merge(TCollection* li, Option_t *options)
 {
@@ -7016,6 +7071,7 @@ Long64_t TTree::Merge(TCollection* li, Option_t *options)
       return 0; // All trees have empty branches
    }
    if (!li) return 0;
+   const bool importBranches = TString(options).Contains("ImportBranches", TString::ECaseCompare::kIgnoreCase);
    Long64_t storeAutoSave = fAutoSave;
    // Disable the autosave as the TFileMerge keeps a list of key and deleting the underlying
    // key would invalidate its iteration (or require costly measure to not use the deleted keys).
@@ -7034,7 +7090,8 @@ Long64_t TTree::Merge(TCollection* li, Option_t *options)
 
       Long64_t nentries = tree->GetEntries();
       if (nentries == 0) continue;
-
+      if (importBranches)
+         ImportBranches(tree);
       CopyEntries(tree, -1, options, true);
    }
    fAutoSave = storeAutoSave;
@@ -7049,6 +7106,9 @@ Long64_t TTree::Merge(TCollection* li, Option_t *options)
 /// use for further merging).
 /// Trees with no branches will be skipped, the branch structure
 /// will be taken from the first non-zero-branch Tree of {this+li}
+/// Use "ImportBranches" info-option to incorporate branches from the (filled) trees
+/// in the list that were not in this TTree into the final result, backfilling
+/// with default values to prevent misalignment
 ///
 /// Returns the total number of entries in the merged tree.
 
@@ -7111,6 +7171,7 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
       }
    }
    if (!li) return 0;
+   const bool importBranches = TString(options).Contains("ImportBranches", TString::ECaseCompare::kIgnoreCase);
    Long64_t storeAutoSave = fAutoSave;
    // Disable the autosave as the TFileMerge keeps a list of key and deleting the underlying
    // key would invalidate its iteration (or require costly measure to not use the deleted keys).
@@ -7126,7 +7187,8 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
          fAutoSave = storeAutoSave;
          return -1;
       }
-
+      if (importBranches)
+         ImportBranches(tree);
       CopyEntries(tree, -1, options, true);
    }
    fAutoSave = storeAutoSave;

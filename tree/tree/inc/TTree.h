@@ -635,6 +635,7 @@ public:
    bool                    MemoryFull(Int_t nbytes);
    virtual Long64_t        Merge(TCollection* list, Option_t* option = "");
    virtual Long64_t        Merge(TCollection* list, TFileMergeInfo *info);
+   bool                    ImportBranches(TTree *tree);
    static  TTree          *MergeTrees(TList* list, Option_t* option = "");
            bool            Notify() override;
    virtual void            OptimizeBaskets(ULong64_t maxMemory=10000000, Float_t minComp=1.1, Option_t *option="");
