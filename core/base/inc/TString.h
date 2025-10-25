@@ -423,6 +423,7 @@ public:
    Bool_t       IsWhitespace() const   { return (Length() == CountChar(' ')); }
    Ssiz_t       Last(char c) const;
    Ssiz_t       Length() const         { return IsLong() ? GetLongSize() : GetShortSize(); }
+   inline std::size_t size() const { return Length(); }
    Bool_t       MaybeRegexp() const;
    Bool_t       MaybeWildcard() const;
    TString      MD5() const;
