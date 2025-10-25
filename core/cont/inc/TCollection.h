@@ -177,6 +177,7 @@ public:
    TObject           *operator()(const char *name) const;
    TObject           *FindObject(const TObject *obj) const override;
    virtual Int_t      GetEntries() const { return GetSize(); }
+   inline std::size_t size() const { return GetEntries(); }
    const char        *GetName() const override;
    virtual TObject  **GetObjectRef(const TObject *obj) const = 0;
    /// Return the *capacity* of the collection, i.e. the current total amount of space that has been allocated so far.
