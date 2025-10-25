@@ -18,9 +18,6 @@ def pythonize_tvectort(klass):
     # Parameters:
     # klass: class to be pythonized
 
-    # Support `len(v)` as `v.GetNoElements()`
-    klass.__len__ = klass.GetNoElements
-
     # Add checked __getitem__.
     # Allows to throw pythonic IndexError when index is out of range
     # and to iterate over the vector.
