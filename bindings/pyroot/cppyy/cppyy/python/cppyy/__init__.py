@@ -339,8 +339,17 @@ if not ispypy:
 
         apipath_extra = os.path.join(os.path.dirname(apipath), 'site', 'python'+ldversion)
         if not os.path.exists(os.path.join(apipath_extra, 'CPyCppyy')):
-            import glob, libcppyy
-            ape = os.path.dirname(libcppyy.__file__)
+            import glob
+            import platform
+
+            if platform.system() == "Windows":
+                # On Windows, the library is found directly
+                import libcppyy
+                ape = os.path.dirname(libcppyy.__file__)
+                print("libcppyy was found in", ape)
+            else:
+                import cppyy.libcppyy as libcppyy
+                ape = os.path.dirname(libcppyy.__file__)
           # a "normal" structure finds the include directory up to 3 levels up,
           # ie. dropping lib/pythonx.y[md]/site-packages
             for i in range(3):
