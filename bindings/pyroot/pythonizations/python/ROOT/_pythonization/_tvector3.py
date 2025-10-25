@@ -18,9 +18,6 @@ def pythonize_tvector3(klass):
     # Parameters:
     # klass: class to be pythonized
 
-    # `len(v)` is always 3
-    klass.__len__ = lambda _: 3
-
     # Add checked __getitem__.
     # Allows to throw pythonic IndexError when index is out of range
     # and to iterate over the vector.

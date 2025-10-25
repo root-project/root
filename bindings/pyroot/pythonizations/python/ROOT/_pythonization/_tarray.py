@@ -48,10 +48,7 @@ def pythonize_tarray(klass, name):
     # klass: class to be pythonized
     # name: string containing the name of the class
 
-    if name == 'TArray':
-        # Support `len(a)` as `a.GetSize()`
-        klass.__len__ = klass.GetSize
-    else:
+    if not name == 'TArray':
         # Add checked __getitem__. It has to be directly added to the TArray
         # subclasses, which have a default __getitem__.
         # The new __getitem__ allows to throw pythonic IndexError when index
