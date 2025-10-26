@@ -1,4 +1,4 @@
-{
+LIBCLING_1_0 {
   global:
     CreateInterpreter;
     DestroyInterpreter;
