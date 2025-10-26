@@ -318,7 +318,11 @@ TEST(TH1, SetBufferedSumw2)
 // https://github.com/root-project/root/issues/20185
 TEST(TAxis, EqualBinEdges)
 {
-   ROOT_EXPECT_ERROR(TAxis _({1, 1}), "TAxis::Set", "bins must be in increasing order");
+   ROOT_EXPECT_ERROR(TAxis _({1, 1}), "TAxis::Set", "bin edges must be in increasing order");
+   ROOT_EXPECT_ERROR(TAxis _(1, -std::numeric_limits<double>::infinity(), 0), "TAxis::Set", "fixed binwidth not compatible with infinite lower/upper edges");
+   ROOT_EXPECT_ERROR(TAxis _(1, 0., std::numeric_limits<double>::infinity()), "TAxis::Set", "fixed binwidth not compatible with infinite lower/upper edges");
+   ROOT_EXPECT_ERROR(TAxis _(1, std::numeric_limits<double>::quiet_NaN(), 0), "TAxis::Set", "lower/upper edges should not be NaN");
+   ROOT_EXPECT_ERROR(TAxis _(1, 0, std::numeric_limits<double>::quiet_NaN()), "TAxis::Set", "lower/upper edges should not be NaN");
 }
 
 TEST(TH1L, SetBinContent)

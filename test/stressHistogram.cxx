@@ -6269,7 +6269,7 @@ bool testMerge1DWithBuffer(bool allNoLimits)
    // where different axis are used, BUT the largest bin width must be
    // a multiple of the smallest bin width
 
-   double x1 = 1; double x2 = 0;
+   double x1 = 1; double x2 = 0; // i.e. automatic axis range calculation
    if (!allNoLimits) {
       // case when one of the histogram has limits (mix mode)
       x1 = minRange; x2 = maxRange;
@@ -6277,18 +6277,18 @@ bool testMerge1DWithBuffer(bool allNoLimits)
 
    TH1D* h0 = new TH1D("h0", "h0-Title", numberOfBins, 1, 0);
    TH1D* h1 = new TH1D("h1", "h1-Title", numberOfBins, x1, x2);
-   TH1D* h2 = new TH1D("h2", "h2-Title", 1,1,0);
-   TH1D* h3 = new TH1D("h3", "h3-Title", 1,1,0);
-   TH1D* h4 = new TH1D("h4", "h4-Title", numberOfBins, x1,x2);
+   TH1D* h2 = new TH1D("h2", "h2-Title", 1, 1, 0);
+   TH1D* h3 = new TH1D("h3", "h3-Title", 1, 1, 0);
+   TH1D* h4 = new TH1D("h4", "h4-Title", numberOfBins, x1, x2);
 
    h0->Sumw2(); h1->Sumw2();h2->Sumw2();h4->Sumw2();
    // The below histograms will be merged into h0, so they all need to fit into the buffer.
    // Otherwise, the axis ranges will be computed already during the partial merge.
    h0->SetBuffer(nEvents * 10);
-   h1->SetBuffer(nEvents*10);
-   h2->SetBuffer(nEvents*10);
-   h3->SetBuffer(nEvents*10);
-   h4->SetBuffer(nEvents*10);
+   h1->SetBuffer(nEvents * 10);
+   h2->SetBuffer(nEvents * 10);
+   h3->SetBuffer(nEvents * 10);
+   h4->SetBuffer(nEvents * 10);
 
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
