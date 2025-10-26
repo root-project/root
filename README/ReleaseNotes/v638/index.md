@@ -58,6 +58,7 @@ export CLING_LDSYSPATH=ROOT_LDSYSPATH
 export CLING_CPPSYSINCL=$(LC_ALL=C c++ -xc++ -E -v /dev/null 2>&1 | sed -n '/^.include/,${/^ \/.*++/{p}}' | tr '\n' ':' | tr ' ' ':')
 ```
 This caching reduces sub-process creation during initialization and can be useful when multiple ROOT instances or binaries linked to ROOT are executed (less system-calls, cleaner debugging).
+* It is now possible to read a user configuration file (in jeargon, a "rootrc file") at startup in a custom path instead of the one in the home directory, by specifying its full path with the `ROOTENV_USER_PATH` environment variable.
 
 ## I/O
 
