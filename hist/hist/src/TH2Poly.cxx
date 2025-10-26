@@ -146,7 +146,7 @@ times, it is better to divide into a small number of cells.
 
 TH2Poly::TH2Poly()
 {
-   Initialize(0., 0., 0., 0., 25, 25);
+   Initialize(0., 0., 0., 0., 25, 25); // automatic axis range calculation
    SetName("NoName");
    SetTitle("NoTitle");
    SetFloat();
