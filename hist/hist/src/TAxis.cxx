@@ -483,7 +483,7 @@ Double_t TAxis::GetBinCenter(Int_t bin) const
    Double_t binwidth;
    if (!fXbins.fN || bin<1 || bin>fNbins) {
       binwidth = (fXmax - fXmin) / Double_t(fNbins);
-      return fXmin + (bin-1) * binwidth + 0.5*binwidth;
+      return fXmin + (bin - 0.5) * binwidth;
    } else {
       binwidth = fXbins.fArray[bin] - fXbins.fArray[bin-1];
       return fXbins.fArray[bin-1] + 0.5*binwidth;
