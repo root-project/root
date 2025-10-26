@@ -37,12 +37,13 @@ for the benefit of its community.
 - [Meetings](https://root.cern/for_developers/meetings/)
 
 ## Cite
-When citing ROOT, please use both the reference reported below and the DOI specific to your ROOT version available [on Zenodo](https://zenodo.org/badge/latestdoi/10994345) [![DOI](https://zenodo.org/badge/10994345.svg)](https://zenodo.org/badge/latestdoi/10994345). For example, you can copy-paste and fill in the following citation:
+If you use ROOT for your work, we kindly ask you to cite it as:
 
     Rene Brun and Fons Rademakers, ROOT - An Object Oriented Data Analysis Framework,
     Proceedings AIHENP'96 Workshop, Lausanne, Sep. 1996,
     Nucl. Inst. & Meth. in Phys. Res. A 389 (1997) 81-86.
-    See also "ROOT" [software], Release vX.YY/ZZ, dd/mm/yyyy
+
+See the reference in BibTeX format [here](README/root_citation.bib).
 
 ## Live Demo for CERN Users
 [![](https://img.shields.io/badge/Launch-SWAN-orange)](http://cern.ch/swanserver/cgi-bin/go?projurl=https://github.com/cernphsft/rootbinder.git)
