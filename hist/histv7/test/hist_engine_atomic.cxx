@@ -32,6 +32,23 @@ TEST(RHistEngine, FillAtomic)
    engineD.FillAtomic(1);
 }
 
+TEST(RHistEngine, StressFillAtomic)
+{
+   static constexpr std::size_t NThreads = 4;
+   static constexpr std::size_t NFillsPerThread = 10000;
+   static constexpr std::size_t NFills = NThreads * NFillsPerThread;
+
+   // Fill a single bin, to maximize contention.
+   RHistEngine<int> engine(1, {0, 1});
+   StressInParallel(NThreads, [&] {
+      for (std::size_t i = 0; i < NFillsPerThread; i++) {
+         engine.FillAtomic(0.5);
+      }
+   });
+
+   EXPECT_EQ(engine.GetBinContent(0), NFills);
+}
+
 TEST(RHistEngine, FillAtomicTuple)
 {
    static constexpr std::size_t Bins = 20;
@@ -89,6 +106,24 @@ TEST(RHistEngine, FillAtomicWeight)
    // Instantiate further bin content types to make sure they work.
    RHistEngine<double> engineD({axis});
    engineD.FillAtomic(1, RWeight(0.8));
+}
+
+TEST(RHistEngine, StressFillAtomicWeight)
+{
+   static constexpr std::size_t NThreads = 4;
+   static constexpr std::size_t NFillsPerThread = 10000;
+   static constexpr std::size_t NFills = NThreads * NFillsPerThread;
+   static constexpr double Weight = 0.5;
+
+   // Fill a single bin, to maximize contention.
+   RHistEngine<float> engine(1, {0, 1});
+   StressInParallel(NThreads, [&] {
+      for (std::size_t i = 0; i < NFillsPerThread; i++) {
+         engine.FillAtomic(0.5, RWeight(Weight));
+      }
+   });
+
+   EXPECT_EQ(engine.GetBinContent(0), NFills * Weight);
 }
 
 TEST(RHistEngine, FillAtomicTupleWeight)
@@ -161,6 +196,24 @@ TEST(RHistEngine_RBinWithError, FillAtomic)
    }
 }
 
+TEST(RHistEngine_RBinWithError, StressFillAtomic)
+{
+   static constexpr std::size_t NThreads = 4;
+   static constexpr std::size_t NFillsPerThread = 10000;
+   static constexpr std::size_t NFills = NThreads * NFillsPerThread;
+
+   // Fill a single bin, to maximize contention.
+   RHistEngine<RBinWithError> engine(1, {0, 1});
+   StressInParallel(NThreads, [&] {
+      for (std::size_t i = 0; i < NFillsPerThread; i++) {
+         engine.FillAtomic(0.5);
+      }
+   });
+
+   EXPECT_EQ(engine.GetBinContent(0).fSum, NFills);
+   EXPECT_EQ(engine.GetBinContent(0).fSum2, NFills);
+}
+
 TEST(RHistEngine_RBinWithError, FillAtomicWeight)
 {
    static constexpr std::size_t Bins = 20;
@@ -177,4 +230,23 @@ TEST(RHistEngine_RBinWithError, FillAtomicWeight)
       EXPECT_FLOAT_EQ(bin.fSum, weight);
       EXPECT_FLOAT_EQ(bin.fSum2, weight * weight);
    }
+}
+
+TEST(RHistEngine_RBinWithError, StressFillAtomicWeight)
+{
+   static constexpr std::size_t NThreads = 4;
+   static constexpr std::size_t NFillsPerThread = 10000;
+   static constexpr std::size_t NFills = NThreads * NFillsPerThread;
+   static constexpr double Weight = 0.5;
+
+   // Fill a single bin, to maximize contention.
+   RHistEngine<RBinWithError> engine(1, {0, 1});
+   StressInParallel(NThreads, [&] {
+      for (std::size_t i = 0; i < NFillsPerThread; i++) {
+         engine.FillAtomic(0.5, RWeight(Weight));
+      }
+   });
+
+   EXPECT_EQ(engine.GetBinContent(0).fSum, NFills * Weight);
+   EXPECT_EQ(engine.GetBinContent(0).fSum2, NFills * Weight * Weight);
 }
