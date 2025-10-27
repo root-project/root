@@ -635,6 +635,20 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
 {
    if (!classp->GetCollectionProxy())
       throw RException(R__FAIL(std::string(GetTypeName()) + " has no associated collection proxy"));
+   if (classp->Property() & kIsDefinedInStd) {
+      static const std::vector<std::string> supportedStdTypes = {
+         "std::set<", "std::unordered_set<", "std::multiset<", "std::unordered_multiset<",
+         "std::map<", "std::unordered_map<", "std::multimap<", "std::unordered_multimap<"};
+      bool isSupported = false;
+      for (const auto &tn : supportedStdTypes) {
+         if (GetTypeName().rfind(tn, 0) == 0) {
+            isSupported = true;
+            break;
+         }
+      }
+      if (!isSupported)
+         throw RException(R__FAIL(std::string(GetTypeName()) + " is not supported"));
+   }
 
    fProxy.reset(classp->GetCollectionProxy()->Generate());
    fProperties = fProxy->GetProperties();
