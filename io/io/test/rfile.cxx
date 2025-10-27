@@ -132,9 +132,10 @@ TEST(RFile, CheckNoAutoRegistrationWrite)
    EXPECT_EQ(gDirectory, gROOT);
    auto hist = std::make_unique<TH1D>("hist", "", 100, -10, 10);
    file->Put("hist", *hist);
-   EXPECT_EQ(hist->GetDirectory(), gROOT);
+   TDirectory const *expectedDir = ROOT::Experimental::IsImplicitObjectOwnershipEnabled() ? gROOT : nullptr;
+   EXPECT_EQ(hist->GetDirectory(), expectedDir);
    file->Close();
-   EXPECT_EQ(hist->GetDirectory(), gROOT);
+   EXPECT_EQ(hist->GetDirectory(), expectedDir);
    hist.reset();
    // no double free should happen when ROOT exits
 }
