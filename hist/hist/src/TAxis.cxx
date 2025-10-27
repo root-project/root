@@ -804,14 +804,21 @@ void TAxis::Set(Int_t nbins, Double_t xlow, Double_t xup)
 /// Initialize axis with variable bins
 ///
 /// An error is printed if bin edges are not in strictly increasing order
+/// or if any of them is infinite or nan
 
 void TAxis::Set(Int_t nbins, const Float_t *xbins)
 {
    Int_t bin;
    fNbins  = nbins;
    fXbins.Set(fNbins+1);
-   for (bin=0; bin<= fNbins; bin++)
+   for (bin = 0; bin <= fNbins; bin++) {
+      if (std::isinf(xbins[bin])) {
+         Error("TAxis::Set", "infinite bin edges are not supported. Use a large number instead.");
+      } else if (std::isnan(xbins[bin])) {
+         Error("TAxis::Set", "bin edges should not be NaN");
+      }
       fXbins.fArray[bin] = xbins[bin];
+   }
    for (bin=1; bin<= fNbins; bin++)
       if (fXbins.fArray[bin] <= fXbins.fArray[bin - 1])
          Error("TAxis::Set", "bin edges must be in increasing order");
