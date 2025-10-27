@@ -1298,30 +1298,44 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
    TContext ctxt(kTRUE);
 
    cd();
-   if (nx <= 0) nx = 1;
-   if (ny <= 0) ny = 1;
-   Int_t ix, iy;
-   Double_t x1, y1, x2, y2, dx, dy;
-   TPad *pad;
+   if (nx == 0)
+      nx = 1;
+   if (ny == 0)
+      ny = 1;
+
+   // Outer margins, equal to half of the inner margin. Set to zero if nx or ny are negative.
+   Float_t xmargin_outer = xmargin;
+   Float_t ymargin_outer = ymargin;
+
+   if (nx < 0) {
+      xmargin_outer = 0.0;
+      nx = -nx;
+   }
+
+   if (ny < 0) {
+      ymargin_outer = 0.0;
+      ny = -ny;
+   }
+
    TString name, title;
    Int_t n = 0;
    if (color == 0) color = GetFillColor();
    if (xmargin >= 0 && ymargin >= 0) {
       //general case
-      dy = 1/Double_t(ny);
-      dx = 1/Double_t(nx);
-      for (iy=0;iy<ny;iy++) {
-         y2 = 1 - iy*dy - ymargin;
-         y1 = y2 - dy + 2*ymargin;
+      auto dx = (1 - 2 * xmargin * (nx - 1) - 2 * xmargin_outer) / nx; // width of a subpad
+      auto dy = (1 - 2 * ymargin * (ny - 1) - 2 * ymargin_outer) / ny; // height of a subpad
+      for (auto iy = 0; iy < ny; iy++) {
+         auto y2 = 1 - iy * dy - 2 * ymargin * iy - ymargin_outer;
+         auto y1 = y2 - dy;
          if (y1 < 0) y1 = 0;
          if (y1 > y2) continue;
-         for (ix=0;ix<nx;ix++) {
-            x1 = ix*dx + xmargin;
-            x2 = x1 +dx -2*xmargin;
+         for (auto ix = 0; ix < nx; ix++) {
+            auto x1 = ix * dx + 2 * xmargin * ix + xmargin_outer;
+            auto x2 = x1 + dx;
             if (x1 > x2) continue;
             n++;
             name.Form("%s_%d", GetName(), n);
-            pad = new TPad(name.Data(), name.Data(), x1, y1, x2, y2, color);
+            auto pad = new TPad(name.Data(), name.Data(), x1, y1, x2, y2, color);
             pad->SetNumber(n);
             pad->Draw();
          }
@@ -1340,23 +1354,23 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
       SetRightMargin(xr);
       SetBottomMargin(yb);
       SetTopMargin(yt);
-      dx = (1-xl-xr)/nx;
-      dy = (1-yb-yt)/ny;
+      auto dx = (1 - xl - xr) / nx;
+      auto dy = (1 - yb - yt) / ny;
       Int_t number = 0;
       for (Int_t i=0;i<nx;i++) {
-         x1 = i*dx+xl;
-         x2 = x1 + dx;
+         auto x1 = i * dx + xl;
+         auto x2 = x1 + dx;
          if (i == 0) x1 = 0;
          if (i == nx-1) x2 = 1-xr;
          for (Int_t j=0;j<ny;j++) {
             number = j*nx + i +1;
-            y2 = 1 -j*dy -yt;
-            y1 = y2 - dy;
+            auto y2 = 1 - j * dy - yt;
+            auto y1 = y2 - dy;
             if (j == 0)    y2 = 1-yt;
             if (j == ny-1) y1 = 0;
             name.Form("%s_%d", GetName(), number);
             title.Form("%s_%d", GetTitle(), number);
-            pad = new TPad(name.Data(), title.Data(), x1, y1, x2, y2, color);
+            auto pad = new TPad(name.Data(), title.Data(), x1, y1, x2, y2, color);
             pad->SetNumber(number);
             pad->SetBorderMode(0);
             if (i == 0)    pad->SetLeftMargin(xl*nx);
