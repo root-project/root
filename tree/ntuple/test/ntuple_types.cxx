@@ -2056,6 +2056,9 @@ TEST(RNTuple, TClassStlDerived)
 
 TEST(RNTuple, TVirtualCollectionProxy)
 {
+   // Unsupported stdlib collections should throw
+   EXPECT_THROW(ROOT::RFieldBase::Create("l", "std::list<int>").Unwrap(), ROOT::RException);
+
    SimpleCollectionProxy<StructUsingCollectionProxy<char>> proxyC;
    // Exposing as a non-vector forces iteration over collection elements in `ReadGlobalImpl()`
    SimpleCollectionProxy<StructUsingCollectionProxy<float>, ROOT::kSTLdeque> proxyF;
