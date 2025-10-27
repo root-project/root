@@ -1,4 +1,4 @@
-\defgroup tutorial_histv7 Histogram tutorials
+\defgroup tutorial_histv7 RHist tutorials
 \ingroup tutorial_hist
 
 Examples demonstrating ROOT's histogram package.

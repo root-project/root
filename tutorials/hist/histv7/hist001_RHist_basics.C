@@ -4,6 +4,7 @@
 /// Basics of RHist, including filling and adding them.
 ///
 /// \macro_code
+/// \macro_output
 ///
 /// \date September 2025
 /// \author The ROOT Team
@@ -17,7 +18,7 @@
 #include <random>
 #include <variant>
 
-// It is currently not possible to directly draw RHist's, so this function implements an output with ASCII characters.
+// It is currently not possible to directly draw an RHist, so this function implements an output with ASCII characters.
 static void DrawHistogram(const ROOT::Experimental::RHist<int> &hist)
 {
    // Get the axis object from the histogram.
@@ -56,9 +57,9 @@ static void DrawHistogram(const ROOT::Experimental::RHist<int> &hist)
 void hist001_RHist_basics()
 {
    // Create an axis that can be used for multiple histograms.
-   ROOT::Experimental::RRegularAxis axis(40, {0, 20});
+   ROOT::Experimental::RRegularAxis axis(40, {0.0, 20.0});
 
-   // Create a first histograms and fill with random values.
+   // Create a first histogram and fill with random values.
    ROOT::Experimental::RHist<int> hist1({axis});
 
    // Create a normal distribution with mean 5.0 and stddev 2.0.
