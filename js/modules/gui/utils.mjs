@@ -429,18 +429,18 @@ function injectStyle(code, node, tag) {
    const styles = (node || document).getElementsByTagName('style');
    for (let n = 0; n < styles.length; ++n) {
       if (tag && styles[n].getAttribute('tag') === tag) {
-         styles[n].innerHTML = code;
+         styles[n].innerText = code;
          return true;
       }
 
-      if (styles[n].innerHTML === code)
+      if (styles[n].innerText === code)
          return true;
    }
 
    const element = document.createElement('style');
    if (tag)
       element.setAttribute('tag', tag);
-   element.innerHTML = code;
+   element.innerText = code;
    (node || document.head).appendChild(element);
    return true;
 }

@@ -4389,7 +4389,7 @@ class TGeoPainter extends ObjectPainter {
             info.setAttribute('style', 'position: absolute; text-align: center; vertical-align: middle; top: 45%; left: 40%; color: red; font-size: 150%;');
             main.append(info);
          }
-         info.innerHTML = `${msg}, ${spent.toFixed(1)}s`;
+         info.innerText = `${msg}, ${spent.toFixed(1)}s`;
       }
    }
 

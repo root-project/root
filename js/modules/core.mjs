@@ -6,7 +6,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '21/10/2025',
+version_date = '27/10/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1131,7 +1131,7 @@ async function injectCode(code) {
       // check if code already loaded - to avoid duplication
       const scripts = document.getElementsByTagName('script');
       for (let n = 0; n < scripts.length; ++n) {
-         if (scripts[n].innerHTML === code)
+         if (scripts[n].innerText === code)
             return true;
       }
 
@@ -1147,7 +1147,7 @@ async function injectCode(code) {
       return promise.then(() => {
          const element = document.createElement('script');
          element.setAttribute('type', is_mjs ? 'module' : 'text/javascript');
-         element.innerHTML = code;
+         element.innerText = code;
          document.head.appendChild(element);
          // while onload event not fired, just postpone resolve
          return isBatchMode() ? true : postponePromise(true, 10);

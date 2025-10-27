@@ -1,30 +1,31 @@
 # JSROOT changelog
 
-## Changes in dev
+## Changes in 7.10.0
 1. `RNtuple` support, thanks to Kriti Mahajan https://github.com/Krmjn09
-1. Implement `RTreeMapPainter` to display `RNTuple` structure, thanks to Patryk Pilichowski https://github.com/magnustymoteus
-1. Implement `build3d` function for building three.js objects for `TH1/2/3`, `TLatex` `TGeo`, `TGraph2D` classes #368
-1. Draw `TAnnotation3D` in real 3D with handling scene rotation
-1. Let use hex colors in histogram draw options like "fill_00ff00" or "line_77aa1166"
-1. Let configure exact axis ticks position via draw option like "xticks:[-3,-1,1,3]"
-1. Support gStyle.fBarOffset for `TGraph` bar drawing
-1. Support "fill_<id>" and "line_<id>" draw options for `TGraph`
-1. Support dark mode when store images
-1. With 'Shift' key pressed whole graph is moved by dragging action
-1. Support `Xall` and `Yall` as projections width #340
-1. Implement `unzipJSON()` function for data embeding in jupyter
-1. Support reading `TBranch` from old ROOT files with custom streamers
-1. Upgrade three.js r174 -> r180
-1. Upgrade lil-gui.mjs 0.19.2 -> 0.20.0
-1. Upgrade svg2pdf.js 2.3.0 -> 2.6.0
-1. Upgrade jsPDF 2.5.2 -> 3.0.3, exclude gif, bmp, jpeg support
-1. Use ES6 modules to implement geoworker, enable node.js usage
-1. Remove countGeometryFaces function - use numGeometryFaces instead
-1. Remove experimental RHist classes, deprecated in ROOT 6.38
-1. Internal - ws members are private, new methods has to be used
-1. Fix - ticks size and labels with kMoreLogLabels axis bit
-1. Fix - first color in palette drawing #365
-1. Fix - latex parsing error of `#delta_{0}_suffix` string
+2. Implement `RTreeMapPainter` to display `RNTuple` structure, thanks to Patryk Pilichowski https://github.com/magnustymoteus
+3. Implement `build3d` function for building three.js objects for `TH1/2/3`, `TLatex` `TGeo`, `TGraph2D` classes #368
+4. Draw `TAnnotation3D` in real 3D with handling scene rotation
+5. Let use hex colors in histogram draw options like "fill_00ff00" or "line_77aa1166"
+6. Let configure exact axis ticks position via draw option like "xticks:[-3,-1,1,3]"
+7. Support gStyle.fBarOffset for `TGraph` bar drawing
+8. Support "fill_<id>" and "line_<id>" draw options for `TGraph`
+9. Support dark mode when store images
+10. With 'Shift' key pressed whole graph is moved by dragging action
+11. Support `Xall` and `Yall` as projections width #340
+12. Implement `unzipJSON()` function for data embeding in jupyter
+13. Support reading `TBranch` from very old ROOT files with custom streamers
+14. Upgrade three.js r174 -> r180
+15. Upgrade lil-gui.mjs 0.19.2 -> 0.20.0
+16. Upgrade svg2pdf.js 2.3.0 -> 2.6.0
+17. Upgrade jsPDF 2.5.2 -> 3.0.3, exclude gif, bmp, jpeg support
+18. Use ES6 modules to implement geoworker, enable node.js usage
+19. Remove countGeometryFaces function - use numGeometryFaces instead
+20. Remove experimental RHist classes, deprecated in ROOT 6.38
+21. Internal - ws members are private, new methods has to be used
+22. Fix - ticks size and labels with kMoreLogLabels axis bit
+23. Fix - first color in palette drawing #365
+24. Fix - latex parsing error of `#delta_{0}_suffix` string
+25. Fix - reduce plain HTML usage to minimize danger of JS code injection
 
 
 ## Changes in 7.9.3

@@ -291,7 +291,7 @@ class JSRootMenu {
             title = name;
          if (title)
             title += `, code ${id}`;
-         this.addchk((id === curr) || more, '<nobr>' + name + '</nobr>', id, set_func, title || name);
+         this.addchk((id === curr) || more, name, id, set_func, title || name);
       };
 
       this.sub('Palette', () => this.input('Enter palette code [1..113]', curr, 'int', 1, 113).then(set_func));
@@ -1358,13 +1358,13 @@ class StandaloneMenu extends JSRootMenu {
                   title = d.title;
             }
             if (!url)
-               item.innerHTML = d.text;
+               item.innerText = d.text;
             else {
                item.style.display = 'flex';
                item.style['justify-content'] = 'space-between';
 
                const txt = doc.createElement('span');
-               txt.innerHTML = d.text;
+               txt.innerText = d.text;
                txt.style = 'display: inline-block; margin: 0;';
                item.appendChild(txt);
 
@@ -1426,10 +1426,7 @@ class StandaloneMenu extends JSRootMenu {
             }
 
             const sub = doc.createElement('span');
-            if (d.text.indexOf('<nobr>') === 0)
-               sub.textContent = d.text.slice(6, d.text.length - 7);
-            else
-               sub.textContent = d.text;
+            sub.textContent = d.text;
             text.appendChild(sub);
          }
 

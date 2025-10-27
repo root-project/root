@@ -182,8 +182,12 @@ function floatToString(value, fmt, ret_fmt) {
 class DrawOptions {
 
    constructor(opt) {
-      this.opt = isStr(opt) ? opt.toUpperCase().trim() : '';
-      this.part = '';
+      if (isStr(opt)) {
+         this.origin = opt.trim();
+         this.opt = this.origin.toUpperCase();
+      } else
+         this.opt = this.origin = '';
+      this.part = this.partO = '';
    }
 
    /** @summary Returns true if remaining options are empty or contain only separators symbols. */
@@ -192,12 +196,18 @@ class DrawOptions {
    /** @summary Returns remaining part of the draw options. */
    remain() { return this.opt; }
 
+   /** @summary Remove [pos, pos2) part from the string */
+   #cut(pos, pos2) {
+      this.opt = this.opt.slice(0, pos) + this.opt.slice(pos2);
+      this.origin = this.origin.slice(0, pos) + this.origin.slice(pos2);
+   }
+
    /** @summary Checks if given option exists */
    check(name, postpart) {
       const pos = this.opt.indexOf(name);
       if (pos < 0)
          return false;
-      this.opt = this.opt.slice(0, pos) + this.opt.slice(pos + name.length);
+      this.#cut(pos, pos + name.length);
       this.part = '';
       if (!postpart)
          return true;
@@ -217,7 +227,8 @@ class DrawOptions {
       }
       if (pos2 > pos) {
          this.part = this.opt.slice(pos, pos2);
-         this.opt = this.opt.slice(0, pos) + this.opt.slice(pos2);
+         this.partO = this.origin.slice(pos, pos2);
+         this.#cut(pos, pos2);
       }
 
       if (is_array) {
@@ -248,6 +259,9 @@ class DrawOptions {
       }
       return false;
    }
+
+   /** @summary Returns (original) part after found options. */
+   getPart(origin) { return origin ? this.partO : this.part; }
 
    /** @summary Returns remaining part of found option as integer. */
    partAsInt(offset, dflt) {

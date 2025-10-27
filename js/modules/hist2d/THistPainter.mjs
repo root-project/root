@@ -151,13 +151,13 @@ class THistDrawOptions {
 
       // let configure histogram titles - only for debug purposes
       if (d.check('HTITLE:', true))
-         histo.fTitle = decodeURIComponent(d.part.toLowerCase());
+         histo.fTitle = decodeURIComponent(d.getPart(true));
       if (d.check('XTITLE:', true))
-         histo.fXaxis.fTitle = decodeURIComponent(d.part.toLowerCase());
+         histo.fXaxis.fTitle = decodeURIComponent(d.getPart(true));
       if (d.check('YTITLE:', true))
-         histo.fYaxis.fTitle = decodeURIComponent(d.part.toLowerCase());
+         histo.fYaxis.fTitle = decodeURIComponent(d.getPart(true));
       if (d.check('ZTITLE:', true))
-         histo.fZaxis.fTitle = decodeURIComponent(d.part.toLowerCase());
+         histo.fZaxis.fTitle = decodeURIComponent(d.getPart(true));
       if (d.check('POISSON2'))
          this.Poisson = kPoisson2;
       if (d.check('POISSON'))

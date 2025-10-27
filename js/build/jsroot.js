@@ -1,4 +1,4 @@
-// https://root.cern/js/ v7.9.99
+// https://root.cern/js/ v7.10.0
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -10,11 +10,11 @@ var _documentCurrentScript = typeof document !== 'undefined' ? document.currentS
 
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = 'dev',
+const version_id = '7.10.0',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '21/10/2025',
+version_date = '27/10/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1139,7 +1139,7 @@ async function injectCode(code) {
       // check if code already loaded - to avoid duplication
       const scripts = document.getElementsByTagName('script');
       for (let n = 0; n < scripts.length; ++n) {
-         if (scripts[n].innerHTML === code)
+         if (scripts[n].innerText === code)
             return true;
       }
 
@@ -1155,7 +1155,7 @@ async function injectCode(code) {
       return promise.then(() => {
          const element = document.createElement('script');
          element.setAttribute('type', is_mjs ? 'module' : 'text/javascript');
-         element.innerHTML = code;
+         element.innerText = code;
          document.head.appendChild(element);
          // while onload event not fired, just postpone resolve
          return isBatchMode() ? true : postponePromise(true, 10);
@@ -8904,8 +8904,12 @@ function floatToString(value, fmt, ret_fmt) {
 class DrawOptions {
 
    constructor(opt) {
-      this.opt = isStr(opt) ? opt.toUpperCase().trim() : '';
-      this.part = '';
+      if (isStr(opt)) {
+         this.origin = opt.trim();
+         this.opt = this.origin.toUpperCase();
+      } else
+         this.opt = this.origin = '';
+      this.part = this.partO = '';
    }
 
    /** @summary Returns true if remaining options are empty or contain only separators symbols. */
@@ -8914,12 +8918,18 @@ class DrawOptions {
    /** @summary Returns remaining part of the draw options. */
    remain() { return this.opt; }
 
+   /** @summary Remove [pos, pos2) part from the string */
+   #cut(pos, pos2) {
+      this.opt = this.opt.slice(0, pos) + this.opt.slice(pos2);
+      this.origin = this.origin.slice(0, pos) + this.origin.slice(pos2);
+   }
+
    /** @summary Checks if given option exists */
    check(name, postpart) {
       const pos = this.opt.indexOf(name);
       if (pos < 0)
          return false;
-      this.opt = this.opt.slice(0, pos) + this.opt.slice(pos + name.length);
+      this.#cut(pos, pos + name.length);
       this.part = '';
       if (!postpart)
          return true;
@@ -8939,7 +8949,8 @@ class DrawOptions {
       }
       if (pos2 > pos) {
          this.part = this.opt.slice(pos, pos2);
-         this.opt = this.opt.slice(0, pos) + this.opt.slice(pos2);
+         this.partO = this.origin.slice(pos, pos2);
+         this.#cut(pos, pos2);
       }
 
       if (is_array) {
@@ -8970,6 +8981,9 @@ class DrawOptions {
       }
       return false;
    }
+
+   /** @summary Returns (original) part after found options. */
+   getPart(origin) { return origin ? this.partO : this.part; }
 
    /** @summary Returns remaining part of found option as integer. */
    partAsInt(offset, dflt) {
@@ -13397,6 +13411,11 @@ class ObjectPainter extends BasePainter {
 
       return pad_painter.addToPrimitives(this);
    }
+
+   /** @summary Remove painter from pad list of painters
+     * @desc Can be used from external frameworks to add/remove painters
+     * @protected */
+   removeFromPadPrimitives() { this.getPadPainter()?.removePrimitive(this); }
 
    /** @summary Creates marker attributes object
      * @desc Can be used to produce markers in painter.
@@ -74654,37 +74673,34 @@ class TooltipFor3D {
 
    /** @summary Show tooltip */
    show(v /* , mouse_pos, status_func */) {
-      if (!v)
+      let lines;
+      if (v && isObject(v) && (v.lines || v.line)) {
+         if (!v.only_status)
+            lines = v.line ? [v.line] : v.lines;
+      } else if (isStr(v))
+         lines = [v];
+
+      const doc = this.parent.ownerDocument;
+
+      if (!lines || !doc)
          return this.hide();
 
-      if (isObject(v) && (v.lines || v.line)) {
-         if (v.only_status)
-            return this.hide();
-
-         if (v.line)
-            v = v.line;
-         else {
-            let res = v.lines[0];
-            for (let n = 1; n < v.lines.length; ++n)
-               res += '<br/>' + v.lines[n];
-            v = res;
-         }
-      }
-
-      if (this.tt === null) {
-         const doc = getDocument();
+      if (!this.tt) {
          this.tt = doc.createElement('div');
-         this.tt.setAttribute('style', 'opacity: 1; filter: alpha(opacity=1); position: absolute; display: block; overflow: hidden; z-index: 101;');
+         this.tt.setAttribute('style', 'opacity: 1; filter: alpha(opacity=1); position: absolute; display: block; width: auto; overflow: hidden; z-index: 101;');
          this.cont = doc.createElement('div');
          this.cont.setAttribute('style', 'display: block; padding: 5px; margin-left: 5px; font-size: 11px; line-height: 18px; background: #777; color: #fff;');
          this.tt.appendChild(this.cont);
          this.parent.appendChild(this.tt);
       }
 
-      if (this.lastlbl !== v) {
-         this.cont.innerHTML = this.lastlbl = v;
-         this.tt.style.width = 'auto'; // let it be automatically resizing...
-      }
+      this.cont.innerText = '';
+      lines.forEach(lbl => {
+         const p = doc.createElement('p');
+         p.innerText = lbl;
+         p.setAttribute('style', 'padding: 0px; margin: 1px;');
+         this.cont.appendChild(p);
+      });
    }
 
    /** @summary Hide tooltip */
@@ -74692,8 +74708,7 @@ class TooltipFor3D {
       if (this.tt)
          this.parent.removeChild(this.tt);
 
-      this.tt = null;
-      this.lastlbl = '';
+      this.tt = this.cont = null;
    }
 
 } // class TooltipFor3D
@@ -74951,20 +74966,21 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
 
    control.getInfoAtMousePosition = function(mouse_pos) {
       const intersects = this.getMouseIntersects(mouse_pos);
-      let tip = null, _painter = null;
+      let tip = null, p = null;
 
       for (let i = 0; i < intersects.length; ++i) {
-         if (intersects[i].object.tooltip) {
-            tip = intersects[i].object.tooltip(intersects[i]);
-            _painter = intersects[i].object.painter;
+         const obj3d = intersects[i].object;
+         if (isFunc(obj3d?.tooltip)) {
+            tip = obj3d.tooltip(intersects[i]);
+            p = obj3d.tip_painter || obj3d.painter || tip?.$painter;
             break;
          }
       }
 
-      if (tip && _painter) {
+      if (tip && p) {
          return {
-            obj: _painter.getObject(),
-            name: _painter.getObject().fName,
+            obj: p.getObject(),
+            name: p.getObject().fName,
             bin: tip.bin, cont: tip.value,
             binx: tip.ix, biny: tip.iy, binz: tip.iz,
             grx: (tip.x1 + tip.x2) / 2, gry: (tip.y1 + tip.y2) / 2, grz: (tip.z1 + tip.z2) / 2
@@ -78459,18 +78475,18 @@ function injectStyle(code, node, tag) {
    const styles = (node || document).getElementsByTagName('style');
    for (let n = 0; n < styles.length; ++n) {
       if (tag && styles[n].getAttribute('tag') === tag) {
-         styles[n].innerHTML = code;
+         styles[n].innerText = code;
          return true;
       }
 
-      if (styles[n].innerHTML === code)
+      if (styles[n].innerText === code)
          return true;
    }
 
    const element = document.createElement('style');
    if (tag)
       element.setAttribute('tag', tag);
-   element.innerHTML = code;
+   element.innerText = code;
    (node || document.head).appendChild(element);
    return true;
 }
@@ -79002,7 +79018,7 @@ class JSRootMenu {
             title = name;
          if (title)
             title += `, code ${id}`;
-         this.addchk((id === curr) || more, '<nobr>' + name + '</nobr>', id, set_func, title || name);
+         this.addchk((id === curr) || more, name, id, set_func, title || name);
       };
 
       this.sub('Palette', () => this.input('Enter palette code [1..113]', curr, 'int', 1, 113).then(set_func));
@@ -80069,13 +80085,13 @@ class StandaloneMenu extends JSRootMenu {
                   title = d.title;
             }
             if (!url)
-               item.innerHTML = d.text;
+               item.innerText = d.text;
             else {
                item.style.display = 'flex';
                item.style['justify-content'] = 'space-between';
 
                const txt = doc.createElement('span');
-               txt.innerHTML = d.text;
+               txt.innerText = d.text;
                txt.style = 'display: inline-block; margin: 0;';
                item.appendChild(txt);
 
@@ -80137,10 +80153,7 @@ class StandaloneMenu extends JSRootMenu {
             }
 
             const sub = doc.createElement('span');
-            if (d.text.indexOf('<nobr>') === 0)
-               sub.textContent = d.text.slice(6, d.text.length - 7);
-            else
-               sub.textContent = d.text;
+            sub.textContent = d.text;
             text.appendChild(sub);
          }
 
@@ -86051,7 +86064,7 @@ class TabsDisplay extends MDIDisplay {
          }).append('button')
          .attr('title', 'close')
          .attr('style', 'margin-left: .5em; padding: 0; font-size: 0.5em; width: 1.8em; height: 1.8em; vertical-align: center;')
-         .html('&#x2715;')
+         .text('\u2715')
          .on('click', function() {
             mdi.modifyTabsFrame(select(this.parentNode).property('frame_id'), 'close');
          });
@@ -86204,9 +86217,9 @@ class FlexibleDisplay extends MDIDisplay {
          const btn = select(this);
          if (((d.t === 'minimize') && (newstate === 'min')) ||
              ((d.t === 'maximize') && (newstate === 'max')))
-            btn.html('&#x259E;').attr('title', 'restore');
+            btn.text('\u259E').attr('title', 'restore');
          else
-            btn.html(d.n).attr('title', d.t);
+            btn.text(d.n).attr('title', d.t);
       });
 
       main.property('state', newstate);
@@ -86316,13 +86329,13 @@ class FlexibleDisplay extends MDIDisplay {
           .on('contextmenu', evnt => mdi.showContextMenu(evnt, true))
           .on('click', function() { mdi.activateFrame(select(this.parentNode).select('.jsroot_flex_draw').node()); })
           .selectAll('button')
-          .data([{ n: '&#x2715;', t: 'close' }, { n: '&#x2594;', t: 'maximize' }, { n: '&#x2581;', t: 'minimize' }])
+          .data([{ n: '\u2715', t: 'close' }, { n: '\u2594', t: 'maximize' }, { n: '\u2581', t: 'minimize' }])
           .enter()
           .append('button')
           .attr('type', 'button')
           .attr('style', 'float: right; padding: 0; width: 1.4em; text-align: center; font-size: 10px; margin-top: 2px; margin-right: 4px')
           .attr('title', d => d.t)
-          .html(d => d.n)
+          .text(d => d.n)
           .on('click', function() { mdi._clickButton(this); });
 
       let moving_frame = null, moving_div = null, doing_move = false, current = [];
@@ -86578,7 +86591,7 @@ class BatchDisplay extends MDIDisplay {
       return Promise.all(prs).then(() => {
          this.jsdom_body.append('div')
              .attr('id', 'jsroot_batch_final')
-             .html(`${cnt}`);
+             .text(`${cnt}`);
       });
    }
 
@@ -86999,7 +87012,7 @@ class BrowserLayout {
       for (let n = 0; n < 4; ++n) {
          const lbl = this.status_layout.getGridFrame(n).querySelector('label');
          maxh = Math.max(maxh, lbl.clientHeight);
-         lbl.innerHTML = msgs[n] || '';
+         lbl.innerText = msgs[n] || '';
       }
 
       if (!this.status_layout.first_check) {
@@ -93072,13 +93085,13 @@ class THistDrawOptions {
 
       // let configure histogram titles - only for debug purposes
       if (d.check('HTITLE:', true))
-         histo.fTitle = decodeURIComponent(d.part.toLowerCase());
+         histo.fTitle = decodeURIComponent(d.getPart(true));
       if (d.check('XTITLE:', true))
-         histo.fXaxis.fTitle = decodeURIComponent(d.part.toLowerCase());
+         histo.fXaxis.fTitle = decodeURIComponent(d.getPart(true));
       if (d.check('YTITLE:', true))
-         histo.fYaxis.fTitle = decodeURIComponent(d.part.toLowerCase());
+         histo.fYaxis.fTitle = decodeURIComponent(d.getPart(true));
       if (d.check('ZTITLE:', true))
-         histo.fZaxis.fTitle = decodeURIComponent(d.part.toLowerCase());
+         histo.fZaxis.fTitle = decodeURIComponent(d.getPart(true));
       if (d.check('POISSON2'))
          this.Poisson = kPoisson2;
       if (d.check('POISSON'))
@@ -101695,7 +101708,7 @@ function _lineErrToolTip(intersect) {
    const pos = Math.floor(intersect.index / 6);
    if ((pos < 0) || (pos >= this.intersect_index.length))
       return null;
-   const p = this.painter,
+   const p = this.tip_painter,
          histo = p.getHisto(),
          fp = p.getFramePainter(),
          tip = p.get3DToolTip(this.intersect_index[pos]),
@@ -101800,7 +101813,7 @@ function drawBinsError3D(painter, is_v7 = false) {
          material = new THREE.LineBasicMaterial(getMaterialArgs(lcolor, { linewidth: is_v7 ? painter.v7EvalAttr('line_width', 1) : histo.fLineWidth })),
          line = createLineSegments(lpos, material);
 
-   line.painter = painter;
+   line.tip_painter = painter;
    line.intersect_index = binindx;
    line.zmin = zmin;
    line.zmax = zmax;
@@ -104453,7 +104466,7 @@ class TH3Painter extends THistPainter {
          fp.add3DMesh(mesh);
 
          mesh.bins = bins;
-         mesh.painter = this;
+         mesh.tip_painter = this;
          mesh.tip_color = histo.fMarkerColor === 3 ? 0xFF0000 : 0x00FF00;
 
          mesh.tooltip = function(intersect) {
@@ -104461,7 +104474,7 @@ class TH3Painter extends THistPainter {
             if ((indx < 0) || (indx >= this.bins.length))
                return null;
 
-            const p = this.painter,
+            const p = this.tip_painter,
                   thisto = p.getHisto(),
                   tip = p.get3DToolTip(this.bins[indx]);
 
@@ -104644,7 +104657,7 @@ class TH3Painter extends THistPainter {
          }
       }
 
-      function getBinTooltip(intersect) {
+      function _getBinTooltip(intersect) {
          let binid = this.binid;
 
          if (binid === undefined) {
@@ -104653,7 +104666,7 @@ class TH3Painter extends THistPainter {
             binid = this.bins[intersect.instanceId];
          }
 
-         const p = this.painter,
+         const p = this.tip_painter,
                thisto = p.getHisto(),
                tip = p.get3DToolTip(binid),
                grx1 = fp.grx(thisto.fXaxis.GetBinCoord(tip.ix - 1)),
@@ -104686,12 +104699,12 @@ class TH3Painter extends THistPainter {
 
             bin_mesh.applyMatrix4(bins_matrixes[n]);
 
-            bin_mesh.painter = this;
+            bin_mesh.tip_painter = this;
             bin_mesh.binid = bins_ids[n];
             bin_mesh.tipscale = tipscale;
             bin_mesh.tip_color = (histo.fFillColor === 3) ? 0xFF0000 : 0x00FF00;
             bin_mesh.get_weight = get_bin_weight;
-            bin_mesh.tooltip = getBinTooltip;
+            bin_mesh.tooltip = _getBinTooltip;
 
             fp.add3DMesh(bin_mesh);
          }
@@ -104709,12 +104722,12 @@ class TH3Painter extends THistPainter {
                all_bins_mesh.setColorAt(n, new THREE.Color(bins_colors[n]));
          }
 
-         all_bins_mesh.painter = this;
+         all_bins_mesh.tip_painter = this;
          all_bins_mesh.bins = bins_ids;
          all_bins_mesh.tipscale = tipscale;
          all_bins_mesh.tip_color = (histo.fFillColor === 3) ? 0xFF0000 : 0x00FF00;
          all_bins_mesh.get_weight = get_bin_weight;
-         all_bins_mesh.tooltip = getBinTooltip;
+         all_bins_mesh.tooltip = _getBinTooltip;
 
          fp.add3DMesh(all_bins_mesh);
       }
@@ -119118,7 +119131,7 @@ class TGeoPainter extends ObjectPainter {
             info.setAttribute('style', 'position: absolute; text-align: center; vertical-align: middle; top: 45%; left: 40%; color: red; font-size: 150%;');
             main.append(info);
          }
-         info.innerHTML = `${msg}, ${spent.toFixed(1)}s`;
+         info.innerText = `${msg}, ${spent.toFixed(1)}s`;
       }
    }
 
@@ -166320,12 +166333,12 @@ class HierarchyPainter extends BasePainter {
 
       if ((options.length === 1) && (options[0] === 'iotest')) {
          this.clearHierarchy();
-         select('#' + this.disp_frameid).html('<h2>Start I/O test</h2>');
+         select('#' + this.disp_frameid).html('').append('h2').text('Start I/O test');
 
          const tm0 = new Date();
-         return this.getObject(items[0]).then(() => {
+         return this.getObject(items[0]).then(res => {
             const tm1 = new Date();
-            select('#' + this.disp_frameid).append('h2').html('Item ' + items[0] + ' reading time = ' + (tm1.getTime() - tm0.getTime()) + 'ms');
+            select('#' + this.disp_frameid).append('h2').text(`Item ${items[0]} reading ` + (res?.obj ? `type ${res?.obj._typename} time = ${tm1.getTime() - tm0.getTime()}ms` : 'fail'));
             return true;
          });
       }
@@ -167607,6 +167620,7 @@ class HierarchyPainter extends BasePainter {
          browser_kind = 'float';
 
       this.no_select = getOption('noselect');
+      this.top_info = getOption('info');
 
       if (getOption('files_monitoring') !== null)
          this.files_monitoring = true;
@@ -167897,7 +167911,7 @@ class HierarchyPainter extends BasePainter {
 
       this.brlayout.setBrowserContent(guiCode);
 
-      const title_elem = this.brlayout.setBrowserTitle(this.is_online ? 'ROOT online server' : 'Read a ROOT file');
+      const title_elem = this.brlayout.setBrowserTitle(this.top_info || (this.is_online ? 'ROOT online server' : 'Read a ROOT file'));
       title_elem?.on('contextmenu', evnt => {
          evnt.preventDefault();
          createMenu(evnt).then(menu => {
@@ -171460,7 +171474,7 @@ class TGraphDelaunay {
 } // class TGraphDelaunay
 
 /** @summary Function handles tooltips in the mesh */
-function graph2DTooltip(intersect) {
+function _graph2DTooltip(intersect) {
    let indx = Math.floor(intersect.index / this.nvertex);
    if ((indx < 0) || (indx >= this.index.length))
       return null;
@@ -171967,8 +171981,7 @@ class TGraph2DPainter extends ObjectPainter {
             linemesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
             linemesh.nvertex = 2;
             linemesh.check_next = true;
-
-            linemesh.tooltip = graph2DTooltip;
+            linemesh.tooltip = _graph2DTooltip;
          }
 
          if (err) {
@@ -171984,8 +171997,7 @@ class TGraph2DPainter extends ObjectPainter {
             errmesh.tip_name = this.getObjectHint();
             errmesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
             errmesh.nvertex = 6;
-
-            errmesh.tooltip = graph2DTooltip;
+            errmesh.tooltip = _graph2DTooltip;
          }
 
          if (pnts) {
@@ -172000,9 +172012,8 @@ class TGraph2DPainter extends ObjectPainter {
                mesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
                mesh.scale0 = 0.3 * scale;
                mesh.index = index;
-
                mesh.tip_name = this.getObjectHint();
-               mesh.tooltip = graph2DTooltip;
+               mesh.tooltip = _graph2DTooltip;
                fp.add3DMesh(mesh, this);
             });
 

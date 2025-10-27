@@ -661,6 +661,11 @@ class ObjectPainter extends BasePainter {
       return pad_painter.addToPrimitives(this);
    }
 
+   /** @summary Remove painter from pad list of painters
+     * @desc Can be used from external frameworks to add/remove painters
+     * @protected */
+   removeFromPadPrimitives() { this.getPadPainter()?.removePrimitive(this); }
+
    /** @summary Creates marker attributes object
      * @desc Can be used to produce markers in painter.
      * See {@link TAttMarkerHandler} for more info.
