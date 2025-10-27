@@ -176,8 +176,35 @@ the deprecation period was extended.
 
 ## JavaScript ROOT
 - A new configuration option `Jupyter.JSRoot` was added in .rootrc to set the default mode for JSROOT in Jupyter notebooks (on or off).
+- JSROOT 7.10.0:
+   * `RNtuple` support, thanks to Kriti Mahajan https://github.com/Krmjn09
+   * Implement `RTreeMapPainter` to display `RNTuple` structure, thanks to Patryk Pilichowski https://github.com/magnustymoteus
+   * Implement `build3d` function for building three.js objects for `TH1/2/3`, `TLatex` `TGeo`, `TGraph2D` classes
+   * Draw `TAnnotation3D` in real 3D with handling scene rotation
+   * Let use hex colors in histogram draw options like "fill_00ff00" or "line_77aa1166"
+   * Let configure exact axis ticks position via draw option like "xticks:[-3,-1,1,3]"
+   * Support gStyle.fBarOffset for `TGraph` bar drawing
+   * Support "fill_<id>" and "line_<id>" draw options for `TGraph`
+   * Support dark mode when store images
+   * With 'Shift' key pressed whole graph is moved by dragging action
+   * Support `Xall` and `Yall` as projections width
+   * Implement `unzipJSON()` function for data embeding in jupyter
+   * Support reading `TBranch` from very old ROOT files with custom streamers
+   * Upgrade three.js r174 -> r180
+   * Upgrade lil-gui.mjs 0.19.2 -> 0.20.0
+   * Upgrade svg2pdf.js 2.3.0 -> 2.6.0
+   * Upgrade jsPDF 2.5.2 -> 3.0.3, exclude gif, bmp, jpeg support
+   * Use ES6 modules to implement geoworker, enable node.js usage
+   * Remove countGeometryFaces function - use numGeometryFaces instead
+   * Remove experimental RHist classes, deprecated in ROOT 6.38
+   * Internal - ws members are private, new methods has to be used
+   * Fix - ticks size and labels with kMoreLogLabels axis bit
+   * Fix - first color in palette drawing
+   * Fix - latex parsing error of `#delta_{0}_suffix` string
+   * Fix - reduce plain HTML usage to minimize danger of JS code injection
 
-### Optimization of ROOT header files
+
+## Optimization of ROOT header files
 
 More unused includes were removed from ROOT header files.
 For instance, `#include "TMathBase.h"` was removed from `TString.h`.
