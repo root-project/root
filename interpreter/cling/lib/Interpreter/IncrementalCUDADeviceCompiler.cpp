@@ -8,6 +8,7 @@
 //------------------------------------------------------------------------------
 
 #include "cling/Interpreter/IncrementalCUDADeviceCompiler.h"
+#ifdef ROOT_HAS_CUDA
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InvocationOptions.h"
 #include "cling/Interpreter/Transaction.h"
@@ -159,8 +160,9 @@ namespace cling {
     }
 
     // use custom CUDA SDK path
-    if(!invocationOptions.CompilerOpts.CUDAPath.empty()){
-      additionalPtxOpt.push_back("--cuda-path=" + invocationOptions.CompilerOpts.CUDAPath);
+    if (!invocationOptions.CompilerOpts.CUDAPath.empty()) {
+      additionalPtxOpt.push_back("--cuda-path=" +
+                                 invocationOptions.CompilerOpts.CUDAPath);
     }
 
     enum FatBinFlags {
@@ -193,7 +195,7 @@ namespace cling {
 
   void IncrementalCUDADeviceCompiler::addHeaderSearchPathFlags(
       std::vector<std::string>& argv,
-      const std::shared_ptr<clang::HeaderSearchOptions> &headerSearchOptions) {
+      const std::shared_ptr<clang::HeaderSearchOptions>& headerSearchOptions) {
     for (clang::HeaderSearchOptions::Entry e :
          headerSearchOptions->UserEntries) {
       if (e.Group == clang::frontend::IncludeDirGroup::Quoted) {
@@ -432,3 +434,47 @@ namespace cling {
   }
 
 } // end namespace cling
+
+#else
+
+#include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/InvocationOptions.h"
+#include "clang/Frontend/CompilerInstance.h"
+
+namespace cling {
+
+  IncrementalCUDADeviceCompiler::IncrementalCUDADeviceCompiler(
+      const std::string& filePath, const int optLevel,
+      const cling::InvocationOptions& invocationOptions,
+      const clang::CompilerInstance& CI) {}
+
+  Interpreter* IncrementalCUDADeviceCompiler::getPTXInterpreter() {
+    throw std::logic_error(
+        "Cling was compiled without CUDA support. Therefore, the program "
+        "execution should never end up here throwing this exception");
+  }
+
+  bool IncrementalCUDADeviceCompiler::process(const std::string& input) {
+    throw std::logic_error(
+        "Cling was compiled without CUDA support. Therefore, the program "
+        "execution should never end up here throwing this exception");
+  }
+  bool IncrementalCUDADeviceCompiler::declare(const std::string& input) {
+    throw std::logic_error(
+        "Cling was compiled without CUDA support. Therefore, the program "
+        "execution should never end up here throwing this exception");
+  }
+  bool IncrementalCUDADeviceCompiler::parse(const std::string& input) const {
+    throw std::logic_error(
+        "Cling was compiled without CUDA support. Therefore, the program "
+        "execution should never end up here throwing this exception");
+  }
+  void IncrementalCUDADeviceCompiler::dump() {
+    throw std::logic_error(
+        "Cling was compiled without CUDA support. Therefore, the program "
+        "execution should never end up here throwing this exception");
+  }
+
+} // namespace cling
+
+#endif

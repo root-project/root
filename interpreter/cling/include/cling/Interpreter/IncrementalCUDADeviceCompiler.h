@@ -6,10 +6,10 @@
 // of Illinois Open Source License or the GNU Lesser General Public License. See
 // LICENSE.TXT for details.
 //------------------------------------------------------------------------------
-
 #ifndef CLING_INCREMENTAL_CUDA_DEVICE_JIT_H
 #define CLING_INCREMENTAL_CUDA_DEVICE_JIT_H
 
+#ifdef LLVM_HAS_NVPTX_TARGET
 #include "clang/Basic/CodeGenOptions.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/TargetParser/Triple.h"
@@ -62,16 +62,15 @@ namespace cling {
                        const uint32_t fatbinFlags, const bool verbose,
                        const bool debug,
                        const std::vector<std::string> additionalPtxOpt)
-          : cppStdVersion(cppStdVersion),
-            hostTriple(hostTriple), smVersion(smVersion),
-            fatbinFlags(fatbinFlags), verbose(verbose), debug(debug),
-            additionalPtxOpt(additionalPtxOpt) {}
+          : cppStdVersion(cppStdVersion), hostTriple(hostTriple),
+            smVersion(smVersion), fatbinFlags(fatbinFlags), verbose(verbose),
+            debug(debug), additionalPtxOpt(additionalPtxOpt) {}
     };
 
     std::unique_ptr<CUDACompilerArgs> m_CuArgs;
 
     ///\brief Interpreter instance with target NVPTX which compiles the input to
-    ///LLVM IR. Then the LLVM IR is compiled to PTX via an additional backend.
+    /// LLVM IR. Then the LLVM IR is compiled to PTX via an additional backend.
     std::unique_ptr<Interpreter> m_PTX_interp;
 
     ///\brief Is true if the second interpreter instance was created and the
@@ -99,7 +98,7 @@ namespace cling {
     /// paths.
     void addHeaderSearchPathFlags(
         std::vector<std::string>& argv,
-        const std::shared_ptr<clang::HeaderSearchOptions> &headerSearchOptions);
+        const std::shared_ptr<clang::HeaderSearchOptions>& headerSearchOptions);
 
     ///\brief Compiles a PTX file from the current input. The PTX code is
     /// written to cling.ptx.
@@ -145,7 +144,7 @@ namespace cling {
     ///
     ///\return std::unique_ptr< cling::Interpreter >&
     ///
-    Interpreter *getPTXInterpreter() { return m_PTX_interp.get(); }
+    Interpreter* getPTXInterpreter() { return m_PTX_interp.get(); }
 
     ///\brief Generate an new fatbin file with the path in
     /// CudaGpuBinaryFileNames.
@@ -195,4 +194,38 @@ namespace cling {
 
 } // namespace cling
 
+#else
+
+#include <string>
+
+namespace cling {
+  class InvocationOptions;
+  class Interpreter;
+} // namespace cling
+
+namespace clang {
+  class CompilerInstance;
+} // namespace clang
+
+namespace cling {
+
+  // Null object pattern for IncrementalCUDADeviceCompiler. Avoids that the
+  // client code of this class needs to be wrapped in
+  // #ifdef LLVM_HAS_NVPTX_TARGET, in order to compile.
+  class IncrementalCUDADeviceCompiler {
+  public:
+    IncrementalCUDADeviceCompiler(
+        const std::string& filePath, const int optLevel,
+        const cling::InvocationOptions& invocationOptions,
+        const clang::CompilerInstance& CI);
+
+    Interpreter* getPTXInterpreter();
+    bool process(const std::string& input);
+    bool declare(const std::string& input);
+    bool parse(const std::string& input) const;
+    void dump();
+  };
+
+} // namespace cling
+#endif // LLVM_HAS_NVPTX_TARGET
 #endif // CLING_INCREMENTAL_CUDA_DEVICE_JIT_H
