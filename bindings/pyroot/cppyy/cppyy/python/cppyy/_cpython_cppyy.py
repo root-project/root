@@ -19,17 +19,31 @@ __all__ = [
     '_end_capture_stderr'
     ]
 
+# First load the dependency libraries of the backend, then pull in the libcppyy
+# extension module. If the backed can't be loaded, it was probably linked
+# statically into the extension module, so we don't error out at this point.
+try:
+    from cppyy_backend import loader
+    c = loader.load_cpp_backend()
+except ModuleNotFoundError:
+    c = None
+
 if platform.system() == "Windows":
     # On Windows, the library has to be searched without prefix
     import libcppyy as _backend
 else:
     import cppyy.libcppyy as _backend
 
+if c is not None:
+    _backend._cpp_backend = c
+
 # explicitly expose APIs from libcppyy
+import ctypes
 _w = ctypes.CDLL(_backend.__file__, ctypes.RTLD_GLOBAL)
 
 
 # some beautification for inspect (only on p2)
+import sys
 if sys.hexversion < 0x3000000:
   # TODO: this reliese on CPPOverload cooking up a func_code object, which atm
   # is simply not implemented for p3 :/
@@ -61,10 +75,11 @@ class Template(object):  # expected/used by ProxyWrappers.cxx in CPyCppyy
     stl_fixed_size_types = ['std::array']
     stl_mapping_types    = ['std::map', 'std::unordered_map']
 
-    def __init__(self, name):
+    def __init__(self, name, scope):
         self.__name__     = name
         self.__cpp_name__ = name
         self._instantiations = dict()
+        self.__scope__    = scope
 
     def __repr__(self):
         return "<cppyy.Template '%s' object at %s>" % (self.__name__, hex(id(self)))
@@ -81,7 +96,7 @@ class Template(object):  # expected/used by ProxyWrappers.cxx in CPyCppyy
             pass
 
       # construct the type name from the types or their string representation
-        newargs = [self.__name__]
+        newargs = [self.__scope__]
         for arg in args:
             if isinstance(arg, str):
                 arg = ','.join(map(lambda x: x.strip(), arg.split(',')))
@@ -96,13 +111,11 @@ class Template(object):  # expected/used by ProxyWrappers.cxx in CPyCppyy
             if 'reserve' in pyclass.__dict__:
                 def iadd(self, ll):
                     self.reserve(len(ll))
-                    for x in ll:
-                        self.push_back(x)
+                    for x in ll: self.push_back(x)
                     return self
             else:
                 def iadd(self, ll):
-                    for x in ll:
-                        self.push_back(x)
+                    for x in ll: self.push_back(x)
                     return self
             pyclass.__iadd__ = iadd
 
@@ -117,7 +130,7 @@ class Template(object):  # expected/used by ProxyWrappers.cxx in CPyCppyy
       # most common cases are covered
         if args:
             args0 = args[0]
-            if args0 and isinstance(args0, (tuple, list)):
+            if args0 and (type(args0) is tuple or type(args0) is list):
                 t = type(args0[0])
                 if t is float: t = 'double'
 
@@ -128,7 +141,7 @@ class Template(object):  # expected/used by ProxyWrappers.cxx in CPyCppyy
                 if self.__name__ in self.stl_unrolled_types:
                     return self[tuple(type(a) for a in args0)](*args0)
 
-            if args0 and isinstance(args0, dict):
+            if args0 and type(args0) is dict:
                 if self.__name__ in self.stl_mapping_types:
                     try:
                         pair = args0.items().__iter__().__next__()
@@ -159,27 +172,26 @@ gbl.std.move  = _backend.move
 #- add to the dynamic path as needed -----------------------------------------
 import os
 def add_default_paths():
-    gSystem = gbl.gSystem
+    libCppInterOp = gbl.Cpp
     if os.getenv('CONDA_PREFIX'):
       # MacOS, Linux
         lib_path = os.path.join(os.getenv('CONDA_PREFIX'), 'lib')
-        if os.path.exists(lib_path): gSystem.AddDynamicPath(lib_path)
+        if os.path.exists(lib_path): libCppInterOp.AddSearchPath(lib_path, True, False)
 
       # Windows
         lib_path = os.path.join(os.getenv('CONDA_PREFIX'), 'Library', 'lib')
-        if os.path.exists(lib_path): gSystem.AddDynamicPath(lib_path)
+        if os.path.exists(lib_path): libCppInterOp.AddSearchPath(lib_path, True, False)
 
   # assuming that we are in PREFIX/lib/python/site-packages/cppyy, add PREFIX/lib to the search path
-    lib_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), os.path.pardir, os.path.pardir, os.path.pardir))
-    if os.path.exists(lib_path): gSystem.AddDynamicPath(lib_path)
+    lib_path = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir, os.path.pardir, os.path.pardir))
+    if os.path.exists(lib_path): libCppInterOp.AddSearchPath(lib_path, True, False)
 
     try:
         with open('/etc/ld.so.conf') as ldconf:
             for line in ldconf:
                 f = line.strip()
                 if (os.path.exists(f)):
-                    gSystem.AddDynamicPath(f)
+                    libCppInterOp.AddSearchPath(f, True, False)
     except IOError:
         pass
 add_default_paths()
@@ -193,9 +205,18 @@ nullptr       = _backend.nullptr
 default       = _backend.default
 
 def load_reflection_info(name):
-    sc = gbl.gSystem.Load(name)
-    if sc == -1:
-        raise RuntimeError("Unable to load reflection library "+name)
+#    with _stderr_capture() as err:
+    #FIXME: Remove the .so and add logic in libcppinterop
+    name = name + ".so"
+    result = gbl.Cpp.LoadLibrary(name, True)
+    if name.endswith("Dict.so"):
+        header = name[:-7] + ".h"
+        gbl.Cpp.Declare('#include "' + header +'"', False)
+
+    if result == False:
+        raise RuntimeError('Could not load library "%s"' % (name))
+
+    return True
 
 def _begin_capture_stderr():
     _backend._begin_capture_stderr()
