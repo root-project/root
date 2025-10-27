@@ -382,8 +382,9 @@ void THLimitsFinder::OptimizeLimits(Int_t nbins, Int_t &newbins, Double_t &xmin,
       xmin = -1;
       xmax = 1;
    } else {
-      xmin = std::min(binlow, xmin - 0.01 * (xmax - xmin));
-      xmax = std::max(binhigh, xmax + 0.01 * (xmax - xmin));
+      auto delta = 0.01 * (xmax - xmin);
+      xmin = std::min(binlow, xmin - delta);
+      xmax = std::max(binhigh, xmax + delta);
    }
    if (isInteger) {
       Long64_t ixmin = Long64_t(xmin);
