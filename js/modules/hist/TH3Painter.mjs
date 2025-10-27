@@ -348,7 +348,7 @@ class TH3Painter extends THistPainter {
          fp.add3DMesh(mesh);
 
          mesh.bins = bins;
-         mesh.painter = this;
+         mesh.tip_painter = this;
          mesh.tip_color = histo.fMarkerColor === 3 ? 0xFF0000 : 0x00FF00;
 
          mesh.tooltip = function(intersect) {
@@ -356,7 +356,7 @@ class TH3Painter extends THistPainter {
             if ((indx < 0) || (indx >= this.bins.length))
                return null;
 
-            const p = this.painter,
+            const p = this.tip_painter,
                   thisto = p.getHisto(),
                   tip = p.get3DToolTip(this.bins[indx]);
 
@@ -539,7 +539,7 @@ class TH3Painter extends THistPainter {
          }
       }
 
-      function getBinTooltip(intersect) {
+      function _getBinTooltip(intersect) {
          let binid = this.binid;
 
          if (binid === undefined) {
@@ -548,7 +548,7 @@ class TH3Painter extends THistPainter {
             binid = this.bins[intersect.instanceId];
          }
 
-         const p = this.painter,
+         const p = this.tip_painter,
                thisto = p.getHisto(),
                tip = p.get3DToolTip(binid),
                grx1 = fp.grx(thisto.fXaxis.GetBinCoord(tip.ix - 1)),
@@ -581,12 +581,12 @@ class TH3Painter extends THistPainter {
 
             bin_mesh.applyMatrix4(bins_matrixes[n]);
 
-            bin_mesh.painter = this;
+            bin_mesh.tip_painter = this;
             bin_mesh.binid = bins_ids[n];
             bin_mesh.tipscale = tipscale;
             bin_mesh.tip_color = (histo.fFillColor === 3) ? 0xFF0000 : 0x00FF00;
             bin_mesh.get_weight = get_bin_weight;
-            bin_mesh.tooltip = getBinTooltip;
+            bin_mesh.tooltip = _getBinTooltip;
 
             fp.add3DMesh(bin_mesh);
          }
@@ -604,12 +604,12 @@ class TH3Painter extends THistPainter {
                all_bins_mesh.setColorAt(n, new THREE.Color(bins_colors[n]));
          }
 
-         all_bins_mesh.painter = this;
+         all_bins_mesh.tip_painter = this;
          all_bins_mesh.bins = bins_ids;
          all_bins_mesh.tipscale = tipscale;
          all_bins_mesh.tip_color = (histo.fFillColor === 3) ? 0xFF0000 : 0x00FF00;
          all_bins_mesh.get_weight = get_bin_weight;
-         all_bins_mesh.tooltip = getBinTooltip;
+         all_bins_mesh.tooltip = _getBinTooltip;
 
          fp.add3DMesh(all_bins_mesh);
       }

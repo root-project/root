@@ -792,37 +792,34 @@ class TooltipFor3D {
 
    /** @summary Show tooltip */
    show(v /* , mouse_pos, status_func */) {
-      if (!v)
+      let lines;
+      if (v && isObject(v) && (v.lines || v.line)) {
+         if (!v.only_status)
+            lines = v.line ? [v.line] : v.lines;
+      } else if (isStr(v))
+         lines = [v];
+
+      const doc = this.parent.ownerDocument;
+
+      if (!lines || !doc)
          return this.hide();
 
-      if (isObject(v) && (v.lines || v.line)) {
-         if (v.only_status)
-            return this.hide();
-
-         if (v.line)
-            v = v.line;
-         else {
-            let res = v.lines[0];
-            for (let n = 1; n < v.lines.length; ++n)
-               res += '<br/>' + v.lines[n];
-            v = res;
-         }
-      }
-
-      if (this.tt === null) {
-         const doc = getDocument();
+      if (!this.tt) {
          this.tt = doc.createElement('div');
-         this.tt.setAttribute('style', 'opacity: 1; filter: alpha(opacity=1); position: absolute; display: block; overflow: hidden; z-index: 101;');
+         this.tt.setAttribute('style', 'opacity: 1; filter: alpha(opacity=1); position: absolute; display: block; width: auto; overflow: hidden; z-index: 101;');
          this.cont = doc.createElement('div');
          this.cont.setAttribute('style', 'display: block; padding: 5px; margin-left: 5px; font-size: 11px; line-height: 18px; background: #777; color: #fff;');
          this.tt.appendChild(this.cont);
          this.parent.appendChild(this.tt);
       }
 
-      if (this.lastlbl !== v) {
-         this.cont.innerHTML = this.lastlbl = v;
-         this.tt.style.width = 'auto'; // let it be automatically resizing...
-      }
+      this.cont.innerText = '';
+      lines.forEach(lbl => {
+         const p = doc.createElement('p');
+         p.innerText = lbl;
+         p.setAttribute('style', 'padding: 0px; margin: 1px;');
+         this.cont.appendChild(p);
+      });
    }
 
    /** @summary Hide tooltip */
@@ -830,8 +827,7 @@ class TooltipFor3D {
       if (this.tt)
          this.parent.removeChild(this.tt);
 
-      this.tt = null;
-      this.lastlbl = '';
+      this.tt = this.cont = null;
    }
 
 } // class TooltipFor3D
@@ -1089,20 +1085,21 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
 
    control.getInfoAtMousePosition = function(mouse_pos) {
       const intersects = this.getMouseIntersects(mouse_pos);
-      let tip = null, _painter = null;
+      let tip = null, p = null;
 
       for (let i = 0; i < intersects.length; ++i) {
-         if (intersects[i].object.tooltip) {
-            tip = intersects[i].object.tooltip(intersects[i]);
-            _painter = intersects[i].object.painter;
+         const obj3d = intersects[i].object;
+         if (isFunc(obj3d?.tooltip)) {
+            tip = obj3d.tooltip(intersects[i]);
+            p = obj3d.tip_painter || obj3d.painter || tip?.$painter;
             break;
          }
       }
 
-      if (tip && _painter) {
+      if (tip && p) {
          return {
-            obj: _painter.getObject(),
-            name: _painter.getObject().fName,
+            obj: p.getObject(),
+            name: p.getObject().fName,
             bin: tip.bin, cont: tip.value,
             binx: tip.ix, biny: tip.iy, binz: tip.iz,
             grx: (tip.x1 + tip.x2) / 2, gry: (tip.y1 + tip.y2) / 2, grz: (tip.z1 + tip.z2) / 2

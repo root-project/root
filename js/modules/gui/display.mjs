@@ -713,7 +713,7 @@ class TabsDisplay extends MDIDisplay {
          }).append('button')
          .attr('title', 'close')
          .attr('style', 'margin-left: .5em; padding: 0; font-size: 0.5em; width: 1.8em; height: 1.8em; vertical-align: center;')
-         .html('&#x2715;')
+         .text('\u2715')
          .on('click', function() {
             mdi.modifyTabsFrame(d3_select(this.parentNode).property('frame_id'), 'close');
          });
@@ -866,9 +866,9 @@ class FlexibleDisplay extends MDIDisplay {
          const btn = d3_select(this);
          if (((d.t === 'minimize') && (newstate === 'min')) ||
              ((d.t === 'maximize') && (newstate === 'max')))
-            btn.html('&#x259E;').attr('title', 'restore');
+            btn.text('\u259E').attr('title', 'restore');
          else
-            btn.html(d.n).attr('title', d.t);
+            btn.text(d.n).attr('title', d.t);
       });
 
       main.property('state', newstate);
@@ -978,13 +978,13 @@ class FlexibleDisplay extends MDIDisplay {
           .on('contextmenu', evnt => mdi.showContextMenu(evnt, true))
           .on('click', function() { mdi.activateFrame(d3_select(this.parentNode).select('.jsroot_flex_draw').node()); })
           .selectAll('button')
-          .data([{ n: '&#x2715;', t: 'close' }, { n: '&#x2594;', t: 'maximize' }, { n: '&#x2581;', t: 'minimize' }])
+          .data([{ n: '\u2715', t: 'close' }, { n: '\u2594', t: 'maximize' }, { n: '\u2581', t: 'minimize' }])
           .enter()
           .append('button')
           .attr('type', 'button')
           .attr('style', 'float: right; padding: 0; width: 1.4em; text-align: center; font-size: 10px; margin-top: 2px; margin-right: 4px')
           .attr('title', d => d.t)
-          .html(d => d.n)
+          .text(d => d.n)
           .on('click', function() { mdi._clickButton(this); });
 
       let moving_frame = null, moving_div = null, doing_move = false, current = [];
@@ -1240,7 +1240,7 @@ class BatchDisplay extends MDIDisplay {
       return Promise.all(prs).then(() => {
          this.jsdom_body.append('div')
              .attr('id', 'jsroot_batch_final')
-             .html(`${cnt}`);
+             .text(`${cnt}`);
       });
    }
 
@@ -1661,7 +1661,7 @@ class BrowserLayout {
       for (let n = 0; n < 4; ++n) {
          const lbl = this.status_layout.getGridFrame(n).querySelector('label');
          maxh = Math.max(maxh, lbl.clientHeight);
-         lbl.innerHTML = msgs[n] || '';
+         lbl.innerText = msgs[n] || '';
       }
 
       if (!this.status_layout.first_check) {

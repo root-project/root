@@ -1078,7 +1078,7 @@ class TGraphDelaunay {
 } // class TGraphDelaunay
 
 /** @summary Function handles tooltips in the mesh */
-function graph2DTooltip(intersect) {
+function _graph2DTooltip(intersect) {
    let indx = Math.floor(intersect.index / this.nvertex);
    if ((indx < 0) || (indx >= this.index.length))
       return null;
@@ -1585,8 +1585,7 @@ class TGraph2DPainter extends ObjectPainter {
             linemesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
             linemesh.nvertex = 2;
             linemesh.check_next = true;
-
-            linemesh.tooltip = graph2DTooltip;
+            linemesh.tooltip = _graph2DTooltip;
          }
 
          if (err) {
@@ -1602,8 +1601,7 @@ class TGraph2DPainter extends ObjectPainter {
             errmesh.tip_name = this.getObjectHint();
             errmesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
             errmesh.nvertex = 6;
-
-            errmesh.tooltip = graph2DTooltip;
+            errmesh.tooltip = _graph2DTooltip;
          }
 
          if (pnts) {
@@ -1618,9 +1616,8 @@ class TGraph2DPainter extends ObjectPainter {
                mesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
                mesh.scale0 = 0.3 * scale;
                mesh.index = index;
-
                mesh.tip_name = this.getObjectHint();
-               mesh.tooltip = graph2DTooltip;
+               mesh.tooltip = _graph2DTooltip;
                fp.add3DMesh(mesh, this);
             });
 
