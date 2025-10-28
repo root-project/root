@@ -84,6 +84,7 @@
 #include "TPaveText.h"
 #include "TPaveStats.h"
 #include "TPaveLabel.h"
+#include "TAnnotation.h"
 #include "TRatioPlot.h"
 #include "TGaxis.h"
 #include "TSpline.h"
@@ -2896,6 +2897,104 @@ void basic3d()
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Testing TAnnotation3D
+
+void annotation3d()
+{
+   gStyle->SetOptStat(0);
+   gStyle->SetHistTopMargin(0);
+   gStyle->SetOptTitle(kFALSE);
+
+   auto C = StartTest(600, 800);
+   C->Divide(1,2);
+
+   // Define and draw a surface
+   auto f = new TF2("func_annotation3d", "[0]*cos(x)*cos(y)", -1, 1, -1, 1);
+   f->SetParameter(0, 1);
+   double s = 1./f->Integral(-1, 1, -1, 1);
+   f->SetParameter(0, s);
+   f->SetNpx(50);
+   f->SetNpy(50);
+
+   f->GetXaxis()->SetTitle("x");
+   f->GetXaxis()->SetTitleOffset(1.4);
+   f->GetXaxis()->SetTitleSize(0.04);
+   f->GetXaxis()->CenterTitle();
+   f->GetXaxis()->SetNdivisions(505);
+   f->GetXaxis()->SetTitleOffset(1.3);
+   f->GetXaxis()->SetLabelSize(0.03);
+   f->GetXaxis()->ChangeLabelByValue(-0.5,-1,-1,-1,kRed,-1,"X_{0}");
+
+   f->GetYaxis()->SetTitle("y");
+   f->GetYaxis()->CenterTitle();
+   f->GetYaxis()->SetTitleOffset(1.4);
+   f->GetYaxis()->SetTitleSize(0.04);
+   f->GetYaxis()->SetTitleOffset(1.3);
+   f->GetYaxis()->SetNdivisions(505);
+   f->GetYaxis()->SetLabelSize(0.03);
+
+   f->GetZaxis()->SetTitle("dP/dx");
+   f->GetZaxis()->CenterTitle();
+   f->GetZaxis()->SetTitleOffset(1.3);
+   f->GetZaxis()->SetNdivisions(505);
+   f->GetZaxis()->SetTitleSize(0.04);
+   f->GetZaxis()->SetLabelSize(0.03);
+
+   f->SetLineWidth(1);
+   f->SetLineColorAlpha(kAzure-2, 0.3);
+
+   C->cd(1);
+
+   f->Draw("cont2");
+
+   auto txt0 = new TAnnotation(-0.45, -0.2, 0.3, "f(y,x_{0})");
+   txt0->SetTextFont(42);
+   txt0->SetTextColor(kGreen);
+   txt0->Draw();
+
+   C->cd(2);
+   gPad->SetTheta(30);
+   gPad->SetPhi(50);
+
+
+   f->Draw("surf1 fb");
+
+   // Lines for 3D annotation
+   double x[11] = {-0.500, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.5, -0.500};
+   double y[11] = {-0.985, -0.8, -0.6, -0.4, -0.2,  0.0,  0.2,  0.4,  0.6,  0.8,  0.985};
+   double z[11];
+   for (int i = 0; i < 11; ++i) z[i] = s*cos(x[i])*cos(y[i]);
+   auto g2 = new TPolyLine3D(11, x, y, z);
+
+   double xx[2] = {-0.5, -0.5};
+   double yy[2] = {-0.985, -0.985};
+   double zz[2] = {0.11, s*cos(-0.5)*cos(-0.985)};
+   auto l2 = new TPolyLine3D(2, xx, yy, zz);
+
+   g2->SetLineColor(kRed);
+   g2->SetLineWidth(3);
+   g2->Draw();
+
+   l2->SetLineColor(kRed);
+   l2->SetLineStyle(2);
+   l2->SetLineWidth(1);
+   l2->Draw();
+
+   // Draw text Annotations
+   auto txt = new TAnnotation(-0.45, -0.2, 0.3, "f(y,x_{0})");
+   txt->SetTextFont(42);
+   txt->SetTextColor(kRed);
+   txt->Draw();
+
+   auto txt1 = new TAnnotation(0.5, 0.5, 0.3, "f(x,y)");
+   txt1->SetTextColor(kBlue);
+   txt1->SetTextFont(42);
+   txt1->Draw();
+
+   TestReport(C, "TAnnotation with 2D and 3D", "", kSkipSvgTest, "annotation3d");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// 1st complex drawing and TPad test
 
 void ntuple1()
@@ -3826,7 +3925,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    }
    earth         ();
    if (gSkip3D) {
-      gTestNum += 7;
+      gTestNum += 8;
    } else {
       tgraph2d1  ();
       tgraph2d2  ();
@@ -3835,6 +3934,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
       tprofile3d ();
       tf3        ();
       basic3d    ();
+      annotation3d();
    }
    tgraph2d3     ();
    print_reports ();
