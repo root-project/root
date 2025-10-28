@@ -92,6 +92,7 @@
 #include "TScatter.h"
 #include "TEfficiency.h"
 #include "TGraph.h"
+#include "TCutG.h"
 #include "TGraphErrors.h"
 #include "TGraphAsymmErrors.h"
 #include "TGraphBentErrors.h"
@@ -1881,6 +1882,29 @@ void labels1()
    TestReport(C, "Alphanumeric labels in a 1-d histogram", "", 0, "labels1");
    delete hlab1;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Testing TH2 drawing with TCutG
+
+void th2_cut()
+{
+   auto C = StartTest(600, 600);
+
+   Float_t x[6] = { 1, 2,  1, -1, -2, -1 };
+   Float_t y[6] = { 2, 0, -2, -2,  0,  2 };
+   TCutG *cut = new TCutG("cut", 6, x, y);
+
+   TH1 *hpxpy = (TH1*)gHsimple->Get("hpxpy");
+
+   hpxpy->Draw("col [cut]");
+   cut->Draw("l");
+
+  TestReport(C, "TH2 with TCutG cut", "", 0, "th2_cut");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Testing TH2 with custom axis labels
+
 
 void th2_custom_axis_labels()
 {
@@ -4146,6 +4170,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    tgaxis6       ();
    padticks      ();
    labels1       ();
+   th2_cut       ();
    th2_custom_axis_labels();
    tellipse      ();
    feynman       ();
