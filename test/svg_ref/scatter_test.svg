@@ -1,7 +1,7 @@
 <?xml version="1.0" standalone="no"?>
 <svg width="567" height="550" viewBox="0 0 567 550" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
 <title>
-svg37.svg
+scatter_test.svg
 </title>
 <rect x="0.500" y="0" width="567" height="550" fill="#f2f2f2"/>
 <path d="M0.500,550l 2.0, -2.0v -546h 563l 2.0, -2.0h -567v 550z" fill="white"/>

@@ -1,7 +1,7 @@
 <?xml version="1.0" standalone="no"?>
 <svg width="505" height="369" viewBox="0 0 505 369" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
 <title>
-svg34.svg
+waves.svg
 </title>
 <rect x="0.500" y="0" width="504" height="369" fill="white"/>
 <path d="M0.500,369l 2.0, -2.0v -365h 500l 2.0, -2.0h -504v 369z" fill="white"/>

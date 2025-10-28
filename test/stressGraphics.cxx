@@ -342,9 +342,9 @@ Int_t CompareSVGFiles(const TString &filename1, const TString &filename2, int te
       if (!gSvgCompact && (cnt == 8))
          continue;
 
-      // only for debuging - ignore difference in file name
-      if (gSvgCompact && (cnt == 4))
-         continue;
+      // ignore difference in file name, only for debugging
+      // if (gSvgCompact && (cnt == 4))
+      //   continue;
 
       printf("Diff in line %d", cnt);
       if (line1.length() != line2.length())
