@@ -23,7 +23,7 @@ struct MatchedCSCSegment
 
 struct CSCSegment
 {
-   float someValue;
+   float someValue = 0.0;
 
    operator MatchedCSCSegment()
    {
