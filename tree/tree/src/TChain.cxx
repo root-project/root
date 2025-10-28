@@ -1311,6 +1311,16 @@ Long64_t TChain::RefreshFriendAddresses()
          br->SetAutoDelete(true);
       }
    }
+
+   // We cannot know a priori if the branch(es) of the friend TChain(s) that were just
+   // updated were supposed to be connected to one of the TChainElement of this chain
+   // or possibly to another TChainElement belonging to another chain that has befriended
+   // this chain (i.e., one of the "external friends"). Thus, we forward the notification
+   // that one or more friend trees were updated to the friends of this chain.
+   if (fExternalFriends)
+      for (auto external_fe : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fExternalFriends))
+         external_fe->MarkUpdated();
+
    if (fPlayer) {
       fPlayer->UpdateFormulaLeaves();
    }
