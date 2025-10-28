@@ -162,6 +162,18 @@ inline void EnsureValidRange(SourceT val [[maybe_unused]])
    }
 }
 
+/// Currently ensures that the floating point class doesn't change in double --> float conversion
+template <typename DestT, typename SourceT>
+inline void EnsureValidConversion(DestT dst [[maybe_unused]], SourceT src [[maybe_unused]])
+{
+   if constexpr (std::is_same_v<DestT, float> && std::is_same_v<SourceT, double>) {
+      if (std::fpclassify(src) != std::fpclassify(dst)) {
+         throw ROOT::RException(R__FAIL(std::string("floating point class mismatch: ") + std::to_string(src) +
+                                        " on disk to " + std::to_string(dst) + " in memory"));
+      }
+   }
+}
+
 /// \brief Pack `count` elements into narrower (or wider) type
 ///
 /// Used to convert in-memory elements to smaller column types of comatible types
@@ -192,6 +204,7 @@ inline void CastUnpack(void *destination, const void *source, std::size_t count)
       ByteSwapIfNecessary(val);
       EnsureValidRange<DestT, SourceT>(val);
       dst[i] = val;
+      EnsureValidConversion<DestT, SourceT>(dst[i], val);
    }
 }
 
@@ -230,6 +243,7 @@ inline void CastSplitUnpack(void *destination, const void *source, std::size_t c
       ByteSwapIfNecessary(val);
       EnsureValidRange<DestT, SourceT>(val);
       dst[i] = val;
+      EnsureValidConversion<DestT, SourceT>(dst[i], val);
    }
 }
 
