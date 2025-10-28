@@ -19,6 +19,7 @@
 /gui/ @bellenot
 /hist/ @lmoneta
 /hist/histv7/ @hahnjo
+/hist/histv7util/ @hahnjo
 /html/ @dpiparo
 /icons/ @bellenot
 /interpreter/ @dpiparo
