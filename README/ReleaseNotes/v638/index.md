@@ -50,6 +50,8 @@ The following people have contributed to this new version:
 * The `TH1K` class is deprecated and will be removed in 6.40. It did not implement the `TH1` interface consistently, and limited the usability of the k-neighbors method it implemented by closely coupling the algorithm with the histogram class. Please use the new `TMath::KNNDensity` function that implements the same mathematical logic.
 
 ## Core Libraries
+* ROOT and the Cling C++ interpreter now relies on LLVM version 20.
+* Experimental SYCL support in the ROOT prompt. This feature can be enabled by building ROOT with `-Dexperimental_adaptivecpp=ON`.
 * Behavior change: when selecting a template instantiation for a dictionary, all the template arguments have to be fully defined - the forward declarations are not enough any more. The error prompted by the dictionary generator will be `Warning: Unused class rule: MyTemplate<MyFwdDeclaredClass>`.
 * New expert option to reduce static startup cost of ROOT by setting environment variables
 ```bash
@@ -71,6 +73,10 @@ This caching reduces sub-process creation during initialization and can be usefu
 * The parallel writer is now part of the public, stable API. The `RNTupleParallelWriter` and the closely related `RNTupleFillContext` moved from the `ROOT::Experimental` to the `ROOT` namespace.
 
 ## Math
+* Added GenVectorX, an extended version of the GenVector library supporting multi-target execution with SYCL. Enable by configuring CMake with:
+```bash
+-Dexperimental_adaptivecpp=ON -Dexperimental_genvectorx=ON
+```
 
 ### Minimizer interface
 
