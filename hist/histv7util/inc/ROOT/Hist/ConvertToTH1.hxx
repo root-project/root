@@ -5,6 +5,7 @@
 #ifndef ROOT_Hist_ConvertToTH1
 #define ROOT_Hist_ConvertToTH1
 
+#include <ROOT/RBinWithError.hxx>
 #include <ROOT/RHist.hxx>
 #include <ROOT/RHistEngine.hxx>
 
@@ -61,6 +62,11 @@ std::unique_ptr<TH1F> ConvertToTH1F(const RHistEngine<float> &engine);
 /// \copydetails ConvertToTH1I(const RHistEngine<int> &engine)
 std::unique_ptr<TH1D> ConvertToTH1D(const RHistEngine<double> &engine);
 
+/// Convert a one-dimensional histogram to TH1D.
+///
+/// \copydetails ConvertToTH1I(const RHistEngine<int> &engine)
+std::unique_ptr<TH1D> ConvertToTH1D(const RHistEngine<RBinWithError> &engine);
+
 /// Convert a one-dimensional histogram to TH1C.
 ///
 /// \copydetails ConvertToTH1I(const RHist<int> &hist)
@@ -98,6 +104,11 @@ std::unique_ptr<TH1F> ConvertToTH1F(const RHist<float> &hist);
 ///
 /// \copydetails ConvertToTH1I(const RHist<int> &hist)
 std::unique_ptr<TH1D> ConvertToTH1D(const RHist<double> &hist);
+
+/// Convert a one-dimensional histogram to TH1D.
+///
+/// \copydetails ConvertToTH1I(const RHist<int> &hist)
+std::unique_ptr<TH1D> ConvertToTH1D(const RHist<RBinWithError> &hist);
 
 } // namespace Hist
 } // namespace Experimental

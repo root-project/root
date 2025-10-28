@@ -216,17 +216,50 @@ TEST(ConvertToTH1F, RHist)
 TEST(ConvertToTH1D, RHistEngine)
 {
    static constexpr std::size_t Bins = 20;
-   const RHistEngine<double> engine(Bins, {0, Bins});
+   const RHistEngine<double> engineD(Bins, {0, Bins});
 
-   auto th1d = ConvertToTH1D(engine);
+   auto th1d = ConvertToTH1D(engineD);
    ASSERT_TRUE(th1d);
+
+   RHistEngine<RBinWithError> engineE(Bins, {0, Bins});
+   for (std::size_t i = 0; i < Bins; i++) {
+      engineE.Fill(i, RWeight(0.1 + i * 0.03));
+   }
+
+   th1d = ConvertToTH1D(engineE);
+   ASSERT_TRUE(th1d);
+   const Double_t *sumw2 = th1d->GetSumw2()->GetArray();
+   ASSERT_TRUE(sumw2 != nullptr);
+
+   for (std::size_t i = 1; i <= Bins; i++) {
+      const double weight = 0.1 + (i - 1) * 0.03;
+      EXPECT_EQ(th1d->GetBinContent(i), weight);
+      EXPECT_EQ(sumw2[i], weight * weight);
+   }
 }
 
 TEST(ConvertToTH1D, RHist)
 {
    static constexpr std::size_t Bins = 20;
-   const RHist<double> hist(Bins, {0, Bins});
+   const RHist<double> histD(Bins, {0, Bins});
 
-   auto th1d = ConvertToTH1D(hist);
+   auto th1d = ConvertToTH1D(histD);
    ASSERT_TRUE(th1d);
+
+   RHist<RBinWithError> histE(Bins, {0, Bins});
+   for (std::size_t i = 0; i < Bins; i++) {
+      histE.Fill(i, RWeight(0.1 + i * 0.03));
+   }
+
+   th1d = ConvertToTH1D(histE);
+   ASSERT_TRUE(th1d);
+
+   ASSERT_EQ(histE.GetNEntries(), Bins);
+   EXPECT_EQ(th1d->GetEntries(), Bins);
+   Double_t stats[4];
+   th1d->GetStats(stats);
+   EXPECT_DOUBLE_EQ(stats[0], 7.7);
+   EXPECT_DOUBLE_EQ(stats[1], 3.563);
+   EXPECT_DOUBLE_EQ(stats[2], 93.1);
+   EXPECT_DOUBLE_EQ(stats[3], 1330.0);
 }
