@@ -71,6 +71,7 @@
 #include "TLine.h"
 #include "TArrow.h"
 #include "TMarker.h"
+#include "TCrown.h"
 #include "TPolyLine.h"
 #include "TLatex.h"
 #include "TMathText.h"
@@ -798,6 +799,32 @@ void patterns()
    TestReport(C, "Fill patterns", "", 0, "patterns");
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TCrown test
+
+void crown()
+{
+   auto C = StartTest(400,400);
+
+   auto cr1 = new TCrown(.5,.5,.3,.4);
+   cr1->SetLineStyle(2);
+   cr1->SetLineWidth(4);
+   cr1->Draw();
+   auto cr2 = new TCrown(.5,.5,.2,.3,45,315);
+   cr2->SetFillColor(38);
+   cr2->SetFillStyle(3010);
+   cr2->Draw();
+   auto cr3 = new TCrown(.5,.5,.2,.3,-45,45);
+   cr3->SetFillColor(50);
+   cr3->SetFillStyle(3025);
+   cr3->Draw();
+   auto cr4 = new TCrown(.5,.5,.0,.2);
+   cr4->SetFillColor(4);
+   cr4->SetFillStyle(3008);
+   cr4->Draw();
+
+   TestReport(C, "TCrown", "", 0, "crown");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// 1st TText test.
@@ -3612,6 +3639,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    tpolyline     ();
    arrows        ();
    patterns      ();
+   crown         ();
    ttext1        ();
    ttext2        ();
    tlatex1       ();
