@@ -1,0 +1,1 @@
+ROOT_ADD_GTEST(hist_convert_TH1 hist_convert_TH1.cxx LIBRARIES ROOTHist ROOTHistUtil)
