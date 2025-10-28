@@ -266,6 +266,30 @@ TEST(RNTuple, TypeCastReal)
    EXPECT_FLOAT_EQ(*ptrDouble32, -11.043);
 }
 
+TEST(RNTuple, TypeCastRealFpClass)
+{
+   FileRaii fileGuard("test_ntuple_type_cast_real_fpclass.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrDouble = model->MakeField<double>("double");
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrDouble = std::numeric_limits<double>::max();
+      writer->Fill();
+   }
+
+   auto castModel = RNTupleModel::Create();
+   auto ptrDouble = castModel->MakeField<float>("double");
+   auto reader = RNTupleReader::Open(std::move(castModel), "ntpl", fileGuard.GetPath());
+   try {
+      reader->LoadEntry(0);
+      FAIL() << "floating point mismatch should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("floating point class mismatch"));
+   }
+}
+
 TEST(RNTuple, TypeCastChar)
 {
    FileRaii fileGuard("test_ntuple_type_cast_char.root");
