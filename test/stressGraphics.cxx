@@ -2149,6 +2149,99 @@ void tgraph4()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// This example test all the various case of reverse graphs
+/// combined with logarithmic scale.
+
+void tgraphreverse()
+{
+   auto C = StartTest(900,900);
+   C->Divide(3,3);
+
+   C->cd(1);
+   gPad->SetGrid();
+
+   // TGraphErrors
+   auto graphe = new TGraphErrors();
+   graphe->GetXaxis()->SetNdivisions(514);
+   graphe->GetYaxis()->SetNdivisions(514);
+   graphe->SetMarkerStyle(kCircle);
+   graphe->SetPoint(0,5,5);
+   graphe->SetPointError(0,1,3);
+   graphe->SetPoint(1,9,9);
+   graphe->SetPointError(1,1,3);
+   graphe->GetXaxis()->SetMoreLogLabels();
+   graphe->GetYaxis()->SetMoreLogLabels();
+
+   gPad->Add(graphe, "a  pl ");
+
+   C->cd(2);
+   gPad->SetGrid();
+   gPad->Add(graphe, "a  pl rx ry ");
+
+   C->cd(3);
+   gPad->SetGrid();
+   gPad->SetLogx();
+   gPad->SetLogy();
+   gPad->Add(graphe, "a  pl rx ry");
+
+   C->cd(4);
+   gPad->SetGrid();
+
+   // TGraphAsymmErrors
+   auto graphae = new TGraphAsymmErrors();
+   graphae->GetXaxis()->SetNdivisions(514);
+   graphae->GetYaxis()->SetNdivisions(514);
+   graphae->SetMarkerStyle(kCircle);
+   graphae->SetPoint(0,5,5);
+   graphae->SetPointError(0,1,3,3,1);
+   graphae->SetPoint(1,9,9);
+   graphae->SetPointError(1,1,3,1,3);
+   graphae->GetXaxis()->SetMoreLogLabels();
+   graphae->GetYaxis()->SetMoreLogLabels();
+
+   gPad->Add(graphae, "a  pl ");
+
+   C->cd(5);
+   gPad->SetGrid();
+   gPad->Add(graphae, "a  pl rx ry ");
+
+   C->cd(6);
+   gPad->SetGrid();
+   gPad->SetLogx();
+   gPad->SetLogy();
+   gPad->Add(graphae, "a  pl rx ry");
+
+   C->cd(7);
+   gPad->SetGrid();
+
+   // TGraphBentErrors
+   auto graphbe = new TGraphBentErrors();
+   graphbe->GetXaxis()->SetNdivisions(514);
+   graphbe->GetYaxis()->SetNdivisions(514);
+   graphbe->SetMarkerStyle(kCircle);
+   graphbe->SetPoint(0,5,5);
+   graphbe->SetPointError(0,1,3,3,1,.5,.2,.5,.2);
+   graphbe->SetPoint(1,9,9);
+   graphbe->SetPointError(1,1,3,1,3,-.5,-.2,-.5,-.2);
+   graphbe->GetXaxis()->SetMoreLogLabels();
+   graphbe->GetYaxis()->SetMoreLogLabels();
+
+   gPad->Add(graphbe, "a  pl ");
+
+   C->cd(8);
+   gPad->SetGrid();
+   gPad->Add(graphbe, "a  pl rx ry ");
+
+   C->cd(9);
+   gPad->SetGrid();
+   gPad->SetLogx();
+   gPad->SetLogy();
+   gPad->Add(graphbe, "a  pl rx ry");
+
+   TestReport(C, "TGraph with reverse axis and log scale", "", 0, "tgraphreverse");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// TGraphMultiErrors test.
 
 void gmultierrors()
@@ -3937,6 +4030,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    tgraph2       ();
    tgraph3       ();
    tgraph4       ();
+   tgraphreverse ();
    gmultierrors  ();
    tmultigraph1  ();
    tmultigraph2  ();
