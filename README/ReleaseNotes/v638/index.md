@@ -20,6 +20,7 @@ The following people have contributed to this new version:
  Jonas Hahnfeld, CERN/EP-SFT and Goethe University Frankfurt,\
  Fernando Hueso Gonzalez, IFIC (CSIC-University of Valencia),\
  Stephan Hageboeck, CERN/EP-SFT,\
+ Petr Jacka, Czech Technical University in Prague,\
  Aaron Jomy, CERN/EP-SFT,\
  Sergey Linev, GSI Darmstadt,\
  Lorenzo Moneta, CERN/EP-SFT,\
@@ -33,7 +34,6 @@ The following people have contributed to this new version:
  Devajith Valaparambil Sreeramaswamy, CERN/EP-SFT,\
  Vassil Vassilev, Princeton,\
  Sandro Wenzel, CERN/ALICE,\
- Petr Jacka, Czech Technical University in Prague
 
 ## Deprecation and Removal
 
@@ -141,11 +141,15 @@ If you want to keep using `TList*` return values, you can write a small adapter 
   RDF uses one copy of each histogram per thread. Now, RDataFrame can reduce the number of clones using `ROOT::RDF::Experimental::ThreadsPerTH3()`. Setting this
   to numbers such as 8 would share one 3-d histogram among 8 threads, greatly reducing the memory consumption. This might slow down execution if the histograms
   are filled at very high rates. Use lower number in this case.
-- Add HistoNSparseD action that fills a sparse N-dimensional histogram.
+- HistoNSparseD action which fills a sparse N-dimensional histogram is now added.
+- RDatasetSpec class now also supports RNTuple, including the usage of the factory function FromSpec.
 
 ### Snapshot
 - The Snapshot method has been refactored so that it does not need anymore compile-time information (i.e. either template arguments or JIT-ting) to know the input column types. This means that any Snapshot call that specifies the template arguments, e.g. `Snapshot<int, float>(..., {"intCol", "floatCol"})` is now redundant and the template arguments can safely be removed from the call. At the same time, Snapshot does not need to JIT compile the column types, practically giving huge speedups depending on the number of columns that need to be written to disk. In certain cases (e.g. when writing O(10000) columns) the speedup can be larger than an order of magnitude. The Snapshot template is now deprecated and it will issue a compile-time warning when called. The function overload is scheduled for removal in ROOT 6.40.
 - The default compression setting for the output dataset used by Snapshot has been changed from 101 (ZLIB level 1, the TTree default) to 505 (ZSTD level 5). This is a better setting on average, and makes more sense for RDataFrame since now the Snapshot operation supports more than just the TTree output data format. This change may result in smaller output file sizes for your analyses that use Snapshot with default settings. During the 6.38 development release cycle, Snapshot will print information about this change once per program run. Starting from 6.40.00, the information will not be printed. The message can be suppressed by setting ROOT_RDF_SILENCE_SNAPSHOT_INFO=1 in your environment or by setting 'ROOT.RDF.Snapshot.Info: 0' in your .rootrc.
+
+### Distributed RDataFrame
+- Processing of RNTuples is now done in the same way as for TTrees, as it is a more efficient way of distributing the computations. The API remains unchanged.
 
 ## Python Interface
 
