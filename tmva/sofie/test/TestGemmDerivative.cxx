@@ -100,7 +100,7 @@ TEST_P(GemmTest, GemmTestDerivative)
 
             #pragma clad ON
             void clad_request() {
-               clad::gradient(gemm_function, "variables");
+               clad::gradient<clad::opts::enable_va>(gemm_function, "variables");
             }
             #pragma clad OFF
         )cpp");
