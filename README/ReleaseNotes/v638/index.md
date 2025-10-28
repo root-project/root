@@ -17,6 +17,7 @@ The following people have contributed to this new version:
  Olivier Couet, CERN/EP-SFT,\
  Marta Czurylo, CERN/EP-SFT,\
  Florine de Geus, CERN/EP-SFT and University of Twente,\
+ Edward Finkelstein, UCI and SDSU,\
  Jonas Hahnfeld, CERN/EP-SFT and Goethe University Frankfurt,\
  Fernando Hueso Gonzalez, IFIC (CSIC-University of Valencia),\
  Stephan Hageboeck, CERN/EP-SFT,\
