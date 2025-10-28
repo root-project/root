@@ -17,7 +17,7 @@ namespace Experimental {
 // forward declarations for friend declaration
 class RBinIndexRange;
 namespace Internal {
-RBinIndexRange CreateBinIndexRange(RBinIndex begin, RBinIndex end, std::size_t nNormalBins);
+static RBinIndexRange CreateBinIndexRange(RBinIndex begin, RBinIndex end, std::size_t nNormalBins);
 } // namespace Internal
 
 /**
@@ -130,7 +130,7 @@ namespace Internal {
 /// \param[in] begin the begin of the bin index range (inclusive)
 /// \param[in] end the end of the bin index range (exclusive)
 /// \param[in] nNormalBins the number of normal bins, after which iteration advances to RBinIndex::Overflow()
-RBinIndexRange CreateBinIndexRange(RBinIndex begin, RBinIndex end, std::size_t nNormalBins)
+static RBinIndexRange CreateBinIndexRange(RBinIndex begin, RBinIndex end, std::size_t nNormalBins)
 {
    RBinIndexRange range;
    range.fBegin = begin;
