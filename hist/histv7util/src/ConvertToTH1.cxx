@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
+#include <type_traits>
 #include <variant>
 #include <vector>
 
@@ -27,8 +28,20 @@ std::unique_ptr<Hist> ConvertToTH1Impl(const RHistEngine<T> &engine)
    }
 
    std::unique_ptr<Hist> ret;
-   auto copyBinContent = [&ret, &engine](Int_t i, RBinIndex index) {
-      ret->GetArray()[i] = engine.GetBinContent(index);
+   Double_t *sumw2 = nullptr;
+   auto copyBinContent = [&ret, &engine, &sumw2](Int_t i, RBinIndex index) {
+      if constexpr (std::is_same_v<T, RBinWithError>) {
+         if (sumw2 == nullptr) {
+            ret->Sumw2();
+            sumw2 = ret->GetSumw2()->GetArray();
+         }
+         const RBinWithError &c = engine.GetBinContent(index);
+         ret->GetArray()[i] = c.fSum;
+         sumw2[i] = c.fSum2;
+      } else {
+         (void)sumw2;
+         ret->GetArray()[i] = engine.GetBinContent(index);
+      }
    };
 
    const auto &axes = engine.GetAxes();
@@ -114,6 +127,11 @@ std::unique_ptr<TH1D> ConvertToTH1D(const RHistEngine<double> &engine)
    return ConvertToTH1Impl<TH1D>(engine);
 }
 
+std::unique_ptr<TH1D> ConvertToTH1D(const RHistEngine<RBinWithError> &engine)
+{
+   return ConvertToTH1Impl<TH1D>(engine);
+}
+
 std::unique_ptr<TH1C> ConvertToTH1C(const RHist<char> &hist)
 {
    auto ret = ConvertToTH1C(hist.GetEngine());
@@ -157,6 +175,13 @@ std::unique_ptr<TH1F> ConvertToTH1F(const RHist<float> &hist)
 }
 
 std::unique_ptr<TH1D> ConvertToTH1D(const RHist<double> &hist)
+{
+   auto ret = ConvertToTH1D(hist.GetEngine());
+   ConvertGlobalStatistics(*ret, hist.GetStats());
+   return ret;
+}
+
+std::unique_ptr<TH1D> ConvertToTH1D(const RHist<RBinWithError> &hist)
 {
    auto ret = ConvertToTH1D(hist.GetEngine());
    ConvertGlobalStatistics(*ret, hist.GetStats());
