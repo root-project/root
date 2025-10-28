@@ -1939,7 +1939,6 @@ public:
       {
          ROOT::Internal::RDF::RIgnoreErrorLevelRAII iel(kError);
          h = model.GetHistogram();
-         h->SetDirectory(nullptr);
       }
 
       if (h->GetXaxis()->GetXmax() == h->GetXaxis()->GetXmin())
