@@ -79,14 +79,86 @@ namespace ROOT {
 namespace Experimental {
 namespace Hist {
 
+std::unique_ptr<TH1C> ConvertToTH1C(const RHistEngine<char> &engine)
+{
+   return ConvertToTH1Impl<TH1C>(engine);
+}
+
+std::unique_ptr<TH1S> ConvertToTH1S(const RHistEngine<short> &engine)
+{
+   return ConvertToTH1Impl<TH1S>(engine);
+}
+
 std::unique_ptr<TH1I> ConvertToTH1I(const RHistEngine<int> &engine)
 {
    return ConvertToTH1Impl<TH1I>(engine);
 }
 
+std::unique_ptr<TH1L> ConvertToTH1L(const RHistEngine<long> &engine)
+{
+   return ConvertToTH1Impl<TH1L>(engine);
+}
+
+std::unique_ptr<TH1L> ConvertToTH1L(const RHistEngine<long long> &engine)
+{
+   return ConvertToTH1Impl<TH1L>(engine);
+}
+
+std::unique_ptr<TH1F> ConvertToTH1F(const RHistEngine<float> &engine)
+{
+   return ConvertToTH1Impl<TH1F>(engine);
+}
+
+std::unique_ptr<TH1D> ConvertToTH1D(const RHistEngine<double> &engine)
+{
+   return ConvertToTH1Impl<TH1D>(engine);
+}
+
+std::unique_ptr<TH1C> ConvertToTH1C(const RHist<char> &hist)
+{
+   auto ret = ConvertToTH1C(hist.GetEngine());
+   ConvertGlobalStatistics(*ret, hist.GetStats());
+   return ret;
+}
+
+std::unique_ptr<TH1S> ConvertToTH1S(const RHist<short> &hist)
+{
+   auto ret = ConvertToTH1S(hist.GetEngine());
+   ConvertGlobalStatistics(*ret, hist.GetStats());
+   return ret;
+}
+
 std::unique_ptr<TH1I> ConvertToTH1I(const RHist<int> &hist)
 {
    auto ret = ConvertToTH1I(hist.GetEngine());
+   ConvertGlobalStatistics(*ret, hist.GetStats());
+   return ret;
+}
+
+std::unique_ptr<TH1L> ConvertToTH1L(const RHist<long> &hist)
+{
+   auto ret = ConvertToTH1L(hist.GetEngine());
+   ConvertGlobalStatistics(*ret, hist.GetStats());
+   return ret;
+}
+
+std::unique_ptr<TH1L> ConvertToTH1L(const RHist<long long> &hist)
+{
+   auto ret = ConvertToTH1L(hist.GetEngine());
+   ConvertGlobalStatistics(*ret, hist.GetStats());
+   return ret;
+}
+
+std::unique_ptr<TH1F> ConvertToTH1F(const RHist<float> &hist)
+{
+   auto ret = ConvertToTH1F(hist.GetEngine());
+   ConvertGlobalStatistics(*ret, hist.GetStats());
+   return ret;
+}
+
+std::unique_ptr<TH1D> ConvertToTH1D(const RHist<double> &hist)
+{
+   auto ret = ConvertToTH1D(hist.GetEngine());
    ConvertGlobalStatistics(*ret, hist.GetStats());
    return ret;
 }
