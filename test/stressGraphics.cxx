@@ -37,66 +37,67 @@
 #include <map>
 #include <vector>
 
-#include <TString.h>
-#include <TROOT.h>
-#include <TError.h>
-#include <TRandom.h>
-#include <TRandom3.h>
-#include <TBenchmark.h>
-#include <TSystem.h>
-#include <TApplication.h>
-#include <TDatime.h>
-#include <TFile.h>
-#include <TF1.h>
-#include <TF12.h>
-#include <TF2.h>
-#include <TF3.h>
-#include <TH2.h>
-#include <TH2Poly.h>
-#include <TNtuple.h>
-#include <TKey.h>
-#include <TProfile.h>
-#include <TProfile2D.h>
-#include <TProfile2Poly.h>
-#include <TProfile3D.h>
-#include <TString.h>
+#include "TString.h"
+#include "TROOT.h"
+#include "TError.h"
+#include "TRandom.h"
+#include "TRandom3.h"
+#include "TBenchmark.h"
+#include "TSystem.h"
+#include "TApplication.h"
+#include "TDatime.h"
+#include "TFile.h"
+#include "TF1.h"
+#include "TF12.h"
+#include "TF2.h"
+#include "TF3.h"
+#include "TH2.h"
+#include "TH2Poly.h"
+#include "TNtuple.h"
+#include "TKey.h"
+#include "TProfile.h"
+#include "TProfile2D.h"
+#include "TProfile2Poly.h"
+#include "TProfile3D.h"
+#include "TString.h"
 
-#include <TStyle.h>
-#include <TCanvas.h>
-#include <TColor.h>
-#include <TFrame.h>
-#include <TPostScript.h>
-#include <TSVG.h>
-#include <TPDF.h>
-#include <TLine.h>
-#include <TMarker.h>
-#include <TPolyLine.h>
-#include <TLatex.h>
-#include <TMathText.h>
-#include <TLegend.h>
-#include <TEllipse.h>
-#include <TCurlyArc.h>
-#include <TArc.h>
-#include <TPaveText.h>
-#include <TPaveStats.h>
-#include <TPaveLabel.h>
-#include <TRatioPlot.h>
-#include <TGaxis.h>
-#include <TSpline.h>
-#include <TPolyMarker.h>
-#include <TScatter.h>
-#include <TEfficiency.h>
-#include <TGraph.h>
-#include <TGraphErrors.h>
-#include <TGraphAsymmErrors.h>
-#include <TGraphBentErrors.h>
-#include <TMultiGraph.h>
-#include <TGraph2D.h>
-#include <TGraph2DErrors.h>
-#include <TGraph2DAsymmErrors.h>
-#include <TParallelCoord.h>
-#include <TImage.h>
-#include <TMath.h>
+#include "TStyle.h"
+#include "TCanvas.h"
+#include "TColor.h"
+#include "TFrame.h"
+#include "TPostScript.h"
+#include "TSVG.h"
+#include "TPDF.h"
+#include "TLine.h"
+#include "TArrow.h"
+#include "TMarker.h"
+#include "TPolyLine.h"
+#include "TLatex.h"
+#include "TMathText.h"
+#include "TLegend.h"
+#include "TEllipse.h"
+#include "TCurlyArc.h"
+#include "TArc.h"
+#include "TPaveText.h"
+#include "TPaveStats.h"
+#include "TPaveLabel.h"
+#include "TRatioPlot.h"
+#include "TGaxis.h"
+#include "TSpline.h"
+#include "TPolyMarker.h"
+#include "TScatter.h"
+#include "TEfficiency.h"
+#include "TGraph.h"
+#include "TGraphErrors.h"
+#include "TGraphAsymmErrors.h"
+#include "TGraphBentErrors.h"
+#include "TMultiGraph.h"
+#include "TGraph2D.h"
+#include "TGraph2DErrors.h"
+#include "TGraph2DAsymmErrors.h"
+#include "TParallelCoord.h"
+#include "TImage.h"
+#include "TMath.h"
 
 
 const int kMaxNumTests = 70;
@@ -194,6 +195,9 @@ int ReadRefFile(const char *fname, std::map<int, RefEntry> &entries)
          printf("Fail to read line %d from reference file %s\n", nline, fname);
          return 0;
       }
+
+      // workaround until all changes in ref file done
+      TestNum = nline - 1;
 
       if ((TestNum < 1) || (TestNum >= kMaxNumTests)) {
          printf("Wrong test number %d in line %d from reference file %s\n", TestNum, nline, fname);
@@ -668,6 +672,44 @@ void tpolyline()
    p->Draw("");
 
    TestReport(C, "TPolyLine");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Test TArrow
+
+void arrows()
+{
+   auto C = StartTest(800, 600);
+   C->Range(0,0,1,1);
+
+   auto par = new TPaveLabel(0.1,0.8,0.9,0.95,"Examples of various arrows formats");
+   par->SetFillColor(42);
+   C->Add(par);
+
+   auto ar1 = new TArrow(0.1,0.1,0.1,0.7);
+   C->Add(ar1);
+   auto ar2 = new TArrow(0.2,0.1,0.2,0.7,0.05,"|>");
+   ar2->SetAngle(40);
+   ar2->SetLineWidth(2);
+   C->Add(ar2);
+   auto ar3 = new TArrow(0.3,0.1,0.3,0.7,0.05,"<|>");
+   ar3->SetAngle(40);
+   ar3->SetLineWidth(2);
+   C->Add(ar3);
+   auto ar4 = new TArrow(0.46,0.7,0.82,0.42,0.07,"|>");
+   ar4->SetAngle(60);
+   ar4->SetLineWidth(2);
+   ar4->SetFillColor(2);
+   C->Add(ar4);
+   auto ar5 = new TArrow(0.4,0.25,0.95,0.25,0.15,"<|>");
+   ar5->SetAngle(60);
+   ar5->SetLineWidth(4);
+   ar5->SetLineColor(4);
+   ar5->SetFillStyle(3008);
+   ar5->SetFillColor(2);
+   C->Add(ar5);
+
+   TestReport(C, "TArrow");
 }
 
 
@@ -3457,6 +3499,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    tline         ();
    tmarker       ();
    tpolyline     ();
+   arrows        ();
    patterns      ();
    ttext1        ();
    ttext2        ();
@@ -3537,7 +3580,8 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    clonepad      ();
    hbars         ();
    th2poly       ();
-   print_reports ();
+
+   print_reports();
 
    if (!gOptionR) {
       std::cout << "**********************************************************************\n";
