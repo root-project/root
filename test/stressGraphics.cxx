@@ -99,6 +99,7 @@
 #include "TGraph2D.h"
 #include "TGraph2DErrors.h"
 #include "TGraph2DAsymmErrors.h"
+#include "TGraphMultiErrors.h"
 #include "TParallelCoord.h"
 #include "TImage.h"
 #include "TMath.h"
@@ -2147,6 +2148,40 @@ void tgraph4()
    TestReport(C, "TGraph 4 (Log scales setting order)", "", 0, "tgraph4");
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphMultiErrors test.
+
+void gmultierrors()
+{
+   auto C = StartTest(700, 500);
+   C->SetGrid();
+   C->GetFrame()->SetBorderSize(12);
+
+   const Int_t np = 5;
+   Double_t x[np]       = {0, 1, 2, 3, 4};
+   Double_t y[np]       = {0, 2, 4, 1, 3};
+   Double_t exl[np]     = {0.3, 0.3, 0.3, 0.3, 0.3};
+   Double_t exh[np]     = {0.3, 0.3, 0.3, 0.3, 0.3};
+   Double_t eylstat[np] = {1, 0.5, 1, 0.5, 1};
+   Double_t eyhstat[np] = {0.5, 1, 0.5, 1, 0.5};
+   Double_t eylsys[np]  = {0.5, 0.4, 0.8, 0.3, 1.2};
+   Double_t eyhsys[np]  = {0.6, 0.7, 0.6, 0.4, 0.8};
+
+   auto gme = new TGraphMultiErrors("gme", "TGraphMultiErrors Example", np, x, y, exl, exh, eylstat, eyhstat);
+   gme->AddYError(np, eylsys, eyhsys);
+   gme->SetMarkerStyle(20);
+   gme->SetLineColor(kRed);
+   gme->GetAttLine(0)->SetLineColor(kRed);
+   gme->GetAttLine(1)->SetLineColor(kBlue);
+   gme->GetAttFill(1)->SetFillStyle(0);
+
+   // Graph and x erros drawn with "APS"
+   // Stat Errors drawn with "Z"
+   // Sys Errors drawn with "5 s=0.5"
+   gme->Draw("APS ; Z ; 5 s=0.5");
+
+   TestReport(C, "TGraphMultiErrors", "", 0, "gmultierrors");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TH2Poly test.
@@ -3902,6 +3937,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    tgraph2       ();
    tgraph3       ();
    tgraph4       ();
+   gmultierrors  ();
    tmultigraph1  ();
    tmultigraph2  ();
    waves         ();
