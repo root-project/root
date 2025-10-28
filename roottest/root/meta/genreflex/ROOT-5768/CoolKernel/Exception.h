@@ -38,7 +38,7 @@ namespace cool {
     virtual ~Exception() throw() {}
 
     /// Error reporting method
-    virtual const char* what() const throw()
+    const char* what() const throw() override
     {
       return m_message.c_str();
     }
@@ -554,9 +554,9 @@ namespace cool {
       : Exception( "", domain )
     {
       std::ostringstream msg;
-      msg << "A tag relation cannot be created" 
+      msg << "A tag relation cannot be created"
           << " between tag '" << childTagName << "' in node #" << childNodeId
-          << " and parent tag '" << parentTagName << "' in the parent node: " 
+          << " and parent tag '" << parentTagName << "' in the parent node: "
           << details;
       setMessage( msg.str() );
     }

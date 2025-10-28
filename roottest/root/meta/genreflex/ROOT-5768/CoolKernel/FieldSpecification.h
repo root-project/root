@@ -23,16 +23,16 @@ namespace cool
     FieldSpecification( const FieldSpecification& rhs );
 
     /// Return the name of this field.
-    const std::string& name() const;
+    const std::string& name() const override;
 
     /// Return the storage type of this field.
-    const StorageType& storageType() const;
+    const StorageType& storageType() const override;
 
     /// Compare the names and storage types of this and another field.
-    bool operator==( const IFieldSpecification& rhs ) const;
+    bool operator==( const IFieldSpecification& rhs ) const override;
 
     /// Compare the names and storage types of this and another field.
-    bool operator!=( const IFieldSpecification& rhs ) const;
+    bool operator!=( const IFieldSpecification& rhs ) const override;
 
     /// Check that a given field is compatible with this specification.
     /// The field must have the same transient C++ type and a value
@@ -43,7 +43,7 @@ namespace cool
     /// Throw FieldSpecificationWrongStorageType if field has the wrong type.
     /// Throw StorageTypeInvalidValue for values outside the allowed range.
     void validate( const IField& field,
-                   bool checkName = true ) const;
+                   bool checkName = true ) const override;
 
     /// Check that a given attribute is compatible with this specification.
     /// The attribute must have the same transient C++ type and a value
@@ -53,7 +53,7 @@ namespace cool
     /// Throw StorageTypeWrongCppType if the attribute has the wrong C++ type.
     /// Throw StorageTypeInvalidValue for values outside the allowed range.
     void validate( const coral::Attribute& attribute,
-                   bool checkName = true ) const;
+                   bool checkName = true ) const override;
 
   private:
 
