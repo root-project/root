@@ -1795,6 +1795,42 @@ void tgaxis6()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Testing ticks configuration on the pad
+
+void padticks()
+{
+   auto C = StartTest(900,700);
+
+   gStyle->SetOptStat(0);
+   C->Divide(2,2,0,0);
+   TH2F *h1 = new TH2F("ticks_h1","test1",10,0,1,20,0,20);
+   TH2F *h2 = new TH2F("ticks_h2","test2",10,0,1,20,0,100);
+   TH2F *h3 = new TH2F("ticks_h3","test3",10,0,1,20,-1,1);
+   TH2F *h4 = new TH2F("ticks_h4","test4",10,0,1,20,0,1000);
+
+   C->cd(1);
+   gPad->SetTickx(2);
+   h1->Draw();
+
+   C->cd(2);
+   gPad->SetTickx(2);
+   gPad->SetTicky(2);
+   h2->GetYaxis()->SetLabelOffset(0.01);
+   h2->Draw();
+
+   C->cd(3);
+   gPad->SetTickx(1);
+   gPad->SetTicky(1);
+   h3->Draw();
+
+   C->cd(4);
+   gPad->SetTicky(2);
+   h4->Draw();
+
+   TestReport(C, "TPad with tickx/y", "", 0, "padticks");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Alphanumeric labels in a 1-d histogram
 
 void labels1()
@@ -4108,6 +4144,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    tgaxis4       ();
    tgaxis5       ();
    tgaxis6       ();
+   padticks      ();
    labels1       ();
    th2_custom_axis_labels();
    tellipse      ();
