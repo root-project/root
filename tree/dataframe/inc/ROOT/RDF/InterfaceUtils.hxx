@@ -108,7 +108,6 @@ struct Book{};
 
 template <typename T, bool ISV6HISTO = std::is_base_of<TH1, std::decay_t<T>>::value>
 struct HistoUtils {
-   static void SetCanExtendAllAxes(T &h) { h.SetCanExtend(::TH1::kAllAxes); }
    static bool HasAxisLimits(T &h)
    {
       auto xaxis = h.GetXaxis();
@@ -118,7 +117,6 @@ struct HistoUtils {
 
 template <typename T>
 struct HistoUtils<T, false> {
-   static void SetCanExtendAllAxes(T &) {}
    static bool HasAxisLimits(T &) { return true; }
 };
 

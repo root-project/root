@@ -1942,7 +1942,7 @@ public:
       }
 
       if (h->GetXaxis()->GetXmax() == h->GetXaxis()->GetXmin())
-         RDFInternal::HistoUtils<::TH1D>::SetCanExtendAllAxes(*h);
+         h->SetCanExtend(::TH1::kAllAxes);
       return CreateAction<RDFInternal::ActionTags::Histo1D, V>(validatedColumns, h, h, fProxiedPtr);
    }
 
