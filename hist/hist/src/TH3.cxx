@@ -2038,8 +2038,23 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
    // if the out axis has labels and is extendable, temporary make it non-extendable to avoid adding extra bins
    Bool_t extendable = projX->CanExtend();
    if ( labels && extendable ) h1->GetXaxis()->SetCanExtend(kFALSE);
-   for (ixbin=0;ixbin<=1+projX->GetNbins();ixbin++) {
-      if ( projX->TestBit(TAxis::kAxisRange) && ( ixbin < ixmin || ixbin > ixmax )) continue;
+
+   // compute loop indices
+   Int_t loop_start = 0;
+   Int_t loop_end = projX->GetNbins() + 1;
+   Int_t ix = 0;
+   if (projX->TestBit(TAxis::kAxisRange)) {
+      loop_start = ixmin;
+      loop_end = ixmax;
+      if (originalRange)
+         // place results at original bin indices
+         ix = ixmin;
+      else
+         // start from the first bin
+         ix = 1;
+   }
+
+   for (ixbin = loop_start; ixbin <= loop_end; ++ixbin, ++ix) {
 
       Double_t cont = 0;
       Double_t err2 = 0;
@@ -2058,12 +2073,10 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
             }
          }
       }
-      Int_t ix    = h1->FindBin( projX->GetBinCenter(ixbin) );
       h1->SetBinContent(ix ,cont);
       if (computeErrors) h1->SetBinError(ix, TMath::Sqrt(err2) );
       // sum all content
       totcont += cont;
-
    }
    if ( labels ) h1->GetXaxis()->SetCanExtend(extendable);
 
@@ -2244,7 +2257,7 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
    }
 
    Int_t *refX = nullptr, *refY = nullptr, *refZ = nullptr;
-   Int_t ixbin, iybin, outbin;
+   Int_t ixbin, iybin, outbin, iy;
    if ( projX == GetXaxis() && projY == GetYaxis() ) { refX = &ixbin;  refY = &iybin;  refZ = &outbin; }
    if ( projX == GetYaxis() && projY == GetXaxis() ) { refX = &iybin;  refY = &ixbin;  refZ = &outbin; }
    if ( projX == GetXaxis() && projY == GetZaxis() ) { refX = &ixbin;  refY = &outbin; refZ = &iybin;  }
@@ -2265,13 +2278,38 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
    if (useUF && !out->TestBit(TAxis::kAxisRange) )  outmin -= 1;
    if (useOF && !out->TestBit(TAxis::kAxisRange) )  outmax += 1;
 
-   for (ixbin=0;ixbin<=1+projX->GetNbins();ixbin++) {
-      if ( projX->TestBit(TAxis::kAxisRange) && ( ixbin < ixmin || ixbin > ixmax )) continue;
-      Int_t ix = h2->GetYaxis()->FindBin( projX->GetBinCenter(ixbin) );
+   // compute outer loop indices
+   Int_t ixbin_start = 0;
+   Int_t ixbin_end = projX->GetNbins() + 1;
+   Int_t ix = 0;
+   if (projX->TestBit(TAxis::kAxisRange)) {
+      ixbin_start = ixmin;
+      ixbin_end = ixmax;
+      if (originalRange)
+         // place results at original bin indices
+         ix = ixmin;
+      else
+         // start from the first bin
+         ix = 1;
+   }
+   // compute inner loop indices
+   Int_t iybin_start = 0;
+   Int_t iybin_end = projY->GetNbins() + 1;
+   Int_t iy_start = 0;
+   if (projY->TestBit(TAxis::kAxisRange)) {
+      iybin_start = iymin;
+      iybin_end = iymax;
+      if (originalRange)
+         // place results at original bin indices
+         iy_start = iymin;
+      else
+         // start from the first bin
+         iy_start = 1;
+   }
 
-      for (iybin=0;iybin<=1+projY->GetNbins();iybin++) {
-         if ( projY->TestBit(TAxis::kAxisRange) && ( iybin < iymin || iybin > iymax )) continue;
-         Int_t iy = h2->GetXaxis()->FindBin( projY->GetBinCenter(iybin) );
+   for (ixbin = ixbin_start; ixbin <= ixbin_end; ++ixbin, ++ix) {
+
+      for (iybin = iybin_start, iy = iy_start; iybin <= iybin_end; ++iybin, ++iy) {
 
          Double_t cont = 0;
          Double_t err2 = 0;
@@ -2295,7 +2333,6 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
          if (computeErrors) h2->SetBinError(iy, ix, TMath::Sqrt(err2) );
          // sum all content
          totcont += cont;
-
       }
    }
 
