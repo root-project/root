@@ -1157,8 +1157,6 @@ RooAbsGenContext* RooAbsPdf::autoGenContext(const RooArgSet &vars, const RooData
   return context ;
 }
 
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate a new dataset containing the specified variables with events sampled from our distribution.
 /// Generate the specified number of events or expectedEvents() if not specified.
@@ -1179,11 +1177,13 @@ RooAbsGenContext* RooAbsPdf::autoGenContext(const RooArgSet &vars, const RooData
 /// <tr><td> `Extended()`                        <td> If no number of events to be generated is given,
 /// use expected number of events from extended likelihood term.
 /// This evidently only works for extended PDFs.
-/// <tr><td> `GenBinned(const char* tag)`        <td> Use binned generation for all component pdfs that have 'setAttribute(tag)' set
-/// <tr><td> `AutoBinned(bool flag)`           <td> Automatically deploy binned generation for binned distributions (e.g. RooHistPdf, sums and products of
+/// <tr><td> `GenBinned(const char* tag)`        <td> Use binned generation for all component pdfs that have
+/// 'setAttribute(tag)' set <tr><td> `AutoBinned(bool flag)`           <td> Automatically deploy binned generation for
+/// binned distributions (e.g. RooHistPdf, sums and products of
 ///                                                 RooHistPdfs etc)
 /// \note Datasets that are generated in binned mode are returned as weighted unbinned datasets. This means that
-/// for each bin, there will be one event in the dataset with a weight corresponding to the (possibly randomised) bin content.
+/// for each bin, there will be one event in the dataset with a weight corresponding to the (possibly randomised) bin
+/// content.
 ///
 ///
 /// <tr><td> `AllBinned()`                       <td> As above, but for all components.
@@ -1191,16 +1191,17 @@ RooAbsGenContext* RooAbsPdf::autoGenContext(const RooArgSet &vars, const RooData
 ///       as binned generation is always executed at the top-level node for a regular
 ///       PDF, so for those it only mattes that the top-level node is tagged.
 ///
-/// <tr><td> ProtoData(const RooDataSet& data, bool randOrder)
+/// <tr><td> ProtoData(const RooAbsData& data, bool randOrder)
 ///          <td> Use specified dataset as prototype dataset. If randOrder in ProtoData() is set to true,
 ///               the order of the events in the dataset will be read in a random order if the requested
 ///               number of events to be generated does not match the number of events in the prototype dataset.
-///               \note If ProtoData() is used, the specified existing dataset as a prototype: the new dataset will contain
-///               the same number of events as the prototype (unless otherwise specified), and any prototype variables not in
-///               whatVars will be copied into the new dataset for each generated event and also used to set our PDF parameters.
-///               The user can specify a  number of events to generate that will override the default. The result is a
-///               copy of the prototype dataset with only variables in whatVars randomized. Variables in whatVars that
-///               are not in the prototype will be added as new columns to the generated dataset.
+///               \note If ProtoData() is used, the specified existing dataset as a prototype: the new dataset will
+///               contain the same number of events as the prototype (unless otherwise specified), and any prototype
+///               variables not in whatVars will be copied into the new dataset for each generated event and also used
+///               to set our PDF parameters. The user can specify a  number of events to generate that will override the
+///               default. The result is a copy of the prototype dataset with only variables in whatVars randomized.
+///               Variables in whatVars that are not in the prototype will be added as new columns to the generated
+///               dataset.
 ///
 /// </table>
 ///
