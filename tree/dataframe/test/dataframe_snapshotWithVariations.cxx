@@ -342,12 +342,15 @@ TEST(RDFVarySnapshot, TwoVariationsInSameFile)
    EXPECT_NE(file->GetKey(("R_rdf_branchToBitmaskMapping_" + treename1).c_str()), nullptr);
    EXPECT_NE(file->GetKey(("R_rdf_branchToBitmaskMapping_" + treename2).c_str()), nullptr);
 
+   // In Windows, an exception is thrown as expected, but it cannot be caught for the time being:
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
    EXPECT_THROW(ROOT::RDataFrame(treename1, filename).Mean("x").GetValue(), std::out_of_range);
    EXPECT_THROW(ROOT::RDataFrame(treename2, filename).Mean("x").GetValue(), std::out_of_range);
    EXPECT_THROW(ROOT::RDataFrame(treename1, filename).FilterAvailable("x__xVar_0").Mean("x").GetValue(),
                 std::out_of_range);
    EXPECT_THROW(ROOT::RDataFrame(treename2, filename).FilterAvailable("x__xVar_1").Mean("x").GetValue(),
                 std::out_of_range);
+#endif
 
    const std::vector<int> evens{0, 2, 4, 6, 8, 10};
    const std::vector<int> odds{1, 3, 5, 7, 9};
