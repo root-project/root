@@ -171,6 +171,19 @@ The deprecated pythonization with the `__getattr__` syntax is now removed.
 It was originally schedeuled for removal in 6.34 according to the 6.32 release notes, but since it was still used quite a bit,
 the deprecation period was extended.
 
+### Enhancements to the RDataFrame Pythonic API
+
+#### Support for C++ free functions in `.Define` and `.Filter`
+- It is now possible to pass user-defined C++ free functions (including templated and overloaded ones) directly to `RDataFrame.Define()` and `Filter()`.
+- Functions taking templated input types such as STL containers (e.g. std::vector<T>) are not yet supported.
+
+#### Extended Numba support for C++ containers and ROOT classes
+- The `@ROOT.Numba.Declare` decorator was extended to support functions using `std::vector`, `std::array`, and a selected set of ROOT classes (limited by [cppyy’s Numba extension](https://cppyy.readthedocs.io/en/latest/numba.html)).
+
+#### Further Unified Histogram Interface (UHI) integration and histogram pythonizations
+- Implemented `__iter__` for histograms to return an immutable copy of bin contents, including flow bins.
+- Integrated the [UHI testing suite](https://uhi.readthedocs.io/en/latest/testing.html) providing cross-library validation tests to ensure consistency and interoperability with the UHI specification.
+
 ## ROOT executable
 
 - Removed stray linebreak when running `root -q` with no input files.
