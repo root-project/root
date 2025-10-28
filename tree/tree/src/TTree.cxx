@@ -6612,6 +6612,14 @@ Long64_t TTree::LoadTree(Long64_t entry)
          if (fNotify) {
             if(!fNotify->Notify()) return -6;
          }
+         // We cannot know a priori if the branch(es) of the friend TChain(s) that were just
+         // updated were supposed to be connected to possibly a TChainElement of another chain
+         // that has befriended this TTree (i.e., one of the "external friends"). Thus, we
+         // forward the notification that one or more friend trees were updated to the friends
+         // of this TTree.
+         if (fExternalFriends)
+            for (auto external_fe : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fExternalFriends))
+               external_fe->MarkUpdated();
       }
    }
 
