@@ -4265,6 +4265,7 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
          theReversedXaxis->SetLabelColor(theGraph->GetXaxis()->GetLabelColor());
          theReversedXaxis->SetTickLength(TLX);
          theReversedXaxis->Paint();
+         delete theReversedXaxis;
       }
 
       // Reverse X coordinates
@@ -4331,6 +4332,7 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
          theReversedYaxis->SetTickLength(-TLY);
          theReversedYaxis->SetLabelOffset(LOY-TLY);
          theReversedYaxis->Paint();
+         delete theReversedYaxis;
       }
 
       // Reverse Y coordinates
@@ -4360,6 +4362,8 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
    }
 
    PaintHelper(theReversedGraph,opt.Data());
+
+   delete theReversedGraph;
 
    theHist->GetXaxis()->SetLabelOffset(LOX);
    theHist->GetXaxis()->SetTickLength(TLX);
