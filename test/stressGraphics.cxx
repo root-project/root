@@ -89,6 +89,7 @@
 #include "TAnnotation.h"
 #include "TRatioPlot.h"
 #include "TGaxis.h"
+#include "TPaletteAxis.h"
 #include "TSpline.h"
 #include "TPolyMarker.h"
 #include "TScatter.h"
@@ -2081,6 +2082,54 @@ void th2_custom_axis_labels()
   TestReport(C, "TH2 with custom axis labels", "", 0, "th2_custom_axis_labels");
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Test editing of stats and palette attributes
+
+void th2_stats_palette_edit()
+{
+   auto C = StartTest(600, 600);
+
+   gStyle->SetOptStat();
+
+   auto hist = new TH2F("th2_stats_palette", "Modify histogram stats and palette", 40, -4, 4, 40, -20, 20);
+   TRandom3 rnr;
+
+   float px, py;
+   for (int i = 0; i < 25000; i++) {
+      rnr.Rannor(px,py);
+      hist->Fill(px,5*py);
+   }
+
+   C->SetRightMargin(0.18);
+   auto palette = new TPaletteAxis(4.3, -18, 4.8, 10, hist);
+   hist->GetListOfFunctions()->Add(palette);
+
+   C->Add(hist, "colz");
+
+   C->Update();
+
+   TPaveStats *ps = (TPaveStats*)C->GetPrimitive("stats");
+   ps->SetName("mystats");
+   TList *listOfLines = ps->GetListOfLines();
+
+   // Remove the RMS line
+   while (auto tconst = ps->GetLineWith("Dev"))
+      listOfLines->Remove(tconst);
+
+   // Add a new line in the stat box.
+   // Note that "=" is a control character
+   TLatex *myt = new TLatex(0,0, "Test = 10");
+   myt ->SetTextFont(42);
+   myt ->SetTextSize(0.04);
+   myt ->SetTextColor(kRed);
+   listOfLines->Add(myt);
+
+   // the following line is needed to avoid that the automatic redrawing of stats
+   hist->SetStats(0);
+
+   TestReport(C, "TH2 with modified palette and stats", "", 0, "th2_stats_palette_edit");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TEllipse test.
@@ -4360,6 +4409,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    th2_candle    ();
    th2_violin    ();
    th2_custom_axis_labels();
+   th2_stats_palette_edit();
    tellipse      ();
    feynman       ();
    ratioplot     ();
