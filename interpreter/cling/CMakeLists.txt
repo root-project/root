@@ -118,7 +118,7 @@ else()
   endif()
 endif()
 
-if( NOT "NVPTX" IN_LIST LLVM_TARGETS_TO_BUILD)
+if( NOT "NVPTX" IN_LIST LLVM_TARGETS_TO_BUILD AND NOT EMSCRIPTEN)
   message(FATAL_ERROR "NVPTX backend is not activated\n"
     "Please enable it via -DLLVM_TARGETS_TO_BUILD=\"host;NVPTX\"")
 endif()
