@@ -1903,8 +1903,59 @@ void th2_cut()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Testing TH2 with custom axis labels
+/// Testing TH2 candle option
+/// do not include candle5 and candle6 testing while they emulate scatter plots
 
+void th2_candle()
+{
+   auto C = StartTest(1200, 800);
+   C->Divide(4, 2);
+
+   for (int padid = 0; padid < 8; ++padid) {
+      auto pad = C->cd(padid+1);
+
+      TString name = TString::Format("candle%s%d", padid/4 > 0 ? "v" : "h", padid % 4 + 1);
+      TString title = TString::Format("%s CANDLE%d plot", padid/4 > 0 ? "Vertical" : "Horizontal", padid % 4 + 1);
+
+      TH2 *h2 = (TH2*)gHsimple->Get("hpxpy")->Clone(name);
+      h2->SetTitle(title);
+      h2->SetFillColor(kGray);
+      h2->SetLineColor(kBlue);
+
+      pad->Add(h2, name);
+   }
+
+   TestReport(C, "TH2 candle", "", 0, "th2_candle");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Testing TH2 violin option
+
+void th2_violin()
+{
+   auto C = StartTest(800, 800);
+   C->Divide(2, 2);
+
+   for (int padid = 0; padid < 4; ++padid) {
+      auto pad = C->cd(padid+1);
+
+      TString name = TString::Format("violin%s%d", padid/2 > 0 ? "v" : "h", padid % 2 + 1);
+      TString title = TString::Format("%s VIOLIN%d plot", padid/2 > 0 ? "Vertical" : "Horizontal", padid % 2 + 1);
+
+      TH2 *h2 = (TH2*)gHsimple->Get("hpxpy")->Clone(name);
+      h2->SetTitle(title);
+      h2->SetFillColor(kGray);
+      h2->SetLineColor(kBlue);
+
+      pad->Add(h2, name);
+   }
+
+   TestReport(C, "TH2 violin", "", 0, "th2_violin");
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Testing TH2 with custom axis labels
 
 void th2_custom_axis_labels()
 {
@@ -4171,6 +4222,8 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    padticks      ();
    labels1       ();
    th2_cut       ();
+   th2_candle    ();
+   th2_violin    ();
    th2_custom_axis_labels();
    tellipse      ();
    feynman       ();
