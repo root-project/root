@@ -6111,7 +6111,7 @@ TTree* TTree::GetFriend(const char *friendname) const
 /// that you may not be able to take advantage of this feature.
 ///
 
-const char* TTree::GetFriendAlias(TTree* tree) const
+const char *TTree::GetFriendAlias(TTree *tree) const
 {
    if ((tree == this) || (tree == GetTree())) {
       return nullptr;
@@ -6122,30 +6122,60 @@ const char* TTree::GetFriendAlias(TTree* tree) const
    if (kGetFriendAlias & fFriendLockStatus) {
       return nullptr;
    }
-   if (!fFriends) {
+
+   // This is a TTree and it does not have any friends, we can return early
+   if (GetTree() == this && !fFriends)
       return nullptr;
-   }
-   TFriendLock lock(const_cast<TTree*>(this), kGetFriendAlias);
-   TIter nextf(fFriends);
-   TFriendElement* fe = nullptr;
-   while ((fe = (TFriendElement*) nextf())) {
-      TTree* t = fe->GetTree();
-      if (t == tree) {
-         return fe->GetName();
+
+   TFriendLock lock(const_cast<TTree *>(this), kGetFriendAlias);
+
+   auto lookForFriendNameInListOfFriends = [tree](const TList &friends) -> const char * {
+      for (auto *frEl : ROOT::Detail::TRangeStaticCast<TFriendElement>(friends)) {
+         auto *frElTree = frEl->GetTree();
+         // Simplest case: we found a friend which tree is the same as the input tree
+         if (frElTree == tree)
+            return frEl->GetName();
+         // Try again: the friend tree might be actually a TChain
+         if (frElTree && frElTree->GetTree() == tree)
+            return frEl->GetName();
       }
-      // Case of a chain:
-      if (t && t->GetTree() == tree) {
-         return fe->GetName();
+      return nullptr;
+   };
+
+   // First, look for the immediate friends of this tree
+   if (fFriends) {
+      const char *friendAlias = lookForFriendNameInListOfFriends(*fFriends);
+      if (friendAlias)
+         return friendAlias;
+   }
+
+   // Then, check if this is a TChain and the current tree has friends
+   // The non-redundant scenario here is that the currently-available
+   // inner TTree of this TChain has a list of friends which the TChain
+   // itself doesn't know anything about.
+   if (const auto *innerListOfFriends = GetTree()->GetListOfFriends();
+       innerListOfFriends && innerListOfFriends != fFriends) {
+      const char *friendAlias = lookForFriendNameInListOfFriends(*innerListOfFriends);
+      if (friendAlias)
+         return friendAlias;
+   }
+
+   // Recursively look into the list of friends of this tree
+   if (fFriends) {
+      for (auto *frEl : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fFriends)) {
+         const char *friendAlias = frEl->GetTree()->GetFriendAlias(tree);
+         if (friendAlias)
+            return friendAlias;
       }
    }
-   // After looking at the first level,
-   // let's see if it is a friend of friends.
-   nextf.Reset();
-   fe = nullptr;
-   while ((fe = (TFriendElement*) nextf())) {
-      const char* res = fe->GetTree()->GetFriendAlias(tree);
-      if (res) {
-         return res;
+
+   // Recursively look into the list of friends of the inner tree
+   if (const auto *innerListOfFriends = GetTree()->GetListOfFriends();
+       innerListOfFriends && innerListOfFriends != fFriends) {
+      for (auto *frEl : ROOT::Detail::TRangeStaticCast<TFriendElement>(*innerListOfFriends)) {
+         const char *friendAlias = frEl->GetTree()->GetFriendAlias(tree);
+         if (friendAlias)
+            return friendAlias;
       }
    }
    return nullptr;
