@@ -69,8 +69,8 @@ if(NOT "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" AND NOT MSVC)
     -Wno-unused-but-set-parameter)
 endif()
 
-
-add_library(cppyy SHARED src/CPyCppyyPyModule.cxx)
+# A module library cannot be linked to, it's opened dynamically:
+add_library(cppyy MODULE src/CPyCppyyPyModule.cxx)
 
 # Set the suffix to '.so' and the prefix to 'lib'
 set_target_properties(cppyy PROPERTIES  ${ROOT_LIBRARY_PROPERTIES}
