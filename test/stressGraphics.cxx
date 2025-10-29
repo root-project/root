@@ -1884,6 +1884,50 @@ void labels1()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Testing automatic color for hsitograms
+
+void th1_palettecolor()
+{
+   auto C = StartTest(800, 600);
+
+   gStyle->SetOptTitle(kFALSE);
+   gStyle->SetOptStat(0);
+
+   auto h1 = new TH1F("palettecolor_h1","Histogram drawn with full circles",100,-4,4);
+   auto h2 = new TH1F("palettecolor_h2","Histogram drawn with full squares",100,-4,4);
+   auto h3 = new TH1F("palettecolor_h3","Histogram drawn with full triangles up",100,-4,4);
+   auto h4 = new TH1F("palettecolor_h4","Histogram drawn with full triangles down",100,-4,4);
+   auto h5 = new TH1F("palettecolor_h5","Histogram drawn with empty circles",100,-4,4);
+
+   TRandom3 rng;
+   Double_t px,py;
+   for (Int_t i = 0; i < 25000; i++) {
+      rng.Rannor(px,py);
+      h1->Fill(px,10.);
+      h2->Fill(px, 8.);
+      h3->Fill(px, 6.);
+      h4->Fill(px, 4.);
+      h5->Fill(px, 2.);
+   }
+
+   h1->SetMarkerStyle(kFullCircle);
+   h2->SetMarkerStyle(kFullSquare);
+   h3->SetMarkerStyle(kFullTriangleUp);
+   h4->SetMarkerStyle(kFullTriangleDown);
+   h5->SetMarkerStyle(kOpenCircle);
+
+   h1->Draw("PLC PMC");
+   h2->Draw("SAME PLC PMC");
+   h3->Draw("SAME PLC PMC");
+   h4->Draw("SAME PLC PMC");
+   h5->Draw("SAME PLC PMC");
+
+   C->BuildLegend();
+
+   TestReport(C, "TH1 with automatic line/marker colors", "", 0, "th1_palettecolor");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Testing TH2 drawing with TCutG
 
 void th2_cut()
@@ -4221,6 +4265,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    tgaxis6       ();
    padticks      ();
    labels1       ();
+   th1_palettecolor();
    th2_cut       ();
    th2_candle    ();
    th2_violin    ();
@@ -4228,6 +4273,9 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    tellipse      ();
    feynman       ();
    ratioplot     ();
+   print_reports ();
+
+   start_block("More high Level 2D Primitives");
    tgraph1       ();
    tgraph2       ();
    tgraph3       ();
