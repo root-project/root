@@ -30,7 +30,19 @@ except ImportError:
 
 if platform.system() == "Windows":
     # On Windows, the library has to be searched without prefix
-    import libcppyy as _backend
+    try:
+        import libcppyy as _backend
+    except ModuleNotFoundError as e:
+        print(e)
+    
+    import os
+
+    tl = os.path.dirname(__file__)
+    for path in [tl, os.path.dirname(tl), os.path.join(tl, 'cppyy')]:
+        try:
+            print("***___ Listing of", path, os.listdir(path))
+        except FileNotFoundError:
+            pass
 else:
     import cppyy.libcppyy as _backend
 

@@ -344,7 +344,18 @@ if not ispypy:
 
             if platform.system() == "Windows":
                 # Install locations are handled differently on Windows
-                import libcppyy
+                try:
+                    import libcppyy
+                except ModuleNotFoundError as e:
+                    print(e)
+                import os
+
+                tl = os.path.dirname(__file__)
+                for path in [tl, os.path.dirname(tl), os.path.join(tl, 'cppyy')]:
+                    try:
+                        print("***___ Listing of", path, os.listdir(path))
+                    except FileNotFoundError:
+                        pass
 
                 ape = os.path.dirname(libcppyy.__file__)
             else:
