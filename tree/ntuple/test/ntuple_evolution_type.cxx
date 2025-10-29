@@ -628,8 +628,8 @@ TEST(RNTupleEvolution, Collections)
    ReadCollectionFail<std::map<short int, short int>, true>("proxyOfPairs", fileGuard.GetPath());
    ReadCollectionFail<std::map<short int, short int>, true>("vectorOfPairs", fileGuard.GetPath());
    ReadCollectionFail<std::map<short int, short int>, true>("rvecOfPairs", fileGuard.GetPath());
-   ReadCollection<std::map<short int, short int>, true>("setOfPairs", fileGuard.GetPath());
-   ReadCollection<std::map<short int, short int>, true>("unordered_setOfPairs", fileGuard.GetPath());
+   ReadCollectionFail<std::map<short int, short int>, true>("setOfPairs", fileGuard.GetPath());
+   ReadCollectionFail<std::map<short int, short int>, true>("unordered_setOfPairs", fileGuard.GetPath());
    ReadCollectionFail<std::map<short int, short int>, true>("multisetOfPairs", fileGuard.GetPath());
    ReadCollectionFail<std::map<short int, short int>, true>("unordered_multisetOfPairs", fileGuard.GetPath());
    ReadCollection<std::map<short int, short int>, true>("unordered_map", fileGuard.GetPath());
@@ -640,8 +640,8 @@ TEST(RNTupleEvolution, Collections)
    ReadCollectionFail<std::unordered_map<short int, short int>, true>("proxyOfPairs", fileGuard.GetPath());
    ReadCollectionFail<std::unordered_map<short int, short int>, true>("vectorOfPairs", fileGuard.GetPath());
    ReadCollectionFail<std::unordered_map<short int, short int>, true>("rvecOfPairs", fileGuard.GetPath());
-   ReadCollection<std::unordered_map<short int, short int>, true>("setOfPairs", fileGuard.GetPath());
-   ReadCollection<std::unordered_map<short int, short int>, true>("unordered_setOfPairs", fileGuard.GetPath());
+   ReadCollectionFail<std::unordered_map<short int, short int>, true>("setOfPairs", fileGuard.GetPath());
+   ReadCollectionFail<std::unordered_map<short int, short int>, true>("unordered_setOfPairs", fileGuard.GetPath());
    ReadCollectionFail<std::unordered_map<short int, short int>, true>("multisetOfPairs", fileGuard.GetPath());
    ReadCollectionFail<std::unordered_map<short int, short int>, true>("unordered_multisetOfPairs", fileGuard.GetPath());
    ReadCollection<std::unordered_map<short int, short int>, true>("map", fileGuard.GetPath());

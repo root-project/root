@@ -936,8 +936,7 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RMapField::CloneImpl(std::string_view ne
 
 void ROOT::RMapField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
 {
-   static const std::vector<std::string> prefixesRegular = {"std::map<", "std::unordered_map<", "std::set<",
-                                                            "std::unordered_set<"};
+   static const std::vector<std::string> prefixesRegular = {"std::map<", "std::unordered_map<"};
 
    EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
 
