@@ -382,7 +382,7 @@ void THLimitsFinder::OptimizeLimits(Int_t nbins, Int_t &newbins, Double_t &xmin,
       xmin = -1;
       xmax = 1;
    } else {
-      auto delta = 0.01 * (xmax - xmin);
+      const auto delta = 0.01 * (xmax - xmin);
       xmin = std::min(binlow, xmin - delta);
       xmax = std::max(binhigh, xmax + delta);
    }
