@@ -56,15 +56,19 @@ public:
 class withHiddenRef : public top {
    withHiddenRef &operator=(const withHiddenRef&); // intentionally NOT implemented
    int a;
-#ifndef __CINT__
+#ifdef __CLING__
+public:
+   withHiddenRef(int &) {};
+#else
    const int &ref;
    int &ref2;
-#endif
 public:
    withHiddenRef(int &p) : ref(p),ref2(p) {};
+#endif
+
 };
 
-#ifdef __CINT__
+#ifdef __CLING__
 #pragma link C++ class withHiddenRef-;
 #endif
 

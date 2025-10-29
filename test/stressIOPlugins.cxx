@@ -53,7 +53,7 @@
 //         : filename with a url query in Add...................... OK
 // ****************************************************************************
 //_____________________________batch only_____________________
-#ifndef __CINT__
+#ifndef __CLING__
 
 #include <cstdlib>
 #include <snprintf.h>
