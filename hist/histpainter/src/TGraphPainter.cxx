@@ -4207,15 +4207,22 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
 
    Int_t i; // loop index
 
+   // if axis drawn update painting once before continue
+   // otherwise X axis will disappear when Y axis makes own update
+   if (axis && (lrx || lry)) {
+      if (lrx) {
+         theHist->GetXaxis()->SetTickLength(0.);
+         theHist->GetXaxis()->SetLabelOffset(999.);
+      }
+      gPad->Update();
+   }
+
    // Reserve the TGraph along the X axis
    if (lrx) {
       opt.ReplaceAll("rx", "");
       if (axis) {
          // Reverse the X axis
          Double_t GL = 0.;
-         theHist->GetXaxis()->SetTickLength(0.);
-         theHist->GetXaxis()->SetLabelOffset(999.);
-         gPad->Update();
          TString optax = "-SDH";
          if (gPad->GetGridx()) {
             if (gPad->GetLogy()) {
@@ -4283,7 +4290,6 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
       if (axis) {
          // Reverse the Y axis
          Double_t GL = 0.;
-         gPad->Update();
          TString optax = "-SDH";
          if (gPad->GetGridy()) {
             if (gPad->GetLogx()) {
