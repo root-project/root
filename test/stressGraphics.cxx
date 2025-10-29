@@ -51,7 +51,9 @@
 #include "TF12.h"
 #include "TF2.h"
 #include "TF3.h"
+#include "TH1.h"
 #include "TH2.h"
+#include "THStack.h"
 #include "TH2Poly.h"
 #include "TNtuple.h"
 #include "TKey.h"
@@ -1925,6 +1927,55 @@ void th1_palettecolor()
    C->BuildLegend();
 
    TestReport(C, "TH1 with automatic line/marker colors", "", 0, "th1_palettecolor");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Testing THStack with TH1 histograms
+
+void thstack1()
+{
+   auto C = StartTest(1000, 500);
+   C->Divide(2, 1);
+
+   // create three 1-d histograms
+   auto h1st = new TH1F("h1st", "test hstack", 100, -4, 4);
+   h1st->SetFillColor(kRed);
+   h1st->SetMarkerStyle(21);
+   h1st->SetMarkerColor(kRed);
+   auto h2st = new TH1F("h2st", "test hstack", 100, -4, 4);
+   h2st->SetFillColor(kBlue);
+   h2st->SetMarkerStyle(21);
+   h2st->SetMarkerColor(kBlue);
+   auto h3st = new TH1F("h3st", "test hstack", 100, -4, 4);
+   h3st->SetFillColor(kGreen);
+   h3st->SetMarkerStyle(21);
+   h3st->SetMarkerColor(kGreen);
+
+   TRandom3 rng;
+   Double_t px,py;
+   for (Int_t i = 0; i < 25000; i++) {
+      rng.Rannor(px,py);
+      h1st->Fill(px, 2.);
+      h2st->Fill(py, 1.5);
+      h3st->Fill((px+py)/2, 1.);
+   }
+
+   C->cd(1);
+   auto hs1 = new THStack("hs1", "Stacked 1D histograms");
+   hs1->Add(h1st);
+   hs1->Add(h2st);
+   hs1->Add(h3st);
+   hs1->Draw();
+
+   C->cd(2);
+   auto hs2 = new THStack("hs2", "Stacked with nostack option");
+   hs2->Add(h1st);
+   hs2->Add(h2st);
+   hs2->Add(h3st);
+   gPad->SetGrid();
+   hs2->Draw("nostack,e1p");
+
+   TestReport(C, "THStack for 1D histograms", kSkipCCode, 0, "thstack1");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4266,6 +4317,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    padticks      ();
    labels1       ();
    th1_palettecolor();
+   thstack1      ();
    th2_cut       ();
    th2_candle    ();
    th2_violin    ();
