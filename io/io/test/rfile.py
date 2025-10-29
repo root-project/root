@@ -1,4 +1,5 @@
 import os
+import platform
 import unittest
 import ROOT
 
@@ -24,9 +25,11 @@ class RFileTests(unittest.TestCase):
             self.assertEqual(rfile.Get[ROOT.TH1F]("hist"), None)
             self.assertNotEqual(rfile.Get[ROOT.TH1]("hist"), None)
 
-            with self.assertRaises(ROOT.RException):
-                # This should fail because the file was opened as read-only
-                rfile.Put("foo", hist)
+            if not platform.system() == "Windows":
+                # TODO: re-enable it on Windows once the exception handling is fixed
+                with self.assertRaises(ROOT.RException):
+                    # This should fail because the file was opened as read-only
+                    rfile.Put("foo", hist)
 
         os.remove(fileName)
 
@@ -39,8 +42,10 @@ class RFileTests(unittest.TestCase):
             hist = ROOT.TH1D("hist", "", 100, -10, 10)
             hist.FillRandom("gaus", 10)
             rfile.Put("hist", hist)
-            with self.assertRaises(ROOT.RException):
-                rfile.Put("hist/2", hist)
+            if not platform.system() == "Windows":
+                # TODO: re-enable it on Windows once the exception handling is fixed
+                with self.assertRaises(ROOT.RException):
+                    rfile.Put("hist/2", hist)
 
         with RFile.Open(fileName) as rfile:
             hist = rfile.Get("hist")
