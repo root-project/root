@@ -1817,7 +1817,7 @@ void TChain::Loop(Option_t* option, Long64_t nentries, Long64_t firstentry)
    if (LoadTree(firstentry) < 0) return;
 
    if (firstentry < 0) firstentry = 0;
-   Long64_t lastentry = firstentry + nentries -1;
+   Long64_t lastentry = nentries == TTree::kMaxEntries ? nentries - 1 : firstentry + nentries - 1;
    if (lastentry > fEntries-1) {
       lastentry = fEntries -1;
    }

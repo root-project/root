@@ -725,7 +725,7 @@ Double_t TSpider::FindTextAngle(Double_t angle)
 
 Long64_t TSpider::GetEntriesToProcess(Long64_t firstentry, Long64_t nentries) const
 {
-   Long64_t lastentry = firstentry + nentries - 1;
+   Long64_t lastentry = nentries == TTree::kMaxEntries ? nentries - 1 : firstentry + nentries - 1;
    if (lastentry > fTree->GetEntriesFriend()-1) {
       lastentry  = fTree->GetEntriesFriend() - 1;
       nentries   = lastentry - firstentry + 1;

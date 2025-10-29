@@ -234,7 +234,8 @@ TTree *TTreePlayer::CopyTree(const char *selection, Option_t *, Long64_t nentrie
 
    //loop on the specified entries
    Int_t tnumber = -1;
-   for (entry=firstentry;entry<firstentry+nentries;entry++) {
+   Long64_t lastentry = nentries == TTree::kMaxEntries ? nentries - 1 : firstentry + nentries - 1;
+   for (entry = firstentry; entry <= lastentry; entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
       Long64_t localEntry = fTree->LoadTree(entryNumber);
@@ -616,7 +617,7 @@ Long64_t TTreePlayer::GetEntries(const char *selection)
 
 Long64_t TTreePlayer::GetEntriesToProcess(Long64_t firstentry, Long64_t nentries) const
 {
-   Long64_t lastentry = firstentry + nentries - 1;
+   Long64_t lastentry = nentries == TTree::kMaxEntries ? nentries - 1 : firstentry + nentries - 1;
    if (lastentry > fTree->GetEntriesFriend()-1) {
       lastentry  = fTree->GetEntriesFriend() - 1;
       nentries   = lastentry - firstentry + 1;
@@ -2072,7 +2073,8 @@ TPrincipal *TTreePlayer::Principal(const char *varexp, const char *selection, Op
 //*-*- loop on all selected entries
    fSelectedRows = 0;
    Int_t tnumber = -1;
-   for (entry=firstentry;entry<firstentry+nentries;entry++) {
+   Long64_t lastentry = nentries == TTree::kMaxEntries ? nentries - 1 : firstentry + nentries - 1;
+   for (entry = firstentry; entry < lastentry; entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
       Long64_t localEntry = fTree->LoadTree(entryNumber);
@@ -2257,16 +2259,18 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       //set the file cache
       TTreeCache *tpf = nullptr;
       TFile *curfile = fTree->GetCurrentFile();
+      Long64_t lastentry = nentries == TTree::kMaxEntries ? nentries - 1 : firstentry + nentries - 1;
       if (curfile) {
          tpf = (TTreeCache*)curfile->GetCacheRead(fTree);
          if (tpf)
-            tpf->SetEntryRange(firstentry,firstentry+nentries);
+            tpf->SetEntryRange(firstentry, lastentry);
          else {
             // Create the TTreeCache with the default size unless the
             // user explicitly disabled it.
             fTree->EnableCache();
             tpf = (TTreeCache*)curfile->GetCacheRead(fTree);
-            if (tpf) tpf->SetEntryRange(firstentry,firstentry+nentries);
+            if (tpf)
+               tpf->SetEntryRange(firstentry, lastentry);
          }
       }
 
@@ -2291,7 +2295,7 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       fSelectorUpdate = selector;
       UpdateFormulaLeaves();
 
-      for (entry=firstentry;entry<firstentry+nentries;entry++) {
+      for (entry = firstentry; entry <= lastentry; entry++) {
          entryNumber = fTree->GetEntryNumber(entry);
          if (entryNumber < 0) break;
          if (timer && timer->ProcessEvents()) break;
@@ -2711,9 +2715,8 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    fSelectedRows = 0;
    Int_t tnumber = -1;
    bool exitloop = false;
-   for (entry=firstentry;
-        entry<(firstentry+nentries) && !exitloop;
-        entry++) {
+   Long64_t lastentry = nentries == TTree::kMaxEntries ? nentries - 1 : firstentry + nentries - 1;
+   for (entry = firstentry; entry <= lastentry && !exitloop; entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
       Long64_t localEntry = fTree->LoadTree(entryNumber);
@@ -2892,7 +2895,8 @@ TSQLResult *TTreePlayer::Query(const char *varexp, const char *selection,
    fSelectedRows = 0;
    Int_t tnumber = -1;
    Int_t *fields = new Int_t[ncols];
-   for (entry=firstentry;entry<firstentry+nentries;entry++) {
+   Long64_t lastentry = nentries == TTree::kMaxEntries ? nentries - 1 : firstentry + nentries - 1;
+   for (entry = firstentry; entry <= lastentry; entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
       Long64_t localEntry = fTree->LoadTree(entryNumber);
