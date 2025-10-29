@@ -16,8 +16,6 @@ CLING_REPO_DIR_NAME = 'cling'
 ROOT_REPO_DIR_NAME = 'root'
 INTERP_DIR_NAME = 'interpreter/cling'
 DEST_INTERP_DIR_NAME = ''
-TEXTINPUT_DIR_NAME = 'core/textinput/src/textinput'
-DEST_TEXTINPUT_DIR_NAME='lib/UserInterface/textinput'
 
 def printError(msg):
     print(f'*** Error: {msg}')
@@ -87,26 +85,21 @@ def getHashes(repoDirName, startingHash, dirInRepoName=''):
     hashes = [line.split(' ', 1)[0] for line in out.split('\n')]
     return hashes
 
-def createPatches(rootHashes, interpHashes, textinputHashes):
+def createPatches(rootHashes, interpHashes):
     patches = []
 
     # We'll need a few sets to quickly check what to do with ROOT hashes
     interpHashesSet = set(interpHashes)
-    textInputHashesSet = set(textinputHashes)
-    allHashesSet = interpHashesSet | textInputHashesSet
 
     # We filter the ROOT hashes that we do not want to sync
-    rootHashesToSync = list(filter(lambda hash: hash in allHashesSet, rootHashes))
+    rootHashesToSync = list(filter(lambda hash: hash in interpHashesSet, rootHashes))
 
     # We loop on ROOT hashes to sync, from oldest to newest
-    # to return a list of triples [label, hash, patchAsSting], where label allows us
-    # to disinguish between textinput and interpreter patches and hash is there
-    # for debugging purposes.
-    # One commit can be visible in both directories, ergo 2 patches per hash are possible.
+    # to return a list of triples [dirInRepo, hash, patchAsSting], where dirInRepo is the
+    # directory and hash is there for debugging purposes.
     for rootHashtoSync in reversed(rootHashesToSync):
         keys = []
         if rootHashtoSync in interpHashesSet: keys.append(INTERP_DIR_NAME)
-        if rootHashtoSync in textInputHashesSet: keys.append(TEXTINPUT_DIR_NAME)
         for key in keys:
             patchAsStr = execCommand(f"git format-patch -1 {rootHashtoSync} {key} --stdout", ROOT_REPO_DIR_NAME)
             patches.append([key, rootHashtoSync, patchAsStr])
@@ -115,7 +108,7 @@ def createPatches(rootHashes, interpHashes, textinputHashes):
 def applyPatches(patches):
     for dirInRepo, hash, patchAsStr in patches:
         ignorePathLevel = dirInRepo.count('/') + 2
-        destDirName = DEST_INTERP_DIR_NAME if dirInRepo == INTERP_DIR_NAME else DEST_TEXTINPUT_DIR_NAME
+        destDirName = DEST_INTERP_DIR_NAME
         directoryOption = f'--directory {destDirName}' if destDirName else ''
         printInfo(f'Applying {hash} restricted to {dirInRepo} to repository {CLING_REPO_DIR_NAME}')
         execCommand(f'git am -p {ignorePathLevel} {directoryOption}', CLING_REPO_DIR_NAME, patchAsStr)
@@ -158,18 +151,17 @@ def principal():
     # to commits in the directories we are interested in for the sync
     rootHashes = getHashes(ROOT_REPO_DIR_NAME, startingRootHash)
     interpHashes = getHashes(ROOT_REPO_DIR_NAME, startingRootHash, INTERP_DIR_NAME)
-    textinputHashes = getHashes(ROOT_REPO_DIR_NAME, startingRootHash, TEXTINPUT_DIR_NAME)
 
     # If we have no commits to sync, we quit.
-    if not interpHashes and not textinputHashes:
+    if not interpHashes:
         # nothing to do, we have no commits to sync
         printInfo('No commit to sync. Exiting now.')
         return 0
 
-    printInfo(f'We found:\n - {len(interpHashes)} patches from the directory {INTERP_DIR_NAME}\n - {len(textinputHashes)} patches from the directory {TEXTINPUT_DIR_NAME}')
+    printInfo(f'We found:\n - {len(interpHashes)} patches from the directory {INTERP_DIR_NAME}')
 
     # We now create the patches we want to apply to the cling repo
-    patches = createPatches(rootHashes, interpHashes, textinputHashes)
+    patches = createPatches(rootHashes, interpHashes)
 
     # We now apply the patches
     if not patches:
