@@ -322,5 +322,5 @@ TEST(TAxis, EqualBinEdges)
    ROOT_EXPECT_ERROR(TAxis _(1, -std::numeric_limits<double>::infinity(), 0), "TAxis::Set", "Axis limits need to be finite numbers");
    ROOT_EXPECT_ERROR(TAxis _(1, 0., std::numeric_limits<double>::infinity()), "TAxis::Set", "Axis limits need to be finite numbers");
    ROOT_EXPECT_ERROR(TAxis _(1, std::numeric_limits<double>::quiet_NaN(), 0), "TAxis::Set", "Axis limits need to be finite numbers");
-   ROOT_EXPECT_ERROR(TAxis _(1, 0, std::numeric_limits<double>::quiet_NaN()), "Axis limits need to be finite numbers");
+   ROOT_EXPECT_ERROR(TAxis _(1, 0, std::numeric_limits<double>::quiet_NaN()), "TAxis::Set", "Axis limits need to be finite numbers");
 }
