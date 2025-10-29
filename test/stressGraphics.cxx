@@ -2905,6 +2905,44 @@ void earth()
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Testing THStack with TH2 histograms and lego options
+
+void thstack2()
+{
+   auto C = StartTest(800, 800);
+
+
+   gPad->SetFrameFillColor(17);
+   TF2 f1("hstack_f1", "xygaus + xygaus(5) + xylandau(10)",-4,4,-4,4);
+   Double_t params1[] = {130,-1.4,1.8,1.5,1, 150,2,0.5,-2,0.5,
+      3600,-2,0.7,-3,0.3};
+   f1.SetParameters(params1);
+   TF2 f2("hstack_f2","xygaus + xygaus(5)",-4,4,-4,4);
+   Double_t params2[] = {100,-1.4,1.9,1.1,2, 80,2,0.7,-2,0.5};
+   f2.SetParameters(params2);
+
+   auto h2sta = new TH2F("h2sta","h2sta",20,-4,4,20,-4,4);
+   h2sta->SetFillColor(38);
+   auto h2stb = new TH2F("h2stb","h2stb",20,-4,4,20,-4,4);
+   h2stb->SetFillColor(46);
+
+   TRandom3 rng;
+
+   h2sta->FillRandom(&f1, 4000, &rng);
+   h2stb->FillRandom(&f2, 3000, &rng);
+
+
+   auto a = new THStack("hstacklego", "Stacked 2D histograms");
+
+   a->Add(h2sta);
+   a->Add(h2stb);
+   a->Draw();
+
+   TestReport(C, "THStack lego plot", kSkipCCode, 0, "thstack2");
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// 1st TGraph2D Test
 
 void tgraph2d1()
@@ -4358,8 +4396,9 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    }
    earth         ();
    if (gSkip3D) {
-      gTestNum += 8;
+      gTestNum += 9;
    } else {
+      thstack2   ();
       tgraph2d1  ();
       tgraph2d2  ();
       tgraph2derr();
