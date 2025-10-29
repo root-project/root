@@ -210,8 +210,9 @@ int ReadRefFile(const char *fname, std::map<int, RefEntry> &entries)
          return 0;
       }
 
-      // workaround until all changes in ref file done
-      TestNum = nline - 1;
+      // only for debug purposes - set test number based on line number
+      // can be useful when inserting many new lines in the ref files
+      // TestNum = nline - 1;
 
       if ((TestNum < 1) || (TestNum >= kMaxNumTests)) {
          printf("Wrong test number %d in line %d from reference file %s\n", TestNum, nline, fname);
