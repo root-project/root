@@ -6,7 +6,6 @@ on:
       - 'master'
     paths:
       - 'interpreter/cling/**'
-      - 'core/textinput/src/textinput/**'
   workflow_dispatch:
 
 jobs:
