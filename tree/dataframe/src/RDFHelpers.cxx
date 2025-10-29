@@ -15,6 +15,7 @@
 #include "ROOT/RDF/RLoopManager.hxx" // for RLoopManager
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RResultHandle.hxx" // for RResultHandle, RunGraphs
+#include "ROOT/RResultPtr.hxx"
 
 #include "TROOT.h"      // IsImplicitMTEnabled
 #include "TError.h"     // Warning
@@ -157,7 +158,8 @@ void ThreadsPerTH3(unsigned int N)
 }
 
 ProgressHelper::ProgressHelper(std::size_t increment, unsigned int totalFiles, unsigned int progressBarWidth,
-                               unsigned int printInterval, bool useColors)
+                              unsigned int printInterval, bool useColors,
+                              ROOT::RDF::RResultPtr<ULong64_t> totalEntries)
    : fPrintInterval(printInterval),
      fIncrement{increment},
      fBarWidth{progressBarWidth = int(get_tty_size() / 4)},
@@ -169,6 +171,7 @@ ProgressHelper::ProgressHelper(std::size_t increment, unsigned int totalFiles, u
      fIsTTY{isatty(fileno(stdout)) == 1},
      fUseShellColours{useColors && fIsTTY} // Control characters only with terminals.
 #endif
+      , fTotalEntries(std::move(totalEntries))
 {
 }
 
@@ -241,82 +244,81 @@ void ProgressHelper::PrintStats(std::ostream &stream, std::size_t currentEventCo
 {
    RestoreStreamState restore(stream);
    auto evtpersec = EvtPerSec();
-   auto GetNEventsOfCurrentFile = ComputeNEventsSoFar();
-   auto currentFileIdx = ComputeCurrentFileIdx();
-   auto totalFiles = fTotalFiles;
+   auto GetNEventsOfCurrentFile = fTotalEntries && fTotalEntries.IsReady() ? const_cast<ROOT::RDF::RResultPtr<ULong64_t>&>(fTotalEntries).GetValue() : 0;
 
-   if (fUseShellColours)
-      stream << "\033[35m";
-   stream << "["
-          << "Elapsed time: " << elapsedSeconds << "  ";
-   if (fUseShellColours)
-      stream << "\033[0m";
-   stream << "processing file: " << currentFileIdx << " / " << totalFiles << "  ";
-
-   // Event counts:
+   // A progressbar format that fits on one line (to avoid clutter)
+   stream << " ";
+   
+   // Event counts in compact format
    if (fUseShellColours)
       stream << "\033[32m";
 
-   stream << "processed evts: " << currentEventCount;
+   stream << currentEventCount;
    if (GetNEventsOfCurrentFile != 0) {
-      stream << " / " << std::scientific << std::setprecision(2) << GetNEventsOfCurrentFile;
+      stream << "/" << GetNEventsOfCurrentFile;
+      // Calculate and show percentage
+      double percentage = (double(currentEventCount) / GetNEventsOfCurrentFile) * 100.0;
+      stream << " (" << std::fixed << std::setprecision(1) << percentage << "%)";
    }
-   stream << "  ";
 
    if (fUseShellColours)
       stream << "\033[0m";
 
-   // events/s
-   stream << std::scientific << std::setprecision(2) << evtpersec << " evt/s";
+   // Compact events/s display
+   stream << " " << std::scientific << std::setprecision(1) << evtpersec << "evt/s";
 
-   // Time statistics:
-   if (GetNEventsOfCurrentFile != 0) {
-      if (fUseShellColours)
-         stream << "\033[35m";
-      std::chrono::seconds remainingSeconds(
-         static_cast<long long>((ComputeNEventsSoFar() - currentEventCount) / evtpersec));
-      stream << " " << remainingSeconds << " "
-             << " remaining time (per file being processed)";
-      if (fUseShellColours)
-         stream << "\033[0m";
-   }
-
-   stream << "]   ";
+   // Compact time display (mm:ss format)
+   auto totalSeconds = elapsedSeconds.count();
+   auto minutes = totalSeconds / 60;
+   auto seconds = totalSeconds % 60;
+   stream << " " << minutes << ":" << std::setfill('0') << std::setw(2) << seconds << "m";
 }
 
-void ProgressHelper::PrintStatsFinal(std::ostream &stream, std::chrono::seconds elapsedSeconds) const
+void ROOT::RDF::Experimental::ProgressHelper::PrintStatsFinal(std::ostream &stream, std::chrono::seconds elapsedSeconds) const
 {
    RestoreStreamState restore(stream);
-   auto totalEvents = ComputeNEventsSoFar();
+   auto totalEvents = fProcessedEvents.load();
+   auto expectedTotal = fTotalEntries && fTotalEntries.IsReady() ? const_cast<ROOT::RDF::RResultPtr<ULong64_t>&>(fTotalEntries).GetValue() : 0;
    auto totalFiles = fTotalFiles;
+
+   // Clear line and start fresh
+   stream << "\r\033[K";
 
    if (fUseShellColours)
       stream << "\033[35m";
-   stream << "["
-          << "Total elapsed time: " << elapsedSeconds << "  ";
+   stream << "[";
+   
+   // Convert elapsed seconds to minutes:seconds format
+   auto totalSecs = elapsedSeconds.count();
+   auto minutes = totalSecs / 60;
+   auto seconds = totalSecs % 60;
+   
+   stream << "Total time: " << std::setfill('0') << std::setw(2) << minutes << ":" 
+          << std::setfill('0') << std::setw(2) << seconds << "s  ";
+          
    if (fUseShellColours)
       stream << "\033[0m";
    stream << "processed files: " << totalFiles << " / " << totalFiles << "  ";
 
-   // Event counts:
+   // Event counts in tqdm-like format:
    if (fUseShellColours)
       stream << "\033[32m";
 
    stream << "processed evts: " << totalEvents;
-   if (totalEvents != 0) {
-      stream << " / " << std::scientific << std::setprecision(2) << totalEvents;
+   if (expectedTotal != 0) {
+      stream << "/" << expectedTotal << " (100.0%)";
    }
 
    if (fUseShellColours)
       stream << "\033[0m";
 
-   stream << "]   ";
+   stream << "]" << std::endl;
 }
 
-/// Print a progress bar of width `ProgressHelper::fBarWidth` if `fGetNEventsOfCurrentFile` is known.
-void ProgressHelper::PrintProgressBar(std::ostream &stream, std::size_t currentEventCount) const
+/// Print a progress bar of width `ProgressHelper::fBarWidth` if `fTotalEntries` is known.
+void ROOT::RDF::Experimental::ProgressHelper::PrintProgressBar(std::ostream &stream, std::size_t currentEventCount) const
 {
-   auto GetNEventsOfCurrentFile = ComputeNEventsSoFar();
+   auto GetNEventsOfCurrentFile = fTotalEntries && fTotalEntries.IsReady() ? const_cast<ROOT::RDF::RResultPtr<ULong64_t>&>(fTotalEntries).GetValue() : 0;
    if (GetNEventsOfCurrentFile == 0)
       return;
 
@@ -334,32 +336,32 @@ void ProgressHelper::PrintProgressBar(std::ostream &stream, std::size_t currentE
    if (fUseShellColours)
       stream << "\033[0m";
 }
-//*/
 
 class ProgressBarAction final : public ROOT::Detail::RDF::RActionImpl<ProgressBarAction> {
 public:
    using Result_t = int;
 
 private:
-   std::shared_ptr<ProgressHelper> fHelper;
+   std::shared_ptr<ROOT::RDF::Experimental::ProgressHelper> fHelper;
    std::shared_ptr<int> fDummyResult = std::make_shared<int>();
 
 public:
-   ProgressBarAction(std::shared_ptr<ProgressHelper> r) : fHelper(std::move(r)) {}
+   ProgressBarAction(std::shared_ptr<ROOT::RDF::Experimental::ProgressHelper> r) : fHelper(std::move(r)) {}
 
    std::shared_ptr<Result_t> GetResultPtr() const { return fDummyResult; }
 
    void Initialize() {}
    void InitTask(TTreeReader *, unsigned int) {}
 
-   void Exec(unsigned int) {}
+   void Exec(unsigned int) 
+   {
+      // Don't call the progress helper here - it will be called by OnPartialResultSlot
+      // This method is called once per event processed, but progress updates
+      // should happen less frequently to avoid performance overhead
+   }
 
    void Finalize()
    {
-      std::mutex fPrintMutex;
-      if (!fPrintMutex.try_lock())
-         return;
-      std::lock_guard<std::mutex> lockGuard(fPrintMutex, std::adopt_lock);
       const auto &[eventCount, elapsedSeconds] = fHelper->RecordEvtCountAndTime();
 
       // The next line resets the current line output in the terminal.
@@ -387,17 +389,29 @@ public:
 void AddProgressBar(ROOT::RDF::RNode node)
 {
    auto total_files = node.GetNFiles();
-   auto progress = std::make_shared<ProgressHelper>(1000, total_files);
+   // Try to get the expected total events for progress display
+   // For Range operations, Count() will give us the range size
+   auto totalEntries = node.Count();
+   // Adaptive callback frequency: We aim for ~100 updates regardless of dataset size
+   // This ensures consistent progress granularity for both small and large datasets
+   const std::size_t targetUpdates = 100;
+   const std::size_t totalEvents = static_cast<std::size_t>(*totalEntries);
+   const std::size_t callbackFrequency = std::max(totalEvents / targetUpdates, std::size_t(1));
+   
+   auto progress = std::make_shared<ROOT::RDF::Experimental::ProgressHelper>(callbackFrequency, total_files, 40, 1, true, totalEntries);
    ProgressBarAction c(progress);
    auto r = node.Book<>(c);
-   r.OnPartialResultSlot(1000, [progress](unsigned int slot, auto &&arg) { (*progress)(slot, arg); });
+   // Use adaptive frequency to ensure consistent progress updates
+   r.OnPartialResultSlot(callbackFrequency, [progress](unsigned int slot, auto &&arg) { (*progress)(slot, arg); });
 }
+
+} // namespace Experimental
 
 void AddProgressBar(ROOT::RDataFrame dataframe)
 {
    auto node = ROOT::RDF::AsRNode(dataframe);
    ROOT::RDF::Experimental::AddProgressBar(node);
 }
-} // namespace Experimental
+
 } // namespace RDF
 } // namespace ROOT

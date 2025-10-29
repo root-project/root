@@ -17,6 +17,7 @@
 #include <ROOT/RDF/RActionBase.hxx>
 #include <ROOT/RDF/RResultMap.hxx>
 #include <ROOT/RResultHandle.hxx> // users of RunGraphs might rely on this transitive include
+#include <ROOT/RResultPtr.hxx>
 #include <ROOT/TypeTraits.hxx>
 
 #include <array>
@@ -276,8 +277,9 @@ SnapshotPtr_t VariationsFor(SnapshotPtr_t resPtr);
 /// \brief Add ProgressBar to a ROOT::RDF::RNode
 /// \param[in] df RDataFrame node at which ProgressBar is called.
 ///
-/// The ProgressBar can be added not only at the RDataFrame head node, but also at any any computational node,
-/// such as Filter or Define.
+/// The ProgressBar can be added not only at the RDataFrame head node, but also at any computational node,
+/// such as Filter or Define. To correctly account for the entries processed, place the progress bar
+/// after transformations that reduce the number of events (e.g. `Range`).
 /// ###Example usage:
 /// ~~~{.cpp}
 /// ROOT::RDataFrame df("tree", "file.root");
@@ -333,9 +335,7 @@ class ProgressBarAction;
 class ProgressHelper {
 private:
    double EvtPerSec() const;
-   std::pair<std::size_t, std::chrono::seconds> RecordEvtCountAndTime();
    void PrintStats(std::ostream &stream, std::size_t currentEventCount, std::chrono::seconds totalElapsedSeconds) const;
-   void PrintStatsFinal(std::ostream &stream, std::chrono::seconds totalElapsedSeconds) const;
    void PrintProgressBar(std::ostream &stream, std::size_t currentEventCount) const;
 
    std::chrono::time_point<std::chrono::system_clock> fBeginTime = std::chrono::system_clock::now();
@@ -345,6 +345,7 @@ private:
    std::atomic<std::size_t> fProcessedEvents{0};
    std::size_t fLastProcessedEvents{0};
    std::size_t fIncrement;
+   std::atomic<std::size_t> fCallbackCount{0}; // Track number of callbacks received
 
    mutable std::mutex fSampleNameToEventEntriesMutex;
    std::map<std::string, ULong64_t> fSampleNameToEventEntries; // Filename, events in the file
@@ -360,6 +361,8 @@ private:
    bool fUseShellColours;
 
    std::shared_ptr<TTree> fTree{nullptr};
+   ROOT::RDF::RResultPtr<ULong64_t> fTotalEntries{};
+
 
 public:
    /// Create a progress helper.
@@ -370,7 +373,11 @@ public:
    /// \param useColors Use shell colour codes to colour the output. Automatically disabled when
    /// we are not writing to a tty.
    ProgressHelper(std::size_t increment, unsigned int totalFiles = 1, unsigned int progressBarWidth = 40,
-                  unsigned int printInterval = 1, bool useColors = true);
+                  unsigned int printInterval = 1, bool useColors = true,
+                  ROOT::RDF::RResultPtr<ULong64_t> totalEntries = {});
+
+   std::pair<std::size_t, std::chrono::seconds> RecordEvtCountAndTime();
+   void PrintStatsFinal(std::ostream &stream, std::chrono::seconds totalElapsedSeconds) const;
 
    ~ProgressHelper() = default;
 
@@ -414,10 +421,37 @@ public:
       // ***************************************************
       // Warning: Here, everything needs to be thread safe:
       // ***************************************************
-      fProcessedEvents += fIncrement;
+   
 
-      // We only print every n seconds.
-      if (duration_cast<seconds>(system_clock::now() - fLastPrintTime) < fPrintInterval) {
+      // ***************************************************
+      // Progress tracking with adaptive estimation:
+      // Count callbacks and estimate progress based on total entries
+      // This should be handled here for thread safety
+      // ***************************************************
+      auto callbackNumber = fCallbackCount.fetch_add(1) + 1;
+      auto now = system_clock::now();
+      
+      // Calculate estimated progress based on callback frequency and total entries
+      if (fTotalEntries && *fTotalEntries > 0) {
+         auto totalEvents = static_cast<std::size_t>(*fTotalEntries);
+         auto estimatedProgress = std::min(callbackNumber * fIncrement, totalEvents);
+         fProcessedEvents.store(estimatedProgress);
+         
+         // Skip printing if we've already reached 100% and haven't made significant progress
+         if (estimatedProgress >= totalEvents && fProcessedEvents.load() == totalEvents) {
+            // Already at 100%, don't spam updates
+            auto timeSinceLastPrint = duration_cast<seconds>(now - fLastPrintTime);
+            if (timeSinceLastPrint < std::chrono::seconds(2)) {
+               return; // Don't print multiple 100% updates within 2 seconds
+            }
+         }
+      } else {
+         // Fallback to simple increment counting if total entries not available
+         fProcessedEvents.fetch_add(fIncrement);
+      }
+
+      // Only proceed with printing if enough time has passed
+      if (duration_cast<seconds>(now - fLastPrintTime) < fPrintInterval) {
          return;
       }
 
@@ -432,16 +466,14 @@ public:
       seconds elapsedSeconds;
       std::tie(eventCount, elapsedSeconds) = RecordEvtCountAndTime();
 
-      if (fIsTTY)
-         std::cout << "\r";
+      // Clear the entire line and return to beginning for clean progress updates
+      std::cout << "\r\033[K";
 
       PrintProgressBar(std::cout, eventCount);
       PrintStats(std::cout, eventCount, elapsedSeconds);
 
-      if (fIsTTY)
-         std::cout << std::flush;
-      else
-         std::cout << std::endl;
+      // Always flush for real-time updates, never add newlines during progress
+      std::cout << std::flush;
    }
 
    std::size_t ComputeNEventsSoFar() const
