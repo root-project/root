@@ -790,10 +790,8 @@ void TAxis::SaveAttributes(std::ostream &out, const char *name, const char *subn
 void TAxis::Set(Int_t nbins, Double_t xlow, Double_t xup)
 {
    fNbins   = nbins;
-   if (std::isinf(xlow) || std::isinf(xup))
-      Error("TAxis::Set", "fixed binwidth not compatible with infinite lower/upper edges");
-   if (std::isnan(xlow) || std::isnan(xup))
-      Error("TAxis::Set", "lower/upper edges should not be NaN");
+   if (!std::isfinite(xlow) || !std::isfinite(xup))
+      Error("TAxis::Set", "Axis limits need to be finite numbers");
    fXmin    = xlow;
    fXmax    = xup;
    if (!fParent) SetDefaults();
@@ -812,10 +810,8 @@ void TAxis::Set(Int_t nbins, const Float_t *xbins)
    fNbins  = nbins;
    fXbins.Set(fNbins+1);
    for (bin = 0; bin <= fNbins; bin++) {
-      if (std::isinf(xbins[bin])) {
-         Error("TAxis::Set", "infinite bin edges are not supported. Use a large number instead.");
-      } else if (std::isnan(xbins[bin])) {
-         Error("TAxis::Set", "bin edges should not be NaN");
+      if (!std::isfinite(xbins[bin])) {
+         Error("TAxis::Set", "Bin edges need to be finite numbers. Use a large number instead.");
       }
       fXbins.fArray[bin] = xbins[bin];
    }
