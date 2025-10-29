@@ -69,6 +69,9 @@ This caching reduces sub-process creation during initialization and can be usefu
 ### RNTuple
 
 * The parallel writer is now part of the public, stable API. The `RNTupleParallelWriter` and the closely related `RNTupleFillContext` moved from the `ROOT::Experimental` to the `ROOT` namespace.
+* Automatic schema evolution (in addition to I/O customization rules, which are already supported) akin to the classic I/O behavior. Expert documentation added in `tree/ntuple/doc/SchemaEvolution.md`.
+* RNTuple support in the classic browser together with several visual improvements, including a new treemap visualization of field sizes.
+* Bulk I/O optimization for fixed-size arrays and vectors of fixed-size arrays.
 
 ## Math
 
