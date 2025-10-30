@@ -220,12 +220,12 @@ void TGraphPolar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    auto xname  = SavePrimitiveVector(out, "polar_fx", fNpoints, fX, kTRUE);
    auto yname  = SavePrimitiveVector(out, "polar_fy", fNpoints, fY);
-   auto exname = SavePrimitiveVector(out, "polar_fex", fNpoints, fEX);
-   auto eyname = SavePrimitiveVector(out, "polar_fey", fNpoints, fEY);
+   auto exname = SavePrimitiveVector(out, "polar_fex", fNpoints, fEX, 111);
+   auto eyname = SavePrimitiveVector(out, "polar_fey", fNpoints, fEY, 111);
 
    SavePrimitiveConstructor(
       out, Class(), "polar",
-      TString::Format("%d, %s.data(), %s.data(), %s.data(), %s.data()", fNpoints, xname.Data(), yname.Data(), exname.Data(), eyname.Data()), kFALSE);
+      TString::Format("%d, %s.data(), %s.data(), %s, %s", fNpoints, xname.Data(), yname.Data(), exname.Data(), eyname.Data()), kFALSE);
 
    SavePrimitiveNameTitle(out, "polar");
 
