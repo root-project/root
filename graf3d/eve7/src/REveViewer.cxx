@@ -411,29 +411,6 @@ void REveViewerList::SceneDestructing(REveScene* scene)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Show / hide tooltip for various MouseOver events.
-/// Must be called from slots where sender is TGLEventHandler.
-
-void REveViewerList::HandleTooltip()
-{
-   if (fShowTooltip)
-   {
-      // TGLViewer       *glw = dynamic_cast<TGLViewer*>((TQObject*) gTQSender);
-      // TGLEventHandler *glh = (TGLEventHandler*) glw->GetEventHandler();
-      // if (REX::gEve->GetHighlight()->NumChildren() == 1)
-      // {
-      //    TString title(REX::gEve->GetHighlight()->FirstChild()->GetHighlightTooltip());
-      //    if ( ! title.IsNull())
-      //       glh->TriggerTooltip(title);
-      // }
-      // else
-      // {
-      //    glh->RemoveTooltip();
-      // }
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set color brightness.
 
 void REveViewerList::SetColorBrightness(Float_t b)

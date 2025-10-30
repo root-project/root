@@ -181,7 +181,6 @@ public:
 
    void    NewShapePicked(int shapeId, Int_t selectionId, bool multi);
 
-
    bool    RequiresExtraSelectionData() const override { return GetAlwaysSecSelect(); };
    void    FillExtraSelectionData(nlohmann::json& j, const std::set<int>& secondary_idcs) const override;
 

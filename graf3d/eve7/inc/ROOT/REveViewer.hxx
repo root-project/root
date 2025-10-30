@@ -125,8 +125,6 @@ protected:
    Float_t       fBrightness;
    Bool_t        fUseLightColorSet;
 
-   void HandleTooltip();
-
 public:
    REveViewerList(const std::string &n="REveViewerList", const std::string &t="");
    ~REveViewerList() override;
