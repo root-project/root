@@ -429,3 +429,62 @@ TEST(TTreeDraw, IntOverflow)
    auto nEntriesSelected = tree->Draw("val", "", "", TTree::kMaxEntries, 3);
    EXPECT_EQ(nEntriesSelected, 7);
 }
+
+// https://github.com/root-project/root/issues/20248
+TEST(TTreeScan, chainNameWithDifferentTreeName)
+{
+   struct DatasetRAII {
+      const char *fTreeName{"tree_20248"};
+      const char *fFileName{"tree_20248.root"};
+      DatasetRAII()
+      {
+         auto file = std::make_unique<TFile>(fFileName, "recreate");
+         auto tree = std::make_unique<TTree>(fTreeName, fTreeName);
+
+         int val{};
+         tree->Branch("val", &val);
+         for (; val < 5; val++)
+            tree->Fill();
+         file->Write();
+      }
+
+      ~DatasetRAII() { std::remove(fFileName); }
+   } dataset;
+
+   TChain c{"differentNameForChain"};
+   c.Add((std::string(dataset.fFileName) + "?#" + dataset.fTreeName).c_str());
+
+   ASSERT_NE(c.FindBranch("differentNameForChain.val"), nullptr);
+
+   std::ostringstream strCout;
+   {
+      if (auto *treePlayer = static_cast<TTreePlayer *>(c.GetPlayer())) {
+         struct FileRAII {
+            const char *fPath;
+            FileRAII(const char *name) : fPath(name) {}
+            ~FileRAII() { std::remove(fPath); }
+         } redirectFile{"tree_20248_regression_redirect.txt"};
+         treePlayer->SetScanRedirect(true);
+         treePlayer->SetScanFileName(redirectFile.fPath);
+         c.Scan("differentNameForChain.val", "", "colsize=30");
+
+         std::ifstream redirectStream(redirectFile.fPath);
+         std::stringstream redirectOutput;
+         redirectOutput << redirectStream.rdbuf();
+
+         const static std::string expectedScanOut{
+            R"Scan(*********************************************
+*    Row   *      differentNameForChain.val *
+*********************************************
+*        0 *                              0 *
+*        1 *                              1 *
+*        2 *                              2 *
+*        3 *                              3 *
+*        4 *                              4 *
+*********************************************
+)Scan"};
+         EXPECT_EQ(redirectOutput.str(), expectedScanOut);
+      } else
+         throw std::runtime_error("Could not retrieve TTreePlayer from main tree!");
+   }
+}
