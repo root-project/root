@@ -106,6 +106,8 @@ jobs:
             overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
           - image: ubuntu22
             overrides: ["imt=Off", "LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
+          - image: ubuntu2404
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
     runs-on:
       - self-hosted
       - linux
