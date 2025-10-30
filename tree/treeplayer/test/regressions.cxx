@@ -488,3 +488,82 @@ TEST(TTreeScan, chainNameWithDifferentTreeName)
          throw std::runtime_error("Could not retrieve TTreePlayer from main tree!");
    }
 }
+
+// https://github.com/root-project/root/issues/20249
+TEST(TTreeScan, TTreeGetBranchOfFriendTChain)
+{
+   struct DatasetRAII {
+      const char *fTreeNameStepZero{"tree_20249_zero"};
+      const char *fFileNameStepZero{"tree_20249_zero.root"};
+      const char *fTreeNameStepOne{"tree_20249_one"};
+      const char *fFileNameStepOne{"tree_20249_one.root"};
+
+      void WriteData(const char *name, const char *treename, int first, int last)
+      {
+         auto file = std::make_unique<TFile>(name, "RECREATE");
+         auto tree = std::make_unique<TTree>(treename, treename);
+
+         int value{};
+         tree->Branch("value", &value);
+
+         for (value = first; value < last; ++value) {
+            tree->Fill();
+         }
+
+         file->Write();
+      }
+
+      DatasetRAII()
+      {
+         WriteData(fFileNameStepZero, fTreeNameStepZero, 3, 7);
+         WriteData(fFileNameStepOne, fTreeNameStepOne, 0, 4);
+      }
+
+      ~DatasetRAII()
+      {
+         std::remove(fFileNameStepZero);
+         std::remove(fFileNameStepOne);
+      }
+   } dataset;
+
+   auto chain0 = std::make_unique<TChain>("stepzerochain");
+   chain0->Add((std::string(dataset.fFileNameStepZero) + "?#" + dataset.fTreeNameStepZero).c_str());
+
+   auto file1 = std::make_unique<TFile>(dataset.fFileNameStepOne);
+   std::unique_ptr<TTree> tree1{file1->Get<TTree>(dataset.fTreeNameStepOne)};
+   tree1->AddFriend(chain0.get());
+
+   ASSERT_NE(tree1->FindBranch("stepzerochain.value"), nullptr);
+
+   std::ostringstream strCout;
+   {
+      if (auto *treePlayer = static_cast<TTreePlayer *>(tree1->GetPlayer())) {
+         struct FileRAII {
+            const char *fPath;
+            FileRAII(const char *name) : fPath(name) {}
+            ~FileRAII() { std::remove(fPath); }
+         } redirectFile{"tree_20249_regression_redirect.txt"};
+         treePlayer->SetScanRedirect(true);
+         treePlayer->SetScanFileName(redirectFile.fPath);
+
+         tree1->Scan("value:stepzerochain.value", "", "colsize=24");
+
+         std::ifstream redirectStream(redirectFile.fPath);
+         std::stringstream redirectOutput;
+         redirectOutput << redirectStream.rdbuf();
+
+         const static std::string expectedScanOut{
+            R"Scan(******************************************************************
+*    Row   *                    value *      stepzerochain.value *
+******************************************************************
+*        0 *                        0 *                        3 *
+*        1 *                        1 *                        4 *
+*        2 *                        2 *                        5 *
+*        3 *                        3 *                        6 *
+******************************************************************
+)Scan"};
+         EXPECT_EQ(redirectOutput.str(), expectedScanOut);
+      } else
+         throw std::runtime_error("Could not retrieve TTreePlayer from main tree!");
+   }
+}
