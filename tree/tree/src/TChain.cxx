@@ -64,6 +64,8 @@ the trees in the chain.
 #include "strlcpy.h"
 #include "snprintf.h"
 
+#include <string_view>
+#include "ROOT/StringUtils.hxx"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -802,16 +804,35 @@ Long64_t TChain::Draw(const char* varexp, const char* selection,
 ////////////////////////////////////////////////////////////////////////////////
 /// See TTree::GetReadEntry().
 
-TBranch* TChain::FindBranch(const char* branchname)
+TBranch *TChain::FindBranch(const char *branchname)
 {
-   if (fTree) {
-      return fTree->FindBranch(branchname);
+   auto findBranchImpl = [this](const char *resolvedBranchName) -> TBranch * {
+      if (fTree) {
+         return fTree->FindBranch(resolvedBranchName);
+      }
+      LoadTree(0);
+      if (fTree) {
+         return fTree->FindBranch(resolvedBranchName);
+      }
+      return nullptr;
+   };
+
+   // This will allow the branchname to be preceded by the name of this chain.
+   // See similar code in TTree::FindBranch
+   std::string_view branchNameView{branchname};
+   std::string_view chainPrefix = GetName();
+
+   if (ROOT::StartsWith(branchNameView, chainPrefix)) {
+      branchNameView.remove_prefix(chainPrefix.length());
+      if (!branchNameView.empty() && branchNameView.front() == '.') {
+         branchNameView.remove_prefix(1);
+         // Perform a copy here to ensure the returned character array is null-terminated.
+         std::string copy{branchNameView};
+         return findBranchImpl(copy.c_str());
+      }
    }
-   LoadTree(0);
-   if (fTree) {
-      return fTree->FindBranch(branchname);
-   }
-   return nullptr;
+
+   return findBranchImpl(branchname);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
