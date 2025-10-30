@@ -488,6 +488,17 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
          errors.push_back(ss.str());
       }
 
+      // Require that field versions match
+      const auto srcFldVer = field.fSrc->GetFieldVersion();
+      const auto dstFldVer = field.fDst->GetFieldVersion();
+      if (srcFldVer != dstFldVer) {
+         std::stringstream ss;
+         ss << "Field `" << field.fSrc->GetFieldName()
+            << "` has a different field version than previously-seen field with the same name (old: " << dstFldVer
+            << ", new: " << srcFldVer << ")";
+         errors.push_back(ss.str());
+      }
+
       const auto srcRole = field.fSrc->GetStructure();
       const auto dstRole = field.fDst->GetStructure();
       if (srcRole != dstRole) {
