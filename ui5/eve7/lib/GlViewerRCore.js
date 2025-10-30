@@ -87,6 +87,8 @@ sap.ui.define([
                   return canvasDOM;
                };
 
+               pthis.ApplyTemporaryRCoreExtensions();
+
                pthis.bootstrap();
             });
          } else {
@@ -203,6 +205,7 @@ sap.ui.define([
          this.renderer.clearColor = "#00000000";
          this.scene = new RC.Scene();
          this.overlay_scene = new RC.Scene();
+         this.scene_bbox = new RC.Box3();
 
          this.lights = new RC.Group;
          this.lights.name = "Light container";
@@ -470,18 +473,23 @@ sap.ui.define([
          this.resetRenderer();
       }
 
+      recalcSceneBBox()
+      {
+         this.scene_bbox.setFromObject( this.scene );
+         if (this.scene_bbox.isEmpty())
+         {
+            console.error("GlViewerRenderCore.resetRenderer scene bbox empty", this.scene_bbox);
+            const ext = 100;
+            this.scene_bbox.expandByPoint(new RC.Vector3(-ext,-ext,-ext));
+            this.scene_bbox.expandByPoint(new RC.Vector3( ext, ext, ext));
+         }
+      }
+
       resetRenderer()
       {
-         let sbbox = new RC.Box3();
-         sbbox.setFromObject( this.scene );
-         if (sbbox.isEmpty())
-         {
-            console.error("GlViewerRenderCore.resetRenderer scene bbox empty", sbbox);
-            const ext = 100;
-            sbbox.expandByPoint(new RC.Vector3(-ext,-ext,-ext));
-            sbbox.expandByPoint(new RC.Vector3( ext, ext, ext));
-         }
+         this.recalcSceneBBox();
 
+         let sbbox = this.scene_bbox;
          let posV = new RC.Vector3; posV.subVectors(sbbox.max, this.rot_center);
          let negV = new RC.Vector3; negV.subVectors(sbbox.min, this.rot_center);
 
@@ -540,6 +548,19 @@ sap.ui.define([
          this.controls.update();
       }
 
+      setupCamera()
+      {
+         // To be used with JS debugger to edit the values as needed.
+
+         let pos = new RC.Vector3;
+         let lookat = new RC.Vector3;
+         let fov = 30; // in degrees
+
+         console.log("A good place to set the breakpoint and edit the values");
+
+         // Call the controller stuff, hope it's not all local, otherwise we need to edit it there.
+         // Sigh, should really have it (and RedeQuTor) in ROOT.
+      }
 
       updateViewerAttributes()
       {
@@ -641,10 +662,11 @@ sap.ui.define([
 
       //==============================================================================
 
-      request_render()
+      request_render(recalc_sbbox=false)
       {
          // console.log("REQUEST RENDER");
 
+         this.render_requested_recalc_sbbox ||= recalc_sbbox;
          if (this.render_requested) return;
          setTimeout(this.render.bind(this), 0);
          this.render_requested = true;
@@ -652,9 +674,16 @@ sap.ui.define([
 
       render()
       {
-         // console.log("RENDER", this.scene, this.camera, this.canvas, this.renderer);
+         console.log("RENDER", this.scene, this.camera, this.canvas, this.renderer);
 
          this.render_requested = false;
+         if (this.render_requested_recalc_sbbox) {
+            this.recalcSceneBBox();
+            this.render_requested_recalc_sbbox = false;
+         }
+         if (this.camera.isPerspectiveCamera) {
+            this.camera.optimizeNearFar(this.scene_bbox);
+         }
 
          if (this.canvas.width <= 0 || this.canvas.height <= 0) return;
 
@@ -1220,6 +1249,25 @@ sap.ui.define([
          </html>`);
          win.document.close();
       }
+
+      //==============================================================================
+      // Temporary RCore additions (to avoid updating of RCore.tgz)
+      //==============================================================================
+
+      ApplyTemporaryRCoreExtensions() {
+         console.log("GlViewerRCore.ApplyTemporaryRCoreExtensions()");
+
+         // E.g.:
+         // if (RC.PerspectiveCamera.prototype.optimizeNearFar === undefined) {
+         //    RC.PerspectiveCamera.prototype.optimizeNearFar = function(scene_bbox) {
+         //       this.matrixWorldInverse.getInverse(this.matrixWorld);
+         //       // .....
+         //    };
+         // }
+      }
+
+      //==============================================================================
+
    } // class GlViewerRCore
 
    return GlViewerRCore;
