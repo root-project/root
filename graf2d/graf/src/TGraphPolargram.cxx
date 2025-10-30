@@ -45,6 +45,7 @@ End_Macro
 #include "TGaxis.h"
 #include "THLimitsFinder.h"
 #include "TVirtualPad.h"
+#include "TColor.h"
 #include "TLatex.h"
 #include "TEllipse.h"
 #include "TMath.h"
@@ -962,3 +963,51 @@ void TGraphPolargram::SetTwoPi()
 {
    SetRangePolar(0,2*TMath::Pi());
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save TGraphPolargram as primitive
+
+void TGraphPolargram::SavePrimitive(std::ostream &out, Option_t *option)
+{
+   if (!option || strcmp(option, "nodraw"))
+      return;
+
+   TString opt = "";
+   if (fDegree)
+      opt = "d";
+   else if (fGrad)
+      opt = "g";
+
+   SavePrimitiveConstructor(
+      out, Class(), "polargram",
+      TString::Format("\"%s\", %g, %g, %g, %g, \"%s\"", GetName(), fRwrmin, fRwrmax, fRwtmin, fRwtmax, opt.Data()));
+
+   SaveLineAttributes(out, "polargram", -1, -1, -1);
+   SaveTextAttributes(out, "polargram", -1, -1, -1, -1, -1);
+
+   if (fAxisAngle)
+      out << "   polargram->SetAxisAngle(" << fAxisAngle / TMath::Pi() * 180 << ");\n";
+
+   if (fNdivPol != 508)
+      out << "   polargram->SetNdivPolar(" << fNdivPol << ");\n";
+   out << "   polargram->SetPolarLabelColor(" << TColor::SavePrimitiveColor(fPolarLabelColor) << ");\n";
+   out << "   polargram->SetPolarLabelFont(" << fPolarLabelFont << ");\n";
+   out << "   polargram->SetPolarLabelSize(" << fPolarTextSize << ");\n";
+   if (fPolarOffset != 0.04)
+      out << "   polargram->SetPolarOffset(" << fPolarOffset << ");\n";
+   out << "   polargram->SetTickpolarSize(" << fTickpolarSize << ");\n";
+   if (fPolarLabels)
+      for(Int_t n = 0; n < fNdivPol; n++)
+         if (!fPolarLabels[n].IsNull())
+            out << "   polargram->SetPolarLabel(\"" << fPolarLabels[n] << "\");\n";
+
+   if (fNdivRad != 508)
+      out << "   polargram->SetNdivRadial(" << fNdivRad << ");\n";
+   out << "   polargram->SetRadialLabelColor(" << TColor::SavePrimitiveColor(fRadialLabelColor) << ");\n";
+   out << "   polargram->SetRadialLabelFont(" << fRadialLabelFont << ");\n";
+   out << "   polargram->SetRadialLabelSize(" << fRadialTextSize << ");\n";
+   if (fRadialOffset != 0.04)
+      out << "   polargram->SetRadialOffset(" << fRadialOffset << ");\n";
+}
+
