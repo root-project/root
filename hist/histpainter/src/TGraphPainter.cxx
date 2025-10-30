@@ -4591,7 +4591,7 @@ void TGraphPainter::PaintScatter2D(TScatter2D *theScatter, Option_t* chopt)
 
    TGraph2D* theGraph = theScatter->GetGraph();
 
-   Int_t optionSAME = 0, optionSkipCol = 0;
+   Int_t optionSAME = 0, optionSkipCol = 0, optionLOGC = 1, optionLOGS = 0;
 
    TString opt = chopt;
    opt.ToUpper();
@@ -4603,6 +4603,14 @@ void TGraphPainter::PaintScatter2D(TScatter2D *theScatter, Option_t* chopt)
    if (opt.Contains("SKIPCOL")) {
       optionSkipCol = 1;
       opt.ReplaceAll("SKIPCOL"," ");
+   }
+   if (opt.Contains("LOGC")) {
+      optionLOGC = 2;
+      opt.ReplaceAll("LOGC"," ");
+   }
+   if (opt.Contains("LOGS")) {
+      optionLOGS = 1;
+      opt.ReplaceAll("LOGS"," ");
    }
 
    opt.Append("TRI0");
@@ -4660,8 +4668,8 @@ void TGraphPainter::PaintScatter2D(TScatter2D *theScatter, Option_t* chopt)
 
       // Define and paint palette
       if (theColor) {
-         TPaletteAxis *palette;
          TList *functions = theScatter->GetGraph()->GetListOfFunctions();
+         TPaletteAxis *palette = nullptr;
          palette = (TPaletteAxis*)functions->FindObject("palette");
          TView *view = gPad->GetView();
          if (palette) {
@@ -4687,16 +4695,17 @@ void TGraphPainter::PaintScatter2D(TScatter2D *theScatter, Option_t* chopt)
             Double_t xmax = gPad->PadtoX(xup + xr);
             if (xmax > x2) xmax = gPad->PadtoX(gPad->GetX2()-0.01*xr);
             palette = new TPaletteAxis(xmin,ymin,xmax,ymax,minc,maxc);
+            palette->SetLog(optionLOGC);
             palette->SetLabelColor(theGraph->GetZaxis()->GetLabelColor());
             palette->SetLabelFont(theGraph->GetZaxis()->GetLabelFont());
             palette->SetLabelOffset(theGraph->GetZaxis()->GetLabelOffset());
             palette->SetLabelSize(theGraph->GetZaxis()->GetLabelSize());
-          //  palette->SetTitleOffset(theGraph->GetZaxis()->GetTitleOffset());
-          //  palette->SetTitleSize(theGraph->GetZaxis()->GetTitleSize());
+            //palette->SetTitleOffset(theGraph->GetZaxis()->GetTitleOffset());
+            palette->SetTitleSize(theGraph->GetZaxis()->GetTitleSize());
             palette->SetNdivisions(theGraph->GetZaxis()->GetNdivisions());
-           // palette->SetTitle(theGraph->GetZaxis()->GetTitle());
-           // palette->SetTitleColor(theGraph->GetZaxis()->GetTitleColor());
-           // palette->SetTitleFont(theGraph->GetZaxis()->GetTitleFont());
+            //palette->SetTitle(theGraph->GetTitle());
+            //palette->SetTitleColor(theGraph->GetZaxis()->GetTitleColor());
+            //palette->SetTitleFont(theGraph->GetZaxis()->GetTitleFont());
 
             functions->AddFirst(palette);
          }
@@ -4707,6 +4716,11 @@ void TGraphPainter::PaintScatter2D(TScatter2D *theScatter, Option_t* chopt)
       TIter next(gPad->GetListOfPrimitives());
       while ((s2 = (TScatter2D *)next())) {
          if (!s2->InheritsFrom(TScatter2D::Class())) continue;
+         TString opt2 = s2->GetDrawOption();
+         if (opt2.Contains("LOGC")) optionLOGC = 2;
+         else optionLOGC = 1;
+         if (opt2.Contains("LOGS")) optionLOGS = 1;
+         else optionLOGS = 0;
          if (theColor) {
             double *ColorInPad = s2->GetColor();
             if (ColorInPad) {
@@ -4730,11 +4744,29 @@ void TGraphPainter::PaintScatter2D(TScatter2D *theScatter, Option_t* chopt)
    int logx = gPad->GetLogx();
    int logy = gPad->GetLogy();
    int logz = gPad->GetLogz();
+   int logc = 0;
+   if (optionLOGC == 2) logc =1;
+   if (theColor && logc) {
+      if (minc>0) minc = log10(minc);
+      if (maxc>0) maxc = log10(maxc);
+   }
+   if (theSize && optionLOGS) {
+      if (mins>0) mins = log10(mins);
+      if (maxs>0) maxs = log10(maxs);
+   }
+   theScatter->SetMarkerColor(theScatter->GetMarkerColor());
+   theScatter->TAttMarker::Modify();
+   double x,y,z,c,s,ms;
    int nc;
-   double x,y,z,c, ms;
    for (Int_t i = 0; i < n; i++) {
       if (theColor) {
          c = theColor[i];
+         if (logc){
+            if (theColor[i]>0) c = log10(theColor[i]);
+            else continue;
+         } else {
+            c = theColor[i];
+         }
          if (c<minc) {
             if (optionSkipCol) continue;
             c = minc;
@@ -4748,7 +4780,13 @@ void TGraphPainter::PaintScatter2D(TScatter2D *theScatter, Option_t* chopt)
          theScatter->SetMarkerColor(gStyle->GetColorPalette(nc));
       }
       if (theSize)  {
-         ms = (MaxMarkerSize-MinMarkerSize)*((theSize[i]-mins)/(maxs-mins))+MinMarkerSize;
+         if (optionLOGS){
+            if (theSize[i]>0) s = log10(theSize[i]);
+            else continue;
+         } else {
+            s = theSize[i];
+         }
+         ms = (MaxMarkerSize-MinMarkerSize)*((s-mins)/(maxs-mins))+MinMarkerSize;
          theScatter->SetMarkerSize(ms);
       }
       theScatter->TAttMarker::Modify();

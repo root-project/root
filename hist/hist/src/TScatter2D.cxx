@@ -38,6 +38,13 @@ TScatter2D can be drawn with the following options:
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
 | "SAME"   | Superimpose on previous picture in the same pad.|
+| "LOGC"   | Log scale for colors.|
+| "LOGS"   | Log scale for size.|
+
+In the case of the SAME option, the log scale for color and size is inherited from the
+previously drawn TScatter2D. For example, if a TScatter2D is drawn on top of another one
+that uses a log scale for color, the second TScatter2D will also use a log scale for its
+colors, even if the log scale for color is not explicitly specified for the second plot.
 
 */
 
@@ -225,10 +232,10 @@ void TScatter2D::SetMargin(Double_t margin)
 
 void TScatter2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   TString arr_x = SavePrimitiveVector(out, "scat_x", fNpoints, fGraph->GetX(), kTRUE);
-   TString arr_y = SavePrimitiveVector(out, "scat_y", fNpoints, fGraph->GetY());
-   TString arr_z = SavePrimitiveVector(out, "scat_z", fNpoints, fGraph->GetZ());
-   TString arr_col = SavePrimitiveVector(out, "scat_col", fNpoints, fColor);
+   TString arr_x    = SavePrimitiveVector(out, "scat_x", fNpoints, fGraph->GetX(), kTRUE);
+   TString arr_y    = SavePrimitiveVector(out, "scat_y", fNpoints, fGraph->GetY());
+   TString arr_z    = SavePrimitiveVector(out, "scat_z", fNpoints, fGraph->GetZ());
+   TString arr_col  = SavePrimitiveVector(out, "scat_col", fNpoints, fColor);
    TString arr_size = SavePrimitiveVector(out, "scat_size", fNpoints, fSize);
 
    SavePrimitiveConstructor(out, Class(), "scat",
