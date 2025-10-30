@@ -812,3 +812,208 @@ INSTANTIATE_TEST_SUITE_P(
 
       return label;
    }));
+
+// Another scenario where all datasets in the hierarchy have the same branch name but the different branches from the
+// different datasets are accessed together in the same parts of a TTree::Scan expression. This checks that the various
+// branch addresses are properly set and they don't get mixed up.
+struct GH20033ComplexScanExpression : public ::testing::TestWithParam<std::tuple<bool, bool, bool, bool>> {
+
+   constexpr static std::array<const char *, 3> fStepZeroFileNames{
+      "tree_gh20033_complexscanexpression_stepzero_0.root", "tree_gh20033_complexscanexpression_stepzero_1.root",
+      "tree_gh20033_complexscanexpression_stepzero_2.root"};
+
+   constexpr static auto fStepOneFileName{"tree_gh20033_complexscanexpression_stepone.root"};
+   constexpr static auto fStepTwoFileName{"tree_gh20033_complexscanexpression_steptwo.root"};
+   constexpr static auto fStepThreeFileName{"tree_gh20033_complexscanexpression_stepthree.root"};
+   constexpr static auto fStepFourFileName{"tree_gh20033_complexscanexpression_stepfour.root"};
+
+   constexpr static auto fStepZeroTreeName{"stepzerotree"};
+   constexpr static auto fStepOneTreeName{"steponetree"};
+   constexpr static auto fStepTwoTreeName{"steptwotree"};
+   constexpr static auto fStepThreeTreeName{"stepthreetree"};
+   constexpr static auto fStepFourTreeName{"stepfourtree"};
+
+   constexpr static auto fTotalEntries{10};
+
+   static void WriteData(const char *name, const char *treename, int first, int last)
+   {
+      auto file = std::make_unique<TFile>(name, "RECREATE");
+      auto tree = std::make_unique<TTree>(treename, treename);
+
+      int val{};
+      tree->Branch("value", &val);
+
+      for (val = first; val < last; ++val) {
+         tree->Fill();
+      }
+
+      file->Write();
+   }
+
+   static void SetUpTestSuite()
+   {
+      WriteData(fStepZeroFileNames[0], fStepZeroTreeName, 0, 4);
+      WriteData(fStepZeroFileNames[1], fStepZeroTreeName, 4, 7);
+      WriteData(fStepZeroFileNames[2], fStepZeroTreeName, 7, 10);
+      WriteData(fStepOneFileName, fStepOneTreeName, 100, 100 + fTotalEntries);
+      WriteData(fStepTwoFileName, fStepTwoTreeName, 200, 200 + fTotalEntries);
+      WriteData(fStepThreeFileName, fStepThreeTreeName, 300, 300 + fTotalEntries);
+      WriteData(fStepFourFileName, fStepFourTreeName, 400, 400 + fTotalEntries);
+   }
+
+   static void TearDownTestSuite()
+   {
+      for (const auto &fileName : fStepZeroFileNames)
+         std::remove(fileName);
+
+      std::remove(fStepOneFileName);
+      std::remove(fStepTwoFileName);
+      std::remove(fStepThreeFileName);
+      std::remove(fStepFourFileName);
+   }
+};
+
+TEST_P(GH20033ComplexScanExpression, Test)
+{
+
+   auto &&[stepOneTChain, stepTwoTChain, stepThreeTChain, stepFourTChain] = GetParam();
+
+   // The step zero dataset needs to be a TChain and have more than one TTree
+   // to recreate the scenarios when one component of the friendship chain
+   // is a TChain switching to a new TTree and thus triggering the update
+   auto stepZeroDataset = std::make_unique<TChain>(fStepZeroTreeName);
+   for (const auto &fileName : fStepZeroFileNames)
+      stepZeroDataset->Add(fileName);
+
+   // Step one dataset, can be a TChain or a standalone TTree.
+   // In the former case, the first tree of the TChain is used
+   // to befriend the chain from the previous step.
+   std::unique_ptr<TFile> stepOneFileLifeLine{};
+   std::unique_ptr<TTree> stepOneDataset{};
+   if (stepOneTChain) {
+      auto chain = std::make_unique<TChain>(fStepOneTreeName);
+      chain->Add(fStepOneFileName);
+      chain->GetEntry(0);
+      chain->GetTree()->AddFriend(stepZeroDataset.get());
+      stepOneDataset = std::move(chain);
+   } else {
+      stepOneFileLifeLine = std::make_unique<TFile>(fStepOneFileName);
+      stepOneDataset = std::unique_ptr<TTree>{stepOneFileLifeLine->Get<TTree>(fStepOneTreeName)};
+      stepOneDataset->AddFriend(stepZeroDataset.get());
+   }
+
+   // Step two dataset, can be a TChain or a standalone TTree.
+   // In the former case, the first tree of the TChain is used
+   // to befriend the chain from the previous step.
+   std::unique_ptr<TFile> stepTwoFileLifeLine{};
+   std::unique_ptr<TTree> stepTwoDataset{};
+   if (stepTwoTChain) {
+      auto chain = std::make_unique<TChain>(fStepTwoTreeName);
+      chain->Add(fStepTwoFileName);
+      chain->GetEntry(0);
+      chain->GetTree()->AddFriend(stepOneDataset.get());
+      stepTwoDataset = std::move(chain);
+   } else {
+      stepTwoFileLifeLine = std::make_unique<TFile>(fStepTwoFileName);
+      stepTwoDataset = std::unique_ptr<TTree>{stepTwoFileLifeLine->Get<TTree>(fStepTwoTreeName)};
+      stepTwoDataset->AddFriend(stepOneDataset.get());
+   }
+
+   // Step three dataset, can be a TChain or a standalone TTree.
+   // In the former case, the first tree of the TChain is used
+   // to befriend the chain from the previous step.
+   std::unique_ptr<TFile> stepThreeFileLifeLine{};
+   std::unique_ptr<TTree> stepThreeDataset{};
+   if (stepThreeTChain) {
+      auto chain = std::make_unique<TChain>(fStepThreeTreeName);
+      chain->Add(fStepThreeFileName);
+      chain->GetEntry(0);
+      chain->GetTree()->AddFriend(stepTwoDataset.get());
+      stepThreeDataset = std::move(chain);
+   } else {
+      stepThreeFileLifeLine = std::make_unique<TFile>(fStepThreeFileName);
+      stepThreeDataset = std::unique_ptr<TTree>{stepThreeFileLifeLine->Get<TTree>(fStepThreeTreeName)};
+      stepThreeDataset->AddFriend(stepTwoDataset.get());
+   }
+
+   // Step four dataset, can be a TChain or a standalone TTree.
+   // In the former case, the first tree of the TChain is used
+   // to befriend the chain from the previous step.
+   std::unique_ptr<TFile> stepFourFileLifeLine{};
+   std::unique_ptr<TTree> stepFourDataset{};
+   if (stepFourTChain) {
+      auto chain = std::make_unique<TChain>(fStepFourTreeName);
+      chain->Add(fStepFourFileName);
+      chain->GetEntry(0);
+      chain->GetTree()->AddFriend(stepThreeDataset.get());
+      stepFourDataset = std::move(chain);
+   } else {
+      stepFourFileLifeLine = std::make_unique<TFile>(fStepFourFileName);
+      stepFourDataset = std::unique_ptr<TTree>{stepFourFileLifeLine->Get<TTree>(fStepFourTreeName)};
+      stepFourDataset->AddFriend(stepThreeDataset.get());
+   }
+
+   std::ostringstream strCout;
+   {
+      if (auto *treePlayer = static_cast<TTreePlayer *>(stepFourDataset->GetPlayer())) {
+         struct FileRAII {
+            const char *fPath;
+            FileRAII(const char *name) : fPath(name) {}
+            ~FileRAII() { std::remove(fPath); }
+         } redirectFile{"tree_gh20033_complexscanexpression_redirect.txt"};
+         treePlayer->SetScanRedirect(true);
+         treePlayer->SetScanFileName(redirectFile.fPath);
+         stepFourDataset->Scan("stepfourtree.value * stepzerotree.value:steponetree.value + steptwotree.value:"
+                               "stepthreetree.value - stepzerotree.value",
+                               "stepthreetree.value > 303", "colsize=50");
+
+         std::ifstream redirectStream(redirectFile.fPath);
+         std::stringstream redirectOutput;
+         redirectOutput << redirectStream.rdbuf();
+
+         EXPECT_EQ(
+            redirectOutput.str(),
+            R"Scan(***************************************************************************************************************************************************************************
+*    Row   *            stepfourtree.value * stepzerotree.value *              steponetree.value + steptwotree.value *           stepthreetree.value - stepzerotree.value *
+***************************************************************************************************************************************************************************
+*        4 *                                               1616 *                                                308 *                                                300 *
+*        5 *                                               2025 *                                                310 *                                                300 *
+*        6 *                                               2436 *                                                312 *                                                300 *
+*        7 *                                               2849 *                                                314 *                                                300 *
+*        8 *                                               3264 *                                                316 *                                                300 *
+*        9 *                                               3681 *                                                318 *                                                300 *
+***************************************************************************************************************************************************************************
+)Scan");
+      } else
+         throw std::runtime_error("Could not retrieve TTreePlayer from main tree!");
+   }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+   Run, GH20033ComplexScanExpression,
+   ::testing::Combine(::testing::Values(false, true), ::testing::Values(false, true), ::testing::Values(false, true),
+                      ::testing::Values(false, true)),
+   // Extra parenthesis around lambda to avoid preprocessor errors, see
+   // https://stackoverflow.com/questions/79438894/lambda-with-structured-bindings-inside-macro-call
+   ([](const testing::TestParamInfo<GH20033ComplexScanExpression::ParamType> &paramInfo) {
+      auto &&[stepOneTChain, stepTwoTChain, stepThreeTChain, stepFourTChain] = paramInfo.param;
+      // googletest only accepts ASCII alphanumeric characters for labels
+      std::string label{};
+      if (stepOneTChain)
+         label += "StepOneTChain_";
+      else
+         label += "StepOneTTree_";
+      if (stepTwoTChain)
+         label += "StepTwoTChain_";
+      else
+         label += "StepTwoTTree_";
+      if (stepThreeTChain)
+         label += "StepThreeTChain_";
+      else
+         label += "StepThreeTTree_";
+      if (stepFourTChain)
+         label += "StepFourTChain";
+      else
+         label += "StepFourTTree";
+      return label;
+   }));
