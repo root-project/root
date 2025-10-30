@@ -19,7 +19,8 @@ ROOT_ADD_GTEST(treeplayer_gh16804 gh16804.cxx LIBRARIES TreePlayer)
 
 ROOT_ADD_GTEST(treeplayer_gh16805 gh16805.cxx LIBRARIES TreePlayer)
 
-ROOT_ADD_GTEST(treeplayer_gh20033 gh20033.cxx LIBRARIES TreePlayer)
+ROOT_GENERATE_DICTIONARY(CMSDASClassesDict ${CMAKE_CURRENT_SOURCE_DIR}/CMSDASClasses.hxx LINKDEF CMSDASClassesLinkDef.hxx NO_CXXMODULE DEPENDENCIES Core Tree RIO)
+ROOT_ADD_GTEST(treeplayer_gh20033 gh20033.cxx CMSDASClassesDict.cxx LIBRARIES TreePlayer)
 
 ROOT_ADD_GTEST(treeplayer_leafs leafs.cxx LIBRARIES TreePlayer)
 add_custom_command(TARGET treeplayer_leafs POST_BUILD
