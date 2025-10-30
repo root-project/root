@@ -4150,6 +4150,13 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
          theHist->GetYaxis()->SetLabelOffset(999.);
          theHist->GetYaxis()->SetAxisColor(gPad->GetFrameFillColor());
       }
+
+      // after Unzoom menu command min/max can be 0 and should be reset
+      if ((theHist->GetMinimum() == theHist->GetMaximum()) && (theHist->GetMinimum() != -1111)) {
+         theHist->SetMinimum(theGraph->GetYaxis()->GetXmin());
+         theHist->SetMaximum(theGraph->GetYaxis()->GetXmax());
+      }
+
       TString opth = "0";
       if (lxp) opth.Append("x+");
       if (lyp) opth.Append("y+");
@@ -4206,16 +4213,6 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
    theReversedGraph->SetLineColor(theGraph->GetLineColor());
 
    Int_t i; // loop index
-
-   // if axis drawn update painting once before continue
-   // otherwise X axis will disappear when Y axis makes own update
-   if (axis && (lrx || lry)) {
-      if (lrx) {
-         theHist->GetXaxis()->SetTickLength(0.);
-         theHist->GetXaxis()->SetLabelOffset(999.);
-      }
-      gPad->Update();
-   }
 
    // Reserve the TGraph along the X axis
    if (lrx) {
@@ -4305,14 +4302,21 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
          else     xpos = gPad->GetUxmin();
          if (gPad->GetLogx()) xpos = TMath::Power(10,xpos);
          TGaxis *theReversedYaxis;
+         Double_t ymin = theHist->GetMinimum();
+         Double_t ymax = theHist->GetMaximum();
+         if (ymin == ymax) {
+            ymin = theGraph->GetYaxis()->GetXmin();
+            ymax = theGraph->GetYaxis()->GetXmax();
+         }
+
          if (gPad->GetLogy()) {
             optax.Append("G");
             theReversedYaxis = new TGaxis(xpos,
                                     TMath::Power(10,gPad->GetUymax()),
                                     xpos,
                                     TMath::Power(10,gPad->GetUymin()),
-                                    theGraph->GetYaxis()->GetXmin(),
-                                    theGraph->GetYaxis()->GetXmax(),
+                                    ymin,
+                                    ymax,
                                     theHist->GetNdivisions("Y"),
                                     optax.Data(), GL);
             if (theHist->GetYaxis()->GetMoreLogLabels()) theReversedYaxis->SetMoreLogLabels();
@@ -4321,8 +4325,8 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
                                     gPad->GetUymax(),
                                     xpos,
                                     gPad->GetUymin(),
-                                    theGraph->GetYaxis()->GetXmin(),
-                                    theGraph->GetYaxis()->GetXmax(),
+                                    ymin,
+                                    ymax,
                                     theHist->GetNdivisions("Y"),
                                     optax.Data(), GL);
          }
