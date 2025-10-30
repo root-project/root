@@ -2164,9 +2164,11 @@ void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, O
 {
    thread_local Int_t frameNumber = 0;
 
-   SavePrimitiveNameTitle(out, varname);
+   TString ref = "Graph";
+   if ((ref != GetName()) || (ref != GetTitle()))
+      SavePrimitiveNameTitle(out, varname);
 
-   SaveFillAttributes(out, varname, 0, 1001);
+   SaveFillAttributes(out, varname, 0, 1000);
    SaveLineAttributes(out, varname, 1, 1, 1);
    SaveMarkerAttributes(out, varname, 1, 1, 1);
 
