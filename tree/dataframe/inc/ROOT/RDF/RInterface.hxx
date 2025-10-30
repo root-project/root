@@ -2001,6 +2001,9 @@ public:
          ROOT::Internal::RDF::RIgnoreErrorLevelRAII iel(kError);
          h = model.GetHistogram();
       }
+
+      if (h->GetXaxis()->GetXmax() == h->GetXaxis()->GetXmin())
+         h->SetCanExtend(::TH1::kAllAxes);
       return CreateAction<RDFInternal::ActionTags::Histo1D, V, W>(userColumns, h, h, fProxiedPtr);
    }
 
