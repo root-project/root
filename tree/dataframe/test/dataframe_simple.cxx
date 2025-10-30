@@ -519,6 +519,15 @@ TEST_P(RDFSimpleTests, TakeCarrays)
    gSystem->Unlink(fileName);
 }
 
+TEST_P(RDFSimpleTests, HistoExtend)
+{
+   auto d = RDataFrame(10000).Define("x", "rdfentry_");
+   auto hist = d.Histo1D("x");
+   EXPECT_GE(hist->GetXaxis()->GetXmax(), 10000);
+   auto histWeighted = d.Define("w", "1").Histo1D("x", "w");
+   EXPECT_GE(histWeighted->GetXaxis()->GetXmax(), 10000);
+}
+
 TEST_P(RDFSimpleTests, Reduce)
 {
    auto d = RDataFrame(5).DefineSlotEntry("x", [](unsigned int, ULong64_t e) { return static_cast<int>(e) + 1; });
