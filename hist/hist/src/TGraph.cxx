@@ -1438,7 +1438,7 @@ TH1F *TGraph::GetHistogram() const
    // therefore they might be too strict and cut some points. In that case the
    // fHistogram limits should be recomputed ie: the existing fHistogram
    // should not be returned.
-   TH1F *historg = nullptr;
+   TH1F *histogr = nullptr;
    if (fHistogram) {
       if (!TestBit(kResetHisto)) {
          if (gPad && gPad->GetLogx()) {
@@ -1451,7 +1451,7 @@ TH1F *TGraph::GetHistogram() const
       } else {
          const_cast <TGraph*>(this)->ResetBit(kResetHisto);
       }
-      historg = fHistogram;
+      histogr = fHistogram;
    }
 
    if (rwxmin == rwxmax) rwxmax += 1.;
@@ -1492,7 +1492,7 @@ TH1F *TGraph::GetHistogram() const
    const char *gname = GetName();
    if (!gname[0]) gname = "Graph";
    // do not add the histogram to gDirectory
-   // use local TDirectory::TContect that will set temporarly gDirectory to a nullptr and
+   // use local TDirectory::TContext that will set temporarly gDirectory to a nullptr and
    // will avoid that histogram is added in the global directory
    {
       TDirectory::TContext ctx(nullptr);
@@ -1504,24 +1504,24 @@ TH1F *TGraph::GetHistogram() const
    fHistogram->SetMaximum(maximum);
    fHistogram->GetYaxis()->SetLimits(minimum, maximum);
    // Restore the axis attributes if needed
-   if (historg) {
-      fHistogram->GetXaxis()->SetTitle(historg->GetXaxis()->GetTitle());
-      fHistogram->GetXaxis()->CenterTitle(historg->GetXaxis()->GetCenterTitle());
-      fHistogram->GetXaxis()->RotateTitle(historg->GetXaxis()->GetRotateTitle());
-      fHistogram->GetXaxis()->SetNoExponent(historg->GetXaxis()->GetNoExponent());
-      fHistogram->GetXaxis()->SetTimeDisplay(historg->GetXaxis()->GetTimeDisplay());
-      fHistogram->GetXaxis()->SetTimeFormat(historg->GetXaxis()->GetTimeFormat());
-      historg->GetXaxis()->TAttAxis::Copy(*(fHistogram->GetXaxis()));
+   if (histogr) {
+      fHistogram->GetXaxis()->SetTitle(histogr->GetXaxis()->GetTitle());
+      fHistogram->GetXaxis()->CenterTitle(histogr->GetXaxis()->GetCenterTitle());
+      fHistogram->GetXaxis()->RotateTitle(histogr->GetXaxis()->GetRotateTitle());
+      fHistogram->GetXaxis()->SetNoExponent(histogr->GetXaxis()->GetNoExponent());
+      fHistogram->GetXaxis()->SetTimeDisplay(histogr->GetXaxis()->GetTimeDisplay());
+      fHistogram->GetXaxis()->SetTimeFormat(histogr->GetXaxis()->GetTimeFormat());
+      histogr->GetXaxis()->TAttAxis::Copy(*(fHistogram->GetXaxis()));
 
-      fHistogram->GetYaxis()->SetTitle(historg->GetYaxis()->GetTitle());
-      fHistogram->GetYaxis()->CenterTitle(historg->GetYaxis()->GetCenterTitle());
-      fHistogram->GetYaxis()->RotateTitle(historg->GetYaxis()->GetRotateTitle());
-      fHistogram->GetYaxis()->SetNoExponent(historg->GetYaxis()->GetNoExponent());
-      fHistogram->GetYaxis()->SetTimeDisplay(historg->GetYaxis()->GetTimeDisplay());
-      fHistogram->GetYaxis()->SetTimeFormat(historg->GetYaxis()->GetTimeFormat());
-      historg->GetYaxis()->TAttAxis::Copy(*(fHistogram->GetYaxis()));
+      fHistogram->GetYaxis()->SetTitle(histogr->GetYaxis()->GetTitle());
+      fHistogram->GetYaxis()->CenterTitle(histogr->GetYaxis()->GetCenterTitle());
+      fHistogram->GetYaxis()->RotateTitle(histogr->GetYaxis()->GetRotateTitle());
+      fHistogram->GetYaxis()->SetNoExponent(histogr->GetYaxis()->GetNoExponent());
+      fHistogram->GetYaxis()->SetTimeDisplay(histogr->GetYaxis()->GetTimeDisplay());
+      fHistogram->GetYaxis()->SetTimeFormat(histogr->GetYaxis()->GetTimeFormat());
+      histogr->GetYaxis()->TAttAxis::Copy(*(fHistogram->GetYaxis()));
 
-      delete historg;
+      delete histogr;
    }
    return fHistogram;
 }
