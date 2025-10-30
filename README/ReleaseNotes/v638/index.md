@@ -198,6 +198,8 @@ the deprecation period was extended.
 - The `rootls` utility has a new native implementation and can now be run without Python.
   The options and the output of the new rootls are identical to the previous implementation but it should run faster (typically about 3 to 4x faster).
 
+- The `rootbrowse` utility has a new native implementation and can now be run without Python.
+
 ## JavaScript ROOT
 - A new configuration option `Jupyter.JSRoot` was added in .rootrc to set the default mode for JSROOT in Jupyter notebooks (on or off).
 - JSROOT 7.10.0:
@@ -227,6 +229,13 @@ the deprecation period was extended.
    * Fix - latex parsing error of `#delta_{0}_suffix` string
    * Fix - reduce plain HTML usage to minimize danger of JS code injection
 
+
+## Experimental features
+
+### RFile
+
+* A new experimental interface for ROOT files, `ROOT::Experimental::RFile`, has been added. This aims to be a
+  minimal and modern interface to ROOT files with explicit ownership of objects.
 
 ## Optimization of ROOT header files
 
