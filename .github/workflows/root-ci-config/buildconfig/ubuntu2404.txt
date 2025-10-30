@@ -1,0 +1,3 @@
+builtin_pcre=ON
+pythia8=OFF
+tmva-cpu=OFF
