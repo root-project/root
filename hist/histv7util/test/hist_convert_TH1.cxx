@@ -149,7 +149,7 @@ TEST(ConvertToTH1L, RHistEngine)
    // Set one 64-bit long long value larger than what double can exactly represent.
    static constexpr long long Large = (1LL << 60) - 1;
    const std::array<RBinIndex, 1> indices = {1};
-   ROOT::Experimental::Internal::SetBinContent(engineLL, indices, Large);
+   engineLL.SetBinContent(indices, Large);
 
    th1l = ConvertToTH1L(engineLL);
    ASSERT_TRUE(th1l);
