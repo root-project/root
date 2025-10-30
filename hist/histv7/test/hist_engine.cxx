@@ -71,6 +71,55 @@ TEST(RHistEngine, GetBinContentNotFound)
    EXPECT_THROW(engine.GetBinContent(Bins), std::invalid_argument);
 }
 
+TEST(RHistEngine, SetBinContent)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<int> engine({axis});
+
+   const RBinIndex index(7);
+   engine.SetBinContent(index, 42);
+   EXPECT_EQ(engine.GetBinContent(index), 42);
+
+   const std::array<RBinIndex, 1> indices = {index};
+   engine.SetBinContent(indices, 43);
+   EXPECT_EQ(engine.GetBinContent(indices), 43);
+
+   // This also works if the value must be converted to the bin content type.
+   RHistEngine<float> engineF({axis});
+   engineF.SetBinContent(index, 42);
+   EXPECT_EQ(engineF.GetBinContent(index), 42);
+
+   engineF.SetBinContent(indices, 43);
+   EXPECT_EQ(engineF.GetBinContent(indices), 43);
+}
+
+TEST(RHistEngine, SetBinContentInvalidNumberOfArguments)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<int> engine1({axis});
+   ASSERT_EQ(engine1.GetNDimensions(), 1);
+   RHistEngine<int> engine2({axis, axis});
+   ASSERT_EQ(engine2.GetNDimensions(), 2);
+
+   EXPECT_NO_THROW(engine1.SetBinContent(1, 0));
+   EXPECT_THROW(engine1.SetBinContent(1, 2, 0), std::invalid_argument);
+
+   EXPECT_THROW(engine2.SetBinContent(1, 0), std::invalid_argument);
+   EXPECT_NO_THROW(engine2.SetBinContent(1, 2, 0));
+   EXPECT_THROW(engine2.SetBinContent(1, 2, 3, 0), std::invalid_argument);
+}
+
+TEST(RHistEngine, SetBinContentNotFound)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<int> engine({axis});
+
+   EXPECT_THROW(engine.SetBinContent(Bins, 0), std::invalid_argument);
+}
+
 TEST(RHistEngine, Add)
 {
    static constexpr std::size_t Bins = 20;

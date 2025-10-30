@@ -6,6 +6,12 @@
 struct User {
    double fValue = 0;
 
+   User &operator=(double value)
+   {
+      fValue = value;
+      return *this;
+   }
+
    User &operator++()
    {
       fValue++;
@@ -118,4 +124,20 @@ TEST(RHistEngineUser, FillWeight)
    EXPECT_EQ(engine.GetBinContent(RBinIndex(8)).fValue, 0.8);
    std::array<RBinIndex, 1> indices = {9};
    EXPECT_EQ(engine.GetBinContent(indices).fValue, 0.9);
+}
+
+TEST(RHistEngineUser, SetBinContent)
+{
+   // Setting uses operator=
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<User> engine({axis});
+
+   const RBinIndex index(7);
+   engine.SetBinContent(index, 42);
+   EXPECT_EQ(engine.GetBinContent(index).fValue, 42);
+
+   const std::array<RBinIndex, 1> indices = {index};
+   engine.SetBinContent(indices, 43);
+   EXPECT_EQ(engine.GetBinContent(indices).fValue, 43);
 }

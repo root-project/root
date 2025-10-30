@@ -58,11 +58,12 @@ Special arguments are passed last.
 Examples include
 ```cpp
 template <typename... A> void Fill(const std::tuple<A...> &args, RWeight w);
-template <std::size_t N> void SetBinContent(const std::array<RBinIndex, N> &indices, const BinContentType &content);
+template <std::size_t N, typename V> void SetBinContent(const std::array<RBinIndex, N> &indices, const V &value);
 ```
-The same works for the variadic function templates that will check the type of the last argument.
+Note that we accept mandatory arguments with a template type as well to allow automatic conversion.
 
-For profiles, we accept the value with a template type as well to allow automatic conversion to `double`, for example from `int`.
+Variadic function templates receive all arguments in a single function parameter pack.
+For optional arguments, the function will check the type of the last argument to determine if it was passed.
 
 ## Miscellaneous
 

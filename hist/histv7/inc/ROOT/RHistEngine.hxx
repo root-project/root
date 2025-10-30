@@ -170,6 +170,78 @@ public:
       return GetBinContent(indices);
    }
 
+   /// Set the content of a single bin.
+   ///
+   /// \code
+   /// ROOT::Experimental::RHistEngine<int> hist({/* two dimensions */});
+   /// std::array<ROOT::Experimental::RBinIndex, 2> indices = {3, 5};
+   /// int value = /* ... */;
+   /// hist.SetBinContent(indices, value);
+   /// \endcode
+   ///
+   /// \note Compared to TH1 conventions, the first normal bin has index 0 and underflow and overflow bins are special
+   /// values. See also the class documentation of RBinIndex.
+   ///
+   /// Throws an exception if the number of indices does not match the axis configuration or the bin is not found.
+   ///
+   /// \param[in] indices the array of indices for each axis
+   /// \param[in] value the new value of the bin content
+   /// \par See also
+   /// the \ref SetBinContent(const A &... args) const "variadic function template overload" accepting arguments
+   /// directly
+   template <std::size_t N, typename V>
+   void SetBinContent(const std::array<RBinIndex, N> &indices, const V &value)
+   {
+      // We could rely on RAxes::ComputeGlobalIndex to check the number of arguments, but its exception message might
+      // be confusing for users.
+      if (N != GetNDimensions()) {
+         throw std::invalid_argument("invalid number of indices passed to SetBinContent");
+      }
+      RLinearizedIndex index = fAxes.ComputeGlobalIndex(indices);
+      if (!index.fValid) {
+         throw std::invalid_argument("bin not found in SetBinContent");
+      }
+      assert(index.fIndex < fBinContents.size());
+      // To allow conversion, we have to accept value with a template type V to capture any argument. Otherwise it would
+      // select the variadic function template...
+      fBinContents[index.fIndex] = value;
+   }
+
+private:
+   template <typename... A, std::size_t... I>
+   void SetBinContentImpl(const std::tuple<A...> &args, std::index_sequence<I...>)
+   {
+      std::array<RBinIndex, sizeof...(A) - 1> indices{std::get<I>(args)...};
+      SetBinContent(indices, std::get<sizeof...(A) - 1>(args));
+   }
+
+public:
+   /// Set the content of a single bin.
+   ///
+   /// \code
+   /// ROOT::Experimental::RHistEngine<int> hist({/* two dimensions */});
+   /// int value = /* ... */;
+   /// hist.SetBinContent(ROOT::Experimental::RBinIndex(3), ROOT::Experimental::RBinIndex(5), value);
+   /// // ... or construct the RBinIndex arguments implicitly from integers:
+   /// hist.SetBinContent(3, 5, value);
+   /// \endcode
+   ///
+   /// \note Compared to TH1 conventions, the first normal bin has index 0 and underflow and overflow bins are special
+   /// values. See also the class documentation of RBinIndex.
+   ///
+   /// Throws an exception if the number of arguments does not match the axis configuration or the bin is not found.
+   ///
+   /// \param[in] args the arguments for each axis and the new value of the bin content
+   /// \par See also
+   /// the \ref SetBinContent(const std::array<RBinIndex, N> &indices, const V &value) const "function overload"
+   /// accepting `std::array`
+   template <typename... A>
+   void SetBinContent(const A &...args)
+   {
+      auto t = std::forward_as_tuple(args...);
+      SetBinContentImpl(t, std::make_index_sequence<sizeof...(A) - 1>());
+   }
+
    /// Add all bin contents of another histogram.
    ///
    /// Throws an exception if the axes configurations are not identical.
