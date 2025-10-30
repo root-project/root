@@ -1336,21 +1336,24 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
 
    // Draw the Axis.
    Double_t rwxmin,rwxmax, rwymin, rwymax, maximum, minimum, dx, dy;
+
+   TH1F *histogram = nullptr;
    if (optionAxis) {
-      if (theGraph->GetHistogram()) {
+      histogram = theGraph->GetHistogram();
+      if (histogram) {
          rwxmin    = gPad->GetUxmin();
          rwxmax    = gPad->GetUxmax();
          rwymin    = gPad->GetUymin();
          rwymax    = gPad->GetUymax();
-         minimum   = theGraph->GetHistogram()->GetMinimumStored();
-         maximum   = theGraph->GetHistogram()->GetMaximumStored();
+         minimum   = histogram->GetMinimumStored();
+         maximum   = histogram->GetMaximumStored();
          if (minimum == -1111) { //this can happen after unzooming
-            minimum = theGraph->GetHistogram()->GetYaxis()->GetXmin();
-            theGraph->GetHistogram()->SetMinimum(minimum);
+            minimum = histogram->GetYaxis()->GetXmin();
+            histogram->SetMinimum(minimum);
          }
          if (maximum == -1111) {
-            maximum = theGraph->GetHistogram()->GetYaxis()->GetXmax();
-            theGraph->GetHistogram()->SetMaximum(maximum);
+            maximum = histogram->GetYaxis()->GetXmax();
+            histogram->SetMaximum(maximum);
          }
          uxmin     = gPad->PadtoX(rwxmin);
          uxmax     = gPad->PadtoX(rwxmax);
@@ -1367,9 +1370,12 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
          minimum  = rwymin - dy;
          maximum  = rwymax + dy;
       }
-      if (theGraph->GetMinimum() != -1111) rwymin = minimum = theGraph->GetMinimum();
-      if (theGraph->GetMaximum() != -1111) rwymax = maximum = theGraph->GetMaximum();
-      if (uxmin < 0 && rwxmin >= 0) uxmin = 0.9*rwxmin;
+      if (theGraph->GetMinimum() != -1111)
+         rwymin = minimum = theGraph->GetMinimum();
+      if (theGraph->GetMaximum() != -1111)
+         rwymax = maximum = theGraph->GetMaximum();
+      if (uxmin < 0 && rwxmin >= 0)
+         uxmin = 0.9*rwxmin;
       if (uxmax > 0 && rwxmax <= 0) {
          if (gPad->GetLogx()) uxmax = 1.1*rwxmax;
          else                 uxmax = 0;
@@ -1393,31 +1399,32 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
       if (strstr(chopt,"x+")) strncat(chopth, "x+",3);
       if (strstr(chopt,"y+")) strncat(chopth, "y+",3);
       if (optionIAxis) strncat(chopth, "A",2);
-      if (!theGraph->GetHistogram()) {
+      if (!histogram) {
          // the graph is created with at least as many bins as there are
          // points to permit zooming on the full range.
          rwxmin = uxmin;
          rwxmax = uxmax;
          npt = 100;
          if (theNpoints > npt) npt = theNpoints;
-         TH1F *h = new TH1F(TString::Format("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax);
-         theGraph->SetHistogram(h);
-         if (!theGraph->GetHistogram()) return;
-         theGraph->GetHistogram()->SetMinimum(rwymin);
-         theGraph->GetHistogram()->SetMaximum(rwymax);
-         theGraph->GetHistogram()->GetYaxis()->SetLimits(rwymin,rwymax);
-         theGraph->GetHistogram()->SetBit(TH1::kNoStats);
-         theGraph->GetHistogram()->SetDirectory(nullptr);
-         theGraph->GetHistogram()->Sumw2(kFALSE);
-         theGraph->GetHistogram()->Paint(chopth); // Draw histogram axis, title and grid
+         histogram = new TH1F(TString::Format("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax);
+         theGraph->SetHistogram(histogram);
+         histogram = theGraph->GetHistogram();
+         if (!histogram) return;
+         histogram->SetMinimum(rwymin);
+         histogram->SetMaximum(rwymax);
+         histogram->GetYaxis()->SetLimits(rwymin,rwymax);
+         histogram->SetBit(TH1::kNoStats);
+         histogram->SetDirectory(nullptr);
+         histogram->Sumw2(kFALSE);
+         histogram->Paint(chopth); // Draw histogram axis, title and grid
       } else {
          if (gPad->GetLogy()) {
-            theGraph->GetHistogram()->SetMinimum(rwymin);
-            theGraph->GetHistogram()->SetMaximum(rwymax);
-            theGraph->GetHistogram()->GetYaxis()->SetLimits(rwymin,rwymax);
+            histogram->SetMinimum(rwymin);
+            histogram->SetMaximum(rwymax);
+            histogram->GetYaxis()->SetLimits(rwymin,rwymax);
          }
-         theGraph->GetHistogram()->Sumw2(kFALSE);
-         theGraph->GetHistogram()->Paint(chopth); // Draw histogram axis, title and grid
+         histogram->Sumw2(kFALSE);
+         histogram->Paint(chopth); // Draw histogram axis, title and grid
       }
    }
 
@@ -1430,9 +1437,10 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
    rwymax   = gPad->GetUymax();
    uxmin    = gPad->PadtoX(rwxmin);
    uxmax    = gPad->PadtoX(rwxmax);
-   if (theGraph->GetHistogram() && !theGraph->InheritsFrom("TGraphPolar")) {
-      maximum = theGraph->GetHistogram()->GetMaximum();
-      minimum = theGraph->GetHistogram()->GetMinimum();
+
+   if (histogram && !theGraph->InheritsFrom("TGraphPolar")) {
+      maximum = histogram->GetMaximum();
+      minimum = histogram->GetMinimum();
    } else {
       maximum = gPad->PadtoY(rwymax);
       minimum = gPad->PadtoY(rwymin);
