@@ -43,7 +43,7 @@ void gr019_scatter2d()
    c1[0] = 1;
 
    auto scatter1 = new TScatter2D(n, x1, y1, z1, c1, s1);
-   scatter1->SetTitle("Scatter plot title;X title;Y title;Z title");
+   scatter1->SetTitle("Scatter plot title;X title;Y title;Z title;C title");
    scatter1->SetMarkerStyle(20);
 
    auto scatter2 = new TScatter2D(n, x2, y2, z2, c2, s2);

@@ -18,6 +18,8 @@ In addition, ROOT offers multiple variations to basic TGraphs, such as:
 - [TGraphSmooth](https://root.cern/doc/master/classTGraphSmooth.html)
 - [TGraphStruct](https://root.cern/doc/master/classTGraphStruct.html)
 - [TGraphTime](https://root.cern/doc/master/classTGraphTime.html).
+- [TScatter](https://root.cern/doc/master/classTScatter.html).
+- [TScatter2D](https://root.cern/doc/master/classTScatter2D.html).
 
 TGraphs are painted through the [TGraphPainter](https://root.cern/doc/master/classTGraphPainter.html) or [TGraph2DPainter](https://root.cern/doc/master/classTGraph2DPainter.html) classes. As a general remark, TGraphs are not binned, each point is painted individually.
 
@@ -44,6 +46,7 @@ These examples showcase the creation of different types of graphs and basic ways
 | gr004_errors_asym.C       | gr004_errors_asym.py          | Create and draw a graph with asymmetric x & y errors. |
 | gr005_apply.C             | gr005_apply.py                | Demonstrate the functionality of the TGraph::Apply() method. |
 | gr006_scatter.C           | gr006_scatter.py              | Scatter plot for 4 variables, mapped to: x, y, marker color and marker size. |
+| gr019_scatter2.C          |                               | Scatter plot for 5 variables, mapped to: x, y, z, marker color and marker size. |
 | gr007_multigraph.C        | gr007_multigraph.py           | Create and draw a TMultiGraph (several graphs superposed). |
 | gr008_multierrors.C       |                               | Graph with multiple y errors in each bin. |
 | gr009_bent_err.C          | gr009_bent_err.py             | Graph with bent (non-vertical/non-horizontal) error bars. |
