@@ -115,6 +115,7 @@ gr.AddPoint(10000, 0);
 auto h1 = new TH1F("hist", "hist", 10000, -10., 11000.); // Define underlying hist with 10000 instead of 101 bins
 h1->SetMaximum(120);
 h1->SetStats(0);
+h1->SetDirectory(nullptr);
 gr.SetHistogram(h1);
 gr.Draw("A*")
 \endcode
