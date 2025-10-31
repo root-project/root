@@ -150,6 +150,7 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "TThreadSlots.h"
 #include "TGlobal.h"
 #include "ROOT/RConcurrentHashColl.hxx"
+#include "ROOT/InternalIOUtils.hxx"
 #include <memory>
 #include <cinttypes>
 
@@ -3778,34 +3779,16 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
    TString expandedUrl(url);
    gSystem->ExpandPathName(expandedUrl);
 
-#ifdef R__UNIX
-   // If URL is a file on an EOS FUSE mount, attempt redirection to XRootD protocol.
-   if (gEnv->GetValue("TFile.CrossProtocolRedirects", 1) == 1) {
-      TUrl fileurl(expandedUrl, /* default is file */ kTRUE);
-      if (strcmp(fileurl.GetProtocol(), "file") == 0) {
-         ssize_t len = getxattr(fileurl.GetFile(), "eos.url.xroot", nullptr, 0);
-         if (len > 0) {
-            std::string xurl(len, 0);
-            std::string fileNameFromUrl{fileurl.GetFile()};
-            if (getxattr(fileNameFromUrl.c_str(), "eos.url.xroot", &xurl[0], len) == len) {
-               // Sometimes the `getxattr` call may return an invalid URL due
-               // to the POSIX attribute not being yet completely filled by EOS.
-               if (auto baseName = fileNameFromUrl.substr(fileNameFromUrl.find_last_of("/") + 1);
-                   std::equal(baseName.crbegin(), baseName.crend(), xurl.crbegin())) {
-                  if ((f = TFile::Open(xurl.c_str(), options, ftitle, compress, netopt))) {
-                     if (!f->IsZombie()) {
-                        return f;
-                     } else {
-                        delete f;
-                        f = nullptr;
-                     }
-                  }
-               }
-            }
+   if (auto xurl = ROOT::Internal::GetEOSRedirectedXRootURL(expandedUrl.Data())) {
+      if ((f = TFile::Open(xurl->c_str(), options, ftitle, compress, netopt))) {
+         if (!f->IsZombie()) {
+            return f;
+         } else {
+            delete f;
+            f = nullptr;
          }
       }
    }
-#endif
 
    // If a timeout has been specified extract the value and try to apply it (it requires
    // support for asynchronous open, though; the following is completely transparent if
