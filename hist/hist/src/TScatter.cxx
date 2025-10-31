@@ -11,20 +11,11 @@
 
 
 #include "TROOT.h"
-#include "TBuffer.h"
 #include "TScatter.h"
-#include "TStyle.h"
-#include "TMath.h"
-#include "TVirtualPad.h"
 #include "TH2.h"
 #include "TVirtualGraphPainter.h"
-#include "strtok.h"
 
-#include <iostream>
-#include <fstream>
-#include <cstring>
-#include <string>
-
+ #include <iostream>
 
 
 ////////////////////////////////////////////////////////////////////////////////

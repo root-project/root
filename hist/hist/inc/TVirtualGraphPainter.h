@@ -23,6 +23,7 @@
 
 class TGraph;
 class TScatter;
+class TScatter2D;
 class TF1;
 
 class TVirtualGraphPainter : public TObject {
@@ -42,6 +43,7 @@ public:
    virtual void  PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt) = 0;
    virtual void  PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt) = 0;
    virtual void  PaintScatter(TScatter *theScatter, Option_t *option) = 0;
+   virtual void  PaintScatter2D(TScatter2D *theScatter, Option_t *option) = 0;
    virtual void  PaintStats(TGraph *theGraph, TF1 *fit) = 0;
    virtual void  SetHighlight(TGraph *theGraph) = 0;
 
