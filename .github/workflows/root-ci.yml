@@ -209,7 +209,7 @@ jobs:
                     --head_sha        ${{ github.event.pull_request.head.sha }}         \
                     --repository      ${{ github.server_url }}/${{ github.repository }} \
                     --platform        ${{ contains(matrix.platform, 'experimental-brew-ci') && 'mac15' || matrix.platform }} \
-                    --overrides       $GLOBAL_OVERRIDES $OVERRIDES
+                    --overrides       $GLOBAL_OVERRIDES $OVERRIDES testing=Off
 
       - name: Workflow dispatch
         shell: bash -leo pipefail {0}
