@@ -33,8 +33,8 @@
 ## \date July 2024
 ## \author Robin Syring
 
-import ROOT
 import numpy as np
+import ROOT
 from sklearn.neural_network import MLPClassifier
 
 # The samples used for training the classifier in this tutorial / rescale for more accuracy
@@ -46,7 +46,6 @@ ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
 
 # Morphing as a baseline
 def morphing(setting):
-
     # Define binning for morphing
     grid = ROOT.RooMomentMorphFuncND.Grid(ROOT.RooBinning(4, 0.0, 4.0))
     x_var.setBins(50)
@@ -58,25 +57,25 @@ def morphing(setting):
         # Define the sampled gausians
         mu_help = ROOT.RooRealVar(f"mu{i}", f"mu{i}", i)
         help = ROOT.RooGaussian(f"g{i}", f"g{i}", x_var, mu_help, sigma)
-        workspace.Import(help, Silence=True)
+        workspace.Import(help, Silence=True)  # noqa F821
 
         # Fill the histograms
-        hist = workspace[f"g{i}"].generateBinned([x_var], n_samples)
+        hist = workspace[f"g{i}"].generateBinned([x_var], n_samples)  # noqa F821
 
         # Make sure that every bin is filled and we don't get zero probability
         for i_bin in range(hist.numEntries()):
             hist.add(hist.get(i_bin), 1.0)
 
         # Add the pdf to the workspace
-        workspace.Import(ROOT.RooHistPdf(f"histpdf{i}", f"histpdf{i}", [x_var], hist, 1), Silence=True)
+        workspace.Import(ROOT.RooHistPdf(f"histpdf{i}", f"histpdf{i}", [x_var], hist, 1), Silence=True)  # noqa F821
 
         # Add the pdf to the grid
-        grid.addPdf(workspace[f"histpdf{i}"], i)
+        grid.addPdf(workspace[f"histpdf{i}"], i)  # noqa F821
 
     # Create the morphing and add it to the workspace
     morph_func = ROOT.RooMomentMorphFuncND("morph_func", "morph_func", [mu_var], [x_var], grid, setting)
     morph = ROOT.RooWrapperPdf("morph", "morph", morph_func, True)
-    workspace.Import(morph, Silence=True)
+    workspace.Import(morph, Silence=True)  # noqa F821
 
     # Uncomment to see input plots for the first dimension (you might need to increase the morphed samples)
     # f1 = x_var.frame(Title="linear morphing;x;pdf", Range=(-4, 8))
@@ -228,8 +227,8 @@ if single_canvas:
 frame1.Draw()
 
 legend1 = ROOT.TLegend(0.43, 0.63, 0.8, 0.87)
-legend1.SetFillColor("kWhite")
-legend1.SetLineColor("kWhite")
+legend1.SetFillColor(ROOT.kWhite)
+legend1.SetLineColor(ROOT.kWhite)
 legend1.SetTextSize(0.04)
 legend1.AddEntry("learned", "learned (SBI)", "L")
 legend1.AddEntry("gauss", "true NLL", "L")
@@ -247,8 +246,8 @@ else:
 frame2.Draw()
 
 legend2 = ROOT.TLegend(0.53, 0.73, 0.87, 0.87)
-legend2.SetFillColor("kWhite")
-legend2.SetLineColor("kWhite")
+legend2.SetFillColor(ROOT.kWhite)
+legend2.SetLineColor(ROOT.kWhite)
 legend2.SetTextSize(0.04)
 legend2.AddEntry("learned_ratio", "learned (SBI)", "L")
 legend2.AddEntry("exact", "true ratio", "L")
