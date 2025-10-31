@@ -113,7 +113,7 @@ jobs:
         run: |
           dnf -y update
           dnf -y install lcov
-          pip3 install gcovr
+          pip3 install "gcovr<8.4"
 
       # This checks out the merge commit if this is a PR
       - name: Checkout
