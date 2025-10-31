@@ -92,13 +92,13 @@ namespace cling {
       llvm::errs() << "Could not create PTX interpreter instance\n";
       return;
     }
-
+#ifndef __EMSCRIPTEN__
     // initialize NVPTX backend
     LLVMInitializeNVPTXTargetInfo();
     LLVMInitializeNVPTXTarget();
     LLVMInitializeNVPTXTargetMC();
     LLVMInitializeNVPTXAsmPrinter();
-
+#endif
     m_Init = true;
   }
 
