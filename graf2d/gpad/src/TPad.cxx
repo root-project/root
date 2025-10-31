@@ -1253,7 +1253,35 @@ Int_t TPad::DistancetoPrimitive(Int_t px, Int_t py)
 ///
 /// __Note3:__  in case xmargin < 0 or ymargin < 0, there is no space
 ///             between pads. The current pad margins are recomputed to
-///             optimize the layout.
+///             optimize the layout in order to have similar frames' areas.
+///             See the following example:
+///
+/// ~~~ {.cpp}
+///    void divpad(Int_t nx=3, Int_t ny=2) {
+///       gStyle->SetOptStat(0);
+///       auto C = new TCanvas();
+///       C->SetLeftMargin(0.3);
+///       C->SetRightMargin(0.3);
+///       C->SetTopMargin(0.3);
+///       C->SetBottomMargin(0.3);
+///       C->Divide(nx,ny,-1);
+///       Int_t number = 0;
+///       auto h = new TH1F("","",100,-3.3,3.3);
+///       h->GetXaxis()->SetLabelFont(43);
+///       h->GetXaxis()->SetLabelSize(12);
+///       h->GetYaxis()->SetLabelFont(43);
+///       h->GetYaxis()->SetLabelSize(12);
+///       h->GetYaxis()->SetNdivisions(505);
+///       h->SetMaximum(30*nx*ny);
+///       h->SetFillColor(42);
+///       for (Int_t i=0;i<nx*ny;i++) {
+///          number++;
+///          C->cd(number);
+///          h->FillRandom("gaus",1000);
+///          h->DrawCopy();
+///       }
+///    }
+/// ~~~
 
 void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t color)
 {
@@ -4492,7 +4520,7 @@ void TPad::PaintLine3D(Float_t *p1, Float_t *p2)
 void TPad::PaintLine3D(Double_t *p1, Double_t *p2)
 {
    if (!fView) return;
-   
+
    // convert from 3-D to 2-D pad coordinate system
    Double_t xpad[6];
    Double_t temp[3];
@@ -4510,7 +4538,7 @@ void TPad::PaintLine3D(Double_t *p1, Double_t *p2)
 void TPad::PaintMarker3D(Double_t x, Double_t y, Double_t z)
 {
    if (!fView) return;
-   
+
    Double_t rmin[3], rmax[3];
    fView->GetRange(rmin, rmax);
 
