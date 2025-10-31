@@ -398,3 +398,34 @@ TEST(TTreeScan, IntOverflow)
          throw std::runtime_error("Could not retrieve TTreePlayer from main tree!");
    }
 }
+
+// https://github.com/root-project/root/issues/20228
+TEST(TTreeDraw, IntOverflow)
+{
+   struct DatasetRAII {
+      const char *fTreeName{"tree_20228"};
+      const char *fFileName{"tree_20228.root"};
+      DatasetRAII()
+      {
+         auto file = std::make_unique<TFile>(fFileName, "recreate");
+         auto tree = std::make_unique<TTree>(fTreeName, fTreeName);
+
+         int val{};
+         tree->Branch("val", &val);
+         for (; val < 10; val++)
+            tree->Fill();
+         file->Write();
+      }
+
+      ~DatasetRAII() { std::remove(fFileName); }
+   } dataset;
+
+   auto file = std::make_unique<TFile>(dataset.fFileName);
+   std::unique_ptr<TTree> tree{file->Get<TTree>(dataset.fTreeName)};
+
+   // TTree::Draw returns the number of entries selected. In this case it should be 7,
+   // but due to the regression, it was zero
+   tree->SetMaxEntryLoop(TTree::kMaxEntries);
+   auto nEntriesSelected = tree->Draw("val", "", "", TTree::kMaxEntries, 3);
+   EXPECT_EQ(nEntriesSelected, 7);
+}
