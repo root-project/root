@@ -53,6 +53,7 @@ of elements
 
 TLeaf::TLeaf()
    : TNamed()
+   , fTypeCode(0)
    , fNdata(0)
    , fLen(0)
    , fLenType(0)
@@ -70,8 +71,9 @@ TLeaf::TLeaf()
 ///
 /// See the TTree and TBranch constructors for explanation of parameters.
 
-TLeaf::TLeaf(TBranch *parent, const char* name, const char *)
+TLeaf::TLeaf(TBranch *parent, const char* name, const char *type)
    : TNamed(name, name)
+   , fTypeCode(type[0])
    , fNdata(0)
    , fLen(0)
    , fLenType(4)
@@ -98,6 +100,7 @@ TLeaf::TLeaf(TBranch *parent, const char* name, const char *)
 
 TLeaf::TLeaf(const TLeaf& lf) :
   TNamed(lf),
+  fTypeCode(lf.fTypeCode),
   fNdata(lf.fNdata),
   fLen(lf.fLen),
   fLenType(lf.fLenType),
@@ -117,6 +120,7 @@ TLeaf& TLeaf::operator=(const TLeaf& lf)
 {
    if(this!=&lf) {
       TNamed::operator=(lf);
+      fTypeCode=lf.fTypeCode;
       fNdata=lf.fNdata;
       fLen=lf.fLen;
       fLenType=lf.fLenType;
