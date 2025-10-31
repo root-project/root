@@ -3300,7 +3300,7 @@ bool TFormula::GenerateGradientPar() {
    // reuse the already generated gradient function.
    if (!functionExists(GetGradientFuncName())) {
       std::string GradientCall
-          ("clad::gradient(" + std::string(fClingName.Data()) + ", \"p\");");
+          ("clad::gradient<clad::opts::enable_va>(" + std::string(fClingName.Data()) + ", \"p\");");
       if (!DeclareGenerationInput(GetGradientFuncName(),
                                   GradientCall,
                                   fGradGenerationInput))

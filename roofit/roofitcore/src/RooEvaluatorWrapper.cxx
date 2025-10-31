@@ -313,7 +313,7 @@ void RooFuncWrapper::createGradient()
    std::stringstream requestFuncStrm;
    requestFuncStrm << "#pragma clad ON\n"
                       "void " << requestName << "() {\n"
-                      "  clad::gradient(" << _funcName << ", \"params\");\n"
+                      "  clad::gradient<clad::opts::enable_va>(" << _funcName << ", \"params\");\n"
                       "}\n"
                       "#pragma clad OFF";
    // clang-format on
