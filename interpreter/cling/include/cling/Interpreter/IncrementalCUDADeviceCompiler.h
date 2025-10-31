@@ -10,7 +10,6 @@
 #ifndef CLING_INCREMENTAL_CUDA_DEVICE_JIT_H
 #define CLING_INCREMENTAL_CUDA_DEVICE_JIT_H
 
-#ifdef LLVM_HAS_NVPTX_TARGET
 #include "clang/Basic/CodeGenOptions.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/TargetParser/Triple.h"
@@ -196,38 +195,4 @@ namespace cling {
 
 } // namespace cling
 
-#else
-
-#include <string>
-
-namespace cling {
-  class InvocationOptions;
-  class Interpreter;
-} // namespace cling
-
-namespace clang {
-  class CompilerInstance;
-} // namespace clang
-
-namespace cling {
-
-  // Null object pattern for IncrementalCUDADeviceCompiler. Avoids that the
-  // client code of this class needs to be wrapped in
-  // #ifdef LLVM_HAS_NVPTX_TARGET, in order to compile.
-  class IncrementalCUDADeviceCompiler {
-  public:
-    IncrementalCUDADeviceCompiler(
-        const std::string& filePath, const int optLevel,
-        const cling::InvocationOptions& invocationOptions,
-        const clang::CompilerInstance& CI);
-
-    Interpreter* getPTXInterpreter();
-    bool process(const std::string& input);
-    bool declare(const std::string& input);
-    bool parse(const std::string& input) const;
-    void dump();
-  };
-
-} // namespace cling
-#endif // LLVM_HAS_NVPTX_TARGET
 #endif // CLING_INCREMENTAL_CUDA_DEVICE_JIT_H
