@@ -134,6 +134,7 @@ public:
    virtual Int_t    GetLenType() const { return fLenType; }
    virtual Int_t    GetMaximum() const { return 0; }
    virtual Int_t    GetMinimum() const { return 0; }
+   virtual char     GetTypeCode() const { return fTypeCode; }
    virtual Int_t    GetNdata() const { return fNdata; }
    virtual Int_t    GetOffset() const { return fOffset; }
    virtual void    *GetValuePointer() const { return nullptr; }
