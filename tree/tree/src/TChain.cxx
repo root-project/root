@@ -1805,50 +1805,6 @@ void TChain::Lookup(bool force)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Loop on nentries of this chain starting at firstentry.  (NOT IMPLEMENTED)
-
-void TChain::Loop(Option_t* option, Long64_t nentries, Long64_t firstentry)
-{
-   Error("Loop", "Function not yet implemented");
-
-   if (option || nentries || firstentry) { }  // keep warnings away
-
-#if 0
-   if (LoadTree(firstentry) < 0) return;
-
-   if (firstentry < 0) firstentry = 0;
-   Long64_t lastentry = firstentry + nentries -1;
-   if (lastentry > fEntries-1) {
-      lastentry = fEntries -1;
-   }
-
-   GetPlayer();
-   GetSelector();
-   fSelector->Start(option);
-
-   Long64_t entry = firstentry;
-   Int_t tree,e0,en;
-   for (tree=0;tree<fNtrees;tree++) {
-      e0 = fTreeOffset[tree];
-      en = fTreeOffset[tree+1] - 1;
-      if (en > lastentry) en = lastentry;
-      if (entry > en) continue;
-
-      LoadTree(entry);
-      fSelector->BeginFile();
-
-      while (entry <= en) {
-         fSelector->Execute(fTree, entry - e0);
-         entry++;
-      }
-      fSelector->EndFile();
-   }
-
-   fSelector->Finish(option);
-#endif
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// List the chain.
 
 void TChain::ls(Option_t* option) const
