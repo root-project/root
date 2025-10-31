@@ -160,9 +160,8 @@ namespace cling {
     }
 
     // use custom CUDA SDK path
-    if (!invocationOptions.CompilerOpts.CUDAPath.empty()) {
-      additionalPtxOpt.push_back("--cuda-path=" +
-                                 invocationOptions.CompilerOpts.CUDAPath);
+    if(!invocationOptions.CompilerOpts.CUDAPath.empty()){
+      additionalPtxOpt.push_back("--cuda-path=" + invocationOptions.CompilerOpts.CUDAPath);
     }
 
     enum FatBinFlags {
@@ -195,7 +194,7 @@ namespace cling {
 
   void IncrementalCUDADeviceCompiler::addHeaderSearchPathFlags(
       std::vector<std::string>& argv,
-      const std::shared_ptr<clang::HeaderSearchOptions>& headerSearchOptions) {
+      const std::shared_ptr<clang::HeaderSearchOptions> &headerSearchOptions) {
     for (clang::HeaderSearchOptions::Entry e :
          headerSearchOptions->UserEntries) {
       if (e.Group == clang::frontend::IncludeDirGroup::Quoted) {
