@@ -32,6 +32,7 @@ for sub in subdirs:
             continue
         py_tutorials.append(f)
 
+py_tutorials = sorted(py_tutorials, key=lambda p: p.name)
 
 def test_tutorials_are_detected():
     assert len(py_tutorials) > 0
@@ -74,6 +75,7 @@ for sub in subdirs:
             continue
         cpp_tutorials.append(f)
 
+cpp_tutorials = sorted(cpp_tutorials, key=lambda p: p.name)
 
 def test_cpp_tutorials_are_detected():
     assert len(cpp_tutorials) > 0
