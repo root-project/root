@@ -13,10 +13,13 @@
 #include <Math/Vector3D.h>
 #include <ROOT/TestSupport.hxx>
 
+#include "TTreePlayer.h"
+
 #include "gtest/gtest.h"
 
 #include <string>
 #include <vector>
+#include <fstream>
 
 // ROOT-10702
 TEST(TTreeReaderRegressions, CompositeTypeWithNameClash)
@@ -334,5 +337,64 @@ TEST(TTreeReaderRegressions, XYZVectors)
    }
    for (auto filename : {filename1, filename2}) {
       gSystem->Unlink(filename);
+   }
+}
+
+// https://github.com/root-project/root/issues/20226
+TEST(TTreeScan, IntOverflow)
+{
+   struct DatasetRAII {
+      const char *fTreeName{"tree_20226"};
+      const char *fFileName{"tree_20226.root"};
+      DatasetRAII()
+      {
+         auto file = std::make_unique<TFile>(fFileName, "recreate");
+         auto tree = std::make_unique<TTree>(fTreeName, fTreeName);
+
+         int val{};
+         tree->Branch("val", &val);
+         for (; val < 10; val++)
+            tree->Fill();
+         file->Write();
+      }
+
+      ~DatasetRAII() { std::remove(fFileName); }
+   } dataset;
+
+   auto file = std::make_unique<TFile>(dataset.fFileName);
+   std::unique_ptr<TTree> tree{file->Get<TTree>(dataset.fTreeName)};
+
+   std::ostringstream strCout;
+   {
+      if (auto *treePlayer = static_cast<TTreePlayer *>(tree->GetPlayer())) {
+         struct FileRAII {
+            const char *fPath;
+            FileRAII(const char *name) : fPath(name) {}
+            ~FileRAII() { std::remove(fPath); }
+         } redirectFile{"tree_20226_regression_redirect.txt"};
+         treePlayer->SetScanRedirect(true);
+         treePlayer->SetScanFileName(redirectFile.fPath);
+         tree->Scan("val", "", "", TTree::kMaxEntries, 3);
+
+         std::ifstream redirectStream(redirectFile.fPath);
+         std::stringstream redirectOutput;
+         redirectOutput << redirectStream.rdbuf();
+
+         const static std::string expectedScanOut{
+            R"Scan(************************
+*    Row   *       val *
+************************
+*        3 *         3 *
+*        4 *         4 *
+*        5 *         5 *
+*        6 *         6 *
+*        7 *         7 *
+*        8 *         8 *
+*        9 *         9 *
+************************
+)Scan"};
+         EXPECT_EQ(redirectOutput.str(), expectedScanOut);
+      } else
+         throw std::runtime_error("Could not retrieve TTreePlayer from main tree!");
    }
 }
