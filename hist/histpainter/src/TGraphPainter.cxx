@@ -4591,7 +4591,7 @@ void TGraphPainter::PaintScatter2D(TScatter2D *theScatter, Option_t* chopt)
 
    TGraph2D* theGraph = theScatter->GetGraph();
 
-   Int_t optionSAME = 0, optionSkipCol = 0, optionLOGC = 1, optionLOGS = 0;
+   Int_t optionSAME = 0, optionSkipCol = 0, optionLOGC = 1, optionLOGS = 0, optionP = 0;
 
    TString opt = chopt;
    opt.ToUpper();
@@ -4611,6 +4611,10 @@ void TGraphPainter::PaintScatter2D(TScatter2D *theScatter, Option_t* chopt)
    if (opt.Contains("LOGS")) {
       optionLOGS = 1;
       opt.ReplaceAll("LOGS"," ");
+   }
+   if (opt.Contains("P")) {
+      optionP = 1;
+      opt.ReplaceAll("P"," ");
    }
 
    opt.Append("TRI0");
@@ -4709,7 +4713,7 @@ void TGraphPainter::PaintScatter2D(TScatter2D *theScatter, Option_t* chopt)
 
             functions->AddFirst(palette);
          }
-         if (palette) palette->Paint();
+         if (palette && !optionP) palette->Paint();
       }
    } else {
       TScatter2D *s2;

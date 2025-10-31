@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Draw a 2D scatter plot.
+/// \preview Draw a 2D scatter plot.
 ///
 /// \macro_image
 /// \macro_code
@@ -50,8 +50,6 @@ void gr019_scatter2d()
    scatter2->SetMarkerStyle(21);
 
    canvas->SetLogx();
-   scatter1->Draw("logc ");
+   scatter1->Draw("logc");
    scatter2->Draw("SAME");
-
-scatter1->SaveAs("canvas.C");
 }

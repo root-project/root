@@ -39,7 +39,11 @@ TScatter2D can be drawn with the following options:
 |----------|-------------------------------------------------------------------|
 | "SAME"   | Superimpose on previous picture in the same pad.|
 | "LOGC"   | Log scale for colors.|
-| "LOGS"   | Log scale for size.|
+| "LOGS"   | Log scale for sizes.|
+| "FB"     | Suppress the Front-Box.|
+| "BB"     | Suppress the Back-Box.|
+| "A"      | Suppress the axis.|
+| "P"      | Suppress the palette.|
 
 In the case of the SAME option, the log scale for color and size is inherited from the
 previously drawn TScatter2D. For example, if a TScatter2D is drawn on top of another one
