@@ -2266,6 +2266,13 @@ void TGraph::SetHighlight(Bool_t set)
    painter->SetHighlight(this);
 }
 
+/// Set the histogram underlying the TGraph. This transfers the ownership of h to the TGraph. The preexisting fHistogram will be deleted.
+void  TGraph::SetHistogram(TH1F *h)
+{
+   delete fHistogram;
+   fHistogram = h;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the maximum of the graph.
 
