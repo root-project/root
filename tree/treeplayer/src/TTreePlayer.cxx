@@ -2711,9 +2711,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    fSelectedRows = 0;
    Int_t tnumber = -1;
    bool exitloop = false;
-   for (entry=firstentry;
-        entry<(firstentry+nentries) && !exitloop;
-        entry++) {
+   for (entry = firstentry; entry - firstentry < nentries && !exitloop; entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
       Long64_t localEntry = fTree->LoadTree(entryNumber);
