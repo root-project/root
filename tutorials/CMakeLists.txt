@@ -850,11 +850,6 @@ if(ROOT_pyroot_FOUND)
   # disable PyTorch model file used by TMVA_CNN_Classification.C
   list(APPEND pyveto machine_learning/PyTorch_Generate_CNN_Model.py)
 
-  ROOT_FIND_PYTHON_MODULE(tensorflow QUIET)
-  if(NOT ROOT_TENSORFLOW_FOUND)
-    list(APPEND pyveto machine_learning/TMVA_CNN_Classification.py)
-  endif()
-
   if(NOT ROOT_geom_FOUND)
     list(APPEND pyveto geom/geometry.py)
   endif()
@@ -962,6 +957,7 @@ if(ROOT_pyroot_FOUND)
   )
   file(GLOB requires_tensorflow RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       machine_learning/RBatchGenerator_TensorFlow.py
+      machine_learning/TMVA_CNN_Classification.py
   )
 
   file(GLOB requires_matplotlib RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
