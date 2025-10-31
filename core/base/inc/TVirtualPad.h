@@ -189,6 +189,7 @@ public:
    virtual void     PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option="") = 0;
    virtual void     PaintPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option="") = 0;
    virtual void     PaintPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="") = 0;
+   virtual void     PaintMarker3D(Double_t x, Double_t y, Double_t z) = 0;
    virtual void     PaintModified() = 0;
    virtual void     PaintText(Double_t x, Double_t y, const char *text) = 0;
    virtual void     PaintText(Double_t x, Double_t y, const wchar_t *text) = 0;
