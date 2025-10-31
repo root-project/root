@@ -182,7 +182,8 @@ public:
    virtual void          Scale(Double_t c1=1., Option_t *option="y"); // *MENU*
    virtual void          SetEditable(Bool_t editable=kTRUE); // *TOGGLE* *GETTER=GetEditable
    virtual void          SetHighlight(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsHighlight
-   virtual void          SetHistogram(TH1F *h) {fHistogram = h;}
+   /// Set the histogram underlying the TGraph. This transfers the ownership of h to the TGraph. The preexisting fHistogram will be deleted.
+   virtual void          SetHistogram(TH1F *h) {delete fHistogram; fHistogram = h;}
    virtual void          SetMaximum(Double_t maximum=-1111); // *MENU*
    virtual void          SetMinimum(Double_t minimum=-1111); // *MENU*
    virtual void          Set(Int_t n);
