@@ -29,8 +29,10 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 
 namespace ROOT {
 class RNTuple;
@@ -64,7 +66,46 @@ std::cout << "myNTuple has " << reader->GetNEntries() << " entries\n";
 */
 // clang-format on
 class RNTupleReader {
+   struct RActiveEntriesControlBlock;
+
+public:
+   class RActiveEntryToken {
+      friend class RNTupleReader;
+
+      std::shared_ptr<RActiveEntriesControlBlock> fPtrControlBlock;
+      NTupleSize_t fEntryNumber = kInvalidNTupleIndex;
+
+      void ActivateEntry(NTupleSize_t entryNumber);
+      void DeactivateEntry(NTupleSize_t entryNumber);
+
+      explicit RActiveEntryToken(std::shared_ptr<RActiveEntriesControlBlock> ptrControlBlock)
+         : fPtrControlBlock(ptrControlBlock) {}
+
+   public:
+      ~RActiveEntryToken() { Reset(); }
+      RActiveEntryToken(const RActiveEntryToken &other);
+      RActiveEntryToken(RActiveEntryToken &&other);
+      RActiveEntryToken &operator=(const RActiveEntryToken &other);
+      RActiveEntryToken &operator=(RActiveEntryToken &&other);
+
+      NTupleSize_t GetEntryNumber() const { return fEntryNumber; }
+      void SetEntryNumber(NTupleSize_t entryNumber);
+      void Reset();
+   };
+
 private:
+   /// Shared data structure between the reader and all the issued active entry tokens.
+   struct RActiveEntriesControlBlock {
+      /// Points to the page source backing the associated RNTupleReader. When the reader is destructed, the
+      /// page source is reset to nullptr. At that point, operations on remaining active entry tokens become noops.
+      Internal::RPageSource *fPageSource = nullptr;
+      /// Reference counter of clusters pinned in the page source due to entries being marked as active.
+      std::unordered_map<ROOT::DescriptorId_t, std::uint64_t> fActiveClusters;
+      std::mutex fLock;
+
+      explicit RActiveEntriesControlBlock(Internal::RPageSource *pageSource) : fPageSource(pageSource) {}
+   };
+
    /// Set as the page source's scheduler for parallel page decompression if implicit multi-threading (IMT) is on.
    /// Needs to be destructed after the page source is destructed (and thus be declared before)
    std::unique_ptr<Internal::RPageStorage::RTaskScheduler> fUnzipTasks;
@@ -87,6 +128,9 @@ private:
    Experimental::Detail::RNTupleMetrics fMetrics;
    /// If not nullopt, these will be used when creating the model
    std::optional<ROOT::RNTupleDescriptor::RCreateModelOptions> fCreateModelOptions;
+   /// Initialized when the page source is connected. It is then shared between the reader instance and all
+   /// active entry tokens. When the reader destructs, it resets the page source pointer in the control block.
+   std::shared_ptr<RActiveEntriesControlBlock> fActiveEntriesControlBlock;
 
    RNTupleReader(std::unique_ptr<ROOT::RNTupleModel> model, std::unique_ptr<Internal::RPageSource> source,
                  const ROOT::RNTupleReadOptions &options);
@@ -242,6 +286,8 @@ public:
 
       entry.Read(index);
    }
+
+   RActiveEntryToken CreateActiveEntryToken() { return RActiveEntryToken(fActiveEntriesControlBlock); }
 
    /// Returns an iterator over the entry indices of the RNTuple.
    ///
