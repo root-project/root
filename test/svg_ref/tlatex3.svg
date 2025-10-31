@@ -1,0 +1,267 @@
+<?xml version="1.0" standalone="no"?>
+<svg width="567" height="385" viewBox="0 0 567 385" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+<title>
+tlatex3.svg
+</title>
+<rect x="0.500" y="0" width="567" height="384" fill="#f2f2f2"/>
+<path d="M0.500,384l 2.0, -2.0v -380h 563l 2.0, -2.0h -567v 384z" fill="white"/>
+<path d="M0.500,384l 2.0, -2.0h 563v -380l 2.0, -2.0v 384h -567z" fill="#a9a9a9"/>
+<rect x="29" y="77" width="510" height="269" fill="#f2f2f2"/>
+<path d="M34,346v 3.3h 509v -267h -3.3v 264z" fill="black"/>
+<path d="M29,346v -269h 510v 269h -510z" fill="none" stroke="black"/>
+<text xml:space="preserve" x="454" y="127" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">)
+</text>
+<text xml:space="preserve" x="445" y="127" fill="black" font-size="18" font-family="Times">&#0952;
+</text>
+<text xml:space="preserve" x="438" y="119" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="376" y="127" fill="black" font-size="18" font-family="Helvetica" font-weight="bold"> (1+cos
+</text>
+<text xml:space="preserve" x="370" y="115" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="358" y="127" fill="black" font-size="18" font-family="Helvetica" font-weight="bold"> 
+</text>
+<text xml:space="preserve" x="346" y="138" fill="black" font-size="18" font-family="Times">&#0945;
+</text>
+<text xml:space="preserve" x="335" y="138" fill="black" font-size="18" font-family="Times">&#0916;
+</text>
+<text xml:space="preserve" x="310" y="138" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">1 - 
+</text>
+<text xml:space="preserve" x="330" y="120" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">1
+</text>
+<path d="M310,122h 48" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="305" y="127" fill="black" font-size="18" font-family="Helvetica" font-weight="bold"> 
+</text>
+<path d="M300,107v 32" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M367,107v 32" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="267" y="127" fill="black" font-size="18" font-family="Helvetica" font-weight="bold"> ) = 
+</text>
+<text xml:space="preserve" x="261" y="127" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">f
+</text>
+<path d="M261,112h 5.7" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="255" y="127" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">f
+</text>
+<text xml:space="preserve" x="237" y="127" fill="black" font-size="18" font-family="Times">&#8594;
+</text>
+<text xml:space="preserve" x="233" y="118" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">-
+</text>
+<text xml:space="preserve" x="223" y="127" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">e
+</text>
+<text xml:space="preserve" x="217" y="119" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">+
+</text>
+<text xml:space="preserve" x="196" y="127" fill="black" font-size="18" font-family="Helvetica" font-weight="bold"> (e
+</text>
+<text xml:space="preserve" x="188" y="138" fill="black" font-size="18" font-family="Times">&#0952;
+</text>
+<text xml:space="preserve" x="146" y="138" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">dcos
+</text>
+<text xml:space="preserve" x="171" y="119" fill="black" font-size="18" font-family="Times">&#0963;
+</text>
+<text xml:space="preserve" x="161" y="119" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">d
+</text>
+<path d="M146,122h 51" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="136" y="127" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">  
+</text>
+<text xml:space="preserve" x="130" y="133" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="118" y="139" fill="black" font-size="18" font-family="Times">&#0945;
+</text>
+<text xml:space="preserve" x="108" y="139" fill="black" font-size="18" font-family="Times">&#0960;
+</text>
+<text xml:space="preserve" x="113" y="119" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">2s
+</text>
+<path d="M108,122h 28" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="490" y="217" fill="black" font-size="18" font-family="Helvetica" font-weight="bold"> 
+</text>
+<text xml:space="preserve" x="472" y="217" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">) 
+</text>
+<text xml:space="preserve" x="463" y="217" fill="black" font-size="18" font-family="Times">&#0952;
+</text>
+<text xml:space="preserve" x="427" y="217" fill="black" font-size="18" font-family="Helvetica" font-weight="bold"> cos
+</text>
+<text xml:space="preserve" x="421" y="206" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">f
+</text>
+<text xml:space="preserve" x="421" y="225" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">a
+</text>
+<text xml:space="preserve" x="411" y="217" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">g
+</text>
+<path d="M413,205l 3.3, -2.8l 3.3, 2.8" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="405" y="206" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">e
+</text>
+<text xml:space="preserve" x="405" y="225" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">a
+</text>
+<text xml:space="preserve" x="395" y="217" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">g
+</text>
+<path d="M396,205l 3.3, -2.8l 3.3, 2.8" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="354" y="217" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">) + 2 
+</text>
+<text xml:space="preserve" x="345" y="217" fill="black" font-size="18" font-family="Times">&#0952;
+</text>
+<text xml:space="preserve" x="339" y="208" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="267" y="217" fill="black" font-size="18" font-family="Helvetica" font-weight="bold"> (1 + cos
+</text>
+<text xml:space="preserve" x="260" y="206" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">f
+</text>
+<text xml:space="preserve" x="260" y="225" fill="black" font-size="12" font-family="Times">&#0957;
+</text>
+<text xml:space="preserve" x="250" y="217" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">g
+</text>
+<path d="M251,205l 3.3, -2.8l 3.3, 2.8" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="242" y="206" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">e
+</text>
+<text xml:space="preserve" x="242" y="225" fill="black" font-size="12" font-family="Times">&#0957;
+</text>
+<text xml:space="preserve" x="233" y="217" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">g
+</text>
+<path d="M234,205l 3.3, -2.8l 3.3, 2.8" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M228,198v 28" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M228,198h 4.8" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M228,226h 4.8" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M488,198v 28" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M488,198h -4.8" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M488,226h -4.8" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="199" y="217" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">(s) 
+</text>
+<text xml:space="preserve" x="190" y="217" fill="black" font-size="18" font-family="Times">&#0967;
+</text>
+<text xml:space="preserve" x="185" y="217" fill="black" font-size="18" font-family="Helvetica" font-weight="bold"> 
+</text>
+<text xml:space="preserve" x="173" y="227" fill="black" font-size="18" font-family="Times">&#0945;
+</text>
+<text xml:space="preserve" x="162" y="227" fill="black" font-size="18" font-family="Times">&#0916;
+</text>
+<text xml:space="preserve" x="137" y="227" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">1 - 
+</text>
+<text xml:space="preserve" x="156" y="209" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">2
+</text>
+<path d="M137,212h 48" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="132" y="217" fill="black" font-size="18" font-family="Helvetica" font-weight="bold"> 
+</text>
+<path d="M128,196v 12" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M128,216v 12" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M128,196h 4.0" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M128,228h 4.0" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M124,212l 4.0, -4.0" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M124,212l 4.0, 4.0" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M499,196v 12" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M499,216v 12" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M495,196h 4.0" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M495,228h 4.0" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M499,208l 4.0, 4.0" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M499,216l 4.0, -4.0" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="64" y="217" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">+ 4 Re 
+</text>
+<text xml:space="preserve" x="516" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold"> 
+</text>
+<text xml:space="preserve" x="499" y="308" fill="black" font-size="18" font-family="Times">&#0952;
+</text>
+<text xml:space="preserve" x="468" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">cos
+</text>
+<text xml:space="preserve" x="461" y="298" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">f
+</text>
+<text xml:space="preserve" x="461" y="317" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">v
+</text>
+<text xml:space="preserve" x="451" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">g
+</text>
+<path d="M453,296l 3.3, -2.8l 3.3, 2.8" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="446" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold"> 
+</text>
+<text xml:space="preserve" x="439" y="297" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">e
+</text>
+<text xml:space="preserve" x="439" y="317" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">v
+</text>
+<text xml:space="preserve" x="429" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">g
+</text>
+<path d="M431,296l 3.3, -2.8l 3.3, 2.8" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="424" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold"> 
+</text>
+<text xml:space="preserve" x="418" y="298" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">f
+</text>
+<text xml:space="preserve" x="418" y="317" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">a
+</text>
+<text xml:space="preserve" x="408" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">g
+</text>
+<path d="M410,296l 3.3, -2.8l 3.3, 2.8" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="403" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold"> 
+</text>
+<text xml:space="preserve" x="397" y="297" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">e
+</text>
+<text xml:space="preserve" x="397" y="317" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">a
+</text>
+<text xml:space="preserve" x="387" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">g
+</text>
+<path d="M389,296l 3.3, -2.8l 3.3, 2.8" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="346" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">) + 8 
+</text>
+<text xml:space="preserve" x="337" y="308" fill="black" font-size="18" font-family="Times">&#0952;
+</text>
+<text xml:space="preserve" x="331" y="300" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="268" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">)(1+cos
+</text>
+<text xml:space="preserve" x="263" y="293" fill="black" font-size="8.4" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="259" y="298" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">f
+</text>
+<text xml:space="preserve" x="259" y="317" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">v
+</text>
+<text xml:space="preserve" x="249" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">g
+</text>
+<path d="M251,296l 3.3, -2.8l 3.3, 2.8" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="230" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold"> + 
+</text>
+<text xml:space="preserve" x="225" y="293" fill="black" font-size="8.4" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="221" y="298" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">f
+</text>
+<text xml:space="preserve" x="221" y="317" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">a
+</text>
+<text xml:space="preserve" x="211" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">g
+</text>
+<path d="M213,296l 3.3, -2.8l 3.3, 2.8" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="200" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">)(
+</text>
+<text xml:space="preserve" x="195" y="293" fill="black" font-size="8.4" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="188" y="297" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">e
+</text>
+<text xml:space="preserve" x="188" y="317" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">v
+</text>
+<text xml:space="preserve" x="178" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">g
+</text>
+<path d="M180,296l 3.3, -2.8l 3.3, 2.8" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="169" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">+
+</text>
+<text xml:space="preserve" x="164" y="293" fill="black" font-size="8.4" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="157" y="297" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">e
+</text>
+<text xml:space="preserve" x="157" y="317" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">a
+</text>
+<text xml:space="preserve" x="147" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">g
+</text>
+<path d="M149,296l 3.3, -2.8l 3.3, 2.8" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="142" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">(
+</text>
+<path d="M137,286v 31" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M137,286h 4.8" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M137,318h 4.8" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M513,286v 31" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M513,286h -4.8" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M513,318h -4.8" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="128" y="300" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="100" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">(s)
+</text>
+<text xml:space="preserve" x="90" y="308" fill="black" font-size="18" font-family="Times">&#0967;
+</text>
+<path d="M85,295v 18" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M126,295v 18" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="47" y="308" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">+ 16
+</text>
+<rect x="156" y="69" width="255" height="15" fill="#f2f2f2"/>
+<path d="M160,85v 2.4h 254v -14h -2.4v 12z" fill="black"/>
+<path d="M156,85v -15h 255v 15h -255z" fill="none" stroke="black"/>
+<text xml:space="preserve" x="237" y="81" fill="black" font-size="14" font-family="Helvetica" font-weight="bold">Born equation
+</text></svg>

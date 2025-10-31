@@ -1,0 +1,981 @@
+<?xml version="1.0" standalone="no"?>
+<svg width="567" height="408" viewBox="0 0 567 408" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+<title>
+options2d2.svg
+</title>
+<rect x="0.500" y="0" width="567" height="407" fill="#cccccc"/>
+<path d="M0.500,407l 2.0, -2.0v -403h 563l 2.0, -2.0h -567v 407z" fill="#f4f4f4"/>
+<path d="M0.500,407l 2.0, -2.0h 563v -403l 2.0, -2.0v 407h -567z" fill="#8e8e8e"/>
+<rect x="57" y="41" width="454" height="326" fill="#cccccc"/>
+<path d="M57,367l 1.000, -1.000v -324h 452l 1.000, -1.000h -454v 326z" fill="#f4f4f4"/>
+<path d="M57,367l 1.000, -1.000h 452v -324l 1.000, -1.000v 326h -454z" fill="#8e8e8e"/>
+<rect x="57" y="41" width="454" height="326" fill="none" stroke="black"/>
+<text xml:space="preserve" x="67" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">1
+</text>
+<text xml:space="preserve" x="89" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">5
+</text>
+<text xml:space="preserve" x="110" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">17
+</text>
+<text xml:space="preserve" x="133" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">21
+</text>
+<text xml:space="preserve" x="155" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">16
+</text>
+<text xml:space="preserve" x="178" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">23
+</text>
+<text xml:space="preserve" x="200" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">15
+</text>
+<text xml:space="preserve" x="223" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">17
+</text>
+<text xml:space="preserve" x="248" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">9
+</text>
+<text xml:space="preserve" x="268" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">13
+</text>
+<text xml:space="preserve" x="293" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">5
+</text>
+<text xml:space="preserve" x="316" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">8
+</text>
+<text xml:space="preserve" x="336" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">10
+</text>
+<text xml:space="preserve" x="361" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">7
+</text>
+<text xml:space="preserve" x="384" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">6
+</text>
+<text xml:space="preserve" x="407" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">4
+</text>
+<text xml:space="preserve" x="429" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="452" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">3
+</text>
+<text xml:space="preserve" x="475" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="497" y="362" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="65" y="346" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">11
+</text>
+<text xml:space="preserve" x="87" y="345" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">49
+</text>
+<text xml:space="preserve" x="107" y="345" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">125
+</text>
+<text xml:space="preserve" x="130" y="345" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">179
+</text>
+<text xml:space="preserve" x="153" y="345" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">209
+</text>
+<text xml:space="preserve" x="176" y="345" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">216
+</text>
+<text xml:space="preserve" x="198" y="345" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">165
+</text>
+<text xml:space="preserve" x="221" y="345" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">162
+</text>
+<text xml:space="preserve" x="244" y="345" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">129
+</text>
+<text xml:space="preserve" x="268" y="345" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">99
+</text>
+<text xml:space="preserve" x="291" y="345" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">98
+</text>
+<text xml:space="preserve" x="314" y="345" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">75
+</text>
+<text xml:space="preserve" x="336" y="345" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">53
+</text>
+<text xml:space="preserve" x="359" y="345" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">52
+</text>
+<text xml:space="preserve" x="382" y="345" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">58
+</text>
+<text xml:space="preserve" x="404" y="345" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">34
+</text>
+<text xml:space="preserve" x="427" y="345" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">38
+</text>
+<text xml:space="preserve" x="450" y="345" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">30
+</text>
+<text xml:space="preserve" x="473" y="345" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">31
+</text>
+<text xml:space="preserve" x="495" y="345" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">18
+</text>
+<text xml:space="preserve" x="64" y="329" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">13
+</text>
+<text xml:space="preserve" x="87" y="329" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">88
+</text>
+<text xml:space="preserve" x="108" y="329" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">181
+</text>
+<text xml:space="preserve" x="130" y="329" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">302
+</text>
+<text xml:space="preserve" x="153" y="329" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">322
+</text>
+<text xml:space="preserve" x="176" y="329" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">328
+</text>
+<text xml:space="preserve" x="198" y="329" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">294
+</text>
+<text xml:space="preserve" x="221" y="329" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">250
+</text>
+<text xml:space="preserve" x="244" y="329" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">185
+</text>
+<text xml:space="preserve" x="266" y="329" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">162
+</text>
+<text xml:space="preserve" x="289" y="329" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">106
+</text>
+<text xml:space="preserve" x="312" y="329" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">113
+</text>
+<text xml:space="preserve" x="336" y="329" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">98
+</text>
+<text xml:space="preserve" x="357" y="329" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">105
+</text>
+<text xml:space="preserve" x="380" y="329" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">118
+</text>
+<text xml:space="preserve" x="403" y="329" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">111
+</text>
+<text xml:space="preserve" x="427" y="329" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">83
+</text>
+<text xml:space="preserve" x="450" y="329" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">41
+</text>
+<text xml:space="preserve" x="472" y="329" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">40
+</text>
+<text xml:space="preserve" x="495" y="329" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">41
+</text>
+<text xml:space="preserve" x="64" y="313" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">13
+</text>
+<text xml:space="preserve" x="87" y="313" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">62
+</text>
+<text xml:space="preserve" x="107" y="313" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">147
+</text>
+<text xml:space="preserve" x="130" y="313" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">215
+</text>
+<text xml:space="preserve" x="153" y="313" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">250
+</text>
+<text xml:space="preserve" x="176" y="313" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">238
+</text>
+<text xml:space="preserve" x="198" y="313" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">194
+</text>
+<text xml:space="preserve" x="221" y="313" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">184
+</text>
+<text xml:space="preserve" x="244" y="313" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">158
+</text>
+<text xml:space="preserve" x="268" y="313" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">99
+</text>
+<text xml:space="preserve" x="289" y="313" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">105
+</text>
+<text xml:space="preserve" x="314" y="313" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">75
+</text>
+<text xml:space="preserve" x="336" y="313" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">95
+</text>
+<text xml:space="preserve" x="357" y="313" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">141
+</text>
+<text xml:space="preserve" x="380" y="313" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">236
+</text>
+<text xml:space="preserve" x="402" y="313" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">234
+</text>
+<text xml:space="preserve" x="425" y="313" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">142
+</text>
+<text xml:space="preserve" x="450" y="313" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">56
+</text>
+<text xml:space="preserve" x="472" y="313" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">24
+</text>
+<text xml:space="preserve" x="495" y="313" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">24
+</text>
+<text xml:space="preserve" x="66" y="297" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">8
+</text>
+<text xml:space="preserve" x="87" y="297" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">45
+</text>
+<text xml:space="preserve" x="110" y="297" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">81
+</text>
+<text xml:space="preserve" x="130" y="297" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">154
+</text>
+<text xml:space="preserve" x="153" y="297" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">168
+</text>
+<text xml:space="preserve" x="176" y="297" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">133
+</text>
+<text xml:space="preserve" x="198" y="297" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">142
+</text>
+<text xml:space="preserve" x="221" y="297" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">122
+</text>
+<text xml:space="preserve" x="246" y="297" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">92
+</text>
+<text xml:space="preserve" x="268" y="297" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">75
+</text>
+<text xml:space="preserve" x="291" y="297" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">70
+</text>
+<text xml:space="preserve" x="314" y="297" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">60
+</text>
+<text xml:space="preserve" x="334" y="297" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">117
+</text>
+<text xml:space="preserve" x="357" y="297" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">223
+</text>
+<text xml:space="preserve" x="380" y="297" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">364
+</text>
+<text xml:space="preserve" x="402" y="297" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">425
+</text>
+<text xml:space="preserve" x="425" y="297" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">192
+</text>
+<text xml:space="preserve" x="450" y="297" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">72
+</text>
+<text xml:space="preserve" x="472" y="297" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">24
+</text>
+<text xml:space="preserve" x="495" y="297" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">13
+</text>
+<text xml:space="preserve" x="66" y="280" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">5
+</text>
+<text xml:space="preserve" x="87" y="280" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">31
+</text>
+<text xml:space="preserve" x="110" y="280" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">63
+</text>
+<text xml:space="preserve" x="132" y="280" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">79
+</text>
+<text xml:space="preserve" x="153" y="280" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">101
+</text>
+<text xml:space="preserve" x="175" y="281" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">127
+</text>
+<text xml:space="preserve" x="200" y="281" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">77
+</text>
+<text xml:space="preserve" x="223" y="280" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">65
+</text>
+<text xml:space="preserve" x="246" y="280" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">56
+</text>
+<text xml:space="preserve" x="268" y="280" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">56
+</text>
+<text xml:space="preserve" x="291" y="281" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">42
+</text>
+<text xml:space="preserve" x="314" y="280" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">35
+</text>
+<text xml:space="preserve" x="336" y="280" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">80
+</text>
+<text xml:space="preserve" x="357" y="281" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">222
+</text>
+<text xml:space="preserve" x="380" y="280" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">389
+</text>
+<text xml:space="preserve" x="402" y="280" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">373
+</text>
+<text xml:space="preserve" x="425" y="280" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">226
+</text>
+<text xml:space="preserve" x="450" y="281" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">77
+</text>
+<text xml:space="preserve" x="472" y="280" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">18
+</text>
+<text xml:space="preserve" x="497" y="280" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">5
+</text>
+<text xml:space="preserve" x="66" y="264" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">6
+</text>
+<text xml:space="preserve" x="87" y="264" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">31
+</text>
+<text xml:space="preserve" x="110" y="264" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">38
+</text>
+<text xml:space="preserve" x="132" y="264" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">63
+</text>
+<text xml:space="preserve" x="155" y="264" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">72
+</text>
+<text xml:space="preserve" x="178" y="264" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">71
+</text>
+<text xml:space="preserve" x="200" y="264" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">68
+</text>
+<text xml:space="preserve" x="223" y="264" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">62
+</text>
+<text xml:space="preserve" x="246" y="264" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">51
+</text>
+<text xml:space="preserve" x="268" y="264" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">39
+</text>
+<text xml:space="preserve" x="291" y="264" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">23
+</text>
+<text xml:space="preserve" x="314" y="264" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">28
+</text>
+<text xml:space="preserve" x="337" y="264" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">61
+</text>
+<text xml:space="preserve" x="357" y="264" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">126
+</text>
+<text xml:space="preserve" x="380" y="264" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">244
+</text>
+<text xml:space="preserve" x="402" y="264" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">237
+</text>
+<text xml:space="preserve" x="425" y="264" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">132
+</text>
+<text xml:space="preserve" x="450" y="264" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">38
+</text>
+<text xml:space="preserve" x="475" y="264" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">7
+</text>
+<text xml:space="preserve" x="497" y="264" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">8
+</text>
+<text xml:space="preserve" x="64" y="248" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">16
+</text>
+<text xml:space="preserve" x="87" y="248" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">13
+</text>
+<text xml:space="preserve" x="110" y="248" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">34
+</text>
+<text xml:space="preserve" x="133" y="248" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">51
+</text>
+<text xml:space="preserve" x="155" y="248" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">55
+</text>
+<text xml:space="preserve" x="178" y="248" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">72
+</text>
+<text xml:space="preserve" x="200" y="248" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">55
+</text>
+<text xml:space="preserve" x="223" y="248" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">45
+</text>
+<text xml:space="preserve" x="246" y="248" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">43
+</text>
+<text xml:space="preserve" x="268" y="248" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">32
+</text>
+<text xml:space="preserve" x="291" y="248" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">38
+</text>
+<text xml:space="preserve" x="314" y="248" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">25
+</text>
+<text xml:space="preserve" x="336" y="248" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">34
+</text>
+<text xml:space="preserve" x="359" y="248" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">49
+</text>
+<text xml:space="preserve" x="382" y="248" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">61
+</text>
+<text xml:space="preserve" x="404" y="248" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">63
+</text>
+<text xml:space="preserve" x="427" y="248" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">44
+</text>
+<text xml:space="preserve" x="450" y="248" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">20
+</text>
+<text xml:space="preserve" x="475" y="248" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">6
+</text>
+<text xml:space="preserve" x="497" y="248" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">4
+</text>
+<text xml:space="preserve" x="64" y="232" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">14
+</text>
+<text xml:space="preserve" x="87" y="232" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">24
+</text>
+<text xml:space="preserve" x="110" y="231" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">68
+</text>
+<text xml:space="preserve" x="132" y="231" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">59
+</text>
+<text xml:space="preserve" x="155" y="232" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">71
+</text>
+<text xml:space="preserve" x="178" y="232" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">71
+</text>
+<text xml:space="preserve" x="200" y="231" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">66
+</text>
+<text xml:space="preserve" x="223" y="232" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">77
+</text>
+<text xml:space="preserve" x="246" y="231" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">67
+</text>
+<text xml:space="preserve" x="268" y="231" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">58
+</text>
+<text xml:space="preserve" x="291" y="232" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">47
+</text>
+<text xml:space="preserve" x="314" y="231" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">31
+</text>
+<text xml:space="preserve" x="337" y="231" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">31
+</text>
+<text xml:space="preserve" x="359" y="232" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">24
+</text>
+<text xml:space="preserve" x="382" y="231" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">25
+</text>
+<text xml:space="preserve" x="404" y="232" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">24
+</text>
+<text xml:space="preserve" x="427" y="231" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">13
+</text>
+<text xml:space="preserve" x="452" y="232" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">4
+</text>
+<text xml:space="preserve" x="475" y="231" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">8
+</text>
+<text xml:space="preserve" x="497" y="232" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="64" y="215" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">32
+</text>
+<text xml:space="preserve" x="87" y="215" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">45
+</text>
+<text xml:space="preserve" x="110" y="215" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">85
+</text>
+<text xml:space="preserve" x="132" y="215" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">88
+</text>
+<text xml:space="preserve" x="153" y="215" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">101
+</text>
+<text xml:space="preserve" x="176" y="215" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">121
+</text>
+<text xml:space="preserve" x="200" y="215" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">99
+</text>
+<text xml:space="preserve" x="223" y="215" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">91
+</text>
+<text xml:space="preserve" x="246" y="215" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">95
+</text>
+<text xml:space="preserve" x="268" y="215" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">83
+</text>
+<text xml:space="preserve" x="291" y="215" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">85
+</text>
+<text xml:space="preserve" x="314" y="215" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">57
+</text>
+<text xml:space="preserve" x="336" y="215" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">55
+</text>
+<text xml:space="preserve" x="359" y="215" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">37
+</text>
+<text xml:space="preserve" x="382" y="215" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">19
+</text>
+<text xml:space="preserve" x="404" y="215" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">17
+</text>
+<text xml:space="preserve" x="427" y="215" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">14
+</text>
+<text xml:space="preserve" x="452" y="215" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">6
+</text>
+<text xml:space="preserve" x="475" y="215" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">8
+</text>
+<text xml:space="preserve" x="497" y="215" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="64" y="199" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">60
+</text>
+<text xml:space="preserve" x="87" y="199" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">83
+</text>
+<text xml:space="preserve" x="107" y="199" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">128
+</text>
+<text xml:space="preserve" x="130" y="199" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">138
+</text>
+<text xml:space="preserve" x="153" y="199" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">173
+</text>
+<text xml:space="preserve" x="176" y="199" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">171
+</text>
+<text xml:space="preserve" x="199" y="199" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">191
+</text>
+<text xml:space="preserve" x="221" y="199" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">182
+</text>
+<text xml:space="preserve" x="244" y="199" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">164
+</text>
+<text xml:space="preserve" x="266" y="199" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">137
+</text>
+<text xml:space="preserve" x="289" y="199" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">106
+</text>
+<text xml:space="preserve" x="314" y="199" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">92
+</text>
+<text xml:space="preserve" x="336" y="199" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">73
+</text>
+<text xml:space="preserve" x="359" y="199" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">52
+</text>
+<text xml:space="preserve" x="382" y="199" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">40
+</text>
+<text xml:space="preserve" x="404" y="199" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">27
+</text>
+<text xml:space="preserve" x="427" y="199" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">27
+</text>
+<text xml:space="preserve" x="450" y="199" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">12
+</text>
+<text xml:space="preserve" x="475" y="199" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">6
+</text>
+<text xml:space="preserve" x="498" y="199" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">1
+</text>
+<text xml:space="preserve" x="62" y="182" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">100
+</text>
+<text xml:space="preserve" x="85" y="182" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">138
+</text>
+<text xml:space="preserve" x="107" y="182" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">185
+</text>
+<text xml:space="preserve" x="130" y="182" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">204
+</text>
+<text xml:space="preserve" x="153" y="182" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">248
+</text>
+<text xml:space="preserve" x="176" y="182" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">243
+</text>
+<text xml:space="preserve" x="198" y="182" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">248
+</text>
+<text xml:space="preserve" x="221" y="182" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">246
+</text>
+<text xml:space="preserve" x="244" y="182" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">246
+</text>
+<text xml:space="preserve" x="266" y="182" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">218
+</text>
+<text xml:space="preserve" x="289" y="182" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">193
+</text>
+<text xml:space="preserve" x="312" y="182" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">132
+</text>
+<text xml:space="preserve" x="334" y="182" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">104
+</text>
+<text xml:space="preserve" x="359" y="182" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">76
+</text>
+<text xml:space="preserve" x="382" y="183" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">71
+</text>
+<text xml:space="preserve" x="404" y="182" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">53
+</text>
+<text xml:space="preserve" x="427" y="182" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">28
+</text>
+<text xml:space="preserve" x="450" y="182" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">16
+</text>
+<text xml:space="preserve" x="475" y="182" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">5
+</text>
+<text xml:space="preserve" x="497" y="182" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">3
+</text>
+<text xml:space="preserve" x="62" y="166" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">118
+</text>
+<text xml:space="preserve" x="85" y="166" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">181
+</text>
+<text xml:space="preserve" x="107" y="166" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">243
+</text>
+<text xml:space="preserve" x="131" y="166" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">321
+</text>
+<text xml:space="preserve" x="153" y="166" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">328
+</text>
+<text xml:space="preserve" x="176" y="166" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">329
+</text>
+<text xml:space="preserve" x="198" y="166" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">347
+</text>
+<text xml:space="preserve" x="221" y="166" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">338
+</text>
+<text xml:space="preserve" x="244" y="166" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">313
+</text>
+<text xml:space="preserve" x="266" y="166" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">268
+</text>
+<text xml:space="preserve" x="289" y="166" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">215
+</text>
+<text xml:space="preserve" x="312" y="166" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">188
+</text>
+<text xml:space="preserve" x="334" y="166" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">154
+</text>
+<text xml:space="preserve" x="357" y="167" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">111
+</text>
+<text xml:space="preserve" x="382" y="166" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">70
+</text>
+<text xml:space="preserve" x="404" y="166" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">48
+</text>
+<text xml:space="preserve" x="427" y="167" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">22
+</text>
+<text xml:space="preserve" x="450" y="166" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">20
+</text>
+<text xml:space="preserve" x="475" y="167" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">7
+</text>
+<text xml:space="preserve" x="497" y="166" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">6
+</text>
+<text xml:space="preserve" x="62" y="150" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">152
+</text>
+<text xml:space="preserve" x="85" y="150" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">180
+</text>
+<text xml:space="preserve" x="107" y="150" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">252
+</text>
+<text xml:space="preserve" x="130" y="150" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">313
+</text>
+<text xml:space="preserve" x="153" y="150" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">358
+</text>
+<text xml:space="preserve" x="176" y="150" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">364
+</text>
+<text xml:space="preserve" x="198" y="150" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">377
+</text>
+<text xml:space="preserve" x="221" y="150" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">361
+</text>
+<text xml:space="preserve" x="244" y="150" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">355
+</text>
+<text xml:space="preserve" x="266" y="150" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">295
+</text>
+<text xml:space="preserve" x="289" y="150" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">262
+</text>
+<text xml:space="preserve" x="312" y="150" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">205
+</text>
+<text xml:space="preserve" x="334" y="150" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">123
+</text>
+<text xml:space="preserve" x="357" y="150" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">107
+</text>
+<text xml:space="preserve" x="382" y="150" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">77
+</text>
+<text xml:space="preserve" x="405" y="150" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">61
+</text>
+<text xml:space="preserve" x="427" y="150" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">39
+</text>
+<text xml:space="preserve" x="450" y="150" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">21
+</text>
+<text xml:space="preserve" x="473" y="150" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">11
+</text>
+<text xml:space="preserve" x="497" y="150" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">6
+</text>
+<text xml:space="preserve" x="62" y="134" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">159
+</text>
+<text xml:space="preserve" x="85" y="134" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">189
+</text>
+<text xml:space="preserve" x="107" y="134" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">243
+</text>
+<text xml:space="preserve" x="130" y="134" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">298
+</text>
+<text xml:space="preserve" x="153" y="134" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">349
+</text>
+<text xml:space="preserve" x="176" y="134" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">350
+</text>
+<text xml:space="preserve" x="198" y="134" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">365
+</text>
+<text xml:space="preserve" x="221" y="134" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">351
+</text>
+<text xml:space="preserve" x="244" y="134" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">336
+</text>
+<text xml:space="preserve" x="266" y="134" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">265
+</text>
+<text xml:space="preserve" x="289" y="134" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">255
+</text>
+<text xml:space="preserve" x="312" y="134" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">189
+</text>
+<text xml:space="preserve" x="334" y="134" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">139
+</text>
+<text xml:space="preserve" x="357" y="134" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">113
+</text>
+<text xml:space="preserve" x="382" y="134" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">93
+</text>
+<text xml:space="preserve" x="404" y="134" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">37
+</text>
+<text xml:space="preserve" x="427" y="134" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">27
+</text>
+<text xml:space="preserve" x="450" y="134" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">23
+</text>
+<text xml:space="preserve" x="472" y="134" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">15
+</text>
+<text xml:space="preserve" x="497" y="134" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">4
+</text>
+<text xml:space="preserve" x="62" y="118" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">114
+</text>
+<text xml:space="preserve" x="85" y="118" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">171
+</text>
+<text xml:space="preserve" x="107" y="117" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">199
+</text>
+<text xml:space="preserve" x="130" y="117" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">255
+</text>
+<text xml:space="preserve" x="153" y="117" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">252
+</text>
+<text xml:space="preserve" x="176" y="117" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">261
+</text>
+<text xml:space="preserve" x="198" y="117" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">320
+</text>
+<text xml:space="preserve" x="221" y="117" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">313
+</text>
+<text xml:space="preserve" x="243" y="117" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">267
+</text>
+<text xml:space="preserve" x="266" y="117" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">233
+</text>
+<text xml:space="preserve" x="289" y="117" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">192
+</text>
+<text xml:space="preserve" x="312" y="117" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">189
+</text>
+<text xml:space="preserve" x="334" y="117" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">107
+</text>
+<text xml:space="preserve" x="359" y="117" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">88
+</text>
+<text xml:space="preserve" x="382" y="117" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">63
+</text>
+<text xml:space="preserve" x="405" y="117" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">31
+</text>
+<text xml:space="preserve" x="427" y="118" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">24
+</text>
+<text xml:space="preserve" x="450" y="117" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">15
+</text>
+<text xml:space="preserve" x="475" y="117" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">8
+</text>
+<text xml:space="preserve" x="497" y="118" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">7
+</text>
+<text xml:space="preserve" x="64" y="101" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">67
+</text>
+<text xml:space="preserve" x="85" y="101" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">122
+</text>
+<text xml:space="preserve" x="107" y="101" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">157
+</text>
+<text xml:space="preserve" x="130" y="101" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">174
+</text>
+<text xml:space="preserve" x="153" y="101" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">199
+</text>
+<text xml:space="preserve" x="176" y="101" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">171
+</text>
+<text xml:space="preserve" x="198" y="101" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">196
+</text>
+<text xml:space="preserve" x="221" y="101" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">215
+</text>
+<text xml:space="preserve" x="244" y="101" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">174
+</text>
+<text xml:space="preserve" x="266" y="101" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">158
+</text>
+<text xml:space="preserve" x="289" y="101" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">157
+</text>
+<text xml:space="preserve" x="312" y="101" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">104
+</text>
+<text xml:space="preserve" x="336" y="101" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">80
+</text>
+<text xml:space="preserve" x="359" y="101" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">72
+</text>
+<text xml:space="preserve" x="382" y="101" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">50
+</text>
+<text xml:space="preserve" x="404" y="101" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">26
+</text>
+<text xml:space="preserve" x="427" y="101" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">10
+</text>
+<text xml:space="preserve" x="450" y="101" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">19
+</text>
+<text xml:space="preserve" x="475" y="101" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">6
+</text>
+<text xml:space="preserve" x="497" y="101" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">5
+</text>
+<text xml:space="preserve" x="64" y="85" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">43
+</text>
+<text xml:space="preserve" x="87" y="85" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">71
+</text>
+<text xml:space="preserve" x="110" y="85" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">74
+</text>
+<text xml:space="preserve" x="130" y="85" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">113
+</text>
+<text xml:space="preserve" x="152" y="85" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">107
+</text>
+<text xml:space="preserve" x="176" y="85" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">113
+</text>
+<text xml:space="preserve" x="198" y="85" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">108
+</text>
+<text xml:space="preserve" x="221" y="85" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">127
+</text>
+<text xml:space="preserve" x="243" y="85" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">117
+</text>
+<text xml:space="preserve" x="266" y="85" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">103
+</text>
+<text xml:space="preserve" x="291" y="85" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">88
+</text>
+<text xml:space="preserve" x="314" y="85" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">63
+</text>
+<text xml:space="preserve" x="336" y="85" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">42
+</text>
+<text xml:space="preserve" x="359" y="85" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">38
+</text>
+<text xml:space="preserve" x="382" y="85" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">28
+</text>
+<text xml:space="preserve" x="404" y="85" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">19
+</text>
+<text xml:space="preserve" x="427" y="85" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">10
+</text>
+<text xml:space="preserve" x="452" y="85" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">6
+</text>
+<text xml:space="preserve" x="475" y="85" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">6
+</text>
+<text xml:space="preserve" x="497" y="85" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">3
+</text>
+<text xml:space="preserve" x="65" y="68" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">31
+</text>
+<text xml:space="preserve" x="87" y="68" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">36
+</text>
+<text xml:space="preserve" x="110" y="68" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">36
+</text>
+<text xml:space="preserve" x="132" y="68" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">56
+</text>
+<text xml:space="preserve" x="155" y="68" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">50
+</text>
+<text xml:space="preserve" x="178" y="68" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">76
+</text>
+<text xml:space="preserve" x="200" y="68" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">60
+</text>
+<text xml:space="preserve" x="223" y="68" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">57
+</text>
+<text xml:space="preserve" x="246" y="68" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">58
+</text>
+<text xml:space="preserve" x="268" y="68" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">56
+</text>
+<text xml:space="preserve" x="291" y="68" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">32
+</text>
+<text xml:space="preserve" x="314" y="68" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">31
+</text>
+<text xml:space="preserve" x="336" y="68" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">32
+</text>
+<text xml:space="preserve" x="359" y="69" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">14
+</text>
+<text xml:space="preserve" x="382" y="68" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">13
+</text>
+<text xml:space="preserve" x="407" y="68" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">3
+</text>
+<text xml:space="preserve" x="429" y="68" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">8
+</text>
+<text xml:space="preserve" x="452" y="69" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">4
+</text>
+<text xml:space="preserve" x="475" y="68" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">5
+</text>
+<text xml:space="preserve" x="497" y="68" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">3
+</text>
+<text xml:space="preserve" x="64" y="52" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">17
+</text>
+<text xml:space="preserve" x="87" y="52" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">12
+</text>
+<text xml:space="preserve" x="110" y="52" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">20
+</text>
+<text xml:space="preserve" x="132" y="52" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">20
+</text>
+<text xml:space="preserve" x="155" y="52" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">33
+</text>
+<text xml:space="preserve" x="178" y="52" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">30
+</text>
+<text xml:space="preserve" x="200" y="52" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">35
+</text>
+<text xml:space="preserve" x="223" y="52" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">25
+</text>
+<text xml:space="preserve" x="246" y="52" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">27
+</text>
+<text xml:space="preserve" x="268" y="52" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">29
+</text>
+<text xml:space="preserve" x="291" y="52" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">23
+</text>
+<text xml:space="preserve" x="314" y="52" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">14
+</text>
+<text xml:space="preserve" x="337" y="52" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">11
+</text>
+<text xml:space="preserve" x="359" y="52" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">15
+</text>
+<text xml:space="preserve" x="384" y="52" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">5
+</text>
+<text xml:space="preserve" x="407" y="52" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">1
+</text>
+<text xml:space="preserve" x="427" y="52" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">11
+</text>
+<text xml:space="preserve" x="452" y="52" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">4
+</text>
+<text xml:space="preserve" x="475" y="52" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="497" y="52" fill="black" font-size="8.0" font-family="Helvetica" font-weight="bold">3
+</text>
+<rect x="6.2" y="2.0" width="328" height="22" fill="#f2f2f2"/>
+<path d="M4.7,4.2v 22h 328v -1.4h -326v -20z" fill="black"/>
+<path d="M6.2,24v -22h 328v 22h -328z" fill="none" stroke="black"/>
+<text xml:space="preserve" x="24" y="18" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">xygaus + xygaus(5) + xylandau(10)
+</text>
+<path d="M57,367h 454" fill="none" stroke="black"/>
+<path d="M57,357v 9.8" fill="none" stroke="black"/>
+<path d="M57,41v 326" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M69,362v 4.9" fill="none" stroke="black"/>
+<path d="M80,362v 4.9" fill="none" stroke="black"/>
+<path d="M91,362v 4.9" fill="none" stroke="black"/>
+<path d="M103,362v 4.9" fill="none" stroke="black"/>
+<path d="M114,357v 9.8" fill="none" stroke="black"/>
+<path d="M114,41v 326" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M125,362v 4.9" fill="none" stroke="black"/>
+<path d="M137,362v 4.9" fill="none" stroke="black"/>
+<path d="M148,362v 4.9" fill="none" stroke="black"/>
+<path d="M159,362v 4.9" fill="none" stroke="black"/>
+<path d="M171,357v 9.8" fill="none" stroke="black"/>
+<path d="M171,41v 326" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M182,362v 4.9" fill="none" stroke="black"/>
+<path d="M193,362v 4.9" fill="none" stroke="black"/>
+<path d="M205,362v 4.9" fill="none" stroke="black"/>
+<path d="M216,362v 4.9" fill="none" stroke="black"/>
+<path d="M227,357v 9.8" fill="none" stroke="black"/>
+<path d="M227,41v 326" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M239,362v 4.9" fill="none" stroke="black"/>
+<path d="M250,362v 4.9" fill="none" stroke="black"/>
+<path d="M261,362v 4.9" fill="none" stroke="black"/>
+<path d="M273,362v 4.9" fill="none" stroke="black"/>
+<path d="M284,357v 9.8" fill="none" stroke="black"/>
+<path d="M284,41v 326" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M295,362v 4.9" fill="none" stroke="black"/>
+<path d="M307,362v 4.9" fill="none" stroke="black"/>
+<path d="M318,362v 4.9" fill="none" stroke="black"/>
+<path d="M329,362v 4.9" fill="none" stroke="black"/>
+<path d="M341,357v 9.8" fill="none" stroke="black"/>
+<path d="M341,41v 326" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M352,362v 4.9" fill="none" stroke="black"/>
+<path d="M363,362v 4.9" fill="none" stroke="black"/>
+<path d="M375,362v 4.9" fill="none" stroke="black"/>
+<path d="M386,362v 4.9" fill="none" stroke="black"/>
+<path d="M397,357v 9.8" fill="none" stroke="black"/>
+<path d="M397,41v 326" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M409,362v 4.9" fill="none" stroke="black"/>
+<path d="M420,362v 4.9" fill="none" stroke="black"/>
+<path d="M431,362v 4.9" fill="none" stroke="black"/>
+<path d="M443,362v 4.9" fill="none" stroke="black"/>
+<path d="M454,357v 9.8" fill="none" stroke="black"/>
+<path d="M454,41v 326" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M465,362v 4.9" fill="none" stroke="black"/>
+<path d="M477,362v 4.9" fill="none" stroke="black"/>
+<path d="M488,362v 4.9" fill="none" stroke="black"/>
+<path d="M499,362v 4.9" fill="none" stroke="black"/>
+<path d="M511,357v 9.8" fill="none" stroke="black"/>
+<path d="M511,41v 326" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<text xml:space="preserve" x="57" y="382" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">4
+</text>
+<text xml:space="preserve" x="49" y="382" fill="black" font-size="15" font-family="Times">&#8722;
+</text>
+<text xml:space="preserve" x="114" y="382" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">3
+</text>
+<text xml:space="preserve" x="106" y="382" fill="black" font-size="15" font-family="Times">&#8722;
+</text>
+<text xml:space="preserve" x="171" y="382" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="163" y="382" fill="black" font-size="15" font-family="Times">&#8722;
+</text>
+<text xml:space="preserve" x="228" y="382" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">1
+</text>
+<text xml:space="preserve" x="220" y="382" fill="black" font-size="15" font-family="Times">&#8722;
+</text>
+<text xml:space="preserve" x="280" y="382" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">0
+</text>
+<text xml:space="preserve" x="338" y="382" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">1
+</text>
+<text xml:space="preserve" x="393" y="382" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="450" y="382" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">3
+</text>
+<text xml:space="preserve" x="507" y="382" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">4
+</text>
+<path d="M57,367v -326" fill="none" stroke="black"/>
+<path d="M71,367h -14" fill="none" stroke="black"/>
+<path d="M511,367h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M64,359h -6.8" fill="none" stroke="black"/>
+<path d="M64,350h -6.8" fill="none" stroke="black"/>
+<path d="M64,342h -6.8" fill="none" stroke="black"/>
+<path d="M64,334h -6.8" fill="none" stroke="black"/>
+<path d="M71,326h -14" fill="none" stroke="black"/>
+<path d="M511,326h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M64,318h -6.8" fill="none" stroke="black"/>
+<path d="M64,310h -6.8" fill="none" stroke="black"/>
+<path d="M64,301h -6.8" fill="none" stroke="black"/>
+<path d="M64,293h -6.8" fill="none" stroke="black"/>
+<path d="M71,285h -14" fill="none" stroke="black"/>
+<path d="M511,285h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M64,277h -6.8" fill="none" stroke="black"/>
+<path d="M64,269h -6.8" fill="none" stroke="black"/>
+<path d="M64,261h -6.8" fill="none" stroke="black"/>
+<path d="M64,253h -6.8" fill="none" stroke="black"/>
+<path d="M71,244h -14" fill="none" stroke="black"/>
+<path d="M511,244h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M64,236h -6.8" fill="none" stroke="black"/>
+<path d="M64,228h -6.8" fill="none" stroke="black"/>
+<path d="M64,220h -6.8" fill="none" stroke="black"/>
+<path d="M64,212h -6.8" fill="none" stroke="black"/>
+<path d="M71,204h -14" fill="none" stroke="black"/>
+<path d="M511,204h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M64,196h -6.8" fill="none" stroke="black"/>
+<path d="M64,187h -6.8" fill="none" stroke="black"/>
+<path d="M64,179h -6.8" fill="none" stroke="black"/>
+<path d="M64,171h -6.8" fill="none" stroke="black"/>
+<path d="M71,163h -14" fill="none" stroke="black"/>
+<path d="M511,163h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M64,155h -6.8" fill="none" stroke="black"/>
+<path d="M64,147h -6.8" fill="none" stroke="black"/>
+<path d="M64,139h -6.8" fill="none" stroke="black"/>
+<path d="M64,130h -6.8" fill="none" stroke="black"/>
+<path d="M71,122h -14" fill="none" stroke="black"/>
+<path d="M511,122h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M64,114h -6.8" fill="none" stroke="black"/>
+<path d="M64,106h -6.8" fill="none" stroke="black"/>
+<path d="M64,98h -6.8" fill="none" stroke="black"/>
+<path d="M64,90h -6.8" fill="none" stroke="black"/>
+<path d="M71,81h -14" fill="none" stroke="black"/>
+<path d="M511,81h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M64,73h -6.8" fill="none" stroke="black"/>
+<path d="M64,65h -6.8" fill="none" stroke="black"/>
+<path d="M64,57h -6.8" fill="none" stroke="black"/>
+<path d="M64,49h -6.8" fill="none" stroke="black"/>
+<path d="M71,41h -14" fill="none" stroke="black"/>
+<path d="M511,41h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<text xml:space="preserve" x="47" y="373" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">4
+</text>
+<text xml:space="preserve" x="38" y="373" fill="black" font-size="15" font-family="Times">&#8722;
+</text>
+<text xml:space="preserve" x="47" y="332" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">3
+</text>
+<text xml:space="preserve" x="38" y="332" fill="black" font-size="15" font-family="Times">&#8722;
+</text>
+<text xml:space="preserve" x="47" y="292" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="38" y="292" fill="black" font-size="15" font-family="Times">&#8722;
+</text>
+<text xml:space="preserve" x="49" y="250" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">1
+</text>
+<text xml:space="preserve" x="41" y="250" fill="black" font-size="15" font-family="Times">&#8722;
+</text>
+<text xml:space="preserve" x="47" y="210" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">0
+</text>
+<text xml:space="preserve" x="49" y="169" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">1
+</text>
+<text xml:space="preserve" x="47" y="129" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="47" y="88" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">3
+</text>
+<text xml:space="preserve" x="47" y="47" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">4
+</text>
+<rect x="380" y="20" width="102" height="31" fill="#f2f2f2"/>
+<path d="M384,51v 2.1h 101v -29h -2.1v 27z" fill="black"/>
+<path d="M380,51v -31h 102v 31h -102z" fill="none" stroke="black"/>
+<text xml:space="preserve" x="406" y="44" fill="black" font-size="20" font-family="Helvetica" font-weight="bold">TEXT
+</text>
+<rect x="6.2" y="2.0" width="328" height="22" fill="#f2f2f2"/>
+<path d="M4.7,4.2v 22h 328v -1.4h -326v -20z" fill="black"/>
+<path d="M6.2,24v -22h 328v 22h -328z" fill="none" stroke="black"/>
+<text xml:space="preserve" x="24" y="18" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">xygaus + xygaus(5) + xylandau(10)
+</text></svg>

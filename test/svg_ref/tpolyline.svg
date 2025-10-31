@@ -1,0 +1,13 @@
+<?xml version="1.0" standalone="no"?>
+<svg width="567" height="385" viewBox="0 0 567 385" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+<title>
+tpolyline.svg
+</title>
+<rect x="0.500" y="0" width="567" height="384" fill="#f2f2f2"/>
+<path d="M0.500,384l 2.0, -2.0v -380h 563l 2.0, -2.0h -567v 384z" fill="white"/>
+<path d="M0.500,384l 2.0, -2.0h 563v -380l 2.0, -2.0v 384h -567z" fill="#a9a9a9"/>
+<path d="M52,279l 52, -62h 52l 52, 62h 52l 52, 62l 40, 43h 13l 50, -341l 50, 341h 3.6l 50, -353z" fill="#f2f2f2"/>
+<path d="M52,279l 52, -62h 52l 52, 62h 52l 52, 62l 40, 43" fill="none" stroke="#ff0000" stroke-width="3.0"/>
+<path d="M363,384l 50, -341" fill="none" stroke="#ff0000" stroke-width="3.0"/>
+<path d="M413,43l 50, 341" fill="none" stroke="#ff0000" stroke-width="3.0"/>
+<path d="M466,384l 50, -353" fill="none" stroke="#ff0000" stroke-width="3.0"/></svg>

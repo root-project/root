@@ -162,7 +162,7 @@ ROOT_ADD_TEST(test-stresslinear-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${
 
 #--stressGraphics------------------------------------------------------------------------------------
 if(ROOT_opengl_FOUND AND TARGET TreeViewer)
-  ROOT_EXECUTABLE(stressGraphics stressGraphics.cxx LIBRARIES Graf Gpad Postscript TreeViewer)
+  ROOT_EXECUTABLE(stressGraphics stressGraphics.cxx LIBRARIES Graf Gpad Postscript TreeViewer HistPainter)
   if(MSVC)
     set_property(TARGET stressGraphics APPEND_STRING PROPERTY LINK_FLAGS "/STACK:4000000")
   endif()
