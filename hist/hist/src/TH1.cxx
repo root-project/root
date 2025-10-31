@@ -7344,7 +7344,7 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
    out << std::setprecision(max_precision);
 
-   out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
+   out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << TString(savedName).ReplaceSpecialCppChars() << "\", \""
        << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << GetXaxis()->GetNbins();
    if (!sxaxis.IsNull())
       out << ", " << sxaxis << ".data()";

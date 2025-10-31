@@ -1326,7 +1326,7 @@ void TH2Poly::SavePrimitive(std::ostream &out, Option_t *option)
    out << "   \n";
 
    // Construct the class initialization
-   out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
+   out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\", \""
        << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << fCellX << ", " << fXaxis.GetXmin() << ", "
        << fXaxis.GetXmax() << ", " << fCellY << ", " << fYaxis.GetXmin() << ", " << fYaxis.GetXmax() << ");\n";
 

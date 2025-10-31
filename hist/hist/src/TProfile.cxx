@@ -1651,7 +1651,7 @@ void TProfile::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    if (GetXaxis()->GetXbins()->fN && GetXaxis()->GetXbins()->fArray)
       sxaxis = SavePrimitiveVector(out, hname + "_x", GetXaxis()->GetXbins()->fN, GetXaxis()->GetXbins()->fArray);
 
-   out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
+   out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\", \""
        << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << GetXaxis()->GetNbins() << ", ";
    if (!sxaxis.IsNull())
       out << sxaxis << ".data()";
