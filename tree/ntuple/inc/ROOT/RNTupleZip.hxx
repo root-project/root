@@ -17,6 +17,8 @@
 #include <RZip.h>
 #include <TError.h>
 
+#include <ROOT/RError.hxx>
+
 #include <algorithm>
 #include <array>
 #include <cstring>
@@ -116,15 +118,17 @@ public:
          int szSource;
          int szTarget;
          int retval = R__unzip_header(&szSource, source, &szTarget);
-         R__ASSERT(retval == 0);
-         R__ASSERT(szSource > 0);
-         R__ASSERT(szTarget > szSource);
-         R__ASSERT(static_cast<unsigned int>(szSource) <= nbytes);
-         R__ASSERT(static_cast<unsigned int>(szTarget) <= dataLen);
+         if (R__unlikely(!((retval == 0) && (szSource > 0) && (szTarget > szSource) &&
+                           (static_cast<unsigned int>(szSource) <= nbytes) &&
+                           (static_cast<unsigned int>(szTarget) <= dataLen)))) {
+            throw ROOT::RException(R__FAIL("failed to unzip buffer header"));
+         }
 
          int unzipBytes = 0;
          R__unzip(&szSource, source, &szTarget, target, &unzipBytes);
-         R__ASSERT(unzipBytes == szTarget);
+         if (R__unlikely(unzipBytes != szTarget))
+            throw ROOT::RException(R__FAIL(std::string("unexpected length after unzipping the buffer (wanted: ") +
+                                           std::to_string(szTarget) + ", got: " + std::to_string(unzipBytes) + ")"));
 
          target += szTarget;
          source += szSource;

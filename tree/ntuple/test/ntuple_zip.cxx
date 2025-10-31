@@ -56,3 +56,16 @@ TEST(RNTupleZip, LargeWithOutputBuffer)
    RNTupleDecompressor::Unzip(zipBuffer.get(), szZip, N, unzipBuffer.get());
    EXPECT_EQ(data, std::string_view(unzipBuffer.get(), N));
 }
+
+TEST(RNTupleZip, CorruptedInput)
+{
+   std::string data = "xxxxxxxxxxxxxxxxxxxxxxxx";
+   auto zipBuffer = MakeUninitArray<unsigned char>(data.length());
+   auto szZipped = RNTupleCompressor::Zip(data.data(), data.length(), 101, zipBuffer.get());
+   EXPECT_LT(szZipped, data.length());
+   auto unzipBuffer = MakeUninitArray<unsigned char>(data.length());
+   // corrupt the buffer header
+   memset(zipBuffer.get() + 1, 0xCD, 5);
+   EXPECT_THROW(RNTupleDecompressor::Unzip(zipBuffer.get(), szZipped, data.length(), unzipBuffer.get()),
+                ROOT::RException);
+}
