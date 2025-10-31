@@ -228,8 +228,8 @@ if single_canvas:
 frame1.Draw()
 
 legend1 = ROOT.TLegend(0.43, 0.63, 0.8, 0.87)
-legend1.SetFillColor("kWhite")
-legend1.SetLineColor("kWhite")
+legend1.SetFillColor(ROOT.kWhite)
+legend1.SetLineColor(ROOT.kWhite)
 legend1.SetTextSize(0.04)
 legend1.AddEntry("learned", "learned (SBI)", "L")
 legend1.AddEntry("gauss", "true NLL", "L")
@@ -247,8 +247,8 @@ else:
 frame2.Draw()
 
 legend2 = ROOT.TLegend(0.53, 0.73, 0.87, 0.87)
-legend2.SetFillColor("kWhite")
-legend2.SetLineColor("kWhite")
+legend2.SetFillColor(ROOT.kWhite)
+legend2.SetLineColor(ROOT.kWhite)
 legend2.SetTextSize(0.04)
 legend2.AddEntry("learned_ratio", "learned (SBI)", "L")
 legend2.AddEntry("exact", "true ratio", "L")
