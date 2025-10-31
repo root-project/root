@@ -326,6 +326,74 @@ public:
       }
    }
 
+   /// Fill an entry into the histogram using atomic instructions.
+   ///
+   /// \param[in] args the arguments for each axis
+   /// \see Fill(const std::tuple<A...> &args)
+   template <typename... A>
+   void FillAtomic(const std::tuple<A...> &args)
+   {
+      // We could rely on RAxes::ComputeGlobalIndex to check the number of arguments, but its exception message might
+      // be confusing for users.
+      if (sizeof...(A) != GetNDimensions()) {
+         throw std::invalid_argument("invalid number of arguments to Fill");
+      }
+      RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<sizeof...(A)>(args);
+      if (index.fValid) {
+         assert(index.fIndex < fBinContents.size());
+         Internal::AtomicInc(&fBinContents[index.fIndex]);
+      }
+   }
+
+   /// Fill an entry into the histogram with a weight using atomic instructions.
+   ///
+   /// This overload is not available for integral bin content types (see \ref SupportsWeightedFilling).
+   ///
+   /// \param[in] args the arguments for each axis
+   /// \param[in] weight the weight for this entry
+   /// \see Fill(const std::tuple<A...> &args, RWeight weight)
+   template <typename... A>
+   void FillAtomic(const std::tuple<A...> &args, RWeight weight)
+   {
+      static_assert(SupportsWeightedFilling, "weighted filling is not supported for integral bin content types");
+
+      // We could rely on RAxes::ComputeGlobalIndex to check the number of arguments, but its exception message might
+      // be confusing for users.
+      if (sizeof...(A) != GetNDimensions()) {
+         throw std::invalid_argument("invalid number of arguments to Fill");
+      }
+      RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<sizeof...(A)>(args);
+      if (index.fValid) {
+         assert(index.fIndex < fBinContents.size());
+         Internal::AtomicAdd(&fBinContents[index.fIndex], weight.fValue);
+      }
+   }
+
+   /// Fill an entry into the histogram using atomic instructions.
+   ///
+   /// \param[in] args the arguments for each axis
+   /// \see Fill(const A &...args)
+   template <typename... A>
+   void FillAtomic(const A &...args)
+   {
+      auto t = std::forward_as_tuple(args...);
+      if constexpr (std::is_same_v<typename Internal::LastType<A...>::type, RWeight>) {
+         static_assert(SupportsWeightedFilling, "weighted filling is not supported for integral bin content types");
+         static constexpr std::size_t N = sizeof...(A) - 1;
+         if (N != fAxes.GetNDimensions()) {
+            throw std::invalid_argument("invalid number of arguments to Fill");
+         }
+         RWeight weight = std::get<N>(t);
+         RLinearizedIndex index = fAxes.ComputeGlobalIndexImpl<N>(t);
+         if (index.fValid) {
+            assert(index.fIndex < fBinContents.size());
+            Internal::AtomicAdd(&fBinContents[index.fIndex], weight.fValue);
+         }
+      } else {
+         FillAtomic(t);
+      }
+   }
+
    /// %ROOT Streamer function to throw when trying to store an object of this class.
    void Streamer(TBuffer &) { throw std::runtime_error("unable to store RHistEngine"); }
 };
