@@ -50,6 +50,10 @@ The following people have contributed to this new version:
   If you want a ROOT build without RPATHs, use the canonical CMake variable `CMAKE_SKIP_INSTALL_RPATH=TRUE`.
 * The `TH1K` class is deprecated and will be removed in 6.40. It did not implement the `TH1` interface consistently, and limited the usability of the k-neighbors method it implemented by closely coupling the algorithm with the histogram class. Please use the new `TMath::KNNDensity` function that implements the same mathematical logic.
 
+## Build System
+* Improve building ROOT when ROOT is already installed in the system. ROOT now correctly handles system-include folders that both contain a package that ROOT depends on and a ROOT installation. Dependent packages are included with `-isystem` instead of `-I`, so installed ROOT headers will not interfere with a ROOT build. See [#8708](https://github.com/root-project/root/issues/8708) for details.
+* Add support of `-isystem` to rootcling.
+
 ## Core Libraries
 * ROOT and the Cling C++ interpreter now relies on LLVM version 20.
 * Experimental SYCL support in the ROOT prompt. This feature can be enabled by building ROOT with `-Dexperimental_adaptivecpp=ON`.
@@ -62,6 +66,8 @@ export CLING_CPPSYSINCL=$(LC_ALL=C c++ -xc++ -E -v /dev/null 2>&1 | sed -n '/^.i
 ```
 This caching reduces sub-process creation during initialization and can be useful when multiple ROOT instances or binaries linked to ROOT are executed (less system-calls, cleaner debugging).
 * It is now possible to read a user configuration file (in jeargon, a "rootrc file") at startup in a custom path instead of the one in the home directory, by specifying its full path with the `ROOTENV_USER_PATH` environment variable.
+* ROOT reacts to the environment variable `ROOT_MAX_THREADS`. This can be used to select the number of worker threads when implicit multithreading is enabled. It is supported since 2021, but better documentation was added in the context of the [RDataFrame documentation](https://root.cern.ch/doc/v638/classROOT_1_1RDataFrame.html#parallel-execution).
+* ROOT now determines `std::hardware_destructive_interference_size` at configure time, and defines the macro `R__HARDWARE_INTERFERENCE_SIZE` in `RConfigure.h`. Not keeping it fixed could lead to ABI breakages when code is interpreted on a machine that is different from the machine where ROOT was compiled.
 
 ## I/O
 
@@ -81,6 +87,10 @@ This caching reduces sub-process creation during initialization and can be usefu
 ```bash
 -Dexperimental_adaptivecpp=ON -Dexperimental_genvectorx=ON
 ```
+* When a Chi2 test is used with TProfiles, the "WW" option is used by default, because a weighted-to-weighted comparison is required.
+* When histograms compute automatic axis ranges (e.g. in TTree::Draw), the range is now slightly extended beyond the min/max of the underlying distribution. Otherwise, the maximum of the distribution will fall in the overflow bin, which is often not desired.
+* Acoplanarity and asymmetry functions have been added to [the GenVector library (e.g. LorentzVector)](https://root.cern.ch/doc/v638/group__GenVector.html).
+* Several classes in the genvector package (e.g. ROOT::Math::LorentzVector) are now nothrow move constructible. The ABI didn't change, but members are default initialised and outdated copy constructors have been removed, enabling compiler-generated copy and move constructors.
 
 ### Minimizer interface
 
@@ -143,13 +153,14 @@ If you want to keep using `TList*` return values, you can write a small adapter 
 ## RDataFrame
 - Memory savings in RDataFrame: When many Histo3D are filled in RDataFrame, the memory consumption in multi-threaded runs can be prohibitively large, because
   RDF uses one copy of each histogram per thread. Now, RDataFrame can reduce the number of clones using `ROOT::RDF::Experimental::ThreadsPerTH3()`. Setting this
-  to numbers such as 8 would share one 3-d histogram among 8 threads, greatly reducing the memory consumption. This might slow down execution if the histograms
-  are filled at very high rates. Use lower number in this case.
+  to numbers such as 8 would share one 3-d histogram among 8 threads, significantly reducing the memory consumption. This might slow down execution if the histograms
+  are filled at very high rates, in which case lower numbers are better.
 - HistoNSparseD action which fills a sparse N-dimensional histogram is now added.
 - RDatasetSpec class now also supports RNTuple, including the usage of the factory function FromSpec.
 
 ### Snapshot
 - The Snapshot method has been refactored so that it does not need anymore compile-time information (i.e. either template arguments or JIT-ting) to know the input column types. This means that any Snapshot call that specifies the template arguments, e.g. `Snapshot<int, float>(..., {"intCol", "floatCol"})` is now redundant and the template arguments can safely be removed from the call. At the same time, Snapshot does not need to JIT compile the column types, practically giving huge speedups depending on the number of columns that need to be written to disk. In certain cases (e.g. when writing O(10000) columns) the speedup can be larger than an order of magnitude. The Snapshot template is now deprecated and it will issue a compile-time warning when called. The function overload is scheduled for removal in ROOT 6.40.
+- Experimental support for systematic variations has been added to snapshots. Refer to the section on [systematic variations](https://root.cern.ch/doc/v638/classROOT_1_1RDataFrame.html#systematics) in the RDataFrame manual. The support currently only encompasses single-threaded snapshots to TTree, but support will be extended to multi-threaded snapshots in TTree and to RNTuple in future ROOT versions.
 - The default compression setting for the output dataset used by Snapshot has been changed from 101 (ZLIB level 1, the TTree default) to 505 (ZSTD level 5). This is a better setting on average, and makes more sense for RDataFrame since now the Snapshot operation supports more than just the TTree output data format. This change may result in smaller output file sizes for your analyses that use Snapshot with default settings. During the 6.38 development release cycle, Snapshot will print information about this change once per program run. Starting from 6.40.00, the information will not be printed. The message can be suppressed by setting ROOT_RDF_SILENCE_SNAPSHOT_INFO=1 in your environment or by setting 'ROOT.RDF.Snapshot.Info: 0' in your .rootrc.
 
 ### Distributed RDataFrame
