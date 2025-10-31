@@ -18,6 +18,13 @@
 #include "Windows4Root.h"
 #endif
 
-#include <GL/glew.h>
+#include <glad/gl.h>
+
+// This used to be included through glew.h.
+#if defined(__APPLE__) && defined(__MACH__)
+#  include <OpenGL/glu.h>
+#else
+#  include <GL/glu.h>
+#endif
 
 #endif

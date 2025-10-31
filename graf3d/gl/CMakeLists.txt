@@ -235,10 +235,6 @@ endif()
 # Remove when not needed anymore in the ROOT 6.40 development cycle
 target_compile_definitions(RGL PRIVATE _ROOT_GL_BUILDS_ITSELF)
 
-if(MSVC AND builtin_glew)
-  target_compile_definitions (RGL PRIVATE "GLEW_STATIC")
-endif()
-
 if(MACOSX_GLU_DEPRECATED)
   target_compile_options(RGL PRIVATE -Wno-deprecated-declarations)
 endif()

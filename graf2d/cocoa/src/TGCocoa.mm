@@ -13,7 +13,7 @@
 
 #include "TGCocoa.h"
 
-#include <GL/glew.h>
+#include "TGLIncludes.h"
 
 #include "ROOTOpenGLView.h"
 #include "CocoaConstants.h"
