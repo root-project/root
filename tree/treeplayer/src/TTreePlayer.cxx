@@ -2291,7 +2291,7 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       fSelectorUpdate = selector;
       UpdateFormulaLeaves();
 
-      for (entry=firstentry;entry<firstentry+nentries;entry++) {
+      for (entry = firstentry; entry - firstentry < nentries; entry++) {
          entryNumber = fTree->GetEntryNumber(entry);
          if (entryNumber < 0) break;
          if (timer && timer->ProcessEvents()) break;
