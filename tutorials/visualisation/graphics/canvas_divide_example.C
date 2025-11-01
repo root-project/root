@@ -18,20 +18,12 @@ void canvas_divide_example(int use_variant = 0)
    c->SetFillColor(19);
 
    if (use_variant == 0) {
-      c->SetLeftMargin(ml);
-      c->SetBottomMargin(mb);
-      c->SetRightMargin(mr);
-      c->SetTopMargin(mt);
-
+      c->SetMargin(ml, mr, mb, mt);
       c->Divide(nx, ny, 0.03, 0.05, 46);
    } else if (use_variant == 1) {
       c->Divide(nx, ny, 0.01, 0.01, 46);
    } else {
-      c->SetLeftMargin(0.01);
-      c->SetBottomMargin(0.01);
-      c->SetRightMargin(0.01);
-      c->SetTopMargin(0.01);
-
+      c->SetMargin(0.01, 0.01, 0.01, 0.01);
       c->Divide(nx, ny, 0.02, 0.02, 46);
    }
 
@@ -121,11 +113,6 @@ void canvas_divide_example(int use_variant = 0)
    text.SetTextFont(102);
    text.SetNDC(1);
 
-   if (use_variant == 0) {
-      text.DrawText(0.01, 0.90, "c->SetLeftMargin(ml);");
-      text.DrawText(0.01, 0.85, "c->SetBottomMargin(mb);");
-      text.DrawText(0.01, 0.80, "c->SetRightMargin(mr);");
-      text.DrawText(0.01, 0.75, "c->SetTopMargin(mt);");
-      text.DrawText(0.01, 0.70, "c->Divide(nx, ny, xm, ym);");
-   }
+   text.DrawText(0.01, 0.97, "c->SetMargin(ml, mr, mb, mt);");
+   text.DrawText(0.01, 0.94, "c->Divide(nx, ny, xm, ym);");
 }
