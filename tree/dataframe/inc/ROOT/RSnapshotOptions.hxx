@@ -11,8 +11,9 @@
 #ifndef ROOT_RSNAPSHOTOPTIONS
 #define ROOT_RSNAPSHOTOPTIONS
 
+#include "ROOT/RNTupleWriteOptions.hxx"
 #include <Compression.h>
-#include <optional>
+
 #include <string_view>
 #include <string>
 
@@ -26,11 +27,20 @@ enum class ESnapshotOutputFormat {
 };
 
 /// A collection of options to steer the creation of the dataset on file
+///
+/// Some settings are output format-dependent. If `fOutputFormat` is set to `ESnapshotOutputFormat::kTTree`, the
+/// `fNTupleWriteOpts` option will be ignored. If `fOutputFormat` is set to `ESnapshotOutputFormat::kRNTuple`,
+/// `fAutoFlush`, `fSplitLevel` and `fBasketSize` will be ignored.
+///
+/// When `fOutputFormat` is set to `ESnapshotOutputFormat::kRNTuple`, fCompressionAlgorithm and fCompressionLevel will
+/// be used, *unless* the compression settings in `fNTupleWriteOpts` have been set to something other than the default
+/// (through RNTupleWriteOptions::SetCompression()).
 struct RSnapshotOptions {
    using ECAlgo = ROOT::RCompressionSetting::EAlgorithm::EValues;
    RSnapshotOptions() = default;
    RSnapshotOptions(std::string_view mode, ECAlgo comprAlgo, int comprLevel, int autoFlush, int splitLevel, bool lazy,
                     bool overwriteIfExists = false, bool vector2RVec = true, int basketSize = -1,
+                    ROOT::RNTupleWriteOptions ntupleWriteOpts = ROOT::RNTupleWriteOptions(),
                     ESnapshotOutputFormat outputFormat = ESnapshotOutputFormat::kDefault)
       : fMode(mode),
         fCompressionAlgorithm(comprAlgo),
@@ -41,6 +51,7 @@ struct RSnapshotOptions {
         fOverwriteIfExists(overwriteIfExists),
         fVector2RVec(vector2RVec),
         fBasketSize(basketSize),
+        fNTupleWriteOpts(ntupleWriteOpts),
         fOutputFormat(outputFormat)
    {
    }
@@ -56,7 +67,8 @@ struct RSnapshotOptions {
    bool fIncludeVariations = false;  ///< Include columns that result from a Vary() action
    int fBasketSize = -1;             ///< Set a custom basket size option. For more details, see
                                      ///< https://root.cern/manual/trees/#baskets-clusters-and-the-tree-header
-   ESnapshotOutputFormat fOutputFormat = ESnapshotOutputFormat::kDefault; ///< Which data format to write to
+   ROOT::RNTupleWriteOptions fNTupleWriteOpts = ROOT::RNTupleWriteOptions(); ///< RNTuple-specific write options
+   ESnapshotOutputFormat fOutputFormat = ESnapshotOutputFormat::kDefault;    ///< Which data format to write to
 };
 } // namespace RDF
 } // namespace ROOT

@@ -1413,6 +1413,8 @@ public:
          }
       };
 
+      RDFInternal::CheckSnapshotOptionsFormatCompatibility(options);
+
       if (options.fOutputFormat == ESnapshotOutputFormat::kRNTuple) {
          // The data source of the RNTuple resulting from the Snapshot action does not exist yet here, so we create one
          // without a data source for now, and set it once the actual data source can be created (i.e., after

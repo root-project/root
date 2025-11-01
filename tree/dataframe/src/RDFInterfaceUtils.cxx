@@ -939,6 +939,39 @@ void CheckForDuplicateSnapshotColumns(const ColumnNames_t &cols)
    }
 }
 
+void CheckSnapshotOptionsFormatCompatibility(const ROOT::RDF::RSnapshotOptions &opts)
+{
+   const ROOT::RDF::RSnapshotOptions defaultSnapshotOpts;
+   if ((opts.fOutputFormat == ROOT::RDF::ESnapshotOutputFormat::kTTree ||
+        opts.fOutputFormat == ROOT::RDF::ESnapshotOutputFormat::kDefault) &&
+       opts.fNTupleWriteOpts != defaultSnapshotOpts.fNTupleWriteOpts) {
+      Warning(
+         "Snapshot",
+         "The RNTuple-specific fNTupleWriteOptions option in RSnapshotOptions has been set, but the output format is "
+         "set to TTree, so this option won't have any effect. Use the other options available in RSnapshotOptions to "
+         "configure the output TTree. Alternatively, change fOutputFormat to snapshot to RNTuple instead.");
+   } else if (opts.fOutputFormat == ROOT::RDF::ESnapshotOutputFormat::kRNTuple) {
+      std::string optionName;
+
+      if (opts.fAutoFlush != defaultSnapshotOpts.fAutoFlush) {
+         optionName = "fAutoFlush";
+      } else if (opts.fSplitLevel != defaultSnapshotOpts.fSplitLevel) {
+         optionName = "fSplitLevel";
+      } else if (opts.fBasketSize != defaultSnapshotOpts.fBasketSize) {
+         optionName = "fBasketSize";
+      }
+
+      if (!optionName.empty()) {
+         Warning(
+            "Snapshot",
+            "The TTree-specific %s option in RSnapshotOptions has been set, but the output format is set to RNTuple, "
+            "so this option won't have any effect. Use the fNTupleWriteOptions option available in RSnapshotOptions to "
+            "configure the output RNTuple. Alternatively, change fOutputFormat to snapshot to TTree instead.",
+            optionName.c_str());
+      }
+   }
+}
+
 /// Return copies of colsWithoutAliases and colsWithAliases with size branches for variable-sized array branches added
 /// in the right positions (i.e. before the array branches that need them).
 std::pair<std::vector<std::string>, std::vector<std::string>>

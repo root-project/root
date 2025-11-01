@@ -917,8 +917,20 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
    }
    model->Freeze();
 
-   ROOT::RNTupleWriteOptions writeOptions;
-   writeOptions.SetCompression(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel);
+   // Propagate fOptions.fCompressionAlgorithm and fOptions.fCompressionLevel to fOptions.fNTupleWriteOpts *only* if the
+   // compression settings in fNTupleWriteOpts have not been changed.
+   std::uint32_t comprFromOptions =
+      ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel);
+   if (comprFromOptions != RCompressionSetting::EDefaults::kUseGeneralPurpose) {
+      if (fOptions.fNTupleWriteOpts.GetCompression() != RCompressionSetting::EDefaults::kUseGeneralPurpose &&
+          fOptions.fNTupleWriteOpts.GetCompression() != comprFromOptions) {
+         throw std::runtime_error(
+            "Snapshot: fCompressionAlgorithm and/or fCompressionLevel and the compression in fNTupleWriteOpts in "
+            "RSnapshotOptions have been set to something other than the default");
+      }
+
+      fOptions.fNTupleWriteOpts.SetCompression(comprFromOptions);
+   }
 
    fOutputFile.reset(TFile::Open(fFileName.c_str(), fOptions.fMode.c_str()));
    if (!fOutputFile)
@@ -936,7 +948,7 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
 
    // The RNTupleParallelWriter has exclusive access to the underlying TFile, no further synchronization is needed for
    // calls to Fill() (in Exec) and FlushCluster() (in FinalizeTask).
-   fWriter = ROOT::RNTupleParallelWriter::Append(std::move(model), fNTupleName, *outputDir, writeOptions);
+   fWriter = ROOT::RNTupleParallelWriter::Append(std::move(model), fNTupleName, *outputDir, fOptions.fNTupleWriteOpts);
 }
 
 void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::InitTask(TTreeReader *, unsigned int slot)
