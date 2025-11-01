@@ -24,13 +24,12 @@ import tarfile
 import time
 
 import build_utils
-import openstack
 from build_utils import (
     calc_options_hash,
     die,
     github_log_group,
     is_macos,
-    load_config,
+    print_options_diff,
     subprocess_with_capture,
     subprocess_with_log,
     upload_file,
@@ -38,12 +37,6 @@ from build_utils import (
 
 S3CONTAINER = 'ROOT-build-artifacts'  # Used for uploads
 S3URL = 'https://s3.cern.ch/swift/v1/' + S3CONTAINER  # Used for downloads
-
-try:
-    CONNECTION = openstack.connect(cloud='envvars')
-except Exception as exc:
-    print("Failed to open the S3 connection:", exc, file=sys.stderr)
-    CONNECTION = None
 
 WINDOWS = (os.name == 'nt')
 WORKDIR = (os.environ['HOME'] + '/ROOT-CI') if not WINDOWS else 'C:/ROOT-CI'
@@ -70,11 +63,17 @@ def main():
     # Load CMake options from .github/workflows/root-ci-config/buildconfig/[platform].txt
     this_script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    options_dict = {
-        **load_config(f'{this_script_dir}/buildconfig/global.txt'),
-        # file below overwrites values from above
-        **load_config(f'{this_script_dir}/buildconfig/{args.platform}.txt')
-    }
+    options_dict = build_utils.load_config(f"{this_script_dir}/buildconfig/global.txt")
+    temp = dict(options_dict)
+    options_dict.update(build_utils.load_config(f"{this_script_dir}/buildconfig/{args.platform}.txt"))
+    print(f"Build options ({args.platform})")
+    print_options_diff(options_dict, temp)
+
+    print("Build options (CI override):", args.overrides)
+    if args.overrides is not None:
+        temp = dict(options_dict)
+        options_dict.update((arg.split("=") for arg in args.overrides))
+        print_options_diff(options_dict, temp)
 
     options = build_utils.cmake_options_from_dict(options_dict)
 
@@ -193,6 +192,7 @@ def parse_args():
     parser.add_argument("--architecture",    default=None,      help="Windows only, target arch")
     parser.add_argument("--repository",      default="https://github.com/root-project/root.git",
                         help="url to repository")
+    parser.add_argument("--overrides",       default=None,      help="Override build options with these key-value pairs", nargs="*")
 
     args = parser.parse_args()
 
@@ -255,7 +255,7 @@ def git_pull(directory: str, repository: str, branch: str):
             returncode = subprocess_with_log(f"""
                 git clone --branch {branch} --single-branch {repository} "{targetdir}"
             """)
-        
+
         if returncode == 0:
             return
 
@@ -333,6 +333,14 @@ def archive_and_upload(archive_name, prefix):
         targz.add("src")
         targz.add("build")
 
+    try:
+        import openstack
+        CONNECTION = openstack.connect(cloud='envvars')
+    except Exception as exc:
+        print("Failed to open the S3 connection:", exc, file=sys.stderr)
+        CONNECTION = None
+
+
     upload_file(
         connection=CONNECTION,
         container=S3CONTAINER,
@@ -406,7 +414,8 @@ def build(options, buildtype):
 
     dump_requested_config(options)
 
-    cmake_build(buildtype)
+    print("*** Skipping build")
+    #cmake_build(buildtype)
 
 
 @github_log_group("Create binary packages")
