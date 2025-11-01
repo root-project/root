@@ -1303,36 +1303,29 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
    if (ny == 0)
       ny = 1;
 
-   // Outer margins, equal to half of the inner margin. Set to zero if nx or ny are negative.
-   Float_t xmargin_outer = xmargin;
-   Float_t ymargin_outer = ymargin;
-
-   if (nx < 0) {
-      xmargin_outer = 0.0;
-      nx = -nx;
-   }
-
-   if (ny < 0) {
-      ymargin_outer = 0.0;
-      ny = -ny;
-   }
+   Double_t xl = GetLeftMargin();
+   Double_t xr = GetRightMargin();
+   Double_t yb = GetBottomMargin();
+   Double_t yt = GetTopMargin();
 
    TString name, title;
-   Int_t n = 0;
    if (color == 0) color = GetFillColor();
    if (xmargin >= 0 && ymargin >= 0) {
       //general case
-      auto dx = (1 - 2 * xmargin * (nx - 1) - 2 * xmargin_outer) / nx; // width of a subpad
-      auto dy = (1 - 2 * ymargin * (ny - 1) - 2 * ymargin_outer) / ny; // height of a subpad
+      auto dx = (1 - xl - xr - xmargin * (nx - 1)) / nx; // width of a subpad
+      auto dy = (1 - yt - yb - ymargin * (ny - 1)) / ny; // height of a subpad
+
+      Int_t n = 0;
       for (auto iy = 0; iy < ny; iy++) {
-         auto y2 = 1 - iy * dy - 2 * ymargin * iy - ymargin_outer;
+         auto y2 = 1 - yt - iy * (dy + ymargin);
          auto y1 = y2 - dy;
-         if (y1 < 0) y1 = 0;
-         if (y1 > y2) continue;
+         if (y1 < yb)
+            y1 = yb;
          for (auto ix = 0; ix < nx; ix++) {
-            auto x1 = ix * dx + 2 * xmargin * ix + xmargin_outer;
+            auto x1 = xl + ix * (dx + xmargin);
             auto x2 = x1 + dx;
-            if (x1 > x2) continue;
+            if (x2 > (1 - xr))
+               xr = 1 - xr;
             n++;
             name.Form("%s_%d", GetName(), n);
             auto pad = new TPad(name.Data(), name.Data(), x1, y1, x2, y2, color);
@@ -1342,10 +1335,6 @@ void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t co
       }
    } else {
       // special case when xmargin < 0 or ymargin < 0
-      Double_t xl = GetLeftMargin();
-      Double_t xr = GetRightMargin();
-      Double_t yb = GetBottomMargin();
-      Double_t yt = GetTopMargin();
       xl /= (1-xl+xr)*nx;
       xr /= (1-xl+xr)*nx;
       yb /= (1-yb+yt)*ny;
