@@ -1225,13 +1225,12 @@ Int_t TPad::DistancetoPrimitive(Int_t px, Int_t py)
 /// Automatic pad generation by division.
 ///
 ///  - The current canvas is divided in nx by ny equal divisions (pads).
-///  - xmargin defines the horizontal spacing around each pad as a percentage of the canvas
-///    width. Therefore, the distance between two adjacent pads along the x-axis is equal
-///    to twice the xmargin value.
-///  - ymargin defines the vertical spacing around each pad as a percentage of the canvas
-///    height. Therefore, the distance between two adjacent pads along the y-axis is equal
-///    to twice the ymargin value.
+///  - xmargin defines the horizontal spacing between each pad as a percentage of the canvas
+///    width.
+///  - ymargin defines the vertical spacing between each pad as a percentage of the canvas
+///    height.
 ///  - color is the color of the new pads. If 0, color is the canvas color.
+///  - All pads are contained within the inner area defined by the canvas margins.
 ///
 /// Pads are automatically named `canvasname_n` where `n` is the division number
 /// starting from top left pad.
@@ -1239,6 +1238,15 @@ Int_t TPad::DistancetoPrimitive(Int_t px, Int_t py)
 /// Example if canvasname=c1 , nx=2, ny=3:
 ///
 /// \image html gpad_pad3.png
+///
+/// Example if:
+/// /// ~~~ {.cpp}
+/// c->SetMargin(0.30, 0.05, 0.10, 0.10);
+/// c->Divide(nx, ny, 0.03, 0.05, 46);
+/// ~~~
+/// \image html canvas_divide.png
+///
+/// More examples are in `tutorials/visualisation/graphics/canvas_divide_example.C`
 ///
 /// Once a pad is divided into sub-pads, one can set the current pad
 /// to a subpad with a given division number as illustrated above
