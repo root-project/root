@@ -840,14 +840,33 @@ TBranch *TChain::FindBranch(const char *branchname)
 
 TLeaf* TChain::FindLeaf(const char* searchname)
 {
-   if (fTree) {
-      return fTree->FindLeaf(searchname);
+   auto findLeafImpl = [this](const char *resolvedBranchName) -> TLeaf * {
+      if (fTree) {
+         return fTree->FindLeaf(resolvedBranchName);
+      }
+      LoadTree(0);
+      if (fTree) {
+         return fTree->FindLeaf(resolvedBranchName);
+      }
+      return nullptr;
+   };
+
+   // This will allow the branchname to be preceded by the name of this chain.
+   // See similar code in TTree::FindLeaf
+   std::string_view branchNameView{searchname};
+   std::string_view chainPrefix = GetName();
+
+   if (ROOT::StartsWith(branchNameView, chainPrefix)) {
+      branchNameView.remove_prefix(chainPrefix.length());
+      if (!branchNameView.empty() && branchNameView.front() == '.') {
+         branchNameView.remove_prefix(1);
+         // Perform a copy here to ensure the returned character array is null-terminated.
+         std::string copy{branchNameView};
+         return findLeafImpl(copy.c_str());
+      }
    }
-   LoadTree(0);
-   if (fTree) {
-      return fTree->FindLeaf(searchname);
-   }
-   return nullptr;
+
+   return findLeafImpl(searchname);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
