@@ -1,6 +1,5 @@
 from ......_pythonization import pythonization
 from cppyy import gbl as gbl_namespace
-import numpy as np
 import os
 import time
 
@@ -93,6 +92,8 @@ def add_layer_into_RModel(rmodel, layer_data):
     Raises exception: If the provided layer type or activation function is not supported.
     """
     
+    import numpy as np
+    
     keras_version = get_keras_version()
     
     fLayerType = layer_data['layerType']
@@ -174,6 +175,7 @@ def add_layer_into_RModel(rmodel, layer_data):
                 num_input_shapes = len(list(Attributes['_build_shapes_dict']['input_shape']))
             
             axis = Attributes['axis']
+            axis = axis[0] if isinstance(axis, list) else axis
             if axis < 0:
                 axis += num_input_shapes
             fAttrPerm = list(range(0, num_input_shapes))
@@ -287,6 +289,7 @@ class RModelParser_Keras:
         # caches the imported packages.
         
         import keras
+        import numpy as np
         
         keras_version = get_keras_version()
         

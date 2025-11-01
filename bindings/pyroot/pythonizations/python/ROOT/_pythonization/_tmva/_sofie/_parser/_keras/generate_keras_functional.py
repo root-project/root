@@ -1,8 +1,7 @@
-import numpy as np
-
 def generate_keras_functional(dst_dir):
     
     from keras import models, layers
+    import numpy as np
     
     # Helper training function
     def train_and_save(model, name):
