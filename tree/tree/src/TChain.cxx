@@ -64,6 +64,8 @@ the trees in the chain.
 #include "strlcpy.h"
 #include "snprintf.h"
 
+#include <string_view>
+#include "ROOT/StringUtils.hxx"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -802,16 +804,35 @@ Long64_t TChain::Draw(const char* varexp, const char* selection,
 ////////////////////////////////////////////////////////////////////////////////
 /// See TTree::GetReadEntry().
 
-TBranch* TChain::FindBranch(const char* branchname)
+TBranch *TChain::FindBranch(const char *branchname)
 {
-   if (fTree) {
-      return fTree->FindBranch(branchname);
+   auto findBranchImpl = [this](const char *resolvedBranchName) -> TBranch * {
+      if (fTree) {
+         return fTree->FindBranch(resolvedBranchName);
+      }
+      LoadTree(0);
+      if (fTree) {
+         return fTree->FindBranch(resolvedBranchName);
+      }
+      return nullptr;
+   };
+
+   // This will allow the branchname to be preceded by the name of this chain.
+   // See similar code in TTree::FindBranch
+   std::string_view branchNameView{branchname};
+   std::string_view chainPrefix = GetName();
+
+   if (ROOT::StartsWith(branchNameView, chainPrefix)) {
+      branchNameView.remove_prefix(chainPrefix.length());
+      if (!branchNameView.empty() && branchNameView.front() == '.') {
+         branchNameView.remove_prefix(1);
+         // Perform a copy here to ensure the returned character array is null-terminated.
+         std::string copy{branchNameView};
+         return findBranchImpl(copy.c_str());
+      }
    }
-   LoadTree(0);
-   if (fTree) {
-      return fTree->FindBranch(branchname);
-   }
-   return nullptr;
+
+   return findBranchImpl(branchname);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -819,14 +840,33 @@ TBranch* TChain::FindBranch(const char* branchname)
 
 TLeaf* TChain::FindLeaf(const char* searchname)
 {
-   if (fTree) {
-      return fTree->FindLeaf(searchname);
+   auto findLeafImpl = [this](const char *resolvedBranchName) -> TLeaf * {
+      if (fTree) {
+         return fTree->FindLeaf(resolvedBranchName);
+      }
+      LoadTree(0);
+      if (fTree) {
+         return fTree->FindLeaf(resolvedBranchName);
+      }
+      return nullptr;
+   };
+
+   // This will allow the branchname to be preceded by the name of this chain.
+   // See similar code in TTree::FindLeaf
+   std::string_view branchNameView{searchname};
+   std::string_view chainPrefix = GetName();
+
+   if (ROOT::StartsWith(branchNameView, chainPrefix)) {
+      branchNameView.remove_prefix(chainPrefix.length());
+      if (!branchNameView.empty() && branchNameView.front() == '.') {
+         branchNameView.remove_prefix(1);
+         // Perform a copy here to ensure the returned character array is null-terminated.
+         std::string copy{branchNameView};
+         return findLeafImpl(copy.c_str());
+      }
    }
-   LoadTree(0);
-   if (fTree) {
-      return fTree->FindLeaf(searchname);
-   }
-   return nullptr;
+
+   return findLeafImpl(searchname);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1311,6 +1351,16 @@ Long64_t TChain::RefreshFriendAddresses()
          br->SetAutoDelete(true);
       }
    }
+
+   // We cannot know a priori if the branch(es) of the friend TChain(s) that were just
+   // updated were supposed to be connected to one of the TChainElement of this chain
+   // or possibly to another TChainElement belonging to another chain that has befriended
+   // this chain (i.e., one of the "external friends"). Thus, we forward the notification
+   // that one or more friend trees were updated to the friends of this chain.
+   if (fExternalFriends)
+      for (auto external_fe : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fExternalFriends))
+         external_fe->MarkUpdated();
+
    if (fPlayer) {
       fPlayer->UpdateFormulaLeaves();
    }
