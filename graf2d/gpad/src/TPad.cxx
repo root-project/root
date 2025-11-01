@@ -1228,6 +1228,7 @@ Int_t TPad::DistancetoPrimitive(Int_t px, Int_t py)
 ///  - xmargin is the space along x between pads in percent of canvas.
 ///  - ymargin is the space along y between pads in percent of canvas.
 ///  - color is the color of the new pads. If 0, color is the canvas color.
+///  - The outer margins of the pads are taken from the current canvas margins.
 ///
 /// Pads are automatically named `canvasname_n` where `n` is the division number
 /// starting from top left pad.
@@ -1235,6 +1236,18 @@ Int_t TPad::DistancetoPrimitive(Int_t px, Int_t py)
 /// Example if canvasname=c1 , nx=2, ny=3:
 ///
 /// \image html gpad_pad3.png
+///
+/// Example if:
+/// /// ~~~ {.cpp}
+/// c->SetLeftMargin(0.30);
+/// c->SetBottomMargin(0.10);
+/// c->SetRightMargin(0.05);
+/// c->SetTopMargin(0.10);
+/// c->Divide(nx, ny, 0.03, 0.05, 46);
+/// ~~~
+/// \image html canvas_divide_custom.png
+///
+/// More examples are in `tutorials/visualisation/graphics/canvas_divide_example.C`
 ///
 /// Once a pad is divided into sub-pads, one can set the current pad
 /// to a subpad with a given division number as illustrated above
@@ -1254,9 +1267,6 @@ Int_t TPad::DistancetoPrimitive(Int_t px, Int_t py)
 /// __Note3:__  in case xmargin < 0 or ymargin < 0, there is no space
 ///             between pads. The current pad margins are recomputed to
 ///             optimize the layout.
-///
-/// __Note4:__  in case nx < 0 or ny < 0, there is no outer x or y margin, but
-///             the inner margins are equal to xmargin and ymargin, respectively.
 
 void TPad::Divide(Int_t nx, Int_t ny, Float_t xmargin, Float_t ymargin, Int_t color)
 {
