@@ -9,7 +9,17 @@
 #---------------------------------------------------------------------------------------------------
 
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "(Apple|)Clang|GNU|Intel|MSVC")
-  message(WARNING "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}.")
+  if (CMAKE_CXX_COMPILER_ID MATCHES "NVHPC")
+    message(WARNING "NVHPC compiler is only supported at best effort level.")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "25.7.0")
+      message(WARNING "Minimum version of NVHPC compiler is 25.7.  Version ${CMAKE_CXX_COMPILER_VERSION} detected.")
+    endif()
+    if (CMAKE_CXX_STANDARD GREATER "17") 
+      message(WARNING "C++ Standard level only supported up to C++17 with NVHPC. Detected value is ${CMAKE_CXX_STANDARD}")
+    endif()
+  else()
+    message(WARNING "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}.")
+  endif()
 endif()
 
 if(NOT GENERATOR_IS_MULTI_CONFIG AND NOT CMAKE_BUILD_TYPE)
