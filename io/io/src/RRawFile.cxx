@@ -21,28 +21,6 @@
 #include "TPluginManager.h"
 #include "TROOT.h"
 
-// XRootD protocol redirection
-#ifdef R__UNIX
-
-#ifdef R__FBSD
-#include <sys/extattr.h>
-#else
-#include <sys/xattr.h>
-#endif
-
-#ifdef R__MACOSX
-/* On macOS getxattr takes two extra arguments that should be set to 0 */
-#define getxattr(path, name, value, size) getxattr(path, name, value, size, 0u, 0)
-#endif
-
-#ifdef R__FBSD
-#define getxattr(path, name, value, size) extattr_get_file(path, EXTATTR_NAMESPACE_USER, name, value, size)
-#endif
-
-#include "TEnv.h"
-
-#endif
-
 #include <algorithm>
 #include <cctype> // for towlower
 #include <cerrno>
@@ -90,23 +68,6 @@ ROOT::Internal::RRawFile::Create(std::string_view url, ROptions options)
 #ifdef _WIN32
       return std::unique_ptr<RRawFile>(new RRawFileWin(url, options));
 #else
-      // If URL is a file on an EOS FUSE mount, attempt redirection to XRootD protocol.
-      if (gEnv->GetValue("TFile.CrossProtocolRedirects", 1) == 1) {
-         // At the moment the url parameter can only be the file name
-         ssize_t len = getxattr(url.data(), "eos.url.xroot", nullptr, 0);
-         if (len > 0) {
-            std::string xurl(len, 0);
-            std::string fileNameFromUrl{url.data()};
-            if (getxattr(fileNameFromUrl.c_str(), "eos.url.xroot", &xurl[0], len) == len) {
-               // Sometimes the `getxattr` call may return an invalid URL due
-               // to the POSIX attribute not being yet completely filled by EOS.
-               if (auto baseName = fileNameFromUrl.substr(fileNameFromUrl.find_last_of("/") + 1);
-                   std::equal(baseName.crbegin(), baseName.crend(), xurl.crbegin())) {
-                  return Create(xurl, options);
-               }
-            }
-         }
-      }
       return std::unique_ptr<RRawFile>(new RRawFileUnix(url, options));
 #endif
    }
