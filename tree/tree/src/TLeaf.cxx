@@ -73,7 +73,7 @@ TLeaf::TLeaf()
 
 TLeaf::TLeaf(TBranch *parent, const char* name, const char *type)
    : TNamed(name, name)
-   , fTypeCode(type[0])
+   , fTypeCode(type ? type[0] : 0)
    , fNdata(0)
    , fLen(0)
    , fLenType(4)
