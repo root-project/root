@@ -532,7 +532,7 @@ void TPaveStats::SavePrimitive(std::ostream &out, Option_t *option)
    if (fBorderSize != 4)
       out << "   ptstats->SetBorderSize(" << fBorderSize << ");\n";
 
-   SaveFillAttributes(out, "ptstats", 19, 1001);
+   SaveFillAttributes(out, "ptstats", -1, -1);
    SaveLineAttributes(out, "ptstats", 1, 1, 1);
    SaveTextAttributes(out, "ptstats", 22, 0, 1, 62, 0);
    SaveLines(out, "ptstats", kTRUE);
