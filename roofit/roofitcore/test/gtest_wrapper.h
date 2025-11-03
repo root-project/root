@@ -32,8 +32,12 @@
 
 #define ROOFIT_EVAL_BACKENDS ROOFIT_EVAL_BACKEND_LEGACY ROOFIT_EVAL_BACKEND_CUDA RooFit::EvalBackend::Cpu()
 
+#ifdef ROOFIT_CLAD
 #define ROOFIT_EVAL_BACKENDS_WITH_CODEGEN \
    ROOFIT_EVAL_BACKENDS, ROOFIT_EVAL_BACKEND_CODEGEN RooFit::EvalBackend::CodegenNoGrad()
+#else
+#define ROOFIT_EVAL_BACKENDS_WITH_CODEGEN ROOFIT_EVAL_BACKENDS
+#endif
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
