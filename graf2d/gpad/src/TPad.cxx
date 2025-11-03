@@ -6066,7 +6066,7 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * option /*= ""*/)
           << ", " << rmax[1] << ", " << rmax[2] << ");\n";
    }
 
-   SaveFillAttributes(out, cname, 19, 1001);
+   SaveFillAttributes(out, cname, -1, -1);
 
    if (GetBorderMode() != 1)
       out << "   " << cname << "->SetBorderMode(" << GetBorderMode() << ");\n";
