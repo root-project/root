@@ -81,6 +81,7 @@ This caching reduces sub-process creation during initialization and can be usefu
 * Automatic schema evolution (in addition to I/O customization rules, which are already supported) akin to the classic I/O behavior. Expert documentation added in `tree/ntuple/doc/SchemaEvolution.md`.
 * RNTuple support in the classic browser together with several visual improvements, including a new treemap visualization of field sizes.
 * Bulk I/O optimization for fixed-size arrays and vectors of fixed-size arrays.
+* The interface to access field data through the `RNTupleProcessor` has been refactored, and now includes a mechanism to safely handle reading from entries where not every field may hold a valid value. While the `RNTupleProcessor` is still experimental, and more interface changes may take place before it becomes part of the public, stable API, users are encouraged to try out this new feature. Feedback is highly appreciated!
 
 ## Math
 * Added GenVectorX, an extended version of the GenVector library supporting multi-target execution with SYCL. Enable by configuring CMake with:
