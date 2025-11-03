@@ -1268,7 +1268,7 @@ void TAxis::UnZoom()
 
    //unzoom object owning this axis
    SetRange(0,0);
-   TH1 *hobj1 = GetParent() && GetParent()->InheritsFrom(TH1::Class()) ? static_cast<TH1*>(GetParent()) : nullptr;
+   TH1 *hobj1 = GetParent() && GetParent()->InheritsFrom(TH1::Class()) ? static_cast<TH1 *>(GetParent()) : nullptr;
    if (!strstr(GetName(),"xaxis")) {
       if (!hobj1) return;
       if (hobj1->GetDimension() == 2) {
@@ -1283,7 +1283,7 @@ void TAxis::UnZoom()
          hobj1->SetMinimum(fXmin);
          hobj1->SetMaximum(fXmax);
       } else {
-         if (fXmin==hobj1->GetMinimum() && fXmax==hobj1->GetMaximum()) {
+         if (fXmin == hobj1->GetMinimumStored() && fXmax == hobj1->GetMaximumStored()) {
             hobj1->SetMinimum(fXmin);
             hobj1->SetMaximum(fXmax);
          } else {
