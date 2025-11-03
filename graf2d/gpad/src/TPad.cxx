@@ -1225,8 +1225,12 @@ Int_t TPad::DistancetoPrimitive(Int_t px, Int_t py)
 /// Automatic pad generation by division.
 ///
 ///  - The current canvas is divided in nx by ny equal divisions (pads).
-///  - xmargin is the space along x between pads in percent of canvas.
-///  - ymargin is the space along y between pads in percent of canvas.
+///  - xmargin defines the horizontal spacing around each pad as a percentage of the canvas
+///    width. Therefore, the distance between two adjacent pads along the x-axis is equal
+///    to twice the xmargin value.
+///  - ymargin defines the vertical spacing around each pad as a percentage of the canvas
+///    height. Therefore, the distance between two adjacent pads along the y-axis is equal
+///    to twice the ymargin value.
 ///  - color is the color of the new pads. If 0, color is the canvas color.
 ///
 /// Pads are automatically named `canvasname_n` where `n` is the division number
