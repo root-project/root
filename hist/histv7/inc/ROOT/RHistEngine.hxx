@@ -405,6 +405,19 @@ public:
       }
    }
 
+   /// Scale all histogram bin contents.
+   ///
+   /// This method is not available for integral bin content types.
+   ///
+   /// \param[in] factor the scale factor
+   void Scale(double factor)
+   {
+      static_assert(!std::is_integral_v<BinContentType>, "scaling is not supported for integral bin content types");
+      for (std::size_t i = 0; i < fBinContents.size(); i++) {
+         fBinContents[i] *= factor;
+      }
+   }
+
    /// %ROOT Streamer function to throw when trying to store an object of this class.
    void Streamer(TBuffer &) { throw std::runtime_error("unable to store RHistEngine"); }
 };

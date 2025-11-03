@@ -31,6 +31,12 @@ struct User {
       return *this;
    }
 
+   User &operator*=(double factor)
+   {
+      fValue *= factor;
+      return *this;
+   }
+
    void AtomicInc() { ROOT::Experimental::Internal::AtomicInc(&fValue); }
 
    void AtomicAdd(double w) { ROOT::Experimental::Internal::AtomicAdd(&fValue, w); }
@@ -152,4 +158,21 @@ TEST(RHistEngineUser, FillAtomicWeight)
    EXPECT_EQ(engine.GetBinContent(RBinIndex(8)).fValue, 0.8);
    std::array<RBinIndex, 1> indices = {9};
    EXPECT_EQ(engine.GetBinContent(indices).fValue, 0.9);
+}
+
+TEST(RHistEngineUser, Scale)
+{
+   // Scaling uses operator+=(double)
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<User> engine({axis});
+
+   engine.Fill(8.5, RWeight(0.8));
+   engine.Fill(9.5, RWeight(0.9));
+
+   static constexpr double Factor = 0.8;
+   engine.Scale(Factor);
+
+   EXPECT_EQ(engine.GetBinContent(8).fValue, Factor * 0.8);
+   EXPECT_EQ(engine.GetBinContent(9).fValue, Factor * 0.9);
 }
