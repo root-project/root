@@ -6109,7 +6109,7 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * option /*= ""*/)
       out << "   " << cname << "->SetFrameLineColor(" << TColor::SavePrimitiveColor(GetFrameLineColor()) << ");\n";
    if (GetFrameLineWidth() != 1)
       out << "   " << cname << "->SetFrameLineWidth(" << GetFrameLineWidth() << ");\n";
-   if (GetFrameBorderMode() != 1)
+   if (GetFrameBorderMode() != 0)
       out << "   " << cname << "->SetFrameBorderMode(" << GetFrameBorderMode() << ");\n";
    if (GetFrameBorderSize() != 1)
       out << "   " << cname << "->SetFrameBorderSize(" << GetFrameBorderSize() << ");\n";
@@ -6128,7 +6128,7 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * option /*= ""*/)
          out << "   " << cname << "->SetFrameLineColor(" << TColor::SavePrimitiveColor(frame->GetLineColor()) << ");\n";
       if (frame->GetLineWidth() != 1)
          out << "   " << cname << "->SetFrameLineWidth(" << frame->GetLineWidth() << ");\n";
-      if (frame->GetBorderMode() != 1)
+      if (frame->GetBorderMode() != 0)
          out << "   " << cname << "->SetFrameBorderMode(" << frame->GetBorderMode() << ");\n";
       if (frame->GetBorderSize() != 1)
          out << "   " << cname << "->SetFrameBorderSize(" << frame->GetBorderSize() << ");\n";
