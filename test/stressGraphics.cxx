@@ -3813,6 +3813,8 @@ void zoomfit()
 void hbars()
 {
    TCanvas *C = StartTest(700,800);
+   TDirectory dir("hbars_dir", "Directory for the hbars test");
+   TDirectory::TContext dirCtx{&dir};
 
    TTree *T = (TTree*)gCernstaff->Get("T");
    T->SetFillColor(45);
@@ -3826,9 +3828,10 @@ void hbars()
    //vertical bar chart
    C->cd(2); gPad->SetGrid(); gPad->SetFrameFillColor(33);
    T->Draw("Division>>hDiv","","goff");
-   TH1F *hDiv   = (TH1F*)gDirectory->Get("hDiv");
+   TH1F *hDiv = (TH1F *)dir.Get("hDiv");
    hDiv->SetStats(0);
    TH1F *hDivFR = (TH1F*)hDiv->Clone("hDivFR");
+   hDivFR->SetDirectory(&dir);
    T->Draw("Division>>hDivFR","Nation==\"FR\"","goff");
    hDiv->SetBarWidth(0.45);
    hDiv->SetBarOffset(0.1);
