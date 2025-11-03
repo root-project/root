@@ -3883,7 +3883,8 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
 
       // check if we read through a file cache
       if (!strcasecmp(option, "CACHEREAD") ||
-         ((!strcasecmp(option,"READ") || !option[0]) && fgCacheFileForce)) {
+          ((!strcasecmp(option, "READ") || !strcasecmp(option, "READ_WITHOUT_GLOBALREGISTRATION") || !option[0]) &&
+           fgCacheFileForce)) {
          // Try opening the file from the cache
          if ((f = TFile::OpenFromCache(n, option, ftitle, compress, netopt)))
             return f;
