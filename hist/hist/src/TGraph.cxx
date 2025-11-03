@@ -110,7 +110,7 @@ you can either start canvas in web mode, or keep in classic mode but predefine t
 \code{.cpp}
 TGraph gr;
 for(auto i = 0; i < 100; ++i) gr.AddPoint(i,i);
-gr.AddPoint(10000, 0); 
+gr.AddPoint(10000, 0);
 // If one draws here, one can not zoom between x = 0 and x = 50, since first bin goes from x = 0 to 100.
 auto h1 = new TH1F("hist", "hist", 10000, -10., 11000.); // Define underlying hist with 10000 instead of 101 bins
 h1->SetMaximum(120);

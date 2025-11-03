@@ -3266,7 +3266,7 @@ void TEfficiency::SavePrimitive(std::ostream& out,Option_t* option)
    TH1::SavePrimitiveFunctions(out, name, fFunctions);
 
    //set style
-   SaveFillAttributes(out, name);
+   SaveFillAttributes(out, name, -1, -1);
    SaveLineAttributes(out, name);
    SaveMarkerAttributes(out, name);
 

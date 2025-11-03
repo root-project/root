@@ -248,7 +248,7 @@ void TScatter2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
                             kFALSE);
 
    SavePrimitiveNameTitle(out, "scat");
-   SaveFillAttributes(out, "scat", 0, 1001);
+   SaveFillAttributes(out, "scat", -1, -1);
    SaveLineAttributes(out, "scat", 1, 1, 1);
    SaveMarkerAttributes(out, "scat", 1, 1, 1);
 
