@@ -684,15 +684,16 @@ public:
       elem["expression"] << expression.Data();
       return true;
    }
+
 private:
-   void cleanExpression(TString& expr) const
+   void cleanExpression(TString &expr) const
    {
-      expr.ReplaceAll("TMath::Exp",  "exp");
-      expr.ReplaceAll("TMath::Min",  "min");
-      expr.ReplaceAll("TMath::Max",  "max");
-      expr.ReplaceAll("TMath::Log",  "log");
-      expr.ReplaceAll("TMath::Cos",  "cos");
-      expr.ReplaceAll("TMath::Sin",  "sin");
+      expr.ReplaceAll("TMath::Exp", "exp");
+      expr.ReplaceAll("TMath::Min", "min");
+      expr.ReplaceAll("TMath::Max", "max");
+      expr.ReplaceAll("TMath::Log", "log");
+      expr.ReplaceAll("TMath::Cos", "cos");
+      expr.ReplaceAll("TMath::Sin", "sin");
       expr.ReplaceAll("TMath::Sqrt", "sqrt");
       expr.ReplaceAll("TMath::Power", "pow");
    }
@@ -1045,7 +1046,7 @@ STATIC_EXECUTE([]() {
    registerExporter<RooRealIntegralStreamer>(RooRealIntegral::Class(), false);
    registerExporter<RooDerivativeStreamer>(RooDerivative::Class(), false);
    registerExporter<RooFFTConvPdfStreamer>(RooFFTConvPdf::Class(), false);
-   registerExporter<RooExtendPdfStreamer>(RooExtendPdf::Class(), false);   
+   registerExporter<RooExtendPdfStreamer>(RooExtendPdf::Class(), false);
 });
 
 } // namespace
