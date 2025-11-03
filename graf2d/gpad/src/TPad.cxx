@@ -1264,10 +1264,7 @@ Int_t TPad::DistancetoPrimitive(Int_t px, Int_t py)
 ///    void divpad(Int_t nx=3, Int_t ny=2) {
 ///       gStyle->SetOptStat(0);
 ///       auto C = new TCanvas();
-///       C->SetLeftMargin(0.3);
-///       C->SetRightMargin(0.3);
-///       C->SetTopMargin(0.3);
-///       C->SetBottomMargin(0.3);
+///       C->SetMargin(0.3, 0.3, 0.3, 0.3);
 ///       C->Divide(nx,ny,-1);
 ///       Int_t number = 0;
 ///       auto h = new TH1F("","",100,-3.3,3.3);
