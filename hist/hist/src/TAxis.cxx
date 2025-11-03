@@ -1268,7 +1268,7 @@ void TAxis::UnZoom()
 
    //unzoom object owning this axis
    SetRange(0,0);
-   TH1 *hobj1 = (TH1*)GetParent();
+   TH1 *hobj1 = GetParent() && GetParent()->InheritsFrom(TH1::Class()) ? static_cast<TH1*>(GetParent()) : nullptr;
    if (!strstr(GetName(),"xaxis")) {
       if (!hobj1) return;
       if (hobj1->GetDimension() == 2) {
