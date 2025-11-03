@@ -2510,7 +2510,7 @@ RooWorkspace RooJSONFactoryWSTool::cleanWS(const RooWorkspace &ws, bool onlyMode
 
    for (auto *obj : ws.allResolutionModels()) {
       tmpWS.import(*obj);
-   }   
+   }
 
    /*
    if (auto* mc = dynamic_cast<RooStats::ModelConfig*>(obj)) {
@@ -2586,9 +2586,9 @@ RooWorkspace RooJSONFactoryWSTool::sanitizeWS(const RooWorkspace &ws)
          obj->SetName(sanitizeName(obj->GetName()).c_str());
       }
    }
-   
+
    // Resolution Models
-   for (auto *obj : tmpWS.allResolutionModels()){
+   for (auto *obj : tmpWS.allResolutionModels()) {
       if (!isValidName(obj->GetName())) {
          obj->SetName(sanitizeName(obj->GetName()).c_str());
       }
