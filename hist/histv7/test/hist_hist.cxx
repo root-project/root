@@ -125,7 +125,33 @@ TEST(RHist, FillWeight)
    EXPECT_FLOAT_EQ(hist.GetBinContent(indices), 0.9);
 
    EXPECT_EQ(hist.GetNEntries(), 2);
+   EXPECT_FLOAT_EQ(hist.GetStats().GetSumW(), 1.7);
+   EXPECT_FLOAT_EQ(hist.GetStats().GetSumW2(), 1.45);
    // Cross-checked with TH1
+   EXPECT_FLOAT_EQ(hist.ComputeNEffectiveEntries(), 1.9931034);
+   EXPECT_FLOAT_EQ(hist.ComputeMean(), 9.0294118);
+   EXPECT_FLOAT_EQ(hist.ComputeStdDev(), 0.49913420);
+}
+
+TEST(RHist, Scale)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHist<float> hist({axis});
+
+   hist.Fill(8.5, RWeight(0.8));
+   hist.Fill(9.5, RWeight(0.9));
+
+   static constexpr double Factor = 0.8;
+   hist.Scale(Factor);
+
+   EXPECT_FLOAT_EQ(hist.GetBinContent(8), Factor * 0.8);
+   EXPECT_FLOAT_EQ(hist.GetBinContent(9), Factor * 0.9);
+
+   EXPECT_EQ(hist.GetNEntries(), 2);
+   EXPECT_FLOAT_EQ(hist.GetStats().GetSumW(), Factor * 1.7);
+   EXPECT_FLOAT_EQ(hist.GetStats().GetSumW2(), Factor * Factor * 1.45);
+   // Cross-checked with TH1 - unchanged compared to FillWeight because the factor cancels out.
    EXPECT_FLOAT_EQ(hist.ComputeNEffectiveEntries(), 1.9931034);
    EXPECT_FLOAT_EQ(hist.ComputeMean(), 9.0294118);
    EXPECT_FLOAT_EQ(hist.ComputeStdDev(), 0.49913420);

@@ -277,6 +277,17 @@ public:
       fStats.Fill(args...);
    }
 
+   /// Scale all histogram bin contents and statistics.
+   ///
+   /// This method is not available for integral bin content types.
+   ///
+   /// \param[in] factor the scale factor
+   void Scale(double factor)
+   {
+      fEngine.Scale(factor);
+      fStats.Scale(factor);
+   }
+
    /// %ROOT Streamer function to throw when trying to store an object of this class.
    void Streamer(TBuffer &) { throw std::runtime_error("unable to store RHist"); }
 };

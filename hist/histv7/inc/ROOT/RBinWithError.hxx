@@ -48,6 +48,13 @@ struct RBinWithError final {
       return *this;
    }
 
+   RBinWithError &operator*=(double factor)
+   {
+      fSum *= factor;
+      fSum2 *= factor * factor;
+      return *this;
+   }
+
    void AtomicInc()
    {
       Internal::AtomicInc(&fSum);

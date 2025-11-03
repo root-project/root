@@ -75,6 +75,14 @@ public:
          fSumWX3 = 0.0;
          fSumWX4 = 0.0;
       }
+
+      void Scale(double factor)
+      {
+         fSumWX *= factor;
+         fSumWX2 *= factor;
+         fSumWX3 *= factor;
+         fSumWX4 *= factor;
+      }
    };
 
 private:
@@ -390,6 +398,18 @@ public:
          FillImpl<0, N>(t, w);
       } else {
          Fill(t);
+      }
+   }
+
+   /// Scale the histogram statistics.
+   ///
+   /// \param[in] factor the scale factor
+   void Scale(double factor)
+   {
+      fSumW *= factor;
+      fSumW2 *= factor * factor;
+      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
+         fDimensionStats[i].Scale(factor);
       }
    }
 
