@@ -1644,6 +1644,16 @@ void TMultiGraph::SetMinimum(Double_t minimum)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set histogram which will be used for axes painting
+
+void TMultiGraph::SetHistogram(TH1F *hist)
+{
+   delete fHistogram;
+   fHistogram = hist;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Get iterator over internal graphs list.
 
 TIter TMultiGraph::begin() const
