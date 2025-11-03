@@ -358,6 +358,28 @@ TEST(RHistEngine, FillTupleWeightInvalidNumberOfArguments)
    EXPECT_THROW(engine2.Fill(std::make_tuple(1, 2, 3), RWeight(1)), std::invalid_argument);
 }
 
+TEST(RHistEngine, Scale)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<float> engine({axis});
+
+   engine.Fill(-100, RWeight(0.25));
+   for (std::size_t i = 0; i < Bins; i++) {
+      engine.Fill(i, RWeight(0.1 + i * 0.03));
+   }
+   engine.Fill(100, RWeight(0.75));
+
+   static constexpr double Factor = 0.8;
+   engine.Scale(Factor);
+
+   EXPECT_FLOAT_EQ(engine.GetBinContent(RBinIndex::Underflow()), Factor * 0.25);
+   for (auto index : axis.GetNormalRange()) {
+      EXPECT_FLOAT_EQ(engine.GetBinContent(index), Factor * (0.1 + index.GetIndex() * 0.03));
+   }
+   EXPECT_FLOAT_EQ(engine.GetBinContent(RBinIndex::Overflow()), Factor * 0.75);
+}
+
 TEST(RHistEngine_RBinWithError, Add)
 {
    static constexpr std::size_t Bins = 20;
@@ -411,6 +433,27 @@ TEST(RHistEngine_RBinWithError, FillWeight)
    for (auto index : axis.GetNormalRange()) {
       auto &bin = engine.GetBinContent(index);
       double weight = 0.1 + index.GetIndex() * 0.03;
+      EXPECT_FLOAT_EQ(bin.fSum, weight);
+      EXPECT_FLOAT_EQ(bin.fSum2, weight * weight);
+   }
+}
+
+TEST(RHistEngine_RBinWithError, Scale)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<RBinWithError> engine({axis});
+
+   for (std::size_t i = 0; i < Bins; i++) {
+      engine.Fill(i, RWeight(0.1 + i * 0.03));
+   }
+
+   static constexpr double Factor = 0.8;
+   engine.Scale(Factor);
+
+   for (auto index : axis.GetNormalRange()) {
+      auto &bin = engine.GetBinContent(index);
+      double weight = Factor * (0.1 + index.GetIndex() * 0.03);
       EXPECT_FLOAT_EQ(bin.fSum, weight);
       EXPECT_FLOAT_EQ(bin.fSum2, weight * weight);
    }

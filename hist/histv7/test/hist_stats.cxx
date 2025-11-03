@@ -455,3 +455,44 @@ TEST(RHistStats, FillTupleWeightInvalidNumberOfArguments)
    EXPECT_NO_THROW(stats2.Fill(std::make_tuple(1, 2), RWeight(1)));
    EXPECT_THROW(stats2.Fill(std::make_tuple(1, 2, 3), RWeight(1)), std::invalid_argument);
 }
+
+TEST(RHistStats, Scale)
+{
+   RHistStats stats(3);
+   ASSERT_EQ(stats.GetNEntries(), 0);
+
+   static constexpr std::size_t Entries = 20;
+   for (std::size_t i = 0; i < Entries; i++) {
+      stats.Fill(i, 2 * i, i * i, RWeight(0.1 + 0.03 * i));
+   }
+
+   static constexpr double Factor = 0.8;
+   stats.Scale(Factor);
+
+   // The number of entries should not have changed.
+   EXPECT_EQ(stats.GetNEntries(), Entries);
+   EXPECT_DOUBLE_EQ(stats.GetSumW(), Factor * 7.7);
+   EXPECT_DOUBLE_EQ(stats.GetSumW2(), Factor * Factor * 3.563);
+
+   {
+      const auto &dimensionStats = stats.GetDimensionStats(/*=0*/);
+      EXPECT_DOUBLE_EQ(dimensionStats.fSumWX, Factor * 93.1);
+      EXPECT_DOUBLE_EQ(dimensionStats.fSumWX2, Factor * 1330.0);
+      EXPECT_DOUBLE_EQ(dimensionStats.fSumWX3, Factor * 20489.98);
+      EXPECT_DOUBLE_EQ(dimensionStats.fSumWX4, Factor * 330265.6);
+   }
+   {
+      const auto &dimensionStats = stats.GetDimensionStats(1);
+      EXPECT_DOUBLE_EQ(dimensionStats.fSumWX, Factor * 2 * 93.1);
+      EXPECT_DOUBLE_EQ(dimensionStats.fSumWX2, Factor * 4 * 1330.0);
+      EXPECT_DOUBLE_EQ(dimensionStats.fSumWX3, Factor * 8 * 20489.98);
+      EXPECT_DOUBLE_EQ(dimensionStats.fSumWX4, Factor * 16 * 330265.6);
+   }
+   {
+      const auto &dimensionStats = stats.GetDimensionStats(2);
+      EXPECT_DOUBLE_EQ(dimensionStats.fSumWX, Factor * 1330.0);
+      EXPECT_DOUBLE_EQ(dimensionStats.fSumWX2, Factor * 330265.6);
+      EXPECT_DOUBLE_EQ(dimensionStats.fSumWX3, Factor * 93164182.0);
+      EXPECT_DOUBLE_EQ(dimensionStats.fSumWX4, Factor * 28108731464.8);
+   }
+}
