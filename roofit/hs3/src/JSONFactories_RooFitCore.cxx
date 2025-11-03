@@ -543,12 +543,6 @@ public:
    {
       const RooArg_t *pdf = static_cast<const RooArg_t *>(func);
       elem["type"] << key();
-      std::string name = elem["name"].val();
-      /*elem["name"] << RooJSONFactoryWSTool::sanitizeName(name);
-      RooJSONFactoryWSTool::fillSeqSanitizedName(elem["summands"], pdf->pdfList());
-      RooJSONFactoryWSTool::fillSeqSanitizedName(elem["coefficients"], pdf->coefList());
-      */
-      elem["name"] << name;
       RooJSONFactoryWSTool::fillSeq(elem["summands"], pdf->pdfList());
       RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf->coefList());
       elem["extended"] << (pdf->extendMode() != RooArg_t::CanNotBeExtended);
@@ -563,12 +557,6 @@ public:
    {
       const RooRealSumPdf *pdf = static_cast<const RooRealSumPdf *>(func);
       elem["type"] << key();
-      std::string name = elem["name"].val();
-      /*elem["name"] << RooJSONFactoryWSTool::sanitizeName(name);
-      RooJSONFactoryWSTool::fillSeqSanitizedName(elem["samples"], pdf->funcList());
-      RooJSONFactoryWSTool::fillSeqSanitizedName(elem["coefficients"], pdf->coefList());
-      */
-      elem["name"] << name;
       RooJSONFactoryWSTool::fillSeq(elem["samples"], pdf->funcList());
       RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf->coefList());
       elem["extended"] << (pdf->extendMode() != RooAbsPdf::CanNotBeExtended);
@@ -583,12 +571,6 @@ public:
    {
       const RooRealSumFunc *pdf = static_cast<const RooRealSumFunc *>(func);
       elem["type"] << key();
-      std::string name = elem["name"].val();
-      /*elem["name"] << RooJSONFactoryWSTool::sanitizeName(name);
-      RooJSONFactoryWSTool::fillSeqSanitizedName(elem["samples"], pdf->funcList());
-      RooJSONFactoryWSTool::fillSeqSanitizedName(elem["coefficients"], pdf->coefList());
-      */
-      elem["name"] << name;
       RooJSONFactoryWSTool::fillSeq(elem["samples"], pdf->funcList());
       RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf->coefList());
       return true;
@@ -687,6 +669,7 @@ public:
       const RooArg_t *pdf = static_cast<const RooArg_t *>(func);
       elem["type"] << key();
       TString expression(pdf->expression());
+      cleanExpression(expression);
       // If the tokens follow the "x[#]" convention, the square braces enclosing each number
       // ensures that there is a unique mapping between the token and parameter name
       // If the tokens follow the "@#" convention, the numbers are not enclosed by braces.
@@ -700,6 +683,18 @@ public:
       }
       elem["expression"] << expression.Data();
       return true;
+   }
+private:
+   void cleanExpression(TString& expr) const
+   {
+      expr.ReplaceAll("TMath::Exp",  "exp");
+      expr.ReplaceAll("TMath::Min",  "min");
+      expr.ReplaceAll("TMath::Max",  "max");
+      expr.ReplaceAll("TMath::Log",  "log");
+      expr.ReplaceAll("TMath::Cos",  "cos");
+      expr.ReplaceAll("TMath::Sin",  "sin");
+      expr.ReplaceAll("TMath::Sqrt", "sqrt");
+      expr.ReplaceAll("TMath::Power", "pow");
    }
 };
 template <class RooArg_t>
@@ -784,9 +779,6 @@ public:
    {
       auto *pdf = static_cast<const RooTruthModel *>(func);
       elem["type"] << key();
-      std::string name = elem["name"].val();
-      // elem["name"] << RooJSONFactoryWSTool::sanitizeName(name);
-      elem["name"] << name;
       elem["x"] << pdf->convVar().GetName();
 
       return true;
@@ -800,9 +792,6 @@ public:
    {
       auto *pdf = static_cast<const RooGaussModel *>(func);
       elem["type"] << key();
-      std::string name = elem["name"].val();
-      // elem["name"] << RooJSONFactoryWSTool::sanitizeName(name);
-      elem["name"] << name;
       elem["x"] << pdf->convVar().GetName();
       elem["mean"] << pdf->getMean().GetName();
       elem["sigma"] << pdf->getSigma().GetName();
@@ -913,10 +902,6 @@ public:
    bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       auto *integral = static_cast<const RooRealIntegral *>(func);
-      std::string name = elem["name"].val();
-      // elem["name"] << RooJSONFactoryWSTool::sanitizeName(name);
-      elem["name"] << name;
-
       elem["type"] << key();
       std::string integrand = integral->integrand().GetName();
       // elem["integrand"] << RooJSONFactoryWSTool::sanitizeName(integrand);

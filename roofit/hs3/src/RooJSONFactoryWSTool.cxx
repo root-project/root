@@ -2508,6 +2508,10 @@ RooWorkspace RooJSONFactoryWSTool::cleanWS(const RooWorkspace &ws, bool onlyMode
       tmpWS.import(*obj);
    }
 
+   for (auto *obj : ws.allResolutionModels()) {
+      tmpWS.import(*obj);
+   }   
+
    /*
    if (auto* mc = dynamic_cast<RooStats::ModelConfig*>(obj)) {
          // Import the PDF
@@ -2582,7 +2586,13 @@ RooWorkspace RooJSONFactoryWSTool::sanitizeWS(const RooWorkspace &ws)
          obj->SetName(sanitizeName(obj->GetName()).c_str());
       }
    }
-
+   
+   // Resolution Models
+   for (auto *obj : tmpWS.allResolutionModels()){
+      if (!isValidName(obj->GetName())) {
+         obj->SetName(sanitizeName(obj->GetName()).c_str());
+      }
+   }
    // Datasets
    for (auto *data : tmpWS.allData()) {
       // Sanitize dataset name
