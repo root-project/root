@@ -104,8 +104,6 @@ void testUnfold5c()
 
   TUnfoldBinning *detectorBinning,*generatorBinning;
 
-  outputFile->cd();
-
   // read binning schemes in XML format
 #ifndef READ_BINNING_CINT
   TDOMParser parser;
@@ -122,8 +120,8 @@ void testUnfold5c()
 
   delete binningSchemes;
 #endif
-  detectorBinning->Write();
-  generatorBinning->Write();
+  outputFile->WriteTObject(detectorBinning);
+  outputFile->WriteTObject(generatorBinning);
 
   if(detectorBinning) {
      detectorBinning->PrintStream(cout);
@@ -154,10 +152,10 @@ void testUnfold5c()
   Float_t etaRec,ptRec,discr,etaGen,ptGen;
   Int_t istriggered,issignal;
 
-  outputFile->cd();
-
   TH1 *histDataReco=detectorBinning->CreateHistogram("histDataReco");
   TH1 *histDataTruth=generatorBinning->CreateHistogram("histDataTruth");
+  histDataReco->SetDirectory(outputFile);
+  histDataTruth->SetDirectory(outputFile);
 
   TFile *dataFile=new TFile("testUnfold5_data.root");
   TTree *dataTree=(TTree *) dataFile->Get("data");
@@ -208,10 +206,9 @@ void testUnfold5c()
   // Step 4: book and fill histogram of migrations
   //         it receives events from both signal MC and background MC
 
-  outputFile->cd();
-
   TH2 *histMCGenRec=TUnfoldBinning::CreateHistogramOfMigrations
      (generatorBinning,detectorBinning,"histMCGenRec");
+  histMCGenRec->SetDirectory(outputFile);
 
   TFile *signalFile=new TFile("testUnfold5_signal.root");
   TTree *signalTree=(TTree *) signalFile->Get("signal");
