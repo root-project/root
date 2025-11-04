@@ -11,13 +11,13 @@
 
 // Validate cling C mode.
 
-// Fix value printing!
-
 int printf(const char*,...);
 printf("CHECK 123 %p\n", gCling); // CHECK: CHECK 123
 
-12 // expected-error {{ValueExtractionSynthesizer could not find: 'cling::runtime::internal::setValueNoAlloc'.}}
+int i = 1 // CHECK: (int) 1
+sizeof(int) // CHECK: (unsigned long) 4
+int x = sizeof(int);
+printf("CHECK %d\n", x); // CHECK: CHECK 4
 
-32 // expected-error {{ValueExtractionSynthesizer could not find: 'cling::runtime::internal::setValueNoAlloc'.}}
-
+// expected-no-diagnostics
 .q
