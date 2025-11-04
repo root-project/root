@@ -414,8 +414,7 @@ def build(options, buildtype):
 
     dump_requested_config(options)
 
-    print("*** Skipping build")
-    #cmake_build(buildtype)
+    cmake_build(buildtype)
 
 
 @github_log_group("Create binary packages")
