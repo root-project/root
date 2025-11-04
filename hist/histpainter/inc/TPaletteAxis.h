@@ -74,7 +74,7 @@ public:
 
    virtual void  UnZoom();  // *MENU*
 
-   ClassDefOverride(TPaletteAxis,4)  //class used to display a color palette axis for 2-d plots
+   ClassDefOverride(TPaletteAxis, 5)  //class used to display a color palette axis for 2-d plots
 };
 
 #endif
