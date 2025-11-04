@@ -85,6 +85,7 @@
 #include <TMatrixD.h>
 #include <TMatrixDSym.h>
 #include <TVectorD.h>
+#include <TVirtualFitter.h>
 #include <TMatrixDSymEigen.h>
 #include <TFitResult.h>
 #include <TRandom3.h>
