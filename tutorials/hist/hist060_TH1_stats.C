@@ -13,7 +13,7 @@
 /// \date August 2016
 /// \author  Olivier Couet
 
-TCanvas *hist060_TH1_stats()
+void hist060_TH1_stats()
 {
    // Create and plot a test histogram with stats
    TCanvas *se = new TCanvas;
@@ -44,5 +44,4 @@ TCanvas *hist060_TH1_stats()
    h->SetStats(0);
 
    se->Modified();
-   return se;
 }
