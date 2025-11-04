@@ -10,7 +10,7 @@
 /// \date August 2016
 /// \author Olivier Couet
 
-TCanvas *hist037_TH2Poly_boxes()
+void hist037_TH2Poly_boxes()
 {
    TCanvas *ch2p2 = new TCanvas("ch2p2", "ch2p2", 600, 400);
    gStyle->SetPalette(57);
@@ -44,5 +44,4 @@ TCanvas *hist037_TH2Poly_boxes()
    }
 
    h2p->Draw("COLZ");
-   return ch2p2;
 }
