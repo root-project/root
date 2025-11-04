@@ -9,7 +9,7 @@
 /// \date November 2024
 /// \author Rene Brun
 
-TCanvas *hist006_TH1_bar_charts()
+void hist006_TH1_bar_charts()
 {
    // Try to open first the file cernstaff.root in tutorials/io/tree directory
    TString filedir = gROOT->GetTutorialDir();
@@ -28,14 +28,14 @@ TCanvas *hist006_TH1_bar_charts()
    auto file = std::unique_ptr<TFile>(TFile::Open(filename, "READ"));
    if (!file) {
       Error("hist006_TH1_bar_charts", "file cernstaff.root not found");
-      return nullptr;
+      return;
    }
 
    // Retrieve the TTree named "T" contained in the file
    auto tree = file->Get<TTree>("T");
    if (!tree) {
       Error("hist006_TH1_bar_charts", "Tree T is not present in file %s", file->GetName());
-      return nullptr;
+      return;
    }
    tree->SetFillColor(45);
 
@@ -88,6 +88,4 @@ TCanvas *hist006_TH1_bar_charts()
    legend->Draw();
 
    c1->cd();
-
-   return c1;
 }
