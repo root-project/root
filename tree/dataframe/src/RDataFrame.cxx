@@ -264,7 +264,7 @@ df.Filter([] (ULong64_t e) { return e == 1; }, {"event"}).Histo1D<RVec<float>>("
    <td>
 ~~~{cpp}
 // object selection: for each event, fill histogram with array of selected pts
-tree->Draw('Muon_pt', 'Muon_pt > 100')
+tree->Draw('Muon_pt', 'Muon_pt > 100');
 ~~~
    </td>
    <td>
@@ -1915,6 +1915,178 @@ Non-finite numbers can be suppressed using Filter(), e.g.:
 \code{.py}
 df.Filter("std::isfinite(x)").Mean("x")
 \endcode
+
+### Translating TTree::Draw to RDataFrame 
+
+<table>
+<tr>
+   <td>
+      <b>TTree::Draw</b>
+   </td>
+   <td>
+      <b>ROOT::RDataFrame</b>
+   </td>
+</tr>
+<tr>
+   <td>
+~~~{.cpp}
+// Get the tree and Draw a histogram of x for selected y values
+auto *tree = file->Get<TTree>("myTree");
+tree->Draw("x", "y > 2");
+~~~
+   </td>
+   <td>
+~~~{.cpp}
+ROOT::RDataFrame df("myTree", file);
+df.Filter("y > 2").Histo1D("x")->Draw();
+~~~
+   </td>
+</tr>
+<tr>
+   <td>
+~~~{.cpp}
+// Draw a histogram of "jet_eta" with the desired weight
+tree->Draw("jet_eta", "weight*(event == 1)");
+~~~
+   </td>
+   <td>
+~~~{.cpp}
+df.Filter("event == 1").Histo1D("jet_eta", "weight")->Draw();
+~~~
+   </td>
+</tr>
+<tr>
+   <td>
+~~~{cpp}
+// Draw a histogram filled with values resulting from calling a method of the class of the `event` branch in the TTree.
+tree->Draw("event.GetNtrack()");
+
+~~~
+   </td>
+   <td>
+~~~{cpp}
+auto df1 = df.Define("NTrack","event.GetNtrack()");
+df1.Histo1D("NTrack")->Draw();
+~~~
+   </td>
+</tr>
+<tr>
+   <td>
+~~~{cpp}
+// Draw only every 10th event
+tree->Draw("fNtrack","fEvtHdr.fEvtNum%10 == 0");
+~~~
+   </td>
+   <td>
+~~~{cpp}
+// Use the Filter operation together with the special RDF column: `rdfentry_`
+df.Filter("rdfentry_ % 10 == 0").Histo1D("fNtrack")->Draw();
+~~~
+   </td>
+</tr>
+<tr>
+   <td>
+~~~{cpp}
+// object selection: for each event, fill histogram with array of selected pts
+tree->Draw('Muon_pt', 'Muon_pt > 100');
+~~~
+   </td>
+   <td>
+~~~{cpp}
+// with RDF, arrays are read as ROOT::VecOps::RVec objects
+df.Define("good_pt", "Muon_pt[Muon_pt > 100]").Histo1D("good_pt")->Draw();
+~~~
+   </td>
+</tr>
+</tr>
+<tr>
+   <td>
+~~~{cpp}
+// Draw the histogram and fill hnew with it
+tree->Draw("sqrt(x)>>hnew","y>0"); 
+
+// Retrieve hnew from the current directory
+TH1F *hnew = (TH1F*)gDirectory->Get("hnew");
+
+// Retrieve hnew from the current Pad
+TH1F *hnew = (TH1F*)gPad->GetPrimitive("hnew");
+~~~
+   </td>
+   <td>
+~~~{cpp}
+// We pass histogram constructor arguments to the Histo1D operation, to easily give the histogram a name
+auto hist = df.Filter("y>0").Histo1D({"hnew","hnew",10, 0, 10},"x");
+~~~
+   </td>
+</tr>
+<tr>
+   <td>
+~~~{cpp}
+// Draw a 1D Profile histogram instead of TH2F
+tree->Draw("y:x","","prof");
+
+// Draw a 2D Profile histogram instead of TH3F
+tree->Draw("z:y:x","","prof");
+~~~
+   </td>
+   <td>
+~~~{cpp}
+
+// Draw a 1D Profile histogram
+auto profile1D = df.Profile1D("x", "y");
+
+// Draw a 2D Profile histogram
+auto profile2D = df.Profile2D("x", "y", "z");
+~~~
+   </td>
+</tr>
+<tr>
+   <td>
+~~~{cpp}
+// This command draws 2 entries starting with entry 5
+tree->Draw("x", "","", 2, 5);
+~~~
+   </td>
+   <td>
+~~~{cpp}
+// Range function with arguments begin, end
+auto histo_range = df.Range(5,7).Histo1D<int>("x");
+histo_range->Draw();
+~~~
+   </td>
+</tr>
+<tr>
+   <td>
+~~~{cpp}
+// Draw the X() component of the 
+// ROOT::Math::DisplacementVector3D in vec_list
+tree->Draw("vec_list.X()");
+~~~
+   </td>
+   <td>
+~~~{cpp}
+auto histo = df.Define("x", "ROOT::RVecD out; for(const auto &el: vec_list) out.push_back(el.X()); return out;").Histo1D("x");
+histo->Draw();
+~~~
+   </td>
+</tr>
+<tr>
+   <td>
+~~~{cpp}
+// Gather all values from a branch holding a collection per event, `pt`, 
+// and fill a histogram so that we can count the total number of values across all events 
+tree->Draw("pt>>histo");
+TH1D *histo = (TH1D *)gDirectory->Get("histo");
+histo->GetEntries();
+~~~
+   </td>
+   <td>
+~~~{cpp}
+df.Histo1D("pt")->GetEntries();
+~~~
+   </td>
+</tr>
+</table>
 
 */
 // clang-format on
