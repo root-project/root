@@ -141,6 +141,15 @@ TEST(TFile, ReadWithoutGlobalRegistrationNet)
    const auto netFile = "root://eospublic.cern.ch//eos/root-eos/h1/dstarmb.root";
    TestReadWithoutGlobalRegistrationIfPossible(netFile);
 }
+TEST(TFile, ReadWithCacheWithoutGlobalRegistration)
+{
+   const auto webFile = "http://root.cern/files/h1/dstarmb.root";
+   TFile::SetCacheFileDir(".");
+   delete TFile::Open(webFile, "READ_WITHOUT_GLOBALREGISTRATION");
+   EXPECT_TRUE(gSystem->AccessPathName("./files/h1/dstarmb.root"));
+   TFile::SetCacheFileDir("");
+   gSystem->Unlink("./files");
+}
 #endif
 #endif
 
@@ -295,3 +304,4 @@ TEST(TFile, PersistTObjectStdArray)
    }
    gSystem->Unlink(filename);
 }
+
