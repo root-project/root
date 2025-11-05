@@ -4344,4 +4344,4 @@ ObjectPainter.prototype.showInspector = function(opt, obj) {
 internals.drawInspector = drawInspector;
 
 export { HierarchyPainter, drawInspector, drawStreamerInfo, drawList, markAsStreamerInfo,
-         folderHierarchy, taskHierarchy, listHierarchy, objectHierarchy, keysHierarchy };
+         folderHierarchy, taskHierarchy, listHierarchy, objectHierarchy, keysHierarchy, parseAsArray };

@@ -152,7 +152,7 @@ class TBoxPainter extends ObjectPainter {
       return this;
    }
 
-   /** @summary Draw TLine object */
+   /** @summary Draw TBox object */
    static async draw(dom, obj, opt) {
       const painter = new TBoxPainter(dom, obj, opt);
       return ensureTCanvas(painter, false).then(() => painter.redraw());

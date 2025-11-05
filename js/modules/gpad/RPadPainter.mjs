@@ -1852,6 +1852,12 @@ class RPadPainter extends RObjectPainter {
          pad.fGridy = 1;
       if (d.check('GRID'))
          pad.fGridx = pad.fGridy = 1;
+      if (d.check('TICKX2'))
+         pad.fTickx = 2;
+      if (d.check('TICKY2'))
+         pad.fTicky = 2;
+      if (d.check('TICK2'))
+         pad.fTickx = pad.fTicky = 2;
       if (d.check('TICKX'))
          pad.fTickx = 1;
       if (d.check('TICKY'))
