@@ -1,5 +1,4 @@
 #include "TMath.h"
-#include "TH1K.h"
 
 #include "gtest/gtest.h"
 
@@ -24,22 +23,6 @@ TEST(DNNDensity, BasicTests)
       double ref = factor == 0. ? 0. : factor * k_actual * (1. / std::abs(dist));
 
       EXPECT_DOUBLE_EQ(output, ref);
-
-      // Remove the next block once the deprecated TH1K class is removed. It
-      // was meant to ensure that the new TMath implementation given the same
-      // results.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-      TH1K hist{"hist", "hist", 19, -9.5, 9.5};
-      hist.SetKOrd(k);
-      for (auto &x : values) {
-         hist.Fill(x);
-      }
-      double th1kval = hist.GetBinContent(10);
-      // The old TH1K used only single precision, so we can't compare with
-      // double precision
-      EXPECT_FLOAT_EQ(output, th1kval);
-#pragma GCC diagnostic pop
    };
 
    check({}, /*k*/ 0, /*dist*/ 0., /*k_actual*/ 0);
