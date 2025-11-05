@@ -134,7 +134,6 @@ set(cpp_sources
     src/RPyROOTApplication.cxx
     src/GenericPyz.cxx
     src/TClassPyz.cxx
-    src/TObjectPyz.cxx
     src/TTreePyz.cxx
     src/CPPInstancePyz.cxx
     src/TPyDispatcher.cxx
