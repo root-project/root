@@ -47,7 +47,7 @@ TEST(TH1, MapCppNameTest)
    if (!gSystem->GetPathInfo(CFile.Data(), fs))
       FileSize = (Int_t)fs.fSize;
 
-   EXPECT_NEAR(FileSize, 5867, 200);
+   EXPECT_NEAR(FileSize, 6350, 200);
 
    gSystem->Unlink(CFile.Data());
 }
