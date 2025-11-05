@@ -34,6 +34,8 @@ The following people have contributed to this new version:
 ## Deprecation and Removal
 * The `TH1K` class was removed. `TMath::KNNDensity` can be used in its stead.
 
+* The `TObject` equality operator pythonization (`TObject.__eq__`) that was deprecated in ROOT 6.38 and scheduled for removal in ROOT 6.40 is removed
+
 ## Build System
 
 ## Core Libraries
