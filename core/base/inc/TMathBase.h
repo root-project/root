@@ -97,8 +97,6 @@ namespace TMath {
    // Binary search
    template <typename T> Long64_t BinarySearch(Long64_t n, const T  *array, T value);
    template <typename T> Long64_t BinarySearch(Long64_t n, const T **array, T value);
-   template <typename Iterator, typename Element> Iterator BinarySearch(Iterator first, Iterator last, Element value)
-       R__DEPRECATED(6,40, "Undefined behavior in case \"value\" is smaller than the first element. Use STL algorithms instead, e.g. std::lower_bound(v.rbegin(), v.rend(), value, std::greater{}).");
 
    // Sorting
    template <typename Element, typename Index>
@@ -322,23 +320,6 @@ inline ULong_t TMath::Range(ULong_t lb, ULong_t ub, ULong_t x)
 /// `lb`, `ub` and `x` are `Double_t`.
 inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
    { return x < lb ? lb : (x > ub ? ub : x); }
-
-/// Binary search in an array defined by its iterators.
-///
-/// The values in the iterators range are supposed to be sorted
-/// prior to this call.  If match is found, function returns
-/// position of element.  If no match found, function gives nearest
-/// element smaller than value.
-template <typename Iterator, typename Element>
-Iterator TMath::BinarySearch(Iterator first, Iterator last, Element value)
-{
-   Iterator pind;
-   pind = std::lower_bound(first, last, value);
-   if ( (pind != last) && (*pind == value) )
-      return pind;
-   else
-      return ( pind - 1);
-}
 
 /// Binary search in an array of n values to locate value.
 ///
