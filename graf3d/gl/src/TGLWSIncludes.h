@@ -18,14 +18,14 @@
 #include "TGLIncludes.h"
 
 #if defined(WIN32)
-#  include <GL/wglew.h>
+#include <GL/wglew.h>
 #else
-#  if defined(__APPLE__) && !defined(R__HAS_COCOA)
-#    define GLEW_APPLE_GLX
-#  endif
-#  if !defined(R__HAS_COCOA)
-#    include <GL/glxew.h>
-#  endif
+#if defined(__APPLE__) && !defined(R__HAS_COCOA)
+#define GLEW_APPLE_GLX
+#endif
+#if !defined(R__HAS_COCOA)
+#include <GL/glxew.h>
+#endif
 #endif
 
 #endif
