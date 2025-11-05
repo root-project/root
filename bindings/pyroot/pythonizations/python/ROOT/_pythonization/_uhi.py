@@ -494,8 +494,7 @@ def _values_default(self) -> np.typing.NDArray[Any]:  # noqa: F821
     return ret.reshape(_shape(self), order="F")[tuple([slice(1, -1)] * len(_shape(self)))]
 
 
-# Special case for TH1K: we need the array length to correspond to the number of bins
-# according to the UHI plotting protocol
+# Special case for TH*C and TProfile*
 def _values_by_copy(self, include_flow_bins=False) -> np.typing.NDArray[Any]:  # noqa: F821
     from itertools import product
 
@@ -566,8 +565,6 @@ values_func_dict: dict[str, Callable] = {
     "TH1C": _values_by_copy,
     "TH2C": _values_by_copy,
     "TH3C": _values_by_copy,
-    "TH2K": _values_by_copy,
-    "TH3K": _values_by_copy,
     "TProfile": _values_by_copy,
     "TProfile2D": _values_by_copy,
     "TProfile2Poly": _values_by_copy,
