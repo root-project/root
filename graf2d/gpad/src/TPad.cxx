@@ -1232,6 +1232,10 @@ Int_t TPad::DistancetoPrimitive(Int_t px, Int_t py)
 ///  - color is the color of the new pads. If 0, color is the canvas color.
 ///  - All pads are contained within the inner area defined by the canvas margins.
 ///
+/// Note that, if you don't have a background color of your pad, the spacing between pads
+/// might look larger than specified, since in the default case, each pad has internally
+/// an empty space on the right equal to the space filled on the left for the y axis labels.
+///
 /// Pads are automatically named `canvasname_n` where `n` is the division number
 /// starting from top left pad.
 ///
