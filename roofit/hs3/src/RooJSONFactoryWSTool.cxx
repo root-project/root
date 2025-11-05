@@ -965,7 +965,7 @@ RooAbsReal *RooJSONFactoryWSTool::requestImpl<RooAbsReal>(const std::string &obj
  * @param node The JSONNode to which the variable will be exported.
  * @return void
  */
-void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &node)
+void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &node, const bool storeConstant)
 {
    auto *cv = dynamic_cast<const RooConstVar *>(v);
    auto *rrv = dynamic_cast<const RooRealVar *>(v);
@@ -984,7 +984,7 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &node)
       var["const"] << true;
    } else if (rrv) {
       var["value"] << rrv->getVal();
-      if (rrv->isConstant()) {
+      if (rrv->isConstant() && storeConstant) {
          var["const"] << rrv->isConstant();
       }
       if (rrv->getBins() != 100) {
@@ -1004,12 +1004,12 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &node)
  * @param n The JSONNode to which the variables will be exported.
  * @return void
  */
-void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, JSONNode &n)
+void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, JSONNode &n, const bool storeConstant)
 {
    // export a list of RooRealVar objects
    n.set_seq();
    for (RooAbsArg *arg : allElems) {
-      exportVariable(arg, n);
+      exportVariable(arg, n, storeConstant);
    }
 }
 
@@ -1554,7 +1554,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
 
    // this really is an unbinned dataset
    output["type"] << "unbinned";
-   exportVariables(variables, output["axes"]);
+   exportVariables(variables, output["axes"], false);
    auto &coords = output["entries"].set_seq();
    std::vector<double> weightVals;
    bool hasNonUnityWeights = false;
@@ -1562,10 +1562,6 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       data.get(i);
       coords.append_child().fill_seq(variables, [](auto x) { return static_cast<RooRealVar *>(x)->getVal(); });
       std::string datasetName = data.GetName();
-      /*if (datasetName.find("combData_ZvvH126.5") != std::string::npos) {
-         file << dynamic_cast<RooAbsReal *>(data.get(i)->find("atlas_invMass_PttEtaConvVBFCat1"))->getVal() <<
-      std::endl;
-      }*/
       if (data.isWeighted()) {
          weightVals.push_back(data.weight());
          if (data.weight() != 1.)
@@ -1575,7 +1571,6 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    if (data.isWeighted() && hasNonUnityWeights) {
       output["weights"].fill_seq(weightVals);
    }
-   // file.close();
 }
 
 /**
