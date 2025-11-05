@@ -49,7 +49,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     TH1F.h
     TH1.h
     TH1I.h
-    TH1K.h
     TH1L.h
     TH1S.h
     TH2C.h
@@ -139,7 +138,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     TScatter.cxx
     TScatter2D.cxx
     TH1.cxx
-    TH1K.cxx
     TH1Merger.cxx
     TH2.cxx
     TH2Poly.cxx
