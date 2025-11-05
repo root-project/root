@@ -811,7 +811,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
                         TIsAProxy.h TVirtualIsAProxy.h
                         DllImport.h ESTLType.h Varargs.h
                         ThreadLocalStorage.h
-                        TBranchProxyTemplate.h TGLWSIncludes.h
+                        TBranchProxyTemplate.h
                         snprintf.h strlcpy.h)
 
    # Deprecated header files.
