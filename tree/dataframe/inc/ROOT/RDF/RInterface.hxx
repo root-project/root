@@ -1251,26 +1251,6 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns to disk, in a new TTree or RNTuple `treename` in file `filename`.
-   /// \deprecated Use other overloads that do not require template arguments.
-   /// \tparam ColumnTypes variadic list of branch/column types.
-   /// \param[in] treename The name of the output TTree or RNTuple.
-   /// \param[in] filename The name of the output TFile.
-   /// \param[in] columnList The list of names of the columns/branches/fields to be written.
-   /// \param[in] options RSnapshotOptions struct with extra options to pass to the output TFile and TTree/RNTuple.
-   /// \return a `RDataFrame` that wraps the snapshotted dataset.
-   ///
-   template <typename... ColumnTypes>
-   R__DEPRECATED(
-      6, 40, "Snapshot does not need template arguments anymore, you can safely remove them from this function call.")
-   RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
-                                                 const ColumnNames_t &columnList,
-                                                 const RSnapshotOptions &options = RSnapshotOptions())
-   {
-      return Snapshot(treename, filename, columnList, options);
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Save selected columns to disk, in a new TTree or RNTuple `treename` in file `filename`.
    /// \param[in] treename The name of the output TTree or RNTuple.
    /// \param[in] filename The name of the output TFile.
    /// \param[in] columnList The list of names of the columns/branches/fields to be written.
