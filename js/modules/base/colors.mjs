@@ -191,16 +191,23 @@ function findColor(name) {
 /** @summary Add new color
   * @param {string} rgb - color name or just string with rgb value
   * @param {array} [lst] - optional colors list, to which add colors
+  * @param {array} [lst] - optional colors list, to which add colors
   * @return {number} index of new color
   * @private */
-function addColor(rgb, lst) {
+function addColor(rgb, lst, indx) {
    if (!lst)
       lst = gbl_colors_list;
 
    if ((rgb[0] === '#') && (isNodeJs() || (isBatchMode() && settings.ApproxTextSize)))
       rgb = d3_color(rgb).formatRgb();
 
-   const indx = lst.indexOf(rgb);
+   if (indx !== undefined) {
+      if (Number.isInteger(indx) && (indx > 0))
+         lst[indx] = rgb;
+      return indx;
+   }
+
+   indx = lst.indexOf(rgb);
    if (indx >= 0)
       return indx;
    lst.push(rgb);

@@ -1098,7 +1098,7 @@ class TAxisPainter extends ObjectPainter {
 
    /** @summary Draw axis labels
      * @return {Promise} with array label size and max width */
-   async drawLabels(axis_g, axis, w, h, handle, side, labelsFont, labeloffset, tickSize, ticksPlusMinus, max_text_width, frame_ygap) {
+   async drawLabels(axis_g, axis, w, h, handle, labelsside, labelsFont, labeloffset, tickSize, ticksPlusMinus, max_text_width, frame_ygap) {
       const center_lbls = this.isCenteredLabels(),
             label_g = [axis_g.append('svg:g').attr('class', 'axis_labels')],
             lbl_pos = handle.lbl_pos || handle.major,
@@ -1170,13 +1170,8 @@ class TAxisPainter extends ObjectPainter {
          }
       }
 
-      let pr = Promise.resolve();
-
-      for (let lcnt = 0; lcnt < label_g.length; ++lcnt) {
-         if (lcnt > 0)
-            side = -side;
-
-         pr = pr.then(() => this.startTextDrawingAsync(labelsFont, 'font', label_g[lcnt])).then(() => {
+      const draw_labels = (lcnt, side) => {
+         return this.startTextDrawingAsync(labelsFont, 'font', label_g[lcnt]).then(() => {
             let lastpos = 0;
             const fix_coord = this.vertical ? -labeloffset * side : labeloffset * side + ticksPlusMinus * tickSize;
 
@@ -1222,7 +1217,8 @@ class TAxisPainter extends ObjectPainter {
                if (this.vertical) {
                   arg.x = fix_coord;
                   arg.y = pos;
-                  arg.align = rotate_lbls ? (this.optionLeft || this.reverseAlign ? 23 : 21) : (this.optionLeft || this.reverseAlign ? 12 : 32);
+                  const flag = this.optionLeft || this.reverseAlign || (side < 0);
+                  arg.align = rotate_lbls ? (flag ? 23 : 21) : (flag ? 12 : 32);
                   if (this.cutLabels()) {
                      const gap = labelsFont.size * (rotate_lbls ? 1.5 : 0.6);
                      if ((pos < gap) || (pos > h - gap))
@@ -1292,14 +1288,16 @@ class TAxisPainter extends ObjectPainter {
                });
             }
 
-            if ((lcnt > 1) && applied_scale)
+            if ((lcnt > 0) && applied_scale)
                this.scaleTextDrawing(applied_scale, label_g[lcnt]);
 
             return this.finishTextDrawing(label_g[lcnt], true);
          });
-      }
+      };
 
-      return pr.then(() => {
+      return draw_labels(0, labelsside).then(() => {
+         return label_g.length < 2 ? true : draw_labels(1, -labelsside);
+      }).then(() => {
          this._maxlbllen = maxtextlen; // for internal use in palette painter
 
          if (lbl_tilt) {

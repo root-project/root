@@ -2811,6 +2811,10 @@ class TPadPainter extends ObjectPainter {
       padOpt('GRIDX', p => { p.fGridx = 1; });
       padOpt('GRIDY', p => { p.fGridy = 1; });
       padOpt('GRID', p => { p.fGridx = p.fGridy = 1; });
+      padOpt('TICKX2', p => { p.fTickx = 2; });
+      padOpt('TICKY2', p => { p.fTicky = 2; });
+      padOpt('TICKZ2', p => { p.fTickz = 2; });
+      padOpt('TICK2', p => { p.fTickx = p.fTicky = 2; });
       padOpt('TICKX', p => { p.fTickx = 1; });
       padOpt('TICKY', p => { p.fTicky = 1; });
       padOpt('TICKZ', p => { p.fTickz = 1; });

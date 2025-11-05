@@ -1,4 +1,4 @@
-import { gStyle, browser, settings, clone, isObject, isFunc, isStr, BIT,
+import { gStyle, browser, settings, clone, create, isObject, isFunc, isStr, BIT,
          clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTPaveClass, clTDiamond, clTLegend, clTPaletteAxis,
          clTText, clTLatex, clTLine, clTBox, kTitle, isNodeJs, nsSVG } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb, pointer as d3_pointer } from '../d3.mjs';
@@ -1821,4 +1821,52 @@ class TPavePainter extends ObjectPainter {
 } // class TPavePainter
 
 
-export { TPavePainter, kPosTitle };
+/** @summary Draw object title
+    * @return {Promise} with painter */
+async function drawObjectTitle(painter, first_time, is_enabled, is_draw) {
+   if (!is_enabled)
+      return painter;
+
+   const st = gStyle,
+         obj = painter.getObject(),
+         pp = painter.getPadPainter(),
+         draw_title = is_draw && (st.fOptTitle > 0);
+
+   if (first_time) {
+      let pt = pp.findInPrimitives(kTitle, clTPaveText);
+      if (pt) {
+         pt.Clear();
+         if (draw_title)
+            pt.AddText(obj.fTitle);
+         return painter;
+      }
+
+      pt = create(clTPaveText);
+      Object.assign(pt, {
+         fName: kTitle, fOption: 'blNDC', fFillColor: st.fTitleColor, fFillStyle: st.fTitleStyle, fBorderSize: st.fTitleBorderSize,
+         fTextFont: st.fTitleFont, fTextSize: st.fTitleFontSize, fTextColor: st.fTitleTextColor, fTextAlign: 22
+      });
+
+      if (draw_title)
+         pt.AddText(obj.fTitle);
+
+      return TPavePainter.draw(pp, pt, kPosTitle).then(p => {
+         p?.setSecondaryId(painter, kTitle);
+         return painter;
+      });
+   }
+
+   const tpainter = pp?.findPainterFor(null, kTitle, clTPaveText),
+         pt = tpainter?.getObject();
+
+   if (!tpainter || !pt)
+      return painter;
+
+   pt.Clear();
+   if (draw_title)
+      pt.AddText(obj.fTitle);
+   return tpainter.redraw().then(() => painter);
+}
+
+
+export { TPavePainter, kPosTitle, drawObjectTitle };

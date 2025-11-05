@@ -6,7 +6,8 @@ import { getTF1Value } from '../base/func.mjs';
 
 
 const PadDrawOptions = ['LOGXY', 'LOGX', 'LOGY', 'LOGZ', 'LOGV', 'LOG', 'LOG2X', 'LOG2Y', 'LOG2',
-                        'LNX', 'LNY', 'LN', 'GRIDXY', 'GRIDX', 'GRIDY', 'TICKXY', 'TICKX', 'TICKY', 'TICKZ', 'FB', 'GRAYSCALE'];
+                        'LNX', 'LNY', 'LN', 'GRIDXY', 'GRIDX', 'GRIDY',
+                        'TICKXY2', 'TICKX2', 'TICKY2', 'TICKXY', 'TICKX', 'TICKY', 'TICKZ', 'FB', 'GRAYSCALE'];
 
 /**
  * @summary Painter for TH1 classes
