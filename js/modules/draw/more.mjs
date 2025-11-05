@@ -112,47 +112,6 @@ function drawEllipse() {
    };
 }
 
-/** @summary Draw TPie
-  * @private */
-function drawPie() {
-   const g = this.createG(),
-         pie = this.getObject(),
-         nb = pie.fPieSlices.length,
-         xc = this.axisToSvg('x', pie.fX),
-         yc = this.axisToSvg('y', pie.fY),
-         rx = this.axisToSvg('x', pie.fX + pie.fRadius) - xc,
-         ry = this.axisToSvg('y', pie.fY + pie.fRadius) - yc;
-
-   makeTranslate(g, xc, yc);
-
-   // Draw the slices
-   let total = 0,
-       af = (pie.fAngularOffset * Math.PI) / 180,
-       x1 = Math.round(rx * Math.cos(af)),
-       y1 = Math.round(ry * Math.sin(af));
-
-   for (let n = 0; n < nb; n++)
-      total += pie.fPieSlices[n].fValue;
-
-   for (let n = 0; n < nb; n++) {
-      const slice = pie.fPieSlices[n];
-
-      this.createAttLine({ attr: slice });
-      this.createAttFill({ attr: slice });
-
-      af += slice.fValue / total * 2 * Math.PI;
-      const x2 = Math.round(rx * Math.cos(af)),
-            y2 = Math.round(ry * Math.sin(af));
-
-      g.append('svg:path')
-       .attr('d', `M0,0L${x1},${y1}A${rx},${ry},0,0,0,${x2},${y2}z`)
-       .call(this.lineatt.func)
-       .call(this.fillatt.func);
-      x1 = x2;
-      y1 = y2;
-   }
-}
-
 /** @summary Draw TMarker
   * @private */
 function drawMarker() {
@@ -283,4 +242,4 @@ function drawJSImage(dom, obj, opt) {
    return painter;
 }
 
-export { drawEllipse, drawPie, drawMarker, drawPolyMarker, drawJSImage };
+export { drawEllipse, drawMarker, drawPolyMarker, drawJSImage };

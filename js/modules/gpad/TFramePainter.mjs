@@ -2514,6 +2514,11 @@ class TFramePainter extends FrameInteractive {
             this.fillatt.setSolidColor('white');
          else if ((pad?.fFillStyle === 4000) && !this.fillatt.empty()) // special case of transpad.C macro, which set transparent pad
             this.fillatt.setOpacity(0);
+
+         if (pad && (pad.fFrameBorderMode || (pad.fFrameBorderSize !== 1))) {
+            this.#border_mode = pad.fFrameBorderMode;
+            this.#border_size = pad.fFrameBorderSize;
+         }
       }
 
       if (!tframe && (pad?.fFrameLineColor !== undefined))

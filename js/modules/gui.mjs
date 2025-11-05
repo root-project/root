@@ -1,7 +1,8 @@
 import { decodeUrl, settings, constants, gStyle, internals, browser,
          findFunction, parse, isFunc, isStr, isObject, isBatchMode, setBatchMode } from './core.mjs';
 import { select as d3_select } from './d3.mjs';
-import { HierarchyPainter } from './gui/HierarchyPainter.mjs';
+import { addColor } from './base/colors.mjs';
+import { HierarchyPainter, parseAsArray } from './gui/HierarchyPainter.mjs';
 import { setStoragePrefix, readSettings, readStyle } from './gui/utils.mjs';
 import { setDefaultDrawOpt } from './draw.mjs';
 import { createMenu, closeMenu } from './gui/menu.mjs';
@@ -231,6 +232,20 @@ function readStyleFromURL(url) {
 
    gStyle.fStatFormat = d.get('statfmt', gStyle.fStatFormat);
    gStyle.fFitFormat = d.get('fitfmt', gStyle.fFitFormat);
+
+   if (d.has('colors')) {
+      parseAsArray(d.get('colors')).forEach(elem => {
+         if (!isStr(elem))
+            return;
+         const p = elem.indexOf('_');
+         if (p < 0)
+            return;
+         const id = parseInt(elem.slice(0, p)),
+               col = elem.slice(p + 1);
+         if (col.match(/^[a-fA-F0-9]+/) && ((col.length === 6) || (col.length === 8)))
+            addColor('#' + col, null, id);
+      });
+   }
 }
 
 
