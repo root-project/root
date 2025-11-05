@@ -18,18 +18,11 @@
 
 // This header is deprecated according to
 // https://its.cern.ch/jira/browse/ROOT-9807
-// In the 6.38 release, our users will get a warning, and then in 6.40 we
-// remove this header. Conditional on the ROOT version, this header will give
-// an error on inclusion to remind us to move it. Remove also the
-// _ROOT_GL_BUILDS_ITSELF definition from the CMakeLists.txt then.
-#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 38, 00)
-#error "Header should be moved outside of the public ROOT interface now"
-#else
-#ifndef _ROOT_GL_BUILDS_ITSELF
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 39, 00)
+#error "The TGLWSIncludes.h header was removed from ROOT in v6.40"
+#elif !defined(_ROOT_GL_BUILDS_ITSELF) and !defined(_WIN32)
 #warning "The TGLWSIncludes.h header is deprecated and will be removed in ROOT 6.40"
 #endif
-#endif
-
 
 #include "RConfigure.h"
 #include "TGLIncludes.h"
