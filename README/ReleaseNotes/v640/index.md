@@ -32,6 +32,7 @@ The following people have contributed to this new version:
  Vassil Vassilev, Princeton,\
 
 ## Deprecation and Removal
+* The `TH1K` class was removed. `TMath::KNNDensity` can be used in its stead.
 
 ## Build System
 
