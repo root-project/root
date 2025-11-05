@@ -194,6 +194,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
     src/TGLViewerEditor.cxx
     src/TGLVoxelPainter.cxx
     src/TGLWidget.cxx
+    src/TGLWSIncludes.h
     src/TH2GL.cxx
     src/TH3GL.cxx
     src/TKDEAdapter.cxx
@@ -224,6 +225,7 @@ target_include_directories(RGL PRIVATE
      ${OPENGL_INCLUDE_DIR}
      ${FTGL_INCLUDE_DIR}
      ${FREETYPE_INCLUDE_DIRS}
+     ${GLEW_INCLUDE_DIRS}
 )
 
 if(builtin_gl2ps)
