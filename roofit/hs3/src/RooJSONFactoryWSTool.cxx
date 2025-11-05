@@ -483,18 +483,13 @@ void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
  *
  * @param ws The RooWorkspace in which the observables will be created.
  * @param node The JSONNode containing information about the observables to be created.
- * @param out The RooArgSet to which the created observables will be added.
+ * @param out The RooAbsCollection to which the created observables will be added.
  * @return void
  */
-void getObservables(RooWorkspace const &ws, const JSONNode &node, RooArgSet &out)
+void getObservables(RooWorkspace const &ws, const JSONNode &node, RooAbsCollection &out)
 {
-   std::map<std::string, Var> vars;
    for (const auto &p : node["axes"].children()) {
-      vars.emplace(RooJSONFactoryWSTool::name(p), Var(p));
-   }
-
-   for (auto v : vars) {
-      std::string name(v.first);
+      std::string name(RooJSONFactoryWSTool::name(p));
       if (ws.var(name)) {
          out.add(*ws.var(name));
       } else {
@@ -528,9 +523,9 @@ std::unique_ptr<RooAbsData> loadData(const JSONNode &p, RooWorkspace &workspace)
       return RooJSONFactoryWSTool::readBinnedData(p, name, RooJSONFactoryWSTool::readAxes(p));
    } else if (type == "unbinned") {
       // unbinned
-      RooArgSet vars;
-      getObservables(workspace, p, vars);
-      RooArgList varlist(vars);
+      RooArgList varlist;
+      getObservables(workspace, p, varlist);
+      RooArgSet vars(varlist);
       auto data = std::make_unique<RooDataSet>(name, name, vars, RooFit::WeightVar());
       auto &coords = p["entries"];
       if (!coords.is_seq()) {
