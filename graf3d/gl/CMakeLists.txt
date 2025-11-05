@@ -194,6 +194,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
     src/TGLViewerEditor.cxx
     src/TGLVoxelPainter.cxx
     src/TGLWidget.cxx
+    src/TGLWSIncludes.h
     src/TH2GL.cxx
     src/TH3GL.cxx
     src/TKDEAdapter.cxx
@@ -224,6 +225,7 @@ target_include_directories(RGL PRIVATE
      ${OPENGL_INCLUDE_DIR}
      ${FTGL_INCLUDE_DIR}
      ${FREETYPE_INCLUDE_DIRS}
+     ${GLEW_INCLUDE_DIRS}
 )
 
 if(builtin_gl2ps)
@@ -231,9 +233,6 @@ if(builtin_gl2ps)
 else()
   target_include_directories(RGL PRIVATE ${GL2PS_INCLUDE_DIRS})
 endif()
-
-# Remove when not needed anymore in the ROOT 6.40 development cycle
-target_compile_definitions(RGL PRIVATE _ROOT_GL_BUILDS_ITSELF)
 
 if(MSVC AND builtin_glew)
   target_compile_definitions (RGL PRIVATE "GLEW_STATIC")
