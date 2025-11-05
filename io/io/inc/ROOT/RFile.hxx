@@ -341,7 +341,7 @@ public:
    /// By default, keys referring to directories are not returned: only those referring to leaf objects are.
    /// If `basePath` is the path of a leaf object, only `basePath` itself will be returned.
    /// `flags` is a bitmask specifying the listing mode.
-   /// If `(flags & kListObject) != 0`, the listing will include keys of non-directory objects (default);
+   /// If `(flags & kListObjects) != 0`, the listing will include keys of non-directory objects (default);
    /// If `(flags & kListDirs) != 0`, the listing will include keys of directory objects;
    /// If `(flags & kListRecursive) != 0`, the listing will recurse on all subdirectories of `basePath` (default),
    /// otherwise it will only list immediate children of `basePath`.
