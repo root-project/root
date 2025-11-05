@@ -4727,6 +4727,12 @@ void TGraphPainter::PaintScatter2D(TScatter2D *theScatter, Option_t* chopt)
 
             functions->AddFirst(palette);
          }
+         TString scTitle(theScatter->GetTitle());
+         if (palette && scTitle.CountChar(';') == 4) {
+            auto pos = scTitle.Last(';') + 1;
+            auto cTitle = scTitle(pos, scTitle.Length() - pos);
+            palette->SetTitle(cTitle.Data());
+         }
          if (palette && !optionP) palette->Paint();
       }
    } else {

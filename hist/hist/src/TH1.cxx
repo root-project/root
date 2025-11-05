@@ -6758,9 +6758,12 @@ void TH1::SetDefaultSumw2(Bool_t sumw2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Change/set the title.
 ///
-/// If title is in the form `stringt;stringx;stringy;stringz`
+/// If title is in the form `stringt;stringx;stringy;stringz;stringc`
 /// the histogram title is set to `stringt`, the x axis title to `stringx`,
-/// the y axis title to `stringy`, and the z axis title to `stringz`.
+/// the y axis title to `stringy`, the z axis title to `stringz`, and the c
+/// axis title for the palette is ignored at this stage.
+/// Note that you can use e.g. `stringt;stringx` if you only want to specify
+/// title and x axis title.
 ///
 /// To insert the character `;` in one of the titles, one should use `#;`
 /// or `#semicolon`.
@@ -6792,8 +6795,15 @@ void TH1::SetTitle(const char *title)
             fYaxis.SetTitle(str2.Data());
             lns  = str1.Length();
             str1 = str1(isc+1, lns);
-            str1.ReplaceAll("#semicolon",10,";",1);
-            fZaxis.SetTitle(str1.Data());
+            isc  = str1.Index(";");
+            if (isc >=0 ) {
+               str2 = str1(0,isc);
+               str2.ReplaceAll("#semicolon",10,";",1);
+               fZaxis.SetTitle(str2.Data());
+            } else {
+               str1.ReplaceAll("#semicolon",10,";",1);
+               fZaxis.SetTitle(str1.Data());
+            }
          } else {
             str1.ReplaceAll("#semicolon",10,";",1);
             fYaxis.SetTitle(str1.Data());
