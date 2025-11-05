@@ -132,8 +132,6 @@ static PyMethodDef gPyROOTMethods[] = {
     (char *)"Allow to access branches as tree attributes"},
    {(char *)"AddTClassDynamicCastPyz", (PyCFunction)PyROOT::AddTClassDynamicCastPyz, METH_VARARGS,
     (char *)"Cast the void* returned by TClass::DynamicCast to the right type"},
-   {(char *)"AddTObjectEqNePyz", (PyCFunction)PyROOT::AddTObjectEqNePyz, METH_VARARGS,
-    (char *)"Add equality and inequality comparison operators to TObject"},
    {(char *)"BranchPyz", (PyCFunction)PyROOT::BranchPyz, METH_VARARGS,
     (char *)"Fully enable the use of TTree::Branch from Python"},
    {(char *)"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,

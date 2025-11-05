@@ -8,7 +8,6 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from ROOT.libROOTPythonizations import AddTObjectEqNePyz
 import cppyy
 
 # Searching
@@ -25,22 +24,6 @@ def _contains(self, o):
 
 
 # Comparison operators
-
-
-def _eq(self, o):
-    import warnings
-
-    warnings.warn(
-        "\nTObject.__eq__ is deprecated and will be removed in ROOT 6.40."
-        "\n\nIt forwards to TObject::Equals(), which uses pointer comparison if"
-        " not overridden in derived classes."
-        "\nThis may be confusing, because people expect value comparisons."
-        "\nUse Pythons `is` for pointer comparison, or request/implement"
-        " `operator==` on the C++ side if you need value-based equality checks.",
-        FutureWarning,
-        stacklevel=2,
-    )
-    return self._cpp_eq(o)
 
 
 def _lt(self, o):
@@ -78,9 +61,6 @@ def pythonize_tobject():
     klass.__contains__ = _contains
 
     # Inject comparison operators
-    AddTObjectEqNePyz(klass)
-    klass._cpp_eq = klass.__eq__
-    klass.__eq__ = _eq
     klass.__lt__ = _lt
     klass.__le__ = _le
     klass.__gt__ = _gt
