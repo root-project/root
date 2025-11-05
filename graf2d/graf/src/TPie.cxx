@@ -1135,7 +1135,7 @@ void TPie::SavePrimitive(std::ostream &out, Option_t *option)
       fPieSlices[i]->SavePrimitive(out, slice_name.Data());
    }
 
-   SavePrimitiveDraw(out, "pie", option);
+   out << "   gPad->Add(pie, \"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
