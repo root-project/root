@@ -893,6 +893,7 @@ TTreeFormula* TNeuron::UseBranch(TTree* input, const char* formula)
    }
    // Computes the default normalization
    TH1D tmp("tmpb", "tmpb", 1, -FLT_MAX, FLT_MAX);
+   tmp.SetDirectory(gDirectory);
    input->Draw(Form("%s>>tmpb",(const char*)f),"","goff");
    fNorm[0] = tmp.GetRMS();
    if(fNorm[0]<1e-15) fNorm[0]=1.;
