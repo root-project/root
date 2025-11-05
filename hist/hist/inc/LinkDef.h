@@ -62,7 +62,6 @@
 #pragma link C++ class TH1F+;
 #pragma link C++ class TH1S+;
 #pragma link C++ class TH1I+;
-#pragma link C++ class TH1K+;
 #pragma link C++ class TH1L+;
 #pragma link C++ class TH2-;
 #pragma link C++ class TH2C-;
