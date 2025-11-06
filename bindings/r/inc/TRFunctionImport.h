@@ -165,7 +165,7 @@ namespace ROOT {
             return (*f)();
          }
 #include<TRFunctionImport__oprtr.h>
-         ClassDef(TRFunctionImport, 0) //
+         ClassDefOverride(TRFunctionImport, 0) //
       };
 
       template<> inline TRObject::operator TRFunctionImport()
