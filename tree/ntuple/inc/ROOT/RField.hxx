@@ -197,6 +197,8 @@ public:
    size_t GetAlignment() const final { return fMaxAlignment; }
    std::uint32_t GetTypeVersion() const final;
    std::uint32_t GetTypeChecksum() const final;
+   /// Return the TClass instance backing this field.
+   const TClass *GetClass() const { return fClass; }
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -285,7 +287,7 @@ template <typename T, typename = void>
 class RField final : public RClassField {
 public:
    static std::string TypeName() { return ROOT::Internal::GetRenormalizedDemangledTypeName(typeid(T)); }
-   RField(std::string_view name) : RClassField(name, TypeName())
+   RField(std::string_view name) : RClassField(name, Internal::GetDemangledTypeName(typeid(T)))
    {
       static_assert(std::is_class_v<T>, "no I/O support for this basic C++ type");
    }
