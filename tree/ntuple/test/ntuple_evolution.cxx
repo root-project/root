@@ -150,6 +150,12 @@ struct AddedMemberObject {
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "AddedMemberObject").Unwrap());
 
+      // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
+      // See also https://github.com/root-project/root/issues/9371
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                            /*matchFullMessage=*/false);
+
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
 
@@ -158,16 +164,6 @@ struct AddedMemberObject {
       ProcessLine("ptrAddedMemberObject->fMember1.fInt = 71;");
       ProcessLine("ptrAddedMemberObject->fMember3.fInt = 93;");
       writer->Fill();
-
-      // Reset / close the writer and flush the file.
-      {
-         // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
-         // See also https://github.com/root-project/root/issues/9371
-         ROOT::TestSupport::CheckDiagsRAII diagRAII;
-         diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
-                               /*matchFullMessage=*/false);
-         writer.reset();
-      }
    });
 
    ASSERT_TRUE(gInterpreter->Declare(R"(
@@ -393,18 +389,14 @@ struct RenamedMemberClass {
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "RenamedMemberClass").Unwrap());
 
+      // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
+      // See also https://github.com/root-project/root/issues/9371
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                            /*matchFullMessage=*/false);
+
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
-
-      // Reset / close the writer and flush the file.
-      {
-         // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
-         // See also https://github.com/root-project/root/issues/9371
-         ROOT::TestSupport::CheckDiagsRAII diagRAII;
-         diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
-                               /*matchFullMessage=*/false);
-         writer.reset();
-      }
    });
 
    ASSERT_TRUE(gInterpreter->Declare(R"(
@@ -488,6 +480,12 @@ struct AddedBaseDerived : public AddedBaseIntermediate {
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "AddedBaseDerived").Unwrap());
 
+      // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
+      // See also https://github.com/root-project/root/issues/9371
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                            /*matchFullMessage=*/false);
+
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
 
@@ -496,16 +494,6 @@ struct AddedBaseDerived : public AddedBaseIntermediate {
       ProcessLine("ptrAddedBaseDerived->fIntermediate = 82;");
       ProcessLine("ptrAddedBaseDerived->fDerived = 93;");
       writer->Fill();
-
-      // Reset / close the writer and flush the file.
-      {
-         // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
-         // See also https://github.com/root-project/root/issues/9371
-         ROOT::TestSupport::CheckDiagsRAII diagRAII;
-         diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
-                               /*matchFullMessage=*/false);
-         writer.reset();
-      }
    });
 
    ASSERT_TRUE(gInterpreter->Declare(R"(
@@ -557,6 +545,12 @@ struct AddedSecondBaseDerived : public AddedSecondBaseFirst {
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "AddedSecondBaseDerived").Unwrap());
 
+      // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
+      // See also https://github.com/root-project/root/issues/9371
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                            /*matchFullMessage=*/false);
+
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
 
@@ -565,16 +559,6 @@ struct AddedSecondBaseDerived : public AddedSecondBaseFirst {
       ProcessLine("ptrAddedSecondBaseDerived->fFirstBase = 71;");
       ProcessLine("ptrAddedSecondBaseDerived->fDerived = 93;");
       writer->Fill();
-
-      // Reset / close the writer and flush the file.
-      {
-         // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
-         // See also https://github.com/root-project/root/issues/9371
-         ROOT::TestSupport::CheckDiagsRAII diagRAII;
-         diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
-                               /*matchFullMessage=*/false);
-         writer.reset();
-      }
    });
 
    ASSERT_TRUE(gInterpreter->Declare(R"(
@@ -628,18 +612,14 @@ struct PrependSecondBaseDerived : public PrependSecondBaseFirst {
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "PrependSecondBaseDerived").Unwrap());
 
+      // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
+      // See also https://github.com/root-project/root/issues/9371
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                            /*matchFullMessage=*/false);
+
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
-
-      // Reset / close the writer and flush the file.
-      {
-         // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
-         // See also https://github.com/root-project/root/issues/9371
-         ROOT::TestSupport::CheckDiagsRAII diagRAII;
-         diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
-                               /*matchFullMessage=*/false);
-         writer.reset();
-      }
    });
 
    ASSERT_TRUE(gInterpreter->Declare(R"(
@@ -683,18 +663,14 @@ struct AddedIntermediateDerived : public AddedIntermediateBase {
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "AddedIntermediateDerived").Unwrap());
 
+      // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
+      // See also https://github.com/root-project/root/issues/9371
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                            /*matchFullMessage=*/false);
+
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
-
-      // Reset / close the writer and flush the file.
-      {
-         // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
-         // See also https://github.com/root-project/root/issues/9371
-         ROOT::TestSupport::CheckDiagsRAII diagRAII;
-         diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
-                               /*matchFullMessage=*/false);
-         writer.reset();
-      }
    });
 
    ASSERT_TRUE(gInterpreter->Declare(R"(
@@ -741,6 +717,12 @@ struct RemovedBaseDerived : public RemovedBaseIntermediate {
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "RemovedBaseDerived").Unwrap());
 
+      // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
+      // See also https://github.com/root-project/root/issues/9371
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                            /*matchFullMessage=*/false);
+
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
 
@@ -750,16 +732,6 @@ struct RemovedBaseDerived : public RemovedBaseIntermediate {
       ProcessLine("ptrRemovedBaseDerived->fIntermediate = 82;");
       ProcessLine("ptrRemovedBaseDerived->fDerived = 93;");
       writer->Fill();
-
-      // Reset / close the writer and flush the file.
-      {
-         // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
-         // See also https://github.com/root-project/root/issues/9371
-         ROOT::TestSupport::CheckDiagsRAII diagRAII;
-         diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
-                               /*matchFullMessage=*/false);
-         writer.reset();
-      }
    });
 
    ASSERT_TRUE(gInterpreter->Declare(R"(
@@ -809,18 +781,14 @@ struct RemovedIntermediateDerived : public RemovedIntermediate {
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "RemovedIntermediateDerived").Unwrap());
 
+      // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
+      // See also https://github.com/root-project/root/issues/9371
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                            /*matchFullMessage=*/false);
+
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
-
-      // Reset / close the writer and flush the file.
-      {
-         // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
-         // See also https://github.com/root-project/root/issues/9371
-         ROOT::TestSupport::CheckDiagsRAII diagRAII;
-         diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
-                               /*matchFullMessage=*/false);
-         writer.reset();
-      }
    });
 
    ASSERT_TRUE(gInterpreter->Declare(R"(
@@ -862,18 +830,14 @@ struct RenamedBaseDerived : public RenamedBase1 {
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "RenamedBaseDerived").Unwrap());
 
+      // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
+      // See also https://github.com/root-project/root/issues/9371
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                            /*matchFullMessage=*/false);
+
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
-
-      // Reset / close the writer and flush the file.
-      {
-         // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
-         // See also https://github.com/root-project/root/issues/9371
-         ROOT::TestSupport::CheckDiagsRAII diagRAII;
-         diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
-                               /*matchFullMessage=*/false);
-         writer.reset();
-      }
    });
 
    ASSERT_TRUE(gInterpreter->Declare(R"(
@@ -918,18 +882,14 @@ struct RenamedIntermediateDerived : public RenamedIntermediate1 {
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "RenamedIntermediateDerived").Unwrap());
 
+      // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
+      // See also https://github.com/root-project/root/issues/9371
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                            /*matchFullMessage=*/false);
+
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
-
-      // Reset / close the writer and flush the file.
-      {
-         // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
-         // See also https://github.com/root-project/root/issues/9371
-         ROOT::TestSupport::CheckDiagsRAII diagRAII;
-         diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
-                               /*matchFullMessage=*/false);
-         writer.reset();
-      }
    });
 
    ASSERT_TRUE(gInterpreter->Declare(R"(

@@ -23,6 +23,9 @@
 #pragma link C++ class IOConstructor+;
 #pragma link C++ class LowPrecisionFloats+;
 
+#pragma link C++ class std::map<int, CustomStruct>+ ;
+#pragma link C++ class std::map<int, float>+ ;
+
 #pragma link C++ class EdmWrapper<CustomStruct> +;
 #pragma link C++ class EdmHash < 1> + ;
 #pragma link C++ class EdmWrapper<long long>+;

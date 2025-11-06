@@ -32,6 +32,12 @@ struct Outer_Simple {
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "Outer_Simple").Unwrap());
 
+      // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
+      // See also https://github.com/root-project/root/issues/9371
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                            /*matchFullMessage=*/false);
+
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
 
@@ -42,13 +48,6 @@ struct Outer_Simple {
       ProcessLine("ptrOuter->fInner.fInt2 = 82;");
       ProcessLine("ptrOuter->fInt1 = 93;");
       writer->Fill();
-
-      // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
-      // See also https://github.com/root-project/root/issues/9371
-      ROOT::TestSupport::CheckDiagsRAII diagRAII;
-      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
-                            /*matchFullMessage=*/false);
-      writer.reset();
    });
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
@@ -134,6 +133,12 @@ struct Outer_Vecs {
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("outers", "std::vector<Outer_Vecs>").Unwrap());
 
+      // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
+      // See also https://github.com/root-project/root/issues/9371
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                            /*matchFullMessage=*/false);
+
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
 
@@ -144,13 +149,6 @@ struct Outer_Vecs {
       ProcessLine("(*ptrOuters)[0].fInners.push_back(Inner_Vecs{42.f});");
       ProcessLine("(*ptrOuters)[0].fInner.fFlt = 84.f;");
       writer->Fill();
-
-      // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
-      // See also https://github.com/root-project/root/issues/9371
-      ROOT::TestSupport::CheckDiagsRAII diagRAII;
-      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
-                            /*matchFullMessage=*/false);
-      writer.reset();
    });
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
@@ -307,15 +305,14 @@ struct Outer_EmptyStruct {
       auto model = RNTupleModel::Create();
       model->AddField(RFieldBase::Create("f", "Outer_EmptyStruct").Unwrap());
 
-      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
-      writer->Fill();
-
       // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
       // See also https://github.com/root-project/root/issues/9371
       ROOT::TestSupport::CheckDiagsRAII diagRAII;
       diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
                             /*matchFullMessage=*/false);
-      writer.reset();
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
    });
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
