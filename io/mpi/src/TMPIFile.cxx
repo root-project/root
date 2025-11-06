@@ -15,7 +15,6 @@
 #include "THashTable.h"
 #include "TMath.h"
 
-ClassImp(TMPIFile);
 
 /** \class TMPIFile
 A TFile implimentation that uses MPI to enable multiple parallel MPI

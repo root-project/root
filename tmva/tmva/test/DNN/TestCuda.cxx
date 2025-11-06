@@ -1,7 +1,7 @@
 #include "Utility.h"
 #include "TMVA/DNN/Architectures/Cuda.h"
 #include "TMVA/DNN/Architectures/Reference.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 using namespace TMVA::DNN;
 

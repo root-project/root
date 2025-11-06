@@ -41,9 +41,9 @@ void handle_notebook_option(int argc, char **argv)
    if (notebook > 0) {
       // Build command
 #ifdef ROOTBINDIR
-      if (getenv("ROOTIGNOREPREFIX"))
+      if (std::getenv("ROOTIGNOREPREFIX"))
 #endif
-         snprintf(arg0, sizeof(arg0), "%s/bin/%s", getenv("ROOTSYS"), ROOTNBBINARY);
+         snprintf(arg0, sizeof(arg0), "%s/bin/%s", std::getenv("ROOTSYS"), ROOTNBBINARY);
 #ifdef ROOTBINDIR
       else
          snprintf(arg0, sizeof(arg0), "%s/%s", ROOTBINDIR, ROOTNBBINARY);

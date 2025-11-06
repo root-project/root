@@ -26,6 +26,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
     ROOT/Browsable/TObjectElement.hxx
     ROOT/Browsable/TObjectHolder.hxx
     ROOT/Browsable/TObjectItem.hxx
+    ROOT/Browsable/RNTupleItem.hxx
   SOURCES
     src/RElement.cxx
     src/RGroup.cxx
@@ -107,24 +108,25 @@ endif()
 
 # provider for browsing and drawing of RNTuple
 
+ROOT_LINKER_LIBRARY(ROOTNTupleBrowseProvider
+     src/RNTupleBrowseProvider.cxx
+  DEPENDENCIES
+     ROOTBrowsable
+     ROOTNTuple
+     ROOTNTupleBrowse
+)
+
+ROOT_LINKER_LIBRARY(ROOTNTupleDraw6Provider
+     src/RNTupleDraw6Provider.cxx
+  DEPENDENCIES
+     ROOTBrowsable
+     ROOTNTuple
+     ROOTNTupleBrowse
+     Gpad
+     ROOTTreeMap
+)
+
 if(root7)
-  ROOT_LINKER_LIBRARY(ROOTNTupleBrowseProvider
-       src/RNTupleBrowseProvider.cxx
-    DEPENDENCIES
-       ROOTBrowsable
-       ROOTNTuple
-       ROOTNTupleBrowse
-  )
-
-  ROOT_LINKER_LIBRARY(ROOTNTupleDraw6Provider
-       src/RNTupleDraw6Provider.cxx
-    DEPENDENCIES
-       ROOTBrowsable
-       ROOTNTuple
-       ROOTNTupleBrowse
-       Gpad
-  )
-
   ROOT_LINKER_LIBRARY(ROOTNTupleDraw7Provider
        src/RNTupleDraw7Provider.cxx
     DEPENDENCIES
@@ -132,6 +134,7 @@ if(root7)
        ROOTNTuple
        ROOTNTupleBrowse
        ROOTGpadv7
+       ROOTTreeMap
 )
 endif()
 

@@ -108,6 +108,14 @@ auto RooFitHS3_wsexportkeys = R"({
             "pdfs": "factors"
         }
     },
+    "RooProjectedPdf": {
+        "type": "projected_dist",
+        "proxies": {
+            "IntegratedPdf": "input_pdf",
+            "IntegrationObservables": "observables",
+            "Dependents": ""
+        }
+    },
     "RooProduct": {
         "type": "product",
         "proxies": {

@@ -1,6 +1,6 @@
 #include "TObject.h"
 #include "TChain.h"
-#include <stdio.h>
+#include <cstdio>
 
 struct CallBack : public TObject {
   CallBack(TChain *ch) : fChain(ch) {};

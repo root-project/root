@@ -51,3 +51,4 @@
 -Wl,--export=_ZNK5clang12FunctionDecl12getNumParamsEv
 -Wl,--export=__clang_Interpreter_SetValueNoAlloc
 -Wl,--export=__clang_Interpreter_SetValueWithAlloc
+-Wl,--export=_ZN4llvm15SmallVectorBaseIjE8set_sizeEm

@@ -1,7 +1,7 @@
 #ifndef marker_h
 #define marker_h
 
-#include <stdio.h>
+#include <cstdio>
 #include "TString.h"
 
 class Marker

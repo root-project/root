@@ -77,15 +77,24 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
         this.handleChangeOrientation(uiDevice.orientation.landscape);
 
+        let data = this.getView().getViewData();
+        this.websocket = data?.conn_handle;
+        this.jsroot = data?.jsroot;
+
+        const SortMethod =  this.websocket.getUserArgs('sort') ?? 'name',
+              ReverseOrder = this.websocket.getUserArgs('reverse') ?? false,
+              ShowHiddenFiles = this.websocket.getUserArgs('hidden') ?? false;
+
         this._oSettingsModel = new JSONModel({
             SortMethods: [
                { name: 'name', value: 'name' },
                { name: 'size', value: 'size' },
-               { name: 'none', value: '' }
+               { name: 'none', value: 'none' }
             ],
-            SortMethod: 'name',
-            ReverseOrder: false,
-            ShowHiddenFiles: false,
+            SortMethod,
+            ReverseOrder,
+            ShowHiddenFiles,
+            OnlyLastCycle: false,
             AppendToCanvas: false,
             HandleDoubleClick: true,
             DBLCLKRun: false,
@@ -166,10 +175,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             ]
          });
 
-        let data = this.getView().getViewData();
-        this.websocket = data?.conn_handle;
-        this.jsroot = data?.jsroot;
-
          // this is code for the Components.js
          // this.websocket = Component.getOwnerComponentFor(this.getView()).getComponentData().conn_handle;
 
@@ -185,6 +190,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          // create model only for browser - no need for anybody else
          this.model = new BrowserModel();
+         this.model.setSortMethod(SortMethod);
+         this.model.setReverseOrder(ReverseOrder);
+         this.model.setShowHidden(ShowHiddenFiles);
 
          // copy extra attributes from element to node in the browser
          // later can be done automatically
@@ -775,7 +783,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       onSettingsPress() {
          this._oSettingsModel.setProperty("/AppendToCanvas", this.model.isAppendToCanvas());
          this._oSettingsModel.setProperty("/HandleDoubleClick", this.model.isHandleDoubleClick());
-         this._oSettingsModel.setProperty("/OnlyLastCycle", (this.model.getOnlyLastCycle() > 0));
+         this._oSettingsModel.setProperty("/OnlyLastCycle", this.model.getOnlyLastCycle());
          this._oSettingsModel.setProperty("/ShowHiddenFiles", this.model.isShowHidden());
          this._oSettingsModel.setProperty("/SortMethod", this.model.getSortMethod());
          this._oSettingsModel.setProperty("/ReverseOrder", this.model.isReverseOrder());
@@ -816,9 +824,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             changed_dblclick = true;
          }
 
-         if (lastcycle != (this.model.getOnlyLastCycle() > 0)) {
+         if (lastcycle != this.model.getOnlyLastCycle()) {
             changed = true;
-            this.model.setOnlyLastCycle(lastcycle ? 1 : -1);
+            this.model.setOnlyLastCycle(lastcycle);
+            this.websocket.send('LASTCYCLE:' + (lastcycle ? '1' : '0'));
          }
 
          if (hidden != this.model.isShowHidden()) {
@@ -1090,8 +1099,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             return oEvent.preventDefault();
 
          oDragSession.setComplexData("item_property", prop);
-
-         console.log('start dragging ', prop.path);
       },
 
       onDrop(oEvent) {
@@ -1193,8 +1200,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          if (typeof msg != "string")
             return console.error("Browser do not uses binary messages len = " + mgs.byteLength);
-
-         // console.log('MSG', msg.substr(0,20));
 
          let p = msg.indexOf(':'), mhdr = '';
          if (p > 0) {
@@ -1393,7 +1398,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @summary process initial message, now it is list of existing canvases */
       processInitMsg(msg) {
-         let arr = this.jsroot.parse(msg);
+         const arr = this.jsroot.parse(msg);
          if (!arr) return;
 
          this.updateBReadcrumbs(arr[0]);
@@ -1412,6 +1417,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                this._oSettingsModel.setProperty('/optTH1', arr[k][1] || '<dflt>');
                this._oSettingsModel.setProperty('/optTH2', arr[k][2]|| '<dflt>');
                this._oSettingsModel.setProperty('/optTProfile', arr[k][3]|| '<dflt>');
+            } else if (kind == "settings") {
+               const expand = (arr[k][1] == 'on' || arr[k][1] == 'yes' || arr[k][1] == '1');
+               if (expand)
+                  this.onExpandMaster();
+               this.model.setOnlyLastCycle(arr[k][2] == '1');
             } else {
                const pr = this.createElement(kind, arr[k][1], arr[k][2], arr[k][3], arr[k][4]);
                Promise.resolve(pr).then(tab => {

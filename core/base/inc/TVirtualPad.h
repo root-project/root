@@ -77,8 +77,9 @@ public:
                Color_t color=19, Short_t bordersize=4, Short_t bordermode=1);
    virtual ~TVirtualPad();
    virtual void     AbsCoordinates(Bool_t set) = 0;
-   virtual Double_t AbsPixeltoX(Int_t px) = 0;
-   virtual Double_t AbsPixeltoY(Int_t py) = 0;
+   virtual Double_t AbsPixeltoX(Double_t px) = 0;
+   virtual Double_t AbsPixeltoY(Double_t py) = 0;
+   virtual void     AbsPixeltoXY(Double_t xpixel, Double_t ypixel, Double_t &x, Double_t &y) = 0;
    virtual void     Add(TObject *obj, Option_t *opt = "", Bool_t modified = kTRUE) = 0;
    virtual void     AddFirst(TObject *obj, Option_t *opt = "", Bool_t modified = kTRUE) = 0;
    virtual void     AddExec(const char *name, const char *command) = 0;
@@ -188,13 +189,15 @@ public:
    virtual void     PaintPolyLineNDC(Int_t n, Double_t *x, Double_t *y, Option_t *option="") = 0;
    virtual void     PaintPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option="") = 0;
    virtual void     PaintPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="") = 0;
+   virtual void     PaintMarker3D(Double_t x, Double_t y, Double_t z) = 0;
    virtual void     PaintModified() = 0;
    virtual void     PaintText(Double_t x, Double_t y, const char *text) = 0;
    virtual void     PaintText(Double_t x, Double_t y, const wchar_t *text) = 0;
    virtual void     PaintTextNDC(Double_t u, Double_t v, const char *text) = 0;
    virtual void     PaintTextNDC(Double_t u, Double_t v, const wchar_t *text) = 0;
-   virtual Double_t PixeltoX(Int_t px) = 0;
-   virtual Double_t PixeltoY(Int_t py) = 0;
+   virtual Double_t PixeltoX(Double_t px) = 0;
+   virtual Double_t PixeltoY(Double_t py) = 0;
+   virtual void     PixeltoXY(Double_t xpixel, Double_t ypixel, Double_t &x, Double_t &y) = 0;
            void     Pop() override = 0;
            void     Print(const char *filename="") const override = 0;
    virtual void     Print(const char *filename, Option_t *option) = 0;
@@ -254,10 +257,14 @@ public:
    virtual Int_t    VtoPixel(Double_t v) const = 0;
    virtual Int_t    XtoAbsPixel(Double_t x) const = 0;
    virtual Int_t    YtoAbsPixel(Double_t y) const = 0;
+   virtual void     XYtoAbsPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const = 0;
+   virtual void     XYtoAbsPixel(Double_t x, Double_t y, Double_t &xpixel, Double_t &ypixel) const = 0;
    virtual Double_t XtoPad(Double_t x) const = 0;
    virtual Double_t YtoPad(Double_t y) const = 0;
    virtual Int_t    XtoPixel(Double_t x) const = 0;
    virtual Int_t    YtoPixel(Double_t y) const = 0;
+   virtual void     XYtoPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const = 0;
+   virtual void     XYtoPixel(Double_t x, Double_t y, Double_t &xpixel, Double_t &ypixel) const = 0;
 
    virtual Int_t    IncrementPaletteColor(Int_t i, TString opt) = 0;
    virtual Int_t    NextPaletteColor() = 0;

@@ -18,7 +18,6 @@
 #include "TClass.h"
 #include "TMath.h"
 
-ClassImp(TPave);
 
 /** \class TPave
 \ingroup BasicGraphics
@@ -650,7 +649,7 @@ TString TPave::GetSavePaveArgs(const char *extra_arg, Bool_t save_option)
 void TPave::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "pave", GetSavePaveArgs(TString::Format("%d", fBorderSize)));
-   SaveFillAttributes(out, "pave", 19, 1001);
+   SaveFillAttributes(out, "pave", -1, -1);
    SaveLineAttributes(out, "pave", 1, 1, 1);
    if (strcmp(GetName(), "TPave"))
       out << "   pave->SetName(\"" << GetName() << "\");\n";

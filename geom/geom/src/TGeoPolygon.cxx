@@ -57,7 +57,6 @@ At the end one has to call the FinishPolygon() method.
 #include "TGeoManager.h"
 #include "TVirtualGeoPainter.h"
 
-ClassImp(TGeoPolygon);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Dummy constructor.

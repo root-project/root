@@ -15,7 +15,6 @@
 
 #include <gvc.h>
 
-ClassImp(TGraphNode);
 
 /** \class TGraphNode
 \ingroup gviz
@@ -154,7 +153,7 @@ void TGraphNode::SavePrimitive(std::ostream &, Option_t *)
 
 void TGraphNode::SaveAttributes(std::ostream &out)
 {
-   SaveFillAttributes(out, GetName(), 0, 1001);
+   SaveFillAttributes(out, GetName(), -1, -1);
    SaveLineAttributes(out, GetName(), 1, 1, 1);
    SaveTextAttributes(out, GetName(), 0, 0, 0, 0, 0);
 }

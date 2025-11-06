@@ -94,7 +94,6 @@
 /// of `void*` to an CPPInstance and vice versa.
 
 //- data ---------------------------------------------------------------------
-ClassImp(TPython);
 static PyObject *gMainDict = 0;
 
 namespace {

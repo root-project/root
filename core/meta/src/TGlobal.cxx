@@ -22,7 +22,6 @@ variables (accessible via TROOT::GetListOfGlobals()).
 #include "TROOT.h"
 
 
-ClassImp(TGlobal);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TGlobal ctor.

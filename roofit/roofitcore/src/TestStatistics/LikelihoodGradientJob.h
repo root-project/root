@@ -43,10 +43,7 @@ public:
 private:
    void run_derivator(unsigned int i_component) const;
 
-   void synchronizeParameterSettings(ROOT::Math::IMultiGenFunction *function,
-                                     const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) override;
-   // this overload must also be overridden here so that the one above doesn't trigger a overloaded-virtual warning:
-   void synchronizeParameterSettings(const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) override;
+   void synchronizeParameterSettingsImpl(const std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) override;
 
    void synchronizeWithMinimizer(const ROOT::Math::MinimizerOptions &options) override;
    void setStrategy(int istrat);

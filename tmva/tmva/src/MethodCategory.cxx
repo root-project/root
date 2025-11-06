@@ -72,7 +72,6 @@ is due to different locations/angles.
 
 REGISTER_METHOD(Category)
 
-ClassImp(TMVA::MethodCategory);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor

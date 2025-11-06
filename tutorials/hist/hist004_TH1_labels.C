@@ -11,7 +11,7 @@
 /// \date November 2024
 /// \author Rene Brun
 
-TCanvas *hist004_TH1_labels()
+void hist004_TH1_labels()
 {
    // Create the histogram
    const std::array people{"Jean",    "Pierre", "Marie",    "Odile",   "Sebastien", "Fons",  "Rene",
@@ -56,6 +56,4 @@ TCanvas *hist004_TH1_labels()
    pt->AddText(" \">\"   to sort by decreasing values");
    pt->AddText(" \"<\"   to sort by increasing values");
    pt->Draw();
-
-   return c1;
 }

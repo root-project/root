@@ -167,7 +167,7 @@ TEST(RNTupleShow, Vectors)
    std::ostringstream os;
    ntuple2->Show(0, os);
    // clang-format off
-   std::string fString{ 
+   std::string fString{
 R"({
   "intVec": [4, 5, 6],
   "floatVecVec": [[0.1, 0.2], [1.1, 1.2]],
@@ -312,7 +312,7 @@ TEST(RNTupleShow, Objects)
    std::ostringstream os;
    ntuple2->Show(0, os);
    // clang-format off
-   std::string fString{ 
+   std::string fString{
 R"({
   "CustomStruct": {
     "a": 4.1,
@@ -643,23 +643,43 @@ R"({
    EXPECT_EQ(os1.str(), expected);
 }
 
-TEST(RNTupleShow, Friends)
+TEST(RNTupleShow, TypeTraceReport)
 {
-   FileRaii fileGuard1("test_ntuple_show_friends1.ntuple");
+   FileRaii fileGuard("test_ntuple_show_type_trace_report.ntuple");
    {
       auto model = RNTupleModel::Create();
-      auto foo = model->MakeField<float>("foo");
-      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl1", fileGuard1.GetPath());
-      *foo = 3.14;
-      writer->Fill();
+      model->MakeField<std::variant<double, std::vector<std::pair<float, TrivialTraitsBase>>>>("f");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
    }
 
-   FileRaii fileGuard2("test_ntuple_show_friends2.ntuple");
-   {
-      auto model = RNTupleModel::Create();
-      auto bar = model->MakeField<float>("bar");
-      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl2", fileGuard2.GetPath());
-      *bar = 2.72;
-      writer->Fill();
-   }
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   // Get the field for the `a` member of the inner `TrivialTraitsBase`
+   const auto field = reader->GetModel()
+                         .GetDefaultEntry()
+                         .begin()
+                         ->GetField()
+                         .GetConstSubfields()[1]
+                         ->GetConstSubfields()[0]
+                         ->GetConstSubfields()[1]
+                         ->GetConstSubfields()[0];
+
+   const auto report = ROOT::Internal::GetTypeTraceReport(*field, reader->GetDescriptor());
+
+   const std::string expected{
+      R"(In-memory field/type hierarchy:
+f [std::variant<double,std::vector<std::pair<float,TrivialTraitsBase>>>] (id: 0)
+  _1 [std::vector<std::pair<float,TrivialTraitsBase>>] (id: 2)
+    _0 [std::pair<float,TrivialTraitsBase>] (id: 3)
+      _1 [TrivialTraitsBase, type version: 5, type checksum: 2623577133] (id: 5)
+        a [std::int32_t] (id: 6)
+On-disk field/type hierarchy:
+f [std::variant<double,std::vector<std::pair<float,TrivialTraitsBase>>>] (id: 0)
+  _1 [std::vector<std::pair<float,TrivialTraitsBase>>] (id: 2)
+    _0 [std::pair<float,TrivialTraitsBase>] (id: 3)
+      _1 [TrivialTraitsBase, type version: 5, type checksum: 2623577133] (id: 5)
+        a [std::int32_t] (id: 6)
+)"};
+
+   EXPECT_EQ(expected, report);
 }

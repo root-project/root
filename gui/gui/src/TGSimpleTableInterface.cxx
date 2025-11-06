@@ -12,7 +12,6 @@
 #include "TGResourcePool.h"
 #include "TError.h"
 
-ClassImp(TGSimpleTableInterface);
 
 
 /** \class TGSimpleTableInterface

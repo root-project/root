@@ -26,7 +26,7 @@
 
 #include "TNamed.h"
 #include "TTimer.h"
-#include <stdarg.h>
+#include <cstdarg>
 
 #ifdef R__LESS_INCLUDES
 class TCondition;

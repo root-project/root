@@ -7,6 +7,7 @@
 PyObject* CPyCppyy::PyStrings::gAssign           = nullptr;
 PyObject* CPyCppyy::PyStrings::gBases            = nullptr;
 PyObject* CPyCppyy::PyStrings::gBase             = nullptr;
+PyObject* CPyCppyy::PyStrings::gContains         = nullptr;
 PyObject* CPyCppyy::PyStrings::gCopy             = nullptr;
 PyObject* CPyCppyy::PyStrings::gCppBool          = nullptr;
 PyObject* CPyCppyy::PyStrings::gCppName          = nullptr;
@@ -88,6 +89,7 @@ bool CPyCppyy::CreatePyStrings() {
     CPPYY_INITIALIZE_STRING(gAssign,         __assign__);
     CPPYY_INITIALIZE_STRING(gBases,          __bases__);
     CPPYY_INITIALIZE_STRING(gBase,           __base__);
+    CPPYY_INITIALIZE_STRING(gContains,       contains);
     CPPYY_INITIALIZE_STRING(gCopy,           copy);
 #if PY_VERSION_HEX < 0x03000000
     CPPYY_INITIALIZE_STRING(gCppBool,        __cpp_nonzero__);
@@ -171,6 +173,7 @@ PyObject* CPyCppyy::DestroyPyStrings() {
 // Remove all cached python strings.
     Py_DECREF(PyStrings::gBases);       PyStrings::gBases       = nullptr;
     Py_DECREF(PyStrings::gBase);        PyStrings::gBase        = nullptr;
+    Py_DECREF(PyStrings::gContains);    PyStrings::gContains    = nullptr;
     Py_DECREF(PyStrings::gCopy);        PyStrings::gCopy        = nullptr;
     Py_DECREF(PyStrings::gCppBool);     PyStrings::gCppBool     = nullptr;
     Py_DECREF(PyStrings::gCppName);     PyStrings::gCppName     = nullptr;

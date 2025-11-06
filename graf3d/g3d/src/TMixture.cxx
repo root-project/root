@@ -14,7 +14,6 @@
 #include "TBuffer.h"
 #include "TMath.h"
 
-ClassImp(TMixture);
 
 /** \class TMixture
 \ingroup g3d

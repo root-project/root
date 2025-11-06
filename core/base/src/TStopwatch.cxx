@@ -31,7 +31,6 @@ const Double_t gTicks = 1.0e-7;
 #endif
 
 
-ClassImp(TStopwatch);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a stopwatch and start it.

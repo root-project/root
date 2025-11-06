@@ -43,7 +43,6 @@ TSystem* ROOT_Plugin_TNetXNGSystem(const char *url, Bool_t owner) {
 }
 
 
-ClassImp(TNetXNGSystem);
 
 THashList TNetXNGSystem::fgAddrFQDN;
 TMutex TNetXNGSystem::fgAddrMutex;

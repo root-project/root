@@ -16,7 +16,6 @@
 #include "TLink.h"
 #include "snprintf.h"
 
-ClassImp(TLink);
 
 /** \class TLink
 \ingroup BasicGraphics

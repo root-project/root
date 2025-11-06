@@ -98,7 +98,6 @@ Int_t  TPDF::fgLineJoin = 0;
 Int_t  TPDF::fgLineCap  = 0;
 Bool_t TPDF::fgObjectIsOpen = kFALSE;
 
-ClassImp(TPDF);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default PDF constructor

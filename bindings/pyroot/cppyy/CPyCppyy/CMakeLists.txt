@@ -73,7 +73,8 @@ endif()
 add_library(cppyy SHARED src/CPyCppyyPyModule.cxx)
 
 # Set the suffix to '.so' and the prefix to 'lib'
-set_target_properties(cppyy PROPERTIES  ${ROOT_LIBRARY_PROPERTIES})
+set_target_properties(cppyy PROPERTIES  ${ROOT_LIBRARY_PROPERTIES}
+  LIBRARY_OUTPUT_DIRECTORY ${localruntimedir}/cppyy)
 if(MSVC)
   target_link_libraries(cppyy PRIVATE CPyCppyy)
   set_target_properties(cppyy PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
@@ -94,14 +95,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang"
   target_compile_options(CPyCppyy PRIVATE -Wno-cast-function-type)
 endif()
 
-# Disables warnings in Python 3.8 caused by the temporary extra filed for tp_print compatibility
-# (see https://github.com/python/cpython/blob/3.8/Include/cpython/object.h#L260).
-# Note that Python 3.8 is the lowers Python version that is still supported by
-# ROOT, so this compile option can be completely removed soon.
-if(NOT MSVC AND Python3_VERSION VERSION_LESS 3.9)
-  target_compile_options(CPyCppyy PRIVATE -Wno-missing-field-initializers)
-endif()
-
 target_compile_definitions(CPyCppyy PRIVATE NO_CPPYY_LEGACY_NAMESPACE)
 
 target_include_directories(CPyCppyy SYSTEM PUBLIC ${Python3_INCLUDE_DIRS})
@@ -116,7 +109,7 @@ set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS cppyy)
 
 if(NOT MSVC)
   # Make sure that relative RUNPATH to main ROOT libraries is always correct.
-  ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH(cppyy ${CMAKE_INSTALL_PYTHONDIR})
+  ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH(cppyy ${CMAKE_INSTALL_PYTHONDIR}/cppyy)
   ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH(CPyCppyy ${CMAKE_INSTALL_LIBDIR})
 endif()
 
@@ -127,9 +120,9 @@ install(TARGETS CPyCppyy EXPORT ${CMAKE_PROJECT_NAME}Exports
                             ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
 
 install(TARGETS cppyy EXPORT ${CMAKE_PROJECT_NAME}Exports
-                            RUNTIME DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries
-                            LIBRARY DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries
-                            ARCHIVE DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries)
+                            RUNTIME DESTINATION ${CMAKE_INSTALL_PYTHONDIR}/cppyy COMPONENT libraries # Windows
+                            LIBRARY DESTINATION ${CMAKE_INSTALL_PYTHONDIR}/cppyy COMPONENT libraries
+                            ARCHIVE DESTINATION ${CMAKE_INSTALL_PYTHONDIR}/cppyy COMPONENT libraries)
 
 file(COPY ${headers} DESTINATION ${CMAKE_BINARY_DIR}/include/CPyCppyy)
 

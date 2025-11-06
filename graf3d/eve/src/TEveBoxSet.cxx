@@ -39,7 +39,6 @@ See also base-class TEveDigitSet for more information.
 Tutorial: tutorials/visualisation/eve7/eve/boxset_test.C
 */
 
-ClassImp(TEveBoxSet);
 
 ////////////////////////////////////////////////////////////////////////////////
 

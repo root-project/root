@@ -34,8 +34,6 @@ TQConnection:
 #include "THashTable.h"
 #include "strlcpy.h"
 
-ClassImpQ(TQConnection)
-
 char *gTQSlotParams; // used to pass string parameter
 
 /** \class TQSlot

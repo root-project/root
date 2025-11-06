@@ -15,7 +15,7 @@
 
 #include <ROOT/RConfig.hxx>
 #include "RConfigure.h"
-#include <stdlib.h>
+#include <cstdlib>
 #include <stdexcept>
 #ifdef R__WIN32
 #ifndef UNDNAME_COMPLETE

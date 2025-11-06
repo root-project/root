@@ -101,7 +101,7 @@ class TMultiGraphPainter extends ObjectPainter {
    scanGraphsRange(graphs, histo, pad, reset_histo) {
       const mgraph = this.getObject(),
             rw = { xmin: 0, xmax: 0, ymin: 0, ymax: 0, first: true },
-            test = (v1, v2) => { return Math.abs(v2-v1) < 1e-6; };
+            test = (v1, v2) => { return Math.abs(v2 - v1) < 1e-6; };
       let maximum, minimum, logx = false, logy = false,
           src_hist, dummy_histo = false;
 
@@ -168,7 +168,7 @@ class TMultiGraphPainter extends ObjectPainter {
       if (uxmin < 0 && rw.xmin >= 0)
          uxmin = logx ? 0.9 * rw.xmin : 0;
       if (uxmax > 0 && rw.xmax <= 0)
-         uxmax = logx? 1.1 * rw.xmax : 0;
+         uxmax = logx ? 1.1 * rw.xmax : 0;
 
       if (mgraph.fMinimum !== kNoZoom)
          rw.ymin = minimum = mgraph.fMinimum;
@@ -181,7 +181,7 @@ class TMultiGraphPainter extends ObjectPainter {
          maximum = 1.1 * rw.ymax;
       if (minimum <= 0 && logy)
          minimum = 0.001 * maximum;
-      if (!logy && minimum > 0 && minimum < 0.05*maximum)
+      if (!logy && minimum > 0 && minimum < 0.05 * maximum)
          minimum = 0;
       if (uxmin <= 0 && logx)
          uxmin = (uxmax > 1000) ? 1 : 0.001 * uxmax;
@@ -218,8 +218,10 @@ class TMultiGraphPainter extends ObjectPainter {
          if (histo.fTitle.indexOf(';') >= 0) {
             const t = histo.fTitle.split(';');
             histo.fTitle = t[0];
-            if (t[1]) xaxis.fTitle = t[1];
-            if (t[2]) yaxis.fTitle = t[2];
+            if (t[1])
+               xaxis.fTitle = t[1];
+            if (t[2])
+               yaxis.fTitle = t[2];
          }
          if (!xaxis.fLabels) {
             xaxis.fXmin = uxmin;
@@ -265,7 +267,7 @@ class TMultiGraphPainter extends ObjectPainter {
 
       // handling of 'pads' draw option
       if (pad_painter) {
-         const subpad_painter = pad_painter.getSubPadPainter(indx+1);
+         const subpad_painter = pad_painter.getSubPadPainter(indx + 1);
          if (!subpad_painter)
             return this;
 
@@ -276,7 +278,7 @@ class TMultiGraphPainter extends ObjectPainter {
                subp.setSecondaryId(this, subid);
                this.#painters.push(subp);
             }
-            return this.drawNextGraph(indx+1, pad_painter);
+            return this.drawNextGraph(indx + 1, pad_painter);
          });
       }
 
@@ -316,12 +318,18 @@ class TMultiGraphPainter extends ObjectPainter {
       this.#is3d = d.check('3D');
       this.#auto = '';
       this.#pads = d.check('PADS');
-      ['PFC', 'PLC', 'PMC'].forEach(f => { if (d.check(f)) this.#auto += ' ' + f; });
+      ['PFC', 'PLC', 'PMC'].forEach(f => {
+         if (d.check(f))
+            this.#auto += ' ' + f;
+      });
 
       let hopt = '', pad_painter = null;
       if (d.check('FB') && this.is3d())
          hopt += 'FB'; // will be directly combined with LEGO
-      PadDrawOptions.forEach(name => { if (d.check(name)) hopt += ';' + name; });
+      PadDrawOptions.forEach(name => {
+         if (d.check(name))
+            hopt += ';' + name;
+      });
 
       this.#restopt = d.remain();
 

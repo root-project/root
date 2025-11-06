@@ -89,8 +89,6 @@ TObjectTable  *TCollection::fgGarbageCollection = nullptr;
 Bool_t         TCollection::fgEmptyingGarbage   = kFALSE;
 Int_t          TCollection::fgGarbageStack      = 0;
 
-ClassImp(TCollection);
-ClassImp(TIter);
 
 #ifdef R__CHECK_COLLECTION_MULTI_ACCESS
 

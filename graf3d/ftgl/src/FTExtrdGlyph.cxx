@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include    <math.h>
+#include    <cmath>
 
 #include    "FTExtrdGlyph.h"
 #include    "FTVectoriser.h"

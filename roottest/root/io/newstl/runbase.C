@@ -58,7 +58,6 @@ private:
   ClassDef(foo,1);
 }; 
 
-ClassImp(foo);
 
 #ifdef __CINT__
 // pragma link C++ class std::map<int, int>;

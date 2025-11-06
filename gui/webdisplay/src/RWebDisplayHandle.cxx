@@ -37,8 +37,8 @@
 #include <process.h>
 #else
 #include <unistd.h>
-#include <stdlib.h>
-#include <signal.h>
+#include <cstdlib>
+#include <csignal>
 #include <spawn.h>
 #ifdef R__MACOSX
 #include <sys/wait.h>
@@ -263,6 +263,7 @@ static void DummyTimeOutHandler(int /* Sig */) {}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Display given URL in web browser
+/// \note See more details related to webdisplay on RWebWindowsManager::ShowWindow
 
 std::unique_ptr<RWebDisplayHandle>
 RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
@@ -295,6 +296,13 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
                sposy = std::to_string(args.GetY() >= 0 ? args.GetY() : 0);
 
    ProcessGeometry(exec, args);
+
+   std::string extra = args.GetExtraArgs();
+   if (!extra.empty()) {
+      auto p = exec.find("$url");
+      if (p != std::string::npos)
+         exec.insert(p, extra + " ");
+   }
 
    std::string rmdir = MakeProfile(exec, args.IsBatchMode() || args.IsHeadless());
 
@@ -684,11 +692,6 @@ void RWebDisplayHandle::ChromeCreator::ProcessGeometry(std::string &exec, const 
       if (!geometry.empty()) geometry.append(" ");
       geometry.append("--window-position="s + std::to_string(args.GetX() >= 0 ? args.GetX() : 0) + ","s +
                                            std::to_string(args.GetY() >= 0 ? args.GetY() : 0));
-   }
-
-   if (!args.GetExtraArgs().empty()) {
-      if (!geometry.empty()) geometry.append(" ");
-      geometry.append(args.GetExtraArgs());
    }
 
    exec = std::regex_replace(exec, std::regex("\\$geometry"), geometry);
@@ -1393,9 +1396,13 @@ try_again:
 
    auto handle = RWebDisplayHandle::Display(args);
 
-   if (!handle) {
-      R__LOG_DEBUG(0, WebGUILog()) << "Cannot start " << args.GetBrowserName() << " to produce image " << fdebug;
-      return false;
+   // ensure file is created by browser draw
+   if (use_browser_draw && handle) {
+      Int_t batch_timeout = gEnv->GetValue("WebGui.BatchTimeout", 30) * 10;
+      while (gSystem->AccessPathName(wait_file_name.Data()) && (--batch_timeout > 0)) {
+         gSystem->ProcessEvents();
+         gSystem->Sleep(100);
+      }
    }
 
    // delete temporary HTML file
@@ -1406,12 +1413,18 @@ try_again:
          gSystem->Unlink(html_name.Data());
    }
 
-   if (!wait_file_name.IsNull() && gSystem->AccessPathName(wait_file_name.Data())) {
-      R__LOG_ERROR(WebGUILog()) << "Fail to produce image " << fdebug;
+   if (!handle) {
+      R__LOG_DEBUG(0, WebGUILog()) << "Cannot start " << args.GetBrowserName() << " to produce image " << fdebug;
       return false;
    }
 
    if (use_browser_draw) {
+
+      if (gSystem->AccessPathName(wait_file_name.Data())) {
+         R__LOG_ERROR(WebGUILog()) << "Fail to produce image " << fdebug;
+         return false;
+      }
+
       if (fmts[0] == "s.pdf")
          ::Info("ProduceImages", "PDF file %s with %d pages has been created", fnames[0].c_str(), (int) jsons.size());
       else {

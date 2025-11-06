@@ -38,7 +38,7 @@
 #include "TMath.h"
 #include "TRandom3.h"
 
-#include <assert.h>
+#include <cassert>
 #include <iomanip>
 #include <iostream>
 #include <sstream>

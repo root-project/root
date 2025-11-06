@@ -66,7 +66,7 @@
 #include <windows.h>
 
 #include <set>
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 #include <fstream>
 

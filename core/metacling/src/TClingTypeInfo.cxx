@@ -130,6 +130,8 @@ long TClingTypeInfo::Property() const
    property = TClingDeclInfo::Property(property, QT);
    const clang::TagType *tagQT = llvm::dyn_cast<clang::TagType>(QT.getTypePtr());
    if (tagQT) {
+      // getDecl and isAbstract can trigger deserialization
+      cling::Interpreter::PushTransactionRAII RAII(fInterp);
       // Note: Now we have class, enum, struct, union only.
       const clang::TagDecl *TD = llvm::dyn_cast<clang::TagDecl>(tagQT->getDecl());
       if (!TD)
@@ -174,8 +176,6 @@ long TClingTypeInfo::Property() const
          else if (CRD->isUnion()) {
             property |= kIsUnion;
          }
-         // isAbstract can trigger deserialization
-         cling::Interpreter::PushTransactionRAII RAII(fInterp);
          if (CRD->isThisDeclarationADefinition() && CRD->isAbstract()) {
             property |= kIsAbstract;
          }

@@ -70,6 +70,9 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
+   std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec) final;
+
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
    RArrayField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField, std::size_t arrayLength);
@@ -109,8 +112,13 @@ public:
 
 /// The type-erased field for a RVec<Type>
 class RRVecField : public RFieldBase {
-public:
-   /// the RRVecDeleter is also used by RArrayAsRVecField and therefore declared public
+   friend class RArrayAsRVecField; // to use the RRVecDeleter and to call ResizeRVec()
+
+   // Ensures that the RVec pointed to by rvec has at least nItems valid elements
+   // Returns the possibly new "begin pointer" of the RVec, i.e. the pointer to the data area.
+   static unsigned char *
+   ResizeRVec(void *rvec, std::size_t nItems, std::size_t itemSize, const RFieldBase *itemField, RDeleter *itemDeleter);
+
    class RRVecDeleter : public RDeleter {
    private:
       std::size_t fItemAlignment;
@@ -133,6 +141,11 @@ protected:
    ROOT::Internal::RColumnIndex fNWritten;
    std::size_t fValueSize;
 
+   // For bulk read optimzation
+   std::size_t fBulkNRepetition = 1;
+   /// May be a direct PoD subfield or a sub-subfield of a fixed-size array of PoD
+   RFieldBase *fBulkSubfield = nullptr;
+
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
@@ -144,6 +157,9 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec) final;
+
+   std::unique_ptr<RFieldBase> BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
    void CommitClusterImpl() final { fNWritten = 0; }
 
@@ -159,16 +175,6 @@ public:
    size_t GetValueSize() const final;
    size_t GetAlignment() const final;
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
-   void
-   GetCollectionInfo(ROOT::NTupleSize_t globalIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size) const
-   {
-      fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
-   }
-   void
-   GetCollectionInfo(RNTupleLocalIndex localIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size) const
-   {
-      fPrincipalColumn->GetCollectionInfo(localIndex, collectionStart, size);
-   }
 };
 
 template <typename ItemT>
@@ -194,6 +200,7 @@ public:
 /// The generic field for a (nested) `std::vector<Type>` except for `std::vector<bool>`
 /// The field can be constructed as untyped collection through CreateUntyped().
 class RVectorField : public RFieldBase {
+   friend class RArrayAsVectorField; // to get access to the RVectorDeleter
    friend std::unique_ptr<RFieldBase> Internal::CreateEmulatedVectorField(std::string_view fieldName,
                                                                           std::unique_ptr<RFieldBase> itemField,
                                                                           std::string_view emulatedFromType);
@@ -216,6 +223,10 @@ class RVectorField : public RFieldBase {
    ROOT::Internal::RColumnIndex fNWritten;
    std::unique_ptr<RDeleter> fItemDeleter;
 
+   // Ensures that the std::vector pointed to by vec has at least nItems valid elements.
+   static void ResizeVector(void *vec, std::size_t nItems, std::size_t itemSize, const RFieldBase &itemField,
+                            RDeleter *itemDeleter);
+
 protected:
    /// Creates a possibly-untyped VectorField.
    /// If `emulatedFromType` is not nullopt, the field is untyped. If the string is empty, it is a "regular"
@@ -235,6 +246,9 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
 
+   std::unique_ptr<RFieldBase> BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource) final;
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
+
    void CommitClusterImpl() final { fNWritten = 0; }
 
 public:
@@ -250,16 +264,6 @@ public:
    size_t GetValueSize() const final { return sizeof(std::vector<char>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
-   void
-   GetCollectionInfo(ROOT::NTupleSize_t globalIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size) const
-   {
-      fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
-   }
-   void
-   GetCollectionInfo(RNTupleLocalIndex localIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size) const
-   {
-      fPrincipalColumn->GetCollectionInfo(localIndex, collectionStart, size);
-   }
 };
 
 template <typename ItemT>
@@ -277,6 +281,9 @@ template <>
 class RField<std::vector<bool>> final : public RFieldBase {
 private:
    ROOT::Internal::RColumnIndex fNWritten{0};
+   /// If schema-evolved from an std::array, fOnDiskNRepetition is > 0 and there will be no
+   /// principal column.
+   std::size_t fOnDiskNRepetitions = 0;
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
@@ -293,6 +300,9 @@ protected:
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
+   void ReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to) final;
+
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
    void CommitClusterImpl() final { fNWritten = 0; }
 
@@ -308,16 +318,6 @@ public:
    size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<bool>>(); }
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
-   void
-   GetCollectionInfo(ROOT::NTupleSize_t globalIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size) const
-   {
-      fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
-   }
-   void
-   GetCollectionInfo(RNTupleLocalIndex localIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size) const
-   {
-      fPrincipalColumn->GetCollectionInfo(localIndex, collectionStart, size);
-   }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -351,6 +351,8 @@ protected:
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
 
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
+
 public:
    /**
       Constructor of the field. The `itemField` argument represents the inner
@@ -366,6 +368,50 @@ public:
 
    std::size_t GetValueSize() const final { return fValueSize; }
    std::size_t GetAlignment() const final;
+
+   std::vector<RFieldBase::RValue> SplitValue(const RFieldBase::RValue &value) const final;
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
+};
+
+/**
+\class ROOT::RArrayAsVectorField
+\brief A field for fixed-size arrays that are represented as std::vector in memory.
+\ingroup NTuple
+This class is used only for reading. In particular, it helps for schema evolution of fixed-size arrays into vectors.
+*/
+class RArrayAsVectorField final : public RFieldBase {
+private:
+   std::unique_ptr<RDeleter> fItemDeleter; /// Sub field deleter or nullptr for simple fields
+   std::size_t fItemSize;                  /// The size of a child field's item
+   std::size_t fArrayLength;               /// The length of the arrays in this field
+
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+
+   void GenerateColumns() final;
+   using RFieldBase::GenerateColumns;
+
+   void ConstructValue(void *where) const final { new (where) std::vector<char>(); }
+   /// Returns an RVectorField::RVectorDeleter
+   std::unique_ptr<RDeleter> GetDeleter() const final;
+
+   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
+   void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
+
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
+
+public:
+   /// The `itemField` argument represents the inner item of the on-disk array,
+   /// i.e. for an `std::array<float>` it is the `float`
+   RArrayAsVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField, std::size_t arrayLength);
+   RArrayAsVectorField(const RArrayAsVectorField &other) = delete;
+   RArrayAsVectorField &operator=(const RArrayAsVectorField &other) = delete;
+   RArrayAsVectorField(RArrayAsVectorField &&other) = default;
+   RArrayAsVectorField &operator=(RArrayAsVectorField &&other) = default;
+   ~RArrayAsVectorField() final = default;
+
+   size_t GetValueSize() const final { return sizeof(std::vector<char>); }
+   size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
 
    std::vector<RFieldBase::RValue> SplitValue(const RFieldBase::RValue &value) const final;
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;

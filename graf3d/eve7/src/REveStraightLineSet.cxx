@@ -255,7 +255,6 @@ void REveStraightLineSet::ComputeBBox()
 Projected replica of a REveStraightLineSet.
 */
 
-ClassImp(REveStraightLineSetProjected);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

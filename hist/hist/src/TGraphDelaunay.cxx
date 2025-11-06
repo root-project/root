@@ -13,7 +13,6 @@
 #include "TGraph2D.h"
 #include "TGraphDelaunay.h"
 
-ClassImp(TGraphDelaunay);
 
 
 /** \class TGraphDelaunay

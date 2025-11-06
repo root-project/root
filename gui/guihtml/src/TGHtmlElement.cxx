@@ -31,7 +31,7 @@
 
 **************************************************************************/
 
-#include <string.h>
+#include <cstring>
 
 #include "TGHtml.h"
 #include "TImage.h"

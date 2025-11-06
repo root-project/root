@@ -18,6 +18,11 @@ if(uring AND NOT DEFINED ENV{ROOTTEST_IGNORE_URING})
   ROOT_ADD_GTEST(RIoUring RIoUring.cxx LIBRARIES RIO)
 endif()
 
+ROOT_ADD_GTEST(rfile rfile.cxx LIBRARIES RIO Hist)
+if(pyroot)
+  ROOT_ADD_PYUNITTEST(rfile_py rfile.py)
+endif()
+
 # Temporarily disabled.  Test routinely fails on MacOS and some Linuxes.
 #if(NOT WIN32 AND (NOT MACOS_VERSION OR NOT MACOSX_VERSION VERSION_LESS 13.00))
 #  ROOT_EXECUTABLE(TMapFileTest TMapFileTest.cxx LIBRARIES RIO Hist New)

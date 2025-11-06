@@ -40,8 +40,6 @@ TGHotString is a string with a "hot" character underlined.
 #include "ctype.h"
 
 
-ClassImp(TGString);
-ClassImp(TGHotString);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

@@ -23,7 +23,6 @@
 Sub-editor for TEveTrans class.
 */
 
-ClassImp(TEveTransSubEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -221,7 +220,6 @@ void TEveTransSubEditor::DoTransChanged()
 Editor for TEveTrans class.
 */
 
-ClassImp(TEveTransEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

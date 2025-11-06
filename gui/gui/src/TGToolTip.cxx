@@ -49,7 +49,6 @@ fButton->SetToolTipText("Go to the ROOT page\n (http://root.cern.ch)
 #include "TVirtualX.h"
 
 
-ClassImp(TGToolTip);
 
 ////////////////////////////////////////////////////////////////////////////////
 

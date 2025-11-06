@@ -14,7 +14,6 @@
 #include "TBrowser.h"
 #include "snprintf.h"
 
-ClassImp(THbookKey);
 
 /** \class THbookKey
     \ingroup Hist

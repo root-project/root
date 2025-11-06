@@ -48,9 +48,6 @@ and TGPrintDialog.
 #include <cstdlib>
 
 
-ClassImp(TGSearchDialog);
-ClassImp(TGPrintDialog);
-ClassImp(TGGotoDialog);
 
 static TString gLastSearchString;
 TGSearchDialog *TGSearchDialog::fgSearchDialog = nullptr;

@@ -259,7 +259,9 @@ protected:
    };
 
 public:
-   // Used as the max value for any TTree range operation.
+   /// Used as the max value for any TTree range operation.
+   /// The maximum number of entries allowed in a TTree is strictly smaller than this value
+   /// (`maxTreeEntries<= kMaxEntries-1`), ie the last entry index is at maximum `kMaxEntries-2`.
    static constexpr Long64_t kMaxEntries = TVirtualTreePlayer::kMaxEntries;
 
    // SetBranchAddress return values
@@ -685,6 +687,11 @@ public:
    virtual void            SetCacheLearnEntries(Int_t n=10);
    virtual void            SetChainOffset(Long64_t offset = 0) { fChainOffset=offset; }
    virtual void            SetCircular(Long64_t maxEntries);
+   /// Enables (or disables) the early decompression of the baskets of the current cluster
+   /// (whose compressed data is already in memory if used in conjunction with the TTreeCache).
+   /// This affects performance only in conjunction with non-sequential use/load/read of the entries, ie
+   /// within a cluster you can have cheap random access to the entries (instead of having to decompress again and again).
+   /// \note This setting is totally different from SetCacheSize and from TFile.AsyncPrefetching, which save read calls
    virtual void            SetClusterPrefetch(bool enabled) { fCacheDoClusterPrefetch = enabled; }
    virtual void            SetDebug(Int_t level = 1, Long64_t min = 0, Long64_t max = 9999999); // *MENU*
    virtual void            SetDefaultEntryOffsetLen(Int_t newdefault, bool updateExisting = false);
@@ -723,7 +730,7 @@ public:
     * \brief Sets the default maximum number of lines to be shown before `<CR>` when calling Scan().
     * \param n the maximum number of lines. Default=50, if 0, all entries of the Tree are shown
     * and there is no need to press `<CR>` or `q` to exit the function.
-    * \see TTreePlayer::Scan for more details on how to redirect the output to an ASCII file
+    * \note See TTreePlayer::Scan for more details on how to redirect the output to an ASCII file
     */
    virtual void            SetScanField(Int_t n = 50) { fScanField = n; } // *MENU*
    void SetTargetMemoryRatio(Float_t ratio) { fTargetMemoryRatio = ratio; }

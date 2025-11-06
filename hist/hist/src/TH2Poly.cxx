@@ -19,7 +19,6 @@
 #include "TMath.h"
 #include <cassert>
 
-ClassImp(TH2Poly);
 
 /** \class TH2Poly
     \ingroup Histograms
@@ -1327,7 +1326,7 @@ void TH2Poly::SavePrimitive(std::ostream &out, Option_t *option)
    out << "   \n";
 
    // Construct the class initialization
-   out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
+   out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\", \""
        << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << fCellX << ", " << fXaxis.GetXmin() << ", "
        << fXaxis.GetXmax() << ", " << fCellY << ", " << fYaxis.GetXmin() << ", " << fYaxis.GetXmax() << ");\n";
 
@@ -1696,7 +1695,7 @@ Bool_t TH2Poly::Multiply(TF1 *, Double_t)
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// NOT IMPLEMENTED for TH2Poly
-Double_t TH2Poly::ComputeIntegral(Bool_t )
+Double_t TH2Poly::ComputeIntegral(Bool_t, Option_t *)
 {
    Error("ComputeIntegral", "Not implemented for TH2Poly");
    return TMath::QuietNaN();

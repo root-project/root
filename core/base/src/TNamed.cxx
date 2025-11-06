@@ -27,7 +27,6 @@ overridden by the derived classes.
 #include "TVirtualPad.h"
 #include "TClass.h"
 
-ClassImp(TNamed);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TNamed copy ctor.

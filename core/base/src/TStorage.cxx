@@ -30,7 +30,7 @@ Set the compile option R__NOSTATS to de-activate all memory checking
 and statistics gathering in the system.
 */
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "TROOT.h"
 #include "TObjectTable.h"
@@ -68,7 +68,6 @@ ReAllocCFun_t TStorage::fgReAllocCHook;
 Bool_t        TStorage::fgHasCustomNewDelete;
 
 
-ClassImp(TStorage);
 
 //------------------------------------------------------------------------------
 

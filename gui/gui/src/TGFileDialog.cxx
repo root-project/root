@@ -63,7 +63,6 @@ static const char *gDefTypes[] = { "All files",     "*",
 static TGFileInfo gInfo;
 
 
-ClassImp(TGFileDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGFileInfo Destructor.

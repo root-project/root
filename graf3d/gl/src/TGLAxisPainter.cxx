@@ -29,7 +29,6 @@
 Utility class to paint axis in GL.
 */
 
-ClassImp(TGLAxisPainter);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -443,7 +442,6 @@ void TGLAxisPainter::PaintAxis(TGLRnrCtx &rnrCtx, TAxis* ax)
 Painter class for axes encompassing a 3D box.
 */
 
-ClassImp(TGLAxisPainterBox);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

@@ -15,7 +15,6 @@
 #include <iostream>
 #include <cstring>
 
-ClassImp(TPieSlice);
 
 /** \class TPieSlice
 \ingroup BasicGraphics
@@ -91,11 +90,11 @@ void TPieSlice::SavePrimitive(std::ostream &out, Option_t *opts)
    if (!name || !*name || strncmp(name, "pie->", 5))
       return;
 
-   out << "   " << name << "->SetTitle(\"" << GetTitle() << "\");" << std::endl;
-   out << "   " << name << "->SetValue(" << GetValue() << ");" << std::endl;
-   out << "   " << name << "->SetRadiusOffset(" << GetRadiusOffset() << ");" << std::endl;
+   out << "   " << name << "->SetTitle(\"" << GetTitle() << "\");\n";
+   out << "   " << name << "->SetValue(" << GetValue() << ");\n";
+   out << "   " << name << "->SetRadiusOffset(" << GetRadiusOffset() << ");\n";
 
-   SaveFillAttributes(out, name, 0, 1001);
+   SaveFillAttributes(out, name, -1, -1);
    SaveLineAttributes(out, name, 1, 1, 1);
 }
 

@@ -36,7 +36,6 @@ Quadratic interpolation of TGraph
 #include "TMath.h"
 #include "TSpline.h"
 
-ClassImp(TMVA::TSpline2);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor from TGraph pointer (not owned by TSpline2)

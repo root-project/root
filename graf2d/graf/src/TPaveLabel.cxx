@@ -16,7 +16,6 @@
 #include "TLatex.h"
 #include "TVirtualPad.h"
 
-ClassImp(TPaveLabel);
 
 /** \class TPaveLabel
 \ingroup BasicGraphics
@@ -207,7 +206,7 @@ void TPaveLabel::SavePrimitive(std::ostream &out, Option_t *option)
    if (fBorderSize != 3)
       out << "   pavelabel->SetBorderSize(" << fBorderSize << ");\n";
 
-   SaveFillAttributes(out, "pavelabel", 19, 1001);
+   SaveFillAttributes(out, "pavelabel", -1, -1);
    SaveLineAttributes(out, "pavelabel", 1, 1, 1);
    SaveTextAttributes(out, "pavelabel", 22, 0, 1, 62, 0);
 

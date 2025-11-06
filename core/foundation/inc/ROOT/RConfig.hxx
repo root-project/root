@@ -104,7 +104,7 @@
 #      endif
 #   else
 #      define R__SUN
-#      include <stdlib.h>
+#      include <cstdlib>
 #   endif
 #   define R__UNIX
 #   define NEED_STRING

@@ -1,5 +1,5 @@
 /*************************************************************************
- * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2025, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -10,7 +10,7 @@
 #include "TClass.h"
 
 #include "RFieldProvider.hxx"
-
+#include "RVisualizationProvider.hxx"
 
 // ==============================================================================================
 
@@ -19,26 +19,40 @@
 \brief Provider for RNTuple drawing on TCanvas
 \author Sergey Linev <S.Linev@gsi.de>
 \date 2021-03-09
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is
+welcome!
 */
 
-class RNTupleDraw6Provider : public RFieldProvider {
+class RNTupleDraw6Provider : public RProvider {
+private:
+   RFieldProvider fieldProvider;
+   RVisualizationProvider visualizationProvider;
 
 public:
-
    RNTupleDraw6Provider()
    {
       RegisterDraw6(TClass::GetClass<ROOT::RNTuple>(),
                     [this](TVirtualPad *pad, std::unique_ptr<RHolder> &obj, const std::string &opt) -> bool {
-                       auto h1 = DrawField(dynamic_cast<RFieldHolder *>(obj.get()));
-                       if (!h1)
-                          return false;
+                       auto visHolder = dynamic_cast<RVisualizationHolder *>(obj.get());
+                       if (visHolder) {
+                          auto treeMap = visualizationProvider.CreateTreeMap(visHolder);
+                          if (!treeMap)
+                             return false;
 
-                       pad->Add(h1, opt.c_str());
+                          pad->Add(treeMap.release(), opt.c_str());
+                          return true;
+                       }
 
-                       return true;
+                       auto fieldHolder = dynamic_cast<RFieldHolder *>(obj.get());
+                       if (fieldHolder) {
+                          auto h1 = fieldProvider.DrawField(fieldHolder);
+                          if (!h1)
+                             return false;
+
+                          pad->Add(h1, opt.c_str());
+                          return true;
+                       }
+                       return false;
                     });
    }
-
 } newRNTupleDraw6Provider;
-

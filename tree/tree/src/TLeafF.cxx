@@ -21,7 +21,6 @@ A TLeaf for a 32 bit floating point data type.
 #include "TClonesArray.h"
 #include <iostream>
 
-ClassImp(TLeafF);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for LeafF.

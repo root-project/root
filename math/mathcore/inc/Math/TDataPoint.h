@@ -17,7 +17,7 @@
 #include "RtypesCore.h"
 
 #include <cassert>
-#include <math.h>
+#include <cmath>
 
 namespace ROOT {
 namespace Math {

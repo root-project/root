@@ -21,7 +21,7 @@
 ///
 /// \author Damir Buskulic
 
-#include <time.h>
+#include <ctime>
 
 void hist061_TH1_timeonaxis()
 {

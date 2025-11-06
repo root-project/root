@@ -16,7 +16,6 @@
 
 #include <cstring>
 
-ClassImp(TSliderBox);
 
 
 /** \class TSliderBox

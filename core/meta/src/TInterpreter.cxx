@@ -40,7 +40,6 @@ AddPseudoGlobals() {
 }
 
 
-ClassImp(TInterpreter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TInterpreter ctor only called by derived classes.

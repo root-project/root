@@ -36,7 +36,6 @@ protected:
    ClassDefOverride(Shape, 0);
 };
 
-ClassImp(Shape);
 
 Shape::Shape(Int_t color, Double_t x, Double_t y, Double_t z) : fX(x), fY(y), fZ(z), fColor(color) {}
 
@@ -53,7 +52,6 @@ private:
    ClassDefOverride(Box, 0);
 };
 
-ClassImp(Box);
 
 Box::Box(Int_t color, Double_t x, Double_t y, Double_t z, Double_t dX, Double_t dY, Double_t dZ)
    : Shape(color, x, y, z), fDX(dX), fDY(dY), fDZ(dZ)
@@ -220,7 +218,6 @@ private:
    ClassDefOverride(SBPyramid, 0);
 };
 
-ClassImp(SBPyramid);
 
 SBPyramid::SBPyramid(Int_t color, Double_t x, Double_t y, Double_t z, Double_t dX, Double_t dY, Double_t dZ)
    : Shape(color, x, y, z), fDX(dX), fDY(dY), fDZ(dZ)
@@ -358,7 +355,6 @@ private:
    ClassDefOverride(MyGeom, 0);
 };
 
-ClassImp(MyGeom);
 
 MyGeom::MyGeom()
 {

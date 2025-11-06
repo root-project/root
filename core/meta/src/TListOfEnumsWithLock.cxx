@@ -25,7 +25,6 @@ unloaded enum.
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
 
-ClassImp(TListOfEnumsWithLock);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -317,7 +316,6 @@ Int_t TListOfEnumsWithLock::GetSize() const
 Iterator for TListOfEnumsWithLock.
 */
 
-ClassImp(TListOfEnumsWithLockIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 

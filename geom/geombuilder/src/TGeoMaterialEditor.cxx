@@ -30,7 +30,6 @@ Editors for materials.
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TGeoMaterialEditor);
 
 enum ETGeoMaterialWid {
    kMATERIAL_NAME,
@@ -387,7 +386,6 @@ Editors for mixtures.
 
 */
 
-ClassImp(TGeoMixtureEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for mixture editor.

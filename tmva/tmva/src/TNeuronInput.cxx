@@ -29,4 +29,3 @@ Interface for TNeuron input calculation classes.
 
 #include "Rtypes.h"
 
-ClassImp(TMVA::TNeuronInput);

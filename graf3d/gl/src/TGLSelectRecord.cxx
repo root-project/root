@@ -21,7 +21,6 @@ Supports initialization from a raw GL record (UInt_t*) and
 copies the name-data into internal array.
 */
 
-ClassImp(TGLSelectRecordBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -143,7 +142,6 @@ scene and details ob out selected object (TGLPhysicalShape*,
 TObject* or simply a void* for foreign scenes).
 */
 
-ClassImp(TGLSelectRecord);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -290,7 +288,6 @@ Bool_t TGLSelectRecord::AreSameSelectionWise(const TGLSelectRecord& r1,
 Selection record for overlay objects.
 */
 
-ClassImp(TGLOvlSelectRecord);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

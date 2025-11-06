@@ -62,7 +62,6 @@ Int_t TSocket::fgClientProtocol = 17;  // increase when client protocol changes
 
 TVirtualMutex *gSocketAuthMutex = 0;
 
-ClassImp(TSocket);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a socket. Connect to the named service at address addr.

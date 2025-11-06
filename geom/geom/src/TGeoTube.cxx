@@ -139,7 +139,6 @@ shape:
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-ClassImp(TGeoTube);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -1281,7 +1280,6 @@ void TGeoTube::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *
       safe[i] = Safety(&points[3 * i], inside[i]);
 }
 
-ClassImp(TGeoTubeSeg);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -2589,7 +2587,6 @@ void TGeoTubeSeg::Safety_v(const Double_t *points, const Bool_t *inside, Double_
       safe[i] = Safety(&points[3 * i], inside[i]);
 }
 
-ClassImp(TGeoCtub);
 
 TGeoCtub::TGeoCtub()
 {

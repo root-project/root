@@ -18,7 +18,6 @@
 #include <cmath>
 #include <iostream>
 
-ClassImp(TAttLine);
 using std::sqrt;
 
 /** \class TAttLine
@@ -274,11 +273,15 @@ void TAttLine::ResetAttLine(Option_t *)
 
 void TAttLine::SaveLineAttributes(std::ostream &out, const char *name, Int_t coldef, Int_t stydef, Int_t widdef)
 {
-   if (fLineColor != coldef)
+   // save line settings if gStyle configured differently - so 1,1,1 is not default
+   Bool_t force_saving = (coldef == 1) && (stydef == 1) && (widdef == 1) && gStyle &&
+                         ((gStyle->GetLineColor() != 1) || (gStyle->GetLineWidth() != 1) || (gStyle->GetLineStyle() != 1));
+
+   if ((fLineColor != coldef) || force_saving)
       out << "   " << name << "->SetLineColor(" << TColor::SavePrimitiveColor(fLineColor) << ");\n";
-   if (fLineStyle != stydef)
+   if ((fLineStyle != stydef) || force_saving)
       out << "   " << name << "->SetLineStyle(" << fLineStyle << ");\n";
-   if (fLineWidth != widdef)
+   if ((fLineWidth != widdef)  || force_saving)
       out << "   " << name << "->SetLineWidth(" << fLineWidth << ");\n";
 }
 

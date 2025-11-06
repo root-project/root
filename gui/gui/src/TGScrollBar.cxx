@@ -62,10 +62,6 @@ kC_VSCROLL, kSB_SLIDERTRACK, position, 0
 Pixmap_t TGScrollBar::fgBckgndPixmap = 0;
 Int_t    TGScrollBar::fgScrollBarWidth = kDefaultScrollBarWidth;
 
-ClassImp(TGScrollBarElement);
-ClassImp(TGScrollBar);
-ClassImp(TGHScrollBar);
-ClassImp(TGVScrollBar);
 
 
 ////////////////////////////////////////////////////////////////////////////////

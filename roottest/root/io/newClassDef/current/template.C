@@ -1,8 +1,6 @@
 #include "template.h"
 #include "TBufferFile.h"
 
-//ClassImpT(MyTemplate,const int)
-
 #ifdef _ClassInit_
 // Old Style
 #define _ClassImpTS_(name,Tmpl) \
@@ -22,13 +20,10 @@
    _ClassImpTS_(name,Tmpl)
 #else
 // New style
-#define ClassImpTS(name,Tmpl) templateClassImp( name< Tmpl > )
+#define ClassImpTS(name,Tmpl)
 #endif
 
 ClassImpTS(MyTemplate,const double*)
-
-ClassImpT(MyTemplate,T)
-ClassImp2T(MyPairTemplate,T,T2)
 
 const double dvalue = 33.3;
 

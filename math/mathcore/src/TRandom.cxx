@@ -33,14 +33,14 @@ the ROOT generator, *gRandom*.
 576 bits. This new implementation is built on the idea and the original code of Alexei Sibidanov, described in his
 <a href="https://arxiv.org/abs/1705.03123">paper </a>. It generates random numbers with 52 bit precision (double
 precision) and it has an higher luxury level than the original Ranlux generator (`p = 2048` instead of `p=794`).
-- ::TRandomMixMax: Generator based on the family of the MIXMAX matrix generators (see the
+- ::TRandomMixMax : Generator based on the family of the MIXMAX matrix generators (see the
 <a href="https://mixmax.hepforge.org">MIXMAX HEPFORGE Web page</a> and the documentation of the class
 ROOT::Math::MixMaxEngine for more information), that are base on the Asanov dynamical C systems. This generator has a
 state of N=240 64 bit integers, proof random properties, it provides 61 random bits and it has a very large period
 (\f$10^{4839}\f$). Furthermore, it provides the capability to be seeded with the guarantee that, for each given
 different seed, a different sequence of random numbers will be generated. The only drawback is that the seeding time is
 time consuming, of the order of 0.1 ms, while the time to generate a number is few ns (more than 10000 faster).
-- ::TRandomMixMax17: Another MixMax generator, but with a smaller state, N=17, and this results in a smaller entropy
+- ::TRandomMixMax17 : Another MixMax generator, but with a smaller state, N=17, and this results in a smaller entropy
 than the generator with N=240. However, it has the same seeding capabilities, with a much faster seeding time (about 200
 times less than TRandomMixMax240 and comparable to TRandom3).
 - ::TRandomMixMax256 : A variant of the MIXMAX generators, based on a state of N=256, and described in the
@@ -179,7 +179,6 @@ A TRandom object may be written to a Root file
 #include "TUUID.h"
 #include "TError.h"
 
-ClassImp(TRandom);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor. For seed see SetSeed().

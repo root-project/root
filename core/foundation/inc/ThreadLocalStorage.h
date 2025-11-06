@@ -182,8 +182,11 @@ T &TTHREAD_TLS_INIT(ArgType arg) {
 #  define TTHREAD_TLS_FREE(name)
 
 #elif defined(R__HAS_PTHREAD)
-
+#ifdef __cplusplus
+#include <cassert>
+#else
 #include <assert.h>
+#endif
 #include <pthread.h>
 
 #  define TTHREAD_TLS_DECLARE(type,name)                                     \

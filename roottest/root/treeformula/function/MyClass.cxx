@@ -1,7 +1,6 @@
 #include "MyClass.h"
 #include "TMath.h"
 
-ClassImp(MyClass)
 
 TF1*    MyClass::fgWSb            = NULL;     
 

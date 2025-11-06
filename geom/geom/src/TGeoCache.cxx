@@ -19,7 +19,6 @@
 
 // const Int_t kN3 = 3*sizeof(Double_t);
 
-ClassImp(TGeoNodeCache);
 
 /** \class TGeoNodeCache
 \ingroup Geometry_classes
@@ -470,7 +469,6 @@ void TGeoNodeCache::MasterToLocalBomb(const Double_t *master, Double_t *local) c
    fMatrix->MasterToLocalBomb(master, local);
 }
 
-ClassImp(TGeoCacheState);
 
 /** \class TGeoCacheState
 \ingroup Geometry_classes

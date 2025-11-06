@@ -22,7 +22,6 @@ Describes an Operating System directory for the browser.
 #include "TList.h"
 
 
-ClassImp(TSystemDirectory);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a system directory object.

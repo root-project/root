@@ -166,7 +166,6 @@ final choice of tau should sit right in the minimum</li>
 using std::cout;
 #endif
 
-ClassImp(TUnfoldDensity)
 
 TUnfoldDensity::~TUnfoldDensity(void)
 {

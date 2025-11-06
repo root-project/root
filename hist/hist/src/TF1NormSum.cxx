@@ -16,7 +16,6 @@
 #include "Math/WrappedFunction.h"
 #include "Math/WrappedTF1.h"
 
-ClassImp(TF1NormSum);
 
 /** \class TF1NormSum
     \ingroup Functions

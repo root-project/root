@@ -29,7 +29,6 @@ Implements GUI for editing marker attributes.
 #include "TCanvas.h"
 #include "TROOT.h"
 
-ClassImp(TAttMarkerEditor);
 
 enum EMarkerWid {
    kCOLOR,

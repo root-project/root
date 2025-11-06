@@ -13,10 +13,10 @@ A *categorical axis* has a unique label per bin.
 *Axes* is the plural of axis and usually means the bin configurations for all dimensions of a histogram.
 
 A *bin content* is the value of a single bin.
-The *bin content type* can be an integer type, a floating-point type, the special `RDoubleBinWithError`, or a user-defined type.
+The *bin content type* can be an integer type, a floating-point type, the special `RBinWithError`, or a user-defined type.
 
 A *bin error* is the Poisson error of a bin content.
-With the special `RDoubleBinWithError`, it is the square root of the sum of weights squared: $\sqrt{\sum w_i^2}$
+With the special `RBinWithError`, it is the square root of the sum of weights squared: $\sqrt{\sum w_i^2}$
 Otherwise it is the square root of the bin content, which is only correct with unweighted filling.
 
 A *bin index* (plural *indices*) refers to a single bin of a dimension, an array of indices refers to a bin in a histogram.

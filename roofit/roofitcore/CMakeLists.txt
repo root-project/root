@@ -10,7 +10,11 @@
 ############################################################################
 
 if(roofit_multiprocess)
-  set(RooFitMPTestStatisticsSources src/TestStatistics/LikelihoodJob.cxx src/TestStatistics/LikelihoodGradientJob.cxx)
+  set(RooFitMPTestStatisticsSources
+    src/TestStatistics/LikelihoodGradientJob.cxx
+    src/TestStatistics/LikelihoodJob.cxx
+    src/TestStatistics/MinuitFcnGrad.cxx
+  )
   list(APPEND EXTRA_LIBRARIES RooFitMultiProcess)
   #FIXME: The ProcessTimer.h exposes json in its interface:
   list(APPEND EXTRA_LIBRARIES nlohmann_json::nlohmann_json)
@@ -436,7 +440,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/TestStatistics/LikelihoodGradientWrapper.cxx
     src/TestStatistics/LikelihoodSerial.cxx
     src/TestStatistics/LikelihoodWrapper.cxx
-    src/TestStatistics/MinuitFcnGrad.cxx
     src/TestStatistics/RooAbsL.cxx
     src/TestStatistics/RooBinnedL.cxx
     src/TestStatistics/RooRealL.cxx

@@ -26,7 +26,6 @@ of the autoloading of branches as well as all the generic setup routine.
 #include <string>
 #include <string_view>
 
-ClassImp(ROOT::Detail::TBranchProxy);
 
 using namespace ROOT::Internal;
 

@@ -34,7 +34,6 @@ Rectified Linear Unit activation function for TNeuron
 
 #include <iostream>
 
-ClassImp(TMVA::TActivationReLU);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// get expressions for the tanh and its derivative

@@ -1,5 +1,9 @@
 ROOTTEST_ADD_TESTDIRS()
 
+ROOTTEST_ADD_TEST(customRootrcPath
+                  MACRO customRootrcPath.C
+                  ENVIRONMENT ROOTENV_USER_PATH=${CMAKE_CURRENT_SOURCE_DIR}/customrootc)
+
 ROOTTEST_ADD_TEST(lifetime
                   MACRO lifetime.C
                   OUTREF lifetime.ref)

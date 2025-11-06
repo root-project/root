@@ -6,7 +6,6 @@
 
 using namespace std;
 
-ClassImp(A)
 
 A::A()
 : TObject()
@@ -47,7 +46,6 @@ void A::print()
    cout << "n: " << n << endl;
 }
 
-ClassImp(B)
 
 B::B()
 : A()
@@ -86,7 +84,6 @@ void B::print()
    cout << "n: " << n << endl;
 }
 
-ClassImp(C)
 
 C::C()
 : TObject()

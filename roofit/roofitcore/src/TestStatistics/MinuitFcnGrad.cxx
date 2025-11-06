@@ -17,6 +17,9 @@
 #include "RooAbsPdf.h"
 #include "RooNaNPacker.h"
 
+#include <Minuit2/Minuit2Minimizer.h>
+#include <Minuit2/FCNBase.h>
+
 #include <iomanip> // std::setprecision
 
 namespace RooFit {
@@ -24,34 +27,36 @@ namespace TestStatistics {
 
 namespace {
 
-class MinuitGradFunctor : public ROOT::Math::IMultiGradFunction {
-
+class MinuitGradFunctor : public ROOT::Minuit2::FCNBase {
 public:
-   MinuitGradFunctor(MinuitFcnGrad const &fcn) : _fcn{fcn} {}
+   MinuitGradFunctor(MinuitFcnGrad const &fcn, double errorLevel) : _fcn{fcn}, _up{errorLevel} {}
 
-   ROOT::Math::IMultiGradFunction *Clone() const override { return new MinuitGradFunctor(_fcn); }
-
-   unsigned int NDim() const override { return _fcn.getNDim(); }
-
-   void Gradient(const double *x, double *grad) const override { return _fcn.Gradient(x, grad); }
-
-   void GradientWithPrevResult(const double *x, double *grad, double *previous_grad, double *previous_g2,
-                               double *previous_gstep) const override
+   double operator()(std::vector<double> const &v) const override { return _fcn(v.data()); }
+   double Up() const override { return _up; }
+   void SetErrorDef(double val) override { _up = val; }
+   bool HasGradient() const override { return true; }
+   std::vector<double> Gradient(std::vector<double> const &params) const override
    {
-      return _fcn.GradientWithPrevResult(x, grad, previous_grad, previous_g2, previous_gstep);
+      std::vector<double> grad(_fcn.getNDim());
+      _fcn.Gradient(params.data(), grad.data());
+      return grad;
    }
-
-   bool returnsInMinuit2ParameterSpace() const override { return _fcn.returnsInMinuit2ParameterSpace(); }
+   std::vector<double> GradientWithPrevResult(std::vector<double> const &v, double *previous_grad, double *previous_g2,
+                                              double *previous_gstep) const override
+   {
+      std::vector<double> output(v.size());
+      _fcn.GradientWithPrevResult(v.data(), output.data(), previous_grad, previous_g2, previous_gstep);
+      return output;
+   }
+   ROOT::Minuit2::GradientParameterSpace gradParameterSpace() const override
+   {
+      return _fcn.returnsInMinuit2ParameterSpace() ? ROOT::Minuit2::GradientParameterSpace::Internal
+                                                   : ROOT::Minuit2::GradientParameterSpace::External;
+   }
 
 private:
-   double DoEval(const double *x) const override { return _fcn(x); }
-
-   double DoDerivative(double const * /*x*/, unsigned int /*icoord*/) const override
-   {
-      throw std::runtime_error("MinuitGradFunctor::DoDerivative is not implemented, please use Gradient instead.");
-   }
-
    MinuitFcnGrad const &_fcn;
+   double _up;
 };
 
 } // namespace
@@ -83,10 +88,7 @@ private:
 MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &absL, RooMinimizer *context,
                              std::vector<ROOT::Fit::ParameterSettings> &parameters, LikelihoodMode likelihoodMode,
                              LikelihoodGradientMode likelihoodGradientMode)
-   : RooAbsMinimizerFcn(*absL->getParameters(), context),
-     _minuitInternalX(getNDim(), 0),
-     _minuitExternalX(getNDim(), 0),
-     _multiGenFcn{std::make_unique<MinuitGradFunctor>(*this)}
+   : RooAbsMinimizerFcn(*absL->getParameters(), context), _minuitInternalX(getNDim(), 0), _minuitExternalX(getNDim(), 0)
 {
    synchronizeParameterSettings(parameters, true);
 
@@ -108,7 +110,7 @@ MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAb
                                                  shared_offset);
 
    applyToLikelihood([&](auto &l) { l.synchronizeParameterSettings(parameters); });
-   _gradient->synchronizeParameterSettings(getMultiGenFcn(), parameters);
+   _gradient->synchronizeParameterSettingsImpl(parameters);
 
    // Note: can be different than RooGradMinimizerFcn/LikelihoodGradientSerial, where default options are passed
    // (ROOT::Math::MinimizerOptions::DefaultStrategy() and ROOT::Math::MinimizerOptions::DefaultErrorDef())
@@ -272,6 +274,12 @@ bool MinuitFcnGrad::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &param
    applyToLikelihood([&](auto &l) { l.synchronizeWithMinimizer(_context->fitter()->Config().MinimizerOptions()); });
    _gradient->synchronizeWithMinimizer(_context->fitter()->Config().MinimizerOptions());
    return returnee;
+}
+
+void MinuitFcnGrad::initMinimizer(ROOT::Math::Minimizer &minim)
+{
+   auto &minuit = dynamic_cast<ROOT::Minuit2::Minuit2Minimizer &>(minim);
+   minuit.SetFCN(getNDim(), std::make_unique<MinuitGradFunctor>(*this, minim.ErrorDef()));
 }
 
 } // namespace TestStatistics

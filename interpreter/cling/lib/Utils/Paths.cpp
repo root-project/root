@@ -39,7 +39,7 @@ bool ExpandEnvVars(std::string& Str, bool Path) {
 
     std::string EnvVar = Str.substr(DPos + 1, Length -1); //"HOME"
     std::string FullPath;
-    if (const char* Tok = ::getenv(EnvVar.c_str()))
+    if (const char* Tok = std::getenv(EnvVar.c_str()))
       FullPath = Tok;
 
     Str.replace(DPos, Length, FullPath);
@@ -79,12 +79,6 @@ void CopyIncludePaths(const clang::HeaderSearchOptions& Opts,
     case frontend::System:
       if (!withSystem) continue;
       if (withFlags) incpaths.push_back("-isystem");
-      break;
-
-    case frontend::IndexHeaderMap:
-      if (!withSystem) continue;
-      if (withFlags) incpaths.push_back("-index-header-map");
-      if (withFlags) incpaths.push_back(E.IsFramework? "-F" : "-I");
       break;
 
     case frontend::CSystem:

@@ -94,6 +94,18 @@ enum Operator : unsigned char {
 
 enum OperatorArity : unsigned char { kUnary = 1, kBinary, kBoth };
 
+/// Enum modelling CVR qualifiers.
+enum QualKind : unsigned char {
+  Const = 1 << 0,
+  Volatile = 1 << 1,
+  Restrict = 1 << 2
+};
+
+inline QualKind operator|(QualKind a, QualKind b) {
+  return static_cast<QualKind>(static_cast<unsigned char>(a) |
+                               static_cast<unsigned char>(b));
+}
+
 /// A class modeling function calls for functions produced by the interpreter
 /// in compiled code. It provides an information if we are calling a standard
 /// function, constructor or destructor.
@@ -308,6 +320,18 @@ CPPINTEROP_API bool IsEnumConstant(TCppScope_t handle);
 
 /// Checks if the passed value is an enum type or not.
 CPPINTEROP_API bool IsEnumType(TCppType_t type);
+
+/// Checks if the passed type has qual Qualifiers
+/// qual can be ORed value of enum QualKind
+CPPINTEROP_API bool HasTypeQualifier(TCppType_t type, QualKind qual);
+
+/// Returns type with the qual Qualifiers removed
+/// qual can be ORed value of enum QualKind
+CPPINTEROP_API TCppType_t RemoveTypeQualifier(TCppType_t type, QualKind qual);
+
+/// Returns type with the qual Qualifiers added
+/// qual can be ORed value of enum QualKind
+CPPINTEROP_API TCppType_t AddTypeQualifier(TCppType_t type, QualKind qual);
 
 /// Extracts enum declarations from a specified scope and stores them in
 /// vector
@@ -548,6 +572,9 @@ void GetEnumConstantDatamembers(TCppScope_t scope,
 /// This is a Lookup function to be used specifically for data members.
 CPPINTEROP_API TCppScope_t LookupDatamember(const std::string& name,
                                             TCppScope_t parent);
+
+/// Check if the given type is a lamda class
+CPPINTEROP_API bool IsLambdaClass(TCppType_t type);
 
 /// Gets the type of the variable that is passed as a parameter.
 CPPINTEROP_API TCppType_t GetVariableType(TCppScope_t var);

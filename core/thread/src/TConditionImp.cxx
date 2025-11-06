@@ -20,4 +20,3 @@
 
 #include "TConditionImp.h"
 
-ClassImp(TConditionImp);

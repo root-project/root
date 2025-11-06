@@ -27,7 +27,6 @@
 #include <cstring>
 #include <string>
 
-ClassImp(TGraphErrors);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -723,12 +722,12 @@ void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    auto xname  = SavePrimitiveVector(out, "gre_fx", fNpoints, fX, kTRUE);
    auto yname  = SavePrimitiveVector(out, "gre_fy", fNpoints, fY);
-   auto exname = SavePrimitiveVector(out, "gre_fex", fNpoints, fEX);
-   auto eyname = SavePrimitiveVector(out, "gre_fey", fNpoints, fEY);
+   auto exname = SavePrimitiveVector(out, "gre_fex", fNpoints, fEX, 111);
+   auto eyname = SavePrimitiveVector(out, "gre_fey", fNpoints, fEY, 111);
 
    SavePrimitiveConstructor(
       out, Class(), "gre",
-      TString::Format("%d, %s.data(), %s.data(), %s.data(), %s.data()", fNpoints, xname.Data(), yname.Data(), exname.Data(), eyname.Data()), kFALSE);
+      TString::Format("%d, %s.data(), %s.data(), %s, %s", fNpoints, xname.Data(), yname.Data(), exname.Data(), eyname.Data()), kFALSE);
 
    SaveHistogramAndFunctions(out, "gre", option);
 }

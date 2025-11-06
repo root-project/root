@@ -898,7 +898,6 @@ void TRootIconBox::RemoveAll()
 // ROOT object browser (looking like Windows Explorer).
 //_____________________________________________________________________________
 
-ClassImp(TRootBrowserLite);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create browser with a specified width and height.

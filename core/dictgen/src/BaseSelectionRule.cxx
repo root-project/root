@@ -24,7 +24,7 @@
 #include "TClingUtils.h"
 
 #include <iostream>
-#include <string.h>
+#include <cstring>
 #include <cctype>
 
 #include "clang/Basic/SourceLocation.h"
@@ -261,7 +261,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
            (fHasFilePatternAttribute && CheckPattern(file_name, file_pattern_value, fFileSubPatterns, isLinkdef)));
 
       if (hasFileMatch) {
-         // Reject utility classes defined in ClassImp
+         // Reject utility classes defined in ClassDef
          // when using a file based rule
          if (!strncmp(name.c_str(), "R__Init", 7) ||
              strstr(name.c_str(), "::R__Init")) {

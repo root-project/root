@@ -90,7 +90,7 @@ It is strongly recommended to persistify those as objects rather than lists of l
   name of the leaf, but have no effect.) If no type is given, the
   type of the variable is assumed to be the same as the previous
   variable. If the first variable does not have a type, it is
-  assumed of type F by default. The list of currently supported
+  assumed of type `F` by default. The list of currently supported
   types is given below:
    - `C` : a character string terminated by the 0 character
    - `B` : an 8 bit integer (`Char_t`); Mostly signed, might be unsigned in special platforms or depending on compiler flags, thus do not use std::int8_t as underlying variable since they are not equivalent; Treated as a character when in an array.
@@ -478,7 +478,6 @@ constexpr Float_t kNEntriesResortInv = 1.f/kNEntriesResort;
 Int_t    TTree::fgBranchStyle = 1;  // Use new TBranch style with TBranchElement.
 Long64_t TTree::fgMaxTreeSize = 100000000000LL;
 
-ClassImp(TTree);
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -1969,7 +1968,7 @@ Int_t TTree::Branch(const char* foldername, Int_t bufsize /* = 32000 */, Int_t s
 ///      The variable type may be 0,1 or 2 characters. If no type is given,
 ///      the type of the variable is assumed to be the same as the previous
 ///      variable. If the first variable does not have a type, it is assumed
-///      of type F by default. The list of currently supported types is given below:
+///      of type `F` by default. The list of currently supported types is given below:
 ///         - `C` : a character string terminated by the 0 character
 ///         - `B` : an 8 bit integer (`Char_t`); Mostly signed, might be unsigned in special platforms or depending on compiler flags, thus do not use std::int8_t as underlying variable since they are not equivalent; Treated as a character when in an array.
 ///         - `b` : an 8 bit unsigned integer (`UChar_t`)
@@ -4261,7 +4260,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// -  `Length$`     : return the total number of element of this formula for this
 ///     entry (`==TTreeFormula::GetNdata()`)
 /// -  `Iteration$`  : return the current iteration over this formula for this
-///     entry (i.e. varies from 0 to `Length$`).
+///     entry (i.e. varies from 0 to `Length$ - 1`).
 /// -  `Length$(formula )`  : return the total number of element of the formula
 ///     given as a parameter.
 /// -  `Sum$(formula )`  : return the sum of the value of the elements of the
@@ -5478,7 +5477,7 @@ Int_t TTree::GetBranchStyle()
 ////////////////////////////////////////////////////////////////////////////////
 /// Used for automatic sizing of the cache.
 ///
-/// Estimates a suitable size for the tree cache based on AutoFlush.
+/// Estimates a suitable size in bytes for the tree cache based on AutoFlush.
 /// A cache sizing factor is taken from the configuration. If this yields zero
 /// and withDefault is true the historical algorithm for default size is used.
 
@@ -6112,7 +6111,7 @@ TTree* TTree::GetFriend(const char *friendname) const
 /// that you may not be able to take advantage of this feature.
 ///
 
-const char* TTree::GetFriendAlias(TTree* tree) const
+const char *TTree::GetFriendAlias(TTree *tree) const
 {
    if ((tree == this) || (tree == GetTree())) {
       return nullptr;
@@ -6123,30 +6122,60 @@ const char* TTree::GetFriendAlias(TTree* tree) const
    if (kGetFriendAlias & fFriendLockStatus) {
       return nullptr;
    }
-   if (!fFriends) {
+
+   // This is a TTree and it does not have any friends, we can return early
+   if (GetTree() == this && !fFriends)
       return nullptr;
-   }
-   TFriendLock lock(const_cast<TTree*>(this), kGetFriendAlias);
-   TIter nextf(fFriends);
-   TFriendElement* fe = nullptr;
-   while ((fe = (TFriendElement*) nextf())) {
-      TTree* t = fe->GetTree();
-      if (t == tree) {
-         return fe->GetName();
+
+   TFriendLock lock(const_cast<TTree *>(this), kGetFriendAlias);
+
+   auto lookForFriendNameInListOfFriends = [tree](const TList &friends) -> const char * {
+      for (auto *frEl : ROOT::Detail::TRangeStaticCast<TFriendElement>(friends)) {
+         auto *frElTree = frEl->GetTree();
+         // Simplest case: we found a friend which tree is the same as the input tree
+         if (frElTree == tree)
+            return frEl->GetName();
+         // Try again: the friend tree might be actually a TChain
+         if (frElTree && frElTree->GetTree() == tree)
+            return frEl->GetName();
       }
-      // Case of a chain:
-      if (t && t->GetTree() == tree) {
-         return fe->GetName();
+      return nullptr;
+   };
+
+   // First, look for the immediate friends of this tree
+   if (fFriends) {
+      const char *friendAlias = lookForFriendNameInListOfFriends(*fFriends);
+      if (friendAlias)
+         return friendAlias;
+   }
+
+   // Then, check if this is a TChain and the current tree has friends
+   // The non-redundant scenario here is that the currently-available
+   // inner TTree of this TChain has a list of friends which the TChain
+   // itself doesn't know anything about.
+   if (const auto *innerListOfFriends = GetTree()->GetListOfFriends();
+       innerListOfFriends && innerListOfFriends != fFriends) {
+      const char *friendAlias = lookForFriendNameInListOfFriends(*innerListOfFriends);
+      if (friendAlias)
+         return friendAlias;
+   }
+
+   // Recursively look into the list of friends of this tree
+   if (fFriends) {
+      for (auto *frEl : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fFriends)) {
+         const char *friendAlias = frEl->GetTree()->GetFriendAlias(tree);
+         if (friendAlias)
+            return friendAlias;
       }
    }
-   // After looking at the first level,
-   // let's see if it is a friend of friends.
-   nextf.Reset();
-   fe = nullptr;
-   while ((fe = (TFriendElement*) nextf())) {
-      const char* res = fe->GetTree()->GetFriendAlias(tree);
-      if (res) {
-         return res;
+
+   // Recursively look into the list of friends of the inner tree
+   if (const auto *innerListOfFriends = GetTree()->GetListOfFriends();
+       innerListOfFriends && innerListOfFriends != fFriends) {
+      for (auto *frEl : ROOT::Detail::TRangeStaticCast<TFriendElement>(*innerListOfFriends)) {
+         const char *friendAlias = frEl->GetTree()->GetFriendAlias(tree);
+         if (friendAlias)
+            return friendAlias;
       }
    }
    return nullptr;
@@ -6613,6 +6642,14 @@ Long64_t TTree::LoadTree(Long64_t entry)
          if (fNotify) {
             if(!fNotify->Notify()) return -6;
          }
+         // We cannot know a priori if the branch(es) of the friend TChain(s) that were just
+         // updated were supposed to be connected to possibly a TChainElement of another chain
+         // that has befriended this TTree (i.e., one of the "external friends"). Thus, we
+         // forward the notification that one or more friend trees were updated to the friends
+         // of this TTree.
+         if (fExternalFriends)
+            for (auto external_fe : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fExternalFriends))
+               external_fe->MarkUpdated();
       }
    }
 
@@ -8265,7 +8302,7 @@ void TTree::ResetBranchAddresses()
 /// \param firstentry first entry to scan
 /// \param nentries total number of entries to scan (starting from firstentry). Defaults to all entries.
 /// \note see TTree::SetScanField to control how many lines are printed between pagination breaks (Use 0 to disable pagination)
-/// \see TTreePlayer::Scan
+/// \see TTreePlayer::Scan, TTreePlayer::SetScanFileName, TTreePlayer::SetScanRedirect
 
 Long64_t TTree::Scan(const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
@@ -8877,13 +8914,17 @@ void TTree::SetBranchStyle(Int_t style)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set maximum size of the file cache .
+/// Set maximum size of the file cache (TTreeCache) in bytes.
 //
-/// - if cachesize = 0 the existing cache (if any) is deleted.
+/// - if cachesize = 0 the existing cache (if any) is disabled (deleted if any).
+/// - if cachesize > 0, the cache is enabled or extended, if necessary
 /// - if cachesize = -1 (default) it is set to the AutoFlush value when writing
 ///    the Tree (default is 30 MBytes).
 ///
 /// The cacheSize might be clamped, see TFileCacheRead::SetBufferSize
+///
+/// TTreeCache's 'real' job is to actually prefetch (early grab from disk) the compressed data.
+/// The cachesize controls the size of the read bytes from disk.
 ///
 /// Returns:
 /// - 0 size set, cache was created if possible
@@ -8898,19 +8939,24 @@ Int_t TTree::SetCacheSize(Long64_t cacheSize)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the size of the file cache and create it if possible.
+/// Set the maximum size of the file cache (TTreeCache) in bytes and create it if possible.
 ///
 /// If autocache is true:
 /// this may be an autocreated cache, possibly enlarging an existing
 /// autocreated cache. The size is calculated. The value passed in cacheSize:
-/// - cacheSize =  0  make cache if default cache creation is enabled
+/// - cacheSize =  0  make cache if default cache creation is enabled.
+/// - cachesize >  0  the cache is enabled or extended, if necessary
 /// - cacheSize = -1  make a default sized cache in any case
 ///
 /// If autocache is false:
 /// this is a user requested cache. cacheSize is used to size the cache.
-/// This cache should never be automatically adjusted.
+/// This cache should never be automatically adjusted. If cachesize is
+/// 0, the cache is disabled (deleted if any).
 ///
 /// The cacheSize might be clamped, see TFileCacheRead::SetBufferSize
+///
+/// TTreeCache's 'real' job is to actually prefetch (early grab from disk) the compressed data.
+/// The cachesize controls the size of the read bytes from disk.
 ///
 /// Returns:
 /// - 0 size set, or existing autosized cache almost large enough.
@@ -9982,7 +10028,6 @@ Int_t TTree::Write(const char *name, Int_t option, Int_t bufsize)
 ///
 /// Iterator on all the leaves in a TTree and its friend
 
-ClassImp(TTreeFriendLeafIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new iterator. By default the iteration direction

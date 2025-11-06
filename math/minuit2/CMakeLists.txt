@@ -26,7 +26,6 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       Minuit2/ExternalInternalGradientCalculator.h
       Minuit2/FCNAdapter.h
       Minuit2/FCNBase.h
-      Minuit2/FCNGradAdapter.h
       Minuit2/FCNGradientBase.h
       Minuit2/FumiliBuilder.h
       Minuit2/FumiliChi2FCN.h

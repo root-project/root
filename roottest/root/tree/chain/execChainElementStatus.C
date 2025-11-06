@@ -26,7 +26,9 @@ void testGetEntries() {
    TChain ch("tester");
    AddFiles(ch);
 
-   ch.GetEntries();
+   // The test is meant to traverse the entire dataset to populate
+   // the information of each TChainElement correctly.
+   ch.LoadTree(TTree::kMaxEntries - 1);
 
    Print(ch);
 

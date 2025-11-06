@@ -47,7 +47,6 @@ To draw a 3D text in a GL window. This class uses uses FTGL to render text.
 FTGL is a package making the interface between the Free Type fonts and GL.
 */
 
-ClassImp(TGLText);
 
 ////////////////////////////////////////////////////////////////////////////////
 

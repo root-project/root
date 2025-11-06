@@ -43,12 +43,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     TGraphSmooth.h
     TGraphTime.h
     TScatter.h
+    TScatter2D.h
     TH1C.h
     TH1D.h
     TH1F.h
     TH1.h
     TH1I.h
-    TH1K.h
     TH1L.h
     TH1S.h
     TH2C.h
@@ -136,8 +136,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     TGraphSmooth.cxx
     TGraphTime.cxx
     TScatter.cxx
+    TScatter2D.cxx
     TH1.cxx
-    TH1K.cxx
     TH1Merger.cxx
     TH2.cxx
     TH2Poly.cxx

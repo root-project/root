@@ -1,4 +1,4 @@
-# RNTuple Binary Format Specification 1.0.0.2
+# RNTuple Binary Format Specification 1.0.1.0
 
 ## Versioning Notes
 
@@ -374,13 +374,16 @@ The field version and type version are used for schema evolution.
 
 The structural role of the field can have one of the following values:
 
-| Value    | Structural role                                                          |
-|----------|--------------------------------------------------------------------------|
-| 0x00     | Leaf field in the schema tree                                            |
-| 0x01     | The field is the parent of a collection (e.g., a vector)                 |
-| 0x02     | The field is the parent of a record (e.g., a struct)                     |
-| 0x03     | The field is the parent of a variant                                     |
-| 0x04     | The field stores objects serialized with the ROOT streamer               |
+| Value    | Structural role                                                                 |
+|----------|---------------------------------------------------------------------------------|
+| 0x00     | Plain field in the schema tree that does not carry a particular structural role |
+| 0x01     | The field is the parent of a collection (e.g., a vector)                        |
+| 0x02     | The field is the parent of a record (e.g., a struct)                            |
+| 0x03     | The field is the parent of a variant                                            |
+| 0x04     | The field stores objects serialized with the ROOT streamer                      |
+
+A plain field is either a leaf or a "wrapper field" in the schema tree such as the parent field of an enum data field
+(see Section "Mapping of C++ Types to Fields and Columns")
 
 The "flags" field can have any of the following bits set:
 
@@ -403,7 +406,7 @@ these columns are alias columns to physical columns attached to the source field
 The following restrictions apply on field projections:
   - The source field and the target field must have the same structural role,
     except for an `RNTupleCardinality` field, which must have a collection field as a source.
-  - For streamer fields and leaf fields, the type name of the source field and the projected field must be identical.
+  - For streamer fields and plain fields, the type name of the source field and the projected field must be identical.
   - Projections involving variants or fixed-size arrays are unsupported.
   - Projected fields must be on the same schema path of collection fields as the source field.
     For instance, one can project a vector of structs with floats to individual vectors of floats but cannot
@@ -624,6 +627,7 @@ The footer envelope has the following structure:
 - Header checksum (XxHash-3 64bit)
 - Schema extension record frame
 - List frame of cluster group record frames
+- List frame of linked attribute set record frames
 
 The header checksum can be used to cross-check that header and footer belong together.
 The meaning of the feature flags is the same as for the header.
@@ -680,6 +684,21 @@ The entry span is the number of entries that are covered by this cluster group.
 The entry range allows for finding the right page list for random access requests to entries.
 The number of clusters information allows for using consistent cluster IDs
 even if cluster groups are accessed non-sequentially.
+
+#### Linked Attribute Set Record Frame
+
+The attribute set record frame references the anchor of a linked attribute set RNTuple and gives information about it.
+It has the following contents, followed a locator to the linked RNTuple anchor and a string with the attribute set name.
+```
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|     Schema Version Major     |     Schema Version Minor       |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|             Attribute Anchor Uncompressed Size                |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
+The meaning of the Schema Version is described below.
 
 ### Page List Envelope
 
@@ -796,6 +815,47 @@ In every cluster, every field has exactly one primary column representation.
 All other representations must be suppressed.
 Note that the primary column representation can change from cluster to cluster.
 
+## Linked Attribute Sets
+
+An RNTuple has zero or more linked attribute sets, containing user-defined metadata.
+Each attribute set is stored on disk as an RNTuple and the anchor of each RNTuple is linked to by the main
+RNTuple's footer.
+
+An attribute set RNTuple has the following restrictions compared to a regular RNTuple:
+
+1. it cannot have linked attribute RNTuples itself;
+2. the alias columns sections, both in its header and footer, must be empty (i.e. none of the attribute set RNTuple's
+   fields can be projected fields);
+3. none of its fields may have a structural role of 0x04 (i.e. it must not contain a ROOT streamer object);
+
+All linked attribute sets must have a non-empty, distinct name.
+
+### Reserved Attribute Set Names
+
+Attribute set names starting with `__` (two underscores) are reserved for internal use by implementations: compliant
+writers should disallow users from creating attribute sets with such names and only use them for internal metadata
+(read access to internal attribute sets may be allowed).
+
+### Attribute Schema Version
+
+Each attribute set is created with a user-defined schema. This schema is not used directly by the underlying attribute
+set RNTuple, but it is augmented with internal fields used to store additional data that serve to associate each
+entry in the attribute set with those in the main RNTuple.
+
+The Attribute Schema Version describes the internal schema of the linked attribute set RNTuple.
+A change in Major version number indicates a breaking, non-forward-compatible change in the schema: readers should
+refuse reading an attribute set whose Major Schema Version is unknown.
+A change in Minor version number indicates the presence of optional additional fields in the schema: readers should
+still be able to read the attribute set as before, ignoring any new field.
+
+The current Attribute Schema Version is **1.0**. It has the following fields (in the following order):
+  1. `_rangeStart` (type `std::uint64_t`): the start of the range that each attribute entry refers to;
+  2. `_rangeLen` (type `std::uint64_t`): the length of the range that each attribute entry refers to.
+     Note that `_rangeLen == 0` is valid and refers to an empty range;
+  3. `_userData` (untyped record): a record-type field that serves as the root field to the user-provided schema description
+     of the attribute set RNTuple. Each user-defined field that was attached to the root field in the user-provided
+     schema will be attached to this field in the attribute set RNTuple.
+
 ## Mapping of C++ Types to Fields and Columns
 
 This section is a comprehensive list of the C++ types with RNTuple I/O support.
@@ -830,7 +890,7 @@ For example, the type name `const pair<size_t, array<class ::Event, 2>>` will be
 
 ### Fundamental Types
 
-The following fundamental types are stored as `leaf` fields with a single column each.
+The following fundamental types are stored as `plain` fields with a single column each.
 Fundamental C++ types can potentially be stored in multiple possible column types.
 The possible combinations are marked as `W` in the following table.
 Additionally, some types allow for reading from certain column types but not to write into them.
@@ -923,7 +983,7 @@ The child fields are named `_0`, `_1`, ...
 
 #### std::bitset\<N\>
 
-A bitset is stored as a repetitive leaf field with an attached `Bit` column.
+A bitset is stored as a repetitive plain field with an attached `Bit` column.
 The bitset size `N` is stored as repetition parameter in the field metadata.
 Within the repetition blocks, bits are stored in little-endian order, i.e. the least significant bits come first.
 
@@ -952,13 +1012,13 @@ whose principal column is of type `(Split)Index[64|32]` and a child field of typ
 
 ### std::atomic\<T\>
 
-Atomic types are stored as a leaf field with a single subfield named `_0`.
+Atomic types are stored as a plain field with a single subfield named `_0`.
 The parent field has no attached columns.
 The subfield corresponds to the inner type `T`.
 
 ### User-defined enums
 
-User-defined enums are stored as a leaf field with a single subfield named `_0`.
+User-defined enums are stored as a plain field with a single subfield named `_0`.
 The parent field has no attached columns.
 The subfield corresponds to the integer type the underlies the enum.
 Unscoped and scoped enums are supported as long as the enum has a dictionary.

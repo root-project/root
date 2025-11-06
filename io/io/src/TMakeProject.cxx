@@ -16,7 +16,7 @@
 Helper class implementing the TFile::MakeProject.
 **/
 
-#include <ctype.h>
+#include <cctype>
 #include "TMakeProject.h"
 #include "TClass.h"
 #include "TClassEdit.h"

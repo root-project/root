@@ -52,7 +52,6 @@ to be merged, like the standalone hadd program.
 #include <cstring>
 #include <map>
 
-ClassImp(TFileMerger);
 
 TClassRef R__TH1_Class("TH1");
 TClassRef R__TTree_Class("TTree");

@@ -17,14 +17,12 @@
 #include <ROOT/RNTupleDrawVisitor.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleTreeMap.hxx>
 
 #include <TBrowser.h>
 #include <TObject.h>
 #include <TPad.h>
 #include <TText.h>
-
-#include <memory>
-#include <string>
 
 namespace {
 
@@ -91,6 +89,32 @@ public:
    const char *GetTitle() const final { return fTypeName.c_str(); }
 };
 
+class RVisualizationBrowsable : public TObject {
+private:
+   std::unique_ptr<ROOT::Experimental::RNTupleInspector> fInspector;
+   std::unique_ptr<ROOT::Experimental::RTreeMapPainter> fTreeMap;
+
+public:
+   RVisualizationBrowsable(const ROOT::RNTuple &ntuple)
+      : fInspector(ROOT::Experimental::RNTupleInspector::Create(ntuple))
+   {
+   }
+   void Browse(TBrowser *b) final
+   {
+      if (!b || !gPad)
+         return;
+      gPad->GetListOfPrimitives()->Clear();
+      fTreeMap = ROOT::Experimental::CreateTreeMapFromRNTuple(*fInspector);
+      fTreeMap->Paint("");
+      gPad->Update();
+   }
+
+   const char *GetIconName() const final { return "RNTuple-visualization"; }
+   bool IsFolder() const final { return false; }
+   const char *GetName() const final { return "Visualization"; }
+   const char *GetTitle() const final { return "TreeMap visualization of RNTuple structure and disk usage"; }
+};
+
 } // anonymous namespace
 
 void ROOT::Internal::BrowseRNTuple(const void *ntuple, TBrowser *b)
@@ -100,6 +124,7 @@ void ROOT::Internal::BrowseRNTuple(const void *ntuple, TBrowser *b)
 
    std::shared_ptr<ROOT::RNTupleReader> reader = RNTupleReader::Open(*static_cast<const ROOT::RNTuple *>(ntuple));
    const auto &desc = reader->GetDescriptor();
+   b->Add(new RVisualizationBrowsable(*static_cast<const ROOT::RNTuple *>(ntuple)), "Visualization");
    for (const auto &f : desc.GetTopLevelFields()) {
       b->Add(new RFieldBrowsable(reader, f.GetId()), f.GetFieldName().c_str());
    }

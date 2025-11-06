@@ -28,6 +28,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <typeinfo>
 #include <variant>
 
 namespace ROOT {
@@ -54,8 +55,10 @@ protected:
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final { CallReadOn(*fSubfields[0], globalIndex, to); }
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final { CallReadOn(*fSubfields[0], localIndex, to); }
 
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
+
 public:
-   RAtomicField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
+   RAtomicField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField);
    RAtomicField(RAtomicField &&other) = default;
    RAtomicField &operator=(RAtomicField &&other) = default;
    ~RAtomicField() override = default;
@@ -72,7 +75,7 @@ template <typename ItemT>
 class RField<std::atomic<ItemT>> final : public RAtomicField {
 public:
    static std::string TypeName() { return "std::atomic<" + RField<ItemT>::TypeName() + ">"; }
-   explicit RField(std::string_view name) : RAtomicField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
+   explicit RField(std::string_view name) : RAtomicField(name, std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
@@ -193,6 +196,9 @@ class RNullableField : public RFieldBase {
    ROOT::Internal::RColumnIndex fNWritten{0};
 
 protected:
+   // For reading, indicates that we read type T as a nullable field of type T, i.e. the value is always present
+   bool fIsEvolvedFromInnerType = false;
+
    const RFieldBase::RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
    void GenerateColumns(const ROOT::RNTupleDescriptor &) final;
@@ -201,11 +207,16 @@ protected:
    std::size_t AppendValue(const void *from);
    void CommitClusterImpl() final { fNWritten = 0; }
 
-   /// Given the index of the nullable field, returns the corresponding global index of the subfield or,
-   /// if it is null, returns `kInvalidNTupleIndex`
-   RNTupleLocalIndex GetItemIndex(ROOT::NTupleSize_t globalIndex);
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
-   RNullableField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
+   /// Given the global index of the nullable field, returns the corresponding cluster-local index of the subfield or,
+   /// if it is null, returns a default constructed RNTupleLocalIndex
+   RNTupleLocalIndex GetItemIndex(NTupleSize_t globalIndex);
+   /// Given the cluster-local index of the nullable field, returns the corresponding cluster-local index of
+   /// the subfield or, if it is null, returns a default constructed RNTupleLocalIndex
+   RNTupleLocalIndex GetItemIndex(RNTupleLocalIndex localIndex);
+
+   RNullableField(std::string_view fieldName, const std::string &typePrefix, std::unique_ptr<RFieldBase> itemField);
 
 public:
    RNullableField(RNullableField &&other) = default;
@@ -234,6 +245,7 @@ class ROptionalField : public RNullableField {
    const bool *GetEngagementPtr(const void *optionalPtr) const;
    bool *GetEngagementPtr(void *optionalPtr) const;
    std::size_t GetEngagementPtrOffset() const;
+   void PrepareRead(void *to, bool hasOnDiskValue);
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -243,9 +255,10 @@ protected:
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
+   void ReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to) final;
 
 public:
-   ROptionalField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
+   ROptionalField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField);
    ROptionalField(ROptionalField &&other) = default;
    ROptionalField &operator=(ROptionalField &&other) = default;
    ~ROptionalField() override = default;
@@ -259,7 +272,7 @@ template <typename ItemT>
 class RField<std::optional<ItemT>> final : public ROptionalField {
 public:
    static std::string TypeName() { return "std::optional<" + RField<ItemT>::TypeName() + ">"; }
-   explicit RField(std::string_view name) : ROptionalField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
+   explicit RField(std::string_view name) : ROptionalField(name, std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
@@ -276,6 +289,12 @@ class RUniquePtrField : public RNullableField {
    };
 
    std::unique_ptr<RDeleter> fItemDeleter;
+   /// If the item type is a polymorphic class (that declares or inherits at least one virtual method), points to the
+   /// expected dynamic type of any user object; otherwise nullptr.
+   const std::type_info *fPolymorphicTypeInfo = nullptr;
+
+   // Returns the value pointer, i.e. where to read the subfield into
+   void *PrepareRead(void *to, bool hasOnDiskValue);
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -285,9 +304,10 @@ protected:
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
+   void ReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to) final;
 
 public:
-   RUniquePtrField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
+   RUniquePtrField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField);
    RUniquePtrField(RUniquePtrField &&other) = default;
    RUniquePtrField &operator=(RUniquePtrField &&other) = default;
    ~RUniquePtrField() override = default;
@@ -301,7 +321,7 @@ template <typename ItemT>
 class RField<std::unique_ptr<ItemT>> final : public RUniquePtrField {
 public:
    static std::string TypeName() { return "std::unique_ptr<" + RField<ItemT>::TypeName() + ">"; }
-   explicit RField(std::string_view name) : RUniquePtrField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
+   explicit RField(std::string_view name) : RUniquePtrField(name, std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
@@ -336,7 +356,7 @@ private:
 public:
    static std::string TypeName() { return "std::string"; }
    explicit RField(std::string_view name)
-      : RFieldBase(name, TypeName(), ROOT::ENTupleStructure::kLeaf, false /* isSimple */), fIndex(0)
+      : RFieldBase(name, TypeName(), ROOT::ENTupleStructure::kPlain, false /* isSimple */), fIndex(0)
    {
    }
    RField(RField &&other) = default;
@@ -408,6 +428,8 @@ protected:
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
 
    void CommitClusterImpl() final;
+
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
    RVariantField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields);

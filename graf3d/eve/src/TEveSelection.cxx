@@ -22,7 +22,6 @@ Make sure there is a SINGLE running TEveSelection for each
 selection type (select/highlight).
 */
 
-ClassImp(TEveSelection);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

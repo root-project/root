@@ -21,7 +21,7 @@ a stable file and used in place of TMath.h in the ROOT miniCore.
 */
 
 #include "TMathBase.h"
-#include <math.h>
+#include <cmath>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return next prime number after x, unless x is a prime in which case

@@ -21,7 +21,12 @@
  */
 
 enum CustomEnum { kCustomEnumVal = 7 };
+enum RenamedCustomEnum : short int {
+   kRenamedCustomEnumVal = 7
+};
 // TODO(jblomer): use standard integer types for specifying the underlying width; requires TEnum fix.
+enum class CustomEnumBool : bool {
+};
 enum class CustomEnumInt8 : char {};
 enum class CustomEnumUInt8 : unsigned char {};
 enum class CustomEnumInt16 : short int {};
@@ -30,6 +35,11 @@ enum class CustomEnumInt32 : int {};
 enum class CustomEnumUInt32 : unsigned int {};
 enum class CustomEnumInt64 : long int {};
 enum class CustomEnumUInt64 : unsigned long int {};
+
+// Used for std::atomic tests as an example of a class that is not lock-free.
+struct CustomAtomicNotLockFree {
+   int a[100];
+};
 
 struct CustomStruct {
    template <typename T>
@@ -209,6 +219,8 @@ struct StructUsingCollectionProxy {
 /// Classes to exercise field traits
 struct TrivialTraitsBase {
    int a;
+
+   ClassDefNV(TrivialTraitsBase, 5)
 };
 
 struct TrivialTraits : TrivialTraitsBase {
@@ -374,6 +386,14 @@ struct DuplicateBaseC : public BaseA {
 
 struct DuplicateBaseD : public DuplicateBaseB, public DuplicateBaseC {
    float d = 0.0;
+};
+
+struct PolymorphicBase {
+   virtual ~PolymorphicBase() {}
+};
+
+struct PolymorphicDerived : public PolymorphicBase {
+   ~PolymorphicDerived() override {}
 };
 
 class Left {

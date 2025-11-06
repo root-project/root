@@ -4,7 +4,6 @@ using namespace std;
 #include "RecHeader.h"
 
 
-ClassImp(RecHeader)
 
 // Definition of methods (alphabetical order)
 // ***************************************************

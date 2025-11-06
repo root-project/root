@@ -22,10 +22,9 @@
 #include "TPosixMutex.h"
 #include "PosixThreadInc.h"
 
-#include <errno.h>
+#include <cerrno>
 
 
-ClassImp(TPosixCondition);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create Condition variable. Ctor must be given a pointer to an

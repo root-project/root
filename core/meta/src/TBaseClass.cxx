@@ -13,7 +13,7 @@
 #include "TBuffer.h"
 #include "TClass.h"
 #include "TInterpreter.h"
-#include <limits.h>
+#include <climits>
 
 #include "TVirtualMutex.h" // For R__LOCKGUARD
 
@@ -27,7 +27,6 @@ The base class information is used a.o. in to find all inherited methods.
 */
 
 
-ClassImp(TBaseClass);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TBaseClass ctor. TBaseClasses are constructed in TClass

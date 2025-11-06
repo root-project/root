@@ -90,10 +90,6 @@ Hitting the tab key will generate:
 #include <iostream>
 
 
-ClassImp(TGNumberFormat);
-ClassImp(TGNumberEntryField);
-ClassImp(TGNumberEntryLayout);
-ClassImp(TGNumberEntry);
 
 
 

@@ -27,10 +27,6 @@ or kFixedHeight property set.
 #include <iostream>
 
 
-ClassImp(TGSplitter);
-ClassImp(TGVSplitter);
-ClassImp(TGHSplitter);
-ClassImp(TGVFileSplitter);
 
 
 ////////////////////////////////////////////////////////////////////////////////

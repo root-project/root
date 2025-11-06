@@ -91,8 +91,6 @@ namespace ROOT {
          // if it inherits from ROOT::Math::IGradientFunctionMultiDim.
          virtual bool HasGradient() const { return false; }
 
-         virtual bool returnsInMinuit2ParameterSpace() const { return false; }
-
          /// Evaluate all the vector of function derivatives (gradient)  at a point x.
          /// Derived classes must re-implement it if more efficient than evaluating one at a time
          virtual void Gradient(const T *x, T *grad) const
@@ -100,17 +98,6 @@ namespace ROOT {
             unsigned int ndim = NDim();
             for (unsigned int icoord  = 0; icoord < ndim; ++icoord) {
                grad[icoord] = Derivative(x, icoord);
-            }
-         }
-
-         /// In some cases, the gradient algorithm will use information from the previous step, these can be passed
-         /// in with this overload. The `previous_*` arrays can also be used to return second derivative and step size
-         /// so that these can be passed forward again as well at the call site, if necessary.
-         virtual void GradientWithPrevResult(const T *x, T *grad, T *previous_grad, T *previous_g2, T *previous_gstep) const
-         {
-            unsigned int ndim = NDim();
-            for (unsigned int icoord  = 0; icoord < ndim; ++icoord) {
-               grad[icoord] = Derivative(x, icoord, previous_grad, previous_g2, previous_gstep);
             }
          }
 

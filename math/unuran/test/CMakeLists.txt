@@ -4,7 +4,7 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-set(Libraries Core MathCore Minuit Unuran Gpad Hist)
+set(Libraries Core MathCore Unuran Gpad Hist)
 
 if(mathmore)
   list(APPEND Libraries MathMore)

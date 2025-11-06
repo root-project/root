@@ -53,7 +53,6 @@
 #include "TMath.h"
 #include "TMehrotraSolver.h"
 
-ClassImp(TMehrotraSolver);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

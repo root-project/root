@@ -153,6 +153,11 @@ int testVector3D() {
   vg4 = vg - vl;
 #endif
 
+  // test structured bindings
+  auto const [x, y, z] = vg;
+  iret |= (x != vg.x());
+  iret |= (y != vg.y());
+  iret |= (z != vg.z());
 
   if (iret == 0) std::cout << "\t\t\t\t\tOK\n";
   else std::cout << "\t\t\t\tFAILED\n";
@@ -284,6 +289,10 @@ int testVector2D() {
   vg4 = vg - vl;
 #endif
 
+  // test structured bindings
+  auto const [x, y] = vg;
+  iret |= (x != vg.x());
+  iret |= (y != vg.y());
 
   if (iret == 0) std::cout << "\t\t\t\tOK\n";
   else std::cout << "\t\t\tFAILED\n";
@@ -807,6 +816,14 @@ int testLorentzVector()
    // TLorentzVector t1, t2;
    // t1.SetPtEtaPhiE(1,2,3,4); t2.SetPtEtaPhiE(5,6,7,8);
    // t1.DeltaR(t2)
+   
+   // test structured bindings
+   auto const [x, y, z, E] = v1;
+   iret |= (x != v1.X());
+   iret |= (y != v1.Y());
+   iret |= (z != v1.Z());
+   iret |= (E != v1.E());
+
    if (iret == 0)
       std::cout << "\t\t\tOK\n";
    else

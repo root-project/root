@@ -21,7 +21,6 @@ A TLeaf for a long integer data type (Long_t, non-portable size).
 #include "TClonesArray.h"
 #include <iostream>
 
-ClassImp(TLeafG);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for LeafG.

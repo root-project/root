@@ -35,7 +35,6 @@ Linear interpolation of TGraph
 #include "TGraph.h"
 #include "TMath.h"
 
-ClassImp(TMVA::TSpline1);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor from TGraph pointer (not owned by TSpline1)

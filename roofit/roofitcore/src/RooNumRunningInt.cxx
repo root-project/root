@@ -35,11 +35,6 @@ when any of the parameters of the input p.d.f. has changed.
 #include "RooHistPdf.h"
 #include "RooRealVar.h"
 
-using std::string;
-
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct running integral of function '_func' over x_print from
 /// the lower bound on _x to the present value of _x using a numeric
@@ -70,29 +65,17 @@ RooNumRunningInt::RooNumRunningInt(const RooNumRunningInt& other, const char* na
  {
  }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooNumRunningInt::~RooNumRunningInt()
-{
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return unique name for RooAbsCachedPdf cache components
 /// constructed from input function name
 
 const char* RooNumRunningInt::inputBaseName() const
 {
-  static string ret ;
-  ret = func.arg().GetName() ;
-  ret += "_NUMRUNINT" ;
-  return ret.c_str() ;
-} ;
-
-
+   static std::string ret;
+   ret = func.arg().GetName();
+   ret += "_NUMRUNINT";
+   return ret.c_str();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct RunningIntegral CacheElement
@@ -100,7 +83,7 @@ const char* RooNumRunningInt::inputBaseName() const
 RooNumRunningInt::RICacheElem::RICacheElem(const RooNumRunningInt &self, const RooArgSet *nset)
    : FuncCacheElem(self, nset),
      _self(&const_cast<RooNumRunningInt &>(self)),
-     _xx(static_cast<RooRealVar *>(hist()->get()->find(self.x.arg().GetName())))
+     _xx(*hist()->get()->find(self.x.arg().GetName()))
 {
   // Instantiate temp arrays
   _ax.resize(hist()->numEntries());
@@ -110,7 +93,7 @@ RooNumRunningInt::RICacheElem::RICacheElem(const RooNumRunningInt &self, const R
 
   for (int i=0 ; i<hist()->numEntries() ; i++) {
     hist()->get(i) ;
-    _ax[i] = _xx->getVal() ;
+    _ax[i] = static_cast<RooRealVar *>(_xx.first())->getVal();
     _ay[i] = -1 ;
   }
 
@@ -125,7 +108,7 @@ RooArgList RooNumRunningInt::RICacheElem::containedArgs(Action action)
   RooArgList ret ;
   ret.add(FuncCacheElem::containedArgs(action)) ;
   ret.add(*_self) ;
-  ret.add(*_xx) ;
+  ret.add(_xx);
   return ret ;
 }
 
@@ -234,9 +217,8 @@ void RooNumRunningInt::RICacheElem::addRange(Int_t ixlo, Int_t ixhi, Int_t nbins
 void RooNumRunningInt::RICacheElem::addPoint(Int_t ix)
 {
   hist()->get(ix) ;
-  _self->x = _xx->getVal() ;
-  _ay[ix] = _self->func.arg().getVal(*_xx) ;
-
+  _self->x = static_cast<RooRealVar *>(_xx.first())->getVal();
+  _ay[ix] = _self->func.arg().getVal(_xx);
 }
 
 
@@ -295,5 +277,3 @@ double RooNumRunningInt::evaluate() const
   std::cout << "RooNumRunningInt::evaluate(" << GetName() << ")" << std::endl ;
   return 0 ;
 }
-
-

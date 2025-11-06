@@ -78,8 +78,6 @@ child frame. By default these are 0.
 #include <iostream>
 
 
-ClassImp(TGTableLayout);
-ClassImp(TGTableLayoutHints);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGTableLayout constructor.

@@ -4,7 +4,11 @@ enable_testing()
 
 # LLVM builds (not installed llvm) provides gtest.
 if (NOT TARGET GTest::gtest AND NOT TARGET gtest)
-  include(GoogleTest)
+  find_package(GTest)
+  if (NOT GTest_FOUND)
+    message(WARNING "CppInterOp could not find GTest. Provide the package or set CPPINTEROP_ENABLE_TESTING=OFF to disable this warning.")
+    return()
+  endif()
 endif()
 
 if(EMSCRIPTEN)

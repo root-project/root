@@ -6,9 +6,7 @@
 #include <map>
 #include <string>
 #include <sstream>
-#if __cplusplus > 201402L
 #include <string_view>
-#endif
 #include <utility>
 #include <vector>
 
@@ -209,12 +207,10 @@ namespace UnicodeAndSTL {
 
 
 // helpers for string_view testing
-#if __cplusplus > 201402L
 namespace StringViewTest {
     std::string_view::size_type count(const std::string_view arg);
     std::string_view::size_type count_cr(const std::string_view& arg);
 }
-#endif
 
 
 // helper for exception base class testing

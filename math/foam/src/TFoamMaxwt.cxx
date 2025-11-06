@@ -15,7 +15,6 @@ wmax defines weight range (1,wmax), it is adjusted "manually"
 #include "TH1.h"
 #include "TFoamMaxwt.h"
 
-ClassImp(TFoamMaxwt);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for streamer

@@ -86,6 +86,7 @@ set(py_sources
   ROOT/_pythonization/_generic.py
   ROOT/_pythonization/_memory_utils.py
   ROOT/_pythonization/_pyz_utils.py
+  ROOT/_pythonization/_rfile.py
   ROOT/_pythonization/_rntuple.py
   ROOT/_pythonization/_runtime_error.py
   ROOT/_pythonization/_rvec.py
@@ -133,7 +134,6 @@ set(cpp_sources
     src/RPyROOTApplication.cxx
     src/GenericPyz.cxx
     src/TClassPyz.cxx
-    src/TObjectPyz.cxx
     src/TTreePyz.cxx
     src/CPPInstancePyz.cxx
     src/TPyDispatcher.cxx

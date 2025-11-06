@@ -50,7 +50,6 @@ with a tree hierarchy. Specific implementations are:
 
 TMap TGeoTabManager::fgEditorToMgrMap;
 
-ClassImp(TGeoTabManager);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor.
@@ -293,7 +292,6 @@ void TGeoTabManager::SetTab()
    fTab->SetTab(GetTabIndex());
 }
 
-ClassImp(TGeoTreeDialog);
 
 TObject *TGeoTreeDialog::fgSelectedObj = nullptr;
 
@@ -368,7 +366,6 @@ void TGeoTreeDialog::DoSelect(TGListTreeItem *item)
    }
 }
 
-ClassImp(TGeoVolumeDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor.
@@ -492,7 +489,6 @@ void TGeoVolumeDialog::ConnectSignalsToSlots()
    fLT->Connect("Clicked(TGListTreeItem *, Int_t)", "TGeoVolumeDialog", this, "DoItemClick(TGListTreeItem *, Int_t)");
 }
 
-ClassImp(TGeoShapeDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor.
@@ -573,7 +569,6 @@ void TGeoShapeDialog::ConnectSignalsToSlots()
    fLT->Connect("Clicked(TGListTreeItem *, Int_t)", "TGeoShapeDialog", this, "DoItemClick(TGListTreeItem *, Int_t)");
 }
 
-ClassImp(TGeoMediumDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor.
@@ -639,7 +634,6 @@ void TGeoMediumDialog::ConnectSignalsToSlots()
    fLT->Connect("Clicked(TGListTreeItem *, Int_t)", "TGeoMediumDialog", this, "DoItemClick(TGListTreeItem *, Int_t)");
 }
 
-ClassImp(TGeoMaterialDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor.
@@ -705,7 +699,6 @@ void TGeoMaterialDialog::ConnectSignalsToSlots()
    fLT->Connect("Clicked(TGListTreeItem *, Int_t)", "TGeoMaterialDialog", this, "DoItemClick(TGListTreeItem *, Int_t)");
 }
 
-ClassImp(TGeoMatrixDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor.
@@ -800,7 +793,6 @@ void TGeoMatrixDialog::ConnectSignalsToSlots()
    fLT->Connect("Clicked(TGListTreeItem *, Int_t)", "TGeoMatrixDialog", this, "DoItemClick(TGListTreeItem *, Int_t)");
 }
 
-ClassImp(TGeoTransientPanel);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Transient panel ctor.

@@ -12,7 +12,7 @@
 // Header source file for class DisplacementVector3D
 //
 // Created by: Lorenzo Moneta  at Mon May 30 12:21:43 2005
-// Major rewrite: M. FIschler  at Wed Jun  8  2005
+// Major rewrite: M. Fischler  at Wed Jun  8  2005
 //
 // Last update: $Id$
 //
@@ -209,6 +209,7 @@ namespace ROOT {
 
       /**
          get internal data into 3 Scalar numbers
+         \note Alternatively, you may use structured bindings: `auto const [a, b, c] = v`.
        */
       void GetCoordinates( Scalar& a, Scalar& b, Scalar& c ) const
                             { fCoordinates.GetCoordinates(a, b, c);  }
@@ -698,12 +699,35 @@ namespace ROOT {
 
     }  // op>> <>()
 
-
+    // Structured bindings
+    template <std::size_t I, class CoordSystem, class Tag>
+    typename CoordSystem::Scalar get(DisplacementVector3D<CoordSystem, Tag> const& p)
+    {
+       static_assert(I < 3);
+       if constexpr (I == 0) {
+          return p.x();
+       } else if constexpr (I == 1) {
+          return p.y();
+       } else {
+          return p.z();
+       }
+    }
 
   }  // namespace Math
 
 }  // namespace ROOT
 
+// Structured bindings
+#include <tuple>
+namespace std {
+   template <class CoordSystem, class Tag>
+   struct tuple_size<ROOT::Math::DisplacementVector3D<CoordSystem, Tag>> : integral_constant<size_t, 3> {};
+   template <size_t I, class CoordSystem, class Tag>
+   struct tuple_element<I, ROOT::Math::DisplacementVector3D<CoordSystem, Tag>> {
+      static_assert(I < 3);
+      using type = typename CoordSystem::Scalar;
+   };
+}
 
 #endif /* ROOT_Math_GenVector_DisplacementVector3D  */
 

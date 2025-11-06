@@ -55,9 +55,6 @@ public:
 
 // begin of code - STreeEvent.cpp
 
-ClassImp(PhotonsList)
-ClassImp(FittedList)
-ClassImp(STreeEvent)
 // end of code - STreeEvent.cpp
 
 

@@ -1,18 +1,18 @@
+#ifndef runvectorint_C
+#define runvectorint_C
+
+
 #include <vector>
 #include "TFile.h"
 #include "TTree.h"
 #include "TROOT.h"
 #include "TClonesArray.h"
 
-#ifndef runvectorint_C
-#ifdef ClingWorkAroundMultipleInclude
-#define runvectorint_C
-#endif
 
 class Track : public TObject {
 public:
    int random;
-   ClassDef(Track,1);
+   ClassDefOverride(Track,1);
 };
 
 #ifdef __MAKECINT__
@@ -73,14 +73,15 @@ void createsel(const char *filename = "vec.root")
    t->MakeProxy("vectorintSel","dude.C","","");
 }
 
+
 void usesel(const char *filename = "vec.root")
 {
    TFile *f = TFile::Open(filename,"READ");
-   TTree *t; f->GetObject("t",t); 
+   TTree *t; f->GetObject("t",t);
    t->Process("vectorintSel.h+","goff");
 }
 
-int runvectorint(int mode = 0) 
+int runvectorint(int mode = 0)
 {
    if (mode==0) {
      createvec();

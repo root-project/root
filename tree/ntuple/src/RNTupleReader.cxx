@@ -22,9 +22,10 @@
 
 #include <TROOT.h>
 
-void ROOT::RNTupleReader::ConnectModel(ROOT::RNTupleModel &model)
+void ROOT::RNTupleReader::ConnectModel(ROOT::RNTupleModel &model, bool allowFieldSubstitutions)
 {
    auto &fieldZero = ROOT::Internal::GetFieldZeroOfModel(model);
+   ROOT::Internal::SetAllowFieldSubstitutions(fieldZero, allowFieldSubstitutions);
    // We must not use the descriptor guard to prevent recursive locking in field.ConnectPageSource
    ROOT::DescriptorId_t fieldZeroId = fSource->GetSharedDescriptorGuard()->GetFieldZeroId();
    fieldZero.SetOnDiskId(fieldZeroId);
@@ -38,6 +39,7 @@ void ROOT::RNTupleReader::ConnectModel(ROOT::RNTupleModel &model)
       }
       ROOT::Internal::CallConnectPageSourceOnField(*field, *fSource);
    }
+   ROOT::Internal::SetAllowFieldSubstitutions(fieldZero, false);
 }
 
 void ROOT::RNTupleReader::InitPageSource(bool enableMetrics)
@@ -53,6 +55,7 @@ void ROOT::RNTupleReader::InitPageSource(bool enableMetrics)
    if (enableMetrics)
       EnableMetrics();
    fSource->Attach();
+   fNEntries = fSource->GetNEntries();
 }
 
 ROOT::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::RNTupleModel> model,
@@ -67,7 +70,7 @@ ROOT::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::RNTupleModel> model,
    }
    fModel->Freeze();
    InitPageSource(options.GetEnableMetrics());
-   ConnectModel(*fModel);
+   ConnectModel(*fModel, false /* allowFieldSubstitutions */);
 }
 
 ROOT::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Internal::RPageSource> source,
@@ -135,7 +138,7 @@ const ROOT::RNTupleModel &ROOT::RNTupleReader::GetModel()
    if (!fModel) {
       fModel = fSource->GetSharedDescriptorGuard()->CreateModel(
          fCreateModelOptions.value_or(ROOT::RNTupleDescriptor::RCreateModelOptions{}));
-      ConnectModel(*fModel);
+      ConnectModel(*fModel, true /* allowFieldSubstitutions */);
    }
    return *fModel;
 }

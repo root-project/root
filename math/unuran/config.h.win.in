@@ -52,7 +52,7 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 /* #undef HAVE_DLFCN_H */
 
-/* Define to 1 if you have the <float.h> header file. */
+/* Define to 1 if you have the <cfloat> header file. */
 #define HAVE_FLOAT_H 1
 
 /* Define to 1 if you have the `floor' function. */
@@ -67,7 +67,7 @@
 /* Define to 1 if "x != x" is true for NaNs */
 #define HAVE_IEEE_COMPARISONS 1
 
-/* Define to 1 if you have the <inttypes.h> header file. */
+/* Define to 1 if you have the <cinttypes> header file. */
 /* #undef HAVE_INTTYPES_H */
 
 /* Define to 1 if you have the `gsl' library (-lgsl). */
@@ -85,7 +85,7 @@
 /* Define to 1 if you have the `rngstreams' library (-lrngstreams). */
 /* #undef HAVE_LIBRNGSTREAMS */
 
-/* Define to 1 if you have the <limits.h> header file. */
+/* Define to 1 if you have the <climits> header file. */
 #define HAVE_LIMITS_H 1
 
 /* Define to 1 if you have the <memory.h> header file. */
@@ -106,10 +106,10 @@
 /* Define to 1 if you have the `sqrt' function. */
 #define HAVE_SQRT 1
 
-/* Define to 1 if you have the <stdint.h> header file. */
+/* Define to 1 if you have the <cstdint> header file. */
 /* #undef HAVE_STDINT_H */
 
-/* Define to 1 if you have the <stdlib.h> header file. */
+/* Define to 1 if you have the <cstdlib> header file. */
 #define HAVE_STDLIB_H 1
 
 /* Define to 1 if you have the `strcasecmp' function. */
@@ -121,7 +121,7 @@
 /* Define to 1 if you have the <strings.h> header file. */
 /* #undef HAVE_STRINGS_H */
 
-/* Define to 1 if you have the <string.h> header file. */
+/* Define to 1 if you have the <cstring> header file. */
 #define HAVE_STRING_H 1
 
 /* Define to 1 if you have the `strtol' function. */
@@ -170,7 +170,7 @@
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
-/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
+/* Define to 1 if you can safely include both <sys/time.h> and <ctime>. */
 /* #undef TIME_WITH_SYS_TIME */
 
 /* Define to 1 if you use random number generators from GNU Scientific

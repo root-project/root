@@ -296,10 +296,6 @@ def RDataFrameAsNumpy(
     result_ptrs = {}
     for column in columns:
         column_type = df.GetColumnType(column)
-        # bool columns should be taken as unsigned chars, because NumPy stores
-        # bools in bytes - different from the std::vector<bool> returned by the
-        # action, which might do some space optimization
-        column_type = "unsigned char" if column_type == "bool" else column_type
 
         # If the column type is a class, make sure cling knows about it
         tclass = ROOT.TClass.GetClass(column_type)
@@ -307,8 +303,10 @@ def RDataFrameAsNumpy(
             raise RuntimeError(
                 f'The column named "{column}" is of type "{column_type}", which is not known to the ROOT interpreter. Please load the corresponding header files or dictionaries.'
             )
-
-        result_ptrs[column] = df.Take[column_type](column)
+        # We take the values via ROOT::RVec to avoid having to deal with std::vector<bool>
+        # This uses one single data structure for all array types, which exposes the array interface
+        # allowing zero-copy conversion to numpy array
+        result_ptrs[column] = df.Take[f"{column_type}, ROOT::RVec<{column_type}>"](column)
 
     result = AsNumpyResult(result_ptrs, columns)
 
@@ -584,7 +582,7 @@ def _MakeNumpyDataFrame(np_dict):
 
     namespace __ROOT_Internal {
 
-    inline std::function<void()> MakePyDeleter(std::intptr_t ptr) {
+    inline std::function<void()> MakePyDeleter(std::uintptr_t ptr) {
         PyObject *obj = reinterpret_cast<PyObject*>(ptr);
         Py_INCREF(obj);
         return [obj](){ Py_DECREF(obj); };

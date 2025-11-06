@@ -22,9 +22,10 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstdlib>
 
-#include <errno.h>
-#include <string.h>
+#include <cerrno>
+#include <cstring>
 
 #ifdef _WIN32
 #include <direct.h>
@@ -150,7 +151,7 @@ const std::string& GetFallbackRootSys() {
 
 #ifdef ROOTPREFIX
 static bool IgnorePrefix() {
-   static bool ignorePrefix = ::getenv("ROOTIGNOREPREFIX");
+   static bool ignorePrefix = std::getenv("ROOTIGNOREPREFIX");
    return ignorePrefix;
 }
 #endif
@@ -164,7 +165,7 @@ const std::string& GetRootSys() {
 #endif
    static std::string rootsys;
    if (rootsys.empty()) {
-      if (const char* envValue = ::getenv("ROOTSYS")) {
+      if (const char* envValue = std::getenv("ROOTSYS")) {
          rootsys = envValue;
          // We cannot use gSystem->UnixPathName.
          ConvertToUnixPath(rootsys);

@@ -21,7 +21,6 @@ A TLeaf for a 64 bit Integer data type.
 #include "TClonesArray.h"
 #include <iostream>
 
-ClassImp(TLeafL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for LeafL.

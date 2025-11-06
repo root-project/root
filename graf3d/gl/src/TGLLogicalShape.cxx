@@ -61,7 +61,6 @@ See base/src/TVirtualViewer3D for description of common external 3D
 viewer architecture and how external viewer clients use it.
 */
 
-ClassImp(TGLLogicalShape);
 
 Bool_t TGLLogicalShape::fgIgnoreSizeForCameraInterest = kFALSE;
 

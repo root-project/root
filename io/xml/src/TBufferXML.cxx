@@ -51,7 +51,6 @@ There are limitations for complex objects like TTree, which can not be converted
 #include <limits>
 #include <memory>
 
-ClassImp(TBufferXML);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates buffer object to serialize/deserialize data to/from xml.

@@ -28,7 +28,6 @@
 #include <sstream>
 #include <stdexcept>
 
-ClassImp(TColor);
 
 namespace {
    static Bool_t& TColor__GrayScaleMode() {

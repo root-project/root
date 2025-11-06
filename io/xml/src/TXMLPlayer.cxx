@@ -128,7 +128,6 @@ const char *tab4 = "            ";
 
 const char *names_xmlfileclass = "TXmlFile";
 
-ClassImp(TXMLPlayer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor

@@ -18,10 +18,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <unistd.h>
-#include <signal.h>
+#include <csignal>
 #include <sys/stat.h>
 #include <sys/param.h>
 #include <fcntl.h>

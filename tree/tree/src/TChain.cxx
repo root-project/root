@@ -64,7 +64,8 @@ the trees in the chain.
 #include "strlcpy.h"
 #include "snprintf.h"
 
-ClassImp(TChain);
+#include <string_view>
+#include "ROOT/StringUtils.hxx"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -803,16 +804,35 @@ Long64_t TChain::Draw(const char* varexp, const char* selection,
 ////////////////////////////////////////////////////////////////////////////////
 /// See TTree::GetReadEntry().
 
-TBranch* TChain::FindBranch(const char* branchname)
+TBranch *TChain::FindBranch(const char *branchname)
 {
-   if (fTree) {
-      return fTree->FindBranch(branchname);
+   auto findBranchImpl = [this](const char *resolvedBranchName) -> TBranch * {
+      if (fTree) {
+         return fTree->FindBranch(resolvedBranchName);
+      }
+      LoadTree(0);
+      if (fTree) {
+         return fTree->FindBranch(resolvedBranchName);
+      }
+      return nullptr;
+   };
+
+   // This will allow the branchname to be preceded by the name of this chain.
+   // See similar code in TTree::FindBranch
+   std::string_view branchNameView{branchname};
+   std::string_view chainPrefix = GetName();
+
+   if (ROOT::StartsWith(branchNameView, chainPrefix)) {
+      branchNameView.remove_prefix(chainPrefix.length());
+      if (!branchNameView.empty() && branchNameView.front() == '.') {
+         branchNameView.remove_prefix(1);
+         // We're only removing characters from the beginning of the view so we
+         // don't need to worry about missing null-termination character
+         return findBranchImpl(branchNameView.data());
+      }
    }
-   LoadTree(0);
-   if (fTree) {
-      return fTree->FindBranch(branchname);
-   }
-   return nullptr;
+
+   return findBranchImpl(branchname);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -820,14 +840,33 @@ TBranch* TChain::FindBranch(const char* branchname)
 
 TLeaf* TChain::FindLeaf(const char* searchname)
 {
-   if (fTree) {
-      return fTree->FindLeaf(searchname);
+   auto findLeafImpl = [this](const char *resolvedBranchName) -> TLeaf * {
+      if (fTree) {
+         return fTree->FindLeaf(resolvedBranchName);
+      }
+      LoadTree(0);
+      if (fTree) {
+         return fTree->FindLeaf(resolvedBranchName);
+      }
+      return nullptr;
+   };
+
+   // This will allow the branchname to be preceded by the name of this chain.
+   // See similar code in TTree::FindLeaf
+   std::string_view branchNameView{searchname};
+   std::string_view chainPrefix = GetName();
+
+   if (ROOT::StartsWith(branchNameView, chainPrefix)) {
+      branchNameView.remove_prefix(chainPrefix.length());
+      if (!branchNameView.empty() && branchNameView.front() == '.') {
+         branchNameView.remove_prefix(1);
+         // We're only removing characters from the beginning of the view so we
+         // don't need to worry about missing null-termination character
+         return findLeafImpl(branchNameView.data());
+      }
    }
-   LoadTree(0);
-   if (fTree) {
-      return fTree->FindLeaf(searchname);
-   }
-   return nullptr;
+
+   return findLeafImpl(searchname);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -905,14 +944,24 @@ Long64_t TChain::GetEntries() const
       // and `LoadTree` will be no-op.
       if (kLoadTree & fFriendLockStatus)
          return fEntries;
-      const auto readEntry = fReadEntry;
-      auto *thisChain = const_cast<TChain *>(this);
-      thisChain->LoadTree(TTree::kMaxEntries - 1);
-      thisChain->InvalidateCurrentTree();
-      if (readEntry >= 0)
-         thisChain->LoadTree(readEntry);
-      else
-         thisChain->fReadEntry = readEntry;
+      Long64_t totalEntries{};
+      for (auto chainEl : ROOT::Detail::TRangeStaticCast<TChainElement>(fFiles)) {
+         if (chainEl->GetEntries() != TTree::kMaxEntries) {
+            totalEntries += chainEl->GetEntries();
+            continue;
+         }
+         TDirectory::TContext ctxt;
+         std::unique_ptr<TFile> curFile{TFile::Open(chainEl->GetTitle(), "READ_WITHOUT_GLOBALREGISTRATION")};
+         if (!curFile || curFile->IsZombie()) {
+            continue;
+         }
+         std::unique_ptr<TTree> curTree{curFile->Get<TTree>(chainEl->GetName())};
+         if (!curTree) {
+            continue;
+         }
+         totalEntries += curTree->GetEntries();
+      }
+      const_cast<TChain *>(this)->fEntries = totalEntries;
    }
    return fEntries;
 }
@@ -1302,6 +1351,16 @@ Long64_t TChain::RefreshFriendAddresses()
          br->SetAutoDelete(true);
       }
    }
+
+   // We cannot know a priori if the branch(es) of the friend TChain(s) that were just
+   // updated were supposed to be connected to one of the TChainElement of this chain
+   // or possibly to another TChainElement belonging to another chain that has befriended
+   // this chain (i.e., one of the "external friends"). Thus, we forward the notification
+   // that one or more friend trees were updated to the friends of this chain.
+   if (fExternalFriends)
+      for (auto external_fe : ROOT::Detail::TRangeStaticCast<TFriendElement>(*fExternalFriends))
+         external_fe->MarkUpdated();
+
    if (fPlayer) {
       fPlayer->UpdateFormulaLeaves();
    }
@@ -1793,50 +1852,6 @@ void TChain::Lookup(bool force)
       printf("\n");
    fflush(stdout);
    SafeDelete(stg);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Loop on nentries of this chain starting at firstentry.  (NOT IMPLEMENTED)
-
-void TChain::Loop(Option_t* option, Long64_t nentries, Long64_t firstentry)
-{
-   Error("Loop", "Function not yet implemented");
-
-   if (option || nentries || firstentry) { }  // keep warnings away
-
-#if 0
-   if (LoadTree(firstentry) < 0) return;
-
-   if (firstentry < 0) firstentry = 0;
-   Long64_t lastentry = firstentry + nentries -1;
-   if (lastentry > fEntries-1) {
-      lastentry = fEntries -1;
-   }
-
-   GetPlayer();
-   GetSelector();
-   fSelector->Start(option);
-
-   Long64_t entry = firstentry;
-   Int_t tree,e0,en;
-   for (tree=0;tree<fNtrees;tree++) {
-      e0 = fTreeOffset[tree];
-      en = fTreeOffset[tree+1] - 1;
-      if (en > lastentry) en = lastentry;
-      if (entry > en) continue;
-
-      LoadTree(entry);
-      fSelector->BeginFile();
-
-      while (entry <= en) {
-         fSelector->Execute(fTree, entry - e0);
-         entry++;
-      }
-      fSelector->EndFile();
-   }
-
-   fSelector->Finish(option);
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -53,7 +53,6 @@ See base/src/TVirtualViewer3D for description of common external 3D
 viewer architecture and how external viewer clients use it.
 */
 
-ClassImp(TGLPhysicalShape);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a physical shape using arguments:

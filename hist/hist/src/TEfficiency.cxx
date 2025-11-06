@@ -40,7 +40,6 @@ const Double_t kDefConfLevel = 0.682689492137; // 1 sigma
 const TEfficiency::EStatOption kDefStatOpt = TEfficiency::kFCP;
 const Double_t kDefWeight = 1;
 
-ClassImp(TEfficiency);
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TEfficiency
@@ -3267,7 +3266,7 @@ void TEfficiency::SavePrimitive(std::ostream& out,Option_t* option)
    TH1::SavePrimitiveFunctions(out, name, fFunctions);
 
    //set style
-   SaveFillAttributes(out, name);
+   SaveFillAttributes(out, name, -1, -1);
    SaveLineAttributes(out, name);
    SaveMarkerAttributes(out, name);
 

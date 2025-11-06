@@ -16,7 +16,6 @@
 #include <cstring>
 #include <limits>
 
-templateClassImp(TKDTree);
 
 
 /**

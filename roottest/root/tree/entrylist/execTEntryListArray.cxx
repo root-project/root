@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include <cstdlib>
 #include "TApplication.h"
 #include "TTree.h"
 #include "TChain.h"

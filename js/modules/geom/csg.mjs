@@ -73,7 +73,7 @@ class Vertex {
 
 
    normalize() {
-      const length = Math.sqrt(this.x**2 + this.y**2 + this.z**2);
+      const length = Math.sqrt(this.x ** 2 + this.y ** 2 + this.z ** 2);
 
       this.x /= length;
       this.y /= length;
@@ -83,19 +83,19 @@ class Vertex {
    }
 
    dot(vertex) {
-      return this.x*vertex.x + this.y*vertex.y + this.z*vertex.z;
+      return this.x * vertex.x + this.y * vertex.y + this.z * vertex.z;
    }
 
    diff(vertex) {
       const dx = (this.x - vertex.x),
-          dy = (this.y - vertex.y),
-          dz = (this.z - vertex.z),
-          len2 = this.x**2 + this.y**2 + this.z**2;
+            dy = (this.y - vertex.y),
+            dz = (this.z - vertex.z),
+            len2 = this.x ** 2 + this.y ** 2 + this.z ** 2;
 
-      return (dx**2 + dy**2 + dz**2) / (len2 > 0 ? len2 : 1e-10);
+      return (dx ** 2 + dy ** 2 + dz ** 2) / (len2 > 0 ? len2 : 1e-10);
    }
 
-/*
+   /*
    lerp( a, t ) {
       this.add(
          a.clone().subtract( this ).multiplyScalar( t )
@@ -119,8 +119,8 @@ class Vertex {
 
    interpolate(a, t) {
       const t1 = 1 - t;
-      return new Vertex(this.x*t1 + a.x*t, this.y*t1 + a.y*t, this.z*t1 + a.z*t,
-                        this.nx*t1 + a.nx*t, this.ny*t1 + a.ny*t, this.nz*t1 + a.nz*t);
+      return new Vertex(this.x * t1 + a.x * t, this.y * t1 + a.y * t, this.z * t1 + a.z * t,
+                        this.nx * t1 + a.nx * t, this.ny * t1 + a.ny * t, this.nz * t1 + a.nz * t);
    }
 
    applyMatrix4(m) {
@@ -133,7 +133,9 @@ class Vertex {
       this.y = e[1] * x + e[5] * y + e[9] * z + e[13];
       this.z = e[2] * x + e[6] * y + e[10] * z + e[14];
 
-      x = this.nx; y = this.ny; z = this.nz;
+      x = this.nx;
+      y = this.ny;
+      z = this.nz;
 
       this.nx = e[0] * x + e[4] * y + e[8] * z;
       this.ny = e[1] * x + e[5] * y + e[9] * z;
@@ -187,7 +189,7 @@ class Polygon {
 
    clone() {
       const vertice_count = this.vertices.length,
-          vertices = [];
+            vertices = [];
 
       for (let i = 0; i < vertice_count; ++i)
          vertices.push(this.vertices[i].clone());
@@ -209,9 +211,10 @@ class Polygon {
 
    classifyVertex(vertex) {
       const side_value = this.nsign * (this.normal.dot(vertex) - this.w);
-
-      if (side_value < -EPSILON) return BACK;
-      if (side_value > EPSILON) return FRONT;
+      if (side_value < -EPSILON)
+         return BACK;
+      if (side_value > EPSILON)
+         return FRONT;
       return COPLANAR;
    }
 
@@ -223,13 +226,16 @@ class Polygon {
          const classification = this.classifyVertex(polygon.vertices[i]);
          if (classification === FRONT)
             ++num_positive;
-          else if (classification === BACK)
+         else if (classification === BACK)
             ++num_negative;
       }
 
-      if (num_positive > 0 && num_negative === 0) return FRONT;
-      if (num_positive === 0 && num_negative > 0) return BACK;
-      if (num_positive === 0 && num_negative === 0) return COPLANAR;
+      if (num_positive > 0 && num_negative === 0)
+         return FRONT;
+      if (num_positive === 0 && num_negative > 0)
+         return BACK;
+      if (num_positive === 0 && num_negative === 0)
+         return COPLANAR;
       return SPANNING;
    }
 
@@ -254,7 +260,7 @@ class Polygon {
                nny = this.normal.y,
                nnz = this.normal.z,
                f = [], b = [];
-          let i, j, ti, tj, vi, vj, t, v;
+         let i, j, ti, tj, vi, vj, t, v;
 
          for (i = 0; i < vertice_count; ++i) {
             j = (i + 1) % vertice_count;
@@ -263,13 +269,15 @@ class Polygon {
             ti = this.classifyVertex(vi);
             tj = this.classifyVertex(vj);
 
-            if (ti !== BACK) f.push(vi);
-            if (ti !== FRONT) b.push(vi);
+            if (ti !== BACK)
+               f.push(vi);
+            if (ti !== FRONT)
+               b.push(vi);
             if ((ti | tj) === SPANNING) {
                // t = (this.w - this.normal.dot(vi))/this.normal.dot(vj.clone().subtract(vi));
                // v = vi.clone().lerp( vj, t );
 
-               t = (this.w - (nnx*vi.x + nny*vi.y + nnz*vi.z)) / (nnx*(vj.x-vi.x) + nny*(vj.y-vi.y) + nnz*(vj.z-vi.z));
+               t = (this.w - (nnx * vi.x + nny * vi.y + nnz * vi.z)) / (nnx * (vj.x - vi.x) + nny * (vj.y - vi.y) + nnz * (vj.z - vi.z));
 
                v = vi.interpolate(vj, t);
                f.push(v);
@@ -277,10 +285,14 @@ class Polygon {
             }
          }
 
-         // if ( f.length >= 3 ) front.push(new Polygon(f).calculateProperties());
-         // if ( b.length >= 3 ) back.push(new Polygon(b).calculateProperties());
-         if (f.length >= 3) front.push(new Polygon(f, polygon, true));
-         if (b.length >= 3) back.push(new Polygon(b, polygon, true));
+         // if ( f.length >= 3 )
+         //    front.push(new Polygon(f).calculateProperties());
+         // if ( b.length >= 3 )
+         //    back.push(new Polygon(b).calculateProperties());
+         if (f.length >= 3)
+            front.push(new Polygon(f, polygon, true));
+         if (b.length >= 3)
+            back.push(new Polygon(b, polygon, true));
       }
    }
 
@@ -293,12 +305,13 @@ class Node {
       this.polygons = [];
       this.front = this.back = undefined;
 
-      if (!polygons) return;
+      if (!polygons)
+         return;
 
       this.divider = polygons[0].clone();
 
       const polygon_count = polygons.length,
-          front = [], back = [];
+            front = [], back = [];
 
       for (let i = 0; i < polygon_count; ++i) {
          if (nodeid !== undefined) {
@@ -313,7 +326,8 @@ class Node {
             this.divider.splitPolygon(polygons[i], this.polygons, this.polygons, front, back);
       }
 
-      if (nodeid !== undefined) this.maxnodeid = nodeid;
+      if (nodeid !== undefined)
+         this.maxnodeid = nodeid;
 
       if (front.length)
          this.front = new Node(front);
@@ -326,7 +340,8 @@ class Node {
    //   let i, j, len = polygons.length;
    //   for ( i = 0; i < len; ++i )
    //      for ( j = 0; j < len; ++j )
-   //         if ( i !== j && polygons[i].classifySide( polygons[j] ) !== BACK ) return false;
+   //         if ( i !== j && polygons[i].classifySide( polygons[j] ) !== BACK )
+   //            return false;
    //   return true;
    // }
 
@@ -390,8 +405,10 @@ class Node {
          this.polygons[i].flip();
 
       this.divider.flip();
-      if (this.front) this.front.invert();
-      if (this.back) this.back.invert();
+      if (this.front)
+         this.front.invert();
+      if (this.back)
+         this.back.invert();
 
       const temp = this.front;
       this.front = this.back;
@@ -401,7 +418,8 @@ class Node {
    }
 
    clipPolygons(polygons) {
-      if (!this.divider) return polygons.slice();
+      if (!this.divider)
+         return polygons.slice();
 
       const polygon_count = polygons.length;
       let front = [], back = [];
@@ -409,9 +427,10 @@ class Node {
       for (let i = 0; i < polygon_count; ++i)
          this.divider.splitPolygon(polygons[i], front, back, front, back);
 
-      if (this.front) front = this.front.clipPolygons(front);
-      if (this.back) back = this.back.clipPolygons(back);
-                else back = [];
+      if (this.front)
+         front = this.front.clipPolygons(front);
+
+      back = this.back?.clipPolygons(back) ?? [];
 
       return front.concat(back);
    }
@@ -422,7 +441,7 @@ class Node {
       this.back?.clipTo(node);
    }
 
- } // class Node
+} // class Node
 
 
 function createBufferGeometry(polygons) {
@@ -438,20 +457,20 @@ function createBufferGeometry(polygons) {
 
    function CopyVertex(vertex) {
       positions_buf[iii] = vertex.x;
-      positions_buf[iii+1] = vertex.y;
-      positions_buf[iii+2] = vertex.z;
+      positions_buf[iii + 1] = vertex.y;
+      positions_buf[iii + 2] = vertex.z;
 
       normals_buf[iii] = polygon.nsign * vertex.nx;
-      normals_buf[iii+1] = polygon.nsign * vertex.ny;
-      normals_buf[iii+2] = polygon.nsign * vertex.nz;
-      iii+=3;
+      normals_buf[iii + 1] = polygon.nsign * vertex.ny;
+      normals_buf[iii + 2] = polygon.nsign * vertex.nz;
+      iii += 3;
    }
 
    for (i = 0; i < polygon_count; ++i) {
       polygon = polygons[i];
       for (j = 2; j < polygon.vertices.length; ++j) {
          CopyVertex(polygon.vertices[0]);
-         CopyVertex(polygon.vertices[j-1]);
+         CopyVertex(polygon.vertices[j - 1]);
          CopyVertex(polygon.vertices[j]);
       }
    }
@@ -485,20 +504,25 @@ class Geometry {
                polygons = [];
          let polygon, vert1, vert2, vert3;
 
-         for (let i=0; i < pos_buf.length; i+=9) {
+         for (let i = 0; i < pos_buf.length; i += 9) {
             polygon = new Polygon();
 
-            vert1 = new Vertex(pos_buf[i], pos_buf[i+1], pos_buf[i+2], norm_buf[i], norm_buf[i+1], norm_buf[i+2]);
-            if (transfer_matrix) vert1.applyMatrix4(transfer_matrix);
+            vert1 = new Vertex(pos_buf[i], pos_buf[i + 1], pos_buf[i + 2], norm_buf[i], norm_buf[i + 1], norm_buf[i + 2]);
+            if (transfer_matrix)
+               vert1.applyMatrix4(transfer_matrix);
 
-            vert2 = new Vertex(pos_buf[i+3], pos_buf[i+4], pos_buf[i+5], norm_buf[i+3], norm_buf[i+4], norm_buf[i+5]);
-            if (transfer_matrix) vert2.applyMatrix4(transfer_matrix);
+            vert2 = new Vertex(pos_buf[i + 3], pos_buf[i + 4], pos_buf[i + 5], norm_buf[i + 3], norm_buf[i + 4], norm_buf[i + 5]);
+            if (transfer_matrix)
+               vert2.applyMatrix4(transfer_matrix);
 
-            vert3 = new Vertex(pos_buf[i+6], pos_buf[i+7], pos_buf[i+8], norm_buf[i+6], norm_buf[i+7], norm_buf[i+8]);
-            if (transfer_matrix) vert3.applyMatrix4(transfer_matrix);
+            vert3 = new Vertex(pos_buf[i + 6], pos_buf[i + 7], pos_buf[i + 8], norm_buf[i + 6], norm_buf[i + 7], norm_buf[i + 8]);
+            if (transfer_matrix)
+               vert3.applyMatrix4(transfer_matrix);
 
-            if (flippedMesh) polygon.vertices.push(vert1, vert3, vert2);
-                        else polygon.vertices.push(vert1, vert2, vert3);
+            if (flippedMesh)
+               polygon.vertices.push(vert1, vert3, vert2);
+            else
+               polygon.vertices.push(vert1, vert2, vert3);
 
             polygon.calculateProperties(true);
             polygons.push(polygon);
@@ -544,24 +568,30 @@ class Geometry {
          useVertexNormals = face.vertexNormals && (face.vertexNormals.length === 3);
 
          vertex = geometry.vertices[face.a];
-         if (useVertexNormals) normal = face.vertexNormals[0];
+         if (useVertexNormals)
+            normal = face.vertexNormals[0];
          // uvs = faceVertexUvs ? new THREE.Vector2( faceVertexUvs[0].x, faceVertexUvs[0].y ) : null;
          vertex = new Vertex(vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z /* face.normal, uvs */);
-         if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
+         if (transfer_matrix)
+            vertex.applyMatrix4(transfer_matrix);
          polygon.vertices.push(vertex);
 
          vertex = geometry.vertices[face.b];
-         if (useVertexNormals) normal = face.vertexNormals[1];
+         if (useVertexNormals)
+            normal = face.vertexNormals[1];
          // uvs = faceVertexUvs ? new THREE.Vector2( faceVertexUvs[1].x, faceVertexUvs[1].y ) : null;
          vertex = new Vertex(vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z /* face.normal, uvs */);
-         if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
+         if (transfer_matrix)
+            vertex.applyMatrix4(transfer_matrix);
          polygon.vertices.push(vertex);
 
          vertex = geometry.vertices[face.c];
-         if (useVertexNormals) normal = face.vertexNormals[2];
+         if (useVertexNormals)
+            normal = face.vertexNormals[2];
          // uvs = faceVertexUvs ? new THREE.Vector2( faceVertexUvs[2].x, faceVertexUvs[2].y ) : null;
          vertex = new Vertex(vertex.x, vertex.y, vertex.z, normal.x, normal.y, normal.z /* face.normal, uvs */);
-         if (transfer_matrix) vertex.applyMatrix4(transfer_matrix);
+         if (transfer_matrix)
+            vertex.applyMatrix4(transfer_matrix);
          polygon.vertices.push(vertex);
 
          polygon.calculateProperties(true);
@@ -569,7 +599,8 @@ class Geometry {
       }
 
       this.tree = new Node(polygons, nodeid);
-      if (nodeid !== undefined) this.maxid = this.tree.maxnodeid;
+      if (nodeid !== undefined)
+         this.maxid = this.tree.maxnodeid;
    }
 
    subtract(other_tree) {
@@ -621,7 +652,8 @@ class Geometry {
    }
 
    tryToCompress(polygons) {
-      if (this.maxid === undefined) return;
+      if (this.maxid === undefined)
+         return;
 
       const arr = [];
       let parts, foundpair,
@@ -631,15 +663,18 @@ class Geometry {
       // sort out polygons
       for (n = 0; n < len; ++n) {
          p = polygons[n];
-         if (p.id === undefined) continue;
-         if (arr[p.id] === undefined) arr[p.id] = [];
+         if (p.id === undefined)
+            continue;
+         if (arr[p.id] === undefined)
+            arr[p.id] = [];
 
          arr[p.id].push(p);
       }
 
       for (n = 0; n < arr.length; ++n) {
          parts = arr[n];
-         if (parts === undefined) continue;
+         if (parts === undefined)
+            continue;
 
          len = parts.length;
 
@@ -648,10 +683,11 @@ class Geometry {
          while (foundpair) {
             foundpair = false;
 
-            for (i1 = 0; i1 < len-1; ++i1) {
+            for (i1 = 0; i1 < len - 1; ++i1) {
                p1 = parts[i1];
-               if (!p1?.parent) continue;
-               for (i2 = i1+1; i2 < len; ++i2) {
+               if (!p1?.parent)
+                  continue;
+               for (i2 = i1 + 1; i2 < len; ++i2) {
                   p2 = parts[i2];
                   if (p2 && (p1.parent === p2.parent) && (p1.nsign === p2.nsign)) {
                      if (p1.nsign !== p1.parent.nsign)
@@ -659,7 +695,8 @@ class Geometry {
                      nreduce++;
                      parts[i1] = p1.parent;
                      parts[i2] = null;
-                     if (p1.parent.vertices.length < 3) console.log('something wrong with parent');
+                     if (p1.parent.vertices.length < 3)
+                        console.log('something wrong with parent');
                      foundpair = true;
                      break;
                   }
@@ -674,8 +711,10 @@ class Geometry {
          for (n = 0; n < arr.length; ++n) {
             parts = arr[n];
             if (parts !== undefined) {
-               for (i1 = 0, len = parts.length; i1 < len; ++i1)
-                  if (parts[i1]) polygons.push(parts[i1]);
+               for (i1 = 0, len = parts.length; i1 < len; ++i1) {
+                  if (parts[i1])
+                     polygons.push(parts[i1]);
+               }
             }
          }
       }
@@ -784,25 +823,26 @@ class Geometry {
 /** @summary create geometry to make cut on specified axis
   * @private */
 function createNormal(axis_name, pos, size) {
-   if (!size || (size < 10000)) size = 10000;
+   if (!size || (size < 10000))
+      size = 10000;
 
    let vertices;
 
    switch (axis_name) {
       case 'x':
-         vertices = [new Vertex(pos, -3*size, size, 1, 0, 0),
-                     new Vertex(pos, size, -3*size, 1, 0, 0),
+         vertices = [new Vertex(pos, -3 * size, size, 1, 0, 0),
+                     new Vertex(pos, size, -3 * size, 1, 0, 0),
                      new Vertex(pos, size, size, 1, 0, 0)];
          break;
       case 'y':
-         vertices = [new Vertex(-3*size, pos, size, 0, 1, 0),
+         vertices = [new Vertex(-3 * size, pos, size, 0, 1, 0),
                      new Vertex(size, pos, size, 0, 1, 0),
-                     new Vertex(size, pos, -3*size, 0, 1, 0)];
+                     new Vertex(size, pos, -3 * size, 0, 1, 0)];
          break;
       // case 'z':
       default:
-         vertices = [new Vertex(-3*size, size, pos, 0, 0, 1),
-                     new Vertex(size, -3*size, pos, 0, 0, 1),
+         vertices = [new Vertex(-3 * size, size, pos, 0, 0, 1),
+                     new Vertex(size, -3 * size, pos, 0, 0, 1),
                      new Vertex(size, size, pos, 0, 0, 1)];
    }
 

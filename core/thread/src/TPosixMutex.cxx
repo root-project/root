@@ -21,7 +21,6 @@
 #include "TPosixMutex.h"
 #include "PosixThreadInc.h"
 
-ClassImp(TPosixMutex);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a posix mutex lock.

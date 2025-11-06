@@ -25,8 +25,6 @@ GDML format to the clients requiring it from the transient geometry.
 
 #include "TGeoManager.h"
 
-ClassImp(TGeoRegionCut);
-ClassImp(TGeoRegion);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Region destructor.

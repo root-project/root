@@ -1,6 +1,6 @@
 #include "TROOT.h"
-#include "TMinuit.h"
-#include <stdio.h>
+
+#include <cstdio>
 #include <fcntl.h>
 #include <iostream>
 #include <fstream>

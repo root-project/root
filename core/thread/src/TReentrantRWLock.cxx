@@ -35,7 +35,7 @@ thus preventing starvation.
 #include "ROOT/TSpinMutex.hxx"
 #include "TMutex.h"
 #include "TError.h"
-#include <assert.h>
+#include <cassert>
 
 using namespace ROOT;
 

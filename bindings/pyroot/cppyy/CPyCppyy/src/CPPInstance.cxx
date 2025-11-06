@@ -274,7 +274,7 @@ static PyObject* op_destruct(CPPInstance* self)
 }
 
 //= CPyCppyy object dispatch support =========================================
-static PyObject* op_dispatch(PyObject* self, PyObject* args, PyObject* /* kdws */)
+static PyObject* op_dispatch(PyObject* self, PyObject* args, PyObject* /* kwds */)
 {
 // User-side __dispatch__ method to allow selection of a specific overloaded
 // method. The actual selection is in the __overload__() method of CPPOverload.

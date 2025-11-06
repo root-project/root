@@ -2,6 +2,7 @@
 """
 
 import ctypes
+import platform
 import sys
 
 from . import _stdcpp_fix
@@ -27,7 +28,11 @@ try:
 except ImportError:
     c = None
 
-import libcppyy as _backend
+if platform.system() == "Windows":
+    # On Windows, the library has to be searched without prefix
+    import libcppyy as _backend
+else:
+    import cppyy.libcppyy as _backend
 
 if c is not None:
     _backend._cpp_backend = c

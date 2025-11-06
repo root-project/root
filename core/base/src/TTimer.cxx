@@ -48,7 +48,6 @@ To emit the Timeout signal repeatedly with minimum timeout:
 #include "TSystem.h"
 #include "TROOT.h"
 
-ClassImp(TTimer);
 
 
 class TSingleShotCleaner : public TTimer {

@@ -32,7 +32,6 @@ Editor for a TGeoPara.
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TGeoParaEditor);
 
 enum ETGeoParaWid {
    kPARA_NAME,

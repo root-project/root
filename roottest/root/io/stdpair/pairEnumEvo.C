@@ -1,7 +1,7 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TFile.h"
-#include <stdlib.h>
+#include <cstdlib>
 #include "TSystem.h"
 #include "TVirtualCollectionProxy.h"
 #include "TError.h"

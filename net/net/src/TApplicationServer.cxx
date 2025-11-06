@@ -274,7 +274,6 @@ TASLogHandlerGuard::~TASLogHandlerGuard()
    }
 }
 
-ClassImp(TApplicationServer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Main constructor. Create an application environment. The TApplicationServer

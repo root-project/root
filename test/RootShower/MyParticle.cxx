@@ -7,7 +7,7 @@
  * For the licensing terms see the LICENSE file.                         *
  *************************************************************************/
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <TSystem.h>
 #include <TRandom.h>
@@ -23,7 +23,6 @@
 // MyParticle class implementation
 //______________________________________________________________________________
 
-ClassImp(MyParticle);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// MyParticle constructor.

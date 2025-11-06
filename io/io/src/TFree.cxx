@@ -15,7 +15,6 @@
 #include "Bytes.h"
 #include <iostream>
 
-ClassImp(TFree);
 
 /**
 \class TFree

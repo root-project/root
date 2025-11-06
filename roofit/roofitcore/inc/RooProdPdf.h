@@ -177,9 +177,7 @@ private:
   void rearrangeProduct(CacheElem&) const;
   std::unique_ptr<RooAbsReal> specializeIntegral(RooAbsReal& orig, const char* targetRangeName) const ;
   std::unique_ptr<RooAbsReal> specializeRatio(RooFormulaVar& input, const char* targetRangeName) const ;
-  double calculate(const RooProdPdf::CacheElem& cache, bool verbose=false) const ;
-  void doEvalImpl(RooAbsArg const* caller, const RooProdPdf::CacheElem &cache, RooFit::EvalContext &) const;
-
+  double calculate(const RooProdPdf::CacheElem &cache, bool verbose = false) const;
 
   friend class RooProdGenContext ;
   friend class RooFit::Detail::RooFixedProdPdf ;
@@ -202,15 +200,10 @@ private:
   bool _selfNorm = true; ///< Is self-normalized
   RooArgSet _defNormSet ; ///< Default normalization set
 
-private:
-
-
-
   ClassDefOverride(RooProdPdf,6) // PDF representing a product of PDFs
 };
 
-namespace RooFit {
-namespace Detail {
+namespace RooFit::Detail {
 
 /// A RooProdPdf with a fixed normalization set can be replaced by this class.
 /// Its purpose is to provide the right client-server interface for the
@@ -227,7 +220,7 @@ public:
 
    inline bool canComputeBatchWithCuda() const override { return true; }
 
-   inline void doEval(RooFit::EvalContext &ctx) const override { _prodPdf->doEvalImpl(this, *_cache, ctx); }
+   void doEval(RooFit::EvalContext &ctx) const override;
 
    inline ExtendMode extendMode() const override { return _prodPdf->extendMode(); }
    inline double expectedEvents(const RooArgSet * /*nset*/) const override
@@ -260,22 +253,30 @@ public:
       return _prodPdf->analyticalIntegral(code, rangeName);
    }
 
-   RooProdPdf::CacheElem const &cache() const { return *_cache; }
+   bool isRearranged() const { return _isRearranged; }
+
+   RooAbsReal const *rearrangedNum() const
+   {
+      return _isRearranged ? static_cast<RooAbsReal const *>(_servers[0]) : nullptr;
+   }
+   RooAbsReal const *rearrangedDen() const
+   {
+      return _isRearranged ? static_cast<RooAbsReal const *>(_servers[1]) : nullptr;
+   }
+
+   RooArgSet const *partList() const { return !_isRearranged ? static_cast<RooArgSet const *>(&_servers) : nullptr; }
 
 private:
-   void initialize();
-
-   inline double evaluate() const override { return _prodPdf->calculate(*_cache); }
+   double evaluate() const override;
 
    RooArgSet _normSet;
-   std::unique_ptr<RooProdPdf::CacheElem> _cache;
    RooSetProxy _servers;
    std::unique_ptr<RooProdPdf> _prodPdf;
+   bool _isRearranged = false;
 
    ClassDefOverride(RooFit::Detail::RooFixedProdPdf, 0);
 };
 
-} // namespace Detail
-} // namespace RooFit
+} // namespace RooFit::Detail
 
 #endif

@@ -164,7 +164,6 @@ See that function for details.
 #include <ctime>
 #include <sstream>
 
-ClassImp(TGDMLWrite);
 
 TGDMLWrite *TGDMLWrite::fgGDMLWrite = nullptr;
 

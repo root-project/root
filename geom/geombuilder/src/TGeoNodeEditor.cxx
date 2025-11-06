@@ -28,7 +28,6 @@ Editor class for TGeoNode objects.
 #include "TGLabel.h"
 #include "TGeoTabManager.h"
 
-ClassImp(TGeoNodeEditor);
 
 enum ETGeoNodeWid {
    kNODE_NAME,

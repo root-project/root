@@ -68,6 +68,8 @@
 #include "RooStats/HistFactory/HistFactoryException.h"
 
 #include <algorithm>
+#include <fstream>
+#include <iomanip>
 #include <memory>
 #include <utility>
 
@@ -694,26 +696,29 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
   void HistoToWorkspaceFactoryFast::PrintCovarianceMatrix(RooFitResult* result, RooArgSet* params, string filename){
 
-    FILE* covFile = fopen ((filename).c_str(),"w");
-    fprintf(covFile," ") ;
-    for (auto const *myargi : static_range_cast<RooRealVar *>(*params)) {
-      if(myargi->isConstant()) continue;
-      fprintf(covFile," & %s",  myargi->GetName());
+     std::ofstream covFile(filename);
+
+     covFile << " ";
+     for (auto const *myargi : static_range_cast<RooRealVar *>(*params)) {
+        if (myargi->isConstant())
+           continue;
+        covFile << " & " << myargi->GetName();
     }
-    fprintf(covFile,"\\\\ \\hline \n" );
+    covFile << "\\\\ \\hline \n";
     for (auto const *myargi : static_range_cast<RooRealVar *>(*params)) {
       if(myargi->isConstant()) continue;
-      fprintf(covFile,"%s", myargi->GetName());
+      covFile << myargi->GetName();
       for (auto const *myargj : static_range_cast<RooRealVar *>(*params)) {
         if(myargj->isConstant()) continue;
         std::cout << myargi->GetName() << "," << myargj->GetName();
-        fprintf(covFile, " & %.2f", result->correlation(*myargi, *myargj));
+        double corr = result->correlation(*myargi, *myargj);
+        covFile << " & " << std::fixed << std::setprecision(2) << corr;
       }
       std::cout << std::endl;
-      fprintf(covFile, " \\\\\n");
+      covFile << " \\\\\n";
     }
-    fclose(covFile);
 
+    covFile.close();
   }
 
 

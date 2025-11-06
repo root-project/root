@@ -33,7 +33,6 @@ Editor for a TGeoCone.
 #include "TGLabel.h"
 #include "TGDoubleSlider.h"
 
-ClassImp(TGeoConeEditor);
 
 enum ETGeoConeWid { kCONE_NAME, kCONE_RMIN1, kCONE_RMIN2, kCONE_RMAX1, kCONE_RMAX2, kCONE_Z, kCONE_APPLY, kCONE_UNDO };
 
@@ -378,7 +377,6 @@ Editor for a cone segment.
 
 */
 
-ClassImp(TGeoConeSegEditor);
 
 enum ETGeoConeSegWid { kCONESEG_PHI1, kCONESEG_PHI2, kCONESEG_PHI };
 

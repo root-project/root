@@ -61,8 +61,6 @@ Bool_t TCanvas::fgIsFolder = kFALSE;
 
 const Size_t kDefaultCanvasSize   = 20;
 
-ClassImpQ(TCanvas)
-
 
 TString GetNewCanvasName(const char *arg = nullptr)
 {

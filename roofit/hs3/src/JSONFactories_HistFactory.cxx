@@ -31,6 +31,7 @@
 #include <RooGaussian.h>
 #include <RooProduct.h>
 #include <RooWorkspace.h>
+#include <RooFitImplHelpers.h>
 
 #include <regex>
 
@@ -262,7 +263,6 @@ getOrCreateConstraint(RooJSONFactoryWSTool &tool, const JSONNode &mod, RooRealVa
       }
       return *constraint;
    } else {
-      std::cout << "creating new constraint for " << param << std::endl;
       std::string constraint_type = "Gauss";
       if (auto constrType = mod.find("constraint_type")) {
          constraint_type = constrType->val();
@@ -785,13 +785,13 @@ NormSys parseOverallModifierFormula(const std::string &s, RooFormulaVar *formula
       if (constr2 && !p3) {
          sys.name = p2->GetName();
          sys.param = p2;
-         sys.high = sign * std::stod(token3);
-         sys.low = -sign * std::stod(token3);
+         sys.high = sign * toDouble(token3);
+         sys.low = -sign * toDouble(token3);
       } else if (!p2 && constr3) {
          sys.name = p3->GetName();
          sys.param = p3;
-         sys.high = sign * std::stod(token2);
-         sys.low = -sign * std::stod(token2);
+         sys.high = sign * toDouble(token2);
+         sys.low = -sign * toDouble(token2);
       } else if (constr2 && p3 && !constr3) {
          sys.name = v2->GetName();
          sys.param = v2;

@@ -42,7 +42,7 @@ Optionally the output can also be saved into a file:
 */
 
 
-#include <errno.h>
+#include <cerrno>
 #include <sys/types.h>
 #ifdef WIN32
 #   include <io.h>

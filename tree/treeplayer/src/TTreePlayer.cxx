@@ -99,7 +99,6 @@ R__EXTERN Foption_t Foption;
 
 TVirtualFitter *tFitter = nullptr;
 
-ClassImp(TTreePlayer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default Tree constructor.
@@ -2292,7 +2291,7 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       fSelectorUpdate = selector;
       UpdateFormulaLeaves();
 
-      for (entry=firstentry;entry<firstentry+nentries;entry++) {
+      for (entry = firstentry; entry - firstentry < nentries; entry++) {
          entryNumber = fTree->GetEntryNumber(entry);
          if (entryNumber < 0) break;
          if (timer && timer->ProcessEvents()) break;
@@ -2383,7 +2382,17 @@ void TTreePlayer::RecursiveRemove(TObject *obj)
 ///   tree->Scan("*");
 ///   .>
 /// ~~~
-///  will create a file tree.log
+///  will create a file `tree.log`
+/// ### From a script
+/// One could use TSystem::RedirectOutput, but it's cleaner to call:
+/// ~~~{.cpp}
+///   ///   tree->SetScanField(0);
+///   auto logname = TString(tree->GetName())+".log";
+///   auto player = static_cast<TTreePlayer *>(tree->GetPlayer());
+///   player->SetScanFileName(logname);
+///   player->SetScanRedirect(true);
+///   tree->Scan();
+/// ~~~
 ///
 /// Arrays (within an entry) are printed in their linear forms.
 /// If several arrays with multiple dimensions are printed together,
@@ -2702,9 +2711,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    fSelectedRows = 0;
    Int_t tnumber = -1;
    bool exitloop = false;
-   for (entry=firstentry;
-        entry<(firstentry+nentries) && !exitloop;
-        entry++) {
+   for (entry = firstentry; entry - firstentry < nentries && !exitloop; entry++) {
       entryNumber = fTree->GetEntryNumber(entry);
       if (entryNumber < 0) break;
       Long64_t localEntry = fTree->LoadTree(entryNumber);

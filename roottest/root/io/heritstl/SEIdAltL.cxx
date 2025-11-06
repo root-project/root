@@ -22,7 +22,6 @@
 
 using namespace std;
 
-ClassImp(SEIdAltL)
 
 //_____________________________________________________________________________
 ostream& operator<<(ostream& os, const SEIdAltL& alt)

@@ -88,10 +88,6 @@ const TGGC   *TGMenuTitle::fgDefaultSelectedGC = nullptr;
 const TGFont *TGMenuTitle::fgDefaultFont = nullptr;
 
 
-ClassImp(TGMenuBar);
-ClassImp(TGMenuTitle);
-ClassImpQ(TGPopupMenu)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -513,4 +513,10 @@ bool RooEvaluatorWrapper::hasGradient() const
    return _funcWrapper->hasGradient();
 }
 
+void RooEvaluatorWrapper::writeDebugMacro(std::string const &filename) const
+{
+   if (_funcWrapper)
+      return _funcWrapper->writeDebugMacro(filename);
+}
+
 /// \endcond

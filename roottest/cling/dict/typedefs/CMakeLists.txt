@@ -1,1 +1,0 @@
-ROOTTEST_GENERATE_REFLEX_DICTIONARY(cmsdict01 classes.h SELECTION classes_def.xml)

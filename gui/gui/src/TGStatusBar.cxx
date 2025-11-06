@@ -91,7 +91,6 @@ void TGStatusBarPart::DoRedraw()
 }
 
 
-ClassImp(TGStatusBar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a status bar widget. By default it consist of one part.

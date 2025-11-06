@@ -22,7 +22,6 @@
 #include "Math/IntegratorOptions.h"
 #include "snprintf.h"
 
-ClassImp(TF2);
 
 /** \class TF2
     \ingroup Functions

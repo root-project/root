@@ -51,7 +51,6 @@
 Int_t TSpectrum2::fgIterations    = 3;
 Int_t TSpectrum2::fgAverageWindow = 3;
 
-ClassImp(TSpectrum2);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

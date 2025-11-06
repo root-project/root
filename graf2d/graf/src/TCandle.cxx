@@ -19,7 +19,6 @@
 #include "TStyle.h"
 #include "strlcpy.h"
 
-ClassImp(TCandle);
 
 /** \class TCandle
 \ingroup BasicGraphics

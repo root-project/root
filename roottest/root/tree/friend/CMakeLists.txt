@@ -114,3 +114,13 @@ ROOTTEST_ADD_TEST(NonExistingFriend
                   MACRO execNonExistingFriend.C
                   OUTCNVCMD sed -e "s: file [A-Za-z/\].*[/\]: file :g"
                   OUTREF execNonExistingFriend.ref)
+
+ROOTTEST_ADD_TEST(TreeChangedName
+                  MACRO treeChangedName.C
+                  FIXTURES_SETUP root-tree-friend-tree-changed-name-fixture
+                  OUTREF treeChangedName.ref)
+
+ROOTTEST_ADD_TEST(TreeChangedNameRead
+                  MACRO treeChangedNameRead.C
+                  FIXTURES_REQUIRED root-tree-friend-tree-changed-name-fixture
+                  OUTREF treeChangedNameRead.ref)

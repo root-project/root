@@ -29,7 +29,6 @@ derived from TEveElement.
 See also TEveProjectionManager::ImportElements().
 */
 
-ClassImp(TEveProjectable);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -153,7 +152,6 @@ It is assumed that all classes deriving from TEveProjected are also
 derived from TEveElement.
 */
 
-ClassImp(TEveProjected);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

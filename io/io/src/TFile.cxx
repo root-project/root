@@ -90,7 +90,7 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #endif
 #endif
 #include <fcntl.h>
-#include <errno.h>
+#include <cerrno>
 #include <sys/stat.h>
 #ifndef WIN32
 #include <unistd.h>
@@ -151,7 +151,7 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "TGlobal.h"
 #include "ROOT/RConcurrentHashColl.hxx"
 #include <memory>
-#include <inttypes.h>
+#include <cinttypes>
 
 #ifdef R__FBSD
 #include <sys/extattr.h>
@@ -183,7 +183,6 @@ ROOT::Internal::RConcurrentHashColl TFile::fgTsSIHashes;
 
 const Int_t kBEGIN = 100;
 
-ClassImp(TFile);
 
 //*-*x17 macros/layout_file
 // Needed to add the "fake" global gFile to the list of globals.
@@ -3884,7 +3883,8 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
 
       // check if we read through a file cache
       if (!strcasecmp(option, "CACHEREAD") ||
-         ((!strcasecmp(option,"READ") || !option[0]) && fgCacheFileForce)) {
+          ((!strcasecmp(option, "READ") || !strcasecmp(option, "READ_WITHOUT_GLOBALREGISTRATION") || !option[0]) &&
+           fgCacheFileForce)) {
          // Try opening the file from the cache
          if ((f = TFile::OpenFromCache(n, option, ftitle, compress, netopt)))
             return f;

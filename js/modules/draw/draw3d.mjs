@@ -24,7 +24,8 @@ function before3DDraw(painter) {
 
    return pr.then(geop => {
       const pp = painter.getPadPainter();
-      if (pp) pp.options._disable_dragging = true;
+      if (pp)
+         pp.options._disable_dragging = true;
 
       if (geop.options.dummy && isFunc(painter.get3DBox))
          geop.extendCustomBoundingBox(painter.get3DBox());
@@ -89,11 +90,11 @@ async function drawPolyLine3D() {
    if (!isObject(fp) || !fp.grx || !fp.gry || !fp.grz)
       return fp;
 
-   const limit = 3*line.fN, p = line.fP, pnts = [];
+   const limit = 3 * line.fN, p = line.fP, pnts = [];
 
    for (let n = 3; n < limit; n += 3) {
-      pnts.push(fp.grx(p[n-3]), fp.gry(p[n-2]), fp.grz(p[n-1]),
-                fp.grx(p[n]), fp.gry(p[n+1]), fp.grz(p[n+2]));
+      pnts.push(fp.grx(p[n - 3]), fp.gry(p[n - 2]), fp.grz(p[n - 1]),
+                fp.grx(p[n]), fp.gry(p[n + 1]), fp.grz(p[n + 2]));
    }
 
    const lines = createLineSegments(pnts, create3DLineMaterial(this, line));

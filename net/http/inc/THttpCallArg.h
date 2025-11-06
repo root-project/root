@@ -206,6 +206,9 @@ public:
 
    TString GetHeader(const char *name);
 
+   void SetChunked(Bool_t on = kTRUE);
+   Bool_t IsChunked();
+
    /** Set Content-Encoding header like gzip */
    void SetEncoding(const char *typ) { AccessHeader(fHeader, "Content-Encoding", typ, kTRUE); }
 

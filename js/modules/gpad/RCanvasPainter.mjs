@@ -58,7 +58,7 @@ class RCanvasPainter extends RPadPainter {
    /** @summary Returns layout kind */
    getLayoutKind() {
       const origin = this.selectDom('origin'),
-         layout = origin.empty() ? '' : origin.property('layout');
+            layout = origin.empty() ? '' : origin.property('layout');
       return layout || 'simple';
    }
 
@@ -66,7 +66,8 @@ class RCanvasPainter extends RPadPainter {
    setLayoutKind(kind, main_selector) {
       const origin = this.selectDom('origin');
       if (!origin.empty()) {
-         if (!kind) kind = 'simple';
+         if (!kind)
+            kind = 'simple';
          origin.property('layout', kind);
          origin.property('layout_selector', (kind !== 'simple') && main_selector ? main_selector : null);
          this.#changed_layout = (kind !== 'simple'); // use in cleanup
@@ -145,7 +146,8 @@ class RCanvasPainter extends RPadPainter {
    async toggleProjection(kind) {
       delete this.proj_painter;
 
-      if (kind) this.proj_painter = { X: false, Y: false }; // just indicator that drawing can be preformed
+      if (kind)
+         this.proj_painter = { X: false, Y: false }; // just indicator that drawing can be preformed
 
       if (isFunc(this.showUI5ProjectionArea))
          return this.showUI5ProjectionArea(kind);
@@ -153,13 +155,28 @@ class RCanvasPainter extends RPadPainter {
       let layout = 'simple', mainid;
 
       switch (kind) {
-         case 'XY': layout = 'projxy'; mainid = 2; break;
+         case 'XY':
+            layout = 'projxy';
+            mainid = 2;
+            break;
          case 'X':
-         case 'bottom': layout = 'vert2_31'; mainid = 0; break;
+         case 'bottom':
+            layout = 'vert2_31';
+            mainid = 0;
+            break;
          case 'Y':
-         case 'left': layout = 'horiz2_13'; mainid = 1; break;
-         case 'top': layout = 'vert2_13'; mainid = 1; break;
-         case 'right': layout = 'horiz2_31'; mainid = 0; break;
+         case 'left':
+            layout = 'horiz2_13';
+            mainid = 1;
+            break;
+         case 'top':
+            layout = 'vert2_13';
+            mainid = 1;
+            break;
+         case 'right':
+            layout = 'horiz2_31';
+            mainid = 0;
+            break;
       }
 
       return this.changeLayout(layout, mainid);
@@ -198,7 +215,7 @@ class RCanvasPainter extends RPadPainter {
    /** @summary Function called when canvas menu item Save is called */
    saveCanvasAsFile(fname) {
       const pnt = fname.indexOf('.');
-      this.createImage(fname.slice(pnt+1))
+      this.createImage(fname.slice(pnt + 1))
           .then(res => this.sendWebsocket(`SAVE:${fname}:${res}`));
    }
 
@@ -259,7 +276,10 @@ class RCanvasPainter extends RPadPainter {
          return handle !== undefined;
 
       if (tm === 'reset') {
-         if (handle) { clearTimeout(handle); delete this.#websocket._tmouts[name]; }
+         if (handle) {
+            clearTimeout(handle);
+            delete this.#websocket._tmouts[name];
+         }
       } else if (!handle && Number.isInteger(tm))
          this.#websocket._tmouts[name] = setTimeout(() => { delete this.#websocket._tmouts[name]; }, tm);
    }
@@ -287,41 +307,41 @@ class RCanvasPainter extends RPadPainter {
       } else if (msg.slice(0, 5) === 'SNAP:') {
          msg = msg.slice(5);
          const p1 = msg.indexOf(':'),
-             snapid = msg.slice(0, p1),
-             snap = parse(msg.slice(p1+1));
+               snapid = msg.slice(0, p1),
+               snap = parse(msg.slice(p1 + 1));
          this.syncDraw(true)
              .then(() => {
                 if (!this.getSnapId() && snap?.fWinSize)
                    this.resizeBrowser(snap.fWinSize[0], snap.fWinSize[1]);
              }).then(() => this.redrawPadSnap(snap))
              .then(() => {
-                 this.addPadInteractive();
-                 handle.send(`SNAPDONE:${snapid}`); // send ready message back when drawing completed
-                 this.confirmDraw();
+                this.addPadInteractive();
+                handle.send(`SNAPDONE:${snapid}`); // send ready message back when drawing completed
+                this.confirmDraw();
              }).catch(err => {
-               if (isFunc(this.showConsoleError))
-                  this.showConsoleError(err);
-               else
-                  console.log(err);
+                if (isFunc(this.showConsoleError))
+                   this.showConsoleError(err);
+                else
+                   console.log(err);
              });
       } else if (msg.slice(0, 4) === 'JSON') {
          const obj = parse(msg.slice(4));
          this.redrawObject(obj);
       } else if (msg.slice(0, 9) === 'REPL_REQ:')
          this.processDrawableReply(msg.slice(9));
-       else if (msg.slice(0, 4) === 'CMD:') {
+      else if (msg.slice(0, 4) === 'CMD:') {
          msg = msg.slice(4);
          const p1 = msg.indexOf(':'),
-             cmdid = msg.slice(0, p1),
-             cmd = msg.slice(p1+1),
-             reply = `REPLY:${cmdid}:`;
+               cmdid = msg.slice(0, p1),
+               cmd = msg.slice(p1 + 1),
+               reply = `REPLY:${cmdid}:`;
          if ((cmd === 'SVG') || (cmd === 'PNG') || (cmd === 'JPEG') || (cmd === 'WEBP') || (cmd === 'PDF')) {
             this.createImage(cmd.toLowerCase())
                 .then(res => handle.send(reply + res));
          } else if (cmd.indexOf('ADDPANEL:') === 0) {
             if (!isFunc(this.showUI5Panel))
                handle.send(reply + 'false');
-             else {
+            else {
                const window_path = cmd.slice(9),
                      conn = handle.createNewInstance(window_path);
 
@@ -359,11 +379,11 @@ class RCanvasPainter extends RPadPainter {
          }
       } else if ((msg.slice(0, 7) === 'DXPROJ:') || (msg.slice(0, 7) === 'DYPROJ:')) {
          const kind = msg[1],
-             hist = parse(msg.slice(7));
+               hist = parse(msg.slice(7));
          this.drawProjection(kind, hist);
       } else if (msg.slice(0, 5) === 'SHOW:') {
          const that = msg.slice(5),
-             on = that.at(-1) === '1';
+               on = that.at(-1) === '1';
          this.showSection(that.slice(0, that.length - 2), on);
       } else
          console.log(`unrecognized msg len: ${msg.length} msg: ${msg.slice(0, 30)}`);
@@ -376,7 +396,8 @@ class RCanvasPainter extends RPadPainter {
 
       if (kind && method) {
          // if kind specified - check if such request already was submitted
-         if (!painter._requests) painter._requests = {};
+         if (!painter._requests)
+            painter._requests = {};
 
          const prevreq = painter._requests[kind];
 
@@ -395,7 +416,8 @@ class RCanvasPainter extends RPadPainter {
       req.id = painter.getSnapId();
 
       if (method) {
-         if (!this.#nextreqid) this.#nextreqid = 1;
+         if (!this.#nextreqid)
+            this.#nextreqid = 1;
          req.reqid = this.#nextreqid++;
       } else
          req.reqid = 0; // request will not be replied
@@ -432,15 +454,18 @@ class RCanvasPainter extends RPadPainter {
    submitExec(painter, exec, subelem) {
       if (subelem && isStr(subelem)) {
          const len = subelem.length;
-         if ((len > 2) && (subelem.indexOf('#x') === len - 2)) subelem = 'x'; else
-         if ((len > 2) && (subelem.indexOf('#y') === len - 2)) subelem = 'y'; else
-         if ((len > 2) && (subelem.indexOf('#z') === len - 2)) subelem = 'z';
+         if ((len > 2) && (subelem.indexOf('#x') === len - 2))
+            subelem = 'x';
+         else if ((len > 2) && (subelem.indexOf('#y') === len - 2))
+            subelem = 'y';
+         else if ((len > 2) && (subelem.indexOf('#z') === len - 2))
+            subelem = 'z';
 
          if ((subelem === 'x') || (subelem === 'y') || (subelem === 'z'))
             exec = subelem + 'axis#' + exec;
          else
             return console.log(`not recoginzed subelem ${subelem} in submitExec`);
-       }
+      }
 
       this.submitDrawableRequest('', { _typename: `${nsREX}RDrawableExecRequest`, exec }, painter);
    }
@@ -448,10 +473,12 @@ class RCanvasPainter extends RPadPainter {
    /** @summary Process reply from request to RDrawable */
    processDrawableReply(msg) {
       const reply = parse(msg);
-      if (!reply?.reqid) return false;
+      if (!reply?.reqid)
+         return false;
 
       const req = this.#submreq[reply.reqid];
-      if (!req) return false;
+      if (!req)
+         return false;
 
       // remove reference first
       this.#submreq[reply.reqid] = undefined;
@@ -491,7 +518,8 @@ class RCanvasPainter extends RPadPainter {
          return;
 
       const msg = '';
-      if (!painter) painter = this;
+      if (!painter)
+         painter = this;
       switch (kind) {
          case 'sbits':
             console.log('Status bits in RCanvas are changed - that to do?');
@@ -526,7 +554,8 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary returns true when event status area exist for the canvas */
    hasEventStatus() {
-      if (this.testUI5()) return false;
+      if (this.testUI5())
+         return false;
       if (this.brlayout)
          return this.brlayout.hasStatus();
       const hp = getHPainter();
@@ -555,23 +584,25 @@ class RCanvasPainter extends RPadPainter {
    /** @summary Show online canvas status
      * @private */
    showCanvasStatus(...msgs) {
-      if (this.testUI5()) return;
+      if (this.testUI5())
+         return;
 
       const br = this.brlayout || getHPainter()?.brlayout;
-
       br?.showStatus(...msgs);
    }
 
    /** @summary Returns true if GED is present on the canvas */
    hasGed() {
-      if (this.testUI5()) return false;
+      if (this.testUI5())
+         return false;
       return this.brlayout?.hasContent() ?? false;
    }
 
    /** @summary Function used to de-activate GED
      * @private */
    removeGed() {
-      if (this.testUI5()) return;
+      if (this.testUI5())
+         return;
 
       this.registerForPadEvents(null);
 
@@ -758,14 +789,16 @@ function drawRFrameTitle(reason, drag) {
 
    const g = this.createG();
 
-   makeTranslate(g, fx, Math.round(fy-title_margin-title_height));
+   makeTranslate(g, fx, Math.round(fy - title_margin - title_height));
 
    return this.startTextDrawingAsync(textFont, 'font').then(() => {
-      this.drawText({ x: title_width/2, y: title_height/2, text: title.fText, latex: 1 });
+      this.drawText({ x: title_width / 2, y: title_height / 2, text: title.fText, latex: 1 });
       return this.finishTextDrawing();
    }).then(() => {
-      addDragHandler(this, { x: fx, y: Math.round(fy-title_margin-title_height), width: title_width, height: title_height,
-                             minwidth: 20, minheight: 20, no_change_x: true, redraw: d => this.redraw('drag', d) });
+      addDragHandler(this, {
+         x: fx, y: Math.round(fy - title_margin - title_height), width: title_width, height: title_height,
+         minwidth: 20, minheight: 20, no_change_x: true, redraw: d => this.redraw('drag', d)
+      });
    });
 }
 
@@ -793,7 +826,7 @@ registerMethods(`${nsREX}RPalette`, {
 
       if (this.fCustomContour) {
          while (l < r - 1) {
-            const mid = Math.round((l+r)/2);
+            const mid = Math.round((l + r) / 2);
             if (cntr[mid] > zc)
                r = mid;
             else
@@ -803,7 +836,7 @@ registerMethods(`${nsREX}RPalette`, {
       }
 
       // last color in palette starts from level cntr[r-1]
-      return Math.floor((zc-cntr[0]) / (cntr[r-1] - cntr[0]) * (r-1));
+      return Math.floor((zc - cntr[0]) / (cntr[r - 1] - cntr[0]) * (r - 1));
    },
 
    getContourColor(zc) {
@@ -830,9 +863,9 @@ registerMethods(`${nsREX}RPalette`, {
       // interpolate
       const col1 = d3_rgb(this.extractRColor(entry1.fColor)),
             col2 = d3_rgb(this.extractRColor(entry2.fColor)),
-            color = d3_rgb(Math.round((col1.r*r1 + col2.r*r2)/dist),
-                           Math.round((col1.g*r1 + col2.g*r2)/dist),
-                           Math.round((col1.b*r1 + col2.b*r2)/dist));
+            color = d3_rgb(Math.round((col1.r * r1 + col2.r * r2) / dist),
+                           Math.round((col1.g * r1 + col2.g * r2) / dist),
+                           Math.round((col1.b * r1 + col2.b * r2) / dist));
 
       return color.formatRgb();
    },
@@ -842,16 +875,15 @@ registerMethods(`${nsREX}RPalette`, {
       let indx = 0;
 
       while (arr.length < len) {
-         const value = arr.length / (len-1),
-
-          entry = this.fColors[indx];
+         const value = arr.length / (len - 1),
+               entry = this.fColors[indx];
 
          if ((Math.abs(entry.fOrdinal - value) < 0.0001) || (indx === this.fColors.length - 1)) {
             arr.push(this.extractRColor(entry.fColor));
             continue;
          }
 
-         const next = this.fColors[indx+1];
+         const next = this.fColors[indx + 1];
          if (next.fOrdinal <= value)
             indx++;
          else
@@ -879,7 +911,7 @@ registerMethods(`${nsREX}RPalette`, {
          if (Math.abs(entry.fOrdinal - value) < 0.0001)
             return this.extractRColor(entry.fColor);
 
-         next = this.fColors[indx+1];
+         next = this.fColors[indx + 1];
          if (next.fOrdinal > value)
             return this.calcColor(value, entry, next);
       }
@@ -900,32 +932,33 @@ registerMethods(`${nsREX}RPalette`, {
       this.colzmax = zmax;
 
       if (logz) {
-         if (this.colzmax <= 0) this.colzmax = 1.0;
+         if (this.colzmax <= 0)
+            this.colzmax = 1.0;
          if (this.colzmin <= 0) {
             if ((zminpositive === undefined) || (zminpositive <= 0))
-               this.colzmin = 0.0001*this.colzmax;
+               this.colzmin = 0.0001 * this.colzmax;
             else
-               this.colzmin = ((zminpositive < 3) || (zminpositive>100)) ? 0.3*zminpositive : 1;
+               this.colzmin = ((zminpositive < 3) || (zminpositive > 100)) ? 0.3 * zminpositive : 1;
          }
          if (this.colzmin >= this.colzmax)
-            this.colzmin = 0.0001*this.colzmax;
+            this.colzmin = 0.0001 * this.colzmax;
 
-         const logmin = Math.log(this.colzmin)/Math.log(10),
-             logmax = Math.log(this.colzmax)/Math.log(10),
-             dz = (logmax-logmin)/nlevels;
+         const logmin = Math.log(this.colzmin) / Math.log(10),
+               logmax = Math.log(this.colzmax) / Math.log(10),
+               dz = (logmax - logmin) / nlevels;
          this.fContour.push(this.colzmin);
-         for (let level=1; level<nlevels; level++)
-            this.fContour.push(Math.exp((logmin + dz*level)*Math.log(10)));
+         for (let level = 1; level < nlevels; level++)
+            this.fContour.push(Math.exp((logmin + dz * level) * Math.log(10)));
          this.fContour.push(this.colzmax);
          this.fCustomContour = true;
       } else {
          if ((this.colzmin === this.colzmax) && this.colzmin) {
-            this.colzmax += 0.01*Math.abs(this.colzmax);
-            this.colzmin -= 0.01*Math.abs(this.colzmin);
+            this.colzmax += 0.01 * Math.abs(this.colzmax);
+            this.colzmin -= 0.01 * Math.abs(this.colzmin);
          }
-         const dz = (this.colzmax-this.colzmin)/nlevels;
-         for (let level=0; level<=nlevels; level++)
-            this.fContour.push(this.colzmin + dz*level);
+         const dz = (this.colzmax - this.colzmin) / nlevels;
+         for (let level = 0; level <= nlevels; level++)
+            this.fContour.push(this.colzmin + dz * level);
       }
 
       if (!this.palette || (this.palette.length !== nlevels))
@@ -939,7 +972,7 @@ registerMethods(`${nsREX}RPalette`, {
 function drawRFont() {
    const font = this.getObject(),
          svg = this.getCanvSvg(),
-         clname = 'custom_font_' + font.fFamily+font.fWeight+font.fStyle;
+         clname = 'custom_font_' + font.fFamily + font.fWeight + font.fStyle;
    let defs = svg.selectChild('.canvas_defs');
 
    if (defs.empty())
@@ -982,7 +1015,8 @@ function drawRAxis(dom, obj, opt) {
   * @private */
 function drawRFrame(dom, obj, opt) {
    const p = new RFramePainter(dom, obj);
-   if (opt === '3d') p.mode3d = true;
+   if (opt === '3d')
+      p.mode3d = true;
    return ensureRCanvas(p, false).then(() => p.redraw());
 }
 

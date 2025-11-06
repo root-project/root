@@ -1,17 +1,19 @@
 /// \file
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+/// \warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
+/// Feedback is welcome!
 
 #ifndef ROOT_RRegularAxis
 #define ROOT_RRegularAxis
 
 #include "RBinIndex.hxx"
+#include "RBinIndexRange.hxx"
 #include "RLinearizedIndex.hxx"
 
 #include <cassert>
 #include <cstddef>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 class TBuffer;
 
@@ -22,17 +24,21 @@ namespace Experimental {
 A regular axis with equidistant bins in the interval \f$[fLow, fHigh)\f$.
 
 For example, the following creates a regular axis with 10 normal bins between 5 and 15:
-~~~ {.cxx}
+\code
 ROOT::Experimental::RRegularAxis axis(10, 5, 15);
-~~~
+\endcode
 
 It is possible to disable underflow and overflow bins by passing `enableFlowBins = false`. In that case, arguments
 outside the axis will be silently discarded.
 
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is
-welcome!
+\warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
+Feedback is welcome!
 */
 class RRegularAxis final {
+public:
+   using ArgumentType = double;
+
+private:
    /// The number of normal bins
    std::size_t fNNormalBins;
    /// The lower end of the axis interval
@@ -48,20 +54,19 @@ public:
    /// Construct a regular axis object.
    ///
    /// \param[in] nNormalBins the number of normal bins, must be > 0
-   /// \param[in] low the lower end of the axis interval (inclusive)
-   /// \param[in] high the upper end of the axis interval (exclusive), must be > low
+   /// \param[in] interval the axis interval (lower end inclusive, upper end exclusive)
    /// \param[in] enableFlowBins whether to enable underflow and overflow bins
-   RRegularAxis(std::size_t nNormalBins, double low, double high, bool enableFlowBins = true)
-      : fNNormalBins(nNormalBins), fLow(low), fHigh(high), fEnableFlowBins(enableFlowBins)
+   RRegularAxis(std::size_t nNormalBins, std::pair<double, double> interval, bool enableFlowBins = true)
+      : fNNormalBins(nNormalBins), fLow(interval.first), fHigh(interval.second), fEnableFlowBins(enableFlowBins)
    {
       if (nNormalBins == 0) {
          throw std::invalid_argument("nNormalBins must be > 0");
       }
-      if (low >= high) {
-         std::string msg = "high must be > low, but " + std::to_string(low) + " >= " + std::to_string(high);
+      if (fLow >= fHigh) {
+         std::string msg = "high must be > low, but " + std::to_string(fLow) + " >= " + std::to_string(fHigh);
          throw std::invalid_argument(msg);
       }
-      fInvBinWidth = nNormalBins / (high - low);
+      fInvBinWidth = nNormalBins / (fHigh - fLow);
    }
 
    std::size_t GetNNormalBins() const { return fNNormalBins; }
@@ -120,7 +125,51 @@ public:
       return {bin, bin < fNNormalBins};
    }
 
-   /// ROOT Streamer function to throw when trying to store an object of this class.
+   /// Get the range of all normal bins.
+   ///
+   /// \return the bin index range from the first to the last normal bin, inclusive
+   RBinIndexRange GetNormalRange() const
+   {
+      return Internal::CreateBinIndexRange(RBinIndex(0), RBinIndex(fNNormalBins), 0);
+   }
+
+   /// Get a range of normal bins.
+   ///
+   /// \param[in] begin the begin of the bin index range (inclusive), must be normal
+   /// \param[in] end the end of the bin index range (exclusive), must be normal and >= begin
+   /// \return a bin index range \f$[begin, end)\f$
+   RBinIndexRange GetNormalRange(RBinIndex begin, RBinIndex end) const
+   {
+      if (!begin.IsNormal()) {
+         throw std::invalid_argument("begin must be a normal bin");
+      }
+      if (begin.GetIndex() >= fNNormalBins) {
+         throw std::invalid_argument("begin must be inside the axis");
+      }
+      if (!end.IsNormal()) {
+         throw std::invalid_argument("end must be a normal bin");
+      }
+      if (end.GetIndex() > fNNormalBins) {
+         throw std::invalid_argument("end must be inside or past the axis");
+      }
+      if (!(end >= begin)) {
+         throw std::invalid_argument("end must be >= begin");
+      }
+      return Internal::CreateBinIndexRange(begin, end, 0);
+   }
+
+   /// Get the full range of all bins.
+   ///
+   /// This includes underflow and overflow bins, if enabled.
+   ///
+   /// \return the bin index range of all bins
+   RBinIndexRange GetFullRange() const
+   {
+      return fEnableFlowBins ? Internal::CreateBinIndexRange(RBinIndex::Underflow(), RBinIndex(), fNNormalBins)
+                             : GetNormalRange();
+   }
+
+   /// %ROOT Streamer function to throw when trying to store an object of this class.
    void Streamer(TBuffer &) { throw std::runtime_error("unable to store RRegularAxis"); }
 };
 

@@ -15,13 +15,10 @@ namespace A {
 #ifdef WIN32
       ClassDef(Class2,1) //
 #else
-      ClassDefT(A::Class2<T>,1) //
+      ClassDef(A::Class2<T>,1) //
 #endif
    };
    
-#ifndef __MAKECINT__
-  ClassDefT2(Class2,T)
-#endif
 }
 
 namespace B {

@@ -1,0 +1,152 @@
+<?xml version="1.0" standalone="no"?>
+<svg width="567" height="640" viewBox="0 0 567 640" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+<title>
+tlatex1.svg
+</title>
+<rect x="0.500" y="0" width="567" height="639" fill="#f2f2f2"/>
+<path d="M0.500,639l 2.0, -2.0v -635h 563l 2.0, -2.0h -567v 639z" fill="white"/>
+<path d="M0.500,639l 2.0, -2.0h 563v -635l 2.0, -2.0v 639h -567z" fill="#a9a9a9"/>
+<text xml:space="preserve" x="296" y="73" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">)dt
+</text>
+<text xml:space="preserve" x="288" y="64" fill="black" font-size="14" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="282" y="73" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">t
+</text>
+<text xml:space="preserve" x="270" y="85" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="270" y="64" fill="black" font-size="21" font-family="Times">&#0960;
+</text>
+<path d="M270,67h 11" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="227" y="73" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">cos(
+</text>
+<text xml:space="preserve" x="216" y="100" fill="black" font-size="14" font-family="Helvetica" font-weight="bold">0
+</text>
+<text xml:space="preserve" x="216" y="38" fill="black" font-size="14" font-family="Helvetica" font-weight="bold">x
+</text>
+<text xml:space="preserve" x="213" y="83" fill="black" font-size="48" font-family="Times">&#8747;
+</text>
+<text xml:space="preserve" x="202" y="73" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">  
+</text>
+<text xml:space="preserve" x="187" y="86" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">D
+</text>
+<text xml:space="preserve" x="175" y="86" fill="black" font-size="21" font-family="Times">&#0955;
+</text>
+<text xml:space="preserve" x="183" y="64" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">2
+</text>
+<path d="M175,67h 27" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M162,49l 5.5, 38" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M167,87l 5.5, -44" fill="none" stroke="black"/>
+<path d="M173,44h 29" fill="none" stroke="black"/>
+<text xml:space="preserve" x="57" y="73" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">1) C(x) = d 
+</text>
+<text xml:space="preserve" x="296" y="205" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">)dt
+</text>
+<text xml:space="preserve" x="288" y="196" fill="black" font-size="14" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="282" y="205" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">t
+</text>
+<text xml:space="preserve" x="270" y="217" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="270" y="195" fill="black" font-size="21" font-family="Times">&#0960;
+</text>
+<path d="M270,199h 11" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="227" y="205" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">cos(
+</text>
+<text xml:space="preserve" x="216" y="169" fill="black" font-size="14" font-family="Helvetica" font-weight="bold">x
+</text>
+<text xml:space="preserve" x="213" y="215" fill="black" font-size="48" font-family="Times">&#8747;
+</text>
+<text xml:space="preserve" x="202" y="205" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">  
+</text>
+<text xml:space="preserve" x="187" y="218" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">D
+</text>
+<text xml:space="preserve" x="175" y="218" fill="black" font-size="21" font-family="Times">&#0955;
+</text>
+<text xml:space="preserve" x="183" y="196" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">2
+</text>
+<path d="M175,199h 27" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M162,181l 5.5, 38" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M167,219l 5.5, -44" fill="none" stroke="black"/>
+<path d="M173,175h 29" fill="none" stroke="black"/>
+<text xml:space="preserve" x="57" y="205" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">2) C(x) = d 
+</text>
+<path d="M195,342l -0.424, -0.938l -0.404, -0.957l -0.385, -0.975l -0.365, -0.992l -0.344, -1.0l -0.324, -1.0l -0.303, -1.0l -0.281, -1.1l -0.260, -1.1l -0.238, -1.1l -0.216, -1.1l -0.194, -1.1l -0.171, -1.1l -0.149, -1.1l -0.126, -1.1l -0.103, -1.1l
+ -0.081, -1.1l -0.058, -1.1l -0.035, -1.1l -0.012, -1.1l 0.012, -1.1l 0.035, -1.1l 0.058, -1.1l 0.081, -1.1l 0.103, -1.1l 0.126, -1.1l 0.149, -1.1l 0.171, -1.1l 0.194, -1.1l 0.216, -1.1l 0.238, -1.1l 0.260, -1.1l 0.281, -1.1l 0.303, -1.0l 0.324,
+ -1.0l 0.344, -1.0l 0.365, -0.992l 0.385, -0.975l 0.404, -0.957l 0.424, -0.938" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M397,299l 0.424, 0.938l 0.404, 0.957l 0.385, 0.975l 0.365, 0.992l 0.344, 1.0l 0.324, 1.0l 0.303, 1.0l 0.281, 1.1l 0.260, 1.1l 0.238, 1.1l 0.216, 1.1l 0.194, 1.1l 0.171, 1.1l 0.149, 1.1l 0.126, 1.1l 0.103, 1.1l 0.081, 1.1l 0.058, 1.1l 0.035,
+ 1.1l 0.012, 1.1l -0.012, 1.1l -0.035, 1.1l -0.058, 1.1l -0.081, 1.1l -0.103, 1.1l -0.126, 1.1l -0.149, 1.1l -0.171, 1.1l -0.194, 1.1l -0.216, 1.1l -0.238, 1.1l -0.260, 1.1l -0.281, 1.1l -0.303, 1.0l -0.324, 1.0l -0.344, 1.0l -0.365, 0.992l -0.385,
+ 0.975l -0.404, 0.957l -0.424, 0.938" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="384" y="312" fill="black" font-size="14" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="322" y="327" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">+S(V)
+</text>
+<text xml:space="preserve" x="311" y="339" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="312" y="318" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">1
+</text>
+<path d="M311,321h 11" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M305,303v 36" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M305,303h 5.7" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M305,339h 5.7" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M381,303v 36" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M381,303h -5.7" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M381,339h -5.7" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="291" y="327" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">+
+</text>
+<text xml:space="preserve" x="283" y="312" fill="black" font-size="14" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="220" y="327" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">+C(V)
+</text>
+<text xml:space="preserve" x="209" y="339" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="210" y="318" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">1
+</text>
+<path d="M209,321h 11" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M203,303v 36" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M203,303h 5.7" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M203,339h 5.7" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M280,303v 36" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M280,303h -5.7" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M280,339h -5.7" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="176" y="339" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="178" y="318" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">1
+</text>
+<path d="M176,321h 11" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="153" y="327" fill="black" font-size="21" font-family="Helvetica" font-weight="bold"> = 
+</text>
+<text xml:space="preserve" x="146" y="317" fill="black" font-size="14" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="57" y="327" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">3) R = |A|
+</text>
+<text xml:space="preserve" x="245" y="465" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">t+i
+</text>
+<text xml:space="preserve" x="254" y="443" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">i
+</text>
+<path d="M245,446h 24" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M239,427v 39" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M239,427h 5.7" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M239,466h 5.7" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M274,427v 39" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M274,427h -5.7" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M274,466h -5.7" fill="none" stroke="black" stroke-width="2.0"/>
+<text xml:space="preserve" x="166" y="452" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">A(i)cos
+</text>
+<text xml:space="preserve" x="147" y="427" fill="black" font-size="14" font-family="Times">&#8734;
+</text>
+<text xml:space="preserve" x="155" y="475" fill="black" font-size="14" font-family="Times">&#8734;
+</text>
+<text xml:space="preserve" x="138" y="475" fill="black" font-size="14" font-family="Helvetica" font-weight="bold">i=-
+</text>
+<text xml:space="preserve" x="139" y="458" fill="black" font-size="38" font-family="Times">&#8721;
+</text>
+<text xml:space="preserve" x="57" y="452" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">4) F(t) = 
+</text>
+<text xml:space="preserve" x="94" y="580" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">Li
+</text>
+<text xml:space="preserve" x="87" y="571" fill="black" font-size="14" font-family="Helvetica" font-weight="bold">7
+</text>
+<text xml:space="preserve" x="87" y="591" fill="black" font-size="14" font-family="Helvetica" font-weight="bold">3
+</text>
+<text xml:space="preserve" x="57" y="580" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">5)  
+</text></svg>

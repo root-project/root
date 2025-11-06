@@ -31,7 +31,6 @@ Full description with examples and pictures
 #include "TGeoManager.h"
 #include "TGeoStateInfo.h"
 
-ClassImp(TGeoVoxelFinder);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

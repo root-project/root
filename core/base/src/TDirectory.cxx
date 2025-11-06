@@ -48,7 +48,6 @@ static std::atomic_flag *GetCurrentDirectoryLock()
 Describe directory structure in memory.
 */
 
-ClassImp(TDirectory);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Directory default constructor.

@@ -89,7 +89,6 @@ Font selection dialog, allowing to select one in the list of available fonts in 
 */
 
 
-ClassImp(TGFontDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create font dialog. When closed via OK button fontProp is set to

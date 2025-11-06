@@ -1,6 +1,9 @@
 #ifdef __CLING__
 
 #pragma link C++ enum CustomEnum;
+#pragma link C++ enum RenamedCustomEnum;
+
+#pragma link C++ enum CustomEnumBool;
 #pragma link C++ enum CustomEnumInt8;
 #pragma link C++ enum CustomEnumUInt8;
 #pragma link C++ enum CustomEnumInt16;
@@ -9,6 +12,8 @@
 #pragma link C++ enum CustomEnumUInt32;
 #pragma link C++ enum CustomEnumInt64;
 #pragma link C++ enum CustomEnumUInt64;
+
+#pragma link C++ class CustomAtomicNotLockFree+;
 
 #pragma link C++ class CustomStruct+;
 #pragma link C++ class DerivedA+;
@@ -146,6 +151,8 @@
 #pragma link C++ class DuplicateBaseB + ;
 #pragma link C++ class DuplicateBaseC + ;
 #pragma link C++ class DuplicateBaseD + ;
+#pragma link C++ class PolymorphicBase + ;
+#pragma link C++ class PolymorphicDerived + ;
 
 #pragma link C++ class Left + ;
 #pragma link C++ class DerivedFromLeftAndTObject+;

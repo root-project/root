@@ -1,6 +1,6 @@
 /// \file
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+/// \warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
+/// Feedback is welcome!
 
 #ifndef ROOT_RBinIndex
 #define ROOT_RBinIndex
@@ -16,8 +16,8 @@ A bin index with special values for underflow and overflow bins.
 
 Objects of this type should be passed by value.
 
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is
-welcome!
+\warning This is part of the %ROOT 7 prototype! It will change without notice. It might trigger earthquakes.
+Feedback is welcome!
 */
 class RBinIndex final {
    static constexpr std::size_t UnderflowIndex = -3;

@@ -20,7 +20,7 @@ if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
   target_link_libraries(Core PRIVATE execinfo util)
 endif()
 
-CHECK_CXX_SOURCE_COMPILES("#include <stdlib.h>
+CHECK_CXX_SOURCE_COMPILES("#include <cstdlib>
 int main() { char buf[32]; arc4random_buf(buf, 32); return 0;}" found_arc4)
 
 if(found_arc4)

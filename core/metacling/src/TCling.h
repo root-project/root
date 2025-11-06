@@ -191,7 +191,7 @@ protected:
 
 public: // Public Interface
 
-   virtual ~TCling();
+   ~TCling() final;
    TCling(const char* name, const char* title, const char* const argv[], void *interpLibHandle);
 
    void    AddIncludePath(const char* path) final;
@@ -219,11 +219,11 @@ public: // Public Interface
    const char* GetClassSharedLibs(const char* cls, bool skipCore = true) final;
    const char* GetSharedLibDeps(const char* lib, bool tryDyld = false) final;
    const char* GetIncludePath() final;
-   virtual const char* GetSTLIncludePath() const final;
+   const char* GetSTLIncludePath() const final;
    TObjArray*  GetRootMapFiles() const final { return fRootmapFiles; }
    unsigned long long GetInterpreterStateMarker() const final { return fTransactionCount;}
-   virtual void Initialize() final;
-   virtual void ShutDown() final;
+   void    Initialize() final;
+   void    ShutDown() final;
    void    InspectMembers(TMemberInspector&, const void* obj, const TClass* cl, Bool_t isTransient) final;
    Bool_t  IsLoaded(const char* filename) const final;
    Bool_t  IsLibraryLoaded(const char* libname) const final;
@@ -252,7 +252,7 @@ public: // Public Interface
                           const char** classesHeaders,
                           Bool_t lateRegistration = false,
                           Bool_t hasCxxModule = false) final;
-   virtual void AddAvailableIndentifiers(TSeqCollection& Idents) final;
+   void    AddAvailableIndentifiers(TSeqCollection& Idents) final;
    void    RegisterTClassUpdate(TClass *oldcl,DictFuncPtr_t dict) final;
    void    UnRegisterTClassUpdate(const TClass *oldcl) final;
 
@@ -301,7 +301,7 @@ public: // Public Interface
    DeclId_t GetFunctionWithValues(ClassInfo_t *cl, const char* method, const char* params, Bool_t objectIsConst = kFALSE) final;
    DeclId_t GetFunctionTemplate(ClassInfo_t *cl, const char *funcname) final;
    void     GetFunctionOverloads(ClassInfo_t *cl, const char *funcname, std::vector<DeclId_t>& res) const final;
-   virtual void     LoadFunctionTemplates(TClass* cl) const final;
+   void     LoadFunctionTemplates(TClass* cl) const final;
 
    std::vector<std::string> GetUsingNamespaces(ClassInfo_t *cl) const final;
 
@@ -369,7 +369,7 @@ public: // Public Interface
 
    // core/meta helper functions.
    EReturnType MethodCallReturnType(TFunction *func) const final;
-   virtual void GetFunctionName(const clang::Decl *decl, std::string &name) const;
+   void GetFunctionName(const clang::Decl *decl, std::string &name) const;
    bool DiagnoseIfInterpreterException(const std::exception &e) const final;
 
    // CallFunc interface

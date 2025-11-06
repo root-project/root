@@ -22,7 +22,6 @@
 #include <cstring>
 #include <iostream>
 
-ClassImp(TGroupButton);
 
 
 /** \class TGroupButton
@@ -229,7 +228,7 @@ void TGroupButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
                                             TString(GetMethod()).ReplaceSpecialCppChars().Data(), fXlowNDC, fYlowNDC,
                                             fXlowNDC + fWNDC, fYlowNDC + fHNDC));
 
-   SaveFillAttributes(out, "grbutton", 0, 1001);
+   SaveFillAttributes(out, "grbutton", -1, -1);
    SaveLineAttributes(out, "grbutton", 1, 1, 1);
    SaveTextAttributes(out, "grbutton", 22, 0, 1, 62, .75);
 

@@ -46,7 +46,7 @@
 //#define G__OLDEXPAND
 
 #include <unistd.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <sys/types.h>
 #if defined(R__SUN) || defined(R__AIX) || \
     defined(R__LINUX) || defined(R__SOLARIS) || \
@@ -94,15 +94,15 @@
 #include <utime.h>
 #include <syslog.h>
 #include <sys/stat.h>
-#include <setjmp.h>
-#include <signal.h>
+#include <csetjmp>
+#include <csignal>
 #include <sys/param.h>
 #include <pwd.h>
 #include <grp.h>
-#include <errno.h>
+#include <cerrno>
 #include <sys/resource.h>
 #include <sys/wait.h>
-#include <time.h>
+#include <ctime>
 #include <sys/time.h>
 #include <sys/file.h>
 #include <sys/socket.h>
@@ -218,7 +218,7 @@ extern "C" {
 
 // FPE handling includes
 #if (defined(R__LINUX) && !defined(R__WINGCC))
-#include <fenv.h>
+#include <cfenv>
 #include <sys/prctl.h>    // for prctl() function used in StackTrace()
 #endif
 
@@ -229,11 +229,11 @@ extern "C" {
 #if defined(R__MACOSX) && !defined(__SSE2__) && !defined(__xlC__) && \
    !defined(__i386__) && !defined(__x86_64__) && !defined(__arm__) && \
    !defined(__arm64__)
-#include <fenv.h>
-#include <signal.h>
+#include <cfenv>
+#include <csignal>
 #include <ucontext.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 #include <mach/thread_status.h>
 
 #define fegetenvd(x) asm volatile("mffs %0" : "=f" (x));
@@ -251,7 +251,7 @@ enum {
 
 #if defined(R__MACOSX) && !defined(__SSE2__) && \
     (defined(__i386__) || defined(__x86_64__) || defined(__arm__) || defined(__arm64__))
-#include <fenv.h>
+#include <cfenv>
 #endif
 // End FPE handling includes
 
@@ -568,7 +568,6 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
 }
 #endif
 
-ClassImp(TUnixSystem);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -704,7 +703,7 @@ void TUnixSystem::SetDisplay()
          }
       }
 #ifndef R__HAS_COCOA
-      if (!gROOT->IsBatch() && !getenv("DISPLAY")) {
+      if (!gROOT->IsBatch() && !std::getenv("DISPLAY")) {
          Error("SetDisplay", "Can't figure out DISPLAY, set it manually\n"
             "In case you run a remote ssh session, restart your ssh session with:\n"
             "=========>  ssh -Y");
@@ -2139,7 +2138,7 @@ void TUnixSystem::Setenv(const char *name, const char *value)
 
 const char *TUnixSystem::Getenv(const char *name)
 {
-   return ::getenv(name);
+   return std::getenv(name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4600,6 +4599,12 @@ int TUnixSystem::UnixSend(int sock, const void *buffer, int length, int flag)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get shared library search path. Static utility function.
+///
+/// The runtime cost (syscalls) of this function can be shortened by injecting
+/// a pre-calculated result for the system library search path in form of
+/// `export ROOT_LDSYSPATH=$(LD_DEBUG=libs LD_PRELOAD=DOESNOTEXIST ls /tmp/DOESNOTEXIST 2>&1 | grep -m 1 "system search
+/// path" | sed 's/.*=//g' | awk '//{print $1}')` This might be useful in scenarios, where ROOT is instantiated many
+/// times.
 
 static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFALSE)
 {
@@ -4685,23 +4690,34 @@ static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFA
       dynpath_syspart = "/usr/local/lib:/usr/X11R6/lib:/usr/lib:/lib:";
       dynpath_syspart += "/lib/x86_64-linux-gnu:/usr/local/lib64:/usr/lib64:/lib64:";
    #else
-      // trick to get the system search path
-      std::string cmd("LD_DEBUG=libs LD_PRELOAD=DOESNOTEXIST ls 2>&1");
-      FILE *pf = popen(cmd.c_str (), "r");
-      std::string result = "";
-      char buffer[128];
-      while (!feof(pf)) {
-         if (fgets(buffer, 128, pf) != nullptr)
-            result += buffer;
-      }
-      pclose(pf);
-      std::size_t from = result.find("search path=", result.find("(LD_LIBRARY_PATH)"));
-      std::size_t to = result.find("(system search path)");
-      if (from != std::string::npos && to != std::string::npos) {
-         from += 12;
-         std::string sys_path = result.substr(from, to-from);
-         sys_path.erase(std::remove_if(sys_path.begin(), sys_path.end(), isspace), sys_path.end());
-         dynpath_syspart = sys_path.c_str();
+      // Obtain the system search path ...
+
+      // First of all, let's see if an outside entity gave us the system path.
+      // This is a power-user feature for users bringing up many executables with ROOT linked in.
+      // In this case, the system path could be cached in an environment variable ROOT_LDSYSPATH and prevent
+      // repeated sys-calls (popen) and to having to search through potentially long LD_LIBRARY_PATH strings.
+      const auto ldsyspath = std::getenv("ROOT_LDSYSPATH");
+      if (ldsyspath != nullptr) {
+         dynpath_syspart = ldsyspath;
+      } else {
+         // trick to get the system search path at runtime (default case)
+         std::string cmd("LD_DEBUG=libs LD_PRELOAD=DOESNOTEXIST ls 2>&1");
+         FILE *pf = popen(cmd.c_str(), "r");
+         std::string result = "";
+         char buffer[128];
+         while (!feof(pf)) {
+            if (fgets(buffer, 128, pf) != nullptr)
+               result += buffer;
+         }
+         pclose(pf);
+         std::size_t from = result.find("search path=", result.find("(LD_LIBRARY_PATH)"));
+         std::size_t to = result.find("(system search path)");
+         if (from != std::string::npos && to != std::string::npos) {
+            from += 12;
+            std::string sys_path = result.substr(from, to - from);
+            sys_path.erase(std::remove_if(sys_path.begin(), sys_path.end(), isspace), sys_path.end());
+            dynpath_syspart = sys_path.c_str();
+         }
       }
       dynpath_envpart.ReplaceAll("::", ":");
       dynpath_syspart.ReplaceAll("::", ":");

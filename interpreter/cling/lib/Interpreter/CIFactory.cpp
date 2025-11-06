@@ -42,7 +42,6 @@
 #include "llvm/Config/llvm-config.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/Option/ArgList.h"
-#include "llvm/Support/Error.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
@@ -115,6 +114,23 @@ namespace {
                                        llvm::SmallVectorImpl<char>& Buf,
                                        AdditionalArgList& Args,
                                        bool Verbose) {
+    // For power-users: Let's see if the path is available as a predefined env
+    // variable to save repeated system calls when ROOT/CLING is initialized for
+    // each process in a many process system. CLING_CPPSYSINCL should contain
+    // paths separated by a ":" and otherwise contain the same paths as returned
+    // from the CppInclQuery further below.
+    auto PrefCppSystemIncl = std::getenv("CLING_CPPSYSINCL");
+    if (PrefCppSystemIncl != nullptr) {
+      llvm::StringRef PathsString(PrefCppSystemIncl);
+      llvm::SmallVector<StringRef, 10> Paths;
+      PathsString.split(Paths, ":");
+      for (auto& P : Paths) {
+        P = P.trim();
+        Args.addArgument("-cxx-isystem", P.str());
+      }
+      return;
+    }
+
     std::string CppInclQuery("LC_ALL=C ");
     CppInclQuery.append(Compiler);
 
@@ -402,6 +418,15 @@ namespace {
 #endif // _MSC_VER
 
     Opts.IncrementalExtensions = 1;
+
+    //
+    // Tell the parser to parse without RecoveryExpr nodes.
+    // This restores old (LLVM 18) behavior: error -> ExprError (invalid),
+    // without emitting a <recovery-expr>() that later asserts:
+    // Assertion `!Init->isValueDependent()' failed.
+    // https://github.com/llvm/llvm-project/commit/fd87d765c0455265aea4595a3741a96b4c078fbc
+    //
+    Opts.RecoveryAST = 0;
 
     Opts.Exceptions = 1;
     if (Opts.CPlusPlus) {
@@ -787,7 +812,7 @@ namespace {
     clang::HeaderSearchOptions& HSOpts = CI.getHeaderSearchOpts();
     // Register prebuilt module paths where we will lookup module files.
     addPrebuiltModulePaths(HSOpts,
-                           getPathsFromEnv(getenv("CLING_PREBUILT_MODULE_PATH")));
+                           getPathsFromEnv(std::getenv("CLING_PREBUILT_MODULE_PATH")));
 
     // Register all modulemaps necessary for cling to run. If we have specified
     // -fno-implicit-module-maps then we have to add them explicitly to the list
@@ -1064,7 +1089,8 @@ namespace {
           Out.indent(2) << "Module map file: " << ModuleMapPath << "\n";
         }
 
-        bool ReadLanguageOptions(const LangOptions &LangOpts, bool /*Complain*/,
+        bool ReadLanguageOptions(const LangOptions &LangOpts,
+                                 StringRef ModuleFilename, bool /*Complain*/,
                                  bool /*AllowCompatibleDifferences*/) override {
           Out.indent(2) << "Language options:\n";
 #define LANGOPT(Name, Bits, Default, Description)                       \
@@ -1088,6 +1114,7 @@ namespace {
         }
 
         bool ReadTargetOptions(const TargetOptions &TargetOpts,
+                               StringRef ModuleFilename,
                                bool /*Complain*/,
                                bool /*AllowCompatibleDifferences*/) override {
           Out.indent(2) << "Target options:\n";
@@ -1107,6 +1134,7 @@ namespace {
         }
 
         bool ReadDiagnosticOptions(IntrusiveRefCntPtr<DiagnosticOptions> DiagOpts,
+                                   StringRef ModuleFilename,
                                    bool /*Complain*/) override {
           Out.indent(2) << "Diagnostic options:\n";
 #define DIAGOPT(Name, Bits, Default) DUMP_BOOLEAN(DiagOpts->Name, #Name);
@@ -1126,6 +1154,7 @@ namespace {
         }
 
         bool ReadHeaderSearchOptions(const HeaderSearchOptions &HSOpts,
+                                     StringRef ModuleFilename,
                                      StringRef SpecificModuleCachePath,
                                      bool /*Complain*/) override {
           Out.indent(2) << "Header search options:\n";
@@ -1148,6 +1177,7 @@ namespace {
 
         bool
         ReadPreprocessorOptions(const PreprocessorOptions& PPOpts,
+                                StringRef /*ModuleFilename*/,
                                 bool /*ReadMacros*/, bool /*Complain*/,
                                 std::string& /*SuggestedPredefines*/) override {
           Out.indent(2) << "Preprocessor options:\n";
@@ -1254,54 +1284,6 @@ namespace {
                                          Listener,
                                          HSOpts.ModulesValidateDiagnosticOptions);
     }
-  }
-
-  // Goal is to make this as close to the function in
-  // clang/lib/Interpreter/Interpreter.cpp taking only clang arguments
-  static llvm::Expected<std::unique_ptr<CompilerInstance>>
-  CreateCI(const std::vector<const char*>& ClangArgv,
-           const std::string& ExeName,
-           std::unique_ptr<clang::driver::Compilation>& Compilation) {
-    auto InvocationPtr = std::make_shared<clang::CompilerInvocation>();
-
-    // The compiler invocation is the owner of the diagnostic options.
-    // Everything else points to them.
-    DiagnosticOptions& DiagOpts = InvocationPtr->getDiagnosticOpts();
-    llvm::IntrusiveRefCntPtr<DiagnosticsEngine> Diags =
-        SetupDiagnostics(DiagOpts, ExeName);
-    if (!Diags)
-      return llvm::createStringError(llvm::errc::not_supported,
-                                     "Could not setup diagnostic engine.");
-
-    llvm::Triple TheTriple(llvm::sys::getProcessTriple());
-    clang::driver::Driver Drvr(ClangArgv[0], TheTriple.getTriple(), *Diags);
-    // Drvr.setWarnMissingInput(false);
-    Drvr.setCheckInputsExist(false); // think foo.C(12)
-    llvm::ArrayRef<const char*> RF(&(ClangArgv[0]), ClangArgv.size());
-    Compilation.reset(Drvr.BuildCompilation(RF));
-    if (!Compilation)
-      return llvm::createStringError(
-          llvm::errc::not_supported,
-          "Couldn't create clang::driver::Compilation.");
-
-    const llvm::opt::ArgStringList* CC1Args =
-        GetCC1Arguments(Compilation.get());
-    if (!CC1Args)
-      return llvm::createStringError(llvm::errc::not_supported,
-                                     "Could not get cc1 arguments.");
-
-    clang::CompilerInvocation::CreateFromArgs(*InvocationPtr, *CC1Args, *Diags);
-    // We appreciate the error message about an unknown flag (or do we? if not
-    // we should switch to a different DiagEngine for parsing the flags).
-    // But in general we'll happily go on.
-    Diags->Reset();
-
-    // Create and setup a compiler instance.
-    std::unique_ptr<CompilerInstance> CI(new CompilerInstance());
-    CI->setInvocation(InvocationPtr);
-    CI->setDiagnostics(Diags.get()); // Diags is ref-counted
-
-    return CI;
   }
 
   static CompilerInstance*
@@ -1440,6 +1422,11 @@ namespace {
       argvCompile.push_back("-fno-omit-frame-pointer");
     }
 
+#ifdef CLING_WITH_ADAPTIVECPP
+    argvCompile.push_back("-D__ACPP_ENABLE_LLVM_SSCP_TARGET__");
+    argvCompile.push_back("-Xclang");
+    argvCompile.push_back("-disable-O0-optnone");
+#endif
     // Add host specific includes, -resource-dir if necessary, and -isysroot
     std::string ClingBin = GetExecutablePath(argv[0]);
     AddHostArguments(ClingBin, argvCompile, LLVMDir, COpts);
@@ -1466,6 +1453,11 @@ namespace {
       argvCompile.push_back("<<< cling interactive line includer >>>");
     }
 
+    auto InvocationPtr = std::make_shared<clang::CompilerInvocation>();
+
+    // The compiler invocation is the owner of the diagnostic options.
+    // Everything else points to them.
+    DiagnosticOptions& DiagOpts = InvocationPtr->getDiagnosticOpts();
     // add prefix to diagnostic messages if second compiler instance is existing
     // e.g. in CUDA mode
     std::string ExeName = "";
@@ -1473,20 +1465,41 @@ namespace {
       ExeName = "cling";
     if (COpts.CUDADevice)
       ExeName = "cling-ptx";
-
-    std::unique_ptr<clang::driver::Compilation> Compilation;
-
-    auto CIOrErr = CreateCI(argvCompile, ExeName, Compilation);
-    if (auto Err = CIOrErr.takeError()) {
-      llvm::logAllUnhandledErrors(std::move(Err), cling::errs());
+    llvm::IntrusiveRefCntPtr<DiagnosticsEngine> Diags =
+        SetupDiagnostics(DiagOpts, ExeName);
+    if (!Diags) {
+      cling::errs() << "Could not setup diagnostic engine.\n";
       return nullptr;
     }
-    std::unique_ptr<clang::CompilerInstance> CI = std::move(*CIOrErr);
 
-    DiagnosticsEngine& Diags = CI->getDiagnostics();
-    CompilerInvocation& Invocation = CI->getInvocation();
-    DiagnosticOptions& DiagOpts = Invocation.getDiagnosticOpts();
+    llvm::Triple TheTriple(llvm::sys::getProcessTriple());
+    clang::driver::Driver Drvr(argv[0], TheTriple.getTriple(), *Diags);
+    //Drvr.setWarnMissingInput(false);
+    Drvr.setCheckInputsExist(false); // think foo.C(12)
+    llvm::ArrayRef<const char*>RF(&(argvCompile[0]), argvCompile.size());
+    std::unique_ptr<clang::driver::Compilation>
+      Compilation(Drvr.BuildCompilation(RF));
+    if (!Compilation) {
+      cling::errs() << "Couldn't create clang::driver::Compilation.\n";
+      return nullptr;
+    }
 
+    const llvm::opt::ArgStringList* CC1Args = GetCC1Arguments(Compilation.get());
+    if (!CC1Args) {
+      cling::errs() << "Could not get cc1 arguments.\n";
+      return nullptr;
+    }
+
+    clang::CompilerInvocation::CreateFromArgs(*InvocationPtr, *CC1Args, *Diags);
+    // We appreciate the error message about an unknown flag (or do we? if not
+    // we should switch to a different DiagEngine for parsing the flags).
+    // But in general we'll happily go on.
+    Diags->Reset();
+
+    // Create and setup a compiler instance.
+    std::unique_ptr<CompilerInstance> CI(new CompilerInstance());
+    CI->setInvocation(InvocationPtr);
+    CI->setDiagnostics(Diags.get()); // Diags is ref-counted
     if (!OnlyLex)
       CI->getDiagnosticOpts().ShowColors =
         llvm::sys::Process::StandardOutIsDisplayed() ||
@@ -1499,9 +1512,14 @@ namespace {
     // Copied from CompilerInstance::createDiagnostics:
     // Chain in -verify checker, if requested.
     if (DiagOpts.VerifyDiagnostics)
-      Diags.setClient(new clang::VerifyDiagnosticConsumer(Diags));
+      Diags->setClient(new clang::VerifyDiagnosticConsumer(*Diags));
+
+    IntrusiveRefCntPtr<llvm::vfs::OverlayFileSystem> Overlay =
+        new llvm::vfs::OverlayFileSystem(llvm::vfs::getRealFileSystem());
+    auto FileMgr = CI->createFileManager(Overlay);
+    llvm::vfs::FileSystem &VFS = FileMgr->getVirtualFileSystem();
     // Configure our handling of diagnostics.
-    ProcessWarningOptions(Diags, DiagOpts);
+    ProcessWarningOptions(*Diags, DiagOpts, VFS);
 
     if (COpts.HasOutput && !OnlyLex) {
       ActionScan scan(clang::driver::Action::PrecompileJobClass,
@@ -1514,13 +1532,11 @@ namespace {
       if (!SetupCompiler(CI.get(), COpts))
         return nullptr;
 
-      ProcessWarningOptions(Diags, DiagOpts);
+      ProcessWarningOptions(*Diags, DiagOpts, VFS);
       return CI.release();
     }
 
-    IntrusiveRefCntPtr<llvm::vfs::OverlayFileSystem> Overlay =
-        new llvm::vfs::OverlayFileSystem(llvm::vfs::getRealFileSystem());
-    CI->createFileManager(Overlay);
+    clang::CompilerInvocation& Invocation = CI->getInvocation();
     std::string& PCHFile = Invocation.getPreprocessorOpts().ImplicitPCHInclude;
     bool InitLang = true, InitTarget = true;
     if (!PCHFile.empty()) {
@@ -1536,6 +1552,7 @@ namespace {
             m_Invocation(I), m_ReadLang(false), m_ReadTarget(false) {}
 
           bool ReadLanguageOptions(const LangOptions &LangOpts,
+                                   StringRef ModuleFilename,
                                    bool /*Complain*/,
                                    bool /*AllowCompatibleDifferences*/) override {
             m_Invocation.getLangOpts() = LangOpts;
@@ -1543,6 +1560,7 @@ namespace {
             return false;
           }
           bool ReadTargetOptions(const TargetOptions &TargetOpts,
+                                 StringRef ModuleFilename,
                                  bool /*Complain*/,
                                  bool /*AllowCompatibleDifferences*/) override {
             m_Invocation.getTargetOpts() = TargetOpts;
@@ -1550,7 +1568,9 @@ namespace {
             return false;
           }
           bool ReadPreprocessorOptions(
-              const PreprocessorOptions& PPOpts, bool /*ReadMacros*/,
+              const PreprocessorOptions& PPOpts,
+              StringRef /*ModuleFilename*/,
+              bool /*ReadMacros*/,
               bool /*Complain*/,
               std::string& /*SuggestedPredefines*/) override {
             // Import selected options, e.g. don't overwrite ImplicitPCHInclude.
@@ -1572,14 +1592,14 @@ namespace {
           // When running interactively pass on the info that the PCH
           // has failed so that IncrmentalParser::Initialize won't try again.
           if (!HasInput && llvm::sys::Process::StandardInIsUserInput()) {
-            const unsigned ID =
-                Diags.getCustomDiagID(clang::DiagnosticsEngine::Level::Error,
-                                      "Problems loading PCH: '%0'.");
-
-            Diags.Report(ID) << PCHFile;
+            const unsigned ID = Diags->getCustomDiagID(
+                                       clang::DiagnosticsEngine::Level::Error,
+                                       "Problems loading PCH: '%0'.");
+            
+            Diags->Report(ID) << PCHFile;
             // If this was the only error, then don't let it stop anything
-            if (Diags.getClient()->getNumErrors() == 1)
-              Diags.Reset(true);
+            if (Diags->getClient()->getNumErrors() == 1)
+              Diags->Reset(true);
             // Clear the include so no one else uses it.
             std::string().swap(PCHFile);
           }
@@ -1624,7 +1644,7 @@ namespace {
     // name), clang will call $PWD "." which is terrible if we ever change
     // directories (see ROOT-7114). By asking for $PWD (and not ".") it will
     // be registered as $PWD instead, which is stable even after chdirs.
-    FM.getDirectory(platform::GetCwd());
+    llvm::consumeError(FM.getDirectoryRef(platform::GetCwd()).takeError());
 
     // Build the virtual file, Give it a name that's likely not to ever
     // be #included (so we won't get a clash in clang's cache).
@@ -1653,7 +1673,7 @@ namespace {
     }
 
     // Set up the preprocessor
-    auto TUKind = COpts.ModuleName.empty() ? TU_Complete : TU_Module;
+    auto TUKind = COpts.ModuleName.empty() ? TU_Complete : TU_ClangModule;
     CI->createPreprocessor(TUKind);
 
     // With modules, we now start adding prebuilt module paths to the CI.

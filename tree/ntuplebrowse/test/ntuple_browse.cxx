@@ -72,6 +72,6 @@ TEST(RNTupleBrowse, Simple)
 
    ROOT::Internal::BrowseRNTuple(ntpl.get(), b);
 
-   ASSERT_EQ(1u, imp->fAdded.size());
-   EXPECT_EQ("f", imp->fAdded[0]);
+   ASSERT_EQ(2u, imp->fAdded.size());
+   EXPECT_EQ("f", imp->fAdded[1]);
 }

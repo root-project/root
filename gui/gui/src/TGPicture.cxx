@@ -45,9 +45,6 @@ destroyed by the TGPicturePool.
 
 TGGC *TGSelectedPicture::fgSelectedGC = nullptr;
 
-ClassImp(TGPicture);
-ClassImp(TGSelectedPicture);
-ClassImp(TGPicturePool);
 
 
 ////////////////////////////////////////////////////////////////////////////////

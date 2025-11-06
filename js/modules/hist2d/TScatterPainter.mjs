@@ -35,16 +35,17 @@ class TScatterPainter extends TGraphPainter {
    /** @summary Return margins for histogram ranges */
    getHistRangeMargin() { return this.getObject()?.fMargin ?? 0.1; }
 
-  /** @summary Draw axis histogram
-    * @private */
+   /** @summary Draw axis histogram
+     * @private */
    async drawAxisHisto() {
-      const need_histo = !this.getHistogram(),
-            histo = this.createHistogram(need_histo, need_histo);
+      const set_x = this.isDummyHistogram('x'),
+            set_y = this.isDummyHistogram('y'),
+            histo = this.createHistogram(set_x, set_y);
       return TH2Painter.draw(this.getDrawDom(), histo, this.getOptions().Axis + ';IGNORE_PALETTE');
    }
 
-  /** @summary Provide palette, create if necessary
-    * @private */
+   /** @summary Provide palette, create if necessary
+     * @private */
    getPalette() {
       const gr = this.getGraph();
       let pal = gr?.fFunctions?.arr?.find(func => (func._typename === clTPaletteAxis));
@@ -91,7 +92,7 @@ class TScatterPainter extends TGraphPainter {
          return false;
       // match at least full color level inside
       for (let i = 0; i < levels.length - 1; ++i) {
-         if ((min <= levels[i]) && (max >= levels[i+1]))
+         if ((min <= levels[i]) && (max >= levels[i + 1]))
             return true;
       }
       return false;
@@ -137,12 +138,12 @@ class TScatterPainter extends TGraphPainter {
 
          let minc = scatter.fColor[0], maxc = scatter.fColor[0];
          for (let i = 1; i < scatter.fColor.length; ++i) {
-             minc = Math.min(minc, scatter.fColor[i]);
-             maxc = Math.max(maxc, scatter.fColor[i]);
+            minc = Math.min(minc, scatter.fColor[i]);
+            maxc = Math.max(maxc, scatter.fColor[i]);
          }
          if (maxc <= minc)
-            maxc = minc < 0 ? 0.9*minc : (minc > 0 ? 1.1*minc : 1);
-         else if ((minc > 0) && (minc < 0.3*maxc))
+            maxc = minc < 0 ? 0.9 * minc : (minc > 0 ? 1.1 * minc : 1);
+         else if ((minc > 0) && (minc < 0.3 * maxc))
             minc = 0;
          this.#contour = new HistContour(minc, maxc);
          this.#contour.createNormal(30);
@@ -161,12 +162,12 @@ class TScatterPainter extends TGraphPainter {
          let mins = scatter.fSize[0], maxs = scatter.fSize[0];
 
          for (let i = 1; i < scatter.fSize.length; ++i) {
-             mins = Math.min(mins, scatter.fSize[i]);
-             maxs = Math.max(maxs, scatter.fSize[i]);
+            mins = Math.min(mins, scatter.fSize[i]);
+            maxs = Math.max(maxs, scatter.fSize[i]);
          }
 
          if (maxs <= mins)
-            maxs = mins < 0 ? 0.9*mins : (mins > 0 ? 1.1*mins : 1);
+            maxs = mins < 0 ? 0.9 * mins : (mins > 0 ? 1.1 * mins : 1);
 
          scale = (scatter.fMaxMarkerSize - scatter.fMinMarkerSize) / (maxs - mins);
          offset = mins;

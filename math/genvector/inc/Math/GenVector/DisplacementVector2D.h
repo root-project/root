@@ -166,6 +166,7 @@ namespace ROOT {
         /**
            get internal data into 2 Scalar numbers.
            These are for example (x,y) for a cartesian vector or (r,phi) for a polar vector
+           \note Alternatively, you may use structured bindings: `auto const [a, b] = v`.
         */
         void GetCoordinates( Scalar& a, Scalar& b) const
         { fCoordinates.GetCoordinates(a, b);  }
@@ -538,12 +539,32 @@ namespace ROOT {
 
      }  // op>> <>()
 
-
+     // Structured bindings
+     template <std::size_t I, class CoordSystem, class Tag>
+     typename CoordSystem::Scalar get(DisplacementVector2D<CoordSystem, Tag> const& p)
+     {
+        static_assert(I < 2);
+        if constexpr (I == 0) {
+           return p.x();
+        } else {
+           return p.y();
+        }
+     }
 
   }  // namespace Math
 
 }  // namespace ROOT
 
+// Structured bindings
+#include <tuple>
+namespace std {
+   template <class CoordSystem, class Tag>
+   struct tuple_size<ROOT::Math::DisplacementVector2D<CoordSystem, Tag>> : integral_constant<size_t, 2> {};
+   template <size_t I, class CoordSystem, class Tag>
+   struct tuple_element<I, ROOT::Math::DisplacementVector2D<CoordSystem, Tag>> {
+      static_assert(I < 2);
+      using type = typename CoordSystem::Scalar;
+   };
+}
 
 #endif /* ROOT_Math_GenVector_DisplacementVector2D  */
-

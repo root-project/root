@@ -18,7 +18,6 @@
 #include "TMath.h"
 #include "Riostream.h"
 
-ClassImp(TConfidenceLevel);
 
 Double_t const TConfidenceLevel::fgMCLM2S = 0.025;
 Double_t const TConfidenceLevel::fgMCLM1S = 0.16;

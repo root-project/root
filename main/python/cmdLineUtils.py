@@ -195,11 +195,9 @@ def isDirectoryKey(key):
     """
     Return True if the object, corresponding to the key, inherits from TDirectory
     """
-    import cppyy
-
     classname = key.GetClassName()
     cl = ROOT.gROOT.GetClass(classname)
-    if cl == cppyy.nullptr:
+    if not cl:
         logging.warning("Unknown class to ROOT: " + classname)
         return False
     return cl.InheritsFrom(ROOT.TDirectory.Class())
@@ -209,11 +207,9 @@ def isTreeKey(key):
     """
     Return True if the object, corresponding to the key, inherits from TTree
     """
-    import cppyy
-
     classname = key.GetClassName()
     cl = ROOT.gROOT.GetClass(classname)
-    if cl == cppyy.nullptr:
+    if not cl:
         logging.warning("Unknown class to ROOT: " + classname)
         return False
     return cl.InheritsFrom(ROOT.TTree.Class())
@@ -223,11 +219,9 @@ def isTHnSparseKey(key):
     """
     Return True if the object, corresponding to the key, inherits from THnSparse
     """
-    import cppyy
-
     classname = key.GetClassName()
     cl = ROOT.gROOT.GetClass(classname)
-    if cl == cppyy.nullptr:
+    if not cl:
         logging.warning("Unknown class to ROOT: " + classname)
         return False
     return cl.InheritsFrom(ROOT.THnSparse.Class())
@@ -790,40 +784,6 @@ REPLACE_HELP = "replace object if already existing"
 ##########
 
 ##########
-# ROOTBROWSE
-
-
-def _openBrowser(rootFile=None):
-    browser = ROOT.TBrowser()
-    if ROOT.gSystem.InheritsFrom("TMacOSXSystem") or browser.IsWeb():
-        print("Press ctrl+c to exit.")
-        try:
-            while True:
-                if ROOT.gROOT.IsInterrupted() or ROOT.gSystem.ProcessEvents():
-                    break
-                sleep(0.01)
-        except (KeyboardInterrupt, SystemExit):
-            pass
-    else:
-        input("Press enter to exit.")
-
-
-def rootBrowse(fileName=None):
-    if fileName:
-        rootFile = openROOTFile(fileName)
-        if not rootFile:
-            return 1
-        _openBrowser(rootFile)
-        rootFile.Close()
-    else:
-        _openBrowser()
-    return 0
-
-
-# End of ROOTBROWSE
-##########
-
-##########
 # ROOTCP
 
 
@@ -1098,13 +1058,24 @@ def rootMv(sourceList, destFileName, destPathSplit, compress=None, interactive=F
 # ROOTPRINT
 
 
-def _keyListExtended(rootFile, pathSplitList):
+def _keyListExtended(rootFile, pathSplitList, recursive = False):
+    prefixList = []
     keyList, dirList = keyClassSplitter(rootFile, pathSplitList)
     for pathSplit in dirList:
         keyList.extend(getKeyList(rootFile, pathSplit))
+    subList = [key for key in keyList if isDirectoryKey(key)]
     keyList = [key for key in keyList if not isDirectoryKey(key)]
-    keyListSort(keyList)
-    return keyList
+    prefixList = ["" for key in keyList]
+    if recursive:
+        for subdir in subList:
+            subkeyList, subprefixList = _keyListExtended(ROOT.gDirectory.Get(subdir.GetName()), pathSplitList, recursive)
+            keyList.extend(subkeyList)
+            prefixList.extend([subdir.GetName() + "_" + prefix for prefix in subprefixList])
+    if recursive:
+        keyList, prefixList = (list(t) for t in zip(*sorted(zip(keyList, prefixList), key=lambda x: x[0].GetName().lower())))
+    else:
+        keyListSort(keyList)
+    return keyList, prefixList
 
 
 def rootPrint(
@@ -1117,6 +1088,7 @@ def rootPrint(
     sizeOption=None,
     styleOption=None,
     verboseOption=False,
+    recursiveOption=False,
 ):
     # Check arguments
     if sourceList == []:
@@ -1196,8 +1168,8 @@ def rootPrint(
             continue
         openRootFiles.append(rootFile)
         # Fill the key list (almost the same as in root)
-        keyList = _keyListExtended(rootFile, pathSplitList)
-        for key in keyList:
+        keyList, prefixList = _keyListExtended(rootFile, pathSplitList, recursiveOption)
+        for k, key in enumerate(keyList):
             if isTreeKey(key):
                 pass
             else:
@@ -1216,8 +1188,9 @@ def rootPrint(
                         canvas.Clear()
                         canvas.Divide(x, y)
                 else:
+                    prefix = prefixList[k]
                     if not outputOption:
-                        outputFileName = key.GetName() + "." + formatOption
+                        outputFileName = prefix + key.GetName() + "." + formatOption
                         if directoryOption:
                             outputFileName = os.path.join(directoryOption, outputFileName)
                     if outputOption or formatOption == "pdf":

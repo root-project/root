@@ -28,7 +28,6 @@
 #include <cassert>
 #include <cmath>
 
-ClassImp(TUnuranSampler);
 
 TUnuranSampler::TUnuranSampler() :
    fOneDim(false),

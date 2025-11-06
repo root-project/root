@@ -31,15 +31,8 @@
 
 namespace ROOT {
 
-class RNTupleReader;
-
-namespace Experimental {
 class RNTupleFillContext;
-class RNTupleProcessor;
-class RNTupleSingleProcessor;
-class RNTupleChainProcessor;
-class RNTupleJoinProcessor;
-} // namespace Experimental
+class RNTupleReader;
 
 // clang-format off
 /**
@@ -52,13 +45,9 @@ with values are managed through shared pointers.
 */
 // clang-format on
 class REntry {
+   friend class RNTupleFillContext;
    friend class RNTupleModel;
    friend class RNTupleReader;
-   friend class Experimental::RNTupleFillContext;
-   friend class Experimental::RNTupleProcessor;
-   friend class Experimental::RNTupleSingleProcessor;
-   friend class Experimental::RNTupleChainProcessor;
-   friend class Experimental::RNTupleJoinProcessor;
 
 private:
    /// The entry must be linked to a specific model, identified by a model ID

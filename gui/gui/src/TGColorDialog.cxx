@@ -78,9 +78,6 @@ It uses 2 TGColorPalette's and the TGColorPick widgets.
 #include "TVirtualX.h"
 #include "snprintf.h"
 
-ClassImp(TGColorPalette);
-ClassImp(TGColorPick);
-ClassImp(TGColorDialog);
 
 
 // TODO:

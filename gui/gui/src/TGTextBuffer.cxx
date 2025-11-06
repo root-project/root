@@ -34,4 +34,3 @@ use TGText.
 
 #include "TGTextBuffer.h"
 
-ClassImp(TGTextBuffer);

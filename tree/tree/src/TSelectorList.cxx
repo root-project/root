@@ -22,7 +22,6 @@ output list.
 #include "TSelectorList.h"
 #include "TMethodCall.h"
 
-ClassImp(TSelectorList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// If the class of obj has the SetDirectory(TDirectory*) method

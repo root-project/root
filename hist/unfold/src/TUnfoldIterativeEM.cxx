@@ -3,7 +3,6 @@
 #include <TVectorD.h>
 #include <TGraph.h>
 
-ClassImp(TUnfoldIterativeEM)
 
 TUnfoldIterativeEM::TUnfoldIterativeEM(void) {
    f_inputBins=nullptr;

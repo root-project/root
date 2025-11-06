@@ -25,8 +25,6 @@ PyObject *BranchPyz(PyObject *self, PyObject *args);
 
 PyObject *AddTClassDynamicCastPyz(PyObject *self, PyObject *args);
 
-PyObject *AddTObjectEqNePyz(PyObject *self, PyObject *args);
-
 PyObject *CPPInstanceExpand(PyObject *self, PyObject *args);
 
 } // namespace PyROOT

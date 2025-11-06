@@ -1867,7 +1867,7 @@ The user's model function is a Gaussian.
     #ifndef MN_GaussFunction_H_
     #define MN_GaussFunction_H_
 
-    #include <math.h>
+    #include <cmath>
 
     class GaussFunction {
 

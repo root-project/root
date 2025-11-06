@@ -8,10 +8,10 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from ROOT.libROOTPythonizations import AddTObjectEqNePyz
 import cppyy
 
 # Searching
+
 
 def _contains(self, o):
     # Relies on TObject::FindObject
@@ -22,7 +22,9 @@ def _contains(self, o):
     # - True if self contains o
     return bool(self.FindObject(o))
 
+
 # Comparison operators
+
 
 def _lt(self, o):
     if isinstance(o, cppyy.gbl.TObject):
@@ -30,17 +32,20 @@ def _lt(self, o):
     else:
         return NotImplemented
 
+
 def _le(self, o):
     if isinstance(o, cppyy.gbl.TObject):
         return self.Compare(o) <= 0
     else:
         return NotImplemented
 
+
 def _gt(self, o):
     if isinstance(o, cppyy.gbl.TObject):
         return self.Compare(o) == 1
     else:
         return NotImplemented
+
 
 def _ge(self, o):
     if isinstance(o, cppyy.gbl.TObject):
@@ -56,11 +61,11 @@ def pythonize_tobject():
     klass.__contains__ = _contains
 
     # Inject comparison operators
-    AddTObjectEqNePyz(klass)
     klass.__lt__ = _lt
     klass.__le__ = _le
     klass.__gt__ = _gt
     klass.__ge__ = _ge
+
 
 # Instant pythonization (executed at `import ROOT` time), no need of a
 # decorator. This is a core class that is instantiated before cppyy's

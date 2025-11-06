@@ -27,7 +27,6 @@ hit testing (selection) for manipulator sub component (widget), and
 some common mouse action handling/tracking.
 */
 
-ClassImp(TGLManip);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a manipulator object, bound to supplied viewer, and no

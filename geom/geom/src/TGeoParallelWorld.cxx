@@ -59,7 +59,6 @@ method.
 #include <bvh/v2/stack.h>
 #include <bvh/v2/default_builder.h>
 
-ClassImp(TGeoParallelWorld);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

@@ -40,7 +40,6 @@ Multidimensional histogram base.
 Defines common functionality and interfaces for THn, THnSparse.
 */
 
-ClassImp(THnBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a THnBase with "dim" dimensions,
@@ -1631,7 +1630,6 @@ ROOT::Internal::THnBaseBinIter::~THnBaseBinIter() {
    Iterator over THnBase bins
 */
 
-ClassImp(THnIter);
 
 THnIter::~THnIter() {
    // Destruct a bin iterator.
@@ -1644,7 +1642,6 @@ THnIter::~THnIter() {
 */
 
 
-ClassImp(ROOT::Internal::THnBaseBrowsable);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a THnBaseBrowsable.

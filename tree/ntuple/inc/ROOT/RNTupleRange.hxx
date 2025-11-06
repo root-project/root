@@ -37,11 +37,11 @@ public:
 
    public:
       using iterator = RIterator;
-      using iterator_category = std::forward_iterator_tag;
+      using iterator_category = std::input_iterator_tag;
       using value_type = ROOT::NTupleSize_t;
-      using difference_type = ROOT::NTupleSize_t;
-      using pointer = ROOT::NTupleSize_t *;
-      using reference = ROOT::NTupleSize_t &;
+      using difference_type = std::ptrdiff_t;
+      using pointer = const ROOT::NTupleSize_t *;
+      using reference = const ROOT::NTupleSize_t &;
 
       RIterator() = default;
       explicit RIterator(ROOT::NTupleSize_t index) : fIndex(index) {}
@@ -58,8 +58,8 @@ public:
          ++fIndex;
          return *this;
       }
-      reference operator*() { return fIndex; }
-      pointer operator->() { return &fIndex; }
+      reference operator*() const { return fIndex; }
+      pointer operator->() const { return &fIndex; }
       bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
       bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
    };
@@ -80,9 +80,9 @@ public:
 // clang-format on
 class RNTupleLocalRange {
 private:
-   const ROOT::DescriptorId_t fClusterId;
-   const ROOT::NTupleSize_t fStart;
-   const ROOT::NTupleSize_t fEnd;
+   ROOT::DescriptorId_t fClusterId;
+   ROOT::NTupleSize_t fStart;
+   ROOT::NTupleSize_t fEnd;
 
 public:
    class RIterator {
@@ -91,11 +91,11 @@ public:
 
    public:
       using iterator = RIterator;
-      using iterator_category = std::forward_iterator_tag;
+      using iterator_category = std::input_iterator_tag;
       using value_type = RNTupleLocalIndex;
-      using difference_type = RNTupleLocalIndex;
-      using pointer = RNTupleLocalIndex *;
-      using reference = RNTupleLocalIndex &;
+      using difference_type = std::ptrdiff_t;
+      using pointer = const RNTupleLocalIndex *;
+      using reference = const RNTupleLocalIndex &;
 
       RIterator() = default;
       explicit RIterator(RNTupleLocalIndex localIndex) : fLocalIndex(localIndex) {}
@@ -112,8 +112,8 @@ public:
          fLocalIndex++;
          return *this;
       }
-      reference operator*() { return fLocalIndex; }
-      pointer operator->() { return &fLocalIndex; }
+      reference operator*() const { return fLocalIndex; }
+      pointer operator->() const { return &fLocalIndex; }
       bool operator==(const iterator &rh) const { return fLocalIndex == rh.fLocalIndex; }
       bool operator!=(const iterator &rh) const { return fLocalIndex != rh.fLocalIndex; }
    };

@@ -3,11 +3,10 @@
 #endif
 
 #include "MyClass.h"
-#include <stdlib.h>
+#include <cstdlib>
 #include <Riostream.h>
 #include <TObject.h>
 
-ClassImp(MyClass)
 
 #if MYCLASS == 1
 // old version, classdef = 1

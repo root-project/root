@@ -9,11 +9,11 @@ import { getTEfficiencyBoundaryFunc } from '../base/math.mjs';
 
 const kIsBayesian = BIT(14),  // Bayesian statistics are used
       kPosteriorMode = BIT(15),  // Use posterior mean for best estimate (Bayesian statistics)
- //   kShortestInterval = BIT(16),  // Use shortest interval, not implemented - too complicated
+   //   kShortestInterval = BIT(16),  // Use shortest interval, not implemented - too complicated
       kUseBinPrior = BIT(17),  // Use a different prior for each bin
       kUseWeights = BIT(18),  // Use weights
-      getBetaAlpha = (obj, bin) => (obj.fBeta_bin_params.length > bin) ? obj.fBeta_bin_params[bin].first : obj.fBeta_alpha,
-      getBetaBeta = (obj, bin) => (obj.fBeta_bin_params.length > bin) ? obj.fBeta_bin_params[bin].second : obj.fBeta_beta;
+      getBetaAlpha = (obj, bin) => { return (obj.fBeta_bin_params.length > bin) ? obj.fBeta_bin_params[bin].first : obj.fBeta_alpha; },
+      getBetaBeta = (obj, bin) => { return (obj.fBeta_bin_params.length > bin) ? obj.fBeta_bin_params[bin].second : obj.fBeta_beta; };
 
 /**
  * @summary Painter for TEfficiency object
@@ -25,18 +25,22 @@ class TEfficiencyPainter extends ObjectPainter {
 
    /** @summary Calculate efficiency */
    getEfficiency(obj, bin) {
-      const BetaMean = (a, b) => (a <= 0 || b <= 0) ? 0 : a / (a + b),
+      const BetaMean = (a, b) => { return (a <= 0 || b <= 0) ? 0 : a / (a + b); },
             BetaMode = (a, b) => {
-         if (a <= 0 || b <= 0) return 0;
-         if (a <= 1 || b <= 1) {
-            if (a < b) return 0;
-            if (a > b) return 1;
-            if (a === b) return 0.5; // cannot do otherwise
-         }
-         return (a - 1.0) / (a + b -2.0);
-      },
-      total = obj.fTotalHistogram.fArray[bin], // should work for both 1-d and 2-d
-      passed = obj.fPassedHistogram.fArray[bin]; // should work for both 1-d and 2-d
+               if (a <= 0 || b <= 0)
+                  return 0;
+               if (a <= 1 || b <= 1) {
+                  if (a < b)
+                     return 0;
+                  if (a > b)
+                     return 1;
+                  if (a === b)
+                     return 0.5; // cannot do otherwise
+               }
+               return (a - 1.0) / (a + b - 2.0);
+            },
+            total = obj.fTotalHistogram.fArray[bin], // should work for both 1-d and 2-d
+            passed = obj.fPassedHistogram.fArray[bin]; // should work for both 1-d and 2-d
 
       if (obj.TestBit(kIsBayesian)) {
          // parameters for the beta prior distribution
@@ -46,13 +50,14 @@ class TEfficiencyPainter extends ObjectPainter {
          let aa, bb;
          if (obj.TestBit(kUseWeights)) {
             const tw = total, // fTotalHistogram->GetBinContent(bin);
-                tw2 = obj.fTotalHistogram.fSumw2 ? obj.fTotalHistogram.fSumw2[bin] : Math.abs(total),
-                pw = passed; // fPassedHistogram->GetBinContent(bin);
+                  tw2 = obj.fTotalHistogram.fSumw2 ? obj.fTotalHistogram.fSumw2[bin] : Math.abs(total),
+                  pw = passed; // fPassedHistogram->GetBinContent(bin);
 
-            if (tw2 <= 0) return pw/tw;
+            if (tw2 <= 0)
+               return pw / tw;
 
             // tw/tw2 re-normalize the weights
-            const norm = tw/tw2;
+            const norm = tw / tw2;
             aa = pw * norm + alpha;
             bb = (tw - pw) * norm + beta;
          } else {
@@ -123,16 +128,17 @@ class TEfficiencyPainter extends ObjectPainter {
             plot0Bins = (opt.indexOf('e0') >= 0);
 
       for (let n = 0, j = 0; n < npoints; ++n) {
-         if (!plot0Bins && eff.fTotalHistogram.getBinContent(n+1) === 0) continue;
+         if (!plot0Bins && eff.fTotalHistogram.getBinContent(n + 1) === 0)
+            continue;
 
-         const value = this.getEfficiency(eff, n+1);
+         const value = this.getEfficiency(eff, n + 1);
 
-         gr.fX[j] = xaxis.GetBinCenter(n+1);
+         gr.fX[j] = xaxis.GetBinCenter(n + 1);
          gr.fY[j] = value;
-         gr.fEXlow[j] = xaxis.GetBinCenter(n+1) - xaxis.GetBinLowEdge(n+1);
-         gr.fEXhigh[j] = xaxis.GetBinLowEdge(n+2) - xaxis.GetBinCenter(n+1);
-         gr.fEYlow[j] = this.getEfficiencyErrorLow(eff, n+1, value);
-         gr.fEYhigh[j] = this.getEfficiencyErrorUp(eff, n+1, value);
+         gr.fEXlow[j] = xaxis.GetBinCenter(n + 1) - xaxis.GetBinLowEdge(n + 1);
+         gr.fEXhigh[j] = xaxis.GetBinLowEdge(n + 2) - xaxis.GetBinCenter(n + 1);
+         gr.fEYlow[j] = this.getEfficiencyErrorLow(eff, n + 1, value);
+         gr.fEYhigh[j] = this.getEfficiencyErrorUp(eff, n + 1, value);
 
          gr.fNpoints = ++j;
       }
@@ -147,8 +153,8 @@ class TEfficiencyPainter extends ObjectPainter {
             nbinsx = hist.fXaxis.fNbins,
             nbinsy = hist.fYaxis.fNbins;
 
-      for (let i = 0; i < nbinsx+2; ++i) {
-         for (let j = 0; j < nbinsy+2; ++j) {
+      for (let i = 0; i < nbinsx + 2; ++i) {
+         for (let j = 0; j < nbinsy + 2; ++j) {
             const bin = hist.getBin(i, j);
             hist.fArray[bin] = this.getEfficiency(eff, bin);
          }
@@ -183,7 +189,8 @@ class TEfficiencyPainter extends ObjectPainter {
       if (!skip_cleanup)
          this.getPadPainter()?.removePrimitive(this, true);
 
-      if (!opt || !isStr(opt)) opt = '';
+      if (!opt || !isStr(opt))
+         opt = '';
       opt = opt.toLowerCase();
 
       let promise, draw_total = false;
@@ -195,15 +202,19 @@ class TEfficiencyPainter extends ObjectPainter {
          draw_total = true;
          promise = (this.ndim === 1 ? TH1Painter : TH2Painter).draw(dom, eff.fTotalHistogram, opt.slice(1));
       } else if (this.ndim === 1) {
-         if (!opt) opt = 'ap';
-         if ((opt.indexOf('same') < 0) && (opt.indexOf('a') < 0)) opt += 'a';
-         if (opt.indexOf('p') < 0) opt += 'p';
+         if (!opt)
+            opt = 'ap';
+         if ((opt.indexOf('same') < 0) && (opt.indexOf('a') < 0))
+            opt += 'a';
+         if (opt.indexOf('p') < 0)
+            opt += 'p';
 
          const gr = this.createGraph(eff);
          this.fillGraph(gr, opt);
          promise = TGraphPainter.draw(dom, gr, opt);
       } else {
-         if (!opt) opt = 'col';
+         if (!opt)
+            opt = 'col';
          const hist = this.createHisto(eff);
          this.fillHisto(hist, opt);
          promise = TH2Painter.draw(dom, hist, opt);

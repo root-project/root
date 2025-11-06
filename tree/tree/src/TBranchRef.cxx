@@ -38,7 +38,6 @@ TObjArray.
 #include "TFile.h"
 #include "TFriendElement.h"
 
-ClassImp(TBranchRef);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

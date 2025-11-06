@@ -8,13 +8,14 @@ import DistRDF
 class TestRunGraphs:
     """Tests usage of RunGraphs function with Dask backend"""
 
-    def test_rungraphs_dask_3histos(self, payload):
+    @pytest.mark.parametrize("datasource", ["ttree", "rntuple"])
+    def test_rungraphs_dask_3histos(self, payload, datasource):
         """
         Submit three different Dask RDF graphs concurrently
         """
         # Create a test file for processing
         treename = "tree"
-        filename = "../data/ttree/distrdf_roottest_check_rungraphs.root"
+        filename = f"../data/{datasource}/distrdf_roottest_check_rungraphs.root"
         nentries = 10000
         connection, _ = payload
         df = ROOT.RDataFrame(treename, filename, executor=connection, npartitions=2)

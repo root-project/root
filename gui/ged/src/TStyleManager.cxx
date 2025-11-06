@@ -138,7 +138,6 @@ Provides a help of the currently selected tab.
 
 TStyleManager *TStyleManager::fgStyleManager = nullptr;
 
-ClassImp(TStyleManager);
 
 enum EStyleManagerWid {
    kMenuNew,

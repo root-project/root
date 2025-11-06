@@ -1,6 +1,5 @@
 #include "MyDerived.h"
 
-ClassImp(MyDerived)
 
 // Constructor
 MyDerived::MyDerived() : TObject(), fX(0) {}

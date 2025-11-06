@@ -37,7 +37,6 @@ A specialized TSelector for TTree::Draw.
 #include "TColor.h"
 #include "strlcpy.h"
 
-ClassImp(TSelectorDraw);
 
 const Int_t kCustomHistogram = BIT(17);
 

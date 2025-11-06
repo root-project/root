@@ -18,7 +18,7 @@
 #include "TDatabasePDG.h"
 #include "TDecayChannel.h"
 #include "TParticlePDG.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 
 /** \class TDatabasePDG
@@ -50,7 +50,6 @@ The current default pdg_table file displays lifetime 0 for some unstable particl
 
 */
 
-ClassImp(TDatabasePDG);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function holding the instance.

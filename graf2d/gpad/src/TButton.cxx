@@ -17,7 +17,6 @@
 #include <cstring>
 #include <iostream>
 
-ClassImp(TButton);
 
 /** \class TButton
 \ingroup gpad
@@ -289,7 +288,7 @@ void TButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
                                             TString(GetMethod()).ReplaceSpecialCppChars().Data(), fXlowNDC, fYlowNDC,
                                             fXlowNDC + fWNDC, fYlowNDC + fHNDC));
 
-   SaveFillAttributes(out, "button", 0, 1001);
+   SaveFillAttributes(out, "button", -1, -1);
    SaveLineAttributes(out, "button", 1, 1, 1);
    SaveTextAttributes(out, "button", 22, 0, 1, 61, .65);
 

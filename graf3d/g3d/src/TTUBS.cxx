@@ -16,7 +16,6 @@
 #include "TGeometry.h"
 #include "TMath.h"
 
-ClassImp(TTUBS);
 
 /** \class TTUBS
 \ingroup g3d

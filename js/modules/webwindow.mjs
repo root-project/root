@@ -53,20 +53,26 @@ class LongPollSocket {
       let url = this.path, reqmode = 'buf', post = null;
       if (kind === 'connect') {
          url += this.raw ? '?raw_connect' : '?txt_connect';
-         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
+         if (this.handle)
+            url += '&' + this.handle.getConnArgs(this.counter++);
          this.connid = 'connect';
       } else if (kind === 'close') {
-         if ((this.connid === null) || (this.connid === 'close')) return;
+         if ((this.connid === null) || (this.connid === 'close'))
+            return;
          url += `?connection=${this.connid}&close`;
-         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
+         if (this.handle)
+            url += '&' + this.handle.getConnArgs(this.counter++);
          this.connid = 'close';
          reqmode = 'text;sync'; // use sync mode to close connection before browser window closed
       } else if ((this.connid === null) || (typeof this.connid !== 'number')) {
-         if (!browser.qt6) console.error('No connection');
+         if (!browser.qt6)
+            console.error('No connection');
       } else {
          url += '?connection=' + this.connid;
-         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
-         if (kind === 'dummy') url += '&dummy';
+         if (this.handle)
+            url += '&' + this.handle.getConnArgs(this.counter++);
+         if (kind === 'dummy')
+            url += '&dummy';
       }
 
       if (data) {
@@ -98,11 +104,13 @@ class LongPollSocket {
             const u8Arr = new Uint8Array(res);
             let str = '', i = 0, offset = u8Arr.length;
             if (offset < 4) {
-               if (!browser.qt6) console.error(`longpoll got short message in raw mode ${offset}`);
+               if (!browser.qt6)
+                  console.error(`longpoll got short message in raw mode ${offset}`);
                return this.handle.processRequest(null);
             }
 
-            while (i < 4) str += String.fromCharCode(u8Arr[i++]);
+            while (i < 4)
+               str += String.fromCharCode(u8Arr[i++]);
             if (str !== 'txt:') {
                str = '';
                while ((i < offset) && (String.fromCharCode(u8Arr[i]) !== ':'))
@@ -112,20 +120,22 @@ class LongPollSocket {
             }
 
             str = '';
-            while (i < offset) str += String.fromCharCode(u8Arr[i++]);
+            while (i < offset)
+               str += String.fromCharCode(u8Arr[i++]);
 
             if (str) {
                if (str === '<<nope>>')
                   this.handle.processRequest(-1111);
                else
-                   this.handle.processRequest(str);
+                  this.handle.processRequest(str);
             }
             if (offset < u8Arr.length)
                this.handle.processRequest(res, offset);
          } else if (this.getResponseHeader('Content-Type') === 'application/x-binary') {
             // binary reply with optional header
             const extra_hdr = this.getResponseHeader('LongpollHeader');
-            if (extra_hdr) this.handle.processRequest(extra_hdr);
+            if (extra_hdr)
+               this.handle.processRequest(extra_hdr);
             this.handle.processRequest(res, 0);
          } else {
             // text reply
@@ -187,8 +197,12 @@ class LongPollSocket {
          this.onmessage({ data: res, offset: _offset });
 
       // minimal timeout to reduce load, generate dummy only if client not submit new request immediately
-      if (!this.req)
-         setTimeout(() => { if (!this.req) this.nextRequest('', 'dummy'); }, dummy_tmout);
+      if (!this.req) {
+         setTimeout(() => {
+            if (!this.req)
+               this.nextRequest('', 'dummy');
+         }, dummy_tmout);
+      }
    }
 
    /** @summary Send data */
@@ -222,7 +236,8 @@ class FileDumpSocket {
 
    /** @summary Get stored protocol */
    getProtocol(res) {
-      if (!res) return;
+      if (!res)
+         return;
       this.protocol = JSON.parse(res);
       if (isFunc(this.onopen))
          this.onopen();
@@ -247,7 +262,8 @@ class FileDumpSocket {
       if (this.#wait_for_file)
          return;
       const fname = this.protocol[this.cnt];
-      if (!fname) return;
+      if (!fname)
+         return;
 
       if (fname === 'send') {
          if (this.sendcnt > 0) {
@@ -262,9 +278,10 @@ class FileDumpSocket {
       this.cnt++;
       httpRequest(fname, (fname.indexOf('.bin') > 0 ? 'buf' : 'text')).then(res => {
          this.#wait_for_file = false;
-         if (!res) return;
+         if (!res)
+            return;
          const p = fname.indexOf('_ch'),
-               chid = (p > 0) ? Number.parseInt(fname.slice(p+3, fname.indexOf('.', p))) : 1;
+               chid = (p > 0) ? Number.parseInt(fname.slice(p + 3, fname.indexOf('.', p))) : 1;
          if (isFunc(this.#receiver?.provideData))
             this.#receiver.provideData(chid, res, 0);
          setTimeout(() => this.nextOperation(), 10);
@@ -508,10 +525,15 @@ class WebWindowHandle {
      * @private */
    sendLast(kind, tmout, msg) {
       let d = this._delayed;
-      if (!d) d = this._delayed = {};
+      if (!d)
+         d = this._delayed = {};
       d[kind] = msg;
-      if (!d[`${kind}_handler`])
-         d[`${kind}_handler`] = setTimeout(() => { delete d[`${kind}_handler`]; this.send(d[kind]); }, tmout);
+      if (!d[`${kind}_handler`]) {
+         d[`${kind}_handler`] = setTimeout(() => {
+            delete d[`${kind}_handler`];
+            this.send(d[kind]);
+         }, tmout);
+      }
    }
 
    /** @summary Inject message(s) into input queue, for debug purposes only
@@ -549,8 +571,8 @@ class WebWindowHandle {
          window.resizeTo(w, h);
    }
 
-      /** @summary Remove existing channel.
-    * @private */
+   /** @summary Remove existing channel.
+     * @private */
    removeChannel(chid) {
       if (this.#channels)
          this.#channels[chid] = undefined;
@@ -633,7 +655,8 @@ class WebWindowHandle {
          args += `key=${k}&ntry=${ntry}`;
       }
       if (this.#token) {
-         if (args) args += '&';
+         if (args)
+            args += '&';
          args += `token=${this.#token}`;
       }
       return args;
@@ -705,7 +728,8 @@ class WebWindowHandle {
             return;
 
          this.#ws.onopen = () => {
-            if (ntry > 2) showProgress();
+            if (ntry > 2)
+               showProgress();
             this.#state = 1;
 
             const reply = (this.#secondary ? '' : 'generate_key;') + (this.#key || '');
@@ -772,7 +796,7 @@ class WebWindowHandle {
             // HMAC used to authenticate server
             // sequence id is necessary to exclude submission of same packet again
             if (this.#key && sessionKey) {
-               const client_hash = HMAC(this.#key, msg.slice(i0+1));
+               const client_hash = HMAC(this.#key, msg.slice(i0 + 1));
                if (server_hash !== client_hash)
                   return console.log(`Failure checking server HMAC sum ${server_hash}`);
             }
@@ -868,7 +892,7 @@ class WebWindowHandle {
             evnt.preventDefault();
             console.log('Prevent Ctrl-R propogation - ask reload RWebWindow!');
             this.askReload();
-          }
+         }
       });
    }
 
@@ -888,7 +912,7 @@ class WebWindowHandle {
             p = href.indexOf(prefix);
          }
          if ((p > 0) && this.#new_key) {
-            const p1 = href.indexOf('#', p+1), p2 = href.indexOf('&', p+1),
+            const p1 = href.indexOf('#', p + 1), p2 = href.indexOf('&', p + 1),
                   pp = (p1 < 0) ? p2 : (p2 < 0 ? p1 : Math.min(p1, p2));
             href = href.slice(0, p) + prefix + this.#new_key + (pp < 0 ? '' : href.slice(pp));
             window.history?.replaceState(window.history.state, undefined, href);

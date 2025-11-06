@@ -33,7 +33,6 @@ to orthographic bird-view, if camera theta is less than given threshold. It sets
 perspective camera when accumulated angle is more than transition theta.
 */
 
-ClassImp(TEveLegoEventHandler);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

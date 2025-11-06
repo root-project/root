@@ -30,7 +30,6 @@
 #include <ctime>
 #include <cassert>
 
-ClassImp(TAxis);
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TAxis
@@ -484,7 +483,7 @@ Double_t TAxis::GetBinCenter(Int_t bin) const
    Double_t binwidth;
    if (!fXbins.fN || bin<1 || bin>fNbins) {
       binwidth = (fXmax - fXmin) / Double_t(fNbins);
-      return fXmin + (bin-1) * binwidth + 0.5*binwidth;
+      return fXmin + (bin - 0.5) * binwidth;
    } else {
       binwidth = fXbins.fArray[bin] - fXbins.fArray[bin-1];
       return fXbins.fArray[bin-1] + 0.5*binwidth;
@@ -801,7 +800,7 @@ void TAxis::Set(Int_t nbins, const Float_t *xbins)
    for (bin=0; bin<= fNbins; bin++)
       fXbins.fArray[bin] = xbins[bin];
    for (bin=1; bin<= fNbins; bin++)
-      if (fXbins.fArray[bin] < fXbins.fArray[bin-1])
+      if (fXbins.fArray[bin] <= fXbins.fArray[bin - 1])
          Error("TAxis::Set", "bins must be in increasing order");
    fXmin      = fXbins.fArray[0];
    fXmax      = fXbins.fArray[fNbins];
@@ -819,7 +818,7 @@ void TAxis::Set(Int_t nbins, const Double_t *xbins)
    for (bin=0; bin<= fNbins; bin++)
       fXbins.fArray[bin] = xbins[bin];
    for (bin=1; bin<= fNbins; bin++)
-      if (fXbins.fArray[bin] < fXbins.fArray[bin-1])
+      if (fXbins.fArray[bin] <= fXbins.fArray[bin - 1])
          Error("TAxis::Set", "bins must be in increasing order");
    fXmin      = fXbins.fArray[0];
    fXmax      = fXbins.fArray[fNbins];

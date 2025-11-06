@@ -32,7 +32,6 @@ A Branch for the case of an object.
 #include "TTree.h"
 #include "snprintf.h"
 
-ClassImp(TBranchObject);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for BranchObject.

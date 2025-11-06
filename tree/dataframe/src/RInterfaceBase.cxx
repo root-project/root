@@ -274,7 +274,7 @@ bool ROOT::RDF::RInterfaceBase::HasColumn(std::string_view columnName)
    if (fColRegister.IsDefineOrAlias(columnName))
       return true;
 
-   if (auto ds = GetDataSource(); ds->HasColumn(columnName))
+   if (auto ds = GetDataSource(); ds && ds->HasColumn(columnName))
       return true;
 
    return false;

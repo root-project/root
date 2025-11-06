@@ -16,7 +16,6 @@
 Allow plot-painters to be used for gl-inpad and gl-viewer.
 */
 
-ClassImp(TGLAdapter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

@@ -250,8 +250,11 @@ public:
       fShapeOutput.resize(dim);
       for (size_t i = 0; i < dim; i++) {
          if (!fEnd[i].isParam && !fStart[i].isParam && !fSteps[i].isParam) {
-            size_t s = (fEnd[i].dim-fStart[i].dim)/ fSteps[i].dim;
-            fShapeOutput[i] = Dim{s};
+            int64_t istart = static_cast<int64_t>(fStart[i].dim);
+            int64_t iend = static_cast<int64_t>(fEnd[i].dim);
+            int64_t istep= static_cast<int64_t>(fSteps[i].dim);
+            int64_t s = (iend-istart)/istep;
+            fShapeOutput[i] = Dim{static_cast<size_t>(s)};
          } else {
             std::string s;
             if (fStart[i].GetVal() != "0")
@@ -281,26 +284,37 @@ public:
          size_t outputSize = ConvertShapeToLength(ConvertShapeToInt(fShapeOutput));
          std::vector<int64_t> outputData(outputSize);
          std::vector<size_t> inputStride = UTILITY::ComputeStrideFromShape(ConvertShapeToInt(fShapeInput));
-         // perform slice using a recursive function- need to use two lambda functions for this
+         std::cout << "slice " << ConvertDimShapeToString(fShapeInput) << " output size " << outputSize << "  " << ConvertDimShapeToString(fShapeOutput) << std::endl;
+         std::cout << " start - end -steps \n";
+         for (size_t ii = 0; ii< fStart.size(); ii++)
+            std::cout << fStart[ii] << "  " << fEnd[ii] << "  " << fSteps[ii] << std::endl;
+          // perform slice using a recursive function- need to use two lambda functions for this
          auto sliceRecursive = [&](size_t iaxis, size_t & outIdx, size_t & inOffset) {
             auto slice_impl = [&](size_t iax, size_t & outputIdx, size_t & inputOffset, auto & sliceRecImpl) {
+               std::cout << "SLice_impl " << fStart.size() << "  " << fEnd.size() << " " << fSteps.size() << "  " << iax << std::endl;
                if (fStart[iax].isParam || fEnd[iax].isParam || fSteps[iax].isParam)
-                  throw std::runtime_error("TMVA Slice Op : cannot have parametric values hen input is constant");
+                  throw std::runtime_error("TMVA Slice Op : cannot have parametric values when input is constant");
                // compute indices
                std::vector<IType> indices;
                for (IType i = (IType) fStart[iax].dim; (IType(fSteps[iax].dim) > 0) ? i < IType(fEnd[iax].dim) : i > IType(fEnd[iax].dim); i += IType(fSteps[iax].dim) )
                   indices.push_back(i);
                if (iax == dim-1) { // last axis
+                  std::cout << "SLice_impl last axis: " << indices.size() << " : ";
                   for (size_t i = 0; i < indices.size(); i++) {
+                     std::cout << outputIdx << " , " << indices[i] << " " << inputOffset << " ; ";
                      outputData[outputIdx] = inputData[inputOffset + indices[i]];
                      outputIdx++;
                   }
+                  std::cout << std::endl;
                   return;
                } else {
+                  std::cout << "SLice_impl else : " << indices.size() << " : ";
                   for (size_t i = 0; i < indices.size(); i++) {
+                     std::cout << inputStride[iax] << " , " << indices[i] << " " << inputOffset << "  ";
                      size_t offset = inputOffset + inputStride[iax]*indices[i];
                      sliceRecImpl(iax+1, outputIdx, offset,sliceRecImpl);
                   }
+                  std::cout << std::endl;
                }
             };
             slice_impl(iaxis, outIdx, inOffset,slice_impl);

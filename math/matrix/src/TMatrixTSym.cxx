@@ -32,7 +32,6 @@ object persistent only the upper right triangle is stored.
 #include "TMatrixDSymEigen.h"
 #include "TMath.h"
 
-templateClassImp(TMatrixTSym);
 
 
 ////////////////////////////////////////////////////////////////////////////////

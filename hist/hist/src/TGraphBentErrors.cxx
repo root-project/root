@@ -19,7 +19,6 @@
 #include "TH1.h"
 #include "TF1.h"
 
-ClassImp(TGraphBentErrors);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -552,18 +551,17 @@ void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
 {
    auto xname  = SavePrimitiveVector(out, "grbe_fx", fNpoints, fX, kTRUE);
    auto yname  = SavePrimitiveVector(out, "grbe_fy", fNpoints, fY);
-   auto exlname = SavePrimitiveVector(out, "grbe_fexl", fNpoints, fEXlow);
-   auto exhname = SavePrimitiveVector(out, "grbe_fexh", fNpoints, fEXhigh);
-   auto eylname = SavePrimitiveVector(out, "grbe_feyl", fNpoints, fEYlow);
-   auto eyhname = SavePrimitiveVector(out, "grbe_feyh", fNpoints, fEYhigh);
-   auto exldname = SavePrimitiveVector(out, "grbe_fexld", fNpoints, fEXlowd);
-   auto exhdname = SavePrimitiveVector(out, "grbe_fexhd", fNpoints, fEXhighd);
-   auto eyldname = SavePrimitiveVector(out, "grbe_feyld", fNpoints, fEYlowd);
-   auto eyhdname = SavePrimitiveVector(out, "grbe_feyhd", fNpoints, fEYhighd);
+   auto exlname = SavePrimitiveVector(out, "grbe_fexl", fNpoints, fEXlow, 111);
+   auto exhname = SavePrimitiveVector(out, "grbe_fexh", fNpoints, fEXhigh, 111);
+   auto eylname = SavePrimitiveVector(out, "grbe_feyl", fNpoints, fEYlow, 111);
+   auto eyhname = SavePrimitiveVector(out, "grbe_feyh", fNpoints, fEYhigh, 111);
+   auto exldname = SavePrimitiveVector(out, "grbe_fexld", fNpoints, fEXlowd, 111);
+   auto exhdname = SavePrimitiveVector(out, "grbe_fexhd", fNpoints, fEXhighd, 111);
+   auto eyldname = SavePrimitiveVector(out, "grbe_feyld", fNpoints, fEYlowd, 111);
+   auto eyhdname = SavePrimitiveVector(out, "grbe_feyhd", fNpoints, fEYhighd, 111);
 
    SavePrimitiveConstructor(out, Class(), "grbe",
-                            TString::Format("%d, %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), "
-                                            "%s.data(), %s.data(), %s.data(), %s.data()",
+                            TString::Format("%d, %s.data(), %s.data(), %s, %s, %s, %s, %s, %s, %s, %s",
                                             fNpoints, xname.Data(), yname.Data(), exlname.Data(), exhname.Data(),
                                             eylname.Data(), eyhname.Data(), exldname.Data(), exhdname.Data(),
                                             eyldname.Data(), eyhdname.Data()),

@@ -14,8 +14,6 @@
 #include "TGTable.h"
 #include "TVirtualX.h"
 
-ClassImp(TGTableFrame);
-ClassImp(TGTableHeaderFrame);
 
 
 // TGTableFrame and TGTableHeaderFrame

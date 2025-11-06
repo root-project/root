@@ -14,7 +14,6 @@
 #include "TBuffer.h"
 #include "TStyle.h"
 
-ClassImp(TAttPad);
 
 /** \class TAttPad
 \ingroup Base

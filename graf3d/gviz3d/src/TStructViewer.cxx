@@ -19,7 +19,6 @@
 #include <TClassEdit.h>
 #include <vector>
 
-ClassImp(TStructViewer);
 
 class TA {
 public:

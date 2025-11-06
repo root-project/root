@@ -407,7 +407,6 @@ Can be extended to application-specific classes.
 Normally TRootSnifferFull class is used which able to access data from trees, canvases, histograms.
 */
 
-ClassImp(TRootSniffer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

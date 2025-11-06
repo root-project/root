@@ -31,7 +31,7 @@
 #include <iostream>
 #include <fstream>
 #include <limits>
-#include <math.h>
+#include <cmath>
 
 /*! \class TMVA::CCPruner
 \ingroup TMVA

@@ -1,0 +1,252 @@
+// @(#)root/mathcore:$Id: b12794c790afad19142e34a401af6c233aba446b $
+// Authors: W. Brown, M. Fischler, L. Moneta    2005
+
+/**********************************************************************
+ *                                                                    *
+ * Copyright (c) 2005 , LCG ROOT MathLib Team                         *
+ *                    & FNAL LCG ROOT Mathlib Team                    *
+ *                                                                    *
+ *                                                                    *
+ **********************************************************************/
+
+// Header file for class Cartesian2D
+//
+// Created by: Lorenzo Moneta  at Mon 16 Apr 2007
+//
+#ifndef ROOT_MathX_GenVectorX_Cartesian2D
+#define ROOT_MathX_GenVectorX_Cartesian2D 1
+
+#include "MathX/GenVectorX/Polar2Dfwd.h"
+
+#include "Math/Math.h"
+
+#include "MathX/GenVectorX/MathHeaders.h"
+
+#include "MathX/GenVectorX/AccHeaders.h"
+
+using namespace ROOT::ROOT_MATH_ARCH;
+
+namespace ROOT {
+
+namespace ROOT_MATH_ARCH {
+
+//__________________________________________________________________________________________
+/**
+    Class describing a 2D cartesian coordinate system
+    (x, y coordinates)
+
+    @ingroup GenVectorX
+
+    @see GenVectorX
+*/
+
+template <class T = double>
+class Cartesian2D {
+
+public:
+   typedef T Scalar;
+
+   /**
+      Default constructor  with x=y=0
+   */
+   constexpr Cartesian2D() noexcept = default;
+
+   /**
+      Constructor from x,y  coordinates
+   */
+   Cartesian2D(Scalar xx, Scalar yy) : fX(xx), fY(yy) {}
+
+   /**
+      Construct from any Vector or coordinate system implementing
+      X() and Y()
+   */
+   template <class CoordSystem>
+   explicit constexpr Cartesian2D(const CoordSystem &v) : fX(v.X()), fY(v.Y())
+   {
+   }
+
+   /**
+      Set internal data based on 2 Scalar numbers
+   */
+   void SetCoordinates(Scalar xx, Scalar yy)
+   {
+      fX = xx;
+      fY = yy;
+   }
+
+   /**
+      get internal data into 2 Scalar numbers
+   */
+   void GetCoordinates(Scalar &xx, Scalar &yy) const
+   {
+      xx = fX;
+      yy = fY;
+   }
+
+   Scalar X() const { return fX; }
+   Scalar Y() const { return fY; }
+   Scalar Mag2() const { return fX * fX + fY * fY; }
+   Scalar R() const { return math_sqrt(Mag2()); }
+   Scalar Phi() const { return (fX == Scalar(0) && fY == Scalar(0)) ? Scalar(0) : math_atan2(fY, fX); }
+
+   /**
+       set the x coordinate value keeping y constant
+   */
+   void SetX(Scalar a) { fX = a; }
+
+   /**
+       set the y coordinate value keeping x constant
+   */
+   void SetY(Scalar a) { fY = a; }
+
+   /**
+       set all values using cartesian coordinates
+   */
+   void SetXY(Scalar xx, Scalar yy)
+   {
+      fX = xx;
+      fY = yy;
+   }
+
+   /**
+      scale the vector by a scalar quantity a
+   */
+   void Scale(Scalar a)
+   {
+      fX *= a;
+      fY *= a;
+   }
+
+   /**
+      negate the vector
+   */
+   void Negate()
+   {
+      fX = -fX;
+      fY = -fY;
+   }
+
+   /**
+       rotate by an angle
+    */
+   void Rotate(Scalar angle)
+   {
+      const Scalar s = math_sin(angle);
+      const Scalar c = math_cos(angle);
+      SetCoordinates(c * fX - s * fY, s * fX + c * fY);
+   }
+
+   /**
+      Assignment from any class implementing x(),y()
+      (can assign from any coordinate system)
+   */
+   template <class CoordSystem>
+   Cartesian2D &operator=(const CoordSystem &v)
+   {
+      fX = v.x();
+      fY = v.y();
+      return *this;
+   }
+
+   /**
+      Exact equality
+   */
+   bool operator==(const Cartesian2D &rhs) const { return fX == rhs.fX && fY == rhs.fY; }
+   bool operator!=(const Cartesian2D &rhs) const { return !(operator==(rhs)); }
+
+   // ============= Compatibility section ==================
+
+   // The following make this coordinate system look enough like a CLHEP
+   // vector that an assignment member template can work with either
+   Scalar x() const { return X(); }
+   Scalar y() const { return Y(); }
+
+   // ============= Overloads for improved speed ==================
+
+   template <class T2>
+   explicit Cartesian2D(const Polar2D<T2> &v)
+   {
+      const Scalar r = v.R(); // re-using this instead of calling v.X() and v.Y()
+      // is the speed improvement
+      fX = r * math_cos(v.Phi());
+      fY = r * math_sin(v.Phi());
+   }
+   // Technical note:  This works even though only Polar2Dfwd.h is
+   // included (and in fact, including Polar2D.h would cause circularity
+   // problems). It works because any program **using** this ctor must itself
+   // be including Polar2D.h.
+
+   template <class T2>
+   Cartesian2D &operator=(const Polar2D<T2> &v)
+   {
+      const Scalar r = v.R();
+      fX = r * math_cos(v.Phi());
+      fY = r * math_sin(v.Phi());
+      return *this;
+   }
+
+#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+
+   // ====== Set member functions for coordinates in other systems =======
+
+   void SetR(Scalar r);
+
+   void SetPhi(Scalar phi);
+
+#endif
+
+private:
+   /**
+      (Contiguous) data containing the coordinates values x and y
+   */
+   T fX = 0;
+   T fY = 0;
+};
+
+} // end namespace ROOT_MATH_ARCH
+
+} // end namespace ROOT
+
+#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
+// need to put here setter methods to resolve nasty cyclical dependencies
+// I need to include other coordinate systems only when Cartesian is already defined
+// since they depend on it
+
+#include "MathX/GenVectorX/GenVector_exception.h"
+#include "MathX/GenVectorX/Polar2D.h"
+
+// ====== Set member functions for coordinates in other systems =======
+
+namespace ROOT {
+
+namespace ROOT_MATH_ARCH {
+
+template <class T>
+void Cartesian2D<T>::SetR(Scalar r)
+{
+   GenVector_exception e("Cartesian2D::SetR() is not supposed to be called");
+   throw e;
+   Polar2D<Scalar> v(*this);
+   v.SetR(r);
+   *this = Cartesian2D<Scalar>(v);
+}
+
+template <class T>
+void Cartesian2D<T>::SetPhi(Scalar phi)
+{
+   GenVector_exception e("Cartesian2D::SetPhi() is not supposed to be called");
+   throw e;
+   Polar2D<Scalar> v(*this);
+   v.SetPhi(phi);
+   *this = Cartesian2D<Scalar>(v);
+}
+
+} // namespace ROOT_MATH_ARCH
+
+} // end namespace ROOT
+
+#endif
+#endif
+
+#endif /* ROOT_MathX_GenVectorX_Cartesian2D  */

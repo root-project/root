@@ -44,7 +44,6 @@
 #include "TVirtualPad.h"
 #include "TKDE.h"
 
-ClassImp(TKDE);
 
 
 struct TKDE::KernelIntegrand {

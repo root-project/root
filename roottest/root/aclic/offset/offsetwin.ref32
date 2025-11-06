@@ -1,0 +1,10 @@
+
+Processing runoffset.C...
+size TH1D,TArrayD,my=728,12,744 offset=728
+size TH1D,TArrayD,my=728,12,744 offset=728
+size TH1D,TArrayD,my=728,12,736 offset=728
+Tail1: first size=608 c012offset=8 600 608,TailSize=616
+Tail2: first size=608 c0121offset=8 600 608,TailSize=616
+Tail3: first size=608 c012offset=8 600 608,TailSize=616
+Tail2: first size=608 c0121offset=8 600 608,TailSize=616
+TailP: first size=96 offset=96 TailSize=104

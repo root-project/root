@@ -27,7 +27,6 @@
 Encapsulation of format / contents of an OpenGL buffer.
 */
 
-ClassImp(TGLFormat);
 
 std::vector<Int_t> TGLFormat::fgAvailableSamples;
 

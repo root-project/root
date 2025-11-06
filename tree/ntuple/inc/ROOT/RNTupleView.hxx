@@ -89,6 +89,8 @@ protected:
    static std::unique_ptr<ROOT::RFieldBase>
    CreateField(ROOT::DescriptorId_t fieldId, Internal::RPageSource &pageSource, std::string_view typeName = "")
    {
+      RFieldZero fieldZero;
+      Internal::SetAllowFieldSubstitutions(fieldZero, true);
       std::unique_ptr<ROOT::RFieldBase> field;
       {
          const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
@@ -103,8 +105,9 @@ protected:
          }
       }
       field->SetOnDiskId(fieldId);
-      ROOT::Internal::CallConnectPageSourceOnField(*field, pageSource);
-      return field;
+      fieldZero.Attach(std::move(field));
+      ROOT::Internal::CallConnectPageSourceOnField(fieldZero, pageSource);
+      return std::move(fieldZero.ReleaseSubfields()[0]);
    }
 
    RNTupleViewBase(std::unique_ptr<ROOT::RFieldBase> field, ROOT::RNTupleGlobalRange range)
@@ -362,9 +365,20 @@ private:
 
 public:
    RNTupleCollectionView(const RNTupleCollectionView &other) = delete;
-   RNTupleCollectionView(RNTupleCollectionView &&other) = default;
    RNTupleCollectionView &operator=(const RNTupleCollectionView &other) = delete;
-   RNTupleCollectionView &operator=(RNTupleCollectionView &&other) = default;
+   RNTupleCollectionView(RNTupleCollectionView &&other)
+      : fSource(other.fSource), fField(std::move(other.fField)), fValue(fField.CreateValue())
+   {
+   }
+   RNTupleCollectionView &operator=(RNTupleCollectionView &&other)
+   {
+      if (this == &other)
+         return *this;
+      std::swap(fSource, other.fSource);
+      std::swap(fField, other.fField);
+      fValue = fField.CreateValue();
+      return *this;
+   }
    ~RNTupleCollectionView() = default;
 
    ROOT::RNTupleLocalRange GetCollectionRange(ROOT::NTupleSize_t globalIndex)

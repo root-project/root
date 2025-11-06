@@ -12,7 +12,6 @@
 #include "TCONE.h"
 #include "TNode.h"
 
-ClassImp(TCONE);
 
 /** \class TCONE
 \ingroup g3d

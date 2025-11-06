@@ -87,7 +87,6 @@ For embedded (pad) GL this viewer is created directly by plugin
 manager. For standalone the derived TGLSAViewer is.
 */
 
-ClassImp(TGLViewer);
 
 TGLColorSet TGLViewer::fgDefaultColorSet;
 Bool_t      TGLViewer::fgUseDefaultColorSetForNewViewers = kFALSE;

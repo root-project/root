@@ -14,7 +14,6 @@
 #include "TGroupButton.h"
 #include "TStyle.h"
 
-ClassImp(TDialogCanvas);
 
 /** \class TDialogCanvas
 \ingroup gpad

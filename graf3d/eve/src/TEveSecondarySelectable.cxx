@@ -35,7 +35,6 @@ There should always be a single entry there.
 See TEveDigitSet for an example.
 */
 
-ClassImp(TEveSecondarySelectable);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

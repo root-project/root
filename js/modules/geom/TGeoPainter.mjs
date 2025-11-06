@@ -1,6 +1,6 @@
 import { httpRequest, browser, source_dir, settings, internals, constants, create, clone,
          findFunction, isBatchMode, isNodeJs, getDocument, isObject, isFunc, isStr, postponePromise, getPromise,
-         getKindForType, clTNamed, clTList, clTAxis, clTObjArray, clTPolyMarker3D, clTPolyLine3D,
+         getKindForType, clTTree, clTNamed, clTList, clTAxis, clTObjArray, clTPolyMarker3D, clTPolyLine3D,
          clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, nsSVG, kInspect } from '../core.mjs';
 import { showProgress, injectStyle, ToolbarIcons } from '../gui/utils.mjs';
 import { GUI } from '../gui/lil-gui.mjs';
@@ -14,11 +14,11 @@ import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { createMenu, closeMenu } from '../gui/menu.mjs';
 import { TAxisPainter } from '../gpad/TAxisPainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
-import { kindGeo, kindEve,
+import { kindGeo, kindEve, kGetMesh, kDeleteMesh,
          clTGeoBBox, clTGeoCompositeShape,
          geoCfg, geoBITS, ClonedNodes, testGeoBit, setGeoBit, toggleGeoBit, setInvisibleAll,
          countNumShapes, getNodeKind, produceRenderOrder, createServerGeometry,
-         projectGeometry, countGeometryFaces, createMaterial, createFrustum, createProjectionMatrix,
+         projectGeometry, numGeometryFaces, createMaterial, createFrustum, createProjectionMatrix,
          getBoundingBox, provideObjectInfo, isSameStack, checkDuplicates, getObjectName, cleanupShape, getShapeIcon } from './geobase.mjs';
 
 
@@ -61,7 +61,8 @@ let $comp_col_cnt = 0;
 /** @summary Function used to build hierarchy of elements of composite shapes
   * @private */
 function buildCompositeVolume(comp, maxlvl, side) {
-   if (maxlvl === undefined) maxlvl = 1;
+   if (maxlvl === undefined)
+      maxlvl = 1;
    if (!side) {
       $comp_col_cnt = 0;
       side = '';
@@ -78,7 +79,8 @@ function buildCompositeVolume(comp, maxlvl, side) {
       return vol;
    }
 
-   if (side) side += '/';
+   if (side)
+      side += '/';
    vol.$geoh = true; // workaround, let know browser that we are in volumes hierarchy
    vol.fName = '';
 
@@ -87,14 +89,14 @@ function buildCompositeVolume(comp, maxlvl, side) {
    setGeoBit(node1, geoBITS.kVisDaughters, true);
    node1.fName = 'Left';
    node1.fMatrix = comp.fNode.fLeftMat;
-   node1.fVolume = buildCompositeVolume(comp.fNode.fLeft, maxlvl-1, side + 'Left');
+   node1.fVolume = buildCompositeVolume(comp.fNode.fLeft, maxlvl - 1, side + 'Left');
 
    const node2 = create(clTGeoNodeMatrix);
    setGeoBit(node2, geoBITS.kVisThis, true);
    setGeoBit(node2, geoBITS.kVisDaughters, true);
    node2.fName = 'Right';
    node2.fMatrix = comp.fNode.fRightMat;
-   node2.fVolume = buildCompositeVolume(comp.fNode.fRight, maxlvl-1, side + 'Right');
+   node2.fVolume = buildCompositeVolume(comp.fNode.fRight, maxlvl - 1, side + 'Right');
 
    vol.fNodes = create(clTList);
    vol.fNodes.Add(node1);
@@ -116,17 +118,17 @@ function getHistPainter3DCfg(painter) {
           offset_x = 0, offset_y = 0, offset_z = 0;
 
       if (main.scale_xmax > main.scale_xmin) {
-         scale_x = 2 * main.size_x3d/(main.scale_xmax - main.scale_xmin);
+         scale_x = 2 * main.size_x3d / (main.scale_xmax - main.scale_xmin);
          offset_x = (main.scale_xmax + main.scale_xmin) / 2 * scale_x;
       }
 
       if (main.scale_ymax > main.scale_ymin) {
-         scale_y = 2 * main.size_y3d/(main.scale_ymax - main.scale_ymin);
+         scale_y = 2 * main.size_y3d / (main.scale_ymax - main.scale_ymin);
          offset_y = (main.scale_ymax + main.scale_ymin) / 2 * scale_y;
       }
 
       if (main.scale_zmax > main.scale_zmin) {
-         scale_z = 2 * main.size_z3d/(main.scale_zmax - main.scale_zmin);
+         scale_z = 2 * main.size_z3d / (main.scale_zmax - main.scale_zmin);
          offset_z = (main.scale_zmax + main.scale_zmin) / 2 * scale_z - main.size_z3d;
       }
 
@@ -141,7 +143,7 @@ function getHistPainter3DCfg(painter) {
          scale_x, scale_y, scale_z,
          offset_x, offset_y, offset_z
       };
-  }
+   }
 }
 
 
@@ -184,7 +186,8 @@ function provideVisStyle(obj) {
 /** @summary update icons
   * @private */
 function updateBrowserIcons(obj, hpainter) {
-   if (!obj || !hpainter) return;
+   if (!obj || !hpainter)
+      return;
 
    hpainter.forEachItem(m => {
       // update all items with that volume
@@ -200,7 +203,8 @@ function updateBrowserIcons(obj, hpainter) {
   * @private */
 function getIntersectStack(item) {
    const obj = item?.object;
-   if (!obj) return null;
+   if (!obj)
+      return null;
    if (obj.stack)
       return obj.stack;
    if (obj.stacks && item.instanceId !== undefined && item.instanceId < obj.stacks.length)
@@ -249,10 +253,11 @@ class Toolbar {
 
    /** @summary change brightness */
    changeBrightness(bright) {
-      if (this.bright === bright) return;
-      this.element.selectAll('*').remove();
-      this.bright = bright;
-      this.createButtons();
+      if (this.bright !== bright) {
+         this.element.selectAll('*').remove();
+         this.bright = bright;
+         this.createButtons();
+      }
    }
 
    /** @summary cleanup toolbar */
@@ -286,7 +291,8 @@ class GeoDrawingControl extends InteractiveControl {
    /** @summary draw special */
    drawSpecial(col, indx) {
       const c = this.mesh;
-      if (!c?.material) return;
+      if (!c?.material)
+         return;
 
       if (c.isInstancedMesh) {
          if (c._highlight_mesh) {
@@ -319,12 +325,12 @@ class GeoDrawingControl extends InteractiveControl {
       if (col) {
          if (!c.origin) {
             c.origin = {
-              color: c.material.color,
-              emissive: c.material.emissive,
-              opacity: c.material.opacity,
-              width: c.material.linewidth,
-              size: c.material.size
-           };
+               color: c.material.color,
+               emissive: c.material.emissive,
+               opacity: c.material.opacity,
+               width: c.material.linewidth,
+               size: c.material.size
+            };
          }
          if (this.bloom) {
             c.layers.enable(_BLOOM_SCENE);
@@ -509,8 +515,8 @@ class TGeoPainter extends ObjectPainter {
             { name: 'Boundary box', value: 'box' },
             { name: 'Mesh size', value: 'size' },
             { name: 'Central point', value: 'pnt' }
-          ],
-          cameraKindItems: [
+         ],
+         cameraKindItems: [
             { name: 'Perspective', value: 'perspective' },
             { name: 'Perspective (Floor XOZ)', value: 'perspXOZ' },
             { name: 'Perspective (Floor YOZ)', value: 'perspYOZ' },
@@ -553,23 +559,23 @@ class TGeoPainter extends ObjectPainter {
             { name: 'MeshLambertMaterial', value: 'lambert', emissive: true, props: [{ name: 'flatShading' }] },
             { name: 'MeshBasicMaterial', value: 'basic' },
             { name: 'MeshStandardMaterial', value: 'standard', emissive: true,
-                props: [{ name: 'flatShading' }, { name: 'roughness', min: 0, max: 1, step: 0.001 }, { name: 'metalness', min: 0, max: 1, step: 0.001 }] },
+               props: [{ name: 'flatShading' }, { name: 'roughness', min: 0, max: 1, step: 0.001 }, { name: 'metalness', min: 0, max: 1, step: 0.001 }] },
             { name: 'MeshPhysicalMaterial', value: 'physical', emissive: true,
                props: [{ name: 'flatShading' }, { name: 'roughness', min: 0, max: 1, step: 0.001 }, { name: 'metalness', min: 0, max: 1, step: 0.001 }, { name: 'reflectivity', min: 0, max: 1, step: 0.001 }] },
             { name: 'MeshPhongMaterial', value: 'phong', emissive: true,
-                props: [{ name: 'flatShading' }, { name: 'shininess', min: 0, max: 100, step: 0.1 }] },
+               props: [{ name: 'flatShading' }, { name: 'shininess', min: 0, max: 100, step: 0.1 }] },
             { name: 'MeshNormalMaterial', value: 'normal', props: [{ name: 'flatShading' }] },
             { name: 'MeshDepthMaterial', value: 'depth' },
             { name: 'MeshMatcapMaterial', value: 'matcap' },
             { name: 'MeshToonMaterial', value: 'toon' }
          ],
          getMaterialCfg() {
-             let cfg;
-             this.materialKinds.forEach(item => {
-                if (item.value === this.material_kind)
-                   cfg = item;
-             });
-             return cfg;
+            let cfg;
+            this.materialKinds.forEach(item => {
+               if (item.value === this.material_kind)
+                  cfg = item;
+            });
+            return cfg;
          }
       };
 
@@ -701,11 +707,12 @@ class TGeoPainter extends ObjectPainter {
                evnt.preventDefault();
                evnt.stopPropagation();
 
-               if (closeMenu()) return;
+               if (closeMenu())
+                  return;
 
                createMenu(evnt, this).then(menu => {
-                   menu.painter.fillContextMenu(menu);
-                   menu.show();
+                  menu.painter.fillContextMenu(menu);
+                  menu.show();
                });
             }
          });
@@ -732,7 +739,8 @@ class TGeoPainter extends ObjectPainter {
 
       navigator.getVRDisplays().then(displays => {
          const vrDisplay = displays[0];
-         if (!vrDisplay) return;
+         if (!vrDisplay)
+            return;
          this.#renderer.vr.setDevice(vrDisplay);
          this.#vrDisplay = vrDisplay;
          if (vrDisplay.stageParameters)
@@ -773,12 +781,14 @@ class TGeoPainter extends ObjectPainter {
    updateVRControllersList() {
       const gamepads = navigator.getGamepads && navigator.getGamepads();
       // Has controller list changed?
-      if (this.#vrControllers && (gamepads.length === this.#vrControllers.length)) return;
+      if (this.#vrControllers && (gamepads.length === this.#vrControllers.length))
+         return;
       // Hide meshes.
       this.#controllersMeshes.forEach(mesh => { mesh.visible = false; });
       this.#vrControllers = [];
       for (let i = 0; i < gamepads.length; ++i) {
-         if (!gamepads[i] || !gamepads[i].pose) continue;
+         if (!gamepads[i] || !gamepads[i].pose)
+            continue;
          this.#vrControllers.push({
             gamepad: gamepads[i],
             mesh: this.#controllersMeshes[i]
@@ -813,8 +823,10 @@ class TGeoPainter extends ObjectPainter {
                orientation = controller.gamepad.pose.orientation,
                position = controller.gamepad.pose.position,
                controllerMesh = controller.mesh;
-         if (orientation) controllerMesh.quaternion.fromArray(orientation);
-         if (position) controllerMesh.position.fromArray(position);
+         if (orientation)
+            controllerMesh.quaternion.fromArray(orientation);
+         if (position)
+            controllerMesh.position.fromArray(position);
          controllerMesh.updateMatrix();
          controllerMesh.applyMatrix4(this.#standingMatrix);
          controllerMesh.matrixWorldNeedsUpdate = true;
@@ -836,7 +848,7 @@ class TGeoPainter extends ObjectPainter {
       this.#vr_camera_rotation = this.#camera.rotation.clone();
       this.#vrDisplay.requestPresent([{ source: this.#renderer.domElement }]).then(() => {
          this.#vr_camera_near = this.#camera.near;
-         this.#dolly.position.set(this.#camera.position.x/4, -this.#camera.position.y/8, -this.#camera.position.z/4);
+         this.#dolly.position.set(this.#camera.position.x / 4, -this.#camera.position.y / 8, -this.#camera.position.z / 4);
          this.#camera.position.set(0, 0, 0);
          this.#dolly.add(this.#camera);
          this.#camera.near = 0.1;
@@ -851,7 +863,8 @@ class TGeoPainter extends ObjectPainter {
 
       window.addEventListener('keydown', evnt => {
          // Esc Key turns VR mode off
-         if (evnt.code === 'Escape') this.exitVRMode();
+         if (evnt.code === 'Escape')
+            this.exitVRMode();
       });
    }
 
@@ -888,7 +901,7 @@ class TGeoPainter extends ObjectPainter {
 
       // arg.node.fVolume
       if (name.indexOf('*') < 0) {
-         regexp = new RegExp('^'+name+'$');
+         regexp = new RegExp('^' + name + '$');
          exact = true;
       } else {
          regexp = new RegExp('^' + name.split('*').join('.*') + '$');
@@ -909,28 +922,33 @@ class TGeoPainter extends ObjectPainter {
       if (this.#superimpose && (opt.indexOf('same') === 0))
          opt = opt.slice(4);
 
-      const res = this.ctrl,
+      const res = this.ctrl, macro = opt.indexOf('macro:');
 
-       macro = opt.indexOf('macro:');
       if (macro >= 0) {
-         let separ = opt.indexOf(';', macro+6);
-         if (separ < 0) separ = opt.length;
-         res.script_name = opt.slice(macro+6, separ);
-         opt = opt.slice(0, macro) + opt.slice(separ+1);
+         let separ = opt.indexOf(';', macro + 6);
+         if (separ < 0)
+            separ = opt.length;
+         res.script_name = opt.slice(macro + 6, separ);
+         opt = opt.slice(0, macro) + opt.slice(separ + 1);
          console.log(`script ${res.script_name} rest ${opt}`);
       }
 
       while (true) {
          const pp = opt.indexOf('+'), pm = opt.indexOf('-');
-         if ((pp < 0) && (pm < 0)) break;
+         if ((pp < 0) && (pm < 0))
+            break;
          let p1 = pp, sign = '+';
-         if ((p1 < 0) || ((pm >= 0) && (pm < pp))) { p1 = pm; sign = '-'; }
+         if ((p1 < 0) || ((pm >= 0) && (pm < pp))) {
+            p1 = pm;
+            sign = '-';
+         }
 
-         let p2 = p1+1;
+         let p2 = p1 + 1;
          const regexp = /[,; .]/;
-         while ((p2 < opt.length) && !regexp.test(opt[p2]) && (opt[p2] !== '+') && (opt[p2] !== '-')) p2++;
+         while ((p2 < opt.length) && !regexp.test(opt[p2]) && (opt[p2] !== '+') && (opt[p2] !== '-'))
+            p2++;
 
-         const name = opt.substring(p1+1, p2);
+         const name = opt.substring(p1 + 1, p2);
          opt = opt.slice(0, p1) + opt.slice(p2);
 
          this.modifyVisisbility(name, sign);
@@ -938,41 +956,76 @@ class TGeoPainter extends ObjectPainter {
 
       const d = new DrawOptions(opt);
 
-      if (d.check('MAIN')) res.is_main = true;
+      if (d.check('MAIN'))
+         res.is_main = true;
 
-      if (d.check('DUMMY')) res.dummy = true;
+      if (d.check('DUMMY'))
+         res.dummy = true;
 
-      if (d.check('TRACKS')) res.tracks = true; // only for TGeoManager
-      if (d.check('SHOWTOP')) res.showtop = true; // only for TGeoManager
-      if (d.check('NO_SCREEN')) res.no_screen = true; // ignore kVisOnScreen bits for visibility
+      if (d.check('TRACKS'))
+         res.tracks = true; // only for TGeoManager
+      if (d.check('SHOWTOP'))
+         res.showtop = true; // only for TGeoManager
+      if (d.check('NO_SCREEN'))
+         res.no_screen = true; // ignore kVisOnScreen bits for visibility
 
-      if (d.check('NOINSTANCING')) res.instancing = -1; // disable usage of InstancedMesh
-      if (d.check('INSTANCING')) res.instancing = 1; // force usage of InstancedMesh
+      if (d.check('NOINSTANCING'))
+         res.instancing = -1; // disable usage of InstancedMesh
+      if (d.check('INSTANCING'))
+         res.instancing = 1; // force usage of InstancedMesh
 
-      if (d.check('ORTHO_CAMERA')) { res.camera_kind = 'orthoXOY'; res.can_rotate = 0; }
-      if (d.check('ORTHO', true)) { res.camera_kind = 'ortho' + d.part; res.can_rotate = 0; }
-      if (d.check('OVERLAY', true)) res.camera_overlay = d.part.toLowerCase();
-      if (d.check('CAN_ROTATE')) res.can_rotate = true;
-      if (d.check('PERSPECTIVE')) { res.camera_kind = 'perspective'; res.can_rotate = true; }
-      if (d.check('PERSP', true)) { res.camera_kind = 'persp' + d.part; res.can_rotate = true; }
-      if (d.check('MOUSE_CLICK')) res.mouse_click = true;
+      if (d.check('ORTHO_CAMERA')) {
+         res.camera_kind = 'orthoXOY';
+         res.can_rotate = 0;
+      }
+      if (d.check('ORTHO', true)) {
+         res.camera_kind = 'ortho' + d.part;
+         res.can_rotate = 0;
+      }
+      if (d.check('OVERLAY', true))
+         res.camera_overlay = d.part.toLowerCase();
+      if (d.check('CAN_ROTATE'))
+         res.can_rotate = true;
+      if (d.check('PERSPECTIVE')) {
+         res.camera_kind = 'perspective';
+         res.can_rotate = true;
+      }
+      if (d.check('PERSP', true)) {
+         res.camera_kind = 'persp' + d.part;
+         res.can_rotate = true;
+      }
+      if (d.check('MOUSE_CLICK'))
+         res.mouse_click = true;
 
-      if (d.check('DEPTHRAY') || d.check('DRAY')) res.depthMethod = 'ray';
-      if (d.check('DEPTHBOX') || d.check('DBOX')) res.depthMethod = 'box';
-      if (d.check('DEPTHPNT') || d.check('DPNT')) res.depthMethod = 'pnt';
-      if (d.check('DEPTHSIZE') || d.check('DSIZE')) res.depthMethod = 'size';
-      if (d.check('DEPTHDFLT') || d.check('DDFLT')) res.depthMethod = 'dflt';
+      if (d.check('DEPTHRAY') || d.check('DRAY'))
+         res.depthMethod = 'ray';
+      if (d.check('DEPTHBOX') || d.check('DBOX'))
+         res.depthMethod = 'box';
+      if (d.check('DEPTHPNT') || d.check('DPNT'))
+         res.depthMethod = 'pnt';
+      if (d.check('DEPTHSIZE') || d.check('DSIZE'))
+         res.depthMethod = 'size';
+      if (d.check('DEPTHDFLT') || d.check('DDFLT'))
+         res.depthMethod = 'dflt';
 
-      if (d.check('ZOOM', true)) res.zoom = d.partAsFloat(0, 100) / 100;
-      if (d.check('ROTY', true)) res.rotatey = d.partAsFloat();
-      if (d.check('ROTZ', true)) res.rotatez = d.partAsFloat();
+      if (d.check('ZOOM', true))
+         res.zoom = d.partAsFloat(0, 100) / 100;
+      if (d.check('ROTY', true))
+         res.rotatey = d.partAsFloat();
+      if (d.check('ROTZ', true))
+         res.rotatez = d.partAsFloat();
 
-      if (d.check('PHONG')) res.material_kind = 'phong';
-      if (d.check('LAMBERT')) res.material_kind = 'lambert';
-      if (d.check('MATCAP')) res.material_kind = 'matcap';
-      if (d.check('TOON')) res.material_kind = 'toon';
+      if (d.check('PHONG'))
+         res.material_kind = 'phong';
+      if (d.check('LAMBERT'))
+         res.material_kind = 'lambert';
+      if (d.check('MATCAP'))
+         res.material_kind = 'matcap';
+      if (d.check('TOON'))
+         res.material_kind = 'toon';
 
-      if (d.check('AMBIENT')) res.light.kind = 'ambient';
+      if (d.check('AMBIENT'))
+         res.light.kind = 'ambient';
 
       const getCamPart = () => {
          let neg = 1;
@@ -983,94 +1036,158 @@ class TGeoPainter extends ObjectPainter {
          return neg * d.partAsFloat();
       };
 
-      if (d.check('CAMX', true)) res.camx = getCamPart();
-      if (d.check('CAMY', true)) res.camy = getCamPart();
-      if (d.check('CAMZ', true)) res.camz = getCamPart();
-      if (d.check('CAMLX', true)) res.camlx = getCamPart();
-      if (d.check('CAMLY', true)) res.camly = getCamPart();
-      if (d.check('CAMLZ', true)) res.camlz = getCamPart();
+      if (d.check('CAMX', true))
+         res.camx = getCamPart();
+      if (d.check('CAMY', true))
+         res.camy = getCamPart();
+      if (d.check('CAMZ', true))
+         res.camz = getCamPart();
+      if (d.check('CAMLX', true))
+         res.camlx = getCamPart();
+      if (d.check('CAMLY', true))
+         res.camly = getCamPart();
+      if (d.check('CAMLZ', true))
+         res.camlz = getCamPart();
 
-      if (d.check('BLACK')) res.background = '#000000';
-      if (d.check('WHITE')) res.background = '#FFFFFF';
+      if (d.check('BLACK'))
+         res.background = '#000000';
+      if (d.check('WHITE'))
+         res.background = '#FFFFFF';
 
       if (d.check('BKGR_', true)) {
          let bckgr = null;
          if (d.partAsInt(1) > 0)
             bckgr = getColor(d.partAsInt());
-          else {
+         else {
             for (let col = 0; col < 8; ++col) {
                if (getColor(col).toUpperCase() === d.part)
                   bckgr = getColor(col);
             }
          }
-         if (bckgr) res.background = '#' + new THREE.Color(bckgr).getHexString();
+         if (bckgr)
+            res.background = '#' + new THREE.Color(bckgr).getHexString();
       }
 
       if (d.check('R3D_', true))
          res.Render3D = constants.Render3D.fromString(d.part.toLowerCase());
 
-      if (d.check('MORE', true)) res.more = d.partAsInt(0, 2) ?? 2;
-      if (d.check('ALL')) { res.more = 100; res.vislevel = 99; }
+      if (d.check('MORE', true))
+         res.more = d.partAsInt(0, 2) ?? 2;
+      if (d.check('ALL')) {
+         res.more = 100;
+         res.vislevel = 99;
+      }
 
-      if (d.check('VISLVL', true)) res.vislevel = d.partAsInt();
-      if (d.check('MAXNODES', true)) res.maxnodes = d.partAsInt();
-      if (d.check('MAXFACES', true)) res.maxfaces = d.partAsInt();
+      if (d.check('VISLVL', true))
+         res.vislevel = d.partAsInt();
+      if (d.check('MAXNODES', true))
+         res.maxnodes = d.partAsInt();
+      if (d.check('MAXFACES', true))
+         res.maxfaces = d.partAsInt();
 
-      if (d.check('CONTROLS') || d.check('CTRL')) res.show_controls = true;
+      if (d.check('CONTROLS') || d.check('CTRL'))
+         res.show_controls = true;
 
-      if (d.check('CLIPXYZ')) res.clip[0].enabled = res.clip[1].enabled = res.clip[2].enabled = true;
-      if (d.check('CLIPX')) res.clip[0].enabled = true;
-      if (d.check('CLIPY')) res.clip[1].enabled = true;
-      if (d.check('CLIPZ')) res.clip[2].enabled = true;
-      if (d.check('CLIP')) res.clip[0].enabled = res.clip[1].enabled = res.clip[2].enabled = true;
+      if (d.check('CLIPXYZ'))
+         res.clip[0].enabled = res.clip[1].enabled = res.clip[2].enabled = true;
+      if (d.check('CLIPX'))
+         res.clip[0].enabled = true;
+      if (d.check('CLIPY'))
+         res.clip[1].enabled = true;
+      if (d.check('CLIPZ'))
+         res.clip[2].enabled = true;
+      if (d.check('CLIP'))
+         res.clip[0].enabled = res.clip[1].enabled = res.clip[2].enabled = true;
 
-      if (d.check('PROJX', true)) { res.project = 'x'; if (d.partAsInt(1) > 0) res.projectPos = d.partAsInt(); res.can_rotate = 0; }
-      if (d.check('PROJY', true)) { res.project = 'y'; if (d.partAsInt(1) > 0) res.projectPos = d.partAsInt(); res.can_rotate = 0; }
-      if (d.check('PROJZ', true)) { res.project = 'z'; if (d.partAsInt(1) > 0) res.projectPos = d.partAsInt(); res.can_rotate = 0; }
+      if (d.check('PROJX', true)) {
+         res.project = 'x';
+         if (d.partAsInt(1) > 0)
+            res.projectPos = d.partAsInt();
+         res.can_rotate = 0;
+      }
+      if (d.check('PROJY', true)) {
+         res.project = 'y';
+         if (d.partAsInt(1) > 0)
+            res.projectPos = d.partAsInt();
+         res.can_rotate = 0;
+      }
+      if (d.check('PROJZ', true)) {
+         res.project = 'z';
+         if (d.partAsInt(1) > 0)
+            res.projectPos = d.partAsInt();
+         res.can_rotate = 0;
+      }
 
-      if (d.check('DFLT_COLORS') || d.check('DFLT')) res.dflt_colors = true;
+      if (d.check('DFLT_COLORS') || d.check('DFLT'))
+         res.dflt_colors = true;
       d.check('SSAO'); // deprecated
-      if (d.check('NOBLOOM')) res.highlight_bloom = false;
-      if (d.check('BLOOM')) res.highlight_bloom = true;
-      if (d.check('OUTLINE')) res.outline = true;
+      if (d.check('NOBLOOM'))
+         res.highlight_bloom = false;
+      if (d.check('BLOOM'))
+         res.highlight_bloom = true;
+      if (d.check('OUTLINE'))
+         res.outline = true;
 
-      if (d.check('NOWORKER')) res.use_worker = -1;
-      if (d.check('WORKER')) res.use_worker = 1;
+      if (d.check('NOWORKER'))
+         res.use_worker = -1;
+      if (d.check('WORKER'))
+         res.use_worker = 1;
 
-      if (d.check('NOFOG')) res.use_fog = false;
-      if (d.check('FOG')) res.use_fog = true;
+      if (d.check('NOFOG'))
+         res.use_fog = false;
+      if (d.check('FOG'))
+         res.use_fog = true;
 
-      if (d.check('NOHIGHLIGHT') || d.check('NOHIGH')) res.highlight_scene = res.highlight = false;
-      if (d.check('HIGHLIGHT')) res.highlight_scene = res.highlight = true;
-      if (d.check('HSCENEONLY')) { res.highlight_scene = true; res.highlight = false; }
-      if (d.check('NOHSCENE')) res.highlight_scene = false;
-      if (d.check('HSCENE')) res.highlight_scene = true;
+      if (d.check('NOHIGHLIGHT') || d.check('NOHIGH'))
+         res.highlight_scene = res.highlight = false;
+      if (d.check('HIGHLIGHT'))
+         res.highlight_scene = res.highlight = true;
+      if (d.check('HSCENEONLY')) {
+         res.highlight_scene = true;
+         res.highlight = false;
+      }
+      if (d.check('NOHSCENE'))
+         res.highlight_scene = false;
+      if (d.check('HSCENE'))
+         res.highlight_scene = true;
 
-      if (d.check('WIREFRAME') || d.check('WIRE')) res.wireframe = true;
-      if (d.check('ROTATE')) res.rotate = true;
+      if (d.check('WIREFRAME') || d.check('WIRE'))
+         res.wireframe = true;
+      if (d.check('ROTATE'))
+         res.rotate = true;
 
-      if (d.check('INVX') || d.check('INVERTX')) res.scale.x = -1;
-      if (d.check('INVY') || d.check('INVERTY')) res.scale.y = -1;
-      if (d.check('INVZ') || d.check('INVERTZ')) res.scale.z = -1;
+      if (d.check('INVX') || d.check('INVERTX'))
+         res.scale.x = -1;
+      if (d.check('INVY') || d.check('INVERTY'))
+         res.scale.y = -1;
+      if (d.check('INVZ') || d.check('INVERTZ'))
+         res.scale.z = -1;
 
-      if (d.check('COUNT')) res._count = true;
+      if (d.check('COUNT'))
+         res._count = true;
 
       if (d.check('TRANSP', true))
-         res.transparency = d.partAsInt(0, 100)/100;
+         res.transparency = d.partAsInt(0, 100) / 100;
 
       if (d.check('OPACITY', true))
-         res.transparency = 1 - d.partAsInt(0, 100)/100;
+         res.transparency = 1 - d.partAsInt(0, 100) / 100;
 
-      if (d.check('AXISCENTER') || d.check('AXISC') || d.check('AC')) res._axis = 2;
-      if (d.check('AXIS') || d.check('A')) res._axis = 1;
+      if (d.check('AXISCENTER') || d.check('AXISC') || d.check('AC'))
+         res._axis = 2;
+      if (d.check('AXIS') || d.check('A'))
+         res._axis = 1;
 
-      if (d.check('TRR', true)) res.trans_radial = d.partAsInt()/100;
-      if (d.check('TRZ', true)) res.trans_z = d.partAsInt()/100;
+      if (d.check('TRR', true))
+         res.trans_radial = d.partAsInt() / 100;
+      if (d.check('TRZ', true))
+         res.trans_z = d.partAsInt() / 100;
 
-
-      if (d.check('W')) res.wireframe = true;
-      if (d.check('Y')) res._yup = true;
-      if (d.check('Z')) res._yup = false;
+      if (d.check('W'))
+         res.wireframe = true;
+      if (d.check('Y'))
+         res._yup = true;
+      if (d.check('Z'))
+         res._yup = false;
 
       // when drawing geometry without TCanvas, yup = true by default
       if (res._yup === undefined)
@@ -1123,17 +1240,20 @@ class TGeoPainter extends ObjectPainter {
          func: (/* node */) => {
             let m2 = this.getmatrix();
             const entry = this.copyStack(),
-                  mesh = this.#clones.createObject3D(entry.stack, this.#toplevel, 'mesh');
-            if (!mesh) return true;
+                  mesh = this.#clones.createObject3D(entry.stack, this.#toplevel, kGetMesh);
+            if (!mesh)
+               return true;
 
             totalcnt++;
 
             const m1 = mesh.matrixWorld;
-            if (m1.equals(m2)) return true;
+            if (m1.equals(m2))
+               return true;
             if ((m1.determinant() > 0) && (m2.determinant() < -0.9)) {
                const flip = new THREE.Vector3(1, 1, -1);
                m2 = m2.clone().scale(flip);
-               if (m1.equals(m2)) return true;
+               if (m1.equals(m2))
+                  return true;
             }
 
             let max = 0;
@@ -1142,7 +1262,8 @@ class TGeoPainter extends ObjectPainter {
 
             totalmax = Math.max(max, totalmax);
 
-            if (max < 1e-4) return true;
+            if (max < 1e-4)
+               return true;
 
             console.log(`${this.#clones.resolveStack(entry.stack).name} maxdiff ${max} determ ${m1.determinant()} ${m2.determinant()}`);
 
@@ -1156,7 +1277,7 @@ class TGeoPainter extends ObjectPainter {
 
       const tm2 = new Date().getTime();
 
-      console.log(`Compare matrixes total ${totalcnt} errors ${errcnt} takes ${tm2-tm1} maxdiff ${totalmax}`);
+      console.log(`Compare matrixes total ${totalcnt} errors ${errcnt} takes ${tm2 - tm1} maxdiff ${totalmax}`);
    }
 
    /** @summary Fill context menu */
@@ -1165,7 +1286,8 @@ class TGeoPainter extends ObjectPainter {
 
       menu.addchk(this.ctrl.update_browser, 'Browser update', () => {
          this.ctrl.update_browser = !this.ctrl.update_browser;
-         if (!this.ctrl.update_browser) this.activateInBrowser([]);
+         if (!this.ctrl.update_browser)
+            this.activateInBrowser([]);
       });
       menu.addchk(this.ctrl.show_controls, 'Show Controls', () => this.showControlGui('toggle'));
 
@@ -1212,7 +1334,7 @@ class TGeoPainter extends ObjectPainter {
       menu.sub('Camera');
       menu.add('Reset position', () => this.focusCamera());
       if (!this.ctrl.project)
-          menu.addchk(this.ctrl.rotate, 'Autorotate', () => this.setAutoRotate(!this.ctrl.rotate));
+         menu.addchk(this.ctrl.rotate, 'Autorotate', () => this.setAutoRotate(!this.ctrl.rotate));
 
       if (!this.#geom_viewer) {
          menu.addchk(this.canRotateCamera(), 'Can rotate', () => this.changeCanRotate(!this.ctrl.can_rotate));
@@ -1247,7 +1369,8 @@ class TGeoPainter extends ObjectPainter {
 
       menu.addchk(this.ctrl.select_in_view, 'Select in view', () => {
          this.ctrl.select_in_view = !this.ctrl.select_in_view;
-         if (this.ctrl.select_in_view) this.startDrawGeometry();
+         if (this.ctrl.select_in_view)
+            this.startDrawGeometry();
       });
    }
 
@@ -1296,7 +1419,8 @@ class TGeoPainter extends ObjectPainter {
 
       this.#toplevel?.traverse(node => {
          // ignore all kind of extra elements
-         if (node.material?.inherentArgs === undefined) return;
+         if (node.material?.inherentArgs === undefined)
+            return;
 
          if (node.material[name] !== undefined) {
             node.material[name] = value;
@@ -1314,7 +1438,8 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Method should be called when transformation parameters were changed */
    changedTransformation(arg) {
-      if (!this.#toplevel) return;
+      if (!this.#toplevel)
+         return;
 
       const ctrl = this.ctrl,
             translation = new THREE.Matrix4(),
@@ -1345,7 +1470,7 @@ class TGeoPainter extends ObjectPainter {
                node.minvert = new THREE.Matrix4().copy(node.matrixWorld).invert();
 
                const box3 = getBoundingBox(mesh, null, true),
-                   signz = mesh._flippedMesh ? -1 : 1;
+                     signz = mesh._flippedMesh ? -1 : 1;
 
                // real center of mesh in local coordinates
                node.vect0 = new THREE.Vector3((box3.max.x + box3.min.x) / 2, (box3.max.y + box3.min.y) / 2, signz * (box3.max.z + box3.min.z) / 2).applyMatrix4(node.matrixWorld);
@@ -1440,11 +1565,12 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Display control GUI */
    showControlGui(on) {
       // while complete geo drawing can be removed until dat is loaded - just check and ignore callback
-      if (!this.ctrl) return;
+      if (!this.ctrl)
+         return;
 
       if (on === 'toggle')
          on = !this.#gui;
-       else if (on === undefined)
+      else if (on === undefined)
          on = this.ctrl.show_controls;
 
       this.ctrl.show_controls = on;
@@ -1464,8 +1590,11 @@ class TGeoPainter extends ObjectPainter {
       if (main.style('position') === 'static')
          main.style('position', 'relative');
 
-      this.#gui = new GUI({ container: main.node(), closeFolders: true, width: Math.min(300, this.#scene_width / 2),
-                            title: 'Settings' });
+      this.#gui = new GUI({
+         container: main.node(), closeFolders: true,
+         width: Math.min(300, this.#scene_width / 2),
+         title: 'Settings'
+      });
 
       const dom = this.#gui.domElement;
       dom.style.position = 'absolute';
@@ -1504,10 +1633,10 @@ class TGeoPainter extends ObjectPainter {
 
       if (this.ctrl.project) {
          const bound = this.getGeomBoundingBox(this.getProjectionSource(), 0.01),
-             axis = this.ctrl.project;
+               axis = this.ctrl.project;
 
          if (this.ctrl.projectPos === undefined)
-            this.ctrl.projectPos = (bound.min[axis] + bound.max[axis])/2;
+            this.ctrl.projectPos = (bound.min[axis] + bound.max[axis]) / 2;
 
          this.#gui.add(this.ctrl, 'projectPos', bound.min[axis], bound.max[axis])
              .name(axis.toUpperCase() + ' projection')
@@ -1519,7 +1648,7 @@ class TGeoPainter extends ObjectPainter {
 
          for (let naxis = 0; naxis < 3; ++naxis) {
             const cc = this.ctrl.clip[naxis],
-                axisC = cc.name.toUpperCase();
+                  axisC = cc.name.toUpperCase();
 
             clipFolder.add(cc, 'enabled')
                 .name('Enable ' + axisC)
@@ -1605,7 +1734,8 @@ class TGeoPainter extends ObjectPainter {
          material_props = [];
 
          const props = this.ctrl.getMaterialCfg()?.props;
-         if (!props) return;
+         if (!props)
+            return;
 
          props.forEach(prop => {
             const f = material.add(this.ctrl, prop.name, prop.min, prop.max, prop.step).onChange(() => {
@@ -1617,11 +1747,11 @@ class TGeoPainter extends ObjectPainter {
 
       material.add(this.ctrl, 'material_kind', makeLil(this.ctrl.materialKinds)).name('Kind')
               .listen().onChange(() => {
-            addMaterialProp();
-            this.ensureBloom(false);
-            this.changedMaterial();
-            this.changedHighlight(); // for some materials bloom will not work
-      });
+                 addMaterialProp();
+                 this.ensureBloom(false);
+                 this.changedMaterial();
+                 this.changedHighlight(); // for some materials bloom will not work
+              });
 
       material.add(this.ctrl, 'transparency', 0, 1, 0.001).name('Transparency')
               .listen().onChange(value => this.changedGlobalTransparency(value));
@@ -1639,9 +1769,9 @@ class TGeoPainter extends ObjectPainter {
 
       camera.add(this.ctrl, 'camera_kind', makeLil(this.ctrl.cameraKindItems))
             .name('Kind').listen().onChange(() => {
-            overlay.show(this.ctrl.camera_kind.indexOf('ortho') === 0);
-            this.changeCamera();
-      });
+               overlay.show(this.ctrl.camera_kind.indexOf('ortho') === 0);
+               this.changeCamera();
+            });
 
       camera.add(this.ctrl, 'can_rotate').name('Can rotate')
                 .listen().onChange(() => this.changeCanRotate());
@@ -1677,8 +1807,8 @@ class TGeoPainter extends ObjectPainter {
                   .listen().onChange(() => this.changedTransformation());
 
          transform.add(this, 'resetTransformation').name('Reset');
-
-         if (this.ctrl.trans_z || this.ctrl.trans_radial) transform.open();
+         if (this.ctrl.trans_z || this.ctrl.trans_radial)
+            transform.open();
       }
    }
 
@@ -1729,8 +1859,8 @@ class TGeoPainter extends ObjectPainter {
    changeCamera() {
       // force control recreation
       if (this.#controls) {
-          this.#controls.cleanup();
-          this.#controls = undefined;
+         this.#controls.cleanup();
+         this.#controls = undefined;
       }
 
       this.ensureBloom(false);
@@ -1759,7 +1889,7 @@ class TGeoPainter extends ObjectPainter {
    ensureBloom(on) {
       if (on === undefined) {
          if (this.ctrl.highlight_bloom === 0)
-             this.ctrl.highlight_bloom = this.#webgl && !browser.android;
+            this.ctrl.highlight_bloom = this.#webgl && !browser.android;
 
          on = this.ctrl.highlight_bloom && this.ctrl.getMaterialCfg()?.emissive;
       }
@@ -1795,17 +1925,20 @@ class TGeoPainter extends ObjectPainter {
          let numitems = 0, numnodes = 0, cnt = 0;
          if (intersects) {
             for (let n = 0; n < intersects.length; ++n) {
-               if (getIntersectStack(intersects[n])) numnodes++;
-               if (intersects[n].geo_name) numitems++;
+               if (getIntersectStack(intersects[n]))
+                  numnodes++;
+               if (intersects[n].geo_name)
+                  numitems++;
             }
          }
 
          if (numnodes + numitems === 0)
             this.fillContextMenu(menu);
-          else {
+         else {
             const many = (numnodes + numitems) > 1;
 
-            if (many) menu.header((numitems > 0) ? 'Items' : 'Nodes');
+            if (many)
+               menu.header((numitems > 0) ? 'Items' : 'Nodes');
 
             for (let n = 0; n < intersects.length; ++n) {
                const obj = intersects[n].object,
@@ -1816,8 +1949,9 @@ class TGeoPainter extends ObjectPainter {
                   itemname = obj.geo_name;
                   if (itemname.indexOf('<prnt>') === 0)
                      itemname = (this.getItemName() || 'top') + itemname.slice(6);
-                  name = itemname.slice(itemname.lastIndexOf('/')+1);
-                  if (!name) name = itemname;
+                  name = itemname.slice(itemname.lastIndexOf('/') + 1);
+                  if (!name)
+                     name = itemname;
                   hdr = name;
                } else if (stack) {
                   name = this.#clones.getStackName(stack);
@@ -1849,7 +1983,8 @@ class TGeoPainter extends ObjectPainter {
                         const items = [];
                         for (let i = 0; i < indx; ++i) {
                            const stack2 = getIntersectStack(intersects[i]);
-                           if (stack2) items.push(this.getStackFullName(stack2));
+                           if (stack2)
+                              items.push(this.getStackFullName(stack2));
                         }
                         this.hidePhysicalNode(items);
                      });
@@ -1858,11 +1993,13 @@ class TGeoPainter extends ObjectPainter {
                   menu.add('Hide', n, indx => {
                      const mesh = intersects[indx].object;
                      mesh.visible = false; // just disable mesh
-                     if (mesh.geo_object) mesh.geo_object.$hidden_via_menu = true; // and hide object for further redraw
+                     if (mesh.geo_object)
+                        mesh.geo_object.$hidden_via_menu = true; // and hide object for further redraw
                      menu.painter.render3D();
                   }, 'Hide this physical node');
 
-                  if (many) menu.endsub();
+                  if (many)
+                     menu.endsub();
 
                   continue;
                }
@@ -1920,7 +2057,7 @@ class TGeoPainter extends ObjectPainter {
                      this.testGeomChanges();
                   }, 'Hide only this physical node');
                   if (n > 1) {
-                    menu.add('Hide all before', n, indx => {
+                     menu.add('Hide all before', n, indx => {
                         for (let k = 0; k < indx; ++k)
                            this.#clones.setPhysNodeVisibility(getIntersectStack(intersects[k]), false);
                         this.testGeomChanges();
@@ -1928,7 +2065,8 @@ class TGeoPainter extends ObjectPainter {
                   }
                }
 
-               if (many) menu.endsub();
+               if (many)
+                  menu.endsub();
             }
          }
          menu.show();
@@ -1952,17 +2090,19 @@ class TGeoPainter extends ObjectPainter {
          const obj = intersects[n].object;
          let unique = obj.visible && (getIntersectStack(intersects[n]) || (obj.geo_name !== undefined));
 
-         if (unique && obj.material && (obj.material.opacity !== undefined))
-            unique = (obj.material.opacity >= 0.1);
+         if (unique && (obj.material?.opacity !== undefined))
+            unique = obj.material.opacity >= 0.1;
 
-         if (obj.jsroot_special) unique = false;
+         if (obj.jsroot_special)
+            unique = false;
 
          for (let k = 0; (k < n) && unique; ++k) {
             if (intersects[k].object === obj)
                unique = false;
          }
 
-         if (!unique) intersects.splice(n, 1);
+         if (!unique)
+            intersects.splice(n, 1);
       }
 
       const clip = this.ctrl.clip;
@@ -1974,11 +2114,15 @@ class TGeoPainter extends ObjectPainter {
             const point = intersects[i].point, special = (intersects[i].object.type === 'Points');
             let clipped = true;
 
-            if (clip[0].enabled && ((this.#clip_planes[0].normal.dot(point) > this.#clip_planes[0].constant) ^ special)) clipped = false;
-            if (clip[1].enabled && ((this.#clip_planes[1].normal.dot(point) > this.#clip_planes[1].constant) ^ special)) clipped = false;
-            if (clip[2].enabled && (this.#clip_planes[2].normal.dot(point) > this.#clip_planes[2].constant)) clipped = false;
+            if (clip[0].enabled && ((this.#clip_planes[0].normal.dot(point) > this.#clip_planes[0].constant) ^ special))
+               clipped = false;
+            if (clip[1].enabled && ((this.#clip_planes[1].normal.dot(point) > this.#clip_planes[1].constant) ^ special))
+               clipped = false;
+            if (clip[2].enabled && (this.#clip_planes[2].normal.dot(point) > this.#clip_planes[2].constant))
+               clipped = false;
 
-            if (!clipped) clippedIntersects.push(intersects[i]);
+            if (!clipped)
+               clippedIntersects.push(intersects[i]);
          }
 
          intersects = clippedIntersects;
@@ -2011,7 +2155,7 @@ class TGeoPainter extends ObjectPainter {
      * @desc Includes item name of top geo object */
    getStackFullName(stack) {
       const mainitemname = this.getItemName(),
-          sub = this.resolveStack(stack);
+            sub = this.resolveStack(stack);
       if (!sub || !sub.name)
          return mainitemname;
       return mainitemname ? mainitemname + '/' + sub.name : sub.name;
@@ -2064,8 +2208,10 @@ class TGeoPainter extends ObjectPainter {
          // check all other painters
 
          if (active_mesh) {
-            if (!geo_object) geo_object = active_mesh[0].geo_object;
-            if (!geo_stack) geo_stack = active_mesh[0].stack;
+            if (!geo_object)
+               geo_object = active_mesh[0].geo_object;
+            if (!geo_stack)
+               geo_stack = active_mesh[0].stack;
          }
 
          const lst = this.#highlight_handlers || this.getCentral()?.getSubordinates().concat([this.getCentral()]) || this.getSubordinates();
@@ -2080,7 +2226,7 @@ class TGeoPainter extends ObjectPainter {
       if (!curr_mesh && !active_mesh)
          return false;
 
-      const get_ctrl = mesh => mesh.get_ctrl ? mesh.get_ctrl() : new GeoDrawingControl(mesh, this.ctrl.highlight_bloom && this.#bloomComposer);
+      const get_ctrl = mesh => { return mesh.get_ctrl ? mesh.get_ctrl() : new GeoDrawingControl(mesh, this.ctrl.highlight_bloom && this.#bloomComposer); };
 
       let same = false;
 
@@ -2153,7 +2299,8 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Add orbit control */
    addOrbitControls() {
-      if (this.#controls || !this.#webgl || this.isBatchMode() || this.#superimpose || isNodeJs()) return;
+      if (this.#controls || !this.#webgl || this.isBatchMode() || this.#superimpose || isNodeJs())
+         return;
 
       if (!this.getCanvPainter())
          this.setTooltipAllowed(settings.Tooltip);
@@ -2169,20 +2316,23 @@ class TGeoPainter extends ObjectPainter {
 
       this.#controls.processMouseMove = intersects => {
          // painter already cleaned up, ignore any incoming events
-         if (!this.ctrl || !this.#controls) return;
+         if (!this.ctrl || !this.#controls)
+            return;
 
          let active_mesh = null, tooltip = null, resolve = null, names = [], geo_object, geo_index, geo_stack;
 
          // try to find mesh from intersections
          for (let k = 0; k < intersects.length; ++k) {
             const obj = intersects[k].object, stack = getIntersectStack(intersects[k]);
-            if (!obj || !obj.visible) continue;
+            if (!obj || !obj.visible)
+               continue;
             let info = null;
             if (obj.geo_object)
                info = obj.geo_name;
             else if (stack)
                info = this.getStackFullName(stack);
-            if (!info) continue;
+            if (!info)
+               continue;
 
             if (info.indexOf('<prnt>') === 0)
                info = this.getItemName() + info.slice(6);
@@ -2202,7 +2352,8 @@ class TGeoPainter extends ObjectPainter {
 
                if (geo_stack) {
                   resolve = this.resolveStack(geo_stack);
-                  if (obj.stacks) geo_index = intersects[k].instanceId;
+                  if (obj.stacks)
+                     geo_index = intersects[k].instanceId;
                }
             }
          }
@@ -2210,7 +2361,8 @@ class TGeoPainter extends ObjectPainter {
          this.highlightMesh(active_mesh, undefined, geo_object, geo_index);
 
          if (this.ctrl.update_browser) {
-            if (this.ctrl.highlight && tooltip) names = [tooltip];
+            if (this.ctrl.highlight && tooltip)
+               names = [tooltip];
             this.activateInBrowser(names);
          }
 
@@ -2229,7 +2381,8 @@ class TGeoPainter extends ObjectPainter {
 
       this.#controls.processDblClick = () => {
          // painter already cleaned up, ignore any incoming events
-         if (!this.ctrl || !this.#controls) return;
+         if (!this.ctrl || !this.#controls)
+            return;
 
          if (this.#last_manifest) {
             this.#last_manifest.wireframe = !this.#last_manifest.wireframe;
@@ -2293,7 +2446,8 @@ class TGeoPainter extends ObjectPainter {
          }
 
          this.#current_face_limit = this.ctrl.maxfaces;
-         if (matrix) this.#current_face_limit *= 1.25;
+         if (matrix)
+            this.#current_face_limit *= 1.25;
 
          // here we decide if we need worker for the drawings
          // main reason - too large geometry and large time to scan all camera positions
@@ -2353,7 +2507,7 @@ class TGeoPainter extends ObjectPainter {
 
             // remove should be fast, do it here
             for (let n = 0; n < del.length; ++n)
-               this.#clones.createObject3D(del[n].stack, this.#toplevel, 'delete_mesh');
+               this.#clones.createObject3D(del[n].stack, this.#toplevel, kDeleteMesh);
 
             if (del.length)
                this.#drawing_log = `Delete ${del.length} nodes`;
@@ -2388,7 +2542,7 @@ class TGeoPainter extends ObjectPainter {
                // only submit not-done items
                if (item.ready || item.geom) {
                   // this is place holder for existing geometry
-                  job.shapes.push({ id: item.id, ready: true, nfaces: countGeometryFaces(item.geom), refcnt: item.refcnt });
+                  job.shapes.push({ id: item.id, ready: true, nfaces: numGeometryFaces(item.geom), refcnt: item.refcnt });
                } else {
                   job.shapes.push(clone(item, null, true));
                   cnt++;
@@ -2423,7 +2577,6 @@ class TGeoPainter extends ObjectPainter {
                this.ctrl.info.num_shapes = res.shapes;
                this.#drawing_log = `Creating: ${res.shapes} / ${this.#build_shapes.length} shapes,  ${res.faces} faces`;
                return true;
-               // if (res.notusedshapes < 30) return true;
             }
          }
 
@@ -2439,7 +2592,8 @@ class TGeoPainter extends ObjectPainter {
          if (!build_instanced) {
             for (let n = 0; n < this.#draw_nodes.length; ++n) {
                const entry = this.#draw_nodes[n];
-               if (entry.done) continue;
+               if (entry.done)
+                  continue;
 
                // shape can be provided with entry itself
                const shape = entry.server_shape || this.#build_shapes[entry.shapeid];
@@ -2447,7 +2601,10 @@ class TGeoPainter extends ObjectPainter {
                this.createEntryMesh(entry, shape, toplevel);
 
                const tm1 = new Date().getTime();
-               if (tm1 - tm0 > 500) { ready = false; break; }
+               if (tm1 - tm0 > 500) {
+                  ready = false;
+                  break;
+               }
             }
          }
 
@@ -2516,7 +2673,7 @@ class TGeoPainter extends ObjectPainter {
       if (this.#more_nodes) {
          for (let n = 0; n < this.#more_nodes.length; ++n) {
             const entry = this.#more_nodes[n],
-                obj3d = this.#clones.createObject3D(entry.stack, this.#toplevel, 'delete_mesh');
+                  obj3d = this.#clones.createObject3D(entry.stack, this.#toplevel, kDeleteMesh);
             disposeThreejsObject(obj3d);
             cleanupShape(entry.server_shape);
             delete entry.server_shape;
@@ -2524,13 +2681,15 @@ class TGeoPainter extends ObjectPainter {
          this.#more_nodes = undefined;
       }
 
-      if (!nodes) return;
+      if (!nodes)
+         return;
 
       const real_nodes = [];
       for (let k = 0; k < nodes.length; ++k) {
          const entry = nodes[k],
-             shape = entry.server_shape;
-         if (!shape?.ready) continue;
+               shape = entry.server_shape;
+         if (!shape?.ready)
+            continue;
 
          if (this.createEntryMesh(entry, shape, this.#toplevel))
             real_nodes.push(entry);
@@ -2558,7 +2717,8 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Extend custom geometry bounding box */
    extendCustomBoundingBox(box) {
-      if (!box) return;
+      if (!box)
+         return;
       if (!this.#custom_bounding_box)
          this.#custom_bounding_box = new THREE.Box3().makeEmpty();
 
@@ -2596,8 +2756,8 @@ class TGeoPainter extends ObjectPainter {
 
       if (scalar === 'original') {
          box3.translate(new THREE.Vector3(-topitem.position.x, -topitem.position.y, -topitem.position.z));
-         box3.min.multiply(new THREE.Vector3(1/topitem.scale.x, 1/topitem.scale.y, 1/topitem.scale.z));
-         box3.max.multiply(new THREE.Vector3(1/topitem.scale.x, 1/topitem.scale.y, 1/topitem.scale.z));
+         box3.min.multiply(new THREE.Vector3(1 / topitem.scale.x, 1 / topitem.scale.y, 1 / topitem.scale.z));
+         box3.max.multiply(new THREE.Vector3(1 / topitem.scale.x, 1 / topitem.scale.y, 1 / topitem.scale.z));
       } else if (scalar !== undefined)
          box3.expandByVector(box3.getSize(new THREE.Vector3()).multiplyScalar(scalar));
 
@@ -2608,7 +2768,8 @@ class TGeoPainter extends ObjectPainter {
    doProjection() {
       const toplevel = this.getProjectionSource();
 
-      if (!toplevel) return false;
+      if (!toplevel)
+         return false;
 
       disposeThreejsObject(this.#toplevel, true);
 
@@ -2617,25 +2778,24 @@ class TGeoPainter extends ObjectPainter {
       if (this.ctrl.projectPos === undefined) {
          const bound = this.getGeomBoundingBox(toplevel),
                min = bound.min[this.ctrl.project], max = bound.max[this.ctrl.project];
-         let mean = (min + max)/2;
+         let mean = (min + max) / 2;
 
-         if ((min < 0) && (max > 0) && (Math.abs(mean) < 0.2*Math.max(-min, max))) mean = 0; // if middle is around 0, use 0
+         if ((min < 0) && (max > 0) && (Math.abs(mean) < 0.2 * Math.max(-min, max)))
+            mean = 0; // if middle is around 0, use 0
 
          this.ctrl.projectPos = mean;
       }
 
       toplevel.traverse(mesh => {
-         if (!(mesh instanceof THREE.Mesh) || !mesh.stack) return;
+         if (!(mesh instanceof THREE.Mesh) || !mesh.stack)
+            return;
 
          const geom2 = projectGeometry(mesh.geometry, mesh.parent.absMatrix || mesh.parent.matrixWorld, this.ctrl.project, this.ctrl.projectPos, mesh._flippedMesh);
-
-         if (!geom2) return;
-
-         const mesh2 = new THREE.Mesh(geom2, mesh.material.clone());
-
-         this.#toplevel.add(mesh2);
-
-         mesh2.stack = mesh.stack;
+         if (geom2) {
+            const mesh2 = new THREE.Mesh(geom2, mesh.material.clone());
+            this.#toplevel.add(mesh2);
+            mesh2.stack = mesh.stack;
+         }
       });
 
       return true;
@@ -2648,12 +2808,13 @@ class TGeoPainter extends ObjectPainter {
 
       const need_render = !box;
 
-      if (!box) box = this.getGeomBoundingBox();
+      if (!box)
+         box = this.getGeomBoundingBox();
 
       const sizex = box.max.x - box.min.x,
-          sizey = box.max.y - box.min.y,
-          sizez = box.max.z - box.min.z,
-          plights = [], p = (this.ctrl.light.power ?? 1) * 0.5;
+            sizey = box.max.y - box.min.y,
+            sizez = box.max.z - box.min.z,
+            plights = [], p = (this.ctrl.light.power ?? 1) * 0.5;
 
       if (this.#camera._lights !== this.ctrl.light.kind) {
          // remove all childs and recreate only necessary lights
@@ -2662,9 +2823,14 @@ class TGeoPainter extends ObjectPainter {
          this.#camera._lights = this.ctrl.light.kind;
 
          switch (this.#camera._lights) {
-            case 'ambient' : this.#camera.add(new THREE.AmbientLight(0xefefef, p)); break;
-            case 'hemisphere' : this.#camera.add(new THREE.HemisphereLight(0xffffbb, 0x080820, p)); break;
-            case 'mix': this.#camera.add(new THREE.AmbientLight(0xefefef, p));
+            case 'ambient':
+               this.#camera.add(new THREE.AmbientLight(0xefefef, p));
+               break;
+            case 'hemisphere':
+               this.#camera.add(new THREE.HemisphereLight(0xffffbb, 0x080820, p));
+               break;
+            case 'mix':
+               this.#camera.add(new THREE.AmbientLight(0xefefef, p));
             // eslint-disable-next-line  no-fallthrough
             default: // 6 point lights
                for (let n = 0; n < 6; ++n) {
@@ -2682,23 +2848,44 @@ class TGeoPainter extends ObjectPainter {
             light.intensity = p;
             continue;
          }
-         if (!light.isDirectionalLight) continue;
+         if (!light.isDirectionalLight)
+            continue;
          switch (light._id) {
-            case 0: light.position.set(sizex/5, sizey/5, sizez/5); enabled = this.ctrl.light.specular; break;
-            case 1: light.position.set(0, 0, sizez/2); enabled = this.ctrl.light.front; break;
-            case 2: light.position.set(0, 2*sizey, 0); enabled = this.ctrl.light.top; break;
-            case 3: light.position.set(0, -2*sizey, 0); enabled = this.ctrl.light.bottom; break;
-            case 4: light.position.set(-2*sizex, 0, 0); enabled = this.ctrl.light.left; break;
-            case 5: light.position.set(2*sizex, 0, 0); enabled = this.ctrl.light.right; break;
+            case 0:
+               light.position.set(sizex / 5, sizey / 5, sizez / 5);
+               enabled = this.ctrl.light.specular;
+               break;
+            case 1:
+               light.position.set(0, 0, sizez / 2);
+               enabled = this.ctrl.light.front;
+               break;
+            case 2:
+               light.position.set(0, 2 * sizey, 0);
+               enabled = this.ctrl.light.top;
+               break;
+            case 3:
+               light.position.set(0, -2 * sizey, 0);
+               enabled = this.ctrl.light.bottom;
+               break;
+            case 4:
+               light.position.set(-2 * sizex, 0, 0);
+               enabled = this.ctrl.light.left;
+               break;
+            case 5:
+               light.position.set(2 * sizex, 0, 0);
+               enabled = this.ctrl.light.right;
+               break;
          }
-         light.power = enabled ? p*Math.PI*4 : 0;
-         if (enabled) plights.push(light);
+         light.power = enabled ? p * Math.PI * 4 : 0;
+         if (enabled)
+            plights.push(light);
       }
 
       // keep light power of all sources constant
-      plights.forEach(ll => { ll.power = p*4*Math.PI/plights.length; });
+      plights.forEach(ll => { ll.power = p * 4 * Math.PI / plights.length; });
 
-      if (need_render) this.render3D();
+      if (need_render)
+         this.render3D();
    }
 
    /** @summary Returns true if orthographic camera is used */
@@ -2715,8 +2902,8 @@ class TGeoPainter extends ObjectPainter {
       }
 
       if (this.isOrthoCamera())
-         this.#camera = new THREE.OrthographicCamera(-this.#scene_width/2, this.#scene_width/2, this.#scene_height/2, -this.#scene_height/2, 1, 10000);
-       else {
+         this.#camera = new THREE.OrthographicCamera(-this.#scene_width / 2, this.#scene_width / 2, this.#scene_height / 2, -this.#scene_height / 2, 1, 10000);
+      else {
          this.#camera = new THREE.PerspectiveCamera(25, this.#scene_width / this.#scene_height, 1, 10000);
          this.#camera.up = this.ctrl._yup ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(0, 0, 1);
       }
@@ -2891,7 +3078,8 @@ class TGeoPainter extends ObjectPainter {
          const box = this.getGeomBoundingBox();
 
          // if detect of coordinates fails - ignore
-         if (!Number.isFinite(box.min.x)) return 1000;
+         if (!Number.isFinite(box.min.x))
+            return 1000;
 
          this.#overall_size = 2 * Math.max(box.max.x - box.min.x, box.max.y - box.min.y, box.max.z - box.min.z);
       }
@@ -2901,10 +3089,12 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Create png image with drawing snapshot. */
    createSnapshot(filename) {
-      if (!this.#renderer) return;
+      if (!this.#renderer)
+         return;
       this.render3D(0);
       const dataUrl = this.#renderer.domElement.toDataURL('image/png');
-      if (filename === 'asis') return dataUrl;
+      if (filename === 'asis')
+         return dataUrl;
       dataUrl.replace('image/png', 'image/octet-stream');
       const doc = getDocument(),
             link = doc.createElement('a');
@@ -2930,20 +3120,25 @@ class TGeoPainter extends ObjectPainter {
 
       let kind = '';
       if (this.ctrl.camera_kind !== 'perspective')
-        kind = this.ctrl.camera_kind + ',';
+         kind = this.ctrl.camera_kind + ',';
 
       if (arg === true) {
          const p = this.#camera.position, t = this.#controls?.target;
-         if (!p || !t) return '';
+         if (!p || !t)
+            return '';
 
          const conv = v => {
             let s = '';
-            if (v < 0) { s = 'n'; v = -v; }
+            if (v < 0) {
+               s = 'n';
+               v = -v;
+            }
             return s + v.toFixed(0);
          };
 
          let res = `${kind}camx${conv(p.x)},camy${conv(p.y)},camz${conv(p.z)}`;
-         if (t.x || t.y || t.z) res += `,camlx${conv(t.x)},camly${conv(t.y)},camlz${conv(t.z)}`;
+         if (t.x || t.y || t.z)
+            res += `,camlx${conv(t.x)},camly${conv(t.y)},camlz${conv(t.z)}`;
          return res;
       }
 
@@ -2965,8 +3160,10 @@ class TGeoPainter extends ObjectPainter {
       let roty = euler.y / Math.PI * 180,
           rotz = euler.z / Math.PI * 180;
 
-      if (roty < 0) roty += 360;
-      if (rotz < 0) rotz += 360;
+      if (roty < 0)
+         roty += 360;
+      if (rotz < 0)
+         rotz += 360;
       return `${kind}roty${roty.toFixed(0)},rotz${rotz.toFixed(0)},zoom${zoom.toFixed(0)}`;
    }
 
@@ -3006,22 +3203,22 @@ class TGeoPainter extends ObjectPainter {
       const sizex = box.max.x - box.min.x,
             sizey = box.max.y - box.min.y,
             sizez = box.max.z - box.min.z,
-            midx = (box.max.x + box.min.x)/2,
-            midy = (box.max.y + box.min.y)/2,
-            midz = (box.max.z + box.min.z)/2,
+            midx = (box.max.x + box.min.x) / 2,
+            midy = (box.max.y + box.min.y) / 2,
+            midz = (box.max.z + box.min.z) / 2,
             more = this.ctrl._axis || (this.ctrl.camera_overlay === 'bar') ? 0.2 : 0.1;
 
       if (this.#scene_size && !force) {
-         function test(v1, v2, scale) {
-            if (!scale) scale = Math.abs((v1+v2)/2);
-            return scale <= 1e-20 ? true : Math.abs(v2-v1)/scale > 0.01;
-         };
-         const d = this.#scene_size;
+         const test = (v1, v2, scale) => {
+            if (!scale)
+               scale = Math.abs((v1 + v2) / 2);
+            return scale <= 1e-20 ? true : Math.abs(v2 - v1) / scale > 0.01;
+         }, d = this.#scene_size;
          if (!test(sizex, d.sizex) && !test(sizey, d.sizey) && !test(sizez, d.sizez) &&
              !test(midx, d.midx, d.sizex) && !test(midy, d.midy, d.sizey) && !test(midz, d.midz, d.sizez)) {
-               if (this.ctrl.select_in_view)
-                  this.startDrawGeometry();
-               return;
+            if (this.ctrl.select_in_view)
+               this.startDrawGeometry();
+            return;
          }
       }
 
@@ -3040,8 +3237,8 @@ class TGeoPainter extends ObjectPainter {
             cc.min = box.min[cc.name];
             cc.max = box.max[cc.name];
             const sz = cc.max - cc.min;
-            cc.max += sz*0.01;
-            cc.min -= sz*0.01;
+            cc.max += sz * 0.01;
+            cc.min -= sz * 0.01;
             if (sz > 100)
                cc.step = 0.1;
             else if (sz > 1)
@@ -3058,31 +3255,32 @@ class TGeoPainter extends ObjectPainter {
          }
       }
 
-      let k = 2*this.ctrl.zoom;
+      let k = 2 * this.ctrl.zoom;
       const max_all = Math.max(sizex, sizey, sizez),
             sign = this.ctrl.camera_kind.indexOf('N') > 0 ? -1 : 1;
 
       this.#lookat = new THREE.Vector3(midx, midy, midz);
-      this.#camera0pos = new THREE.Vector3(-2*max_all, 0, 0); // virtual 0 position, where rotation starts
+      this.#camera0pos = new THREE.Vector3(-2 * max_all, 0, 0); // virtual 0 position, where rotation starts
 
       this.#camera.updateMatrixWorld();
       this.#camera.updateProjectionMatrix();
 
       if ((this.ctrl.rotatey || this.ctrl.rotatez) && this.ctrl.can_rotate) {
          const prev_zoom = this.calculateZoom();
-         if (keep_zoom && prev_zoom) k = 2*prev_zoom;
+         if (keep_zoom && prev_zoom)
+            k = 2 * prev_zoom;
 
-         const euler = new THREE.Euler(0, this.ctrl.rotatey/180*Math.PI, this.ctrl.rotatez/180*Math.PI, 'YZX');
+         const euler = new THREE.Euler(0, this.ctrl.rotatey / 180 * Math.PI, this.ctrl.rotatez / 180 * Math.PI, 'YZX');
 
-         this.#camera.position.set(-k*max_all, 0, 0);
+         this.#camera.position.set(-k * max_all, 0, 0);
          this.#camera.position.applyEuler(euler);
          this.#camera.position.add(new THREE.Vector3(midx, midy, midz));
 
          if (keep_zoom && prev_zoom) {
             const actual_zoom = this.calculateZoom();
-            k *= prev_zoom/actual_zoom;
+            k *= prev_zoom / actual_zoom;
 
-            this.#camera.position.set(-k*max_all, 0, 0);
+            this.#camera.position.set(-k * max_all, 0, 0);
             this.#camera.position.applyEuler(euler);
             this.#camera.position.add(new THREE.Vector3(midx, midy, midz));
          }
@@ -3092,75 +3290,79 @@ class TGeoPainter extends ObjectPainter {
          this.ctrl.camx = this.ctrl.camy = this.ctrl.camz = this.ctrl.camlx = this.ctrl.camly = this.ctrl.camlz = undefined;
       } else if ((this.ctrl.camera_kind === 'orthoXOY') || (this.ctrl.camera_kind === 'orthoXNOY')) {
          this.#camera.up.set(0, 1, 0);
-         this.#camera.position.set(sign < 0 ? midx*2 : 0, 0, midz + sign*sizez*2);
-         this.#lookat.set(sign < 0 ? midx*2 : 0, 0, midz);
-         this.#camera.left = box.min.x - more*sizex;
-         this.#camera.right = box.max.x + more*sizex;
-         this.#camera.top = box.max.y + more*sizey;
-         this.#camera.bottom = box.min.y - more*sizey;
-         if (!keep_zoom) this.#camera.zoom = this.ctrl.zoom || 1;
+         this.#camera.position.set(sign < 0 ? midx * 2 : 0, 0, midz + sign * sizez * 2);
+         this.#lookat.set(sign < 0 ? midx * 2 : 0, 0, midz);
+         this.#camera.left = box.min.x - more * sizex;
+         this.#camera.right = box.max.x + more * sizex;
+         this.#camera.top = box.max.y + more * sizey;
+         this.#camera.bottom = box.min.y - more * sizey;
+         if (!keep_zoom)
+            this.#camera.zoom = this.ctrl.zoom || 1;
          this.#camera.orthoSign = sign;
-         this.#camera.orthoZ = [midz, sizez/2];
+         this.#camera.orthoZ = [midz, sizez / 2];
       } else if ((this.ctrl.camera_kind === 'orthoXOZ') || (this.ctrl.camera_kind === 'orthoXNOZ')) {
          this.#camera.up.set(0, 0, 1);
-         this.#camera.position.set(sign < 0 ? midx*2 : 0, midy - sign*sizey*2, 0);
-         this.#lookat.set(sign < 0 ? midx*2 : 0, midy, 0);
-         this.#camera.left = box.min.x - more*sizex;
-         this.#camera.right = box.max.x + more*sizex;
-         this.#camera.top = box.max.z + more*sizez;
-         this.#camera.bottom = box.min.z - more*sizez;
-         if (!keep_zoom) this.#camera.zoom = this.ctrl.zoom || 1;
+         this.#camera.position.set(sign < 0 ? midx * 2 : 0, midy - sign * sizey * 2, 0);
+         this.#lookat.set(sign < 0 ? midx * 2 : 0, midy, 0);
+         this.#camera.left = box.min.x - more * sizex;
+         this.#camera.right = box.max.x + more * sizex;
+         this.#camera.top = box.max.z + more * sizez;
+         this.#camera.bottom = box.min.z - more * sizez;
+         if (!keep_zoom)
+            this.#camera.zoom = this.ctrl.zoom || 1;
          this.#camera.orthoIndicies = [0, 2, 1];
-         this.#camera.orthoRotation = geom => geom.rotateX(Math.PI/2);
+         this.#camera.orthoRotation = geom => geom.rotateX(Math.PI / 2);
          this.#camera.orthoSign = sign;
-         this.#camera.orthoZ = [midy, -sizey/2];
+         this.#camera.orthoZ = [midy, -sizey / 2];
       } else if ((this.ctrl.camera_kind === 'orthoZOY') || (this.ctrl.camera_kind === 'orthoZNOY')) {
          this.#camera.up.set(0, 1, 0);
-         this.#camera.position.set(midx - sign*sizex*2, 0, sign < 0 ? midz*2 : 0);
-         this.#lookat.set(midx, 0, sign < 0 ? midz*2 : 0);
-         this.#camera.left = box.min.z - more*sizez;
-         this.#camera.right = box.max.z + more*sizez;
-         this.#camera.top = box.max.y + more*sizey;
-         this.#camera.bottom = box.min.y - more*sizey;
-         if (!keep_zoom) this.#camera.zoom = this.ctrl.zoom || 1;
+         this.#camera.position.set(midx - sign * sizex * 2, 0, sign < 0 ? midz * 2 : 0);
+         this.#lookat.set(midx, 0, sign < 0 ? midz * 2 : 0);
+         this.#camera.left = box.min.z - more * sizez;
+         this.#camera.right = box.max.z + more * sizez;
+         this.#camera.top = box.max.y + more * sizey;
+         this.#camera.bottom = box.min.y - more * sizey;
+         if (!keep_zoom)
+            this.#camera.zoom = this.ctrl.zoom || 1;
          this.#camera.orthoIndicies = [2, 1, 0];
-         this.#camera.orthoRotation = geom => geom.rotateY(-Math.PI/2);
+         this.#camera.orthoRotation = geom => geom.rotateY(-Math.PI / 2);
          this.#camera.orthoSign = sign;
-         this.#camera.orthoZ = [midx, -sizex/2];
+         this.#camera.orthoZ = [midx, -sizex / 2];
       } else if ((this.ctrl.camera_kind === 'orthoZOX') || (this.ctrl.camera_kind === 'orthoZNOX')) {
          this.#camera.up.set(1, 0, 0);
-         this.#camera.position.set(0, midy - sign*sizey*2, sign > 0 ? midz*2 : 0);
-         this.#lookat.set(0, midy, sign > 0 ? midz*2 : 0);
-         this.#camera.left = box.min.z - more*sizez;
-         this.#camera.right = box.max.z + more*sizez;
-         this.#camera.top = box.max.x + more*sizex;
-         this.#camera.bottom = box.min.x - more*sizex;
-         if (!keep_zoom) this.#camera.zoom = this.ctrl.zoom || 1;
+         this.#camera.position.set(0, midy - sign * sizey * 2, sign > 0 ? midz * 2 : 0);
+         this.#lookat.set(0, midy, sign > 0 ? midz * 2 : 0);
+         this.#camera.left = box.min.z - more * sizez;
+         this.#camera.right = box.max.z + more * sizez;
+         this.#camera.top = box.max.x + more * sizex;
+         this.#camera.bottom = box.min.x - more * sizex;
+         if (!keep_zoom)
+            this.#camera.zoom = this.ctrl.zoom || 1;
          this.#camera.orthoIndicies = [2, 0, 1];
-         this.#camera.orthoRotation = geom => geom.rotateX(Math.PI/2).rotateY(Math.PI/2);
+         this.#camera.orthoRotation = geom => geom.rotateX(Math.PI / 2).rotateY(Math.PI / 2);
          this.#camera.orthoSign = sign;
-         this.#camera.orthoZ = [midy, -sizey/2];
+         this.#camera.orthoZ = [midy, -sizey / 2];
       } else if (this.ctrl.project) {
          switch (this.ctrl.project) {
-            case 'x': this.#camera.position.set(k*1.5*Math.max(sizey, sizez), 0, 0); break;
-            case 'y': this.#camera.position.set(0, k*1.5*Math.max(sizex, sizez), 0); break;
-            case 'z': this.#camera.position.set(0, 0, k*1.5*Math.max(sizex, sizey)); break;
+            case 'x': this.#camera.position.set(k * 1.5 * Math.max(sizey, sizez), 0, 0); break;
+            case 'y': this.#camera.position.set(0, k * 1.5 * Math.max(sizex, sizez), 0); break;
+            case 'z': this.#camera.position.set(0, 0, k * 1.5 * Math.max(sizex, sizey)); break;
          }
       } else if (this.ctrl.camera_kind === 'perspXOZ') {
          this.#camera.up.set(0, 1, 0);
-         this.#camera.position.set(midx - 3*max_all, midy, midz);
+         this.#camera.position.set(midx - 3 * max_all, midy, midz);
       } else if (this.ctrl.camera_kind === 'perspYOZ') {
          this.#camera.up.set(1, 0, 0);
-         this.#camera.position.set(midx, midy - 3*max_all, midz);
+         this.#camera.position.set(midx, midy - 3 * max_all, midz);
       } else if (this.ctrl.camera_kind === 'perspXOY') {
          this.#camera.up.set(0, 0, 1);
-         this.#camera.position.set(midx - 3*max_all, midy, midz);
+         this.#camera.position.set(midx - 3 * max_all, midy, midz);
       } else if (this.ctrl._yup) {
          this.#camera.up.set(0, 1, 0);
-         this.#camera.position.set(midx-k*Math.max(sizex, sizez), midy+k*sizey, midz-k*Math.max(sizex, sizez));
+         this.#camera.position.set(midx - k * Math.max(sizex, sizez), midy + k * sizey, midz - k * Math.max(sizex, sizez));
       } else {
          this.#camera.up.set(0, 0, 1);
-         this.#camera.position.set(midx-k*Math.max(sizex, sizey), midy-k*Math.max(sizex, sizey), midz+k*sizez);
+         this.#camera.position.set(midx - k * Math.max(sizex, sizey), midy - k * Math.max(sizex, sizey), midz + k * sizez);
       }
 
       if (this.#camera.isOrthographicCamera && this.isOrthoCamera() && this.#scene_width && this.#scene_height) {
@@ -3187,7 +3389,8 @@ class TGeoPainter extends ObjectPainter {
 
       if (this.#controls) {
          this.#controls.target.copy(this.#lookat);
-         if (!only_set) this.#controls.update();
+         if (!only_set)
+            this.#controls.update();
       }
 
       // recheck which elements to draw
@@ -3197,13 +3400,14 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Specifies camera position as rotation around geometry center */
    setCameraPosition(rotatey, rotatez, zoom) {
-      if (!this.ctrl) return;
+      if (!this.ctrl)
+         return;
       this.ctrl.rotatey = rotatey || 0;
       this.ctrl.rotatez = rotatez || 0;
       let preserve_zoom = false;
       if (zoom && Number.isFinite(zoom))
          this.ctrl.zoom = zoom;
-       else
+      else
          preserve_zoom = true;
 
       this.adjustCameraPosition(false, preserve_zoom);
@@ -3244,28 +3448,28 @@ class TGeoPainter extends ObjectPainter {
       let box = new THREE.Box3();
       if (focus === undefined)
          box = this.getGeomBoundingBox();
-       else if (focus instanceof THREE.Mesh)
+      else if (focus instanceof THREE.Mesh)
          box.setFromObject(focus);
-       else {
+      else {
          const center = new THREE.Vector3().setFromMatrixPosition(focus.matrix),
-             node = focus.node,
-             halfDelta = new THREE.Vector3(node.fDX, node.fDY, node.fDZ).multiplyScalar(0.5);
+               node = focus.node,
+               halfDelta = new THREE.Vector3(node.fDX, node.fDY, node.fDZ).multiplyScalar(0.5);
          box.min = center.clone().sub(halfDelta);
          box.max = center.clone().add(halfDelta);
       }
 
       const sizex = box.max.x - box.min.x,
-          sizey = box.max.y - box.min.y,
-          sizez = box.max.z - box.min.z,
-          midx = (box.max.x + box.min.x)/2,
-          midy = (box.max.y + box.min.y)/2,
-          midz = (box.max.z + box.min.z)/2;
+            sizey = box.max.y - box.min.y,
+            sizez = box.max.z - box.min.z,
+            midx = (box.max.x + box.min.x) / 2,
+            midy = (box.max.y + box.min.y) / 2,
+            midz = (box.max.z + box.min.z) / 2;
 
       let position, frames = 50, step = 0;
       if (this.ctrl._yup)
-         position = new THREE.Vector3(midx-2*Math.max(sizex, sizez), midy+2*sizey, midz-2*Math.max(sizex, sizez));
+         position = new THREE.Vector3(midx - 2 * Math.max(sizex, sizez), midy + 2 * sizey, midz - 2 * Math.max(sizex, sizez));
       else
-         position = new THREE.Vector3(midx-2*Math.max(sizex, sizey), midy-2*Math.max(sizex, sizey), midz+2*sizez);
+         position = new THREE.Vector3(midx - 2 * Math.max(sizex, sizey), midy - 2 * Math.max(sizex, sizey), midz + 2 * sizez);
 
       const target = new THREE.Vector3(midx, midy, midz),
             oldTarget = this.#controls.target,
@@ -3280,7 +3484,10 @@ class TGeoPainter extends ObjectPainter {
       if (autoClip) {
          for (let axis = 0; axis < 3; ++axis) {
             const cc = this.ctrl.clip[axis];
-            if (!cc.enabled) { cc.value = cc.min; cc.enabled = true; }
+            if (!cc.enabled) {
+               cc.value = cc.min;
+               cc.enabled = true;
+            }
             cc.inc = ((cc.min + cc.max) / 2 - cc.value) / frames;
          }
          this.updateClipping();
@@ -3294,9 +3501,9 @@ class TGeoPainter extends ObjectPainter {
 
          if (this.#animating)
             requestAnimationFrame(animate);
-          else if (!this.#geom_viewer)
+         else if (!this.#geom_viewer)
             this.startDrawGeometry();
-         const smoothFactor = -Math.cos((2.0*Math.PI*step)/frames) + 1.0;
+         const smoothFactor = -Math.cos((2.0 * Math.PI * step) / frames) + 1.0;
          this.#camera.position.add(posIncrement.clone().multiplyScalar(smoothFactor));
          oldTarget.add(targetIncrement.clone().multiplyScalar(smoothFactor));
          this.#lookat = oldTarget;
@@ -3312,7 +3519,8 @@ class TGeoPainter extends ObjectPainter {
             this.render3D(0);
 
          const tm2 = new Date().getTime();
-         if ((step === 0) && (tm2-tm1 > 200)) frames = 20;
+         if ((step === 0) && (tm2 - tm1 > 200))
+            frames = 20;
          step++;
          this.#animating = step < frames;
       };
@@ -3328,7 +3536,8 @@ class TGeoPainter extends ObjectPainter {
       let last = new Date();
 
       const animate = () => {
-         if (!this.#renderer || !this.ctrl) return;
+         if (!this.#renderer || !this.ctrl)
+            return;
 
          const current = new Date();
 
@@ -3344,12 +3553,12 @@ class TGeoPainter extends ObjectPainter {
          this.render3D(0);
       };
 
-      if (this.#webgl) animate();
+      if (this.#webgl)
+         animate();
    }
 
    /** @summary called at the end of scene drawing */
-   completeScene() {
-   }
+   completeScene() {}
 
    /** @summary Drawing with 'count' option
      * @desc Scans hierarchy and check for unique nodes
@@ -3357,9 +3566,9 @@ class TGeoPainter extends ObjectPainter {
    async drawCount(unqievis, clonetm) {
       const makeTime = tm => (this.isBatchMode() ? 'anytime' : tm.toString()) + ' ms',
 
-       res = ['Unique nodes: ' + this.#clones.nodes.length,
-                  'Unique visible: ' + unqievis,
-                  'Time to clone: ' + makeTime(clonetm)];
+            res = ['Unique nodes: ' + this.#clones.nodes.length,
+                   'Unique visible: ' + unqievis,
+                   'Time to clone: ' + makeTime(clonetm)];
 
       // need to fill cached value line numvischld
       this.#clones.scanVisible();
@@ -3390,7 +3599,7 @@ class TGeoPainter extends ObjectPainter {
             res.push(`  lvl${lvl}: ${arg.cnt[lvl]}`);
       }
 
-      res.push(`Time to scan: ${makeTime(tm2-tm1)}`, '', 'Check timing for matrix calculations ...');
+      res.push(`Time to scan: ${makeTime(tm2 - tm1)}`, '', 'Check timing for matrix calculations ...');
 
       const elem = this.selectDom().style('overflow', 'auto');
 
@@ -3405,7 +3614,7 @@ class TGeoPainter extends ObjectPainter {
          numvis = this.#clones.scanVisible(arg);
          tm2 = new Date().getTime();
 
-         const last_str = `Time to scan with matrix: ${makeTime(tm2-tm1)}`;
+         const last_str = `Time to scan with matrix: ${makeTime(tm2 - tm1)}`;
          if (this.isBatchMode())
             res.push(last_str);
          else
@@ -3421,22 +3630,24 @@ class TGeoPainter extends ObjectPainter {
      * By default function with name 'extract_geo_tracks' is checked
      * @return {Promise} handling of drop operation */
    async performDrop(obj, itemname, hitem, opt) {
-      if (obj?.$kind === 'TTree') {
+      if (obj?.$kind === clTTree) {
          // drop tree means function call which must extract tracks from provided tree
 
          let funcname = 'extract_geo_tracks';
 
          if (opt && opt.indexOf('$') > 0) {
             funcname = opt.slice(0, opt.indexOf('$'));
-            opt = opt.slice(opt.indexOf('$')+1);
+            opt = opt.slice(opt.indexOf('$') + 1);
          }
 
          const func = findFunction(funcname);
 
-         if (!func) return Promise.reject(Error(`Function ${funcname} not found`));
+         if (!func)
+            return Promise.reject(Error(`Function ${funcname} not found`));
 
          return func(obj, opt).then(tracks => {
-            if (!tracks) return this;
+            if (!tracks)
+               return this;
 
             // FIXME: probably tracks should be remembered?
             return this.drawExtras(tracks, '', false).then(() => {
@@ -3447,9 +3658,11 @@ class TGeoPainter extends ObjectPainter {
       }
 
       return this.drawExtras(obj, itemname).then(is_any => {
-         if (!is_any) return this;
+         if (!is_any)
+            return this;
 
-         if (hitem) hitem._painter = this; // set for the browser item back pointer
+         if (hitem)
+            hitem._painter = this; // set for the browser item back pointer
 
          return this.render3D(100);
       });
@@ -3463,7 +3676,8 @@ class TGeoPainter extends ObjectPainter {
       const obj = hitem._obj;
 
       // let's highlight tracks and hits only for the time being
-      if (!obj || (obj._typename !== clTEveTrack && obj._typename !== clTEvePointSet && obj._typename !== clTPolyMarker3D)) return;
+      if (!obj || (obj._typename !== clTEveTrack && obj._typename !== clTEvePointSet && obj._typename !== clTPolyMarker3D))
+         return;
 
       this.highlightMesh(null, 0x00ff00, on ? obj : null);
    }
@@ -3504,7 +3718,8 @@ class TGeoPainter extends ObjectPainter {
       if ((indx < 0) && hitem._obj) {
          indx = this.#extra_objects.arr.indexOf(hitem._obj);
          // workaround - if object found, replace its name
-         if (indx >= 0) this.#extra_objects.opt[indx] = itemname;
+         if (indx >= 0)
+            this.#extra_objects.opt[indx] = itemname;
       }
 
       if (indx < 0)
@@ -3519,7 +3734,10 @@ class TGeoPainter extends ObjectPainter {
 
          let mesh = null;
          // either found painted object or just draw once again
-         this.#toplevel.traverse(node => { if (node.geo_object === obj) mesh = node; });
+         this.#toplevel.traverse(node => {
+            if (node.geo_object === obj)
+               mesh = node;
+         });
 
          if (mesh) {
             mesh.visible = res;
@@ -3553,12 +3771,14 @@ class TGeoPainter extends ObjectPainter {
       let promise = false;
 
       if ((obj._typename === clTList) || (obj._typename === clTObjArray)) {
-         if (!obj.arr) return false;
+         if (!obj.arr)
+            return false;
          const parr = [];
          for (let n = 0; n < obj.arr.length; ++n) {
             const sobj = obj.arr[n];
             let sname = obj.opt ? obj.opt[n] : '';
-            if (!sname) sname = (itemname || '<prnt>') + `/[${n}]`;
+            if (!sname)
+               sname = (itemname || '<prnt>') + `/[${n}]`;
             parr.push(this.drawExtras(sobj, sname, add_objects));
          }
          promise = Promise.all(parr).then(ress => ress.indexOf(true) >= 0);
@@ -3597,17 +3817,26 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary returns container for extra objects */
    getExtrasContainer(action, name) {
-      if (!this.#toplevel) return null;
+      if (!this.#toplevel)
+         return null;
 
-      if (!name) name = 'tracks';
+      if (!name)
+         name = 'tracks';
 
       let extras = null;
       const lst = [];
       for (let n = 0; n < this.#toplevel.children.length; ++n) {
          const chld = this.#toplevel.children[n];
-         if (!chld._extras) continue;
-         if (action === 'collect') { lst.push(chld); continue; }
-         if (chld._extras === name) { extras = chld; break; }
+         if (!chld._extras)
+            continue;
+         if (action === 'collect') {
+            lst.push(chld);
+            continue;
+         }
+         if (chld._extras === name) {
+            extras = chld;
+            break;
+         }
       }
 
       if (action === 'collect') {
@@ -3617,7 +3846,8 @@ class TGeoPainter extends ObjectPainter {
       }
 
       if (action === 'delete') {
-         if (extras) this.#toplevel.remove(extras);
+         if (extras)
+            this.#toplevel.remove(extras);
          disposeThreejsObject(extras);
          return null;
       }
@@ -3637,7 +3867,7 @@ class TGeoPainter extends ObjectPainter {
       const container = this.getExtrasContainer('', name);
       if (container)
          container.add(obj);
-       else {
+      else {
          console.warn('Fail to add object to extras');
          disposeThreejsObject(obj);
       }
@@ -3645,24 +3875,25 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary drawing TGeoTrack */
    drawGeoTrack(track, itemname) {
-      if (!track?.fNpoints) return false;
+      if (!track?.fNpoints)
+         return false;
 
       const linewidth = browser.isWin ? 1 : (track.fLineWidth || 1), // line width not supported on windows
             color = getColor(track.fLineColor) || '#ff00ff',
-            npoints = Math.round(track.fNpoints/4), // each track point has [x,y,z,t] coordinate
-            buf = new Float32Array((npoints-1)*6),
+            npoints = Math.round(track.fNpoints / 4), // each track point has [x,y,z,t] coordinate
+            buf = new Float32Array((npoints - 1) * 6),
             projv = this.ctrl.projectPos,
             projx = (this.ctrl.project === 'x'),
             projy = (this.ctrl.project === 'y'),
             projz = (this.ctrl.project === 'z');
 
-      for (let k = 0, pos = 0; k < npoints-1; ++k, pos+=6) {
-         buf[pos] = projx ? projv : track.fPoints[k*4];
-         buf[pos+1] = projy ? projv : track.fPoints[k*4+1];
-         buf[pos+2] = projz ? projv : track.fPoints[k*4+2];
-         buf[pos+3] = projx ? projv : track.fPoints[k*4+4];
-         buf[pos+4] = projy ? projv : track.fPoints[k*4+5];
-         buf[pos+5] = projz ? projv : track.fPoints[k*4+6];
+      for (let k = 0, pos = 0; k < npoints - 1; ++k, pos += 6) {
+         buf[pos] = projx ? projv : track.fPoints[k * 4];
+         buf[pos + 1] = projy ? projv : track.fPoints[k * 4 + 1];
+         buf[pos + 2] = projz ? projv : track.fPoints[k * 4 + 2];
+         buf[pos + 3] = projx ? projv : track.fPoints[k * 4 + 4];
+         buf[pos + 4] = projy ? projv : track.fPoints[k * 4 + 5];
+         buf[pos + 5] = projz ? projv : track.fPoints[k * 4 + 6];
       }
 
       const lineMaterial = new THREE.LineBasicMaterial({ color, linewidth }),
@@ -3683,25 +3914,26 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary drawing TPolyLine3D */
    drawPolyLine(line, itemname) {
-      if (!line) return false;
+      if (!line)
+         return false;
 
       const linewidth = browser.isWin ? 1 : (line.fLineWidth || 1),
             color = getColor(line.fLineColor) || '#ff00ff',
             npoints = line.fN,
             fP = line.fP,
-            buf = new Float32Array((npoints-1)*6),
+            buf = new Float32Array((npoints - 1) * 6),
             projv = this.ctrl.projectPos,
             projx = (this.ctrl.project === 'x'),
             projy = (this.ctrl.project === 'y'),
             projz = (this.ctrl.project === 'z');
 
-      for (let k = 0, pos = 0; k < npoints-1; ++k, pos += 6) {
-         buf[pos] = projx ? projv : fP[k*3];
-         buf[pos+1] = projy ? projv : fP[k*3+1];
-         buf[pos+2] = projz ? projv : fP[k*3+2];
-         buf[pos+3] = projx ? projv : fP[k*3+3];
-         buf[pos+4] = projy ? projv : fP[k*3+4];
-         buf[pos+5] = projz ? projv : fP[k*3+5];
+      for (let k = 0, pos = 0; k < npoints - 1; ++k, pos += 6) {
+         buf[pos] = projx ? projv : fP[k * 3];
+         buf[pos + 1] = projy ? projv : fP[k * 3 + 1];
+         buf[pos + 2] = projz ? projv : fP[k * 3 + 2];
+         buf[pos + 3] = projx ? projv : fP[k * 3 + 3];
+         buf[pos + 4] = projy ? projv : fP[k * 3 + 4];
+         buf[pos + 5] = projz ? projv : fP[k * 3 + 5];
       }
 
       const lineMaterial = new THREE.LineBasicMaterial({ color, linewidth }),
@@ -3719,23 +3951,24 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Drawing TEveTrack */
    drawEveTrack(track, itemname) {
-      if (!track || (track.fN <= 0)) return false;
+      if (!track || (track.fN <= 0))
+         return false;
 
       const linewidth = browser.isWin ? 1 : (track.fLineWidth || 1),
             color = getColor(track.fLineColor) || '#ff00ff',
-            buf = new Float32Array((track.fN-1)*6),
+            buf = new Float32Array((track.fN - 1) * 6),
             projv = this.ctrl.projectPos,
             projx = (this.ctrl.project === 'x'),
             projy = (this.ctrl.project === 'y'),
             projz = (this.ctrl.project === 'z');
 
-      for (let k = 0, pos = 0; k < track.fN-1; ++k, pos+=6) {
-         buf[pos] = projx ? projv : track.fP[k*3];
-         buf[pos+1] = projy ? projv : track.fP[k*3+1];
-         buf[pos+2] = projz ? projv : track.fP[k*3+2];
-         buf[pos+3] = projx ? projv : track.fP[k*3+3];
-         buf[pos+4] = projy ? projv : track.fP[k*3+4];
-         buf[pos+5] = projz ? projv : track.fP[k*3+5];
+      for (let k = 0, pos = 0; k < track.fN - 1; ++k, pos += 6) {
+         buf[pos] = projx ? projv : track.fP[k * 3];
+         buf[pos + 1] = projy ? projv : track.fP[k * 3 + 1];
+         buf[pos + 2] = projz ? projv : track.fP[k * 3 + 2];
+         buf[pos + 3] = projx ? projv : track.fP[k * 3 + 3];
+         buf[pos + 4] = projy ? projv : track.fP[k * 3 + 4];
+         buf[pos + 5] = projz ? projv : track.fP[k * 3 + 5];
       }
 
       const lineMaterial = new THREE.LineBasicMaterial({ color, linewidth }),
@@ -3767,9 +4000,9 @@ class TGeoPainter extends ObjectPainter {
             pnts = new PointsCreator(nhits, this.#webgl, hit_scale);
 
       for (let i = 0; i < nhits; i++) {
-         pnts.addPoint(projx ? projv : hit.fP[i*3],
-                       projy ? projv : hit.fP[i*3+1],
-                       projz ? projv : hit.fP[i*3+2]);
+         pnts.addPoint(projx ? projv : hit.fP[i * 3],
+                       projy ? projv : hit.fP[i * 3 + 1],
+                       projz ? projv : hit.fP[i * 3 + 2]);
       }
 
       return pnts.createPoints({ color: getColor(hit.fMarkerColor) || '#0000ff', style: hit.fMarkerStyle }).then(mesh => {
@@ -3786,7 +4019,8 @@ class TGeoPainter extends ObjectPainter {
    drawExtraShape(obj, itemname) {
       // eslint-disable-next-line no-use-before-define
       const mesh = build(obj);
-      if (!mesh) return false;
+      if (!mesh)
+         return false;
 
       mesh.geo_name = itemname;
       mesh.geo_object = obj;
@@ -3808,15 +4042,18 @@ class TGeoPainter extends ObjectPainter {
          first_level = true;
          volumes = [];
       } else {
-         if (itemname) itemname += '/';
+         if (itemname)
+            itemname += '/';
          itemname += prnt.fName;
       }
 
-      if (!prnt.fVolume || prnt.fVolume._searched) return null;
+      if (!prnt.fVolume || prnt.fVolume._searched)
+         return null;
 
       if (name.test(prnt.fVolume.fName)) {
          res = action({ node: prnt, item: itemname });
-         if (res) return res;
+         if (res)
+            return res;
       }
 
       prnt.fVolume._searched = true;
@@ -3825,7 +4062,8 @@ class TGeoPainter extends ObjectPainter {
       if (prnt.fVolume.fNodes) {
          for (let n = 0, len = prnt.fVolume.fNodes.arr.length; n < len; ++n) {
             res = this.findNodeWithVolume(name, action, prnt.fVolume.fNodes.arr[n], itemname, volumes);
-            if (res) break;
+            if (res)
+               break;
          }
       }
 
@@ -3860,49 +4098,52 @@ class TGeoPainter extends ObjectPainter {
          return result;
 
       const mgr = {
-            GetVolume: name => {
-               const regexp = new RegExp('^'+name+'$'),
-                   currnode = this.findNodeWithVolume(regexp, arg => arg);
+         GetVolume: name => {
+            const regexp = new RegExp('^' + name + '$'),
+                  currnode = this.findNodeWithVolume(regexp, arg => arg);
 
-               if (!currnode) console.log(`Did not found ${name} volume`);
+            if (!currnode)
+               console.log(`Did not found ${name} volume`);
 
-               // return proxy object with several methods, typically used in ROOT geom scripts
-               return {
-                   found: currnode,
-                   fVolume: currnode?.node?.fVolume,
-                   InvisibleAll(flag) {
-                      setInvisibleAll(this.fVolume, flag);
-                   },
-                   Draw() {
-                      if (!this.found || !this.fVolume) return;
-                      result.obj = this.found.node;
-                      result.prefix = this.found.item;
-                      console.log(`Select volume for drawing ${this.fVolume.fName} ${result.prefix}`);
-                   },
-                   SetTransparency(lvl) {
-                     if (this.fVolume?.fMedium?.fMaterial)
-                        this.fVolume.fMedium.fMaterial.fFillStyle = 3000 + lvl;
-                   },
-                   SetLineColor(col) {
-                      if (this.fVolume) this.fVolume.fLineColor = col;
-                   }
-                };
-            },
+            // return proxy object with several methods, typically used in ROOT geom scripts
+            return {
+               found: currnode,
+               fVolume: currnode?.node?.fVolume,
+               InvisibleAll(flag) {
+                  setInvisibleAll(this.fVolume, flag);
+               },
+               Draw() {
+                  if (!this.found || !this.fVolume)
+                     return;
+                  result.obj = this.found.node;
+                  result.prefix = this.found.item;
+                  console.log(`Select volume for drawing ${this.fVolume.fName} ${result.prefix}`);
+               },
+               SetTransparency(lvl) {
+                  if (this.fVolume?.fMedium?.fMaterial)
+                     this.fVolume.fMedium.fMaterial.fFillStyle = 3000 + lvl;
+               },
+               SetLineColor(col) {
+                  if (this.fVolume)
+                     this.fVolume.fLineColor = col;
+               }
+            };
+         },
 
-            DefaultColors: () => {
-               this.ctrl.dflt_colors = true;
-            },
+         DefaultColors: () => {
+            this.ctrl.dflt_colors = true;
+         },
 
-            SetMaxVisNodes: limit => {
-               if (!this.ctrl.maxnodes)
-                  this.ctrl.maxnodes = parseInt(limit) || 0;
-            },
+         SetMaxVisNodes: limit => {
+            if (!this.ctrl.maxnodes)
+               this.ctrl.maxnodes = parseInt(limit) || 0;
+         },
 
-            SetVisLevel: limit => {
-               if (!this.ctrl.vislevel)
-                  this.ctrl.vislevel = parseInt(limit) || 0;
-            }
-          };
+         SetVisLevel: limit => {
+            if (!this.ctrl.vislevel)
+               this.ctrl.vislevel = parseInt(limit) || 0;
+         }
+      };
 
       showProgress(`Loading macro ${script_name}`);
 
@@ -3916,7 +4157,8 @@ class TGeoPainter extends ObjectPainter {
             if (line.indexOf('//') === 0)
                continue;
 
-            if (line.indexOf('gGeoManager') < 0) continue;
+            if (line.indexOf('gGeoManager') < 0)
+               continue;
             line = line.replace('->GetVolume', '.GetVolume');
             line = line.replace('->InvisibleAll', '.InvisibleAll');
             line = line.replace('->SetMaxVisNodes', '.SetMaxVisNodes');
@@ -3950,10 +4192,8 @@ class TGeoPainter extends ObjectPainter {
 
       // array for descriptors for each node
       // if array too large (>1M), use JS object while only ~1K nodes are expected to be used
-      if (recreate) {
-         // if (draw_msg.kind !== 'draw') return false;
+      if (recreate)
          nodes = (draw_msg.numnodes > 1e6) ? { length: draw_msg.numnodes } : new Array(draw_msg.numnodes); // array for all nodes
-      }
 
       draw_msg.nodes.forEach(node => {
          node = ClonedNodes.formatServerElement(node);
@@ -4134,28 +4374,30 @@ class TGeoPainter extends ObjectPainter {
          return;
 
       const main = this.#renderer.domElement.parentNode;
-      if (!main) return;
+      if (!main)
+         return;
 
       let info = main.querySelector('.geo_info');
 
       if (!msg)
          info?.remove();
-       else {
-         const spent = (new Date().getTime() - this.#start_drawing_time)*1e-3;
+      else {
+         const spent = (new Date().getTime() - this.#start_drawing_time) * 1e-3;
          if (!info) {
             info = getDocument().createElement('p');
             info.setAttribute('class', 'geo_info');
             info.setAttribute('style', 'position: absolute; text-align: center; vertical-align: middle; top: 45%; left: 40%; color: red; font-size: 150%;');
             main.append(info);
          }
-         info.innerHTML = `${msg}, ${spent.toFixed(1)}s`;
+         info.innerText = `${msg}, ${spent.toFixed(1)}s`;
       }
    }
 
    /** @summary Reentrant method to perform geometry drawing step by step */
    continueDraw() {
       // nothing to do - exit
-      if (this.isStage(stageInit)) return;
+      if (this.isStage(stageInit))
+         return;
 
       const tm0 = new Date().getTime(),
             interval = this.#first_drawing ? 1000 : 200;
@@ -4163,7 +4405,8 @@ class TGeoPainter extends ObjectPainter {
 
       while (true) {
          const res = this.nextDrawAction();
-         if (!res) break;
+         if (!res)
+            break;
 
          now = new Date().getTime();
 
@@ -4182,7 +4425,7 @@ class TGeoPainter extends ObjectPainter {
 
             this.showDrawInfo(this.#drawing_log);
 
-            if (this.#first_drawing && this.#webgl && (this.ctrl.info.num_meshes - this.#last_render_meshes > 100) && (now - this.#last_render_tm > 2.5*interval)) {
+            if (this.#first_drawing && this.#webgl && (this.ctrl.info.num_meshes - this.#last_render_meshes > 100) && (now - this.#last_render_tm > 2.5 * interval)) {
                this.adjustCameraPosition();
                this.render3D(-1);
                this.#last_render_meshes = this.ctrl.info.num_meshes;
@@ -4219,7 +4462,8 @@ class TGeoPainter extends ObjectPainter {
       if (!force && this.#last_camera_position) {
          // if camera position does not changed a lot, ignore such change
          const dist = this.#last_camera_position.distanceTo(origin);
-         if (dist < (this.#overall_size || 1000)*1e-4) return;
+         if (dist < (this.#overall_size || 1000) * 1e-4)
+            return;
       }
 
       this.#last_camera_position = origin; // remember current camera position
@@ -4293,7 +4537,7 @@ class TGeoPainter extends ObjectPainter {
       // its needed for outlinePass - do rendering, most consuming time
       if (this.#webgl && this.#effectComposer?.passes)
          this.#effectComposer.render();
-       else if (this.#webgl && this.#bloomComposer?.passes) {
+      else if (this.#webgl && this.#bloomComposer?.passes) {
          this.#renderer.clear();
          this.#camera.layers.set(_BLOOM_SCENE);
          this.#bloomComposer.render();
@@ -4404,14 +4648,14 @@ class TGeoPainter extends ObjectPainter {
       }
 
       if ('shapes' in job) {
-         for (let n=0; n<job.shapes.length; ++n) {
+         for (let n = 0; n < job.shapes.length; ++n) {
             const item = job.shapes[n],
                   origin = this.#build_shapes[n];
 
             if (item.buf_pos && item.buf_norm) {
                if (!item.buf_pos.length)
                   origin.geom = null;
-                else if (item.buf_pos.length !== item.buf_norm.length) {
+               else if (item.buf_pos.length !== item.buf_norm.length) {
                   console.error(`item.buf_pos.length ${item.buf_pos.length} !== item.buf_norm.length ${item.buf_norm.length}`);
                   origin.geom = null;
                } else {
@@ -4481,7 +4725,7 @@ class TGeoPainter extends ObjectPainter {
                              { log: 0, reverse: false });
       const y_handle = new TAxisPainter(null, create(clTAxis));
       y_handle.configureAxis('yaxis', y1, y2, y1, y2, false, [y1, y2],
-                              { log: 0, reverse: false });
+                             { log: 0, reverse: false });
 
       const ii = this.#camera.orthoIndicies ?? [0, 1, 2];
       let buf, pos, midZ = 0, gridZ = 0;
@@ -4490,9 +4734,9 @@ class TGeoPainter extends ObjectPainter {
          gridZ = midZ = this.#camera.orthoZ[0];
 
       const addPoint = (x, y, z) => {
-         buf[pos+ii[0]] = x;
-         buf[pos+ii[1]] = y;
-         buf[pos+ii[2]] = z ?? gridZ;
+         buf[pos + ii[0]] = x;
+         buf[pos + ii[1]] = y;
+         buf[pos + ii[2]] = z ?? gridZ;
          pos += 3;
       }, createText = (lbl, size) => {
          const text3d = createTextGeometry(lbl, size);
@@ -4500,7 +4744,7 @@ class TGeoPainter extends ObjectPainter {
          text3d._width = text3d.boundingBox.max.x - text3d.boundingBox.min.x;
          text3d._height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
 
-         text3d.translate(-text3d._width/2, -text3d._height/2, 0);
+         text3d.translate(-text3d._width / 2, -text3d._height / 2, 0);
          if (this.#camera.orthoSign < 0)
             text3d.rotateY(Math.PI);
 
@@ -4532,7 +4776,7 @@ class TGeoPainter extends ObjectPainter {
             ox2 = ticks.major.at(-1);
          }
 
-         buf = new Float32Array(3*6);
+         buf = new Float32Array(3 * 6);
          pos = 0;
 
          addPoint(ox1, oy1, midZ);
@@ -4576,27 +4820,30 @@ class TGeoPainter extends ObjectPainter {
             const x = xticks.tick, k = (xticks.kind === 1) ? 1.0 : 0.6;
 
             if (show_grid) {
-               buf = new Float32Array(2*3); pos = 0;
-               addPoint(x, ymax - k*tick_size - grid_gap);
-               addPoint(x, ymin + k*tick_size + grid_gap);
+               buf = new Float32Array(2 * 3);
+               pos = 0;
+               addPoint(x, ymax - k * tick_size - grid_gap);
+               addPoint(x, ymin + k * tick_size + grid_gap);
                container.add(createLineSegments(buf, xticks.kind === 1 ? gridMaterial1 : gridMaterial2));
             }
 
-            buf = new Float32Array(4*3); pos = 0;
+            buf = new Float32Array(4 * 3);
+            pos = 0;
             addPoint(x, ymax);
-            addPoint(x, ymax - k*tick_size);
+            addPoint(x, ymax - k * tick_size);
             addPoint(x, ymin);
-            addPoint(x, ymin + k*tick_size);
+            addPoint(x, ymin + k * tick_size);
 
             container.add(createLineSegments(buf, lineMaterial));
 
-            if (xticks.kind !== 1) continue;
+            if (xticks.kind !== 1)
+               continue;
 
             const text3d = createText(x_handle.format(x, true), text_size);
 
-            container.add(createTextMesh(text3d, textMaterial, x, ymax - tick_size - text_size/2 - text3d._height/2));
+            container.add(createTextMesh(text3d, textMaterial, x, ymax - tick_size - text_size / 2 - text3d._height / 2));
 
-            container.add(createTextMesh(text3d, textMaterial, x, ymin + tick_size + text_size/2 + text3d._height/2));
+            container.add(createTextMesh(text3d, textMaterial, x, ymin + tick_size + text_size / 2 + text3d._height / 2));
          }
 
          const yticks = y_handle.createTicks();
@@ -4605,27 +4852,30 @@ class TGeoPainter extends ObjectPainter {
             const y = yticks.tick, k = (yticks.kind === 1) ? 1.0 : 0.6;
 
             if (show_grid) {
-               buf = new Float32Array(2*3); pos = 0;
-               addPoint(xmin + k*tick_size + grid_gap, y);
-               addPoint(xmax - k*tick_size - grid_gap, y);
+               buf = new Float32Array(2 * 3);
+               pos = 0;
+               addPoint(xmin + k * tick_size + grid_gap, y);
+               addPoint(xmax - k * tick_size - grid_gap, y);
                container.add(createLineSegments(buf, yticks.kind === 1 ? gridMaterial1 : gridMaterial2));
             }
 
-            buf = new Float32Array(4*3); pos = 0;
+            buf = new Float32Array(4 * 3);
+            pos = 0;
             addPoint(xmin, y);
-            addPoint(xmin + k*tick_size, y);
+            addPoint(xmin + k * tick_size, y);
             addPoint(xmax, y);
-            addPoint(xmax - k*tick_size, y);
+            addPoint(xmax - k * tick_size, y);
 
             container.add(createLineSegments(buf, lineMaterial));
 
-            if (yticks.kind !== 1) continue;
+            if (yticks.kind !== 1)
+               continue;
 
             const text3d = createText(y_handle.format(y, true), text_size);
 
-            container.add(createTextMesh(text3d, textMaterial, xmin + tick_size + text_size/2 + text3d._width/2, y));
+            container.add(createTextMesh(text3d, textMaterial, xmin + tick_size + text_size / 2 + text3d._width / 2, y));
 
-            container.add(createTextMesh(text3d, textMaterial, xmax - tick_size - text_size/2 - text3d._width/2, y));
+            container.add(createTextMesh(text3d, textMaterial, xmax - tick_size - text_size / 2 - text3d._width / 2, y));
          }
 
          return true;
@@ -4642,45 +4892,50 @@ class TGeoPainter extends ObjectPainter {
          return false;
 
       const box = this.getGeomBoundingBox(this.#toplevel, this.#superimpose ? 'original' : undefined),
-          container = this.getExtrasContainer('create', 'axis'),
-          text_size = 0.02 * Math.max(box.max.x - box.min.x, box.max.y - box.min.y, box.max.z - box.min.z),
-          center = [0, 0, 0],
-          names = ['x', 'y', 'z'],
-          labels = ['X', 'Y', 'Z'],
-          colors = ['red', 'green', 'blue'],
-          ortho = this.isOrthoCamera(),
-          ckind = this.ctrl.camera_kind ?? 'perspective';
+            container = this.getExtrasContainer('create', 'axis'),
+            text_size = 0.02 * Math.max(box.max.x - box.min.x, box.max.y - box.min.y, box.max.z - box.min.z),
+            center = [0, 0, 0],
+            names = ['x', 'y', 'z'],
+            labels = ['X', 'Y', 'Z'],
+            colors = ['red', 'green', 'blue'],
+            ortho = this.isOrthoCamera(),
+            ckind = this.ctrl.camera_kind ?? 'perspective';
 
       if (this.ctrl._axis === 2) {
          for (let naxis = 0; naxis < 3; ++naxis) {
             const name = names[naxis];
-            if ((box.min[name] <= 0) && (box.max[name] >= 0)) continue;
-            center[naxis] = (box.min[name] + box.max[name])/2;
+            if ((box.min[name] <= 0) && (box.max[name] >= 0))
+               continue;
+            center[naxis] = (box.min[name] + box.max[name]) / 2;
          }
       }
 
       for (let naxis = 0; naxis < 3; ++naxis) {
          // exclude axis which is not seen
-         if (ortho && ckind.indexOf(labels[naxis]) < 0) continue;
+         if (ortho && ckind.indexOf(labels[naxis]) < 0)
+            continue;
 
          const buf = new Float32Array(6),
                color = colors[naxis],
                name = names[naxis],
-
-          valueToString = val => {
-            if (!val) return '0';
-            const lg = Math.log10(Math.abs(val));
-            if (lg < 0) {
-               if (lg > -1) return val.toFixed(2);
-               if (lg > -2) return val.toFixed(3);
-            } else {
-               if (lg < 2) return val.toFixed(1);
-               if (lg < 4) return val.toFixed(0);
-            }
-            return val.toExponential(2);
-         },
-
-          lbl = valueToString(box.max[name]) + ' ' + labels[naxis];
+               valueToString = val => {
+                  if (!val)
+                     return '0';
+                  const lg = Math.log10(Math.abs(val));
+                  if (lg < 0) {
+                     if (lg > -1)
+                        return val.toFixed(2);
+                     if (lg > -2)
+                        return val.toFixed(3);
+                  } else {
+                     if (lg < 2)
+                        return val.toFixed(1);
+                     if (lg < 4)
+                        return val.toFixed(0);
+                  }
+                  return val.toExponential(2);
+               },
+               lbl = valueToString(box.max[name]) + ' ' + labels[naxis];
 
          buf[0] = box.min.x;
          buf[1] = box.min.y;
@@ -4691,14 +4946,16 @@ class TGeoPainter extends ObjectPainter {
          buf[5] = box.min.z;
 
          switch (naxis) {
-           case 0: buf[3] = box.max.x; break;
-           case 1: buf[4] = box.max.y; break;
-           case 2: buf[5] = box.max.z; break;
+            case 0: buf[3] = box.max.x; break;
+            case 1: buf[4] = box.max.y; break;
+            case 2: buf[5] = box.max.z; break;
          }
 
          if (this.ctrl._axis === 2) {
-            for (let k = 0; k < 6; ++k)
-               if ((k % 3) !== naxis) buf[k] = center[k%3];
+            for (let k = 0; k < 6; ++k) {
+               if ((k % 3) !== naxis)
+                  buf[k] = center[k % 3];
+            }
          }
 
          const lineMaterial = new THREE.LineBasicMaterial({ color });
@@ -4712,7 +4969,7 @@ class TGeoPainter extends ObjectPainter {
 
          if ((center[naxis] === 0) && (center[naxis] >= box.min[name]) && (center[naxis] <= box.max[name])) {
             if ((this.ctrl._axis !== 2) || (naxis === 0)) {
-               const geom = ortho ? new THREE.CircleGeometry(text_size*0.25) : new THREE.SphereGeometry(text_size*0.25);
+               const geom = ortho ? new THREE.CircleGeometry(text_size * 0.25) : new THREE.SphereGeometry(text_size * 0.25);
                mesh = new THREE.Mesh(geom, textMaterial);
                mesh.translateX(naxis === 0 ? center[0] : buf[0]);
                mesh.translateY(naxis === 1 ? center[1] : buf[1]);
@@ -4749,7 +5006,7 @@ class TGeoPainter extends ObjectPainter {
                }
                angle = Math.round(angle / Math.PI * 2 + 2) % 4;
                if (this._last_angle !== angle) {
-                  this.rotateX((angle - this._last_angle) * Math.PI/2);
+                  this.rotateX((angle - this._last_angle) * Math.PI / 2);
                   this._last_angle = angle;
                }
             };
@@ -4757,7 +5014,7 @@ class TGeoPainter extends ObjectPainter {
 
          let textbox = new THREE.Box3().setFromObject(mesh);
 
-         text3d.translate(-textbox.max.x*0.5, -textbox.max.y/2, 0);
+         text3d.translate(-textbox.max.x * 0.5, -textbox.max.y / 2, 0);
 
          mesh.translateX(buf[3]);
          mesh.translateY(buf[4]);
@@ -4768,38 +5025,39 @@ class TGeoPainter extends ObjectPainter {
          if (naxis === 0) {
             if (ortho && ckind.indexOf('OX') > 0)
                setTopRotation(mesh, 0);
-             else if (ortho ? ckind.indexOf('OY') > 0 : this.ctrl._yup)
+            else if (ortho ? ckind.indexOf('OY') > 0 : this.ctrl._yup)
                setSideRotation(mesh, new THREE.Vector3(0, 0, -1));
-             else {
+            else {
                setSideRotation(mesh, new THREE.Vector3(0, 1, 0));
-               mesh.rotateX(Math.PI/2);
+               mesh.rotateX(Math.PI / 2);
             }
 
-            mesh.translateX(text_size*0.5 + textbox.max.x*0.5);
+            mesh.translateX(text_size * 0.5 + textbox.max.x * 0.5);
          } else if (naxis === 1) {
             if (ortho ? ckind.indexOf('OY') > 0 : this.ctrl._yup) {
                setTopRotation(mesh, 2);
-               mesh.rotateX(-Math.PI/2);
-               mesh.rotateY(-Math.PI/2);
-               mesh.translateX(text_size*0.5 + textbox.max.x*0.5);
+               mesh.rotateX(-Math.PI / 2);
+               mesh.rotateY(-Math.PI / 2);
+               mesh.translateX(text_size * 0.5 + textbox.max.x * 0.5);
             } else {
                setSideRotation(mesh);
-               mesh.rotateX(Math.PI/2);
-               mesh.rotateY(-Math.PI/2);
-               mesh.translateX(-textbox.max.x*0.5 - text_size*0.5);
+               mesh.rotateX(Math.PI / 2);
+               mesh.rotateY(-Math.PI / 2);
+               mesh.translateX(-textbox.max.x * 0.5 - text_size * 0.5);
             }
          } else if (naxis === 2) {
             if (ortho ? ckind.indexOf('OZ') < 0 : this.ctrl._yup) {
                const zox = ortho && (ckind.indexOf('ZOX') > 0 || ckind.indexOf('ZNOX') > 0);
                setSideRotation(mesh, zox ? new THREE.Vector3(0, -1, 0) : undefined);
-               mesh.rotateY(-Math.PI/2);
-               if (zox) mesh.rotateX(-Math.PI/2);
+               mesh.rotateY(-Math.PI / 2);
+               if (zox)
+                  mesh.rotateX(-Math.PI / 2);
             } else {
                setTopRotation(mesh);
-               mesh.rotateX(Math.PI/2);
-               mesh.rotateZ(Math.PI/2);
+               mesh.rotateX(Math.PI / 2);
+               mesh.rotateZ(Math.PI / 2);
             }
-            mesh.translateX(text_size*0.5 + textbox.max.x*0.5);
+            mesh.translateX(text_size * 0.5 + textbox.max.x * 0.5);
          }
 
          container.add(mesh);
@@ -4810,7 +5068,7 @@ class TGeoPainter extends ObjectPainter {
          mesh._no_clip = true; // skip from clipping
          textbox = new THREE.Box3().setFromObject(mesh);
 
-         text3d.translate(-textbox.max.x*0.5, -textbox.max.y/2, 0);
+         text3d.translate(-textbox.max.x * 0.5, -textbox.max.y / 2, 0);
 
          mesh._axis_name = name;
 
@@ -4821,37 +5079,38 @@ class TGeoPainter extends ObjectPainter {
          if (naxis === 0) {
             if (ortho && ckind.indexOf('OX') > 0)
                setTopRotation(mesh, 0);
-             else if (ortho ? ckind.indexOf('OY') > 0 : this.ctrl._yup)
+            else if (ortho ? ckind.indexOf('OY') > 0 : this.ctrl._yup)
                setSideRotation(mesh, new THREE.Vector3(0, 0, -1));
-             else {
+            else {
                setSideRotation(mesh, new THREE.Vector3(0, 1, 0));
-               mesh.rotateX(Math.PI/2);
+               mesh.rotateX(Math.PI / 2);
             }
-            mesh.translateX(-text_size*0.5 - textbox.max.x*0.5);
+            mesh.translateX(-text_size * 0.5 - textbox.max.x * 0.5);
          } else if (naxis === 1) {
             if (ortho ? ckind.indexOf('OY') > 0 : this.ctrl._yup) {
                setTopRotation(mesh, 2);
-               mesh.rotateX(-Math.PI/2);
-               mesh.rotateY(-Math.PI/2);
-               mesh.translateX(-textbox.max.x*0.5 - text_size*0.5);
+               mesh.rotateX(-Math.PI / 2);
+               mesh.rotateY(-Math.PI / 2);
+               mesh.translateX(-textbox.max.x * 0.5 - text_size * 0.5);
             } else {
                setSideRotation(mesh);
-               mesh.rotateX(Math.PI/2);
-               mesh.rotateY(-Math.PI/2);
-               mesh.translateX(textbox.max.x*0.5 + text_size*0.5);
+               mesh.rotateX(Math.PI / 2);
+               mesh.rotateY(-Math.PI / 2);
+               mesh.translateX(textbox.max.x * 0.5 + text_size * 0.5);
             }
          } else if (naxis === 2) {
             if (ortho ? ckind.indexOf('OZ') < 0 : this.ctrl._yup) {
                const zox = ortho && (ckind.indexOf('ZOX') > 0 || ckind.indexOf('ZNOX') > 0);
                setSideRotation(mesh, zox ? new THREE.Vector3(0, -1, 0) : undefined);
-               mesh.rotateY(-Math.PI/2);
-               if (zox) mesh.rotateX(-Math.PI/2);
+               mesh.rotateY(-Math.PI / 2);
+               if (zox)
+                  mesh.rotateX(-Math.PI / 2);
             } else {
                setTopRotation(mesh);
-               mesh.rotateX(Math.PI/2);
-               mesh.rotateZ(Math.PI/2);
+               mesh.rotateX(Math.PI / 2);
+               mesh.rotateZ(Math.PI / 2);
             }
-            mesh.translateX(-textbox.max.x*0.5 - text_size*0.5);
+            mesh.translateX(-textbox.max.x * 0.5 - text_size * 0.5);
          }
 
          container.add(mesh);
@@ -4872,8 +5131,10 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Set auto rotate mode */
    setAutoRotate(on) {
-      if (this.ctrl.project) return;
-      if (on !== undefined) this.ctrl.rotate = on;
+      if (this.ctrl.project)
+         return;
+      if (on !== undefined)
+         this.ctrl.rotate = on;
       this.autorotate(2.5);
    }
 
@@ -4903,7 +5164,8 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Should be called when depth test flag is changed */
    changedDepthTest() {
-      if (!this.#toplevel) return;
+      if (!this.#toplevel)
+         return;
       const flag = this.ctrl.depthTest;
       this.#toplevel.traverse(node => {
          if (node instanceof THREE.Mesh)
@@ -4924,12 +5186,13 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Assign clipping attributes to the meshes - supported only for webgl */
    updateClipping(without_render, force_traverse) {
       // do not try clipping with SVG renderer
-      if (this.#renderer?.jsroot_render3d === constants.Render3D.SVG) return;
+      if (this.#renderer?.jsroot_render3d === constants.Render3D.SVG)
+         return;
 
       if (!this.#clip_planes) {
          this.#clip_planes = [new THREE.Plane(new THREE.Vector3(1, 0, 0), 0),
-                             new THREE.Plane(new THREE.Vector3(0, this.ctrl._yup ? -1 : 1, 0), 0),
-                             new THREE.Plane(new THREE.Vector3(0, 0, this.ctrl._yup ? 1 : -1), 0)];
+                              new THREE.Plane(new THREE.Vector3(0, this.ctrl._yup ? -1 : 1, 0), 0),
+                              new THREE.Plane(new THREE.Vector3(0, 0, this.ctrl._yup ? 1 : -1), 0)];
       }
 
       const clip = this.ctrl.clip,
@@ -4942,7 +5205,8 @@ class TGeoPainter extends ObjectPainter {
          if (clip[k].enabled)
             clip_cfg += 2 << k;
          if (this.#clip_planes[k].constant !== clip_constants[k]) {
-            if (clip[k].enabled) changed = true;
+            if (clip[k].enabled)
+               changed = true;
             this.#clip_planes[k].constant = clip_constants[k];
          }
          if (clip[k].enabled)
@@ -4986,7 +5250,8 @@ class TGeoPainter extends ObjectPainter {
 
       this.ctrl.doubleside = any_clipping;
 
-      if (!without_render) this.render3D(0);
+      if (!without_render)
+         this.render3D(0);
 
       return changed;
    }
@@ -5106,15 +5371,16 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Remove already drawn node. Used by geom viewer */
    removeDrawnNode(nodeid) {
-      if (!this.#draw_nodes) return;
+      if (!this.#draw_nodes)
+         return;
 
       const new_nodes = [];
 
       for (let n = 0; n < this.#draw_nodes.length; ++n) {
          const entry = this.#draw_nodes[n];
          if ((entry.nodeid === nodeid) || this.#clones.isIdInStack(nodeid, entry.stack))
-            this.#clones.createObject3D(entry.stack, this.#toplevel, 'delete_mesh');
-          else
+            this.#clones.createObject3D(entry.stack, this.#toplevel, kDeleteMesh);
+         else
             new_nodes.push(entry);
       }
 
@@ -5205,7 +5471,7 @@ class TGeoPainter extends ObjectPainter {
       this.#toplevel = null;
       this.#fullgeom_proj = undefined;
       this.#fog = undefined;
-      this.#camera= undefined;
+      this.#camera = undefined;
       this.#camera0pos = undefined;
       this.#lookat = undefined;
       this.#selected_mesh = undefined;
@@ -5236,7 +5502,8 @@ class TGeoPainter extends ObjectPainter {
    performResize(width, height) {
       if ((this.#scene_width === width) && (this.#scene_height === height))
          return false;
-      if ((width < 10) || (height < 10)) return false;
+      if ((width < 10) || (height < 10))
+         return false;
 
       this.#scene_width = width;
       this.#scene_height = height;
@@ -5274,7 +5541,7 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Toggle enlarge state */
    toggleEnlarge() {
       if (this.enlargeMain('toggle'))
-        this.checkResize();
+         this.checkResize();
    }
 
    /** @summary either change mesh wireframe or return current value
@@ -5342,7 +5609,7 @@ class TGeoPainter extends ObjectPainter {
       this.#full_redrawing = true;
    }
 
-    /** @summary Redraw TGeo object inside TPad */
+   /** @summary Redraw TGeo object inside TPad */
    redraw() {
       if (this.#superimpose) {
          const cfg = getHistPainter3DCfg(this.getMainPainter());
@@ -5394,34 +5661,189 @@ class TGeoPainter extends ObjectPainter {
       return this.prepareObjectDraw(draw_obj, name_prefix);
    }
 
-  /** @summary draw TGeo object */
+   /** @summary Build three.js object */
+   static build3d(obj, sopt) {
+      if (!obj)
+         return null;
+
+      let opt = sopt || {};
+      if (isStr(sopt)) {
+         const painter = new TGeoPainter(null, obj);
+         painter.decodeOptions(sopt);
+         opt = painter.ctrl;
+         opt.numfaces = opt.maxfaces;
+         opt.numnodes = opt.maxnodes;
+      }
+
+      if (!opt.numfaces)
+         opt.numfaces = 100000;
+      if (!opt.numnodes)
+         opt.numnodes = 1000;
+      if (!opt.frustum)
+         opt.frustum = null;
+
+      opt.res_mesh = opt.res_faces = 0;
+
+      if (opt.instancing === undefined)
+         opt.instancing = -1;
+
+      opt.info = { num_meshes: 0, num_faces: 0 };
+
+      let clones, visibles;
+
+      if (obj.visibles && obj.nodes && obj.numnodes) {
+         // case of draw message from geometry viewer
+
+         const nodes = obj.numnodes > 1e6 ? { length: obj.numnodes } : new Array(obj.numnodes);
+
+         obj.nodes.forEach(node => {
+            nodes[node.id] = ClonedNodes.formatServerElement(node);
+         });
+
+         clones = new ClonedNodes(null, nodes);
+         clones.name_prefix = clones.getNodeName(0);
+
+         // normally only need when making selection, not used in geo viewer
+         // this.geo_clones.setMaxVisNodes(draw_msg.maxvisnodes);
+         // this.geo_clones.setVisLevel(draw_msg.vislevel);
+         // TODO: provide from server
+         clones.maxdepth = 20;
+
+         const nsegm = obj.cfg?.nsegm || 30;
+
+         for (let cnt = 0; cnt < obj.visibles.length; ++cnt) {
+            const item = obj.visibles[cnt], rd = item.ri;
+
+            // entry may be provided without shape - it is ok
+            if (rd)
+               item.server_shape = rd.server_shape = createServerGeometry(rd, nsegm);
+         }
+
+         visibles = obj.visibles;
+      } else {
+         let shape = null, hide_top = false;
+
+         if (('fShapeBits' in obj) && ('fShapeId' in obj)) {
+            shape = obj;
+            obj = null;
+         } else if ((obj._typename === clTGeoVolumeAssembly) || (obj._typename === clTGeoVolume))
+            shape = obj.fShape;
+         else if ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract))
+            shape = obj.fShape;
+         else if (obj._typename === clTGeoManager) {
+            obj = obj.fMasterVolume;
+            hide_top = !opt.showtop;
+            shape = obj.fShape;
+         } else if (obj.fVolume)
+            shape = obj.fVolume.fShape;
+         else
+            obj = null;
+
+         if (opt.composite && shape && (shape._typename === clTGeoCompositeShape) && shape.fNode)
+            obj = buildCompositeVolume(shape);
+
+         if (!obj && shape)
+            obj = Object.assign(create(clTNamed), { _typename: clTEveGeoShapeExtract, fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 1], fElements: null, fRnrSelf: true });
+
+         if (!obj)
+            return null;
+
+         if (obj._typename.indexOf(clTGeoVolume) === 0)
+            obj = { _typename: clTGeoNode, fVolume: obj, fName: obj.fName, $geoh: obj.$geoh, _proxy: true };
+
+         clones = new ClonedNodes(obj);
+         clones.setVisLevel(opt.vislevel);
+         clones.setMaxVisNodes(opt.numnodes);
+
+         if (opt.dflt_colors)
+            clones.setDefaultColors(true);
+
+         const uniquevis = opt.no_screen ? 0 : clones.markVisibles(true);
+         if (uniquevis <= 0)
+            clones.markVisibles(false, false, hide_top);
+         else
+            clones.markVisibles(true, true, hide_top); // copy bits once and use normal visibility bits
+
+         clones.produceIdShifts();
+
+         // collect visible nodes
+         const res = clones.collectVisibles(opt.numfaces, opt.frustum);
+
+         visibles = res.lst;
+      }
+
+      if (!opt.material_kind)
+         opt.material_kind = 'lambert';
+      if (opt.set_names === undefined)
+         opt.set_names = true;
+
+      clones.setConfig(opt);
+
+      // collect shapes
+      const shapes = clones.collectShapes(visibles);
+
+      clones.buildShapes(shapes, opt.numfaces);
+
+      const toplevel = new THREE.Object3D();
+      toplevel.clones = clones; // keep reference on JSROOT data
+
+      const colors = getRootColors();
+
+      if (clones.createInstancedMeshes(opt, toplevel, visibles, shapes, colors))
+         return toplevel;
+
+      for (let n = 0; n < visibles.length; ++n) {
+         const entry = visibles[n];
+         if (entry.done)
+            continue;
+
+         const shape = entry.server_shape || shapes[entry.shapeid];
+         if (!shape.ready) {
+            console.warn('shape marked as not ready when it should');
+            break;
+         }
+
+         clones.createEntryMesh(opt, toplevel, entry, shape, colors);
+      }
+
+      return toplevel;
+   }
+
+   /** @summary draw TGeo object */
    static async draw(dom, obj, opt) {
-      if (!obj) return null;
+      if (!obj)
+         return null;
 
       let shape = null, extras = null, extras_path = '', is_eve = false;
 
       if (('fShapeBits' in obj) && ('fShapeId' in obj)) {
-         shape = obj; obj = null;
+         shape = obj;
+         obj = null;
       } else if ((obj._typename === clTGeoVolumeAssembly) || (obj._typename === clTGeoVolume))
          shape = obj.fShape;
       else if ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract)) {
-         shape = obj.fShape; is_eve = true;
+         shape = obj.fShape;
+         is_eve = true;
       } else if (obj._typename === clTGeoManager)
          shape = obj.fMasterVolume.fShape;
       else if (obj._typename === clTGeoOverlap) {
          extras = obj.fMarker;
          extras_path = '<prnt>/Marker';
          obj = buildOverlapVolume(obj);
-         if (!opt) opt = 'wire';
-      } else if ('fVolume' in obj) {
-         if (obj.fVolume) shape = obj.fVolume.fShape;
-      } else
+         if (!opt)
+            opt = 'wire';
+      } else if ('fVolume' in obj)
+         shape = obj.fVolume?.fShape;
+      else
          obj = null;
 
       if (isStr(opt) && opt.indexOf('comp') === 0 && shape && (shape._typename === clTGeoCompositeShape) && shape.fNode) {
          let maxlvl = 1;
          opt = opt.slice(4);
-         if (opt[0] === 'x') { maxlvl = 999; opt = opt.slice(1) + '_vislvl999'; }
+         if (opt[0] === 'x') {
+            maxlvl = 999;
+            opt = opt.slice(1) + '_vislvl999';
+         }
          obj = buildCompositeVolume(shape, maxlvl);
       }
 
@@ -5578,7 +6000,8 @@ function createGeoPainter(dom, obj, opt) {
 /** @summary provide menu for geo object
   * @private */
 function provideMenu(menu, item, hpainter) {
-   if (!item._geoobj) return false;
+   if (!item._geoobj)
+      return false;
 
    const obj = item._geoobj, vol = item._volume,
          iseve = ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract));
@@ -5589,7 +6012,8 @@ function provideMenu(menu, item, hpainter) {
    menu.separator();
 
    const scanEveVisible = (obj2, arg, skip_this) => {
-      if (!arg) arg = { visible: 0, hidden: 0 };
+      if (!arg)
+         arg = { visible: 0, hidden: 0 };
 
       if (!skip_this) {
          if (arg.assign !== undefined)
@@ -5637,12 +6061,12 @@ function provideMenu(menu, item, hpainter) {
       hpainter.updateTreeNode(item);
       findItemWithGeoPainter(item, true);
    }, drawitem = findItemWithGeoPainter(item),
-      fullname = drawitem ? hpainter.itemFullName(item, drawitem) : '';
+         fullname = drawitem ? hpainter.itemFullName(item, drawitem) : '';
 
    if ((item._geoobj._typename.indexOf(clTGeoNode) === 0) && drawitem) {
       menu.add('Focus', () => {
-        if (drawitem && isFunc(drawitem._painter?.focusOnItem))
-           drawitem._painter.focusOnItem(fullname);
+         if (drawitem && isFunc(drawitem._painter?.focusOnItem))
+            drawitem._painter.focusOnItem(fullname);
       });
    }
 
@@ -5672,9 +6096,9 @@ function provideMenu(menu, item, hpainter) {
       }
 
       menu.addchk(is_visible, 'Logical vis',
-            geoBITS.kVisThis, toggleMenuBit, 'Logical node visibility - all instances');
+                  geoBITS.kVisThis, toggleMenuBit, 'Logical node visibility - all instances');
       menu.addchk(testGeoBit(vol, geoBITS.kVisDaughters), 'Daughters',
-            geoBITS.kVisDaughters, toggleMenuBit, 'Logical node daugthers visibility');
+                  geoBITS.kVisDaughters, toggleMenuBit, 'Logical node daugthers visibility');
    }
 
    return true;
@@ -5729,7 +6153,8 @@ function createList(parent, lst, name, title) {
 function expandGeoObject(parent, obj) {
    injectGeoStyle();
 
-   if (!parent || !obj) return false;
+   if (!parent || !obj)
+      return false;
 
    const isnode = (obj._typename.indexOf(clTGeoNode) === 0),
          isvolume = (obj._typename.indexOf(clTGeoVolume) === 0),
@@ -5737,9 +6162,11 @@ function expandGeoObject(parent, obj) {
          iseve = ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract)),
          isoverlap = (obj._typename === clTGeoOverlap);
 
-   if (!isnode && !isvolume && !ismanager && !iseve && !isoverlap) return false;
+   if (!isnode && !isvolume && !ismanager && !iseve && !isoverlap)
+      return false;
 
-   if (parent._childs) return true;
+   if (parent._childs)
+      return true;
 
    if (ismanager) {
       createList(parent, obj.fMaterials, 'Materials', 'list of materials');
@@ -5799,9 +6226,10 @@ createItem = function(node, obj, name) {
       _parent: node,
       _geoobj: obj,
       _get(item /* ,itemname */) {
-          // mark object as belong to the hierarchy, require to
-          if (item._geoobj) item._geoobj.$geoh = true;
-          return Promise.resolve(item._geoobj);
+         // mark object as belong to the hierarchy, require to
+         if (item._geoobj)
+            item._geoobj.$geoh = true;
+         return Promise.resolve(item._geoobj);
       }
    };
    let volume, shape, subnodes, iseve = false;
@@ -5814,7 +6242,8 @@ createItem = function(node, obj, name) {
       sub._icon = 'img_geomixture';
    else if ((obj._typename.indexOf(clTGeoNode) === 0) && obj.fVolume) {
       sub._title = 'node:' + obj._typename;
-      if (obj.fTitle) sub._title += ' ' + obj.fTitle;
+      if (obj.fTitle)
+         sub._title += ' ' + obj.fTitle;
       volume = obj.fVolume;
    } else if (obj._typename.indexOf(clTGeoVolume) === 0)
       volume = obj;
@@ -5831,7 +6260,8 @@ createItem = function(node, obj, name) {
    }
 
    if (volume || shape || subnodes) {
-      if (volume) sub._volume = volume;
+      if (volume)
+         sub._volume = volume;
 
       if (subnodes) {
          sub._more = true;
@@ -5896,10 +6326,11 @@ async function drawDummy3DGeom(painter) {
    shape.fShapeBits = 0;
    shape.fOrigin = [0, 0, 0];
 
-   const obj = Object.assign(create(clTNamed),
-                { _typename: clTEveGeoShapeExtract,
-                  fTrans: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-                  fShape: shape, fRGBA: [0, 0, 0, 0], fElements: null, fRnrSelf: false }),
+   const obj = Object.assign(create(clTNamed), {
+      _typename: clTEveGeoShapeExtract,
+      fTrans: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+      fShape: shape, fRGBA: [0, 0, 0, 0], fElements: null, fRnrSelf: false
+   }),
          pp = painter.getPadPainter(),
          pad = pp?.getRootPad(true),
          opt = 'dummy;' + (pad?.fFillColor && (pad?.fFillStyle > 1000) ? 'bkgr_' + pad.fFillColor : '');
@@ -5938,136 +6369,7 @@ function drawAxis3D() {
   * // this is three.js object and can be now inserted in the scene
   */
 function build(obj, opt) {
-   if (!obj) return null;
-
-   if (!opt) opt = {};
-   if (!opt.numfaces) opt.numfaces = 100000;
-   if (!opt.numnodes) opt.numnodes = 1000;
-   if (!opt.frustum) opt.frustum = null;
-
-   opt.res_mesh = opt.res_faces = 0;
-
-   if (opt.instancing === undefined)
-      opt.instancing = -1;
-
-   opt.info = { num_meshes: 0, num_faces: 0 };
-
-   let clones, visibles;
-
-   if (obj.visibles && obj.nodes && obj.numnodes) {
-      // case of draw message from geometry viewer
-
-      const nodes = obj.numnodes > 1e6 ? { length: obj.numnodes } : new Array(obj.numnodes);
-
-      obj.nodes.forEach(node => {
-         nodes[node.id] = ClonedNodes.formatServerElement(node);
-      });
-
-      clones = new ClonedNodes(null, nodes);
-      clones.name_prefix = clones.getNodeName(0);
-
-      // normally only need when making selection, not used in geo viewer
-      // this.geo_clones.setMaxVisNodes(draw_msg.maxvisnodes);
-      // this.geo_clones.setVisLevel(draw_msg.vislevel);
-      // TODO: provide from server
-      clones.maxdepth = 20;
-
-      const nsegm = obj.cfg?.nsegm || 30;
-
-      for (let cnt = 0; cnt < obj.visibles.length; ++cnt) {
-         const item = obj.visibles[cnt], rd = item.ri;
-
-         // entry may be provided without shape - it is ok
-         if (rd)
-            item.server_shape = rd.server_shape = createServerGeometry(rd, nsegm);
-      }
-
-      visibles = obj.visibles;
-   } else {
-      let shape = null, hide_top = false;
-
-      if (('fShapeBits' in obj) && ('fShapeId' in obj)) {
-         shape = obj; obj = null;
-      } else if ((obj._typename === clTGeoVolumeAssembly) || (obj._typename === clTGeoVolume))
-         shape = obj.fShape;
-       else if ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract))
-         shape = obj.fShape;
-       else if (obj._typename === clTGeoManager) {
-         obj = obj.fMasterVolume;
-         hide_top = !opt.showtop;
-         shape = obj.fShape;
-      } else if (obj.fVolume)
-         shape = obj.fVolume.fShape;
-       else
-         obj = null;
-
-
-      if (opt.composite && shape && (shape._typename === clTGeoCompositeShape) && shape.fNode)
-         obj = buildCompositeVolume(shape);
-
-      if (!obj && shape)
-         obj = Object.assign(create(clTNamed), { _typename: clTEveGeoShapeExtract, fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 1], fElements: null, fRnrSelf: true });
-
-      if (!obj) return null;
-
-      if (obj._typename.indexOf(clTGeoVolume) === 0)
-         obj = { _typename: clTGeoNode, fVolume: obj, fName: obj.fName, $geoh: obj.$geoh, _proxy: true };
-
-      clones = new ClonedNodes(obj);
-      clones.setVisLevel(opt.vislevel);
-      clones.setMaxVisNodes(opt.numnodes);
-
-      if (opt.dflt_colors)
-         clones.setDefaultColors(true);
-
-      const uniquevis = opt.no_screen ? 0 : clones.markVisibles(true);
-      if (uniquevis <= 0)
-         clones.markVisibles(false, false, hide_top);
-      else
-         clones.markVisibles(true, true, hide_top); // copy bits once and use normal visibility bits
-
-      clones.produceIdShifts();
-
-      // collect visible nodes
-      const res = clones.collectVisibles(opt.numfaces, opt.frustum);
-
-      visibles = res.lst;
-   }
-
-   if (!opt.material_kind)
-      opt.material_kind = 'lambert';
-   if (opt.set_names === undefined)
-      opt.set_names = true;
-
-   clones.setConfig(opt);
-
-   // collect shapes
-   const shapes = clones.collectShapes(visibles);
-
-   clones.buildShapes(shapes, opt.numfaces);
-
-   const toplevel = new THREE.Object3D();
-   toplevel.clones = clones; // keep reference on JSROOT data
-
-   const colors = getRootColors();
-
-   if (clones.createInstancedMeshes(opt, toplevel, visibles, shapes, colors))
-      return toplevel;
-
-   for (let n = 0; n < visibles.length; ++n) {
-      const entry = visibles[n];
-      if (entry.done) continue;
-
-      const shape = entry.server_shape || shapes[entry.shapeid];
-      if (!shape.ready) {
-         console.warn('shape marked as not ready when it should');
-         break;
-      }
-
-      clones.createEntryMesh(opt, toplevel, entry, shape, colors);
-   }
-
-   return toplevel;
+   return TGeoPainter.build3d(obj, opt);
 }
 
 export { ClonedNodes, build, TGeoPainter, GeoDrawingControl,

@@ -47,7 +47,6 @@ Each viewer automatically creates a TGLRnrCtx and passes it down
 all render functions.
 */
 
-ClassImp(TGLViewerBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 

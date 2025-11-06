@@ -11,21 +11,11 @@
 
 
 #include "TROOT.h"
-#include "TBuffer.h"
 #include "TScatter.h"
-#include "TStyle.h"
-#include "TMath.h"
-#include "TVirtualPad.h"
 #include "TH2.h"
 #include "TVirtualGraphPainter.h"
-#include "strtok.h"
 
-#include <iostream>
-#include <fstream>
-#include <cstring>
-#include <string>
-
-ClassImp(TScatter);
+ #include <iostream>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -270,7 +260,7 @@ void TScatter::SavePrimitive(std::ostream &out, Option_t *option)
                             kFALSE);
 
    SavePrimitiveNameTitle(out, "scat");
-   SaveFillAttributes(out, "scat", 0, 1001);
+   SaveFillAttributes(out, "scat", -1, -1);
    SaveLineAttributes(out, "scat", 1, 1, 1);
    SaveMarkerAttributes(out, "scat", 1, 1, 1);
 

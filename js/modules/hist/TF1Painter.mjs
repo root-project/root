@@ -28,7 +28,8 @@ function produceTAxisLogScale(axis, num, min, max) {
 }
 
 function scanTF1Options(opt) {
-   if (!isStr(opt)) opt = '';
+   if (!isStr(opt))
+      opt = '';
    let p = opt.indexOf(';webcanv_hist'), _webcanv_hist = false, _use_saved = 0;
    if (p >= 0) {
       _webcanv_hist = true;
@@ -87,7 +88,8 @@ class TF1Painter extends TH1Painter {
 
       if (this._webcanv_hist) {
          const h0 = this.getPadPainter()?.findInPrimitives('Func', clTH1D);
-         if (h0) this.updateAxes(histo, h0, this.getFramePainter());
+         if (h0)
+            this.updateAxes(histo, h0, this.getFramePainter());
       }
 
       this.setFunc(obj);
@@ -163,7 +165,7 @@ class TF1Painter extends TH1Painter {
 
          if (logx)
             produceTAxisLogScale(hist.fXaxis, np, xmin, xmax);
-          else {
+         else {
             hist.fXaxis.fXmin = xmin;
             hist.fXaxis.fXmax = xmax;
          }
@@ -261,8 +263,8 @@ class TF1Painter extends TH1Painter {
          // in the case where the points have been saved, useful for example
          // if we don't have the user's function
          const nb_points = nsave - 2,
-             xmin = this.#func.fSave[nsave - 2],
-             xmax = this.#func.fSave[nsave - 1];
+               xmin = this.#func.fSave[nsave - 2],
+               xmax = this.#func.fSave[nsave - 1];
 
          return Math.abs(xmax - xmin) / nb_points < Math.abs(max - min);
       }
@@ -313,11 +315,13 @@ class TF1Painter extends TH1Painter {
          return null;
       }
 
-      const res = { name: this.#func?.fName, title: this.#func?.fTitle,
-                    x: pnt.x, y: pnt.y,
-                    color1: this.lineatt?.color ?? 'green',
-                    color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
-                    lines: this.getTF1Tooltips(pnt), exact: true, menu: true };
+      const res = {
+         name: this.#func?.fName, title: this.#func?.fTitle,
+         x: pnt.x, y: pnt.y,
+         color1: this.lineatt?.color ?? 'green',
+         color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
+         lines: this.getTF1Tooltips(pnt), exact: true, menu: true
+      };
 
       if (pnt.disabled)
          ttrect.remove();

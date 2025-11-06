@@ -12,6 +12,14 @@
 using ROOT::Internal::RNTupleWriteOptionsManip;
 
 namespace {
+
+// NOTE: these should be in sync with the version in RNTuple.hxx and are duplicated here
+// as a double check that we increment the version correctly.
+constexpr auto kVersionEpoch = 1;
+constexpr auto kVersionMajor = 0;
+constexpr auto kVersionMinor = 1;
+constexpr auto kVersionPatch = 0;
+
 bool IsEqual(const ROOT::RNTuple &a, const ROOT::RNTuple &b)
 {
    return a.GetVersionEpoch() == b.GetVersionEpoch() && a.GetVersionMajor() == b.GetVersionMajor() &&
@@ -76,10 +84,10 @@ TEST(MiniFile, Stream)
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
    auto ntuple = reader.GetNTuple("MyNTuple").Inspect();
-   EXPECT_EQ(1u, ntuple.GetVersionEpoch());
-   EXPECT_EQ(0u, ntuple.GetVersionMajor());
-   EXPECT_EQ(0u, ntuple.GetVersionMinor());
-   EXPECT_EQ(2u, ntuple.GetVersionPatch());
+   EXPECT_EQ(kVersionEpoch, ntuple.GetVersionEpoch());
+   EXPECT_EQ(kVersionMajor, ntuple.GetVersionMajor());
+   EXPECT_EQ(kVersionMinor, ntuple.GetVersionMinor());
+   EXPECT_EQ(kVersionPatch, ntuple.GetVersionPatch());
    EXPECT_EQ(offHeader, ntuple.GetSeekHeader());
    EXPECT_EQ(offFooter, ntuple.GetSeekFooter());
 
@@ -115,10 +123,10 @@ TEST(MiniFile, Proper)
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
    auto ntuple = reader.GetNTuple("MyNTuple").Inspect();
-   EXPECT_EQ(1u, ntuple.GetVersionEpoch());
-   EXPECT_EQ(0u, ntuple.GetVersionMajor());
-   EXPECT_EQ(0u, ntuple.GetVersionMinor());
-   EXPECT_EQ(2u, ntuple.GetVersionPatch());
+   EXPECT_EQ(kVersionEpoch, ntuple.GetVersionEpoch());
+   EXPECT_EQ(kVersionMajor, ntuple.GetVersionMajor());
+   EXPECT_EQ(kVersionMinor, ntuple.GetVersionMinor());
+   EXPECT_EQ(kVersionPatch, ntuple.GetVersionPatch());
    EXPECT_EQ(offHeader, ntuple.GetSeekHeader());
    EXPECT_EQ(offFooter, ntuple.GetSeekFooter());
 

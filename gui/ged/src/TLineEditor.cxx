@@ -22,7 +22,6 @@ Implements GUI for editing line attributes: shape, size, angle.
 #include "TGNumberEntry.h"
 #include "TLine.h"
 
-ClassImp(TLineEditor);
 
 enum ELineWid {
    kLine_STAX,

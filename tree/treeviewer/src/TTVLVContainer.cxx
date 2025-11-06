@@ -21,7 +21,6 @@
 #include "snprintf.h"
 
 
-ClassImp(TGItemContext);
 
 /** \class TGItemContext
 Empty object used as context menu support for TGLVTreeEntries.
@@ -84,7 +83,6 @@ void TGItemContext::SetExpression(const char *name, const char *alias, bool cut)
    fItem->SetExpression(name, alias, cut);
 }
 
-ClassImp(TTVLVEntry);
 
 /** \class TTVLVEntry
 This class represent entries that goes into the TreeViewer listview container.
@@ -299,7 +297,6 @@ void TTVLVEntry::SetSmallPic(const TGPicture *spic)
    fClient->FreePicture(cspic);
 }
 
-ClassImp(TTVLVContainer);
 
 /** \class TTVLVContainer
 This class represent the list view container for the TreeView class.
@@ -644,7 +641,6 @@ void TTVLVContainer::SelectItem(const char* name)
    }
 }
 
-ClassImp(TGSelectBox);
 
 /** \class TGSelectBox
 This class represent a specialized expression editor for TTVLVEntry 'true name' and 'alias' data members.

@@ -59,7 +59,7 @@ Examples showing usage of the GenVector library, generic class templates for mod
 | mathcoreVectorCollection.C | Example showing how to write and read a std vector of ROOT::Math LorentzVector in a ROOT tree. |
 | mathcoreVectorFloatIO.C | Macro illustrating  I/O with Lorentz Vectors of floats. |
 | mathcoreVectorIO.C | Example of  I/O of a GenVector Lorentz Vectors in a Tree and comparison with legacy TLorentzVector.|
-
+| mathcoreGenVectorSYCL.C | Example macro testing available methods and operation of the GenVectorX classes to be used in SYCL for heterogeneous computing. |
 
 \anchor histograms
 ## Histogramming related features

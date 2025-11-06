@@ -20,7 +20,6 @@ A TChainElement describes a component of a TChain.
 #include "TROOT.h"
 #include <iostream>
 
-ClassImp(TChainElement);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for a chain element.
@@ -30,7 +29,7 @@ TChainElement::TChainElement() : TNamed(),fBaddress(nullptr),fBaddressType(0),
 {
    fNPackets   = 0;
    fPackets    = nullptr;
-   fEntries    = 0;
+   fEntries    = TTree::kMaxEntries;
    fPacketSize = 100;
    fStatus     = -1;
    ResetBit(kHasBeenLookedUp);
@@ -45,7 +44,7 @@ TChainElement::TChainElement(const char *name, const char *title)
 {
    fNPackets   = 0;
    fPackets    = nullptr;
-   fEntries    = 0;
+   fEntries    = TTree::kMaxEntries;
    fPacketSize = 100;
    fStatus     = -1;
    ResetBit(kHasBeenLookedUp);

@@ -93,7 +93,6 @@ The following method are available from the TFormLeafInfo interface:
  -  Update() : react to the possible loading of a shared library.
 */
 
-ClassImp(TTreeFormula);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// The function returns the number of bytes read from the input buffer.

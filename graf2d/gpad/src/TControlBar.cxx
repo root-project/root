@@ -82,7 +82,6 @@ will return the name of the last clicked button.
 #include "TROOT.h"
 
 
-ClassImp(TControlBar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

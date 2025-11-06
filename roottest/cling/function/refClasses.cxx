@@ -1,7 +1,7 @@
 #ifndef refClasses_cxx
 #define refClasses_cxx
 
-#include <stdio.h>
+#include <cstdio>
 #include "TString.h"
 
 class yy {

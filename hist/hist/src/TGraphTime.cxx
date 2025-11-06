@@ -17,7 +17,6 @@
 #include "TObjArray.h"
 #include "TSystem.h"
 
-ClassImp(TGraphTime);
 
 /** \class TGraphTime
     \ingroup Graphs

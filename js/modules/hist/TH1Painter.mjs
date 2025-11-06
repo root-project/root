@@ -1,6 +1,7 @@
-import { settings, gStyle } from '../core.mjs';
-import { assignFrame3DMethods, drawBinsLego } from './hist3d.mjs';
+import { gStyle } from '../core.mjs';
+import { crete3DFrame, drawBinsLego } from './hist3d.mjs';
 import { TAxisPainter } from '../gpad/TAxisPainter.mjs';
+import { TFramePainter } from '../gpad/TFramePainter.mjs';
 import { THistPainter } from '../hist2d/THistPainter.mjs';
 import { TH1Painter as TH1Painter2D } from '../hist2d/TH1Painter.mjs';
 
@@ -16,9 +17,9 @@ class TH1Painter extends TH1Painter2D {
 
       const fp = this.getFramePainter(), // who makes axis drawing
             is_main = this.isMainPainter(), // is main histogram
-            histo = this.getHisto(),
-            o = this.getOptions(),
-            zmult = 1 + 2*gStyle.fHistTopMargin;
+            o = this.getOptions();
+
+      o.zmult = 1 + 2 * gStyle.fHistTopMargin;
       let pr = Promise.resolve(true), full_draw = true;
 
       if (reason === 'resize') {
@@ -35,17 +36,8 @@ class TH1Painter extends TH1Painter2D {
 
          this.scanContent(reason === 'zoom'); // may be required for axis drawings
 
-         if (is_main) {
-            assignFrame3DMethods(fp);
-            pr = fp.create3DScene(o.Render3D, o.x3dscale, o.y3dscale, o.Ortho).then(() => {
-               fp.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0, this);
-               fp.set3DOptions(o);
-               fp.drawXYZ(fp.toplevel, TAxisPainter, {
-                  ndim: 1, hist_painter: this, use_y_for_z: true, zmult, zoom: settings.Zooming,
-                  draw: (o.Axis !== -1), drawany: o.isCartesian()
-               });
-            });
-         }
+         if (is_main)
+            pr = crete3DFrame(this, TAxisPainter, o.Render3D);
 
          if (fp.mode3d) {
             pr = pr.then(() => {
@@ -64,6 +56,24 @@ class TH1Painter extends TH1Painter2D {
                .then(() => this.updateHistTitle())
                .then(() => this);
    }
+
+   /** @summary Build three.js object for the histogram */
+   static async build3d(histo, opt) {
+      const painter = new TH1Painter(null, histo);
+      painter.decodeOptions(opt);
+      painter.scanContent();
+
+      painter.createHistDrawAttributes(true);
+      painter.options.zmult = 1 + 2 * gStyle.fHistTopMargin;
+
+      const fp = new TFramePainter(null, null);
+      painter.getFramePainter = () => fp;
+
+      return crete3DFrame(painter, TAxisPainter)
+             .then(() => drawBinsLego(painter))
+             .then(() => fp.create3DScene(-1, true));
+   }
+
 
    /** @summary draw TH1 object */
    static async draw(dom, histo, opt) {

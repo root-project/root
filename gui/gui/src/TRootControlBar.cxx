@@ -26,7 +26,6 @@ with a number of buttons (text or picture buttons).
 #include "TGButton.h"
 
 
-ClassImp(TRootControlBar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a ROOT native GUI controlbar.

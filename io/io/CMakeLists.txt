@@ -21,6 +21,8 @@ if (uring)
 endif ()
 
 ROOT_LINKER_LIBRARY(RIO
+  src/RConcurrentHashColl.cxx
+  src/RFile.cxx
   src/RRawFile.cxx
   ${rawfile_local_sources}
   src/TArchiveFile.cxx
@@ -72,7 +74,13 @@ if(uring)
   target_include_directories(RIO PRIVATE ${LIBURING_INCLUDE_DIR})
 endif()
 
+# keep include directory for ROOT/RSha256.hxx private
+set_source_files_properties(src/RConcurrentHashColl.cxx
+  PROPERTIES COMPILE_FLAGS -I${CMAKE_SOURCE_DIR}/core/foundation/res)
+
 ROOT_GENERATE_DICTIONARY(G__RIO
+  ROOT/RConcurrentHashColl.hxx
+  ROOT/RFile.hxx
   ROOT/RRawFile.hxx
   ROOT/RRawFileTFile.hxx
   ${rawfile_local_headers}

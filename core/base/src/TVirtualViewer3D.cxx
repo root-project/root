@@ -270,7 +270,6 @@ object if suitable.
 #include "TPluginManager.h"
 #include "TError.h"
 
-ClassImp(TVirtualViewer3D);
 
 // pin the vtable here.
 TVirtualViewer3D::~TVirtualViewer3D() {}

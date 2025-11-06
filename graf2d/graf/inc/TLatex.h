@@ -15,6 +15,8 @@
 #include "TAttLine.h"
 #include <vector>
 
+class TVirtualPad;
+
 class TLatex : public TText, public TAttLine {
 protected:
 
@@ -73,6 +75,9 @@ protected:
    //Text analysis and painting
    TLatexFormSize Analyse(Double_t x, Double_t y, const TextSpec_t &spec, const Char_t *t,Int_t length);
    TLatexFormSize Anal1(const TextSpec_t &spec, const Char_t *t,Int_t length);
+
+   void Rotate(TVirtualPad *pad, Double_t angle, Int_t np, Double_t *x, Double_t *y);
+   void Rotate(TVirtualPad *pad, Double_t angle, Double_t x, Double_t y, Double_t &xx, Double_t &yy);
 
    void DrawPolyLine(Int_t npoints, Double_t *xx, Double_t *yy, const TextSpec_t &spec, Double_t scale_width = 0.);
    void DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const TextSpec_t &spec);

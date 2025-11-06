@@ -32,6 +32,8 @@
 #include <RooRealConstant.h>
 #include <RooRealVar.h>
 
+#include "RooEvaluatorWrapper.h"
+
 #include <TH1.h>
 #include <TInterpreter.h>
 
@@ -127,6 +129,13 @@ RooCmdArg ParallelGradientOptions(bool enable, int orderStrategy, int chainFacto
 RooCmdArg ParallelDescentOptions(bool enable, int splitStrategy, int numSplits)
 {
    return RooCmdArg("ParallelDescentOptions", enable, numSplits, splitStrategy, 0, nullptr, nullptr, nullptr, nullptr);
+}
+
+void writeCodegenDebugMacro(RooAbsReal const &absReal, std::string const &name)
+{
+   if (auto *wrapper = dynamic_cast<RooEvaluatorWrapper const *>(&absReal)) {
+      wrapper->writeDebugMacro(name);
+   }
 }
 
 } // namespace Experimental
@@ -551,7 +560,16 @@ RooCmdArg EventRange(Int_t nStart, Int_t nStop)
 
 // RooAbsPdf::fitTo arguments
 
-EvalBackend::EvalBackend(EvalBackend::Value value) : RooCmdArg{"EvalBackend", static_cast<int>(value)} {}
+EvalBackend::EvalBackend(EvalBackend::Value value) : RooCmdArg{"EvalBackend", static_cast<int>(value)}
+{
+#ifndef ROOFIT_CLAD
+   if (value == Value::Codegen || value == Value::CodegenNoGrad) {
+      oocoutE(nullptr, InputArguments)
+         << "RooFit was built without clad. Codegen backends are unavailable. Falling back to default.\n";
+      setInt(0, static_cast<int>(defaultValue()));
+   }
+#endif
+}
 EvalBackend::EvalBackend(std::string const &name) : EvalBackend{toValue(name)} {}
 EvalBackend::Value EvalBackend::toValue(std::string const &name)
 {

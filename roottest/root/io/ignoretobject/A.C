@@ -23,7 +23,6 @@ public:
 #pragma link C++ class A+;
 #endif
 
-ClassImp(A);
 
 A::A()
    : fX(0.0),fY(0.0),fZ(0.0)

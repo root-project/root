@@ -22,7 +22,6 @@
 */
 // clang-format on
 
-templateClassImp(TStatistic);
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Constructor from a vector of values

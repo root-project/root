@@ -34,7 +34,6 @@ when selecting a member function taking arguments.
 
 extern TGTextEntry *gBlinkingEntry;
 
-ClassImp(TRootDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a method argument prompt dialog.

@@ -17,29 +17,31 @@ endif
 set ARGS=($_)
 
 set LSOF=`env PATH=/usr/sbin:${PATH} which lsof`
-set thisfile="`${LSOF} -w +p $$ | grep -oE '/.*thisroot.csh'  `"
-if ( "$thisfile" == "" ) then
-#   set thisfile=/does/not/exist
+set SOURCE="`${LSOF} -w +p $$ | grep -oE '/.*thisroot.csh'  `"
+if ( "$SOURCE" == "" ) then
+#   set SOURCE=/does/not/exist
 endif
-if ( "$thisfile" != "" && -e ${thisfile} ) then
+if ( "$SOURCE" != "" && -e ${SOURCE} ) then
    # We found it, didn't we.
-   set thisroot="`dirname ${thisfile}`"
+   set SOURCE=`realpath ${SOURCE}`
+   set thisrootdir=`dirname ${SOURCE}`
 else if ("$ARGS" != "") then
-   set thisroot="`dirname ${ARGS[2]}`"
+   set SOURCE=`realpath ${ARGS[2]}`
+   set thisrootdir="`dirname ${SOURCE}`"
 else
    # But $_ might not be set if the script is source non-interactively.
    # In [t]csh the sourced file is inserted 'in place' inside the
    # outer script, so we need an external source of information
    # either via the current directory or an extra parameter.
    if ( -e thisroot.csh ) then
-      set thisroot=${PWD}
+      set thisrootdir=${PWD}
    else if ( -e bin/thisroot.csh ) then
-      set thisroot=${PWD}/bin
+      set thisrootdir=${PWD}/bin
    else if ( "$1" != "" ) then
       if ( -e ${1}/bin/thisroot.csh ) then
-         set thisroot=${1}/bin
+         set thisrootdir=${1}/bin
       else if ( -e ${1}/thisroot.csh ) then
-         set thisroot=${1}
+         set thisrootdir=${1}
       else
          echo "thisroot.csh: ${1} does not contain a ROOT installation"
       endif
@@ -53,9 +55,14 @@ else
    endif
 endif
 
-if ($?thisroot) then
+if ($?thisrootdir) then
 
-setenv ROOTSYS "`(cd ${thisroot}/..;pwd)`"
+setenv ROOTSYS "`(dirname ${thisrootdir})`"
+if ( ! -f "$ROOTSYS/bin/root-config" ) then
+    echo "ERROR: root-config not found under ROOTSYS=\"$ROOTSYS/\"" >&2
+    set ROOTSYS =
+    return 1
+endif
 
 if ($?old_rootsys) then
    setenv PATH `set DOLLAR='$'; echo $PATH | sed -e "s;:$old_rootsys/bin:;:;g" \
@@ -162,6 +169,14 @@ if ($?old_rootsys) then
                                  -e "s;^$old_rootsys/etc/notebook${DOLLAR};;g"`
    endif
 
+   if ($?ROOT_INCLUDE_PATH) then
+      setenv ROOT_INCLUDE_PATH `set DOLLAR='$'; echo $ROOT_INCLUDE_PATH | \
+                             sed -e "s;:@DEFAULT_ROOT_INCLUDE_PATH@:;:;g" \
+                                 -e "s;:@DEFAULT_ROOT_INCLUDE_PATH@${DOLLAR};;g"   \
+                                 -e "s;^@DEFAULT_ROOT_INCLUDE_PATH@:;;g"   \
+                                 -e "s;^@DEFAULT_ROOT_INCLUDE_PATH@${DOLLAR};;g"`
+   endif
+
 endif
 
 
@@ -232,7 +247,13 @@ else
    setenv JUPYTER_CONFIG_PATH ${ROOTSYS}/etc/notebook
 endif
 
-endif # if ("$thisroot" != "")
+if ($?ROOT_INCLUDE_PATH) then
+   setenv ROOT_INCLUDE_PATH @DEFAULT_ROOT_INLUCDE_PATH@:$ROOT_INCLUDE_PATH
+else
+   setenv ROOT_INCLUDE_PATH @DEFAULT_ROOT_INLUCDE_PATH@
+endif
 
-set thisroot=
+endif # if ("$thisrootdir" != "")
+
+set thisrootdir=
 set old_rootsys=

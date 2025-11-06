@@ -28,16 +28,6 @@
 #include <iostream>
 
 
-ClassImp(TGLayoutHints);
-ClassImp(TGLayoutManager);
-ClassImp(TGVerticalLayout);
-ClassImp(TGHorizontalLayout);
-ClassImp(TGRowLayout);
-ClassImp(TGColumnLayout);
-ClassImp(TGMatrixLayout);
-ClassImp(TGTileLayout);
-ClassImp(TGListLayout);
-ClassImp(TGListDetailsLayout);
 
 
 ////////////////////////////////////////////////////////////////////////////////

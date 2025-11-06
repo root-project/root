@@ -1154,7 +1154,9 @@ std::string RooAbsCollection::contentsString() const
     retVal += ",";
   }
 
-  retVal.erase(retVal.end()-1);
+  if (!retVal.empty()) {
+    retVal.erase(retVal.end()-1);
+  }
 
   return retVal;
 }

@@ -40,6 +40,9 @@ public:
    ~TVector3() override = default;
    // Destructor
 
+   /// The length is always 3. For compatibility with the standard library.
+   constexpr std::size_t size() const { return 3; }
+
    Double_t operator () (int) const;
    inline Double_t operator [] (int) const;
    // Get components by index (Geant4).

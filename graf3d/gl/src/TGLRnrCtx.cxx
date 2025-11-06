@@ -48,7 +48,6 @@ Current scene / scene-info part is always initialized by viewer,
 scenes can assume they're ok.
 */
 
-ClassImp(TGLRnrCtx);
 
 ////////////////////////////////////////////////////////////////////////////////
 

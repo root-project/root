@@ -123,7 +123,6 @@ in graphical user interface) see THistPainter::Paint
 
 #include <cstdlib>
 
-ClassImp(TH1Editor);
 
 enum ETH1Wid{
    kTH1_TITLE,

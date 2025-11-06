@@ -787,19 +787,13 @@ class TestSIGNALS:
 
 
 class TestSTDNOTINGLOBAL:
-    def setup_class(cls):
-        import cppyy
-        cls.has_byte = 201402 < cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;")
-
     @mark.xfail()
     def test01_stl_in_std(self):
         """STL classes should live in std:: only"""
 
         import cppyy
 
-        names = ['array', 'function', 'list', 'set', 'vector']
-        if self.has_byte:
-            names.append('byte')
+        names = ["array", "function", "list", "set", "vector", "byte"]
 
         for name in names:
             getattr(cppyy.gbl.std, name)

@@ -29,7 +29,6 @@ static Tetris *gTetris;                    // game manager
 static const UInt_t gBoxPixelSize = 20;   // size of TetrisBox in pixels
 
 
-ClassImp(Tetris);
 
 ///////////////////////////////////////////////////////////////////
 //  TetrisBox - the main brick of the game

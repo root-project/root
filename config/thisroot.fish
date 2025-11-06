@@ -29,8 +29,14 @@ end
 
 set SOURCE (status -f)
 # normalize path
-set thisroot (path dirname $SOURCE)
-set -xg ROOTSYS (set oldpwd $PWD; cd $thisroot/.. > /dev/null;pwd;cd $oldpwd; set -e oldpwd)
+set thisrootdir (dirname (realpath $SOURCE))
+set -xg ROOTSYS (string replace -r '/[^/]*$' '' $thisrootdir)
+
+if not test -f "$ROOTSYS/bin/root-config"
+    echo "ERROR: root-config not found under ROOTSYS=\"$ROOTSYS/\"" >&2
+    set -e ROOTSYS
+    exit
+end
 
 if not set -q MANPATH
    # Grab the default man path before setting the path to avoid duplicates
@@ -49,6 +55,7 @@ update_path MANPATH "$old_rootsys" "/man" @mandir@
 update_path CMAKE_PREFIX_PATH "$old_rootsys" "" $ROOTSYS
 update_path JUPYTER_PATH "$old_rootsys" "/etc/notebook" $ROOTSYS/etc/notebook
 update_path JUPYTER_CONFIG_PATH "$old_rootsys" "/etc/notebook" $ROOTSYS/etc/notebook
+update_path ROOT_INCLUDE_PATH "@DEFAULT_ROOT_INCLUDE_PATH@" "" "@DEFAULT_ROOT_INCLUDE_PATH@"
 
 functions -e update_path
 set -e old_rootsys

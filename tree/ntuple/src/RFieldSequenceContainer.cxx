@@ -9,135 +9,28 @@
 #include <ROOT/RFieldUtils.hxx>
 
 #include <cstdlib> // for malloc, free
+#include <limits>
 #include <memory>
 #include <new> // hardware_destructive_interference_size
-
-ROOT::RArrayField::RArrayField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
-                               std::size_t arrayLength)
-   : ROOT::RFieldBase(fieldName,
-                      "std::array<" + itemField->GetTypeName() + "," +
-                         Internal::GetNormalizedInteger(static_cast<unsigned long long>(arrayLength)) + ">",
-                      ROOT::ENTupleStructure::kLeaf, false /* isSimple */, arrayLength),
-     fItemSize(itemField->GetValueSize()),
-     fArrayLength(arrayLength)
-{
-   fTraits |= itemField->GetTraits() & ~kTraitMappable;
-   Attach(std::move(itemField));
-}
-
-std::unique_ptr<ROOT::RFieldBase> ROOT::RArrayField::CloneImpl(std::string_view newName) const
-{
-   auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
-   return std::make_unique<RArrayField>(newName, std::move(newItemField), fArrayLength);
-}
-
-std::size_t ROOT::RArrayField::AppendImpl(const void *from)
-{
-   std::size_t nbytes = 0;
-   if (fSubfields[0]->IsSimple()) {
-      GetPrincipalColumnOf(*fSubfields[0])->AppendV(from, fArrayLength);
-      nbytes += fArrayLength * GetPrincipalColumnOf(*fSubfields[0])->GetElement()->GetPackedSize();
-   } else {
-      auto arrayPtr = static_cast<const unsigned char *>(from);
-      for (unsigned i = 0; i < fArrayLength; ++i) {
-         nbytes += CallAppendOn(*fSubfields[0], arrayPtr + (i * fItemSize));
-      }
-   }
-   return nbytes;
-}
-
-void ROOT::RArrayField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
-{
-   if (fSubfields[0]->IsSimple()) {
-      GetPrincipalColumnOf(*fSubfields[0])->ReadV(globalIndex * fArrayLength, fArrayLength, to);
-   } else {
-      auto arrayPtr = static_cast<unsigned char *>(to);
-      for (unsigned i = 0; i < fArrayLength; ++i) {
-         CallReadOn(*fSubfields[0], globalIndex * fArrayLength + i, arrayPtr + (i * fItemSize));
-      }
-   }
-}
-
-void ROOT::RArrayField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to)
-{
-   if (fSubfields[0]->IsSimple()) {
-      GetPrincipalColumnOf(*fSubfields[0])
-         ->ReadV(RNTupleLocalIndex(localIndex.GetClusterId(), localIndex.GetIndexInCluster() * fArrayLength),
-                 fArrayLength, to);
-   } else {
-      auto arrayPtr = static_cast<unsigned char *>(to);
-      for (unsigned i = 0; i < fArrayLength; ++i) {
-         CallReadOn(*fSubfields[0],
-                    RNTupleLocalIndex(localIndex.GetClusterId(), localIndex.GetIndexInCluster() * fArrayLength + i),
-                    arrayPtr + (i * fItemSize));
-      }
-   }
-}
-
-void ROOT::RArrayField::ConstructValue(void *where) const
-{
-   if (fSubfields[0]->GetTraits() & kTraitTriviallyConstructible)
-      return;
-
-   auto arrayPtr = reinterpret_cast<unsigned char *>(where);
-   for (unsigned i = 0; i < fArrayLength; ++i) {
-      CallConstructValueOn(*fSubfields[0], arrayPtr + (i * fItemSize));
-   }
-}
-
-void ROOT::RArrayField::RArrayDeleter::operator()(void *objPtr, bool dtorOnly)
-{
-   if (fItemDeleter) {
-      for (unsigned i = 0; i < fArrayLength; ++i) {
-         fItemDeleter->operator()(reinterpret_cast<unsigned char *>(objPtr) + i * fItemSize, true /* dtorOnly */);
-      }
-   }
-   RDeleter::operator()(objPtr, dtorOnly);
-}
-
-std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RArrayField::GetDeleter() const
-{
-   if (!(fSubfields[0]->GetTraits() & kTraitTriviallyDestructible))
-      return std::make_unique<RArrayDeleter>(fItemSize, fArrayLength, GetDeleterOf(*fSubfields[0]));
-   return std::make_unique<RDeleter>();
-}
-
-std::vector<ROOT::RFieldBase::RValue> ROOT::RArrayField::SplitValue(const RValue &value) const
-{
-   auto valuePtr = value.GetPtr<void>();
-   auto arrayPtr = static_cast<unsigned char *>(valuePtr.get());
-   std::vector<RValue> result;
-   result.reserve(fArrayLength);
-   for (unsigned i = 0; i < fArrayLength; ++i) {
-      result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<void>(valuePtr, arrayPtr + (i * fItemSize))));
-   }
-   return result;
-}
-
-void ROOT::RArrayField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
-{
-   visitor.VisitArrayField(*this);
-}
-
-//------------------------------------------------------------------------------
 
 namespace {
 
 /// Retrieve the addresses of the data members of a generic RVec from a pointer to the beginning of the RVec object.
 /// Returns pointers to fBegin, fSize and fCapacity in a std::tuple.
-std::tuple<void **, std::int32_t *, std::int32_t *> GetRVecDataMembers(void *rvecPtr)
+std::tuple<unsigned char **, std::int32_t *, std::int32_t *> GetRVecDataMembers(void *rvecPtr)
 {
-   void **begin = reinterpret_cast<void **>(rvecPtr);
+   unsigned char **beginPtr = reinterpret_cast<unsigned char **>(rvecPtr);
    // int32_t fSize is the second data member (after 1 void*)
-   std::int32_t *size = reinterpret_cast<std::int32_t *>(begin + 1);
+   std::int32_t *size = reinterpret_cast<std::int32_t *>(beginPtr + 1);
    R__ASSERT(*size >= 0);
    // int32_t fCapacity is the third data member (1 int32_t after fSize)
    std::int32_t *capacity = size + 1;
    R__ASSERT(*capacity >= -1);
-   return {begin, size, capacity};
+   return {beginPtr, size, capacity};
 }
 
-std::tuple<const void *const *, const std::int32_t *, const std::int32_t *> GetRVecDataMembers(const void *rvecPtr)
+std::tuple<const unsigned char *const *, const std::int32_t *, const std::int32_t *>
+GetRVecDataMembers(const void *rvecPtr)
 {
    return {GetRVecDataMembers(const_cast<void *>(rvecPtr))};
 }
@@ -189,7 +82,7 @@ std::size_t EvalRVecAlignment(std::size_t alignOfSubfield)
    return std::max({alignof(void *), alignof(std::int32_t), alignOfSubfield});
 }
 
-void DestroyRVecWithChecks(std::size_t alignOfT, void **beginPtr, char *begin, std::int32_t *capacityPtr)
+void DestroyRVecWithChecks(std::size_t alignOfT, unsigned char **beginPtr, std::int32_t *capacityPtr)
 {
    // figure out if we are in the small state, i.e. begin == &inlineBuffer
    // there might be padding between fCapacity and the inline buffer, so we compute it here
@@ -197,14 +90,152 @@ void DestroyRVecWithChecks(std::size_t alignOfT, void **beginPtr, char *begin, s
    auto paddingMiddle = dataMemberSz % alignOfT;
    if (paddingMiddle != 0)
       paddingMiddle = alignOfT - paddingMiddle;
-   const bool isSmall = (begin == (reinterpret_cast<char *>(beginPtr) + dataMemberSz + paddingMiddle));
+   const bool isSmall = (*beginPtr == (reinterpret_cast<unsigned char *>(beginPtr) + dataMemberSz + paddingMiddle));
 
    const bool owns = (*capacityPtr != -1);
    if (!isSmall && owns)
-      free(begin);
+      free(*beginPtr);
+}
+
+std::vector<ROOT::RFieldBase::RValue> SplitVector(std::shared_ptr<void> valuePtr, ROOT::RFieldBase &itemField)
+{
+   auto *vec = static_cast<std::vector<char> *>(valuePtr.get());
+   const auto itemSize = itemField.GetValueSize();
+   R__ASSERT(itemSize > 0);
+   R__ASSERT((vec->size() % itemSize) == 0);
+   const auto nItems = vec->size() / itemSize;
+   std::vector<ROOT::RFieldBase::RValue> result;
+   result.reserve(nItems);
+   for (unsigned i = 0; i < nItems; ++i) {
+      result.emplace_back(itemField.BindValue(std::shared_ptr<void>(valuePtr, vec->data() + (i * itemSize))));
+   }
+   return result;
 }
 
 } // anonymous namespace
+
+ROOT::RArrayField::RArrayField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
+                               std::size_t arrayLength)
+   : ROOT::RFieldBase(fieldName,
+                      "std::array<" + itemField->GetTypeName() + "," +
+                         Internal::GetNormalizedInteger(static_cast<unsigned long long>(arrayLength)) + ">",
+                      ROOT::ENTupleStructure::kPlain, false /* isSimple */, arrayLength),
+     fItemSize(itemField->GetValueSize()),
+     fArrayLength(arrayLength)
+{
+   fTraits |= itemField->GetTraits() & ~kTraitMappable;
+   Attach(std::move(itemField));
+}
+
+std::unique_ptr<ROOT::RFieldBase> ROOT::RArrayField::CloneImpl(std::string_view newName) const
+{
+   auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
+   return std::make_unique<RArrayField>(newName, std::move(newItemField), fArrayLength);
+}
+
+std::size_t ROOT::RArrayField::AppendImpl(const void *from)
+{
+   std::size_t nbytes = 0;
+   if (fSubfields[0]->IsSimple()) {
+      GetPrincipalColumnOf(*fSubfields[0])->AppendV(from, fArrayLength);
+      nbytes += fArrayLength * GetPrincipalColumnOf(*fSubfields[0])->GetElement()->GetPackedSize();
+   } else {
+      auto arrayPtr = static_cast<const unsigned char *>(from);
+      for (unsigned i = 0; i < fArrayLength; ++i) {
+         nbytes += CallAppendOn(*fSubfields[0], arrayPtr + (i * fItemSize));
+      }
+   }
+   return nbytes;
+}
+
+void ROOT::RArrayField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
+{
+   if (fSubfields[0]->IsSimple()) {
+      GetPrincipalColumnOf(*fSubfields[0])->ReadV(globalIndex * fArrayLength, fArrayLength, to);
+   } else {
+      auto arrayPtr = static_cast<unsigned char *>(to);
+      for (unsigned i = 0; i < fArrayLength; ++i) {
+         CallReadOn(*fSubfields[0], globalIndex * fArrayLength + i, arrayPtr + (i * fItemSize));
+      }
+   }
+}
+
+void ROOT::RArrayField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to)
+{
+   if (fSubfields[0]->IsSimple()) {
+      GetPrincipalColumnOf(*fSubfields[0])->ReadV(localIndex * fArrayLength, fArrayLength, to);
+   } else {
+      auto arrayPtr = static_cast<unsigned char *>(to);
+      for (unsigned i = 0; i < fArrayLength; ++i) {
+         CallReadOn(*fSubfields[0], localIndex * fArrayLength + i, arrayPtr + (i * fItemSize));
+      }
+   }
+}
+
+std::size_t ROOT::RArrayField::ReadBulkImpl(const RBulkSpec &bulkSpec)
+{
+   if (!fSubfields[0]->IsSimple())
+      return RFieldBase::ReadBulkImpl(bulkSpec);
+
+   GetPrincipalColumnOf(*fSubfields[0])
+      ->ReadV(bulkSpec.fFirstIndex * fArrayLength, bulkSpec.fCount * fArrayLength, bulkSpec.fValues);
+   return RBulkSpec::kAllSet;
+}
+
+void ROOT::RArrayField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   static const std::vector<std::string> prefixes = {"std::array<"};
+
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+   EnsureMatchingTypePrefix(desc, prefixes).ThrowOnError();
+}
+
+void ROOT::RArrayField::ConstructValue(void *where) const
+{
+   if (fSubfields[0]->GetTraits() & kTraitTriviallyConstructible)
+      return;
+
+   auto arrayPtr = reinterpret_cast<unsigned char *>(where);
+   for (unsigned i = 0; i < fArrayLength; ++i) {
+      CallConstructValueOn(*fSubfields[0], arrayPtr + (i * fItemSize));
+   }
+}
+
+void ROOT::RArrayField::RArrayDeleter::operator()(void *objPtr, bool dtorOnly)
+{
+   if (fItemDeleter) {
+      for (unsigned i = 0; i < fArrayLength; ++i) {
+         fItemDeleter->operator()(reinterpret_cast<unsigned char *>(objPtr) + i * fItemSize, true /* dtorOnly */);
+      }
+   }
+   RDeleter::operator()(objPtr, dtorOnly);
+}
+
+std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RArrayField::GetDeleter() const
+{
+   if (!(fSubfields[0]->GetTraits() & kTraitTriviallyDestructible))
+      return std::make_unique<RArrayDeleter>(fItemSize, fArrayLength, GetDeleterOf(*fSubfields[0]));
+   return std::make_unique<RDeleter>();
+}
+
+std::vector<ROOT::RFieldBase::RValue> ROOT::RArrayField::SplitValue(const RValue &value) const
+{
+   auto valuePtr = value.GetPtr<void>();
+   auto arrayPtr = static_cast<unsigned char *>(valuePtr.get());
+   std::vector<RValue> result;
+   result.reserve(fArrayLength);
+   for (unsigned i = 0; i < fArrayLength; ++i) {
+      result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<void>(valuePtr, arrayPtr + (i * fItemSize))));
+   }
+   return result;
+}
+
+void ROOT::RArrayField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitArrayField(*this);
+}
+
+//------------------------------------------------------------------------------
 
 ROOT::RRVecField::RRVecField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
    : ROOT::RFieldBase(fieldName, "ROOT::VecOps::RVec<" + itemField->GetTypeName() + ">",
@@ -216,6 +247,19 @@ ROOT::RRVecField::RRVecField(std::string_view fieldName, std::unique_ptr<RFieldB
       fItemDeleter = GetDeleterOf(*itemField);
    Attach(std::move(itemField));
    fValueSize = EvalRVecValueSize(fSubfields[0]->GetAlignment(), fSubfields[0]->GetValueSize(), GetAlignment());
+
+   // Determine if we can optimimize bulk reading
+   if (fSubfields[0]->IsSimple()) {
+      fBulkSubfield = fSubfields[0].get();
+   } else {
+      if (auto f = dynamic_cast<RArrayField *>(fSubfields[0].get())) {
+         auto grandChildFields = fSubfields[0]->GetMutableSubfields();
+         if (grandChildFields[0]->IsSimple()) {
+            fBulkSubfield = grandChildFields[0];
+            fBulkNRepetition = f->GetLength();
+         }
+      }
+   }
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RRVecField::CloneImpl(std::string_view newName) const
@@ -233,9 +277,8 @@ std::size_t ROOT::RRVecField::AppendImpl(const void *from)
       GetPrincipalColumnOf(*fSubfields[0])->AppendV(*beginPtr, *sizePtr);
       nbytes += *sizePtr * GetPrincipalColumnOf(*fSubfields[0])->GetElement()->GetPackedSize();
    } else {
-      auto begin = reinterpret_cast<const char *>(*beginPtr); // for pointer arithmetics
       for (std::int32_t i = 0; i < *sizePtr; ++i) {
-         nbytes += CallAppendOn(*fSubfields[0], begin + i * fItemSize);
+         nbytes += CallAppendOn(*fSubfields[0], *beginPtr + i * fItemSize);
       }
    }
 
@@ -244,30 +287,27 @@ std::size_t ROOT::RRVecField::AppendImpl(const void *from)
    return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
-void ROOT::RRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
+unsigned char *ROOT::RRVecField::ResizeRVec(void *rvec, std::size_t nItems, std::size_t itemSize,
+                                            const RFieldBase *itemField, RDeleter *itemDeleter)
+
 {
-   // TODO as a performance optimization, we could assign values to elements of the inline buffer:
-   // if size < inline buffer size: we save one allocation here and usage of the RVec skips a pointer indirection
+   if (nItems > static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max())) {
+      throw RException(R__FAIL("RVec too large: " + std::to_string(nItems)));
+   }
 
-   auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(to);
-
-   // Read collection info for this entry
-   ROOT::NTupleSize_t nItems;
-   RNTupleLocalIndex collectionStart;
-   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
-   char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
+   auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(rvec);
    const std::size_t oldSize = *sizePtr;
 
    // See "semantics of reading non-trivial objects" in RNTuple's Architecture.md for details
    // on the element construction/destrution.
    const bool owns = (*capacityPtr != -1);
-   const bool needsConstruct = !(fSubfields[0]->GetTraits() & kTraitTriviallyConstructible);
-   const bool needsDestruct = owns && fItemDeleter;
+   const bool needsConstruct = !(itemField->GetTraits() & kTraitTriviallyConstructible);
+   const bool needsDestruct = owns && itemDeleter;
 
    // Destroy excess elements, if any
    if (needsDestruct) {
       for (std::size_t i = nItems; i < oldSize; ++i) {
-         fItemDeleter->operator()(begin + (i * fItemSize), true /* dtorOnly */);
+         itemDeleter->operator()(*beginPtr + (i * itemSize), true /* dtorOnly */);
       }
    }
 
@@ -277,7 +317,7 @@ void ROOT::RRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
       // allocates memory we need to release it here to avoid memleaks (e.g. if this is an RVec<RVec<int>>)
       if (needsDestruct) {
          for (std::size_t i = 0u; i < oldSize; ++i) {
-            fItemDeleter->operator()(begin + (i * fItemSize), true /* dtorOnly */);
+            itemDeleter->operator()(*beginPtr + (i * itemSize), true /* dtorOnly */);
          }
       }
 
@@ -288,15 +328,14 @@ void ROOT::RRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
       }
       // We trust that malloc returns a buffer with large enough alignment.
       // This might not be the case if T in RVec<T> is over-aligned.
-      *beginPtr = malloc(nItems * fItemSize);
+      *beginPtr = static_cast<unsigned char *>(malloc(nItems * itemSize));
       R__ASSERT(*beginPtr != nullptr);
-      begin = reinterpret_cast<char *>(*beginPtr);
       *capacityPtr = nItems;
 
       // Placement new for elements that were already there before the resize
       if (needsConstruct) {
          for (std::size_t i = 0u; i < oldSize; ++i)
-            CallConstructValueOn(*fSubfields[0], begin + (i * fItemSize));
+            CallConstructValueOn(*itemField, *beginPtr + (i * itemSize));
       }
    }
    *sizePtr = nItems;
@@ -304,8 +343,23 @@ void ROOT::RRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
    // Placement new for new elements, if any
    if (needsConstruct) {
       for (std::size_t i = oldSize; i < nItems; ++i)
-         CallConstructValueOn(*fSubfields[0], begin + (i * fItemSize));
+         CallConstructValueOn(*itemField, *beginPtr + (i * itemSize));
    }
+
+   return *beginPtr;
+}
+
+void ROOT::RRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
+{
+   // TODO as a performance optimization, we could assign values to elements of the inline buffer:
+   // if size < inline buffer size: we save one allocation here and usage of the RVec skips a pointer indirection
+
+   // Read collection info for this entry
+   ROOT::NTupleSize_t nItems;
+   RNTupleLocalIndex collectionStart;
+   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
+
+   auto begin = ResizeRVec(to, nItems, fItemSize, fSubfields[0].get(), fItemDeleter.get());
 
    if (fSubfields[0]->IsSimple() && nItems) {
       GetPrincipalColumnOf(*fSubfields[0])->ReadV(collectionStart, nItems, begin);
@@ -320,14 +374,14 @@ void ROOT::RRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 
 std::size_t ROOT::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSpec)
 {
-   if (!fSubfields[0]->IsSimple())
+   if (!fBulkSubfield)
       return RFieldBase::ReadBulkImpl(bulkSpec);
 
    if (bulkSpec.fAuxData->empty()) {
       /// Initialize auxiliary memory: the first sizeof(size_t) bytes store the value size of the item field.
       /// The following bytes store the item values, consecutively.
       bulkSpec.fAuxData->resize(sizeof(std::size_t));
-      *reinterpret_cast<std::size_t *>(bulkSpec.fAuxData->data()) = fSubfields[0]->GetValueSize();
+      *reinterpret_cast<std::size_t *>(bulkSpec.fAuxData->data()) = fBulkNRepetition * fBulkSubfield->GetValueSize();
    }
    const auto itemValueSize = *reinterpret_cast<std::size_t *>(bulkSpec.fAuxData->data());
    unsigned char *itemValueArray = bulkSpec.fAuxData->data() + sizeof(std::size_t);
@@ -336,7 +390,7 @@ std::size_t ROOT::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSpec)
    // Get size of the first RVec of the bulk
    RNTupleLocalIndex firstItemIndex;
    ROOT::NTupleSize_t collectionSize;
-   this->GetCollectionInfo(bulkSpec.fFirstIndex, &firstItemIndex, &collectionSize);
+   fPrincipalColumn->GetCollectionInfo(bulkSpec.fFirstIndex, &firstItemIndex, &collectionSize);
    *beginPtr = itemValueArray;
    *sizePtr = collectionSize;
    *capacityPtr = -1;
@@ -379,7 +433,8 @@ std::size_t ROOT::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSpec)
       }
    }
 
-   GetPrincipalColumnOf(*fSubfields[0])->ReadV(firstItemIndex, nItems, itemValueArray - delta);
+   GetPrincipalColumnOf(*fBulkSubfield)
+      ->ReadV(firstItemIndex * fBulkNRepetition, nItems * fBulkNRepetition, itemValueArray - delta);
    return RBulkSpec::kAllSet;
 }
 
@@ -403,6 +458,27 @@ void ROOT::RRVecField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
+std::unique_ptr<ROOT::RFieldBase> ROOT::RRVecField::BeforeConnectPageSource(Internal::RPageSource &pageSource)
+{
+   if (GetOnDiskId() == kInvalidDescriptorId)
+      return nullptr;
+
+   const auto descGuard = pageSource.GetSharedDescriptorGuard();
+   const auto &fieldDesc = descGuard->GetFieldDescriptor(GetOnDiskId());
+   if (fieldDesc.GetTypeName().rfind("std::array<", 0) == 0) {
+      auto substitute = std::make_unique<RArrayAsRVecField>(
+         GetFieldName(), fSubfields[0]->Clone(fSubfields[0]->GetFieldName()), fieldDesc.GetNRepetitions());
+      substitute->SetOnDiskId(GetOnDiskId());
+      return substitute;
+   }
+   return nullptr;
+}
+
+void ROOT::RRVecField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+}
+
 void ROOT::RRVecField::ConstructValue(void *where) const
 {
    // initialize data members fBegin, fSize, fCapacity
@@ -416,14 +492,13 @@ void ROOT::RRVecField::RRVecDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(objPtr);
 
-   char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
    if (fItemDeleter) {
       for (std::int32_t i = 0; i < *sizePtr; ++i) {
-         fItemDeleter->operator()(begin + i * fItemSize, true /* dtorOnly */);
+         fItemDeleter->operator()(*beginPtr + i * fItemSize, true /* dtorOnly */);
       }
    }
 
-   DestroyRVecWithChecks(fItemAlignment, beginPtr, begin, capacityPtr);
+   DestroyRVecWithChecks(fItemAlignment, beginPtr, capacityPtr);
    RDeleter::operator()(objPtr, dtorOnly);
 }
 
@@ -439,10 +514,10 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RRVecField::SplitValue(const RValue 
    auto [beginPtr, sizePtr, _] = GetRVecDataMembers(value.GetPtr<void>().get());
 
    std::vector<RValue> result;
-   char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
    result.reserve(*sizePtr);
    for (std::int32_t i = 0; i < *sizePtr; ++i) {
-      result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), begin + i * fItemSize)));
+      result.emplace_back(
+         fSubfields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), *beginPtr + i * fItemSize)));
    }
    return result;
 }
@@ -487,7 +562,7 @@ ROOT::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFi
 std::unique_ptr<ROOT::RVectorField>
 ROOT::RVectorField::CreateUntyped(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
 {
-   return std::unique_ptr<ROOT::RVectorField>(new RVectorField(fieldName, std::move(itemField), ""));
+   return std::unique_ptr<ROOT::RVectorField>(new RVectorField(fieldName, itemField->Clone("_0"), ""));
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RVectorField::CloneImpl(std::string_view newName) const
@@ -523,6 +598,30 @@ std::size_t ROOT::RVectorField::AppendImpl(const void *from)
    return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
+void ROOT::RVectorField::ResizeVector(void *vec, std::size_t nItems, std::size_t itemSize, const RFieldBase &itemField,
+                                      RDeleter *itemDeleter)
+{
+   auto typedValue = static_cast<std::vector<char> *>(vec);
+
+   // See "semantics of reading non-trivial objects" in RNTuple's Architecture.md
+   R__ASSERT(itemSize > 0);
+   const auto oldNItems = typedValue->size() / itemSize;
+   const bool canRealloc = oldNItems < nItems;
+   bool allDeallocated = false;
+   if (itemDeleter) {
+      allDeallocated = canRealloc;
+      for (std::size_t i = allDeallocated ? 0 : nItems; i < oldNItems; ++i) {
+         itemDeleter->operator()(typedValue->data() + (i * itemSize), true /* dtorOnly */);
+      }
+   }
+   typedValue->resize(nItems * itemSize);
+   if (!(itemField.GetTraits() & kTraitTriviallyConstructible)) {
+      for (std::size_t i = allDeallocated ? 0 : oldNItems; i < nItems; ++i) {
+         CallConstructValueOn(itemField, typedValue->data() + (i * itemSize));
+      }
+   }
+}
+
 void ROOT::RVectorField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
    auto typedValue = static_cast<std::vector<char> *>(to);
@@ -538,23 +637,7 @@ void ROOT::RVectorField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to
       return;
    }
 
-   // See "semantics of reading non-trivial objects" in RNTuple's Architecture.md
-   R__ASSERT(fItemSize > 0);
-   const auto oldNItems = typedValue->size() / fItemSize;
-   const bool canRealloc = oldNItems < nItems;
-   bool allDeallocated = false;
-   if (fItemDeleter) {
-      allDeallocated = canRealloc;
-      for (std::size_t i = allDeallocated ? 0 : nItems; i < oldNItems; ++i) {
-         fItemDeleter->operator()(typedValue->data() + (i * fItemSize), true /* dtorOnly */);
-      }
-   }
-   typedValue->resize(nItems * fItemSize);
-   if (!(fSubfields[0]->GetTraits() & kTraitTriviallyConstructible)) {
-      for (std::size_t i = allDeallocated ? 0 : oldNItems; i < nItems; ++i) {
-         CallConstructValueOn(*fSubfields[0], typedValue->data() + (i * fItemSize));
-      }
-   }
+   ResizeVector(to, nItems, fItemSize, *fSubfields[0], fItemDeleter.get());
 
    for (std::size_t i = 0; i < nItems; ++i) {
       CallReadOn(*fSubfields[0], collectionStart + i, typedValue->data() + (i * fItemSize));
@@ -581,6 +664,27 @@ void ROOT::RVectorField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
+std::unique_ptr<ROOT::RFieldBase> ROOT::RVectorField::BeforeConnectPageSource(Internal::RPageSource &pageSource)
+{
+   if (GetOnDiskId() == kInvalidDescriptorId)
+      return nullptr;
+
+   const auto descGuard = pageSource.GetSharedDescriptorGuard();
+   const auto &fieldDesc = descGuard->GetFieldDescriptor(GetOnDiskId());
+   if (fieldDesc.GetTypeName().rfind("std::array<", 0) == 0) {
+      auto substitute = std::make_unique<RArrayAsVectorField>(
+         GetFieldName(), fSubfields[0]->Clone(fSubfields[0]->GetFieldName()), fieldDesc.GetNRepetitions());
+      substitute->SetOnDiskId(GetOnDiskId());
+      return substitute;
+   }
+   return nullptr;
+}
+
+void ROOT::RVectorField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+}
+
 void ROOT::RVectorField::RVectorDeleter::operator()(void *objPtr, bool dtorOnly)
 {
    auto vecPtr = static_cast<std::vector<char> *>(objPtr);
@@ -605,17 +709,7 @@ std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RVectorField::GetDeleter() con
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RVectorField::SplitValue(const RValue &value) const
 {
-   auto valuePtr = value.GetPtr<void>();
-   auto *vec = static_cast<std::vector<char> *>(valuePtr.get());
-   R__ASSERT(fItemSize > 0);
-   R__ASSERT((vec->size() % fItemSize) == 0);
-   auto nItems = vec->size() / fItemSize;
-   std::vector<RValue> result;
-   result.reserve(nItems);
-   for (unsigned i = 0; i < nItems; ++i) {
-      result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<void>(valuePtr, vec->data() + (i * fItemSize))));
-   }
-   return result;
+   return SplitVector(value.GetPtr<void>(), *fSubfields[0]);
 }
 
 void ROOT::RVectorField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
@@ -648,15 +742,47 @@ void ROOT::RField<std::vector<bool>>::ReadGlobalImpl(ROOT::NTupleSize_t globalIn
 {
    auto typedValue = static_cast<std::vector<bool> *>(to);
 
-   ROOT::NTupleSize_t nItems;
-   RNTupleLocalIndex collectionStart;
-   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
+   if (fOnDiskNRepetitions == 0) {
+      ROOT::NTupleSize_t nItems;
+      RNTupleLocalIndex collectionStart;
+      fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
+      typedValue->resize(nItems);
+      for (std::size_t i = 0; i < nItems; ++i) {
+         bool bval;
+         CallReadOn(*fSubfields[0], collectionStart + i, &bval);
+         (*typedValue)[i] = bval;
+      }
+   } else {
+      typedValue->resize(fOnDiskNRepetitions);
+      for (std::size_t i = 0; i < fOnDiskNRepetitions; ++i) {
+         bool bval;
+         CallReadOn(*fSubfields[0], globalIndex * fOnDiskNRepetitions + i, &bval);
+         (*typedValue)[i] = bval;
+      }
+   }
+}
 
-   typedValue->resize(nItems);
-   for (unsigned i = 0; i < nItems; ++i) {
-      bool bval;
-      CallReadOn(*fSubfields[0], collectionStart + i, &bval);
-      (*typedValue)[i] = bval;
+void ROOT::RField<std::vector<bool>>::ReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to)
+{
+   auto typedValue = static_cast<std::vector<bool> *>(to);
+
+   if (fOnDiskNRepetitions == 0) {
+      ROOT::NTupleSize_t nItems;
+      RNTupleLocalIndex collectionStart;
+      fPrincipalColumn->GetCollectionInfo(localIndex, &collectionStart, &nItems);
+      typedValue->resize(nItems);
+      for (std::size_t i = 0; i < nItems; ++i) {
+         bool bval;
+         CallReadOn(*fSubfields[0], collectionStart + i, &bval);
+         (*typedValue)[i] = bval;
+      }
+   } else {
+      typedValue->resize(fOnDiskNRepetitions);
+      for (std::size_t i = 0; i < fOnDiskNRepetitions; ++i) {
+         bool bval;
+         CallReadOn(*fSubfields[0], localIndex * fOnDiskNRepetitions + i, &bval);
+         (*typedValue)[i] = bval;
+      }
    }
 }
 
@@ -666,18 +792,41 @@ const ROOT::RFieldBase::RColumnRepresentations &ROOT::RField<std::vector<bool>>:
                                                   {ENTupleColumnType::kIndex64},
                                                   {ENTupleColumnType::kSplitIndex32},
                                                   {ENTupleColumnType::kIndex32}},
-                                                 {});
+                                                 {{}});
    return representations;
 }
 
 void ROOT::RField<std::vector<bool>>::GenerateColumns()
 {
+   R__ASSERT(fOnDiskNRepetitions == 0); // fOnDiskNRepetitions must only be used for reading
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>();
 }
 
 void ROOT::RField<std::vector<bool>>::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
+   if (fOnDiskNRepetitions == 0)
+      GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
+}
+
+void ROOT::RField<std::vector<bool>>::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+
+   if (fieldDesc.GetTypeName().rfind("std::array<", 0) == 0) {
+      EnsureMatchingOnDiskField(desc, kDiffTypeName | kDiffStructure | kDiffNRepetitions).ThrowOnError();
+
+      if (fieldDesc.GetNRepetitions() == 0) {
+         throw RException(R__FAIL("fixed-size array --> std::vector<bool>: expected repetition count > 0\n" +
+                                  Internal::GetTypeTraceReport(*this, desc)));
+      }
+      if (fieldDesc.GetStructure() != ENTupleStructure::kPlain) {
+         throw RException(R__FAIL("fixed-size array --> std::vector<bool>: expected plain on-disk field\n" +
+                                  Internal::GetTypeTraceReport(*this, desc)));
+      }
+      fOnDiskNRepetitions = fieldDesc.GetNRepetitions();
+   } else {
+      EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+   }
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::RField<std::vector<bool>>::SplitValue(const RValue &value) const
@@ -687,10 +836,11 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RField<std::vector<bool>>::SplitValu
    std::vector<RValue> result;
    result.reserve(count);
    for (unsigned i = 0; i < count; ++i) {
-      if (typedValue[i])
+      if (typedValue[i]) {
          result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<bool>(new bool(true))));
-      else
+      } else {
          result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<bool>(new bool(false))));
+      }
    }
    return result;
 }
@@ -724,52 +874,10 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::RArrayAsRVecField::CloneImpl(std::string
 void ROOT::RArrayAsRVecField::ConstructValue(void *where) const
 {
    // initialize data members fBegin, fSize, fCapacity
+   // currently the inline buffer is left uninitialized
    void **beginPtr = new (where)(void *)(nullptr);
-   std::int32_t *sizePtr = new (reinterpret_cast<void *>(beginPtr + 1)) std::int32_t(0);
-   std::int32_t *capacityPtr = new (sizePtr + 1) std::int32_t(0);
-
-   // Create the RVec with the known fixed size, do it once here instead of
-   // every time the value is read in `Read*Impl` functions
-   char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
-
-   // Early return if the RVec has already been allocated.
-   if (*sizePtr == std::int32_t(fArrayLength))
-      return;
-
-   // Need to allocate the RVec if it is the first time the value is being created.
-   // See "semantics of reading non-trivial objects" in RNTuple's Architecture.md for details
-   // on the element construction.
-   const bool owns = (*capacityPtr != -1); // RVec is adopting the memory
-   const bool needsConstruct = !(fSubfields[0]->GetTraits() & kTraitTriviallyConstructible);
-   const bool needsDestruct = owns && fItemDeleter;
-
-   // Destroy old elements: useless work for trivial types, but in case the element type's constructor
-   // allocates memory we need to release it here to avoid memleaks (e.g. if this is an RVec<RVec<int>>)
-   if (needsDestruct) {
-      for (std::int32_t i = 0; i < *sizePtr; ++i) {
-         fItemDeleter->operator()(begin + (i * fItemSize), true /* dtorOnly */);
-      }
-   }
-
-   // TODO: Isn't the RVec always owning in this case?
-   if (owns) {
-      // *beginPtr points to the array of item values (allocated in an earlier call by the following malloc())
-      free(*beginPtr);
-   }
-
-   *beginPtr = malloc(fArrayLength * fItemSize);
-   R__ASSERT(*beginPtr != nullptr);
-   // Re-assign begin pointer after allocation
-   begin = reinterpret_cast<char *>(*beginPtr);
-   // Size and capacity are equal since the field data type is std::array
-   *sizePtr = fArrayLength;
-   *capacityPtr = fArrayLength;
-
-   // Placement new for the array elements
-   if (needsConstruct) {
-      for (std::size_t i = 0; i < fArrayLength; ++i)
-         CallConstructValueOn(*fSubfields[0], begin + (i * fItemSize));
-   }
+   std::int32_t *sizePtr = new (static_cast<void *>(beginPtr + 1)) std::int32_t(0);
+   new (sizePtr + 1) std::int32_t(-1);
 }
 
 std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RArrayAsRVecField::GetDeleter() const
@@ -783,39 +891,42 @@ std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RArrayAsRVecField::GetDeleter(
 
 void ROOT::RArrayAsRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
-
-   auto [beginPtr, _, __] = GetRVecDataMembers(to);
-   auto rvecBeginPtr = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
+   auto begin = RRVecField::ResizeRVec(to, fArrayLength, fItemSize, fSubfields[0].get(), fItemDeleter.get());
 
    if (fSubfields[0]->IsSimple()) {
-      GetPrincipalColumnOf(*fSubfields[0])->ReadV(globalIndex * fArrayLength, fArrayLength, rvecBeginPtr);
+      GetPrincipalColumnOf(*fSubfields[0])->ReadV(globalIndex * fArrayLength, fArrayLength, begin);
       return;
    }
 
    // Read the new values into the collection elements
    for (std::size_t i = 0; i < fArrayLength; ++i) {
-      CallReadOn(*fSubfields[0], globalIndex * fArrayLength + i, rvecBeginPtr + (i * fItemSize));
+      CallReadOn(*fSubfields[0], globalIndex * fArrayLength + i, begin + (i * fItemSize));
    }
 }
 
 void ROOT::RArrayAsRVecField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to)
 {
-   auto [beginPtr, _, __] = GetRVecDataMembers(to);
-   auto rvecBeginPtr = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
-
-   const auto &clusterId = localIndex.GetClusterId();
-   const auto &indexInCluster = localIndex.GetIndexInCluster();
+   auto begin = RRVecField::ResizeRVec(to, fArrayLength, fItemSize, fSubfields[0].get(), fItemDeleter.get());
 
    if (fSubfields[0]->IsSimple()) {
-      GetPrincipalColumnOf(*fSubfields[0])
-         ->ReadV(RNTupleLocalIndex(clusterId, indexInCluster * fArrayLength), fArrayLength, rvecBeginPtr);
+      GetPrincipalColumnOf(*fSubfields[0])->ReadV(localIndex * fArrayLength, fArrayLength, begin);
       return;
    }
 
    // Read the new values into the collection elements
    for (std::size_t i = 0; i < fArrayLength; ++i) {
-      CallReadOn(*fSubfields[0], RNTupleLocalIndex(clusterId, indexInCluster * fArrayLength + i),
-                 rvecBeginPtr + (i * fItemSize));
+      CallReadOn(*fSubfields[0], localIndex * fArrayLength + i, begin + (i * fItemSize));
+   }
+}
+
+void ROOT::RArrayAsRVecField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureMatchingOnDiskField(desc, kDiffTypeName | kDiffTypeVersion | kDiffStructure | kDiffNRepetitions)
+      .ThrowOnError();
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   if (fieldDesc.GetTypeName().rfind("std::array<", 0) != 0) {
+      throw RException(R__FAIL("RArrayAsRVecField " + GetQualifiedFieldName() + " expects an on-disk array field\n" +
+                               Internal::GetTypeTraceReport(*this, desc)));
    }
 }
 
@@ -839,4 +950,91 @@ std::vector<ROOT::RFieldBase::RValue> ROOT::RArrayAsRVecField::SplitValue(const 
 void ROOT::RArrayAsRVecField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitArrayAsRVecField(*this);
+}
+
+//------------------------------------------------------------------------------
+
+ROOT::RArrayAsVectorField::RArrayAsVectorField(std::string_view fieldName, std::unique_ptr<ROOT::RFieldBase> itemField,
+                                               std::size_t arrayLength)
+   : ROOT::RFieldBase(fieldName, "std::vector<" + itemField->GetTypeName() + ">", ROOT::ENTupleStructure::kCollection,
+                      false /* isSimple */),
+     fItemSize(itemField->GetValueSize()),
+     fArrayLength(arrayLength)
+{
+   Attach(std::move(itemField));
+   if (!(fSubfields[0]->GetTraits() & kTraitTriviallyDestructible))
+      fItemDeleter = GetDeleterOf(*fSubfields[0]);
+}
+
+std::unique_ptr<ROOT::RFieldBase> ROOT::RArrayAsVectorField::CloneImpl(std::string_view newName) const
+{
+   auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
+   return std::make_unique<RArrayAsVectorField>(newName, std::move(newItemField), fArrayLength);
+}
+
+void ROOT::RArrayAsVectorField::GenerateColumns()
+{
+   throw RException(R__FAIL("RArrayAsVectorField fields must only be used for reading"));
+}
+
+std::unique_ptr<ROOT::RFieldBase::RDeleter> ROOT::RArrayAsVectorField::GetDeleter() const
+{
+   if (fItemDeleter)
+      return std::make_unique<RVectorField::RVectorDeleter>(fItemSize, GetDeleterOf(*fSubfields[0]));
+   return std::make_unique<RVectorField::RVectorDeleter>();
+}
+
+void ROOT::RArrayAsVectorField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
+{
+   auto typedValue = static_cast<std::vector<char> *>(to);
+
+   if (fSubfields[0]->IsSimple()) {
+      typedValue->resize(fArrayLength * fItemSize);
+      GetPrincipalColumnOf(*fSubfields[0])->ReadV(globalIndex * fArrayLength, fArrayLength, typedValue->data());
+      return;
+   }
+
+   RVectorField::ResizeVector(to, fArrayLength, fItemSize, *fSubfields[0], fItemDeleter.get());
+
+   for (std::size_t i = 0; i < fArrayLength; ++i) {
+      CallReadOn(*fSubfields[0], globalIndex * fArrayLength + i, typedValue->data() + (i * fItemSize));
+   }
+}
+
+void ROOT::RArrayAsVectorField::ReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to)
+{
+   auto typedValue = static_cast<std::vector<char> *>(to);
+
+   if (fSubfields[0]->IsSimple()) {
+      typedValue->resize(fArrayLength * fItemSize);
+      GetPrincipalColumnOf(*fSubfields[0])->ReadV(localIndex * fArrayLength, fArrayLength, typedValue->data());
+      return;
+   }
+
+   RVectorField::ResizeVector(to, fArrayLength, fItemSize, *fSubfields[0], fItemDeleter.get());
+
+   for (std::size_t i = 0; i < fArrayLength; ++i) {
+      CallReadOn(*fSubfields[0], localIndex * fArrayLength + i, typedValue->data() + (i * fItemSize));
+   }
+}
+
+void ROOT::RArrayAsVectorField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureMatchingOnDiskField(desc, kDiffTypeName | kDiffTypeVersion | kDiffStructure | kDiffNRepetitions);
+
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   if (fieldDesc.GetTypeName().rfind("std::array<", 0) != 0) {
+      throw RException(R__FAIL("RArrayAsVectorField " + GetQualifiedFieldName() + " expects an on-disk array field\n" +
+                               Internal::GetTypeTraceReport(*this, desc)));
+   }
+}
+
+std::vector<ROOT::RFieldBase::RValue> ROOT::RArrayAsVectorField::SplitValue(const ROOT::RFieldBase::RValue &value) const
+{
+   return SplitVector(value.GetPtr<void>(), *fSubfields[0]);
+}
+
+void ROOT::RArrayAsVectorField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitArrayAsVectorField(*this);
 }

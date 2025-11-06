@@ -254,7 +254,6 @@ The 3 arrays mytracks,pions and muons may be written separately.
 TObjArray  *TRef::fgExecs  = nullptr;
 TObject    *TRef::fgObject = nullptr;
 
-ClassImp(TRef);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a ref to obj.

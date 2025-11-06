@@ -1,7 +1,6 @@
 #include "twodimvar.h"
 
 #if !defined(__CINT__)
-ClassImp(A);
 #endif
 
 

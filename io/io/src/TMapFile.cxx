@@ -85,7 +85,7 @@ robust Streamer mechanism I opted for 3).
 #endif
 
 #include <fcntl.h>
-#include <errno.h>
+#include <cerrno>
 
 #include "TMapFile.h"
 #include "TKeyMapFile.h"
@@ -203,7 +203,6 @@ TObject *TMapRec::GetObject() const
 
 
 
-ClassImp(TMapFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor. Does not much except setting some basic values.

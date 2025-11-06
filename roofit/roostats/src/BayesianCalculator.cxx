@@ -861,10 +861,10 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
 
 #ifdef DOLATER // (not clear why this does not work)
       // need to make in this case a likelihood from the nll and make the product with the prior
-      TString likeName = TString("likelihood_times_prior_") + TString(fPriorPdf->GetName());
-      TString formula;
-      formula.Form("exp(-@0+%f+log(@1))",fNLLMin);
-      fLikelihood = new RooFormulaVar(likeName,formula,RooArgList(*fLogLike,*fPriorPdf));
+      std::string likeName = std::string{"likelihood_times_prior_"} + fPriorPdf->GetName();
+      std::stringstream formula;
+      formula << "std::exp(-@0+" << fNllMin << "+log(@1))";
+      fLikelihood = new RooFormulaVar(likeName.c_str(), formula, RooArgList(*fLogLike, *fPriorPdf));
 #else
       // here use RooProdPdf (not very nice) but working
 
@@ -877,9 +877,9 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
       // // create a unique name for the product pdf
       RooAbsPdf *  pdfAndPrior = fPdf;
       if (fPriorPdf) {
-         TString prodName = TString("product_") + TString(fPdf->GetName()) + TString("_") + TString(fPriorPdf->GetName() );
+         std::string prodName = std::string{"product_"} + fPdf->GetName() + "_" + fPriorPdf->GetName();
          // save this as data member since it needs to be deleted afterwards
-         fProductPdf = new RooProdPdf(prodName,"",RooArgList(*fPdf,*fPriorPdf));
+         fProductPdf = new RooProdPdf(prodName.c_str(), "", RooArgList(*fPdf, *fPriorPdf));
          pdfAndPrior = fProductPdf;
       }
 
@@ -888,10 +888,10 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
       RemoveConstantParameters(&*constrParams);
       fLogLike = std::unique_ptr<RooAbsReal>{pdfAndPrior->createNLL(*fData, RooFit::Constrain(*constrParams),RooFit::ConditionalObservables(fConditionalObs),RooFit::GlobalObservables(fGlobalObs) )};
 
-      TString likeName = TString("likelihood_times_prior_") + TString(pdfAndPrior->GetName());
-      TString formula;
-      formula.Form("exp(-@0+%f)",fNLLMin);
-      fLikelihood = new RooFormulaVar(likeName,formula,RooArgList(*fLogLike));
+      std::string likeName = std::string{"likelihood_times_prior_"} + pdfAndPrior->GetName();
+      std::stringstream formula;
+      formula << "exp(-@0+" << fNLLMin << ")";
+      fLikelihood = new RooFormulaVar(likeName.c_str(), formula.str().c_str(), RooArgList(*fLogLike));
 #endif
 
 

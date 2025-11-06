@@ -23,6 +23,8 @@
 #include <cstddef>
 
 class TTreeReader;
+template <typename T>
+class TTreeReaderValue;
 
 namespace ROOT {
 namespace Internal {
@@ -106,6 +108,23 @@ private:
    bool fCopyWarningPrinted = false;
 
    void *GetImpl(Long64_t entry) override;
+};
+
+class R__CLING_PTRCHECK(off) RMaskedColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
+   std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase> fValueReader;
+   std::unique_ptr<TTreeReaderValue<uint64_t>> fTreeValueMask;
+   unsigned int fMaskIndex = 0;
+
+   void *GetImpl(Long64_t) override;
+
+public:
+   RMaskedColumnReader(TTreeReader &r, std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase> valueReader,
+                       std::string_view maskName, unsigned int maskIndex);
+   ~RMaskedColumnReader() override;
+   void SetColumnReader(std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase> reader)
+   {
+      fValueReader = std::move(reader);
+   }
 };
 
 } // namespace RDF

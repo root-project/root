@@ -17,9 +17,7 @@
 #ifndef ROO_MINIMIZER
 #define ROO_MINIMIZER
 
-#include <RooFit/TestStatistics/RooAbsL.h>
-#include <RooFit/TestStatistics/LikelihoodWrapper.h>
-#include <RooFit/TestStatistics/LikelihoodGradientWrapper.h>
+#include <RooAbsReal.h>
 
 #include <TStopwatch.h>
 #include <TMatrixDSymfwd.h>
@@ -27,13 +25,13 @@
 #include <Fit/FitConfig.h>
 
 #include <fstream>
+#include <map>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 class RooAbsMinimizerFcn;
-class RooAbsReal;
 class RooFitResult;
 class RooArgList;
 class RooRealVar;
@@ -188,8 +186,6 @@ public:
    /// Return underlying ROOT fitter object
    inline auto fitter() { return std::make_unique<FitterInterface>(&_config, _minimizer.get(), _result.get()); }
 
-   ROOT::Math::IMultiGenFunction *getMultiGenFcn() const;
-
    int getNPar() const;
 
    void applyCovarianceMatrix(TMatrixDSym const &V);
@@ -218,7 +214,7 @@ private:
 
    int exec(std::string const &algoName, std::string const &statusName);
 
-   bool fitFCN(const ROOT::Math::IMultiGenFunction &fcn);
+   bool fitFCN();
 
    bool calculateHessErrors();
    bool calculateMinosErrors();

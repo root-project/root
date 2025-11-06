@@ -18,7 +18,6 @@
 #include "TVirtualTableInterface.h"
 #include "TVirtualX.h"
 
-ClassImp(TGTableCell);
 
 
 /** \class TGTableCell

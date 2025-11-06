@@ -81,13 +81,14 @@ class TGraphDelaunay {
       this.Initialize();
 
       // Find the z value corresponding to the point (x,y).
-      const xx = (x+this.fXoffset)*this.fXScaleFactor,
-            yy = (y+this.fYoffset)*this.fYScaleFactor;
+      const xx = (x + this.fXoffset) * this.fXScaleFactor,
+            yy = (y + this.fYoffset) * this.fYScaleFactor;
       let zz = this.Interpolate(xx, yy);
 
       // Wrong zeros may appear when points sit on a regular grid.
       // The following line try to avoid this problem.
-      if (zz === 0) zz = this.Interpolate(xx+0.0001, yy);
+      if (zz === 0)
+         zz = this.Interpolate(xx + 0.0001, yy);
 
       return zz;
    }
@@ -101,19 +102,19 @@ class TGraphDelaunay {
             ymax = getMax(this.fGraph2D.fY),
             xmin = getMin(this.fGraph2D.fX),
             ymin = getMin(this.fGraph2D.fY);
-      this.fXoffset = -(xmax+xmin)/2;
-      this.fYoffset = -(ymax+ymin)/2;
-      this.fXScaleFactor = 1/(xmax-xmin);
-      this.fYScaleFactor = 1/(ymax-ymin);
-      this.fXNmax = (xmax+this.fXoffset)*this.fXScaleFactor;
-      this.fXNmin = (xmin+this.fXoffset)*this.fXScaleFactor;
-      this.fYNmax = (ymax+this.fYoffset)*this.fYScaleFactor;
-      this.fYNmin = (ymin+this.fYoffset)*this.fYScaleFactor;
-      this.fXN = new Array(this.fNpoints+1);
-      this.fYN = new Array(this.fNpoints+1);
+      this.fXoffset = -(xmax + xmin) / 2;
+      this.fYoffset = -(ymax + ymin) / 2;
+      this.fXScaleFactor = 1 / (xmax - xmin);
+      this.fYScaleFactor = 1 / (ymax - ymin);
+      this.fXNmax = (xmax + this.fXoffset) * this.fXScaleFactor;
+      this.fXNmin = (xmin + this.fXoffset) * this.fXScaleFactor;
+      this.fYNmax = (ymax + this.fYoffset) * this.fYScaleFactor;
+      this.fYNmin = (ymin + this.fYoffset) * this.fYScaleFactor;
+      this.fXN = new Array(this.fNpoints + 1);
+      this.fYN = new Array(this.fNpoints + 1);
       for (let n = 0; n < this.fNpoints; n++) {
-         this.fXN[n+1] = (this.fX[n]+this.fXoffset)*this.fXScaleFactor;
-         this.fYN[n+1] = (this.fY[n]+this.fYoffset)*this.fYScaleFactor;
+         this.fXN[n + 1] = (this.fX[n] + this.fXoffset) * this.fXScaleFactor;
+         this.fYN[n + 1] = (this.fY[n] + this.fYoffset) * this.fYScaleFactor;
       }
 
       // If needed, creates the arrays to hold the Delaunay triangles.
@@ -135,8 +136,8 @@ class TGraphDelaunay {
       let i = 0, j = x.length - 1, oddNodes = false;
 
       for (; i < x.length; ++i) {
-         if ((y[i]<yp && y[j]>=yp) || (y[j]<yp && y[i]>=yp)) {
-            if (x[i]+(yp-y[i])/(y[j]-y[i])*(x[j]-x[i])<xp)
+         if ((y[i] < yp && y[j] >= yp) || (y[j] < yp && y[i] >= yp)) {
+            if (x[i] + (yp - y[i]) / (y[j] - y[i]) * (x[j] - x[i]) < xp)
                oddNodes = !oddNodes;
          }
          j = i;
@@ -151,13 +152,19 @@ class TGraphDelaunay {
    // expanded.
 
    FileIt(p, n, m) {
-      let swap, tmp, ps = p, ns = n, ms = m;
+      let swap, ps = p, ns = n, ms = m;
 
       // order the vertices before storing them
       do {
          swap = false;
-         if (ns > ps) { tmp = ps; ps = ns; ns = tmp; swap = true; }
-         if (ms > ns) { tmp = ns; ns = ms; ms = tmp; swap = true; }
+         if (ns > ps) {
+            [ns, ps] = [ps, ns];
+            swap = true;
+         }
+         if (ms > ns) {
+            [ms, ns] = [ns, ms];
+            swap = true;
+         }
       } while (swap);
 
       // store a new Delaunay triangle
@@ -180,13 +187,14 @@ class TGraphDelaunay {
    // the size of the `alittlebit' parameter may help.
 
    FindAllTriangles() {
-      if (this.fAllTri) return;
+      if (this.fAllTri)
+         return;
 
       this.fAllTri = true;
 
       let xcntr, ycntr, xm, ym, xx, yy,
           sx, sy, nx, ny, mx, my, mdotn, nn, a,
-          t1, t2, pa, na, ma, pb, nb, mb, p1=0, p2=0, m, n, p3=0;
+          t1, t2, pa, na, ma, pb, nb, mb, p1 = 0, p2 = 0, m, n, p3 = 0;
       const s = [false, false, false],
             alittlebit = 0.0001;
 
@@ -199,11 +207,11 @@ class TGraphDelaunay {
       xcntr = 0;
       ycntr = 0;
       for (n = 1; n <= this.fNhull; n++) {
-         xcntr += this.fXN[this.fHullPoints[n-1]];
-         ycntr += this.fYN[this.fHullPoints[n-1]];
+         xcntr += this.fXN[this.fHullPoints[n - 1]];
+         ycntr += this.fYN[this.fHullPoints[n - 1]];
       }
-      xcntr = xcntr/this.fNhull+alittlebit;
-      ycntr = ycntr/this.fNhull+alittlebit;
+      xcntr = xcntr / this.fNhull + alittlebit;
+      ycntr = ycntr / this.fNhull + alittlebit;
       // and calculate it's triangle
       this.Interpolate(xcntr, ycntr);
 
@@ -214,21 +222,21 @@ class TGraphDelaunay {
       t1 = 1;
       while (t1 <= this.fNdt) {
          // get the three points that make up this triangle
-         pa = this.fPTried[t1-1];
-         na = this.fNTried[t1-1];
-         ma = this.fMTried[t1-1];
+         pa = this.fPTried[t1 - 1];
+         na = this.fNTried[t1 - 1];
+         ma = this.fMTried[t1 - 1];
 
          // produce three integers which will represent the three sides
          s[0] = false;
          s[1] = false;
          s[2] = false;
          // loop over all other Delaunay triangles
-         for (t2=1; t2<=this.fNdt; t2++) {
+         for (t2 = 1; t2 <= this.fNdt; t2++) {
             if (t2 !== t1) {
                // get the points that make up this triangle
-               pb = this.fPTried[t2-1];
-               nb = this.fNTried[t2-1];
-               mb = this.fMTried[t2-1];
+               pb = this.fPTried[t2 - 1];
+               nb = this.fNTried[t2 - 1];
+               mb = this.fMTried[t2 - 1];
                // do triangles t1 and t2 share a side?
                if ((pa === pb && na === nb) || (pa === pb && na === mb) || (pa === nb && na === mb)) {
                   // they share side 1
@@ -243,14 +251,15 @@ class TGraphDelaunay {
             }
             // if t1 shares all its sides with other Delaunay triangles then
             // forget about it
-            if (s[0] && s[1] && s[2]) continue;
+            if (s[0] && s[1] && s[2])
+               continue;
          }
          // Looks like t1 is missing a neighbor on at least one side.
          // For each side, take a point a little bit beyond it and calculate
          // the Delaunay triangle for that point, this should be the triangle
          // which shares the side.
-         for (m=1; m<=3; m++) {
-            if (!s[m-1]) {
+         for (m = 1; m <= 3; m++) {
+            if (!s[m - 1]) {
                // get the two points that make up this side
                if (m === 1) {
                   p1 = pa;
@@ -266,23 +275,23 @@ class TGraphDelaunay {
                   p3 = pa;
                }
                // get the coordinates of the centre of this side
-               xm = (this.fXN[p1]+this.fXN[p2])/2.0;
-               ym = (this.fYN[p1]+this.fYN[p2])/2.0;
+               xm = (this.fXN[p1] + this.fXN[p2]) / 2.0;
+               ym = (this.fYN[p1] + this.fYN[p2]) / 2.0;
                // we want to add a little to these coordinates to get a point just
                // outside the triangle; (sx,sy) will be the vector that represents
                // the side
-               sx = this.fXN[p1]-this.fXN[p2];
-               sy = this.fYN[p1]-this.fYN[p2];
+               sx = this.fXN[p1] - this.fXN[p2];
+               sy = this.fYN[p1] - this.fYN[p2];
                // (nx,ny) will be the normal to the side, but don't know if it's
                // pointing in or out yet
                nx = sy;
                ny = -sx;
-               nn = Math.sqrt(nx*nx+ny*ny);
+               nn = Math.sqrt(nx * nx + ny * ny);
                nx /= nn;
                ny /= nn;
-               mx = this.fXN[p3]-xm;
-               my = this.fYN[p3]-ym;
-               mdotn = mx*nx+my*ny;
+               mx = this.fXN[p3] - xm;
+               my = this.fYN[p3] - ym;
+               mdotn = mx * nx + my * ny;
                if (mdotn > 0) {
                   // (nx,ny) is pointing in, we want it pointing out
                   nx = -nx;
@@ -291,9 +300,9 @@ class TGraphDelaunay {
                // increase/decrease xm and ym a little to produce a point
                // just outside the triangle (ensuring that the amount added will
                // be large enough such that it won't be lost in rounding errors)
-               a = Math.abs(Math.max(alittlebit*xm, alittlebit*ym));
-               xx = xm+nx*a;
-               yy = ym+ny*a;
+               a = Math.abs(Math.max(alittlebit * xm, alittlebit * ym));
+               xx = xm + nx * a;
+               yy = ym + ny * a;
                // try and find a new Delaunay triangle for this point
                this.Interpolate(xx, yy);
 
@@ -316,7 +325,7 @@ class TGraphDelaunay {
          this.fHullPoints = new Array(this.fNpoints);
 
       let nhull_tmp = 0;
-      for (let n=1; n<=this.fNpoints; n++) {
+      for (let n = 1; n <= this.fNpoints; n++) {
          // if the point is not inside the hull of the set of all points
          // bar it, then it is part of the hull of the set of all points
          // including it
@@ -325,7 +334,7 @@ class TGraphDelaunay {
             // cannot increment fNhull directly - InHull needs to know that
             // the hull has not yet been completely found
             nhull_tmp++;
-            this.fHullPoints[nhull_tmp-1] = n;
+            this.fHullPoints[nhull_tmp - 1] = n;
          }
       }
       this.fNhull = nhull_tmp;
@@ -367,45 +376,46 @@ class TGraphDelaunay {
 
 
       //  Get the angle n1-e-n2 and set it to lastdphi
-      dx1 = xx-this.fXN[n1];
-      dy1 = yy-this.fYN[n1];
-      dx2 = xx-this.fXN[n2];
-      dy2 = yy-this.fYN[n2];
+      dx1 = xx - this.fXN[n1];
+      dy1 = yy - this.fYN[n1];
+      dx2 = xx - this.fXN[n2];
+      dy2 = yy - this.fYN[n2];
       phi1 = Math.atan2(dy1, dx1);
       phi2 = Math.atan2(dy2, dx2);
-      dphi = (phi1-phi2)-(Math.floor((phi1-phi2)/(Math.PI*2))*Math.PI*2);
-      if (dphi < 0) dphi += Math.PI*2;
+      dphi = (phi1 - phi2) - (Math.floor((phi1 - phi2) / (Math.PI * 2)) * Math.PI * 2);
+      if (dphi < 0)
+         dphi += Math.PI * 2;
       lastdphi = dphi;
-      for (n=1; n<=ntry; n++) {
+      for (n = 1; n <= ntry; n++) {
          if (this.fNhull > 0) {
             // Try hull point n
-            m = this.fHullPoints[n-1];
+            m = this.fHullPoints[n - 1];
          } else
             m = n;
 
          if ((m !== n1) && (m !== n2) && (m !== x)) {
             // Can the vector e->m be represented as a sum with positive
             // coefficients of vectors e->n1 and e->n2?
-            dx1 = xx-this.fXN[n1];
-            dy1 = yy-this.fYN[n1];
-            dx2 = xx-this.fXN[n2];
-            dy2 = yy-this.fYN[n2];
-            dx3 = xx-this.fXN[m];
-            dy3 = yy-this.fYN[m];
+            dx1 = xx - this.fXN[n1];
+            dy1 = yy - this.fYN[n1];
+            dx2 = xx - this.fXN[n2];
+            dy2 = yy - this.fYN[n2];
+            dx3 = xx - this.fXN[m];
+            dy3 = yy - this.fYN[m];
 
-            dd1 = (dx2*dy1-dx1*dy2);
-            dd2 = (dx1*dy2-dx2*dy1);
+            dd1 = (dx2 * dy1 - dx1 * dy2);
+            dd2 = (dx1 * dy2 - dx2 * dy1);
 
             if (dd1 * dd2) {
-               u = (dx2*dy3-dx3*dy2)/dd1;
-               v = (dx1*dy3-dx3*dy1)/dd2;
+               u = (dx2 * dy3 - dx3 * dy2) / dd1;
+               v = (dx1 * dy3 - dx3 * dy1) / dd2;
                if ((u < 0) || (v < 0)) {
                   // No, it cannot - point m does not lie in-between n1 and n2 as
                   // viewed from e. Replace either n1 or n2 to increase the
                   // n1-e-n2 angle. The one to replace is the one which makes the
                   // smallest angle with e->m
-                  vNv1 = (dx1*dx3+dy1*dy3)/Math.sqrt(dx1*dx1+dy1*dy1);
-                  vNv2 = (dx2*dx3+dy2*dy3)/Math.sqrt(dx2*dx2+dy2*dy2);
+                  vNv1 = (dx1 * dx3 + dy1 * dy3) / Math.sqrt(dx1 * dx1 + dy1 * dy1);
+                  vNv2 = (dx2 * dx3 + dy2 * dy3) / Math.sqrt(dx2 * dx2 + dy2 * dy2);
                   if (vNv1 > vNv2) {
                      n1 = m;
                      phi1 = Math.atan2(dy3, dx3);
@@ -415,9 +425,10 @@ class TGraphDelaunay {
                      phi1 = Math.atan2(dy1, dx1);
                      phi2 = Math.atan2(dy3, dx3);
                   }
-                  dphi = (phi1-phi2)-(Math.floor((phi1-phi2)/(Math.PI*2))*Math.PI*2);
-                  if (dphi < 0) dphi += Math.PI*2;
-                  if ((dphi - Math.PI)*(lastdphi - Math.PI) < 0) {
+                  dphi = (phi1 - phi2) - (Math.floor((phi1 - phi2) / (Math.PI * 2)) * Math.PI * 2);
+                  if (dphi < 0)
+                     dphi += Math.PI * 2;
+                  if ((dphi - Math.PI) * (lastdphi - Math.PI) < 0) {
                      // The addition of point m means the angle n1-e-n2 has risen
                      // above 180 degrees, the point is in the hull.
                      deTinhull = true;
@@ -436,13 +447,19 @@ class TGraphDelaunay {
    // on the plane defined by t1,t2,t3
 
    InterpolateOnPlane(TI1, TI2, TI3, e) {
-      let tmp, swap, t1 = TI1, t2 = TI2, t3 = TI3;
+      let swap, t1 = TI1, t2 = TI2, t3 = TI3;
 
       // order the vertices
       do {
          swap = false;
-         if (t2 > t1) { tmp = t1; t1 = t2; t2 = tmp; swap = true; }
-         if (t3 > t2) { tmp = t2; t2 = t3; t3 = tmp; swap = true; }
+         if (t2 > t1) {
+            [t1, t2] = [t2, t1];
+            swap = true;
+         }
+         if (t3 > t2) {
+            [t2, t3] = [t3, t2];
+            swap = true;
+         }
       } while (swap);
 
       const x1 = this.fXN[t1],
@@ -451,14 +468,14 @@ class TGraphDelaunay {
             y1 = this.fYN[t1],
             y2 = this.fYN[t2],
             y3 = this.fYN[t3],
-            f1 = this.fZ[t1-1],
-            f2 = this.fZ[t2-1],
-            f3 = this.fZ[t3-1],
-            u = (f1*(y2-y3)+f2*(y3-y1)+f3*(y1-y2))/(x1*(y2-y3)+x2*(y3-y1)+x3*(y1-y2)),
-            v = (f1*(x2-x3)+f2*(x3-x1)+f3*(x1-x2))/(y1*(x2-x3)+y2*(x3-x1)+y3*(x1-x2)),
-            w = f1-u*x1-v*y1;
+            f1 = this.fZ[t1 - 1],
+            f2 = this.fZ[t2 - 1],
+            f3 = this.fZ[t3 - 1],
+            u = (f1 * (y2 - y3) + f2 * (y3 - y1) + f3 * (y1 - y2)) / (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)),
+            v = (f1 * (x2 - x3) + f2 * (x3 - x1) + f3 * (x1 - x2)) / (y1 * (x2 - x3) + y2 * (x3 - x1) + y3 * (x1 - x2)),
+            w = f1 - u * x1 - v * y1;
 
-      return u*this.fXN[e] + v*this.fYN[e] + w;
+      return u * this.fXN[e] + v * this.fYN[e] + w;
    }
 
    // Finds the Delaunay triangle that the point (xi,yi) sits in (if any) and
@@ -501,10 +518,10 @@ class TGraphDelaunay {
          return thevalue;
 
       // check existing Delaunay triangles for a good one
-      for (it=1; it<=this.fNdt; it++) {
-         p = this.fPTried[it-1];
-         n = this.fNTried[it-1];
-         m = this.fMTried[it-1];
+      for (it = 1; it <= this.fNdt; it++) {
+         p = this.fPTried[it - 1];
+         n = this.fNTried[it - 1];
+         m = this.fMTried[it - 1];
          // p, n and m form a previously found Delaunay triangle, does it
          // enclose the point?
          if (this.Enclose(p, n, m, 0)) {
@@ -522,25 +539,26 @@ class TGraphDelaunay {
       // it must be in a Delaunay triangle - find it...
 
       // order mass points by distance in mass plane from desired point
-      for (it=1; it<=this.fNpoints; it++) {
+      for (it = 1; it <= this.fNpoints; it++) {
          vxN = this.fXN[it];
          vyN = this.fYN[it];
-         this.fDist[it-1] = Math.sqrt((xx-vxN)*(xx-vxN)+(yy-vyN)*(yy-vyN));
+         this.fDist[it - 1] = Math.sqrt((xx - vxN) * (xx - vxN) + (yy - vyN) * (yy - vyN));
       }
 
       // sort array 'fDist' to find closest points
       TMath_Sort(this.fNpoints, this.fDist, this.fOrder /* , false */);
-      for (it=0; it<this.fNpoints; it++) this.fOrder[it]++;
+      for (it = 0; it < this.fNpoints; it++)
+         this.fOrder[it]++;
 
       // loop over triplets of close points to try to find a triangle that
       // encloses the point.
-      for (k=3; k<=this.fNpoints; k++) {
-         m = this.fOrder[k-1];
-         for (j=2; j<=k-1; j++) {
-            n = this.fOrder[j-1];
-            for (i=1; i<=j-1; i++) {
+      for (k = 3; k <= this.fNpoints; k++) {
+         m = this.fOrder[k - 1];
+         for (j = 2; j <= k - 1; j++) {
+            n = this.fOrder[j - 1];
+            for (i = 1; i <= j - 1; i++) {
                let skip_this_triangle = false; // used instead of goto L90
-               p = this.fOrder[i-1];
+               p = this.fOrder[i - 1];
                if (ntris_tried > this.fMaxIter) {
                   // perhaps this point isn't in the hull after all
                   /* Warning("Interpolate",
@@ -550,10 +568,10 @@ class TGraphDelaunay {
                }
                ntris_tried++;
                // check the points aren't colinear
-               d1 = Math.sqrt((this.fXN[p]-this.fXN[n])**2+(this.fYN[p]-this.fYN[n])**2);
-               d2 = Math.sqrt((this.fXN[p]-this.fXN[m])**2+(this.fYN[p]-this.fYN[m])**2);
-               d3 = Math.sqrt((this.fXN[n]-this.fXN[m])**2+(this.fYN[n]-this.fYN[m])**2);
-               if ((d1+d2 <= d3) || (d1+d3 <= d2) || (d2+d3 <= d1))
+               d1 = Math.sqrt((this.fXN[p] - this.fXN[n]) ** 2 + (this.fYN[p] - this.fYN[n]) ** 2);
+               d2 = Math.sqrt((this.fXN[p] - this.fXN[m]) ** 2 + (this.fYN[p] - this.fYN[m]) ** 2);
+               d3 = Math.sqrt((this.fXN[n] - this.fXN[m]) ** 2 + (this.fYN[n] - this.fYN[m]) ** 2);
+               if ((d1 + d2 <= d3) || (d1 + d3 <= d2) || (d2 + d3 <= d1))
                   continue;
 
                // does the triangle enclose the point?
@@ -576,14 +594,17 @@ class TGraphDelaunay {
 
                   // point z cannot be inside the triangle if it's further from (xx,yy)
                   // than the furthest pointing making up the triangle - test this
-                  for (l=1; l<=this.fNpoints; l++) {
-                     if (this.fOrder[l-1] === z) {
-                        if ((l<i) || (l<j) || (l<k)) {
+                  for (l = 1; l <= this.fNpoints; l++) {
+                     if (this.fOrder[l - 1] === z) {
+                        if ((l < i) || (l < j) || (l < k)) {
                            // point z is nearer to (xx,yy) than m, n or p - it could be in the
                            // triangle so call enclose to find out
 
                            // if it is inside the triangle this can't be a Delaunay triangle
-                           if (this.Enclose(p, n, m, z)) { skip_this_triangle = true; break; } // goto L90;
+                           if (this.Enclose(p, n, m, z)) {
+                              skip_this_triangle = true;
+                              break;
+                           } // goto L90;
                         } else {
                            // there's no way it could be in the triangle so there's no point
                            // calling enclose
@@ -592,19 +613,20 @@ class TGraphDelaunay {
                      }
                   }
 
-                  if (skip_this_triangle) break;
+                  if (skip_this_triangle)
+                     break;
 
                   // is point z colinear with any pair of the triangle points?
-   // L1:
-                  if (((this.fXN[p]-this.fXN[z])*(this.fYN[p]-this.fYN[n])) === ((this.fYN[p]-this.fYN[z])*(this.fXN[p]-this.fXN[n]))) {
+                  // L1:
+                  if (((this.fXN[p] - this.fXN[z]) * (this.fYN[p] - this.fYN[n])) === ((this.fYN[p] - this.fYN[z]) * (this.fXN[p] - this.fXN[n]))) {
                      // z is colinear with p and n
                      a = p;
                      b = n;
-                  } else if (((this.fXN[p]-this.fXN[z])*(this.fYN[p]-this.fYN[m])) === ((this.fYN[p]-this.fYN[z])*(this.fXN[p]-this.fXN[m]))) {
+                  } else if (((this.fXN[p] - this.fXN[z]) * (this.fYN[p] - this.fYN[m])) === ((this.fYN[p] - this.fYN[z]) * (this.fXN[p] - this.fXN[m]))) {
                      // z is colinear with p and m
                      a = p;
                      b = m;
-                  } else if (((this.fXN[n]-this.fXN[z])*(this.fYN[n]-this.fYN[m])) === ((this.fYN[n]-this.fYN[z])*(this.fXN[n]-this.fXN[m]))) {
+                  } else if (((this.fXN[n] - this.fXN[z]) * (this.fYN[n] - this.fYN[m])) === ((this.fYN[n] - this.fYN[z]) * (this.fXN[n] - this.fXN[m]))) {
                      // z is colinear with n and m
                      a = n;
                      b = m;
@@ -616,11 +638,11 @@ class TGraphDelaunay {
                      // point z is colinear with 2 of the triangle points, if it lies
                      // between them it's in the circle otherwise it's outside
                      if (this.fXN[a] !== this.fXN[b]) {
-                        if (((this.fXN[z]-this.fXN[a])*(this.fXN[z]-this.fXN[b])) < 0) {
+                        if (((this.fXN[z] - this.fXN[a]) * (this.fXN[z] - this.fXN[b])) < 0) {
                            skip_this_triangle = true;
                            break;
                            // goto L90;
-                        } else if (((this.fXN[z]-this.fXN[a])*(this.fXN[z]-this.fXN[b])) === 0) {
+                        } else if (((this.fXN[z] - this.fXN[a]) * (this.fXN[z] - this.fXN[b])) === 0) {
                            // At least two points are sitting on top of each other, we will
                            // treat these as one and not consider this a 'multiple points lying
                            // on a common circle' situation. It is a sign something could be
@@ -628,11 +650,11 @@ class TGraphDelaunay {
                            // different fZ's. If they don't then this is harmless.
                            console.warn(`Interpolate Two of these three points are coincident ${a} ${b} ${z}`);
                         }
-                     } else if (((this.fYN[z]-this.fYN[a])*(this.fYN[z]-this.fYN[b])) < 0) {
+                     } else if (((this.fYN[z] - this.fYN[a]) * (this.fYN[z] - this.fYN[b])) < 0) {
                         skip_this_triangle = true;
                         break;
                         // goto L90;
-                     } else if (((this.fYN[z]-this.fYN[a])*(this.fYN[z]-this.fYN[b])) === 0) {
+                     } else if (((this.fYN[z] - this.fYN[a]) * (this.fYN[z] - this.fYN[b])) === 0) {
                         // At least two points are sitting on top of each other - see above.
                         console.warn(`Interpolate Two of these three points are coincident ${a} ${b} ${z}`);
                      }
@@ -640,7 +662,8 @@ class TGraphDelaunay {
                      continue; // goto L50;
                   }
 
-                  if (skip_this_triangle) break;
+                  if (skip_this_triangle)
+                     break;
 
                   /* Error("Interpolate", "Should not get to here"); */
                   // may as well soldier on
@@ -653,53 +676,59 @@ class TGraphDelaunay {
                   // lying between the other two? (we're going to form a quadrilateral
                   // from the points, and then demand certain properties of that
                   // quadrilateral)
-                  dxz[0] = this.fXN[p]-this.fXN[z];
-                  dyz[0] = this.fYN[p]-this.fYN[z];
-                  dxz[1] = this.fXN[n]-this.fXN[z];
-                  dyz[1] = this.fYN[n]-this.fYN[z];
-                  dxz[2] = this.fXN[m]-this.fXN[z];
-                  dyz[2] = this.fYN[m]-this.fYN[z];
-                  for (l=1; l<=3; l++) {
-                     dx1 = dxz[l-1];
-                     dx2 = dxz[l%3];
-                     dx3 = dxz[(l+1)%3];
-                     dy1 = dyz[l-1];
-                     dy2 = dyz[l%3];
-                     dy3 = dyz[(l+1)%3];
+                  dxz[0] = this.fXN[p] - this.fXN[z];
+                  dyz[0] = this.fYN[p] - this.fYN[z];
+                  dxz[1] = this.fXN[n] - this.fXN[z];
+                  dyz[1] = this.fYN[n] - this.fYN[z];
+                  dxz[2] = this.fXN[m] - this.fXN[z];
+                  dyz[2] = this.fYN[m] - this.fYN[z];
+                  for (l = 1; l <= 3; l++) {
+                     dx1 = dxz[l - 1];
+                     dx2 = dxz[l % 3];
+                     dx3 = dxz[(l + 1) % 3];
+                     dy1 = dyz[l - 1];
+                     dy2 = dyz[l % 3];
+                     dy3 = dyz[(l + 1) % 3];
 
                      // u et v are used only to know their sign. The previous
                      // code computed them with a division which was long and
                      // might be a division by 0. It is now replaced by a
                      // multiplication.
-                     u = (dy3*dx2-dx3*dy2)*(dy1*dx2-dx1*dy2);
-                     v = (dy3*dx1-dx3*dy1)*(dy2*dx1-dx2*dy1);
+                     u = (dy3 * dx2 - dx3 * dy2) * (dy1 * dx2 - dx1 * dy2);
+                     v = (dy3 * dx1 - dx3 * dy1) * (dy2 * dx1 - dx2 * dy1);
 
                      if ((u >= 0) && (v >= 0)) {
                         // vector (dx3,dy3) is expressible as a sum of the other two vectors
                         // with positive coefficients -> i.e. it lies between the other two vectors
                         if (l === 1) {
-                           f = m; o1 = p; o2 = n;
+                           f = m;
+                           o1 = p;
+                           o2 = n;
                         } else if (l === 2) {
-                           f = p; o1 = n; o2 = m;
+                           f = p;
+                           o1 = n;
+                           o2 = m;
                         } else {
-                           f = n; o1 = m; o2 = p;
+                           f = n;
+                           o1 = m;
+                           o2 = p;
                         }
                         break; // goto L2;
                      }
                   }
-   // L2:
+                  // L2:
                   // this is not a valid quadrilateral if the diagonals don't cross,
                   // check that points f and z lie on opposite side of the line o1-o2,
                   // this is true if the angle f-o1-z is greater than o2-o1-z and o2-o1-f
-                  cfo1k = ((this.fXN[f]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])+(this.fYN[f]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1]))/
-                           Math.sqrt(((this.fXN[f]-this.fXN[o1])*(this.fXN[f]-this.fXN[o1])+(this.fYN[f]-this.fYN[o1])*(this.fYN[f]-this.fYN[o1]))*
-                           ((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])+(this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1])));
-                  co2o1k = ((this.fXN[o2]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])+(this.fYN[o2]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1]))/
-                           Math.sqrt(((this.fXN[o2]-this.fXN[o1])*(this.fXN[o2]-this.fXN[o1])+(this.fYN[o2]-this.fYN[o1])*(this.fYN[o2]-this.fYN[o1]))*
-                           ((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1]) + (this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1])));
-                  co2o1f = ((this.fXN[o2]-this.fXN[o1])*(this.fXN[f]-this.fXN[o1])+(this.fYN[o2]-this.fYN[o1])*(this.fYN[f]-this.fYN[o1]))/
-                           Math.sqrt(((this.fXN[o2]-this.fXN[o1])*(this.fXN[o2]-this.fXN[o1])+(this.fYN[o2]-this.fYN[o1])*(this.fYN[o2]-this.fYN[o1]))*
-                           ((this.fXN[f]-this.fXN[o1])*(this.fXN[f]-this.fXN[o1]) + (this.fYN[f]-this.fYN[o1])*(this.fYN[f]-this.fYN[o1])));
+                  cfo1k = ((this.fXN[f] - this.fXN[o1]) * (this.fXN[z] - this.fXN[o1]) + (this.fYN[f] - this.fYN[o1]) * (this.fYN[z] - this.fYN[o1])) /
+                           Math.sqrt(((this.fXN[f] - this.fXN[o1]) * (this.fXN[f] - this.fXN[o1]) + (this.fYN[f] - this.fYN[o1]) * (this.fYN[f] - this.fYN[o1])) *
+                           ((this.fXN[z] - this.fXN[o1]) * (this.fXN[z] - this.fXN[o1]) + (this.fYN[z] - this.fYN[o1]) * (this.fYN[z] - this.fYN[o1])));
+                  co2o1k = ((this.fXN[o2] - this.fXN[o1]) * (this.fXN[z] - this.fXN[o1]) + (this.fYN[o2] - this.fYN[o1]) * (this.fYN[z] - this.fYN[o1])) /
+                           Math.sqrt(((this.fXN[o2] - this.fXN[o1]) * (this.fXN[o2] - this.fXN[o1]) + (this.fYN[o2] - this.fYN[o1]) * (this.fYN[o2] - this.fYN[o1])) *
+                           ((this.fXN[z] - this.fXN[o1]) * (this.fXN[z] - this.fXN[o1]) + (this.fYN[z] - this.fYN[o1]) * (this.fYN[z] - this.fYN[o1])));
+                  co2o1f = ((this.fXN[o2] - this.fXN[o1]) * (this.fXN[f] - this.fXN[o1]) + (this.fYN[o2] - this.fYN[o1]) * (this.fYN[f] - this.fYN[o1])) /
+                           Math.sqrt(((this.fXN[o2] - this.fXN[o1]) * (this.fXN[o2] - this.fXN[o1]) + (this.fYN[o2] - this.fYN[o1]) * (this.fYN[o2] - this.fYN[o1])) *
+                           ((this.fXN[f] - this.fXN[o1]) * (this.fXN[f] - this.fXN[o1]) + (this.fYN[f] - this.fYN[o1]) * (this.fYN[f] - this.fYN[o1])));
                   if ((cfo1k > co2o1k) || (cfo1k > co2o1f)) {
                      // not a valid quadrilateral - point z is definitely outside the circle
                      continue; // goto L50;
@@ -707,13 +736,13 @@ class TGraphDelaunay {
                   // calculate the 2 internal angles of the quadrangle formed by joining
                   // points z and f to points o1 and o2, at z and f. If they sum to less
                   // than 180 degrees then z lies outside the circle
-                  dko1 = Math.sqrt((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o1])+(this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o1]));
-                  dko2 = Math.sqrt((this.fXN[z]-this.fXN[o2])*(this.fXN[z]-this.fXN[o2])+(this.fYN[z]-this.fYN[o2])*(this.fYN[z]-this.fYN[o2]));
-                  dfo1 = Math.sqrt((this.fXN[f]-this.fXN[o1])*(this.fXN[f]-this.fXN[o1])+(this.fYN[f]-this.fYN[o1])*(this.fYN[f]-this.fYN[o1]));
-                  dfo2 = Math.sqrt((this.fXN[f]-this.fXN[o2])*(this.fXN[f]-this.fXN[o2])+(this.fYN[f]-this.fYN[o2])*(this.fYN[f]-this.fYN[o2]));
-                  c1 = ((this.fXN[z]-this.fXN[o1])*(this.fXN[z]-this.fXN[o2])+(this.fYN[z]-this.fYN[o1])*(this.fYN[z]-this.fYN[o2]))/dko1/dko2;
-                  c2 = ((this.fXN[f]-this.fXN[o1])*(this.fXN[f]-this.fXN[o2])+(this.fYN[f]-this.fYN[o1])*(this.fYN[f]-this.fYN[o2]))/dfo1/dfo2;
-                  sin_sum = c1*Math.sqrt(1-c2*c2)+c2*Math.sqrt(1-c1*c1);
+                  dko1 = Math.sqrt((this.fXN[z] - this.fXN[o1]) * (this.fXN[z] - this.fXN[o1]) + (this.fYN[z] - this.fYN[o1]) * (this.fYN[z] - this.fYN[o1]));
+                  dko2 = Math.sqrt((this.fXN[z] - this.fXN[o2]) * (this.fXN[z] - this.fXN[o2]) + (this.fYN[z] - this.fYN[o2]) * (this.fYN[z] - this.fYN[o2]));
+                  dfo1 = Math.sqrt((this.fXN[f] - this.fXN[o1]) * (this.fXN[f] - this.fXN[o1]) + (this.fYN[f] - this.fYN[o1]) * (this.fYN[f] - this.fYN[o1]));
+                  dfo2 = Math.sqrt((this.fXN[f] - this.fXN[o2]) * (this.fXN[f] - this.fXN[o2]) + (this.fYN[f] - this.fYN[o2]) * (this.fYN[f] - this.fYN[o2]));
+                  c1 = ((this.fXN[z] - this.fXN[o1]) * (this.fXN[z] - this.fXN[o2]) + (this.fYN[z] - this.fYN[o1]) * (this.fYN[z] - this.fYN[o2])) / dko1 / dko2;
+                  c2 = ((this.fXN[f] - this.fXN[o1]) * (this.fXN[f] - this.fXN[o2]) + (this.fYN[f] - this.fYN[o1]) * (this.fYN[f] - this.fYN[o2])) / dfo1 / dfo2;
+                  sin_sum = c1 * Math.sqrt(1 - c2 * c2) + c2 * Math.sqrt(1 - c1 * c1);
 
                   // sin_sum doesn't always come out as zero when it should do.
                   if (sin_sum < -1.e-6) {
@@ -737,7 +766,8 @@ class TGraphDelaunay {
                   // L50: continue;
                } // end of for ( z = 1 ...) loop
 
-               if (skip_this_triangle) continue;
+               if (skip_this_triangle)
+                  continue;
 
                // This is a good triangle
                if (ndegen > 0) {
@@ -758,7 +788,7 @@ class TGraphDelaunay {
                   f = fdegen;
                   o1 = o1degen;
                   o2 = o2degen;
-                  if ((this.fZ[o1-1] + this.fZ[o2-1]) > (this.fZ[d-1] + this.fZ[f-1])) {
+                  if ((this.fZ[o1 - 1] + this.fZ[o2 - 1]) > (this.fZ[d - 1] + this.fZ[f - 1])) {
                      // best diagonalisation of quadrilateral is current one, we have
                      // the triangle
                      t1 = p;
@@ -775,7 +805,7 @@ class TGraphDelaunay {
                      t2 = d;
                      if (this.Enclose(f, d, o1, 0))
                         t3 = o1;
-                      else
+                     else
                         t3 = o2;
 
                      // file the good triangles
@@ -793,7 +823,7 @@ class TGraphDelaunay {
                thevalue = this.InterpolateOnPlane(t1, t2, t3, 0);
                return thevalue;
 
-   // L90:      continue;
+               // L90:      continue;
             }
          }
       }
@@ -847,18 +877,41 @@ class TGraphDelaunay {
          p0 = t[0] - 1;
          p1 = t[1] - 1;
          p2 = t[2] - 1;
-         x0 = this.fX[p0]; x2 = this.fX[p0];
-         y0 = this.fY[p0]; y2 = this.fY[p0];
-         z0 = this.fZ[p0]; z2 = this.fZ[p0];
+         x0 = this.fX[p0];
+         x2 = this.fX[p0];
+         y0 = this.fY[p0];
+         y2 = this.fY[p0];
+         z0 = this.fZ[p0];
+         z2 = this.fZ[p0];
 
          // Order along Z axis the points (xi,yi,zi) where "i" belongs to {0,1,2}
          // After this z0 < z1 < z2
          /* eslint-disable-next-line no-useless-assignment */
          i0 = i1 = i2 = 0;
-         if (this.fZ[p1] <= z0) { z0 = this.fZ[p1]; x0 = this.fX[p1]; y0 = this.fY[p1]; i0 = 1; }
-         if (this.fZ[p1] > z2) { z2 = this.fZ[p1]; x2 = this.fX[p1]; y2 = this.fY[p1]; i2 = 1; }
-         if (this.fZ[p2] <= z0) { z0 = this.fZ[p2]; x0 = this.fX[p2]; y0 = this.fY[p2]; i0 = 2; }
-         if (this.fZ[p2] > z2) { z2 = this.fZ[p2]; x2 = this.fX[p2]; y2 = this.fY[p2]; i2 = 2; }
+         if (this.fZ[p1] <= z0) {
+            z0 = this.fZ[p1];
+            x0 = this.fX[p1];
+            y0 = this.fY[p1];
+            i0 = 1;
+         }
+         if (this.fZ[p1] > z2) {
+            z2 = this.fZ[p1];
+            x2 = this.fX[p1];
+            y2 = this.fY[p1];
+            i2 = 1;
+         }
+         if (this.fZ[p2] <= z0) {
+            z0 = this.fZ[p2];
+            x0 = this.fX[p2];
+            y0 = this.fY[p2];
+            i0 = 2;
+         }
+         if (this.fZ[p2] > z2) {
+            z2 = this.fZ[p2];
+            x2 = this.fX[p2];
+            y2 = this.fY[p2];
+            i2 = 2;
+         }
          if (i0 === 0 && i2 === 0) {
             console.error('GetContourList: wrong vertices ordering');
             return null;
@@ -866,30 +919,30 @@ class TGraphDelaunay {
 
          i1 = 3 - i2 - i0;
 
-         x1 = this.fX[t[i1]-1];
-         y1 = this.fY[t[i1]-1];
-         z1 = this.fZ[t[i1]-1];
+         x1 = this.fX[t[i1] - 1];
+         y1 = this.fY[t[i1] - 1];
+         z1 = this.fZ[t[i1] - 1];
 
-         if (contour >= z0 && contour <=z2) {
-            r20 = (contour-z0)/(z2-z0);
-            xs0c = r20*(x2-x0)+x0;
-            ys0c = r20*(y2-y0)+y0;
-            if (contour >= z1 && contour <=z2) {
-               r21 = (contour-z1)/(z2-z1);
-               xs1c = r21*(x2-x1)+x1;
-               ys1c = r21*(y2-y1)+y1;
+         if (contour >= z0 && contour <= z2) {
+            r20 = (contour - z0) / (z2 - z0);
+            xs0c = r20 * (x2 - x0) + x0;
+            ys0c = r20 * (y2 - y0) + y0;
+            if (contour >= z1 && contour <= z2) {
+               r21 = (contour - z1) / (z2 - z1);
+               xs1c = r21 * (x2 - x1) + x1;
+               ys1c = r21 * (y2 - y1) + y1;
             } else {
-               r10 = (contour-z0)/(z1-z0);
-               xs1c = r10*(x1-x0)+x0;
-               ys1c = r10*(y1-y0)+y0;
+               r10 = (contour - z0) / (z1 - z0);
+               xs1c = r10 * (x1 - x0) + x0;
+               ys1c = r10 * (y1 - y0) + y0;
             }
             // do not take the segments equal to a point
             if (xs0c !== xs1c || ys0c !== ys1c) {
                nbSeg++;
-               xs0[nbSeg-1] = xs0c;
-               ys0[nbSeg-1] = ys0c;
-               xs1[nbSeg-1] = xs1c;
-               ys1[nbSeg-1] = ys1c;
+               xs0[nbSeg - 1] = xs0c;
+               ys0[nbSeg - 1] = ys0c;
+               xs1[nbSeg - 1] = xs1c;
+               ys1[nbSeg - 1] = ys1c;
             }
          }
       }
@@ -901,21 +954,27 @@ class TGraphDelaunay {
       // either they are "opened" or they are "closed"
 
       // Find the opened graphs
-      let xc=0, yc=0, xnc=0, ync=0,
+      let xc = 0, yc = 0, xnc = 0, ync = 0,
           findNew, s0, s1, is, js;
 
       for (is = 0; is < nbSeg; is++) {
-         if (segUsed[is]) continue;
+         if (segUsed[is])
+            continue;
          s0 = s1 = false;
 
          // Find to which segment is is connected. It can be connected
          // via 0, 1 or 2 vertices.
          for (js = 0; js < nbSeg; js++) {
-            if (is === js) continue;
-            if (xs0[is] === xs0[js] && ys0[is] === ys0[js]) s0 = true;
-            if (xs0[is] === xs1[js] && ys0[is] === ys1[js]) s0 = true;
-            if (xs1[is] === xs0[js] && ys1[is] === ys0[js]) s1 = true;
-            if (xs1[is] === xs1[js] && ys1[is] === ys1[js]) s1 = true;
+            if (is === js)
+               continue;
+            if (xs0[is] === xs0[js] && ys0[is] === ys0[js])
+               s0 = true;
+            if (xs0[is] === xs1[js] && ys0[is] === ys1[js])
+               s0 = true;
+            if (xs1[is] === xs0[js] && ys1[is] === ys0[js])
+               s1 = true;
+            if (xs1[is] === xs1[js] && ys1[is] === ys1[js])
+               s1 = true;
          }
 
          // Segment is is alone, not connected. It is stored in the
@@ -934,8 +993,18 @@ class TGraphDelaunay {
          if (!s0 || !s1) {
             // Find all the segments connected to segment is
             graph = [];
-            if (s0) { xc = xs0[is]; yc = ys0[is]; xnc = xs1[is]; ync = ys1[is]; }
-            if (s1) { xc = xs1[is]; yc = ys1[is]; xnc = xs0[is]; ync = ys0[is]; }
+            if (s0) {
+               xc = xs0[is];
+               yc = ys0[is];
+               xnc = xs1[is];
+               ync = ys1[is];
+            }
+            if (s1) {
+               xc = xs1[is];
+               yc = ys1[is];
+               xnc = xs0[is];
+               ync = ys0[is];
+            }
             graph.push(xnc, ync);
             segUsed[is] = true;
             js = 0;
@@ -969,7 +1038,8 @@ class TGraphDelaunay {
       // Find the closed graphs. At this point all the remaining graphs
       // are closed. Any segment can be used to start the search.
       for (is = 0; is < nbSeg; is++) {
-         if (segUsed[is]) continue;
+         if (segUsed[is])
+            continue;
 
          // Find all the segments connected to segment is
          graph = [];
@@ -1007,12 +1077,12 @@ class TGraphDelaunay {
 
 } // class TGraphDelaunay
 
-   /** @summary Function handles tooltips in the mesh */
-function graph2DTooltip(intersect) {
+/** @summary Function handles tooltips in the mesh */
+function _graph2DTooltip(intersect) {
    let indx = Math.floor(intersect.index / this.nvertex);
    if ((indx < 0) || (indx >= this.index.length))
       return null;
-   const sqr = v => v*v;
+   const sqr = v => v * v;
 
    indx = this.index[indx];
 
@@ -1021,13 +1091,16 @@ function graph2DTooltip(intersect) {
        gry = fp.gry(gr.fY[indx]),
        grz = fp.grz(gr.fZ[indx]);
 
-   if (this.check_next && indx+1<gr.fX.length) {
+   if (this.check_next && indx + 1 < gr.fX.length) {
       const d = intersect.point,
-          grx1 = fp.grx(gr.fX[indx+1]),
-          gry1 = fp.gry(gr.fY[indx+1]),
-          grz1 = fp.grz(gr.fZ[indx+1]);
-      if (sqr(d.x-grx1)+sqr(d.y-gry1)+sqr(d.z-grz1) < sqr(d.x-grx)+sqr(d.y-gry)+sqr(d.z-grz)) {
-         grx = grx1; gry = gry1; grz = grz1; indx++;
+            grx1 = fp.grx(gr.fX[indx + 1]),
+            gry1 = fp.gry(gr.fY[indx + 1]),
+            grz1 = fp.grz(gr.fZ[indx + 1]);
+      if (sqr(d.x - grx1) + sqr(d.y - gry1) + sqr(d.z - grz1) < sqr(d.x - grx) + sqr(d.y - gry) + sqr(d.z - grz)) {
+         grx = grx1;
+         gry = gry1;
+         grz = grz1;
+         indx++;
       }
    }
 
@@ -1040,11 +1113,10 @@ function graph2DTooltip(intersect) {
       z2: grz + this.scale0,
       color: this.tip_color,
       lines: [this.tip_name,
-               'pnt: ' + indx,
-               'x: ' + fp.axisAsText('x', gr.fX[indx]),
-               'y: ' + fp.axisAsText('y', gr.fY[indx]),
-               'z: ' + fp.axisAsText('z', gr.fZ[indx])
-             ]
+              'pnt: ' + indx,
+              'x: ' + fp.axisAsText('x', gr.fX[indx]),
+              'y: ' + fp.axisAsText('y', gr.fY[indx]),
+              'z: ' + fp.axisAsText('z', gr.fZ[indx])]
    };
 }
 
@@ -1094,7 +1166,7 @@ class TGraph2DPainter extends ObjectPainter {
 
       if (d.check('P0COL'))
          res.Color = res.Circles = res.Markers = true;
-       else {
+      else {
          res.Color = d.check('COL');
          res.Circles = d.check('P0');
          res.Markers = d.check('P');
@@ -1114,7 +1186,8 @@ class TGraph2DPainter extends ObjectPainter {
          res.Axis = '';
       else if (res.isAny()) {
          res.Axis = 'lego2';
-         if (res.Zscale) res.Axis += 'z';
+         if (res.Zscale)
+            res.Axis += 'z';
       } else
          res.Axis = opt;
 
@@ -1151,7 +1224,8 @@ class TGraph2DPainter extends ObjectPainter {
       }
 
       function calc_delta(min, max, margin) {
-         if (min < max) return margin * (max - min);
+         if (min < max)
+            return margin * (max - min);
          return Math.abs(min) < 1e5 ? 0.02 : 0.02 * Math.abs(min);
       }
       const dx = calc_delta(xmin, xmax, gr.fMargin),
@@ -1161,19 +1235,27 @@ class TGraph2DPainter extends ObjectPainter {
           uymin = ymin - dy, uymax = ymax + dy,
           uzmin = zmin - dz, uzmax = zmax + dz;
 
-      if ((uxmin < 0) && (xmin >= 0)) uxmin = xmin*0.98;
-      if ((uxmax > 0) && (xmax <= 0)) uxmax = 0;
+      if ((uxmin < 0) && (xmin >= 0))
+         uxmin = xmin * 0.98;
+      if ((uxmax > 0) && (xmax <= 0))
+         uxmax = 0;
 
-      if ((uymin < 0) && (ymin >= 0)) uymin = ymin*0.98;
-      if ((uymax > 0) && (ymax <= 0)) uymax = 0;
+      if ((uymin < 0) && (ymin >= 0))
+         uymin = ymin * 0.98;
+      if ((uymax > 0) && (ymax <= 0))
+         uymax = 0;
 
-      if ((uzmin < 0) && (zmin >= 0)) uzmin = zmin*0.98;
-      if ((uzmax > 0) && (zmax <= 0)) uzmax = 0;
+      if ((uzmin < 0) && (zmin >= 0))
+         uzmin = zmin * 0.98;
+      if ((uzmax > 0) && (zmax <= 0))
+         uzmax = 0;
 
       const graph = this.getObject();
 
-      if (graph.fMinimum !== kNoZoom) uzmin = graph.fMinimum;
-      if (graph.fMaximum !== kNoZoom) uzmax = graph.fMaximum;
+      if (graph.fMinimum !== kNoZoom)
+         uzmin = graph.fMinimum;
+      if (graph.fMaximum !== kNoZoom)
+         uzmax = graph.fMaximum;
 
       const histo = createHistogram(clTH2D, graph.fNpx, graph.fNpy);
       histo.fName = graph.fName + '_h';
@@ -1196,7 +1278,7 @@ class TGraph2DPainter extends ObjectPainter {
                for (let j = 0; j < graph.fNpy; ++j) {
                   const yy = uymin + (j + 0.5) / graph.fNpy * (uymax - uymin),
                         zz = dulaunay.ComputeZ(xx, yy);
-                  histo.fArray[histo.getBin(i+1, j+1)] = zz;
+                  histo.fArray[histo.getBin(i + 1, j + 1)] = zz;
                }
             }
          }
@@ -1217,14 +1299,15 @@ class TGraph2DPainter extends ObjectPainter {
 
    drawTriangles(fp, graph, levels, palette) {
       const dulaunay = this.buildDelaunay(graph);
-      if (!dulaunay) return;
+      if (!dulaunay)
+         return;
 
-      const main_grz = !fp.logz ? fp.grz : value => (value < fp.scale_zmin) ? -0.1 : fp.grz(value),
+      const main_grz = !fp.logz ? fp.grz : value => { return (value < fp.scale_zmin) ? -0.1 : fp.grz(value); },
             o = this.getOptions(),
             plain_mode = o.Triangles === 2,
             do_faces = (o.Triangles >= 10) || plain_mode,
             do_lines = (o.Triangles % 10 === 1) || (plain_mode && (graph.fLineColor !== graph.fFillColor)),
-            triangles = new Triangles3DHandler(levels, main_grz, 0, 2*fp.size_z3d, do_lines);
+            triangles = new Triangles3DHandler(levels, main_grz, 0, 2 * fp.size_z3d, do_lines);
 
       for (triangles.loop = 0; triangles.loop < 2; ++triangles.loop) {
          triangles.createBuffers();
@@ -1237,7 +1320,7 @@ class TGraph2DPainter extends ObjectPainter {
                const pnt = points[i] - 1;
                coord.push(fp.grx(graph.fX[pnt]), fp.gry(graph.fY[pnt]), main_grz(graph.fZ[pnt]));
 
-                if ((graph.fX[pnt] < fp.scale_xmin) || (graph.fX[pnt] > fp.scale_xmax) ||
+               if ((graph.fX[pnt] < fp.scale_xmin) || (graph.fX[pnt] > fp.scale_xmax) ||
                     (graph.fY[pnt] < fp.scale_ymin) || (graph.fY[pnt] > fp.scale_ymax))
                   use_triangle = false;
             }
@@ -1247,9 +1330,7 @@ class TGraph2DPainter extends ObjectPainter {
 
             if (do_lines && use_triangle) {
                triangles.addLineSegment(coord[0], coord[1], coord[2], coord[3], coord[4], coord[5]);
-
                triangles.addLineSegment(coord[3], coord[4], coord[5], coord[6], coord[7], coord[8]);
-
                triangles.addLineSegment(coord[6], coord[7], coord[8], coord[0], coord[1], coord[2]);
             }
          }
@@ -1266,8 +1347,8 @@ class TGraph2DPainter extends ObjectPainter {
          mesh.painter = this; // to let use it with context menu
       }, (_isgrid, lpos) => {
          const lcolor = this.getColor(graph.fLineColor),
-              material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor), linewidth: graph.fLineWidth }),
-              linemesh = createLineSegments(convertLegoBuf(this.getMainPainter(), lpos, 100, 100), material);
+               material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor), linewidth: graph.fLineWidth }),
+               linemesh = createLineSegments(convertLegoBuf(this.getMainPainter(), lpos, 100, 100), material);
          fp.add3DMesh(linemesh, this);
       });
    }
@@ -1329,7 +1410,7 @@ class TGraph2DPainter extends ObjectPainter {
          for (let i = 0; i < lst.length; ++i) {
             const gr = lst[i], arr = [];
             for (let n = 0; n < gr.length; n += 2)
-               arr.push({ grx: funcs.grx(gr[n]), gry: funcs.gry(gr[n+1]) });
+               arr.push({ grx: funcs.grx(gr[n]), gry: funcs.gry(gr[n + 1]) });
             path += buildSvgCurve(arr, { cmd: 'M', line: true });
          }
 
@@ -1387,12 +1468,10 @@ class TGraph2DPainter extends ObjectPainter {
       let step = 1;
       if ((settings.OptimizeDraw > 0) && !fp.webgl) {
          const numselected = countSelected(fp.scale_zmin, fp.scale_zmax),
-             sizelimit = 50000;
+               sizelimit = 50000;
 
-         if (numselected > sizelimit) {
-            step = Math.floor(numselected / sizelimit);
-            if (step <= 2) step = 2;
-         }
+         if (numselected > sizelimit)
+            step = Math.max(2, Math.floor(numselected / sizelimit));
       }
 
       const markeratt = this.createAttMarker({ attr: graph, std: false }),
@@ -1407,7 +1486,10 @@ class TGraph2DPainter extends ObjectPainter {
       if (fp.usesvg)
          scale *= 0.3;
 
-      scale *= 7 * Math.max(fp.size_x3d / fp.getFrameWidth(), fp.size_z3d / fp.getFrameHeight());
+      const fw = fp.getFrameWidth(), fh = fp.getFrameHeight();
+
+      if ((fw > 10) && (fh > 10))
+         scale *= 7 * Math.max(fp.size_x3d / fw, fp.size_z3d / fh);
 
       if (o.Color || (o.Triangles >= 10)) {
          levels = main.getContourLevels(true);
@@ -1419,28 +1501,30 @@ class TGraph2DPainter extends ObjectPainter {
 
       for (let lvl = 0; lvl < levels.length - 1; ++lvl) {
          const lvl_zmin = Math.max(levels[lvl], fp.scale_zmin),
-               lvl_zmax = Math.min(levels[lvl+1], fp.scale_zmax);
+               lvl_zmax = Math.min(levels[lvl + 1], fp.scale_zmax);
 
          if (lvl_zmin >= lvl_zmax)
             continue;
 
          const size = Math.floor(countSelected(lvl_zmin, lvl_zmax) / step),
                index = new Int32Array(size),
-               pnts = o.Markers || o.Circles ? new PointsCreator(size, fp.webgl, scale/3) : null,
-               err = o.Error ? new Float32Array(size*6*3) : null,
+               pnts = o.Markers || o.Circles ? new PointsCreator(size, fp.webgl, scale / 3) : null,
+               err = o.Error ? new Float32Array(size * 6 * 3) : null,
                asymm = err && this.matchObjectType(clTGraph2DAsymmErrors),
-               line = o.Line ? new Float32Array((size-1)*6) : null;
+               line = o.Line ? new Float32Array((size - 1) * 6) : null;
 
          let select = 0, icnt = 0, ierr = 0, iline = 0;
 
          for (let i = 0; i < graph.fNpoints; ++i) {
             if ((graph.fX[i] < fp.scale_xmin) || (graph.fX[i] > fp.scale_xmax) ||
                 (graph.fY[i] < fp.scale_ymin) || (graph.fY[i] > fp.scale_ymax) ||
-                (graph.fZ[i] < lvl_zmin) || (graph.fZ[i] >= lvl_zmax)) continue;
+                (graph.fZ[i] < lvl_zmin) || (graph.fZ[i] >= lvl_zmax))
+               continue;
 
             if (step > 1) {
-               select = (select+1) % step;
-               if (select) continue;
+               select = (select + 1) % step;
+               if (select)
+                  continue;
             }
 
             index[icnt++] = i; // remember point index for tooltip
@@ -1451,39 +1535,39 @@ class TGraph2DPainter extends ObjectPainter {
 
             if (err) {
                err[ierr] = fp.grx(graph.fX[i] - (asymm ? graph.fEXlow[i] : graph.fEX[i]));
-               err[ierr+1] = y;
-               err[ierr+2] = z;
-               err[ierr+3] = fp.grx(graph.fX[i] + (asymm ? graph.fEXhigh[i] : graph.fEX[i]));
-               err[ierr+4] = y;
-               err[ierr+5] = z;
-               ierr+=6;
+               err[ierr + 1] = y;
+               err[ierr + 2] = z;
+               err[ierr + 3] = fp.grx(graph.fX[i] + (asymm ? graph.fEXhigh[i] : graph.fEX[i]));
+               err[ierr + 4] = y;
+               err[ierr + 5] = z;
+               ierr += 6;
                err[ierr] = x;
-               err[ierr+1] = fp.gry(graph.fY[i] - (asymm ? graph.fEYlow[i] : graph.fEY[i]));
-               err[ierr+2] = z;
-               err[ierr+3] = x;
-               err[ierr+4] = fp.gry(graph.fY[i] + (asymm ? graph.fEYhigh[i] : graph.fEY[i]));
-               err[ierr+5] = z;
-               ierr+=6;
+               err[ierr + 1] = fp.gry(graph.fY[i] - (asymm ? graph.fEYlow[i] : graph.fEY[i]));
+               err[ierr + 2] = z;
+               err[ierr + 3] = x;
+               err[ierr + 4] = fp.gry(graph.fY[i] + (asymm ? graph.fEYhigh[i] : graph.fEY[i]));
+               err[ierr + 5] = z;
+               ierr += 6;
                err[ierr] = x;
-               err[ierr+1] = y;
-               err[ierr+2] = fp.grz(graph.fZ[i] - (asymm ? graph.fEZlow[i] : graph.fEZ[i]));
-               err[ierr+3] = x;
-               err[ierr+4] = y;
-               err[ierr+5] = fp.grz(graph.fZ[i] + (asymm ? graph.fEZhigh[i] : graph.fEZ[i]));
-               ierr+=6;
+               err[ierr + 1] = y;
+               err[ierr + 2] = fp.grz(graph.fZ[i] - (asymm ? graph.fEZlow[i] : graph.fEZ[i]));
+               err[ierr + 3] = x;
+               err[ierr + 4] = y;
+               err[ierr + 5] = fp.grz(graph.fZ[i] + (asymm ? graph.fEZhigh[i] : graph.fEZ[i]));
+               ierr += 6;
             }
 
             if (line) {
                if (iline >= 6) {
-                  line[iline] = line[iline-3];
-                  line[iline+1] = line[iline-2];
-                  line[iline+2] = line[iline-1];
+                  line[iline] = line[iline - 3];
+                  line[iline + 1] = line[iline - 2];
+                  line[iline + 2] = line[iline - 1];
                   iline += 3;
                }
                line[iline] = x;
-               line[iline+1] = y;
-               line[iline+2] = z;
-               iline+=3;
+               line[iline + 1] = y;
+               line[iline + 2] = z;
+               iline += 3;
             }
          }
 
@@ -1496,13 +1580,12 @@ class TGraph2DPainter extends ObjectPainter {
             linemesh.graph = graph;
             linemesh.index = index;
             linemesh.fp = fp;
-            linemesh.scale0 = 0.7*scale;
+            linemesh.scale0 = 0.7 * scale;
             linemesh.tip_name = this.getObjectHint();
             linemesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
             linemesh.nvertex = 2;
             linemesh.check_next = true;
-
-            linemesh.tooltip = graph2DTooltip;
+            linemesh.tooltip = _graph2DTooltip;
          }
 
          if (err) {
@@ -1514,12 +1597,11 @@ class TGraph2DPainter extends ObjectPainter {
             errmesh.graph = graph;
             errmesh.index = index;
             errmesh.fp = fp;
-            errmesh.scale0 = 0.7*scale;
+            errmesh.scale0 = 0.7 * scale;
             errmesh.tip_name = this.getObjectHint();
             errmesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
             errmesh.nvertex = 6;
-
-            errmesh.tooltip = graph2DTooltip;
+            errmesh.tooltip = _graph2DTooltip;
          }
 
          if (pnts) {
@@ -1532,11 +1614,10 @@ class TGraph2DPainter extends ObjectPainter {
                mesh.graph = graph;
                mesh.fp = fp;
                mesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
-               mesh.scale0 = 0.3*scale;
+               mesh.scale0 = 0.3 * scale;
                mesh.index = index;
-
                mesh.tip_name = this.getObjectHint();
-               mesh.tooltip = graph2DTooltip;
+               mesh.tooltip = _graph2DTooltip;
                fp.add3DMesh(mesh, this);
             });
 
@@ -1564,6 +1645,27 @@ class TGraph2DPainter extends ObjectPainter {
       }).then(() => {
          fp.render3D(100);
          return this;
+      });
+   }
+
+   /** @summary Build three.js of TGraph2D object */
+   static async build3d(gr, opt) {
+      const painter = new TGraph2DPainter(null, gr);
+      painter.decodeOptions(opt, gr);
+
+      if (painter.options.Contour) {
+         console.error('Contour plot is not 3d');
+         return null;
+      }
+
+      return TH2Painter.build3d(painter.createHistogram(), painter.options.Axis, true).then(hist_painter => {
+         painter.axes_draw = true;
+         const fp = hist_painter.getFramePainter();
+
+         painter.getFramePainter = () => fp;
+         painter.getMainPainter = () => hist_painter;
+
+         return painter.drawGraph2D().then(() => fp.create3DScene(-1, true));
       });
    }
 

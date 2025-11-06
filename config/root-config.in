@@ -74,7 +74,7 @@ newlib="-lNew"
 rootglibs="-lGui"
 rootevelibs="-lEve -lEG -lGeom -lGed -lRGL"
 rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTVecOps -lTree -lTreePlayer\
-          -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread -lROOTNTuple"
+          -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread -lROOTNTuple -lROOTNTupleUtil"
 
 # MultiProc is not supported on Windows
 if test "$platform" != "win32"; then
@@ -83,10 +83,6 @@ fi
 
 if echo "${features}" | grep -q "dataframe"; then
    rootlibs="$rootlibs -lROOTDataFrame"
-fi
-
-if echo "${features}" | grep -q "root7"; then
-   rootlibs="$rootlibs -lROOTNTupleUtil"
 fi
 
 if test "$platform" = "win32"; then
@@ -155,6 +151,7 @@ fi
 
 # Set the C++ standard version
 cxxversionflag="@configstd@ "
+auxcflags="${cxxversionflag} "
 
 case $arch in
 aix5)
@@ -167,7 +164,7 @@ aix5)
    ;;
 aixgcc)
    # IBM AIX with g++
-   auxcflags="${cxxversionflag} -fsigned-char -fsized-deallocation"
+   auxcflags+="-fsigned-char -fsized-deallocation"
    auxlibs=
    #forcelibs=$rootulibs
    #forceglibs=$rootuglibs
@@ -175,90 +172,87 @@ aixgcc)
    ;;
 solarisgcc)
    # Solaris g++ 2.8.x
-   auxcflags="${cxxversionflag}"
    auxlibs="-L/usr/ccs/lib -lm -lsocket -lgen -ldl"
    ;;
 solarisCC5)
    # Solaris CC 5.0
    if [ `uname -p` = "i386" ]; then
-      auxcflags="${cxxversionflag} -library=stlport4"
+      auxcflags+="-library=stlport4"
       auxldflags="-library=stlport4"
    else
-      auxcflags="${cxxversionflag}"
       auxldflags=
    fi
    auxlibs="-lm -ldl -lnsl -lsocket"
    ;;
 solaris64CC5)
    # Solaris CC 5.0 x86-64
-   auxcflags="${cxxversionflag} -m64 -library=stlport4"
+   auxcflags+="-m64 -library=stlport4"
    auxldflags="-m64 -library=stlport4"
    auxlibs="-lm -ldl -lnsl -lsocket"
    ;;
 linux)
    # Linux with gcc >= 3.x
-   auxcflags="${cxxversionflag} -m32 -msse -mfpmath=sse -fsized-deallocation"
+   auxcflags+="-m32 -msse -mfpmath=sse -fsized-deallocation"
    auxldflags="-m32 -msse -mfpmath=sse "
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxicc)
    # Linux with the Intel icc compiler
-   auxcflags="${cxxversionflag} -fsized-deallocation"
+   auxcflags+="-fsized-deallocation"
    auxlibs="-limf -lm -ldl"
    ;;
 linuxppcgcc)
    # PPC Linux with gcc
-   auxcflags="${cxxversionflag} -m32 -fsigned-char -fsized-deallocation"
+   auxcflags+="-m32 -fsigned-char -fsized-deallocation"
    auxldflags="-m32"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxppc64gcc)
    # PPC64/PPC64LE (64 bit mode) Linux with gcc
-   auxcflags="${cxxversionflag} -m64 -fsigned-char -fsized-deallocation"
+   auxcflags+="-m64 -fsigned-char -fsized-deallocation"
    auxldflags="-m64"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxx8664gcc)
    # AMD Opteron and Intel EM64T (64 bit mode) Linux with gcc 3.x
-   auxcflags="${cxxversionflag} -m64 -fsized-deallocation"
+   auxcflags+="-m64 -fsized-deallocation"
    auxldflags="-m64"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxx8664icc)
    # AMD Opteron and Intel EM64T (64 bit mode) Linux with Intel icc
-   auxcflags="${cxxversionflag}"
    auxlibs="-limf -lm -ldl"
    ;;
 linuxx8664k1omicc)
    # Intel Many Integrated Cores Architecture (Knights Corner) Linux with Intel icc
-   auxcflags="${cxxversionflag} -mmic -I/usr/include"
+   auxcflags+="-mmic -I/usr/include"
    auxlibs="-limf -lm -ldl"
    ;;
 linuxx32gcc)
    # x32 ABI (64 bit mode with 32 bit pointers) Linux with gcc > 4.7
-   auxcflags="${cxxversionflag} -mx32 -fsized-deallocation"
+   auxcflags+="-mx32 -fsized-deallocation"
    auxldflags="-mx32"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxarm)
    # ARM Linux with gcc
-   auxcflags="${cxxversionflag} -fsigned-char -fsized-deallocation"
+   auxcflags+="-fsigned-char -fsized-deallocation"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxarm64)
    # ARMv8-A (AArch64) Linux with gcc
-   auxcflags="${cxxversionflag} -fsigned-char -fsized-deallocation"
+   auxcflags+="-fsigned-char -fsized-deallocation"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxs390gcc)
    # s390 (31 bit mode) Linux with gcc
-   auxcflags="${cxxversionflag} -m31 -fsigned-char -fsized-deallocation"
+   auxcflags+="-m31 -fsigned-char -fsized-deallocation"
    auxldflags="-m31"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxs390xgcc)
    # s390x (64 bit mode) Linux with gcc
-   auxcflags="${cxxversionflag} -m64 -fsigned-char -fsized-deallocation"
+   auxcflags+="-m64 -fsigned-char -fsized-deallocation"
    auxldflags="-m64"
    auxlibs="-lm -ldl -rdynamic"
    ;;
@@ -272,22 +266,19 @@ linuxloong64)
    ;;
 freebsd*)
    # FreeBSD
-   auxcflags="${cxxversionflag}"
    auxlibs="-lm"
    ;;
 openbsd)
    # OpenBSD with libc
-   auxcflags="${cxxversionflag}"
    auxlibs="-lm -lstdc++"
    ;;
 macosxicc)
    # MacOS X with Intel icc compiler
-   auxcflags="${cxxversionflag}"
    auxlibs="-lm -ldl"
    ;;
 macosx64|macosxarm64)
    # MacOS X with gcc (GNU cc v4.x) in 64 bit mode
-   auxcflags="${cxxversionflag} -m64"
+   auxcflags+="-m64"
    auxldflags="-m64"
    auxlibs="-lm -ldl"
    ;;
@@ -335,11 +326,9 @@ case $arch in
 freebsd*)
    auxcflags="-pthread $auxcflags"
    auxlibs="-pthread $auxlibs"
+   auxlibs="-Wl,-rpath,$libdir $auxlibs"
 
    for f in $features ; do
-      if test "x$f" = "xrpath" ; then
-         auxlibs="-Wl,-rpath,$libdir $auxlibs"
-      fi
       if test "x$f" = "xlibcxx" ; then
          auxcflags="-stdlib=libc++ $auxcflags"
          auxlibs="-stdlib=libc++ $auxlibs"
@@ -349,11 +338,9 @@ freebsd*)
 openbsd* | linux*)
    auxcflags="-pthread $auxcflags"
    auxlibs="-pthread $auxlibs"
+   auxlibs="-Wl,-rpath,$libdir $auxlibs"
 
    for f in $features ; do
-      if test "x$f" = "xrpath" ; then
-         auxlibs="-Wl,-rpath,$libdir $auxlibs"
-      fi
       if test "x$f" = "xlibcxx" ; then
          auxcflags="-stdlib=libc++ $auxcflags"
          auxlibs="-stdlib=libc++ $auxlibs"
@@ -363,10 +350,9 @@ openbsd* | linux*)
 macosx*)
    auxcflags="-pthread $auxcflags"
    auxlibs="-lpthread $auxlibs"
+   auxlibs="-Wl,-rpath,$libdir $auxlibs"
+
    for f in $features ; do
-      if test "x$f" = "xrpath" ; then
-         auxlibs="-Wl,-rpath,$libdir $auxlibs"
-      fi
       if test "x$f" = "xlibcxx" ; then
          auxcflags="-stdlib=libc++ $auxcflags"
          auxlibs="-stdlib=libc++ $auxlibs"

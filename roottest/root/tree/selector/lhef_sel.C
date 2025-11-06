@@ -1,5 +1,5 @@
 #include "lhef_sel_gen.C"
-#include <stdio.h>
+#include <cstdio>
 
 class lhef_sel : public lhef_sel_gen {
    UInt_t nullValues = 0;

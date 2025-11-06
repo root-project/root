@@ -21,7 +21,8 @@
 
 #if defined(__sun) || defined(_MSC_VER)
 //Microsoft and solaris definition of cmath does not include math.h which has the definitions of numerical constants
-#include <math.h>
+#include <math.h> // for M_PI
+// TODO replace with std::numbers::pi once minimum version is C++20, and remove this code block
 #endif
 
 
@@ -43,11 +44,6 @@
 #ifndef M_PI_4
 #define M_PI_4     0.78539816339744830961566084582      // Pi/4
 #endif
-
-/**
-   \namespace ROOT
-   Namespace for new ROOT classes and functions
- */
 
 namespace ROOT {
 

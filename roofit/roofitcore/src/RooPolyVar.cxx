@@ -116,7 +116,9 @@ void RooPolyVar::doEvalImpl(RooAbsArg const *caller, RooFit::EvalContext &ctx, R
 {
    std::span<double> output = ctx.output();
    if (coefs.empty()) {
-      output[0] = lowestOrder ? 1.0 : 0.0;
+      for (std::size_t i = 0; i < output.size(); ++i) {
+         output[i] = lowestOrder ? 1.0 : 0.0;
+      }
       return;
    }
 

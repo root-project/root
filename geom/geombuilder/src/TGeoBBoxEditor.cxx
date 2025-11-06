@@ -32,7 +32,6 @@ Editor for a TGeoBBox.
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TGeoBBoxEditor);
 
 enum ETGeoBBoxWid { kBOX_NAME, kBOX_X, kBOX_Y, kBOX_Z, kBOX_OX, kBOX_OY, kBOX_OZ, kBOX_APPLY, kBOX_CANCEL, kBOX_UNDO };
 

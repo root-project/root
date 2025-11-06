@@ -25,7 +25,6 @@ Flag fFixColorRange: specifies how the palette is mapped to signal values:
   - false - MinValue -> MaxValue
 */
 
-ClassImp(TEveRGBAPalette);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

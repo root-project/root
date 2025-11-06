@@ -1,0 +1,208 @@
+<?xml version="1.0" standalone="no"?>
+<svg width="567" height="299" viewBox="0 0 567 299" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+<title>
+labels1.svg
+</title>
+<rect x="0.500" y="0" width="567" height="299" fill="#f2f2f2"/>
+<path d="M0.500,299l 2.0, -2.0v -295h 563l 2.0, -2.0h -567v 299z" fill="white"/>
+<path d="M0.500,299l 2.0, -2.0h 563v -295l 2.0, -2.0v 299h -567z" fill="#a9a9a9"/>
+<rect x="57" y="30" width="454" height="224" fill="#f2f2f2"/>
+<path d="M57,254l 1.000, -1.000v -222h 452l 1.000, -1.000h -454v 224z" fill="white"/>
+<path d="M57,254l 1.000, -1.000h 452v -222l 1.000, -1.000v 224h -454z" fill="#a9a9a9"/>
+<rect x="57" y="30" width="454" height="224" fill="none" stroke="black"/>
+<path d="M57,254h 454" fill="none" stroke="black"/>
+<path d="M57,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M80,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M103,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M125,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M148,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M171,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M193,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M216,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M239,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M261,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M284,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M307,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M329,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M352,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M375,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M397,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M420,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M443,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M465,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M488,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M511,30v 224" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M57,254v -224" fill="none" stroke="black"/>
+<path d="M511,254h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M511,215h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M511,176h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M511,137h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M511,98h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M511,59h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M57,254v -8.6h 23v -13h 23v -11h 23v -21h 23v -22h 23v -28h 23v -38h 23v -12h 23v -25h 23v -17h 23v -19h 23v 32h 23v 18h 23v 37h 23v 22h 23v 41h 23v 24h 23v 0.391h 23v 18h 23v 10h 23v 11z" fill="#7c99d1"/>
+<path d="M57,245h 23v -13h 23v -11h 23v -21h 23v -22h 23v -28h 23v -38h 23v -12h 23v -25h 23v -17h 23v -19h 23v 32h 23v 18h 23v 37h 23v 22h 23v 41h 23v 24h 23v 0.391h 23v 18h 23v 10h 23" fill="none" stroke="black"/>
+<path d="M57,254h 454" fill="none" stroke="black"/>
+<g transform="rotate(20,67,260)">
+<text xml:space="preserve" x="67" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Jean
+</text>
+</g>
+<g transform="rotate(20,90,260)">
+<text xml:space="preserve" x="90" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Pierre
+</text>
+</g>
+<g transform="rotate(20,113,260)">
+<text xml:space="preserve" x="113" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Marie
+</text>
+</g>
+<g transform="rotate(20,135,260)">
+<text xml:space="preserve" x="135" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Odile
+</text>
+</g>
+<g transform="rotate(20,158,260)">
+<text xml:space="preserve" x="158" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Sebastien
+</text>
+</g>
+<g transform="rotate(20,181,260)">
+<text xml:space="preserve" x="181" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Fons
+</text>
+</g>
+<g transform="rotate(20,204,260)">
+<text xml:space="preserve" x="204" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Rene
+</text>
+</g>
+<g transform="rotate(20,226,260)">
+<text xml:space="preserve" x="226" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Nicolas
+</text>
+</g>
+<g transform="rotate(20,249,260)">
+<text xml:space="preserve" x="249" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Xavier
+</text>
+</g>
+<g transform="rotate(20,272,260)">
+<text xml:space="preserve" x="272" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Greg
+</text>
+</g>
+<g transform="rotate(20,294,260)">
+<text xml:space="preserve" x="294" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Bjarne
+</text>
+</g>
+<g transform="rotate(20,317,260)">
+<text xml:space="preserve" x="317" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Anton
+</text>
+</g>
+<g transform="rotate(20,340,260)">
+<text xml:space="preserve" x="340" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Otto
+</text>
+</g>
+<g transform="rotate(20,362,260)">
+<text xml:space="preserve" x="362" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Eddy
+</text>
+</g>
+<g transform="rotate(20,385,260)">
+<text xml:space="preserve" x="385" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Peter
+</text>
+</g>
+<g transform="rotate(20,408,260)">
+<text xml:space="preserve" x="408" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Pasha
+</text>
+</g>
+<g transform="rotate(20,431,260)">
+<text xml:space="preserve" x="431" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Philippe
+</text>
+</g>
+<g transform="rotate(20,453,260)">
+<text xml:space="preserve" x="453" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Suzanne
+</text>
+</g>
+<g transform="rotate(20,476,260)">
+<text xml:space="preserve" x="476" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Jeff
+</text>
+</g>
+<g transform="rotate(20,499,260)">
+<text xml:space="preserve" x="499" y="260" fill="black" font-size="7.8" font-family="Helvetica" font-weight="bold">Valery
+</text>
+</g>
+<path d="M57,247v 7.2" fill="none" stroke="black"/>
+<path d="M80,247v 7.2" fill="none" stroke="black"/>
+<path d="M103,247v 7.2" fill="none" stroke="black"/>
+<path d="M125,247v 7.2" fill="none" stroke="black"/>
+<path d="M148,247v 7.2" fill="none" stroke="black"/>
+<path d="M171,247v 7.2" fill="none" stroke="black"/>
+<path d="M193,247v 7.2" fill="none" stroke="black"/>
+<path d="M216,247v 7.2" fill="none" stroke="black"/>
+<path d="M239,247v 7.2" fill="none" stroke="black"/>
+<path d="M261,247v 7.2" fill="none" stroke="black"/>
+<path d="M284,247v 7.2" fill="none" stroke="black"/>
+<path d="M307,247v 7.2" fill="none" stroke="black"/>
+<path d="M329,247v 7.2" fill="none" stroke="black"/>
+<path d="M352,247v 7.2" fill="none" stroke="black"/>
+<path d="M375,247v 7.2" fill="none" stroke="black"/>
+<path d="M397,247v 7.2" fill="none" stroke="black"/>
+<path d="M420,247v 7.2" fill="none" stroke="black"/>
+<path d="M443,247v 7.2" fill="none" stroke="black"/>
+<path d="M465,247v 7.2" fill="none" stroke="black"/>
+<path d="M488,247v 7.2" fill="none" stroke="black"/>
+<path d="M511,247v 7.2" fill="none" stroke="black"/>
+<path d="M57,254v -224" fill="none" stroke="black"/>
+<path d="M70,254h -13" fill="none" stroke="black"/>
+<path d="M64,246h -6.4" fill="none" stroke="black"/>
+<path d="M64,238h -6.4" fill="none" stroke="black"/>
+<path d="M64,230h -6.4" fill="none" stroke="black"/>
+<path d="M64,223h -6.4" fill="none" stroke="black"/>
+<path d="M70,215h -13" fill="none" stroke="black"/>
+<path d="M64,207h -6.4" fill="none" stroke="black"/>
+<path d="M64,199h -6.4" fill="none" stroke="black"/>
+<path d="M64,191h -6.4" fill="none" stroke="black"/>
+<path d="M64,184h -6.4" fill="none" stroke="black"/>
+<path d="M70,176h -13" fill="none" stroke="black"/>
+<path d="M64,168h -6.4" fill="none" stroke="black"/>
+<path d="M64,160h -6.4" fill="none" stroke="black"/>
+<path d="M64,152h -6.4" fill="none" stroke="black"/>
+<path d="M64,144h -6.4" fill="none" stroke="black"/>
+<path d="M70,137h -13" fill="none" stroke="black"/>
+<path d="M64,129h -6.4" fill="none" stroke="black"/>
+<path d="M64,121h -6.4" fill="none" stroke="black"/>
+<path d="M64,113h -6.4" fill="none" stroke="black"/>
+<path d="M64,105h -6.4" fill="none" stroke="black"/>
+<path d="M70,98h -13" fill="none" stroke="black"/>
+<path d="M64,90h -6.4" fill="none" stroke="black"/>
+<path d="M64,82h -6.4" fill="none" stroke="black"/>
+<path d="M64,74h -6.4" fill="none" stroke="black"/>
+<path d="M64,66h -6.4" fill="none" stroke="black"/>
+<path d="M70,59h -13" fill="none" stroke="black"/>
+<path d="M64,51h -6.4" fill="none" stroke="black"/>
+<path d="M64,43h -6.4" fill="none" stroke="black"/>
+<path d="M64,35h -6.4" fill="none" stroke="black"/>
+<text xml:space="preserve" x="48" y="259" fill="black" font-size="11" font-family="Helvetica" font-weight="bold">0
+</text>
+<text xml:space="preserve" x="35" y="220" fill="black" font-size="11" font-family="Helvetica" font-weight="bold">100
+</text>
+<text xml:space="preserve" x="35" y="180" fill="black" font-size="11" font-family="Helvetica" font-weight="bold">200
+</text>
+<text xml:space="preserve" x="35" y="141" fill="black" font-size="11" font-family="Helvetica" font-weight="bold">300
+</text>
+<text xml:space="preserve" x="35" y="102" fill="black" font-size="11" font-family="Helvetica" font-weight="bold">400
+</text>
+<text xml:space="preserve" x="35" y="63" fill="black" font-size="11" font-family="Helvetica" font-weight="bold">500
+</text>
+<rect x="6.2" y="1.5" width="46" height="15" fill="#f2f2f2"/>
+<path d="M4.9,3.4v 14h 45v -1.3h -44v -13z" fill="black"/>
+<path d="M6.2,16v -15h 46v 15h -46z" fill="none" stroke="black"/>
+<text xml:space="preserve" x="14" y="14" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">hlab1
+</text>
+<rect x="341" y="6.0" width="215" height="84" fill="#e5e5e5"/>
+<path d="M344,90v 2.5h 214v -82h -2.5v 80z" fill="black"/>
+<path d="M341,90v -84h 215v 84h -215z" fill="none" stroke="black"/>
+<text xml:space="preserve" x="351" y="20" fill="black" font-size="11" font-family="Helvetica" font-weight="bold">Use the axis Context Menu LabelsOption
+</text>
+<text xml:space="preserve" x="351" y="40" fill="black" font-size="11" font-family="Helvetica" font-weight="bold"> "a"   to sort by alphabetic order
+</text>
+<text xml:space="preserve" x="351" y="61" fill="black" font-size="11" font-family="Helvetica" font-weight="bold"> "&gt;"   to sort by decreasing values
+</text>
+<text xml:space="preserve" x="351" y="82" fill="black" font-size="11" font-family="Helvetica" font-weight="bold"> "&lt;"   to sort by increasing values
+</text>
+<rect x="6.2" y="1.5" width="46" height="15" fill="#f2f2f2"/>
+<path d="M4.9,3.4v 14h 45v -1.3h -44v -13z" fill="black"/>
+<path d="M6.2,16v -15h 46v 15h -46z" fill="none" stroke="black"/>
+<text xml:space="preserve" x="14" y="14" fill="black" font-size="12" font-family="Helvetica" font-weight="bold">hlab1
+</text></svg>

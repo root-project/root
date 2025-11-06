@@ -28,10 +28,9 @@ namespace ROOT {
 
 class RNTupleModel;
 
-namespace Experimental {
-
 class RNTupleFillContext;
 
+namespace Experimental {
 namespace Detail {
 
 // clang-format off
@@ -46,7 +45,7 @@ provided by REntry, with safe interfaces, type checks, and shared object ownersh
 // clang-format on
 class RRawPtrWriteEntry {
    friend class ROOT::RNTupleModel;
-   friend class ROOT::Experimental::RNTupleFillContext;
+   friend class ROOT::RNTupleFillContext;
 
 private:
    /// The entry must be linked to a specific model, identified by a model ID

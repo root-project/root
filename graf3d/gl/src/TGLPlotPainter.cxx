@@ -42,7 +42,6 @@ Base class for plot-painters that provide GL rendering of various
 2D and 3D histograms, functions and parametric surfaces.
 */
 
-ClassImp(TGLPlotPainter);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///TGLPlotPainter's ctor.
@@ -619,7 +618,6 @@ Helper class for plot-painters holding information about axis
 ranges, numbers of bins and flags if certain axis is logarithmic.
 */
 
-ClassImp(TGLPlotCoordinates);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Constructor.
@@ -1420,7 +1418,6 @@ Bool_t FindAxisRange(TH2Poly *hist, Bool_t logZ, Rgl::Range_t &zRange)
 Used by plot-painters to determine the area of the plot that is cut away.
 */
 
-ClassImp(TGLBoxCut);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Constructor.
@@ -1692,7 +1689,6 @@ Bool_t TGLBoxCut::IsInCut(Double_t xMin, Double_t xMax, Double_t yMin, Double_t 
 A slice of a TH3.
 */
 
-ClassImp(TGLTH3Slice);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

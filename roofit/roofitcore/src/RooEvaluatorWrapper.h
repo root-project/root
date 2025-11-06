@@ -72,6 +72,8 @@ public:
 
    void setUseGeneratedFunctionCode(bool);
 
+   void writeDebugMacro(std::string const &) const;
+
 protected:
    double evaluate() const override;
 

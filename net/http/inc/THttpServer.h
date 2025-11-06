@@ -81,7 +81,7 @@ public:
    THttpServer(const char *engine = "http:8080");
    virtual ~THttpServer();
 
-   Bool_t CreateEngine(const char *engine);
+   virtual Bool_t CreateEngine(const char *engine);
 
    Bool_t IsAnyEngine() const { return fEngines.GetSize() > 0; }
 

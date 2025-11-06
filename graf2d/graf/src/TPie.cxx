@@ -27,7 +27,6 @@
 
 #include <iostream>
 
-ClassImp(TPie);
 
 /** \class TPie
 \ingroup BasicGraphics

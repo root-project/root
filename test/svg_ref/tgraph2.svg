@@ -1,0 +1,157 @@
+<?xml version="1.0" standalone="no"?>
+<svg width="567" height="385" viewBox="0 0 567 385" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+<title>
+tgraph2.svg
+</title>
+<rect x="0.500" y="0" width="567" height="384" fill="#f2f2f2"/>
+<path d="M0.500,384l 2.0, -2.0v -380h 563l 2.0, -2.0h -567v 384z" fill="white"/>
+<path d="M0.500,384l 2.0, -2.0h 563v -380l 2.0, -2.0v 384h -567z" fill="#a9a9a9"/>
+<rect x="57" y="38" width="454" height="308" fill="#f2f2f2"/>
+<path d="M57,346l 1.000, -1.000v -306h 452l 1.000, -1.000h -454v 308z" fill="white"/>
+<path d="M57,346l 1.000, -1.000h 452v -306l 1.000, -1.000v 308h -454z" fill="#a9a9a9"/>
+<rect x="57" y="38" width="454" height="308" fill="none" stroke="black"/>
+<path d="M57,346h 454" fill="none" stroke="black"/>
+<path d="M78,38v 308" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M131,38v 308" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M184,38v 308" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M236,38v 308" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M289,38v 308" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M342,38v 308" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M395,38v 308" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M448,38v 308" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M501,38v 308" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M57,346v -308" fill="none" stroke="black"/>
+<path d="M511,332h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M511,262h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M511,192h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M511,122h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M511,52h -454" fill="none" stroke="black" stroke-dasharray=" 1.000, 2.0"/>
+<path d="M57,346h 454" fill="none" stroke="black"/>
+<path d="M78,337v 9.2" fill="none" stroke="black"/>
+<path d="M88,341v 4.6" fill="none" stroke="black"/>
+<path d="M99,341v 4.6" fill="none" stroke="black"/>
+<path d="M110,341v 4.6" fill="none" stroke="black"/>
+<path d="M120,341v 4.6" fill="none" stroke="black"/>
+<path d="M131,337v 9.2" fill="none" stroke="black"/>
+<path d="M141,341v 4.6" fill="none" stroke="black"/>
+<path d="M152,341v 4.6" fill="none" stroke="black"/>
+<path d="M162,341v 4.6" fill="none" stroke="black"/>
+<path d="M173,341v 4.6" fill="none" stroke="black"/>
+<path d="M184,337v 9.2" fill="none" stroke="black"/>
+<path d="M194,341v 4.6" fill="none" stroke="black"/>
+<path d="M205,341v 4.6" fill="none" stroke="black"/>
+<path d="M215,341v 4.6" fill="none" stroke="black"/>
+<path d="M226,341v 4.6" fill="none" stroke="black"/>
+<path d="M236,337v 9.2" fill="none" stroke="black"/>
+<path d="M247,341v 4.6" fill="none" stroke="black"/>
+<path d="M258,341v 4.6" fill="none" stroke="black"/>
+<path d="M268,341v 4.6" fill="none" stroke="black"/>
+<path d="M279,341v 4.6" fill="none" stroke="black"/>
+<path d="M289,337v 9.2" fill="none" stroke="black"/>
+<path d="M300,341v 4.6" fill="none" stroke="black"/>
+<path d="M310,341v 4.6" fill="none" stroke="black"/>
+<path d="M321,341v 4.6" fill="none" stroke="black"/>
+<path d="M332,341v 4.6" fill="none" stroke="black"/>
+<path d="M342,337v 9.2" fill="none" stroke="black"/>
+<path d="M353,341v 4.6" fill="none" stroke="black"/>
+<path d="M363,341v 4.6" fill="none" stroke="black"/>
+<path d="M374,341v 4.6" fill="none" stroke="black"/>
+<path d="M384,341v 4.6" fill="none" stroke="black"/>
+<path d="M395,337v 9.2" fill="none" stroke="black"/>
+<path d="M406,341v 4.6" fill="none" stroke="black"/>
+<path d="M416,341v 4.6" fill="none" stroke="black"/>
+<path d="M427,341v 4.6" fill="none" stroke="black"/>
+<path d="M437,341v 4.6" fill="none" stroke="black"/>
+<path d="M448,337v 9.2" fill="none" stroke="black"/>
+<path d="M458,341v 4.6" fill="none" stroke="black"/>
+<path d="M469,341v 4.6" fill="none" stroke="black"/>
+<path d="M480,341v 4.6" fill="none" stroke="black"/>
+<path d="M490,341v 4.6" fill="none" stroke="black"/>
+<path d="M501,337v 9.2" fill="none" stroke="black"/>
+<path d="M67,341v 4.6" fill="none" stroke="black"/>
+<text xml:space="preserve" x="74" y="360" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">0
+</text>
+<text xml:space="preserve" x="120" y="360" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">0.5
+</text>
+<text xml:space="preserve" x="181" y="360" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">1
+</text>
+<text xml:space="preserve" x="226" y="360" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">1.5
+</text>
+<text xml:space="preserve" x="285" y="360" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="332" y="360" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">2.5
+</text>
+<text xml:space="preserve" x="391" y="360" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">3
+</text>
+<text xml:space="preserve" x="438" y="360" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">3.5
+</text>
+<text xml:space="preserve" x="497" y="360" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">4
+</text>
+<path d="M57,346v -308" fill="none" stroke="black"/>
+<path d="M71,332h -14" fill="none" stroke="black"/>
+<path d="M64,318h -6.8" fill="none" stroke="black"/>
+<path d="M64,304h -6.8" fill="none" stroke="black"/>
+<path d="M64,290h -6.8" fill="none" stroke="black"/>
+<path d="M64,276h -6.8" fill="none" stroke="black"/>
+<path d="M71,262h -14" fill="none" stroke="black"/>
+<path d="M64,248h -6.8" fill="none" stroke="black"/>
+<path d="M64,234h -6.8" fill="none" stroke="black"/>
+<path d="M64,220h -6.8" fill="none" stroke="black"/>
+<path d="M64,206h -6.8" fill="none" stroke="black"/>
+<path d="M71,192h -14" fill="none" stroke="black"/>
+<path d="M64,178h -6.8" fill="none" stroke="black"/>
+<path d="M64,164h -6.8" fill="none" stroke="black"/>
+<path d="M64,150h -6.8" fill="none" stroke="black"/>
+<path d="M64,136h -6.8" fill="none" stroke="black"/>
+<path d="M71,122h -14" fill="none" stroke="black"/>
+<path d="M64,108h -6.8" fill="none" stroke="black"/>
+<path d="M64,94h -6.8" fill="none" stroke="black"/>
+<path d="M64,80h -6.8" fill="none" stroke="black"/>
+<path d="M64,66h -6.8" fill="none" stroke="black"/>
+<path d="M71,52h -14" fill="none" stroke="black"/>
+<text xml:space="preserve" x="38" y="338" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">10
+</text>
+<text xml:space="preserve" x="30" y="338" fill="black" font-size="15" font-family="Times">&#8722;
+</text>
+<text xml:space="preserve" x="46" y="268" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">5
+</text>
+<text xml:space="preserve" x="39" y="268" fill="black" font-size="15" font-family="Times">&#8722;
+</text>
+<text xml:space="preserve" x="46" y="198" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">0
+</text>
+<text xml:space="preserve" x="46" y="128" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">5
+</text>
+<text xml:space="preserve" x="38" y="59" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">10
+</text>
+<rect x="6.2" y="1.9" width="160" height="22" fill="#f2f2f2"/>
+<path d="M4.5,4.4v 21h 160v -1.6h -158v -19z" fill="black"/>
+<path d="M6.2,23v -22h 160v 22h -160z" fill="none" stroke="black"/>
+<text xml:space="preserve" x="15" y="18" fill="black" font-size="17" font-family="Helvetica" font-weight="bold">Exclusion graphs
+</text>
+<path d="M57,177l 21, 16l 11, -14l 11, -14l 11, -14l 11, -13l 11, -13l 9.0, -10l 1.5, -1.7l 8.4, -8.9l 2.2, -2.2l 7.9, -7.8l 2.7, -2.5l 7.5, -6.7l 3.1, -2.6l 7.2, -5.7l 3.4, -2.5l 6.9, -4.7l 3.6, -2.2l 6.7, -3.8l 3.8, -1.9l 6.6, -2.9l 4.0, -1.5l 6.5,
+ -2.0l 4.1, -1.0l 6.4, -1.2l 4.2, -0.496l 6.4, -0.343l 4.2, 0.052l 6.4, 0.504l 4.2, 0.602l 6.5, 1.4l 4.1, 1.1l 6.5, 2.2l 4.0, 1.6l 6.7, 3.1l 3.9, 2.1l 6.9, 4.0l 3.7, 2.4l 7.1, 5.0l 3.5, 2.6l 7.4, 6.0l 3.2, 2.8l 7.8, 7.1l 2.8, 2.7l 8.2, 8.3l 2.4, 2.5l
+ 8.8, 9.6l 1.8, 2.0l 11, 12l 11, 13l 11, 13l 11, 14l 11, 14l 11, 14l 11, 14l 11, 14l 34, -26l -10, -14l -10, -14l -11, -14l -11, -14l -11, -14l -11, -14l -11, -14l -11, -13l -2.2, -2.5l -9.3, -10l -2.9, -3.1l -8.9, -8.9l -3.5, -3.4l -8.6, -7.9l -4.1,
+ -3.6l -8.4, -6.9l -4.7, -3.5l -5.4, -3.8h -166l -2.1, 1.4l -4.6, 3.4l -8.3, 6.5l -4.0, 3.4l -8.4, 7.4l -3.4, 3.2l -8.6, 8.4l -2.8, 2.8l -8.9, 9.5l -2.0, 2.2l -9.6, 11l -11, 13l -11, 14l -11, 14l -8.1, 11z" fill="white"/>
+<path d="M78,192l 11, -14l 11, -14l 11, -14l 11, -13l 11, -13l 9.0, -10l 1.5, -1.7l 8.4, -8.9l 2.2, -2.2l 7.9, -7.8l 2.7, -2.5l 7.5, -6.7l 3.1, -2.6l 7.2, -5.7l 3.4, -2.5l 6.9, -4.7l 3.6, -2.2l 6.7, -3.8l 3.8, -1.9l 6.6, -2.9l 4.0, -1.5l 6.5, -2.0l
+ 4.1, -1.0l 6.4, -1.2l 4.2, -0.496l 6.4, -0.343l 4.2, 0.052l 6.4, 0.504l 4.2, 0.602l 6.5, 1.4l 4.1, 1.1l 6.5, 2.2l 4.0, 1.6l 6.7, 3.1l 3.9, 2.1l 6.9, 4.0l 3.7, 2.4l 7.1, 5.0l 3.5, 2.6l 7.4, 6.0l 3.2, 2.8l 7.8, 7.1l 2.8, 2.7l 8.2, 8.3l 2.4, 2.5l 8.8,
+ 9.6l 1.8, 2.0l 11, 12l 11, 13l 11, 13l 11, 14l 11, 14l 11, 14l 11, 14l 11, 14" fill="none" stroke="#ff0000" stroke-width="4.0"/>
+<path d="M78,52l 8.3, 0.427l 2.3, 0.272l 8.3, 1.5l 2.3, 0.568l 8.4, 2.6l 2.2, 0.830l 8.5, 3.8l 2.1, 1.0l 8.7, 4.9l 1.9, 1.2l 8.9, 6.1l 1.7, 1.2l 9.2, 7.3l 1.4, 1.1l 11, 9.5l 11, 11l 11, 11l 11, 12l 11, 13l 11, 13l 11, 14l 11, 14l 11, 14l 11, 14l 11,
+ 14l 11, 13l 11, 13l 11, 12l 11, 12l 11, 11l 11, 9.9l 11, 8.9l 9.0, 6.7l 1.5, 1.1l 8.8, 5.6l 1.8, 1.0l 8.6, 4.4l 2.0, 0.910l 8.4, 3.3l 2.2, 0.708l 8.3, 2.2l 2.3, 0.452l 8.3, 1.1l 2.3, 0.161l 8.2, 0.028l 2.3, -0.146l 8.3, -1.1l 2.3, -0.448l 8.3, -2.2l
+ 2.3, -0.742l 6.0, 19h -140l -9.8, -8.3l -13, -12l -12, -13l -12, -13l -12, -14l -11, -14l -11, -14l -11, -14l -11, -14l -11, -14l -10, -14l -10, -13l -10.0, -13l -9.8, -12l -9.5, -11l -9.2, -9.9l -8.8, -8.7l -8.9, -8.0l -0.00231148, -0.00103572l
+ -7.7, -6.2l -0.014, -0.011l -7.0, -4.8l -6.3, -3.6l 0.423, 0.211l -5.4, -2.4l -4.8, -1.5l 1.1, 0.270l -4.1, -0.749l -5.8, -0.270z" fill="#5954d8"/>
+<path d="M78,52l 8.3, 0.427l 2.3, 0.272l 8.3, 1.5l 2.3, 0.568l 8.4, 2.6l 2.2, 0.830l 8.5, 3.8l 2.1, 1.0l 8.7, 4.9l 1.9, 1.2l 8.9, 6.1l 1.7, 1.2l 9.2, 7.3l 1.4, 1.1l 11, 9.5l 11, 11l 11, 11l 11, 12l 11, 13l 11, 13l 11, 14l 11, 14l 11, 14l 11, 14l 11,
+ 14l 11, 13l 11, 13l 11, 12l 11, 12l 11, 11l 11, 9.9l 11, 8.9l 9.0, 6.7l 1.5, 1.1l 8.8, 5.6l 1.8, 1.0l 8.6, 4.4l 2.0, 0.910l 8.4, 3.3l 2.2, 0.708l 8.3, 2.2l 2.3, 0.452l 8.3, 1.1l 2.3, 0.161l 8.2, 0.028l 2.3, -0.146l 8.3, -1.1l 2.3, -0.448l 8.3, -2.2l
+ 2.3, -0.742" fill="none" stroke="#0000ff" stroke-width="2.0"/>
+<path d="M131,220l 11, -14l 11, -14l 11, -14l 11, -13l 11, -13l 9.0, -10l 1.5, -1.7l 8.4, -8.9l 2.2, -2.2l 7.9, -7.8l 2.7, -2.5l 7.5, -6.7l 3.1, -2.6l 7.2, -5.7l 3.4, -2.5l 6.9, -4.7l 3.6, -2.2l 6.7, -3.8l 3.8, -1.9l 6.6, -2.9l 4.0, -1.5l 6.5, -2.0l
+ 4.1, -1.0l 6.4, -1.2l 4.2, -0.496l 6.4, -0.343l 4.2, 0.052l 6.4, 0.504l 4.2, 0.602l 6.5, 1.4l 4.1, 1.1l 6.5, 2.2l 4.0, 1.6l 6.7, 3.1l 3.9, 2.1l 6.9, 4.0l 3.7, 2.4l 7.1, 5.0l 3.5, 2.6l 7.4, 6.0l 3.2, 2.8l 7.8, 7.1l 2.8, 2.7l 8.2, 8.3l 2.4, 2.5l 8.8,
+ 9.6l 1.8, 2.0l 11, 12l 11, 13l 11, 13l 11, 14l 11, 14l 11, 14l 11, 14l 11, 14l -18, 14l -11, -14l -11, -14l -11, -14l -11, -14l -10, -14l -10, -13l -10, -13l -10, -12l -1.5, -1.7l -8.5, -9.3l -2.0, -2.2l -7.9, -7.9l -2.4, -2.3l -7.3, -6.7l -2.7,
+ -2.3l -6.8, -5.6l -2.9, -2.2l -6.4, -4.5l -2.9, -1.9l -6.0, -3.5l -2.9, -1.6l -5.6, -2.6l -2.9, -1.2l -5.3, -1.8l -2.8, -0.771l -5.1, -1.1l -2.7, -0.393l -4.9, -0.388l -2.7, -0.033l -4.9, 0.263l -2.7, 0.322l -5.0, 0.929l -2.7, 0.688l -5.2, 1.6l
+ -2.8, 1.1l -5.5, 2.4l -2.8, 1.4l -5.9, 3.3l -2.8, 1.8l -6.2, 4.2l -2.7, 2.0l -6.6, 5.2l -2.5, 2.1l -7.1, 6.3l -2.2, 2.1l -7.6, 7.4l -1.8, 1.9l -8.1, 8.6l -1.3, 1.4l -8.7, 9.9l -10, 12l -10, 13l -10, 13l -10, 14l -11, 14z" fill="#ff0000"/>
+<path d="M131,220l 11, -14l 11, -14l 11, -14l 11, -13l 11, -13l 9.0, -10l 1.5, -1.7l 8.4, -8.9l 2.2, -2.2l 7.9, -7.8l 2.7, -2.5l 7.5, -6.7l 3.1, -2.6l 7.2, -5.7l 3.4, -2.5l 6.9, -4.7l 3.6, -2.2l 6.7, -3.8l 3.8, -1.9l 6.6, -2.9l 4.0, -1.5l 6.5, -2.0l
+ 4.1, -1.0l 6.4, -1.2l 4.2, -0.496l 6.4, -0.343l 4.2, 0.052l 6.4, 0.504l 4.2, 0.602l 6.5, 1.4l 4.1, 1.1l 6.5, 2.2l 4.0, 1.6l 6.7, 3.1l 3.9, 2.1l 6.9, 4.0l 3.7, 2.4l 7.1, 5.0l 3.5, 2.6l 7.4, 6.0l 3.2, 2.8l 7.8, 7.1l 2.8, 2.7l 8.2, 8.3l 2.4, 2.5l 8.8,
+ 9.6l 1.8, 2.0l 11, 12l 11, 13l 11, 13l 11, 14l 11, 14l 11, 14l 11, 14l 11, 14" fill="none" stroke="#ffff00" stroke-width="2.0"/>
+<rect x="6.2" y="1.9" width="160" height="22" fill="#f2f2f2"/>
+<path d="M4.5,4.4v 21h 160v -1.6h -158v -19z" fill="black"/>
+<path d="M6.2,23v -22h 160v 22h -160z" fill="none" stroke="black"/>
+<text xml:space="preserve" x="15" y="18" fill="black" font-size="17" font-family="Helvetica" font-weight="bold">Exclusion graphs
+</text></svg>

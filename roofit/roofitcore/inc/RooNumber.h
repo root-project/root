@@ -39,7 +39,6 @@ public:
    /// Get the absolute epsilon that is used by range checks in RooFit,
    /// e.g., in RooAbsRealLValue::inRange().
    inline static double rangeEpsAbs() { return staticRangeEpsAbs(); }
-   static std::string toString(double x);
 
 private:
    static double &staticRangeEpsRel();

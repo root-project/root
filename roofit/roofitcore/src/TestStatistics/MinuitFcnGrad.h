@@ -34,18 +34,17 @@ public:
                  std::vector<ROOT::Fit::ParameterSettings> &parameters, LikelihoodMode likelihoodMode,
                  LikelihoodGradientMode likelihoodGradientMode);
 
+   void initMinimizer(ROOT::Math::Minimizer &) override;
+
    /// Overridden from RooAbsMinimizerFcn to include gradient strategy synchronization.
    bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) override;
 
-   // used inside Minuit:
-   inline bool returnsInMinuit2ParameterSpace() const { return _gradient->usesMinuitInternalValues(); }
+   bool returnsInMinuit2ParameterSpace() const { return _gradient->usesMinuitInternalValues(); }
 
    inline void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override
    {
       applyToLikelihood([&](auto &l) { l.constOptimizeTestStatistic(opcode, doAlsoTrackingOpt); });
    }
-
-   ROOT::Math::IMultiGenFunction *getMultiGenFcn() override { return _multiGenFcn.get(); }
 
    double operator()(const double *x) const;
 
@@ -93,8 +92,6 @@ private:
    // currently setting this is not supported, so it doesn't happen.
    mutable bool offsets_reset_ = false;
    void syncOffsets() const;
-
-   std::unique_ptr<ROOT::Math::IMultiGradFunction> _multiGenFcn;
 
    mutable bool _minuitInternalRooFitXMismatch = false;
 };

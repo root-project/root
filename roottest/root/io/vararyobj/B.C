@@ -7,7 +7,6 @@
 
 using namespace std;
 
-ClassImp(B);
 
 B::B() : TNamed(), fX(10), fY(20.0) {}
 

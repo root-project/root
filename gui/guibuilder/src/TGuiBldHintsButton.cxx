@@ -23,7 +23,6 @@ Special button class used for editing layout hints in the ROOT GUI Builder.
 */
 
 
-ClassImp(TGuiBldHintsButton);
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -64,7 +64,6 @@ struct BasisFunction {
 /// (plug-in name is "Linear").
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(TLinearMinimizer);
 
 
 TLinearMinimizer::TLinearMinimizer(int ) :

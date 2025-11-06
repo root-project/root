@@ -46,8 +46,6 @@ Pysica Slovaca Vol. 54/ 4 (2004), pp. 385-400.
 #include "TSpectrum2Painter.h"
 #include "strlcpy.h"
 
-ClassImp (TSpectrum2Painter)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TSpectrum2Painter normal constructor

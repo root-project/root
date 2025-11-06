@@ -19,7 +19,6 @@
 #include "strlcpy.h"
 #include "snprintf.h"
 
-ClassImp(TNtupleD);
 
 /** \class TNtupleD
 \ingroup tree

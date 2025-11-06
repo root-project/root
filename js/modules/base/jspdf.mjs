@@ -1,11 +1,11 @@
 /** @license
  *
  * jsPDF - PDF Document creation from JavaScript
- * Version 2.5.2
+ * Version 3.0.3
  *
- * Copyright (c) 2010-2021 James Hall <james@parall.ax>, https://github.com/MrRio/jsPDF
- *               2015-2021 yWorks GmbH, http://www.yworks.com
- *               2015-2021 Lukas Holländer <lukas.hollaender@yworks.com>, https://github.com/HackbrettXXX
+ * Copyright (c) 2010-2025 James Hall <james@parall.ax>, https://github.com/MrRio/jsPDF
+ *               2015-2025 yWorks GmbH, http://www.yworks.com
+ *               2015-2025 Lukas Holländer <lukas.hollaender@yworks.com>, https://github.com/HackbrettXXX
  *               2016-2018 Aras Abbasi <aras.abbasi@gmail.com>
  *               2010 Aaron Spike, https://github.com/acspike
  *               2012 Willow Systems Corporation, https://github.com/willowsystems
@@ -4426,7 +4426,7 @@ function jsPDF(options) {
 
     //lang
 
-    var lang = options.lang;
+    options.lang;
 
     //renderingMode
     var renderingMode = -1;
@@ -4605,14 +4605,13 @@ function jsPDF(options) {
         for (var l = 0; l < len; l++) {
           newY = l === 0 ? getVerticalCoordinate(y) : -leading;
           newX = l === 0 ? getHorizontalCoordinate(x) : 0;
+
+          const numSpaces = da[l].split(" ").length - 1;
+          const spacing =
+            numSpaces > 0 ? (maxWidth - lineWidths[l]) / numSpaces : 0;
+
           if (l < len - 1) {
-            wordSpacingPerLine.push(
-              hpf(
-                scale(
-                  (maxWidth - lineWidths[l]) / (da[l].split(" ").length - 1)
-                )
-              )
-            );
+            wordSpacingPerLine.push(hpf(scale(spacing)));
           } else {
             wordSpacingPerLine.push(0);
           }
@@ -6408,8 +6407,8 @@ function jsPDF(options) {
     this.x = pageX;
     this.y = pageY;
     this.matrix = pageMatrix;
-    this.width = getPageWidth(currentPage);
-    this.height = getPageHeight(currentPage);
+    this.width = getUnscaledPageWidth(currentPage);
+    this.height = getUnscaledPageHeight(currentPage);
     this.outputDestination = outputDestination;
 
     this.id = ""; // set by endFormObject()
@@ -6424,8 +6423,8 @@ function jsPDF(options) {
     pageX = this.x;
     pageY = this.y;
     pageMatrix = this.matrix;
-    setPageWidth(currentPage, this.width);
-    setPageHeight(currentPage, this.height);
+    setPageWidthWithoutScaling(currentPage, this.width);
+    setPageHeightWithoutScaling(currentPage, this.height);
     outputDestination = this.outputDestination;
   };
 
@@ -6606,32 +6605,46 @@ function jsPDF(options) {
     }
   }
 
+  function getUnscaledPageWidth(pageNumber) {
+    return (
+      pagesContext[pageNumber].mediaBox.topRightX -
+      pagesContext[pageNumber].mediaBox.bottomLeftX
+    );
+  }
+
+  function setPageWidthWithoutScaling(pageNumber, value) {
+    pagesContext[pageNumber].mediaBox.topRightX =
+      value + pagesContext[pageNumber].mediaBox.bottomLeftX;
+  }
+
+  function getUnscaledPageHeight(pageNumber) {
+    return (
+      pagesContext[pageNumber].mediaBox.topRightY -
+      pagesContext[pageNumber].mediaBox.bottomLeftY
+    );
+  }
+
+  function setPageHeightWithoutScaling(pageNumber, value) {
+    pagesContext[pageNumber].mediaBox.topRightY =
+      value + pagesContext[pageNumber].mediaBox.bottomLeftY;
+  }
+
   var getPageWidth = (API.getPageWidth = function(pageNumber) {
     pageNumber = pageNumber || currentPage;
-    return (
-      (pagesContext[pageNumber].mediaBox.topRightX -
-        pagesContext[pageNumber].mediaBox.bottomLeftX) /
-      scaleFactor
-    );
+    return getUnscaledPageWidth(pageNumber) / scaleFactor;
   });
 
   var setPageWidth = (API.setPageWidth = function(pageNumber, value) {
-    pagesContext[pageNumber].mediaBox.topRightX =
-      value * scaleFactor + pagesContext[pageNumber].mediaBox.bottomLeftX;
+    setPageWidthWithoutScaling(pageNumber, value * scaleFactor);
   });
 
   var getPageHeight = (API.getPageHeight = function(pageNumber) {
     pageNumber = pageNumber || currentPage;
-    return (
-      (pagesContext[pageNumber].mediaBox.topRightY -
-        pagesContext[pageNumber].mediaBox.bottomLeftY) /
-      scaleFactor
-    );
+    return getUnscaledPageHeight(pageNumber) / scaleFactor;
   });
 
   var setPageHeight = (API.setPageHeight = function(pageNumber, value) {
-    pagesContext[pageNumber].mediaBox.topRightY =
-      value * scaleFactor + pagesContext[pageNumber].mediaBox.bottomLeftY;
+    setPageHeightWithoutScaling(pageNumber, value * scaleFactor);
   });
 
   /**
@@ -6761,7 +6774,7 @@ jsPDF.API = {
  * @type {string}
  * @memberof jsPDF#
  */
-jsPDF.version = "2.5.2";
+jsPDF.version = "3.0.3";
 
 /* global jsPDF */
 
@@ -10157,7 +10170,11 @@ var AcroForm = jsPDF.AcroForm;
         value: "<<" + image.decodeParameters + ">>"
       });
     }
-    if ("transparency" in image && Array.isArray(image.transparency)) {
+    if (
+      "transparency" in image &&
+      Array.isArray(image.transparency) &&
+      image.transparency.length > 0
+    ) {
       var transparency = "",
         i = 0,
         len = image.transparency.length;
@@ -10191,22 +10208,17 @@ var AcroForm = jsPDF.AcroForm;
 
     // Soft mask
     if ("sMask" in image && typeof image.sMask !== "undefined") {
-      var decodeParameters =
-        "/Predictor " +
-        image.predictor +
-        " /Colors 1 /BitsPerComponent " +
-        image.bitsPerComponent +
-        " /Columns " +
-        image.width;
-      var sMask = {
+      const sMaskBitsPerComponent =
+        image.sMaskBitsPerComponent ?? image.bitsPerComponent;
+      const sMask = {
         width: image.width,
         height: image.height,
         colorSpace: "DeviceGray",
-        bitsPerComponent: image.bitsPerComponent,
-        decodeParameters: decodeParameters,
+        bitsPerComponent: sMaskBitsPerComponent,
         data: image.sMask
       };
       if ("filter" in image) {
+        sMask.decodeParameters = `/Predictor ${image.predictor} /Colors 1 /BitsPerComponent ${sMaskBitsPerComponent} /Columns ${image.width}`;
         sMask.filter = image.filter;
       }
       putImage.call(this, sMask);
@@ -10547,45 +10559,34 @@ var AcroForm = jsPDF.AcroForm;
    * @name extractImageFromDataUrl
    * @function
    * @param {string} dataUrl a valid data URI of format 'data:[<MIME-type>][;base64],<data>'
-   * @returns {Array}an Array containing the following
-   * [0] the complete data URI
-   * [1] <MIME-type>
-   * [2] format - the second part of the mime-type i.e 'png' in 'image/png'
-   * [4] <data>
+   * @returns {string} The raw Base64-encoded data.
    */
   var extractImageFromDataUrl = (jsPDFAPI.__addimage__.extractImageFromDataUrl = function(
     dataUrl
   ) {
-    dataUrl = dataUrl || "";
-    var dataUrlParts = dataUrl.split("base64,");
-    var result = null;
-
-    if (dataUrlParts.length === 2) {
-      var extractedInfo = /^data:(\w*\/\w*);*(charset=(?!charset=)[\w=-]*)*;*$/.exec(
-        dataUrlParts[0]
-      );
-      if (Array.isArray(extractedInfo)) {
-        result = {
-          mimeType: extractedInfo[1],
-          charset: extractedInfo[2],
-          data: dataUrlParts[1]
-        };
-      }
+    if (dataUrl == null) {
+      return null;
     }
-    return result;
-  });
 
-  /**
-   * Check to see if ArrayBuffer is supported
-   *
-   * @name supportsArrayBuffer
-   * @function
-   * @returns {boolean}
-   */
-  var supportsArrayBuffer = (jsPDFAPI.__addimage__.supportsArrayBuffer = function() {
-    return (
-      typeof ArrayBuffer !== "undefined" && typeof Uint8Array !== "undefined"
-    );
+    // avoid using a regexp for parsing because it might be vulnerable against ReDoS attacks
+
+    dataUrl = dataUrl.trim();
+
+    if (!dataUrl.startsWith("data:")) {
+      return null;
+    }
+
+    const commaIndex = dataUrl.indexOf(",");
+    if (commaIndex < 0) {
+      return null;
+    }
+
+    const dataScheme = dataUrl.substring(0, commaIndex).trim();
+    if (!dataScheme.endsWith("base64")) {
+      return null;
+    }
+
+    return dataUrl.substring(commaIndex + 1);
   });
 
   /**
@@ -10598,7 +10599,7 @@ var AcroForm = jsPDF.AcroForm;
    * @returns {boolean}
    */
   jsPDFAPI.__addimage__.isArrayBuffer = function(object) {
-    return supportsArrayBuffer() && object instanceof ArrayBuffer;
+    return object instanceof ArrayBuffer;
   };
 
   /**
@@ -10613,18 +10614,15 @@ var AcroForm = jsPDF.AcroForm;
     object
   ) {
     return (
-      supportsArrayBuffer() &&
-      typeof Uint32Array !== "undefined" &&
-      (object instanceof Int8Array ||
-        object instanceof Uint8Array ||
-        (typeof Uint8ClampedArray !== "undefined" &&
-          object instanceof Uint8ClampedArray) ||
-        object instanceof Int16Array ||
-        object instanceof Uint16Array ||
-        object instanceof Int32Array ||
-        object instanceof Uint32Array ||
-        object instanceof Float32Array ||
-        object instanceof Float64Array)
+      object instanceof Int8Array ||
+      object instanceof Uint8Array ||
+      object instanceof Uint8ClampedArray ||
+      object instanceof Int16Array ||
+      object instanceof Uint16Array ||
+      object instanceof Int32Array ||
+      object instanceof Uint32Array ||
+      object instanceof Float32Array ||
+      object instanceof Float64Array
     );
   });
 
@@ -10814,12 +10812,10 @@ var AcroForm = jsPDF.AcroForm;
     result = checkImagesForAlias.call(this, alias);
 
     if (!result) {
-      if (supportsArrayBuffer()) {
-        // no need to convert if imageData is already uint8array
-        if (!(imageData instanceof Uint8Array) && format !== "RGBA") {
-          dataAsBinaryString = imageData;
-          imageData = binaryStringToUint8Array(imageData);
-        }
+      // no need to convert if imageData is already uint8array
+      if (!(imageData instanceof Uint8Array) && format !== "RGBA") {
+        dataAsBinaryString = imageData;
+        imageData = binaryStringToUint8Array(imageData);
       }
 
       result = this["process" + format.toUpperCase()](
@@ -10848,13 +10844,11 @@ var AcroForm = jsPDF.AcroForm;
     throwError
   ) {
     throwError = typeof throwError === "boolean" ? throwError : true;
-    var base64Info;
     var imageData = "";
     var rawData;
 
     if (typeof stringData === "string") {
-      base64Info = extractImageFromDataUrl(stringData);
-      rawData = base64Info !== null ? base64Info.data : stringData;
+      rawData = extractImageFromDataUrl(stringData) ?? stringData;
 
       try {
         imageData = atob(rawData);
@@ -10913,7 +10907,7 @@ var AcroForm = jsPDF.AcroForm;
       );
     }
 
-    if (supportsArrayBuffer() && !(imageData instanceof Uint8Array)) {
+    if (!(imageData instanceof Uint8Array)) {
       imageData = binaryStringToUint8Array(imageData);
     }
 
@@ -13463,10 +13457,10 @@ function parseFontFamily(input) {
         matches = rx.exec(value);
         if (matches !== null) {
           var fontStyle = matches[1];
-          var fontVariant = matches[2];
+          matches[2];
           var fontWeight = matches[3];
           var fontSize = matches[4];
-          var lineHeight = matches[5];
+          matches[5];
           var fontFamily = matches[6];
         } else {
           return;
@@ -15554,23 +15548,12 @@ function parseFontFamily(input) {
 })(jsPDF.API);
 
 // DEFLATE is a complex format; to read this code, you should probably check the RFC first:
-// https://tools.ietf.org/html/rfc1951
-// You may also wish to take a look at the guide I made about this program:
-// https://gist.github.com/101arrowz/253f31eb5abc3d9275ab943003ffecad
-// Much of the following code is similar to that of UZIP.js:
-// https://github.com/photopea/UZIP.js
-// Many optimizations have been made, so the bundle size is ultimately smaller but performance is similar.
-// Sometimes 0 will appear where -1 would be more appropriate. This is because using a uint
-// is better for memory in most engines (I *think*).
-// Mediocre shim
-
 
 // aliases for shorter compressed code (most minifers don't do this)
-var u8 = Uint8Array, u16 = Uint16Array, u32 = Uint32Array;
+var u8 = Uint8Array, u16 = Uint16Array, i32 = Int32Array;
 // fixed length extra bits
 var fleb = new u8([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0, /* unused */ 0, 0, /* impossible */ 0]);
 // fixed distance extra bits
-// see fleb note
 var fdeb = new u8([0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, /* unused */ 0, 0]);
 // code length index map
 var clim = new u8([16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]);
@@ -15581,26 +15564,26 @@ var freb = function (eb, start) {
         b[i] = start += 1 << eb[i - 1];
     }
     // numbers here are at max 18 bits
-    var r = new u32(b[30]);
+    var r = new i32(b[30]);
     for (var i = 1; i < 30; ++i) {
         for (var j = b[i]; j < b[i + 1]; ++j) {
             r[j] = ((j - b[i]) << 5) | i;
         }
     }
-    return [b, r];
+    return { b: b, r: r };
 };
-var _a = freb(fleb, 2), fl = _a[0], revfl = _a[1];
+var _a = freb(fleb, 2), fl = _a.b, revfl = _a.r;
 // we can ignore the fact that the other numbers are wrong; they never happen anyway
 fl[28] = 258, revfl[258] = 28;
-var _b = freb(fdeb, 0), fd = _b[0], revfd = _b[1];
+var _b = freb(fdeb, 0), revfd = _b.r;
 // map of value to reverse (assuming 16 bits)
 var rev = new u16(32768);
 for (var i = 0; i < 32768; ++i) {
     // reverse table algorithm from SO
-    var x = ((i & 0xAAAA) >>> 1) | ((i & 0x5555) << 1);
-    x = ((x & 0xCCCC) >>> 2) | ((x & 0x3333) << 2);
-    x = ((x & 0xF0F0) >>> 4) | ((x & 0x0F0F) << 4);
-    rev[i] = (((x & 0xFF00) >>> 8) | ((x & 0x00FF) << 8)) >>> 1;
+    var x = ((i & 0xAAAA) >> 1) | ((i & 0x5555) << 1);
+    x = ((x & 0xCCCC) >> 2) | ((x & 0x3333) << 2);
+    x = ((x & 0xF0F0) >> 4) | ((x & 0x0F0F) << 4);
+    rev[i] = (((x & 0xFF00) >> 8) | ((x & 0x00FF) << 8)) >> 1;
 }
 // create huffman tree from u8 "map": index -> code length for code index
 // mb (max bits) must be at most 15
@@ -15612,11 +15595,13 @@ var hMap = (function (cd, mb, r) {
     // u16 "map": index -> # of codes with bit length = index
     var l = new u16(mb);
     // length of cd must be 288 (total # of codes)
-    for (; i < s; ++i)
-        ++l[cd[i] - 1];
+    for (; i < s; ++i) {
+        if (cd[i])
+            ++l[cd[i] - 1];
+    }
     // u16 "map": index -> minimum code for bit length = index
     var le = new u16(mb);
-    for (i = 0; i < mb; ++i) {
+    for (i = 1; i < mb; ++i) {
         le[i] = (le[i - 1] + l[i - 1]) << 1;
     }
     var co;
@@ -15637,15 +15622,18 @@ var hMap = (function (cd, mb, r) {
                 // m is end value
                 for (var m = v | ((1 << r_1) - 1); v <= m; ++v) {
                     // every 16 bit value starting with the code yields the same result
-                    co[rev[v] >>> rvb] = sv;
+                    co[rev[v] >> rvb] = sv;
                 }
             }
         }
     }
     else {
         co = new u16(s);
-        for (i = 0; i < s; ++i)
-            co[i] = rev[le[cd[i] - 1]++] >>> (15 - cd[i]);
+        for (i = 0; i < s; ++i) {
+            if (cd[i]) {
+                co[i] = rev[le[cd[i] - 1]++] >> (15 - cd[i]);
+            }
+        }
     }
     return co;
 });
@@ -15664,30 +15652,11 @@ var fdt = new u8(32);
 for (var i = 0; i < 32; ++i)
     fdt[i] = 5;
 // fixed length map
-var flm = /*#__PURE__*/ hMap(flt, 9, 0), flrm = /*#__PURE__*/ hMap(flt, 9, 1);
+var flm = /*#__PURE__*/ hMap(flt, 9, 0);
 // fixed distance map
-var fdm = /*#__PURE__*/ hMap(fdt, 5, 0), fdrm = /*#__PURE__*/ hMap(fdt, 5, 1);
-// find max of array
-var max = function (a) {
-    var m = a[0];
-    for (var i = 1; i < a.length; ++i) {
-        if (a[i] > m)
-            m = a[i];
-    }
-    return m;
-};
-// read d, starting at bit p and mask with m
-var bits = function (d, p, m) {
-    var o = (p / 8) >> 0;
-    return ((d[o] | (d[o + 1] << 8)) >>> (p & 7)) & m;
-};
-// read d, starting at bit p continuing for at least 16 bits
-var bits16 = function (d, p) {
-    var o = (p / 8) >> 0;
-    return ((d[o] | (d[o + 1] << 8) | (d[o + 2] << 16)) >>> (p & 7));
-};
+var fdm = /*#__PURE__*/ hMap(fdt, 5, 0);
 // get end of byte
-var shft = function (p) { return ((p / 8) >> 0) + (p & 7 && 1); };
+var shft = function (p) { return ((p + 7) / 8) | 0; };
 // typed array slice - allows garbage collector to free original reference,
 // while being more compatible than .slice
 var slc = function (v, s, e) {
@@ -15696,194 +15665,22 @@ var slc = function (v, s, e) {
     if (e == null || e > v.length)
         e = v.length;
     // can't use .constructor in case user-supplied
-    var n = new (v instanceof u16 ? u16 : v instanceof u32 ? u32 : u8)(e - s);
-    n.set(v.subarray(s, e));
-    return n;
-};
-// expands raw DEFLATE data
-var inflt = function (dat, buf, st) {
-    // source length
-    var sl = dat.length;
-    // have to estimate size
-    var noBuf = !buf || st;
-    // no state
-    var noSt = !st || st.i;
-    if (!st)
-        st = {};
-    // Assumes roughly 33% compression ratio average
-    if (!buf)
-        buf = new u8(sl * 3);
-    // ensure buffer can fit at least l elements
-    var cbuf = function (l) {
-        var bl = buf.length;
-        // need to increase size to fit
-        if (l > bl) {
-            // Double or set to necessary, whichever is greater
-            var nbuf = new u8(Math.max(bl * 2, l));
-            nbuf.set(buf);
-            buf = nbuf;
-        }
-    };
-    //  last chunk         bitpos           bytes
-    var final = st.f || 0, pos = st.p || 0, bt = st.b || 0, lm = st.l, dm = st.d, lbt = st.m, dbt = st.n;
-    // total bits
-    var tbts = sl * 8;
-    do {
-        if (!lm) {
-            // BFINAL - this is only 1 when last chunk is next
-            st.f = final = bits(dat, pos, 1);
-            // type: 0 = no compression, 1 = fixed huffman, 2 = dynamic huffman
-            var type = bits(dat, pos + 1, 3);
-            pos += 3;
-            if (!type) {
-                // go to end of byte boundary
-                var s = shft(pos) + 4, l = dat[s - 4] | (dat[s - 3] << 8), t = s + l;
-                if (t > sl) {
-                    if (noSt)
-                        throw 'unexpected EOF';
-                    break;
-                }
-                // ensure size
-                if (noBuf)
-                    cbuf(bt + l);
-                // Copy over uncompressed data
-                buf.set(dat.subarray(s, t), bt);
-                // Get new bitpos, update byte count
-                st.b = bt += l, st.p = pos = t * 8;
-                continue;
-            }
-            else if (type == 1)
-                lm = flrm, dm = fdrm, lbt = 9, dbt = 5;
-            else if (type == 2) {
-                //  literal                            lengths
-                var hLit = bits(dat, pos, 31) + 257, hcLen = bits(dat, pos + 10, 15) + 4;
-                var tl = hLit + bits(dat, pos + 5, 31) + 1;
-                pos += 14;
-                // length+distance tree
-                var ldt = new u8(tl);
-                // code length tree
-                var clt = new u8(19);
-                for (var i = 0; i < hcLen; ++i) {
-                    // use index map to get real code
-                    clt[clim[i]] = bits(dat, pos + i * 3, 7);
-                }
-                pos += hcLen * 3;
-                // code lengths bits
-                var clb = max(clt), clbmsk = (1 << clb) - 1;
-                if (!noSt && pos + tl * (clb + 7) > tbts)
-                    break;
-                // code lengths map
-                var clm = hMap(clt, clb, 1);
-                for (var i = 0; i < tl;) {
-                    var r = clm[bits(dat, pos, clbmsk)];
-                    // bits read
-                    pos += r & 15;
-                    // symbol
-                    var s = r >>> 4;
-                    // code length to copy
-                    if (s < 16) {
-                        ldt[i++] = s;
-                    }
-                    else {
-                        //  copy   count
-                        var c = 0, n = 0;
-                        if (s == 16)
-                            n = 3 + bits(dat, pos, 3), pos += 2, c = ldt[i - 1];
-                        else if (s == 17)
-                            n = 3 + bits(dat, pos, 7), pos += 3;
-                        else if (s == 18)
-                            n = 11 + bits(dat, pos, 127), pos += 7;
-                        while (n--)
-                            ldt[i++] = c;
-                    }
-                }
-                //    length tree                 distance tree
-                var lt = ldt.subarray(0, hLit), dt = ldt.subarray(hLit);
-                // max length bits
-                lbt = max(lt);
-                // max dist bits
-                dbt = max(dt);
-                lm = hMap(lt, lbt, 1);
-                dm = hMap(dt, dbt, 1);
-            }
-            else
-                throw 'invalid block type';
-            if (pos > tbts)
-                throw 'unexpected EOF';
-        }
-        // Make sure the buffer can hold this + the largest possible addition
-        // Maximum chunk size (practically, theoretically infinite) is 2^17;
-        if (noBuf)
-            cbuf(bt + 131072);
-        var lms = (1 << lbt) - 1, dms = (1 << dbt) - 1;
-        var mxa = lbt + dbt + 18;
-        while (noSt || pos + mxa < tbts) {
-            // bits read, code
-            var c = lm[bits16(dat, pos) & lms], sym = c >>> 4;
-            pos += c & 15;
-            if (pos > tbts)
-                throw 'unexpected EOF';
-            if (!c)
-                throw 'invalid length/literal';
-            if (sym < 256)
-                buf[bt++] = sym;
-            else if (sym == 256) {
-                lm = null;
-                break;
-            }
-            else {
-                var add = sym - 254;
-                // no extra bits needed if less
-                if (sym > 264) {
-                    // index
-                    var i = sym - 257, b = fleb[i];
-                    add = bits(dat, pos, (1 << b) - 1) + fl[i];
-                    pos += b;
-                }
-                // dist
-                var d = dm[bits16(dat, pos) & dms], dsym = d >>> 4;
-                if (!d)
-                    throw 'invalid distance';
-                pos += d & 15;
-                var dt = fd[dsym];
-                if (dsym > 3) {
-                    var b = fdeb[dsym];
-                    dt += bits16(dat, pos) & ((1 << b) - 1), pos += b;
-                }
-                if (pos > tbts)
-                    throw 'unexpected EOF';
-                if (noBuf)
-                    cbuf(bt + 131072);
-                var end = bt + add;
-                for (; bt < end; bt += 4) {
-                    buf[bt] = buf[bt - dt];
-                    buf[bt + 1] = buf[bt + 1 - dt];
-                    buf[bt + 2] = buf[bt + 2 - dt];
-                    buf[bt + 3] = buf[bt + 3 - dt];
-                }
-                bt = end;
-            }
-        }
-        st.l = lm, st.p = pos, st.b = bt;
-        if (lm)
-            final = 1, st.m = lbt, st.d = dm, st.n = dbt;
-    } while (!final);
-    return bt == buf.length ? buf : slc(buf, 0, bt);
+    return new u8(v.subarray(s, e));
 };
 // starting at p, write the minimum number of bits that can hold v to d
 var wbits = function (d, p, v) {
     v <<= p & 7;
-    var o = (p / 8) >> 0;
+    var o = (p / 8) | 0;
     d[o] |= v;
-    d[o + 1] |= v >>> 8;
+    d[o + 1] |= v >> 8;
 };
 // starting at p, write the minimum number of bits (>8) that can hold v to d
 var wbits16 = function (d, p, v) {
     v <<= p & 7;
-    var o = (p / 8) >> 0;
+    var o = (p / 8) | 0;
     d[o] |= v;
-    d[o + 1] |= v >>> 8;
-    d[o + 2] |= v >>> 16;
+    d[o + 1] |= v >> 8;
+    d[o + 2] |= v >> 16;
 };
 // creates code lengths from a frequency table
 var hTree = function (d, mb) {
@@ -15896,11 +15693,11 @@ var hTree = function (d, mb) {
     var s = t.length;
     var t2 = t.slice();
     if (!s)
-        return [new u8(0), 0];
+        return { t: et, l: 0 };
     if (s == 1) {
         var v = new u8(t[0].s + 1);
         v[t[0].s] = 1;
-        return [v, 1];
+        return { t: v, l: 1 };
     }
     t.sort(function (a, b) { return a.f - b.f; });
     // after i2 reaches last ind, will be stopped
@@ -15944,7 +15741,7 @@ var hTree = function (d, mb) {
             else
                 break;
         }
-        dt >>>= lft;
+        dt >>= lft;
         while (dt > 0) {
             var i2_2 = t2[i].s;
             if (tr[i2_2] < mb)
@@ -15961,7 +15758,7 @@ var hTree = function (d, mb) {
         }
         mbt = mb;
     }
-    return [new u8(tr), mbt];
+    return { t: new u8(tr), l: mbt };
 };
 // get the max length and assign length codes
 var ln = function (n, l, d) {
@@ -16004,7 +15801,7 @@ var lc = function (c) {
             cln = c[i];
         }
     }
-    return [cl.subarray(0, cli), s];
+    return { c: cl.subarray(0, cli), n: s };
 };
 // calculate the length of output from tree, code lengths
 var clen = function (cf, cl) {
@@ -16020,7 +15817,7 @@ var wfblk = function (out, pos, dat) {
     var s = dat.length;
     var o = shft(pos + 2);
     out[o] = s & 255;
-    out[o + 1] = s >>> 8;
+    out[o + 1] = s >> 8;
     out[o + 2] = out[o] ^ 255;
     out[o + 3] = out[o + 1] ^ 255;
     for (var i = 0; i < s; ++i)
@@ -16031,23 +15828,23 @@ var wfblk = function (out, pos, dat) {
 var wblk = function (dat, out, final, syms, lf, df, eb, li, bs, bl, p) {
     wbits(out, p++, final);
     ++lf[256];
-    var _a = hTree(lf, 15), dlt = _a[0], mlb = _a[1];
-    var _b = hTree(df, 15), ddt = _b[0], mdb = _b[1];
-    var _c = lc(dlt), lclt = _c[0], nlc = _c[1];
-    var _d = lc(ddt), lcdt = _d[0], ndc = _d[1];
+    var _a = hTree(lf, 15), dlt = _a.t, mlb = _a.l;
+    var _b = hTree(df, 15), ddt = _b.t, mdb = _b.l;
+    var _c = lc(dlt), lclt = _c.c, nlc = _c.n;
+    var _d = lc(ddt), lcdt = _d.c, ndc = _d.n;
     var lcfreq = new u16(19);
     for (var i = 0; i < lclt.length; ++i)
-        lcfreq[lclt[i] & 31]++;
+        ++lcfreq[lclt[i] & 31];
     for (var i = 0; i < lcdt.length; ++i)
-        lcfreq[lcdt[i] & 31]++;
-    var _e = hTree(lcfreq, 7), lct = _e[0], mlcb = _e[1];
+        ++lcfreq[lcdt[i] & 31];
+    var _e = hTree(lcfreq, 7), lct = _e.t, mlcb = _e.l;
     var nlcc = 19;
     for (; nlcc > 4 && !lct[clim[nlcc - 1]]; --nlcc)
         ;
     var flen = (bl + 5) << 3;
     var ftlen = clen(lf, flt) + clen(df, fdt) + eb;
-    var dtlen = clen(lf, dlt) + clen(df, ddt) + eb + 14 + 3 * nlcc + clen(lcfreq, lct) + (2 * lcfreq[16] + 3 * lcfreq[17] + 7 * lcfreq[18]);
-    if (flen <= ftlen && flen <= dtlen)
+    var dtlen = clen(lf, dlt) + clen(df, ddt) + eb + 14 + 3 * nlcc + clen(lcfreq, lct) + 2 * lcfreq[16] + 3 * lcfreq[17] + 7 * lcfreq[18];
+    if (bs >= 0 && flen <= ftlen && flen <= dtlen)
         return wfblk(out, p, dat.subarray(bs, bs + bl));
     var lm, ll, dm, dl;
     wbits(out, p, 1 + (dtlen < ftlen)), p += 2;
@@ -16068,7 +15865,7 @@ var wblk = function (dat, out, final, syms, lf, df, eb, li, bs, bl, p) {
                 var len = clct[i] & 31;
                 wbits(out, p, llm[len]), p += lct[len];
                 if (len > 15)
-                    wbits(out, p, (clct[i] >>> 5) & 127), p += clct[i] >>> 12;
+                    wbits(out, p, (clct[i] >> 5) & 127), p += clct[i] >> 12;
             }
         }
     }
@@ -16076,71 +15873,58 @@ var wblk = function (dat, out, final, syms, lf, df, eb, li, bs, bl, p) {
         lm = flm, ll = flt, dm = fdm, dl = fdt;
     }
     for (var i = 0; i < li; ++i) {
-        if (syms[i] > 255) {
-            var len = (syms[i] >>> 18) & 31;
+        var sym = syms[i];
+        if (sym > 255) {
+            var len = (sym >> 18) & 31;
             wbits16(out, p, lm[len + 257]), p += ll[len + 257];
             if (len > 7)
-                wbits(out, p, (syms[i] >>> 23) & 31), p += fleb[len];
-            var dst = syms[i] & 31;
+                wbits(out, p, (sym >> 23) & 31), p += fleb[len];
+            var dst = sym & 31;
             wbits16(out, p, dm[dst]), p += dl[dst];
             if (dst > 3)
-                wbits16(out, p, (syms[i] >>> 5) & 8191), p += fdeb[dst];
+                wbits16(out, p, (sym >> 5) & 8191), p += fdeb[dst];
         }
         else {
-            wbits16(out, p, lm[syms[i]]), p += ll[syms[i]];
+            wbits16(out, p, lm[sym]), p += ll[sym];
         }
     }
     wbits16(out, p, lm[256]);
     return p + ll[256];
 };
 // deflate options (nice << 13) | chain
-var deo = /*#__PURE__*/ new u32([65540, 131080, 131088, 131104, 262176, 1048704, 1048832, 2114560, 2117632]);
+var deo = /*#__PURE__*/ new i32([65540, 131080, 131088, 131104, 262176, 1048704, 1048832, 2114560, 2117632]);
 // empty
 var et = /*#__PURE__*/ new u8(0);
 // compresses data into a raw DEFLATE buffer
-var dflt = function (dat, lvl, plvl, pre, post, lst) {
-    var s = dat.length;
-    var o = new u8(pre + s + 5 * (1 + Math.floor(s / 7000)) + post);
+var dflt = function (dat, lvl, plvl, pre, post, st) {
+    var s = st.z || dat.length;
+    var o = new u8(pre + s + 5 * (1 + Math.ceil(s / 7000)) + post);
     // writing to this writes to the output buffer
     var w = o.subarray(pre, o.length - post);
-    var pos = 0;
-    if (!lvl || s < 8) {
-        for (var i = 0; i <= s; i += 65535) {
-            // end
-            var e = i + 65535;
-            if (e < s) {
-                // write full block
-                pos = wfblk(w, pos, dat.subarray(i, e));
-            }
-            else {
-                // write final block
-                w[i] = lst;
-                pos = wfblk(w, pos, dat.subarray(i, s));
-            }
-        }
-    }
-    else {
+    var lst = st.l;
+    var pos = (st.r || 0) & 7;
+    if (lvl) {
+        if (pos)
+            w[0] = st.r >> 3;
         var opt = deo[lvl - 1];
-        var n = opt >>> 13, c = opt & 8191;
+        var n = opt >> 13, c = opt & 8191;
         var msk_1 = (1 << plvl) - 1;
         //    prev 2-byte val map    curr 2-byte val map
-        var prev = new u16(32768), head = new u16(msk_1 + 1);
+        var prev = st.p || new u16(32768), head = st.h || new u16(msk_1 + 1);
         var bs1_1 = Math.ceil(plvl / 3), bs2_1 = 2 * bs1_1;
         var hsh = function (i) { return (dat[i] ^ (dat[i + 1] << bs1_1) ^ (dat[i + 2] << bs2_1)) & msk_1; };
         // 24576 is an arbitrary number of maximum symbols per block
         // 424 buffer for last block
-        var syms = new u32(25000);
+        var syms = new i32(25000);
         // length/literal freq   distance freq
         var lf = new u16(288), df = new u16(32);
-        //  l/lcnt  exbits  index  l/lind  waitdx  bitpos
-        var lc_1 = 0, eb = 0, i = 0, li = 0, wi = 0, bs = 0;
-        for (; i < s; ++i) {
+        //  l/lcnt  exbits  index          l/lind  waitdx          blkpos
+        var lc_1 = 0, eb = 0, i = st.i || 0, li = 0, wi = st.w || 0, bs = 0;
+        for (; i + 2 < s; ++i) {
             // hash value
             var hv = hsh(i);
-            // index mod 32768
-            var imod = i & 32767;
-            // previous index with this value
-            var pimod = head[hv];
+            // index mod 32768    previous index mod
+            var imod = i & 32767, pimod = head[hv];
             prev[imod] = pimod;
             head[hv] = imod;
             // We always should modify head and prev, but only add symbols if
@@ -16148,7 +15932,7 @@ var dflt = function (dat, lvl, plvl, pre, post, lst) {
             if (wi <= i) {
                 // bytes remaining
                 var rem = s - i;
-                if ((lc_1 > 7000 || li > 24576) && rem > 423) {
+                if ((lc_1 > 7000 || li > 24576) && (rem > 423 || !lst)) {
                     pos = wblk(dat, w, 0, syms, lf, df, eb, li, bs, i - bs, pos);
                     li = lc_1 = eb = 0, bs = i;
                     for (var j = 0; j < 286; ++j)
@@ -16157,7 +15941,7 @@ var dflt = function (dat, lvl, plvl, pre, post, lst) {
                         df[j] = 0;
                 }
                 //  len    dist   chain
-                var l = 2, d = 0, ch_1 = c, dif = (imod - pimod) & 32767;
+                var l = 2, d = 0, ch_1 = c, dif = imod - pimod & 32767;
                 if (rem > 2 && hv == hsh(i - dif)) {
                     var maxn = Math.min(n, rem) - 1;
                     var maxd = Math.min(32767, i);
@@ -16180,9 +15964,9 @@ var dflt = function (dat, lvl, plvl, pre, post, lst) {
                                 var mmd = Math.min(dif, nl - 2);
                                 var md = 0;
                                 for (var j = 0; j < mmd; ++j) {
-                                    var ti = (i - dif + j + 32768) & 32767;
+                                    var ti = i - dif + j & 32767;
                                     var pti = prev[ti];
-                                    var cd = (ti - pti + 32768) & 32767;
+                                    var cd = ti - pti & 32767;
                                     if (cd > md)
                                         md = cd, pimod = ti;
                                 }
@@ -16190,12 +15974,12 @@ var dflt = function (dat, lvl, plvl, pre, post, lst) {
                         }
                         // check the previous match
                         imod = pimod, pimod = prev[imod];
-                        dif += (imod - pimod + 32768) & 32767;
+                        dif += imod - pimod & 32767;
                     }
                 }
                 // d will be nonzero only when a match was found
                 if (d) {
-                    // store both dist and len data in one Uint32
+                    // store both dist and len data in one int32
                     // Make sure this is recognized as a len/dist with 28th bit (2^28)
                     syms[li++] = 268435456 | (revfl[l] << 18) | revfd[d];
                     var lin = revfl[l] & 31, din = revfd[d] & 31;
@@ -16211,35 +15995,69 @@ var dflt = function (dat, lvl, plvl, pre, post, lst) {
                 }
             }
         }
+        for (i = Math.max(i, wi); i < s; ++i) {
+            syms[li++] = dat[i];
+            ++lf[dat[i]];
+        }
         pos = wblk(dat, w, lst, syms, lf, df, eb, li, bs, i - bs, pos);
-        // this is the easiest way to avoid needing to maintain state
-        if (!lst)
-            pos = wfblk(w, pos, et);
+        if (!lst) {
+            st.r = (pos & 7) | w[(pos / 8) | 0] << 3;
+            // shft(pos) now 1 less if pos & 7 != 0
+            pos -= 7;
+            st.h = head, st.p = prev, st.i = i, st.w = wi;
+        }
+    }
+    else {
+        for (var i = st.w || 0; i < s + lst; i += 65535) {
+            // end
+            var e = i + 65535;
+            if (e >= s) {
+                // write final block
+                w[(pos / 8) | 0] = lst;
+                e = s;
+            }
+            pos = wfblk(w, pos + 1, dat.subarray(i, e));
+        }
+        st.i = s;
     }
     return slc(o, 0, pre + shft(pos) + post);
 };
-// Alder32
+// Adler32
 var adler = function () {
     var a = 1, b = 0;
     return {
         p: function (d) {
             // closures have awful performance
             var n = a, m = b;
-            var l = d.length;
+            var l = d.length | 0;
             for (var i = 0; i != l;) {
-                var e = Math.min(i + 5552, l);
+                var e = Math.min(i + 2655, l);
                 for (; i < e; ++i)
-                    n += d[i], m += n;
-                n %= 65521, m %= 65521;
+                    m += n += d[i];
+                n = (n & 65535) + 15 * (n >> 16), m = (m & 65535) + 15 * (m >> 16);
             }
             a = n, b = m;
         },
-        d: function () { return ((a >>> 8) << 16 | (b & 255) << 8 | (b >>> 8)) + ((a & 255) << 23) * 2; }
+        d: function () {
+            a %= 65521, b %= 65521;
+            return (a & 255) << 24 | (a & 0xFF00) << 8 | (b & 255) << 8 | (b >> 8);
+        }
     };
 };
 // deflate with opts
 var dopt = function (dat, opt, pre, post, st) {
-    return dflt(dat, opt.level == null ? 6 : opt.level, opt.mem == null ? Math.ceil(Math.max(8, Math.min(13, Math.log(dat.length))) * 1.5) : (12 + opt.mem), pre, post, !st);
+    if (!st) {
+        st = { l: 1 };
+        if (opt.dictionary) {
+            var dict = opt.dictionary.subarray(-32768);
+            var newDat = new u8(dict.length + dat.length);
+            newDat.set(dict);
+            newDat.set(dat, dict.length);
+            dat = newDat;
+            st.w = dict.length;
+        }
+    }
+    return dflt(dat, opt.level == null ? 6 : opt.level, opt.mem == null ? Math.ceil(Math.max(8, Math.min(13, Math.log(dat.length))) * 1.5) : (12 + opt.mem), pre, post, st);
 };
 // write bytes
 var wbytes = function (d, b, v) {
@@ -16249,14 +16067,13 @@ var wbytes = function (d, b, v) {
 // zlib header
 var zlh = function (c, o) {
     var lv = o.level, fl = lv == 0 ? 0 : lv < 6 ? 1 : lv == 9 ? 3 : 2;
-    c[0] = 120, c[1] = (fl << 6) | (fl ? (32 - 2 * fl) : 1);
-};
-// zlib valid
-var zlv = function (d) {
-    if ((d[0] & 15) != 8 || (d[0] >>> 4) > 7 || ((d[0] << 8 | d[1]) % 31))
-        throw 'invalid zlib data';
-    if (d[1] & 32)
-        throw 'invalid zlib data: preset dictionaries not supported';
+    c[0] = 120, c[1] = (fl << 6) | (o.dictionary && 32);
+    c[1] |= 31 - ((c[0] << 8) | c[1]) % 31;
+    if (o.dictionary) {
+        var h = adler();
+        h.p(o.dictionary);
+        wbytes(c, 2, h.d());
+    }
 };
 /**
  * Compress data with Zlib
@@ -16265,21 +16082,22 @@ var zlv = function (d) {
  * @returns The zlib-compressed version of the data
  */
 function zlibSync(data, opts) {
-    if (opts === void 0) { opts = {}; }
+    if (!opts)
+        opts = {};
     var a = adler();
     a.p(data);
-    var d = dopt(data, opts, 2, 4);
+    var d = dopt(data, opts, opts.dictionary ? 6 : 2, 4);
     return zlh(d, opts), wbytes(d, d.length - 4, a.d()), d;
 }
-/**
- * Expands Zlib data
- * @param data The data to decompress
- * @param out Where to write the data. Saves memory if you know the decompressed size and provide an output buffer of that length.
- * @returns The decompressed version of the data
- */
-function unzlibSync(data, out) {
-    return inflt((zlv(data), data.subarray(2, -4)), out);
+// text decoder
+var td = typeof TextDecoder != 'undefined' && /*#__PURE__*/ new TextDecoder();
+// text decoder stream
+var tds = 0;
+try {
+    td.decode(et, { stream: true });
+    tds = 1;
 }
+catch (e) { }
 
 /**
  * @license
@@ -16811,680 +16629,8276 @@ function unzlibSync(data, out) {
   return this;
 })(jsPDF.API);
 
-/**
- * @license
- *
- * Licensed under the MIT License.
- * http://opensource.org/licenses/mit-license
- */
+function decode(bytes, encoding = 'utf8') {
+    const decoder = new TextDecoder(encoding);
+    return decoder.decode(bytes);
+}
+const encoder = new TextEncoder();
+function encode(str) {
+    return encoder.encode(str);
+}
 
-/**
- * jsPDF jpeg Support PlugIn
- *
- * @name jpeg_support
- * @module
- */
-(function(jsPDFAPI) {
-
-  /**
-   * 0xc0 (SOF) Huffman  - Baseline DCT
-   * 0xc1 (SOF) Huffman  - Extended sequential DCT
-   * 0xc2 Progressive DCT (SOF2)
-   * 0xc3 Spatial (sequential) lossless (SOF3)
-   * 0xc4 Differential sequential DCT (SOF5)
-   * 0xc5 Differential progressive DCT (SOF6)
-   * 0xc6 Differential spatial (SOF7)
-   * 0xc7
-   */
-  var markers = [0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7];
-
-  //takes a string imgData containing the raw bytes of
-  //a jpeg image and returns [width, height]
-  //Algorithm from: http://www.64lines.com/jpeg-width-height
-  var getJpegInfo = function(imgData) {
-    var width, height, numcomponents;
-    var blockLength = imgData.charCodeAt(4) * 256 + imgData.charCodeAt(5);
-    var len = imgData.length;
-    var result = { width: 0, height: 0, numcomponents: 1 };
-    for (var i = 4; i < len; i += 2) {
-      i += blockLength;
-      if (markers.indexOf(imgData.charCodeAt(i + 1)) !== -1) {
-        height = imgData.charCodeAt(i + 5) * 256 + imgData.charCodeAt(i + 6);
-        width = imgData.charCodeAt(i + 7) * 256 + imgData.charCodeAt(i + 8);
-        numcomponents = imgData.charCodeAt(i + 9);
-        result = { width: width, height: height, numcomponents: numcomponents };
-        break;
-      } else {
-        blockLength =
-          imgData.charCodeAt(i + 2) * 256 + imgData.charCodeAt(i + 3);
-      }
-    }
-    return result;
-  };
-
-  /**
-   * @ignore
-   */
-  jsPDFAPI.processJPEG = function(
-    data,
-    index,
-    alias,
-    compression,
-    dataAsBinaryString,
-    colorSpace
-  ) {
-    var filter = this.decode.DCT_DECODE,
-      bpc = 8,
-      dims,
-      result = null;
-
-    if (
-      typeof data === "string" ||
-      this.__addimage__.isArrayBuffer(data) ||
-      this.__addimage__.isArrayBufferView(data)
-    ) {
-      // if we already have a stored binary string rep use that
-      data = dataAsBinaryString || data;
-      data = this.__addimage__.isArrayBuffer(data)
-        ? new Uint8Array(data)
-        : data;
-      data = this.__addimage__.isArrayBufferView(data)
-        ? this.__addimage__.arrayBufferToBinaryString(data)
-        : data;
-
-      dims = getJpegInfo(data);
-      switch (dims.numcomponents) {
-        case 1:
-          colorSpace = this.color_spaces.DEVICE_GRAY;
-          break;
-        case 4:
-          colorSpace = this.color_spaces.DEVICE_CMYK;
-          break;
-        case 3:
-          colorSpace = this.color_spaces.DEVICE_RGB;
-          break;
-      }
-
-      result = {
-        data: data,
-        width: dims.width,
-        height: dims.height,
-        colorSpace: colorSpace,
-        bitsPerComponent: bpc,
-        filter: filter,
-        index: index,
-        alias: alias
-      };
-    }
-    return result;
-  };
-})(jsPDF.API);
-
-// Generated by CoffeeScript 1.4.0
-
-var PNG = (function() {
-  var APNG_BLEND_OP_SOURCE,
-    APNG_DISPOSE_OP_BACKGROUND,
-    APNG_DISPOSE_OP_PREVIOUS,
-    makeImage,
-    scratchCanvas,
-    scratchCtx;
-
-  APNG_DISPOSE_OP_BACKGROUND = 1;
-
-  APNG_DISPOSE_OP_PREVIOUS = 2;
-
-  APNG_BLEND_OP_SOURCE = 0;
-
-  function PNG(data) {
-    var chunkSize,
-      colors,
-      palLen,
-      delayDen,
-      delayNum,
-      frame,
-      i,
-      index,
-      key,
-      section,
-      palShort,
-      text,
-      _i,
-      _j,
-      _ref;
-    this.data = data;
-    this.pos = 8;
-    this.palette = [];
-    this.imgData = [];
-    this.transparency = {};
-    this.animation = null;
-    this.text = {};
-    frame = null;
-    while (true) {
-      chunkSize = this.readUInt32();
-      section = function() {
-        var _i, _results;
-        _results = [];
-        for (i = _i = 0; _i < 4; i = ++_i) {
-          _results.push(String.fromCharCode(this.data[this.pos++]));
+const defaultByteLength = 1024 * 8;
+const hostBigEndian = (() => {
+    const array = new Uint8Array(4);
+    const view = new Uint32Array(array.buffer);
+    return !((view[0] = 1) & array[0]);
+})();
+const typedArrays = {
+    int8: globalThis.Int8Array,
+    uint8: globalThis.Uint8Array,
+    int16: globalThis.Int16Array,
+    uint16: globalThis.Uint16Array,
+    int32: globalThis.Int32Array,
+    uint32: globalThis.Uint32Array,
+    uint64: globalThis.BigUint64Array,
+    int64: globalThis.BigInt64Array,
+    float32: globalThis.Float32Array,
+    float64: globalThis.Float64Array,
+};
+class IOBuffer {
+    /**
+     * Reference to the internal ArrayBuffer object.
+     */
+    buffer;
+    /**
+     * Byte length of the internal ArrayBuffer.
+     */
+    byteLength;
+    /**
+     * Byte offset of the internal ArrayBuffer.
+     */
+    byteOffset;
+    /**
+     * Byte length of the internal ArrayBuffer.
+     */
+    length;
+    /**
+     * The current offset of the buffer's pointer.
+     */
+    offset;
+    lastWrittenByte;
+    littleEndian;
+    _data;
+    _mark;
+    _marks;
+    /**
+     * Create a new IOBuffer.
+     * @param data - The data to construct the IOBuffer with.
+     * If data is a number, it will be the new buffer's length<br>
+     * If data is `undefined`, the buffer will be initialized with a default length of 8Kb<br>
+     * If data is an ArrayBuffer, SharedArrayBuffer, an ArrayBufferView (Typed Array), an IOBuffer instance,
+     * or a Node.js Buffer, a view will be created over the underlying ArrayBuffer.
+     * @param options - An object for the options.
+     * @returns A new IOBuffer instance.
+     */
+    constructor(data = defaultByteLength, options = {}) {
+        let dataIsGiven = false;
+        if (typeof data === 'number') {
+            data = new ArrayBuffer(data);
         }
-        return _results;
-      }
-        .call(this)
-        .join("");
-      switch (section) {
-        case "IHDR":
-          this.width = this.readUInt32();
-          this.height = this.readUInt32();
-          this.bits = this.data[this.pos++];
-          this.colorType = this.data[this.pos++];
-          this.compressionMethod = this.data[this.pos++];
-          this.filterMethod = this.data[this.pos++];
-          this.interlaceMethod = this.data[this.pos++];
-          break;
-        case "acTL":
-          this.animation = {
-            numFrames: this.readUInt32(),
-            numPlays: this.readUInt32() || Infinity,
-            frames: []
-          };
-          break;
-        case "PLTE":
-          this.palette = this.read(chunkSize);
-          break;
-        case "fcTL":
-          if (frame) {
-            this.animation.frames.push(frame);
-          }
-          this.pos += 4;
-          frame = {
-            width: this.readUInt32(),
-            height: this.readUInt32(),
-            xOffset: this.readUInt32(),
-            yOffset: this.readUInt32()
-          };
-          delayNum = this.readUInt16();
-          delayDen = this.readUInt16() || 100;
-          frame.delay = (1000 * delayNum) / delayDen;
-          frame.disposeOp = this.data[this.pos++];
-          frame.blendOp = this.data[this.pos++];
-          frame.data = [];
-          break;
-        case "IDAT":
-        case "fdAT":
-          if (section === "fdAT") {
-            this.pos += 4;
-            chunkSize -= 4;
-          }
-          data = (frame != null ? frame.data : void 0) || this.imgData;
-          for (
-            i = _i = 0;
-            0 <= chunkSize ? _i < chunkSize : _i > chunkSize;
-            i = 0 <= chunkSize ? ++_i : --_i
-          ) {
-            data.push(this.data[this.pos++]);
-          }
-          break;
-        case "tRNS":
-          this.transparency = {};
-          switch (this.colorType) {
-            case 3:
-              palLen = this.palette.length / 3;
-              this.transparency.indexed = this.read(chunkSize);
-              if (this.transparency.indexed.length > palLen)
-                throw new Error("More transparent colors than palette size");
-              /*
-               * According to the PNG spec trns should be increased to the same size as palette if shorter
-               */
-              //palShort = 255 - this.transparency.indexed.length;
-              palShort = palLen - this.transparency.indexed.length;
-              if (palShort > 0) {
-                for (
-                  i = _j = 0;
-                  0 <= palShort ? _j < palShort : _j > palShort;
-                  i = 0 <= palShort ? ++_j : --_j
-                ) {
-                  this.transparency.indexed.push(255);
-                }
-              }
-              break;
-            case 0:
-              this.transparency.grayscale = this.read(chunkSize)[0];
-              break;
-            case 2:
-              this.transparency.rgb = this.read(chunkSize);
-          }
-          break;
-        case "tEXt":
-          text = this.read(chunkSize);
-          index = text.indexOf(0);
-          key = String.fromCharCode.apply(String, text.slice(0, index));
-          this.text[key] = String.fromCharCode.apply(
-            String,
-            text.slice(index + 1)
-          );
-          break;
-        case "IEND":
-          if (frame) {
-            this.animation.frames.push(frame);
-          }
-          this.colors = function() {
-            switch (this.colorType) {
-              case 0:
-              case 3:
-              case 4:
-                return 1;
-              case 2:
-              case 6:
-                return 3;
+        else {
+            dataIsGiven = true;
+            this.lastWrittenByte = data.byteLength;
+        }
+        const offset = options.offset ? options.offset >>> 0 : 0;
+        const byteLength = data.byteLength - offset;
+        let dvOffset = offset;
+        if (ArrayBuffer.isView(data) || data instanceof IOBuffer) {
+            if (data.byteLength !== data.buffer.byteLength) {
+                dvOffset = data.byteOffset + offset;
             }
-          }.call(this);
-          this.hasAlphaChannel = (_ref = this.colorType) === 4 || _ref === 6;
-          colors = this.colors + (this.hasAlphaChannel ? 1 : 0);
-          this.pixelBitlength = this.bits * colors;
-          this.colorSpace = function() {
-            switch (this.colors) {
-              case 1:
-                return "DeviceGray";
-              case 3:
-                return "DeviceRGB";
-            }
-          }.call(this);
-          this.imgData = new Uint8Array(this.imgData);
-          return;
-        default:
-          this.pos += chunkSize;
+            data = data.buffer;
+        }
+        if (dataIsGiven) {
+            this.lastWrittenByte = byteLength;
+        }
+        else {
+            this.lastWrittenByte = 0;
+        }
+        this.buffer = data;
+        this.length = byteLength;
+        this.byteLength = byteLength;
+        this.byteOffset = dvOffset;
+        this.offset = 0;
+        this.littleEndian = true;
+        this._data = new DataView(this.buffer, dvOffset, byteLength);
+        this._mark = 0;
+        this._marks = [];
+    }
+    /**
+     * Checks if the memory allocated to the buffer is sufficient to store more
+     * bytes after the offset.
+     * @param byteLength - The needed memory in bytes.
+     * @returns `true` if there is sufficient space and `false` otherwise.
+     */
+    available(byteLength = 1) {
+        return this.offset + byteLength <= this.length;
+    }
+    /**
+     * Check if little-endian mode is used for reading and writing multi-byte
+     * values.
+     * @returns `true` if little-endian mode is used, `false` otherwise.
+     */
+    isLittleEndian() {
+        return this.littleEndian;
+    }
+    /**
+     * Set little-endian mode for reading and writing multi-byte values.
+     * @returns This.
+     */
+    setLittleEndian() {
+        this.littleEndian = true;
+        return this;
+    }
+    /**
+     * Check if big-endian mode is used for reading and writing multi-byte values.
+     * @returns `true` if big-endian mode is used, `false` otherwise.
+     */
+    isBigEndian() {
+        return !this.littleEndian;
+    }
+    /**
+     * Switches to big-endian mode for reading and writing multi-byte values.
+     * @returns This.
+     */
+    setBigEndian() {
+        this.littleEndian = false;
+        return this;
+    }
+    /**
+     * Move the pointer n bytes forward.
+     * @param n - Number of bytes to skip.
+     * @returns This.
+     */
+    skip(n = 1) {
+        this.offset += n;
+        return this;
+    }
+    /**
+     * Move the pointer n bytes backward.
+     * @param n - Number of bytes to move back.
+     * @returns This.
+     */
+    back(n = 1) {
+        this.offset -= n;
+        return this;
+    }
+    /**
+     * Move the pointer to the given offset.
+     * @param offset - The offset to move to.
+     * @returns This.
+     */
+    seek(offset) {
+        this.offset = offset;
+        return this;
+    }
+    /**
+     * Store the current pointer offset.
+     * @see {@link IOBuffer#reset}
+     * @returns This.
+     */
+    mark() {
+        this._mark = this.offset;
+        return this;
+    }
+    /**
+     * Move the pointer back to the last pointer offset set by mark.
+     * @see {@link IOBuffer#mark}
+     * @returns This.
+     */
+    reset() {
+        this.offset = this._mark;
+        return this;
+    }
+    /**
+     * Push the current pointer offset to the mark stack.
+     * @see {@link IOBuffer#popMark}
+     * @returns This.
+     */
+    pushMark() {
+        this._marks.push(this.offset);
+        return this;
+    }
+    /**
+     * Pop the last pointer offset from the mark stack, and set the current
+     * pointer offset to the popped value.
+     * @see {@link IOBuffer#pushMark}
+     * @returns This.
+     */
+    popMark() {
+        const offset = this._marks.pop();
+        if (offset === undefined) {
+            throw new Error('Mark stack empty');
+        }
+        this.seek(offset);
+        return this;
+    }
+    /**
+     * Move the pointer offset back to 0.
+     * @returns This.
+     */
+    rewind() {
+        this.offset = 0;
+        return this;
+    }
+    /**
+     * Make sure the buffer has sufficient memory to write a given byteLength at
+     * the current pointer offset.
+     * If the buffer's memory is insufficient, this method will create a new
+     * buffer (a copy) with a length that is twice (byteLength + current offset).
+     * @param byteLength - The needed memory in bytes.
+     * @returns This.
+     */
+    ensureAvailable(byteLength = 1) {
+        if (!this.available(byteLength)) {
+            const lengthNeeded = this.offset + byteLength;
+            const newLength = lengthNeeded * 2;
+            const newArray = new Uint8Array(newLength);
+            newArray.set(new Uint8Array(this.buffer));
+            this.buffer = newArray.buffer;
+            this.length = newLength;
+            this.byteLength = newLength;
+            this._data = new DataView(this.buffer);
+        }
+        return this;
+    }
+    /**
+     * Read a byte and return false if the byte's value is 0, or true otherwise.
+     * Moves pointer forward by one byte.
+     * @returns The read boolean.
+     */
+    readBoolean() {
+        return this.readUint8() !== 0;
+    }
+    /**
+     * Read a signed 8-bit integer and move pointer forward by 1 byte.
+     * @returns The read byte.
+     */
+    readInt8() {
+        return this._data.getInt8(this.offset++);
+    }
+    /**
+     * Read an unsigned 8-bit integer and move pointer forward by 1 byte.
+     * @returns The read byte.
+     */
+    readUint8() {
+        return this._data.getUint8(this.offset++);
+    }
+    /**
+     * Alias for {@link IOBuffer#readUint8}.
+     * @returns The read byte.
+     */
+    readByte() {
+        return this.readUint8();
+    }
+    /**
+     * Read `n` bytes and move pointer forward by `n` bytes.
+     * @param n - Number of bytes to read.
+     * @returns The read bytes.
+     */
+    readBytes(n = 1) {
+        return this.readArray(n, 'uint8');
+    }
+    /**
+     * Creates an array of corresponding to the type `type` and size `size`.
+     * For example type `uint8` will create a `Uint8Array`.
+     * @param size - size of the resulting array
+     * @param type - number type of elements to read
+     * @returns The read array.
+     */
+    readArray(size, type) {
+        const bytes = typedArrays[type].BYTES_PER_ELEMENT * size;
+        const offset = this.byteOffset + this.offset;
+        const slice = this.buffer.slice(offset, offset + bytes);
+        if (this.littleEndian === hostBigEndian &&
+            type !== 'uint8' &&
+            type !== 'int8') {
+            const slice = new Uint8Array(this.buffer.slice(offset, offset + bytes));
+            slice.reverse();
+            const returnArray = new typedArrays[type](slice.buffer);
+            this.offset += bytes;
+            returnArray.reverse();
+            return returnArray;
+        }
+        const returnArray = new typedArrays[type](slice);
+        this.offset += bytes;
+        return returnArray;
+    }
+    /**
+     * Read a 16-bit signed integer and move pointer forward by 2 bytes.
+     * @returns The read value.
+     */
+    readInt16() {
+        const value = this._data.getInt16(this.offset, this.littleEndian);
+        this.offset += 2;
+        return value;
+    }
+    /**
+     * Read a 16-bit unsigned integer and move pointer forward by 2 bytes.
+     * @returns The read value.
+     */
+    readUint16() {
+        const value = this._data.getUint16(this.offset, this.littleEndian);
+        this.offset += 2;
+        return value;
+    }
+    /**
+     * Read a 32-bit signed integer and move pointer forward by 4 bytes.
+     * @returns The read value.
+     */
+    readInt32() {
+        const value = this._data.getInt32(this.offset, this.littleEndian);
+        this.offset += 4;
+        return value;
+    }
+    /**
+     * Read a 32-bit unsigned integer and move pointer forward by 4 bytes.
+     * @returns The read value.
+     */
+    readUint32() {
+        const value = this._data.getUint32(this.offset, this.littleEndian);
+        this.offset += 4;
+        return value;
+    }
+    /**
+     * Read a 32-bit floating number and move pointer forward by 4 bytes.
+     * @returns The read value.
+     */
+    readFloat32() {
+        const value = this._data.getFloat32(this.offset, this.littleEndian);
+        this.offset += 4;
+        return value;
+    }
+    /**
+     * Read a 64-bit floating number and move pointer forward by 8 bytes.
+     * @returns The read value.
+     */
+    readFloat64() {
+        const value = this._data.getFloat64(this.offset, this.littleEndian);
+        this.offset += 8;
+        return value;
+    }
+    /**
+     * Read a 64-bit signed integer number and move pointer forward by 8 bytes.
+     * @returns The read value.
+     */
+    readBigInt64() {
+        const value = this._data.getBigInt64(this.offset, this.littleEndian);
+        this.offset += 8;
+        return value;
+    }
+    /**
+     * Read a 64-bit unsigned integer number and move pointer forward by 8 bytes.
+     * @returns The read value.
+     */
+    readBigUint64() {
+        const value = this._data.getBigUint64(this.offset, this.littleEndian);
+        this.offset += 8;
+        return value;
+    }
+    /**
+     * Read a 1-byte ASCII character and move pointer forward by 1 byte.
+     * @returns The read character.
+     */
+    readChar() {
+        // eslint-disable-next-line unicorn/prefer-code-point
+        return String.fromCharCode(this.readInt8());
+    }
+    /**
+     * Read `n` 1-byte ASCII characters and move pointer forward by `n` bytes.
+     * @param n - Number of characters to read.
+     * @returns The read characters.
+     */
+    readChars(n = 1) {
+        let result = '';
+        for (let i = 0; i < n; i++) {
+            result += this.readChar();
+        }
+        return result;
+    }
+    /**
+     * Read the next `n` bytes, return a UTF-8 decoded string and move pointer
+     * forward by `n` bytes.
+     * @param n - Number of bytes to read.
+     * @returns The decoded string.
+     */
+    readUtf8(n = 1) {
+        return decode(this.readBytes(n));
+    }
+    /**
+     * Read the next `n` bytes, return a string decoded with `encoding` and move pointer
+     * forward by `n` bytes.
+     * If no encoding is passed, the function is equivalent to @see {@link IOBuffer#readUtf8}
+     * @param n - Number of bytes to read.
+     * @param encoding - The encoding to use. Default is 'utf8'.
+     * @returns The decoded string.
+     */
+    decodeText(n = 1, encoding = 'utf8') {
+        return decode(this.readBytes(n), encoding);
+    }
+    /**
+     * Write 0xff if the passed value is truthy, 0x00 otherwise and move pointer
+     * forward by 1 byte.
+     * @param value - The value to write.
+     * @returns This.
+     */
+    writeBoolean(value) {
+        this.writeUint8(value ? 0xff : 0x00);
+        return this;
+    }
+    /**
+     * Write `value` as an 8-bit signed integer and move pointer forward by 1 byte.
+     * @param value - The value to write.
+     * @returns This.
+     */
+    writeInt8(value) {
+        this.ensureAvailable(1);
+        this._data.setInt8(this.offset++, value);
+        this._updateLastWrittenByte();
+        return this;
+    }
+    /**
+     * Write `value` as an 8-bit unsigned integer and move pointer forward by 1
+     * byte.
+     * @param value - The value to write.
+     * @returns This.
+     */
+    writeUint8(value) {
+        this.ensureAvailable(1);
+        this._data.setUint8(this.offset++, value);
+        this._updateLastWrittenByte();
+        return this;
+    }
+    /**
+     * An alias for {@link IOBuffer#writeUint8}.
+     * @param value - The value to write.
+     * @returns This.
+     */
+    writeByte(value) {
+        return this.writeUint8(value);
+    }
+    /**
+     * Write all elements of `bytes` as uint8 values and move pointer forward by
+     * `bytes.length` bytes.
+     * @param bytes - The array of bytes to write.
+     * @returns This.
+     */
+    writeBytes(bytes) {
+        this.ensureAvailable(bytes.length);
+        // eslint-disable-next-line @typescript-eslint/prefer-for-of
+        for (let i = 0; i < bytes.length; i++) {
+            this._data.setUint8(this.offset++, bytes[i]);
+        }
+        this._updateLastWrittenByte();
+        return this;
+    }
+    /**
+     * Write `value` as a 16-bit signed integer and move pointer forward by 2
+     * bytes.
+     * @param value - The value to write.
+     * @returns This.
+     */
+    writeInt16(value) {
+        this.ensureAvailable(2);
+        this._data.setInt16(this.offset, value, this.littleEndian);
+        this.offset += 2;
+        this._updateLastWrittenByte();
+        return this;
+    }
+    /**
+     * Write `value` as a 16-bit unsigned integer and move pointer forward by 2
+     * bytes.
+     * @param value - The value to write.
+     * @returns This.
+     */
+    writeUint16(value) {
+        this.ensureAvailable(2);
+        this._data.setUint16(this.offset, value, this.littleEndian);
+        this.offset += 2;
+        this._updateLastWrittenByte();
+        return this;
+    }
+    /**
+     * Write `value` as a 32-bit signed integer and move pointer forward by 4
+     * bytes.
+     * @param value - The value to write.
+     * @returns This.
+     */
+    writeInt32(value) {
+        this.ensureAvailable(4);
+        this._data.setInt32(this.offset, value, this.littleEndian);
+        this.offset += 4;
+        this._updateLastWrittenByte();
+        return this;
+    }
+    /**
+     * Write `value` as a 32-bit unsigned integer and move pointer forward by 4
+     * bytes.
+     * @param value - The value to write.
+     * @returns This.
+     */
+    writeUint32(value) {
+        this.ensureAvailable(4);
+        this._data.setUint32(this.offset, value, this.littleEndian);
+        this.offset += 4;
+        this._updateLastWrittenByte();
+        return this;
+    }
+    /**
+     * Write `value` as a 32-bit floating number and move pointer forward by 4
+     * bytes.
+     * @param value - The value to write.
+     * @returns This.
+     */
+    writeFloat32(value) {
+        this.ensureAvailable(4);
+        this._data.setFloat32(this.offset, value, this.littleEndian);
+        this.offset += 4;
+        this._updateLastWrittenByte();
+        return this;
+    }
+    /**
+     * Write `value` as a 64-bit floating number and move pointer forward by 8
+     * bytes.
+     * @param value - The value to write.
+     * @returns This.
+     */
+    writeFloat64(value) {
+        this.ensureAvailable(8);
+        this._data.setFloat64(this.offset, value, this.littleEndian);
+        this.offset += 8;
+        this._updateLastWrittenByte();
+        return this;
+    }
+    /**
+     * Write `value` as a 64-bit signed bigint and move pointer forward by 8
+     * bytes.
+     * @param value - The value to write.
+     * @returns This.
+     */
+    writeBigInt64(value) {
+        this.ensureAvailable(8);
+        this._data.setBigInt64(this.offset, value, this.littleEndian);
+        this.offset += 8;
+        this._updateLastWrittenByte();
+        return this;
+    }
+    /**
+     * Write `value` as a 64-bit unsigned bigint and move pointer forward by 8
+     * bytes.
+     * @param value - The value to write.
+     * @returns This.
+     */
+    writeBigUint64(value) {
+        this.ensureAvailable(8);
+        this._data.setBigUint64(this.offset, value, this.littleEndian);
+        this.offset += 8;
+        this._updateLastWrittenByte();
+        return this;
+    }
+    /**
+     * Write the charCode of `str`'s first character as an 8-bit unsigned integer
+     * and move pointer forward by 1 byte.
+     * @param str - The character to write.
+     * @returns This.
+     */
+    writeChar(str) {
+        // eslint-disable-next-line unicorn/prefer-code-point
+        return this.writeUint8(str.charCodeAt(0));
+    }
+    /**
+     * Write the charCodes of all `str`'s characters as 8-bit unsigned integers
+     * and move pointer forward by `str.length` bytes.
+     * @param str - The characters to write.
+     * @returns This.
+     */
+    writeChars(str) {
+        for (let i = 0; i < str.length; i++) {
+            // eslint-disable-next-line unicorn/prefer-code-point
+            this.writeUint8(str.charCodeAt(i));
+        }
+        return this;
+    }
+    /**
+     * UTF-8 encode and write `str` to the current pointer offset and move pointer
+     * forward according to the encoded length.
+     * @param str - The string to write.
+     * @returns This.
+     */
+    writeUtf8(str) {
+        return this.writeBytes(encode(str));
+    }
+    /**
+     * Export a Uint8Array view of the internal buffer.
+     * The view starts at the byte offset and its length
+     * is calculated to stop at the last written byte or the original length.
+     * @returns A new Uint8Array view.
+     */
+    toArray() {
+        return new Uint8Array(this.buffer, this.byteOffset, this.lastWrittenByte);
+    }
+    /**
+     *  Get the total number of bytes written so far, regardless of the current offset.
+     * @returns - Total number of bytes.
+     */
+    getWrittenByteLength() {
+        return this.lastWrittenByte - this.byteOffset;
+    }
+    /**
+     * Update the last written byte offset
+     * @private
+     */
+    _updateLastWrittenByte() {
+        if (this.offset > this.lastWrittenByte) {
+            this.lastWrittenByte = this.offset;
+        }
+    }
+}
+
+/*! pako 2.1.0 https://github.com/nodeca/pako @license (MIT AND Zlib) */
+// (C) 1995-2013 Jean-loup Gailly and Mark Adler
+// (C) 2014-2017 Vitaly Puzrin and Andrey Tupitsin
+//
+// This software is provided 'as-is', without any express or implied
+// warranty. In no event will the authors be held liable for any damages
+// arising from the use of this software.
+//
+// Permission is granted to anyone to use this software for any purpose,
+// including commercial applications, and to alter it and redistribute it
+// freely, subject to the following restrictions:
+//
+// 1. The origin of this software must not be misrepresented; you must not
+//   claim that you wrote the original software. If you use this software
+//   in a product, an acknowledgment in the product documentation would be
+//   appreciated but is not required.
+// 2. Altered source versions must be plainly marked as such, and must not be
+//   misrepresented as being the original software.
+// 3. This notice may not be removed or altered from any source distribution.
+
+/* eslint-disable space-unary-ops */
+
+/* Public constants ==========================================================*/
+/* ===========================================================================*/
+
+
+//const Z_FILTERED          = 1;
+//const Z_HUFFMAN_ONLY      = 2;
+//const Z_RLE               = 3;
+const Z_FIXED$1               = 4;
+//const Z_DEFAULT_STRATEGY  = 0;
+
+/* Possible values of the data_type field (though see inflate()) */
+const Z_BINARY              = 0;
+const Z_TEXT                = 1;
+//const Z_ASCII             = 1; // = Z_TEXT
+const Z_UNKNOWN$1             = 2;
+
+/*============================================================================*/
+
+
+function zero$1(buf) { let len = buf.length; while (--len >= 0) { buf[len] = 0; } }
+
+// From zutil.h
+
+const STORED_BLOCK = 0;
+const STATIC_TREES = 1;
+const DYN_TREES    = 2;
+/* The three kinds of block type */
+
+const MIN_MATCH$1    = 3;
+const MAX_MATCH$1    = 258;
+/* The minimum and maximum match lengths */
+
+// From deflate.h
+/* ===========================================================================
+ * Internal compression state.
+ */
+
+const LENGTH_CODES$1  = 29;
+/* number of length codes, not counting the special END_BLOCK code */
+
+const LITERALS$1      = 256;
+/* number of literal bytes 0..255 */
+
+const L_CODES$1       = LITERALS$1 + 1 + LENGTH_CODES$1;
+/* number of Literal or Length codes, including the END_BLOCK code */
+
+const D_CODES$1       = 30;
+/* number of distance codes */
+
+const BL_CODES$1      = 19;
+/* number of codes used to transfer the bit lengths */
+
+const HEAP_SIZE$1     = 2 * L_CODES$1 + 1;
+/* maximum heap size */
+
+const MAX_BITS$1      = 15;
+/* All codes must not exceed MAX_BITS bits */
+
+const Buf_size      = 16;
+/* size of bit buffer in bi_buf */
+
+
+/* ===========================================================================
+ * Constants
+ */
+
+const MAX_BL_BITS = 7;
+/* Bit length codes must not exceed MAX_BL_BITS bits */
+
+const END_BLOCK   = 256;
+/* end of block literal code */
+
+const REP_3_6     = 16;
+/* repeat previous bit length 3-6 times (2 bits of repeat count) */
+
+const REPZ_3_10   = 17;
+/* repeat a zero length 3-10 times  (3 bits of repeat count) */
+
+const REPZ_11_138 = 18;
+/* repeat a zero length 11-138 times  (7 bits of repeat count) */
+
+/* eslint-disable comma-spacing,array-bracket-spacing */
+const extra_lbits =   /* extra bits for each length code */
+  new Uint8Array([0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0]);
+
+const extra_dbits =   /* extra bits for each distance code */
+  new Uint8Array([0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13]);
+
+const extra_blbits =  /* extra bits for each bit length code */
+  new Uint8Array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,3,7]);
+
+const bl_order =
+  new Uint8Array([16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15]);
+/* eslint-enable comma-spacing,array-bracket-spacing */
+
+/* The lengths of the bit length codes are sent in order of decreasing
+ * probability, to avoid transmitting the lengths for unused bit length codes.
+ */
+
+/* ===========================================================================
+ * Local data. These are initialized only once.
+ */
+
+// We pre-fill arrays with 0 to avoid uninitialized gaps
+
+const DIST_CODE_LEN = 512; /* see definition of array dist_code below */
+
+// !!!! Use flat array instead of structure, Freq = i*2, Len = i*2+1
+const static_ltree  = new Array((L_CODES$1 + 2) * 2);
+zero$1(static_ltree);
+/* The static literal tree. Since the bit lengths are imposed, there is no
+ * need for the L_CODES extra codes used during heap construction. However
+ * The codes 286 and 287 are needed to build a canonical tree (see _tr_init
+ * below).
+ */
+
+const static_dtree  = new Array(D_CODES$1 * 2);
+zero$1(static_dtree);
+/* The static distance tree. (Actually a trivial tree since all codes use
+ * 5 bits.)
+ */
+
+const _dist_code    = new Array(DIST_CODE_LEN);
+zero$1(_dist_code);
+/* Distance codes. The first 256 values correspond to the distances
+ * 3 .. 258, the last 256 values correspond to the top 8 bits of
+ * the 15 bit distances.
+ */
+
+const _length_code  = new Array(MAX_MATCH$1 - MIN_MATCH$1 + 1);
+zero$1(_length_code);
+/* length code for each normalized match length (0 == MIN_MATCH) */
+
+const base_length   = new Array(LENGTH_CODES$1);
+zero$1(base_length);
+/* First normalized length for each code (0 = MIN_MATCH) */
+
+const base_dist     = new Array(D_CODES$1);
+zero$1(base_dist);
+/* First normalized distance for each code (0 = distance of 1) */
+
+
+function StaticTreeDesc(static_tree, extra_bits, extra_base, elems, max_length) {
+
+  this.static_tree  = static_tree;  /* static tree or NULL */
+  this.extra_bits   = extra_bits;   /* extra bits for each code or NULL */
+  this.extra_base   = extra_base;   /* base index for extra_bits */
+  this.elems        = elems;        /* max number of elements in the tree */
+  this.max_length   = max_length;   /* max bit length for the codes */
+
+  // show if `static_tree` has data or dummy - needed for monomorphic objects
+  this.has_stree    = static_tree && static_tree.length;
+}
+
+
+let static_l_desc;
+let static_d_desc;
+let static_bl_desc;
+
+
+function TreeDesc(dyn_tree, stat_desc) {
+  this.dyn_tree = dyn_tree;     /* the dynamic tree */
+  this.max_code = 0;            /* largest code with non zero frequency */
+  this.stat_desc = stat_desc;   /* the corresponding static tree */
+}
+
+
+
+const d_code = (dist) => {
+
+  return dist < 256 ? _dist_code[dist] : _dist_code[256 + (dist >>> 7)];
+};
+
+
+/* ===========================================================================
+ * Output a short LSB first on the stream.
+ * IN assertion: there is enough room in pendingBuf.
+ */
+const put_short = (s, w) => {
+//    put_byte(s, (uch)((w) & 0xff));
+//    put_byte(s, (uch)((ush)(w) >> 8));
+  s.pending_buf[s.pending++] = (w) & 0xff;
+  s.pending_buf[s.pending++] = (w >>> 8) & 0xff;
+};
+
+
+/* ===========================================================================
+ * Send a value on a given number of bits.
+ * IN assertion: length <= 16 and value fits in length bits.
+ */
+const send_bits = (s, value, length) => {
+
+  if (s.bi_valid > (Buf_size - length)) {
+    s.bi_buf |= (value << s.bi_valid) & 0xffff;
+    put_short(s, s.bi_buf);
+    s.bi_buf = value >> (Buf_size - s.bi_valid);
+    s.bi_valid += length - Buf_size;
+  } else {
+    s.bi_buf |= (value << s.bi_valid) & 0xffff;
+    s.bi_valid += length;
+  }
+};
+
+
+const send_code = (s, c, tree) => {
+
+  send_bits(s, tree[c * 2]/*.Code*/, tree[c * 2 + 1]/*.Len*/);
+};
+
+
+/* ===========================================================================
+ * Reverse the first len bits of a code, using straightforward code (a faster
+ * method would use a table)
+ * IN assertion: 1 <= len <= 15
+ */
+const bi_reverse = (code, len) => {
+
+  let res = 0;
+  do {
+    res |= code & 1;
+    code >>>= 1;
+    res <<= 1;
+  } while (--len > 0);
+  return res >>> 1;
+};
+
+
+/* ===========================================================================
+ * Flush the bit buffer, keeping at most 7 bits in it.
+ */
+const bi_flush = (s) => {
+
+  if (s.bi_valid === 16) {
+    put_short(s, s.bi_buf);
+    s.bi_buf = 0;
+    s.bi_valid = 0;
+
+  } else if (s.bi_valid >= 8) {
+    s.pending_buf[s.pending++] = s.bi_buf & 0xff;
+    s.bi_buf >>= 8;
+    s.bi_valid -= 8;
+  }
+};
+
+
+/* ===========================================================================
+ * Compute the optimal bit lengths for a tree and update the total bit length
+ * for the current block.
+ * IN assertion: the fields freq and dad are set, heap[heap_max] and
+ *    above are the tree nodes sorted by increasing frequency.
+ * OUT assertions: the field len is set to the optimal bit length, the
+ *     array bl_count contains the frequencies for each bit length.
+ *     The length opt_len is updated; static_len is also updated if stree is
+ *     not null.
+ */
+const gen_bitlen = (s, desc) => {
+//    deflate_state *s;
+//    tree_desc *desc;    /* the tree descriptor */
+
+  const tree            = desc.dyn_tree;
+  const max_code        = desc.max_code;
+  const stree           = desc.stat_desc.static_tree;
+  const has_stree       = desc.stat_desc.has_stree;
+  const extra           = desc.stat_desc.extra_bits;
+  const base            = desc.stat_desc.extra_base;
+  const max_length      = desc.stat_desc.max_length;
+  let h;              /* heap index */
+  let n, m;           /* iterate over the tree elements */
+  let bits;           /* bit length */
+  let xbits;          /* extra bits */
+  let f;              /* frequency */
+  let overflow = 0;   /* number of elements with bit length too large */
+
+  for (bits = 0; bits <= MAX_BITS$1; bits++) {
+    s.bl_count[bits] = 0;
+  }
+
+  /* In a first pass, compute the optimal bit lengths (which may
+   * overflow in the case of the bit length tree).
+   */
+  tree[s.heap[s.heap_max] * 2 + 1]/*.Len*/ = 0; /* root of the heap */
+
+  for (h = s.heap_max + 1; h < HEAP_SIZE$1; h++) {
+    n = s.heap[h];
+    bits = tree[tree[n * 2 + 1]/*.Dad*/ * 2 + 1]/*.Len*/ + 1;
+    if (bits > max_length) {
+      bits = max_length;
+      overflow++;
+    }
+    tree[n * 2 + 1]/*.Len*/ = bits;
+    /* We overwrite tree[n].Dad which is no longer needed */
+
+    if (n > max_code) { continue; } /* not a leaf node */
+
+    s.bl_count[bits]++;
+    xbits = 0;
+    if (n >= base) {
+      xbits = extra[n - base];
+    }
+    f = tree[n * 2]/*.Freq*/;
+    s.opt_len += f * (bits + xbits);
+    if (has_stree) {
+      s.static_len += f * (stree[n * 2 + 1]/*.Len*/ + xbits);
+    }
+  }
+  if (overflow === 0) { return; }
+
+  // Tracev((stderr,"\nbit length overflow\n"));
+  /* This happens for example on obj2 and pic of the Calgary corpus */
+
+  /* Find the first bit length which could increase: */
+  do {
+    bits = max_length - 1;
+    while (s.bl_count[bits] === 0) { bits--; }
+    s.bl_count[bits]--;      /* move one leaf down the tree */
+    s.bl_count[bits + 1] += 2; /* move one overflow item as its brother */
+    s.bl_count[max_length]--;
+    /* The brother of the overflow item also moves one step up,
+     * but this does not affect bl_count[max_length]
+     */
+    overflow -= 2;
+  } while (overflow > 0);
+
+  /* Now recompute all bit lengths, scanning in increasing frequency.
+   * h is still equal to HEAP_SIZE. (It is simpler to reconstruct all
+   * lengths instead of fixing only the wrong ones. This idea is taken
+   * from 'ar' written by Haruhiko Okumura.)
+   */
+  for (bits = max_length; bits !== 0; bits--) {
+    n = s.bl_count[bits];
+    while (n !== 0) {
+      m = s.heap[--h];
+      if (m > max_code) { continue; }
+      if (tree[m * 2 + 1]/*.Len*/ !== bits) {
+        // Tracev((stderr,"code %d bits %d->%d\n", m, tree[m].Len, bits));
+        s.opt_len += (bits - tree[m * 2 + 1]/*.Len*/) * tree[m * 2]/*.Freq*/;
+        tree[m * 2 + 1]/*.Len*/ = bits;
       }
-      this.pos += 4;
-      if (this.pos > this.data.length) {
-        throw new Error("Incomplete or corrupt PNG file");
+      n--;
+    }
+  }
+};
+
+
+/* ===========================================================================
+ * Generate the codes for a given tree and bit counts (which need not be
+ * optimal).
+ * IN assertion: the array bl_count contains the bit length statistics for
+ * the given tree and the field len is set for all tree elements.
+ * OUT assertion: the field code is set for all tree elements of non
+ *     zero code length.
+ */
+const gen_codes = (tree, max_code, bl_count) => {
+//    ct_data *tree;             /* the tree to decorate */
+//    int max_code;              /* largest code with non zero frequency */
+//    ushf *bl_count;            /* number of codes at each bit length */
+
+  const next_code = new Array(MAX_BITS$1 + 1); /* next code value for each bit length */
+  let code = 0;              /* running code value */
+  let bits;                  /* bit index */
+  let n;                     /* code index */
+
+  /* The distribution counts are first used to generate the code values
+   * without bit reversal.
+   */
+  for (bits = 1; bits <= MAX_BITS$1; bits++) {
+    code = (code + bl_count[bits - 1]) << 1;
+    next_code[bits] = code;
+  }
+  /* Check that the bit counts in bl_count are consistent. The last code
+   * must be all ones.
+   */
+  //Assert (code + bl_count[MAX_BITS]-1 == (1<<MAX_BITS)-1,
+  //        "inconsistent bit counts");
+  //Tracev((stderr,"\ngen_codes: max_code %d ", max_code));
+
+  for (n = 0;  n <= max_code; n++) {
+    let len = tree[n * 2 + 1]/*.Len*/;
+    if (len === 0) { continue; }
+    /* Now reverse the bits */
+    tree[n * 2]/*.Code*/ = bi_reverse(next_code[len]++, len);
+
+    //Tracecv(tree != static_ltree, (stderr,"\nn %3d %c l %2d c %4x (%x) ",
+    //     n, (isgraph(n) ? n : ' '), len, tree[n].Code, next_code[len]-1));
+  }
+};
+
+
+/* ===========================================================================
+ * Initialize the various 'constant' tables.
+ */
+const tr_static_init = () => {
+
+  let n;        /* iterates over tree elements */
+  let bits;     /* bit counter */
+  let length;   /* length value */
+  let code;     /* code value */
+  let dist;     /* distance index */
+  const bl_count = new Array(MAX_BITS$1 + 1);
+  /* number of codes at each bit length for an optimal tree */
+
+  // do check in _tr_init()
+  //if (static_init_done) return;
+
+  /* For some embedded targets, global variables are not initialized: */
+/*#ifdef NO_INIT_GLOBAL_POINTERS
+  static_l_desc.static_tree = static_ltree;
+  static_l_desc.extra_bits = extra_lbits;
+  static_d_desc.static_tree = static_dtree;
+  static_d_desc.extra_bits = extra_dbits;
+  static_bl_desc.extra_bits = extra_blbits;
+#endif*/
+
+  /* Initialize the mapping length (0..255) -> length code (0..28) */
+  length = 0;
+  for (code = 0; code < LENGTH_CODES$1 - 1; code++) {
+    base_length[code] = length;
+    for (n = 0; n < (1 << extra_lbits[code]); n++) {
+      _length_code[length++] = code;
+    }
+  }
+  //Assert (length == 256, "tr_static_init: length != 256");
+  /* Note that the length 255 (match length 258) can be represented
+   * in two different ways: code 284 + 5 bits or code 285, so we
+   * overwrite length_code[255] to use the best encoding:
+   */
+  _length_code[length - 1] = code;
+
+  /* Initialize the mapping dist (0..32K) -> dist code (0..29) */
+  dist = 0;
+  for (code = 0; code < 16; code++) {
+    base_dist[code] = dist;
+    for (n = 0; n < (1 << extra_dbits[code]); n++) {
+      _dist_code[dist++] = code;
+    }
+  }
+  //Assert (dist == 256, "tr_static_init: dist != 256");
+  dist >>= 7; /* from now on, all distances are divided by 128 */
+  for (; code < D_CODES$1; code++) {
+    base_dist[code] = dist << 7;
+    for (n = 0; n < (1 << (extra_dbits[code] - 7)); n++) {
+      _dist_code[256 + dist++] = code;
+    }
+  }
+  //Assert (dist == 256, "tr_static_init: 256+dist != 512");
+
+  /* Construct the codes of the static literal tree */
+  for (bits = 0; bits <= MAX_BITS$1; bits++) {
+    bl_count[bits] = 0;
+  }
+
+  n = 0;
+  while (n <= 143) {
+    static_ltree[n * 2 + 1]/*.Len*/ = 8;
+    n++;
+    bl_count[8]++;
+  }
+  while (n <= 255) {
+    static_ltree[n * 2 + 1]/*.Len*/ = 9;
+    n++;
+    bl_count[9]++;
+  }
+  while (n <= 279) {
+    static_ltree[n * 2 + 1]/*.Len*/ = 7;
+    n++;
+    bl_count[7]++;
+  }
+  while (n <= 287) {
+    static_ltree[n * 2 + 1]/*.Len*/ = 8;
+    n++;
+    bl_count[8]++;
+  }
+  /* Codes 286 and 287 do not exist, but we must include them in the
+   * tree construction to get a canonical Huffman tree (longest code
+   * all ones)
+   */
+  gen_codes(static_ltree, L_CODES$1 + 1, bl_count);
+
+  /* The static distance tree is trivial: */
+  for (n = 0; n < D_CODES$1; n++) {
+    static_dtree[n * 2 + 1]/*.Len*/ = 5;
+    static_dtree[n * 2]/*.Code*/ = bi_reverse(n, 5);
+  }
+
+  // Now data ready and we can init static trees
+  static_l_desc = new StaticTreeDesc(static_ltree, extra_lbits, LITERALS$1 + 1, L_CODES$1, MAX_BITS$1);
+  static_d_desc = new StaticTreeDesc(static_dtree, extra_dbits, 0,          D_CODES$1, MAX_BITS$1);
+  static_bl_desc = new StaticTreeDesc(new Array(0), extra_blbits, 0,         BL_CODES$1, MAX_BL_BITS);
+
+  //static_init_done = true;
+};
+
+
+/* ===========================================================================
+ * Initialize a new block.
+ */
+const init_block = (s) => {
+
+  let n; /* iterates over tree elements */
+
+  /* Initialize the trees. */
+  for (n = 0; n < L_CODES$1;  n++) { s.dyn_ltree[n * 2]/*.Freq*/ = 0; }
+  for (n = 0; n < D_CODES$1;  n++) { s.dyn_dtree[n * 2]/*.Freq*/ = 0; }
+  for (n = 0; n < BL_CODES$1; n++) { s.bl_tree[n * 2]/*.Freq*/ = 0; }
+
+  s.dyn_ltree[END_BLOCK * 2]/*.Freq*/ = 1;
+  s.opt_len = s.static_len = 0;
+  s.sym_next = s.matches = 0;
+};
+
+
+/* ===========================================================================
+ * Flush the bit buffer and align the output on a byte boundary
+ */
+const bi_windup = (s) =>
+{
+  if (s.bi_valid > 8) {
+    put_short(s, s.bi_buf);
+  } else if (s.bi_valid > 0) {
+    //put_byte(s, (Byte)s->bi_buf);
+    s.pending_buf[s.pending++] = s.bi_buf;
+  }
+  s.bi_buf = 0;
+  s.bi_valid = 0;
+};
+
+/* ===========================================================================
+ * Compares to subtrees, using the tree depth as tie breaker when
+ * the subtrees have equal frequency. This minimizes the worst case length.
+ */
+const smaller = (tree, n, m, depth) => {
+
+  const _n2 = n * 2;
+  const _m2 = m * 2;
+  return (tree[_n2]/*.Freq*/ < tree[_m2]/*.Freq*/ ||
+         (tree[_n2]/*.Freq*/ === tree[_m2]/*.Freq*/ && depth[n] <= depth[m]));
+};
+
+/* ===========================================================================
+ * Restore the heap property by moving down the tree starting at node k,
+ * exchanging a node with the smallest of its two sons if necessary, stopping
+ * when the heap property is re-established (each father smaller than its
+ * two sons).
+ */
+const pqdownheap = (s, tree, k) => {
+//    deflate_state *s;
+//    ct_data *tree;  /* the tree to restore */
+//    int k;               /* node to move down */
+
+  const v = s.heap[k];
+  let j = k << 1;  /* left son of k */
+  while (j <= s.heap_len) {
+    /* Set j to the smallest of the two sons: */
+    if (j < s.heap_len &&
+      smaller(tree, s.heap[j + 1], s.heap[j], s.depth)) {
+      j++;
+    }
+    /* Exit if v is smaller than both sons */
+    if (smaller(tree, v, s.heap[j], s.depth)) { break; }
+
+    /* Exchange v with the smallest son */
+    s.heap[k] = s.heap[j];
+    k = j;
+
+    /* And continue down the tree, setting j to the left son of k */
+    j <<= 1;
+  }
+  s.heap[k] = v;
+};
+
+
+// inlined manually
+// const SMALLEST = 1;
+
+/* ===========================================================================
+ * Send the block data compressed using the given Huffman trees
+ */
+const compress_block = (s, ltree, dtree) => {
+//    deflate_state *s;
+//    const ct_data *ltree; /* literal tree */
+//    const ct_data *dtree; /* distance tree */
+
+  let dist;           /* distance of matched string */
+  let lc;             /* match length or unmatched char (if dist == 0) */
+  let sx = 0;         /* running index in sym_buf */
+  let code;           /* the code to send */
+  let extra;          /* number of extra bits to send */
+
+  if (s.sym_next !== 0) {
+    do {
+      dist = s.pending_buf[s.sym_buf + sx++] & 0xff;
+      dist += (s.pending_buf[s.sym_buf + sx++] & 0xff) << 8;
+      lc = s.pending_buf[s.sym_buf + sx++];
+      if (dist === 0) {
+        send_code(s, lc, ltree); /* send a literal byte */
+        //Tracecv(isgraph(lc), (stderr," '%c' ", lc));
+      } else {
+        /* Here, lc is the match length - MIN_MATCH */
+        code = _length_code[lc];
+        send_code(s, code + LITERALS$1 + 1, ltree); /* send the length code */
+        extra = extra_lbits[code];
+        if (extra !== 0) {
+          lc -= base_length[code];
+          send_bits(s, lc, extra);       /* send the extra length bits */
+        }
+        dist--; /* dist is now the match distance - 1 */
+        code = d_code(dist);
+        //Assert (code < D_CODES, "bad d_code");
+
+        send_code(s, code, dtree);       /* send the distance code */
+        extra = extra_dbits[code];
+        if (extra !== 0) {
+          dist -= base_dist[code];
+          send_bits(s, dist, extra);   /* send the extra distance bits */
+        }
+      } /* literal or match pair ? */
+
+      /* Check that the overlay between pending_buf and sym_buf is ok: */
+      //Assert(s->pending < s->lit_bufsize + sx, "pendingBuf overflow");
+
+    } while (sx < s.sym_next);
+  }
+
+  send_code(s, END_BLOCK, ltree);
+};
+
+
+/* ===========================================================================
+ * Construct one Huffman tree and assigns the code bit strings and lengths.
+ * Update the total bit length for the current block.
+ * IN assertion: the field freq is set for all tree elements.
+ * OUT assertions: the fields len and code are set to the optimal bit length
+ *     and corresponding code. The length opt_len is updated; static_len is
+ *     also updated if stree is not null. The field max_code is set.
+ */
+const build_tree = (s, desc) => {
+//    deflate_state *s;
+//    tree_desc *desc; /* the tree descriptor */
+
+  const tree     = desc.dyn_tree;
+  const stree    = desc.stat_desc.static_tree;
+  const has_stree = desc.stat_desc.has_stree;
+  const elems    = desc.stat_desc.elems;
+  let n, m;          /* iterate over heap elements */
+  let max_code = -1; /* largest code with non zero frequency */
+  let node;          /* new node being created */
+
+  /* Construct the initial heap, with least frequent element in
+   * heap[SMALLEST]. The sons of heap[n] are heap[2*n] and heap[2*n+1].
+   * heap[0] is not used.
+   */
+  s.heap_len = 0;
+  s.heap_max = HEAP_SIZE$1;
+
+  for (n = 0; n < elems; n++) {
+    if (tree[n * 2]/*.Freq*/ !== 0) {
+      s.heap[++s.heap_len] = max_code = n;
+      s.depth[n] = 0;
+
+    } else {
+      tree[n * 2 + 1]/*.Len*/ = 0;
+    }
+  }
+
+  /* The pkzip format requires that at least one distance code exists,
+   * and that at least one bit should be sent even if there is only one
+   * possible code. So to avoid special checks later on we force at least
+   * two codes of non zero frequency.
+   */
+  while (s.heap_len < 2) {
+    node = s.heap[++s.heap_len] = (max_code < 2 ? ++max_code : 0);
+    tree[node * 2]/*.Freq*/ = 1;
+    s.depth[node] = 0;
+    s.opt_len--;
+
+    if (has_stree) {
+      s.static_len -= stree[node * 2 + 1]/*.Len*/;
+    }
+    /* node is 0 or 1 so it does not have extra bits */
+  }
+  desc.max_code = max_code;
+
+  /* The elements heap[heap_len/2+1 .. heap_len] are leaves of the tree,
+   * establish sub-heaps of increasing lengths:
+   */
+  for (n = (s.heap_len >> 1/*int /2*/); n >= 1; n--) { pqdownheap(s, tree, n); }
+
+  /* Construct the Huffman tree by repeatedly combining the least two
+   * frequent nodes.
+   */
+  node = elems;              /* next internal node of the tree */
+  do {
+    //pqremove(s, tree, n);  /* n = node of least frequency */
+    /*** pqremove ***/
+    n = s.heap[1/*SMALLEST*/];
+    s.heap[1/*SMALLEST*/] = s.heap[s.heap_len--];
+    pqdownheap(s, tree, 1/*SMALLEST*/);
+    /***/
+
+    m = s.heap[1/*SMALLEST*/]; /* m = node of next least frequency */
+
+    s.heap[--s.heap_max] = n; /* keep the nodes sorted by frequency */
+    s.heap[--s.heap_max] = m;
+
+    /* Create a new node father of n and m */
+    tree[node * 2]/*.Freq*/ = tree[n * 2]/*.Freq*/ + tree[m * 2]/*.Freq*/;
+    s.depth[node] = (s.depth[n] >= s.depth[m] ? s.depth[n] : s.depth[m]) + 1;
+    tree[n * 2 + 1]/*.Dad*/ = tree[m * 2 + 1]/*.Dad*/ = node;
+
+    /* and insert the new node in the heap */
+    s.heap[1/*SMALLEST*/] = node++;
+    pqdownheap(s, tree, 1/*SMALLEST*/);
+
+  } while (s.heap_len >= 2);
+
+  s.heap[--s.heap_max] = s.heap[1/*SMALLEST*/];
+
+  /* At this point, the fields freq and dad are set. We can now
+   * generate the bit lengths.
+   */
+  gen_bitlen(s, desc);
+
+  /* The field len is now set, we can generate the bit codes */
+  gen_codes(tree, max_code, s.bl_count);
+};
+
+
+/* ===========================================================================
+ * Scan a literal or distance tree to determine the frequencies of the codes
+ * in the bit length tree.
+ */
+const scan_tree = (s, tree, max_code) => {
+//    deflate_state *s;
+//    ct_data *tree;   /* the tree to be scanned */
+//    int max_code;    /* and its largest code of non zero frequency */
+
+  let n;                     /* iterates over all tree elements */
+  let prevlen = -1;          /* last emitted length */
+  let curlen;                /* length of current code */
+
+  let nextlen = tree[0 * 2 + 1]/*.Len*/; /* length of next code */
+
+  let count = 0;             /* repeat count of the current code */
+  let max_count = 7;         /* max repeat count */
+  let min_count = 4;         /* min repeat count */
+
+  if (nextlen === 0) {
+    max_count = 138;
+    min_count = 3;
+  }
+  tree[(max_code + 1) * 2 + 1]/*.Len*/ = 0xffff; /* guard */
+
+  for (n = 0; n <= max_code; n++) {
+    curlen = nextlen;
+    nextlen = tree[(n + 1) * 2 + 1]/*.Len*/;
+
+    if (++count < max_count && curlen === nextlen) {
+      continue;
+
+    } else if (count < min_count) {
+      s.bl_tree[curlen * 2]/*.Freq*/ += count;
+
+    } else if (curlen !== 0) {
+
+      if (curlen !== prevlen) { s.bl_tree[curlen * 2]/*.Freq*/++; }
+      s.bl_tree[REP_3_6 * 2]/*.Freq*/++;
+
+    } else if (count <= 10) {
+      s.bl_tree[REPZ_3_10 * 2]/*.Freq*/++;
+
+    } else {
+      s.bl_tree[REPZ_11_138 * 2]/*.Freq*/++;
+    }
+
+    count = 0;
+    prevlen = curlen;
+
+    if (nextlen === 0) {
+      max_count = 138;
+      min_count = 3;
+
+    } else if (curlen === nextlen) {
+      max_count = 6;
+      min_count = 3;
+
+    } else {
+      max_count = 7;
+      min_count = 4;
+    }
+  }
+};
+
+
+/* ===========================================================================
+ * Send a literal or distance tree in compressed form, using the codes in
+ * bl_tree.
+ */
+const send_tree = (s, tree, max_code) => {
+//    deflate_state *s;
+//    ct_data *tree; /* the tree to be scanned */
+//    int max_code;       /* and its largest code of non zero frequency */
+
+  let n;                     /* iterates over all tree elements */
+  let prevlen = -1;          /* last emitted length */
+  let curlen;                /* length of current code */
+
+  let nextlen = tree[0 * 2 + 1]/*.Len*/; /* length of next code */
+
+  let count = 0;             /* repeat count of the current code */
+  let max_count = 7;         /* max repeat count */
+  let min_count = 4;         /* min repeat count */
+
+  /* tree[max_code+1].Len = -1; */  /* guard already set */
+  if (nextlen === 0) {
+    max_count = 138;
+    min_count = 3;
+  }
+
+  for (n = 0; n <= max_code; n++) {
+    curlen = nextlen;
+    nextlen = tree[(n + 1) * 2 + 1]/*.Len*/;
+
+    if (++count < max_count && curlen === nextlen) {
+      continue;
+
+    } else if (count < min_count) {
+      do { send_code(s, curlen, s.bl_tree); } while (--count !== 0);
+
+    } else if (curlen !== 0) {
+      if (curlen !== prevlen) {
+        send_code(s, curlen, s.bl_tree);
+        count--;
+      }
+      //Assert(count >= 3 && count <= 6, " 3_6?");
+      send_code(s, REP_3_6, s.bl_tree);
+      send_bits(s, count - 3, 2);
+
+    } else if (count <= 10) {
+      send_code(s, REPZ_3_10, s.bl_tree);
+      send_bits(s, count - 3, 3);
+
+    } else {
+      send_code(s, REPZ_11_138, s.bl_tree);
+      send_bits(s, count - 11, 7);
+    }
+
+    count = 0;
+    prevlen = curlen;
+    if (nextlen === 0) {
+      max_count = 138;
+      min_count = 3;
+
+    } else if (curlen === nextlen) {
+      max_count = 6;
+      min_count = 3;
+
+    } else {
+      max_count = 7;
+      min_count = 4;
+    }
+  }
+};
+
+
+/* ===========================================================================
+ * Construct the Huffman tree for the bit lengths and return the index in
+ * bl_order of the last bit length code to send.
+ */
+const build_bl_tree = (s) => {
+
+  let max_blindex;  /* index of last bit length code of non zero freq */
+
+  /* Determine the bit length frequencies for literal and distance trees */
+  scan_tree(s, s.dyn_ltree, s.l_desc.max_code);
+  scan_tree(s, s.dyn_dtree, s.d_desc.max_code);
+
+  /* Build the bit length tree: */
+  build_tree(s, s.bl_desc);
+  /* opt_len now includes the length of the tree representations, except
+   * the lengths of the bit lengths codes and the 5+5+4 bits for the counts.
+   */
+
+  /* Determine the number of bit length codes to send. The pkzip format
+   * requires that at least 4 bit length codes be sent. (appnote.txt says
+   * 3 but the actual value used is 4.)
+   */
+  for (max_blindex = BL_CODES$1 - 1; max_blindex >= 3; max_blindex--) {
+    if (s.bl_tree[bl_order[max_blindex] * 2 + 1]/*.Len*/ !== 0) {
+      break;
+    }
+  }
+  /* Update opt_len to include the bit length tree and counts */
+  s.opt_len += 3 * (max_blindex + 1) + 5 + 5 + 4;
+  //Tracev((stderr, "\ndyn trees: dyn %ld, stat %ld",
+  //        s->opt_len, s->static_len));
+
+  return max_blindex;
+};
+
+
+/* ===========================================================================
+ * Send the header for a block using dynamic Huffman trees: the counts, the
+ * lengths of the bit length codes, the literal tree and the distance tree.
+ * IN assertion: lcodes >= 257, dcodes >= 1, blcodes >= 4.
+ */
+const send_all_trees = (s, lcodes, dcodes, blcodes) => {
+//    deflate_state *s;
+//    int lcodes, dcodes, blcodes; /* number of codes for each tree */
+
+  let rank;                    /* index in bl_order */
+
+  //Assert (lcodes >= 257 && dcodes >= 1 && blcodes >= 4, "not enough codes");
+  //Assert (lcodes <= L_CODES && dcodes <= D_CODES && blcodes <= BL_CODES,
+  //        "too many codes");
+  //Tracev((stderr, "\nbl counts: "));
+  send_bits(s, lcodes - 257, 5); /* not +255 as stated in appnote.txt */
+  send_bits(s, dcodes - 1,   5);
+  send_bits(s, blcodes - 4,  4); /* not -3 as stated in appnote.txt */
+  for (rank = 0; rank < blcodes; rank++) {
+    //Tracev((stderr, "\nbl code %2d ", bl_order[rank]));
+    send_bits(s, s.bl_tree[bl_order[rank] * 2 + 1]/*.Len*/, 3);
+  }
+  //Tracev((stderr, "\nbl tree: sent %ld", s->bits_sent));
+
+  send_tree(s, s.dyn_ltree, lcodes - 1); /* literal tree */
+  //Tracev((stderr, "\nlit tree: sent %ld", s->bits_sent));
+
+  send_tree(s, s.dyn_dtree, dcodes - 1); /* distance tree */
+  //Tracev((stderr, "\ndist tree: sent %ld", s->bits_sent));
+};
+
+
+/* ===========================================================================
+ * Check if the data type is TEXT or BINARY, using the following algorithm:
+ * - TEXT if the two conditions below are satisfied:
+ *    a) There are no non-portable control characters belonging to the
+ *       "block list" (0..6, 14..25, 28..31).
+ *    b) There is at least one printable character belonging to the
+ *       "allow list" (9 {TAB}, 10 {LF}, 13 {CR}, 32..255).
+ * - BINARY otherwise.
+ * - The following partially-portable control characters form a
+ *   "gray list" that is ignored in this detection algorithm:
+ *   (7 {BEL}, 8 {BS}, 11 {VT}, 12 {FF}, 26 {SUB}, 27 {ESC}).
+ * IN assertion: the fields Freq of dyn_ltree are set.
+ */
+const detect_data_type = (s) => {
+  /* block_mask is the bit mask of block-listed bytes
+   * set bits 0..6, 14..25, and 28..31
+   * 0xf3ffc07f = binary 11110011111111111100000001111111
+   */
+  let block_mask = 0xf3ffc07f;
+  let n;
+
+  /* Check for non-textual ("block-listed") bytes. */
+  for (n = 0; n <= 31; n++, block_mask >>>= 1) {
+    if ((block_mask & 1) && (s.dyn_ltree[n * 2]/*.Freq*/ !== 0)) {
+      return Z_BINARY;
+    }
+  }
+
+  /* Check for textual ("allow-listed") bytes. */
+  if (s.dyn_ltree[9 * 2]/*.Freq*/ !== 0 || s.dyn_ltree[10 * 2]/*.Freq*/ !== 0 ||
+      s.dyn_ltree[13 * 2]/*.Freq*/ !== 0) {
+    return Z_TEXT;
+  }
+  for (n = 32; n < LITERALS$1; n++) {
+    if (s.dyn_ltree[n * 2]/*.Freq*/ !== 0) {
+      return Z_TEXT;
+    }
+  }
+
+  /* There are no "block-listed" or "allow-listed" bytes:
+   * this stream either is empty or has tolerated ("gray-listed") bytes only.
+   */
+  return Z_BINARY;
+};
+
+
+let static_init_done = false;
+
+/* ===========================================================================
+ * Initialize the tree data structures for a new zlib stream.
+ */
+const _tr_init$1 = (s) =>
+{
+
+  if (!static_init_done) {
+    tr_static_init();
+    static_init_done = true;
+  }
+
+  s.l_desc  = new TreeDesc(s.dyn_ltree, static_l_desc);
+  s.d_desc  = new TreeDesc(s.dyn_dtree, static_d_desc);
+  s.bl_desc = new TreeDesc(s.bl_tree, static_bl_desc);
+
+  s.bi_buf = 0;
+  s.bi_valid = 0;
+
+  /* Initialize the first block of the first file: */
+  init_block(s);
+};
+
+
+/* ===========================================================================
+ * Send a stored block
+ */
+const _tr_stored_block$1 = (s, buf, stored_len, last) => {
+//DeflateState *s;
+//charf *buf;       /* input block */
+//ulg stored_len;   /* length of input block */
+//int last;         /* one if this is the last block for a file */
+
+  send_bits(s, (STORED_BLOCK << 1) + (last ? 1 : 0), 3);    /* send block type */
+  bi_windup(s);        /* align on byte boundary */
+  put_short(s, stored_len);
+  put_short(s, ~stored_len);
+  if (stored_len) {
+    s.pending_buf.set(s.window.subarray(buf, buf + stored_len), s.pending);
+  }
+  s.pending += stored_len;
+};
+
+
+/* ===========================================================================
+ * Send one empty static block to give enough lookahead for inflate.
+ * This takes 10 bits, of which 7 may remain in the bit buffer.
+ */
+const _tr_align$1 = (s) => {
+  send_bits(s, STATIC_TREES << 1, 3);
+  send_code(s, END_BLOCK, static_ltree);
+  bi_flush(s);
+};
+
+
+/* ===========================================================================
+ * Determine the best encoding for the current block: dynamic trees, static
+ * trees or store, and write out the encoded block.
+ */
+const _tr_flush_block$1 = (s, buf, stored_len, last) => {
+//DeflateState *s;
+//charf *buf;       /* input block, or NULL if too old */
+//ulg stored_len;   /* length of input block */
+//int last;         /* one if this is the last block for a file */
+
+  let opt_lenb, static_lenb;  /* opt_len and static_len in bytes */
+  let max_blindex = 0;        /* index of last bit length code of non zero freq */
+
+  /* Build the Huffman trees unless a stored block is forced */
+  if (s.level > 0) {
+
+    /* Check if the file is binary or text */
+    if (s.strm.data_type === Z_UNKNOWN$1) {
+      s.strm.data_type = detect_data_type(s);
+    }
+
+    /* Construct the literal and distance trees */
+    build_tree(s, s.l_desc);
+    // Tracev((stderr, "\nlit data: dyn %ld, stat %ld", s->opt_len,
+    //        s->static_len));
+
+    build_tree(s, s.d_desc);
+    // Tracev((stderr, "\ndist data: dyn %ld, stat %ld", s->opt_len,
+    //        s->static_len));
+    /* At this point, opt_len and static_len are the total bit lengths of
+     * the compressed block data, excluding the tree representations.
+     */
+
+    /* Build the bit length tree for the above two trees, and get the index
+     * in bl_order of the last bit length code to send.
+     */
+    max_blindex = build_bl_tree(s);
+
+    /* Determine the best encoding. Compute the block lengths in bytes. */
+    opt_lenb = (s.opt_len + 3 + 7) >>> 3;
+    static_lenb = (s.static_len + 3 + 7) >>> 3;
+
+    // Tracev((stderr, "\nopt %lu(%lu) stat %lu(%lu) stored %lu lit %u ",
+    //        opt_lenb, s->opt_len, static_lenb, s->static_len, stored_len,
+    //        s->sym_next / 3));
+
+    if (static_lenb <= opt_lenb) { opt_lenb = static_lenb; }
+
+  } else {
+    // Assert(buf != (char*)0, "lost buf");
+    opt_lenb = static_lenb = stored_len + 5; /* force a stored block */
+  }
+
+  if ((stored_len + 4 <= opt_lenb) && (buf !== -1)) {
+    /* 4: two words for the lengths */
+
+    /* The test buf != NULL is only necessary if LIT_BUFSIZE > WSIZE.
+     * Otherwise we can't have processed more than WSIZE input bytes since
+     * the last block flush, because compression would have been
+     * successful. If LIT_BUFSIZE <= WSIZE, it is never too late to
+     * transform a block into a stored block.
+     */
+    _tr_stored_block$1(s, buf, stored_len, last);
+
+  } else if (s.strategy === Z_FIXED$1 || static_lenb === opt_lenb) {
+
+    send_bits(s, (STATIC_TREES << 1) + (last ? 1 : 0), 3);
+    compress_block(s, static_ltree, static_dtree);
+
+  } else {
+    send_bits(s, (DYN_TREES << 1) + (last ? 1 : 0), 3);
+    send_all_trees(s, s.l_desc.max_code + 1, s.d_desc.max_code + 1, max_blindex + 1);
+    compress_block(s, s.dyn_ltree, s.dyn_dtree);
+  }
+  // Assert (s->compressed_len == s->bits_sent, "bad compressed size");
+  /* The above check is made mod 2^32, for files larger than 512 MB
+   * and uLong implemented on 32 bits.
+   */
+  init_block(s);
+
+  if (last) {
+    bi_windup(s);
+  }
+  // Tracev((stderr,"\ncomprlen %lu(%lu) ", s->compressed_len>>3,
+  //       s->compressed_len-7*last));
+};
+
+/* ===========================================================================
+ * Save the match info and tally the frequency counts. Return true if
+ * the current block must be flushed.
+ */
+const _tr_tally$1 = (s, dist, lc) => {
+//    deflate_state *s;
+//    unsigned dist;  /* distance of matched string */
+//    unsigned lc;    /* match length-MIN_MATCH or unmatched char (if dist==0) */
+
+  s.pending_buf[s.sym_buf + s.sym_next++] = dist;
+  s.pending_buf[s.sym_buf + s.sym_next++] = dist >> 8;
+  s.pending_buf[s.sym_buf + s.sym_next++] = lc;
+  if (dist === 0) {
+    /* lc is the unmatched char */
+    s.dyn_ltree[lc * 2]/*.Freq*/++;
+  } else {
+    s.matches++;
+    /* Here, lc is the match length - MIN_MATCH */
+    dist--;             /* dist = match distance - 1 */
+    //Assert((ush)dist < (ush)MAX_DIST(s) &&
+    //       (ush)lc <= (ush)(MAX_MATCH-MIN_MATCH) &&
+    //       (ush)d_code(dist) < (ush)D_CODES,  "_tr_tally: bad match");
+
+    s.dyn_ltree[(_length_code[lc] + LITERALS$1 + 1) * 2]/*.Freq*/++;
+    s.dyn_dtree[d_code(dist) * 2]/*.Freq*/++;
+  }
+
+  return (s.sym_next === s.sym_end);
+};
+
+var _tr_init_1  = _tr_init$1;
+var _tr_stored_block_1 = _tr_stored_block$1;
+var _tr_flush_block_1  = _tr_flush_block$1;
+var _tr_tally_1 = _tr_tally$1;
+var _tr_align_1 = _tr_align$1;
+
+var trees = {
+	_tr_init: _tr_init_1,
+	_tr_stored_block: _tr_stored_block_1,
+	_tr_flush_block: _tr_flush_block_1,
+	_tr_tally: _tr_tally_1,
+	_tr_align: _tr_align_1
+};
+
+// Note: adler32 takes 12% for level 0 and 2% for level 6.
+// It isn't worth it to make additional optimizations as in original.
+// Small size is preferable.
+
+// (C) 1995-2013 Jean-loup Gailly and Mark Adler
+// (C) 2014-2017 Vitaly Puzrin and Andrey Tupitsin
+//
+// This software is provided 'as-is', without any express or implied
+// warranty. In no event will the authors be held liable for any damages
+// arising from the use of this software.
+//
+// Permission is granted to anyone to use this software for any purpose,
+// including commercial applications, and to alter it and redistribute it
+// freely, subject to the following restrictions:
+//
+// 1. The origin of this software must not be misrepresented; you must not
+//   claim that you wrote the original software. If you use this software
+//   in a product, an acknowledgment in the product documentation would be
+//   appreciated but is not required.
+// 2. Altered source versions must be plainly marked as such, and must not be
+//   misrepresented as being the original software.
+// 3. This notice may not be removed or altered from any source distribution.
+
+const adler32 = (adler, buf, len, pos) => {
+  let s1 = (adler & 0xffff) |0,
+      s2 = ((adler >>> 16) & 0xffff) |0,
+      n = 0;
+
+  while (len !== 0) {
+    // Set limit ~ twice less than 5552, to keep
+    // s2 in 31-bits, because we force signed ints.
+    // in other case %= will fail.
+    n = len > 2000 ? 2000 : len;
+    len -= n;
+
+    do {
+      s1 = (s1 + buf[pos++]) |0;
+      s2 = (s2 + s1) |0;
+    } while (--n);
+
+    s1 %= 65521;
+    s2 %= 65521;
+  }
+
+  return (s1 | (s2 << 16)) |0;
+};
+
+
+var adler32_1 = adler32;
+
+// Note: we can't get significant speed boost here.
+// So write code to minimize size - no pregenerated tables
+// and array tools dependencies.
+
+// (C) 1995-2013 Jean-loup Gailly and Mark Adler
+// (C) 2014-2017 Vitaly Puzrin and Andrey Tupitsin
+//
+// This software is provided 'as-is', without any express or implied
+// warranty. In no event will the authors be held liable for any damages
+// arising from the use of this software.
+//
+// Permission is granted to anyone to use this software for any purpose,
+// including commercial applications, and to alter it and redistribute it
+// freely, subject to the following restrictions:
+//
+// 1. The origin of this software must not be misrepresented; you must not
+//   claim that you wrote the original software. If you use this software
+//   in a product, an acknowledgment in the product documentation would be
+//   appreciated but is not required.
+// 2. Altered source versions must be plainly marked as such, and must not be
+//   misrepresented as being the original software.
+// 3. This notice may not be removed or altered from any source distribution.
+
+// Use ordinary array, since untyped makes no boost here
+const makeTable = () => {
+  let c, table = [];
+
+  for (var n = 0; n < 256; n++) {
+    c = n;
+    for (var k = 0; k < 8; k++) {
+      c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+    }
+    table[n] = c;
+  }
+
+  return table;
+};
+
+// Create table on load. Just 255 signed longs. Not a problem.
+const crcTable$1 = new Uint32Array(makeTable());
+
+
+const crc32 = (crc, buf, len, pos) => {
+  const t = crcTable$1;
+  const end = pos + len;
+
+  crc ^= -1;
+
+  for (let i = pos; i < end; i++) {
+    crc = (crc >>> 8) ^ t[(crc ^ buf[i]) & 0xFF];
+  }
+
+  return (crc ^ (-1)); // >>> 0;
+};
+
+
+var crc32_1 = crc32;
+
+// (C) 1995-2013 Jean-loup Gailly and Mark Adler
+// (C) 2014-2017 Vitaly Puzrin and Andrey Tupitsin
+//
+// This software is provided 'as-is', without any express or implied
+// warranty. In no event will the authors be held liable for any damages
+// arising from the use of this software.
+//
+// Permission is granted to anyone to use this software for any purpose,
+// including commercial applications, and to alter it and redistribute it
+// freely, subject to the following restrictions:
+//
+// 1. The origin of this software must not be misrepresented; you must not
+//   claim that you wrote the original software. If you use this software
+//   in a product, an acknowledgment in the product documentation would be
+//   appreciated but is not required.
+// 2. Altered source versions must be plainly marked as such, and must not be
+//   misrepresented as being the original software.
+// 3. This notice may not be removed or altered from any source distribution.
+
+var messages = {
+  2:      'need dictionary',     /* Z_NEED_DICT       2  */
+  1:      'stream end',          /* Z_STREAM_END      1  */
+  0:      '',                    /* Z_OK              0  */
+  '-1':   'file error',          /* Z_ERRNO         (-1) */
+  '-2':   'stream error',        /* Z_STREAM_ERROR  (-2) */
+  '-3':   'data error',          /* Z_DATA_ERROR    (-3) */
+  '-4':   'insufficient memory', /* Z_MEM_ERROR     (-4) */
+  '-5':   'buffer error',        /* Z_BUF_ERROR     (-5) */
+  '-6':   'incompatible version' /* Z_VERSION_ERROR (-6) */
+};
+
+// (C) 1995-2013 Jean-loup Gailly and Mark Adler
+// (C) 2014-2017 Vitaly Puzrin and Andrey Tupitsin
+//
+// This software is provided 'as-is', without any express or implied
+// warranty. In no event will the authors be held liable for any damages
+// arising from the use of this software.
+//
+// Permission is granted to anyone to use this software for any purpose,
+// including commercial applications, and to alter it and redistribute it
+// freely, subject to the following restrictions:
+//
+// 1. The origin of this software must not be misrepresented; you must not
+//   claim that you wrote the original software. If you use this software
+//   in a product, an acknowledgment in the product documentation would be
+//   appreciated but is not required.
+// 2. Altered source versions must be plainly marked as such, and must not be
+//   misrepresented as being the original software.
+// 3. This notice may not be removed or altered from any source distribution.
+
+var constants$2 = {
+
+  /* Allowed flush values; see deflate() and inflate() below for details */
+  Z_NO_FLUSH:         0,
+  Z_PARTIAL_FLUSH:    1,
+  Z_SYNC_FLUSH:       2,
+  Z_FULL_FLUSH:       3,
+  Z_FINISH:           4,
+  Z_BLOCK:            5,
+  Z_TREES:            6,
+
+  /* Return codes for the compression/decompression functions. Negative values
+  * are errors, positive values are used for special but normal events.
+  */
+  Z_OK:               0,
+  Z_STREAM_END:       1,
+  Z_NEED_DICT:        2,
+  Z_ERRNO:           -1,
+  Z_STREAM_ERROR:    -2,
+  Z_DATA_ERROR:      -3,
+  Z_MEM_ERROR:       -4,
+  Z_BUF_ERROR:       -5,
+  //Z_VERSION_ERROR: -6,
+
+  /* compression levels */
+  Z_NO_COMPRESSION:         0,
+  Z_BEST_SPEED:             1,
+  Z_BEST_COMPRESSION:       9,
+  Z_DEFAULT_COMPRESSION:   -1,
+
+
+  Z_FILTERED:               1,
+  Z_HUFFMAN_ONLY:           2,
+  Z_RLE:                    3,
+  Z_FIXED:                  4,
+  Z_DEFAULT_STRATEGY:       0,
+
+  /* Possible values of the data_type field (though see inflate()) */
+  Z_BINARY:                 0,
+  Z_TEXT:                   1,
+  //Z_ASCII:                1, // = Z_TEXT (deprecated)
+  Z_UNKNOWN:                2,
+
+  /* The deflate compression method */
+  Z_DEFLATED:               8
+  //Z_NULL:                 null // Use -1 or null inline, depending on var type
+};
+
+// (C) 1995-2013 Jean-loup Gailly and Mark Adler
+// (C) 2014-2017 Vitaly Puzrin and Andrey Tupitsin
+//
+// This software is provided 'as-is', without any express or implied
+// warranty. In no event will the authors be held liable for any damages
+// arising from the use of this software.
+//
+// Permission is granted to anyone to use this software for any purpose,
+// including commercial applications, and to alter it and redistribute it
+// freely, subject to the following restrictions:
+//
+// 1. The origin of this software must not be misrepresented; you must not
+//   claim that you wrote the original software. If you use this software
+//   in a product, an acknowledgment in the product documentation would be
+//   appreciated but is not required.
+// 2. Altered source versions must be plainly marked as such, and must not be
+//   misrepresented as being the original software.
+// 3. This notice may not be removed or altered from any source distribution.
+
+const { _tr_init, _tr_stored_block, _tr_flush_block, _tr_tally, _tr_align } = trees;
+
+
+
+
+/* Public constants ==========================================================*/
+/* ===========================================================================*/
+
+const {
+  Z_NO_FLUSH: Z_NO_FLUSH$2, Z_PARTIAL_FLUSH, Z_FULL_FLUSH: Z_FULL_FLUSH$1, Z_FINISH: Z_FINISH$3, Z_BLOCK: Z_BLOCK$1,
+  Z_OK: Z_OK$3, Z_STREAM_END: Z_STREAM_END$3, Z_STREAM_ERROR: Z_STREAM_ERROR$2, Z_DATA_ERROR: Z_DATA_ERROR$2, Z_BUF_ERROR: Z_BUF_ERROR$1,
+  Z_DEFAULT_COMPRESSION: Z_DEFAULT_COMPRESSION$1,
+  Z_FILTERED, Z_HUFFMAN_ONLY, Z_RLE, Z_FIXED, Z_DEFAULT_STRATEGY: Z_DEFAULT_STRATEGY$1,
+  Z_UNKNOWN,
+  Z_DEFLATED: Z_DEFLATED$2
+} = constants$2;
+
+/*============================================================================*/
+
+
+const MAX_MEM_LEVEL = 9;
+/* Maximum value for memLevel in deflateInit2 */
+const MAX_WBITS$1 = 15;
+/* 32K LZ77 window */
+const DEF_MEM_LEVEL = 8;
+
+
+const LENGTH_CODES  = 29;
+/* number of length codes, not counting the special END_BLOCK code */
+const LITERALS      = 256;
+/* number of literal bytes 0..255 */
+const L_CODES       = LITERALS + 1 + LENGTH_CODES;
+/* number of Literal or Length codes, including the END_BLOCK code */
+const D_CODES       = 30;
+/* number of distance codes */
+const BL_CODES      = 19;
+/* number of codes used to transfer the bit lengths */
+const HEAP_SIZE     = 2 * L_CODES + 1;
+/* maximum heap size */
+const MAX_BITS  = 15;
+/* All codes must not exceed MAX_BITS bits */
+
+const MIN_MATCH = 3;
+const MAX_MATCH = 258;
+const MIN_LOOKAHEAD = (MAX_MATCH + MIN_MATCH + 1);
+
+const PRESET_DICT = 0x20;
+
+const INIT_STATE    =  42;    /* zlib header -> BUSY_STATE */
+//#ifdef GZIP
+const GZIP_STATE    =  57;    /* gzip header -> BUSY_STATE | EXTRA_STATE */
+//#endif
+const EXTRA_STATE   =  69;    /* gzip extra block -> NAME_STATE */
+const NAME_STATE    =  73;    /* gzip file name -> COMMENT_STATE */
+const COMMENT_STATE =  91;    /* gzip comment -> HCRC_STATE */
+const HCRC_STATE    = 103;    /* gzip header CRC -> BUSY_STATE */
+const BUSY_STATE    = 113;    /* deflate -> FINISH_STATE */
+const FINISH_STATE  = 666;    /* stream complete */
+
+const BS_NEED_MORE      = 1; /* block not completed, need more input or more output */
+const BS_BLOCK_DONE     = 2; /* block flush performed */
+const BS_FINISH_STARTED = 3; /* finish started, need only more output at next deflate */
+const BS_FINISH_DONE    = 4; /* finish done, accept no more input or output */
+
+const OS_CODE = 0x03; // Unix :) . Don't detect, use this default.
+
+const err = (strm, errorCode) => {
+  strm.msg = messages[errorCode];
+  return errorCode;
+};
+
+const rank = (f) => {
+  return ((f) * 2) - ((f) > 4 ? 9 : 0);
+};
+
+const zero = (buf) => {
+  let len = buf.length; while (--len >= 0) { buf[len] = 0; }
+};
+
+/* ===========================================================================
+ * Slide the hash table when sliding the window down (could be avoided with 32
+ * bit values at the expense of memory usage). We slide even when level == 0 to
+ * keep the hash table consistent if we switch back to level > 0 later.
+ */
+const slide_hash = (s) => {
+  let n, m;
+  let p;
+  let wsize = s.w_size;
+
+  n = s.hash_size;
+  p = n;
+  do {
+    m = s.head[--p];
+    s.head[p] = (m >= wsize ? m - wsize : 0);
+  } while (--n);
+  n = wsize;
+//#ifndef FASTEST
+  p = n;
+  do {
+    m = s.prev[--p];
+    s.prev[p] = (m >= wsize ? m - wsize : 0);
+    /* If n is not on any hash chain, prev[n] is garbage but
+     * its value will never be used.
+     */
+  } while (--n);
+//#endif
+};
+
+/* eslint-disable new-cap */
+let HASH_ZLIB = (s, prev, data) => ((prev << s.hash_shift) ^ data) & s.hash_mask;
+// This hash causes less collisions, https://github.com/nodeca/pako/issues/135
+// But breaks binary compatibility
+//let HASH_FAST = (s, prev, data) => ((prev << 8) + (prev >> 8) + (data << 4)) & s.hash_mask;
+let HASH = HASH_ZLIB;
+
+
+/* =========================================================================
+ * Flush as much pending output as possible. All deflate() output, except for
+ * some deflate_stored() output, goes through this function so some
+ * applications may wish to modify it to avoid allocating a large
+ * strm->next_out buffer and copying into it. (See also read_buf()).
+ */
+const flush_pending = (strm) => {
+  const s = strm.state;
+
+  //_tr_flush_bits(s);
+  let len = s.pending;
+  if (len > strm.avail_out) {
+    len = strm.avail_out;
+  }
+  if (len === 0) { return; }
+
+  strm.output.set(s.pending_buf.subarray(s.pending_out, s.pending_out + len), strm.next_out);
+  strm.next_out  += len;
+  s.pending_out  += len;
+  strm.total_out += len;
+  strm.avail_out -= len;
+  s.pending      -= len;
+  if (s.pending === 0) {
+    s.pending_out = 0;
+  }
+};
+
+
+const flush_block_only = (s, last) => {
+  _tr_flush_block(s, (s.block_start >= 0 ? s.block_start : -1), s.strstart - s.block_start, last);
+  s.block_start = s.strstart;
+  flush_pending(s.strm);
+};
+
+
+const put_byte = (s, b) => {
+  s.pending_buf[s.pending++] = b;
+};
+
+
+/* =========================================================================
+ * Put a short in the pending buffer. The 16-bit value is put in MSB order.
+ * IN assertion: the stream state is correct and there is enough room in
+ * pending_buf.
+ */
+const putShortMSB = (s, b) => {
+
+  //  put_byte(s, (Byte)(b >> 8));
+//  put_byte(s, (Byte)(b & 0xff));
+  s.pending_buf[s.pending++] = (b >>> 8) & 0xff;
+  s.pending_buf[s.pending++] = b & 0xff;
+};
+
+
+/* ===========================================================================
+ * Read a new buffer from the current input stream, update the adler32
+ * and total number of bytes read.  All deflate() input goes through
+ * this function so some applications may wish to modify it to avoid
+ * allocating a large strm->input buffer and copying from it.
+ * (See also flush_pending()).
+ */
+const read_buf = (strm, buf, start, size) => {
+
+  let len = strm.avail_in;
+
+  if (len > size) { len = size; }
+  if (len === 0) { return 0; }
+
+  strm.avail_in -= len;
+
+  // zmemcpy(buf, strm->next_in, len);
+  buf.set(strm.input.subarray(strm.next_in, strm.next_in + len), start);
+  if (strm.state.wrap === 1) {
+    strm.adler = adler32_1(strm.adler, buf, len, start);
+  }
+
+  else if (strm.state.wrap === 2) {
+    strm.adler = crc32_1(strm.adler, buf, len, start);
+  }
+
+  strm.next_in += len;
+  strm.total_in += len;
+
+  return len;
+};
+
+
+/* ===========================================================================
+ * Set match_start to the longest match starting at the given string and
+ * return its length. Matches shorter or equal to prev_length are discarded,
+ * in which case the result is equal to prev_length and match_start is
+ * garbage.
+ * IN assertions: cur_match is the head of the hash chain for the current
+ *   string (strstart) and its distance is <= MAX_DIST, and prev_length >= 1
+ * OUT assertion: the match length is not greater than s->lookahead.
+ */
+const longest_match = (s, cur_match) => {
+
+  let chain_length = s.max_chain_length;      /* max hash chain length */
+  let scan = s.strstart; /* current string */
+  let match;                       /* matched string */
+  let len;                           /* length of current match */
+  let best_len = s.prev_length;              /* best match length so far */
+  let nice_match = s.nice_match;             /* stop if match long enough */
+  const limit = (s.strstart > (s.w_size - MIN_LOOKAHEAD)) ?
+      s.strstart - (s.w_size - MIN_LOOKAHEAD) : 0/*NIL*/;
+
+  const _win = s.window; // shortcut
+
+  const wmask = s.w_mask;
+  const prev  = s.prev;
+
+  /* Stop when cur_match becomes <= limit. To simplify the code,
+   * we prevent matches with the string of window index 0.
+   */
+
+  const strend = s.strstart + MAX_MATCH;
+  let scan_end1  = _win[scan + best_len - 1];
+  let scan_end   = _win[scan + best_len];
+
+  /* The code is optimized for HASH_BITS >= 8 and MAX_MATCH-2 multiple of 16.
+   * It is easy to get rid of this optimization if necessary.
+   */
+  // Assert(s->hash_bits >= 8 && MAX_MATCH == 258, "Code too clever");
+
+  /* Do not waste too much time if we already have a good match: */
+  if (s.prev_length >= s.good_match) {
+    chain_length >>= 2;
+  }
+  /* Do not look for matches beyond the end of the input. This is necessary
+   * to make deflate deterministic.
+   */
+  if (nice_match > s.lookahead) { nice_match = s.lookahead; }
+
+  // Assert((ulg)s->strstart <= s->window_size-MIN_LOOKAHEAD, "need lookahead");
+
+  do {
+    // Assert(cur_match < s->strstart, "no future");
+    match = cur_match;
+
+    /* Skip to next match if the match length cannot increase
+     * or if the match length is less than 2.  Note that the checks below
+     * for insufficient lookahead only occur occasionally for performance
+     * reasons.  Therefore uninitialized memory will be accessed, and
+     * conditional jumps will be made that depend on those values.
+     * However the length of the match is limited to the lookahead, so
+     * the output of deflate is not affected by the uninitialized values.
+     */
+
+    if (_win[match + best_len]     !== scan_end  ||
+        _win[match + best_len - 1] !== scan_end1 ||
+        _win[match]                !== _win[scan] ||
+        _win[++match]              !== _win[scan + 1]) {
+      continue;
+    }
+
+    /* The check at best_len-1 can be removed because it will be made
+     * again later. (This heuristic is not always a win.)
+     * It is not necessary to compare scan[2] and match[2] since they
+     * are always equal when the other bytes match, given that
+     * the hash keys are equal and that HASH_BITS >= 8.
+     */
+    scan += 2;
+    match++;
+    // Assert(*scan == *match, "match[2]?");
+
+    /* We check for insufficient lookahead only every 8th comparison;
+     * the 256th check will be made at strstart+258.
+     */
+    do {
+      /*jshint noempty:false*/
+    } while (_win[++scan] === _win[++match] && _win[++scan] === _win[++match] &&
+             _win[++scan] === _win[++match] && _win[++scan] === _win[++match] &&
+             _win[++scan] === _win[++match] && _win[++scan] === _win[++match] &&
+             _win[++scan] === _win[++match] && _win[++scan] === _win[++match] &&
+             scan < strend);
+
+    // Assert(scan <= s->window+(unsigned)(s->window_size-1), "wild scan");
+
+    len = MAX_MATCH - (strend - scan);
+    scan = strend - MAX_MATCH;
+
+    if (len > best_len) {
+      s.match_start = cur_match;
+      best_len = len;
+      if (len >= nice_match) {
+        break;
+      }
+      scan_end1  = _win[scan + best_len - 1];
+      scan_end   = _win[scan + best_len];
+    }
+  } while ((cur_match = prev[cur_match & wmask]) > limit && --chain_length !== 0);
+
+  if (best_len <= s.lookahead) {
+    return best_len;
+  }
+  return s.lookahead;
+};
+
+
+/* ===========================================================================
+ * Fill the window when the lookahead becomes insufficient.
+ * Updates strstart and lookahead.
+ *
+ * IN assertion: lookahead < MIN_LOOKAHEAD
+ * OUT assertions: strstart <= window_size-MIN_LOOKAHEAD
+ *    At least one byte has been read, or avail_in == 0; reads are
+ *    performed for at least two bytes (required for the zip translate_eol
+ *    option -- not supported here).
+ */
+const fill_window = (s) => {
+
+  const _w_size = s.w_size;
+  let n, more, str;
+
+  //Assert(s->lookahead < MIN_LOOKAHEAD, "already enough lookahead");
+
+  do {
+    more = s.window_size - s.lookahead - s.strstart;
+
+    // JS ints have 32 bit, block below not needed
+    /* Deal with !@#$% 64K limit: */
+    //if (sizeof(int) <= 2) {
+    //    if (more == 0 && s->strstart == 0 && s->lookahead == 0) {
+    //        more = wsize;
+    //
+    //  } else if (more == (unsigned)(-1)) {
+    //        /* Very unlikely, but possible on 16 bit machine if
+    //         * strstart == 0 && lookahead == 1 (input done a byte at time)
+    //         */
+    //        more--;
+    //    }
+    //}
+
+
+    /* If the window is almost full and there is insufficient lookahead,
+     * move the upper half to the lower one to make room in the upper half.
+     */
+    if (s.strstart >= _w_size + (_w_size - MIN_LOOKAHEAD)) {
+
+      s.window.set(s.window.subarray(_w_size, _w_size + _w_size - more), 0);
+      s.match_start -= _w_size;
+      s.strstart -= _w_size;
+      /* we now have strstart >= MAX_DIST */
+      s.block_start -= _w_size;
+      if (s.insert > s.strstart) {
+        s.insert = s.strstart;
+      }
+      slide_hash(s);
+      more += _w_size;
+    }
+    if (s.strm.avail_in === 0) {
+      break;
+    }
+
+    /* If there was no sliding:
+     *    strstart <= WSIZE+MAX_DIST-1 && lookahead <= MIN_LOOKAHEAD - 1 &&
+     *    more == window_size - lookahead - strstart
+     * => more >= window_size - (MIN_LOOKAHEAD-1 + WSIZE + MAX_DIST-1)
+     * => more >= window_size - 2*WSIZE + 2
+     * In the BIG_MEM or MMAP case (not yet supported),
+     *   window_size == input_size + MIN_LOOKAHEAD  &&
+     *   strstart + s->lookahead <= input_size => more >= MIN_LOOKAHEAD.
+     * Otherwise, window_size == 2*WSIZE so more >= 2.
+     * If there was sliding, more >= WSIZE. So in all cases, more >= 2.
+     */
+    //Assert(more >= 2, "more < 2");
+    n = read_buf(s.strm, s.window, s.strstart + s.lookahead, more);
+    s.lookahead += n;
+
+    /* Initialize the hash value now that we have some input: */
+    if (s.lookahead + s.insert >= MIN_MATCH) {
+      str = s.strstart - s.insert;
+      s.ins_h = s.window[str];
+
+      /* UPDATE_HASH(s, s->ins_h, s->window[str + 1]); */
+      s.ins_h = HASH(s, s.ins_h, s.window[str + 1]);
+//#if MIN_MATCH != 3
+//        Call update_hash() MIN_MATCH-3 more times
+//#endif
+      while (s.insert) {
+        /* UPDATE_HASH(s, s->ins_h, s->window[str + MIN_MATCH-1]); */
+        s.ins_h = HASH(s, s.ins_h, s.window[str + MIN_MATCH - 1]);
+
+        s.prev[str & s.w_mask] = s.head[s.ins_h];
+        s.head[s.ins_h] = str;
+        str++;
+        s.insert--;
+        if (s.lookahead + s.insert < MIN_MATCH) {
+          break;
+        }
+      }
+    }
+    /* If the whole input has less than MIN_MATCH bytes, ins_h is garbage,
+     * but this is not important since only literal bytes will be emitted.
+     */
+
+  } while (s.lookahead < MIN_LOOKAHEAD && s.strm.avail_in !== 0);
+
+  /* If the WIN_INIT bytes after the end of the current data have never been
+   * written, then zero those bytes in order to avoid memory check reports of
+   * the use of uninitialized (or uninitialised as Julian writes) bytes by
+   * the longest match routines.  Update the high water mark for the next
+   * time through here.  WIN_INIT is set to MAX_MATCH since the longest match
+   * routines allow scanning to strstart + MAX_MATCH, ignoring lookahead.
+   */
+//  if (s.high_water < s.window_size) {
+//    const curr = s.strstart + s.lookahead;
+//    let init = 0;
+//
+//    if (s.high_water < curr) {
+//      /* Previous high water mark below current data -- zero WIN_INIT
+//       * bytes or up to end of window, whichever is less.
+//       */
+//      init = s.window_size - curr;
+//      if (init > WIN_INIT)
+//        init = WIN_INIT;
+//      zmemzero(s->window + curr, (unsigned)init);
+//      s->high_water = curr + init;
+//    }
+//    else if (s->high_water < (ulg)curr + WIN_INIT) {
+//      /* High water mark at or above current data, but below current data
+//       * plus WIN_INIT -- zero out to current data plus WIN_INIT, or up
+//       * to end of window, whichever is less.
+//       */
+//      init = (ulg)curr + WIN_INIT - s->high_water;
+//      if (init > s->window_size - s->high_water)
+//        init = s->window_size - s->high_water;
+//      zmemzero(s->window + s->high_water, (unsigned)init);
+//      s->high_water += init;
+//    }
+//  }
+//
+//  Assert((ulg)s->strstart <= s->window_size - MIN_LOOKAHEAD,
+//    "not enough room for search");
+};
+
+/* ===========================================================================
+ * Copy without compression as much as possible from the input stream, return
+ * the current block state.
+ *
+ * In case deflateParams() is used to later switch to a non-zero compression
+ * level, s->matches (otherwise unused when storing) keeps track of the number
+ * of hash table slides to perform. If s->matches is 1, then one hash table
+ * slide will be done when switching. If s->matches is 2, the maximum value
+ * allowed here, then the hash table will be cleared, since two or more slides
+ * is the same as a clear.
+ *
+ * deflate_stored() is written to minimize the number of times an input byte is
+ * copied. It is most efficient with large input and output buffers, which
+ * maximizes the opportunites to have a single copy from next_in to next_out.
+ */
+const deflate_stored = (s, flush) => {
+
+  /* Smallest worthy block size when not flushing or finishing. By default
+   * this is 32K. This can be as small as 507 bytes for memLevel == 1. For
+   * large input and output buffers, the stored block size will be larger.
+   */
+  let min_block = s.pending_buf_size - 5 > s.w_size ? s.w_size : s.pending_buf_size - 5;
+
+  /* Copy as many min_block or larger stored blocks directly to next_out as
+   * possible. If flushing, copy the remaining available input to next_out as
+   * stored blocks, if there is enough space.
+   */
+  let len, left, have, last = 0;
+  let used = s.strm.avail_in;
+  do {
+    /* Set len to the maximum size block that we can copy directly with the
+     * available input data and output space. Set left to how much of that
+     * would be copied from what's left in the window.
+     */
+    len = 65535/* MAX_STORED */;     /* maximum deflate stored block length */
+    have = (s.bi_valid + 42) >> 3;     /* number of header bytes */
+    if (s.strm.avail_out < have) {         /* need room for header */
+      break;
+    }
+      /* maximum stored block length that will fit in avail_out: */
+    have = s.strm.avail_out - have;
+    left = s.strstart - s.block_start;  /* bytes left in window */
+    if (len > left + s.strm.avail_in) {
+      len = left + s.strm.avail_in;   /* limit len to the input */
+    }
+    if (len > have) {
+      len = have;             /* limit len to the output */
+    }
+
+    /* If the stored block would be less than min_block in length, or if
+     * unable to copy all of the available input when flushing, then try
+     * copying to the window and the pending buffer instead. Also don't
+     * write an empty block when flushing -- deflate() does that.
+     */
+    if (len < min_block && ((len === 0 && flush !== Z_FINISH$3) ||
+                        flush === Z_NO_FLUSH$2 ||
+                        len !== left + s.strm.avail_in)) {
+      break;
+    }
+
+    /* Make a dummy stored block in pending to get the header bytes,
+     * including any pending bits. This also updates the debugging counts.
+     */
+    last = flush === Z_FINISH$3 && len === left + s.strm.avail_in ? 1 : 0;
+    _tr_stored_block(s, 0, 0, last);
+
+    /* Replace the lengths in the dummy stored block with len. */
+    s.pending_buf[s.pending - 4] = len;
+    s.pending_buf[s.pending - 3] = len >> 8;
+    s.pending_buf[s.pending - 2] = ~len;
+    s.pending_buf[s.pending - 1] = ~len >> 8;
+
+    /* Write the stored block header bytes. */
+    flush_pending(s.strm);
+
+//#ifdef ZLIB_DEBUG
+//    /* Update debugging counts for the data about to be copied. */
+//    s->compressed_len += len << 3;
+//    s->bits_sent += len << 3;
+//#endif
+
+    /* Copy uncompressed bytes from the window to next_out. */
+    if (left) {
+      if (left > len) {
+        left = len;
+      }
+      //zmemcpy(s->strm->next_out, s->window + s->block_start, left);
+      s.strm.output.set(s.window.subarray(s.block_start, s.block_start + left), s.strm.next_out);
+      s.strm.next_out += left;
+      s.strm.avail_out -= left;
+      s.strm.total_out += left;
+      s.block_start += left;
+      len -= left;
+    }
+
+    /* Copy uncompressed bytes directly from next_in to next_out, updating
+     * the check value.
+     */
+    if (len) {
+      read_buf(s.strm, s.strm.output, s.strm.next_out, len);
+      s.strm.next_out += len;
+      s.strm.avail_out -= len;
+      s.strm.total_out += len;
+    }
+  } while (last === 0);
+
+  /* Update the sliding window with the last s->w_size bytes of the copied
+   * data, or append all of the copied data to the existing window if less
+   * than s->w_size bytes were copied. Also update the number of bytes to
+   * insert in the hash tables, in the event that deflateParams() switches to
+   * a non-zero compression level.
+   */
+  used -= s.strm.avail_in;    /* number of input bytes directly copied */
+  if (used) {
+    /* If any input was used, then no unused input remains in the window,
+     * therefore s->block_start == s->strstart.
+     */
+    if (used >= s.w_size) {  /* supplant the previous history */
+      s.matches = 2;     /* clear hash */
+      //zmemcpy(s->window, s->strm->next_in - s->w_size, s->w_size);
+      s.window.set(s.strm.input.subarray(s.strm.next_in - s.w_size, s.strm.next_in), 0);
+      s.strstart = s.w_size;
+      s.insert = s.strstart;
+    }
+    else {
+      if (s.window_size - s.strstart <= used) {
+        /* Slide the window down. */
+        s.strstart -= s.w_size;
+        //zmemcpy(s->window, s->window + s->w_size, s->strstart);
+        s.window.set(s.window.subarray(s.w_size, s.w_size + s.strstart), 0);
+        if (s.matches < 2) {
+          s.matches++;   /* add a pending slide_hash() */
+        }
+        if (s.insert > s.strstart) {
+          s.insert = s.strstart;
+        }
+      }
+      //zmemcpy(s->window + s->strstart, s->strm->next_in - used, used);
+      s.window.set(s.strm.input.subarray(s.strm.next_in - used, s.strm.next_in), s.strstart);
+      s.strstart += used;
+      s.insert += used > s.w_size - s.insert ? s.w_size - s.insert : used;
+    }
+    s.block_start = s.strstart;
+  }
+  if (s.high_water < s.strstart) {
+    s.high_water = s.strstart;
+  }
+
+  /* If the last block was written to next_out, then done. */
+  if (last) {
+    return BS_FINISH_DONE;
+  }
+
+  /* If flushing and all input has been consumed, then done. */
+  if (flush !== Z_NO_FLUSH$2 && flush !== Z_FINISH$3 &&
+    s.strm.avail_in === 0 && s.strstart === s.block_start) {
+    return BS_BLOCK_DONE;
+  }
+
+  /* Fill the window with any remaining input. */
+  have = s.window_size - s.strstart;
+  if (s.strm.avail_in > have && s.block_start >= s.w_size) {
+    /* Slide the window down. */
+    s.block_start -= s.w_size;
+    s.strstart -= s.w_size;
+    //zmemcpy(s->window, s->window + s->w_size, s->strstart);
+    s.window.set(s.window.subarray(s.w_size, s.w_size + s.strstart), 0);
+    if (s.matches < 2) {
+      s.matches++;       /* add a pending slide_hash() */
+    }
+    have += s.w_size;      /* more space now */
+    if (s.insert > s.strstart) {
+      s.insert = s.strstart;
+    }
+  }
+  if (have > s.strm.avail_in) {
+    have = s.strm.avail_in;
+  }
+  if (have) {
+    read_buf(s.strm, s.window, s.strstart, have);
+    s.strstart += have;
+    s.insert += have > s.w_size - s.insert ? s.w_size - s.insert : have;
+  }
+  if (s.high_water < s.strstart) {
+    s.high_water = s.strstart;
+  }
+
+  /* There was not enough avail_out to write a complete worthy or flushed
+   * stored block to next_out. Write a stored block to pending instead, if we
+   * have enough input for a worthy block, or if flushing and there is enough
+   * room for the remaining input as a stored block in the pending buffer.
+   */
+  have = (s.bi_valid + 42) >> 3;     /* number of header bytes */
+    /* maximum stored block length that will fit in pending: */
+  have = s.pending_buf_size - have > 65535/* MAX_STORED */ ? 65535/* MAX_STORED */ : s.pending_buf_size - have;
+  min_block = have > s.w_size ? s.w_size : have;
+  left = s.strstart - s.block_start;
+  if (left >= min_block ||
+     ((left || flush === Z_FINISH$3) && flush !== Z_NO_FLUSH$2 &&
+     s.strm.avail_in === 0 && left <= have)) {
+    len = left > have ? have : left;
+    last = flush === Z_FINISH$3 && s.strm.avail_in === 0 &&
+         len === left ? 1 : 0;
+    _tr_stored_block(s, s.block_start, len, last);
+    s.block_start += len;
+    flush_pending(s.strm);
+  }
+
+  /* We've done all we can with the available input and output. */
+  return last ? BS_FINISH_STARTED : BS_NEED_MORE;
+};
+
+
+/* ===========================================================================
+ * Compress as much as possible from the input stream, return the current
+ * block state.
+ * This function does not perform lazy evaluation of matches and inserts
+ * new strings in the dictionary only for unmatched strings or for short
+ * matches. It is used only for the fast compression options.
+ */
+const deflate_fast = (s, flush) => {
+
+  let hash_head;        /* head of the hash chain */
+  let bflush;           /* set if current block must be flushed */
+
+  for (;;) {
+    /* Make sure that we always have enough lookahead, except
+     * at the end of the input file. We need MAX_MATCH bytes
+     * for the next match, plus MIN_MATCH bytes to insert the
+     * string following the next match.
+     */
+    if (s.lookahead < MIN_LOOKAHEAD) {
+      fill_window(s);
+      if (s.lookahead < MIN_LOOKAHEAD && flush === Z_NO_FLUSH$2) {
+        return BS_NEED_MORE;
+      }
+      if (s.lookahead === 0) {
+        break; /* flush the current block */
+      }
+    }
+
+    /* Insert the string window[strstart .. strstart+2] in the
+     * dictionary, and set hash_head to the head of the hash chain:
+     */
+    hash_head = 0/*NIL*/;
+    if (s.lookahead >= MIN_MATCH) {
+      /*** INSERT_STRING(s, s.strstart, hash_head); ***/
+      s.ins_h = HASH(s, s.ins_h, s.window[s.strstart + MIN_MATCH - 1]);
+      hash_head = s.prev[s.strstart & s.w_mask] = s.head[s.ins_h];
+      s.head[s.ins_h] = s.strstart;
+      /***/
+    }
+
+    /* Find the longest match, discarding those <= prev_length.
+     * At this point we have always match_length < MIN_MATCH
+     */
+    if (hash_head !== 0/*NIL*/ && ((s.strstart - hash_head) <= (s.w_size - MIN_LOOKAHEAD))) {
+      /* To simplify the code, we prevent matches with the string
+       * of window index 0 (in particular we have to avoid a match
+       * of the string with itself at the start of the input file).
+       */
+      s.match_length = longest_match(s, hash_head);
+      /* longest_match() sets match_start */
+    }
+    if (s.match_length >= MIN_MATCH) {
+      // check_match(s, s.strstart, s.match_start, s.match_length); // for debug only
+
+      /*** _tr_tally_dist(s, s.strstart - s.match_start,
+                     s.match_length - MIN_MATCH, bflush); ***/
+      bflush = _tr_tally(s, s.strstart - s.match_start, s.match_length - MIN_MATCH);
+
+      s.lookahead -= s.match_length;
+
+      /* Insert new strings in the hash table only if the match length
+       * is not too large. This saves time but degrades compression.
+       */
+      if (s.match_length <= s.max_lazy_match/*max_insert_length*/ && s.lookahead >= MIN_MATCH) {
+        s.match_length--; /* string at strstart already in table */
+        do {
+          s.strstart++;
+          /*** INSERT_STRING(s, s.strstart, hash_head); ***/
+          s.ins_h = HASH(s, s.ins_h, s.window[s.strstart + MIN_MATCH - 1]);
+          hash_head = s.prev[s.strstart & s.w_mask] = s.head[s.ins_h];
+          s.head[s.ins_h] = s.strstart;
+          /***/
+          /* strstart never exceeds WSIZE-MAX_MATCH, so there are
+           * always MIN_MATCH bytes ahead.
+           */
+        } while (--s.match_length !== 0);
+        s.strstart++;
+      } else
+      {
+        s.strstart += s.match_length;
+        s.match_length = 0;
+        s.ins_h = s.window[s.strstart];
+        /* UPDATE_HASH(s, s.ins_h, s.window[s.strstart+1]); */
+        s.ins_h = HASH(s, s.ins_h, s.window[s.strstart + 1]);
+
+//#if MIN_MATCH != 3
+//                Call UPDATE_HASH() MIN_MATCH-3 more times
+//#endif
+        /* If lookahead < MIN_MATCH, ins_h is garbage, but it does not
+         * matter since it will be recomputed at next deflate call.
+         */
+      }
+    } else {
+      /* No match, output a literal byte */
+      //Tracevv((stderr,"%c", s.window[s.strstart]));
+      /*** _tr_tally_lit(s, s.window[s.strstart], bflush); ***/
+      bflush = _tr_tally(s, 0, s.window[s.strstart]);
+
+      s.lookahead--;
+      s.strstart++;
+    }
+    if (bflush) {
+      /*** FLUSH_BLOCK(s, 0); ***/
+      flush_block_only(s, false);
+      if (s.strm.avail_out === 0) {
+        return BS_NEED_MORE;
+      }
+      /***/
+    }
+  }
+  s.insert = ((s.strstart < (MIN_MATCH - 1)) ? s.strstart : MIN_MATCH - 1);
+  if (flush === Z_FINISH$3) {
+    /*** FLUSH_BLOCK(s, 1); ***/
+    flush_block_only(s, true);
+    if (s.strm.avail_out === 0) {
+      return BS_FINISH_STARTED;
+    }
+    /***/
+    return BS_FINISH_DONE;
+  }
+  if (s.sym_next) {
+    /*** FLUSH_BLOCK(s, 0); ***/
+    flush_block_only(s, false);
+    if (s.strm.avail_out === 0) {
+      return BS_NEED_MORE;
+    }
+    /***/
+  }
+  return BS_BLOCK_DONE;
+};
+
+/* ===========================================================================
+ * Same as above, but achieves better compression. We use a lazy
+ * evaluation for matches: a match is finally adopted only if there is
+ * no better match at the next window position.
+ */
+const deflate_slow = (s, flush) => {
+
+  let hash_head;          /* head of hash chain */
+  let bflush;              /* set if current block must be flushed */
+
+  let max_insert;
+
+  /* Process the input block. */
+  for (;;) {
+    /* Make sure that we always have enough lookahead, except
+     * at the end of the input file. We need MAX_MATCH bytes
+     * for the next match, plus MIN_MATCH bytes to insert the
+     * string following the next match.
+     */
+    if (s.lookahead < MIN_LOOKAHEAD) {
+      fill_window(s);
+      if (s.lookahead < MIN_LOOKAHEAD && flush === Z_NO_FLUSH$2) {
+        return BS_NEED_MORE;
+      }
+      if (s.lookahead === 0) { break; } /* flush the current block */
+    }
+
+    /* Insert the string window[strstart .. strstart+2] in the
+     * dictionary, and set hash_head to the head of the hash chain:
+     */
+    hash_head = 0/*NIL*/;
+    if (s.lookahead >= MIN_MATCH) {
+      /*** INSERT_STRING(s, s.strstart, hash_head); ***/
+      s.ins_h = HASH(s, s.ins_h, s.window[s.strstart + MIN_MATCH - 1]);
+      hash_head = s.prev[s.strstart & s.w_mask] = s.head[s.ins_h];
+      s.head[s.ins_h] = s.strstart;
+      /***/
+    }
+
+    /* Find the longest match, discarding those <= prev_length.
+     */
+    s.prev_length = s.match_length;
+    s.prev_match = s.match_start;
+    s.match_length = MIN_MATCH - 1;
+
+    if (hash_head !== 0/*NIL*/ && s.prev_length < s.max_lazy_match &&
+        s.strstart - hash_head <= (s.w_size - MIN_LOOKAHEAD)/*MAX_DIST(s)*/) {
+      /* To simplify the code, we prevent matches with the string
+       * of window index 0 (in particular we have to avoid a match
+       * of the string with itself at the start of the input file).
+       */
+      s.match_length = longest_match(s, hash_head);
+      /* longest_match() sets match_start */
+
+      if (s.match_length <= 5 &&
+         (s.strategy === Z_FILTERED || (s.match_length === MIN_MATCH && s.strstart - s.match_start > 4096/*TOO_FAR*/))) {
+
+        /* If prev_match is also MIN_MATCH, match_start is garbage
+         * but we will ignore the current match anyway.
+         */
+        s.match_length = MIN_MATCH - 1;
+      }
+    }
+    /* If there was a match at the previous step and the current
+     * match is not better, output the previous match:
+     */
+    if (s.prev_length >= MIN_MATCH && s.match_length <= s.prev_length) {
+      max_insert = s.strstart + s.lookahead - MIN_MATCH;
+      /* Do not insert strings in hash table beyond this. */
+
+      //check_match(s, s.strstart-1, s.prev_match, s.prev_length);
+
+      /***_tr_tally_dist(s, s.strstart - 1 - s.prev_match,
+                     s.prev_length - MIN_MATCH, bflush);***/
+      bflush = _tr_tally(s, s.strstart - 1 - s.prev_match, s.prev_length - MIN_MATCH);
+      /* Insert in hash table all strings up to the end of the match.
+       * strstart-1 and strstart are already inserted. If there is not
+       * enough lookahead, the last two strings are not inserted in
+       * the hash table.
+       */
+      s.lookahead -= s.prev_length - 1;
+      s.prev_length -= 2;
+      do {
+        if (++s.strstart <= max_insert) {
+          /*** INSERT_STRING(s, s.strstart, hash_head); ***/
+          s.ins_h = HASH(s, s.ins_h, s.window[s.strstart + MIN_MATCH - 1]);
+          hash_head = s.prev[s.strstart & s.w_mask] = s.head[s.ins_h];
+          s.head[s.ins_h] = s.strstart;
+          /***/
+        }
+      } while (--s.prev_length !== 0);
+      s.match_available = 0;
+      s.match_length = MIN_MATCH - 1;
+      s.strstart++;
+
+      if (bflush) {
+        /*** FLUSH_BLOCK(s, 0); ***/
+        flush_block_only(s, false);
+        if (s.strm.avail_out === 0) {
+          return BS_NEED_MORE;
+        }
+        /***/
+      }
+
+    } else if (s.match_available) {
+      /* If there was no match at the previous position, output a
+       * single literal. If there was a match but the current match
+       * is longer, truncate the previous match to a single literal.
+       */
+      //Tracevv((stderr,"%c", s->window[s->strstart-1]));
+      /*** _tr_tally_lit(s, s.window[s.strstart-1], bflush); ***/
+      bflush = _tr_tally(s, 0, s.window[s.strstart - 1]);
+
+      if (bflush) {
+        /*** FLUSH_BLOCK_ONLY(s, 0) ***/
+        flush_block_only(s, false);
+        /***/
+      }
+      s.strstart++;
+      s.lookahead--;
+      if (s.strm.avail_out === 0) {
+        return BS_NEED_MORE;
+      }
+    } else {
+      /* There is no previous match to compare with, wait for
+       * the next step to decide.
+       */
+      s.match_available = 1;
+      s.strstart++;
+      s.lookahead--;
+    }
+  }
+  //Assert (flush != Z_NO_FLUSH, "no flush?");
+  if (s.match_available) {
+    //Tracevv((stderr,"%c", s->window[s->strstart-1]));
+    /*** _tr_tally_lit(s, s.window[s.strstart-1], bflush); ***/
+    bflush = _tr_tally(s, 0, s.window[s.strstart - 1]);
+
+    s.match_available = 0;
+  }
+  s.insert = s.strstart < MIN_MATCH - 1 ? s.strstart : MIN_MATCH - 1;
+  if (flush === Z_FINISH$3) {
+    /*** FLUSH_BLOCK(s, 1); ***/
+    flush_block_only(s, true);
+    if (s.strm.avail_out === 0) {
+      return BS_FINISH_STARTED;
+    }
+    /***/
+    return BS_FINISH_DONE;
+  }
+  if (s.sym_next) {
+    /*** FLUSH_BLOCK(s, 0); ***/
+    flush_block_only(s, false);
+    if (s.strm.avail_out === 0) {
+      return BS_NEED_MORE;
+    }
+    /***/
+  }
+
+  return BS_BLOCK_DONE;
+};
+
+
+/* ===========================================================================
+ * For Z_RLE, simply look for runs of bytes, generate matches only of distance
+ * one.  Do not maintain a hash table.  (It will be regenerated if this run of
+ * deflate switches away from Z_RLE.)
+ */
+const deflate_rle = (s, flush) => {
+
+  let bflush;            /* set if current block must be flushed */
+  let prev;              /* byte at distance one to match */
+  let scan, strend;      /* scan goes up to strend for length of run */
+
+  const _win = s.window;
+
+  for (;;) {
+    /* Make sure that we always have enough lookahead, except
+     * at the end of the input file. We need MAX_MATCH bytes
+     * for the longest run, plus one for the unrolled loop.
+     */
+    if (s.lookahead <= MAX_MATCH) {
+      fill_window(s);
+      if (s.lookahead <= MAX_MATCH && flush === Z_NO_FLUSH$2) {
+        return BS_NEED_MORE;
+      }
+      if (s.lookahead === 0) { break; } /* flush the current block */
+    }
+
+    /* See how many times the previous byte repeats */
+    s.match_length = 0;
+    if (s.lookahead >= MIN_MATCH && s.strstart > 0) {
+      scan = s.strstart - 1;
+      prev = _win[scan];
+      if (prev === _win[++scan] && prev === _win[++scan] && prev === _win[++scan]) {
+        strend = s.strstart + MAX_MATCH;
+        do {
+          /*jshint noempty:false*/
+        } while (prev === _win[++scan] && prev === _win[++scan] &&
+                 prev === _win[++scan] && prev === _win[++scan] &&
+                 prev === _win[++scan] && prev === _win[++scan] &&
+                 prev === _win[++scan] && prev === _win[++scan] &&
+                 scan < strend);
+        s.match_length = MAX_MATCH - (strend - scan);
+        if (s.match_length > s.lookahead) {
+          s.match_length = s.lookahead;
+        }
+      }
+      //Assert(scan <= s->window+(uInt)(s->window_size-1), "wild scan");
+    }
+
+    /* Emit match if have run of MIN_MATCH or longer, else emit literal */
+    if (s.match_length >= MIN_MATCH) {
+      //check_match(s, s.strstart, s.strstart - 1, s.match_length);
+
+      /*** _tr_tally_dist(s, 1, s.match_length - MIN_MATCH, bflush); ***/
+      bflush = _tr_tally(s, 1, s.match_length - MIN_MATCH);
+
+      s.lookahead -= s.match_length;
+      s.strstart += s.match_length;
+      s.match_length = 0;
+    } else {
+      /* No match, output a literal byte */
+      //Tracevv((stderr,"%c", s->window[s->strstart]));
+      /*** _tr_tally_lit(s, s.window[s.strstart], bflush); ***/
+      bflush = _tr_tally(s, 0, s.window[s.strstart]);
+
+      s.lookahead--;
+      s.strstart++;
+    }
+    if (bflush) {
+      /*** FLUSH_BLOCK(s, 0); ***/
+      flush_block_only(s, false);
+      if (s.strm.avail_out === 0) {
+        return BS_NEED_MORE;
+      }
+      /***/
+    }
+  }
+  s.insert = 0;
+  if (flush === Z_FINISH$3) {
+    /*** FLUSH_BLOCK(s, 1); ***/
+    flush_block_only(s, true);
+    if (s.strm.avail_out === 0) {
+      return BS_FINISH_STARTED;
+    }
+    /***/
+    return BS_FINISH_DONE;
+  }
+  if (s.sym_next) {
+    /*** FLUSH_BLOCK(s, 0); ***/
+    flush_block_only(s, false);
+    if (s.strm.avail_out === 0) {
+      return BS_NEED_MORE;
+    }
+    /***/
+  }
+  return BS_BLOCK_DONE;
+};
+
+/* ===========================================================================
+ * For Z_HUFFMAN_ONLY, do not look for matches.  Do not maintain a hash table.
+ * (It will be regenerated if this run of deflate switches away from Huffman.)
+ */
+const deflate_huff = (s, flush) => {
+
+  let bflush;             /* set if current block must be flushed */
+
+  for (;;) {
+    /* Make sure that we have a literal to write. */
+    if (s.lookahead === 0) {
+      fill_window(s);
+      if (s.lookahead === 0) {
+        if (flush === Z_NO_FLUSH$2) {
+          return BS_NEED_MORE;
+        }
+        break;      /* flush the current block */
+      }
+    }
+
+    /* Output a literal byte */
+    s.match_length = 0;
+    //Tracevv((stderr,"%c", s->window[s->strstart]));
+    /*** _tr_tally_lit(s, s.window[s.strstart], bflush); ***/
+    bflush = _tr_tally(s, 0, s.window[s.strstart]);
+    s.lookahead--;
+    s.strstart++;
+    if (bflush) {
+      /*** FLUSH_BLOCK(s, 0); ***/
+      flush_block_only(s, false);
+      if (s.strm.avail_out === 0) {
+        return BS_NEED_MORE;
+      }
+      /***/
+    }
+  }
+  s.insert = 0;
+  if (flush === Z_FINISH$3) {
+    /*** FLUSH_BLOCK(s, 1); ***/
+    flush_block_only(s, true);
+    if (s.strm.avail_out === 0) {
+      return BS_FINISH_STARTED;
+    }
+    /***/
+    return BS_FINISH_DONE;
+  }
+  if (s.sym_next) {
+    /*** FLUSH_BLOCK(s, 0); ***/
+    flush_block_only(s, false);
+    if (s.strm.avail_out === 0) {
+      return BS_NEED_MORE;
+    }
+    /***/
+  }
+  return BS_BLOCK_DONE;
+};
+
+/* Values for max_lazy_match, good_match and max_chain_length, depending on
+ * the desired pack level (0..9). The values given below have been tuned to
+ * exclude worst case performance for pathological files. Better values may be
+ * found for specific files.
+ */
+function Config(good_length, max_lazy, nice_length, max_chain, func) {
+
+  this.good_length = good_length;
+  this.max_lazy = max_lazy;
+  this.nice_length = nice_length;
+  this.max_chain = max_chain;
+  this.func = func;
+}
+
+const configuration_table = [
+  /*      good lazy nice chain */
+  new Config(0, 0, 0, 0, deflate_stored),          /* 0 store only */
+  new Config(4, 4, 8, 4, deflate_fast),            /* 1 max speed, no lazy matches */
+  new Config(4, 5, 16, 8, deflate_fast),           /* 2 */
+  new Config(4, 6, 32, 32, deflate_fast),          /* 3 */
+
+  new Config(4, 4, 16, 16, deflate_slow),          /* 4 lazy matches */
+  new Config(8, 16, 32, 32, deflate_slow),         /* 5 */
+  new Config(8, 16, 128, 128, deflate_slow),       /* 6 */
+  new Config(8, 32, 128, 256, deflate_slow),       /* 7 */
+  new Config(32, 128, 258, 1024, deflate_slow),    /* 8 */
+  new Config(32, 258, 258, 4096, deflate_slow)     /* 9 max compression */
+];
+
+
+/* ===========================================================================
+ * Initialize the "longest match" routines for a new zlib stream
+ */
+const lm_init = (s) => {
+
+  s.window_size = 2 * s.w_size;
+
+  /*** CLEAR_HASH(s); ***/
+  zero(s.head); // Fill with NIL (= 0);
+
+  /* Set the default configuration parameters:
+   */
+  s.max_lazy_match = configuration_table[s.level].max_lazy;
+  s.good_match = configuration_table[s.level].good_length;
+  s.nice_match = configuration_table[s.level].nice_length;
+  s.max_chain_length = configuration_table[s.level].max_chain;
+
+  s.strstart = 0;
+  s.block_start = 0;
+  s.lookahead = 0;
+  s.insert = 0;
+  s.match_length = s.prev_length = MIN_MATCH - 1;
+  s.match_available = 0;
+  s.ins_h = 0;
+};
+
+
+function DeflateState() {
+  this.strm = null;            /* pointer back to this zlib stream */
+  this.status = 0;            /* as the name implies */
+  this.pending_buf = null;      /* output still pending */
+  this.pending_buf_size = 0;  /* size of pending_buf */
+  this.pending_out = 0;       /* next pending byte to output to the stream */
+  this.pending = 0;           /* nb of bytes in the pending buffer */
+  this.wrap = 0;              /* bit 0 true for zlib, bit 1 true for gzip */
+  this.gzhead = null;         /* gzip header information to write */
+  this.gzindex = 0;           /* where in extra, name, or comment */
+  this.method = Z_DEFLATED$2; /* can only be DEFLATED */
+  this.last_flush = -1;   /* value of flush param for previous deflate call */
+
+  this.w_size = 0;  /* LZ77 window size (32K by default) */
+  this.w_bits = 0;  /* log2(w_size)  (8..16) */
+  this.w_mask = 0;  /* w_size - 1 */
+
+  this.window = null;
+  /* Sliding window. Input bytes are read into the second half of the window,
+   * and move to the first half later to keep a dictionary of at least wSize
+   * bytes. With this organization, matches are limited to a distance of
+   * wSize-MAX_MATCH bytes, but this ensures that IO is always
+   * performed with a length multiple of the block size.
+   */
+
+  this.window_size = 0;
+  /* Actual size of window: 2*wSize, except when the user input buffer
+   * is directly used as sliding window.
+   */
+
+  this.prev = null;
+  /* Link to older string with same hash index. To limit the size of this
+   * array to 64K, this link is maintained only for the last 32K strings.
+   * An index in this array is thus a window index modulo 32K.
+   */
+
+  this.head = null;   /* Heads of the hash chains or NIL. */
+
+  this.ins_h = 0;       /* hash index of string to be inserted */
+  this.hash_size = 0;   /* number of elements in hash table */
+  this.hash_bits = 0;   /* log2(hash_size) */
+  this.hash_mask = 0;   /* hash_size-1 */
+
+  this.hash_shift = 0;
+  /* Number of bits by which ins_h must be shifted at each input
+   * step. It must be such that after MIN_MATCH steps, the oldest
+   * byte no longer takes part in the hash key, that is:
+   *   hash_shift * MIN_MATCH >= hash_bits
+   */
+
+  this.block_start = 0;
+  /* Window position at the beginning of the current output block. Gets
+   * negative when the window is moved backwards.
+   */
+
+  this.match_length = 0;      /* length of best match */
+  this.prev_match = 0;        /* previous match */
+  this.match_available = 0;   /* set if previous match exists */
+  this.strstart = 0;          /* start of string to insert */
+  this.match_start = 0;       /* start of matching string */
+  this.lookahead = 0;         /* number of valid bytes ahead in window */
+
+  this.prev_length = 0;
+  /* Length of the best match at previous step. Matches not greater than this
+   * are discarded. This is used in the lazy match evaluation.
+   */
+
+  this.max_chain_length = 0;
+  /* To speed up deflation, hash chains are never searched beyond this
+   * length.  A higher limit improves compression ratio but degrades the
+   * speed.
+   */
+
+  this.max_lazy_match = 0;
+  /* Attempt to find a better match only when the current match is strictly
+   * smaller than this value. This mechanism is used only for compression
+   * levels >= 4.
+   */
+  // That's alias to max_lazy_match, don't use directly
+  //this.max_insert_length = 0;
+  /* Insert new strings in the hash table only if the match length is not
+   * greater than this length. This saves time but degrades compression.
+   * max_insert_length is used only for compression levels <= 3.
+   */
+
+  this.level = 0;     /* compression level (1..9) */
+  this.strategy = 0;  /* favor or force Huffman coding*/
+
+  this.good_match = 0;
+  /* Use a faster search when the previous match is longer than this */
+
+  this.nice_match = 0; /* Stop searching when current match exceeds this */
+
+              /* used by trees.c: */
+
+  /* Didn't use ct_data typedef below to suppress compiler warning */
+
+  // struct ct_data_s dyn_ltree[HEAP_SIZE];   /* literal and length tree */
+  // struct ct_data_s dyn_dtree[2*D_CODES+1]; /* distance tree */
+  // struct ct_data_s bl_tree[2*BL_CODES+1];  /* Huffman tree for bit lengths */
+
+  // Use flat array of DOUBLE size, with interleaved fata,
+  // because JS does not support effective
+  this.dyn_ltree  = new Uint16Array(HEAP_SIZE * 2);
+  this.dyn_dtree  = new Uint16Array((2 * D_CODES + 1) * 2);
+  this.bl_tree    = new Uint16Array((2 * BL_CODES + 1) * 2);
+  zero(this.dyn_ltree);
+  zero(this.dyn_dtree);
+  zero(this.bl_tree);
+
+  this.l_desc   = null;         /* desc. for literal tree */
+  this.d_desc   = null;         /* desc. for distance tree */
+  this.bl_desc  = null;         /* desc. for bit length tree */
+
+  //ush bl_count[MAX_BITS+1];
+  this.bl_count = new Uint16Array(MAX_BITS + 1);
+  /* number of codes at each bit length for an optimal tree */
+
+  //int heap[2*L_CODES+1];      /* heap used to build the Huffman trees */
+  this.heap = new Uint16Array(2 * L_CODES + 1);  /* heap used to build the Huffman trees */
+  zero(this.heap);
+
+  this.heap_len = 0;               /* number of elements in the heap */
+  this.heap_max = 0;               /* element of largest frequency */
+  /* The sons of heap[n] are heap[2*n] and heap[2*n+1]. heap[0] is not used.
+   * The same heap array is used to build all trees.
+   */
+
+  this.depth = new Uint16Array(2 * L_CODES + 1); //uch depth[2*L_CODES+1];
+  zero(this.depth);
+  /* Depth of each subtree used as tie breaker for trees of equal frequency
+   */
+
+  this.sym_buf = 0;        /* buffer for distances and literals/lengths */
+
+  this.lit_bufsize = 0;
+  /* Size of match buffer for literals/lengths.  There are 4 reasons for
+   * limiting lit_bufsize to 64K:
+   *   - frequencies can be kept in 16 bit counters
+   *   - if compression is not successful for the first block, all input
+   *     data is still in the window so we can still emit a stored block even
+   *     when input comes from standard input.  (This can also be done for
+   *     all blocks if lit_bufsize is not greater than 32K.)
+   *   - if compression is not successful for a file smaller than 64K, we can
+   *     even emit a stored file instead of a stored block (saving 5 bytes).
+   *     This is applicable only for zip (not gzip or zlib).
+   *   - creating new Huffman trees less frequently may not provide fast
+   *     adaptation to changes in the input data statistics. (Take for
+   *     example a binary file with poorly compressible code followed by
+   *     a highly compressible string table.) Smaller buffer sizes give
+   *     fast adaptation but have of course the overhead of transmitting
+   *     trees more frequently.
+   *   - I can't count above 4
+   */
+
+  this.sym_next = 0;      /* running index in sym_buf */
+  this.sym_end = 0;       /* symbol table full when sym_next reaches this */
+
+  this.opt_len = 0;       /* bit length of current block with optimal trees */
+  this.static_len = 0;    /* bit length of current block with static trees */
+  this.matches = 0;       /* number of string matches in current block */
+  this.insert = 0;        /* bytes at end of window left to insert */
+
+
+  this.bi_buf = 0;
+  /* Output buffer. bits are inserted starting at the bottom (least
+   * significant bits).
+   */
+  this.bi_valid = 0;
+  /* Number of valid bits in bi_buf.  All bits above the last valid bit
+   * are always zero.
+   */
+
+  // Used for window memory init. We safely ignore it for JS. That makes
+  // sense only for pointers and memory check tools.
+  //this.high_water = 0;
+  /* High water mark offset in window for initialized bytes -- bytes above
+   * this are set to zero in order to avoid memory check warnings when
+   * longest match routines access bytes past the input.  This is then
+   * updated to the new high water mark.
+   */
+}
+
+
+/* =========================================================================
+ * Check for a valid deflate stream state. Return 0 if ok, 1 if not.
+ */
+const deflateStateCheck = (strm) => {
+
+  if (!strm) {
+    return 1;
+  }
+  const s = strm.state;
+  if (!s || s.strm !== strm || (s.status !== INIT_STATE &&
+//#ifdef GZIP
+                                s.status !== GZIP_STATE &&
+//#endif
+                                s.status !== EXTRA_STATE &&
+                                s.status !== NAME_STATE &&
+                                s.status !== COMMENT_STATE &&
+                                s.status !== HCRC_STATE &&
+                                s.status !== BUSY_STATE &&
+                                s.status !== FINISH_STATE)) {
+    return 1;
+  }
+  return 0;
+};
+
+
+const deflateResetKeep = (strm) => {
+
+  if (deflateStateCheck(strm)) {
+    return err(strm, Z_STREAM_ERROR$2);
+  }
+
+  strm.total_in = strm.total_out = 0;
+  strm.data_type = Z_UNKNOWN;
+
+  const s = strm.state;
+  s.pending = 0;
+  s.pending_out = 0;
+
+  if (s.wrap < 0) {
+    s.wrap = -s.wrap;
+    /* was made negative by deflate(..., Z_FINISH); */
+  }
+  s.status =
+//#ifdef GZIP
+    s.wrap === 2 ? GZIP_STATE :
+//#endif
+    s.wrap ? INIT_STATE : BUSY_STATE;
+  strm.adler = (s.wrap === 2) ?
+    0  // crc32(0, Z_NULL, 0)
+  :
+    1; // adler32(0, Z_NULL, 0)
+  s.last_flush = -2;
+  _tr_init(s);
+  return Z_OK$3;
+};
+
+
+const deflateReset = (strm) => {
+
+  const ret = deflateResetKeep(strm);
+  if (ret === Z_OK$3) {
+    lm_init(strm.state);
+  }
+  return ret;
+};
+
+
+const deflateSetHeader = (strm, head) => {
+
+  if (deflateStateCheck(strm) || strm.state.wrap !== 2) {
+    return Z_STREAM_ERROR$2;
+  }
+  strm.state.gzhead = head;
+  return Z_OK$3;
+};
+
+
+const deflateInit2 = (strm, level, method, windowBits, memLevel, strategy) => {
+
+  if (!strm) { // === Z_NULL
+    return Z_STREAM_ERROR$2;
+  }
+  let wrap = 1;
+
+  if (level === Z_DEFAULT_COMPRESSION$1) {
+    level = 6;
+  }
+
+  if (windowBits < 0) { /* suppress zlib wrapper */
+    wrap = 0;
+    windowBits = -windowBits;
+  }
+
+  else if (windowBits > 15) {
+    wrap = 2;           /* write gzip wrapper instead */
+    windowBits -= 16;
+  }
+
+
+  if (memLevel < 1 || memLevel > MAX_MEM_LEVEL || method !== Z_DEFLATED$2 ||
+    windowBits < 8 || windowBits > 15 || level < 0 || level > 9 ||
+    strategy < 0 || strategy > Z_FIXED || (windowBits === 8 && wrap !== 1)) {
+    return err(strm, Z_STREAM_ERROR$2);
+  }
+
+
+  if (windowBits === 8) {
+    windowBits = 9;
+  }
+  /* until 256-byte window bug fixed */
+
+  const s = new DeflateState();
+
+  strm.state = s;
+  s.strm = strm;
+  s.status = INIT_STATE;     /* to pass state test in deflateReset() */
+
+  s.wrap = wrap;
+  s.gzhead = null;
+  s.w_bits = windowBits;
+  s.w_size = 1 << s.w_bits;
+  s.w_mask = s.w_size - 1;
+
+  s.hash_bits = memLevel + 7;
+  s.hash_size = 1 << s.hash_bits;
+  s.hash_mask = s.hash_size - 1;
+  s.hash_shift = ~~((s.hash_bits + MIN_MATCH - 1) / MIN_MATCH);
+
+  s.window = new Uint8Array(s.w_size * 2);
+  s.head = new Uint16Array(s.hash_size);
+  s.prev = new Uint16Array(s.w_size);
+
+  // Don't need mem init magic for JS.
+  //s.high_water = 0;  /* nothing written to s->window yet */
+
+  s.lit_bufsize = 1 << (memLevel + 6); /* 16K elements by default */
+
+  /* We overlay pending_buf and sym_buf. This works since the average size
+   * for length/distance pairs over any compressed block is assured to be 31
+   * bits or less.
+   *
+   * Analysis: The longest fixed codes are a length code of 8 bits plus 5
+   * extra bits, for lengths 131 to 257. The longest fixed distance codes are
+   * 5 bits plus 13 extra bits, for distances 16385 to 32768. The longest
+   * possible fixed-codes length/distance pair is then 31 bits total.
+   *
+   * sym_buf starts one-fourth of the way into pending_buf. So there are
+   * three bytes in sym_buf for every four bytes in pending_buf. Each symbol
+   * in sym_buf is three bytes -- two for the distance and one for the
+   * literal/length. As each symbol is consumed, the pointer to the next
+   * sym_buf value to read moves forward three bytes. From that symbol, up to
+   * 31 bits are written to pending_buf. The closest the written pending_buf
+   * bits gets to the next sym_buf symbol to read is just before the last
+   * code is written. At that time, 31*(n-2) bits have been written, just
+   * after 24*(n-2) bits have been consumed from sym_buf. sym_buf starts at
+   * 8*n bits into pending_buf. (Note that the symbol buffer fills when n-1
+   * symbols are written.) The closest the writing gets to what is unread is
+   * then n+14 bits. Here n is lit_bufsize, which is 16384 by default, and
+   * can range from 128 to 32768.
+   *
+   * Therefore, at a minimum, there are 142 bits of space between what is
+   * written and what is read in the overlain buffers, so the symbols cannot
+   * be overwritten by the compressed data. That space is actually 139 bits,
+   * due to the three-bit fixed-code block header.
+   *
+   * That covers the case where either Z_FIXED is specified, forcing fixed
+   * codes, or when the use of fixed codes is chosen, because that choice
+   * results in a smaller compressed block than dynamic codes. That latter
+   * condition then assures that the above analysis also covers all dynamic
+   * blocks. A dynamic-code block will only be chosen to be emitted if it has
+   * fewer bits than a fixed-code block would for the same set of symbols.
+   * Therefore its average symbol length is assured to be less than 31. So
+   * the compressed data for a dynamic block also cannot overwrite the
+   * symbols from which it is being constructed.
+   */
+
+  s.pending_buf_size = s.lit_bufsize * 4;
+  s.pending_buf = new Uint8Array(s.pending_buf_size);
+
+  // It is offset from `s.pending_buf` (size is `s.lit_bufsize * 2`)
+  //s->sym_buf = s->pending_buf + s->lit_bufsize;
+  s.sym_buf = s.lit_bufsize;
+
+  //s->sym_end = (s->lit_bufsize - 1) * 3;
+  s.sym_end = (s.lit_bufsize - 1) * 3;
+  /* We avoid equality with lit_bufsize*3 because of wraparound at 64K
+   * on 16 bit machines and because stored blocks are restricted to
+   * 64K-1 bytes.
+   */
+
+  s.level = level;
+  s.strategy = strategy;
+  s.method = method;
+
+  return deflateReset(strm);
+};
+
+const deflateInit = (strm, level) => {
+
+  return deflateInit2(strm, level, Z_DEFLATED$2, MAX_WBITS$1, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY$1);
+};
+
+
+/* ========================================================================= */
+const deflate$2 = (strm, flush) => {
+
+  if (deflateStateCheck(strm) || flush > Z_BLOCK$1 || flush < 0) {
+    return strm ? err(strm, Z_STREAM_ERROR$2) : Z_STREAM_ERROR$2;
+  }
+
+  const s = strm.state;
+
+  if (!strm.output ||
+      (strm.avail_in !== 0 && !strm.input) ||
+      (s.status === FINISH_STATE && flush !== Z_FINISH$3)) {
+    return err(strm, (strm.avail_out === 0) ? Z_BUF_ERROR$1 : Z_STREAM_ERROR$2);
+  }
+
+  const old_flush = s.last_flush;
+  s.last_flush = flush;
+
+  /* Flush as much pending output as possible */
+  if (s.pending !== 0) {
+    flush_pending(strm);
+    if (strm.avail_out === 0) {
+      /* Since avail_out is 0, deflate will be called again with
+       * more output space, but possibly with both pending and
+       * avail_in equal to zero. There won't be anything to do,
+       * but this is not an error situation so make sure we
+       * return OK instead of BUF_ERROR at next call of deflate:
+       */
+      s.last_flush = -1;
+      return Z_OK$3;
+    }
+
+    /* Make sure there is something to do and avoid duplicate consecutive
+     * flushes. For repeated and useless calls with Z_FINISH, we keep
+     * returning Z_STREAM_END instead of Z_BUF_ERROR.
+     */
+  } else if (strm.avail_in === 0 && rank(flush) <= rank(old_flush) &&
+    flush !== Z_FINISH$3) {
+    return err(strm, Z_BUF_ERROR$1);
+  }
+
+  /* User must not provide more input after the first FINISH: */
+  if (s.status === FINISH_STATE && strm.avail_in !== 0) {
+    return err(strm, Z_BUF_ERROR$1);
+  }
+
+  /* Write the header */
+  if (s.status === INIT_STATE && s.wrap === 0) {
+    s.status = BUSY_STATE;
+  }
+  if (s.status === INIT_STATE) {
+    /* zlib header */
+    let header = (Z_DEFLATED$2 + ((s.w_bits - 8) << 4)) << 8;
+    let level_flags = -1;
+
+    if (s.strategy >= Z_HUFFMAN_ONLY || s.level < 2) {
+      level_flags = 0;
+    } else if (s.level < 6) {
+      level_flags = 1;
+    } else if (s.level === 6) {
+      level_flags = 2;
+    } else {
+      level_flags = 3;
+    }
+    header |= (level_flags << 6);
+    if (s.strstart !== 0) { header |= PRESET_DICT; }
+    header += 31 - (header % 31);
+
+    putShortMSB(s, header);
+
+    /* Save the adler32 of the preset dictionary: */
+    if (s.strstart !== 0) {
+      putShortMSB(s, strm.adler >>> 16);
+      putShortMSB(s, strm.adler & 0xffff);
+    }
+    strm.adler = 1; // adler32(0L, Z_NULL, 0);
+    s.status = BUSY_STATE;
+
+    /* Compression must start with an empty pending buffer */
+    flush_pending(strm);
+    if (s.pending !== 0) {
+      s.last_flush = -1;
+      return Z_OK$3;
+    }
+  }
+//#ifdef GZIP
+  if (s.status === GZIP_STATE) {
+    /* gzip header */
+    strm.adler = 0;  //crc32(0L, Z_NULL, 0);
+    put_byte(s, 31);
+    put_byte(s, 139);
+    put_byte(s, 8);
+    if (!s.gzhead) { // s->gzhead == Z_NULL
+      put_byte(s, 0);
+      put_byte(s, 0);
+      put_byte(s, 0);
+      put_byte(s, 0);
+      put_byte(s, 0);
+      put_byte(s, s.level === 9 ? 2 :
+                  (s.strategy >= Z_HUFFMAN_ONLY || s.level < 2 ?
+                   4 : 0));
+      put_byte(s, OS_CODE);
+      s.status = BUSY_STATE;
+
+      /* Compression must start with an empty pending buffer */
+      flush_pending(strm);
+      if (s.pending !== 0) {
+        s.last_flush = -1;
+        return Z_OK$3;
+      }
+    }
+    else {
+      put_byte(s, (s.gzhead.text ? 1 : 0) +
+                  (s.gzhead.hcrc ? 2 : 0) +
+                  (!s.gzhead.extra ? 0 : 4) +
+                  (!s.gzhead.name ? 0 : 8) +
+                  (!s.gzhead.comment ? 0 : 16)
+      );
+      put_byte(s, s.gzhead.time & 0xff);
+      put_byte(s, (s.gzhead.time >> 8) & 0xff);
+      put_byte(s, (s.gzhead.time >> 16) & 0xff);
+      put_byte(s, (s.gzhead.time >> 24) & 0xff);
+      put_byte(s, s.level === 9 ? 2 :
+                  (s.strategy >= Z_HUFFMAN_ONLY || s.level < 2 ?
+                   4 : 0));
+      put_byte(s, s.gzhead.os & 0xff);
+      if (s.gzhead.extra && s.gzhead.extra.length) {
+        put_byte(s, s.gzhead.extra.length & 0xff);
+        put_byte(s, (s.gzhead.extra.length >> 8) & 0xff);
+      }
+      if (s.gzhead.hcrc) {
+        strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending, 0);
+      }
+      s.gzindex = 0;
+      s.status = EXTRA_STATE;
+    }
+  }
+  if (s.status === EXTRA_STATE) {
+    if (s.gzhead.extra/* != Z_NULL*/) {
+      let beg = s.pending;   /* start of bytes to update crc */
+      let left = (s.gzhead.extra.length & 0xffff) - s.gzindex;
+      while (s.pending + left > s.pending_buf_size) {
+        let copy = s.pending_buf_size - s.pending;
+        // zmemcpy(s.pending_buf + s.pending,
+        //    s.gzhead.extra + s.gzindex, copy);
+        s.pending_buf.set(s.gzhead.extra.subarray(s.gzindex, s.gzindex + copy), s.pending);
+        s.pending = s.pending_buf_size;
+        //--- HCRC_UPDATE(beg) ---//
+        if (s.gzhead.hcrc && s.pending > beg) {
+          strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending - beg, beg);
+        }
+        //---//
+        s.gzindex += copy;
+        flush_pending(strm);
+        if (s.pending !== 0) {
+          s.last_flush = -1;
+          return Z_OK$3;
+        }
+        beg = 0;
+        left -= copy;
+      }
+      // JS specific: s.gzhead.extra may be TypedArray or Array for backward compatibility
+      //              TypedArray.slice and TypedArray.from don't exist in IE10-IE11
+      let gzhead_extra = new Uint8Array(s.gzhead.extra);
+      // zmemcpy(s->pending_buf + s->pending,
+      //     s->gzhead->extra + s->gzindex, left);
+      s.pending_buf.set(gzhead_extra.subarray(s.gzindex, s.gzindex + left), s.pending);
+      s.pending += left;
+      //--- HCRC_UPDATE(beg) ---//
+      if (s.gzhead.hcrc && s.pending > beg) {
+        strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending - beg, beg);
+      }
+      //---//
+      s.gzindex = 0;
+    }
+    s.status = NAME_STATE;
+  }
+  if (s.status === NAME_STATE) {
+    if (s.gzhead.name/* != Z_NULL*/) {
+      let beg = s.pending;   /* start of bytes to update crc */
+      let val;
+      do {
+        if (s.pending === s.pending_buf_size) {
+          //--- HCRC_UPDATE(beg) ---//
+          if (s.gzhead.hcrc && s.pending > beg) {
+            strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending - beg, beg);
+          }
+          //---//
+          flush_pending(strm);
+          if (s.pending !== 0) {
+            s.last_flush = -1;
+            return Z_OK$3;
+          }
+          beg = 0;
+        }
+        // JS specific: little magic to add zero terminator to end of string
+        if (s.gzindex < s.gzhead.name.length) {
+          val = s.gzhead.name.charCodeAt(s.gzindex++) & 0xff;
+        } else {
+          val = 0;
+        }
+        put_byte(s, val);
+      } while (val !== 0);
+      //--- HCRC_UPDATE(beg) ---//
+      if (s.gzhead.hcrc && s.pending > beg) {
+        strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending - beg, beg);
+      }
+      //---//
+      s.gzindex = 0;
+    }
+    s.status = COMMENT_STATE;
+  }
+  if (s.status === COMMENT_STATE) {
+    if (s.gzhead.comment/* != Z_NULL*/) {
+      let beg = s.pending;   /* start of bytes to update crc */
+      let val;
+      do {
+        if (s.pending === s.pending_buf_size) {
+          //--- HCRC_UPDATE(beg) ---//
+          if (s.gzhead.hcrc && s.pending > beg) {
+            strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending - beg, beg);
+          }
+          //---//
+          flush_pending(strm);
+          if (s.pending !== 0) {
+            s.last_flush = -1;
+            return Z_OK$3;
+          }
+          beg = 0;
+        }
+        // JS specific: little magic to add zero terminator to end of string
+        if (s.gzindex < s.gzhead.comment.length) {
+          val = s.gzhead.comment.charCodeAt(s.gzindex++) & 0xff;
+        } else {
+          val = 0;
+        }
+        put_byte(s, val);
+      } while (val !== 0);
+      //--- HCRC_UPDATE(beg) ---//
+      if (s.gzhead.hcrc && s.pending > beg) {
+        strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending - beg, beg);
+      }
+      //---//
+    }
+    s.status = HCRC_STATE;
+  }
+  if (s.status === HCRC_STATE) {
+    if (s.gzhead.hcrc) {
+      if (s.pending + 2 > s.pending_buf_size) {
+        flush_pending(strm);
+        if (s.pending !== 0) {
+          s.last_flush = -1;
+          return Z_OK$3;
+        }
+      }
+      put_byte(s, strm.adler & 0xff);
+      put_byte(s, (strm.adler >> 8) & 0xff);
+      strm.adler = 0; //crc32(0L, Z_NULL, 0);
+    }
+    s.status = BUSY_STATE;
+
+    /* Compression must start with an empty pending buffer */
+    flush_pending(strm);
+    if (s.pending !== 0) {
+      s.last_flush = -1;
+      return Z_OK$3;
+    }
+  }
+//#endif
+
+  /* Start a new block or continue the current one.
+   */
+  if (strm.avail_in !== 0 || s.lookahead !== 0 ||
+    (flush !== Z_NO_FLUSH$2 && s.status !== FINISH_STATE)) {
+    let bstate = s.level === 0 ? deflate_stored(s, flush) :
+                 s.strategy === Z_HUFFMAN_ONLY ? deflate_huff(s, flush) :
+                 s.strategy === Z_RLE ? deflate_rle(s, flush) :
+                 configuration_table[s.level].func(s, flush);
+
+    if (bstate === BS_FINISH_STARTED || bstate === BS_FINISH_DONE) {
+      s.status = FINISH_STATE;
+    }
+    if (bstate === BS_NEED_MORE || bstate === BS_FINISH_STARTED) {
+      if (strm.avail_out === 0) {
+        s.last_flush = -1;
+        /* avoid BUF_ERROR next call, see above */
+      }
+      return Z_OK$3;
+      /* If flush != Z_NO_FLUSH && avail_out == 0, the next call
+       * of deflate should use the same flush parameter to make sure
+       * that the flush is complete. So we don't have to output an
+       * empty block here, this will be done at next call. This also
+       * ensures that for a very small output buffer, we emit at most
+       * one empty block.
+       */
+    }
+    if (bstate === BS_BLOCK_DONE) {
+      if (flush === Z_PARTIAL_FLUSH) {
+        _tr_align(s);
+      }
+      else if (flush !== Z_BLOCK$1) { /* FULL_FLUSH or SYNC_FLUSH */
+
+        _tr_stored_block(s, 0, 0, false);
+        /* For a full flush, this empty block will be recognized
+         * as a special marker by inflate_sync().
+         */
+        if (flush === Z_FULL_FLUSH$1) {
+          /*** CLEAR_HASH(s); ***/             /* forget history */
+          zero(s.head); // Fill with NIL (= 0);
+
+          if (s.lookahead === 0) {
+            s.strstart = 0;
+            s.block_start = 0;
+            s.insert = 0;
+          }
+        }
+      }
+      flush_pending(strm);
+      if (strm.avail_out === 0) {
+        s.last_flush = -1; /* avoid BUF_ERROR at next call, see above */
+        return Z_OK$3;
       }
     }
   }
 
-  PNG.prototype.read = function(bytes) {
-    var i, _i, _results;
-    _results = [];
-    for (
-      i = _i = 0;
-      0 <= bytes ? _i < bytes : _i > bytes;
-      i = 0 <= bytes ? ++_i : --_i
-    ) {
-      _results.push(this.data[this.pos++]);
+  if (flush !== Z_FINISH$3) { return Z_OK$3; }
+  if (s.wrap <= 0) { return Z_STREAM_END$3; }
+
+  /* Write the trailer */
+  if (s.wrap === 2) {
+    put_byte(s, strm.adler & 0xff);
+    put_byte(s, (strm.adler >> 8) & 0xff);
+    put_byte(s, (strm.adler >> 16) & 0xff);
+    put_byte(s, (strm.adler >> 24) & 0xff);
+    put_byte(s, strm.total_in & 0xff);
+    put_byte(s, (strm.total_in >> 8) & 0xff);
+    put_byte(s, (strm.total_in >> 16) & 0xff);
+    put_byte(s, (strm.total_in >> 24) & 0xff);
+  }
+  else
+  {
+    putShortMSB(s, strm.adler >>> 16);
+    putShortMSB(s, strm.adler & 0xffff);
+  }
+
+  flush_pending(strm);
+  /* If avail_out is zero, the application will call deflate again
+   * to flush the rest.
+   */
+  if (s.wrap > 0) { s.wrap = -s.wrap; }
+  /* write the trailer only once! */
+  return s.pending !== 0 ? Z_OK$3 : Z_STREAM_END$3;
+};
+
+
+const deflateEnd = (strm) => {
+
+  if (deflateStateCheck(strm)) {
+    return Z_STREAM_ERROR$2;
+  }
+
+  const status = strm.state.status;
+
+  strm.state = null;
+
+  return status === BUSY_STATE ? err(strm, Z_DATA_ERROR$2) : Z_OK$3;
+};
+
+
+/* =========================================================================
+ * Initializes the compression dictionary from the given byte
+ * sequence without producing any compressed output.
+ */
+const deflateSetDictionary = (strm, dictionary) => {
+
+  let dictLength = dictionary.length;
+
+  if (deflateStateCheck(strm)) {
+    return Z_STREAM_ERROR$2;
+  }
+
+  const s = strm.state;
+  const wrap = s.wrap;
+
+  if (wrap === 2 || (wrap === 1 && s.status !== INIT_STATE) || s.lookahead) {
+    return Z_STREAM_ERROR$2;
+  }
+
+  /* when using zlib wrappers, compute Adler-32 for provided dictionary */
+  if (wrap === 1) {
+    /* adler32(strm->adler, dictionary, dictLength); */
+    strm.adler = adler32_1(strm.adler, dictionary, dictLength, 0);
+  }
+
+  s.wrap = 0;   /* avoid computing Adler-32 in read_buf */
+
+  /* if dictionary would fill window, just replace the history */
+  if (dictLength >= s.w_size) {
+    if (wrap === 0) {            /* already empty otherwise */
+      /*** CLEAR_HASH(s); ***/
+      zero(s.head); // Fill with NIL (= 0);
+      s.strstart = 0;
+      s.block_start = 0;
+      s.insert = 0;
     }
-    return _results;
-  };
+    /* use the tail */
+    // dictionary = dictionary.slice(dictLength - s.w_size);
+    let tmpDict = new Uint8Array(s.w_size);
+    tmpDict.set(dictionary.subarray(dictLength - s.w_size, dictLength), 0);
+    dictionary = tmpDict;
+    dictLength = s.w_size;
+  }
+  /* insert dictionary into window and hash */
+  const avail = strm.avail_in;
+  const next = strm.next_in;
+  const input = strm.input;
+  strm.avail_in = dictLength;
+  strm.next_in = 0;
+  strm.input = dictionary;
+  fill_window(s);
+  while (s.lookahead >= MIN_MATCH) {
+    let str = s.strstart;
+    let n = s.lookahead - (MIN_MATCH - 1);
+    do {
+      /* UPDATE_HASH(s, s->ins_h, s->window[str + MIN_MATCH-1]); */
+      s.ins_h = HASH(s, s.ins_h, s.window[str + MIN_MATCH - 1]);
 
-  PNG.prototype.readUInt32 = function() {
-    var b1, b2, b3, b4;
-    b1 = this.data[this.pos++] << 24;
-    b2 = this.data[this.pos++] << 16;
-    b3 = this.data[this.pos++] << 8;
-    b4 = this.data[this.pos++];
-    return b1 | b2 | b3 | b4;
-  };
+      s.prev[str & s.w_mask] = s.head[s.ins_h];
 
-  PNG.prototype.readUInt16 = function() {
-    var b1, b2;
-    b1 = this.data[this.pos++] << 8;
-    b2 = this.data[this.pos++];
-    return b1 | b2;
-  };
+      s.head[s.ins_h] = str;
+      str++;
+    } while (--n);
+    s.strstart = str;
+    s.lookahead = MIN_MATCH - 1;
+    fill_window(s);
+  }
+  s.strstart += s.lookahead;
+  s.block_start = s.strstart;
+  s.insert = s.lookahead;
+  s.lookahead = 0;
+  s.match_length = s.prev_length = MIN_MATCH - 1;
+  s.match_available = 0;
+  strm.next_in = next;
+  strm.input = input;
+  strm.avail_in = avail;
+  s.wrap = wrap;
+  return Z_OK$3;
+};
 
-  PNG.prototype.decodePixels = function(data) {
-    var pixelBytes = this.pixelBitlength / 8;
-    var fullPixels = new Uint8Array(this.width * this.height * pixelBytes);
-    var pos = 0;
-    var _this = this;
 
-    if (data == null) {
-      data = this.imgData;
+var deflateInit_1 = deflateInit;
+var deflateInit2_1 = deflateInit2;
+var deflateReset_1 = deflateReset;
+var deflateResetKeep_1 = deflateResetKeep;
+var deflateSetHeader_1 = deflateSetHeader;
+var deflate_2$1 = deflate$2;
+var deflateEnd_1 = deflateEnd;
+var deflateSetDictionary_1 = deflateSetDictionary;
+var deflateInfo = 'pako deflate (from Nodeca project)';
+
+/* Not implemented
+module.exports.deflateBound = deflateBound;
+module.exports.deflateCopy = deflateCopy;
+module.exports.deflateGetDictionary = deflateGetDictionary;
+module.exports.deflateParams = deflateParams;
+module.exports.deflatePending = deflatePending;
+module.exports.deflatePrime = deflatePrime;
+module.exports.deflateTune = deflateTune;
+*/
+
+var deflate_1$2 = {
+	deflateInit: deflateInit_1,
+	deflateInit2: deflateInit2_1,
+	deflateReset: deflateReset_1,
+	deflateResetKeep: deflateResetKeep_1,
+	deflateSetHeader: deflateSetHeader_1,
+	deflate: deflate_2$1,
+	deflateEnd: deflateEnd_1,
+	deflateSetDictionary: deflateSetDictionary_1,
+	deflateInfo: deflateInfo
+};
+
+const _has = (obj, key) => {
+  return Object.prototype.hasOwnProperty.call(obj, key);
+};
+
+var assign = function (obj /*from1, from2, from3, ...*/) {
+  const sources = Array.prototype.slice.call(arguments, 1);
+  while (sources.length) {
+    const source = sources.shift();
+    if (!source) { continue; }
+
+    if (typeof source !== 'object') {
+      throw new TypeError(source + 'must be non-object');
     }
-    if (data.length === 0) {
-      return new Uint8Array(0);
+
+    for (const p in source) {
+      if (_has(source, p)) {
+        obj[p] = source[p];
+      }
+    }
+  }
+
+  return obj;
+};
+
+
+// Join array of chunks to single array.
+var flattenChunks = (chunks) => {
+  // calculate data length
+  let len = 0;
+
+  for (let i = 0, l = chunks.length; i < l; i++) {
+    len += chunks[i].length;
+  }
+
+  // join chunks
+  const result = new Uint8Array(len);
+
+  for (let i = 0, pos = 0, l = chunks.length; i < l; i++) {
+    let chunk = chunks[i];
+    result.set(chunk, pos);
+    pos += chunk.length;
+  }
+
+  return result;
+};
+
+var common = {
+	assign: assign,
+	flattenChunks: flattenChunks
+};
+
+// String encode/decode helpers
+
+
+// Quick check if we can use fast array to bin string conversion
+//
+// - apply(Array) can fail on Android 2.2
+// - apply(Uint8Array) can fail on iOS 5.1 Safari
+//
+let STR_APPLY_UIA_OK = true;
+
+try { String.fromCharCode.apply(null, new Uint8Array(1)); } catch (__) { STR_APPLY_UIA_OK = false; }
+
+
+// Table with utf8 lengths (calculated by first byte of sequence)
+// Note, that 5 & 6-byte values and some 4-byte values can not be represented in JS,
+// because max possible codepoint is 0x10ffff
+const _utf8len = new Uint8Array(256);
+for (let q = 0; q < 256; q++) {
+  _utf8len[q] = (q >= 252 ? 6 : q >= 248 ? 5 : q >= 240 ? 4 : q >= 224 ? 3 : q >= 192 ? 2 : 1);
+}
+_utf8len[254] = _utf8len[254] = 1; // Invalid sequence start
+
+
+// convert string to array (typed, when possible)
+var string2buf = (str) => {
+  if (typeof TextEncoder === 'function' && TextEncoder.prototype.encode) {
+    return new TextEncoder().encode(str);
+  }
+
+  let buf, c, c2, m_pos, i, str_len = str.length, buf_len = 0;
+
+  // count binary size
+  for (m_pos = 0; m_pos < str_len; m_pos++) {
+    c = str.charCodeAt(m_pos);
+    if ((c & 0xfc00) === 0xd800 && (m_pos + 1 < str_len)) {
+      c2 = str.charCodeAt(m_pos + 1);
+      if ((c2 & 0xfc00) === 0xdc00) {
+        c = 0x10000 + ((c - 0xd800) << 10) + (c2 - 0xdc00);
+        m_pos++;
+      }
+    }
+    buf_len += c < 0x80 ? 1 : c < 0x800 ? 2 : c < 0x10000 ? 3 : 4;
+  }
+
+  // allocate buffer
+  buf = new Uint8Array(buf_len);
+
+  // convert
+  for (i = 0, m_pos = 0; i < buf_len; m_pos++) {
+    c = str.charCodeAt(m_pos);
+    if ((c & 0xfc00) === 0xd800 && (m_pos + 1 < str_len)) {
+      c2 = str.charCodeAt(m_pos + 1);
+      if ((c2 & 0xfc00) === 0xdc00) {
+        c = 0x10000 + ((c - 0xd800) << 10) + (c2 - 0xdc00);
+        m_pos++;
+      }
+    }
+    if (c < 0x80) {
+      /* one byte */
+      buf[i++] = c;
+    } else if (c < 0x800) {
+      /* two bytes */
+      buf[i++] = 0xC0 | (c >>> 6);
+      buf[i++] = 0x80 | (c & 0x3f);
+    } else if (c < 0x10000) {
+      /* three bytes */
+      buf[i++] = 0xE0 | (c >>> 12);
+      buf[i++] = 0x80 | (c >>> 6 & 0x3f);
+      buf[i++] = 0x80 | (c & 0x3f);
+    } else {
+      /* four bytes */
+      buf[i++] = 0xf0 | (c >>> 18);
+      buf[i++] = 0x80 | (c >>> 12 & 0x3f);
+      buf[i++] = 0x80 | (c >>> 6 & 0x3f);
+      buf[i++] = 0x80 | (c & 0x3f);
+    }
+  }
+
+  return buf;
+};
+
+// Helper
+const buf2binstring = (buf, len) => {
+  // On Chrome, the arguments in a function call that are allowed is `65534`.
+  // If the length of the buffer is smaller than that, we can use this optimization,
+  // otherwise we will take a slower path.
+  if (len < 65534) {
+    if (buf.subarray && STR_APPLY_UIA_OK) {
+      return String.fromCharCode.apply(null, buf.length === len ? buf : buf.subarray(0, len));
+    }
+  }
+
+  let result = '';
+  for (let i = 0; i < len; i++) {
+    result += String.fromCharCode(buf[i]);
+  }
+  return result;
+};
+
+
+// convert array to string
+var buf2string = (buf, max) => {
+  const len = max || buf.length;
+
+  if (typeof TextDecoder === 'function' && TextDecoder.prototype.decode) {
+    return new TextDecoder().decode(buf.subarray(0, max));
+  }
+
+  let i, out;
+
+  // Reserve max possible length (2 words per char)
+  // NB: by unknown reasons, Array is significantly faster for
+  //     String.fromCharCode.apply than Uint16Array.
+  const utf16buf = new Array(len * 2);
+
+  for (out = 0, i = 0; i < len;) {
+    let c = buf[i++];
+    // quick process ascii
+    if (c < 0x80) { utf16buf[out++] = c; continue; }
+
+    let c_len = _utf8len[c];
+    // skip 5 & 6 byte codes
+    if (c_len > 4) { utf16buf[out++] = 0xfffd; i += c_len - 1; continue; }
+
+    // apply mask on first byte
+    c &= c_len === 2 ? 0x1f : c_len === 3 ? 0x0f : 0x07;
+    // join the rest
+    while (c_len > 1 && i < len) {
+      c = (c << 6) | (buf[i++] & 0x3f);
+      c_len--;
     }
 
-    data = unzlibSync(data);
-    function pass(x0, y0, dx, dy) {
-      var abyte,
-        c,
-        col,
-        i,
-        left,
-        length,
-        p,
-        pa,
-        paeth,
-        pb,
-        pc,
-        pixels,
-        row,
-        scanlineLength,
-        upper,
-        upperLeft,
-        _i,
-        _j,
-        _k,
-        _l,
-        _m;
-      var w = Math.ceil((_this.width - x0) / dx),
-        h = Math.ceil((_this.height - y0) / dy);
-      var isFull = _this.width == w && _this.height == h;
-      scanlineLength = pixelBytes * w;
-      pixels = isFull ? fullPixels : new Uint8Array(scanlineLength * h);
-      length = data.length;
-      row = 0;
-      c = 0;
-      while (row < h && pos < length) {
-        switch (data[pos++]) {
-          case 0:
-            for (i = _i = 0; _i < scanlineLength; i = _i += 1) {
-              pixels[c++] = data[pos++];
+    // terminated by end of string?
+    if (c_len > 1) { utf16buf[out++] = 0xfffd; continue; }
+
+    if (c < 0x10000) {
+      utf16buf[out++] = c;
+    } else {
+      c -= 0x10000;
+      utf16buf[out++] = 0xd800 | ((c >> 10) & 0x3ff);
+      utf16buf[out++] = 0xdc00 | (c & 0x3ff);
+    }
+  }
+
+  return buf2binstring(utf16buf, out);
+};
+
+
+// Calculate max possible position in utf8 buffer,
+// that will not break sequence. If that's not possible
+// - (very small limits) return max size as is.
+//
+// buf[] - utf8 bytes array
+// max   - length limit (mandatory);
+var utf8border = (buf, max) => {
+
+  max = max || buf.length;
+  if (max > buf.length) { max = buf.length; }
+
+  // go back from last position, until start of sequence found
+  let pos = max - 1;
+  while (pos >= 0 && (buf[pos] & 0xC0) === 0x80) { pos--; }
+
+  // Very small and broken sequence,
+  // return max, because we should return something anyway.
+  if (pos < 0) { return max; }
+
+  // If we came to start of buffer - that means buffer is too small,
+  // return max too.
+  if (pos === 0) { return max; }
+
+  return (pos + _utf8len[buf[pos]] > max) ? pos : max;
+};
+
+var strings = {
+	string2buf: string2buf,
+	buf2string: buf2string,
+	utf8border: utf8border
+};
+
+// (C) 1995-2013 Jean-loup Gailly and Mark Adler
+// (C) 2014-2017 Vitaly Puzrin and Andrey Tupitsin
+//
+// This software is provided 'as-is', without any express or implied
+// warranty. In no event will the authors be held liable for any damages
+// arising from the use of this software.
+//
+// Permission is granted to anyone to use this software for any purpose,
+// including commercial applications, and to alter it and redistribute it
+// freely, subject to the following restrictions:
+//
+// 1. The origin of this software must not be misrepresented; you must not
+//   claim that you wrote the original software. If you use this software
+//   in a product, an acknowledgment in the product documentation would be
+//   appreciated but is not required.
+// 2. Altered source versions must be plainly marked as such, and must not be
+//   misrepresented as being the original software.
+// 3. This notice may not be removed or altered from any source distribution.
+
+function ZStream() {
+  /* next input byte */
+  this.input = null; // JS specific, because we have no pointers
+  this.next_in = 0;
+  /* number of bytes available at input */
+  this.avail_in = 0;
+  /* total number of input bytes read so far */
+  this.total_in = 0;
+  /* next output byte should be put there */
+  this.output = null; // JS specific, because we have no pointers
+  this.next_out = 0;
+  /* remaining free space at output */
+  this.avail_out = 0;
+  /* total number of bytes output so far */
+  this.total_out = 0;
+  /* last error message, NULL if no error */
+  this.msg = ''/*Z_NULL*/;
+  /* not visible by applications */
+  this.state = null;
+  /* best guess about the data type: binary or text */
+  this.data_type = 2/*Z_UNKNOWN*/;
+  /* adler32 value of the uncompressed data */
+  this.adler = 0;
+}
+
+var zstream = ZStream;
+
+const toString$1 = Object.prototype.toString;
+
+/* Public constants ==========================================================*/
+/* ===========================================================================*/
+
+const {
+  Z_NO_FLUSH: Z_NO_FLUSH$1, Z_SYNC_FLUSH, Z_FULL_FLUSH, Z_FINISH: Z_FINISH$2,
+  Z_OK: Z_OK$2, Z_STREAM_END: Z_STREAM_END$2,
+  Z_DEFAULT_COMPRESSION,
+  Z_DEFAULT_STRATEGY,
+  Z_DEFLATED: Z_DEFLATED$1
+} = constants$2;
+
+/* ===========================================================================*/
+
+
+/**
+ * class Deflate
+ *
+ * Generic JS-style wrapper for zlib calls. If you don't need
+ * streaming behaviour - use more simple functions: [[deflate]],
+ * [[deflateRaw]] and [[gzip]].
+ **/
+
+/* internal
+ * Deflate.chunks -> Array
+ *
+ * Chunks of output data, if [[Deflate#onData]] not overridden.
+ **/
+
+/**
+ * Deflate.result -> Uint8Array
+ *
+ * Compressed result, generated by default [[Deflate#onData]]
+ * and [[Deflate#onEnd]] handlers. Filled after you push last chunk
+ * (call [[Deflate#push]] with `Z_FINISH` / `true` param).
+ **/
+
+/**
+ * Deflate.err -> Number
+ *
+ * Error code after deflate finished. 0 (Z_OK) on success.
+ * You will not need it in real life, because deflate errors
+ * are possible only on wrong options or bad `onData` / `onEnd`
+ * custom handlers.
+ **/
+
+/**
+ * Deflate.msg -> String
+ *
+ * Error message, if [[Deflate.err]] != 0
+ **/
+
+
+/**
+ * new Deflate(options)
+ * - options (Object): zlib deflate options.
+ *
+ * Creates new deflator instance with specified params. Throws exception
+ * on bad params. Supported options:
+ *
+ * - `level`
+ * - `windowBits`
+ * - `memLevel`
+ * - `strategy`
+ * - `dictionary`
+ *
+ * [http://zlib.net/manual.html#Advanced](http://zlib.net/manual.html#Advanced)
+ * for more information on these.
+ *
+ * Additional options, for internal needs:
+ *
+ * - `chunkSize` - size of generated data chunks (16K by default)
+ * - `raw` (Boolean) - do raw deflate
+ * - `gzip` (Boolean) - create gzip wrapper
+ * - `header` (Object) - custom header for gzip
+ *   - `text` (Boolean) - true if compressed data believed to be text
+ *   - `time` (Number) - modification time, unix timestamp
+ *   - `os` (Number) - operation system code
+ *   - `extra` (Array) - array of bytes with extra data (max 65536)
+ *   - `name` (String) - file name (binary string)
+ *   - `comment` (String) - comment (binary string)
+ *   - `hcrc` (Boolean) - true if header crc should be added
+ *
+ * ##### Example:
+ *
+ * ```javascript
+ * const pako = require('pako')
+ *   , chunk1 = new Uint8Array([1,2,3,4,5,6,7,8,9])
+ *   , chunk2 = new Uint8Array([10,11,12,13,14,15,16,17,18,19]);
+ *
+ * const deflate = new pako.Deflate({ level: 3});
+ *
+ * deflate.push(chunk1, false);
+ * deflate.push(chunk2, true);  // true -> last chunk
+ *
+ * if (deflate.err) { throw new Error(deflate.err); }
+ *
+ * console.log(deflate.result);
+ * ```
+ **/
+function Deflate$1(options) {
+  this.options = common.assign({
+    level: Z_DEFAULT_COMPRESSION,
+    method: Z_DEFLATED$1,
+    chunkSize: 16384,
+    windowBits: 15,
+    memLevel: 8,
+    strategy: Z_DEFAULT_STRATEGY
+  }, options || {});
+
+  let opt = this.options;
+
+  if (opt.raw && (opt.windowBits > 0)) {
+    opt.windowBits = -opt.windowBits;
+  }
+
+  else if (opt.gzip && (opt.windowBits > 0) && (opt.windowBits < 16)) {
+    opt.windowBits += 16;
+  }
+
+  this.err    = 0;      // error code, if happens (0 = Z_OK)
+  this.msg    = '';     // error message
+  this.ended  = false;  // used to avoid multiple onEnd() calls
+  this.chunks = [];     // chunks of compressed data
+
+  this.strm = new zstream();
+  this.strm.avail_out = 0;
+
+  let status = deflate_1$2.deflateInit2(
+    this.strm,
+    opt.level,
+    opt.method,
+    opt.windowBits,
+    opt.memLevel,
+    opt.strategy
+  );
+
+  if (status !== Z_OK$2) {
+    throw new Error(messages[status]);
+  }
+
+  if (opt.header) {
+    deflate_1$2.deflateSetHeader(this.strm, opt.header);
+  }
+
+  if (opt.dictionary) {
+    let dict;
+    // Convert data if needed
+    if (typeof opt.dictionary === 'string') {
+      // If we need to compress text, change encoding to utf8.
+      dict = strings.string2buf(opt.dictionary);
+    } else if (toString$1.call(opt.dictionary) === '[object ArrayBuffer]') {
+      dict = new Uint8Array(opt.dictionary);
+    } else {
+      dict = opt.dictionary;
+    }
+
+    status = deflate_1$2.deflateSetDictionary(this.strm, dict);
+
+    if (status !== Z_OK$2) {
+      throw new Error(messages[status]);
+    }
+
+    this._dict_set = true;
+  }
+}
+
+/**
+ * Deflate#push(data[, flush_mode]) -> Boolean
+ * - data (Uint8Array|ArrayBuffer|String): input data. Strings will be
+ *   converted to utf8 byte sequence.
+ * - flush_mode (Number|Boolean): 0..6 for corresponding Z_NO_FLUSH..Z_TREE modes.
+ *   See constants. Skipped or `false` means Z_NO_FLUSH, `true` means Z_FINISH.
+ *
+ * Sends input data to deflate pipe, generating [[Deflate#onData]] calls with
+ * new compressed chunks. Returns `true` on success. The last data block must
+ * have `flush_mode` Z_FINISH (or `true`). That will flush internal pending
+ * buffers and call [[Deflate#onEnd]].
+ *
+ * On fail call [[Deflate#onEnd]] with error code and return false.
+ *
+ * ##### Example
+ *
+ * ```javascript
+ * push(chunk, false); // push one of data chunks
+ * ...
+ * push(chunk, true);  // push last chunk
+ * ```
+ **/
+Deflate$1.prototype.push = function (data, flush_mode) {
+  const strm = this.strm;
+  const chunkSize = this.options.chunkSize;
+  let status, _flush_mode;
+
+  if (this.ended) { return false; }
+
+  if (flush_mode === ~~flush_mode) _flush_mode = flush_mode;
+  else _flush_mode = flush_mode === true ? Z_FINISH$2 : Z_NO_FLUSH$1;
+
+  // Convert data if needed
+  if (typeof data === 'string') {
+    // If we need to compress text, change encoding to utf8.
+    strm.input = strings.string2buf(data);
+  } else if (toString$1.call(data) === '[object ArrayBuffer]') {
+    strm.input = new Uint8Array(data);
+  } else {
+    strm.input = data;
+  }
+
+  strm.next_in = 0;
+  strm.avail_in = strm.input.length;
+
+  for (;;) {
+    if (strm.avail_out === 0) {
+      strm.output = new Uint8Array(chunkSize);
+      strm.next_out = 0;
+      strm.avail_out = chunkSize;
+    }
+
+    // Make sure avail_out > 6 to avoid repeating markers
+    if ((_flush_mode === Z_SYNC_FLUSH || _flush_mode === Z_FULL_FLUSH) && strm.avail_out <= 6) {
+      this.onData(strm.output.subarray(0, strm.next_out));
+      strm.avail_out = 0;
+      continue;
+    }
+
+    status = deflate_1$2.deflate(strm, _flush_mode);
+
+    // Ended => flush and finish
+    if (status === Z_STREAM_END$2) {
+      if (strm.next_out > 0) {
+        this.onData(strm.output.subarray(0, strm.next_out));
+      }
+      status = deflate_1$2.deflateEnd(this.strm);
+      this.onEnd(status);
+      this.ended = true;
+      return status === Z_OK$2;
+    }
+
+    // Flush if out buffer full
+    if (strm.avail_out === 0) {
+      this.onData(strm.output);
+      continue;
+    }
+
+    // Flush if requested and has data
+    if (_flush_mode > 0 && strm.next_out > 0) {
+      this.onData(strm.output.subarray(0, strm.next_out));
+      strm.avail_out = 0;
+      continue;
+    }
+
+    if (strm.avail_in === 0) break;
+  }
+
+  return true;
+};
+
+
+/**
+ * Deflate#onData(chunk) -> Void
+ * - chunk (Uint8Array): output data.
+ *
+ * By default, stores data blocks in `chunks[]` property and glue
+ * those in `onEnd`. Override this handler, if you need another behaviour.
+ **/
+Deflate$1.prototype.onData = function (chunk) {
+  this.chunks.push(chunk);
+};
+
+
+/**
+ * Deflate#onEnd(status) -> Void
+ * - status (Number): deflate status. 0 (Z_OK) on success,
+ *   other if not.
+ *
+ * Called once after you tell deflate that the input stream is
+ * complete (Z_FINISH). By default - join collected chunks,
+ * free memory and fill `results` / `err` properties.
+ **/
+Deflate$1.prototype.onEnd = function (status) {
+  // On success - join
+  if (status === Z_OK$2) {
+    this.result = common.flattenChunks(this.chunks);
+  }
+  this.chunks = [];
+  this.err = status;
+  this.msg = this.strm.msg;
+};
+
+// (C) 1995-2013 Jean-loup Gailly and Mark Adler
+// (C) 2014-2017 Vitaly Puzrin and Andrey Tupitsin
+//
+// This software is provided 'as-is', without any express or implied
+// warranty. In no event will the authors be held liable for any damages
+// arising from the use of this software.
+//
+// Permission is granted to anyone to use this software for any purpose,
+// including commercial applications, and to alter it and redistribute it
+// freely, subject to the following restrictions:
+//
+// 1. The origin of this software must not be misrepresented; you must not
+//   claim that you wrote the original software. If you use this software
+//   in a product, an acknowledgment in the product documentation would be
+//   appreciated but is not required.
+// 2. Altered source versions must be plainly marked as such, and must not be
+//   misrepresented as being the original software.
+// 3. This notice may not be removed or altered from any source distribution.
+
+// See state defs from inflate.js
+const BAD$1 = 16209;       /* got a data error -- remain here until reset */
+const TYPE$1 = 16191;      /* i: waiting for type bits, including last-flag bit */
+
+/*
+   Decode literal, length, and distance codes and write out the resulting
+   literal and match bytes until either not enough input or output is
+   available, an end-of-block is encountered, or a data error is encountered.
+   When large enough input and output buffers are supplied to inflate(), for
+   example, a 16K input buffer and a 64K output buffer, more than 95% of the
+   inflate execution time is spent in this routine.
+
+   Entry assumptions:
+
+        state.mode === LEN
+        strm.avail_in >= 6
+        strm.avail_out >= 258
+        start >= strm.avail_out
+        state.bits < 8
+
+   On return, state.mode is one of:
+
+        LEN -- ran out of enough output space or enough available input
+        TYPE -- reached end of block code, inflate() to interpret next block
+        BAD -- error in block data
+
+   Notes:
+
+    - The maximum input bits used by a length/distance pair is 15 bits for the
+      length code, 5 bits for the length extra, 15 bits for the distance code,
+      and 13 bits for the distance extra.  This totals 48 bits, or six bytes.
+      Therefore if strm.avail_in >= 6, then there is enough input to avoid
+      checking for available input while decoding.
+
+    - The maximum bytes that a single length/distance pair can output is 258
+      bytes, which is the maximum length that can be coded.  inflate_fast()
+      requires strm.avail_out >= 258 for each loop to avoid checking for
+      output space.
+ */
+var inffast = function inflate_fast(strm, start) {
+  let _in;                    /* local strm.input */
+  let last;                   /* have enough input while in < last */
+  let _out;                   /* local strm.output */
+  let beg;                    /* inflate()'s initial strm.output */
+  let end;                    /* while out < end, enough space available */
+//#ifdef INFLATE_STRICT
+  let dmax;                   /* maximum distance from zlib header */
+//#endif
+  let wsize;                  /* window size or zero if not using window */
+  let whave;                  /* valid bytes in the window */
+  let wnext;                  /* window write index */
+  // Use `s_window` instead `window`, avoid conflict with instrumentation tools
+  let s_window;               /* allocated sliding window, if wsize != 0 */
+  let hold;                   /* local strm.hold */
+  let bits;                   /* local strm.bits */
+  let lcode;                  /* local strm.lencode */
+  let dcode;                  /* local strm.distcode */
+  let lmask;                  /* mask for first level of length codes */
+  let dmask;                  /* mask for first level of distance codes */
+  let here;                   /* retrieved table entry */
+  let op;                     /* code bits, operation, extra bits, or */
+                              /*  window position, window bytes to copy */
+  let len;                    /* match length, unused bytes */
+  let dist;                   /* match distance */
+  let from;                   /* where to copy match from */
+  let from_source;
+
+
+  let input, output; // JS specific, because we have no pointers
+
+  /* copy state to local variables */
+  const state = strm.state;
+  //here = state.here;
+  _in = strm.next_in;
+  input = strm.input;
+  last = _in + (strm.avail_in - 5);
+  _out = strm.next_out;
+  output = strm.output;
+  beg = _out - (start - strm.avail_out);
+  end = _out + (strm.avail_out - 257);
+//#ifdef INFLATE_STRICT
+  dmax = state.dmax;
+//#endif
+  wsize = state.wsize;
+  whave = state.whave;
+  wnext = state.wnext;
+  s_window = state.window;
+  hold = state.hold;
+  bits = state.bits;
+  lcode = state.lencode;
+  dcode = state.distcode;
+  lmask = (1 << state.lenbits) - 1;
+  dmask = (1 << state.distbits) - 1;
+
+
+  /* decode literals and length/distances until end-of-block or not enough
+     input data or output space */
+
+  top:
+  do {
+    if (bits < 15) {
+      hold += input[_in++] << bits;
+      bits += 8;
+      hold += input[_in++] << bits;
+      bits += 8;
+    }
+
+    here = lcode[hold & lmask];
+
+    dolen:
+    for (;;) { // Goto emulation
+      op = here >>> 24/*here.bits*/;
+      hold >>>= op;
+      bits -= op;
+      op = (here >>> 16) & 0xff/*here.op*/;
+      if (op === 0) {                          /* literal */
+        //Tracevv((stderr, here.val >= 0x20 && here.val < 0x7f ?
+        //        "inflate:         literal '%c'\n" :
+        //        "inflate:         literal 0x%02x\n", here.val));
+        output[_out++] = here & 0xffff/*here.val*/;
+      }
+      else if (op & 16) {                     /* length base */
+        len = here & 0xffff/*here.val*/;
+        op &= 15;                           /* number of extra bits */
+        if (op) {
+          if (bits < op) {
+            hold += input[_in++] << bits;
+            bits += 8;
+          }
+          len += hold & ((1 << op) - 1);
+          hold >>>= op;
+          bits -= op;
+        }
+        //Tracevv((stderr, "inflate:         length %u\n", len));
+        if (bits < 15) {
+          hold += input[_in++] << bits;
+          bits += 8;
+          hold += input[_in++] << bits;
+          bits += 8;
+        }
+        here = dcode[hold & dmask];
+
+        dodist:
+        for (;;) { // goto emulation
+          op = here >>> 24/*here.bits*/;
+          hold >>>= op;
+          bits -= op;
+          op = (here >>> 16) & 0xff/*here.op*/;
+
+          if (op & 16) {                      /* distance base */
+            dist = here & 0xffff/*here.val*/;
+            op &= 15;                       /* number of extra bits */
+            if (bits < op) {
+              hold += input[_in++] << bits;
+              bits += 8;
+              if (bits < op) {
+                hold += input[_in++] << bits;
+                bits += 8;
+              }
+            }
+            dist += hold & ((1 << op) - 1);
+//#ifdef INFLATE_STRICT
+            if (dist > dmax) {
+              strm.msg = 'invalid distance too far back';
+              state.mode = BAD$1;
+              break top;
+            }
+//#endif
+            hold >>>= op;
+            bits -= op;
+            //Tracevv((stderr, "inflate:         distance %u\n", dist));
+            op = _out - beg;                /* max distance in output */
+            if (dist > op) {                /* see if copy from window */
+              op = dist - op;               /* distance back in window */
+              if (op > whave) {
+                if (state.sane) {
+                  strm.msg = 'invalid distance too far back';
+                  state.mode = BAD$1;
+                  break top;
+                }
+
+// (!) This block is disabled in zlib defaults,
+// don't enable it for binary compatibility
+//#ifdef INFLATE_ALLOW_INVALID_DISTANCE_TOOFAR_ARRR
+//                if (len <= op - whave) {
+//                  do {
+//                    output[_out++] = 0;
+//                  } while (--len);
+//                  continue top;
+//                }
+//                len -= op - whave;
+//                do {
+//                  output[_out++] = 0;
+//                } while (--op > whave);
+//                if (op === 0) {
+//                  from = _out - dist;
+//                  do {
+//                    output[_out++] = output[from++];
+//                  } while (--len);
+//                  continue top;
+//                }
+//#endif
+              }
+              from = 0; // window index
+              from_source = s_window;
+              if (wnext === 0) {           /* very common case */
+                from += wsize - op;
+                if (op < len) {         /* some from window */
+                  len -= op;
+                  do {
+                    output[_out++] = s_window[from++];
+                  } while (--op);
+                  from = _out - dist;  /* rest from output */
+                  from_source = output;
+                }
+              }
+              else if (wnext < op) {      /* wrap around window */
+                from += wsize + wnext - op;
+                op -= wnext;
+                if (op < len) {         /* some from end of window */
+                  len -= op;
+                  do {
+                    output[_out++] = s_window[from++];
+                  } while (--op);
+                  from = 0;
+                  if (wnext < len) {  /* some from start of window */
+                    op = wnext;
+                    len -= op;
+                    do {
+                      output[_out++] = s_window[from++];
+                    } while (--op);
+                    from = _out - dist;      /* rest from output */
+                    from_source = output;
+                  }
+                }
+              }
+              else {                      /* contiguous in window */
+                from += wnext - op;
+                if (op < len) {         /* some from window */
+                  len -= op;
+                  do {
+                    output[_out++] = s_window[from++];
+                  } while (--op);
+                  from = _out - dist;  /* rest from output */
+                  from_source = output;
+                }
+              }
+              while (len > 2) {
+                output[_out++] = from_source[from++];
+                output[_out++] = from_source[from++];
+                output[_out++] = from_source[from++];
+                len -= 3;
+              }
+              if (len) {
+                output[_out++] = from_source[from++];
+                if (len > 1) {
+                  output[_out++] = from_source[from++];
+                }
+              }
+            }
+            else {
+              from = _out - dist;          /* copy direct from output */
+              do {                        /* minimum length is three */
+                output[_out++] = output[from++];
+                output[_out++] = output[from++];
+                output[_out++] = output[from++];
+                len -= 3;
+              } while (len > 2);
+              if (len) {
+                output[_out++] = output[from++];
+                if (len > 1) {
+                  output[_out++] = output[from++];
+                }
+              }
+            }
+          }
+          else if ((op & 64) === 0) {          /* 2nd level distance code */
+            here = dcode[(here & 0xffff)/*here.val*/ + (hold & ((1 << op) - 1))];
+            continue dodist;
+          }
+          else {
+            strm.msg = 'invalid distance code';
+            state.mode = BAD$1;
+            break top;
+          }
+
+          break; // need to emulate goto via "continue"
+        }
+      }
+      else if ((op & 64) === 0) {              /* 2nd level length code */
+        here = lcode[(here & 0xffff)/*here.val*/ + (hold & ((1 << op) - 1))];
+        continue dolen;
+      }
+      else if (op & 32) {                     /* end-of-block */
+        //Tracevv((stderr, "inflate:         end of block\n"));
+        state.mode = TYPE$1;
+        break top;
+      }
+      else {
+        strm.msg = 'invalid literal/length code';
+        state.mode = BAD$1;
+        break top;
+      }
+
+      break; // need to emulate goto via "continue"
+    }
+  } while (_in < last && _out < end);
+
+  /* return unused bytes (on entry, bits < 8, so in won't go too far back) */
+  len = bits >> 3;
+  _in -= len;
+  bits -= len << 3;
+  hold &= (1 << bits) - 1;
+
+  /* update state and return */
+  strm.next_in = _in;
+  strm.next_out = _out;
+  strm.avail_in = (_in < last ? 5 + (last - _in) : 5 - (_in - last));
+  strm.avail_out = (_out < end ? 257 + (end - _out) : 257 - (_out - end));
+  state.hold = hold;
+  state.bits = bits;
+  return;
+};
+
+// (C) 1995-2013 Jean-loup Gailly and Mark Adler
+// (C) 2014-2017 Vitaly Puzrin and Andrey Tupitsin
+//
+// This software is provided 'as-is', without any express or implied
+// warranty. In no event will the authors be held liable for any damages
+// arising from the use of this software.
+//
+// Permission is granted to anyone to use this software for any purpose,
+// including commercial applications, and to alter it and redistribute it
+// freely, subject to the following restrictions:
+//
+// 1. The origin of this software must not be misrepresented; you must not
+//   claim that you wrote the original software. If you use this software
+//   in a product, an acknowledgment in the product documentation would be
+//   appreciated but is not required.
+// 2. Altered source versions must be plainly marked as such, and must not be
+//   misrepresented as being the original software.
+// 3. This notice may not be removed or altered from any source distribution.
+
+const MAXBITS = 15;
+const ENOUGH_LENS$1 = 852;
+const ENOUGH_DISTS$1 = 592;
+//const ENOUGH = (ENOUGH_LENS+ENOUGH_DISTS);
+
+const CODES$1 = 0;
+const LENS$1 = 1;
+const DISTS$1 = 2;
+
+const lbase = new Uint16Array([ /* Length codes 257..285 base */
+  3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31,
+  35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258, 0, 0
+]);
+
+const lext = new Uint8Array([ /* Length codes 257..285 extra */
+  16, 16, 16, 16, 16, 16, 16, 16, 17, 17, 17, 17, 18, 18, 18, 18,
+  19, 19, 19, 19, 20, 20, 20, 20, 21, 21, 21, 21, 16, 72, 78
+]);
+
+const dbase = new Uint16Array([ /* Distance codes 0..29 base */
+  1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193,
+  257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145,
+  8193, 12289, 16385, 24577, 0, 0
+]);
+
+const dext = new Uint8Array([ /* Distance codes 0..29 extra */
+  16, 16, 16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22,
+  23, 23, 24, 24, 25, 25, 26, 26, 27, 27,
+  28, 28, 29, 29, 64, 64
+]);
+
+const inflate_table = (type, lens, lens_index, codes, table, table_index, work, opts) =>
+{
+  const bits = opts.bits;
+      //here = opts.here; /* table entry for duplication */
+
+  let len = 0;               /* a code's length in bits */
+  let sym = 0;               /* index of code symbols */
+  let min = 0, max = 0;          /* minimum and maximum code lengths */
+  let root = 0;              /* number of index bits for root table */
+  let curr = 0;              /* number of index bits for current table */
+  let drop = 0;              /* code bits to drop for sub-table */
+  let left = 0;                   /* number of prefix codes available */
+  let used = 0;              /* code entries in table used */
+  let huff = 0;              /* Huffman code */
+  let incr;              /* for incrementing code, index */
+  let fill;              /* index for replicating entries */
+  let low;               /* low bits for current root entry */
+  let mask;              /* mask for low root bits */
+  let next;             /* next available space in table */
+  let base = null;     /* base value table to use */
+//  let shoextra;    /* extra bits table to use */
+  let match;                  /* use base and extra for symbol >= match */
+  const count = new Uint16Array(MAXBITS + 1); //[MAXBITS+1];    /* number of codes of each length */
+  const offs = new Uint16Array(MAXBITS + 1); //[MAXBITS+1];     /* offsets in table for each length */
+  let extra = null;
+
+  let here_bits, here_op, here_val;
+
+  /*
+   Process a set of code lengths to create a canonical Huffman code.  The
+   code lengths are lens[0..codes-1].  Each length corresponds to the
+   symbols 0..codes-1.  The Huffman code is generated by first sorting the
+   symbols by length from short to long, and retaining the symbol order
+   for codes with equal lengths.  Then the code starts with all zero bits
+   for the first code of the shortest length, and the codes are integer
+   increments for the same length, and zeros are appended as the length
+   increases.  For the deflate format, these bits are stored backwards
+   from their more natural integer increment ordering, and so when the
+   decoding tables are built in the large loop below, the integer codes
+   are incremented backwards.
+
+   This routine assumes, but does not check, that all of the entries in
+   lens[] are in the range 0..MAXBITS.  The caller must assure this.
+   1..MAXBITS is interpreted as that code length.  zero means that that
+   symbol does not occur in this code.
+
+   The codes are sorted by computing a count of codes for each length,
+   creating from that a table of starting indices for each length in the
+   sorted table, and then entering the symbols in order in the sorted
+   table.  The sorted table is work[], with that space being provided by
+   the caller.
+
+   The length counts are used for other purposes as well, i.e. finding
+   the minimum and maximum length codes, determining if there are any
+   codes at all, checking for a valid set of lengths, and looking ahead
+   at length counts to determine sub-table sizes when building the
+   decoding tables.
+   */
+
+  /* accumulate lengths for codes (assumes lens[] all in 0..MAXBITS) */
+  for (len = 0; len <= MAXBITS; len++) {
+    count[len] = 0;
+  }
+  for (sym = 0; sym < codes; sym++) {
+    count[lens[lens_index + sym]]++;
+  }
+
+  /* bound code lengths, force root to be within code lengths */
+  root = bits;
+  for (max = MAXBITS; max >= 1; max--) {
+    if (count[max] !== 0) { break; }
+  }
+  if (root > max) {
+    root = max;
+  }
+  if (max === 0) {                     /* no symbols to code at all */
+    //table.op[opts.table_index] = 64;  //here.op = (var char)64;    /* invalid code marker */
+    //table.bits[opts.table_index] = 1;   //here.bits = (var char)1;
+    //table.val[opts.table_index++] = 0;   //here.val = (var short)0;
+    table[table_index++] = (1 << 24) | (64 << 16) | 0;
+
+
+    //table.op[opts.table_index] = 64;
+    //table.bits[opts.table_index] = 1;
+    //table.val[opts.table_index++] = 0;
+    table[table_index++] = (1 << 24) | (64 << 16) | 0;
+
+    opts.bits = 1;
+    return 0;     /* no symbols, but wait for decoding to report error */
+  }
+  for (min = 1; min < max; min++) {
+    if (count[min] !== 0) { break; }
+  }
+  if (root < min) {
+    root = min;
+  }
+
+  /* check for an over-subscribed or incomplete set of lengths */
+  left = 1;
+  for (len = 1; len <= MAXBITS; len++) {
+    left <<= 1;
+    left -= count[len];
+    if (left < 0) {
+      return -1;
+    }        /* over-subscribed */
+  }
+  if (left > 0 && (type === CODES$1 || max !== 1)) {
+    return -1;                      /* incomplete set */
+  }
+
+  /* generate offsets into symbol table for each length for sorting */
+  offs[1] = 0;
+  for (len = 1; len < MAXBITS; len++) {
+    offs[len + 1] = offs[len] + count[len];
+  }
+
+  /* sort symbols by length, by symbol order within each length */
+  for (sym = 0; sym < codes; sym++) {
+    if (lens[lens_index + sym] !== 0) {
+      work[offs[lens[lens_index + sym]]++] = sym;
+    }
+  }
+
+  /*
+   Create and fill in decoding tables.  In this loop, the table being
+   filled is at next and has curr index bits.  The code being used is huff
+   with length len.  That code is converted to an index by dropping drop
+   bits off of the bottom.  For codes where len is less than drop + curr,
+   those top drop + curr - len bits are incremented through all values to
+   fill the table with replicated entries.
+
+   root is the number of index bits for the root table.  When len exceeds
+   root, sub-tables are created pointed to by the root entry with an index
+   of the low root bits of huff.  This is saved in low to check for when a
+   new sub-table should be started.  drop is zero when the root table is
+   being filled, and drop is root when sub-tables are being filled.
+
+   When a new sub-table is needed, it is necessary to look ahead in the
+   code lengths to determine what size sub-table is needed.  The length
+   counts are used for this, and so count[] is decremented as codes are
+   entered in the tables.
+
+   used keeps track of how many table entries have been allocated from the
+   provided *table space.  It is checked for LENS and DIST tables against
+   the constants ENOUGH_LENS and ENOUGH_DISTS to guard against changes in
+   the initial root table size constants.  See the comments in inftrees.h
+   for more information.
+
+   sym increments through all symbols, and the loop terminates when
+   all codes of length max, i.e. all codes, have been processed.  This
+   routine permits incomplete codes, so another loop after this one fills
+   in the rest of the decoding tables with invalid code markers.
+   */
+
+  /* set up for code type */
+  // poor man optimization - use if-else instead of switch,
+  // to avoid deopts in old v8
+  if (type === CODES$1) {
+    base = extra = work;    /* dummy value--not used */
+    match = 20;
+
+  } else if (type === LENS$1) {
+    base = lbase;
+    extra = lext;
+    match = 257;
+
+  } else {                    /* DISTS */
+    base = dbase;
+    extra = dext;
+    match = 0;
+  }
+
+  /* initialize opts for loop */
+  huff = 0;                   /* starting code */
+  sym = 0;                    /* starting code symbol */
+  len = min;                  /* starting code length */
+  next = table_index;              /* current table to fill in */
+  curr = root;                /* current table index bits */
+  drop = 0;                   /* current bits to drop from code for index */
+  low = -1;                   /* trigger new sub-table when len > root */
+  used = 1 << root;          /* use root table entries */
+  mask = used - 1;            /* mask for comparing low */
+
+  /* check available table space */
+  if ((type === LENS$1 && used > ENOUGH_LENS$1) ||
+    (type === DISTS$1 && used > ENOUGH_DISTS$1)) {
+    return 1;
+  }
+
+  /* process all codes and make table entries */
+  for (;;) {
+    /* create table entry */
+    here_bits = len - drop;
+    if (work[sym] + 1 < match) {
+      here_op = 0;
+      here_val = work[sym];
+    }
+    else if (work[sym] >= match) {
+      here_op = extra[work[sym] - match];
+      here_val = base[work[sym] - match];
+    }
+    else {
+      here_op = 32 + 64;         /* end of block */
+      here_val = 0;
+    }
+
+    /* replicate for those indices with low len bits equal to huff */
+    incr = 1 << (len - drop);
+    fill = 1 << curr;
+    min = fill;                 /* save offset to next table */
+    do {
+      fill -= incr;
+      table[next + (huff >> drop) + fill] = (here_bits << 24) | (here_op << 16) | here_val |0;
+    } while (fill !== 0);
+
+    /* backwards increment the len-bit code huff */
+    incr = 1 << (len - 1);
+    while (huff & incr) {
+      incr >>= 1;
+    }
+    if (incr !== 0) {
+      huff &= incr - 1;
+      huff += incr;
+    } else {
+      huff = 0;
+    }
+
+    /* go to next symbol, update count, len */
+    sym++;
+    if (--count[len] === 0) {
+      if (len === max) { break; }
+      len = lens[lens_index + work[sym]];
+    }
+
+    /* create new sub-table if needed */
+    if (len > root && (huff & mask) !== low) {
+      /* if first time, transition to sub-tables */
+      if (drop === 0) {
+        drop = root;
+      }
+
+      /* increment past last table */
+      next += min;            /* here min is 1 << curr */
+
+      /* determine length of next table */
+      curr = len - drop;
+      left = 1 << curr;
+      while (curr + drop < max) {
+        left -= count[curr + drop];
+        if (left <= 0) { break; }
+        curr++;
+        left <<= 1;
+      }
+
+      /* check for enough space */
+      used += 1 << curr;
+      if ((type === LENS$1 && used > ENOUGH_LENS$1) ||
+        (type === DISTS$1 && used > ENOUGH_DISTS$1)) {
+        return 1;
+      }
+
+      /* point entry in root table to sub-table */
+      low = huff & mask;
+      /*table.op[low] = curr;
+      table.bits[low] = root;
+      table.val[low] = next - opts.table_index;*/
+      table[low] = (root << 24) | (curr << 16) | (next - table_index) |0;
+    }
+  }
+
+  /* fill in remaining table entry if code is incomplete (guaranteed to have
+   at most one remaining entry, since if the code is incomplete, the
+   maximum code length that was allowed to get this far is one bit) */
+  if (huff !== 0) {
+    //table.op[next + huff] = 64;            /* invalid code marker */
+    //table.bits[next + huff] = len - drop;
+    //table.val[next + huff] = 0;
+    table[next + huff] = ((len - drop) << 24) | (64 << 16) |0;
+  }
+
+  /* set return parameters */
+  //opts.table_index += used;
+  opts.bits = root;
+  return 0;
+};
+
+
+var inftrees = inflate_table;
+
+// (C) 1995-2013 Jean-loup Gailly and Mark Adler
+// (C) 2014-2017 Vitaly Puzrin and Andrey Tupitsin
+//
+// This software is provided 'as-is', without any express or implied
+// warranty. In no event will the authors be held liable for any damages
+// arising from the use of this software.
+//
+// Permission is granted to anyone to use this software for any purpose,
+// including commercial applications, and to alter it and redistribute it
+// freely, subject to the following restrictions:
+//
+// 1. The origin of this software must not be misrepresented; you must not
+//   claim that you wrote the original software. If you use this software
+//   in a product, an acknowledgment in the product documentation would be
+//   appreciated but is not required.
+// 2. Altered source versions must be plainly marked as such, and must not be
+//   misrepresented as being the original software.
+// 3. This notice may not be removed or altered from any source distribution.
+
+
+
+
+
+
+const CODES = 0;
+const LENS = 1;
+const DISTS = 2;
+
+/* Public constants ==========================================================*/
+/* ===========================================================================*/
+
+const {
+  Z_FINISH: Z_FINISH$1, Z_BLOCK, Z_TREES,
+  Z_OK: Z_OK$1, Z_STREAM_END: Z_STREAM_END$1, Z_NEED_DICT: Z_NEED_DICT$1, Z_STREAM_ERROR: Z_STREAM_ERROR$1, Z_DATA_ERROR: Z_DATA_ERROR$1, Z_MEM_ERROR: Z_MEM_ERROR$1, Z_BUF_ERROR,
+  Z_DEFLATED
+} = constants$2;
+
+
+/* STATES ====================================================================*/
+/* ===========================================================================*/
+
+
+const    HEAD = 16180;       /* i: waiting for magic header */
+const    FLAGS = 16181;      /* i: waiting for method and flags (gzip) */
+const    TIME = 16182;       /* i: waiting for modification time (gzip) */
+const    OS = 16183;         /* i: waiting for extra flags and operating system (gzip) */
+const    EXLEN = 16184;      /* i: waiting for extra length (gzip) */
+const    EXTRA = 16185;      /* i: waiting for extra bytes (gzip) */
+const    NAME = 16186;       /* i: waiting for end of file name (gzip) */
+const    COMMENT = 16187;    /* i: waiting for end of comment (gzip) */
+const    HCRC = 16188;       /* i: waiting for header crc (gzip) */
+const    DICTID = 16189;    /* i: waiting for dictionary check value */
+const    DICT = 16190;      /* waiting for inflateSetDictionary() call */
+const        TYPE = 16191;      /* i: waiting for type bits, including last-flag bit */
+const        TYPEDO = 16192;    /* i: same, but skip check to exit inflate on new block */
+const        STORED = 16193;    /* i: waiting for stored size (length and complement) */
+const        COPY_ = 16194;     /* i/o: same as COPY below, but only first time in */
+const        COPY = 16195;      /* i/o: waiting for input or output to copy stored block */
+const        TABLE = 16196;     /* i: waiting for dynamic block table lengths */
+const        LENLENS = 16197;   /* i: waiting for code length code lengths */
+const        CODELENS = 16198;  /* i: waiting for length/lit and distance code lengths */
+const            LEN_ = 16199;      /* i: same as LEN below, but only first time in */
+const            LEN = 16200;       /* i: waiting for length/lit/eob code */
+const            LENEXT = 16201;    /* i: waiting for length extra bits */
+const            DIST = 16202;      /* i: waiting for distance code */
+const            DISTEXT = 16203;   /* i: waiting for distance extra bits */
+const            MATCH = 16204;     /* o: waiting for output space to copy string */
+const            LIT = 16205;       /* o: waiting for output space to write literal */
+const    CHECK = 16206;     /* i: waiting for 32-bit check value */
+const    LENGTH = 16207;    /* i: waiting for 32-bit length (gzip) */
+const    DONE = 16208;      /* finished check, done -- remain here until reset */
+const    BAD = 16209;       /* got a data error -- remain here until reset */
+const    MEM = 16210;       /* got an inflate() memory error -- remain here until reset */
+const    SYNC = 16211;      /* looking for synchronization bytes to restart inflate() */
+
+/* ===========================================================================*/
+
+
+
+const ENOUGH_LENS = 852;
+const ENOUGH_DISTS = 592;
+//const ENOUGH =  (ENOUGH_LENS+ENOUGH_DISTS);
+
+const MAX_WBITS = 15;
+/* 32K LZ77 window */
+const DEF_WBITS = MAX_WBITS;
+
+
+const zswap32 = (q) => {
+
+  return  (((q >>> 24) & 0xff) +
+          ((q >>> 8) & 0xff00) +
+          ((q & 0xff00) << 8) +
+          ((q & 0xff) << 24));
+};
+
+
+function InflateState() {
+  this.strm = null;           /* pointer back to this zlib stream */
+  this.mode = 0;              /* current inflate mode */
+  this.last = false;          /* true if processing last block */
+  this.wrap = 0;              /* bit 0 true for zlib, bit 1 true for gzip,
+                                 bit 2 true to validate check value */
+  this.havedict = false;      /* true if dictionary provided */
+  this.flags = 0;             /* gzip header method and flags (0 if zlib), or
+                                 -1 if raw or no header yet */
+  this.dmax = 0;              /* zlib header max distance (INFLATE_STRICT) */
+  this.check = 0;             /* protected copy of check value */
+  this.total = 0;             /* protected copy of output count */
+  // TODO: may be {}
+  this.head = null;           /* where to save gzip header information */
+
+  /* sliding window */
+  this.wbits = 0;             /* log base 2 of requested window size */
+  this.wsize = 0;             /* window size or zero if not using window */
+  this.whave = 0;             /* valid bytes in the window */
+  this.wnext = 0;             /* window write index */
+  this.window = null;         /* allocated sliding window, if needed */
+
+  /* bit accumulator */
+  this.hold = 0;              /* input bit accumulator */
+  this.bits = 0;              /* number of bits in "in" */
+
+  /* for string and stored block copying */
+  this.length = 0;            /* literal or length of data to copy */
+  this.offset = 0;            /* distance back to copy string from */
+
+  /* for table and code decoding */
+  this.extra = 0;             /* extra bits needed */
+
+  /* fixed and dynamic code tables */
+  this.lencode = null;          /* starting table for length/literal codes */
+  this.distcode = null;         /* starting table for distance codes */
+  this.lenbits = 0;           /* index bits for lencode */
+  this.distbits = 0;          /* index bits for distcode */
+
+  /* dynamic table building */
+  this.ncode = 0;             /* number of code length code lengths */
+  this.nlen = 0;              /* number of length code lengths */
+  this.ndist = 0;             /* number of distance code lengths */
+  this.have = 0;              /* number of code lengths in lens[] */
+  this.next = null;              /* next available space in codes[] */
+
+  this.lens = new Uint16Array(320); /* temporary storage for code lengths */
+  this.work = new Uint16Array(288); /* work area for code table building */
+
+  /*
+   because we don't have pointers in js, we use lencode and distcode directly
+   as buffers so we don't need codes
+  */
+  //this.codes = new Int32Array(ENOUGH);       /* space for code tables */
+  this.lendyn = null;              /* dynamic table for length/literal codes (JS specific) */
+  this.distdyn = null;             /* dynamic table for distance codes (JS specific) */
+  this.sane = 0;                   /* if false, allow invalid distance too far */
+  this.back = 0;                   /* bits back of last unprocessed length/lit */
+  this.was = 0;                    /* initial length of match */
+}
+
+
+const inflateStateCheck = (strm) => {
+
+  if (!strm) {
+    return 1;
+  }
+  const state = strm.state;
+  if (!state || state.strm !== strm ||
+    state.mode < HEAD || state.mode > SYNC) {
+    return 1;
+  }
+  return 0;
+};
+
+
+const inflateResetKeep = (strm) => {
+
+  if (inflateStateCheck(strm)) { return Z_STREAM_ERROR$1; }
+  const state = strm.state;
+  strm.total_in = strm.total_out = state.total = 0;
+  strm.msg = ''; /*Z_NULL*/
+  if (state.wrap) {       /* to support ill-conceived Java test suite */
+    strm.adler = state.wrap & 1;
+  }
+  state.mode = HEAD;
+  state.last = 0;
+  state.havedict = 0;
+  state.flags = -1;
+  state.dmax = 32768;
+  state.head = null/*Z_NULL*/;
+  state.hold = 0;
+  state.bits = 0;
+  //state.lencode = state.distcode = state.next = state.codes;
+  state.lencode = state.lendyn = new Int32Array(ENOUGH_LENS);
+  state.distcode = state.distdyn = new Int32Array(ENOUGH_DISTS);
+
+  state.sane = 1;
+  state.back = -1;
+  //Tracev((stderr, "inflate: reset\n"));
+  return Z_OK$1;
+};
+
+
+const inflateReset = (strm) => {
+
+  if (inflateStateCheck(strm)) { return Z_STREAM_ERROR$1; }
+  const state = strm.state;
+  state.wsize = 0;
+  state.whave = 0;
+  state.wnext = 0;
+  return inflateResetKeep(strm);
+
+};
+
+
+const inflateReset2 = (strm, windowBits) => {
+  let wrap;
+
+  /* get the state */
+  if (inflateStateCheck(strm)) { return Z_STREAM_ERROR$1; }
+  const state = strm.state;
+
+  /* extract wrap request from windowBits parameter */
+  if (windowBits < 0) {
+    wrap = 0;
+    windowBits = -windowBits;
+  }
+  else {
+    wrap = (windowBits >> 4) + 5;
+    if (windowBits < 48) {
+      windowBits &= 15;
+    }
+  }
+
+  /* set number of window bits, free window if different */
+  if (windowBits && (windowBits < 8 || windowBits > 15)) {
+    return Z_STREAM_ERROR$1;
+  }
+  if (state.window !== null && state.wbits !== windowBits) {
+    state.window = null;
+  }
+
+  /* update state and reset the rest of it */
+  state.wrap = wrap;
+  state.wbits = windowBits;
+  return inflateReset(strm);
+};
+
+
+const inflateInit2 = (strm, windowBits) => {
+
+  if (!strm) { return Z_STREAM_ERROR$1; }
+  //strm.msg = Z_NULL;                 /* in case we return an error */
+
+  const state = new InflateState();
+
+  //if (state === Z_NULL) return Z_MEM_ERROR;
+  //Tracev((stderr, "inflate: allocated\n"));
+  strm.state = state;
+  state.strm = strm;
+  state.window = null/*Z_NULL*/;
+  state.mode = HEAD;     /* to pass state test in inflateReset2() */
+  const ret = inflateReset2(strm, windowBits);
+  if (ret !== Z_OK$1) {
+    strm.state = null/*Z_NULL*/;
+  }
+  return ret;
+};
+
+
+const inflateInit = (strm) => {
+
+  return inflateInit2(strm, DEF_WBITS);
+};
+
+
+/*
+ Return state with length and distance decoding tables and index sizes set to
+ fixed code decoding.  Normally this returns fixed tables from inffixed.h.
+ If BUILDFIXED is defined, then instead this routine builds the tables the
+ first time it's called, and returns those tables the first time and
+ thereafter.  This reduces the size of the code by about 2K bytes, in
+ exchange for a little execution time.  However, BUILDFIXED should not be
+ used for threaded applications, since the rewriting of the tables and virgin
+ may not be thread-safe.
+ */
+let virgin = true;
+
+let lenfix, distfix; // We have no pointers in JS, so keep tables separate
+
+
+const fixedtables = (state) => {
+
+  /* build fixed huffman tables if first call (may not be thread safe) */
+  if (virgin) {
+    lenfix = new Int32Array(512);
+    distfix = new Int32Array(32);
+
+    /* literal/length table */
+    let sym = 0;
+    while (sym < 144) { state.lens[sym++] = 8; }
+    while (sym < 256) { state.lens[sym++] = 9; }
+    while (sym < 280) { state.lens[sym++] = 7; }
+    while (sym < 288) { state.lens[sym++] = 8; }
+
+    inftrees(LENS,  state.lens, 0, 288, lenfix,   0, state.work, { bits: 9 });
+
+    /* distance table */
+    sym = 0;
+    while (sym < 32) { state.lens[sym++] = 5; }
+
+    inftrees(DISTS, state.lens, 0, 32,   distfix, 0, state.work, { bits: 5 });
+
+    /* do this just once */
+    virgin = false;
+  }
+
+  state.lencode = lenfix;
+  state.lenbits = 9;
+  state.distcode = distfix;
+  state.distbits = 5;
+};
+
+
+/*
+ Update the window with the last wsize (normally 32K) bytes written before
+ returning.  If window does not exist yet, create it.  This is only called
+ when a window is already in use, or when output has been written during this
+ inflate call, but the end of the deflate stream has not been reached yet.
+ It is also called to create a window for dictionary data when a dictionary
+ is loaded.
+
+ Providing output buffers larger than 32K to inflate() should provide a speed
+ advantage, since only the last 32K of output is copied to the sliding window
+ upon return from inflate(), and since all distances after the first 32K of
+ output will fall in the output data, making match copies simpler and faster.
+ The advantage may be dependent on the size of the processor's data caches.
+ */
+const updatewindow = (strm, src, end, copy) => {
+
+  let dist;
+  const state = strm.state;
+
+  /* if it hasn't been done already, allocate space for the window */
+  if (state.window === null) {
+    state.wsize = 1 << state.wbits;
+    state.wnext = 0;
+    state.whave = 0;
+
+    state.window = new Uint8Array(state.wsize);
+  }
+
+  /* copy state->wsize or less output bytes into the circular window */
+  if (copy >= state.wsize) {
+    state.window.set(src.subarray(end - state.wsize, end), 0);
+    state.wnext = 0;
+    state.whave = state.wsize;
+  }
+  else {
+    dist = state.wsize - state.wnext;
+    if (dist > copy) {
+      dist = copy;
+    }
+    //zmemcpy(state->window + state->wnext, end - copy, dist);
+    state.window.set(src.subarray(end - copy, end - copy + dist), state.wnext);
+    copy -= dist;
+    if (copy) {
+      //zmemcpy(state->window, end - copy, copy);
+      state.window.set(src.subarray(end - copy, end), 0);
+      state.wnext = copy;
+      state.whave = state.wsize;
+    }
+    else {
+      state.wnext += dist;
+      if (state.wnext === state.wsize) { state.wnext = 0; }
+      if (state.whave < state.wsize) { state.whave += dist; }
+    }
+  }
+  return 0;
+};
+
+
+const inflate$2 = (strm, flush) => {
+
+  let state;
+  let input, output;          // input/output buffers
+  let next;                   /* next input INDEX */
+  let put;                    /* next output INDEX */
+  let have, left;             /* available input and output */
+  let hold;                   /* bit buffer */
+  let bits;                   /* bits in bit buffer */
+  let _in, _out;              /* save starting available input and output */
+  let copy;                   /* number of stored or match bytes to copy */
+  let from;                   /* where to copy match bytes from */
+  let from_source;
+  let here = 0;               /* current decoding table entry */
+  let here_bits, here_op, here_val; // paked "here" denormalized (JS specific)
+  //let last;                   /* parent table entry */
+  let last_bits, last_op, last_val; // paked "last" denormalized (JS specific)
+  let len;                    /* length to copy for repeats, bits to drop */
+  let ret;                    /* return code */
+  const hbuf = new Uint8Array(4);    /* buffer for gzip header crc calculation */
+  let opts;
+
+  let n; // temporary variable for NEED_BITS
+
+  const order = /* permutation of code lengths */
+    new Uint8Array([ 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 ]);
+
+
+  if (inflateStateCheck(strm) || !strm.output ||
+      (!strm.input && strm.avail_in !== 0)) {
+    return Z_STREAM_ERROR$1;
+  }
+
+  state = strm.state;
+  if (state.mode === TYPE) { state.mode = TYPEDO; }    /* skip check */
+
+
+  //--- LOAD() ---
+  put = strm.next_out;
+  output = strm.output;
+  left = strm.avail_out;
+  next = strm.next_in;
+  input = strm.input;
+  have = strm.avail_in;
+  hold = state.hold;
+  bits = state.bits;
+  //---
+
+  _in = have;
+  _out = left;
+  ret = Z_OK$1;
+
+  inf_leave: // goto emulation
+  for (;;) {
+    switch (state.mode) {
+      case HEAD:
+        if (state.wrap === 0) {
+          state.mode = TYPEDO;
+          break;
+        }
+        //=== NEEDBITS(16);
+        while (bits < 16) {
+          if (have === 0) { break inf_leave; }
+          have--;
+          hold += input[next++] << bits;
+          bits += 8;
+        }
+        //===//
+        if ((state.wrap & 2) && hold === 0x8b1f) {  /* gzip header */
+          if (state.wbits === 0) {
+            state.wbits = 15;
+          }
+          state.check = 0/*crc32(0L, Z_NULL, 0)*/;
+          //=== CRC2(state.check, hold);
+          hbuf[0] = hold & 0xff;
+          hbuf[1] = (hold >>> 8) & 0xff;
+          state.check = crc32_1(state.check, hbuf, 2, 0);
+          //===//
+
+          //=== INITBITS();
+          hold = 0;
+          bits = 0;
+          //===//
+          state.mode = FLAGS;
+          break;
+        }
+        if (state.head) {
+          state.head.done = false;
+        }
+        if (!(state.wrap & 1) ||   /* check if zlib header allowed */
+          (((hold & 0xff)/*BITS(8)*/ << 8) + (hold >> 8)) % 31) {
+          strm.msg = 'incorrect header check';
+          state.mode = BAD;
+          break;
+        }
+        if ((hold & 0x0f)/*BITS(4)*/ !== Z_DEFLATED) {
+          strm.msg = 'unknown compression method';
+          state.mode = BAD;
+          break;
+        }
+        //--- DROPBITS(4) ---//
+        hold >>>= 4;
+        bits -= 4;
+        //---//
+        len = (hold & 0x0f)/*BITS(4)*/ + 8;
+        if (state.wbits === 0) {
+          state.wbits = len;
+        }
+        if (len > 15 || len > state.wbits) {
+          strm.msg = 'invalid window size';
+          state.mode = BAD;
+          break;
+        }
+
+        // !!! pako patch. Force use `options.windowBits` if passed.
+        // Required to always use max window size by default.
+        state.dmax = 1 << state.wbits;
+        //state.dmax = 1 << len;
+
+        state.flags = 0;               /* indicate zlib header */
+        //Tracev((stderr, "inflate:   zlib header ok\n"));
+        strm.adler = state.check = 1/*adler32(0L, Z_NULL, 0)*/;
+        state.mode = hold & 0x200 ? DICTID : TYPE;
+        //=== INITBITS();
+        hold = 0;
+        bits = 0;
+        //===//
+        break;
+      case FLAGS:
+        //=== NEEDBITS(16); */
+        while (bits < 16) {
+          if (have === 0) { break inf_leave; }
+          have--;
+          hold += input[next++] << bits;
+          bits += 8;
+        }
+        //===//
+        state.flags = hold;
+        if ((state.flags & 0xff) !== Z_DEFLATED) {
+          strm.msg = 'unknown compression method';
+          state.mode = BAD;
+          break;
+        }
+        if (state.flags & 0xe000) {
+          strm.msg = 'unknown header flags set';
+          state.mode = BAD;
+          break;
+        }
+        if (state.head) {
+          state.head.text = ((hold >> 8) & 1);
+        }
+        if ((state.flags & 0x0200) && (state.wrap & 4)) {
+          //=== CRC2(state.check, hold);
+          hbuf[0] = hold & 0xff;
+          hbuf[1] = (hold >>> 8) & 0xff;
+          state.check = crc32_1(state.check, hbuf, 2, 0);
+          //===//
+        }
+        //=== INITBITS();
+        hold = 0;
+        bits = 0;
+        //===//
+        state.mode = TIME;
+        /* falls through */
+      case TIME:
+        //=== NEEDBITS(32); */
+        while (bits < 32) {
+          if (have === 0) { break inf_leave; }
+          have--;
+          hold += input[next++] << bits;
+          bits += 8;
+        }
+        //===//
+        if (state.head) {
+          state.head.time = hold;
+        }
+        if ((state.flags & 0x0200) && (state.wrap & 4)) {
+          //=== CRC4(state.check, hold)
+          hbuf[0] = hold & 0xff;
+          hbuf[1] = (hold >>> 8) & 0xff;
+          hbuf[2] = (hold >>> 16) & 0xff;
+          hbuf[3] = (hold >>> 24) & 0xff;
+          state.check = crc32_1(state.check, hbuf, 4, 0);
+          //===
+        }
+        //=== INITBITS();
+        hold = 0;
+        bits = 0;
+        //===//
+        state.mode = OS;
+        /* falls through */
+      case OS:
+        //=== NEEDBITS(16); */
+        while (bits < 16) {
+          if (have === 0) { break inf_leave; }
+          have--;
+          hold += input[next++] << bits;
+          bits += 8;
+        }
+        //===//
+        if (state.head) {
+          state.head.xflags = (hold & 0xff);
+          state.head.os = (hold >> 8);
+        }
+        if ((state.flags & 0x0200) && (state.wrap & 4)) {
+          //=== CRC2(state.check, hold);
+          hbuf[0] = hold & 0xff;
+          hbuf[1] = (hold >>> 8) & 0xff;
+          state.check = crc32_1(state.check, hbuf, 2, 0);
+          //===//
+        }
+        //=== INITBITS();
+        hold = 0;
+        bits = 0;
+        //===//
+        state.mode = EXLEN;
+        /* falls through */
+      case EXLEN:
+        if (state.flags & 0x0400) {
+          //=== NEEDBITS(16); */
+          while (bits < 16) {
+            if (have === 0) { break inf_leave; }
+            have--;
+            hold += input[next++] << bits;
+            bits += 8;
+          }
+          //===//
+          state.length = hold;
+          if (state.head) {
+            state.head.extra_len = hold;
+          }
+          if ((state.flags & 0x0200) && (state.wrap & 4)) {
+            //=== CRC2(state.check, hold);
+            hbuf[0] = hold & 0xff;
+            hbuf[1] = (hold >>> 8) & 0xff;
+            state.check = crc32_1(state.check, hbuf, 2, 0);
+            //===//
+          }
+          //=== INITBITS();
+          hold = 0;
+          bits = 0;
+          //===//
+        }
+        else if (state.head) {
+          state.head.extra = null/*Z_NULL*/;
+        }
+        state.mode = EXTRA;
+        /* falls through */
+      case EXTRA:
+        if (state.flags & 0x0400) {
+          copy = state.length;
+          if (copy > have) { copy = have; }
+          if (copy) {
+            if (state.head) {
+              len = state.head.extra_len - state.length;
+              if (!state.head.extra) {
+                // Use untyped array for more convenient processing later
+                state.head.extra = new Uint8Array(state.head.extra_len);
+              }
+              state.head.extra.set(
+                input.subarray(
+                  next,
+                  // extra field is limited to 65536 bytes
+                  // - no need for additional size check
+                  next + copy
+                ),
+                /*len + copy > state.head.extra_max - len ? state.head.extra_max : copy,*/
+                len
+              );
+              //zmemcpy(state.head.extra + len, next,
+              //        len + copy > state.head.extra_max ?
+              //        state.head.extra_max - len : copy);
+            }
+            if ((state.flags & 0x0200) && (state.wrap & 4)) {
+              state.check = crc32_1(state.check, input, copy, next);
+            }
+            have -= copy;
+            next += copy;
+            state.length -= copy;
+          }
+          if (state.length) { break inf_leave; }
+        }
+        state.length = 0;
+        state.mode = NAME;
+        /* falls through */
+      case NAME:
+        if (state.flags & 0x0800) {
+          if (have === 0) { break inf_leave; }
+          copy = 0;
+          do {
+            // TODO: 2 or 1 bytes?
+            len = input[next + copy++];
+            /* use constant limit because in js we should not preallocate memory */
+            if (state.head && len &&
+                (state.length < 65536 /*state.head.name_max*/)) {
+              state.head.name += String.fromCharCode(len);
+            }
+          } while (len && copy < have);
+
+          if ((state.flags & 0x0200) && (state.wrap & 4)) {
+            state.check = crc32_1(state.check, input, copy, next);
+          }
+          have -= copy;
+          next += copy;
+          if (len) { break inf_leave; }
+        }
+        else if (state.head) {
+          state.head.name = null;
+        }
+        state.length = 0;
+        state.mode = COMMENT;
+        /* falls through */
+      case COMMENT:
+        if (state.flags & 0x1000) {
+          if (have === 0) { break inf_leave; }
+          copy = 0;
+          do {
+            len = input[next + copy++];
+            /* use constant limit because in js we should not preallocate memory */
+            if (state.head && len &&
+                (state.length < 65536 /*state.head.comm_max*/)) {
+              state.head.comment += String.fromCharCode(len);
+            }
+          } while (len && copy < have);
+          if ((state.flags & 0x0200) && (state.wrap & 4)) {
+            state.check = crc32_1(state.check, input, copy, next);
+          }
+          have -= copy;
+          next += copy;
+          if (len) { break inf_leave; }
+        }
+        else if (state.head) {
+          state.head.comment = null;
+        }
+        state.mode = HCRC;
+        /* falls through */
+      case HCRC:
+        if (state.flags & 0x0200) {
+          //=== NEEDBITS(16); */
+          while (bits < 16) {
+            if (have === 0) { break inf_leave; }
+            have--;
+            hold += input[next++] << bits;
+            bits += 8;
+          }
+          //===//
+          if ((state.wrap & 4) && hold !== (state.check & 0xffff)) {
+            strm.msg = 'header crc mismatch';
+            state.mode = BAD;
+            break;
+          }
+          //=== INITBITS();
+          hold = 0;
+          bits = 0;
+          //===//
+        }
+        if (state.head) {
+          state.head.hcrc = ((state.flags >> 9) & 1);
+          state.head.done = true;
+        }
+        strm.adler = state.check = 0;
+        state.mode = TYPE;
+        break;
+      case DICTID:
+        //=== NEEDBITS(32); */
+        while (bits < 32) {
+          if (have === 0) { break inf_leave; }
+          have--;
+          hold += input[next++] << bits;
+          bits += 8;
+        }
+        //===//
+        strm.adler = state.check = zswap32(hold);
+        //=== INITBITS();
+        hold = 0;
+        bits = 0;
+        //===//
+        state.mode = DICT;
+        /* falls through */
+      case DICT:
+        if (state.havedict === 0) {
+          //--- RESTORE() ---
+          strm.next_out = put;
+          strm.avail_out = left;
+          strm.next_in = next;
+          strm.avail_in = have;
+          state.hold = hold;
+          state.bits = bits;
+          //---
+          return Z_NEED_DICT$1;
+        }
+        strm.adler = state.check = 1/*adler32(0L, Z_NULL, 0)*/;
+        state.mode = TYPE;
+        /* falls through */
+      case TYPE:
+        if (flush === Z_BLOCK || flush === Z_TREES) { break inf_leave; }
+        /* falls through */
+      case TYPEDO:
+        if (state.last) {
+          //--- BYTEBITS() ---//
+          hold >>>= bits & 7;
+          bits -= bits & 7;
+          //---//
+          state.mode = CHECK;
+          break;
+        }
+        //=== NEEDBITS(3); */
+        while (bits < 3) {
+          if (have === 0) { break inf_leave; }
+          have--;
+          hold += input[next++] << bits;
+          bits += 8;
+        }
+        //===//
+        state.last = (hold & 0x01)/*BITS(1)*/;
+        //--- DROPBITS(1) ---//
+        hold >>>= 1;
+        bits -= 1;
+        //---//
+
+        switch ((hold & 0x03)/*BITS(2)*/) {
+          case 0:                             /* stored block */
+            //Tracev((stderr, "inflate:     stored block%s\n",
+            //        state.last ? " (last)" : ""));
+            state.mode = STORED;
+            break;
+          case 1:                             /* fixed block */
+            fixedtables(state);
+            //Tracev((stderr, "inflate:     fixed codes block%s\n",
+            //        state.last ? " (last)" : ""));
+            state.mode = LEN_;             /* decode codes */
+            if (flush === Z_TREES) {
+              //--- DROPBITS(2) ---//
+              hold >>>= 2;
+              bits -= 2;
+              //---//
+              break inf_leave;
             }
             break;
-          case 1:
-            for (i = _j = 0; _j < scanlineLength; i = _j += 1) {
-              abyte = data[pos++];
-              left = i < pixelBytes ? 0 : pixels[c - pixelBytes];
-              pixels[c++] = (abyte + left) % 256;
-            }
-            break;
-          case 2:
-            for (i = _k = 0; _k < scanlineLength; i = _k += 1) {
-              abyte = data[pos++];
-              col = (i - (i % pixelBytes)) / pixelBytes;
-              upper =
-                row &&
-                pixels[
-                  (row - 1) * scanlineLength +
-                    col * pixelBytes +
-                    (i % pixelBytes)
-                ];
-              pixels[c++] = (upper + abyte) % 256;
-            }
+          case 2:                             /* dynamic block */
+            //Tracev((stderr, "inflate:     dynamic codes block%s\n",
+            //        state.last ? " (last)" : ""));
+            state.mode = TABLE;
             break;
           case 3:
-            for (i = _l = 0; _l < scanlineLength; i = _l += 1) {
-              abyte = data[pos++];
-              col = (i - (i % pixelBytes)) / pixelBytes;
-              left = i < pixelBytes ? 0 : pixels[c - pixelBytes];
-              upper =
-                row &&
-                pixels[
-                  (row - 1) * scanlineLength +
-                    col * pixelBytes +
-                    (i % pixelBytes)
-                ];
-              pixels[c++] = (abyte + Math.floor((left + upper) / 2)) % 256;
-            }
-            break;
-          case 4:
-            for (i = _m = 0; _m < scanlineLength; i = _m += 1) {
-              abyte = data[pos++];
-              col = (i - (i % pixelBytes)) / pixelBytes;
-              left = i < pixelBytes ? 0 : pixels[c - pixelBytes];
-              if (row === 0) {
-                upper = upperLeft = 0;
-              } else {
-                upper =
-                  pixels[
-                    (row - 1) * scanlineLength +
-                      col * pixelBytes +
-                      (i % pixelBytes)
-                  ];
-                upperLeft =
-                  col &&
-                  pixels[
-                    (row - 1) * scanlineLength +
-                      (col - 1) * pixelBytes +
-                      (i % pixelBytes)
-                  ];
-              }
-              p = left + upper - upperLeft;
-              pa = Math.abs(p - left);
-              pb = Math.abs(p - upper);
-              pc = Math.abs(p - upperLeft);
-              if (pa <= pb && pa <= pc) {
-                paeth = left;
-              } else if (pb <= pc) {
-                paeth = upper;
-              } else {
-                paeth = upperLeft;
-              }
-              pixels[c++] = (abyte + paeth) % 256;
-            }
-            break;
-          default:
-            throw new Error("Invalid filter algorithm: " + data[pos - 1]);
+            strm.msg = 'invalid block type';
+            state.mode = BAD;
         }
-        if (!isFull) {
-          var fullPos = ((y0 + row * dy) * _this.width + x0) * pixelBytes;
-          var partPos = row * scanlineLength;
-          for (i = 0; i < w; i += 1) {
-            for (var j = 0; j < pixelBytes; j += 1)
-              fullPixels[fullPos++] = pixels[partPos++];
-            fullPos += (dx - 1) * pixelBytes;
+        //--- DROPBITS(2) ---//
+        hold >>>= 2;
+        bits -= 2;
+        //---//
+        break;
+      case STORED:
+        //--- BYTEBITS() ---// /* go to byte boundary */
+        hold >>>= bits & 7;
+        bits -= bits & 7;
+        //---//
+        //=== NEEDBITS(32); */
+        while (bits < 32) {
+          if (have === 0) { break inf_leave; }
+          have--;
+          hold += input[next++] << bits;
+          bits += 8;
+        }
+        //===//
+        if ((hold & 0xffff) !== ((hold >>> 16) ^ 0xffff)) {
+          strm.msg = 'invalid stored block lengths';
+          state.mode = BAD;
+          break;
+        }
+        state.length = hold & 0xffff;
+        //Tracev((stderr, "inflate:       stored length %u\n",
+        //        state.length));
+        //=== INITBITS();
+        hold = 0;
+        bits = 0;
+        //===//
+        state.mode = COPY_;
+        if (flush === Z_TREES) { break inf_leave; }
+        /* falls through */
+      case COPY_:
+        state.mode = COPY;
+        /* falls through */
+      case COPY:
+        copy = state.length;
+        if (copy) {
+          if (copy > have) { copy = have; }
+          if (copy > left) { copy = left; }
+          if (copy === 0) { break inf_leave; }
+          //--- zmemcpy(put, next, copy); ---
+          output.set(input.subarray(next, next + copy), put);
+          //---//
+          have -= copy;
+          next += copy;
+          left -= copy;
+          put += copy;
+          state.length -= copy;
+          break;
+        }
+        //Tracev((stderr, "inflate:       stored end\n"));
+        state.mode = TYPE;
+        break;
+      case TABLE:
+        //=== NEEDBITS(14); */
+        while (bits < 14) {
+          if (have === 0) { break inf_leave; }
+          have--;
+          hold += input[next++] << bits;
+          bits += 8;
+        }
+        //===//
+        state.nlen = (hold & 0x1f)/*BITS(5)*/ + 257;
+        //--- DROPBITS(5) ---//
+        hold >>>= 5;
+        bits -= 5;
+        //---//
+        state.ndist = (hold & 0x1f)/*BITS(5)*/ + 1;
+        //--- DROPBITS(5) ---//
+        hold >>>= 5;
+        bits -= 5;
+        //---//
+        state.ncode = (hold & 0x0f)/*BITS(4)*/ + 4;
+        //--- DROPBITS(4) ---//
+        hold >>>= 4;
+        bits -= 4;
+        //---//
+//#ifndef PKZIP_BUG_WORKAROUND
+        if (state.nlen > 286 || state.ndist > 30) {
+          strm.msg = 'too many length or distance symbols';
+          state.mode = BAD;
+          break;
+        }
+//#endif
+        //Tracev((stderr, "inflate:       table sizes ok\n"));
+        state.have = 0;
+        state.mode = LENLENS;
+        /* falls through */
+      case LENLENS:
+        while (state.have < state.ncode) {
+          //=== NEEDBITS(3);
+          while (bits < 3) {
+            if (have === 0) { break inf_leave; }
+            have--;
+            hold += input[next++] << bits;
+            bits += 8;
+          }
+          //===//
+          state.lens[order[state.have++]] = (hold & 0x07);//BITS(3);
+          //--- DROPBITS(3) ---//
+          hold >>>= 3;
+          bits -= 3;
+          //---//
+        }
+        while (state.have < 19) {
+          state.lens[order[state.have++]] = 0;
+        }
+        // We have separate tables & no pointers. 2 commented lines below not needed.
+        //state.next = state.codes;
+        //state.lencode = state.next;
+        // Switch to use dynamic table
+        state.lencode = state.lendyn;
+        state.lenbits = 7;
+
+        opts = { bits: state.lenbits };
+        ret = inftrees(CODES, state.lens, 0, 19, state.lencode, 0, state.work, opts);
+        state.lenbits = opts.bits;
+
+        if (ret) {
+          strm.msg = 'invalid code lengths set';
+          state.mode = BAD;
+          break;
+        }
+        //Tracev((stderr, "inflate:       code lengths ok\n"));
+        state.have = 0;
+        state.mode = CODELENS;
+        /* falls through */
+      case CODELENS:
+        while (state.have < state.nlen + state.ndist) {
+          for (;;) {
+            here = state.lencode[hold & ((1 << state.lenbits) - 1)];/*BITS(state.lenbits)*/
+            here_bits = here >>> 24;
+            here_op = (here >>> 16) & 0xff;
+            here_val = here & 0xffff;
+
+            if ((here_bits) <= bits) { break; }
+            //--- PULLBYTE() ---//
+            if (have === 0) { break inf_leave; }
+            have--;
+            hold += input[next++] << bits;
+            bits += 8;
+            //---//
+          }
+          if (here_val < 16) {
+            //--- DROPBITS(here.bits) ---//
+            hold >>>= here_bits;
+            bits -= here_bits;
+            //---//
+            state.lens[state.have++] = here_val;
+          }
+          else {
+            if (here_val === 16) {
+              //=== NEEDBITS(here.bits + 2);
+              n = here_bits + 2;
+              while (bits < n) {
+                if (have === 0) { break inf_leave; }
+                have--;
+                hold += input[next++] << bits;
+                bits += 8;
+              }
+              //===//
+              //--- DROPBITS(here.bits) ---//
+              hold >>>= here_bits;
+              bits -= here_bits;
+              //---//
+              if (state.have === 0) {
+                strm.msg = 'invalid bit length repeat';
+                state.mode = BAD;
+                break;
+              }
+              len = state.lens[state.have - 1];
+              copy = 3 + (hold & 0x03);//BITS(2);
+              //--- DROPBITS(2) ---//
+              hold >>>= 2;
+              bits -= 2;
+              //---//
+            }
+            else if (here_val === 17) {
+              //=== NEEDBITS(here.bits + 3);
+              n = here_bits + 3;
+              while (bits < n) {
+                if (have === 0) { break inf_leave; }
+                have--;
+                hold += input[next++] << bits;
+                bits += 8;
+              }
+              //===//
+              //--- DROPBITS(here.bits) ---//
+              hold >>>= here_bits;
+              bits -= here_bits;
+              //---//
+              len = 0;
+              copy = 3 + (hold & 0x07);//BITS(3);
+              //--- DROPBITS(3) ---//
+              hold >>>= 3;
+              bits -= 3;
+              //---//
+            }
+            else {
+              //=== NEEDBITS(here.bits + 7);
+              n = here_bits + 7;
+              while (bits < n) {
+                if (have === 0) { break inf_leave; }
+                have--;
+                hold += input[next++] << bits;
+                bits += 8;
+              }
+              //===//
+              //--- DROPBITS(here.bits) ---//
+              hold >>>= here_bits;
+              bits -= here_bits;
+              //---//
+              len = 0;
+              copy = 11 + (hold & 0x7f);//BITS(7);
+              //--- DROPBITS(7) ---//
+              hold >>>= 7;
+              bits -= 7;
+              //---//
+            }
+            if (state.have + copy > state.nlen + state.ndist) {
+              strm.msg = 'invalid bit length repeat';
+              state.mode = BAD;
+              break;
+            }
+            while (copy--) {
+              state.lens[state.have++] = len;
+            }
           }
         }
-        row++;
+
+        /* handle error breaks in while */
+        if (state.mode === BAD) { break; }
+
+        /* check for end-of-block code (better have one) */
+        if (state.lens[256] === 0) {
+          strm.msg = 'invalid code -- missing end-of-block';
+          state.mode = BAD;
+          break;
+        }
+
+        /* build code tables -- note: do not change the lenbits or distbits
+           values here (9 and 6) without reading the comments in inftrees.h
+           concerning the ENOUGH constants, which depend on those values */
+        state.lenbits = 9;
+
+        opts = { bits: state.lenbits };
+        ret = inftrees(LENS, state.lens, 0, state.nlen, state.lencode, 0, state.work, opts);
+        // We have separate tables & no pointers. 2 commented lines below not needed.
+        // state.next_index = opts.table_index;
+        state.lenbits = opts.bits;
+        // state.lencode = state.next;
+
+        if (ret) {
+          strm.msg = 'invalid literal/lengths set';
+          state.mode = BAD;
+          break;
+        }
+
+        state.distbits = 6;
+        //state.distcode.copy(state.codes);
+        // Switch to use dynamic table
+        state.distcode = state.distdyn;
+        opts = { bits: state.distbits };
+        ret = inftrees(DISTS, state.lens, state.nlen, state.ndist, state.distcode, 0, state.work, opts);
+        // We have separate tables & no pointers. 2 commented lines below not needed.
+        // state.next_index = opts.table_index;
+        state.distbits = opts.bits;
+        // state.distcode = state.next;
+
+        if (ret) {
+          strm.msg = 'invalid distances set';
+          state.mode = BAD;
+          break;
+        }
+        //Tracev((stderr, 'inflate:       codes ok\n'));
+        state.mode = LEN_;
+        if (flush === Z_TREES) { break inf_leave; }
+        /* falls through */
+      case LEN_:
+        state.mode = LEN;
+        /* falls through */
+      case LEN:
+        if (have >= 6 && left >= 258) {
+          //--- RESTORE() ---
+          strm.next_out = put;
+          strm.avail_out = left;
+          strm.next_in = next;
+          strm.avail_in = have;
+          state.hold = hold;
+          state.bits = bits;
+          //---
+          inffast(strm, _out);
+          //--- LOAD() ---
+          put = strm.next_out;
+          output = strm.output;
+          left = strm.avail_out;
+          next = strm.next_in;
+          input = strm.input;
+          have = strm.avail_in;
+          hold = state.hold;
+          bits = state.bits;
+          //---
+
+          if (state.mode === TYPE) {
+            state.back = -1;
+          }
+          break;
+        }
+        state.back = 0;
+        for (;;) {
+          here = state.lencode[hold & ((1 << state.lenbits) - 1)];  /*BITS(state.lenbits)*/
+          here_bits = here >>> 24;
+          here_op = (here >>> 16) & 0xff;
+          here_val = here & 0xffff;
+
+          if (here_bits <= bits) { break; }
+          //--- PULLBYTE() ---//
+          if (have === 0) { break inf_leave; }
+          have--;
+          hold += input[next++] << bits;
+          bits += 8;
+          //---//
+        }
+        if (here_op && (here_op & 0xf0) === 0) {
+          last_bits = here_bits;
+          last_op = here_op;
+          last_val = here_val;
+          for (;;) {
+            here = state.lencode[last_val +
+                    ((hold & ((1 << (last_bits + last_op)) - 1))/*BITS(last.bits + last.op)*/ >> last_bits)];
+            here_bits = here >>> 24;
+            here_op = (here >>> 16) & 0xff;
+            here_val = here & 0xffff;
+
+            if ((last_bits + here_bits) <= bits) { break; }
+            //--- PULLBYTE() ---//
+            if (have === 0) { break inf_leave; }
+            have--;
+            hold += input[next++] << bits;
+            bits += 8;
+            //---//
+          }
+          //--- DROPBITS(last.bits) ---//
+          hold >>>= last_bits;
+          bits -= last_bits;
+          //---//
+          state.back += last_bits;
+        }
+        //--- DROPBITS(here.bits) ---//
+        hold >>>= here_bits;
+        bits -= here_bits;
+        //---//
+        state.back += here_bits;
+        state.length = here_val;
+        if (here_op === 0) {
+          //Tracevv((stderr, here.val >= 0x20 && here.val < 0x7f ?
+          //        "inflate:         literal '%c'\n" :
+          //        "inflate:         literal 0x%02x\n", here.val));
+          state.mode = LIT;
+          break;
+        }
+        if (here_op & 32) {
+          //Tracevv((stderr, "inflate:         end of block\n"));
+          state.back = -1;
+          state.mode = TYPE;
+          break;
+        }
+        if (here_op & 64) {
+          strm.msg = 'invalid literal/length code';
+          state.mode = BAD;
+          break;
+        }
+        state.extra = here_op & 15;
+        state.mode = LENEXT;
+        /* falls through */
+      case LENEXT:
+        if (state.extra) {
+          //=== NEEDBITS(state.extra);
+          n = state.extra;
+          while (bits < n) {
+            if (have === 0) { break inf_leave; }
+            have--;
+            hold += input[next++] << bits;
+            bits += 8;
+          }
+          //===//
+          state.length += hold & ((1 << state.extra) - 1)/*BITS(state.extra)*/;
+          //--- DROPBITS(state.extra) ---//
+          hold >>>= state.extra;
+          bits -= state.extra;
+          //---//
+          state.back += state.extra;
+        }
+        //Tracevv((stderr, "inflate:         length %u\n", state.length));
+        state.was = state.length;
+        state.mode = DIST;
+        /* falls through */
+      case DIST:
+        for (;;) {
+          here = state.distcode[hold & ((1 << state.distbits) - 1)];/*BITS(state.distbits)*/
+          here_bits = here >>> 24;
+          here_op = (here >>> 16) & 0xff;
+          here_val = here & 0xffff;
+
+          if ((here_bits) <= bits) { break; }
+          //--- PULLBYTE() ---//
+          if (have === 0) { break inf_leave; }
+          have--;
+          hold += input[next++] << bits;
+          bits += 8;
+          //---//
+        }
+        if ((here_op & 0xf0) === 0) {
+          last_bits = here_bits;
+          last_op = here_op;
+          last_val = here_val;
+          for (;;) {
+            here = state.distcode[last_val +
+                    ((hold & ((1 << (last_bits + last_op)) - 1))/*BITS(last.bits + last.op)*/ >> last_bits)];
+            here_bits = here >>> 24;
+            here_op = (here >>> 16) & 0xff;
+            here_val = here & 0xffff;
+
+            if ((last_bits + here_bits) <= bits) { break; }
+            //--- PULLBYTE() ---//
+            if (have === 0) { break inf_leave; }
+            have--;
+            hold += input[next++] << bits;
+            bits += 8;
+            //---//
+          }
+          //--- DROPBITS(last.bits) ---//
+          hold >>>= last_bits;
+          bits -= last_bits;
+          //---//
+          state.back += last_bits;
+        }
+        //--- DROPBITS(here.bits) ---//
+        hold >>>= here_bits;
+        bits -= here_bits;
+        //---//
+        state.back += here_bits;
+        if (here_op & 64) {
+          strm.msg = 'invalid distance code';
+          state.mode = BAD;
+          break;
+        }
+        state.offset = here_val;
+        state.extra = (here_op) & 15;
+        state.mode = DISTEXT;
+        /* falls through */
+      case DISTEXT:
+        if (state.extra) {
+          //=== NEEDBITS(state.extra);
+          n = state.extra;
+          while (bits < n) {
+            if (have === 0) { break inf_leave; }
+            have--;
+            hold += input[next++] << bits;
+            bits += 8;
+          }
+          //===//
+          state.offset += hold & ((1 << state.extra) - 1)/*BITS(state.extra)*/;
+          //--- DROPBITS(state.extra) ---//
+          hold >>>= state.extra;
+          bits -= state.extra;
+          //---//
+          state.back += state.extra;
+        }
+//#ifdef INFLATE_STRICT
+        if (state.offset > state.dmax) {
+          strm.msg = 'invalid distance too far back';
+          state.mode = BAD;
+          break;
+        }
+//#endif
+        //Tracevv((stderr, "inflate:         distance %u\n", state.offset));
+        state.mode = MATCH;
+        /* falls through */
+      case MATCH:
+        if (left === 0) { break inf_leave; }
+        copy = _out - left;
+        if (state.offset > copy) {         /* copy from window */
+          copy = state.offset - copy;
+          if (copy > state.whave) {
+            if (state.sane) {
+              strm.msg = 'invalid distance too far back';
+              state.mode = BAD;
+              break;
+            }
+// (!) This block is disabled in zlib defaults,
+// don't enable it for binary compatibility
+//#ifdef INFLATE_ALLOW_INVALID_DISTANCE_TOOFAR_ARRR
+//          Trace((stderr, "inflate.c too far\n"));
+//          copy -= state.whave;
+//          if (copy > state.length) { copy = state.length; }
+//          if (copy > left) { copy = left; }
+//          left -= copy;
+//          state.length -= copy;
+//          do {
+//            output[put++] = 0;
+//          } while (--copy);
+//          if (state.length === 0) { state.mode = LEN; }
+//          break;
+//#endif
+          }
+          if (copy > state.wnext) {
+            copy -= state.wnext;
+            from = state.wsize - copy;
+          }
+          else {
+            from = state.wnext - copy;
+          }
+          if (copy > state.length) { copy = state.length; }
+          from_source = state.window;
+        }
+        else {                              /* copy from output */
+          from_source = output;
+          from = put - state.offset;
+          copy = state.length;
+        }
+        if (copy > left) { copy = left; }
+        left -= copy;
+        state.length -= copy;
+        do {
+          output[put++] = from_source[from++];
+        } while (--copy);
+        if (state.length === 0) { state.mode = LEN; }
+        break;
+      case LIT:
+        if (left === 0) { break inf_leave; }
+        output[put++] = state.length;
+        left--;
+        state.mode = LEN;
+        break;
+      case CHECK:
+        if (state.wrap) {
+          //=== NEEDBITS(32);
+          while (bits < 32) {
+            if (have === 0) { break inf_leave; }
+            have--;
+            // Use '|' instead of '+' to make sure that result is signed
+            hold |= input[next++] << bits;
+            bits += 8;
+          }
+          //===//
+          _out -= left;
+          strm.total_out += _out;
+          state.total += _out;
+          if ((state.wrap & 4) && _out) {
+            strm.adler = state.check =
+                /*UPDATE_CHECK(state.check, put - _out, _out);*/
+                (state.flags ? crc32_1(state.check, output, _out, put - _out) : adler32_1(state.check, output, _out, put - _out));
+
+          }
+          _out = left;
+          // NB: crc32 stored as signed 32-bit int, zswap32 returns signed too
+          if ((state.wrap & 4) && (state.flags ? hold : zswap32(hold)) !== state.check) {
+            strm.msg = 'incorrect data check';
+            state.mode = BAD;
+            break;
+          }
+          //=== INITBITS();
+          hold = 0;
+          bits = 0;
+          //===//
+          //Tracev((stderr, "inflate:   check matches trailer\n"));
+        }
+        state.mode = LENGTH;
+        /* falls through */
+      case LENGTH:
+        if (state.wrap && state.flags) {
+          //=== NEEDBITS(32);
+          while (bits < 32) {
+            if (have === 0) { break inf_leave; }
+            have--;
+            hold += input[next++] << bits;
+            bits += 8;
+          }
+          //===//
+          if ((state.wrap & 4) && hold !== (state.total & 0xffffffff)) {
+            strm.msg = 'incorrect length check';
+            state.mode = BAD;
+            break;
+          }
+          //=== INITBITS();
+          hold = 0;
+          bits = 0;
+          //===//
+          //Tracev((stderr, "inflate:   length matches trailer\n"));
+        }
+        state.mode = DONE;
+        /* falls through */
+      case DONE:
+        ret = Z_STREAM_END$1;
+        break inf_leave;
+      case BAD:
+        ret = Z_DATA_ERROR$1;
+        break inf_leave;
+      case MEM:
+        return Z_MEM_ERROR$1;
+      case SYNC:
+        /* falls through */
+      default:
+        return Z_STREAM_ERROR$1;
+    }
+  }
+
+  // inf_leave <- here is real place for "goto inf_leave", emulated via "break inf_leave"
+
+  /*
+     Return from inflate(), updating the total counts and the check value.
+     If there was no progress during the inflate() call, return a buffer
+     error.  Call updatewindow() to create and/or update the window state.
+     Note: a memory error from inflate() is non-recoverable.
+   */
+
+  //--- RESTORE() ---
+  strm.next_out = put;
+  strm.avail_out = left;
+  strm.next_in = next;
+  strm.avail_in = have;
+  state.hold = hold;
+  state.bits = bits;
+  //---
+
+  if (state.wsize || (_out !== strm.avail_out && state.mode < BAD &&
+                      (state.mode < CHECK || flush !== Z_FINISH$1))) {
+    if (updatewindow(strm, strm.output, strm.next_out, _out - strm.avail_out)) ;
+  }
+  _in -= strm.avail_in;
+  _out -= strm.avail_out;
+  strm.total_in += _in;
+  strm.total_out += _out;
+  state.total += _out;
+  if ((state.wrap & 4) && _out) {
+    strm.adler = state.check = /*UPDATE_CHECK(state.check, strm.next_out - _out, _out);*/
+      (state.flags ? crc32_1(state.check, output, _out, strm.next_out - _out) : adler32_1(state.check, output, _out, strm.next_out - _out));
+  }
+  strm.data_type = state.bits + (state.last ? 64 : 0) +
+                    (state.mode === TYPE ? 128 : 0) +
+                    (state.mode === LEN_ || state.mode === COPY_ ? 256 : 0);
+  if (((_in === 0 && _out === 0) || flush === Z_FINISH$1) && ret === Z_OK$1) {
+    ret = Z_BUF_ERROR;
+  }
+  return ret;
+};
+
+
+const inflateEnd = (strm) => {
+
+  if (inflateStateCheck(strm)) {
+    return Z_STREAM_ERROR$1;
+  }
+
+  let state = strm.state;
+  if (state.window) {
+    state.window = null;
+  }
+  strm.state = null;
+  return Z_OK$1;
+};
+
+
+const inflateGetHeader = (strm, head) => {
+
+  /* check state */
+  if (inflateStateCheck(strm)) { return Z_STREAM_ERROR$1; }
+  const state = strm.state;
+  if ((state.wrap & 2) === 0) { return Z_STREAM_ERROR$1; }
+
+  /* save header structure */
+  state.head = head;
+  head.done = false;
+  return Z_OK$1;
+};
+
+
+const inflateSetDictionary = (strm, dictionary) => {
+  const dictLength = dictionary.length;
+
+  let state;
+  let dictid;
+  let ret;
+
+  /* check state */
+  if (inflateStateCheck(strm)) { return Z_STREAM_ERROR$1; }
+  state = strm.state;
+
+  if (state.wrap !== 0 && state.mode !== DICT) {
+    return Z_STREAM_ERROR$1;
+  }
+
+  /* check for correct dictionary identifier */
+  if (state.mode === DICT) {
+    dictid = 1; /* adler32(0, null, 0)*/
+    /* dictid = adler32(dictid, dictionary, dictLength); */
+    dictid = adler32_1(dictid, dictionary, dictLength, 0);
+    if (dictid !== state.check) {
+      return Z_DATA_ERROR$1;
+    }
+  }
+  /* copy dictionary to window using updatewindow(), which will amend the
+   existing dictionary if appropriate */
+  ret = updatewindow(strm, dictionary, dictLength, dictLength);
+  if (ret) {
+    state.mode = MEM;
+    return Z_MEM_ERROR$1;
+  }
+  state.havedict = 1;
+  // Tracev((stderr, "inflate:   dictionary set\n"));
+  return Z_OK$1;
+};
+
+
+var inflateReset_1 = inflateReset;
+var inflateReset2_1 = inflateReset2;
+var inflateResetKeep_1 = inflateResetKeep;
+var inflateInit_1 = inflateInit;
+var inflateInit2_1 = inflateInit2;
+var inflate_2$1 = inflate$2;
+var inflateEnd_1 = inflateEnd;
+var inflateGetHeader_1 = inflateGetHeader;
+var inflateSetDictionary_1 = inflateSetDictionary;
+var inflateInfo = 'pako inflate (from Nodeca project)';
+
+/* Not implemented
+module.exports.inflateCodesUsed = inflateCodesUsed;
+module.exports.inflateCopy = inflateCopy;
+module.exports.inflateGetDictionary = inflateGetDictionary;
+module.exports.inflateMark = inflateMark;
+module.exports.inflatePrime = inflatePrime;
+module.exports.inflateSync = inflateSync;
+module.exports.inflateSyncPoint = inflateSyncPoint;
+module.exports.inflateUndermine = inflateUndermine;
+module.exports.inflateValidate = inflateValidate;
+*/
+
+var inflate_1$2 = {
+	inflateReset: inflateReset_1,
+	inflateReset2: inflateReset2_1,
+	inflateResetKeep: inflateResetKeep_1,
+	inflateInit: inflateInit_1,
+	inflateInit2: inflateInit2_1,
+	inflate: inflate_2$1,
+	inflateEnd: inflateEnd_1,
+	inflateGetHeader: inflateGetHeader_1,
+	inflateSetDictionary: inflateSetDictionary_1,
+	inflateInfo: inflateInfo
+};
+
+// (C) 1995-2013 Jean-loup Gailly and Mark Adler
+// (C) 2014-2017 Vitaly Puzrin and Andrey Tupitsin
+//
+// This software is provided 'as-is', without any express or implied
+// warranty. In no event will the authors be held liable for any damages
+// arising from the use of this software.
+//
+// Permission is granted to anyone to use this software for any purpose,
+// including commercial applications, and to alter it and redistribute it
+// freely, subject to the following restrictions:
+//
+// 1. The origin of this software must not be misrepresented; you must not
+//   claim that you wrote the original software. If you use this software
+//   in a product, an acknowledgment in the product documentation would be
+//   appreciated but is not required.
+// 2. Altered source versions must be plainly marked as such, and must not be
+//   misrepresented as being the original software.
+// 3. This notice may not be removed or altered from any source distribution.
+
+function GZheader() {
+  /* true if compressed data believed to be text */
+  this.text       = 0;
+  /* modification time */
+  this.time       = 0;
+  /* extra flags (not used when writing a gzip file) */
+  this.xflags     = 0;
+  /* operating system */
+  this.os         = 0;
+  /* pointer to extra field or Z_NULL if none */
+  this.extra      = null;
+  /* extra field length (valid if extra != Z_NULL) */
+  this.extra_len  = 0; // Actually, we don't need it in JS,
+                       // but leave for few code modifications
+
+  //
+  // Setup limits is not necessary because in js we should not preallocate memory
+  // for inflate use constant limit in 65536 bytes
+  //
+
+  /* space at extra (only when reading header) */
+  // this.extra_max  = 0;
+  /* pointer to zero-terminated file name or Z_NULL */
+  this.name       = '';
+  /* space at name (only when reading header) */
+  // this.name_max   = 0;
+  /* pointer to zero-terminated comment or Z_NULL */
+  this.comment    = '';
+  /* space at comment (only when reading header) */
+  // this.comm_max   = 0;
+  /* true if there was or will be a header crc */
+  this.hcrc       = 0;
+  /* true when done reading gzip header (not used when writing a gzip file) */
+  this.done       = false;
+}
+
+var gzheader = GZheader;
+
+const toString = Object.prototype.toString;
+
+/* Public constants ==========================================================*/
+/* ===========================================================================*/
+
+const {
+  Z_NO_FLUSH, Z_FINISH,
+  Z_OK, Z_STREAM_END, Z_NEED_DICT, Z_STREAM_ERROR, Z_DATA_ERROR, Z_MEM_ERROR
+} = constants$2;
+
+/* ===========================================================================*/
+
+
+/**
+ * class Inflate
+ *
+ * Generic JS-style wrapper for zlib calls. If you don't need
+ * streaming behaviour - use more simple functions: [[inflate]]
+ * and [[inflateRaw]].
+ **/
+
+/* internal
+ * inflate.chunks -> Array
+ *
+ * Chunks of output data, if [[Inflate#onData]] not overridden.
+ **/
+
+/**
+ * Inflate.result -> Uint8Array|String
+ *
+ * Uncompressed result, generated by default [[Inflate#onData]]
+ * and [[Inflate#onEnd]] handlers. Filled after you push last chunk
+ * (call [[Inflate#push]] with `Z_FINISH` / `true` param).
+ **/
+
+/**
+ * Inflate.err -> Number
+ *
+ * Error code after inflate finished. 0 (Z_OK) on success.
+ * Should be checked if broken data possible.
+ **/
+
+/**
+ * Inflate.msg -> String
+ *
+ * Error message, if [[Inflate.err]] != 0
+ **/
+
+
+/**
+ * new Inflate(options)
+ * - options (Object): zlib inflate options.
+ *
+ * Creates new inflator instance with specified params. Throws exception
+ * on bad params. Supported options:
+ *
+ * - `windowBits`
+ * - `dictionary`
+ *
+ * [http://zlib.net/manual.html#Advanced](http://zlib.net/manual.html#Advanced)
+ * for more information on these.
+ *
+ * Additional options, for internal needs:
+ *
+ * - `chunkSize` - size of generated data chunks (16K by default)
+ * - `raw` (Boolean) - do raw inflate
+ * - `to` (String) - if equal to 'string', then result will be converted
+ *   from utf8 to utf16 (javascript) string. When string output requested,
+ *   chunk length can differ from `chunkSize`, depending on content.
+ *
+ * By default, when no options set, autodetect deflate/gzip data format via
+ * wrapper header.
+ *
+ * ##### Example:
+ *
+ * ```javascript
+ * const pako = require('pako')
+ * const chunk1 = new Uint8Array([1,2,3,4,5,6,7,8,9])
+ * const chunk2 = new Uint8Array([10,11,12,13,14,15,16,17,18,19]);
+ *
+ * const inflate = new pako.Inflate({ level: 3});
+ *
+ * inflate.push(chunk1, false);
+ * inflate.push(chunk2, true);  // true -> last chunk
+ *
+ * if (inflate.err) { throw new Error(inflate.err); }
+ *
+ * console.log(inflate.result);
+ * ```
+ **/
+function Inflate$1(options) {
+  this.options = common.assign({
+    chunkSize: 1024 * 64,
+    windowBits: 15,
+    to: ''
+  }, options || {});
+
+  const opt = this.options;
+
+  // Force window size for `raw` data, if not set directly,
+  // because we have no header for autodetect.
+  if (opt.raw && (opt.windowBits >= 0) && (opt.windowBits < 16)) {
+    opt.windowBits = -opt.windowBits;
+    if (opt.windowBits === 0) { opt.windowBits = -15; }
+  }
+
+  // If `windowBits` not defined (and mode not raw) - set autodetect flag for gzip/deflate
+  if ((opt.windowBits >= 0) && (opt.windowBits < 16) &&
+      !(options && options.windowBits)) {
+    opt.windowBits += 32;
+  }
+
+  // Gzip header has no info about windows size, we can do autodetect only
+  // for deflate. So, if window size not set, force it to max when gzip possible
+  if ((opt.windowBits > 15) && (opt.windowBits < 48)) {
+    // bit 3 (16) -> gzipped data
+    // bit 4 (32) -> autodetect gzip/deflate
+    if ((opt.windowBits & 15) === 0) {
+      opt.windowBits |= 15;
+    }
+  }
+
+  this.err    = 0;      // error code, if happens (0 = Z_OK)
+  this.msg    = '';     // error message
+  this.ended  = false;  // used to avoid multiple onEnd() calls
+  this.chunks = [];     // chunks of compressed data
+
+  this.strm   = new zstream();
+  this.strm.avail_out = 0;
+
+  let status  = inflate_1$2.inflateInit2(
+    this.strm,
+    opt.windowBits
+  );
+
+  if (status !== Z_OK) {
+    throw new Error(messages[status]);
+  }
+
+  this.header = new gzheader();
+
+  inflate_1$2.inflateGetHeader(this.strm, this.header);
+
+  // Setup dictionary
+  if (opt.dictionary) {
+    // Convert data if needed
+    if (typeof opt.dictionary === 'string') {
+      opt.dictionary = strings.string2buf(opt.dictionary);
+    } else if (toString.call(opt.dictionary) === '[object ArrayBuffer]') {
+      opt.dictionary = new Uint8Array(opt.dictionary);
+    }
+    if (opt.raw) { //In raw mode we need to set the dictionary early
+      status = inflate_1$2.inflateSetDictionary(this.strm, opt.dictionary);
+      if (status !== Z_OK) {
+        throw new Error(messages[status]);
       }
     }
-    if (_this.interlaceMethod == 1) {
-      /*
-          1 6 4 6 2 6 4 6
-          7 7 7 7 7 7 7 7
-          5 6 5 6 5 6 5 6
-          7 7 7 7 7 7 7 7
-          3 6 4 6 3 6 4 6
-          7 7 7 7 7 7 7 7
-          5 6 5 6 5 6 5 6
-          7 7 7 7 7 7 7 7
-        */
-      pass(0, 0, 8, 8); // 1
-      /* NOTE these seem to follow the pattern:
-       * pass(x, 0, 2*x, 2*x);
-       * pass(0, x,   x, 2*x);
-       * with x being 4, 2, 1.
-       */
-      pass(4, 0, 8, 8); // 2
-      pass(0, 4, 4, 8); // 3
+  }
+}
 
-      pass(2, 0, 4, 4); // 4
-      pass(0, 2, 2, 4); // 5
+/**
+ * Inflate#push(data[, flush_mode]) -> Boolean
+ * - data (Uint8Array|ArrayBuffer): input data
+ * - flush_mode (Number|Boolean): 0..6 for corresponding Z_NO_FLUSH..Z_TREE
+ *   flush modes. See constants. Skipped or `false` means Z_NO_FLUSH,
+ *   `true` means Z_FINISH.
+ *
+ * Sends input data to inflate pipe, generating [[Inflate#onData]] calls with
+ * new output chunks. Returns `true` on success. If end of stream detected,
+ * [[Inflate#onEnd]] will be called.
+ *
+ * `flush_mode` is not needed for normal operation, because end of stream
+ * detected automatically. You may try to use it for advanced things, but
+ * this functionality was not tested.
+ *
+ * On fail call [[Inflate#onEnd]] with error code and return false.
+ *
+ * ##### Example
+ *
+ * ```javascript
+ * push(chunk, false); // push one of data chunks
+ * ...
+ * push(chunk, true);  // push last chunk
+ * ```
+ **/
+Inflate$1.prototype.push = function (data, flush_mode) {
+  const strm = this.strm;
+  const chunkSize = this.options.chunkSize;
+  const dictionary = this.options.dictionary;
+  let status, _flush_mode, last_avail_out;
 
-      pass(1, 0, 2, 2); // 6
-      pass(0, 1, 1, 2); // 7
-    } else {
-      pass(0, 0, 1, 1);
+  if (this.ended) return false;
+
+  if (flush_mode === ~~flush_mode) _flush_mode = flush_mode;
+  else _flush_mode = flush_mode === true ? Z_FINISH : Z_NO_FLUSH;
+
+  // Convert data if needed
+  if (toString.call(data) === '[object ArrayBuffer]') {
+    strm.input = new Uint8Array(data);
+  } else {
+    strm.input = data;
+  }
+
+  strm.next_in = 0;
+  strm.avail_in = strm.input.length;
+
+  for (;;) {
+    if (strm.avail_out === 0) {
+      strm.output = new Uint8Array(chunkSize);
+      strm.next_out = 0;
+      strm.avail_out = chunkSize;
     }
-    return fullPixels;
-  };
 
-  PNG.prototype.decodePalette = function() {
-    var c, i, length, palette, pos, ret, transparency, _i, _ref, _ref1;
-    palette = this.palette;
-    transparency = this.transparency.indexed || [];
-    ret = new Uint8Array((transparency.length || 0) + palette.length);
-    pos = 0;
-    length = palette.length;
-    c = 0;
-    for (i = _i = 0, _ref = length; _i < _ref; i = _i += 3) {
-      ret[pos++] = palette[i];
-      ret[pos++] = palette[i + 1];
-      ret[pos++] = palette[i + 2];
-      ret[pos++] = (_ref1 = transparency[c++]) != null ? _ref1 : 255;
-    }
-    return ret;
-  };
+    status = inflate_1$2.inflate(strm, _flush_mode);
 
-  PNG.prototype.copyToImageData = function(imageData, pixels) {
-    var alpha, colors, data, i, input, j, k, length, palette, v, _ref;
-    colors = this.colors;
-    palette = null;
-    alpha = this.hasAlphaChannel;
-    if (this.palette.length) {
-      palette =
-        (_ref = this._decodedPalette) != null
-          ? _ref
-          : (this._decodedPalette = this.decodePalette());
-      colors = 4;
-      alpha = true;
-    }
-    data = imageData.data || imageData;
-    length = data.length;
-    input = palette || pixels;
-    i = j = 0;
-    if (colors === 1) {
-      while (i < length) {
-        k = palette ? pixels[i / 4] * 4 : j;
-        v = input[k++];
-        data[i++] = v;
-        data[i++] = v;
-        data[i++] = v;
-        data[i++] = alpha ? input[k++] : 255;
-        j = k;
-      }
-    } else {
-      while (i < length) {
-        k = palette ? pixels[i / 4] * 4 : j;
-        data[i++] = input[k++];
-        data[i++] = input[k++];
-        data[i++] = input[k++];
-        data[i++] = alpha ? input[k++] : 255;
-        j = k;
+    if (status === Z_NEED_DICT && dictionary) {
+      status = inflate_1$2.inflateSetDictionary(strm, dictionary);
+
+      if (status === Z_OK) {
+        status = inflate_1$2.inflate(strm, _flush_mode);
+      } else if (status === Z_DATA_ERROR) {
+        // Replace code with more verbose
+        status = Z_NEED_DICT;
       }
     }
-  };
 
-  PNG.prototype.decode = function() {
-    var ret;
-    ret = new Uint8Array(this.width * this.height * 4);
-    this.copyToImageData(ret, this.decodePixels());
-    return ret;
-  };
+    // Skip snyc markers if more data follows and not raw mode
+    while (strm.avail_in > 0 &&
+           status === Z_STREAM_END &&
+           strm.state.wrap > 0 &&
+           data[strm.next_in] !== 0)
+    {
+      inflate_1$2.inflateReset(strm);
+      status = inflate_1$2.inflate(strm, _flush_mode);
+    }
 
-  var hasBrowserCanvas = function() {
-    if (Object.prototype.toString.call(globalObject) === "[object Window]") {
-      try {
-        scratchCanvas = globalObject.document.createElement("canvas");
-        scratchCtx = scratchCanvas.getContext("2d");
-      } catch (e) {
+    switch (status) {
+      case Z_STREAM_ERROR:
+      case Z_DATA_ERROR:
+      case Z_NEED_DICT:
+      case Z_MEM_ERROR:
+        this.onEnd(status);
+        this.ended = true;
         return false;
+    }
+
+    // Remember real `avail_out` value, because we may patch out buffer content
+    // to align utf8 strings boundaries.
+    last_avail_out = strm.avail_out;
+
+    if (strm.next_out) {
+      if (strm.avail_out === 0 || status === Z_STREAM_END) {
+
+        if (this.options.to === 'string') {
+
+          let next_out_utf8 = strings.utf8border(strm.output, strm.next_out);
+
+          let tail = strm.next_out - next_out_utf8;
+          let utf8str = strings.buf2string(strm.output, next_out_utf8);
+
+          // move tail & realign counters
+          strm.next_out = tail;
+          strm.avail_out = chunkSize - tail;
+          if (tail) strm.output.set(strm.output.subarray(next_out_utf8, next_out_utf8 + tail), 0);
+
+          this.onData(utf8str);
+
+        } else {
+          this.onData(strm.output.length === strm.next_out ? strm.output : strm.output.subarray(0, strm.next_out));
+        }
       }
+    }
+
+    // Must repeat iteration if out buffer is full
+    if (status === Z_OK && last_avail_out === 0) continue;
+
+    // Finalize if end of stream reached.
+    if (status === Z_STREAM_END) {
+      status = inflate_1$2.inflateEnd(this.strm);
+      this.onEnd(status);
+      this.ended = true;
       return true;
     }
-    return false;
-  };
 
-  hasBrowserCanvas();
+    if (strm.avail_in === 0) break;
+  }
 
-  makeImage = function(imageData) {
-    if (hasBrowserCanvas() === true) {
-      var img;
-      scratchCtx.width = imageData.width;
-      scratchCtx.height = imageData.height;
-      scratchCtx.clearRect(0, 0, imageData.width, imageData.height);
-      scratchCtx.putImageData(imageData, 0, 0);
-      img = new Image();
-      img.src = scratchCanvas.toDataURL();
-      return img;
-    }
-    throw new Error("This method requires a Browser with Canvas-capability.");
-  };
+  return true;
+};
 
-  PNG.prototype.decodeFrames = function(ctx) {
-    var frame, i, imageData, pixels, _i, _len, _ref, _results;
-    if (!this.animation) {
-      return;
-    }
-    _ref = this.animation.frames;
-    _results = [];
-    for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
-      frame = _ref[i];
-      imageData = ctx.createImageData(frame.width, frame.height);
-      pixels = this.decodePixels(new Uint8Array(frame.data));
-      this.copyToImageData(imageData, pixels);
-      frame.imageData = imageData;
-      _results.push((frame.image = makeImage(imageData)));
-    }
-    return _results;
-  };
 
-  PNG.prototype.renderFrame = function(ctx, number) {
-    var frame, frames, prev;
-    frames = this.animation.frames;
-    frame = frames[number];
-    prev = frames[number - 1];
-    if (number === 0) {
-      ctx.clearRect(0, 0, this.width, this.height);
-    }
-    if (
-      (prev != null ? prev.disposeOp : void 0) === APNG_DISPOSE_OP_BACKGROUND
-    ) {
-      ctx.clearRect(prev.xOffset, prev.yOffset, prev.width, prev.height);
-    } else if (
-      (prev != null ? prev.disposeOp : void 0) === APNG_DISPOSE_OP_PREVIOUS
-    ) {
-      ctx.putImageData(prev.imageData, prev.xOffset, prev.yOffset);
-    }
-    if (frame.blendOp === APNG_BLEND_OP_SOURCE) {
-      ctx.clearRect(frame.xOffset, frame.yOffset, frame.width, frame.height);
-    }
-    return ctx.drawImage(frame.image, frame.xOffset, frame.yOffset);
-  };
+/**
+ * Inflate#onData(chunk) -> Void
+ * - chunk (Uint8Array|String): output data. When string output requested,
+ *   each chunk will be string.
+ *
+ * By default, stores data blocks in `chunks[]` property and glue
+ * those in `onEnd`. Override this handler, if you need another behaviour.
+ **/
+Inflate$1.prototype.onData = function (chunk) {
+  this.chunks.push(chunk);
+};
 
-  PNG.prototype.animate = function(ctx) {
-    var doFrame,
-      frameNumber,
-      frames,
-      numFrames,
-      numPlays,
-      _ref,
-      _this = this;
-    frameNumber = 0;
-    (_ref = this.animation),
-      (numFrames = _ref.numFrames),
-      (frames = _ref.frames),
-      (numPlays = _ref.numPlays);
-    return (doFrame = function() {
-      var f, frame;
-      f = frameNumber++ % numFrames;
-      frame = frames[f];
-      _this.renderFrame(ctx, f);
-      if (numFrames > 1 && frameNumber / numFrames < numPlays) {
-        return (_this.animation._timeout = setTimeout(doFrame, frame.delay));
-      }
-    })();
-  };
 
-  PNG.prototype.stopAnimation = function() {
-    var _ref;
-    return clearTimeout(
-      (_ref = this.animation) != null ? _ref._timeout : void 0
-    );
-  };
-
-  PNG.prototype.render = function(canvas) {
-    var ctx, data;
-    if (canvas._png) {
-      canvas._png.stopAnimation();
-    }
-    canvas._png = this;
-    canvas.width = this.width;
-    canvas.height = this.height;
-    ctx = canvas.getContext("2d");
-    if (this.animation) {
-      this.decodeFrames(ctx);
-      return this.animate(ctx);
+/**
+ * Inflate#onEnd(status) -> Void
+ * - status (Number): inflate status. 0 (Z_OK) on success,
+ *   other if not.
+ *
+ * Called either after you tell inflate that the input stream is
+ * complete (Z_FINISH). By default - join collected chunks,
+ * free memory and fill `results` / `err` properties.
+ **/
+Inflate$1.prototype.onEnd = function (status) {
+  // On success - join
+  if (status === Z_OK) {
+    if (this.options.to === 'string') {
+      this.result = this.chunks.join('');
     } else {
-      data = ctx.createImageData(this.width, this.height);
-      this.copyToImageData(data, this.decodePixels());
-      return ctx.putImageData(data, 0, 0);
+      this.result = common.flattenChunks(this.chunks);
     }
-  };
+  }
+  this.chunks = [];
+  this.err = status;
+  this.msg = this.strm.msg;
+};
 
-  return PNG;
-})();
+
+/**
+ * inflate(data[, options]) -> Uint8Array|String
+ * - data (Uint8Array|ArrayBuffer): input data to decompress.
+ * - options (Object): zlib inflate options.
+ *
+ * Decompress `data` with inflate/ungzip and `options`. Autodetect
+ * format via wrapper header by default. That's why we don't provide
+ * separate `ungzip` method.
+ *
+ * Supported options are:
+ *
+ * - windowBits
+ *
+ * [http://zlib.net/manual.html#Advanced](http://zlib.net/manual.html#Advanced)
+ * for more information.
+ *
+ * Sugar (options):
+ *
+ * - `raw` (Boolean) - say that we work with raw stream, if you don't wish to specify
+ *   negative windowBits implicitly.
+ * - `to` (String) - if equal to 'string', then result will be converted
+ *   from utf8 to utf16 (javascript) string. When string output requested,
+ *   chunk length can differ from `chunkSize`, depending on content.
+ *
+ *
+ * ##### Example:
+ *
+ * ```javascript
+ * const pako = require('pako');
+ * const input = pako.deflate(new Uint8Array([1,2,3,4,5,6,7,8,9]));
+ * let output;
+ *
+ * try {
+ *   output = pako.inflate(input);
+ * } catch (err) {
+ *   console.log(err);
+ * }
+ * ```
+ **/
+function inflate$1(input, options) {
+  const inflator = new Inflate$1(options);
+
+  inflator.push(input);
+
+  // That will never happens, if you don't cheat with options :)
+  if (inflator.err) throw inflator.msg || messages[inflator.err];
+
+  return inflator.result;
+}
+
+
+/**
+ * inflateRaw(data[, options]) -> Uint8Array|String
+ * - data (Uint8Array|ArrayBuffer): input data to decompress.
+ * - options (Object): zlib inflate options.
+ *
+ * The same as [[inflate]], but creates raw data, without wrapper
+ * (header and adler32 crc).
+ **/
+function inflateRaw$1(input, options) {
+  options = options || {};
+  options.raw = true;
+  return inflate$1(input, options);
+}
+
+
+/**
+ * ungzip(data[, options]) -> Uint8Array|String
+ * - data (Uint8Array|ArrayBuffer): input data to decompress.
+ * - options (Object): zlib inflate options.
+ *
+ * Just shortcut to [[inflate]], because it autodetects format
+ * by header.content. Done for convenience.
+ **/
+
+
+var Inflate_1$1 = Inflate$1;
+var inflate_2 = inflate$1;
+var inflateRaw_1$1 = inflateRaw$1;
+var ungzip$1 = inflate$1;
+var constants = constants$2;
+
+var inflate_1$1 = {
+	Inflate: Inflate_1$1,
+	inflate: inflate_2,
+	inflateRaw: inflateRaw_1$1,
+	ungzip: ungzip$1,
+	constants: constants
+};
+
+const { Inflate, inflate, inflateRaw, ungzip } = inflate_1$1;
+var Inflate_1 = Inflate;
+var inflate_1 = inflate;
+
+const crcTable = [];
+for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) {
+        if (c & 1) {
+            c = 0xedb88320 ^ (c >>> 1);
+        }
+        else {
+            c = c >>> 1;
+        }
+    }
+    crcTable[n] = c;
+}
+const initialCrc = 0xffffffff;
+function updateCrc(currentCrc, data, length) {
+    let c = currentCrc;
+    for (let n = 0; n < length; n++) {
+        c = crcTable[(c ^ data[n]) & 0xff] ^ (c >>> 8);
+    }
+    return c;
+}
+function crc(data, length) {
+    return (updateCrc(initialCrc, data, length) ^ initialCrc) >>> 0;
+}
+function checkCrc(buffer, crcLength, chunkName) {
+    const expectedCrc = buffer.readUint32();
+    const actualCrc = crc(new Uint8Array(buffer.buffer, buffer.byteOffset + buffer.offset - crcLength - 4, crcLength), crcLength); // "- 4" because we already advanced by reading the CRC
+    if (actualCrc !== expectedCrc) {
+        throw new Error(`CRC mismatch for chunk ${chunkName}. Expected ${expectedCrc}, found ${actualCrc}`);
+    }
+}
+
+function unfilterNone(currentLine, newLine, bytesPerLine) {
+    for (let i = 0; i < bytesPerLine; i++) {
+        newLine[i] = currentLine[i];
+    }
+}
+function unfilterSub(currentLine, newLine, bytesPerLine, bytesPerPixel) {
+    let i = 0;
+    for (; i < bytesPerPixel; i++) {
+        // just copy first bytes
+        newLine[i] = currentLine[i];
+    }
+    for (; i < bytesPerLine; i++) {
+        newLine[i] = (currentLine[i] + newLine[i - bytesPerPixel]) & 0xff;
+    }
+}
+function unfilterUp(currentLine, newLine, prevLine, bytesPerLine) {
+    let i = 0;
+    if (prevLine.length === 0) {
+        // just copy bytes for first line
+        for (; i < bytesPerLine; i++) {
+            newLine[i] = currentLine[i];
+        }
+    }
+    else {
+        for (; i < bytesPerLine; i++) {
+            newLine[i] = (currentLine[i] + prevLine[i]) & 0xff;
+        }
+    }
+}
+function unfilterAverage(currentLine, newLine, prevLine, bytesPerLine, bytesPerPixel) {
+    let i = 0;
+    if (prevLine.length === 0) {
+        for (; i < bytesPerPixel; i++) {
+            newLine[i] = currentLine[i];
+        }
+        for (; i < bytesPerLine; i++) {
+            newLine[i] = (currentLine[i] + (newLine[i - bytesPerPixel] >> 1)) & 0xff;
+        }
+    }
+    else {
+        for (; i < bytesPerPixel; i++) {
+            newLine[i] = (currentLine[i] + (prevLine[i] >> 1)) & 0xff;
+        }
+        for (; i < bytesPerLine; i++) {
+            newLine[i] =
+                (currentLine[i] + ((newLine[i - bytesPerPixel] + prevLine[i]) >> 1)) &
+                    0xff;
+        }
+    }
+}
+function unfilterPaeth(currentLine, newLine, prevLine, bytesPerLine, bytesPerPixel) {
+    let i = 0;
+    if (prevLine.length === 0) {
+        for (; i < bytesPerPixel; i++) {
+            newLine[i] = currentLine[i];
+        }
+        for (; i < bytesPerLine; i++) {
+            newLine[i] = (currentLine[i] + newLine[i - bytesPerPixel]) & 0xff;
+        }
+    }
+    else {
+        for (; i < bytesPerPixel; i++) {
+            newLine[i] = (currentLine[i] + prevLine[i]) & 0xff;
+        }
+        for (; i < bytesPerLine; i++) {
+            newLine[i] =
+                (currentLine[i] +
+                    paethPredictor$1(newLine[i - bytesPerPixel], prevLine[i], prevLine[i - bytesPerPixel])) &
+                    0xff;
+        }
+    }
+}
+function paethPredictor$1(a, b, c) {
+    const p = a + b - c;
+    const pa = Math.abs(p - a);
+    const pb = Math.abs(p - b);
+    const pc = Math.abs(p - c);
+    if (pa <= pb && pa <= pc)
+        return a;
+    else if (pb <= pc)
+        return b;
+    else
+        return c;
+}
+
+/**
+ * Apllies filter on scanline based on the filter type.
+ * @param filterType - The filter type to apply.
+ * @param currentLine - The current line of pixel data.
+ * @param newLine - The new line of pixel data.
+ * @param prevLine - The previous line of pixel data.
+ * @param passLineBytes - The number of bytes in the pass line.
+ * @param bytesPerPixel - The number of bytes per pixel.
+ */
+function applyUnfilter(filterType, currentLine, newLine, prevLine, passLineBytes, bytesPerPixel) {
+    switch (filterType) {
+        case 0:
+            unfilterNone(currentLine, newLine, passLineBytes);
+            break;
+        case 1:
+            unfilterSub(currentLine, newLine, passLineBytes, bytesPerPixel);
+            break;
+        case 2:
+            unfilterUp(currentLine, newLine, prevLine, passLineBytes);
+            break;
+        case 3:
+            unfilterAverage(currentLine, newLine, prevLine, passLineBytes, bytesPerPixel);
+            break;
+        case 4:
+            unfilterPaeth(currentLine, newLine, prevLine, passLineBytes, bytesPerPixel);
+            break;
+        default:
+            throw new Error(`Unsupported filter: ${filterType}`);
+    }
+}
+
+const uint16$1 = new Uint16Array([0x00ff]);
+const uint8$1 = new Uint8Array(uint16$1.buffer);
+const osIsLittleEndian$1 = uint8$1[0] === 0xff;
+/**
+ * Decodes the Adam7 interlaced PNG data.
+ *
+ * @param params - DecodeInterlaceNullParams
+ * @returns - array of pixel data.
+ */
+function decodeInterlaceAdam7(params) {
+    const { data, width, height, channels, depth } = params;
+    // Adam7 interlacing pattern
+    const passes = [
+        { x: 0, y: 0, xStep: 8, yStep: 8 }, // Pass 1
+        { x: 4, y: 0, xStep: 8, yStep: 8 }, // Pass 2
+        { x: 0, y: 4, xStep: 4, yStep: 8 }, // Pass 3
+        { x: 2, y: 0, xStep: 4, yStep: 4 }, // Pass 4
+        { x: 0, y: 2, xStep: 2, yStep: 4 }, // Pass 5
+        { x: 1, y: 0, xStep: 2, yStep: 2 }, // Pass 6
+        { x: 0, y: 1, xStep: 1, yStep: 2 }, // Pass 7
+    ];
+    const bytesPerPixel = Math.ceil(depth / 8) * channels;
+    const resultData = new Uint8Array(height * width * bytesPerPixel);
+    let offset = 0;
+    // Process each pass
+    for (let passIndex = 0; passIndex < 7; passIndex++) {
+        const pass = passes[passIndex];
+        // Calculate pass dimensions
+        const passWidth = Math.ceil((width - pass.x) / pass.xStep);
+        const passHeight = Math.ceil((height - pass.y) / pass.yStep);
+        if (passWidth <= 0 || passHeight <= 0)
+            continue;
+        const passLineBytes = passWidth * bytesPerPixel;
+        const prevLine = new Uint8Array(passLineBytes);
+        // Process each scanline in this pass
+        for (let y = 0; y < passHeight; y++) {
+            // First byte is the filter type
+            const filterType = data[offset++];
+            const currentLine = data.subarray(offset, offset + passLineBytes);
+            offset += passLineBytes;
+            // Create a new line for the unfiltered data
+            const newLine = new Uint8Array(passLineBytes);
+            // Apply the appropriate unfilter
+            applyUnfilter(filterType, currentLine, newLine, prevLine, passLineBytes, bytesPerPixel);
+            prevLine.set(newLine);
+            for (let x = 0; x < passWidth; x++) {
+                const outputX = pass.x + x * pass.xStep;
+                const outputY = pass.y + y * pass.yStep;
+                if (outputX >= width || outputY >= height)
+                    continue;
+                for (let i = 0; i < bytesPerPixel; i++) {
+                    resultData[(outputY * width + outputX) * bytesPerPixel + i] =
+                        newLine[x * bytesPerPixel + i];
+                }
+            }
+        }
+    }
+    if (depth === 16) {
+        const uint16Data = new Uint16Array(resultData.buffer);
+        if (osIsLittleEndian$1) {
+            for (let k = 0; k < uint16Data.length; k++) {
+                // PNG is always big endian. Swap the bytes.
+                uint16Data[k] = swap16$1(uint16Data[k]);
+            }
+        }
+        return uint16Data;
+    }
+    else {
+        return resultData;
+    }
+}
+function swap16$1(val) {
+    return ((val & 0xff) << 8) | ((val >> 8) & 0xff);
+}
+
+const uint16 = new Uint16Array([0x00ff]);
+const uint8 = new Uint8Array(uint16.buffer);
+const osIsLittleEndian = uint8[0] === 0xff;
+const empty = new Uint8Array(0);
+function decodeInterlaceNull(params) {
+    const { data, width, height, channels, depth } = params;
+    const bytesPerPixel = Math.ceil(depth / 8) * channels;
+    const bytesPerLine = Math.ceil((depth / 8) * channels * width);
+    const newData = new Uint8Array(height * bytesPerLine);
+    let prevLine = empty;
+    let offset = 0;
+    let currentLine;
+    let newLine;
+    for (let i = 0; i < height; i++) {
+        currentLine = data.subarray(offset + 1, offset + 1 + bytesPerLine);
+        newLine = newData.subarray(i * bytesPerLine, (i + 1) * bytesPerLine);
+        switch (data[offset]) {
+            case 0:
+                unfilterNone(currentLine, newLine, bytesPerLine);
+                break;
+            case 1:
+                unfilterSub(currentLine, newLine, bytesPerLine, bytesPerPixel);
+                break;
+            case 2:
+                unfilterUp(currentLine, newLine, prevLine, bytesPerLine);
+                break;
+            case 3:
+                unfilterAverage(currentLine, newLine, prevLine, bytesPerLine, bytesPerPixel);
+                break;
+            case 4:
+                unfilterPaeth(currentLine, newLine, prevLine, bytesPerLine, bytesPerPixel);
+                break;
+            default:
+                throw new Error(`Unsupported filter: ${data[offset]}`);
+        }
+        prevLine = newLine;
+        offset += bytesPerLine + 1;
+    }
+    if (depth === 16) {
+        const uint16Data = new Uint16Array(newData.buffer);
+        if (osIsLittleEndian) {
+            for (let k = 0; k < uint16Data.length; k++) {
+                // PNG is always big endian. Swap the bytes.
+                uint16Data[k] = swap16(uint16Data[k]);
+            }
+        }
+        return uint16Data;
+    }
+    else {
+        return newData;
+    }
+}
+function swap16(val) {
+    return ((val & 0xff) << 8) | ((val >> 8) & 0xff);
+}
+
+// https://www.w3.org/TR/PNG/#5PNG-file-signature
+const pngSignature = Uint8Array.of(137, 80, 78, 71, 13, 10, 26, 10);
+function checkSignature(buffer) {
+    if (!hasPngSignature(buffer.readBytes(pngSignature.length))) {
+        throw new Error('wrong PNG signature');
+    }
+}
+function hasPngSignature(array) {
+    if (array.length < pngSignature.length) {
+        return false;
+    }
+    for (let i = 0; i < pngSignature.length; i++) {
+        if (array[i] !== pngSignature[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// https://www.w3.org/TR/png/#11tEXt
+const textChunkName = 'tEXt';
+const NULL = 0;
+const latin1Decoder = new TextDecoder('latin1');
+function validateKeyword(keyword) {
+    validateLatin1(keyword);
+    if (keyword.length === 0 || keyword.length > 79) {
+        throw new Error('keyword length must be between 1 and 79');
+    }
+}
+// eslint-disable-next-line no-control-regex
+const latin1Regex = /^[\u0000-\u00FF]*$/;
+function validateLatin1(text) {
+    if (!latin1Regex.test(text)) {
+        throw new Error('invalid latin1 text');
+    }
+}
+function decodetEXt(text, buffer, length) {
+    const keyword = readKeyword(buffer);
+    text[keyword] = readLatin1(buffer, length - keyword.length - 1);
+}
+// https://www.w3.org/TR/png/#11keywords
+function readKeyword(buffer) {
+    buffer.mark();
+    while (buffer.readByte() !== NULL) {
+        /* advance */
+    }
+    const end = buffer.offset;
+    buffer.reset();
+    const keyword = latin1Decoder.decode(buffer.readBytes(end - buffer.offset - 1));
+    // NULL
+    buffer.skip(1);
+    validateKeyword(keyword);
+    return keyword;
+}
+function readLatin1(buffer, length) {
+    return latin1Decoder.decode(buffer.readBytes(length));
+}
+
+const ColorType = {
+    UNKNOWN: -1,
+    GREYSCALE: 0,
+    TRUECOLOUR: 2,
+    INDEXED_COLOUR: 3,
+    GREYSCALE_ALPHA: 4,
+    TRUECOLOUR_ALPHA: 6,
+};
+const CompressionMethod = {
+    UNKNOWN: -1,
+    DEFLATE: 0,
+};
+const FilterMethod = {
+    UNKNOWN: -1,
+    ADAPTIVE: 0,
+};
+const InterlaceMethod = {
+    UNKNOWN: -1,
+    NO_INTERLACE: 0,
+    ADAM7: 1,
+};
+const DisposeOpType = {
+    NONE: 0,
+    BACKGROUND: 1,
+    PREVIOUS: 2,
+};
+const BlendOpType = {
+    SOURCE: 0,
+    OVER: 1,
+};
+
+class PngDecoder extends IOBuffer {
+    _checkCrc;
+    _inflator;
+    _png;
+    _apng;
+    _end;
+    _hasPalette;
+    _palette;
+    _hasTransparency;
+    _transparency;
+    _compressionMethod;
+    _filterMethod;
+    _interlaceMethod;
+    _colorType;
+    _isAnimated;
+    _numberOfFrames;
+    _numberOfPlays;
+    _frames;
+    _writingDataChunks;
+    constructor(data, options = {}) {
+        super(data);
+        const { checkCrc = false } = options;
+        this._checkCrc = checkCrc;
+        this._inflator = new Inflate_1();
+        this._png = {
+            width: -1,
+            height: -1,
+            channels: -1,
+            data: new Uint8Array(0),
+            depth: 1,
+            text: {},
+        };
+        this._apng = {
+            width: -1,
+            height: -1,
+            channels: -1,
+            depth: 1,
+            numberOfFrames: 1,
+            numberOfPlays: 0,
+            text: {},
+            frames: [],
+        };
+        this._end = false;
+        this._hasPalette = false;
+        this._palette = [];
+        this._hasTransparency = false;
+        this._transparency = new Uint16Array(0);
+        this._compressionMethod = CompressionMethod.UNKNOWN;
+        this._filterMethod = FilterMethod.UNKNOWN;
+        this._interlaceMethod = InterlaceMethod.UNKNOWN;
+        this._colorType = ColorType.UNKNOWN;
+        this._isAnimated = false;
+        this._numberOfFrames = 1;
+        this._numberOfPlays = 0;
+        this._frames = [];
+        this._writingDataChunks = false;
+        // PNG is always big endian
+        // https://www.w3.org/TR/PNG/#7Integers-and-byte-order
+        this.setBigEndian();
+    }
+    decode() {
+        checkSignature(this);
+        while (!this._end) {
+            const length = this.readUint32();
+            const type = this.readChars(4);
+            this.decodeChunk(length, type);
+        }
+        this.decodeImage();
+        return this._png;
+    }
+    decodeApng() {
+        checkSignature(this);
+        while (!this._end) {
+            const length = this.readUint32();
+            const type = this.readChars(4);
+            this.decodeApngChunk(length, type);
+        }
+        this.decodeApngImage();
+        return this._apng;
+    }
+    // https://www.w3.org/TR/PNG/#5Chunk-layout
+    decodeChunk(length, type) {
+        const offset = this.offset;
+        switch (type) {
+            // 11.2 Critical chunks
+            case 'IHDR': // 11.2.2 IHDR Image header
+                this.decodeIHDR();
+                break;
+            case 'PLTE': // 11.2.3 PLTE Palette
+                this.decodePLTE(length);
+                break;
+            case 'IDAT': // 11.2.4 IDAT Image data
+                this.decodeIDAT(length);
+                break;
+            case 'IEND': // 11.2.5 IEND Image trailer
+                this._end = true;
+                break;
+            // 11.3 Ancillary chunks
+            case 'tRNS': // 11.3.2.1 tRNS Transparency
+                this.decodetRNS(length);
+                break;
+            case 'iCCP': // 11.3.3.3 iCCP Embedded ICC profile
+                this.decodeiCCP(length);
+                break;
+            case textChunkName: // 11.3.4.3 tEXt Textual data
+                decodetEXt(this._png.text, this, length);
+                break;
+            case 'pHYs': // 11.3.5.3 pHYs Physical pixel dimensions
+                this.decodepHYs();
+                break;
+            default:
+                this.skip(length);
+                break;
+        }
+        if (this.offset - offset !== length) {
+            throw new Error(`Length mismatch while decoding chunk ${type}`);
+        }
+        if (this._checkCrc) {
+            checkCrc(this, length + 4, type);
+        }
+        else {
+            this.skip(4);
+        }
+    }
+    decodeApngChunk(length, type) {
+        const offset = this.offset;
+        if (type !== 'fdAT' && type !== 'IDAT' && this._writingDataChunks) {
+            this.pushDataToFrame();
+        }
+        switch (type) {
+            case 'acTL':
+                this.decodeACTL();
+                break;
+            case 'fcTL':
+                this.decodeFCTL();
+                break;
+            case 'fdAT':
+                this.decodeFDAT(length);
+                break;
+            default:
+                this.decodeChunk(length, type);
+                this.offset = offset + length;
+                break;
+        }
+        if (this.offset - offset !== length) {
+            throw new Error(`Length mismatch while decoding chunk ${type}`);
+        }
+        if (this._checkCrc) {
+            checkCrc(this, length + 4, type);
+        }
+        else {
+            this.skip(4);
+        }
+    }
+    // https://www.w3.org/TR/PNG/#11IHDR
+    decodeIHDR() {
+        const image = this._png;
+        image.width = this.readUint32();
+        image.height = this.readUint32();
+        image.depth = checkBitDepth(this.readUint8());
+        const colorType = this.readUint8();
+        this._colorType = colorType;
+        let channels;
+        switch (colorType) {
+            case ColorType.GREYSCALE:
+                channels = 1;
+                break;
+            case ColorType.TRUECOLOUR:
+                channels = 3;
+                break;
+            case ColorType.INDEXED_COLOUR:
+                channels = 1;
+                break;
+            case ColorType.GREYSCALE_ALPHA:
+                channels = 2;
+                break;
+            case ColorType.TRUECOLOUR_ALPHA:
+                channels = 4;
+                break;
+            // Kept for exhaustiveness.
+            // eslint-disable-next-line unicorn/no-useless-switch-case
+            case ColorType.UNKNOWN:
+            default:
+                throw new Error(`Unknown color type: ${colorType}`);
+        }
+        this._png.channels = channels;
+        this._compressionMethod = this.readUint8();
+        if (this._compressionMethod !== CompressionMethod.DEFLATE) {
+            throw new Error(`Unsupported compression method: ${this._compressionMethod}`);
+        }
+        this._filterMethod = this.readUint8();
+        this._interlaceMethod = this.readUint8();
+    }
+    decodeACTL() {
+        this._numberOfFrames = this.readUint32();
+        this._numberOfPlays = this.readUint32();
+        this._isAnimated = true;
+    }
+    decodeFCTL() {
+        const image = {
+            sequenceNumber: this.readUint32(),
+            width: this.readUint32(),
+            height: this.readUint32(),
+            xOffset: this.readUint32(),
+            yOffset: this.readUint32(),
+            delayNumber: this.readUint16(),
+            delayDenominator: this.readUint16(),
+            disposeOp: this.readUint8(),
+            blendOp: this.readUint8(),
+            data: new Uint8Array(0),
+        };
+        this._frames.push(image);
+    }
+    // https://www.w3.org/TR/PNG/#11PLTE
+    decodePLTE(length) {
+        if (length % 3 !== 0) {
+            throw new RangeError(`PLTE field length must be a multiple of 3. Got ${length}`);
+        }
+        const l = length / 3;
+        this._hasPalette = true;
+        const palette = [];
+        this._palette = palette;
+        for (let i = 0; i < l; i++) {
+            palette.push([this.readUint8(), this.readUint8(), this.readUint8()]);
+        }
+    }
+    // https://www.w3.org/TR/PNG/#11IDAT
+    decodeIDAT(length) {
+        this._writingDataChunks = true;
+        const dataLength = length;
+        const dataOffset = this.offset + this.byteOffset;
+        this._inflator.push(new Uint8Array(this.buffer, dataOffset, dataLength));
+        if (this._inflator.err) {
+            throw new Error(`Error while decompressing the data: ${this._inflator.err}`);
+        }
+        this.skip(length);
+    }
+    decodeFDAT(length) {
+        this._writingDataChunks = true;
+        let dataLength = length;
+        let dataOffset = this.offset + this.byteOffset;
+        dataOffset += 4;
+        dataLength -= 4;
+        this._inflator.push(new Uint8Array(this.buffer, dataOffset, dataLength));
+        if (this._inflator.err) {
+            throw new Error(`Error while decompressing the data: ${this._inflator.err}`);
+        }
+        this.skip(length);
+    }
+    // https://www.w3.org/TR/PNG/#11tRNS
+    decodetRNS(length) {
+        switch (this._colorType) {
+            case ColorType.GREYSCALE:
+            case ColorType.TRUECOLOUR: {
+                if (length % 2 !== 0) {
+                    throw new RangeError(`tRNS chunk length must be a multiple of 2. Got ${length}`);
+                }
+                if (length / 2 > this._png.width * this._png.height) {
+                    throw new Error(`tRNS chunk contains more alpha values than there are pixels (${length / 2} vs ${this._png.width * this._png.height})`);
+                }
+                this._hasTransparency = true;
+                this._transparency = new Uint16Array(length / 2);
+                for (let i = 0; i < length / 2; i++) {
+                    this._transparency[i] = this.readUint16();
+                }
+                break;
+            }
+            case ColorType.INDEXED_COLOUR: {
+                if (length > this._palette.length) {
+                    throw new Error(`tRNS chunk contains more alpha values than there are palette colors (${length} vs ${this._palette.length})`);
+                }
+                let i = 0;
+                for (; i < length; i++) {
+                    const alpha = this.readByte();
+                    this._palette[i].push(alpha);
+                }
+                for (; i < this._palette.length; i++) {
+                    this._palette[i].push(255);
+                }
+                break;
+            }
+            // Kept for exhaustiveness.
+            /* eslint-disable unicorn/no-useless-switch-case */
+            case ColorType.UNKNOWN:
+            case ColorType.GREYSCALE_ALPHA:
+            case ColorType.TRUECOLOUR_ALPHA:
+            default: {
+                throw new Error(`tRNS chunk is not supported for color type ${this._colorType}`);
+            }
+            /* eslint-enable unicorn/no-useless-switch-case */
+        }
+    }
+    // https://www.w3.org/TR/PNG/#11iCCP
+    decodeiCCP(length) {
+        const name = readKeyword(this);
+        const compressionMethod = this.readUint8();
+        if (compressionMethod !== CompressionMethod.DEFLATE) {
+            throw new Error(`Unsupported iCCP compression method: ${compressionMethod}`);
+        }
+        const compressedProfile = this.readBytes(length - name.length - 2);
+        this._png.iccEmbeddedProfile = {
+            name,
+            profile: inflate_1(compressedProfile),
+        };
+    }
+    // https://www.w3.org/TR/PNG/#11pHYs
+    decodepHYs() {
+        const ppuX = this.readUint32();
+        const ppuY = this.readUint32();
+        const unitSpecifier = this.readByte();
+        this._png.resolution = { x: ppuX, y: ppuY, unit: unitSpecifier };
+    }
+    decodeApngImage() {
+        this._apng.width = this._png.width;
+        this._apng.height = this._png.height;
+        this._apng.channels = this._png.channels;
+        this._apng.depth = this._png.depth;
+        this._apng.numberOfFrames = this._numberOfFrames;
+        this._apng.numberOfPlays = this._numberOfPlays;
+        this._apng.text = this._png.text;
+        this._apng.resolution = this._png.resolution;
+        for (let i = 0; i < this._numberOfFrames; i++) {
+            const newFrame = {
+                sequenceNumber: this._frames[i].sequenceNumber,
+                delayNumber: this._frames[i].delayNumber,
+                delayDenominator: this._frames[i].delayDenominator,
+                data: this._apng.depth === 8
+                    ? new Uint8Array(this._apng.width * this._apng.height * this._apng.channels)
+                    : new Uint16Array(this._apng.width * this._apng.height * this._apng.channels),
+            };
+            const frame = this._frames.at(i);
+            if (frame) {
+                frame.data = decodeInterlaceNull({
+                    data: frame.data,
+                    width: frame.width,
+                    height: frame.height,
+                    channels: this._apng.channels,
+                    depth: this._apng.depth,
+                });
+                if (this._hasPalette) {
+                    this._apng.palette = this._palette;
+                }
+                if (this._hasTransparency) {
+                    this._apng.transparency = this._transparency;
+                }
+                if (i === 0 ||
+                    (frame.xOffset === 0 &&
+                        frame.yOffset === 0 &&
+                        frame.width === this._png.width &&
+                        frame.height === this._png.height)) {
+                    newFrame.data = frame.data;
+                }
+                else {
+                    const prevFrame = this._apng.frames.at(i - 1);
+                    this.disposeFrame(frame, prevFrame, newFrame);
+                    this.addFrameDataToCanvas(newFrame, frame);
+                }
+                this._apng.frames.push(newFrame);
+            }
+        }
+        return this._apng;
+    }
+    disposeFrame(frame, prevFrame, imageFrame) {
+        switch (frame.disposeOp) {
+            case DisposeOpType.NONE:
+                break;
+            case DisposeOpType.BACKGROUND:
+                for (let row = 0; row < this._png.height; row++) {
+                    for (let col = 0; col < this._png.width; col++) {
+                        const index = (row * frame.width + col) * this._png.channels;
+                        for (let channel = 0; channel < this._png.channels; channel++) {
+                            imageFrame.data[index + channel] = 0;
+                        }
+                    }
+                }
+                break;
+            case DisposeOpType.PREVIOUS:
+                imageFrame.data.set(prevFrame.data);
+                break;
+            default:
+                throw new Error('Unknown disposeOp');
+        }
+    }
+    addFrameDataToCanvas(imageFrame, frame) {
+        const maxValue = 1 << this._png.depth;
+        const calculatePixelIndices = (row, col) => {
+            const index = ((row + frame.yOffset) * this._png.width + frame.xOffset + col) *
+                this._png.channels;
+            const frameIndex = (row * frame.width + col) * this._png.channels;
+            return { index, frameIndex };
+        };
+        switch (frame.blendOp) {
+            case BlendOpType.SOURCE:
+                for (let row = 0; row < frame.height; row++) {
+                    for (let col = 0; col < frame.width; col++) {
+                        const { index, frameIndex } = calculatePixelIndices(row, col);
+                        for (let channel = 0; channel < this._png.channels; channel++) {
+                            imageFrame.data[index + channel] =
+                                frame.data[frameIndex + channel];
+                        }
+                    }
+                }
+                break;
+            // https://www.w3.org/TR/png-3/#13Alpha-channel-processing
+            case BlendOpType.OVER:
+                for (let row = 0; row < frame.height; row++) {
+                    for (let col = 0; col < frame.width; col++) {
+                        const { index, frameIndex } = calculatePixelIndices(row, col);
+                        for (let channel = 0; channel < this._png.channels; channel++) {
+                            const sourceAlpha = frame.data[frameIndex + this._png.channels - 1] / maxValue;
+                            const foregroundValue = channel % (this._png.channels - 1) === 0
+                                ? 1
+                                : frame.data[frameIndex + channel];
+                            const value = Math.floor(sourceAlpha * foregroundValue +
+                                (1 - sourceAlpha) * imageFrame.data[index + channel]);
+                            imageFrame.data[index + channel] += value;
+                        }
+                    }
+                }
+                break;
+            default:
+                throw new Error('Unknown blendOp');
+        }
+    }
+    decodeImage() {
+        if (this._inflator.err) {
+            throw new Error(`Error while decompressing the data: ${this._inflator.err}`);
+        }
+        const data = this._isAnimated
+            ? (this._frames?.at(0)).data
+            : this._inflator.result;
+        if (this._filterMethod !== FilterMethod.ADAPTIVE) {
+            throw new Error(`Filter method ${this._filterMethod} not supported`);
+        }
+        if (this._interlaceMethod === InterlaceMethod.NO_INTERLACE) {
+            this._png.data = decodeInterlaceNull({
+                data: data,
+                width: this._png.width,
+                height: this._png.height,
+                channels: this._png.channels,
+                depth: this._png.depth,
+            });
+        }
+        else if (this._interlaceMethod === InterlaceMethod.ADAM7) {
+            this._png.data = decodeInterlaceAdam7({
+                data: data,
+                width: this._png.width,
+                height: this._png.height,
+                channels: this._png.channels,
+                depth: this._png.depth,
+            });
+        }
+        else {
+            throw new Error(`Interlace method ${this._interlaceMethod} not supported`);
+        }
+        if (this._hasPalette) {
+            this._png.palette = this._palette;
+        }
+        if (this._hasTransparency) {
+            this._png.transparency = this._transparency;
+        }
+    }
+    pushDataToFrame() {
+        const result = this._inflator.result;
+        const lastFrame = this._frames.at(-1);
+        if (lastFrame) {
+            lastFrame.data = result;
+        }
+        else {
+            this._frames.push({
+                sequenceNumber: 0,
+                width: this._png.width,
+                height: this._png.height,
+                xOffset: 0,
+                yOffset: 0,
+                delayNumber: 0,
+                delayDenominator: 0,
+                disposeOp: DisposeOpType.NONE,
+                blendOp: BlendOpType.SOURCE,
+                data: result,
+            });
+        }
+        this._inflator = new Inflate_1();
+        this._writingDataChunks = false;
+    }
+}
+function checkBitDepth(value) {
+    if (value !== 1 &&
+        value !== 2 &&
+        value !== 4 &&
+        value !== 8 &&
+        value !== 16) {
+        throw new Error(`invalid bit depth: ${value}`);
+    }
+    return value;
+}
+
+var ResolutionUnitSpecifier;
+(function (ResolutionUnitSpecifier) {
+    /**
+     * Unit is unknown
+     */
+    ResolutionUnitSpecifier[ResolutionUnitSpecifier["UNKNOWN"] = 0] = "UNKNOWN";
+    /**
+     * Unit is the metre
+     */
+    ResolutionUnitSpecifier[ResolutionUnitSpecifier["METRE"] = 1] = "METRE";
+})(ResolutionUnitSpecifier || (ResolutionUnitSpecifier = {}));
+
+function decodePng(data, options) {
+    const decoder = new PngDecoder(data, options);
+    return decoder.decode();
+}
 
 /**
  * @license
@@ -17512,34 +24926,136 @@ var PNG = (function() {
  * ====================================================================
  */
 
-/**
- * jsPDF PNG PlugIn
- * @name png_support
- * @module
+/*
+ * @see http://www.w3.org/TR/PNG-Chunks.html
+ *
+ Color    Allowed      Interpretation
+ Type     Bit Depths
+
+   0       1,2,4,8,16  Each pixel is a grayscale sample.
+
+   2       8,16        Each pixel is an R,G,B triple.
+
+   3       1,2,4,8     Each pixel is a palette index;
+                       a PLTE chunk must appear.
+
+   4       8,16        Each pixel is a grayscale sample,
+                       followed by an alpha sample.
+
+   6       8,16        Each pixel is an R,G,B triple,
+                       followed by an alpha sample.
+*/
+
+/*
+ * @name processPNG
+ * Entry point: process a PNG and return image dict and metadata for jsPDF
  */
-(function(jsPDFAPI) {
+jsPDF.API.processPNG = function(imageData, index, alias, compression) {
+  if (this.__addimage__.isArrayBuffer(imageData)) {
+    imageData = new Uint8Array(imageData);
+  }
+  if (!this.__addimage__.isArrayBufferView(imageData)) {
+    return;
+  }
 
-  /*
-   * @see http://www.w3.org/TR/PNG-Chunks.html
-   *
-   Color    Allowed      Interpretation
-   Type     Bit Depths
+  const decodedPng = decodePng(imageData, { checkCrc: true });
+  const {
+    width,
+    height,
+    channels,
+    palette: decodedPalette,
+    depth: bitsPerComponent
+  } = decodedPng;
 
-     0       1,2,4,8,16  Each pixel is a grayscale sample.
+  let result;
+  if (decodedPalette && channels === 1) {
+    result = processIndexedPNG(decodedPng);
+  } else if (channels === 2 || channels === 4) {
+    result = processAlphaPNG(decodedPng);
+  } else {
+    result = processOpaquePNG(decodedPng);
+  }
 
-     2       8,16        Each pixel is an R,G,B triple.
+  const {
+    colorSpace,
+    colorsPerPixel,
+    sMaskBitsPerComponent,
+    colorBytes,
+    alphaBytes,
+    needSMask,
+    palette,
+    mask
+  } = result;
 
-     3       1,2,4,8     Each pixel is a palette index;
-                         a PLTE chunk must appear.
+  let predictor = null;
 
-     4       8,16        Each pixel is a grayscale sample,
-                         followed by an alpha sample.
+  let filter, decodeParameters, sMask;
+  if (canCompress(compression)) {
+    predictor = getPredictorFromCompression(compression);
+    filter = this.decode.FLATE_DECODE;
+    decodeParameters = `/Predictor ${predictor} /Colors ${colorsPerPixel} /BitsPerComponent ${bitsPerComponent} /Columns ${width}`;
 
-     6       8,16        Each pixel is an R,G,B triple,
-                         followed by an alpha sample.
-  */
+    const rowByteLength = Math.ceil(
+      (width * colorsPerPixel * bitsPerComponent) / 8
+    );
 
-  /*
+    imageData = compressBytes(
+      colorBytes,
+      rowByteLength,
+      colorsPerPixel,
+      bitsPerComponent,
+      compression
+    );
+    if (needSMask) {
+      const sMaskRowByteLength = Math.ceil((width * sMaskBitsPerComponent) / 8);
+      sMask = compressBytes(
+        alphaBytes,
+        sMaskRowByteLength,
+        1,
+        sMaskBitsPerComponent,
+        compression
+      );
+    }
+  } else {
+    filter = undefined;
+    decodeParameters = undefined;
+    imageData = colorBytes;
+    if (needSMask) sMask = alphaBytes;
+  }
+
+  if (
+    this.__addimage__.isArrayBuffer(imageData) ||
+    this.__addimage__.isArrayBufferView(imageData)
+  ) {
+    imageData = this.__addimage__.arrayBufferToBinaryString(imageData);
+  }
+
+  if (
+    (sMask && this.__addimage__.isArrayBuffer(sMask)) ||
+    this.__addimage__.isArrayBufferView(sMask)
+  ) {
+    sMask = this.__addimage__.arrayBufferToBinaryString(sMask);
+  }
+
+  return {
+    alias,
+    data: imageData,
+    index,
+    filter,
+    decodeParameters,
+    transparency: mask,
+    palette,
+    sMask,
+    predictor,
+    width,
+    height,
+    bitsPerComponent,
+    sMaskBitsPerComponent,
+    colorSpace
+  };
+};
+
+/*
    * PNG filter method types
    *
    * @see http://www.w3.org/TR/PNG-Filters.html
@@ -17557,7962 +25073,374 @@ var PNG = (function() {
      4       Paeth
    */
 
-  var canCompress = function(value) {
-    return value !== jsPDFAPI.image_compression.NONE && hasCompressionJS();
-  };
+function canCompress(value) {
+  return value !== jsPDF.API.image_compression.NONE && hasCompressionJS();
+}
 
-  var hasCompressionJS = function() {
-    return typeof zlibSync === "function";
-  };
-  var compressBytes = function(bytes, lineLength, colorsPerPixel, compression) {
-    var level = 4;
-    var filter_method = filterUp;
+function hasCompressionJS() {
+  return typeof zlibSync === "function";
+}
+function compressBytes(
+  bytes,
+  lineByteLength,
+  channels,
+  bitsPerComponent,
+  compression
+) {
+  let level = 4;
+  let filter_method = filterUp;
 
-    switch (compression) {
-      case jsPDFAPI.image_compression.FAST:
-        level = 1;
-        filter_method = filterSub;
-        break;
+  switch (compression) {
+    case jsPDF.API.image_compression.FAST:
+      level = 1;
+      filter_method = filterSub;
+      break;
 
-      case jsPDFAPI.image_compression.MEDIUM:
-        level = 6;
-        filter_method = filterAverage;
-        break;
+    case jsPDF.API.image_compression.MEDIUM:
+      level = 6;
+      filter_method = filterAverage;
+      break;
 
-      case jsPDFAPI.image_compression.SLOW:
-        level = 9;
-        filter_method = filterPaeth;
-        break;
-    }
+    case jsPDF.API.image_compression.SLOW:
+      level = 9;
+      filter_method = filterPaeth;
+      break;
+  }
 
-    bytes = applyPngFilterMethod(
-      bytes,
-      lineLength,
-      colorsPerPixel,
-      filter_method
-    );
-    var dat = zlibSync(bytes, { level: level });
-    return jsPDFAPI.__addimage__.arrayBufferToBinaryString(dat);
-  };
-
-  var applyPngFilterMethod = function(
+  const bytesPerPixel = Math.ceil((channels * bitsPerComponent) / 8);
+  bytes = applyPngFilterMethod(
     bytes,
-    lineLength,
-    colorsPerPixel,
+    lineByteLength,
+    bytesPerPixel,
     filter_method
-  ) {
-    var lines = bytes.length / lineLength,
-      result = new Uint8Array(bytes.length + lines),
-      filter_methods = getFilterMethods(),
-      line,
-      prevLine,
-      offset;
+  );
+  const dat = zlibSync(bytes, { level: level });
+  return jsPDF.API.__addimage__.arrayBufferToBinaryString(dat);
+}
 
-    for (var i = 0; i < lines; i += 1) {
-      offset = i * lineLength;
-      line = bytes.subarray(offset, offset + lineLength);
+function applyPngFilterMethod(
+  bytes,
+  lineByteLength,
+  bytesPerPixel,
+  filter_method
+) {
+  const lines = bytes.length / lineByteLength;
+  const result = new Uint8Array(bytes.length + lines);
+  const filter_methods = getFilterMethods();
+  let prevLine;
 
-      if (filter_method) {
-        result.set(filter_method(line, colorsPerPixel, prevLine), offset + i);
-      } else {
-        var len = filter_methods.length,
-          results = [];
+  for (let i = 0; i < lines; i += 1) {
+    const offset = i * lineByteLength;
+    const line = bytes.subarray(offset, offset + lineByteLength);
 
-        for (var j; j < len; j += 1) {
-          results[j] = filter_methods[j](line, colorsPerPixel, prevLine);
-        }
+    if (filter_method) {
+      result.set(filter_method(line, bytesPerPixel, prevLine), offset + i);
+    } else {
+      const len = filter_methods.length;
+      const results = [];
 
-        var ind = getIndexOfSmallestSum(results.concat());
-
-        result.set(results[ind], offset + i);
+      for (let j = 0; j < len; j += 1) {
+        results[j] = filter_methods[j](line, bytesPerPixel, prevLine);
       }
 
-      prevLine = line;
+      const ind = getIndexOfSmallestSum(results.concat());
+
+      result.set(results[ind], offset + i);
     }
 
-    return result;
-  };
+    prevLine = line;
+  }
 
-  var filterNone = function(line) {
-    /*var result = new Uint8Array(line.length + 1);
+  return result;
+}
+
+function filterNone(line) {
+  /*const result = new Uint8Array(line.length + 1);
     result[0] = 0;
     result.set(line, 1);*/
 
-    var result = Array.apply([], line);
-    result.unshift(0);
+  const result = Array.apply([], line);
+  result.unshift(0);
 
-    return result;
-  };
-
-  var filterSub = function(line, colorsPerPixel) {
-    var result = [],
-      len = line.length,
-      left;
-
-    result[0] = 1;
-
-    for (var i = 0; i < len; i += 1) {
-      left = line[i - colorsPerPixel] || 0;
-      result[i + 1] = (line[i] - left + 0x0100) & 0xff;
-    }
-
-    return result;
-  };
-
-  var filterUp = function(line, colorsPerPixel, prevLine) {
-    var result = [],
-      len = line.length,
-      up;
-
-    result[0] = 2;
-
-    for (var i = 0; i < len; i += 1) {
-      up = (prevLine && prevLine[i]) || 0;
-      result[i + 1] = (line[i] - up + 0x0100) & 0xff;
-    }
-
-    return result;
-  };
-
-  var filterAverage = function(line, colorsPerPixel, prevLine) {
-    var result = [],
-      len = line.length,
-      left,
-      up;
-
-    result[0] = 3;
-
-    for (var i = 0; i < len; i += 1) {
-      left = line[i - colorsPerPixel] || 0;
-      up = (prevLine && prevLine[i]) || 0;
-      result[i + 1] = (line[i] + 0x0100 - ((left + up) >>> 1)) & 0xff;
-    }
-
-    return result;
-  };
-
-  var filterPaeth = function(line, colorsPerPixel, prevLine) {
-    var result = [],
-      len = line.length,
-      left,
-      up,
-      upLeft,
-      paeth;
-
-    result[0] = 4;
-
-    for (var i = 0; i < len; i += 1) {
-      left = line[i - colorsPerPixel] || 0;
-      up = (prevLine && prevLine[i]) || 0;
-      upLeft = (prevLine && prevLine[i - colorsPerPixel]) || 0;
-      paeth = paethPredictor(left, up, upLeft);
-      result[i + 1] = (line[i] - paeth + 0x0100) & 0xff;
-    }
-
-    return result;
-  };
-
-  var paethPredictor = function(left, up, upLeft) {
-    if (left === up && up === upLeft) {
-      return left;
-    }
-    var pLeft = Math.abs(up - upLeft),
-      pUp = Math.abs(left - upLeft),
-      pUpLeft = Math.abs(left + up - upLeft - upLeft);
-    return pLeft <= pUp && pLeft <= pUpLeft
-      ? left
-      : pUp <= pUpLeft
-      ? up
-      : upLeft;
-  };
-
-  var getFilterMethods = function() {
-    return [filterNone, filterSub, filterUp, filterAverage, filterPaeth];
-  };
-
-  var getIndexOfSmallestSum = function(arrays) {
-    var sum = arrays.map(function(value) {
-      return value.reduce(function(pv, cv) {
-        return pv + Math.abs(cv);
-      }, 0);
-    });
-    return sum.indexOf(Math.min.apply(null, sum));
-  };
-
-  var getPredictorFromCompression = function(compression) {
-    var predictor;
-    switch (compression) {
-      case jsPDFAPI.image_compression.FAST:
-        predictor = 11;
-        break;
-
-      case jsPDFAPI.image_compression.MEDIUM:
-        predictor = 13;
-        break;
-
-      case jsPDFAPI.image_compression.SLOW:
-        predictor = 14;
-        break;
-
-      default:
-        predictor = 12;
-        break;
-    }
-    return predictor;
-  };
-
-  /**
-   * @name processPNG
-   * @function
-   * @ignore
-   */
-  jsPDFAPI.processPNG = function(imageData, index, alias, compression) {
-
-    var colorSpace,
-      filter = this.decode.FLATE_DECODE,
-      bitsPerComponent,
-      image,
-      decodeParameters = "",
-      trns,
-      colors,
-      pal,
-      smask,
-      pixels,
-      len,
-      alphaData,
-      imgData,
-      hasColors,
-      pixel,
-      i,
-      n;
-
-    if (this.__addimage__.isArrayBuffer(imageData))
-      imageData = new Uint8Array(imageData);
-
-    if (this.__addimage__.isArrayBufferView(imageData)) {
-      image = new PNG(imageData);
-      imageData = image.imgData;
-      bitsPerComponent = image.bits;
-      colorSpace = image.colorSpace;
-      colors = image.colors;
-
-      /*
-       * colorType 6 - Each pixel is an R,G,B triple, followed by an alpha sample.
-       *
-       * colorType 4 - Each pixel is a grayscale sample, followed by an alpha sample.
-       *
-       * Extract alpha to create two separate images, using the alpha as a sMask
-       */
-      if ([4, 6].indexOf(image.colorType) !== -1) {
-        /*
-         * processes 8 bit RGBA and grayscale + alpha images
-         */
-        if (image.bits === 8) {
-          pixels =
-            image.pixelBitlength == 32
-              ? new Uint32Array(image.decodePixels().buffer)
-              : image.pixelBitlength == 16
-              ? new Uint16Array(image.decodePixels().buffer)
-              : new Uint8Array(image.decodePixels().buffer);
-          len = pixels.length;
-          imgData = new Uint8Array(len * image.colors);
-          alphaData = new Uint8Array(len);
-          var pDiff = image.pixelBitlength - image.bits;
-          i = 0;
-          n = 0;
-          var pbl;
-
-          for (; i < len; i++) {
-            pixel = pixels[i];
-            pbl = 0;
-
-            while (pbl < pDiff) {
-              imgData[n++] = (pixel >>> pbl) & 0xff;
-              pbl = pbl + image.bits;
-            }
-
-            alphaData[i] = (pixel >>> pbl) & 0xff;
-          }
-        }
-
-        /*
-         * processes 16 bit RGBA and grayscale + alpha images
-         */
-        if (image.bits === 16) {
-          pixels = new Uint32Array(image.decodePixels().buffer);
-          len = pixels.length;
-          imgData = new Uint8Array(
-            len * (32 / image.pixelBitlength) * image.colors
-          );
-          alphaData = new Uint8Array(len * (32 / image.pixelBitlength));
-          hasColors = image.colors > 1;
-          i = 0;
-          n = 0;
-          var a = 0;
-
-          while (i < len) {
-            pixel = pixels[i++];
-
-            imgData[n++] = (pixel >>> 0) & 0xff;
-
-            if (hasColors) {
-              imgData[n++] = (pixel >>> 16) & 0xff;
-
-              pixel = pixels[i++];
-              imgData[n++] = (pixel >>> 0) & 0xff;
-            }
-
-            alphaData[a++] = (pixel >>> 16) & 0xff;
-          }
-          bitsPerComponent = 8;
-        }
-
-        if (canCompress(compression)) {
-          imageData = compressBytes(
-            imgData,
-            image.width * image.colors,
-            image.colors,
-            compression
-          );
-          smask = compressBytes(alphaData, image.width, 1, compression);
-        } else {
-          imageData = imgData;
-          smask = alphaData;
-          filter = undefined;
-        }
-      }
-
-      /*
-       * Indexed png. Each pixel is a palette index.
-       */
-      if (image.colorType === 3) {
-        colorSpace = this.color_spaces.INDEXED;
-        pal = image.palette;
-
-        if (image.transparency.indexed) {
-          var trans = image.transparency.indexed;
-          var total = 0;
-          i = 0;
-          len = trans.length;
-
-          for (; i < len; ++i) {
-            total += trans[i];
-          }
-
-          total = total / 255;
-
-          /*
-           * a single color is specified as 100% transparent (0),
-           * so we set trns to use a /Mask with that index
-           */
-          if (total === len - 1 && trans.indexOf(0) !== -1) {
-            trns = [trans.indexOf(0)];
-
-            /*
-             * there's more than one colour within the palette that specifies
-             * a transparency value less than 255, so we unroll the pixels to create an image sMask
-             */
-          } else if (total !== len) {
-            pixels = image.decodePixels();
-            alphaData = new Uint8Array(pixels.length);
-            i = 0;
-            len = pixels.length;
-
-            for (; i < len; i++) {
-              alphaData[i] = trans[pixels[i]];
-            }
-
-            smask = compressBytes(alphaData, image.width, 1);
-          }
-        }
-      }
-
-      var predictor = getPredictorFromCompression(compression);
-
-      if (filter === this.decode.FLATE_DECODE) {
-        decodeParameters = "/Predictor " + predictor + " ";
-      }
-      decodeParameters +=
-        "/Colors " +
-        colors +
-        " /BitsPerComponent " +
-        bitsPerComponent +
-        " /Columns " +
-        image.width;
-
-      if (
-        this.__addimage__.isArrayBuffer(imageData) ||
-        this.__addimage__.isArrayBufferView(imageData)
-      ) {
-        imageData = this.__addimage__.arrayBufferToBinaryString(imageData);
-      }
-
-      if (
-        (smask && this.__addimage__.isArrayBuffer(smask)) ||
-        this.__addimage__.isArrayBufferView(smask)
-      ) {
-        smask = this.__addimage__.arrayBufferToBinaryString(smask);
-      }
-
-      return {
-        alias: alias,
-        data: imageData,
-        index: index,
-        filter: filter,
-        decodeParameters: decodeParameters,
-        transparency: trns,
-        palette: pal,
-        sMask: smask,
-        predictor: predictor,
-        width: image.width,
-        height: image.height,
-        bitsPerComponent: bitsPerComponent,
-        colorSpace: colorSpace
-      };
-    }
-  };
-})(jsPDF.API);
-
-/**
- * @license
- * (c) Dean McNamee <dean@gmail.com>, 2013.
- *
- * https://github.com/deanm/omggif
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- *
- * omggif is a JavaScript implementation of a GIF 89a encoder and decoder,
- * including animation and compression.  It does not rely on any specific
- * underlying system, so should run in the browser, Node, or Plask.
- */
-
-function GifReader(buf) {
-  var p = 0;
-
-  // - Header (GIF87a or GIF89a).
-  if (
-    buf[p++] !== 0x47 ||
-    buf[p++] !== 0x49 ||
-    buf[p++] !== 0x46 ||
-    buf[p++] !== 0x38 ||
-    ((buf[p++] + 1) & 0xfd) !== 0x38 ||
-    buf[p++] !== 0x61
-  ) {
-    throw new Error("Invalid GIF 87a/89a header.");
-  }
-
-  // - Logical Screen Descriptor.
-  var width = buf[p++] | (buf[p++] << 8);
-  var height = buf[p++] | (buf[p++] << 8);
-  var pf0 = buf[p++]; // <Packed Fields>.
-  var global_palette_flag = pf0 >> 7;
-  var num_global_colors_pow2 = pf0 & 0x7;
-  var num_global_colors = 1 << (num_global_colors_pow2 + 1);
-  var background = buf[p++];
-  buf[p++]; // Pixel aspect ratio (unused?).
-
-  var global_palette_offset = null;
-  var global_palette_size = null;
-
-  if (global_palette_flag) {
-    global_palette_offset = p;
-    global_palette_size = num_global_colors;
-    p += num_global_colors * 3; // Seek past palette.
-  }
-
-  var no_eof = true;
-
-  var frames = [];
-
-  var delay = 0;
-  var transparent_index = null;
-  var disposal = 0; // 0 - No disposal specified.
-  var loop_count = null;
-
-  this.width = width;
-  this.height = height;
-
-  while (no_eof && p < buf.length) {
-    switch (buf[p++]) {
-      case 0x21: // Graphics Control Extension Block
-        switch (buf[p++]) {
-          case 0xff: // Application specific block
-            // Try if it's a Netscape block (with animation loop counter).
-            if (
-              buf[p] !== 0x0b || // 21 FF already read, check block size.
-              // NETSCAPE2.0
-              (buf[p + 1] == 0x4e &&
-                buf[p + 2] == 0x45 &&
-                buf[p + 3] == 0x54 &&
-                buf[p + 4] == 0x53 &&
-                buf[p + 5] == 0x43 &&
-                buf[p + 6] == 0x41 &&
-                buf[p + 7] == 0x50 &&
-                buf[p + 8] == 0x45 &&
-                buf[p + 9] == 0x32 &&
-                buf[p + 10] == 0x2e &&
-                buf[p + 11] == 0x30 &&
-                // Sub-block
-                buf[p + 12] == 0x03 &&
-                buf[p + 13] == 0x01 &&
-                buf[p + 16] == 0)
-            ) {
-              p += 14;
-              loop_count = buf[p++] | (buf[p++] << 8);
-              p++; // Skip terminator.
-            } else {
-              // We don't know what it is, just try to get past it.
-              p += 12;
-              while (true) {
-                // Seek through subblocks.
-                var block_size = buf[p++];
-                // Bad block size (ex: undefined from an out of bounds read).
-                if (!(block_size >= 0)) throw Error("Invalid block size");
-                if (block_size === 0) break; // 0 size is terminator
-                p += block_size;
-              }
-            }
-            break;
-
-          case 0xf9: // Graphics Control Extension
-            if (buf[p++] !== 0x4 || buf[p + 4] !== 0)
-              throw new Error("Invalid graphics extension block.");
-            var pf1 = buf[p++];
-            delay = buf[p++] | (buf[p++] << 8);
-            transparent_index = buf[p++];
-            if ((pf1 & 1) === 0) transparent_index = null;
-            disposal = (pf1 >> 2) & 0x7;
-            p++; // Skip terminator.
-            break;
-
-          case 0xfe: // Comment Extension.
-            while (true) {
-              // Seek through subblocks.
-              var block_size = buf[p++];
-              // Bad block size (ex: undefined from an out of bounds read).
-              if (!(block_size >= 0)) throw Error("Invalid block size");
-              if (block_size === 0) break; // 0 size is terminator
-              // console.log(buf.slice(p, p+block_size).toString('ascii'));
-              p += block_size;
-            }
-            break;
-
-          default:
-            throw new Error(
-              "Unknown graphic control label: 0x" + buf[p - 1].toString(16)
-            );
-        }
-        break;
-
-      case 0x2c: // Image Descriptor.
-        var x = buf[p++] | (buf[p++] << 8);
-        var y = buf[p++] | (buf[p++] << 8);
-        var w = buf[p++] | (buf[p++] << 8);
-        var h = buf[p++] | (buf[p++] << 8);
-        var pf2 = buf[p++];
-        var local_palette_flag = pf2 >> 7;
-        var interlace_flag = (pf2 >> 6) & 1;
-        var num_local_colors_pow2 = pf2 & 0x7;
-        var num_local_colors = 1 << (num_local_colors_pow2 + 1);
-        var palette_offset = global_palette_offset;
-        var palette_size = global_palette_size;
-        var has_local_palette = false;
-        if (local_palette_flag) {
-          var has_local_palette = true;
-          palette_offset = p; // Override with local palette.
-          palette_size = num_local_colors;
-          p += num_local_colors * 3; // Seek past palette.
-        }
-
-        var data_offset = p;
-
-        p++; // codesize
-        while (true) {
-          var block_size = buf[p++];
-          // Bad block size (ex: undefined from an out of bounds read).
-          if (!(block_size >= 0)) throw Error("Invalid block size");
-          if (block_size === 0) break; // 0 size is terminator
-          p += block_size;
-        }
-
-        frames.push({
-          x: x,
-          y: y,
-          width: w,
-          height: h,
-          has_local_palette: has_local_palette,
-          palette_offset: palette_offset,
-          palette_size: palette_size,
-          data_offset: data_offset,
-          data_length: p - data_offset,
-          transparent_index: transparent_index,
-          interlaced: !!interlace_flag,
-          delay: delay,
-          disposal: disposal
-        });
-        break;
-
-      case 0x3b: // Trailer Marker (end of file).
-        no_eof = false;
-        break;
-
-      default:
-        throw new Error("Unknown gif block: 0x" + buf[p - 1].toString(16));
-    }
-  }
-
-  this.numFrames = function() {
-    return frames.length;
-  };
-
-  this.loopCount = function() {
-    return loop_count;
-  };
-
-  this.frameInfo = function(frame_num) {
-    if (frame_num < 0 || frame_num >= frames.length)
-      throw new Error("Frame index out of range.");
-    return frames[frame_num];
-  };
-
-  this.decodeAndBlitFrameBGRA = function(frame_num, pixels) {
-    var frame = this.frameInfo(frame_num);
-    var num_pixels = frame.width * frame.height;
-    var index_stream = new Uint8Array(num_pixels); // At most 8-bit indices.
-    GifReaderLZWOutputIndexStream(
-      buf,
-      frame.data_offset,
-      index_stream,
-      num_pixels
-    );
-    var palette_offset = frame.palette_offset;
-
-    // NOTE(deanm): It seems to be much faster to compare index to 256 than
-    // to === null.  Not sure why, but CompareStub_EQ_STRICT shows up high in
-    // the profile, not sure if it's related to using a Uint8Array.
-    var trans = frame.transparent_index;
-    if (trans === null) trans = 256;
-
-    // We are possibly just blitting to a portion of the entire frame.
-    // That is a subrect within the framerect, so the additional pixels
-    // must be skipped over after we finished a scanline.
-    var framewidth = frame.width;
-    var framestride = width - framewidth;
-    var xleft = framewidth; // Number of subrect pixels left in scanline.
-
-    // Output indices of the top left and bottom right corners of the subrect.
-    var opbeg = (frame.y * width + frame.x) * 4;
-    var opend = ((frame.y + frame.height) * width + frame.x) * 4;
-    var op = opbeg;
-
-    var scanstride = framestride * 4;
-
-    // Use scanstride to skip past the rows when interlacing.  This is skipping
-    // 7 rows for the first two passes, then 3 then 1.
-    if (frame.interlaced === true) {
-      scanstride += width * 4 * 7; // Pass 1.
-    }
-
-    var interlaceskip = 8; // Tracking the row interval in the current pass.
-
-    for (var i = 0, il = index_stream.length; i < il; ++i) {
-      var index = index_stream[i];
-
-      if (xleft === 0) {
-        // Beginning of new scan line
-        op += scanstride;
-        xleft = framewidth;
-        if (op >= opend) {
-          // Catch the wrap to switch passes when interlacing.
-          scanstride = framestride * 4 + width * 4 * (interlaceskip - 1);
-          // interlaceskip / 2 * 4 is interlaceskip << 1.
-          op = opbeg + (framewidth + framestride) * (interlaceskip << 1);
-          interlaceskip >>= 1;
-        }
-      }
-
-      if (index === trans) {
-        op += 4;
-      } else {
-        var r = buf[palette_offset + index * 3];
-        var g = buf[palette_offset + index * 3 + 1];
-        var b = buf[palette_offset + index * 3 + 2];
-        pixels[op++] = b;
-        pixels[op++] = g;
-        pixels[op++] = r;
-        pixels[op++] = 255;
-      }
-      --xleft;
-    }
-  };
-
-  // I will go to copy and paste hell one day...
-  this.decodeAndBlitFrameRGBA = function(frame_num, pixels) {
-    var frame = this.frameInfo(frame_num);
-    var num_pixels = frame.width * frame.height;
-    var index_stream = new Uint8Array(num_pixels); // At most 8-bit indices.
-    GifReaderLZWOutputIndexStream(
-      buf,
-      frame.data_offset,
-      index_stream,
-      num_pixels
-    );
-    var palette_offset = frame.palette_offset;
-
-    // NOTE(deanm): It seems to be much faster to compare index to 256 than
-    // to === null.  Not sure why, but CompareStub_EQ_STRICT shows up high in
-    // the profile, not sure if it's related to using a Uint8Array.
-    var trans = frame.transparent_index;
-    if (trans === null) trans = 256;
-
-    // We are possibly just blitting to a portion of the entire frame.
-    // That is a subrect within the framerect, so the additional pixels
-    // must be skipped over after we finished a scanline.
-    var framewidth = frame.width;
-    var framestride = width - framewidth;
-    var xleft = framewidth; // Number of subrect pixels left in scanline.
-
-    // Output indices of the top left and bottom right corners of the subrect.
-    var opbeg = (frame.y * width + frame.x) * 4;
-    var opend = ((frame.y + frame.height) * width + frame.x) * 4;
-    var op = opbeg;
-
-    var scanstride = framestride * 4;
-
-    // Use scanstride to skip past the rows when interlacing.  This is skipping
-    // 7 rows for the first two passes, then 3 then 1.
-    if (frame.interlaced === true) {
-      scanstride += width * 4 * 7; // Pass 1.
-    }
-
-    var interlaceskip = 8; // Tracking the row interval in the current pass.
-
-    for (var i = 0, il = index_stream.length; i < il; ++i) {
-      var index = index_stream[i];
-
-      if (xleft === 0) {
-        // Beginning of new scan line
-        op += scanstride;
-        xleft = framewidth;
-        if (op >= opend) {
-          // Catch the wrap to switch passes when interlacing.
-          scanstride = framestride * 4 + width * 4 * (interlaceskip - 1);
-          // interlaceskip / 2 * 4 is interlaceskip << 1.
-          op = opbeg + (framewidth + framestride) * (interlaceskip << 1);
-          interlaceskip >>= 1;
-        }
-      }
-
-      if (index === trans) {
-        op += 4;
-      } else {
-        var r = buf[palette_offset + index * 3];
-        var g = buf[palette_offset + index * 3 + 1];
-        var b = buf[palette_offset + index * 3 + 2];
-        pixels[op++] = r;
-        pixels[op++] = g;
-        pixels[op++] = b;
-        pixels[op++] = 255;
-      }
-      --xleft;
-    }
-  };
+  return result;
 }
 
-function GifReaderLZWOutputIndexStream(code_stream, p, output, output_length) {
-  var min_code_size = code_stream[p++];
+function filterSub(line, colorsPerPixel) {
+  const len = line.length;
+  const result = [];
 
-  var clear_code = 1 << min_code_size;
-  var eoi_code = clear_code + 1;
-  var next_code = eoi_code + 1;
+  result[0] = 1;
 
-  var cur_code_size = min_code_size + 1; // Number of bits per code.
-  // NOTE: This shares the same name as the encoder, but has a different
-  // meaning here.  Here this masks each code coming from the code stream.
-  var code_mask = (1 << cur_code_size) - 1;
-  var cur_shift = 0;
-  var cur = 0;
+  for (let i = 0; i < len; i += 1) {
+    const left = line[i - colorsPerPixel] || 0;
+    result[i + 1] = (line[i] - left + 0x0100) & 0xff;
+  }
 
-  var op = 0; // Output pointer.
+  return result;
+}
 
-  var subblock_size = code_stream[p++];
+function filterUp(line, colorsPerPixel, prevLine) {
+  const len = line.length;
+  const result = [];
 
-  // TODO(deanm): Would using a TypedArray be any faster?  At least it would
-  // solve the fast mode / backing store uncertainty.
-  // var code_table = Array(4096);
-  var code_table = new Int32Array(4096); // Can be signed, we only use 20 bits.
+  result[0] = 2;
 
-  var prev_code = null; // Track code-1.
+  for (let i = 0; i < len; i += 1) {
+    const up = (prevLine && prevLine[i]) || 0;
+    result[i + 1] = (line[i] - up + 0x0100) & 0xff;
+  }
 
-  while (true) {
-    // Read up to two bytes, making sure we always 12-bits for max sized code.
-    while (cur_shift < 16) {
-      if (subblock_size === 0) break; // No more data to be read.
+  return result;
+}
 
-      cur |= code_stream[p++] << cur_shift;
-      cur_shift += 8;
+function filterAverage(line, colorsPerPixel, prevLine) {
+  const len = line.length;
+  const result = [];
 
-      if (subblock_size === 1) {
-        // Never let it get to 0 to hold logic above.
-        subblock_size = code_stream[p++]; // Next subblock.
-      } else {
-        --subblock_size;
-      }
-    }
+  result[0] = 3;
 
-    // TODO(deanm): We should never really get here, we should have received
-    // and EOI.
-    if (cur_shift < cur_code_size) break;
+  for (let i = 0; i < len; i += 1) {
+    const left = line[i - colorsPerPixel] || 0;
+    const up = (prevLine && prevLine[i]) || 0;
+    result[i + 1] = (line[i] + 0x0100 - ((left + up) >>> 1)) & 0xff;
+  }
 
-    var code = cur & code_mask;
-    cur >>= cur_code_size;
-    cur_shift -= cur_code_size;
+  return result;
+}
 
-    // TODO(deanm): Maybe should check that the first code was a clear code,
-    // at least this is what you're supposed to do.  But actually our encoder
-    // now doesn't emit a clear code first anyway.
-    if (code === clear_code) {
-      // We don't actually have to clear the table.  This could be a good idea
-      // for greater error checking, but we don't really do any anyway.  We
-      // will just track it with next_code and overwrite old entries.
+function filterPaeth(line, colorsPerPixel, prevLine) {
+  const len = line.length;
+  const result = [];
 
-      next_code = eoi_code + 1;
-      cur_code_size = min_code_size + 1;
-      code_mask = (1 << cur_code_size) - 1;
+  result[0] = 4;
 
-      // Don't update prev_code ?
-      prev_code = null;
-      continue;
-    } else if (code === eoi_code) {
+  for (let i = 0; i < len; i += 1) {
+    const left = line[i - colorsPerPixel] || 0;
+    const up = (prevLine && prevLine[i]) || 0;
+    const upLeft = (prevLine && prevLine[i - colorsPerPixel]) || 0;
+    const paeth = paethPredictor(left, up, upLeft);
+    result[i + 1] = (line[i] - paeth + 0x0100) & 0xff;
+  }
+
+  return result;
+}
+
+function paethPredictor(left, up, upLeft) {
+  if (left === up && up === upLeft) {
+    return left;
+  }
+  const pLeft = Math.abs(up - upLeft),
+    pUp = Math.abs(left - upLeft),
+    pUpLeft = Math.abs(left + up - upLeft - upLeft);
+  return pLeft <= pUp && pLeft <= pUpLeft ? left : pUp <= pUpLeft ? up : upLeft;
+}
+
+function getFilterMethods() {
+  return [filterNone, filterSub, filterUp, filterAverage, filterPaeth];
+}
+
+function getIndexOfSmallestSum(arrays) {
+  const sum = arrays.map(function(value) {
+    return value.reduce(function(pv, cv) {
+      return pv + Math.abs(cv);
+    }, 0);
+  });
+  return sum.indexOf(Math.min.apply(null, sum));
+}
+
+function getPredictorFromCompression(compression) {
+  let predictor;
+  switch (compression) {
+    case jsPDF.API.image_compression.FAST:
+      predictor = 11;
       break;
-    }
 
-    // We have a similar situation as the decoder, where we want to store
-    // variable length entries (code table entries), but we want to do in a
-    // faster manner than an array of arrays.  The code below stores sort of a
-    // linked list within the code table, and then "chases" through it to
-    // construct the dictionary entries.  When a new entry is created, just the
-    // last byte is stored, and the rest (prefix) of the entry is only
-    // referenced by its table entry.  Then the code chases through the
-    // prefixes until it reaches a single byte code.  We have to chase twice,
-    // first to compute the length, and then to actually copy the data to the
-    // output (backwards, since we know the length).  The alternative would be
-    // storing something in an intermediate stack, but that doesn't make any
-    // more sense.  I implemented an approach where it also stored the length
-    // in the code table, although it's a bit tricky because you run out of
-    // bits (12 + 12 + 8), but I didn't measure much improvements (the table
-    // entries are generally not the long).  Even when I created benchmarks for
-    // very long table entries the complexity did not seem worth it.
-    // The code table stores the prefix entry in 12 bits and then the suffix
-    // byte in 8 bits, so each entry is 20 bits.
+    case jsPDF.API.image_compression.MEDIUM:
+      predictor = 13;
+      break;
 
-    var chase_code = code < next_code ? code : prev_code;
+    case jsPDF.API.image_compression.SLOW:
+      predictor = 14;
+      break;
 
-    // Chase what we will output, either {CODE} or {CODE-1}.
-    var chase_length = 0;
-    var chase = chase_code;
-    while (chase > clear_code) {
-      chase = code_table[chase] >> 8;
-      ++chase_length;
-    }
-
-    var k = chase;
-
-    var op_end = op + chase_length + (chase_code !== code ? 1 : 0);
-    if (op_end > output_length) {
-      console.log("Warning, gif stream longer than expected.");
-      return;
-    }
-
-    // Already have the first byte from the chase, might as well write it fast.
-    output[op++] = k;
-
-    op += chase_length;
-    var b = op; // Track pointer, writing backwards.
-
-    if (chase_code !== code)
-      // The case of emitting {CODE-1} + k.
-      output[op++] = k;
-
-    chase = chase_code;
-    while (chase_length--) {
-      chase = code_table[chase];
-      output[--b] = chase & 0xff; // Write backwards.
-      chase >>= 8; // Pull down to the prefix code.
-    }
-
-    if (prev_code !== null && next_code < 4096) {
-      code_table[next_code++] = (prev_code << 8) | k;
-      // TODO(deanm): Figure out this clearing vs code growth logic better.  I
-      // have an feeling that it should just happen somewhere else, for now it
-      // is awkward between when we grow past the max and then hit a clear code.
-      // For now just check if we hit the max 12-bits (then a clear code should
-      // follow, also of course encoded in 12-bits).
-      if (next_code >= code_mask + 1 && cur_code_size < 12) {
-        ++cur_code_size;
-        code_mask = (code_mask << 1) | 1;
-      }
-    }
-
-    prev_code = code;
+    default:
+      predictor = 12;
+      break;
   }
-
-  if (op !== output_length) {
-    console.log("Warning, gif stream shorter than expected.");
-  }
-
-  return output;
+  return predictor;
 }
 
-/**
- * @license
-  Copyright (c) 2008, Adobe Systems Incorporated
-  All rights reserved.
+// Extracted helper for Indexed PNGs (palette-based)
+function processIndexedPNG(decodedPng) {
+  const { width, height, data, palette: decodedPalette, depth } = decodedPng;
+  let needSMask = false;
+  let palette = [];
+  let mask = [];
+  let alphaBytes = undefined;
+  let hasSemiTransparency = false;
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions are
-  met:
+  const maxMaskLength = 1;
+  let maskLength = 0;
 
-  * Redistributions of source code must retain the above copyright notice,
-    this list of conditions and the following disclaimer.
+  for (let i = 0; i < decodedPalette.length; i++) {
+    const [r, g, b, a] = decodedPalette[i];
+    palette.push(r, g, b);
+    if (a != null) {
+      if (a === 0) {
+        maskLength++;
+        if (mask.length < maxMaskLength) {
+          mask.push(i);
+        }
+      } else if (a < 255) {
+        hasSemiTransparency = true;
+      }
+    }
+  }
 
-  * Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in the
-    documentation and/or other materials provided with the distribution.
+  if (hasSemiTransparency || maskLength > maxMaskLength) {
+    needSMask = true;
+    mask = undefined;
 
-  * Neither the name of Adobe Systems Incorporated nor the names of its
-    contributors may be used to endorse or promote products derived from
-    this software without specific prior written permission.
+    const totalPixels = width * height;
+    // per PNG spec, palettes always use 8 bits per component
+    alphaBytes = new Uint8Array(totalPixels);
+    const dataView = new DataView(data.buffer);
+    for (let p = 0; p < totalPixels; p++) {
+      const paletteIndex = readSample(dataView, p, depth);
+      const [, , , alpha] = decodedPalette[paletteIndex];
+      alphaBytes[p] = alpha;
+    }
+  } else if (maskLength === 0) {
+    mask = undefined;
+  }
 
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
-  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+  return {
+    colorSpace: "Indexed",
+    colorsPerPixel: 1,
+    sMaskBitsPerComponent: needSMask ? 8 : undefined,
+    colorBytes: data,
+    alphaBytes,
+    needSMask,
+    palette,
+    mask
+  };
+}
+
 /*
-JPEG encoder ported to JavaScript and optimized by Andreas Ritter, www.bytestrom.eu, 11/2009
+ * Splits color and alpha values into separate buffers
+ */
+function processAlphaPNG(decodedPng) {
+  const { data, width, height, channels, depth } = decodedPng;
 
-Basic GUI blocking jpeg encoder
-*/
+  const colorSpace = channels === 2 ? "DeviceGray" : "DeviceRGB";
+  const colorsPerPixel = channels - 1;
 
-function JPEGEncoder(quality) {
-  var ffloor = Math.floor;
-  var YTable = new Array(64);
-  var UVTable = new Array(64);
-  var fdtbl_Y = new Array(64);
-  var fdtbl_UV = new Array(64);
-  var YDC_HT;
-  var UVDC_HT;
-  var YAC_HT;
-  var UVAC_HT;
+  const totalPixels = width * height;
+  const colorChannels = colorsPerPixel; // 1 for Gray, 3 for RGB
+  const alphaChannels = 1;
+  const totalColorSamples = totalPixels * colorChannels;
+  const totalAlphaSamples = totalPixels * alphaChannels;
 
-  var bitcode = new Array(65535);
-  var category = new Array(65535);
-  var outputfDCTQuant = new Array(64);
-  var DU = new Array(64);
-  var byteout = [];
-  var bytenew = 0;
-  var bytepos = 7;
+  const colorByteLen = Math.ceil((totalColorSamples * depth) / 8);
+  const alphaByteLen = Math.ceil((totalAlphaSamples * depth) / 8);
+  const colorBytes = new Uint8Array(colorByteLen);
+  const alphaBytes = new Uint8Array(alphaByteLen);
 
-  var YDU = new Array(64);
-  var UDU = new Array(64);
-  var VDU = new Array(64);
-  var clt = new Array(256);
-  var RGB_YUV_TABLE = new Array(2048);
-  var currentQuality;
+  const dataView = new DataView(data.buffer);
+  const colorView = new DataView(colorBytes.buffer);
+  const alphaView = new DataView(alphaBytes.buffer);
 
-  var ZigZag = [
-    0,
-    1,
-    5,
-    6,
-    14,
-    15,
-    27,
-    28,
-    2,
-    4,
-    7,
-    13,
-    16,
-    26,
-    29,
-    42,
-    3,
-    8,
-    12,
-    17,
-    25,
-    30,
-    41,
-    43,
-    9,
-    11,
-    18,
-    24,
-    31,
-    40,
-    44,
-    53,
-    10,
-    19,
-    23,
-    32,
-    39,
-    45,
-    52,
-    54,
-    20,
-    22,
-    33,
-    38,
-    46,
-    51,
-    55,
-    60,
-    21,
-    34,
-    37,
-    47,
-    50,
-    56,
-    59,
-    61,
-    35,
-    36,
-    48,
-    49,
-    57,
-    58,
-    62,
-    63
-  ];
-
-  var std_dc_luminance_nrcodes = [
-    0,
-    0,
-    1,
-    5,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0
-  ];
-  var std_dc_luminance_values = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-  var std_ac_luminance_nrcodes = [
-    0,
-    0,
-    2,
-    1,
-    3,
-    3,
-    2,
-    4,
-    3,
-    5,
-    5,
-    4,
-    4,
-    0,
-    0,
-    1,
-    0x7d
-  ];
-  var std_ac_luminance_values = [
-    0x01,
-    0x02,
-    0x03,
-    0x00,
-    0x04,
-    0x11,
-    0x05,
-    0x12,
-    0x21,
-    0x31,
-    0x41,
-    0x06,
-    0x13,
-    0x51,
-    0x61,
-    0x07,
-    0x22,
-    0x71,
-    0x14,
-    0x32,
-    0x81,
-    0x91,
-    0xa1,
-    0x08,
-    0x23,
-    0x42,
-    0xb1,
-    0xc1,
-    0x15,
-    0x52,
-    0xd1,
-    0xf0,
-    0x24,
-    0x33,
-    0x62,
-    0x72,
-    0x82,
-    0x09,
-    0x0a,
-    0x16,
-    0x17,
-    0x18,
-    0x19,
-    0x1a,
-    0x25,
-    0x26,
-    0x27,
-    0x28,
-    0x29,
-    0x2a,
-    0x34,
-    0x35,
-    0x36,
-    0x37,
-    0x38,
-    0x39,
-    0x3a,
-    0x43,
-    0x44,
-    0x45,
-    0x46,
-    0x47,
-    0x48,
-    0x49,
-    0x4a,
-    0x53,
-    0x54,
-    0x55,
-    0x56,
-    0x57,
-    0x58,
-    0x59,
-    0x5a,
-    0x63,
-    0x64,
-    0x65,
-    0x66,
-    0x67,
-    0x68,
-    0x69,
-    0x6a,
-    0x73,
-    0x74,
-    0x75,
-    0x76,
-    0x77,
-    0x78,
-    0x79,
-    0x7a,
-    0x83,
-    0x84,
-    0x85,
-    0x86,
-    0x87,
-    0x88,
-    0x89,
-    0x8a,
-    0x92,
-    0x93,
-    0x94,
-    0x95,
-    0x96,
-    0x97,
-    0x98,
-    0x99,
-    0x9a,
-    0xa2,
-    0xa3,
-    0xa4,
-    0xa5,
-    0xa6,
-    0xa7,
-    0xa8,
-    0xa9,
-    0xaa,
-    0xb2,
-    0xb3,
-    0xb4,
-    0xb5,
-    0xb6,
-    0xb7,
-    0xb8,
-    0xb9,
-    0xba,
-    0xc2,
-    0xc3,
-    0xc4,
-    0xc5,
-    0xc6,
-    0xc7,
-    0xc8,
-    0xc9,
-    0xca,
-    0xd2,
-    0xd3,
-    0xd4,
-    0xd5,
-    0xd6,
-    0xd7,
-    0xd8,
-    0xd9,
-    0xda,
-    0xe1,
-    0xe2,
-    0xe3,
-    0xe4,
-    0xe5,
-    0xe6,
-    0xe7,
-    0xe8,
-    0xe9,
-    0xea,
-    0xf1,
-    0xf2,
-    0xf3,
-    0xf4,
-    0xf5,
-    0xf6,
-    0xf7,
-    0xf8,
-    0xf9,
-    0xfa
-  ];
-
-  var std_dc_chrominance_nrcodes = [
-    0,
-    0,
-    3,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    0,
-    0,
-    0,
-    0,
-    0
-  ];
-  var std_dc_chrominance_values = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-  var std_ac_chrominance_nrcodes = [
-    0,
-    0,
-    2,
-    1,
-    2,
-    4,
-    4,
-    3,
-    4,
-    7,
-    5,
-    4,
-    4,
-    0,
-    1,
-    2,
-    0x77
-  ];
-  var std_ac_chrominance_values = [
-    0x00,
-    0x01,
-    0x02,
-    0x03,
-    0x11,
-    0x04,
-    0x05,
-    0x21,
-    0x31,
-    0x06,
-    0x12,
-    0x41,
-    0x51,
-    0x07,
-    0x61,
-    0x71,
-    0x13,
-    0x22,
-    0x32,
-    0x81,
-    0x08,
-    0x14,
-    0x42,
-    0x91,
-    0xa1,
-    0xb1,
-    0xc1,
-    0x09,
-    0x23,
-    0x33,
-    0x52,
-    0xf0,
-    0x15,
-    0x62,
-    0x72,
-    0xd1,
-    0x0a,
-    0x16,
-    0x24,
-    0x34,
-    0xe1,
-    0x25,
-    0xf1,
-    0x17,
-    0x18,
-    0x19,
-    0x1a,
-    0x26,
-    0x27,
-    0x28,
-    0x29,
-    0x2a,
-    0x35,
-    0x36,
-    0x37,
-    0x38,
-    0x39,
-    0x3a,
-    0x43,
-    0x44,
-    0x45,
-    0x46,
-    0x47,
-    0x48,
-    0x49,
-    0x4a,
-    0x53,
-    0x54,
-    0x55,
-    0x56,
-    0x57,
-    0x58,
-    0x59,
-    0x5a,
-    0x63,
-    0x64,
-    0x65,
-    0x66,
-    0x67,
-    0x68,
-    0x69,
-    0x6a,
-    0x73,
-    0x74,
-    0x75,
-    0x76,
-    0x77,
-    0x78,
-    0x79,
-    0x7a,
-    0x82,
-    0x83,
-    0x84,
-    0x85,
-    0x86,
-    0x87,
-    0x88,
-    0x89,
-    0x8a,
-    0x92,
-    0x93,
-    0x94,
-    0x95,
-    0x96,
-    0x97,
-    0x98,
-    0x99,
-    0x9a,
-    0xa2,
-    0xa3,
-    0xa4,
-    0xa5,
-    0xa6,
-    0xa7,
-    0xa8,
-    0xa9,
-    0xaa,
-    0xb2,
-    0xb3,
-    0xb4,
-    0xb5,
-    0xb6,
-    0xb7,
-    0xb8,
-    0xb9,
-    0xba,
-    0xc2,
-    0xc3,
-    0xc4,
-    0xc5,
-    0xc6,
-    0xc7,
-    0xc8,
-    0xc9,
-    0xca,
-    0xd2,
-    0xd3,
-    0xd4,
-    0xd5,
-    0xd6,
-    0xd7,
-    0xd8,
-    0xd9,
-    0xda,
-    0xe2,
-    0xe3,
-    0xe4,
-    0xe5,
-    0xe6,
-    0xe7,
-    0xe8,
-    0xe9,
-    0xea,
-    0xf2,
-    0xf3,
-    0xf4,
-    0xf5,
-    0xf6,
-    0xf7,
-    0xf8,
-    0xf9,
-    0xfa
-  ];
-
-  function initQuantTables(sf) {
-    var YQT = [
-      16,
-      11,
-      10,
-      16,
-      24,
-      40,
-      51,
-      61,
-      12,
-      12,
-      14,
-      19,
-      26,
-      58,
-      60,
-      55,
-      14,
-      13,
-      16,
-      24,
-      40,
-      57,
-      69,
-      56,
-      14,
-      17,
-      22,
-      29,
-      51,
-      87,
-      80,
-      62,
-      18,
-      22,
-      37,
-      56,
-      68,
-      109,
-      103,
-      77,
-      24,
-      35,
-      55,
-      64,
-      81,
-      104,
-      113,
-      92,
-      49,
-      64,
-      78,
-      87,
-      103,
-      121,
-      120,
-      101,
-      72,
-      92,
-      95,
-      98,
-      112,
-      100,
-      103,
-      99
-    ];
-
-    for (var i = 0; i < 64; i++) {
-      var t = ffloor((YQT[i] * sf + 50) / 100);
-      t = Math.min(Math.max(t, 1), 255);
-      YTable[ZigZag[i]] = t;
+  let needSMask = false;
+  for (let p = 0; p < totalPixels; p++) {
+    const pixelStartIndex = p * channels;
+    for (let s = 0; s < colorChannels; s++) {
+      const sampleIndex = pixelStartIndex + s;
+      const colorValue = readSample(dataView, sampleIndex, depth);
+      writeSample(colorView, colorValue, p * colorChannels + s, depth);
     }
-    var UVQT = [
-      17,
-      18,
-      24,
-      47,
-      99,
-      99,
-      99,
-      99,
-      18,
-      21,
-      26,
-      66,
-      99,
-      99,
-      99,
-      99,
-      24,
-      26,
-      56,
-      99,
-      99,
-      99,
-      99,
-      99,
-      47,
-      66,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99,
-      99
-    ];
-    for (var j = 0; j < 64; j++) {
-      var u = ffloor((UVQT[j] * sf + 50) / 100);
-      u = Math.min(Math.max(u, 1), 255);
-      UVTable[ZigZag[j]] = u;
+    const sampleIndex = pixelStartIndex + colorChannels;
+    const alphaValue = readSample(dataView, sampleIndex, depth);
+    if (alphaValue < (1 << depth) - 1) {
+      needSMask = true;
     }
-    var aasf = [
-      1.0,
-      1.387039845,
-      1.306562965,
-      1.175875602,
-      1.0,
-      0.785694958,
-      0.5411961,
-      0.275899379
-    ];
-    var k = 0;
-    for (var row = 0; row < 8; row++) {
-      for (var col = 0; col < 8; col++) {
-        fdtbl_Y[k] = 1.0 / (YTable[ZigZag[k]] * aasf[row] * aasf[col] * 8.0);
-        fdtbl_UV[k] = 1.0 / (UVTable[ZigZag[k]] * aasf[row] * aasf[col] * 8.0);
-        k++;
-      }
-    }
+    writeSample(alphaView, alphaValue, p * alphaChannels, depth);
   }
 
-  function computeHuffmanTbl(nrcodes, std_table) {
-    var codevalue = 0;
-    var pos_in_table = 0;
-    var HT = new Array();
-    for (var k = 1; k <= 16; k++) {
-      for (var j = 1; j <= nrcodes[k]; j++) {
-        HT[std_table[pos_in_table]] = [];
-        HT[std_table[pos_in_table]][0] = codevalue;
-        HT[std_table[pos_in_table]][1] = k;
-        pos_in_table++;
-        codevalue++;
-      }
-      codevalue *= 2;
-    }
-    return HT;
-  }
-
-  function initHuffmanTbl() {
-    YDC_HT = computeHuffmanTbl(
-      std_dc_luminance_nrcodes,
-      std_dc_luminance_values
-    );
-    UVDC_HT = computeHuffmanTbl(
-      std_dc_chrominance_nrcodes,
-      std_dc_chrominance_values
-    );
-    YAC_HT = computeHuffmanTbl(
-      std_ac_luminance_nrcodes,
-      std_ac_luminance_values
-    );
-    UVAC_HT = computeHuffmanTbl(
-      std_ac_chrominance_nrcodes,
-      std_ac_chrominance_values
-    );
-  }
-
-  function initCategoryNumber() {
-    var nrlower = 1;
-    var nrupper = 2;
-    for (var cat = 1; cat <= 15; cat++) {
-      //Positive numbers
-      for (var nr = nrlower; nr < nrupper; nr++) {
-        category[32767 + nr] = cat;
-        bitcode[32767 + nr] = [];
-        bitcode[32767 + nr][1] = cat;
-        bitcode[32767 + nr][0] = nr;
-      }
-      //Negative numbers
-      for (var nrneg = -(nrupper - 1); nrneg <= -nrlower; nrneg++) {
-        category[32767 + nrneg] = cat;
-        bitcode[32767 + nrneg] = [];
-        bitcode[32767 + nrneg][1] = cat;
-        bitcode[32767 + nrneg][0] = nrupper - 1 + nrneg;
-      }
-      nrlower <<= 1;
-      nrupper <<= 1;
-    }
-  }
-
-  function initRGBYUVTable() {
-    for (var i = 0; i < 256; i++) {
-      RGB_YUV_TABLE[i] = 19595 * i;
-      RGB_YUV_TABLE[(i + 256) >> 0] = 38470 * i;
-      RGB_YUV_TABLE[(i + 512) >> 0] = 7471 * i + 0x8000;
-      RGB_YUV_TABLE[(i + 768) >> 0] = -11059 * i;
-      RGB_YUV_TABLE[(i + 1024) >> 0] = -21709 * i;
-      RGB_YUV_TABLE[(i + 1280) >> 0] = 32768 * i + 0x807fff;
-      RGB_YUV_TABLE[(i + 1536) >> 0] = -27439 * i;
-      RGB_YUV_TABLE[(i + 1792) >> 0] = -5329 * i;
-    }
-  }
-
-  // IO functions
-  function writeBits(bs) {
-    var value = bs[0];
-    var posval = bs[1] - 1;
-    while (posval >= 0) {
-      if (value & (1 << posval)) {
-        bytenew |= 1 << bytepos;
-      }
-      posval--;
-      bytepos--;
-      if (bytepos < 0) {
-        if (bytenew == 0xff) {
-          writeByte(0xff);
-          writeByte(0);
-        } else {
-          writeByte(bytenew);
-        }
-        bytepos = 7;
-        bytenew = 0;
-      }
-    }
-  }
-
-  function writeByte(value) {
-    //byteout.push(clt[value]); // write char directly instead of converting later
-    byteout.push(value);
-  }
-
-  function writeWord(value) {
-    writeByte((value >> 8) & 0xff);
-    writeByte(value & 0xff);
-  }
-
-  // DCT & quantization core
-  function fDCTQuant(data, fdtbl) {
-    var d0, d1, d2, d3, d4, d5, d6, d7;
-    /* Pass 1: process rows. */
-    var dataOff = 0;
-    var i;
-    var I8 = 8;
-    var I64 = 64;
-    for (i = 0; i < I8; ++i) {
-      d0 = data[dataOff];
-      d1 = data[dataOff + 1];
-      d2 = data[dataOff + 2];
-      d3 = data[dataOff + 3];
-      d4 = data[dataOff + 4];
-      d5 = data[dataOff + 5];
-      d6 = data[dataOff + 6];
-      d7 = data[dataOff + 7];
-
-      var tmp0 = d0 + d7;
-      var tmp7 = d0 - d7;
-      var tmp1 = d1 + d6;
-      var tmp6 = d1 - d6;
-      var tmp2 = d2 + d5;
-      var tmp5 = d2 - d5;
-      var tmp3 = d3 + d4;
-      var tmp4 = d3 - d4;
-
-      /* Even part */
-      var tmp10 = tmp0 + tmp3; /* phase 2 */
-      var tmp13 = tmp0 - tmp3;
-      var tmp11 = tmp1 + tmp2;
-      var tmp12 = tmp1 - tmp2;
-
-      data[dataOff] = tmp10 + tmp11; /* phase 3 */
-      data[dataOff + 4] = tmp10 - tmp11;
-
-      var z1 = (tmp12 + tmp13) * 0.707106781; /* c4 */
-      data[dataOff + 2] = tmp13 + z1; /* phase 5 */
-      data[dataOff + 6] = tmp13 - z1;
-
-      /* Odd part */
-      tmp10 = tmp4 + tmp5; /* phase 2 */
-      tmp11 = tmp5 + tmp6;
-      tmp12 = tmp6 + tmp7;
-
-      /* The rotator is modified from fig 4-8 to avoid extra negations. */
-      var z5 = (tmp10 - tmp12) * 0.382683433; /* c6 */
-      var z2 = 0.5411961 * tmp10 + z5; /* c2-c6 */
-      var z4 = 1.306562965 * tmp12 + z5; /* c2+c6 */
-      var z3 = tmp11 * 0.707106781; /* c4 */
-
-      var z11 = tmp7 + z3; /* phase 5 */
-      var z13 = tmp7 - z3;
-
-      data[dataOff + 5] = z13 + z2; /* phase 6 */
-      data[dataOff + 3] = z13 - z2;
-      data[dataOff + 1] = z11 + z4;
-      data[dataOff + 7] = z11 - z4;
-
-      dataOff += 8; /* advance pointer to next row */
-    }
-
-    /* Pass 2: process columns. */
-    dataOff = 0;
-    for (i = 0; i < I8; ++i) {
-      d0 = data[dataOff];
-      d1 = data[dataOff + 8];
-      d2 = data[dataOff + 16];
-      d3 = data[dataOff + 24];
-      d4 = data[dataOff + 32];
-      d5 = data[dataOff + 40];
-      d6 = data[dataOff + 48];
-      d7 = data[dataOff + 56];
-
-      var tmp0p2 = d0 + d7;
-      var tmp7p2 = d0 - d7;
-      var tmp1p2 = d1 + d6;
-      var tmp6p2 = d1 - d6;
-      var tmp2p2 = d2 + d5;
-      var tmp5p2 = d2 - d5;
-      var tmp3p2 = d3 + d4;
-      var tmp4p2 = d3 - d4;
-
-      /* Even part */
-      var tmp10p2 = tmp0p2 + tmp3p2; /* phase 2 */
-      var tmp13p2 = tmp0p2 - tmp3p2;
-      var tmp11p2 = tmp1p2 + tmp2p2;
-      var tmp12p2 = tmp1p2 - tmp2p2;
-
-      data[dataOff] = tmp10p2 + tmp11p2; /* phase 3 */
-      data[dataOff + 32] = tmp10p2 - tmp11p2;
-
-      var z1p2 = (tmp12p2 + tmp13p2) * 0.707106781; /* c4 */
-      data[dataOff + 16] = tmp13p2 + z1p2; /* phase 5 */
-      data[dataOff + 48] = tmp13p2 - z1p2;
-
-      /* Odd part */
-      tmp10p2 = tmp4p2 + tmp5p2; /* phase 2 */
-      tmp11p2 = tmp5p2 + tmp6p2;
-      tmp12p2 = tmp6p2 + tmp7p2;
-
-      /* The rotator is modified from fig 4-8 to avoid extra negations. */
-      var z5p2 = (tmp10p2 - tmp12p2) * 0.382683433; /* c6 */
-      var z2p2 = 0.5411961 * tmp10p2 + z5p2; /* c2-c6 */
-      var z4p2 = 1.306562965 * tmp12p2 + z5p2; /* c2+c6 */
-      var z3p2 = tmp11p2 * 0.707106781; /* c4 */
-
-      var z11p2 = tmp7p2 + z3p2; /* phase 5 */
-      var z13p2 = tmp7p2 - z3p2;
-
-      data[dataOff + 40] = z13p2 + z2p2; /* phase 6 */
-      data[dataOff + 24] = z13p2 - z2p2;
-      data[dataOff + 8] = z11p2 + z4p2;
-      data[dataOff + 56] = z11p2 - z4p2;
-
-      dataOff++; /* advance pointer to next column */
-    }
-
-    // Quantize/descale the coefficients
-    var fDCTQuant;
-    for (i = 0; i < I64; ++i) {
-      // Apply the quantization and scaling factor & Round to nearest integer
-      fDCTQuant = data[i] * fdtbl[i];
-      outputfDCTQuant[i] =
-        fDCTQuant > 0.0 ? (fDCTQuant + 0.5) | 0 : (fDCTQuant - 0.5) | 0;
-      //outputfDCTQuant[i] = fround(fDCTQuant);
-    }
-    return outputfDCTQuant;
-  }
-
-  function writeAPP0() {
-    writeWord(0xffe0); // marker
-    writeWord(16); // length
-    writeByte(0x4a); // J
-    writeByte(0x46); // F
-    writeByte(0x49); // I
-    writeByte(0x46); // F
-    writeByte(0); // = "JFIF",'\0'
-    writeByte(1); // versionhi
-    writeByte(1); // versionlo
-    writeByte(0); // xyunits
-    writeWord(1); // xdensity
-    writeWord(1); // ydensity
-    writeByte(0); // thumbnwidth
-    writeByte(0); // thumbnheight
-  }
-
-  function writeSOF0(width, height) {
-    writeWord(0xffc0); // marker
-    writeWord(17); // length, truecolor YUV JPG
-    writeByte(8); // precision
-    writeWord(height);
-    writeWord(width);
-    writeByte(3); // nrofcomponents
-    writeByte(1); // IdY
-    writeByte(0x11); // HVY
-    writeByte(0); // QTY
-    writeByte(2); // IdU
-    writeByte(0x11); // HVU
-    writeByte(1); // QTU
-    writeByte(3); // IdV
-    writeByte(0x11); // HVV
-    writeByte(1); // QTV
-  }
-
-  function writeDQT() {
-    writeWord(0xffdb); // marker
-    writeWord(132); // length
-    writeByte(0);
-    for (var i = 0; i < 64; i++) {
-      writeByte(YTable[i]);
-    }
-    writeByte(1);
-    for (var j = 0; j < 64; j++) {
-      writeByte(UVTable[j]);
-    }
-  }
-
-  function writeDHT() {
-    writeWord(0xffc4); // marker
-    writeWord(0x01a2); // length
-
-    writeByte(0); // HTYDCinfo
-    for (var i = 0; i < 16; i++) {
-      writeByte(std_dc_luminance_nrcodes[i + 1]);
-    }
-    for (var j = 0; j <= 11; j++) {
-      writeByte(std_dc_luminance_values[j]);
-    }
-
-    writeByte(0x10); // HTYACinfo
-    for (var k = 0; k < 16; k++) {
-      writeByte(std_ac_luminance_nrcodes[k + 1]);
-    }
-    for (var l = 0; l <= 161; l++) {
-      writeByte(std_ac_luminance_values[l]);
-    }
-
-    writeByte(1); // HTUDCinfo
-    for (var m = 0; m < 16; m++) {
-      writeByte(std_dc_chrominance_nrcodes[m + 1]);
-    }
-    for (var n = 0; n <= 11; n++) {
-      writeByte(std_dc_chrominance_values[n]);
-    }
-
-    writeByte(0x11); // HTUACinfo
-    for (var o = 0; o < 16; o++) {
-      writeByte(std_ac_chrominance_nrcodes[o + 1]);
-    }
-    for (var p = 0; p <= 161; p++) {
-      writeByte(std_ac_chrominance_values[p]);
-    }
-  }
-
-  function writeSOS() {
-    writeWord(0xffda); // marker
-    writeWord(12); // length
-    writeByte(3); // nrofcomponents
-    writeByte(1); // IdY
-    writeByte(0); // HTY
-    writeByte(2); // IdU
-    writeByte(0x11); // HTU
-    writeByte(3); // IdV
-    writeByte(0x11); // HTV
-    writeByte(0); // Ss
-    writeByte(0x3f); // Se
-    writeByte(0); // Bf
-  }
-
-  function processDU(CDU, fdtbl, DC, HTDC, HTAC) {
-    var EOB = HTAC[0x00];
-    var M16zeroes = HTAC[0xf0];
-    var pos;
-    var I16 = 16;
-    var I63 = 63;
-    var I64 = 64;
-    var DU_DCT = fDCTQuant(CDU, fdtbl);
-    //ZigZag reorder
-    for (var j = 0; j < I64; ++j) {
-      DU[ZigZag[j]] = DU_DCT[j];
-    }
-    var Diff = DU[0] - DC;
-    DC = DU[0];
-    //Encode DC
-    if (Diff == 0) {
-      writeBits(HTDC[0]); // Diff might be 0
-    } else {
-      pos = 32767 + Diff;
-      writeBits(HTDC[category[pos]]);
-      writeBits(bitcode[pos]);
-    }
-    //Encode ACs
-    var end0pos = 63; // was const... which is crazy
-    while (end0pos > 0 && DU[end0pos] == 0) {
-      end0pos--;
-    }
-    //end0pos = first element in reverse order !=0
-    if (end0pos == 0) {
-      writeBits(EOB);
-      return DC;
-    }
-    var i = 1;
-    var lng;
-    while (i <= end0pos) {
-      var startpos = i;
-      while (DU[i] == 0 && i <= end0pos) {
-        ++i;
-      }
-      var nrzeroes = i - startpos;
-      if (nrzeroes >= I16) {
-        lng = nrzeroes >> 4;
-        for (var nrmarker = 1; nrmarker <= lng; ++nrmarker)
-          writeBits(M16zeroes);
-        nrzeroes = nrzeroes & 0xf;
-      }
-      pos = 32767 + DU[i];
-      writeBits(HTAC[(nrzeroes << 4) + category[pos]]);
-      writeBits(bitcode[pos]);
-      i++;
-    }
-    if (end0pos != I63) {
-      writeBits(EOB);
-    }
-    return DC;
-  }
-
-  function initCharLookupTable() {
-    var sfcc = String.fromCharCode;
-    for (var i = 0; i < 256; i++) {
-      ///// ACHTUNG // 255
-      clt[i] = sfcc(i);
-    }
-  }
-
-  this.encode = function(
-    image,
-    quality // image data object
-  ) {
-    if (quality) setQuality(quality);
-
-    // Initialize bit writer
-    byteout = new Array();
-    bytenew = 0;
-    bytepos = 7;
-
-    // Add JPEG headers
-    writeWord(0xffd8); // SOI
-    writeAPP0();
-    writeDQT();
-    writeSOF0(image.width, image.height);
-    writeDHT();
-    writeSOS();
-
-    // Encode 8x8 macroblocks
-    var DCY = 0;
-    var DCU = 0;
-    var DCV = 0;
-
-    bytenew = 0;
-    bytepos = 7;
-
-    this.encode.displayName = "_encode_";
-
-    var imageData = image.data;
-    var width = image.width;
-    var height = image.height;
-
-    var quadWidth = width * 4;
-
-    var x,
-      y = 0;
-    var r, g, b;
-    var start, p, col, row, pos;
-    while (y < height) {
-      x = 0;
-      while (x < quadWidth) {
-        start = quadWidth * y + x;
-        col = -1;
-        row = 0;
-
-        for (pos = 0; pos < 64; pos++) {
-          row = pos >> 3; // /8
-          col = (pos & 7) * 4; // %8
-          p = start + row * quadWidth + col;
-
-          if (y + row >= height) {
-            // padding bottom
-            p -= quadWidth * (y + 1 + row - height);
-          }
-
-          if (x + col >= quadWidth) {
-            // padding right
-            p -= x + col - quadWidth + 4;
-          }
-
-          r = imageData[p++];
-          g = imageData[p++];
-          b = imageData[p++];
-
-          /* // calculate YUV values dynamically
-					YDU[pos]=((( 0.29900)*r+( 0.58700)*g+( 0.11400)*b))-128; //-0x80
-					UDU[pos]=(((-0.16874)*r+(-0.33126)*g+( 0.50000)*b));
-					VDU[pos]=((( 0.50000)*r+(-0.41869)*g+(-0.08131)*b));
-					*/
-
-          // use lookup table (slightly faster)
-          YDU[pos] =
-            ((RGB_YUV_TABLE[r] +
-              RGB_YUV_TABLE[(g + 256) >> 0] +
-              RGB_YUV_TABLE[(b + 512) >> 0]) >>
-              16) -
-            128;
-          UDU[pos] =
-            ((RGB_YUV_TABLE[(r + 768) >> 0] +
-              RGB_YUV_TABLE[(g + 1024) >> 0] +
-              RGB_YUV_TABLE[(b + 1280) >> 0]) >>
-              16) -
-            128;
-          VDU[pos] =
-            ((RGB_YUV_TABLE[(r + 1280) >> 0] +
-              RGB_YUV_TABLE[(g + 1536) >> 0] +
-              RGB_YUV_TABLE[(b + 1792) >> 0]) >>
-              16) -
-            128;
-        }
-
-        DCY = processDU(YDU, fdtbl_Y, DCY, YDC_HT, YAC_HT);
-        DCU = processDU(UDU, fdtbl_UV, DCU, UVDC_HT, UVAC_HT);
-        DCV = processDU(VDU, fdtbl_UV, DCV, UVDC_HT, UVAC_HT);
-        x += 32;
-      }
-      y += 8;
-    }
-
-    ////////////////////////////////////////////////////////////////
-
-    // Do the bit alignment of the EOI marker
-    if (bytepos >= 0) {
-      var fillbits = [];
-      fillbits[1] = bytepos + 1;
-      fillbits[0] = (1 << (bytepos + 1)) - 1;
-      writeBits(fillbits);
-    }
-
-    writeWord(0xffd9); //EOI
-
-    return new Uint8Array(byteout);
+  return {
+    colorSpace,
+    colorsPerPixel,
+    sMaskBitsPerComponent: needSMask ? depth : undefined,
+    colorBytes,
+    alphaBytes,
+    needSMask
   };
-
-  function setQuality(quality) {
-    quality = Math.min(Math.max(quality, 1), 100);
-
-    if (currentQuality == quality) return; // don't recalc if unchanged
-
-    var sf =
-      quality < 50 ? Math.floor(5000 / quality) : Math.floor(200 - quality * 2);
-
-    initQuantTables(sf);
-    currentQuality = quality;
-    //console.log('Quality set to: '+quality +'%');
-  }
-
-  function init() {
-    quality = quality || 50;
-    // Create tables
-    initCharLookupTable();
-    initHuffmanTbl();
-    initCategoryNumber();
-    initRGBYUVTable();
-
-    setQuality(quality);
-  }
-  init();
 }
 
-/**
- * @license
- * Copyright (c) 2017 Aras Abbasi
- *
- * Licensed under the MIT License.
- * http://opensource.org/licenses/mit-license
- */
+function processOpaquePNG(decodedPng) {
+  const { data, channels } = decodedPng;
+  const colorSpace = channels === 1 ? "DeviceGray" : "DeviceRGB";
+  const colorsPerPixel = colorSpace === "DeviceGray" ? 1 : 3;
 
-/**
- * jsPDF Gif Support PlugIn
- *
- * @name gif_support
- * @module
- */
-(function(jsPDFAPI) {
+  let colorBytes;
+  if (data instanceof Uint16Array) {
+    colorBytes = convertUint16ArrayToUint8Array(data);
+  } else {
+    colorBytes = data;
+  }
 
-  jsPDFAPI.processGIF89A = function(imageData, index, alias, compression) {
-    var reader = new GifReader(imageData);
-    var width = reader.width,
-      height = reader.height;
-    var qu = 100;
-    var pixels = [];
-
-    reader.decodeAndBlitFrameRGBA(0, pixels);
-    var rawImageData = {
-      data: pixels,
-      width: width,
-      height: height
-    };
-
-    var encoder = new JPEGEncoder(qu);
-    var data = encoder.encode(rawImageData, qu);
-    return jsPDFAPI.processJPEG.call(this, data, index, alias, compression);
-  };
-
-  jsPDFAPI.processGIF87A = jsPDFAPI.processGIF89A;
-})(jsPDF.API);
-
-/**
- * @author shaozilee
- *
- * Bmp format decoder,support 1bit 4bit 8bit 24bit bmp
- *
- */
-
-function BmpDecoder(buffer, is_with_alpha) {
-  this.pos = 0;
-  this.buffer = buffer;
-  this.datav = new DataView(buffer.buffer);
-  this.is_with_alpha = !!is_with_alpha;
-  this.bottom_up = true;
-  this.flag =
-    String.fromCharCode(this.buffer[0]) + String.fromCharCode(this.buffer[1]);
-  this.pos += 2;
-  if (["BM", "BA", "CI", "CP", "IC", "PT"].indexOf(this.flag) === -1)
-    throw new Error("Invalid BMP File");
-  this.parseHeader();
-  this.parseBGR();
+  return { colorSpace, colorsPerPixel, colorBytes, needSMask: false };
 }
 
-BmpDecoder.prototype.parseHeader = function() {
-  this.fileSize = this.datav.getUint32(this.pos, true);
-  this.pos += 4;
-  this.reserved = this.datav.getUint32(this.pos, true);
-  this.pos += 4;
-  this.offset = this.datav.getUint32(this.pos, true);
-  this.pos += 4;
-  this.headerSize = this.datav.getUint32(this.pos, true);
-  this.pos += 4;
-  this.width = this.datav.getUint32(this.pos, true);
-  this.pos += 4;
-  this.height = this.datav.getInt32(this.pos, true);
-  this.pos += 4;
-  this.planes = this.datav.getUint16(this.pos, true);
-  this.pos += 2;
-  this.bitPP = this.datav.getUint16(this.pos, true);
-  this.pos += 2;
-  this.compress = this.datav.getUint32(this.pos, true);
-  this.pos += 4;
-  this.rawSize = this.datav.getUint32(this.pos, true);
-  this.pos += 4;
-  this.hr = this.datav.getUint32(this.pos, true);
-  this.pos += 4;
-  this.vr = this.datav.getUint32(this.pos, true);
-  this.pos += 4;
-  this.colors = this.datav.getUint32(this.pos, true);
-  this.pos += 4;
-  this.importantColors = this.datav.getUint32(this.pos, true);
-  this.pos += 4;
+function convertUint16ArrayToUint8Array(data) {
+  // PNG/PDF expect MSB-first byte order. Since EcmaScript does not specify
+  // the byte order of Uint16Array, we need to use a DataView to ensure the
+  // correct byte order.
+  const sampleCount = data.length;
+  const out = new Uint8Array(sampleCount * 2);
+  const outView = new DataView(out.buffer, out.byteOffset, out.byteLength);
 
-  if (this.bitPP === 16 && this.is_with_alpha) {
-    this.bitPP = 15;
+  for (let i = 0; i < sampleCount; i++) {
+    outView.setUint16(i * 2, data[i], false);
   }
-  if (this.bitPP < 15) {
-    var len = this.colors === 0 ? 1 << this.bitPP : this.colors;
-    this.palette = new Array(len);
-    for (var i = 0; i < len; i++) {
-      var blue = this.datav.getUint8(this.pos++, true);
-      var green = this.datav.getUint8(this.pos++, true);
-      var red = this.datav.getUint8(this.pos++, true);
-      var quad = this.datav.getUint8(this.pos++, true);
-      this.palette[i] = {
-        red: red,
-        green: green,
-        blue: blue,
-        quad: quad
-      };
-    }
-  }
-  if (this.height < 0) {
-    this.height *= -1;
-    this.bottom_up = false;
-  }
-};
-
-BmpDecoder.prototype.parseBGR = function() {
-  this.pos = this.offset;
-  try {
-    var bitn = "bit" + this.bitPP;
-    var len = this.width * this.height * 4;
-    this.data = new Uint8Array(len);
-
-    this[bitn]();
-  } catch (e) {
-    console.log("bit decode error:" + e);
-  }
-};
-
-BmpDecoder.prototype.bit1 = function() {
-  var xlen = Math.ceil(this.width / 8);
-  var mode = xlen % 4;
-  var y;
-  for (y = this.height - 1; y >= 0; y--) {
-    var line = this.bottom_up ? y : this.height - 1 - y;
-    for (var x = 0; x < xlen; x++) {
-      var b = this.datav.getUint8(this.pos++, true);
-      var location = line * this.width * 4 + x * 8 * 4;
-      for (var i = 0; i < 8; i++) {
-        if (x * 8 + i < this.width) {
-          var rgb = this.palette[(b >> (7 - i)) & 0x1];
-          this.data[location + i * 4] = rgb.blue;
-          this.data[location + i * 4 + 1] = rgb.green;
-          this.data[location + i * 4 + 2] = rgb.red;
-          this.data[location + i * 4 + 3] = 0xff;
-        } else {
-          break;
-        }
-      }
-    }
-
-    if (mode !== 0) {
-      this.pos += 4 - mode;
-    }
-  }
-};
-
-BmpDecoder.prototype.bit4 = function() {
-  var xlen = Math.ceil(this.width / 2);
-  var mode = xlen % 4;
-  for (var y = this.height - 1; y >= 0; y--) {
-    var line = this.bottom_up ? y : this.height - 1 - y;
-    for (var x = 0; x < xlen; x++) {
-      var b = this.datav.getUint8(this.pos++, true);
-      var location = line * this.width * 4 + x * 2 * 4;
-
-      var before = b >> 4;
-      var after = b & 0x0f;
-
-      var rgb = this.palette[before];
-      this.data[location] = rgb.blue;
-      this.data[location + 1] = rgb.green;
-      this.data[location + 2] = rgb.red;
-      this.data[location + 3] = 0xff;
-
-      if (x * 2 + 1 >= this.width) break;
-
-      rgb = this.palette[after];
-      this.data[location + 4] = rgb.blue;
-      this.data[location + 4 + 1] = rgb.green;
-      this.data[location + 4 + 2] = rgb.red;
-      this.data[location + 4 + 3] = 0xff;
-    }
-
-    if (mode !== 0) {
-      this.pos += 4 - mode;
-    }
-  }
-};
-
-BmpDecoder.prototype.bit8 = function() {
-  var mode = this.width % 4;
-  for (var y = this.height - 1; y >= 0; y--) {
-    var line = this.bottom_up ? y : this.height - 1 - y;
-    for (var x = 0; x < this.width; x++) {
-      var b = this.datav.getUint8(this.pos++, true);
-      var location = line * this.width * 4 + x * 4;
-      if (b < this.palette.length) {
-        var rgb = this.palette[b];
-        this.data[location] = rgb.red;
-        this.data[location + 1] = rgb.green;
-        this.data[location + 2] = rgb.blue;
-        this.data[location + 3] = 0xff;
-      } else {
-        this.data[location] = 0xff;
-        this.data[location + 1] = 0xff;
-        this.data[location + 2] = 0xff;
-        this.data[location + 3] = 0xff;
-      }
-    }
-    if (mode !== 0) {
-      this.pos += 4 - mode;
-    }
-  }
-};
-
-BmpDecoder.prototype.bit15 = function() {
-  var dif_w = this.width % 3;
-  var _11111 = parseInt("11111", 2),
-    _1_5 = _11111;
-  for (var y = this.height - 1; y >= 0; y--) {
-    var line = this.bottom_up ? y : this.height - 1 - y;
-    for (var x = 0; x < this.width; x++) {
-      var B = this.datav.getUint16(this.pos, true);
-      this.pos += 2;
-      var blue = (((B & _1_5) / _1_5) * 255) | 0;
-      var green = ((((B >> 5) & _1_5) / _1_5) * 255) | 0;
-      var red = ((((B >> 10) & _1_5) / _1_5) * 255) | 0;
-      var alpha = B >> 15 ? 0xff : 0x00;
-
-      var location = line * this.width * 4 + x * 4;
-      this.data[location] = red;
-      this.data[location + 1] = green;
-      this.data[location + 2] = blue;
-      this.data[location + 3] = alpha;
-    }
-    //skip extra bytes
-    this.pos += dif_w;
-  }
-};
-
-BmpDecoder.prototype.bit16 = function() {
-  var dif_w = this.width % 3;
-  var _11111 = parseInt("11111", 2),
-    _1_5 = _11111;
-  var _111111 = parseInt("111111", 2),
-    _1_6 = _111111;
-  for (var y = this.height - 1; y >= 0; y--) {
-    var line = this.bottom_up ? y : this.height - 1 - y;
-    for (var x = 0; x < this.width; x++) {
-      var B = this.datav.getUint16(this.pos, true);
-      this.pos += 2;
-      var alpha = 0xff;
-      var blue = (((B & _1_5) / _1_5) * 255) | 0;
-      var green = ((((B >> 5) & _1_6) / _1_6) * 255) | 0;
-      var red = (((B >> 11) / _1_5) * 255) | 0;
-
-      var location = line * this.width * 4 + x * 4;
-      this.data[location] = red;
-      this.data[location + 1] = green;
-      this.data[location + 2] = blue;
-      this.data[location + 3] = alpha;
-    }
-    //skip extra bytes
-    this.pos += dif_w;
-  }
-};
-
-BmpDecoder.prototype.bit24 = function() {
-  //when height > 0
-  for (var y = this.height - 1; y >= 0; y--) {
-    var line = this.bottom_up ? y : this.height - 1 - y;
-    for (var x = 0; x < this.width; x++) {
-      var blue = this.datav.getUint8(this.pos++, true);
-      var green = this.datav.getUint8(this.pos++, true);
-      var red = this.datav.getUint8(this.pos++, true);
-      var location = line * this.width * 4 + x * 4;
-      this.data[location] = red;
-      this.data[location + 1] = green;
-      this.data[location + 2] = blue;
-      this.data[location + 3] = 0xff;
-    }
-    //skip extra bytes
-    this.pos += this.width % 4;
-  }
-};
-
-/**
- * add 32bit decode func
- * @author soubok
- */
-BmpDecoder.prototype.bit32 = function() {
-  //when height > 0
-  for (var y = this.height - 1; y >= 0; y--) {
-    var line = this.bottom_up ? y : this.height - 1 - y;
-    for (var x = 0; x < this.width; x++) {
-      var blue = this.datav.getUint8(this.pos++, true);
-      var green = this.datav.getUint8(this.pos++, true);
-      var red = this.datav.getUint8(this.pos++, true);
-      var alpha = this.datav.getUint8(this.pos++, true);
-      var location = line * this.width * 4 + x * 4;
-      this.data[location] = red;
-      this.data[location + 1] = green;
-      this.data[location + 2] = blue;
-      this.data[location + 3] = alpha;
-    }
-    //skip extra bytes
-    //this.pos += (this.width % 4);
-  }
-};
-
-BmpDecoder.prototype.getData = function() {
-  return this.data;
-};
-
-/**
- * @license
- * Copyright (c) 2018 Aras Abbasi
- *
- * Licensed under the MIT License.
- * http://opensource.org/licenses/mit-license
- */
-
-/**
- * jsPDF bmp Support PlugIn
- * @name bmp_support
- * @module
- */
-(function(jsPDFAPI) {
-
-  jsPDFAPI.processBMP = function(imageData, index, alias, compression) {
-    var reader = new BmpDecoder(imageData, false);
-    var width = reader.width,
-      height = reader.height;
-    var qu = 100;
-    var pixels = reader.getData();
-
-    var rawImageData = {
-      data: pixels,
-      width: width,
-      height: height
-    };
-
-    var encoder = new JPEGEncoder(qu);
-    var data = encoder.encode(rawImageData, qu);
-    return jsPDFAPI.processJPEG.call(this, data, index, alias, compression);
-  };
-})(jsPDF.API);
-
-function WebPDecoder(imageData) {
-
-  function x(F) {
-    if (!F) throw Error("assert :P");
-  }
-  function fa(F, L, J) {
-    for (var H = 0; 4 > H; H++) if (F[L + H] != J.charCodeAt(H)) return !0;
-    return !1;
-  }
-  function I(F, L, J, H, Z) {
-    for (var O = 0; O < Z; O++) F[L + O] = J[H + O];
-  }
-  function M(F, L, J, H) {
-    for (var Z = 0; Z < H; Z++) F[L + Z] = J;
-  }
-  function V(F) {
-    return new Int32Array(F);
-  }
-  function wa(F, L) {
-    for (var J = [], H = 0; H < F; H++) J.push(new L());
-    return J;
-  }
-  function wb() {
-    function F(J, H, Z) {
-      for (var O = Z[H], L = 0; L < O; L++) {
-        J.push(Z.length > H + 1 ? [] : 0);
-        if (Z.length < H + 1) break;
-        F(J[L], H + 1, Z);
-      }
-    }
-    var L = [];
-    F(L, 0, [3, 11]);
-    return L;
-  }
-  function Ed(F, L) {
-    function J(H, O, F) {
-      for (var Z = F[O], ma = 0; ma < Z; ma++) {
-        H.push(F.length > O + 1 ? [] : new L());
-        if (F.length < O + 1) break;
-        J(H[ma], O + 1, F);
-      }
-    }
-    var H = [];
-    J(H, 0, F);
-    return H;
-  }
-  var _WebPDecoder = function() {
-    var self = this;
-    function L(a, b) {
-      for (var c = (1 << (b - 1)) >>> 0; a & c; ) c >>>= 1;
-      return c ? (a & (c - 1)) + c : a;
-    }
-    function J(a, b, c, d, e) {
-      x(!(d % c));
-      do (d -= c), (a[b + d] = e);
-      while (0 < d);
-    }
-    function H(a, b, c, d, e, f) {
-      var g = b,
-        h = 1 << c,
-        k,
-        l,
-        m = V(16),
-        n = V(16);
-      x(0 != e);
-      x(null != d);
-      x(null != a);
-      x(0 < c);
-      for (l = 0; l < e; ++l) {
-        if (15 < d[l]) return 0;
-        ++m[d[l]];
-      }
-      if (m[0] == e) return 0;
-      n[1] = 0;
-      for (k = 1; 15 > k; ++k) {
-        if (m[k] > 1 << k) return 0;
-        n[k + 1] = n[k] + m[k];
-      }
-      for (l = 0; l < e; ++l) (k = d[l]), 0 < d[l] && (f[n[k]++] = l);
-      if (1 == n[15])
-        return (d = new O()), (d.g = 0), (d.value = f[0]), J(a, g, 1, h, d), h;
-      var r = -1,
-        q = h - 1,
-        t = 0,
-        v = 1,
-        p = 1,
-        u,
-        w = 1 << c;
-      l = 0;
-      k = 1;
-      for (e = 2; k <= c; ++k, e <<= 1) {
-        p <<= 1;
-        v += p;
-        p -= m[k];
-        if (0 > p) return 0;
-        for (; 0 < m[k]; --m[k])
-          (d = new O()),
-            (d.g = k),
-            (d.value = f[l++]),
-            J(a, g + t, e, w, d),
-            (t = L(t, k));
-      }
-      k = c + 1;
-      for (e = 2; 15 >= k; ++k, e <<= 1) {
-        p <<= 1;
-        v += p;
-        p -= m[k];
-        if (0 > p) return 0;
-        for (; 0 < m[k]; --m[k]) {
-          d = new O();
-          if ((t & q) != r) {
-            g += w;
-            r = k;
-            for (u = 1 << (r - c); 15 > r; ) {
-              u -= m[r];
-              if (0 >= u) break;
-              ++r;
-              u <<= 1;
-            }
-            u = r - c;
-            w = 1 << u;
-            h += w;
-            r = t & q;
-            a[b + r].g = u + c;
-            a[b + r].value = g - b - r;
-          }
-          d.g = k - c;
-          d.value = f[l++];
-          J(a, g + (t >> c), e, w, d);
-          t = L(t, k);
-        }
-      }
-      return v != 2 * n[15] - 1 ? 0 : h;
-    }
-    function Z(a, b, c, d, e) {
-      x(2328 >= e);
-      if (512 >= e) var f = V(512);
-      else if (((f = V(e)), null == f)) return 0;
-      return H(a, b, c, d, e, f);
-    }
-    function O() {
-      this.value = this.g = 0;
-    }
-    function Fd() {
-      this.value = this.g = 0;
-    }
-    function Ub() {
-      this.G = wa(5, O);
-      this.H = V(5);
-      this.jc = this.Qb = this.qb = this.nd = 0;
-      this.pd = wa(xb, Fd);
-    }
-    function ma(a, b, c, d) {
-      x(null != a);
-      x(null != b);
-      x(2147483648 > d);
-      a.Ca = 254;
-      a.I = 0;
-      a.b = -8;
-      a.Ka = 0;
-      a.oa = b;
-      a.pa = c;
-      a.Jd = b;
-      a.Yc = c + d;
-      a.Zc = 4 <= d ? c + d - 4 + 1 : c;
-      Qa(a);
-    }
-    function na(a, b) {
-      for (var c = 0; 0 < b--; ) c |= K(a, 128) << b;
-      return c;
-    }
-    function ca(a, b) {
-      var c = na(a, b);
-      return G(a) ? -c : c;
-    }
-    function cb(a, b, c, d) {
-      var e,
-        f = 0;
-      x(null != a);
-      x(null != b);
-      x(4294967288 > d);
-      a.Sb = d;
-      a.Ra = 0;
-      a.u = 0;
-      a.h = 0;
-      4 < d && (d = 4);
-      for (e = 0; e < d; ++e) f += b[c + e] << (8 * e);
-      a.Ra = f;
-      a.bb = d;
-      a.oa = b;
-      a.pa = c;
-    }
-    function Vb(a) {
-      for (; 8 <= a.u && a.bb < a.Sb; )
-        (a.Ra >>>= 8),
-          (a.Ra += (a.oa[a.pa + a.bb] << (ob - 8)) >>> 0),
-          ++a.bb,
-          (a.u -= 8);
-      db(a) && ((a.h = 1), (a.u = 0));
-    }
-    function D(a, b) {
-      x(0 <= b);
-      if (!a.h && b <= Gd) {
-        var c = pb(a) & Hd[b];
-        a.u += b;
-        Vb(a);
-        return c;
-      }
-      a.h = 1;
-      return (a.u = 0);
-    }
-    function Wb() {
-      this.b = this.Ca = this.I = 0;
-      this.oa = [];
-      this.pa = 0;
-      this.Jd = [];
-      this.Yc = 0;
-      this.Zc = [];
-      this.Ka = 0;
-    }
-    function Ra() {
-      this.Ra = 0;
-      this.oa = [];
-      this.h = this.u = this.bb = this.Sb = this.pa = 0;
-    }
-    function pb(a) {
-      return (a.Ra >>> (a.u & (ob - 1))) >>> 0;
-    }
-    function db(a) {
-      x(a.bb <= a.Sb);
-      return a.h || (a.bb == a.Sb && a.u > ob);
-    }
-    function qb(a, b) {
-      a.u = b;
-      a.h = db(a);
-    }
-    function Sa(a) {
-      a.u >= Xb && (x(a.u >= Xb), Vb(a));
-    }
-    function Qa(a) {
-      x(null != a && null != a.oa);
-      a.pa < a.Zc
-        ? ((a.I = (a.oa[a.pa++] | (a.I << 8)) >>> 0), (a.b += 8))
-        : (x(null != a && null != a.oa),
-          a.pa < a.Yc
-            ? ((a.b += 8), (a.I = a.oa[a.pa++] | (a.I << 8)))
-            : a.Ka
-            ? (a.b = 0)
-            : ((a.I <<= 8), (a.b += 8), (a.Ka = 1)));
-    }
-    function G(a) {
-      return na(a, 1);
-    }
-    function K(a, b) {
-      var c = a.Ca;
-      0 > a.b && Qa(a);
-      var d = a.b,
-        e = (c * b) >>> 8,
-        f = (a.I >>> d > e) + 0;
-      f ? ((c -= e), (a.I -= ((e + 1) << d) >>> 0)) : (c = e + 1);
-      d = c;
-      for (e = 0; 256 <= d; ) (e += 8), (d >>= 8);
-      d = 7 ^ (e + Id[d]);
-      a.b -= d;
-      a.Ca = (c << d) - 1;
-      return f;
-    }
-    function ra(a, b, c) {
-      a[b + 0] = (c >> 24) & 255;
-      a[b + 1] = (c >> 16) & 255;
-      a[b + 2] = (c >> 8) & 255;
-      a[b + 3] = (c >> 0) & 255;
-    }
-    function Ta(a, b) {
-      return (a[b + 0] << 0) | (a[b + 1] << 8);
-    }
-    function Yb(a, b) {
-      return Ta(a, b) | (a[b + 2] << 16);
-    }
-    function Ha(a, b) {
-      return Ta(a, b) | (Ta(a, b + 2) << 16);
-    }
-    function Zb(a, b) {
-      var c = 1 << b;
-      x(null != a);
-      x(0 < b);
-      a.X = V(c);
-      if (null == a.X) return 0;
-      a.Mb = 32 - b;
-      a.Xa = b;
-      return 1;
-    }
-    function $b(a, b) {
-      x(null != a);
-      x(null != b);
-      x(a.Xa == b.Xa);
-      I(b.X, 0, a.X, 0, 1 << b.Xa);
-    }
-    function ac() {
-      this.X = [];
-      this.Xa = this.Mb = 0;
-    }
-    function bc(a, b, c, d) {
-      x(null != c);
-      x(null != d);
-      var e = c[0],
-        f = d[0];
-      0 == e && (e = (a * f + b / 2) / b);
-      0 == f && (f = (b * e + a / 2) / a);
-      if (0 >= e || 0 >= f) return 0;
-      c[0] = e;
-      d[0] = f;
-      return 1;
-    }
-    function xa(a, b) {
-      return (a + (1 << b) - 1) >>> b;
-    }
-    function yb(a, b) {
-      return (
-        (((((a & 4278255360) + (b & 4278255360)) >>> 0) & 4278255360) +
-          ((((a & 16711935) + (b & 16711935)) >>> 0) & 16711935)) >>>
-        0
-      );
-    }
-    function X(a, b) {
-      self[b] = function(b, d, e, f, g, h, k) {
-        var c;
-        for (c = 0; c < g; ++c) {
-          var m = self[a](h[k + c - 1], e, f + c);
-          h[k + c] = yb(b[d + c], m);
-        }
-      };
-    }
-    function Jd() {
-      this.ud = this.hd = this.jd = 0;
-    }
-    function aa(a, b) {
-      return ((((a ^ b) & 4278124286) >>> 1) + (a & b)) >>> 0;
-    }
-    function sa(a) {
-      if (0 <= a && 256 > a) return a;
-      if (0 > a) return 0;
-      if (255 < a) return 255;
-    }
-    function eb(a, b) {
-      return sa(a + ((a - b + 0.5) >> 1));
-    }
-    function Ia(a, b, c) {
-      return Math.abs(b - c) - Math.abs(a - c);
-    }
-    function cc(a, b, c, d, e, f, g) {
-      d = f[g - 1];
-      for (c = 0; c < e; ++c) f[g + c] = d = yb(a[b + c], d);
-    }
-    function Kd(a, b, c, d, e) {
-      var f;
-      for (f = 0; f < c; ++f) {
-        var g = a[b + f],
-          h = (g >> 8) & 255,
-          k = g & 16711935,
-          k = k + ((h << 16) + h),
-          k = k & 16711935;
-        d[e + f] = ((g & 4278255360) + k) >>> 0;
-      }
-    }
-    function dc(a, b) {
-      b.jd = (a >> 0) & 255;
-      b.hd = (a >> 8) & 255;
-      b.ud = (a >> 16) & 255;
-    }
-    function Ld(a, b, c, d, e, f) {
-      var g;
-      for (g = 0; g < d; ++g) {
-        var h = b[c + g],
-          k = h >>> 8,
-          l = h >>> 16,
-          m = h,
-          l = l + ((((a.jd << 24) >> 24) * ((k << 24) >> 24)) >>> 5),
-          l = l & 255,
-          m = m + ((((a.hd << 24) >> 24) * ((k << 24) >> 24)) >>> 5),
-          m = m + ((((a.ud << 24) >> 24) * ((l << 24) >> 24)) >>> 5),
-          m = m & 255;
-        e[f + g] = (h & 4278255360) + (l << 16) + m;
-      }
-    }
-    function ec(a, b, c, d, e) {
-      self[b] = function(a, b, c, k, l, m, n, r, q) {
-        for (k = n; k < r; ++k)
-          for (n = 0; n < q; ++n) l[m++] = e(c[d(a[b++])]);
-      };
-      self[a] = function(a, b, h, k, l, m, n) {
-        var f = 8 >> a.b,
-          g = a.Ea,
-          t = a.K[0],
-          v = a.w;
-        if (8 > f)
-          for (a = (1 << a.b) - 1, v = (1 << f) - 1; b < h; ++b) {
-            var p = 0,
-              u;
-            for (u = 0; u < g; ++u)
-              u & a || (p = d(k[l++])), (m[n++] = e(t[p & v])), (p >>= f);
-          }
-        else self["VP8LMapColor" + c](k, l, t, v, m, n, b, h, g);
-      };
-    }
-    function Md(a, b, c, d, e) {
-      for (c = b + c; b < c; ) {
-        var f = a[b++];
-        d[e++] = (f >> 16) & 255;
-        d[e++] = (f >> 8) & 255;
-        d[e++] = (f >> 0) & 255;
-      }
-    }
-    function Nd(a, b, c, d, e) {
-      for (c = b + c; b < c; ) {
-        var f = a[b++];
-        d[e++] = (f >> 16) & 255;
-        d[e++] = (f >> 8) & 255;
-        d[e++] = (f >> 0) & 255;
-        d[e++] = (f >> 24) & 255;
-      }
-    }
-    function Od(a, b, c, d, e) {
-      for (c = b + c; b < c; ) {
-        var f = a[b++],
-          g = ((f >> 16) & 240) | ((f >> 12) & 15),
-          f = ((f >> 0) & 240) | ((f >> 28) & 15);
-        d[e++] = g;
-        d[e++] = f;
-      }
-    }
-    function Pd(a, b, c, d, e) {
-      for (c = b + c; b < c; ) {
-        var f = a[b++],
-          g = ((f >> 16) & 248) | ((f >> 13) & 7),
-          f = ((f >> 5) & 224) | ((f >> 3) & 31);
-        d[e++] = g;
-        d[e++] = f;
-      }
-    }
-    function Qd(a, b, c, d, e) {
-      for (c = b + c; b < c; ) {
-        var f = a[b++];
-        d[e++] = (f >> 0) & 255;
-        d[e++] = (f >> 8) & 255;
-        d[e++] = (f >> 16) & 255;
-      }
-    }
-    function fb(a, b, c, d, e, f) {
-      if (0 == f)
-        for (c = b + c; b < c; )
-          (f = a[b++]),
-            ra(
-              d,
-              ((f[0] >> 24) |
-                ((f[1] >> 8) & 65280) |
-                ((f[2] << 8) & 16711680) |
-                (f[3] << 24)) >>>
-                0
-            ),
-            (e += 32);
-      else I(d, e, a, b, c);
-    }
-    function gb(a, b) {
-      self[b][0] = self[a + "0"];
-      self[b][1] = self[a + "1"];
-      self[b][2] = self[a + "2"];
-      self[b][3] = self[a + "3"];
-      self[b][4] = self[a + "4"];
-      self[b][5] = self[a + "5"];
-      self[b][6] = self[a + "6"];
-      self[b][7] = self[a + "7"];
-      self[b][8] = self[a + "8"];
-      self[b][9] = self[a + "9"];
-      self[b][10] = self[a + "10"];
-      self[b][11] = self[a + "11"];
-      self[b][12] = self[a + "12"];
-      self[b][13] = self[a + "13"];
-      self[b][14] = self[a + "0"];
-      self[b][15] = self[a + "0"];
-    }
-    function hb(a) {
-      return a == zb || a == Ab || a == Ja || a == Bb;
-    }
-    function Rd() {
-      this.eb = [];
-      this.size = this.A = this.fb = 0;
-    }
-    function Sd() {
-      this.y = [];
-      this.f = [];
-      this.ea = [];
-      this.F = [];
-      this.Tc = this.Ed = this.Cd = this.Fd = this.lb = this.Db = this.Ab = this.fa = this.J = this.W = this.N = this.O = 0;
-    }
-    function Cb() {
-      this.Rd = this.height = this.width = this.S = 0;
-      this.f = {};
-      this.f.RGBA = new Rd();
-      this.f.kb = new Sd();
-      this.sd = null;
-    }
-    function Td() {
-      this.width = [0];
-      this.height = [0];
-      this.Pd = [0];
-      this.Qd = [0];
-      this.format = [0];
-    }
-    function Ud() {
-      this.Id = this.fd = this.Md = this.hb = this.ib = this.da = this.bd = this.cd = this.j = this.v = this.Da = this.Sd = this.ob = 0;
-    }
-    function Vd(a) {
-      alert("todo:WebPSamplerProcessPlane");
-      return a.T;
-    }
-    function Wd(a, b) {
-      var c = a.T,
-        d = b.ba.f.RGBA,
-        e = d.eb,
-        f = d.fb + a.ka * d.A,
-        g = P[b.ba.S],
-        h = a.y,
-        k = a.O,
-        l = a.f,
-        m = a.N,
-        n = a.ea,
-        r = a.W,
-        q = b.cc,
-        t = b.dc,
-        v = b.Mc,
-        p = b.Nc,
-        u = a.ka,
-        w = a.ka + a.T,
-        y = a.U,
-        A = (y + 1) >> 1;
-      0 == u
-        ? g(h, k, null, null, l, m, n, r, l, m, n, r, e, f, null, null, y)
-        : (g(b.ec, b.fc, h, k, q, t, v, p, l, m, n, r, e, f - d.A, e, f, y),
-          ++c);
-      for (; u + 2 < w; u += 2)
-        (q = l),
-          (t = m),
-          (v = n),
-          (p = r),
-          (m += a.Rc),
-          (r += a.Rc),
-          (f += 2 * d.A),
-          (k += 2 * a.fa),
-          g(h, k - a.fa, h, k, q, t, v, p, l, m, n, r, e, f - d.A, e, f, y);
-      k += a.fa;
-      a.j + w < a.o
-        ? (I(b.ec, b.fc, h, k, y),
-          I(b.cc, b.dc, l, m, A),
-          I(b.Mc, b.Nc, n, r, A),
-          c--)
-        : w & 1 ||
-          g(
-            h,
-            k,
-            null,
-            null,
-            l,
-            m,
-            n,
-            r,
-            l,
-            m,
-            n,
-            r,
-            e,
-            f + d.A,
-            null,
-            null,
-            y
-          );
-      return c;
-    }
-    function Xd(a, b, c) {
-      var d = a.F,
-        e = [a.J];
-      if (null != d) {
-        var f = a.U,
-          g = b.ba.S,
-          h = g == ya || g == Ja;
-        b = b.ba.f.RGBA;
-        var k = [0],
-          l = a.ka;
-        k[0] = a.T;
-        a.Kb &&
-          (0 == l ? --k[0] : (--l, (e[0] -= a.width)),
-          a.j + a.ka + a.T == a.o && (k[0] = a.o - a.j - l));
-        var m = b.eb,
-          l = b.fb + l * b.A;
-        a = fc(d, e[0], a.width, f, k, m, l + (h ? 0 : 3), b.A);
-        x(c == k);
-        a && hb(g) && za(m, l, h, f, k, b.A);
-      }
-      return 0;
-    }
-    function gc(a) {
-      var b = a.ma,
-        c = b.ba.S,
-        d = 11 > c,
-        e = c == Ua || c == Va || c == ya || c == Db || 12 == c || hb(c);
-      b.memory = null;
-      b.Ib = null;
-      b.Jb = null;
-      b.Nd = null;
-      if (!hc(b.Oa, a, e ? 11 : 12)) return 0;
-      e && hb(c) && ic();
-      if (a.da) alert("todo:use_scaling");
-      else {
-        if (d) {
-          if (((b.Ib = Vd), a.Kb)) {
-            c = (a.U + 1) >> 1;
-            b.memory = V(a.U + 2 * c);
-            if (null == b.memory) return 0;
-            b.ec = b.memory;
-            b.fc = 0;
-            b.cc = b.ec;
-            b.dc = b.fc + a.U;
-            b.Mc = b.cc;
-            b.Nc = b.dc + c;
-            b.Ib = Wd;
-            ic();
-          }
-        } else alert("todo:EmitYUV");
-        e && ((b.Jb = Xd), d && Aa());
-      }
-      if (d && !jc) {
-        for (a = 0; 256 > a; ++a)
-          (Yd[a] = (89858 * (a - 128) + Ba) >> Wa),
-            (Zd[a] = -22014 * (a - 128) + Ba),
-            ($d[a] = -45773 * (a - 128)),
-            (ae[a] = (113618 * (a - 128) + Ba) >> Wa);
-        for (a = ta; a < Eb; ++a)
-          (b = (76283 * (a - 16) + Ba) >> Wa),
-            (be[a - ta] = ga(b, 255)),
-            (ce[a - ta] = ga((b + 8) >> 4, 15));
-        jc = 1;
-      }
-      return 1;
-    }
-    function kc(a) {
-      var b = a.ma,
-        c = a.U,
-        d = a.T;
-      x(!(a.ka & 1));
-      if (0 >= c || 0 >= d) return 0;
-      c = b.Ib(a, b);
-      null != b.Jb && b.Jb(a, b, c);
-      b.Dc += c;
-      return 1;
-    }
-    function lc(a) {
-      a.ma.memory = null;
-    }
-    function mc(a, b, c, d) {
-      if (47 != D(a, 8)) return 0;
-      b[0] = D(a, 14) + 1;
-      c[0] = D(a, 14) + 1;
-      d[0] = D(a, 1);
-      return 0 != D(a, 3) ? 0 : !a.h;
-    }
-    function ib(a, b) {
-      if (4 > a) return a + 1;
-      var c = (a - 2) >> 1;
-      return ((2 + (a & 1)) << c) + D(b, c) + 1;
-    }
-    function nc(a, b) {
-      if (120 < b) return b - 120;
-      var c = de[b - 1],
-        c = (c >> 4) * a + (8 - (c & 15));
-      return 1 <= c ? c : 1;
-    }
-    function ua(a, b, c) {
-      var d = pb(c);
-      b += d & 255;
-      var e = a[b].g - 8;
-      0 < e &&
-        (qb(c, c.u + 8),
-        (d = pb(c)),
-        (b += a[b].value),
-        (b += d & ((1 << e) - 1)));
-      qb(c, c.u + a[b].g);
-      return a[b].value;
-    }
-    function ub(a, b, c) {
-      c.g += a.g;
-      c.value += (a.value << b) >>> 0;
-      x(8 >= c.g);
-      return a.g;
-    }
-    function ha(a, b, c) {
-      var d = a.xc;
-      b = 0 == d ? 0 : a.vc[a.md * (c >> d) + (b >> d)];
-      x(b < a.Wb);
-      return a.Ya[b];
-    }
-    function oc(a, b, c, d) {
-      var e = a.ab,
-        f = a.c * b,
-        g = a.C;
-      b = g + b;
-      var h = c,
-        k = d;
-      d = a.Ta;
-      for (c = a.Ua; 0 < e--; ) {
-        var l = a.gc[e],
-          m = g,
-          n = b,
-          r = h,
-          q = k,
-          k = d,
-          h = c,
-          t = l.Ea;
-        x(m < n);
-        x(n <= l.nc);
-        switch (l.hc) {
-          case 2:
-            pc(r, q, (n - m) * t, k, h);
-            break;
-          case 0:
-            var v = l,
-              p = m,
-              u = n,
-              w = k,
-              y = h,
-              A = v.Ea;
-            0 == p &&
-              (ee(r, q, null, null, 1, w, y),
-              cc(r, q + 1, 0, 0, A - 1, w, y + 1),
-              (q += A),
-              (y += A),
-              ++p);
-            for (
-              var E = 1 << v.b,
-                B = E - 1,
-                C = xa(A, v.b),
-                N = v.K,
-                v = v.w + (p >> v.b) * C;
-              p < u;
-
-            ) {
-              var z = N,
-                Q = v,
-                S = 1;
-              for (fe(r, q, w, y - A, 1, w, y); S < A; ) {
-                var K = qc[(z[Q++] >> 8) & 15],
-                  D = (S & ~B) + E;
-                D > A && (D = A);
-                K(r, q + +S, w, y + S - A, D - S, w, y + S);
-                S = D;
-              }
-              q += A;
-              y += A;
-              ++p;
-              p & B || (v += C);
-            }
-            n != l.nc && I(k, h - t, k, h + (n - m - 1) * t, t);
-            break;
-          case 1:
-            t = r;
-            u = q;
-            r = l.Ea;
-            q = 1 << l.b;
-            w = q - 1;
-            y = r & ~w;
-            A = r - y;
-            p = xa(r, l.b);
-            E = l.K;
-            for (l = l.w + (m >> l.b) * p; m < n; ) {
-              B = E;
-              C = l;
-              N = new Jd();
-              v = u + y;
-              for (z = u + r; u < v; )
-                dc(B[C++], N), Fb(N, t, u, q, k, h), (u += q), (h += q);
-              u < z &&
-                (dc(B[C++], N), Fb(N, t, u, A, k, h), (u += A), (h += A));
-              ++m;
-              m & w || (l += p);
-            }
-            break;
-          case 3:
-            if (r == k && q == h && 0 < l.b) {
-              y = (n - m) * xa(l.Ea, l.b);
-              t = h + (n - m) * t - y;
-              u = k;
-              r = t;
-              q = k;
-              w = h;
-              A = y;
-              p = [];
-              for (y = A - 1; 0 <= y; --y) p[y] = q[w + y];
-              for (y = A - 1; 0 <= y; --y) u[r + y] = p[y];
-              rc(l, m, n, k, t, k, h);
-            } else rc(l, m, n, r, q, k, h);
-        }
-        h = d;
-        k = c;
-      }
-      k != c && I(d, c, h, k, f);
-    }
-    function ge(a, b) {
-      var c = a.V,
-        d = a.Ba + a.c * a.C,
-        e = b - a.C;
-      x(b <= a.l.o);
-      x(16 >= e);
-      if (0 < e) {
-        var f = a.l,
-          g = a.Ta,
-          h = a.Ua,
-          k = f.width;
-        oc(a, e, c, d);
-        h = [h];
-        c = a.C;
-        d = b;
-        e = h;
-        x(c < d);
-        x(f.v < f.va);
-        d > f.o && (d = f.o);
-        if (c < f.j) {
-          var l = f.j - c,
-            c = f.j;
-          e[0] += l * k;
-        }
-        c >= d
-          ? (c = 0)
-          : ((e[0] += 4 * f.v),
-            (f.ka = c - f.j),
-            (f.U = f.va - f.v),
-            (f.T = d - c),
-            (c = 1));
-        if (c) {
-          h = h[0];
-          c = a.ca;
-          if (11 > c.S) {
-            for (
-              var m = c.f.RGBA,
-                d = c.S,
-                e = f.U,
-                f = f.T,
-                l = m.eb,
-                n = m.A,
-                r = f,
-                m = m.fb + a.Ma * m.A;
-              0 < r--;
-
-            ) {
-              var q = g,
-                t = h,
-                v = e,
-                p = l,
-                u = m;
-              switch (d) {
-                case Ca:
-                  sc(q, t, v, p, u);
-                  break;
-                case Ua:
-                  Gb(q, t, v, p, u);
-                  break;
-                case zb:
-                  Gb(q, t, v, p, u);
-                  za(p, u, 0, v, 1, 0);
-                  break;
-                case tc:
-                  uc(q, t, v, p, u);
-                  break;
-                case Va:
-                  fb(q, t, v, p, u, 1);
-                  break;
-                case Ab:
-                  fb(q, t, v, p, u, 1);
-                  za(p, u, 0, v, 1, 0);
-                  break;
-                case ya:
-                  fb(q, t, v, p, u, 0);
-                  break;
-                case Ja:
-                  fb(q, t, v, p, u, 0);
-                  za(p, u, 1, v, 1, 0);
-                  break;
-                case Db:
-                  Hb(q, t, v, p, u);
-                  break;
-                case Bb:
-                  Hb(q, t, v, p, u);
-                  vc(p, u, v, 1, 0);
-                  break;
-                case wc:
-                  xc(q, t, v, p, u);
-                  break;
-                default:
-                  x(0);
-              }
-              h += k;
-              m += n;
-            }
-            a.Ma += f;
-          } else alert("todo:EmitRescaledRowsYUVA");
-          x(a.Ma <= c.height);
-        }
-      }
-      a.C = b;
-      x(a.C <= a.i);
-    }
-    function yc(a) {
-      var b;
-      if (0 < a.ua) return 0;
-      for (b = 0; b < a.Wb; ++b) {
-        var c = a.Ya[b].G,
-          d = a.Ya[b].H;
-        if (
-          0 < c[1][d[1] + 0].g ||
-          0 < c[2][d[2] + 0].g ||
-          0 < c[3][d[3] + 0].g
-        )
-          return 0;
-      }
-      return 1;
-    }
-    function zc(a, b, c, d, e, f) {
-      if (0 != a.Z) {
-        var g = a.qd,
-          h = a.rd;
-        for (x(null != ia[a.Z]); b < c; ++b)
-          ia[a.Z](g, h, d, e, d, e, f), (g = d), (h = e), (e += f);
-        a.qd = g;
-        a.rd = h;
-      }
-    }
-    function Ib(a, b) {
-      var c = a.l.ma,
-        d = 0 == c.Z || 1 == c.Z ? a.l.j : a.C,
-        d = a.C < d ? d : a.C;
-      x(b <= a.l.o);
-      if (b > d) {
-        var e = a.l.width,
-          f = c.ca,
-          g = c.tb + e * d,
-          h = a.V,
-          k = a.Ba + a.c * d,
-          l = a.gc;
-        x(1 == a.ab);
-        x(3 == l[0].hc);
-        he(l[0], d, b, h, k, f, g);
-        zc(c, d, b, f, g, e);
-      }
-      a.C = a.Ma = b;
-    }
-    function Jb(a, b, c, d, e, f, g) {
-      var h = a.$ / d,
-        k = a.$ % d,
-        l = a.m,
-        m = a.s,
-        n = c + a.$,
-        r = n;
-      e = c + d * e;
-      var q = c + d * f,
-        t = 280 + m.ua,
-        v = a.Pb ? h : 16777216,
-        p = 0 < m.ua ? m.Wa : null,
-        u = m.wc,
-        w = n < q ? ha(m, k, h) : null;
-      x(a.C < f);
-      x(q <= e);
-      var y = !1;
-      a: for (;;) {
-        for (; y || n < q; ) {
-          var A = 0;
-          if (h >= v) {
-            var v = a,
-              E = n - c;
-            x(v.Pb);
-            v.wd = v.m;
-            v.xd = E;
-            0 < v.s.ua && $b(v.s.Wa, v.s.vb);
-            v = h + ie;
-          }
-          k & u || (w = ha(m, k, h));
-          x(null != w);
-          w.Qb && ((b[n] = w.qb), (y = !0));
-          if (!y)
-            if ((Sa(l), w.jc)) {
-              var A = l,
-                E = b,
-                B = n,
-                C = w.pd[pb(A) & (xb - 1)];
-              x(w.jc);
-              256 > C.g
-                ? (qb(A, A.u + C.g), (E[B] = C.value), (A = 0))
-                : (qb(A, A.u + C.g - 256), x(256 <= C.value), (A = C.value));
-              0 == A && (y = !0);
-            } else A = ua(w.G[0], w.H[0], l);
-          if (l.h) break;
-          if (y || 256 > A) {
-            if (!y)
-              if (w.nd) b[n] = (w.qb | (A << 8)) >>> 0;
-              else {
-                Sa(l);
-                y = ua(w.G[1], w.H[1], l);
-                Sa(l);
-                E = ua(w.G[2], w.H[2], l);
-                B = ua(w.G[3], w.H[3], l);
-                if (l.h) break;
-                b[n] = ((B << 24) | (y << 16) | (A << 8) | E) >>> 0;
-              }
-            y = !1;
-            ++n;
-            ++k;
-            if (
-              k >= d &&
-              ((k = 0),
-              ++h,
-              null != g && h <= f && !(h % 16) && g(a, h),
-              null != p)
-            )
-              for (; r < n; )
-                (A = b[r++]),
-                  (p.X[((506832829 * A) & 4294967295) >>> p.Mb] = A);
-          } else if (280 > A) {
-            A = ib(A - 256, l);
-            E = ua(w.G[4], w.H[4], l);
-            Sa(l);
-            E = ib(E, l);
-            E = nc(d, E);
-            if (l.h) break;
-            if (n - c < E || e - n < A) break a;
-            else for (B = 0; B < A; ++B) b[n + B] = b[n + B - E];
-            n += A;
-            for (k += A; k >= d; )
-              (k -= d), ++h, null != g && h <= f && !(h % 16) && g(a, h);
-            x(n <= e);
-            k & u && (w = ha(m, k, h));
-            if (null != p)
-              for (; r < n; )
-                (A = b[r++]),
-                  (p.X[((506832829 * A) & 4294967295) >>> p.Mb] = A);
-          } else if (A < t) {
-            y = A - 280;
-            for (x(null != p); r < n; )
-              (A = b[r++]), (p.X[((506832829 * A) & 4294967295) >>> p.Mb] = A);
-            A = n;
-            E = p;
-            x(!(y >>> E.Xa));
-            b[A] = E.X[y];
-            y = !0;
-          } else break a;
-          y || x(l.h == db(l));
-        }
-        if (a.Pb && l.h && n < e)
-          x(a.m.h),
-            (a.a = 5),
-            (a.m = a.wd),
-            (a.$ = a.xd),
-            0 < a.s.ua && $b(a.s.vb, a.s.Wa);
-        else if (l.h) break a;
-        else null != g && g(a, h > f ? f : h), (a.a = 0), (a.$ = n - c);
-        return 1;
-      }
-      a.a = 3;
-      return 0;
-    }
-    function Ac(a) {
-      x(null != a);
-      a.vc = null;
-      a.yc = null;
-      a.Ya = null;
-      var b = a.Wa;
-      null != b && (b.X = null);
-      a.vb = null;
-      x(null != a);
-    }
-    function Bc() {
-      var a = new je();
-      if (null == a) return null;
-      a.a = 0;
-      a.xb = Cc;
-      gb("Predictor", "VP8LPredictors");
-      gb("Predictor", "VP8LPredictors_C");
-      gb("PredictorAdd", "VP8LPredictorsAdd");
-      gb("PredictorAdd", "VP8LPredictorsAdd_C");
-      pc = Kd;
-      Fb = Ld;
-      sc = Md;
-      Gb = Nd;
-      Hb = Od;
-      xc = Pd;
-      uc = Qd;
-      self.VP8LMapColor32b = ke;
-      self.VP8LMapColor8b = le;
-      return a;
-    }
-    function rb(a, b, c, d, e) {
-      var f = 1,
-        g = [a],
-        h = [b],
-        k = d.m,
-        l = d.s,
-        m = null,
-        n = 0;
-      a: for (;;) {
-        if (c)
-          for (; f && D(k, 1); ) {
-            var r = g,
-              q = h,
-              t = d,
-              v = 1,
-              p = t.m,
-              u = t.gc[t.ab],
-              w = D(p, 2);
-            if (t.Oc & (1 << w)) f = 0;
-            else {
-              t.Oc |= 1 << w;
-              u.hc = w;
-              u.Ea = r[0];
-              u.nc = q[0];
-              u.K = [null];
-              ++t.ab;
-              x(4 >= t.ab);
-              switch (w) {
-                case 0:
-                case 1:
-                  u.b = D(p, 3) + 2;
-                  v = rb(xa(u.Ea, u.b), xa(u.nc, u.b), 0, t, u.K);
-                  u.K = u.K[0];
-                  break;
-                case 3:
-                  var y = D(p, 8) + 1,
-                    A = 16 < y ? 0 : 4 < y ? 1 : 2 < y ? 2 : 3;
-                  r[0] = xa(u.Ea, A);
-                  u.b = A;
-                  var v = rb(y, 1, 0, t, u.K),
-                    E;
-                  if ((E = v)) {
-                    var B,
-                      C = y,
-                      N = u,
-                      z = 1 << (8 >> N.b),
-                      Q = V(z);
-                    if (null == Q) E = 0;
-                    else {
-                      var S = N.K[0],
-                        K = N.w;
-                      Q[0] = N.K[0][0];
-                      for (B = 1; B < 1 * C; ++B) Q[B] = yb(S[K + B], Q[B - 1]);
-                      for (; B < 4 * z; ++B) Q[B] = 0;
-                      N.K[0] = null;
-                      N.K[0] = Q;
-                      E = 1;
-                    }
-                  }
-                  v = E;
-                  break;
-                case 2:
-                  break;
-                default:
-                  x(0);
-              }
-              f = v;
-            }
-          }
-        g = g[0];
-        h = h[0];
-        if (f && D(k, 1) && ((n = D(k, 4)), (f = 1 <= n && 11 >= n), !f)) {
-          d.a = 3;
-          break a;
-        }
-        var H;
-        if ((H = f))
-          b: {
-            var F = d,
-              G = g,
-              L = h,
-              J = n,
-              T = c,
-              Da,
-              ba,
-              X = F.m,
-              R = F.s,
-              P = [null],
-              U,
-              W = 1,
-              aa = 0,
-              na = me[J];
-            c: for (;;) {
-              if (T && D(X, 1)) {
-                var ca = D(X, 3) + 2,
-                  ga = xa(G, ca),
-                  ka = xa(L, ca),
-                  qa = ga * ka;
-                if (!rb(ga, ka, 0, F, P)) break c;
-                P = P[0];
-                R.xc = ca;
-                for (Da = 0; Da < qa; ++Da) {
-                  var ia = (P[Da] >> 8) & 65535;
-                  P[Da] = ia;
-                  ia >= W && (W = ia + 1);
-                }
-              }
-              if (X.h) break c;
-              for (ba = 0; 5 > ba; ++ba) {
-                var Y = Dc[ba];
-                !ba && 0 < J && (Y += 1 << J);
-                aa < Y && (aa = Y);
-              }
-              var ma = wa(W * na, O);
-              var ua = W,
-                va = wa(ua, Ub);
-              if (null == va) var la = null;
-              else x(65536 >= ua), (la = va);
-              var ha = V(aa);
-              if (null == la || null == ha || null == ma) {
-                F.a = 1;
-                break c;
-              }
-              var pa = ma;
-              for (Da = U = 0; Da < W; ++Da) {
-                var ja = la[Da],
-                  da = ja.G,
-                  ea = ja.H,
-                  Fa = 0,
-                  ra = 1,
-                  Ha = 0;
-                for (ba = 0; 5 > ba; ++ba) {
-                  Y = Dc[ba];
-                  da[ba] = pa;
-                  ea[ba] = U;
-                  !ba && 0 < J && (Y += 1 << J);
-                  d: {
-                    var sa,
-                      za = Y,
-                      ta = F,
-                      oa = ha,
-                      db = pa,
-                      eb = U,
-                      Ia = 0,
-                      Ka = ta.m,
-                      fb = D(Ka, 1);
-                    M(oa, 0, 0, za);
-                    if (fb) {
-                      var gb = D(Ka, 1) + 1,
-                        hb = D(Ka, 1),
-                        Ja = D(Ka, 0 == hb ? 1 : 8);
-                      oa[Ja] = 1;
-                      2 == gb && ((Ja = D(Ka, 8)), (oa[Ja] = 1));
-                      var ya = 1;
-                    } else {
-                      var Ua = V(19),
-                        Va = D(Ka, 4) + 4;
-                      if (19 < Va) {
-                        ta.a = 3;
-                        var Aa = 0;
-                        break d;
-                      }
-                      for (sa = 0; sa < Va; ++sa) Ua[ne[sa]] = D(Ka, 3);
-                      var Ba = void 0,
-                        sb = void 0,
-                        Wa = ta,
-                        ib = Ua,
-                        Ca = za,
-                        Xa = oa,
-                        Oa = 0,
-                        La = Wa.m,
-                        Ya = 8,
-                        Za = wa(128, O);
-                      e: for (;;) {
-                        if (!Z(Za, 0, 7, ib, 19)) break e;
-                        if (D(La, 1)) {
-                          var kb = 2 + 2 * D(La, 3),
-                            Ba = 2 + D(La, kb);
-                          if (Ba > Ca) break e;
-                        } else Ba = Ca;
-                        for (sb = 0; sb < Ca && Ba--; ) {
-                          Sa(La);
-                          var $a = Za[0 + (pb(La) & 127)];
-                          qb(La, La.u + $a.g);
-                          var jb = $a.value;
-                          if (16 > jb) (Xa[sb++] = jb), 0 != jb && (Ya = jb);
-                          else {
-                            var lb = 16 == jb,
-                              ab = jb - 16,
-                              mb = oe[ab],
-                              bb = D(La, pe[ab]) + mb;
-                            if (sb + bb > Ca) break e;
-                            else
-                              for (var nb = lb ? Ya : 0; 0 < bb--; )
-                                Xa[sb++] = nb;
-                          }
-                        }
-                        Oa = 1;
-                        break e;
-                      }
-                      Oa || (Wa.a = 3);
-                      ya = Oa;
-                    }
-                    (ya = ya && !Ka.h) && (Ia = Z(db, eb, 8, oa, za));
-                    ya && 0 != Ia ? (Aa = Ia) : ((ta.a = 3), (Aa = 0));
-                  }
-                  if (0 == Aa) break c;
-                  ra && 1 == qe[ba] && (ra = 0 == pa[U].g);
-                  Fa += pa[U].g;
-                  U += Aa;
-                  if (3 >= ba) {
-                    var Pa = ha[0],
-                      tb;
-                    for (tb = 1; tb < Y; ++tb) ha[tb] > Pa && (Pa = ha[tb]);
-                    Ha += Pa;
-                  }
-                }
-                ja.nd = ra;
-                ja.Qb = 0;
-                ra &&
-                  ((ja.qb =
-                    ((da[3][ea[3] + 0].value << 24) |
-                      (da[1][ea[1] + 0].value << 16) |
-                      da[2][ea[2] + 0].value) >>>
-                    0),
-                  0 == Fa &&
-                    256 > da[0][ea[0] + 0].value &&
-                    ((ja.Qb = 1), (ja.qb += da[0][ea[0] + 0].value << 8)));
-                ja.jc = !ja.Qb && 6 > Ha;
-                if (ja.jc) {
-                  var Ga,
-                    Ea = ja;
-                  for (Ga = 0; Ga < xb; ++Ga) {
-                    var Ma = Ga,
-                      Na = Ea.pd[Ma],
-                      vb = Ea.G[0][Ea.H[0] + Ma];
-                    256 <= vb.value
-                      ? ((Na.g = vb.g + 256), (Na.value = vb.value))
-                      : ((Na.g = 0),
-                        (Na.value = 0),
-                        (Ma >>= ub(vb, 8, Na)),
-                        (Ma >>= ub(Ea.G[1][Ea.H[1] + Ma], 16, Na)),
-                        (Ma >>= ub(Ea.G[2][Ea.H[2] + Ma], 0, Na)),
-                        ub(Ea.G[3][Ea.H[3] + Ma], 24, Na));
-                  }
-                }
-              }
-              R.vc = P;
-              R.Wb = W;
-              R.Ya = la;
-              R.yc = ma;
-              H = 1;
-              break b;
-            }
-            H = 0;
-          }
-        f = H;
-        if (!f) {
-          d.a = 3;
-          break a;
-        }
-        if (0 < n) {
-          if (((l.ua = 1 << n), !Zb(l.Wa, n))) {
-            d.a = 1;
-            f = 0;
-            break a;
-          }
-        } else l.ua = 0;
-        var Qa = d,
-          cb = g,
-          ob = h,
-          Ra = Qa.s,
-          Ta = Ra.xc;
-        Qa.c = cb;
-        Qa.i = ob;
-        Ra.md = xa(cb, Ta);
-        Ra.wc = 0 == Ta ? -1 : (1 << Ta) - 1;
-        if (c) {
-          d.xb = re;
-          break a;
-        }
-        m = V(g * h);
-        if (null == m) {
-          d.a = 1;
-          f = 0;
-          break a;
-        }
-        f = (f = Jb(d, m, 0, g, h, h, null)) && !k.h;
-        break a;
-      }
-      f
-        ? (null != e ? (e[0] = m) : (x(null == m), x(c)), (d.$ = 0), c || Ac(l))
-        : Ac(l);
-      return f;
-    }
-    function Ec(a, b) {
-      var c = a.c * a.i,
-        d = c + b + 16 * b;
-      x(a.c <= b);
-      a.V = V(d);
-      if (null == a.V) return (a.Ta = null), (a.Ua = 0), (a.a = 1), 0;
-      a.Ta = a.V;
-      a.Ua = a.Ba + c + b;
-      return 1;
-    }
-    function se(a, b) {
-      var c = a.C,
-        d = b - c,
-        e = a.V,
-        f = a.Ba + a.c * c;
-      for (x(b <= a.l.o); 0 < d; ) {
-        var g = 16 < d ? 16 : d,
-          h = a.l.ma,
-          k = a.l.width,
-          l = k * g,
-          m = h.ca,
-          n = h.tb + k * c,
-          r = a.Ta,
-          q = a.Ua;
-        oc(a, g, e, f);
-        Fc(r, q, m, n, l);
-        zc(h, c, c + g, m, n, k);
-        d -= g;
-        e += g * a.c;
-        c += g;
-      }
-      x(c == b);
-      a.C = a.Ma = b;
-    }
-    function te(a, b) {
-      var c = [0],
-        d = [0],
-        e = [0];
-      a: for (;;) {
-        if (null == a) return 0;
-        if (null == b) return (a.a = 2), 0;
-        a.l = b;
-        a.a = 0;
-        cb(a.m, b.data, b.w, b.ha);
-        if (!mc(a.m, c, d, e)) {
-          a.a = 3;
-          break a;
-        }
-        a.xb = Cc;
-        b.width = c[0];
-        b.height = d[0];
-        if (!rb(c[0], d[0], 1, a, null)) break a;
-        return 1;
-      }
-      x(0 != a.a);
-      return 0;
-    }
-    function ue() {
-      this.ub = this.yd = this.td = this.Rb = 0;
-    }
-    function ve() {
-      this.Kd = this.Ld = this.Ud = this.Td = this.i = this.c = 0;
-    }
-    function we() {
-      this.Fb = this.Bb = this.Cb = 0;
-      this.Zb = V(4);
-      this.Lb = V(4);
-    }
-    function Gc() {
-      this.Yb = wb();
-    }
-    function xe() {
-      this.jb = V(3);
-      this.Wc = Ed([4, 8], Gc);
-      this.Xc = Ed([4, 17], Gc);
-    }
-    function ye() {
-      this.Pc = this.wb = this.Tb = this.zd = 0;
-      this.vd = new V(4);
-      this.od = new V(4);
-    }
-    function Xa() {
-      this.ld = this.La = this.dd = this.tc = 0;
-    }
-    function Hc() {
-      this.Na = this.la = 0;
-    }
-    function ze() {
-      this.Sc = [0, 0];
-      this.Eb = [0, 0];
-      this.Qc = [0, 0];
-      this.ia = this.lc = 0;
-    }
-    function Kb() {
-      this.ad = V(384);
-      this.Za = 0;
-      this.Ob = V(16);
-      this.$b = this.Ad = this.ia = this.Gc = this.Hc = this.Dd = 0;
-    }
-    function Ae() {
-      this.uc = this.M = this.Nb = 0;
-      this.wa = Array(new Xa());
-      this.Y = 0;
-      this.ya = Array(new Kb());
-      this.aa = 0;
-      this.l = new Oa();
-    }
-    function Ic() {
-      this.y = V(16);
-      this.f = V(8);
-      this.ea = V(8);
-    }
-    function Be() {
-      this.cb = this.a = 0;
-      this.sc = "";
-      this.m = new Wb();
-      this.Od = new ue();
-      this.Kc = new ve();
-      this.ed = new ye();
-      this.Qa = new we();
-      this.Ic = this.$c = this.Aa = 0;
-      this.D = new Ae();
-      this.Xb = this.Va = this.Hb = this.zb = this.yb = this.Ub = this.za = 0;
-      this.Jc = wa(8, Wb);
-      this.ia = 0;
-      this.pb = wa(4, ze);
-      this.Pa = new xe();
-      this.Bd = this.kc = 0;
-      this.Ac = [];
-      this.Bc = 0;
-      this.zc = [0, 0, 0, 0];
-      this.Gd = Array(new Ic());
-      this.Hd = 0;
-      this.rb = Array(new Hc());
-      this.sb = 0;
-      this.wa = Array(new Xa());
-      this.Y = 0;
-      this.oc = [];
-      this.pc = 0;
-      this.sa = [];
-      this.ta = 0;
-      this.qa = [];
-      this.ra = 0;
-      this.Ha = [];
-      this.B = this.R = this.Ia = 0;
-      this.Ec = [];
-      this.M = this.ja = this.Vb = this.Fc = 0;
-      this.ya = Array(new Kb());
-      this.L = this.aa = 0;
-      this.gd = Ed([4, 2], Xa);
-      this.ga = null;
-      this.Fa = [];
-      this.Cc = this.qc = this.P = 0;
-      this.Gb = [];
-      this.Uc = 0;
-      this.mb = [];
-      this.nb = 0;
-      this.rc = [];
-      this.Ga = this.Vc = 0;
-    }
-    function ga(a, b) {
-      return 0 > a ? 0 : a > b ? b : a;
-    }
-    function Oa() {
-      this.T = this.U = this.ka = this.height = this.width = 0;
-      this.y = [];
-      this.f = [];
-      this.ea = [];
-      this.Rc = this.fa = this.W = this.N = this.O = 0;
-      this.ma = "void";
-      this.put = "VP8IoPutHook";
-      this.ac = "VP8IoSetupHook";
-      this.bc = "VP8IoTeardownHook";
-      this.ha = this.Kb = 0;
-      this.data = [];
-      this.hb = this.ib = this.da = this.o = this.j = this.va = this.v = this.Da = this.ob = this.w = 0;
-      this.F = [];
-      this.J = 0;
-    }
-    function Ce() {
-      var a = new Be();
-      null != a &&
-        ((a.a = 0), (a.sc = "OK"), (a.cb = 0), (a.Xb = 0), oa || (oa = De));
-      return a;
-    }
-    function T(a, b, c) {
-      0 == a.a && ((a.a = b), (a.sc = c), (a.cb = 0));
-      return 0;
-    }
-    function Jc(a, b, c) {
-      return 3 <= c && 157 == a[b + 0] && 1 == a[b + 1] && 42 == a[b + 2];
-    }
-    function Kc(a, b) {
-      if (null == a) return 0;
-      a.a = 0;
-      a.sc = "OK";
-      if (null == b) return T(a, 2, "null VP8Io passed to VP8GetHeaders()");
-      var c = b.data;
-      var d = b.w;
-      var e = b.ha;
-      if (4 > e) return T(a, 7, "Truncated header.");
-      var f = c[d + 0] | (c[d + 1] << 8) | (c[d + 2] << 16);
-      var g = a.Od;
-      g.Rb = !(f & 1);
-      g.td = (f >> 1) & 7;
-      g.yd = (f >> 4) & 1;
-      g.ub = f >> 5;
-      if (3 < g.td) return T(a, 3, "Incorrect keyframe parameters.");
-      if (!g.yd) return T(a, 4, "Frame not displayable.");
-      d += 3;
-      e -= 3;
-      var h = a.Kc;
-      if (g.Rb) {
-        if (7 > e) return T(a, 7, "cannot parse picture header");
-        if (!Jc(c, d, e)) return T(a, 3, "Bad code word");
-        h.c = ((c[d + 4] << 8) | c[d + 3]) & 16383;
-        h.Td = c[d + 4] >> 6;
-        h.i = ((c[d + 6] << 8) | c[d + 5]) & 16383;
-        h.Ud = c[d + 6] >> 6;
-        d += 7;
-        e -= 7;
-        a.za = (h.c + 15) >> 4;
-        a.Ub = (h.i + 15) >> 4;
-        b.width = h.c;
-        b.height = h.i;
-        b.Da = 0;
-        b.j = 0;
-        b.v = 0;
-        b.va = b.width;
-        b.o = b.height;
-        b.da = 0;
-        b.ib = b.width;
-        b.hb = b.height;
-        b.U = b.width;
-        b.T = b.height;
-        f = a.Pa;
-        M(f.jb, 0, 255, f.jb.length);
-        f = a.Qa;
-        x(null != f);
-        f.Cb = 0;
-        f.Bb = 0;
-        f.Fb = 1;
-        M(f.Zb, 0, 0, f.Zb.length);
-        M(f.Lb, 0, 0, f.Lb);
-      }
-      if (g.ub > e) return T(a, 7, "bad partition length");
-      f = a.m;
-      ma(f, c, d, g.ub);
-      d += g.ub;
-      e -= g.ub;
-      g.Rb && ((h.Ld = G(f)), (h.Kd = G(f)));
-      h = a.Qa;
-      var k = a.Pa,
-        l;
-      x(null != f);
-      x(null != h);
-      h.Cb = G(f);
-      if (h.Cb) {
-        h.Bb = G(f);
-        if (G(f)) {
-          h.Fb = G(f);
-          for (l = 0; 4 > l; ++l) h.Zb[l] = G(f) ? ca(f, 7) : 0;
-          for (l = 0; 4 > l; ++l) h.Lb[l] = G(f) ? ca(f, 6) : 0;
-        }
-        if (h.Bb) for (l = 0; 3 > l; ++l) k.jb[l] = G(f) ? na(f, 8) : 255;
-      } else h.Bb = 0;
-      if (f.Ka) return T(a, 3, "cannot parse segment header");
-      h = a.ed;
-      h.zd = G(f);
-      h.Tb = na(f, 6);
-      h.wb = na(f, 3);
-      h.Pc = G(f);
-      if (h.Pc && G(f)) {
-        for (k = 0; 4 > k; ++k) G(f) && (h.vd[k] = ca(f, 6));
-        for (k = 0; 4 > k; ++k) G(f) && (h.od[k] = ca(f, 6));
-      }
-      a.L = 0 == h.Tb ? 0 : h.zd ? 1 : 2;
-      if (f.Ka) return T(a, 3, "cannot parse filter header");
-      l = d;
-      var m = e;
-      e = l;
-      d = l + m;
-      h = m;
-      a.Xb = (1 << na(a.m, 2)) - 1;
-      k = a.Xb;
-      if (m < 3 * k) c = 7;
-      else {
-        l += 3 * k;
-        h -= 3 * k;
-        for (m = 0; m < k; ++m) {
-          var n = c[e + 0] | (c[e + 1] << 8) | (c[e + 2] << 16);
-          n > h && (n = h);
-          ma(a.Jc[+m], c, l, n);
-          l += n;
-          h -= n;
-          e += 3;
-        }
-        ma(a.Jc[+k], c, l, h);
-        c = l < d ? 0 : 5;
-      }
-      if (0 != c) return T(a, c, "cannot parse partitions");
-      l = a.m;
-      c = na(l, 7);
-      e = G(l) ? ca(l, 4) : 0;
-      d = G(l) ? ca(l, 4) : 0;
-      h = G(l) ? ca(l, 4) : 0;
-      k = G(l) ? ca(l, 4) : 0;
-      l = G(l) ? ca(l, 4) : 0;
-      m = a.Qa;
-      for (n = 0; 4 > n; ++n) {
-        if (m.Cb) {
-          var r = m.Zb[n];
-          m.Fb || (r += c);
-        } else if (0 < n) {
-          a.pb[n] = a.pb[0];
-          continue;
-        } else r = c;
-        var q = a.pb[n];
-        q.Sc[0] = Lb[ga(r + e, 127)];
-        q.Sc[1] = Mb[ga(r + 0, 127)];
-        q.Eb[0] = 2 * Lb[ga(r + d, 127)];
-        q.Eb[1] = (101581 * Mb[ga(r + h, 127)]) >> 16;
-        8 > q.Eb[1] && (q.Eb[1] = 8);
-        q.Qc[0] = Lb[ga(r + k, 117)];
-        q.Qc[1] = Mb[ga(r + l, 127)];
-        q.lc = r + l;
-      }
-      if (!g.Rb) return T(a, 4, "Not a key frame.");
-      G(f);
-      g = a.Pa;
-      for (c = 0; 4 > c; ++c) {
-        for (e = 0; 8 > e; ++e)
-          for (d = 0; 3 > d; ++d)
-            for (h = 0; 11 > h; ++h)
-              (k = K(f, Ee[c][e][d][h]) ? na(f, 8) : Fe[c][e][d][h]),
-                (g.Wc[c][e].Yb[d][h] = k);
-        for (e = 0; 17 > e; ++e) g.Xc[c][e] = g.Wc[c][Ge[e]];
-      }
-      a.kc = G(f);
-      a.kc && (a.Bd = na(f, 8));
-      return (a.cb = 1);
-    }
-    function De(a, b, c, d, e, f, g) {
-      var h = b[e].Yb[c];
-      for (c = 0; 16 > e; ++e) {
-        if (!K(a, h[c + 0])) return e;
-        for (; !K(a, h[c + 1]); )
-          if (((h = b[++e].Yb[0]), (c = 0), 16 == e)) return 16;
-        var k = b[e + 1].Yb;
-        if (K(a, h[c + 2])) {
-          var l = a,
-            m = h,
-            n = c;
-          var r = 0;
-          if (K(l, m[n + 3]))
-            if (K(l, m[n + 6])) {
-              h = 0;
-              r = K(l, m[n + 8]);
-              m = K(l, m[n + 9 + r]);
-              n = 2 * r + m;
-              r = 0;
-              for (m = He[n]; m[h]; ++h) r += r + K(l, m[h]);
-              r += 3 + (8 << n);
-            } else
-              K(l, m[n + 7])
-                ? ((r = 7 + 2 * K(l, 165)), (r += K(l, 145)))
-                : (r = 5 + K(l, 159));
-          else K(l, m[n + 4]) ? (r = 3 + K(l, m[n + 5])) : (r = 2);
-          h = k[2];
-        } else (r = 1), (h = k[1]);
-        k = g + Ie[e];
-        l = a;
-        0 > l.b && Qa(l);
-        var m = l.b,
-          n = l.Ca >> 1,
-          q = (n - (l.I >> m)) >> 31;
-        --l.b;
-        l.Ca += q;
-        l.Ca |= 1;
-        l.I -= ((n + 1) & q) << m;
-        f[k] = ((r ^ q) - q) * d[(0 < e) + 0];
-      }
-      return 16;
-    }
-    function Lc(a) {
-      var b = a.rb[a.sb - 1];
-      b.la = 0;
-      b.Na = 0;
-      M(a.zc, 0, 0, a.zc.length);
-      a.ja = 0;
-    }
-    function Je(a, b) {
-      for (a.M = 0; a.M < a.Va; ++a.M) {
-        var c = a.Jc[a.M & a.Xb],
-          d = a.m,
-          e = a,
-          f;
-        for (f = 0; f < e.za; ++f) {
-          var g = d;
-          var h = e;
-          var k = h.Ac,
-            l = h.Bc + 4 * f,
-            m = h.zc,
-            n = h.ya[h.aa + f];
-          h.Qa.Bb
-            ? (n.$b = K(g, h.Pa.jb[0])
-                ? 2 + K(g, h.Pa.jb[2])
-                : K(g, h.Pa.jb[1]))
-            : (n.$b = 0);
-          h.kc && (n.Ad = K(g, h.Bd));
-          n.Za = !K(g, 145) + 0;
-          if (n.Za) {
-            var r = n.Ob,
-              q = 0;
-            for (h = 0; 4 > h; ++h) {
-              var t = m[0 + h];
-              var v;
-              for (v = 0; 4 > v; ++v) {
-                t = Ke[k[l + v]][t];
-                for (var p = Mc[K(g, t[0])]; 0 < p; )
-                  p = Mc[2 * p + K(g, t[p])];
-                t = -p;
-                k[l + v] = t;
-              }
-              I(r, q, k, l, 4);
-              q += 4;
-              m[0 + h] = t;
-            }
-          } else
-            (t = K(g, 156) ? (K(g, 128) ? 1 : 3) : K(g, 163) ? 2 : 0),
-              (n.Ob[0] = t),
-              M(k, l, t, 4),
-              M(m, 0, t, 4);
-          n.Dd = K(g, 142) ? (K(g, 114) ? (K(g, 183) ? 1 : 3) : 2) : 0;
-        }
-        if (e.m.Ka) return T(a, 7, "Premature end-of-partition0 encountered.");
-        for (; a.ja < a.za; ++a.ja) {
-          d = a;
-          e = c;
-          g = d.rb[d.sb - 1];
-          k = d.rb[d.sb + d.ja];
-          f = d.ya[d.aa + d.ja];
-          if ((l = d.kc ? f.Ad : 0))
-            (g.la = k.la = 0),
-              f.Za || (g.Na = k.Na = 0),
-              (f.Hc = 0),
-              (f.Gc = 0),
-              (f.ia = 0);
-          else {
-            var u,
-              w,
-              g = k,
-              k = e,
-              l = d.Pa.Xc,
-              m = d.ya[d.aa + d.ja],
-              n = d.pb[m.$b];
-            h = m.ad;
-            r = 0;
-            q = d.rb[d.sb - 1];
-            t = v = 0;
-            M(h, r, 0, 384);
-            if (m.Za) {
-              var y = 0;
-              var A = l[3];
-            } else {
-              p = V(16);
-              var E = g.Na + q.Na;
-              E = oa(k, l[1], E, n.Eb, 0, p, 0);
-              g.Na = q.Na = (0 < E) + 0;
-              if (1 < E) Nc(p, 0, h, r);
-              else {
-                var B = (p[0] + 3) >> 3;
-                for (p = 0; 256 > p; p += 16) h[r + p] = B;
-              }
-              y = 1;
-              A = l[0];
-            }
-            var C = g.la & 15;
-            var N = q.la & 15;
-            for (p = 0; 4 > p; ++p) {
-              var z = N & 1;
-              for (B = w = 0; 4 > B; ++B)
-                (E = z + (C & 1)),
-                  (E = oa(k, A, E, n.Sc, y, h, r)),
-                  (z = E > y),
-                  (C = (C >> 1) | (z << 7)),
-                  (w = (w << 2) | (3 < E ? 3 : 1 < E ? 2 : 0 != h[r + 0])),
-                  (r += 16);
-              C >>= 4;
-              N = (N >> 1) | (z << 7);
-              v = ((v << 8) | w) >>> 0;
-            }
-            A = C;
-            y = N >> 4;
-            for (u = 0; 4 > u; u += 2) {
-              w = 0;
-              C = g.la >> (4 + u);
-              N = q.la >> (4 + u);
-              for (p = 0; 2 > p; ++p) {
-                z = N & 1;
-                for (B = 0; 2 > B; ++B)
-                  (E = z + (C & 1)),
-                    (E = oa(k, l[2], E, n.Qc, 0, h, r)),
-                    (z = 0 < E),
-                    (C = (C >> 1) | (z << 3)),
-                    (w = (w << 2) | (3 < E ? 3 : 1 < E ? 2 : 0 != h[r + 0])),
-                    (r += 16);
-                C >>= 2;
-                N = (N >> 1) | (z << 5);
-              }
-              t |= w << (4 * u);
-              A |= (C << 4) << u;
-              y |= (N & 240) << u;
-            }
-            g.la = A;
-            q.la = y;
-            m.Hc = v;
-            m.Gc = t;
-            m.ia = t & 43690 ? 0 : n.ia;
-            l = !(v | t);
-          }
-          0 < d.L &&
-            ((d.wa[d.Y + d.ja] = d.gd[f.$b][f.Za]),
-            (d.wa[d.Y + d.ja].La |= !l));
-          if (e.Ka) return T(a, 7, "Premature end-of-file encountered.");
-        }
-        Lc(a);
-        c = a;
-        d = b;
-        e = 1;
-        f = c.D;
-        g = 0 < c.L && c.M >= c.zb && c.M <= c.Va;
-        if (0 == c.Aa)
-          a: {
-            (f.M = c.M), (f.uc = g), Oc(c, f), (e = 1);
-            w = c.D;
-            f = w.Nb;
-            t = Ya[c.L];
-            g = t * c.R;
-            k = (t / 2) * c.B;
-            p = 16 * f * c.R;
-            B = 8 * f * c.B;
-            l = c.sa;
-            m = c.ta - g + p;
-            n = c.qa;
-            h = c.ra - k + B;
-            r = c.Ha;
-            q = c.Ia - k + B;
-            C = w.M;
-            N = 0 == C;
-            v = C >= c.Va - 1;
-            2 == c.Aa && Oc(c, w);
-            if (w.uc)
-              for (E = c, z = E.D.M, x(E.D.uc), w = E.yb; w < E.Hb; ++w) {
-                var Q = E;
-                y = w;
-                A = z;
-                var S = Q.D,
-                  D = S.Nb;
-                u = Q.R;
-                var S = S.wa[S.Y + y],
-                  F = Q.sa,
-                  H = Q.ta + 16 * D * u + 16 * y,
-                  J = S.dd,
-                  G = S.tc;
-                if (0 != G)
-                  if ((x(3 <= G), 1 == Q.L))
-                    0 < y && Pc(F, H, u, G + 4),
-                      S.La && Qc(F, H, u, G),
-                      0 < A && Rc(F, H, u, G + 4),
-                      S.La && Sc(F, H, u, G);
-                  else {
-                    var L = Q.B,
-                      O = Q.qa,
-                      P = Q.ra + 8 * D * L + 8 * y,
-                      R = Q.Ha,
-                      Q = Q.Ia + 8 * D * L + 8 * y,
-                      D = S.ld;
-                    0 < y &&
-                      (Tc(F, H, u, G + 4, J, D),
-                      Uc(O, P, R, Q, L, G + 4, J, D));
-                    S.La && (Vc(F, H, u, G, J, D), Wc(O, P, R, Q, L, G, J, D));
-                    0 < A &&
-                      (Xc(F, H, u, G + 4, J, D),
-                      Yc(O, P, R, Q, L, G + 4, J, D));
-                    S.La && (Zc(F, H, u, G, J, D), $c(O, P, R, Q, L, G, J, D));
-                  }
-              }
-            c.ia && alert("todo:DitherRow");
-            if (null != d.put) {
-              w = 16 * C;
-              C = 16 * (C + 1);
-              N
-                ? ((d.y = c.sa),
-                  (d.O = c.ta + p),
-                  (d.f = c.qa),
-                  (d.N = c.ra + B),
-                  (d.ea = c.Ha),
-                  (d.W = c.Ia + B))
-                : ((w -= t),
-                  (d.y = l),
-                  (d.O = m),
-                  (d.f = n),
-                  (d.N = h),
-                  (d.ea = r),
-                  (d.W = q));
-              v || (C -= t);
-              C > d.o && (C = d.o);
-              d.F = null;
-              d.J = null;
-              if (
-                null != c.Fa &&
-                0 < c.Fa.length &&
-                w < C &&
-                ((d.J = Le(c, d, w, C - w)),
-                (d.F = c.mb),
-                null == d.F && 0 == d.F.length)
-              ) {
-                e = T(c, 3, "Could not decode alpha data.");
-                break a;
-              }
-              w < d.j &&
-                ((t = d.j - w),
-                (w = d.j),
-                x(!(t & 1)),
-                (d.O += c.R * t),
-                (d.N += c.B * (t >> 1)),
-                (d.W += c.B * (t >> 1)),
-                null != d.F && (d.J += d.width * t));
-              w < C &&
-                ((d.O += d.v),
-                (d.N += d.v >> 1),
-                (d.W += d.v >> 1),
-                null != d.F && (d.J += d.v),
-                (d.ka = w - d.j),
-                (d.U = d.va - d.v),
-                (d.T = C - w),
-                (e = d.put(d)));
-            }
-            f + 1 != c.Ic ||
-              v ||
-              (I(c.sa, c.ta - g, l, m + 16 * c.R, g),
-              I(c.qa, c.ra - k, n, h + 8 * c.B, k),
-              I(c.Ha, c.Ia - k, r, q + 8 * c.B, k));
-          }
-        if (!e) return T(a, 6, "Output aborted.");
-      }
-      return 1;
-    }
-    function Me(a, b) {
-      if (null == a) return 0;
-      if (null == b) return T(a, 2, "NULL VP8Io parameter in VP8Decode().");
-      if (!a.cb && !Kc(a, b)) return 0;
-      x(a.cb);
-      if (null == b.ac || b.ac(b)) {
-        b.ob && (a.L = 0);
-        var c = Ya[a.L];
-        2 == a.L
-          ? ((a.yb = 0), (a.zb = 0))
-          : ((a.yb = (b.v - c) >> 4),
-            (a.zb = (b.j - c) >> 4),
-            0 > a.yb && (a.yb = 0),
-            0 > a.zb && (a.zb = 0));
-        a.Va = (b.o + 15 + c) >> 4;
-        a.Hb = (b.va + 15 + c) >> 4;
-        a.Hb > a.za && (a.Hb = a.za);
-        a.Va > a.Ub && (a.Va = a.Ub);
-        if (0 < a.L) {
-          var d = a.ed;
-          for (c = 0; 4 > c; ++c) {
-            var e;
-            if (a.Qa.Cb) {
-              var f = a.Qa.Lb[c];
-              a.Qa.Fb || (f += d.Tb);
-            } else f = d.Tb;
-            for (e = 0; 1 >= e; ++e) {
-              var g = a.gd[c][e],
-                h = f;
-              d.Pc && ((h += d.vd[0]), e && (h += d.od[0]));
-              h = 0 > h ? 0 : 63 < h ? 63 : h;
-              if (0 < h) {
-                var k = h;
-                0 < d.wb &&
-                  ((k = 4 < d.wb ? k >> 2 : k >> 1),
-                  k > 9 - d.wb && (k = 9 - d.wb));
-                1 > k && (k = 1);
-                g.dd = k;
-                g.tc = 2 * h + k;
-                g.ld = 40 <= h ? 2 : 15 <= h ? 1 : 0;
-              } else g.tc = 0;
-              g.La = e;
-            }
-          }
-        }
-        c = 0;
-      } else T(a, 6, "Frame setup failed"), (c = a.a);
-      if ((c = 0 == c)) {
-        if (c) {
-          a.$c = 0;
-          0 < a.Aa || (a.Ic = Ne);
-          b: {
-            c = a.Ic;
-            var k = a.za,
-              d = 4 * k,
-              l = 32 * k,
-              m = k + 1,
-              n = 0 < a.L ? k * (0 < a.Aa ? 2 : 1) : 0,
-              r = (2 == a.Aa ? 2 : 1) * k;
-            e = ((3 * (16 * c + Ya[a.L])) / 2) * l;
-            f = null != a.Fa && 0 < a.Fa.length ? a.Kc.c * a.Kc.i : 0;
-            g = d + 832 + e + f;
-            if (g != g) c = 0;
-            else {
-              if (g > a.Vb) {
-                a.Vb = 0;
-                a.Ec = V(g);
-                a.Fc = 0;
-                if (null == a.Ec) {
-                  c = T(a, 1, "no memory during frame initialization.");
-                  break b;
-                }
-                a.Vb = g;
-              }
-              g = a.Ec;
-              h = a.Fc;
-              a.Ac = g;
-              a.Bc = h;
-              h += d;
-              a.Gd = wa(l, Ic);
-              a.Hd = 0;
-              a.rb = wa(m + 1, Hc);
-              a.sb = 1;
-              a.wa = n ? wa(n, Xa) : null;
-              a.Y = 0;
-              a.D.Nb = 0;
-              a.D.wa = a.wa;
-              a.D.Y = a.Y;
-              0 < a.Aa && (a.D.Y += k);
-              x(!0);
-              a.oc = g;
-              a.pc = h;
-              h += 832;
-              a.ya = wa(r, Kb);
-              a.aa = 0;
-              a.D.ya = a.ya;
-              a.D.aa = a.aa;
-              2 == a.Aa && (a.D.aa += k);
-              a.R = 16 * k;
-              a.B = 8 * k;
-              l = Ya[a.L];
-              k = l * a.R;
-              l = (l / 2) * a.B;
-              a.sa = g;
-              a.ta = h + k;
-              a.qa = a.sa;
-              a.ra = a.ta + 16 * c * a.R + l;
-              a.Ha = a.qa;
-              a.Ia = a.ra + 8 * c * a.B + l;
-              a.$c = 0;
-              h += e;
-              a.mb = f ? g : null;
-              a.nb = f ? h : null;
-              x(h + f <= a.Fc + a.Vb);
-              Lc(a);
-              M(a.Ac, a.Bc, 0, d);
-              c = 1;
-            }
-          }
-          if (c) {
-            b.ka = 0;
-            b.y = a.sa;
-            b.O = a.ta;
-            b.f = a.qa;
-            b.N = a.ra;
-            b.ea = a.Ha;
-            b.Vd = a.Ia;
-            b.fa = a.R;
-            b.Rc = a.B;
-            b.F = null;
-            b.J = 0;
-            if (!ad) {
-              for (c = -255; 255 >= c; ++c) bd[255 + c] = 0 > c ? -c : c;
-              for (c = -1020; 1020 >= c; ++c)
-                cd[1020 + c] = -128 > c ? -128 : 127 < c ? 127 : c;
-              for (c = -112; 112 >= c; ++c)
-                dd[112 + c] = -16 > c ? -16 : 15 < c ? 15 : c;
-              for (c = -255; 510 >= c; ++c)
-                ed[255 + c] = 0 > c ? 0 : 255 < c ? 255 : c;
-              ad = 1;
-            }
-            Nc = Oe;
-            Za = Pe;
-            Nb = Qe;
-            pa = Re;
-            Ob = Se;
-            fd = Te;
-            Xc = Ue;
-            Tc = Ve;
-            Yc = We;
-            Uc = Xe;
-            Zc = Ye;
-            Vc = Ze;
-            $c = $e;
-            Wc = af;
-            Rc = gd;
-            Pc = hd;
-            Sc = bf;
-            Qc = cf;
-            W[0] = df;
-            W[1] = ef;
-            W[2] = ff;
-            W[3] = gf;
-            W[4] = hf;
-            W[5] = jf;
-            W[6] = kf;
-            W[7] = lf;
-            W[8] = mf;
-            W[9] = nf;
-            Y[0] = of;
-            Y[1] = pf;
-            Y[2] = qf;
-            Y[3] = rf;
-            Y[4] = sf;
-            Y[5] = tf;
-            Y[6] = uf;
-            ka[0] = vf;
-            ka[1] = wf;
-            ka[2] = xf;
-            ka[3] = yf;
-            ka[4] = zf;
-            ka[5] = Af;
-            ka[6] = Bf;
-            c = 1;
-          } else c = 0;
-        }
-        c && (c = Je(a, b));
-        null != b.bc && b.bc(b);
-        c &= 1;
-      }
-      if (!c) return 0;
-      a.cb = 0;
-      return c;
-    }
-    function qa(a, b, c, d, e) {
-      e = a[b + c + 32 * d] + (e >> 3);
-      a[b + c + 32 * d] = e & -256 ? (0 > e ? 0 : 255) : e;
-    }
-    function kb(a, b, c, d, e, f) {
-      qa(a, b, 0, c, d + e);
-      qa(a, b, 1, c, d + f);
-      qa(a, b, 2, c, d - f);
-      qa(a, b, 3, c, d - e);
-    }
-    function da(a) {
-      return ((20091 * a) >> 16) + a;
-    }
-    function id(a, b, c, d) {
-      var e = 0,
-        f;
-      var g = V(16);
-      for (f = 0; 4 > f; ++f) {
-        var h = a[b + 0] + a[b + 8];
-        var k = a[b + 0] - a[b + 8];
-        var l = ((35468 * a[b + 4]) >> 16) - da(a[b + 12]);
-        var m = da(a[b + 4]) + ((35468 * a[b + 12]) >> 16);
-        g[e + 0] = h + m;
-        g[e + 1] = k + l;
-        g[e + 2] = k - l;
-        g[e + 3] = h - m;
-        e += 4;
-        b++;
-      }
-      for (f = e = 0; 4 > f; ++f)
-        (a = g[e + 0] + 4),
-          (h = a + g[e + 8]),
-          (k = a - g[e + 8]),
-          (l = ((35468 * g[e + 4]) >> 16) - da(g[e + 12])),
-          (m = da(g[e + 4]) + ((35468 * g[e + 12]) >> 16)),
-          qa(c, d, 0, 0, h + m),
-          qa(c, d, 1, 0, k + l),
-          qa(c, d, 2, 0, k - l),
-          qa(c, d, 3, 0, h - m),
-          e++,
-          (d += 32);
-    }
-    function Te(a, b, c, d) {
-      var e = a[b + 0] + 4,
-        f = (35468 * a[b + 4]) >> 16,
-        g = da(a[b + 4]),
-        h = (35468 * a[b + 1]) >> 16;
-      a = da(a[b + 1]);
-      kb(c, d, 0, e + g, a, h);
-      kb(c, d, 1, e + f, a, h);
-      kb(c, d, 2, e - f, a, h);
-      kb(c, d, 3, e - g, a, h);
-    }
-    function Pe(a, b, c, d, e) {
-      id(a, b, c, d);
-      e && id(a, b + 16, c, d + 4);
-    }
-    function Qe(a, b, c, d) {
-      Za(a, b + 0, c, d, 1);
-      Za(a, b + 32, c, d + 128, 1);
-    }
-    function Re(a, b, c, d) {
-      a = a[b + 0] + 4;
-      var e;
-      for (e = 0; 4 > e; ++e) for (b = 0; 4 > b; ++b) qa(c, d, b, e, a);
-    }
-    function Se(a, b, c, d) {
-      a[b + 0] && pa(a, b + 0, c, d);
-      a[b + 16] && pa(a, b + 16, c, d + 4);
-      a[b + 32] && pa(a, b + 32, c, d + 128);
-      a[b + 48] && pa(a, b + 48, c, d + 128 + 4);
-    }
-    function Oe(a, b, c, d) {
-      var e = V(16),
-        f;
-      for (f = 0; 4 > f; ++f) {
-        var g = a[b + 0 + f] + a[b + 12 + f];
-        var h = a[b + 4 + f] + a[b + 8 + f];
-        var k = a[b + 4 + f] - a[b + 8 + f];
-        var l = a[b + 0 + f] - a[b + 12 + f];
-        e[0 + f] = g + h;
-        e[8 + f] = g - h;
-        e[4 + f] = l + k;
-        e[12 + f] = l - k;
-      }
-      for (f = 0; 4 > f; ++f)
-        (a = e[0 + 4 * f] + 3),
-          (g = a + e[3 + 4 * f]),
-          (h = e[1 + 4 * f] + e[2 + 4 * f]),
-          (k = e[1 + 4 * f] - e[2 + 4 * f]),
-          (l = a - e[3 + 4 * f]),
-          (c[d + 0] = (g + h) >> 3),
-          (c[d + 16] = (l + k) >> 3),
-          (c[d + 32] = (g - h) >> 3),
-          (c[d + 48] = (l - k) >> 3),
-          (d += 64);
-    }
-    function Pb(a, b, c) {
-      var d = b - 32,
-        e = R,
-        f = 255 - a[d - 1],
-        g;
-      for (g = 0; g < c; ++g) {
-        var h = e,
-          k = f + a[b - 1],
-          l;
-        for (l = 0; l < c; ++l) a[b + l] = h[k + a[d + l]];
-        b += 32;
-      }
-    }
-    function ef(a, b) {
-      Pb(a, b, 4);
-    }
-    function wf(a, b) {
-      Pb(a, b, 8);
-    }
-    function pf(a, b) {
-      Pb(a, b, 16);
-    }
-    function qf(a, b) {
-      var c;
-      for (c = 0; 16 > c; ++c) I(a, b + 32 * c, a, b - 32, 16);
-    }
-    function rf(a, b) {
-      var c;
-      for (c = 16; 0 < c; --c) M(a, b, a[b - 1], 16), (b += 32);
-    }
-    function $a(a, b, c) {
-      var d;
-      for (d = 0; 16 > d; ++d) M(b, c + 32 * d, a, 16);
-    }
-    function of(a, b) {
-      var c = 16,
-        d;
-      for (d = 0; 16 > d; ++d) c += a[b - 1 + 32 * d] + a[b + d - 32];
-      $a(c >> 5, a, b);
-    }
-    function sf(a, b) {
-      var c = 8,
-        d;
-      for (d = 0; 16 > d; ++d) c += a[b - 1 + 32 * d];
-      $a(c >> 4, a, b);
-    }
-    function tf(a, b) {
-      var c = 8,
-        d;
-      for (d = 0; 16 > d; ++d) c += a[b + d - 32];
-      $a(c >> 4, a, b);
-    }
-    function uf(a, b) {
-      $a(128, a, b);
-    }
-    function z(a, b, c) {
-      return (a + 2 * b + c + 2) >> 2;
-    }
-    function ff(a, b) {
-      var c = b - 32,
-        c = new Uint8Array([
-          z(a[c - 1], a[c + 0], a[c + 1]),
-          z(a[c + 0], a[c + 1], a[c + 2]),
-          z(a[c + 1], a[c + 2], a[c + 3]),
-          z(a[c + 2], a[c + 3], a[c + 4])
-        ]),
-        d;
-      for (d = 0; 4 > d; ++d) I(a, b + 32 * d, c, 0, c.length);
-    }
-    function gf(a, b) {
-      var c = a[b - 1],
-        d = a[b - 1 + 32],
-        e = a[b - 1 + 64],
-        f = a[b - 1 + 96];
-      ra(a, b + 0, 16843009 * z(a[b - 1 - 32], c, d));
-      ra(a, b + 32, 16843009 * z(c, d, e));
-      ra(a, b + 64, 16843009 * z(d, e, f));
-      ra(a, b + 96, 16843009 * z(e, f, f));
-    }
-    function df(a, b) {
-      var c = 4,
-        d;
-      for (d = 0; 4 > d; ++d) c += a[b + d - 32] + a[b - 1 + 32 * d];
-      c >>= 3;
-      for (d = 0; 4 > d; ++d) M(a, b + 32 * d, c, 4);
-    }
-    function hf(a, b) {
-      var c = a[b - 1 + 0],
-        d = a[b - 1 + 32],
-        e = a[b - 1 + 64],
-        f = a[b - 1 - 32],
-        g = a[b + 0 - 32],
-        h = a[b + 1 - 32],
-        k = a[b + 2 - 32],
-        l = a[b + 3 - 32];
-      a[b + 0 + 96] = z(d, e, a[b - 1 + 96]);
-      a[b + 1 + 96] = a[b + 0 + 64] = z(c, d, e);
-      a[b + 2 + 96] = a[b + 1 + 64] = a[b + 0 + 32] = z(f, c, d);
-      a[b + 3 + 96] = a[b + 2 + 64] = a[b + 1 + 32] = a[b + 0 + 0] = z(g, f, c);
-      a[b + 3 + 64] = a[b + 2 + 32] = a[b + 1 + 0] = z(h, g, f);
-      a[b + 3 + 32] = a[b + 2 + 0] = z(k, h, g);
-      a[b + 3 + 0] = z(l, k, h);
-    }
-    function kf(a, b) {
-      var c = a[b + 1 - 32],
-        d = a[b + 2 - 32],
-        e = a[b + 3 - 32],
-        f = a[b + 4 - 32],
-        g = a[b + 5 - 32],
-        h = a[b + 6 - 32],
-        k = a[b + 7 - 32];
-      a[b + 0 + 0] = z(a[b + 0 - 32], c, d);
-      a[b + 1 + 0] = a[b + 0 + 32] = z(c, d, e);
-      a[b + 2 + 0] = a[b + 1 + 32] = a[b + 0 + 64] = z(d, e, f);
-      a[b + 3 + 0] = a[b + 2 + 32] = a[b + 1 + 64] = a[b + 0 + 96] = z(e, f, g);
-      a[b + 3 + 32] = a[b + 2 + 64] = a[b + 1 + 96] = z(f, g, h);
-      a[b + 3 + 64] = a[b + 2 + 96] = z(g, h, k);
-      a[b + 3 + 96] = z(h, k, k);
-    }
-    function jf(a, b) {
-      var c = a[b - 1 + 0],
-        d = a[b - 1 + 32],
-        e = a[b - 1 + 64],
-        f = a[b - 1 - 32],
-        g = a[b + 0 - 32],
-        h = a[b + 1 - 32],
-        k = a[b + 2 - 32],
-        l = a[b + 3 - 32];
-      a[b + 0 + 0] = a[b + 1 + 64] = (f + g + 1) >> 1;
-      a[b + 1 + 0] = a[b + 2 + 64] = (g + h + 1) >> 1;
-      a[b + 2 + 0] = a[b + 3 + 64] = (h + k + 1) >> 1;
-      a[b + 3 + 0] = (k + l + 1) >> 1;
-      a[b + 0 + 96] = z(e, d, c);
-      a[b + 0 + 64] = z(d, c, f);
-      a[b + 0 + 32] = a[b + 1 + 96] = z(c, f, g);
-      a[b + 1 + 32] = a[b + 2 + 96] = z(f, g, h);
-      a[b + 2 + 32] = a[b + 3 + 96] = z(g, h, k);
-      a[b + 3 + 32] = z(h, k, l);
-    }
-    function lf(a, b) {
-      var c = a[b + 0 - 32],
-        d = a[b + 1 - 32],
-        e = a[b + 2 - 32],
-        f = a[b + 3 - 32],
-        g = a[b + 4 - 32],
-        h = a[b + 5 - 32],
-        k = a[b + 6 - 32],
-        l = a[b + 7 - 32];
-      a[b + 0 + 0] = (c + d + 1) >> 1;
-      a[b + 1 + 0] = a[b + 0 + 64] = (d + e + 1) >> 1;
-      a[b + 2 + 0] = a[b + 1 + 64] = (e + f + 1) >> 1;
-      a[b + 3 + 0] = a[b + 2 + 64] = (f + g + 1) >> 1;
-      a[b + 0 + 32] = z(c, d, e);
-      a[b + 1 + 32] = a[b + 0 + 96] = z(d, e, f);
-      a[b + 2 + 32] = a[b + 1 + 96] = z(e, f, g);
-      a[b + 3 + 32] = a[b + 2 + 96] = z(f, g, h);
-      a[b + 3 + 64] = z(g, h, k);
-      a[b + 3 + 96] = z(h, k, l);
-    }
-    function nf(a, b) {
-      var c = a[b - 1 + 0],
-        d = a[b - 1 + 32],
-        e = a[b - 1 + 64],
-        f = a[b - 1 + 96];
-      a[b + 0 + 0] = (c + d + 1) >> 1;
-      a[b + 2 + 0] = a[b + 0 + 32] = (d + e + 1) >> 1;
-      a[b + 2 + 32] = a[b + 0 + 64] = (e + f + 1) >> 1;
-      a[b + 1 + 0] = z(c, d, e);
-      a[b + 3 + 0] = a[b + 1 + 32] = z(d, e, f);
-      a[b + 3 + 32] = a[b + 1 + 64] = z(e, f, f);
-      a[b + 3 + 64] = a[b + 2 + 64] = a[b + 0 + 96] = a[b + 1 + 96] = a[
-        b + 2 + 96
-      ] = a[b + 3 + 96] = f;
-    }
-    function mf(a, b) {
-      var c = a[b - 1 + 0],
-        d = a[b - 1 + 32],
-        e = a[b - 1 + 64],
-        f = a[b - 1 + 96],
-        g = a[b - 1 - 32],
-        h = a[b + 0 - 32],
-        k = a[b + 1 - 32],
-        l = a[b + 2 - 32];
-      a[b + 0 + 0] = a[b + 2 + 32] = (c + g + 1) >> 1;
-      a[b + 0 + 32] = a[b + 2 + 64] = (d + c + 1) >> 1;
-      a[b + 0 + 64] = a[b + 2 + 96] = (e + d + 1) >> 1;
-      a[b + 0 + 96] = (f + e + 1) >> 1;
-      a[b + 3 + 0] = z(h, k, l);
-      a[b + 2 + 0] = z(g, h, k);
-      a[b + 1 + 0] = a[b + 3 + 32] = z(c, g, h);
-      a[b + 1 + 32] = a[b + 3 + 64] = z(d, c, g);
-      a[b + 1 + 64] = a[b + 3 + 96] = z(e, d, c);
-      a[b + 1 + 96] = z(f, e, d);
-    }
-    function xf(a, b) {
-      var c;
-      for (c = 0; 8 > c; ++c) I(a, b + 32 * c, a, b - 32, 8);
-    }
-    function yf(a, b) {
-      var c;
-      for (c = 0; 8 > c; ++c) M(a, b, a[b - 1], 8), (b += 32);
-    }
-    function lb(a, b, c) {
-      var d;
-      for (d = 0; 8 > d; ++d) M(b, c + 32 * d, a, 8);
-    }
-    function vf(a, b) {
-      var c = 8,
-        d;
-      for (d = 0; 8 > d; ++d) c += a[b + d - 32] + a[b - 1 + 32 * d];
-      lb(c >> 4, a, b);
-    }
-    function Af(a, b) {
-      var c = 4,
-        d;
-      for (d = 0; 8 > d; ++d) c += a[b + d - 32];
-      lb(c >> 3, a, b);
-    }
-    function zf(a, b) {
-      var c = 4,
-        d;
-      for (d = 0; 8 > d; ++d) c += a[b - 1 + 32 * d];
-      lb(c >> 3, a, b);
-    }
-    function Bf(a, b) {
-      lb(128, a, b);
-    }
-    function ab(a, b, c) {
-      var d = a[b - c],
-        e = a[b + 0],
-        f = 3 * (e - d) + Qb[1020 + a[b - 2 * c] - a[b + c]],
-        g = mb[112 + ((f + 4) >> 3)];
-      a[b - c] = R[255 + d + mb[112 + ((f + 3) >> 3)]];
-      a[b + 0] = R[255 + e - g];
-    }
-    function jd(a, b, c, d) {
-      var e = a[b + 0],
-        f = a[b + c];
-      return U[255 + a[b - 2 * c] - a[b - c]] > d || U[255 + f - e] > d;
-    }
-    function kd(a, b, c, d) {
-      return (
-        4 * U[255 + a[b - c] - a[b + 0]] + U[255 + a[b - 2 * c] - a[b + c]] <= d
-      );
-    }
-    function ld(a, b, c, d, e) {
-      var f = a[b - 3 * c],
-        g = a[b - 2 * c],
-        h = a[b - c],
-        k = a[b + 0],
-        l = a[b + c],
-        m = a[b + 2 * c],
-        n = a[b + 3 * c];
-      return 4 * U[255 + h - k] + U[255 + g - l] > d
-        ? 0
-        : U[255 + a[b - 4 * c] - f] <= e &&
-            U[255 + f - g] <= e &&
-            U[255 + g - h] <= e &&
-            U[255 + n - m] <= e &&
-            U[255 + m - l] <= e &&
-            U[255 + l - k] <= e;
-    }
-    function gd(a, b, c, d) {
-      var e = 2 * d + 1;
-      for (d = 0; 16 > d; ++d) kd(a, b + d, c, e) && ab(a, b + d, c);
-    }
-    function hd(a, b, c, d) {
-      var e = 2 * d + 1;
-      for (d = 0; 16 > d; ++d) kd(a, b + d * c, 1, e) && ab(a, b + d * c, 1);
-    }
-    function bf(a, b, c, d) {
-      var e;
-      for (e = 3; 0 < e; --e) (b += 4 * c), gd(a, b, c, d);
-    }
-    function cf(a, b, c, d) {
-      var e;
-      for (e = 3; 0 < e; --e) (b += 4), hd(a, b, c, d);
-    }
-    function ea(a, b, c, d, e, f, g, h) {
-      for (f = 2 * f + 1; 0 < e--; ) {
-        if (ld(a, b, c, f, g))
-          if (jd(a, b, c, h)) ab(a, b, c);
-          else {
-            var k = a,
-              l = b,
-              m = c,
-              n = k[l - 2 * m],
-              r = k[l - m],
-              q = k[l + 0],
-              t = k[l + m],
-              v = k[l + 2 * m],
-              p = Qb[1020 + 3 * (q - r) + Qb[1020 + n - t]],
-              u = (27 * p + 63) >> 7,
-              w = (18 * p + 63) >> 7,
-              p = (9 * p + 63) >> 7;
-            k[l - 3 * m] = R[255 + k[l - 3 * m] + p];
-            k[l - 2 * m] = R[255 + n + w];
-            k[l - m] = R[255 + r + u];
-            k[l + 0] = R[255 + q - u];
-            k[l + m] = R[255 + t - w];
-            k[l + 2 * m] = R[255 + v - p];
-          }
-        b += d;
-      }
-    }
-    function Fa(a, b, c, d, e, f, g, h) {
-      for (f = 2 * f + 1; 0 < e--; ) {
-        if (ld(a, b, c, f, g))
-          if (jd(a, b, c, h)) ab(a, b, c);
-          else {
-            var k = a,
-              l = b,
-              m = c,
-              n = k[l - m],
-              r = k[l + 0],
-              q = k[l + m],
-              t = 3 * (r - n),
-              v = mb[112 + ((t + 4) >> 3)],
-              t = mb[112 + ((t + 3) >> 3)],
-              p = (v + 1) >> 1;
-            k[l - 2 * m] = R[255 + k[l - 2 * m] + p];
-            k[l - m] = R[255 + n + t];
-            k[l + 0] = R[255 + r - v];
-            k[l + m] = R[255 + q - p];
-          }
-        b += d;
-      }
-    }
-    function Ue(a, b, c, d, e, f) {
-      ea(a, b, c, 1, 16, d, e, f);
-    }
-    function Ve(a, b, c, d, e, f) {
-      ea(a, b, 1, c, 16, d, e, f);
-    }
-    function Ye(a, b, c, d, e, f) {
-      var g;
-      for (g = 3; 0 < g; --g) (b += 4 * c), Fa(a, b, c, 1, 16, d, e, f);
-    }
-    function Ze(a, b, c, d, e, f) {
-      var g;
-      for (g = 3; 0 < g; --g) (b += 4), Fa(a, b, 1, c, 16, d, e, f);
-    }
-    function We(a, b, c, d, e, f, g, h) {
-      ea(a, b, e, 1, 8, f, g, h);
-      ea(c, d, e, 1, 8, f, g, h);
-    }
-    function Xe(a, b, c, d, e, f, g, h) {
-      ea(a, b, 1, e, 8, f, g, h);
-      ea(c, d, 1, e, 8, f, g, h);
-    }
-    function $e(a, b, c, d, e, f, g, h) {
-      Fa(a, b + 4 * e, e, 1, 8, f, g, h);
-      Fa(c, d + 4 * e, e, 1, 8, f, g, h);
-    }
-    function af(a, b, c, d, e, f, g, h) {
-      Fa(a, b + 4, 1, e, 8, f, g, h);
-      Fa(c, d + 4, 1, e, 8, f, g, h);
-    }
-    function Cf() {
-      this.ba = new Cb();
-      this.ec = [];
-      this.cc = [];
-      this.Mc = [];
-      this.Dc = this.Nc = this.dc = this.fc = 0;
-      this.Oa = new Ud();
-      this.memory = 0;
-      this.Ib = "OutputFunc";
-      this.Jb = "OutputAlphaFunc";
-      this.Nd = "OutputRowFunc";
-    }
-    function md() {
-      this.data = [];
-      this.offset = this.kd = this.ha = this.w = 0;
-      this.na = [];
-      this.xa = this.gb = this.Ja = this.Sa = this.P = 0;
-    }
-    function Df() {
-      this.nc = this.Ea = this.b = this.hc = 0;
-      this.K = [];
-      this.w = 0;
-    }
-    function Ef() {
-      this.ua = 0;
-      this.Wa = new ac();
-      this.vb = new ac();
-      this.md = this.xc = this.wc = 0;
-      this.vc = [];
-      this.Wb = 0;
-      this.Ya = new Ub();
-      this.yc = new O();
-    }
-    function je() {
-      this.xb = this.a = 0;
-      this.l = new Oa();
-      this.ca = new Cb();
-      this.V = [];
-      this.Ba = 0;
-      this.Ta = [];
-      this.Ua = 0;
-      this.m = new Ra();
-      this.Pb = 0;
-      this.wd = new Ra();
-      this.Ma = this.$ = this.C = this.i = this.c = this.xd = 0;
-      this.s = new Ef();
-      this.ab = 0;
-      this.gc = wa(4, Df);
-      this.Oc = 0;
-    }
-    function Ff() {
-      this.Lc = this.Z = this.$a = this.i = this.c = 0;
-      this.l = new Oa();
-      this.ic = 0;
-      this.ca = [];
-      this.tb = 0;
-      this.qd = null;
-      this.rd = 0;
-    }
-    function Rb(a, b, c, d, e, f, g) {
-      a = null == a ? 0 : a[b + 0];
-      for (b = 0; b < g; ++b) (e[f + b] = (a + c[d + b]) & 255), (a = e[f + b]);
-    }
-    function Gf(a, b, c, d, e, f, g) {
-      if (null == a) Rb(null, null, c, d, e, f, g);
-      else {
-        var h;
-        for (h = 0; h < g; ++h) e[f + h] = (a[b + h] + c[d + h]) & 255;
-      }
-    }
-    function Hf(a, b, c, d, e, f, g) {
-      if (null == a) Rb(null, null, c, d, e, f, g);
-      else {
-        var h = a[b + 0],
-          k = h,
-          l = h,
-          m;
-        for (m = 0; m < g; ++m)
-          (h = a[b + m]),
-            (k = l + h - k),
-            (l = (c[d + m] + (k & -256 ? (0 > k ? 0 : 255) : k)) & 255),
-            (k = h),
-            (e[f + m] = l);
-      }
-    }
-    function Le(a, b, c, d) {
-      var e = b.width,
-        f = b.o;
-      x(null != a && null != b);
-      if (0 > c || 0 >= d || c + d > f) return null;
-      if (!a.Cc) {
-        if (null == a.ga) {
-          a.ga = new Ff();
-          var g;
-          (g = null == a.ga) ||
-            ((g = b.width * b.o),
-            x(0 == a.Gb.length),
-            (a.Gb = V(g)),
-            (a.Uc = 0),
-            null == a.Gb
-              ? (g = 0)
-              : ((a.mb = a.Gb), (a.nb = a.Uc), (a.rc = null), (g = 1)),
-            (g = !g));
-          if (!g) {
-            g = a.ga;
-            var h = a.Fa,
-              k = a.P,
-              l = a.qc,
-              m = a.mb,
-              n = a.nb,
-              r = k + 1,
-              q = l - 1,
-              t = g.l;
-            x(null != h && null != m && null != b);
-            ia[0] = null;
-            ia[1] = Rb;
-            ia[2] = Gf;
-            ia[3] = Hf;
-            g.ca = m;
-            g.tb = n;
-            g.c = b.width;
-            g.i = b.height;
-            x(0 < g.c && 0 < g.i);
-            if (1 >= l) b = 0;
-            else if (
-              ((g.$a = (h[k + 0] >> 0) & 3),
-              (g.Z = (h[k + 0] >> 2) & 3),
-              (g.Lc = (h[k + 0] >> 4) & 3),
-              (k = (h[k + 0] >> 6) & 3),
-              0 > g.$a || 1 < g.$a || 4 <= g.Z || 1 < g.Lc || k)
-            )
-              b = 0;
-            else if (
-              ((t.put = kc),
-              (t.ac = gc),
-              (t.bc = lc),
-              (t.ma = g),
-              (t.width = b.width),
-              (t.height = b.height),
-              (t.Da = b.Da),
-              (t.v = b.v),
-              (t.va = b.va),
-              (t.j = b.j),
-              (t.o = b.o),
-              g.$a)
-            )
-              b: {
-                x(1 == g.$a), (b = Bc());
-                c: for (;;) {
-                  if (null == b) {
-                    b = 0;
-                    break b;
-                  }
-                  x(null != g);
-                  g.mc = b;
-                  b.c = g.c;
-                  b.i = g.i;
-                  b.l = g.l;
-                  b.l.ma = g;
-                  b.l.width = g.c;
-                  b.l.height = g.i;
-                  b.a = 0;
-                  cb(b.m, h, r, q);
-                  if (!rb(g.c, g.i, 1, b, null)) break c;
-                  1 == b.ab && 3 == b.gc[0].hc && yc(b.s)
-                    ? ((g.ic = 1),
-                      (h = b.c * b.i),
-                      (b.Ta = null),
-                      (b.Ua = 0),
-                      (b.V = V(h)),
-                      (b.Ba = 0),
-                      null == b.V ? ((b.a = 1), (b = 0)) : (b = 1))
-                    : ((g.ic = 0), (b = Ec(b, g.c)));
-                  if (!b) break c;
-                  b = 1;
-                  break b;
-                }
-                g.mc = null;
-                b = 0;
-              }
-            else b = q >= g.c * g.i;
-            g = !b;
-          }
-          if (g) return null;
-          1 != a.ga.Lc ? (a.Ga = 0) : (d = f - c);
-        }
-        x(null != a.ga);
-        x(c + d <= f);
-        a: {
-          h = a.ga;
-          b = h.c;
-          f = h.l.o;
-          if (0 == h.$a) {
-            r = a.rc;
-            q = a.Vc;
-            t = a.Fa;
-            k = a.P + 1 + c * b;
-            l = a.mb;
-            m = a.nb + c * b;
-            x(k <= a.P + a.qc);
-            if (0 != h.Z)
-              for (x(null != ia[h.Z]), g = 0; g < d; ++g)
-                ia[h.Z](r, q, t, k, l, m, b),
-                  (r = l),
-                  (q = m),
-                  (m += b),
-                  (k += b);
-            else
-              for (g = 0; g < d; ++g)
-                I(l, m, t, k, b), (r = l), (q = m), (m += b), (k += b);
-            a.rc = r;
-            a.Vc = q;
-          } else {
-            x(null != h.mc);
-            b = c + d;
-            g = h.mc;
-            x(null != g);
-            x(b <= g.i);
-            if (g.C >= b) b = 1;
-            else if ((h.ic || Aa(), h.ic)) {
-              var h = g.V,
-                r = g.Ba,
-                q = g.c,
-                v = g.i,
-                t = 1,
-                k = g.$ / q,
-                l = g.$ % q,
-                m = g.m,
-                n = g.s,
-                p = g.$,
-                u = q * v,
-                w = q * b,
-                y = n.wc,
-                A = p < w ? ha(n, l, k) : null;
-              x(p <= u);
-              x(b <= v);
-              x(yc(n));
-              c: for (;;) {
-                for (; !m.h && p < w; ) {
-                  l & y || (A = ha(n, l, k));
-                  x(null != A);
-                  Sa(m);
-                  v = ua(A.G[0], A.H[0], m);
-                  if (256 > v)
-                    (h[r + p] = v),
-                      ++p,
-                      ++l,
-                      l >= q && ((l = 0), ++k, k <= b && !(k % 16) && Ib(g, k));
-                  else if (280 > v) {
-                    var v = ib(v - 256, m);
-                    var E = ua(A.G[4], A.H[4], m);
-                    Sa(m);
-                    E = ib(E, m);
-                    E = nc(q, E);
-                    if (p >= E && u - p >= v) {
-                      var B;
-                      for (B = 0; B < v; ++B) h[r + p + B] = h[r + p + B - E];
-                    } else {
-                      t = 0;
-                      break c;
-                    }
-                    p += v;
-                    for (l += v; l >= q; )
-                      (l -= q), ++k, k <= b && !(k % 16) && Ib(g, k);
-                    p < w && l & y && (A = ha(n, l, k));
-                  } else {
-                    t = 0;
-                    break c;
-                  }
-                  x(m.h == db(m));
-                }
-                Ib(g, k > b ? b : k);
-                break c;
-              }
-              !t || (m.h && p < u) ? ((t = 0), (g.a = m.h ? 5 : 3)) : (g.$ = p);
-              b = t;
-            } else b = Jb(g, g.V, g.Ba, g.c, g.i, b, se);
-            if (!b) {
-              d = 0;
-              break a;
-            }
-          }
-          c + d >= f && (a.Cc = 1);
-          d = 1;
-        }
-        if (!d) return null;
-        if (
-          a.Cc &&
-          ((d = a.ga), null != d && (d.mc = null), (a.ga = null), 0 < a.Ga)
-        )
-          return alert("todo:WebPDequantizeLevels"), null;
-      }
-      return a.nb + c * e;
-    }
-    function If(a, b, c, d, e, f) {
-      for (; 0 < e--; ) {
-        var g = a,
-          h = b + (c ? 1 : 0),
-          k = a,
-          l = b + (c ? 0 : 3),
-          m;
-        for (m = 0; m < d; ++m) {
-          var n = k[l + 4 * m];
-          255 != n &&
-            ((n *= 32897),
-            (g[h + 4 * m + 0] = (g[h + 4 * m + 0] * n) >> 23),
-            (g[h + 4 * m + 1] = (g[h + 4 * m + 1] * n) >> 23),
-            (g[h + 4 * m + 2] = (g[h + 4 * m + 2] * n) >> 23));
-        }
-        b += f;
-      }
-    }
-    function Jf(a, b, c, d, e) {
-      for (; 0 < d--; ) {
-        var f;
-        for (f = 0; f < c; ++f) {
-          var g = a[b + 2 * f + 0],
-            h = a[b + 2 * f + 1],
-            k = h & 15,
-            l = 4369 * k,
-            h = (((h & 240) | (h >> 4)) * l) >> 16;
-          a[b + 2 * f + 0] =
-            (((((g & 240) | (g >> 4)) * l) >> 16) & 240) |
-            ((((((g & 15) | (g << 4)) * l) >> 16) >> 4) & 15);
-          a[b + 2 * f + 1] = (h & 240) | k;
-        }
-        b += e;
-      }
-    }
-    function Kf(a, b, c, d, e, f, g, h) {
-      var k = 255,
-        l,
-        m;
-      for (m = 0; m < e; ++m) {
-        for (l = 0; l < d; ++l) {
-          var n = a[b + l];
-          f[g + 4 * l] = n;
-          k &= n;
-        }
-        b += c;
-        g += h;
-      }
-      return 255 != k;
-    }
-    function Lf(a, b, c, d, e) {
-      var f;
-      for (f = 0; f < e; ++f) c[d + f] = a[b + f] >> 8;
-    }
-    function Aa() {
-      za = If;
-      vc = Jf;
-      fc = Kf;
-      Fc = Lf;
-    }
-    function va(a, b, c) {
-      self[a] = function(a, e, f, g, h, k, l, m, n, r, q, t, v, p, u, w, y) {
-        var d,
-          E = (y - 1) >> 1;
-        var B = h[k + 0] | (l[m + 0] << 16);
-        var C = n[r + 0] | (q[t + 0] << 16);
-        x(null != a);
-        var z = (3 * B + C + 131074) >> 2;
-        b(a[e + 0], z & 255, z >> 16, v, p);
-        null != f &&
-          ((z = (3 * C + B + 131074) >> 2),
-          b(f[g + 0], z & 255, z >> 16, u, w));
-        for (d = 1; d <= E; ++d) {
-          var D = h[k + d] | (l[m + d] << 16);
-          var G = n[r + d] | (q[t + d] << 16);
-          var F = B + D + C + G + 524296;
-          var H = (F + 2 * (D + C)) >> 3;
-          F = (F + 2 * (B + G)) >> 3;
-          z = (H + B) >> 1;
-          B = (F + D) >> 1;
-          b(a[e + 2 * d - 1], z & 255, z >> 16, v, p + (2 * d - 1) * c);
-          b(a[e + 2 * d - 0], B & 255, B >> 16, v, p + (2 * d - 0) * c);
-          null != f &&
-            ((z = (F + C) >> 1),
-            (B = (H + G) >> 1),
-            b(f[g + 2 * d - 1], z & 255, z >> 16, u, w + (2 * d - 1) * c),
-            b(f[g + 2 * d + 0], B & 255, B >> 16, u, w + (2 * d + 0) * c));
-          B = D;
-          C = G;
-        }
-        y & 1 ||
-          ((z = (3 * B + C + 131074) >> 2),
-          b(a[e + y - 1], z & 255, z >> 16, v, p + (y - 1) * c),
-          null != f &&
-            ((z = (3 * C + B + 131074) >> 2),
-            b(f[g + y - 1], z & 255, z >> 16, u, w + (y - 1) * c)));
-      };
-    }
-    function ic() {
-      P[Ca] = Mf;
-      P[Ua] = nd;
-      P[tc] = Nf;
-      P[Va] = od;
-      P[ya] = pd;
-      P[Db] = qd;
-      P[wc] = Of;
-      P[zb] = nd;
-      P[Ab] = od;
-      P[Ja] = pd;
-      P[Bb] = qd;
-    }
-    function Sb(a) {
-      return a & ~Pf ? (0 > a ? 0 : 255) : a >> rd;
-    }
-    function bb(a, b) {
-      return Sb(((19077 * a) >> 8) + ((26149 * b) >> 8) - 14234);
-    }
-    function nb(a, b, c) {
-      return Sb(
-        ((19077 * a) >> 8) - ((6419 * b) >> 8) - ((13320 * c) >> 8) + 8708
-      );
-    }
-    function Pa(a, b) {
-      return Sb(((19077 * a) >> 8) + ((33050 * b) >> 8) - 17685);
-    }
-    function Ga(a, b, c, d, e) {
-      d[e + 0] = bb(a, c);
-      d[e + 1] = nb(a, b, c);
-      d[e + 2] = Pa(a, b);
-    }
-    function Tb(a, b, c, d, e) {
-      d[e + 0] = Pa(a, b);
-      d[e + 1] = nb(a, b, c);
-      d[e + 2] = bb(a, c);
-    }
-    function sd(a, b, c, d, e) {
-      var f = nb(a, b, c);
-      b = ((f << 3) & 224) | (Pa(a, b) >> 3);
-      d[e + 0] = (bb(a, c) & 248) | (f >> 5);
-      d[e + 1] = b;
-    }
-    function td(a, b, c, d, e) {
-      var f = (Pa(a, b) & 240) | 15;
-      d[e + 0] = (bb(a, c) & 240) | (nb(a, b, c) >> 4);
-      d[e + 1] = f;
-    }
-    function ud(a, b, c, d, e) {
-      d[e + 0] = 255;
-      Ga(a, b, c, d, e + 1);
-    }
-    function vd(a, b, c, d, e) {
-      Tb(a, b, c, d, e);
-      d[e + 3] = 255;
-    }
-    function wd(a, b, c, d, e) {
-      Ga(a, b, c, d, e);
-      d[e + 3] = 255;
-    }
-    function ga(a, b) {
-      return 0 > a ? 0 : a > b ? b : a;
-    }
-    function la(a, b, c) {
-      self[a] = function(a, e, f, g, h, k, l, m, n) {
-        for (var d = m + (n & -2) * c; m != d; )
-          b(a[e + 0], f[g + 0], h[k + 0], l, m),
-            b(a[e + 1], f[g + 0], h[k + 0], l, m + c),
-            (e += 2),
-            ++g,
-            ++k,
-            (m += 2 * c);
-        n & 1 && b(a[e + 0], f[g + 0], h[k + 0], l, m);
-      };
-    }
-    function xd(a, b, c) {
-      return 0 == c ? (0 == a ? (0 == b ? 6 : 5) : 0 == b ? 4 : 0) : c;
-    }
-    function yd(a, b, c, d, e) {
-      switch (a >>> 30) {
-        case 3:
-          Za(b, c, d, e, 0);
-          break;
-        case 2:
-          fd(b, c, d, e);
-          break;
-        case 1:
-          pa(b, c, d, e);
-      }
-    }
-    function Oc(a, b) {
-      var c,
-        d,
-        e = b.M,
-        f = b.Nb,
-        g = a.oc,
-        h = a.pc + 40,
-        k = a.oc,
-        l = a.pc + 584,
-        m = a.oc,
-        n = a.pc + 600;
-      for (c = 0; 16 > c; ++c) g[h + 32 * c - 1] = 129;
-      for (c = 0; 8 > c; ++c)
-        (k[l + 32 * c - 1] = 129), (m[n + 32 * c - 1] = 129);
-      0 < e
-        ? (g[h - 1 - 32] = k[l - 1 - 32] = m[n - 1 - 32] = 129)
-        : (M(g, h - 32 - 1, 127, 21),
-          M(k, l - 32 - 1, 127, 9),
-          M(m, n - 32 - 1, 127, 9));
-      for (d = 0; d < a.za; ++d) {
-        var r = b.ya[b.aa + d];
-        if (0 < d) {
-          for (c = -1; 16 > c; ++c) I(g, h + 32 * c - 4, g, h + 32 * c + 12, 4);
-          for (c = -1; 8 > c; ++c)
-            I(k, l + 32 * c - 4, k, l + 32 * c + 4, 4),
-              I(m, n + 32 * c - 4, m, n + 32 * c + 4, 4);
-        }
-        var q = a.Gd,
-          t = a.Hd + d,
-          v = r.ad,
-          p = r.Hc;
-        0 < e &&
-          (I(g, h - 32, q[t].y, 0, 16),
-          I(k, l - 32, q[t].f, 0, 8),
-          I(m, n - 32, q[t].ea, 0, 8));
-        if (r.Za) {
-          var u = g;
-          var w = h - 32 + 16;
-          0 < e &&
-            (d >= a.za - 1
-              ? M(u, w, q[t].y[15], 4)
-              : I(u, w, q[t + 1].y, 0, 4));
-          for (c = 0; 4 > c; c++)
-            u[w + 128 + c] = u[w + 256 + c] = u[w + 384 + c] = u[w + 0 + c];
-          for (c = 0; 16 > c; ++c, p <<= 2)
-            (u = g), (w = h + zd[c]), W[r.Ob[c]](u, w), yd(p, v, 16 * +c, u, w);
-        } else if (((u = xd(d, e, r.Ob[0])), Y[u](g, h), 0 != p))
-          for (c = 0; 16 > c; ++c, p <<= 2) yd(p, v, 16 * +c, g, h + zd[c]);
-        c = r.Gc;
-        u = xd(d, e, r.Dd);
-        ka[u](k, l);
-        ka[u](m, n);
-        r = c >> 0;
-        p = v;
-        u = k;
-        w = l;
-        r & 255 && (r & 170 ? Nb(p, 256, u, w) : Ob(p, 256, u, w));
-        c >>= 8;
-        r = m;
-        p = n;
-        c & 255 && (c & 170 ? Nb(v, 320, r, p) : Ob(v, 320, r, p));
-        e < a.Ub - 1 &&
-          (I(q[t].y, 0, g, h + 480, 16),
-          I(q[t].f, 0, k, l + 224, 8),
-          I(q[t].ea, 0, m, n + 224, 8));
-        c = 8 * f * a.B;
-        q = a.sa;
-        t = a.ta + 16 * d + 16 * f * a.R;
-        v = a.qa;
-        r = a.ra + 8 * d + c;
-        p = a.Ha;
-        u = a.Ia + 8 * d + c;
-        for (c = 0; 16 > c; ++c) I(q, t + c * a.R, g, h + 32 * c, 16);
-        for (c = 0; 8 > c; ++c)
-          I(v, r + c * a.B, k, l + 32 * c, 8),
-            I(p, u + c * a.B, m, n + 32 * c, 8);
-      }
-    }
-    function Ad(a, b, c, d, e, f, g, h, k) {
-      var l = [0],
-        m = [0],
-        n = 0,
-        r = null != k ? k.kd : 0,
-        q = null != k ? k : new md();
-      if (null == a || 12 > c) return 7;
-      q.data = a;
-      q.w = b;
-      q.ha = c;
-      b = [b];
-      c = [c];
-      q.gb = [q.gb];
-      a: {
-        var t = b;
-        var v = c;
-        var p = q.gb;
-        x(null != a);
-        x(null != v);
-        x(null != p);
-        p[0] = 0;
-        if (12 <= v[0] && !fa(a, t[0], "RIFF")) {
-          if (fa(a, t[0] + 8, "WEBP")) {
-            p = 3;
-            break a;
-          }
-          var u = Ha(a, t[0] + 4);
-          if (12 > u || 4294967286 < u) {
-            p = 3;
-            break a;
-          }
-          if (r && u > v[0] - 8) {
-            p = 7;
-            break a;
-          }
-          p[0] = u;
-          t[0] += 12;
-          v[0] -= 12;
-        }
-        p = 0;
-      }
-      if (0 != p) return p;
-      u = 0 < q.gb[0];
-      for (c = c[0]; ; ) {
-        t = [0];
-        n = [n];
-        a: {
-          var w = a;
-          v = b;
-          p = c;
-          var y = n,
-            A = l,
-            z = m,
-            B = t;
-          y[0] = 0;
-          if (8 > p[0]) p = 7;
-          else {
-            if (!fa(w, v[0], "VP8X")) {
-              if (10 != Ha(w, v[0] + 4)) {
-                p = 3;
-                break a;
-              }
-              if (18 > p[0]) {
-                p = 7;
-                break a;
-              }
-              var C = Ha(w, v[0] + 8);
-              var D = 1 + Yb(w, v[0] + 12);
-              w = 1 + Yb(w, v[0] + 15);
-              if (2147483648 <= D * w) {
-                p = 3;
-                break a;
-              }
-              null != B && (B[0] = C);
-              null != A && (A[0] = D);
-              null != z && (z[0] = w);
-              v[0] += 18;
-              p[0] -= 18;
-              y[0] = 1;
-            }
-            p = 0;
-          }
-        }
-        n = n[0];
-        t = t[0];
-        if (0 != p) return p;
-        v = !!(t & 2);
-        if (!u && n) return 3;
-        null != f && (f[0] = !!(t & 16));
-        null != g && (g[0] = v);
-        null != h && (h[0] = 0);
-        g = l[0];
-        t = m[0];
-        if (n && v && null == k) {
-          p = 0;
-          break;
-        }
-        if (4 > c) {
-          p = 7;
-          break;
-        }
-        if ((u && n) || (!u && !n && !fa(a, b[0], "ALPH"))) {
-          c = [c];
-          q.na = [q.na];
-          q.P = [q.P];
-          q.Sa = [q.Sa];
-          a: {
-            C = a;
-            p = b;
-            u = c;
-            var y = q.gb,
-              A = q.na,
-              z = q.P,
-              B = q.Sa;
-            D = 22;
-            x(null != C);
-            x(null != u);
-            w = p[0];
-            var F = u[0];
-            x(null != A);
-            x(null != B);
-            A[0] = null;
-            z[0] = null;
-            for (B[0] = 0; ; ) {
-              p[0] = w;
-              u[0] = F;
-              if (8 > F) {
-                p = 7;
-                break a;
-              }
-              var G = Ha(C, w + 4);
-              if (4294967286 < G) {
-                p = 3;
-                break a;
-              }
-              var H = (8 + G + 1) & -2;
-              D += H;
-              if (0 < y && D > y) {
-                p = 3;
-                break a;
-              }
-              if (!fa(C, w, "VP8 ") || !fa(C, w, "VP8L")) {
-                p = 0;
-                break a;
-              }
-              if (F[0] < H) {
-                p = 7;
-                break a;
-              }
-              fa(C, w, "ALPH") || ((A[0] = C), (z[0] = w + 8), (B[0] = G));
-              w += H;
-              F -= H;
-            }
-          }
-          c = c[0];
-          q.na = q.na[0];
-          q.P = q.P[0];
-          q.Sa = q.Sa[0];
-          if (0 != p) break;
-        }
-        c = [c];
-        q.Ja = [q.Ja];
-        q.xa = [q.xa];
-        a: if (
-          ((y = a),
-          (p = b),
-          (u = c),
-          (A = q.gb[0]),
-          (z = q.Ja),
-          (B = q.xa),
-          (C = p[0]),
-          (w = !fa(y, C, "VP8 ")),
-          (D = !fa(y, C, "VP8L")),
-          x(null != y),
-          x(null != u),
-          x(null != z),
-          x(null != B),
-          8 > u[0])
-        )
-          p = 7;
-        else {
-          if (w || D) {
-            y = Ha(y, C + 4);
-            if (12 <= A && y > A - 12) {
-              p = 3;
-              break a;
-            }
-            if (r && y > u[0] - 8) {
-              p = 7;
-              break a;
-            }
-            z[0] = y;
-            p[0] += 8;
-            u[0] -= 8;
-            B[0] = D;
-          } else
-            (B[0] = 5 <= u[0] && 47 == y[C + 0] && !(y[C + 4] >> 5)),
-              (z[0] = u[0]);
-          p = 0;
-        }
-        c = c[0];
-        q.Ja = q.Ja[0];
-        q.xa = q.xa[0];
-        b = b[0];
-        if (0 != p) break;
-        if (4294967286 < q.Ja) return 3;
-        null == h || v || (h[0] = q.xa ? 2 : 1);
-        g = [g];
-        t = [t];
-        if (q.xa) {
-          if (5 > c) {
-            p = 7;
-            break;
-          }
-          h = g;
-          r = t;
-          v = f;
-          null == a || 5 > c
-            ? (a = 0)
-            : 5 <= c && 47 == a[b + 0] && !(a[b + 4] >> 5)
-            ? ((u = [0]),
-              (y = [0]),
-              (A = [0]),
-              (z = new Ra()),
-              cb(z, a, b, c),
-              mc(z, u, y, A)
-                ? (null != h && (h[0] = u[0]),
-                  null != r && (r[0] = y[0]),
-                  null != v && (v[0] = A[0]),
-                  (a = 1))
-                : (a = 0))
-            : (a = 0);
-        } else {
-          if (10 > c) {
-            p = 7;
-            break;
-          }
-          h = t;
-          null == a || 10 > c || !Jc(a, b + 3, c - 3)
-            ? (a = 0)
-            : ((r = a[b + 0] | (a[b + 1] << 8) | (a[b + 2] << 16)),
-              (v = ((a[b + 7] << 8) | a[b + 6]) & 16383),
-              (a = ((a[b + 9] << 8) | a[b + 8]) & 16383),
-              r & 1 ||
-              3 < ((r >> 1) & 7) ||
-              !((r >> 4) & 1) ||
-              r >> 5 >= q.Ja ||
-              !v ||
-              !a
-                ? (a = 0)
-                : (g && (g[0] = v), h && (h[0] = a), (a = 1)));
-        }
-        if (!a) return 3;
-        g = g[0];
-        t = t[0];
-        if (n && (l[0] != g || m[0] != t)) return 3;
-        null != k &&
-          ((k[0] = q),
-          (k.offset = b - k.w),
-          x(4294967286 > b - k.w),
-          x(k.offset == k.ha - c));
-        break;
-      }
-      return 0 == p || (7 == p && n && null == k)
-        ? (null != f && (f[0] |= null != q.na && 0 < q.na.length),
-          null != d && (d[0] = g),
-          null != e && (e[0] = t),
-          0)
-        : p;
-    }
-    function hc(a, b, c) {
-      var d = b.width,
-        e = b.height,
-        f = 0,
-        g = 0,
-        h = d,
-        k = e;
-      b.Da = null != a && 0 < a.Da;
-      if (
-        b.Da &&
-        ((h = a.cd),
-        (k = a.bd),
-        (f = a.v),
-        (g = a.j),
-        11 > c || ((f &= -2), (g &= -2)),
-        0 > f || 0 > g || 0 >= h || 0 >= k || f + h > d || g + k > e)
-      )
-        return 0;
-      b.v = f;
-      b.j = g;
-      b.va = f + h;
-      b.o = g + k;
-      b.U = h;
-      b.T = k;
-      b.da = null != a && 0 < a.da;
-      if (b.da) {
-        c = [a.ib];
-        f = [a.hb];
-        if (!bc(h, k, c, f)) return 0;
-        b.ib = c[0];
-        b.hb = f[0];
-      }
-      b.ob = null != a && a.ob;
-      b.Kb = null == a || !a.Sd;
-      b.da && ((b.ob = b.ib < (3 * d) / 4 && b.hb < (3 * e) / 4), (b.Kb = 0));
-      return 1;
-    }
-    function Bd(a) {
-      if (null == a) return 2;
-      if (11 > a.S) {
-        var b = a.f.RGBA;
-        b.fb += (a.height - 1) * b.A;
-        b.A = -b.A;
-      } else
-        (b = a.f.kb),
-          (a = a.height),
-          (b.O += (a - 1) * b.fa),
-          (b.fa = -b.fa),
-          (b.N += ((a - 1) >> 1) * b.Ab),
-          (b.Ab = -b.Ab),
-          (b.W += ((a - 1) >> 1) * b.Db),
-          (b.Db = -b.Db),
-          null != b.F && ((b.J += (a - 1) * b.lb), (b.lb = -b.lb));
-      return 0;
-    }
-    function Cd(a, b, c, d) {
-      if (null == d || 0 >= a || 0 >= b) return 2;
-      if (null != c) {
-        if (c.Da) {
-          var e = c.cd,
-            f = c.bd,
-            g = c.v & -2,
-            h = c.j & -2;
-          if (0 > g || 0 > h || 0 >= e || 0 >= f || g + e > a || h + f > b)
-            return 2;
-          a = e;
-          b = f;
-        }
-        if (c.da) {
-          e = [c.ib];
-          f = [c.hb];
-          if (!bc(a, b, e, f)) return 2;
-          a = e[0];
-          b = f[0];
-        }
-      }
-      d.width = a;
-      d.height = b;
-      a: {
-        var k = d.width;
-        var l = d.height;
-        a = d.S;
-        if (0 >= k || 0 >= l || !(a >= Ca && 13 > a)) a = 2;
-        else {
-          if (0 >= d.Rd && null == d.sd) {
-            var g = (f = e = b = 0),
-              h = k * Dd[a],
-              m = h * l;
-            11 > a ||
-              ((b = (k + 1) / 2),
-              (f = ((l + 1) / 2) * b),
-              12 == a && ((e = k), (g = e * l)));
-            l = V(m + 2 * f + g);
-            if (null == l) {
-              a = 1;
-              break a;
-            }
-            d.sd = l;
-            11 > a
-              ? ((k = d.f.RGBA),
-                (k.eb = l),
-                (k.fb = 0),
-                (k.A = h),
-                (k.size = m))
-              : ((k = d.f.kb),
-                (k.y = l),
-                (k.O = 0),
-                (k.fa = h),
-                (k.Fd = m),
-                (k.f = l),
-                (k.N = 0 + m),
-                (k.Ab = b),
-                (k.Cd = f),
-                (k.ea = l),
-                (k.W = 0 + m + f),
-                (k.Db = b),
-                (k.Ed = f),
-                12 == a && ((k.F = l), (k.J = 0 + m + 2 * f)),
-                (k.Tc = g),
-                (k.lb = e));
-          }
-          b = 1;
-          e = d.S;
-          f = d.width;
-          g = d.height;
-          if (e >= Ca && 13 > e)
-            if (11 > e)
-              (a = d.f.RGBA),
-                (h = Math.abs(a.A)),
-                (b &= h * (g - 1) + f <= a.size),
-                (b &= h >= f * Dd[e]),
-                (b &= null != a.eb);
-            else {
-              a = d.f.kb;
-              h = (f + 1) / 2;
-              m = (g + 1) / 2;
-              k = Math.abs(a.fa);
-              var l = Math.abs(a.Ab),
-                n = Math.abs(a.Db),
-                r = Math.abs(a.lb),
-                q = r * (g - 1) + f;
-              b &= k * (g - 1) + f <= a.Fd;
-              b &= l * (m - 1) + h <= a.Cd;
-              b &= n * (m - 1) + h <= a.Ed;
-              b = b & (k >= f) & (l >= h) & (n >= h);
-              b &= null != a.y;
-              b &= null != a.f;
-              b &= null != a.ea;
-              12 == e && ((b &= r >= f), (b &= q <= a.Tc), (b &= null != a.F));
-            }
-          else b = 0;
-          a = b ? 0 : 2;
-        }
-      }
-      if (0 != a) return a;
-      null != c && c.fd && (a = Bd(d));
-      return a;
-    }
-    var xb = 64,
-      Hd = [
-        0,
-        1,
-        3,
-        7,
-        15,
-        31,
-        63,
-        127,
-        255,
-        511,
-        1023,
-        2047,
-        4095,
-        8191,
-        16383,
-        32767,
-        65535,
-        131071,
-        262143,
-        524287,
-        1048575,
-        2097151,
-        4194303,
-        8388607,
-        16777215
-      ],
-      Gd = 24,
-      ob = 32,
-      Xb = 8,
-      Id = [
-        0,
-        0,
-        1,
-        1,
-        2,
-        2,
-        2,
-        2,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        3,
-        4,
-        4,
-        4,
-        4,
-        4,
-        4,
-        4,
-        4,
-        4,
-        4,
-        4,
-        4,
-        4,
-        4,
-        4,
-        4,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7
-      ];
-    X("Predictor0", "PredictorAdd0");
-    self.Predictor0 = function() {
-      return 4278190080;
-    };
-    self.Predictor1 = function(a) {
-      return a;
-    };
-    self.Predictor2 = function(a, b, c) {
-      return b[c + 0];
-    };
-    self.Predictor3 = function(a, b, c) {
-      return b[c + 1];
-    };
-    self.Predictor4 = function(a, b, c) {
-      return b[c - 1];
-    };
-    self.Predictor5 = function(a, b, c) {
-      return aa(aa(a, b[c + 1]), b[c + 0]);
-    };
-    self.Predictor6 = function(a, b, c) {
-      return aa(a, b[c - 1]);
-    };
-    self.Predictor7 = function(a, b, c) {
-      return aa(a, b[c + 0]);
-    };
-    self.Predictor8 = function(a, b, c) {
-      return aa(b[c - 1], b[c + 0]);
-    };
-    self.Predictor9 = function(a, b, c) {
-      return aa(b[c + 0], b[c + 1]);
-    };
-    self.Predictor10 = function(a, b, c) {
-      return aa(aa(a, b[c - 1]), aa(b[c + 0], b[c + 1]));
-    };
-    self.Predictor11 = function(a, b, c) {
-      var d = b[c + 0];
-      b = b[c - 1];
-      return 0 >=
-        Ia((d >> 24) & 255, (a >> 24) & 255, (b >> 24) & 255) +
-          Ia((d >> 16) & 255, (a >> 16) & 255, (b >> 16) & 255) +
-          Ia((d >> 8) & 255, (a >> 8) & 255, (b >> 8) & 255) +
-          Ia(d & 255, a & 255, b & 255)
-        ? d
-        : a;
-    };
-    self.Predictor12 = function(a, b, c) {
-      var d = b[c + 0];
-      b = b[c - 1];
-      return (
-        ((sa(((a >> 24) & 255) + ((d >> 24) & 255) - ((b >> 24) & 255)) << 24) |
-          (sa(((a >> 16) & 255) + ((d >> 16) & 255) - ((b >> 16) & 255)) <<
-            16) |
-          (sa(((a >> 8) & 255) + ((d >> 8) & 255) - ((b >> 8) & 255)) << 8) |
-          sa((a & 255) + (d & 255) - (b & 255))) >>>
-        0
-      );
-    };
-    self.Predictor13 = function(a, b, c) {
-      var d = b[c - 1];
-      a = aa(a, b[c + 0]);
-      return (
-        ((eb((a >> 24) & 255, (d >> 24) & 255) << 24) |
-          (eb((a >> 16) & 255, (d >> 16) & 255) << 16) |
-          (eb((a >> 8) & 255, (d >> 8) & 255) << 8) |
-          eb((a >> 0) & 255, (d >> 0) & 255)) >>>
-        0
-      );
-    };
-    var ee = self.PredictorAdd0;
-    self.PredictorAdd1 = cc;
-    X("Predictor2", "PredictorAdd2");
-    X("Predictor3", "PredictorAdd3");
-    X("Predictor4", "PredictorAdd4");
-    X("Predictor5", "PredictorAdd5");
-    X("Predictor6", "PredictorAdd6");
-    X("Predictor7", "PredictorAdd7");
-    X("Predictor8", "PredictorAdd8");
-    X("Predictor9", "PredictorAdd9");
-    X("Predictor10", "PredictorAdd10");
-    X("Predictor11", "PredictorAdd11");
-    X("Predictor12", "PredictorAdd12");
-    X("Predictor13", "PredictorAdd13");
-    var fe = self.PredictorAdd2;
-    ec(
-      "ColorIndexInverseTransform",
-      "MapARGB",
-      "32b",
-      function(a) {
-        return (a >> 8) & 255;
-      },
-      function(a) {
-        return a;
-      }
-    );
-    ec(
-      "VP8LColorIndexInverseTransformAlpha",
-      "MapAlpha",
-      "8b",
-      function(a) {
-        return a;
-      },
-      function(a) {
-        return (a >> 8) & 255;
-      }
-    );
-    var rc = self.ColorIndexInverseTransform,
-      ke = self.MapARGB,
-      he = self.VP8LColorIndexInverseTransformAlpha,
-      le = self.MapAlpha,
-      pc,
-      qc = (self.VP8LPredictorsAdd = []);
-    qc.length = 16;
-    (self.VP8LPredictors = []).length = 16;
-    (self.VP8LPredictorsAdd_C = []).length = 16;
-    (self.VP8LPredictors_C = []).length = 16;
-    var Fb,
-      sc,
-      Gb,
-      Hb,
-      xc,
-      uc,
-      bd = V(511),
-      cd = V(2041),
-      dd = V(225),
-      ed = V(767),
-      ad = 0,
-      Qb = cd,
-      mb = dd,
-      R = ed,
-      U = bd,
-      Ca = 0,
-      Ua = 1,
-      tc = 2,
-      Va = 3,
-      ya = 4,
-      Db = 5,
-      wc = 6,
-      zb = 7,
-      Ab = 8,
-      Ja = 9,
-      Bb = 10,
-      pe = [2, 3, 7],
-      oe = [3, 3, 11],
-      Dc = [280, 256, 256, 256, 40],
-      qe = [0, 1, 1, 1, 0],
-      ne = [17, 18, 0, 1, 2, 3, 4, 5, 16, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
-      de = [
-        24,
-        7,
-        23,
-        25,
-        40,
-        6,
-        39,
-        41,
-        22,
-        26,
-        38,
-        42,
-        56,
-        5,
-        55,
-        57,
-        21,
-        27,
-        54,
-        58,
-        37,
-        43,
-        72,
-        4,
-        71,
-        73,
-        20,
-        28,
-        53,
-        59,
-        70,
-        74,
-        36,
-        44,
-        88,
-        69,
-        75,
-        52,
-        60,
-        3,
-        87,
-        89,
-        19,
-        29,
-        86,
-        90,
-        35,
-        45,
-        68,
-        76,
-        85,
-        91,
-        51,
-        61,
-        104,
-        2,
-        103,
-        105,
-        18,
-        30,
-        102,
-        106,
-        34,
-        46,
-        84,
-        92,
-        67,
-        77,
-        101,
-        107,
-        50,
-        62,
-        120,
-        1,
-        119,
-        121,
-        83,
-        93,
-        17,
-        31,
-        100,
-        108,
-        66,
-        78,
-        118,
-        122,
-        33,
-        47,
-        117,
-        123,
-        49,
-        63,
-        99,
-        109,
-        82,
-        94,
-        0,
-        116,
-        124,
-        65,
-        79,
-        16,
-        32,
-        98,
-        110,
-        48,
-        115,
-        125,
-        81,
-        95,
-        64,
-        114,
-        126,
-        97,
-        111,
-        80,
-        113,
-        127,
-        96,
-        112
-      ],
-      me = [
-        2954,
-        2956,
-        2958,
-        2962,
-        2970,
-        2986,
-        3018,
-        3082,
-        3212,
-        3468,
-        3980,
-        5004
-      ],
-      ie = 8,
-      Lb = [
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-        16,
-        17,
-        17,
-        18,
-        19,
-        20,
-        20,
-        21,
-        21,
-        22,
-        22,
-        23,
-        23,
-        24,
-        25,
-        25,
-        26,
-        27,
-        28,
-        29,
-        30,
-        31,
-        32,
-        33,
-        34,
-        35,
-        36,
-        37,
-        37,
-        38,
-        39,
-        40,
-        41,
-        42,
-        43,
-        44,
-        45,
-        46,
-        46,
-        47,
-        48,
-        49,
-        50,
-        51,
-        52,
-        53,
-        54,
-        55,
-        56,
-        57,
-        58,
-        59,
-        60,
-        61,
-        62,
-        63,
-        64,
-        65,
-        66,
-        67,
-        68,
-        69,
-        70,
-        71,
-        72,
-        73,
-        74,
-        75,
-        76,
-        76,
-        77,
-        78,
-        79,
-        80,
-        81,
-        82,
-        83,
-        84,
-        85,
-        86,
-        87,
-        88,
-        89,
-        91,
-        93,
-        95,
-        96,
-        98,
-        100,
-        101,
-        102,
-        104,
-        106,
-        108,
-        110,
-        112,
-        114,
-        116,
-        118,
-        122,
-        124,
-        126,
-        128,
-        130,
-        132,
-        134,
-        136,
-        138,
-        140,
-        143,
-        145,
-        148,
-        151,
-        154,
-        157
-      ],
-      Mb = [
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-        16,
-        17,
-        18,
-        19,
-        20,
-        21,
-        22,
-        23,
-        24,
-        25,
-        26,
-        27,
-        28,
-        29,
-        30,
-        31,
-        32,
-        33,
-        34,
-        35,
-        36,
-        37,
-        38,
-        39,
-        40,
-        41,
-        42,
-        43,
-        44,
-        45,
-        46,
-        47,
-        48,
-        49,
-        50,
-        51,
-        52,
-        53,
-        54,
-        55,
-        56,
-        57,
-        58,
-        60,
-        62,
-        64,
-        66,
-        68,
-        70,
-        72,
-        74,
-        76,
-        78,
-        80,
-        82,
-        84,
-        86,
-        88,
-        90,
-        92,
-        94,
-        96,
-        98,
-        100,
-        102,
-        104,
-        106,
-        108,
-        110,
-        112,
-        114,
-        116,
-        119,
-        122,
-        125,
-        128,
-        131,
-        134,
-        137,
-        140,
-        143,
-        146,
-        149,
-        152,
-        155,
-        158,
-        161,
-        164,
-        167,
-        170,
-        173,
-        177,
-        181,
-        185,
-        189,
-        193,
-        197,
-        201,
-        205,
-        209,
-        213,
-        217,
-        221,
-        225,
-        229,
-        234,
-        239,
-        245,
-        249,
-        254,
-        259,
-        264,
-        269,
-        274,
-        279,
-        284
-      ],
-      oa = null,
-      He = [
-        [173, 148, 140, 0],
-        [176, 155, 140, 135, 0],
-        [180, 157, 141, 134, 130, 0],
-        [254, 254, 243, 230, 196, 177, 153, 140, 133, 130, 129, 0]
-      ],
-      Ie = [0, 1, 4, 8, 5, 2, 3, 6, 9, 12, 13, 10, 7, 11, 14, 15],
-      Mc = [-0, 1, -1, 2, -2, 3, 4, 6, -3, 5, -4, -5, -6, 7, -7, 8, -8, -9],
-      Fe = [
-        [
-          [
-            [128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128],
-            [128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128],
-            [128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128]
-          ],
-          [
-            [253, 136, 254, 255, 228, 219, 128, 128, 128, 128, 128],
-            [189, 129, 242, 255, 227, 213, 255, 219, 128, 128, 128],
-            [106, 126, 227, 252, 214, 209, 255, 255, 128, 128, 128]
-          ],
-          [
-            [1, 98, 248, 255, 236, 226, 255, 255, 128, 128, 128],
-            [181, 133, 238, 254, 221, 234, 255, 154, 128, 128, 128],
-            [78, 134, 202, 247, 198, 180, 255, 219, 128, 128, 128]
-          ],
-          [
-            [1, 185, 249, 255, 243, 255, 128, 128, 128, 128, 128],
-            [184, 150, 247, 255, 236, 224, 128, 128, 128, 128, 128],
-            [77, 110, 216, 255, 236, 230, 128, 128, 128, 128, 128]
-          ],
-          [
-            [1, 101, 251, 255, 241, 255, 128, 128, 128, 128, 128],
-            [170, 139, 241, 252, 236, 209, 255, 255, 128, 128, 128],
-            [37, 116, 196, 243, 228, 255, 255, 255, 128, 128, 128]
-          ],
-          [
-            [1, 204, 254, 255, 245, 255, 128, 128, 128, 128, 128],
-            [207, 160, 250, 255, 238, 128, 128, 128, 128, 128, 128],
-            [102, 103, 231, 255, 211, 171, 128, 128, 128, 128, 128]
-          ],
-          [
-            [1, 152, 252, 255, 240, 255, 128, 128, 128, 128, 128],
-            [177, 135, 243, 255, 234, 225, 128, 128, 128, 128, 128],
-            [80, 129, 211, 255, 194, 224, 128, 128, 128, 128, 128]
-          ],
-          [
-            [1, 1, 255, 128, 128, 128, 128, 128, 128, 128, 128],
-            [246, 1, 255, 128, 128, 128, 128, 128, 128, 128, 128],
-            [255, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128]
-          ]
-        ],
-        [
-          [
-            [198, 35, 237, 223, 193, 187, 162, 160, 145, 155, 62],
-            [131, 45, 198, 221, 172, 176, 220, 157, 252, 221, 1],
-            [68, 47, 146, 208, 149, 167, 221, 162, 255, 223, 128]
-          ],
-          [
-            [1, 149, 241, 255, 221, 224, 255, 255, 128, 128, 128],
-            [184, 141, 234, 253, 222, 220, 255, 199, 128, 128, 128],
-            [81, 99, 181, 242, 176, 190, 249, 202, 255, 255, 128]
-          ],
-          [
-            [1, 129, 232, 253, 214, 197, 242, 196, 255, 255, 128],
-            [99, 121, 210, 250, 201, 198, 255, 202, 128, 128, 128],
-            [23, 91, 163, 242, 170, 187, 247, 210, 255, 255, 128]
-          ],
-          [
-            [1, 200, 246, 255, 234, 255, 128, 128, 128, 128, 128],
-            [109, 178, 241, 255, 231, 245, 255, 255, 128, 128, 128],
-            [44, 130, 201, 253, 205, 192, 255, 255, 128, 128, 128]
-          ],
-          [
-            [1, 132, 239, 251, 219, 209, 255, 165, 128, 128, 128],
-            [94, 136, 225, 251, 218, 190, 255, 255, 128, 128, 128],
-            [22, 100, 174, 245, 186, 161, 255, 199, 128, 128, 128]
-          ],
-          [
-            [1, 182, 249, 255, 232, 235, 128, 128, 128, 128, 128],
-            [124, 143, 241, 255, 227, 234, 128, 128, 128, 128, 128],
-            [35, 77, 181, 251, 193, 211, 255, 205, 128, 128, 128]
-          ],
-          [
-            [1, 157, 247, 255, 236, 231, 255, 255, 128, 128, 128],
-            [121, 141, 235, 255, 225, 227, 255, 255, 128, 128, 128],
-            [45, 99, 188, 251, 195, 217, 255, 224, 128, 128, 128]
-          ],
-          [
-            [1, 1, 251, 255, 213, 255, 128, 128, 128, 128, 128],
-            [203, 1, 248, 255, 255, 128, 128, 128, 128, 128, 128],
-            [137, 1, 177, 255, 224, 255, 128, 128, 128, 128, 128]
-          ]
-        ],
-        [
-          [
-            [253, 9, 248, 251, 207, 208, 255, 192, 128, 128, 128],
-            [175, 13, 224, 243, 193, 185, 249, 198, 255, 255, 128],
-            [73, 17, 171, 221, 161, 179, 236, 167, 255, 234, 128]
-          ],
-          [
-            [1, 95, 247, 253, 212, 183, 255, 255, 128, 128, 128],
-            [239, 90, 244, 250, 211, 209, 255, 255, 128, 128, 128],
-            [155, 77, 195, 248, 188, 195, 255, 255, 128, 128, 128]
-          ],
-          [
-            [1, 24, 239, 251, 218, 219, 255, 205, 128, 128, 128],
-            [201, 51, 219, 255, 196, 186, 128, 128, 128, 128, 128],
-            [69, 46, 190, 239, 201, 218, 255, 228, 128, 128, 128]
-          ],
-          [
-            [1, 191, 251, 255, 255, 128, 128, 128, 128, 128, 128],
-            [223, 165, 249, 255, 213, 255, 128, 128, 128, 128, 128],
-            [141, 124, 248, 255, 255, 128, 128, 128, 128, 128, 128]
-          ],
-          [
-            [1, 16, 248, 255, 255, 128, 128, 128, 128, 128, 128],
-            [190, 36, 230, 255, 236, 255, 128, 128, 128, 128, 128],
-            [149, 1, 255, 128, 128, 128, 128, 128, 128, 128, 128]
-          ],
-          [
-            [1, 226, 255, 128, 128, 128, 128, 128, 128, 128, 128],
-            [247, 192, 255, 128, 128, 128, 128, 128, 128, 128, 128],
-            [240, 128, 255, 128, 128, 128, 128, 128, 128, 128, 128]
-          ],
-          [
-            [1, 134, 252, 255, 255, 128, 128, 128, 128, 128, 128],
-            [213, 62, 250, 255, 255, 128, 128, 128, 128, 128, 128],
-            [55, 93, 255, 128, 128, 128, 128, 128, 128, 128, 128]
-          ],
-          [
-            [128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128],
-            [128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128],
-            [128, 128, 128, 128, 128, 128, 128, 128, 128, 128, 128]
-          ]
-        ],
-        [
-          [
-            [202, 24, 213, 235, 186, 191, 220, 160, 240, 175, 255],
-            [126, 38, 182, 232, 169, 184, 228, 174, 255, 187, 128],
-            [61, 46, 138, 219, 151, 178, 240, 170, 255, 216, 128]
-          ],
-          [
-            [1, 112, 230, 250, 199, 191, 247, 159, 255, 255, 128],
-            [166, 109, 228, 252, 211, 215, 255, 174, 128, 128, 128],
-            [39, 77, 162, 232, 172, 180, 245, 178, 255, 255, 128]
-          ],
-          [
-            [1, 52, 220, 246, 198, 199, 249, 220, 255, 255, 128],
-            [124, 74, 191, 243, 183, 193, 250, 221, 255, 255, 128],
-            [24, 71, 130, 219, 154, 170, 243, 182, 255, 255, 128]
-          ],
-          [
-            [1, 182, 225, 249, 219, 240, 255, 224, 128, 128, 128],
-            [149, 150, 226, 252, 216, 205, 255, 171, 128, 128, 128],
-            [28, 108, 170, 242, 183, 194, 254, 223, 255, 255, 128]
-          ],
-          [
-            [1, 81, 230, 252, 204, 203, 255, 192, 128, 128, 128],
-            [123, 102, 209, 247, 188, 196, 255, 233, 128, 128, 128],
-            [20, 95, 153, 243, 164, 173, 255, 203, 128, 128, 128]
-          ],
-          [
-            [1, 222, 248, 255, 216, 213, 128, 128, 128, 128, 128],
-            [168, 175, 246, 252, 235, 205, 255, 255, 128, 128, 128],
-            [47, 116, 215, 255, 211, 212, 255, 255, 128, 128, 128]
-          ],
-          [
-            [1, 121, 236, 253, 212, 214, 255, 255, 128, 128, 128],
-            [141, 84, 213, 252, 201, 202, 255, 219, 128, 128, 128],
-            [42, 80, 160, 240, 162, 185, 255, 205, 128, 128, 128]
-          ],
-          [
-            [1, 1, 255, 128, 128, 128, 128, 128, 128, 128, 128],
-            [244, 1, 255, 128, 128, 128, 128, 128, 128, 128, 128],
-            [238, 1, 255, 128, 128, 128, 128, 128, 128, 128, 128]
-          ]
-        ]
-      ],
-      Ke = [
-        [
-          [231, 120, 48, 89, 115, 113, 120, 152, 112],
-          [152, 179, 64, 126, 170, 118, 46, 70, 95],
-          [175, 69, 143, 80, 85, 82, 72, 155, 103],
-          [56, 58, 10, 171, 218, 189, 17, 13, 152],
-          [114, 26, 17, 163, 44, 195, 21, 10, 173],
-          [121, 24, 80, 195, 26, 62, 44, 64, 85],
-          [144, 71, 10, 38, 171, 213, 144, 34, 26],
-          [170, 46, 55, 19, 136, 160, 33, 206, 71],
-          [63, 20, 8, 114, 114, 208, 12, 9, 226],
-          [81, 40, 11, 96, 182, 84, 29, 16, 36]
-        ],
-        [
-          [134, 183, 89, 137, 98, 101, 106, 165, 148],
-          [72, 187, 100, 130, 157, 111, 32, 75, 80],
-          [66, 102, 167, 99, 74, 62, 40, 234, 128],
-          [41, 53, 9, 178, 241, 141, 26, 8, 107],
-          [74, 43, 26, 146, 73, 166, 49, 23, 157],
-          [65, 38, 105, 160, 51, 52, 31, 115, 128],
-          [104, 79, 12, 27, 217, 255, 87, 17, 7],
-          [87, 68, 71, 44, 114, 51, 15, 186, 23],
-          [47, 41, 14, 110, 182, 183, 21, 17, 194],
-          [66, 45, 25, 102, 197, 189, 23, 18, 22]
-        ],
-        [
-          [88, 88, 147, 150, 42, 46, 45, 196, 205],
-          [43, 97, 183, 117, 85, 38, 35, 179, 61],
-          [39, 53, 200, 87, 26, 21, 43, 232, 171],
-          [56, 34, 51, 104, 114, 102, 29, 93, 77],
-          [39, 28, 85, 171, 58, 165, 90, 98, 64],
-          [34, 22, 116, 206, 23, 34, 43, 166, 73],
-          [107, 54, 32, 26, 51, 1, 81, 43, 31],
-          [68, 25, 106, 22, 64, 171, 36, 225, 114],
-          [34, 19, 21, 102, 132, 188, 16, 76, 124],
-          [62, 18, 78, 95, 85, 57, 50, 48, 51]
-        ],
-        [
-          [193, 101, 35, 159, 215, 111, 89, 46, 111],
-          [60, 148, 31, 172, 219, 228, 21, 18, 111],
-          [112, 113, 77, 85, 179, 255, 38, 120, 114],
-          [40, 42, 1, 196, 245, 209, 10, 25, 109],
-          [88, 43, 29, 140, 166, 213, 37, 43, 154],
-          [61, 63, 30, 155, 67, 45, 68, 1, 209],
-          [100, 80, 8, 43, 154, 1, 51, 26, 71],
-          [142, 78, 78, 16, 255, 128, 34, 197, 171],
-          [41, 40, 5, 102, 211, 183, 4, 1, 221],
-          [51, 50, 17, 168, 209, 192, 23, 25, 82]
-        ],
-        [
-          [138, 31, 36, 171, 27, 166, 38, 44, 229],
-          [67, 87, 58, 169, 82, 115, 26, 59, 179],
-          [63, 59, 90, 180, 59, 166, 93, 73, 154],
-          [40, 40, 21, 116, 143, 209, 34, 39, 175],
-          [47, 15, 16, 183, 34, 223, 49, 45, 183],
-          [46, 17, 33, 183, 6, 98, 15, 32, 183],
-          [57, 46, 22, 24, 128, 1, 54, 17, 37],
-          [65, 32, 73, 115, 28, 128, 23, 128, 205],
-          [40, 3, 9, 115, 51, 192, 18, 6, 223],
-          [87, 37, 9, 115, 59, 77, 64, 21, 47]
-        ],
-        [
-          [104, 55, 44, 218, 9, 54, 53, 130, 226],
-          [64, 90, 70, 205, 40, 41, 23, 26, 57],
-          [54, 57, 112, 184, 5, 41, 38, 166, 213],
-          [30, 34, 26, 133, 152, 116, 10, 32, 134],
-          [39, 19, 53, 221, 26, 114, 32, 73, 255],
-          [31, 9, 65, 234, 2, 15, 1, 118, 73],
-          [75, 32, 12, 51, 192, 255, 160, 43, 51],
-          [88, 31, 35, 67, 102, 85, 55, 186, 85],
-          [56, 21, 23, 111, 59, 205, 45, 37, 192],
-          [55, 38, 70, 124, 73, 102, 1, 34, 98]
-        ],
-        [
-          [125, 98, 42, 88, 104, 85, 117, 175, 82],
-          [95, 84, 53, 89, 128, 100, 113, 101, 45],
-          [75, 79, 123, 47, 51, 128, 81, 171, 1],
-          [57, 17, 5, 71, 102, 57, 53, 41, 49],
-          [38, 33, 13, 121, 57, 73, 26, 1, 85],
-          [41, 10, 67, 138, 77, 110, 90, 47, 114],
-          [115, 21, 2, 10, 102, 255, 166, 23, 6],
-          [101, 29, 16, 10, 85, 128, 101, 196, 26],
-          [57, 18, 10, 102, 102, 213, 34, 20, 43],
-          [117, 20, 15, 36, 163, 128, 68, 1, 26]
-        ],
-        [
-          [102, 61, 71, 37, 34, 53, 31, 243, 192],
-          [69, 60, 71, 38, 73, 119, 28, 222, 37],
-          [68, 45, 128, 34, 1, 47, 11, 245, 171],
-          [62, 17, 19, 70, 146, 85, 55, 62, 70],
-          [37, 43, 37, 154, 100, 163, 85, 160, 1],
-          [63, 9, 92, 136, 28, 64, 32, 201, 85],
-          [75, 15, 9, 9, 64, 255, 184, 119, 16],
-          [86, 6, 28, 5, 64, 255, 25, 248, 1],
-          [56, 8, 17, 132, 137, 255, 55, 116, 128],
-          [58, 15, 20, 82, 135, 57, 26, 121, 40]
-        ],
-        [
-          [164, 50, 31, 137, 154, 133, 25, 35, 218],
-          [51, 103, 44, 131, 131, 123, 31, 6, 158],
-          [86, 40, 64, 135, 148, 224, 45, 183, 128],
-          [22, 26, 17, 131, 240, 154, 14, 1, 209],
-          [45, 16, 21, 91, 64, 222, 7, 1, 197],
-          [56, 21, 39, 155, 60, 138, 23, 102, 213],
-          [83, 12, 13, 54, 192, 255, 68, 47, 28],
-          [85, 26, 85, 85, 128, 128, 32, 146, 171],
-          [18, 11, 7, 63, 144, 171, 4, 4, 246],
-          [35, 27, 10, 146, 174, 171, 12, 26, 128]
-        ],
-        [
-          [190, 80, 35, 99, 180, 80, 126, 54, 45],
-          [85, 126, 47, 87, 176, 51, 41, 20, 32],
-          [101, 75, 128, 139, 118, 146, 116, 128, 85],
-          [56, 41, 15, 176, 236, 85, 37, 9, 62],
-          [71, 30, 17, 119, 118, 255, 17, 18, 138],
-          [101, 38, 60, 138, 55, 70, 43, 26, 142],
-          [146, 36, 19, 30, 171, 255, 97, 27, 20],
-          [138, 45, 61, 62, 219, 1, 81, 188, 64],
-          [32, 41, 20, 117, 151, 142, 20, 21, 163],
-          [112, 19, 12, 61, 195, 128, 48, 4, 24]
-        ]
-      ],
-      Ee = [
-        [
-          [
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [176, 246, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [223, 241, 252, 255, 255, 255, 255, 255, 255, 255, 255],
-            [249, 253, 253, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 244, 252, 255, 255, 255, 255, 255, 255, 255, 255],
-            [234, 254, 254, 255, 255, 255, 255, 255, 255, 255, 255],
-            [253, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 246, 254, 255, 255, 255, 255, 255, 255, 255, 255],
-            [239, 253, 254, 255, 255, 255, 255, 255, 255, 255, 255],
-            [254, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 248, 254, 255, 255, 255, 255, 255, 255, 255, 255],
-            [251, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 253, 254, 255, 255, 255, 255, 255, 255, 255, 255],
-            [251, 254, 254, 255, 255, 255, 255, 255, 255, 255, 255],
-            [254, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 254, 253, 255, 254, 255, 255, 255, 255, 255, 255],
-            [250, 255, 254, 255, 254, 255, 255, 255, 255, 255, 255],
-            [254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-          ]
-        ],
-        [
-          [
-            [217, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [225, 252, 241, 253, 255, 255, 254, 255, 255, 255, 255],
-            [234, 250, 241, 250, 253, 255, 253, 254, 255, 255, 255]
-          ],
-          [
-            [255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [223, 254, 254, 255, 255, 255, 255, 255, 255, 255, 255],
-            [238, 253, 254, 254, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 248, 254, 255, 255, 255, 255, 255, 255, 255, 255],
-            [249, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 253, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [247, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 253, 254, 255, 255, 255, 255, 255, 255, 255, 255],
-            [252, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 254, 254, 255, 255, 255, 255, 255, 255, 255, 255],
-            [253, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 254, 253, 255, 255, 255, 255, 255, 255, 255, 255],
-            [250, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-          ]
-        ],
-        [
-          [
-            [186, 251, 250, 255, 255, 255, 255, 255, 255, 255, 255],
-            [234, 251, 244, 254, 255, 255, 255, 255, 255, 255, 255],
-            [251, 251, 243, 253, 254, 255, 254, 255, 255, 255, 255]
-          ],
-          [
-            [255, 253, 254, 255, 255, 255, 255, 255, 255, 255, 255],
-            [236, 253, 254, 255, 255, 255, 255, 255, 255, 255, 255],
-            [251, 253, 253, 254, 254, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 254, 254, 255, 255, 255, 255, 255, 255, 255, 255],
-            [254, 254, 254, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [254, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-          ]
-        ],
-        [
-          [
-            [248, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [250, 254, 252, 254, 255, 255, 255, 255, 255, 255, 255],
-            [248, 254, 249, 253, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 253, 253, 255, 255, 255, 255, 255, 255, 255, 255],
-            [246, 253, 253, 255, 255, 255, 255, 255, 255, 255, 255],
-            [252, 254, 251, 254, 254, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 254, 252, 255, 255, 255, 255, 255, 255, 255, 255],
-            [248, 254, 253, 255, 255, 255, 255, 255, 255, 255, 255],
-            [253, 255, 254, 254, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 251, 254, 255, 255, 255, 255, 255, 255, 255, 255],
-            [245, 251, 254, 255, 255, 255, 255, 255, 255, 255, 255],
-            [253, 253, 254, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 251, 253, 255, 255, 255, 255, 255, 255, 255, 255],
-            [252, 253, 254, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 254, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 252, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [249, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 254, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 255, 253, 255, 255, 255, 255, 255, 255, 255, 255],
-            [250, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-          ],
-          [
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [254, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255],
-            [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255]
-          ]
-        ]
-      ],
-      Ge = [0, 1, 2, 3, 6, 4, 5, 6, 6, 6, 6, 6, 6, 6, 6, 7, 0],
-      Nc,
-      Y = [],
-      W = [],
-      ka = [],
-      Za,
-      fd,
-      Nb,
-      pa,
-      Ob,
-      Xc,
-      Tc,
-      Yc,
-      Uc,
-      Zc,
-      Vc,
-      $c,
-      Wc,
-      Rc,
-      Pc,
-      Sc,
-      Qc,
-      re = 1,
-      Cc = 2,
-      ia = [],
-      za,
-      vc,
-      fc,
-      Fc,
-      P = [];
-    va("UpsampleRgbLinePair", Ga, 3);
-    va("UpsampleBgrLinePair", Tb, 3);
-    va("UpsampleRgbaLinePair", wd, 4);
-    va("UpsampleBgraLinePair", vd, 4);
-    va("UpsampleArgbLinePair", ud, 4);
-    va("UpsampleRgba4444LinePair", td, 2);
-    va("UpsampleRgb565LinePair", sd, 2);
-    var Mf = self.UpsampleRgbLinePair,
-      Nf = self.UpsampleBgrLinePair,
-      nd = self.UpsampleRgbaLinePair,
-      od = self.UpsampleBgraLinePair,
-      pd = self.UpsampleArgbLinePair,
-      qd = self.UpsampleRgba4444LinePair,
-      Of = self.UpsampleRgb565LinePair,
-      Wa = 16,
-      Ba = 1 << (Wa - 1),
-      ta = -227,
-      Eb = 482,
-      rd = 6,
-      Pf = (256 << rd) - 1,
-      jc = 0,
-      Yd = V(256),
-      ae = V(256),
-      $d = V(256),
-      Zd = V(256),
-      be = V(Eb - ta),
-      ce = V(Eb - ta);
-    la("YuvToRgbRow", Ga, 3);
-    la("YuvToBgrRow", Tb, 3);
-    la("YuvToRgbaRow", wd, 4);
-    la("YuvToBgraRow", vd, 4);
-    la("YuvToArgbRow", ud, 4);
-    la("YuvToRgba4444Row", td, 2);
-    la("YuvToRgb565Row", sd, 2);
-    var zd = [
-        0,
-        4,
-        8,
-        12,
-        128,
-        132,
-        136,
-        140,
-        256,
-        260,
-        264,
-        268,
-        384,
-        388,
-        392,
-        396
-      ],
-      Ya = [0, 2, 8],
-      Qf = [8, 7, 6, 4, 4, 2, 2, 2, 1, 1, 1, 1],
-      Ne = 1;
-    this.WebPDecodeRGBA = function(a, b, c, d, e) {
-      var f = Ua;
-      var g = new Cf(),
-        h = new Cb();
-      g.ba = h;
-      h.S = f;
-      h.width = [h.width];
-      h.height = [h.height];
-      var k = h.width;
-      var l = h.height,
-        m = new Td();
-      if (null == m || null == a) var n = 2;
-      else
-        x(null != m),
-          (n = Ad(a, b, c, m.width, m.height, m.Pd, m.Qd, m.format, null));
-      0 != n
-        ? (k = 0)
-        : (null != k && (k[0] = m.width[0]),
-          null != l && (l[0] = m.height[0]),
-          (k = 1));
-      if (k) {
-        h.width = h.width[0];
-        h.height = h.height[0];
-        null != d && (d[0] = h.width);
-        null != e && (e[0] = h.height);
-        b: {
-          d = new Oa();
-          e = new md();
-          e.data = a;
-          e.w = b;
-          e.ha = c;
-          e.kd = 1;
-          b = [0];
-          x(null != e);
-          a = Ad(e.data, e.w, e.ha, null, null, null, b, null, e);
-          (0 == a || 7 == a) && b[0] && (a = 4);
-          b = a;
-          if (0 == b) {
-            x(null != g);
-            d.data = e.data;
-            d.w = e.w + e.offset;
-            d.ha = e.ha - e.offset;
-            d.put = kc;
-            d.ac = gc;
-            d.bc = lc;
-            d.ma = g;
-            if (e.xa) {
-              a = Bc();
-              if (null == a) {
-                g = 1;
-                break b;
-              }
-              if (te(a, d)) {
-                b = Cd(d.width, d.height, g.Oa, g.ba);
-                if ((d = 0 == b)) {
-                  c: {
-                    d = a;
-                    d: for (;;) {
-                      if (null == d) {
-                        d = 0;
-                        break c;
-                      }
-                      x(null != d.s.yc);
-                      x(null != d.s.Ya);
-                      x(0 < d.s.Wb);
-                      c = d.l;
-                      x(null != c);
-                      e = c.ma;
-                      x(null != e);
-                      if (0 != d.xb) {
-                        d.ca = e.ba;
-                        d.tb = e.tb;
-                        x(null != d.ca);
-                        if (!hc(e.Oa, c, Va)) {
-                          d.a = 2;
-                          break d;
-                        }
-                        if (!Ec(d, c.width)) break d;
-                        if (c.da) break d;
-                        (c.da || hb(d.ca.S)) && Aa();
-                        11 > d.ca.S ||
-                          (alert("todo:WebPInitConvertARGBToYUV"),
-                          null != d.ca.f.kb.F && Aa());
-                        if (
-                          d.Pb &&
-                          0 < d.s.ua &&
-                          null == d.s.vb.X &&
-                          !Zb(d.s.vb, d.s.Wa.Xa)
-                        ) {
-                          d.a = 1;
-                          break d;
-                        }
-                        d.xb = 0;
-                      }
-                      if (!Jb(d, d.V, d.Ba, d.c, d.i, c.o, ge)) break d;
-                      e.Dc = d.Ma;
-                      d = 1;
-                      break c;
-                    }
-                    x(0 != d.a);
-                    d = 0;
-                  }
-                  d = !d;
-                }
-                d && (b = a.a);
-              } else b = a.a;
-            } else {
-              a = new Ce();
-              if (null == a) {
-                g = 1;
-                break b;
-              }
-              a.Fa = e.na;
-              a.P = e.P;
-              a.qc = e.Sa;
-              if (Kc(a, d)) {
-                if (((b = Cd(d.width, d.height, g.Oa, g.ba)), 0 == b)) {
-                  a.Aa = 0;
-                  c = g.Oa;
-                  e = a;
-                  x(null != e);
-                  if (null != c) {
-                    k = c.Md;
-                    k = 0 > k ? 0 : 100 < k ? 255 : (255 * k) / 100;
-                    if (0 < k) {
-                      for (l = m = 0; 4 > l; ++l)
-                        (n = e.pb[l]),
-                          12 > n.lc &&
-                            (n.ia = (k * Qf[0 > n.lc ? 0 : n.lc]) >> 3),
-                          (m |= n.ia);
-                      m && (alert("todo:VP8InitRandom"), (e.ia = 1));
-                    }
-                    e.Ga = c.Id;
-                    100 < e.Ga ? (e.Ga = 100) : 0 > e.Ga && (e.Ga = 0);
-                  }
-                  Me(a, d) || (b = a.a);
-                }
-              } else b = a.a;
-            }
-            0 == b && null != g.Oa && g.Oa.fd && (b = Bd(g.ba));
-          }
-          g = b;
-        }
-        f = 0 != g ? null : 11 > f ? h.f.RGBA.eb : h.f.kb.y;
-      } else f = null;
-      return f;
-    };
-    var Dd = [3, 4, 3, 4, 4, 2, 2, 4, 4, 4, 2, 1, 1];
-  };
-  new _WebPDecoder();
-
-  /** @license
-   * Copyright (c) 2017 Dominik Homberger
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-https://webpjs.appspot.com
-WebPRiffParser dominikhlbg@gmail.com
-*/
-
-  function memcmp(data, data_off, str, size) {
-    for (var i = 0; i < size; i++)
-      if (data[data_off + i] != str.charCodeAt(i)) return true;
-    return false;
-  }
-
-  function GetTag(data, data_off) {
-    var str = "";
-    for (var i = 0; i < 4; i++) str += String.fromCharCode(data[data_off++]);
-    return str;
-  }
-
-  function GetLE16(data, data_off) {
-    return (data[data_off + 0] << 0) | (data[data_off + 1] << 8);
-  }
-
-  function GetLE24(data, data_off) {
-    return (
-      ((data[data_off + 0] << 0) |
-        (data[data_off + 1] << 8) |
-        (data[data_off + 2] << 16)) >>>
-      0
-    );
-  }
-
-  function GetLE32(data, data_off) {
-    return (
-      ((data[data_off + 0] << 0) |
-        (data[data_off + 1] << 8) |
-        (data[data_off + 2] << 16) |
-        (data[data_off + 3] << 24)) >>>
-      0
-    );
-  }
-
-  function WebPRiffParser(src, src_off) {
-    var imagearray = {};
-    var i = 0;
-    var alpha_chunk = false;
-    var alpha_size = 0;
-    var alpha_offset = 0;
-    imagearray["frames"] = [];
-    if (memcmp(src, src_off, "RIFF", 4)) return;
-    src_off += 4;
-    var riff_size = GetLE32(src, src_off) + 8;
-    src_off += 8;
-
-    while (src_off < src.length) {
-      var fourcc = GetTag(src, src_off);
-      src_off += 4;
-
-      var payload_size = GetLE32(src, src_off);
-      src_off += 4;
-      var payload_size_padded = payload_size + (payload_size & 1);
-
-      switch (fourcc) {
-        case "VP8 ":
-        case "VP8L":
-          if (typeof imagearray["frames"][i] === "undefined")
-            imagearray["frames"][i] = {};
-          var obj = imagearray["frames"][i];
-          var height = [0];
-          var width = [0];
-          obj["src_off"] = alpha_chunk ? alpha_offset : src_off - 8;
-          obj["src_size"] = alpha_size + payload_size + 8;
-          //var rgba = webpdecoder.WebPDecodeRGBA(src,(alpha_chunk?alpha_offset:src_off-8),alpha_size+payload_size+8,width,height);
-          //imagearray[i]={'rgba':rgba,'width':width[0],'height':height[0]};
-          i++;
-          if (alpha_chunk) {
-            alpha_chunk = false;
-            alpha_size = 0;
-            alpha_offset = 0;
-          }
-          break;
-        case "VP8X":
-          var obj = (imagearray["header"] = {});
-          var feature_flags = (obj["feature_flags"] = src[src_off]);
-          var src_off_ = src_off + 4;
-          var canvas_width = (obj["canvas_width"] = 1 + GetLE24(src, src_off_));
-          src_off_ += 3;
-          var canvas_height = (obj["canvas_height"] =
-            1 + GetLE24(src, src_off_));
-          src_off_ += 3;
-          break;
-        case "ALPH":
-          alpha_chunk = true;
-          alpha_size = payload_size_padded + 8;
-          alpha_offset = src_off - 8;
-          break;
-
-        case "ANIM":
-          var obj = imagearray["header"];
-          var bgcolor = (obj["bgcolor"] = GetLE32(src, src_off));
-          src_off_ = src_off + 4;
-
-          var loop_count = (obj["loop_count"] = GetLE16(src, src_off_));
-          src_off_ += 2;
-          break;
-        case "ANMF":
-          var offset_x = 0,
-            offset_y = 0,
-            width = 0,
-            height = 0,
-            duration = 0,
-            blend = 0,
-            dispose = 0,
-            temp = 0;
-          var obj = (imagearray["frames"][i] = {});
-          obj["offset_x"] = offset_x = 2 * GetLE24(src, src_off);
-          src_off += 3;
-          obj["offset_y"] = offset_y = 2 * GetLE24(src, src_off);
-          src_off += 3;
-          obj["width"] = width = 1 + GetLE24(src, src_off);
-          src_off += 3;
-          obj["height"] = height = 1 + GetLE24(src, src_off);
-          src_off += 3;
-          obj["duration"] = duration = GetLE24(src, src_off);
-          src_off += 3;
-          temp = src[src_off++];
-          obj["dispose"] = dispose = temp & 1;
-          obj["blend"] = blend = (temp >> 1) & 1;
-          break;
-      }
-      if (fourcc != "ANMF") src_off += payload_size_padded;
-    }
-    return imagearray;
-  }
-
-  var height = [0];
-  var width = [0];
-  var pixels = [];
-  var webpdecoder = new _WebPDecoder();
-
-  var response = imageData;
-  var imagearray = WebPRiffParser(response, 0);
-  imagearray["response"] = response;
-  imagearray["rgbaoutput"] = true;
-  imagearray["dataurl"] = false;
-
-  var header = imagearray["header"] ? imagearray["header"] : null;
-  var frames = imagearray["frames"] ? imagearray["frames"] : null;
-
-  if (header) {
-    header["loop_counter"] = header["loop_count"];
-    height = [header["canvas_height"]];
-    width = [header["canvas_width"]];
-    for (var f = 0; f < frames.length; f++)
-      if (frames[f]["blend"] == 0) {
-        break;
-      }
-  }
-
-  var frame = frames[0];
-  var rgba = webpdecoder.WebPDecodeRGBA(
-    response,
-    frame["src_off"],
-    frame["src_size"],
-    width,
-    height
-  );
-  frame["rgba"] = rgba;
-  frame["imgwidth"] = width[0];
-  frame["imgheight"] = height[0];
-
-  for (var i = 0; i < width[0] * height[0] * 4; i++) {
-    pixels[i] = rgba[i];
-  }
-
-  this.width = width;
-  this.height = height;
-  this.data = pixels;
-  return this;
+  return out;
 }
 
-WebPDecoder.prototype.getData = function() {
-  return this.data;
-};
+function readSample(view, sampleIndex, depth) {
+  const bitIndex = sampleIndex * depth;
+  const byteIndex = Math.floor(bitIndex / 8);
+  const bitOffset = 16 - (bitIndex - byteIndex * 8 + depth);
+  const bitMask = (1 << depth) - 1;
+  const word = safeGetUint16(view, byteIndex);
+  return (word >> bitOffset) & bitMask;
+}
 
-/**
- * @license
- * Copyright (c) 2019 Aras Abbasi
- *
- * Licensed under the MIT License.
- * http://opensource.org/licenses/mit-license
- */
+function writeSample(view, value, sampleIndex, depth) {
+  const bitIndex = sampleIndex * depth;
+  const byteIndex = Math.floor(bitIndex / 8);
+  const bitOffset = 16 - (bitIndex - byteIndex * 8 + depth);
+  const bitMask = (1 << depth) - 1;
+  const writeValue = (value & bitMask) << bitOffset;
+  const word =
+    safeGetUint16(view, byteIndex) & ~(bitMask << bitOffset) & 0xffff;
+  safeSetUint16(view, byteIndex, word | writeValue);
+}
 
-/**
- * jsPDF webp Support PlugIn
- *
- * @name webp_support
- * @module
- */
-(function(jsPDFAPI) {
+function safeGetUint16(view, byteIndex) {
+  if (byteIndex + 1 < view.byteLength) {
+    return view.getUint16(byteIndex, false);
+  }
+  const b0 = view.getUint8(byteIndex);
+  return b0 << 8;
+}
 
-  jsPDFAPI.processWEBP = function(imageData, index, alias, compression) {
-    var reader = new WebPDecoder(imageData, false);
-    var width = reader.width,
-      height = reader.height;
-    var qu = 100;
-    var pixels = reader.getData();
-
-    var rawImageData = {
-      data: pixels,
-      width: width,
-      height: height
-    };
-
-    var encoder = new JPEGEncoder(qu);
-    var data = encoder.encode(rawImageData, qu);
-    return jsPDFAPI.processJPEG.call(this, data, index, alias, compression);
-  };
-})(jsPDF.API);
+function safeSetUint16(view, byteIndex, value) {
+  if (byteIndex + 1 < view.byteLength) {
+    view.setUint16(byteIndex, value, false);
+    return;
+  }
+  const byteToWrite = (value >> 8) & 0xff;
+  view.setUint8(byteIndex, byteToWrite);
+}
 
 /**
  * @license
@@ -25947,7 +25875,7 @@ WebPDecoder.prototype.getData = function() {
    * of the string will be that much.
    *
    * Multiply by font size to get actual width in *points*
-   * Then divide by 72 to get inches or divide by (72/25.6) to get 'mm' etc.
+   * Then divide by 72 to get inches or divide by (72/25.4) to get 'mm' etc.
    *
    * @name getStringUnitWidth
    * @public
@@ -26243,10 +26171,10 @@ WebPDecoder.prototype.getData = function() {
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -30250,11 +30178,11 @@ WebPDecoder.prototype.getData = function() {
 
   var bidiEngineFunction = function(args) {
     var text = args.text;
-    var x = args.x;
-    var y = args.y;
+    args.x;
+    args.y;
     var options = args.options || {};
-    var mutex = args.mutex || {};
-    var lang = options.lang;
+    args.mutex || {};
+    options.lang;
     var tmpText = [];
 
     options.isInputVisual =
@@ -32157,5 +32085,4 @@ jsPDF.API.PDFObject = (function() {
   return PDFObject;
 })();
 
-export default jsPDF;
-export { AcroForm, AcroFormAppearance, AcroFormButton, AcroFormCheckBox, AcroFormChoiceField, AcroFormComboBox, AcroFormEditBox, AcroFormListBox, AcroFormPasswordField, AcroFormPushButton, AcroFormRadioButton, AcroFormTextField, GState, ShadingPattern, TilingPattern, jsPDF };
+export { AcroForm, AcroFormAppearance, AcroFormButton, AcroFormCheckBox, AcroFormChoiceField, AcroFormComboBox, AcroFormEditBox, AcroFormListBox, AcroFormPasswordField, AcroFormPushButton, AcroFormRadioButton, AcroFormTextField, GState, ShadingPattern, TilingPattern, jsPDF as default, jsPDF };

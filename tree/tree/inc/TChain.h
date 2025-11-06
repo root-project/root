@@ -127,8 +127,7 @@ public:
    bool      InPlaceClone(TDirectory *newdirectory, const char *options = "") override;
    Int_t     LoadBaskets(Long64_t maxmemory) override;
    Long64_t  LoadTree(Long64_t entry) override;
-           void      Lookup(bool force = false);
-   virtual void      Loop(Option_t *option="", Long64_t nentries=kMaxEntries, Long64_t firstentry=0); // *MENU*
+   void      Lookup(bool force = false);
    void      ls(Option_t *option="") const override;
    virtual Long64_t  Merge(const char *name, Option_t *option = "");
    Long64_t  Merge(TCollection *list, Option_t *option = "") override;

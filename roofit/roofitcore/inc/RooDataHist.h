@@ -139,7 +139,9 @@ public:
   void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent="") const override;
   void printArgs(std::ostream& os) const override;
   void printValue(std::ostream& os) const override;
-  void printDataHistogram(std::ostream& os, RooRealVar* obs) const;
+  
+  /// Print the contents of the dataset to the specified output stream.
+  void printContents(std::ostream& os = std::cout) const override;
 
   void SetName(const char *name) override;
   void SetNameTitle(const char *name, const char* title) override;

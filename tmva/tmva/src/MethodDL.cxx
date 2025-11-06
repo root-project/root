@@ -56,7 +56,6 @@
 #include <chrono>
 
 REGISTER_METHOD(DL)
-ClassImp(TMVA::MethodDL);
 
 using namespace TMVA::DNN::CNN;
 using namespace TMVA::DNN;

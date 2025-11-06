@@ -143,37 +143,34 @@ ROOTTEST_ADD_TEST(ursula
                   COPY_TO_BUILDDIR cmsursula.root
                   OUTREF ursula.ref)
 
-#disable on Windows while there are problem to compile ConfigRecord.cxx without building dictionary
-#for some classes
-if(NOT MSVC OR win_broken_tests)
-  ROOTTEST_COMPILE_MACRO(ConfigRecord.cxx
-                         FIXTURES_SETUP root-tree-addresses-ConfigRecord-fixture
-                         FIXTURES_REQUIRED root-tree-addresses-sueloader-fixture)
+ROOTTEST_COMPILE_MACRO(sueloader.C
+                       FIXTURES_SETUP root-tree-addresses-sueloader-fixture)
 
-  ROOTTEST_COMPILE_MACRO(sueloader.C
-                         FIXTURES_SETUP root-tree-addresses-sueloader-fixture)
+ROOTTEST_COMPILE_MACRO(ConfigRecord.cxx
+                       BUILDLIB sueloader_C
+                       FIXTURES_REQUIRED root-tree-addresses-sueloader-fixture
+                       FIXTURES_SETUP root-tree-addresses-ConfigRecord-fixture)
 
-  if(ClingWorkAroundMissingDynamicScope)
-    SET(_sue_opts -e "(void)gROOT->ProcessLine(\".L sueloader.C+\")"
-                  -e "(void)gROOT->ProcessLine(\".L ConfigRecord.cxx+\")")
-  endif()
-
-  ROOTTEST_ADD_TEST(configtest
-                    MACRO suetestwrt.C
-                    ROOTEXE_OPTS ${_sue_opts}
-                    OUTREF configtest.ref
-                    FIXTURES_REQUIRED root-tree-addresses-ConfigRecord-fixture
-                                      root-tree-addresses-sueloader-fixture
-                   FIXTURES_SETUP root-tree-addresses-configtest-fixture)
-
-  ROOTTEST_ADD_TEST(suetest
-                    MACRO suetestrd.C
-                    ROOTEXE_OPTS ${_sue_opts}
-                    OUTREF suetest.ref
-                    FIXTURES_REQUIRED root-tree-addresses-ConfigRecord-fixture
-                                      root-tree-addresses-sueloader-fixture
-                                      root-tree-addresses-configtest-fixture)
+if(ClingWorkAroundMissingDynamicScope)
+  SET(_sue_opts -e "(void)gROOT->ProcessLine(\".L sueloader.C+\")"
+                -e "(void)gROOT->ProcessLine(\".L ConfigRecord.cxx+\")")
 endif()
+
+ROOTTEST_ADD_TEST(configtest
+                  MACRO suetestwrt.C
+                  ROOTEXE_OPTS ${_sue_opts}
+                  OUTREF configtest.ref
+                  FIXTURES_REQUIRED root-tree-addresses-ConfigRecord-fixture
+                                    root-tree-addresses-sueloader-fixture
+                 FIXTURES_SETUP root-tree-addresses-configtest-fixture)
+
+ROOTTEST_ADD_TEST(suetest
+                  MACRO suetestrd.C
+                  ROOTEXE_OPTS ${_sue_opts}
+                  OUTREF suetest.ref
+                  FIXTURES_REQUIRED root-tree-addresses-ConfigRecord-fixture
+                                    root-tree-addresses-sueloader-fixture
+                                    root-tree-addresses-configtest-fixture)
 
 ROOTTEST_COMPILE_MACRO(JansEvent.C
                        FIXTURES_SETUP root-tree-addresses-JansEvent-fixture)

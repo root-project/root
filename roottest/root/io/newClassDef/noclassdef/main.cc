@@ -153,6 +153,3 @@ int main(int argc, char **argv)
     return !result;
 }
 
-ClassImp(RootCaloHit)
-ClassImp(RootData)
-ClassImp(RootPCellID)

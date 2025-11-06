@@ -33,13 +33,12 @@ array with the  digest.
 #include "TError.h"
 #include "TSystem.h"
 #include "Bytes.h"
-#include <string.h>
-#include <errno.h>
+#include <cstring>
+#include <cerrno>
 #ifdef R__WIN32
 #include <io.h>
 #endif
 
-ClassImp(TMD5);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create TMD5 object. Set bit count to 0 and buffer to mysterious

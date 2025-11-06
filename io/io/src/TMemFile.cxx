@@ -27,8 +27,8 @@ only from memory.
 #include "TKey.h"
 #include "TClass.h"
 #include "TVirtualMutex.h"
-#include <errno.h>
-#include <stdio.h>
+#include <cerrno>
+#include <cstdio>
 #include <sys/stat.h>
 
 // The following snippet is used for developer-level debugging
@@ -40,7 +40,6 @@ only from memory.
 #define TRACE(x);
 #endif
 
-ClassImp(TMemFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor allocating the memory buffer.

@@ -29,7 +29,6 @@ Editor class for TGeo tracking media.
 #include "TGLabel.h"
 #include "TG3DLine.h"
 
-ClassImp(TGeoMediumEditor);
 
 enum ETGeoMediumWid {
    kMED_NAME,

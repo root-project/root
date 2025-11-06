@@ -28,7 +28,6 @@ Window-manager is created by the EVE-manager and can be retrieved via:
 ~~~
 */
 
-ClassImp(TEveWindowManager);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

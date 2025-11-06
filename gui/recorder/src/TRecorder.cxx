@@ -121,7 +121,6 @@ const char *kWindowsTree    = "WindowsTree"; // Name of TTree with window IDs
 const char *kExtraEventTree = "ExtraEvents"; // Name of TTree with extra events (PaveLabels and Texts)
 const char *kBranchName     = "MainBranch";  // Name of the main branch in all TTrees
 
-ClassImp(TRecorder);
 
 
 //_____________________________________________________________________________
@@ -313,7 +312,6 @@ void TRecorder::PrevCanvases(const char *filename, Option_t *option)
 //______________________________________________________________________________
 // Represents state of TRecorder when replaying
 
-ClassImp(TRecorderReplaying);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Allocates all necessary data structures used for replaying
@@ -927,7 +925,6 @@ void TRecorderReplaying::Continue()
 //______________________________________________________________________________
 // Represents state of TRecorder after its creation
 
-ClassImp(TRecorderInactive);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Switches from INACTIVE state to RECORDING and starts recording
@@ -1112,7 +1109,6 @@ void TRecorderInactive::PrevCanvases(const char *filename, Option_t *option)
 //______________________________________________________________________________
 // Represents state of TRecorder when paused
 
-   ClassImp(TRecorderPaused);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Remember the recorder state that is paused
@@ -1149,7 +1145,6 @@ void TRecorderPaused::ReplayStop(TRecorder *r)
 //______________________________________________________________________________
 // Represents state of TRecorder when recording events
 
-ClassImp(TRecorderRecording);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initializes TRecorderRecording for recording
@@ -1721,7 +1716,6 @@ void TRecorderRecording::SetTypeOfConfigureNotify(Event_t *e)
 //______________________________________________________________________________
 // The GUI for the recorder
 
-ClassImp(TGRecorder);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// The GUI for the recorder
@@ -2029,8 +2023,6 @@ TGRecorder::~TGRecorder()
 //______________________________________________________________________________
 // Helper class
 
-ClassImp(TRecCmdEvent);
-ClassImp(TRecGuiEvent);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Replays stored GUI event
@@ -2192,4 +2184,3 @@ Event_t *TRecGuiEvent::CreateEvent(TRecGuiEvent *ge)
    return e;
 }
 
-ClassImp(TRecWinPair);

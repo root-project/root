@@ -1,6 +1,6 @@
 #include "runStaticDataMember.h"
 
-#include <stdio.h>
+#include <cstdio>
 
 using namespace std;
 

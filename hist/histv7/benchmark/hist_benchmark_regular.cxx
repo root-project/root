@@ -8,7 +8,7 @@
 struct RRegularAxis : public benchmark::Fixture {
    // The axis is stored and constructed in the fixture to avoid compiler optimizations in the benchmark body taking
    // advantage of the (constant) constructor parameters.
-   ROOT::Experimental::RRegularAxis axis{20, 0.0, 1.0};
+   ROOT::Experimental::RRegularAxis axis{20, {0.0, 1.0}};
    std::vector<double> fNumbers;
 
    // Avoid GCC warning

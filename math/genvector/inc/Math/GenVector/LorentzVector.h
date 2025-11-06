@@ -203,6 +203,7 @@ Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity.
 
        /**
           get internal data into 4 Scalar numbers
+          \note Alternatively, you may use structured bindings: `auto const [a, b, c, d] = v`.
        */
        void GetCoordinates( Scalar& a, Scalar& b, Scalar& c, Scalar & d ) const
        { fCoordinates.GetCoordinates(a, b, c, d);  }
@@ -861,11 +862,37 @@ Pt (or rho) refers to transverse momentum, whereas eta refers to pseudorapidity.
 
      }  // op>> <>()
 
-
+    // Structured bindings
+    template <std::size_t I, class CoordSystem>
+    typename CoordSystem::Scalar get(LorentzVector<CoordSystem> const& p)
+    {
+       static_assert(I < 4);
+       if constexpr (I == 0) {
+          return p.X();
+       } else if constexpr (I == 1) {
+          return p.Y();
+       } else if constexpr (I == 2) {
+          return p.Z();
+       } else {
+          return p.E();
+       }
+    }
 
   } // end namespace Math
 
 } // end namespace ROOT
+
+// Structured bindings
+#include <tuple>
+namespace std {
+   template <class CoordSystem>
+   struct tuple_size<ROOT::Math::LorentzVector<CoordSystem>> : integral_constant<size_t, 4> {};
+   template <size_t I, class CoordSystem>
+   struct tuple_element<I, ROOT::Math::LorentzVector<CoordSystem>> {
+      static_assert(I < 4);
+      using type = typename CoordSystem::Scalar;
+   };
+}
 
 #include <sstream>
 namespace cling

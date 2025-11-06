@@ -1,8 +1,5 @@
 #include "PEvent.hh"
 
-ClassImp(PEvent);
-ClassImp(QRawPulse);
-ClassImp(QRawTriggerPulse);
 
 
 //______________________________________________________________________________

@@ -54,7 +54,6 @@ using range-searching.  The discriminant D is defined as
 #include <cmath>
 #include <vector>
 
-ClassImp(TMVA::PDEFoamDiscriminantDensity);
 
 ////////////////////////////////////////////////////////////////////////////////
 

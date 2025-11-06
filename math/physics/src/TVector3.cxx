@@ -180,7 +180,6 @@ theta plane) to the (x,y,z) frame.
 #include "TRotation.h"
 #include "TMath.h"
 
-ClassImp(TVector3);
 
 
 ////////////////////////////////////////////////////////////////////////////////

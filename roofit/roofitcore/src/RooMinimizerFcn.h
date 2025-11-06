@@ -35,13 +35,14 @@ class RooMinimizerFcn : public RooAbsMinimizerFcn {
 public:
    RooMinimizerFcn(RooAbsReal *funct, RooMinimizer *context);
 
+   void initMinimizer(ROOT::Math::Minimizer &) override;
+
    std::string getFunctionName() const override;
    std::string getFunctionTitle() const override;
 
    void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override;
 
    void setOffsetting(bool flag) override;
-   ROOT::Math::IMultiGenFunction *getMultiGenFcn() override { return _multiGenFcn.get(); }
 
    double operator()(const double *x) const;
    void evaluateGradient(const double *x, double *out) const;

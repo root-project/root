@@ -20,7 +20,7 @@
 
 Double_t SawTooth(Double_t x, Double_t WaveLen);
 
-TCanvas *hist102_TH2_contour_list()
+void hist102_TH2_contour_list()
 {
 
    const Double_t PI = TMath::Pi();
@@ -91,7 +91,7 @@ TCanvas *hist102_TH2_contour_list()
 
    if (!conts) {
       printf("*** No Contours Were Extracted!\n");
-      return nullptr;
+      return;
    }
 
    TList *contLevel = nullptr;
@@ -157,7 +157,6 @@ TCanvas *hist102_TH2_contour_list()
    printf("\n\n\tExtracted %d Contours and %d Graphs \n", TotalConts, nGraphs);
    gStyle->SetTitleW(0.);
    gStyle->SetTitleH(0.);
-   return c1;
 }
 
 Double_t SawTooth(Double_t x, Double_t WaveLen)

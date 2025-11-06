@@ -112,7 +112,6 @@ static const char *gPluginFileTypes[] = {
 };
 
 
-ClassImp(TRootBrowser);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create browser with a specified width and height.

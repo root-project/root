@@ -32,7 +32,6 @@ Implements GUI for editing text attributes.
 #include "TROOT.h"
 #include "snprintf.h"
 
-ClassImp(TAttTextEditor);
 
 enum ETextWid {
    kCOLOR,

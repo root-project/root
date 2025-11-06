@@ -37,9 +37,15 @@ ROOT_GENERATE_DICTIONARY(RNTupleDescriptorDict ${CMAKE_CURRENT_SOURCE_DIR}/RNTup
                          DEPENDENCIES RIO)
 
 ROOT_ADD_GTEST(ntuple_endian ntuple_endian.cxx LIBRARIES ROOTNTuple)
+ROOT_ADD_GTEST(ntuple_evolution_type ntuple_evolution_type.cxx LIBRARIES ROOTNTuple)
+ROOT_GENERATE_DICTIONARY(STLContainerEvolutionDict ${CMAKE_CURRENT_SOURCE_DIR}/STLContainerEvolution.hxx
+                         MODULE ntuple_evolution_type
+                         LINKDEF STLContainerEvolutionLinkDef.h
+                         OPTIONS -inlineInputHeader
+                         DEPENDENCIES CustomStruct)
 if(NOT MSVC)
   # These unit tests rely on fork(), which is not available on Windows.
-  ROOT_ADD_GTEST(ntuple_evolution ntuple_evolution.cxx LIBRARIES ROOTNTuple)
+  ROOT_ADD_GTEST(ntuple_evolution_shape ntuple_evolution_shape.cxx LIBRARIES ROOTNTuple)
   ROOT_ADD_GTEST(ntuple_emulated ntuple_emulated.cxx LIBRARIES ROOTNTuple)
 endif()
 ROOT_ADD_GTEST(ntuple_join_table ntuple_join_table.cxx LIBRARIES ROOTNTuple)
@@ -78,13 +84,20 @@ if(MSVC)
 endif()
 ROOT_ADD_GTEST(rfield_vector rfield_vector.cxx LIBRARIES ROOTNTuple CustomStruct)
 
-ROOT_ADD_GTEST(ntuple_minifile ntuple_minifile.cxx LIBRARIES ROOTNTuple Physics Tree)
+if(NOT MSVC OR builtin_gtest)
+  # As of 2025-09, the external gtest provided by Conda is not link compatible with ROOT.
+  # As is this test fails with the following error:
+  # error LNK2019: unresolved external symbol "class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > testing::FLAGS_gtest_death_test_style"
+  # Addressing locally this missing symbol leads to other errors with symbols being defined multiple times in the other tests.
+  ROOT_ADD_GTEST(ntuple_minifile ntuple_minifile.cxx LIBRARIES ROOTNTuple Physics Tree)
+endif()
 ROOT_ADD_GTEST(ntuple_show ntuple_show.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_storage ntuple_storage.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
 ROOT_ADD_GTEST(ntuple_extended ntuple_extended.cxx LIBRARIES ROOTNTuple MathCore)
 if(NOT MSVC OR win_broken_tests)
   ROOT_ADD_GTEST(ntuple_largefile1 ntuple_largefile1.cxx LIBRARIES ROOTNTuple MathCore)
   ROOT_ADD_GTEST(ntuple_largefile2 ntuple_largefile2.cxx LIBRARIES ROOTNTuple MathCore)
+  ROOT_ADD_GTEST(ntuple_largevector ntuple_largevector.cxx LIBRARIES ROOTNTuple)
 endif()
 ROOT_ADD_GTEST(ntuple_randomaccess ntuple_randomaccess.cxx LIBRARIES ROOTNTuple MathCore)
 
@@ -98,12 +111,10 @@ ROOT_GENERATE_DICTIONARY(StreamerFieldDict ${CMAKE_CURRENT_SOURCE_DIR}/StreamerF
                          DEPENDENCIES RIO)
 
 if(MSVC)
-  set(genreflex ${CMAKE_BINARY_DIR}/bin/genreflex.exe)
-  set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" ${genreflex})
+  set(command ${CMAKE_COMMAND} -E env "ROOTIGNOREPREFIX=1" $<TARGET_FILE:genreflex>)
 else()
-  set(genreflex ${CMAKE_BINARY_DIR}/bin/genreflex)
   set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}"
-              "ROOTIGNOREPREFIX=1" ${genreflex})
+              "ROOTIGNOREPREFIX=1" $<TARGET_FILE:genreflex>)
 endif()
 
 configure_file(StreamerFieldXML.h . COPYONLY)

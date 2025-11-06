@@ -24,7 +24,6 @@ collection since no copying needs to be done.
 #include "TError.h"
 
 
-ClassImp(TOrdCollection);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an ordered collection.
@@ -444,7 +443,6 @@ Int_t TOrdCollection::BinarySearch(TObject *obj)
 Iterator of ordered collection.
 */
 
-ClassImp(TOrdCollectionIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create collection iterator. By default the iteration direction

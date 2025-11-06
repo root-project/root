@@ -326,7 +326,6 @@ void MacOSXSystem::SetFileDescriptor(int fd, DescriptorType fdType)
 
 namespace Private = ROOT::MacOSX::Details;
 
-ClassImp(TMacOSXSystem)
 
 //______________________________________________________________________________
 TMacOSXSystem::TMacOSXSystem()

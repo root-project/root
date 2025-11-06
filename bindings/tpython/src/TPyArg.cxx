@@ -24,7 +24,6 @@
 // on implicit conversions.
 
 //- data ---------------------------------------------------------------------
-ClassImp(TPyArg);
 
 namespace {
    class PyGILRAII {

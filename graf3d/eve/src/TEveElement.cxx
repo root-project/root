@@ -42,7 +42,6 @@ can appear in several list-trees as well as several times in the
 same list-tree.
 */
 
-ClassImp(TEveElement::TEveListTreeInfo);
 
 /** \class TEveElement
 \ingroup TEve
@@ -50,7 +49,6 @@ Base class for TEveUtil visualization elements, providing hierarchy
 management, rendering control and list-tree item management.
 */
 
-ClassImp(TEveElement);
 
 const TGPicture* TEveElement::fgRnrIcons[4]      = { nullptr };
 const TGPicture* TEveElement::fgListTreeIcons[9] = { nullptr };
@@ -2081,7 +2079,6 @@ fChildClass member.
 and set fDoColor automatically, based on which ctor is called.
 */
 
-ClassImp(TEveElementList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -2149,7 +2146,6 @@ A projected element list -- required for proper propagation
 of render state to projected views.
 */
 
-ClassImp(TEveElementListProjected);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

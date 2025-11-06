@@ -15,6 +15,10 @@
 class TClass;
 
 namespace ROOT {
+
+class RFieldBase;
+class RNTupleDescriptor;
+
 namespace Internal {
 
 /// Applies RNTuple specific type name normalization rules (see specs) that help the string parsing in
@@ -61,6 +65,11 @@ std::vector<std::string> TokenizeTypeList(std::string_view templateType, std::si
 /// GetRenormalizedTypeName(). Usually, this check can be done with a simple string comparison. The failure case,
 /// however, needs to additionally check for ROOT-specific special cases.
 bool IsMatchingFieldType(std::string_view actualTypeName, std::string_view expectedTypeName, const std::type_info &ti);
+
+/// Prints the hierarchy of types with their field names and field IDs for the given in-memory field and the
+/// on-disk hierarchy, matching the fields on-disk ID with the information of the descriptor.
+/// Useful information when the in-memory field cannot be matched to the the on-disk information.
+std::string GetTypeTraceReport(const RFieldBase &field, const RNTupleDescriptor &desc);
 
 } // namespace Internal
 } // namespace ROOT

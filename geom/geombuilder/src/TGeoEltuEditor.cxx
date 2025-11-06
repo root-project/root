@@ -32,7 +32,6 @@ Editor for a TGeoEltu.
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TGeoEltuEditor);
 
 enum ETGeoEltuWid { kELTU_NAME, kELTU_A, kELTU_B, kELTU_DZ, kELTU_APPLY, kELTU_UNDO };
 

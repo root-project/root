@@ -24,23 +24,28 @@ async function makePDF(svg, args) {
          const name = this.getAttribute('font-family');
          if (name === kCourier) {
             this.setAttribute('font-family', 'courier');
-            if (!svg.can_modify) restore_fonts.push(this); // keep to restore it
+            if (!svg.can_modify)
+               restore_fonts.push(this); // keep to restore it
          }
          if (name === kSymbol) {
             this.setAttribute('font-family', 'symbol');
-            if (!svg.can_modify) restore_symb.push(this); // keep to restore it
+            if (!svg.can_modify)
+               restore_symb.push(this); // keep to restore it
          }
          if (name === kWingdings) {
             this.setAttribute('font-family', 'zapfdingbats');
-            if (!svg.can_modify) restore_wing.push(this); // keep to restore it
+            if (!svg.can_modify)
+               restore_wing.push(this); // keep to restore it
          }
 
          if (((name === kArial) || (name === kCourier)) && (this.getAttribute('font-weight') === 'bold') && (this.getAttribute('font-style') === 'oblique')) {
             this.setAttribute('font-style', 'italic');
-            if (!svg.can_modify) restore_oblique.push(this); // keep to restore it
+            if (!svg.can_modify)
+               restore_oblique.push(this); // keep to restore it
          } else if ((name === kCourier) && (this.getAttribute('font-style') === 'oblique')) {
             this.setAttribute('font-style', 'italic');
-            if (!svg.can_modify) restore_oblique.push(this); // keep to restore it
+            if (!svg.can_modify)
+               restore_oblique.push(this); // keep to restore it
          }
       }
    });
@@ -49,13 +54,15 @@ async function makePDF(svg, args) {
       if (this.hasAttribute('dominant-baseline')) {
          this.setAttribute('dy', '.2em'); // slightly different as in plain text
          this.removeAttribute('dominant-baseline');
-         if (!svg.can_modify) restore_dominant.push(this); // keep to restore it
+         if (!svg.can_modify)
+            restore_dominant.push(this); // keep to restore it
       } else if (svg.can_modify && nodejs && this.getAttribute('dy') === '.4em')
          this.setAttribute('dy', '.2em'); // better alignment in PDF
 
       if (replaceSymbolsInTextNode(this)) {
          need_symbols = true;
-         if (!svg.can_modify) restore_text.push(this); // keep to restore it
+         if (!svg.can_modify)
+            restore_text.push(this); // keep to restore it
       }
    });
 
@@ -111,10 +118,13 @@ async function makePDF(svg, args) {
    // add custom fonts to PDF document, only TTF format supported
    d3_select(svg.node).selectAll('style').each(function() {
       const fcfg = this.$fontcfg;
-      if (!fcfg?.n || !fcfg?.base64) return;
+      if (!fcfg?.n || !fcfg?.base64)
+         return;
       const name = fcfg.n;
-      if ((name === kSymbol) || (name === kWingdings)) return;
-      if (custom_fonts[name]) return;
+      if ((name === kSymbol) || (name === kWingdings))
+         return;
+      if (custom_fonts[name])
+         return;
       custom_fonts[name] = true;
 
       const filename = name.toLowerCase().replace(/\s/g, '') + '.ttf';

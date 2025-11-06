@@ -17,7 +17,6 @@ The TEnumConstant class implements the constants of the enum type.
 #include "TEnum.h"
 
 
-ClassImp(TEnumConstant);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of the TEnumConstant.

@@ -409,26 +409,6 @@ double RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, bool /*verbose*
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Evaluate product of PDFs in batch mode.
-void RooProdPdf::doEvalImpl(RooAbsArg const *caller, const RooProdPdf::CacheElem &cache, RooFit::EvalContext &ctx) const
-{
-   if (cache._isRearranged) {
-      auto numerator = ctx.at(cache._rearrangedNum.get());
-      auto denominator = ctx.at(cache._rearrangedDen.get());
-      RooBatchCompute::compute(ctx.config(caller), RooBatchCompute::Ratio, ctx.output(), {numerator, denominator});
-   } else {
-      std::vector<std::span<const double>> factors;
-      factors.reserve(cache._partList.size());
-      for (const RooAbsArg *i : cache._partList) {
-         auto span = ctx.at(i);
-         factors.push_back(span);
-      }
-      std::array<double, 1> special{static_cast<double>(factors.size())};
-      RooBatchCompute::compute(ctx.config(caller), RooBatchCompute::ProdPdf, ctx.output(), factors, special);
-   }
-}
-
 namespace {
 
 template<class T>
@@ -1059,14 +1039,14 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 
          RooAddition* tmpadd = static_cast<RooAddition*>(parg) ;
 
-         RooCustomizer cust(*tmpadd->list1().first(),Form("blah_%s",iter->c_str())) ;
+         RooCustomizer cust(*tmpadd->list1().first(), ("blah_" + *iter).c_str());
          cust.replaceArg(*ratio,*specializedRatio) ;
          partCust = cust.build() ;
 
        } else {
-         RooCustomizer cust(*parg,Form("blah_%s",iter->c_str())) ;
-         cust.replaceArg(*ratio,*specializedRatio) ;
-         partCust = cust.build() ;
+          RooCustomizer cust(*parg, ("blah_" + *iter).c_str());
+          cust.replaceArg(*ratio, *specializedRatio);
+          partCust = cust.build();
        }
 
        // Print customized denominator
@@ -1139,7 +1119,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
     return ;
   }
 
-  string name = Form("%s_numerator",GetName()) ;
+  string name = std::string{GetName()} + "_numerator";
   // WVE FIX THIS (2)
 
   std::unique_ptr<RooAbsReal> numerator = std::make_unique<RooProduct>(name.c_str(),name.c_str(),nomList) ;
@@ -1438,7 +1418,8 @@ std::string RooProdPdf::makeRGPPName(const char* pfx, const RooArgSet& term, con
 {
   // Make an appropriate automatic name for a RooGenProdProj object in getPartIntList()
 
-  std::ostringstream os(pfx);
+  std::ostringstream os;
+  os << pfx;
   os << "[";
 
   // Encode component names
@@ -2185,8 +2166,7 @@ RooProdPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileC
    return fixedProdPdf;
 }
 
-namespace RooFit {
-namespace Detail {
+namespace RooFit::Detail {
 
 RooFixedProdPdf::RooFixedProdPdf(std::unique_ptr<RooProdPdf> &&prodPdf, RooArgSet const &normSet)
    : RooAbsPdf(prodPdf->GetName(), prodPdf->GetTitle()),
@@ -2194,35 +2174,76 @@ RooFixedProdPdf::RooFixedProdPdf(std::unique_ptr<RooProdPdf> &&prodPdf, RooArgSe
      _servers("!servers", "List of servers", this),
      _prodPdf{std::move(prodPdf)}
 {
-   initialize();
+   auto cache = _prodPdf->createCacheElem(&_normSet, nullptr);
+   _isRearranged = cache->_isRearranged;
+
+   // The actual servers for a given normalization set depend on whether the
+   // cache is rearranged or not. See RooProdPdf::calculate to see
+   // which args in the cache are used directly.
+   if (_isRearranged) {
+      _servers.add(*cache->_rearrangedNum);
+      _servers.add(*cache->_rearrangedDen);
+      addOwnedComponents(std::move(cache->_rearrangedNum));
+      addOwnedComponents(std::move(cache->_rearrangedDen));
+      return;
+   }
+   // We don't want to carry the full cache object around, so we let it go out
+   // of scope and transfer the ownership of the args that we actually need.
+   cache->_ownedList.releaseOwnership();
+   std::vector<std::unique_ptr<RooAbsArg>> owned;
+   for (RooAbsArg *arg : cache->_ownedList) {
+      owned.emplace_back(arg);
+   }
+   for (RooAbsArg *arg : cache->_partList) {
+      _servers.add(*arg);
+      auto found = std::find_if(owned.begin(), owned.end(), [&](auto const &ptr) { return arg == ptr.get(); });
+      if (found != owned.end()) {
+         addOwnedComponents(std::move(owned[std::distance(owned.begin(), found)]));
+      }
+   }
 }
 
 RooFixedProdPdf::RooFixedProdPdf(const RooFixedProdPdf &other, const char *name)
    : RooAbsPdf(other, name),
      _normSet{other._normSet},
-     _servers("!servers", "List of servers", this),
-     _prodPdf{static_cast<RooProdPdf *>(other._prodPdf->Clone())}
+     _servers("!servers", this, other._servers),
+     _prodPdf{static_cast<RooProdPdf *>(other._prodPdf->Clone())},
+     _isRearranged{other._isRearranged}
 {
-   initialize();
 }
 
-void RooFixedProdPdf::initialize()
-{
-   _cache = _prodPdf->createCacheElem(&_normSet, nullptr);
-   auto &cache = *_cache;
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate product of PDFs in batch mode.
 
-   // The actual servers for a given normalization set depend on whether the
-   // cache is rearranged or not. See RooProdPdf::calculateBatch to see
-   // which args in the cache are used directly.
-   if (cache._isRearranged) {
-      _servers.add(*cache._rearrangedNum);
-      _servers.add(*cache._rearrangedDen);
-   } else {
-      for (std::size_t i = 0; i < cache._partList.size(); ++i) {
-         _servers.add(cache._partList[i]);
-      }
+void RooFixedProdPdf::doEval(RooFit::EvalContext &ctx) const
+{
+   if (_isRearranged) {
+      auto numerator = ctx.at(rearrangedNum());
+      auto denominator = ctx.at(rearrangedDen());
+      RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Ratio, ctx.output(), {numerator, denominator});
+      return;
    }
+   std::vector<std::span<const double>> factors;
+   factors.reserve(partList()->size());
+   for (const RooAbsArg *arg : *partList()) {
+      auto span = ctx.at(arg);
+      factors.push_back(span);
+   }
+   std::array<double, 1> special{static_cast<double>(factors.size())};
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::ProdPdf, ctx.output(), factors, special);
 }
 
-} // namespace Detail
-} // namespace RooFit
+double RooFixedProdPdf::evaluate() const
+{
+   if (_isRearranged) {
+      return rearrangedNum()->getVal() / rearrangedDen()->getVal();
+   }
+   double value = 1.0;
+
+   for (auto *arg : static_range_cast<RooAbsReal *>(*partList())) {
+      value *= arg->getVal();
+   }
+   return value;
+}
+
+} // namespace RooFit::Detail

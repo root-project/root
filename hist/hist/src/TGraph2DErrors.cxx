@@ -17,7 +17,6 @@
 #include "TVirtualFitter.h"
 #include "THLimitsFinder.h"
 
-ClassImp(TGraph2DErrors);
 
 /** \class TGraph2DErrors
     \ingroup Graphs
@@ -456,12 +455,12 @@ void TGraph2DErrors::SavePrimitive(std::ostream &out, Option_t *option)
    TString arrx = SavePrimitiveVector(out, "gr2derr_x", fNpoints, fX, kTRUE);
    TString arry = SavePrimitiveVector(out, "gr2derr_y", fNpoints, fY);
    TString arrz = SavePrimitiveVector(out, "gr2derr_z", fNpoints, fZ);
-   TString arrex = SavePrimitiveVector(out, "gr2derr_ex", fNpoints, fEX);
-   TString arrey = SavePrimitiveVector(out, "gr2derr_ey", fNpoints, fEY);
-   TString arrez = SavePrimitiveVector(out, "gr2derr_ez", fNpoints, fEZ);
+   TString arrex = SavePrimitiveVector(out, "gr2derr_ex", fNpoints, fEX, 111);
+   TString arrey = SavePrimitiveVector(out, "gr2derr_ey", fNpoints, fEY, 111);
+   TString arrez = SavePrimitiveVector(out, "gr2derr_ez", fNpoints, fEZ, 111);
 
    SavePrimitiveConstructor(out, Class(), "gr2derr",
-                            TString::Format("%d, %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), %s.data()",
+                            TString::Format("%d, %s.data(), %s.data(), %s.data(), %s, %s, %s",
                                             fNpoints, arrx.Data(), arry.Data(), arrz.Data(), arrex.Data(), arrey.Data(),
                                             arrez.Data()),
                             kFALSE);

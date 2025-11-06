@@ -41,7 +41,6 @@ public:
    ClassDefOverride(MyClass, 1)
 };
 
-ClassImp(MyClass)
 
 //________________________________________________________________________
 void create_tree()

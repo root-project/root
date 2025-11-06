@@ -29,7 +29,7 @@
 #include <TKey.h>
 #include <TObjString.h>
 #include <TUUID.h>
-#include <TVirtualStreamerInfo.h>
+#include <TStreamerInfo.h>
 
 #include <xxhash.h>
 
@@ -404,6 +404,13 @@ struct RTFHeader {
       }
    }
 
+   std::uint64_t GetNbytesInfo() const
+   {
+      if (IsBigFile())
+         return fInfoLong.fNbytesInfo;
+      return fInfoShort.fNbytesInfo;
+   }
+
    void SetNbytesInfo(std::uint32_t value)
    {
       if (IsBigFile()) {
@@ -713,6 +720,50 @@ std::uint64_t ROOT::Internal::RMiniFileReader::SearchInDirectory(std::uint64_t &
 
    // Not found
    return 0;
+}
+
+void ROOT::Internal::RMiniFileReader::LoadStreamerInfo()
+{
+   RTFHeader fileHeader;
+   ReadBuffer(&fileHeader, sizeof(fileHeader), 0);
+
+   const std::uint64_t seekKeyInfo = fileHeader.GetSeekInfo();
+
+   RTFKey key;
+   ReadBuffer(&key, sizeof(key), seekKeyInfo);
+
+   const std::uint64_t nbytesInfo = fileHeader.GetNbytesInfo() - key.fKeyLen;
+   const std::uint64_t seekInfo = seekKeyInfo + key.fKeyLen;
+   const std::uint32_t uncompLenInfo = key.fObjLen;
+   auto streamerInfo = MakeUninitArray<char>(uncompLenInfo);
+   if (nbytesInfo == uncompLenInfo) {
+      // Uncompressed
+      ReadBuffer(streamerInfo.get(), nbytesInfo, seekInfo);
+   } else {
+      auto buffer = MakeUninitArray<std::byte>(nbytesInfo);
+      ReadBuffer(buffer.get(), nbytesInfo, seekInfo);
+      RNTupleDecompressor::Unzip(buffer.get(), nbytesInfo, uncompLenInfo, streamerInfo.get());
+   }
+
+   TBufferFile buffer(TBuffer::kRead, uncompLenInfo, streamerInfo.release());
+   // This is necessary to allow the "class tags" inside the StreamerInfo list to refer to the proper offset into
+   // the buffer. Normally TFile loads the StreamerInfo via TKey::ReadObjWithBuffer, whose buffer also includes the
+   // key itself. Since we dealt with the key above already, we are only passing the payload to TBufferFile so offsets
+   // need to be patched up.
+   buffer.SetBufferDisplacement(key.fKeyLen);
+   TList streamerInfoList;
+   streamerInfoList.Streamer(buffer);
+   TObjLink *lnk = streamerInfoList.FirstLink();
+   while (lnk) {
+      auto obj = lnk->GetObject();
+      // NOTE: the last element of the streamer info list may be a TList with the IO customization rules, so we need
+      // to check before static casting.
+      if (obj->IsA() == TStreamerInfo::Class()) {
+         auto info = static_cast<TStreamerInfo *>(obj);
+         info->BuildCheck();
+      }
+      lnk = lnk->Next();
+   }
 }
 
 ROOT::RResult<ROOT::RNTuple> ROOT::Internal::RMiniFileReader::GetNTupleProper(std::string_view ntuplePath)

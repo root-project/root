@@ -10,6 +10,7 @@ add_subdirectory(fitpanel)
 add_subdirectory(guibuilder)
 add_subdirectory(guihtml)
 add_subdirectory(recorder)
+add_subdirectory(treemap)
 
 if(webgui)
    if(cefweb)

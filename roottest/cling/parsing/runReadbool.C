@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 
 bool tester(int i, bool &b,int expected) {
    if (b!=expected) {

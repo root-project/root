@@ -30,7 +30,6 @@
 
 #include "TROOT.h"
 
-ClassImp(TParallelCoordEditor);
 
 
 /** \class TParallelCoordEditor

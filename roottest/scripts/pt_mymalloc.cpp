@@ -1,16 +1,16 @@
 #include <sys/types.h>
-#include <errno.h>
+#include <cerrno>
 #include <dlfcn.h>
 #include <fcntl.h>
 #if defined(__APPLE__)
-#include <stdlib.h>
+#include <cstdlib>
 #else
 #include <malloc.h>
 #endif
 #include <pthread.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <unistd.h>
 
 // Intercepts calls to malloc, realloc, free, by planting replacement symbols.
@@ -61,7 +61,7 @@ private:
 
       // Open the FIFO:
       static const char* fifoenv = "PT_FIFONAME";
-      const char* fifoname = getenv(fifoenv);
+      const char* fifoname = std::getenv(fifoenv);
       if (fifoname) {
          fFifoFD = open(fifoname, O_WRONLY);
          if (fFifoFD < 0) {

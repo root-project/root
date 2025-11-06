@@ -12,7 +12,6 @@
 #include "TTRD2.h"
 #include "TNode.h"
 
-ClassImp(TTRD2);
 
 /** \class TTRD2
 \ingroup g3d

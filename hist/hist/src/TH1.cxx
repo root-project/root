@@ -595,7 +595,6 @@ extern void H1LeastSquareFit(Int_t n, Int_t m, Double_t *a);
 extern void H1LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t &ifail);
 extern void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k, Double_t *b);
 
-ClassImp(TH1);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Histogram default constructor.
@@ -2506,12 +2505,17 @@ void TH1::ClearUnderflowAndOverflow()
 ///  The resulting integral is normalized to 1.
 ///  If the routine is called with the onlyPositive flag set an error will
 ///  be produced in case of negative bin content and a NaN value returned
+///  \param onlyPositive If set to true, an error will be produced and NaN will be returned
+///  when a bin with negative number of entries is encountered.
+///  \param option
+///  - `""` (default) Compute the cumulative density function assuming current bin contents represent counts.
+///  - `"width"` Computes the cumulative density function assuming current bin contents represent densities.
 ///  \return 1 if success, 0 if integral is zero, NAN if onlyPositive-test fails
 
-Double_t TH1::ComputeIntegral(Bool_t onlyPositive)
+Double_t TH1::ComputeIntegral(Bool_t onlyPositive, Option_t *option)
 {
    if (fBuffer) BufferEmpty();
-
+   bool useArea = TString(option).Contains("width", TString::kIgnoreCase);
    // delete previously computed integral (if any)
    if (fIntegral) delete [] fIntegral;
 
@@ -2525,10 +2529,16 @@ Double_t TH1::ComputeIntegral(Bool_t onlyPositive)
    Int_t ibin = 0; fIntegral[ibin] = 0;
 
    for (Int_t binz=1; binz <= nbinsz; ++binz) {
+      Double_t zWidth = (fDimension > 2) ? fZaxis.GetBinWidth(binz) : 1;
       for (Int_t biny=1; biny <= nbinsy; ++biny) {
+         Double_t yWidth = (fDimension > 1) ? fYaxis.GetBinWidth(biny) : 1;
          for (Int_t binx=1; binx <= nbinsx; ++binx) {
+            Double_t xWidth = fXaxis.GetBinWidth(binx);
             ++ibin;
             Double_t y = RetrieveBinContent(GetBin(binx, biny, binz));
+            if (useArea)
+               y *= xWidth * yWidth * zWidth;
+
             if (onlyPositive && y < 0) {
                  Error("ComputeIntegral","Bin content is negative - return a NaN value");
                  fIntegral[nbins] = TMath::QuietNaN();
@@ -5006,13 +5016,14 @@ void TH1::GetBinXYZ(Int_t binglobal, Int_t &binx, Int_t &biny, Int_t &binz) cons
 /// is evaluated, normalized to one.
 ///
 /// @param rng (optional) Random number generator pointer used (default is gRandom)
+/// @param option (optional) Set it to "width" if your non-uniform bin contents represent a density rather than counts
 ///
 /// The integral is automatically recomputed if the number of entries
 /// is not the same then when the integral was computed.
-/// NB Only valid for 1-d histograms. Use GetRandom2 or 3 otherwise.
-/// If the histogram has a bin with negative content a NaN is returned
+/// @note Only valid for 1-d histograms. Use GetRandom2 or GetRandom3 otherwise.
+/// If the histogram has a bin with negative content, a NaN is returned.
 
-Double_t TH1::GetRandom(TRandom * rng) const
+Double_t TH1::GetRandom(TRandom *rng, Option_t *option) const
 {
    if (fDimension > 1) {
       Error("GetRandom","Function only valid for 1-d histograms");
@@ -5022,10 +5033,11 @@ Double_t TH1::GetRandom(TRandom * rng) const
    Double_t integral = 0;
    // compute integral checking that all bins have positive content (see ROOT-5894)
    if (fIntegral) {
-      if (fIntegral[nbinsx+1] != fEntries) integral = ((TH1*)this)->ComputeIntegral(true);
+      if (fIntegral[nbinsx + 1] != fEntries)
+         integral = const_cast<TH1 *>(this)->ComputeIntegral(true, option);
       else  integral = fIntegral[nbinsx];
    } else {
-      integral = ((TH1*)this)->ComputeIntegral(true);
+      integral = const_cast<TH1 *>(this)->ComputeIntegral(true, option);
    }
    if (integral == 0) return 0;
    // return a NaN in case some bins have negative content
@@ -6746,9 +6758,12 @@ void TH1::SetDefaultSumw2(Bool_t sumw2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Change/set the title.
 ///
-/// If title is in the form `stringt;stringx;stringy;stringz`
+/// If title is in the form `stringt;stringx;stringy;stringz;stringc`
 /// the histogram title is set to `stringt`, the x axis title to `stringx`,
-/// the y axis title to `stringy`, and the z axis title to `stringz`.
+/// the y axis title to `stringy`, the z axis title to `stringz`, and the c
+/// axis title for the palette is ignored at this stage.
+/// Note that you can use e.g. `stringt;stringx` if you only want to specify
+/// title and x axis title.
 ///
 /// To insert the character `;` in one of the titles, one should use `#;`
 /// or `#semicolon`.
@@ -6780,8 +6795,15 @@ void TH1::SetTitle(const char *title)
             fYaxis.SetTitle(str2.Data());
             lns  = str1.Length();
             str1 = str1(isc+1, lns);
-            str1.ReplaceAll("#semicolon",10,";",1);
-            fZaxis.SetTitle(str1.Data());
+            isc  = str1.Index(";");
+            if (isc >=0 ) {
+               str2 = str1(0,isc);
+               str2.ReplaceAll("#semicolon",10,";",1);
+               fZaxis.SetTitle(str2.Data());
+            } else {
+               str1.ReplaceAll("#semicolon",10,";",1);
+               fZaxis.SetTitle(str1.Data());
+            }
          } else {
             str1.ReplaceAll("#semicolon",10,";",1);
             fYaxis.SetTitle(str1.Data());
@@ -7332,7 +7354,7 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
    out << std::setprecision(max_precision);
 
-   out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
+   out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << TString(savedName).ReplaceSpecialCppChars() << "\", \""
        << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << GetXaxis()->GetNbins();
    if (!sxaxis.IsNull())
       out << ", " << sxaxis << ".data()";
@@ -7444,7 +7466,7 @@ void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *opti
    SavePrimitiveFunctions(out, hname, fFunctions);
 
    // save attributes
-   SaveFillAttributes(out, hname, 0, 1001);
+   SaveFillAttributes(out, hname, -1, -1);
    SaveLineAttributes(out, hname, 1, 1, 1);
    SaveMarkerAttributes(out, hname, 1, 1, 1);
    fXaxis.SaveAttributes(out, hname, "->GetXaxis()");
@@ -9474,7 +9496,6 @@ std::string cling::printValue(TH1 *val) {
 // TH1C : histograms with one byte per channel.   Maximum bin content = 127
 //______________________________________________________________________________
 
-ClassImp(TH1C);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -9660,7 +9681,6 @@ TH1C operator/(const TH1C &h1, const TH1C &h2)
 // TH1S : histograms with one short per channel.  Maximum bin content = 32767
 //______________________________________________________________________________
 
-ClassImp(TH1S);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -9847,7 +9867,6 @@ TH1S operator/(const TH1S &h1, const TH1S &h2)
 // 2147483647 = INT_MAX
 //______________________________________________________________________________
 
-ClassImp(TH1I);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -10035,7 +10054,6 @@ TH1I operator/(const TH1I &h1, const TH1I &h2)
 // 9223372036854775807 = LLONG_MAX
 //______________________________________________________________________________
 
-ClassImp(TH1L);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -10222,7 +10240,6 @@ TH1L operator/(const TH1L &h1, const TH1L &h2)
 // TH1F : histograms with one float per channel. Maximum precision 7 digits, maximum integer bin content = +/-16777216
 //______________________________________________________________________________
 
-ClassImp(TH1F);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -10403,7 +10420,6 @@ TH1F operator/(const TH1F &h1, const TH1F &h2)
 // TH1D : histograms with one double per channel. Maximum precision 14 digits, maximum integer bin content = +/-9007199254740992
 //______________________________________________________________________________
 
-ClassImp(TH1D);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

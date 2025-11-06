@@ -45,7 +45,6 @@ TImageDump can be used in any mode (batch, interactive) as follows
 #include "TObjArray.h"
 
 
-ClassImp(TImageDump);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

@@ -33,7 +33,6 @@ Editor of pad/canvas objects.
 #include "TGLabel.h"
 #include "TCanvas.h"
 
-ClassImp(TPadEditor);
 
 enum EPadWid {
    kCOLOR,

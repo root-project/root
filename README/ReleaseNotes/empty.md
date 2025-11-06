@@ -32,7 +32,7 @@ The following people have contributed to this new version:
  Bernhard Manfred Gruber,\
  Enrico Guiraud,
  Jonas Hahnfeld, CERN/Goethe University Frankfurt,\
- Fernando Hueso Gonzalez, University of Valencia\
+ Fernando Hueso Gonzalez, IFIC (CSIC-University of Valencia),\
  Attila Krasznahorkay, CERN/EP-ADP-OS,\
  Wim Lavrijsen, LBL,\
  Dennis Klein, GSI,\

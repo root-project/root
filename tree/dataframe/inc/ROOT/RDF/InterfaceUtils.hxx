@@ -89,6 +89,7 @@ struct Histo1D{};
 struct Histo2D{};
 struct Histo3D{};
 struct HistoND{};
+struct HistoNSparseD{};
 struct Graph{};
 struct GraphAsymmErrors{};
 struct Profile1D{};
@@ -107,7 +108,6 @@ struct Book{};
 
 template <typename T, bool ISV6HISTO = std::is_base_of<TH1, std::decay_t<T>>::value>
 struct HistoUtils {
-   static void SetCanExtendAllAxes(T &h) { h.SetCanExtend(::TH1::kAllAxes); }
    static bool HasAxisLimits(T &h)
    {
       auto xaxis = h.GetXaxis();
@@ -117,11 +117,10 @@ struct HistoUtils {
 
 template <typename T>
 struct HistoUtils<T, false> {
-   static void SetCanExtendAllAxes(T &) {}
    static bool HasAxisLimits(T &) { return true; }
 };
 
-// Generic filling (covers Histo2D, HistoND, Profile1D and Profile2D actions, with and without weights)
+// Generic filling (covers Histo2D, HistoND, HistoNSparseD, Profile1D and Profile2D actions, with and without weights)
 template <typename... ColTypes, typename ActionTag, typename ActionResultType, typename PrevNodeType>
 std::unique_ptr<RActionBase>
 BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h, const unsigned int nSlots,
@@ -270,6 +269,7 @@ struct SnapshotHelperArgs {
    ROOT::Detail::RDF::RLoopManager *fOutputLoopManager;
    ROOT::Detail::RDF::RLoopManager *fInputLoopManager;
    bool fToNTuple;
+   bool fIncludeVariations;
 };
 
 template <typename PrevNodeType>
@@ -293,28 +293,33 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
 
    std::unique_ptr<RActionBase> actionPtr;
    if (snapHelperArgs->fToNTuple) {
-      if (!ROOT::IsImplicitMTEnabled()) {
-         // single-thread snapshot
-         using Helper_t = UntypedSnapshotRNTupleHelper;
-         using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
+      // We use the same helper for single- and multi-thread snapshot.
+      using Helper_t = UntypedSnapshotRNTupleHelper;
+      using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
 
-         actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options, inputLM,
-                                               outputLM, std::move(isDefine), colTypeIDs),
-                                      colNames, colTypeIDs, prevNode, colRegister));
-      } else {
-         // multi-thread snapshot to RNTuple is not yet supported
-         // TODO(fdegeus) Add MT snapshotting
-         throw std::runtime_error("Snapshot: Snapshotting to RNTuple with IMT enabled is not supported yet.");
-      }
+      actionPtr.reset(new Action_t(Helper_t(nSlots, filename, dirname, treename, colNames, outputColNames, options,
+                                            inputLM, outputLM, colTypeIDs),
+                                   colNames, colTypeIDs, prevNode, colRegister));
    } else {
       if (!ROOT::IsImplicitMTEnabled()) {
          // single-thread snapshot
-         using Helper_t = UntypedSnapshotTTreeHelper;
-         using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
-         actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options,
-                                               std::move(isDefine), outputLM, inputLM, colTypeIDs),
-                                      colNames, colTypeIDs, prevNode, colRegister));
+         if (snapHelperArgs->fIncludeVariations) {
+            using Helper_t = SnapshotHelperWithVariations;
+            using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
+            actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options,
+                                                  std::move(isDefine), outputLM, inputLM, colTypeIDs),
+                                         colNames, colTypeIDs, prevNode, colRegister));
+         } else {
+            using Helper_t = UntypedSnapshotTTreeHelper;
+            using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
+            actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options,
+                                                  std::move(isDefine), outputLM, inputLM, colTypeIDs),
+                                         colNames, colTypeIDs, prevNode, colRegister));
+         }
       } else {
+         if (snapHelperArgs->fIncludeVariations) {
+            throw std::invalid_argument("Multi-threaded snapshot with variations is not supported yet.");
+         }
          // multi-thread snapshot
          using Helper_t = UntypedSnapshotTTreeHelperMT;
          using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
@@ -416,8 +421,6 @@ ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColu
 std::vector<std::string> GetValidatedArgTypes(const ColumnNames_t &colNames, const RColumnRegister &colRegister,
                                               TTree *tree, RDataSource *ds, const std::string &context,
                                               bool vector2RVec);
-
-std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, const ColumnNames_t &definedDSCols);
 
 template <typename T>
 void AddDSColumnsHelper(const std::string &colName, RLoopManager &lm, RDataSource &ds, RColumnRegister &colRegister)

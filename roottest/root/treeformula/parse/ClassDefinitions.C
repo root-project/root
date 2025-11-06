@@ -21,7 +21,6 @@ class QRawPulseR : public TObject
 	ClassDefOverride(QRawPulseR, 1)
 };
 
-ClassImp(QRawPulseR);
 
 QRawPulseR::QRawPulseR()
 {
@@ -68,7 +67,6 @@ class QRawTriggerPulseR : public QRawPulseR
 	ClassDefOverride(QRawTriggerPulseR, 1);
 };
 
-ClassImp(QRawTriggerPulseR);
 
 QRawTriggerPulseR::QRawTriggerPulseR() : QRawPulseR() 
 {
@@ -106,7 +104,6 @@ class QRawEventR : public TObject
 	ClassDef (QRawEventR, 1)
 };
 
-ClassImp(QRawEventR);
 
 QRawEventR::QRawEventR() 
 {

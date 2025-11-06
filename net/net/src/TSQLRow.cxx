@@ -22,4 +22,3 @@
 
 #include "TSQLRow.h"
 
-ClassImp(TSQLRow);

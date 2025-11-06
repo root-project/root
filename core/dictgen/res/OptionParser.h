@@ -51,8 +51,8 @@ Bugs Fixed 8-7-12:
  */
 
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 /**
  * @file

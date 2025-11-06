@@ -46,7 +46,6 @@ file (or set corresponding gEnv entry in application initialization):
 ~~~
 */
 
-ClassImp(TEveViewer);
 
 Bool_t TEveViewer::fgInitInternal        = kFALSE;
 Bool_t TEveViewer::fgRecreateGlOnDockOps = kFALSE;
@@ -325,7 +324,6 @@ Bool_t TEveViewer::HandleElementPaste(TEveElement* el)
 List of Viewers providing common operations on TEveViewer collections.
 */
 
-ClassImp(TEveViewerList);
 
 ////////////////////////////////////////////////////////////////////////////////
 

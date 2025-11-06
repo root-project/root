@@ -59,7 +59,6 @@ TChainIndex::TChainIndexEntry::TChainIndexEntry(const TChainIndex::TChainIndexEn
    fTreeIndex = (other.fTreeIndex ? static_cast<TVirtualIndex *>(other.fTreeIndex->Clone()) : nullptr);
 }
 
-ClassImp(TChainIndex);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for TChainIndex

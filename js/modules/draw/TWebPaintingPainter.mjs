@@ -57,9 +57,10 @@ class TWebPaintingPainter extends ObjectPainter {
       let indx = 0, attr = {}, lastpath = null, lastkind = 'none', d = '',
           oper, npoints, n;
 
+      /* eslint-disable one-var */
       const g = this.createG(),
-            arr = obj.fOper.split(';'),
-      check_attributes = kind => {
+            arr = obj.fOper.split(';');
+      const check_attributes = kind => {
          if (kind === lastkind)
             return;
 
@@ -76,20 +77,28 @@ class TWebPaintingPainter extends ObjectPainter {
          lastkind = kind;
          lastpath = g.append('svg:path').attr('d', ''); // placeholder for 'd' to have it always in front
          switch (kind) {
-            case 'f': lastpath.call(this.fillatt.func); break;
-            case 'l': lastpath.call(this.lineatt.func).style('fill', 'none'); break;
-            case 'm': lastpath.call(this.markeratt.func); break;
+            case 'f':
+               lastpath.call(this.fillatt.func);
+               break;
+            case 'l':
+               lastpath.call(this.lineatt.func).style('fill', 'none');
+               break;
+            case 'm':
+               lastpath.call(this.markeratt.func);
+               break;
          }
-      }, read_attr = (str, names) => {
+      };
+      const read_attr = (str, names) => {
          let lastp = 0;
          const obj2 = { _typename: 'any' };
          for (let k = 0; k < names.length; ++k) {
-            const p = str.indexOf(':', lastp+1);
-            obj2[names[k]] = parseInt(str.slice(lastp+1, (p > lastp) ? p : undefined));
+            const p = str.indexOf(':', lastp + 1);
+            obj2[names[k]] = parseInt(str.slice(lastp + 1, p > lastp ? p : undefined));
             lastp = p;
          }
          return obj2;
-      }, process = k => {
+      };
+      const process = k => {
          while (++k < arr.length) {
             oper = arr[k][0];
             switch (oper) {
@@ -107,7 +116,8 @@ class TWebPaintingPainter extends ObjectPainter {
                   continue;
                case 'o':
                   attr = read_attr(arr[k], ['fTextColor', 'fTextFont', 'fTextSize', 'fTextAlign', 'fTextAngle']);
-                  if (attr.fTextSize < 0) attr.fTextSize *= -0.001;
+                  if (attr.fTextSize < 0)
+                     attr.fTextSize *= -0.001;
                   check_attributes();
                   continue;
                case 'r':
@@ -119,7 +129,7 @@ class TWebPaintingPainter extends ObjectPainter {
                         x2 = func.x(obj.fBuf[indx++]),
                         y2 = func.y(obj.fBuf[indx++]);
 
-                  d += `M${x1},${y1}h${x2-x1}v${y2-y1}h${x1-x2}z`;
+                  d += `M${x1},${y1}h${x2 - x1}v${y2 - y1}h${x1 - x2}z`;
                   continue;
                }
                case 'l':
@@ -129,9 +139,10 @@ class TWebPaintingPainter extends ObjectPainter {
                   npoints = parseInt(arr[k].slice(1));
 
                   for (n = 0; n < npoints; ++n)
-                     d += `${(n>0)?'L':'M'}${func.x(obj.fBuf[indx++])},${func.y(obj.fBuf[indx++])}`;
+                     d += `${(n > 0) ? 'L' : 'M'}${func.x(obj.fBuf[indx++])},${func.y(obj.fBuf[indx++])}`;
 
-                  if (oper === 'f') d += 'Z';
+                  if (oper === 'f')
+                     d += 'Z';
 
                   continue;
                }
@@ -160,23 +171,25 @@ class TWebPaintingPainter extends ObjectPainter {
                         let text = arr[k].slice(1),
                             angle = attr.fTextAngle;
                         if (angle >= 360)
-                           angle -= Math.floor(angle/360) * 360;
+                           angle -= Math.floor(angle / 360) * 360;
 
                         if (oper === 'h') {
                            let res = '';
                            for (n = 0; n < text.length; n += 2)
-                              res += String.fromCharCode(parseInt(text.slice(n, n+2), 16));
+                              res += String.fromCharCode(parseInt(text.slice(n, n + 2), 16));
                            text = res;
                         }
 
                         // todo - correct support of angle
-                        this.drawText({ align: attr.fTextAlign,
-                                        x: func.x(obj.fBuf[indx++]),
-                                        y: func.y(obj.fBuf[indx++]),
-                                        rotate: -angle,
-                                        text,
-                                        color: getColor(attr.fTextColor),
-                                        latex: 0, draw_g: group });
+                        this.drawText({
+                           align: attr.fTextAlign,
+                           x: func.x(obj.fBuf[indx++]),
+                           y: func.y(obj.fBuf[indx++]),
+                           rotate: -angle,
+                           text,
+                           color: getColor(attr.fTextColor),
+                           latex: 0, draw_g: group
+                        });
 
                         return this.finishTextDrawing(group);
                      }).then(() => process(k));

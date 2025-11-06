@@ -35,12 +35,10 @@
 
 /**
    @defgroup QuasiRandom QuasiRandom number generators and distributions
-   Classes for generating QuasiRandom numbers and based on GSL 
+   Classes for generating QuasiRandom numbers and based on GSL.
+   \note MathMore needs to be enabled for these integrator to be available.
    @ingroup Random
-   @ingroup MathMore
 */
-
-
 
 namespace ROOT {
 namespace Math {

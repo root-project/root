@@ -145,11 +145,13 @@ class RPadPainter extends RObjectPainter {
      * @protected */
    getFrameSvg() {
       const layer = this.getLayerSvg('primitives_layer');
-      if (layer.empty()) return layer;
+      if (layer.empty())
+         return layer;
       let node = layer.node().firstChild;
       while (node) {
          const elem = d3_select(node);
-         if (elem.classed('root_frame')) return elem;
+         if (elem.classed('root_frame'))
+            return elem;
          node = node.nextSibling;
       }
       return d3_select(null);
@@ -177,7 +179,8 @@ class RPadPainter extends RObjectPainter {
       const svg_p = this.getPadSvg();
       if (!svg_p.empty()) {
          svg_p.property('pad_painter', null);
-         if (!this.isCanvas()) svg_p.remove();
+         if (!this.isCanvas())
+            svg_p.remove();
       }
 
       this.#main_painter_ref = undefined;
@@ -235,18 +238,19 @@ class RPadPainter extends RObjectPainter {
    /** @summary Returns frame coordinates - also when frame is not drawn */
    getFrameRect() {
       const fp = this.getFramePainter();
-      if (fp) return fp.getFrameRect();
+      if (fp)
+         return fp.getFrameRect();
 
       const w = this.getPadWidth(),
             h = this.getPadHeight(),
             rect = {};
 
-      rect.szx = Math.round(0.5*w);
-      rect.szy = Math.round(0.5*h);
-      rect.width = 2*rect.szx;
-      rect.height = 2*rect.szy;
-      rect.x = Math.round(w/2 - rect.szx);
-      rect.y = Math.round(h/2 - rect.szy);
+      rect.szx = Math.round(0.5 * w);
+      rect.szy = Math.round(0.5 * h);
+      rect.width = 2 * rect.szx;
+      rect.height = 2 * rect.szy;
+      rect.x = Math.round(w / 2 - rect.szx);
+      rect.y = Math.round(h / 2 - rect.szy);
       rect.hint_delta_x = rect.szx;
       rect.hint_delta_y = rect.szy;
       rect.transform = makeTranslate(rect.x, rect.y) || '';
@@ -296,9 +300,11 @@ class RPadPainter extends RObjectPainter {
    removePrimitive(arg, clean_only_secondary) {
       let indx, prim = null;
       if (Number.isInteger(arg)) {
-         indx = arg; prim = this.#painters[indx];
+         indx = arg;
+         prim = this.#painters[indx];
       } else {
-         indx = this.#painters.indexOf(arg); prim = arg;
+         indx = this.#painters.indexOf(arg);
+         prim = arg;
       }
       if (indx < 0)
          return indx;
@@ -314,7 +320,8 @@ class RPadPainter extends RObjectPainter {
             if (this.#painters[k].isSecondary(arr[len0])) {
                arr.push(this.#painters[k]);
                this.#painters.splice(k, 1);
-               if (k <= indx) resindx--;
+               if (k <= indx)
+                  resindx--;
             }
          }
          len0++;
@@ -348,12 +355,17 @@ class RPadPainter extends RObjectPainter {
    findPainterFor(selobj, selname, seltype) {
       return this.#painters.find(p => {
          const pobj = p.getObject();
-         if (!pobj) return false;
+         if (!pobj)
+            return false;
 
-         if (selobj && (pobj === selobj)) return true;
-         if (!selname && !seltype) return false;
-         if (selname && (pobj.fName !== selname)) return false;
-         if (seltype && (pobj._typename !== seltype)) return false;
+         if (selobj && (pobj === selobj))
+            return true;
+         if (!selname && !seltype)
+            return false;
+         if (selname && (pobj.fName !== selname))
+            return false;
+         if (seltype && (pobj._typename !== seltype))
+            return false;
          return true;
       });
    }
@@ -363,7 +375,8 @@ class RPadPainter extends RObjectPainter {
    getHistPalette() {
       const pp = this.findPainterFor(undefined, undefined, `${nsREX}RPaletteDrawable`);
 
-      if (pp) return pp.getHistPalette();
+      if (pp)
+         return pp.getHistPalette();
 
       if (!this.fDfltPalette) {
          this.fDfltPalette = {
@@ -377,8 +390,8 @@ class RPadPainter extends RObjectPainter {
                       { fOrdinal: 0.75, fColor: { fColor: 'rgb(209, 187, 89)' } },
                       { fOrdinal: 0.875, fColor: { fColor: 'rgb(254, 200, 50)' } },
                       { fOrdinal: 1, fColor: { fColor: 'rgb(249, 251, 14)' } }],
-             fInterpolate: true,
-             fNormalized: true
+            fInterpolate: true,
+            fNormalized: true
          };
          addMethods(this.fDfltPalette, `${nsREX}RPalette`);
       }
@@ -411,12 +424,15 @@ class RPadPainter extends RObjectPainter {
    forEachPainterInPad(userfunc, kind) {
       if (!kind)
          kind = 'all';
-      if (kind !== 'objects') userfunc(this);
+      if (kind !== 'objects')
+         userfunc(this);
       for (let k = 0; k < this.#painters.length; ++k) {
          const sub = this.#painters[k];
          if (isFunc(sub.forEachPainterInPad)) {
-            if (kind !== 'objects') sub.forEachPainterInPad(userfunc, kind);
-         } else if (kind !== 'pads') userfunc(sub);
+            if (kind !== 'objects')
+               sub.forEachPainterInPad(userfunc, kind);
+         } else if (kind !== 'pads')
+            userfunc(sub);
       }
    }
 
@@ -546,7 +562,8 @@ class RPadPainter extends RObjectPainter {
          factor = 0.66;
          if (this.#pad?.fWinSize[0] && this.#pad.fWinSize[1]) {
             factor = this.#pad.fWinSize[1] / this.#pad.fWinSize[0];
-            if ((factor < 0.1) || (factor > 10)) factor = 0.66;
+            if ((factor < 0.1) || (factor > 10))
+               factor = 0.66;
          }
 
          if (this.#fixed_size) {
@@ -584,12 +601,12 @@ class RPadPainter extends RObjectPainter {
             .attr('height', rect.height)
             .style('position', 'absolute');
       } else {
-        svg.attr('x', 0)
-           .attr('y', 0)
-           .style('width', '100%')
-           .style('height', '100%')
-           .style('position', 'absolute')
-           .style('left', 0).style('top', 0).style('bottom', 0).style('right', 0);
+         svg.attr('x', 0)
+            .attr('y', 0)
+            .style('width', '100%')
+            .style('height', '100%')
+            .style('position', 'absolute')
+            .style('left', 0).style('top', 0).style('bottom', 0).style('right', 0);
       }
 
       svg.style('filter', settings.DarkMode ? 'invert(100%)' : null);
@@ -636,8 +653,10 @@ class RPadPainter extends RObjectPainter {
             pad_enlarged = svg_can.property('pad_enlarged');
 
       if (this.isTopPad() || (!pad_enlarged && !this.hasObjectsToDraw() && !this.#painters)) {
-         if (this.#fixed_size) return; // canvas cannot be enlarged in such mode
-         if (!this.enlargeMain(is_escape ? false : 'toggle')) return;
+         if (this.#fixed_size)
+            return; // canvas cannot be enlarged in such mode
+         if (!this.enlargeMain(is_escape ? false : 'toggle'))
+            return;
          if (this.enlargeMain('state') === 'off')
             svg_can.property('pad_enlarged', null);
          else
@@ -683,10 +702,18 @@ class RPadPainter extends RObjectPainter {
          pad_visible = false;
          if (pad_enlarged === this.#pad)
             pad_visible = true;
-         else
-            this.forEachPainterInPad(pp => { if (pp.getObject() === pad_enlarged) pad_visible = true; }, 'pads');
+         else {
+            this.forEachPainterInPad(pp => {
+               if (pp.getObject() === pad_enlarged)
+                  pad_visible = true;
+            }, 'pads');
+         }
 
-         if (pad_visible) { w = width; h = height; x = y = 0; }
+         if (pad_visible) {
+            w = width;
+            h = height;
+            x = y = 0;
+         }
       }
 
       if (only_resize) {
@@ -759,7 +786,8 @@ class RPadPainter extends RObjectPainter {
              .style('display', pad_visible ? '' : 'none');
       }
 
-      if (this.alignButtons && btns) this.alignButtons(btns, w, h);
+      if (this.alignButtons && btns)
+         this.alignButtons(btns, w, h);
 
       return pad_visible;
    }
@@ -809,7 +837,10 @@ class RPadPainter extends RObjectPainter {
          this.#doing_draw = undefined;
       else {
          const entry = this.#doing_draw[0];
-         if (entry.func) { entry.func(); delete entry.func; }
+         if (entry.func) {
+            entry.func();
+            delete entry.func;
+         }
       }
    }
 
@@ -837,7 +868,8 @@ class RPadPainter extends RObjectPainter {
 
          if (this.#start_draw_tm) {
             const spenttm = new Date().getTime() - this.#start_draw_tm;
-            if (spenttm > 3000) console.log(`Canvas drawing took ${(spenttm*1e-3).toFixed(2)}s`);
+            if (spenttm > 3000)
+               console.log(`Canvas drawing took ${(spenttm * 1e-3).toFixed(2)}s`);
             this.#start_draw_tm = undefined;
          }
 
@@ -850,7 +882,7 @@ class RPadPainter extends RObjectPainter {
          if (isObject(op))
             op._primitive = true;
 
-         return this.drawPrimitives(indx+1);
+         return this.drawPrimitives(indx + 1);
       });
    }
 
@@ -870,10 +902,12 @@ class RPadPainter extends RObjectPainter {
 
       // first count - how many processors are there
       this.#painters?.forEach(obj => {
-         if (isFunc(obj.processTooltipEvent)) painters.push(obj);
+         if (isFunc(obj.processTooltipEvent))
+            painters.push(obj);
       });
 
-      if (pnt) pnt.nproc = painters.length;
+      if (pnt)
+         pnt.nproc = painters.length;
 
       painters.forEach(obj => {
          const hint = obj.processTooltipEvent(pnt) || { user_info: null };
@@ -905,7 +939,8 @@ class RPadPainter extends RObjectPainter {
          menu.addAttributesMenu(this);
          if (this.isCanvas()) {
             menu.addSettingsMenu(false, false, arg => {
-               if (arg === 'dark') this.changeDarkMode();
+               if (arg === 'dark')
+                  this.changeDarkMode();
             });
          }
       }
@@ -984,7 +1019,7 @@ class RPadPainter extends RObjectPainter {
       return sync_promise.then(() => {
          if (this.isCanvas())
             this.createCanvasSvg(2);
-          else
+         else
             showsubitems = this.createPadSvg(true);
 
          return redrawNext(0);
@@ -1007,11 +1042,14 @@ class RPadPainter extends RObjectPainter {
      * @private */
    needRedrawByResize() {
       const elem = this.getPadSvg();
-      if (!elem.empty() && elem.property('can3d') === constants.Embed3D.Overlay) return true;
+      if (!elem.empty() && elem.property('can3d') === constants.Embed3D.Overlay)
+         return true;
 
       for (let i = 0; i < this.#painters.length; ++i) {
-         if (isFunc(this.#painters[i].needRedrawByResize))
-            if (this.#painters[i].needRedrawByResize()) return true;
+         if (isFunc(this.#painters[i].needRedrawByResize)) {
+            if (this.#painters[i].needRedrawByResize())
+               return true;
+         }
       }
 
       return false;
@@ -1026,11 +1064,16 @@ class RPadPainter extends RObjectPainter {
       if (sync_promise === false)
          return false;
 
-      if ((size === true) || (size === false)) { force = size; size = null; }
+      if ((size === true) || (size === false)) {
+         force = size;
+         size = null;
+      }
 
-      if (isObject(size) && size.force) force = true;
+      if (isObject(size) && size.force)
+         force = true;
 
-      if (!force) force = this.needRedrawByResize();
+      if (!force)
+         force = this.needRedrawByResize();
 
       let changed = false;
       const redrawNext = indx => {
@@ -1039,7 +1082,7 @@ class RPadPainter extends RObjectPainter {
             return changed;
          }
 
-         return getPromise(this.#painters[indx].redraw(force ? 'redraw' : 'resize')).then(() => redrawNext(indx+1));
+         return getPromise(this.#painters[indx].redraw(force ? 'redraw' : 'resize')).then(() => redrawNext(indx + 1));
       };
 
 
@@ -1107,7 +1150,7 @@ class RPadPainter extends RObjectPainter {
          const colors = this.getColors() || getRootColors();
          for (let k = 0; k < snap.fColIndex.length; ++k)
             colors[snap.fColIndex[k]] = convertColor(snap.fColValue[k]);
-       }
+      }
 
       // painter used only for evaluation of attributes
       const pattr = new RObjectPainter(), obj = snap.fObject;
@@ -1119,7 +1162,8 @@ class RPadPainter extends RObjectPainter {
 
       const extract_color = (member_name, attr_name) => {
          const col = pattr.v7EvalColor(attr_name, '');
-         if (col) obj[member_name] = addColor(col, this.getColors());
+         if (col)
+            obj[member_name] = addColor(col, this.getColors());
       };
 
       // handle TAttLine
@@ -1191,7 +1235,7 @@ class RPadPainter extends RObjectPainter {
             for (let n = 0; n < arr.length; ++n) {
                const name = arr[n].fString, p = name.indexOf('=');
                if (p > 0)
-                  colors[parseInt(name.slice(0, p))] = convertColor(name.slice(p+1));
+                  colors[parseInt(name.slice(0, p))] = convertColor(name.slice(p + 1));
             }
 
             this.setColors(colors);
@@ -1260,7 +1304,7 @@ class RPadPainter extends RObjectPainter {
          // TODO - fDrawable is v7, fObject from v6, maybe use same data member?
          promise = this.drawObject(this, snap.fDrawable || snap.fObject || snap, snap.fOption || '')
                        .then(objp => this.addObjectPainter(objp, lst, indx));
-      };
+      }
 
       return getPromise(promise).then(() => this.drawNextSnap(lst, pindx, indx)); // call next
    }
@@ -1269,8 +1313,10 @@ class RPadPainter extends RObjectPainter {
      * @private */
    findSnap(snapid, onlyid) {
       function check(checkid) {
-         if (!checkid || !isStr(checkid)) return false;
-         if (checkid === snapid) return true;
+         if (!checkid || !isStr(checkid))
+            return false;
+         if (checkid === snapid)
+            return true;
          return onlyid && (checkid.length > snapid.length) &&
                 (checkid.indexOf(snapid) === (checkid.length - snapid.length));
       }
@@ -1281,7 +1327,7 @@ class RPadPainter extends RObjectPainter {
       if (!this.#painters)
          return null;
 
-      for (let k=0; k < this.#painters.length; ++k) {
+      for (let k = 0; k < this.#painters.length; ++k) {
          let sub = this.#painters[k];
 
          if (!onlyid && isFunc(sub.findSnap))
@@ -1289,7 +1335,8 @@ class RPadPainter extends RObjectPainter {
          else if (!check(sub.getSnapId()))
             sub = null;
 
-         if (sub) return sub;
+         if (sub)
+            return sub;
       }
 
       return null;
@@ -1316,7 +1363,7 @@ class RPadPainter extends RObjectPainter {
          this.#pad = snap;
 
          if (this.isBatchMode() && this.isCanvas())
-             this.#fixed_size = true;
+            this.#fixed_size = true;
 
          const mainid = this.selectDom().attr('id');
 
@@ -1343,7 +1390,7 @@ class RPadPainter extends RObjectPainter {
       // apply all changes in the object (pad or canvas)
       if (this.isCanvas())
          this.createCanvasSvg(2);
-       else
+      else
          this.createPadSvg(true);
 
       let missmatch = false, i = 0, k = 0;
@@ -1413,12 +1460,12 @@ class RPadPainter extends RObjectPainter {
    async createImage(format) {
       if ((format === 'png') || (format === 'jpeg') || (format === 'svg') || (format === 'webp') || (format === 'pdf')) {
          return this.produceImage(true, format).then(res => {
-            if (!res || (format === 'svg')) return res;
+            if (!res || (format === 'svg'))
+               return res;
             const separ = res.indexOf('base64,');
-            return (separ > 0) ? res.slice(separ+7) : '';
+            return (separ > 0) ? res.slice(separ + 7) : '';
          });
       }
-
       return '';
    }
 
@@ -1426,7 +1473,7 @@ class RPadPainter extends RObjectPainter {
      * @private */
    itemContextMenu(name) {
       const rrr = this.getPadSvg().node().getBoundingClientRect(),
-            evnt = { clientX: rrr.left+10, clientY: rrr.top + 10 };
+            evnt = { clientX: rrr.left + 10, clientY: rrr.top + 10 };
 
       // use timeout to avoid conflict with mouse click and automatic menu close
       if (name === 'pad')
@@ -1476,10 +1523,10 @@ class RPadPainter extends RObjectPainter {
             let res = imgdata;
             if (kind !== 'svg') {
                const separ = res.indexOf('base64,');
-               res = (separ > 0) ? res.slice(separ+7) : '';
+               res = (separ > 0) ? res.slice(separ + 7) : '';
             }
             if (res)
-              this.getCanvPainter()?.sendWebsocket(`SAVE:${filename}:${res}`);
+               this.getCanvPainter()?.sendWebsocket(`SAVE:${filename}:${res}`);
          } else
             saveFile(filename, (kind !== 'svg') ? imgdata : prSVG + encodeURIComponent(imgdata));
       });
@@ -1612,7 +1659,8 @@ class RPadPainter extends RObjectPainter {
       if (funcname === 'PadContextMenus') {
          evnt?.preventDefault();
          evnt?.stopPropagation();
-         if (closeMenu()) return;
+         if (closeMenu())
+            return;
 
          return createMenu(evnt, this).then(menu => {
             menu.header('Menus');
@@ -1636,9 +1684,11 @@ class RPadPainter extends RObjectPainter {
                const shown = [];
                this.#painters.forEach((pp, indx) => {
                   const obj = pp?.getObject();
-                  if (!obj || (shown.indexOf(obj) >= 0) || pp.isSecondary()) return;
+                  if (!obj || (shown.indexOf(obj) >= 0) || pp.isSecondary())
+                     return;
                   let name = isFunc(pp.getClassName) ? pp.getClassName() : (obj._typename || '');
-                  if (name) name += '::';
+                  if (name)
+                     name += '::';
                   name += isFunc(pp.getObjectName) ? pp.getObjectName() : (obj.fName || `item${indx}`);
                   menu.add(name, indx, this.itemContextMenu);
                   shown.push(obj);
@@ -1662,7 +1712,8 @@ class RPadPainter extends RObjectPainter {
 
          if (!done && isFunc(pp.clickButton)) {
             done = pp.clickButton(funcname);
-            if (isPromise(done)) prs.push(done);
+            if (isPromise(done))
+               prs.push(done);
          }
       }
 
@@ -1679,14 +1730,17 @@ class RPadPainter extends RObjectPainter {
          this._buttons = [];
       // check if there are duplications
 
-      for (let k = 0; k < this._buttons.length; ++k)
-         if (this._buttons[k].funcname === funcname) return;
+      for (let k = 0; k < this._buttons.length; ++k) {
+         if (this._buttons[k].funcname === funcname)
+            return;
+      }
 
       this._buttons.push({ btn, tooltip, funcname, keyname });
 
       if (!this.isTopPad() && funcname.indexOf('Pad') && (funcname !== 'enlargePad')) {
          const cp = this.getCanvPainter();
-         if (cp && (cp !== this)) cp.addPadButton(btn, tooltip, funcname);
+         if (cp && (cp !== this))
+            cp.addPadButton(btn, tooltip, funcname);
       }
    }
 
@@ -1712,7 +1766,8 @@ class RPadPainter extends RObjectPainter {
    /** @summary Show pad buttons
      * @private */
    showPadButtons() {
-      if (!this._buttons) return;
+      if (!this._buttons)
+         return;
 
       PadButtonsHandler.assign(this);
       this.showPadButtons();
@@ -1722,7 +1777,7 @@ class RPadPainter extends RObjectPainter {
    getPadLength(vertical, len, frame_painter) {
       let rect, res;
       const sign = vertical ? -1 : 1,
-            getV = (indx, dflt) => (indx < len.fArr.length) ? len.fArr[indx] : dflt,
+            getV = (indx, dflt) => { return (indx < len.fArr.length) ? len.fArr[indx] : dflt; },
             getRect = () => {
                if (!rect)
                   rect = frame_painter ? frame_painter.getFrameRect() : this.getPadRect();
@@ -1740,7 +1795,7 @@ class RPadPainter extends RObjectPainter {
 
       const norm = getV(0, 0), pixel = getV(1, 0);
 
-      res += sign*pixel;
+      res += sign * pixel;
 
       if (norm)
          res += sign * (vertical ? getRect().height : getRect().width) * norm;
@@ -1762,28 +1817,53 @@ class RPadPainter extends RObjectPainter {
    /** @summary Decode pad draw options */
    decodeOptions(opt) {
       const pad = this.getObject();
-      if (!pad) return;
+      if (!pad)
+         return;
 
       const d = new DrawOptions(opt),
             o = this.setOptions({ GlobalColors: true, LocalColors: false, IgnorePalette: false, RotateFrame: false, FixFrame: false });
 
-      if (d.check('NOCOLORS') || d.check('NOCOL')) o.GlobalColors = o.LocalColors = false;
-      if (d.check('LCOLORS') || d.check('LCOL')) { o.GlobalColors = false; o.LocalColors = true; }
-      if (d.check('NOPALETTE') || d.check('NOPAL')) o.IgnorePalette = true;
-      if (d.check('ROTATE')) o.RotateFrame = true;
-      if (d.check('FIXFRAME')) o.FixFrame = true;
+      if (d.check('NOCOLORS') || d.check('NOCOL'))
+         o.GlobalColors = o.LocalColors = false;
+      if (d.check('LCOLORS') || d.check('LCOL')) {
+         o.GlobalColors = false;
+         o.LocalColors = true;
+      }
+      if (d.check('NOPALETTE') || d.check('NOPAL'))
+         o.IgnorePalette = true;
+      if (d.check('ROTATE'))
+         o.RotateFrame = true;
+      if (d.check('FIXFRAME'))
+         o.FixFrame = true;
 
-      if (d.check('WHITE')) pad.fFillColor = 0;
-      if (d.check('LOGX')) pad.fLogx = 1;
-      if (d.check('LOGY')) pad.fLogy = 1;
-      if (d.check('LOGZ')) pad.fLogz = 1;
-      if (d.check('LOG')) pad.fLogx = pad.fLogy = pad.fLogz = 1;
-      if (d.check('GRIDX')) pad.fGridx = 1;
-      if (d.check('GRIDY')) pad.fGridy = 1;
-      if (d.check('GRID')) pad.fGridx = pad.fGridy = 1;
-      if (d.check('TICKX')) pad.fTickx = 1;
-      if (d.check('TICKY')) pad.fTicky = 1;
-      if (d.check('TICK')) pad.fTickx = pad.fTicky = 1;
+      if (d.check('WHITE'))
+         pad.fFillColor = 0;
+      if (d.check('LOGX'))
+         pad.fLogx = 1;
+      if (d.check('LOGY'))
+         pad.fLogy = 1;
+      if (d.check('LOGZ'))
+         pad.fLogz = 1;
+      if (d.check('LOG'))
+         pad.fLogx = pad.fLogy = pad.fLogz = 1;
+      if (d.check('GRIDX'))
+         pad.fGridx = 1;
+      if (d.check('GRIDY'))
+         pad.fGridy = 1;
+      if (d.check('GRID'))
+         pad.fGridx = pad.fGridy = 1;
+      if (d.check('TICKX2'))
+         pad.fTickx = 2;
+      if (d.check('TICKY2'))
+         pad.fTicky = 2;
+      if (d.check('TICK2'))
+         pad.fTickx = pad.fTicky = 2;
+      if (d.check('TICKX'))
+         pad.fTickx = 1;
+      if (d.check('TICKY'))
+         pad.fTicky = 1;
+      if (d.check('TICK'))
+         pad.fTickx = pad.fTicky = 1;
    }
 
    /** @summary draw RPad object */

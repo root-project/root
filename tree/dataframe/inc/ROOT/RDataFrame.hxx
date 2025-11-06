@@ -17,7 +17,6 @@ ROOT's RDataFrame allows to analyse data stored in TTrees with a high level inte
 #define ROOT_RDATAFRAME
 
 #include "TROOT.h" // To allow ROOT::EnableImplicitMT without including ROOT.h
-#include "ROOT/RDF/RDatasetSpec.hxx"
 #include "ROOT/RDF/RInterface.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include <string_view>
@@ -30,6 +29,10 @@ ROOT's RDataFrame allows to analyse data stored in TTrees with a high level inte
 
 class TDirectory;
 class TTree;
+
+namespace ROOT::RDF::Experimental{
+class RDatasetSpec;
+}
 
 namespace ROOT {
 namespace RDF {

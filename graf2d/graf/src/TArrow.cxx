@@ -20,7 +20,6 @@ Float_t TArrow::fgDefaultAngle      = 60;
 Float_t TArrow::fgDefaultArrowSize  = 0.05;
 TString TArrow::fgDefaultOption     = ">";
 
-ClassImp(TArrow);
 
 /** \class TArrow
 \ingroup BasicGraphics
@@ -365,9 +364,9 @@ void TArrow::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "arrow",
                             TString::Format("%g, %g, %g, %g, %g, \"%s\"", fX1, fY1, fX2, fY2, fArrowSize,
-                                            TString(GetDrawOption()).ReplaceSpecialCppChars().Data()));
+                                            TString(GetOption()).ReplaceSpecialCppChars().Data()));
 
-   SaveFillAttributes(out, "arrow", 0, 1);
+   SaveFillAttributes(out, "arrow", 0, 1001);
    SaveLineAttributes(out, "arrow", 1, 1, 1);
 
    if (TestBit(kLineNDC))

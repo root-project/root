@@ -49,7 +49,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
     Hist
     Matrix
     Tree
-    Minuit
     RIO
     MathCore
     Foam

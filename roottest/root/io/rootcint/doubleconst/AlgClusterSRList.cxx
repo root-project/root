@@ -1,6 +1,5 @@
 #include "AlgClusterSRList.h"
 
-ClassImp(AlgClusterSRList)
 
 AlgClusterSRList::AlgClusterSRList()
 {
