@@ -191,7 +191,7 @@ namespace ROOT {
                return T();
             }
          }
-         ClassDef(TRObject, 0) //
+         ClassDefOverride(TRObject, 0) //
       };
 
    }

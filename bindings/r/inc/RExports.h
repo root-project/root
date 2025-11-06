@@ -46,6 +46,7 @@
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"
 #pragma GCC diagnostic ignored "-Wextra"
 #pragma GCC diagnostic ignored "-Wignored-qualifiers"
+#pragma GCC diagnostic ignored "-Wsuggest-override"
 // disable warning for macos
 #if defined(__APPLE__)
 #pragma GCC diagnostic ignored "-Wnonportable-include-path"
