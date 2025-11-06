@@ -25,6 +25,8 @@
 
 #pragma link C++ class EdmWrapper<CustomStruct> +;
 #pragma link C++ class EdmHash < 1> + ;
+#pragma link C++ class EdmWrapper<long long>+;
+#pragma link C++ class EdmContainer;
 
 #pragma link C++ class DataVector < int, double> + ;
 #pragma link C++ class DataVector < int, float> + ;

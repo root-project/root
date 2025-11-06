@@ -344,3 +344,19 @@ TEST(RNTuple, TClassInnerReadRule)
    reader->LoadEntry(1);
    EXPECT_TRUE(f->empty());
 }
+
+TEST(RNTuple, TClassMetaName)
+{
+   auto f1 = ROOT::RClassField("f", "EdmWrapper<long long>");
+   EXPECT_STREQ("EdmWrapper<Long64_t>", f1.GetClass()->GetName());
+
+   auto f2 = std::make_unique<ROOT::RField<EdmWrapper<long long>>>("f");
+   EXPECT_STREQ("EdmWrapper<Long64_t>", static_cast<ROOT::RClassField *>(f2.get())->GetClass()->GetName());
+
+   auto f3 = RFieldBase::Create("f", "EdmWrapper<long long>").Unwrap();
+   EXPECT_STREQ("EdmWrapper<Long64_t>", static_cast<ROOT::RClassField *>(f3.get())->GetClass()->GetName());
+
+   auto f4 = RFieldBase::Create("f", "EdmContainer").Unwrap();
+   EXPECT_STREQ("EdmWrapper<Long64_t>",
+                static_cast<const ROOT::RClassField *>(f4->GetConstSubfields()[0])->GetClass()->GetName());
+}

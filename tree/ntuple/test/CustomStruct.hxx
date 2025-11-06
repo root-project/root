@@ -95,6 +95,12 @@ public:
    T fMember;
 };
 
+class EdmContainer {
+public:
+   // Used to test that the streamer info for fWrapper will use long long
+   EdmWrapper<long long> fWrapper;
+};
+
 template <typename T>
 struct EdmHashTrait {
    using value_type = T;
