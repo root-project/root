@@ -152,7 +152,7 @@ public:
    void importJSONElement(const std::string &name, const std::string &jsonString);
    void importVariableElement(const RooFit::Detail::JSONNode &n);
 
-   void importFunction(const RooFit::Detail::JSONNode &n, bool importAllDependants);
+   void importFunction(const RooFit::Detail::JSONNode &p, bool importAllDependants);
    void importFunction(const std::string &jsonString, bool importAllDependants);
 
    static std::unique_ptr<RooFit::Detail::JSONTree> createNewJSONTree();
@@ -226,10 +226,10 @@ private:
 
    void importAllNodes(const RooFit::Detail::JSONNode &n);
 
-   void importVariable(const RooFit::Detail::JSONNode &n);
+   void importVariable(const RooFit::Detail::JSONNode &p);
    void importDependants(const RooFit::Detail::JSONNode &n);
 
-   void exportVariable(const RooAbsArg *v, RooFit::Detail::JSONNode &n);
+   void exportVariable(const RooAbsArg *v, RooFit::Detail::JSONNode &p);
    void exportVariables(const RooArgSet &allElems, RooFit::Detail::JSONNode &n);
 
    void exportAllObjects(RooFit::Detail::JSONNode &n);

@@ -107,7 +107,7 @@ static std::pair<void *, std::string> ResolveBranch(TTree *tree, const char *nam
  * @note In the current implementation of TLeaf, there is no way to extract the
  *       dimensions without string parsing.
  *
- * @param leaf Pointer to the TLeaf object from which to extract dimensions.
+ * @param title title of the TLeaf object from which to extract dimensions.
  * @return std::vector<dim_t> A vector containing the extracted dimensions.
  */
 static std::vector<dim_t> getMultiDims(std::string const &title)
