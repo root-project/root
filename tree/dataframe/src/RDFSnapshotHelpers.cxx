@@ -919,6 +919,12 @@ void ROOT::Internal::RDF::UntypedSnapshotRNTupleHelper::Initialize()
 
    ROOT::RNTupleWriteOptions writeOptions;
    writeOptions.SetCompression(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel);
+   writeOptions.SetInitialUnzippedPageSize(fOptions.fInitialUnzippedPageSize);
+   writeOptions.SetMaxUnzippedPageSize(fOptions.fMaxUnzippedPageSize);
+   writeOptions.SetApproxZippedClusterSize(fOptions.fApproxZippedClusterSize);
+   writeOptions.SetMaxUnzippedClusterSize(fOptions.fMaxUnzippedClusterSize);
+   writeOptions.SetEnablePageChecksums(fOptions.fEnablePageChecksums);
+   writeOptions.SetEnableSamePageMerging(fOptions.fEnableSamePageMerging);
 
    fOutputFile.reset(TFile::Open(fFileName.c_str(), fOptions.fMode.c_str()));
    if (!fOutputFile)
