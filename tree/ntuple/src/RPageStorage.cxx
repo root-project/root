@@ -927,7 +927,7 @@ void ROOT::Internal::RPagePersistentSink::UpdateExtraTypeInfo(const ROOT::RExtra
    if (extraTypeInfo.GetContentId() != EExtraTypeInfoIds::kStreamerInfo)
       throw RException(R__FAIL("ROOT bug: unexpected type extra info in UpdateExtraTypeInfo()"));
 
-   fStreamerInfos.merge(RNTupleSerializer::DeserializeStreamerInfos(extraTypeInfo.GetContent()).Unwrap());
+   fInfosOfStreamerFields.merge(RNTupleSerializer::DeserializeStreamerInfos(extraTypeInfo.GetContent()).Unwrap());
 }
 
 void ROOT::Internal::RPagePersistentSink::InitImpl(ROOT::RNTupleModel &model)
@@ -1255,7 +1255,7 @@ void ROOT::Internal::RPagePersistentSink::CommitClusterGroup()
 
 void ROOT::Internal::RPagePersistentSink::CommitDatasetImpl()
 {
-   if (!fStreamerInfos.empty()) {
+   if (!fInfosOfStreamerFields.empty()) {
       // De-duplicate extra type infos before writing. Usually we won't have them already in the descriptor, but
       // this may happen when we are writing back an already-existing RNTuple, e.g. when doing incremental merging.
       for (const auto &etDesc : fDescriptorBuilder.GetDescriptor().GetExtraTypeInfoIterable()) {
@@ -1265,13 +1265,13 @@ void ROOT::Internal::RPagePersistentSink::CommitDatasetImpl()
             R__ASSERT(etDesc.GetTypeName().empty());
             R__ASSERT(etDesc.GetTypeVersion() == 0);
             auto etInfo = RNTupleSerializer::DeserializeStreamerInfos(etDesc.GetContent()).Unwrap();
-            fStreamerInfos.merge(etInfo);
+            fInfosOfStreamerFields.merge(etInfo);
          }
       }
 
       RExtraTypeInfoDescriptorBuilder extraInfoBuilder;
       extraInfoBuilder.ContentId(EExtraTypeInfoIds::kStreamerInfo)
-         .Content(RNTupleSerializer::SerializeStreamerInfos(fStreamerInfos));
+         .Content(RNTupleSerializer::SerializeStreamerInfos(fInfosOfStreamerFields));
       fDescriptorBuilder.ReplaceExtraTypeInfo(extraInfoBuilder.MoveDescriptor().Unwrap());
    }
 

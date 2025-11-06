@@ -447,7 +447,7 @@ private:
    std::vector<ROOT::RClusterDescriptor::RPageRange> fOpenPageRanges;
 
    /// Union of the streamer info records that are sent from streamer fields to the sink before committing the dataset.
-   ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t fStreamerInfos;
+   ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t fInfosOfStreamerFields;
 
 protected:
    /// Set of optional features supported by the persistent sink
