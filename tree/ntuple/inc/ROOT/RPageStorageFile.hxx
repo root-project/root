@@ -65,6 +65,10 @@ private:
    std::unique_ptr<ROOT::Internal::RNTupleFileWriter> fWriter;
    /// Number of bytes committed to storage in the current cluster
    std::uint64_t fNBytesCurrentCluster = 0;
+   /// On UpdateSchema(), the new class fields register the corresponding streamer info here so that the
+   /// streamer info records in the file can be properly updated on dataset commit
+   ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t fInfosOfClassFields;
+
    RPageSinkFile(std::string_view ntupleName, const ROOT::RNTupleWriteOptions &options);
 
    /// We pass bytesPacked so that TFile::ls() reports a reasonable value for the compression ratio of the corresponding
@@ -98,6 +102,8 @@ public:
    RPageSinkFile(RPageSinkFile &&) = default;
    RPageSinkFile &operator=(RPageSinkFile &&) = default;
    ~RPageSinkFile() override;
+
+   void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final;
 }; // class RPageSinkFile
 
 // clang-format off
