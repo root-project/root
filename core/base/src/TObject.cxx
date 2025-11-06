@@ -956,7 +956,7 @@ void TObject::UseCurrentStyle()
 ///  The function returns the total number of bytes written to the file.
 ///  It returns 0 if the object cannot be written.
 
-Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize) const
+Int_t TObject::Write(const char *name, Int_t option, Long64_t bufsize) const
 {
    if (R__unlikely(option & kOnlyPrepStep))
       return 0;
@@ -978,7 +978,7 @@ Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize) const
 /// Write this object to the current directory. For more see the
 /// const version of this method.
 
-Int_t TObject::Write(const char *name, Int_t option, Int_t bufsize)
+Int_t TObject::Write(const char *name, Int_t option, Long64_t bufsize)
 {
    return ((const TObject*)this)->Write(name, option, bufsize);
 }
