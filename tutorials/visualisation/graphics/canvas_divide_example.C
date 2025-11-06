@@ -1,36 +1,60 @@
-// variants: 0  - custom values
-//           1  - default values
-//           2+ - old default values
+/// \file
+/// \ingroup tutorial_graphics
+/// \notebook -js
+/// \preview Example of canvas division into subpads
+///
+/// ROOT 6.40.0 changed how the canvas are divided into subpads. Before, the TPad::Divide
+/// with typical arguments (positive `xmargin` and `ymargin` values) function was not respecting
+/// canvas own margins for the inner area. This limited flexibility of defining canvas layout.
+///
+/// As it was changed and fixed in 6.40.0, this macro demonstrates how the new TPad::Divide function
+/// works, what are the current default values, and how to reproduce the old behaviour.
+///
+/// This example can be run with optional argument (default is 0):
+///  * 0  - will demonstrate current custom layout behaviour,
+///  * 1  - will show default values (starting from 6.40.0) where the canvas margins are respected
+///         and the subpad canvas are customised (the default values are put explicitly because we
+///         also want to modify the pads background colour for better visibility of the layout),
+///  * 2 (or anything else than 0, 1) - will restore old default values (for root before 6.40.0).
+///      Note that the `xmargin` and `ymargin` are doubled in TPad::Divide call in respect to the
+///      old defaults, and the canvas margins also must be modified.
+/// ~~~{.cpp}
+/// const auto xmargin = 0.01; // old default xmargin
+/// const auto ymargin = 0.01; // old default ymargin
+/// c->SetMargin(xmargin, xmargin, ymargin, ymargin);
+/// c->Divide(nx, ny, 2 * xmargin, 2 * ymargin, 46);
+/// ~~~
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rafał Lalik
 void canvas_divide_example(int use_variant = 0)
 {
-   auto wx = 600; // width and heigh
-   auto wy = 400;
+   const auto nx = 3; // top-level pad division
+   const auto ny = 2;
 
-   auto nx = 3; // top-level pad division
-   auto ny = 2;
-
-   auto ml = 0.30; // top-level pad margins
-   auto mb = 0.10;
-   auto mr = 0.05;
-   auto mt = 0.10;
-
-   auto c = new TCanvas("canvas_divide", "canvas_divide", wx, wy);
+   auto c = new TCanvas("canvas_divide", "canvas_divide", 600, 400);
    c->SetFillColor(19);
 
    if (use_variant == 0) {
-      c->SetMargin(ml, mr, mb, mt);
+      c->SetMargin(0.30, 0.05, 0.10, 0.10);
       c->Divide(nx, ny, 0.03, 0.05, 46);
    } else if (use_variant == 1) {
       c->Divide(nx, ny, 0.01, 0.01, 46);
    } else {
-      c->SetMargin(0.01, 0.01, 0.01, 0.01);
-      c->Divide(nx, ny, 0.02, 0.02, 46);
+      const auto xmargin = 0.01; // old default
+      const auto ymargin = 0.01; // old default
+      c->SetMargin(xmargin, xmargin, ymargin, ymargin);
+      c->Divide(nx, ny, 2 * xmargin, 2 * ymargin, 46);
    }
 
-   ml = c->GetLeftMargin();
-   mb = c->GetBottomMargin();
-   mr = c->GetRightMargin();
-   mt = c->GetTopMargin();
+   // display layout details
+
+   const auto ml = c->GetLeftMargin();
+   const auto mb = c->GetBottomMargin();
+   const auto mr = c->GetRightMargin();
+   const auto mt = c->GetTopMargin();
 
    auto h = new TH1F("", "", 100, -3.3, 3.3);
    h->GetXaxis()->SetLabelFont(43);
