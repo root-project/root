@@ -154,7 +154,8 @@ def canReproduceNotebook(inNBName, kernelName, needsCompare):
     tmpDir = addEtcToEnvironment(os.path.dirname(inNBName))
     outNBName = inNBName.replace(nbExtension,"_out"+nbExtension)
     interpName = getInterpreterName()
-    convCmd = convCmdTmpl %(interpName, kernelName, inNBName, outNBName)
+    convCmd = convCmdTmpl %(interpName, kernelName, inNBName, os.path.basename(outNBName))
+    print("Running", convCmd)
     exitStatus = os.system(convCmd) # we use system to inherit the environment in os.environ
     shutil.rmtree(tmpDir)
     if needsCompare:
