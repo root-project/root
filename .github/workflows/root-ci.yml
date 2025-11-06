@@ -386,6 +386,7 @@ jobs:
           # Minimal build
           - image: alma10
             minimal: true
+            property: "Minimal build"
           - image: ubuntu22
             overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2404
@@ -434,7 +435,7 @@ jobs:
       - ${{ matrix.extra-runs-on == null && 'cpu' || matrix.extra-runs-on }}
 
     name: |
-      ${{ matrix.image }} ${{ matrix.property }} ${{ matrix.minimal && 'Minimal build' || '' }}
+      ${{ matrix.image }} ${{ matrix.property }}
       ${{ (github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && join( matrix.overrides, ', ' )) || '' }}
 
     container:
