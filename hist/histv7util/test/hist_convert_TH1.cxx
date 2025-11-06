@@ -3,6 +3,7 @@
 #include <TAxis.h>
 #include <TH1.h>
 
+#include <array>
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
@@ -150,11 +151,21 @@ TEST(ConvertToTH1L, RHistEngine)
    auto th1l = ConvertToTH1L(engineL);
    ASSERT_TRUE(th1l);
 
-   const RHistEngine<long long> engineLL(Bins, {0, Bins});
+   RHistEngine<long long> engineLL(Bins, {0, Bins});
+
+   // Set one 64-bit long long value larger than what double can exactly represent.
+   static constexpr long long Large = (1LL << 60) - 1;
+   const std::array<RBinIndex, 1> indices = {1};
+   ROOT::Experimental::Internal::SetBinContent(engineLL, indices, Large);
+
    th1l = ConvertToTH1L(engineLL);
    ASSERT_TRUE(th1l);
 
-   // TODO: Test that 64-bit long long values are not truncated to double
+   // Get the value via TArrayL::At and store into a variable to be sure about the type. During direct comparison, a
+   // double return value may automatically promate Large to a double as well, introducing the truncation we want to
+   // test against.
+   const long long value = th1l->At(2);
+   EXPECT_EQ(value, Large);
 }
 
 TEST(ConvertToTH1L, RHist)

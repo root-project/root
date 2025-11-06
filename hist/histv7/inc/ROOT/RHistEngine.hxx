@@ -25,6 +25,14 @@ class TBuffer;
 namespace ROOT {
 namespace Experimental {
 
+// forward declarations for friend declaration
+template <typename BinContentType>
+class RHistEngine;
+namespace Internal {
+template <typename T, std::size_t N>
+static void SetBinContent(RHistEngine<T> &hist, const std::array<RBinIndex, N> &indices, const T &value);
+} // namespace Internal
+
 /**
 A histogram data structure to bin data along multiple dimensions.
 
@@ -57,6 +65,9 @@ Feedback is welcome!
 */
 template <typename BinContentType>
 class RHistEngine final {
+   template <typename T, std::size_t N>
+   friend void Internal::SetBinContent(RHistEngine<T> &, const std::array<RBinIndex, N> &, const T &);
+
    /// The axis configuration for this histogram. Relevant methods are forwarded from the public interface.
    Internal::RAxes fAxes;
    /// The bin contents for this histogram
@@ -329,6 +340,20 @@ public:
    /// %ROOT Streamer function to throw when trying to store an object of this class.
    void Streamer(TBuffer &) { throw std::runtime_error("unable to store RHistEngine"); }
 };
+
+namespace Internal {
+/// %Internal function to set the content of a single bin.
+template <typename T, std::size_t N>
+static void SetBinContent(RHistEngine<T> &hist, const std::array<RBinIndex, N> &indices, const T &value)
+{
+   RLinearizedIndex index = hist.fAxes.ComputeGlobalIndex(indices);
+   if (!index.fValid) {
+      throw std::invalid_argument("bin not found in SetBinContent");
+   }
+   assert(index.fIndex < hist.fBinContents.size());
+   hist.fBinContents[index.fIndex] = value;
+}
+} // namespace Internal
 
 } // namespace Experimental
 } // namespace ROOT
