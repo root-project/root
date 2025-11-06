@@ -64,27 +64,7 @@ namespace TMVA {
       RMethodBase(Types::EMVA methodType,
                   DataSetInfo &dsi,
                   const TString &weightFile, ROOT::R::TRInterface &_r = ROOT::R::TRInterface::Instance());
-
-      // default destructur
-      virtual ~RMethodBase() {};
-      virtual void     Train() = 0;
-      // options treatment
-      virtual void     Init()           = 0;
-      virtual void     DeclareOptions() = 0;
-      virtual void     ProcessOptions() = 0;
-      // create ranking
-      virtual const Ranking *CreateRanking() = 0;
-
-      virtual Double_t GetMvaValue(Double_t *errLower = nullptr, Double_t *errUpper = nullptr) = 0;
-
-      Bool_t HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets) = 0;
    protected:
-      // the actual "weights"
-      virtual void AddWeightsXMLTo(void *parent) const = 0;
-      virtual void ReadWeightsFromXML(void *wghtnode) = 0;
-      virtual void ReadWeightsFromStream(std::istream &) = 0;        // backward compatibility
-      virtual void ReadWeightsFromStream(TFile &) {}                 // backward compatibility
-
 
       void LoadData();//Read data from Data() Aand DataInfo() to Dataframes and Vectors
    protected:
@@ -97,7 +77,7 @@ namespace TMVA {
       ROOT::R::TRDataFrame fDfSpectators;
 
    private:
-      ClassDef(RMethodBase, 0) // Virtual base class for all TMVA method
+      ClassDefOverride(RMethodBase, 0) // Virtual base class for all TMVA method
 
    };
 } // namespace TMVA
