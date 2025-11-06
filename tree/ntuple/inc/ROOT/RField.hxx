@@ -225,6 +225,8 @@ public:
    /// For polymorphic classes (that declare or inherit at least one virtual method), return the expected dynamic type
    /// of any user object. If the class is not polymorphic, return nullptr.
    const std::type_info *GetPolymorphicTypeInfo() const;
+   /// Return the TClass instance backing this field.
+   const TClass *GetClass() const { return fClass; }
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -316,7 +318,7 @@ template <typename T, typename = void>
 class RField final : public RClassField {
 public:
    static std::string TypeName() { return ROOT::Internal::GetRenormalizedTypeName(typeid(T)); }
-   RField(std::string_view name) : RClassField(name, TypeName())
+   RField(std::string_view name) : RClassField(name, Internal::GetDemangledTypeName(typeid(T)))
    {
       static_assert(std::is_class_v<T>, "no I/O support for this basic C++ type");
    }
