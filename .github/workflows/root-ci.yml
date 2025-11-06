@@ -385,7 +385,7 @@ jobs:
           - image: alma10
           # Minimal build
           - image: alma10
-            overrides: ["minimal=ON", pythia8=OFF, tmva-sofie=OFF]
+            minimal: true
           - image: ubuntu22
             overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2404
@@ -434,7 +434,7 @@ jobs:
       - ${{ matrix.extra-runs-on == null && 'cpu' || matrix.extra-runs-on }}
 
     name: |
-      ${{ matrix.image }} ${{ matrix.property }}
+      ${{ matrix.image }} ${{ matrix.property }} ${{ matrix.minimal && 'Minimal build' || '' }}
       ${{ (github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && join( matrix.overrides, ', ' )) || '' }}
 
     container:
@@ -493,6 +493,19 @@ jobs:
         run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
                ls -la
               '
+      - name: Apply option minimal request from matrix for this job
+        if: ${{ matrix.minimal == true }}
+        env:
+          GLOBAL_CONFIG_DIR: '.github/workflows/root-ci-config/buildconfig'
+          CONFIGFILE_STEM: '.github/workflows/root-ci-config/buildconfig/${{ matrix.image }}'
+        run: |
+          echo "Applying minimal request options"
+          # Add commands to apply minimal request options here
+          set -x
+          cp "$GLOBAL_CONFIG_DIR/global-minimal.txt" "$GLOBAL_CONFIG_DIR/global.txt"
+          if [ -f "${CONFIGFILE_STEM}-minimal.txt" ]; then
+            cp "${CONFIGFILE_STEM}-minimal.txt" "${CONFIGFILE_STEM}.txt"
+          fi
 
       - name: Apply option overrides from matrix for this job for all builds except non-special nightlies and releases
         if: ${{ ( github.event_name != 'schedule' || matrix.is_special) && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
