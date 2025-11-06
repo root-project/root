@@ -202,10 +202,10 @@ public:
 
 class TThreadTimer : public TTimer {
 public:
-   // if this time is less or equal to kItimerResolution, TUnixSystem::DispatchOneEvent i
+   // if this time is less or equal to kItimerResolution, TUnixSystem::DispatchOneEvent
    // can not exit and have its caller react to the other TTimer's actions (like the request
    // to stop the event loop) until there is another type of event.
-   TThreadTimer(Long_t ms = kItimerResolution + 10);
+   TThreadTimer(Long_t ms = kItimerResolution + 5);
    Bool_t Notify() override;
 };
 

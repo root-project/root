@@ -60,7 +60,7 @@ enum ESysConstants {
    kMAXSIGNALS       = 16,
    kMAXPATHLEN       = 8192,
    kBUFFERSIZE       = 8192,
-   kItimerResolution = 10      // interval-timer resolution in ms
+   kItimerResolution = 5       ///< interval-timer resolution in ms (used for TThread, TTimer, Emit, Connect, etc.)
 };
 
 enum EColor { kWhite   =0,   kBlack    =1,   kGray   =920,
