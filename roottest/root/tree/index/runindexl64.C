@@ -5,9 +5,8 @@
 bool test(TTree *);
 
 const char *fname = "indexl64.root";
-https : // github.com/root-project/root/pull/19561
-        const Long64_t bigval =
-           0x0FFFFFFFFFFFFFFF; // here we skip long double, so we can go higher than with runindex64.C
+// https://github.com/root-project/root/pull/19561
+const Long64_t bigval = 0x0FFFFFFFFFFFFFFF; // here we skip long double, so we can go higher than with runindex64.C
 
 int runindexl64()
 {
