@@ -1016,11 +1016,6 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &node)
       return;
    }
 
-   // this variable was already exported
-   if (findNamedChild(node, v->GetName())) {
-      return;
-   }
-
    JSONNode &var = appendNamedChild(node, v->GetName());
 
    if (cv) {
