@@ -14,16 +14,8 @@ from . import pythonization
 
 
 def _tcolor_constructor(original_init):
-    """
-    Wrapper for TColor constructor that retains ownership to avoid double deletes.
-    Uses functools.wraps to preserve the original function's attributes.
-    """
     @functools.wraps(original_init)
     def wrapper(self, *args, **kwargs):
-        """
-        Forward the arguments to the C++ constructor and retain ownership. This
-        helps avoiding double deletes due to ROOT automatic memory management.
-        """
         original_init(self, *args, **kwargs)
         import ROOT
         ROOT.SetOwnership(self, False)

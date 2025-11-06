@@ -15,8 +15,11 @@ def verify_fix():
     print("=" * 70)
     print()
     
-    # Path to the fixed file
-    tcolor_file = "/Volumes/Backup Plus/root/bindings/pyroot/pythonizations/python/ROOT/_pythonization/_tcolor.py"
+    # Path to the fixed file - relative to script location
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    repo_root = os.path.abspath(os.path.join(script_dir, '..', '..', '..'))
+    tcolor_file = os.path.join(repo_root, "bindings", "pyroot", "pythonizations", 
+                                "python", "ROOT", "_pythonization", "_tcolor.py")
     
     if not os.path.exists(tcolor_file):
         print("ERROR: Cannot find _tcolor.py file")
@@ -108,12 +111,15 @@ def verify_tests():
     print("=" * 70)
     print()
     
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    repo_root = os.path.abspath(os.path.join(script_dir, '..', '..', '..'))
+    jupyroot_dir = os.path.join(repo_root, "roottest", "python", "JupyROOT")
     test_files = {
-        "Jupyter Notebook Test": "/Volumes/Backup Plus/root/roottest/python/JupyROOT/tcolor_definedcolors.ipynb",
-        "Python Unit Test": "/Volumes/Backup Plus/root/roottest/python/JupyROOT/test_tcolor_metadata.py",
-        "CMakeLists.txt": "/Volumes/Backup Plus/root/roottest/python/JupyROOT/CMakeLists.txt",
-        "Fix Summary": "/Volumes/Backup Plus/root/roottest/python/JupyROOT/ISSUE_20018_FIX_SUMMARY.md",
-        "Test README": "/Volumes/Backup Plus/root/roottest/python/JupyROOT/README_TCOLOR_TEST.md"
+        "Jupyter Notebook Test": os.path.join(jupyroot_dir, "tcolor_definedcolors.ipynb"),
+        "Python Unit Test": os.path.join(jupyroot_dir, "test_tcolor_metadata.py"),
+        "CMakeLists.txt": os.path.join(jupyroot_dir, "CMakeLists.txt"),
+        "Fix Summary": os.path.join(jupyroot_dir, "ISSUE_20018_FIX_SUMMARY.md"),
+        "Test README": os.path.join(jupyroot_dir, "README_TCOLOR_TEST.md")
     }
     
     all_exist = True
