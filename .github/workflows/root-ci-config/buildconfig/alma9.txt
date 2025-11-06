@@ -1,3 +1,4 @@
 BLA_VENDOR=OpenBLAS
 builtin_vdt=ON
+gfal=OFF
 tmva-cpu=OFF
