@@ -1,4 +1,5 @@
 builtin_nlohmannjson=ON
-builtin_vdt=On
-tmva-sofie=On
+builtin_vdt=ON
+gfal=OFF
 tmva-cpu=OFF
+tmva-sofie=ON
