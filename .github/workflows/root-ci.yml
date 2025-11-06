@@ -385,6 +385,9 @@ jobs:
           - image: alma9
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
           - image: alma10
+          # Minimal build
+          - image: alma10
+            overrides: ["minimal=ON", pythia8=OFF, tmva-sofie=OFF]
           - image: ubuntu22
             overrides: ["imt=Off", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2404
