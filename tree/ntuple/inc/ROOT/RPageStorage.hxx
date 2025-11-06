@@ -521,7 +521,7 @@ public:
 
    /// Updates the descriptor and calls InitImpl() that handles the backend-specific details (file, DAOS, etc.)
    void InitImpl(RNTupleModel &model) final;
-   void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final;
+   void UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) override;
    void UpdateExtraTypeInfo(const ROOT::RExtraTypeInfoDescriptor &extraTypeInfo) final;
 
    /// Initialize sink based on an existing descriptor and fill into the descriptor builder, optionally copying over

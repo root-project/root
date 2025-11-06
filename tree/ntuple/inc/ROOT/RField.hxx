@@ -281,6 +281,7 @@ public:
    size_t GetAlignment() const final;
    std::uint32_t GetTypeVersion() const final;
    std::uint32_t GetTypeChecksum() const final;
+   TClass *GetClass() const { return fClass; }
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 

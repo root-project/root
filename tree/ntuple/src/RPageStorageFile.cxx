@@ -30,6 +30,7 @@
 #include <RVersion.h>
 #include <TDirectory.h>
 #include <TError.h>
+#include <TVirtualStreamerInfo.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -83,6 +84,37 @@ void ROOT::Internal::RPageSinkFile::InitImpl(unsigned char *serializedHeader, st
    auto szZipHeader =
       RNTupleCompressor::Zip(serializedHeader, length, GetWriteOptions().GetCompression(), zipBuffer.get());
    fWriter->WriteNTupleHeader(zipBuffer.get(), szZipHeader, length);
+}
+
+void ROOT::Internal::RPageSinkFile::UpdateSchema(const ROOT::Internal::RNTupleModelChangeset &changeset,
+                                                 ROOT::NTupleSize_t firstEntry)
+{
+   RPagePersistentSink::UpdateSchema(changeset, firstEntry);
+
+   auto fnAddStreamerInfo = [this](const ROOT::RFieldBase *field) {
+      const TClass *cl = nullptr;
+      if (auto classField = dynamic_cast<const RClassField *>(field)) {
+         cl = classField->GetClass();
+      } else if (auto streamerField = dynamic_cast<const RStreamerField *>(field)) {
+         cl = streamerField->GetClass();
+      }
+      if (!cl)
+         return;
+
+      auto streamerInfo = cl->GetStreamerInfo(field->GetTypeVersion());
+      if (!streamerInfo) {
+         throw RException(R__FAIL(std::string("cannot get streamerInfo for ") + cl->GetName() + " [" +
+                                  std::to_string(field->GetTypeVersion()) + "]"));
+      }
+      fInfosOfClassFields[streamerInfo->GetNumber()] = streamerInfo;
+   };
+
+   for (const auto field : changeset.fAddedFields) {
+      fnAddStreamerInfo(field);
+      for (const auto &subField : *field) {
+         fnAddStreamerInfo(&subField);
+      }
+   }
 }
 
 inline ROOT::RNTupleLocator
@@ -244,7 +276,18 @@ ROOT::Internal::RPageSinkFile::CommitClusterGroupImpl(unsigned char *serializedP
 
 void ROOT::Internal::RPageSinkFile::CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length)
 {
-   fWriter->UpdateStreamerInfos(fDescriptorBuilder.BuildStreamerInfos());
+   // Add the streamer info records from streamer fields: because of runtime polymorphism we may need to add additional
+   // types not covered by the type names of the class fields
+   for (const auto &extraTypeInfo : fDescriptorBuilder.GetDescriptor().GetExtraTypeInfoIterable()) {
+      if (extraTypeInfo.GetContentId() != EExtraTypeInfoIds::kStreamerInfo)
+         continue;
+      // Ideally, we would avoid deserializing the streamer info records of the streamer fields that we just serialized.
+      // However, this happens only once at the end of writing and only when streamer fields are used, so the
+      // preference here is for code simplicity.
+      fInfosOfClassFields.merge(RNTupleSerializer::DeserializeStreamerInfos(extraTypeInfo.GetContent()).Unwrap());
+   }
+   fWriter->UpdateStreamerInfos(fInfosOfClassFields);
+
    auto bufFooterZip = MakeUninitArray<unsigned char>(length);
    auto szFooterZip =
       RNTupleCompressor::Zip(serializedFooter, length, GetWriteOptions().GetCompression(), bufFooterZip.get());

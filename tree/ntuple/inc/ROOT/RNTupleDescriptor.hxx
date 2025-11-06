@@ -1762,9 +1762,6 @@ public:
    ///   - Logical columns of piece two
    ///   - ...
    void ShiftAliasColumns(std::uint32_t offset);
-
-   /// Get the streamer info records for custom classes. Currently requires the corresponding dictionaries to be loaded.
-   ROOT::Internal::RNTupleSerializer::StreamerInfoMap_t BuildStreamerInfos() const;
 };
 
 inline RNTupleDescriptor CloneDescriptorSchema(const RNTupleDescriptor &desc)

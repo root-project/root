@@ -4,9 +4,14 @@
 #include <TObject.h>
 #include <TRef.h>
 #include <TRotation.h>
+#include <TVirtualStreamerInfo.h>
 
 #include <memory>
 #include <sstream>
+#include <string>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
 namespace {
 class RNoDictionary {};
@@ -386,4 +391,50 @@ TEST(RNTuple, TClassMetaName)
    auto f4 = RFieldBase::Create("f", "EdmContainer").Unwrap();
    EXPECT_STREQ("EdmWrapper<Long64_t>",
                 static_cast<const ROOT::RClassField *>(f4->GetConstSubfields()[0])->GetClass()->GetName());
+}
+
+TEST(RNTuple, StreamerInfoRecords)
+{
+   // Every testee consists of the type stored on disk and the expected streamer info records
+   std::vector<std::pair<std::string, std::vector<std::string>>> testees{
+      {"float", {}},
+      {"std::vector<float>", {}},
+      {"std::pair<float, float>", {}},
+      {"std::map<int, float>", {}},
+      {"CustomStruct", {"CustomStruct"}},
+      {"std::vector<CustomStruct>", {"CustomStruct"}},
+      {"std::map<int, CustomStruct>", {"CustomStruct"}},
+      {"DerivedA", {"DerivedA", "CustomStruct"}},
+      {"std::pair<CustomStruct, DerivedA>", {"DerivedA", "CustomStruct"}},
+      {"EdmWrapper<long long>", {"EdmWrapper<Long64_t>"}},
+      {"TRotation", {"TRotation"}}};
+
+   for (const auto &t : testees) {
+      FileRaii fileGuard("test_ntuple_streamer_info_records.root");
+
+      {
+         auto model = ROOT::RNTupleModel::Create();
+         if (t.first == "TRotation") {
+            model->AddField(std::make_unique<ROOT::RStreamerField>("f", t.first));
+         } else {
+            model->AddField(ROOT::RFieldBase::Create("f", t.first).Unwrap());
+         }
+         auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      }
+
+      auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+      ASSERT_TRUE(f && !f->IsZombie());
+
+      std::unordered_set<std::string> expectedInfos{t.second.begin(), t.second.end()};
+      expectedInfos.insert("ROOT::RNTuple");
+      for (const auto info : TRangeDynCast<TVirtualStreamerInfo>(*f->GetStreamerInfoList())) {
+         auto itr = expectedInfos.find(info->GetName());
+         if (itr == expectedInfos.end()) {
+            FAIL() << "unexpected streamer info: " << info->GetName();
+            continue;
+         }
+         expectedInfos.erase(itr);
+      }
+      EXPECT_TRUE(expectedInfos.empty());
+   }
 }
