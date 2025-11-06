@@ -25,9 +25,8 @@ namespace ROOT {
       TVectorD mingradfunction(TVectorD y){
          unsigned int size = y.GetNoElements();
          const double * yy = y.GetMatrixArray();
-         double z[size];
-         gGradFunction->Gradient(yy,z);
-         TVectorD zz(size,z);
+         TVectorD zz(size);
+         gGradFunction->Gradient(yy,zz.data());
          return zz;
       }
 
