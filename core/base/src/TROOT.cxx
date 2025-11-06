@@ -124,6 +124,7 @@ FARPROC dlsym(void *library, const char *function_name)
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TClassGenerator.h"
+#include "TDirectory.h"
 #include "TDataType.h"
 #include "TStyle.h"
 #include "TObjectTable.h"
@@ -232,9 +233,32 @@ static Int_t ITIMQQ(const char *time)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Write and Close all open writable TFiles, useful to be called when SIGTERM is caught.
+
+void TROOT::WriteCloseAllFiles()
+{
+   if (gROOT) {
+      R__LOCKGUARD(gROOTMutex);
+
+      if (gROOT->GetListOfFiles()) {
+         TIter next(gROOT->GetListOfFiles());
+         while (TObject *obj = next()) {
+            if (obj && obj->InheritsFrom(TClass::GetClass("TFile", kFALSE, kTRUE))) {
+               auto fobj = static_cast<TDirectory *>(obj);
+               if (fobj->IsWritable()) {
+                  fobj->Write();
+                  fobj->Close();
+               }
+            }
+         }
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Clean up at program termination before global objects go out of scope.
 
-static void CleanUpROOTAtExit()
+void TROOT::CleanUpROOTAtExit()
 {
    if (gROOT) {
       R__LOCKGUARD(gROOTMutex);
