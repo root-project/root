@@ -8,6 +8,7 @@
 #include <ROOT/RWeight.hxx>
 
 using namespace ROOT::Experimental::Hist;
+using ROOT::Experimental::RBinIndex;
 using ROOT::Experimental::RBinWithError;
 using ROOT::Experimental::RHist;
 using ROOT::Experimental::RHistEngine;

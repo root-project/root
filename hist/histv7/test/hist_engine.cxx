@@ -1,5 +1,6 @@
 #include "hist_test.hxx"
 
+#include <array>
 #include <stdexcept>
 #include <type_traits>
 #include <variant>
@@ -69,6 +70,23 @@ TEST(RHistEngine, GetBinContentNotFound)
    const RHistEngine<int> engine({axis});
 
    EXPECT_THROW(engine.GetBinContent(Bins), std::invalid_argument);
+}
+
+TEST(RHistEngine, SetBinContent)
+{
+   using ROOT::Experimental::Internal::SetBinContent;
+
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<int> engine({axis});
+
+   std::array<RBinIndex, 1> indices = {7};
+   SetBinContent(engine, indices, 42);
+   EXPECT_EQ(engine.GetBinContent(indices), 42);
+
+   // "bin not found"
+   indices = {Bins};
+   EXPECT_THROW(SetBinContent(engine, indices, 43), std::invalid_argument);
 }
 
 TEST(RHistEngine, Add)
