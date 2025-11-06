@@ -10,9 +10,11 @@ TEST(RHistAutoAxisFiller, Constructor)
    RHistAutoAxisFiller<int> filler(Bins);
    EXPECT_EQ(filler.GetNNormalBins(), Bins);
    EXPECT_EQ(filler.GetMaxBufferSize(), 1024);
+   EXPECT_EQ(filler.GetMarginFraction(), 0.05);
 
    EXPECT_THROW(RHistAutoAxisFiller<int>(0), std::invalid_argument);
    EXPECT_THROW(RHistAutoAxisFiller<int>(1, 0), std::invalid_argument);
+   EXPECT_THROW(RHistAutoAxisFiller<int>(1, 1024, -1), std::invalid_argument);
 }
 
 TEST(RHistAutoAxisFiller, Fill)
@@ -33,8 +35,8 @@ TEST(RHistAutoAxisFiller, Fill)
    auto &axis = std::get<RRegularAxis>(hist.GetAxes()[0]);
    EXPECT_EQ(axis.GetNNormalBins(), Bins);
    EXPECT_TRUE(axis.HasFlowBins());
-   EXPECT_DOUBLE_EQ(axis.GetLow(), 0);
-   EXPECT_DOUBLE_EQ(axis.GetHigh(), Bins - 1);
+   EXPECT_LT(axis.GetLow(), 0);
+   EXPECT_GT(axis.GetHigh(), Bins - 1);
 
    EXPECT_EQ(hist.GetNEntries(), Bins + 1);
    EXPECT_EQ(hist.GetBinContent(RBinIndex::Underflow()), 0);
@@ -64,7 +66,7 @@ TEST(RHistAutoAxisFiller, FillAutoFlush)
    }
 
    // Further entries may land in the flow bins
-   filler.Fill(-1);
+   filler.Fill(-1000);
    filler.Fill(2000);
 
    auto &hist = filler.GetHist();
