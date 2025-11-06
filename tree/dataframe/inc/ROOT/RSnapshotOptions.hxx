@@ -165,15 +165,15 @@ struct RSnapshotOptions {
                     bool enablePageChecksums = true, bool enableSamePageMerging = true,
                     ESnapshotOutputFormat outputFormat = ESnapshotOutputFormat::kDefault)
       : fMode(mode),
+        fOutputFormat(outputFormat),
         fCompressionAlgorithm(comprAlgo),
         fCompressionLevel{comprLevel},
-        fAutoFlush(autoFlush),
-        fSplitLevel(splitLevel),
         fLazy(lazy),
         fOverwriteIfExists(overwriteIfExists),
         fVector2RVec(vector2RVec),
+        fAutoFlush(autoFlush),
+        fSplitLevel(splitLevel),
         fBasketSize(basketSize),
-        fOutputFormat(outputFormat),
         fApproxZippedClusterSize(approxZippedClusterSize),
         fMaxUnzippedClusterSize(maxUnzippedClusterSize),
         fInitialUnzippedPageSize(initUnzippedPageSize),
@@ -183,18 +183,22 @@ struct RSnapshotOptions {
    {
    }
    std::string fMode = "RECREATE"; ///< Mode of creation of output file
+   ESnapshotOutputFormat fOutputFormat = ESnapshotOutputFormat::kDefault; ///< Which data format to write to
    ECAlgo fCompressionAlgorithm =
       ROOT::RCompressionSetting::EAlgorithm::kZSTD; ///< Compression algorithm of output file
    int fCompressionLevel = 5;                       ///< Compression level of output file
-   int fAutoFlush = 0;                              ///< AutoFlush value for output tree
-   int fSplitLevel = 99;                            ///< Split level of output tree
    bool fLazy = false;                              ///< Do not start the event loop when Snapshot is called
    bool fOverwriteIfExists = false;  ///< If fMode is "UPDATE", overwrite object in output file if it already exists
    bool fVector2RVec = true;         ///< If set to true will convert std::vector columns to RVec when saving to disk
    bool fIncludeVariations = false;  ///< Include columns that result from a Vary() action
-   int fBasketSize = -1;             ///< Set a custom basket size option. For more details, see
-                                     ///< https://root.cern/manual/trees/#baskets-clusters-and-the-tree-header
-   ESnapshotOutputFormat fOutputFormat = ESnapshotOutputFormat::kDefault; ///< Which data format to write to
+
+   /// *(TTree only)* AutoFlush value for output tree
+   int fAutoFlush = 0;
+   /// *(TTree only)* Split level of output tree
+   int fSplitLevel = 99;
+   /// *(TTree only)* Set a custom basket size option. For more details, see
+   /// https://root.cern/manual/trees/#baskets-clusters-and-the-tree-header
+   int fBasketSize = -1;
 
    /// *(RNTuple only)* Approximate target compressed cluster size
    std::size_t fApproxZippedClusterSize = 128 * 1024 * 1024;
