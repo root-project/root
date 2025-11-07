@@ -161,6 +161,5 @@ public:
 };
 
 class TList;
-void fillListOfDir(TList &l);
 
 #endif // TEST__HELPER
