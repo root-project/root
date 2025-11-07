@@ -38,7 +38,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include <TGLIncludes.h>
+#include "../TGLIncludes.h"
 
 #define GL2PSDLL_API
 
