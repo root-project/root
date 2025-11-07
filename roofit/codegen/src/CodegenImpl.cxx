@@ -629,6 +629,7 @@ void codegenImpl(RooRealIntegral &arg, CodegenContext &ctx)
       << "   const int n = 1000; // number of sampling points\n"
       << "   double d = " << intVar.getMax(arg.intRange()) << " - " << intVar.getMin(arg.intRange()) << ";\n"
       << "   double eps = d / n;\n"
+      << "   #pragma clad checkpoint loop\n"
       << "   for (int i = 0; i < n; ++i) {\n"
       << "      " << obsName << "[0] = " << intVar.getMin(arg.intRange()) << " + eps * i;\n"
       << "      double tmpA = " << funcName << "(params, " << obsName << ", xlArr);\n"
