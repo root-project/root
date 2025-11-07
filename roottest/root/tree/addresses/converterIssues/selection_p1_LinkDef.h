@@ -1,4 +1,4 @@
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ class EventFormat_p1+;
 #pragma link C++ class edm::EventFormatElement+;
 // #pragma link C++ class edm::EventFormat+;

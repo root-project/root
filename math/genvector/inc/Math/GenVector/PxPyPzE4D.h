@@ -302,7 +302,7 @@ public :
 
 
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
 
    // ====== Set member functions for coordinates in other systems =======
 
@@ -333,7 +333,7 @@ private:
 
 
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY)
+#if defined(__ROOTCLING__) || defined(G__DICTIONARY)
 // move implementations here to avoid circle dependencies
 
 #include "Math/GenVector/PtEtaPhiE4D.h"

@@ -1,11 +1,11 @@
 #include "header.h"
 #include "Rtypes.h"
 
-#ifndef __CINT__
+#ifndef __CLING__
 RootClassVersion(Hard2Stream,2);
 #endif
 
-#ifdef __CINT__
+#ifdef __CLING__
 #pragma link C++ class Hard2Stream-;
 #endif
 

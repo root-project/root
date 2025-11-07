@@ -659,7 +659,7 @@ Int_t stressFit(const char *type, const char *algo, Int_t N)
 
   printf("******************************************************************\n");
   gBenchmark->Print("stressFit");
-#ifdef __CINT__
+#ifdef __CLING__
   Double_t reftime = 86.34; //macbrun interpreted
 #else
   Double_t reftime = 12.07; //macbrun compiled
@@ -675,7 +675,7 @@ Int_t stressFit(const char *type, const char *algo, Int_t N)
 }
 
 //_____________________________batch only_____________________
-#ifndef __CINT__
+#ifndef __CLING__
 
 int main(int argc,const char *argv[])
 {

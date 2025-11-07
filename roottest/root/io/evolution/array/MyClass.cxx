@@ -84,6 +84,6 @@ void MyClass::SetArray(Int_t* array){
 }
 #endif
 
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ class MyClass+;
 #endif
