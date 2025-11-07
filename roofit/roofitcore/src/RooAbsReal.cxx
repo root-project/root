@@ -3122,6 +3122,17 @@ RooFit::OwningPtr<RooAbsArg> RooAbsReal::createFundamental(const char* newname) 
   return RooFit::makeOwningPtr<RooAbsArg>(std::move(fund));
 }
 
+
+bool RooAbsReal::matchArgs(const RooArgSet &allDeps, RooArgSet &analDeps, const RooArgProxy &a) const
+{
+   TList nameList;
+   nameList.Add(new TObjString(a.absArg()->GetName()));
+   bool result = matchArgsByName(allDeps, analDeps, nameList);
+   nameList.Delete();
+   return result;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility function for use in getAnalyticalIntegral(). If the
 /// contents of 'refset' occur in set 'allDeps' then the arguments
