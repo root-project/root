@@ -292,8 +292,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
       """Verify object and pointer comparisons"""
 
       c1 = MakeNullPointer( TCanvas )
-      self.assertEqual( c1, None )
-      self.assertEqual( None, c1 )
+      self.assertFalse( c1 )
 
       c2 = MakeNullPointer( TCanvas )
       self.assertEqual( c1, c2 )
@@ -301,8 +300,7 @@ class Cpp1LanguageFeatureTestCase( MyTestCase ):
 
     # TLorentzVector overrides operator==
       l1 = MakeNullPointer( TLorentzVector )
-      self.assertEqual( l1, None )
-      self.assertEqual( None, l1 )
+      self.assertFalse( l1 )
 
       self.assertNotEqual( c1, l1 )
       self.assertNotEqual( l1, c1 )
