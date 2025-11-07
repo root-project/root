@@ -10,7 +10,7 @@ enum EWhich {
    kEnd = 256
 };
 
-void srun(const TString &srcpath = "", int which = kEnd - 1, const TString &readpath = "") {
+void srun(const TString &srcpath = "", const TString &readpath = "", int which = kEnd - 1) {
 
    // use current directory as build directory
    gSystem->SetBuildDir(gSystem->pwd(), true);

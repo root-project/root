@@ -488,18 +488,6 @@ AutoDict_*.cxx
 /root/io/newdelete/3-*
 /root/io/newdelete/ClassesDict.*
 
-# /root/io/newstl/
-/root/io/newstl/AutoDict*
-/root/io/newstl/pospelov
-/root/io/newstl/latest
-/root/io/newstl/3-*
-/root/io/newstl/4-*
-/root/io/newstl/5-*
-/root/io/newstl/6-*
-/root/io/newstl/7-*
-/root/io/newstl/*.root
-/root/io/newstl/ArchivedDataFiles
-
 # /root/io/perf/
 /root/io/perf/*.root
 
