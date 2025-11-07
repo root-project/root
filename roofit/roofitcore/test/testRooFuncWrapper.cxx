@@ -11,17 +11,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooAbsData.h>
-#include <RooAbsPdf.h>
 #include <RooAddPdf.h>
 #include <RooBinWidthFunction.h>
 #include <RooCategory.h>
 #include <RooClassFactory.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
+#include <RooEvaluatorWrapper.h>
 #include <RooExponential.h>
 #include <RooFitResult.h>
-#include <../src/RooEvaluatorWrapper.h>
 #include <RooGaussian.h>
 #include <RooHelpers.h>
 #include <RooHistFunc.h>
@@ -161,7 +159,7 @@ TEST_P(FactoryTest, NLLFit)
 
    // We want to use the generated code also for the nominal likelihood. Like
    // this, we make sure to validate also the NLL values of the generated code.
-   static_cast<RooEvaluatorWrapper &>(*nllFunc).setUseGeneratedFunctionCode(true);
+   static_cast<RooFit::Experimental::RooEvaluatorWrapper &>(*nllFunc).setUseGeneratedFunctionCode(true);
 
    double tol = _params._fitResultTolerance;
 

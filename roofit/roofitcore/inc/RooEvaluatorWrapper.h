@@ -16,22 +16,19 @@
 #define RooFit_RooEvaluatorWrapper_h
 
 #include <RooAbsData.h>
-#include <RooFit/EvalContext.h>
 #include <RooFit/Evaluator.h>
 #include <RooGlobalFunc.h>
-#include <RooHelpers.h>
 #include <RooRealProxy.h>
 #include <RooSetProxy.h>
 
-#include "RooFit/BatchModeDataHelpers.h"
-
-#include <chrono>
-#include <memory>
 #include <stack>
 
 class RooAbsArg;
 class RooAbsCategory;
 class RooAbsPdf;
+
+namespace RooFit::Experimental {
+
 class RooFuncWrapper;
 
 class RooEvaluatorWrapper final : public RooAbsReal {
@@ -92,6 +89,8 @@ private:
    std::stack<std::vector<double>> _vectorBuffers; // used for preserving resources
    std::map<RooFit::Detail::DataKey, std::span<const double>> _dataSpans;
 };
+
+} // namespace RooFit::Experimental
 
 #endif
 
