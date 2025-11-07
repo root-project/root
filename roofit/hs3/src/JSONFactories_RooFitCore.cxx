@@ -33,6 +33,7 @@
 #include <RooLegacyExpPoly.h>
 #include <RooLognormal.h>
 #include <RooMultiVarGaussian.h>
+#include <RooStats/HistFactory/ParamHistFunc.h>
 #include <RooPoisson.h>
 #include <RooPolynomial.h>
 #include <RooPolyVar.h>
@@ -532,6 +533,23 @@ public:
    }
 };
 
+class ParamHistFuncFactory : public RooFit::JSONIO::Importer {
+public:
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      std::string name(RooJSONFactoryWSTool::name(p));
+      RooArgList vars = tool->requestArgList<RooRealVar>(p, "variables");
+      std::vector<int> nbins;
+      nbins << p["nbins"];
+      for (size_t i = 0; i < vars.size(); ++i) {
+         auto *v = dynamic_cast<RooRealVar*>(vars.at(i));
+         v->setBins(nbins[i]);
+      }
+      tool->wsEmplace<ParamHistFunc>(name, vars, tool->requestArgList<RooAbsReal>(p, "parameters"));
+      return true;
+   }
+};
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // specialized exporter implementations
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -696,6 +714,7 @@ private:
       expr.ReplaceAll("TMath::Sin", "sin");
       expr.ReplaceAll("TMath::Sqrt", "sqrt");
       expr.ReplaceAll("TMath::Power", "pow");
+      expr.ReplaceAll("TMath::Erf", "erf");
    }
 };
 template <class RooArg_t>
@@ -952,6 +971,26 @@ public:
    }
 };
 
+class ParamHistFuncStreamer : public RooFit::JSONIO::Exporter {
+public:
+   std::string const &key() const override;
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   {
+      auto *pdf = static_cast<const ParamHistFunc *>(func);
+      elem["type"] << key();
+      RooJSONFactoryWSTool::fillSeq(elem["variables"], pdf->dataVars());
+      RooJSONFactoryWSTool::fillSeq(elem["parameters"], pdf->paramList());
+      std::vector<int> nbins;
+      for (auto *arg : pdf->dataVars()) {
+         auto *var = dynamic_cast<RooRealVar*>(arg);
+         nbins.push_back(var->numBins());
+      }
+      elem["nbins"] << nbins;
+
+      return true;
+   }
+};
+
 #define DEFINE_EXPORTER_KEY(class_name, name)    \
    std::string const &class_name::key() const    \
    {                                             \
@@ -989,6 +1028,7 @@ DEFINE_EXPORTER_KEY(RooRealIntegralStreamer, "integral");
 DEFINE_EXPORTER_KEY(RooDerivativeStreamer, "derivative");
 DEFINE_EXPORTER_KEY(RooFFTConvPdfStreamer, "fft_conv_pdf");
 DEFINE_EXPORTER_KEY(RooExtendPdfStreamer, "extend_pdf");
+DEFINE_EXPORTER_KEY(ParamHistFuncStreamer, "param_hist_func");
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // instantiate all importers and exporters
@@ -1021,6 +1061,7 @@ STATIC_EXECUTE([]() {
    registerImporter<RooDerivativeFactory>("derivative", false);
    registerImporter<RooFFTConvPdfFactory>("fft_conv_pdf", false);
    registerImporter<RooExtendPdfFactory>("extend_pdf", false);
+   registerImporter<ParamHistFuncFactory>("param_hist_func", false);
 
    registerExporter<RooAddPdfStreamer<RooAddPdf>>(RooAddPdf::Class(), false);
    registerExporter<RooAddPdfStreamer<RooAddModel>>(RooAddModel::Class(), false);
@@ -1047,6 +1088,7 @@ STATIC_EXECUTE([]() {
    registerExporter<RooDerivativeStreamer>(RooDerivative::Class(), false);
    registerExporter<RooFFTConvPdfStreamer>(RooFFTConvPdf::Class(), false);
    registerExporter<RooExtendPdfStreamer>(RooExtendPdf::Class(), false);
+   registerExporter<ParamHistFuncStreamer>(ParamHistFunc::Class(), false);
 });
 
 } // namespace
