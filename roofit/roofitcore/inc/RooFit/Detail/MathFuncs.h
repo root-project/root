@@ -177,6 +177,9 @@ template <typename DoubleArray>
 double constraintSum(DoubleArray comp, unsigned int compSize)
 {
    double sum = 0;
+   #ifdef __CLING__
+   #pragma clad checkpoint loop
+   #endif
    for (unsigned int i = 0; i < compSize; i++) {
       sum -= std::log(comp[i]);
    }
@@ -364,6 +367,9 @@ double flexibleInterp(unsigned int code, ParamsArray params, unsigned int n, Dou
                       double boundary, double nominal, int doCutoff)
 {
    double total = nominal;
+   #ifdef __CLING__
+   #pragma clad checkpoint loop
+   #endif
    for (std::size_t i = 0; i < n; ++i) {
       total += flexibleInterpSingle(code, low[i], high[i], boundary, nominal, params[i], total);
    }
