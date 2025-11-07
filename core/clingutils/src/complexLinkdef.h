@@ -3,6 +3,17 @@
 
 #pragma extra_include "root_std_complex.h";
 
+#ifdef _WIN32
+#pragma create TClass _C_float_complex+;
+#pragma create TClass _Complex_base<float,_C_float_complex>+;
+#pragma create TClass _C_double_complex+;
+#pragma create TClass _Complex_base<double,_C_double_complex>+;
+#pragma create TClass _Complex_value<int>+;
+#pragma create TClass _Complex_value<long>+;
+#pragma create TClass _Complex_base<int,_Complex_value<int>>+;
+#pragma create TClass _Complex_base<long,_Complex_value<long>>+;
+#endif
+
 #pragma create TClass complex<int>+;
 #pragma create TClass complex<long>+;
 #pragma create TClass complex<float>+;
