@@ -112,3 +112,12 @@ TEST(TH1, SetBufferedSumw2)
    EXPECT_FLOAT_EQ(h1.GetBinContent(1), Entries * Weight);
    EXPECT_FLOAT_EQ(h1.GetBinError(1), std::sqrt(Entries * Weight * Weight));
 }
+
+TEST(TH1L, SetBinContent)
+{
+   TH1L h("", "", 1, 0, 1);
+   // Something that does not fit into Int_t, but is exactly representable in Double_t
+   static constexpr long long Large = 1LL << 42;
+   h.SetBinContent(1, Large);
+   EXPECT_EQ(h.GetBinContent(1), Large);
+}
