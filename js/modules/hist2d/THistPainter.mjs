@@ -1168,9 +1168,6 @@ class THistPainter extends ObjectPainter {
    /** @summary Returns true if histogram drawn instead of TF1/TF2 object */
    isTF1() { return false; }
 
-   /** @summary Returns true if TH1K */
-   isTH1K() { return this.matchObjectType('TH1K'); }
-
    /** @summary Returns true if TH2Poly */
    isTH2Poly() {
       return this.matchObjectType(/^TH2Poly/) || this.matchObjectType(/^TProfile2Poly/);
@@ -1439,10 +1436,7 @@ class THistPainter extends ObjectPainter {
 
          if (this.isTProfile())
             histo.fBinEntries = obj.fBinEntries;
-         else if (this.isTH1K()) {
-            histo.fNIn = obj.fNIn;
-            histo.fReady = 0;
-         } else if (this.isTH2Poly())
+         else if (this.isTH2Poly())
             histo.fBins = obj.fBins;
 
          // remove old functions, update existing, prepare to draw new one
