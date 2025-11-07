@@ -25,15 +25,17 @@ Wraps a RooFit::Evaluator that evaluates a RooAbsReal back into a RooAbsReal.
 
 #include <RooAbsData.h>
 #include <RooAbsPdf.h>
-#include <RooConstVar.h>
-#include <RooHelpers.h>
 #include <RooMsgService.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 
+#include "RooFit/BatchModeDataHelpers.h"
+
 #include <TInterpreter.h>
 
 #include <fstream>
+
+namespace RooFit::Experimental {
 
 RooEvaluatorWrapper::RooEvaluatorWrapper(RooAbsReal &topNode, RooAbsData *data, bool useGPU,
                                          std::string const &rangeName, RooAbsPdf const *pdf,
@@ -518,5 +520,7 @@ void RooEvaluatorWrapper::writeDebugMacro(std::string const &filename) const
    if (_funcWrapper)
       return _funcWrapper->writeDebugMacro(filename);
 }
+
+} // namespace RooFit::Experimental
 
 /// \endcond
