@@ -87,6 +87,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern/d
    - [Adding a progress bar](\ref progressbar)
    - [Working with missing values in the dataset](\ref missing-values)
    - [Dealing with NaN or Inf values in the dataset](\ref special-values)
+   - [Translating TTree::Draw to RDataFrame](\ref rosetta-stone)
 - [Python interface](classROOT_1_1RDataFrame.html#python)
 - <a class="el" href="classROOT_1_1RDataFrame.html#reference" onclick="javascript:toggleInherit('pub_methods_classROOT_1_1RDF_1_1RInterface')">Class reference</a>
 
@@ -1916,6 +1917,7 @@ Non-finite numbers can be suppressed using Filter(), e.g.:
 df.Filter("std::isfinite(x)").Mean("x")
 \endcode
 
+\anchor rosetta-stone
 ### Translating TTree::Draw to RDataFrame 
 
 <table>
