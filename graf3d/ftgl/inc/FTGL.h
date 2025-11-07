@@ -18,7 +18,11 @@ typedef float    FTGL_FLOAT;
     #define FT_RENDER_MODE_NORMAL ft_render_mode_normal
 #endif
 
-#include "TGLIncludes.h"
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
+
+#include <GL/glew.h>
 
 #ifndef WIN32
     // Required for compatibility with glext.h style function definitions of

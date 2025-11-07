@@ -41,7 +41,8 @@ The following people have contributed to this new version:
 * The `RooDataSet` constructors to construct a dataset from a part of an existing dataset were deprecated in ROOT 6.36 and are now removed. This is to avoid interface duplication. Please use `RooAbsData::reduce()` instead, or if you need to change the weight column, use the universal constructor with the `Import()`, `Cut()`, and `WeightVar()` arguments.
 * The `RooStats::HLFactory` class that was deprecated in ROOT 6.36 is now removed. It provided little advantage over using the RooWorkspace directly or any of the other higher-level frameworks that exist in the RooFit ecosystem.
 * The build options `mysql`, `odbc` and `pgsql`, that were deprecated in ROOT 6.36, are now removed.
-* The `TGLWSIncludes.h` header is deprecated and will be removed in ROOT 6.40
+* The `TGLIncludes.h` and `TGLWSIncludes.h` headers are deprecated and will be removed in ROOT 6.40. Please include your required headers like `<GL/gl.h>` or `<GL/glu.h>` directly.
+* The GLEW headers (`GL/eglew.h`, `GL/glew.h`, `GL/glxew.h`, and `GL/wglew.h`) that are installed when building ROOT with `builtin_glew=ON` are deprecated and will be removed in ROOT 6.40. This is done because ROOT will move away from GLEW for loading OpenGL extensions.
 * The `ROOT::Math::TDataPointN` class that can be used with the `ROOT::Math::KDETree` was removed. Use the templated `TDataPoint<N>` instead.
 * The Parallel ROOT Facility, `PROOF`, has been removed from the repository.
 * After being deprecated for a long period, the `-r` option of `rootcling` has been removed.
@@ -230,7 +231,7 @@ the deprecation period was extended.
    * Support dark mode when store images
    * With 'Shift' key pressed whole graph is moved by dragging action
    * Support `Xall` and `Yall` as projections width
-   * Implement `unzipJSON()` function for data embeding in jupyter
+   * Implement `unzipJSON()` function for data embedding in jupyter
    * Support reading `TBranch` from very old ROOT files with custom streamers
    * Upgrade three.js r174 -> r180
    * Upgrade lil-gui.mjs 0.19.2 -> 0.20.0
@@ -301,7 +302,7 @@ More than 240 items were addressed for this release:
   * [[#19867](https://github.com/root-project/root/issues/19867)] - ROOT dictionary crash related to default template arguments
   * [[#19850](https://github.com/root-project/root/issues/19850)] - Error: "no member named 'getenv' in the global namespace" during the compilation with libc++
   * [[#19834](https://github.com/root-project/root/issues/19834)] - HasColumn crashing for an empty RDataFrame
-  * [[#19820](https://github.com/root-project/root/issues/19820)] - Name collisions in Workspace when using RooAbsPdf.derviative()
+  * [[#19820](https://github.com/root-project/root/issues/19820)] - Name collisions in Workspace when using RooAbsPdf.derivative()
   * [[#19814](https://github.com/root-project/root/issues/19814)] - Regression in 6.34: segfault when using TTreeReader on partially initialized TChain
   * [[#19777](https://github.com/root-project/root/issues/19777)] - Complete roottest/root/meta/callfunc runmemberFunc.C
   * [[#19776](https://github.com/root-project/root/issues/19776)] - “HIST” option for TRatioPlot(TH1*, THStack)
@@ -331,7 +332,7 @@ More than 240 items were addressed for this release:
   * [[#19362](https://github.com/root-project/root/issues/19362)] - [RDF] Automatic axis extension not working with weighted filling
   * [[#19359](https://github.com/root-project/root/issues/19359)] - Incorrect bin error with `TH1::SetBuffer` and `TH1::Sumw2`
   * [[#19349](https://github.com/root-project/root/issues/19349)] - typo: documentation for RooCrystalBall mathematical implementation does not match code implementation
-  * [[#19346](https://github.com/root-project/root/issues/19346)] - Duplicated tests in tree/treeplayer/test lead to ramdom failures
+  * [[#19346](https://github.com/root-project/root/issues/19346)] - Duplicated tests in tree/treeplayer/test lead to random failures
   * [[#19338](https://github.com/root-project/root/issues/19338)] - Feature Request ( Functions for Acoplanarity, Vector and Scalar Pt asymmetries)
   * [[#19333](https://github.com/root-project/root/issues/19333)] - Ninja build cannot start if `builtin_xrootd=ON`
   * [[#19330](https://github.com/root-project/root/issues/19330)] - A partial merge in TFileMerger creates directories that users didn't ask for
@@ -499,7 +500,7 @@ More than 240 items were addressed for this release:
   * [[ROOT-8093](https://its.cern.ch/jira/browse/8093)] - Gaussian with exponential tail(s) in roofit
   * [[ROOT-7973](https://its.cern.ch/jira/browse/7973)] - TChain::LoadTree() can crash when a different tree is read from the same file
   * [[ROOT-7743](https://its.cern.ch/jira/browse/7743)] - TTree AddFriend not working
-  * [[ROOT-7686](https://its.cern.ch/jira/browse/7686)] - TTreeFormula and function arguements
+  * [[ROOT-7686](https://its.cern.ch/jira/browse/7686)] - TTreeFormula and function arguments
   * [[ROOT-7465](https://its.cern.ch/jira/browse/7465)] - TTreeFormula unable to access all but first index of vector branch
   * [[ROOT-7439](https://its.cern.ch/jira/browse/7439)] - Missing TMethodCall::Execute signature
   * [[ROOT-6960](https://its.cern.ch/jira/browse/6960)] - TFormula/TTreeFormula: Virtualize Optimize() and part of AnalyzeFunction()
