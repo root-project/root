@@ -656,11 +656,16 @@ function getColorId(col) {
   * @desc Color can be id or string, but should belong to list of known colors
   * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color is exists
   * @private */
-function getColorExec(col, method) {
+function getColorExec(col, method, extra_arg) {
    const d = getColorId(col);
 
    if (d.id < 0)
       return '';
+
+   if (!extra_arg)
+      extra_arg = '';
+   else
+      extra_arg += ',';
 
    // for higher color numbers ensure that such color exists
    if (d.id >= 50) {
@@ -668,7 +673,7 @@ function getColorExec(col, method) {
       d.id = `TColor::GetColor(${c.r},${c.g},${c.b})`;
    }
 
-   return `exec:${method}(${d.id})`;
+   return `exec:${method}(${extra_arg}${d.id})`;
 }
 
 /** @summary Change object member in the painter
@@ -693,4 +698,4 @@ Object.assign(internals.jsroot, { addMoveHandler, registerForResize });
 export { showProgress, closeCurrentWindow, loadOpenui5, ToolbarIcons, registerForResize,
          detectRightButton, addMoveHandler, injectStyle,
          selectgStyle, setStoragePrefix, saveSettings, readSettings, saveStyle, readStyle,
-         saveFile, setSaveFile, getBinFileContent, getColorExec, changeObjectMember };
+         saveFile, setSaveFile, getBinFileContent, getColorId, getColorExec, changeObjectMember };
