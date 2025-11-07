@@ -573,6 +573,19 @@ static PyObject* op_richcompare(CPPInstance* self, PyObject* other, int op)
     if (op == Py_EQ || op == Py_NE) {
     // special case for None to compare True to a null-pointer
         if ((PyObject*)other == Py_None && !self->fObject) {
+            const char *msg =
+                "\nComparison of C++ nullptr objects with `None` is deprecated and will raise a TypeError starting from ROOT 6.40."
+                "\n\nThis currently treats `None` as equivalent to a null C++ pointer, which may lead to confusing results."
+                "\nFor example, `x == None` may return True even though `x is None` is False."
+                "\n\nTo test whether a C++ object is null or not, check its truth value instead:"
+                "\n    if not x: ..."
+                "\nor use `x is None` to explicitly check for Python None."
+                "\n";
+
+            // Equivalent to: warnings.warn(msg, FutureWarning, stacklevel=0)
+            if (PyErr_WarnEx(PyExc_FutureWarning, msg, 0) < 0) {
+                return NULL;  // Propagate the error if warning turned into an exception
+            }
             if (op == Py_EQ) { Py_RETURN_TRUE; }
             Py_RETURN_FALSE;
         }
