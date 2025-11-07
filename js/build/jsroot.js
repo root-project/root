@@ -14,7 +14,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '5/11/2025',
+version_date = '7/11/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -78709,11 +78709,16 @@ function getColorId(col) {
   * @desc Color can be id or string, but should belong to list of known colors
   * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color is exists
   * @private */
-function getColorExec(col, method) {
+function getColorExec(col, method, extra_arg) {
    const d = getColorId(col);
 
    if (d.id < 0)
       return '';
+
+   if (!extra_arg)
+      extra_arg = '';
+   else
+      extra_arg += ',';
 
    // for higher color numbers ensure that such color exists
    if (d.id >= 50) {
@@ -78721,7 +78726,7 @@ function getColorExec(col, method) {
       d.id = `TColor::GetColor(${c.r},${c.g},${c.b})`;
    }
 
-   return `exec:${method}(${d.id})`;
+   return `exec:${method}(${extra_arg}${d.id})`;
 }
 
 /** @summary Change object member in the painter
@@ -94165,9 +94170,6 @@ class THistPainter extends ObjectPainter {
    /** @summary Returns true if histogram drawn instead of TF1/TF2 object */
    isTF1() { return false; }
 
-   /** @summary Returns true if TH1K */
-   isTH1K() { return this.matchObjectType('TH1K'); }
-
    /** @summary Returns true if TH2Poly */
    isTH2Poly() {
       return this.matchObjectType(/^TH2Poly/) || this.matchObjectType(/^TProfile2Poly/);
@@ -94436,10 +94438,7 @@ class THistPainter extends ObjectPainter {
 
          if (this.isTProfile())
             histo.fBinEntries = obj.fBinEntries;
-         else if (this.isTH1K()) {
-            histo.fNIn = obj.fNIn;
-            histo.fReady = 0;
-         } else if (this.isTH2Poly())
+         else if (this.isTH2Poly())
             histo.fBins = obj.fBins;
 
          // remove old functions, update existing, prepare to draw new one
@@ -102333,30 +102332,12 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       return histo;
    }
 
-   /** @summary Convert TH1K into normal binned histogram */
-   convertTH1K() {
-      const histo = this.getObject();
-      if (histo.fReady)
-         return;
-
-      const arr = histo.fArray, entries = histo.fEntries; // array of values
-      histo.fNcells = histo.fXaxis.fNbins + 2;
-      histo.fArray = new Float64Array(histo.fNcells).fill(0);
-      for (let n = 0; n < histo.fNIn; ++n)
-         histo.Fill(arr[n]);
-      histo.fReady = 1;
-      histo.fEntries = entries;
-   }
-
    /** @summary Scan content of 1-D histogram
      * @desc Detect min/max values for x and y axis
      * @param {boolean} when_axis_changed - true when zooming was changed, some checks may be skipped */
    scanContent(when_axis_changed) {
       if (when_axis_changed && !this.nbinsx)
          when_axis_changed = false;
-
-      if (this.isTH1K())
-         this.convertTH1K();
 
       const histo = this.getHisto(),
             o = this.getOptions();
@@ -175641,6 +175622,8 @@ TSplinePainter: TSplinePainter
 
 class TPiePainter extends ObjectPainter {
 
+   #cx; // recent cx
+   #cy; // recent cy
    #rx; // recent rx
    #ry; // recent ry
    #slices; // recent slices
@@ -175673,6 +175656,20 @@ class TPiePainter extends ObjectPainter {
          o.sort = -1;
    }
 
+   #findDrawnSlice(x, y) {
+      if ((!x && !y) || !this.#slices || !this.#rx || !this.#ry)
+         return null;
+      let angle = Math.atan2(y / this.#ry, x / this.#rx);
+
+      while (angle < 0.5 * Math.PI)
+         angle += 2 * Math.PI;
+
+      return this.#slices.find(elem => {
+         return ((elem.a1 < angle) && (angle < elem.a2)) ||
+                ((elem.a1 < angle + 2 * Math.PI) && (angle + 2 * Math.PI < elem.a2));
+      });
+   }
+
    /** @summary start of drag handler
      * @private */
    moveStart(x, y) {
@@ -175685,13 +175682,10 @@ class TPiePainter extends ObjectPainter {
 
       const pie = this.getObject(),
             len = Math.sqrt((x / this.#rx) ** 2 + (y / this.#ry) ** 2),
-            slice = this.#slices.find(elem => {
-               return ((elem.a1 < angle) && (angle < elem.a2)) ||
-                      ((elem.a1 < angle + 2 * Math.PI) && (angle + 2 * Math.PI < elem.a2));
-            });
+            slice = this.#findDrawnSlice(x, y);
 
       // kind of cursor shown
-      this.#mode = ((len > 0.95) && (x > this.#rx * 0.95) && this.options.is3d) ? 'n-resize' : ((slice && len < 0.7) ? 'grab' : 'w-resize');
+      this.#mode = ((len > 0.95) && (x > this.#rx * 0.95) && this.options.is3d) ? 'n-resize' : ((slice && len - slice.offset < 0.7) ? 'grab' : 'w-resize');
 
       this.#movex = x;
       this.#movey = y;
@@ -175775,24 +175769,25 @@ class TPiePainter extends ObjectPainter {
       const maing = this.createG(),
             pie = this.getObject(),
             o = this.getOptions(),
-            xc = this.axisToSvg('x', pie.fX),
-            yc = this.axisToSvg('y', pie.fY),
             pp = this.getPadPainter(),
             radX = pie.fRadius;
+
+      this.#cx = this.axisToSvg('x', pie.fX);
+      this.#cy = this.axisToSvg('y', pie.fY);
 
       let radY = radX, pixelHeight = 1;
 
       if (o.is3d) {
          radY *= Math.sin(pie.fAngle3D / 180 * Math.PI);
-         pixelHeight = this.axisToSvg('y', pie.fY - pie.fHeight) - yc;
+         pixelHeight = this.axisToSvg('y', pie.fY - pie.fHeight) - this.#cy;
       }
 
       maing.style('cursor', this.#mode || null);
 
       this.createAttText({ attr: pie });
 
-      const rx = this.axisToSvg('x', pie.fX + radX) - xc,
-            ry = this.axisToSvg('y', pie.fY - radY) - yc,
+      const rx = this.axisToSvg('x', pie.fX + radX) - this.#cx,
+            ry = this.axisToSvg('y', pie.fY - radY) - this.#cy,
             dist_to_15pi = a => {
                while (a < 0.5 * Math.PI)
                   a += 2 * Math.PI;
@@ -175801,185 +175796,231 @@ class TPiePainter extends ObjectPainter {
                return Math.abs(a - 1.5 * Math.PI);
             };
 
-      makeTranslate(maing, xc, yc);
+      makeTranslate(maing, this.#cx, this.#cy);
 
-      const arr = [], promises = [];
+      // pie.fPieSlices[4].fValue = 100;
+
+      const arr = [];
       let total = 0, af = -pie.fAngularOffset / 180 * Math.PI;
-      while (af < 2.5 * Math.PI)
+      // ensure all angles are positive
+      while (af <= 2 * Math.PI)
          af += 2 * Math.PI;
+
       for (let n = 0; n < pie.fPieSlices.length; n++) {
-         const value = pie.fPieSlices[n].fValue;
+         const slice = pie.fPieSlices[n],
+               value = slice.fValue;
          total += value;
-         arr.push({ n, value });
+         arr.push({
+            n, value, slice,
+            offset: slice.fRadiusOffset,
+            attline: this.createAttLine(slice),
+            attfill: this.createAttFill(slice)
+         });
       }
+
       // sort in increase/decrease order
       if (o.sort !== 0)
          arr.sort((v1, v2) => { return o.sort * (v1.value - v2.value); });
 
       // now assign angles for each slice
+
       for (let n = 0; n < arr.length; n++) {
          const entry = arr[n];
+         entry.seq = n;
          entry.a2 = af;
          af -= entry.value / total * 2 * Math.PI;
          entry.a1 = af;
-         entry.a = dist_to_15pi((entry.a1 + entry.a2) / 2);
+
+         entry.x1 = Math.round(rx * Math.cos(entry.a1));
+         entry.y1 = Math.round(ry * Math.sin(entry.a1));
+         entry.x2 = Math.round(rx * Math.cos(entry.a2));
+         entry.y2 = Math.round(ry * Math.sin(entry.a2));
+
+         if (entry.offset) {
+            const coef = radX > 0 ? entry.offset / radX : 0.1,
+                  mid_angle = (entry.a1 + entry.a2) / 2;
+            entry.dx = Math.round(rx * coef * Math.cos(mid_angle));
+            entry.dy = Math.round(ry * coef * Math.sin(mid_angle));
+         } else
+            entry.dx = entry.dy = 0;
       }
 
-      // sort for visualization in increasing order from Pi/2 angle
-      arr.sort((v1, v2) => { return v1.a - v2.a; });
+      const add_path = (entry, path) => {
+         const elem = maing.append('svg:path')
+                           .attr('d', path)
+                           .call(entry.attline.func)
+                           .call(entry.attfill.func);
+         if (entry.offset)
+            makeTranslate(elem, entry.dx, entry.dy);
+      }, build_pie = (entry, func) => {
+         // use same segments for side and top/bottom curves
+         let a = entry.a1, border = 0;
+         while (border <= entry.a1)
+            border += Math.PI;
+         while (a < entry.a2) {
+            if (border >= entry.a2) {
+               func(a, entry.a2, entry);
+               a = entry.a2;
+            } else {
+               func(a, border, entry);
+               a = border;
+               border += Math.PI;
+            }
+         }
+      }, add_curved_side = (aa1, aa2, entry) => {
+         if (dist_to_15pi((aa1 + aa2) / 2) < 0.5 * Math.PI)
+            return;
+         const xx1 = Math.round(rx * Math.cos(aa1)),
+               yy1 = Math.round(ry * Math.sin(aa1)),
+               xx2 = Math.round(rx * Math.cos(aa2)),
+               yy2 = Math.round(ry * Math.sin(aa2));
+         add_path(entry, `M${xx1},${yy1}a${rx},${ry},0,0,1,${xx2 - xx1},${yy2 - yy1}v${pixelHeight}a${rx},${ry},0,0,0,${xx1 - xx2},${yy1 - yy2}z`);
+      }, add_planar_side = (x, y, entry) => {
+         add_path(entry, `M0,0v${pixelHeight}l${x},${y}v${-pixelHeight}z`);
+      };
+
+      // build main paths for each slice
 
       for (let indx = 0; indx < arr.length; indx++) {
-         const entry = arr[indx],
-               slice = pie.fPieSlices[entry.n],
-               g = maing.append('svg:g'),
-               mid_angle = (entry.a1 + entry.a2) / 2;
-         if (slice.fRadiusOffset) {
-            const coef = radX > 0 ? slice.fRadiusOffset / radX : 0.1,
-                  dx = Math.round(rx * coef * Math.cos(mid_angle)),
-                  dy = Math.round(ry * coef * Math.sin(mid_angle));
-            makeTranslate(g, dx, dy);
-         }
-
-         // Draw the slices
-         const a1 = entry.a1, a2 = entry.a2,
-               x1 = Math.round(rx * Math.cos(a1)),
-               y1 = Math.round(ry * Math.sin(a1)),
-               x2 = Math.round(rx * Math.cos(a2)),
-               y2 = Math.round(ry * Math.sin(a2)),
-               attline = this.createAttLine({ attr: slice, std: false }),
-               attfill = this.createAttFill({ attr: slice, std: false });
-
-         // paint pseudo-3d object
+         const entry = arr[indx];
          if (o.is3d) {
-            const add_curved_side = (aa1, aa2) => {
-               if (dist_to_15pi((aa1 + aa2) / 2) < 0.5 * Math.PI)
-                  return;
+            entry.pie_path = '';
+            build_pie(entry, (aa1, aa2) => {
                const xx1 = Math.round(rx * Math.cos(aa1)),
                      yy1 = Math.round(ry * Math.sin(aa1)),
                      xx2 = Math.round(rx * Math.cos(aa2)),
                      yy2 = Math.round(ry * Math.sin(aa2));
-               g.append('svg:path')
-                .attr('d', `M${xx1},${yy1}a${rx},${ry},0,0,1,${xx2 - xx1},${yy2 - yy1}v${pixelHeight}a${rx},${ry},0,0,0,${xx1 - xx2},${yy1 - yy2}z`)
-                .call(attline.func)
-                .call(attfill.func);
-            }, add_planar_side = (x, y) => {
-               g.append('svg:path')
-                .attr('d', `M0,0v${pixelHeight}l${x},${y}v${-pixelHeight}z`)
-                .call(attline.func)
-                .call(attfill.func);
-            }, build_pie = func => {
-               // use same segments for side and top/bottom curves
-               let a = a1, border = 0;
-               while (border <= a1)
-                  border += Math.PI;
-               while (a < a2) {
-                  if (border >= a2) {
-                     func(a, a2);
-                     a = a2;
-                  } else {
-                     func(a, border);
-                     a = border;
-                     border += Math.PI;
-                  }
-               }
-            };
-
-            let pie_path = '';
-            build_pie((aa1, aa2) => {
-               const xx1 = Math.round(rx * Math.cos(aa1)),
-                     yy1 = Math.round(ry * Math.sin(aa1)),
-                     xx2 = Math.round(rx * Math.cos(aa2)),
-                     yy2 = Math.round(ry * Math.sin(aa2));
-               pie_path += `a${rx},${ry},0,0,1,${xx2 - xx1},${yy2 - yy1}`;
+               entry.pie_path += `a${rx},${ry},0,0,1,${xx2 - xx1},${yy2 - yy1}`;
             });
-
-            // bottom
-            g.append('svg:path')
-             .attr('d', `M0,${pixelHeight}l${x1},${y1}${pie_path}z`)
-             .call(attline.func)
-             .call(attfill.func);
-
-
-            // planar
-            if (dist_to_15pi(a1) > dist_to_15pi(a2)) {
-               add_planar_side(x2, y2);
-               add_planar_side(x1, y1);
-            } else {
-               add_planar_side(x1, y1);
-               add_planar_side(x2, y2);
-            }
-
-            // curved
-            build_pie(add_curved_side);
-
-            // upper
-            g.append('svg:path')
-             .attr('d', `M0,0l${x1},${y1}${pie_path}z`)
-             .call(attline.func)
-             .call(attfill.func);
-         } else {
-            g.append('svg:path')
-             .attr('d', `M0,0l${x1},${y1}a${rx},${ry},0,0,1,${x2 - x1},${y2 - y1}z`)
-             .call(attline.func)
-             .call(attfill.func);
-         }
-
-         const frac = total ? slice.fValue / total : 0;
-         let tmptxt = pie.fLabelFormat;
-         tmptxt = tmptxt.replaceAll('%txt', slice.fTitle);
-         tmptxt = tmptxt.replaceAll('%val', floatToString(slice.fValue, pie.fValueFormat));
-         tmptxt = tmptxt.replaceAll('%frac', floatToString(frac, pie.fFractionFormat));
-         tmptxt = tmptxt.replaceAll('%perc', floatToString(frac * 100, pie.fPercentFormat) + '%');
-
-         const arg = {
-            draw_g: g,
-            x: rx * (1 + pie.fLabelsOffset) * Math.cos(mid_angle),
-            y: ry * (1 + pie.fLabelsOffset) * Math.sin(mid_angle),
-            latex: 1,
-            align: 22,
-            text: tmptxt
-         };
-
-         if (o.samecolor)
-            arg.color = this.getColor(slice.fFillColor);
-
-         if (o.lblor === 1) {
-            // radial positioning of the labels
-            arg.rotate = Math.atan2(arg.y, arg.x) / Math.PI * 180;
-            if (arg.x > 0)
-               arg.align = 12;
-            else {
-               arg.align = 32;
-               arg.rotate += 180;
-            }
-         } else if (o.lblor === 2) {
-            // in the slice
-            arg.rotate = Math.atan2(y2 - y1, x2 - x1) / Math.PI * 180;
-            if ((arg.rotate > 90) || (arg.rotate < -90)) {
-               arg.rotate += 180;
-               arg.align = 21;
-            } else
-               arg.align = 23;
-         } else if ((arg.x >= 0) && (arg.y >= 0)) {
-            arg.align = 13;
-            if (o.is3d)
-               arg.y += pixelHeight;
-         } else if ((arg.x > 0) && (arg.y < 0))
-            arg.align = 11;
-         else if ((arg.x < 0) && (arg.y >= 0)) {
-            arg.align = 33;
-            if (o.is3d)
-               arg.y += pixelHeight;
-         } else if ((arg.x < 0) && (arg.y < 0))
-            arg.align = 31;
-
-         const pr = this.startTextDrawingAsync(this.textatt.font, this.textatt.getSize(pp), g)
-                        .then(() => this.drawText(arg)).then(() => this.finishTextDrawing(g));
-
-         promises.push(pr);
+         } else
+            entry.pie_path = `a${rx},${ry},0,0,1,${entry.x2 - entry.x1},${entry.y2 - entry.y1}`;
       }
 
-      return Promise.all(promises).then(() => {
+      // code to create 3d effect
+
+      if (o.is3d) {
+         let start_indx = -1, border = Math.PI / 2;
+         for (let indx = 0; indx < arr.length; indx++) {
+            const entry = arr[indx];
+
+            // first add bottom
+            add_path(entry, `M0,${pixelHeight}l${entry.x1},${entry.y1}${entry.pie_path}z`);
+
+            if ((entry.a1 <= 1.5 * Math.PI) && (entry.a2 >= 1.5 * Math.PI))
+               start_indx = indx;
+            else if ((entry.a1 <= 3.5 * Math.PI) && (entry.a2 >= 3.5 * Math.PI)) {
+               start_indx = indx;
+               border = 2.5 * Math.PI;
+            }
+         }
+
+         if (start_indx < 0) {
+            console.error('fail to find start index, use default');
+            start_indx = 0;
+         }
+
+         let indx = start_indx, cnt = arr.length;
+
+         while ((arr[indx].a1 > border) && (cnt-- > 0)) {
+            const entry1 = arr[indx];
+            indx++;
+            if (indx === arr.length) {
+               indx = 0;
+               border += 2 * Math.PI;
+            }
+            const entry2 = arr[indx];
+
+            if (entry1.offset || entry2.offset) {
+               add_planar_side(entry1.x1, entry1.y1, entry1);
+               add_planar_side(entry2.x2, entry2.y2, entry2);
+            }
+            // curved
+            build_pie(entry1, add_curved_side);
+         }
+
+         indx = start_indx;
+
+         while (cnt-- > 0) {
+            const entry1 = arr[indx];
+            indx = (indx === 0) ? arr.length - 1 : indx - 1;
+            const entry2 = arr[indx];
+
+            if (entry1.offset || entry2.offset) {
+               add_planar_side(entry1.x2, entry1.y2, entry1);
+               add_planar_side(entry2.x1, entry2.y1, entry2);
+            }
+
+            build_pie(entry2, add_curved_side);
+         }
+      }
+
+      // add main path
+      for (let indx = 0; indx < arr.length; indx++) {
+         const entry = arr[indx];
+         add_path(entry, `M0,0l${entry.x1},${entry.y1}${entry.pie_path}z`);
+      }
+
+      // at the end draw text
+
+      return this.startTextDrawingAsync(this.textatt.font, this.textatt.getSize(pp), maing).then(() => {
+         for (let indx = 0; indx < arr.length; indx++) {
+            const entry = arr[indx],
+                  slice = entry.slice,
+                  mid_angle = (entry.a1 + entry.a2) / 2,
+                  frac = total ? slice.fValue / total : 0;
+
+            let tmptxt = pie.fLabelFormat;
+            tmptxt = tmptxt.replaceAll('%txt', slice.fTitle);
+            tmptxt = tmptxt.replaceAll('%val', floatToString(slice.fValue, pie.fValueFormat));
+            tmptxt = tmptxt.replaceAll('%frac', floatToString(frac, pie.fFractionFormat));
+            tmptxt = tmptxt.replaceAll('%perc', floatToString(frac * 100, pie.fPercentFormat) + '%');
+
+            const arg = {
+               draw_g: maing,
+               x: entry.dx + rx * (1 + pie.fLabelsOffset) * Math.cos(mid_angle),
+               y: entry.dy + ry * (1 + pie.fLabelsOffset) * Math.sin(mid_angle),
+               latex: 1,
+               align: 22,
+               text: tmptxt
+            };
+
+            if (o.samecolor)
+               arg.color = this.getColor(slice.fFillColor);
+
+            if (o.lblor === 1) {
+               // radial positioning of the labels
+               arg.rotate = Math.atan2(arg.y, arg.x) / Math.PI * 180;
+               if (arg.x > 0)
+                  arg.align = 12;
+               else {
+                  arg.align = 32;
+                  arg.rotate += 180;
+               }
+            } else if (o.lblor === 2) {
+               // in the slice
+               arg.rotate = Math.atan2(entry.y2 - entry.y1, entry.x2 - entry.x1) / Math.PI * 180;
+               if ((arg.rotate > 90) || (arg.rotate < -90)) {
+                  arg.rotate += 180;
+                  arg.align = 21;
+               } else
+                  arg.align = 23;
+            } else if ((arg.x >= 0) && (arg.y >= 0)) {
+               arg.align = 13;
+               if (o.is3d)
+                  arg.y += pixelHeight;
+            } else if ((arg.x > 0) && (arg.y < 0))
+               arg.align = 11;
+            else if ((arg.x < 0) && (arg.y >= 0)) {
+               arg.align = 33;
+               if (o.is3d)
+                  arg.y += pixelHeight;
+            } else if ((arg.x < 0) && (arg.y < 0))
+               arg.align = 31;
+
+            this.drawText(arg);
+         }
+         return this.finishTextDrawing(maing);
+      }).then(() => {
          this.#rx = rx;
          this.#ry = ry;
          this.#slices = arr;
@@ -176008,8 +176049,69 @@ class TPiePainter extends ObjectPainter {
          pie.fTitle = t;
          this.interactiveRedraw('pad', `exec:SetTitle("${t}")`);
       }));
-   }
+      menu.add('Angular offset', () => menu.input('Enter new angular offset', pie.fAngularOffset, 'float').then(v => {
+         pie.fAngularOffset = v;
+         this.interactiveRedraw('pad', `exec:SetAngularOffset(${v})`);
+      }));
+      if (this.options.is3d) {
+         menu.add('Angle 3D', () => menu.input('Enter new angle 3D', pie.fAngle3D, 'float', 0, 90).then(v => {
+            pie.fAngle3D = v;
+            this.interactiveRedraw('pad', `exec:SetAngle3D(${v})`);
+         }));
+      }
 
+      if (!menu.getEventPosition())
+         return;
+
+      const svg = this.getPadPainter()?.getPadSvg(),
+            rect = svg.node().getBoundingClientRect(),
+            x = menu.getEventPosition().clientX - rect.left - svg.node().clientLeft,
+            y = menu.getEventPosition().clientY - rect.top - svg.node().clientTop,
+            elem = this.#findDrawnSlice(x - this.#cx, y - this.#cy);
+      if (!elem)
+         return;
+
+      menu.sub(`Slice${elem.n}`);
+
+      menu.add('Title', () => menu.input('Enter new title', elem.slice.fTitle).then(t => {
+         elem.slice.fTitle = t;
+         this.interactiveRedraw('pad', `exec:SetEntryLabel(${elem.n},"${t}")`);
+      }));
+      menu.add('Offset', () => menu.input('Enter new slice offset', elem.slice.fRadiusOffset, 'float', 0, 1).then(v => {
+         elem.slice.fRadiusOffset = v;
+         this.interactiveRedraw('pad', `exec:SetEntryRadiusOffset(${elem.n},${v})`);
+      }));
+
+      menu.sub('Line att');
+      menu.addSizeMenu('width', 1, 10, 1, elem.attline.width, arg => {
+         elem.slice.fLineWidth = arg;
+         this.interactiveRedraw('pad', `exec:SetEntryLineWidth(${elem.n},${arg})`);
+      });
+      if (!elem.attline.nocolor) {
+         menu.addColorMenu('color', elem.attline.color, arg => {
+            elem.slice.fLineColor = getColorId(arg).id;
+            this.interactiveRedraw('pad', getColorExec(arg, 'SetEntryLineColor', elem.n));
+         });
+      }
+      menu.addLineStyleMenu('style', elem.attline.style, id => {
+         elem.slice.fLineStyle = id;
+         this.interactiveRedraw('pad', `exec:SetEntryLineStyle(${elem.n},${id})`);
+      });
+      menu.endsub();
+
+      menu.sub('Fill att');
+      menu.addColorMenu('color', elem.attfill.colorindx, arg => {
+         elem.slice.fFillColor = getColorId(arg).id;
+         this.interactiveRedraw('pad', getColorExec(arg, 'SetEntryFillColor', elem.n));
+      }, elem.attfill.kind);
+      menu.addFillStyleMenu('style', elem.attfill.pattern, elem.attfill.colorindx, id => {
+         elem.slice.fFillStyle = id;
+         this.interactiveRedraw('pad', `exec:SetEntryFillStyle(${elem.n},${id})`);
+      });
+      menu.endsub();
+
+      menu.endsub();
+   }
 
    /** @summary Draw TPie object */
    static async draw(dom, obj, opt) {

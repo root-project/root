@@ -3,6 +3,7 @@
 
 ## Changes in dev
 1. Implement for `TPie` 3d, text, title drawing including interactivity
+1. Remove support for deprectaed TH1K class
 1. Fix - proper paint axis labels on both sides when pad.fTickx/y = 2
 1. Fix - paint frame border mode/size from TCanvas
 
