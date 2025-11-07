@@ -2434,82 +2434,140 @@ void tgraphreverse()
    gPad->SetGrid();
 
    // TGraphErrors
-   auto graphe = new TGraphErrors();
-   graphe->GetXaxis()->SetNdivisions(514);
-   graphe->GetYaxis()->SetNdivisions(514);
-   graphe->SetMarkerStyle(kCircle);
-   graphe->SetPoint(0,5,5);
-   graphe->SetPointError(0,1,3);
-   graphe->SetPoint(1,9,9);
-   graphe->SetPointError(1,1,3);
-   graphe->GetXaxis()->SetMoreLogLabels();
-   graphe->GetYaxis()->SetMoreLogLabels();
-
-   gPad->Add(graphe, "a  pl ");
+   auto graphe1 = new TGraphErrors();
+   graphe1->SetMarkerStyle(kCircle);
+   graphe1->SetPoint(0,5,5);
+   graphe1->SetPointError(0,1,3);
+   graphe1->SetPoint(1,9,9);
+   graphe1->SetPointError(1,1,3);
+   graphe1->GetXaxis()->SetNdivisions(514);
+   graphe1->GetYaxis()->SetNdivisions(514);
+   graphe1->GetXaxis()->SetMoreLogLabels();
+   graphe1->GetYaxis()->SetMoreLogLabels();
+   gPad->Add(graphe1, "a  pl ");
 
    C->cd(2);
    gPad->SetGrid();
-   gPad->Add(graphe, "a  pl rx ry ");
+
+   auto graphe2 = new TGraphErrors();
+   graphe2->SetMarkerStyle(kCircle);
+   graphe2->SetPoint(0,5,5);
+   graphe2->SetPointError(0,1,3);
+   graphe2->SetPoint(1,9,9);
+   graphe2->SetPointError(1,1,3);
+   graphe2->GetXaxis()->SetNdivisions(514);
+   graphe2->GetYaxis()->SetNdivisions(514);
+   graphe2->GetXaxis()->SetMoreLogLabels();
+   graphe2->GetYaxis()->SetMoreLogLabels();
+   gPad->Add(graphe2, "a  pl rx ry ");
 
    C->cd(3);
    gPad->SetGrid();
    gPad->SetLogx();
    gPad->SetLogy();
-   gPad->Add(graphe, "a  pl rx ry");
+   auto graphe3 = new TGraphErrors();
+   graphe3->SetMarkerStyle(kCircle);
+   graphe3->SetPoint(0,5,5);
+   graphe3->SetPointError(0,1,3);
+   graphe3->SetPoint(1,9,9);
+   graphe3->SetPointError(1,1,3);
+   graphe3->GetXaxis()->SetNdivisions(514);
+   graphe3->GetYaxis()->SetNdivisions(514);
+   graphe3->GetXaxis()->SetMoreLogLabels();
+   graphe3->GetYaxis()->SetMoreLogLabels();
+   gPad->Add(graphe3, "a  pl rx ry");
 
    C->cd(4);
    gPad->SetGrid();
 
    // TGraphAsymmErrors
-   auto graphae = new TGraphAsymmErrors();
-   graphae->GetXaxis()->SetNdivisions(514);
-   graphae->GetYaxis()->SetNdivisions(514);
-   graphae->SetMarkerStyle(kCircle);
-   graphae->SetPoint(0,5,5);
-   graphae->SetPointError(0,1,3,3,1);
-   graphae->SetPoint(1,9,9);
-   graphae->SetPointError(1,1,3,1,3);
-   graphae->GetXaxis()->SetMoreLogLabels();
-   graphae->GetYaxis()->SetMoreLogLabels();
-
-   gPad->Add(graphae, "a  pl ");
+   auto graphae1 = new TGraphAsymmErrors();
+   graphae1->SetMarkerStyle(kCircle);
+   graphae1->SetPoint(0,5,5);
+   graphae1->SetPointError(0,1,3,3,1);
+   graphae1->SetPoint(1,9,9);
+   graphae1->SetPointError(1,1,3,1,3);
+   graphae1->GetXaxis()->SetNdivisions(514);
+   graphae1->GetYaxis()->SetNdivisions(514);
+   graphae1->GetXaxis()->SetMoreLogLabels();
+   graphae1->GetYaxis()->SetMoreLogLabels();
+   gPad->Add(graphae1, "a  pl ");
 
    C->cd(5);
    gPad->SetGrid();
-   gPad->Add(graphae, "a  pl rx ry ");
+   auto graphae2 = new TGraphAsymmErrors();
+   graphae2->SetMarkerStyle(kCircle);
+   graphae2->SetPoint(0,5,5);
+   graphae2->SetPointError(0,1,3,3,1);
+   graphae2->SetPoint(1,9,9);
+   graphae2->SetPointError(1,1,3,1,3);
+   graphae2->GetXaxis()->SetNdivisions(514);
+   graphae2->GetYaxis()->SetNdivisions(514);
+   graphae2->GetXaxis()->SetMoreLogLabels();
+   graphae2->GetYaxis()->SetMoreLogLabels();
+   gPad->Add(graphae2, "a  pl rx ry ");
 
    C->cd(6);
    gPad->SetGrid();
    gPad->SetLogx();
    gPad->SetLogy();
-   gPad->Add(graphae, "a  pl rx ry");
+   auto graphae3 = new TGraphAsymmErrors();
+   graphae3->SetMarkerStyle(kCircle);
+   graphae3->SetPoint(0,5,5);
+   graphae3->SetPointError(0,1,3,3,1);
+   graphae3->SetPoint(1,9,9);
+   graphae3->SetPointError(1,1,3,1,3);
+   graphae3->GetXaxis()->SetNdivisions(514);
+   graphae3->GetYaxis()->SetNdivisions(514);
+   graphae3->GetXaxis()->SetMoreLogLabels();
+   graphae3->GetYaxis()->SetMoreLogLabels();
+   gPad->Add(graphae3, "a  pl rx ry");
 
    C->cd(7);
    gPad->SetGrid();
 
    // TGraphBentErrors
-   auto graphbe = new TGraphBentErrors();
-   graphbe->GetXaxis()->SetNdivisions(514);
-   graphbe->GetYaxis()->SetNdivisions(514);
-   graphbe->SetMarkerStyle(kCircle);
-   graphbe->SetPoint(0,5,5);
-   graphbe->SetPointError(0,1,3,3,1,.5,.2,.5,.2);
-   graphbe->SetPoint(1,9,9);
-   graphbe->SetPointError(1,1,3,1,3,-.5,-.2,-.5,-.2);
-   graphbe->GetXaxis()->SetMoreLogLabels();
-   graphbe->GetYaxis()->SetMoreLogLabels();
-
-   gPad->Add(graphbe, "a  pl ");
+   auto graphbe1 = new TGraphBentErrors();
+   graphbe1->SetMarkerStyle(kCircle);
+   graphbe1->SetPoint(0,5,5);
+   graphbe1->SetPointError(0,1,3,3,1,.5,.2,.5,.2);
+   graphbe1->SetPoint(1,9,9);
+   graphbe1->SetPointError(1,1,3,1,3,-.5,-.2,-.5,-.2);
+   graphbe1->GetXaxis()->SetNdivisions(514);
+   graphbe1->GetYaxis()->SetNdivisions(514);
+   graphbe1->GetXaxis()->SetMoreLogLabels();
+   graphbe1->GetYaxis()->SetMoreLogLabels();
+   gPad->Add(graphbe1, "a  pl ");
 
    C->cd(8);
    gPad->SetGrid();
-   gPad->Add(graphbe, "a  pl rx ry ");
+   auto graphbe2 = new TGraphBentErrors();
+   graphbe2->SetMarkerStyle(kCircle);
+   graphbe2->SetPoint(0,5,5);
+   graphbe2->SetPointError(0,1,3,3,1,.5,.2,.5,.2);
+   graphbe2->SetPoint(1,9,9);
+   graphbe2->SetPointError(1,1,3,1,3,-.5,-.2,-.5,-.2);
+   graphbe2->GetXaxis()->SetNdivisions(514);
+   graphbe2->GetYaxis()->SetNdivisions(514);
+   graphbe2->GetXaxis()->SetMoreLogLabels();
+   graphbe2->GetYaxis()->SetMoreLogLabels();
+   gPad->Add(graphbe2, "a  pl rx ry ");
 
    C->cd(9);
    gPad->SetGrid();
    gPad->SetLogx();
    gPad->SetLogy();
-   gPad->Add(graphbe, "a  pl rx ry");
+   auto graphbe3 = new TGraphBentErrors();
+   graphbe3->SetMarkerStyle(kCircle);
+   graphbe3->SetPoint(0,5,5);
+   graphbe3->SetPointError(0,1,3,3,1,.5,.2,.5,.2);
+   graphbe3->SetPoint(1,9,9);
+   graphbe3->SetPointError(1,1,3,1,3,-.5,-.2,-.5,-.2);
+   graphbe3->GetXaxis()->SetNdivisions(514);
+   graphbe3->GetYaxis()->SetNdivisions(514);
+   graphbe3->GetXaxis()->SetMoreLogLabels();
+   graphbe3->GetYaxis()->SetMoreLogLabels();
+   gPad->Add(graphbe3, "a  pl rx ry");
 
    TestReport(C, "tgraphreverse", "TGraph with reverse axis and log scale");
 }
