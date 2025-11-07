@@ -1992,7 +1992,7 @@ void thstack1()
    gPad->SetGrid();
    hs2->Draw("nostack,e1p");
 
-   TestReport(C, "thstack1", "THStack for 1D histograms", kSkipCCode);
+   TestReport(C, "thstack1", "THStack for 1D histograms");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3003,7 +3003,7 @@ void thstack2()
    a->Add(h2stb);
    a->Draw();
 
-   TestReport(C, "thstack2", "THStack lego plot", kSkipCCode);
+   TestReport(C, "thstack2", "THStack lego plot");
 }
 
 
@@ -4294,7 +4294,7 @@ void graphpolar()
       grPE->GetPolargram()->SetToRadian();
    }
 
-   TestReport(C, "graphpolar", "TGraphPolar", kSkipCCode, kSkipSvgTest);
+   TestReport(C, "graphpolar", "TGraphPolar", "", kSkipSvgTest);
 }
 
 
