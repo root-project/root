@@ -230,48 +230,57 @@ int ReadRefFile(const char *fname, std::vector<RefEntry> &entries)
    return entries.size();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Print header for ref file
+
+void PrintRefHeader()
+{
+   if (gWebMode)
+      printf("          Test#  SVG1Ref#  SVG1Err#   PDFRef#   PDFErr#   JPGRef#   JPGErr#   PNGRef#   PNGErr#  SVG2Ref#  SVG2Err#\n");
+   else
+      printf("          Test#   PS1Ref#   PS1Err#   PDFRef#   PDFErr#   JPGRef#   JPGErr#   PNGRef#   PNGErr#   PS2Ref#   PS2Err#\n");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print content of ref entries
+
+void PrintRefEntries(const std::vector<RefEntry> &entries)
+{
+   for (auto &d : entries)
+      printf("%15s%10d%10d%10d%10d%10d%10d%10d%10d%10d%10d\n", d.name.Data(), d.ps1ref, d.ps1err, d.pdfref, d.pdferr, d.jpgref, d.jpgerr, d.pngref, d.pngerr, d.ps2ref, d.ps2err);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print test program number and its title
 
-Int_t StatusPrint(const TString &filename, Int_t id, const char *title, Int_t testnum, Int_t res, Int_t ref, Int_t err)
+Int_t StatusPrint(const TString &filename, const TString &title, Int_t res, Int_t &ref, Int_t err)
 {
-   if (!gOptionR) {
-      TString line;
-      if (id > 0)
-         line = TString::Format("Test %2d: %s", testnum, title);
-       else
-         line = TString::Format("       %s", title);
-
+   if (gOptionR) {
+      ref = res;
+   } else {
+      TString line = title;
+      if (line.Index("Test") == kNPOS)
+         line.Prepend("         ");
       const Int_t nch = line.Length();
       if (TMath::Abs(res - ref) <= err) {
          std::cout << line;
-         for (Int_t i = nch; i < 67; i++) std::cout << ".";
+         for (Int_t i = nch; i < 67; i++)
+            std::cout << ".";
          std::cout << " OK\n";
          if (!gOptionK)
             gSystem->Unlink(filename.Data());
       } else {
          std::cout << line;
          Int_t ndots = 60;
-         Int_t w = 3;
-         if (testnum < 10) {
-            ndots++;
-            w--;
-         }
          for (Int_t i = nch; i < ndots; i++)
             std::cout << ".";
-         std::cout << std::setw(w) << testnum << " FAILED\n";
-         ;
+         std::cout << " FAILED\n";
          std::cout << "         Result    = " << res << "\n";
          std::cout << "         Reference = " << ref << "\n";
          std::cout << "         Error     = " << TMath::Abs(res - ref) << " (was " << err << ")\n";
          gTestsFailed++;
          return 1;
       }
-   } else {
-      if (id > 0)  printf("%5d%10d%10d", testnum, res, err);
-      if (id == 0) printf("%10d%10d", res, err);
-      if (id < 0)  printf("%10d%10d\n", res, err);
    }
    return 0;
 }
@@ -614,25 +623,24 @@ void print_reports()
          continue;
       }
 
-      StatusPrint(e.psfile, 1, e.title, gTestNum, e.IPS ? FileSize(e.psfile) : AnalysePS(e.psfile), ref->ps1ref, ref->ps1err);
+      TString title = TString::Format("Test %2d. %s", gTestNum, e.title.Data());
 
-      StatusPrint(e.pdffile, 0, "  PDF output", gTestNum, FileSize(e.pdffile), ref->pdfref, ref->pdferr);
+      StatusPrint(e.psfile, title, e.IPS ? FileSize(e.psfile) : AnalysePS(e.psfile), ref->ps1ref, ref->ps1err);
 
-      StatusPrint(e.jpgfile, 0, "  JPG output", gTestNum, FileSize(e.jpgfile), ref->jpgref, ref->jpgerr);
+      StatusPrint(e.pdffile, "PDF output", FileSize(e.pdffile), ref->pdfref, ref->pdferr);
 
-      StatusPrint(e.pngfile, 0, "  PNG output", gTestNum, FileSize(e.pngfile), ref->pngref, ref->pngerr);
+      StatusPrint(e.jpgfile, "JPG output", FileSize(e.jpgfile), ref->jpgref, ref->jpgerr);
+
+      StatusPrint(e.pngfile, "PNG output", FileSize(e.pngfile), ref->pngref, ref->pngerr);
 
       if (e.execute_ccode) {
-         Int_t ret_code = StatusPrint(e.ps2file, -1, "  C file result", gTestNum,
+         Int_t ret_code = StatusPrint(e.ps2file, "C file result",
                                     e.IPS ? FileSize(e.ps2file) : AnalysePS(e.ps2file), ref->ps2ref, ref->ps2err);
 
 #ifndef __CLING__
          if (!gOptionK && !ret_code)
             gSystem->Unlink(e.ccode);
 #endif
-      } else {
-         if (gOptionR)
-            printf("%10d%10d\n", 0, 0);
       }
    }
 
@@ -4289,13 +4297,6 @@ void graphpolar()
    TestReport(C, "graphpolar", "TGraphPolar", kSkipCCode, kSkipSvgTest);
 }
 
-void PrintRefHeader()
-{
-   if (gWebMode)
-      printf("          Test#  SVG1Ref#  SVG1Err#   PDFRef#   PDFErr#   JPGRef#   JPGErr#   PNGRef#   PNGErr#  SVG2Ref#  SVG2Err#\n");
-   else
-      printf("          Test#   PS1Ref#   PS1Err#   PDFRef#   PDFErr#   JPGRef#   JPGErr#   PNGRef#   PNGErr#   PS2Ref#   PS2Err#\n");
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Run all graphics stress tests.
@@ -4364,9 +4365,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
 
    gRandom->SetSeed(65539);
 
-   if (gOptionR) {
-      PrintRefHeader();
-   } else {
+   if (!gOptionR) {
       std::cout << "**********************************************************************\n";
       std::cout << "*  Starting  Graphics - S T R E S S suite                    " << ref_kind << " *\n";
    }
@@ -4473,10 +4472,12 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    clonepad      ();
    hbars         ();
    th2poly       ();
+   print_reports ();
 
-   print_reports();
-
-   if (!gOptionR) {
+   if (gOptionR) {
+      PrintRefHeader();
+      PrintRefEntries(gRef);
+   } else {
       std::cout << "**********************************************************************\n";
       if (!gTestsFailed) {
          std::cout << "*  All the tests passed. :-)\n";
@@ -4572,14 +4573,14 @@ void BuildReferenceFile(int argc, char *argv[], int arg_first)
       }
    }
 
-   PrintRefHeader();
-   for (auto &d : entries_min) {
-      if (NumFiles > 1) {
+   if (NumFiles > 1)
+      for (auto &d : entries_min) {
          auto emax = FindEntry(entries_max, d.name);
          if (emax) d.CalcMeanError(*emax);
       }
-      printf("%15s%10d%10d%10d%10d%10d%10d%10d%10d%10d%10d\n", d.name.Data(), d.ps1ref, d.ps1err, d.pdfref, d.pdferr, d.jpgref, d.jpgerr, d.pngref, d.pngerr, d.ps2ref, d.ps2err);
-   }
+
+   PrintRefHeader();
+   PrintRefEntries(entries_min);
 }
 
 
