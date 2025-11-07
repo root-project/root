@@ -861,7 +861,7 @@ public:
 
 protected:
    Double_t RetrieveBinContent(Int_t bin) const override { return Double_t (fArray[bin]); }
-   void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = Int_t (content); }
+   void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = Long64_t (content); }
 };
 
 TH1L operator*(Double_t c1, const TH1L &h1);

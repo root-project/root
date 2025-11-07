@@ -297,7 +297,7 @@ public:
 
 protected:
    Double_t RetrieveBinContent(Int_t bin) const override { return Double_t (fArray[bin]); }
-   void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = Int_t (content); }
+   void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = Long64_t (content); }
 
    ClassDefOverride(TH2L,0)  //2-Dim histograms (one 64 bit integer per channel)
 };
