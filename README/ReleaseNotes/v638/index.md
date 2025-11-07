@@ -49,6 +49,7 @@ The following people have contributed to this new version:
   Relative RPATHs to the main ROOT libraries are unconditionally appended to all ROOT executables and libraries if the operating system supports it.
   If you want a ROOT build without RPATHs, use the canonical CMake variable `CMAKE_SKIP_INSTALL_RPATH=TRUE`.
 * The `TH1K` class is deprecated and will be removed in 6.40. It did not implement the `TH1` interface consistently, and limited the usability of the k-neighbors method it implemented by closely coupling the algorithm with the histogram class. Please use the new `TMath::KNNDensity` function that implements the same mathematical logic.
+* Comparing C++ `nullptr` objects with `None` in Python now results in a `FutureWarning`, and will result in a `TypeError` starting from ROOT 6.40. This is to prevent confusing results where `x == None` and `x is None` are not identical. Use truth-value checks like `if not x` or `x is None` instead.
 
 ## Build System
 * Improve building ROOT when ROOT is already installed in the system. ROOT now correctly handles system-include folders that both contain a package that ROOT depends on and a ROOT installation. Dependent packages are included with `-isystem` instead of `-I`, so installed ROOT headers will not interfere with a ROOT build. See [#8708](https://github.com/root-project/root/issues/8708) for details.
