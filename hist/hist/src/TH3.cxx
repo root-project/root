@@ -4344,7 +4344,7 @@ void TH3L::AddBinContent(Int_t bin)
 void TH3L::AddBinContent(Int_t bin, Double_t w)
 {
    Long64_t newval = fArray[bin] + Long64_t(w);
-   if (newval > -LLONG_MAX && newval < LLONG_MAX) {fArray[bin] = Int_t(newval); return;}
+   if (newval > -LLONG_MAX && newval < LLONG_MAX) {fArray[bin] = newval; return;}
    if (newval < -LLONG_MAX) fArray[bin] = -LLONG_MAX;
    if (newval >  LLONG_MAX) fArray[bin] =  LLONG_MAX;
 }
