@@ -14,6 +14,10 @@
 
 // GL includes - include this if you are calling OpenGL functions.
 
+#ifndef _ROOT_GL_BUILDS_ITSELF
+#warning "The TGLIncludes.h header is deprecated and will be removed in ROOT 6.40. Please include the required headers like <GL/gl.h> or <GL/glu.h> directly."
+#endif
+
 #ifdef WIN32
 #include "Windows4Root.h"
 #endif
