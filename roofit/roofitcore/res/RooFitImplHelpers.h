@@ -96,8 +96,7 @@ void getSortedComputationGraph(RooAbsArg const &func, RooArgSet &out);
 
 } // namespace RooHelpers
 
-namespace RooFit {
-namespace Detail {
+namespace RooFit::Detail {
 
 std::string makeValidVarName(std::string const &in);
 
@@ -105,8 +104,7 @@ void replaceAll(std::string &inOut, std::string_view what, std::string_view with
 
 std::string makeSliceCutString(RooArgSet const &sliceDataSet);
 
-} // namespace Detail
-} // namespace RooFit
+} // namespace RooFit::Detail
 
 double toDouble(const char *s);
 double toDouble(const std::string &s);
