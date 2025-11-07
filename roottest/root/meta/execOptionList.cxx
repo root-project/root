@@ -1,3 +1,4 @@
+#if __has_include("TGTextEntry.h") // Gui Target is disabled when minimal=ON
 #include "TDataMember.h"
 #include "TClass.h"
 #include "TGWidget.h"
@@ -32,3 +33,8 @@ int execOptionList() {
    return result;
 
 }
+#else
+int execOptionList() {
+   return 0;
+}
+#endif

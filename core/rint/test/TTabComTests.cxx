@@ -71,7 +71,10 @@ TEST(TTabComTests, CompleteTH1)
       // FIXME: See ROOT-10989
       " TH1DModel"
 #endif
-      " TH1Editor TH1F TH1I TH1L TH1S";
+#if __has_include("TH1Editor.h") // Gui Target is disabled when minimal=ON
+      " TH1Editor";
+#endif
+      " TH1F TH1I TH1L TH1S";
 
    ASSERT_STREQ(expected.c_str(), GetCompletions("TH1").c_str());
 }
