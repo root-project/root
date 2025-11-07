@@ -1,7 +1,6 @@
 
 Processing srun.C("roottest/root/io/newstl/", "roottest/root/io/newstl/6-32-19/")...
 Running reading test rvec
-ROOT 63219 did not support variable size array of stl containers
 Running reading test vector
 Running reading test deque
 Running reading test list

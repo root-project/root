@@ -17,25 +17,17 @@ foreach(index RANGE 7)
                          FIXTURES_SETUP root-io-newstl-test-fixture)
 endforeach()
 
-if(APPLE OR MSVC)
-  set(_srun_ref stlIoTestMac.ref)
-  set(_srun_read_ref stlIoReadMac-6-32-19.ref)
-else()
-  set(_srun_ref stlIoTest.ref)
-  set(_srun_read_ref stlIoRead-6-32-19.ref)
-endif()
-
 ROOTTEST_ADD_TEST(run
                   MACRO srun.C
                   MACROARG "\"${CMAKE_CURRENT_SOURCE_DIR}/\""
-                  OUTREF ${_srun_ref}
+                  OUTREF stlIoTest.ref
                   FIXTURES_REQUIRED root-io-newstl-test-fixture
                   FIXTURES_SETUP root-io-newstl-run-fixture)
 
 ROOTTEST_ADD_TEST(read-6-32-19
                   MACRO srun.C
                   MACROARG "\"${CMAKE_CURRENT_SOURCE_DIR}/\", \"${CMAKE_CURRENT_SOURCE_DIR}/6-32-19/\""
-                  OUTREF ${_srun_read_ref}
+                  OUTREF stlIoRead.ref
                   FIXTURES_REQUIRED root-io-newstl-test-fixture)
 
 # failing tests, crashes ROOT, was disabled in Makefile
