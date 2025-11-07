@@ -320,3 +320,12 @@ TEST(TAxis, EqualBinEdges)
 {
    ROOT_EXPECT_ERROR(TAxis _({1, 1}), "TAxis::Set", "bins must be in increasing order");
 }
+
+TEST(TH1L, SetBinContent)
+{
+   TH1L h("", "", 1, 0, 1);
+   // Something that does not fit into Int_t, but is exactly representable in Double_t
+   static constexpr long long Large = 1LL << 42;
+   h.SetBinContent(1, Large);
+   EXPECT_EQ(h.GetBinContent(1), Large);
+}
