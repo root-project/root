@@ -39,6 +39,22 @@ class TObjectComparisonOps(unittest.TestCase):
         # Test comparison with None
         self.assertTrue(o != None)
 
+    def test_nullptr_eq_none_raises(self):
+        import cppyy
+
+        x = cppyy.bind_object(cppyy.nullptr, "TObject")
+
+        # Comparing a nullptr to None must raise TypeError in ROOT >= 6.40
+        # This is important to check, because if we don't raise an error, the
+        # result might not be equivalent to the confusing behavior in previous
+        # ROOT versions, which would be a silent behavior change.
+        # See https://github.com/root-project/root/issues/20283
+        with self.assertRaises(TypeError):
+            _ = x == None
+
+        with self.assertRaises(TypeError):
+            _ = x != None
+
     def test_lt(self):
         a = TUrl("a")
         b = TUrl("b")

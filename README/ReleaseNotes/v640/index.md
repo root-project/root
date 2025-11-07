@@ -35,6 +35,7 @@ The following people have contributed to this new version:
 * The `TH1K` class was removed. `TMath::KNNDensity` can be used in its stead.
 
 * The `TObject` equality operator pythonization (`TObject.__eq__`) that was deprecated in ROOT 6.38 and scheduled for removal in ROOT 6.40 is removed
+* Comparing C++ `nullptr` objects with `None` in Python now raises a `TypeError`, as announced in the ROOT 6.38 release notes. Use truth-value checks like `if not x` or `x is None` instead.
 
 ## Build System
 
