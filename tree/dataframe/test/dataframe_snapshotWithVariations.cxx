@@ -494,3 +494,38 @@ TEST(RDFVarySnapshot, SnapshotVirtualClass)
       }
    }
 }
+
+// https://github.com/root-project/root/issues/20320
+TEST(RDFVarySnapshot, GH20320)
+{
+   const char *fileName{"dataframe_snapshot_with_variations_regression_gh20330.root"};
+   RemoveFileRAII(fileName);
+
+   ROOT::RDataFrame df{1};
+
+   auto df_def = df.Define("val", []() { return 2; });
+
+   auto df_var =
+      df_def.Vary("val", [](int val) { return ROOT::RVecI{val - 1, val + 1}; }, {"val"}, {"down", "up"}, "var");
+
+   // Jitted filters used to break the Snapshot because:
+   // - It did not JIT the RJittedFilter before requesting for the varied filters
+   // - It did not take into account that the previous nodes of the Snapshot could be of different types
+   auto df_fil = df_var.Filter("val > 0");
+
+   ROOT::RDF::RSnapshotOptions opts;
+   opts.fIncludeVariations = true;
+   auto snap = df_fil.Snapshot("tree", fileName, {"val"}, opts);
+
+   auto take_val = snap->Take<int>("val");
+   auto take_var_up = snap->Take<int>("val__var_up");
+   auto take_var_down = snap->Take<int>("val__var_down");
+
+   EXPECT_EQ(take_val->size(), 1);
+   EXPECT_EQ(take_var_up->size(), 1);
+   EXPECT_EQ(take_var_down->size(), 1);
+
+   EXPECT_EQ(take_var_down->front(), 1);
+   EXPECT_EQ(take_val->front(), 2);
+   EXPECT_EQ(take_var_up->front(), 3);
+}
