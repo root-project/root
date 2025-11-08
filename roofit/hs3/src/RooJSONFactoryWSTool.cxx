@@ -160,12 +160,6 @@ struct Var {
     * @param n Number of bins.
     */
    Var(int n) : nbins(n), min(0), max(n) {}
-
-   /**
-    * @brief Constructor for Var from JSONNode.
-    * @param val JSONNode containing variable information.
-    */
-   Var(const JSONNode &val);
 };
 
 /**
@@ -255,34 +249,6 @@ JSONNode const *getVariablesNode(JSONNode const &rootNode)
    if (out == nullptr)
       return nullptr;
    return &((*out)["parameters"]);
-}
-
-Var::Var(const JSONNode &val)
-{
-   if (val.find("edges")) {
-      for (auto const &child : val.children()) {
-         this->edges.push_back(child.val_double());
-      }
-      this->nbins = this->edges.size();
-      this->min = this->edges[0];
-      this->max = this->edges[this->nbins - 1];
-   } else {
-      if (!val.find("nbins")) {
-         this->nbins = 1;
-      } else {
-         this->nbins = val["nbins"].val_int();
-      }
-      if (!val.find("min")) {
-         this->min = 0;
-      } else {
-         this->min = val["min"].val_double();
-      }
-      if (!val.find("max")) {
-         this->max = 1;
-      } else {
-         this->max = val["max"].val_double();
-      }
-   }
 }
 
 std::string genPrefix(const JSONNode &p, bool trailing_underscore)
