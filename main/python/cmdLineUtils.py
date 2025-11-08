@@ -709,6 +709,12 @@ def copyRootObjectRecursive(sourceFile, sourcePathSplit, destFile, destPathSplit
                 changeDirectory(destFile, destPathSplit)
                 obj.Write(setName, ROOT.TObject.kSingleKey)
             else:
+                if replaceOption and isExisting(destFile, destPathSplit + [objectName]):
+                    retcodeTemp = deleteObject(destFile, destPathSplit + [objectName])
+                    if retcodeTemp:
+                        retcode += retcodeTemp
+                        obj.Delete()
+                        continue
                 if setName != "":
                     if isinstance(obj, ROOT.TNamed):
                         obj.SetName(setName)
