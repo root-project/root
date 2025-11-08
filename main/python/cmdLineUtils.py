@@ -694,7 +694,7 @@ def copyRootObjectRecursive(sourceFile, sourcePathSplit, destFile, destPathSplit
             obj = key.ReadObj()
             if replaceOption and isExisting(destFile, destPathSplit + [setName]):
                 changeDirectory(destFile, destPathSplit)
-                otherObj = getFromDirectory(setName)
+                # Delete existing object before writing replacement
                 retcodeTemp = deleteObject(destFile, destPathSplit + [setName])
                 if retcodeTemp:
                     retcode += retcodeTemp
