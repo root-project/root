@@ -2036,6 +2036,7 @@ XMLNodePointer_t TGDMLWrite::CreateRotationN(const char *name, Xyz rotation, con
 XMLNodePointer_t TGDMLWrite::CreateMatrixN(TGDMLMatrix const *matrix)
 {
    std::stringstream vals;
+   vals << std::setprecision(fFltPrecision);
    size_t cols = matrix->GetCols();
    size_t rows = matrix->GetRows();
    XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "matrix", nullptr);
