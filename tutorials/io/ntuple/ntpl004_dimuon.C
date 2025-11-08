@@ -3,9 +3,9 @@
 /// \notebook
 /// Mini-Analysis on CMS OpenData with RDataFrame.
 /// This tutorial illustrates that analyzing data with RDataFrame works the same
-/// for both TTree data and RNTuple data.  The RNTuple data are converted from the Events tree
-/// in http://root.cern/files/NanoAOD_DoubleMuon_CMS2011OpenData.root
-/// Based on RDataFrame's df102_NanoAODDimuonAnalysis.C
+/// for both TTree data and RNTuple data. The RNTuple data are obtained by
+/// converting the CMS open dataset at https://opendata.cern.ch/record/12341.
+/// The analysis is based on df102_NanoAODDimuonAnalysis.C.
 ///
 /// \macro_image
 /// \macro_code
@@ -28,7 +28,8 @@
 #include <vector>
 #include <utility>
 
-constexpr char const *kNTupleFileName = "http://root.cern/files/tutorials/ntpl004_dimuon_v1.root";
+constexpr char const *kNTupleFileName =
+   "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/rntuple/Run2012BC_DoubleMuParked_Muons.root";
 
 using namespace ROOT::VecOps;
 
