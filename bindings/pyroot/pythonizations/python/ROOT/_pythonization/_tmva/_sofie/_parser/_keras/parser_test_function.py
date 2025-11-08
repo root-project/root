@@ -45,8 +45,13 @@ def is_accurate(tensor_a, tensor_b, tolerance=1e-3):
 
 def generate_and_test_inference(model_file_path: str, generated_header_file_dir: str = None, batch_size=1):
     
+    import tensorflow as tf
     import keras
     import numpy as np
+    
+    print("Tensorflow version: ", tf.__version__)
+    print("Keras version: ", keras.__version__)
+    print("Numpy version:", np.__version__)
     
     model_name = model_file_path[model_file_path.rfind('/')+1:].removesuffix(".h5")
     rmodel = ROOT.TMVA.Experimental.SOFIE.RModelParser_Keras.Parse(model_file_path, batch_size)
