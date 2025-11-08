@@ -13,11 +13,10 @@
 # http://stackoverflow.com/questions/4675728/redirect-stdout-to-a-file-in-python/22434262#22434262
 # Thanks J.F. Sebastian !!
 
-from contextlib import contextmanager
 import os
 import sys
-from time import sleep
-from itertools import zip_longest
+from contextlib import contextmanager
+
 
 def fileno(file_or_fd):
     """
@@ -81,9 +80,10 @@ with stdoutRedirected():
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 ROOT.gROOT.GetVersion()
 
+# ruff: noqa: E402
 import argparse
-import glob
 import fnmatch
+import glob
 import logging
 
 LOG_FORMAT = "%(levelname)s: %(message)s"
@@ -328,12 +328,12 @@ def openROOTFileCompress(fileName, compress, recreate):
     Open a ROOT file (like openROOTFile) with the possibility
     to change compression settings
     """
-    if compress != None and os.path.isfile(fileName):
+    if compress is not None and os.path.isfile(fileName):
         logging.warning("can't change compression settings on existing file")
         return None
     mode = "recreate" if recreate else "update"
     theFile = openROOTFile(fileName, mode)
-    if compress != None:
+    if compress is not None:
         theFile.SetCompressionSettings(compress)
     return theFile
 
@@ -501,7 +501,7 @@ def getSourceListArgs(parser, wildcards=True):
     inputFiles = []
     try:
         inputFiles = args.FILE
-    except:
+    except Exception:
         inputFiles = args.SOURCE
     sourceList = [tup for pattern in inputFiles for tup in patternToFileNameAndPathSplitList(pattern, wildcards)]
     return sourceList, args
