@@ -18,11 +18,10 @@
 #include <vector>
 #include <random>
 
-#include "TMVA/RTensor.hxx"
 #include "TMVA/BatchGenerator/RChunkConstructor.hxx"
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDF/Utils.hxx"
-#include "ROOT/RVec.hxx"
+#include "TMVA/BatchGenerator/RFlat2DMatrix.hxx"
 
 #include "ROOT/RLogger.hxx"
 
@@ -44,7 +43,7 @@ class RChunkLoaderFunctor {
    std::size_t fVecSizeIdx{};
    float fVecPadding{};
    std::vector<std::size_t> fMaxVecSizes{};
-   TMVA::Experimental::RTensor<float> &fChunkTensor;
+   RFlat2DMatrix &fChunkTensor;
 
    std::size_t fNumChunkCols;
 
@@ -58,17 +57,18 @@ class RChunkLoaderFunctor {
    {
       std::size_t max_vec_size = fMaxVecSizes[fVecSizeIdx++];
       std::size_t vec_size = vec.size();
+
+      float *dst = fChunkTensor.GetData() + fOffset + numColumns * i;
       if (vec_size < max_vec_size) // Padding vector column to max_vec_size with fVecPadding
       {
-         std::copy(vec.begin(), vec.end(), &fChunkTensor.GetData()[fOffset + numColumns * i]);
-         std::fill(&fChunkTensor.GetData()[fOffset + numColumns * i + vec_size],
-                   &fChunkTensor.GetData()[fOffset + numColumns * i + max_vec_size], fVecPadding);
+         std::copy(vec.begin(), vec.end(), dst);
+         std::fill(dst + vec_size, dst + max_vec_size, fVecPadding);
       } else // Copy only max_vec_size length from vector column
       {
-         std::copy(vec.begin(), vec.begin() + max_vec_size, &fChunkTensor.GetData()[fOffset + numColumns * i]);
+         std::copy(vec.begin(), vec.begin() + max_vec_size, dst);
       }
-      fOffset += max_vec_size;
-   }
+       fOffset += max_vec_size;
+    }
 
    //////////////////////////////////////////////////////////////////////////
    /// \brief Copy the content of a column into RTensor when the column consits of single values 
@@ -81,7 +81,7 @@ class RChunkLoaderFunctor {
    }
 
 public:
-   RChunkLoaderFunctor(TMVA::Experimental::RTensor<float> &chunkTensor, std::size_t numColumns,
+   RChunkLoaderFunctor(RFlat2DMatrix &chunkTensor, std::size_t numColumns,
                        const std::vector<std::size_t> &maxVecSizes, float vecPadding, int i)
       : fChunkTensor(chunkTensor), fMaxVecSizes(maxVecSizes), fVecPadding(vecPadding), fI(i), fNumColumns(numColumns)
    {
@@ -320,8 +320,8 @@ public:
    /// \brief Load the nth chunk from the training dataset into a tensor
    /// \param[in] TrainChunkTensor RTensor for the training chunk
    /// \param[in] chunk Index of the chunk in the dataset
-   void LoadTrainingChunk(TMVA::Experimental::RTensor<float> &TrainChunkTensor, std::size_t chunk)
-   {
+   void LoadTrainingChunk(RFlat2DMatrix &TrainChunkTensor, std::size_t chunk)
+    {
 
       std::random_device rd;
       std::mt19937 g;
@@ -335,8 +335,8 @@ public:
       std::size_t chunkSize = fTraining->ChunksSizes[chunk];
 
       if (chunk < fTraining->Chunks) {
-         TMVA::Experimental::RTensor<float> Tensor({chunkSize, fNumChunkCols});
-         TrainChunkTensor = TrainChunkTensor.Resize({{chunkSize, fNumChunkCols}});
+         RFlat2DMatrix Tensor(chunkSize, fNumChunkCols);
+         TrainChunkTensor.Resize(chunkSize, fNumChunkCols);
 
          // make an identity permutation map        
          std::vector<int> indices(chunkSize);
@@ -393,8 +393,8 @@ public:
    /// \brief Load the nth chunk from the validation dataset into a tensor
    /// \param[in] ValidationChunkTensor RTensor for the validation chunk
    /// \param[in] chunk Index of the chunk in the dataset
-   void LoadValidationChunk(TMVA::Experimental::RTensor<float> &ValidationChunkTensor, std::size_t chunk)
-   {
+   void LoadValidationChunk(RFlat2DMatrix &ValidationChunkTensor, std::size_t chunk)
+    {
 
       std::random_device rd;
       std::mt19937 g;
@@ -408,8 +408,8 @@ public:
       std::size_t chunkSize = fValidation->ChunksSizes[chunk];
 
       if (chunk < fValidation->Chunks) {
-         TMVA::Experimental::RTensor<float> Tensor({chunkSize, fNumChunkCols});
-         ValidationChunkTensor = ValidationChunkTensor.Resize({{chunkSize, fNumChunkCols}});
+         RFlat2DMatrix Tensor(chunkSize, fNumChunkCols);
+         ValidationChunkTensor.Resize(chunkSize, fNumChunkCols);
 
          // make an identity permutation map        
          std::vector<int> indices(chunkSize);
@@ -467,55 +467,31 @@ public:
    std::size_t GetNumTrainingEntries() { return fNumTrainEntries; }
    std::size_t GetNumValidationEntries() { return fNumValidationEntries; }
 
-   void CheckIfUnique(TMVA::Experimental::RTensor<float> &Tensor)
+   void CheckIfUnique(RFlat2DMatrix &Tensor)
    {
-      auto tensorSize = Tensor.GetSize();
-      TMVA::Experimental::RTensor<float> SqueezeTensor = Tensor.Reshape({1, tensorSize}).Squeeze();
-
-      std::list<int> allEntries;
-      for (int i = 0; i < tensorSize; i++) {
-         allEntries.push_back(SqueezeTensor(0, i));
-      }
-      allEntries.sort();
-      allEntries.unique();
-      if (allEntries.size() == tensorSize) {
+      const auto &rvec = Tensor.fRVec;
+      if(std::set<float>(rvec.begin(), rvec.end()).size() == rvec.size()) {
          std::cout << "Tensor consists of only unique elements" << std::endl;
       }
    };
 
-   void CheckIfOverlap(TMVA::Experimental::RTensor<float> &Tensor1, TMVA::Experimental::RTensor<float> &Tensor2)
+   void CheckIfOverlap(RFlat2DMatrix &Tensor1, RFlat2DMatrix &Tensor2)
    {
-      auto tensorSize1 = Tensor1.GetSize();
-      TMVA::Experimental::RTensor<float> SqueezeTensor1 = Tensor1.Reshape({1, tensorSize1}).Squeeze();
-
-      std::list<int> allEntries1;
-      for (int i = 0; i < tensorSize1; i++) {
-         allEntries1.push_back(SqueezeTensor1(0, i));
-      }
-
-      auto tensorSize2 = Tensor2.GetSize();
-      TMVA::Experimental::RTensor<float> SqueezeTensor2 = Tensor2.Reshape({1, tensorSize2}).Squeeze();
-
-      std::list<int> allEntries2;
-      for (int i = 0; i < tensorSize2; i++) {
-         allEntries2.push_back(SqueezeTensor2(0, i));
-      }
-
-      std::set<int> result;
+      std::set<float> result;
 
       // Call the set_intersection(), which computes the
       // intersection of set1 and set2 and
       // inserts the result into the 'result' set
-      std::set<int> set1(allEntries1.begin(), allEntries1.end());
-      std::set<int> set2(allEntries2.begin(), allEntries2.end());
-      std::set_intersection(set1.begin(), set1.end(), set2.begin(), set2.end(), inserter(result, result.begin()));
+      std::set<float> set1(Tensor1.fRVec.begin(), Tensor1.fRVec.end());
+      std::set<float> set2(Tensor2.fRVec.begin(), Tensor2.fRVec.end());
+      std::set_intersection(set1.begin(), set1.end(), set2.begin(), set2.end(), std::inserter(result, result.begin()));
       // std::list<int> result = intersection(allEntries1, allEntries2);
 
       if (result.size() == 0) {
          std::cout << "No overlap between the tensors" << std::endl;
       } else {
          std::cout << "Intersection between tensors: ";
-         for (int num : result) {
+         for (auto num : result) {
             std::cout << num << " ";
          }
          std::cout << std::endl;
