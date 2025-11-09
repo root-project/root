@@ -539,9 +539,4 @@ class RModelParser_Keras:
             outputNames.append(output_layer_name)
         rmodel.AddOutputTensorNameList(outputNames)
         return rmodel
-
-@pythonization("RModelParser_Keras", ns="TMVA::Experimental::SOFIE")
-def pythonize_rmodelparser_keras(klass):
-    # Parameters:
-    # klass: class to be pythonized 
-    setattr(klass, "Parse", RModelParser_Keras.Parse)
+    
