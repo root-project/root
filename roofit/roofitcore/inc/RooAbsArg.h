@@ -188,7 +188,7 @@ public:
    bool redirectServers(const RooAbsCollection &newServerList, bool mustReplaceAll = false, bool nameChange = false,
                         bool isRecursionStep = false);
    bool redirectServers(std::unordered_map<RooAbsArg *, RooAbsArg *> const &replacements);
-   bool recursiveRedirectServers(const RooAbsCollection &newServerList, bool mustReplaceAll = false,
+   bool recursiveRedirectServers(const RooAbsCollection &newSet, bool mustReplaceAll = false,
                                  bool nameChange = false, bool recurseInNewSet = true);
 
    virtual bool redirectServersHook(const RooAbsCollection &newServerList, bool mustReplaceAll, bool nameChange,

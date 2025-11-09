@@ -27,7 +27,6 @@
 #include "TColor.h"
 #include "TLine.h"
 
-ClassImp(TPaveText);
 
 /** \class TPaveText
 \ingroup BasicGraphics
@@ -706,7 +705,7 @@ void TPaveText::SaveLines(std::ostream &out, const char *name, Bool_t)
          auto box_name = TString::Format("%s_box%d", name, linecnt++);
          out << "   TBox *" << box_name << " = " << name << "->AddBox(" << lineb->GetX1() << "," << lineb->GetY1()
              << "," << lineb->GetX2() << "," << lineb->GetY2() << ");" << std::endl;
-         lineb->SaveFillAttributes(out, box_name.Data(), 18, 1001);
+         lineb->SaveFillAttributes(out, box_name.Data(), -1, -1);
          lineb->SaveLineAttributes(out, box_name.Data(), 1, 1, 1);
       } else if (line->IsA() == TText::Class() || line->IsA() == TLatex::Class()) {
          // Next primitive is a text
@@ -741,7 +740,7 @@ void TPaveText::SavePrimitive(std::ostream &out, Option_t *option)
       out << "   pt->SetLabel(\"" << TString(fLabel).ReplaceSpecialCppChars() << "\");\n";
    if (fBorderSize != 4)
       out << "   pt->SetBorderSize(" << fBorderSize << ");\n";
-   SaveFillAttributes(out, "pt", 19, 1001);
+   SaveFillAttributes(out, "pt", -1, -1);
    SaveLineAttributes(out, "pt", 1, 1, 1);
    SaveTextAttributes(out, "pt", 22, 0, 1, 62, 0);
    SaveLines(out, "pt", kTRUE);

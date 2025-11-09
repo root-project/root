@@ -79,7 +79,6 @@ const UChar_t kPidOffsetShift = 48;
 const static TString gTDirectoryString("TDirectory");
 std::atomic<UInt_t> keyAbsNumber{0};
 
-ClassImp(TKey);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TKey default constructor.

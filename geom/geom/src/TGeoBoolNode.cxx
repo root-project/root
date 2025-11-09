@@ -43,7 +43,6 @@ implementations for Boolean nodes are:
   - TGeoIntersection - representing the Boolean intersection of two positioned shapes
 */
 
-ClassImp(TGeoBoolNode);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -470,7 +469,6 @@ void TGeoBoolNode::Sizeof3D() const
    fRight->Sizeof3D();
 }
 
-ClassImp(TGeoUnion);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Make a clone of this. Pointers are preserved.
@@ -869,7 +867,6 @@ void TGeoUnion::Sizeof3D() const
    TGeoBoolNode::Sizeof3D();
 }
 
-ClassImp(TGeoSubtraction);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Make a clone of this. Pointers are preserved.
@@ -1182,7 +1179,6 @@ void TGeoSubtraction::Sizeof3D() const
    TGeoBoolNode::Sizeof3D();
 }
 
-ClassImp(TGeoIntersection);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Make a clone of this. Pointers are preserved.

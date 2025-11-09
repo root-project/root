@@ -50,3 +50,18 @@ foreach(d ${test_list})
     add_subdirectory(${d})
   endif()
 endforeach()
+
+# When ninja is in use, tests that compile an executable might try to rebuild the entire build tree.
+# If multiple of these are invoked in parallel, ninja will suffer from race conditions.
+# To solve this, do the following:
+# - Add a test that updates the build tree (equivalent to "ninja all"). This one will run in complete isolation.
+# - Make all tests that require a ninja build depend on the above test.
+# - Use a RESOURCE_LOCK on all tests that invoke ninja, so no two tests will invoke ninja in parallel
+if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
+  add_test(NAME ninja-build-all
+      COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR})
+  set_tests_properties(ninja-build-all PROPERTIES
+      RESOURCE_LOCK NINJA_BUILD
+      FIXTURES_SETUP NINJA_BUILD_ALL
+      RUN_SERIAL True)
+endif()

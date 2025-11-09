@@ -1,6 +1,15 @@
 set(histv7_headers
     ROOT/RAxes.hxx
+    ROOT/RBinIndex.hxx
+    ROOT/RBinIndexRange.hxx
+    ROOT/RBinWithError.hxx
+    ROOT/RCategoricalAxis.hxx
+    ROOT/RHist.hxx
+    ROOT/RHistEngine.hxx
+    ROOT/RHistStats.hxx
+    ROOT/RHistUtils.hxx
     ROOT/RLinearizedIndex.hxx
     ROOT/RRegularAxis.hxx
     ROOT/RVariableBinAxis.hxx
+    ROOT/RWeight.hxx
 )

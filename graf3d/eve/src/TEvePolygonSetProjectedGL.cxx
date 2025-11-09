@@ -23,7 +23,6 @@
 GL-renderer for TEvePolygonSetProjected class.
 */
 
-ClassImp(TEvePolygonSetProjectedGL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

@@ -185,9 +185,6 @@ private:
    RooRealVar *setupObservable(const char *obsname, TClass *mode, TObject *inputExample);
 
 public:
-   /// length of floating point digits precision supported by implementation.
-   static constexpr double implementedPrecision = RooFit::SuperFloatPrecision::digits10;
-
    void writeMatrixToFile(const TMatrixD &matrix, const char *fname);
    void writeMatrixToStream(const TMatrixD &matrix, std::ostream &stream);
    TMatrixD readMatrixFromFile(const char *fname);

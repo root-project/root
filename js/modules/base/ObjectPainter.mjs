@@ -170,8 +170,10 @@ class ObjectPainter extends BasePainter {
       if (this._no_default_title || !name)
          return;
       const can = this.getCanvSvg();
-      if (!can.empty()) can.select('title').text(name);
-                   else this.selectDom().attr('title', name);
+      if (!can.empty())
+         can.select('title').text(name);
+      else
+         this.selectDom().attr('title', name);
       const cp = this.getCanvPainter();
       if (cp && ((cp === this) || (this.isMainPainter() && (cp === this.getPadPainter()))))
          cp.drawItemNameOnCanvas(name);
@@ -199,7 +201,7 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary Emulate old options property */
-   get options() { return this.getOptions(); };
+   get options() { return this.getOptions(); }
 
    /** @summary Store actual options together with original string
      * @private */
@@ -379,7 +381,10 @@ class ObjectPainter extends BasePainter {
 
    /** @summary Assign G element used for object drawing
      * @protected */
-   setG(g) { this.#draw_g = g; return g; }
+   setG(g) {
+      this.#draw_g = g;
+      return g;
+   }
 
    /** @summary Append svg::path to G
      * @protected */
@@ -406,13 +411,14 @@ class ObjectPainter extends BasePainter {
             console.error('Not found frame to create g element inside');
             return frame;
          }
-         if (!isStr(frame_layer)) frame_layer = 'main_layer';
+         if (!isStr(frame_layer))
+            frame_layer = 'main_layer';
          layer = frame.selectChild('.' + frame_layer);
       } else
          layer = pp.getLayerSvg('primitives_layer');
 
       if (this.#draw_g && this.#draw_g.node().parentNode !== layer.node()) {
-         console.log('g element changes its layer!!');
+         console.log('g element changes its layer!');
          this.removeG();
       }
 
@@ -448,7 +454,7 @@ class ObjectPainter extends BasePainter {
       if (check_online && this.getSnapId()) {
          const pp = this.getPadPainter();
          if (pp?.getSnapId())
-            this.getCanvPainter()?.sendWebsocket('POPOBJ:'+JSON.stringify([pp.getSnapId(), this.getSnapId()]));
+            this.getCanvPainter()?.sendWebsocket('POPOBJ:' + JSON.stringify([pp.getSnapId(), this.getSnapId()]));
       }
    }
 
@@ -586,10 +592,12 @@ class ObjectPainter extends BasePainter {
       if (pad) {
          if (axis === 'y') {
             value = pad.fY1 + value * (pad.fY2 - pad.fY1);
-            if (pad.fLogy) value = Math.pow(10, value);
+            if (pad.fLogy)
+               value = Math.pow(10, value);
          } else {
             value = pad.fX1 + value * (pad.fX2 - pad.fX1);
-            if (pad.fLogx) value = Math.pow(10, value);
+            if (pad.fLogx)
+               value = Math.pow(10, value);
          }
       }
 
@@ -652,6 +660,11 @@ class ObjectPainter extends BasePainter {
 
       return pad_painter.addToPrimitives(this);
    }
+
+   /** @summary Remove painter from pad list of painters
+     * @desc Can be used from external frameworks to add/remove painters
+     * @protected */
+   removeFromPadPrimitives() { this.getPadPainter()?.removePrimitive(this); }
 
    /** @summary Creates marker attributes object
      * @desc Can be used to produce markers in painter.
@@ -898,7 +911,7 @@ class ObjectPainter extends BasePainter {
       const cl = this.getClassName(),
             name = this.getObjectName(),
             p = cl.lastIndexOf('::'),
-            cl0 = (p > 0) ? cl.slice(p+2) : cl,
+            cl0 = (p > 0) ? cl.slice(p + 2) : cl,
             hdr = (cl0 && name) ? `${cl0}:${name}` : (cl0 || name || 'object'),
             url = cl ? `${urlClassPrefix}${cl.replaceAll('::', '_1_1')}.html` : '';
 
@@ -935,7 +948,8 @@ class ObjectPainter extends BasePainter {
 
       if ((name === undefined) && (title === undefined)) {
          const obj = this.getObject();
-         if (!obj) return;
+         if (!obj)
+            return;
          name = this.getItemName() || obj.fName;
          title = obj.fTitle || obj._typename;
          info = obj._typename;
@@ -1024,7 +1038,10 @@ class ObjectPainter extends BasePainter {
       const all_args = draw_g.property('all_args') || [];
       let missing = 0;
 
-      all_args.forEach(arg => { if (!arg.ready) missing++; });
+      all_args.forEach(arg => {
+         if (!arg.ready)
+            missing++;
+      });
 
       if (missing > 0) {
          if (isFunc(resolveFunc)) {
@@ -1079,7 +1096,8 @@ class ObjectPainter extends BasePainter {
             txt = arg.txt_node;
             delete arg.txt_node;
             is_txt = true;
-            if (optimize_arr !== null) optimize_arr.push(txt);
+            if (optimize_arr !== null)
+               optimize_arr.push(txt);
          } else if (arg.txt_g) {
             txt = arg.txt_g;
             delete arg.txt_g;
@@ -1095,8 +1113,8 @@ class ObjectPainter extends BasePainter {
             // adjust x position when scale into specified rectangle
             if (arg.align[0] === 'middle')
                arg.x += arg.width / 2;
-             else if (arg.align[0] === 'end')
-                arg.x += arg.width;
+            else if (arg.align[0] === 'end')
+               arg.x += arg.width;
          }
 
          if (arg.height) {
@@ -1112,7 +1130,10 @@ class ObjectPainter extends BasePainter {
             // handle simple text drawing
 
             if (isNodeJs()) {
-               if (arg.scale && (f > 0)) { arg.box.width *= 1/f; arg.box.height *= 1/f; }
+               if (arg.scale && (f > 0)) {
+                  arg.box.width *= 1 / f;
+                  arg.box.height *= 1 / f;
+               }
             } else if (!arg.plain && !arg.fast) {
                // exact box dimension only required when complex text was build
                arg.box = getElementRect(txt, 'bbox');
@@ -1135,16 +1156,16 @@ class ObjectPainter extends BasePainter {
             // handle latex drawing
             const box = arg.text_rect;
 
-            scale = (f > 0) && (Math.abs(1-f) > 0.01) ? 1/f : 1;
+            scale = (f > 0) && (Math.abs(1 - f) > 0.01) ? 1 / f : 1;
 
             dx = ((arg.align[0] === 'middle') ? -0.5 : ((arg.align[0] === 'end') ? -1 : 0)) * box.width * scale;
 
             if (arg.align[1] === 'top')
-               dy = -box.y1*scale;
+               dy = -box.y1 * scale;
             else if (arg.align[1] === 'bottom')
-               dy = -box.y2*scale;
+               dy = -box.y2 * scale;
             else if (arg.align[1] === 'middle')
-               dy = -0.5*(box.y1 + box.y2)*scale;
+               dy = -0.5 * (box.y1 + box.y2) * scale;
          } else
             console.error('text rect not calcualted - please check code');
 
@@ -1157,7 +1178,11 @@ class ObjectPainter extends BasePainter {
          // use translate and then rotate to avoid complex sign calculations
          let trans = makeTranslate(Math.round(arg.x), Math.round(arg.y)) || '';
          const dtrans = makeTranslate(Math.round(dx), Math.round(dy)),
-               append = aaa => { if (trans) trans += ' '; trans += aaa; };
+               append = aaa => {
+                  if (trans)
+                     trans += ' ';
+                  trans += aaa;
+               };
 
          if (arg.rotate)
             append(`rotate(${Math.round(arg.rotate)})`);
@@ -1179,7 +1204,8 @@ class ObjectPainter extends BasePainter {
             let first = optimize_arr[0].attr(name);
             optimize_arr.forEach(txt_node => {
                const value = txt_node.attr(name);
-               if (!value || (value !== first)) first = undefined;
+               if (!value || (value !== first))
+                  first = undefined;
             });
             if (first) {
                draw_g.attr(name, first);
@@ -1189,7 +1215,8 @@ class ObjectPainter extends BasePainter {
       }
 
       // if specified, call resolve function
-      if (resolveFunc) resolveFunc(this); // IMPORTANT - return painter, may use in draw methods
+      if (resolveFunc)
+         resolveFunc(this); // IMPORTANT - return painter, may use in draw methods
    }
 
    /** @summary Post-process plain text drawing
@@ -1404,7 +1431,8 @@ class ObjectPainter extends BasePainter {
                cp = execp.getCanvPainter(),
                item = menu.exec_items[parseInt(arg)];
 
-         if (!item?.fName) return;
+         if (!item?.fName)
+            return;
 
          // this is special entry, produced by TWebMenuItem, which recognizes editor entries itself
          if (item.fExec === 'Show:Editor') {
@@ -1472,7 +1500,7 @@ class ObjectPainter extends BasePainter {
                if (lastclname !== item.fClassName) {
                   lastclname = item.fClassName;
                   const p = lastclname.lastIndexOf('::'),
-                        shortname = (p > 0) ? lastclname.slice(p+2) : lastclname;
+                        shortname = (p > 0) ? lastclname.slice(p + 2) : lastclname;
 
                   _menu.sub(shortname.replace(/[<>]/g, '_'));
                }
@@ -1489,8 +1517,7 @@ class ObjectPainter extends BasePainter {
 
          _resolveFunc(_menu);
       },
-
-      reqid = this.getSnapId(kind);
+            reqid = this.getSnapId(kind);
 
       menu._got_menu = false;
 
@@ -1502,7 +1529,8 @@ class ObjectPainter extends BasePainter {
          let did_resolve = false;
 
          function handleResolve(res) {
-            if (did_resolve) return;
+            if (did_resolve)
+               return;
             did_resolve = true;
             resolveFunc(res);
          }
@@ -1530,7 +1558,7 @@ class ObjectPainter extends BasePainter {
       }
    }
 
-    /** @summary Configure user-defined click handler
+   /** @summary Configure user-defined click handler
       * @desc Function will be called every time when frame click was performed
       * As argument, tooltip object with selected bins will be provided
       * If handler function returns true, default handling of click will be disabled
@@ -1656,23 +1684,23 @@ function drawRawText(dom, txt /* , opt */) {
       if (!isStr(stxt))
          stxt = '<undefined>';
 
-      const mathjax = this.txt.mathjax || (settings.Latex === constants.Latex.AlwaysMathJax);
-
-      if (!mathjax && !('as_is' in this.txt)) {
-         const arr = stxt.split('\n');
-         stxt = '';
-         for (let i = 0; i < arr.length; ++i)
-            stxt += `<pre style='margin:0'>${arr[i]}</pre>`;
-      }
-
-      const frame = this.selectDom();
+      const mathjax = this.txt.mathjax || (settings.Latex === constants.Latex.AlwaysMathJax),
+            frame = this.selectDom();
       let main = frame.select('div');
       if (main.empty())
          main = frame.append('div').attr('style', 'max-width:100%;max-height:100%;overflow:auto');
-      main.html(stxt);
+      else
+         main.html('');
 
       // (re) set painter to first child element, base painter not requires canvas
       this.setTopPainter();
+
+      if (!mathjax && !('as_is' in this.txt)) {
+         const arr = stxt.split('\n');
+         for (let i = 0; i < arr.length; ++i)
+            main.append('pre').style('margin', '0').text(arr[i]);
+      } else
+         main.text(stxt);
 
       if (mathjax)
          typesetMathjax(frame.node());
@@ -1770,7 +1798,10 @@ function resize(dom, arg) {
   * cleanup(document.querySelector('#drawing')); */
 function cleanup(dom) {
    const dummy = new ObjectPainter(dom), lst = [];
-   dummy.forEachPainter(p => { if (lst.indexOf(p) < 0) lst.push(p); });
+   dummy.forEachPainter(p => {
+      if (lst.indexOf(p) < 0)
+         lst.push(p);
+   });
    lst.forEach(p => p.cleanup());
    dummy.selectDom().html('');
    return lst;

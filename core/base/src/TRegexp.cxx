@@ -43,7 +43,6 @@ E.g., Index() functions may return incorrect result.
 const unsigned TRegexp::fgMaxpat = 2048;
 
 
-ClassImp(TRegexp);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a regular expression from the input string. If wildcard is

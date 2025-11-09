@@ -422,6 +422,7 @@ var ColorFill = /** @class */ (function () {
 var AttributeState = /** @class */ (function () {
     function AttributeState() {
         this.xmlSpace = '';
+        this.whiteSpace = '';
         this.fill = null;
         this.fillOpacity = 1.0;
         // public fillRule: string = null
@@ -451,6 +452,7 @@ var AttributeState = /** @class */ (function () {
     AttributeState.prototype.clone = function () {
         var clone = new AttributeState();
         clone.xmlSpace = this.xmlSpace;
+        clone.whiteSpace = this.whiteSpace;
         clone.fill = this.fill;
         clone.fillOpacity = this.fillOpacity;
         // clone.fillRule = this.fillRule;
@@ -481,6 +483,7 @@ var AttributeState = /** @class */ (function () {
     AttributeState.default = function () {
         var attributeState = new AttributeState();
         attributeState.xmlSpace = 'default';
+        attributeState.whiteSpace = 'normal';
         attributeState.fill = new ColorFill(new RGBColor('rgb(0, 0, 0)'));
         attributeState.fillOpacity = 1.0;
         // attributeState.fillRule = "nonzero";
@@ -1258,7 +1261,7 @@ function getBoundingBoxByChildren(context, svgnode) {
     var boundingBox = [];
     svgnode.children.forEach(function (child) {
         var nodeBox = child.getBoundingBox(context);
-        if ((nodeBox[0] === 0) && (nodeBox[1] === 0) && (nodeBox[2] === 0) && (nodeBox[3] === 0))
+        if (nodeBox[0] === 0 && nodeBox[1] === 0 && nodeBox[2] === 0 && nodeBox[3] === 0)
             return;
         var transform = child.computeNodeTransform(context);
         // TODO: take into account rotation matrix
@@ -1913,6 +1916,10 @@ function parseAttributes(context, svgNode, node) {
     if (xmlSpace) {
         context.attributeState.xmlSpace = xmlSpace;
     }
+    var whiteSpace = getAttribute(domNode, context.styleSheets, 'white-space');
+    if (whiteSpace) {
+        context.attributeState.whiteSpace = whiteSpace;
+    }
     var fontWeight = getAttribute(domNode, context.styleSheets, 'font-weight');
     if (fontWeight) {
         context.attributeState.fontWeight = fontWeight;
@@ -2415,7 +2422,7 @@ var GeometryNode = /** @class */ (function (_super) {
                 if (prev instanceof MoveTo || prev instanceof LineTo || prev instanceof CurveTo) {
                     if (curr instanceof CurveTo) {
                         hasStartMarker &&
-                            markers.addMarker(new Marker(markerStart, [prev.x, prev.y],
+                            markers.addMarker(new Marker(markerStart, [prev.x, prev.y], 
                             // @ts-ignore
                             getAngle(last_1 ? [last_1.x, last_1.y] : [prev.x, prev.y], [curr.x1, curr.y1]), true));
                         hasEndMarker &&
@@ -2850,7 +2857,8 @@ function getTextRenderingMode(attributeState) {
 function transformXmlSpace(trimmedText, attributeState) {
     trimmedText = removeNewlines(trimmedText);
     trimmedText = replaceTabsBySpace(trimmedText);
-    if (attributeState.xmlSpace === 'default') {
+    var shouldPreserve = attributeState.xmlSpace === 'preserve' || attributeState.whiteSpace === 'pre';
+    if (!shouldPreserve) {
         trimmedText = trimmedText.trim();
         trimmedText = consolidateSpaces(trimmedText);
     }
@@ -2915,7 +2923,9 @@ var TextChunk = /** @class */ (function () {
     };
     TextChunk.prototype.rightTrimText = function () {
         for (var r = this.texts.length - 1; r >= 0; r--) {
-            if (this.contexts[r].attributeState.xmlSpace === 'default') {
+            var shouldPreserve = this.contexts[r].attributeState.xmlSpace === 'preserve' ||
+                this.contexts[r].attributeState.whiteSpace === 'pre';
+            if (!shouldPreserve) {
                 this.texts[r] = trimRight(this.texts[r]);
             }
             // If find a letter, stop right-trimming
@@ -3034,7 +3044,7 @@ var TextNode = /** @class */ (function (_super) {
     }
     TextNode.prototype.processTSpans = function (textNode, node, context, textChunks, currentTextSegment, trimInfo) {
         var pdfFontSize = context.pdf.getFontSize();
-        var xmlSpace = context.attributeState.xmlSpace;
+        var shouldPreserve = context.attributeState.xmlSpace === 'preserve' || context.attributeState.whiteSpace === 'pre';
         var firstText = true, initialSpace = false;
         for (var i = 0; i < node.childNodes.length; i++) {
             var childNode = node.childNodes[i];
@@ -3045,7 +3055,7 @@ var TextNode = /** @class */ (function (_super) {
             if (childNode.nodeName === '#text') {
                 var trimmedText = removeNewlines(textContent);
                 trimmedText = replaceTabsBySpace(trimmedText);
-                if (xmlSpace === 'default') {
+                if (!shouldPreserve) {
                     trimmedText = consolidateSpaces(trimmedText);
                     // If first text in tspan and starts with a space
                     if (firstText && trimmedText.match(/^\s/)) {
@@ -3091,7 +3101,7 @@ var TextNode = /** @class */ (function (_super) {
     };
     TextNode.prototype.renderCore = function (context) {
         return __awaiter(this, void 0, void 0, function () {
-            var xOffset, charSpace, lengthAdjustment, pdfFontSize, textX, textY, dx, dy, textLength, visibility, tSpanCount, textContent, trimmedText, transformedText, defaultSize, alignmentBaseline, textRenderingMode, textChunks, currentTextSegment, initialSpace, trimRight, r, totalDefaultWidth_1, totalLength_1;
+            var xOffset, charSpace, lengthAdjustment, pdfFontSize, textX, textY, dx, dy, textLength, visibility, tSpanCount, textContent, trimmedText, transformedText, defaultSize, shouldPreserve, alignmentBaseline, textRenderingMode, textChunks, currentTextSegment, initialSpace, trimRight, r, totalDefaultWidth_1, totalLength_1;
             return __generator(this, function (_a) {
                 context.pdf.saveGraphicsState();
                 xOffset = 0;
@@ -3112,7 +3122,8 @@ var TextNode = /** @class */ (function (_super) {
                     xOffset = context.textMeasure.getTextOffset(transformedText, context.attributeState);
                     if (textLength > 0) {
                         defaultSize = context.textMeasure.measureTextWidth(transformedText, context.attributeState);
-                        if (context.attributeState.xmlSpace === 'default' && textContent.match(/^\s/)) {
+                        shouldPreserve = context.attributeState.xmlSpace === 'preserve' || context.attributeState.whiteSpace === 'pre';
+                        if (!shouldPreserve && textContent.match(/^\s/)) {
                             lengthAdjustment = 0;
                         }
                         charSpace = (textLength - defaultSize) / (transformedText.length - lengthAdjustment) || 0;
@@ -3126,14 +3137,19 @@ var TextNode = /** @class */ (function (_super) {
                             renderingMode: textRenderingMode === 'fill' ? void 0 : textRenderingMode,
                             charSpace: charSpace === 0 ? void 0 : charSpace
                         });
-                        this.boundingBox = [textX + dx - xOffset, textY + dy + 0.1 * pdfFontSize, context.textMeasure.measureTextWidth(transformedText, context.attributeState), pdfFontSize];
+                        this.boundingBox = [
+                            textX + dx - xOffset,
+                            textY + dy + 0.1 * pdfFontSize,
+                            context.textMeasure.measureTextWidth(transformedText, context.attributeState),
+                            pdfFontSize
+                        ];
                     }
                 }
                 else {
                     textChunks = [];
                     currentTextSegment = new TextChunk(this, context.attributeState.textAnchor, textX + dx, textY + dy);
                     textChunks.push({ type: '', chunk: currentTextSegment });
-                    initialSpace = this.processTSpans(this, this.element, context, textChunks, currentTextSegment,
+                    initialSpace = this.processTSpans(this, this.element, context, textChunks, currentTextSegment, 
                     // Set prevText to ' ' so any spaces on left of <text> are trimmed
                     { prevText: ' ', prevContext: context });
                     lengthAdjustment = initialSpace ? 0 : 1;
@@ -3178,7 +3194,9 @@ var TextNode = /** @class */ (function (_super) {
         return svgNodeAndChildrenVisible(this, parentVisible, context);
     };
     TextNode.prototype.getBoundingBoxCore = function (context) {
-        return this.boundingBox.length > 0 ? this.boundingBox : defaultBoundingBox(this.element, context);
+        return this.boundingBox.length > 0
+            ? this.boundingBox
+            : defaultBoundingBox(this.element, context);
     };
     TextNode.prototype.computeNodeTransformCore = function (context) {
         return context.pdf.unitMatrix;
@@ -5432,7 +5450,7 @@ var ClipPath = /** @class */ (function (_super) {
     }
     ClipPath.prototype.apply = function (context) {
         return __awaiter(this, void 0, void 0, function () {
-            var clipPathMatrix, _i, _a, child;
+            var clipPathMatrix, _i, _a, child, hasClipRuleFromFirstChild, clipRule;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -5461,7 +5479,11 @@ var ClipPath = /** @class */ (function (_super) {
                         _i++;
                         return [3 /*break*/, 1];
                     case 4:
-                        context.pdf.clip().discardPath();
+                        hasClipRuleFromFirstChild = this.children.length > 0 && !!getAttribute(this.children[0].element, context.styleSheets, 'clip-rule');
+                        clipRule = hasClipRuleFromFirstChild
+                            ? this.getClipRuleAttr(this.children[0].element, context.styleSheets)
+                            : this.getClipRuleAttr(this.element, context.styleSheets);
+                        context.pdf.clip(clipRule).discardPath();
                         // as we cannot use restoreGraphicsState() to reset the transform (this would reset the clipping path, as well),
                         // we must append the inverse instead
                         context.pdf.setCurrentTransformationMatrix(clipPathMatrix.inversed());
@@ -5475,6 +5497,9 @@ var ClipPath = /** @class */ (function (_super) {
     };
     ClipPath.prototype.isVisible = function (parentVisible, context) {
         return svgNodeAndChildrenVisible(this, parentVisible, context);
+    };
+    ClipPath.prototype.getClipRuleAttr = function (element, styleSheets) {
+        return getAttribute(element, styleSheets, 'clip-rule') === 'evenodd' ? 'evenodd' : undefined;
     };
     return ClipPath;
 }(NonRenderedNode));

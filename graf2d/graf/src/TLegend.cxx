@@ -28,7 +28,6 @@
 #include "TH1.h"
 #include "THStack.h"
 
-ClassImp(TLegend);
 
 /** \class TLegend
 \ingroup BasicGraphics

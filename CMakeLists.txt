@@ -12,18 +12,31 @@ if(WIN32)
   cmake_policy(SET CMP0091 OLD)
   set(CMAKE_SKIP_TEST_ALL_DEPENDENCY TRUE)
 endif()
-if(APPLE AND (NOT CMAKE_OSX_SYSROOT OR CMAKE_OSX_SYSROOT STREQUAL ""))
+if(CMAKE_HOST_APPLE AND (NOT CMAKE_OSX_SYSROOT OR CMAKE_OSX_SYSROOT STREQUAL ""))
   # The SYSROOT *must* be set before the project() call
-  execute_process(COMMAND xcrun --sdk macosx --show-sdk-path
-    OUTPUT_VARIABLE SDK_PATH
-    ERROR_QUIET
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  # TODO: The following code is *necessary* on a standard MacOS platform (e.g. an Apple MacOS machine), but may not
+  # be as necessary on other MacOS platforms (e.g. Nix). A PR removed the following code https://github.com/root-project/root/pull/19718
+  # and the CI was happy with it, but unfortunately it was working simply because during our CI run jobs something is
+  # setting the SDKROOT environment variable, which implicitly sets the CMAKE_OSX_SYSROOT variable. This was highlighted
+  # by another PR https://github.com/root-project/root/pull/19855. On a standard Apple MacOS system, where the SDKROOT
+  # variable is not set by default, the build of ROOT would fail without the following code. It is unclear what is setting
+  # the SDKROOT variable only during our CI jobs, logging to the same CI machines and launching a build manually shows
+  # the same build error.
+  find_program(XCRUN_EXECUTABLE xcrun)
+  if(EXISTS ${XCRUN_EXECUTABLE})
+    execute_process(COMMAND ${XCRUN_EXECUTABLE} --sdk macosx --show-sdk-path
+      OUTPUT_VARIABLE SDK_PATH
+      ERROR_QUIET
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(NOT EXISTS "${SDK_PATH}")
+      message(FATAL_ERROR "Could not detect macOS SDK path")
+    endif()
 
-  if(NOT EXISTS "${SDK_PATH}")
-    message(FATAL_ERROR "Could not detect macOS SDK path")
+    set(CMAKE_OSX_SYSROOT "${SDK_PATH}" CACHE PATH "SDK path" FORCE)
+  else()
+    message(WARNING "The CMAKE_OSX_SYSROOT variable is not set and the 'xcrun' executable is not available. "
+                    "This build of ROOT might not be able to find the correct MacOS SDK.")
   endif()
-
-  set(CMAKE_OSX_SYSROOT "${SDK_PATH}" CACHE PATH "SDK path" FORCE)
 endif()
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT ALLOW_IN_SOURCE)
@@ -31,6 +44,13 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT ALLOW_IN_SOURCE)
     " ROOT must be built out-of-source.\n"
     " Please see README/INSTALL for more information.")
 endif()
+
+set(unsupported_chars " *+")
+foreach(directoryName IN ITEMS ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} ${CMAKE_INSTALL_PREFIX})
+  if(${directoryName} MATCHES "[${unsupported_chars}]+")
+    message(FATAL_ERROR "Unsupported chars in directory \"${directoryName}\". Avoid any of \"${unsupported_chars}\".")
+  endif()
+endforeach()
 
 set(policy_new CMP0072 CMP0076 CMP0077 CMP0079
     CMP0156 CMP0179 #deduplicate static libraries when linker supports it
@@ -125,6 +145,14 @@ include(RootBuildOptions)
 include(RootMacros)
 include(CheckAssembler)
 include(CheckIntrinsics)
+
+#---Enable testing------------------------------------------------------------------------------
+if(testing)
+  enable_testing()
+endif()
+
+#---Here we look for installed software and switch on and off the different build options-------
+include(SearchInstalledSoftware)
 
 # relatedrepo_GetClosestMatch(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
 #                             FETCHURL_VARIABLE <output_url> FETCHREF_VARIABLE <output_ref>)
@@ -298,15 +326,6 @@ if(asan)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ASAN_EXTRA_EXE_LINKER_FLAGS}")
 endif()
 
-#---Enable CTest package -----------------------------------------------------------------------
-#include(CTest)
-if(testing)
-  enable_testing()
-endif()
-
-#---Here we look for installed software and switch on and of the different build options--------
-include(SearchInstalledSoftware)
-
 #---Here we add tcmalloc to the linker flags if needed------------------------------------------
 if (TCMALLOC_FOUND)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc -L${TCMALLOC_LIBRARY_PATH}")
@@ -376,6 +395,9 @@ unset(artifact_files)
 
 add_custom_target(move_artifacts DEPENDS ${stamp_file} ${all_artifacts})
 
+if(builtin_cling)
+    set(CLING_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
+endif()
 
 #---Add the main sources ---------------------------------
 add_subdirectory (interpreter)
@@ -404,7 +426,9 @@ add_subdirectory (io)
 add_subdirectory (net)
 add_subdirectory (graf2d)
 add_subdirectory (graf3d)
-add_subdirectory (gui)
+if(NOT minimal)
+  add_subdirectory (gui)
+endif()
 add_subdirectory (montecarlo)
 if(geom)
   add_subdirectory (geom)
@@ -434,36 +458,14 @@ get_property(__allBuiltins GLOBAL PROPERTY ROOT_BUILTIN_TARGETS)
 add_custom_target(move_headers ALL DEPENDS ${__allHeaders} ${__allBuiltins} gitinfotxt)
 
 #---CXX MODULES-----------------------------------------------------------------------------------
-if(MSVC)
-  set(_os_cat "type")
-else()
-  set(_os_cat "cat")
-endif()
-file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" _from_native)
-file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" _to_native)
-
-add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/ROOT.modulemap")
-add_custom_command(
-		  OUTPUT "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
-                  DEPENDS cmake/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
-		  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/cmake/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/ROOT.modulemap"
-                  COMMAND ${_os_cat} "${_from_native}" >> "${_to_native}"
-)
-install(FILES "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
-
-add_dependencies(move_headers copymodulemap)
-
 # Take all the modulemap contents we collected from the packages and append them to our modulemap.
 # We have to delay this because the ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT is filled in the
 # add_subdirectory calls above.
 get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
-string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
-# Write module.modulemap.extra to a temporary file first, to not touch module.modulemap.extra
-# if it's unchanged.
-file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra.tmp" "${__modulemap_extra_content}")
-configure_file("${CMAKE_BINARY_DIR}/include/module.modulemap.extra.tmp"
-    "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
-    COPYONLY)
+string(REPLACE ";" "" ROOT_GENERATED_MODULEMAP_CONTENT "${__modulemap_extra_content}")
+# Now append the generated content to the original modulemap
+configure_file(${CMAKE_SOURCE_DIR}/cmake/unix/module.modulemap ${CMAKE_BINARY_DIR}/include/ROOT.modulemap)
+install(FILES "${CMAKE_BINARY_DIR}/include/ROOT.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 
 # From now on we handled all exposed module and want to make all new modulemaps private to ROOT.
 set(ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR ON)
@@ -546,10 +548,6 @@ install(
    PATTERN "pkgconfig" EXCLUDE
 )
 
-if(Vc_INCLUDE_DIR)
-  set(MODULES_ROOT_INCPATH "ROOT_INCLUDE_PATH=${Vc_INCLUDE_DIR}:${ROOT_INCLUDE_PATH}")
-endif()
-
 # modules.idx
 if(runtime_cxxmodules)
   ROOT_GET_LIBRARY_OUTPUT_DIR(library_output_dir)
@@ -559,6 +557,7 @@ if(runtime_cxxmodules)
                                 ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b)
   else()
     set(modules_idx_cmd COMMAND ${ld_library_path}=${library_output_dir}:$ENV{${ld_library_path}}
+                                ROOT_INCLUDE_PATH=${DEFAULT_ROOT_INCLUDE_PATH}
                                 ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b)
   endif()
   add_custom_command(OUTPUT ${library_output_dir}/modules.idx
@@ -580,9 +579,10 @@ add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
 add_dependencies(hsimple onepcm)
 if(WIN32)
   set(hsimple_cmd COMMAND ${CMAKE_COMMAND} -E env PATH="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}\\\;%PATH%"
+                          ROOT_INCLUDE_PATH=${DEFAULT_ROOT_INCLUDE_PATH}
                           ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x ${CMAKE_SOURCE_DIR}/tutorials/hsimple.C -e return)
 else()
-  set(hsimple_cmd COMMAND ${MODULES_ROOT_INCPATH} ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
+  set(hsimple_cmd COMMAND ROOT_INCLUDE_PATH=${DEFAULT_ROOT_INCLUDE_PATH} ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
                           ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x ${CMAKE_SOURCE_DIR}/tutorials/hsimple.C -e return)
 endif()
 add_custom_command(OUTPUT tutorials/hsimple.root

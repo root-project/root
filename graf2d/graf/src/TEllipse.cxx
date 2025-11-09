@@ -23,7 +23,6 @@
 
 constexpr Double_t kPI = TMath::Pi();
 
-ClassImp(TEllipse);
 
 /** \class TEllipse
 \ingroup BasicGraphics

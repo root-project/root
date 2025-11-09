@@ -11,17 +11,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooAbsData.h>
-#include <RooAbsPdf.h>
 #include <RooAddPdf.h>
 #include <RooBinWidthFunction.h>
 #include <RooCategory.h>
 #include <RooClassFactory.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
+#include <RooEvaluatorWrapper.h>
 #include <RooExponential.h>
 #include <RooFitResult.h>
-#include <../src/RooEvaluatorWrapper.h>
 #include <RooGaussian.h>
 #include <RooHelpers.h>
 #include <RooHistFunc.h>
@@ -161,7 +159,7 @@ TEST_P(FactoryTest, NLLFit)
 
    // We want to use the generated code also for the nominal likelihood. Like
    // this, we make sure to validate also the NLL values of the generated code.
-   static_cast<RooEvaluatorWrapper &>(*nllFunc).setUseGeneratedFunctionCode(true);
+   static_cast<RooFit::Experimental::RooEvaluatorWrapper &>(*nllFunc).setUseGeneratedFunctionCode(true);
 
    double tol = _params._fitResultTolerance;
 
@@ -219,7 +217,9 @@ TEST_P(FactoryTest, NLLFit)
 /// Initial minimization that was not based on any other tutorial/test.
 FactoryTestParams param1{"Gaussian",
                          [](RooWorkspace &ws) {
-                            ws.factory("sum::mu_shifted(mu[0, -10, 10], shift[1.0, -10, 10])");
+                            constexpr double inf = std::numeric_limits<double>::infinity();
+                            ws.import(RooRealVar{"mu", "mu", -inf, inf});
+                            ws.factory("sum::mu_shifted(mu, shift[1.0, -10, 10])");
                             ws.factory("prod::sigma_scaled(sigma[3.0, 0.01, 10], 1.5)");
                             ws.factory("Gaussian::model(x[0, -10, 10], mu_shifted, sigma_scaled)");
 
@@ -428,7 +428,10 @@ FactoryTestParams param9{"Poisson",
 // A RooPoisson where x is not rounded, like it is used in HistFactory
 FactoryTestParams param10{"PoissonNoRounding",
                           [](RooWorkspace &ws) {
-                             ws.factory("Poisson::model(x[5, 0, 10], mu[5, 0, 10])");
+                             constexpr double inf = std::numeric_limits<double>::infinity();
+                             RooRealVar mu{"mu", "mu", 5., 0., inf};
+                             ws.import(mu);
+                             ws.factory("Poisson::model(x[5, 0, 10], mu)");
                              auto poisson = static_cast<RooPoisson *>(ws.pdf("model"));
                              poisson->setNoRounding(true);
                              ws.defineSet("observables", "x");

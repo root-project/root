@@ -27,7 +27,6 @@
 
 #include <iostream>
 
-ClassImp(THStack);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1035,8 +1034,11 @@ void THStack::RecursiveRemove(TObject *obj)
 void THStack::SavePrimitive(std::ostream &out, Option_t *option)
 {
    TString name = gInterpreter->MapCppName(GetName());
+   if (name.IsNull())
+      name = "hstack";
 
-   SavePrimitiveConstructor(out, Class(), name);
+   out << "   " << ClassName() << " *" << name << " = new " << ClassName() << "();\n";
+
    SavePrimitiveNameTitle(out, name);
 
    if (fMinimum != -1111)

@@ -17,7 +17,7 @@
 
 class TEST_MAP_HOLDER : public TObject {
 
-public:   
+public:
 
    TEST_MAP_HOLDER() : TObject()
       ,fScalarArrVar(0)
@@ -45,12 +45,12 @@ public:
          for(int index=0;index<4;index++) fScalarPtrArr[index]=0;
          Reset(entry);
       }
-   
+
    std::TEST_MAP<EHelper, int > fEnumInt;
    std::TEST_MAP<std::string, EHelper > fStrEnum;
 
    std::TEST_MAP<float, bool >    fScalar;
-  
+
    std::TEST_MAP<short, char >    fScalarArr[2];
    UInt_t                         fScalarArrVarSize;
    std::TEST_MAP<char, short >   *fScalarArrVar; //[fScalarArrVarSize]
@@ -59,7 +59,7 @@ public:
    std::TEST_MAP<double, float > *fScalarPtrArr[4];
    UInt_t                         fScalarPtrArrVarSize;
    std::TEST_MAP<int,double >    *fScalarPtrArrVar; //[fScalarPtrArrVarSize]
-   
+
 
    std::TEST_MAP<Helper, Helper >  fObject;
    std::TEST_MAP<Helper, Helper*> *fObjectPtr;
@@ -121,19 +121,19 @@ public:
       return utility::SetOrVerify("fEnumInt",fEnumInt,seed,entryNumber,reset,testname);
    }
    VERIFY(EnumInt);
-   
+
    bool SetOrVerifyStrEnum(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {
       Int_t seed = 1 * (entryNumber+1);
       return utility::SetOrVerify("fStrEnum",fStrEnum,seed,entryNumber,reset,testname);
    }
    VERIFY(StrEnum);
-   
+
    bool SetOrVerifyScalar(Int_t entryNumber, bool reset, const std::string &testname,int /*splitlevel*/) {
       Int_t seed = 1 * (entryNumber+1);
       return utility::SetOrVerify("fScalar",fScalar,seed,entryNumber,reset,testname);
    }
    VERIFY(Scalar);
-   
+
    bool SetOrVerifyScalarArr(Int_t entryNumber, bool reset, const std::string &testname, int /*splitlevel*/) {
       Int_t seed = 2 * (entryNumber+1);
       return utility::SetOrVerify("fScalarArr",&(fScalarArr[0]), 2 ,seed,entryNumber,reset,testname);
@@ -143,7 +143,7 @@ public:
    bool SetOrVerifyScalarArrVar(Int_t entryNumber, bool reset, const std::string &testname, int /*splitlevel*/) {
       if (!reset && gFile && !HasVarArrayOfContainers(gFile)) {
          return true;
-      }      
+      }
       Int_t seed = 3 * (entryNumber+1);
       return utility::SetOrVerifyArrVar("fScalarArrVar",fScalarArrVar,fScalarArrVarSize,seed,entryNumber,reset,testname);
    }
@@ -168,7 +168,7 @@ public:
    bool SetOrVerifyScalarPtrArrVar(Int_t entryNumber, bool reset, const std::string &testname, int /*splitlevel*/) {
       if (!reset && gFile && !HasVarArrayOfContainers(gFile)) {
          return true;
-      }      
+      }
       Int_t seed = 6 * (entryNumber+1);
       return utility::SetOrVerifyArrVar("fScalarPtrArrVar",fScalarPtrArrVar,fScalarPtrArrVarSize,seed,entryNumber,reset,testname);
    }
@@ -402,19 +402,19 @@ protected:
    }
 
 public:
-   
+
    void Reset(Int_t entryNumber) {
       SetOrVerify(entryNumber, true, "reseting", 0);
    }
-   
+
    bool Verify(Int_t entryNumber, const std::string &testname, int splitlevel) {
       return SetOrVerify(entryNumber,false,testname,splitlevel);
    }
 
 #if defined(R__NO_NESTED_CONTAINER)
-   ClassDef(TEST_MAP_HOLDER,1);
-#else 
-   ClassDef(TEST_MAP_HOLDER,2);
+   ClassDefOverride(TEST_MAP_HOLDER,1);
+#else
+   ClassDefOverride(TEST_MAP_HOLDER,2);
 #endif
 };
 

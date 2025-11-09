@@ -77,7 +77,6 @@ See also specialized branches:
  - TBranchClones in case the branch is an array of clone objects
 */
 
-ClassImp(TBranch);
 
 
 

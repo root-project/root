@@ -32,7 +32,6 @@ Editor for a TGeoTrd1.
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TGeoTrd1Editor);
 
 enum ETGeoTrd1Wid { kTRD1_NAME, kTRD1_X1, kTRD1_X2, kTRD1_Y, kTRD1_Z, kTRD1_APPLY, kTRD1_UNDO };
 

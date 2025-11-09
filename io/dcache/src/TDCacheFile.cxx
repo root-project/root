@@ -28,7 +28,7 @@ TFile behaviour.
 #include "TROOT.h"
 
 #include <cstdlib>
-#include <errno.h>
+#include <cerrno>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -53,7 +53,6 @@ static const char* const DCAP_PREFIX = "dcap:";
 static const size_t DCAP_PREFIX_LEN = strlen(DCAP_PREFIX);
 
 
-ClassImp(TDCacheFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a dCache file object.

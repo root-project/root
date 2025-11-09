@@ -18,7 +18,6 @@
 #include "TVirtualFitter.h"
 #include "THLimitsFinder.h"
 
-ClassImp(TGraph2DAsymmErrors);
 
 /** \class TGraph2DAsymmErrors
     \ingroup Graphs
@@ -582,17 +581,17 @@ void TGraph2DAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option)
    TString arrx = SavePrimitiveVector(out, "gr2daerr_x", fNpoints, fX, kTRUE);
    TString arry = SavePrimitiveVector(out, "gr2daerr_y", fNpoints, fY);
    TString arrz = SavePrimitiveVector(out, "gr2daerr_z", fNpoints, fZ);
-   TString arrexl = SavePrimitiveVector(out, "gr2daerr_exl", fNpoints, fEXlow);
-   TString arrexh = SavePrimitiveVector(out, "gr2daerr_exh", fNpoints, fEXhigh);
-   TString arreyl = SavePrimitiveVector(out, "gr2daerr_eyl", fNpoints, fEYlow);
-   TString arreyh = SavePrimitiveVector(out, "gr2daerr_eyh", fNpoints, fEYhigh);
-   TString arrezl = SavePrimitiveVector(out, "gr2daerr_ezl", fNpoints, fEZlow);
-   TString arrezh = SavePrimitiveVector(out, "gr2daerr_ezh", fNpoints, fEZhigh);
+   TString arrexl = SavePrimitiveVector(out, "gr2daerr_exl", fNpoints, fEXlow, 111);
+   TString arrexh = SavePrimitiveVector(out, "gr2daerr_exh", fNpoints, fEXhigh, 111);
+   TString arreyl = SavePrimitiveVector(out, "gr2daerr_eyl", fNpoints, fEYlow, 111);
+   TString arreyh = SavePrimitiveVector(out, "gr2daerr_eyh", fNpoints, fEYhigh, 111);
+   TString arrezl = SavePrimitiveVector(out, "gr2daerr_ezl", fNpoints, fEZlow, 111);
+   TString arrezh = SavePrimitiveVector(out, "gr2daerr_ezh", fNpoints, fEZhigh, 111);
 
    SavePrimitiveConstructor(
       out, Class(), "gr2daerr",
       TString::Format(
-         "%d, %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), %s.data(), %s.data()",
+         "%d, %s.data(), %s.data(), %s.data(), %s, %s, %s, %s, %s, %s",
          fNpoints, arrx.Data(), arry.Data(), arrz.Data(), arrexl.Data(), arrexh.Data(), arreyl.Data(), arreyh.Data(),
          arrezl.Data(), arrezh.Data()),
       kFALSE);

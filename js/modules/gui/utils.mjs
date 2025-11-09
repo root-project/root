@@ -20,7 +20,8 @@ function showProgress(msg, tmout, click_handle) {
    let box = d3_select('#' + id);
 
    if (!settings.ProgressBox) {
-      if (modal) modal();
+      if (modal)
+         modal();
       return box.remove();
    }
 
@@ -68,9 +69,10 @@ function showProgress(msg, tmout, click_handle) {
   * therefore try several workarounds
   * @private */
 function closeCurrentWindow() {
-   if (typeof window === 'undefined') return;
-   window.close();
-   window.open('', '_self').close();
+   if (typeof window !== 'undefined') {
+      window.close();
+      window.open('', '_self').close();
+   }
 }
 
 /** @summary Tries to open ui5
@@ -154,11 +156,23 @@ async function loadOpenui5(args) {
 
    if (isStr(args.openui5src)) {
       switch (args.openui5src) {
-         case 'nodefault': openui5_dflt = ''; break;
-         case 'default': openui5_sources.push(openui5_dflt); openui5_dflt = ''; break;
-         case 'nojsroot': /* openui5_root = ''; */ break;
-         case 'jsroot': openui5_sources.push(openui5_root); openui5_root = ''; break;
-         default: openui5_sources.push(args.openui5src); break;
+         case 'nodefault':
+            openui5_dflt = '';
+            break;
+         case 'default':
+            openui5_sources.push(openui5_dflt);
+            openui5_dflt = '';
+            break;
+         case 'nojsroot':
+            /* openui5_root = ''; */
+            break;
+         case 'jsroot':
+            openui5_sources.push(openui5_root);
+            openui5_root = '';
+            break;
+         default:
+            openui5_sources.push(args.openui5src);
+            break;
       }
    } else if (args.ui5dbg)
       openui5_root = ''; // exclude ROOT version in debug mode
@@ -223,9 +237,9 @@ const ToolbarIcons = {
    th2colorz: { recs: [{ x: 128, y: 486, w: 256, h: 26, f: 'rgb(38,62,168)' }, { y: 461, f: 'rgb(22,82,205)' }, { y: 435, f: 'rgb(16,100,220)' }, { y: 410, f: 'rgb(18,114,217)' }, { y: 384, f: 'rgb(20,129,214)' }, { y: 358, f: 'rgb(14,143,209)' }, { y: 333, f: 'rgb(9,157,204)' }, { y: 307, f: 'rgb(13,167,195)' }, { y: 282, f: 'rgb(30,175,179)' }, { y: 256, f: 'rgb(46,183,164)' }, { y: 230, f: 'rgb(82,186,146)' }, { y: 205, f: 'rgb(116,189,129)' }, { y: 179, f: 'rgb(149,190,113)' }, { y: 154, f: 'rgb(179,189,101)' }, { y: 128, f: 'rgb(209,187,89)' }, { y: 102, f: 'rgb(226,192,75)' }, { y: 77, f: 'rgb(244,198,59)' }, { y: 51, f: 'rgb(253,210,43)' }, { y: 26, f: 'rgb(251,230,29)' }, { y: 0, f: 'rgb(249,249,15)' }] },
    th2color: { recs: [{x:0,y:256,w:13,h:39,f:'rgb(38,62,168)'},{x:13,y:371,w:39,h:39},{y:294,h:39},{y:256,h:39},{y:218,h:39},{x:51,y:410,w:39,h:39},{y:371,h:39},{y:333,h:39},{y:294},{y:256,h:39},{y:218,h:39},{y:179,h:39},{y:141,h:39},{y:102,h:39},{y:64},{x:90,y:448,w:39,h:39},{y:410},{y:371,h:39},{y:333,h:39,f:'rgb(22,82,205)'},{y:294},{y:256,h:39,f:'rgb(16,100,220)'},{y:218,h:39},{y:179,h:39,f:'rgb(22,82,205)'},{y:141,h:39},{y:102,h:39,f:'rgb(38,62,168)'},{y:64},{y:0,h:27},{x:128,y:448,w:39,h:39},{y:410},{y:371,h:39},{y:333,h:39,f:'rgb(22,82,205)'},{y:294,f:'rgb(20,129,214)'},{y:256,h:39,f:'rgb(9,157,204)'},{y:218,h:39,f:'rgb(14,143,209)'},{y:179,h:39,f:'rgb(20,129,214)'},{y:141,h:39,f:'rgb(16,100,220)'},{y:102,h:39,f:'rgb(22,82,205)'},{y:64,f:'rgb(38,62,168)'},{y:26,h:39},{y:0,h:27},{x:166,y:486,h:14},{y:448,h:39},{y:410},{y:371,h:39,f:'rgb(22,82,205)'},{y:333,h:39,f:'rgb(20,129,214)'},{y:294,f:'rgb(82,186,146)'},{y:256,h:39,f:'rgb(179,189,101)'},{y:218,h:39,f:'rgb(116,189,129)'},{y:179,h:39,f:'rgb(82,186,146)'},{y:141,h:39,f:'rgb(14,143,209)'},{y:102,h:39,f:'rgb(16,100,220)'},{y:64,f:'rgb(38,62,168)'},{y:26,h:39},{x:205,y:486,w:39,h:14},{y:448,h:39},{y:410},{y:371,h:39,f:'rgb(16,100,220)'},{y:333,h:39,f:'rgb(9,157,204)'},{y:294,f:'rgb(149,190,113)'},{y:256,h:39,f:'rgb(244,198,59)'},{y:218,h:39},{y:179,h:39,f:'rgb(226,192,75)'},{y:141,h:39,f:'rgb(13,167,195)'},{y:102,h:39,f:'rgb(18,114,217)'},{y:64,f:'rgb(22,82,205)'},{y:26,h:39,f:'rgb(38,62,168)'},{x:243,y:448,w:39,h:39},{y:410},{y:371,h:39,f:'rgb(18,114,217)'},{y:333,h:39,f:'rgb(30,175,179)'},{y:294,f:'rgb(209,187,89)'},{y:256,h:39,f:'rgb(251,230,29)'},{y:218,h:39,f:'rgb(249,249,15)'},{y:179,h:39,f:'rgb(226,192,75)'},{y:141,h:39,f:'rgb(30,175,179)'},{y:102,h:39,f:'rgb(18,114,217)'},{y:64,f:'rgb(38,62,168)'},{y:26,h:39},{x:282,y:448,h:39},{y:410},{y:371,h:39,f:'rgb(18,114,217)'},{y:333,h:39,f:'rgb(14,143,209)'},{y:294,f:'rgb(149,190,113)'},{y:256,h:39,f:'rgb(226,192,75)'},{y:218,h:39,f:'rgb(244,198,59)'},{y:179,h:39,f:'rgb(149,190,113)'},{y:141,h:39,f:'rgb(9,157,204)'},{y:102,h:39,f:'rgb(18,114,217)'},{y:64,f:'rgb(38,62,168)'},{y:26,h:39},{x:320,y:448,w:39,h:39},{y:410},{y:371,h:39,f:'rgb(22,82,205)'},{y:333,h:39,f:'rgb(20,129,214)'},{y:294,f:'rgb(46,183,164)'},{y:256,h:39},{y:218,h:39,f:'rgb(82,186,146)'},{y:179,h:39,f:'rgb(9,157,204)'},{y:141,h:39,f:'rgb(20,129,214)'},{y:102,h:39,f:'rgb(16,100,220)'},{y:64,f:'rgb(38,62,168)'},{y:26,h:39},{x:358,y:448,h:39},{y:410},{y:371,h:39,f:'rgb(22,82,205)'},{y:333,h:39},{y:294,f:'rgb(16,100,220)'},{y:256,h:39,f:'rgb(20,129,214)'},{y:218,h:39,f:'rgb(14,143,209)'},{y:179,h:39,f:'rgb(18,114,217)'},{y:141,h:39,f:'rgb(22,82,205)'},{y:102,h:39,f:'rgb(38,62,168)'},{y:64},{y:26,h:39},{x:397,y:448,w:39,h:39},{y:371,h:39},{y:333,h:39},{y:294,f:'rgb(22,82,205)'},{y:256,h:39},{y:218,h:39},{y:179,h:39,f:'rgb(38,62,168)'},{y:141,h:39},{y:102,h:39},{y:64},{y:26,h:39},{x:435,y:410,h:39},{y:371,h:39},{y:333,h:39},{y:294},{y:256,h:39},{y:218,h:39},{y:179,h:39},{y:141,h:39},{y:102,h:39},{y:64},{x:474,y:256,h:39},{y:179,h:39}] },
    th2draw3d: {
-      path: 'M172.768,0H51.726C23.202,0,0.002,23.194,0.002,51.712v89.918c0,28.512,23.2,51.718,51.724,51.718h121.042   c28.518,0,51.724-23.2,51.724-51.718V51.712C224.486,23.194,201.286,0,172.768,0z M177.512,141.63c0,2.611-2.124,4.745-4.75,4.745   H51.726c-2.626,0-4.751-2.134-4.751-4.745V51.712c0-2.614,2.125-4.739,4.751-4.739h121.042c2.62,0,4.75,2.125,4.75,4.739 L177.512,141.63L177.512,141.63z '+
-            'M460.293,0H339.237c-28.521,0-51.721,23.194-51.721,51.712v89.918c0,28.512,23.2,51.718,51.721,51.718h121.045   c28.521,0,51.721-23.2,51.721-51.718V51.712C512.002,23.194,488.802,0,460.293,0z M465.03,141.63c0,2.611-2.122,4.745-4.748,4.745   H339.237c-2.614,0-4.747-2.128-4.747-4.745V51.712c0-2.614,2.133-4.739,4.747-4.739h121.045c2.626,0,4.748,2.125,4.748,4.739 V141.63z '+
-            'M172.768,256.149H51.726c-28.524,0-51.724,23.205-51.724,51.726v89.915c0,28.504,23.2,51.715,51.724,51.715h121.042   c28.518,0,51.724-23.199,51.724-51.715v-89.915C224.486,279.354,201.286,256.149,172.768,256.149z M177.512,397.784   c0,2.615-2.124,4.736-4.75,4.736H51.726c-2.626-0.006-4.751-2.121-4.751-4.736v-89.909c0-2.626,2.125-4.753,4.751-4.753h121.042 c2.62,0,4.75,2.116,4.75,4.753L177.512,397.784L177.512,397.784z '+
+      path: 'M172.768,0H51.726C23.202,0,0.002,23.194,0.002,51.712v89.918c0,28.512,23.2,51.718,51.724,51.718h121.042   c28.518,0,51.724-23.2,51.724-51.718V51.712C224.486,23.194,201.286,0,172.768,0z M177.512,141.63c0,2.611-2.124,4.745-4.75,4.745   H51.726c-2.626,0-4.751-2.134-4.751-4.745V51.712c0-2.614,2.125-4.739,4.751-4.739h121.042c2.62,0,4.75,2.125,4.75,4.739 L177.512,141.63L177.512,141.63z ' +
+            'M460.293,0H339.237c-28.521,0-51.721,23.194-51.721,51.712v89.918c0,28.512,23.2,51.718,51.721,51.718h121.045   c28.521,0,51.721-23.2,51.721-51.718V51.712C512.002,23.194,488.802,0,460.293,0z M465.03,141.63c0,2.611-2.122,4.745-4.748,4.745   H339.237c-2.614,0-4.747-2.128-4.747-4.745V51.712c0-2.614,2.133-4.739,4.747-4.739h121.045c2.626,0,4.748,2.125,4.748,4.739 V141.63z ' +
+            'M172.768,256.149H51.726c-28.524,0-51.724,23.205-51.724,51.726v89.915c0,28.504,23.2,51.715,51.724,51.715h121.042   c28.518,0,51.724-23.199,51.724-51.715v-89.915C224.486,279.354,201.286,256.149,172.768,256.149z M177.512,397.784   c0,2.615-2.124,4.736-4.75,4.736H51.726c-2.626-0.006-4.751-2.121-4.751-4.736v-89.909c0-2.626,2.125-4.753,4.751-4.753h121.042 c2.62,0,4.75,2.116,4.75,4.753L177.512,397.784L177.512,397.784z ' +
             'M460.293,256.149H339.237c-28.521,0-51.721,23.199-51.721,51.726v89.915c0,28.504,23.2,51.715,51.721,51.715h121.045   c28.521,0,51.721-23.199,51.721-51.715v-89.915C512.002,279.354,488.802,256.149,460.293,256.149z M465.03,397.784   c0,2.615-2.122,4.736-4.748,4.736H339.237c-2.614,0-4.747-2.121-4.747-4.736v-89.909c0-2.626,2.121-4.753,4.747-4.753h121.045 c2.615,0,4.748,2.116,4.748,4.753V397.784z'
    },
 
@@ -235,8 +249,8 @@ const ToolbarIcons = {
 
    createSVG(group, btn, size, title, arg) {
       const use_dark = (arg === true) || (arg === false) ? arg : settings.DarkMode,
-          opacity0 = (arg === 'browser') ? (browser.touches ? 0.2 : 0) : (use_dark ? 0.8 : 0.2),
-          svg = group.append('svg:svg')
+            opacity0 = (arg === 'browser') ? (browser.touches ? 0.2 : 0) : (use_dark ? 0.8 : 0.2),
+            svg = group.append('svg:svg')
                      .attr('width', size + 'px')
                      .attr('height', size + 'px')
                      .attr('viewBox', '0 0 512 512')
@@ -250,13 +264,15 @@ const ToolbarIcons = {
                         const elem = d3_select(this);
                         elem.style('opacity', elem.property('opacity1'));
                         const func = elem.node()._mouseenter;
-                        if (isFunc(func)) func();
+                        if (isFunc(func))
+                           func();
                      })
                      .on('mouseleave', function() {
                         const elem = d3_select(this);
                         elem.style('opacity', elem.property('opacity0'));
                         const func = elem.node()._mouseleave;
-                        if (isFunc(func)) func();
+                        if (isFunc(func))
+                           func();
                      });
 
       if ('recs' in btn) {
@@ -290,10 +306,10 @@ const ToolbarIcons = {
   * @param {number} [delay] - one could specify delay after which resize event will be handled
   * @protected */
 function registerForResize(handle, delay) {
-   if (!handle || isBatchMode() || (typeof window === 'undefined') || (typeof document === 'undefined')) return;
+   if (!handle || isBatchMode() || (typeof window === 'undefined') || (typeof document === 'undefined'))
+      return;
 
-   let myInterval = null, myDelay = delay || 300;
-   if (myDelay < 20) myDelay = 20;
+   let myInterval = null;
 
    function ResizeTimer() {
       myInterval = null;
@@ -317,8 +333,9 @@ function registerForResize(handle, delay) {
    }
 
    window.addEventListener('resize', () => {
-      if (myInterval !== null) clearTimeout(myInterval);
-      myInterval = setTimeout(ResizeTimer, myDelay);
+      if (myInterval)
+         clearTimeout(myInterval);
+      myInterval = setTimeout(ResizeTimer, Math.max(20, delay || 300));
    });
 }
 
@@ -367,14 +384,16 @@ function addMoveHandler(painter, enabled = true, hover_handler = false) {
          if (this.moveStart)
             this.moveStart(pos[0], pos[1], evnt.sourceEvent);
       }.bind(painter)).on('drag', function(evnt) {
-         if (move_disabled) return;
+         if (move_disabled)
+            return;
          evnt.sourceEvent.preventDefault();
          evnt.sourceEvent.stopPropagation();
          not_changed = false;
          if (this.moveDrag)
             this.moveDrag(evnt.dx, evnt.dy, evnt.sourceEvent);
       }.bind(painter)).on('end', function(evnt) {
-         if (move_disabled) return;
+         if (move_disabled)
+            return;
          evnt.sourceEvent.preventDefault();
          evnt.sourceEvent.stopPropagation();
          if (this.moveEnd)
@@ -410,17 +429,18 @@ function injectStyle(code, node, tag) {
    const styles = (node || document).getElementsByTagName('style');
    for (let n = 0; n < styles.length; ++n) {
       if (tag && styles[n].getAttribute('tag') === tag) {
-         styles[n].innerHTML = code;
+         styles[n].innerText = code;
          return true;
       }
 
-      if (styles[n].innerHTML === code)
+      if (styles[n].innerText === code)
          return true;
    }
 
    const element = document.createElement('style');
-   if (tag) element.setAttribute('tag', tag);
-   element.innerHTML = code;
+   if (tag)
+      element.setAttribute('tag', tag);
+   element.innerText = code;
    (node || document.head).appendChild(element);
    return true;
 }
@@ -491,7 +511,8 @@ function saveSettings(expires = 365, name = 'settings') {
   * @private */
 function readSettings(only_check = false, name = 'settings') {
    const s = readLocalStorage(name);
-   if (!s) return false;
+   if (!s)
+      return false;
    if (!only_check)
       Object.assign(settings, s);
    return true;
@@ -511,7 +532,8 @@ function saveStyle(expires = 365, name = 'style') {
   * @private */
 function readStyle(only_check = false, name = 'style') {
    const s = readLocalStorage(name);
-   if (!s) return false;
+   if (!s)
+      return false;
    if (!only_check)
       Object.assign(gStyle, s);
    return true;
@@ -570,7 +592,12 @@ async function saveFile(filename, content) {
    if ((content.length > 1e6) && (contentType === 'application/pdf')) {
       // large PDF files do not work in the browser with plain base64 coding
       const bindata = getBinFileContent(content),
-            blob = new Blob([bindata], { type: contentType });
+            len = bindata.length,
+            buffer = new ArrayBuffer(len),
+            view = new DataView(buffer, 0, len);
+      for (let i = 0; i < len; ++i)
+         view.setUint8(i, bindata.charCodeAt(i));
+      const blob = new Blob([buffer], { type: contentType });
       fileURL = URL.createObjectURL(blob);
       a.href = fileURL;
    } else
@@ -607,9 +634,13 @@ function getColorId(col) {
    if (isStr(col)) {
       if (!col || (col === 'none'))
          id = 0;
-       else {
-         for (let k = 1; k < arr.length; ++k)
-            if (arr[k] === col) { id = k; break; }
+      else {
+         for (let k = 1; k < arr.length; ++k) {
+            if (arr[k] === col) {
+               id = k;
+               break;
+            }
+         }
       }
       if ((id < 0) && (col.indexOf('rgb') === 0))
          id = 9999;
@@ -625,19 +656,24 @@ function getColorId(col) {
   * @desc Color can be id or string, but should belong to list of known colors
   * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color is exists
   * @private */
-function getColorExec(col, method) {
+function getColorExec(col, method, extra_arg) {
    const d = getColorId(col);
 
    if (d.id < 0)
       return '';
 
+   if (!extra_arg)
+      extra_arg = '';
+   else
+      extra_arg += ',';
+
    // for higher color numbers ensure that such color exists
    if (d.id >= 50) {
       const c = d3_color(d.col);
       d.id = `TColor::GetColor(${c.r},${c.g},${c.b})`;
-    }
+   }
 
-   return `exec:${method}(${d.id})`;
+   return `exec:${method}(${extra_arg}${d.id})`;
 }
 
 /** @summary Change object member in the painter
@@ -662,4 +698,4 @@ Object.assign(internals.jsroot, { addMoveHandler, registerForResize });
 export { showProgress, closeCurrentWindow, loadOpenui5, ToolbarIcons, registerForResize,
          detectRightButton, addMoveHandler, injectStyle,
          selectgStyle, setStoragePrefix, saveSettings, readSettings, saveStyle, readStyle,
-         saveFile, setSaveFile, getBinFileContent, getColorExec, changeObjectMember };
+         saveFile, setSaveFile, getBinFileContent, getColorId, getColorExec, changeObjectMember };

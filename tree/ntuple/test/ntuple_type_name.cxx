@@ -1,4 +1,5 @@
 #include "ntuple_test.hxx"
+#include "SimpleCollectionProxy.hxx"
 
 TEST(RNTuple, TypeNameBasics)
 {
@@ -78,6 +79,14 @@ TEST(RNTuple, TypeNameNormalizationByName)
    EXPECT_EQ("std::vector<CustomStruct>",
              RFieldBase::Create("f", "::std::vector<::CustomStruct>").Unwrap()->GetTypeName());
    EXPECT_EQ("", RFieldBase::Create("f", "::std::vector<::CustomStruct>").Unwrap()->GetTypeAlias());
+
+   SimpleCollectionProxy<StructUsingCollectionProxy<int>> proxy;
+   auto klass = TClass::GetClass("StructUsingCollectionProxy<int>");
+   klass->CopyCollectionProxy(proxy);
+
+   EXPECT_EQ("StructUsingCollectionProxy<std::int32_t>",
+             RFieldBase::Create("f", "StructUsingCollectionProxy<int>").Unwrap()->GetTypeName());
+   EXPECT_EQ("", RFieldBase::Create("f", "StructUsingCollectionProxy<int>").Unwrap()->GetTypeAlias());
 }
 
 TEST(RNTuple, TypeNameNormalizationById)

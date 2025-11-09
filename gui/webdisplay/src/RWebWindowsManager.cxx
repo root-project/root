@@ -510,6 +510,7 @@ bool RWebWindowsManager::CreateServer(bool with_http)
    int fcgi_thrds = gEnv->GetValue("WebGui.FastCgiThreads", 10);
    const char *fcgi_serv = gEnv->GetValue("WebGui.FastCgiServer", "");
    fLaunchTmout = gEnv->GetValue("WebGui.LaunchTmout", 30.);
+   fReconnectTmout = gEnv->GetValue("WebGui.ReconnectTmout", 15.);
    bool assign_loopback = gWebWinLoopbackMode;
    const char *http_bind = gEnv->GetValue("WebGui.HttpBind", "");
    bool use_secure = RWebWindowWSHandler::GetBoolEnv("WebGui.UseHttps", 0) == 1;
@@ -784,6 +785,7 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 ///      WebGui.FirefoxProfilePath: file path to Firefox profile
 ///      WebGui.FirefoxRandomProfile: usage of random Firefox profile "no" - disabled, "yes" - enabled (default)
 ///      WebGui.LaunchTmout: time required to start process in seconds (default 30 s)
+///      WebGui.ReconnectTmout: time to reconnect for already existing connection, if negative - no reconnecting possible (default 15 s)
 ///      WebGui.CefTimer: periodic time to run CEF event loop (default 10 ms)
 ///      WebGui.CefUseViews: "yes" - enable / "no" - disable usage of CEF views frameworks (default is platform/version dependent)
 ///      WebGui.OperationTmout: time required to perform WebWindow operation like execute command or update drawings
@@ -800,6 +802,10 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 ///      WebGui.DarkMode: "no" (default), "yes" - switch to JSROOT dark mode and will use sap_fiori_3_dark theme
 ///
 /// THttpServer-related parameters documented in \ref CreateServer method
+///
+/// In case of using web browsers based on snap sandboxing, if you see a runtime error about unauthorized access to the system
+/// `/tmp/` folder, try callign `export TMPDIR=/home/user/` (adapt path to a real folder) before running ROOT. This workaround should
+/// no longer be needed for recognized snap-installed firefox or chrome browsers if ROOT version >= 6.38
 
 unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &user_args)
 {

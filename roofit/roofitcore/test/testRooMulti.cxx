@@ -58,6 +58,7 @@ TEST(RooMultiPdfTest, FitConvergesAndReturnsReasonableResult)
 
 {
    using namespace RooFit;
+   const EvalBackend backend{EvalBackend::defaultValue()};
 
    RooRealVar x("x", "x", -10, 10);
 
@@ -78,7 +79,7 @@ TEST(RooMultiPdfTest, FitConvergesAndReturnsReasonableResult)
 
    // Fit 1 - RooMultiPdf fit
 
-   std::unique_ptr<RooAbsReal> nll{multipdf.createNLL(*data, EvalBackend("codegen"))};
+   std::unique_ptr<RooAbsReal> nll{multipdf.createNLL(*data, backend)};
 
    RooMinimizer minim{*nll};
    minim.setStrategy(0);
@@ -92,7 +93,7 @@ TEST(RooMultiPdfTest, FitConvergesAndReturnsReasonableResult)
    m1.setError(0.0);
    s1.setError(0.0);
    // Fit 2 - Reference fit
-   std::unique_ptr<RooAbsReal> nll1{gaus1.createNLL(*data, EvalBackend("codegen"))};
+   std::unique_ptr<RooAbsReal> nll1{gaus1.createNLL(*data, backend)};
 
    RooMinimizer minim1{*nll1};
    minim1.setStrategy(0);
@@ -122,10 +123,10 @@ TEST(RooMultiPdfTest, FitConvergesAndReturnsReasonableResult)
 
       indx.setIndex(i);
 
-      std::unique_ptr<RooAbsReal> nll_multi{multipdf.createNLL(*data, EvalBackend("codegen"))};
+      std::unique_ptr<RooAbsReal> nll_multi{multipdf.createNLL(*data, backend)};
 
       RooAbsPdf *selectedPdf = multipdf.getPdf(i);
-      std::unique_ptr<RooAbsReal> nll_direct{selectedPdf->createNLL(*data, EvalBackend("codegen"))};
+      std::unique_ptr<RooAbsReal> nll_direct{selectedPdf->createNLL(*data, backend)};
 
       int n_param = countFloatingParametersIncludingObservable(*selectedPdf);
 
@@ -142,6 +143,7 @@ TEST(RooMultiPdfTest, FitConvergesAndReturnsReasonableResult)
 TEST(RooMultiPdfTest, PenaltyTermIsAppliedCorrectly)
 {
    using namespace RooFit;
+   const EvalBackend backend = EvalBackend::defaultValue();
 
    RooRealVar x("x", "x", -10, 10);
 
@@ -162,9 +164,9 @@ TEST(RooMultiPdfTest, PenaltyTermIsAppliedCorrectly)
 
    std::unique_ptr<RooDataSet> data{gauss1.generate(x, 100)};
 
-   std::unique_ptr<RooAbsReal> nll_gauss1{gauss1.createNLL(*data, EvalBackend("codegen"))};
+   std::unique_ptr<RooAbsReal> nll_gauss1{gauss1.createNLL(*data, backend)};
 
-   std::unique_ptr<RooAbsReal> nll_multi{multiPdf.createNLL(*data, EvalBackend("codegen"))};
+   std::unique_ptr<RooAbsReal> nll_multi{multiPdf.createNLL(*data, backend)};
 
    double val_gauss1 = nll_gauss1->getVal();
    double val_multi = nll_multi->getVal();

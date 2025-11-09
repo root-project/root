@@ -23,7 +23,6 @@
 #include "TClass.h"
 #include "TROOT.h"
 
-ClassImp(TKeyXML);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates TKeyXML and convert object data to xml structures

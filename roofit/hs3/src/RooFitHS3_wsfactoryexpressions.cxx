@@ -105,6 +105,13 @@ auto RooFitHS3_wsfactoryexpressions = R"({
             "factors"
         ]
     },
+    "projected_dist": {
+        "class": "RooProjectedPdf",
+        "arguments": [
+            "input_pdf",
+            "observables"
+        ]
+    },
     "step": {
         "class": "ParamHistFunc",
         "arguments": [

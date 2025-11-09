@@ -77,9 +77,6 @@ const TGPicture *TGListTree::fgCheckedPic = nullptr;
 const TGPicture *TGListTree::fgUncheckedPic = nullptr;
 
 
-ClassImp(TGListTreeItem);
-ClassImp(TGListTreeItemStd);
-ClassImp(TGListTree);
 
 /******************************************************************************/
 /******************************************************************************/
@@ -2554,7 +2551,7 @@ const TGGC &TGListTree::GetColorGC()
 const TGPicture *TGListTree::GetOpenPic()
 {
    if (!fgOpenPic)
-      fgOpenPic = gClient->GetPicture("ofolder_t.xpm");
+      fgOpenPic = gClient->GetPictureOrEmpty("ofolder_t.xpm");
    ((TGPicture *)fgOpenPic)->AddReference();
    return fgOpenPic;
 }
@@ -2565,7 +2562,7 @@ const TGPicture *TGListTree::GetOpenPic()
 const TGPicture *TGListTree::GetClosedPic()
 {
    if (!fgClosedPic)
-      fgClosedPic = gClient->GetPicture("folder_t.xpm");
+      fgClosedPic = gClient->GetPictureOrEmpty("folder_t.xpm");
    ((TGPicture *)fgClosedPic)->AddReference();
    return fgClosedPic;
 }
@@ -2576,7 +2573,7 @@ const TGPicture *TGListTree::GetClosedPic()
 const TGPicture *TGListTree::GetCheckedPic()
 {
    if (!fgCheckedPic)
-      fgCheckedPic = gClient->GetPicture("checked_t.xpm");
+      fgCheckedPic = gClient->GetPictureOrEmpty("checked_t.xpm");
    ((TGPicture *)fgCheckedPic)->AddReference();
    return fgCheckedPic;
 }
@@ -2587,7 +2584,7 @@ const TGPicture *TGListTree::GetCheckedPic()
 const TGPicture *TGListTree::GetUncheckedPic()
 {
    if (!fgUncheckedPic)
-      fgUncheckedPic = gClient->GetPicture("unchecked_t.xpm");
+      fgUncheckedPic = gClient->GetPictureOrEmpty("unchecked_t.xpm");
    ((TGPicture *)fgUncheckedPic)->AddReference();
    return fgUncheckedPic;
 }

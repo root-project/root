@@ -452,6 +452,9 @@ RSA.KeyType:  1
 
 # Control the usage of asynchronous prefetching capabilities irrespective
 # of the TFile implementation. By default it is disabled.
+# In conjunction with a TFileCacheRead (for example the TTreeCache), it
+# will asynchronously grab early the compressed data of the 'next' cluster
+# while the current cluster is being processed (ie is subject of GetEntry)
 #TFile.AsyncPrefetching:   no
 
 # Enable cross-protocol redirects
@@ -612,3 +615,9 @@ Rint.Canvas.HighLightColor:      5
 #                          1 All Branches (default)
 # Can be overridden by the environment variable ROOT_TTREECACHE_PREFILL
 # TTreeCache.Prefill: 1
+
+# Set whether to show or suppress an info message coming from RDataFrame
+# Snapshot informing the user on the change of default output dataset
+# compression settings introduced in ROOT 6.38 (1 means show the info, 0 means
+# suppress, 1 by default).
+# ROOT.RDF.Snapshot.Info: 1

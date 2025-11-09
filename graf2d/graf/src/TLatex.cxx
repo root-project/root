@@ -21,7 +21,6 @@
 
 const Double_t kPI = TMath::Pi();
 
-ClassImp(TLatex);
 
 /** \class TLatex
 \ingroup BasicGraphics
@@ -484,6 +483,36 @@ void TLatex::Copy(TObject &obj) const
    ((TLatex&)obj).fTabSize     = fTabSize;
    ((TLatex&)obj).fOriginSize  = fOriginSize;
    ((TLatex&)obj).fItalic      = fItalic;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate array of points around fX, fY coordinate by specified angle
+
+void TLatex::Rotate(TVirtualPad *pad, Double_t angle, Int_t np, Double_t *x, Double_t *y)
+{
+   Double_t xOrigin, yOrigin;
+   pad->XYtoAbsPixel(fX, fY, xOrigin, yOrigin);
+
+   Double_t cos_angle = TMath::Cos(kPI*angle/180.);
+   Double_t sin_angle = TMath::Sin(kPI*angle/180.);
+   Double_t xx, yy;
+   for (Int_t n = 0; n < np; ++n) {
+      pad->AbsPixeltoXY( cos_angle * (x[n]-xOrigin) + sin_angle * (y[n]-yOrigin) + xOrigin,
+                        -sin_angle * (x[n]-xOrigin) + cos_angle * (y[n]-yOrigin) + yOrigin,
+                        xx, yy);
+      x[n] = xx;
+      y[n] = yy;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate single point around fX, fY coordinate by specified angle
+
+void TLatex::Rotate(TVirtualPad *pad, Double_t angle, Double_t x, Double_t y, Double_t &xx, Double_t &yy)
+{
+   xx = x;
+   yy = y;
+   Rotate(pad, angle, 1, &xx, &yy);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1174,11 +1203,8 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          hbar.SetTextSize(spec.fSize);
          hbar.SetTextAngle(fTextAngle);
          hbar.SetTextAlign(11);
-         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
-         Double_t angle   = kPI*spec.fAngle/180.;
-         Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
-         Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
+         Double_t xx, yy;
+         Rotate(gPad, spec.fAngle, x, y, xx, yy);
          hbar.PaintText(xx,yy,"h");
          DrawLine(x,y-0.8*square,x+0.75*square,y-square,spec);
       }
@@ -1196,11 +1222,8 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          minus.SetTextSize(spec.fSize);
          minus.SetTextAngle(fTextAngle);
          minus.SetTextAlign(11);
-         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
-         Double_t angle   = kPI*spec.fAngle/180.;
-         Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
-         Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
+         Double_t xx, yy;
+         Rotate(gPad, spec.fAngle, x, y, xx, yy);
          minus.PaintText(xx,yy,"-");
       }
       result = fs1 + TLatexFormSize(square,square,0);
@@ -1217,11 +1240,8 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          plus.SetTextSize(spec.fSize);
          plus.SetTextAngle(fTextAngle);
          plus.SetTextAlign(11);
-         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
-         Double_t angle   = kPI*spec.fAngle/180.;
-         Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
-         Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
+         Double_t xx, yy;
+         Rotate(gPad, spec.fAngle, x, y, xx, yy);
          plus.PaintText(xx,yy,"+");
       }
       result = fs1 + TLatexFormSize(square,square,0);
@@ -1238,11 +1258,8 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          mp.SetTextSize(spec.fSize);
          mp.SetTextAngle(fTextAngle+180);
          mp.SetTextAlign(11);
-         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
-         Double_t angle   = kPI*spec.fAngle/180.;
-         Double_t xx = gPad->AbsPixeltoX(Int_t((x+square-xOrigin)*TMath::Cos(angle)+(y-1.25*square-yOrigin)*TMath::Sin(angle)+xOrigin));
-         Double_t yy = gPad->AbsPixeltoY(Int_t((x+square-xOrigin)*TMath::Sin(-angle)+(y-1.25*square-yOrigin)*TMath::Cos(angle)+yOrigin));
+         Double_t xx, yy;
+         Rotate(gPad, spec.fAngle, x+square, y-1.25*square, xx, yy);
          mp.PaintText(xx,yy,"\261");
       }
       result = fs1 + TLatexFormSize(square,square,0);
@@ -1275,11 +1292,8 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          bs.SetTextSize(spec.fSize);
          bs.SetTextAngle(fTextAngle);
          bs.SetTextAlign(11);
-         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
-         Double_t angle   = kPI*spec.fAngle/180.;
-         Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
-         Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
+         Double_t xx, yy;
+         Rotate(gPad, spec.fAngle, x, y, xx, yy);
          bs.PaintText(xx,yy,"\\");
       }
       result = fs1 + TLatexFormSize(square,square,0);
@@ -1458,12 +1472,8 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             if (gVirtualPS) gVirtualPS = nullptr;
             Double_t y22 = y2;
             if (gVirtualX->InheritsFrom("TGCocoa")) y2 -= 4.7*sub;
-            Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
-            Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
-            Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-            Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
-            Double_t xx  = gPad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y2-yOrigin)*sinang+xOrigin));
-            Double_t yy  = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y2-yOrigin)*cosang+yOrigin));
+            Double_t xx, yy;
+            Rotate(gPad, spec.fAngle, x2, y2, xx, yy);
             TText tilde;
             tilde.SetTextFont(fTextFont);
             tilde.SetTextColor(spec.fColor);
@@ -1474,8 +1484,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             if (saveps) {
                gVirtualPS = saveps;
                if (!strstr(gVirtualPS->GetTitle(),"IMG")) y22 -= 4*sub;
-               xx  = gPad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y22-yOrigin)*sinang+xOrigin));
-               yy  = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y22-yOrigin)*cosang+yOrigin));
+               Rotate(gPad, spec.fAngle, x2, y22, xx, yy);
                gVirtualPS->SetTextAlign(22);
                gVirtualPS->Text(xx, yy, "~");
             }
@@ -1916,12 +1925,9 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
 
       if (fShow) {
          // paint the Latex sub-expression per sub-expression
-         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
-         Double_t angle   = kPI*spec.fAngle/180.;
-         Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
-         Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
-         gPad->PaintText(xx,yy,text);
+         Double_t xx, yy;
+         Rotate(gPad, spec.fAngle, x, y, xx, yy);
+         gPad->PaintText(xx, yy, text);
       } else {
          GetTextExtent(w,h,text);
          Double_t width = w;
@@ -1971,17 +1977,10 @@ TLatex *TLatex::DrawLatexNDC(Double_t x, Double_t y, const char *text)
 /// If not specified - default line width will be used
 void TLatex::DrawPolyLine(Int_t npoints, Double_t *xx, Double_t *yy, const TextSpec_t &spec, Double_t scale_width)
 {
-   if (!gPad) return ;
-   Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
-   Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
-   Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-   Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
-   for (Int_t n = 0; n < npoints; ++n) {
-      Double_t mx  = gPad->AbsPixeltoX(Int_t((xx[n]-xOrigin)*cosang+(yy[n]-yOrigin)*sinang+xOrigin));
-      Double_t my  = gPad->AbsPixeltoY(Int_t((xx[n]-xOrigin)*-sinang+(yy[n]-yOrigin)*cosang+yOrigin));
-      xx[n] = mx;
-      yy[n] = my;
-   }
+   if (!gPad)
+      return;
+
+   Rotate(gPad, spec.fAngle, npoints, xx, yy);
 
    if (scale_width >= 1.) {
       TAttFill fill(spec.fColor, 1001);
@@ -2010,20 +2009,13 @@ void TLatex::DrawPolyLine(Int_t npoints, Double_t *xx, Double_t *yy, const TextS
 
 void TLatex::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const TextSpec_t &spec)
 {
-   if (!gPad) return ;
-   Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
-   Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
-   Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-   Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
-   Double_t xx  = gPad->AbsPixeltoX(Int_t((x1-xOrigin)*cosang+(y1-yOrigin)*sinang+xOrigin));
-   Double_t yy  = gPad->AbsPixeltoY(Int_t((x1-xOrigin)*-sinang+(y1-yOrigin)*cosang+yOrigin));
-
-   Double_t xx2 = gPad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y2-yOrigin)*sinang+xOrigin));
-   Double_t yy2 = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y2-yOrigin)*cosang+yOrigin));
-
+   if (!gPad) return;
+   Double_t xx[2] = { x1, x2 };
+   Double_t yy[2] = { y1, y2 };
+   Rotate(gPad, spec.fAngle, 2, xx, yy);
    SetLineColor(spec.fColor);
    TAttLine::Modify();
-   gPad->PaintLine(xx,yy,xx2,yy2);
+   gPad->PaintLine(xx[0], yy[0], xx[1], yy[1]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2031,29 +2023,26 @@ void TLatex::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const 
 
 void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, const TextSpec_t &spec)
 {
-   if (!gPad) return ;
-   if (r < 1) r = 1;
-   Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
-   Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
-   Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-   Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+   if (!gPad)
+      return;
+   if (r < 1)
+      r = 1;
 
    const Int_t np = 40;
    Double_t dphi = 2*kPI/np;
    Double_t x[np+3], y[np+3];
-   Double_t angle,dx,dy;
 
    SetLineColor(spec.fColor);
    TAttLine::Modify();  //Change line attributes only if necessary
 
-   for (Int_t i=0;i<=np;i++) {
-      angle = Double_t(i)*dphi;
-      dx    = r*TMath::Cos(angle) +x1 -xOrigin;
-      dy    = r*TMath::Sin(angle) +y1 -yOrigin;
-      x[i]  = gPad->AbsPixeltoX(TMath::Nint( dx*cosang+ dy*sinang +xOrigin));
-      y[i]  = gPad->AbsPixeltoY(TMath::Nint(-dx*sinang+ dy*cosang +yOrigin));
+   for (Int_t i = 0; i <= np; i++) {
+      Double_t angle = i*dphi;
+      x[i] = x1 + r*TMath::Cos(angle);
+      y[i] = y1 + r*TMath::Sin(angle);
    }
-   gPad->PaintPolyLine(np+1,x,y);
+   Rotate(gPad, spec.fAngle, np+1, x, y);
+
+   gPad->PaintPolyLine(np+1, x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2062,29 +2051,28 @@ void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, const TextSpec_t &
 void TLatex::DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
                              Double_t  phimin, Double_t  phimax, const TextSpec_t &spec)
 {
-   if (!gPad) return ;
-   if (r1 < 1) r1 = 1;
-   if (r2 < 1) r2 = 1;
-   Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
-   Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
-   Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-   Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+   if (!gPad)
+      return;
+   if (r1 < 1)
+      r1 = 1;
+   if (r2 < 1)
+      r2 = 1;
 
    const Int_t np = 40;
    Double_t dphi = (phimax-phimin)*kPI/(180*np);
    Double_t x[np+3], y[np+3];
-   Double_t angle,dx,dy ;
 
    SetLineColor(spec.fColor);
    TAttLine::Modify();  //Change line attributes only if necessary
 
-   for (Int_t i=0;i<=np;i++) {
-      angle = phimin*kPI/180 + Double_t(i)*dphi;
-      dx    = r1*TMath::Cos(angle) +x1 -xOrigin;
-      dy    = r2*TMath::Sin(angle) +y1 -yOrigin;
-      x[i]  = gPad->AbsPixeltoX(Int_t( dx*cosang+dy*sinang +xOrigin));
-      y[i]  = gPad->AbsPixeltoY(Int_t(-dx*sinang+dy*cosang +yOrigin));
+   for (Int_t i = 0; i <= np; i++) {
+      Double_t angle = phimin*kPI/180 + i*dphi;
+      x[i] = x1 + r1*TMath::Cos(angle);
+      y[i] = y1 + r2*TMath::Sin(angle);
    }
+
+   Rotate(gPad, spec.fAngle, np+1, x, y);
+
    gPad->PaintPolyLine(np+1,x,y);
 }
 
@@ -2208,9 +2196,11 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
 
 Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size, const Char_t *text1)
 {
-   if (!gPad) return 0;
+   if (!gPad)
+      return 0;
    TString newText = text1;
-   if( newText.Length() == 0) return 0;
+   if(newText.Length() == 0)
+      return 0;
    newText.ReplaceAll("#hbox","#mbox");
 
    fError = nullptr;
@@ -2222,7 +2212,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    fError = nullptr;
 
    // Do not use Latex if font is low precision.
-   if (fTextFont%10 < 2) {
+   if (fTextFont % 10 < 2) {
       if (gVirtualX) gVirtualX->SetTextAngle(angle);
       if (gVirtualPS) gVirtualPS->SetTextAngle(angle);
       gPad->PaintText(x,y,text1);
@@ -2248,26 +2238,25 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
          }
       } else {
          return 1;
-      };
+      }
    }
 
    Double_t saveSize = size;
    Int_t saveFont = fTextFont;
-   if (fTextFont%10 > 2) {
+   if (fTextFont % 10 > 2) {
       size = GetTextSizePercent(size);
       SetTextFont(10*(saveFont/10) + 2);
    }
 
-   Int_t length = newText.Length() ;
-   const Char_t *text = newText.Data() ;
+   Int_t length = newText.Length();
+   const Char_t *text = newText.Data();
 
    Double_t xsave = fX;
    Double_t ysave = fY;
    fX = x;
    fY = y;
-   x = gPad->XtoAbsPixel(x);
-   y = gPad->YtoAbsPixel(y);
-   fShow = kFALSE ;
+   gPad->XYtoAbsPixel(fX, fY, x, y);
+   fShow = kFALSE;
    TLatexFormSize fs = FirstParse(angle,size,text);
 
    fOriginSize = size;
@@ -2292,14 +2281,14 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
       newSpec.fSize = size;
 
       switch (valign) {
-         case 0: y -= fs.Under() ; break;
+         case 0: y -= fs.Under(); break;
          case 1: break;
-         case 2: y += fs.Height()*0.5-fs.Under(); y++; break;
-         case 3: y += fs.Over() ; break;
+         case 2: y += fs.Height()*0.5-fs.Under() + 1.; break;
+         case 3: y += fs.Over(); break;
       }
       switch (halign) {
-         case 2: x -= fs.Width()/2  ; break;
-         case 3: x -= fs.Width()    ; break;
+         case 2: x -= fs.Width()/2; break;
+         case 3: x -= fs.Width(); break;
       }
       Analyse(x,y,newSpec,text,length);
    }
@@ -2315,8 +2304,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    fTabSize.clear();
    fX = xsave;
    fY = ysave;
-   if (fError) return 0;
-   return 1;
+   return fError ? 0 : 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2594,7 +2582,7 @@ Double_t TLatex::GetXsize()
    TLatexFormSize fs = FirstParse(0,GetTextSize(),text);
    SetTextAngle(angle_old);
    fTabSize.clear();
-   return std::abs(gPad->AbsPixeltoX(Int_t(fs.Width())) - gPad->AbsPixeltoX(0));
+   return std::abs(gPad->AbsPixeltoX(fs.Width()) - gPad->AbsPixeltoX(0));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2682,7 +2670,7 @@ Double_t TLatex::GetYsize()
    TLatexFormSize fs = FirstParse(0,GetTextSize(),text);
    fTextAngle = angsav;
    fTabSize.clear();
-   return std::abs(gPad->AbsPixeltoY(Int_t(fs.Height())) - gPad->AbsPixeltoY(0));
+   return std::abs(gPad->AbsPixeltoY(fs.Height()) - gPad->AbsPixeltoY(0));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

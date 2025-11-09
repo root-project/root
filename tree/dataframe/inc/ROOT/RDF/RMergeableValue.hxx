@@ -245,6 +245,7 @@ actions:
 - [Histo{1D,2D,3D}]
   (classROOT_1_1RDF_1_1RInterface.html#a247ca3aeb7ce5b95015b7fae72983055)
 - [HistoND](classROOT_1_1RDF_1_1RInterface.html#a0c9956a0f48c26f8e4294e17376c7fea)
+- [HistoNSparseD](classROOT_1_1RDF_1_1RInterface.html)
 - [Profile{1D,2D}]
   (classROOT_1_1RDF_1_1RInterface.html#a8ef7dc16b0e9f7bc9cfbe2d9e5de0cef)
 - [Stats](classROOT_1_1RDF_1_1RInterface.html#abc68922c464e472f5f856e8981955af6)

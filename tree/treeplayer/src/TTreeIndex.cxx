@@ -11,6 +11,8 @@
 
 /** \class TTreeIndex
 A Tree Index with majorname and minorname.
+
+If minorname is "0" (default arg in TTree::BuildIndex), just majorname will be used.
 */
 
 #include "TTreeIndex.h"
@@ -22,7 +24,6 @@ A Tree Index with majorname and minorname.
 
 #include <cstring> // std::strlen
 
-ClassImp(TTreeIndex);
 
 
 struct IndexSortComparator {
@@ -180,6 +181,13 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
          current = fTree->GetTreeNumber();
          fMajorFormula->UpdateFormulaLeaves();
          fMinorFormula->UpdateFormulaLeaves();
+      }
+      if ((fMajorFormula->GetNdata() + fMinorFormula->GetNdata()) <= 0) {
+         // Calling GetNdata is essential before calling EvalInstance, otherwise a wrong
+         // result is silently returned by EvalInstance below if formula is value from a variable-sized array
+         // We raise an error to prevent the if clause being optimized-out if we do not use the return
+         Error("TTreeIndex", "In tree entry %lld, Ndata in formula is zero for both '%s' and '%s'", i,
+               fMajorName.Data(), fMinorName.Data());
       }
       auto GetAndRangeCheck = [this](bool isMajor, Long64_t entry) {
          LongDouble_t ret = (isMajor ? fMajorFormula : fMinorFormula)->EvalInstance<LongDouble_t>();

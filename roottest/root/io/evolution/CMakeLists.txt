@@ -12,13 +12,13 @@ ROOTTEST_ADD_TEST(write
                   ROOTEXE_OPTS ${_myclassold_load}
                   LABELS longtest io
                   FIXTURES_REQUIRED root-io-evolution-MyClassOld-fixture
-                  FIXTURES_SETUP root-io-evolution-write)
+                  FIXTURES_SETUP root-io-evolution-write-fixture)
 
 ROOTTEST_ADD_TEST(readold
                   MACRO readold.C
                   ROOTEXE_OPTS ${_myclassold_load}
                   LABELS longtest io
-                  FIXTURES_REQUIRED root-io-evolution-write)
+                  FIXTURES_REQUIRED root-io-evolution-write-fixture)
 
 
 # this test was failing in Makefile too
@@ -29,7 +29,7 @@ ROOTTEST_ADD_TEST(readnew
                   MACRO readnew.C
                   WILLFAIL
                   LABELS longtest io
-                  FIXTURES_REQUIRED root-io-evolution-write root-io-evolution-MyClass-fixture)
+                  FIXTURES_REQUIRED root-io-evolution-write-fixture root-io-evolution-MyClass-fixture)
 
 
 ROOTTEST_COMPILE_MACRO(ClassConvOld.cxx

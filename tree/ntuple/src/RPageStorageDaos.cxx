@@ -768,3 +768,8 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
 
    return clusters;
 }
+
+void ROOT::Experimental::Internal::RPageSourceDaos::LoadStreamerInfo()
+{
+   R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "DAOS-backed sources have no associated StreamerInfo to load.";
+}

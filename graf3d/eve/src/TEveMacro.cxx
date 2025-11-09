@@ -22,7 +22,6 @@ Sub-class of TMacro, overriding Exec to unload the previous version
 and cleanup after the execution.
 */
 
-ClassImp(TEveMacro);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

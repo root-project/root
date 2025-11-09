@@ -49,7 +49,7 @@ double xRooFit::Asymptotics::k(const IncompatFunc &compatRegions, double pValue,
       double operator()(double x) const
       {
          double val = PValue(cFunc, x, poiVal, alt_val, sigma_mu, low, high);
-         if (val < 0)
+         if (val < -1e-10)
             kInvalid = true;
          return val - target;
       }
@@ -154,26 +154,22 @@ double xRooFit::Asymptotics::PValue(const IncompatFunc &compatRegions, double k,
    // go through the 4 'regions' ... only two of which will apply
    if (k <= k_high) {
       out2 += ROOT::Math::gaussian_cdf_c(sqrt(k) + Lambda_y);
-      out += 1.0 -
-             Phi_m(poiVal, poi_primeVal, Lambda_y + sqrt(k), sigma, compatRegions);
+      out += 1.0 - Phi_m(poiVal, poi_primeVal, Lambda_y + sqrt(k), sigma, compatRegions);
    } else {
       double Lambda_high = (poiVal - upBound) * (poiVal + upBound - 2. * poi_primeVal) / (sigma * sigma);
       double sigma_high = 2. * (upBound - poiVal) / sigma;
       out2 += ROOT::Math::gaussian_cdf_c((k - Lambda_high) / sigma_high);
-      out += 1.0 -
-             Phi_m(poiVal, poi_primeVal, (k - Lambda_high) / sigma_high, sigma, compatRegions);
+      out += 1.0 - Phi_m(poiVal, poi_primeVal, (k - Lambda_high) / sigma_high, sigma, compatRegions);
    }
 
    if (k <= k_low) {
       out2 += ROOT::Math::gaussian_cdf_c(sqrt(k) - Lambda_y);
-      out += 1.0 +
-             Phi_m(poiVal, poi_primeVal, Lambda_y - sqrt(k), sigma, compatRegions);
+      out += 1.0 + Phi_m(poiVal, poi_primeVal, Lambda_y - sqrt(k), sigma, compatRegions);
    } else {
       double Lambda_low = (poiVal - lowBound) * (poiVal + lowBound - 2. * poi_primeVal) / (sigma * sigma);
       double sigma_low = 2. * (poiVal - lowBound) / sigma;
       out2 += ROOT::Math::gaussian_cdf_c((k - Lambda_low) / sigma_low);
-      out += 1.0 +
-             Phi_m(poiVal, poi_primeVal, (Lambda_low - k) / sigma_low, sigma, compatRegions);
+      out += 1.0 + Phi_m(poiVal, poi_primeVal, (Lambda_low - k) / sigma_low, sigma, compatRegions);
       /*out +=  ROOT::Math::gaussian_cdf((k-Lambda_low)/sigma_low) +
            2*Phi_m(poiVal,poi_primeVal,(Lambda_low - k_low)==0 ? 0 : ((Lambda_low -
          k_low)/sigma_low),sigma,compatRegions)

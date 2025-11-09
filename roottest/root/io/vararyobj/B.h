@@ -14,7 +14,7 @@ public:
   B(char const *name, char const *title, int x, double y);
   B(const B&);
   B& operator=(const B&);
-  ~B();
+  ~B() override;
 public:
   int           GetX() const     { return fX; }
   double        GetY() const     { return fY; }
@@ -23,7 +23,7 @@ public:
 public:
   void          repr() const;
 public:
-  ClassDef(B,1);
+  ClassDefOverride(B,1);
 };
 
 #endif // B_HDR

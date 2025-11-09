@@ -20,7 +20,6 @@
 #include "snprintf.h"
 
 
-ClassImp(TTVRecord);
 
 /** \class TTVRecord
 I/O classes for TreeViewer session handling.
@@ -128,7 +127,6 @@ void TTVRecord::SaveSource(std::ofstream &out)
    }
 }
 
-ClassImp(TTVSession);
 
 /** \class TTVSession
 I/O classes for TreeViewer session handling.

@@ -54,9 +54,6 @@ Service classes of the tab widget.
 const TGFont *TGTab::fgDefaultFont = nullptr;
 const TGGC   *TGTab::fgDefaultGC = nullptr;
 
-ClassImp(TGTabElement);
-ClassImp(TGTabLayout);
-ClassImp(TGTab);
 
 
 ////////////////////////////////////////////////////////////////////////////////

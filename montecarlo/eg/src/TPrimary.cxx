@@ -28,7 +28,6 @@ This class is now obsolete. Use TParticle instead.
 #include "TPolyLine3D.h"
 #include "snprintf.h"
 
-ClassImp(TPrimary);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

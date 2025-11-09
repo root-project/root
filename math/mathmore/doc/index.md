@@ -1,11 +1,16 @@
 \defgroup MathMore  MathMore
-\ingroup Math
-\brief The Mathematical library providing some advanced functionality and based on GSL.
+\ingroup MathCore
+\brief The Mathematical library providing GSL extensions to MathCore.
 
 **MathMore** provides an advanced collection of functions and C++ classes for HEP numerical
-computing. This is an extension of the functionality provided by the \ref MathCore. The
-current set includes classes and functions for:
+computing. This is an extension of the functionality provided by the \ref MathCore, which becomes
+available when a GSL library is found in the system. It can be enabled/disabled
+when configuring %ROOT using `cmake -Dmathmore=On/Off`.
+MathMore links with the GSL static libraries, so note that its license differs from ROOT's usual license,
+since the GSL is distributed under the GNU General Public License. On some platforms (like Linux x86-64), GSL
+needs to be compiled with the option `--with-pic`.
 
+MathMore provides extensions to the following MathCore groups:
 *   \ref SpecFunc, with all the major functions (Bessel functions, Legendre polynomial, etc..)
 *   \ref StatFunc, Mathematical functions used in statistics such as probability density
      functions, cumulative distributions functions and their inverse (quantiles).
@@ -30,10 +35,3 @@ file of GSL can be downloaded from the [GSL Web site](http://www.gnu.org/softwar
 or (for version 1.8) from [here](http://seal.web.cern.ch/seal/MathLibs/gsl-1.8.tar.gz).
 Windows binaries, compiled using Visual Studio 7.1 can be downloaded from
 [this location](http://seal.web.cern.ch/seal/MathLibs/GSL-1.8.zip).
-
-MathMore (and its %ROOT CINT dictionary) can be built within %ROOT whenever a GSL library
-is found in the system. Optionally the GSL library and header file location can be specified
-in the %ROOT configure script with _configure --with-gsl-incdir=... --with-gsl-libdir=..._
-MathMore links with the GSL static libraries. On some platform (like Linux x86-64)  GSL
-needs to be compiled with the option _--with-pic_.
-The source code of MathMore is distributed under the GNU General Public License

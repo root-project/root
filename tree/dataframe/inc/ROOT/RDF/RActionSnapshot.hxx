@@ -29,6 +29,8 @@ std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node, co
                                              std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
 } // namespace GraphDrawing
 
+class SnapshotHelperWithVariations;
+
 template <typename Helper, typename PrevNode>
 class R__CLING_PTRCHECK(off) RActionSnapshot final : public RActionBase {
 
@@ -36,7 +38,7 @@ class R__CLING_PTRCHECK(off) RActionSnapshot final : public RActionBase {
    Helper fHelper;
 
    /// Pointer to the previous node in this branch of the computation graph
-   std::shared_ptr<PrevNode> fPrevNode;
+   std::vector<std::shared_ptr<PrevNode>> fPrevNodes;
 
    /// Column readers per slot and per input column
    std::vector<std::vector<RColumnReaderBase *>> fValues;
@@ -54,8 +56,8 @@ public:
                    const std::vector<const std::type_info *> &colTypeIDs, std::shared_ptr<PrevNode> pd,
                    const RColumnRegister &colRegister)
       : RActionBase(pd->GetLoopManagerUnchecked(), columns, colRegister, pd->GetVariations()),
-        fHelper(std::forward<Helper>(h)),
-        fPrevNode(std::move(pd)),
+        fHelper(std::move(h)),
+        fPrevNodes{std::move(pd)},
         fValues(GetNSlots()),
         fColTypeIDs(colTypeIDs)
    {
@@ -65,6 +67,29 @@ public:
       fIsDefine.reserve(nColumns);
       for (auto i = 0u; i < nColumns; ++i)
          fIsDefine.push_back(colRegister.IsDefineOrAlias(columns[i]));
+
+      if constexpr (std::is_same_v<Helper, SnapshotHelperWithVariations>) {
+         if (const auto &variations = GetVariations(); !variations.empty()) {
+            // Get pointers to previous nodes of all systematics
+            fPrevNodes.reserve(1 + variations.size());
+            auto nominalFilter = fPrevNodes.front();
+            if (static_cast<RNodeBase *>(nominalFilter.get()) == fLoopManager) {
+               // just fill this with the RLoopManager N times
+               fPrevNodes.resize(1 + variations.size(), nominalFilter);
+            } else {
+               // create varied versions of the previous filter node
+               const auto &prevVariations = nominalFilter->GetVariations();
+               for (const auto &variation : variations) {
+                  if (IsStrInVec(variation, prevVariations)) {
+                     fPrevNodes.emplace_back(
+                        std::static_pointer_cast<PrevNode>(nominalFilter->GetVariedFilter(variation)));
+                  } else {
+                     fPrevNodes.emplace_back(nominalFilter);
+                  }
+               }
+            }
+         }
+      }
    }
 
    RActionSnapshot(const RActionSnapshot &) = delete;
@@ -89,11 +114,36 @@ public:
    {
       fValues[slot] = GetUntypedColumnReaders(slot, r, RActionBase::GetColRegister(), *fLoopManager,
                                               RActionBase::GetColumnNames(), fColTypeIDs);
+
+      if constexpr (std::is_same_v<Helper, SnapshotHelperWithVariations>) {
+         // In case of systematic variations, append also the varied column readers to the values
+         // that get passed to the helpers
+         auto const &variations = GetVariations();
+         for (unsigned int variationIndex = 0; variationIndex < variations.size(); ++variationIndex) {
+            auto const &readers =
+               GetUntypedColumnReaders(slot, r, RActionBase::GetColRegister(), *fLoopManager,
+                                       RActionBase::GetColumnNames(), fColTypeIDs, variations[variationIndex]);
+            for (unsigned int i = 0; i < readers.size(); ++i) {
+               if (fValues[slot][i] != readers[i]) {
+                  // The reader with variations differs from nominal, so this column needs to be added to the output
+                  fValues[slot].push_back(readers[i]);
+                  // Both the original and the varied column need to be registered for masking
+                  fHelper.RegisterVariedColumn(slot, i, i, 0,
+                                               "nominal"); // (No harm flagging the nominal multiple times)
+                  fHelper.RegisterVariedColumn(slot, fValues[slot].size() - 1, i, variationIndex + 1,
+                                               variations[variationIndex]);
+               }
+            }
+         }
+      }
+
       fHelper.InitTask(r, slot);
    }
 
    void *GetValue(unsigned int slot, std::size_t readerIdx, Long64_t entry)
    {
+      assert(slot < fValues.size());
+      assert(readerIdx < fValues[slot].size());
       if (auto *val = fValues[slot][readerIdx]->template TryGet<void>(entry))
          return val;
 
@@ -117,12 +167,36 @@ public:
 
    void Run(unsigned int slot, Long64_t entry) final
    {
-      // check if entry passes all filters
-      if (fPrevNode->CheckFilters(slot, entry))
-         CallExec(slot, entry);
+      if constexpr (std::is_same_v<Helper, SnapshotHelperWithVariations>) {
+         // check if entry passes all filters
+         std::vector<bool> filterPassed(fPrevNodes.size(), false);
+         for (unsigned int variation = 0; variation < fPrevNodes.size(); ++variation) {
+            filterPassed[variation] = fPrevNodes[variation]->CheckFilters(slot, entry);
+         }
+
+         // Currently, every event where any of nominal or variations pass gets written to the output.
+         // This logic could be extended for different use cases if the need arises.
+         if (std::any_of(filterPassed.begin(), filterPassed.end(), [](bool val) { return val; })) {
+            // TODO: Don't allocate
+            std::vector<void *> untypedValues;
+            auto nReaders = fValues[slot].size();
+            untypedValues.reserve(nReaders);
+            for (decltype(nReaders) readerIdx{}; readerIdx < nReaders; readerIdx++)
+               untypedValues.push_back(GetValue(slot, readerIdx, entry));
+
+            fHelper.Exec(slot, untypedValues, filterPassed);
+         }
+      } else {
+         if (fPrevNodes.front()->CheckFilters(slot, entry))
+            CallExec(slot, entry);
+      }
    }
 
-   void TriggerChildrenCount() final { fPrevNode->IncrChildrenCount(); }
+   void TriggerChildrenCount() final
+   {
+      for (auto const &node : fPrevNodes)
+         node->IncrChildrenCount();
+   }
 
    /// Clean-up operations to be performed at the end of a task.
    void FinalizeSlot(unsigned int slot) final
@@ -142,29 +216,30 @@ public:
    std::shared_ptr<GraphDrawing::GraphNode>
    GetGraph(std::unordered_map<void *, std::shared_ptr<GraphDrawing::GraphNode>> &visitedMap) final
    {
-      auto prevNode = fPrevNode->GetGraph(visitedMap);
-      const auto &prevColumns = prevNode->GetDefinedColumns();
-
       // Action nodes do not need to go through CreateFilterNode: they are never common nodes between multiple branches
       const auto nodeType = HasRun() ? GraphDrawing::ENodeType::kUsedAction : GraphDrawing::ENodeType::kAction;
       auto thisNode = std::make_shared<GraphDrawing::GraphNode>(fHelper.GetActionName(), visitedMap.size(), nodeType);
       visitedMap[(void *)this] = thisNode;
 
-      auto upmostNode = AddDefinesToGraph(thisNode, GetColRegister(), prevColumns, visitedMap);
+      for (auto const &node : fPrevNodes) {
+         auto prevNode = node->GetGraph(visitedMap);
+         const auto &prevColumns = prevNode->GetDefinedColumns();
+         auto upmostNode = AddDefinesToGraph(thisNode, GetColRegister(), prevColumns, visitedMap);
 
-      thisNode->AddDefinedColumns(GetColRegister().GenerateColumnNames());
-      upmostNode->SetPrevNode(prevNode);
+         thisNode->AddDefinedColumns(GetColRegister().GenerateColumnNames());
+         upmostNode->SetPrevNode(prevNode);
+      }
       return thisNode;
    }
 
-   /// This method is invoked to update a partial result during the event loop, right before passing the result to a
-   /// user-defined callback registered via RResultPtr::RegisterCallback
+   /// Forwards to the action helpers; will throw since PartialUpdate not supported for most snapshot helpers.
    void *PartialUpdate(unsigned int slot) final { return fHelper.CallPartialUpdate(slot); }
 
+   /// Will throw, since varied actions are unsupported. Instead, set a flag in RSnapshotOptions.
    [[maybe_unused]] std::unique_ptr<RActionBase> MakeVariedAction(std::vector<void *> && /*results*/) final
    {
-      // TODO: Probably we also need an untyped RVariedAction
-      throw std::runtime_error("RDataFrame::Snapshot: Snapshot with systematic variations is not supported yet.");
+      throw std::logic_error("RDataFrame::Snapshot: The snapshot action cannot be varied. Instead, switch on "
+                             "variations in RSnapshotOptions.");
    }
 
    /**
@@ -175,8 +250,8 @@ public:
     */
    std::unique_ptr<RActionBase> CloneAction(void *newResult) final
    {
-      return std::make_unique<RActionSnapshot>(fHelper.CallMakeNew(newResult), GetColumnNames(), fColTypeIDs, fPrevNode,
-                                               GetColRegister());
+      return std::make_unique<RActionSnapshot>(fHelper.CallMakeNew(newResult), GetColumnNames(), fColTypeIDs,
+                                               fPrevNodes.front(), GetColRegister());
    }
 };
 

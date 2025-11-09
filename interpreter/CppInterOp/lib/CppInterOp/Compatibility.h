@@ -5,9 +5,13 @@
 #ifndef CPPINTEROP_COMPATIBILITY_H
 #define CPPINTEROP_COMPATIBILITY_H
 
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/GlobalDecl.h"
+#include "clang/Basic/SourceLocation.h"
+#include "clang/Basic/Specifiers.h"
 #include "clang/Basic/Version.h"
 #include "clang/Config/config.h"
+#include "clang/Sema/Sema.h"
 
 #ifdef _MSC_VER
 #define dup _dup
@@ -59,14 +63,7 @@ static inline char* GetEnv(const char* Var_Name) {
   CXXSpecialMemberKind::MoveConstructor
 #endif
 
-#if LLVM_VERSION_MAJOR < 18
-#define starts_with startswith
-#define ends_with endswith
-#endif
-
-#if CLANG_VERSION_MAJOR >= 18
 #include "clang/Interpreter/CodeCompletion.h"
-#endif
 
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
@@ -342,7 +339,6 @@ inline void codeComplete(std::vector<std::string>& Results,
                          clang::Interpreter& I, const char* code,
                          unsigned complete_line = 1U,
                          unsigned complete_column = 1U) {
-#if CLANG_VERSION_MAJOR >= 18
   // FIXME: We should match the invocation arguments of the main interpreter.
   //        That can affect the returned completion results.
   auto CB = clang::IncrementalCompilerBuilder();
@@ -358,7 +354,6 @@ inline void codeComplete(std::vector<std::string>& Results,
   }
 
   std::vector<std::string> results;
-  std::vector<std::string> Comps;
   clang::CompilerInstance* MainCI = (*Interp)->getCompilerInstance();
   auto CC = clang::ReplCodeCompleter();
   CC.codeComplete(MainCI, code, complete_line, complete_column,
@@ -366,9 +361,6 @@ inline void codeComplete(std::vector<std::string>& Results,
   for (llvm::StringRef r : results)
     if (r.find(CC.Prefix) == 0)
       Results.push_back(r.str());
-#else
-  assert(false && "CodeCompletion API only available in Clang >= 18.");
-#endif
 }
 
 } // namespace compat
@@ -401,18 +393,6 @@ public:
 
 namespace compat {
 
-// Clang >= 14 change type name to string (spaces formatting problem)
-inline std::string FixTypeName(const std::string type_name) {
-  return type_name;
-}
-
-inline std::string MakeResourceDir(llvm::StringRef Dir) {
-  llvm::SmallString<128> P(Dir);
-  llvm::sys::path::append(P, CLANG_INSTALL_LIBDIR_BASENAME, "clang",
-                          CLANG_VERSION_MAJOR_STRING);
-  return std::string(P.str());
-}
-
 // Clang >= 16 (=16 with Value patch) change castAs to convertTo
 #ifdef CPPINTEROP_USE_CLING
 template <typename T> inline T convertTo(cling::Value V) {
@@ -424,6 +404,22 @@ template <typename T> inline T convertTo(clang::Value V) {
 }
 #endif // CPPINTEROP_USE_CLING
 
+inline void InstantiateClassTemplateSpecialization(
+    Interpreter& interp, clang::ClassTemplateSpecializationDecl* CTSD) {
+#ifdef CPPINTEROP_USE_CLING
+  cling::Interpreter::PushTransactionRAII RAII(&interp);
+#endif
+#if CLANG_VERSION_MAJOR < 20
+  interp.getSema().InstantiateClassTemplateSpecialization(
+      clang::SourceLocation::getFromRawEncoding(1), CTSD,
+      clang::TemplateSpecializationKind::TSK_Undeclared, /*Complain=*/true);
+#else
+  interp.getSema().InstantiateClassTemplateSpecialization(
+      clang::SourceLocation::getFromRawEncoding(1), CTSD,
+      clang::TemplateSpecializationKind::TSK_Undeclared, /*Complain=*/true,
+      /*PrimaryHasMatchedPackOnParmToNonPackOnArg=*/false);
+#endif
+}
 } // namespace compat
 
 #endif // CPPINTEROP_COMPATIBILITY_H

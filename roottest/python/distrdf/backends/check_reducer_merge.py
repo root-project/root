@@ -1,11 +1,8 @@
 import os
 
-import pytest
-
 import numpy
-
+import pytest
 import ROOT
-
 from DistRDF.Backends import Dask
 
 
@@ -124,6 +121,28 @@ class TestReducerMerge:
 
         histond_distrdf = distrdf_withcols.HistoND(modelTHND, colnames)
         histond_rdf = rdf_withcols.HistoND(modelTHND, colnames)
+
+        assert histond_distrdf.GetEntries() == histond_rdf.GetEntries()
+        assert histond_distrdf.GetNbins() == histond_rdf.GetNbins()
+
+    def test_histonsparsed_merge(self, payload):
+        """Check the working of HistoND merge operation in the reducer."""
+        nbins = (10, 10, 10, 10)
+        xmin = (0.0, 0.0, 0.0, 0.0)
+        xmax = (100.0, 100.0, 100.0, 100.0)
+        modelTHNSparseD = ("name", "title", 4, nbins, xmin, xmax)
+        colnames = ("x0", "x1", "x2", "x3")
+
+        connection, _ = payload
+        distrdf = ROOT.RDataFrame(100, executor=connection)
+
+        rdf = ROOT.RDataFrame(100)
+
+        distrdf_withcols = self.define_four_columns(distrdf, colnames)
+        rdf_withcols = self.define_four_columns(rdf, colnames)
+
+        histond_distrdf = distrdf_withcols.HistoNSparseD(modelTHNSparseD, colnames)
+        histond_rdf = rdf_withcols.HistoNSparseD(modelTHNSparseD, colnames)
 
         assert histond_distrdf.GetEntries() == histond_rdf.GetEntries()
         assert histond_distrdf.GetNbins() == histond_rdf.GetNbins()
@@ -404,12 +423,13 @@ class TestReducerMerge:
         assert sum_before.GetValue() == 10.0
         assert sum_after.GetValue() == 20.0
 
-    def test_distributed_stddev(self, payload):
+    @pytest.mark.parametrize("datasource", ["ttree", "rntuple"])
+    def test_distributed_stddev(self, payload, datasource):
         """Test support for the StdDev action."""
 
         # Create dataset with fixed series of entries
         treename = "tree"
-        filename = "../data/ttree/distrdf_roottest_check_reducer_merge_1.root"
+        filename = f"../data/{datasource}/distrdf_roottest_check_reducer_merge_1.root"
 
         connection, _ = payload
         df = ROOT.RDataFrame(treename, filename, executor=connection)
@@ -420,11 +440,12 @@ class TestReducerMerge:
 
         assert std.GetValue() == pytest.approx(expected, rel), f"{std.GetValue()}!={expected}"
 
-    def test_distributed_stats(self, payload):
+    @pytest.mark.parametrize("datasource", ["ttree", "rntuple"])
+    def test_distributed_stats(self, payload, datasource):
         """Test support for the Stats action."""
         # Create dataset with fixed series of entries
         treename = "tree"
-        filename = "../data/ttree/distrdf_roottest_check_reducer_merge_1.root"
+        filename = f"../data/{datasource}/distrdf_roottest_check_reducer_merge_1.root"
 
         connection, _ = payload
         df = ROOT.RDataFrame(treename, filename, executor=connection)

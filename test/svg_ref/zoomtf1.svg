@@ -1,0 +1,192 @@
+<?xml version="1.0" standalone="no"?>
+<svg width="567" height="550" viewBox="0 0 567 550" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+<title>
+zoomtf1.svg
+</title>
+<rect x="0.500" y="0" width="567" height="550" fill="#f2f2f2"/>
+<path d="M0.500,550l 2.0, -2.0v -546h 563l 2.0, -2.0h -567v 550z" fill="white"/>
+<path d="M0.500,550l 2.0, -2.0h 563v -546l 2.0, -2.0v 550h -567z" fill="#a9a9a9"/>
+<rect x="57" y="55" width="454" height="440" fill="#f2f2f2"/>
+<path d="M57,495l 1.000, -1.000v -438h 452l 1.000, -1.000h -454v 440z" fill="white"/>
+<path d="M57,495l 1.000, -1.000h 452v -438l 1.000, -1.000v 440h -454z" fill="#a9a9a9"/>
+<rect x="57" y="55" width="454" height="440" fill="none" stroke="black"/>
+<rect x="57" y="55" width="454" height="440" fill="#f2f2f2"/>
+<path d="M57,495l 1.000, -1.000v -438h 452l 1.000, -1.000h -454v 440z" fill="white"/>
+<path d="M57,495l 1.000, -1.000h 452v -438l 1.000, -1.000v 440h -454z" fill="#a9a9a9"/>
+<rect x="57" y="55" width="454" height="440" fill="none" stroke="black"/>
+<path d="M80,495l 2.0, -4.1" fill="none" stroke="black" stroke-width="3.0"/>
+<path d="M82,491l 4.5, -9.3l 4.5, -9.2l 4.5, -9.2l 4.5, -9.2l 4.5, -9.1l 4.5, -9.1l 4.5, -9.1l 4.5, -9.0l 4.5, -9.0l 4.5, -8.9l 4.5, -8.8l 4.5, -8.8l 4.5, -8.7l 4.5, -8.7l 4.5, -8.6l 4.5, -8.5l 4.5, -8.4l 4.5, -8.4l 4.5, -8.3l 4.5, -8.2l 4.5, -8.1l
+ 4.5, -8.0l 4.5, -7.9l 4.5, -7.8l 4.5, -7.7l 4.5, -7.6l 4.5, -7.5l 4.5, -7.4l 4.5, -7.2l 4.5, -7.1l 4.5, -7.0l 4.5, -6.9l 4.5, -6.8l 4.5, -6.6l 4.5, -6.5l 4.5, -6.4l 4.5, -6.2l 4.5, -6.1l 4.5, -5.9l 4.5, -5.8l 4.5, -5.6l 4.5, -5.5l 4.5, -5.3l 4.5,
+ -5.2l 4.5, -5.0l 4.5, -4.9l 4.5, -4.7l 4.5, -4.6" fill="none" stroke="black" stroke-width="3.0"/>
+<path d="M300,133l 4.5, -4.4l 4.5, -4.2l 4.5, -4.1l 4.5, -3.9l 4.5, -3.7l 4.5, -3.5l 4.5, -3.4l 4.5, -3.2l 4.5, -3.0l 4.5, -2.8l 4.5, -2.7l 4.5, -2.5l 4.5, -2.3l 4.5, -2.1l 4.5, -1.9l 4.5, -1.8l 4.5, -1.6l 4.5, -1.4l 4.5, -1.2l 4.5, -1.0l 4.5,
+ -0.845l 4.5, -0.659l 4.5, -0.473l 4.5, -0.287l 4.5, -0.101l 4.5, 0.086l 4.5, 0.272l 4.5, 0.458l 4.5, 0.644l 4.5, 0.830l 4.5, 1.0l 4.5, 1.2l 4.5, 1.4l 4.5, 1.6l 4.5, 1.8l 4.5, 1.9l 4.5, 2.1l 4.5, 2.3l 4.5, 2.5l 4.5, 2.7l 4.5, 2.8l 4.5, 3.0l 4.5, 3.2l
+ 4.5, 3.4l 4.5, 3.5l 4.5, 3.7" fill="none" stroke="black" stroke-width="3.0"/>
+<path d="M57,495h 454" fill="none" stroke="black"/>
+<path d="M57,482v 13" fill="none" stroke="black"/>
+<path d="M69,488v 6.6" fill="none" stroke="black"/>
+<path d="M80,488v 6.6" fill="none" stroke="black"/>
+<path d="M91,488v 6.6" fill="none" stroke="black"/>
+<path d="M103,482v 13" fill="none" stroke="black"/>
+<path d="M114,488v 6.6" fill="none" stroke="black"/>
+<path d="M125,488v 6.6" fill="none" stroke="black"/>
+<path d="M137,488v 6.6" fill="none" stroke="black"/>
+<path d="M148,482v 13" fill="none" stroke="black"/>
+<path d="M159,488v 6.6" fill="none" stroke="black"/>
+<path d="M171,488v 6.6" fill="none" stroke="black"/>
+<path d="M182,488v 6.6" fill="none" stroke="black"/>
+<path d="M193,482v 13" fill="none" stroke="black"/>
+<path d="M205,488v 6.6" fill="none" stroke="black"/>
+<path d="M216,488v 6.6" fill="none" stroke="black"/>
+<path d="M227,488v 6.6" fill="none" stroke="black"/>
+<path d="M239,482v 13" fill="none" stroke="black"/>
+<path d="M250,488v 6.6" fill="none" stroke="black"/>
+<path d="M261,488v 6.6" fill="none" stroke="black"/>
+<path d="M273,488v 6.6" fill="none" stroke="black"/>
+<path d="M284,482v 13" fill="none" stroke="black"/>
+<path d="M295,488v 6.6" fill="none" stroke="black"/>
+<path d="M307,488v 6.6" fill="none" stroke="black"/>
+<path d="M318,488v 6.6" fill="none" stroke="black"/>
+<path d="M329,482v 13" fill="none" stroke="black"/>
+<path d="M341,488v 6.6" fill="none" stroke="black"/>
+<path d="M352,488v 6.6" fill="none" stroke="black"/>
+<path d="M363,488v 6.6" fill="none" stroke="black"/>
+<path d="M375,482v 13" fill="none" stroke="black"/>
+<path d="M386,488v 6.6" fill="none" stroke="black"/>
+<path d="M397,488v 6.6" fill="none" stroke="black"/>
+<path d="M409,488v 6.6" fill="none" stroke="black"/>
+<path d="M420,482v 13" fill="none" stroke="black"/>
+<path d="M431,488v 6.6" fill="none" stroke="black"/>
+<path d="M443,488v 6.6" fill="none" stroke="black"/>
+<path d="M454,488v 6.6" fill="none" stroke="black"/>
+<path d="M465,482v 13" fill="none" stroke="black"/>
+<path d="M477,488v 6.6" fill="none" stroke="black"/>
+<path d="M488,488v 6.6" fill="none" stroke="black"/>
+<path d="M499,488v 6.6" fill="none" stroke="black"/>
+<path d="M511,482v 13" fill="none" stroke="black"/>
+<text xml:space="preserve" x="52" y="515" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">0
+</text>
+<text xml:space="preserve" x="88" y="515" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">0.2
+</text>
+<text xml:space="preserve" x="134" y="515" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">0.4
+</text>
+<text xml:space="preserve" x="179" y="515" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">0.6
+</text>
+<text xml:space="preserve" x="224" y="515" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">0.8
+</text>
+<text xml:space="preserve" x="280" y="515" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">1
+</text>
+<text xml:space="preserve" x="315" y="515" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">1.2
+</text>
+<text xml:space="preserve" x="360" y="515" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">1.4
+</text>
+<text xml:space="preserve" x="406" y="515" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">1.6
+</text>
+<text xml:space="preserve" x="451" y="515" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">1.8
+</text>
+<text xml:space="preserve" x="505" y="515" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">2
+</text>
+<text xml:space="preserve" x="452" y="538" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">X axis
+</text>
+<path d="M57,495v -440" fill="none" stroke="black"/>
+<path d="M71,449h -14" fill="none" stroke="black"/>
+<path d="M64,439h -6.8" fill="none" stroke="black"/>
+<path d="M64,430h -6.8" fill="none" stroke="black"/>
+<path d="M64,421h -6.8" fill="none" stroke="black"/>
+<path d="M64,411h -6.8" fill="none" stroke="black"/>
+<path d="M71,402h -14" fill="none" stroke="black"/>
+<path d="M64,393h -6.8" fill="none" stroke="black"/>
+<path d="M64,383h -6.8" fill="none" stroke="black"/>
+<path d="M64,374h -6.8" fill="none" stroke="black"/>
+<path d="M64,365h -6.8" fill="none" stroke="black"/>
+<path d="M71,356h -14" fill="none" stroke="black"/>
+<path d="M64,346h -6.8" fill="none" stroke="black"/>
+<path d="M64,337h -6.8" fill="none" stroke="black"/>
+<path d="M64,328h -6.8" fill="none" stroke="black"/>
+<path d="M64,318h -6.8" fill="none" stroke="black"/>
+<path d="M71,309h -14" fill="none" stroke="black"/>
+<path d="M64,300h -6.8" fill="none" stroke="black"/>
+<path d="M64,290h -6.8" fill="none" stroke="black"/>
+<path d="M64,281h -6.8" fill="none" stroke="black"/>
+<path d="M64,272h -6.8" fill="none" stroke="black"/>
+<path d="M71,262h -14" fill="none" stroke="black"/>
+<path d="M64,253h -6.8" fill="none" stroke="black"/>
+<path d="M64,244h -6.8" fill="none" stroke="black"/>
+<path d="M64,234h -6.8" fill="none" stroke="black"/>
+<path d="M64,225h -6.8" fill="none" stroke="black"/>
+<path d="M71,216h -14" fill="none" stroke="black"/>
+<path d="M64,206h -6.8" fill="none" stroke="black"/>
+<path d="M64,197h -6.8" fill="none" stroke="black"/>
+<path d="M64,188h -6.8" fill="none" stroke="black"/>
+<path d="M64,178h -6.8" fill="none" stroke="black"/>
+<path d="M71,169h -14" fill="none" stroke="black"/>
+<path d="M64,160h -6.8" fill="none" stroke="black"/>
+<path d="M64,150h -6.8" fill="none" stroke="black"/>
+<path d="M64,141h -6.8" fill="none" stroke="black"/>
+<path d="M64,132h -6.8" fill="none" stroke="black"/>
+<path d="M71,123h -14" fill="none" stroke="black"/>
+<path d="M64,113h -6.8" fill="none" stroke="black"/>
+<path d="M64,104h -6.8" fill="none" stroke="black"/>
+<path d="M64,95h -6.8" fill="none" stroke="black"/>
+<path d="M64,85h -6.8" fill="none" stroke="black"/>
+<path d="M71,76h -14" fill="none" stroke="black"/>
+<path d="M64,458h -6.8" fill="none" stroke="black"/>
+<path d="M64,467h -6.8" fill="none" stroke="black"/>
+<path d="M64,477h -6.8" fill="none" stroke="black"/>
+<path d="M64,486h -6.8" fill="none" stroke="black"/>
+<path d="M64,67h -6.8" fill="none" stroke="black"/>
+<path d="M64,57h -6.8" fill="none" stroke="black"/>
+<text xml:space="preserve" x="26" y="457" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">0.2
+</text>
+<text xml:space="preserve" x="26" y="410" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">0.3
+</text>
+<text xml:space="preserve" x="26" y="363" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">0.4
+</text>
+<text xml:space="preserve" x="26" y="317" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">0.5
+</text>
+<text xml:space="preserve" x="26" y="270" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">0.6
+</text>
+<text xml:space="preserve" x="26" y="224" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">0.7
+</text>
+<text xml:space="preserve" x="26" y="177" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">0.8
+</text>
+<text xml:space="preserve" x="26" y="130" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">0.9
+</text>
+<text xml:space="preserve" x="47" y="84" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">1
+</text>
+<g transform="rotate(-90,535,429)">
+<text xml:space="preserve" x="535" y="429" fill="black" font-size="21" font-family="Helvetica" font-weight="bold">Y axis title on the right side of the plot
+</text>
+</g>
+<path d="M69,495l 4.4, -18" fill="none" stroke="#ff0000" stroke-width="3.0"/>
+<path d="M73,477l 4.5, -18l 4.5, -18l 4.5, -18l 4.5, -18l 4.5, -18l 4.5, -17l 4.5, -17l 4.5, -17l 4.5, -17l 4.5, -16l 4.5, -16l 4.5, -15l 4.5, -15l 4.5, -14l 4.5, -14l 4.5, -14l 4.5, -13l 4.5, -12l 4.5, -12l 4.5, -11l 4.5, -11l 4.5, -10l 4.5, -9.4l
+ 4.5, -8.8l 4.5, -8.1l 4.5, -7.4l 4.5, -6.8l 4.5, -6.1l 4.5, -5.3l 4.5, -4.6l 4.5, -3.9l 4.5, -3.2l 4.5, -2.4l 4.5, -1.7l 4.5, -0.946l 4.5, -0.201l 4.5, 0.544l 4.5, 1.3l 4.5, 2.0l 4.5, 2.8l 4.5, 3.5l 4.5, 4.2l 4.5, 5.0l 4.5, 5.7l 4.5, 6.4l 4.5, 7.1l
+ 4.5, 7.8l 4.5, 8.4" fill="none" stroke="#ff0000" stroke-width="3.0"/>
+<path d="M291,131l 4.5, 9.1l 4.5, 9.7l 4.5, 10l 4.5, 11l 4.5, 12l 4.5, 12l 4.5, 13l 4.5, 13l 4.5, 14l 4.5, 14l 4.5, 15l 4.5, 15l 4.5, 16l 4.5, 16l 4.5, 16l 4.5, 17l 4.5, 17l 4.5, 17l 4.5, 18l 4.5, 18l 4.5, 18l 4.5, 18l 4.5, 18l 4.5, 18l 2.3, 9.5"
+ fill="none" stroke="#ff0000" stroke-width="3.0"/>
+<path d="M65,495l 3.7, -23" fill="none" stroke="#00ff00" stroke-width="3.0"/>
+<path d="M69,472l 4.5, -28l 4.5, -27l 4.5, -27l 4.5, -26l 4.5, -26l 4.5, -25l 4.5, -24l 4.5, -23l 4.5, -22l 4.5, -21l 4.5, -20l 4.5, -19l 4.5, -17l 4.5, -16l 4.5, -15l 4.5, -13l 4.5, -12l 4.5, -10l 4.5, -8.5l 4.5, -6.9l 4.5, -5.3l 4.5, -3.6l 4.5,
+ -2.0l 4.5, -0.302l 4.5, 1.4l 4.5, 3.0l 4.5, 4.7l 4.5, 6.4l 4.5, 8.0l 4.5, 9.6l 4.5, 11l 4.5, 13l 4.5, 14l 4.5, 16l 4.5, 17l 4.5, 18l 4.5, 19l 4.5, 21l 4.5, 22l 4.5, 23l 4.5, 24l 4.5, 25l 4.5, 25l 4.5, 26l 4.5, 27l 4.5, 27l 4.5, 27l 4.5, 28"
+ fill="none" stroke="#00ff00" stroke-width="3.0"/>
+<path d="M63,495l 1.1, -8.7" fill="none" stroke="#0000ff" stroke-width="3.0"/>
+<path d="M64,486l 4.5, -37l 4.5, -36l 4.5, -35l 4.5, -34l 4.5, -33l 4.5, -32l 4.5, -30l 4.5, -28l 4.5, -26l 4.5, -24l 4.5, -21l 4.5, -19l 4.5, -16l 4.5, -14l 4.5, -11l 4.5, -7.8l 4.5, -4.9l 4.5, -1.9l 4.5, 1.1l 4.5, 4.1l 4.5, 7.0l 4.5, 9.9l 4.5, 13l
+ 4.5, 16l 4.5, 18l 4.5, 21l 4.5, 23l 4.5, 25l 4.5, 27l 4.5, 29l 4.5, 31l 4.5, 33l 4.5, 34l 4.5, 35l 4.5, 36l 4.5, 37l 2.3, 19" fill="none" stroke="#0000ff" stroke-width="3.0"/>
+<path d="M419,495l 3.2, -26" fill="none" stroke="#0000ff" stroke-width="3.0"/>
+<path d="M422,469l 4.5, -37l 4.5, -36l 4.5, -35l 4.5, -34l 4.5, -32l 4.5, -31l 4.5, -29l 4.5, -27l 4.5, -25l 4.5, -23l 4.5, -20l 4.5, -18l 4.5, -15l 4.5, -12l 4.5, -9.4l 4.5, -6.5l 4.5, -3.5l 4.5, -0.521l 4.5, 2.5" fill="none" stroke="#0000ff"
+ stroke-width="3.0"/>
+<path d="M62,495l 2.2, -23" fill="none" stroke="#ffff00" stroke-width="3.0"/>
+<path d="M64,472l 4.5, -46l 4.5, -44l 4.5, -43l 4.5, -41l 4.5, -38l 4.5, -36l 4.5, -32l 4.5, -29l 4.5, -25l 4.5, -21l 4.5, -17l 4.5, -12l 4.5, -7.9l 4.5, -3.3l 4.5, 1.4l 4.5, 6.0l 4.5, 11l 4.5, 15l 4.5, 19l 4.5, 24l 4.5, 27l 4.5, 31l 4.5, 34l 4.5,
+ 37l 4.5, 40l 4.5, 42l 4.5, 44l 4.5, 45l 4.1, 42" fill="none" stroke="#ffff00" stroke-width="3.0"/>
+<path d="M347,495l 3.0, -30" fill="none" stroke="#ffff00" stroke-width="3.0"/>
+<path d="M350,465l 4.5, -45l 4.5, -44l 4.5, -43l 4.5, -40l 4.5, -38l 4.5, -35l 4.5, -32l 4.5, -28l 4.5, -25l 4.5, -20l 4.5, -16l 4.5, -12l 4.5, -7.1l 4.5, -2.5l 4.5, 2.1l 4.5, 6.8l 4.5, 11l 4.5, 16l 4.5, 20l 4.5, 24l 4.5, 28l 4.5, 32l 4.5, 35l 4.5,
+ 38l 4.5, 40l 4.5, 42l 4.5, 44l 4.5, 45l 3.3, 34" fill="none" stroke="#ffff00" stroke-width="3.0"/>
+<path d="M61,495l 3.0, -36" fill="none" stroke="#ff00ff" stroke-width="3.0"/>
+<path d="M64,458l 4.5, -54l 4.5, -52l 4.5, -50l 4.5, -46l 4.5, -42l 4.5, -37l 4.5, -32l 4.5, -26l 4.5, -20l 4.5, -14l 4.5, -7.3l 4.5, -0.603l 4.5, 6.1l 4.5, 13l 4.5, 19l 4.5, 25l 4.5, 31l 4.5, 36l 4.5, 41l 4.5, 45l 4.5, 49l 4.5, 52l 4.5, 54l 3.8, 46"
+ fill="none" stroke="#ff00ff" stroke-width="3.0"/>
+<path d="M298,495l 1.3, -17" fill="none" stroke="#ff00ff" stroke-width="3.0"/>
+<path d="M300,478l 4.5, -55l 4.5, -53l 4.5, -51l 4.5, -47l 4.5, -44l 4.5, -39l 4.5, -34l 4.5, -28l 4.5, -22l 4.5, -16l 4.5, -9.7l 4.5, -3.0l 4.5, 3.7l 4.5, 10l 4.5, 17l 4.5, 23l 4.5, 29l 4.5, 35l 4.5, 40l 4.5, 44l 4.5, 48l 4.5, 51l 4.5, 53l 4.5, 55l
+ 0.890, 11" fill="none" stroke="#ff00ff" stroke-width="3.0"/>
+<rect x="6.2" y="2.7" width="397" height="30" fill="#f2f2f2"/>
+<path d="M4.7,4.9v 29h 396v -1.4h -395v -28z" fill="black"/>
+<path d="M6.2,33v -30h 397v 30h -397z" fill="none" stroke="black"/>
+<text xml:space="preserve" x="19" y="22" fill="black" font-size="13" font-family="Helvetica" font-weight="bold">Zoom/UnZoom a collection of TF1 and change axis attributes
+</text></svg>

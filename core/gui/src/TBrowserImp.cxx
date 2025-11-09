@@ -18,7 +18,6 @@ ABC describing GUI independent browser implementation protocol.
 #include "TBrowserImp.h"
 #include "TBrowser.h"
 
-ClassImp(TBrowserImp);
 
 ///////////////////////////////////////////////////////////////////
 /// Default constructor

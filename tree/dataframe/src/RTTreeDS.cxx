@@ -506,15 +506,32 @@ ROOT::Internal::RDF::RTTreeDS::CreateColumnReader(unsigned int /*slot*/, std::st
    if (!treeReader)
       return nullptr;
 
-   if (ti == typeid(void))
-      return std::make_unique<ROOT::Internal::RDF::RTreeOpaqueColumnReader>(*treeReader, col);
+   std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase> colReader;
 
-   const auto typeName = ROOT::Internal::RDF::TypeID2TypeName(ti);
-   if (auto &&[toConvert, innerTypeName, collType] = GetCollectionInfo(typeName); toConvert)
-      return std::make_unique<ROOT::Internal::RDF::RTreeUntypedArrayColumnReader>(*treeReader, col, innerTypeName,
-                                                                                  collType);
-   else
-      return std::make_unique<ROOT::Internal::RDF::RTreeUntypedValueColumnReader>(*treeReader, col, typeName);
+   if (ti == typeid(void)) {
+      colReader = std::make_unique<ROOT::Internal::RDF::RTreeOpaqueColumnReader>(*treeReader, col);
+   } else {
+      const auto typeName = ROOT::Internal::RDF::TypeID2TypeName(ti);
+      if (auto &&[toConvert, innerTypeName, collType] = GetCollectionInfo(typeName); toConvert)
+         colReader = std::make_unique<ROOT::Internal::RDF::RTreeUntypedArrayColumnReader>(*treeReader, col,
+                                                                                          innerTypeName, collType);
+      else
+         colReader = std::make_unique<ROOT::Internal::RDF::RTreeUntypedValueColumnReader>(*treeReader, col, typeName);
+   }
+
+   if (TDirectory *treeDir = treeReader->GetTree()->GetDirectory(); treeDir) {
+      using Map_t = std::unordered_map<std::string, std::pair<std::string, unsigned int>>;
+      const std::string bitmaskMapName =
+         std::string{"R_rdf_branchToBitmaskMapping_"} + treeReader->GetTree()->GetName();
+      if (Map_t const *columnMaskMap = treeDir->Get<Map_t>(bitmaskMapName.c_str()); columnMaskMap) {
+         if (auto it = columnMaskMap->find(std::string(col)); it != columnMaskMap->end()) {
+            colReader = std::make_unique<RMaskedColumnReader>(*treeReader, std::move(colReader), it->second.first,
+                                                              it->second.second);
+         }
+      }
+   }
+
+   return colReader;
 }
 
 bool ROOT::Internal::RDF::RTTreeDS::SetEntry(unsigned int, ULong64_t entry)
@@ -615,15 +632,14 @@ void ROOT::Internal::RDF::RTTreeDS::Finalize()
 
 void ROOT::Internal::RDF::RTTreeDS::Initialize()
 {
-   if (fNSlots == 1) {
-      assert(!fTreeReader);
-      fTreeReader = std::make_unique<TTreeReader>(fTree.get(), fTree->GetEntryList(), /*warnAboutLongerFriends*/ true);
-      if (fGlobalEntryRange.has_value() && fGlobalEntryRange->first <= std::numeric_limits<Long64_t>::max() &&
-          fGlobalEntryRange->second <= std::numeric_limits<Long64_t>::max() && fTreeReader &&
-          fTreeReader->SetEntriesRange(fGlobalEntryRange->first, fGlobalEntryRange->second) !=
-             TTreeReader::kEntryValid) {
-         throw std::logic_error("Something went wrong in initializing the TTreeReader.");
-      }
+   if (ROOT::IsImplicitMTEnabled())
+      return;
+   assert(!fTreeReader);
+   fTreeReader = std::make_unique<TTreeReader>(fTree.get(), fTree->GetEntryList(), /*warnAboutLongerFriends*/ true);
+   if (fGlobalEntryRange.has_value() && fGlobalEntryRange->first <= std::numeric_limits<Long64_t>::max() &&
+       fGlobalEntryRange->second <= std::numeric_limits<Long64_t>::max() && fTreeReader &&
+       fTreeReader->SetEntriesRange(fGlobalEntryRange->first, fGlobalEntryRange->second) != TTreeReader::kEntryValid) {
+      throw std::logic_error("Something went wrong in initializing the TTreeReader.");
    }
 }
 

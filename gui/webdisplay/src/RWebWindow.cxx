@@ -25,7 +25,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <utility>
-#include <assert.h>
+#include <cassert>
 #include <algorithm>
 #include <fstream>
 
@@ -643,15 +643,20 @@ void RWebWindow::CheckPendingConnections()
 
    timestamp_t stamp = std::chrono::system_clock::now();
 
-   float tmout = fMgr->GetLaunchTmout();
+   float launchTmout = fMgr->GetLaunchTmout();
+   float reconnectTmout = fMgr->GetReconnectTmout();
 
    ConnectionsList_t selected;
+
+   bool doClearOnClose = false;
 
    {
       std::lock_guard<std::mutex> grd(fConnMutex);
 
       auto pred = [&](std::shared_ptr<WebConn> &e) {
          std::chrono::duration<double> diff = stamp - e->fSendStamp;
+
+         float tmout = e->fWasEstablished ? reconnectTmout : launchTmout;
 
          if (diff.count() > tmout) {
             R__LOG_DEBUG(0, WebGUILog()) << "Remove pending connection " << e->fKey << " after " << diff.count() << " sec";
@@ -663,7 +668,12 @@ void RWebWindow::CheckPendingConnections()
       };
 
       fPendingConn.erase(std::remove_if(fPendingConn.begin(), fPendingConn.end(), pred), fPendingConn.end());
+
+      doClearOnClose = (selected.size() > 0) && (fPendingConn.size() == 0) && (fConn.size() == 0);
    }
+
+   if (doClearOnClose)
+      fClearOnClose.reset();
 }
 
 
@@ -855,6 +865,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       if (conn) {
          conn->fWSId = arg.GetWSId();
          conn->fActive = true;
+         conn->fWasEstablished = true;
          conn->fRecvSeq = 0;
          conn->fSendSeq = 1;
          // preserve key for longpoll or when with session key used for HMAC hash of messages
@@ -902,23 +913,24 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       auto conn = RemoveConnection(arg.GetWSId(), true);
 
       if (conn) {
-         bool do_clear_on_close = false;
-         if (!conn->fNewKey.empty()) {
+         bool doClearOnClose = false;
+         if (!conn->fNewKey.empty() && (fMgr->GetReconnectTmout() > 0)) {
             // case when same handle want to be reused by client with new key
             std::lock_guard<std::mutex> grd(fConnMutex);
             conn->fKeyUsed = 0;
             conn->fKey = conn->fNewKey;
             conn->fNewKey.clear();
             conn->fConnId = ++fConnCnt; // change connection id to avoid confusion
+            conn->fWasEstablished = true;
             conn->ResetData();
             conn->ResetStamps(); // reset stamps, after timeout connection wll be removed
             fPendingConn.emplace_back(conn);
          } else {
             std::lock_guard<std::mutex> grd(fConnMutex);
-            do_clear_on_close = (fPendingConn.size() == 0) && (fConn.size() == 0);
+            doClearOnClose = (fPendingConn.size() == 0) && (fConn.size() == 0);
          }
 
-         if (do_clear_on_close)
+         if (doClearOnClose)
             fClearOnClose.reset();
       }
 

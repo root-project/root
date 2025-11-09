@@ -274,7 +274,7 @@ static PyObject* op_destruct(CPPInstance* self)
 }
 
 //= CPyCppyy object dispatch support =========================================
-static PyObject* op_dispatch(PyObject* self, PyObject* args, PyObject* /* kdws */)
+static PyObject* op_dispatch(PyObject* self, PyObject* args, PyObject* /* kwds */)
 {
 // User-side __dispatch__ method to allow selection of a specific overloaded
 // method. The actual selection is in the __overload__() method of CPPOverload.
@@ -573,8 +573,17 @@ static PyObject* op_richcompare(CPPInstance* self, PyObject* other, int op)
     if (op == Py_EQ || op == Py_NE) {
     // special case for None to compare True to a null-pointer
         if ((PyObject*)other == Py_None && !self->fObject) {
-            if (op == Py_EQ) { Py_RETURN_TRUE; }
-            Py_RETURN_FALSE;
+            const char *msg =
+                "\nComparison of C++ nullptr objects with `None` is no longer supported."
+                "\n\nPreviously, `None` was treated as equivalent to a null C++ pointer, "
+                "but this led to confusing behavior where `x == None` could be True even though `x is None` was False."
+                "\n\nTo test whether a C++ object is null or not, check its truth value instead:"
+                "\n    if not x: ..."
+                "\nor use `x is None` to explicitly check for Python None."
+                "\n";
+
+            PyErr_SetString(PyExc_TypeError, msg);
+            return NULL;  // stop execution, raise TypeError
         }
 
     // use C++-side operators if available

@@ -112,6 +112,7 @@ struct NodeInfo {
    bool isCategory = false;
    bool hasLogged = false;
    bool computeInGPU = false;
+   bool isValueServer = false; // if this node is a value server to the top node
    std::size_t outputSize = 1;
    std::size_t lastSetValCount = std::numeric_limits<std::size_t>::max();
    int lastCatVal = std::numeric_limits<int>::max();
@@ -204,6 +205,16 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
             info.serverInfos.emplace_back(serverInfo);
             serverInfo->clientInfos.emplace_back(&info);
          }
+      }
+   }
+
+   // Figure out which nodes are value servers to the top node
+   _nodes.back().isValueServer = true; // the top node itself
+   for (auto iter = _nodes.rbegin(); iter != _nodes.rend(); ++iter) {
+      if (!iter->isValueServer)
+         continue;
+      for (auto &serverInfo : iter->serverInfos) {
+         serverInfo->isValueServer = true;
       }
    }
 
@@ -687,7 +698,7 @@ RooArgSet Evaluator::getParameters() const
 {
    RooArgSet parameters;
    for (auto &nodeInfo : _nodes) {
-      if (nodeInfo.absArg->isFundamental()) {
+      if (nodeInfo.isValueServer && nodeInfo.absArg->isFundamental()) {
          parameters.add(*nodeInfo.absArg);
       }
    }

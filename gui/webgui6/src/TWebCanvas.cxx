@@ -36,7 +36,6 @@
 #include "TF2.h"
 #include "TH1.h"
 #include "TH2.h"
-#include "TH1K.h"
 #include "THStack.h"
 #include "TMultiGraph.h"
 #include "TEnv.h"
@@ -313,7 +312,8 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
       const char *name{nullptr};
       bool with_derived{false};
       bool reduse_by_many{false};
-   } supported_classes[] = {{"TH1", true},
+   } supported_classes[] = {{"ROOT::Experimental::RTreeMapPainter"},
+                            {"TH1", true},
                             {"TF1", true},
                             {"TGraph", true},
                             {"TScatter"},
@@ -331,6 +331,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
                             {"TWbox"}, // some extra calls which cannot be handled via TWebPainter
                             {"TLine", false, true}, // can be handler via TWebPainter, disable for large number of primitives (like in greyscale.C)
                             {"TEllipse", true, true},  // can be handled via TWebPainter, disable for large number of primitives (like in greyscale.C)
+                            {"TPie"},
                             {"TText"},
                             {"TLatex"},
                             {"TLink"},
@@ -935,27 +936,6 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          CreatePadSnapshot(paddata.NewSubPad(), (TPad *)obj, version, nullptr);
       } else if (!process_primitives) {
          continue;
-      } else if (obj->InheritsFrom(TH1K::Class())) {
-         flush_master();
-         TH1K *hist = static_cast<TH1K *>(obj);
-
-         Int_t nbins = hist->GetXaxis()->GetNbins();
-
-         TH1D *h1 = new TH1D("__dummy_name__", hist->GetTitle(), nbins, hist->GetXaxis()->GetXmin(), hist->GetXaxis()->GetXmax());
-         h1->SetDirectory(nullptr);
-         h1->SetName(hist->GetName());
-         hist->TAttLine::Copy(*h1);
-         hist->TAttFill::Copy(*h1);
-         hist->TAttMarker::Copy(*h1);
-         for (Int_t n = 1; n <= nbins; ++n)
-             h1->SetBinContent(n, hist->GetBinContent(n));
-
-         TIter fiter(hist->GetListOfFunctions());
-         while (auto fobj = fiter())
-            h1->GetListOfFunctions()->Add(fobj->Clone());
-
-         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, h1, kTRUE);
-
       } else if (obj->InheritsFrom(TH1::Class())) {
          flush_master();
 
@@ -3022,3 +3002,4 @@ TCanvas *TWebCanvas::CreateWebCanvas(const char *name, const char *title, UInt_t
 
    return canvas;
 }
+

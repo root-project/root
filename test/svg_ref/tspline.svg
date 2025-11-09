@@ -1,0 +1,223 @@
+<?xml version="1.0" standalone="no"?>
+<svg width="567" height="408" viewBox="0 0 567 408" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+<title>
+tspline.svg
+</title>
+<rect x="0.500" y="0" width="567" height="407" fill="#f2f2f2"/>
+<path d="M0.500,407l 2.0, -2.0v -403h 563l 2.0, -2.0h -567v 407z" fill="white"/>
+<path d="M0.500,407l 2.0, -2.0h 563v -403l 2.0, -2.0v 407h -567z" fill="#a9a9a9"/>
+<rect x="57" y="41" width="454" height="326" fill="#f2f2f2"/>
+<path d="M57,367l 1.000, -1.000v -324h 452l 1.000, -1.000h -454v 326z" fill="white"/>
+<path d="M57,367l 1.000, -1.000h 452v -324l 1.000, -1.000v 326h -454z" fill="#a9a9a9"/>
+<rect x="57" y="41" width="454" height="326" fill="none" stroke="black"/>
+<path d="M59,177l 2.4, 1.6l 2.1, 2.0l 2.6, 3.5l 1.9, 2.9l 4.5, 7.1l 3.9, 5.3l 0.639, 0.702l 2.3, 2.1l 2.2, 1.3l 2.1, 0.408l 2.4, -0.450l 2.3, -1.4l 2.2, -2.1l 2.3, -2.8l 2.3, -3.3l 4.5, -7.1l 3.8, -5.4l 0.776, -0.903l 2.9, -2.7l 1.6, -0.837l 1.8,
+ -0.219l 1.8, 0.496l 0.938, 0.601l 1.8, 1.8l 1.8, 2.6l 0.982, 1.8l 1.8, 4.1l 2.1, 5.5l 0.644, 1.9l 1.9, 6.3l 2.6, 9.6l 4.5, 18l 4.5, 18l 2.7, 9.4l 1.6, 4.8l 0.273, 0.740l 1.9, 4.7l 1.4, 2.7l 1.2, 1.7l 1.5, 1.3l 1.3, 0.386l 1.3, -0.387l 0.351, -0.244l
+ 1.5, -1.7l 1.3, -2.3l 1.4, -3.3l 0.298, -0.818l 1.3, -4.2l 1.4, -5.4l 1.8, -7.8l 1.4, -7.0l 1.8, -10l 1.3, -7.9l 1.7, -11l 2.8, -19l 3.7, -26l 0.792, -5.4l 2.8, -18l 1.4, -8.7l 0.320, -1.8l 1.9, -10l 1.2, -5.8l 1.2, -5.0l 0.200, -0.752l 1.5, -5.0l
+ 1.2, -3.2l 1.1, -2.3l 0.809, -1.2l 1.2, -1.0l 1.2, -0.144l 1.1, 0.643l 1.1, 1.4l 1.1, 2.3l 1.2, 3.4l 1.2, 4.2l 1.0, 4.2l 1.1, 5.5l 1.3, 7.5l 1.5, 9.3l 0.611, 4.1l 1.2, 9.1l 1.4, 11l 1.9, 16l 1.5, 13l 3.0, 28l 4.5, 42l 2.4, 21l 1.2, 9.8l 0.883, 6.5l
+ 1.5, 10l 1.1, 7.0l 1.0, 5.8l 0.910, 4.4l 1.2, 5.0l 1.1, 3.9l 0.971, 2.6l 1.0, 1.9l 0.221, 0.299l 1.1, 0.898l 1.2, 0.00404909l 0.994, -0.819l 1.0, -1.7l 0.277, -0.590l 0.998, -2.7l 1.0, -3.7l 1.1, -4.7l 1.2, -6.0l 0.221, -1.2l 1.0, -6.2l 1.3, -8.9l
+ 1.4, -11l 0.837, -6.9l 1.2, -10l 1.4, -13l 2.0, -20l 1.4, -15l 3.1, -34l 3.4, -37l 1.1, -12l 2.1, -20l 1.3, -12l 1.2, -9.7l 1.4, -11l 1.1, -7.6l 0.955, -6.0l 1.1, -5.8l 1.1, -5.1l 1.1, -4.2l 0.928, -2.7l 0.952, -2.0l 0.401, -0.589l 0.989, -0.834l
+ 0.998, 0.010l 0.980, 0.829l 1.0, 1.7l 0.566, 1.3l 0.950, 2.9l 1.0, 3.9l 1.1, 5.1l 1.2, 6.5l 0.336, 2.0l 1.1, 7.1l 1.2, 8.7l 1.0, 8.3l 1.1, 9.6l 0.198, 1.9" fill="none" stroke="black" stroke-width="3.0"/>
+<path d="M282,115l 1.9, 18l 1.9, 20l 0.753, 8.1l 4.5, 52l 3.7, 41l 0.866, 9.1l 2.0, 20l 1.3, 12l 1.1, 9.2l 0.174, 1.4l 1.4, 11l 1.1, 7.6l 0.944, 6.0l 1.1, 5.9l 1.1, 5.0l 1.1, 4.2l 0.931, 2.7l 0.955, 2.0l 0.417, 0.584l 0.979, 0.747l 0.996, -0.099l
+ 0.990, -0.929l 1.0, -1.8l 0.552, -1.3l 1.1, -3.4l 1.0, -4.2l 1.1, -5.4l 1.3, -7.6l 1.0, -6.7l 1.1, -8.3l 1.4, -12l 0.971, -8.4l 1.2, -11l 1.3, -13l 2.0, -21l 1.5, -16l 3.1, -34l 3.0, -32l 1.3, -14l 0.228, -2.2l 1.9, -18l 1.3, -12l 1.1, -8.8l 0.246,
+ -1.9l 1.4, -10l 1.1, -7.0l 0.980, -5.6l 1.0, -5.0l 1.1, -4.6l 1.1, -3.7l 0.970, -2.4l 1.0, -1.7l 0.292, -0.326l 1.0, -0.578l 1.2, 0.372l 1.0, 1.2l 1.1, 2.1l 0.203, 0.484l 1.0, 2.9l 1.1, 4.0l 1.2, 5.4l 1.3, 6.5l 1.1, 6.5l 1.2, 8.3l 1.7, 13l 0.515,
+ 4.0l 1.3, 11l 2.0, 18l 1.2, 11l 4.5, 42l 3.3, 30l 1.2, 10l 2.0, 16l 1.2, 8.6l 1.2, 7.7l 0.183, 1.1l 1.5, 8.4l 1.1, 5.8l 1.1, 4.9l 0.832, 3.1l 1.2, 3.7l 1.2, 2.8l 1.1, 1.8l 1.1, 1.0l 1.1, 0.258l 1.2, -0.660l 1.2, -1.5l 0.991, -1.9l 1.1, -2.9l 1.3,
+ -4.4l 1.5, -5.9l 0.588, -2.6l 1.3, -6.1l 1.7, -9.3l 1.6, -9.4l 1.6, -10l 2.9, -20l 4.1, -29l 0.434, -2.9l 2.8, -18l 1.5, -9.3l 0.251, -1.4l 1.9, -10l 1.4, -6.7l 1.3, -5.5l 1.5, -5.7l 1.3, -4.1l 1.3, -3.5l 0.380, -0.830l 1.5, -2.6l 1.3, -1.5l 1.4,
+ -0.701l 0.281, -0.038l 1.3, 0.336l 1.5, 1.3l 1.7, 2.5l 1.4, 2.9l 1.9, 4.9l 1.2, 3.6l 1.8, 6.2l 2.7, 10l 4.5, 18l 3.9, 16l 0.593, 2.1l 2.7, 9.1l 1.8, 5.4l 1.8, 4.4l 1.8, 3.6l 0.986, 1.7l 1.8, 2.3l 1.8, 1.5l 0.927, 0.449l 1.9, 0.210l 2.2, -0.761l
+ 0.491, -0.284l 2.3, -2.0l 2.2, -2.7l 2.8, -4.1l 1.8, -2.8l 4.5, -7.0l 3.1, -3.9l 1.4, -1.4l 2.2, -1.5l 2.3, -0.777l 2.2, 0.164l 2.4, 1.1l 2.2, 1.8l 2.3, 2.7" fill="none" stroke="black" stroke-width="3.0"/>
+<path d="M504,210l 4.5, 6.6" fill="none" stroke="black" stroke-width="3.0"/>
+<path d="M59,177l 4.5, 3.6l 4.5, 6.3l 4.5, 7.1l 4.5, 6.0l 4.5, 3.4l 4.5, -0.041l 4.5, -3.5l 4.5, -6.1l 4.5, -7.1l 4.5, -6.3l 4.5, -3.5l 4.5, 0.878l 4.5, 6.2l 4.5, 12l 4.5, 16l 4.5, 18l 4.5, 18l 4.5, 15l 4.5, 9.1l 4.5, 1.1l 4.5, -8.2l 4.5, -17l 4.5,
+ -25l 4.5, -30l 4.5, -32l 4.5, -29l 4.5, -22l 4.5, -12l 4.5, 0.864l 4.5, 14l 4.5, 26l 4.5, 36l 4.5, 42l 4.5, 42l 4.5, 37l 4.5, 27l 4.5, 14l 4.5, -2.2l 4.5, -18l 4.5, -33l 4.5, -43l 4.5, -49l 4.5, -48l 4.5, -42l 4.5, -30l 4.5, -15l 4.5, 3.0l 4.5, 20l
+ 4.5, 36" fill="none" stroke="black" stroke-width="3.0"/>
+<path d="M282,115l 4.5, 46l 4.5, 52l 4.5, 50l 4.5, 43l 4.5, 31l 4.5, 14l 4.5, -3.4l 4.5, -21l 4.5, -35l 4.5, -45l 4.5, -49l 4.5, -48l 4.5, -40l 4.5, -28l 4.5, -13l 4.5, 3.6l 4.5, 19l 4.5, 31l 4.5, 39l 4.5, 42l 4.5, 40l 4.5, 33l 4.5, 22l 4.5, 9.4l
+ 4.5, -3.8l 4.5, -16l 4.5, -25l 4.5, -30l 4.5, -31l 4.5, -29l 4.5, -23l 4.5, -14l 4.5, -4.8l 4.5, 4.1l 4.5, 11l 4.5, 16l 4.5, 18l 4.5, 18l 4.5, 14l 4.5, 9.7l 4.5, 4.2l 4.5, -0.836l 4.5, -4.7l 4.5, -6.8l 4.5, -7.0l 4.5, -5.3l 4.5, -2.3l 4.5, 1.2l 4.5,
+ 4.5" fill="none" stroke="black" stroke-width="3.0"/>
+<path d="M504,210l 4.5, 6.6" fill="none" stroke="black" stroke-width="3.0"/>
+<path d="M57,367h 454" fill="none" stroke="black"/>
+<path d="M84,357v 9.8" fill="none" stroke="black"/>
+<path d="M97,362v 4.9" fill="none" stroke="black"/>
+<path d="M111,362v 4.9" fill="none" stroke="black"/>
+<path d="M124,362v 4.9" fill="none" stroke="black"/>
+<path d="M137,362v 4.9" fill="none" stroke="black"/>
+<path d="M150,357v 9.8" fill="none" stroke="black"/>
+<path d="M163,362v 4.9" fill="none" stroke="black"/>
+<path d="M176,362v 4.9" fill="none" stroke="black"/>
+<path d="M189,362v 4.9" fill="none" stroke="black"/>
+<path d="M202,362v 4.9" fill="none" stroke="black"/>
+<path d="M215,357v 9.8" fill="none" stroke="black"/>
+<path d="M228,362v 4.9" fill="none" stroke="black"/>
+<path d="M241,362v 4.9" fill="none" stroke="black"/>
+<path d="M255,362v 4.9" fill="none" stroke="black"/>
+<path d="M268,362v 4.9" fill="none" stroke="black"/>
+<path d="M281,357v 9.8" fill="none" stroke="black"/>
+<path d="M294,362v 4.9" fill="none" stroke="black"/>
+<path d="M307,362v 4.9" fill="none" stroke="black"/>
+<path d="M320,362v 4.9" fill="none" stroke="black"/>
+<path d="M333,362v 4.9" fill="none" stroke="black"/>
+<path d="M346,357v 9.8" fill="none" stroke="black"/>
+<path d="M359,362v 4.9" fill="none" stroke="black"/>
+<path d="M372,362v 4.9" fill="none" stroke="black"/>
+<path d="M385,362v 4.9" fill="none" stroke="black"/>
+<path d="M398,362v 4.9" fill="none" stroke="black"/>
+<path d="M412,357v 9.8" fill="none" stroke="black"/>
+<path d="M425,362v 4.9" fill="none" stroke="black"/>
+<path d="M438,362v 4.9" fill="none" stroke="black"/>
+<path d="M451,362v 4.9" fill="none" stroke="black"/>
+<path d="M464,362v 4.9" fill="none" stroke="black"/>
+<path d="M477,357v 9.8" fill="none" stroke="black"/>
+<path d="M71,362v 4.9" fill="none" stroke="black"/>
+<path d="M58,362v 4.9" fill="none" stroke="black"/>
+<path d="M490,362v 4.9" fill="none" stroke="black"/>
+<path d="M503,362v 4.9" fill="none" stroke="black"/>
+<text xml:space="preserve" x="80" y="382" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">0
+</text>
+<text xml:space="preserve" x="146" y="382" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">5
+</text>
+<text xml:space="preserve" x="207" y="382" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">10
+</text>
+<text xml:space="preserve" x="273" y="382" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">15
+</text>
+<text xml:space="preserve" x="338" y="382" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">20
+</text>
+<text xml:space="preserve" x="403" y="382" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">25
+</text>
+<text xml:space="preserve" x="469" y="382" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">30
+</text>
+<path d="M57,367v -326" fill="none" stroke="black"/>
+<path d="M71,355h -14" fill="none" stroke="black"/>
+<path d="M64,340h -6.8" fill="none" stroke="black"/>
+<path d="M64,324h -6.8" fill="none" stroke="black"/>
+<path d="M64,309h -6.8" fill="none" stroke="black"/>
+<path d="M64,294h -6.8" fill="none" stroke="black"/>
+<path d="M71,279h -14" fill="none" stroke="black"/>
+<path d="M64,264h -6.8" fill="none" stroke="black"/>
+<path d="M64,249h -6.8" fill="none" stroke="black"/>
+<path d="M64,234h -6.8" fill="none" stroke="black"/>
+<path d="M64,219h -6.8" fill="none" stroke="black"/>
+<path d="M71,204h -14" fill="none" stroke="black"/>
+<path d="M64,189h -6.8" fill="none" stroke="black"/>
+<path d="M64,174h -6.8" fill="none" stroke="black"/>
+<path d="M64,159h -6.8" fill="none" stroke="black"/>
+<path d="M64,144h -6.8" fill="none" stroke="black"/>
+<path d="M71,129h -14" fill="none" stroke="black"/>
+<path d="M64,114h -6.8" fill="none" stroke="black"/>
+<path d="M64,99h -6.8" fill="none" stroke="black"/>
+<path d="M64,84h -6.8" fill="none" stroke="black"/>
+<path d="M64,68h -6.8" fill="none" stroke="black"/>
+<path d="M71,53h -14" fill="none" stroke="black"/>
+<text xml:space="preserve" x="49" y="361" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">1
+</text>
+<text xml:space="preserve" x="41" y="361" fill="black" font-size="15" font-family="Times">&#8722;
+</text>
+<text xml:space="preserve" x="34" y="285" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">0.5
+</text>
+<text xml:space="preserve" x="26" y="285" fill="black" font-size="15" font-family="Times">&#8722;
+</text>
+<text xml:space="preserve" x="47" y="210" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">0
+</text>
+<text xml:space="preserve" x="34" y="135" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">0.5
+</text>
+<text xml:space="preserve" x="49" y="59" fill="black" font-size="15" font-family="Helvetica" font-weight="bold">1
+</text>
+<rect x="6.2" y="2.0" width="147" height="23" fill="#f2f2f2"/>
+<path d="M4.7,4.2v 22h 147v -1.4h -145v -21z" fill="black"/>
+<path d="M6.2,25v -23h 147v 23h -147z" fill="none" stroke="black"/>
+<text xml:space="preserve" x="14" y="19" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">sin(x)*sin(x/10)
+</text>
+<path d="M80,202l 2.0, 1.2l 2.1, 0.383l 2.1, -0.463l 2.0, -1.2l 2.4, -2.3l 1.7, -2.1l 3.4, -5.1l 0.721, -1.2l 4.1, -6.8l 3.5, -5.0l 0.666, -0.777l 2.6, -2.5l 1.5, -0.800l 1.8, -0.281l 1.8, 0.452l 0.588, 0.346l 1.7, 1.5l 1.8, 2.4l 0.676, 1.2l 1.7,
+ 3.6l 1.9, 4.9l 0.443, 1.2l 2.1, 6.5l 2.1, 7.3l 2.5, 9.9l 1.6, 6.5l 4.1, 17l 3.3, 13l 0.811, 2.8l 2.3, 7.3l 1.5, 4.0l 0.246, 0.561l 1.5, 3.1l 1.4, 2.2l 1.2, 1.2l 1.5, 0.684l 1.4, -0.126l 1.3, -0.864l 1.5, -1.9l 1.4, -2.6l 1.3, -3.1l 1.5, -4.5l 1.5,
+ -5.6l 1.1, -4.5l 1.6, -7.4l 1.9, -9.6l 0.663, -3.6l 1.7, -9.9l 2.4, -15l 2.5, -17l 1.6, -11l 3.4, -23l 0.708, -4.5l 2.4, -14l 1.4, -7.9l 0.342, -1.8l 1.8, -8.6l 1.2, -5.2l 1.1, -4.2l 1.4, -4.1l 1.1, -2.6l 1.1, -1.9l 0.511, -0.572l 1.3, -0.720l 1.1,
+ 0.239l 1.1, 1.0l 0.560, 0.842l 1.1, 2.3l 1.2, 3.3l 1.2, 4.3l 0.663, 2.7l 1.1, 5.3l 1.3, 7.0l 1.4, 8.8l 0.310, 2.0l 1.2, 8.6l 1.7, 13l 1.2, 10l 1.4, 12l 2.7, 25l 4.1, 38l 2.8, 25l 1.3, 11l 2.0, 15l 1.2, 8.3l 0.996, 6.5l 1.4, 7.9l 1.1, 5.6l 1.0, 4.7l
+ 0.665, 2.5l 1.3, 4.1l 1.0, 2.4l 0.991, 1.6l 0.777, 0.653l 1.0, 0.098l 1.1, -0.798l 1.0, -1.6l 0.993, -2.3l 1.0, -3.2l 1.1, -4.5l 1.1, -5.4l 0.872, -4.8l 1.0, -6.5l 1.2, -8.7l 1.4, -11l 0.449, -3.7l 1.2, -10l 1.6, -15l 1.3, -13l 1.6, -16l 2.5, -28l
+ 3.4, -37l 0.701, -7.4l 2.3, -24l 1.3, -12l 0.560, -5.1l 1.6, -14l 1.1, -8.5l 1.1, -7.7l 0.385, -2.6l 1.3, -8.2l 1.0, -5.6l 0.950, -4.5l 0.839, -3.3l 1.1, -3.3l 1.0, -2.4l 0.927, -1.4l 1.1, -0.624l 0.975, 0.368l 1.1, 1.4l 0.977, 2.1l 1.1, 3.3l 0.964,
+ 3.8l 1.1, 5.5l 1.1, 6.4l 0.905, 5.8l 1.1, 7.8l 1.1, 8.6l 1.1, 9.1l 0.853, 8.0" fill="none" stroke="#ff0000" stroke-width="3.0"/>
+<path d="M282,117l 1.8, 18l 1.9, 20l 0.456, 4.9l 4.1, 47l 3.9, 44l 0.253, 2.7l 2.2, 23l 1.2, 12l 0.781, 7.2l 1.4, 12l 1.1, 8.6l 1.0, 7.4l 0.710, 4.7l 1.3, 7.8l 1.0, 5.2l 0.935, 4.1l 0.869, 3.1l 1.0, 2.8l 1.1, 1.9l 0.937, 0.930l 1.1, 0.111l 0.969,
+ -0.816l 1.1, -1.9l 1.0, -2.7l 1.1, -3.6l 0.981, -4.2l 1.1, -5.9l 1.2, -7.1l 0.813, -5.4l 1.1, -7.7l 1.3, -11l 1.8, -16l 1.3, -12l 1.5, -15l 1.4, -14l 1.5, -16l 2.6, -29l 3.0, -32l 1.1, -11l 1.9, -18l 1.2, -11l 1.1, -9.0l 1.3, -10l 1.1, -7.6l 1.0,
+ -6.7l 0.679, -3.9l 1.3, -6.7l 1.0, -4.4l 0.990, -3.5l 0.784, -2.2l 1.1, -2.1l 1.1, -1.3l 1.0, -0.406l 0.990, 0.365l 1.0, 1.2l 1.1, 2.3l 1.1, 3.2l 0.886, 3.1l 1.0, 4.4l 1.2, 6.2l 1.4, 7.9l 0.509, 3.2l 1.2, 7.9l 1.6, 12l 1.4, 11l 1.4, 12l 2.7, 25l
+ 4.1, 39l 3.1, 28l 1.1, 8.8l 2.0, 16l 1.2, 9.0l 0.893, 6.0l 1.4, 8.4l 1.1, 6.2l 1.1, 5.5l 0.487, 2.1l 1.3, 5.0l 1.1, 3.3l 1.1, 2.6l 0.557, 0.963l 1.1, 1.3l 1.1, 0.472l 1.2, -0.365l 0.668, -0.576l 1.1, -1.6l 1.2, -2.7l 1.3, -3.9l 0.424, -1.4l 1.2,
+ -4.5l 1.4, -6.4l 1.5, -7.5l 1.4, -7.7l 2.1, -13l 0.659, -4.2l 2.0, -13l 2.2, -15l 3.6, -25l 0.516, -3.4l 2.5, -16l 1.7, -9.9l 1.8, -9.9l 1.4, -6.8l 0.875, -3.8l 1.4, -5.6l 1.3, -4.3l 1.4, -3.7l 1.4, -2.9l 1.3, -1.9l 1.4, -1.1l 1.5, -0.253l 1.4,
+ 0.670l 1.2, 1.2l 1.6, 2.4l 1.7, 3.8l 0.823, 2.1l 1.6, 4.7l 2.5, 8.6l 2.4, 9.3l 1.7, 6.8l 4.1, 17l 3.4, 13l 0.695, 2.4l 2.4, 7.6l 1.7, 4.8l 1.7, 4.1l 1.8, 3.4l 0.596, 0.934l 1.7, 2.1l 1.9, 1.4l 0.530, 0.255l 1.9, 0.302l 2.3, -0.688l 2.2, -1.7l 1.9,
+ -2.1l 2.4, -3.2l 1.8, -2.7l 4.1, -6.5" fill="none" stroke="#ff0000" stroke-width="3.0"/>
+<path d="M484,214l 4.1, -5.7" fill="none" stroke="#ff0000" stroke-width="3.0"/>
+<path d="M80,202l 4.1, 1.5l 4.1, -1.6l 4.1, -4.4l 4.1, -6.3l 4.1, -6.8l 4.1, -5.8l 4.1, -3.3l 4.1, 0.517l 4.1, 5.1l 4.1, 9.8l 4.1, 14l 4.1, 16l 4.1, 17l 4.1, 16l 4.1, 12l 4.1, 6.4l 4.1, -0.306l 4.1, -7.6l 4.1, -15l 4.1, -21l 4.1, -25l 4.1, -27l 4.1,
+ -27l 4.1, -24l 4.1, -18l 4.1, -9.1l 4.1, 1.4l 4.1, 13l 4.1, 23l 4.1, 32l 4.1, 37l 4.1, 38l 4.1, 36l 4.1, 30l 4.1, 21l 4.1, 8.8l 4.1, -4.6l 4.1, -18l 4.1, -30l 4.1, -39l 4.1, -44l 4.1, -45l 4.1, -41l 4.1, -33l 4.1, -22l 4.1, -7.7l 4.1, 7.2l 4.1, 21l
+ 4.1, 33" fill="none" stroke="#ff0000" stroke-width="3.0"/>
+<path d="M282,117l 4.1, 42l 4.1, 47l 4.1, 46l 4.1, 42l 4.1, 33l 4.1, 20l 4.1, 5.7l 4.1, -9.0l 4.1, -23l 4.1, -34l 4.1, -42l 4.1, -45l 4.1, -44l 4.1, -38l 4.1, -29l 4.1, -17l 4.1, -3.5l 4.1, 9.8l 4.1, 22l 4.1, 31l 4.1, 37l 4.1, 39l 4.1, 36l 4.1, 31l
+ 4.1, 22l 4.1, 12l 4.1, 0.840l 4.1, -9.6l 4.1, -18l 4.1, -25l 4.1, -28l 4.1, -28l 4.1, -26l 4.1, -21l 4.1, -14l 4.1, -6.0l 4.1, 1.6l 4.1, 8.3l 4.1, 13l 4.1, 16l 4.1, 17l 4.1, 15l 4.1, 12l 4.1, 8.4l 4.1, 3.8l 4.1, -0.385l 4.1, -3.8l 4.1, -5.9l 4.1,
+ -6.5" fill="none" stroke="#ff0000" stroke-width="3.0"/>
+<path d="M484,214l 4.1, -5.7" fill="none" stroke="#ff0000" stroke-width="3.0"/>
+<path d="M80,202l 2.1, 0.494l 2.1, -0.286l 2.3, -1.3l 1.8, -1.6l 3.0, -3.5l 1.1, -1.4l 4.1, -6.0l 4.1, -5.9l 3.2, -3.9l 0.896, -0.859l 2.5, -1.9l 1.6, -0.627l 2.2, -0.066l 1.9, 0.827l 1.7, 1.5l 1.6, 2.2l 0.832, 1.4l 1.7, 3.6l 1.9, 5.0l 0.603, 1.8l
+ 1.6, 5.1l 2.6, 9.6l 4.1, 17l 4.1, 17l 2.8, 11l 1.3, 4.4l 2.3, 6.8l 1.5, 3.6l 0.400, 0.836l 1.5, 2.6l 1.3, 1.7l 1.4, 0.906l 1.4, -0.042l 1.4, -0.914l 1.3, -1.6l 1.5, -2.7l 1.6, -3.8l 1.1, -3.1l 1.6, -5.4l 1.8, -7.2l 0.671, -2.8l 1.8, -8.5l 2.3, -11l
+ 2.3, -13l 1.8, -10l 3.5, -21l 0.608, -3.7l 3.8, -23l 0.348, -2.1l 2.7, -15l 1.5, -7.8l 2.1, -10l 1.3, -5.4l 0.721, -2.6l 1.4, -4.4l 1.1, -3.0l 1.1, -2.2l 0.507, -0.738l 1.3, -1.2l 1.0, -0.222l 1.0, 0.515l 0.736, 0.891l 1.0, 2.0l 1.1, 3.1l 1.1, 4.0l
+ 0.842, 3.5l 1.0, 5.1l 1.3, 7.4l 1.5, 9.9l 0.265, 1.8l 1.2, 9.0l 1.4, 11l 1.5, 12l 1.4, 12l 2.7, 24l 4.1, 37l 2.6, 22l 1.6, 12l 1.9, 14l 1.3, 8.6l 1.0, 6.3l 1.4, 7.8l 1.1, 5.7l 1.1, 4.9l 0.522, 2.0l 1.3, 4.4l 1.0, 2.7l 0.990, 1.8l 0.762, 0.875l 1.1,
+ 0.475l 1.0, -0.374l 0.928, -1.1l 1.1, -2.1l 0.941, -2.8l 1.1, -4.4l 1.1, -5.2l 0.996, -5.5l 0.986, -6.2l 1.2, -9.0l 1.5, -12l 0.420, -3.5l 1.2, -11l 1.4, -13l 1.5, -15l 1.6, -16l 2.5, -27l 3.3, -35l 0.800, -8.2l 2.2, -22l 1.3, -13l 0.575, -5.1l 1.7,
+ -14l 1.1, -8.7l 1.1, -7.9l 0.207, -1.4l 1.3, -8.4l 1.0, -5.8l 0.956, -4.7l 0.816, -3.4l 1.1, -3.8l 1.0, -2.6l 0.873, -1.5l 0.898, -0.809l 0.214, -0.065l 0.924, 0.261l 1.1, 1.4l 0.952, 2.1l 1.0, 3.1l 0.153, 0.536l 0.916, 3.7l 0.990, 4.9l 1.2, 6.8l
+ 1.1, 6.9l 1.1, 8.1l 1.1, 8.8l 1.1, 9.5l 0.774, 7.2" fill="none" stroke="#00ff00" stroke-width="3.0"/>
+<path d="M282,119l 1.9, 18l 1.9, 20l 0.321, 3.4l 1.7, 18l 2.4, 27l 4.1, 46l 2.3, 25l 1.2, 12l 0.554, 5.1l 1.7, 15l 1.0, 8.1l 0.981, 7.2l 0.484, 3.2l 1.3, 7.9l 0.987, 5.2l 0.883, 3.9l 0.949, 3.4l 0.955, 2.5l 1.1, 1.8l 0.959, 0.734l 1.1, -0.120l 0.966,
+ -0.983l 1.1, -2.1l 1.1, -3.0l 0.989, -3.5l 1.0, -4.4l 1.2, -5.9l 1.2, -7.1l 0.734, -4.7l 1.1, -7.8l 1.3, -10.0l 1.5, -12l 0.293, -2.6l 1.2, -11l 1.4, -14l 1.5, -16l 1.4, -15l 2.8, -30l 3.0, -32l 1.1, -12l 1.9, -18l 1.1, -10l 1.1, -9.7l 1.3, -10l
+ 1.1, -7.5l 1.1, -6.7l 0.632, -3.5l 1.3, -6.5l 1.1, -4.4l 1.0, -3.5l 0.702, -1.9l 1.1, -2.3l 1.1, -1.4l 0.998, -0.537l 0.945, 0.210l 1.0, 1.1l 1.1, 2.0l 1.0, 2.8l 0.951, 3.2l 0.994, 4.2l 1.2, 6.1l 1.4, 8.0l 0.561, 3.5l 1.1, 7.8l 1.3, 9.7l 1.7, 14l
+ 1.5, 12l 2.7, 24l 4.1, 38l 2.9, 25l 1.3, 11l 1.9, 15l 1.3, 9.3l 0.908, 6.1l 1.4, 8.6l 1.1, 6.3l 1.1, 5.4l 0.553, 2.4l 1.3, 5.1l 1.1, 3.3l 1.1, 2.5l 0.622, 1.1l 1.1, 1.2l 1.2, 0.351l 1.2, -0.528l 0.655, -0.622l 1.2, -1.7l 1.2, -2.8l 1.4, -4.0l 0.337,
+ -1.1l 1.2, -4.6l 1.4, -6.2l 1.4, -7.1l 1.4, -7.5l 2.0, -12l 0.774, -4.9l 1.8, -12l 2.3, -16l 3.6, -25l 0.543, -3.6l 2.4, -16l 1.7, -10.0l 1.5, -8.1l 1.4, -6.9l 1.2, -5.1l 1.5, -5.6l 1.4, -4.4l 1.3, -3.5l 1.4, -3.0l 1.3, -2.0l 1.4, -1.3l 1.4, -0.355l
+ 1.4, 0.545l 1.3, 1.2l 1.3, 2.1l 1.7, 3.7l 1.1, 2.7l 1.6, 4.8l 2.5, 8.5l 2.6, 9.8l 1.6, 6.2l 4.1, 17l 3.5, 13l 0.596, 2.1l 2.7, 8.6l 1.5, 4.1l 1.7, 4.0l 1.7, 3.3l 0.700, 1.1l 1.7, 2.1l 1.9, 1.4l 0.481, 0.212l 1.9, 0.271l 2.2, -0.654l 2.2, -1.6l 1.9,
+ -1.9l 2.2, -2.9l 1.9, -2.8l 4.1, -6.5" fill="none" stroke="#00ff00" stroke-width="3.0"/>
+<path d="M484,215l 4.1, -5.8" fill="none" stroke="#00ff00" stroke-width="3.0"/>
+<path d="M80,202l 4.1, 0.208l 4.1, -2.9l 4.1, -5.0l 4.1, -6.0l 4.1, -5.9l 4.1, -4.7l 4.1, -2.5l 4.1, 0.761l 4.1, 5.1l 4.1, 10l 4.1, 15l 4.1, 17l 4.1, 17l 4.1, 15l 4.1, 11l 4.1, 5.2l 4.1, -2.6l 4.1, -9.7l 4.1, -15l 4.1, -20l 4.1, -23l 4.1, -25l 4.1,
+ -25l 4.1, -23l 4.1, -18l 4.1, -10l 4.1, -0.045l 4.1, 13l 4.1, 24l 4.1, 32l 4.1, 37l 4.1, 37l 4.1, 34l 4.1, 29l 4.1, 20l 4.1, 9.8l 4.1, -3.1l 4.1, -18l 4.1, -31l 4.1, -39l 4.1, -43l 4.1, -43l 4.1, -40l 4.1, -32l 4.1, -22l 4.1, -8.8l 4.1, 7.3l 4.1,
+ 22l 4.1, 34" fill="none" stroke="#00ff00" stroke-width="3.0"/>
+<path d="M282,119l 4.1, 41l 4.1, 46l 4.1, 46l 4.1, 42l 4.1, 33l 4.1, 20l 4.1, 4.9l 4.1, -9.5l 4.1, -22l 4.1, -33l 4.1, -41l 4.1, -45l 4.1, -44l 4.1, -38l 4.1, -28l 4.1, -16l 4.1, -4.0l 4.1, 9.0l 4.1, 22l 4.1, 31l 4.1, 37l 4.1, 38l 4.1, 36l 4.1, 31l
+ 4.1, 23l 4.1, 12l 4.1, 0.375l 4.1, -9.6l 4.1, -18l 4.1, -24l 4.1, -28l 4.1, -29l 4.1, -26l 4.1, -20l 4.1, -14l 4.1, -6.3l 4.1, 1.4l 4.1, 8.4l 4.1, 13l 4.1, 16l 4.1, 17l 4.1, 15l 4.1, 13l 4.1, 8.4l 4.1, 3.6l 4.1, -0.383l 4.1, -3.5l 4.1, -5.7l 4.1,
+ -6.5" fill="none" stroke="#00ff00" stroke-width="3.0"/>
+<path d="M484,215l 4.1, -5.8" fill="none" stroke="#00ff00" stroke-width="3.0"/>
+<g fill="#0000ff">
+<circle cx="78" cy="200" r="4.3"/>
+<circle cx="118" cy="184" r="4.3"/>
+<circle cx="146" cy="272" r="4.3"/>
+<circle cx="170" cy="178" r="4.3"/>
+<circle cx="193" cy="103" r="4.3"/>
+<circle cx="214" cy="258" r="4.3"/>
+<circle cx="233" cy="330" r="4.3"/>
+<circle cx="252" cy="164" r="4.3"/>
+<circle cx="271" cy="56" r="4.3"/>
+<circle cx="289" cy="190" r="4.3"/>
+<circle cx="306" cy="345" r="4.3"/>
+<circle cx="323" cy="289" r="4.3"/>
+<circle cx="340" cy="120" r="4.3"/>
+<circle cx="356" cy="78" r="4.3"/>
+<circle cx="372" cy="198" r="4.3"/>
+<circle cx="387" cy="305" r="4.3"/>
+<circle cx="403" cy="276" r="4.3"/>
+<circle cx="418" cy="177" r="4.3"/>
+<circle cx="433" cy="135" r="4.3"/>
+<circle cx="447" cy="175" r="4.3"/>
+<circle cx="462" cy="224" r="4.3"/>
+<circle cx="476" cy="226" r="4.3"/>
+<circle cx="490" cy="207" r="4.3"/>
+</g>
+<rect x="341" y="49" width="159" height="73" fill="white"/>
+<path d="M345,122v 2.8h 157v -72h -2.8v 69z" fill="black"/>
+<path d="M341,122v -73h 159v 73h -159z" fill="none" stroke="black"/>
+<text xml:space="preserve" x="380" y="67" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">sin(x)*sin(x/10)
+</text>
+<path d="M347,70h 28v -17h -28z" fill="none" stroke="#f2f2f2"/>
+<path d="M347,61h 28" fill="none" stroke="black" stroke-width="3.0"/>
+<g stroke="black" stroke-width="1.000" fill="none">
+<line x1="360" y1="61" x2="361" y2="61"/>
+</g>
+<text xml:space="preserve" x="380" y="91" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Spline5
+</text>
+<path d="M347,94h 28v -17h -28z" fill="none" stroke="white"/>
+<path d="M347,86h 28" fill="none" stroke="#ff0000" stroke-width="3.0"/>
+<g stroke="black" stroke-width="1.000" fill="none">
+<line x1="360" y1="86" x2="361" y2="86"/>
+</g>
+<text xml:space="preserve" x="380" y="115" fill="black" font-size="16" font-family="Helvetica" font-weight="bold">Spline3
+</text>
+<path d="M347,119h 28v -17h -28z" fill="none" stroke="white"/>
+<path d="M347,110h 28" fill="none" stroke="#00ff00" stroke-width="3.0"/>
+<g fill="#0000ff">
+<circle cx="361" cy="110" r="4.3"/>
+</g>
+<rect x="6.2" y="2.0" width="147" height="23" fill="#f2f2f2"/>
+<path d="M4.7,4.2v 22h 147v -1.4h -145v -21z" fill="black"/>
+<path d="M6.2,25v -23h 147v 23h -147z" fill="none" stroke="black"/>
+<text xml:space="preserve" x="14" y="19" fill="black" font-size="18" font-family="Helvetica" font-weight="bold">sin(x)*sin(x/10)
+</text></svg>

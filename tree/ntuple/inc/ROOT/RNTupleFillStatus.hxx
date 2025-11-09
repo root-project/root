@@ -20,9 +20,7 @@
 
 namespace ROOT {
 
-namespace Experimental {
 class RNTupleFillContext;
-}
 
 // clang-format off
 /**
@@ -30,12 +28,12 @@ class RNTupleFillContext;
 \ingroup NTuple
 \brief A status object after filling an entry
 
-After passing an instance to RNTupleWriter::FillNoFlush or RNTupleFillContext::FillNoFlush, the caller must check
-ShouldFlushCluster and call RNTupleWriter::FlushCluster or RNTupleFillContext::FlushCluster if necessary.
+After passing an instance to RNTupleWriter::FillNoFlush() or RNTupleFillContext::FillNoFlush(), the caller must check
+ShouldFlushCluster() and call RNTupleWriter::FlushCluster() or RNTupleFillContext::FlushCluster() if necessary.
 */
 // clang-format on
 class RNTupleFillStatus {
-   friend class Experimental::RNTupleFillContext;
+   friend class RNTupleFillContext;
 
 private:
    /// Number of entries written into the current cluster
@@ -55,7 +53,7 @@ public:
    std::size_t GetLastEntrySize() const { return fLastEntrySize; }
    /// Return true if the caller should call FlushCluster.
    bool ShouldFlushCluster() const { return fShouldFlushCluster; }
-}; // class RNTupleFillContext
+};
 
 } // namespace ROOT
 

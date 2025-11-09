@@ -52,9 +52,8 @@ set to the owner of its own content.
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TVirtualMutex.h"
-#include <stdlib.h>
+#include <cstdlib>
 
-ClassImp(TObjArray);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an object array. Using s one can set the array size (default is
@@ -872,7 +871,6 @@ Int_t TObjArray::BinarySearch(TObject *op, Int_t upto)
 Iterator of object array.
 */
 
-ClassImp(TObjArrayIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create array iterator. By default the iteration direction

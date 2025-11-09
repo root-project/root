@@ -6,9 +6,6 @@
 
 #include "NtpRecord.h"
 
-ClassImp(NtpShower)
-ClassImp(NtpEvent)
-ClassImp(NtpRecord)
 
 TClonesArray *NtpRecord::fgShowers = 0;
 TClonesArray *NtpRecord::fgEvents = 0;

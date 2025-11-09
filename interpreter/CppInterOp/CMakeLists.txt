@@ -67,25 +67,13 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
 include(GNUInstallDirs)
   ## Define supported version of clang and llvm
 
-if (CPPINTEROP_USE_CLING)
   set(CLANG_MIN_SUPPORTED 18.0)
-else()
-  set(CLANG_MIN_SUPPORTED 16.0)
-endif(CPPINTEROP_USE_CLING)
   set(CLANG_MAX_SUPPORTED "20.1.x")
   set(CLANG_VERSION_UPPER_BOUND 21.0.0)
-if (CPPINTEROP_USE_CLING)
   set(LLD_MIN_SUPPORTED 18.0)
-else()
-  set(LLD_MIN_SUPPORTED 16.0)
-endif(CPPINTEROP_USE_CLING)
   set(LLD_MAX_SUPPORTED "20.1.x")
   set(LLD_VERSION_UPPER_BOUND 21.0.0)
-if (CPPINTEROP_USE_CLING)
   set(LLVM_MIN_SUPPORTED 18.0)
-else()
-  set(LLVM_MIN_SUPPORTED 16.0)
-endif(CPPINTEROP_USE_CLING)
   set(LLVM_MAX_SUPPORTED "20.1.x")
   set(LLVM_VERSION_UPPER_BOUND 21.0.0)
 
@@ -242,7 +230,7 @@ endif()
   message(STATUS "Found supported version: Clang ${CLANG_PACKAGE_VERSION}")
   message(STATUS "Using ClangConfig.cmake in: ${Clang_DIR}")
 
-  ## Clang 16 require c++17 or later.
+  ## Clang 18 require c++17 or later.
   if (NOT CMAKE_CXX_STANDARD)
     set (CMAKE_CXX_STANDARD 17)
   endif()
@@ -286,10 +274,10 @@ endif()
   set(LLVM_LIBRARY_OUTPUT_INTDIR ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/lib${LLVM_LIBDIR_SUFFIX})
 
   set( CPPINTEROP_BUILT_STANDALONE 1 )
-endif()
 
-include(AddLLVM)
-include(HandleLLVMOptions)
+  include(AddLLVM)
+  include(HandleLLVMOptions)
+endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 

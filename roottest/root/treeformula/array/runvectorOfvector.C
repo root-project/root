@@ -39,7 +39,7 @@ typedef std::vector<Two> TwoCollec;
 
 #include "TTree.h"
 
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ class std::vector<int>;
 #pragma link C++ class std::vector<subCollection>;
 #pragma link C++ class std::vector<One>;
@@ -52,7 +52,7 @@ TTree* generateTree_1(int sub = 10) {
    TTree *t = new TTree("1","");
 
    subCollection *p = new subCollection;
-   
+
    t->Branch("vec",&p);
 
    int total = 0;
@@ -240,7 +240,7 @@ TTree* generateTree(int sub = 10, int level = 2) {
    TTree *t = new TTree("2","");
 
    collection *p = new collection;
-   
+
    t->Branch("vec",&p);
 
    subCollection a;
@@ -259,7 +259,7 @@ TTree* generateTree(int sub = 10, int level = 2) {
    return t;
 }
 
-bool testing(TTree *t, const char *what, Int_t expect) 
+bool testing(TTree *t, const char *what, Int_t expect)
 {
    Int_t res = t->Draw(what,"","");
    if (res!=expect) {

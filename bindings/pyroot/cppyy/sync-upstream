@@ -4,12 +4,14 @@
 
 # We will keep our own CMakeLists.txt files
 
+mv cppyy-backend/CMakeLists.txt cppyy-backend_CMakeLists.txt
 mv CPyCppyy/CMakeLists.txt CPyCppyy_CMakeLists.txt
 mv cppyy/CMakeLists.txt cppyy_CMakeLists.txt
 mv cppyy/test/CMakeLists.txt cppyy_test_CMakeLists.txt
 
 rm -rf CPyCppyy
 rm -rf cppyy
+rm -rf cppyy-backend
 
 # If we want to clone specific branches:
 # git clone --depth 1 --branch CPyCppyy-1.13.0 https://github.com/wlav/CPyCppyy.git
@@ -17,13 +19,14 @@ rm -rf cppyy
 
 git clone https://github.com/wlav/CPyCppyy.git
 git clone https://github.com/wlav/cppyy.git
+git clone https://github.com/wlav/cppyy-backend.git
 
 rebase_topic () {
   git rebase sync $1 && git branch -D sync && git checkout -b sync
 }
 
 cd CPyCppyy/
-git reset --hard 0586cd9e5d7112cf20418c5126130276c5b8e384
+git reset --hard 1d049d4dab7cc26387dc938846e42bc3a7e0a05c
 
 git remote rename origin wlav
 
@@ -34,13 +37,12 @@ git checkout -b sync
 
 rebase_topic guitargeek/py_errors
 rebase_topic guitargeek/reduce_api
-rebase_topic guitargeek/improve-clone-heuristic # equivalent to vepadulano/improve-clone-heuristic
 
 cd ../
 
 cd cppyy/
 
-git reset --hard 05c8f2dad4a37c495c55f2ea28d9dff540b0fecc
+git reset --hard a3bd17f45b42689c2504a514ea0397b2eeb63a5d
 
 git remote rename origin wlav
 
@@ -51,27 +53,54 @@ git checkout -b sync
 
 rebase_topic guitargeek/concurrency_tests_gil
 
+rm test/Makefile
+
+cd ../
+
+cd cppyy-backend/
+
+git reset --hard a6e112cf8396bcddf5ba4d66ab70ca77a7bd9d20
+
+sed '/C-linkage wrappers/,$d' clingwrapper/src/clingwrapper.cxx > clingwrapper/src/clingwrapper.cxx.no_c_api
+
+mv clingwrapper/src/clingwrapper.cxx.no_c_api clingwrapper/src/clingwrapper.cxx
+
+rm -rf .circleci/
+rm -rf .github/
+rm .gitignore
+rm README.rst
+rm circleci.py
+rm -rf cling/
+rm clingwrapper/MANIFEST.in
+rm clingwrapper/README.rst
+rm clingwrapper/pyproject.toml
+rm clingwrapper/setup.cfg
+rm clingwrapper/setup.py
+rm clingwrapper/src/capi.h
+rm clingwrapper/src/clingwrapper.h
+rm clingwrapper/src/cppyy.h
+
 cd ../
 
 rm -rf CPyCppyy/.git
 rm -rf cppyy/.git
+rm -rf cppyy-backend/.git
 
 # Move back CMakeLists.txt files
 
 mv CPyCppyy_CMakeLists.txt CPyCppyy/CMakeLists.txt
 mv cppyy_CMakeLists.txt cppyy/CMakeLists.txt
 mv cppyy_test_CMakeLists.txt cppyy/test/CMakeLists.txt
+mv cppyy-backend_CMakeLists.txt cppyy-backend/CMakeLists.txt
 
 # Apply patches (they were created with git format-patch -1 HEAD)
 # Alternatively, one can also use "git am" to create individual commits
 git apply patches/CPyCppyy-Adapt-to-no-std-in-ROOT.patch
 git apply patches/CPyCppyy-Always-convert-returned-std-string.patch
 git apply patches/CPyCppyy-Prevent-construction-of-agg-init-for-tuple.patch
-git apply patches/CPyCppyy-Perform-function-style-casts.patch # https://github.com/wlav/CPyCppyy/pull/34
 git apply patches/CPyCppyy-Use-PyMapping_GetOptionalItemString-where-necessary.patch # https://github.com/wlav/CPyCppyy/pull/44
 git apply patches/CPyCppyy-Add-converters-and-low-level-views-for-fixed-width-integers.patch # https://github.com/wlav/CPyCppyy/pull/52
 git apply patches/CPyCppyy-Correct-check-for-temporaries-in-Python-3.14.patch # https://github.com/wlav/CPyCppyy/pull/53
-git apply patches/CPyCppyy-Disable-implicit-conversion-to-smart-ptr.patch
 git apply patches/CPyCppyy-Disable_std-vector-numpy-array-pythonization.patch
 git apply patches/CPyCppyy-Support-conversion-from-str-to-char.patch # https://github.com/wlav/CPyCppyy/pull/21
 git apply patches/CPyCppyy-Get-names-and-types-of-all-overloads-signature.patch
@@ -80,4 +109,3 @@ git apply patches/cppyy-No-CppyyLegacy-namespace.patch
 git apply patches/cppyy-Remove-Windows-workaround.patch
 git apply patches/cppyy-Don-t-enable-cling-autoloading.patch
 git apply patches/cppyy-Enable-testsuite.patch
-git apply patches/cppyy-Remove-unused-template-instance-pattern-rule.patch

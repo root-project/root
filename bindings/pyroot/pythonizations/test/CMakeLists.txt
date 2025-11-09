@@ -22,6 +22,10 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py PYTHON_DEPS numpy)
 ROOT_ADD_PYUNITTEST(uhi_plotting uhi_plotting.py GENERIC PYTHON_DEPS uhi numpy)
 ROOT_ADD_PYUNITTEST(uhi_indexing uhi_indexing.py GENERIC PYTHON_DEPS uhi numpy)
+if(Python3_VERSION VERSION_GREATER_EQUAL 3.9)
+    # Enable uhi testing helper for Python 3.9+
+    ROOT_ADD_PYUNITTEST(uhi_test_suite uhi_test_suite.py GENERIC PYTHON_DEPS uhi numpy)
+endif()
 
 # STL containers pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_stl_vector stl_vector.py)
@@ -51,10 +55,14 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_iterable ttree_iterable.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_setbranchaddress ttree_setbranchaddress.py PYTHON_DEPS numpy)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch ttree_branch.py PYTHON_DEPS numpy)
 
+# TColor-related pythonizations
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tcolor tcolor.py)
+
 # TH1 and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th1_operators th1_operators.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th1_fillN th1_fillN.py PYTHON_DEPS numpy)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th2 th2.py)
+ROOT_ADD_PYUNITTEST(pyroot_pyz_th3 th3.py)
 
 # TGraph, TGraph2D and error subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tgraph_getters tgraph_getters.py)

@@ -1,8 +1,7 @@
 # -*- coding: UTF-8 -*-
 import py, sys, pytest, os
 from pytest import mark, raises, skip
-from support import setup_make, pylong, pyunicode, maxvalue, ispypy
-
+from support import setup_make, pylong, pyunicode, maxvalue, ispypy, no_root_errors
 
 currpath = os.getcwd()
 test_dct = currpath + "/libstltypesDict"
@@ -820,6 +819,30 @@ class TestSTLVECTOR:
 
             for i, d in zip(range(-5, 5, 1), data):
                 assert d == i
+
+    def test24_vector_to_span(self):
+        """Vectors should convert to std::span without errors"""
+
+        import cppyy
+
+        cppyy.cppdef("""
+        double calc_cumsum(std::size_t n, std::span<double> v)
+        {
+            double sum = 0.0;
+            for (int i = 0; i < n; i += 1) {
+                sum += v[i];
+            }
+            return sum;
+        }
+        """)
+
+        l = list(range(4))
+        v = cppyy.gbl.std.vector["double"](l)
+
+        with no_root_errors():
+            result = cppyy.gbl.calc_cumsum(len(v), v)
+
+        assert result == sum(l)
 
 
 class TestSTLSTRING:
@@ -1674,9 +1697,6 @@ class TestSTLSTRING_VIEW:
         """Usage of std::string_view as formal argument"""
 
         import cppyy
-        if cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") <= 201402:
-            # string_view exists as of C++17
-            return
 
         countit = cppyy.gbl.StringViewTest.count
         countit_cr = cppyy.gbl.StringViewTest.count_cr
@@ -1695,9 +1715,6 @@ class TestSTLSTRING_VIEW:
         """Life-time management of converted unicode strings"""
 
         import cppyy, gc
-        if cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;") <= 201402:
-            # string_view exists as of C++17
-            return
 
         # view on (converted) unicode
         text = cppyy.gbl.std.string_view('''\
@@ -1850,6 +1867,13 @@ class TestSTLSET:
       # there is a regression somehow
         for i in range(100):
             assert not (2**30 in S)
+
+        assert '__contains__' in cppyy.gbl.std.string.__dict__
+        my_string = cppyy.gbl.std.string("hello world")
+
+        assert "hello" in my_string
+        assert "world" in my_string
+        assert "bye" not in my_string
 
 
 class TestSTLTUPLE:

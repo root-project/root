@@ -1,0 +1,233 @@
+<?xml version="1.0" standalone="no"?>
+<svg width="567" height="197" viewBox="0 0 567 197" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+<title>
+tmarker.svg
+</title>
+<rect x="0.500" y="0" width="567" height="197" fill="#f2f2f2"/>
+<path d="M0.500,197l 2.0, -2.0v -193h 563l 2.0, -2.0h -567v 197z" fill="white"/>
+<path d="M0.500,197l 2.0, -2.0h 563v -193l 2.0, -2.0v 197h -567z" fill="#a9a9a9"/>
+<g stroke="black" stroke-width="1.000" fill="none">
+<line x1="35" y1="147" x2="36" y2="147"/>
+</g>
+<text xml:space="preserve" x="36" y="182" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">1
+</text>
+<g fill="black">
+<circle cx="36" cy="88" r="14"/>
+</g>
+<text xml:space="preserve" x="36" y="123" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">20
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<polygon points=" 22, 29 36, 16 50, 29 36, 43 22, 29 50, 29 36, 43 36, 16"/>
+</g>
+<text xml:space="preserve" x="36" y="64" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">35
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<line x1="58" y1="147" x2="85" y2="147"/><line x1="71" y1="134" x2="71" y2="161"/>
+</g>
+<text xml:space="preserve" x="71" y="182" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">2
+</text>
+<g fill="black">
+<rect x="58" y="75" width="27" height="27"/>
+</g>
+<text xml:space="preserve" x="71" y="123" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">21
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<polygon points=" 58, 16 85, 16 85, 43 58, 43 58, 16 85, 43 58, 43 85, 16"/>
+</g>
+<text xml:space="preserve" x="71" y="64" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">36
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<line x1="93" y1="147" x2="121" y2="147"/><line x1="107" y1="134" x2="107" y2="161"/><line x1="97" y1="138" x2="116" y2="157"/><line x1="97" y1="157" x2="116" y2="138"/>
+</g>
+<text xml:space="preserve" x="107" y="182" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">3
+</text>
+<g fill="black">
+<polygon points=" 107, 75 121, 102 93, 102"/>
+</g>
+<text xml:space="preserve" x="107" y="123" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">22
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<polygon points=" 107, 29 114, 43 100, 43 107, 29 100, 16 93, 29 107, 29 121, 29 114, 16 107, 29"/>
+</g>
+<text xml:space="preserve" x="107" y="64" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">37
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<circle cx="142" cy="147" r="14"/>
+</g>
+<text xml:space="preserve" x="142" y="182" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">4
+</text>
+<g fill="black">
+<polygon points=" 129, 75 156, 75 142, 102"/>
+</g>
+<text xml:space="preserve" x="142" y="123" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">23
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<polygon points=" 129, 29 129, 23 135, 16 149, 16 156, 23 156, 36 149, 43 135, 43 129, 36 129, 29 156, 29 142, 29 142, 16 142, 43 142, 29"/>
+</g>
+<text xml:space="preserve" x="142" y="64" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">38
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<line x1="168" y1="138" x2="187" y2="157"/><line x1="168" y1="157" x2="187" y2="138"/>
+</g>
+<text xml:space="preserve" x="178" y="182" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">5
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<circle cx="178" cy="88" r="14"/>
+</g>
+<text xml:space="preserve" x="178" y="123" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">24
+</text>
+<g fill="black">
+<polygon points=" 178, 29 185, 43 171, 43 178, 29 171, 16 164, 29 178, 29 191, 29 185, 16 178, 29"/>
+</g>
+<text xml:space="preserve" x="178" y="64" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">39
+</text>
+<g fill="black">
+<circle cx="213" cy="147" r="0.091"/>
+</g>
+<text xml:space="preserve" x="213" y="182" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">6
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<rect x="199" y="75" width="27" height="27"/>
+</g>
+<text xml:space="preserve" x="213" y="123" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">25
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<polygon points=" 213, 29 220, 43 227, 36 213, 29 227, 23 220, 16 213, 29 206, 16 199, 23 213, 29 199, 36 206, 43 213, 29"/>
+</g>
+<text xml:space="preserve" x="213" y="64" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">40
+</text>
+<g fill="black">
+<circle cx="249" cy="147" r="0.183"/>
+</g>
+<text xml:space="preserve" x="249" y="182" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">7
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<polygon points=" 249, 75 262, 102 235, 102"/>
+</g>
+<text xml:space="preserve" x="249" y="123" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">26
+</text>
+<g fill="black">
+<polygon points=" 249, 29 255, 43 262, 36 249, 29 262, 23 255, 16 249, 29 242, 16 235, 23 249, 29 235, 36 242, 43 249, 29"/>
+</g>
+<text xml:space="preserve" x="249" y="64" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">41
+</text>
+<g fill="black">
+<circle cx="284" cy="147" r="14"/>
+</g>
+<text xml:space="preserve" x="284" y="182" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">8
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<polygon points=" 284, 75 293, 88 284, 102 275, 88"/>
+</g>
+<text xml:space="preserve" x="284" y="123" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">27
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<polygon points=" 284, 43 281, 33 270, 29 281, 26 284, 16 287, 26 298, 29 287, 33 284, 43"/>
+</g>
+<text xml:space="preserve" x="284" y="64" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">42
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<line x1="318" y1="147" x2="319" y2="147"/>
+</g>
+<text xml:space="preserve" x="319" y="182" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">9
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<polygon points=" 315, 84 315, 75 324, 75 324, 84 333, 84 333, 93 324, 93 324, 102 315, 102 315, 93 306, 93 306, 84"/>
+</g>
+<text xml:space="preserve" x="319" y="123" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">28
+</text>
+<g fill="black">
+<polygon points=" 319, 43 316, 33 306, 29 316, 26 319, 16 323, 26 333, 29 323, 33 319, 43"/>
+</g>
+<text xml:space="preserve" x="319" y="64" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">43
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<line x1="354" y1="147" x2="355" y2="147"/>
+</g>
+<text xml:space="preserve" x="355" y="182" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">10
+</text>
+<g fill="black">
+<polygon points=" 355, 102 358, 93 368, 93 360, 87 363, 77 355, 83 347, 77 350, 87 342, 93 352, 93"/>
+</g>
+<text xml:space="preserve" x="355" y="123" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">29
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<polygon points=" 355, 29 362, 43 348, 43 362, 16 348, 16 355, 29 369, 36 369, 23 341, 36 341, 23 355, 29"/>
+</g>
+<text xml:space="preserve" x="355" y="64" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">44
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<line x1="389" y1="147" x2="390" y2="147"/>
+</g>
+<text xml:space="preserve" x="390" y="182" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">11
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<polygon points=" 390, 102 393, 93 403, 93 395, 87 398, 77 390, 83 382, 77 385, 87 377, 93 387, 93"/>
+</g>
+<text xml:space="preserve" x="390" y="123" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">30
+</text>
+<g fill="black">
+<polygon points=" 393, 32 397, 43 383, 43 388, 32 377, 36 377, 23 388, 27 383, 16 397, 16 393, 27 404, 23 404, 36 393, 32"/>
+</g>
+<text xml:space="preserve" x="390" y="64" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">45
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<line x1="425" y1="147" x2="426" y2="147"/>
+</g>
+<text xml:space="preserve" x="426" y="182" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">12
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<line x1="412" y1="88" x2="439" y2="88"/><line x1="426" y1="75" x2="426" y2="102"/><line x1="416" y1="79" x2="435" y2="98"/><line x1="416" y1="98" x2="435" y2="79"/>
+</g>
+<text xml:space="preserve" x="426" y="123" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">31
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<polygon points=" 426, 36 419, 43 412, 36 419, 29 412, 23 419, 16 426, 23 433, 16 439, 23 433, 29 439, 36 433, 43 426, 36"/>
+</g>
+<text xml:space="preserve" x="426" y="64" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">46
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<line x1="460" y1="147" x2="461" y2="147"/>
+</g>
+<text xml:space="preserve" x="461" y="182" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">13
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<polygon points=" 447, 75 475, 75 461, 102"/>
+</g>
+<text xml:space="preserve" x="461" y="123" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">32
+</text>
+<g fill="black">
+<polygon points=" 461, 36 454, 43 447, 36 454, 29 447, 23 454, 16 461, 23 468, 16 475, 23 468, 29 475, 36 468, 43 461, 36"/>
+</g>
+<text xml:space="preserve" x="461" y="64" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">47
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<line x1="496" y1="147" x2="497" y2="147"/>
+</g>
+<text xml:space="preserve" x="497" y="182" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">14
+</text>
+<g fill="black">
+<polygon points=" 497, 75 506, 88 497, 102 487, 88"/>
+</g>
+<text xml:space="preserve" x="497" y="123" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">33
+</text>
+<g fill="black">
+<polygon points=" 497, 36 490, 43 483, 36 490, 29 483, 23 490, 16 497, 23 503, 16 510, 23 503, 29 510, 36 503, 43 497, 36 503, 29 497, 23 490, 29 497, 36"/>
+</g>
+<text xml:space="preserve" x="497" y="64" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">48
+</text>
+<g stroke="black" stroke-width="1.000" fill="none">
+<line x1="531" y1="147" x2="532" y2="147"/>
+</g>
+<text xml:space="preserve" x="532" y="182" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">15
+</text>
+<g fill="black">
+<polygon points=" 527, 84 527, 75 537, 75 537, 84 546, 84 546, 93 537, 93 537, 102 527, 102 527, 93 518, 93 518, 84"/>
+</g>
+<text xml:space="preserve" x="532" y="123" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">34
+</text>
+<g fill="black">
+<polygon points=" 527, 25 527, 16 537, 16 537, 25 546, 25 546, 34 537, 34 537, 43 527, 43 527, 34 518, 34 518, 25 527, 25 527, 34 537, 34 537, 25"/>
+</g>
+<text xml:space="preserve" x="532" y="64" text-anchor="middle" fill="black" font-size="19" font-family="Helvetica" font-weight="bold">49
+</text></svg>

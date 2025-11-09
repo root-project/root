@@ -51,7 +51,6 @@ few other, which can not be converted to SQL (yet).
 #include "TSQLFile.h"
 #include "TSQLClassInfo.h"
 
-ClassImp(TBufferSQL2);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor, should not be used

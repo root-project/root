@@ -5,3 +5,5 @@ A::inlineNoArgsNoReturn
 A::outlinedNoArgsNoReturn
 ======================================================
 Running through TMethodCall...
+A::inlineNoArgsNoReturn
+A::outlinedNoArgsNoReturn

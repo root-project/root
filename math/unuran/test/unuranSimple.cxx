@@ -18,8 +18,6 @@
 #include "TApplication.h"
 #include "TCanvas.h"
 #include "TRandom.h"
-#include "TVirtualFitter.h"
-#include "TFitter.h"
 #include "Math/DistFunc.h"
 
 #include <iostream>

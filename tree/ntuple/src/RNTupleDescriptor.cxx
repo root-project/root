@@ -81,7 +81,7 @@ ROOT::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc, const ROO
    if (GetStructure() == ROOT::ENTupleStructure::kUnknown) {
       if (options.GetReturnInvalidOnError()) {
          auto invalidField = std::make_unique<ROOT::RInvalidField>(GetFieldName(), GetTypeName(), "",
-                                                                   ROOT::RInvalidField::RCategory::kUnknownStructure);
+                                                                   ROOT::RInvalidField::ECategory::kUnknownStructure);
          invalidField->SetOnDiskId(fFieldId);
          return invalidField;
       } else {
@@ -144,7 +144,7 @@ ROOT::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc, const ROO
    } catch (const RException &ex) {
       if (options.GetReturnInvalidOnError())
          return std::make_unique<ROOT::RInvalidField>(GetFieldName(), GetTypeName(), ex.GetError().GetReport(),
-                                                      ROOT::RInvalidField::RCategory::kGeneric);
+                                                      ROOT::RInvalidField::ECategory::kGeneric);
       else
          throw ex;
    }
@@ -167,6 +167,31 @@ bool ROOT::RFieldDescriptor::IsCustomClass() const
    }
 
    return true;
+}
+
+bool ROOT::RFieldDescriptor::IsCustomEnum(const RNTupleDescriptor &desc) const
+{
+   if (fStructure != ROOT::ENTupleStructure::kPlain)
+      return false;
+   if (fTypeName.rfind("std::", 0) == 0)
+      return false;
+
+   auto subFieldId = desc.FindFieldId("_0", fFieldId);
+   if (subFieldId == kInvalidDescriptorId)
+      return false;
+
+   static const std::string gIntTypeNames[] = {"bool",         "char",          "std::int8_t",  "std::uint8_t",
+                                               "std::int16_t", "std::uint16_t", "std::int32_t", "std::uint32_t",
+                                               "std::int64_t", "std::uint64_t"};
+   return std::find(std::begin(gIntTypeNames), std::end(gIntTypeNames),
+                    desc.GetFieldDescriptor(subFieldId).GetTypeName()) != std::end(gIntTypeNames);
+}
+
+bool ROOT::RFieldDescriptor::IsStdAtomic() const
+{
+   if (fStructure != ROOT::ENTupleStructure::kPlain)
+      return false;
+   return (fTypeName.rfind("std::atomic<", 0) == 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -338,6 +363,24 @@ ROOT::NTupleSize_t ROOT::RNTupleDescriptor::GetNElements(ROOT::DescriptorId_t ph
       result = std::max(result, columnRange.GetFirstElementIndex() + columnRange.GetNElements());
    }
    return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the cluster boundaries for each cluster in this RNTuple.
+std::vector<ROOT::Internal::RNTupleClusterBoundaries>
+ROOT::Internal::GetClusterBoundaries(const ROOT::RNTupleDescriptor &desc)
+{
+   std::vector<Internal::RNTupleClusterBoundaries> boundaries;
+   boundaries.reserve(desc.GetNClusters());
+   auto clusterId = desc.FindClusterId(0, 0);
+   while (clusterId != ROOT::kInvalidDescriptorId) {
+      const auto &clusterDesc = desc.GetClusterDescriptor(clusterId);
+      R__ASSERT(clusterDesc.GetNEntries() > 0);
+      boundaries.emplace_back(ROOT::Internal::RNTupleClusterBoundaries{
+         clusterDesc.GetFirstEntryIndex(), clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries()});
+      clusterId = desc.FindNextClusterId(clusterId);
+   }
+   return boundaries;
 }
 
 ROOT::DescriptorId_t
@@ -702,7 +745,7 @@ std::unique_ptr<ROOT::RNTupleModel> ROOT::RNTupleDescriptor::CreateModel(const R
       if (field->GetTraits() & ROOT::RFieldBase::kTraitInvalidField) {
          const auto &invalid = static_cast<const RInvalidField &>(*field);
          const auto cat = invalid.GetCategory();
-         bool mustThrow = cat != RInvalidField::RCategory::kUnknownStructure;
+         bool mustThrow = cat != RInvalidField::ECategory::kUnknownStructure;
          if (mustThrow)
             throw invalid.GetError();
 
@@ -767,6 +810,8 @@ ROOT::RNTupleDescriptor ROOT::RNTupleDescriptor::Clone() const
    clone.fSortedClusterGroupIds = fSortedClusterGroupIds;
    for (const auto &d : fClusterDescriptors)
       clone.fClusterDescriptors.emplace(d.first, d.second.Clone());
+   for (const auto &d : fAttributeSets)
+      clone.fAttributeSets.emplace_back(d.Clone());
    return clone;
 }
 
@@ -1087,6 +1132,19 @@ void ROOT::Internal::RNTupleDescriptorBuilder::SetFeature(unsigned int flag)
    fDescriptor.fFeatureFlags.insert(flag);
 }
 
+ROOT::RResult<ROOT::Experimental::RNTupleAttrSetDescriptor>
+ROOT::Experimental::Internal::RNTupleAttrSetDescriptorBuilder::MoveDescriptor()
+{
+   if (fDesc.fName.empty())
+      return R__FAIL("attribute set name cannot be empty");
+   if (fDesc.fAnchorLength == 0)
+      return R__FAIL("invalid anchor length");
+   if (fDesc.fAnchorLocator.GetType() == RNTupleLocator::kTypeUnknown)
+      return R__FAIL("invalid locator type");
+
+   return std::move(fDesc);
+}
+
 ROOT::RResult<ROOT::RColumnDescriptor> ROOT::Internal::RColumnDescriptorBuilder::MakeDescriptor() const
 {
    if (fColumn.GetLogicalId() == ROOT::kInvalidDescriptorId)
@@ -1108,14 +1166,6 @@ ROOT::RResult<ROOT::RColumnDescriptor> ROOT::Internal::RColumnDescriptorBuilder:
    }
 
    return fColumn.Clone();
-}
-
-ROOT::Internal::RFieldDescriptorBuilder::RFieldDescriptorBuilder(const RFieldDescriptor &fieldDesc)
-   : fField(fieldDesc.Clone())
-{
-   fField.fParentId = ROOT::kInvalidDescriptorId;
-   fField.fLinkIds = {};
-   fField.fLogicalColumnIds = {};
 }
 
 ROOT::Internal::RFieldDescriptorBuilder
@@ -1284,17 +1334,6 @@ ROOT::RResult<void> ROOT::Internal::RNTupleDescriptorBuilder::AddClusterGroup(RC
    return RResult<void>::Success();
 }
 
-void ROOT::Internal::RNTupleDescriptorBuilder::Reset()
-{
-   fDescriptor.fName = "";
-   fDescriptor.fDescription = "";
-   fDescriptor.fFieldDescriptors.clear();
-   fDescriptor.fColumnDescriptors.clear();
-   fDescriptor.fClusterDescriptors.clear();
-   fDescriptor.fClusterGroupDescriptors.clear();
-   fDescriptor.fHeaderExtension.reset();
-}
-
 void ROOT::Internal::RNTupleDescriptorBuilder::SetSchemaFromExisting(const RNTupleDescriptor &descriptor)
 {
    fDescriptor = descriptor.CloneSchema();
@@ -1358,6 +1397,19 @@ void ROOT::Internal::RNTupleDescriptorBuilder::ReplaceExtraTypeInfo(RExtraTypeIn
       *it = std::move(extraTypeInfoDesc);
    else
       fDescriptor.fExtraTypeInfoDescriptors.emplace_back(std::move(extraTypeInfoDesc));
+}
+
+ROOT::RResult<void>
+ROOT::Internal::RNTupleDescriptorBuilder::AddAttributeSet(Experimental::RNTupleAttrSetDescriptor &&attrSetDesc)
+{
+   auto &attrSets = fDescriptor.fAttributeSets;
+   if (std::find_if(attrSets.begin(), attrSets.end(), [&name = attrSetDesc.GetName()](const auto &desc) {
+          return desc.GetName() == name;
+       }) != attrSets.end()) {
+      return R__FAIL("attribute sets with duplicate names");
+   }
+   attrSets.push_back(std::move(attrSetDesc));
+   return RResult<void>::Success();
 }
 
 RNTupleSerializer::StreamerInfoMap_t ROOT::Internal::RNTupleDescriptorBuilder::BuildStreamerInfos() const
@@ -1474,4 +1526,27 @@ ROOT::RNTupleDescriptor::RClusterDescriptorIterable ROOT::RNTupleDescriptor::Get
 ROOT::RNTupleDescriptor::RExtraTypeInfoDescriptorIterable ROOT::RNTupleDescriptor::GetExtraTypeInfoIterable() const
 {
    return RExtraTypeInfoDescriptorIterable(*this);
+}
+
+ROOT::Experimental::RNTupleAttrSetDescriptorIterable ROOT::RNTupleDescriptor::GetAttrSetIterable() const
+{
+   return Experimental::RNTupleAttrSetDescriptorIterable(*this);
+}
+
+bool ROOT::Experimental::RNTupleAttrSetDescriptor::operator==(const RNTupleAttrSetDescriptor &other) const
+{
+   return fAnchorLength == other.fAnchorLength && fSchemaVersionMajor == other.fSchemaVersionMajor &&
+          fSchemaVersionMinor == other.fSchemaVersionMinor && fAnchorLocator == other.fAnchorLocator &&
+          fName == other.fName;
+};
+
+ROOT::Experimental::RNTupleAttrSetDescriptor ROOT::Experimental::RNTupleAttrSetDescriptor::Clone() const
+{
+   RNTupleAttrSetDescriptor desc;
+   desc.fAnchorLength = fAnchorLength;
+   desc.fSchemaVersionMajor = fSchemaVersionMajor;
+   desc.fSchemaVersionMinor = fSchemaVersionMinor;
+   desc.fAnchorLocator = fAnchorLocator;
+   desc.fName = fName;
+   return desc;
 }

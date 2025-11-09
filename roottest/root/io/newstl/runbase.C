@@ -1,18 +1,19 @@
 #include <map>
 #include <string>
 #include <utility>
+#include <exception>
+#include <algorithm>
+#include <set>
+
 #include "TFile.h"
 #include "TBranch.h"
 #include "TTree.h"
-#include "exception"
-#include "algorithm"
-#include "set"
 
 #ifndef ClingWorkAroundStripDefaultArg
 namespace std {
 #endif
-  template <typename key, typename value, 
-    typename compare_operation = less<key>, 
+  template <typename key, typename value,
+    typename compare_operation = less<key>,
     typename alloc = allocator<pair<const key, value> > >
   class cmap: public map<key, value, compare_operation, alloc> {
   public:
@@ -39,26 +40,25 @@ namespace std {
 }
 #endif
 
-class foo: public TObject { 
-public: 
+class foo: public TObject {
+public:
 #ifndef ClingWorkAroundStripDefaultArg
-  std::cmap<int,int> & get_table () { return m_map; } 
+  std::cmap<int,int> & get_table () { return m_map; }
 #else
   cmap<int,int> & get_table () { return m_map; }
 #endif
-  foo (): TObject (), m_map("foo") {} 
+  foo (): TObject (), m_map("foo") {}
   virtual ~foo() {}
-private: 
+private:
 #ifndef ClingWorkAroundStripDefaultArg
-  std::cmap<int,int> m_map; 
+  std::cmap<int,int> m_map;
 #else
   cmap<int,int> m_map;
 #endif
-   std::set<std::string> m_string;
-  ClassDef(foo,1);
-}; 
+  std::set<std::string> m_string;
+  ClassDefOverride(foo,1);
+};
 
-ClassImp(foo);
 
 #ifdef __CINT__
 // pragma link C++ class std::map<int, int>;

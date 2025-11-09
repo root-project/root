@@ -100,19 +100,17 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - platform: mac13   
-            arch: ARM64
-            overrides: ["builtin_zlib=ON"]
           - platform: mac14
             arch: X64
             overrides: ["CMAKE_CXX_STANDARD=20"]
           - platform: mac15
             arch: ARM64
             overrides: ["CMAKE_CXX_STANDARD=23"]
+          - platform: mac26
+            arch: ARM64
           - platform: mac-beta
             is_special: true
             arch: ARM64
-            overrides: ["CMAKE_CXX_STANDARD=23"]
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
@@ -161,13 +159,15 @@ jobs:
 
       - name: Set up curl CA bundle for Davix to work with https
         run: 'echo SSL_CERT_FILE=/opt/local/share/curl/curl-ca-bundle.crt >> $GITHUB_ENV'
-
+        
       - name: Pull Request Build
+        shell: bash -leo pipefail {0}
         if: github.event_name == 'pull_request'
         env:
-          INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
+          HOME: /Users/sftnight
+          INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') && !matrix.platform == 'mac15' && !matrix.platform == 'mac26'}}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
-        run: ".github/workflows/root-ci-config/build_root.py
+        run: ".github/workflows/root-ci-config/build_root.py 
                     --buildtype       RelWithDebInfo
                     --incremental     $INCREMENTAL
                     --base_ref        ${{ github.base_ref }}
@@ -179,8 +179,9 @@ jobs:
                     --platform        ${{ matrix.platform }}"
 
       - name: Workflow dispatch
+        shell: bash -leo pipefail {0}
         if: ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
-        run: ".github/workflows/root-ci-config/build_root.py
+        run: ".github/workflows/root-ci-config/build_root.py 
                     --buildtype      ${{ inputs.buildtype }}
                     --platform       ${{ matrix.platform }}
                     --incremental    ${{ inputs.incremental }}
@@ -190,8 +191,9 @@ jobs:
                     --repository     ${{ github.server_url }}/${{ github.repository }}"
 
       - name: Nightly build
+        shell: bash -leo pipefail {0}
         if:   github.event_name == 'schedule'
-        run: ".github/workflows/root-ci-config/build_root.py
+        run: ".github/workflows/root-ci-config/build_root.py 
                     --buildtype      Release
                     --platform       ${{ matrix.platform }}
                     --incremental    false
@@ -200,8 +202,9 @@ jobs:
                     --repository     ${{ github.server_url }}/${{ github.repository }}"
 
       - name: Update build cache after push to release branch
+        shell: bash -leo pipefail {0}
         if:   github.event_name == 'push'
-        run: ".github/workflows/root-ci-config/build_root.py
+        run: ".github/workflows/root-ci-config/build_root.py 
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.platform }}
                     --incremental    false
@@ -376,8 +379,6 @@ jobs:
           - image: fedora42
             overrides: ["CMAKE_CXX_STANDARD=23"]
           - image: fedora43
-            overrides: ["CMAKE_CXX_STANDARD=23"]
-            is_special: true
           - image: alma8
           - image: alma9
             overrides: ["CMAKE_BUILD_TYPE=Debug"]
@@ -389,10 +390,10 @@ jobs:
           - image: ubuntu2504
             overrides: ["CMAKE_CXX_STANDARD=23"]
           - image: ubuntu2510
-            is_special: true
-            overrides: ["CMAKE_CXX_STANDARD=23"]
           - image: debian125
             overrides: ["CMAKE_CXX_STANDARD=20", "dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
+          - image: debian13
+            overrides: ["dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
           # Special builds
           - image: alma9
             is_special: true
@@ -601,7 +602,7 @@ jobs:
 
       - name: CTest in post-install test project
         working-directory: ${{ env.POST_INSTALL_DIR }}
-        run: ctest -j $(nproc)
+        run: ctest --output-on-failure -j $(nproc)
 
   event_file:
     # For any event that is not a PR, the CI will always run. In PRs, the CI

@@ -65,8 +65,5 @@ void testing() {
 }
 
 #ifndef __CINT__
-ClassImp(PlexSTL)
-ClassImp(PlexItem)
-ClassImp(Object)
 #endif
 

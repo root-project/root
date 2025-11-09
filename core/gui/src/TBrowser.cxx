@@ -99,7 +99,6 @@ private:
    TClass *fClass; ///<! pointer to class of the foreign object
 };
 
-ClassImp(TBrowser);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Make sure the application environment exists and the GUI libs are loaded

@@ -89,6 +89,10 @@ clean_environment()
          default_manpath=""
       fi
    fi
+   if [ -n "${ROOT_INCLUDE_PATH-}" ]; then
+      drop_from_path "$ROOT_INCLUDE_PATH" "@DEFAULT_ROOT_INCLUDE_PATH@"
+      ROOT_INCLUDE_PATH=$newpath
+   fi
 }
 
 set_environment()
@@ -162,6 +166,14 @@ set_environment()
    else
       JUPYTER_CONFIG_PATH=$ROOTSYS/etc/notebook:$JUPYTER_CONFIG_PATH; export JUPYTER_CONFIG_PATH
    fi
+
+   if [ -z "${ROOT_INCLUDE_PATH-}" ]; then
+      ROOT_INCLUDE_PATH=@DEFAULT_ROOT_INCLUDE_PATH@
+      export ROOT_INCLUDE_PATH
+   else
+      ROOT_INCLUDE_PATH=@DEFAULT_ROOT_INCLUDE_PATH@:$ROOT_INCLUDE_PATH
+      export ROOT_INCLUDE_PATH
+   fi
 }
 
 getTrueShellExeName() { # mklement0 https://stackoverflow.com/a/23011530/7471760
@@ -189,6 +201,12 @@ getTrueShellExeName() { # mklement0 https://stackoverflow.com/a/23011530/7471760
    # If the executable is a symlink, resolve it to its *ultimate*
    # target.
    while nextTarget=$(readlink "$trueExe"); do trueExe=$nextTarget; done
+   
+   if [ "$(basename $trueExe)" = "sh" -a -L "/private/var/select/sh" ]; then
+      # on MacOS, sh re-execs /private/var/select/sh, so resolve it
+      trueExe="/private/var/select/sh";
+      while nextTarget=$(readlink "$trueExe"); do trueExe=$nextTarget; done
+   fi
    # Output the executable name only.
    printf '%s' "$(basename "$trueExe")"
 }
@@ -238,15 +256,15 @@ if [ -z "${SOURCE}" ]; then
       return 1
    fi
 else
-   # get param to "."
-   thisroot="$(dirname "${SOURCE}")"
-   ROOTSYS=$(cd "${thisroot}/.." > /dev/null && pwd); export ROOTSYS
-   if [ -z "$ROOTSYS" ]; then
-      echo "ERROR: \"cd ${thisroot}/..\" or \"pwd\" failed" >&2
-      return 1
-   fi
+   thisrootdir=$(dirname $(realpath "${SOURCE}"))
+   export ROOTSYS=${thisrootdir%/*}
 fi
 
+if ! [ -f "${ROOTSYS}/bin/root-config" ] ; then
+   echo "ERROR: root-config not found under ROOTSYS=\"${ROOTSYS}/\"" >&2
+   ROOTSYS=; export ROOTSYS
+   return 1
+fi
 
 clean_environment
 set_environment

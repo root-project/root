@@ -85,11 +85,11 @@ public:
    void AddTCanvas() { AddInitWidget("tcanvas"); }
    void AddRCanvas() { AddInitWidget("rcanvas"); }
 
-   /// show Browser in specified place
    void Show(const RWebDisplayArgs &args = "", bool always_start_new_browser = false);
 
-   /// hide Browser
    void Hide();
+
+   void Sync();
 
    std::string GetWindowUrl(bool remote);
 

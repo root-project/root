@@ -3,7 +3,6 @@
 #include <iomanip>
 using namespace std;
 
-ClassImp(DataBlockBase)
 
 DataBlockBase::DataBlockBase()
   : fSize(10)

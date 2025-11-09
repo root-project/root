@@ -30,7 +30,6 @@ TGGCPool provides a pool of graphics contexts.
 #include <cstring>
 
 
-ClassImp(TGGC);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a graphics context (only called via TGGCPool::GetGC()).
@@ -868,7 +867,6 @@ void TGGC::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 }
 
 
-ClassImp(TGGCPool);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create graphics context pool.

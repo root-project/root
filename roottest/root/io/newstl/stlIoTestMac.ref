@@ -1,0 +1,18 @@
+
+Processing srun.C("roottest/root/io/newstl/")...
+Running test rvec
+ROOT does not support variable size array of stl containers
+Running test vector
+ROOT does not support variable size array of stl containers
+Running test deque
+ROOT does not support variable size array of stl containers
+Running test list
+ROOT does not support variable size array of stl containers
+Running test set
+ROOT does not support variable size array of stl containers
+Running test multiset
+ROOT does not support variable size array of stl containers
+Running test map
+ROOT does not support variable size array of stl containers
+Running test multimap
+ROOT does not support variable size array of stl containers

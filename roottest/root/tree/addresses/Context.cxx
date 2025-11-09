@@ -1,17 +1,15 @@
-#include <iostream>
-using namespace std;
-
 #include "Context.h"
 
-ClassImp(Context)
+#include <iostream>
+
 
 //_____________________________________________________________________________
 void Context::Print(Option_t *) const
 {
    // Print this object
 
-  cout << "Context::Print " << endl;
-  cout << "Detector " << fDetector << " SimFlag " << fSimFlag 
-       << " Time " << fTimeStamp << endl;
+  std::cout << "Context::Print " << std::endl;
+  std::cout << "Detector " << fDetector << " SimFlag " << fSimFlag
+       << " Time " << fTimeStamp << std::endl;
 }
 

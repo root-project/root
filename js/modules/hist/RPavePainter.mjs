@@ -85,8 +85,10 @@ class RPavePainter extends RObjectPainter {
             if (settings.ContextMenu && this.paveContextMenu)
                g.on('contextmenu', evnt => this.paveContextMenu(evnt));
 
-            addDragHandler(this, { x: pave_x, y: pave_y, width: pave_width, height: pave_height,
-                                   minwidth: 20, minheight: 20, redraw: d => this.sizeChanged(d) });
+            addDragHandler(this, {
+               x: pave_x, y: pave_y, width: pave_width, height: pave_height,
+               minwidth: 20, minheight: 20, redraw: d => this.sizeChanged(d)
+            });
          }
 
          return this;
@@ -168,53 +170,58 @@ class RLegendPainter extends RPavePainter {
             pp = this.getPadPainter();
 
       let nlines = legend.fEntries.length;
-      if (legend.fTitle) nlines++;
+      if (legend.fTitle)
+         nlines++;
 
-      if (!nlines || !pp) return this;
+      if (!nlines || !pp)
+         return this;
 
       const stepy = height / nlines, margin_x = 0.02 * width;
 
-      textFont.setSize(height/(nlines * 1.2));
+      textFont.setSize(height / (nlines * 1.2));
       return this.startTextDrawingAsync(textFont, 'font').then(() => {
          let posy = 0;
 
          if (legend.fTitle) {
-            this.drawText({ latex: 1, width: width - 2*margin_x, height: stepy, x: margin_x, y: posy, text: legend.fTitle });
+            this.drawText({ latex: 1, width: width - 2 * margin_x, height: stepy, x: margin_x, y: posy, text: legend.fTitle });
             posy += stepy;
          }
 
          for (let i = 0; i < legend.fEntries.length; ++i) {
-            const entry = legend.fEntries[i], w4 = Math.round(width/4);
+            const entry = legend.fEntries[i], w4 = Math.round(width / 4);
             let objp = null;
 
-            this.drawText({ latex: 1, width: 0.75*width - 3*margin_x, height: stepy, x: 2*margin_x + w4, y: posy, text: entry.fLabel });
+            this.drawText({ latex: 1, width: 0.75 * width - 3 * margin_x, height: stepy, x: 2 * margin_x + w4, y: posy, text: entry.fLabel });
 
             if (entry.fDrawableId !== 'custom')
                objp = pp.findSnap(entry.fDrawableId, true);
             else if (entry.fDrawable.fIO) {
                objp = new RObjectPainter(this.getPadPainter(), entry.fDrawable.fIO);
-               if (entry.fLine) objp.createv7AttLine();
-               if (entry.fFill) objp.createv7AttFill();
-               if (entry.fMarker) objp.createv7AttMarker();
+               if (entry.fLine)
+                  objp.createv7AttLine();
+               if (entry.fFill)
+                  objp.createv7AttFill();
+               if (entry.fMarker)
+                  objp.createv7AttMarker();
             }
 
             if (entry.fFill && objp?.fillatt) {
-               this.appendPath(`M${Math.round(margin_x)},${Math.round(posy + stepy*0.1)}h${w4}v${Math.round(stepy*0.8)}h${-w4}z`)
+               this.appendPath(`M${Math.round(margin_x)},${Math.round(posy + stepy * 0.1)}h${w4}v${Math.round(stepy * 0.8)}h${-w4}z`)
                    .call(objp.fillatt.func);
             }
 
             if (entry.fLine && objp?.lineatt) {
-               this.appendPath(`M${Math.round(margin_x)},${Math.round(posy + stepy/2)}h${w4}`)
+               this.appendPath(`M${Math.round(margin_x)},${Math.round(posy + stepy / 2)}h${w4}`)
                    .call(objp.lineatt.func);
             }
 
             if (entry.fError && objp?.lineatt) {
-               this.appendPath(`M${Math.round(margin_x + width/8)},${Math.round(posy + stepy*0.2)}v${Math.round(stepy*0.6)}`)
+               this.appendPath(`M${Math.round(margin_x + width / 8)},${Math.round(posy + stepy * 0.2)}v${Math.round(stepy * 0.6)}`)
                    .call(objp.lineatt.func);
             }
 
             if (entry.fMarker && objp?.markeratt) {
-               this.appendPath(objp.markeratt.create(margin_x + width/8, posy + stepy/2))
+               this.appendPath(objp.markeratt.create(margin_x + width / 8, posy + stepy / 2))
                    .call(objp.markeratt.func);
             }
 
@@ -245,20 +252,21 @@ class RPaveTextPainter extends RPavePainter {
    /** @summary draw RPaveText content */
    async drawContent() {
       const pavetext = this.getObject(),
-            textFont = this.v7EvalFont('text', { size: 12, color: 'black', align: 22 }),
+            nlines = pavetext?.fText.length;
+
+      if (!nlines)
+         return;
+
+      const textFont = this.v7EvalFont('text', { size: 12, color: 'black', align: 22 }),
             width = this.pave_width,
             height = this.pave_height,
-            nlines = pavetext.fText.length;
+            stepy = height / nlines, margin_x = 0.02 * width;
 
-      if (!nlines) return;
-
-      const stepy = height / nlines, margin_x = 0.02 * width;
-
-      textFont.setSize(height/(nlines * 1.2));
+      textFont.setSize(height / (nlines * 1.2));
 
       return this.startTextDrawingAsync(textFont, 'font').then(() => {
          for (let i = 0, posy = 0; i < pavetext.fText.length; ++i, posy += stepy)
-            this.drawText({ latex: 1, width: width - 2*margin_x, height: stepy, x: margin_x, y: posy, text: pavetext.fText[i] });
+            this.drawText({ latex: 1, width: width - 2 * margin_x, height: stepy, x: margin_x, y: posy, text: pavetext.fText[i] });
 
          return this.finishTextDrawing(undefined, true);
       });

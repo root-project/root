@@ -49,7 +49,6 @@
 
 extern void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k, Double_t *b);
 
-ClassImp(TGraph);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -101,6 +100,25 @@ Begin_Macro(source)
    g->Draw();
 }
 End_Macro
+
+#### X-axis zooming
+
+The underlying x axis of a TGraph is based on a virtual fixed binwidth histogram, which means that one can not infinitely zoom on it, just down to one bin.
+The number of virtual bins is the maximum between 100 and the number of points in the TGraph. If you find a case where you would like to zoom deeper than allowed,
+you can either start canvas in web mode, or keep in classic mode but predefine the histogram before the first drawing of the graph:
+
+\code{.cpp}
+TGraph gr;
+for(auto i = 0; i < 100; ++i) gr.AddPoint(i,i);
+gr.AddPoint(10000, 0);
+// If one draws here, one can not zoom between x = 0 and x = 50, since first bin goes from x = 0 to 100.
+auto h1 = new TH1F("hist", "hist", 10000, -10., 11000.); // Define underlying hist with 10000 instead of 101 bins
+h1->SetMaximum(120);
+h1->SetStats(0);
+h1->SetDirectory(nullptr);
+gr.SetHistogram(h1);
+gr.Draw("A*")
+\endcode
 
 */
 
@@ -1439,7 +1457,7 @@ TH1F *TGraph::GetHistogram() const
    // therefore they might be too strict and cut some points. In that case the
    // fHistogram limits should be recomputed ie: the existing fHistogram
    // should not be returned.
-   TH1F *historg = nullptr;
+   TH1F *histogr = nullptr;
    if (fHistogram) {
       if (!TestBit(kResetHisto)) {
          if (gPad && gPad->GetLogx()) {
@@ -1452,7 +1470,7 @@ TH1F *TGraph::GetHistogram() const
       } else {
          const_cast <TGraph*>(this)->ResetBit(kResetHisto);
       }
-      historg = fHistogram;
+      histogr = fHistogram;
    }
 
    if (rwxmin == rwxmax) rwxmax += 1.;
@@ -1493,7 +1511,7 @@ TH1F *TGraph::GetHistogram() const
    const char *gname = GetName();
    if (!gname[0]) gname = "Graph";
    // do not add the histogram to gDirectory
-   // use local TDirectory::TContect that will set temporarly gDirectory to a nullptr and
+   // use local TDirectory::TContext that will set temporarly gDirectory to a nullptr and
    // will avoid that histogram is added in the global directory
    {
       TDirectory::TContext ctx(nullptr);
@@ -1505,24 +1523,24 @@ TH1F *TGraph::GetHistogram() const
    fHistogram->SetMaximum(maximum);
    fHistogram->GetYaxis()->SetLimits(minimum, maximum);
    // Restore the axis attributes if needed
-   if (historg) {
-      fHistogram->GetXaxis()->SetTitle(historg->GetXaxis()->GetTitle());
-      fHistogram->GetXaxis()->CenterTitle(historg->GetXaxis()->GetCenterTitle());
-      fHistogram->GetXaxis()->RotateTitle(historg->GetXaxis()->GetRotateTitle());
-      fHistogram->GetXaxis()->SetNoExponent(historg->GetXaxis()->GetNoExponent());
-      fHistogram->GetXaxis()->SetTimeDisplay(historg->GetXaxis()->GetTimeDisplay());
-      fHistogram->GetXaxis()->SetTimeFormat(historg->GetXaxis()->GetTimeFormat());
-      historg->GetXaxis()->TAttAxis::Copy(*(fHistogram->GetXaxis()));
+   if (histogr) {
+      fHistogram->GetXaxis()->SetTitle(histogr->GetXaxis()->GetTitle());
+      fHistogram->GetXaxis()->CenterTitle(histogr->GetXaxis()->GetCenterTitle());
+      fHistogram->GetXaxis()->RotateTitle(histogr->GetXaxis()->GetRotateTitle());
+      fHistogram->GetXaxis()->SetNoExponent(histogr->GetXaxis()->GetNoExponent());
+      fHistogram->GetXaxis()->SetTimeDisplay(histogr->GetXaxis()->GetTimeDisplay());
+      fHistogram->GetXaxis()->SetTimeFormat(histogr->GetXaxis()->GetTimeFormat());
+      histogr->GetXaxis()->TAttAxis::Copy(*(fHistogram->GetXaxis()));
 
-      fHistogram->GetYaxis()->SetTitle(historg->GetYaxis()->GetTitle());
-      fHistogram->GetYaxis()->CenterTitle(historg->GetYaxis()->GetCenterTitle());
-      fHistogram->GetYaxis()->RotateTitle(historg->GetYaxis()->GetRotateTitle());
-      fHistogram->GetYaxis()->SetNoExponent(historg->GetYaxis()->GetNoExponent());
-      fHistogram->GetYaxis()->SetTimeDisplay(historg->GetYaxis()->GetTimeDisplay());
-      fHistogram->GetYaxis()->SetTimeFormat(historg->GetYaxis()->GetTimeFormat());
-      historg->GetYaxis()->TAttAxis::Copy(*(fHistogram->GetYaxis()));
+      fHistogram->GetYaxis()->SetTitle(histogr->GetYaxis()->GetTitle());
+      fHistogram->GetYaxis()->CenterTitle(histogr->GetYaxis()->GetCenterTitle());
+      fHistogram->GetYaxis()->RotateTitle(histogr->GetYaxis()->GetRotateTitle());
+      fHistogram->GetYaxis()->SetNoExponent(histogr->GetYaxis()->GetNoExponent());
+      fHistogram->GetYaxis()->SetTimeDisplay(histogr->GetYaxis()->GetTimeDisplay());
+      fHistogram->GetYaxis()->SetTimeFormat(histogr->GetYaxis()->GetTimeFormat());
+      histogr->GetYaxis()->TAttAxis::Copy(*(fHistogram->GetYaxis()));
 
-      delete historg;
+      delete histogr;
    }
    return fHistogram;
 }
@@ -2165,9 +2183,11 @@ void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, O
 {
    thread_local Int_t frameNumber = 0;
 
-   SavePrimitiveNameTitle(out, varname);
+   TString ref = "Graph";
+   if ((ref != GetName()) || (ref != GetTitle()))
+      SavePrimitiveNameTitle(out, varname);
 
-   SaveFillAttributes(out, varname, 0, 1001);
+   SaveFillAttributes(out, varname, 0, 1000);
    SaveLineAttributes(out, varname, 1, 1, 1);
    SaveMarkerAttributes(out, varname, 1, 1, 1);
 
@@ -2265,6 +2285,13 @@ void TGraph::SetHighlight(Bool_t set)
    if (!painter) return;
    SetBit(kIsHighlight, set);
    painter->SetHighlight(this);
+}
+
+/// Set the histogram underlying the TGraph. This transfers the ownership of h to the TGraph. The preexisting fHistogram will be deleted.
+void  TGraph::SetHistogram(TH1F *h)
+{
+   delete fHistogram;
+   fHistogram = h;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

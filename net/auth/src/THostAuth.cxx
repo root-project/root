@@ -26,10 +26,9 @@
 #include "TAuthenticate.h"
 #include "TSocket.h"
 #include "TUrl.h"
-#include <stdlib.h>
+#include <cstdlib>
 
 
-ClassImp(THostAuth);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

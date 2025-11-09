@@ -330,6 +330,13 @@ std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view>
 {
    std::stringstream code;
 
+   if (fVerbose) {
+      std::cout << "Total chunks allocated\n";
+      for (auto chunk = fIntermediateMemoryInfo.total_stack.begin(); chunk != fIntermediateMemoryInfo.total_stack.end(); ++chunk) {
+         std::cout << "..... chunk " << chunk->first << " size " << chunk->second.tensor_size << " " << chunk->second.tensor_name << std::endl;
+      }
+   }
+
    auto declareIntermediateTensor = [this, &code](std::string const &name, size_t size, size_t location) {
       std::string typeName = ConvertTypeToString(GetTensorType(name));
       code << "\n // Allocating memory for intermediate tensor " << name << " with size " << size << " bytes";
@@ -338,88 +345,160 @@ std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view>
            << "*>(fIntermediateMemoryPool.data() + " << location << ");\n";
    };
 
+   if (fVerbose) std::cout << "*** AllocateIntermediateMemory: Loop on op output tensors\n";
+   // order output tensors by size
+   std::vector<TensorMemoryInfo> ordered_output_tensors;
+
    for (auto &it : op_output_tensors) {
-         std::string name = std::string{it};
-         bool allocated = false;
-         if (GetTensorType(name) == ETensorType::BOOL ||
-            fInitializedTensors.find(name) != fInitializedTensors.end() ||
-            fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end()) continue;
+      auto name = std::string(it);
+      if (GetTensorType(name) == ETensorType::BOOL || fInitializedTensors.find(name) != fInitializedTensors.end() ||
+          fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end())
+         continue;
 
-         auto tensor_size = GetTypeSize(GetTensorType(name)) * ConvertShapeToLength(GetTensorShape(name));
+      auto tensor_size = GetTypeSize(GetTensorType(name)) * ConvertShapeToLength(GetTensorShape(name));
+      // important fill the pair in the ordered output tensors with the string view and not the string
+      TensorMemoryInfo tmi = {it, tensor_size};
+      ordered_output_tensors.push_back(tmi);
+   }
+   std::sort(ordered_output_tensors.begin(), ordered_output_tensors.end(),
+             [](const TensorMemoryInfo &a, const TensorMemoryInfo &b) { return a.tensor_size > b.tensor_size; });
 
-            for (auto chunk = fIntermediateMemoryInfo.available_stack.begin(); chunk != fIntermediateMemoryInfo.available_stack.end(); ) {
+   for (auto &it : ordered_output_tensors) {
+      bool allocated = false;
+      std::string name = std::string{it.tensor_name};
+      size_t tensor_size = it.tensor_size;
+      if (fVerbose)
+         std::cout << "output tensor " << name << " size " << tensor_size << std::endl;
 
-                  // check if available memory chunks can accommodate the tensor
-                  if (chunk->second >= tensor_size) {
-                     auto new_chunk = fIntermediateMemoryInfo.total_stack[chunk->first].split(it, tensor_size);
-                     auto new_chunk_location = chunk->first+chunk->second-tensor_size;
-                     fIntermediateMemoryInfo.total_stack[new_chunk_location] = new_chunk;
+      for (auto chunk = fIntermediateMemoryInfo.available_stack.begin();
+           chunk != fIntermediateMemoryInfo.available_stack.end();) {
 
-                     declareIntermediateTensor(name, tensor_size, new_chunk_location);
-                     chunk->second -= tensor_size;
+         if (fVerbose) std::cout << ".. available chunk " << chunk->first << " with size = " << chunk->second;
+         // check if available memory chunks can accommodate the tensor
+         if (chunk->second >= tensor_size) {
+            // need to use here string_view (i.e it.tensor_name)
+            // split returns the new chunk with size of new tensor. The free chunk is before the used one
+            auto new_chunk = fIntermediateMemoryInfo.total_stack[chunk->first].split(it.tensor_name, tensor_size);
+            auto new_chunk_location = chunk->first + chunk->second - tensor_size;
+            fIntermediateMemoryInfo.total_stack[new_chunk_location] = new_chunk;
 
-                     allocated = true;
+            declareIntermediateTensor(name, tensor_size, new_chunk_location);
+            chunk->second -= tensor_size;
 
-                     if (chunk->second == 0) {
-                        chunk = fIntermediateMemoryInfo.available_stack.erase(chunk);
-                     }
+            allocated = true;
 
-                     break;
-                  }
-                  ++chunk;
+            if (fVerbose) std::cout << " is re-used and split in a new of size " << new_chunk.tensor_size << " at " << new_chunk_location;
+
+            if (chunk->second == 0) {
+               if (fVerbose) std::cout << " and deleted since size matches";
+               fIntermediateMemoryInfo.available_stack.erase(chunk);
             }
-
-         if (!allocated) {
-               size_t chunk_idx = fIntermediateMemoryInfo.total_stack.empty()
-                                 ? 0
-                                 : fIntermediateMemoryInfo.total_stack.rbegin()->first + fIntermediateMemoryInfo.total_stack.rbegin()->second.tensor_size;
-
-               fIntermediateMemoryInfo.total_stack[chunk_idx] = {it, tensor_size};
-
-               declareIntermediateTensor(name, tensor_size, chunk_idx);
+            if (fVerbose) std::cout << std::endl;
+            break;
+         } else if (chunk->first == fIntermediateMemoryInfo.available_stack.rbegin()->first &&
+                    fIntermediateMemoryInfo.total_stack.rbegin()->first == chunk->first) {
+            // case last available chunk is the last in the memory, we can increase that one
+            fIntermediateMemoryInfo.total_stack[chunk->first] = {it.tensor_name, tensor_size};
+            declareIntermediateTensor(name, tensor_size, chunk->first);
+            fIntermediateMemoryInfo.available_stack.erase(chunk);
+            allocated = true;
+            if (fVerbose) std::cout << " is extended  with a bigger one of size " << tensor_size << std::endl;
+            break;
          }
+         ++chunk;
+         if (fVerbose) std::cout << std::endl;
+      }
+
+      if (!allocated) {
+         size_t chunk_idx = fIntermediateMemoryInfo.total_stack.empty()
+                               ? 0
+                               : fIntermediateMemoryInfo.total_stack.rbegin()->first +
+                                    fIntermediateMemoryInfo.total_stack.rbegin()->second.tensor_size;
+
+         fIntermediateMemoryInfo.total_stack[chunk_idx] = it;
+
+         declareIntermediateTensor(name, tensor_size, chunk_idx);
+
+         if (fVerbose) std::cout << "no chunk available - add in total stack a new chunk with size of tensor and idx : " << chunk_idx
+                   << std::endl;
+      }
    }
    return code.str();
 }
 
 void RModel::CheckAndFlushIntermediateMemory(std::span<const std::string_view> op_input_tensors, const size_t& op_idx){
-   for (auto &it : op_input_tensors){
+   if (fVerbose) std::cout << "*** CheckAndFlushIntermediateMemory: Loop on input tensors for op " << op_idx << "\n";
+   //print available chunks
+   if (fVerbose) std::cout << "available chunks before freeing them : \n";
+   for (auto chunk = fIntermediateMemoryInfo.available_stack.begin();
+        chunk != fIntermediateMemoryInfo.available_stack.end(); chunk++) {
+      if (fVerbose) std::cout << "-- free chunk " << chunk->first <<  " size = " << chunk->second << std::endl;
+   }
+   for (auto &it : op_input_tensors) {
       // last occurence of the tensor is reached => flush it from memory
+      if (fVerbose) std::cout << ".. input tensors : " << it;
       if (fIntermediateTensorFrequencyLookup[it] == op_idx) {
+         if (fVerbose) std::cout << "  flash condition is met - looping on chunks to find matching one \n";
          for (auto chunk = fIntermediateMemoryInfo.total_stack.begin();
-               chunk != fIntermediateMemoryInfo.total_stack.end(); ++chunk ) {
-               if (chunk->second.tensor_name == it) {
+              chunk != fIntermediateMemoryInfo.total_stack.end(); ++chunk) {
+            if (fVerbose) std::cout << "---  chunk " << chunk->first << " , " << chunk->second.tensor_name << " size " << chunk->second.tensor_size;
+            if (chunk->second.tensor_name == it) {
+               if (fVerbose) std::cout << " --  Found chunk corresponding to input tensor:  " << chunk->first;
+               // check if nearby chunks in available memory can coalesce
+               auto first_greater = fIntermediateMemoryInfo.available_stack.upper_bound(
+                  chunk->first); // smallest element greater than the flushed chunk idx
+               auto last_smaller = (first_greater == fIntermediateMemoryInfo.available_stack.begin())
+                                      ? fIntermediateMemoryInfo.available_stack.end()
+                                      : std::prev(first_greater); // largest element smaller than the flushed chunk idx
 
-                     // check if nearby chunks in available memory can coalesce
-                     auto first_greater = fIntermediateMemoryInfo.available_stack.upper_bound(chunk->first); // smallest element greater than the flushed chunk idx
-                     auto last_smaller = (first_greater == fIntermediateMemoryInfo.available_stack.begin()) ? fIntermediateMemoryInfo.available_stack.end() : std::prev(first_greater); // largest element smaller than the flushed chunk idx
+               // check if the next stack entry is actually adjacent in memory
 
-                     // check if the next stack entry is actually adjacent in memory
-                     if (last_smaller->first+last_smaller->second + 1 == chunk->first){
-                        last_smaller->second += chunk->second.tensor_size;
-                        fIntermediateMemoryInfo.total_stack[last_smaller->first].merge(chunk->second);
-
-                        if (last_smaller->first + last_smaller->second + 1 == first_greater->first){
-                              fIntermediateMemoryInfo.total_stack[last_smaller->first].merge(fIntermediateMemoryInfo.total_stack[first_greater->first]);
-                              first_greater = fIntermediateMemoryInfo.available_stack.erase(first_greater);
-                        }
-                     } else{
-                        if (chunk->first + chunk->second.tensor_size + 1 == first_greater->first){
-                           fIntermediateMemoryInfo.total_stack[chunk->first].merge(fIntermediateMemoryInfo.total_stack[first_greater->first]);
-                           first_greater = fIntermediateMemoryInfo.available_stack.erase(first_greater);
-                        }
-                        fIntermediateMemoryInfo.available_stack.insert({
-                           chunk->first,
-                           chunk->second.tensor_size
-        });
-                     }
+               if (last_smaller != fIntermediateMemoryInfo.available_stack.end() &&
+                   last_smaller->first + last_smaller->second == chunk->first) {
+                  // merge chunk with previous one
+                  last_smaller->second += chunk->second.tensor_size;
+                  fIntermediateMemoryInfo.total_stack[last_smaller->first].merge(chunk->second);
+                  if (fVerbose) std::cout << " is adjacent in memory with previous one - merge ";
+                  if (first_greater != fIntermediateMemoryInfo.available_stack.end() &&
+                      last_smaller->first + last_smaller->second == first_greater->first) {
+                     // merge also with following one
+                     last_smaller->second += first_greater->second;
+                     fIntermediateMemoryInfo.total_stack[last_smaller->first].merge(
+                        fIntermediateMemoryInfo.total_stack[first_greater->first]);
+                     // delete merged one in available stack and in total stack
+                     fIntermediateMemoryInfo.total_stack.erase(first_greater->first);
+                     fIntermediateMemoryInfo.available_stack.erase(first_greater);
+                     if (fVerbose) std::cout << " merge also with following that is free ";
+                  }
+                  fIntermediateMemoryInfo.total_stack.erase(chunk->first);
+                  if (fVerbose) std::cout << std::endl;
+                  break;
+               } else if (first_greater != fIntermediateMemoryInfo.available_stack.end() &&
+                          chunk->first + chunk->second.tensor_size == first_greater->first) {
+                  // merge with first greater
+                  if (fVerbose) std::cout << " is adjacent in memory with following one - merge \n";
+                  // cannot modify idx of first_greter. Insert a new one and delete previous one
+                  size_t new_size = chunk->second.tensor_size + first_greater->second;
+                  size_t first_greater_idx = first_greater->first;
+                  fIntermediateMemoryInfo.available_stack.erase(first_greater);
+                  // cannot use anymore first_greater
+                  fIntermediateMemoryInfo.available_stack.insert({chunk->first, new_size});
+                  fIntermediateMemoryInfo.total_stack[chunk->first].merge(
+                     fIntermediateMemoryInfo.total_stack[first_greater_idx]);
+                  fIntermediateMemoryInfo.total_stack.erase(first_greater_idx);
+               } else {
+                  fIntermediateMemoryInfo.available_stack.insert({chunk->first, chunk->second.tensor_size});
+                  if (fVerbose) std::cout << " insert in the available stack the chunk with size " << chunk->second.tensor_size << std::endl;
                }
+               chunk->second.tensor_name = "free";
+               break;
+            }
          }
+      } else {
+         if (fVerbose) std::cout << std::endl;
       }
    }
 }
-
-
 
 void RModel::Initialize(int batchSize, bool verbose) {
    std::map<std::string, size_t> inputParams;
@@ -609,10 +688,13 @@ void RModel::GenerateInitializedTensorInfo()
 
    for (auto &i : fInitializedTensors) {
       if (!fUseWeightFile || i.second.IsConstantTensor()) {
-         if (i.second.type() == ETensorType::FLOAT)
+         if (i.second.type() == ETensorType::FLOAT) {
             fGC += GenerateConstantTensorCode<float>(i);
-         else if (i.second.type() == ETensorType::INT64)
+            fConstantTensorSize += ConvertShapeToLength(i.second.shape()) * 4;
+         } else if (i.second.type() == ETensorType::INT64) {
             fGC += GenerateConstantTensorCode<int64_t>(i);
+            fConstantTensorSize += ConvertShapeToLength(i.second.shape()) * 8;
+         }
 
       } else {
          // case of tensors which are read from a file
@@ -620,6 +702,7 @@ void RModel::GenerateInitializedTensorInfo()
          if (i.second.type() == ETensorType::FLOAT) {
             fGC += "std::vector<float> fTensor_" + i.first + " = std::vector<float>(" + std::to_string(length) + ");\n";
             fGC += "float * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
+            fWeightsTensorSize += ConvertShapeToLength(i.second.shape()) * 4;
          }
       }
    }
@@ -657,14 +740,17 @@ void RModel::GenerateIntermediateTensorInfo() {
             if (i.second.type == ETensorType::FLOAT) {
                tensor_declaration_block += "std::vector<float> fTensor_" + i.first + " = std::vector<float>(" + std::to_string(length) + ");\n";
                tensor_declaration_block += "float * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
+               fOtherTensorSize += 4 * length;
             }
             else if (i.second.type == ETensorType::DOUBLE) {
                tensor_declaration_block += "std::vector<double> fTensor_" + i.first + " = std::vector<double>(" + std::to_string(length) + ");\n";
                tensor_declaration_block += "double * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
+               fOtherTensorSize += 8 * length;
             }
             else if (i.second.type == ETensorType::INT64) {
                tensor_declaration_block += "std::vector<int64_t> fTensor_" + i.first + " = std::vector<int64_t>(" + std::to_string(length) + ");\n";
                tensor_declaration_block += "int64_t * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
+               fOtherTensorSize += 8 * length;
             }
          }
       }
@@ -846,6 +932,11 @@ void RModel::GenerateSessionCode()
       std::string intermediate_memory_alloc_string = "";
       intermediate_memory_alloc_string += "\n// --- Positioning intermediate tensor memory --";
       for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
+         if (fVerbose) {
+            auto op = fOperators[op_idx].get();
+            std::cout << "\n******************\n analyzing input/output operator " << op_idx << "  "
+                      << typeid(*op).name() << std::endl;
+         }
          intermediate_memory_alloc_string += AllocateIntermediateMemory(fOperators[op_idx]->GetOpOutputTensors());
          CheckAndFlushIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx);
       }

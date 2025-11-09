@@ -11,6 +11,8 @@
 #include <random>
 #include <vector>
 
+#include "ROOT/TestSupport.hxx"
+
 // StatOverflows TH1
 TEST(TH1, StatOverflows)
 {
@@ -52,6 +54,19 @@ TEST(THLimitsFinder, Degenerate)
    EXPECT_LT(xmin, xmax);
    EXPECT_LE(xmin, centralValue - 5.);
    EXPECT_GE(xmax, centralValue + 5.);
+}
+
+// see https://root-forum.cern.ch/t/bug-or-feature-in-ttree-draw/62862
+// Due to a poor binning choice in THLimitsFinder, the histograms in
+// TTree::Draw might not contain all values.
+TEST(THLimitsFinder, TTreeDraw_AutoBinning)
+{
+   TH1F histo("limitsFinder", "", 100, 0, 0);
+   histo.Fill(-999);
+   histo.Fill(0);
+   histo.BufferEmpty(1);
+
+   EXPECT_EQ(histo.GetEntries(), histo.GetEffectiveEntries());
 }
 
 // Simple cross-check that TH1::SmoothArray() is not doing anything if input
@@ -298,4 +313,19 @@ TEST(TH1, SetBufferedSumw2)
 
    EXPECT_FLOAT_EQ(h1.GetBinContent(1), Entries * Weight);
    EXPECT_FLOAT_EQ(h1.GetBinError(1), std::sqrt(Entries * Weight * Weight));
+}
+
+// https://github.com/root-project/root/issues/20185
+TEST(TAxis, EqualBinEdges)
+{
+   ROOT_EXPECT_ERROR(TAxis _({1, 1}), "TAxis::Set", "bins must be in increasing order");
+}
+
+TEST(TH1L, SetBinContent)
+{
+   TH1L h("", "", 1, 0, 1);
+   // Something that does not fit into Int_t, but is exactly representable in Double_t
+   static constexpr long long Large = 1LL << 42;
+   h.SetBinContent(1, Large);
+   EXPECT_EQ(h.GetBinContent(1), Large);
 }

@@ -82,6 +82,8 @@ private:
    /// Retrieving descriptor data from an RNTupleReader is supposed to be for testing and information purposes,
    /// not on a hot code path.
    std::optional<ROOT::RNTupleDescriptor> fCachedDescriptor;
+   /// We know that the RNTupleReader is always reading a single RNTuple, so the number of entries is fixed.
+   ROOT::NTupleSize_t fNEntries = 0;
    Experimental::Detail::RNTupleMetrics fMetrics;
    /// If not nullopt, these will be used when creating the model
    std::optional<ROOT::RNTupleDescriptor::RCreateModelOptions> fCreateModelOptions;
@@ -91,7 +93,7 @@ private:
    /// The model is generated from the RNTuple metadata on storage.
    explicit RNTupleReader(std::unique_ptr<Internal::RPageSource> source, const ROOT::RNTupleReadOptions &options);
 
-   void ConnectModel(ROOT::RNTupleModel &model);
+   void ConnectModel(ROOT::RNTupleModel &model, bool allowFieldSubstitutions);
    RNTupleReader *GetDisplayReader();
    void InitPageSource(bool enableMetrics);
 
@@ -105,11 +107,11 @@ public:
 
    public:
       using iterator = RIterator;
-      using iterator_category = std::forward_iterator_tag;
+      using iterator_category = std::input_iterator_tag;
       using value_type = ROOT::NTupleSize_t;
-      using difference_type = ROOT::NTupleSize_t;
-      using pointer = ROOT::NTupleSize_t *;
-      using reference = ROOT::NTupleSize_t &;
+      using difference_type = std::ptrdiff_t;
+      using pointer = const ROOT::NTupleSize_t *;
+      using reference = const ROOT::NTupleSize_t &;
 
       RIterator() = default;
       explicit RIterator(ROOT::NTupleSize_t index) : fIndex(index) {}
@@ -126,8 +128,8 @@ public:
          ++fIndex;
          return *this;
       }
-      reference operator*() { return fIndex; }
-      pointer operator->() { return &fIndex; }
+      reference operator*() const { return fIndex; }
+      pointer operator->() const { return &fIndex; }
       bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
       bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
    };
@@ -171,7 +173,20 @@ public:
    }
    ~RNTupleReader();
 
-   ROOT::NTupleSize_t GetNEntries() const { return fSource->GetNEntries(); }
+   /// Returns the number of entries in this RNTuple.
+   /// Note that the recommended way to iterate the RNTuple is using
+   /// ~~~ {.cpp}
+   /// // RECOMMENDED way to iterate an ntuple
+   /// for (auto i : reader->GetEntryRange()) { ... }
+   /// ~~~
+   /// instead of
+   /// ~~~ {.cpp}
+   /// // DISCOURAGED way to iterate an ntuple
+   /// for (auto i = 0u; i < reader->GetNEntries(); ++i) { ... }
+   /// ~~~
+   /// The reason is that determining the number of entries, while currently cheap, may in the future be
+   /// an expensive operation.
+   ROOT::NTupleSize_t GetNEntries() const { return fNEntries; }
    const ROOT::RNTupleModel &GetModel();
    std::unique_ptr<ROOT::REntry> CreateEntry();
 

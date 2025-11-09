@@ -135,7 +135,7 @@ clang/LLVM technology.
 #include <map>
 #include <set>
 #include <stdexcept>
-#include <stdint.h>
+#include <cstdint>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -153,8 +153,8 @@ clang/LLVM technology.
 #define R__DLLEXPORT __attribute__ ((visibility ("default")))
 #include <sys/stat.h>
 #endif
-#include <limits.h>
-#include <stdio.h>
+#include <climits>
+#include <cstdio>
 
 #ifdef __APPLE__
 #include <dlfcn.h>
@@ -1346,8 +1346,8 @@ static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
 
       PreIncludes += gClassDefInterpMacro + "\n"
                      + gInterpreterClassDef + "\n"
-                     "#undef ClassImp\n"
-                     "#define ClassImp(X);\n";
+                     "#undef ClassImp\n"       // bw compatibility
+                     "#define ClassImp(X);\n"; // bw compatibility
    }
    if (!hasCxxModules)
       PreIncludes += "#include <string>\n";
@@ -1436,6 +1436,15 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
       // by -O1, but seems to require -O2 to not explode in run time.
       clingArgsStorage.push_back("-mllvm");
       clingArgsStorage.push_back("-optimize-regalloc=0");
+#endif
+
+#ifdef CLING_WITH_ADAPTIVECPP
+      std::string acppInclude(TROOT::GetIncludeDir() + "/AdaptiveCpp");
+
+      clingArgsStorage.push_back("-isystem");
+      clingArgsStorage.push_back(acppInclude);
+      clingArgsStorage.push_back("-mllvm");
+      clingArgsStorage.push_back("-acpp-sscp");
 #endif
    }
 
@@ -3538,7 +3547,7 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
    // Check that this is not a system library
    static const int bufsize = 260;
    char posixwindir[bufsize];
-   char *windir = getenv("WINDIR");
+   char *windir = std::getenv("WINDIR");
    if (windir)
       cygwin_conv_path(CCP_WIN_A_TO_POSIX, windir, posixwindir, bufsize);
    else
@@ -4864,7 +4873,7 @@ TInterpreter::DeclId_t TCling::GetDataMember(ClassInfo_t *opaque_cl, const char 
    DeclarationName DName = &SemaR.Context.Idents.get(name);
 
    LookupResult R(SemaR, DName, SourceLocation(), Sema::LookupOrdinaryName,
-                  Sema::ForExternalRedeclaration);
+                  RedeclarationKind::ForExternalRedeclaration);
 
    cling::utils::Lookup::Named(&SemaR, R);
 
@@ -5138,8 +5147,8 @@ void TCling::GetFunctionOverloads(ClassInfo_t *cl, const char *funcname,
    }
 
    // NotForRedeclaration: we want to find names in inline namespaces etc.
-   clang::LookupResult R(S, DName, clang::SourceLocation(),
-                         Sema::LookupOrdinaryName, clang::Sema::NotForRedeclaration);
+   clang::LookupResult R(S, DName, clang::SourceLocation(), Sema::LookupOrdinaryName,
+                         RedeclarationKind::NotForRedeclaration);
    R.suppressDiagnostics(); // else lookup with NotForRedeclaration will check access etc
    S.LookupQualifiedName(R, const_cast<DeclContext*>(DeclCtx));
    if (R.empty()) return;
@@ -5475,7 +5484,7 @@ Longptr_t TCling::ExecuteMacro(const char* filename, EErrorCode* error)
 const char* TCling::GetTopLevelMacroName() const
 {
    Warning("GetTopLevelMacroName", "Must change return type!");
-   return fCurExecutingMacros.back();
+   return fCurExecutingMacros.empty() ? nullptr : fCurExecutingMacros.back();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5526,7 +5535,7 @@ const char* TCling::GetCurrentMacroName() const
    Warning("GetCurrentMacroName", "Must change return type!");
 #endif
 #endif
-   return fCurExecutingMacros.back();
+   return fCurExecutingMacros.empty() ? nullptr : fCurExecutingMacros.back();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7007,8 +7016,7 @@ void TCling::InvalidateCachedDecl(const std::tuple<TListOfDataMembers*,
             InvalidateCachedDecl(Lists, I);
 
          // For NamespaceDecl (redeclarable), only invalidate this redecl.
-         if (D->getKind() != Decl::Namespace
-             || cast<NamespaceDecl>(D)->isOriginalNamespace())
+         if (D->getKind() != Decl::Namespace || cast<NamespaceDecl>(D)->isFirstDecl())
             C->ResetClassInfo();
       }
    }

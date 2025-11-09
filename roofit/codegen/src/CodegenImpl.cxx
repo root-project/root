@@ -67,6 +67,14 @@ namespace Experimental {
 
 namespace {
 
+// Return a stringy-field version of the value, formatted to maximum precision.
+std::string doubleToString(double val)
+{
+   std::stringstream ss;
+   ss << std::setprecision(std::numeric_limits<double>::max_digits10) << val;
+   return ss.str();
+}
+
 std::string mathFunc(std::string const &name)
 {
    return "RooFit::Detail::MathFuncs::" + name;
@@ -129,10 +137,10 @@ std::string realSumPdfTranslateImpl(CodegenContext &ctx, RooAbsArg const &arg, R
 
 void codegenImpl(RooFit::Detail::RooFixedProdPdf &arg, CodegenContext &ctx)
 {
-   if (arg.cache()._isRearranged) {
-      ctx.addResult(&arg, ctx.buildCall(mathFunc("ratio"), *arg.cache()._rearrangedNum, *arg.cache()._rearrangedDen));
+   if (arg.isRearranged()) {
+      ctx.addResult(&arg, ctx.buildCall(mathFunc("ratio"), *arg.rearrangedNum(), *arg.rearrangedDen()));
    } else {
-      ctx.addResult(&arg, ctx.buildCall(mathFunc("product"), arg.cache()._partList, arg.cache()._partList.size()));
+      ctx.addResult(&arg, ctx.buildCall(mathFunc("product"), *arg.partList(), arg.partList()->size()));
    }
 }
 
@@ -249,8 +257,9 @@ void codegenImpl(RooMultiPdf &arg, CodegenContext &ctx)
 
    // MathFunc call
 
-   if (numPdfs > 2) { // the value of this number should be discussed.Beyound a certain number of indices MathFunc call
-                      // becomes more efficient.
+   // The value of this number should be discussed. Beyound a certain number of
+   // indices MathFunc call becomes more efficient.
+   if (numPdfs > 2) {
       ctx.addResult(&arg, ctx.buildCall(mathFunc("multipdf"), arg.indexCategory(), arg.getPdfList()));
 
       std::cout << "MathFunc call used\n";
@@ -354,15 +363,7 @@ void codegenImpl(RooChebychev &arg, CodegenContext &ctx)
 
 void codegenImpl(RooConstVar &arg, CodegenContext &ctx)
 {
-   // Just return a stringy-field version of the const value.
-   // Formats to the maximum precision.
-   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
-   std::stringstream ss;
-   ss.precision(max_precision);
-   // Just use toString to make sure we do not output 'inf'.
-   // This is really ugly for large numbers...
-   ss << std::fixed << RooNumber::toString(arg.getVal());
-   ctx.addResult(&arg, ss.str());
+   ctx.addResult(&arg, doubleToString(arg.getVal()));
 }
 
 void codegenImpl(RooConstraintSum &arg, CodegenContext &ctx)
@@ -380,7 +381,10 @@ void codegenImpl(RooFormulaVar &arg, CodegenContext &ctx)
    arg.getVal(); // to trigger the creation of the TFormula
    std::string funcName = arg.getUniqueFuncName();
    ctx.collectFunction(funcName);
-   ctx.addResult(&arg, ctx.buildCall(funcName, arg.dependents()));
+   // We have to force the array type to be "double" because that's what the
+   // declared function wrapped by the TFormula expects.
+   auto inputVar = ctx.buildArg(arg.dependents(), /*arrayType=*/"double");
+   ctx.addResult(&arg, funcName + "(" + inputVar + ")");
 }
 
 void codegenImpl(RooEffProd &arg, CodegenContext &ctx)
@@ -423,7 +427,10 @@ void codegenImpl(RooGenericPdf &arg, CodegenContext &ctx)
    arg.getVal(); // to trigger the creation of the TFormula
    std::string funcName = arg.getUniqueFuncName();
    ctx.collectFunction(funcName);
-   ctx.addResult(&arg, ctx.buildCall(funcName, arg.dependents()));
+   // We have to force the array type to be "double" because that's what the
+   // declared function wrapped by the TFormula expects.
+   auto inputVar = ctx.buildArg(arg.dependents(), /*arrayType=*/"double");
+   ctx.addResult(&arg, funcName + "(" + inputVar + ")");
 }
 
 void codegenImpl(RooHistFunc &arg, CodegenContext &ctx)
@@ -501,15 +508,16 @@ void codegenImpl(RooParamHistFunc &arg, CodegenContext &ctx)
 {
    std::string const &idx = arg.dataHist().calculateTreeIndexForCodeSquash(ctx, arg.xList());
    std::string arrName = ctx.buildArg(arg.paramList());
-   std::string result = arrName + "[" + idx + "]";
+   std::stringstream result;
+   result << arrName << "[" << idx << "]";
    if (arg.relParam()) {
       // get weight[idx] * binv[idx]. Here we get the bin volume for the first element as we assume the distribution to
       // be binned uniformly.
       double binV = arg.dataHist().binVolume(0);
       std::string weightArr = arg.dataHist().declWeightArrayForCodeSquash(ctx, false);
-      result += " * *(" + weightArr + " + " + idx + ") * " + std::to_string(binV);
+      result << " * *(" << weightArr << " + " << idx + ") * " << doubleToString(binV);
    }
-   ctx.addResult(&arg, result);
+   ctx.addResult(&arg, result.str());
 }
 
 void codegenImpl(RooPoisson &arg, CodegenContext &ctx)
@@ -621,6 +629,7 @@ void codegenImpl(RooRealIntegral &arg, CodegenContext &ctx)
       << "   const int n = 1000; // number of sampling points\n"
       << "   double d = " << intVar.getMax(arg.intRange()) << " - " << intVar.getMin(arg.intRange()) << ";\n"
       << "   double eps = d / n;\n"
+      << "   #pragma clad checkpoint loop\n"
       << "   for (int i = 0; i < n; ++i) {\n"
       << "      " << obsName << "[0] = " << intVar.getMin(arg.intRange()) << " + eps * i;\n"
       << "      double tmpA = " << funcName << "(params, " << obsName << ", xlArr);\n"
@@ -650,15 +659,7 @@ void codegenImpl(RooRealVar &arg, CodegenContext &ctx)
    if (!arg.isConstant()) {
       ctx.addResult(&arg, arg.GetName());
    }
-   // Just return a formatted version of the const value.
-   // Formats to the maximum precision.
-   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
-   std::stringstream ss;
-   ss.precision(max_precision);
-   // Just use toString to make sure we do not output 'inf'.
-   // This is really ugly for large numbers...
-   ss << std::fixed << RooNumber::toString(arg.getVal());
-   ctx.addResult(&arg, ss.str());
+   ctx.addResult(&arg, doubleToString(arg.getVal()));
 }
 
 void codegenImpl(RooRecursiveFraction &arg, CodegenContext &ctx)
@@ -812,7 +813,7 @@ std::string rooHistIntegralTranslateImpl(int code, RooAbsArg const &arg, RooData
                                     << std::endl;
       return "";
    }
-   return std::to_string(dataHist.sum(histFuncMode));
+   return doubleToString(dataHist.sum(histFuncMode));
 }
 
 } // namespace
@@ -853,7 +854,7 @@ std::string codegenIntegralImpl(RooMultiVarGaussian &arg, int code, const char *
       throw std::runtime_error(errorMsg.str().c_str());
    }
 
-   return std::to_string(arg.analyticalIntegral(code, rangeName));
+   return doubleToString(arg.analyticalIntegral(code, rangeName));
 }
 
 std::string codegenIntegralImpl(RooPoisson &arg, int code, const char *rangeName, CodegenContext &ctx)
@@ -905,7 +906,7 @@ std::string codegenIntegralImpl(RooUniform &arg, int code, const char *rangeName
 {
    // The integral of a uniform distribution is static, so we can just hardcode
    // the result in a string.
-   return std::to_string(arg.analyticalIntegral(code, rangeName));
+   return doubleToString(arg.analyticalIntegral(code, rangeName));
 }
 
 } // namespace Experimental

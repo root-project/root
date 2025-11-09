@@ -99,7 +99,6 @@ The Physical disk speed is DiskIO + DiskIO*ReadExtra/100.
 
 #include <iostream>
 
-ClassImp(TTreePerfStats);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor (used when reading an object only)

@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <fstream>
 #include <type_traits>
 #include <unordered_map>
@@ -185,6 +186,7 @@ std::unique_ptr<CodegenContext::LoopScope> CodegenContext::beginLoop(RooAbsArg c
    }
 
    // Make sure that the name of this variable doesn't clash with other stuff
+   addToCodeBody(in, "#pragma clad checkpoint loop\n");
    addToCodeBody(in, "for(int " + idx + " = 0; " + idx + " < " + std::to_string(numEntries) + "; " + idx + "++) {\n");
 
    return std::make_unique<LoopScope>(*this, std::move(vars));
@@ -216,14 +218,18 @@ void CodegenContext::addResult(RooAbsArg const *in, std::string const &valueToSa
    // std::string savedName = RooFit::Detail::makeValidVarName(in->GetName());
    std::string savedName = getTmpVarName();
 
-   // Only save values if they contain operations.
-   bool hasOperations = valueToSave.find_first_of(":-+/*") != std::string::npos;
+   // Only save values if they contain operations or they are numerals. Otherwise, we can use them directly.
+
+   // Check if string is numeric.
+   char *end;
+   std::strtod(valueToSave.c_str(), &end);
+   bool isNumeric = (*end == '\0');
+
+   const bool hasOperations = valueToSave.find_first_of(":-+/*") != std::string::npos;
 
    // If the name is not empty and this value is worth saving, save it to the correct scope.
    // otherwise, just return the actual value itself
-   if (hasOperations) {
-      // If this is a scalar result, it will go just outside the loop because
-      // it doesn't need to be recomputed inside loops.
+   if (hasOperations || isNumeric) {
       std::string outVarDecl = "const double " + savedName + " = " + valueToSave + ";\n";
       addToCodeBody(in, outVarDecl);
    } else {
@@ -236,7 +242,7 @@ void CodegenContext::addResult(RooAbsArg const *in, std::string const &valueToSa
 /// @brief Function to save a RooListProxy as an array in the squashed code.
 /// @param in The list to convert to array.
 /// @return Name of the array that stores the input list in the squashed code.
-std::string CodegenContext::buildArg(RooAbsCollection const &in)
+std::string CodegenContext::buildArg(RooAbsCollection const &in, std::string const &arrayType)
 {
    if (in.empty()) {
       return "nullptr";
@@ -250,7 +256,7 @@ std::string CodegenContext::buildArg(RooAbsCollection const &in)
    bool canSaveOutside = true;
 
    std::stringstream declStrm;
-   declStrm << "double " << savedName << "[] = {";
+   declStrm << arrayType << " " << savedName << "[]{";
    for (const auto arg : in) {
       declStrm << getResult(*arg) << ",";
       canSaveOutside = canSaveOutside && isScopeIndependent(arg);
@@ -350,6 +356,7 @@ CodegenContext::buildFunction(RooAbsArg const &arg, std::map<RooFit::Detail::Dat
    // Declare the function
    std::stringstream bodyWithSigStrm;
    bodyWithSigStrm << "double " << funcName << "(double* params, double const* obs, double const* xlArr) {\n"
+                   << "constexpr double inf = std::numeric_limits<double>::infinity();\n"
                    << funcBody << "\n}";
    ctx._collectedFunctions.emplace_back(funcName);
    if (!gInterpreter->Declare(bodyWithSigStrm.str().c_str())) {

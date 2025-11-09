@@ -301,7 +301,7 @@ ROOT::Internal::RPageSourceFile::CreateFromAnchor(const RNTuple &anchor, const R
 
    auto pageSource = std::make_unique<RPageSourceFile>("", std::move(rawFile), options);
    pageSource->fAnchor = anchor;
-   pageSource->fNTupleName = pageSource->fDescriptorBuilder.GetDescriptor().GetName();
+   // NOTE: fNTupleName gets set only upon Attach().
    return pageSource;
 }
 
@@ -365,6 +365,11 @@ ROOT::RNTupleDescriptor ROOT::Internal::RPageSourceFile::AttachImpl(RNTupleSeria
    RNTupleSerializer::DeserializeFooter(unzipBuf, fAnchor->GetLenFooter(), fDescriptorBuilder);
 
    auto desc = fDescriptorBuilder.MoveDescriptor();
+
+   // fNTupleName is empty if and only if we created this source via CreateFromAnchor. If that's the case, this is the
+   // earliest we can set the name.
+   if (fNTupleName.empty())
+      fNTupleName = desc.GetName();
 
    std::vector<unsigned char> buffer;
    for (const auto &cgDesc : desc.GetClusterGroupIterable()) {
@@ -669,4 +674,9 @@ ROOT::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::RKey> clusterK
    }
 
    return clusters;
+}
+
+void ROOT::Internal::RPageSourceFile::LoadStreamerInfo()
+{
+   fReader.LoadStreamerInfo();
 }

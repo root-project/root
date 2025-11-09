@@ -51,7 +51,6 @@ locally nor to manage its consistency.
 Handles also selected/highlighted colors and, in the future, drag-n-drop.
 */
 
-ClassImp(TEveListTreeItem);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Warn about access to function members that should never be called.
@@ -92,7 +91,6 @@ void TEveListTreeItem::Toggle()
 Composite GUI frame for parallel display of a TGListTree and TEveGedEditor.
 */
 
-ClassImp(TEveGListTreeEditorFrame);
 
 TString TEveGListTreeEditorFrame::fgEditorClass("TEveGedEditor");
 
@@ -463,7 +461,6 @@ void TEveGListTreeEditorFrame::ItemKeyPress(TGListTreeItem *entry, UInt_t keysym
 Specialization of TRootBrowser for Eve.
 */
 
-ClassImp(TEveBrowser);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add "Export to CINT" into context-menu for class cl.

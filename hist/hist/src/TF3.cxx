@@ -24,7 +24,6 @@
 #include "Math/IntegratorOptions.h"
 #include <cassert>
 
-ClassImp(TF3);
 
 /** \class TF3
     \ingroup Functions
@@ -618,7 +617,7 @@ void TF3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << f3Name << " = new TF3(\"" << GetName() << "\", " << GetTitle() << "," << fXmin << "," << fXmax << ","
           << fYmin << "," << fYmax << "," << fZmin << "," << fZmax << "," << GetNpar() << ");\n";
 
-   SaveFillAttributes(out, f3Name, 0, 1001);
+   SaveFillAttributes(out, f3Name, -1, 0);
    SaveMarkerAttributes(out, f3Name, 1, 1, 1);
    SaveLineAttributes(out, f3Name, 1, 1, 4);
 

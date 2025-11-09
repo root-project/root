@@ -30,9 +30,9 @@
 #include "TSSLSocket.h"
 #endif
 
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cerrno>
+#include <cstdlib>
+#include <cstring>
 
 #ifdef WIN32
 # ifndef EADDRINUSE
@@ -125,7 +125,6 @@ void TWebSocket::ReOpen()
 }
 
 
-ClassImp(TWebFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a Web file object. A web file is the same as a read-only

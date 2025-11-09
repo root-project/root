@@ -390,10 +390,11 @@ void AddIncludePaths(
 
   if (HOpts.Verbose) {
     LLVM_DEBUG(dbgs() << "Added include paths:\n");
+#ifndef NDEBUG
     for (llvm::StringRef Path : PathsChecked)
       LLVM_DEBUG(dbgs() << "  " << Path << "\n");
+#endif
   }
-
 #undef DEBUG_TYPE
 }
 

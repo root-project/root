@@ -86,6 +86,8 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern/d
    - [Creating an RDataFrame from a dataset specification file](\ref rdf-from-spec)
    - [Adding a progress bar](\ref progressbar)
    - [Working with missing values in the dataset](\ref missing-values)
+   - [Dealing with NaN or Inf values in the dataset](\ref special-values)
+   - [Translating TTree::Draw to RDataFrame](\ref rosetta-stone)
 - [Python interface](classROOT_1_1RDataFrame.html#python)
 - <a class="el" href="classROOT_1_1RDataFrame.html#reference" onclick="javascript:toggleInherit('pub_methods_classROOT_1_1RDF_1_1RInterface')">Class reference</a>
 
@@ -135,6 +137,7 @@ produce many different results in one event loop. Instant actions trigger the ev
 | GraphAsymmErrors() | Fills a TGraphAsymmErrors. Should be used for any type of graph with errors, including cases with errors on one of the axes only. If multi-threading is enabled, the order of the points may not be the one expected, it is therefore suggested to sort if before drawing. |
 | Histo1D(), Histo2D(), Histo3D() | Fill a one-, two-, three-dimensional histogram with the processed column values. |
 | HistoND() | Fill an N-dimensional histogram with the processed column values. |
+| HistoNSparseD() | Fill an N-dimensional sparse histogram with the processed column values. Memory is allocated only for non-empty bins. |
 | Max() | Return the maximum of processed column values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
 | Mean() | Return the mean of processed column values.|
 | Min() | Return the minimum of processed column values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
@@ -150,7 +153,7 @@ produce many different results in one event loop. Instant actions trigger the ev
 |---------------------|-----------------|
 | Foreach() | Execute a user-defined function on each entry. Users are responsible for the thread-safety of this callable when executing with implicit multi-threading enabled. |
 | ForeachSlot() | Same as Foreach(), but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe Foreach() actions when using RDataFrame after ROOT::EnableImplicitMT(). ForeachSlot() works just as well with single-thread execution: in that case `slot` will always be `0`. |
-| Snapshot() | Write the processed dataset to disk, in a new TTree or RNTuple and TFile. Custom columns can be saved as well, filtered entries are not saved. Users can specify which columns to save (default is all). Snapshot, by default, overwrites the output file if it already exists. Snapshot() can be made *lazy* setting the appropriate flag in the snapshot options.|
+| Snapshot() | Write the processed dataset to disk, in a new TTree or RNTuple and TFile. Custom columns can be saved as well, filtered entries are not saved. Users can specify which columns to save (default is all nominal columns). Columns resulting from Vary() can be included by setting the corresponding flag in \ref RSnapshotOptions. Snapshot, by default, overwrites the output file if it already exists. Snapshot() can be made *lazy* setting the appropriate flag in the snapshot options.|
 
 
 ### Queries
@@ -262,7 +265,7 @@ df.Filter([] (ULong64_t e) { return e == 1; }, {"event"}).Histo1D<RVec<float>>("
    <td>
 ~~~{cpp}
 // object selection: for each event, fill histogram with array of selected pts
-tree->Draw('Muon_pt', 'Muon_pt > 100')
+tree->Draw('Muon_pt', 'Muon_pt > 100');
 ~~~
    </td>
    <td>
@@ -477,7 +480,7 @@ h_a_val = h_a.GetValue()
 h_b_val = h_b.GetValue()
 h_c_val = h_c.GetValue()
 
-print(f"How many times was the data set processed? {df_wrong.GetNRuns()} time.") # The answer will be 1 time. 
+print(f"How many times was the data set processed? {df_wrong.GetNRuns()} time.") # The answer will be 1 time.
 ~~~
 
 An incorrect way - the dataset is processed three times.
@@ -493,7 +496,7 @@ h_b_val = h_b.GetValue()
 h_c = df_incorrect.Histo1D("c")
 h_c_val = h_c.GetValue()
 
-print(f"How many times was the data set processed? {df_wrong.GetNRuns()} times.") # The answer will be 3 times. 
+print(f"How many times was the data set processed? {df_wrong.GetNRuns()} times.") # The answer will be 3 times.
 ~~~
 
 It is therefore good practice to declare all your transformations and actions *before* accessing their results, allowing
@@ -737,7 +740,7 @@ parts of the RDataFrame API currently work with this package. The subset that is
 - FilterMissing
 - Graph
 - Histo[1,2,3]D
-- HistoND
+- HistoND, HistoNSparseD
 - Max
 - Mean
 - Min
@@ -774,7 +777,7 @@ df = ROOT.RDataFrame("mytree", "myfile.root", executor = sc)
 
 Note that with the usage above the case of `executor = None` is not supported. One
 can explicitly create a `ROOT.RDF.Distributed.Spark.RDataFrame` object
-in order to get a default instance of 
+in order to get a default instance of
 [SparkContext](https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.SparkContext.html)
 in case it is not already provided as argument.
 
@@ -801,7 +804,7 @@ if __name__ == "__main__":
 
 Note that with the usage above the case of `executor = None` is not supported. One
 can explicitly create a `ROOT.RDF.Distributed.Dask.RDataFrame` object
-in order to get a default instance of 
+in order to get a default instance of
 [distributed.Client](http://distributed.dask.org/en/stable/api.html#distributed.Client)
 in case it is not already provided as argument. This will run multiple processes
 on the local machine using all available cores.
@@ -834,13 +837,13 @@ if __name__ == "__main__":
 Note that when processing a TTree or TChain dataset, the `npartitions` value should not exceed the number of clusters in
 the dataset. The number of clusters in a TTree can be retrieved by typing `rootls -lt myfile.root` at a command line.
 
-### Distributed FromSpec 
+### Distributed FromSpec
 
-RDataFrame can be also built from a JSON sample specification file using the FromSpec function. In distributed mode, two arguments need to be provided: the path to the specification 
-jsonFile (same as for local RDF case) and an additional executor argument - in the same manner as for the RDataFrame constructors above - an executor can either be a spark connection or a dask client. 
-If no second argument is given, the local version of FromSpec will be run. Here is an example of FromSpec usage in distributed RDF using either spark or dask backends. 
-For more information on FromSpec functionality itself please refer to [FromSpec](\ref rdf-from-spec) documentation. Note that adding metadata and friend information is supported, 
-but adding the global range will not be respected in the distributed execution. 
+RDataFrame can be also built from a JSON sample specification file using the FromSpec function. In distributed mode, two arguments need to be provided: the path to the specification
+jsonFile (same as for local RDF case) and an additional executor argument - in the same manner as for the RDataFrame constructors above - an executor can either be a spark connection or a dask client.
+If no second argument is given, the local version of FromSpec will be run. Here is an example of FromSpec usage in distributed RDF using either spark or dask backends.
+For more information on FromSpec functionality itself please refer to [FromSpec](\ref rdf-from-spec) documentation. Note that adding metadata and friend information is supported,
+but adding the global range will not be respected in the distributed execution.
 
 Using spark:
 ~~~{.py}
@@ -857,7 +860,7 @@ df_fromspec = ROOT.RDF.Experimental.FromSpec("myspec.json", executor = sc)
 df_fromspec.Define("x","someoperation").Histo1D(("name", "title", 10, 0, 10), "x")
 ~~~
 
-Using dask: 
+Using dask:
 ~~~{.py}
 import ROOT
 from dask.distributed import Client
@@ -866,7 +869,7 @@ if __name__ == "__main__":
     client = Client("dask_scheduler.domain.com:8786")
 
     # The FromSpec function accepts the Dask Client object as an optional argument
-    df_fromspec = ROOT.RDF.Experimental.FromSpec("myspec.json", executor=client) 
+    df_fromspec = ROOT.RDF.Experimental.FromSpec("myspec.json", executor=client)
     # Proceed as usual
     df_fromspec.Define("x","someoperation").Histo1D(("name", "title", 10, 0, 10), "x")
 ~~~
@@ -929,10 +932,10 @@ the distributed execution.
 
 ### Live visualization in distributed mode with dask
 
-The live visualization feature allows real-time data representation of plots generated during the execution 
-of a distributed RDataFrame application. 
+The live visualization feature allows real-time data representation of plots generated during the execution
+of a distributed RDataFrame application.
 It enables visualizing intermediate results as they are computed across multiple nodes of a Dask cluster
-by creating a canvas and continuously updating it as partial results become available. 
+by creating a canvas and continuously updating it as partial results become available.
 
 The LiveVisualize() function can be imported from the Python package **ROOT.RDF.Distributed**:
 
@@ -944,14 +947,14 @@ LiveVisualize = ROOT.RDF.Distributed.LiveVisualize
 
 The function takes drawable objects (e.g. histograms) and optional callback functions as argument, it accepts 4 different input formats:
 
-- Passing a list or tuple of drawables: 
+- Passing a list or tuple of drawables:
 You can pass a list or tuple containing the plots you want to visualize. For example:
 
 ~~~{.py}
 LiveVisualize([h_gaus, h_exp, h_random])
 ~~~
 
-- Passing a list or tuple of drawables with a global callback function: 
+- Passing a list or tuple of drawables with a global callback function:
 You can also include a global callback function that will be applied to all plots. For example:
 
 ~~~{.py}
@@ -961,7 +964,7 @@ def set_fill_color(hist):
 LiveVisualize([h_gaus, h_exp, h_random], set_fill_color)
 ~~~
 
-- Passing a Dictionary of drawables and callback functions: 
+- Passing a Dictionary of drawables and callback functions:
 For more control, you can create a dictionary where keys are plots and values are corresponding (optional) callback functions. For example:
 
 ~~~{.py}
@@ -974,7 +977,7 @@ plot_callback_dict = {
 LiveVisualize(plot_callback_dict)
 ~~~
 
-- Passing a Dictionary of drawables and callback functions with a global callback function: 
+- Passing a Dictionary of drawables and callback functions with a global callback function:
 You can also combine a dictionary of plots and callbacks with a global callback function:
 
 ~~~{.py}
@@ -991,10 +994,10 @@ LiveVisualize(plot_callback_dict, write_to_tfile)
 ### Injecting C++ code and using external files into distributed RDF script
 
 Distributed RDF provides an interface for the users who want to inject the C++ code (via header files, shared libraries or declare the code directly)
-into their distributed RDF application, or their application needs to use information from external files which should be distributed 
-to the workers (for example, a JSON or a txt file with necessary parameters information). 
+into their distributed RDF application, or their application needs to use information from external files which should be distributed
+to the workers (for example, a JSON or a txt file with necessary parameters information).
 
-The examples below show the usage of these interface functions: firstly, how this is done in a local Python 
+The examples below show the usage of these interface functions: firstly, how this is done in a local Python
 RDF application and secondly, how it is done distributedly.
 
 #### Include and distribute header files.
@@ -1009,7 +1012,7 @@ ROOT.RDF.Distributed.DistributeHeaders("myheader.hxx")
 df.Define(...)
 ~~~
 
-#### Load and distribute shared libraries 
+#### Load and distribute shared libraries
 
 ~~~{.py}
 # Local RDataFrame script
@@ -1023,7 +1026,7 @@ df.Define(...)
 
 #### Declare and distribute the cpp code
 
-The cpp code is always available to all dataframes. 
+The cpp code is always available to all dataframes.
 
 ~~~{.py}
 # Local RDataFrame script
@@ -1035,10 +1038,10 @@ ROOT.RDF.Distributed.DistributeCppCode("my_code")
 df.Define(...)
 ~~~
 
-#### Distribute additional files (other than headers or shared libraries). 
+#### Distribute additional files (other than headers or shared libraries).
 
 ~~~{.py}
-# Local RDataFrame script is not applicable here as local RDF application can simply access the external files it needs. 
+# Local RDataFrame script is not applicable here as local RDF application can simply access the external files it needs.
 
 # Distributed RDF script
 ROOT.RDF.Distributed.DistributeFiles("my_file")
@@ -1061,7 +1064,7 @@ or export an environment variable:
 ~~~{.sh}
 export ROOT_MAX_THREADS=numThreads
 root.exe rdfAnalysis.cxx
-# or 
+# or
 ROOT_MAX_THREADS=4 python rdfAnalysis.py
 ~~~
 replacing `numThreads` with the number of CPUs/slots that were allocated for this job.
@@ -1179,7 +1182,7 @@ of normal RDataFrame results using \ref ROOT::RDF::Experimental::VariationsFor "
 to the analysis code is required: the presence of systematic variations for certain columns is automatically propagated
 through filters, defines and actions, and RDataFrame will take these dependencies into account when producing varied
 results. \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()" is included in header `ROOT/RDFHelpers.hxx`. The compiled C++ programs must include this header
-explicitly, this is not required for ROOT macros. 
+explicitly, this is not required for ROOT macros.
 
 An example usage of Vary() and \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()" in C++:
 
@@ -1213,6 +1216,62 @@ There is no limitation to the complexity of a Vary() expression. Just like for t
 not limited to string expressions but they can also pass any valid C++ callable, including lambda functions and
 complex functors. The callable can be applied to zero or more existing columns and it will always receive their
 _nominal_ value in input.
+
+\note - Currently, VariationsFor() and RResultMap are in the `ROOT::RDF::Experimental` namespace, to indicate that these
+      interfaces can still evolve and improve based on user feedback. Please send feedback on https://github.com/root-project/root.
+
+\note - The results of Display() cannot be varied (i.e. it is not possible to call \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()").
+
+See the Vary() method for more information and [this tutorial](https://root.cern/doc/master/df106__HiggsToFourLeptons_8C.html)
+for an example usage of Vary and \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()" in the analysis.
+
+
+\anchor snapshot-with-variations
+#### Snapshot with Variations
+To combine Vary() and Snapshot(), the \ref ROOT::RDF::RSnapshotOptions::fIncludeVariations "fIncludeVariations" flag in \ref ROOT::RDF::RSnapshotOptions
+"RSnapshotOptions" has to be set, as demonstrated in the following example:
+
+~~~{.cpp}
+   ROOT::RDF::RSnapshotOptions options;
+   options.fIncludeVariations = true;
+
+   auto s = ROOT::RDataFrame(N)
+      .Define("x", [](ULong64_t e) -> float { return 10.f * e; }, {"rdfentry_"})
+      .Vary(
+         "x", [](float x) { return ROOT::RVecF{x - 0.5f, x + 0.5f}; }, {"x"}, 2, "xVar")
+      .Define("y", [](float x) -> double { return -1. * x; }, {"x"})
+      .Filter(cuts, {"x", "y"})
+      .Snapshot("t", filename, {"x", "y"}, options);
+~~~
+
+This snapshot action will create an output file with a dataset that includes the columns requested in the Snapshot() call
+and their corresponding variations:
+
+| Row  |           `x`   |           `y`   | `x__xVar_0`     | `y__xVar_0`     | `x__xVar_1`     | `y__xVar_1`     | `R_rdf_mask_t_0`|
+|------|----------------:|----------------:|----------------:|----------------:|----------------:|----------------:|----------------:|
+| 0 |               0 |              -0 |            -0.5 |             0.5 |             0.5 |            -0.5 |             111 |
+| 1 |              10 |             -10 |             9.5 |            -9.5 |            10.5 |           -10.5 |             111 |
+| 2 |              20 |             -20 |            19.5 |           -19.5 |            20.5 |           -20.5 |             111 |
+| 3 |              30 |             -30 |            29.5 |           -29.5 |            30.5 |           -30.5 |             111 |
+| 4 |              40 |             -40 |            39.5 |           -39.5 |            40.5 |           -40.5 |             111 |
+| 5 |               0 |               0 |            49.5 |           -49.5 |               0 |               0 |             010 |
+| 6 |`* Not written *`|                 |                 |                 |                 |                 |                 |
+| 7 |               0 |               0 |               0 |               0 |            70.5 |           -70.5 |             100 |
+
+"x" and "y" are the nominal values, and their variations are snapshot as `<ColumnName>__<VariationName>_<VariationTag>`.
+
+When Filters are employed, some variations might not pass the selection cuts (like the rows 5 and 7 in the table above).
+In that case, RDataFrame will snapshot the filtered columns in a memory-efficient way by writing zero into the memory of fundamental types, or write a
+default-constructed object in case of classes. If none of the filters pass like in row 6, the entire event is omitted from the snapshot.
+
+To tell apart a genuine `0` (like `x` in row 0) from a variation that didn't pass the selection, RDataFrame writes a bitmask for each event, indicating which variations
+are valid (see last column). A mapping of column names to this bitmask is placed in the same file as the output dataset, and automatically loaded when
+RDataFrame opens a file that was snapshot with variations.
+Attempting to read such missing values with RDataFrame will produce an error, but RDataFrame can either skip these values or fill in defaults as
+described in the \ref missing-values "section on dealing with missing values".
+
+\note Snapshot with variations is currently restricted to single-threaded TTree snapshots.
+
 
 #### Varying multiple columns in lockstep
 
@@ -1256,15 +1315,6 @@ all_hs.GetKeys(); // returns {"nominal", "pt:down", "pt:up", "eta:0", "eta:1"}
 Note how we passed the integer `2` instead of a list of variation tags to the second Vary() invocation: this is a
 shorthand that automatically generates tags 0 to N-1 (in this case 0 and 1).
 
-\note Currently, VariationsFor() and RResultMap are in the `ROOT::RDF::Experimental` namespace, to indicate that these
-      interfaces might still evolve and improve based on user feedback. We expect that some aspects of the related
-      programming model will be streamlined in future versions.
-
-\note Currently, the results of a Snapshot() or Display() call cannot be varied (i.e. it is not possible to
-      call \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()" on them. These limitations will be lifted in future releases.
-
-See the Vary() method for more information and [this tutorial](https://root.cern/doc/master/df106__HiggsToFourLeptons_8C.html) 
-for an example usage of Vary and \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()" in the analysis.
 
 \anchor rnode
 ### RDataFrame objects as function arguments and return values
@@ -1616,14 +1666,14 @@ RDataFrame has experimental support for verbose logging of the event loop runtim
 #include <ROOT/RLogger.hxx>
 
 // this increases RDF's verbosity level as long as the `verbosity` variable is in scope
-auto verbosity = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::Experimental::ELogLevel::kInfo);
+auto verbosity = ROOT::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::ELogLevel::kInfo);
 ~~~
 
 or in Python:
 ~~~{.python}
 import ROOT
 
-verbosity = ROOT.Experimental.RLogScopedVerbosity(ROOT.Detail.RDF.RDFLogChannel(), ROOT.Experimental.ELogLevel.kInfo)
+verbosity = ROOT.RLogScopedVerbosity(ROOT.Detail.RDF.RDFLogChannel(), ROOT.ELogLevel.kInfo)
 ~~~
 
 More information (e.g. start and end of each multi-thread task) is printed using `ELogLevel.kDebug` and even more
@@ -1632,7 +1682,7 @@ More information (e.g. start and end of each multi-thread task) is printed using
 \anchor rdf-from-spec
 ### Creating an RDataFrame from a dataset specification file
 
-RDataFrame can be created using a dataset specification JSON file: 
+RDataFrame can be created using a dataset specification JSON file:
 
 ~~~{.python}
 import ROOT
@@ -1654,7 +1704,7 @@ A simple example for the formatting of the specification in the JSON file is the
          "trees": ["tree1", "tree2"],
          "files": ["file1.root", "file2.root"],
          "metadata": {
-            "lumi": 10000.0, 
+            "lumi": 10000.0,
             "xsec": 1.0,
             "sample_category" = "data"
             }
@@ -1663,7 +1713,7 @@ A simple example for the formatting of the specification in the JSON file is the
          "trees": ["tree3", "tree4"],
          "files": ["file3.root", "file4.root"],
          "metadata": {
-            "lumi": 0.5, 
+            "lumi": 0.5,
             "xsec": 1.5,
             "sample_category" = "MC_background"
             }
@@ -1695,12 +1745,12 @@ An example implementation of the "FromSpec" method is available in tutorial: df1
 provides a corresponding exemplary JSON file for the dataset specification.
 
 \anchor progressbar
-### Adding a progress bar 
+### Adding a progress bar
 
 A progress bar showing the processed event statistics can be added to any RDataFrame program.
-The event statistics include elapsed time, currently processed file, currently processed events, the rate of event processing 
-and an estimated remaining time (per file being processed). It is recorded and printed in the terminal every m events and every 
-n seconds (by default m = 1000 and n = 1). The ProgressBar can be also added when the multithread (MT) mode is enabled. 
+The event statistics include elapsed time, currently processed file, currently processed events, the rate of event processing
+and an estimated remaining time (per file being processed). It is recorded and printed in the terminal every m events and every
+n seconds (by default m = 1000 and n = 1). The ProgressBar can be also added when the multithread (MT) mode is enabled.
 
 ProgressBar is added after creating the dataframe object (df):
 ~~~{.cpp}
@@ -1708,16 +1758,16 @@ ROOT::RDataFrame df("tree", "file.root");
 ROOT::RDF::Experimental::AddProgressBar(df);
 ~~~
 
-Alternatively, RDataFrame can be cast to an RNode first, giving the user more flexibility 
+Alternatively, RDataFrame can be cast to an RNode first, giving the user more flexibility
 For example, it can be called at any computational node, such as Filter or Define, not only the head node,
-with no change to the ProgressBar function itself (please see the [Python interface](classROOT_1_1RDataFrame.html#python) 
-section for appropriate usage in Python): 
+with no change to the ProgressBar function itself (please see the [Python interface](classROOT_1_1RDataFrame.html#python)
+section for appropriate usage in Python):
 ~~~{.cpp}
 ROOT::RDataFrame df("tree", "file.root");
 auto df_1 = ROOT::RDF::RNode(df.Filter("x>1"));
 ROOT::RDF::Experimental::AddProgressBar(df_1);
 ~~~
-Examples of implemented progress bars can be seen by running [Higgs to Four Lepton tutorial](https://root.cern/doc/master/df106__HiggsToFourLeptons_8py_source.html) and [Dimuon tutorial](https://root.cern/doc/master/df102__NanoAODDimuonAnalysis_8C.html). 
+Examples of implemented progress bars can be seen by running [Higgs to Four Lepton tutorial](https://root.cern/doc/master/df106__HiggsToFourLeptons_8py_source.html) and [Dimuon tutorial](https://root.cern/doc/master/df102__NanoAODDimuonAnalysis_8C.html).
 
 \anchor missing-values
 ### Working with missing values in the dataset
@@ -1804,7 +1854,7 @@ instead. Example:
 df = ROOT.RDataFrame(dataset)
 # Anytime an entry from "col" is missing, the value will be the default one
 default_value = ... # Some sensible default value here
-df = df.DefaultValueFor("col", default_value) 
+df = df.DefaultValueFor("col", default_value)
 df = df.Define("twice", "col * 2")
 \endcode
 
@@ -1855,6 +1905,190 @@ df_filtered.Display({"twice"})->Print();
 Note that working with missing values is currently supported with a TTree-based
 data source. Support of this functionality for other data sources may come in
 the future.
+
+\anchor special-values
+### Dealing with NaN or Inf values in the dataset
+
+RDataFrame does not treat NaNs or infinities beyond what the floating-point standards require, i.e. they will
+propagate to the final result.
+Non-finite numbers can be suppressed using Filter(), e.g.:
+
+\code{.py}
+df.Filter("std::isfinite(x)").Mean("x")
+\endcode
+
+\anchor rosetta-stone
+### Translating TTree::Draw to RDataFrame 
+
+<table>
+<tr>
+   <td>
+      <b>TTree::Draw</b>
+   </td>
+   <td>
+      <b>ROOT::RDataFrame</b>
+   </td>
+</tr>
+<tr>
+   <td>
+~~~{.cpp}
+// Get the tree and Draw a histogram of x for selected y values
+auto *tree = file->Get<TTree>("myTree");
+tree->Draw("x", "y > 2");
+~~~
+   </td>
+   <td>
+~~~{.cpp}
+ROOT::RDataFrame df("myTree", file);
+df.Filter("y > 2").Histo1D("x")->Draw();
+~~~
+   </td>
+</tr>
+<tr>
+   <td>
+~~~{.cpp}
+// Draw a histogram of "jet_eta" with the desired weight
+tree->Draw("jet_eta", "weight*(event == 1)");
+~~~
+   </td>
+   <td>
+~~~{.cpp}
+df.Filter("event == 1").Histo1D("jet_eta", "weight")->Draw();
+~~~
+   </td>
+</tr>
+<tr>
+   <td>
+~~~{cpp}
+// Draw a histogram filled with values resulting from calling a method of the class of the `event` branch in the TTree.
+tree->Draw("event.GetNtrack()");
+
+~~~
+   </td>
+   <td>
+~~~{cpp}
+auto df1 = df.Define("NTrack","event.GetNtrack()");
+df1.Histo1D("NTrack")->Draw();
+~~~
+   </td>
+</tr>
+<tr>
+   <td>
+~~~{cpp}
+// Draw only every 10th event
+tree->Draw("fNtrack","fEvtHdr.fEvtNum%10 == 0");
+~~~
+   </td>
+   <td>
+~~~{cpp}
+// Use the Filter operation together with the special RDF column: `rdfentry_`
+df.Filter("rdfentry_ % 10 == 0").Histo1D("fNtrack")->Draw();
+~~~
+   </td>
+</tr>
+<tr>
+   <td>
+~~~{cpp}
+// object selection: for each event, fill histogram with array of selected pts
+tree->Draw('Muon_pt', 'Muon_pt > 100');
+~~~
+   </td>
+   <td>
+~~~{cpp}
+// with RDF, arrays are read as ROOT::VecOps::RVec objects
+df.Define("good_pt", "Muon_pt[Muon_pt > 100]").Histo1D("good_pt")->Draw();
+~~~
+   </td>
+</tr>
+</tr>
+<tr>
+   <td>
+~~~{cpp}
+// Draw the histogram and fill hnew with it
+tree->Draw("sqrt(x)>>hnew","y>0"); 
+
+// Retrieve hnew from the current directory
+TH1F *hnew = (TH1F*)gDirectory->Get("hnew");
+
+// Retrieve hnew from the current Pad
+TH1F *hnew = (TH1F*)gPad->GetPrimitive("hnew");
+~~~
+   </td>
+   <td>
+~~~{cpp}
+// We pass histogram constructor arguments to the Histo1D operation, to easily give the histogram a name
+auto hist = df.Filter("y>0").Histo1D({"hnew","hnew",10, 0, 10},"x");
+~~~
+   </td>
+</tr>
+<tr>
+   <td>
+~~~{cpp}
+// Draw a 1D Profile histogram instead of TH2F
+tree->Draw("y:x","","prof");
+
+// Draw a 2D Profile histogram instead of TH3F
+tree->Draw("z:y:x","","prof");
+~~~
+   </td>
+   <td>
+~~~{cpp}
+
+// Draw a 1D Profile histogram
+auto profile1D = df.Profile1D("x", "y");
+
+// Draw a 2D Profile histogram
+auto profile2D = df.Profile2D("x", "y", "z");
+~~~
+   </td>
+</tr>
+<tr>
+   <td>
+~~~{cpp}
+// This command draws 2 entries starting with entry 5
+tree->Draw("x", "","", 2, 5);
+~~~
+   </td>
+   <td>
+~~~{cpp}
+// Range function with arguments begin, end
+auto histo_range = df.Range(5,7).Histo1D<int>("x");
+histo_range->Draw();
+~~~
+   </td>
+</tr>
+<tr>
+   <td>
+~~~{cpp}
+// Draw the X() component of the 
+// ROOT::Math::DisplacementVector3D in vec_list
+tree->Draw("vec_list.X()");
+~~~
+   </td>
+   <td>
+~~~{cpp}
+auto histo = df.Define("x", "ROOT::RVecD out; for(const auto &el: vec_list) out.push_back(el.X()); return out;").Histo1D("x");
+histo->Draw();
+~~~
+   </td>
+</tr>
+<tr>
+   <td>
+~~~{cpp}
+// Gather all values from a branch holding a collection per event, `pt`, 
+// and fill a histogram so that we can count the total number of values across all events 
+tree->Draw("pt>>histo");
+TH1D *histo = (TH1D *)gDirectory->Get("histo");
+histo->GetEntries();
+~~~
+   </td>
+   <td>
+~~~{cpp}
+df.Histo1D("pt")->GetEntries();
+~~~
+   </td>
+</tr>
+</table>
 
 */
 // clang-format on
@@ -1992,7 +2226,7 @@ namespace Experimental {
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Create the RDataFrame from the dataset specification file.
-/// \param[in] jsonFile Path to the dataset specification JSON file. 
+/// \param[in] jsonFile Path to the dataset specification JSON file.
 ///
 /// The input dataset specification JSON file must include a number of keys that
 /// describe all the necessary samples and their associated metadata information.
@@ -2002,7 +2236,7 @@ namespace Experimental {
 /// added, as well as the friend list information.
 ///
 /// ### Example specification file JSON:
-/// The following is an example of the dataset specification JSON file formatting: 
+/// The following is an example of the dataset specification JSON file formatting:
 ///~~~{.cpp}
 /// {
 ///    "samples": {

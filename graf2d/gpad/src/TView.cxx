@@ -13,7 +13,6 @@
 #include "TROOT.h"
 #include "TPluginManager.h"
 
-ClassImp(TView);
 
 /** \class TView
 \ingroup gpad

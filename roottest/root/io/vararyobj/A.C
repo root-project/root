@@ -11,7 +11,6 @@
 
 using namespace std;
 
-ClassImp(A);
 
 A::A() : TObject()
 {

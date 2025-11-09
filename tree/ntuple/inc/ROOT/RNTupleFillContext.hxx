@@ -2,8 +2,6 @@
 /// \ingroup NTuple
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2024-02-22
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
@@ -32,11 +30,10 @@
 #include <vector>
 
 namespace ROOT {
-namespace Experimental {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleFillContext
+\class ROOT::RNTupleFillContext
 \ingroup NTuple
 \brief A context for filling entries (data) into clusters of an RNTuple
 
@@ -61,7 +58,7 @@ private:
    /// Needs to be destructed before fSink
    std::unique_ptr<ROOT::RNTupleModel> fModel;
 
-   Detail::RNTupleMetrics fMetrics;
+   Experimental::Detail::RNTupleMetrics fMetrics;
 
    ROOT::NTupleSize_t fLastFlushed = 0;
    ROOT::NTupleSize_t fNEntries = 0;
@@ -132,14 +129,14 @@ public:
    ///
    /// This method will check the entry's model ID to ensure it comes from the context's own model or throw an exception
    /// otherwise.
-   void FillNoFlush(Detail::RRawPtrWriteEntry &entry, ROOT::RNTupleFillStatus &status)
+   void FillNoFlush(Experimental::Detail::RRawPtrWriteEntry &entry, ROOT::RNTupleFillStatus &status)
    {
       FillNoFlushImpl(entry, status);
    }
    /// Fill an RRawPtrWriteEntry into this context.  This method will check the entry's model ID to ensure it comes
    /// from the context's own model or throw an exception otherwise.
    /// \return The number of uncompressed bytes written.
-   std::size_t Fill(Detail::RRawPtrWriteEntry &entry) { return FillImpl(entry); }
+   std::size_t Fill(Experimental::Detail::RRawPtrWriteEntry &entry) { return FillImpl(entry); }
 
    /// Flush column data, preparing for CommitCluster or to reduce memory usage. This will trigger compression of pages,
    /// but not actually write to storage.
@@ -151,7 +148,7 @@ public:
 
    const ROOT::RNTupleModel &GetModel() const { return *fModel; }
    std::unique_ptr<ROOT::REntry> CreateEntry() const { return fModel->CreateEntry(); }
-   std::unique_ptr<Detail::RRawPtrWriteEntry> CreateRawPtrWriteEntry() const
+   std::unique_ptr<Experimental::Detail::RRawPtrWriteEntry> CreateRawPtrWriteEntry() const
    {
       return fModel->CreateRawPtrWriteEntry();
    }
@@ -171,10 +168,9 @@ public:
    bool IsStagedClusterCommittingEnabled() const { return fStagedClusterCommitting; }
 
    void EnableMetrics() { fMetrics.Enable(); }
-   const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
-}; // class RNTupleFillContext
+   const Experimental::Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
+};
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif // ROOT_RNTupleFillContext

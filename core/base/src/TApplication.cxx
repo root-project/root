@@ -74,7 +74,6 @@ Bool_t TIdleTimer::Notify()
 }
 
 
-ClassImp(TApplication);
 
 static void CallEndOfProcessCleanups()
 {
@@ -989,8 +988,8 @@ TString TApplication::GetSetup()
                                          gROOT->GetGitBranch(),
                                          gROOT->GetGitCommit()));
    }
-   lines.emplace_back(TString::Format("With %s",
-                                      gSystem->GetBuildCompilerVersionStr()));
+   lines.emplace_back(TString::Format("With %s std%ld",
+                                      gSystem->GetBuildCompilerVersionStr(), __cplusplus));
    lines.emplace_back("Binary directory: "+ gROOT->GetBinDir());
    lines.emplace_back("```");
    TString setup = "";

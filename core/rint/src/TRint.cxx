@@ -47,7 +47,7 @@
 #include "snprintf.h"
 
 #ifdef R__UNIX
-#include <signal.h>
+#include <csignal>
 #include <unistd.h>
 #endif
 
@@ -134,7 +134,6 @@ Bool_t TTermInputHandler::Notify()
 }
 
 
-ClassImp(TRint);
 
 
 namespace {
@@ -543,8 +542,8 @@ void TRint::PrintLogo(Bool_t lite)
                                             gROOT->GetGitBranch(),
                                             gROOT->GetGitCommit()));
       }
-      lines.emplace_back(TString::Format("With %s %%s",
-                                         gSystem->GetBuildCompilerVersionStr()));
+      lines.emplace_back(TString::Format("With %s std%ld %%s",
+                                         gSystem->GetBuildCompilerVersionStr(), __cplusplus));
       lines.emplace_back(TString("Try '.help'/'.?', '.demo', '.license', '.credits', '.quit'/'.q'%s"));
 
       // Find the longest line and its length:

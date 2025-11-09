@@ -35,7 +35,6 @@ Direct subclass of TBuffer, implements common methods for TBufferFile and TBuffe
 
 Int_t TBufferIO::fgMapSize = kMapSize;
 
-ClassImp(TBufferIO);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

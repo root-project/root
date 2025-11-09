@@ -14,10 +14,9 @@ Their main task is to compute the linearized index for a single `Fill` argument:
 ```c++
 RLinearizedIndex ComputeLinearizedIndex(double x);
 ```
-The `bool` is used to indicate if the return value is valid.
-For example, the argument may be outside the axis with the underflow and overflow bins disabled.
-`RLinearizedIndex` is a simple struct with a `std::size_t index` and `bool valid`.
-It is chosen over `std::optional` because it unifies the return value construction:
+`RLinearizedIndex` is a simple struct with a `std::size_t fIndex` and `bool fValid`.
+An index may be invalid if the argument is outside the axis with the underflow and overflow bins disabled.
+A custom struct is chosen over `std::optional` because it unifies the return value construction:
 If outside the axis, the validity is just determined by the member property `fEnableFlowBins`.
 
 ### `Internal::RAxes`
@@ -53,7 +52,7 @@ During `Fill`, it delegates to `RHistEngine::Fill` but also updates the histogra
 
 ## Classes for Weighted Filling
 
-### `RDoubleBinWithError`
+### `RBinWithError`
 
 A special bin content type that also accumulates the sum of weights squared.
 It can be used as a template argument to `RHistEngine` and `RHist`.

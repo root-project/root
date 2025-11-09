@@ -16,7 +16,6 @@
 An overlay element. Supports drawing (Render) and event-handling
 */
 
-ClassImp(TGLOverlayElement);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Mouse has entered this element.
@@ -64,4 +63,3 @@ Manage a collection of overlay elements.
 Not used yet.
 */
 
-ClassImp(TGLOverlayList);

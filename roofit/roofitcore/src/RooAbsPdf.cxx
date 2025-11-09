@@ -288,9 +288,11 @@ double RooAbsPdf::normalizeWithNaNPacking(double rawVal, double normVal) const {
     }
 
     if (rawVal < 0.) {
-      logEvalError(Form("p.d.f value is less than zero (%f), trying to recover", rawVal));
-      clearValueAndShapeDirty();
-      return RooNaNPacker::packFloatIntoNaN(-rawVal);
+       std::stringstream ss;
+       ss << "p.d.f value is less than zero (" << rawVal << "), trying to recover";
+       logEvalError(ss.str().c_str());
+       clearValueAndShapeDirty();
+       return RooNaNPacker::packFloatIntoNaN(-rawVal);
     }
 
     if (TMath::IsNaN(rawVal)) {
@@ -551,7 +553,7 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
       if (!cacheParams.empty()) {
    cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams.size()
           << "-dim value cache for integral over " << depList << " as a function of " << cacheParams << " in range " << (nr?nr:"<default>") <<  std::endl ;
-   string name = Form("%s_CACHE_[%s]",normInt->GetName(),cacheParams.contentsString().c_str()) ;
+   std::string name = normInt->GetName() + ("_CACHE_[" + cacheParams.contentsString()) + "]";
    RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*normInt,cacheParams) ;
    cachedIntegral->setInterpolationOrder(2) ;
    cachedIntegral->addOwnedComponents(*normInt) ;
@@ -2003,13 +2005,11 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   bool haveCompSel = ( (compSpec && strlen(compSpec)>0) || compSet) ;
 
   // Suffix for curve name
-  std::string nameSuffix ;
+  std::stringstream nameSuffix;
   if (compSpec && strlen(compSpec)>0) {
-    nameSuffix.append("_Comp[") ;
-    nameSuffix.append(compSpec) ;
-    nameSuffix.append("]") ;
+     nameSuffix << "_Comp[" << compSpec << "]";
   } else if (compSet) {
-    nameSuffix += "_Comp[" + compSet->contentsString() + "]";
+     nameSuffix << "_Comp[" << compSet->contentsString() << "]";
   }
 
   // Remove PDF-only commands from command list
@@ -2017,9 +2017,9 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 
   // Adjust normalization, if so requested
   if (asymCat) {
-    RooCmdArg cnsuffix("CurveNameSuffix",0,0,0,0,nameSuffix.c_str(),nullptr,nullptr,nullptr) ;
-    cmdList.Add(&cnsuffix);
-    return  RooAbsReal::plotOn(frame,cmdList) ;
+     RooCmdArg cnsuffix("CurveNameSuffix", 0, 0, 0, 0, nameSuffix.str().c_str(), nullptr, nullptr, nullptr);
+     cmdList.Add(&cnsuffix);
+     return RooAbsReal::plotOn(frame, cmdList);
   }
 
   // More sanity checks
@@ -2060,7 +2060,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
           ccoutI(Plotting) << std::endl ;
         }
 
-        nameSuffix.append(Form("_Range[%f_%f]",rangeLo,rangeHi)) ;
+        nameSuffix << "_Range[" << rangeLo << "_" << rangeHi << "]";
 
       } else if (pc.hasProcessed("RangeWithName")) {
 
@@ -2083,7 +2083,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
           ccoutI(Plotting) << std::endl ;
         }
 
-        nameSuffix.append("_Range[" + std::string(pc.getString("rangeName")) + "]");
+        nameSuffix << "_Range[" << pc.getString("rangeName") << "]";
       }
       // Specification of a normalization range override those in a regular range
       if (pc.hasProcessed("NormRange")) {
@@ -2101,8 +2101,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
         hasCustomRange = true ;
         coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") p.d.f. curve is normalized using explicit choice of ranges '" << pc.getString("normRangeName", "", false) << "'" << std::endl ;
 
-        nameSuffix.append("_NormRange[" + std::string(pc.getString("rangeName")) + "]");
-
+        nameSuffix << "_NormRange[" << pc.getString("rangeName") << "]";
       }
 
       if (hasCustomRange && adjustNorm) {
@@ -2146,7 +2145,21 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
         scaleFactor *= rangeNevt/nExpected ;
 
       } else {
-        scaleFactor *= frame->getFitRangeNEvt()/nExpected ;
+        // First, check if the PDF *can* be extended.
+        if (this->canBeExtended()) {
+            // If it can, get the expected events.
+            const double nExp = expectedEvents(frame->getNormVars());
+            if (nExp > 0) {
+                // If the prediction is valid, use it for normalization.
+                scaleFactor *= nExp / nExpected;
+            } else {
+                // If prediction is not valid (e.g. 0), fall back to data.
+                scaleFactor *= frame->getFitRangeNEvt() / nExpected;
+            }
+        } else {
+            // If the PDF can't be extended, just use the data.
+            scaleFactor *= frame->getFitRangeNEvt() / nExpected;
+        }
       }
     } else if (stype==RelativeExpected) {
       scaleFactor *= nExpected ;
@@ -2198,8 +2211,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
     }
   }
 
-
-  RooCmdArg cnsuffix("CurveNameSuffix",0,0,0,0,nameSuffix.c_str(),nullptr,nullptr,nullptr) ;
+  RooCmdArg cnsuffix("CurveNameSuffix", 0, 0, 0, 0, nameSuffix.str().c_str(), nullptr, nullptr, nullptr);
   cmdList.Add(&cnsuffix);
 
   RooPlot* ret =  RooAbsReal::plotOn(frame,cmdList) ;

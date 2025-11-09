@@ -33,7 +33,6 @@ The navigator can be updated to reflect this path array: `array->UpdateNavigator
 #include "TGeoCache.h"
 #include "TGeoManager.h"
 
-ClassImp(TGeoBranchArray);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. Allocates the array with a size given by level.

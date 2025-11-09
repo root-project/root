@@ -56,7 +56,6 @@ A class implementing various fits of rule ensembles
 #include <algorithm>
 #include <random>
 
-ClassImp(TMVA::RuleFit);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

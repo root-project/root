@@ -539,9 +539,6 @@ public:
   }
 };
 
-void printBlockFreqImpl(raw_ostream &OS, BlockFrequency EntryFreq,
-                        BlockFrequency Freq);
-
 namespace bfi_detail {
 
 template <class BlockT> struct TypeMap {};
@@ -1412,11 +1409,10 @@ template <class BT> void BlockFrequencyInfoImpl<BT>::applyIterativeInference() {
     auto Node = getNode(&BB);
     if (!Node.isValid())
       continue;
-    if (BlockIndex.count(&BB)) {
-      Freqs[Node.Index].Scaled = Freq[BlockIndex[&BB]];
-    } else {
+    if (auto It = BlockIndex.find(&BB); It != BlockIndex.end())
+      Freqs[Node.Index].Scaled = Freq[It->second];
+    else
       Freqs[Node.Index].Scaled = Scaled64::getZero();
-    }
   }
 }
 
@@ -1767,8 +1763,8 @@ void BlockFrequencyInfoImpl<BT>::verifyMatch(
     for (auto &Entry : ValidNodes) {
       const BlockT *BB = Entry.first;
       BlockNode Node = Entry.second;
-      if (OtherValidNodes.count(BB)) {
-        BlockNode OtherNode = OtherValidNodes[BB];
+      if (auto It = OtherValidNodes.find(BB); It != OtherValidNodes.end()) {
+        BlockNode OtherNode = It->second;
         const auto &Freq = Freqs[Node.Index];
         const auto &OtherFreq = Other.Freqs[OtherNode.Index];
         if (Freq.Integer != OtherFreq.Integer) {

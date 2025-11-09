@@ -66,5 +66,10 @@ void RJittedDefine::MakeVariations(const std::vector<std::string> &variations)
 RDefineBase &RJittedDefine::GetVariedDefine(const std::string &variationName)
 {
    assert(fConcreteDefine != nullptr);
-   return fConcreteDefine->GetVariedDefine(variationName);
+
+   auto &variedDefine = fConcreteDefine->GetVariedDefine(variationName);
+   if (&variedDefine == fConcreteDefine.get())
+      return *this; // Ensures that the pointer is the same across all variations
+   else
+      return variedDefine;
 }

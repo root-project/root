@@ -44,7 +44,6 @@ public:
   ClassDefOverride(TMyPar,2)
 };
 
-ClassImp(TMyPar)
   
 //______________________________________________________________________________
 TMyPar::TMyPar()
@@ -109,7 +108,6 @@ public:
   ClassDefOverride(TMyData,2)
 };
 
-ClassImp(TMyData)
   
 //______________________________________________________________________________
 TMyData::TMyData()

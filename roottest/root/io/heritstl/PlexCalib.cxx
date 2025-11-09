@@ -14,6 +14,5 @@
 
 #include "PlexCalib.h"
 
-ClassImp(PlexCalib)
 
 #

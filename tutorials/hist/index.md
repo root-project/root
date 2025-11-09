@@ -80,7 +80,6 @@ The examples below showcase the same functionalities through 3 different impleme
 | hist009_TH1_normalize.C            |                                  |                               | Normalizing a Histogram. |
 | hist010_TH1_two_scales.C           | hist010_TH1_two_scales.py        | hist010_TH1_two_scales_uhi.py|Draw two histograms on one canvas using different y-axis scales. |
 | hist011_TH1_legend_autoplaced.C    |                                  |                               | Automatic placing of the legend. |
-| hist012_TH1_hksimple.C             |                                  |                               | Dynamic filling of TH1K histograms. |
 | hist013_TH1_rebin.C                |                                  |                               | Create a variable bin-width histogram and change bin sizes. |
 | hist014_TH1_cumulative.C           |                                  |                               | Illustrate use of the TH1::GetCumulative method. |
 | hist015_TH1_read_and_draw.C        | hist015_TH1_read_and_draw.py     | hist015_TH1_read_and_draw_uhi.py|Read a 1D histogram from a ROOT File and draw it. |

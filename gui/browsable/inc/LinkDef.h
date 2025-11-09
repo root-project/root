@@ -30,5 +30,6 @@
 
 #pragma link C++ class ROOT::Browsable::RItem+;
 #pragma link C++ class ROOT::Browsable::RSysFileItem+;
+#pragma link C++ class ROOT::Browsable::RNTupleItem+;
 
 #endif

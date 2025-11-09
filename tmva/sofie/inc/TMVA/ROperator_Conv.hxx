@@ -313,6 +313,8 @@ public:
       imcol = fNX +"_xcol";
       fOutputTensorNames.emplace_back(convK);
       fOutputTensorNames.emplace_back(imcol);
+      fInputTensorNames.emplace_back(convK);
+      fInputTensorNames.emplace_back(imcol);
 
       if (model.Verbose()) {
          std::cout << "Conv - " << fDim << "  " << fNX << " : " << ConvertShapeToString(fShapeX)

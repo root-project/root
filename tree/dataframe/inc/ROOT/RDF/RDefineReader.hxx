@@ -62,7 +62,7 @@ class RDefinesWithReaders {
    // (see BookDefineJit). it is never null.
    std::shared_ptr<ROOT::Detail::RDF::RDefineBase> fDefine;
    // Column readers per variation (in the map) per slot (in the vector).
-   std::vector<std::unordered_map<std::string_view, std::unique_ptr<RDefineReader>>> fReadersPerVariation;
+   std::vector<std::unordered_map<std::string_view, std::shared_ptr<RDefineReader>>> fReadersPerVariation;
 
    // Strings that were already used to represent column names in this RDataFrame instance.
    ROOT::Internal::RDF::RStringCache &fCachedColNames;

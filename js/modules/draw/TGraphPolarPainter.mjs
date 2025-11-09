@@ -1,8 +1,8 @@
-import { settings, gStyle, create, BIT, clTPaveText, kTitle } from '../core.mjs';
+import { settings, create, BIT } from '../core.mjs';
 import { scaleLinear, pointer as d3_pointer } from '../d3.mjs';
 import { DrawOptions, buildSvgCurve, makeTranslate } from '../base/BasePainter.mjs';
 import { ObjectPainter, getElementMainPainter } from '../base/ObjectPainter.mjs';
-import { TPavePainter, kPosTitle } from '../hist/TPavePainter.mjs';
+import { drawObjectTitle } from '../hist/TPavePainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 import { TooltipHandler } from '../gpad/TFramePainter.mjs';
 import { assignContextMenu, kNoReorder } from '../gui/menu.mjs';
@@ -59,7 +59,7 @@ class TGraphPolargramPainter extends TooltipHandler {
          polar.fRwtmax = tmax;
       }
       this.t0 = tmin;
-      this.mult = 2*Math.PI/(tmax - tmin);
+      this.mult = 2 * Math.PI / (tmax - tmin);
    }
 
    /** @summary Translate coordinates */
@@ -67,7 +67,7 @@ class TGraphPolargramPainter extends TooltipHandler {
       // recalculate angle
       const angle = (input_angle - this.t0) * this.mult;
       let rx = this.r(radius),
-          ry = rx/this.szx*this.szy,
+          ry = rx / this.szx * this.szy,
           grx = rx * Math.cos(-angle),
           gry = ry * Math.sin(-angle);
 
@@ -82,8 +82,10 @@ class TGraphPolargramPainter extends TooltipHandler {
 
    /** @summary format label for radius ticks */
    format(radius) {
-      if (radius === Math.round(radius)) return radius.toString();
-      if (this.ndig > 10) return radius.toExponential(4);
+      if (radius === Math.round(radius))
+         return radius.toString();
+      if (this.ndig > 10)
+         return radius.toExponential(4);
       return radius.toFixed((this.ndig > 0) ? this.ndig : 0);
    }
 
@@ -94,10 +96,10 @@ class TGraphPolargramPainter extends TooltipHandler {
             return value.toString();
          if (this.ndig > 10)
             return value.toExponential(4);
-         return value.toFixed(this.ndig+2);
+         return value.toFixed(this.ndig + 2);
       }
 
-      value *= 180/Math.PI;
+      value *= 180 / Math.PI;
       return (value === Math.round(value)) ? value.toString() : value.toFixed(1);
    }
 
@@ -110,11 +112,11 @@ class TGraphPolargramPainter extends TooltipHandler {
             rect = {};
 
       if (pad) {
-         rect.szx = Math.round(Math.max(0.1, 0.5 - Math.max(pad.fLeftMargin, pad.fRightMargin))*w);
-         rect.szy = Math.round(Math.max(0.1, 0.5 - Math.max(pad.fBottomMargin, pad.fTopMargin))*h);
+         rect.szx = Math.round(Math.max(0.1, 0.5 - Math.max(pad.fLeftMargin, pad.fRightMargin)) * w);
+         rect.szy = Math.round(Math.max(0.1, 0.5 - Math.max(pad.fBottomMargin, pad.fTopMargin)) * h);
       } else {
-         rect.szx = Math.round(0.5*w);
-         rect.szy = Math.round(0.5*h);
+         rect.szx = Math.round(0.5 * w);
+         rect.szy = Math.round(0.5 * h);
       }
 
       rect.width = 2 * rect.szx;
@@ -148,10 +150,12 @@ class TGraphPolargramPainter extends TooltipHandler {
       this.processFrameTooltipEvent(null); // remove all tooltips
 
       const polar = this.getObject();
-      if (!polar) return;
+      if (!polar)
+         return;
 
       let delta = evnt.wheelDelta ? -evnt.wheelDelta : (evnt.deltaY || evnt.detail);
-      if (!delta) return;
+      if (!delta)
+         return;
 
       delta = (delta < 0) ? -0.2 : 0.2;
 
@@ -159,7 +163,7 @@ class TGraphPolargramPainter extends TooltipHandler {
       const range = rmax - rmin;
 
       // rmin -= delta*range;
-      rmax += delta*range;
+      rmax += delta * range;
 
       if ((rmin < polar.fRwrmin) || (rmax > polar.fRwrmax))
          rmin = rmax = 0;
@@ -184,34 +188,36 @@ class TGraphPolargramPainter extends TooltipHandler {
       const fontsize = Math.round(polar.fPolarTextSize * this.szy * 2),
             o = this.getOptions();
 
-      return this.startTextDrawingAsync(polar.fPolarLabelFont, fontsize)
-                 .then(() => {
+      return this.startTextDrawingAsync(polar.fPolarLabelFont, fontsize).then(() => {
          const lbls = (nmajor === 8) ? ['0', '#frac{#pi}{4}', '#frac{#pi}{2}', '#frac{3#pi}{4}', '#pi', '#frac{5#pi}{4}', '#frac{3#pi}{2}', '#frac{7#pi}{4}'] : ['0', '#frac{2#pi}{3}', '#frac{4#pi}{3}'],
                aligns = [12, 11, 21, 31, 32, 33, 23, 13];
 
          for (let n = 0; n < nmajor; ++n) {
-            const angle = -n*2*Math.PI/nmajor;
+            const angle = -n * 2 * Math.PI / nmajor;
             this.getG().append('svg:path')
-               .attr('d', `M0,0L${Math.round(this.szx*Math.cos(angle))},${Math.round(this.szy*Math.sin(angle))}`)
+               .attr('d', `M0,0L${Math.round(this.szx * Math.cos(angle))},${Math.round(this.szy * Math.sin(angle))}`)
                .call(this.lineatt.func);
 
             let align = 12, rotate = 0;
 
             if (o.OrthoLabels) {
-               rotate = -n/nmajor*360;
+               rotate = -n / nmajor * 360;
                if ((rotate > -271) && (rotate < -91)) {
-                  align = 32; rotate += 180;
+                  align = 32;
+                  rotate += 180;
                }
             } else {
-               const aindx = Math.round(16 - angle/Math.PI*4) % 8; // index in align table, here absolute angle is important
+               const aindx = Math.round(16 - angle / Math.PI * 4) % 8; // index in align table, here absolute angle is important
                align = aligns[aindx];
             }
 
-            this.drawText({ align, rotate,
-                           x: Math.round((this.szx + fontsize)*Math.cos(angle)),
-                           y: Math.round((this.szy + fontsize/this.szx*this.szy)*(Math.sin(angle))),
-                           text: lbls[n],
-                           color: this.getColor(polar.fPolarLabelColor), latex: 1 });
+            this.drawText({
+               align, rotate,
+               x: Math.round((this.szx + fontsize) * Math.cos(angle)),
+               y: Math.round((this.szy + fontsize / this.szx * this.szy) * (Math.sin(angle))),
+               text: lbls[n],
+               color: this.getColor(polar.fPolarLabelColor), latex: 1
+            });
          }
 
          return this.finishTextDrawing();
@@ -228,7 +234,7 @@ class TGraphPolargramPainter extends TooltipHandler {
             rect = this.getPadPainter().getFrameRect(),
             g = this.createG();
 
-      makeTranslate(g, Math.round(rect.x + rect.width/2), Math.round(rect.y + rect.height/2));
+      makeTranslate(g, Math.round(rect.x + rect.width / 2), Math.round(rect.y + rect.height / 2));
       this.szx = rect.szx;
       this.szy = rect.szy;
 
@@ -242,11 +248,14 @@ class TGraphPolargramPainter extends TooltipHandler {
       this.r = scaleLinear().domain([this.scale_rmin, this.scale_rmax]).range([0, this.szx]);
 
       if (polar.fRadian) {
-         polar.fRwtmin = 0; polar.fRwtmax = 2*Math.PI;
+         polar.fRwtmin = 0;
+         polar.fRwtmax = 2 * Math.PI;
       } else if (polar.fDegree) {
-         polar.fRwtmin = 0; polar.fRwtmax = 360;
+         polar.fRwtmin = 0;
+         polar.fRwtmax = 360;
       } else if (polar.fGrad) {
-         polar.fRwtmin = 0; polar.fRwtmax = 200;
+         polar.fRwtmin = 0;
+         polar.fRwtmax = 200;
       }
 
       this.setAnglesRange(polar.fRwtmin, polar.fRwtmax);
@@ -266,12 +275,15 @@ class TGraphPolargramPainter extends TooltipHandler {
 
       // verify that all radius labels are unique
       let lbls = [], indx = 0;
-      while (indx<ticks.length) {
+      while (indx < ticks.length) {
          const lbl = this.format(ticks[indx]);
          if (lbls.indexOf(lbl) >= 0) {
-            if (++this.ndig>10) break;
-            lbls = []; indx = 0; continue;
-          }
+            if (++this.ndig > 10)
+               break;
+            lbls = [];
+            indx = 0;
+            continue;
+         }
          lbls.push(lbl);
          indx++;
       }
@@ -303,11 +315,13 @@ class TGraphPolargramPainter extends TooltipHandler {
             if ((n < ticks.length - 1) || !exclude_last) {
                const halign = ca > 0.7 ? 1 : (ca > 0 ? 3 : (ca > -0.7 ? 1 : 3)),
                      valign = Math.abs(ca) < 0.7 ? 1 : 3;
-               this.drawText({ align: 10 * halign + valign,
-                               x: Math.round(rx*ca),
-                               y: Math.round(ry*sa),
-                               text: this.format(ticks[n]),
-                               color: this.getColor(polar.fRadialLabelColor), latex: 0 });
+               this.drawText({
+                  align: 10 * halign + valign,
+                  x: Math.round(rx * ca),
+                  y: Math.round(ry * sa),
+                  text: this.format(ticks[n]),
+                  color: this.getColor(polar.fRadialLabelColor), latex: 0
+               });
                if (o.rdot) {
                   g.append('ellipse')
                    .attr('cx', Math.round(rx * ca))
@@ -321,8 +335,9 @@ class TGraphPolargramPainter extends TooltipHandler {
             if ((nminor > 1) && ((n < ticks.length - 1) || !exclude_last)) {
                const dr = (ticks[1] - ticks[0]) / nminor;
                for (let nn = 1; nn < nminor; ++nn) {
-                  const gridr = ticks[n] + dr*nn;
-                  if (gridr > this.scale_rmax) break;
+                  const gridr = ticks[n] + dr * nn;
+                  if (gridr > this.scale_rmax)
+                     break;
                   rx = this.r(gridr);
                   ry = rx / this.szx * this.szy;
                   g.append('ellipse')
@@ -339,7 +354,7 @@ class TGraphPolargramPainter extends TooltipHandler {
 
          if (ca < 0.999) {
             g.append('path')
-             .attr('d', `M0,0L${Math.round(this.szx*ca)},${Math.round(this.szy*sa)}`)
+             .attr('d', `M0,0L${Math.round(this.szx * ca)},${Math.round(this.szy * sa)}`)
              .style('pointer-events', pointer_events)
              .call(this.lineatt.func);
          }
@@ -352,10 +367,11 @@ class TGraphPolargramPainter extends TooltipHandler {
 
          if (nminor > 1) {
             for (let n = 0; n < nmajor * nminor; ++n) {
-               if (n % nminor === 0) continue;
-               const angle = -n*2*Math.PI/nmajor/nminor;
+               if (n % nminor === 0)
+                  continue;
+               const angle = -n * 2 * Math.PI / nmajor / nminor;
                g.append('svg:path')
-                .attr('d', `M0,0L${Math.round(this.szx*Math.cos(angle))},${Math.round(this.szy*Math.sin(angle))}`)
+                .attr('d', `M0,0L${Math.round(this.szx * Math.cos(angle))},${Math.round(this.szy * Math.sin(angle))}`)
                 .call(this.gridatt.func);
             }
          }
@@ -373,9 +389,21 @@ class TGraphPolargramPainter extends TooltipHandler {
    fillContextMenuItems(menu) {
       const pp = this.getObject(), o = this.getOptions();
       menu.sub('Axis range');
-      menu.addchk(pp.fRadian, 'Radian', flag => { pp.fRadian = flag; pp.fDegree = pp.fGrad = false; this.interactiveRedraw('pad', flag ? 'exec:SetToRadian()' : 'exec:SetTwoPi()'); }, 'Handle data angles as radian range 0..2*Pi');
-      menu.addchk(pp.fDegree, 'Degree', flag => { pp.fDegree = flag; pp.fRadian = pp.fGrad = false; this.interactiveRedraw('pad', flag ? 'exec:SetToDegree()' : 'exec:SetTwoPi()'); }, 'Handle data angles as degree range 0..360');
-      menu.addchk(pp.fGrad, 'Grad', flag => { pp.fGrad = flag; pp.fRadian = pp.fDegree = false; this.interactiveRedraw('pad', flag ? 'exec:SetToGrad()' : 'exec:SetTwoPi()'); }, 'Handle data angles as grad range 0..200');
+      menu.addchk(pp.fRadian, 'Radian', flag => {
+         pp.fRadian = flag;
+         pp.fDegree = pp.fGrad = false;
+         this.interactiveRedraw('pad', flag ? 'exec:SetToRadian()' : 'exec:SetTwoPi()');
+      }, 'Handle data angles as radian range 0..2*Pi');
+      menu.addchk(pp.fDegree, 'Degree', flag => {
+         pp.fDegree = flag;
+         pp.fRadian = pp.fGrad = false;
+         this.interactiveRedraw('pad', flag ? 'exec:SetToDegree()' : 'exec:SetTwoPi()');
+      }, 'Handle data angles as degree range 0..360');
+      menu.addchk(pp.fGrad, 'Grad', flag => {
+         pp.fGrad = flag;
+         pp.fRadian = pp.fDegree = false;
+         this.interactiveRedraw('pad', flag ? 'exec:SetToGrad()' : 'exec:SetTwoPi()');
+      }, 'Handle data angles as grad range 0..200');
       menu.endsub();
       menu.addSizeMenu('Axis angle', 0, 315, 45, o.rangle || pp.fAxisAngle, v => {
          o.rangle = pp.fAxisAngle = v;
@@ -468,9 +496,15 @@ class TGraphPolarPainter extends ObjectPainter {
       return true;
    }
 
+   /** @summary Draw TGraphPolar title */
+   async drawTitle(first_time) {
+      return drawObjectTitle(this, first_time, this._draw_axis, !this.getObject()?.TestBit(kNoTitle));
+   }
+
    /** @summary Redraw TGraphPolar */
-   redraw() {
-      return this.drawGraphPolar().then(() => this.updateTitle());
+   async redraw() {
+      return this.drawGraphPolar()
+                  .then(() => this.drawTitle());
    }
 
    /** @summary Drawing TGraphPolar */
@@ -598,15 +632,16 @@ class TGraphPolarPainter extends ObjectPainter {
          rmax = Math.max(rmax, gr.fY[n] + (has_err ? gr.fEY[n] : 0));
       }
 
-      gr.fPolargram.fRwrmin = rmin - (rmax-rmin)*0.1;
-      gr.fPolargram.fRwrmax = rmax + (rmax-rmin)*0.1;
+      gr.fPolargram.fRwrmin = rmin - (rmax - rmin) * 0.1;
+      gr.fPolargram.fRwrmax = rmax + (rmax - rmin) * 0.1;
 
       return gr.fPolargram;
    }
 
    /** @summary Provide tooltip at specified point */
    extractTooltip(pnt) {
-      if (!pnt) return null;
+      if (!pnt)
+         return null;
 
       const graph = this.getObject(),
             main = this.getMainPainter();
@@ -614,7 +649,7 @@ class TGraphPolarPainter extends ObjectPainter {
 
       for (let n = 0; n < graph.fNpoints; ++n) {
          const pos = main.translate(graph.fX[n], graph.fY[n]),
-               dist2 = (pos.grx - pnt.x)**2 + (pos.gry - pnt.y)**2;
+               dist2 = (pos.grx - pnt.x) ** 2 + (pos.gry - pnt.y) ** 2;
          if (dist2 < best_dist2) {
             best_dist2 = dist2;
             bestindx = n;
@@ -650,59 +685,6 @@ class TGraphPolarPainter extends ObjectPainter {
          res.lines.push(`error phi = ${main.axisAsText('phi', graph.fEX[bestindx])}`);
 
       return res;
-   }
-
-   /** @summary Only redraw histogram title
-     * @return {Promise} with painter */
-   async updateTitle() {
-      // case when histogram drawn over other histogram (same option)
-      if (!this._draw_axis)
-         return this;
-
-      const tpainter = this.getPadPainter()?.findPainterFor(null, kTitle, clTPaveText),
-            pt = tpainter?.getObject();
-
-      if (!tpainter || !pt)
-         return this;
-
-      const gr = this.getObject(),
-            draw_title = !gr.TestBit(kNoTitle) && (gStyle.fOptTitle > 0);
-
-      pt.Clear();
-      if (draw_title) pt.AddText(gr.fTitle);
-      return tpainter.redraw().then(() => this);
-   }
-
-
-   /** @summary Draw histogram title
-     * @return {Promise} with painter */
-   async drawTitle() {
-      // case when histogram drawn over other histogram (same option)
-      if (!this._draw_axis)
-         return this;
-
-      const gr = this.getObject(),
-            st = gStyle,
-            draw_title = !gr.TestBit(kNoTitle) && (st.fOptTitle > 0),
-            pp = this.getPadPainter();
-
-      let pt = pp.findInPrimitives(kTitle, clTPaveText);
-
-      if (pt) {
-         pt.Clear();
-         if (draw_title)
-            pt.AddText(gr.fTitle);
-         return this;
-      }
-
-      pt = create(clTPaveText);
-      Object.assign(pt, { fName: kTitle, fFillColor: st.fTitleColor, fFillStyle: st.fTitleStyle, fBorderSize: st.fTitleBorderSize,
-                           fTextFont: st.fTitleFont, fTextSize: st.fTitleFontSize, fTextColor: st.fTitleTextColor, fTextAlign: 22 });
-
-      if (draw_title)
-         pt.AddText(gr.fTitle);
-      return TPavePainter.draw(pp, pt, kPosTitle)
-                         .then(p => { p?.setSecondaryId(this, kTitle); return this; });
    }
 
    /** @summary Show tooltip */
@@ -763,7 +745,7 @@ class TGraphPolarPainter extends ObjectPainter {
          gram_painter?.setSecondaryId(painter, 'polargram');
          painter.addToPadPrimitives();
          return painter.drawGraphPolar();
-      }).then(() => painter.drawTitle());
+      }).then(() => painter.drawTitle(true));
    }
 
 } // class TGraphPolarPainter

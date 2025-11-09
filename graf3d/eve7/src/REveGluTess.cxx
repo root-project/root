@@ -25,8 +25,8 @@
 
 #include <ROOT/REveGluTess.hxx>
 
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 #include <stdexcept>
 
 namespace ROOT {

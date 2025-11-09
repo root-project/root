@@ -4,8 +4,6 @@
 
 #ifndef __CINT__
 namespace MySpace {
-  ClassImp(MySpace::A)
-  ClassImp(MyClass)
 }
 #endif
 

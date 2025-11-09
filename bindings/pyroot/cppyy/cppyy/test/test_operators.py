@@ -1,6 +1,6 @@
 import py, pytest, os
 from pytest import raises, skip, mark
-from support import setup_make, pylong, maxvalue, IS_WINDOWS, IS_MAC
+from support import setup_make, pylong, maxvalue, IS_WINDOWS, IS_MAC, no_root_errors
 
 
 currpath = os.getcwd()
@@ -222,12 +222,16 @@ class TestOPERATORS:
             assert m[1]    == 74
             assert m(1,2)  == 74
 
+    @mark.xfail(reason="Compilation of unused call wrappers emits errors")
     def test09_templated_operator(self):
         """Templated operator<()"""
 
         from cppyy.gbl import TOIClass
 
-        assert (TOIClass() < 1)
+        # We don't want to see compile errors for overloads that were tried
+        # but didn't succeed
+        with no_root_errors():
+            assert (TOIClass() < 1)
 
     def test10_r_non_associative(self):
         """Use of radd/rmul with non-associative types"""

@@ -27,8 +27,6 @@
 #include "TGLabel.h"
 #include "TColor.h"
 
-ClassImp(TGTable);
-ClassImp(TTableRange);
 
 
 /** \class TGTable

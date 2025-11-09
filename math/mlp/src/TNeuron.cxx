@@ -39,7 +39,6 @@ there to inform buffered values are outdated.
 #include "TRegexp.h"
 #include "TMath.h"
 
-ClassImp(TNeuron);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Usual constructor

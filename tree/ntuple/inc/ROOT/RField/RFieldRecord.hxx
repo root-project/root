@@ -63,6 +63,7 @@ class RRecordField : public RFieldBase {
 
    /// If `emulatedFromType` is non-empty, this field was created as a replacement for a ClassField that we lack a
    /// dictionary for and reconstructed from the on-disk information.
+   /// Used by the public constructor and by Internal::CreateEmulatedRecordField().
    RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
                 std::string_view emulatedFromType);
 
@@ -73,7 +74,7 @@ protected:
 
    std::size_t GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment) const;
 
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
 
    void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final;
@@ -82,6 +83,8 @@ protected:
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
 
+   /// Used by RPairField and RTupleField descendants. These descendants have their own logic to attach the subfields
+   /// that ensure that the resulting memory layout matches std::pair or std::tuple, resp.
    RRecordField(std::string_view fieldName, std::string_view typeName);
 
    void AttachItemFields(std::vector<std::unique_ptr<RFieldBase>> itemFields);
@@ -101,9 +104,13 @@ protected:
       fSize += GetItemPadding(fSize, fMaxAlignment);
    }
 
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) override;
+
 public:
    /// Construct a RRecordField based on a vector of child fields. The ownership of the child fields is transferred
    /// to the RRecordField instance.
+   /// The resulting field uses a memory layout for its values as if there was a struct consisting of the passed
+   /// item fields.
    RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields);
    RRecordField(RRecordField &&other) = default;
    RRecordField &operator=(RRecordField &&other) = default;
@@ -133,6 +140,10 @@ private:
 protected:
    RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> itemFields,
               const std::array<std::size_t, 2> &offsets);
+
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
    RPairField(std::string_view fieldName, std::array<std::unique_ptr<RFieldBase>, 2> itemFields);
@@ -183,6 +194,10 @@ private:
 protected:
    RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
                const std::vector<std::size_t> &offsets);
+
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
    RTupleField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields);

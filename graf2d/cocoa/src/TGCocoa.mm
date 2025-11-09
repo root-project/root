@@ -423,7 +423,6 @@ void FixAscii(std::vector<UniChar> &text)
 
 }
 
-ClassImp(TGCocoa)
 
 Atom_t TGCocoa::fgDeleteWindowAtom = 0;
 

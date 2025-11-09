@@ -26,10 +26,9 @@
 #include <regex>
 #include <utility>
 #include <sstream>
-#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 #include <cstddef>
 #include <string_view>
-#endif
+
 // codecvt does not exist for gcc4.8.5 and is in principle deprecated; it is
 // only used in py2 for char -> wchar_t conversion for std::wstring; if not
 // available, the conversion is done through Python (requires an extra copy)
@@ -1549,13 +1548,13 @@ bool CPyCppyy::VoidArrayConverter::GetAddressSpecialCase(PyObject* pyobject, voi
 
 //----------------------------------------------------------------------------
 bool CPyCppyy::VoidArrayConverter::SetArg(
-    PyObject* pyobject, Parameter& para, CallContext* ctxt)
+    PyObject* pyobject, Parameter& para, CallContext* /*ctxt*/)
 {
 // just convert pointer if it is a C++ object
     CPPInstance* pyobj = GetCppInstance(pyobject);
     if (pyobj) {
     // depending on memory policy, some objects are no longer owned when passed to C++
-        if (!fKeepControl && !UseStrictOwnership(ctxt))
+        if (!fKeepControl && !UseStrictOwnership())
             pyobj->CppOwns();
 
    // set pointer (may be null) and declare success
@@ -1620,7 +1619,7 @@ bool CPyCppyy::VoidArrayConverter::ToMemory(PyObject* value, void* address, PyOb
     CPPInstance* pyobj = GetCppInstance(value);
     if (pyobj) {
     // depending on memory policy, some objects are no longer owned when passed to C++
-        if (!fKeepControl && CallContext::sMemoryPolicy != CallContext::kUseStrict)
+        if (!fKeepControl && !UseStrictOwnership())
             pyobj->CppOwns();
 
     // set pointer (may be null) and declare success
@@ -1777,9 +1776,7 @@ bool CPyCppyy::name##ArrayConverter::ToMemory(                               \
 CPPYY_IMPL_ARRAY_CONVERTER(Bool,     c_bool,       bool,                 '?', )
 CPPYY_IMPL_ARRAY_CONVERTER(SChar,    c_char,       signed char,          'b', )
 CPPYY_IMPL_ARRAY_CONVERTER(UChar,    c_ubyte,      unsigned char,        'B', )
-#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 CPPYY_IMPL_ARRAY_CONVERTER(Byte,     c_ubyte,      std::byte,            'B', )
-#endif
 CPPYY_IMPL_ARRAY_CONVERTER(Int8,     c_byte,       int8_t,               'b', _i8)
 CPPYY_IMPL_ARRAY_CONVERTER(Int16,    c_int16,      int16_t,              'h', _i16)
 CPPYY_IMPL_ARRAY_CONVERTER(Int32,    c_int32,      int32_t,              'i', _i32)
@@ -2032,7 +2029,6 @@ bool CPyCppyy::STLWStringConverter::ToMemory(PyObject* value, void* address, PyO
 }
 
 
-#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
 CPyCppyy::STLStringViewConverter::STLStringViewConverter(bool keepControl) :
     InstanceConverter(Cppyy::GetScope("std::string_view"), keepControl) {}
 
@@ -2112,7 +2108,6 @@ bool CPyCppyy::STLStringViewConverter::ToMemory(
 
     return false;
 }
-#endif
 
 
 bool CPyCppyy::STLStringMoveConverter::SetArg(
@@ -2168,7 +2163,7 @@ bool CPyCppyy::InstancePtrConverter<ISCONST>::SetArg(
     Cppyy::TCppType_t oisa = pyobj->ObjectIsA();
     if (oisa && (oisa == fClass || Cppyy::IsSubtype(oisa, fClass))) {
     // depending on memory policy, some objects need releasing when passed into functions
-        if (!KeepControl() && !UseStrictOwnership(ctxt))
+        if (!KeepControl() && !UseStrictOwnership())
             pyobj->CppOwns();
 
     // calculate offset between formal and actual arguments
@@ -2215,7 +2210,7 @@ bool CPyCppyy::InstancePtrConverter<ISCONST>::ToMemory(PyObject* value, void* ad
 
     if (Cppyy::IsSubtype(pyobj->ObjectIsA(), fClass)) {
     // depending on memory policy, some objects need releasing when passed into functions
-        if (!KeepControl() && CallContext::sMemoryPolicy != CallContext::kUseStrict)
+        if (!KeepControl() && !UseStrictOwnership())
             ((CPPInstance*)value)->CppOwns();
 
         *(void**)address = pyobj->GetObject();
@@ -2380,7 +2375,7 @@ bool CPyCppyy::InstanceMoveConverter::SetArg(
 //----------------------------------------------------------------------------
 template <bool ISREFERENCE>
 bool CPyCppyy::InstancePtrPtrConverter<ISREFERENCE>::SetArg(
-    PyObject* pyobject, Parameter& para, CallContext* ctxt)
+    PyObject* pyobject, Parameter& para, CallContext* /*ctxt*/)
 {
 // convert <pyobject> to C++ instance**, set arg for call
     CPPInstance* pyobj = GetCppInstance(pyobject);
@@ -2396,7 +2391,7 @@ bool CPyCppyy::InstancePtrPtrConverter<ISREFERENCE>::SetArg(
 
     if (Cppyy::IsSubtype(pyobj->ObjectIsA(), fClass)) {
     // depending on memory policy, some objects need releasing when passed into functions
-        if (!KeepControl() && !UseStrictOwnership(ctxt))
+        if (!KeepControl() && !UseStrictOwnership())
             pyobj->CppOwns();
 
     // set pointer (may be null) and declare success
@@ -2437,7 +2432,7 @@ bool CPyCppyy::InstancePtrPtrConverter<ISREFERENCE>::ToMemory(
 
     if (Cppyy::IsSubtype(pyobj->ObjectIsA(), fClass)) {
     // depending on memory policy, some objects need releasing when passed into functions
-        if (!KeepControl() && CallContext::sMemoryPolicy != CallContext::kUseStrict)
+        if (!KeepControl() && !UseStrictOwnership())
             pyobj->CppOwns();
 
     // register the value for potential recycling
@@ -2922,7 +2917,7 @@ bool CPyCppyy::SmartPtrConverter::SetArg(
     if (Cppyy::TCppType_t tsmart = pyobj->GetSmartIsA()) {
         if (Cppyy::IsSubtype(tsmart, fSmartPtrType)) {
         // depending on memory policy, some objects need releasing when passed into functions
-            if (!fKeepControl && !UseStrictOwnership(ctxt))
+            if (!fKeepControl && !UseStrictOwnership())
                 ((CPPInstance*)pyobject)->CppOwns();
 
         // calculate offset between formal and actual arguments
@@ -2952,16 +2947,8 @@ bool CPyCppyy::SmartPtrConverter::SetArg(
         return true;
     }
 
-// The automatic conversion of ordinary obejcts to smart pointers is disabled
-// for PyROOT because it can cause trouble with overload resolution. If a
-// function has overloads for both ordinary objects and smart pointers, then
-// the implicit conversion to smart pointers can result in the smart pointer
-// overload being hit, even though there would be an overload for the regular
-// object. Since PyROOT didn't have this feature before 6.32 anyway, disabling
-// it was the safest option.
-#if 0
 // for the case where we have an ordinary object to convert
-    if (!pyobj->IsSmart() && Cppyy::IsSubtype(oisa, fUnderlyingType)) {
+    if ((ctxt->fFlags & CallContext::kImplicitSmartPtrConversion) && !pyobj->IsSmart() && Cppyy::IsSubtype(oisa, fUnderlyingType)) {
     // create the relevant smart pointer and make the pyobject "smart"
         CPPInstance* pysmart = (CPPInstance*)ConvertImplicit(fSmartPtrType, pyobject, para, ctxt, false);
         if (!CPPInstance_Check(pysmart)) {
@@ -2978,7 +2965,6 @@ bool CPyCppyy::SmartPtrConverter::SetArg(
 
         return true;
     }
-#endif
 
 // final option, try mapping pointer types held (TODO: do not allow for non-const ref)
     if (pyobj->IsSmart() && Cppyy::IsSubtype(oisa, fUnderlyingType)) {
@@ -3136,8 +3122,9 @@ bool CPyCppyy::InitializerListConverter::SetArg(
             PyObject* item = PySequence_GetItem(pyobject, i);
             bool convert_ok = false;
             if (item) {
-                Converter *converter = CreateConverter(fValueTypeName);
-                if (!converter) {
+                if (fConverters.empty())
+                    fConverters.emplace_back(CreateConverter(fValueTypeName));
+                if (!fConverters.back()) {
                     if (CPPInstance_Check(item)) {
                     // by convention, use byte copy
                         memcpy((char*)fake->_M_array + i*fValueSize,
@@ -3158,9 +3145,11 @@ bool CPyCppyy::InitializerListConverter::SetArg(
                         }
                     }
                     if (memloc) {
-                        convert_ok = converter->ToMemory(item, memloc);
+                        if (i >= fConverters.size()) {
+                            fConverters.emplace_back(CreateConverter(fValueTypeName));
+                        }
+                        convert_ok = fConverters[i]->ToMemory(item, memloc);
                     }
-                    fConverters.emplace_back(converter);
                 }
 
 
@@ -3569,9 +3558,7 @@ public:
         gf["SCharAsInt[]"] =                gf["signed char ptr"];
         gf["UCharAsInt*"] =                 gf["unsigned char ptr"];
         gf["UCharAsInt[]"] =                gf["unsigned char ptr"];
-#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
         gf["std::byte ptr"] =               (cf_t)+[](cdims_t d) { return new ByteArrayConverter{d}; };
-#endif
         gf["int8_t ptr"] =                  (cf_t)+[](cdims_t d) { return new Int8ArrayConverter{d}; };
         gf["int16_t ptr"] =                 (cf_t)+[](cdims_t d) { return new Int16ArrayConverter{d}; };
         gf["int32_t ptr"] =                 (cf_t)+[](cdims_t d) { return new Int32ArrayConverter{d}; };
@@ -3596,14 +3583,12 @@ public:
     // aliases
         gf["signed char"] =                 gf["char"];
         gf["const signed char&"] =          gf["const char&"];
-#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
         gf["std::byte"] =                   gf["uint8_t"];
         gf["byte"] =                        gf["uint8_t"];
         gf["const std::byte&"] =            gf["const uint8_t&"];
         gf["const byte&"] =                 gf["const uint8_t&"];
         gf["std::byte&"] =                  gf["uint8_t&"];
         gf["byte&"] =                       gf["uint8_t&"];
-#endif
         gf["std::int8_t"] =                 gf["int8_t"];
         gf["const std::int8_t&"] =          gf["const int8_t&"];
         gf["std::int8_t&"] =                gf["int8_t&"];
@@ -3657,13 +3642,11 @@ public:
         gf["const string&"] =               gf["std::string"];
         gf["std::string&&"] =               (cf_t)+[](cdims_t) { return new STLStringMoveConverter{}; };
         gf["string&&"] =                    gf["std::string&&"];
-#if (__cplusplus > 201402L) || (defined(_MSC_VER) && _MSVC_LANG > 201402L)
         gf["std::string_view"] =            (cf_t)+[](cdims_t) { return new STLStringViewConverter{}; };
         gf[STRINGVIEW] =                    gf["std::string_view"];
         gf["std::string_view&"] =           gf["std::string_view"];
         gf["const std::string_view&"] =     gf["std::string_view"];
         gf["const " STRINGVIEW "&"] =       gf["std::string_view"];
-#endif
         gf["std::wstring"] =                (cf_t)+[](cdims_t) { return new STLWStringConverter{}; };
         gf[WSTRING1] =                      gf["std::wstring"];
         gf[WSTRING2] =                      gf["std::wstring"];

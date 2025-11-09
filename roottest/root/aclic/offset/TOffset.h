@@ -1,16 +1,8 @@
 // @(#)root/base:$Id$
 // Author: Victor Perev   08/05/02
 
-#ifdef __CINT__
-#pragma link off all globals;
-#pragma link off all classes;
-#pragma link off all functions;
-//#pragma link C++ class TOffset;
-#endif
-
 #ifndef ROOT_TOffset
 #define ROOT_TOffset
-
 
 
 #include "Rtypes.h"
@@ -18,8 +10,6 @@
 class TList;
 class TObject;
 class TClass;
-
-
 class TOffset {
 
 public:
@@ -35,8 +25,8 @@ public:
    void  Print(const char* opt="") const;
    Int_t GetOffset(const char *name) const;
 
-static void Test();
-static Int_t Aligne(Int_t off,Int_t mult)
+   static void Test();
+   static Int_t Aligne(Int_t off,Int_t mult)
    {Int_t r = off%mult; if (r) off += mult - r; return off;}
 
 private:
@@ -47,49 +37,49 @@ private:
 
 
 //  	static members
-   
+
    static Int_t fgAlign[16];
    static Int_t fgSize [16];
    static Int_t fgWhereVirt;
    static Int_t fgSolBug;
 
    enum EAlign {
-     kAlignChar,    
-     kAlignShort,    
-     kAlignInt,    
-     kAlignLong,    
-     kAlignPoint,    
-     kAlignFloat,    
-     kAlignDouble,    
-     kAlignBool,    
-     kAlignVirt,    
-     kAlignVector,    
-     kAlignList,    
-     kAlignDeque,    
-     kAlignMap,    
-     kAlignMultiMap,    
-     kAlignSet,    
-     kAlignMultiSet    
+     kAlignChar,
+     kAlignShort,
+     kAlignInt,
+     kAlignLong,
+     kAlignPoint,
+     kAlignFloat,
+     kAlignDouble,
+     kAlignBool,
+     kAlignVirt,
+     kAlignVector,
+     kAlignList,
+     kAlignDeque,
+     kAlignMap,
+     kAlignMultiMap,
+     kAlignSet,
+     kAlignMultiSet
    };
 
-   
+
    enum ESize {
-     kSizeChar,    
-     kSizeShort,    
-     kSizeInt,    
-     kSizeLong,    
-     kSizePoint,    
-     kSizeFloat,    
-     kSizeDouble,    
-     kSizeBool,    
-     kSizeVirt,    
-     kSizeVector,    
-     kSizeList,    
-     kSizeDeque,    
-     kSizeMap,    
-     kSizeMultiMap,    
-     kSizeSet,    
-     kSizeMultiSet    
+     kSizeChar,
+     kSizeShort,
+     kSizeInt,
+     kSizeLong,
+     kSizePoint,
+     kSizeFloat,
+     kSizeDouble,
+     kSizeBool,
+     kSizeVirt,
+     kSizeVector,
+     kSizeList,
+     kSizeDeque,
+     kSizeMap,
+     kSizeMultiMap,
+     kSizeSet,
+     kSizeMultiSet
    };
 
 
@@ -106,7 +96,9 @@ private:
    Int_t  fNBase;
    TList *fOffsetList;
 };
-#ifdef __CINT__
+
+#ifdef __ROOTCLING__
 #pragma link C++ class TOffset+;
 #endif
+
 #endif

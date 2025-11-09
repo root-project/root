@@ -44,8 +44,8 @@ as a TString, construct a TString from it, eg:
 */
 
 #include <ROOT/RConfig.hxx>
-#include <stdlib.h>
-#include <ctype.h>
+#include <cstdlib>
+#include <cctype>
 #include <list>
 #include <algorithm>
 
@@ -70,7 +70,6 @@ as a TString, construct a TString from it, eg:
 namespace std { using ::list; }
 #endif
 
-ClassImp(TString);
 
 // Amount to shift hash values to avoid clustering
 const UInt_t kHashShift = 5;
@@ -714,13 +713,13 @@ UInt_t TString::Hash(ECaseCompare cmp) const
    typedef unsigned __int64 uint64_t;
 #else // defined(_MSC_VER)
    // Other compilers
-#include <stdint.h>
+#include <cstdint>
 #endif // !defined(_MSC_VER)
 
    // From MurmurHash.cpp:
 #if defined(_MSC_VER)
    // Microsoft Visual Studio
-#include <stdlib.h>
+#include <cstdlib>
 #define ROTL64(x,y)     _rotl64(x,y)
 #define BIG_CONSTANT(x) (x)
 #else   // defined(_MSC_VER)

@@ -71,6 +71,37 @@ TEnum *EnsureValidEnum(std::string_view enumName)
    return e;
 }
 
+std::string BuildSetTypeName(ROOT::RSetField::ESetType setType, const ROOT::RFieldBase &innerField)
+{
+   std::string typePrefix;
+   switch (setType) {
+   case ROOT::RSetField::ESetType::kSet: typePrefix = "std::set<"; break;
+   case ROOT::RSetField::ESetType::kUnorderedSet: typePrefix = "std::unordered_set<"; break;
+   case ROOT::RSetField::ESetType::kMultiSet: typePrefix = "std::multiset<"; break;
+   case ROOT::RSetField::ESetType::kUnorderedMultiSet: typePrefix = "std::unordered_multiset<"; break;
+   default: R__ASSERT(false);
+   }
+   return typePrefix + innerField.GetTypeName() + ">";
+}
+
+std::string BuildMapTypeName(ROOT::RMapField::EMapType mapType, const ROOT::RFieldBase *innerField)
+{
+   if (const auto pairField = dynamic_cast<const ROOT::RPairField *>(innerField)) {
+      std::string typePrefix;
+      switch (mapType) {
+      case ROOT::RMapField::EMapType::kMap: typePrefix = "std::map<"; break;
+      case ROOT::RMapField::EMapType::kUnorderedMap: typePrefix = "std::unordered_map<"; break;
+      case ROOT::RMapField::EMapType::kMultiMap: typePrefix = "std::multimap<"; break;
+      case ROOT::RMapField::EMapType::kUnorderedMultiMap: typePrefix = "std::unordered_multimap<"; break;
+      default: R__ASSERT(false);
+      }
+      auto subFields = pairField->GetConstSubfields();
+      return typePrefix + subFields[0]->GetTypeName() + "," + subFields[1]->GetTypeName() + ">";
+   }
+
+   throw ROOT::RException(R__FAIL("RMapField inner field type must be of RPairField"));
+}
+
 } // anonymous namespace
 
 ROOT::RClassField::RClassField(std::string_view fieldName, const RClassField &source)
@@ -174,9 +205,9 @@ ROOT::RClassField::RClassField(std::string_view fieldName, TClass *classp)
 
       const auto normTypeName = ROOT::Internal::GetNormalizedUnresolvedTypeName(origTypeName);
       if (normTypeName == subField->GetTypeName()) {
-         subField->fTypeAlias = "";
+         SetTypeAliasOf(*subField, "");
       } else {
-         subField->fTypeAlias = normTypeName;
+         SetTypeAliasOf(*subField, normTypeName);
       }
 
       fTraits &= subField->GetTraits();
@@ -190,7 +221,7 @@ ROOT::RClassField::~RClassField()
    if (fStagingArea) {
       for (const auto &[_, si] : fStagingItems) {
          if (!(si.fField->GetTraits() & kTraitTriviallyDestructible)) {
-            auto deleter = si.fField->GetDeleter();
+            auto deleter = GetDeleterOf(*si.fField);
             deleter->operator()(fStagingArea.get() + si.fOffset, true /* dtorOnly */);
          }
       }
@@ -362,17 +393,20 @@ void ROOT::RClassField::PrepareStagingArea(const std::vector<const TSchemaRule *
             throw RException(R__FAIL(std::string("cannot find on disk rule source member ") + GetTypeName() + "." +
                                      source->GetName()));
          }
-         const auto &memberFieldDesc = desc.GetFieldDescriptor(memberFieldId);
 
          auto memberType = source->GetTypeForDeclaration() + source->GetDimensions();
-         stagingItem.fField = Create("" /* we don't need a field name */, std::string(memberType)).Unwrap();
-         stagingItem.fField->SetOnDiskId(memberFieldDesc.GetId());
+         auto memberField = Create("" /* we don't need a field name */, std::string(memberType)).Unwrap();
+         memberField->SetOnDiskId(memberFieldId);
+         auto fieldZero = std::make_unique<RFieldZero>();
+         Internal::SetAllowFieldSubstitutions(*fieldZero, true);
+         fieldZero->Attach(std::move(memberField));
+         stagingItem.fField = std::move(fieldZero);
 
          stagingItem.fOffset = fStagingClass->GetDataMemberOffset(source->GetName());
          // Since we successfully looked up the source member in the RNTuple on-disk metadata, we expect it
          // to be present in the TClass instance, too.
          R__ASSERT(stagingItem.fOffset != TVirtualStreamerInfo::kMissing);
-         stagingAreaSize = std::max(stagingAreaSize, stagingItem.fOffset + stagingItem.fField->GetValueSize());
+         stagingAreaSize = std::max(stagingAreaSize, stagingItem.fOffset + stagingItem.fField->begin()->GetValueSize());
       }
    }
 
@@ -382,8 +416,9 @@ void ROOT::RClassField::PrepareStagingArea(const std::vector<const TSchemaRule *
       fStagingArea = std::make_unique<unsigned char[]>(stagingAreaSize);
 
       for (const auto &[_, si] : fStagingItems) {
-         if (!(si.fField->GetTraits() & kTraitTriviallyConstructible)) {
-            CallConstructValueOn(*si.fField, fStagingArea.get() + si.fOffset);
+         const auto &memberField = *si.fField->cbegin();
+         if (!(memberField.GetTraits() & kTraitTriviallyConstructible)) {
+            CallConstructValueOn(memberField, fStagingArea.get() + si.fOffset);
          }
       }
    }
@@ -405,12 +440,15 @@ void ROOT::RClassField::AddReadCallbacksFromIORule(const TSchemaRule *rule)
    });
 }
 
-void ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource)
+std::unique_ptr<ROOT::RFieldBase> ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource)
 {
    std::vector<const TSchemaRule *> rules;
    // On-disk members that are not targeted by an I/O rule; all other sub fields of the in-memory class
    // will be marked as artificial (added member in a new class version or member set by rule).
    std::unordered_set<std::string> regularSubfields;
+   // We generally don't support changing the number of base classes, with the exception of changing from/to zero
+   // base classes. The variable stores the number of on-disk base classes.
+   int nOnDiskBaseClasses = 0;
 
    if (GetOnDiskId() == kInvalidDescriptorId) {
       // This can happen for added base classes or added members of class type
@@ -422,9 +460,19 @@ void ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pag
       const ROOT::RNTupleDescriptor &desc = descriptorGuard.GetRef();
       const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
 
+      if (fieldDesc.GetStructure() == ENTupleStructure::kStreamer) {
+         // Streamer field on disk but meanwhile the type can be represented as a class field; replace this field
+         // by a streamer field to read the data from disk.
+         auto substitute = std::make_unique<RStreamerField>(GetFieldName(), GetTypeName());
+         substitute->SetOnDiskId(GetOnDiskId());
+         return substitute;
+      }
+
       for (auto linkId : fieldDesc.GetLinkIds()) {
          const auto &subFieldDesc = desc.GetFieldDescriptor(linkId);
          regularSubfields.insert(subFieldDesc.GetFieldName());
+         if (!subFieldDesc.GetFieldName().empty() && subFieldDesc.GetFieldName()[0] == ':')
+            nOnDiskBaseClasses++;
       }
 
       rules = FindRules(&fieldDesc);
@@ -445,8 +493,10 @@ void ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pag
       if (!rules.empty()) {
          SetStagingClass(fieldDesc.GetTypeName(), fieldDesc.GetTypeVersion());
          PrepareStagingArea(rules, desc, fieldDesc);
-         for (auto &[_, si] : fStagingItems)
+         for (auto &[_, si] : fStagingItems) {
             Internal::CallConnectPageSourceOnField(*si.fField, pageSource);
+            si.fField = std::move(static_cast<RFieldZero *>(si.fField.get())->ReleaseSubfields()[0]);
+         }
 
          // Remove target member of read rules from the list of regular members of the underlying on-disk field
          for (const auto rule : rules) {
@@ -465,11 +515,31 @@ void ROOT::RClassField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pag
    }
 
    // Iterate over all sub fields in memory and mark those as missing that are not in the descriptor.
+   int nInMemoryBaseClasses = 0;
    for (auto &field : fSubfields) {
-      if (regularSubfields.count(field->GetFieldName()) == 0) {
-         field->SetArtificial();
+      const auto &fieldName = field->GetFieldName();
+      if (regularSubfields.count(fieldName) == 0) {
+         CallSetArtificialOn(*field);
       }
+      if (!fieldName.empty() && fieldName[0] == ':')
+         nInMemoryBaseClasses++;
    }
+
+   if (nInMemoryBaseClasses != 0 && nOnDiskBaseClasses != 0 && nInMemoryBaseClasses != nOnDiskBaseClasses) {
+      throw RException(R__FAIL(std::string("incompatible number of base classes for field ") + GetFieldName() + ": " +
+                               GetTypeName() + ", " + std::to_string(nInMemoryBaseClasses) +
+                               " base classes in memory "
+                               " vs. " +
+                               std::to_string(nOnDiskBaseClasses) + " base classes on-disk\n" +
+                               Internal::GetTypeTraceReport(*this, pageSource.GetSharedDescriptorGuard().GetRef())));
+   }
+
+   return nullptr;
+}
+
+void ROOT::RClassField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureMatchingOnDiskField(desc, kDiffTypeVersion | kDiffTypeName).ThrowOnError();
 }
 
 void ROOT::RClassField::ConstructValue(void *where) const
@@ -511,6 +581,15 @@ std::uint32_t ROOT::RClassField::GetTypeChecksum() const
    return fClass->GetCheckSum();
 }
 
+const std::type_info *ROOT::RClassField::GetPolymorphicTypeInfo() const
+{
+   bool polymorphic = fClass->ClassProperty() & kClassHasVirtual;
+   if (!polymorphic) {
+      return nullptr;
+   }
+   return fClass->GetTypeInfo();
+}
+
 void ROOT::RClassField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitClassField(*this);
@@ -524,7 +603,7 @@ ROOT::REnumField::REnumField(std::string_view fieldName, std::string_view enumNa
 }
 
 ROOT::REnumField::REnumField(std::string_view fieldName, TEnum *enump)
-   : ROOT::RFieldBase(fieldName, GetRenormalizedTypeName(enump->GetQualifiedName()), ROOT::ENTupleStructure::kLeaf,
+   : ROOT::RFieldBase(fieldName, GetRenormalizedTypeName(enump->GetQualifiedName()), ROOT::ENTupleStructure::kPlain,
                       false /* isSimple */)
 {
    // Avoid accidentally supporting std types through TEnum.
@@ -533,6 +612,7 @@ ROOT::REnumField::REnumField(std::string_view fieldName, TEnum *enump)
    }
 
    switch (enump->GetUnderlyingType()) {
+   case kBool_t: Attach(std::make_unique<RField<Bool_t>>("_0")); break;
    case kChar_t: Attach(std::make_unique<RField<Char_t>>("_0")); break;
    case kUChar_t: Attach(std::make_unique<RField<UChar_t>>("_0")); break;
    case kShort_t: Attach(std::make_unique<RField<Short_t>>("_0")); break;
@@ -551,7 +631,7 @@ ROOT::REnumField::REnumField(std::string_view fieldName, TEnum *enump)
 
 ROOT::REnumField::REnumField(std::string_view fieldName, std::string_view enumName,
                              std::unique_ptr<RFieldBase> intField)
-   : ROOT::RFieldBase(fieldName, enumName, ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
+   : ROOT::RFieldBase(fieldName, enumName, ROOT::ENTupleStructure::kPlain, false /* isSimple */)
 {
    Attach(std::move(intField));
    fTraits |= kTraitTriviallyConstructible | kTraitTriviallyDestructible;
@@ -561,6 +641,12 @@ std::unique_ptr<ROOT::RFieldBase> ROOT::REnumField::CloneImpl(std::string_view n
 {
    auto newIntField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
    return std::unique_ptr<REnumField>(new REnumField(newName, GetTypeName(), std::move(newIntField)));
+}
+
+void ROOT::REnumField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   // TODO(jblomer): allow enum to enum conversion only by rename rule
+   EnsureMatchingOnDiskField(desc, kDiffTypeName | kDiffTypeVersion).ThrowOnError();
 }
 
 std::vector<ROOT::RFieldBase::RValue> ROOT::REnumField::SplitValue(const RValue &value) const
@@ -613,6 +699,30 @@ ROOT::RPairField::RPairField(std::string_view fieldName, std::array<std::unique_
    fOffsets.push_back(secondElem->GetThisOffset());
 }
 
+std::unique_ptr<ROOT::RFieldBase> ROOT::RPairField::CloneImpl(std::string_view newName) const
+{
+   std::array<std::size_t, 2> offsets = {fOffsets[0], fOffsets[1]};
+   std::array<std::unique_ptr<RFieldBase>, 2> itemClones = {fSubfields[0]->Clone(fSubfields[0]->GetFieldName()),
+                                                            fSubfields[1]->Clone(fSubfields[1]->GetFieldName())};
+   return std::unique_ptr<RPairField>(new RPairField(newName, std::move(itemClones), offsets));
+}
+
+void ROOT::RPairField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   static const std::vector<std::string> prefixes = {"std::pair<", "std::tuple<"};
+
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+   EnsureMatchingTypePrefix(desc, prefixes).ThrowOnError();
+
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   const auto nOnDiskSubfields = fieldDesc.GetLinkIds().size();
+   if (nOnDiskSubfields != 2) {
+      throw ROOT::RException(R__FAIL("invalid number of on-disk subfields for std::pair " +
+                                     std::to_string(nOnDiskSubfields) + "\n" +
+                                     Internal::GetTypeTraceReport(*this, desc)));
+   }
+}
+
 //------------------------------------------------------------------------------
 
 ROOT::RProxiedCollectionField::RCollectionIterableOnce::RIteratorFuncs
@@ -635,6 +745,20 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
 {
    if (!classp->GetCollectionProxy())
       throw RException(R__FAIL(std::string(GetTypeName()) + " has no associated collection proxy"));
+   if (classp->Property() & kIsDefinedInStd) {
+      static const std::vector<std::string> supportedStdTypes = {
+         "std::set<", "std::unordered_set<", "std::multiset<", "std::unordered_multiset<",
+         "std::map<", "std::unordered_map<", "std::multimap<", "std::unordered_multimap<"};
+      bool isSupported = false;
+      for (const auto &tn : supportedStdTypes) {
+         if (GetTypeName().rfind(tn, 0) == 0) {
+            isSupported = true;
+            break;
+         }
+      }
+      if (!isSupported)
+         throw RException(R__FAIL(std::string(GetTypeName()) + " is not supported"));
+   }
 
    fProxy.reset(classp->GetCollectionProxy()->Generate());
    fProperties = fProxy->GetProperties();
@@ -644,14 +768,6 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
 
    fIFuncsRead = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), true /* readFromDisk */);
    fIFuncsWrite = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), false /* readFromDisk */);
-}
-
-ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName, std::string_view typeName,
-                                                       std::unique_ptr<RFieldBase> itemField)
-   : RProxiedCollectionField(fieldName, EnsureValidClass(typeName))
-{
-   fItemSize = itemField->GetValueSize();
-   Attach(std::move(itemField));
 }
 
 ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName, std::string_view typeName)
@@ -692,8 +808,11 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
 std::unique_ptr<ROOT::RFieldBase> ROOT::RProxiedCollectionField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
-   return std::unique_ptr<RProxiedCollectionField>(
-      new RProxiedCollectionField(newName, GetTypeName(), std::move(newItemField)));
+   auto clone =
+      std::unique_ptr<RProxiedCollectionField>(new RProxiedCollectionField(newName, fProxy->GetCollectionClass()));
+   clone->fItemSize = fItemSize;
+   clone->Attach(std::move(newItemField));
+   return clone;
 }
 
 std::size_t ROOT::RProxiedCollectionField::AppendImpl(const void *from)
@@ -751,6 +870,11 @@ void ROOT::RProxiedCollectionField::GenerateColumns(const ROOT::RNTupleDescripto
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
+void ROOT::RProxiedCollectionField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+}
+
 void ROOT::RProxiedCollectionField::ConstructValue(void *where) const
 {
    fProxy->New(where);
@@ -796,23 +920,64 @@ void ROOT::RProxiedCollectionField::AcceptVisitor(ROOT::Detail::RFieldVisitor &v
 
 //------------------------------------------------------------------------------
 
-ROOT::RMapField::RMapField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField)
-   : RProxiedCollectionField(fieldName, EnsureValidClass(typeName))
+ROOT::RMapField::RMapField(std::string_view fieldName, EMapType mapType, std::unique_ptr<RFieldBase> itemField)
+   : RProxiedCollectionField(fieldName, EnsureValidClass(BuildMapTypeName(mapType, itemField.get()))), fMapType(mapType)
 {
-   if (!dynamic_cast<RPairField *>(itemField.get()))
-      throw RException(R__FAIL("RMapField inner field type must be of RPairField"));
-
    auto *itemClass = fProxy->GetValueClass();
    fItemSize = itemClass->GetClassSize();
 
    Attach(std::move(itemField));
 }
 
+std::unique_ptr<ROOT::RFieldBase> ROOT::RMapField::CloneImpl(std::string_view newName) const
+{
+   return std::make_unique<RMapField>(newName, fMapType, fSubfields[0]->Clone(fSubfields[0]->GetFieldName()));
+}
+
+void ROOT::RMapField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   static const std::vector<std::string> prefixesRegular = {"std::map<", "std::unordered_map<"};
+
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+
+   switch (fMapType) {
+   case EMapType::kMap:
+   case EMapType::kUnorderedMap: EnsureMatchingTypePrefix(desc, prefixesRegular).ThrowOnError(); break;
+   default:
+      break;
+      // no restrictions for multimaps
+   }
+}
+
 //------------------------------------------------------------------------------
 
-ROOT::RSetField::RSetField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField)
-   : ROOT::RProxiedCollectionField(fieldName, typeName, std::move(itemField))
+ROOT::RSetField::RSetField(std::string_view fieldName, ESetType setType, std::unique_ptr<RFieldBase> itemField)
+   : ROOT::RProxiedCollectionField(fieldName, EnsureValidClass(BuildSetTypeName(setType, *itemField))),
+     fSetType(setType)
 {
+   fItemSize = itemField->GetValueSize();
+   Attach(std::move(itemField));
+}
+
+std::unique_ptr<ROOT::RFieldBase> ROOT::RSetField::CloneImpl(std::string_view newName) const
+{
+   return std::make_unique<RSetField>(newName, fSetType, fSubfields[0]->Clone(fSubfields[0]->GetFieldName()));
+}
+
+void ROOT::RSetField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   static const std::vector<std::string> prefixesRegular = {"std::set<", "std::unordered_set<", "std::map<",
+                                                            "std::unordered_map<"};
+
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+
+   switch (fSetType) {
+   case ESetType::kSet:
+   case ESetType::kUnorderedSet: EnsureMatchingTypePrefix(desc, prefixesRegular).ThrowOnError(); break;
+   default:
+      break;
+      // no restrictions for multisets
+   }
 }
 
 //------------------------------------------------------------------------------
@@ -857,11 +1022,6 @@ ROOT::RStreamerField::RStreamerField(std::string_view fieldName, TClass *classp)
       fTraits |= kTraitTriviallyConstructible;
    if (!(fClass->ClassProperty() & (kClassHasExplicitDtor | kClassHasImplicitDtor)))
       fTraits |= kTraitTriviallyDestructible;
-}
-
-void ROOT::RStreamerField::BeforeConnectPageSource(ROOT::Internal::RPageSource &pageSource)
-{
-   pageSource.RegisterStreamerInfos();
 }
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RStreamerField::CloneImpl(std::string_view newName) const
@@ -911,6 +1071,17 @@ void ROOT::RStreamerField::GenerateColumns()
 void ROOT::RStreamerField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 {
    GenerateColumnsImpl<ROOT::Internal::RColumnIndex, std::byte>(desc);
+}
+
+std::unique_ptr<ROOT::RFieldBase> ROOT::RStreamerField::BeforeConnectPageSource(ROOT::Internal::RPageSource &source)
+{
+   source.RegisterStreamerInfos();
+   return nullptr;
+}
+
+void ROOT::RStreamerField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureMatchingOnDiskField(desc, kDiffTypeName | kDiffTypeVersion).ThrowOnError();
 }
 
 void ROOT::RStreamerField::ConstructValue(void *where) const
@@ -1043,13 +1214,6 @@ void ROOT::RField<TObject>::ReadInClusterImpl(RNTupleLocalIndex localIndex, void
    ReadTObject(to, uniqueID, bits);
 }
 
-void ROOT::RField<TObject>::AfterConnectPageSource()
-{
-   if (GetOnDiskTypeVersion() != 1) {
-      throw RException(R__FAIL("unsupported on-disk version of TObject: " + std::to_string(GetTypeVersion())));
-   }
-}
-
 std::uint32_t ROOT::RField<TObject>::GetTypeVersion() const
 {
    return TObject::Class()->GetClassVersion();
@@ -1134,6 +1298,33 @@ ROOT::RTupleField::RTupleField(std::string_view fieldName, std::vector<std::uniq
       if (!member)
          throw RException(R__FAIL(memberName + ": no such member"));
       fOffsets.push_back(member->GetThisOffset());
+   }
+}
+
+std::unique_ptr<ROOT::RFieldBase> ROOT::RTupleField::CloneImpl(std::string_view newName) const
+{
+   std::vector<std::unique_ptr<RFieldBase>> itemClones;
+   itemClones.reserve(fSubfields.size());
+   for (const auto &f : fSubfields) {
+      itemClones.emplace_back(f->Clone(f->GetFieldName()));
+   }
+   return std::unique_ptr<RTupleField>(new RTupleField(newName, std::move(itemClones), fOffsets));
+}
+
+void ROOT::RTupleField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   static const std::vector<std::string> prefixes = {"std::pair<", "std::tuple<"};
+
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+   EnsureMatchingTypePrefix(desc, prefixes).ThrowOnError();
+
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   const auto nOnDiskSubfields = fieldDesc.GetLinkIds().size();
+   const auto nSubfields = fSubfields.size();
+   if (nOnDiskSubfields != nSubfields) {
+      throw ROOT::RException(R__FAIL("invalid number of on-disk subfields for std::tuple " +
+                                     std::to_string(nOnDiskSubfields) + " vs. " + std::to_string(nSubfields) + "\n" +
+                                     Internal::GetTypeTraceReport(*this, desc)));
    }
 }
 
@@ -1281,6 +1472,20 @@ void ROOT::RVariantField::GenerateColumns()
 void ROOT::RVariantField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
 {
    GenerateColumnsImpl<ROOT::Internal::RColumnSwitch>(desc);
+}
+
+void ROOT::RVariantField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   static const std::vector<std::string> prefixes = {"std::variant<"};
+
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+   EnsureMatchingTypePrefix(desc, prefixes).ThrowOnError();
+
+   const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+   if (fSubfields.size() != fieldDesc.GetLinkIds().size()) {
+      throw RException(R__FAIL("number of variants on-disk do not match for " + GetQualifiedFieldName() + "\n" +
+                               Internal::GetTypeTraceReport(*this, desc)));
+   }
 }
 
 void ROOT::RVariantField::ConstructValue(void *where) const

@@ -45,6 +45,15 @@ TEST(ColNames, ContainedNames)
    EXPECT_EQ(1U, *c);
 }
 
+// Test for https://github.com/root-project/root/issues/19834
+TEST(ColNames, NoSource)
+{
+   auto df = ROOT::RDataFrame(1);
+   auto df_def = df.Define("x", "int(1)");
+   EXPECT_TRUE(df_def.HasColumn("x"));
+   EXPECT_FALSE(df_def.HasColumn("y"));
+}
+
 TEST(Aliases, DefineOnAlias)
 {
    ROOT::RDataFrame tdf(2);

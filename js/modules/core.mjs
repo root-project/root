@@ -1,10 +1,12 @@
+/* eslint-disable @stylistic/js/indent */
+
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
 const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '4/07/2025',
+version_date = '7/11/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -142,7 +144,8 @@ if ((typeof document !== 'undefined') && (typeof window !== 'undefined') && (typ
   * @return {Number} 0 - not array, 1 - regular array, 2 - typed array
   * @private */
 function isArrayProto(proto) {
-    if ((proto.length < 14) || proto.indexOf('[object ')) return 0;
+    if ((proto.length < 14) || proto.indexOf('[object '))
+      return 0;
     const p = proto.indexOf('Array]');
     if ((p < 0) || (p !== proto.length - 6))
       return 0;
@@ -164,10 +167,17 @@ const constants = {
       WebGLImage: 2,
       /** @summary Use SVG rendering, slow, imprecise and not interactive, not recommended */
       SVG: 3,
+      /** @summary Disable renderer, used for three.js model creation, only for internal use recommended */
+      None: 4,
       fromString(s) {
-         if ((s === 'webgl') || (s === 'gl')) return this.WebGL;
-         if (s === 'img') return this.WebGLImage;
-         if (s === 'svg') return this.SVG;
+         if ((s === 'webgl') || (s === 'gl'))
+            return this.WebGL;
+         if (s === 'img')
+            return this.WebGLImage;
+         if (s === 'svg')
+            return this.SVG;
+         if (s === 'none')
+            return this.None;
          return this.Default;
       }
    },
@@ -186,8 +196,10 @@ const constants = {
       EmbedSVG: 3,
       /** @summary Convert string values into number  */
       fromString(s) {
-         if (s === 'embed') return this.Embed;
-         if (s === 'overlay') return this.Overlay;
+         if (s === 'embed')
+            return this.Embed;
+         if (s === 'overlay')
+            return this.Overlay;
          return this.Default;
       }
    },
@@ -577,13 +589,15 @@ function BIT(n) { return 1 << n; }
   * @return {object} cloned object
   * @private */
 function clone(src, map, nofunc) {
-   if (!src) return null;
+   if (!src)
+      return null;
 
    if (!map)
       map = { obj: [], clones: [], nofunc };
    else {
       const i = map.obj.indexOf(src);
-      if (i >= 0) return map.clones[i];
+      if (i >= 0)
+         return map.clones[i];
    }
 
    const arr_kind = isArrayProto(Object.prototype.toString.apply(src));
@@ -639,13 +653,15 @@ let addMethods = null;
   * @param {object|string} json  object where references will be replaced
   * @return {object} parsed object */
 function parse(json) {
-   if (!json) return null;
+   if (!json)
+      return null;
 
    const obj = isStr(json) ? JSON.parse(json) : json, map = [];
    let newfmt;
 
    const unref_value = value => {
-      if ((value === null) || (value === undefined)) return;
+      if ((value === null) || (value === undefined))
+         return;
 
       if (isStr(value)) {
          if (newfmt || (value.length < 6) || value.indexOf('$ref:'))
@@ -666,7 +682,8 @@ function parse(json) {
       if (isArrayProto(proto) > 0) {
           for (let i = 0; i < value.length; ++i) {
              const res = unref_value(value[i]);
-             if (res !== undefined) value[i] = res;
+             if (res !== undefined)
+               value[i] = res;
           }
           return;
       }
@@ -675,7 +692,8 @@ function parse(json) {
 
       if ((newfmt !== false) && (len === 1) && (ks[0] === '$ref')) {
          const ref = parseInt(value.$ref);
-         if (!Number.isInteger(ref) || (ref < 0) || (ref >= map.length)) return;
+         if (!Number.isInteger(ref) || (ref < 0) || (ref >= map.length))
+            return;
          newfmt = true;
          return map[ref];
       }
@@ -713,8 +731,10 @@ function parse(json) {
             // compressed coding
             let nkey = 2, p = 0;
             while (nkey < len) {
-               if (ks[nkey][0] === 'p') p = value[ks[nkey++]]; // position
-               if (ks[nkey][0] !== 'v') throw new Error(`Unexpected member ${ks[nkey]} in array decoding`);
+               if (ks[nkey][0] === 'p')
+                  p = value[ks[nkey++]]; // position
+               if (ks[nkey][0] !== 'v')
+                  throw new Error(`Unexpected member ${ks[nkey]} in array decoding`);
                const v = value[ks[nkey++]]; // value
                if (typeof v === 'object') {
                   for (let k = 0; k < v.length; ++k)
@@ -723,7 +743,8 @@ function parse(json) {
                   arr[p++] = v;
                   if ((nkey < len) && (ks[nkey][0] === 'n')) {
                      let cnt = value[ks[nkey++]]; // counter
-                     while (--cnt) arr[p++] = v;
+                     while (--cnt)
+                        arr[p++] = v;
                   }
                }
             }
@@ -736,25 +757,30 @@ function parse(json) {
          newfmt = true;
          const f1 = unref_value(value.first),
                s1 = unref_value(value.second);
-         if (f1 !== undefined) value.first = f1;
-         if (s1 !== undefined) value.second = s1;
+         if (f1 !== undefined)
+            value.first = f1;
+         if (s1 !== undefined)
+            value.second = s1;
          value._typename = value.$pair;
          delete value.$pair;
          return; // pair object is not counted in the objects map
       }
 
      // prevent endless loop
-     if (map.indexOf(value) >= 0) return;
+     if (map.indexOf(value) >= 0)
+      return;
 
       // add object to object map
       map.push(value);
 
       // add methods to all objects, where _typename is specified
-      if (value._typename) addMethods(value);
+      if (value._typename)
+         addMethods(value);
 
       for (let k = 0; k < len; ++k) {
          const i = ks[k], res = unref_value(value[i]);
-         if (res !== undefined) value[i] = res;
+         if (res !== undefined)
+            value[i] = res;
       }
    };
 
@@ -768,7 +794,8 @@ function parse(json) {
   * @param {string} json string to parse
   * @return {Array} array of parsed elements */
 function parseMulti(json) {
-   if (!json) return null;
+   if (!json)
+      return null;
    const arr = JSON.parse(json);
    if (arr?.length) {
       for (let i = 0; i < arr.length; ++i)
@@ -778,8 +805,8 @@ function parseMulti(json) {
 }
 
 /** @summary Method converts JavaScript object into ROOT-like JSON
-  * @desc When performed properly, JSON can be used in [TBufferJSON::fromJSON()]{@link https://root.cern/doc/master/classTBufferJSON.html#a2ecf0daacdad801e60b8093a404c897d} method to read data back with C++
-  * Or one can again parse json with {@link parse} function
+  * @desc When performed properly, JSON can be used in [TBufferJSON::fromJSON()]{@link https://root.cern/doc/master/classTBufferJSON.html}
+  * method to read data back with C++. Or one can again parse json with {@link parse} function
   * @param {object} obj - JavaScript object to convert
   * @param {number} [spacing] - optional line spacing in JSON
   * @return {string} produced JSON code
@@ -790,13 +817,16 @@ function parseMulti(json) {
   * obj.fTitle = 'New histogram title';
   * let json = toJSON(obj); */
 function toJSON(obj, spacing) {
-   if (!isObject(obj)) return '';
+   if (!isObject(obj))
+      return '';
 
    const map = [], // map of stored objects
    copy_value = value => {
-      if (isFunc(value)) return undefined;
+      if (isFunc(value))
+         return undefined;
 
-      if ((value === undefined) || (value === null) || !isObject(value)) return value;
+      if ((value === undefined) || (value === null) || !isObject(value))
+         return value;
 
       // typed array need to be converted into normal array, otherwise looks strange
       if (isArrayProto(Object.prototype.toString.apply(value)) > 0) {
@@ -808,7 +838,8 @@ function toJSON(obj, spacing) {
 
       // this is how reference is code
       const refid = map.indexOf(value);
-      if (refid >= 0) return { $ref: refid };
+      if (refid >= 0)
+         return { $ref: refid };
 
       const ks = Object.keys(value), len = ks.length, tgt = {};
 
@@ -850,27 +881,42 @@ function decodeUrl(url) {
    const res = {
       opts: {},
       has(opt) { return this.opts[opt] !== undefined; },
-      get(opt, dflt) { const v = this.opts[opt]; return v !== undefined ? v : dflt; }
+      get(opt, dflt) { return this.opts[opt] ?? dflt; }
    };
 
    if (!url || !isStr(url)) {
-      if (settings.IgnoreUrlOptions || (typeof document === 'undefined')) return res;
+      if (settings.IgnoreUrlOptions || (typeof document === 'undefined'))
+         return res;
       url = document.URL;
    }
    res.url = url;
 
    const p1 = url.indexOf('?');
-   if (p1 < 0) return res;
-   url = decodeURI(url.slice(p1+1));
+   if (p1 < 0)
+      return res;
+   url = decodeURI(url.slice(p1 + 1));
 
    while (url) {
       // try to correctly handle quotes in the URL
       let pos = 0, nq = 0, eq = -1, firstq = -1;
       while ((pos < url.length) && (nq || ((url[pos] !== '&') && (url[pos] !== '#')))) {
          switch (url[pos]) {
-            case '\'': if (nq >= 0) nq = (nq+1) % 2; if (firstq < 0) firstq = pos; break;
-            case '"': if (nq <= 0) nq = (nq-1) % 2; if (firstq < 0) firstq = pos; break;
-            case '=': if ((firstq < 0) && (eq < 0)) eq = pos; break;
+            case '\'':
+               if (nq >= 0)
+                  nq = (nq + 1) % 2;
+               if (firstq < 0)
+                  firstq = pos;
+               break;
+            case '"':
+               if (nq <= 0)
+                  nq = (nq - 1) % 2;
+               if (firstq < 0)
+                  firstq = pos;
+               break;
+            case '=':
+               if ((firstq < 0) && (eq < 0))
+                  eq = pos;
+               break;
          }
          pos++;
       }
@@ -884,9 +930,10 @@ function decodeUrl(url) {
          res.opts[url.slice(0, eq)] = val;
       }
 
-      if ((pos >= url.length) || (url[pos] === '#')) break;
+      if ((pos >= url.length) || (url[pos] === '#'))
+         break;
 
-      url = url.slice(pos+1);
+      url = url.slice(pos + 1);
    }
 
    return res;
@@ -895,8 +942,10 @@ function decodeUrl(url) {
 /** @summary Find function with given name
   * @private */
 function findFunction(name) {
-   if (isFunc(name)) return name;
-   if (!isStr(name)) return null;
+   if (isFunc(name))
+      return name;
+   if (!isStr(name))
+      return null;
    const names = name.split('.');
    let elem = globalThis;
 
@@ -911,19 +960,36 @@ function findFunction(name) {
 function createHttpRequest(url, kind, user_accept_callback, user_reject_callback, use_promise) {
    function configureXhr(xhr) {
       xhr.http_callback = isFunc(user_accept_callback) ? user_accept_callback.bind(xhr) : () => {};
-      xhr.error_callback = isFunc(user_reject_callback) ? user_reject_callback.bind(xhr) : function(err) { console.warn(err.message); this.http_callback(null); }.bind(xhr);
+      xhr.error_callback = isFunc(user_reject_callback) ? user_reject_callback.bind(xhr) : function(err) {
+         console.warn(err.message);
+         this.http_callback(null);
+      }.bind(xhr);
 
-      if (!kind) kind = 'buf';
+      if (!kind)
+         kind = 'buf';
 
       let method = 'GET', is_async = true;
       const p = kind.indexOf(';sync');
-      if (p > 0) { kind = kind.slice(0, p); is_async = false; }
+      if (p > 0) {
+         kind = kind.slice(0, p);
+         is_async = false;
+      }
       switch (kind) {
-         case 'head': method = 'HEAD'; break;
-         case 'posttext': method = 'POST'; kind = 'text'; break;
-         case 'postbuf': method = 'POST'; kind = 'buf'; break;
+         case 'head':
+            method = 'HEAD';
+            break;
+         case 'posttext':
+            method = 'POST';
+            kind = 'text';
+            break;
+         case 'postbuf':
+            method = 'POST';
+            kind = 'buf';
+            break;
          case 'post':
-         case 'multi': method = 'POST'; break;
+         case 'multi':
+            method = 'POST';
+            break;
       }
 
       xhr.kind = kind;
@@ -942,7 +1008,8 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
       }
 
       xhr.onreadystatechange = function() {
-         if (this.did_abort) return;
+         if (this.did_abort)
+            return;
 
          if ((this.readyState === 2) && this.expected_size) {
             const len = parseInt(this.getResponseHeader('Content-Length'));
@@ -953,7 +1020,8 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
             }
          }
 
-         if (this.readyState !== 4) return;
+         if (this.readyState !== 4)
+            return;
 
          if ((this.status !== 200) && (this.status !== 206) && !browser.qt6 &&
              // in these special cases browsers not always set status
@@ -1063,7 +1131,7 @@ async function injectCode(code) {
       // check if code already loaded - to avoid duplication
       const scripts = document.getElementsByTagName('script');
       for (let n = 0; n < scripts.length; ++n) {
-         if (scripts[n].innerHTML === code)
+         if (scripts[n].innerText === code)
             return true;
       }
 
@@ -1079,7 +1147,7 @@ async function injectCode(code) {
       return promise.then(() => {
          const element = document.createElement('script');
          element.setAttribute('type', is_mjs ? 'module' : 'text/javascript');
-         element.innerHTML = code;
+         element.innerText = code;
          document.head.appendChild(element);
          // while onload event not fired, just postpone resolve
          return isBatchMode() ? true : postponePromise(true, 10);
@@ -1112,8 +1180,7 @@ async function loadScript(url) {
 
    if (!isStr(url)) {
       const scripts = url, loadNext = () => {
-         if (!scripts.length) return true;
-         return loadScript(scripts.shift()).then(loadNext, loadNext);
+         return !scripts.length ? true : loadScript(scripts.shift()).then(loadNext, loadNext);
       };
       return loadNext();
    }
@@ -1141,15 +1208,17 @@ async function loadScript(url) {
    }
 
    const match_url = src => {
-      if (src === url) return true;
+      if (src === url)
+         return true;
       const indx = src.indexOf(url);
-      return (indx > 0) && (indx + url.length === src.length) && (src[indx-1] === '/');
+      return (indx > 0) && (indx + url.length === src.length) && (src[indx - 1] === '/');
    };
 
    if (isstyle) {
       const styles = document.getElementsByTagName('link');
       for (let n = 0; n < styles.length; ++n) {
-         if (!styles[n].href || (styles[n].type !== 'text/css') || (styles[n].rel !== 'stylesheet')) continue;
+         if (!styles[n].href || (styles[n].type !== 'text/css') || (styles[n].rel !== 'stylesheet'))
+            continue;
          if (match_url(styles[n].href))
             return true;
       }
@@ -1175,7 +1244,10 @@ async function loadScript(url) {
 
    return new Promise((resolveFunc, rejectFunc) => {
       element.onload = () => resolveFunc(true);
-      element.onerror = () => { element.remove(); rejectFunc(Error(`Fail to load ${url}`)); };
+      element.onerror = () => {
+         element.remove();
+         rejectFunc(Error(`Fail to load ${url}`));
+      };
       document.head.appendChild(element);
    });
 }
@@ -1191,7 +1263,7 @@ _ensureJSROOT = async function() {
 
 
 const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 'TString', clTObjString = 'TObjString',
-      clTKey = 'TKey', clTFile = 'TFile',
+      clTKey = 'TKey', clTFile = 'TFile', clTTree = 'TTree',
       clTList = 'TList', clTHashList = 'THashList', clTMap = 'TMap', clTObjArray = 'TObjArray', clTClonesArray = 'TClonesArray',
       clTAttLine = 'TAttLine', clTAttFill = 'TAttFill', clTAttMarker = 'TAttMarker', clTAttText = 'TAttText',
       clTHStack = 'THStack', clTGraph = 'TGraph', clTMultiGraph = 'TMultiGraph', clTCutG = 'TCutG',
@@ -1406,7 +1478,7 @@ function create(typename, target) {
          create(clTAttLine, obj);
          extend(obj, { fRadian: false, fDegree: false, fGrad: false, fPolarLabelColor: 1, fRadialLabelColor: 1,
                        fAxisAngle: 0, fPolarOffset: 0.04, fPolarTextSize: 0.04, fRadialOffset: 0.025, fRadialTextSize: 0.035,
-                       fRwrmin: 0, fRwrmax: 1, fRwtmin: 0, fRwtmax: 2*Math.PI, fTickpolarSize: 0.02,
+                       fRwrmin: 0, fRwrmax: 1, fRwtmin: 0, fRwtmax: 2 * Math.PI, fTickpolarSize: 0.02,
                        fPolarLabelFont: 62, fRadialLabelFont: 62, fCutRadial: 0, fNdivRad: 508, fNdivPol: 508 });
          break;
       case clTPolyLine:
@@ -1530,25 +1602,50 @@ function create(typename, target) {
   * h1.fXaxis.fLabelSize = 0.02; */
 function createHistogram(typename, nbinsx, nbinsy, nbinsz) {
    const histo = create(typename);
-   if (!histo.fXaxis || !histo.fYaxis || !histo.fZaxis) return null;
-   histo.fName = 'hist'; histo.fTitle = 'title';
-   if (nbinsx) extend(histo.fXaxis, { fNbins: nbinsx, fXmin: 0, fXmax: nbinsx });
-   if (nbinsy) extend(histo.fYaxis, { fNbins: nbinsy, fXmin: 0, fXmax: nbinsy });
-   if (nbinsz) extend(histo.fZaxis, { fNbins: nbinsz, fXmin: 0, fXmax: nbinsz });
+   if (!histo.fXaxis || !histo.fYaxis || !histo.fZaxis)
+      return null;
+   histo.fName = 'hist';
+   histo.fTitle = 'title';
+   if (nbinsx)
+      extend(histo.fXaxis, { fNbins: nbinsx, fXmin: 0, fXmax: nbinsx });
+   if (nbinsy)
+      extend(histo.fYaxis, { fNbins: nbinsy, fXmin: 0, fXmax: nbinsy });
+   if (nbinsz)
+      extend(histo.fZaxis, { fNbins: nbinsz, fXmin: 0, fXmax: nbinsz });
    switch (parseInt(typename[2])) {
-      case 1: if (nbinsx) histo.fNcells = nbinsx+2; break;
-      case 2: if (nbinsx && nbinsy) histo.fNcells = (nbinsx+2) * (nbinsy+2); break;
-      case 3: if (nbinsx && nbinsy && nbinsz) histo.fNcells = (nbinsx+2) * (nbinsy+2) * (nbinsz+2); break;
+      case 1:
+         if (nbinsx)
+            histo.fNcells = nbinsx + 2;
+         break;
+      case 2:
+         if (nbinsx && nbinsy)
+            histo.fNcells = (nbinsx + 2) * (nbinsy + 2);
+         break;
+      case 3:
+         if (nbinsx && nbinsy && nbinsz)
+            histo.fNcells = (nbinsx + 2) * (nbinsy + 2) * (nbinsz + 2);
+         break;
    }
    if (histo.fNcells > 0) {
       switch (typename[3]) {
-         case 'C': histo.fArray = new Int8Array(histo.fNcells); break;
-         case 'S': histo.fArray = new Int16Array(histo.fNcells); break;
-         case 'I': histo.fArray = new Int32Array(histo.fNcells); break;
-         case 'F': histo.fArray = new Float32Array(histo.fNcells); break;
+         case 'C':
+            histo.fArray = new Int8Array(histo.fNcells);
+            break;
+         case 'S':
+            histo.fArray = new Int16Array(histo.fNcells);
+            break;
+         case 'I':
+            histo.fArray = new Int32Array(histo.fNcells);
+            break;
+         case 'F':
+            histo.fArray = new Float32Array(histo.fNcells);
+            break;
          case 'L':
-         case 'D': histo.fArray = new Float64Array(histo.fNcells); break;
-         default: histo.fArray = new Array(histo.fNcells);
+         case 'D':
+            histo.fArray = new Float64Array(histo.fNcells);
+            break;
+         default:
+            histo.fArray = new Array(histo.fNcells);
       }
       histo.fArray.fill(0);
    }
@@ -1559,15 +1656,19 @@ function createHistogram(typename, nbinsx, nbinsy, nbinsz) {
  * @desc Title may include axes titles, provided with ';' symbol like "Title;x;y;z" */
 
 function setHistogramTitle(histo, title) {
-   if (!histo) return;
+   if (!histo || !isStr(title))
+      return;
    if (title.indexOf(';') < 0)
       histo.fTitle = title;
    else {
       const arr = title.split(';');
       histo.fTitle = arr[0];
-      if (arr.length > 1) histo.fXaxis.fTitle = arr[1];
-      if (arr.length > 2) histo.fYaxis.fTitle = arr[2];
-      if (arr.length > 3) histo.fZaxis.fTitle = arr[3];
+      if (arr.length > 1)
+         histo.fXaxis.fTitle = arr[1];
+      if (arr.length > 2)
+         histo.fYaxis.fTitle = arr[2];
+      if (arr.length > 3)
+         histo.fZaxis.fTitle = arr[3];
    }
 }
 
@@ -1604,8 +1705,8 @@ function createTGraph(npoints, xpts, ypts) {
             usey = isObject(ypts) && (ypts.length === npoints);
 
       for (let i = 0; i < npoints; ++i) {
-         graph.fX.push(usex ? xpts[i] : i/npoints);
-         graph.fY.push(usey ? ypts[i] : i/npoints);
+         graph.fX.push(usex ? xpts[i] : i / npoints);
+         graph.fY.push(usey ? ypts[i] : i / npoints);
       }
    }
 
@@ -1652,7 +1753,8 @@ const methodsCache = {};
 function getMethods(typename, obj) {
    let m = methodsCache[typename];
    const has_methods = (m !== undefined);
-   if (!has_methods) m = {};
+   if (!has_methods)
+      m = {};
 
    // Due to binary I/O such TObject methods may not be set for derived classes
    // Therefore when methods requested for given object, check also that basic methods are there
@@ -1664,7 +1766,8 @@ function getMethods(typename, obj) {
       }
    }
 
-   if (has_methods) return m;
+   if (has_methods)
+      return m;
 
    if ((typename === clTList) || (typename === clTHashList)) {
       m.Clear = function() {
@@ -1702,10 +1805,11 @@ function getMethods(typename, obj) {
 
    if ((typename.indexOf(clTF1) === 0) || (typename === clTF12) || (typename === clTF2) || (typename === clTF3)) {
       m.addFormula = function(formula) {
-         if (!formula) return;
-         if (this.formulas === undefined)
-            this.formulas = [];
-         this.formulas.push(formula);
+         if (formula) {
+            if (this.formulas === undefined)
+               this.formulas = [];
+            this.formulas.push(formula);
+         }
       };
       m.GetParName = function(n) {
          if (this.fParams?.fParNames)
@@ -1719,10 +1823,11 @@ function getMethods(typename, obj) {
          return (this.fNames && this.fNames[n]) ? this.fNames[n] : `p${n}`;
       };
       m.GetParValue = function(n) {
-         if (this.fParams?.fParameters) return this.fParams.fParameters[n];
-         if (this.fFormula?.fClingParameters) return this.fFormula.fClingParameters[n];
-         if (this.fParams) return this.fParams[n];
-         return undefined;
+         if (this.fParams?.fParameters)
+            return this.fParams.fParameters[n];
+         if (this.fFormula?.fClingParameters)
+            return this.fFormula.fClingParameters[n];
+         return this.fParams ? this.fParams[n] : undefined;
       };
       m.GetParError = function(n) {
          return this.fParErrors ? this.fParErrors[n] : undefined;
@@ -1740,7 +1845,7 @@ function getMethods(typename, obj) {
 
          for (; i < this.fNpoints; ++i) {
             if ((y[i] < yp && y[j] >= yp) || (y[j] < yp && y[i] >= yp)) {
-               if (x[i] + (yp - y[i])/(y[j] - y[i])*(x[j] - x[i]) < xp)
+               if (x[i] + (yp - y[i]) / (y[j] - y[i]) * (x[j] - x[i]) < xp)
                   oddNodes = !oddNodes;
             }
             j = i;
@@ -1756,8 +1861,10 @@ function getMethods(typename, obj) {
          //    if the sum of squares of weights has been defined (via Sumw2),
          //    this function returns the sqrt(sum of w2).
          //    otherwise it returns the sqrt(contents) for this bin.
-         if (bin >= this.fNcells) bin = this.fNcells - 1;
-         if (bin < 0) bin = 0;
+         if (bin >= this.fNcells)
+            bin = this.fNcells - 1;
+         if (bin < 0)
+            bin = 0;
          if (bin < this.fSumw2.length)
             return Math.sqrt(this.fSumw2[bin]);
          return Math.sqrt(Math.abs(this.fArray[bin]));
@@ -1783,26 +1890,26 @@ function getMethods(typename, obj) {
    }
 
    if (typename.indexOf(clTH2) === 0) {
-      m.getBin = function(x, y) { return (x + (this.fXaxis.fNbins+2) * y); };
+      m.getBin = function(x, y) { return (x + (this.fXaxis.fNbins + 2) * y); };
       m.getBinContent = function(x, y) { return this.fArray[this.getBin(x, y)]; };
       m.Fill = function(x, y, weight) {
          const a1 = this.fXaxis, a2 = this.fYaxis,
                bin1 = Math.max(0, 1 + Math.min(a1.fNbins, Math.floor((x - a1.fXmin) / (a1.fXmax - a1.fXmin) * a1.fNbins))),
                bin2 = Math.max(0, 1 + Math.min(a2.fNbins, Math.floor((y - a2.fXmin) / (a2.fXmax - a2.fXmin) * a2.fNbins)));
-         this.fArray[bin1 + (a1.fNbins + 2)*bin2] += weight ?? 1;
+         this.fArray[bin1 + (a1.fNbins + 2) * bin2] += weight ?? 1;
          this.fEntries++;
       };
    }
 
    if (typename.indexOf(clTH3) === 0) {
-      m.getBin = function(x, y, z) { return (x + (this.fXaxis.fNbins+2) * (y + (this.fYaxis.fNbins+2) * z)); };
+      m.getBin = function(x, y, z) { return (x + (this.fXaxis.fNbins + 2) * (y + (this.fYaxis.fNbins + 2) * z)); };
       m.getBinContent = function(x, y, z) { return this.fArray[this.getBin(x, y, z)]; };
       m.Fill = function(x, y, z, weight) {
          const a1 = this.fXaxis, a2 = this.fYaxis, a3 = this.fZaxis,
                bin1 = Math.max(0, 1 + Math.min(a1.fNbins, Math.floor((x - a1.fXmin) / (a1.fXmax - a1.fXmin) * a1.fNbins))),
                bin2 = Math.max(0, 1 + Math.min(a2.fNbins, Math.floor((y - a2.fXmin) / (a2.fXmax - a2.fXmin) * a2.fNbins))),
                bin3 = Math.max(0, 1 + Math.min(a3.fNbins, Math.floor((z - a3.fXmin) / (a3.fXmax - a3.fXmin) * a3.fNbins)));
-         this.fArray[bin1 + (a1.fNbins + 2) * (bin2 + (a2.fNbins + 2)*bin3)] += weight ?? 1;
+         this.fArray[bin1 + (a1.fNbins + 2) * (bin2 + (a2.fNbins + 2) * bin3)] += weight ?? 1;
          this.fEntries++;
       };
    }
@@ -1811,31 +1918,34 @@ function getMethods(typename, obj) {
       m.Divide = function(nx, ny, xmargin = 0.01, ymargin = 0.01, color = 0) {
          if (!ny) {
             const ndiv = nx;
-            if (ndiv < 2) return this;
+            if (ndiv < 2)
+               return this;
             nx = ny = Math.round(Math.sqrt(ndiv));
-            if (nx * ny < ndiv) nx += 1;
+            if (nx * ny < ndiv)
+               nx += 1;
          }
-         if (nx*ny < 2)
+         if (nx * ny < 2)
             return 0;
          this.fPrimitives.Clear();
-         const dy = 1/ny, dx = 1/nx;
+         const dy = 1 / ny, dx = 1 / nx;
          let n = 0;
          for (let iy = 0; iy < ny; iy++) {
-            const y2 = 1 - iy*dy - ymargin;
-            let y1 = y2 - dy + 2*ymargin;
-            if (y1 < 0) y1 = 0;
-            if (y1 > y2) continue;
+            const y2 = 1 - iy * dy - ymargin,
+                  y1 = Math.max(0, y2 - dy + 2 * ymargin);
+            if (y1 > y2)
+               continue;
             for (let ix = 0; ix < nx; ix++) {
-               const x1 = ix*dx + xmargin,
-                     x2 = x1 + dx -2*xmargin;
-               if (x1 > x2) continue;
+               const x1 = ix * dx + xmargin,
+                     x2 = x1 + dx - 2 * xmargin;
+               if (x1 > x2)
+                  continue;
                n++;
                const pad = create(clTPad);
                pad.fName = pad.fTitle = `${this.fName}_${n}`;
                pad.fNumber = n;
                if (this._typename !== clTCanvas) {
-                  pad.fAbsWNDC = (x2-x1) * this.fAbsWNDC;
-                  pad.fAbsHNDC = (y2-y1) * this.fAbsHNDC;
+                  pad.fAbsWNDC = (x2 - x1) * this.fAbsWNDC;
+                  pad.fAbsHNDC = (y2 - y1) * this.fAbsHNDC;
                   pad.fAbsXlowNDC = this.fAbsXlowNDC + x1 * this.fAbsWNDC;
                   pad.fAbsYlowNDC = this.fAbsYlowNDC + y1 * this.fAbsHNDC;
                } else {
@@ -1859,22 +1969,24 @@ function getMethods(typename, obj) {
 
    if (typename.indexOf(clTProfile) === 0) {
       if (typename === clTProfile3D) {
-         m.getBin = function(x, y, z) { return (x + (this.fXaxis.fNbins+2) * (y + (this.fYaxis.fNbins+2) * z)); };
+         m.getBin = function(x, y, z) { return (x + (this.fXaxis.fNbins + 2) * (y + (this.fYaxis.fNbins + 2) * z)); };
          m.getBinContent = function(x, y, z) {
             const bin = this.getBin(x, y, z);
-            if (bin < 0 || bin >= this.fNcells || this.fBinEntries[bin] < 1e-300) return 0;
-            return this.fArray ? this.fArray[bin]/this.fBinEntries[bin] : 0;
+            if (bin < 0 || bin >= this.fNcells || this.fBinEntries[bin] < 1e-300)
+               return 0;
+            return this.fArray ? this.fArray[bin] / this.fBinEntries[bin] : 0;
          };
          m.getBinEntries = function(x, y, z) {
             const bin = this.getBin(x, y, z);
             return (bin < 0) || (bin >= this.fNcells) ? 0 : this.fBinEntries[bin];
          };
       } else if (typename === clTProfile2D) {
-         m.getBin = function(x, y) { return (x + (this.fXaxis.fNbins+2) * y); };
+         m.getBin = function(x, y) { return (x + (this.fXaxis.fNbins + 2) * y); };
          m.getBinContent = function(x, y) {
             const bin = this.getBin(x, y);
-            if (bin < 0 || bin >= this.fNcells || this.fBinEntries[bin] < 1e-300) return 0;
-            return this.fArray ? this.fArray[bin]/this.fBinEntries[bin] : 0;
+            if (bin < 0 || bin >= this.fNcells || this.fBinEntries[bin] < 1e-300)
+               return 0;
+            return this.fArray ? this.fArray[bin] / this.fBinEntries[bin] : 0;
          };
          m.getBinEntries = function(x, y) {
             const bin = this.getBin(x, y);
@@ -1883,15 +1995,17 @@ function getMethods(typename, obj) {
       } else {
          m.getBin = function(x) { return x; };
          m.getBinContent = function(bin) {
-            if (bin < 0 || bin >= this.fNcells || this.fBinEntries[bin] < 1e-300) return 0;
-            return this.fArray ? this.fArray[bin]/this.fBinEntries[bin] : 0;
+            if (bin < 0 || bin >= this.fNcells || this.fBinEntries[bin] < 1e-300)
+               return 0;
+            return this.fArray ? this.fArray[bin] / this.fBinEntries[bin] : 0;
          };
          m.getBinEntries = function(bin) {
             return (bin < 0) || (bin >= this.fNcells) ? 0 : this.fBinEntries[bin];
          };
       }
       m.getBinEffectiveEntries = function(bin) {
-         if (bin < 0 || bin >= this.fNcells) return 0;
+         if (bin < 0 || bin >= this.fNcells)
+            return 0;
          const sumOfWeights = this.fBinEntries[bin];
          if (!this.fBinSumw2 || this.fBinSumw2.length !== this.fNcells)
             // this can happen  when reading an old file
@@ -1900,31 +2014,35 @@ function getMethods(typename, obj) {
          return (sumOfWeightsSquare > 0) ? sumOfWeights * sumOfWeights / sumOfWeightsSquare : 0;
       };
       m.getBinError = function(bin) {
-         if (bin < 0 || bin >= this.fNcells) return 0;
+         if (bin < 0 || bin >= this.fNcells)
+            return 0;
          const cont = this.fArray[bin],               // sum of bin w *y
                sum = this.fBinEntries[bin],          // sum of bin weights
                err2 = this.fSumw2[bin],               // sum of bin w * y^2
                neff = this.getBinEffectiveEntries(bin);  // (sum of w)^2 / (sum of w^2)
-         if (sum < 1e-300) return 0;                  // for empty bins
+         if (sum < 1e-300)
+            return 0;                  // for empty bins
          const EErrorType = { kERRORMEAN: 0, kERRORSPREAD: 1, kERRORSPREADI: 2, kERRORSPREADG: 3 };
          // case the values y are gaussian distributed y +/- sigma and w = 1/sigma^2
          if (this.fErrorMode === EErrorType.kERRORSPREADG)
-            return 1.0/Math.sqrt(sum);
+            return 1.0 / Math.sqrt(sum);
          // compute variance in y (eprim2) and standard deviation in y (eprim)
-         const contsum = cont/sum, eprim = Math.sqrt(Math.abs(err2/sum - contsum**2));
+         const contsum = cont / sum, eprim = Math.sqrt(Math.abs(err2 / sum - contsum ** 2));
          if (this.fErrorMode === EErrorType.kERRORSPREADI) {
-            if (eprim) return eprim / Math.sqrt(neff);
+            if (eprim)
+               return eprim / Math.sqrt(neff);
             // in case content y is an integer (so each my has an error +/- 1/sqrt(12)
             // when the std(y) is zero
-            return 1.0 / Math.sqrt(12*neff);
+            return 1.0 / Math.sqrt(12 * neff);
          }
          // if approximate compute the sums (of w, wy and wy2) using all the bins
          //  when the variance in y is zero
          // case option 'S' return standard deviation in y
-         if (this.fErrorMode === EErrorType.kERRORSPREAD) return eprim;
+         if (this.fErrorMode === EErrorType.kERRORSPREAD)
+            return eprim;
          // default case : fErrorMode = kERRORMEAN
          // return standard error on the mean of y
-         return eprim/Math.sqrt(neff);
+         return eprim / Math.sqrt(neff);
       };
    }
 
@@ -1970,7 +2088,7 @@ function getMethods(typename, obj) {
       m.P2 = function() { return this.P() * this.P(); };
       m.Pt = m.pt = function() { return Math.sqrt(this.P2()); };
       m.Phi = m.phi = function() { return Math.atan2(this.fCoordinates.Py(), this.fCoordinates.Px()); };
-      m.Eta = m.eta = function() { return Math.atanh(this.Pz()/this.P()); };
+      m.Eta = m.eta = function() { return Math.atanh(this.Pz() / this.P()); };
    }
 
    if (typename.indexOf(nsROOT + 'Math::PxPyPzE4D') === 0) {
@@ -1978,14 +2096,14 @@ function getMethods(typename, obj) {
       m.Py = m.Y = function() { return this.fY; };
       m.Pz = m.Z = function() { return this.fZ; };
       m.E = m.T = function() { return this.fT; };
-      m.P2 = function() { return this.fX**2 + this.fY**2 + this.fZ**2; };
+      m.P2 = function() { return this.fX ** 2 + this.fY ** 2 + this.fZ ** 2; };
       m.R = m.P = function() { return Math.sqrt(this.P2()); };
-      m.Mag2 = m.M2 = function() { return this.fT**2 - this.fX**2 - this.fY**2 - this.fZ**2; };
+      m.Mag2 = m.M2 = function() { return this.fT ** 2 - this.fX ** 2 - this.fY ** 2 - this.fZ ** 2; };
       m.Mag = m.M = function() { return (this.M2() >= 0) ? Math.sqrt(this.M2()) : -Math.sqrt(-this.M2()); };
-      m.Perp2 = m.Pt2 = function() { return this.fX**2 + this.fY**2; };
+      m.Perp2 = m.Pt2 = function() { return this.fX ** 2 + this.fY ** 2; };
       m.Pt = m.pt = function() { return Math.sqrt(this.P2()); };
       m.Phi = m.phi = function() { return Math.atan2(this.fY, this.fX); };
-      m.Eta = m.eta = function() { return Math.atanh(this.Pz/this.P()); };
+      m.Eta = m.eta = function() { return Math.atanh(this.Pz / this.P()); };
    }
 
    methodsCache[typename] = m;
@@ -2014,8 +2132,10 @@ function registerMethods(typename, m) {
   * @private */
 function isRootCollection(lst, typename) {
    if (isObject(lst)) {
-      if ((lst.$kind === clTList) || (lst.$kind === clTObjArray)) return true;
-      if (!typename) typename = lst._typename;
+      if ((lst.$kind === clTList) || (lst.$kind === clTObjArray))
+         return true;
+      if (!typename)
+         typename = lst._typename;
    }
    return (typename === clTList) || (typename === clTHashList) || (typename === clTMap) ||
           (typename === clTObjArray) || (typename === clTClonesArray);
@@ -2048,7 +2168,7 @@ internals.jsroot = { version, source_dir, settings, gStyle, parse, isBatchMode }
 export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, setBatchMode,
          browser, internals, constants, settings, gStyle, atob_func, btoa_func, prROOT,
          clTObject, clTNamed, clTString, clTObjString,
-         clTKey, clTFile,
+         clTKey, clTFile, clTTree,
          clTList, clTHashList, clTMap, clTObjArray, clTClonesArray,
          clTAttLine, clTAttFill, clTAttMarker, clTAttText,
          clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTPaveClass, clTDiamond,

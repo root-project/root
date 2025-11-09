@@ -28,12 +28,6 @@
 #include <iostream>
 #include <fstream>
 
-ClassImp(TSplinePoly);
-ClassImp(TSplinePoly3);
-ClassImp(TSplinePoly5);
-ClassImp(TSpline3);
-ClassImp(TSpline5);
-ClassImp(TSpline);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
@@ -972,7 +966,7 @@ void TSpline3::SavePrimitive(std::ostream &out, Option_t *option)
 
    out << "   spline3->SetName(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\");\n";
 
-   SaveFillAttributes(out, "spline3", 0, 1001);
+   SaveFillAttributes(out, "spline3", 0, 1);
    SaveLineAttributes(out, "spline3", 1, 1, 1);
    SaveMarkerAttributes(out, "spline3", 1, 1, 1);
    if (fNpx != 100)
@@ -1782,7 +1776,7 @@ void TSpline5::SavePrimitive(std::ostream &out, Option_t *option)
 
    out << "   spline5->SetName(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\");\n";
 
-   SaveFillAttributes(out, "spline5", 0, 1001);
+   SaveFillAttributes(out, "spline5", 0, 1);
    SaveLineAttributes(out, "spline5", 1, 1, 1);
    SaveMarkerAttributes(out, "spline5", 1, 1, 1);
    if (fNpx != 100)

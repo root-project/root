@@ -18,7 +18,6 @@
 #include "TVirtualX.h"
 #include "TPoint.h"
 
-ClassImp(TWbox);
 
 /** \class TWbox
 \ingroup BasicGraphics
@@ -208,7 +207,7 @@ void TWbox::SavePrimitive(std::ostream &out, Option_t *option)
 {
    SavePrimitiveConstructor(out, Class(), "wbox", TString::Format("%g, %g, %g, %g", fX1, fY1, fX2, fY2), kFALSE);
 
-   SaveFillAttributes(out, "wbox", 0, 1001);
+   SaveFillAttributes(out, "wbox", -1, -1);
    SaveLineAttributes(out, "wbox", 1, 1, 1);
 
    SavePrimitiveDraw(out, "wbox", option);

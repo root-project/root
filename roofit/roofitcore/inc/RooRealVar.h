@@ -147,8 +147,6 @@ public:
   void attachToVStore(RooVectorDataStore& vstore) override ;
   void fillTreeBranch(TTree& t) override ;
 
-  double chopAt(double what, Int_t where) const ;
-
   double _error;      ///< Symmetric error associated with current value
   double _asymErrLo ; ///< Low side of asymmetric error associated with current value
   double _asymErrHi ; ///< High side of asymmetric error associated with current value

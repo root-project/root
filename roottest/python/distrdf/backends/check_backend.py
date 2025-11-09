@@ -1,7 +1,7 @@
 import platform
-import pytest
 
 import DistRDF
+import pytest
 import ROOT
 
 
@@ -123,16 +123,18 @@ class TestEmptyTreeError:
     Tests with emtpy trees.
     """
 
-    def test_histo_from_empty_root_file(self, payload):
+    @pytest.mark.parametrize("datasource", ["ttree", "rntuple"])
+    def test_histo_from_empty_root_file(self, payload, datasource):
         """
         Check that when performing operations with the distributed backend on
         an RDataFrame without entries, DistRDF raises an error.
         """
 
         connection, _ = payload
+        datasetname = "empty"
+        filename = f"../data/{datasource}/empty.root"
         # Create an RDataFrame from a file with an empty tree
-        rdf = ROOT.RDataFrame(
-            "empty", "../data/ttree/empty.root", executor=connection)
+        rdf = ROOT.RDataFrame(datasetname, filename, executor=connection)
         histo = rdf.Histo1D(("empty", "empty", 10, 0, 10), "mybranch")
 
         # Get entries in the histogram, raises error
@@ -179,16 +181,17 @@ class TestWithRepeatedTree:
     is used multiple times.
     """
 
-    def test_count_with_same_tree_repeated(self, payload):
+    @pytest.mark.parametrize("datasource", ["ttree", "rntuple"])
+    def test_count_with_same_tree_repeated(self, payload, datasource):
         """
         Count entries of a dataset with three times the same tree.
         """
         connection, _ = payload
-        treename = "tree_0"
-        filename = "../data/ttree/distrdf_roottest_check_backend_0.root"
+        datasetname = "tree_0"
+        filename = f"../data/{datasource}/distrdf_roottest_check_backend_0.root"
         filenames = [filename] * 3
 
-        rdf = ROOT.RDataFrame(treename, filenames, executor=connection)
+        rdf = ROOT.RDataFrame(datasetname, filenames, executor=connection)
 
         assert rdf.Count().GetValue() == 300
 

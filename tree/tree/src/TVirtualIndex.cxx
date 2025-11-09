@@ -17,7 +17,6 @@ Abstract interface for Tree Index
 
 #include "TVirtualIndex.h"
 
-ClassImp(TVirtualIndex);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for TVirtualIndex

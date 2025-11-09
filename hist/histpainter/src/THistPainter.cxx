@@ -1051,7 +1051,7 @@ is the color change between cells.
 
 The color palette in TStyle can be modified via `gStyle->SetPalette()`.
 
-All the non-empty bins are painted. Empty bins (bins with content and error equal to 0) are 
+All the non-empty bins are painted. Empty bins (bins with content and error equal to 0) are
 not painted unless some bins have a negative content because in that case the null bins
 might be not empty.
 
@@ -3203,7 +3203,6 @@ static TString gStringKurtosisX;
 static TString gStringKurtosisY;
 static TString gStringKurtosisZ;
 
-ClassImp(THistPainter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -9882,25 +9881,28 @@ void THistPainter::PaintTH2PolyColorLevels(Option_t *)
       theColor = Int_t((color+0.99)*Float_t(ncolors)/Float_t(ndivz));
       if (theColor > ncolors-1) theColor = ncolors-1;
 
+      auto rootColor = gStyle->GetColorPalette(theColor);
+
       // Paint the TGraph bins.
       if (poly->IsA() == TGraph::Class()) {
          TGraph *g  = (TGraph*)poly;
-         g->SetFillColor(gStyle->GetColorPalette(theColor));
+         auto origin = g->GetFillColor();
+         g->SetFillColor(rootColor);
          g->TAttFill::Modify();
          g->Paint("F");
+         g->SetFillColor(origin);
       }
 
       // Paint the TMultiGraph bins.
       if (poly->IsA() == TMultiGraph::Class()) {
          TMultiGraph *mg = (TMultiGraph*)poly;
-         TList *gl = mg->GetListOfGraphs();
-         if (!gl) return;
-         TGraph *g;
-         TIter nextg(gl);
-         while ((g = (TGraph*) nextg())) {
-            g->SetFillColor(gStyle->GetColorPalette(theColor));
+         TIter nextg(mg->GetListOfGraphs());
+         while (auto g = (TGraph*) nextg()) {
+            auto origin = g->GetFillColor();
+            g->SetFillColor(rootColor);
             g->TAttFill::Modify();
             g->Paint("F");
+            g->SetFillColor(origin);
          }
       }
    }

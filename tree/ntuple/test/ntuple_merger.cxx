@@ -2915,6 +2915,100 @@ TEST(RNTupleMerger, MergeLMExtBig)
    }
 }
 
+TEST(RNTupleMerger, MergeFirstNoEntries)
+{
+   // Try merging three ntuples with different schemas, the first two of which have no entries.
+   FileRaii fileGuard1("test_ntuple_merge_first_noentries_1.root");
+   FileRaii fileGuard2("test_ntuple_merge_first_noentries_2.root");
+   FileRaii fileGuard3("test_ntuple_merge_first_noentries_3.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<float>("foo");
+      model->MakeField<int>("bar");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+   }
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<std::string>("asd");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+   }
+   {
+      auto model = RNTupleModel::Create();
+      auto p = model->MakeField<double>("baz");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard3.GetPath());
+      for (int i = 0; i < 10; ++i) {
+         *p = i;
+         ntuple->Fill();
+      }
+   }
+
+   // Now merge the inputs
+   FileRaii fileGuardOut("test_ntuple_merge_first_noentries_out.root");
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard3.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      RNTupleMergeOptions opts;
+      {
+         auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
+         opts.fMergingMode = ENTupleMergingMode::kFilter;
+         RNTupleMerger merger{std::move(destination)};
+         auto res = merger.Merge(sourcePtrs, opts);
+         // Should fail because the second input doesn't have all the fields of the first
+         EXPECT_FALSE(bool(res));
+      }
+      {
+         auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
+         opts.fMergingMode = ENTupleMergingMode::kStrict;
+         RNTupleMerger merger{std::move(destination)};
+         auto res = merger.Merge(sourcePtrs, opts);
+         EXPECT_FALSE(bool(res));
+      }
+      {
+         auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
+         opts.fMergingMode = ENTupleMergingMode::kUnion;
+         RNTupleMerger merger{std::move(destination)};
+         auto res = merger.Merge(sourcePtrs, opts);
+         EXPECT_TRUE(bool(res));
+      }
+   }
+
+   {
+      auto ntupleOut = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+      EXPECT_EQ(ntupleOut->GetNEntries(), 10);
+      EXPECT_EQ(ntupleOut->GetDescriptor().GetNFields(), 5); // zero field + the ones we added
+      auto pFoo = ntupleOut->GetModel().GetDefaultEntry().GetPtr<float>("foo");
+      auto pBar = ntupleOut->GetModel().GetDefaultEntry().GetPtr<int>("bar");
+      auto pBaz = ntupleOut->GetModel().GetDefaultEntry().GetPtr<double>("baz");
+      auto pAsd = ntupleOut->GetModel().GetDefaultEntry().GetPtr<std::string>("asd");
+      for (int i : ntupleOut->GetEntryRange()) {
+         ntupleOut->LoadEntry(i);
+         EXPECT_FLOAT_EQ(*pFoo, 0);
+         EXPECT_EQ(*pBar, 0);
+         EXPECT_EQ(*pAsd, "");
+         EXPECT_DOUBLE_EQ(*pBaz, i);
+      }
+
+      const auto &descFoo = ntupleOut->GetDescriptor().GetColumnDescriptor(0);
+      const auto &descBar = ntupleOut->GetDescriptor().GetColumnDescriptor(1);
+      const auto &descAsd = ntupleOut->GetDescriptor().GetColumnDescriptor(2);
+      const auto &descBaz = ntupleOut->GetDescriptor().GetColumnDescriptor(3);
+      EXPECT_FALSE(descFoo.IsDeferredColumn());
+      EXPECT_FALSE(descAsd.IsDeferredColumn());
+      // The columns extended from the third input are not deferred as they normally would, because the first two
+      // inputs had 0 entries, so they still start at index 0.
+      EXPECT_FALSE(descBar.IsDeferredColumn());
+      EXPECT_FALSE(descBaz.IsDeferredColumn());
+   }
+}
+
 TEST(RNTupleMerger, MergeEmptySchema)
 {
    // Try merging two ntuples with an empty schema
@@ -2969,9 +3063,9 @@ TEST(RNTupleMerger, MergeEmptySchema)
    // We expect the output ntuple to have no entries
    {
       auto ntupleOut = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
-      ASSERT_EQ(ntupleOut->GetNEntries(), 0);
+      EXPECT_EQ(ntupleOut->GetNEntries(), 0);
       // We expect to see only the zero field
-      ASSERT_EQ(ntupleOut->GetDescriptor().GetNFields(), 1);
+      EXPECT_EQ(ntupleOut->GetDescriptor().GetNFields(), 1);
    }
 }
 

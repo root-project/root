@@ -1,0 +1,137 @@
+// @(#)root/mathcore:$Id$
+// Authors:  M. Fischler  2005
+
+/**********************************************************************
+ *                                                                    *
+ * Copyright (c) 2005 , LCG ROOT FNAL MathLib Team                    *
+ *                                                                    *
+ *                                                                    *
+ **********************************************************************/
+
+// Header file for class BoostX, a 4x4 symmetric matrix representation of
+// an axial Lorentz transformation
+//
+// Created by: Mark Fischler Mon Nov 1  2005
+//
+#include "MathX/GenVectorX/BoostX.h"
+#include "MathX/GenVectorX/LorentzVector.h"
+#include "MathX/GenVectorX/PxPyPzE4D.h"
+#include "MathX/GenVectorX/DisplacementVector3D.h"
+#include "MathX/GenVectorX/Cartesian3D.h"
+#include "MathX/GenVectorX/GenVector_exception.h"
+
+#include <cmath>
+#include <algorithm>
+
+#include "MathX/GenVectorX/AccHeaders.h"
+
+#include "MathX/GenVectorX/MathHeaders.h"
+
+namespace ROOT {
+
+namespace ROOT_MATH_ARCH {
+
+BoostX::BoostX() : fBeta(0.0), fGamma(1.0) {}
+
+void BoostX::SetComponents(Scalar bx)
+{
+   // set component
+   Scalar bp2 = bx * bx;
+   if (bp2 >= 1) {
+#if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
+      GenVector_Throw("Beta Vector supplied to set BoostX represents speed >= c");
+#endif
+      return;
+   }
+   fBeta = bx;
+   fGamma = 1.0 / math_sqrt(1.0 - bp2);
+}
+
+void BoostX::GetComponents(Scalar &bx) const
+{
+   // get component
+   bx = fBeta;
+}
+
+DisplacementVector3D<Cartesian3D<BoostX::Scalar>> BoostX::BetaVector() const
+{
+   // return beta vector
+   return DisplacementVector3D<Cartesian3D<Scalar>>(fBeta, 0.0, 0.0);
+}
+
+void BoostX::GetLorentzRotation(Scalar r[]) const
+{
+   // get corresponding LorentzRotation
+   r[kLXX] = fGamma;
+   r[kLXY] = 0.0;
+   r[kLXZ] = 0.0;
+   r[kLXT] = fGamma * fBeta;
+   r[kLYX] = 0.0;
+   r[kLYY] = 1.0;
+   r[kLYZ] = 0.0;
+   r[kLYT] = 0.0;
+   r[kLZX] = 0.0;
+   r[kLZY] = 0.0;
+   r[kLZZ] = 1.0;
+   r[kLZT] = 0.0;
+   r[kLTX] = fGamma * fBeta;
+   r[kLTY] = 0.0;
+   r[kLTZ] = 0.0;
+   r[kLTT] = fGamma;
+}
+
+void BoostX::Rectify()
+{
+   // Assuming the representation of this is close to a true Lorentz Rotation,
+   // but may have drifted due to round-off error from many operations,
+   // this forms an "exact" orthosymplectic matrix for the Lorentz Rotation
+   // again.
+
+   if (fGamma <= 0) {
+#if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
+      GenVector_Throw("Attempt to rectify a boost with non-positive gamma");
+#endif
+      return;
+   }
+   Scalar beta = fBeta;
+   if (beta >= 1) {
+      beta /= (beta * (1.0 + 1.0e-16));
+   }
+   SetComponents(beta);
+}
+
+LorentzVector<PxPyPzE4D<double>> BoostX::operator()(const LorentzVector<PxPyPzE4D<double>> &v) const
+{
+   // apply boost to a LV
+   Scalar x = v.Px();
+   Scalar t = v.E();
+   return LorentzVector<PxPyPzE4D<double>>(fGamma * x + fGamma * fBeta * t, v.Py(), v.Pz(),
+                                           fGamma * fBeta * x + fGamma * t);
+}
+
+void BoostX::Invert()
+{
+   // invert
+   fBeta = -fBeta;
+}
+
+BoostX BoostX::Inverse() const
+{
+   // return an inverse boostX
+   BoostX tmp(*this);
+   tmp.Invert();
+   return tmp;
+}
+
+#if !defined(ROOT_MATH_SYCL) && !defined(ROOT_MATH_CUDA)
+// ========== I/O =====================
+
+std::ostream &operator<<(std::ostream &os, const BoostX &b)
+{
+   os << " BoostX( beta: " << b.Beta() << ", gamma: " << b.Gamma() << " ) ";
+   return os;
+}
+#endif
+
+} // namespace ROOT_MATH_ARCH
+} // namespace ROOT

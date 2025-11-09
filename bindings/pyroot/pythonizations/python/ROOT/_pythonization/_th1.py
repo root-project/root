@@ -233,7 +233,6 @@ _th1_derived_classes_to_pythonize = [
     "TH1L",
     "TH1F",
     "TH1D",
-    "TH1K",
     "TProfile",
 ]
 

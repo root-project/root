@@ -12,7 +12,7 @@
 #include "TMath.h"
 
 // eventually, include some additoinal C or C++ libraries
-#include <math.h>
+#include <cmath>
 
 //     ==>>  put the code of your macro here
 void ExampleMacro_GUI() {

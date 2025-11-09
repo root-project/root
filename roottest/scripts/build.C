@@ -75,9 +75,6 @@ void build(const char *filename, const char *lib = 0, const char *obj = 0, const
    }
    // fprintf(stderr,"from %s to %s\n",filename,fname.Data());
    int result = gSystem->CompileMacro(fname,"kc");
-#elif defined(CMakeEnvironment) && defined(CMakeBuildDir)
-   // fprintf(stderr,"CmakeBuildDir: %s filename: %s", CMakeBuildDir, filename);
-   int result = gSystem->CompileMacro(filename,"kc-", libname, CMakeBuildDir);
 #else
    int result = gSystem->CompileMacro(filename,"kc", libname);
 #endif

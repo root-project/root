@@ -16,4 +16,3 @@ private:
 	ClassDef(SomeClass, 1) // Class with a name.
 };
 
-ClassImp(SomeClass)

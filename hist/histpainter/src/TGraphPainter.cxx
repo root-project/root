@@ -29,6 +29,8 @@
 #include "TGraphPolar.h"
 #include "TGraphQQ.h"
 #include "TScatter.h"
+#include "TScatter2D.h"
+#include "TGraph2D.h"
 #include "TPaletteAxis.h"
 #include "TLatex.h"
 #include "TArrow.h"
@@ -47,7 +49,6 @@ static Int_t    gHighlightPoint  = -1;         // highlight point of graph
 static TGraph  *gHighlightGraph  = nullptr;    // pointer to graph with highlight point
 static std::unique_ptr<TMarker> gHighlightMarker;    // highlight marker
 
-ClassImp(TGraphPainter);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1335,21 +1336,24 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
 
    // Draw the Axis.
    Double_t rwxmin,rwxmax, rwymin, rwymax, maximum, minimum, dx, dy;
+
+   TH1F *histogram = nullptr;
    if (optionAxis) {
-      if (theGraph->GetHistogram()) {
+      histogram = theGraph->GetHistogram();
+      if (histogram) {
          rwxmin    = gPad->GetUxmin();
          rwxmax    = gPad->GetUxmax();
          rwymin    = gPad->GetUymin();
          rwymax    = gPad->GetUymax();
-         minimum   = theGraph->GetHistogram()->GetMinimumStored();
-         maximum   = theGraph->GetHistogram()->GetMaximumStored();
+         minimum   = histogram->GetMinimumStored();
+         maximum   = histogram->GetMaximumStored();
          if (minimum == -1111) { //this can happen after unzooming
-            minimum = theGraph->GetHistogram()->GetYaxis()->GetXmin();
-            theGraph->GetHistogram()->SetMinimum(minimum);
+            minimum = histogram->GetYaxis()->GetXmin();
+            histogram->SetMinimum(minimum);
          }
          if (maximum == -1111) {
-            maximum = theGraph->GetHistogram()->GetYaxis()->GetXmax();
-            theGraph->GetHistogram()->SetMaximum(maximum);
+            maximum = histogram->GetYaxis()->GetXmax();
+            histogram->SetMaximum(maximum);
          }
          uxmin     = gPad->PadtoX(rwxmin);
          uxmax     = gPad->PadtoX(rwxmax);
@@ -1366,9 +1370,12 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
          minimum  = rwymin - dy;
          maximum  = rwymax + dy;
       }
-      if (theGraph->GetMinimum() != -1111) rwymin = minimum = theGraph->GetMinimum();
-      if (theGraph->GetMaximum() != -1111) rwymax = maximum = theGraph->GetMaximum();
-      if (uxmin < 0 && rwxmin >= 0) uxmin = 0.9*rwxmin;
+      if (theGraph->GetMinimum() != -1111)
+         rwymin = minimum = theGraph->GetMinimum();
+      if (theGraph->GetMaximum() != -1111)
+         rwymax = maximum = theGraph->GetMaximum();
+      if (uxmin < 0 && rwxmin >= 0)
+         uxmin = 0.9*rwxmin;
       if (uxmax > 0 && rwxmax <= 0) {
          if (gPad->GetLogx()) uxmax = 1.1*rwxmax;
          else                 uxmax = 0;
@@ -1392,31 +1399,32 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
       if (strstr(chopt,"x+")) strncat(chopth, "x+",3);
       if (strstr(chopt,"y+")) strncat(chopth, "y+",3);
       if (optionIAxis) strncat(chopth, "A",2);
-      if (!theGraph->GetHistogram()) {
+      if (!histogram) {
          // the graph is created with at least as many bins as there are
          // points to permit zooming on the full range.
          rwxmin = uxmin;
          rwxmax = uxmax;
          npt = 100;
          if (theNpoints > npt) npt = theNpoints;
-         TH1F *h = new TH1F(TString::Format("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax);
-         theGraph->SetHistogram(h);
-         if (!theGraph->GetHistogram()) return;
-         theGraph->GetHistogram()->SetMinimum(rwymin);
-         theGraph->GetHistogram()->SetMaximum(rwymax);
-         theGraph->GetHistogram()->GetYaxis()->SetLimits(rwymin,rwymax);
-         theGraph->GetHistogram()->SetBit(TH1::kNoStats);
-         theGraph->GetHistogram()->SetDirectory(nullptr);
-         theGraph->GetHistogram()->Sumw2(kFALSE);
-         theGraph->GetHistogram()->Paint(chopth); // Draw histogram axis, title and grid
+         histogram = new TH1F(TString::Format("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax);
+         theGraph->SetHistogram(histogram);
+         histogram = theGraph->GetHistogram();
+         if (!histogram) return;
+         histogram->SetMinimum(rwymin);
+         histogram->SetMaximum(rwymax);
+         histogram->GetYaxis()->SetLimits(rwymin,rwymax);
+         histogram->SetBit(TH1::kNoStats);
+         histogram->SetDirectory(nullptr);
+         histogram->Sumw2(kFALSE);
+         histogram->Paint(chopth); // Draw histogram axis, title and grid
       } else {
          if (gPad->GetLogy()) {
-            theGraph->GetHistogram()->SetMinimum(rwymin);
-            theGraph->GetHistogram()->SetMaximum(rwymax);
-            theGraph->GetHistogram()->GetYaxis()->SetLimits(rwymin,rwymax);
+            histogram->SetMinimum(rwymin);
+            histogram->SetMaximum(rwymax);
+            histogram->GetYaxis()->SetLimits(rwymin,rwymax);
          }
-         theGraph->GetHistogram()->Sumw2(kFALSE);
-         theGraph->GetHistogram()->Paint(chopth); // Draw histogram axis, title and grid
+         histogram->Sumw2(kFALSE);
+         histogram->Paint(chopth); // Draw histogram axis, title and grid
       }
    }
 
@@ -1429,9 +1437,10 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
    rwymax   = gPad->GetUymax();
    uxmin    = gPad->PadtoX(rwxmin);
    uxmax    = gPad->PadtoX(rwxmax);
-   if (theGraph->GetHistogram() && !theGraph->InheritsFrom("TGraphPolar")) {
-      maximum = theGraph->GetHistogram()->GetMaximum();
-      minimum = theGraph->GetHistogram()->GetMinimum();
+
+   if (histogram && !theGraph->InheritsFrom("TGraphPolar")) {
+      maximum = histogram->GetMaximum();
+      minimum = histogram->GetMinimum();
    } else {
       maximum = gPad->PadtoY(rwymax);
       minimum = gPad->PadtoY(rwymin);
@@ -4151,6 +4160,13 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
          theHist->GetYaxis()->SetLabelOffset(999.);
          theHist->GetYaxis()->SetAxisColor(gPad->GetFrameFillColor());
       }
+
+      // after Unzoom menu command min/max can be 0 and should be reset
+      if ((theHist->GetMinimum() == theHist->GetMaximum()) && (theHist->GetMinimum() != -1111)) {
+         theHist->SetMinimum(theGraph->GetYaxis()->GetXmin());
+         theHist->SetMaximum(theGraph->GetYaxis()->GetXmax());
+      }
+
       TString opth = "0";
       if (lxp) opth.Append("x+");
       if (lyp) opth.Append("y+");
@@ -4214,9 +4230,6 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
       if (axis) {
          // Reverse the X axis
          Double_t GL = 0.;
-         theHist->GetXaxis()->SetTickLength(0.);
-         theHist->GetXaxis()->SetLabelOffset(999.);
-         gPad->Update();
          TString optax = "-SDH";
          if (gPad->GetGridx()) {
             if (gPad->GetLogy()) {
@@ -4259,6 +4272,7 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
          theReversedXaxis->SetLabelColor(theGraph->GetXaxis()->GetLabelColor());
          theReversedXaxis->SetTickLength(TLX);
          theReversedXaxis->Paint();
+         delete theReversedXaxis;
       }
 
       // Reverse X coordinates
@@ -4284,7 +4298,6 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
       if (axis) {
          // Reverse the Y axis
          Double_t GL = 0.;
-         gPad->Update();
          TString optax = "-SDH";
          if (gPad->GetGridy()) {
             if (gPad->GetLogx()) {
@@ -4299,14 +4312,21 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
          else     xpos = gPad->GetUxmin();
          if (gPad->GetLogx()) xpos = TMath::Power(10,xpos);
          TGaxis *theReversedYaxis;
+         Double_t ymin = theHist->GetMinimum();
+         Double_t ymax = theHist->GetMaximum();
+         if (ymin == ymax) {
+            ymin = theGraph->GetYaxis()->GetXmin();
+            ymax = theGraph->GetYaxis()->GetXmax();
+         }
+
          if (gPad->GetLogy()) {
             optax.Append("G");
             theReversedYaxis = new TGaxis(xpos,
                                     TMath::Power(10,gPad->GetUymax()),
                                     xpos,
                                     TMath::Power(10,gPad->GetUymin()),
-                                    theGraph->GetYaxis()->GetXmin(),
-                                    theGraph->GetYaxis()->GetXmax(),
+                                    ymin,
+                                    ymax,
                                     theHist->GetNdivisions("Y"),
                                     optax.Data(), GL);
             if (theHist->GetYaxis()->GetMoreLogLabels()) theReversedYaxis->SetMoreLogLabels();
@@ -4315,8 +4335,8 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
                                     gPad->GetUymax(),
                                     xpos,
                                     gPad->GetUymin(),
-                                    theGraph->GetYaxis()->GetXmin(),
-                                    theGraph->GetYaxis()->GetXmax(),
+                                    ymin,
+                                    ymax,
                                     theHist->GetNdivisions("Y"),
                                     optax.Data(), GL);
          }
@@ -4326,6 +4346,7 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
          theReversedYaxis->SetTickLength(-TLY);
          theReversedYaxis->SetLabelOffset(LOY-TLY);
          theReversedYaxis->Paint();
+         delete theReversedYaxis;
       }
 
       // Reverse Y coordinates
@@ -4356,6 +4377,8 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
 
    PaintHelper(theReversedGraph,opt.Data());
 
+   delete theReversedGraph;
+
    theHist->GetXaxis()->SetLabelOffset(LOX);
    theHist->GetXaxis()->SetTickLength(TLX);
    theHist->GetYaxis()->SetLabelOffset(LOY);
@@ -4371,6 +4394,8 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
 void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
 {
 
+   TGraph* theGraph = theScatter->GetGraph();
+
    Int_t optionAxis, optionSkipCol;
 
    TString opt = chopt;
@@ -4379,35 +4404,26 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
    if (opt.Contains("A"))       optionAxis     = 1;  else optionAxis     = 0;
    if (opt.Contains("SKIPCOL")) optionSkipCol  = 1;  else optionSkipCol  = 0;
 
-   double *theX         = theScatter->GetGraph()->GetX();
-   double *theY         = theScatter->GetGraph()->GetY();
-   int n                = theScatter->GetGraph()->GetN();
+   double *theX         = theGraph->GetX();
+   double *theY         = theGraph->GetY();
+   int n                = theGraph->GetN();
    double *theColor     = theScatter->GetColor();
    double *theSize      = theScatter->GetSize();
    double MinMarkerSize = theScatter->GetMinMarkerSize();
    double MaxMarkerSize = theScatter->GetMaxMarkerSize();
 
-   double minx =  DBL_MAX;
-   double maxx = -DBL_MAX;
-   double miny =  DBL_MAX;
-   double maxy = -DBL_MAX;
-   double minc =  DBL_MAX;
-   double maxc = -DBL_MAX;
-   double mins =  DBL_MAX;
-   double maxs = -DBL_MAX;
-   for (int i=0; i<n; i++) {
-      minx = TMath::Min(minx,theX[i]);
-      maxx = TMath::Max(maxx,theX[i]);
-      miny = TMath::Min(miny,theY[i]);
-      maxy = TMath::Max(maxy,theY[i]);
-      if (theColor) {
-         minc = TMath::Min(minc,theColor[i]);
-         maxc = TMath::Max(maxc,theColor[i]);
-      }
-      if (theSize) {
-         mins = TMath::Min(mins,theSize[i]);
-         maxs = TMath::Max(maxs,theSize[i]);
-      }
+   double minx = TMath::MinElement(n, theX);
+   double maxx = TMath::MaxElement(n, theX);
+   double miny = TMath::MinElement(n, theY);
+   double maxy = TMath::MaxElement(n, theY);
+   double minc = 0, maxc = 0., mins = 0., maxs = 0.;
+   if (theColor) {
+      minc = TMath::MinElement(n, theColor);
+      maxc = TMath::MaxElement(n, theColor);
+   }
+   if (theSize) {
+      mins = TMath::MinElement(n, theSize);
+      maxs = TMath::MaxElement(n, theSize);
    }
 
    // Make sure minimum and maximum values are different
@@ -4458,57 +4474,80 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
    }
 
    TH2F *h = theScatter->GetHistogram();
-   if (optionAxis) h->Paint(" ");
-   if (h->GetMinimum() < h->GetMaximum()) {
-      if (minc<h->GetMinimum()) minc = h->GetMinimum();
-      if (maxc>h->GetMaximum()) maxc = h->GetMaximum();
-   } else {
-      Error("PaintScatter", "Mininal (%g) and Maximal (%g) values of the internal histogram are not valid",h->GetMinimum(),h->GetMaximum());
-   }
+   if (optionAxis) {
+      h->Paint(" ");
+      if (h->GetMinimum() < h->GetMaximum()) {
+         if (minc<h->GetMinimum()) minc = h->GetMinimum();
+         if (maxc>h->GetMaximum()) maxc = h->GetMaximum();
+      } else {
+         Error("PaintScatter", "Mininal (%g) and Maximal (%g) values of the internal histogram are not valid",h->GetMinimum(),h->GetMaximum());
+      }
 
-   // Define and paint palette
-   if (theColor) {
-      TPaletteAxis *palette;
-      TList *functions = theScatter->GetGraph()->GetListOfFunctions();
-      palette = (TPaletteAxis*)functions->FindObject("palette");
-      TView *view = gPad->GetView();
-      if (palette) {
-         if (view) {
-            if (!palette->TestBit(TPaletteAxis::kHasView)) {
-               functions->Remove(palette);
-               delete palette; palette = nullptr;
-            }
-         } else {
-            if (palette->TestBit(TPaletteAxis::kHasView)) {
-               functions->Remove(palette);
-               delete palette; palette = nullptr;
+      // Define and paint palette
+      if (theColor) {
+         TPaletteAxis *palette;
+         TList *functions = theGraph->GetListOfFunctions();
+         palette = (TPaletteAxis*)functions->FindObject("palette");
+         TView *view = gPad->GetView();
+         if (palette) {
+            if (view) {
+               if (!palette->TestBit(TPaletteAxis::kHasView)) {
+                  functions->Remove(palette);
+                  delete palette; palette = nullptr;
+               }
+            } else {
+               if (palette->TestBit(TPaletteAxis::kHasView)) {
+                  functions->Remove(palette);
+                  delete palette; palette = nullptr;
+               }
             }
          }
-      }
-      if (!palette) {
-         Double_t xup  = gPad->GetUxmax();
-         Double_t x2   = gPad->PadtoX(gPad->GetX2());
-         Double_t ymin = gPad->PadtoY(gPad->GetUymin());
-         Double_t ymax = gPad->PadtoY(gPad->GetUymax());
-         Double_t xr   = 0.05*(gPad->GetX2() - gPad->GetX1());
-         Double_t xmin = gPad->PadtoX(xup +0.1*xr);
-         Double_t xmax = gPad->PadtoX(xup + xr);
-         if (xmax > x2) xmax = gPad->PadtoX(gPad->GetX2()-0.01*xr);
-         palette = new TPaletteAxis(xmin,ymin,xmax,ymax,minc,maxc);
-         palette->SetLabelColor(h->GetZaxis()->GetLabelColor());
-         palette->SetLabelFont(h->GetZaxis()->GetLabelFont());
-         palette->SetLabelOffset(h->GetZaxis()->GetLabelOffset());
-         palette->SetLabelSize(h->GetZaxis()->GetLabelSize());
-         palette->SetTitleOffset(h->GetZaxis()->GetTitleOffset());
-         palette->SetTitleSize(h->GetZaxis()->GetTitleSize());
-         palette->SetNdivisions(h->GetZaxis()->GetNdivisions());
-         palette->SetTitle(h->GetZaxis()->GetTitle());
-         palette->SetTitleColor(h->GetZaxis()->GetTitleColor());
-         palette->SetTitleFont(h->GetZaxis()->GetTitleFont());
+         if (!palette) {
+            Double_t xup  = gPad->GetUxmax();
+            Double_t x2   = gPad->PadtoX(gPad->GetX2());
+            Double_t ymin = gPad->PadtoY(gPad->GetUymin());
+            Double_t ymax = gPad->PadtoY(gPad->GetUymax());
+            Double_t xr   = 0.05*(gPad->GetX2() - gPad->GetX1());
+            Double_t xmin = gPad->PadtoX(xup +0.1*xr);
+            Double_t xmax = gPad->PadtoX(xup + xr);
+            if (xmax > x2) xmax = gPad->PadtoX(gPad->GetX2()-0.01*xr);
+            palette = new TPaletteAxis(xmin,ymin,xmax,ymax,minc,maxc);
+            palette->SetLabelColor(h->GetZaxis()->GetLabelColor());
+            palette->SetLabelFont(h->GetZaxis()->GetLabelFont());
+            palette->SetLabelOffset(h->GetZaxis()->GetLabelOffset());
+            palette->SetLabelSize(h->GetZaxis()->GetLabelSize());
+            palette->SetTitleOffset(h->GetZaxis()->GetTitleOffset());
+            palette->SetTitleSize(h->GetZaxis()->GetTitleSize());
+            palette->SetNdivisions(h->GetZaxis()->GetNdivisions());
+            palette->SetTitle(h->GetZaxis()->GetTitle());
+            palette->SetTitleColor(h->GetZaxis()->GetTitleColor());
+            palette->SetTitleFont(h->GetZaxis()->GetTitleFont());
 
-         functions->AddFirst(palette);
+            functions->AddFirst(palette);
+         }
+         if (palette) palette->Paint();
       }
-      if (palette) palette->Paint();
+   } else {
+      TScatter *s;
+      TIter next(gPad->GetListOfPrimitives());
+      while ((s = (TScatter *)next())) {
+         if (!s->InheritsFrom(TScatter::Class())) continue;
+         if (theColor) {
+            double *ColorInPad = s->GetColor();
+            if (ColorInPad) {
+               minc = TMath::MinElement(n, ColorInPad);
+               maxc = TMath::MaxElement(n, ColorInPad);
+            }
+         }
+         if (theSize) {
+            double *SizeInPad = s->GetSize();
+            if (SizeInPad) {
+               mins = TMath::MinElement(n, SizeInPad);
+               maxs = TMath::MaxElement(n, SizeInPad);
+            }
+         }
+         break;
+      }
    }
 
    // Draw markers
@@ -4562,6 +4601,246 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
         y = theY[i];
       }
       gPad->PaintPolyMarker(1,&x,&y);
+   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint a scatter plot
+
+void TGraphPainter::PaintScatter2D(TScatter2D *theScatter, Option_t* chopt)
+{
+
+   TGraph2D* theGraph = theScatter->GetGraph();
+
+   Int_t optionSAME = 0, optionSkipCol = 0, optionLOGC = 1, optionLOGS = 0, optionP = 0;
+
+   TString opt = chopt;
+   opt.ToUpper();
+
+   if (opt.Contains("SAME")) {
+      optionSAME = 1;
+      opt.ReplaceAll("SAME"," ");
+   }
+   if (opt.Contains("SKIPCOL")) {
+      optionSkipCol = 1;
+      opt.ReplaceAll("SKIPCOL"," ");
+   }
+   if (opt.Contains("LOGC")) {
+      optionLOGC = 2;
+      opt.ReplaceAll("LOGC"," ");
+   }
+   if (opt.Contains("LOGS")) {
+      optionLOGS = 1;
+      opt.ReplaceAll("LOGS"," ");
+   }
+   if (opt.Contains("P")) {
+      optionP = 1;
+      opt.ReplaceAll("P"," ");
+   }
+
+   opt.Append("TRI0");
+
+   double *theX         = theGraph->GetX();
+   double *theY         = theGraph->GetY();
+   double *theZ         = theGraph->GetZ();
+   int n                = theGraph->GetN();
+   double *theColor     = theScatter->GetColor();
+   double *theSize      = theScatter->GetSize();
+   double MinMarkerSize = theScatter->GetMinMarkerSize();
+   double MaxMarkerSize = theScatter->GetMaxMarkerSize();
+
+   double minc = 0, maxc = 0., mins = 0., maxs = 0.;
+   if (theColor) {
+      minc = TMath::MinElement(n, theColor);
+      maxc = TMath::MaxElement(n, theColor);
+   }
+   if (theSize) {
+      mins = TMath::MinElement(n, theSize);
+      maxs = TMath::MaxElement(n, theSize);
+   }
+
+   // Make sure minimum and maximum values are different
+   Double_t d, e = 0.1;
+   if (theColor) {
+      if (minc == maxc) {
+         if (theColor[0] == 0.) {
+            minc = -e;
+            maxc = e;
+         } else {
+            d = TMath::Abs(theColor[0]*e);
+            minc = theColor[0] - d;
+            maxc = theColor[0] + d;
+         }
+      }
+   }
+   if (theSize) {
+      if (mins == maxs) {
+         if (theSize[0] == 0.) {
+            mins = -e;
+            maxs = e;
+         } else {
+            d = TMath::Abs(theSize[0]*e);
+            mins = theSize[0] - d;
+            maxs = theSize[0] + d;
+         }
+      }
+   }
+
+   theGraph->SetTitle(theScatter->GetTitle());
+
+   if (!optionSAME) {
+      theGraph->Paint(opt.Data());
+
+      // Define and paint palette
+      if (theColor) {
+         TList *functions = theScatter->GetGraph()->GetListOfFunctions();
+         TPaletteAxis *palette = nullptr;
+         palette = (TPaletteAxis*)functions->FindObject("palette");
+         TView *view = gPad->GetView();
+         if (palette) {
+            if (view) {
+               if (!palette->TestBit(TPaletteAxis::kHasView)) {
+                  functions->Remove(palette);
+                  delete palette; palette = nullptr;
+               }
+            } else {
+               if (palette->TestBit(TPaletteAxis::kHasView)) {
+                  functions->Remove(palette);
+                  delete palette; palette = nullptr;
+               }
+            }
+         }
+         if (!palette) {
+            Double_t xup  = gPad->GetUxmax();
+            Double_t x2   = gPad->PadtoX(gPad->GetX2());
+            Double_t ymin = gPad->PadtoY(gPad->GetUymin());
+            Double_t ymax = gPad->PadtoY(gPad->GetUymax());
+            Double_t xr   = 0.05*(gPad->GetX2() - gPad->GetX1());
+            Double_t xmin = gPad->PadtoX(xup +0.1*xr);
+            Double_t xmax = gPad->PadtoX(xup + xr);
+            if (xmax > x2) xmax = gPad->PadtoX(gPad->GetX2()-0.01*xr);
+            palette = new TPaletteAxis(xmin,ymin,xmax,ymax,minc,maxc);
+            palette->SetLog(optionLOGC);
+            palette->SetLabelColor(theGraph->GetZaxis()->GetLabelColor());
+            palette->SetLabelFont(theGraph->GetZaxis()->GetLabelFont());
+            palette->SetLabelOffset(theGraph->GetZaxis()->GetLabelOffset());
+            palette->SetLabelSize(theGraph->GetZaxis()->GetLabelSize());
+            //palette->SetTitleOffset(theGraph->GetZaxis()->GetTitleOffset());
+            palette->SetTitleSize(theGraph->GetZaxis()->GetTitleSize());
+            palette->SetNdivisions(theGraph->GetZaxis()->GetNdivisions());
+            //palette->SetTitle(theGraph->GetTitle());
+            //palette->SetTitleColor(theGraph->GetZaxis()->GetTitleColor());
+            //palette->SetTitleFont(theGraph->GetZaxis()->GetTitleFont());
+
+            functions->AddFirst(palette);
+         }
+         TString scTitle(theScatter->GetTitle());
+         if (palette && scTitle.CountChar(';') == 4) {
+            auto pos = scTitle.Last(';') + 1;
+            auto cTitle = scTitle(pos, scTitle.Length() - pos);
+            palette->SetTitle(cTitle.Data());
+         }
+         if (palette && !optionP) palette->Paint();
+      }
+   } else {
+      TScatter2D *s2;
+      TIter next(gPad->GetListOfPrimitives());
+      while ((s2 = (TScatter2D *)next())) {
+         if (!s2->InheritsFrom(TScatter2D::Class())) continue;
+         TString opt2 = s2->GetDrawOption();
+         if (opt2.Contains("LOGC")) optionLOGC = 2;
+         else optionLOGC = 1;
+         if (opt2.Contains("LOGS")) optionLOGS = 1;
+         else optionLOGS = 0;
+         if (theColor) {
+            double *ColorInPad = s2->GetColor();
+            if (ColorInPad) {
+               minc = TMath::MinElement(n, ColorInPad);
+               maxc = TMath::MaxElement(n, ColorInPad);
+            }
+         }
+         if (theSize) {
+            double *SizeInPad = s2->GetSize();
+            if (SizeInPad) {
+               mins = TMath::MinElement(n, SizeInPad);
+               maxs = TMath::MaxElement(n, SizeInPad);
+            }
+         }
+         break;
+      }
+   }
+
+   // Draw markers
+   auto nbcol = gStyle->GetNumberOfColors();
+   int logx = gPad->GetLogx();
+   int logy = gPad->GetLogy();
+   int logz = gPad->GetLogz();
+   int logc = 0;
+   if (optionLOGC == 2) logc =1;
+   if (theColor && logc) {
+      if (minc>0) minc = log10(minc);
+      if (maxc>0) maxc = log10(maxc);
+   }
+   if (theSize && optionLOGS) {
+      if (mins>0) mins = log10(mins);
+      if (maxs>0) maxs = log10(maxs);
+   }
+   theScatter->SetMarkerColor(theScatter->GetMarkerColor());
+   theScatter->TAttMarker::Modify();
+   double x,y,z,c,s,ms;
+   int nc;
+   for (Int_t i = 0; i < n; i++) {
+      if (theColor) {
+         c = theColor[i];
+         if (logc){
+            if (theColor[i]>0) c = log10(theColor[i]);
+            else continue;
+         } else {
+            c = theColor[i];
+         }
+         if (c<minc) {
+            if (optionSkipCol) continue;
+            c = minc;
+         }
+         if (c>maxc) {
+            if (optionSkipCol) continue;
+            c = maxc;
+         }
+         nc = TMath::Nint(((c-minc)/(maxc-minc))*(nbcol-1));
+         if (nc > nbcol-1) nc = nbcol-1;
+         theScatter->SetMarkerColor(gStyle->GetColorPalette(nc));
+      }
+      if (theSize)  {
+         if (optionLOGS){
+            if (theSize[i]>0) s = log10(theSize[i]);
+            else continue;
+         } else {
+            s = theSize[i];
+         }
+         ms = (MaxMarkerSize-MinMarkerSize)*((s-mins)/(maxs-mins))+MinMarkerSize;
+         theScatter->SetMarkerSize(ms);
+      }
+      theScatter->TAttMarker::Modify();
+      if (logx) {
+        if (theX[i]>0) x = log10(theX[i]);
+        else break;
+      } else {
+        x = theX[i];
+      }
+      if (logy) {
+        if (theY[i]>0) y = log10(theY[i]);
+        else break;
+      } else {
+        y = theY[i];
+      }
+      if (logz) {
+        if (theZ[i]>0) z = log10(theZ[i]);
+        else break;
+      } else {
+        z = theZ[i];
+      }
+      gPad->PaintMarker3D(x, y, z);
    }
 }
 
@@ -4697,13 +4976,13 @@ void TGraphPainter::PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double
       } else {
          a1  = TMath::ATan((yi1-yi0)/(xi1-xi0));
       }
-      if (xi1<xi0) a1 = a1+3.14159;
+      if (xi1<xi0) a1 = a1+TMath::Pi();
       if (xi2==xi0) {
          a2 = TMath::PiOver2();
       } else {
          a2  = TMath::ATan((yi0-yi2)/(xi0-xi2));
       }
-      if (xi0<xi2) a2 = a2+3.14159;
+      if (xi0<xi2) a2 = a2+TMath::Pi();
       x1 = xi0-w*TMath::Sin(a1);
       y1 = yi0+w*TMath::Cos(a1);
       x2 = xi0-w*TMath::Sin(a2);
@@ -4715,8 +4994,8 @@ void TGraphPainter::PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double
       } else {
          a3 = TMath::ATan((ym-yi0)/(xm-xi0));
       }
-      x3 = xi0-w*TMath::Sin(a3+1.57079);
-      y3 = yi0+w*TMath::Cos(a3+1.57079);
+      x3 = xi0-w*TMath::Sin(a3+TMath::PiOver2());
+      y3 = yi0+w*TMath::Cos(a3+TMath::PiOver2());
       // Rotate (x3,y3) by PI around (xi0,yi0) if it is not on the (xm,ym) side.
       if ((xm-xi0)*(x3-xi0)<0 && (ym-yi0)*(y3-yi0)<0) {
          x3 = 2*xi0-x3;
@@ -4739,8 +5018,8 @@ void TGraphPainter::PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double
       } else {
          a3 = TMath::ATan((ym-yf[0])/(xm-xf[0]));
       }
-      x3 = xf[0]+w*TMath::Sin(a3+1.57079);
-      y3 = yf[0]-w*TMath::Cos(a3+1.57079);
+      x3 = xf[0]+w*TMath::Sin(a3+TMath::PiOver2());
+      y3 = yf[0]-w*TMath::Cos(a3+TMath::PiOver2());
       if ((xm-xf[0])*(x3-xf[0])<0 && (ym-yf[0])*(y3-yf[0])<0) {
          x3 = 2*xf[0]-x3;
          y3 = 2*yf[0]-y3;
@@ -4755,20 +5034,21 @@ void TGraphPainter::PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double
    Double_t xc, yc, c1, b1, c2, b2;
    Bool_t cross = kFALSE;
    Int_t nf2 = nf;
+   const Double_t eps = 1e-12; // float precision
    for (i=nf2; i>0; i--) {
       for (j=i-1; j>0; j--) {
-         if (xt[i-1]==xt[i] || xt[j-1]==xt[j]) continue;
+         if (TMath::Abs(xt[i-1]-xt[i]) < eps || TMath::Abs(xt[j-1]-xt[j]) < eps) continue;
          c1  = (yt[i-1]-yt[i])/(xt[i-1]-xt[i]);
          b1  = yt[i]-c1*xt[i];
          c2  = (yt[j-1]-yt[j])/(xt[j-1]-xt[j]);
          b2  = yt[j]-c2*xt[j];
-         if (c1 != c2) {
+         if (TMath::Abs(c1 - c2) > eps) {
             xc = (b2-b1)/(c1-c2);
             yc = c1*xc+b1;
-            if (xc>TMath::Min(xt[i],xt[i-1]) && xc<TMath::Max(xt[i],xt[i-1]) &&
-                xc>TMath::Min(xt[j],xt[j-1]) && xc<TMath::Max(xt[j],xt[j-1]) &&
-                yc>TMath::Min(yt[i],yt[i-1]) && yc<TMath::Max(yt[i],yt[i-1]) &&
-                yc>TMath::Min(yt[j],yt[j-1]) && yc<TMath::Max(yt[j],yt[j-1])) {
+            if (xc>TMath::Min(xt[i],xt[i-1])+eps && xc<TMath::Max(xt[i],xt[i-1])-eps &&
+                xc>TMath::Min(xt[j],xt[j-1])+eps && xc<TMath::Max(xt[j],xt[j-1])-eps &&
+                yc>TMath::Min(yt[i],yt[i-1])+eps && yc<TMath::Max(yt[i],yt[i-1])-eps &&
+                yc>TMath::Min(yt[j],yt[j-1])+eps && yc<TMath::Max(yt[j],yt[j-1])-eps) {
                nf++; xf[nf] = xt[i]; yf[nf] = yt[i];
                nf++; xf[nf] = xc   ; yf[nf] = yc;
                i = j;

@@ -17,6 +17,9 @@ private:
    int fVerbose = 0;
    int fBatchSize = -1;
    long fReadPos = 0;  // reading file position
+   size_t fConstantTensorSize = 0; // size  (in Bytes) of the allocated constant tensors
+   size_t fWeightsTensorSize = 0;  // size  (in Bytes) of the allocated weight tensors
+   size_t fOtherTensorSize = 0;    // size  (in Bytes) of intermediate tensors which are not managed by the memory pool
 
    OptimizationLevel fOptimizationLevel = OptimizationLevel::kExtended;
 
@@ -163,6 +166,19 @@ public:
    void CheckAndFlushIntermediateMemory(std::span<const std::string_view> op_output_tensors, const size_t& op_idx);
 
    void SetOptimizationLevel(const OptimizationLevel &optim_level) { fOptimizationLevel = optim_level; }
+
+   // get the size in bytes of the constant tensors
+   size_t GetConstantTensorSize() const { return fConstantTensorSize; }
+   // get the size in bytes of the weight tensors
+   size_t GetWeightsTensorSize() const { return fWeightsTensorSize; }
+   // get the size in bytes of the intermediate tensors which are not part of the memory pool
+   size_t GetOtherTensorSize() const { return fOtherTensorSize; }
+   // get the size in bytes of the intermediate tensors managed by the memory pool
+   size_t GetIntermediateTensorSize() const {
+      return (!fIntermediateMemoryInfo.total_stack.empty())
+                ? fIntermediateMemoryInfo.total_stack.rbegin()->first + fIntermediateMemoryInfo.total_stack.rbegin()->second.tensor_size
+                : 0;
+   }
 
 protected:
    // internal functions

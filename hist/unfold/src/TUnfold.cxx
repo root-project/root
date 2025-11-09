@@ -123,7 +123,6 @@ constraint, both x and &lambda; are determined.
 //#define DEBUG_DETAIL
 //#define FORCE_EIGENVALUE_DECOMPOSITION
 
-ClassImp(TUnfold)
 
 TUnfold::~TUnfold(void)
 {

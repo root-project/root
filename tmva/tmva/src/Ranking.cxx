@@ -38,7 +38,6 @@ Ranking for variables in method (implementation)
 
 #include <iomanip>
 
-ClassImp(TMVA::Ranking);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor

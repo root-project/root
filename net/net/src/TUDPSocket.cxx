@@ -40,7 +40,6 @@ ULong64_t TUDPSocket::fgBytesSent = 0;
 ULong64_t TUDPSocket::fgBytesRecv = 0;
 
 
-ClassImp(TUDPSocket);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a socket. Connect to the named service at address addr.

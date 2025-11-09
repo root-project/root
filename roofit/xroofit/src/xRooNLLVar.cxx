@@ -161,8 +161,11 @@ xRooNLLVar::xRooNLLVar(const std::shared_ptr<RooAbsPdf> &pdf,
    : fPdf(pdf), fData(data.first), fGlobs(data.second)
 {
 
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 37, 00)
    RooMsgService::instance().getStream(RooFit::INFO).removeTopic(RooFit::NumericIntegration);
-
+#else
+   RooMsgService::instance().getStream(RooFit::INFO).removeTopic(RooFit::NumIntegration);
+#endif
    fOpts = std::shared_ptr<RooLinkedList>(new RooLinkedList, [](RooLinkedList *l) {
       if (l)
          l->Delete();
@@ -185,30 +188,8 @@ xRooNLLVar::xRooNLLVar(const std::shared_ptr<RooAbsPdf> &pdf,
          if (!fGlobs || !fGlobs->equals(*gl)) {
             throw std::runtime_error("GlobalObservables mismatch");
          }
-      } else if (strcmp(opts.At(i)->GetName(), "Hesse") == 0) {
-         fitConfig()->SetParabErrors(dynamic_cast<RooCmdArg *>(opts.At(i))->getInt(0)); // controls hesse
-      } else if (strcmp(opts.At(i)->GetName(), "Minos") == 0) {
-         fitConfig()->SetMinosErrors(dynamic_cast<RooCmdArg *>(opts.At(i))->getInt(0)); // controls minos
-      } else if (strcmp(opts.At(i)->GetName(), "Strategy") == 0) {
-         fitConfig()->MinimizerOptions().SetStrategy(dynamic_cast<RooCmdArg *>(opts.At(i))->getInt(0));
-      } else if (strcmp(opts.At(i)->GetName(), "StrategySequence") == 0) {
-         fitConfigOptions()->SetNamedValue("StrategySequence", dynamic_cast<RooCmdArg *>(opts.At(i))->getString(0));
-      } else if (strcmp(opts.At(i)->GetName(), "Tolerance") == 0) {
-         fitConfig()->MinimizerOptions().SetTolerance(dynamic_cast<RooCmdArg *>(opts.At(i))->getDouble(0));
-      } else if (strcmp(opts.At(i)->GetName(), "MaxCalls") == 0) {
-         fitConfig()->MinimizerOptions().SetMaxFunctionCalls(dynamic_cast<RooCmdArg *>(opts.At(i))->getInt(0));
-      } else if (strcmp(opts.At(i)->GetName(), "MaxIterations") == 0) {
-         fitConfig()->MinimizerOptions().SetMaxIterations(dynamic_cast<RooCmdArg *>(opts.At(i))->getInt(0));
-      } else if (strcmp(opts.At(i)->GetName(), "PrintLevel") == 0) {
-         fitConfig()->MinimizerOptions().SetPrintLevel(dynamic_cast<RooCmdArg *>(opts.At(i))->getInt(0));
       } else {
-         if (strcmp(opts.At(i)->GetName(), "Optimize") == 0) {
-            // this flag will trigger constOptimizeTestStatistic to be called on the nll in createNLL method
-            // we should ensure that the fitconfig setting is consistent with it ...
-            fitConfigOptions()->SetValue("OptimizeConst", dynamic_cast<RooCmdArg *>(opts.At(i))->getInt(0));
-         }
-         fOpts->Add(opts.At(i)->Clone(nullptr)); // nullptr needed because accessing Clone via TObject base class puts
-                                                 // "" instead, so doesnt copy names
+         SetOption(dynamic_cast<RooCmdArg &>(*opts.At(i)));
       }
    }
    if (fGlobs) {
@@ -403,10 +384,19 @@ void xRooNLLVar::reinitialize()
          }
       }
       std::map<RooAbsPdf *, std::string> normRanges;
+      std::set<TObject *> removedOpts;
       if (auto range = dynamic_cast<RooCmdArg *>(fOpts->find("RangeWithName"))) {
          TString rangeName = range->getString(0);
          if (auto sr = dynamic_cast<RooCmdArg *>(fOpts->find("SplitRange"));
              sr && sr->getInt(0) && dynamic_cast<RooSimultaneous *>(fPdf.get())) {
+            if (auto special = fOpts->find("RangeOptimize")) {
+               removedOpts.insert(sr);
+               fOpts->Remove(sr);
+               removedOpts.insert(range);
+               fOpts->Remove(range);
+               removedOpts.insert(special);
+               fOpts->Remove(special);
+            }
             // doing split range ... need to loop over categories of simpdf and apply range to each
             auto simPdf = dynamic_cast<RooSimultaneous *>(fPdf.get());
             for (auto cat : simPdf->indexCat()) {
@@ -457,6 +447,8 @@ void xRooNLLVar::reinitialize()
          attribs = std::shared_ptr<RooAbsReal>::get()->attributes();
       this->reset(std::unique_ptr<RooAbsReal>{fPdf->createNLL(*fData, *fOpts)}.release());
       std::shared_ptr<RooAbsReal>::get()->SetName(TString::Format("nll_%s/%s", fPdf->GetName(), fData->GetName()));
+      for (auto o : removedOpts)
+         fOpts->Add(o);
       // RooFit only swaps in what it calls parameters, this misses out the RooConstVars which we treat as pars as well
       // so swap those in ... question: is recursiveRedirectServers usage in RooAbsOptTestStatic (and here) a memory
       // leak?? where do the replaced servers get deleted??
@@ -715,6 +707,12 @@ xRooNLLVar::xRooFitResult xRooNLLVar::minimize(const std::shared_ptr<ROOT::Fit::
       if (fGlobs)
          std::unique_ptr<RooAbsCollection>(out->constPars().selectCommon(*fGlobs))->setAttribAll("global", true);
    }
+
+   if (fOpts->find("GoF")) {
+      // add pgof to the fit result
+      const_cast<RooArgList &>(out->constPars()).addClone(RooRealVar(".pgof", "GoF p-value", pgof()));
+   }
+
    return xRooFitResult(std::make_shared<xRooNode>(out, fPdf), std::make_shared<xRooNLLVar>(*this));
 }
 
@@ -844,7 +842,8 @@ double xRooNLLVar::saturatedConstraintTermVal() const
       return 0;
 
    for (auto c : cTerm->list()) {
-      if (std::string(c->ClassName()) == "RooAbsPdf" || std::string(c->ClassName()).find("RooNormalizedPdf")!=std::string::npos) {
+      if (std::string(c->ClassName()) == "RooAbsPdf" ||
+          std::string(c->ClassName()).find("RooNormalizedPdf") != std::string::npos) {
          // in ROOT 6.32 the constraintTerm is full of RooNormalizedPdfs which aren't public
          // became public in 6.34, hence now also check for RooNormalizedPdf explicitly
          // in this case use the first server
@@ -1284,13 +1283,44 @@ std::shared_ptr<RooAbsReal> xRooNLLVar::func() const
    return *this;
 }
 
-void xRooNLLVar::AddOption(const RooCmdArg &opt)
+void xRooNLLVar::SetOption(const RooCmdArg &opt)
 {
-   fOpts->Add(opt.Clone(nullptr));
-   if (std::shared_ptr<RooAbsReal>::get()) {
-      reinitialize(); // do this way to keep name of nll if user set
+
+   if (strcmp(opt.GetName(), "Hesse") == 0) {
+      fitConfig()->SetParabErrors(opt.getInt(0)); // controls hesse
+   } else if (strcmp(opt.GetName(), "Minos") == 0) {
+      fitConfig()->SetMinosErrors(opt.getInt(0)); // controls minos
+   } else if (strcmp(opt.GetName(), "Strategy") == 0) {
+      fitConfig()->MinimizerOptions().SetStrategy(opt.getInt(0));
+   } else if (strcmp(opt.GetName(), "StrategySequence") == 0) {
+      fitConfigOptions()->SetNamedValue("StrategySequence", opt.getString(0));
+   } else if (strcmp(opt.GetName(), "Tolerance") == 0) {
+      fitConfig()->MinimizerOptions().SetTolerance(opt.getDouble(0));
+   } else if (strcmp(opt.GetName(), "MaxCalls") == 0) {
+      fitConfig()->MinimizerOptions().SetMaxFunctionCalls(opt.getInt(0));
+   } else if (strcmp(opt.GetName(), "MaxIterations") == 0) {
+      fitConfig()->MinimizerOptions().SetMaxIterations(opt.getInt(0));
+   } else if (strcmp(opt.GetName(), "PrintLevel") == 0) {
+      fitConfig()->MinimizerOptions().SetPrintLevel(opt.getInt(0));
    } else {
-      reset(); // will trigger reinitialize
+      if (strcmp(opt.GetName(), "Optimize") == 0) {
+         // this flag will trigger constOptimizeTestStatistic to be called on the nll in createNLL method
+         // we should ensure that the fitconfig setting is consistent with it ...
+         fitConfigOptions()->SetValue("OptimizeConst", opt.getInt(0));
+      }
+      if (auto prevObject = fOpts->FindObject(opt.GetName()); prevObject) {
+         // replace previous option
+         fOpts->Replace(prevObject, opt.Clone(nullptr));
+         delete prevObject;
+      } else {
+         fOpts->Add(opt.Clone(nullptr)); // nullptr needed because accessing Clone via TObject base class puts
+                                         // "" instead, so doesnt copy names
+      }
+      if (std::shared_ptr<RooAbsReal>::get()) {
+         reinitialize(); // do this way to keep name of nll if user set
+      } else {
+         reset(); // will trigger reinitialize
+      }
    }
 }
 
@@ -1406,6 +1436,7 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::getVal(const char *what)
 {
    TString sWhat(what);
    sWhat.ToLower();
+   sWhat.ReplaceAll(" =", "=").ReplaceAll("= ", "="); // remove spaces around equals signs
    bool doTS = sWhat.Contains("ts");
    bool doCLs = sWhat.Contains("pcls");
    bool doNull = sWhat.Contains("pnull");
@@ -1435,7 +1466,7 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::getVal(const char *what)
             // e.g. if doing just pnull significance
             TString toyNum = sWhat(sWhat.Index("toys=") + 5, sWhat.Length());
             size_t nToys = toyNum.Atoi();
-            size_t nToysAlt = (toyNum.Atof() - nToys)*nToys;
+            size_t nToysAlt = (toyNum.Atof() - nToys) * nToys;
             if (nToysAlt == 0 && !toyNum.Contains('.'))
                nToysAlt = nToys;
             if (nullToys.size() < nToys) {
@@ -1447,8 +1478,9 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::getVal(const char *what)
          } else if (doCLs && toys) {
             // auto toy-generating for limits .. do in blocks of 100
             addCLsToys(100, 0, 0.05, nSigma);
-         } else if(toys) {
-            throw std::runtime_error("Auto-generating toys for anything other than CLs not yet supported, please specify number of toys with 'toys=N' ");
+         } else if (toys) {
+            throw std::runtime_error("Auto-generating toys for anything other than CLs not yet supported, please "
+                                     "specify number of toys with 'toys=N' ");
          }
       }
    }
@@ -1561,6 +1593,10 @@ void xRooNLLVar::xRooHypoPoint::Print(Option_t *) const
    }
    std::cout << " , pllType: " << fPllType << std::endl;
 
+   if (fPllType == xRooFit::Asymptotics::Unknown) {
+      std::cout << " obs ts: " << obs_ts << " +/- " << obs_ts_err << std::endl;
+   }
+
    std::cout << " -        ufit: ";
    if (fUfit) {
       std::cout << fUfit->GetName() << " " << fUfit->minNll() << " (status=" << fUfit->status() << ") (";
@@ -1623,7 +1659,7 @@ void xRooNLLVar::xRooHypoPoint::Print(Option_t *) const
    }
    if (fLbound_cfit) {
       std::cout << " - cfit_lbound: " << fLbound_cfit->GetName() << " " << fLbound_cfit->minNll()
-                << " (status=" << fLbound_cfit->status() << ")";
+                << " (status=" << fLbound_cfit->status() << ")" << std::endl;
    }
    if (fGenFit)
       std::cout << " -      gfit: " << fGenFit->GetName() << std::endl;
@@ -1677,6 +1713,10 @@ xRooNLLVar::xRooHypoPoint::xRooHypoPoint(std::shared_ptr<RooStats::HypoTestResul
       fPllType =
          xRooFit::Asymptotics::PLLType(hypoTestResult->GetFitInfo()->getGlobalObservables()->getCatIndex("pllType"));
       isExpected = hypoTestResult->GetFitInfo()->getGlobalObservables()->getRealValue("isExpected");
+
+      // load obsTS value
+      obs_ts = hypoTestResult->GetTestStatisticData();
+      obs_ts_err = hypoTestResult->GetFitInfo()->getGlobalObservables()->getRealValue("obs_ts_err");
 
       // load the toys
       auto toys = hypoTestResult->GetNullDetailedOutput();
@@ -1818,8 +1858,10 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::pCLs_asymp(double nSigma)
 
 xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::ts_asymp(double nSigma)
 {
-   if (std::isnan(nSigma))
-      return pll();
+   if (std::isnan(nSigma)) {
+      return (fPllType == xRooFit::Asymptotics::Unknown) ? std::make_pair(obs_ts, obs_ts_err) : pll();
+   }
+
    auto first_poi = dynamic_cast<RooRealVar *>(poi().first());
    auto _sigma_mu = sigma_mu();
    if (!first_poi || (!std::isnan(nSigma) && std::isnan(_sigma_mu.first)))
@@ -1837,8 +1879,9 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::ts_asymp(double nSigma)
 
 xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::ts_toys(double nSigma)
 {
-   if (std::isnan(nSigma))
-      return pll();
+   if (std::isnan(nSigma)) {
+      return ts_asymp();
+   }
    // nans should appear in the alt toys first ... so loop until past nans
    size_t firstToy = 0;
    while (firstToy < altToys.size() && std::isnan(std::get<1>(altToys[firstToy])))
@@ -1846,7 +1889,7 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::ts_toys(double nSigma)
    if (firstToy >= altToys.size())
       return std::pair(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
    int targetIdx =
-      (altToys.size() - firstToy) * ROOT::Math::gaussian_cdf(nSigma) + firstToy; // TODO: Account for weights
+      (altToys.size() - firstToy) * ROOT::Math::gaussian_cdf_c(nSigma) + firstToy; // TODO: Account for weights
    return std::pair(std::get<1>(altToys[targetIdx]), (std::get<1>(altToys[std::min(int(altToys.size()), targetIdx)]) -
                                                       std::get<1>(altToys[std::max(0, targetIdx)])) /
                                                         2.);
@@ -1877,10 +1920,17 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::pll(bool readOnly)
                      : xRooFit::Asymptotics::CompatFactor(fPllType, fNullVal(), mu_hat().getVal());
    if (cFactor == 0)
       return std::pair<double, double>(0, 0);
-   if (!cfit_null(readOnly) || allowedStatusCodes.find(cfit_null(readOnly)->status()) == allowedStatusCodes.end())
+   auto _cfit_null = cfit_null(readOnly);
+   if (!_cfit_null || allowedStatusCodes.find(_cfit_null->status()) == allowedStatusCodes.end())
       return std::pair<double, double>(std::numeric_limits<double>::quiet_NaN(), 0);
    // std::cout << cfit->minNll() << ":" << cfit->edm() << " " << ufit->minNll() << ":" << ufit->edm() << std::endl;
-   return std::pair<double, double>(2. * cFactor * (cfit_null(readOnly)->minNll() - _ufit->minNll()),
+   double diff = _cfit_null->minNll() - _ufit->minNll();
+   if (diff < 0) {
+      // use edm to attempt a small correction to the diff, i.e. assume edm is an additional correction required to
+      // minNll
+      diff += (_ufit->edm() - _cfit_null->edm());
+   }
+   return std::pair<double, double>(2. * cFactor * diff,
                                     2. * cFactor * sqrt(pow(cfit_null(readOnly)->edm(), 2) + pow(_ufit->edm(), 2)));
    // return 2.*cFactor*(cfit->minNll()+cfit->edm() - ufit->minNll()+ufit->edm());
 }
@@ -2409,7 +2459,7 @@ size_t xRooNLLVar::xRooHypoPoint::addToys(bool alt, int nToys, int initialSeed, 
             std::cout << "..." << std::flush;
             lasti = altToysAdded + toysAdded;
             s.Reset();
-            if(!gROOT->IsBatch()) {
+            if (!gROOT->IsBatch()) {
                Draw();
                if (gPad) {
                   gPad->Update();
@@ -2462,7 +2512,7 @@ size_t xRooNLLVar::xRooHypoPoint::addToys(bool alt, int nToys, int initialSeed, 
       }
       std::cout << "toys " << TString::Format("[%.2f toys/s overall]", double(toysAdded + altToysAdded) / s2.RealTime())
                 << std::endl;
-      if(!gROOT->IsBatch()) {
+      if (!gROOT->IsBatch()) {
          Draw();
          if (gPad) {
             gPad->Update();
@@ -2707,7 +2757,7 @@ void xRooNLLVar::xRooHypoPoint::Draw(Option_t *opt)
       _max = std::max(std::get<1>(p), _max);
    }
 
-   auto obs = pll();
+   auto obs = ts_asymp();
    if (!std::isnan(obs.first)) {
       _min = std::min(obs.first - std::abs(obs.first) * 0.1, _min);
       _max = std::max(obs.first + std::abs(obs.first) * 0.1, _max);
@@ -2715,12 +2765,17 @@ void xRooNLLVar::xRooHypoPoint::Draw(Option_t *opt)
    // these are used down below to add obs p-values to legend, but up here because can trigger fits that create asimov
    auto pNull = pNull_toys();
    auto pAlt = pAlt_toys();
-   auto pNullA = pNull_asymp();
-   auto pAltA = pAlt_asymp();
+   auto pNullA = (fPllType == xRooFit::Asymptotics::Unknown)
+                    ? std::pair(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN())
+                    : pNull_asymp();
+   auto pAltA = (fPllType == xRooFit::Asymptotics::Unknown)
+                   ? std::pair(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN())
+                   : pAlt_asymp();
    sigma_mu(true);
-   auto asi = (fAsimov && fAsimov->fUfit && fAsimov->fNull_cfit) ? fAsimov->pll().first
-                                                                 : std::numeric_limits<double>::quiet_NaN();
-   if (!std::isnan(asi) && asi > 0 && fPllType != xRooFit::Asymptotics::Unknown) {
+   auto asi = (fPllType != xRooFit::Asymptotics::Unknown && fAsimov && fAsimov->fUfit && fAsimov->fNull_cfit)
+                 ? fAsimov->pll().first
+                 : std::numeric_limits<double>::quiet_NaN();
+   if (!std::isnan(asi) && asi > 0) {
       // can calculate asymptotic distributions,
       _min = std::min(asi - std::abs(asi), _min);
       _max = std::max(asi + std::abs(asi), _max);
@@ -2950,20 +3005,44 @@ double xRooNLLVar::xRooHypoPoint::fAltVal()
    return (first_poi == nullptr) ? std::numeric_limits<double>::quiet_NaN() : first_poi->getVal();
 }
 
-xRooNLLVar::xRooHypoSpace xRooNLLVar::hypoSpace(const char *parName, int nPoints, double low, double high,
-                                                double alt_value, const xRooFit::Asymptotics::PLLType &pllType)
+void xRooNLLVar::xRooHypoPoint::setNullVal(double val)
 {
-   if (nPoints < 0) {
-      // catches case where pyROOT has converted TestStatistic enum to int
-      int tsType = nPoints;
-      double alt_val = std::numeric_limits<double>::quiet_NaN();
-      if (tsType == xRooFit::TestStatistic::qmutilde || tsType == xRooFit::TestStatistic::qmu) {
-         alt_val = 0;
-      } else if (tsType == xRooFit::TestStatistic::q0 || tsType == xRooFit::TestStatistic::uncappedq0) {
-         alt_val = 1;
+   auto first_poi = dynamic_cast<RooAbsRealLValue *>(poi().first());
+   if (!first_poi) {
+      throw std::runtime_error("HypoPoint has no POI, cannot set null value");
+   }
+   first_poi->setVal(val);
+}
+void xRooNLLVar::xRooHypoPoint::setAltVal(double val)
+{
+   auto first_poi = dynamic_cast<RooAbsArg *>(poi().first());
+   if (!first_poi) {
+      throw std::runtime_error("HypoPoint has no POI, cannot set alt value");
+   }
+   first_poi->setStringAttribute("altVal", TString::Format("%g", val).Data());
+}
+
+xRooNLLVar::xRooHypoSpace xRooNLLVar::hypoSpace(const char *parName, int nPoints, double low, double high,
+                                                double alt_value, const xRooFit::Asymptotics::PLLType &pllType,
+                                                int tsType)
+{
+   if (nPoints < 0 || tsType < 0) {
+      // nPoints<0 catches case where pyROOT has converted TestStatistic enum to int
+      if (nPoints < 0) {
+         tsType = nPoints;
+         nPoints = int(low + 0.5);
+         low = high;
+         high = alt_value;
+      }
+      if (alt_value == std::numeric_limits<double>::quiet_NaN()) {
+         if (tsType == xRooFit::TestStatistic::qmutilde || tsType == xRooFit::TestStatistic::qmu) {
+            alt_value = 0;
+         } else if (tsType == xRooFit::TestStatistic::q0 || tsType == xRooFit::TestStatistic::uncappedq0) {
+            alt_value = 1;
+         }
       }
 
-      auto out = hypoSpace(parName, pllType, alt_val);
+      auto out = hypoSpace(parName, pllType, alt_value);
 
       // TODO: things like the physical range and alt value can't be stored on the poi
       // because if they change they will change for all hypoSpaces at once, so cannot have
@@ -2975,8 +3054,7 @@ xRooNLLVar::xRooHypoSpace xRooNLLVar::hypoSpace(const char *parName, int nPoints
             Info("xRooNLLVar::hypoSpace", "Setting physical range of %s to [0,inf]", p->GetName());
          } else if (dynamic_cast<RooRealVar *>(p)->hasRange("physical")) {
             dynamic_cast<RooRealVar *>(p)->removeRange("physical");
-            Info("xRooNLLVar::hypoSpace", "Removing physical range of %s",
-                 p->GetName());
+            Info("xRooNLLVar::hypoSpace", "Removing physical range of %s", p->GetName());
          }
       }
 
@@ -2989,13 +3067,12 @@ xRooNLLVar::xRooHypoSpace xRooNLLVar::hypoSpace(const char *parName, int nPoints
          out.fTestStatType = xRooFit::Asymptotics::OneSidedNegative;
       }
 
-      // in this case the arguments are shifted over by one
-      if (int(low + 0.5) > 0) {
-         out.AddPoints(parName, int(low + 0.5), high, alt_value);
+      if (nPoints > 0) {
+         out.AddPoints(parName, nPoints, low, high);
       } else {
-         if (!std::isnan(high) && !std::isnan(alt_value) && !(std::isinf(high) && std::isinf(alt_value))) {
+         if (!std::isnan(low) && !std::isnan(high) && !(std::isinf(low) && std::isinf(high))) {
             for (auto p : out.poi()) {
-               dynamic_cast<RooRealVar *>(p)->setRange("scan", high, alt_value);
+               dynamic_cast<RooRealVar *>(p)->setRange("scan", low, high);
             }
          }
       }
@@ -3066,22 +3143,25 @@ RooStats::HypoTestResult xRooNLLVar::xRooHypoPoint::result()
       nllVar->get()->setAttribute("readOnly");
    }
 
-   auto ts_obs = ts_asymp();
-
-   out.SetTestStatisticData(ts_obs.first);
+   out.SetTestStatisticData(ts_asymp().first);
 
    // build a ds to hold all fits ... store coords in the globs list of the nullDist
    // also need to store at least mu_hat value(s)
    RooArgList fitDetails;
    RooArgList fitMeta;
-   fitMeta.addClone(RooCategory(
-      "pllType", "test statistic type",
-      {{"TwoSided", 0}, {"OneSidedPositive", 1}, {"OneSidedNegative", 2}, {"Uncapped", 3}, {"Unknown", 4}}));
+   fitMeta.addClone(RooCategory("pllType", "test statistic type",
+                                {{"TwoSided", 0},
+                                 {"OneSidedPositive", 1},
+                                 {"OneSidedNegative", 2},
+                                 {"OneSidedAbsolute", 3},
+                                 {"Uncapped", 4},
+                                 {"Unknown", 5}}));
    if (ufit()) {
       fitMeta.addClone(ufit()->floatParsFinal());
    }
    fitMeta.setCatIndex("pllType", int(fPllType));
    fitMeta.addClone(RooRealVar("isExpected", "isExpected", int(isExpected)));
+   fitMeta.addClone(RooRealVar("obs_ts_err", "obs_ts_err", obs_ts_err));
    fitDetails.addClone(RooCategory("type", "fit type",
                                    {{"ufit", 0},
                                     {"cfit_null", 1},
@@ -3200,7 +3280,7 @@ RooStats::HypoTestResult xRooNLLVar::xRooHypoPoint::result()
          pAlt_toys().second); // overrides binomial error used in SamplingDistribution::IntegralAndError
 #endif
 
-   } else {
+   } else if (fPllType != xRooFit::Asymptotics::Unknown) {
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
       out.fAlternatePValue = pAlt_asymp().first;
       out.fAlternatePValueError = pAlt_asymp().second;

@@ -24,7 +24,8 @@
       #ifndef _USE_MATH_DEFINES
          #define _USE_MATH_DEFINES
       #endif
-      #include <math.h>
+      #include <math.h> // for M_PI
+      // TODO once minimum standard is C++20: replace with std::numbers::pi and remove this codeblock
       #undef _USE_MATH_DEFINES
    #endif
    #define _VECOPS_USE_EXTERN_TEMPLATES false
@@ -3238,6 +3239,274 @@ RVec<typename RVec<T>::size_type> Enumerate(const RVec<T> &v)
    return ret;
 }
 
+/**
+ * \brief Produce RVec with N evenly-spaced entries from start to end.
+ *
+ * This function generates a vector of evenly spaced values, starting at \p start and (depending on the
+ * \p endpoint parameter) either including or excluding \p end. If \p endpoint is true (default),
+ * the vector contains \p n values with \p end as the final element, and the spacing is computed as
+ * \f$\text{step} = \frac{\text{end} - \text{start}}{n-1}\f$. If \p endpoint is false,
+ * the sequence consists of n values computed as if there were n+1 evenly spaced samples, with the final
+ * value (\p end) omitted; in this case, \f$\text{step} = \frac{\text{end} - \text{start}}{n}\f$.
+ *
+ * The function is templated to allow for different return types. The return type \c Ret_t, if
+ * not explicitly specified, is determined as follows: if \p T is a floating point type, that type is used;
+ * otherwise, the return type is \c double.
+ *
+ * \tparam T Type of the start and end value. Default is double.
+ * \tparam Ret_t Return type used, which, if not explicitly specified
+ * in the template, is \p T if that is a floating point type, or double otherwise.
+ *
+ * \param start The first value in the sequence.
+ * \param end The last value in the sequence if \p endpoint is true; otherwise, \p end is excluded.
+ * \param n The number of evenly spaced entries to produce. The default value is 128, which is different than numpy's default value of 50.
+ * \param endpoint If true (default), \p end is included as the final element; if false, \p end is excluded.
+ *
+ * \return A vector (RVec<Ret_t>) containing \p n evenly spaced values.
+ *
+ * \note If \p n is 1, the resulting vector will contain only the value \p start.
+ * \note The check `if (!n || (n > std::numeric_limits<long long>::max()))` is used to ensure that:
+ *   - division by zero is avoided when calculating `step`
+ *   - n does not exceed std::numeric_limits<long long>::max(), which would indicate that a negative range (or other arithmetic issue)
+ *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
+ *     amount of memory.
+ * \note If the template parameter \c Ret_t is explicitly overridden with an integral type, the returned results are rounded towards negative (std::floor) and then cast to the integer type. This is equivalent to setting `dtype = int` in numpy.linspace. To cast to integer without rounding, use instead `RVec<integral_type>(Linspace(...))`, which would be equivalent to `np.linspace(...).astype(integral_type)` in numpy.
+ *
+ * \par C++23 Enumerate Support:
+ * With C++23, you can use the range-based enumerate view to iterate over the resulting vector with both the index
+ * and the value, similar to Python's `enumerate`. For example:
+ * ~~~{.cpp}
+ * for (auto const [index, val] : std::views::enumerate(ROOT::VecOps::Linspace(6, 10, 16))) {
+ *     // Process index and val.
+ * }
+ * ~~~
+ *
+ * \par Example code, at the ROOT prompt:
+ * ~~~{.cpp}
+ * using namespace ROOT::VecOps;
+ * cout << Linspace(-1, 5, 5) << "\n";
+ * // { -1, 0.5, 2, 3.5, 5 }
+ * cout << Linspace(3, 12, 5) << "\n";
+ * // { 3, 5.25, 7.5, 9.75, 12 }
+ * cout << Linspace(3, 12, 5, false) << "\n";
+ * // { 3, 4.8, 6.6, 8.4, 10.2 }
+ * cout << Linspace<int, int>(1, 10, 3) << "\n";
+ * // { 1, 5, 10 }
+ * ~~~
+ */
+template <typename T = double, typename Ret_t = std::conditional_t<std::is_floating_point_v<T>, T, double>>
+inline RVec<Ret_t> Linspace(T start, T end, unsigned long long n = 128, const bool endpoint = true)
+{
+    if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
+    {
+        return {};
+    }
+    
+    long double step = std::is_floating_point_v<Ret_t> ?
+    (end - start) / static_cast<long double>(n - endpoint) :
+    (end >= start ? static_cast<long double>(end - start) / (n - endpoint) : (static_cast<long double>(end) - start) / (n - endpoint));
+        
+    RVec<Ret_t> temp(n);
+    temp[0] = std::is_floating_point_v<Ret_t> ? static_cast<Ret_t>(start) : std::floor(start);
+    if constexpr (std::is_floating_point_v<Ret_t>)
+    {
+        for (unsigned long long i = 1; i < n; i++)
+        {
+            temp[i] = static_cast<Ret_t>(start + i * step);
+        }
+    }
+    else
+    {
+        for (unsigned long long i = 1; i < n; i++)
+        {
+            temp[i] = std::floor(start + i * step);
+        }
+    }
+    return temp;
+}
+
+/**
+ * \brief Produce RVec with n log-spaced entries from base^{start} to base^{end}.
+ *
+ * This function generates a vector of values where the exponents are evenly spaced, and then returns the
+ * corresponding values of base raised to these exponents. If \p endpoint is true (default), the vector
+ * contains \p n values with the last element equal to \f$base^{end}\f$. If \p endpoint is false, the
+ * sequence is computed as if there were n+1 evenly spaced samples over the interval in the exponent space,
+ * and the final value (\f$base^{end}\f$) is excluded, resulting in a sequence of n values.
+ *
+ * The function is templated to allow for different return types. The return type \c Ret_t, if not explicitly specified,
+ * is determined as follows: if \p T is a floating point type, that type is used; otherwise, the return type is \c double.
+ *
+ * \tparam T Type of the start and end exponents and the base. Default is double.
+ * \tparam Ret_t Deduced type used for return type, which, if not explicitly specified, is \p T if that is a floating point type, or double otherwise.
+ *
+ * \param start The exponent corresponding to the first element (i.e., the first element is \f$base^{start}\f$).
+ * \param end The exponent corresponding to the final element if \p endpoint is true; otherwise, \p end is excluded.
+ * \param n The number of log-spaced entries to produce. The default value is 128, which is different than numpy's default value of 50.
+ * \param endpoint If true (default), \f$base^{end}\f$ is included as the final element; if false, \f$base^{end}\f$ is excluded.
+ * \param base The base to be used in the exponentiation (default is 10.0).
+ *
+ * \return A vector (RVec<Ret_t>) containing n log-spaced values.
+ *
+ * \note If \p n is 1, the resulting vector will contain only the value \f$base^{start}\f$.
+ * \note The check `if (!n || (n > std::numeric_limits<long long>::max()))` is used to ensure that:
+ *   - division by zero is avoided when calculating `step`
+ *   - n does not exceed std::numeric_limits<long long>::max(), which would indicate that a negative range (or other arithmetic issue)
+ *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
+ *     amount of memory.
+ * \note If the template parameter \c Ret_t is explicitly overridden with an integral type, the returned results are rounded towards negative (`std::floor`) and then cast to the integer type. This is equivalent to setting `dtype = int` in `numpy.linspace`. To cast to integer without rounding, use instead `RVec<integral_type>(Logspace(...))`, which would be equivalent to `np.logspace(...).astype(integral_type)` in numpy.
+ *
+ * \par C++23 Enumerate Support:
+ * With C++23, you can use the range-based enumerate view to iterate over the resulting vector with both the index
+ * and the value, similar to Python's `enumerate`. For example:
+ * ~~~{.cpp}
+ * for (auto const [index, val] : std::views::enumerate(ROOT::VecOps::Logspace(4, 10, 12))) {
+ *     // Process index and val.
+ * }
+ * ~~~
+ *
+ * \par Example code, at the ROOT prompt:
+ * ~~~{.cpp}
+ * using namespace ROOT::VecOps;
+ * cout << Logspace(4, 10, 12) << '\n';
+ * // { 10000, 35111.9, 123285, 432876, 1.51991e+06, 5.3367e+06, 1.87382e+07, 6.57933e+07, 2.31013e+08, 8.11131e+08, 2.84804e+09, 1e+10 }
+ * cout << Logspace(0, 0, 50) << '\n';
+ * // { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
+ * cout << Logspace(0, 0, 0) << '\n';
+ * // {  }
+ * cout << Logspace(4, 10, 12, 10.0, false) << '\n';
+ * // { 10000, 31622.8, 100000, 316228, 1e+06, 3.16228e+06, 1e+07, 3.16228e+07, 1e+08, 3.16228e+08, 1e+09, 3.16228e+09 }
+ * cout << Logspace<int, int>(1, 5, 3) << '\n';
+ * // { 10, 1000, 100000 }
+ * ~~~
+ */
+template <typename T = double, typename Ret_t = std::conditional_t<std::is_floating_point_v<T>, T, double>>
+inline RVec<Ret_t> Logspace(T start, T end, unsigned long long n = 128, const bool endpoint = true, T base = 10.0)
+{
+    if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
+    {
+        return {};
+    }
+    RVec<Ret_t> temp(n);
+    
+    long double start_c = start;
+    long double end_c   = end;
+    long double base_c  = base;
+    
+    long double step = (end_c - start_c) / (n - endpoint);
+    
+    temp[0] = std::is_floating_point_v<Ret_t> ?
+    static_cast<Ret_t>(std::pow(base_c, start_c)) :
+    std::floor(std::pow(base_c, start_c));
+     
+    if constexpr (std::is_floating_point_v<Ret_t>)
+    {
+        for (unsigned long long i = 1; i < n; i++)
+        {
+            auto exponent = start_c + i * step;
+            temp[i] = static_cast<Ret_t>(std::pow(base_c, exponent));
+        }
+    }
+    else
+    {
+        for (unsigned long long i = 1; i < n; i++)
+        {
+            auto exponent = start_c + i * step;
+            temp[i] = std::floor(std::pow(base_c, exponent));
+        }
+    }
+     
+    return temp;
+}
+
+/**
+ * \brief Produce RVec with entries in the range [start, end) in increments of step.
+ *
+ * This function generates a vector of values starting at \p start and incremented by \p step,
+ * continuing until the values reach or exceed \p end (the interval is half-open: [start, end)).
+ * The number of elements is computed as:
+ * \f[
+ * n = \lceil \frac{\text{end} - \text{start}}{\text{step}} \rceil
+ * \f]
+ * ensuring that the arithmetic is performed in a floating-point context when needed.
+ *
+ * The function is templated to allow for different return types. The return type \c Ret_t, if not
+ * explicitly specified, is determined as follows: if \p T is a floating point type, that type is used;
+ * otherwise, the return type is \c double.
+ *
+ * \tparam T Type of the start, end, and step values. Default is double.
+ * \tparam Ret_t Return type, which, if not explicitly
+ * specified, is \p T if that is a floating point type, or double otherwise.
+ *
+ * \param start The first value in the range.
+ * \param end The end of the range (exclusive).
+ * \param step The increment between consecutive values.
+ *
+ * \return A vector (RVec<Ret_t>) containing values starting at \p start, each incremented by \p step,
+ *         up to but not including any value equal to or greater than \p end.
+ *
+ * \note The check `if (!n || (n > std::numeric_limits<long long>::max()))` is used to ensure that:
+ *   - n is nonzero, and
+ *   - n does not exceed std::numeric_limits<long long>::max(), which would indicate that a negative range (or other arithmetic issue)
+ *     has resulted in an extremely large unsigned value, thereby preventing an attempt to reserve an absurd
+ *     amount of memory.
+ * \note If the template parameter \c Ret_t is explicitly overridden with an integral type, the returned results are rounded towards negative (`std::floor`) and then cast to the integer type. This is equivalent to setting `dtype = int` in numpy. To cast to integer without rounding, use instead `RVec<integral_type>(Arange(...))`, which would be equivalent to `np.arange(...).astype(integral_type)` in numpy.
+ *
+ * \par C++23 Enumerate Support:
+ * With C++23, you can use the range-based enumerate view to iterate over the resulting vector with both the index
+ * and the value, similar to Python's `enumerate`. For example:
+ * ~~~{.cpp}
+ * for (auto const [index, val] : std::views::enumerate(ROOT::VecOps::Arange(1, 13, 5))) {
+ *     // Process index and val.
+ * }
+ * ~~~
+ *
+ * \par Example code, at the ROOT prompt:
+ * ~~~{.cpp}
+ * using namespace ROOT::VecOps;
+ * cout << Arange(0, 0, 5) << '\n';
+ * // {  }
+ * cout << Arange(-7, 20, 4) << '\n';
+ * // { -7, -3, 1, 5, 9, 13, 17 }
+ * cout << Arange(1, 13, 5) << '\n';
+ * // { 1, 6, 11 }
+ * cout << Arange<unsigned int, unsigned int>(5, 9, 1) << '\n';
+ * // { 5, 6, 7, 8 }
+ * ~~~
+ */
+template <typename T = double, typename Ret_t = std::conditional_t<std::is_floating_point_v<T>, T, double>>
+inline RVec<Ret_t> Arange(T start, T end, T step)
+{
+    unsigned long long n = std::ceil(( end >= start ? (end - start) : static_cast<long double>(end)-start)/static_cast<long double>(step)); // Ensure floating-point division.
+    
+    if (!n || (n > std::numeric_limits<long long>::max())) // Check for invalid or absurd n.
+    {
+        return {};
+    }
+    
+    RVec<Ret_t> temp(n);
+    
+    long double start_c = start;
+    long double step_c = step;
+
+    temp[0] = std::is_floating_point_v<Ret_t> ? static_cast<Ret_t>(start) : std::floor(start);
+    if constexpr (std::is_floating_point_v<Ret_t>)
+    {
+        for (unsigned long long i = 1; i < n; i++)
+        {
+            temp[i] = static_cast<Ret_t>(start_c + i * step_c);
+        }
+    }
+    else
+    {
+        for (unsigned long long i = 1; i < n; i++)
+        {
+            temp[i] = std::floor(start_c + i * step_c);
+        }
+    }
+    return temp;
+}
+
 /// Produce RVec with entries starting from 0, and incrementing by 1 until a user-specified N is reached.
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
@@ -3304,6 +3573,8 @@ inline RVec<long long int> Range(long long int begin, long long int end, long lo
    }
    return ret;
 }
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a RVec at the prompt:

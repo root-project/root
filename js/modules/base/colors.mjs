@@ -66,7 +66,7 @@ function createRootColors() {
       const s = entry.s;
       for (let n = 0; n < s.length; n += 6) {
          const num = entry.n + n / 6;
-         colorMap[num] = conv(s.slice(n, n+6));
+         colorMap[num] = conv(s.slice(n, n + 6));
       }
    });
 
@@ -105,12 +105,14 @@ function getRGBfromTColor(col) {
 function getGrayColors(rgb_array) {
    const gray_colors = [];
 
-   if (!rgb_array) rgb_array = getRootColors();
+   if (!rgb_array)
+      rgb_array = getRootColors();
 
    for (let n = 0; n < rgb_array.length; ++n) {
-      if (!rgb_array[n]) continue;
+      if (!rgb_array[n])
+         continue;
       const rgb = d3_color(rgb_array[n]),
-            gray = 0.299*rgb.r + 0.587*rgb.g + 0.114*rgb.b;
+            gray = 0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b;
       rgb.r = rgb.g = rgb.b = gray;
       gray_colors[n] = rgb.formatRgb();
    }
@@ -127,7 +129,8 @@ function extendRootColors(jsarr, objarr, grayscale) {
          jsarr[n] = gbl_colors_list[n];
    }
 
-   if (!objarr) return jsarr;
+   if (!objarr)
+      return jsarr;
 
    let rgb_array = objarr;
    if (objarr._typename && objarr.arr) {
@@ -176,7 +179,8 @@ function getColor(indx) {
   * @return Color index or -1 if fails
   * @private */
 function findColor(name) {
-   if (!name) return -1;
+   if (!name)
+      return -1;
    for (let indx = 0; indx < gbl_colors_list.length; ++indx) {
       if (gbl_colors_list[indx] === name)
          return indx;
@@ -187,15 +191,23 @@ function findColor(name) {
 /** @summary Add new color
   * @param {string} rgb - color name or just string with rgb value
   * @param {array} [lst] - optional colors list, to which add colors
+  * @param {array} [lst] - optional colors list, to which add colors
   * @return {number} index of new color
   * @private */
-function addColor(rgb, lst) {
-   if (!lst) lst = gbl_colors_list;
+function addColor(rgb, lst, indx) {
+   if (!lst)
+      lst = gbl_colors_list;
 
    if ((rgb[0] === '#') && (isNodeJs() || (isBatchMode() && settings.ApproxTextSize)))
       rgb = d3_color(rgb).formatRgb();
 
-   const indx = lst.indexOf(rgb);
+   if (indx !== undefined) {
+      if (Number.isInteger(indx) && (indx > 0))
+         lst[indx] = rgb;
+      return indx;
+   }
+
+   indx = lst.indexOf(rgb);
    if (indx >= 0)
       return indx;
    lst.push(rgb);
@@ -219,7 +231,7 @@ class ColorPalette {
    calcColorIndex(i, len) {
       const plen = this.palette.length, theColor = Math.floor((i + 0.99) * plen / (len - 1));
       return (theColor > plen - 1) ? plen - 1 : theColor;
-    }
+   }
 
    /** @summary Returns color with provided index */
    getColor(indx) { return this.palette[indx]; }
@@ -234,18 +246,23 @@ class ColorPalette {
 
 function createDefaultPalette(grayscale) {
    const hue2rgb = (p, q, t) => {
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      if (t < 1 / 6) return p + (q - p) * 6 * t;
-      if (t < 1 / 2) return q;
-      if (t < 2 / 3) return p + (q - p) * (2/3 - t) * 6;
+      if (t < 0)
+         t += 1;
+      if (t > 1)
+         t -= 1;
+      if (t < 1 / 6)
+         return p + (q - p) * 6 * t;
+      if (t < 1 / 2)
+         return q;
+      if (t < 2 / 3)
+         return p + (q - p) * (2 / 3 - t) * 6;
       return p;
    }, HLStoRGB = (h, l, s) => {
       const q = (l < 0.5) ? l * (1 + s) : l + s - l * s,
             p = 2 * l - q,
-            r = hue2rgb(p, q, h + 1/3),
+            r = hue2rgb(p, q, h + 1 / 3),
             g = hue2rgb(p, q, h),
-            b = hue2rgb(p, q, h - 1/3);
+            b = hue2rgb(p, q, h - 1 / 3);
       return toColor(r, g, b);
    }, minHue = 0, maxHue = 280, maxPretty = 50, palette = [];
    for (let i = 0; i < maxPretty; ++i) {
@@ -258,7 +275,7 @@ function createDefaultPalette(grayscale) {
 function createGrayPalette() {
    const palette = [];
    for (let i = 0; i < 50; ++i) {
-      const code = toDec((i+2)/60);
+      const code = toDec((i + 2) / 60);
       palette.push(`rgb(${code}, ${code}, ${code})`);
    }
    return new ColorPalette(palette);
@@ -291,7 +308,11 @@ function getColorPalette(id, grayscale) {
       // Inverted Dark Body Radiator
       case 56: rgb = [[242,234,237,230,212,156,99,45,0],[243,238,238,168,101,45,0,0,0],[230,95,11,8,9,3,1,1,0]]; break;
       // Bird (default, keep float for backward compatibility)
-      case 57: rgb = [[53.091,15.096,19.89,5.916,45.951,135.1755,208.743,253.878,248.982],[42.432,91.7745,128.5455,163.6845,183.039,191.046,186.864,200.481,250.716],[134.9715,221.442,213.8175,201.807,163.8375,118.881,89.2245,50.184,13.7445]]; break;
+      case 57:
+         rgb = [[53.091,15.096,19.89,5.916,45.951,135.1755,208.743,253.878,248.982],
+                [42.432,91.7745,128.5455,163.6845,183.039,191.046,186.864,200.481,250.716],
+                [134.9715,221.442,213.8175,201.807,163.8375,118.881,89.2245,50.184,13.7445]];
+         break;
       // Cubehelix
       case 58: rgb = [[0,24,2,54,176,236,202,194,255],[0,29,92,129,117,120,176,236,255],[0,68,80,34,57,172,252,245,255]]; break;
       // Green Red Violet
@@ -412,16 +433,16 @@ function getColorPalette(id, grayscale) {
 
    for (let g = 1; g < stops.length; g++) {
       // create the colors...
-      const nColorsGradient = Math.round(Math.floor(NColors*stops[g]) - Math.floor(NColors*stops[g-1]));
+      const nColorsGradient = Math.round(Math.floor(NColors * stops[g]) - Math.floor(NColors * stops[g - 1]));
       for (let c = 0; c < nColorsGradient; c++) {
-         const col = 'rgb(' + toDec(Red[g-1] + c * (Red[g] - Red[g-1]) / nColorsGradient, 1) + ', ' +
-                              toDec(Green[g-1] + c * (Green[g] - Green[g-1]) / nColorsGradient, 1) + ', ' +
-                              toDec(Blue[g-1] + c * (Blue[g] - Blue[g-1]) / nColorsGradient, 1) + ')';
+         const col = 'rgb(' + toDec(Red[g - 1] + c * (Red[g] - Red[g - 1]) / nColorsGradient, 1) + ', ' +
+                              toDec(Green[g - 1] + c * (Green[g] - Green[g - 1]) / nColorsGradient, 1) + ', ' +
+                              toDec(Blue[g - 1] + c * (Blue[g] - Blue[g - 1]) / nColorsGradient, 1) + ')';
          palette.push(col);
       }
-    }
+   }
 
-    return new ColorPalette(palette, grayscale);
+   return new ColorPalette(palette, grayscale);
 }
 
 
@@ -434,34 +455,37 @@ function decodeWebCanvasColors(oper) {
       const name = arr[n];
       let p = name.indexOf(':');
       if (p > 0) {
-         const col = `rgb(${name.slice(p+1)})`;
+         const col = `rgb(${name.slice(p + 1)})`;
          colors[parseInt(name.slice(0, p))] = convert_rgb ? d3_color(col).formatRgb() : col;
          continue;
       }
       p = name.indexOf('=');
       if (p > 0) {
-         let col = `rgba(${name.slice(p+1)})`;
+         let col = `rgba(${name.slice(p + 1)})`;
          if (convert_rgb) {
             col = d3_color(col);
-            col.opacity = (Math.round(col.opacity*255) / 255).toFixed(2);
+            col.opacity = (Math.round(col.opacity * 255) / 255).toFixed(2);
             col = col.formatRgb();
          }
          colors[parseInt(name.slice(0, p))] = col;
          continue;
       }
       p = name.indexOf('#');
-      if (p < 0) continue;
+      if (p < 0)
+         continue;
 
       const colindx = parseInt(name.slice(0, p)),
-            data = JSON.parse(name.slice(p+1)),
+            data = JSON.parse(name.slice(p + 1)),
             grad = { _typename: data[0] === 10 ? clTLinearGradient : clTRadialGradient, fNumber: colindx, fType: data[0] };
 
       let cnt = 1;
 
       grad.fCoordinateMode = Math.round(data[cnt++]);
       const nsteps = Math.round(data[cnt++]);
-      grad.fColorPositions = data.slice(cnt, cnt + nsteps); cnt += nsteps;
-      grad.fColors = data.slice(cnt, cnt + 4*nsteps); cnt += 4*nsteps;
+      grad.fColorPositions = data.slice(cnt, cnt + nsteps);
+      cnt += nsteps;
+      grad.fColors = data.slice(cnt, cnt + 4 * nsteps);
+      cnt += 4 * nsteps;
       grad.fStart = { fX: data[cnt++], fY: data[cnt++] };
       grad.fEnd = { fX: data[cnt++], fY: data[cnt++] };
       if (grad._typename === clTRadialGradient && cnt < data.length) {

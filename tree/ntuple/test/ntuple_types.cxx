@@ -47,8 +47,9 @@ TEST(RNTuple, EnumBasics)
    EXPECT_EQ(kCustomEnumVal, reader->GetModel().GetDefaultEntry().GetPtr<std::vector<CustomEnum>>("ve")->at(1));
 }
 
-using EnumClassInts = ::testing::Types<CustomEnumInt8, CustomEnumUInt8, CustomEnumInt16, CustomEnumUInt16,
-                                       CustomEnumInt32, CustomEnumUInt32, CustomEnumInt64, CustomEnumUInt64>;
+using EnumClassInts =
+   ::testing::Types<CustomEnumBool, CustomEnumInt8, CustomEnumUInt8, CustomEnumInt16, CustomEnumUInt16, CustomEnumInt32,
+                    CustomEnumUInt32, CustomEnumInt64, CustomEnumUInt64>;
 
 template <typename EnumT>
 class EnumClass : public ::testing::Test {
@@ -586,8 +587,9 @@ TEST(RNTuple, StdMap)
    EXPECT_THROW(RFieldBase::Create("myInvalidMap", "std::map<char, std::string, int>").Unwrap(), ROOT::RException);
 
    auto invalidInnerField = RFieldBase::Create("someIntField", "int").Unwrap();
-   EXPECT_THROW(std::make_unique<ROOT::RMapField>("myInvalidMap", "std::map<char, int>", std::move(invalidInnerField)),
-                ROOT::RException);
+   EXPECT_THROW(
+      std::make_unique<ROOT::RMapField>("myInvalidMap", ROOT::RMapField::EMapType::kMap, std::move(invalidInnerField)),
+      ROOT::RException);
 
    FileRaii fileGuard("test_ntuple_rfield_stdmap.root");
    {
@@ -1667,8 +1669,7 @@ TEST(RNTuple, Casting)
       auto reader = RNTupleReader::Open(std::move(modelB), "ntuple", fileGuard.GetPath());
       FAIL() << "should not be able to cast int to float";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("On-disk column types"));
-      EXPECT_THAT(err.what(), testing::HasSubstr("cannot be matched"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("unexpected on-disk type name"));
    }
 
    auto modelC = RNTupleModel::Create();
@@ -2055,6 +2056,9 @@ TEST(RNTuple, TClassStlDerived)
 
 TEST(RNTuple, TVirtualCollectionProxy)
 {
+   // Unsupported stdlib collections should throw
+   EXPECT_THROW(ROOT::RFieldBase::Create("l", "std::list<int>").Unwrap(), ROOT::RException);
+
    SimpleCollectionProxy<StructUsingCollectionProxy<char>> proxyC;
    // Exposing as a non-vector forces iteration over collection elements in `ReadGlobalImpl()`
    SimpleCollectionProxy<StructUsingCollectionProxy<float>, ROOT::kSTLdeque> proxyF;

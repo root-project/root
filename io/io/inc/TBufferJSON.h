@@ -45,7 +45,9 @@ public:
      kSameSuppression = 20,          ///< zero suppression plus compress many similar values together
      kBase64          = 30,          ///< all binary arrays will be compressed with base64 coding, supported by JSROOT
 
-     kSkipTypeInfo  = 100            ///< do not store typenames in JSON
+     kSkipTypeInfo  = 100,           ///< do not store typenames in JSON
+
+     kStoreInfNaN = 1000             ///< explicitly store special float numbers as strings ("inf", "nan")
    };
 
    TBufferJSON(TBuffer::EMode mode = TBuffer::kWrite);
@@ -76,6 +78,8 @@ public:
    {
       return ConvertToJSON(obj, TClass::GetClass<T>(), compact, member_name);
    }
+
+   static TString zipJSON(const char *json);
 
    template <class T>
    static Bool_t FromJSON(T *&obj, const char *json)
@@ -325,6 +329,7 @@ protected:
    Int_t fArrayCompact{0};             ///<!  0 - no array compression, 1 - exclude leading/trailing zeros, 2 - check value repetition
    TString fArraySepar;                ///<!  depending from compression level, ", " or ","
    TString fNumericLocale;             ///<!  stored value of setlocale(LC_NUMERIC), which should be recovered at the end
+   Bool_t fStoreInfNaN{kFALSE};        ///<! when true, store inf and nan as string, this is not portable for other JSON readers
    TString fTypeNameTag;               ///<! JSON member used for storing class name, when empty - no class name will be stored
    TString fTypeVersionTag;            ///<! JSON member used to store class version, default empty
    std::vector<const TClass *> fSkipClasses; ///<! list of classes, which class info is not stored

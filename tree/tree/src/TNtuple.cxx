@@ -20,7 +20,6 @@
 
 #include <string>
 
-ClassImp(TNtuple);
 
 /** \class TNtuple
 \ingroup tree

@@ -19,7 +19,6 @@
 
 #include "Minuit2/FCNAdapter.h"
 #include "Minuit2/FumiliFCNAdapter.h"
-#include "Minuit2/FCNGradAdapter.h"
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/MnMigrad.h"
 #include "Minuit2/MnMinos.h"
@@ -82,14 +81,13 @@ int ControlPrintLevel()
 void RestoreGlobalPrintLevel(int) {}
 #endif
 
-Minuit2Minimizer::Minuit2Minimizer(ROOT::Minuit2::EMinimizerType type)
-   : fDim(0), fMinimizer(nullptr), fMinuitFCN(nullptr), fMinimum(nullptr)
+Minuit2Minimizer::Minuit2Minimizer(ROOT::Minuit2::EMinimizerType type) : fDim(0)
 {
    // Default constructor implementation depending on minimizer type
    SetMinimizerType(type);
 }
 
-Minuit2Minimizer::Minuit2Minimizer(const char *type) : fDim(0), fMinimizer(nullptr), fMinuitFCN(nullptr), fMinimum(nullptr)
+Minuit2Minimizer::Minuit2Minimizer(const char *type) : fDim(0)
 {
    // constructor from a string
 
@@ -117,49 +115,31 @@ void Minuit2Minimizer::SetMinimizerType(ROOT::Minuit2::EMinimizerType type)
    // Set  minimizer algorithm type
    fUseFumili = false;
    switch (type) {
-   case ROOT::Minuit2::kMigrad:
-      // std::cout << "Minuit2Minimizer: minimize using MIGRAD " << std::endl;
-      SetMinimizer(new ROOT::Minuit2::VariableMetricMinimizer());
-      return;
+   case ROOT::Minuit2::kMigrad: fMinimizer = std::make_unique<ROOT::Minuit2::VariableMetricMinimizer>(); return;
    case ROOT::Minuit2::kMigradBFGS:
-      // std::cout << "Minuit2Minimizer: minimize using MIGRAD " << std::endl;
-      SetMinimizer(new ROOT::Minuit2::VariableMetricMinimizer(VariableMetricMinimizer::BFGSType()));
+      fMinimizer = std::make_unique<ROOT::Minuit2::VariableMetricMinimizer>(VariableMetricMinimizer::BFGSType());
       return;
-   case ROOT::Minuit2::kSimplex:
-      // std::cout << "Minuit2Minimizer: minimize using SIMPLEX " << std::endl;
-      SetMinimizer(new ROOT::Minuit2::SimplexMinimizer());
-      return;
-   case ROOT::Minuit2::kCombined: SetMinimizer(new ROOT::Minuit2::CombinedMinimizer()); return;
-   case ROOT::Minuit2::kScan: SetMinimizer(new ROOT::Minuit2::ScanMinimizer()); return;
+   case ROOT::Minuit2::kSimplex: fMinimizer = std::make_unique<ROOT::Minuit2::SimplexMinimizer>(); return;
+   case ROOT::Minuit2::kCombined: fMinimizer = std::make_unique<ROOT::Minuit2::CombinedMinimizer>(); return;
+   case ROOT::Minuit2::kScan: fMinimizer = std::make_unique<ROOT::Minuit2::ScanMinimizer>(); return;
    case ROOT::Minuit2::kFumili:
-      SetMinimizer(new ROOT::Minuit2::FumiliMinimizer());
+      fMinimizer = std::make_unique<ROOT::Minuit2::FumiliMinimizer>();
       fUseFumili = true;
       return;
    default:
       // migrad minimizer
-      SetMinimizer(new ROOT::Minuit2::VariableMetricMinimizer());
+      fMinimizer = std::make_unique<ROOT::Minuit2::VariableMetricMinimizer>();
    }
 }
 
-Minuit2Minimizer::~Minuit2Minimizer()
-{
-   // Destructor implementation.
-   if (fMinimizer)
-      delete fMinimizer;
-   if (fMinuitFCN)
-      delete fMinuitFCN;
-   if (fMinimum)
-      delete fMinimum;
-}
+Minuit2Minimizer::~Minuit2Minimizer() = default;
 
 void Minuit2Minimizer::Clear()
 {
    // delete the state in case of consecutive minimizations
    fState = MnUserParameterState();
    // clear also the function minimum
-   if (fMinimum)
-      delete fMinimum;
-   fMinimum = nullptr;
+   fMinimum.reset();
 }
 
 // set variables
@@ -390,33 +370,40 @@ bool Minuit2Minimizer::GetVariableSettings(unsigned int ivar, ROOT::Fit::Paramet
 void Minuit2Minimizer::SetFunction(const ROOT::Math::IMultiGenFunction &func)
 {
    // set function to be minimized
-   if (fMinuitFCN)
-      delete fMinuitFCN;
+   fMinuitFCN.reset();
    fDim = func.NDim();
    const bool hasGrad = func.HasGradient();
    if (!fUseFumili) {
-      fMinuitFCN = hasGrad ? static_cast<ROOT::Minuit2::FCNBase *>(new ROOT::Minuit2::FCNGradAdapter<ROOT::Math::IMultiGradFunction>(dynamic_cast<ROOT::Math::IMultiGradFunction const&>(func), ErrorDef()))
-                           : static_cast<ROOT::Minuit2::FCNBase *>(new ROOT::Minuit2::FCNAdapter<ROOT::Math::IMultiGenFunction>(func, ErrorDef()));
-   } else {
-      if(hasGrad) {
-         // for Fumili the fit method function interface is required
-         auto fcnfunc = dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(&func);
-         if (!fcnfunc) {
-            MnPrint print("Minuit2Minimizer", PrintLevel());
-            print.Error("Wrong Fit method function for Fumili");
-            return;
-         }
-         fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodGradFunction>(*fcnfunc, fDim, ErrorDef());
-      } else {
-         // for Fumili the fit method function interface is required
-         auto fcnfunc = dynamic_cast<const ROOT::Math::FitMethodFunction *>(&func);
-         if (!fcnfunc) {
-            MnPrint print("Minuit2Minimizer", PrintLevel());
-            print.Error("Wrong Fit method function for Fumili");
-            return;
-         }
-         fMinuitFCN = new ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodFunction>(*fcnfunc, fDim, ErrorDef());
+      auto lambdaFunc = [&func](double const *params) { return func(params); };
+      auto adapter = std::make_unique<ROOT::Minuit2::FCNAdapter>(lambdaFunc, ErrorDef());
+      if (hasGrad) {
+         auto const &gradFunc = dynamic_cast<ROOT::Math::IMultiGradFunction const &>(func);
+         auto lambdaGrad = [&gradFunc](double const *params, double *grad) { return gradFunc.Gradient(params, grad); };
+         adapter->SetGradientFunction(lambdaGrad);
       }
+      fMinuitFCN = std::move(adapter);
+      return;
+   }
+   if (hasGrad) {
+      // for Fumili the fit method function interface is required
+      auto fcnfunc = dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(&func);
+      if (!fcnfunc) {
+         MnPrint print("Minuit2Minimizer", PrintLevel());
+         print.Error("Wrong Fit method function for Fumili");
+         return;
+      }
+      fMinuitFCN = std::make_unique<ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodGradFunction>>(*fcnfunc, fDim,
+                                                                                                        ErrorDef());
+   } else {
+      // for Fumili the fit method function interface is required
+      auto fcnfunc = dynamic_cast<const ROOT::Math::FitMethodFunction *>(&func);
+      if (!fcnfunc) {
+         MnPrint print("Minuit2Minimizer", PrintLevel());
+         print.Error("Wrong Fit method function for Fumili");
+         return;
+      }
+      fMinuitFCN =
+         std::make_unique<ROOT::Minuit2::FumiliFCNAdapter<ROOT::Math::FitMethodFunction>>(*fcnfunc, fDim, ErrorDef());
    }
 }
 
@@ -424,7 +411,7 @@ void Minuit2Minimizer::SetHessianFunction(std::function<bool(std::span<const dou
 {
    // for Fumili not supported for the time being
    if (fUseFumili) return;
-   auto fcn = static_cast<ROOT::Minuit2::FCNGradAdapter<ROOT::Math::IMultiGradFunction> *>(fMinuitFCN);
+   auto fcn = static_cast<ROOT::Minuit2::FCNAdapter *>(fMinuitFCN.get());
    if (!fcn) return;
    fcn->SetHessianFunction(hfunc);
 }
@@ -482,9 +469,7 @@ bool Minuit2Minimizer::Minimize()
    assert(GetMinimizer() != nullptr);
 
    // delete result of previous minimization
-   if (fMinimum)
-      delete fMinimum;
-   fMinimum = nullptr;
+   fMinimum.reset();
 
    const int maxfcn = MaxFunctionCalls();
    const double tol = Tolerance();
@@ -532,7 +517,7 @@ bool Minuit2Minimizer::Minimize()
          std::string fumiliMethod;
          ret = minuit2Opt->GetValue("FumiliMethod", fumiliMethod);
          if (ret) {
-            auto fumiliMinimizer = dynamic_cast<ROOT::Minuit2::FumiliMinimizer*>(fMinimizer);
+            auto fumiliMinimizer = dynamic_cast<ROOT::Minuit2::FumiliMinimizer *>(fMinimizer.get());
             if (fumiliMinimizer)
                fumiliMinimizer->SetMethod(fumiliMethod);
          }
@@ -579,7 +564,7 @@ bool Minuit2Minimizer::Minimize()
    const ROOT::Minuit2::MnStrategy strategy = customizedStrategy(strategyLevel, fOptions);
 
    ROOT::Minuit2::FunctionMinimum min = GetMinimizer()->Minimize(*fMinuitFCN, fState, strategy, maxfcn, tol);
-   fMinimum = new ROOT::Minuit2::FunctionMinimum(min);
+   fMinimum = std::make_unique<ROOT::Minuit2::FunctionMinimum>(min);
 
    // check if Hesse needs to be run. We do it when is requested (IsValidError() == true , set by SetParabError(true) in fitConfig)
    // (IsValidError() means the flag to get correct error from the Minimizer is set (Minimizer::SetValidError())
@@ -849,21 +834,27 @@ double Minuit2Minimizer::Correlation(unsigned int i, unsigned int j) const
    return 0;
 }
 
-double Minuit2Minimizer::GlobalCC(unsigned int i) const
+std::vector<double> Minuit2Minimizer::GlobalCC() const
 {
    // get global correlation coefficient for the parameter i. This is a number between zero and one which gives
    // the correlation between the i-th parameter  and that linear combination of all other parameters which
    // is most strongly correlated with i.
 
-   if (i >= fDim)
-      return 0;
+   std::vector<double> out;
+   MnGlobalCorrelationCoeff globalCC = fState.GlobalCC();
    // no info available when minimization has failed or has some problems
-   if (!fState.HasGlobalCC())
-      return 0;
-   if (fState.Parameter(i).IsFixed() || fState.Parameter(i).IsConst())
-      return 0;
-   unsigned int k = fState.IntOfExt(i);
-   return fState.GlobalCC().GlobalCC()[k];
+   if (!globalCC.IsValid())
+      return out;
+   out.resize(fDim);
+   for (unsigned int i = 0; i < fDim; ++i) {
+      if (fState.Parameter(i).IsFixed() || fState.Parameter(i).IsConst())
+         out[i] = 0;
+      else {
+         unsigned int k = fState.IntOfExt(i);
+         out[i] = globalCC.GlobalCC()[k];
+      }
+   }
+   return out;
 }
 
 bool Minuit2Minimizer::GetMinosError(unsigned int i, double &errLow, double &errUp, int runopt)
@@ -1359,6 +1350,12 @@ void Minuit2Minimizer::SetStorageLevel(int level)
    // set storage level
    if (fMinimizer)
       fMinimizer->Builder().SetStorageLevel(level);
+}
+
+void Minuit2Minimizer::SetFCN(unsigned int nDim, std::unique_ptr<ROOT::Minuit2::FCNBase> fcn)
+{
+   fDim = nDim;
+   fMinuitFCN = std::move(fcn);
 }
 
 } // end namespace Minuit2

@@ -144,14 +144,6 @@ static const char *gSaveMacroTypes[] = {
 
 TList *gListOfHiddenFrames = new TList();
 
-ClassImp(TGFrame);
-ClassImp(TGCompositeFrame);
-ClassImp(TGVerticalFrame);
-ClassImp(TGHorizontalFrame);
-ClassImp(TGMainFrame);
-ClassImp(TGTransientFrame);
-ClassImp(TGGroupFrame);
-ClassImp(TGHeaderFrame);
 
 
 ////////////////////////////////////////////////////////////////////////////////

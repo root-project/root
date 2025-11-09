@@ -28,7 +28,6 @@
 #include <sstream>
 #include <stdexcept>
 
-ClassImp(TColor);
 
 namespace {
    static Bool_t& TColor__GrayScaleMode() {
@@ -3697,9 +3696,15 @@ void TColor::InvertPalette()
 TColorNumber::TColorNumber(std::string const &color)
 {
    using Map = std::unordered_map<std::string, Int_t>;
-   // Color dictionary to define matplotlib conventions
-   static Map colorMap{{"r", kRed},   {"b", kBlue},  {"g", kGreen},   {"y", kYellow},
-                       {"w", kWhite}, {"k", kBlack}, {"m", kMagenta}, {"c", kCyan}};
+   // Color dictionary to define matplotlib conventions and other special colors.
+   // We can't use TColor::GetColorByName() with "kWhite" and "kBlack", as
+   // these are the only identifiers that are an enum values, but there is no
+   // corresponding color with the same name in the global list of colors.
+   // That's why they are looked up in this special map instead.
+   static Map colorMap{
+      {"r", kRed},   {"b", kBlue},    {"g", kGreen}, {"y", kYellow},     {"w", kWhite},
+      {"k", kBlack}, {"m", kMagenta}, {"c", kCyan},  {"kWhite", kWhite}, {"kBlack", kBlack},
+   };
    auto found = colorMap.find(color);
    if (found != colorMap.end()) {
       fNumber = found->second;

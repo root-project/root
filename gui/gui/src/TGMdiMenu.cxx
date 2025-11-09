@@ -46,7 +46,6 @@ This file contains the TGMdiMenuBar class.
 #include <iostream>
 
 
-ClassImp(TGMdiMenuBar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGMdiMenuBar constructor.

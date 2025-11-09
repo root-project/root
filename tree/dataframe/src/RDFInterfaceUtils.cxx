@@ -382,19 +382,6 @@ ColumnNames_t FilterArraySizeColNames(const ColumnNames_t &columnNames, const st
    return columnListWithoutSizeColumns;
 }
 
-std::string ResolveAlias(const std::string &col, const std::map<std::string, std::string> &aliasMap)
-{
-   const auto it = aliasMap.find(col);
-   if (it != aliasMap.end())
-      return it->second;
-
-   // #var is an alias for R_rdf_sizeof_var
-   if (col.size() > 1 && col[0] == '#')
-      return "R_rdf_sizeof_" + col.substr(1);
-
-   return col;
-}
-
 void CheckValidCppVarName(std::string_view var, const std::string &where)
 {
    bool isValid = true;
@@ -937,18 +924,6 @@ std::vector<std::string> GetValidatedArgTypes(const ColumnNames_t &colNames, con
    colTypes.reserve(colNames.size());
    std::transform(colNames.begin(), colNames.end(), std::back_inserter(colTypes), toCheckedArgType);
    return colTypes;
-}
-
-/// Return a bitset each element of which indicates whether the corresponding element in `selectedColumns` is the
-/// name of a column that must be defined via datasource. All elements of the returned vector are false if no
-/// data-source is present.
-std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, const ColumnNames_t &definedCols)
-{
-   const auto nColumns = requestedCols.size();
-   std::vector<bool> mustBeDefined(nColumns, false);
-   for (auto i = 0u; i < nColumns; ++i)
-      mustBeDefined[i] = std::find(definedCols.begin(), definedCols.end(), requestedCols[i]) == definedCols.end();
-   return mustBeDefined;
 }
 
 void CheckForDuplicateSnapshotColumns(const ColumnNames_t &cols)

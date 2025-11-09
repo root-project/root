@@ -29,7 +29,6 @@ The write cache is automatically created when writing a remote file
 #include "TFile.h"
 #include "TFileCacheWrite.h"
 
-ClassImp(TFileCacheWrite);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default Constructor.

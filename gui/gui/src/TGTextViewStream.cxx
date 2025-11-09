@@ -23,7 +23,6 @@ to the text view in a cout-like fashion
 #include "TGTextViewStream.h"
 #include "TSystem.h"
 
-ClassImp(TGTextViewStreamBuf);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGTextViewStreamBuf constructor.

@@ -23,7 +23,6 @@
 #include "TLatex.h"
 #include "strlcpy.h"
 
-ClassImp(TPaveStats);
 
 /** \class TPaveStats
 \ingroup BasicGraphics
@@ -333,7 +332,7 @@ void TPaveStats::SetOption(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Invalid method to change drawing option for stats box
 /// While stats box should never appear in pad list of primitives, this method cannot work
-/// Please use SetOption() method insted
+/// Please use SetOption() method instead
 /// Redefined here to remove **MENU** qualifier and exclude it from context menu
 
 void TPaveStats::SetDrawOption(Option_t *option)
@@ -490,6 +489,7 @@ void TPaveStats::Paint(Option_t *option)
             latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
                                           titlesize,
                                           sl);
+            TAttLine::Modify();
             gPad->PaintLine(x1ref,y2ref-yspace,x2ref,y2ref-yspace);
          }
          delete [] sl;
@@ -532,7 +532,7 @@ void TPaveStats::SavePrimitive(std::ostream &out, Option_t *option)
    if (fBorderSize != 4)
       out << "   ptstats->SetBorderSize(" << fBorderSize << ");\n";
 
-   SaveFillAttributes(out, "ptstats", 19, 1001);
+   SaveFillAttributes(out, "ptstats", -1, -1);
    SaveLineAttributes(out, "ptstats", 1, 1, 1);
    SaveTextAttributes(out, "ptstats", 22, 0, 1, 62, 0);
    SaveLines(out, "ptstats", kTRUE);

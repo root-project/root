@@ -418,7 +418,6 @@ of the chunks holds an array of THnSparseCompactBinCoord and the content
 THnSparse) and passed in at construction time.
 */
 
-ClassImp(THnSparseArrayChunk);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// (Default) initialize a chunk. Takes ownership of cont (~THnSparseArrayChunk deletes it),
@@ -543,7 +542,7 @@ with linear index linidx. A possible call would be
 ## Efficiency
 TH1 and TH2 are generally faster than THnSparse for one and two dimensional
 distributions. THnSparse becomes competitive for a sparsely filled TH3
-with large numbers of bins per dimension. The tutorial sparsehist.C
+with large numbers of bins per dimension. The tutorial \ref hist103_THnSparse_hist.C
 shows the turning point. On a AMD64 with 8GB memory, THnSparse "wins"
 starting with a TH3 with 30 bins per dimension. Using a THnSparse for a
 one-dimensional histogram is only reasonable if it has a huge number of bins.
@@ -581,7 +580,6 @@ retrieve the matching bin.
 */
 
 
-ClassImp(THnSparse);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct an empty THnSparse.
@@ -632,6 +630,44 @@ THnBase(name, title, axes),
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Construct a THnSparse with dim dimensions and unequal binning.
+/// nbins and std::vector xbins are used to describe bin edges for each dimension.
+/// chunksize represents the size of the chunks.
+
+THnSparse::THnSparse(const char *name, const char *title, Int_t dim, const Int_t *nbins,
+                     const std::vector<std::vector<double>> &xbins, Int_t chunksize)
+   : THnBase(name, title, dim, nbins, xbins), fChunkSize(chunksize), fFilledBins(0), fCompactCoord(nullptr)
+{
+   fCompactCoord = new THnSparseCompactBinCoord(dim, nbins);
+   fBinContent.SetOwner();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a THnSparse as a copy of "other"
+
+THnSparse::THnSparse(const THnSparse &other)
+   : THnBase(other),
+     fChunkSize(other.fChunkSize),
+     fFilledBins(other.fFilledBins),
+     fBins(other.fBins),
+     fBinsContinued(other.fBinsContinued),
+     fCompactCoord(nullptr)
+{
+
+   TObjArray *copiedContent = (TObjArray *)other.fBinContent.Clone();
+   fBinContent = *copiedContent;
+   copiedContent->SetOwner(kFALSE);
+   delete copiedContent;
+   fBinContent.SetOwner(kTRUE);
+
+   Int_t dim = other.GetNdimensions();
+   std::vector<Int_t> nbins(dim);
+   for (Int_t i = 0; i < dim; i++)
+      nbins[i] = other.GetAxis(i)->GetNbins();
+
+   fCompactCoord = new THnSparseCompactBinCoord(dim, nbins.data());
+}
+
 /// Destruct a THnSparse
 
 THnSparse::~THnSparse() {

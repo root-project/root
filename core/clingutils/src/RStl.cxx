@@ -17,7 +17,7 @@
 #include "TClingUtils.h"
 using namespace TClassEdit;
 
-#include <stdio.h>
+#include <cstdio>
 
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclTemplate.h"

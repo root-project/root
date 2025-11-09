@@ -246,7 +246,7 @@ struct MinimizerConfig {
    int maxCalls = -1;
    int doOffset = -1;
    int parallelize = 0;
-   bool enableParallelGradient = true;
+   bool enableParallelGradient = false;
    bool enableParallelDescent = false;
    bool timingAnalysis = false;
    const RooArgSet *minosSet = nullptr;
@@ -420,8 +420,7 @@ std::unique_ptr<RooAbsReal> createNLLNew(RooAbsPdf &pdf, RooAbsData &data, std::
 
 } // namespace
 
-namespace RooFit {
-namespace FitHelpers {
+namespace RooFit::FitHelpers {
 
 void defineMinimizationOptions(RooCmdConfig &pc)
 {
@@ -445,11 +444,11 @@ void defineMinimizationOptions(RooCmdConfig &pc)
    pc.defineInt("doSumW2", "SumW2Error", 0, minimizerDefaults.doSumW2);
    pc.defineInt("doAsymptoticError", "AsymptoticError", 0, minimizerDefaults.doAsymptotic);
    pc.defineInt("maxCalls", "MaxCalls", 0, minimizerDefaults.maxCalls);
-   pc.defineInt("doOffset", "OffsetLikelihood", 0, 0);
-   pc.defineInt("parallelize", "Parallelize", 0, 0); // Three parallelize arguments
-   pc.defineInt("enableParallelGradient", "ParallelGradientOptions", 0, 0);
-   pc.defineInt("enableParallelDescent", "ParallelDescentOptions", 0, 0);
-   pc.defineInt("timingAnalysis", "TimingAnalysis", 0, 0);
+   pc.defineInt("doOffset", "OffsetLikelihood", 0, minimizerDefaults.doOffset);
+   pc.defineInt("parallelize", "Parallelize", 0, minimizerDefaults.parallelize); // Three parallelize arguments
+   pc.defineInt("enableParallelGradient", "ParallelGradientOptions", 0, minimizerDefaults.enableParallelGradient);
+   pc.defineInt("enableParallelDescent", "ParallelDescentOptions", 0, minimizerDefaults.enableParallelDescent);
+   pc.defineInt("timingAnalysis", "TimingAnalysis", 0, minimizerDefaults.timingAnalysis);
    pc.defineString("mintype", "Minimizer", 0, minimizerDefaults.minType.c_str());
    pc.defineString("minalg", "Minimizer", 1, minimizerDefaults.minAlg.c_str());
    pc.defineSet("minosSet", "Minos", 0, minimizerDefaults.minosSet);
@@ -807,7 +806,7 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
          nll = std::move(correctedNLL);
       }
 
-      auto nllWrapper = std::make_unique<RooEvaluatorWrapper>(
+      auto nllWrapper = std::make_unique<RooFit::Experimental::RooEvaluatorWrapper>(
          *nll, &data, evalBackend == RooFit::EvalBackend::Value::Cuda, rangeName ? rangeName : "", pdfClone.get(),
          takeGlobalObservablesFromData);
 
@@ -1115,7 +1114,6 @@ std::unique_ptr<RooFitResult> fitTo(RooAbsReal &real, RooAbsData &data, const Ro
    return RooFit::FitHelpers::minimize(real, *nll, data, pc);
 }
 
-} // namespace FitHelpers
-} // namespace RooFit
+} // namespace RooFit::FitHelpers
 
 /// \endcond

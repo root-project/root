@@ -1,7 +1,7 @@
 ///////////////////////////
 //
 // in new root session:
-//     > .x macroFriends.C 
+//     > .x macroFriends.C
 //
 ///////////////////////////
 
@@ -14,7 +14,7 @@
 #include "TTree.h"
 #include "TString.h"
 
-#include <Riostream.h>
+#include <iostream>
 
 
 class MyClass: public TNamed {
@@ -24,7 +24,7 @@ class MyClass: public TNamed {
       TTree   *fTree;
       TTree   *fTreeY;
       TTree   *fTreeZ;
-      
+
    public:
       MyClass() {}
       MyClass(const char *name, const char *title = "test");
@@ -60,14 +60,12 @@ class MyData {
       Double_t GetX()  const {return fX;}
 
 #if !defined (__CINT__) || defined (__MAKECINT__)
-      ClassDefOverride(MyData,1) //MyData
+      ClassDef(MyData,1) //MyData
 #endif
 };
 
 
 #if !defined (__CINT__) || defined (__MAKECINT__)
-ClassImp(MyClass);
-ClassImp(MyData);
 #endif
 
 //______________________________________________________________________________
@@ -106,7 +104,7 @@ void MyClass::CreateTrees(const char *treename, const char *filename)
    TTree *tree = 0;
    TString str = "";
 
-   gRandom->SetSeed();
+   gRandom->SetSeed(111);
    for (Int_t i=0; i<4; i++) {
       str = treename; str += i;
       tree = new TTree(str, "trees");
@@ -133,7 +131,7 @@ void MyClass::AddTree(const char *treename, const char *filename)
 {
    cout << "------MyClass::AddTree------" << endl;
 
-   if (!fFile) fFile = new TFile(filename,"READ"); 
+   if (!fFile) fFile = new TFile(filename,"READ");
 
    if (!fTree) fTree = (TTree*)fFile->Get(treename);
    else        fTree->AddFriend(treename, filename);
@@ -317,7 +315,7 @@ void MyClass::GetTreeZ()
 
 //______________________________________________________________________________
 //______________________________________________________________________________
-void macroFriends()
+void macroFriends2()
 {
    MyClass *myclass = new MyClass("MyClass");
 

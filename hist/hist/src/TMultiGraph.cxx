@@ -33,7 +33,6 @@
 
 extern void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k, Double_t *b);
 
-ClassImp(TMultiGraph);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1595,6 +1594,8 @@ void TMultiGraph::RecursiveRemove(TObject *obj)
 
 void TMultiGraph::SavePrimitive(std::ostream &out, Option_t *option)
 {
+   thread_local Int_t frameNumber = 0;
+
    SavePrimitiveConstructor(out, Class(), "multigraph");
    SavePrimitiveNameTitle(out, "multigraph");
 
@@ -1603,21 +1604,22 @@ void TMultiGraph::SavePrimitive(std::ostream &out, Option_t *option)
    while (auto g = iter())
       g->SavePrimitive(out, TString::Format("multigraph%s", iter.GetOption()).Data());
 
+   if (fHistogram) {
+      TString hname = fHistogram->GetName();
+      fHistogram->SetName(TString::Format("MGraph_histogram%d", ++frameNumber).Data());
+      fHistogram->SavePrimitive(out, "nodraw");
+      out << "   " << fHistogram->GetName() << "->GetXaxis()->SetLimits(" << fHistogram->GetXaxis()->GetXmin() << ", " << fHistogram->GetXaxis()->GetXmax() << ");\n";
+      out << "   multigraph->SetHistogram(" << fHistogram->GetName() << ");\n";
+      out << "   \n";
+      fHistogram->SetName(hname.Data());
+   }
+
    const char *l = strstr(option, "th2poly");
    if (l)
       out << "   " << l + 7 << "->AddBin(multigraph);\n";
    else
       SavePrimitiveDraw(out, "multigraph", option);
 
-   TAxis *xaxis = GetXaxis();
-   TAxis *yaxis = GetYaxis();
-
-   if (xaxis) {
-      out << "   multigraph->GetXaxis()->SetLimits(" << xaxis->GetXmin() << ", " << xaxis->GetXmax() << ");\n";
-      xaxis->SaveAttributes(out, "multigraph", "->GetXaxis()");
-   }
-   if (yaxis)
-      yaxis->SaveAttributes(out, "multigraph", "->GetYaxis()");
    if (fMinimum != -1111)
       out << "   multigraph->SetMinimum(" << fMinimum << ");\n";
    if (fMaximum != -1111)
@@ -1641,6 +1643,16 @@ void TMultiGraph::SetMinimum(Double_t minimum)
 {
    fMinimum = minimum;
    if (fHistogram) fHistogram->SetMinimum(minimum);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set histogram which will be used for axes painting
+
+void TMultiGraph::SetHistogram(TH1F *hist)
+{
+   delete fHistogram;
+   fHistogram = hist;
 }
 
 

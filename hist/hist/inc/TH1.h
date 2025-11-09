@@ -214,17 +214,19 @@ private:
 
       // Compute new bin counts and edges
       std::array<Int_t, kMaxDim> nBins{}, totalBins{};
-      std::array<Double_t, kMaxDim> lowEdge{}, upEdge{};
+      std::array<std::vector<Double_t>, kMaxDim> edges;
       for (decltype(ndim) d = 0; d < ndim; ++d) {
          const auto &axis = (d == 0 ? fXaxis : d == 1 ? fYaxis : fZaxis);
          auto start = std::max(1, args[d * 2]);
          auto end = std::min(axis.GetNbins() + 1, args[d * 2 + 1]);
          nBins[d] = end - start;
-         lowEdge[d] = axis.GetBinLowEdge(start);
-         upEdge[d] = axis.GetBinLowEdge(end);
          totalBins[d] = axis.GetNbins() + 2;
          args[2 * d] = start;
          args[2 * d + 1] = end;
+         // Compute new edges
+         for (int b = start; b <= end; ++b)
+            edges[d].push_back(axis.GetBinLowEdge(b));
+         edges[d].push_back(axis.GetBinUpEdge(end));
       }
 
       // Compute layout sizes for slice
@@ -271,13 +273,10 @@ private:
       dataArray = newArr;
 
       // Reconfigure Axes
-      if (ndim == 1) {
-         this->SetBins(nBins[0], lowEdge[0], upEdge[0]);
-      } else if (ndim == 2) {
-         this->SetBins(nBins[0], lowEdge[0], upEdge[0], nBins[1], lowEdge[1], upEdge[1]);
-      } else if (ndim == 3) {
-         this->SetBins(nBins[0], lowEdge[0], upEdge[0], nBins[1], lowEdge[1], upEdge[1], nBins[2], lowEdge[2],
-                       upEdge[2]);
+      switch (ndim) {
+      case 1: this->SetBins(nBins[0], edges[0].data()); break;
+      case 2: this->SetBins(nBins[0], edges[0].data(), nBins[1], edges[1].data()); break;
+      case 3: this->SetBins(nBins[0], edges[0].data(), nBins[1], edges[1].data(), nBins[2], edges[2].data()); break;
       }
 
       // Update the statistics
@@ -444,7 +443,7 @@ public:
    virtual Double_t Chisquare(TF1 * f1, Option_t *option = "") const;
    static  Int_t    CheckConsistency(const TH1* h1, const TH1* h2);
    virtual void     ClearUnderflowAndOverflow();
-   virtual Double_t ComputeIntegral(Bool_t onlyPositive = false);
+   virtual Double_t ComputeIntegral(Bool_t onlyPositive = false, Option_t *option = "");
            TObject* Clone(const char *newname = "") const override;
            void     Copy(TObject &hnew) const override;
    virtual void     DirectoryAutoAdd(TDirectory *);
@@ -550,7 +549,7 @@ public:
    TVirtualHistPainter *GetPainter(Option_t *option="");
 
    virtual Int_t    GetQuantiles(Int_t n, Double_t *xp, const Double_t *p = nullptr);
-   virtual Double_t GetRandom(TRandom * rng = nullptr) const;
+   virtual Double_t GetRandom(TRandom *rng = nullptr, Option_t *option = "") const;
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t GetStdDev(Int_t axis=1) const;
    virtual Double_t GetStdDevError(Int_t axis=1) const;
@@ -863,7 +862,7 @@ public:
 
 protected:
    Double_t RetrieveBinContent(Int_t bin) const override { return Double_t (fArray[bin]); }
-   void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = Int_t (content); }
+   void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = Long64_t (content); }
 };
 
 TH1L operator*(Double_t c1, const TH1L &h1);

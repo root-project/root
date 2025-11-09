@@ -85,7 +85,7 @@ This is and can only be partially enforced through C++.
 */
 // clang-format on
 class RFieldBase {
-   friend class ROOT::RClassField;                             // to mark members as artificial
+   friend class RFieldZero;                                    // to reset fParent pointer in ReleaseSubfields()
    friend class ROOT::Experimental::Detail::RRawPtrWriteEntry; // to call Append()
    friend struct ROOT::Internal::RFieldCallbackInjector;       // used for unit tests
    friend struct ROOT::Internal::RFieldRepresentationModifier; // used for unit tests
@@ -277,6 +277,20 @@ private:
 protected:
    struct RBulkSpec;
 
+   /// Bits used in CompareOnDisk()
+   enum {
+      /// The in-memory field and the on-disk field differ in the field version
+      kDiffFieldVersion = 0x01,
+      /// The in-memory field and the on-disk field differ in the type version
+      kDiffTypeVersion = 0x02,
+      /// The in-memory field and the on-disk field differ in their structural roles
+      kDiffStructure = 0x04,
+      /// The in-memory field and the on-disk field have different type names
+      kDiffTypeName = 0x08,
+      /// The in-memory field and the on-disk field have different repetition counts
+      kDiffNRepetitions = 0x10
+   };
+
    /// Collections and classes own subfields
    std::vector<std::unique_ptr<RFieldBase>> fSubfields;
    /// Subfields point to their mother field
@@ -407,6 +421,11 @@ protected:
    static void CallConstructValueOn(const RFieldBase &other, void *where) { other.ConstructValue(where); }
    static std::unique_ptr<RDeleter> GetDeleterOf(const RFieldBase &other) { return other.GetDeleter(); }
 
+   /// Allow parents to mark their childs as artificial fields (used in class and record fields)
+   static void CallSetArtificialOn(RFieldBase &other) { other.SetArtificial(); }
+   /// Allow class fields to adjust the type alias of their members
+   static void SetTypeAliasOf(RFieldBase &other, const std::string &alias) { other.fTypeAlias = alias; }
+
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
    /// column type exists.
    virtual std::size_t AppendImpl(const void *from);
@@ -492,11 +511,33 @@ protected:
    /// Add a new subfield to the list of nested fields
    void Attach(std::unique_ptr<RFieldBase> child);
 
-   /// Called by ConnectPageSource() before connecting; derived classes may override this as appropriate
-   virtual void BeforeConnectPageSource(ROOT::Internal::RPageSource &) {}
+   /// Called by ConnectPageSource() before connecting; derived classes may override this as appropriate, e.g.
+   /// for the application of I/O rules. In the process, the field at hand or its subfields may be marked as
+   /// "artifical", i.e. introduced by schema evolution and not backed by on-disk information.
+   /// May return a field substitute that fits the on-disk schema as a replacement for the field at hand.
+   /// A field substitute must read into the same in-memory layout than the original field and field substitutions
+   /// must not be cyclic.
+   virtual std::unique_ptr<RFieldBase> BeforeConnectPageSource(ROOT::Internal::RPageSource & /* source */)
+   {
+      return nullptr;
+   }
 
-   /// Called by ConnectPageSource() once connected; derived classes may override this as appropriate
-   virtual void AfterConnectPageSource() {}
+   /// For non-artificial fields, check compatibility of the in-memory field and the on-disk field. In the process,
+   /// the field at hand may change its on-disk ID or perform other tasks related to automatic schema evolution.
+   /// If the on-disk field is incompatible with the in-memory field at hand, an exception is thrown.
+   virtual void ReconcileOnDiskField(const RNTupleDescriptor &desc);
+
+   /// Returns a combination of kDiff... flags, indicating peroperties that are different between the field at hand
+   /// and the given on-disk field
+   std::uint32_t CompareOnDiskField(const RFieldDescriptor &fieldDesc, std::uint32_t ignoreBits) const;
+   /// Compares the field to the corresponding on-disk field information in the provided descriptor.
+   /// Throws an exception if the fields don't match.
+   /// Optionally, a set of bits can be provided that should be ignored in the comparison.
+   RResult<void> EnsureMatchingOnDiskField(const RNTupleDescriptor &desc, std::uint32_t ignoreBits = 0) const;
+   /// Many fields accept a range of type prefixes for schema evolution,
+   /// e.g. std::unique_ptr< and std::optional< for nullable fields
+   RResult<void>
+   EnsureMatchingTypePrefix(const RNTupleDescriptor &desc, const std::vector<std::string> &prefixes) const;
 
    /// Factory method to resurrect a field from the stored on-disk type information.  This overload takes an already
    /// normalized type name and type alias.
@@ -842,7 +883,6 @@ private:
    /// Sets a new range for the bulk. If there is enough capacity, the `fValues` array will be reused.
    /// Otherwise a new array is allocated. After reset, fMaskAvail is false for all values.
    void Reset(RNTupleLocalIndex firstIndex, std::size_t size);
-   void CountValidValues();
 
    bool ContainsRange(RNTupleLocalIndex firstIndex, std::size_t size) const
    {
@@ -894,11 +934,14 @@ public:
       bulkSpec.fAuxData = &fAuxData;
       auto nRead = fField->ReadBulk(bulkSpec);
       if (nRead == RBulkSpec::kAllSet) {
-         if ((offset == 0) && (size == fSize)) {
-            fNValidValues = fSize;
-         } else {
-            CountValidValues();
-         }
+         // We expect that field implementations consistently return kAllSet either in all cases or never. This avoids
+         // the following case where we would have to manually count how many valid values we actually have:
+         // 1. A partial ReadBulk, according to maskReq, with values potentially missing in the middle.
+         // 2. A second ReadBulk that reads a complete subrange. If this returned kAllSet, we don't know how to update
+         // fNValidValues, other than counting. The field should return a concrete number of how many new values it read
+         // in addition to those already present.
+         R__ASSERT((offset == 0) && (size == fSize));
+         fNValidValues = fSize;
       } else {
          fNValidValues += nRead;
       }

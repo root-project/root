@@ -64,8 +64,11 @@ protected:
    }
    void ConstructValue(void *where) const final { *static_cast<std::size_t *>(where) = 0; }
 
+   // We construct these fields and know that they match the page source
+   void ReconcileOnDiskField(const RNTupleDescriptor &) final {}
+
 public:
-   RRDFCardinalityField() : ROOT::RFieldBase("", "std::size_t", ROOT::ENTupleStructure::kLeaf, false /* isSimple */) {}
+   RRDFCardinalityField() : ROOT::RFieldBase("", "std::size_t", ROOT::ENTupleStructure::kPlain, false /* isSimple */) {}
    RRDFCardinalityField(RRDFCardinalityField &&other) = default;
    RRDFCardinalityField &operator=(RRDFCardinalityField &&other) = default;
    ~RRDFCardinalityField() override = default;
@@ -133,9 +136,12 @@ private:
       *static_cast<std::size_t *>(to) = fArrayLength;
    }
 
+   // We construct these fields and know that they match the page source
+   void ReconcileOnDiskField(const RNTupleDescriptor &) final {}
+
 public:
    RArraySizeField(std::size_t arrayLength)
-      : ROOT::RFieldBase("", "std::size_t", ROOT::ENTupleStructure::kLeaf, false /* isSimple */),
+      : ROOT::RFieldBase("", "std::size_t", ROOT::ENTupleStructure::kPlain, false /* isSimple */),
         fArrayLength(arrayLength)
    {
    }
@@ -191,15 +197,20 @@ public:
          }
       }
 
+      RFieldZero fieldZero;
+      ROOT::Internal::SetAllowFieldSubstitutions(fieldZero, true);
+      fieldZero.Attach(std::move(fField));
       try {
-         ROOT::Internal::CallConnectPageSourceOnField(*fField, source);
+         ROOT::Internal::CallConnectPageSourceOnField(fieldZero, source);
       } catch (const ROOT::RException &err) {
+         fField = std::move(fieldZero.ReleaseSubfields()[0]);
          auto onDiskType = source.GetSharedDescriptorGuard()->GetFieldDescriptor(fField->GetOnDiskId()).GetTypeName();
          std::string msg = "RNTupleDS: invalid type \"" + fField->GetTypeName() + "\" for column \"" +
                            fDataSource->fFieldId2QualifiedName[fField->GetOnDiskId()] + "\" with on-disk type \"" +
                            onDiskType + "\"";
          throw std::runtime_error(msg);
       }
+      fField = std::move(fieldZero.ReleaseSubfields()[0]);
 
       if (fValuePtr) {
          // When the reader reconnects to a new file, the fValuePtr is already set
@@ -424,6 +435,13 @@ ROOT::RDF::RNTupleDS::RNTupleDS(std::string_view ntupleName, const std::vector<s
    fStagingArea.resize(fFileNames.size());
 }
 
+ROOT::RDF::RNTupleDS::RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames,
+                                const std::pair<ULong64_t, ULong64_t> &range)
+   : RNTupleDS(ntupleName, fileNames)
+{
+   fGlobalEntryRange = range;
+}
+
 ROOT::RDF::RDataSource::Record_t
 ROOT::RDF::RNTupleDS::GetColumnReadersImpl(std::string_view /* name */, const std::type_info & /* ti */)
 {
@@ -594,17 +612,12 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
       if (i == (nRemainingFiles - 1))
          nSlotsPerFile = fNSlots - fNextRanges.size();
 
-      std::vector<std::pair<ULong64_t, ULong64_t>> rangesByCluster;
-      {
-         auto descriptorGuard = source->GetSharedDescriptorGuard();
-         auto clusterId = descriptorGuard->FindClusterId(0, 0);
-         while (clusterId != kInvalidDescriptorId) {
-            const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterId);
-            rangesByCluster.emplace_back(std::make_pair<ULong64_t, ULong64_t>(
-               clusterDesc.GetFirstEntryIndex(), clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries()));
-            clusterId = descriptorGuard->FindNextClusterId(clusterId);
-         }
-      }
+      const auto rangesByCluster = [&source]() {
+         // Take the shared lock of the descriptor just for the time necessary
+         const auto descGuard = source->GetSharedDescriptorGuard();
+         return ROOT::Internal::GetClusterBoundaries(descGuard.GetRef());
+      }();
+
       const unsigned int nRangesByCluster = rangesByCluster.size();
 
       // Distribute slots equidistantly over the entry range, aligned on cluster boundaries
@@ -614,10 +627,10 @@ void ROOT::RDF::RNTupleDS::PrepareNextRanges()
       unsigned int iSlot = 0;
       const unsigned int N = std::min(nSlotsPerFile, nRangesByCluster);
       for (; iSlot < N; ++iSlot) {
-         auto start = rangesByCluster[iRange].first;
+         auto start = rangesByCluster[iRange].fFirstEntry;
          iRange += nClustersPerSlot + static_cast<int>(iSlot < remainder);
          assert(iRange > 0);
-         auto end = rangesByCluster[iRange - 1].second;
+         auto end = rangesByCluster[iRange - 1].fLastEntryPlusOne;
 
          REntryRangeDS range;
          range.fFileName = sourceFileName;
@@ -912,4 +925,21 @@ ROOT::RDF::RSampleInfo ROOT::Internal::RDF::RNTupleDS::CreateSampleInfo(
    return ROOT::RDF::RSampleInfo(
       ntupleID, std::make_pair(fCurrentRanges[rangeIdx].fFirstEntry, fCurrentRanges[rangeIdx].fLastEntry),
       sampleMap.at(ntupleID));
+}
+
+ROOT::RDataFrame ROOT::Internal::RDF::FromRNTuple(std::string_view ntupleName,
+                                                  const ROOT::RDF::ColumnNames_t &fileNames,
+                                                  const std::pair<ULong64_t, ULong64_t> &range)
+{
+   std::unique_ptr<ROOT::RDF::RNTupleDS> ds{new ROOT::RDF::RNTupleDS(ntupleName, fileNames, range)};
+   return ROOT::RDataFrame(std::move(ds));
+}
+
+std::pair<std::vector<ROOT::Internal::RNTupleClusterBoundaries>, ROOT::NTupleSize_t>
+ROOT::Internal::RDF::GetClustersAndEntries(std::string_view ntupleName, std::string_view location)
+{
+   auto source = ROOT::Internal::RPageSource::Create(ntupleName, location);
+   source->Attach();
+   const auto descGuard = source->GetSharedDescriptorGuard();
+   return std::make_pair(ROOT::Internal::GetClusterBoundaries(descGuard.GetRef()), descGuard->GetNEntries());
 }

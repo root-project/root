@@ -28,7 +28,6 @@
 #include <atomic>
 #include <stdexcept>
 
-ClassImp(TH3);
 
 /** \addtogroup Histograms
 @{
@@ -1264,16 +1263,17 @@ Double_t TH3::GetCovariance(Int_t axis1, Int_t axis2) const
    return 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Return 3 random numbers along axis x , y and z distributed according
+/// Return 3 random numbers along axis x, y and z distributed according
 /// to the cell-contents of this 3-dim histogram
 /// @param[out] x  reference to random generated x value
 /// @param[out] y  reference to random generated y value
 /// @param[out] z  reference to random generated z value
 /// @param[in] rng (optional) Random number generator pointer used (default is gRandom)
+/// @param[in] option (optional) Set it to "width" if your non-uniform bin contents represent a density rather than
+/// counts
 
-void TH3::GetRandom3(Double_t &x, Double_t &y, Double_t &z, TRandom * rng)
+void TH3::GetRandom3(Double_t &x, Double_t &y, Double_t &z, TRandom *rng, Option_t *option)
 {
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
@@ -1283,10 +1283,11 @@ void TH3::GetRandom3(Double_t &x, Double_t &y, Double_t &z, TRandom * rng)
    Double_t integral;
    // compute integral checking that all bins have positive content (see ROOT-5894)
    if (fIntegral) {
-      if (fIntegral[nbins+1] != fEntries) integral = ComputeIntegral(true);
+      if (fIntegral[nbins + 1] != fEntries)
+         integral = ComputeIntegral(true, option);
       else integral = fIntegral[nbins];
    } else {
-      integral = ComputeIntegral(true);
+      integral = ComputeIntegral(true, option);
    }
    if (integral == 0 ) { x = 0; y = 0; z = 0; return;}
    // case histogram has negative bins
@@ -3538,7 +3539,6 @@ TH2D *TH3::DoProject2D(const TH3 &h, const char *name, const char *title, const 
 //  TH3C a 3-D histogram with one byte per cell (char)
 //______________________________________________________________________________
 
-ClassImp(TH3C);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3807,7 +3807,6 @@ TH3C operator/(TH3C const &h1, TH3C const &h2)
 //  TH3S a 3-D histogram with two bytes per cell (short integer)
 //______________________________________________________________________________
 
-ClassImp(TH3S);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4047,7 +4046,6 @@ TH3S operator/(TH3S const &h1, TH3S const &h2)
 //  TH3I a 3-D histogram with four bytes per cell (32 bit integer)
 //______________________________________________________________________________
 
-ClassImp(TH3I);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4254,7 +4252,6 @@ TH3I operator/(TH3I const &h1, TH3I const &h2)
 //  TH3L a 3-D histogram with eight bytes per cell (64 bit integer)
 //______________________________________________________________________________
 
-ClassImp(TH3L);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4347,7 +4344,7 @@ void TH3L::AddBinContent(Int_t bin)
 void TH3L::AddBinContent(Int_t bin, Double_t w)
 {
    Long64_t newval = fArray[bin] + Long64_t(w);
-   if (newval > -LLONG_MAX && newval < LLONG_MAX) {fArray[bin] = Int_t(newval); return;}
+   if (newval > -LLONG_MAX && newval < LLONG_MAX) {fArray[bin] = newval; return;}
    if (newval < -LLONG_MAX) fArray[bin] = -LLONG_MAX;
    if (newval >  LLONG_MAX) fArray[bin] =  LLONG_MAX;
 }
@@ -4461,7 +4458,6 @@ TH3L operator/(TH3L const &h1, TH3L const &h2)
 //  TH3F a 3-D histogram with four bytes per cell (float). Maximum precision 7 digits, maximum integer bin content = +/-16777216
 //______________________________________________________________________________
 
-ClassImp(TH3F);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4677,7 +4673,6 @@ TH3F operator/(TH3F const &h1, TH3F const &h2)
 //  TH3D a 3-D histogram with eight bytes per cell (double). Maximum precision 14 digits, maximum integer bin content = +/-9007199254740992
 //______________________________________________________________________________
 
-ClassImp(TH3D);
 
 
 ////////////////////////////////////////////////////////////////////////////////

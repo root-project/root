@@ -26,7 +26,6 @@
 #include "TStyle.h"
 #include "TMath.h"
 
-ClassImp(TTeXDump);
 
 /** \class TTeXDump
 \ingroup PS

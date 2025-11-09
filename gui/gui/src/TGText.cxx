@@ -39,7 +39,6 @@ and the TGTextEntry widget.
 const Int_t kMaxLen = 8000;
 
 
-ClassImp(TGTextLine);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create empty line of text (default ctor).
@@ -308,7 +307,6 @@ char TGTextLine::GetChar(ULong_t pos)
 }
 
 
-ClassImp(TGText);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///copy constructor

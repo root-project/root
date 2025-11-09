@@ -15,7 +15,6 @@
 
 #include <iostream>
 
-ClassImp(TPaveClass);
 
 
 /** \class TPaveClass
@@ -146,7 +145,7 @@ void TPaveClass::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
                                             TString(fLabel).ReplaceSpecialCppChars().Data(),
                                             TString(fOption).ReplaceSpecialCppChars().Data()));
 
-   SaveFillAttributes(out, "pclass", 0, 1001);
+   SaveFillAttributes(out, "pclass", -1, -1);
    SaveLineAttributes(out, "pclass", 1, 1, 1);
    SaveTextAttributes(out, "pclass", 22, 0, 1, 62, 0);
 

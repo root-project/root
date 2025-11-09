@@ -14,10 +14,12 @@ HEADERS
   ROOT/RNTupleBrowseUtils.hxx
   ROOT/RNTupleClassicBrowse.hxx
   ROOT/RNTupleDrawVisitor.hxx
+  ROOT/RNTupleTreeMap.hxx
 SOURCES
   src/RNTupleBrowseUtils.cxx
   src/RNTupleClassicBrowse.cxx
   src/RNTupleDrawVisitor.cxx
+  src/RNTupleTreeMap.cxx
 LINKDEF
   LinkDef.h
 DEPENDENCIES
@@ -26,6 +28,8 @@ DEPENDENCIES
   Graf
   Hist
   ROOTNTuple
+  ROOTNTupleUtil
+  ROOTTreeMap
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

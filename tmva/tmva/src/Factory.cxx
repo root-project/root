@@ -95,7 +95,6 @@ evaluation phases.
 const Int_t MinNoTrainingEvents = 10;
 // const Int_t  MinNoTestEvents     = 1;
 
-ClassImp(TMVA::Factory);
 
 #define READXML kTRUE
 

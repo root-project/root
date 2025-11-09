@@ -7,6 +7,7 @@
 
 #include <ROOT/RField.hxx>
 #include <ROOT/RLogger.hxx>
+#include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RNTupleUtils.hxx>
 
@@ -721,4 +722,71 @@ bool ROOT::Internal::IsMatchingFieldType(std::string_view actualTypeName, std::s
    // by the ATLAS DataVector class to hide a default template parameter from the on-disk type name.
    // Thus, we check again using first ROOT Meta normalization followed by RNTuple re-normalization.
    return (actualTypeName == ROOT::Internal::GetRenormalizedTypeName(ROOT::Internal::GetDemangledTypeName(ti)));
+}
+
+std::string ROOT::Internal::GetTypeTraceReport(const RFieldBase &field, const RNTupleDescriptor &desc)
+{
+   // Information to print in a single line of the type trace
+   struct RFieldInfo {
+      std::string fFieldName;
+      std::string fTypeName;
+      DescriptorId_t fFieldId = kInvalidDescriptorId;
+      std::uint32_t fTypeVersion = 0;
+      std::optional<std::uint32_t> fTypeChecksum;
+   };
+
+   std::vector<const RFieldBase *> inMemoryStack;
+   std::vector<const RFieldDescriptor *> onDiskStack;
+
+   auto fnGetLine = [](const RFieldInfo &fieldInfo, int level) -> std::string {
+      std::string line = std::string(2 * level, ' ') + fieldInfo.fFieldName + " [" + fieldInfo.fTypeName;
+      if (fieldInfo.fTypeVersion > 0)
+         line += ", type version: " + std::to_string(fieldInfo.fTypeVersion);
+      if (fieldInfo.fTypeChecksum)
+         line += ", type checksum: " + std::to_string(*fieldInfo.fTypeChecksum);
+      line += "] (id: " + std::to_string(fieldInfo.fFieldId) + ")\n";
+      return line;
+   };
+
+   const RFieldBase *fieldPtr = &field;
+   while (fieldPtr->GetParent()) {
+      inMemoryStack.push_back(fieldPtr);
+      fieldPtr = fieldPtr->GetParent();
+   }
+
+   auto fieldId = field.GetOnDiskId();
+   while (fieldId != kInvalidDescriptorId && fieldId != desc.GetFieldZeroId()) {
+      const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
+      onDiskStack.push_back(&fieldDesc);
+      fieldId = fieldDesc.GetParentId();
+   }
+
+   std::string report = "In-memory field/type hierarchy:\n";
+   int indentLevel = 0;
+   for (auto itr = inMemoryStack.rbegin(); itr != inMemoryStack.rend(); ++itr, ++indentLevel) {
+      RFieldInfo fieldInfo;
+      fieldInfo.fFieldName = (*itr)->GetFieldName();
+      fieldInfo.fTypeName = (*itr)->GetTypeName();
+      fieldInfo.fFieldId = (*itr)->GetOnDiskId();
+      fieldInfo.fTypeVersion = (*itr)->GetTypeVersion();
+      if ((*itr)->GetTraits() & RFieldBase::kTraitTypeChecksum)
+         fieldInfo.fTypeChecksum = (*itr)->GetTypeChecksum();
+
+      report += fnGetLine(fieldInfo, indentLevel);
+   }
+
+   report += "On-disk field/type hierarchy:\n";
+   indentLevel = 0;
+   for (auto itr = onDiskStack.rbegin(); itr != onDiskStack.rend(); ++itr, ++indentLevel) {
+      RFieldInfo fieldInfo;
+      fieldInfo.fFieldName = (*itr)->GetFieldName();
+      fieldInfo.fTypeName = (*itr)->GetTypeName();
+      fieldInfo.fFieldId = (*itr)->GetId();
+      fieldInfo.fTypeVersion = (*itr)->GetTypeVersion();
+      fieldInfo.fTypeChecksum = (*itr)->GetTypeChecksum();
+
+      report += fnGetLine(fieldInfo, indentLevel);
+   }
+
+   return report;
 }

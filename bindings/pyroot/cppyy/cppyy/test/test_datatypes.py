@@ -1,6 +1,6 @@
 import py, sys, pytest, os
 from pytest import mark, raises, skip
-from support import setup_make, pylong, pyunicode, IS_MAC_ARM
+from support import setup_make, pylong, pyunicode, IS_MAC, IS_MAC_ARM
 
 currpath = os.getcwd()
 test_dct = currpath + "/libdatatypesDict"
@@ -13,10 +13,6 @@ class TestDATATYPES:
         cls.test_dct = test_dct
         cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = cppyy.gbl.N
-
-        at_least_17 = 201402 < cppyy.gbl.gInterpreter.ProcessLine("__cplusplus;")
-        cls.has_byte     = at_least_17
-        cls.has_optional = at_least_17
 
     @mark.skip()
     def test01_instance_data_read_access(self):
@@ -46,8 +42,7 @@ class TestDATATYPES:
         # reading integer types
         assert c.m_int8    == - 9; assert c.get_int8_cr()    == - 9; assert c.get_int8_r()    == - 9
         assert c.m_uint8   ==   9; assert c.get_uint8_cr()   ==   9; assert c.get_uint8_r()   ==   9
-        if self.has_byte:
-            assert c.m_byte == ord('d'); assert c.get_byte_cr() == ord('d'); assert c.get_byte_r() == ord('d')
+        assert c.m_byte == ord('d'); assert c.get_byte_cr() == ord('d'); assert c.get_byte_r() == ord('d')
         assert c.m_short   == -11; assert c.get_short_cr()   == -11; assert c.get_short_r()   == -11
         assert c.m_ushort  ==  11; assert c.get_ushort_cr()  ==  11; assert c.get_ushort_r()  ==  11
         assert c.m_int     == -22; assert c.get_int_cr()     == -22; assert c.get_int_r()     == -22
@@ -150,9 +145,8 @@ class TestDATATYPES:
             assert c.get_bool_array2()[i]   ==   bool((i+1)%2)
 
         # reading of integer array types
-        names = ['schar', 'uchar',   'int8', 'uint8',  'short', 'ushort',     'int',   'uint',     'long',  'ulong']
-        alpha = [ (1, 2),  (1, 2), (-1, -2),  (3, 4), (-5, -6),   (7, 8), (-9, -10), (11, 12), (-13, -14), (15, 16)]
-        if self.has_byte: names.append('byte'); alpha.append((3,4))
+        names = ["schar", "uchar", "int8", "uint8", "short", "ushort", "int", "uint", "long", "ulong", "byte"]
+        alpha = [(1, 2), (1, 2), (-1, -2), (3, 4), (-5, -6), (7, 8), (-9, -10), (11, 12), (-13, -14), (15, 16), (3, 4)]
 
         for j in range(self.N):
             assert getattr(c, 'm_%s_array'    % names[i])[i]   == alpha[i][0]*i
@@ -170,8 +164,7 @@ class TestDATATYPES:
         # out-of-bounds checks
         raises(IndexError, c.m_schar_array.__getitem__,  self.N)
         raises(IndexError, c.m_uchar_array.__getitem__,  self.N)
-        if self.has_byte:
-            raises(IndexError, c.m_byte_array.__getitem__,   self.N)
+        raises(IndexError, c.m_byte_array.__getitem__,   self.N)
         raises(IndexError, c.m_int8_array.__getitem__,   self.N)
         raises(IndexError, c.m_uint8_array.__getitem__,  self.N)
         raises(IndexError, c.m_short_array.__getitem__,  self.N)
@@ -246,8 +239,7 @@ class TestDATATYPES:
         raises(ValueError, c.set_char32, "string")
 
         # integer types
-        names = ['int8', 'uint8', 'short', 'ushort', 'int', 'uint', 'long', 'ulong', 'llong', 'ullong']
-        if self.has_byte: names.append('byte')
+        names = ["int8", "uint8", "short", "ushort", "int", "uint", "long", "ulong", "llong", "ullong", "byte"]
 
         for i in range(len(names)):
             setattr(c, 'm_'+names[i], i)
@@ -313,13 +305,11 @@ class TestDATATYPES:
         c.destroy_arrays()
 
         # integer arrays (skip int8_t and uint8_t as these are presented as (unsigned) char still)
-        names = ['uchar', 'short', 'ushort', 'int', 'uint', 'long', 'ulong']
-        if self.has_byte: names.append('byte')
+        names = ["uchar", "short", "ushort", "int", "uint", "long", "ulong", "byte"]
 
         import array
         a = range(self.N)
-        atypes = ['B', 'h', 'H', 'i', 'I', 'l', 'L']
-        if self.has_byte: atypes.append('B')
+        atypes = ['B', 'h', 'H', 'i', 'I', 'l', 'L', 'B']
         for j in range(len(names)):
             b = array.array(atypes[j], a)
             setattr(c, 'm_'+names[j]+'_array', b)     # buffer copies
@@ -407,9 +397,8 @@ class TestDATATYPES:
         assert type(CppyyTestData.s_char32) == pyunicode
 
         # integer types
-        if self.has_byte:
-            assert CppyyTestData.s_byte == ord('b')
-            assert c.s_byte             == ord('b')
+        assert CppyyTestData.s_byte == ord('b')
+        assert c.s_byte             == ord('b')
         assert CppyyTestData.s_int8     == - 87
         assert c.s_int8                 == - 87
         assert CppyyTestData.s_uint8    ==   87
@@ -475,11 +464,10 @@ class TestDATATYPES:
         assert CppyyTestData.s_char32   == u'\u00ef'
 
         # integer types
-        if self.has_byte:
-            c.s_byte                     =   66
-            assert CppyyTestData.s_byte ==   66
-            CppyyTestData.s_byte         =   66
-            assert c.s_byte             ==   66
+        c.s_byte                         =   66
+        assert CppyyTestData.s_byte     ==   66
+        CppyyTestData.s_byte             =   66
+        assert c.s_byte                 ==   66
         c.s_short                        = -102
         assert CppyyTestData.s_short    == -102
         CppyyTestData.s_short            = -203
@@ -1001,8 +989,7 @@ class TestDATATYPES:
         gbl = cppyy.gbl
 
         c1 = cppyy.bind_object(0, gbl.CppyyTestData)
-        assert c1 == None
-        assert None == c1
+        assert not c1
 
         c2 = cppyy.bind_object(0, gbl.CppyyTestData)
         assert c1 == c2
@@ -1010,8 +997,7 @@ class TestDATATYPES:
 
         # FourVector overrides operator==
         l1 = cppyy.bind_object(0, gbl.FourVector)
-        assert l1 == None
-        assert None == l1
+        assert not l1
 
         assert c1 != l1
         assert l1 != c1
@@ -1026,10 +1012,9 @@ class TestDATATYPES:
         assert l3 == l4
         assert l4 == l3
 
-        assert l3 != None                 # like this to ensure __ne__ is called
-        assert None != l3                 # id.
-        assert l3 != l5
-        assert l5 != l3
+        assert l3
+        assert l3 != l5                   # like this to ensure __ne__ is called
+        assert l5 != l3                   # id.
 
     def test20_object_comparisons_with_cpp__eq__(self):
         """Comparisons with C++ providing __eq__/__ne__"""
@@ -1145,9 +1130,6 @@ class TestDATATYPES:
         CppyyTestData = cppyy.gbl.CppyyTestData
 
         c = CppyyTestData()
-        byte_array_names = []
-        if self.has_byte:
-            byte_array_names = ['get_byte_array', 'get_byte_array2']
         for func in ['get_bool_array',   'get_bool_array2',
                      'get_uchar_array',  'get_uchar_array2',
                      'get_int8_array',   'get_int8_array2',
@@ -1157,8 +1139,8 @@ class TestDATATYPES:
                      'get_int_array',    'get_int_array2',
                      'get_uint_array',   'get_uint_array2',
                      'get_long_array',   'get_long_array2',
-                     'get_ulong_array',  'get_ulong_array2']+\
-                     byte_array_names:
+                     'get_ulong_array',  'get_ulong_array2',
+                     'get_byte_array', 'get_byte_array2']:
             arr = getattr(c, func)()
             arr.reshape((self.N,))
             assert len(arr) == self.N
@@ -1273,11 +1255,9 @@ class TestDATATYPES:
             assert f(pbuf, len(buf)) == total
 
         run(self, cppyy.gbl.sum_uc_data, buf, total)
+        run(self, cppyy.gbl.sum_byte_data, buf, total)
 
-        if self.has_byte:
-            run(self, cppyy.gbl.sum_byte_data, buf, total)
-
-    @mark.xfail(run=not IS_MAC_ARM, reason = "Crashes on OS X ARM with" \
+    @mark.xfail(run=not IS_MAC, reason = "Fails on all platforms; crashes on macOS with " \
     "libc++abi: terminating due to uncaught exception")
     def test26_function_pointers(self):
         """Function pointer passing"""
@@ -1381,7 +1361,7 @@ class TestDATATYPES:
             retval = i
 
         assert retval is None
-        assert fv(voidf, 5) == None
+        assert not fv(voidf, 5)
         assert retval == 5
 
         # call of function with reference argument
@@ -1455,7 +1435,7 @@ class TestDATATYPES:
             retval = i
 
         assert retval is None
-        assert fv(voidf, 5) == None
+        assert not fv(voidf, 5)
         assert retval == 5
 
         # call of function with reference argument
@@ -2045,19 +2025,18 @@ class TestDATATYPES:
         r1 = ns.make_R1()
         assert r1.e == ns.E.A
 
-        if self.has_optional:
-            cppyy.cppdef("""\
-            namespace AggregateTest {
-            struct R2 {
-                std::optional<S> s = {};
-            };
+        cppyy.cppdef("""\
+        namespace AggregateTest {
+        struct R2 {
+            std::optional<S> s = {};
+        };
 
-            R2 make_R2() {
-                return {1};
-            } }""")
+        R2 make_R2() {
+            return {1};
+        } }""")
 
-            r2 = ns.make_R2()
-            assert r2.s.x == 1
+        r2 = ns.make_R2()
+        assert r2.s.x == 1
 
     @mark.xfail()
     def test41_complex_numpy_arrays(self):
@@ -2356,7 +2335,7 @@ class TestDATATYPES:
         assert str(bt(1)) == 'True'
         assert str(bt(0)) == 'False'
 
-    @mark.xfail(condition=IS_MAC_ARM, reason="Fails on mac-beta ARM64")
+    @mark.xfail(run = not IS_MAC_ARM, reason="Crashes on mac-beta ARM64, fails on alma9 runtime_cxxmodules=off")
     def test49_addressof_method(self):
         """Use of addressof for (const) methods"""
 

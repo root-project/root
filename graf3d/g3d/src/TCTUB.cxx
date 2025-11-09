@@ -13,7 +13,6 @@
 #include "TBuffer.h"
 #include "TMath.h"
 
-ClassImp(TCTUB);
 
 /** \class TCTUB
 \ingroup g3d

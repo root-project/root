@@ -98,9 +98,6 @@ def pythonize_tcollection(klass):
     # Parameters:
     # klass: class to be pythonized
 
-    # Support `len(c)` as `c.GetEntries()`
-    klass.__len__ = klass.GetEntries
-
     # Add Python lists methods
     klass.append = klass.Add
     klass.remove = _remove_pyz

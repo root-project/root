@@ -134,7 +134,6 @@ non-linear methods must be applied.
 
 REGISTER_METHOD(Likelihood)
 
-ClassImp(TMVA::MethodLikelihood);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor
@@ -783,7 +782,7 @@ void  TMVA::MethodLikelihood::WriteMonitoringHistosToFile( void ) const
 
 void TMVA::MethodLikelihood::MakeClassSpecificHeader( std::ostream& fout, const TString& ) const
 {
-   fout << "#include <math.h>" << std::endl;
+   fout << "#include <cmath>" << std::endl;
    fout << "#include <cstdlib>" << std::endl;
 }
 

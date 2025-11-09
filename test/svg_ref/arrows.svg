@@ -1,0 +1,31 @@
+<?xml version="1.0" standalone="no"?>
+<svg width="567" height="408" viewBox="0 0 567 408" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+<title>
+arrows.svg
+</title>
+<rect x="0.500" y="0" width="567" height="407" fill="#f2f2f2"/>
+<path d="M0.500,407l 2.0, -2.0v -403h 563l 2.0, -2.0h -567v 407z" fill="white"/>
+<path d="M0.500,407l 2.0, -2.0h 563v -403l 2.0, -2.0v 407h -567z" fill="#a9a9a9"/>
+<rect x="57" y="20" width="454" height="61" fill="#ddba87"/>
+<path d="M60,81v 2.1h 452v -60h -2.1v 58z" fill="black"/>
+<path d="M57,81v -61h 454v 61h -454z" fill="none" stroke="black"/>
+<text xml:space="preserve" x="82" y="58" fill="black" font-size="24" font-family="Helvetica" font-weight="bold">Examples of various arrows formats
+</text>
+<path d="M57,367v -244" fill="none" stroke="black"/>
+<path d="M46,142l 11, -20l 11, 20" fill="none" stroke="black"/>
+<path d="M114,367v -225" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M107,142l 7.2, -20l 7.2, 20z" fill="black"/>
+<path d="M107,142l 7.2, -20l 7.2, 20h -14z" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M171,347v -205" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M163,142l 7.2, -20l 7.2, 20z" fill="black"/>
+<path d="M163,142l 7.2, -20l 7.2, 20h -14z" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M178,347l -7.2, 20l -7.2, -20z" fill="black"/>
+<path d="M178,347l -7.2, 20l -7.2, -20h 14z" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M261,122l 180, 101" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M449,209l 16, 28l -32, 0.447z" fill="#ff0000"/>
+<path d="M449,209l 16, 28l -32, 0.447l 16, -28z" fill="none" stroke="black" stroke-width="2.0"/>
+<path d="M287,306h 193" fill="none" stroke="#0000ff" stroke-width="4.0"/>
+<path d="M480,271l 60, 34l -60, 34z" fill="#ff0000"/>
+<path d="M480,271l 60, 34l -60, 34v -69z" fill="none" stroke="#0000ff" stroke-width="4.0"/>
+<path d="M287,340l -60, -34l 60, -34z" fill="#ff0000"/>
+<path d="M287,340l -60, -34l 60, -34v 69z" fill="none" stroke="#0000ff" stroke-width="4.0"/></svg>

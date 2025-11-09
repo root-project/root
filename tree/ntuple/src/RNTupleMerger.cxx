@@ -35,7 +35,7 @@
 
 #include <algorithm>
 #include <deque>
-#include <inttypes.h> // for PRIu64
+#include <cinttypes> // for PRIu64
 #include <initializer_list>
 #include <unordered_map>
 #include <vector>
@@ -488,6 +488,17 @@ CompareDescriptorStructure(const ROOT::RNTupleDescriptor &dst, const ROOT::RNTup
          errors.push_back(ss.str());
       }
 
+      // Require that field versions match
+      const auto srcFldVer = field.fSrc->GetFieldVersion();
+      const auto dstFldVer = field.fDst->GetFieldVersion();
+      if (srcFldVer != dstFldVer) {
+         std::stringstream ss;
+         ss << "Field `" << field.fSrc->GetFieldName()
+            << "` has a different field version than previously-seen field with the same name (old: " << dstFldVer
+            << ", new: " << srcFldVer << ")";
+         errors.push_back(ss.str());
+      }
+
       const auto srcRole = field.fSrc->GetStructure();
       const auto dstRole = field.fDst->GetStructure();
       if (srcRole != dstRole) {
@@ -700,7 +711,7 @@ GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<const RColumnMe
 
       // NOTE: we cannot have a Record here because it has no associated columns.
       R__ASSERT(structure == ROOT::ENTupleStructure::kCollection || structure == ROOT::ENTupleStructure::kVariant ||
-                structure == ROOT::ENTupleStructure::kLeaf);
+                structure == ROOT::ENTupleStructure::kPlain);
 
       const auto &columnDesc = dstDescriptor.GetColumnDescriptor(column.fOutputId);
       const auto colElement = RColumnElementBase::Generate(columnDesc.GetType());
@@ -1159,6 +1170,10 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
 
    // Merge main loop
    for (RPageSource *source : sources) {
+      // We need to make sure the streamer info from the source files is loaded otherwise we may not be able
+      // to build the streamer info of user-defined types unless we have their dictionaries available.
+      source->LoadStreamerInfo();
+
       source->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
       auto srcDescriptor = source->GetSharedDescriptorGuard();
       mergeData.fSrcDescriptor = &srcDescriptor.GetRef();

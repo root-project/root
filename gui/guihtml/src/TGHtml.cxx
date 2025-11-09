@@ -61,7 +61,6 @@ The ROOT HTML widget. A derivate of TGView.
 */
 
 
-ClassImp(TGHtml);
 
 int HtmlTraceMask = 0; //HtmlTrace_Table1 | HtmlTrace_Table4;
 int HtmlDepth = 0;

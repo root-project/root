@@ -23,7 +23,7 @@ public:
       TIE_t() : fIndex(0), fVal(0) {} 
       TIE_t(UInt_t i, T v) : fIndex(i),fVal(v) {}
       virtual ~TIE_t() {}
-      ClassDefT(TIE_t,1) // Generic parameter given by an index (in common block)
+      ClassDef(TIE_t,1) // Generic parameter given by an index (in common block)
   };
 
    template<typename T = Int_t>
