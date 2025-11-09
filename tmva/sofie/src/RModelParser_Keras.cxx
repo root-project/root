@@ -25,16 +25,48 @@
 #include <numpy/arrayobject.h>
 
 
-namespace TMVA{
-namespace Experimental{
-namespace SOFIE{
-namespace PyKeras{
+namespace TMVA::Experimental::SOFIE::PyKeras {
 
-// Referencing Python utility functions present in PyMethodBase
-static void(& PyRunString)(TString, PyObject*, PyObject*) = PyMethodBase::PyRunString;
-static const char*(& PyStringAsString)(PyObject*) = PyMethodBase::PyStringAsString;
-static std::vector<size_t>(& GetDataFromTuple)(PyObject*) = PyMethodBase::GetDataFromTuple;
-static PyObject*(& GetValueFromDict)(PyObject*, const char*) = PyMethodBase::GetValueFromDict;
+namespace {
+
+// Utility functions (taken from PyMethodBase in PyMVA)
+
+void PyRunString(TString code, PyObject *globalNS, PyObject *localNS)
+{
+   PyObject *fPyReturn = PyRun_String(code, Py_single_input, globalNS, localNS);
+   if (!fPyReturn) {
+      std::cout << "\nPython error message:\n";
+      PyErr_Print();
+      throw std::runtime_error("\nFailed to run python code: " + code);
+   }
+}
+
+const char *PyStringAsString(PyObject *string)
+{
+   PyObject *encodedString = PyUnicode_AsUTF8String(string);
+   const char *cstring = PyBytes_AsString(encodedString);
+   return cstring;
+}
+
+std::vector<size_t> GetDataFromTuple(PyObject *tupleObject)
+{
+   std::vector<size_t> tupleVec;
+   for (Py_ssize_t tupleIter = 0; tupleIter < PyTuple_Size(tupleObject); ++tupleIter) {
+      auto itemObj = PyTuple_GetItem(tupleObject, tupleIter);
+      if (itemObj == Py_None)
+         tupleVec.push_back(0); // case shape is for example (None,2,3)
+      else
+         tupleVec.push_back((size_t)PyLong_AsLong(itemObj));
+   }
+   return tupleVec;
+}
+
+PyObject *GetValueFromDict(PyObject *dict, const char *key)
+{
+   return PyDict_GetItemWithError(dict, PyUnicode_FromString(key));
+}
+
+} // namespace
 
 namespace INTERNAL{
 
@@ -1036,7 +1068,5 @@ RModel Parse(std::string filename, int batch_size){
 
    return rmodel;
 }
-}//PyKeras
-}//SOFIE
-}//Experimental
-}//TMVA
+
+} // namespace TMVA::Experimental::SOFIE::PyKeras

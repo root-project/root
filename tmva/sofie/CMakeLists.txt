@@ -74,6 +74,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/RFunction_MLP.hxx
    TMVA/RFunction_Sum.hxx
    TMVA/RFunction_Mean.hxx
+
+   TMVA/RModelParser_Keras.h
+   TMVA/RModelParser_PyTorch.h
   SOURCES
     src/RModel_Base.cxx
     src/RModel.cxx
@@ -89,6 +92,17 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
     TMVA
     ${EXTRA_SOFIE_DEPENDENCIES}
 )
+
+if(tpython)
+  ROOT_LINKER_LIBRARY(ROOTTMVASofiePyParsers
+      src/RModelParser_Keras.cxx
+      src/RModelParser_PyTorch.cxx
+    LIBRARIES
+      Python3::NumPy
+      Python3::Python
+      ROOTTMVASofie
+  )
+endif()
 
 target_include_directories(ROOTTMVASofie PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
