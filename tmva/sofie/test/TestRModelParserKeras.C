@@ -7,9 +7,21 @@
 
 #include "TSystem.h"
 #include "TMVA/RSofieReader.hxx"
-#include "TMVA/PyMethodBase.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-6f;
+
+namespace {
+
+// Utility functions (taken from PyMethodBase in PyMVA)
+
+const char *PyStringAsString(PyObject *string)
+{
+   PyObject *encodedString = PyUnicode_AsUTF8String(string);
+   const char *cstring = PyBytes_AsString(encodedString);
+   return cstring;
+}
+
+} // namespace
 
 void GenerateModels() {
 
@@ -529,7 +541,7 @@ TEST(RModel, CUSTOM_OP)
     // get input name for custom (it is output of one before last)
     PyRun_String("outputName = model.get_layer(index=len(model.layers)-2).output.name",Py_single_input,fGlobalNS,fLocalNS);
     PyObject *pOutputName = PyDict_GetItemString(fLocalNS, "outputName");
-    std::string outputName = TMVA::PyMethodBase::PyStringAsString(pOutputName);
+    std::string outputName = PyStringAsString(pOutputName);
     TMVA::Experimental:: RSofieReader r;
     r.AddCustomOperator(/*OpName*/ "Scale_by_2",
                         /*input tensor names where to insert custom op */std::string("{\"" + outputName + "\"}"),

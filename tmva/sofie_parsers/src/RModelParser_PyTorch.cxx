@@ -28,15 +28,39 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
-namespace TMVA{
-namespace Experimental{
-namespace SOFIE{
-namespace PyTorch{
+namespace TMVA::Experimental::SOFIE::PyTorch {
 
-// Referencing Python utility functions present in PyMethodBase
-static void(& PyRunString)(TString, PyObject*, PyObject*) = PyMethodBase::PyRunString;
-static const char*(& PyStringAsString)(PyObject*) = PyMethodBase::PyStringAsString;
-static std::vector<size_t>(& GetDataFromList)(PyObject*) = PyMethodBase::GetDataFromList;
+namespace {
+
+// Utility functions (taken from PyMethodBase in PyMVA)
+
+void PyRunString(TString code, PyObject *globalNS, PyObject *localNS)
+{
+   PyObject *fPyReturn = PyRun_String(code, Py_single_input, globalNS, localNS);
+   if (!fPyReturn) {
+      std::cout << "\nPython error message:\n";
+      PyErr_Print();
+      throw std::runtime_error("\nFailed to run python code: " + code);
+   }
+}
+
+const char *PyStringAsString(PyObject *string)
+{
+   PyObject *encodedString = PyUnicode_AsUTF8String(string);
+   const char *cstring = PyBytes_AsString(encodedString);
+   return cstring;
+}
+
+std::vector<size_t> GetDataFromList(PyObject *listObject)
+{
+   std::vector<size_t> listVec;
+   for (Py_ssize_t listIter = 0; listIter < PyList_Size(listObject); ++listIter) {
+      listVec.push_back((size_t)PyLong_AsLong(PyList_GetItem(listObject, listIter)));
+   }
+   return listVec;
+}
+
+} // namespace
 
 
 namespace INTERNAL{
@@ -558,7 +582,5 @@ RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes){
       std::vector<ETensorType> dtype(inputShapes.size(),ETensorType::FLOAT);
       return Parse(filepath,inputShapes,dtype);
 }
-}//PyTorch
-}//SOFIE
-}//Experimental
-}//TMVA
+
+} // namespace TMVA::Experimental::SOFIE::PyTorch

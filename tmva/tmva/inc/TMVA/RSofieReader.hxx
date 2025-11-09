@@ -110,8 +110,8 @@ public:
       }
       else if (type == kKeras) {
          // use Keras direct parser
-         if (gSystem->Load("libPyMVA") < 0) {
-            throw std::runtime_error("RSofieReader: cannot use SOFIE with Keras since libPyMVA is missing");
+         if (gSystem->Load("libROOTTMVASofiePyParsers") < 0) {
+            throw std::runtime_error("RSofieReader: cannot use SOFIE with Keras since libROOTTMVASofiePyParsers is missing");
          }
          // assume batch size is first entry in first input !
          std::string batch_size = "-1";
@@ -122,8 +122,8 @@ public:
       }
       else if (type == kPt) {
          // use PyTorch direct parser
-         if (gSystem->Load("libPyMVA") < 0) {
-            throw std::runtime_error("RSofieReader: cannot use SOFIE with PyTorch since libPyMVA is missing");
+         if (gSystem->Load("libROOTTMVASofiePyParsers") < 0) {
+            throw std::runtime_error("RSofieReader: cannot use SOFIE with PyTorch since libROOTTMVASofiePyParsers is missing");
          }
          if (inputShapes.size() == 0) {
             throw std::runtime_error("RSofieReader: cannot use SOFIE with PyTorch since the input tensor shape is missing and is needed by the PyTorch parser");

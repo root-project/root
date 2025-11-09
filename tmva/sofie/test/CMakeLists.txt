@@ -107,6 +107,8 @@ endif()
 
 # Look for needed Python modules
 ROOT_FIND_PYTHON_MODULE(torch)
+ROOT_FIND_PYTHON_MODULE(keras)
+
 if (ROOT_TORCH_FOUND)
   configure_file(Conv1dModelGenerator.py  Conv1dModelGenerator.py COPYONLY)
   configure_file(Conv2dModelGenerator.py  Conv2dModelGenerator.py COPYONLY)
@@ -126,6 +128,46 @@ if (ROOT_TORCH_FOUND)
     )
   endif()
 endif()
+
+# Any reatures that link against libpython are disabled if built with tpython=OFF
+if (tpython AND ROOT_TORCH_FOUND AND BLAS_FOUND)
+  configure_file(generatePyTorchModelClassification.py generatePyTorchModelClassification.py COPYONLY)
+  configure_file(generatePyTorchModelMulticlass.py generatePyTorchModelMulticlass.py COPYONLY)
+  configure_file(generatePyTorchModelRegression.py generatePyTorchModelRegression.py COPYONLY)
+  configure_file(generatePyTorchModels.py generatePyTorchModels.py COPYONLY)
+
+  # Test RModelParser_PyTorch
+  ROOT_ADD_GTEST(TestRModelParserPyTorch TestRModelParserPyTorch.C
+        LIBRARIES
+        ROOTTMVASofie
+        TMVA
+        Python3::NumPy
+        Python3::Python
+        BLAS::BLAS
+        INCLUDE_DIRS
+        SYSTEM
+        ${CMAKE_CURRENT_BINARY_DIR}
+  )
+endif()
+
+
+# Any reatures that link against libpython are disabled if built with tpython=OFF
+if (tpython AND ROOT_KERAS_FOUND AND BLAS_FOUND)
+  configure_file(generateKerasModels.py generateKerasModels.py COPYONLY)
+  configure_file(scale_by_2_op.hxx scale_by_2_op.hxx COPYONLY)
+
+  ROOT_ADD_GTEST(TestRModelParserKeras TestRModelParserKeras.C
+     LIBRARIES
+     ROOTTMVASofie
+     Python3::NumPy
+     Python3::Python
+     BLAS::BLAS
+     INCLUDE_DIRS
+     SYSTEM
+     ${CMAKE_CURRENT_BINARY_DIR}
+  )
+endif()
+
 
 ROOT_EXECUTABLE(emitGNN GNN/EmitGNN.cxx LIBRARIES ROOTTMVASofie)
 ROOT_ADD_TEST(tmva-sofie-EmitGNN COMMAND emitGNN)
