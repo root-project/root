@@ -2083,14 +2083,16 @@ endmacro()
 # ROOT_FIND_PYTHON_MODULE(module [REQUIRED] [QUIET])
 # Try importing the python dependency and cache the result in
 # ROOT_TEST_<MODULE> (all upper case).
-# Also set ROOT_<MODULE>_FOUND (all upper case) as well as ROOT_<module>_FOUND
-# (the original spelling of the argument) in the parent scope of this function
-# for convenient testing in subsequent if().
+# Also set ROOT_<MODULE>_FOUND and ROOT_<module>_FOUND (the original spelling)
+# in the parent scope for convenient testing in subsequent if() statements.
+# Additionally, sets ROOT_<MODULE>_VERSION (and ROOT_<module>_VERSION)
+# if the version could be determined.
 #----------------------------------------------------------------------------
 function(ROOT_FIND_PYTHON_MODULE module)
   CMAKE_PARSE_ARGUMENTS(ARG "REQUIRED;QUIET" "" "" ${ARGN})
   string(TOUPPER ${module} module_upper)
   set(CACHE_VAR ROOT_TEST_${module_upper})
+  set(CACHE_VAR_VERSION "${CACHE_VAR}_VERSION")
 
   if(NOT DEFINED ${CACHE_VAR})
     execute_process(COMMAND "${Python3_EXECUTABLE}" "-c" "import ${module}"
@@ -2099,8 +2101,23 @@ function(ROOT_FIND_PYTHON_MODULE module)
 
     if(${status} EQUAL 0)
       set(${CACHE_VAR} ON CACHE BOOL "Enable tests depending on '${module}'")
+      # Only cache a non-empty, non-'unknown' version string.
+      if(module_version AND NOT module_version STREQUAL "unknown")
+        set(${CACHE_VAR_VERSION} "${module_version}" CACHE STRING "Detected version of python module ${module}")
+      else()
+        # ensure no stale version remains in cache
+        if(DEFINED ${CACHE_VAR_VERSION})
+          unset(${CACHE_VAR_VERSION} CACHE)
+        endif()
+        unset(module_version)
+      endif()
     else()
       set(${CACHE_VAR} OFF CACHE BOOL "Enable tests depending on '${module}'")
+      # ensure version cache entry is removed on failure
+      if(DEFINED ${CACHE_VAR_VERSION})
+        unset(${CACHE_VAR_VERSION} CACHE)
+      endif()
+      unset(module_version)
     endif()
 
     if(NOT ARG_QUIET)
@@ -2110,11 +2127,24 @@ function(ROOT_FIND_PYTHON_MODULE module)
         message(STATUS "Could NOT find Python module ${module}. Corresponding tests will be disabled.")
       endif()
     endif()
+  else()
+    # Cache exists: if a cached version string exists, read it into module_version.
+    if(DEFINED ${CACHE_VAR_VERSION})
+      set(module_version ${${CACHE_VAR_VERSION}})
+    endif()
   endif()
 
   # Set the ROOT_xxx_FOUND to the (cached) result of the search:
   set(ROOT_${module_upper}_FOUND ${${CACHE_VAR}} PARENT_SCOPE)
   set(ROOT_${module}_FOUND ${${CACHE_VAR}} PARENT_SCOPE)
+
+  # Expose version only if module was found and a version string is available.
+  if(${CACHE_VAR})
+    if(DEFINED module_version AND NOT module_version STREQUAL "" AND NOT module_version STREQUAL "unknown")
+      set(ROOT_${module_upper}_VERSION "${module_version}" PARENT_SCOPE)
+      set(ROOT_${module}_VERSION "${module_version}" PARENT_SCOPE)
+    endif()
+  endif()
 
   if(ARG_REQUIRED AND NOT ${CACHE_VAR})
     message(FATAL_ERROR "Python module ${module} is required.")
