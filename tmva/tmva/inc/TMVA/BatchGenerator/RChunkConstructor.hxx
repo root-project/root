@@ -13,7 +13,6 @@
 
 #include <vector>
 
-#include "TMVA/RTensor.hxx"
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RVec.hxx"

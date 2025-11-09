@@ -15,7 +15,7 @@
 #ifndef TMVA_RBATCHGENERATOR
 #define TMVA_RBATCHGENERATOR
 
-#include "TMVA/RTensor.hxx"
+#include "TMVA/BatchGenerator/RFlat2DMatrix.hxx"
 #include "ROOT/RDF/RDatasetSpec.hxx"
 #include "TMVA/BatchGenerator/RChunkLoader.hxx"
 #include "TMVA/BatchGenerator/RBatchLoader.hxx"
@@ -100,11 +100,12 @@ private:
    std::size_t fNumTrainingBatches;
    std::size_t fNumValidationBatches;
 
-   TMVA::Experimental::RTensor<float> fTrainTensor;
-   TMVA::Experimental::RTensor<float> fTrainChunkTensor;
+   // flattened buffers for chunks and temporary tensors (rows * cols)
+   RFlat2DMatrix fTrainTensor;
+   RFlat2DMatrix fTrainChunkTensor;
 
-   TMVA::Experimental::RTensor<float> fValidationTensor;
-   TMVA::Experimental::RTensor<float> fValidationChunkTensor;
+   RFlat2DMatrix fValidationTensor;
+   RFlat2DMatrix fValidationChunkTensor;
 
 public:
    RBatchGenerator(ROOT::RDF::RNode &rdf, const std::size_t chunkSize, const std::size_t blockSize,
@@ -125,11 +126,7 @@ public:
         fShuffle(shuffle),
         fNotFiltered(f_rdf.GetFilterNames().empty()),
         fUseWholeFile(maxChunks == 0),
-        fNumColumns(cols.size()),
-        fTrainTensor({0, 0}),
-        fTrainChunkTensor({0, 0}),
-        fValidationTensor({0, 0}),
-        fValidationChunkTensor({0, 0})
+        fNumColumns(cols.size())
    {
 
       fNumEntries = f_rdf.Count().GetValue();
@@ -255,7 +252,7 @@ public:
    }
 
    /// \brief Loads a training batch from the queue
-   TMVA::Experimental::RTensor<float> GetTrainBatch()
+   RFlat2DMatrix GetTrainBatch()
    {
       auto batchQueue = fBatchLoader->GetNumTrainingBatchQueue();
 
@@ -276,8 +273,8 @@ public:
       return fBatchLoader->GetTrainBatch();
    }
 
-   /// \brief Loads a validation batch from the queue   
-   TMVA::Experimental::RTensor<float> GetValidationBatch()
+   /// \brief Loads a validation batch from the queue
+   RFlat2DMatrix GetValidationBatch()
    {
       auto batchQueue = fBatchLoader->GetNumValidationBatchQueue();
 
