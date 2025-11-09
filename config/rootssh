@@ -46,7 +46,7 @@ elif [[ "$1" == "--as-listener--" ]] ; then
    flag=1
    NUM=1
 
-   touch $listener_socket $listener_socket.log
+   touch $listener_socket.log
 
    # on MacOS it is not possible to start netcat multiple times with same socket
    # therefore run it permanently and redirect output to log file
