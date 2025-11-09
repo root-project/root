@@ -30,17 +30,11 @@
 #include "TMVA/Types.h"
 #include "TMVA/OperatorList.hxx"
 
-#include "TMVA/PyMethodBase.h"
-
 #include "Rtypes.h"
 #include "TString.h"
 
 
-namespace TMVA{
-namespace Experimental{
-namespace SOFIE{
-namespace PyKeras{
-
+namespace TMVA::Experimental::SOFIE::PyKeras {
 
 /// Parser function for translatng Keras .h5 model into a RModel object.
 /// Accepts the file location of a Keras model and returns the
@@ -49,8 +43,6 @@ namespace PyKeras{
 /// has not a defined input batch size : e.g. for input = (input_dim,)
 RModel Parse(std::string filename, int batch_size = -1);
 
-}//PyKeras
-}//SOFIE
-}//Experimental
-}//TMVA
+} // namespace TMVA::Experimental::SOFIE::PyKeras
+
 #endif //TMVA_PYMVA_RMODELPARSER_KERAS

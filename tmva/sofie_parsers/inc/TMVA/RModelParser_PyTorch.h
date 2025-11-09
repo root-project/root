@@ -30,31 +30,23 @@
 #include "TMVA/Types.h"
 #include "TMVA/OperatorList.hxx"
 
-#include "TMVA/PyMethodBase.h"
-
 #include "Rtypes.h"
 #include "TString.h"
 
 
-namespace TMVA{
-namespace Experimental{
-namespace SOFIE{
-namespace PyTorch{
+namespace TMVA::Experimental::SOFIE::PyTorch {
 
 /// Parser function for translating PyTorch .pt model into a RModel object.
 /// Accepts the file location of a PyTorch model, shapes and data-types of input tensors
 /// and returns the equivalent RModel object.
-RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes, std::vector<ETensorType> dtype);
+RModel Parse(std::string filepath, std::vector<std::vector<size_t>> inputShapes, std::vector<ETensorType> dtype);
 
 /// Overloaded Parser function for translating PyTorch .pt model into a RModel object.
 /// Accepts the file location of a PyTorch model and the shapes of input tensors.
 /// Builds the vector of data-types for input tensors and calls the `Parse()` function to
 /// return the equivalent RModel object.
-RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes);
+RModel Parse(std::string filepath, std::vector<std::vector<size_t>> inputShapes);
 
-}//PyTorch
-}//SOFIE
-}//Experimental
-}//TMVA
+} // namespace TMVA::Experimental::SOFIE::PyTorch
 
 #endif //TMVA_PYMVA_RMODELPARSER_PYTORCH
