@@ -21,6 +21,8 @@ set_source_files_properties(${PROTO_SRCS} PROPERTIES COMPILE_FLAGS -Wno-unused-p
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
   HEADERS
    TMVA/RModelParser_ONNX.hxx
+   TMVA/RModelParser_Keras.h
+   TMVA/RModelParser_PyTorch.h
   SOURCES
     src/RModelParser_ONNX.cxx
     src/ParseBasicUnary.cxx
@@ -77,6 +79,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     protobuf::libprotobuf
   DEPENDENCIES
     TMVA
+    ROOTTMVASofie
+)
+
+# Separate library for the parses that have to link against libpython.
+ROOT_LINKER_LIBRARY(ROOTTMVASofiePyParsers
+    src/RModelParser_Keras.cxx
+    src/RModelParser_PyTorch.cxx
+  LIBRARIES
+    Python3::NumPy
+    Python3::Python
     ROOTTMVASofie
 )
 

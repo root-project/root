@@ -11,7 +11,7 @@
 
 project(pymva-tests)
 
-set(Libraries Core MathCore TMVA PyMVA ROOTTMVASofie)
+set(Libraries Core MathCore TMVA PyMVA)
 
 # Look for needed python modules
 ROOT_FIND_PYTHON_MODULE(torch)
@@ -55,10 +55,6 @@ endif(ROOT_SKLEARN_FOUND)
 
 # Enable tests based on available python modules
 if(ROOT_TORCH_FOUND)
-   configure_file(generatePyTorchModelClassification.py generatePyTorchModelClassification.py COPYONLY)
-   configure_file(generatePyTorchModelMulticlass.py generatePyTorchModelMulticlass.py COPYONLY)
-   configure_file(generatePyTorchModelRegression.py generatePyTorchModelRegression.py COPYONLY)
-   configure_file(generatePyTorchModels.py generatePyTorchModels.py COPYONLY)
    # Test PyTorch: Binary classification
 
    if (ROOT_SKLEARN_FOUND)
@@ -80,27 +76,9 @@ if(ROOT_TORCH_FOUND)
       LIBRARIES ${Libraries})
    ROOT_ADD_TEST(PyMVA-Torch-Multiclass COMMAND testPyTorchMulticlass DEPENDS ${PyMVA-Torch-Multiclass-depends})
 
-   # Test RModelParser_PyTorch
-
-   if(BLAS_FOUND)
-     ROOT_ADD_GTEST(TestRModelParserPyTorch TestRModelParserPyTorch.C
-           LIBRARIES
-           ROOTTMVASofie
-           TMVA
-           Python3::NumPy
-           Python3::Python
-           BLAS::BLAS
-           INCLUDE_DIRS
-           SYSTEM
-           ${CMAKE_CURRENT_BINARY_DIR}
-        )
-   endif()
-
 endif(ROOT_TORCH_FOUND)
 
 if((ROOT_KERAS_FOUND AND ROOT_THEANO_FOUND) OR (ROOT_KERAS_FOUND AND ROOT_TENSORFLOW_FOUND))
-   configure_file(generateKerasModels.py generateKerasModels.py COPYONLY)
-   configure_file(scale_by_2_op.hxx scale_by_2_op.hxx COPYONLY)
 
    if (ROOT_TORCH_FOUND)
       set(PyMVA-Keras-Classification-depends PyMVA-Torch-Classification)
@@ -127,19 +105,4 @@ if((ROOT_KERAS_FOUND AND ROOT_THEANO_FOUND) OR (ROOT_KERAS_FOUND AND ROOT_TENSOR
    ROOT_EXECUTABLE(testPyKerasMulticlass testPyKerasMulticlass.C
       LIBRARIES ${Libraries})
    ROOT_ADD_TEST(PyMVA-Keras-Multiclass COMMAND testPyKerasMulticlass DEPENDS ${PyMVA-Keras-Multiclass-depends})
-
-   if(BLAS_FOUND)
-      ROOT_ADD_GTEST(TestRModelParserKeras TestRModelParserKeras.C
-         LIBRARIES
-         ROOTTMVASofie
-         PyMVA
-         Python3::NumPy
-         Python3::Python
-         BLAS::BLAS
-         INCLUDE_DIRS
-         SYSTEM
-         ${CMAKE_CURRENT_BINARY_DIR}
-     )
-  endif()
-
 endif()
