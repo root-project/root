@@ -28,7 +28,7 @@ def generateFunctionalModel():
 
 def generateSequentialModel():
     model=Sequential()
-    model.add(Dense(8,batch_size=4))
+    model.add(Dense(8))
     model.add(ReLU())
     model.add(Dense(6))
     model.add(Activation('sigmoid'))
@@ -43,7 +43,7 @@ def generateSequentialModel():
 
 def generateBatchNormModel():
     model=Sequential()
-    model.add(Dense(4,batch_size=2))
+    model.add(Dense(4))
     model.add(BatchNormalization())
     model.add(Dense(2))
 
