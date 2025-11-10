@@ -39,6 +39,7 @@ ExampleWidget::ExampleWidget(QWidget *parent, const char *name) : QWidget(parent
    QObject::connect(GeoCanvasBtn, &QPushButton::clicked, this, &ExampleWidget::GeoCanvasButton_clicked);
    QObject::connect(StandaloneBtn, &QPushButton::clicked, this, &ExampleWidget::StandaloneBtn_clicked);
    QObject::connect(ExitBtn, &QPushButton::clicked, this, &ExampleWidget::ExitButton_clicked);
+   QObject::connect(fxUpdateChk, &QCheckBox::toggled, this, &ExampleWidget::UpdateChk_toggled);
 
    setAttribute(Qt::WA_DeleteOnClose);
 
@@ -51,7 +52,7 @@ ExampleWidget::ExampleWidget(QWidget *parent, const char *name) : QWidget(parent
    fHisto->SetDirectory(nullptr);
 
    gPad = fxTCanvasWidget->getCanvas();
-   fHisto->Draw();
+   fHisto->Draw("hist");
 
    static constexpr int nth2points = 40;
    fHisto2 = std::make_shared<TH2I>("gaus2", "Example of TH2 drawing in RCanvas", nth2points, -5, 5, nth2points, -5, 5);
@@ -70,6 +71,23 @@ ExampleWidget::ExampleWidget(QWidget *parent, const char *name) : QWidget(parent
 }
 
 ExampleWidget::~ExampleWidget() {}
+
+void ExampleWidget::UpdateChk_toggled(bool on)
+{
+   if (on) {
+      // enable modify of canvas every 100 ms
+      QObject::connect(&fTimer, &QTimer::timeout, [&]() {
+         fHisto->FillRandom("gaus", 1000);
+         fxTCanvasWidget->getCanvas()->Modified();
+         fxTCanvasWidget->getCanvas()->Update();
+      });
+      fTimer.setSingleShot(false);
+      fTimer.start(100);
+   } else {
+      fTimer.stop();
+   }
+}
+
 
 void ExampleWidget::CreateDummyGeometry()
 {
