@@ -36,7 +36,7 @@ public:
       if (!fPreserveFile)
          std::remove(fPath.c_str());
    }
-   std::string GetPath() const { return fPath; }
+   const std::string &GetPath() const { return fPath; }
 
    // Useful if you want to keep a test file after the test has finished running
    // for debugging purposes. Should only be used locally and never pushed.
