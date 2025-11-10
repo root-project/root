@@ -344,12 +344,6 @@ Bool_t TDecompSparse::Solve(TVectorD &b)
       Error("Solve()","Matrix is singular");
       return kFALSE;
    }
-   if ( !TestBit(kDecomposed) ) {
-      if (!Decompose()) {
-         Error("Solve()","Decomposition failed");
-         return kFALSE;
-      }
-   }
 
    if (fNrows != b.GetNrows() || fRowLwb != b.GetLwb())
    {
@@ -369,6 +363,13 @@ Bool_t TDecompSparse::Solve(TVectorD &b)
    Int_t refactorizations = 0;
 
    while (!done && refactorizations < 10) {
+
+      if (!TestBit(kDecomposed)) {
+         if (!Decompose()) {
+            Error("Solve()", "Decomposition failed");
+            return kFALSE;
+         }
+      }
 
       Solve(fNrows,fFact,fIw,fW,fMaxfrt,b,fIw1,fNsteps,fIcntl,fInfo);
 
@@ -753,7 +754,7 @@ void TDecompSparse::Solve(const Int_t n,TArrayD &Aa,TArrayI &Aiw,
    info[1] = 0;
    k = 0;
    if (icntl[3] > 0 && icntl[2] > 0) {
-      printf("Entering Solve with n=%d la=%d liw=%d maxfrt=%d nsteps=%d",n,la,liw,maxfrt,nsteps);
+      printf("Entering Solve with n=%d la=%d liw=%d maxfrt=%d nsteps=%d", n, la, liw, maxfrt, nsteps);
 
       kblk = TMath::Abs(iw[1]+0);
       if (kblk != 0) {
