@@ -3,19 +3,14 @@ import os
 import platform
 import unittest
 
-import ROOT
-
 import numpy
+import ROOT
 
 
 class DatasetContext:
     """A helper class to create the dataset for the tutorial below."""
 
-    filenames = [
-        "rdataframe_misc_1.root",
-        "rdataframe_misc_2.root",
-        "rdataframe_misc_3.root"
-    ]
+    filenames = ["rdataframe_misc_1.root", "rdataframe_misc_2.root", "rdataframe_misc_3.root"]
     treename = "dataset"
     nentries = 5
 
@@ -48,6 +43,7 @@ class DatasetContext:
         for filename in self.filenames:
             os.remove(filename)
 
+
 class RDataFrameMisc(unittest.TestCase):
     """Miscellaneous RDataFrame tests"""
 
@@ -59,10 +55,7 @@ class RDataFrameMisc(unittest.TestCase):
         # https://bugs.llvm.org/show_bug.cgi?id=49692 :
         # llvm JIT fails to catch exceptions on MacOS ARM, so we disable their testing
         # Also fails on Windows for the same reason
-        if (
-            (platform.processor() != "arm" or platform.mac_ver()[0] == '') and not
-            platform.system() == "Windows"
-        ):
+        if (platform.processor() != "arm" or platform.mac_ver()[0] == "") and not platform.system() == "Windows":
             # With implicit conversions, cppyy also needs to try dispatching to the various
             # constructor overloads. The C++ exception will be thrown, but will be incapsulated
             # in a more generic TypeError telling the user that none of the overloads worked
@@ -83,7 +76,7 @@ class RDataFrameMisc(unittest.TestCase):
             chain.Add(filename)
 
         return ROOT.RDataFrame(chain)
-    
+
     def _get_chain(self, dataset):
         chain = ROOT.TChain(dataset.treename)
         for filename in dataset.filenames:
@@ -95,9 +88,8 @@ class RDataFrameMisc(unittest.TestCase):
 
     def _filter_x(self, rdf):
         return rdf.Filter("x > 2")
-    
-    def _test_rdf_in_function(self, chain):
 
+    def _test_rdf_in_function(self, chain):
         rdf = ROOT.RDataFrame(chain)
         meanx = rdf.Mean("x")
         meany = rdf.Mean("y")
@@ -117,8 +109,8 @@ class RDataFrameMisc(unittest.TestCase):
             rdf = self._get_rdf(dataset)
 
             npy_dict = rdf.AsNumpy()
-            self.assertIsNone(numpy.testing.assert_array_equal(npy_dict["x"], numpy.array([1,2,3,4,5]*3)))
-            self.assertIsNone(numpy.testing.assert_array_equal(npy_dict["y"], numpy.array([2,4,6,8,10]*3)))
+            self.assertIsNone(numpy.testing.assert_array_equal(npy_dict["x"], numpy.array([1, 2, 3, 4, 5] * 3)))
+            self.assertIsNone(numpy.testing.assert_array_equal(npy_dict["y"], numpy.array([2, 4, 6, 8, 10] * 3)))
 
             chain = self._get_chain(dataset)
 
@@ -157,5 +149,5 @@ class RDataFrameMisc(unittest.TestCase):
             os.remove(out_path)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
