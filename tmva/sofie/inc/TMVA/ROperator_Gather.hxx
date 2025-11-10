@@ -153,13 +153,14 @@ public:
    }
 
    std::string Generate(std::string opName) override {
-      if (fIsOutputConstant) {
-         // no code to generate here for constant output. Tensor output is defined in Session constructor
-         return "//---------------------------------------\n";
-      }
       opName = "op_" + opName;
       std::stringstream out;
-      out << "//--------- Gather " << opName << " --> " << ConvertShapeToString(fShapeY) << "\n";
+      out << "//--------- Gather " << opName << " --> " << fNY << "  " << ConvertShapeToString(fShapeY) << "\n";
+      if (fIsOutputConstant) {
+         // no code to generate here for constant output. Tensor output is defined in Session constructor
+         out << "//--------------------(constant)----------\n";
+         return out.str();
+      }
       // The shape of the output is q + r - 1
       size_t r = fShapeX.size();
       // Indices of shape q
