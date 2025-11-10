@@ -101,8 +101,6 @@ TEST(RooNaNPacker, CanPackStuffIntoNaNs)
       dumpFloats(rnp._payload);
 }
 
-#if !defined(_MSC_VER) || defined(_WIN64) || defined(NDEBUG) || defined(R__ENABLE_BROKEN_WIN_TESTS)
-
 // Demonstrate value preserving behavior after arithmetic on packed NaNs.
 TEST(RooNaNPacker, PackedNaNPreservedAfterArithmetic)
 {
@@ -145,10 +143,6 @@ TEST(RooNaNPacker, PackedNaNPreservedAfterArithmetic)
    // PackedNaN pays no mind
    EXPECT_EQ(rnp.getPayload(), rnp2.getPayload());
 
-   // the following tests have compiler dependent behavior
-   // (note that this behavior was tested for msvc as well, even though this
-   // whole test is currently disabled in msvc)
-#if defined(__clang__) || defined(_MSC_VER)
    // add packed NaN to regular NaN
    rnp2._payload = std::numeric_limits<double>::quiet_NaN() + rnp.getNaNWithPayload();
    // first NaN wins, though! now the payload is gone
@@ -174,26 +168,7 @@ TEST(RooNaNPacker, PackedNaNPreservedAfterArithmetic)
    EXPECT_FALSE(rnp2.isNaNWithPayload());
    // a quiet NaN has a "payload" of zero
    EXPECT_EQ(0, rnp2.getPayload());
-#endif // defined(__clang__) || defined(_MSC_VER)
-#if defined(__GNUC__) && !defined(__clang__)
-   // on gcc, a different NaN is preserved than in clang and msvc!
-
-   // add packed NaN to regular NaN
-   rnp2._payload = rnp.getNaNWithPayload() + std::numeric_limits<double>::quiet_NaN();
-   // on gcc, the second NaN wins! now the payload is gone
-   EXPECT_FALSE(rnp2.isNaNWithPayload());
-   // a quiet NaN has a "payload" of zero
-   EXPECT_EQ(0, rnp2.getPayload());
-
-   // ... other way around
-   rnp2._payload = std::numeric_limits<double>::quiet_NaN() + rnp.getNaNWithPayload();
-   EXPECT_TRUE(rnp2.isNaNWithPayload());
-   // if it comes second, the PackedNaN does survive
-   EXPECT_EQ(rnp.getPayload(), rnp2.getPayload());
-#endif // __GNUC__
 }
-
-#endif // !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
 
 /// Fit a simple linear function, that starts in the negative.
 TEST(RooNaNPacker, FitSimpleLinear)
