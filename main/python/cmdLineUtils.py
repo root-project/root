@@ -713,8 +713,6 @@ def copyRootObjectRecursive(sourceFile, sourcePathSplit, destFile, destPathSplit
                     retcodeTemp = deleteObject(destFile, destPathSplit + [objectName])
                     if retcodeTemp:
                         retcode += retcodeTemp
-                        obj.Delete()
-                        continue
                 if setName != "":
                     if isinstance(obj, ROOT.TNamed):
                         obj.SetName(setName)
