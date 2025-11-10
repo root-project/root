@@ -297,16 +297,25 @@ public:
             }
          }
       }
-      // output channel size can be parametric
+      // output channel size can be parametric and is an expression
       std::vector<Dim> outputDims = std::vector<Dim>(fShapeY.begin()+2, fShapeY.end());
-      auto outputChannelSize = ConvertDimShapeToLength(outputDims); // size/channel = D * H * W
+      //check if shape is not parametric
+      std::vector<size_t> outputInts = ConvertShapeToInt(outputDims);
+      Dim channelDim;
+      if (outputInts.empty()) {
+         auto outputChannelSize = ConvertDimShapeToLength(outputDims); // size/channel = D * H * W
+         channelDim = Dim{ outputChannelSize, static_cast<size_t>(-1)};
+      } else {
+         size_t outputChannelSize = ConvertShapeToLength(outputInts);
+         channelDim = Dim{ outputChannelSize };
+      }
       size_t kernelSize = fAttrKernelShape[0];
       for (size_t i = 1; i < fDim; i++) {
          kernelSize *= fAttrKernelShape[i];
       }
 
       std::vector<size_t> shape1 = {fShapeW[0], fShapeW[1], kernelSize};
-      std::vector<Dim> shape2 = {Dim{fShapeW[1]}, Dim{kernelSize}, Dim{outputChannelSize}};
+      std::vector<Dim> shape2 = {Dim{fShapeW[1]}, Dim{kernelSize}, channelDim };
       model.AddIntermediateTensor(fNX +"_f", ConvertStringToType(fType), shape1 );
       model.AddIntermediateTensor(fNX +"_xcol", ConvertStringToType(fType), shape2 );
       convK = fNX +"_f";

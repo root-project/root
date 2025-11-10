@@ -136,9 +136,9 @@ public:
       std::stringstream out;
       if (fIsOutputConstant) {
          if (fNX.empty())
-            out <<  "// ---- Constant (no-op) " << opName << " --> " << ConvertShapeToString(fDimOutputShape) << "\n";
+            out <<  "// ---- Constant (no-op) " << opName << " --> " << fNY << " " << ConvertShapeToString(fDimOutputShape) << "\n";
          else
-            out << "// ---- ConstantOfShape (no-op) " << opName << " --> " << ConvertShapeToString(fDimOutputShape) << "\n";
+            out << "// ---- ConstantOfShape (no-op) " << opName << " --> " << fNY << " " << ConvertShapeToString(fDimOutputShape) << "\n";
          return out.str();
       }
       // Only ConstantOfShape might require generation code
