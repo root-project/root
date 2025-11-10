@@ -53,6 +53,8 @@ The following people have contributed to this new version:
 
 ## RDataFrame
 
+- The message shown in ROOT 6.38 to inform users about change of default compression setting used by Snapshot (was 101 before 6.38, became 505 in 6.38) is now removed.
+
 ## Python Interface
 
 ## Command-line utilities
