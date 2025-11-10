@@ -50,6 +50,7 @@ End_Macro
 #include "TEllipse.h"
 #include "TMath.h"
 
+#include <string>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraphPolargram Constructor.
@@ -987,27 +988,27 @@ void TGraphPolargram::SavePrimitive(std::ostream &out, Option_t *option)
    SaveTextAttributes(out, "polargram", -1, -1, -1, -1, -1);
 
    if (fAxisAngle)
-      out << "   polargram->SetAxisAngle(" << fAxisAngle / TMath::Pi() * 180 << ");\n";
+      out << "   polargram->SetAxisAngle(" << std::to_string((int)(fAxisAngle / TMath::Pi() * 180)).c_str() << ");\n";
 
    if (fNdivPol != 508)
-      out << "   polargram->SetNdivPolar(" << fNdivPol << ");\n";
+      out << "   polargram->SetNdivPolar(" << std::to_string(fNdivPol).c_str() << ");\n";
    out << "   polargram->SetPolarLabelColor(" << TColor::SavePrimitiveColor(fPolarLabelColor) << ");\n";
-   out << "   polargram->SetPolarLabelFont(" << fPolarLabelFont << ");\n";
-   out << "   polargram->SetPolarLabelSize(" << fPolarTextSize << ");\n";
+   out << "   polargram->SetPolarLabelFont(" << std::to_string(fPolarLabelFont).c_str() << ");\n";
+   out << "   polargram->SetPolarLabelSize(" << std::to_string(fPolarTextSize).c_str() << ");\n";
    if (fPolarOffset != 0.04)
-      out << "   polargram->SetPolarOffset(" << fPolarOffset << ");\n";
-   out << "   polargram->SetTickpolarSize(" << fTickpolarSize << ");\n";
+      out << "   polargram->SetPolarOffset(" << std::to_string(fPolarOffset).c_str() << ");\n";
+   out << "   polargram->SetTickpolarSize(" << std::to_string(fTickpolarSize).c_str() << ");\n";
    if (fPolarLabels)
       for(Int_t n = 0; n < fNdivPol; n++)
          if (!fPolarLabels[n].IsNull())
             out << "   polargram->SetPolarLabel(\"" << fPolarLabels[n] << "\");\n";
 
    if (fNdivRad != 508)
-      out << "   polargram->SetNdivRadial(" << fNdivRad << ");\n";
+      out << "   polargram->SetNdivRadial(" << std::to_string(fNdivRad).c_str() << ");\n";
    out << "   polargram->SetRadialLabelColor(" << TColor::SavePrimitiveColor(fRadialLabelColor) << ");\n";
-   out << "   polargram->SetRadialLabelFont(" << fRadialLabelFont << ");\n";
-   out << "   polargram->SetRadialLabelSize(" << fRadialTextSize << ");\n";
+   out << "   polargram->SetRadialLabelFont(" << std::to_string(fRadialLabelFont).c_str() << ");\n";
+   out << "   polargram->SetRadialLabelSize(" << std::to_string(fRadialTextSize).c_str() << ");\n";
    if (fRadialOffset != 0.04)
-      out << "   polargram->SetRadialOffset(" << fRadialOffset << ");\n";
+      out << "   polargram->SetRadialOffset(" << std::to_string(fRadialOffset).c_str() << ");\n";
 }
 
