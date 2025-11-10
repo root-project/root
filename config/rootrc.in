@@ -615,9 +615,3 @@ Rint.Canvas.HighLightColor:      5
 #                          1 All Branches (default)
 # Can be overridden by the environment variable ROOT_TTREECACHE_PREFILL
 # TTreeCache.Prefill: 1
-
-# Set whether to show or suppress an info message coming from RDataFrame
-# Snapshot informing the user on the change of default output dataset
-# compression settings introduced in ROOT 6.38 (1 means show the info, 0 means
-# suppress, 1 by default).
-# ROOT.RDF.Snapshot.Info: 1
