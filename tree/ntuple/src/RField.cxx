@@ -117,7 +117,7 @@ void ROOT::RSimpleField<T>::ReconcileIntegralField(const RNTupleDescriptor &desc
    EnsureMatchingOnDiskField(desc, kDiffTypeName);
 
    const RFieldDescriptor &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-   if (fieldDesc.IsCustomEnum(desc)) {
+   if (Internal::IsCustomEnumFieldDesc(desc, fieldDesc)) {
       SetOnDiskId(desc.FindFieldId("_0", GetOnDiskId()));
       return;
    }
