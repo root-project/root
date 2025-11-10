@@ -301,6 +301,7 @@ struct RResealFunc {
    ROOT::Internal::RPageAllocator &fPageAlloc;
    std::uint8_t *fBuffer;
    std::size_t fBufSize;
+   const ROOT::RNTupleWriteOptions &fWriteOpts;
 
    void operator()() const
    {
@@ -310,7 +311,7 @@ struct RResealFunc {
       sealConf.fPage = &page;
       sealConf.fBuffer = fBuffer;
       sealConf.fCompressionSettings = *fMergeOptions.fCompressionSettings;
-      sealConf.fWriteChecksum = fSealedPage.GetHasChecksum();
+      sealConf.fWriteChecksum = fWriteOpts.GetEnablePageChecksums();
       assert(fBufSize >= fSealedPage.GetDataSize() + fSealedPage.GetHasChecksum() * sizeof(std::uint64_t));
       auto refSealedPage = RPageSink::SealPage(sealConf);
       fSealedPage = refSealedPage;
@@ -916,6 +917,7 @@ RNTupleMerger::MergeCommonColumns(ROOT::Internal::RClusterPool &clusterPool,
                   *fPageAlloc,
                   buffer.get(),
                   bufSize,
+                  mergeData.fDestination.GetWriteOptions()
                });
             } else {
                RTaskVisitor{fTaskGroup}(RChangeCompressionFunc{
