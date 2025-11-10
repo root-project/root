@@ -19,7 +19,7 @@ import ROOT
 rdf = ROOT.RDataFrame(100)
 
 # Define a new column `x` that contains random numbers
-rdf_x = rdf.Define("x", "gRandom->Rndm()")
+rdf_x = rdf.Define("x", 42)
 
 # Create a histogram from `x` and draw it
 h = rdf_x.Histo1D("x")
