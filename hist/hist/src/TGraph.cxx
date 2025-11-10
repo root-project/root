@@ -14,9 +14,6 @@
 #include "TBuffer.h"
 #include "TEnv.h"
 #include "TGraph.h"
-#include "TGraphErrors.h"
-#include "TGraphAsymmErrors.h"
-#include "TGraphBentErrors.h"
 #include "TH1.h"
 #include "TF1.h"
 #include "TStyle.h"
@@ -2110,8 +2107,12 @@ Int_t TGraph::RemovePoint(Int_t ipoint)
 /// By default file contains lines with (X, Y) coordinates. If errors are present,
 /// (X, EX, Y, EY) are written. With asymmetric errors (X, EXL, EXH, Y, EYL, EYH) are stored.
 /// If option contains "asroot" string, order of values will match such order in TGraph constructors.
-/// So one will get (X, Y, EX, EY) or (X, Y, EXL, EXH, EYL, EYH). One can fully exclude storage of
-/// errors if option contains "noerros" string.
+/// So one will get (X, Y, EX, EY) or (X, Y, EXL, EXH, EYL, EYH).
+///
+/// Also one can directly select that kind of errors are stored:
+///   - "errors" - (X, Y, EX, EY) will be stored
+///   - "asymmerrors" - (X, Y, EXL, EXH, EYL, EYH) will be stored
+///   - "noerrors" - just (X, Y) will be stored disregard of graph kind
 ///
 /// If option contains "title" a title line is generated with the axis titles.
 
@@ -2137,8 +2138,21 @@ void TGraph::SaveAs(const char *filename, Option_t *option) const
          return;
       }
       Bool_t store_title = opt.Contains("title");
-      Bool_t no_errors = opt.Contains("noerrors");
-      Bool_t as_root = opt.Contains("asroot");
+      Bool_t no_errors = kFALSE, plain_errors = kFALSE, asymm_erros = kFALSE;
+      Bool_t as_root = opt.Contains("asroot") || opt.Contains("native");
+      if (opt.Contains("noerrors"))
+         no_errors = kTRUE;
+      else if (opt.Contains("asymmerrors"))
+         asymm_erros = kTRUE;
+      else if (opt.Contains("errors"))
+         plain_errors = kTRUE;
+      else if (InheritsFrom("TGraphErrors"))
+         plain_errors = kTRUE;
+      else if (InheritsFrom("TGraphAsymmErrors") || InheritsFrom("TGraphBentErrors"))
+         asymm_erros = kTRUE;
+      else
+         no_errors = kTRUE;
+
       TString xtitle, ytitle;
       if (fHistogram) {
          xtitle = fHistogram->GetXaxis()->GetTitle();
@@ -2149,50 +2163,47 @@ void TGraph::SaveAs(const char *filename, Option_t *option) const
       if (ytitle.IsNull())
          ytitle = "y";
 
-      if (InheritsFrom(TGraphErrors::Class()) && !no_errors) {
+      if (plain_errors) {
          if(store_title) {
             if (as_root)
                out << "# " << xtitle << "\t" << ytitle << "\tex\tey\n";
             else
                out << "# " << xtitle << "\tex\t" << ytitle << "\tey\n";
          }
-         Double_t *arr_ex = this->GetEX();
-         Double_t *arr_ey = this->GetEY();
          for(int i = 0; i < fNpoints ; i++) {
-            Double_t ex = arr_ex ? arr_ex[i] : 0.;
-            Double_t ey = arr_ey ? arr_ey[i] : 0.;
+            Double_t x = GetPointX(i);
+            Double_t y = GetPointY(i);
+            Double_t ex = GetErrorX(i);
+            Double_t ey = GetErrorY(i);
             if (as_root)
-               out << fX[i] << del << fY[i] << del <<  ex << del << ey << "\n";
+               out << x << del << y << del <<  ex << del << ey << "\n";
             else
-               out << fX[i] << del << ex << del << fY[i] << del << ey << "\n";
+               out << x << del << ex << del << y << del << ey << "\n";
          }
-      } else if ((InheritsFrom(TGraphAsymmErrors::Class()) || InheritsFrom(TGraphBentErrors::Class())) && !no_errors) {
+      } else if (asymm_erros) {
          if(store_title) {
             if (as_root)
                out << "# " << xtitle << "\t" << ytitle << "\texl\texh\teyl\teyh\n";
             else
                out << "# " << xtitle << "\texl\texh\t" << ytitle << "\teyl\teyh\n";
          }
-
-         Double_t *arr_exl = this->GetEXlow();
-         Double_t *arr_exh = this->GetEXhigh();
-         Double_t *arr_eyl = this->GetEYlow();
-         Double_t *arr_eyh = this->GetEYhigh();
-         for(int i=0 ; i<fNpoints ; i++) {
-            Double_t exl = arr_exl ? arr_exl[i] : 0.;
-            Double_t exh = arr_exh ? arr_exh[i] : 0.;
-            Double_t eyl = arr_eyl ? arr_eyl[i] : 0.;
-            Double_t eyh = arr_eyh ? arr_eyh[i] : 0.;
+         for(int i = 0; i < GetN(); i++) {
+            Double_t x = GetPointX(i);
+            Double_t y = GetPointY(i);
+            Double_t exl = GetErrorXlow(i);
+            Double_t exh = GetErrorXhigh(i);
+            Double_t eyl = GetErrorYlow(i);
+            Double_t eyh = GetErrorYhigh(i);
             if (as_root)
-               out << fX[i] << del << fY[i] << del << exl << del << exh << del << eyl << del << eyh << "\n";
+               out << x << del << y << del << exl << del << exh << del << eyl << del << eyh << "\n";
             else
-               out << fX[i] << del << exl << del << exh << del << fY[i] << del << eyl << del << eyh << "\n";
+               out << x << del << exl << del << exh << del << y << del << eyl << del << eyh << "\n";
          }
-      } else {
+      } else if (no_errors) {
          if(store_title)
             out << "# " << xtitle << "\t" << ytitle << "\n";
-         for (int i=0 ; i<fNpoints ; i++)
-            out << fX[i] << del << fY[i] << "\n";
+         for (Int_t i = 0 ; i < GetN(); i++)
+            out << GetPointX(i) << del << GetPointY(i) << "\n";
       }
       out.close();
       Info("SaveAs", "%s file: %s has been generated", ext.Data(), filename);
