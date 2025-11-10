@@ -2107,7 +2107,14 @@ Int_t TGraph::RemovePoint(Int_t ipoint)
 ///  - `.tsv` : tab
 ///  - `.txt` : space
 ///
-/// If option = "title" a title line is generated with the axis titles.
+/// By default file contains lines with (X, Y) coordinates. If errors are present,
+/// (X, EX, Y, EY) are written. With asymmetric errors (X, EXL, EXH, Y, EYL, EYH) are stored.
+/// If option contains "asroot" string, order of values will match such order in TGraph constructors.
+/// So one will get (X, Y, EX, EY) or (X, Y, EXL, EXH, EYL, EYH). One can fully exclude storage of
+/// errors if option contains "noerros" string.
+///
+/// If option contains "title" a title line is generated with the axis titles.
+
 
 void TGraph::SaveAs(const char *filename, Option_t *option) const
 {
@@ -2115,6 +2122,7 @@ void TGraph::SaveAs(const char *filename, Option_t *option) const
    TString ext = "";
    TString fname = filename;
    TString opt = option;
+   opt.ToLower();
 
    if (filename) {
       if      (fname.EndsWith(".csv")) {del = ',';  ext = "csv";}
@@ -2128,27 +2136,63 @@ void TGraph::SaveAs(const char *filename, Option_t *option) const
          Error("SaveAs", "cannot open file: %s", filename);
          return;
       }
-      if (InheritsFrom(TGraphErrors::Class()) ) {
-         if(opt.Contains("title"))
-         out << "# " << GetXaxis()->GetTitle() << "\tex\t" << GetYaxis()->GetTitle() << "\tey" << std::endl;
-         double *ex = this->GetEX();
-         double *ey = this->GetEY();
-         for(int i=0 ; i<fNpoints ; i++)
-         out << fX[i] << del << (ex?ex[i]:0) << del << fY[i] << del << (ey?ey[i]:0) << std::endl;
-      } else if (InheritsFrom(TGraphAsymmErrors::Class()) || InheritsFrom(TGraphBentErrors::Class())) {
-         if(opt.Contains("title"))
-         out << "# " << GetXaxis()->GetTitle() << "\texl\t" << "\texh\t" << GetYaxis()->GetTitle() << "\teyl" << "\teyh" << std::endl;
-         double *exl = this->GetEXlow();
-         double *exh = this->GetEXhigh();
-         double *eyl = this->GetEYlow();
-         double *eyh = this->GetEYhigh();
-         for(int i=0 ; i<fNpoints ; i++)
-         out << fX[i] << del << (exl?exl[i]:0) << del << (exh?exh[i]:0) << del << fY[i] << del << (eyl?eyl[i]:0) << del << (eyh?eyh[i]:0) << std::endl;
+      Bool_t store_title = opt.Contains("title");
+      Bool_t no_errors = opt.Contains("noerrors");
+      Bool_t as_root = opt.Contains("asroot");
+      TString xtitle, ytitle;
+      if (fHistogram) {
+         xtitle = fHistogram->GetXaxis()->GetTitle();
+         ytitle = fHistogram->GetYaxis()->GetTitle();
+      }
+      if (xtitle.IsNull())
+         xtitle = "x";
+      if (ytitle.IsNull())
+         ytitle = "y";
+
+      if (InheritsFrom(TGraphErrors::Class()) && !no_errors) {
+         if(store_title) {
+            if (as_root)
+               out << "# " << xtitle << "\t" << ytitle << "\tex\tey\n";
+            else
+               out << "# " << xtitle << "\tex\t" << ytitle << "\tey\n";
+         }
+         Double_t *arr_ex = this->GetEX();
+         Double_t *arr_ey = this->GetEY();
+         for(int i = 0; i < fNpoints ; i++) {
+            Double_t ex = arr_ex ? arr_ex[i] : 0.;
+            Double_t ey = arr_ey ? arr_ey[i] : 0.;
+            if (as_root)
+               out << fX[i] << del << fY[i] << del <<  ex << del << ey << "\n";
+            else
+               out << fX[i] << del << ex << del << fY[i] << del << ey << "\n";
+         }
+      } else if ((InheritsFrom(TGraphAsymmErrors::Class()) || InheritsFrom(TGraphBentErrors::Class())) && !no_errors) {
+         if(store_title) {
+            if (as_root)
+               out << "# " << xtitle << "\t" << ytitle << "\texl\texh\teyl\teyh\n";
+            else
+               out << "# " << xtitle << "\texl\texh\t" << ytitle << "\teyl\teyh\n";
+         }
+
+         Double_t *arr_exl = this->GetEXlow();
+         Double_t *arr_exh = this->GetEXhigh();
+         Double_t *arr_eyl = this->GetEYlow();
+         Double_t *arr_eyh = this->GetEYhigh();
+         for(int i=0 ; i<fNpoints ; i++) {
+            Double_t exl = arr_exl ? arr_exl[i] : 0.;
+            Double_t exh = arr_exh ? arr_exh[i] : 0.;
+            Double_t eyl = arr_eyl ? arr_eyl[i] : 0.;
+            Double_t eyh = arr_eyh ? arr_eyh[i] : 0.;
+            if (as_root)
+               out << fX[i] << del << fY[i] << del << exl << del << exh << del << eyl << del << eyh << "\n";
+            else
+               out << fX[i] << del << exl << del << exh << del << fY[i] << del << eyl << del << eyh << "\n";
+         }
       } else {
-         if(opt.Contains("title"))
-         out << "# " << GetXaxis()->GetTitle() << "\t" << GetYaxis()->GetTitle() << std::endl;
+         if(store_title)
+            out << "# " << xtitle << "\t" << ytitle << "\n";
          for (int i=0 ; i<fNpoints ; i++)
-         out << fX[i] << del << fY[i] << std::endl;
+            out << fX[i] << del << fY[i] << "\n";
       }
       out.close();
       Info("SaveAs", "%s file: %s has been generated", ext.Data(), filename);
