@@ -67,15 +67,17 @@ class IgnoreUnsplitComment {
 // Test streamer field with polymorphic type
 
 struct PolyBase {
-   virtual ~PolyBase() {}
+   virtual ~PolyBase() = default;
    int x;
 };
 
 struct PolyA : public PolyBase {
+   ~PolyA() override = default;
    int a;
 };
 
 struct PolyB : public PolyBase {
+   ~PolyB() override = default;
    int b;
 };
 
