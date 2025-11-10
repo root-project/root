@@ -94,7 +94,7 @@ namespace cling {
       return;
     }
 
-#if LLVM_HAS_NVPTX_TARGET == 1
+#if LLVM_HAS_NVPTX_TARGET
     // initialize NVPTX backend
     LLVMInitializeNVPTXTargetInfo();
     LLVMInitializeNVPTXTarget();
@@ -102,7 +102,7 @@ namespace cling {
     LLVMInitializeNVPTXAsmPrinter();
 
     m_Init = true;
-#endif  // #if LLVM_HAS_NVPTX_TARGET == 1
+#endif  // LLVM_HAS_NVPTX_TARGET
   }
 
   void IncrementalCUDADeviceCompiler::setCuArgs(

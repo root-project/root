@@ -92,7 +92,7 @@ else()
   set(ROOT_CLING_TARGET "all")
 endif()
 
-if(cuda)
+if(cuda AND NOT "${ROOT_CLING_TARGET}" STREQUAL "all")
   string(APPEND ROOT_CLING_TARGET ";NVPTX")
 endif()
 
