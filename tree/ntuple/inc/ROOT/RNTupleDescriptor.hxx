@@ -189,15 +189,10 @@ public:
    std::uint32_t GetColumnCardinality() const { return fColumnCardinality; }
    std::optional<std::uint32_t> GetTypeChecksum() const { return fTypeChecksum; }
    bool IsProjectedField() const { return fProjectionSourceId != ROOT::kInvalidDescriptorId; }
-   /// Tells if the field describes a user-defined class rather than a fundamental type, a collection, or one of the
-   /// natively supported stdlib classes.
-   /// The dictionary does not need to be available for this method.
-   bool IsCustomClass() const;
-   /// Tells if the field describes a user-defined enum type.
-   /// The dictionary does not need to be available for this method.
-   /// Needs the full descriptor to look up sub fields.
-   bool IsCustomEnum(const RNTupleDescriptor &desc) const;
-   bool IsStdAtomic() const;
+
+   bool IsCustomClass() const R__DEPRECATED(6, 42, "removed from public interface");
+   bool IsCustomEnum(const RNTupleDescriptor &desc) const R__DEPRECATED(6, 42, "removed from public interface");
+   bool IsStdAtomic() const R__DEPRECATED(6, 42, "removed from public interface");
 };
 
 // clang-format off
@@ -1768,6 +1763,14 @@ inline RNTupleDescriptor CloneDescriptorSchema(const RNTupleDescriptor &desc)
 {
    return desc.CloneSchema();
 }
+
+/// Tells if the field describes a user-defined enum type.
+/// The dictionary does not need to be available for this method.
+/// Needs the full descriptor to look up sub fields.
+bool IsCustomEnumFieldDesc(const RNTupleDescriptor &desc, const RFieldDescriptor &fieldDesc);
+
+/// Tells if the field describes a std::atomic<T> type
+bool IsStdAtomicFieldDesc(const RFieldDescriptor &fieldDesc);
 
 } // namespace Internal
 

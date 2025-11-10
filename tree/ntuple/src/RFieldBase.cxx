@@ -959,7 +959,8 @@ void ROOT::RFieldBase::ConnectPageSource(ROOT::Internal::RPageSource &pageSource
       // Note that we have to do this before calling BeforeConnectPageSource(), which already may compare the field
       // to its on-disk description.
       const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
-      if (!dynamic_cast<RAtomicField *>(this) && desc.GetFieldDescriptor(GetOnDiskId()).IsStdAtomic()) {
+      if (!dynamic_cast<RAtomicField *>(this) &&
+          Internal::IsStdAtomicFieldDesc(desc.GetFieldDescriptor(GetOnDiskId()))) {
          SetOnDiskId(desc.GetFieldDescriptor(GetOnDiskId()).GetLinkIds()[0]);
       }
    }
