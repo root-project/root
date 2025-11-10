@@ -39,7 +39,7 @@ TCanvasWidget::TCanvasWidget(QWidget *parent) : QWidget(parent)
 
    auto web = static_cast<TWebCanvas *> (fCanvas->GetCanvasImp());
 
-   web->SetCanCreateObjects(kFALSE); // not yet create objects on server side
+   web->SetCanCreateObjects(kTRUE);
 
    web->SetUpdatedHandler([this]() { emit CanvasUpdated(); });
 
