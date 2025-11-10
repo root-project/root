@@ -556,7 +556,9 @@ def getSourceDestListOptDict(parser, wildcards=True):
 # Several functions shared by rootcp, rootmv and rootrm
 
 TARGET_ERROR = "target '{0}' is not a directory"
-OMITTING_ERROR = "{0} '{1}' will be copied but not its subdirectories (if any). Use the -r option if you need a recursive copy."
+OMITTING_ERROR = (
+    "{0} '{1}' will be copied but not its subdirectories (if any). Use the -r option if you need a recursive copy."
+)
 OVERWRITE_ERROR = "cannot overwrite non-directory '{0}' with directory '{1}'"
 
 
@@ -1062,7 +1064,7 @@ def rootMv(sourceList, destFileName, destPathSplit, compress=None, interactive=F
 # ROOTPRINT
 
 
-def _keyListExtended(rootFile, pathSplitList, recursive = False):
+def _keyListExtended(rootFile, pathSplitList, recursive=False):
     prefixList = []
     keyList, dirList = keyClassSplitter(rootFile, pathSplitList)
     for pathSplit in dirList:
@@ -1072,11 +1074,15 @@ def _keyListExtended(rootFile, pathSplitList, recursive = False):
     prefixList = ["" for key in keyList]
     if recursive:
         for subdir in subList:
-            subkeyList, subprefixList = _keyListExtended(ROOT.gDirectory.Get(subdir.GetName()), pathSplitList, recursive)
+            subkeyList, subprefixList = _keyListExtended(
+                ROOT.gDirectory.Get(subdir.GetName()), pathSplitList, recursive
+            )
             keyList.extend(subkeyList)
             prefixList.extend([subdir.GetName() + "_" + prefix for prefix in subprefixList])
     if recursive:
-        keyList, prefixList = (list(t) for t in zip(*sorted(zip(keyList, prefixList), key=lambda x: x[0].GetName().lower())))
+        keyList, prefixList = (
+            list(t) for t in zip(*sorted(zip(keyList, prefixList), key=lambda x: x[0].GetName().lower()))
+        )
     else:
         keyListSort(keyList)
     return keyList, prefixList
