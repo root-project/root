@@ -123,7 +123,7 @@
                            concat_dim = inputs[i][iaxis];
                         else if (inputs[i][iaxis].isParam || concat_dim.isParam) {
                            concat_dim =
-                              Dim{ concat_dim.GetVal() + std::string("+ ") + inputs[i][iaxis].GetVal(),
+                              Dim{ concat_dim.GetVal() + std::string(" + ") + inputs[i][iaxis].GetVal(),
                                  static_cast<size_t>(-1)};
                         } else {
                            concat_dim = Dim { concat_dim.dim + inputs[i][iaxis].dim };
@@ -156,7 +156,7 @@
                }
 
                // output shape for concatenated axis
-               ret[fAxis] = Dim{concat_dim};
+               ret[fAxis] = concat_dim;
 
             }
             // case of stacking (not supported yet)
@@ -205,7 +205,7 @@
                      size_t inputLength = ConvertShapeToLength(inputShape);
                      std::copy(inputData, inputData + inputLength, outputData.begin() + offset );
                      offset += inputLength;
-                     // data do not need to be written as a weight
+                     // data do not need to be written in teh generated code
                      model.SetNotWritableInitializedTensor(input);
                   }
                   model.AddConstantTensor<int64_t>(fOutput, outputShape, outputData.data());
@@ -221,15 +221,18 @@
                      std::vector<Dim> inputData;
                      auto inputShape = model.GetTensorShape(input); // shape is not dynamic
                      size_t inputLength = ConvertShapeToLength(inputShape); // shape can be a scalar
-                     if (model.IsShapeTensor(input))
+                     if (model.IsShapeTensor(input)) {
                         inputData = model.GetShapeTensorValues(input);
-                     else if (model.IsConstantTensor(input)) {
+                     } else if (model.IsInitializedTensor(input)) {
                         inputData.resize(inputLength);
                         auto intData = static_cast<int64_t*>(model.GetInitializedTensorData(input).get());
                         for (size_t i = 0; i < inputData.size(); i++)
                            inputData[i] = Dim{ static_cast<size_t>(intData[i])};
                      }
-                     std::cout << "concatenating input data " << inputLength << "  " << inputData[0] << std::endl;
+                     else {
+                        // this should not happen
+                        throw std::runtime_error("TMVA SOFIE Concat Operator- invalid input type for shape output type");
+                     }
                      std::copy(inputData.begin(), inputData.end(), outputData.begin() + offset );
                      offset += inputLength;
                   }
@@ -251,13 +254,15 @@
          }
 
          std::string Generate(std::string opName) override {
-            if (fIsOutputConstant) return "";
             opName = "op_" + opName;
+            std::stringstream out;
+            out<<"\n//--------- Concat " << opName << " --> " << fOutput << "  " << ConvertShapeToString(fOutputShape) << "\n";
+
+            if (fIsOutputConstant) return out.str();
+
             if(fOutputShape.empty()){
                   throw std::runtime_error("TMVA SOFIE Concat called to Generate without being initialized first");
             }
-            std::stringstream out;
-            out<<"\n//--------- Concat " << opName << " --> " << ConvertShapeToString(fOutputShape) << "\n";
             // special case when memory is contiguous
             bool hasShapeOnes = true;
             for(int i = 0; i<fAxis; ++i){
@@ -299,14 +304,14 @@
 
                for (size_t j = 0; j < fInputs.size(); j++) {
                   if (j>0)
-                  out << SP << SP << SP << "idxOut += " << fInputShapes[j-1][fAxis].GetVal() << ";\n";
+                  out << SP << SP << SP << "idxOut += " << inStrides[j-1][fAxis-1].GetVal() << ";\n";
                   out << SP << SP << SP << "int idxIn" << j <<" = ";
                   for (int k = 0; k < fAxis; k++) {
                      if (k > 0) out << " + ";
                      out << inStrides[j][k].GetVal() << "*i" << k;
                   }
                   out << ";\n";
-                  out << SP << SP << SP << "for (size_t iC = 0; iC < " << fInputShapes[j][fAxis].GetVal() << "; ++iC) {\n";
+                  out << SP << SP << SP << "for (size_t iC = 0; iC < " << inStrides[j][fAxis-1].GetVal() << "; ++iC) {\n";
                   out << SP << SP << SP << SP << "tensor_" << fOutput << "[idxOut+iC] = tensor_" << fInputs[j] << "[idxIn" << j << "+iC];\n";
                   out << SP << SP << SP << "}\n";
                // concatenate the axis values

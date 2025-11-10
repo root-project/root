@@ -108,6 +108,9 @@ public:
 
                if (IsInteger(tmp_length) && IsInteger(input_length))
                   output_shape[i] = Dim{static_cast<size_t>(std::stoi(input_length) / std::stoi(tmp_length))};
+               else if (IsInteger(tmp_length) && std::stoi(tmp_length) == 1) {
+                  output_shape[i] = Dim{input_length, static_cast<size_t>(-1)};
+               }
                else {
                   //we can try simplifying expression if tmp_length is integer and part of input_length
                   // contains tmp_length
@@ -243,7 +246,7 @@ public:
       // check if optional tensor exists defining shape or axes
       if (!fNInput2.empty()) {
          if (model.CheckIfTensorAlreadyExist(fNInput2)) {
-            if (model.IsConstantTensor(fNInput2) || model.IsInitializedTensor(fNInput2)) {
+            if (model.IsInitializedTensor(fNInput2)) {
                // assume input shape is an initialized tensor
                auto dptr = model.GetInitializedTensorData(fNInput2);
                auto values = static_cast<int64_t *>(dptr.get());
@@ -260,6 +263,9 @@ public:
                fShapeOutput = ShapeInference({fShapeInput})[0];
                // set flag to not write tensor in weight file. Its data will be hard-coded in way model is constructed
                model.SetNotWritableInitializedTensor(fNInput2);
+            } else if (model.IsShapeTensor(fNInput2)) {
+               auto shapeData = model.GetShapeTensorValues(fNInput2);
+               fShapeOutput = shapeData;
             } else {
                // we cannot get shape at initialization time but at run-time
                fDynamicShape = true;
