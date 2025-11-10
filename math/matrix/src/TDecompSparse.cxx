@@ -753,7 +753,7 @@ void TDecompSparse::Solve(const Int_t n,TArrayD &Aa,TArrayI &Aiw,
    info[1] = 0;
    k = 0;
    if (icntl[3] > 0 && icntl[2] > 0) {
-      printf("nentering Solve with n=%d la=%d liw=%d maxfrt=%d nsteps=%d",n,la,liw,maxfrt,nsteps);
+      printf("Entering Solve with n=%d la=%d liw=%d maxfrt=%d nsteps=%d",n,la,liw,maxfrt,nsteps);
 
       kblk = TMath::Abs(iw[1]+0);
       if (kblk != 0) {
