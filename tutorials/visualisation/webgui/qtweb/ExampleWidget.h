@@ -12,6 +12,7 @@
 #define ExampleWidget_h
 
 #include <QWidget>
+#include <QTimer>
 #include "ui_ExampleWidget.h"
 
 #include <memory>
@@ -25,6 +26,7 @@ class ExampleWidget : public QWidget, public Ui::ExampleWidget {
 protected:
    TH1F *fHisto{nullptr};         ///< histogram for display in TCanvas
    std::shared_ptr<TH2I> fHisto2; ///< histogram for display in RCanvas
+   QTimer fTimer;
 
    void ImportCmsGeometry();
 
@@ -44,6 +46,7 @@ public slots:
    void GeoCanvasButton_clicked();
    void StandaloneBtn_clicked();
    void ExitButton_clicked();
+   void UpdateChk_toggled(bool);
 };
 
 #endif
