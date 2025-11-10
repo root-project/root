@@ -3076,23 +3076,55 @@ TMatrixT<Element> &TMatrixTAutoloadOps::ElementDiv(TMatrixT<Element> &target, co
 ////////////////////////////////////////////////////////////////////////////////
 /// Elementary routine to calculate matrix multiplication A*B
 
+
 template <class Element>
 void TMatrixTAutoloadOps::AMultB(const Element *const ap, Int_t na, Int_t ncolsa, const Element *const bp, Int_t nb,
-                                 Int_t ncolsb, Element *cp)
-{
-   const Element *arp0 = ap; // Pointer to  A[i,0];
-   while (arp0 < ap + na) {
-      for (const Element *bcp = bp; bcp < bp + ncolsb;) { // Pointer to the j-th column of B, Start bcp = B[0,0]
-         const Element *arp = arp0;                       // Pointer to the i-th row of A, reset to A[i,0]
-         Element cij = 0;
-         while (bcp < bp + nb) {  // Scan the i-th row of A and
-            cij += *arp++ * *bcp; // the j-th col of B
-            bcp += ncolsb;
+                                 Int_t ncolsb, Element *cp) {
+   // i,k,j loop order with blocking and unrolling
+   const Int_t M = na / ncolsa; // Rows of A
+   const Int_t N = ncolsa;	// Columns of A, rows of B
+   const Int_t P = ncolsb;	// Columns of B and C
+
+   const Int_t BLOCK = 32;
+
+   #ifdef _OPENMP
+   #pragma omp parallel for collapse(2) if(M * P > 10000)
+   #endif
+   for (Int_t i0 = 0; i0 < M; i0 += BLOCK) {
+      for (Int_t k0 = 0; k0 < N; k0 += BLOCK) {
+         for (Int_t j0 = 0; j0 < P; j0 += BLOCK) {
+            const Int_t iMax = (i0 + BLOCK < M) ? i0 + BLOCK : M;
+            const Int_t kMax = (k0 + BLOCK < N) ? k0 + BLOCK : N;
+            const Int_t jMax = (j0 + BLOCK < P) ? j0 + BLOCK : P;
+            for (Int_t i = i0; i < iMax; ++i) {
+               for (Int_t k = k0; k < kMax; ++k) {
+                  Element aik = ap[i * N + k]; // Hoist A[i,k]
+                  Int_t j = j0;
+                  #pragma GCC ivdep
+                  for (; j <= jMax - 4; j += 4) {
+                     // Unroll by 4: update C[i,j], C[i,j+1], C[i,j+2], C[i,j+3]
+                     Element cij0 = cp[i * P + j];
+                     Element cij1 = cp[i * P + (j + 1)];
+                     Element cij2 = cp[i * P + (j + 2)];
+                     Element cij3 = cp[i * P + (j + 3)];
+                     cij0 += aik * bp[k * P + j];
+                     cij1 += aik * bp[k * P + (j + 1)];
+                     cij2 += aik * bp[k * P + (j + 2)];
+                     cij3 += aik * bp[k * P + (j + 3)];
+                     cp[i * P + j] = cij0;
+                     cp[i * P + (j + 1)] = cij1;
+                     cp[i * P + (j + 2)] = cij2;
+                     cp[i * P + (j + 3)] = cij3;
+                  }
+                  #pragma GCC ivdep
+                  for (; j < jMax; ++j) {
+                     // Cleanup loop for remaining j
+                     cp[i * P + j] += aik * bp[k * P + j];
+                  }
+               }
+            }
          }
-         *cp++ = cij;
-         bcp -= nb - 1; // Set bcp to the (j+1)-th col
       }
-      arp0 += ncolsa; // Set ap to the (i+1)-th row
    }
 }
 
