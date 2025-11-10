@@ -5,6 +5,8 @@ import unittest
 
 import ROOT
 
+import numpy
+
 
 class DatasetContext:
     """A helper class to create the dataset for the tutorial below."""
@@ -129,7 +131,30 @@ class RDataFrameMisc(unittest.TestCase):
 
             self.assertEqual(rdf.Count().GetValue(), 9)
 
+    def test_regression_gh_20291(self):
+        """
+        Regression test for https://github.com/root-project/root/issues/20291
+        """
+        # Issues on Windows with contention on file deletion
+        if platform.system() == "Windows":
+            return
+        out_path = "dataframe_misc_regression_gh20291.root"
+        try:
+            x, y = numpy.array([1, 2, 3]), numpy.array([4, 5, 6])
+            df = ROOT.RDF.FromNumpy({"x": x, "y": y})
 
+            df.Snapshot("tree", out_path)
+
+            df_out = ROOT.RDataFrame("tree", out_path)
+            count = df_out.Count()
+            take_x = df_out.Take["Long64_t"]("x")
+            take_y = df_out.Take["Long64_t"]("y")
+
+            self.assertEqual(count.GetValue(), 3)
+            self.assertSequenceEqual(take_x.GetValue(), [1, 2, 3])
+            self.assertSequenceEqual(take_y.GetValue(), [4, 5, 6])
+        finally:
+            os.remove(out_path)
 
 
 if __name__ == '__main__':
