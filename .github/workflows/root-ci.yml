@@ -72,6 +72,8 @@ env:
   OS_INTERFACE: 'public'
   OS_REGION_NAME: 'cern'
   GLOBAL_OVERRIDES: 'asserts=ON LLVM_ENABLE_ASSERTIONS=ON'
+  ACTIONS_RUNNER_DEBUG: true
+  ACTIONS_STEP_DEBUG: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
@@ -92,6 +94,14 @@ jobs:
     permissions:
       contents: read
 
+    # Use login shells to have brew and java available
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+
+    env:
+      VENV_DIR: ${{ github.workspace }}/ROOT_CI_VENV
+
     strategy:
       fail-fast: false
       matrix:
@@ -100,33 +110,64 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - platform: mac14
-            arch: X64
-            overrides: ["CMAKE_CXX_STANDARD=20"]
+          # - platform: mac14
+          #   arch: X64
+          #   overrides: ["CMAKE_CXX_STANDARD=20"]
           - platform: mac15
             arch: ARM64
             overrides: ["CMAKE_CXX_STANDARD=23"]
-          - platform: mac26
-            arch: ARM64
+          - platform: experimental-brew-ci
+            # arch: ARM64
+            overrides: ["CMAKE_CXX_STANDARD=23", "builtin_unuran=On", "tmva-sofie=Off"]
+          - platform: experimental-brew-ci-2
+            # arch: ARM64
+            overrides: ["CMAKE_CXX_STANDARD=23", "builtin_unuran=On", "tmva-sofie=Off"]
+          # - platform: mac26
+          #   arch: ARM64
           - platform: mac-beta
             is_special: true
             arch: ARM64
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
-      - macOS
-      - ${{ matrix.arch }}
+      - ${{ matrix.arch == null && 'self-hosted' || matrix.arch }}
       - ${{ matrix.platform }}
 
     name: |
-      ${{ matrix.platform }} ${{ matrix.arch }} 
+      ${{ matrix.platform }} ${{ matrix.arch }}
       ${{ (github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && join( matrix.overrides, ', ' )) || '' }}
 
     steps:
+      - name: Cleanup
+        run: rm -rf ${{ github.workspace }}/build
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref_name }}
+          path: src/
+
+      - name: Update brew packages
+        if: ${{ contains(matrix.platform, 'experimental-brew-ci') }}
+        run: |
+            brew update
+            brew install ccache googletest openjdk pyenv python3
+            echo "Installing official brew deps: $(brew deps --direct --include-build root)"
+            brew install $(brew deps --direct --include-build root)
+            java --version
+
+      - name: Set up python venv
+        if: ${{ contains(matrix.platform, 'experimental-brew-ci') }}
+        run: |
+          $(brew --prefix python)/bin/python3 -m venv ${VENV_DIR}
+          source ${VENV_DIR}/bin/activate
+          pip install --upgrade pip
+          cat ${{ github.workspace }}/src/requirements.txt | while read PACKAGE; do
+            if [ -n "${PACKAGE%%#*}" ]; then
+              pip install -U "${PACKAGE%%#*}";
+          fi; done || true
+          pip install openstacksdk # TODO: Remove?
+          echo ${VENV_DIR}/bin >> $GITHUB_PATH
 
       - name: Apply option overrides from matrix for this job for non-release builds
         if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
@@ -134,54 +175,46 @@ jobs:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
           CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.platform }}.txt'
         shell: bash
-        run: |
-          set -x
-
-          echo '' >> "$CONFIGFILE"
-
-          for ENTRY in $GLOBAL_OVERRIDES $OVERRIDES; do
-              KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
-
-              # Add entry to file if not exists, otherwise replace
-
-              if grep -q "$KEY=" "$CONFIGFILE"; then
-                  sed -i "s/$KEY=.*\$/$ENTRY/" "$CONFIGFILE"
-              else
-                  echo "$ENTRY" >> "$CONFIGFILE"
-              fi
-          done
-
-          cat "$CONFIGFILE" || true
+        run: echo "Remember to set the following overrides GLOBAL=$GLOBAL_OVERRIDES LOCAL=$OVERRIDES"
 
       - uses: root-project/gcc-problem-matcher-improved@main
         with:
           build-directory: /Users/sftnight/ROOT-CI/src/
 
       - name: Set up curl CA bundle for Davix to work with https
-        run: 'echo SSL_CERT_FILE=/opt/local/share/curl/curl-ca-bundle.crt >> $GITHUB_ENV'
-        
+        run: |
+          for cert in /opt/homebrew/opt/ca-certificates/share/ca-certificates/cacert.pem /opt/local/share/curl/curl-ca-bundle.crt; do
+            if [ -f ${cert} ]; then
+              echo "SSL_CERT_FILE=${cert}" >> $GITHUB_ENV
+            fi
+          done
+
       - name: Pull Request Build
-        shell: bash -leo pipefail {0}
         if: github.event_name == 'pull_request'
         env:
           HOME: /Users/sftnight
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') && !matrix.platform == 'mac15' && !matrix.platform == 'mac26'}}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
-        run: ".github/workflows/root-ci-config/build_root.py 
-                    --buildtype       RelWithDebInfo
-                    --incremental     $INCREMENTAL
-                    --base_ref        ${{ github.base_ref }}
-                    --sha             ${{ github.sha }}
-                    --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
-                    --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
-                    --head_sha        ${{ github.event.pull_request.head.sha }}
-                    --repository      ${{ github.server_url }}/${{ github.repository }}
-                    --platform        ${{ matrix.platform }}"
+          OVERRIDES: ${{ join( matrix.overrides, ' ') }}
+        run: |
+          echo $PATH
+          if [ -f ${VENV_DIR}/bin/activate ]; then source ${VENV_DIR}/bin/activate; fi
+          src/.github/workflows/root-ci-config/build_root.py  \
+                    --buildtype       RelWithDebInfo          \
+                    --incremental     $INCREMENTAL            \
+                    --base_ref        ${{ github.base_ref }}  \
+                    --sha             ${{ github.sha }}       \
+                    --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}  \
+                    --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}  \
+                    --head_sha        ${{ github.event.pull_request.head.sha }}         \
+                    --repository      ${{ github.server_url }}/${{ github.repository }} \
+                    --platform        ${{ contains(matrix.platform, 'experimental-brew-ci') && 'mac15' || matrix.platform }} \
+                    --overrides       $GLOBAL_OVERRIDES $OVERRIDES
 
       - name: Workflow dispatch
         shell: bash -leo pipefail {0}
         if: ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
-        run: ".github/workflows/root-ci-config/build_root.py 
+        run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ inputs.buildtype }}
                     --platform       ${{ matrix.platform }}
                     --incremental    ${{ inputs.incremental }}
@@ -193,7 +226,7 @@ jobs:
       - name: Nightly build
         shell: bash -leo pipefail {0}
         if:   github.event_name == 'schedule'
-        run: ".github/workflows/root-ci-config/build_root.py 
+        run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      Release
                     --platform       ${{ matrix.platform }}
                     --incremental    false
@@ -204,13 +237,16 @@ jobs:
       - name: Update build cache after push to release branch
         shell: bash -leo pipefail {0}
         if:   github.event_name == 'push'
-        run: ".github/workflows/root-ci-config/build_root.py 
+        env:
+          OVERRIDES: ${{ join( matrix.overrides, ' ') }}
+        run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.platform }}
                     --incremental    false
                     --base_ref       ${{ github.ref_name }}
                     --binaries       ${{ startsWith(github.ref, 'refs/tags/') }}
-                    --repository     ${{ github.server_url }}/${{ github.repository }}"
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
+                    --overrides      $GLOBAL_OVERRIDES $OVERRIDES"
 
       - name: Upload test results
         if:   ${{ !cancelled() }}
@@ -231,13 +267,7 @@ jobs:
   build-windows:
     # For any event that is not a PR, the CI will always run. In PRs, the CI
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
-    if: |
-        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !(
-          contains(github.event.pull_request.title, '[skip-ci]') ||
-          contains(github.event.pull_request.title, '[skip ci]') ||
-          contains(github.event.pull_request.labels.*.name, 'skip ci')
-        ))
+    if: false
 
     permissions:
       contents: read
@@ -274,9 +304,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref_name }}
+        uses: actions/checkout@v5
 
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
@@ -356,13 +384,7 @@ jobs:
   build-linux:
     # For any event that is not a PR, the CI will always run. In PRs, the CI
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
-    if: |
-        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !(
-          contains(github.event.pull_request.title, '[skip-ci]') ||
-          contains(github.event.pull_request.title, '[skip ci]') ||
-          contains(github.event.pull_request.labels.*.name, 'skip ci')
-        ))
+    if: false
 
     permissions:
       contents: read
@@ -418,7 +440,7 @@ jobs:
             is_special: true
             property: "Fedora pydebug"
             overrides: ["CMAKE_CXX_STANDARD=23"]
-          # Disable GPU builds until the DNS problem is solved  
+          # Disable GPU builds until the DNS problem is solved
           # - image: ubuntu2404-cuda
           #   is_special: true
           #   property: gpu
