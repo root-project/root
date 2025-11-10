@@ -166,7 +166,7 @@ public:
       std::string reducedLength;
       if (fInputDimShape) {
          reducedLength = "reducedLength_" + opName;
-         out << SP << "size_t " << reducedLength << " = " <<  inputLength << " / " << outputLength << ";\n";
+         out << SP << "size_t " << reducedLength << " = (" <<  inputLength << ") / (" << outputLength << ");\n";
       } else {
          int rLength = std::stoi(inputLength) / std::stoi(outputLength);
          reducedLength = std::to_string(rLength);

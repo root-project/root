@@ -222,6 +222,7 @@ bool RModel::IsInitializedTensor(const std::string& tensorName) const {
     return fInitializedTensors.find(name) != fInitializedTensors.end();
 }
 bool RModel::IsConstantTensor(const std::string& tensorName) const {
+   // a constant tensor is an initialized tensor but has the constant flag set
     std::string name = UTILITY::Clean_name(tensorName);
     auto itr = fInitializedTensors.find(name);
     if (itr == fInitializedTensors.end()) return false;
@@ -522,6 +523,7 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
    fIntermediateTensorInfos.clear();
    fDynamicTensorInfos.clear();
 
+
    // loop on inputs and see if shape can be  full specified
    // if the batch size is provided it can be used to specify the full shape
    // Add the full specified tensors in fReadyInputTensors collection
@@ -581,7 +583,7 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
    if (fUseWeightFile) {
       bool modelHasWeights = false;
       for (auto &i : fInitializedTensors) {
-         if (i.second.type() == ETensorType::FLOAT) {
+         if (i.second.IsWeightTensor()) {
             modelHasWeights = true;
             break;
          }
@@ -610,6 +612,13 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
          }
       }
       i++;
+   }
+
+   // loop on initialized tensors and make the integers as constant to be
+   // not written in a weight file
+   for (auto &i : fInitializedTensors) {
+      if (i.second.IsWeightTensor() && i.second.type() !=  ETensorType::FLOAT)
+         i.second.SetConstant();
    }
 
    fIsInitialized = true;
@@ -684,9 +693,11 @@ std::string GenerateConstantTensorCode(const std::pair<std::string, InitializedT
 void RModel::GenerateInitializedTensorInfo()
 {
    if (!fInitializedTensors.empty())
-      fGC += "// initialized tensors\n";
+      fGC += "// initialized (weights and constant) tensors\n";
 
+   // here are constant tensor or initialized ones which are not weights (e.g. int64_t tensors )
    for (auto &i : fInitializedTensors) {
+      if (i.second.IsNotWritable())  continue;
       if (!fUseWeightFile || i.second.IsConstantTensor()) {
          if (i.second.type() == ETensorType::FLOAT) {
             fGC += GenerateConstantTensorCode<float>(i);
@@ -772,6 +783,9 @@ void RModel::GenerateIntermediateTensorInfo() {
          } else if (i.second.type == ETensorType::INT64) {
             fGC += "std::vector<int64_t> fTensor_" + i.first + ";\n";
             fGC += "int64_t * tensor_" + i.first + " = nullptr;\n";
+         } else if (i.second.type == ETensorType::BOOL) {
+            fGC += "std::vector<uint8_t> fTensor_" + i.first + ";\n";
+            fGC += "uint8_t * tensor_" + i.first + " = nullptr;\n";
          }
       }
    }
@@ -1143,7 +1157,7 @@ void RModel::ReadInitializedTensorsFromFile(long pos) {
                std::string length = std::to_string(ConvertShapeToLength(i.second.shape()));
                fGC += "   ReadTensorFromStream(f, " + tensor_name + ", \"" + tensor_name + "\", " + length + ");\n";
             } else {
-               std::runtime_error("tmva-sofie tensor " + tensor_name + " with type " + ConvertTypeToString(i.second.type()) + " cannot be read from a file");
+               throw std::runtime_error("tmva-sofie tensor " + tensor_name + " with type " + ConvertTypeToString(i.second.type()) + " cannot be read from a file");
             }
         }
         fGC += "   f.close();\n";
@@ -1288,7 +1302,7 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
                }
             }
             else {
-               std::runtime_error("tmva-sofie tensor " + tensor_name + " with type " + ConvertTypeToString(i.second.type()) + " cannot be written to a file");
+               throw std::runtime_error("tmva-sofie tensor " + tensor_name + " with type " + ConvertTypeToString(i.second.type()) + " cannot be written to a file");
             }
             if (f.fail())
                std::runtime_error("tmva-sofie failed to write tensor data to file for  " + tensor_name);
