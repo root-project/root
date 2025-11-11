@@ -67,26 +67,20 @@ class IgnoreUnsplitComment {
 // Test streamer field with polymorphic type
 
 struct PolyBase {
-   virtual ~PolyBase() = default;
+   virtual ~PolyBase() {}
    int x;
-   ClassDef(PolyBase, 3);
 };
 
 struct PolyA : public PolyBase {
-   ~PolyA() override = default;
    int a;
-   ClassDefOverride(PolyA, 3);
 };
 
 struct PolyB : public PolyBase {
-   ~PolyB() override = default;
    int b;
-   ClassDefOverride(PolyB, 3);
 };
 
 struct PolyContainer {
    std::unique_ptr<PolyBase> fPoly;
-   ClassDefNV(PolyContainer, 3);
 };
 
 template <typename T>
