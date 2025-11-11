@@ -164,7 +164,6 @@ See that function for details.
 #include <ctime>
 #include <sstream>
 
-
 TGDMLWrite *TGDMLWrite::fgGDMLWrite = nullptr;
 
 namespace {
@@ -2040,9 +2039,10 @@ XMLNodePointer_t TGDMLWrite::CreateMatrixN(TGDMLMatrix const *matrix)
    XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "matrix", nullptr);
    fGdmlE->NewAttr(mainN, nullptr, "name", matrix->GetName());
    fGdmlE->NewAttr(mainN, nullptr, "coldim", TString::Format("%zu", cols));
+   const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    for (size_t i = 0; i < rows; ++i) {
       for (size_t j = 0; j < cols; ++j) {
-         vals << matrix->Get(i, j);
+         vals << TString::Format(fltPrecision.Data(), matrix->Get(i, j));
          if (j < cols - 1)
             vals << ' ';
       }
