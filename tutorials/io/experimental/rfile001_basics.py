@@ -1,5 +1,7 @@
-# \file tutorials/io/experimental/rfile001_basics.py
-# \ingroup Base ROOT7 tutorial_io
+# \file
+# \ingroup ROOT7 tutorial_io
+# Demonstrate the basic usage of RFile.
+#
 # \author Giacomo Parolini <giacomo.parolini@cern.ch>
 # \date 2025-11-06
 # \macro_code
