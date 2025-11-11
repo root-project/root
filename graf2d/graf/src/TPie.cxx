@@ -792,7 +792,7 @@ void TPie::Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r)
 
    fPieSlices = new TPieSlice*[fNvals];
 
-   Int_t ic = 0, dc = gStyle->GetNumberOfColors()/fNvals;
+   Int_t ic = 0, dc = TMath::Max(1, gStyle->GetNumberOfColors()/fNvals);
 
    for (Int_t i=0;i<fNvals;++i) {
       TString tmplbl = "Slice";
