@@ -72,7 +72,7 @@ jobs:
 
       - name: Run tutorials
         run: |
-          pytest -vv -s -rF --show-capture=all test/wheels
+          pytest -vv --verbosity="4" -rF test/wheels
 
   create-and-upload-wheel-registry:
       if: github.event_name != 'pull_request' # The secrets are not available in PR
