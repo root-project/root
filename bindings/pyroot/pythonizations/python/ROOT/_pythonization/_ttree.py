@@ -254,11 +254,12 @@ def _SetBranchAddress(self, bname, addr, *args, **kwargs):
     ```
     """
     import cppyy
+    import cppyy.types
 
     branch = self.GetBranch(bname)
 
     # Pythonization for cppyy proxies (of type CPPInstance)
-    if isinstance(addr, cppyy._backend.CPPInstance):
+    if isinstance(addr, cppyy.types.Instance):
         addr = _pythonize_branch_addr(branch, addr)
 
     # Figure out data_type in case addr is a numpy.ndarray or array.array
