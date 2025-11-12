@@ -65,6 +65,9 @@ Example:
 ```
 mypie->SetLabelFormat("%txt (%frac)");
 ```
+The numeric format in the label can be changed with TPie::SetFractionFormat.
+The numeric format the slices' values can be changed with TPie::SetValueFormat.
+The numeric format for the percent value of a slice can be changed with TPie::SetPercentFormat.
 
 If the colors are not specified (`nullptr`) they are automatically
 taken from the current color palette as shown in the following example.
