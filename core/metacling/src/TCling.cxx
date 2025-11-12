@@ -2720,15 +2720,6 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       return;
    }
 
-   if (TClassEdit::IsUniquePtr(cl->GetName())) {
-      // Ignore error caused by the inside of std::unique_ptr
-      // This is needed solely because of rootclingIO's IsUnsupportedUniquePointer
-      // which checks the number of elements in the GetListOfRealData.
-      // If this usage is removed, this can be replaced with a return statement.
-      // See https://github.com/root-project/root/issues/13574
-      isTransient = true;
-   }
-
    const char* cobj = (const char*) obj; // for ptr arithmetics
 
    // Treat the case of std::complex in a special manner. We want to enforce
