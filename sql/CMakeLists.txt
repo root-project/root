@@ -4,6 +4,6 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-if(sqlite)
+if(NOT MSVC)
   add_subdirectory(sqlite)
 endif()
