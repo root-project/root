@@ -441,6 +441,7 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
 /// The string format is by default `"%lg %lg"`.
 /// This is a standard c formatting for `scanf()`.
 /// For example, set format to  `"%lg,%lg"` for a comma-separated file.
+/// If format string is empty, suitable value will be provided based on file extension
 ///
 /// If columns of numbers should be skipped, a `"%*lg"` or `"%*s"` for each column
 /// can be added,  e.g. `"%lg %*lg %lg"` would read x-values from the first and
@@ -474,11 +475,21 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
    std::string line;
    Int_t np = 0;
 
-   // No delimiters specified (standard constructor).
-   if (strcmp(option, "") == 0) {
+   TString format_ = format;
+
+   if (!option || !*option) { // No delimiters specified (standard constructor).
+      // is empty format string specified - try to guess format from the file extension
+      if (format_.IsNull()) {
+         if (fname.EndsWith(".txt", TString::kIgnoreCase))
+            format_ = "%lg %lg";
+         else if (fname.EndsWith(".tsv", TString::kIgnoreCase))
+            format_ = "%lg\t%lg";
+         else
+            format_ = "%lg,%lg";
+      }
 
       while (std::getline(infile, line, '\n')) {
-         if (2 != sscanf(line.c_str(), format, &x, &y)) {
+         if (2 != sscanf(line.c_str(), format_.Data(), &x, &y)) {
             continue; //skip empty and ill-formed lines
          }
          SetPoint(np, x, y);
@@ -490,7 +501,6 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
    } else {
 
       // Checking format and creating its boolean counterpart
-      TString format_ = TString(format) ;
       format_.ReplaceAll(" ", "") ;
       format_.ReplaceAll("\t", "") ;
       format_.ReplaceAll("lg", "") ;
