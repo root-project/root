@@ -54,16 +54,8 @@ target_link_directories(read_ttree PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/libttrees
 
 # Need to also explicitly set the LD_LIBRARY_PATH (at least on MacOS), so that
 # the generated library with the custom class can be loaded by the read test.
-# Setting the value of ${ld_library_path} in the ENVIRONMENT argument of the
-# ROOTTEST_ADD_TEST function will not work, because that function sets the same
-# variable internally, thus overriding our choice. The simplest thing to do is
-# to append our directory to the ${ROOTTEST_ENV_LIBRARYPATH} contents, which
-# are automatically used by ROOTTEST_ADD_TEST
-set(_roottest_env_librarypath ${ROOTTEST_ENV_LIBRARYPATH})
-set(ROOTTEST_ENV_LIBRARYPATH "${ROOTTEST_ENV_LIBRARYPATH}:${CMAKE_CURRENT_BINARY_DIR}/libttreestltest")
 ROOTTEST_ADD_TEST(read_ttree
                   EXEC ./read_ttree
-		              FIXTURES_REQUIRED makeproject_read_ttree_executable
+                  FIXTURES_REQUIRED makeproject_read_ttree_executable
                   # PATH is used on Windows to find libraries for loading
-                  ENVIRONMENT PATH=${CMAKE_CURRENT_BINARY_DIR}/libttreestltest)
-set(ROOTTEST_ENV_LIBRARYPATH ${_roottest_env_librarypath})
+                  ENVIRONMENT ${ld_library_path}=${CMAKE_CURRENT_BINARY_DIR}/libttreestltest)
