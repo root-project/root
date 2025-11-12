@@ -24,7 +24,7 @@ unset(GLEW_FOUND CACHE)
 unset(GLEW_FOUND PARENT_SCOPE)
 set(GLEW_FOUND TRUE CACHE BOOL "" FORCE)
 
-# chnage variable and cache to ensure that cmake use builtin version
+# change variable and cache to ensure that cmake use builtin version
 set(GLEW_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/inc PARENT_SCOPE)
 set(GLEW_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc PARENT_SCOPE)
 
