@@ -1263,11 +1263,30 @@ When Filters are employed, some variations might not pass the selection cuts (li
 In that case, RDataFrame will snapshot the filtered columns in a memory-efficient way by writing zero into the memory of fundamental types, or write a
 default-constructed object in case of classes. If none of the filters pass like in row 6, the entire event is omitted from the snapshot.
 
-To tell apart a genuine `0` (like `x` in row 0) from a variation that didn't pass the selection, RDataFrame writes a bitmask for each event, indicating which variations
-are valid (see last column). A mapping of column names to this bitmask is placed in the same file as the output dataset, and automatically loaded when
-RDataFrame opens a file that was snapshot with variations.
-Attempting to read such missing values with RDataFrame will produce an error, but RDataFrame can either skip these values or fill in defaults as
-described in the \ref missing-values "section on dealing with missing values".
+To tell apart a genuine `0` (like `x` in row 0) from a case where nominal or variation didn't pass a selection,
+RDataFrame writes a bitmask for each event, see last column of the table above. Every bit indicates whether its
+associated columns are valid. The bitmask is implemented as a 64-bit `std::bitset` in memory, written to the output
+dataset as a `std::uin64_t`. For every 64 columns, a new bitmask column is added to the output dataset.
+
+For each column that gets varied, the nominal and all variation columns are each assigned a bit to denote whether their
+entries are valid. A mapping of column names to the corresponding bitmask is placed in the same file as the output
+dataset, with a name that follows the pattern `"R_rdf_branchToBitmaskMapping_<NAME_OF_THE_DATASET>"`. It is of type
+`std::unordered_map<std::string, std::pair<std::string, unsigned int>>`, and maps a column name to the name of the
+bitmask column and the index of the relevant bit. For example, in the same file as the dataset "Events" there would be
+an object named `R_rdf_branchToBitmaskMapping_Events`. This object for example would describe a connection such as:
+
+~~~
+muon_pt --> (R_rdf_mask_Events_0, 42)
+~~~
+
+which means that the validity of the entries in `muon_pt` is established by the bit `42` in the bitmask found in the
+column `R_rdf_mask_Events_0`.
+
+When RDataFrame opens a file, it checks for the existence of this mapping between columns and bitmasks, and loads it automatically if found. As such,
+RDataFrame makes the treatment of the various bitmap maskings completely transparent to the user.
+
+In case certain values are labeled invalid by the corresponding bit, this will result in reading a missing value. The semantics of such a scenario follow the
+rules described in the \ref missing-values "section on dealing with missing values" and can be dealt with accordingly.
 
 \note Snapshot with variations is currently restricted to single-threaded TTree snapshots.
 
@@ -1779,6 +1798,9 @@ more of its entries. For example:
 - When joining different datasets horizontally according to some index value
   (e.g. the event number), if the index does not find a match in one or more
   other datasets for a certain entry.
+- If, for a certain event, a column is invalid because it results from a Snapshot
+  with systematic variations, and that variation didn't pass its filters. For
+  more details, see \ref snapshot-with-variations.
 
 For example, suppose that column "y" does not have a value for entry 42:
 
