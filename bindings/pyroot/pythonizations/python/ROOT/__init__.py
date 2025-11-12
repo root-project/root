@@ -8,9 +8,21 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-import importlib
+import atexit
+import builtins
 import os
 import sys
+import types
+from importlib.abc import Loader, MetaPathFinder
+from importlib.machinery import ModuleSpec
+from typing import Optional, Union
+
+import cppyy
+import cppyy.types
+
+from . import _asan  # noqa: F401  # imported for side effects for setup specific to AddressSanitizer environments
+from ._facade import ROOTFacade
+from ._pythonization import _register_pythonizations
 
 # Prevent cppyy's check for extra header directory
 os.environ["CPPYY_API_PATH"] = "none"
@@ -23,16 +35,10 @@ os.environ["CPPYY_NO_ROOT_FILTER"] = "1"
 # the path of the ROOT library directory (only needed on Windows). For example,
 # if the ROOT Python module is in $ROOTSYS/bin/ROOT/__init__.py, the libraries
 # are usually in $ROOTSYS/bin.
-if 'win32' in sys.platform:
-    root_module_path = os.path.dirname(__file__) # expected to be ${CMAKE_INSTALL_PYTHONDIR}/ROOT
-    root_install_pythondir = os.path.dirname(root_module_path) # expected to be ${CMAKE_INSTALL_PYTHONDIR}
+if "win32" in sys.platform:
+    root_module_path = os.path.dirname(__file__)  # expected to be ${CMAKE_INSTALL_PYTHONDIR}/ROOT
+    root_install_pythondir = os.path.dirname(root_module_path)  # expected to be ${CMAKE_INSTALL_PYTHONDIR}
     os.add_dll_directory(root_install_pythondir)
-
-# Do setup specific to AddressSanitizer environments
-from . import _asan
-
-import cppyy
-import cppyy.types
 
 # Build cache of commonly used python strings (the cache is python intern, so
 # all strings are shared python-wide, not just in PyROOT).
@@ -41,14 +47,11 @@ _cached_strings = []
 for s in ["Branch", "FitFCN", "ROOT", "SetBranchAddress", "SetFCN", "_TClass__DynamicCast", "__class__"]:
     _cached_strings.append(sys.intern(s))
 
-# Trigger the addition of the pythonizations
-from ._pythonization import _register_pythonizations
 
+# Trigger the addition of the pythonizations
 _register_pythonizations()
 
 # Check if we are in the IPython shell
-import builtins
-
 _is_ipython = hasattr(builtins, "__IPYTHON__")
 
 
@@ -72,9 +75,6 @@ class _PoisonedDunderAll:
 __all__ = _PoisonedDunderAll()
 
 # Configure ROOT facade module
-import sys
-from ._facade import ROOTFacade
-
 _root_facade = ROOTFacade(sys.modules[__name__], _is_ipython)
 sys.modules[__name__] = _root_facade
 
@@ -84,9 +84,6 @@ sys.modules[__name__] = _root_facade
 #   * https://docs.python.org/3/library/importlib.html#module-importlib.abc
 #
 #   * https://python.plainenglish.io/metapathfinders-or-how-to-change-python-import-behavior-a1cf3b5a13ec
-from importlib.abc import Loader, MetaPathFinder
-from importlib.machinery import ModuleSpec
-from importlib.util import spec_from_loader
 
 
 def _can_be_module(obj) -> bool:
@@ -106,10 +103,6 @@ def _can_be_module(obj) -> bool:
         return True
 
     return False
-
-
-from typing import Optional, Union
-import types
 
 
 def _lookup_root_module(fullname: str) -> Optional[Union[types.ModuleType, cppyy.types.Scope]]:
@@ -160,6 +153,8 @@ class _RootNamespaceFinder(MetaPathFinder):
     """
 
     def find_spec(self, fullname: str, path, target=None) -> ModuleSpec:
+        from importlib.util import spec_from_loader
+
         if not fullname.startswith("ROOT."):
             # This finder only finds ROOT.*
             return None
@@ -178,11 +173,11 @@ if _is_ipython:
 
     ip = get_ipython()
     if hasattr(ip, "kernel"):
-        import JupyROOT
+        import JupyROOT  # noqa: F401  # imported the side effect of setting up JupyROOT
+
         # from . import JsMVA
 
 # Register cleanup
-import atexit
 
 
 def cleanup():
@@ -191,5 +186,6 @@ def cleanup():
     if "app" in facade.__dict__ and hasattr(facade.__dict__["app"], "process_root_events"):
         facade.__dict__["app"].keep_polling = False
         facade.__dict__["app"].process_root_events.join()
+
 
 atexit.register(cleanup)
