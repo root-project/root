@@ -162,7 +162,11 @@ endif()
 # so we check the value of __cplusplus.
 # This default value can be overridden by specifying one at the prompt.
 if (MSVC)
-   set(CXX_STANDARD_STRING "201703L")
+   if(MSVC_VERSION GREATER_EQUAL 1950)
+     set(CXX_STANDARD_STRING "202002L")
+   else()
+     set(CXX_STANDARD_STRING "201703L")
+   endif()
 else()
    execute_process(COMMAND echo __cplusplus
                    COMMAND ${CMAKE_CXX_COMPILER} -E -x c++ -

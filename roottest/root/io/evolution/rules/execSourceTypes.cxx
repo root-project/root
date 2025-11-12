@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <list>
 #include <string>
+#include <array>
 
 struct A {
   float f = 1.1;
