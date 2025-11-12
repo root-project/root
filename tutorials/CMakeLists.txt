@@ -18,7 +18,6 @@ if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
   set(ROOT_root_CMD root.exe)
   if(NOT MSVC)  # Ignore environment on Windows
     set(ROOT_environ PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
-                     ${ld_library_path}=${CMAKE_BINARY_DIR}/lib:$ENV{${ld_library_path}}
                      ROOT_INCLUDE_PATH=${CMAKE_BINARY_DIR}/tutorials/io/tree:${DEFAULT_ROOT_INCLUDE_PATH}
                      PYTHONPATH=${CMAKE_BINARY_DIR}/lib:$ENV{PYTHONPATH})
   else()
