@@ -321,11 +321,12 @@ def _get_cpp_signature(func, rdf, cols):
     Gets the C++ signature of a cppyy callable.
     """
     import cppyy
+    import cppyy.types
 
-    if isinstance(func, cppyy._backend.TemplateProxy):
+    if isinstance(func, cppyy.types.Template):
         func = get_cpp_overload_from_templ_proxy(func, get_column_types(rdf, cols))
 
-    if not isinstance(func, cppyy._backend.CPPOverload):
+    if not isinstance(func, cppyy.types.Function):
         raise TypeError(f"Expected a cppyy callable, got {type(func).__name__}")
 
     overload_types = func.func_overloads_types
@@ -338,8 +339,9 @@ def _to_std_function(func, rdf, cols):
     Converts a cppyy callable to std::function.
     """
     import cppyy
+    import cppyy.types
 
-    if not isinstance(func, cppyy._backend.CPPOverload) and not isinstance(func, cppyy._backend.TemplateProxy):
+    if not isinstance(func, cppyy.types.Function) and not isinstance(func, cppyy.types.Template):
         raise TypeError(f"Expected a cppyy callable, got {type(func).__name__}")
 
     signature = _get_cpp_signature(func, rdf, cols)
@@ -373,10 +375,11 @@ def _handle_cpp_callables(func, original_template, *args, rdf=None, cols=None):
     """
 
     import cppyy
+    import cppyy.types
 
-    is_cpp_functor = lambda: isinstance(getattr(func, "__call__", None), cppyy._backend.CPPOverload)  # noqa E731
+    is_cpp_functor = lambda: isinstance(getattr(func, "__call__", None), cppyy.types.Function)  # noqa E731
 
-    is_std_function = lambda: isinstance(getattr(func, "target_type", None), cppyy._backend.CPPOverload)  # noqa E731
+    is_std_function = lambda: isinstance(getattr(func, "target_type", None), cppyy.types.Function)  # noqa E731
 
     # handle free functions
     if callable(func) and not is_cpp_functor() and not is_std_function():

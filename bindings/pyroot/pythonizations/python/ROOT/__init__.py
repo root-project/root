@@ -32,6 +32,7 @@ if 'win32' in sys.platform:
 from . import _asan
 
 import cppyy
+import cppyy.types
 
 # Build cache of commonly used python strings (the cache is python intern, so
 # all strings are shared python-wide, not just in PyROOT).
@@ -111,7 +112,7 @@ from typing import Optional, Union
 import types
 
 
-def _lookup_root_module(fullname: str) -> Optional[Union[types.ModuleType, cppyy._backend.CPPScope]]:
+def _lookup_root_module(fullname: str) -> Optional[Union[types.ModuleType, cppyy.types.Scope]]:
     """
     Recursively looks up attributes of the ROOT facade, using a full module
     name, and return it if it can be used as a ROOT submodule. This is the case
