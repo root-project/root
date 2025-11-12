@@ -15,6 +15,7 @@
 #include <RooAbsCachedPdf.h>
 #include <RooAddPdf.h>
 #include <RooAddModel.h>
+#include <RooBinning.h>
 #include <RooBinSamplingPdf.h>
 #include <RooBinWidthFunction.h>
 #include <RooCategory.h>
@@ -538,15 +539,54 @@ public:
    bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      RooArgList vars = tool->requestArgList<RooRealVar>(p, "variables");
-      std::vector<int> nbins;
-      nbins << p["nbins"];
-      for (size_t i = 0; i < vars.size(); ++i) {
-         auto *v = dynamic_cast<RooRealVar*>(vars.at(i));
-         v->setBins(nbins[i]);
-      }
-      tool->wsEmplace<ParamHistFunc>(name, vars, tool->requestArgList<RooAbsReal>(p, "parameters"));
+      RooArgList varList = tool->requestArgList<RooRealVar>(p, "variables");
+      tool->wsEmplace<ParamHistFunc>(name, readBinning(p, varList), tool->requestArgList<RooAbsReal>(p, "parameters"));
       return true;
+   }
+
+private:
+   RooArgList readBinning(const JSONNode &topNode, const RooArgList &varList) const
+   {
+      // Temporary map from variable name → RooRealVar
+      std::map<std::string, std::unique_ptr<RooRealVar>> varMap;
+
+      // Build variables from JSON
+      for (const JSONNode &node : topNode["axes"].children()) {
+         const std::string name = node["name"].val();
+         std::unique_ptr<RooRealVar> obs;
+
+         if (node.has_child("edges")) {
+            std::vector<double> edges;
+            for (const auto &bound : node["edges"].children()) {
+               edges.push_back(bound.val_double());
+            }
+            obs = std::make_unique<RooRealVar>(name.c_str(), name.c_str(), edges.front(), edges.back());
+            RooBinning bins(obs->getMin(), obs->getMax());
+            for (auto b : edges)
+               bins.addBoundary(b);
+            obs->setBinning(bins);
+         } else {
+            obs = std::make_unique<RooRealVar>(name.c_str(), name.c_str(), node["min"].val_double(),
+                                               node["max"].val_double());
+            obs->setBins(node["nbins"].val_int());
+         }
+
+         varMap[name] = std::move(obs);
+      }
+
+      // Now build the final list following the order in varList
+      RooArgList vars;
+      for (int i = 0; i < varList.getSize(); ++i) {
+         const auto *refVar = dynamic_cast<RooRealVar *>(varList.at(i));
+         if (!refVar)
+            continue;
+
+         auto it = varMap.find(refVar->GetName());
+         if (it != varMap.end()) {
+            vars.addOwned(std::move(it->second)); // preserve ownership
+         }
+      }
+      return vars;
    }
 };
 
@@ -980,14 +1020,35 @@ public:
       elem["type"] << key();
       RooJSONFactoryWSTool::fillSeq(elem["variables"], pdf->dataVars());
       RooJSONFactoryWSTool::fillSeq(elem["parameters"], pdf->paramList());
-      std::vector<int> nbins;
-      for (auto *arg : pdf->dataVars()) {
-         auto *var = dynamic_cast<RooRealVar*>(arg);
-         nbins.push_back(var->numBins());
-      }
-      elem["nbins"] << nbins;
-
+      writeBinningInfo(pdf, elem);
       return true;
+   }
+
+private:
+   void writeBinningInfo(const ParamHistFunc *pdf, JSONNode &elem) const
+   {
+      auto &observablesNode = elem["axes"].set_seq();
+      // axes have to be ordered to get consistent bin indices
+      for (auto *var : static_range_cast<RooRealVar *>(pdf->dataVars())) {
+         std::string name = var->GetName();
+         RooJSONFactoryWSTool::testValidName(name, false);
+         JSONNode &obsNode = observablesNode.append_child().set_map();
+         obsNode["name"] << name;
+         if (var->getBinning().isUniform()) {
+            obsNode["min"] << var->getMin();
+            obsNode["max"] << var->getMax();
+            obsNode["nbins"] << var->getBins();
+         } else {
+            auto &edges = obsNode["edges"];
+            edges.set_seq();
+            double val = var->getBinning().binLow(0);
+            edges.append_child() << val;
+            for (int i = 0; i < var->getBinning().numBins(); ++i) {
+               val = var->getBinning().binHigh(i);
+               edges.append_child() << val;
+            }
+         }
+      }
    }
 };
 
@@ -1028,7 +1089,7 @@ DEFINE_EXPORTER_KEY(RooRealIntegralStreamer, "integral");
 DEFINE_EXPORTER_KEY(RooDerivativeStreamer, "derivative");
 DEFINE_EXPORTER_KEY(RooFFTConvPdfStreamer, "fft_conv_pdf");
 DEFINE_EXPORTER_KEY(RooExtendPdfStreamer, "extend_pdf");
-DEFINE_EXPORTER_KEY(ParamHistFuncStreamer, "param_hist_func");
+DEFINE_EXPORTER_KEY(ParamHistFuncStreamer, "step");
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // instantiate all importers and exporters
@@ -1061,7 +1122,7 @@ STATIC_EXECUTE([]() {
    registerImporter<RooDerivativeFactory>("derivative", false);
    registerImporter<RooFFTConvPdfFactory>("fft_conv_pdf", false);
    registerImporter<RooExtendPdfFactory>("extend_pdf", false);
-   registerImporter<ParamHistFuncFactory>("param_hist_func", false);
+   registerImporter<ParamHistFuncFactory>("step", false);
 
    registerExporter<RooAddPdfStreamer<RooAddPdf>>(RooAddPdf::Class(), false);
    registerExporter<RooAddPdfStreamer<RooAddModel>>(RooAddModel::Class(), false);
