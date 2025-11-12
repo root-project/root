@@ -1,7 +1,9 @@
+# ROOT testing
+
 This directory contains some ROOT test programs.
 
-Makefile           - Makefile to build all test programs. Before executing make,
-                     select in the Makefile the platform dependent definitions.
+All executables for the tests produced when ROOT compiled with `-Dtesting=ON` flag
+
 
 hsimple.cxx        - Simple test program that creates and saves some histograms.
 
@@ -17,7 +19,7 @@ Event.cxx          - Implementation for classes Event and Track.
 
 minexam.cxx        - Simple test program to test data fitting.
 
-ctorture.cxx       - test program for the class TComplex
+ctorture.cxx       - Test program for the class TComplex.
 
 tcollex.cxx        - Example usage of the ROOT collection classes.
 
@@ -29,9 +31,11 @@ vmatrix.cxx        - Verification program for the TMatrix class.
 
 vvector.cxx        - Verification program for the TVector class.
 
-stressLinear.cxx   - stress testing of the matrix/vector and linear algebra classes
+stressLinear.cxx   - Stress testing of the matrix/vector and linear algebra classes.
 
-QpRandomDriver.cxx - Verfication program for Quadratic programming classes in Quadp library
+stressGraphics.cxx - Stress graphics tests for image production.
+
+QpRandomDriver.cxx - Verfication program for Quadratic programming classes in Quadp library.
 
 vlazy.cxx          - Verification program for lazy matrices.
 
@@ -56,11 +60,3 @@ bench.cxx          - STL and ROOT container test and benchmarking program.
 DrawTest.sh        - Entry script to extensive TTree query test suite.
 
 dt_*               - Scripts used by DrawTest.sh.
-
-
-REMARKS
-=======
-
-Before running ROOT or any ROOT-based utility such as rootcint you
-have to set the ROOTSYS environment variable. See root/README/README
-on how to set this variable.
