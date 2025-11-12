@@ -811,6 +811,22 @@ void ReadTensorFromStream(std::istream &is, T &target, std::string const &expect
    }
 }
 
+
+// code for the memory greeding allocations
+struct TensorLifeInfo {
+   int begin;   // start time (op index) lifetime
+   int end;     //  end time lifetime
+   size_t size; // size of tensors in bytes
+};
+
+struct MemoryResult {
+  std::size_t total_bytes = 0;  // total memory needed
+  std::vector<size_t> offsets; // resulted offsets for each tensor
+};
+
+/// Greedy best-fit planner with coalescing free list.
+MemoryResult OrganizeMemory(const std::vector<TensorLifeInfo> & tensorsInfo );
+
 } // namespace SOFIE
 } // namespace Experimental
 } // namespace TMVA

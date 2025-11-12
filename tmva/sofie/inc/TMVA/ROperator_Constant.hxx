@@ -128,6 +128,7 @@ public:
          }
       } else {
          model.AddIntermediateTensor(fNY, ConvertStringToType(TensorType<T>::Name()), fDimOutputShape);
+         fOutputTensorNames.emplace_back(fNY);
       }
    }
 
@@ -153,9 +154,7 @@ public:
       }
       auto length = ConvertDimShapeToLength(fDimOutputShape);
       // vector is already allocated- fill with values
-      out << SP << "if (" << length << " > fTensor_" << fNY << ".size())\n";
-      out << SP << SP << "fTensor_" << fNY << ".resize(" << length  << ");\n";
-      out << SP << "std::fill(fTensor_" << fNY << ".begin(), fTensor_" << fNY << ".end(), " << fValues[0] << ");\n";
+      out << SP << "std::fill(tensor_" << fNY << ", tensor_" << fNY << " + " << length << ", " << fValues[0] << ");\n";
       return out.str();
    }
 };
