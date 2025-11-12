@@ -358,12 +358,13 @@ TGraph::TGraph(const TH1 *h)
       Error("TGraph", "Histogram must be 1-D; h %s is %d-D", h->GetName(), h->GetDimension());
       fNpoints = 0;
    } else {
-      fNpoints = ((TH1*)h)->GetXaxis()->GetNbins();
+      fNpoints = h->GetXaxis()->GetNbins();
    }
 
-   if (!CtorAllocate()) return;
+   if (!CtorAllocate())
+      return;
 
-   TAxis *xaxis = ((TH1*)h)->GetXaxis();
+   auto xaxis = h->GetXaxis();
    for (Int_t i = 0; i < fNpoints; i++) {
       fX[i] = xaxis->GetBinCenter(i + 1);
       fY[i] = h->GetBinContent(i + 1);
