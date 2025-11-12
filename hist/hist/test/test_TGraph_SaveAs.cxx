@@ -26,7 +26,7 @@ TEST(TGraphsa, SaveGraphAsCSV)
 
    gr.SaveAs("graph.csv");
 
-   auto gr1 = new TGraph("graph.csv", "%lg,%lg");
+   auto gr1 = new TGraph("graph.csv", "");
    EXPECT_EQ(gr1->GetN(), NP);
 
    for (int n = 0; n < NP; ++n) {
@@ -42,7 +42,7 @@ TEST(TGraphsa, SaveGraphAsTSV)
 
    gr.SaveAs("graph.tsv");
 
-   auto gr1 = new TGraph("graph.tsv", "%lg\t%lg");
+   auto gr1 = new TGraph("graph.tsv", "");
    EXPECT_EQ(gr1->GetN(), NP);
 
    for (int n = 0; n < NP; ++n) {
@@ -57,7 +57,7 @@ TEST(TGraphsa, SaveGraphAsTXT)
 
    gr.SaveAs("graph.txt");
 
-   auto gr1 = new TGraph("graph.txt", "%lg %lg");
+   auto gr1 = new TGraph("graph.txt", "");
    EXPECT_EQ(gr1->GetN(), NP);
 
    for (int n = 0; n < NP; ++n) {
@@ -72,7 +72,7 @@ TEST(TGraphsa, SaveGraphErrorsAsCSV)
 
    gr.SaveAs("grapherrors.csv", "asroot"); // << asroot important for order of values
 
-   auto gr1 = new TGraphErrors("grapherrors.csv", "%lg,%lg,%lg,%lg");
+   auto gr1 = new TGraphErrors("grapherrors.csv", "");
    EXPECT_EQ(gr1->GetN(), NP);
 
    for (int n = 0; n < NP; ++n) {
@@ -90,7 +90,7 @@ TEST(TGraphsa, SaveGraphErrorsAsTSV)
 
    gr.SaveAs("grapherrors.tsv", "asroot"); // << asroot important for order of values
 
-   auto gr1 = new TGraphErrors("grapherrors.tsv", "%lg\t%lg\t%lg\t%lg");
+   auto gr1 = new TGraphErrors("grapherrors.tsv", "");
    EXPECT_EQ(gr1->GetN(), NP);
 
    for (int n = 0; n < NP; ++n) {
@@ -107,7 +107,7 @@ TEST(TGraphsa, SaveGraphErrorsAsTXT)
 
    gr.SaveAs("grapherrors.txt", "asroot"); // << asroot important for order of values
 
-   auto gr1 = new TGraphErrors("grapherrors.txt", "%lg %lg %lg %lg");
+   auto gr1 = new TGraphErrors("grapherrors.txt", "");
    EXPECT_EQ(gr1->GetN(), NP);
 
    for (int n = 0; n < NP; ++n) {
@@ -125,7 +125,7 @@ TEST(TGraphsa, SaveGraphAsymmErrorsAsCSV)
 
    gr.SaveAs("graphasymmrrors.csv", "asroot"); // << asroot important for order of values
 
-   auto gr1 = new TGraphAsymmErrors("graphasymmrrors.csv", "%lg,%lg,%lg,%lg,%lg,%lg");
+   auto gr1 = new TGraphAsymmErrors("graphasymmrrors.csv", "");
    EXPECT_EQ(gr1->GetN(), NP);
 
    for (int n = 0; n < NP; ++n) {
@@ -145,7 +145,7 @@ TEST(TGraphsa, SaveGraphAsymmErrorsAsTSV)
 
    gr.SaveAs("graphasymmrrors.tsv", "asroot"); // << asroot important for order of values
 
-   auto gr1 = new TGraphAsymmErrors("graphasymmrrors.tsv", "%lg\t%lg\t%lg\t%lg\t%lg\t%lg");
+   auto gr1 = new TGraphAsymmErrors("graphasymmrrors.tsv", "");
    EXPECT_EQ(gr1->GetN(), NP);
 
    for (int n = 0; n < NP; ++n) {
@@ -164,7 +164,7 @@ TEST(TGraphsa, SaveGraphAsymmErrorsAsTXT)
 
    gr.SaveAs("graphasymmrrors.txt", "asroot"); // << asroot important for order of values
 
-   auto gr1 = new TGraphAsymmErrors("graphasymmrrors.txt", "%lg %lg %lg %lg %lg %lg");
+   auto gr1 = new TGraphAsymmErrors("graphasymmrrors.txt", "");
    EXPECT_EQ(gr1->GetN(), NP);
 
    for (int n = 0; n < NP; ++n) {
@@ -183,7 +183,7 @@ TEST(TGraphsa, SaveGraphAsymmErrorsAsOnlyErrorsCSV)
 
    gr.SaveAs("graphasymmrrors_reduce.csv", "asroot errors"); // << asroot important for order of values
 
-   auto gr1 = new TGraphErrors("graphasymmrrors_reduce.csv", "%lg,%lg,%lg,%lg");
+   auto gr1 = new TGraphErrors("graphasymmrrors_reduce.csv", "");
    EXPECT_EQ(gr1->GetN(), NP);
 
    for (int n = 0; n < NP; ++n) {
