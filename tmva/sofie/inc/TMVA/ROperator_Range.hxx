@@ -37,6 +37,10 @@ public:
       }
       static_assert( (std::is_same_v<T, float> || std::is_same_v<T, int64_t>),
                   "TMVA::SOFIE - Unsupported type by Range operator");
+      {
+         fInputTensorNames = { fNStart, fNLimit, fNDelta };
+         fOutputTensorNames = { fNOutput };
+      }
    }
 
    void Initialize(RModel& model) override {
@@ -166,13 +170,14 @@ public:
                 ") - static_cast<float>(*tensor_" + fNStart + ")) / static_cast<float>(*tensor_" + fNDelta + ")), 0.0f))";
       out << SP << "{\n";
       out << SP << SP << "size_t range" << " = " << sizeName << ";\n";
-      out << SP << SP << "if ( range > " << "fTensor_" << fNOutput << ".size() ){\n";
-      out << SP << SP << SP << "fTensor_" << fNOutput << ".resize(range);\n";
-      // need to re-initialized pointer to tensor data
-      out << SP << SP << SP << "tensor_" << fNOutput << " = fTensor_" << fNOutput << ".data();\n";
-      out << SP << SP << "}\n";
+      if (sizeName != fShape[0].param) {
+         out << SP << SP << "if ( range > " << "fTensor_" << fNOutput << ".size() ){\n";
+         // we should probably resize the tensor here
+         out << SP << SP << SP << "throw std::runtime_error(\"wrong size allocated for output of range\");\n";
+         out << SP << SP << "}\n";
+      }
       out << SP << SP << "for (size_t i = 0; i < range; i++) {\n";
-      out << SP << SP << SP << "fTensor_" << fNOutput << "[i] = *tensor_" << fNStart << " + i * (*tensor_" << fNDelta << ");\n";
+      out << SP << SP << SP << "tensor_" << fNOutput << "[i] = *tensor_" << fNStart << " + i * (*tensor_" << fNDelta << ");\n";
       out << SP << SP << "}\n";
       out << SP << "}\n";
       return out.str();
