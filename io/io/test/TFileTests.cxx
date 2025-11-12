@@ -1,6 +1,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <array>
 
 #include "gtest/gtest.h"
 
