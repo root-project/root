@@ -102,7 +102,7 @@ namespace cling {
     LLVMInitializeNVPTXAsmPrinter();
 
     m_Init = true;
-#endif  // LLVM_HAS_NVPTX_TARGET
+#endif // LLVM_HAS_NVPTX_TARGET
   }
 
   void IncrementalCUDADeviceCompiler::setCuArgs(
