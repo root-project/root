@@ -37,7 +37,7 @@ class TestClassDATATYPES:
         cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = cppyy.gbl.N
         # In new Cppyy, nullptr can't be found in gbl.
-        cls.nullptr = cppyy._backend.nullptr
+        cls.nullptr = cppyy.nullptr
 
     def test01_load_reflection_cache(self):
         """Loading reflection info twice should result in the same object"""
