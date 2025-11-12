@@ -24,6 +24,7 @@ namespace SOFIE{
 
    private:
       bool fIsDynamic = false;
+      bool fBroadcastBias = false;
 
       float fAttrAlpha = 1.0;
       float fAttrBeta = 1.0;
@@ -33,7 +34,6 @@ namespace SOFIE{
       std::string fNA;
       std::string fNB;
       std::string fNC = "";
-      std::string fNC2; // bias tensor name after broadcasting
       std::string fNY;
       std::string fType;
       EActivationType fActivation;
@@ -222,7 +222,6 @@ namespace SOFIE{
                throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor" + fNC + " is dynamic and is not supported");
             }
             fShapeC = model.GetTensorShape(fNC);
-            fNC2 = fNC;
             size_t lengthC = ConvertShapeToLength(fShapeC);
             size_t lengthY = ConvertShapeToLength(shapeY);
             // for dynamic outputs broadcasting is always done
@@ -230,6 +229,7 @@ namespace SOFIE{
 
 
             if (broadcast_needed) {
+               fBroadcastBias = true;
                if (!model.UseSession()) {
                   // without session dynamic tensors not supported in Gemm
                   if (fIsDynamic) {
@@ -246,14 +246,18 @@ namespace SOFIE{
                      fShapeC = shapeY;
                   }
                } else {
-                  // In case of session add broadcasting code in Session constructor and in GenerateInitCode
-                  // we need to add a new intermediate tensor for broadcasted bias tensor
-                  fNC2 = fNC + "bcast";
-                  if (!fIsDynamic) {
-                     model.AddIntermediateTensor(fNC2, model.GetTensorType(fNC), shapeY);
-                  }
-                  else
-                     model.AddDynamicTensor(fNC2,model.GetTensorType(fNC), fShapeY);
+                  // /d to add a new intermediate tensor for broadcasted bias tensor
+                  // fNC2 = fNC + "bcast";
+                  // if (!fIsDynamic) {
+                  //    model.AddIntermed/ In case of session add broadcasting code in Session constructor and in GenerateInitCode
+                  // // we neeiateTensor(fNC2, model.GetTensorType(fNC), shapeY);
+                  // }
+                  // else
+                  //    model.AddDynamicTensor(fNC2,model.GetTensorType(fNC), fShapeY);
+                  // // do not add to lists of input/output tensors since broadcasted tensors are special
+                  // // and we manage their memory separatly
+                  // //fInputTensorNames.emplace_back(fNC2);
+                  // //fOutputTensorNames.emplace_back(fNC2);
                }
             }
          }
@@ -291,18 +295,26 @@ namespace SOFIE{
       std::string GenerateInitCode() override {
          std::stringstream out;
          // generate initialization code for broadcasting of bias tensor
-         if (fShapeC.size() != fShapeY.size() && fNC != fNC2) {
+         if (fShapeC.size() != fShapeY.size() && fBroadcastBias) {
             // we broadcast here always C in Y output, so target shape is the one of Y
             // no need to call UTILITY::UnidirectionalBroadcastShape.
             // here in case of parametric shape we need to assume that the parameters will be defined in the initialization code.
-            auto targetShape = fShapeY;
-            // include a separate scope to avoid defining unique operator temp variables
-            out << "//--- broadcast bias tensor " << fNC << "for Gemm op\n";
-            out << SP << "{\n";
-            out << "      float * data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_"
-               << fNC << "," << ConvertShapeToString(fShapeC) << ", " << ConvertShapeToString(fShapeY) << ");\n";
             auto length = ConvertDimShapeToLength(fShapeY); // output size
-            out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNC2 << ");\n";
+            // include a separate scope to avoid defining unique operator temp variables
+            out << "//--- broadcast bias tensor " << fNC << "for Gemm op if needed \n";
+            // in case of dynamic tensors check needs to be done at run time
+            bool isOutDynamic = ConvertShapeToInt(fShapeY).empty();
+            if (isOutDynamic)
+               out << SP << "if (" << length << " > " << ConvertShapeToLength(fShapeC) << ") {\n";
+            else
+               out << SP << "{\n";
+            // here we broadcast
+            out << SP << SP << "float * data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_"
+                << fNC << "," << ConvertShapeToString(fShapeC) << ", " << ConvertShapeToString(fShapeY) << ");\n";
+
+            out << SP << SP << "fTensor_" << fNC << ".resize(" << length << ");\n";
+            out << SP << SP << "tensor_" << fNC << " = fTensor_" << fNC << ".data();\n";
+            out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNC << ");\n";
             out << SP << SP << "delete [] data;\n";
             out << SP << "}\n";
          }
@@ -338,7 +350,7 @@ namespace SOFIE{
 
          // case bias is present
          if (!fNC.empty()){
-            if (fNC2 == fNC) {
+            if (!fBroadcastBias) {
                // add a check in case broadcasting was not needed or done outside of session
                // C should have smaller dimension of Y
                if (!fIsDynamic) {
@@ -381,7 +393,7 @@ namespace SOFIE{
             out << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrBeta << ",";
             // in the case of bias
              if (!fNC.empty())
-               out << "tensor_" << fNC2;
+               out << "tensor_" << fNC;
              else
                out << "nullptr";
              out << ");\n";
