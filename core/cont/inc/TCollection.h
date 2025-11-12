@@ -160,6 +160,7 @@ public:
 
    virtual            ~TCollection();
    virtual void       Add(TObject *obj) = 0;
+   virtual void       Add(TObject */*obj*/, Option_t */*opt*/) { AbstractMethod("Add"); };
    void               AddVector(TObject *obj1, ...);
    virtual void       AddAll(const TCollection *col);
    Bool_t             AssertClass(TClass *cl) const;
