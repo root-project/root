@@ -68,7 +68,7 @@ Objects of this type are passed by value.
 
 A single bin index, which is just an integer for normal bins.
 `Underflow()` and `Overflow()` are special values and not ordered with respect to others.
-Objects of this type are passed by value; most notably to `GetBinContent` and `SetBinContent`.
+Objects of this type are passed by value; most notably to `GetBinContent`.
 
 ### `RBinIndexRange`
 

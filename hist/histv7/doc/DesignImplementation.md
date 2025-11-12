@@ -55,10 +55,9 @@ This will copy the arguments, which is fine in this case because `RBinIndex` is 
 ### Special Arguments
 
 Special arguments are passed last.
-Examples include
+For example
 ```cpp
 template <typename... A> void Fill(const std::tuple<A...> &args, RWeight w);
-template <std::size_t N> void SetBinContent(const std::array<RBinIndex, N> &indices, const BinContentType &content);
 ```
 The same works for the variadic function templates that will check the type of the last argument.
 
