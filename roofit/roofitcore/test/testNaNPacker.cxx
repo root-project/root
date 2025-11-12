@@ -101,8 +101,6 @@ TEST(RooNaNPacker, CanPackStuffIntoNaNs)
       dumpFloats(rnp._payload);
 }
 
-#if !defined(_MSC_VER) || defined(_WIN64) || defined(NDEBUG) || defined(R__ENABLE_BROKEN_WIN_TESTS)
-
 // Demonstrate value preserving behavior after arithmetic on packed NaNs.
 TEST(RooNaNPacker, PackedNaNPreservedAfterArithmetic)
 {
@@ -138,9 +136,39 @@ TEST(RooNaNPacker, PackedNaNPreservedAfterArithmetic)
    EXPECT_TRUE(rnp2.isNaNWithPayload());
    // nothing can harm the PackedNaN
    EXPECT_EQ(rnp.getPayload(), rnp2.getPayload());
-}
 
-#endif // !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
+   // multiply packed NaN by 0
+   rnp2._payload = 0. * rnp.getNaNWithPayload();
+   EXPECT_TRUE(rnp2.isNaNWithPayload());
+   // PackedNaN pays no mind
+   EXPECT_EQ(rnp.getPayload(), rnp2.getPayload());
+
+   // add packed NaN to regular NaN
+   rnp2._payload = std::numeric_limits<double>::quiet_NaN() + rnp.getNaNWithPayload();
+   // first NaN wins, though! now the payload is gone
+   EXPECT_FALSE(rnp2.isNaNWithPayload());
+   // a quiet NaN has a "payload" of zero
+   EXPECT_EQ(0, rnp2.getPayload());
+
+   // ... other way around
+   rnp2._payload = rnp.getNaNWithPayload() + std::numeric_limits<double>::quiet_NaN();
+   EXPECT_TRUE(rnp2.isNaNWithPayload());
+   // if it comes first, the PackedNaN does survive
+   EXPECT_EQ(rnp.getPayload(), rnp2.getPayload());
+
+   // multiply regular NaN with packed NaN
+   rnp2._payload = rnp.getNaNWithPayload() * std::numeric_limits<double>::quiet_NaN();
+   EXPECT_TRUE(rnp2.isNaNWithPayload());
+   // if it comes first, the PackedNaN does survive
+   EXPECT_EQ(rnp.getPayload(), rnp2.getPayload());
+
+   // ... other way around
+   rnp2._payload = std::numeric_limits<double>::quiet_NaN() * rnp.getNaNWithPayload();
+   // same as with addition: the first NaN wins
+   EXPECT_FALSE(rnp2.isNaNWithPayload());
+   // a quiet NaN has a "payload" of zero
+   EXPECT_EQ(0, rnp2.getPayload());
+}
 
 /// Fit a simple linear function, that starts in the negative.
 TEST(RooNaNPacker, FitSimpleLinear)
