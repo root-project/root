@@ -1884,7 +1884,6 @@ function(ROOT_ADD_PYUNITTESTS name)
   else()
     set(ROOT_ENV
         PATH=${ROOTSYS}/bin:$ENV{PATH}
-        ${ld_library_path}=${ROOTSYS}/lib:$ENV{${ld_library_path}}
         PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
   endif()
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
@@ -1910,7 +1909,6 @@ function(ROOT_ADD_PYUNITTEST name file)
   else()
     set(ROOT_ENV
         PATH=${ROOTSYS}/bin:$ENV{PATH}
-        ${ld_library_path}=${ROOTSYS}/lib:$ENV{${ld_library_path}}
         PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
   endif()
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
@@ -3130,15 +3128,13 @@ function(ROOTTEST_ADD_TEST testname)
   else()
     string(REPLACE ";" ":" _path "${ROOTTEST_ENV_PATH}")
     string(REPLACE ";" ":" _pythonpath "${ROOTTEST_ENV_PYTHONPATH}")
-    string(REPLACE ";" ":" _librarypath "${ROOTTEST_ENV_LIBRARYPATH}")
 
 
     set(environment ENVIRONMENT
                     ${ROOTTEST_ENV_EXTRA}
                     ${ARG_ENVIRONMENT}
                     PATH=${_path}:$ENV{PATH}
-                    PYTHONPATH=${_pythonpath}:$ENV{PYTHONPATH}
-                    ${ld_library_path}=${_librarypath}:$ENV{${ld_library_path}})
+                    PYTHONPATH=${_pythonpath}:$ENV{PYTHONPATH})
   endif()
 
   if(ARG_WORKING_DIR)
@@ -3383,15 +3379,13 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
   else()
     string(REPLACE ";" ":" _path "${ROOTTEST_ENV_PATH}")
     string(REPLACE ";" ":" _pythonpath "${ROOTTEST_ENV_PYTHONPATH}")
-    string(REPLACE ";" ":" _librarypath "${ROOTTEST_ENV_LIBRARYPATH}")
 
 
     set(environment ENVIRONMENT
                     ${ROOTTEST_ENV_EXTRA}
                     ${ARG_ENVIRONMENT}
                     PATH=${_path}:$ENV{PATH}
-                    PYTHONPATH=${_pythonpath}:$ENV{PYTHONPATH}
-                    ${ld_library_path}=${_librarypath}:$ENV{${ld_library_path}})
+                    PYTHONPATH=${_pythonpath}:$ENV{PYTHONPATH})
   endif()
 
   ROOT_ADD_TEST(${fulltestname} COMMAND ${binary}

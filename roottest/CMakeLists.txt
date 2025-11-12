@@ -230,24 +230,7 @@ if(MSVC)
 else()
   set(ROOTTEST_ENV_PYTHONPATH ${ROOT_LIBRARY_DIR})
 endif()
-set(ROOTTEST_ENV_LIBRARYPATH ${ROOT_LIBRARY_DIR})
 set(ROOTTEST_ENV_EXTRA)
-
-# Optionally, add Fortran link directories. This is needed in particular for
-# macOS, where the path of the Fortran library might not be in the default
-# DYLD_LIBRARY_PATH, but it gets picked up with enable_language(Fortran).
-if(APPLE AND fortran)
-  # Convert Fortran link dirs to colon-separated string
-  string(REPLACE ";" ":" FORTRAN_LINK_PATH "${CMAKE_Fortran_IMPLICIT_LINK_DIRECTORIES}")
-
-  # Append to ROOTTEST_ENV_LIBRARYPATH
-  set(ROOTTEST_ENV_LIBRARYPATH "${ROOTTEST_ENV_LIBRARYPATH}:${FORTRAN_LINK_PATH}")
-
-  # Deduplicate ROOTTEST_ENV_LIBRARYPATH
-  string(REPLACE ":" ";" _tmp "${ROOTTEST_ENV_LIBRARYPATH}")
-  list(REMOVE_DUPLICATES _tmp)
-  string(REPLACE ";" ":" ROOTTEST_ENV_LIBRARYPATH "${_tmp}")
-endif()
 
 if(MSVC)
   set(ROOTTEST_ENVIRONMENT
@@ -257,8 +240,7 @@ else()
   string(REGEX REPLACE ":$" "" TESTPYTHONPATH "${ROOTTEST_ENV_PYTHONPATH}:$ENV{PYTHONPATH}")
   set(ROOTTEST_ENVIRONMENT
       PATH=${ROOTTEST_ENV_PATH}:$ENV{PATH}
-      PYTHONPATH=${TESTPYTHONPATH}
-      ${ld_library_path}=${ROOTTEST_ENV_LIBRARYPATH}:$ENV{${ld_library_path}})
+      PYTHONPATH=${TESTPYTHONPATH})
   if (gnuinstall)
     set(ROOTTEST_ENVIRONMENT ${ROOTTEST_ENVIRONMENT} ROOTIGNOREPREFIX=1)
   endif()

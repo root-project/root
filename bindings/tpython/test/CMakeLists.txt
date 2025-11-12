@@ -14,8 +14,6 @@ if(MSVC)
       PYTHONPATH=${ROOTSYS}/bin;$ENV{PYTHONPATH})
 else()
   set(tpython_gtest_env
-      PATH=${ROOTSYS}/bin:$ENV{PATH}
-      LD_LIBRARY_PATH=${ROOTSYS}/lib:$ENV{LD_LIBRARY_PATH}
       PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
 endif()
 
