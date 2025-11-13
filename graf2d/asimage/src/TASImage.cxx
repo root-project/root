@@ -6739,34 +6739,24 @@ void TASImage::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    char *buf = nullptr;
    int sz;
-
-   if (GetWidth() > 500) { // workaround CINT limitations
-      UInt_t w = 500;
-      Double_t scale = 500./GetWidth();
-      UInt_t h = TMath::Nint(GetHeight()*scale);
-      Scale(w, h);
-   }
-
    GetImageBuffer(&buf, &sz, TImage::kXpm);
    TString str = buf;
    free(buf);
 
-   TString name = GetName();
-   name.ReplaceAll(".", "_");
-   static int ii = 0;
-   ii++;
-
    str.ReplaceAll("static", "const");
-   TString xpm = "xpm_";
-   xpm += name;
-   xpm += ii;
-   str.ReplaceAll("asxpm", xpm.Data());
-   out << std::endl << str << std::endl << std::endl;
+   static int ii = 0;
 
-   out << "   TImage *";
-   out << xpm << "_img = TImage::Create();" << std::endl;
-   out << "   " << xpm << "_img->SetImageBuffer( (char **)" << xpm << ", TImage::kXpm);" << std::endl;
-   out << "   " << xpm << "_img->Draw();" << std::endl;
+   TString xpm = TString::Format("asimage_xpm_%d", ii++);
+   str.ReplaceAll("asxpm", xpm.Data());
+   out << "\n" << str << "\n\n";
+
+   out << "   ";
+   if (!gROOT->ClassSaved(TImage::Class()))
+      out << TImage::Class()->GetName() << " *";
+   out << "asimage = TImage::Create();\n";
+   out << "   asimage->SetImageBuffer( (char **)" << xpm << ", TImage::kXpm);\n";
+   SaveImageAttributes(out, "asimage");
+   out << "   asimage->Draw();\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
