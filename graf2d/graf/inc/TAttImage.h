@@ -89,7 +89,7 @@ public:
 
    virtual void     ResetAttImage(Option_t *option="");
    virtual void     SaveImageAttributes(std::ostream &out, const char *name,
-                                        EImageQuality qualdef = kImgDefault,
+                                        EImageQuality qualdef = kImgPoor,
                                         UInt_t comprdef = 0,
                                         Bool_t constRatiodef = kTRUE);
    virtual void     SetConstRatio(Bool_t constRatio = kTRUE); // *TOGGLE*
