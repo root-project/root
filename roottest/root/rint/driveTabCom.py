@@ -5,7 +5,7 @@ import pty, os, subprocess, sys, select
 # Create a tty: master is our side, slave is what we pass as Popen's stdin.
 # This makes ROOT believe that its stdin is a tty.
 master, slave = pty.openpty()
-cmd = [os.environ['ROOTSYS'] + '/bin/root.exe', '-b', '-l']
+cmd = ['root.exe', '-b', '-l']
 proc = subprocess.Popen(cmd,
                         stdin = slave,
                         stdout = slave,
