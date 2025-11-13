@@ -823,9 +823,10 @@ void collectElements(RooArgSet &elems, RooAbsArg *arg)
    }
 }
 
-bool allRooRealVar(const RooAbsCollection &list) {
-   for (auto* var : list) {
-      if (!dynamic_cast<RooRealVar*>(var)) {
+bool allRooRealVar(const RooAbsCollection &list)
+{
+   for (auto *var : list) {
+      if (!dynamic_cast<RooRealVar *>(var)) {
          return false;
       }
    }
@@ -929,7 +930,7 @@ Channel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfname, cons
                addNormFactor(par, sample, ws);
             } else if (auto hf = dynamic_cast<const RooHistFunc *>(e)) {
                updateObservables(hf->dataHist());
-            } else if (ParamHistFunc* phf = dynamic_cast<ParamHistFunc *>(e); phf && allRooRealVar(phf->paramList())) {
+            } else if (ParamHistFunc *phf = dynamic_cast<ParamHistFunc *>(e); phf && allRooRealVar(phf->paramList())) {
                phfs.push_back(phf);
             } else if (auto fip = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(e)) {
                // some (modified) histfactory models have several instances of FlexibleInterpVar
