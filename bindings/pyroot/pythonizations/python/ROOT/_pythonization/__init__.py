@@ -14,8 +14,6 @@ import traceback
 
 import cppyy
 
-from ._generic import pythonize_generic
-
 # \cond INTERNALS
 gbl_namespace = cppyy.gbl
 # \endcond
@@ -70,6 +68,7 @@ def pythonization(class_name, ns="::", is_prefix=False):
 
         def passes_filter(class_name):
             return any(class_name.startswith(prefix) for prefix in target)
+
     else:
 
         def passes_filter(class_name):
@@ -114,6 +113,7 @@ def pythonization(class_name, ns="::", is_prefix=False):
                 name (string): name of the class that is the current candidate
                     to be pythonized.
             """
+            from ._generic import pythonize_generic
 
             fqn = klass.__cpp_name__
 

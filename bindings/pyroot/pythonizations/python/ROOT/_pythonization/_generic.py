@@ -8,7 +8,6 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from ROOT.libROOTPythonizations import AddPrettyPrintingPyz
 
 def _add_getitem_checked(klass):
     # Parameters:
@@ -27,13 +26,16 @@ def _add_getitem_checked(klass):
         if i >= 0 and i < len(o):
             return o._getitem__unchecked(i)
         else:
-            raise IndexError('index out of range')
+            raise IndexError("index out of range")
 
     klass._getitem__unchecked = klass.__getitem__
     klass.__getitem__ = getitem_checked
 
+
 # Generic pythonizor for pretty printing that is applied to (almost) all classes
 def pythonize_generic(klass, name):
+    from ROOT.libROOTPythonizations import AddPrettyPrintingPyz
+
     # Parameters:
     # klass: class to be pythonized
     # name: string containing the name of the class
@@ -41,11 +43,11 @@ def pythonize_generic(klass, name):
     # Add pretty printing via setting the __str__ special function
 
     # Exclude classes which have the method __str__ already defined in C++
-    m = getattr(klass, '__str__', None)
-    has_cpp_str = True if m is not None and type(m).__name__ == 'CPPOverload' else False
+    m = getattr(klass, "__str__", None)
+    has_cpp_str = True if m is not None and type(m).__name__ == "CPPOverload" else False
 
     # Exclude std::string with its own pythonization from cppyy
-    exclude = [ 'std::string' ]
+    exclude = ["std::string"]
 
     if name not in exclude and not has_cpp_str:
         AddPrettyPrintingPyz(klass)
