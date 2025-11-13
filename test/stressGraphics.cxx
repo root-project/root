@@ -113,7 +113,6 @@
 #include "TView.h"
 
 
-const int kMaxNumTests = 1000;
 const int  kFineSvgTest = 10; // SVG file can slightly vary
 const int  kSkipSvgTest = 100; // do not perform SVG test
 
