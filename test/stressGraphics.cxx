@@ -4373,16 +4373,19 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    // only in batch web mode use
    gWebMode = gROOT->IsWebDisplay();
 
-   // Check if $ROOTSYS/tutorials/hsimple.root exists
-   gHsimple = TFile::Open("$(ROOTSYS)/tutorials/hsimple.root");
+   // Check if hsimple.root exists
+
+   TString dir = gROOT->GetTutorialDir();
+
+   gHsimple = TFile::Open(dir + "/hsimple.root");
    if (!gHsimple) {
       gHsimple = TFile::Open("hsimple.root");
       if (!gHsimple) {
-         printf("Create $(ROOTSYS)/tutorials/hsimple.root\n");
-         gROOT->Macro("$(ROOTSYS)/tutorials/hsimple.C");
-         gHsimple = TFile::Open("$(ROOTSYS)/tutorials/hsimple.root");
+         printf("Create hsimple.root\n");
+         gROOT->Macro(dir + "/hsimple.C");
+         gHsimple = TFile::Open("hsimple.root");
          if (!gHsimple) {
-            printf("Could not create $(ROOTSYS)/tutorials/hsimple.root\n");
+            printf("Could not create hsimple.root\n");
             return;
          }
       }
@@ -4391,10 +4394,10 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    // Check if cernstaff.root exists
    gCernstaff = TFile::Open("cernstaff.root");
    if (!gCernstaff) {
-      gCernstaff = TFile::Open("$(ROOTSYS)/tutorials/io/tree/cernstaff.root");
+      gCernstaff = TFile::Open(dir + "/io/tree/cernstaff.root");
       if (!gCernstaff) {
          printf("Create ./cernstaff.root\n");
-         gROOT->Macro("$(ROOTSYS)/tutorials/io/tree/tree500_cernbuild.C(0,0)");
+         gROOT->Macro(dir + "/io/tree/tree500_cernbuild.C(0,0)");
          gCernstaff = TFile::Open("cernstaff.root");
          if (!gCernstaff) {
             printf("Could not create ./cernstaff.root\n");
