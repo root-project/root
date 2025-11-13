@@ -55,6 +55,20 @@ if(fortran AND CMAKE_Fortran_COMPILER)
   ROOT_EXECUTABLE(g2root g2root.f LIBRARIES minicern CMAKENOEXPORT)
   set_target_properties(g2root PROPERTIES COMPILE_FLAGS "-w")
   ROOT_EXECUTABLE(h2root h2root.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore Thread minicern CMAKENOEXPORT)
+
+  # This is needed in particular for macOS, where the path of the GNU Fortran
+  # library might not be in the default DYLD_LIBRARY_PATH, but it gets picked
+  # up with enable_language(Fortran).
+  if(APPLE AND CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
+    # Compute path to quadmath
+    execute_process(
+      COMMAND ${CMAKE_Fortran_COMPILER} -print-file-name=libgfortran.dylib
+      OUTPUT_VARIABLE LIBGFORTRAN_PATH
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+    get_filename_component(LIBGFORTRAN_DIR "${LIBGFORTRAN_PATH}" DIRECTORY)
+    set_property(TARGET h2root APPEND PROPERTY BUILD_RPATH "${LIBGFORTRAN_DIR}")
+    set_property(TARGET h2root APPEND PROPERTY INSTALL_RPATH "${LIBGFORTRAN_DIR}")
+  endif()
 endif()
 
 file(GLOB utils RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} python/root*)
