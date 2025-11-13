@@ -1270,10 +1270,10 @@ dataset as a `std::uin64_t`. For every 64 columns, a new bitmask column is added
 
 For each column that gets varied, the nominal and all variation columns are each assigned a bit to denote whether their
 entries are valid. A mapping of column names to the corresponding bitmask is placed in the same file as the output
-dataset, with a name that follows the pattern `"R_rdf_branchToBitmaskMapping_<NAME_OF_THE_DATASET>"`. It is of type
+dataset, with a name that follows the pattern `"R_rdf_column_to_bitmask_mapping_<NAME_OF_THE_DATASET>"`. It is of type
 `std::unordered_map<std::string, std::pair<std::string, unsigned int>>`, and maps a column name to the name of the
 bitmask column and the index of the relevant bit. For example, in the same file as the dataset "Events" there would be
-an object named `R_rdf_branchToBitmaskMapping_Events`. This object for example would describe a connection such as:
+an object named `R_rdf_column_to_bitmask_mapping_Events`. This object for example would describe a connection such as:
 
 ~~~
 muon_pt --> (R_rdf_mask_Events_0, 42)
