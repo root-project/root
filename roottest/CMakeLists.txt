@@ -251,13 +251,11 @@ endif()
 
 if(MSVC)
   set(ROOTTEST_ENVIRONMENT
-      ROOTSYS=${ROOTSYS}
       PYTHONPATH=${ROOTTEST_ENV_PYTHONPATH})
 else()
   # `PYTHONPATH=...:` (trailing `:`) kills roottest/python/stl/PyROOT_stltests.py.
   string(REGEX REPLACE ":$" "" TESTPYTHONPATH "${ROOTTEST_ENV_PYTHONPATH}:$ENV{PYTHONPATH}")
   set(ROOTTEST_ENVIRONMENT
-      ROOTSYS=${ROOTSYS}
       PATH=${ROOTTEST_ENV_PATH}:$ENV{PATH}
       PYTHONPATH=${TESTPYTHONPATH}
       ${ld_library_path}=${ROOTTEST_ENV_LIBRARYPATH}:$ENV{${ld_library_path}})
