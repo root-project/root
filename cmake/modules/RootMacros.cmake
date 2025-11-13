@@ -1879,10 +1879,10 @@ endfunction()
 #----------------------------------------------------------------------------
 function(ROOT_ADD_PYUNITTESTS name)
   if(MSVC)
-    set(ROOT_ENV ROOTSYS=${ROOTSYS}
+    set(ROOT_ENV
         PYTHONPATH=${ROOTSYS}/bin;$ENV{PYTHONPATH})
   else()
-    set(ROOT_ENV ROOTSYS=${ROOTSYS}
+    set(ROOT_ENV
         PATH=${ROOTSYS}/bin:$ENV{PATH}
         ${ld_library_path}=${ROOTSYS}/lib:$ENV{${ld_library_path}}
         PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
@@ -1905,10 +1905,10 @@ endfunction()
 function(ROOT_ADD_PYUNITTEST name file)
   CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;GENERIC" "" "COPY_TO_BUILDDIR;ENVIRONMENT;PYTHON_DEPS;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" ${ARGN})
   if(MSVC)
-    set(ROOT_ENV ROOTSYS=${ROOTSYS}
+    set(ROOT_ENV
         PYTHONPATH=${ROOTSYS}/bin;$ENV{PYTHONPATH})
   else()
-    set(ROOT_ENV ROOTSYS=${ROOTSYS}
+    set(ROOT_ENV
         PATH=${ROOTSYS}/bin:$ENV{PATH}
         ${ld_library_path}=${ROOTSYS}/lib:$ENV{${ld_library_path}}
         PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
@@ -3126,7 +3126,6 @@ function(ROOTTEST_ADD_TEST testname)
     set(environment ENVIRONMENT
                     ${ROOTTEST_ENV_EXTRA}
                     ${ARG_ENVIRONMENT}
-                    ROOTSYS=${ROOTSYS}
                     PYTHONPATH=${ROOTTEST_ENV_PYTHONPATH})
   else()
     string(REPLACE ";" ":" _path "${ROOTTEST_ENV_PATH}")
@@ -3137,7 +3136,6 @@ function(ROOTTEST_ADD_TEST testname)
     set(environment ENVIRONMENT
                     ${ROOTTEST_ENV_EXTRA}
                     ${ARG_ENVIRONMENT}
-                    ROOTSYS=${ROOTSYS}
                     PATH=${_path}:$ENV{PATH}
                     PYTHONPATH=${_pythonpath}:$ENV{PYTHONPATH}
                     ${ld_library_path}=${_librarypath}:$ENV{${ld_library_path}})
@@ -3381,7 +3379,6 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
 
   if(MSVC)
     set(environment ENVIRONMENT
-                    ROOTSYS=${ROOTSYS}
                     PYTHONPATH=${ROOTTEST_ENV_PYTHONPATH})
   else()
     string(REPLACE ";" ":" _path "${ROOTTEST_ENV_PATH}")
@@ -3392,7 +3389,6 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
     set(environment ENVIRONMENT
                     ${ROOTTEST_ENV_EXTRA}
                     ${ARG_ENVIRONMENT}
-                    ROOTSYS=${ROOTSYS}
                     PATH=${_path}:$ENV{PATH}
                     PYTHONPATH=${_pythonpath}:$ENV{PYTHONPATH}
                     ${ld_library_path}=${_librarypath}:$ENV{${ld_library_path}})
