@@ -1035,7 +1035,7 @@ struct SnapshotOutputWriter {
    {
       if (!fBranchToBitmaskMapping.empty()) {
          fFile->WriteObject(&fBranchToBitmaskMapping,
-                            (std::string{"R_rdf_branchToBitmaskMapping_"} + fTree->GetName()).c_str());
+                            (std::string{"R_rdf_column_to_bitmask_mapping_"} + fTree->GetName()).c_str());
       }
       if (fTree) {
          // use AutoSave to flush TTree contents because TTree::Write writes in gDirectory, not in fDirectory
