@@ -10,11 +10,15 @@
 
 void img2pad()
 {
-   TImage *img = TImage::Open("$ROOTSYS/tutorials/visualisation/image/rose512.jpg");
+   TString fname = gROOT->GetTutorialDir();
+   fname.Append("/visualisation/image/rose512.jpg");
+   TImage *img = TImage::Open(fname);
+
    if (!img) {
       printf("Could not create an image... exit\n");
       return;
    }
+
    img->SetConstRatio(kFALSE);
    img->Draw("N");
 
@@ -26,16 +30,16 @@ void img2pad()
    /*img->Draw("T100,100,#556655");*/
    /*img->Draw("T100,100");*/
 
-   TImage *i1 = TImage::Open("$ROOTSYS/tutorials/visualisation/image/rose512.jpg");
+   TImage *i1 = TImage::Open(fname);
    i1->SetConstRatio(kFALSE);
    i1->Flip(90);
-   TImage *i2 = TImage::Open("$ROOTSYS/tutorials/visualisation/image/rose512.jpg");
+   TImage *i2 = TImage::Open(fname);
    i2->SetConstRatio(kFALSE);
    i2->Flip(180);
-   TImage *i3 = TImage::Open("$ROOTSYS/tutorials/visualisation/image/rose512.jpg");
+   TImage *i3 = TImage::Open(fname);
    i3->SetConstRatio(kFALSE);
    i3->Flip(270);
-   TImage *i4 = TImage::Open("$ROOTSYS/tutorials/visualisation/image/rose512.jpg");
+   TImage *i4 = TImage::Open(fname);
    i4->SetConstRatio(kFALSE);
    i4->Mirror(kTRUE);
 
