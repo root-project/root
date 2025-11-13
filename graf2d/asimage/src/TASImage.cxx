@@ -297,7 +297,7 @@ TASImage::TASImage(const TASImage &img) : TImage(img)
 
    if (img.IsValid()) {
       fImage = clone_asimage(img.fImage, SCL_DO_ALL);
-      fScaledImage   = fScaledImage ? (TASImage*)img.fScaledImage->Clone("") : nullptr;
+      fScaledImage   = fScaledImage ? static_cast<TASImage *>(img.fScaledImage->Clone()) : nullptr;
       fGrayImage     = fGrayImage ? clone_asimage(img.fGrayImage, SCL_DO_ALL) : nullptr;
 
       if (img.fImage->alt.vector) {
@@ -327,7 +327,7 @@ TASImage &TASImage::operator=(const TASImage &img)
       DestroyImage();
       delete fScaledImage;
       fImage = clone_asimage(img.fImage, SCL_DO_ALL);
-      fScaledImage = fScaledImage ? (TASImage*)img.fScaledImage->Clone("") : nullptr;
+      fScaledImage = fScaledImage ? static_cast<TASImage *>(img.fScaledImage->Clone()) : nullptr;
       fGrayImage = fGrayImage ? clone_asimage(img.fGrayImage, SCL_DO_ALL) : nullptr;
 
       if (img.fImage->alt.vector) {
@@ -336,7 +336,7 @@ TASImage &TASImage::operator=(const TASImage &img)
          memcpy(fImage->alt.vector, img.fImage->alt.vector, size);
       }
 
-      fScaledImage = img.fScaledImage ? (TASImage*)img.fScaledImage->Clone("") : nullptr;
+      fScaledImage = img.fScaledImage ? static_cast<TASImage *>(img.fScaledImage->Clone()) : nullptr;
       fZoomUpdate = kNoZoom;
       fZoomOffX   = img.fZoomOffX;
       fZoomOffY   = img.fZoomOffY;
@@ -2788,7 +2788,7 @@ TObject *TASImage::Clone(const char *newname) const
       return nullptr;
    }
 
-   TASImage *im = (TASImage*)TImage::Create();
+   TASImage *im = static_cast<TASImage *>(TImage::Create());
 
    if (!im) {
       Warning("Clone", "Failed to create image");
@@ -2805,7 +2805,7 @@ TObject *TASImage::Clone(const char *newname) const
    im->fZoomWidth = fZoomWidth;
    im->fZoomHeight = fZoomHeight;
    im->fZoomUpdate = fZoomUpdate;
-   im->fScaledImage = fScaledImage ? (TASImage*)fScaledImage->Clone("") : nullptr;
+   im->fScaledImage = fScaledImage ? static_cast<TASImage *>(fScaledImage->Clone()) : nullptr;
 
    if (fImage->alt.argb32) {
       UInt_t sz = fImage->width * fImage->height;
