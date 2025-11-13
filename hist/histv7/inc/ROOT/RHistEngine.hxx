@@ -196,6 +196,21 @@ public:
       }
    }
 
+   /// Add all bin contents of another histogram using atomic instructions.
+   ///
+   /// Throws an exception if the axes configurations are not identical.
+   ///
+   /// \param[in] other another histogram that must not be modified during the operation
+   void AddAtomic(const RHistEngine<BinContentType> &other)
+   {
+      if (fAxes != other.fAxes) {
+         throw std::invalid_argument("axes configurations not identical in AddAtomic");
+      }
+      for (std::size_t i = 0; i < fBinContents.size(); i++) {
+         Internal::AtomicAdd(&fBinContents[i], other.fBinContents[i]);
+      }
+   }
+
    /// Clear all bin contents.
    void Clear()
    {
