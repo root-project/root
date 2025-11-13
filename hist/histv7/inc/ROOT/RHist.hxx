@@ -174,6 +174,17 @@ public:
       fStats.Add(other.fStats);
    }
 
+   /// Add all bin contents and statistics of another histogram using atomic instructions.
+   ///
+   /// Throws an exception if the axes configurations are not identical.
+   ///
+   /// \param[in] other another histogram that must not be modified during the operation
+   void AddAtomic(const RHist<BinContentType> &other)
+   {
+      fEngine.AddAtomic(other.fEngine);
+      fStats.AddAtomic(other.fStats);
+   }
+
    /// Clear all bin contents and statistics.
    void Clear()
    {
