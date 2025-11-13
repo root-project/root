@@ -40,6 +40,8 @@ struct User {
    void AtomicInc() { ROOT::Experimental::Internal::AtomicInc(&fValue); }
 
    void AtomicAdd(double w) { ROOT::Experimental::Internal::AtomicAdd(&fValue, w); }
+
+   void AtomicAdd(const User &rhs) { ROOT::Experimental::Internal::AtomicAdd(&fValue, rhs.fValue); }
 };
 
 static_assert(std::is_nothrow_move_constructible_v<RHistEngine<User>>);
@@ -60,6 +62,23 @@ TEST(RHistEngineUser, Add)
    engineB.Fill(9.5);
 
    engineA.Add(engineB);
+
+   EXPECT_EQ(engineA.GetBinContent(RBinIndex(8)).fValue, 1);
+   EXPECT_EQ(engineA.GetBinContent(RBinIndex(9)).fValue, 1);
+}
+
+TEST(RHistEngineUser, AddAtomic)
+{
+   // Addition with atomic instructions uses AtomicAdd(const User &)
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<User> engineA({axis});
+   RHistEngine<User> engineB({axis});
+
+   engineA.Fill(8.5);
+   engineB.Fill(9.5);
+
+   engineA.AddAtomic(engineB);
 
    EXPECT_EQ(engineA.GetBinContent(RBinIndex(8)).fValue, 1);
    EXPECT_EQ(engineA.GetBinContent(RBinIndex(9)).fValue, 1);

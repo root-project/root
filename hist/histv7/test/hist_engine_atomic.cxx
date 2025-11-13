@@ -1,5 +1,39 @@
 #include "hist_test.hxx"
 
+TEST(RHistEngine, AddAtomic)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<int> engineA({axis});
+   RHistEngine<int> engineB({axis});
+
+   engineA.Fill(-100);
+   for (std::size_t i = 0; i < Bins; i++) {
+      engineA.Fill(i);
+      engineA.Fill(i);
+      engineB.Fill(i);
+   }
+   engineB.Fill(100);
+
+   engineA.AddAtomic(engineB);
+
+   EXPECT_EQ(engineA.GetBinContent(RBinIndex::Underflow()), 1);
+   for (auto index : axis.GetNormalRange()) {
+      EXPECT_EQ(engineA.GetBinContent(index), 3);
+   }
+   EXPECT_EQ(engineA.GetBinContent(RBinIndex::Overflow()), 1);
+}
+
+TEST(RHistEngine, AddAtomicDifferent)
+{
+   // The equality operators of RAxes and the axis objects are already unit-tested separately, so here we only check one
+   // case with different the number of bins.
+   RHistEngine<int> engineA(10, {0, 1});
+   RHistEngine<int> engineB(20, {0, 1});
+
+   EXPECT_THROW(engineA.AddAtomic(engineB), std::invalid_argument);
+}
+
 TEST(RHistEngine, FillAtomic)
 {
    static constexpr std::size_t Bins = 20;
@@ -177,6 +211,29 @@ TEST(RHistEngine, FillAtomicTupleWeightInvalidNumberOfArguments)
    EXPECT_THROW(engine2.FillAtomic(std::make_tuple(1), RWeight(1)), std::invalid_argument);
    EXPECT_NO_THROW(engine2.FillAtomic(std::make_tuple(1, 2), RWeight(1)));
    EXPECT_THROW(engine2.FillAtomic(std::make_tuple(1, 2, 3), RWeight(1)), std::invalid_argument);
+}
+
+TEST(RHistEngine_RBinWithError, AddAtomic)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHistEngine<RBinWithError> engineA({axis});
+   RHistEngine<RBinWithError> engineB({axis});
+
+   for (std::size_t i = 0; i < Bins; i++) {
+      engineA.Fill(i, RWeight(0.2 + i * 0.03));
+      engineB.Fill(i, RWeight(0.1 + i * 0.05));
+   }
+
+   engineA.AddAtomic(engineB);
+
+   for (auto index : axis.GetNormalRange()) {
+      auto &bin = engineA.GetBinContent(index);
+      double weightA = 0.2 + index.GetIndex() * 0.03;
+      double weightB = 0.1 + index.GetIndex() * 0.05;
+      EXPECT_FLOAT_EQ(bin.fSum, weightA + weightB);
+      EXPECT_FLOAT_EQ(bin.fSum2, weightA * weightA + weightB * weightB);
+   }
 }
 
 TEST(RHistEngine_RBinWithError, FillAtomic)

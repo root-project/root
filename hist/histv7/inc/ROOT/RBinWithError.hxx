@@ -66,6 +66,15 @@ struct RBinWithError final {
       Internal::AtomicAdd(&fSum, w);
       Internal::AtomicAdd(&fSum2, w * w);
    }
+
+   /// Add another bin content using atomic instructions.
+   ///
+   /// \param[in] rhs another bin content that must not be modified during the operation
+   void AtomicAdd(const RBinWithError &rhs)
+   {
+      Internal::AtomicAdd(&fSum, rhs.fSum);
+      Internal::AtomicAdd(&fSum2, rhs.fSum2);
+   }
 };
 
 } // namespace Experimental
