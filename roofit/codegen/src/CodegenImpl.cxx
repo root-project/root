@@ -557,7 +557,14 @@ void codegenImpl(RooPolynomial &arg, CodegenContext &ctx)
 
 void codegenImpl(RooProduct &arg, CodegenContext &ctx)
 {
-   ctx.addResult(&arg, ctx.buildCall(mathFunc("product"), arg.realComponents(), arg.realComponents().size()));
+   std::stringstream ss;
+   std::size_t n = arg.realComponents().size();
+   for (std::size_t i = 0; i < n; ++i) {
+      ss << ctx.getResult(arg.realComponents()[i]);
+      if (i != n - 1)
+         ss << " * " << std::endl;
+   }
+   ctx.addResult(&arg, ss.str());
 }
 
 void codegenImpl(RooRatio &arg, CodegenContext &ctx)
