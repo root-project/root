@@ -1967,8 +1967,7 @@ tree->Draw("event.GetNtrack()");
    </td>
    <td>
 ~~~{cpp}
-auto df1 = df.Define("NTrack","event.GetNtrack()");
-df1.Histo1D("NTrack")->Draw();
+df.Define("NTrack","event.GetNtrack()").Histo1D("NTrack")->Draw();
 ~~~
    </td>
 </tr>
@@ -2008,16 +2007,13 @@ df.Define("good_pt", "Muon_pt[Muon_pt > 100]").Histo1D("good_pt")->Draw();
 tree->Draw("sqrt(x)>>hnew","y>0"); 
 
 // Retrieve hnew from the current directory
-TH1F *hnew = (TH1F*)gDirectory->Get("hnew");
-
-// Retrieve hnew from the current Pad
-TH1F *hnew = (TH1F*)gPad->GetPrimitive("hnew");
+auto hnew = gDirectory->Get<TH1F>("hnew");
 ~~~
    </td>
    <td>
 ~~~{cpp}
 // We pass histogram constructor arguments to the Histo1D operation, to easily give the histogram a name
-auto hist = df.Filter("y>0").Histo1D({"hnew","hnew",10, 0, 10},"x");
+auto hist = df.Define("sqrt_x", "sqrt(x)").Filter("y>0").Histo1D({"hnew","hnew", 10, 0, 10}, "sqrt_x");
 ~~~
    </td>
 </tr>
@@ -2035,10 +2031,10 @@ tree->Draw("z:y:x","","prof");
 ~~~{cpp}
 
 // Draw a 1D Profile histogram
-auto profile1D = df.Profile1D("x", "y");
+df.Profile1D("x", "y")->Draw();
 
 // Draw a 2D Profile histogram
-auto profile2D = df.Profile2D("x", "y", "z");
+df.Profile2D("x", "y", "z")->Draw();
 ~~~
    </td>
 </tr>
@@ -2052,8 +2048,7 @@ tree->Draw("x", "","", 2, 5);
    <td>
 ~~~{cpp}
 // Range function with arguments begin, end
-auto histo_range = df.Range(5,7).Histo1D<int>("x");
-histo_range->Draw();
+df.Range(5,7).Histo1D("x")->Draw();
 ~~~
    </td>
 </tr>
@@ -2067,8 +2062,7 @@ tree->Draw("vec_list.X()");
    </td>
    <td>
 ~~~{cpp}
-auto histo = df.Define("x", "ROOT::RVecD out; for(const auto &el: vec_list) out.push_back(el.X()); return out;").Histo1D("x");
-histo->Draw();
+df.Define("x", "ROOT::RVecD out; for(const auto &el: vec_list) out.push_back(el.X()); return out;").Histo1D("x")->Draw();
 ~~~
    </td>
 </tr>
@@ -2078,7 +2072,7 @@ histo->Draw();
 // Gather all values from a branch holding a collection per event, `pt`, 
 // and fill a histogram so that we can count the total number of values across all events 
 tree->Draw("pt>>histo");
-TH1D *histo = (TH1D *)gDirectory->Get("histo");
+auto histo = gDirectory->Get<TH1D>("histo");
 histo->GetEntries();
 ~~~
    </td>
