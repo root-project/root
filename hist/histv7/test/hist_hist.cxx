@@ -52,6 +52,23 @@ TEST(RHist, Add)
    EXPECT_EQ(histA.GetBinContent(RBinIndex(9)), 1);
 }
 
+TEST(RHist, AddAtomic)
+{
+   static constexpr std::size_t Bins = 20;
+   const RRegularAxis axis(Bins, {0, Bins});
+   RHist<int> histA({axis});
+   RHist<int> histB({axis});
+
+   histA.Fill(8.5);
+   histB.Fill(9.5);
+
+   histA.AddAtomic(histB);
+
+   EXPECT_EQ(histA.GetNEntries(), 2);
+   EXPECT_EQ(histA.GetBinContent(RBinIndex(8)), 1);
+   EXPECT_EQ(histA.GetBinContent(RBinIndex(9)), 1);
+}
+
 TEST(RHist, Clear)
 {
    static constexpr std::size_t Bins = 20;
