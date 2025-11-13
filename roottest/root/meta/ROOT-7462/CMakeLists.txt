@@ -28,5 +28,7 @@ ROOTTEST_ADD_TEST(InvalidDeclRecoveryCI
                   MACRO execInvalidDeclRecoveryCI.C
                   OUTREF execInvalidDeclRecoveryCI.ref)
 
+# This tests intentionally output error message about failed interpreter 
+# compilation, so we do not record the log and only check the exit code. 
 ROOTTEST_ADD_TEST(InvalidDeclRecovery
                   MACRO runInvalidDeclRecovery.C)
