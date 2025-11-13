@@ -219,7 +219,7 @@ TEST(RDFVarySnapshot, Bitmask)
       ASSERT_NE(branch, nullptr);
 
       auto *branchToIndexMap = file.Get<std::unordered_map<std::string, std::pair<std::string, unsigned int>>>(
-         ("R_rdf_branchToBitmaskMapping_" + treename).c_str());
+         ("R_rdf_column_to_bitmask_mapping_" + treename).c_str());
       ASSERT_NE(branchToIndexMap, nullptr);
       for (const auto branchName : {"x", "y", "x__xVar_0", "x__xVar_1", "y__xVar_0", "y__xVar_0"}) {
          ASSERT_NE(branchToIndexMap->find(branchName), branchToIndexMap->end());
@@ -339,8 +339,8 @@ TEST(RDFVarySnapshot, TwoVariationsInSameFile)
    auto snap2 = rdf.Filter(cuts2, {"x", "y"}).Snapshot(treename2, filename, {"x", "y"}, options);
 
    std::unique_ptr<TFile> file{TFile::Open(filename)};
-   EXPECT_NE(file->GetKey(("R_rdf_branchToBitmaskMapping_" + treename1).c_str()), nullptr);
-   EXPECT_NE(file->GetKey(("R_rdf_branchToBitmaskMapping_" + treename2).c_str()), nullptr);
+   EXPECT_NE(file->GetKey(("R_rdf_column_to_bitmask_mapping_" + treename1).c_str()), nullptr);
+   EXPECT_NE(file->GetKey(("R_rdf_column_to_bitmask_mapping_" + treename2).c_str()), nullptr);
 
    // In Windows, an exception is thrown as expected, but it cannot be caught for the time being:
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
