@@ -20,7 +20,7 @@ void runscript(const std::string &name, bool with_rootmap = false)
       gSystem->Load("libjet_dictrflx");
       gSystem->Load("libbtag_dictrflx");
       TClass::GetClass("SG::AuxTypeVectorFactory<std::vector<ElementLink<DataVector<xAOD::Jet_v1> > > >");
-      auto c = TClass::GetClass("DataVector<xAOD::Jet_v1>")->GetClassInfo();
+      auto c = TClass::GetClass("DataVector<xAOD::Jet_v1,DataVector<xAOD::IParticle,DataModel_detail::NoBase>>")->GetClassInfo();
       printf("Classinfo for DataVector<xAOD::Jet_v1> is %s\n",gInterpreter->ClassInfo_IsValid(c) ? "valid" : "invalid");
    } else if (name == "case2") {
       gSystem->Load("libsjet_dictrflx");
@@ -31,14 +31,14 @@ void runscript(const std::string &name, bool with_rootmap = false)
    } else if (name == "case3") {
       gSystem->Load("libjet_dictrflx");
       gSystem->Load("libbtag_dictrflx");
-      auto c = TClass::GetClass("DataVector<xAOD::Jet_v1>");
+      auto c = TClass::GetClass("DataVector<xAOD::Jet_v1,DataVector<xAOD::IParticle,DataModel_detail::NoBase>>>");
       printf("TClass for DataVector<xAOD::Jet_v1> is %s\n",c->IsLoaded() ? "loaded" : "not loaded");
    } else if (name == "case4") {
       gSystem->Load("libjet_dictrflx");
       gSystem->Load("libbtag_dictrflx");
-      gROOT->ProcessLine("DataVector<xAOD::Jet_v1> obj;");
+      gROOT->ProcessLine("DataVector<xAOD::Jet_v1,DataVector<xAOD::IParticle,DataModel_detail::NoBase>> obj;");
       std::string name;
-      TClassEdit::GetNormalizedName(name,"DataVector<xAOD::Jet_v1>");
+      TClassEdit::GetNormalizedName(name,"DataVector<xAOD::Jet_v1,DataVector<xAOD::IParticle,DataModel_detail::NoBase>>");
       // TClass::GetClass("DataVector<xAOD::Jet_v1>");
       printf("Normalized name for DataVector<xAOD::Jet_v1> is : %s\n",name.c_str());
    }

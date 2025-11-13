@@ -27,6 +27,11 @@
    <class name="ElementLinkVector<xAOD::JetContainer_v1>" />
    <class name="std::vector<ElementLinkVector<xAOD::JetContainer_v1> >" />
 
+   <class name="DataVector<xAOD::Jet_v1>" />
+   <class name="ElementLink<DataVector<xAOD::Jet_v1>>" />
+   <class name="std::vector<ElementLink<DataVector<xAOD::Jet_v1>>>" />
+   <class name="SG::AuxTypeVectorFactory<std::vector<ElementLink<DataVector<xAOD::Jet_v1>>>>"/>
+
 <!--   <class name="std::pair<std::string,std::vector<const xAOD::IParticle*> >" /> -->
 <!--
    <class name="std::pair<std::string,std::vector<float> >" />
