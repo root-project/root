@@ -35,12 +35,12 @@ on:
         description: rebase from ...
         type: string
         required: true
-        default: master
+        default: v6-36-00-patches
       base_ref:
         description: ... to ... (can have same value)
         type: string
         required: true
-        default: master
+        default: v6-36-00-patches
       incremental:
         description: 'Do incremental build'
         type: boolean
