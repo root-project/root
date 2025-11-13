@@ -3640,28 +3640,30 @@ void timage()
 {
    TCanvas *C = StartTest(800,800);
 
-   TImage *img = TImage::Open("$(ROOTSYS)/tutorials/visualisation/image/rose512.jpg");
+   TString fname = gROOT->GetTutorialDir();
+   fname.Append("/visualisation/image/rose512.jpg");
+   TImage *img = TImage::Open(fname);
    if (!img) {
       printf("Could not create an image... exit\n");
       return;
    }
-   TImage *i1 = TImage::Open("$(ROOTSYS)/tutorials/visualisation/image/rose512.jpg");
+   auto i1 = (TImage *) img->Clone();
    i1->SetConstRatio(kFALSE);
    i1->Flip(90);
-   TImage *i2 = TImage::Open("$(ROOTSYS)/tutorials/visualisation/image/rose512.jpg");
+   auto i2 = (TImage *) img->Clone();
    i2->SetConstRatio(kFALSE);
    i2->Flip(180);
-   TImage *i3 = TImage::Open("$(ROOTSYS)/tutorials/visualisation/image/rose512.jpg");
+   auto i3 = (TImage *) img->Clone();
    i3->SetConstRatio(kFALSE);
    i3->Flip(270);
-   TImage *i4 = TImage::Open("$(ROOTSYS)/tutorials/visualisation/image/rose512.jpg");
-   i4->SetConstRatio(kFALSE);
-   i4->Mirror(kTRUE);
+
+   img->SetConstRatio(kFALSE);
+   img->Mirror(kTRUE);
    float d = 0.40;
    TPad *p1 = new TPad("i1", "i1", 0.05, 0.55, 0.05+d*i1->GetWidth()/i1->GetHeight(), 0.95);
    TPad *p2 = new TPad("i2", "i2", 0.55, 0.55, 0.95, 0.55+d*i2->GetHeight()/i2->GetWidth());
    TPad *p3 = new TPad("i3", "i3", 0.55, 0.05, 0.55+d*i3->GetWidth()/i3->GetHeight(), 0.45);
-   TPad *p4 = new TPad("i4", "i4", 0.05, 0.05, 0.45, 0.05+d*i4->GetHeight()/i4->GetWidth());
+   TPad *p4 = new TPad("i4", "i4", 0.05, 0.05, 0.45, 0.05+d*img->GetHeight()/img->GetWidth());
    p1->Draw();
    p1->cd();
    i1->Draw();
@@ -3676,7 +3678,7 @@ void timage()
    C->cd();
    p4->Draw();
    p4->cd();
-   i4->Draw();
+   img->Draw();
    C->cd();
 
    TestReport(C, "timage", "TImage");
