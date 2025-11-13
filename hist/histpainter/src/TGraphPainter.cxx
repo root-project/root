@@ -4480,7 +4480,7 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
          if (minc<h->GetMinimum()) minc = h->GetMinimum();
          if (maxc>h->GetMaximum()) maxc = h->GetMaximum();
       } else {
-         Error("PaintScatter", "Mininal (%g) and Maximal (%g) values of the internal histogram are not valid",h->GetMinimum(),h->GetMaximum());
+         Error("PaintScatter", "Minimal (%g) and Maximal (%g) values of the internal histogram are not valid",h->GetMinimum(),h->GetMaximum());
       }
 
       // Define and paint palette
