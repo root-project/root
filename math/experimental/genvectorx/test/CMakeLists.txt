@@ -8,14 +8,22 @@
 
 
     ROOT_EXECUTABLE(testGenvectorSYCL testGenVectorSYCL.cxx) # LIBRARIES GenVectorSYCL)
-    if (oneapi)
-        target_link_options(testGenvectorSYCL PUBLIC -E)
-    endif()
     target_link_libraries(testGenvectorSYCL PUBLIC GenVectorSYCL )
     add_sycl_to_root_target(TARGET testGenvectorSYCL 
     SOURCES testGenVectorSYCL.cxx 
     COMPILE_DEFINITIONS ROOT_MATH_SYCL
     DEPENDENCIES GenVectorSYCL
     )
+
+
+    ROOT_EXECUTABLE(testGenvectorSYCLInvMasses testGenVectorSYCLInvMasses.cxx) # LIBRARIES GenVectorSYCL)
+    target_link_libraries(testGenvectorSYCLInvMasses PUBLIC GenVectorSYCL )
+    add_sycl_to_root_target(TARGET testGenvectorSYCLInvMasses 
+    SOURCES testGenvectorSYCLInvMasses.cxx 
+    COMPILE_DEFINITIONS ROOT_MATH_SYCL
+    DEPENDENCIES GenVectorSYCL
+    )
+
     ROOT_ADD_TEST(test-genvector-genvectorsycl COMMAND testGenvectorSYCL)
+    ROOT_ADD_TEST(test-genvector-genvectorsyclinvmasses COMMAND testGenvectorSYCLInvMasses)
 

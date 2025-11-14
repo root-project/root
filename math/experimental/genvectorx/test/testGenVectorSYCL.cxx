@@ -112,8 +112,7 @@ int testVector3D()
    sycl::queue queue(device_selector);
 
    std::cout << "sycl::queue check - selected device:\n"
-                << queue.get_device().get_info<sycl::info::device::name>()
-                << std::endl;
+             << queue.get_device().get_info<sycl::info::device::name>() << std::endl;
 
    {
       queue.submit([&](sycl::handler &cgh) {
@@ -178,8 +177,7 @@ int testPoint3D()
    sycl::queue queue(device_selector);
 
    std::cout << "sycl::queue check - selected device:\n"
-                << queue.get_device().get_info<sycl::info::device::name>()
-                << std::endl;
+             << queue.get_device().get_info<sycl::info::device::name>() << std::endl;
 
    {
       queue.submit([&](sycl::handler &cgh) {
@@ -255,8 +253,7 @@ int testVector2D()
    sycl::queue queue(device_selector);
 
    std::cout << "sycl::queue check - selected device:\n"
-                << queue.get_device().get_info<sycl::info::device::name>()
-                << std::endl;
+             << queue.get_device().get_info<sycl::info::device::name>() << std::endl;
 
    {
       queue.submit([&](sycl::handler &cgh) {
@@ -334,8 +331,7 @@ int testPoint2D()
    sycl::queue queue{sycl::default_selector_v};
 
    std::cout << "sycl::queue check - selected device:\n"
-                << queue.get_device().get_info<sycl::info::device::name>()
-                << std::endl;
+             << queue.get_device().get_info<sycl::info::device::name>() << std::endl;
 
    {
       queue.submit([&](sycl::handler &cgh) {
@@ -414,8 +410,7 @@ int testRotations3D()
    sycl::queue queue(device_selector);
 
    std::cout << "sycl::queue check - selected device:\n"
-                << queue.get_device().get_info<sycl::info::device::name>()
-                << std::endl;
+             << queue.get_device().get_info<sycl::info::device::name>() << std::endl;
 
    {
       queue.submit([&](sycl::handler &cgh) {
@@ -556,8 +551,7 @@ int testTransform3D()
    sycl::queue queue(device_selector);
 
    std::cout << "sycl::queue check - selected device:\n"
-                << queue.get_device().get_info<sycl::info::device::name>()
-                << std::endl;
+             << queue.get_device().get_info<sycl::info::device::name>() << std::endl;
 
    {
       queue.submit([&](sycl::handler &cgh) {
@@ -788,8 +782,7 @@ int testVectorUtil()
    sycl::queue queue(device_selector);
 
    std::cout << "sycl::queue check - selected device:\n"
-                << queue.get_device().get_info<sycl::info::device::name>()
-                << std::endl;
+             << queue.get_device().get_info<sycl::info::device::name>() << std::endl;
 
    {
       queue.submit([&](sycl::handler &cgh) {
@@ -870,8 +863,7 @@ int testLorentzVector()
    sycl::queue queue(device_selector);
 
    std::cout << "sycl::queue check - selected device:\n"
-                << queue.get_device().get_info<sycl::info::device::name>()
-                << std::endl;
+             << queue.get_device().get_info<sycl::info::device::name>() << std::endl;
 
    {
       queue.submit([&](sycl::handler &cgh) {
@@ -881,9 +873,8 @@ int testLorentzVector()
             LorentzVector<PtEtaPhiM4D<float>> v2(5, 6, 7, 8);
             iret[0] |= compare(v1.DeltaR(v2), 4.60575f);
 
-            LorentzVector<PtEtaPhiM4D<float>> v = v1+v2;
+            LorentzVector<PtEtaPhiM4D<float>> v = v1 + v2;
             iret[0] |= compare(v.M(), 62.03058f);
-
          });
       });
    }
@@ -894,7 +885,6 @@ int testLorentzVector()
       std::cout << "\t FAILED\n";
 
    return iret_host;
-
 }
 
 int testGenVector()
