@@ -48,6 +48,7 @@ public:
    virtual     ~TVirtualPS();
    virtual void  CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2) = 0;
    virtual void  CellArrayFill(Int_t r, Int_t g, Int_t b) = 0;
+   virtual void  CellArrayPng(char * /* buffer */, int /* size */) {}
    virtual void  CellArrayEnd() = 0;
    virtual void  Close(Option_t *opt="") = 0;
    virtual void  DrawBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2) = 0;
