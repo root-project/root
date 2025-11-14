@@ -17,7 +17,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyMVA
     TMVA/MethodPyKeras.h
     TMVA/MethodPyRandomForest.h
     TMVA/MethodPyTorch.h
-    TMVA/RModelParser_Keras.h
     TMVA/RModelParser_PyTorch.h
     TMVA/PyMethodBase.h
   SOURCES
@@ -26,7 +25,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyMVA
     src/MethodPyKeras.cxx
     src/MethodPyRandomForest.cxx
     src/MethodPyTorch.cxx
-    src/RModelParser_Keras.cxx
     src/RModelParser_PyTorch.cxx
     src/PyMethodBase.cxx
   LIBRARIES
