@@ -69,6 +69,28 @@ TEST(RHist, AddAtomic)
    EXPECT_EQ(histA.GetBinContent(RBinIndex(9)), 1);
 }
 
+TEST(RHist, StressAddAtomic)
+{
+   static constexpr std::size_t NThreads = 4;
+   static constexpr std::size_t NAddsPerThread = 10000;
+   static constexpr std::size_t NAdds = NThreads * NAddsPerThread;
+
+   // Fill a single bin, to maximize contention.
+   const RRegularAxis axis(1, {0, 1});
+   RHist<int> histA({axis});
+   RHist<int> histB({axis});
+   histB.Fill(0.5);
+
+   StressInParallel(NThreads, [&] {
+      for (std::size_t i = 0; i < NAddsPerThread; i++) {
+         histA.AddAtomic(histB);
+      }
+   });
+
+   EXPECT_EQ(histA.GetNEntries(), NAdds);
+   EXPECT_EQ(histA.GetBinContent(0), NAdds);
+}
+
 TEST(RHist, Clear)
 {
    static constexpr std::size_t Bins = 20;
