@@ -9,16 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifdef WIN32
-#include "Windows4root.h"
-#endif
-
 #include "TPointSet3DGL.h"
 #include "TPointSet3D.h"
 
 #include <TGLRnrCtx.h>
 #include <TGLSelectRecord.h>
-#include "TGLIncludes.h"
+#include <TGLIncludes.h>
 
 /** \class TPointSet3DGL
 \ingroup opengl

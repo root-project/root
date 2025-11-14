@@ -748,30 +748,6 @@ if(opengl AND NOT asimage)
   message(FATAL_ERROR "OpenGL features enabled with \"opengl=ON\" require \"asimage=ON\"")
 endif()
 
-#---Check for GLEW -------------------------------------------------------------------
-# Glew is required by various graf3d features that are enabled with opengl=ON,
-# or by the Cocoa-related code that always requires it.
-if(opengl OR cocoa)
-  message(STATUS "Looking for GLEW")
-  if(fail-on-missing)
-    find_package(GLEW REQUIRED)
-  else()
-    find_package(GLEW)
-    if(GLEW_FOUND AND APPLE AND CMAKE_VERSION VERSION_GREATER 3.15 AND CMAKE_VERSION VERSION_LESS 3.25)
-      # Bug in CMake on Mac OS X until 3.25:
-      # https://gitlab.kitware.com/cmake/cmake/-/issues/19662
-      # https://github.com/microsoft/vcpkg/pull/7967
-      message(FATAL_ERROR "Options opengl or cocoa not supported on macOS with CMake < 3.25")
-      unset(GLEW_FOUND)
-    elseif(GLEW_FOUND AND NOT TARGET GLEW::GLEW)
-      add_library(GLEW::GLEW UNKNOWN IMPORTED)
-      set_target_properties(GLEW::GLEW PROPERTIES
-      IMPORTED_LOCATION "${GLEW_LIBRARIES}"
-      INTERFACE_INCLUDE_DIRECTORIES "${GLEW_INCLUDE_DIRS}")
-    endif()
-  endif()
-endif()
-
 #---Check for gl2ps ------------------------------------------------------------------
 if(opengl AND NOT builtin_gl2ps)
   message(STATUS "Looking for gl2ps")

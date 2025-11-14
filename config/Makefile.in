@@ -163,10 +163,6 @@ ifeq ($(BUILDFTGL), yes)
 FTGLCPPFLAGS   := -DBUILTIN_FTGL
 endif
 
-GLEWLIBDIR     := @glewlibdir@
-GLEWLIBS       := @glewlibs@
-GLEWINCDIR     := $(filter-out /usr/include, @glewincdir@)
-
 SRMIFCEINCDIR  := $(filter-out /usr/include, @srmifceincdir@)
 GLIB2INCDIR    := $(filter-out /usr/include, @glib2incdir@)
 

@@ -28,6 +28,8 @@
 #include "TGLUtil.h"
 #include "TMath.h"
 
+#include <glad/gl.h>
+
 namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -339,6 +341,15 @@ void TGLPadPainter::SelectDrawable(Int_t /*device*/)
 
 void TGLPadPainter::InitPainter()
 {
+   static bool gl_init = false;
+   if (!gl_init) {
+      int version = gladLoaderLoadGL();
+      if (version == 0)
+         Warning("TGLPadPainter::InitPainter", "GL initalization failed.");
+      else if (gDebug > 0)
+         Info("TGLPadPainter::InitPainter", "GL initalization successful.");
+      gl_init = true;
+   }
    glDisable(GL_DEPTH_TEST);
    glDisable(GL_CULL_FACE);
    glDisable(GL_LIGHTING);
@@ -1310,7 +1321,6 @@ void TGLPadPainter::DrawGradient(const TRadialGradient *grad, Int_t nPoints,
 
    //Probably degenerated strip.
    {
-   glBegin(GL_QUAD_STRIP);
    const Double_t * const inner = &circles[nSlices * (nColors - 1) * 2];
    const auto solidRGBA = rgba + (nColors - 1) * 4;
    const Double_t * const outer = &circles[nSlices * nColors * 2];
@@ -1319,7 +1329,6 @@ void TGLPadPainter::DrawGradient(const TRadialGradient *grad, Int_t nPoints,
    }
 
    if (solidFillAfter) {
-      glBegin(GL_QUAD_STRIP);
       const Double_t * const inner = &circles[nSlices * nColors * 2];
       const auto solidRGBA = rgba + (nColors - 1) * 4;
       const Double_t * const outer = &circles[nSlices * (nColors + 1) * 2];

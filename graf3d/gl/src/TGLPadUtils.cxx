@@ -547,7 +547,6 @@ void MarkerPainter::DrawFullCross(UInt_t n, const TPoint *xy)const
       glVertex2d(x + imx, y + im);
       glVertex2d(x + imx, y + imx);
       glEnd();
-      glEnd();
       glBegin(GL_POLYGON);
       glVertex2d(x - imx, y - imx);
       glVertex2d(x - imx, y - im);
@@ -1180,9 +1179,9 @@ Tesselator::Tesselator(Bool_t dump)
 #endif
 
    if (!dump) {
-      gluTessCallback(tess, (GLenum)GLU_BEGIN,  (tess_t) glBegin);
-      gluTessCallback(tess, (GLenum)GLU_END,    (tess_t) glEnd);
-      gluTessCallback(tess, (GLenum)GLU_VERTEX, (tess_t) glVertex3dv);
+      gluTessCallback(tess, (GLenum)GLU_BEGIN,  (tess_t) impl_glBegin);
+      gluTessCallback(tess, (GLenum)GLU_END,    (tess_t) impl_glEnd);
+      gluTessCallback(tess, (GLenum)GLU_VERTEX, (tess_t) impl_glVertex3dv);
    } else {
       gluTessCallback(tess, (GLenum)GLU_BEGIN,  (tess_t) Begin);
       gluTessCallback(tess, (GLenum)GLU_END,    (tess_t) End);
