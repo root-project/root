@@ -123,8 +123,8 @@ public:
    explicit RPageSinkBuf(std::unique_ptr<RPageSink> inner);
    RPageSinkBuf(const RPageSinkBuf&) = delete;
    RPageSinkBuf& operator=(const RPageSinkBuf&) = delete;
-   RPageSinkBuf(RPageSinkBuf&&) = default;
-   RPageSinkBuf& operator=(RPageSinkBuf&&) = default;
+   RPageSinkBuf(RPageSinkBuf &&) = delete;
+   RPageSinkBuf &operator=(RPageSinkBuf &&) = delete;
    ~RPageSinkBuf() override;
 
    ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, RColumn &column) final;
