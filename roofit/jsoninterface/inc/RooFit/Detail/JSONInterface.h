@@ -265,6 +265,12 @@ inline RooFit::Detail::JSONNode &operator<<(RooFit::Detail::JSONNode &n, std::sp
    return n;
 }
 
+inline RooFit::Detail::JSONNode &operator<<(RooFit::Detail::JSONNode &n, std::span<const int> v)
+{
+   n.fill_seq(v);
+   return n;
+}
+
 template <class Key, class T, class Hash, class KeyEqual, class Allocator>
 RooFit::Detail::JSONNode &
 operator<<(RooFit::Detail::JSONNode &n, const std::unordered_map<Key, T, Hash, KeyEqual, Allocator> &m)

@@ -15,6 +15,7 @@
 #include <RooAbsCachedPdf.h>
 #include <RooAddPdf.h>
 #include <RooAddModel.h>
+#include <RooBinning.h>
 #include <RooBinSamplingPdf.h>
 #include <RooBinWidthFunction.h>
 #include <RooCategory.h>
@@ -33,6 +34,7 @@
 #include <RooLegacyExpPoly.h>
 #include <RooLognormal.h>
 #include <RooMultiVarGaussian.h>
+#include <RooStats/HistFactory/ParamHistFunc.h>
 #include <RooPoisson.h>
 #include <RooPolynomial.h>
 #include <RooPolyVar.h>
@@ -532,6 +534,71 @@ public:
    }
 };
 
+class ParamHistFuncFactory : public RooFit::JSONIO::Importer {
+public:
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      std::string name(RooJSONFactoryWSTool::name(p));
+      RooArgList varList = tool->requestArgList<RooRealVar>(p, "variables");
+      if (!p.has_child("axes")) {
+         std::stringstream ss;
+         ss << "No axes given in '" << name << "'"
+            << ". Using default binning (uniform; nbins=100). If needed, export the Workspace to JSON with a newer "
+            << "Root version that supports custom ParamHistFunc binnings(>=6.38.00)." << std::endl;
+         RooJSONFactoryWSTool::warning(ss.str());
+         tool->wsEmplace<ParamHistFunc>(name, varList, tool->requestArgList<RooAbsReal>(p, "parameters"));
+         return true;
+      }
+      tool->wsEmplace<ParamHistFunc>(name, readBinning(p, varList), tool->requestArgList<RooAbsReal>(p, "parameters"));
+      return true;
+   }
+
+private:
+   RooArgList readBinning(const JSONNode &topNode, const RooArgList &varList) const
+   {
+      // Temporary map from variable name → RooRealVar
+      std::map<std::string, std::unique_ptr<RooRealVar>> varMap;
+
+      // Build variables from JSON
+      for (const JSONNode &node : topNode["axes"].children()) {
+         const std::string name = node["name"].val();
+         std::unique_ptr<RooRealVar> obs;
+
+         if (node.has_child("edges")) {
+            std::vector<double> edges;
+            for (const auto &bound : node["edges"].children()) {
+               edges.push_back(bound.val_double());
+            }
+            obs = std::make_unique<RooRealVar>(name.c_str(), name.c_str(), edges.front(), edges.back());
+            RooBinning bins(obs->getMin(), obs->getMax());
+            for (auto b : edges)
+               bins.addBoundary(b);
+            obs->setBinning(bins);
+         } else {
+            obs = std::make_unique<RooRealVar>(name.c_str(), name.c_str(), node["min"].val_double(),
+                                               node["max"].val_double());
+            obs->setBins(node["nbins"].val_int());
+         }
+
+         varMap[name] = std::move(obs);
+      }
+
+      // Now build the final list following the order in varList
+      RooArgList vars;
+      for (int i = 0; i < varList.getSize(); ++i) {
+         const auto *refVar = dynamic_cast<RooRealVar *>(varList.at(i));
+         if (!refVar)
+            continue;
+
+         auto it = varMap.find(refVar->GetName());
+         if (it != varMap.end()) {
+            vars.addOwned(std::move(it->second)); // preserve ownership
+         }
+      }
+      return vars;
+   }
+};
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // specialized exporter implementations
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -696,6 +763,7 @@ private:
       expr.ReplaceAll("TMath::Sin", "sin");
       expr.ReplaceAll("TMath::Sqrt", "sqrt");
       expr.ReplaceAll("TMath::Power", "pow");
+      expr.ReplaceAll("TMath::Erf", "erf");
    }
 };
 template <class RooArg_t>
@@ -952,6 +1020,47 @@ public:
    }
 };
 
+class ParamHistFuncStreamer : public RooFit::JSONIO::Exporter {
+public:
+   std::string const &key() const override;
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   {
+      auto *pdf = static_cast<const ParamHistFunc *>(func);
+      elem["type"] << key();
+      RooJSONFactoryWSTool::fillSeq(elem["variables"], pdf->dataVars());
+      RooJSONFactoryWSTool::fillSeq(elem["parameters"], pdf->paramList());
+      writeBinningInfo(pdf, elem);
+      return true;
+   }
+
+private:
+   void writeBinningInfo(const ParamHistFunc *pdf, JSONNode &elem) const
+   {
+      auto &observablesNode = elem["axes"].set_seq();
+      // axes have to be ordered to get consistent bin indices
+      for (auto *var : static_range_cast<RooRealVar *>(pdf->dataVars())) {
+         std::string name = var->GetName();
+         RooJSONFactoryWSTool::testValidName(name, false);
+         JSONNode &obsNode = observablesNode.append_child().set_map();
+         obsNode["name"] << name;
+         if (var->getBinning().isUniform()) {
+            obsNode["min"] << var->getMin();
+            obsNode["max"] << var->getMax();
+            obsNode["nbins"] << var->getBins();
+         } else {
+            auto &edges = obsNode["edges"];
+            edges.set_seq();
+            double val = var->getBinning().binLow(0);
+            edges.append_child() << val;
+            for (int i = 0; i < var->getBinning().numBins(); ++i) {
+               val = var->getBinning().binHigh(i);
+               edges.append_child() << val;
+            }
+         }
+      }
+   }
+};
+
 #define DEFINE_EXPORTER_KEY(class_name, name)    \
    std::string const &class_name::key() const    \
    {                                             \
@@ -989,6 +1098,7 @@ DEFINE_EXPORTER_KEY(RooRealIntegralStreamer, "integral");
 DEFINE_EXPORTER_KEY(RooDerivativeStreamer, "derivative");
 DEFINE_EXPORTER_KEY(RooFFTConvPdfStreamer, "fft_conv_pdf");
 DEFINE_EXPORTER_KEY(RooExtendPdfStreamer, "extend_pdf");
+DEFINE_EXPORTER_KEY(ParamHistFuncStreamer, "step");
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // instantiate all importers and exporters
@@ -1021,6 +1131,7 @@ STATIC_EXECUTE([]() {
    registerImporter<RooDerivativeFactory>("derivative", false);
    registerImporter<RooFFTConvPdfFactory>("fft_conv_pdf", false);
    registerImporter<RooExtendPdfFactory>("extend_pdf", false);
+   registerImporter<ParamHistFuncFactory>("step", false);
 
    registerExporter<RooAddPdfStreamer<RooAddPdf>>(RooAddPdf::Class(), false);
    registerExporter<RooAddPdfStreamer<RooAddModel>>(RooAddModel::Class(), false);
@@ -1047,6 +1158,7 @@ STATIC_EXECUTE([]() {
    registerExporter<RooDerivativeStreamer>(RooDerivative::Class(), false);
    registerExporter<RooFFTConvPdfStreamer>(RooFFTConvPdf::Class(), false);
    registerExporter<RooExtendPdfStreamer>(RooExtendPdf::Class(), false);
+   registerExporter<ParamHistFuncStreamer>(ParamHistFunc::Class(), false);
 });
 
 } // namespace

@@ -965,7 +965,7 @@ RooAbsReal *RooJSONFactoryWSTool::requestImpl<RooAbsReal>(const std::string &obj
  * @param node The JSONNode to which the variable will be exported.
  * @return void
  */
-void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &node)
+void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &node, bool storeConstant, bool storeBins)
 {
    auto *cv = dynamic_cast<const RooConstVar *>(v);
    auto *rrv = dynamic_cast<const RooRealVar *>(v);
@@ -984,10 +984,10 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &node)
       var["const"] << true;
    } else if (rrv) {
       var["value"] << rrv->getVal();
-      if (rrv->isConstant()) {
+      if (rrv->isConstant() && storeConstant) {
          var["const"] << rrv->isConstant();
       }
-      if (rrv->getBins() != 100) {
+      if (rrv->getBins() != 100 && storeBins) {
          var["nbins"] << rrv->getBins();
       }
       _domains->readVariable(*rrv);
@@ -1004,12 +1004,12 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &node)
  * @param n The JSONNode to which the variables will be exported.
  * @return void
  */
-void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, JSONNode &n)
+void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, JSONNode &n, bool storeConstant, bool storeBins)
 {
    // export a list of RooRealVar objects
    n.set_seq();
    for (RooAbsArg *arg : allElems) {
-      exportVariable(arg, n);
+      exportVariable(arg, n, storeConstant, storeBins);
    }
 }
 
@@ -1070,7 +1070,7 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
       // categories are created by the respective RooSimultaneous, so we're skipping the export here
       return;
    } else if (dynamic_cast<RooRealVar const *>(&func) || dynamic_cast<RooConstVar const *>(&func)) {
-      exportVariable(&func, *_varsNode);
+      exportVariable(&func, *_varsNode, true, false);
       return;
    }
 
@@ -1554,7 +1554,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
 
    // this really is an unbinned dataset
    output["type"] << "unbinned";
-   exportVariables(variables, output["axes"]);
+   exportVariables(variables, output["axes"], false, true);
    auto &coords = output["entries"].set_seq();
    std::vector<double> weightVals;
    bool hasNonUnityWeights = false;
@@ -1562,10 +1562,6 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       data.get(i);
       coords.append_child().fill_seq(variables, [](auto x) { return static_cast<RooRealVar *>(x)->getVal(); });
       std::string datasetName = data.GetName();
-      /*if (datasetName.find("combData_ZvvH126.5") != std::string::npos) {
-         file << dynamic_cast<RooAbsReal *>(data.get(i)->find("atlas_invMass_PttEtaConvVBFCat1"))->getVal() <<
-      std::endl;
-      }*/
       if (data.isWeighted()) {
          weightVals.push_back(data.weight());
          if (data.weight() != 1.)
@@ -1575,7 +1571,6 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    if (data.isWeighted() && hasNonUnityWeights) {
       output["weights"].fill_seq(weightVals);
    }
-   // file.close();
 }
 
 /**
@@ -1960,7 +1955,8 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       snapshotSorted.sort();
       std::string name(snsh->GetName());
       if (name != "default_values") {
-         this->exportVariables(snapshotSorted, appendNamedChild(n["parameter_points"], name)["parameters"]);
+         this->exportVariables(snapshotSorted, appendNamedChild(n["parameter_points"], name)["parameters"], true,
+                               false);
       }
    }
    _varsNode = nullptr;
@@ -2240,8 +2236,14 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
    combineDatasets(*_rootnodeInput, datasets);
 
    for (auto const &d : datasets) {
-      if (d)
+      if (d) {
          _workspace.import(*d);
+         for (auto const &obs : *d->get()) {
+            if (auto *rrv = dynamic_cast<RooRealVar *>(obs)) {
+               _workspace.var(rrv->GetName())->setBinning(rrv->getBinning());
+            }
+         }
+      }
    }
 
    _rootnodeInput = nullptr;
