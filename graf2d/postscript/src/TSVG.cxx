@@ -21,6 +21,7 @@
 
 #include "TROOT.h"
 #include "TDatime.h"
+#include "TBase64.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
 #include "TPoints.h"
@@ -945,6 +946,52 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Begin the Cell Array painting
+
+void TSVG::CellArrayBegin(Int_t width, Int_t height, Double_t x1, Double_t x2, Double_t y1, Double_t y2)
+{
+   Double_t svgx1 = XtoSVG(x1);
+   Double_t svgx2 = XtoSVG(x1 + (x2 - x1) * width);
+   Double_t svgy1 = YtoSVG(y1);
+   Double_t svgy2 = YtoSVG(y1 - (y2 - y1) * height);
+
+   PrintStr("@<g transform=\"translate(");
+   WriteReal(svgx1, kFALSE);
+   WriteReal(svgy1, kTRUE);
+   PrintStr(") scale(");
+   WriteReal((svgx2 - svgx1) / width, kFALSE);
+   WriteReal((svgy2 - svgy1) / height, kTRUE);
+   PrintStr(")\">@");
+   PrintStr(TString::Format("<image width=\"%d\" height=\"%d\" href=\"data:image/png;base64,", width, height));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint the Cell Array as single pixel
+
+void TSVG::CellArrayFill(Int_t, Int_t, Int_t)
+{
+   Warning("CellArrayFill", "not implemented");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint the Cell Array as png image
+
+void TSVG::CellArrayPng(char *buffer, int size)
+{
+   TString base64 = TBase64::Encode(reinterpret_cast<char *>(buffer), size);
+   PrintFast(base64.Length(), base64.Data());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// End the Cell Array painting
+
+void TSVG::CellArrayEnd()
+{
+   PrintStr("\"></image>@");
+   PrintStr("</g>@");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Initialize the SVG file. The main task of the function is to output the
 /// SVG header file which consist in `<title>`, `<desc>` and `<defs>`. The
 /// HeaderPS provided by the user program is written in the `<defs>` part.
@@ -1506,31 +1553,6 @@ Double_t TSVG::YtoSVG(Double_t y)
 {
    Double_t v = (y - gPad->GetY1())/(gPad->GetY2() - gPad->GetY1());
    return  fYsizeSVG-VtoSVG(v);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Begin the Cell Array painting
-
-void TSVG::CellArrayBegin(Int_t, Int_t, Double_t, Double_t, Double_t,
-                          Double_t)
-{
-   Warning("TSVG::CellArrayBegin", "not yet implemented");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Paint the Cell Array
-
-void TSVG::CellArrayFill(Int_t, Int_t, Int_t)
-{
-   Warning("TSVG::CellArrayFill", "not yet implemented");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// End the Cell Array painting
-
-void TSVG::CellArrayEnd()
-{
-   Warning("TSVG::CellArrayEnd", "not yet implemented");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

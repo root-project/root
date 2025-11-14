@@ -42,6 +42,7 @@ public:
 
    void  CellArrayBegin(Int_t W, Int_t H, Double_t x1, Double_t x2, Double_t y1, Double_t y2) override;
    void  CellArrayFill(Int_t r, Int_t g, Int_t b) override;
+   void  CellArrayPng(char *buffer, int size) override;
    void  CellArrayEnd() override;
    void  Close(Option_t *opt="") override;
    Double_t CMtoSVG(Double_t u) { return 0.5 + 72*u/2.54; }
