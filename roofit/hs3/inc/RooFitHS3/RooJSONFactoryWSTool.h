@@ -229,8 +229,8 @@ private:
    void importVariable(const RooFit::Detail::JSONNode &p);
    void importDependants(const RooFit::Detail::JSONNode &n);
 
-   void exportVariable(const RooAbsArg *v, RooFit::Detail::JSONNode &p);
-   void exportVariables(const RooArgSet &allElems, RooFit::Detail::JSONNode &n);
+   void exportVariable(const RooAbsArg *v, RooFit::Detail::JSONNode &n, bool storeConstant, bool storeBins);
+   void exportVariables(const RooArgSet &allElems, RooFit::Detail::JSONNode &n, bool storeConstant, bool storeBins);
 
    void exportAllObjects(RooFit::Detail::JSONNode &n);
 
