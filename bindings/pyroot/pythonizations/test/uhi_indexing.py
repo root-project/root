@@ -357,5 +357,22 @@ class TestInfiniteEdges:
         assert np.allclose(uhi_values, ref_values)
 
 
+class TestHistogramKind:
+    def test_histogram_kind_no_weights(self):
+        h = ROOT.TH1D("h", "h", 100, -10, 10)
+        h.Fill(5)
+        assert h.kind == "COUNT"
+
+    def test_histogram_kind_with_weights(self):
+        h_weighted = ROOT.TH1D("h_weighted", "h_weighted", 100, -10, 10)
+        h_weighted.Fill(5, 2.0)
+        assert h_weighted.kind == "COUNT"
+
+    def test_profile_histogram_kind(self):
+        h_profile = ROOT.TProfile("h_profile", "h_profile", 100, -10, 10)
+        h_profile.Fill(5, 3.0)
+        assert h_profile.kind == "MEAN"
+
+
 if __name__ == "__main__":
     raise SystemExit(pytest.main(args=[__file__]))
