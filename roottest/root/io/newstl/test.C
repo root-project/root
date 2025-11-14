@@ -23,21 +23,10 @@ template <class HolderClass> Bool_t checkHolder(const char *testname = "") {
 template <class HolderClass> void write(const char *testname, int nEntry = 3) {
    bool testingTopLevelVectors = true;
 
-   TString dirname = gROOT->GetVersion();
-   dirname.ReplaceAll(".","-");
-   dirname.ReplaceAll("/","-");
-
-   gSystem->mkdir(dirname);
-   // do not create symlink
-   //gSystem->Unlink("latest");
-   //gSystem->Symlink(dirname,"latest");
-
-   auto _filename = gSystem->ConcatFileName(dirname, testname );
-   TString filename = _filename;
-   delete [] _filename;
+   TString filename = testname;
    filename += ".root";
 
-   TFile *file = new TFile(filename,"RECREATE","stl test file",0);
+   auto file = new TFile(filename,"RECREATE", "stl test file", 0);
 
    HolderClass *holder = new HolderClass( 0 );
 
@@ -100,8 +89,8 @@ template <class HolderClass> void write(const char *testname, int nEntry = 3) {
 
 template <class HolderClass> bool verifyBranch(const char *testname, TTree *chain, const char *bname, int type = 0) {
    static HolderClass *gHolder = new HolderClass;
-   HolderClass **add = 0;
-   HolderClass *holder = 0;
+   HolderClass **add = nullptr;
+   HolderClass *holder = nullptr;
 
    TBranch *branch = chain->GetBranch(bname);
    if (branch==0) {
@@ -145,27 +134,25 @@ template <class HolderClass> bool verifyBranch(const char *testname, TTree *chai
    }
 }
 
-template <class HolderClass> bool read(const char *dirname, const char *testname, int nEntry, bool current) {
-   HolderClass *holder = 0;
+// read file from specified directory
+
+template <class HolderClass> bool read(const char *dirname, const char *testname, int nEntry = 0) {
+   HolderClass *holder = nullptr;
    bool result = true;
    bool testingTopLevelVectors = true;
 
+   TString filename = dirname;
+   filename.Append(testname);
+   filename.Append(".root");
 
-   auto _filename = gSystem->ConcatFileName(dirname, testname );
-   TString filename = _filename;
-   filename += ".root";
-   delete [] _filename;
-
-   if (!current && gSystem->AccessPathName(filename, kFileExists)) {
-      // when reading old directory a missing files is not an error.
-      // For example this happens if the run of roottest at the time was done
-      // with FAST=yes
-      return true;
-   }
+   // file must exists in the specified directory
+   if (gSystem->AccessPathName(filename, kFileExists))
+      return false;
 
    TFile file(filename,"READ");
 
-   if (file.IsZombie()) return false;
+   if (file.IsZombie())
+      return false;
 
    holder = dynamic_cast<HolderClass*>( file.Get("holder") );
    if (!holder) {
@@ -221,31 +208,5 @@ template <class HolderClass> bool read(const char *dirname, const char *testname
    return result;
 }
 
-template <class HolderClass> bool read(const char *testname, int nEntry = 0, bool readother = false) {
-
-   // for each dirname
-   TString dirname = gROOT->GetVersion();
-   dirname.ReplaceAll(".","-");
-   dirname.ReplaceAll("/","-");
-
-   bool result = true;
-   result &= read<HolderClass>(dirname,testname, nEntry, /*current=*/true);
-
-   if (readother) {
-      TList listOfDirs;
-      listOfDirs.SetOwner(kTRUE);
-      fillListOfDir(listOfDirs);
-
-      TIter next(&listOfDirs);
-      while (TObjString *dir = (TObjString*)next()) {
-         if (dirname != dir->GetName()) {
-            std::cout << "Testing older file format from: " << dir->GetName() << std::endl;
-            result &= read<HolderClass>(dir->GetName(),testname, nEntry, /*current=*/ false);
-         }
-      }
-   }
-
-   return result;
-}
 #endif
 
