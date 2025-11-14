@@ -1,5 +1,8 @@
 #include "hist_test.hxx"
 
+#include <atomic>
+#include <cstddef>
+
 TEST(RHistEngine, AddAtomic)
 {
    static constexpr std::size_t Bins = 20;
@@ -22,6 +25,27 @@ TEST(RHistEngine, AddAtomic)
       EXPECT_EQ(engineA.GetBinContent(index), 3);
    }
    EXPECT_EQ(engineA.GetBinContent(RBinIndex::Overflow()), 1);
+}
+
+TEST(RHistEngine, StressAddAtomic)
+{
+   static constexpr std::size_t NThreads = 4;
+   static constexpr std::size_t NAddsPerThread = 10000;
+   static constexpr std::size_t NAdds = NThreads * NAddsPerThread;
+
+   // Fill a single bin, to maximize contention.
+   const RRegularAxis axis(1, {0, 1});
+   RHistEngine<int> engineA({axis});
+   RHistEngine<int> engineB({axis});
+   engineB.Fill(0.5);
+
+   StressInParallel(NThreads, [&] {
+      for (std::size_t i = 0; i < NAddsPerThread; i++) {
+         engineA.AddAtomic(engineB);
+      }
+   });
+
+   EXPECT_EQ(engineA.GetBinContent(0), NAdds);
 }
 
 TEST(RHistEngine, AddAtomicDifferent)
@@ -213,6 +237,36 @@ TEST(RHistEngine, FillAtomicTupleWeightInvalidNumberOfArguments)
    EXPECT_THROW(engine2.FillAtomic(std::make_tuple(1, 2, 3), RWeight(1)), std::invalid_argument);
 }
 
+TEST(RHistEngine, StressFillAddAtomicWeight)
+{
+   static constexpr std::size_t NThreads = 4;
+   static constexpr std::size_t NOpsPerThread = 10000;
+   static constexpr std::size_t NOps = NThreads * NOpsPerThread;
+   static constexpr double Weight = 0.5;
+
+   // Fill a single bin, to maximize contention.
+   const RRegularAxis axis(1, {0, 1});
+   RHistEngine<float> engineA({axis});
+   RHistEngine<float> engineB({axis});
+   engineB.Fill(0.5, RWeight(Weight));
+
+   std::atomic<int> op = 0;
+   StressInParallel(NThreads, [&] {
+      int chosenOp = op.fetch_add(1) % 2;
+      if (chosenOp == 0) {
+         for (std::size_t i = 0; i < NOpsPerThread; i++) {
+            engineA.FillAtomic(0.5, RWeight(Weight));
+         }
+      } else {
+         for (std::size_t i = 0; i < NOpsPerThread; i++) {
+            engineA.AddAtomic(engineB);
+         }
+      }
+   });
+
+   EXPECT_EQ(engineA.GetBinContent(0), NOps * Weight);
+}
+
 TEST(RHistEngine_RBinWithError, AddAtomic)
 {
    static constexpr std::size_t Bins = 20;
@@ -234,6 +288,28 @@ TEST(RHistEngine_RBinWithError, AddAtomic)
       EXPECT_FLOAT_EQ(bin.fSum, weightA + weightB);
       EXPECT_FLOAT_EQ(bin.fSum2, weightA * weightA + weightB * weightB);
    }
+}
+
+TEST(RHistEngine_RBinWithError, StressAddAtomic)
+{
+   static constexpr std::size_t NThreads = 4;
+   static constexpr std::size_t NAddsPerThread = 10000;
+   static constexpr std::size_t NAdds = NThreads * NAddsPerThread;
+
+   // Fill a single bin, to maximize contention.
+   const RRegularAxis axis(1, {0, 1});
+   RHistEngine<RBinWithError> engineA({axis});
+   RHistEngine<RBinWithError> engineB({axis});
+   engineB.Fill(0.5);
+
+   StressInParallel(NThreads, [&] {
+      for (std::size_t i = 0; i < NAddsPerThread; i++) {
+         engineA.AddAtomic(engineB);
+      }
+   });
+
+   EXPECT_EQ(engineA.GetBinContent(0).fSum, NAdds);
+   EXPECT_EQ(engineA.GetBinContent(0).fSum2, NAdds);
 }
 
 TEST(RHistEngine_RBinWithError, FillAtomic)
