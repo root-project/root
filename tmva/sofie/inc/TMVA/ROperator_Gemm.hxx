@@ -207,13 +207,7 @@ namespace SOFIE{
          }
 
          fShapeY = DynamicShapeInference({fShapeA, fShapeB});
-         std::vector<size_t> shapeY;
-         if (!fIsDynamic) {
-            shapeY = ConvertShapeToInt(fShapeY);
-            if (shapeY.empty()) {
-               throw std::runtime_error("TMVA SOFIE Gemm Op " + fNY + " has invalid shape" + ConvertShapeToString(fShapeY));
-            }
-         }
+         std::vector<size_t> shapeY = ConvertShapeToInt(fShapeY);
 
          // bias is normally not dynamic (not support it for time being)
          if (fNC != ""){
@@ -225,7 +219,11 @@ namespace SOFIE{
             size_t lengthC = ConvertShapeToLength(fShapeC);
             size_t lengthY = ConvertShapeToLength(shapeY);
             // for dynamic outputs broadcasting is always done
-            bool broadcast_needed = lengthC != lengthY;
+            bool broadcast_needed = false;
+            if (fIsDynamic && shapeY.empty())
+               broadcast_needed = true;
+            else
+               broadcast_needed = lengthC != lengthY;
 
 
             if (broadcast_needed) {
@@ -359,7 +357,7 @@ namespace SOFIE{
                             + ConvertShapeToString(fShapeC) + " output length " + lengthGemm);
                } else {
                   // add a dynamic check (C should not be a dynamic tensor)
-                  out << SP << "assert(" << lengthGemm << " != " <<  ConvertShapeToLength(fShapeC) << ");\n";
+                  out << SP << "assert(" << lengthGemm << " == " <<  ConvertShapeToLength(fShapeC) << ");\n";
                }
             }
          } else {
