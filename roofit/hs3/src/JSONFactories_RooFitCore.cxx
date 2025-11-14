@@ -544,7 +544,7 @@ public:
          std::stringstream ss;
          ss << "No axes given in '" << name << "'"
             << ". Using default binning (uniform; nbins=100). If needed, export the Workspace with a newer Root"
-            << " version that supports histogram binnings(>6.37.01)." << std::endl;
+            << " version that supports histogram binnings(v6.38+)." << std::endl;
          RooJSONFactoryWSTool::warning(ss.str());
          tool->wsEmplace<ParamHistFunc>(name, varList, tool->requestArgList<RooAbsReal>(p, "parameters"));
          return true;
