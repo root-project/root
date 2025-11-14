@@ -18,6 +18,7 @@
 /// \author Devajith Valaparambil Sreeramaswamy (CERN)
 
 #define ROOT_MATH_ARCH MathSYCL
+#define ROOT_MATH_SYCL
 
 #include "MathX/Vector3D.h"
 #include "MathX/Point3D.h"
@@ -220,16 +221,31 @@ int testLorentzVector()
              << " Lorentz Vector Tests"
              << "\n************************************************************************\n";
 
-   LorentzVector<PtEtaPhiM4D<float>> v1(1, 2, 3, 4);
-   LorentzVector<PtEtaPhiM4D<float>> v2(5, 6, 7, 8);
-   ok += compare(v1.DeltaR(v2), 4.60575f);
-   // Result cross-validated using:
-   // TLorentzVector t1, t2;
-   // t1.SetPtEtaPhiE(1,2,3,4); t2.SetPtEtaPhiE(5,6,7,8);
-   // t1.DeltaR(t2)
+   sycl::buffer<int, 1> ok_buf(&ok, sycl::range<1>(1));
+   sycl::default_selector device_selector;
+   sycl::queue queue(device_selector);
+
+   std::cout << "sycl::queue check - selected device:\n"
+             << queue.get_device().get_info<sycl::info::device::name>() << std::endl;
+
+   {
+      queue.submit([&](sycl::handler &cgh) {
+         auto ok_device = ok_buf.get_access<sycl::access::mode::read_write>(cgh);
+         cgh.single_task<class testRotations3D>([=]() {
+            LorentzVector<PtEtaPhiM4D<float>> v1(1, 2, 3, 4);
+            LorentzVector<PtEtaPhiM4D<float>> v2(5, 6, 7, 8);
+            ok_device[0] += compare(v1.DeltaR(v2), 4.60575f);
+
+            LorentzVector<PtEtaPhiM4D<float>> v = v1 + v2;
+            ok_device[0] += compare(v.M(), 62.03058f);
+         });
+      });
+   }
 
    if (ok == 0)
-      std::cout << "\t OK " << std::endl;
+      std::cout << "\tOK\n";
+   else
+      std::cout << "\t FAILED\n";
 
    return ok;
 }
