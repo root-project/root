@@ -105,11 +105,15 @@ int testVector3D()
 {
    int iret_host = 0;
 
-   std::cout << "testing Vector3D   \t:\t";
+   std::cout << "testing Vector3D   \t:\n";
 
    sycl::buffer<int, 1> iret_buf(&iret_host, sycl::range<1>(1));
    sycl::default_selector device_selector;
    sycl::queue queue(device_selector);
+
+   std::cout << "sycl::queue check - selected device:\n"
+                << queue.get_device().get_info<sycl::info::device::name>()
+                << std::endl;
 
    {
       queue.submit([&](sycl::handler &cgh) {
@@ -167,11 +171,15 @@ int testPoint3D()
 
    int iret_host = 0;
 
-   std::cout << "testing Point3D    \t:\t";
+   std::cout << "testing Point3D    \t:\n";
 
    sycl::buffer<int, 1> iret_buf(&iret_host, sycl::range<1>(1));
    sycl::default_selector device_selector;
    sycl::queue queue(device_selector);
+
+   std::cout << "sycl::queue check - selected device:\n"
+                << queue.get_device().get_info<sycl::info::device::name>()
+                << std::endl;
 
    {
       queue.submit([&](sycl::handler &cgh) {
@@ -240,11 +248,15 @@ int testVector2D()
 
    int iret_host = 0;
 
-   std::cout << "testing Vector2D   \t:\t";
+   std::cout << "testing Vector2D   \t:\n";
 
    sycl::buffer<int, 1> iret_buf(&iret_host, sycl::range<1>(1));
    sycl::default_selector device_selector;
    sycl::queue queue(device_selector);
+
+   std::cout << "sycl::queue check - selected device:\n"
+                << queue.get_device().get_info<sycl::info::device::name>()
+                << std::endl;
 
    {
       queue.submit([&](sycl::handler &cgh) {
@@ -316,10 +328,14 @@ int testPoint2D()
 
    int iret_host = 0;
 
-   std::cout << "testing Point2D    \t:\t";
+   std::cout << "testing Point2D    \t:\n";
 
    sycl::buffer<int, 1> iret_buf(&iret_host, sycl::range<1>(1));
    sycl::queue queue{sycl::default_selector_v};
+
+   std::cout << "sycl::queue check - selected device:\n"
+                << queue.get_device().get_info<sycl::info::device::name>()
+                << std::endl;
 
    {
       queue.submit([&](sycl::handler &cgh) {
@@ -391,11 +407,15 @@ int testRotations3D()
 {
 
    int iret_host = 0;
-   std::cout << "testing 3D Rotations\t:\t";
+   std::cout << "testing 3D Rotations\t:\n";
 
    sycl::buffer<int, 1> iret_buf(&iret_host, sycl::range<1>(1));
    sycl::default_selector device_selector;
    sycl::queue queue(device_selector);
+
+   std::cout << "sycl::queue check - selected device:\n"
+                << queue.get_device().get_info<sycl::info::device::name>()
+                << std::endl;
 
    {
       queue.submit([&](sycl::handler &cgh) {
@@ -529,11 +549,15 @@ int testTransform3D()
 {
 
    int iret_host = 0;
-   std::cout << "testing 3D Transform\t:\t";
+   std::cout << "testing 3D Transform\t:\n";
 
    sycl::buffer<int, 1> iret_buf(&iret_host, sycl::range<1>(1));
    sycl::default_selector device_selector;
    sycl::queue queue(device_selector);
+
+   std::cout << "sycl::queue check - selected device:\n"
+                << queue.get_device().get_info<sycl::info::device::name>()
+                << std::endl;
 
    {
       queue.submit([&](sycl::handler &cgh) {
@@ -757,11 +781,15 @@ int testTransform3D()
 int testVectorUtil()
 {
    int iret_host = 0;
-   std::cout << "testing VectorUtil  \t:\t";
+   std::cout << "testing VectorUtil  \t:\n";
 
    sycl::buffer<int, 1> iret_buf(&iret_host, sycl::range<1>(1));
    sycl::default_selector device_selector;
    sycl::queue queue(device_selector);
+
+   std::cout << "sycl::queue check - selected device:\n"
+                << queue.get_device().get_info<sycl::info::device::name>()
+                << std::endl;
 
    {
       queue.submit([&](sycl::handler &cgh) {
@@ -834,20 +862,39 @@ int testVectorUtil()
 
 int testLorentzVector()
 {
-   std::cout << "testing LorentzVector  \t:\t";
-   int iret = 0;
-   LorentzVector<PtEtaPhiM4D<float>> v1(1, 2, 3, 4);
-   LorentzVector<PtEtaPhiM4D<float>> v2(5, 6, 7, 8);
-   iret |= compare(v1.DeltaR(v2), 4.60575f);
-   // Result cross-validated using:
-   // TLorentzVector t1, t2;
-   // t1.SetPtEtaPhiE(1,2,3,4); t2.SetPtEtaPhiE(5,6,7,8);
-   // t1.DeltaR(t2)
-   if (iret == 0)
-      std::cout << "\t\t\tOK\n";
+   int iret_host = 0;
+   std::cout << "testing LorentzVector  \t:\n";
+
+   sycl::buffer<int, 1> iret_buf(&iret_host, sycl::range<1>(1));
+   sycl::default_selector device_selector;
+   sycl::queue queue(device_selector);
+
+   std::cout << "sycl::queue check - selected device:\n"
+                << queue.get_device().get_info<sycl::info::device::name>()
+                << std::endl;
+
+   {
+      queue.submit([&](sycl::handler &cgh) {
+         auto iret = iret_buf.get_access<sycl::access::mode::read_write>(cgh);
+         cgh.single_task<class testRotations3D>([=]() {
+            LorentzVector<PtEtaPhiM4D<float>> v1(1, 2, 3, 4);
+            LorentzVector<PtEtaPhiM4D<float>> v2(5, 6, 7, 8);
+            iret[0] |= compare(v1.DeltaR(v2), 4.60575f);
+
+            LorentzVector<PtEtaPhiM4D<float>> v = v1+v2;
+            iret[0] |= compare(v.M(), 62.03058f);
+
+         });
+      });
+   }
+
+   if (iret_host == 0)
+      std::cout << "\tOK\n";
    else
-      std::cout << "\t\t\t\t\t\tFAILED\n";
-   return iret;
+      std::cout << "\t FAILED\n";
+
+   return iret_host;
+
 }
 
 int testGenVector()

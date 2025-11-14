@@ -816,7 +816,7 @@ int testLorentzVector()
    // TLorentzVector t1, t2;
    // t1.SetPtEtaPhiM(1,2,3,4); t2.SetPtEtaPhiM(5,6,7,8);
    // t1.DeltaR(t2)
-   
+
    // test structured bindings
    auto const [x, y, z, E] = v1;
    iret |= (x != v1.X());
