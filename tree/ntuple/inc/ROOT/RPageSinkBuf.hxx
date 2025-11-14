@@ -19,6 +19,8 @@
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RPageStorage.hxx>
 
+#include <atomic>
+#include <cstddef>
 #include <deque>
 #include <functional>
 #include <iterator>
@@ -109,6 +111,8 @@ private:
    /// The buffered page sink maintains a copy of the RNTupleModel for the inner sink.
    /// For the unbuffered case, the RNTupleModel is instead managed by a RNTupleWriter.
    std::unique_ptr<ROOT::RNTupleModel> fInnerModel;
+   /// The sum of uncompressed bytes in buffered pages. Used to heuristically reduce the memory usage.
+   std::atomic<std::size_t> fBufferedUncompressed = 0;
    /// Vector of buffered column pages. Indexed by column id.
    std::vector<RColumnBuf> fBufferedColumns;
    /// Columns committed as suppressed are stored and passed to the inner sink at cluster commit
