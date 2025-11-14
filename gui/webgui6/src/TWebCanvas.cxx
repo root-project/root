@@ -34,6 +34,7 @@
 #include "TList.h"
 #include "TF1.h"
 #include "TF2.h"
+#include "TF3.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "THStack.h"
@@ -857,7 +858,14 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       if ((fTF1UseSave == 1) && f1->HasSave())
          return;
 
-      f1->Save(0, 0, 0, 0, 0, 0);
+      auto f3 = dynamic_cast<TF3 *>(f1);
+      auto f2 = dynamic_cast<TF2 *>(f1);
+      if (f3)
+         f3->Save(f3->GetXmin(), f3->GetXmax(), f3->GetYmin(), f3->GetYmax(), f3->GetZmin(), f3->GetZmax());
+      else if (f2)
+         f2->Save(f2->GetXmin(), f2->GetXmax(), f2->GetYmin(), f2->GetYmax(), 0, 0);
+      else
+         f1->Save(f1->GetXmin(), f1->GetXmax(), 0, 0, 0, 0);
    };
 
    auto create_stats = [&]() {
