@@ -1337,6 +1337,7 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
    if (gc) gVirtualX->ChangeGC(gc, &gv);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw image on the drawable wid (pixmap, window) at x,y position.
 ///
@@ -1562,6 +1563,9 @@ void TASImage::Paint(Option_t *option)
 
    // loop over pixmap and draw image to PostScript
    if (gVirtualPS) {
+
+      Bool_t paint_as_png = kFALSE;
+
       if (gVirtualPS->InheritsFrom("TImageDump")) { // PostScript is asimage
          TImage *dump = (TImage *)gVirtualPS->GetStream();
          if (!dump) return;
@@ -1589,23 +1593,12 @@ void TASImage::Paint(Option_t *option)
          Warning("Paint", "PDF not implemented yet");
          return;
       } else if (gVirtualPS->InheritsFrom("TSVG")) {
-         Warning("Paint", "SVG not implemented yet");
-         return;
+         paint_as_png = kTRUE;
       }
-
-      // get special color cell to be reused during image printing
-      TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
-      TColor *color = nullptr;
-      // Look for color by name
-      if ((color = (TColor*)colors->FindObject("Image_PS")) == nullptr)
-         color = new TColor(colors->GetEntries(), 1., 1., 1., "Image_PS");
-
-      gVirtualPS->SetFillColor(color->GetNumber());
-      gVirtualPS->SetFillStyle(1001);
 
       Double_t dx = gPad->GetX2()-gPad->GetX1();
       Double_t dy = gPad->GetY2()-gPad->GetY1();
-      Double_t x1,x2,y1,y2;
+      Double_t x1, x2, y1, y2;
 
       if (expand) {
          x1 = gPad->GetX1();
@@ -1619,19 +1612,44 @@ void TASImage::Paint(Option_t *option)
          y2 = y1+(dy*(1-gPad->GetTopMargin()-gPad->GetBottomMargin()))/image->height;
       }
 
+      // get special color cell to be reused during image printing
+      TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
+      TColor *color = nullptr;
+      // Look for color by name
+      if ((color = (TColor*)colors->FindObject("Image_PS")) == nullptr)
+         color = new TColor(colors->GetEntries(), 1., 1., 1., "Image_PS");
+
+      gVirtualPS->SetFillColor(color->GetNumber());
+      gVirtualPS->SetFillStyle(1001);
+
       gVirtualPS->CellArrayBegin(image->width, image->height, x1, x2, y1, y2);
 
-      ASImageDecoder *imdec = start_image_decoding(fgVisual, image, SCL_DO_ALL,
-                                                   0, 0, image->width, image->height, nullptr);
-      if (!imdec) return;
-      for (Int_t yt = 0; yt < (Int_t)image->height; yt++) {
-         imdec->decode_image_scanline(imdec);
-         for (Int_t xt = 0; xt < (Int_t)image->width; xt++)
-            gVirtualPS->CellArrayFill(imdec->buffer.red[xt],
-                                      imdec->buffer.green[xt],
-                                      imdec->buffer.blue[xt]);
+      if (paint_as_png) {
+         char *buffer = nullptr;
+         int size = 0;
+         ASImageExportParams params;
+         params.png.type = ASIT_Png;
+         params.png.flags = EXPORT_ALPHA;
+         params.png.compression = GetImageCompression();
+         if (!params.png.compression)
+            params.png.compression = -1;
+         if (ASImage2PNGBuff(image, (CARD8 **)&buffer, &size, &params)) {
+            gVirtualPS->CellArrayPng(buffer, size);
+            free(buffer);
+         }
+      } else {
+         auto imdec = start_image_decoding(fgVisual, image, SCL_DO_ALL,
+                                           0, 0, image->width, image->height, nullptr);
+         if (imdec)
+            for (Int_t yt = 0; yt < (Int_t)image->height; yt++) {
+               imdec->decode_image_scanline(imdec);
+               for (Int_t xt = 0; xt < (Int_t)image->width; xt++)
+                  gVirtualPS->CellArrayFill(imdec->buffer.red[xt],
+                                          imdec->buffer.green[xt],
+                                          imdec->buffer.blue[xt]);
+            }
+         stop_image_decoding(&imdec);
       }
-      stop_image_decoding(&imdec);
       gVirtualPS->CellArrayEnd();
 
       // print the color bar
@@ -1645,18 +1663,33 @@ void TASImage::Paint(Option_t *option)
          gVirtualPS->CellArrayBegin(grad_im->width, grad_im->height,
                                     x1, x2, y1, y2);
 
-         imdec = start_image_decoding(fgVisual, grad_im, SCL_DO_ALL,
-                                      0, 0, grad_im->width, grad_im->height, nullptr);
-         if (imdec) {
-            for (Int_t yt = 0; yt < (Int_t)grad_im->height; yt++) {
-               imdec->decode_image_scanline(imdec);
-               for (Int_t xt = 0; xt < (Int_t)grad_im->width; xt++)
-                  gVirtualPS->CellArrayFill(imdec->buffer.red[xt],
-                                            imdec->buffer.green[xt],
-                                            imdec->buffer.blue[xt]);
+         if (paint_as_png) {
+            char *buffer = nullptr;
+            int size = 0;
+            ASImageExportParams params;
+            params.png.type = ASIT_Png;
+            params.png.flags = EXPORT_ALPHA;
+            params.png.compression = GetImageCompression();
+            if (!params.png.compression)
+               params.png.compression = -1;
+
+            if (ASImage2PNGBuff(grad_im, (CARD8 **)&buffer, &size, &params)) {
+               gVirtualPS->CellArrayPng(buffer, size);
+               free(buffer);
             }
+         } else {
+            auto imdec = start_image_decoding(fgVisual, grad_im, SCL_DO_ALL,
+                                              0, 0, grad_im->width, grad_im->height, nullptr);
+            if (imdec)
+               for (Int_t yt = 0; yt < (Int_t)grad_im->height; yt++) {
+                  imdec->decode_image_scanline(imdec);
+                  for (Int_t xt = 0; xt < (Int_t)grad_im->width; xt++)
+                     gVirtualPS->CellArrayFill(imdec->buffer.red[xt],
+                                             imdec->buffer.green[xt],
+                                             imdec->buffer.blue[xt]);
+               }
+            stop_image_decoding(&imdec);
          }
-         stop_image_decoding(&imdec);
          gVirtualPS->CellArrayEnd();
 
          // values of palette
