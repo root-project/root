@@ -14,7 +14,7 @@
 #include "TMath.h"
 
 #include <TGLRnrCtx.h>
-#include "TGLIncludes.h"
+#include <TGLIncludes.h>
 #include <TGLSelectRecord.h>
 #include <TGLUtil.h>
 #include <TGLCamera.h>

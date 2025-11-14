@@ -118,7 +118,7 @@ void DrawMesh(GLN normal3, GLV vertex3, const std::vector<V> &vs,
 void DrawMesh(const std::vector<Float_t> &vs, const std::vector<Float_t> &ns,
               const std::vector<UInt_t> &ts, const TGLBoxCut &box)
 {
-   DrawMesh(&glNormal3fv, &glVertex3fv, vs,  ns, ts, box);
+   DrawMesh(glNormal3fv, glVertex3fv, vs,  ns, ts, box);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -127,7 +127,7 @@ void DrawMesh(const std::vector<Float_t> &vs, const std::vector<Float_t> &ns,
 void DrawMesh(const std::vector<Double_t> &vs, const std::vector<Double_t> &ns,
               const std::vector<UInt_t> &ts, const TGLBoxCut &box)
 {
-   DrawMesh(&glNormal3dv, &glVertex3dv, vs, ns, ts, box);
+   DrawMesh(glNormal3dv, glVertex3dv, vs, ns, ts, box);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -162,7 +162,7 @@ void DrawMesh(GLV vertex3, const std::vector<V> &vs, const std::vector<UInt_t> &
 
 void DrawMesh(const std::vector<Float_t> &vs, const std::vector<UInt_t> &ts, const TGLBoxCut &box)
 {
-   DrawMesh(&glVertex3fv, vs, ts, box);
+   DrawMesh(glVertex3fv, vs, ts, box);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -170,7 +170,7 @@ void DrawMesh(const std::vector<Float_t> &vs, const std::vector<UInt_t> &ts, con
 
 void DrawMesh(const std::vector<Double_t> &vs, const std::vector<UInt_t> &ts, const TGLBoxCut &box)
 {
-   DrawMesh(&glVertex3dv, vs, ts, box);
+   DrawMesh(glVertex3dv, vs, ts, box);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
