@@ -18,7 +18,7 @@
 
 #include <TGLRnrCtx.h>
 #include <TGLSelectRecord.h>
-#include "TGLIncludes.h"
+#include <TGLIncludes.h>
 
 /** \class TPointSet3DGL
 \ingroup opengl
