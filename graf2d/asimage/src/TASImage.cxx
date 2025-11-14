@@ -1613,13 +1613,7 @@ void TASImage::Paint(Option_t *option)
       }
 
       // get special color cell to be reused during image printing
-      TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
-      TColor *color = nullptr;
-      // Look for color by name
-      if ((color = (TColor*)colors->FindObject("Image_PS")) == nullptr)
-         color = new TColor(colors->GetEntries(), 1., 1., 1., "Image_PS");
-
-      gVirtualPS->SetFillColor(color->GetNumber());
+      gVirtualPS->SetFillColor(TColor::GetColor((Float_t) 1., (Float_t) 1., (Float_t) 1.));
       gVirtualPS->SetFillStyle(1001);
 
       gVirtualPS->CellArrayBegin(image->width, image->height, x1, x2, y1, y2);
