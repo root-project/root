@@ -975,11 +975,14 @@ void TSVG::CellArrayFill(Int_t, Int_t, Int_t)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint the Cell Array as png image
+/// Disabled in compact mode to avoid creation of large SVG files
 
 void TSVG::CellArrayPng(char *buffer, int size)
 {
-   TString base64 = TBase64::Encode(reinterpret_cast<char *>(buffer), size);
-   PrintFast(base64.Length(), base64.Data());
+   if (!fCompact) {
+      TString base64 = TBase64::Encode(reinterpret_cast<char *>(buffer), size);
+      PrintFast(base64.Length(), base64.Data());
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
