@@ -383,7 +383,7 @@ void TGLWidget::SetFormat()
    static bool wgl_init = false;
    if ( ! wgl_init) {
       wgl_init = true;
-      int status = gladLoaderLoadWGL(HDC);
+      int status = gladLoaderLoadWGL(hDC);
       printf("GLAD loader WGL version %d.%d\n", GLAD_VERSION_MAJOR(status), GLAD_VERSION_MINOR(status));
    }
 

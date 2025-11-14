@@ -24,9 +24,13 @@ endif()
 
 if(MSVC)
   list(APPEND rglew_srcs src/wgl.c)
+  list(APPEND rglew_libs OpenGL32.lib)
 endif()
 
 ROOT_LINKER_LIBRARY(RGlew ${rglew_srcs} LIBRARIES ${rglew_libs})
+if(MSVC)
+  target_compile_definitions(RGlew PRIVATE GLAD_API_CALL_EXPORT GLAD_API_CALL_EXPORT_BUILD)
+endif()
 
 # We still need to install TGLIncludes.h into include/
 ROOT_INSTALL_HEADERS()

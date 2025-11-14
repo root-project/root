@@ -220,6 +220,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RGL
   INSTALL_OPTIONS
     ${installoptions}
 )
+if(MSVC)
+  target_compile_definitions(RGL PRIVATE GLAD_API_CALL_EXPORT)
+endif()
 
 target_include_directories(RGL PRIVATE
      ${OPENGL_INCLUDE_DIR}
