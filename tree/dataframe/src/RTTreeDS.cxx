@@ -102,8 +102,9 @@ void InsertBranchName(std::set<std::string> &bNamesReg, std::vector<std::string>
    foundLeaves.insert(leaf);
 }
 
-void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, std::vector<std::string> &bNames, TBranch *b,
-                   std::string prefix, std::string &friendName, bool allowDuplicates)
+void ExploreBranch(TTree &t, std::unordered_map<std::string, unsigned int> &duplicateTokens,
+                   std::set<std::string> &bNamesReg, std::vector<std::string> &bNames, TBranch *b, std::string prefix,
+                   std::string &friendName, bool allowDuplicates)
 {
    // We want to avoid situations of overlap between the prefix and the
    // sub-branch name that might happen when the branch is composite, e.g.
@@ -121,6 +122,15 @@ void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, std::vector<std::
    for (auto sb : *b->GetListOfBranches()) {
       TBranch *subBranch = static_cast<TBranch *>(sb);
       auto subBranchName = std::string(subBranch->GetName());
+
+      // Record names of sub branches, which could reapper in different branch hierarchies of the same dataset. For
+      // example, the 'Muon' branch could have sub-branch 'pt', as well as the 'Electron' branch. Later we will
+      // disambiguate by removing the top-level 'pt' branch which TTree doesn't warn about and would end up pointing to
+      // the first sub-branch encountered in this exploration
+      if (!duplicateTokens.insert({subBranchName, 1}).second) {
+         duplicateTokens[subBranchName]++;
+      }
+
       auto fullName = prefix + subBranchName;
 
       if (auto subNameFirstDot = subBranchName.find_first_of('.'); subNameFirstDot != std::string::npos) {
@@ -133,7 +143,7 @@ void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, std::vector<std::
       if (!prefix.empty())
          newPrefix = fullName + ".";
 
-      ExploreBranch(t, bNamesReg, bNames, subBranch, newPrefix, friendName, allowDuplicates);
+      ExploreBranch(t, duplicateTokens, bNamesReg, bNames, subBranch, newPrefix, friendName, allowDuplicates);
 
       auto branchDirectlyFromTree = t.GetBranch(fullName.c_str());
       if (!branchDirectlyFromTree)
@@ -147,7 +157,8 @@ void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, std::vector<std::
    }
 }
 
-void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, std::vector<std::string> &bNames,
+void GetBranchNamesImpl(TTree &t, std::unordered_map<std::string, unsigned int> &duplicateTokens,
+                        std::set<std::string> &bNamesReg, std::vector<std::string> &bNames,
                         std::set<TTree *> &analysedTrees, std::string &friendName, bool allowDuplicates)
 {
    std::set<TLeaf *> foundLeaves;
@@ -184,7 +195,7 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, std::vector<
             }
          } else if (branch->IsA() == TBranchObject::Class()) {
             // TBranchObject
-            ExploreBranch(t, bNamesReg, bNames, branch, branchName + ".", friendName, allowDuplicates);
+            ExploreBranch(t, duplicateTokens, bNamesReg, bNames, branch, branchName + ".", friendName, allowDuplicates);
             InsertBranchName(bNamesReg, bNames, branchName, friendName, allowDuplicates);
          } else {
             // TBranchElement
@@ -199,9 +210,10 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, std::vector<
                dotIsImplied = true;
 
             if (dotIsImplied || branchName.back() == '.')
-               ExploreBranch(t, bNamesReg, bNames, branch, "", friendName, allowDuplicates);
+               ExploreBranch(t, duplicateTokens, bNamesReg, bNames, branch, "", friendName, allowDuplicates);
             else
-               ExploreBranch(t, bNamesReg, bNames, branch, branchName + ".", friendName, allowDuplicates);
+               ExploreBranch(t, duplicateTokens, bNamesReg, bNames, branch, branchName + ".", friendName,
+                             allowDuplicates);
 
             InsertBranchName(bNamesReg, bNames, branchName, friendName, allowDuplicates);
          }
@@ -226,7 +238,7 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, std::vector<
       else
          frName = std::string(friendTree->GetName());
 
-      GetBranchNamesImpl(*friendTree, bNamesReg, bNames, analysedTrees, frName, allowDuplicates);
+      GetBranchNamesImpl(*friendTree, duplicateTokens, bNamesReg, bNames, analysedTrees, frName, allowDuplicates);
    }
 }
 
@@ -234,11 +246,24 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, std::vector<
 /// Get all the branches names, including the ones of the friend trees
 std::vector<std::string> RetrieveDatasetSchema(TTree &t, bool allowDuplicates = true)
 {
+   std::unordered_map<std::string, unsigned int> duplicateTokens;
+
    std::set<std::string> bNamesSet;
    std::vector<std::string> bNames;
    std::set<TTree *> analysedTrees;
    std::string emptyFrName = "";
-   GetBranchNamesImpl(t, bNamesSet, bNames, analysedTrees, emptyFrName, allowDuplicates);
+   GetBranchNamesImpl(t, duplicateTokens, bNamesSet, bNames, analysedTrees, emptyFrName, allowDuplicates);
+
+   // Remove all sub-branches that have duplicate names between different branch hierarchies of the dataset
+   bNames.erase(std::remove_if(bNames.begin(), bNames.end(),
+                               [&duplicateTokens](const auto &name) {
+                                  if (auto it = duplicateTokens.find(name);
+                                      it != duplicateTokens.end() && it->second > 1)
+                                     return true;
+                                  return false;
+                               }),
+                bNames.end());
+
    return bNames;
 }
 } // namespace
