@@ -82,7 +82,6 @@ echo "        ../../bindings/r/                \\" >> Doxyfile_INPUT
 # echo "        ../../core/textinput/            \\" >> Doxyfile_INPUT
 # echo "        ../../graf2d/mathtext/           \\" >> Doxyfile_INPUT
 # echo "        ../../graf3d/ftgl/               \\" >> Doxyfile_INPUT
-# echo "        ../../graf3d/glew/               \\" >> Doxyfile_INPUT
 # echo "        ../../graf3d/x3d/                \\" >> Doxyfile_INPUT
 # echo "        ../../net/rootd/                 \\" >> Doxyfile_INPUT
 # echo "        ../../net/rpdutils/              \\" >> Doxyfile_INPUT
