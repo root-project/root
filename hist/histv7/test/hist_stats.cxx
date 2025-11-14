@@ -123,6 +123,77 @@ TEST(RHistStats, AddDifferent)
    EXPECT_THROW(statsA.Add(statsB), std::invalid_argument);
 }
 
+TEST(RHistStats, AddAtomic)
+{
+   RHistStats statsA(2);
+   RHistStats statsB(2);
+
+   static constexpr std::size_t Entries = 20;
+   for (std::size_t i = 0; i < Entries; i++) {
+      statsA.Fill(i, 2 * i);
+      statsB.Fill(2 * i, 3 * i, RWeight(0.1 + 0.03 * i));
+   }
+
+   statsA.AddAtomic(statsB);
+
+   ASSERT_EQ(statsA.GetNEntries(), 2 * Entries);
+   EXPECT_DOUBLE_EQ(statsA.GetSumW(), 27.7);
+   EXPECT_DOUBLE_EQ(statsA.GetSumW2(), 23.563);
+
+   {
+      const auto &dimensionStats = statsA.GetDimensionStats(/*=0*/);
+      EXPECT_FLOAT_EQ(dimensionStats.fSumWX, 376.2);
+      EXPECT_FLOAT_EQ(dimensionStats.fSumWX2, 7790);
+      EXPECT_FLOAT_EQ(dimensionStats.fSumWX3, 200019.84);
+      EXPECT_FLOAT_EQ(dimensionStats.fSumWX4, 5846915.6);
+   }
+   {
+      const auto &dimensionStats = statsA.GetDimensionStats(1);
+      EXPECT_FLOAT_EQ(dimensionStats.fSumWX, 659.3);
+      EXPECT_FLOAT_EQ(dimensionStats.fSumWX2, 21850);
+      EXPECT_FLOAT_EQ(dimensionStats.fSumWX3, 842029.46);
+      EXPECT_FLOAT_EQ(dimensionStats.fSumWX4, 35754169.6);
+   }
+}
+
+TEST(RHistStats, StressAddAtomic)
+{
+   static constexpr std::size_t NThreads = 4;
+   static constexpr std::size_t NAddsPerThread = 10000;
+   static constexpr std::size_t NAdds = NThreads * NAddsPerThread;
+   static constexpr double X = 1.5;
+   static constexpr double Weight = 0.5;
+
+   // Use a single dimension, to maximize contention.
+   RHistStats statsA(1);
+   RHistStats statsB(1);
+   statsB.Fill(X, RWeight(Weight));
+
+   StressInParallel(NThreads, [&] {
+      for (std::size_t i = 0; i < NAddsPerThread; i++) {
+         statsA.AddAtomic(statsB);
+      }
+   });
+
+   EXPECT_EQ(statsA.GetNEntries(), NAdds);
+   EXPECT_DOUBLE_EQ(statsA.GetSumW(), NAdds * Weight);
+   EXPECT_DOUBLE_EQ(statsA.GetSumW2(), NAdds * Weight * Weight);
+
+   const auto &dimensionStats = statsA.GetDimensionStats();
+   EXPECT_DOUBLE_EQ(dimensionStats.fSumWX, NAdds * Weight * X);
+   EXPECT_DOUBLE_EQ(dimensionStats.fSumWX2, NAdds * Weight * X * X);
+   EXPECT_DOUBLE_EQ(dimensionStats.fSumWX3, NAdds * Weight * X * X * X);
+   EXPECT_DOUBLE_EQ(dimensionStats.fSumWX4, NAdds * Weight * X * X * X * X);
+}
+
+TEST(RHistStats, AddAtomicDifferent)
+{
+   RHistStats statsA(2);
+   RHistStats statsB(3);
+
+   EXPECT_THROW(statsA.AddAtomic(statsB), std::invalid_argument);
+}
+
 TEST(RHistStats, Clear)
 {
    RHistStats stats(2);

@@ -197,15 +197,15 @@ std::enable_if_t<std::is_arithmetic_v<T>> AtomicInc(T *ptr)
 }
 
 template <typename T, typename U>
-std::enable_if_t<std::is_member_function_pointer_v<decltype(&T::AtomicAdd)>> AtomicAdd(T *ptr, const U &add)
+auto AtomicAdd(T *ptr, const U &add) -> decltype(ptr->AtomicAdd(add))
 {
-   ptr->AtomicAdd(add);
+   return ptr->AtomicAdd(add);
 }
 
 template <typename T>
-std::enable_if_t<std::is_member_function_pointer_v<decltype(&T::AtomicInc)>> AtomicInc(T *ptr)
+auto AtomicInc(T *ptr) -> decltype(ptr->AtomicInc())
 {
-   ptr->AtomicInc();
+   return ptr->AtomicInc();
 }
 
 } // namespace Internal
