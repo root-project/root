@@ -235,6 +235,8 @@ public:
                if (iend < 0) {
                   std::string send = std::string("(") + fShapeInput[fAxes[i]].param + "-" + std::to_string(-iend) +")";
                   fEnd[fAxes[i]] = Dim{send,size_t(-1)};
+               } else if (iend == std::numeric_limits<IType>::max()){
+                  fEnd[fAxes[i]] = fShapeInput[fAxes[i]];
                } else {
                  fEnd[fAxes[i]] = Dim{size_t(iend)};
                }
@@ -332,23 +334,23 @@ public:
       else {
          model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
          if (model.Verbose()) {
-            std::cout << "Slice ---> " << fNOutput << " " <<  ConvertShapeToString(fShapeOutput) << std::endl;
+            std::cout << "Slice " << fNData << "  " << ConvertShapeToString(fShapeInput)
+                      << "---> " << fNOutput << " " <<  ConvertShapeToString(fShapeOutput) << std::endl;
          }
       }
    }
 
-   std::string Generate(std::string OpName) override {
-      if (fIsOutputConstant) return "";  //no op for constant tensors
+   std::string Generate(std::string opName) override {
 
-      OpName = "op_" + OpName;
       if (fShapeInput.empty() || fShapeOutput.empty()){
          throw std::runtime_error("TMVA SOFIE Slice Op called to Generate without being initialized first");
       }
 
       std::stringstream out;
-      //std::string opName = "Slice";
 
-      out << SP << "///------- Slice operator\n" << std::endl;
+      out << "///------- Slice operator " << opName << "---> " << fNOutput << " "
+          << ConvertDimShapeToString(fShapeOutput) << "\n" << std::endl;
+      if (fIsOutputConstant) return out.str();  //no op for constant tensors
       // loop on the dimensions depending no the orders
       size_t ndim = fShapeInput.size();
       auto strides = UTILITY::ComputeStrideFromShape(fShapeInput);
