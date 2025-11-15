@@ -13,11 +13,10 @@
 # http://stackoverflow.com/questions/4675728/redirect-stdout-to-a-file-in-python/22434262#22434262
 # Thanks J.F. Sebastian !!
 
-from contextlib import contextmanager
 import os
 import sys
-from time import sleep
-from itertools import zip_longest
+from contextlib import contextmanager
+
 
 def fileno(file_or_fd):
     """
@@ -81,9 +80,10 @@ with stdoutRedirected():
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 ROOT.gROOT.GetVersion()
 
+# ruff: noqa: E402
 import argparse
-import glob
 import fnmatch
+import glob
 import logging
 
 LOG_FORMAT = "%(levelname)s: %(message)s"
@@ -328,12 +328,12 @@ def openROOTFileCompress(fileName, compress, recreate):
     Open a ROOT file (like openROOTFile) with the possibility
     to change compression settings
     """
-    if compress != None and os.path.isfile(fileName):
+    if compress is not None and os.path.isfile(fileName):
         logging.warning("can't change compression settings on existing file")
         return None
     mode = "recreate" if recreate else "update"
     theFile = openROOTFile(fileName, mode)
-    if compress != None:
+    if compress is not None:
         theFile.SetCompressionSettings(compress)
     return theFile
 
@@ -501,7 +501,7 @@ def getSourceListArgs(parser, wildcards=True):
     inputFiles = []
     try:
         inputFiles = args.FILE
-    except:
+    except Exception:
         inputFiles = args.SOURCE
     sourceList = [tup for pattern in inputFiles for tup in patternToFileNameAndPathSplitList(pattern, wildcards)]
     return sourceList, args
@@ -556,7 +556,9 @@ def getSourceDestListOptDict(parser, wildcards=True):
 # Several functions shared by rootcp, rootmv and rootrm
 
 TARGET_ERROR = "target '{0}' is not a directory"
-OMITTING_ERROR = "{0} '{1}' will be copied but not its subdirectories (if any). Use the -r option if you need a recursive copy."
+OMITTING_ERROR = (
+    "{0} '{1}' will be copied but not its subdirectories (if any). Use the -r option if you need a recursive copy."
+)
 OVERWRITE_ERROR = "cannot overwrite non-directory '{0}' with directory '{1}'"
 
 
@@ -694,7 +696,7 @@ def copyRootObjectRecursive(sourceFile, sourcePathSplit, destFile, destPathSplit
             obj = key.ReadObj()
             if replaceOption and isExisting(destFile, destPathSplit + [setName]):
                 changeDirectory(destFile, destPathSplit)
-                otherObj = getFromDirectory(setName)
+                # Delete existing object before writing replacement
                 retcodeTemp = deleteObject(destFile, destPathSplit + [setName])
                 if retcodeTemp:
                     retcode += retcodeTemp
@@ -709,6 +711,10 @@ def copyRootObjectRecursive(sourceFile, sourcePathSplit, destFile, destPathSplit
                 changeDirectory(destFile, destPathSplit)
                 obj.Write(setName, ROOT.TObject.kSingleKey)
             else:
+                if replaceOption and isExisting(destFile, destPathSplit + [objectName]):
+                    retcodeTemp = deleteObject(destFile, destPathSplit + [objectName])
+                    if retcodeTemp:
+                        retcode += retcodeTemp
                 if setName != "":
                     if isinstance(obj, ROOT.TNamed):
                         obj.SetName(setName)
@@ -1058,7 +1064,7 @@ def rootMv(sourceList, destFileName, destPathSplit, compress=None, interactive=F
 # ROOTPRINT
 
 
-def _keyListExtended(rootFile, pathSplitList, recursive = False):
+def _keyListExtended(rootFile, pathSplitList, recursive=False):
     prefixList = []
     keyList, dirList = keyClassSplitter(rootFile, pathSplitList)
     for pathSplit in dirList:
@@ -1068,11 +1074,15 @@ def _keyListExtended(rootFile, pathSplitList, recursive = False):
     prefixList = ["" for key in keyList]
     if recursive:
         for subdir in subList:
-            subkeyList, subprefixList = _keyListExtended(ROOT.gDirectory.Get(subdir.GetName()), pathSplitList, recursive)
+            subkeyList, subprefixList = _keyListExtended(
+                ROOT.gDirectory.Get(subdir.GetName()), pathSplitList, recursive
+            )
             keyList.extend(subkeyList)
             prefixList.extend([subdir.GetName() + "_" + prefix for prefix in subprefixList])
     if recursive:
-        keyList, prefixList = (list(t) for t in zip(*sorted(zip(keyList, prefixList), key=lambda x: x[0].GetName().lower())))
+        keyList, prefixList = (
+            list(t) for t in zip(*sorted(zip(keyList, prefixList), key=lambda x: x[0].GetName().lower()))
+        )
     else:
         keyListSort(keyList)
     return keyList, prefixList
