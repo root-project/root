@@ -1334,8 +1334,32 @@ namespace cling {
     return ""; // Search found no match.
   }
 
+  namespace {
+    template <class T>
+    struct Reversed {
+      const T &m_orig;
+      auto begin() -> decltype(m_orig.rbegin()) { return m_orig.rbegin(); }
+      auto end() -> decltype (m_orig.rend()) { return m_orig.rend(); }
+    };
+    template <class T>
+    Reversed<T> reverse(const T& orig) { return {orig}; }
+  }
+
   DynamicLibraryManager::~DynamicLibraryManager() {
     static_assert(sizeof(Dyld) > 0, "Incomplete type");
+
+    // dlclose all libraries.
+    for (auto &&Handle: reverse(m_OpenDyLibs)) {
+      if (Handle == (DyLibHandle) -1)
+        continue; // was already closed previously.
+      std::string errMsg;
+      platform::DLClose(Handle, &errMsg);
+      if (!errMsg.empty()) {
+        cling::errs() << "cling::DynamicLibraryManager::~DynamicLibraryManager(): "
+                      << errMsg << '\n';
+      }
+    }
+
     delete m_Dyld;
   }
 
