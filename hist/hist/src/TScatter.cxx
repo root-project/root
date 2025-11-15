@@ -157,7 +157,7 @@ TH2F *TScatter::GetHistogram() const
 {
    if (!fHistogram) {
       // do not add the histogram to gDirectory
-      // use local TDirectory::TContect that will set temporarly gDirectory to a nullptr and
+      // use local TDirectory::TContext that will set temporarly gDirectory to a nullptr and
       // will avoid that histogram is added in the global directory
       TDirectory::TContext ctx(nullptr);
       double rwxmin, rwymin, rwxmax, rwymax;
