@@ -394,3 +394,162 @@ TEST(TFileMerger, MergeSelectiveTutorial)
       EXPECT_NE(file.Get<TNtuple>("ntuple"), nullptr);
    }
 }
+
+// https://github.com/root-project/root/issues/14558
+TEST(TFileMerger, ImportBranches)
+{
+   {
+      // Case 1 - Static: ZeroBranches + 1 entry (1 branch) + 1 entry (2 branch)
+      TTree atree("atree", "atitle");
+      int value;
+      atree.Branch("a", &value);
+      value = 11;
+      atree.Fill();
+      TTree abtree("abtree", "abtitle");
+      abtree.Branch("a", &value);
+      abtree.Branch("b", &value);
+      value = 42;
+      abtree.Fill();
+
+      TTree dummy("ztree", "zeroBranches");
+      TList treelist;
+      treelist.Add(&dummy);
+      treelist.Add(&atree);
+      treelist.Add(&abtree);
+      std::unique_ptr<TFile> file1(TFile::Open("b4716.root", "RECREATE"));
+      auto rtree = TTree::MergeTrees(&treelist, "ImportBranches");
+      file1->Write();
+      ASSERT_TRUE(rtree->FindBranch("a"));
+      EXPECT_EQ(rtree->FindBranch("a")->GetEntries(), 2);
+      ASSERT_TRUE(rtree->FindBranch("b"));
+      EXPECT_EQ(rtree->FindBranch("b")->GetEntries(), 2);
+      ASSERT_TRUE(atree.FindBranch("a"));
+      ASSERT_FALSE(atree.FindBranch("b"));
+      ASSERT_TRUE(abtree.FindBranch("a"));
+      ASSERT_TRUE(abtree.FindBranch("b"));
+      EXPECT_EQ(atree.FindBranch("a")->GetEntries(), 1);
+      EXPECT_EQ(abtree.FindBranch("a")->GetEntries(), 1);
+      EXPECT_EQ(abtree.FindBranch("b")->GetEntries(), 1);
+      EXPECT_EQ(dummy.FindBranch("a"), nullptr);
+      EXPECT_EQ(dummy.FindBranch("b"), nullptr);
+   }
+   {
+      // Case 2 - this (ZeroBranches) + 1 entry (1 branch) + 1 entry (2 branch)
+      TTree atree("atree", "atitle");
+      int value;
+      atree.Branch("a", &value);
+      value = 11;
+      atree.Fill();
+      TTree abtree("abtree", "abtitle");
+      abtree.Branch("a", &value);
+      abtree.Branch("b", &value);
+      value = 42;
+      abtree.Fill();
+
+      TTree dummy("ztree", "zeroBranches");
+      TList treelist;
+      treelist.Add(&atree);
+      treelist.Add(&abtree);
+      std::unique_ptr<TFile> file2(TFile::Open("c4716.root", "RECREATE"));
+      TFileMergeInfo info2(file2.get());
+      info2.fOptions += " ImportBranches";
+      dummy.Merge(&treelist, &info2);
+      file2->Write();
+      ASSERT_TRUE(dummy.FindBranch("a"));
+      EXPECT_EQ(dummy.FindBranch("a")->GetEntries(), 2);
+      ASSERT_TRUE(dummy.FindBranch("b"));
+      EXPECT_EQ(dummy.FindBranch("b")->GetEntries(), 2);
+      EXPECT_EQ(TString(atree.GetName()),
+                "ztree"); // As a side effect of trees with zero branches being ignored but it's name kept since it's first
+                          // in list, the first tree with branches (name) gets ztree's name.
+      ASSERT_TRUE(atree.FindBranch("a"));
+      EXPECT_EQ(atree.FindBranch("a")->GetEntries(), 2); // As a side effect, the first with branches (atree) has been
+                                                         // modified and has now 2 entries instead of 1, and ztree's name
+      ASSERT_TRUE(atree.FindBranch("b"));
+      EXPECT_EQ(atree.FindBranch("b")->GetEntries(), 2); // As a side effect, the first with branches (atree) has been
+                                                         // modified and has now 2 entries instead of 1, and ztree's name
+      ASSERT_TRUE(abtree.FindBranch("a"));
+      ASSERT_TRUE(abtree.FindBranch("b"));
+      EXPECT_EQ(abtree.FindBranch("a")->GetEntries(), 1);
+      EXPECT_EQ(abtree.FindBranch("b")->GetEntries(), 1);
+   }
+   {
+      // Case 3 - this (0 entry / 1 branch) + 1 entry (1 branch) + 1 entry (2 branch)
+      TTree atree("atree", "atitle");
+      int value;
+      atree.Branch("a", &value);
+      value = 11;
+      atree.Fill();
+      TTree abtree("abtree", "abtitle");
+      abtree.Branch("a", &value);
+      abtree.Branch("b", &value);
+      value = 42;
+      abtree.Fill();
+
+      TList treelist;
+      treelist.Add(&atree);
+      treelist.Add(&abtree);
+      TTree a0tree("a0tree", "a0title");
+      a0tree.Branch("a", &value);
+      std::unique_ptr<TFile> file3(TFile::Open("d4716.root", "RECREATE"));
+      TFileMergeInfo info3(file3.get());
+      info3.fOptions += " ImportBranches";
+      a0tree.Merge(&treelist, &info3);
+      file3->Write();
+      ASSERT_TRUE(a0tree.FindBranch("a"));
+      EXPECT_EQ(a0tree.FindBranch("a")->GetEntries(), 2);
+      ASSERT_TRUE(a0tree.FindBranch("b"));
+      EXPECT_EQ(a0tree.FindBranch("b")->GetEntries(), 2);
+      ASSERT_TRUE(atree.FindBranch("a"));
+      ASSERT_FALSE(atree.FindBranch("b"));
+      ASSERT_TRUE(abtree.FindBranch("a"));
+      ASSERT_TRUE(abtree.FindBranch("b"));
+      EXPECT_EQ(atree.FindBranch("a")->GetEntries(), 1);
+      EXPECT_EQ(abtree.FindBranch("a")->GetEntries(), 1);
+      EXPECT_EQ(abtree.FindBranch("b")->GetEntries(), 1);
+   }
+   {
+      // Case 4 - this 1 entry (3 branch) + 1 entry (1 branch) + (0 entry / 1 branch)
+      TTree abctree("abctree", "abctitle");
+      int value;
+      abctree.Branch("a", &value);
+      abctree.Branch("b", &value);
+      abctree.Branch("c", &value);
+      value = 11;
+      abctree.Fill();
+      TTree ctree("ctree", "ctitle");
+      ctree.Branch("c", &value);
+      value = 42;
+      ctree.Fill();
+      TTree c0tree("c0tree", "c0title");
+      c0tree.Branch("c", &value);
+
+      std::unique_ptr<TFile> file4(TFile::Open("e4716.root", "RECREATE"));
+      TFileMergeInfo info4(file4.get());
+      info4.fOptions += " ImportBranches";
+      TList treelist;
+      treelist.Add(&ctree);
+      treelist.Add(&c0tree);
+      ROOT::TestSupport::CheckDiagsRAII diagRAII; // ctree and c0tree don't have a/b branch so warn since they will be auto-filled
+      diagRAII.requiredDiag(kWarning, "TTree::CopyAddresses", "Could not find branch named 'a' in tree named 'ctree'");
+      diagRAII.requiredDiag(kWarning, "TTree::CopyAddresses", "Could not find branch named 'b' in tree named 'ctree'");
+      diagRAII.requiredDiag(kWarning, "TTree::CopyAddresses", "Could not find branch named 'a' in tree named 'c0tree'");
+      diagRAII.requiredDiag(kWarning, "TTree::CopyAddresses", "Could not find branch named 'b' in tree named 'c0tree'");
+      abctree.Merge(&treelist, &info4);
+      file4->Write();
+      ASSERT_TRUE(abctree.FindBranch("a"));
+      ASSERT_TRUE(abctree.FindBranch("b"));
+      ASSERT_TRUE(abctree.FindBranch("c"));
+      EXPECT_EQ(abctree.FindBranch("a")->GetEntries(), 2);
+      EXPECT_EQ(abctree.FindBranch("b")->GetEntries(), 2);
+      EXPECT_EQ(abctree.FindBranch("c")->GetEntries(), 2);
+      ASSERT_FALSE(ctree.FindBranch("a"));
+      ASSERT_FALSE(ctree.FindBranch("b"));
+      ASSERT_TRUE(ctree.FindBranch("c"));
+      EXPECT_EQ(ctree.FindBranch("c")->GetEntries(), 1);
+      ASSERT_FALSE(c0tree.FindBranch("a"));
+      ASSERT_FALSE(c0tree.FindBranch("b"));
+      ASSERT_TRUE(c0tree.FindBranch("c"));
+      EXPECT_EQ(c0tree.FindBranch("c")->GetEntries(), 0);
+   }
+}
