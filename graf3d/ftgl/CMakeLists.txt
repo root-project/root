@@ -40,10 +40,13 @@ ROOT_LINKER_LIBRARY(FTGL
     OpenGL::GLU
     ${FREETYPE_LIBRARIES}
     ZLIB::ZLIB
-    GLEW::GLEW
+    RGlew
   BUILTINS
     FREETYPE
 )
+if(MSVC)
+  target_compile_definitions(FTGL PRIVATE GLAD_API_CALL_EXPORT)
+endif()
 
 target_include_directories(FTGL PRIVATE
       ${FREETYPE_INCLUDE_DIRS}
