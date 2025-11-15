@@ -993,7 +993,7 @@ private:
    RCallbackStreamerInfo fCallbackStreamerInfo;
 
 public:
-   TBufferRecStreamer(TBuffer::EMode mode, Int_t bufsize, RCallbackStreamerInfo callbackStreamerInfo)
+   TBufferRecStreamer(TBuffer::EMode mode, Long64_t bufsize, RCallbackStreamerInfo callbackStreamerInfo)
       : TBufferFile(mode, bufsize), fCallbackStreamerInfo(callbackStreamerInfo)
    {
    }
