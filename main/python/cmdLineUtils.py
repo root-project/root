@@ -649,20 +649,21 @@ def deleteObject(rootFile, pathSplit):
 
 def copyRootObjectRecursive(sourceFile, sourcePathSplit, destFile, destPathSplit, replace, setName=""):
     """
-    Copy objects from a file or directory (sourceFile,sourcePathSplit)
-    to an other file or directory (destFile,destPathSplit)
-    - Has the will to be unix-like
-    - that's a recursive function
-    - Python adaptation of a root input/output tutorial : copyFiles.C
+    Copy (or move) objects from (sourceFile,sourcePathSplit) to (destFile,destPathSplit).
+    Handles rootcp and rootmv semantics. Special care for operations within the SAME file
+    to avoid use-after-free when renaming or replacing.
     """
     retcode = 0
     replaceOption = replace
     seen = {}
+
+    sameFile = sourceFile.GetName() == destFile.GetName()
+
     for key in getKeyList(sourceFile, sourcePathSplit):
         objectName = key.GetName()
 
-        # write keys only if the cycle is higher than before
-        if objectName not in seen.keys():
+        # Keep only highest cycle for each name
+        if objectName not in seen:
             seen[objectName] = key
         else:
             if seen[objectName].GetCycle() < key.GetCycle():
@@ -670,60 +671,123 @@ def copyRootObjectRecursive(sourceFile, sourcePathSplit, destFile, destPathSplit
             else:
                 continue
 
+        # Directory case: recurse
         if isDirectoryKey(key):
             if not isExisting(destFile, destPathSplit + [objectName]):
                 createDirectory(destFile, destPathSplit + [objectName])
             if isDirectory(destFile, destPathSplit + [objectName]):
                 retcode += copyRootObjectRecursive(
-                    sourceFile, sourcePathSplit + [objectName], destFile, destPathSplit + [objectName], replace
+                    sourceFile, sourcePathSplit + [objectName],
+                    destFile, destPathSplit + [objectName],
+                    replaceOption
                 )
             else:
                 logging.warning(OVERWRITE_ERROR.format(objectName, objectName))
                 retcode += 1
-        elif isTreeKey(key):
-            T = key.GetMotherDir().Get(objectName + ";" + str(key.GetCycle()))
-            if replaceOption and isExisting(destFile, destPathSplit + [T.GetName()]):
-                retcodeTemp = deleteObject(destFile, destPathSplit + [T.GetName()])
+            continue
+
+        # Tree case
+        if isTreeKey(key):
+            T = key.GetMotherDir().Get(f"{objectName};{key.GetCycle()}")
+            targetName = setName if setName else T.GetName()
+
+            # Same-file rename of tree (rootmv semantics)
+            if sameFile and targetName != objectName and sourcePathSplit[:-1] == destPathSplit:
+                # Handle potential existing destination name
+                if isExisting(destFile, destPathSplit + [targetName]):
+                    if replaceOption:
+                        retcodeTemp = deleteObject(destFile, destPathSplit + [targetName])
+                        if retcodeTemp:
+                            retcode += retcodeTemp
+                            continue
+                    else:
+                        logging.warning(OVERWRITE_ERROR.format(targetName, targetName))
+                        retcode += 1
+                        continue
+                changeDirectory(destFile, destPathSplit)
+                T.SetName(targetName)
+                # Overwrite ensures single cycle
+                T.Write("", ROOT.TObject.kOverwrite)
+                continue
+
+            # General copy/replace of tree
+            if replaceOption and isExisting(destFile, destPathSplit + [targetName]):
+                retcodeTemp = deleteObject(destFile, destPathSplit + [targetName])
                 if retcodeTemp:
                     retcode += retcodeTemp
                     continue
             changeDirectory(destFile, destPathSplit)
             newT = T.CloneTree(-1, "fast")
-            if setName != "":
-                newT.SetName(setName)
+            if targetName != newT.GetName():
+                newT.SetName(targetName)
             newT.Write()
-        else:
-            obj = key.ReadObj()
-            if replaceOption and isExisting(destFile, destPathSplit + [setName]):
-                changeDirectory(destFile, destPathSplit)
-                # Delete existing object before writing replacement
-                retcodeTemp = deleteObject(destFile, destPathSplit + [setName])
-                if retcodeTemp:
-                    retcode += retcodeTemp
-                    continue
-                else:
-                    if isinstance(obj, ROOT.TNamed):
-                        obj.SetName(setName)
-                    changeDirectory(destFile, destPathSplit)
-                    obj.Write()
-            elif issubclass(obj.__class__, ROOT.TCollection):
-                # probably the object was written with kSingleKey
-                changeDirectory(destFile, destPathSplit)
-                obj.Write(setName, ROOT.TObject.kSingleKey)
-            else:
-                if replaceOption and isExisting(destFile, destPathSplit + [objectName]):
-                    retcodeTemp = deleteObject(destFile, destPathSplit + [objectName])
+            # Delete only the clone, never original tree
+            newT.Delete()
+            continue
+
+        # Non-tree object
+        obj = key.ReadObj()
+        targetName = setName if setName else objectName
+
+        # Same-file rename (rootmv) where parent dirs are the same
+        if sameFile and targetName != objectName and sourcePathSplit[:-1] == destPathSplit:
+            # Destination exists?
+            if isExisting(destFile, destPathSplit + [targetName]):
+                if replaceOption:
+                    retcodeTemp = deleteObject(destFile, destPathSplit + [targetName])
                     if retcodeTemp:
                         retcode += retcodeTemp
-                if setName != "":
-                    if isinstance(obj, ROOT.TNamed):
-                        obj.SetName(setName)
+                        obj.Delete()
+                        continue
                 else:
-                    if isinstance(obj, ROOT.TNamed):
-                        obj.SetName(objectName)
-                changeDirectory(destFile, destPathSplit)
-                obj.Write()
-            obj.Delete()
+                    logging.warning(OVERWRITE_ERROR.format(targetName, targetName))
+                    retcode += 1
+                    obj.Delete()
+                    continue
+            # Perform in-place rename
+            if isinstance(obj, ROOT.TNamed):
+                obj.SetName(targetName)
+            changeDirectory(destFile, destPathSplit)
+            # Use kOverwrite so we do not create a new cycle
+            obj.Write("", ROOT.TObject.kOverwrite)
+            # IMPORTANT: Do NOT delete obj (it's original in same file)
+            continue
+
+        # General same-file copy/replace: clone before deleting anything
+        if sameFile:
+            objToWrite = obj.Clone()
+        else:
+            objToWrite = obj
+
+        # Deletion step (only affects destination, do AFTER cloning)
+        if replaceOption and targetName and isExisting(destFile, destPathSplit + [targetName]):
+            retcodeTemp = deleteObject(destFile, destPathSplit + [targetName])
+            if retcodeTemp:
+                retcode += retcodeTemp
+                # Clean up clone if created
+                if objToWrite is not obj:
+                    objToWrite.Delete()
+                continue
+
+        # Rename clone (or original if cross-file) if TNamed
+        if isinstance(objToWrite, ROOT.TNamed) and targetName:
+            objToWrite.SetName(targetName)
+
+        changeDirectory(destFile, destPathSplit)
+
+        if hasattr(objToWrite, 'InheritsFrom') and objToWrite.InheritsFrom('TCollection'):
+            ROOT.gDirectory.WriteObject(objToWrite, targetName)
+        else:
+            objToWrite.Write()
+
+        # Delete only the temporary clone or cross-file object
+        if objToWrite is not obj:
+            objToWrite.Delete()
+        else:
+            # Cross-file original Python proxy corresponds to a newly read object; safe to delete
+            if not sameFile:
+                objToWrite.Delete()
+
     changeDirectory(destFile, destPathSplit)
     ROOT.gDirectory.SaveSelf(ROOT.kTRUE)
     return retcode
