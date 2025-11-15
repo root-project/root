@@ -4474,6 +4474,7 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
    }
 
    TH2F *h = theScatter->GetHistogram();
+   h->SetContour(gStyle->GetNumberOfColors()); // Ensure same number of divisions in underlying hist than in TScatter palette
    if (optionAxis) {
       h->Paint(" ");
       if (h->GetMinimum() < h->GetMaximum()) {
