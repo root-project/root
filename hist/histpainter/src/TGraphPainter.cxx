@@ -4468,7 +4468,7 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
    TH2F *h = theScatter->GetHistogram();
    h->SetContour(gStyle->GetNumberOfColors()); // Ensure same number of divisions in underlying hist than in TScatter palette
    if (optionAxis) {
-      h->Paint(" ");
+      h->Paint("COL1"); // avoid h empty bins to be drawn as background if negative Z values in scatter plot
       if (h->GetMinimum() < h->GetMaximum()) {
          if (minc<h->GetMinimum()) minc = h->GetMinimum();
          if (maxc>h->GetMaximum()) maxc = h->GetMaximum();
