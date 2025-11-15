@@ -17,10 +17,5 @@ else()
       PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
 endif()
 
-if(NOT MSVC)
-    # These tests fail on Windows because of a problem with std::any
-  # input_line_33:7:52: error: address of overloaded function 'make_any' does not match required type 'std::any (int &&)'
-  #     new (ret) (std::any) (((std::any (&)(int &&))std::make_any<int, int, 0>)((int&&)*(int*)args[0]));
-  ROOT_ADD_GTEST(testTPython testTPython.cxx LIBRARIES ROOTTPython ENVIRONMENT ${tpython_gtest_env})
-  ROOT_ADD_PYUNITTEST(test_tpython test_tpython.py)
-endif()
+ROOT_ADD_GTEST(testTPython testTPython.cxx LIBRARIES ROOTTPython ENVIRONMENT ${tpython_gtest_env})
+ROOT_ADD_PYUNITTEST(test_tpython test_tpython.py)
