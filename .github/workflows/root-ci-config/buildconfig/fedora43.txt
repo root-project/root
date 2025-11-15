@@ -3,6 +3,4 @@ builtin_zlib=ON
 builtin_zstd=ON
 experimental_adaptivecpp=ON
 pythia8=ON
-test_distrdf_dask=OFF
-test_distrdf_pyspark=OFF
 vdt=OFF
