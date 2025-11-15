@@ -175,7 +175,7 @@ ROOT_BUILD_OPTION(tmva-gpu OFF "Build TMVA with GPU support for deep learning (r
 ROOT_BUILD_OPTION(tmva-pymva OFF "Enable usage of Python ML libraries in TMVA (requires NumPy, works only with TensorFlow<=2.15)")
 ROOT_BUILD_OPTION(tmva-rmva OFF "Enable support for R in TMVA")
 ROOT_BUILD_OPTION(tmva-sofie OFF "Build TMVA with support for sofie - fast inference code generation (requires protobuf 3)")
-ROOT_BUILD_OPTION(tpython ON "Build the TPython class that allows you to run Python code from C++")
+ROOT_BUILD_OPTION(tpython ON "Build the TPython class that allows you to run Python code from C++, as well as other ROOT libraries that link against libpython")
 ROOT_BUILD_OPTION(unfold OFF "Enable the unfold package [GPL]")
 ROOT_BUILD_OPTION(unuran OFF "Enable support for UNURAN (package for generating non-uniform random numbers) [GPL]")
 ROOT_BUILD_OPTION(uring OFF "Enable support for io_uring (requires liburing and Linux kernel >= 5.1)")
