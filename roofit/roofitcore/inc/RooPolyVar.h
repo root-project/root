@@ -34,7 +34,7 @@ public:
    Int_t getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char *rangeName = nullptr) const override;
    double analyticalIntegral(Int_t code, const char *rangeName = nullptr) const override;
 
-   RooRealProxy const &x() const { return _x; }
+   RooAbsReal const &x() const { return _x.arg(); }
    RooArgList const &coefList() const { return _coefList; }
    int lowestOrder() const { return _lowestOrder; }
 
