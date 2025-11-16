@@ -79,19 +79,20 @@ public:
    {
       fSlow = slow;
       fSlowCnt = 0;
-      SetTime(slow ? 1000 : 10);
+      SetTime(slow ? 50 : 10);
    }
 
    /// used to send control messages to clients
    void Timeout() override
    {
-      if (fProcessing || fCanv.fProcessingData) return;
+      if (fProcessing || fCanv.fProcessingData)
+         return;
       fProcessing = kTRUE;
       Bool_t res = fCanv.CheckDataToSend();
       fProcessing = kFALSE;
       if (res) {
          fSlowCnt = 0;
-      } else if (++fSlowCnt > 10 && !IsSlow()) {
+      } else if (++fSlowCnt > 100 && !IsSlow()) {
          SetSlow(kTRUE);
       }
    }
