@@ -36,8 +36,10 @@
 #include <vector>
 
 class TClass;
+class TDataMember;
 class TEnum;
 class TObject;
+class TRealData;
 class TVirtualStreamerInfo;
 
 namespace ROOT {
@@ -197,6 +199,9 @@ private:
    /// Fields may not have an on-disk representation (e.g., when inserted by schema evolution), in which case the passed
    /// field descriptor is nullptr.
    std::vector<const TSchemaRule *> FindRules(const ROOT::RFieldDescriptor *fieldDesc);
+   /// Checks if the data member dm in fClass is a leaf count array. If so, returns a pointer to the data member
+   /// corresponding to the count leaf (which may be in a base class).
+   TRealData *IsLeafCountArray(const TDataMember &dm) const;
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;

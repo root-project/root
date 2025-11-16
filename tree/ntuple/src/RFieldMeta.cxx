@@ -239,6 +239,11 @@ ROOT::RClassField::RClassField(std::string_view fieldName, TClass *classp)
          }
       }
 
+      if (IsLeafCountArray(*dataMember)) {
+         throw RException(R__FAIL(std::string("leaf count arrays are currently unsupported: ") + GetTypeName() + "." +
+                                  dataMember->GetName()));
+      }
+
       auto subField = RFieldBase::Create(dataMember->GetName(), typeName).Unwrap();
 
       const auto normTypeName = ROOT::Internal::GetNormalizedUnresolvedTypeName(origTypeName);
@@ -271,6 +276,43 @@ void ROOT::RClassField::Attach(std::unique_ptr<RFieldBase> child, RSubFieldInfo 
    fMaxAlignment = std::max(fMaxAlignment, child->GetAlignment());
    fSubfieldsInfo.push_back(info);
    RFieldBase::Attach(std::move(child));
+}
+
+TRealData *ROOT::RClassField::IsLeafCountArray(const TDataMember &dm) const
+{
+   if (!(dm.Property() & kIsPointer) || !dm.GetTitle())
+      return nullptr;
+
+   std::string title = dm.GetTitle();
+   if (title.length() == 0 || title[0] != '[')
+      return nullptr;
+
+   auto idxRight = title.find_first_of("]", 1);
+   if (idxRight == std::string::npos)
+      return nullptr;
+
+   auto nameCountLeaf = title.substr(1, idxRight - 1);
+   for (auto realMember : ROOT::Detail::TRangeStaticCast<TRealData>(*fClass->GetListOfRealData())) {
+      if (nameCountLeaf != realMember->GetName())
+         continue;
+
+      const auto dmCountLeaf = realMember->GetDataMember();
+
+      const auto dtCountLeaf = dmCountLeaf->GetDataType();
+      if (!dtCountLeaf || ((dtCountLeaf->GetType() != kInt_t) && (dtCountLeaf->GetType() != kUInt_t))) {
+         throw ROOT::RException(
+            R__FAIL(std::string("invalid count leaf type: ") + GetTypeName() + "." + realMember->GetName()));
+      }
+
+      if (realMember->GetThisOffset() >= dm.GetOffset()) {
+         throw ROOT::RException(R__FAIL(std::string("count leaf member defined after array: ") + GetTypeName() + "." +
+                                        realMember->GetName()));
+      }
+
+      return realMember;
+   }
+
+   throw ROOT::RException(R__FAIL(std::string("invalid count leaf name in: ") + GetTypeName() + "." + dm.GetName()));
 }
 
 std::vector<const ROOT::TSchemaRule *> ROOT::RClassField::FindRules(const ROOT::RFieldDescriptor *fieldDesc)

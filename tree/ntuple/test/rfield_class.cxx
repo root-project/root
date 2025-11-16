@@ -466,3 +466,36 @@ TEST(RNTuple, StreamerInfoRecords)
       }
    }
 }
+
+TEST(RNTuple, LeafCountInClass)
+{
+   auto model = ROOT::RNTupleModel::Create();
+
+   try {
+      model->MakeField<LeafCountInClassFail1>("f");
+      FAIL() << "typo in count leaf name should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid count leaf name"));
+   }
+
+   try {
+      model->MakeField<LeafCountInClassFail2>("f");
+      FAIL() << "invalid count leaf type should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid count leaf type"));
+   }
+
+   try {
+      model->MakeField<LeafCountInClassFail3>("f");
+      FAIL() << "wrong order of count leaf member should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("count leaf member defined after array"));
+   }
+
+   try {
+      model->MakeField<LeafCountInClass>("f");
+      FAIL() << "class with leaf count array should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("leaf count arrays are currently unsupported"));
+   }
+}

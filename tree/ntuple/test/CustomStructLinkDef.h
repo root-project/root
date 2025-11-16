@@ -175,4 +175,10 @@
 #pragma read sourceClass = "v1::ExampleMC" source = "v1::Vector3D fSpin" version="[1-]" targetClass = \
    "v2::ExampleMC" target = "fHelicity" code = "{ fHelicity = onfile.fSpin.fZ; }"
 
+#pragma link C++ class LeafCountInClassBase+;
+#pragma link C++ class LeafCountInClass+;
+#pragma link C++ class LeafCountInClassFail1+;
+#pragma link C++ class LeafCountInClassFail2+;
+#pragma link C++ class LeafCountInClassFail3+;
+
 #endif
