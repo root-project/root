@@ -210,6 +210,15 @@ inline double getLog(double prob, RooAbsReal const *caller)
    return std::log(prob);
 }
 
+void replaceOrAdd(RooLinkedList &lst, TObject &obj)
+{
+   TObject *old = lst.FindObject(obj.GetName());
+   if (old)
+      lst.Replace(old, &obj);
+   else
+      lst.Add(&obj);
+}
+
 } // namespace
 
 using std::endl, std::string, std::ostream, std::vector, std::pair, std::make_pair;
@@ -2173,7 +2182,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   // Append overriding scale factor command at end of original command list
   RooCmdArg tmp = RooFit::Normalization(scaleFactor,Raw) ;
   tmp.setInt(1,1) ; // Flag this normalization command as created for internal use (so that VisualizeError can strip it)
-  cmdList.Add(&tmp) ;
+  replaceOrAdd(cmdList, tmp);
 
   // Was a component selected requested
   if (haveCompSel) {

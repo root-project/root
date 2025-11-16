@@ -87,6 +87,15 @@ std::map<std::string, RooAbsPdf *> createPdfMap(const RooArgList &inPdfList, Roo
    return pdfMap;
 }
 
+void replaceOrAdd(RooLinkedList &lst, TObject &obj)
+{
+   TObject *old = lst.FindObject(obj.GetName());
+   if (old)
+      lst.Replace(old, &obj);
+   else
+      lst.Add(&obj);
+}
+
 } // namespace
 
 RooSimultaneous::InitializationOutput::~InitializationOutput() = default;
@@ -774,9 +783,9 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     // WVE -- do not adjust normalization for asymmetry plots
     RooLinkedList cmdList2(cmdList) ;
     if (!cmdList.find("Asymmetry")) {
-      cmdList2.Add(&tmp1) ;
+      replaceOrAdd(cmdList2, tmp1);
     }
-    cmdList2.Add(&tmp2) ;
+    replaceOrAdd(cmdList2, tmp2);
 
     // Plot single component
     RooPlot* retFrame = getPdf(idxCatClone->getCurrentLabel())->plotOn(frame,cmdList2);
@@ -875,15 +884,15 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   RooCmdArg tmp2 = RooFit::ProjWData(*projDataSet,*projDataTmp) ;
   // WVE -- do not adjust normalization for asymmetry plots
   if (!cmdList.find("Asymmetry")) {
-    cmdList2.Add(&tmp1) ;
+    replaceOrAdd(cmdList2, tmp1);
   }
-  cmdList2.Add(&tmp2) ;
+  replaceOrAdd(cmdList2, tmp2);
 
   RooPlot* frame2 ;
   if (!projSetTmp.empty()) {
     // Plot temporary function
     RooCmdArg tmp3 = RooFit::Project(projSetTmp) ;
-    cmdList2.Add(&tmp3) ;
+    replaceOrAdd(cmdList2, tmp3);
     frame2 = plotVar.plotOn(frame,cmdList2) ;
   } else {
     // Plot temporary function
