@@ -810,8 +810,8 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     }
     if (skip) continue ;
 
-    // Instantiate a RRV holding this pdfs weight fraction
-    wgtCompList.addOwned(std::make_unique<RooRealVar>(proxy->name(),"coef",wTable->getFrac(proxy->name())));
+    // Instantiate a RRV holding this pdfs weight
+    wgtCompList.addOwned(std::make_unique<RooRealVar>(proxy->name(),"coef",wTable->get(proxy->name())));
     sumWeight += wTable->getFrac(proxy->name()) ;
 
     // Add the PDF to list list

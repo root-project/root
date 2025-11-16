@@ -9,11 +9,13 @@
 #include <RooGenericPdf.h>
 #include <RooHelpers.h>
 #include <RooMinimizer.h>
+#include <RooPlot.h>
 #include <RooProdPdf.h>
 #include <RooRandom.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooThresholdCategory.h>
+#include <RooUniform.h>
 #include <RooWorkspace.h>
 
 #include "gtest_wrapper.h"
@@ -506,4 +508,36 @@ TEST_P(TestStatisticTest, RooSimultaneousSingleChannelCrossCheckWithCondVar)
 
    EXPECT_TRUE(resSimWrapped->isIdentical(*resDirect))
       << "Inconsistency in RooSimultaneous wrapping with ConditionalObservables";
+}
+
+/// GitHub issue #20383.
+/// Check that the the simultaneous pdf is normalized correctly when plotting
+/// with a projection dataset.
+TEST(RooSimultaneous, PlotProjWData)
+{
+   RooRealVar x("x", "x", -8, 8);
+   x.setBins(1);
+
+   RooUniform model{"model", "", x};
+   RooUniform model_ctl{"model_ctl", "", x};
+
+   RooCategory sample("sample", "sample", {{"physics", 0}, {"control", 1}});
+
+   RooArgSet vars{x, sample};
+   RooDataHist combData{"combData", "", vars};
+   sample.setLabel("physics");
+   combData.add(vars, 1000);
+   sample.setLabel("control");
+   combData.add(vars, 2000);
+
+   RooSimultaneous simPdf("simPdf", "simultaneous pdf", {{"physics", &model}, {"control", &model_ctl}}, sample);
+
+   RooPlot *frame = x.frame();
+   combData.plotOn(frame);
+   simPdf.plotOn(frame, RooFit::ProjWData(sample, combData));
+
+   // The pdf should be normalized to match the data. In this test, we plot a
+   // single bin and the model is uniform, to the curve should be equal to the
+   // sum of data entries in the center.
+   EXPECT_DOUBLE_EQ(frame->getCurve()->interpolate(0.), combData.sumEntries());
 }
