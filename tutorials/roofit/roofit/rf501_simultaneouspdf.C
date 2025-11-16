@@ -92,7 +92,7 @@ void rf501_simultaneouspdf()
    // ---------------------------------------------------
 
    // Perform simultaneous fit of model to data and model_ctl to data_ctl
-   std::unique_ptr<RooFitResult> fitResult{simPdf.fitTo(combData, PrintLevel(-1), Save(), PrintLevel(-1))};
+   std::unique_ptr<RooFitResult> fitResult{simPdf.fitTo(combData, Save(), PrintLevel(-1))};
    fitResult->Print();
 
    // P l o t   m o d e l   s l i c e s   o n   d a t a    s l i c e s
