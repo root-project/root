@@ -797,7 +797,6 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     auto protoOwner = std::make_unique<RooWorkspace>(channel_name.c_str(), (channel_name+" workspace").c_str());
     RooWorkspace &proto = *protoOwner;
     auto proto_config = make_unique<ModelConfig>("ModelConfig", &proto);
-    proto_config->SetWorkspace(proto);
 
     // preprocess functions
     for(auto const& func : fPreprocessFunctions){
