@@ -22,7 +22,11 @@ typedef float    FTGL_FLOAT;
 #include "Windows4Root.h"
 #endif
 
-#include <GL/glew.h>
+#ifdef __APPLE__
+#include <OpenGL/glu.h>
+#else
+#include <GL/glu.h>
+#endif
 
 #ifndef WIN32
     // Required for compatibility with glext.h style function definitions of
