@@ -34,13 +34,11 @@
 #include <RooGlobalFunc.h>
 #include <RooHelpers.h>
 #include <RooHistFunc.h>
-#include <RooMultiVarGaussian.h>
 #include <RooNumIntConfig.h>
 #include <RooPoisson.h>
 #include <RooPolyVar.h>
 #include <RooProdPdf.h>
 #include <RooProduct.h>
-#include <RooProfileLL.h>
 #include <RooRandom.h>
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
@@ -56,8 +54,6 @@
 
 #include "TH1.h"
 #include "TStopwatch.h"
-#include "TVectorD.h"
-#include "TMatrixDSym.h"
 
 // specific to this package
 #include <RooStats/HistFactory/Detail/HistFactoryImpl.h>
@@ -1515,7 +1511,9 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       if(!model) std::cout <<"failed to find model for channel"<< std::endl;
       //      std::cout << "int = " << model->createIntegral(*obsN)->getVal() << std::endl;
       models.push_back(model);
-      globalObs.add(*ch->set("globalObservables"), /*silent=*/true); // silent because observables might exist in other channel.
+      auto &modelConfig = *static_cast<ModelConfig *>(chs[i]->obj("ModelConfig"));
+      // silent because observables might exist in other channel:
+      globalObs.add(*modelConfig.GetGlobalObservables(), /*silent=*/true);
 
       //      constrainedParams->add( * ch->set("constrainedParams") );
       pdfMap[channel_name]=model;
