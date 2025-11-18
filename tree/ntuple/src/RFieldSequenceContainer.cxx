@@ -1051,3 +1051,129 @@ void ROOT::RArrayAsVectorField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visit
 {
    visitor.VisitArrayAsVectorField(*this);
 }
+
+//------------------------------------------------------------------------------
+
+ROOT::RLeafCountArrayField::RLeafCountArrayField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
+                                                 std::ptrdiff_t countLeafDelta, bool hasPersistentCountLeaf)
+   : ROOT::RFieldBase(fieldName, "ROOT::VecOps::RVec<" + itemField->GetTypeName() + ">",
+                      ROOT::ENTupleStructure::kCollection, false /* isSimple */),
+     fItemSize(itemField->GetValueSize()),
+     fCountLeafDelta(countLeafDelta),
+     fHasPersistentCountLeaf(hasPersistentCountLeaf)
+{
+   static_assert(sizeof(int) == sizeof(std::int32_t)); // implicit assumption in this field
+   assert(fCountLeafDelta < 0);                        // the count leaf must be defined before the array
+
+   if (!(itemField->GetTraits() & kTraitTriviallyDestructible)) {
+      throw RException(R__FAIL("RLeafCountArrayField only supports trivially destructible item types"));
+   }
+   // Note that we expect the array pointer to be deleted by the user.
+   fTraits |= kTraitTriviallyDestructible | (itemField->GetTraits() & kTraitTriviallyConstructible);
+   Attach(std::move(itemField));
+}
+
+std::unique_ptr<ROOT::RFieldBase> ROOT::RLeafCountArrayField::CloneImpl(std::string_view newName) const
+{
+   auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
+   return std::unique_ptr<RLeafCountArrayField>(
+      new RLeafCountArrayField(newName, std::move(newItemField), fCountLeafDelta, fHasPersistentCountLeaf));
+}
+
+const ROOT::RFieldBase::RColumnRepresentations &ROOT::RLeafCountArrayField::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{ENTupleColumnType::kSplitIndex64},
+                                                  {ENTupleColumnType::kIndex64},
+                                                  {ENTupleColumnType::kSplitIndex32},
+                                                  {ENTupleColumnType::kIndex32}},
+                                                 {});
+   return representations;
+}
+
+void ROOT::RLeafCountArrayField::GenerateColumns()
+{
+   GenerateColumnsImpl<ROOT::Internal::RColumnIndex>();
+}
+
+void ROOT::RLeafCountArrayField::GenerateColumns(const ROOT::RNTupleDescriptor &desc)
+{
+   GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
+}
+
+std::size_t ROOT::RLeafCountArrayField::AppendImpl(const void *from)
+{
+   auto arrPtr = *reinterpret_cast<const unsigned char *const *>(from);
+   auto count = *reinterpret_cast<const std::uint32_t *>(static_cast<const unsigned char *>(from) + fCountLeafDelta);
+   std::size_t nbytes = 0;
+
+   if (fSubfields[0]->IsSimple() && count) {
+      GetPrincipalColumnOf(*fSubfields[0])->AppendV(arrPtr, count);
+      nbytes += count * GetPrincipalColumnOf(*fSubfields[0])->GetElement()->GetPackedSize();
+   } else {
+      for (unsigned i = 0; i < count; ++i) {
+         nbytes += CallAppendOn(*fSubfields[0], arrPtr + (i * fItemSize));
+      }
+   }
+
+   fNWritten += count;
+   fPrincipalColumn->Append(&fNWritten);
+   return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
+}
+
+void ROOT::RLeafCountArrayField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
+{
+   auto typedValue = reinterpret_cast<unsigned char **>(to);
+   auto countPtr = reinterpret_cast<std::uint32_t *>(static_cast<unsigned char *>(to) + fCountLeafDelta);
+
+   ROOT::NTupleSize_t nItems;
+   RNTupleLocalIndex collectionStart;
+   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
+   if (nItems > std::numeric_limits<std::uint32_t>::max()) {
+      throw RException(R__FAIL("count leaf overflow"));
+   }
+
+   if (fHasPersistentCountLeaf) {
+      if (nItems != *countPtr) {
+         throw RException(R__FAIL("count leaf value different from collection size on disk"));
+      }
+   } else {
+      *countPtr = nItems;
+   }
+
+   operator delete(*typedValue);
+   *typedValue = static_cast<unsigned char *>(operator new(nItems * fItemSize));
+
+   if (fSubfields[0]->IsSimple()) {
+      if (nItems)
+         GetPrincipalColumnOf(*fSubfields[0])->ReadV(collectionStart, nItems, *typedValue);
+   } else {
+      for (std::size_t i = 0; i < nItems; ++i) {
+         CallReadOn(*fSubfields[0], collectionStart + i, *typedValue + (i * fItemSize));
+      }
+   }
+}
+
+void ROOT::RLeafCountArrayField::ReconcileOnDiskField(const RNTupleDescriptor &desc)
+{
+   EnsureMatchingOnDiskField(desc, kDiffTypeName).ThrowOnError();
+}
+
+std::vector<ROOT::RFieldBase::RValue> ROOT::RLeafCountArrayField::SplitValue(const RValue &value) const
+{
+   auto arrPtr = *reinterpret_cast<unsigned char **>(value.GetPtr<void>().get());
+   auto count =
+      *reinterpret_cast<std::uint32_t *>(static_cast<unsigned char *>(value.GetPtr<void>().get()) + fCountLeafDelta);
+
+   std::vector<RValue> result;
+   result.reserve(count);
+   for (std::uint32_t i = 0; i < count; ++i) {
+      result.emplace_back(
+         fSubfields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), arrPtr + i * fItemSize)));
+   }
+   return result;
+}
+
+void ROOT::RLeafCountArrayField::AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitLeafCountArrayField(*this);
+}

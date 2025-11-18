@@ -417,6 +417,51 @@ public:
    void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
 };
 
+/**
+\class ROOT::RLeafCountArrayField
+\brief A field for an RVec field as a class member on disk that is represented as leaf count array` in memory.
+\ingroup NTuple
+*/
+class RLeafCountArrayField final : public RFieldBase {
+   friend class RClassField; // only class fields are able to construct this
+
+private:
+   std::size_t fItemSize{0};                  ///< The size of a child field's item
+   ROOT::Internal::RColumnIndex fNWritten{0}; ///< Number of items written in the current cluster
+   std::ptrdiff_t fCountLeafDelta{0};         ///< Offset delta of the count leaf int member relative to the array
+   bool fHasPersistentCountLeaf{true};        ///< The count leaf may be only transient in RNTuple
+
+   RLeafCountArrayField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
+                        std::ptrdiff_t countLeafDelta, bool hasPersistentCountLeaf);
+
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumns() final;
+   void GenerateColumns(const ROOT::RNTupleDescriptor &desc) final;
+
+   void ConstructValue(void *where) const final { *reinterpret_cast<void **>(where) = nullptr; }
+
+   std::size_t AppendImpl(const void *from) final;
+   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
+
+   void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
+
+   void CommitClusterImpl() final { fNWritten = 0; }
+
+public:
+   RLeafCountArrayField(RLeafCountArrayField &&other) = default;
+   RLeafCountArrayField &operator=(RLeafCountArrayField &&other) = default;
+   ~RLeafCountArrayField() final = default;
+
+   std::vector<RValue> SplitValue(const RValue &value) const final;
+
+   size_t GetValueSize() const final { return sizeof(void *); }
+   size_t GetAlignment() const final { return std::alignment_of<void *>(); }
+   void AcceptVisitor(ROOT::Detail::RFieldVisitor &visitor) const final;
+};
+
 } // namespace ROOT
 
 #endif
