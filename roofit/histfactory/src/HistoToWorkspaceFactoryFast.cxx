@@ -71,6 +71,7 @@
 #include <fstream>
 #include <iomanip>
 #include <memory>
+#include <set>
 #include <utility>
 
 constexpr double alphaLow = -5.0;
@@ -1476,6 +1477,11 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
      }
      if (chs.size()  <  ch_names.size() ) {
         Error("MakeCombinedModel","Input vector of workspace has an invalid size - return a nullptr");
+        return nullptr;
+     }
+     std::set<std::string> ch_names_set{ch_names.begin(), ch_names.end()};
+     if (ch_names.size() != ch_names_set.size()) {
+        Error("MakeCombinedModel", "Input vector of channel names has duplicate names - return a nullptr");
         return nullptr;
      }
 
