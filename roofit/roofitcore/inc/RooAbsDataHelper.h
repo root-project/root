@@ -99,14 +99,17 @@ class RActionImpl;
 ///
 /// All arguments passed to  are forwarded to RooDataSet::RooDataSet() / RooDataHist::RooDataHist().
 ///
-/// #### Usage example:
+/// #### Usage example for a weighted RooDataSet:
 /// ```
 ///    RooRealVar x("x", "x", -5.,   5.);
 ///    RooRealVar y("y", "y", -50., 50.);
-///    auto myDataSet = rdataframe.Book<double, double>(
-///      RooDataSetHelper{"dataset",          // Name   (directly forwarded to RooDataSet::RooDataSet())
-///                      "Title of dataset",  // Title  (                   ~ " ~                      )
-///                      RooArgSet(x, y) },   // Variables to create in dataset
+///    auto myDataSet = rdataframe.Book<double, double, double>( // three template arguments for "x", "y", and "weight"
+///      RooDataSetHelper{
+///          "dataset",                   // Name   (directly forwarded to RooDataSet::RooDataSet())
+///          "Title of dataset",          // Title  (                   ~ " ~                      )
+///          RooArgSet(x, y),             // Variables to create in dataset
+///          RooFit::WeightVar("weight")  // skip in case of RooDataHist or unweighted dataset
+///      },
 ///      {"x", "y", "weight"}                 // Column names from RDataFrame
 ///                                           // (this example uses an additional column for the weight)
 ///    );
