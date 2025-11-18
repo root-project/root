@@ -2,38 +2,8 @@ import difflib
 import json
 import os
 import shutil
-import subprocess
 import sys
 import tempfile
-
-nbExtension = ".ipynb"
-convCmdTmpl = (
-    "%s nbconvert "
-    "--to notebook "
-    "--ExecutePreprocessor.kernel_name=%s "
-    "--ExecutePreprocessor.enabled=True "
-    "--ExecutePreprocessor.timeout=3600 "
-    "--ExecutePreprocessor.startup_timeout=180 "
-    "%s "
-    "--output %s"
-)
-pythonInterpName = "python3"
-
-rootKernelFileContent = (
-    """{
- "language": "c++",
- "display_name": "ROOT C++",
- "argv": [
-  "%s",
-  "-m",
-  "JupyROOT.kernel.rootkernel",
-  "-f",
-  "{connection_file}"
- ]
-}
-"""
-    % pythonInterpName
-)
 
 
 # Replace the criterion according to which a line shall be skipped
@@ -134,7 +104,21 @@ def createKernelSpec():
     rootKernelPath = os.path.join(kernelsPath, "root")
     os.mkdir(rootKernelPath)
     with open(os.path.join(rootKernelPath, "kernel.json"), "w") as kernel_file:
-        kernel_file.write(rootKernelFileContent)
+        kernel_file.write(
+            """{
+         "language": "c++",
+         "display_name": "ROOT C++",
+         "argv": [
+          "%s",
+          "-m",
+          "JupyROOT.kernel.rootkernel",
+          "-f",
+          "{connection_file}"
+         ]
+        }
+        """
+            % sys.executable
+        )
 
     return tmpd
 
@@ -149,39 +133,53 @@ def addEtcToEnvironment(inNBDirName):
     return ipythondir
 
 
-def getInterpreterName():
-    """Find if the 'jupyter' executable is available on the platform. If
-    yes, return its name else return 'ipython'
-    """
-    ret = subprocess.call("type jupyter", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    return "jupyter" if ret == 0 else "i%s" % pythonInterpName
-
-
 def getKernelName(inNBName):
     with open(inNBName) as f:
         nbj = json.load(f)
     if nbj["metadata"]["kernelspec"]["language"] == "python":
-        return pythonInterpName
+        return "python3"
     else:  # we support only Python and C++
         return "root"
 
 
-def canReproduceNotebook(inNBName, kernelName, needsCompare):
+def canReproduceNotebook(inNBName, needsCompare):
+    import nbformat
+    from nbconvert.preprocessors import ExecutePreprocessor
+
     tmpDir = addEtcToEnvironment(os.path.dirname(inNBName))
-    outNBName = inNBName.replace(nbExtension, "_out" + nbExtension)
-    interpName = getInterpreterName()
-    convCmd = convCmdTmpl % (interpName, kernelName, inNBName, outNBName)
-    exitStatus = os.system(convCmd)  # we use system to inherit the environment in os.environ
-    shutil.rmtree(tmpDir)
+    outNBName = inNBName.replace(".ipynb", "_out.ipynb")
+
+    # Load input notebook
+    with open(inNBName, "r", encoding="utf-8") as f:
+        nb = nbformat.read(f, as_version=4)
+
+    # Configure execution
+    ep = ExecutePreprocessor(
+        kernel_name=getKernelName(inNBName),
+        timeout=3600,
+        startup_timeout=180,
+        allow_errors=False,
+    )
+
+    # Run the notebook
+    ep.preprocess(nb, {"metadata": {"path": os.path.dirname(inNBName)}})
+
+    # Export executed notebook
+    with open(outNBName, "w", encoding="utf-8") as f:
+        nbformat.write(nb, f)
+
+    # Compare or return success
     if needsCompare:
         return compareNotebooks(inNBName, outNBName)
     else:
-        return exitStatus
+        return 0  # success
+
+    shutil.rmtree(tmpDir)
 
 
 def isInputNotebookFileName(filename):
     if not filename.endswith(".ipynb"):
-        print("Notebook files shall have the %s extension" % nbExtension)
+        print("Notebook files shall have the .ipynb extension")
         return False
     return True
 
@@ -200,13 +198,5 @@ if __name__ == "__main__":
     if not isInputNotebookFileName(nbFileName):
         sys.exit(1)
 
-    try:
-        # If jupyter is there, ipython is too
-        import jupyter
-    except:
-        raise ImportError("Cannot import jupyter")
-
-    kernelName = getKernelName(nbFileName)
-
-    retCode = canReproduceNotebook(nbFileName, kernelName, needsCompare)
+    retCode = canReproduceNotebook(nbFileName, needsCompare)
     sys.exit(retCode)
