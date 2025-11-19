@@ -233,8 +233,7 @@ TEST(RDataFrameUtils, TypeName2TypeID)
 {
    EXPECT_EQ(typeid(float), RDFInt::TypeName2TypeID("float"));
    EXPECT_EQ(typeid(std::vector<float>), RDFInt::TypeName2TypeID("std::vector<float>"));
+   EXPECT_EQ(typeid(std::vector<std::vector<float>>), RDFInt::TypeName2TypeID("std::vector<std::vector<float>>"));
    EXPECT_THROW(RDFInt::TypeName2TypeID("float *"), std::runtime_error);
    EXPECT_THROW(RDFInt::TypeName2TypeID("float &"), std::runtime_error);
-   // TODO(jblomer): Ideally, we would want the next one not to throw an exception
-   EXPECT_THROW(RDFInt::TypeName2TypeID("std::vector<std::vector<float>>"), std::runtime_error);
 }
