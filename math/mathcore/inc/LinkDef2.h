@@ -174,6 +174,7 @@
 #pragma link C++ class ROOT::Math::DistSamplerOptions+;
 #pragma link C++ class ROOT::Math::GoFTest+;
 #pragma link C++ class std::vector<std::vector<double> >+;
+#pragma link C++ class std::vector<std::vector<float> >+;
 
 #pragma link C++ class ROOT::Math::Delaunay2D+;
 
