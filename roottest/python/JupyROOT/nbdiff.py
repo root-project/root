@@ -7,9 +7,9 @@ import tempfile
 
 
 # Replace the criterion according to which a line shall be skipped
-def customLineJunkFilter(line):
+def should_keep_line(line):
     # Skip the banner and empty lines
-    junkLines = [
+    skip_patterns = [
         "Info in <TUnixSystem::ACLiC",
         "Info in <TMacOSXSystem::ACLiC",
         "FAILED TO establish the default connection to the WindowServer",
@@ -18,8 +18,8 @@ def customLineJunkFilter(line):
         '     "execution_count":',
         "libclang_rt.asan-",
     ]
-    for junkLine in junkLines:
-        if junkLine in line:
+    for pattern in skip_patterns:
+        if pattern in line:
             return False
     return True
 
@@ -44,7 +44,7 @@ def removeCellMetadata(lines):
 
 def getFilteredLines(fileName):
     with open(fileName) as f:
-        filteredLines = list(filter(customLineJunkFilter, f.readlines()))
+        filteredLines = list(filter(should_keep_line, f.readlines()))
 
     # Sometimes the jupyter server adds a new line at the end of the notebook
     # and nbconvert does not.
@@ -136,10 +136,7 @@ def addEtcToEnvironment(inNBDirName):
 def getKernelName(inNBName):
     with open(inNBName) as f:
         nbj = json.load(f)
-    if nbj["metadata"]["kernelspec"]["language"] == "python":
-        return "python3"
-    else:  # we support only Python and C++
-        return "root"
+    return nbj["metadata"]["kernelspec"]["name"]
 
 
 def canReproduceNotebook(inNBName, needsCompare):
