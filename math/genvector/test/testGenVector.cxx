@@ -814,9 +814,9 @@ int testLorentzVector()
    iret |= compare(v1.DeltaR(v2), 4.60575f);
    // Result cross-validated using:
    // TLorentzVector t1, t2;
-   // t1.SetPtEtaPhiE(1,2,3,4); t2.SetPtEtaPhiE(5,6,7,8);
+   // t1.SetPtEtaPhiM(1,2,3,4); t2.SetPtEtaPhiM(5,6,7,8);
    // t1.DeltaR(t2)
-   
+
    // test structured bindings
    auto const [x, y, z, E] = v1;
    iret |= (x != v1.X());
