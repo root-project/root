@@ -239,12 +239,19 @@ ROOT::RClassField::RClassField(std::string_view fieldName, TClass *classp)
          }
       }
 
-      if (IsLeafCountArray(*dataMember)) {
-         throw RException(R__FAIL(std::string("leaf count arrays are currently unsupported: ") + GetTypeName() + "." +
-                                  dataMember->GetName()));
-      }
+      const auto memberName = dataMember->GetName();
+      std::unique_ptr<RFieldBase> subField;
 
-      auto subField = RFieldBase::Create(dataMember->GetName(), typeName).Unwrap();
+      if (auto realMember = IsLeafCountArray(*dataMember)) {
+         assert(typeName.length() > 0);
+         assert(*typeName.rbegin() == '*');
+         auto itemField = RFieldBase::Create("_0", typeName.substr(0, typeName.length() - 1)).Unwrap();
+         const std::ptrdiff_t offsetDelta = realMember->GetThisOffset() - dataMember->GetOffset();
+         subField = std::unique_ptr<RLeafCountArrayField>(new RLeafCountArrayField(
+            memberName, std::move(itemField), offsetDelta, true /* fHasPersistentCountLeaf */));
+      } else {
+         subField = RFieldBase::Create(memberName, typeName).Unwrap();
+      }
 
       const auto normTypeName = ROOT::Internal::GetNormalizedUnresolvedTypeName(origTypeName);
       if (normTypeName == subField->GetTypeName()) {

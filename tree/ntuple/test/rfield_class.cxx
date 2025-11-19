@@ -492,10 +492,65 @@ TEST(RNTuple, LeafCountInClass)
       EXPECT_THAT(err.what(), testing::HasSubstr("count leaf member defined after array"));
    }
 
-   try {
-      model->MakeField<LeafCountInClass>("f");
-      FAIL() << "class with leaf count array should throw";
-   } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("leaf count arrays are currently unsupported"));
+   FileRaii fileGuard("test_ntuple_leaf_count_in_class.root");
+
+   {
+      auto f = model->MakeField<LeafCountInClass>("f");
+      auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      f->fPayload1 = new unsigned char[2];
+      f->fPayload2 = new unsigned char[2];
+
+      f->fSize = 1;
+      f->fPayload1[0] = 2;
+      f->fPayload2[0] = 3;
+      writer->Fill();
+      f->fSize = 0;
+      writer->Fill();
+      f->fSize = 2;
+      f->fPayload1[0] = 4;
+      f->fPayload1[1] = 5;
+      f->fPayload2[0] = 6;
+      f->fPayload2[1] = 7;
+      writer->Fill();
+
+      delete[] f->fPayload1;
+      delete[] f->fPayload2;
    }
+
+   auto reader = ROOT::RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(3u, reader->GetNEntries());
+
+   auto viewPayload1 = reader->GetView<ROOT::RVec<unsigned char>>("f.fPayload1");
+   auto viewPayload2 = reader->GetView<ROOT::RVec<unsigned char>>("f.fPayload2");
+   EXPECT_EQ(1u, viewPayload1(0).size());
+   EXPECT_EQ(2u, viewPayload1(0).at(0));
+   EXPECT_EQ(1u, viewPayload2(0).size());
+   EXPECT_EQ(3u, viewPayload2(0).at(0));
+
+   EXPECT_EQ(0u, viewPayload1(1).size());
+   EXPECT_EQ(0u, viewPayload2(1).size());
+
+   EXPECT_EQ(2u, viewPayload1(2).size());
+   EXPECT_EQ(4u, viewPayload1(2).at(0));
+   EXPECT_EQ(5u, viewPayload1(2).at(1));
+   EXPECT_EQ(2u, viewPayload2(2).size());
+   EXPECT_EQ(6u, viewPayload2(2).at(0));
+   EXPECT_EQ(7u, viewPayload2(2).at(1));
+
+   auto f = reader->GetModel().GetDefaultEntry().GetPtr<LeafCountInClass>("f");
+
+   reader->LoadEntry(0);
+   EXPECT_EQ(1, f->fSize);
+   EXPECT_EQ(2, f->fPayload1[0]);
+   EXPECT_EQ(3, f->fPayload2[0]);
+
+   reader->LoadEntry(1);
+   EXPECT_EQ(0, f->fSize);
+
+   reader->LoadEntry(2);
+   EXPECT_EQ(2, f->fSize);
+   EXPECT_EQ(4, f->fPayload1[0]);
+   EXPECT_EQ(5, f->fPayload1[1]);
+   EXPECT_EQ(6, f->fPayload2[0]);
+   EXPECT_EQ(7, f->fPayload2[1]);
 }
