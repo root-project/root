@@ -71,7 +71,7 @@ auto model = ROOT::RNTupleModel::Create();
 auto pFoo = model->MakeField<int>("foo");
 
 /// 2. Create writer from the model.
-auto writer = ROOT::RNTupleReader::Recreate(std::move(model), "myNTuple", "some/file.root");
+auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "myNTuple", "some/file.root");
 
 /// 3. Write into it.
 for (int i = 0; i < 10; ++i) {
