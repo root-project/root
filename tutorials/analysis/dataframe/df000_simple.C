@@ -19,7 +19,7 @@ void df000_simple()
    ROOT::RDataFrame rdf(100);
 
    // Define a new column `x` that contains random numbers
-   auto rdf_x = rdf.Define("x", [](){ return gRandom->Rndm(); });
+   auto rdf_x = rdf.Define("x", [](){ return; });
 
    // Create a histogram from `x`
    auto h = rdf_x.Histo1D("x");
