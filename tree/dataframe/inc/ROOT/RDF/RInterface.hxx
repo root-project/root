@@ -1243,7 +1243,7 @@ public:
    }
 
    template <typename... ColumnTypes>
-   [[deprecated("Snapshot is not any more a template. It compiles faster when removing all template parameters.")]]
+   [[deprecated("Snapshot is not any more a template. You can safely remove the template parameters.")]]
    RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
                                                  const ColumnNames_t &columnList,
                                                  const RSnapshotOptions &options = RSnapshotOptions())
