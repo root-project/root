@@ -400,14 +400,20 @@ public:
 
 static bool UseJITLink(const Triple& TT) {
   bool jitLink = false;
-  // Default to JITLink on macOS and RISC-V, as done in (recent) LLVM by
-  // LLJITBuilderState::prepareForConstruction.
-  if (TT.getArch() == Triple::riscv64 || TT.getArch() == Triple::loongarch64 ||
-      (TT.isOSBinFormatMachO() &&
-       (TT.getArch() == Triple::aarch64 || TT.getArch() == Triple::x86_64)) ||
-      (TT.isOSBinFormatELF() &&
-       (TT.getArch() == Triple::aarch64 || TT.getArch() == Triple::ppc64le))) {
-    jitLink = true;
+  // Auto-configure JITLink following the logic in
+  // LLJITBuilderState::prepareForConstruction
+  switch (TT.getArch()) {
+    case Triple::riscv64:
+    case Triple::loongarch64: jitLink = true; break;
+    case Triple::aarch64: jitLink = !TT.isOSBinFormatCOFF(); break;
+    case Triple::arm:
+    case Triple::armeb:
+    case Triple::thumb:
+    case Triple::thumbeb: jitLink = TT.isOSBinFormatELF(); break;
+    case Triple::x86_64: jitLink = !TT.isOSBinFormatCOFF(); break;
+    case Triple::ppc64: jitLink = TT.isPPC64ELFv2ABI(); break;
+    case Triple::ppc64le: jitLink = TT.isOSBinFormatELF(); break;
+    default: break;
   }
   // Finally, honor the user's choice by setting an environment variable.
   if (const char* clingJitLink = std::getenv("CLING_JITLINK")) {
