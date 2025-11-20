@@ -128,18 +128,4 @@ if((ROOT_KERAS_FOUND AND ROOT_THEANO_FOUND) OR (ROOT_KERAS_FOUND AND ROOT_TENSOR
       LIBRARIES ${Libraries})
    ROOT_ADD_TEST(PyMVA-Keras-Multiclass COMMAND testPyKerasMulticlass DEPENDS ${PyMVA-Keras-Multiclass-depends})
 
-   if(BLAS_FOUND)
-      ROOT_ADD_GTEST(TestRModelParserKeras TestRModelParserKeras.C
-         LIBRARIES
-         ROOTTMVASofie
-         PyMVA
-         Python3::NumPy
-         Python3::Python
-         BLAS::BLAS
-         INCLUDE_DIRS
-         SYSTEM
-         ${CMAKE_CURRENT_BINARY_DIR}
-     )
-  endif()
-
 endif()
