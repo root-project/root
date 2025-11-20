@@ -2272,10 +2272,25 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
    // if the out axis has labels and is extendable, temporary make it non-extendable to avoid adding extra bins
    Bool_t extendable = outAxis->CanExtend();
    if ( labels && extendable ) h1->GetXaxis()->SetCanExtend(kFALSE);
-   for ( Int_t outbin = 0; outbin <= outAxis->GetNbins() + 1;  ++outbin) {
+
+   // compute loop indices
+   Int_t loop_start = 0;
+   Int_t loop_end = outAxis->GetNbins() + 1;
+   Int_t binOut = 0;
+   if (outAxis->TestBit(TAxis::kAxisRange)) {
+      loop_start = firstOutBin;
+      loop_end = lastOutBin;
+      if (originalRange)
+         // place results at original bin indices
+         binOut = firstOutBin;
+      else
+         // start from the first bin
+         binOut = 1;
+   }
+
+   for (Int_t outbin = loop_start; outbin <= loop_end; ++outbin, ++binOut) {
       err2 = 0;
       cont = 0;
-      if (outAxis->TestBit(TAxis::kAxisRange) && ( outbin < firstOutBin || outbin > lastOutBin )) continue;
 
       for (Int_t inbin = firstbin ; inbin <= lastbin ; ++inbin) {
          Int_t binx, biny;
@@ -2292,9 +2307,8 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
             err2  += exy*exy;
          }
       }
-      // find corresponding bin number in h1 for outbin
-      Int_t binOut = h1->GetXaxis()->FindBin( outAxis->GetBinCenter(outbin) );
-      h1->SetBinContent(binOut ,cont);
+
+      h1->SetBinContent(binOut, cont);
       if (computeErrors) h1->SetBinError(binOut,TMath::Sqrt(err2));
       // sum  all content
       totcont += cont;
