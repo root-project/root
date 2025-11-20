@@ -1242,6 +1242,15 @@ public:
       return newInterface;
    }
 
+   template <typename... ColumnTypes>
+   [[deprecated("Snapshot is not any more a template. You can safely remove the template parameters.")]]
+   RResultPtr<RInterface<RLoopManager>>
+   Snapshot(std::string_view treename, std::string_view filename, const ColumnNames_t &columnList,
+            const RSnapshotOptions &options = RSnapshotOptions())
+   {
+      return Snapshot(treename, filename, columnList, options);
+   }
+
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns to disk, in a new TTree or RNTuple `treename` in file `filename`.
    /// \param[in] treename The name of the output TTree or RNTuple.
