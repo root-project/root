@@ -483,7 +483,10 @@ def _axes(self) -> Tuple[Union[PlottableAxisContinuous, PlottableAxisDiscrete], 
 
 
 def _kind(self) -> Kind:
-    return Kind.COUNT if not _hasWeights(self) else Kind.MEAN
+    # TProfile -> MEAN, everything else -> COUNT
+    if self.__class__.__name__.startswith("TProfile"):
+        return Kind.MEAN
+    return Kind.COUNT
 
 
 def _values_default(self) -> np.typing.NDArray[Any]:  # noqa: F821
