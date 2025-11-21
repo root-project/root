@@ -29,6 +29,15 @@ std::string GetRenormalizedTypeName(const std::string &metaNormalizedName);
 /// ensure that e.g. fundamental types are normalized to the type used by RNTuple (e.g. int -> std::int32_t).
 std::string GetRenormalizedDemangledTypeName(const std::type_info &ti);
 
+/// Checks if the meta normalized name is different from the RNTuple normalized name in a way that would cause
+/// the RNTuple normalized name to request different streamer info. This can happen, e.g., if the type name has
+/// Long64_t as a template parameter. In this case, RNTuple should use the meta normalized name as a type alias
+/// to ensure correct reconstruction of objects from disk.
+/// If the function returns true, renormalizedAlias contains the RNTuple normalized name that should be used as
+/// type alias.
+bool NeedsMetaNameAsAlias(const std::string &metaNormalizedName, std::string &renormalizedAlias,
+                          bool isArgInTemplatedUserClass = false /* used in recursion */);
+
 /// Applies all RNTuple type normalization rules except typedef resolution.
 std::string GetNormalizedUnresolvedTypeName(const std::string &origName);
 
