@@ -395,29 +395,35 @@ TEST(RNTuple, TClassMetaName)
 
 TEST(RNTuple, StreamerInfoRecords)
 {
-   // Every testee consists of the type stored on disk and the expected streamer info records
-   std::vector<std::pair<std::string, std::vector<std::string>>> testees{
-      {"float", {}},
-      {"std::vector<float>", {}},
-      {"std::pair<float, float>", {}},
-      {"std::map<int, float>", {}},
-      {"CustomStruct", {"CustomStruct"}},
-      {"std::vector<CustomStruct>", {"CustomStruct"}},
-      {"std::map<int, CustomStruct>", {"CustomStruct"}},
-      {"DerivedA", {"DerivedA", "CustomStruct"}},
-      {"std::pair<CustomStruct, DerivedA>", {"DerivedA", "CustomStruct"}},
-      {"EdmWrapper<long long>", {"EdmWrapper<Long64_t>"}},
-      {"TRotation", {"TRotation"}}};
+   // Every testee consists of the type stored on disk, the expected streamer info records, and the expected type alias
+   std::vector<std::tuple<std::string, std::vector<std::string>, std::string>> testees{
+      {"float", {}, ""},
+      {"std::vector<float>", {}, ""},
+      {"std::pair<float, float>", {}, ""},
+      {"std::map<int, float>", {}, ""},
+      {"CustomStruct", {"CustomStruct"}, ""},
+      {"std::vector<CustomStruct>", {"CustomStruct"}, ""},
+      {"std::map<int, CustomStruct>", {"CustomStruct"}, ""},
+      {"DerivedA", {"DerivedA", "CustomStruct"}, ""},
+      {"std::pair<CustomStruct, DerivedA>", {"DerivedA", "CustomStruct"}, ""},
+      {"EdmWrapper<long long>", {"EdmWrapper<Long64_t>"}, "EdmWrapper<Long64_t>"},
+      {"EdmWrapper<map<int, EdmContent<float, Long64_t> > >",
+       {"EdmWrapper<map<int,EdmContent<float,Long64_t> > >", "EdmContent<float,Long64_t>"},
+       "EdmWrapper<std::map<std::int32_t,EdmContent<float,Long64_t>>>"},
+      {"EdmContainer", {"EdmContainer", "EdmWrapper<Long64_t>"}, ""},
+      {"EdmWrapper<long long>::Inner", {"EdmWrapper<Long64_t>::Inner"}, "EdmWrapper<Long64_t>::Inner"},
+      {"EdmContainer::EdmWrapperLong64_t", {"EdmWrapper<Long64_t>"}, "EdmContainer::EdmWrapperLong64_t"},
+      {"TRotation", {"TRotation"}, ""}};
 
    for (const auto &t : testees) {
       FileRaii fileGuard("test_ntuple_streamer_info_records.root");
 
       {
          auto model = ROOT::RNTupleModel::Create();
-         if (t.first == "TRotation") {
-            model->AddField(std::make_unique<ROOT::RStreamerField>("f", t.first));
+         if (std::get<0>(t) == "TRotation") {
+            model->AddField(std::make_unique<ROOT::RStreamerField>("f", std::get<0>(t)));
          } else {
-            model->AddField(ROOT::RFieldBase::Create("f", t.first).Unwrap());
+            model->AddField(ROOT::RFieldBase::Create("f", std::get<0>(t)).Unwrap());
          }
          auto writer = ROOT::RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       }
@@ -425,7 +431,7 @@ TEST(RNTuple, StreamerInfoRecords)
       auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
       ASSERT_TRUE(f && !f->IsZombie());
 
-      std::unordered_set<std::string> expectedInfos{t.second.begin(), t.second.end()};
+      std::unordered_set<std::string> expectedInfos{std::get<1>(t).begin(), std::get<1>(t).end()};
       expectedInfos.insert("ROOT::RNTuple");
       for (const auto info : TRangeDynCast<TVirtualStreamerInfo>(*f->GetStreamerInfoList())) {
          auto itr = expectedInfos.find(info->GetName());
@@ -436,5 +442,12 @@ TEST(RNTuple, StreamerInfoRecords)
          expectedInfos.erase(itr);
       }
       EXPECT_TRUE(expectedInfos.empty());
+
+      // Make sure we can reconstruct the fields
+      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+      EXPECT_EQ(std::get<2>(t), reader->GetModel().GetConstField("f").GetTypeAlias());
+      if (auto field = dynamic_cast<const ROOT::RClassField *>(&reader->GetModel().GetConstField("f"))) {
+         EXPECT_EQ(std::get<1>(t)[0], field->GetClass()->GetName());
+      }
    }
 }

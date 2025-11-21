@@ -100,14 +100,25 @@ struct alignas(std::uint64_t) TestEBO : public EmptyStruct {
 template <typename T>
 class EdmWrapper {
 public:
+   struct Inner {
+      T fX;
+   };
+
    bool fIsPresent = true;
    T fMember;
 };
 
+template <typename U, typename V>
+struct EdmContent {
+   U fU;
+   V fV;
+};
+
 class EdmContainer {
 public:
+   using EdmWrapperLong64_t = EdmWrapper<long long>;
    // Used to test that the streamer info for fWrapper will use long long
-   EdmWrapper<long long> fWrapper;
+   EdmWrapperLong64_t fWrapper;
 };
 
 template <typename T>
