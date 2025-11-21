@@ -63,6 +63,9 @@ const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
    {"uint64_t", "std::uint64_t"}};
 
 // Natively supported types drop the default template arguments and the CV qualifiers in template arguments.
+// Any types used as a template argument of user classes will keep [U]Long64_t template arguments for the type alias,
+// e.g. MyClass<std::vector<Long64_t>> will normalize to `MyClass<std::vector<std::int64_t>>` but keep the original
+// spelling in the type alias.
 bool IsUserClass(const std::string &typeName)
 {
    return typeName.rfind("std::", 0) != 0 && typeName.rfind("ROOT::VecOps::RVec<", 0) != 0;
@@ -529,6 +532,38 @@ std::string ROOT::Internal::GetRenormalizedTypeName(const std::type_info &ti)
 std::string ROOT::Internal::GetRenormalizedTypeName(const std::string &metaNormalizedName)
 {
    return GetRenormalizedMetaTypeName(metaNormalizedName);
+}
+
+bool ROOT::Internal::NeedsMetaNameAsAlias(const std::string &metaNormalizedName, std::string &renormalizedAlias,
+                                          bool isArgInTemplatedUserClass)
+{
+   const auto canonicalTypePrefix = ROOT::Internal::GetCanonicalTypePrefix(metaNormalizedName);
+   if (canonicalTypePrefix.find('<') == std::string::npos) {
+      // If there are no templates, the function is done.
+      return false;
+   }
+
+   bool result = false;
+   const bool hasTemplatedUserClassParent = isArgInTemplatedUserClass || IsUserClass(canonicalTypePrefix);
+   auto fnCheckLong64 = [&](const std::string &arg) -> std::string {
+      if ((arg == "Long64_t" || arg == "ULong64_t") && hasTemplatedUserClassParent) {
+         result = true;
+         return arg;
+      }
+
+      std::string renormalizedArgAlias;
+      if (NeedsMetaNameAsAlias(arg, renormalizedArgAlias, hasTemplatedUserClassParent)) {
+         result = true;
+         return renormalizedArgAlias;
+      }
+
+      return GetRenormalizedMetaTypeName(arg);
+   };
+
+   renormalizedAlias = canonicalTypePrefix;
+   NormalizeTemplateArguments(renormalizedAlias, 0 /* maxTemplateArgs */, fnCheckLong64);
+
+   return result;
 }
 
 std::string ROOT::Internal::GetNormalizedUnresolvedTypeName(const std::string &origName)
