@@ -380,3 +380,16 @@ TEST(RNTuple, ContextDependentTypeNames)
       }
    }
 }
+
+TEST(RNTuple, NeedsMetaNameAsAlias)
+{
+   using ROOT::Internal::NeedsMetaNameAsAlias;
+
+   EXPECT_FALSE(NeedsMetaNameAsAlias("bool"));
+   EXPECT_FALSE(NeedsMetaNameAsAlias("std::vector<long>"));
+   EXPECT_FALSE(NeedsMetaNameAsAlias("std::vector<Long64_t>"));
+   EXPECT_TRUE(NeedsMetaNameAsAlias("MyClass<Long64_t>"));
+   EXPECT_TRUE(NeedsMetaNameAsAlias("MyClass<ULong64_t>"));
+   EXPECT_TRUE(NeedsMetaNameAsAlias("std::vector<MyClass<Long64_t>>"));
+   EXPECT_FALSE(NeedsMetaNameAsAlias("MyClass<ROOT::RVec<Long64_t>>"));
+}

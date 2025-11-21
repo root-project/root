@@ -531,6 +531,35 @@ std::string ROOT::Internal::GetRenormalizedTypeName(const std::string &metaNorma
    return GetRenormalizedMetaTypeName(metaNormalizedName);
 }
 
+bool ROOT::Internal::NeedsMetaNameAsAlias(const std::string &metaNormalizedName)
+{
+   const auto canonicalTypePrefix = ROOT::Internal::GetCanonicalTypePrefix(metaNormalizedName);
+   if (canonicalTypePrefix.find('<') == std::string::npos) {
+      // If there are no templates, the function is done.
+      return false;
+   }
+
+   auto fnIsUserClass = [](const std::string &name) -> bool {
+      return name.rfind("std::", 0) != 0 && name.rfind("ROOT::", 0) != 0;
+   };
+
+   bool hasLong64TemplateArg = false;
+   bool isTemplatedUserClass = fnIsUserClass(canonicalTypePrefix);
+   auto fnCheckLong64 = [&](const std::string &arg) -> std::string {
+      if (arg == "Long64_t" || arg == "ULong64_t")
+         hasLong64TemplateArg = isTemplatedUserClass;
+
+      const auto result = GetRenormalizedMetaTypeName(arg);
+      isTemplatedUserClass = fnIsUserClass(result);
+      return result;
+   };
+
+   std::string normName{canonicalTypePrefix};
+   NormalizeTemplateArguments(normName, 0 /* maxTemplateArgs */, fnCheckLong64);
+
+   return hasLong64TemplateArg;
+}
+
 std::string ROOT::Internal::GetNormalizedUnresolvedTypeName(const std::string &origName)
 {
    const TClassEdit::EModType modType = static_cast<TClassEdit::EModType>(
