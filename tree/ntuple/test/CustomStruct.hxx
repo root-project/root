@@ -100,6 +100,10 @@ struct alignas(std::uint64_t) TestEBO : public EmptyStruct {
 template <typename T>
 class EdmWrapper {
 public:
+   struct Inner {
+      T fX;
+   };
+
    bool fIsPresent = true;
    T fMember;
 };

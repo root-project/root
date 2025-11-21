@@ -158,6 +158,9 @@ ROOT::RClassField::RClassField(std::string_view fieldName, TClass *classp)
    if (!(fClass->ClassProperty() & kClassHasExplicitDtor))
       fTraits |= kTraitTriviallyDestructible;
 
+   if (Internal::NeedsMetaNameAsAlias(classp->GetName()))
+      fTypeAlias = classp->GetName();
+
    int i = 0;
    const auto *bases = fClass->GetListOfBases();
    assert(bases);
