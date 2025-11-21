@@ -9,23 +9,22 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// Window-system specific GL includes.
-// Inclusion should only be necessary in in low-level system files.
+#ifndef ROOT_TGLIncludes
+#define ROOT_TGLIncludes
 
-#ifndef ROOT_TGLWSIncludes
+// GL includes - include this if you are calling OpenGL functions.
 
-#include "RConfigure.h"
-#include "TGLIncludes.h"
+#ifdef WIN32
+#include "Windows4Root.h"
+#endif
 
-#if defined(WIN32)
-#include <glad/wgl.h>
+#include <glad/gl.h>
+
+// This used to be included through glew.h.
+#if defined(__APPLE__) && defined(__MACH__)
+#  include <OpenGL/glu.h>
 #else
-#if defined(__APPLE__) && !defined(R__HAS_COCOA)
-#define GLEW_APPLE_GLX
-#endif
-#if !defined(R__HAS_COCOA)
-#include <glad/glx.h>
-#endif
+#  include <GL/glu.h>
 #endif
 
 #endif
