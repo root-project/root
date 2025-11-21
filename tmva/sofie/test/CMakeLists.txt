@@ -164,29 +164,19 @@ endif()
 
 # Any features that link against libpython are disabled if built with tpython=OFF
 if (tpython AND ROOT_KERAS_FOUND AND BLAS_FOUND)
+  configure_file(generateKerasModels.py generateKerasModels.py COPYONLY)
+  configure_file(scale_by_2_op.hxx scale_by_2_op.hxx COPYONLY)
 
-  set(unsupported_keras_version "3.5.0")
-
-  # TODO: make sure we also support the newest Keras
-  if (NOT DEFINED ROOT_KERAS_VERSION)
-    message(WARNING "Keras found, but version unknown — cannot verify compatibility.")
-  elseif (ROOT_KERAS_VERSION VERSION_LESS ${unsupported_keras_version})
-    configure_file(generateKerasModels.py generateKerasModels.py COPYONLY)
-    configure_file(scale_by_2_op.hxx scale_by_2_op.hxx COPYONLY)
-
-    ROOT_ADD_GTEST(TestRModelParserKeras TestRModelParserKeras.C
-       LIBRARIES
-       ROOTTMVASofie
-       Python3::NumPy
-       Python3::Python
-       BLAS::BLAS
-       INCLUDE_DIRS
-       SYSTEM
-       ${CMAKE_CURRENT_BINARY_DIR}
-    )
-  else()
-    message(WARNING "Keras version ${ROOT_KERAS_VERSION} is too new for the SOFIE Keras parser (only supports < ${unsupported_keras_version})")
-  endif()
+  ROOT_ADD_GTEST(TestRModelParserKeras TestRModelParserKeras.C
+     LIBRARIES
+     ROOTTMVASofie
+     Python3::NumPy
+     Python3::Python
+     BLAS::BLAS
+     INCLUDE_DIRS
+     SYSTEM
+     ${CMAKE_CURRENT_BINARY_DIR}
+  )
 endif()
 
 
