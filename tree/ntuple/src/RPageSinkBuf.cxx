@@ -175,7 +175,13 @@ void ROOT::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const
       }
    };
 
-   if (!fTaskScheduler) {
+   // If we already buffer more uncompressed bytes than the approximate zipped cluster size, we assume there is enough
+   // work for other threads to pick up. This limits the buffer usage when sealing / compression tasks are not processed
+   // fast enough, and heuristically reduces the memory usage, especially for big compression factors.
+   std::size_t bufferedUncompressed = fBufferedUncompressed.load();
+   bool enoughWork = bufferedUncompressed > GetWriteOptions().GetApproxZippedClusterSize();
+
+   if (!fTaskScheduler || enoughWork) {
       allocateBuf();
       // Seal the page right now, avoiding the allocation and copy, but making sure that the page buffer is not aliased.
       RSealPageConfig config;
@@ -194,16 +200,25 @@ void ROOT::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const
       return;
    }
 
+   // We will buffer the uncompressed page. Unless work is consumed fast enough, the next page might be compressed
+   // directly.
+   fBufferedUncompressed += page.GetNBytes();
+
    // TODO avoid frequent (de)allocations by holding on to allocated buffers in RColumnBuf
    zipItem.fPage = fPageAllocator->NewPage(page.GetElementSize(), page.GetNElements());
    // make sure the page is aware of how many elements it will have
    zipItem.fPage.GrowUnchecked(page.GetNElements());
+   assert(zipItem.fPage.GetNBytes() == page.GetNBytes());
    memcpy(zipItem.fPage.GetBuffer(), page.GetBuffer(), page.GetNBytes());
 
    fCounters->fParallelZip.SetValue(1);
    // Thread safety: Each thread works on a distinct zipItem which owns its
    // compression buffer.
    fTaskScheduler->AddTask([this, &zipItem, &sealedPage, &element, allocateBuf, shrinkSealedPage] {
+      // The task will consume the uncompressed page. Decrease the atomic counter early so that more work has arrived
+      // when we are done.
+      fBufferedUncompressed -= zipItem.fPage.GetNBytes();
+
       allocateBuf();
       RSealPageConfig config;
       config.fPage = &zipItem.fPage;
@@ -241,6 +256,7 @@ void ROOT::Internal::RPageSinkBuf::CommitSealedPageV(
 void ROOT::Internal::RPageSinkBuf::FlushClusterImpl(std::function<void(void)> FlushClusterFn)
 {
    WaitForAllTasks();
+   assert(fBufferedUncompressed == 0 && "all buffered pages should have been processed");
 
    std::vector<RSealedPageGroup> toCommit;
    toCommit.reserve(fBufferedColumns.size());
