@@ -407,6 +407,8 @@ TEST(RNTuple, StreamerInfoRecords)
       {"DerivedA", {"DerivedA", "CustomStruct"}},
       {"std::pair<CustomStruct, DerivedA>", {"DerivedA", "CustomStruct"}},
       {"EdmWrapper<long long>", {"EdmWrapper<Long64_t>"}},
+      {"EdmContainer", {"EdmContainer", "EdmWrapper<Long64_t>"}},
+      {"EdmWrapper<long long>::Inner", {"EdmWrapper<Long64_t>::Inner"}},
       {"TRotation", {"TRotation"}}};
 
    for (const auto &t : testees) {
@@ -436,5 +438,11 @@ TEST(RNTuple, StreamerInfoRecords)
          expectedInfos.erase(itr);
       }
       EXPECT_TRUE(expectedInfos.empty());
+
+      // Make sure we can reconstruct the fields
+      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+      if (auto field = dynamic_cast<const ROOT::RClassField *>(&reader->GetModel().GetConstField("f"))) {
+         EXPECT_EQ(t.second[0], field->GetClass()->GetName());
+      }
    }
 }
