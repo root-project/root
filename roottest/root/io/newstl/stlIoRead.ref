@@ -1,0 +1,10 @@
+
+Processing srun.C("roottest/root/io/newstl/", "roottest/root/io/newstl/6-32-19/")...
+Running reading test rvec
+Running reading test vector
+Running reading test deque
+Running reading test list
+Running reading test set
+Running reading test multiset
+Running reading test map
+Running reading test multimap
