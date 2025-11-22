@@ -68,6 +68,17 @@ public:
          fSumWX4 += other.fSumWX4;
       }
 
+      /// Add another statistics object using atomic instructions.
+      ///
+      /// \param[in] other another statistics object that must not be modified during the operation
+      void AddAtomic(const RDimensionStats &other)
+      {
+         Internal::AtomicAdd(&fSumWX, other.fSumWX);
+         Internal::AtomicAdd(&fSumWX2, other.fSumWX2);
+         Internal::AtomicAdd(&fSumWX3, other.fSumWX3);
+         Internal::AtomicAdd(&fSumWX4, other.fSumWX4);
+      }
+
       void Clear()
       {
          fSumWX = 0.0;
@@ -130,6 +141,24 @@ public:
       fSumW2 += other.fSumW2;
       for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
          fDimensionStats[i].Add(other.fDimensionStats[i]);
+      }
+   }
+
+   /// Add all entries from another statistics object using atomic instructions.
+   ///
+   /// Throws an exception if the number of dimensions are not identical.
+   ///
+   /// \param[in] other another statistics object that must not be modified during the operation
+   void AddAtomic(const RHistStats &other)
+   {
+      if (fDimensionStats.size() != other.fDimensionStats.size()) {
+         throw std::invalid_argument("number of dimensions not identical in Add");
+      }
+      Internal::AtomicAdd(&fNEntries, other.fNEntries);
+      Internal::AtomicAdd(&fSumW, other.fSumW);
+      Internal::AtomicAdd(&fSumW2, other.fSumW2);
+      for (std::size_t i = 0; i < fDimensionStats.size(); i++) {
+         fDimensionStats[i].AddAtomic(other.fDimensionStats[i]);
       }
    }
 
