@@ -130,9 +130,9 @@ public:
    virtual void     SetShowProjectionX(Int_t nbins=1);  // *MENU*
    virtual void     SetShowProjectionY(Int_t nbins=1);  // *MENU*
    virtual void     SetShowProjectionXY(Int_t nbinsY=1, Int_t nbinsX=1);  // *MENU*
-           TH1     *ShowBackground(Int_t niter=20, Option_t *option="same") override;
-           Int_t    ShowPeaks(Double_t sigma=2, Option_t *option="", Double_t threshold=0.05) override; // *MENU*
-           void     Smooth(Int_t ntimes=1, Option_t *option="") override; // *MENU*
+   virtual TH1     *ShowBackground2D(Int_t nIterX = 20, Int_t nIterY = 20, Option_t *option = "same");
+   Int_t            ShowPeaks(Double_t sigma = 2, Option_t *option = "", Double_t threshold = 0.05) override; // *MENU*
+   void             Smooth(Int_t ntimes = 1, Option_t *option = "") override;                                 // *MENU*
 
    ClassDefOverride(TH2,5)  //2-Dim histogram base class
 };
