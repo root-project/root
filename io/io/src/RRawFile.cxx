@@ -20,6 +20,7 @@
 #include "TError.h"
 #include "TPluginManager.h"
 #include "TROOT.h"
+#include "ROOT/InternalIOUtils.hxx"
 
 #include <algorithm>
 #include <cctype> // for towlower
@@ -68,6 +69,9 @@ ROOT::Internal::RRawFile::Create(std::string_view url, ROptions options)
 #ifdef _WIN32
       return std::unique_ptr<RRawFile>(new RRawFileWin(url, options));
 #else
+      // We're assuming the input url is null-terminated in the next call
+      if (auto xurl = ROOT::Internal::GetEOSRedirectedXRootURL(url.data()))
+         return Create(*xurl, options);
       return std::unique_ptr<RRawFile>(new RRawFileUnix(url, options));
 #endif
    }
