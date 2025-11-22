@@ -4883,3 +4883,15 @@ TH3D operator/(TH3D const &h1, TH3D const &h2)
    hnew.SetDirectory(nullptr);
    return hnew;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///   This function calculates the background spectrum in this histogram.
+///   The background is returned as a histogram.
+
+TH1 *TH3::ShowBackground3D(Int_t nIterX, Int_t nIterY, Int_t nIterZ, Option_t *option)
+{
+
+   return (TH1 *)gROOT->ProcessLineFast(
+      TString::Format("TSpectrum3::StaticBackground((TH1*)0x%zx,%d,%d,%d,\"%s\")", (size_t)this, nIterX, nIterY, nIterZ, option)
+         .Data());
+}
