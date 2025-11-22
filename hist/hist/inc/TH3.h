@@ -144,6 +144,7 @@ public:
            void     SetBinContent(Int_t bin, Int_t, Double_t content) override { SetBinContent(bin, content); }
            void     SetBinContent(Int_t binx, Int_t biny, Int_t binz, Double_t content) override { SetBinContent(GetBin(binx, biny, binz), content); }
    virtual void     SetShowProjection(const char *option="xy",Int_t nbins=1);   // *MENU*
+   virtual TH1     *ShowBackground3D(Int_t nIterX = 20, Int_t nIterY = 20, Int_t nIterZ = 20, Option_t *option = "same");
 
 protected:
 
