@@ -2636,13 +2636,13 @@ void TH2::SetShowProjectionXY(Int_t nbinsY, Int_t nbinsX)
 ////////////////////////////////////////////////////////////////////////////////
 ///   This function calculates the background spectrum in this histogram.
 ///   The background is returned as a histogram.
-///   to be implemented (may be)
 
-TH1 *TH2::ShowBackground(Int_t niter, Option_t *option)
+TH1 *TH2::ShowBackground2D(Int_t nIterX, Int_t nIterY, Option_t *option)
 {
 
-   return (TH1 *)gROOT->ProcessLineFast(TString::Format("TSpectrum2::StaticBackground((TH1*)0x%zx,%d,\"%s\")",
-                                            (size_t)this, niter, option).Data());
+   return (TH1 *)gROOT->ProcessLineFast(
+      TString::Format("TSpectrum2::StaticBackground((TH1*)0x%zx,%d,%d,\"%s\")", (size_t)this, nIterX, nIterY, option)
+         .Data());
 }
 
 

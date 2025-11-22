@@ -17,8 +17,8 @@ class TH1;
 
 class TSpectrum2 : public TNamed {
 protected:
-   Int_t         fMaxPeaks;         ///< Maximum number of peaks to be found
-   Int_t         fNPeaks;           ///< number of peaks found
+   Int_t          fMaxPeaks;        ///< Maximum number of peaks to be found
+   Int_t          fNPeaks;          ///< number of peaks found
    Double_t      *fPosition;        ///< [fNPeaks] array of current peak positions
    Double_t      *fPositionX;       ///< [fNPeaks] X position of peaks
    Double_t      *fPositionY;       ///< [fNPeaks] Y position of peaks
@@ -38,11 +38,11 @@ public:
    TSpectrum2();
    TSpectrum2(Int_t maxpositions, Double_t resolution=1); // resolution is *NOT USED*
    ~TSpectrum2() override;
-   virtual TH1  *Background(const TH1 *hist, Int_t niter=20, Option_t *option="");
+   virtual TH1  *Background(const TH1 *hist, Int_t nIterX = 20, Int_t nIterY = 20, Option_t *option = "");
    TH1          *GetHistogram() const {return fHistogram;}
    Int_t         GetNPeaks() const {return fNPeaks;}
-   Double_t      *GetPositionX() const {return fPositionX;}
-   Double_t      *GetPositionY() const {return fPositionY;}
+   Double_t     *GetPositionX() const {return fPositionX;}
+   Double_t     *GetPositionY() const {return fPositionY;}
    void  Print(Option_t *option="") const override;
    virtual Int_t Search(const TH1 *hist, Double_t sigma=2, Option_t *option="", Double_t threshold=0.05);
    static void   SetAverageWindow(Int_t w=3);   //set average window
@@ -55,8 +55,8 @@ public:
    const char   *Deconvolution(Double_t **source, Double_t **resp, Int_t ssizex, Int_t ssizey,Int_t numberIterations, Int_t numberRepetitions, Double_t boost);
    Int_t         SearchHighRes(Double_t **source,Double_t **dest, Int_t ssizex, Int_t ssizey, Double_t sigma, Double_t threshold, Bool_t backgroundRemove,Int_t deconIterations, Bool_t markov, Int_t averWindow);
 
-   static Int_t        StaticSearch(const TH1 *hist, Double_t sigma=2, Option_t *option="goff", Double_t threshold=0.05);
-   static TH1         *StaticBackground(const TH1 *hist,Int_t niter=20, Option_t *option="");
+   static Int_t  StaticSearch(const TH1 *hist, Double_t sigma=2, Option_t *option="goff", Double_t threshold=0.05);
+   static TH1   *StaticBackground(const TH1 *hist, Int_t nIterX = 20, Int_t nIterY = 20, Option_t *option = "");
 
    ClassDefOverride(TSpectrum2,1)  //Peak Finder, background estimator, Deconvolution for 2-D histograms
 };
