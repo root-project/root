@@ -1,4 +1,5 @@
 #include "ntuple_test.hxx"
+#include "SimpleCollectionProxy.hxx"
 
 #include <TMath.h>
 #include <TObject.h>
@@ -364,6 +365,14 @@ TEST(RNTuple, TClassMetaName)
    auto f4 = RFieldBase::Create("f", "EdmContainer").Unwrap();
    EXPECT_STREQ("EdmWrapper<Long64_t>",
                 static_cast<const ROOT::RClassField *>(f4->GetConstSubfields()[0])->GetClass()->GetName());
+
+   SimpleCollectionProxy<StructUsingCollectionProxy<Long64_t>> proxy;
+   auto cl = TClass::GetClass("StructUsingCollectionProxy<Long64_t>");
+   cl->CopyCollectionProxy(proxy);
+
+   auto f5 = std::make_unique<ROOT::RField<StructUsingCollectionProxy<Long64_t>>>("f");
+   EXPECT_TRUE(dynamic_cast<ROOT::RProxiedCollectionField *>(f5.get()));
+   EXPECT_EQ("StructUsingCollectionProxy<Long64_t>", f5->GetTypeAlias());
 }
 
 TEST(RNTuple, StreamerInfoRecords)

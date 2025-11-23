@@ -64,6 +64,7 @@
 #pragma link C++ class StructUsingCollectionProxy<CustomStruct> + ;
 #pragma link C++ class StructUsingCollectionProxy<StructUsingCollectionProxy<float>> + ;
 #pragma link C++ class StructUsingCollectionProxy<int> + ;
+#pragma link C++ class StructUsingCollectionProxy<Long64_t>+;
 
 #pragma link C++ class TrivialTraitsBase + ;
 #pragma link C++ class TrivialTraits + ;

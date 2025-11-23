@@ -638,7 +638,7 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
      fNWritten(0)
 {
    if (!classp->GetCollectionProxy())
-      throw RException(R__FAIL(std::string(GetTypeName()) + " has no associated collection proxy"));
+      throw RException(R__FAIL(std::string(classp->GetName()) + " has no associated collection proxy"));
    if (classp->Property() & kIsDefinedInStd) {
       static const std::vector<std::string> supportedStdTypes = {
          "std::set<", "std::unordered_set<", "std::multiset<", "std::unordered_multiset<",
@@ -653,6 +653,10 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
       if (!isSupported)
          throw RException(R__FAIL(std::string(GetTypeName()) + " is not supported"));
    }
+
+   std::string renormalizedAlias;
+   if (Internal::NeedsMetaNameAsAlias(classp->GetName(), renormalizedAlias))
+      fTypeAlias = renormalizedAlias;
 
    fProxy.reset(classp->GetCollectionProxy()->Generate());
    fProperties = fProxy->GetProperties();
@@ -699,7 +703,7 @@ ROOT::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldNam
       case EDataType::kFloat_t: itemField = std::make_unique<RField<Float_t>>("_0"); break;
       case EDataType::kDouble_t: itemField = std::make_unique<RField<Double_t>>("_0"); break;
       case EDataType::kBool_t: itemField = std::make_unique<RField<Bool_t>>("_0"); break;
-      default: throw RException(R__FAIL("unsupported value type"));
+      default: throw RException(R__FAIL("unsupported value type: " + std::to_string(fProxy->GetType())));
       }
    }
 
