@@ -373,6 +373,10 @@ TEST(RNTuple, TClassMetaName)
    auto f5 = std::make_unique<ROOT::RField<StructUsingCollectionProxy<Long64_t>>>("f");
    EXPECT_TRUE(dynamic_cast<ROOT::RProxiedCollectionField *>(f5.get()));
    EXPECT_EQ("StructUsingCollectionProxy<Long64_t>", f5->GetTypeAlias());
+
+   ROOT::RStreamerField f6("f", "EdmWrapper<long long>");
+   EXPECT_STREQ("EdmWrapper<Long64_t>", f6.GetClass()->GetName());
+   EXPECT_EQ("EdmWrapper<Long64_t>", f6.GetTypeAlias());
 }
 
 TEST(RNTuple, StreamerInfoRecords)
