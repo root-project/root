@@ -1021,6 +1021,10 @@ ROOT::RStreamerField::RStreamerField(std::string_view fieldName, TClass *classp)
      fClass(classp),
      fIndex(0)
 {
+   std::string renormalizedAlias;
+   if (Internal::NeedsMetaNameAsAlias(classp->GetName(), renormalizedAlias))
+      fTypeAlias = renormalizedAlias;
+
    fTraits |= kTraitTypeChecksum;
    // For RClassField, we only check for explicit constructors and destructors and then recursively combine traits from
    // all member subfields. For RStreamerField, we treat the class as a black box and additionally need to check for
