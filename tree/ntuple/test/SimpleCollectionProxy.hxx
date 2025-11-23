@@ -72,6 +72,8 @@ public:
          return EDataType::kInt_t;
       if constexpr (std::is_same<typename CollectionT::ValueType, float>::value)
          return EDataType::kFloat_t;
+      if constexpr (std::is_same<typename CollectionT::ValueType, Long64_t>::value)
+         return EDataType::kLong64_t;
       return EDataType::kOther_t;
    }
 
@@ -122,8 +124,9 @@ template <>
 struct IsCollectionProxy<StructUsingCollectionProxy<float>> : std::true_type {
 };
 template <>
-struct IsCollectionProxy<StructUsingCollectionProxy<CustomStruct>> : std::true_type {
-};
+struct IsCollectionProxy<StructUsingCollectionProxy<Long64_t>> : std::true_type {};
+template <>
+struct IsCollectionProxy<StructUsingCollectionProxy<CustomStruct>> : std::true_type {};
 
 template <>
 struct IsCollectionProxy<StructUsingCollectionProxy<StructUsingCollectionProxy<float>>> : std::true_type {
