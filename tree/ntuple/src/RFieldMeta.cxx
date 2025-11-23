@@ -1010,10 +1010,9 @@ public:
 
 } // anonymous namespace
 
-ROOT::RStreamerField::RStreamerField(std::string_view fieldName, std::string_view className, std::string_view typeAlias)
+ROOT::RStreamerField::RStreamerField(std::string_view fieldName, std::string_view className)
    : RStreamerField(fieldName, EnsureValidClass(className))
 {
-   fTypeAlias = typeAlias;
 }
 
 ROOT::RStreamerField::RStreamerField(std::string_view fieldName, TClass *classp)
@@ -1034,7 +1033,7 @@ ROOT::RStreamerField::RStreamerField(std::string_view fieldName, TClass *classp)
 
 std::unique_ptr<ROOT::RFieldBase> ROOT::RStreamerField::CloneImpl(std::string_view newName) const
 {
-   return std::unique_ptr<RStreamerField>(new RStreamerField(newName, GetTypeName(), GetTypeAlias()));
+   return std::unique_ptr<RStreamerField>(new RStreamerField(newName, GetTypeName()));
 }
 
 std::size_t ROOT::RStreamerField::AppendImpl(const void *from)
