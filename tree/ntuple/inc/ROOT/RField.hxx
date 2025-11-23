@@ -272,7 +272,7 @@ protected:
    void ReconcileOnDiskField(const RNTupleDescriptor &desc) final;
 
 public:
-   RStreamerField(std::string_view fieldName, std::string_view className, std::string_view typeAlias = "");
+   RStreamerField(std::string_view fieldName, std::string_view className);
    RStreamerField(RStreamerField &&other) = default;
    RStreamerField &operator=(RStreamerField &&other) = default;
    ~RStreamerField() final = default;
