@@ -2938,6 +2938,29 @@ public:
       auto sumV = std::make_shared<RDFDetail::SumReturnType_t<T>>(initValue);
       return CreateAction<RDFInternal::ActionTags::Sum, T>(userColumns, sumV, sumV, fProxiedPtr);
    }
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Returns the product of the values in the specified column.
+   /// \tparam T The type of the column values (Default: double)
+   /// \param[in] columnName The name of the column
+   /// \return the product of all values in the column wrapped in a ROOT::RDF::RResultPtr.
+   ///
+   /// This action performs a reduction operation on all processed column values,
+   /// returning the product of the elements. It is equivalent to a Reduce action
+   /// with a multiplication operator and an identity element of 1.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Calculate product of column "x"
+   /// auto prod = d.Product("x");
+   /// ~~~
+   template <typename T = double>
+   RResultPtr<T> Product(std::string_view columnName = "")
+   {
+      auto productLambda = [](const T &a, const T &b) { return a * b; };
+      const T identity = static_cast<T>(1);
+      return Reduce(productLambda, columnName, identity);
+   }
+
    // clang-format on
 
    ////////////////////////////////////////////////////////////////////////////
