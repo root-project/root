@@ -377,5 +377,33 @@ class TestOVERLOADS:
         assert cppyy.gbl.test12_foo(1) == cppyy.gbl.call_test12_foo()
         assert cppyy.gbl.test12_bar(1) == cppyy.gbl.call_test12_bar()
 
+
+    def test13_static_call_from_derived_instance(self):
+        """Test calling a static member function via a derived instance."""
+
+        import cppyy
+
+        cppyy.cppdef("""
+            class Base {
+            public:
+                static int StaticMethod() {
+                    return 42;
+                }
+            };
+
+            class Derived : public Base {
+            };
+        """)
+
+        d = cppyy.gbl.Derived()
+
+        # Call static method through base class directly
+        result_direct = cppyy.gbl.Base.StaticMethod()
+
+        # Call static method through instance
+        result_instance = d.StaticMethod()
+
+        assert result_instance == result_direct
+
 if __name__ == "__main__":
     exit(pytest.main(args=['-sv', '-ra', __file__]))
