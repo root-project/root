@@ -53,7 +53,11 @@ using namespace RooStats;
 //              = 4 Profile Likelihood Signed (pll = -pll if mu < mu_hat)
 //              = 5 Max Likelihood Estimate as test statistic
 //              = 6 Number of Observed Events as test statistic
-enum ECalculatorType { kAsymptotic = 0, kFrequentist = 1, kHybrid = 2 };
+enum ECalculatorType {
+   kAsymptotic = 0,
+   kFrequentist = 1,
+   kHybrid = 2
+};
 enum ETestStatType {
    kSimpleLR = 0,
    kRatioLR = 1,
@@ -119,7 +123,9 @@ private:
 public:
    TestProfileLikelihoodCalculator1(TFile *refFile, bool writeRef, Int_t verbose, double confidenceLevel = 0.95)
       : RooUnitTest("ProfileLikelihoodCalculator Interval - Gaussian Model", refFile, writeRef, verbose),
-        fConfidenceLevel(confidenceLevel){};
+        fConfidenceLevel(confidenceLevel)
+   {
+   }
 
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
@@ -203,7 +209,9 @@ private:
 public:
    TestProfileLikelihoodCalculator2(TFile *refFile, bool writeRef, Int_t verbose, Int_t obsValue = 5)
       : RooUnitTest("ProfileLikelihoodCalculator Interval - Poisson Simple Model", refFile, writeRef, verbose),
-        fObsValue(obsValue){};
+        fObsValue(obsValue)
+   {
+   }
 
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
@@ -305,7 +313,9 @@ public:
       : RooUnitTest("ProfileLikelihoodCalculator Interval - Poisson Product Model", refFile, writeRef, verbose),
         fObsValueX(obsValueX),
         fObsValueY(obsValueY),
-        fConfidenceLevel(confidenceLevel){};
+        fConfidenceLevel(confidenceLevel)
+   {
+   }
 
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
@@ -354,7 +364,8 @@ public:
 
       if (_verb > 1) {
          ws.loadSnapshot("initialVariables");
-         ws.writeToFile(TString::Format("stressRooStats_PoissonProductModel_%d_%d.root", fObsValueX, fObsValueY));
+         ws.writeToFile(
+            TString::Format("stressRooStats_PoissonProductModel_%d_%d.root", fObsValueX, fObsValueY).Data());
       }
 
       return true;
@@ -386,7 +397,9 @@ public:
 class TestProfileLikelihoodCalculator4 : public RooUnitTest {
 public:
    TestProfileLikelihoodCalculator4(TFile *refFile, bool writeRef, Int_t verbose)
-      : RooUnitTest("ProfileLikelihoodCalculator Hypothesis Test", refFile, writeRef, verbose){};
+      : RooUnitTest("ProfileLikelihoodCalculator Hypothesis Test", refFile, writeRef, verbose)
+   {
+   }
 
    // Override test value tolerance
    // A larger tolerance is needed since the values in the Cousins paper are given with 1e-2 precision
@@ -506,7 +519,9 @@ public:
                            double confidenceLevel = 2 * normal_cdf(1) - 1)
       : RooUnitTest("BayesianCalculator Central Interval - Poisson Simple Model", refFile, writeRef, verbose),
         fObsValue(obsValue),
-        fConfidenceLevel(confidenceLevel){};
+        fConfidenceLevel(confidenceLevel)
+   {
+   }
 
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
@@ -661,7 +676,9 @@ public:
 class TestBayesianCalculator2 : public RooUnitTest {
 public:
    TestBayesianCalculator2(TFile *refFile, bool writeRef, Int_t verbose)
-      : RooUnitTest("BayesianCalculator Shortest Interval - Poisson Simple Model", refFile, writeRef, verbose){};
+      : RooUnitTest("BayesianCalculator Shortest Interval - Poisson Simple Model", refFile, writeRef, verbose)
+   {
+   }
 
    // the references values in the paper have a precision of only two decimal points
    // in such a situation, it is natural that we increase the value tolerance
@@ -709,7 +726,8 @@ public:
          RooAbsReal::defaultIntegratorConfig()->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D");
 #endif
          // Uniform prior on mean
-         auto bc = std::make_unique<BayesianCalculator>(data, *ws.pdf("poiss"), *ws.set("poi"), *ws.pdf("prior"), nullptr);
+         auto bc =
+            std::make_unique<BayesianCalculator>(data, *ws.pdf("poiss"), *ws.set("poi"), *ws.pdf("prior"), nullptr);
          bc->SetConfidenceLevel(confidenceLevel);
          bc->SetShortestInterval();
          bc->SetScanOfPosterior(numberScans);
@@ -718,7 +736,8 @@ public:
          regValue(interval->UpperLimit(), upperLimitString);
 
          // Inverse of mean prior
-         bc = std::make_unique<BayesianCalculator>(data, *ws.pdf("poiss"), *ws.set("poi"), *ws.pdf("priorInv"), nullptr);
+         bc =
+            std::make_unique<BayesianCalculator>(data, *ws.pdf("poiss"), *ws.set("poi"), *ws.pdf("priorInv"), nullptr);
          bc->SetConfidenceLevel(confidenceLevel);
          bc->SetShortestInterval();
          bc->SetScanOfPosterior(numberScans);
@@ -766,7 +785,9 @@ public:
       : RooUnitTest("BayesianCalculator Central Interval - Poisson Product Model", refFile, writeRef, verbose),
         fObsValueX(obsValueX),
         fObsValueY(obsValueY),
-        fConfidenceLevel(confidenceLevel){};
+        fConfidenceLevel(confidenceLevel)
+   {
+   }
 
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
@@ -875,7 +896,9 @@ public:
       : RooUnitTest("MCMCCalculator Interval - Poisson Product Model", refFile, writeRef, verbose),
         fObsValueX(obsValueX),
         fObsValueY(obsValueY),
-        fConfidenceLevel(confidenceLevel){};
+        fConfidenceLevel(confidenceLevel)
+   {
+   }
 
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
@@ -977,7 +1000,9 @@ public:
 class TestZBi : public RooUnitTest {
 public:
    TestZBi(TFile *refFile, bool writeRef, Int_t verbose)
-      : RooUnitTest("ZBi Significance - On / Off Model", refFile, writeRef, verbose){};
+      : RooUnitTest("ZBi Significance - On / Off Model", refFile, writeRef, verbose)
+   {
+   }
 
    // Override test value tolerance
    // A larger tolerance is needed since the values in the Cousins paper are given with 1e-2 precision
@@ -1053,7 +1078,9 @@ public:
                     writeRef, verbose),
         fObsValueOn(obsValueOn),
         fObsValueOff(obsValueOff),
-        fTau(tau){};
+        fTau(tau)
+   {
+   }
 
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
@@ -1154,7 +1181,9 @@ public:
                                     kECalculatorTypeString[calculatorType], kETestStatTypeString[testStatType]),
                     refFile, writeRef, verbose),
         fCalculatorType(calculatorType),
-        fTestStatType(testStatType){};
+        fTestStatType(testStatType)
+   {
+   }
 
    bool testCode() override
    {
@@ -1172,7 +1201,8 @@ public:
 
       AsymptoticCalculator::SetPrintLevel(_verb); // is static (don;t care if we don't use it)
 
-      std::unique_ptr<HypoTestCalculatorGeneric> calc{buildHypoTestCalculator(fCalculatorType, *w->data("data"), *bModel, *sbModel, 500, 50)};
+      std::unique_ptr<HypoTestCalculatorGeneric> calc{
+         buildHypoTestCalculator(fCalculatorType, *w->data("data"), *bModel, *sbModel, 500, 50)};
       if (fCalculatorType == kAsymptotic) {
          ((AsymptoticCalculator *)calc.get())->SetOneSidedDiscovery(true);
       }
@@ -1291,7 +1321,9 @@ public:
         fTestStatType(testStatType),
         fObsValueX(obsValueX),
         fObsValueY(obsValueY),
-        fConfidenceLevel(confidenceLevel){};
+        fConfidenceLevel(confidenceLevel)
+   {
+   }
 
    // Basic checks for the parameters passed to the test
    // In case of invalid parameters, a warning is printed and the test is skipped
@@ -1406,7 +1438,8 @@ public:
       // in case of debug write the workspace in a file
       if (_verb > 1) {
          w->loadSnapshot("initialVariables");
-         w->writeToFile(TString::Format("stressRooStats_PoissonProductModel_%d_%d.root", fObsValueX, fObsValueY));
+         w->writeToFile(
+            TString::Format("stressRooStats_PoissonProductModel_%d_%d.root", fObsValueX, fObsValueY).Data());
       }
 
       return true;
@@ -1453,7 +1486,9 @@ public:
         fCalculatorType(calculatorType),
         fTestStatType(testStatType),
         fObsValueX(obsValueX),
-        fConfidenceLevel(confidenceLevel){};
+        fConfidenceLevel(confidenceLevel)
+   {
+   }
 
    // larger value test tolerance especially when using toys (difference of <~ 0.1 observed between using Minuit or
    // Minuit2)
@@ -1592,7 +1627,9 @@ public:
 class TestHypoTestCalculator : public RooUnitTest {
 public:
    TestHypoTestCalculator(TFile *refFile, bool writeRef, Int_t verbose)
-      : RooUnitTest("HypoTestCalculator - On / Off Problem", refFile, writeRef, verbose){};
+      : RooUnitTest("HypoTestCalculator - On / Off Problem", refFile, writeRef, verbose)
+   {
+   }
 
    bool testCode() override
    {

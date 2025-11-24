@@ -2047,13 +2047,13 @@ bool RooWorkspace::cd(const char* path)
 /// Save this current workspace into given file
 /// \return true if file correctly written, false in case of error
 
-bool RooWorkspace::writeToFile(const char* fileName, bool recreate)
+bool RooWorkspace::writeToFile(std::filesystem::path const &fileName, bool recreate)
 {
-  std::unique_ptr<TFile> f{ TFile::Open(fileName, recreate ? "RECREATE" : "UPDATE") };
-  if (!f || f->IsZombie())
-    return false;
-  auto bytes = Write();
-  return bytes > 0;
+   std::unique_ptr<TFile> f{TFile::Open(fileName.c_str(), recreate ? "RECREATE" : "UPDATE")};
+   if (!f || f->IsZombie())
+      return false;
+   auto bytes = Write();
+   return bytes > 0;
 }
 
 

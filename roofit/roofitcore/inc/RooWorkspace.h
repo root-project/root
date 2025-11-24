@@ -22,8 +22,10 @@
 #include "RooCmdArg.h"
 #include "RooExpensiveObjectCache.h"
 #include "TUUID.h"
-#include <map>
+
+#include <filesystem>
 #include <list>
+#include <map>
 #include <memory>
 #include <string>
 
@@ -128,7 +130,7 @@ public:
   bool makeDir() ;
   bool cd(const char* path = nullptr) ;
 
-  bool writeToFile(const char* fileName, bool recreate=true) ;
+  bool writeToFile(std::filesystem::path const &fileName, bool recreate=true) ;
 
   /// Make internal collection use an unordered_map for
   /// faster searching. Important when large trees are
