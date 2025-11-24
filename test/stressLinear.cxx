@@ -184,7 +184,7 @@ void   cleanup                     ();
 int main(int argc,const char *argv[])
 {
   gROOT->SetBatch();
-  Int_t maxSizeReq = 100;
+  Int_t maxSizeReq = 40;
   if (argc > 1)  maxSizeReq = atoi(argv[1]);
   Int_t verbose = 0;
   if (argc > 2)  verbose = (atoi(argv[2]) > 0 ? 1 : 0);
