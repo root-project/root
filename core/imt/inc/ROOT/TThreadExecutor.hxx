@@ -18,7 +18,7 @@
 #ifndef R__USE_IMT
 // No need to error out for dictionaries.
 # if !defined(__ROOTCLING__) && !defined(G__DICTIONARY)
-#  error "Cannot use ROOT::TThreadExecutor without defining R__USE_IMT."
+#  error "Cannot use ROOT::TThreadExecutor when build option imt=Off."
 # endif
 #else
 
