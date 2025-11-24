@@ -643,7 +643,7 @@ TEST(RDataFrameInterface, JittedExprWithMultipleReturns)
 TEST(RDataFrameInterface, JittedExprWithManyVars)
 {
    // Build expression "x + x + ... + x > 0"
-   // With 100 occurences of 'x'
+   // With 100 occurrences of 'x'
    std::string expr{"x"};
    for (int i = 0; i < 99; ++i)
       expr += " + x";

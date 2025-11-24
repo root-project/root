@@ -96,7 +96,7 @@ void TNetFileStager::Print(Option_t *) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get actual end-point url for a path
-/// Returns 0 in case of success and 1 if any error occured
+/// Returns 0 in case of success and 1 if any error occurred
 
 Int_t TNetFileStager::Locate(const char *path, TString &eurl)
 {

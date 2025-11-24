@@ -32,7 +32,7 @@ public:
 
 private:
   // Instantiates memory operands within a snippet.
-  // To make computations as parallel as possible, we generate independant
+  // To make computations as parallel as possible, we generate independent
   // memory locations for instructions that load and store. If there are less
   // than kMinNumDifferentAddresses in the original snippet, we duplicate
   // instructions until there are this number of instructions.

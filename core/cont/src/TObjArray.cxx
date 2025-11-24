@@ -32,7 +32,7 @@ You can either make a shallow copy of the array:
      otherarr = new TObjArray(*myarr);
     *otherarr = *myarr;
 ~~~
-in which case ownership (if any) is not transfered but the other
+in which case ownership (if any) is not transferred but the other
 array points to the same object as the original array.  Note that
 if the content of either array is deleted the other array is not
 notified in any way (i.e. still points to the now deleted objects).

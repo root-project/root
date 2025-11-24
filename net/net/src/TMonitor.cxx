@@ -329,7 +329,7 @@ TSocket *TMonitor::Select()
    if (fInterrupt) {
       fInterrupt = kFALSE;
       fReady = 0;
-      Info("Select","*** interrupt occured ***");
+      Info("Select","*** interrupt occurred ***");
    }
 
    return fReady;
@@ -360,7 +360,7 @@ TSocket *TMonitor::Select(Long_t timeout)
    if (fInterrupt) {
       fInterrupt = kFALSE;
       fReady = 0;
-      Info("Select","*** interrupt occured ***");
+      Info("Select","*** interrupt occurred ***");
    }
 
    return fReady;

@@ -617,7 +617,7 @@ void TKey::FillBuffer(char *&buffer)
       tobuf(buffer, fSeekKey);
 
       // We currently store in the 16 highest bit of fSeekPdir the value of
-      // fPidOffset.  This offset is used when a key (or basket) is transfered from one
+      // fPidOffset.  This offset is used when a key (or basket) is transferred from one
       // file to the other.  In this case the TRef and TObject might have stored a
       // pid index (to retrieve TProcessIDs) which refered to their order on the original
       // file, the fPidOffset is to be added to those values to correctly find the
@@ -642,7 +642,7 @@ void TKey::FillBuffer(char *&buffer)
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment fPidOffset by 'offset'.
 ///
-/// This offset is used when a key (or basket) is transfered from one file to
+/// This offset is used when a key (or basket) is transferred from one file to
 /// the other.  In this case the TRef and TObject might have stored a pid
 /// index (to retrieve TProcessIDs) which refered to their order on the
 /// original file, the fPidOffset is to be added to those values to correctly
@@ -889,7 +889,7 @@ TObject *TKey::ReadObj()
 /// This function is called only internally by ROOT classes.
 /// Although being public it is not supposed to be used outside ROOT.
 /// If used, you must make sure that the bufferRead is large enough to
-/// accomodate the object being read.
+/// accommodate the object being read.
 
 TObject *TKey::ReadObjWithBuffer(char *bufferRead)
 {
@@ -1245,7 +1245,7 @@ void TKey::ReadKeyBuffer(char *&buffer)
       frombuf(buffer, &fSeekKey);
 
       // We currently store in the 16 highest bit of fSeekPdir the value of
-      // fPidOffset.  This offset is used when a key (or basket) is transfered from one
+      // fPidOffset.  This offset is used when a key (or basket) is transferred from one
       // file to the other.  In this case the TRef and TObject might have stored a
       // pid index (to retrieve TProcessIDs) which refered to their order on the original
       // file, the fPidOffset is to be added to those values to correctly find the
@@ -1373,7 +1373,7 @@ void TKey::Streamer(TBuffer &b)
          b >> fSeekKey;
 
          // We currently store in the 16 highest bit of fSeekPdir the value of
-         // fPidOffset.  This offset is used when a key (or basket) is transfered from one
+         // fPidOffset.  This offset is used when a key (or basket) is transferred from one
          // file to the other.  In this case the TRef and TObject might have stored a
          // pid index (to retrieve TProcessIDs) which refered to their order on the original
          // file, the fPidOffset is to be added to those values to correctly find the
@@ -1428,7 +1428,7 @@ void TKey::Streamer(TBuffer &b)
          b << fSeekKey;
 
          // We currently store in the 16 highest bit of fSeekPdir the value of
-         // fPidOffset.  This offset is used when a key (or basket) is transfered from one
+         // fPidOffset.  This offset is used when a key (or basket) is transferred from one
          // file to the other.  In this case the TRef and TObject might have stored a
          // pid index (to retrieve TProcessIDs) which refered to their order on the original
          // file, the fPidOffset is to be added to those values to correctly find the

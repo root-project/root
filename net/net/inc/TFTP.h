@@ -40,7 +40,7 @@ private:
    Int_t      fParallel;    // number of parallel sockets
    Int_t      fWindowSize;  // tcp window size used
    Int_t      fProtocol;    // rootd protocol level
-   Int_t      fLastBlock;   // last block successfully transfered
+   Int_t      fLastBlock;   // last block successfully transferred
    Int_t      fBlockSize;   // size of data buffer used to transfer
    Int_t      fMode;        // binary or ascii file transfer mode
    Long64_t   fRestartAt;   // restart transmission at specified offset

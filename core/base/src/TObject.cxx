@@ -690,7 +690,7 @@ void TObject::RecursiveRemove(TObject *)
 ///   ascii file.
 ///
 /// - if "filename" contains ".cc" the object is saved in filename as C code
-///   independant from ROOT. The code is generated via SavePrimitive().
+///   independent from ROOT. The code is generated via SavePrimitive().
 ///   Specific code should be implemented in each object to handle this
 ///   option. Like in TF1::SavePrimitive().
 ///
@@ -722,7 +722,7 @@ void TObject::SaveAs(const char *filename, Option_t *option) const
       return;
    }
 
-   //==============Save object as a C, ROOT independant, file===================
+   //==============Save object as a C, ROOT independent, file===================
    if (filename && strstr(filename,".cc")) {
       TString fname;
       if (filename && strlen(filename) > 0) {

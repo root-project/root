@@ -1846,7 +1846,7 @@ void TCling::LoadPCMImpl(TFile &pcmFile)
          }
       }
 
-      protoClasses->Clear(); // Ownership was transfered to TClassTable.
+      protoClasses->Clear(); // Ownership was transferred to TClassTable.
       delete protoClasses;
    }
 
@@ -1855,7 +1855,7 @@ void TCling::LoadPCMImpl(TFile &pcmFile)
    if (dataTypes) {
       for (auto typedf : *dataTypes)
          gROOT->GetListOfTypes()->Add(typedf);
-      dataTypes->Clear(); // Ownership was transfered to TListOfTypes.
+      dataTypes->Clear(); // Ownership was transferred to TListOfTypes.
       delete dataTypes;
    }
 }

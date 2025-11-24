@@ -143,7 +143,7 @@ bool isTriviallyVectorizable(Intrinsic::ID ID);
 /// Note: There are intrinsics where implementing vectorization for the
 /// intrinsic is redundant, but we want to implement scalarization of the
 /// vector. To prevent the requirement that an intrinsic also implements
-/// vectorization we provide this seperate function.
+/// vectorization we provide this separate function.
 bool isTriviallyScalarizable(Intrinsic::ID ID, const TargetTransformInfo *TTI);
 
 /// Identifies if the vector form of the intrinsic has a scalar operand.

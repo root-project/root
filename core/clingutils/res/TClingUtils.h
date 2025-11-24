@@ -843,7 +843,7 @@ inline void LevelPrint(bool prefix, int level, const char *location, const char 
 }
 
 //______________________________________________________________________________
-// Use this function in case an error occured.
+// Use this function in case an error occurred.
 inline void Error(const char *location, const char *va_(fmt), ...)
 {
    va_list ap;
@@ -853,7 +853,7 @@ inline void Error(const char *location, const char *va_(fmt), ...)
 }
 
 //______________________________________________________________________________
-// Use this function in case a system (OS or GUI) related error occured.
+// Use this function in case a system (OS or GUI) related error occurred.
 inline void SysError(const char *location, const char *va_(fmt), ...)
 {
    va_list ap;

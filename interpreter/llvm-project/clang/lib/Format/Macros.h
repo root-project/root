@@ -180,7 +180,7 @@ public:
       const llvm::DenseMap<FormatToken *, std::unique_ptr<UnwrappedLine>>
           &ActiveExpansions);
 
-  /// For the given \p Line, match all occurences of tokens expanded from a
+  /// For the given \p Line, match all occurrences of tokens expanded from a
   /// macro to unwrapped lines in the spelled macro call so that the resulting
   /// tree of unwrapped lines best resembles the structure of unwrapped lines
   /// passed in via \c addLine.

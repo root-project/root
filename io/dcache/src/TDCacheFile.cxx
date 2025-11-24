@@ -190,7 +190,7 @@ TDCacheFile::TDCacheFile(const char *path, Option_t *option,
    return;
 
 zombie:
-   // error in file opening occured, make this object a zombie
+   // error in file opening occurred, make this object a zombie
    MakeZombie();
    gDirectory = gROOT;
 }

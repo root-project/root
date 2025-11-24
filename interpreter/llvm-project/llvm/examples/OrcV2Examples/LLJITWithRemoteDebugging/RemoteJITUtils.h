@@ -24,7 +24,7 @@
 #include <memory>
 #include <string>
 
-/// Find the default exectuable on disk and create a JITLinkExecutor for it.
+/// Find the default executable on disk and create a JITLinkExecutor for it.
 std::string findLocalExecutor(const char *HostArgv0);
 
 llvm::Expected<std::pair<std::unique_ptr<llvm::orc::SimpleRemoteEPC>, uint64_t>>

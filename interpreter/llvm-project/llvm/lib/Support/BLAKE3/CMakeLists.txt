@@ -62,7 +62,7 @@ if (CAN_USE_ASSEMBLER)
       # In a macOS Universal build (setting CMAKE_OSX_ARCHITECTURES to multiple
       # values), compilation of the source files will target multiple architectures
       # (each source file is internally compiled once for each architecture).
-      # To accomodate this configuration we include these assembly files without a
+      # To accommodate this configuration we include these assembly files without a
       # CMake check but their source is guarded with architecture "#ifdef" checks.
       list(APPEND LLVM_BLAKE3_FILES
         blake3_sse2_x86-64_unix.S
