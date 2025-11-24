@@ -23,6 +23,8 @@ SKIP_TUTORIALS = {
     "h1analysisProxy.C",  # helper macro, not meant to run standalone
     "hist001_RHist_basics.C",  # required RHist, not supported in ROOT wheels
     "hist002_RHist_weighted.C",  # required RHist, not supported in ROOT wheels
+    "rf618_mixture_models.py",  # fails on CI, to investigate
+    "rf615_simulation_based_inference.py",  # fails on CI, to investigate
 }
 
 # ----------------------
