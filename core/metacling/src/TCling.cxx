@@ -4433,13 +4433,11 @@ void TCling::CreateListOfBaseClasses(TClass *cl) const
    if (cl->fBase) {
       return;
    }
-#ifdef _MSC_VER
-   // On Windows, ignore the `std::_Complex_base` base class
+   // Ignore the base class (e.g. `std::_Complex_base` on Windows)
    if (TClassEdit::GetComplexType(cl->GetName()) != TClassEdit::EComplexType::kNone) {
       cl->fBase = new TList();
       return;
    }
-#endif
    TClingClassInfo *tci = (TClingClassInfo *)cl->GetClassInfo();
    if (!tci) return;
    TClingBaseClassInfo t(GetInterpreterImpl(), tci);
