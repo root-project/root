@@ -114,6 +114,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooEllipse.h
     RooErrorHandler.h
     RooErrorVar.h
+    RooEvaluatorWrapper.h
     RooExpensiveObjectCache.h
     RooExtendPdf.h
     RooExtendedBinding.h
@@ -173,9 +174,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooMoment.h
     RooMsgService.h
     RooMultiCategory.h
-    RooMultiVarGaussian.h
     RooMultiPdf.h
     RooMultiReal.h
+    RooMultiVarGaussian.h
     RooNameReg.h
     RooNormSetCache.h
     RooNumCdf.h
