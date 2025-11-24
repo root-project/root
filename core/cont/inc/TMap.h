@@ -58,6 +58,7 @@ public:
    TMap(Int_t capacity = TCollection::kInitHashTableCapacity, Int_t rehash = 0);
    virtual           ~TMap();
    void              Add(TObject *obj) override;
+   void              Add(TObject *obj, Option_t *) override { Add(obj); };
    void              Add(TObject *key, TObject *value);
    Float_t           AverageCollisions() const;
    Int_t             Capacity() const;
