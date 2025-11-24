@@ -5391,7 +5391,7 @@ void TStreamerInfo::PrintValue(const char *name, char *pointer, Int_t i, Int_t l
    } else        {
       if (i < 0) {
          if (pointer==0) {
-            printf("NULL\n");
+            printf("nullptr\n");
          } else {
             const static TClassRef stringClass("string");
             if (fClass == stringClass) {
