@@ -5710,7 +5710,7 @@ int GenReflexMain(int argc, char **argv)
       "      The name influences the name of the created pcm:\n"
       "       1) If it is not specified, the pcm is called libINPUTHEADER_rdict.pcm\n"
       "       2) If it is specified, the pcm is called libTARGETLIBRARY_rdict.pcm\n"
-      "          Any \"liblib\" occurence is transformed in the expected \"lib\".\n"
+      "          Any \"liblib\" occurrence is transformed in the expected \"lib\".\n"
       "       3) If this is specified in conjunction with --multiDict, the output is\n"
       "          libTARGETLIBRARY_DICTIONARY_rdict.pcm\n";
 

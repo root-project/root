@@ -459,7 +459,7 @@ while test $# -gt 0; do
     --prefix=*)
       ### Set the prefix
       if test "$platform" = "win32"; then
-         ### We need to expand the path to backslash seperated path
+         ### We need to expand the path to backslash separated path
          optarg=`cygpath -u $optarg`
       fi
       prefix=$optarg
@@ -477,7 +477,7 @@ while test $# -gt 0; do
     --exec-prefix=*)
       ### Set the exec-prefix
       if test "$platform" = "win32"; then
-      ### We need to expand the path to backslash seperated path
+      ### We need to expand the path to backslash separated path
          optarg=`cygpath -u $optarg`
       fi
       exec_prefix=$optarg
@@ -531,7 +531,7 @@ while test $# -gt 0; do
       ### Output the compiler flags
       if test "${incdir}" != "/usr/include"; then
          ### In case we're on a Win32 system, we need to expand the
-         ### path to a backslash seperated path
+         ### path to a backslash separated path
          if test "$platform" = "win32"; then
             includes=-I\'`cygpath -w ${incdir}`\'
          else

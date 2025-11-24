@@ -572,7 +572,7 @@ TFile::~TFile()
    // call Close("nodelete")
    // then later call delete TFile
    // which means that at this point we might still have object held and those
-   // might requires a 'valid' TFile object in their desctructor (for example,
+   // might requires a 'valid' TFile object in their destructor (for example,
    // TTree call's GetReadCache which expects a non-null fCacheReadMap).
    // So delete the objects (if any) now.
 

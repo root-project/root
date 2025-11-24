@@ -3402,7 +3402,7 @@ void TTree::CopyAddresses(TTree* tree, bool undo)
          continue;
       }
       if (undo) {
-         // Now we know whether the address has been transfered
+         // Now we know whether the address has been transferred
          tree->ResetBranchAddress(tbranch);
       } else {
          TBranchElement *mother = dynamic_cast<TBranchElement*>(leaf->GetBranch()->GetMother());
@@ -9429,7 +9429,7 @@ void TTree::SetFileNumber(Int_t number)
 /// directly with numerical type variable rather than having to have the original
 /// set of classes (or a reproduction thereof).
 /// In other words, SetMakeClass sets the branch(es) into a
-/// mode that allow its reading via a set of independant variables
+/// mode that allow its reading via a set of independent variables
 /// (see the result of running TTree::MakeClass on your TTree) by changing the
 /// interpretation of the address passed to SetAddress from being the beginning
 /// of the object containing the data to being the exact location where the data

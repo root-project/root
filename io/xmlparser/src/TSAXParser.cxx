@@ -91,7 +91,7 @@ TSAXParser::TSAXParser()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TSAXParser desctructor
+/// TSAXParser destructor
 
 TSAXParser::~TSAXParser()
 {

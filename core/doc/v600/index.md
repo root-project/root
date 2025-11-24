@@ -318,7 +318,7 @@ of the `TDataType` describing a typedef.
     fully transparent and 1. fully opaque.
 
 -   In `SaveAS` implement the possibility to save an object as C code
-    independant from ROOT. It is enough to save the object in a file
+    independent from ROOT. It is enough to save the object in a file
     with the extension ".cc". The code as to save each objet should be
     implement in each `SavePrimitive` function like in `TF1`.
 
