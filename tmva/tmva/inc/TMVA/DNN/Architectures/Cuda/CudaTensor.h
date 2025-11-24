@@ -104,7 +104,7 @@ private:
    };
 #endif
 
-   /** For each GPU device keep the CUDA streams in which tensors are used.
+/** For each GPU device keep the CUDA streams in which tensors are used.
      * Instances belonging to the same stream on the same deviceshare a
      * cudnn library handel to keep cudnn contexts separated */
    //static std::vector<std::vector<int> > fInstances;
